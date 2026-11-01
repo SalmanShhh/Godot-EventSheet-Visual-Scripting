@@ -14,16 +14,13 @@
 @tool
 extends CompositorEffect
 
-## Where the pack's compute shaders live once it is installed. The builder copies them here beside
-## these scripts, so an effect is a file on disk rather than a string compiled at run time.
+## Folder holding the effect scripts and their compiled compute shader files once installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"
 
-## The compute shader's workgroup, in both directions. It is written twice - once here and once in
-## every `local_size_x` - because a dispatch has to count groups and a shader has to declare them.
+## Compute workgroup size in both directions; every shader declares the same number.
 const GROUP_SIZE: int = 8
 
-## How far the effect goes, 0 to 1. 0 hands the frame back exactly as it arrived, which is what an
-## effect sitting on a camera doing nothing should cost the reader to understand.
+## How far the effect goes, 0 to 1; 0 hands the frame back exactly as it arrived.
 ## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var strength: float = 0.6
 

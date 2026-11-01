@@ -40,7 +40,7 @@ const THICKNESS_UNITS_3D: PackedStringArray = ["world", "screen"]
 ## The two depth readings, in the order the shader files are named for.
 const DEPTH_MODES: PackedStringArray = ["test", "through walls"]
 
-## Pixels a screen-width stroke may reach past its box before culling.
+## Extra cull margin, in metres, for a screen-width stroke so it is not culled at its box edge.
 const SCREEN_CULL_MARGIN: float = 1.0
 
 # One Shader resource per blend word and depth reading, shared by every 3D shape in the project.
@@ -67,7 +67,7 @@ var _material_key: String = ""
 
 # The material a volumetric shape wears - real geometry, so a real surface rather than a distance
 # field. Rebuilt when the blend word changes, never per frame.
-## Plain material used when the shape has a solid colour.
+## Unshaded surface material that a volumetric shape wears.
 var _solid_material: StandardMaterial3D = null
 
 # The strip a gradient fill is sampled from, baked when the gradient changes rather than per frame.

@@ -21,7 +21,7 @@ static func build() -> bool:
 		"match_rotation": {"type": "bool", "default": false, "exported": true, "description": "When on, the node rotates to face its direction of travel."},
 		"offset_angle_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Tilts the whole ellipse by this many degrees."},
 		"primary_radius": {"type": "float", "default": 100.0, "exported": true, "description": "Orbit radius on the primary axis, in pixels."},
-		"secondary_radius": {"type": "float", "default": 0.0, "exported": true, "description": "Orbit radius on the second axis, in pixels; 0 makes a circle from primary_radius."},
+		"secondary_radius": {"type": "float", "default": 0.0, "exported": true, "description": "Orbit radius on the second axis, in pixels; 0 makes a circle from the primary radius."},
 		"speed_degrees": {"type": "float", "default": 90.0, "exported": true, "description": "Degrees per second traveled around the orbit; negative reverses direction."},
 		"total_rotation": {"type": "float", "default": 0.0, "exported": false, "description": "Total angle travelled since the orbit started, in degrees, counting full turns."}
 	}

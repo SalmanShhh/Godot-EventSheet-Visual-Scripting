@@ -6,7 +6,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polygon")
-# Each one is a handle in the 2D viewport while the
+# Every point is a handle in the 2D viewport while the
 # node is selected. Past thirty-two points this is Godot's own Polygon2D's job, and the extra
 # points are left undrawn rather than silently thinned.
 ## Corner points of the shape, in the node's own coordinates.

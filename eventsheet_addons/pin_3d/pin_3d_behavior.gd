@@ -15,7 +15,7 @@ func _enter_tree() -> void:
 		push_warning("Pin3DBehavior behavior requires a Node3D parent.")
 
 # --- Designer knobs (tune in the Inspector) ---
-# The first three are
+# The first three pin modes are
 # the plain copies; rope, bar, soft and spring are the ways a follow can lag or be held at
 # a distance, and size copies the anchor's scale instead of its place.
 ## What to copy from the object being ridden, and how to travel to it.
@@ -24,7 +24,7 @@ func _enter_tree() -> void:
 @export var rotate_with_anchor: bool = true
 ## Master on/off - Unpin flips it, Pin To turns it back on.
 @export var pin_enabled: bool = true
-## Length in world units of the rope or bar.
+## Length in metres of the rope or bar.
 @export var pin_length: float = 2.0
 ## How fast a soft pin closes the gap, per second; 10 is tight, 2 trails.
 @export var pin_speed: float = 10.0
@@ -36,7 +36,7 @@ func _enter_tree() -> void:
 @export_enum("all", "x only", "y only", "z only") var pin_axes: String = "all"
 ## Also copy the anchor's scale, whatever else the mode copies.
 @export var pin_follow_size: bool = false
-# In 3D this is
+# The point a pin rides is, in 3D,
 # usually a BoneAttachment3D - Godot keeps it on the skeleton's bone and the pin rides it,
 # so "pin the sword to the hand" is one name. Empty rides the anchor; a name that matches
 # nothing falls back to the anchor rather than dropping the pin.
@@ -57,7 +57,7 @@ var pin_offset: Vector3 = Vector3.ZERO
 ## How far the host is turned from the anchor.
 var pin_turn_offset: Quaternion = Quaternion.IDENTITY
 # The spring mode's carried velocity - the one piece of state overshoot needs.
-## Speed the anchor is moving at, which the host picks up when it unpins.
+## The spring mode's carried velocity, in metres per second.
 var pin_velocity: Vector3 = Vector3.ZERO
 
 # The modes that copy a PLACE and the modes that copy an ANGLE, written out rather than

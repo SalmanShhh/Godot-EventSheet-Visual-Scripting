@@ -36,10 +36,10 @@ var _brightness_property: String = ""
 var _reach_property: String = ""
 ## Reach the light was authored with; the flicker scales around it.
 var _authored_reach: float = 0.0
-# NOISE, not a fresh
+# The flame is driven by NOISE, not a fresh
 # random number per frame: consecutive samples of a noise field are RELATED, so the light
 # wanders the way a flame does. Independent random numbers read as static instead.
-## The noise field the flame is sampled from, and how far along it we are.
+## The noise field the flicker samples its brightness from.
 var _flame: FastNoiseLite = null
 ## Running time that drives the flicker pattern.
 var _walked: float = 0.0

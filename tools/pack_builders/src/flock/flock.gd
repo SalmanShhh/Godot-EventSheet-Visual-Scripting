@@ -8,7 +8,7 @@ var host: Node2D = null
 
 #region block_1
 # --- Designer knobs (tune in the Inspector) ---
-# The host joins it when it enters the scene, so every
+# The flock group is joined by the host when it enters the scene, so every
 # node carrying this behaviour with the same group name is one flock - and anything else you put
 # in that group by hand counts as a neighbour too.
 ## The group whose members fly together.

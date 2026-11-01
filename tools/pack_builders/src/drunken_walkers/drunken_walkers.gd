@@ -67,7 +67,7 @@ const NEIGHBOUR_STEPS: Array[Vector2i] = [
 	Vector2i(-1, 0), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
 ]
 
-# The numbers are
+# The numbers in each preset are
 # the recipe, not a suggestion: they are what the preset means, and every one of them is reachable
 # afterwards through the Set Walker actions. "blob" is the one recipe written as a band (30 to 50
 # steps), taken here at its midpoint so a preset is one concrete walker.

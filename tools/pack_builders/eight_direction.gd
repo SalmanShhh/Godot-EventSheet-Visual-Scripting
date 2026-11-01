@@ -17,7 +17,7 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"ai_controlled": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "AI drive: read ai_move_x/ai_move_y instead of the keyboard (the standard seam an AI driver flips on to steer)."}},
+			"attributes": {"tooltip": "AI drive: take movement from the AI move inputs instead of the keyboard (the standard seam an AI driver flips on)."}},
 		"ai_move_x": {"type": "float", "default": 0.0, "exported": false, "description": "Horizontal input from -1 to 1 when something other than the player drives the host."},
 		"ai_move_y": {"type": "float", "default": 0.0, "exported": false, "description": "Vertical input from -1 to 1 when something other than the player drives the host."},
 		"move_speed": {"type": "float", "default": 200.0, "exported": true, "description": "Movement speed in pixels per second the host travels at full input."}

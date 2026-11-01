@@ -70,7 +70,7 @@ signal on_left_water
 ## Objects in this group count as water - mark a water Area2D with it.
 @export var water_group: String = "water"
 @export_group("")
-## AI drive: read ai_climb_axis instead of the up/down controls (a sheet or an AI driver steers the climb).
+## AI drive: read the AI climb input instead of the up/down controls (a sheet or an AI driver steers the climb).
 @export var ai_controlled: bool = false
 
 # The AI seam's persistent intent axis - a driver holds it like a held key.
@@ -95,7 +95,7 @@ var _wall_slide_frame: int = -10
 var _wall_run_frame: int = -10
 ## Seconds the current wall run has lasted.
 var _wall_run_timer: float = 0.0
-## How much the wall run has sunk, which ends it when it gets too far.
+## Downward speed the wall run has built up so far, in pixels per second; reset when it ends.
 var _wall_run_fall: float = 0.0
 ## True while the host is crouched.
 var _crouching: bool = false
@@ -118,7 +118,7 @@ var _move_to: Vector2 = Vector2.ZERO
 var _move_kind: String = ""
 ## True while the host is in water.
 var _in_water: bool = false
-## Height of the water surface the host is in.
+## World Y of the water surface the host is in, in world pixels.
 var _surface_y: float = 0.0
 # The marked-Area lookup shared by ladders and water: the first area in the group the
 # host is standing inside, or null.

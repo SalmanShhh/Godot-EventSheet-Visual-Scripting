@@ -32,13 +32,13 @@ signal waypoint_reached
 @export var auto_control: bool = true
 ## The built-in driver's speed (m/s). A driver sibling uses its own speed.
 @export var move_speed: float = 4.0
-## The built-in driver's gravity (a driver sibling applies its own).
+## The built-in driver's downward pull in metres per second squared (a driver sibling applies its own).
 @export var gravity: float = 9.8
-## The navigation agent's radius (match your collider).
+## The navigation agent's radius in metres (match your collider).
 @export var agent_radius: float = 0.5
-## The navigation agent's height.
+## The navigation agent's height in metres.
 @export var agent_height: float = 1.8
-## How close (m) counts as having arrived at the target.
+## How close, in metres, counts as having arrived at the target.
 @export var target_desired_distance: float = 1.0
 ## Agents steer around each other (applies to the built-in driver; a driver sibling owns its own velocity).
 @export var avoidance_enabled: bool = false
@@ -52,7 +52,7 @@ var _driver: Node = null
 var _active: bool = false
 ## True while a destination check is waiting for the map to be ready.
 var _pending_check: bool = false
-## How the waiting check picks its point: nearest or exact.
+## How the waiting check judges the target: "reach" fails the path if it is unreachable, anything else accepts it.
 var _pending_mode: String = "nearest"
 ## Sideways step wanted this frame, from -1 to 1.
 var _move_x: float = 0.0

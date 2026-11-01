@@ -8,7 +8,7 @@ extends VectorShape2D
 ## A rectangle with rounded corners (one number, or four), a fill, a border, and dashes on that border - the selection box, the panel, the placement footprint.
 
 # @inspector_action save_as_style Save As Style
-# Empty is the usual case - the fields
+# The style slot is empty in the usual case - the fields
 # below are this shape's own. With one dropped in, every field the style speaks for is read from
 # the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
 # pattern; the button above writes the current fields out as a new style file to reuse.
@@ -176,8 +176,7 @@ extends VectorShape2D
 		shape_changed()
 
 @export_group("Drawing")
-# These are the five blends a canvas shader can be compiled
-# for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
+# A canvas shader can be compiled for five blends; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
 # has blended, because a shape owns its own material.
 ## How the shape blends with what is behind it.
 ## @ace_hidden

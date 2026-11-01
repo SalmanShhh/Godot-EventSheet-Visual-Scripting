@@ -46,7 +46,7 @@ static func build() -> bool:
 		"wall_riding": {"type": "bool", "default": false, "exported": false, "description": "True while the host is running along a wall."},
 		"was_on_floor": {"type": "bool", "default": true, "exported": false, "description": "True if the host was on the floor on the previous frame, used to spot landings."},
 		"yaw": {"type": "float", "default": 0.0, "exported": false, "description": "Left and right look angle, in radians."},
-		"ai_controlled": {"type": "bool", "default": false, "exported": true, "description": "Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).", "attributes": {"group": "AI Driver"}},
+		"ai_controlled": {"type": "bool", "default": false, "exported": true, "description": "Takes movement from the AI move inputs instead of the keyboard when on (for AI or cutscene drivers).", "attributes": {"group": "AI Driver"}},
 		"camera_distance": {"type": "float", "default": 3.5, "exported": true, "description": "How far the camera pulls back in third person (the SpringArm3D length).", "attributes": {"group": "Camera"}},
 		"capture_mouse_on_ready": {"type": "bool", "default": true, "exported": true, "description": "Locks the mouse to the window for looking as soon as the scene starts.", "attributes": {"group": "Camera"}},
 		"third_person": {"type": "bool", "default": false, "exported": true, "description": "Starts in third-person camera when on, first-person when off.", "attributes": {"group": "Camera"}},

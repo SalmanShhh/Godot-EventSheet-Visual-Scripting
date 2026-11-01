@@ -7,14 +7,12 @@ class_name VectorShape2D
 extends Node2D
 ## The base every Vector Shape node extends: one quad, one distance-field canvas shader, and the rows that drive them - thickness with its unit, colours, fills, dashes and the pick tests. Add a Line, Disc, Rect, Polygon, Polyline, Triangle or Regular Polygon from the Create Node dialog rather than this.
 
-# One shader file per blend mode, all
-# including one body: a blend is a `render_mode`, decided when a shader compiles, so it cannot be a
-# uniform and "the same drawing, blended differently" is one file each.
+# There is one shader file per blend mode, all of them including one shared body: a blend is a
+# `render_mode`, decided when a shader compiles, so it cannot be a uniform and "the same drawing, blended differently" is one file each.
 ## Where the pack's own shaders live once it is installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/vector_shapes/"
 
-# These are the five
-# blends a canvas shader can express by itself. The ones that read the screen back belong to the
+# A canvas shader can express five blends by itself. The ones that read the screen back belong to the
 # Blend Modes pack, which replaces an item's material - and a shape owns its material, so the guide
 # says to put such a shape under a blended parent instead of fighting over the slot.
 ## The blend words a row and the Inspector offer, and the file each one is.
@@ -74,7 +72,7 @@ var _tether_b: Node2D = null
 var _tether_seen: PackedVector2Array = PackedVector2Array()
 
 # How far a followed cursor is snapped, in pixels, and -1 when the shape is not following one.
-## Distance along the line the cursor snaps to; -1 for none.
+## Grid size, in pixels, the followed pointer snaps to; 0 is no snapping and -1 is not following.
 var _cursor_snap: float = -1.0
 
 # What is left of a Show For, in seconds. Zero is nothing counting down.

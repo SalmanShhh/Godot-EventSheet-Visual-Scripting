@@ -48,9 +48,9 @@ func _ui(control_name: String) -> Node:
 	if found != null:
 		ui_cache[control_name] = found
 	return found
-# The bars whose underlay is behind them right now, and the ones that turned out to be gone.
-# Two lists made once and reused, because the tick below may not write the book it is walking.
-## Names of lag bars currently showing recently lost value.
+# The bars that turned out to be gone this tick, named here and dropped afterwards.
+# The list is made once and reused, because the tick below may not write the book it is walking.
+## Names of lag bars whose control was not found on this tick, dropped when it ends.
 var _lag_lost: PackedStringArray = PackedStringArray()
 
 func _ready() -> void:

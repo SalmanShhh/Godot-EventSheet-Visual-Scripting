@@ -27,15 +27,12 @@ var settings_node: Object = null
 ## @ace_name("On Mod Loaded")
 signal mod_loaded(loaded_name: String, loaded_version: String)
 
-## Fires once per mod that did NOT load, with the reason in plain words - it carries code and the
-## row asked for data only, its files could not be read, there is no mod at that path, or it is a
-## pack file and something asked to unload it. Mod Name and Mod Reason answer about it.
+## Fires once per mod that did NOT load, with the reason in plain words. Mod Name and Mod Reason answer about it.
 ## @ace_trigger
 ## @ace_name("On Mod Refused")
 signal mod_refused(refused_name: String, reason: String)
 
-## Fires once after anything changes what is loaded or what is switched on - the moment a mod list
-## on the options screen should be redrawn.
+## Fires once after anything changes what is loaded or switched on - the moment a mod list should be redrawn.
 ## @ace_trigger
 ## @ace_name("On Mods Changed")
 signal mods_changed()
@@ -71,14 +68,14 @@ const SHADER_TYPE_TAIL: String = "Shader"
 ## Resource type name of a shader include file.
 const SHADER_INCLUDE_TYPE: String = "ShaderInclude"
 
-# A file with one of these names is not code by its name, and it may carry code
+# A file with a resource extension is not code by its name, and it may carry code
 # all the same - a scene holding a script written inside it, a node property whose value the engine
 # resolves by loading a path or by compiling source carried in the file, a resource naming a
 # script beside it. Godot builds all of that the moment the file is loaded, so a mod carrying one
-# runs a stranger's code while every file in it is called data. These are therefore READ rather
+# runs a stranger's code while every file in it is called data. Such files are therefore READ rather
 # than merely named, which is the difference between the tier's promise and its name.
 #
-# THE LIST IS THE ENGINE'S OWN, ASKED AT RUN TIME. Godot recognises a couple of dozen of these -
+# THE LIST IS THE ENGINE'S OWN, ASKED AT RUN TIME. Godot recognises a couple of dozen resource extensions -
 # `.material`, `.mesh`, `.theme`, `.shape`, `.stylebox`, `.translation` beside the familiar four -
 # and a list typed out here is a hole shaped exactly like whichever ones it forgot: a
 # StandardMaterial3D saved as `evil.material` with a script set on it, named by a scene the mod
@@ -89,21 +86,22 @@ const SHADER_INCLUDE_TYPE: String = "ShaderInclude"
 ## Every extension the engine reads as a RESOURCE TABLE: a scene or a resource, saved as text or in the binary form.
 var _resource_extension_cache: PackedStringArray = PackedStringArray()
 
-# A file that begins with neither is
+# A file that begins with neither head is
 # the binary form, or something else entirely, and its table cannot be read as text at all - an
 # unreadable file is not a file that has been cleared.
 ## The two heads a resource table written as TEXT begins with.
 const RESOURCE_HEADS: Array[String] = ["[gd_scene", "[gd_resource"]
 
-# Read as a tail rather than as a list, because a
-# script type this reading has never heard of is exactly the one a crafted file would name.
-## The two tags a resource table names other resources with, and the tail every script type's name ends in - `Script`, `GDScript`, `CSharpScript`.
+# The tail is read as a tail rather than as a list, because a script type this reading has never
+# heard of is exactly the one a crafted file would name: `Script`, `GDScript` and `CSharpScript`
+# all end in it.
+## The two tags a resource table names other resources with.
 const RESOURCE_TAGS: Array[String] = ["ext_resource", "sub_resource"]
 ## Ending of a resource type name that marks it as a script.
 const SCRIPT_TYPE_TAIL: String = "Script"
 
-# A
-# body line carries no tag at all: `script = Resource("user://payload.gd")` is a property the
+# The two constructors below are how a
+# body line can build something without carrying a tag at all: `script = Resource("user://payload.gd")` is a property the
 # engine resolves by loading that path, and `script = Object(GDScript,"script/source":"...")` is
 # one it resolves by compiling the source carried in the line. `ExtResource(` and `SubResource(`
 # are the honest pair and are deliberately not here - each names an entry in the file's own table,
@@ -112,11 +110,11 @@ const SCRIPT_TYPE_TAIL: String = "Script"
 ## The two constructors a resource file's own VALUES may be written with that BUILD something.
 const BUILDING_MAKERS: Array[String] = ["Object(", "Resource("]
 
-# Godot's saver writes no escape into a tag while its parser decodes every escape it
-# finds in one, so a type spelled with an escape in the middle of it is `GDScript` to the engine
+# The next two constants guard two spellings. Godot's saver writes no escape into a tag while its
+# parser decodes every escape it finds in one, so a type spelled with an escape in the middle of it is `GDScript` to the engine
 # and something else to a reading that compares the letters as written. And `res://../payload.gd`
 # begins with `res://` and names a file beside the project. Neither is second-guessed.
-## The one glyph a resource tag may not carry, and the one spelling a path may climb out of a folder with.
+## The backslash, which a resource tag may not carry because Godot's parser would decode it into a different type name.
 const ESCAPE_GLYPH: String = "\\"
 ## Path part that climbs out of a folder; refused so a mod cannot reach outside its own folder.
 const CLIMB_OUT: String = ".."
@@ -127,33 +125,32 @@ const PACK_MAGIC: int = 0x43504447
 ## Newest pack format this reader understands; higher numbers are refused.
 const PACK_FORMAT_MAX: int = 4
 
-# An encrypted DIRECTORY cannot be read without the
+# Two bits of a pack's own flags word. An encrypted DIRECTORY cannot be read without the
 # game's key, so its file list is not a list this row has. `relative` says every file's place is
 # measured from the base the header gives rather than from the front of the file - which is how
 # the engine writes a pack today, and taking the places as written finds the wrong bytes.
-## The two bits a pack's own flags word may set.
+## Flag bit set when the pack's file list is encrypted, so it cannot be read without the game's key.
 const PACK_DIRECTORY_ENCRYPTED: int = 1
-## How many leading path parts mark a pack's places as relative to the pack.
+## Flag bit set when every file's place is measured from the base the header gives.
 const PACK_PLACES_ARE_RELATIVE: int = 2
 
-# Both are read here, because a pack a player downloads was written by whichever engine
+# Both pack formats are read here, because a pack a player downloads was written by whichever engine
 # the game that made it shipped with.
-## First pack format that keeps its file list near the end.
+## First pack format that writes its file list near the end, with paths lacking the res:// prefix.
 const PACK_FORMAT_WITH_DIRECTORY: int = 4
 
 ## Flag bit set on a pack file that was encrypted by the exporter.
 const PACK_ENTRY_ENCRYPTED: int = 1
 
-# Both are stated rather than felt: a mod is somebody else's folder, so the walk that decides
+# Both limits are stated rather than felt: a mod is somebody else's folder, so the walk that decides
 # whether it may be taken needs an end - and a walk that ENDED EARLY has cleared nothing it did not
 # reach, which is why hitting either limit refuses the mod instead of passing it.
-## How deep a mod's own folders are walked, and how many of its files are listed, before the walk stops.
+## Deepest level of a mod's own folders the walk goes into before it stops.
 const MOST_FOLDER_DEPTH: int = 16
 ## Most files read from one mod folder before it is cut off.
 const MOST_FOLDER_FILES: int = 20000
 
-# Read by the caller immediately after
-# the walk, because "everything in the folder" and "as much of it as fits" are different answers to
+# Read by the caller immediately after the walk, because "everything in the folder" and "as much of it as fits" are different answers to
 # the question the tier asks.
 ## Whether the last folder walk stopped at one of those limits.
 var _folder_was_truncated: bool = false
@@ -546,7 +543,7 @@ func _names_code(place: String) -> bool:
 	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in CODE_EXTENSIONS
 
 
-## And true when it is a SHADER by its own extension, for the same reason.
+## True when a path is a SHADER by its own extension, for the same reason.
 ## @ace_hidden
 func _names_shader(place: String) -> bool:
 	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in SHADER_EXTENSIONS
@@ -622,7 +619,7 @@ func _code_in(paths: PackedStringArray) -> PackedStringArray:
 	return carried
 
 
-## And the shader files in it, kept apart from the code files so the refusal can say which of the
+## The shader files in a list of paths, kept apart from the code files so the refusal can say which of the
 ## two a mod was refused for. Both are code; only one of them can reach the player's machine.
 ## @ace_hidden
 func _shaders_in(paths: PackedStringArray) -> PackedStringArray:

@@ -1638,8 +1638,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Mod Loaded** (`loaded_name: String, loaded_version: String`) - Fires once per mod that loaded, in load order. Mod Name and Mod Version answer about it.
-- **On Mod Refused** (`refused_name: String, reason: String`) - Fires once per mod that did NOT load, with the reason in plain words - it carries code and the row asked for data only, its files could not be read, there is no mod at that path, or it is a pack file and something asked to unload it. Mod Name and Mod Reason answer about it.
-- **On Mods Changed** - Fires once after anything changes what is loaded or what is switched on - the moment a mod list on the options screen should be redrawn.
+- **On Mod Refused** (`refused_name: String, reason: String`) - Fires once per mod that did NOT load, with the reason in plain words. Mod Name and Mod Reason answer about it.
+- **On Mods Changed** - Fires once after anything changes what is loaded or switched on - the moment a mod list should be redrawn.
 
 #### Conditions
 - **Mod Is Loaded** (`wanted: String`) - Whether a mod of that name is loaded right now - the check in front of using what it brought.

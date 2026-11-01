@@ -54,7 +54,7 @@ var _buffs: Dictionary = {}
 ## Base value of each stat before any buff.
 var _bases: Dictionary = {}
 # rule id -> {stat, value, direction, repeating, armed}
-## Rules that combine buffs into a stat, by stat name.
+## Threshold rules by id, each watching one stat's total for a crossing.
 var _rules: Dictionary = {}
 ## Each stat's total as of the last change, used to spot what changed.
 var _last_totals: Dictionary = {}

@@ -68,21 +68,21 @@ signal moment_finished(moment_name: String, cut_short: bool)
 @export_range(0.05, 1.0, 0.05) var min_zoom: float = 0.2
 ## Clamp: the most zoomed-IN the camera may go.
 @export_range(1.0, 16.0, 0.5) var max_zoom: float = 5.0
-## Slowmo: how the slow-down ramps IN (curve + direction).
+## Slowmo: the curve shape the slow-down ramps IN along.
 @export_enum("linear", "sine", "quad", "cubic", "expo", "circ", "back") var slowmo_fade_in_trans: String = "sine"
 ## Slowmo: which direction the fade-IN curve eases (in / out / in-out / out-in).
 @export_enum("in", "out", "in_out", "out_in") var slowmo_fade_in_ease: String = "out"
-## Slowmo: how time ramps back OUT to normal.
+## Slowmo: the curve shape time ramps back OUT to normal along.
 @export_enum("linear", "sine", "quad", "cubic", "expo", "circ", "back") var slowmo_fade_out_trans: String = "sine"
 ## Slowmo: which direction the fade-OUT curve eases back to normal speed (in / out / in-out / out-in).
 @export_enum("in", "out", "in_out", "out_in") var slowmo_fade_out_ease: String = "in"
-## Slowmo: seconds spent fading in / out (the ramp lengths, separate from the HOLD).
+## Slowmo: seconds spent easing IN to the slow speed (separate from the HOLD).
 @export_range(0.0, 2.0, 0.05) var slowmo_fade_in_secs: float = 0.15
 ## Slowmo: seconds spent easing back OUT to normal speed (separate from the HOLD).
 @export_range(0.0, 2.0, 0.05) var slowmo_fade_out_secs: float = 0.35
-## Spring Squash: stiffness + damping of the spring-back (lower damping = bouncier).
+## Spring Squash: how hard the spring pulls the scale back to rest; higher snaps back faster.
 @export_range(1.0, 1000.0, 1.0) var squash_stiffness: float = 250.0
-## Spring Squash: how quickly the spring-back settles (lower = bouncier, higher = calmer).
+## Spring Squash: share of the spring speed lost each second, 0 to 1; lower is bouncier.
 @export_range(0.0, 1.0, 0.01) var squash_damping: float = 0.6
 ## How fast a Recoil kick returns to centre, in pixels per second.
 @export_range(10.0, 2000.0, 5.0) var recoil_recovery: float = 140.0
@@ -330,7 +330,7 @@ var _chroma_shake_elapsed: float = 0.0
 ## True while the colour-fringe shake is held at full strength.
 var _chroma_shake_hold: bool = false
 # The direction in degrees, or below zero for a direction that wanders with the noise.
-## Direction of the fringe in radians; -1 picks a random one.
+## Direction of the fringe in degrees; below 0 lets it wander with the noise.
 var _chroma_shake_angle: float = -1.0
 # The noise clock, advanced by delta so the wander rides the game's own time - and advanced
 # ALREADY SCALED BY THE RATE, which is what lets the rate change mid-shake. Keeping a raw clock
@@ -344,15 +344,15 @@ var _chroma_shake_active: bool = false
 
 # --- Moments: one felt beat of the game, played from a file ---
 
-# They are ordinary files - retune them in the Inspector, rename them,
+# The starter moments are ordinary files - retune them in the Inspector, rename them,
 # duplicate them, delete them, or leave them where they are and point Define Moment at your own.
 ## Where the starter moments ship: beside the pack itself, so Moment "impact" finds impact.tres with nothing set up at all.
 const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
 
-# Looked in FIRST, so a project moment called
+# This folder is looked in FIRST, so a project moment called
 # impact is the one that plays, and the folder above stays what it is - a pack folder the
 # builders regenerate. A game with no such folder never notices it.
-## And where a game keeps the beats it wrote ITSELF.
+## Where a game keeps the moments it wrote itself.
 const PROJECT_MOMENT_DIRECTORY: String = "res://moments/"
 
 # A player who has asked for
@@ -365,7 +365,7 @@ const PROJECT_MOMENT_DIRECTORY: String = "res://moments/"
 # sheet is held to the same ceiling as one kept in a file and a game that changes its mind about
 # the number should change it once. They are still named here so a game reading this pack finds
 # them where it always did.
-## THE ACCESSIBILITY CEILING, the same one the post stack holds itself to.
+## Highest amount a flash in a moment may reach, 0 to 1, the same ceiling the post stack holds itself to.
 const MOMENT_FLASH_CEILING: float = MomentRunner.FLASH_CEILING
 ## Shortest a flash in a moment may last, in seconds.
 const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS
@@ -377,8 +377,7 @@ const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS
 const MOMENT_VERBS: PackedStringArray = ["shake", "hitstop", "slowmo", "flash", "punch", "zoom",
 	"shockwave", "chromatic", "pulse", "hold"]
 
-# Only
-# these are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,
+# Only the amplitude words are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,
 # a slowmo's time scale and a zoom's percentage are numbers of a different kind, and doubling one of
 # those would not mean twice as much of anything.
 #
@@ -393,27 +392,27 @@ const MOMENT_AMPLITUDE_VERBS: PackedStringArray = MomentRunner.AMPLITUDE_VERBS
 ## Moments defined by name, shared by every juice node in the game.
 static var _moments: Dictionary = {}
 
-# Asking a group is a
+# Asking the tree for a group is a
 # dictionary read, so a game that has no post stack at all pays nothing to be told so again.
 ## Group the screen effects layer joins so moments can find it.
 const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 
-# Only a found layer is remembered:
+# The post stack layer is looked up lazily, and only a found layer is remembered:
 # a game whose post stack arrives after the first beat has played - a level that adds its own
 # effects, a pause screen built on demand - would otherwise be missed for ever, and every later
 # moment would quietly fall back to this pack's own overlay.
 ## The Screen FX layer this game has, once one has been FOUND.
 var _moment_screen: CanvasLayer = null
 
-# Once per scene rather than once per step: a moment that plays on
+# The missing-post-stack warning is said once per scene rather than once per step: a moment that plays on
 # every hit would otherwise write the same sentence sixty times a second, which is how a warning
 # stops being read at all.
-## Whether this behaviour has already said that a step wanted the post stack and this game has none, and WHICH SCENE it said it in.
+## Whether the missing post stack has already been mentioned in the current scene.
 var _moment_told_screen: bool = false
-## Scene a moment was last announced for, so it is announced once.
+## Scene in which the missing post stack was last mentioned, so it is said once per scene.
 var _moment_told_scene: Node = null
 
-# Set Moment Strength writes it, and Play Moment At multiplies by it before the distance is paid
+# The strength scale: Set Moment Strength writes it, and Play Moment At multiplies by it before the distance is paid
 # for - so a scene that wants its feel turned down, or a boss fight that wants it turned up, has
 # ONE number to set rather than a strength on every row. It starts at 1, which is the moment as
 # its file was written.
@@ -470,7 +469,7 @@ func _moment_screen_fx() -> CanvasLayer:
 ## Every moment this node has IN THE AIR, by the name it was played under.
 var _moment_plays: Dictionary = {}
 
-# It outlives the play on purpose: Restore Moment Values is asked on the way out of a
+# The ledger outlives the play on purpose: Restore Moment Values is asked on the way out of a
 # level, long after the beat that moved something has ended.
 ## What every moment this node has played found its values at, the FIRST time it touched each one.
 var _moment_ledger: Dictionary = {}
@@ -478,7 +477,7 @@ var _moment_ledger: Dictionary = {}
 ## Whether the last play of each name finished or was ended early.
 var _moment_cut: Dictionary = {}
 
-# Kept between frames and cleared
+# This list is kept between frames and cleared
 # rather than made again, so a tick allocates nothing, and filled during the walk rather than
 # acted on, because closing a play erases it from the book the walk is reading.
 ## The names of the plays the frame just walked has ended.
@@ -500,10 +499,10 @@ const CHANNEL_SHAKE_SCREEN: String = "the screen"
 # One answer per node rather than one per
 # channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
 # and a node that wants to do two different things is two nodes.
-## This listener's answer, for every channel it is in.
+## Which target a channel shake moves: the camera, this node or the screen.
 var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
 
-## The shake a channel last asked for: amount, length, time left and the node's pose.
+## Strength of the shake a channel last asked for, which fades over its length.
 var _channel_amount: float = 0.0
 ## Total seconds of the channel effect in progress.
 var _channel_span: float = 0.0

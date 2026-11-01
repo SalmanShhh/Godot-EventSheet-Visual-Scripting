@@ -12,13 +12,13 @@ const EFFECT_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"
 ## Prefix of an effect's script name; the effect word with spaces closed up.
 const EFFECT_PREFIX: String = "post_"
 
-# They are the words the 2D post stack uses for the same
+# These five are the words the 2D post stack uses for the same
 # looks, so a row reads alike whether it is on the screen or on the camera, and a project that
 # moves from one to the other keeps its sheet.
 ## The five effects a row adds by name.
 const POST_EFFECTS: PackedStringArray = ["vignette", "desaturate", "pixelate", "tint", "fade"]
 
-# It is an ordinary stack entry under a name no Add Post
+# The outline is an ordinary stack entry under a name no Add Post
 # Effect row can mint, so Has Post Effect and Post Strength can see it with no second mechanism -
 # but it is not in the word list, because an outline with nothing marked has nothing to draw.
 ## The reserved entry the outline rows wear.
@@ -33,16 +33,16 @@ const FORWARD_PLUS: String = "forward_plus"
 # A player who has asked for no flashing gets the same rows - a pulse
 # still pulses, an outline still lands - with the amplitude held under this and the time held over
 # FLASH_FLOOR_SECONDS, so nothing the camera draws can strobe.
-## THE ACCESSIBILITY CEILING.
+## Highest strength any effect may reach while no-flashing is on, 0 to 1.
 const FLASH_CEILING: float = 0.3
 ## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
 
-# A game that has those rows needs
+# A game that already sets these two Engine meta keys needs
 # nothing else for the camera to obey them.
-## Engine meta keys holding the no-flashing and effect-strength choices.
+## Engine meta key that, when true, holds every effect under the flash ceiling and floor.
 const NO_FLASHING_META: StringName = &"no_flashing"
-## Metadata key a player sets to scale every effect.
+## Engine meta key holding a 0 to 1 dial that scales every effect's strength.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
 ## The name the mask viewport takes under this node, so a reader who opens the remote tree during a run can see what the outline is made of.
@@ -72,7 +72,7 @@ var _stack_walks: Dictionary = {}
 
 ## Mask rig built when something is first outlined and freed when nothing is.
 var _mask: SubViewport = null
-## Camera that renders the mask used by effects limited to part of the screen.
+## Camera inside the mask viewport that sees only the mask layer.
 var _mask_camera: Camera3D = null
 
 ## Meshes outlined so far, so Stop Outlining switches off only their layer bit.

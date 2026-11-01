@@ -171,7 +171,7 @@ static func _runtime_lines() -> PackedStringArray:
 		"var _swipe_angle: float = 0.0",
 		"## Length of the most recent swipe, in pixels.",
 		"var _swipe_distance: float = 0.0",
-		"## How long the most recent swipe took.",
+		"## How long the most recent swipe took, in seconds.",
 		"var _swipe_seconds: float = 0.0",
 		"## Name of the shape recognised most recently.",
 		"var _shape_name: String = \"\"",

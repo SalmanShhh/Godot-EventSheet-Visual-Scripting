@@ -16,7 +16,7 @@ signal on_spawned
 signal on_despawned
 
 # pool name -> {scene:PackedScene (or null for a custom pool), free:Array[Node], active:Array[Node]}.
-## Pools by scene path, each holding its idle nodes.
+## Pools by pool name, each with its scene and its idle and active nodes.
 var _pools: Dictionary = {}
 # Last-event context, read via the getter expressions inside On Spawned / On Despawned.
 ## The node spawned most recently.
@@ -36,7 +36,7 @@ var _last_despawned: Node = null
 # in a free list is turned back, so Despawn stays safe to run twice.
 # The nodes whose handing back is booked and has not happened yet, by instance id. Kept here rather
 # than written on the node, because a node handed out again carries every mark it was parked with.
-## Nodes taken out of pools, by instance id, so they can be returned.
+## Instance ids of nodes whose return to a pool is booked but has not happened yet.
 var _booked: Dictionary = {}
 
 # The retire runtime, when the project ships it: the file the Retire rows call, which marks a node

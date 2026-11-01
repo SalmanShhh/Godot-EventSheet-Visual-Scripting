@@ -15,7 +15,7 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("HitFlashBehavior behavior requires a CanvasItem parent.")
 
-## The name the two dials go by in hit_flash.gdshader. Named once here so a rename in the shader file is a one-line change in this one.
+## Name of the shader dial that sets the flash colour, named once so a rename in the shader file is a one-line change here.
 const COLOUR_DIAL: String = "flash_color"
 ## Name of the shader dial that sets how strongly the flash shows.
 const AMOUNT_DIAL: String = "flash_amount"

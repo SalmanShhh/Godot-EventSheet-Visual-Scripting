@@ -4,7 +4,7 @@ class_name UHTNPlanResource
 extends Resource
 ## A complete UHTN plan (utility-driven Hierarchical Task Network) as a data asset: the tasks, the methods that decompose them (ranked by utility scorers), their preconditions, and the scoring curves - all authored in Inspector grids. Drop the saved .tres onto a UHTNPlanner's Plan Resource slot.
 
-## A readable name for this plan (shown in debug output).
+## A readable name for this plan; it is handed to On Plan Loaded when the plan is loaded.
 @export_group("Identity")
 @export var plan_name: String = "plan"
 # @inspector_required

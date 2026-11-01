@@ -83,7 +83,7 @@ const TRANSITION_DIRECTORY: String = "res://eventsheet_addons/scene_flow/"
 ## Start of the file name of every transition scene.
 const TRANSITION_PREFIX: String = "transition_"
 
-# Each is one shader file with a
+# Each transition shape is one shader file with a
 # `progress` dial; the two that read the screen back - pixelate and page curl - say so in their own
 # first lines, and they only read it while a transition is actually running.
 ## The seven shapes a transition can take, by the word a row uses.
@@ -93,22 +93,22 @@ const TRANSITIONS: PackedStringArray = ["fade", "wipe", "dissolve", "iris", "bli
 ## Group every running transition joins, so Is Transitioning has one answer.
 const TRANSITION_GROUP: StringName = &"scene_flow_transition"
 
-# THE ACCESSIBILITY FLOOR. A player who has asked for no flashing gets the same transition in the
+# The accessibility floor. A player who has asked for no flashing gets the same transition in the
 # same shape, held over this many seconds - because a shape that sweeps the whole screen and back
 # in a tenth of a second is a flash whatever shape it is. This is the same floor the post stack
 # holds its walks over, read off the same Engine meta the built-in Set No Flashing row writes.
-## Shortest transition length when no flashing is requested.
+## Shortest transition length, in seconds, for a player who has asked for no flashing.
 const TRANSITION_FLASH_FLOOR_SECONDS: float = 0.4
-## Metadata key a player sets to turn flashing transitions off.
+## Engine meta key that, when true, holds every transition over the flash floor.
 const TRANSITION_NO_FLASHING_META: StringName = &"no_flashing"
 
-## Shortest a transition may be when no flashing is requested.
+## Shortest transition length, in seconds, for everyone else.
 const TRANSITION_FLOOR_SECONDS: float = 0.1
 
-# The runner
+# The transition runner
 # outlives the scene it started in, so the node it tells is whichever one is standing in the NEW
 # scene - which is exactly where a row waiting on the arrival wants to be.
-## And the group every Scene Flow node joins, so a finished transition can tell somebody.
+## Group every Scene Flow node joins, so a finished transition can tell somebody.
 const TRANSITION_LISTENERS: StringName = &"scene_flow_listener"
 ## The root-parented runner that draws a transition and swaps the scene under it. Like the fade
 ## runner above, it parents itself to the TREE ROOT rather than to the scene being replaced, so the

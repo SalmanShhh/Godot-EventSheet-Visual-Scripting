@@ -54,13 +54,13 @@ signal bounce_triggered
 @export var default_controls: bool = true
 ## Clamp inside the viewport/constraint bounds.
 @export var constrain_to_layout: bool = false
-## How much the cursor lags behind the mouse, from 0 (none) to 1.
+## How fast the cursor closes on the mouse position, from 0 (it stays put) to 1 (it snaps at once).
 var mouse_smoothing: float = 0.15
 ## True while the cursor is heading for a mouse position.
 var has_mouse_target: bool = false
 ## True while a movement input is being simulated by hand.
 var has_simulated_axis: bool = false
-## AI drive: read ai_move_x/ai_move_y instead of the ui_* actions (a sheet or AI driver flips this on to steer the cursor).
+## AI drive: read the AI move inputs instead of the ui_* actions (a sheet or AI driver flips this on to steer the cursor).
 @export var ai_controlled: bool = false
 ## Horizontal input from -1 to 1 when something other than the player drives the cursor.
 var ai_move_x: float = 0.0
@@ -76,7 +76,7 @@ var homing_mode: int = 0
 var homing_radius: float = 120.0
 ## How strongly a target pulls the cursor, from 0 to 1.
 var homing_strength: float = 0.5
-## Nodes the cursor can be pulled toward.
+## Instance ids of the nodes the cursor can be pulled toward.
 var homing_targets: Array = []
 ## True while a target is close enough to pull the cursor.
 var in_homing_range: bool = false
@@ -86,7 +86,7 @@ var nearest_homing_uid: int = -1
 var nearest_homing_dist: float = -1.0
 ## Instance id of the target the cursor has snapped onto; -1 for none.
 var homing_snapped_uid: int = -1
-## Nodes the cursor cannot move through.
+## Instance ids of the nodes the cursor cannot move through.
 var solids: Array = []
 ## Stop the cursor at solids.
 var solid_collision: bool = true
@@ -120,7 +120,7 @@ var edge_hit_prev: bool = false
 			# frame the cursor moved.
 			report_vel = Vector2.ZERO
 		set_physics_process(value)
-## Movement axis constraint.
+## Which directions the cursor moves in: up_down, left_right, four (one axis at a time) or eight.
 @export_enum("up_down", "left_right", "four", "eight") var direction_mode: int = 3
 ## Point = origin inside shape; Overlap = shapes overlap.
 @export_enum("point", "overlap") var hover_mode: int = 0
@@ -128,11 +128,11 @@ var edge_hit_prev: bool = false
 @export_enum("none", "solids", "constraints", "both") var bounce_mode: int = 0
 ## The cursor's velocity, in pixels per second.
 var vel: Vector2 = Vector2.ZERO
-## The velocity reported to rows, smoothed over recent frames.
+## The velocity rows read, in pixels per second; a teleport reports its implied velocity.
 var report_vel: Vector2 = Vector2.ZERO
 ## Movement input this frame, from -1 to 1 on each axis.
 var axis: Vector2 = Vector2.ZERO
-## Movement input set by hand.
+## Hand-fed movement input waiting for the next physics frame, then cleared.
 var simulated_axis: Vector2 = Vector2.ZERO
 ## The mouse position the cursor is heading for.
 var mouse_target: Vector2 = Vector2.ZERO

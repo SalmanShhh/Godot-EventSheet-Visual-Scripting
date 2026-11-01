@@ -15,7 +15,7 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("OutlineBehavior behavior requires a CanvasItem parent.")
 
-## The two dials outline.gdshader declares, named once so a rename there is a one-line change here.
+## Name of the shader dial that sets the outline colour.
 const COLOUR_DIAL: String = "outline_color"
 ## Name of the shader dial that sets the outline width.
 const WIDTH_DIAL: String = "outline_width"

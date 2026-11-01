@@ -113,7 +113,7 @@ const BINDINGS_SECTION: String = "bindings"
 # that something else already answers to. All three are empty except while a rebinding is open.
 ## Input action waiting for its next key press to be rebound.
 var _listening_action: String = ""
-## Device the rebinding listens to: keyboard, mouse or gamepad.
+## Device the rebinding listens to: keyboard or pad.
 var _listening_device: String = ""
 ## The input event captured for a rebind, waiting to be confirmed.
 var _pending_event: InputEvent = null
@@ -168,7 +168,7 @@ func _difficulty_named(named: Variant) -> Resource:
 const ASSIST_PAGE: String = "Accessibility"
 
 # The names declared as assists, so the trigger below can tell one from an ordinary setting.
-## Accessibility options that are switched on, by id.
+## Ids of the settings declared as accessibility assists, so the trigger can tell them apart.
 var _assists: Dictionary = {}
 
 ## @ace_action

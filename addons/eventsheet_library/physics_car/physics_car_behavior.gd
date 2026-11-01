@@ -36,7 +36,7 @@ signal on_drive_target_reached
 @export var reverse_max_speed: float = 180.0
 ## Reverse push strength.
 @export var reverse_acceleration: float = 900.0
-## Braking strength. Braking force applied at full brake.
+## Braking force applied at full brake.
 @export var brake_force: float = 2800.0
 ## Coasting drag when you are off the throttle (higher = slows sooner).
 @export_range(0.0, 4.0, 0.05) var coast_drag: float = 0.4

@@ -22,11 +22,11 @@ static func build() -> bool:
 	sheet.addon_category = "Idle Generator"
 	sheet.addon_tags = PackedStringArray(["incremental", "idle", "economy"])
 	sheet.variables = {
-		"base_cost": {"type": "float", "default": 10.0, "exported": true, "attributes": {"tooltip": "Cost of the FIRST unit. Each further unit costs cost_growth times more."}},
+		"base_cost": {"type": "float", "default": 10.0, "exported": true, "attributes": {"tooltip": "Price of the first unit; each further unit costs the cost growth times more than the one before."}},
 		"cost_growth": {"type": "float", "default": 1.15, "exported": true, "attributes": {"tooltip": "How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price."}},
 		"base_output": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "Output of ONE unit - per second in continuous mode, or per cycle when Cycle Time > 0."}},
 		"output_multiplier": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier."}},
-		"_cycle_progress": {"type": "float", "default": 0.0, "exported": false, "description": "How far through the current production cycle the generator is, from 0 to 1."},
+		"_cycle_progress": {"type": "float", "default": 0.0, "exported": false, "description": "Seconds of the current production cycle already elapsed, from 0 up to the cycle time."},
 		"_pending": {"type": "float", "default": 0.0, "exported": false, "description": "Output produced but not yet collected."},
 		"last_spent": {"type": "float", "default": 0.0, "exported": false, "description": "Amount spent by the most recent purchase."},
 		"last_bought": {"type": "int", "default": 0, "exported": false, "description": "How many were bought in the most recent purchase."},

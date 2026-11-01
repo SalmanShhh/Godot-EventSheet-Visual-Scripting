@@ -33,13 +33,13 @@ signal reload_completed
 @export var current_ammo: int = 12
 ## Spare rounds a reload draws from.
 @export var reserve_ammo: int = 96
-## Shots per second (the cooldown between shots is 1 / fire_rate).
+## Shots per second; the cooldown between shots is one divided by this.
 @export var fire_rate: float = 8.0
 ## Seconds a reload takes.
 @export var reload_time: float = 1.2
 ## 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
 @export var fire_mode: int = 0
-## Shots per burst when fire_mode = 2.
+## Shots fired in one burst when the fire mode is 2 (burst).
 @export var burst_count: int = 3
 ## Reload automatically when the magazine runs dry.
 @export var auto_reload: bool = true

@@ -34,7 +34,7 @@ static func build() -> bool:
 		"@export var default_controls: bool = true",
 		"## Safety cap: the most tiles a single slide may cross (stops a runaway slide on an open map).",
 		"@export_range(1, 512, 1) var max_slide_tiles: int = 64",
-		"## AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer).",
+		"## AI drive: read the AI move inputs instead of the arrow keys (a sheet or AI driver flips this on to steer).",
 		"@export var ai_controlled: bool = false",
 		"",
 		"# --- Internal state ---",

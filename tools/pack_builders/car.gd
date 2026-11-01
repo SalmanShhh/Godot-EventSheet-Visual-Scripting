@@ -17,7 +17,7 @@ static func build() -> bool:
 		"_drifting": {"type": "bool", "default": false, "exported": false, "description": "True while the car's heading and travel direction differ enough to count as a drift."},
 		"acceleration": {"type": "float", "default": 300.0, "exported": true, "description": "How fast speed builds while on the throttle, in pixels per second squared."},
 		"ai_controlled": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "AI drive: read ai_throttle_axis/ai_steer_axis instead of the keyboard (a sheet or AI driver flips this on to steer)."}},
+			"attributes": {"tooltip": "AI drive: take throttle and steering from the AI inputs instead of the keyboard (a sheet or AI driver flips this on)."}},
 		"ai_steer_axis": {"type": "float", "default": 0.0, "exported": false, "description": "Steering from -1 (left) to 1 (right) when something other than the player drives the car."},
 		"ai_throttle_axis": {"type": "float", "default": 0.0, "exported": false, "description": "Throttle from -1 (reverse) to 1 (full) when something other than the player drives the car."},
 		"deceleration": {"type": "float", "default": 400.0, "exported": true, "description": "How fast the car coasts back to a stop when off the throttle, in pixels per second squared."},

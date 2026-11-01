@@ -28,7 +28,7 @@ var center_y: float = 0.0
 @export var offset_angle_degrees: float = 0.0
 ## Orbit radius on the primary axis, in pixels.
 @export var primary_radius: float = 100.0
-## Orbit radius on the second axis, in pixels; 0 makes a circle from primary_radius.
+## Orbit radius on the second axis, in pixels; 0 makes a circle from the primary radius.
 @export var secondary_radius: float = 0.0
 ## Degrees per second traveled around the orbit; negative reverses direction.
 @export var speed_degrees: float = 90.0

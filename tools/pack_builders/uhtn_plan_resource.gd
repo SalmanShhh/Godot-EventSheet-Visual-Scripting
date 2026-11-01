@@ -18,7 +18,7 @@ static func build() -> bool:
 	sheet.class_description = "A complete UHTN plan (utility-driven Hierarchical Task Network) as a data asset: the tasks, the methods that decompose them (ranked by utility scorers), their preconditions, and the scoring curves - all authored in Inspector grids. Drop the saved .tres onto a UHTNPlanner's Plan Resource slot."
 	sheet.variables = {
 		"plan_name": {"type": "String", "default": "plan", "exported": true,
-			"attributes": {"group": "Identity", "tooltip": "A readable name for this plan (shown in debug output)."}},
+			"attributes": {"group": "Identity", "tooltip": "A readable name for this plan; it is handed to On Plan Loaded when the plan is loaded."}},
 		"root_task": {"type": "String", "default": "", "exported": true,
 			"attributes": {"group": "Identity", "required": true,
 				"tooltip": "The goal the planner decomposes - name a compound (usually) or primitive task from the Tasks grid."}},

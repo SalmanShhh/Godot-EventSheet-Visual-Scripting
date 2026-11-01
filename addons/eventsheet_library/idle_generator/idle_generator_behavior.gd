@@ -21,7 +21,7 @@ signal on_purchased
 ## @ace_name("On Cycle Complete")
 signal on_cycle_complete
 
-## Cost of the FIRST unit. Each further unit costs cost_growth times more.
+## Price of the first unit; each further unit costs the cost growth times more than the one before.
 @export var base_cost: float = 10.0
 ## How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price.
 @export var cost_growth: float = 1.15
@@ -29,7 +29,7 @@ signal on_cycle_complete
 @export var base_output: float = 1.0
 ## A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier.
 @export var output_multiplier: float = 1.0
-## How far through the current production cycle the generator is, from 0 to 1.
+## Seconds of the current production cycle already elapsed, from 0 up to the cycle time.
 var _cycle_progress: float = 0.0
 ## Output produced but not yet collected.
 var _pending: float = 0.0

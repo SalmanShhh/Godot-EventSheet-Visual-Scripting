@@ -25,7 +25,7 @@ signal drift_recovered
 var _drifting: bool = false
 ## How fast speed builds while on the throttle, in pixels per second squared.
 @export var acceleration: float = 300.0
-## AI drive: read ai_throttle_axis/ai_steer_axis instead of the keyboard (a sheet or AI driver flips this on to steer).
+## AI drive: take throttle and steering from the AI inputs instead of the keyboard (a sheet or AI driver flips this on).
 @export var ai_controlled: bool = false
 ## Steering from -1 (left) to 1 (right) when something other than the player drives the car.
 var ai_steer_axis: float = 0.0

@@ -30,7 +30,7 @@ func _enter_tree() -> void:
 
 ## Name of the host's brightness property: energy in 2D, light_energy in 3D.
 var _brightness_property: String = ""
-# Kept rather than read off the game
+# The breath position is kept rather than read off the game
 # clock so that stopping and starting again resumes from where the wave was, and so that
 # changing Period Seconds mid-breath does not snap the light.
 ## How far into the current breath we are, in seconds.

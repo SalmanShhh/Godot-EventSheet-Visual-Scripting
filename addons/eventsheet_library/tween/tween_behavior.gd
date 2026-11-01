@@ -32,7 +32,7 @@ var _active_tween: Tween = null
 ## The curve tween in flight, kept so a second row on the same property replaces it rather than fighting it.
 var _along_tween: Tween = null
 
-# Only ever written once per property, which is what makes Tween Property Back exact however
+# Each property's starting value is only ever written once, which is what makes Tween Property Back exact however
 # many times the property has been tweened since.
 ## What a property held before the FIRST curve tween touched it, keyed by the property path.
 var _tween_starts: Dictionary = {}

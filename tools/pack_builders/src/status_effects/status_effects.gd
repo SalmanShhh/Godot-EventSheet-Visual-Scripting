@@ -45,27 +45,27 @@ var _active: Dictionary = {}
 ## What cannot land right now: the status word -> the seconds of immunity left.
 var _immune: Dictionary = {}
 
-# Both are kept because THIS IS NOT THE ONLY SCRIPT THAT WRITES modulate: an invincibility flash
+# Both colours are kept because this is not the only script that writes modulate: an invincibility flash
 # blinking the alpha while a burn is on used to be captured as the host's "own" colour and then
 # written back for good, which left the sprite half transparent for the rest of the level. So the
 # colour underneath is worked out at every re-mix by asking, channel by channel, whether what is on
 # the sprite is still what this behaviour put there.
-## The host's own colour under the tint, and the exact colour this behaviour last WROTE over it.
+## The host's own colour underneath the tint, as last worked out.
 var _base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
 ## The tint colour this behaviour last wrote to the host.
 var _tint_written: Color = Color(1.0, 1.0, 1.0, 1.0)
 ## True while this behaviour has a tint on the host.
 var _tint_applied: bool = false
 
-## Engine meta keys holding the no-flashing and effect-strength choices.
+## Engine meta key that, when true, holds every tint under the flash ceiling.
 const NO_FLASHING_META: StringName = &"no_flashing"
-## Metadata key a player sets to scale every effect.
+## Engine meta key holding a 0 to 1 dial that scales every tint's strength.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
 # A status
 # tint does not blink, but several arriving and leaving in a second is a flicker all the same, so
 # it is held to the same ceiling the screen effects use.
-## How far a tint may pull the host's colour while a player has asked for no flashing.
+## Highest tint strength allowed while no-flashing is on, 0 to 1.
 const TINT_CEILING: float = 0.3
 
 ## Tick length used when an effect asks for zero seconds.

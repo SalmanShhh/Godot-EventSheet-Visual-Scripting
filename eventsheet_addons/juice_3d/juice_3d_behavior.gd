@@ -144,10 +144,10 @@ const CHANNEL_SHAKE_SCREEN: String = "the screen"
 # One answer per node rather than one per
 # channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
 # and a node that wants to do two different things is two nodes.
-## This listener's answer, for every channel it is in.
+## Which shake target this listener answers with - the camera, this node or the screen - for every channel.
 var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
 
-## The shake a channel last asked for: amount, length, time left and the node's pose.
+## Strength of the channel shake in progress; the camera reads it as trauma from 0 to 1.
 var _channel_amount: float = 0.0
 ## Total seconds of the channel effect in progress.
 var _channel_span: float = 0.0
@@ -250,7 +250,7 @@ var _chroma_shake_elapsed: float = 0.0
 ## True while the colour-fringe shake is held at full strength.
 var _chroma_shake_hold: bool = false
 # The direction in degrees, or below zero for a direction that wanders with the noise.
-## Direction of the fringe in radians; -1 picks a random one.
+## Direction of the fringe in degrees; below 0 lets it wander with the noise.
 var _chroma_shake_angle: float = -1.0
 # The noise clock, advanced by delta so the wander rides the game's own time - and advanced
 # ALREADY SCALED BY THE RATE, which is what lets the rate change mid-shake. Keeping a raw clock

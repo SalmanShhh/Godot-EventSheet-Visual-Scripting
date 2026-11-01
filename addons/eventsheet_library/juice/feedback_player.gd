@@ -74,7 +74,7 @@ signal on_loop(loops_left: int)
 ## Most steps one play may run, loops included, before it gives up.
 const MAX_PLAY_STEPS: int = 4096
 
-## The two directions a list is walked in, and the three answers to "it is already playing".
+## Direction word: walk the list from the first card to the last.
 const TOP_TO_BOTTOM: String = "top to bottom"
 ## Direction word: walk the list from the last card to the first.
 const BOTTOM_TO_TOP: String = "bottom to top"
@@ -85,10 +85,10 @@ const IGNORE: String = "ignore"
 ## Answer to a play while already playing: start a second play alongside the first.
 const OVERLAP: String = "overlap"
 
-# Every other word is played by the
-# Juice behaviour beside it - the same call a moment file makes - so a card list and a moment file
-# are the same ten words plus timing.
-## The step words this node adds to the ten a moment file holds.
+# The seven words below are this node's own. Every other word is played by the Juice behaviour
+# beside it - the same call a moment file makes - so a card list and a moment file are the same
+# ten words plus timing.
+## Step word: stop the play here until Resume is called.
 const PAUSE: String = "pause"
 ## Step word: wait here until the named signal arrives.
 const HOLD_UNTIL: String = "hold_until"
@@ -127,7 +127,7 @@ var _last_played_at: float = -1000.0
 var _order: Array = []
 ## Index in the order of the card being played.
 var _head: int = 0
-## Strength the card being played was given, from 0 to 1.
+## Strength the current play was started at, which scales every card in it.
 var _head_strength: float = 1.0
 
 # A Skip To End does the
@@ -146,8 +146,8 @@ var _loops_left: Dictionary = {}
 var _rolls: Dictionary = {}
 ## The properties this play changed and the values to put back on Restore.
 var _restore_to: Array = []
-# Without the handle the tween goes on writing over the restored value the very next frame,
-# which is a Restore that visibly does nothing.
+# Each tween is kept by handle, because otherwise it goes on writing over the restored value the
+# very next frame, which is a Restore that visibly does nothing.
 ## The tweens this player started, so a Revert or a Restore can stop them before it puts a value back.
 var _tweens: Array[Tween] = []
 
@@ -218,7 +218,7 @@ var _muted: Dictionary = {}
 ## Labels to skip once on the next play, removed as they are used.
 var _skip_once: Dictionary = {}
 
-## Hold Here, and the label Jump To Feedback wants the head moved to at the next step.
+## True while a Hold Here is holding the play still on its current card.
 var _held: bool = false
 ## Label of the card a Jump To Feedback asked to carry on from, or empty.
 var _jump_to: String = ""

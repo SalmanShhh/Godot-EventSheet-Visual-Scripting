@@ -113,7 +113,7 @@ var wall_riding: bool = false
 var was_on_floor: bool = true
 ## Left and right look angle, in radians.
 var yaw: float = 0.0
-## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
+## Takes movement from the AI move inputs instead of the keyboard when on (for AI or cutscene drivers).
 @export_group("AI Driver")
 @export var ai_controlled: bool = false
 ## How far the camera pulls back in third person (the SpringArm3D length).

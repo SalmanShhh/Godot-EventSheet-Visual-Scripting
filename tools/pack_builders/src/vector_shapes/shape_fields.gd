@@ -21,7 +21,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 
 #region fields_style
 # @inspector_action save_as_style Save As Style
-# Empty is the usual case - the fields
+# The style slot is empty in the usual case - the fields
 # below are this shape's own. With one dropped in, every field the style speaks for is read from
 # the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
 # pattern; the button above writes the current fields out as a new style file to reuse.
@@ -190,8 +190,7 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 
 #region fields_drawing
 @export_group("Drawing")
-# These are the five blends a canvas shader can be compiled
-# for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
+# A canvas shader can be compiled for five blends; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
 # has blended, because a shape owns its own material.
 ## How the shape blends with what is behind it.
 ## @ace_hidden

@@ -40,7 +40,7 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Stroke")
-## Stroke width; the dropdown reads it in pixels, world units or screen units.
+## Stroke width, in metres (the node's own units) or in screen pixels when the unit below says so.
 ## @ace_hidden
 @export var thickness: float = 0.05:
 	set(value):

@@ -55,14 +55,11 @@ const POOL_METHOD: StringName = &"despawn"
 ## is empty again by the end of the idle moment that emptied it.
 static var _booked: Dictionary = {}
 
-## The nodes whose handing back is happening RIGHT NOW, by instance id - filled for the length of the
-## one call that gives a node to its pool and emptied again the moment that call returns.
-##
-## WHY A NODE NEEDS THIS TO BE ASKED AT ALL. A pool takes a node back by taking it out of the tree,
-## and a node cannot tell "I am being put away" from "I am being moved" or "I am being handed out
-## again" - `tree_exiting` is raised for all three, and the pool raises it on every spawn. So the one
-## thing the node cannot see for itself is written down here for the length of the handing over, and
-## `is_retiring` below is what a sheet asks instead of guessing.
+# A pool takes a node back by taking it out of the tree, and a node cannot tell "I am being put away"
+# from "I am being moved" or "I am being handed out again" - `tree_exiting` is raised for all three,
+# and the pool raises it on every spawn. So the one thing the node cannot see for itself is written
+# down here for the length of the handing over, and `is_retiring` below is what a sheet asks.
+## Nodes being handed back to their pool right now, by instance id; emptied when the call returns.
 static var _retiring: Dictionary = {}
 ## The pool a node came out of, or null when it came from anywhere else. Null covers all four ways
 ## the answer can be no: the node is not in a tree, it carries no pool mark, nothing is registered at

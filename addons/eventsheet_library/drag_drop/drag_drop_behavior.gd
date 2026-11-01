@@ -53,7 +53,7 @@ var snap_positions: Array = []
 var snap_uids: Array[int] = []
 ## How close the host must be to a snap point to be pulled in, in pixels.
 var snap_radius: float = 0.0
-## How snapping works: 0 off, other values pick positions or nodes.
+## Snap test: 0 snaps within the snap radius of a point, 1 snaps when the host overlaps one.
 var snap_mode: int = 0
 ## How strongly a nearby snap point pulls the host, from 0 to 1.
 var magnet_strength: float = 0.0

@@ -109,7 +109,7 @@ signal nav_graph_cleared
 @export var fallback_gravity: float = 980.0
 ## Off = the agent freezes with its route, graph and settings kept, and route requests are ignored until it is switched back on (Set Enabled).
 @export var nav_enabled: bool = true
-## How routes are picked: balanced, shortest, safest, ground hugging or no falling.
+## How routes are picked: balanced, shortest, safest, ground hugging, no falling or walk only.
 @export_enum("balanced", "shortest", "safest", "ground_hugging", "no_falling", "walk_only") var path_strategy: String = "balanced"
 ## Drop the in-between waypoints of a straight walk so the agent walks the stretch in one leg.
 @export var smooth_paths: bool = true
@@ -163,9 +163,9 @@ var _states: Dictionary = {}
 var _tile_overrides: Dictionary = {}
 ## Tile states scanned from collision bodies (Scan Collision Bodies); they survive Regenerate.
 var _body_states: Dictionary = {}
-## A tilemap-less grid (Create Obstacle Map / Load Obstacle Map JSON): its size and origin.
+## True when the map is a tilemap-less grid made by Create Obstacle Map or Load Obstacle Map JSON.
 var _custom_grid: bool = false
-## Size of the agent in tiles when it is set by hand.
+## Width and height in tiles of the tilemap-less grid.
 var _custom_size: Vector2i = Vector2i.ZERO
 ## Where the tile grid starts, in pixels.
 var _grid_origin: Vector2 = Vector2.ZERO
@@ -213,7 +213,7 @@ var _portal_from: Vector2 = Vector2.ZERO
 var _portal_to: Vector2 = Vector2.ZERO
 ## How far through the current portal trip the host is, from 0 to 1.
 var _portal_progress: float = 0.0
-# Applied at ROUTING time (no rebuild needed when they change):
+# Hazards are applied at ROUTING time (no rebuild needed when they change):
 # deadly blocks links outright, danger multiplies their cost.
 ## World-space hazards: {"id", "kind" ("rect"/"circle"/"tracked"), "rect" or "center"/"radius" or "node"/"radius", "deadly"}.
 var _hazards: Array = []
@@ -270,7 +270,7 @@ var _pending_goal_mode: String = "nearest"
 var _patrolling: bool = false
 ## The two points the host patrols between.
 var _patrol_ends: Array = []
-## Which end the host is heading for.
+## Walking direction: 1 toward the second end, -1 toward the first, 0 when not patrolling.
 var _patrol_dir: int = 0
 ## Seconds the host rests at each end.
 var _patrol_dwell: float = 0.0
@@ -293,9 +293,9 @@ var _side_request: Dictionary = {}
 ## Which side of the target the host arrived on: -1 left, 1 right, 0 none.
 var _reached_side: int = 0
 # Idle separation: time spent trying, and the rest after giving up.
-## Seconds until the host next checks whether it crowds a neighbour.
+## Seconds the host has spent trying to separate from a neighbour.
 var _separation_clock: float = 0.0
-## Seconds to wait before nudging away again.
+## Seconds still to rest after giving up on separating.
 var _separation_rest: float = 0.0
 ## True while the host is stepping away from a neighbour.
 var _separating: bool = false
@@ -311,13 +311,13 @@ static var _shared_tick_id: int = -1
 ## Routes searched so far this frame by all agents.
 static var _shared_paths_this_tick: int = 0
 # Every agent that has routed or ticked (instance id -> true), for crowd, avoidance and spacing.
-## Ids handed out to agents, by instance, shared by all agents.
+## Instance ids of every agent that has routed or ticked, shared by all agents.
 static var _agent_ids: Dictionary = {}
 # Crowd arrivals: "<map key>|<cell>" -> the instance id of the agent that claimed that goal.
 ## Goal spots claimed by agents, so two do not pick the same one.
 static var _goal_claims: Dictionary = {}
 # Map tags: tag -> the shared graph, obstacle edits, portals, hazards and platforms.
-## Search graphs built for each tile map, shared between agents.
+## Shared graph, obstacle edits, portals, hazards and platforms for each map tag.
 static var _shared_maps: Dictionary = {}
 
 ## The cell a world position falls in. Tree-safe: outside a scene tree (tools, tests) the

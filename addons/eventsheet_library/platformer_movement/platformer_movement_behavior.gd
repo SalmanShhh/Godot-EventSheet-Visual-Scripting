@@ -44,7 +44,7 @@ var _wall_sliding: bool = false
 var _was_on_floor: bool = false
 ## How fast you reach top speed when pressing a direction.
 @export var acceleration: float = 1500.0
-## AI drive: read ai_move_axis instead of the keyboard (the Platformer Pathfinding behavior flips this on to steer).
+## AI drive: read the AI move input instead of the keyboard (the Platformer Pathfinding behavior flips this on to steer).
 @export var ai_controlled: bool = false
 ## Horizontal input from -1 to 1 when something other than the player drives the host.
 var ai_move_axis: float = 0.0
@@ -56,7 +56,7 @@ var ai_move_axis: float = 0.0
 @export var enable_wall_jump: bool = false
 ## Cling and slow your fall when pressing into a wall.
 @export var enable_wall_slide: bool = false
-## Downward acceleration (px/s²).
+## Downward acceleration, in pixels per second squared.
 @export var gravity: float = 980.0
 ## Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right). Rotates the whole movement frame: floor detection, running, and jumps follow.
 @export_range(0, 360, 1) var gravity_angle: float = 90.0

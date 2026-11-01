@@ -32,7 +32,7 @@ static func build() -> bool:
 		"snap_positions": {"type": "Array", "default": [], "exported": false, "description": "Positions the host can snap to."},
 		"snap_uids": {"type": "Array[int]", "default": [], "exported": false, "description": "Instance ids of nodes the host can snap to."},
 		"snap_radius": {"type": "float", "default": 0.0, "exported": false, "description": "How close the host must be to a snap point to be pulled in, in pixels."},
-		"snap_mode": {"type": "int", "default": 0, "exported": false, "description": "How snapping works: 0 off, other values pick positions or nodes."},
+		"snap_mode": {"type": "int", "default": 0, "exported": false, "description": "Snap test: 0 snaps within the snap radius of a point, 1 snaps when the host overlaps one."},
 		"magnet_strength": {"type": "float", "default": 0.0, "exported": false, "description": "How strongly a nearby snap point pulls the host, from 0 to 1."},
 		"is_snapping_flag": {"type": "bool", "default": false, "exported": false, "description": "True while the host is held on a snap point."},
 		"snapped_uid": {"type": "int", "default": -1, "exported": false, "description": "Instance id of the node the host is snapped to, or -1."},

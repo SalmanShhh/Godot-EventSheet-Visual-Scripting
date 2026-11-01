@@ -18,7 +18,7 @@ func _enter_tree() -> void:
 ## @ace_name("On Step Finished")
 signal step_finished
 
-## AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer).
+## AI drive: read the AI move inputs instead of the arrow keys (a sheet or AI driver flips this on to steer).
 @export var ai_controlled: bool = false
 ## Horizontal input from -1 to 1 when something other than the player drives the host.
 var ai_move_x: float = 0.0

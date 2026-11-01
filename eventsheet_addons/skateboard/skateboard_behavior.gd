@@ -66,9 +66,9 @@ var _zipline: bool = false
 @export var balance_steer: float = 1.6
 ## How far out balance has to be before Is Losing Balance says yes. 1 is the bail.
 @export_range(0, 1, 0.05) var balance_warn: float = 0.6
-## Rolling friction on the ground (px/s²). Low, because a board coasts.
+## Rolling friction on the ground (px/s squared). Low, because a board coasts.
 @export var friction: float = 60.0
-## Downward acceleration (px/s²). Roll With The Slope projects this along the floor.
+## Downward acceleration (px/s squared). Roll With The Slope projects this along the floor.
 @export var gravity: float = 980.0
 ## Default speed along a rail (px/s) when a grind is not keeping your momentum.
 @export var grind_speed: float = 320.0
@@ -80,7 +80,7 @@ var _zipline: bool = false
 @export var max_fall_speed: float = 1200.0
 ## The fastest a push will take you (px/s). A slope can still carry you past it.
 @export var max_speed: float = 600.0
-## Upward speed an ollie gives you (px/s).
+## Not read by anything yet: the Ollie action takes its own strength, so this value is currently unused.
 @export var ollie_speed: float = 420.0
 ## How much speed one push adds toward the top speed (px/s). A board keeps it - there is no per-tick acceleration here.
 @export var push_speed: float = 40.0

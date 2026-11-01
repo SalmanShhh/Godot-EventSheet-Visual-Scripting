@@ -41,9 +41,9 @@ const SILENT_LEVEL: float = 0.0001
 ## The two players, built on ready.
 var _decks: Array[AudioStreamPlayer] = []
 
-## Loudness of each deck now and its target, from 0 to 1.
+## Loudness of each deck right now, from 0 to 1.
 var _levels: Array[float] = [0.0, 0.0]
-## Volume each of the two decks is fading toward, in decibels.
+## Level each of the two decks is fading toward, from 0 to 1.
 var _level_targets: Array[float] = [0.0, 0.0]
 
 ## How fast a level walks, as full range per second. 0 means the last change was instant and there is nothing to walk.
@@ -55,27 +55,27 @@ var _front: int = 0
 ## What each deck is playing, by name. Empty is an idle deck, which is what Is Playing and Current Track read.
 var _deck_tracks: Array[String] = ["", ""]
 
-# Typed Resource rather than
+# The track is typed Resource rather than
 # MusicTrackResource so this pack still parses in a project that installed it without the track
 # resource beside it - every field is read by name.
 ## The track resource the front deck is playing, or null.
 var _track: Resource = null
 
-# Read from the track when one starts, and overridable by Set Tempo
+# The tempo is read from the track when one starts, and overridable by Set Tempo
 # for a track whose file does not carry it.
-## The tempo the beat is counted at: beats per minute, and the offset in seconds from the start of the stream to the first beat.
+## The tempo the beat is counted at, in beats per minute.
 var _bpm: float = 120.0
 ## Seconds the beat grid is shifted from the start of the track.
 var _beat_offset: float = 0.0
 
-## Last whole beat and bar triggered, so each fires once.
+## Number of the last whole beat that fired, so each beat fires once.
 var _last_beat: int = -1
 ## Bar number last announced, used to fire On Bar once per bar.
 var _last_bar: int = -1
 
-## Duck volume now, its target, its speed and how long it holds.
+## Decibels the music is ducked down by right now; 0 means not ducked.
 var _duck_db: float = 0.0
-## Volume the music is being ducked down to, in decibels.
+## Decibel offset the duck is heading toward; 0 means no duck.
 var _duck_target_db: float = 0.0
 ## How fast the duck is applied, in decibels per second.
 var _duck_rate: float = 0.0
@@ -84,7 +84,7 @@ var _duck_hold: float = 0.0
 ## Seconds the duck takes to fade back up.
 var _duck_release: float = 0.4
 
-# Nothing, usually - but a stinger that
+# A held duck usually comes back up to nothing - but a stinger that
 # lands over a line of dialogue interrupted a duck that is still wanted, and coming back up to full
 # there would raise the music over the voice it was ducked under. So the stinger writes down what it
 # found and the hold hands the music back to it.
@@ -97,11 +97,11 @@ var _duck_return_db: float = 0.0
 ## The tracks that have been started this session, by the name each answered to.
 var _heard: Dictionary = {}
 
-## Level of each named layer now, its target and its speed.
+## Level of each named layer right now, from 0 to 1, by layer name.
 var _layer_levels: Dictionary = {}
-## Volume each layer is fading toward, by layer name.
+## Level each layer is fading toward, from 0 to 1, by layer name.
 var _layer_targets: Dictionary = {}
-## How fast each layer is fading, by layer name.
+## How fast each layer's level changes, in full range per second, by layer name.
 var _layer_rates: Dictionary = {}
 
 ## Layer names of the playing stream, in the order built.

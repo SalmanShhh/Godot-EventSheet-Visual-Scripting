@@ -8,7 +8,7 @@ extends VectorShape2D
 ## A closed outline through points you drag in the viewport, filled or hollow, with a border of its own.
 
 # @inspector_action save_as_style Save As Style
-# Empty is the usual case - the fields
+# The style slot is empty in the usual case - the fields
 # below are this shape's own. With one dropped in, every field the style speaks for is read from
 # the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
 # pattern; the button above writes the current fields out as a new style file to reuse.
@@ -27,7 +27,7 @@ extends VectorShape2D
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polygon")
-# Each one is a handle in the 2D viewport while the
+# Every point is a handle in the 2D viewport while the
 # node is selected. Past thirty-two points this is Godot's own Polygon2D's job, and the extra
 # points are left undrawn rather than silently thinned.
 ## Corner points of the shape, in the node's own coordinates.
@@ -122,8 +122,7 @@ extends VectorShape2D
 		shape_changed()
 
 @export_group("Drawing")
-# These are the five blends a canvas shader can be compiled
-# for; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
+# A canvas shader can be compiled for five blends; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
 # has blended, because a shape owns its own material.
 ## How the shape blends with what is behind it.
 ## @ace_hidden

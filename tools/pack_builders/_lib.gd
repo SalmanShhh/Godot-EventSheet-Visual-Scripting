@@ -549,7 +549,7 @@ static func juice_chroma_shake_lines() -> PackedStringArray:
 		"## True while the colour-fringe shake is held at full strength.",
 		"var _chroma_shake_hold: bool = false",
 		"# The direction in degrees, or below zero for a direction that wanders with the noise.",
-		"## Direction of the fringe in radians; -1 picks a random one.",
+		"## Direction of the fringe in degrees; below 0 lets it wander with the noise.",
 		"var _chroma_shake_angle: float = -1.0",
 		"# The noise clock, advanced by delta so the wander rides the game's own time - and advanced",
 		"# ALREADY SCALED BY THE RATE, which is what lets the rate change mid-shake. Keeping a raw clock",

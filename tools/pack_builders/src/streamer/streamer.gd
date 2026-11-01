@@ -37,7 +37,7 @@ var _pinned: Dictionary = {}
 # the streamer would want it every frame and never call the world settled.
 ## Cell -> true for a cell the folder has no scene for.
 var _absent: Dictionary = {}
-# It is remembered for the same reason a hole is - a cell nothing recorded is
+# A scene that failed to load is remembered for the same reason a hole is - a cell nothing recorded is
 # wanted again the very next frame, which is one engine error per frame for ever and a world
 # that never settles. Stream Chunks Around clears it, so fixing the file and starting again
 # is the way back.

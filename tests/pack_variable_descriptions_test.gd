@@ -60,6 +60,10 @@ static func _test_the_rule_on_small_sources() -> bool:
 		["a paragraph is not brief", _problems_in(too_long), PackedStringArray(["_x description is %d characters, more than %d" % ["word ".repeat(40).strip_edges().length(), LONGEST]])],
 		["a description over two lines is named, a row shows only the first", _problems_in(two_lines), PackedStringArray(["speed description runs over 2 lines, so a row shows only the first"])],
 		["a line inside a triple-quoted string is not a declaration", _problems_in(in_a_string), PackedStringArray(["_CODE has no description"])],
+		["a note naming a neighbour is named", _problems_in("## How many.\nvar _a_count: int = 0\n## Counts up from _a_count.\nvar _b_total: int = 0\n"), PackedStringArray(["_b_total description names another declaration, _a_count"])],
+		["a note in capitals is named", _problems_in("## THE ACCESSIBILITY CEILING.\nconst LIMIT: float = 0.3\n"), PackedStringArray(["LIMIT description is mostly upper case"])],
+		["a note cut mid-sentence is named", _problems_in("## Every other word is played by the\nvar words: int = 0\n"), PackedStringArray(["words description ends mid-sentence"])],
+		["a note that starts with And is named", _problems_in("## And the two the colour rows use.\nconst ROWS: int = 0\n"), PackedStringArray(["ROWS description begins mid-sentence"])],
 		["a machine with no notes is named, machine and every state", _problems_in(one_machine), PackedStringArray(["enum State has no description", "state IDLE has no description", "state RUN has no description"])],
 		["a machine with every note raises nothing", _problems_in(machine_described), PackedStringArray()],
 		["a machine missing one state names that state", _problems_in(machine_half), PackedStringArray(["state RUN has no description"])],
@@ -152,6 +156,7 @@ static func _problems_in(source: String) -> PackedStringArray:
 	var lines: PackedStringArray = source.split("\n")
 	var declaration: RegEx = RegEx.create_from_string("^(?:@[^\\n]*?\\s)?(?:static\\s+)?(?:var|const)\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	var enum_head: RegEx = RegEx.create_from_string("^enum\\s*([A-Za-z_][A-Za-z0-9_]*)?\\s*\\{")
+	var declared: PackedStringArray = _declared_names(lines, declaration)
 	var note: String = ""
 	var note_lines: int = 0
 	var in_string: bool = false
@@ -200,6 +205,10 @@ static func _problems_in(source: String) -> PackedStringArray:
 				problems.append("%s description is %d characters, more than %d" % [variable_name, described.length(), LONGEST])
 			elif note_lines > 1:
 				problems.append("%s description runs over %d lines, so a row shows only the first" % [variable_name, note_lines])
+			else:
+				var fault: String = _fault_in(variable_name, described, declared)
+				if not fault.is_empty():
+					problems.append("%s description %s" % [variable_name, fault])
 		note = ""
 		note_lines = 0
 		index += 1
@@ -228,3 +237,43 @@ static func _check_enum_members(lines: PackedStringArray, start: int, problems: 
 			member_note = ""
 		index += 1
 	return index
+
+
+## Every variable and constant name a script declares at column 0, so a note can be held to
+## describing its own declaration and not pointing at a neighbour.
+static func _declared_names(lines: PackedStringArray, declaration: RegEx) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for line: String in lines:
+		var found: RegExMatch = declaration.search(line)
+		if found != null:
+			names.append(found.get_string(1))
+	return names
+
+
+## What is wrong with the wording of one note, or "" when nothing is: it names another
+## declaration of the same file by an identifier (underscore or ALL_CAPS), it is mostly upper
+## case, it begins with a conjunction (a head cut off a longer sentence), or it stops mid-sentence.
+static func _fault_in(own_name: String, note: String, declared: PackedStringArray) -> String:
+	for other: String in declared:
+		if other == own_name or other.strip_edges().length() < 5:
+			continue
+		if not (other.strip_edges().trim_prefix("_").contains("_") or other == other.to_upper()):
+			continue
+		var word: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % other)
+		if word.search(note) != null:
+			return "names another declaration, %s" % other
+	var letters: int = 0
+	var upper: int = 0
+	for character: String in note:
+		if character.to_lower() != character.to_upper():
+			letters += 1
+			if character == character.to_upper():
+				upper += 1
+	if letters >= 8 and upper * 2 > letters:
+		return "is mostly upper case"
+	var first_word: String = note.get_slice(" ", 0).to_lower()
+	if ["and", "or", "but", "then", "so"].has(first_word):
+		return "begins mid-sentence"
+	if not ".!?)\"'`".contains(note.substr(note.length() - 1)):
+		return "ends mid-sentence"
+	return ""

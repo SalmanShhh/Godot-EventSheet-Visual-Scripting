@@ -71,7 +71,7 @@ const LAYOUT_WORDS: Dictionary = {
 
 # The same two numbers every effect in this project clamps to: the flash becomes a slow
 # fade rather than being taken away, because the prompt still has to say it was hit.
-## How far a flash may go, and the least time it may take, for a player who has asked for no flashing.
+## Highest flash strength allowed for a player who has asked for no flashing, 0 to 1.
 const FLASH_CEILING: float = 0.3
 ## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
@@ -82,7 +82,7 @@ const LAYER_NAME: String = "PromptLayer"
 ## Font size of the prompt label before the player's text-size setting applies.
 const PROMPT_FONT_SIZE: int = 20
 
-## Whether a prompt is waiting for an answer, and what it waits for.
+## True while a prompt is waiting for an answer.
 var _open: bool = false
 ## Kind of the prompt on screen: press, hold or mash.
 var _kind: String = KIND_PRESS
@@ -99,15 +99,15 @@ var _deadline: float = 0.0
 # these rows will be written - would find the press still down and grade itself perfect before the
 # player saw anything. The opening frame is skipped for that reason, and only for that reason: every
 # frame after it reads the controls as they are.
-## The FRAME the prompt opened on.
+## Engine process frame the open prompt started on, whose press is ignored.
 var _opened_frame: int = -1
 
-## Seconds the key must be held, and seconds held so far.
+## Seconds a hold prompt must be held to succeed.
 var _hold_needed: float = 0.0
 ## Seconds the input has been held so far.
 var _held_for: float = 0.0
 
-## A mash: how many presses it takes, and how many have arrived.
+## Presses a mash prompt needs to succeed.
 var _mash_needed: int = 0
 ## Presses counted so far for a mash prompt.
 var _mash_count: int = 0
@@ -115,9 +115,9 @@ var _mash_count: int = 0
 ## The last grade a prompt ended on, which is what Grade Is asks about and Last Grade answers with. Empty until the first prompt ends.
 var _last_grade: String = ""
 
-# Total is kept rather than derived so Sequence
+# The total is kept rather than derived so Sequence
 # Progress still reads 1 after the last one is taken off the queue.
-## A sequence: the controls still to come, how many there were, how many have been answered, how long each one gets, and where they are drawn.
+## The controls still to come in the running sequence, in order.
 var _queue: PackedStringArray = PackedStringArray()
 ## How many prompts the current queue holds.
 var _queue_total: int = 0
@@ -146,7 +146,7 @@ var _forced_device: String = ""
 ## Notes travelling down their lanes, each with its control and due time.
 var _notes: Array[Dictionary] = []
 
-## The prompt being drawn now, the layer it is drawn on, and the node it is drawn at.
+## The node drawing the open prompt, or null when none is shown.
 var _node: Node = null
 ## Screen layer that holds the prompt.
 var _layer: CanvasLayer = null

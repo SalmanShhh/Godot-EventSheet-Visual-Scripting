@@ -30,7 +30,7 @@ const CLOCK_GAME: String = "game"
 ## Clock word: waits run on real time and ignore the time scale.
 const CLOCK_REAL: String = "real"
 
-## How the strength falls off between where the moment happened and the edge of its range.
+## Falloff word: strength fades in a straight line toward the edge of the range.
 const FALLOFF_LINEAR: String = "linear"
 ## Falloff word: strength eases off smoothly toward the edge of the range.
 const FALLOFF_SMOOTH: String = "smooth"
@@ -40,9 +40,9 @@ const FALLOFF_NONE: String = "none"
 ## The project-wide answer to "this player has asked for no flashing", spelled the same here as everywhere else that reads it.
 const NO_FLASHING_META: StringName = &"no_flashing"
 
-# Same numbers the moment layer already holds itself to:
+# These are the same numbers the moment layer already holds itself to:
 # the hit still hits, it just cannot strobe.
-## The ceiling every amount a player SEES is held under while no flashing is on, and the floor every one of those times is held over.
+## Highest amount a player sees while no flashing is on, from 0 to 1.
 const FLASH_CEILING: float = 0.3
 ## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
@@ -72,9 +72,7 @@ const ONE_WAY_VERBS: PackedStringArray = ["shake", "hitstop", "punch", "shockwav
 const AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",
 	"chromatic", "pulse", "hold"]
 
-# A post effect's key carries the effect's own
-# name after the prefix, because a moment may hold several of them at once.
-## The names the values a moment writes are kept under, so the beat that recorded one and the row that puts it back are spelling the same thing.
+## Touch word: the step changes the host's tint.
 const TOUCH_HOST_TINT: String = "host tint"
 ## Touch word: the step changes the host's scale.
 const TOUCH_HOST_SCALE: String = "host scale"
@@ -82,6 +80,8 @@ const TOUCH_HOST_SCALE: String = "host scale"
 const TOUCH_CAMERA_ZOOM: String = "camera zoom"
 ## Touch word: the step changes the time scale.
 const TOUCH_TIME_SCALE: String = "time scale"
+# A post effect's key carries the effect's own
+# name after the prefix, because a moment may hold several of them at once.
 ## Prefix of touch words that name a post-processing effect.
 const TOUCH_POST_PREFIX: String = "post "
 ## Wait until `seconds` after the step above started - the At word. The number is the GAP the
@@ -142,7 +142,7 @@ static func _tree(host: Node) -> SceneTree:
 	if host != null and host.is_inside_tree():
 		return host.get_tree()
 	return Engine.get_main_loop() as SceneTree
-# The layer that plays them holds them to this floor, so the book has to
+# The layer that plays these words holds them to this floor, so the book has to
 # count the same number: a beat counted as instant is over in the book while the flash it
 # started is still on the screen, which turns On Moment Finished into a lie and makes Revert
 # impossible for exactly as long as there is something to revert.

@@ -61,7 +61,7 @@ static func build() -> bool:
 		"nav_enabled": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Off = the agent freezes with its route, graph and settings kept, and route requests are ignored until it is switched back on (Set Enabled)."}},
 		"path_strategy": {"type": "String", "default": "balanced", "exported": true, "options": _STRATEGIES,
-			"attributes": {"tooltip": "How routes are picked: balanced, shortest, safest, ground hugging or no falling."}},
+			"attributes": {"tooltip": "How routes are picked: balanced, shortest, safest, ground hugging, no falling or walk only."}},
 		"smooth_paths": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Drop the in-between waypoints of a straight walk so the agent walks the stretch in one leg."}},
 		"max_search_nodes": {"type": "int", "default": 2000, "exported": true,

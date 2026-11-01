@@ -87,9 +87,9 @@ var _decision_score: float = 0.0
 ## Name of the action whose cooldown just started or ended.
 var _cooldown_action: String = ""
 # Recent started actions, most-recent first (index 0 = current).
-## Recent decisions, newest last, for inspection.
+## Names of the recent started actions, newest first, kept to the history length.
 var _history: PackedStringArray = PackedStringArray()
-## Random source that breaks ties between close scores.
+## Random source for the weighted-random pick among the top-scoring actions.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:

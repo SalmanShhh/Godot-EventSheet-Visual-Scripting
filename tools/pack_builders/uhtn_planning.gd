@@ -35,15 +35,15 @@ static func build() -> bool:
 	sheet.variables = {
 		"auto_replan_on_fail": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Mark Failed re-plans from the root instead of giving up."}},
-		"compounds": {"type": "Dictionary", "default": {}, "exported": false, "description": "Compound tasks by name, each with the ways it can be broken into smaller tasks."},
+		"compounds": {"type": "Dictionary", "default": {}, "exported": false, "description": "Compound task name to the list of methods that can break it into smaller tasks."},
 		"plan": {"type": "Array", "default": [], "exported": false, "description": "The list of primitive tasks the planner is working through."},
 		"plan_index": {"type": "int", "default": 0, "exported": false, "description": "Which task in the plan is running now."},
 		"plan_resource": {"type": "Resource", "default": null, "exported": true,
 			"attributes": {"tooltip": "Plan resource to load on ready; empty builds the plan with actions instead."}},
-		"primitives": {"type": "Dictionary", "default": {}, "exported": false, "description": "Primitive tasks by name, each with its conditions and effects."},
+		"primitives": {"type": "Dictionary", "default": {}, "exported": false, "description": "Names of the primitive tasks, each stored as true."},
 		"root_task": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "Goal to plan for - a compound or primitive task name. A loaded Plan Resource overrides this with its own root task."}},
-		"scorers": {"type": "Dictionary", "default": {}, "exported": false, "description": "Scorers by name, which rate how good each choice is."},
+		"scorers": {"type": "Dictionary", "default": {}, "exported": false, "description": "Scorer name to the list of world-state inputs, curves and weights that score a method."},
 		"world_state": {"type": "Dictionary", "default": {}, "exported": false, "description": "What the planner believes about the world, as facts by name."}
 	}
 

@@ -82,7 +82,7 @@ static func build() -> bool:
 		"var _match_time: float = 0.0",
 		"## Id of the combo that most recently broke off.",
 		"var _failed_id: String = \"\"",
-		"## Step at which that combo broke off.",
+		"## Step of its sequence at which the most recent failed combo broke off.",
 		"var _fail_index: int = 0",
 		"## How many combos have been completed in all.",
 		"var _cleared_count: int = 0",

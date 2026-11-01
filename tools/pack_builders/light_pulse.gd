@@ -50,7 +50,7 @@ static func build() -> bool:
 	lines.append_array(Lib.light_binding_lines())
 	lines.append_array(PackedStringArray([
 		"",
-		"# Kept rather than read off the game",
+		"# The breath position is kept rather than read off the game",
 		"# clock so that stopping and starting again resumes from where the wave was, and so that",
 		"# changing Period Seconds mid-breath does not snap the light.",
 		"## How far into the current breath we are, in seconds.",

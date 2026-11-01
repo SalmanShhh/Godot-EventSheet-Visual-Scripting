@@ -11,7 +11,7 @@ const POST_DIRECTORY: String = "res://eventsheet_addons/screen_fx/"
 ## Prefix of a shader file name; the effect word with spaces closed up.
 const POST_PREFIX: String = "post_"
 
-# Each is one full-screen shader with a
+# Each effect is one full-screen shader with a
 # `strength` dial and a few of its own. Every one of them READS THE SCREEN BACK, which is one screen
 # read per pixel of the viewport per entry that is on - so a stack of twelve is a thing to be
 # deliberate about, and a stack of two costs two. Bloom is the dear one: it reads the screen nine
@@ -23,19 +23,19 @@ const POST_PREFIX: String = "post_"
 const POST_EFFECTS: PackedStringArray = ["vignette", "film grain", "scanlines", "pixelate",
 	"colour grade", "dither", "fisheye", "glitch", "letterbox", "bloom", "saturate", "desaturate"]
 
-# They are ordinary stack entries under reserved names, so
+# The two colour-vision effects are ordinary stack entries under reserved names, so
 # Save Look records them, Clear Look takes them away, and Move Post Effect Before can put the
 # correction last where it belongs - none of which needs a second mechanism.
-## And the two the colour-vision rows use.
+## Reserved effect word for the colour-vision simulation pass.
 const SEE_AS_EFFECT: String = "see as"
-## Effect word for the colour correction pass.
+## Reserved effect word for the colour-vision correction pass.
 const CORRECT_EFFECT: String = "correct colours"
 
 # A colour-vision correction is not an amplitude
 # that can strobe - it is the thing that makes the screen readable at all - so the effect-strength
 # dial does not fade it away and the no-flashing ceiling does not hold it down. Every other entry
 # obeys both.
-## And the two the accessibility dials do NOT touch.
+## Effect words the effect-strength dial and the flash ceiling leave alone.
 const UNDIALLED_EFFECTS: PackedStringArray = [SEE_AS_EFFECT, CORRECT_EFFECT]
 
 ## The four colour-vision kinds, in the order the shaders number them.
@@ -51,20 +51,20 @@ const VISION_DIAL: String = "vision"
 # still pulses, a look still lands - with the amplitude held under this and the time held over
 # FLASH_FLOOR_SECONDS, so nothing the stack draws can strobe. The six verbs this pack shipped first
 # are deliberately untouched by it: their bytes are a promise. The clamp lives in the new layer.
-## THE ACCESSIBILITY CEILING.
+## Highest strength any effect may reach while no-flashing is on, 0 to 1.
 const FLASH_CEILING: float = 0.3
 ## Shortest a flash may last while no-flashing is on, in seconds.
 const FLASH_FLOOR_SECONDS: float = 0.4
 
-# A game that has those rows needs
+# A game that already sets these two Engine meta keys needs
 # nothing else for the stack to obey them.
-## Engine meta keys holding the no-flashing and effect-strength choices.
+## Engine meta key that, when true, holds every effect under the flash ceiling and floor.
 const NO_FLASHING_META: StringName = &"no_flashing"
-## Metadata key a player sets to scale every effect.
+## Engine meta key holding a 0 to 1 dial that scales every effect's strength.
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
 # The Juice pack's
-# moments ask for it by this name - one name, spelled the same in both packs - and a game that has
+# moments ask for the post layer by this name - one name, spelled the same in both packs - and a game that has
 # built its own post layer joins the group in one line to be found the same way.
 ## Group this layer joins so other packs can find it.
 const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"

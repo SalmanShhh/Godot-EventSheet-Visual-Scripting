@@ -30,7 +30,7 @@ signal plan_loaded(plan_name: String)
 
 ## Mark Failed re-plans from the root instead of giving up.
 @export var auto_replan_on_fail: bool = true
-## Compound tasks by name, each with the ways it can be broken into smaller tasks.
+## Compound task name to the list of methods that can break it into smaller tasks.
 var compounds: Dictionary = {}
 ## The list of primitive tasks the planner is working through.
 var plan: Array = []
@@ -38,11 +38,11 @@ var plan: Array = []
 var plan_index: int = 0
 ## Plan resource to load on ready; empty builds the plan with actions instead.
 @export var plan_resource: Resource = null
-## Primitive tasks by name, each with its conditions and effects.
+## Names of the primitive tasks, each stored as true.
 var primitives: Dictionary = {}
 ## Goal to plan for - a compound or primitive task name. A loaded Plan Resource overrides this with its own root task.
 @export var root_task: String = ""
-## Scorers by name, which rate how good each choice is.
+## Scorer name to the list of world-state inputs, curves and weights that score a method.
 var scorers: Dictionary = {}
 ## What the planner believes about the world, as facts by name.
 var world_state: Dictionary = {}

@@ -25,14 +25,14 @@ signal chunk_unloading(chunk: Node, cell: Vector3i)
 signal streaming_idle
 
 # --- Designer knobs (tune in the Inspector) ---
-## Size of one chunk in pixels; cell 3,-2 loads chunk_3_-2.tscn.
+## Size of one chunk in metres; cell 3,0,-2 loads chunk_3_0_-2.tscn.
 @export var cell_size: Vector3 = Vector3(64.0, 64.0, 64.0)
 ## Milliseconds a frame may spend taking in finished chunks; the rest wait.
 @export var budget_ms: float = 4.0
 ## Extra rings of cells beyond the radius kept loaded, so border crossings do not reload.
 @export var keep_radius_cells: int = 1
-# Off is the usual open world: the grid is flat, cells
-# differ only in X and Z, and every chunk's Y is 0 however high the player climbs. On stacks
+# Stream Height off is the usual open world: the grid is flat, cells
+# differ only in X and Z, and every chunk's Y is 0 however high the player climbs. On, it stacks
 # cells vertically as well, for a space station, a cave system or a tower - which multiplies
 # how many chunks a radius asks for, so raise it deliberately.
 ## Whether HEIGHT takes part in the grid.
@@ -60,7 +60,7 @@ var _pinned: Dictionary = {}
 # the streamer would want it every frame and never call the world settled.
 ## Cell -> true for a cell the folder has no scene for.
 var _absent: Dictionary = {}
-# It is remembered for the same reason a hole is - a cell nothing recorded is
+# A scene that failed to load is remembered for the same reason a hole is - a cell nothing recorded is
 # wanted again the very next frame, which is one engine error per frame for ever and a world
 # that never settles. Stream Chunks Around clears it, so fixing the file and starting again
 # is the way back.

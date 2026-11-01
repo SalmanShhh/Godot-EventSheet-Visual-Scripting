@@ -28,13 +28,13 @@ var host: Node3D = null
 var _target: Node3D = null
 # The candidates the last Lock On To Nearest found, ordered left to right by their angle from the
 # camera's forward. Cycle Target walks this ring; nothing else writes it.
-## Candidates in reach, nearest first, that Next Target steps through.
+## Candidates in the cone, ordered left to right by angle, that Cycle Target steps through.
 var _ring: Array[Node3D] = []
 # Whether a target is being held right now. A separate flag rather than a test on _target,
 # because a node that has been freed reads as null in GDScript: asking _target for its nullness
 # would answer "nothing was ever held" for the one case this behaviour most has to announce,
 # and the death would park the loss check silently instead of saying so.
-## True while the target is held and not changed by newer candidates.
+## True while a target is held; a freed node reads as null, so this flag keeps its loss announced.
 var _holding: bool = false
 # The reach the current lock was taken at, so a lock made with a row's own range is lost at that
 # range rather than at the Inspector's. A lock made by NAMING a node is held at INF, because that

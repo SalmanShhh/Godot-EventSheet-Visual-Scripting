@@ -8,8 +8,7 @@ extends "post_effect.gd"
 ## @ace_hidden
 @export var shade: Color = Color.BLACK
 
-## Where the shading starts, measured from the middle of the frame outwards. Small values shade
-## almost the whole frame; large ones leave a wide clear middle and only touch the corners.
+## Where shading starts, from the frame middle outwards: small shades most of the frame, large only the corners.
 ## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var inner_edge: float = 0.35
 

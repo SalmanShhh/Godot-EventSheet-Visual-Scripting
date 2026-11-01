@@ -24,8 +24,7 @@ extends "post_effect.gd"
 ## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var fill: float = 0.0
 
-## The mask this effect reads, as the rendering device knows it. The pack sets it once its mask
-## viewport has drawn a frame; while it is empty the effect draws nothing at all.
+## The mask texture this effect reads; while it is empty the effect draws nothing.
 var mask_texture: RID = RID()
 
 # The one sampler the mask is read through, built the first time a frame is drawn and freed with

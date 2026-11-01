@@ -8,14 +8,14 @@ var host: Node3D = null
 
 #region block_1
 # --- Designer knobs (tune in the Inspector) ---
-# The host joins it when it enters the scene, so every
+# The flock group is joined by the host when it enters the scene, so every
 # node carrying this behaviour with the same group name is one flock - and anything else you put
 # in that group by hand counts as a neighbour too.
 ## The group whose members fly together.
 @export var flock_group: StringName = &"flock"
-## Pixels within which a member sees neighbours and is steered by them.
+## Metres within which a member sees neighbours and is steered by them.
 @export var neighbour_radius: float = 4.0
-## Pixels inside which a neighbour is too close and is pushed away.
+## Metres inside which a neighbour is too close and is pushed away.
 @export var separation_radius: float = 1.2
 ## How strongly a member keeps its distance from neighbours that are too close.
 @export var separation_weight: float = 1.5
@@ -27,7 +27,7 @@ var host: Node3D = null
 @export var min_speed: float = 2.0
 ## The fastest a member flies, in metres per second.
 @export var max_speed: float = 6.0
-## Most a member may change its velocity, in pixels per second squared; low turns lazily.
+## Most a member may change its velocity, in metres per second squared; low turns lazily.
 @export var max_force: float = 12.0
 ## A group the flock keeps away from - a predator, the player, a wall of hazards. Empty avoids nothing.
 @export var avoid_group: StringName = &""
@@ -46,7 +46,7 @@ var host: Node3D = null
 		set_physics_process(value)
 
 # --- Internal state ---
-## Velocity this member flies at, in pixels per second; neighbours align to it.
+## Velocity this member flies at, in metres per second; neighbours align to it.
 var flock_velocity: Vector3 = Vector3.ZERO
 
 ## Everything in a group, as the tree holds it. One seam, because a headless test has no tree and

@@ -21,7 +21,7 @@ var _counts: Dictionary = {}
 # channel -> how the most recent Wait For Event on it ended: 0 (or missing) = one is still
 # waiting, 1 = the message arrived, 2 = it gave up. THREE states, not a bool: a wait that is
 # still in flight has not timed out, and a bool would have to answer one of the two anyway.
-## Results of waits that have finished, by wait id.
+## How each event's latest wait ended: 0 still waiting, 1 the event arrived, 2 it gave up.
 var _wait_outcomes: Dictionary = {}
 # channel -> Array of {node, method}: one-shot listeners, run once and then dropped.
 ## Listeners that remove themselves after their first event, by event name.

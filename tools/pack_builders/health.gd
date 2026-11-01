@@ -14,8 +14,8 @@ static func build() -> bool:
 	sheet.addon_category = "Health"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"max_health": {"type": "float", "default": 100.0, "exported": true, "attributes": {"tooltip": "Starting max HP; current_health initialises to this.", "range": {"min": "1", "max": "10000", "step": "1"}}},
-		"invulnerable": {"type": "bool", "default": false, "exported": true, "attributes": {"tooltip": "Start invulnerable: takeDamage is a no-op while true."}},
+		"max_health": {"type": "float", "default": 100.0, "exported": true, "attributes": {"tooltip": "Starting maximum HP; the current health starts at this value.", "range": {"min": "1", "max": "10000", "step": "1"}}},
+		"invulnerable": {"type": "bool", "default": false, "exported": true, "attributes": {"tooltip": "Start invulnerable: damage does nothing while this is on."}},
 		"destroy_on_death": {"type": "bool", "default": false, "exported": true, "attributes": {"tooltip": "queue_free the host the moment health reaches 0 (after On Death fires)."}},
 		"current_health": {"type": "float", "default": 100.0, "exported": false, "description": "Health the host has right now, from 0 up to its maximum."},
 		"is_dead_flag": {"type": "bool", "default": false, "exported": false, "description": "True once health has reached 0."},
@@ -28,7 +28,7 @@ static func build() -> bool:
 		"_invincible_until": {"type": "int", "default": 0, "exported": false, "description": "Time in milliseconds until which the host ignores damage."},
 		"assist_seconds": {"type": "float", "default": 8.0, "exported": true, "attributes": {"tooltip": "How long a hit still counts as an assist. Anyone who damaged this node within this many seconds of its death is listed by Assists Of.", "range": {"min": "0", "max": "120", "step": "0.5"}}},
 		"last_hit_from": {"type": "Node", "default": null, "exported": false, "description": "The node that dealt the most recent hit."},
-		"assist_hits": {"type": "Dictionary", "default": {}, "exported": false, "description": "Hits taken so far this run, counted for the accessibility assists."},
+		"assist_hits": {"type": "Dictionary", "default": {}, "exported": false, "description": "Who has damaged this node, by source node, with the time of their latest hit in milliseconds."},
 		"armour": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "Flat damage removed from every typed hit; never below minimum damage.", "range": {"min": "0", "max": "1000", "step": "0.5"}}},
 		"minimum_damage": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "Least damage a hit can land for, however much armour there is.", "range": {"min": "0", "max": "100", "step": "0.5"}}},
 		"crit_chance": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "How often a typed hit on this node lands as a critical: 0 never, 1 every time.", "range": {"min": "0", "max": "1", "step": "0.01"}}},

@@ -39,9 +39,9 @@ signal on_health_pool_absorbed
 ## @ace_name("On Health Pool Depleted")
 signal on_health_pool_depleted
 
-## Starting max HP; current_health initialises to this.
+## Starting maximum HP; the current health starts at this value.
 @export_range(1, 10000, 1) var max_health: float = 100.0
-## Start invulnerable: takeDamage is a no-op while true.
+## Start invulnerable: damage does nothing while this is on.
 @export var invulnerable: bool = false
 ## queue_free the host the moment health reaches 0 (after On Death fires).
 @export var destroy_on_death: bool = false
@@ -67,7 +67,7 @@ var _invincible_until: int = 0
 @export_range(0, 120, 0.5) var assist_seconds: float = 8.0
 ## The node that dealt the most recent hit.
 var last_hit_from: Node = null
-## Hits taken so far this run, counted for the accessibility assists.
+## Who has damaged this node, by source node, with the time of their latest hit in milliseconds.
 var assist_hits: Dictionary = {}
 ## Flat damage removed from every typed hit; never below minimum damage.
 @export_range(0, 1000, 0.5) var armour: float = 0.0

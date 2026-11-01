@@ -14,7 +14,7 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("EightDirectionMovement behavior requires a CharacterBody2D parent.")
 
-## AI drive: read ai_move_x/ai_move_y instead of the keyboard (the standard seam an AI driver flips on to steer).
+## AI drive: take movement from the AI move inputs instead of the keyboard (the standard seam an AI driver flips on).
 @export var ai_controlled: bool = false
 ## Horizontal input from -1 to 1 when something other than the player drives the host.
 var ai_move_x: float = 0.0

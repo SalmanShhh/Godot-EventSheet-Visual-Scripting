@@ -114,7 +114,7 @@ static func build() -> bool:
 		"## The currency account that skill points are drawn from.",
 		"var _points_account: String = \"\"",
 		"# The skill Unlock last touched - read it inside On Skill Unlocked / On Unlock Refused.",
-		"## Id of the skill unlocked most recently.",
+		"## Id of the skill the most recent Unlock tried, whether it was granted or refused.",
 		"var _last_skill: String = \"\"",
 		"# The node whose StatForge stack an unlocked skill's grants are applied to (optional).",
 		"## The stats node that skill bonuses are applied to.",

@@ -22,6 +22,16 @@ Every window the editor opens now goes through one helper, `EventSheetWindowPlac
   level at the block's left edge, the cell beginning at its own block) and still holds in Classic Sheet
   (`sub_event_strips_test`).
 
+### Fixed: behaviour variable descriptions say what the code does
+
+- A pack-wide fold had put notes written for a group of declarations onto the first one. Every pack
+  builder was read against its code and the wrong ones rewritten: units copied from a 2D twin into a 3D
+  one, a bool that claimed to hold a scene, a level stored as 0..1 described as decibels, notes that began
+  "And ...", a note in capitals, and plain comments whose first line had been cut. `ollie_speed` stays
+  exported and now says the Ollie action takes its own strength and this value is unused.
+- `pack_variable_descriptions_test` now fails a note that names another declaration of the same file, is
+  mostly upper case, begins with a conjunction or stops mid-sentence.
+
 ### Added: the showcase state enums describe their machine and every state
 
 - Starfall's `State` and the quest showcase's `QuestState` carry a `##` line above the enum (what the
