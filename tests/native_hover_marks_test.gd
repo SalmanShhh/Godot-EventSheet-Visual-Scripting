@@ -156,15 +156,17 @@ func two(x: int) -> void:
 		print(\"d\")
 "
 	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "user://native_hover_marks_count.gd")
-	var all: int = EventSheetViewport.event_numbers_for(sheet.events, sheet.functions).size()
-	var inside: int = EventSheetViewport.event_numbers_for(sheet.events).size()
+	var all: int = EventSheetResource.event_count(sheet.events, sheet.functions)
+	var inside: int = EventSheetResource.event_count(sheet.events)
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	var head_said: String = ""
+	var last_number: int = 0
 	for entry: Variant in editor.get_viewport_control().get_flat_rows():
 		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
 		if row == null:
 			continue
+		last_number = maxi(last_number, row.event_number)
 		for span: SemanticSpan in row.spans:
 			var card: Variant = (span.metadata as Dictionary).get("head_card", {})
 			if card is Dictionary and str((card as Dictionary).get("id", "")) == "events" and head_said.is_empty():
@@ -191,6 +193,8 @@ func _ready() -> void:
 	return SUPPORT.pins(TEST_NAME, [
 		["the events inside functions are events", all > inside, true],
 		["the head count and the status bar count say the same words", head_said, EventSheetDock.event_count_text(all)],
+		["...and that is the highest number the margin draws, a function and its own step counted once",
+			head_said, EventSheetDock.event_count_text(last_number)],
 		["one event is said in the singular", lone_said, "1 event"],
 	])
 

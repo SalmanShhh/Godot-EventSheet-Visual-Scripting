@@ -185,6 +185,16 @@ static func event_numbers(entries: Array, functions: Array = []) -> Dictionary:
 	return numbers
 
 
+## How many events the margin numbers: the highest number event_numbers hands out. A function and the
+## step it draws as its own actions share one number, so this is NOT the size of that map - counting its
+## keys would count each function twice. The sheet head, the status bar and "event N of M" all say this.
+static func event_count(entries: Array, functions: Array = []) -> int:
+	var most: int = 0
+	for number: Variant in event_numbers(entries, functions).values():
+		most = maxi(most, int(number))
+	return most
+
+
 static func _number_events(entries: Array, numbers: Dictionary, counter: Dictionary, by_name: Dictionary = {}) -> void:
 	for entry: Variant in entries:
 		if entry is EventRow:

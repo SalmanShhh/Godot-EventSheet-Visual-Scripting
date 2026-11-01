@@ -201,7 +201,7 @@ static func _test_counts_on_a_pack_sheet() -> bool:
 		inner.trigger_id = "OnProcess"
 		function.events.append(inner)
 	sheet.functions.append(function)
-	var expected: int = EventSheetResource.event_numbers(sheet.events, sheet.functions).size()
+	var expected: int = EventSheetResource.event_count(sheet.events, sheet.functions)
 	var editor: EventSheetEditor = _editor(NATIVE_THEME, sheet)
 	editor._update_sheet_counts_status()
 	var shown: String = editor._event_count_label.text

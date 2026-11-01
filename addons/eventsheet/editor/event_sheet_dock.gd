@@ -7487,7 +7487,7 @@ func _update_sheet_counts_status() -> void:
 	if _apply_status_layout() or EventSheetActiveTheme.active().status_bar_selection_line:
 		_update_row_address_status()
 	# Every event the margin numbers, a function's body included: a behaviour pack is mostly functions.
-	_event_count_label.text = event_count_text(EventSheetViewport.event_numbers_for(_current_sheet.events, _current_sheet.functions).size())
+	_event_count_label.text = event_count_text(EventSheetResource.event_count(_current_sheet.events, _current_sheet.functions))
 	_event_count_label.modulate = chrome.row_address_color
 
 
@@ -7858,7 +7858,7 @@ func apply_collision_fix(finding: Dictionary) -> String:
 static func row_address_text(row_data: EventRowData, sheet: EventSheetResource) -> String:
 	if row_data == null or sheet == null or row_data.event_number <= 0:
 		return ""
-	var total: int = EventSheetViewport.event_numbers_for(sheet.events, sheet.functions).size()
+	var total: int = EventSheetResource.event_count(sheet.events, sheet.functions)
 	var text: String = EventSheetL10n.translate("event %d of %d") % [row_data.event_number, total]
 	if row_data.line_number > 0:
 		text += " · " + EventSheetL10n.translate("line %d") % row_data.line_number
