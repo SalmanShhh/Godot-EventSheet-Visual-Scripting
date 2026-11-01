@@ -289,6 +289,16 @@ var _rows_revision: int = 0
 var _row_builds: int = 0
 ## The engine frame the canvas was last drawn in, so a frame asks for one draw, not two.
 var _last_draw_frame: int = -1
+## Retained row paint (see _retained_paint_active): the item under the rows, one item per visible row
+## by flat index, the recycled ones, the indices placed this frame, and what the base layer draws.
+var _base_item: EventSheetRetainedPaintItem = null
+var _row_items: Dictionary = {}
+var _row_item_pool: Array = []
+var _row_items_placed: Dictionary = {}
+var _base_paint: Dictionary = {}
+var _retained_paint_on: bool = false
+var _retained_record_checks: int = 0
+var _retained_records_requested: int = 0
 ## Bumped whenever the flat row list is replaced or reseated (a rebuild, a kept reading adopted). Never
 ## restored from a kept reading, so two readings can never share a number: it is what keys the two
 ## whole-sheet answers a draw reuses below.
@@ -2478,14 +2488,25 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 	# A figure is exactly as tall as its rows; the 240 px floor is the editing surface's.
 	var background_height: float = size.y / zoom if figure_mode else max(size.y / zoom, 240.0)
-	draw_rect(
-		Rect2(Vector2.ZERO, Vector2(width, background_height)),
-		background_color,
-		true
-	)
+	var retained: bool = _retained_paint_active()
+	_retained_paint_on = retained
+	if retained:
+		# The background and the fills under the rows live on the base layer, behind the rows' own
+		# items; the viewport's paint (this function) lands over all of them.
+		_base_paint = {"zoom": zoom, "width": width, "height": background_height, "color": background_color,
+			"group_fills": false, "selection_fills": [], "selection_fill_color": Color()}
+		_sync_base_item()
+	else:
+		_release_all_row_items()
+		draw_rect(
+			Rect2(Vector2.ZERO, Vector2(width, background_height)),
+			background_color,
+			true
+		)
 	# The getting-started overlay registers real clickable CTA rects, so it must never appear in
 	# an illustration. EventSheetDocFigure refuses an empty sheet up front; this is the backstop.
 	if not figure_mode and _empty_state_helper.is_sheet_visually_empty():
+		_release_all_row_items(false)
 		_empty_state_helper.draw_empty_state(width)
 		# The corner links are on EVERY sheet, an empty one included: a sheet with nothing in it is
 		# exactly where "Add event" has the most to say.
@@ -2495,6 +2516,7 @@ func _draw() -> void:
 	_empty_state_helper.clear_cta_rects()
 	var visible_range: Vector2i = get_visible_row_range()
 	if visible_range.x < 0:
+		_release_all_row_items(false)
 		return
 	visible_range = _settle_rows_in_view(visible_range)
 	_word_filler.resume()
@@ -2510,24 +2532,52 @@ func _draw() -> void:
 	_renderer.show_value_glyphs = show_value_glyphs
 	_renderer.show_variable_badges = show_variable_badges
 	_renderer.show_hover_add_links = show_hover_add_links
-	_draw_variable_group_fills(width)
+	if retained:
+		_base_paint["group_fills"] = true
+	else:
+		_draw_variable_group_fills(width)
 	var selection_runs: Array = _stamp_selection_runs(visible_range)
-	_draw_selection_run_fills(selection_runs)
+	if retained:
+		_collect_selection_fills(selection_runs)
+	else:
+		_draw_selection_run_fills(selection_runs)
 	var drag_moving: bool = _drag_motion.active
 	if drag_moving:
 		# A fold pulls rows up from below the window, so a few more are drawn while a drag is in hand.
 		visible_range.y = mini(visible_range.y + 8, _flat_rows.size() - 1)
+	var frame_signature: int = _frame_paint_signature(zoom, font, font_size) if retained else 0
+	_row_items_placed.clear()
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
 		if row_data == null:
 			continue
 		var layout: Dictionary = _layout_builder.get_or_build_row_layout(index, width, font, font_size)
-		if drag_moving:
-			if not _draw_row_in_motion(index, layout, row_data, font, font_size, zoom):
-				continue
-		else:
-			_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+		var drawn_inline: bool = true
+		if retained:
+			var offset: float = 0.0
+			var placeable: bool = true
+			if drag_moving:
+				# A row a drag in hand leaves alone is the same paint moved down: its item is placed at the
+				# offset. A row the drag changes (a veil, a gap in its lane, a cell lifted) is drawn inline.
+				var plan: Dictionary = _drag_motion.row_plan(index)
+				if float(plan["faded"]) <= 0.01:
+					continue
+				placeable = float(plan["faded"]) >= 0.999 and (plan["span_shift"] as Dictionary).is_empty() \
+					and (plan["hidden"] as Array).is_empty() and absf(float(plan["growth"])) < 0.01 \
+					and not (_drag_motion.kind == "cells" and index == int(_drag_motion._source_cell.get("row", -1)))
+				offset = float(plan["offset"])
+			if placeable:
+				_place_row_item(index, layout, row_data, font, font_size, zoom, offset, frame_signature)
+				drawn_inline = false
+				if drag_moving:
+					draw_set_transform(Vector2(0.0, offset * zoom), 0.0, Vector2(zoom, zoom))
+		if drawn_inline:
+			if drag_moving:
+				if not _draw_row_in_motion(index, layout, row_data, font, font_size, zoom):
+					continue
+			else:
+				_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
 		# The laid-out band of THIS row. Read under the name the layout builder writes it as: a
 		# mistaken key here fails silently as an empty rect at the top of the canvas, which is
 		# where every chip, wash and grip dot below then lands.
@@ -2553,6 +2603,8 @@ func _draw() -> void:
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 		if drag_moving:
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+	if retained:
+		_release_unplaced_row_items()
 	_draw_event_cards(visible_range)
 	if drag_moving:
 		_draw_drag_gaps()
@@ -2569,6 +2621,163 @@ func _draw() -> void:
 	_corner_links.draw(font, font_size,
 		ViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
 	_drag.draw_drag_ghost(font, font_size)
+
+
+# ── Retained row paint ─────────────────────────────────────────────────────────────────────────
+# Every hover, keystroke and selection used to repaint every visible row (0.6 - 1.2 ms a row), although
+# one row changed. Each visible row now lives on a retained canvas item (EventSheetRetainedPaintItem)
+# that is recorded again only when the row's paint signature changes; a row that merely moves (a drag's
+# slide) is repositioned, not repainted. The items draw BEHIND the viewport's own paint, so the stacking
+# is the old one: background and fills, the rows, then everything this function draws over them.
+
+
+## Switched off for A/B comparison and as an escape hatch: EVENTFORGE_NO_RETAINED_PAINT=1.
+static var retained_paint_allowed: bool = OS.get_environment("EVENTFORGE_NO_RETAINED_PAINT") != "1"
+
+
+## Whether this frame's rows are drawn through retained items. Not in an illustration (a figure is
+## drawn once, headless, by something that reads the canvas back), not while a lens that reads live
+## run numbers is showing (those change without the row doing so), and only in a tree that draws.
+func _retained_paint_active() -> bool:
+	return retained_paint_allowed and is_inside_tree() and not figure_mode \
+		and not show_hit_counts and not show_costs
+
+
+## The part of every row's signature that is the same for the whole frame.
+func _frame_paint_signature(zoom: float, font: Font, font_size: int) -> int:
+	return hash([zoom, size, font.get_instance_id() if font != null else 0, font_size,
+		_editor_style.get_instance_id() if _editor_style != null else 0, _layout_style_signature,
+		_renderer.show_event_numbers, _renderer.show_trigger_icons, _renderer.show_value_glyphs,
+		_renderer.show_variable_badges, _renderer.show_hover_add_links])
+
+
+func _new_retained_item(item_kind: int) -> EventSheetRetainedPaintItem:
+	var item: EventSheetRetainedPaintItem = EventSheetRetainedPaintItem.new()
+	item.kind = item_kind
+	item.viewport = self
+	add_child(item)
+	return item
+
+
+func _sync_base_item() -> void:
+	if _base_item == null or not is_instance_valid(_base_item):
+		_base_item = _new_retained_item(EventSheetRetainedPaintItem.KIND_BASE)
+	_base_item.visible = true
+	_base_item.record({}, null, 0)
+
+
+## Records the base layer: the sheet background and the fills the rows sit over.
+func draw_retained_base(item: CanvasItem) -> void:
+	var zoom: float = float(_base_paint.get("zoom", 1.0))
+	item.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+	item.draw_rect(Rect2(Vector2.ZERO, Vector2(float(_base_paint.get("width", 0.0)), float(_base_paint.get("height", 0.0)))),
+		_base_paint.get("color", Color.BLACK) as Color, true)
+	if bool(_base_paint.get("group_fills", false)):
+		_draw_variable_group_fills(float(_base_paint.get("width", 0.0)), item)
+	var fill: Color = _base_paint.get("selection_fill_color", Color()) as Color
+	for rect: Variant in _base_paint.get("selection_fills", []):
+		item.draw_rect(rect as Rect2, fill, true)
+
+
+## The selection runs' fills, worked out now (a drag moves them) and painted on the base layer.
+func _collect_selection_fills(runs: Array) -> void:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if runs.is_empty() or event_style == null:
+		return
+	_base_paint["selection_fill_color"] = event_style.row_background_color.blend(event_style.selection_fill_color)
+	var rects: Array = []
+	for run: Dictionary in runs:
+		if int(run["statements"]) < 2 or _drag_motion.row_carried_away(int(run["first"])):
+			continue
+		rects.append(drag_shifted_rect(selection_run_rect(run), int(run["first"]), int(run["last"])))
+	_base_paint["selection_fills"] = rects
+
+
+## Draws one row onto its retained item: the very call the viewport used to make inline.
+func paint_retained_row(item: CanvasItem, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int) -> void:
+	_renderer.draw_row(item, layout, row_data, font, font_size, _editor_style)
+
+
+## Puts row `index` on an item (taking a recycled one when it has none) and records it when its
+## paint changed.
+func _place_row_item(index: int, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int,
+		zoom: float, offset: float, frame_signature: int) -> void:
+	var item: EventSheetRetainedPaintItem = _row_items.get(index) as EventSheetRetainedPaintItem
+	if item == null or not is_instance_valid(item):
+		item = _row_item_pool.pop_back() as EventSheetRetainedPaintItem if not _row_item_pool.is_empty() else null
+		if item == null or not is_instance_valid(item):
+			item = _new_retained_item(EventSheetRetainedPaintItem.KIND_ROW)
+		_row_items[index] = item
+	_row_items_placed[index] = true
+	item.visible = true
+	var placed_at := Vector2(0.0, offset * zoom)
+	if item.position != placed_at:
+		item.position = placed_at
+	var signature: int = EventSheetRetainedPaintItem.paint_signature(row_data, layout, frame_signature)
+	if item.needs_record(layout, row_data, signature):
+		item.font = font
+		item.font_size = font_size
+		item.zoom = zoom
+		item.size = size
+		item.record(layout, row_data, signature)
+		_retained_records_requested += 1
+	_retained_record_checks += 1
+
+
+## Takes back the items of rows that are no longer on screen this frame, and puts the rest in row order
+## (a row that is drawn over its neighbour's edge must stay over it).
+func _release_unplaced_row_items() -> void:
+	for index: Variant in _row_items.keys():
+		if _row_items_placed.has(index):
+			continue
+		var item: EventSheetRetainedPaintItem = _row_items[index] as EventSheetRetainedPaintItem
+		_row_items.erase(index)
+		if item != null and is_instance_valid(item):
+			item.forget()
+			_row_item_pool.append(item)
+	var placed: Array = _row_items_placed.keys()
+	placed.sort()
+	var previous_position: int = -1
+	var in_order: bool = true
+	for index: Variant in placed:
+		var position_now: int = (_row_items[index] as Node).get_index()
+		if position_now < previous_position:
+			in_order = false
+			break
+		previous_position = position_now
+	if in_order:
+		return
+	var slot: int = _base_item.get_index() + 1 if _base_item != null and is_instance_valid(_base_item) else 0
+	for index: Variant in placed:
+		move_child(_row_items[index] as Node, mini(slot, get_child_count() - 1))
+		slot += 1
+
+
+## Hides every row's item (the sheet shows none this frame). The base layer goes too unless the
+## caller still wants the background it draws (an empty sheet's).
+func _release_all_row_items(hide_base: bool = true) -> void:
+	for index: Variant in _row_items.keys():
+		var item: EventSheetRetainedPaintItem = _row_items[index] as EventSheetRetainedPaintItem
+		if item != null and is_instance_valid(item):
+			item.forget()
+			_row_item_pool.append(item)
+	_row_items.clear()
+	_row_items_placed.clear()
+	if hide_base and _base_item != null and is_instance_valid(_base_item):
+		_base_item.visible = false
+
+
+## How the retained paint stands, for the tests and the bench: items alive, items recorded in all.
+func retained_paint_stats() -> Dictionary:
+	var recorded: int = 0
+	var alive: int = 0
+	for index: Variant in _row_items.keys():
+		var item: EventSheetRetainedPaintItem = _row_items[index] as EventSheetRetainedPaintItem
+		if item != null and is_instance_valid(item):
+			alive += 1
+			recorded += item.records
+	return {"placed": alive, "pooled": _row_item_pool.size(), "records": recorded,
+		"requests": _retained_records_requested, "checks": _retained_record_checks}
 
 
 ## THE EVENT CARD: one border per event, drawn AFTER the row loop and once per EVENT rather than
@@ -3000,7 +3209,7 @@ func _draw_variable_group_bubbles(width: float) -> void:
 ## The box behind each run of grouped variables, painted before the rows so the cards sit on it and
 ## the gaps between them show it - for a theme that states the box's fill. One rounded fill per run,
 ## at the same rect the edge is drawn at afterwards.
-func _draw_variable_group_fills(width: float) -> void:
+func _draw_variable_group_fills(width: float, canvas: CanvasItem = null) -> void:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	if event_style.variable_group_fill_color.a <= 0.01:
 		return
@@ -3015,7 +3224,7 @@ func _draw_variable_group_fills(width: float) -> void:
 		var end_index: int = int(run.get("end"))
 		var top: float = _row_metrics_helper.row_top(start_index)
 		var bottom: float = _row_metrics_helper.row_top(end_index) + _row_metrics_helper.row_height(end_index)
-		box.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
+		box.draw((canvas if canvas != null else self).get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
 
 
 ## The structure brackets: a 2px rule in the block's own colour down the LEFT EDGE of its

@@ -302,7 +302,7 @@ const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
 
 ## Event-sheet-style insert marker: arrowheads at both ends of a thin drop line so the insert point
 ## reads instantly (mirrors the tree-insert-mark).
-func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color) -> void:
+func _draw_insert_marker_arrows(control: CanvasItem, line_rect: Rect2, color: Color) -> void:
 	var mid_y: float = line_rect.get_center().y
 	var arrow: float = 5.0
 	control.draw_colored_polygon(PackedVector2Array([
@@ -345,7 +345,7 @@ static func bold_font(font: Font) -> Font:
 ## A run is split at value-range boundaries so every piece re-draws in the colour the base
 ## pass gave it: tinted values stay tinted, plain expressions stay the base colour.
 func _draw_param_emphasis(
-	control: Control,
+	control: CanvasItem,
 	baseline: Vector2,
 	text: String,
 	param_ranges: Array,
@@ -449,7 +449,7 @@ static func _measured(piece: String, font: Font, font_size: int) -> float:
 
 
 func _draw_text_with_values(
-	control: Control,
+	control: CanvasItem,
 	baseline: Vector2,
 	text: String,
 	value_ranges: Array,
@@ -519,7 +519,7 @@ const SUMMARY_RIGHT_INSET := 8.0
 const SUMMARY_ALPHA := 0.75
 
 
-func _draw_collapsed_summary(control: Control, row_rect: Rect2, row_data: EventRowData, font: Font, font_size: int) -> void:
+func _draw_collapsed_summary(control: CanvasItem, row_rect: Rect2, row_data: EventRowData, font: Font, font_size: int) -> void:
 	if not row_data.folded or row_data.children.is_empty() or font == null:
 		return
 	if not control.has_method("collapsed_row_summary"):
@@ -573,7 +573,7 @@ func _draw_collapsed_summary(control: Control, row_rect: Rect2, row_data: EventR
 ## glyphs scaled that way blur (zoom in) or alias (zoom out). This rasterizes the text at its
 ## final physical pixel size in identity space instead, then restores the zoom transform.
 func _draw_text(
-	control: Control,
+	control: CanvasItem,
 	baseline: Vector2,
 	text: String,
 	max_width: float,
@@ -610,7 +610,7 @@ func _draw_text(
 
 
 func _draw_multiline_text(
-	control: Control,
+	control: CanvasItem,
 	baseline: Vector2,
 	text: String,
 	max_width: float,
@@ -634,7 +634,7 @@ func _draw_multiline_text(
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
 
-func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
+func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
 	var row_rect: Rect2 = layout.get("row_rect", Rect2())
 	var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
 	var fold_rect: Rect2 = layout.get("fold_rect", Rect2())
@@ -1040,7 +1040,7 @@ static func or_divider_geometry(row_data: EventRowData, line_index: int, lane_re
 ## the second condition used to wear: a badge says something about the row it is on, and "or" is
 ## about the pair. The theme's OR pair dresses it, so a preset that restyled the badge restyles this
 ## without knowing it changed.
-func _draw_or_dividers(control: Control, row_data: EventRowData, lane_rect: Rect2, font: Font,
+func _draw_or_dividers(control: CanvasItem, row_data: EventRowData, lane_rect: Rect2, font: Font,
 		font_size: int, reading_style: EventSheetReadingStyle = null) -> void:
 	if row_data == null or row_data.or_condition_lines.is_empty() or font == null:
 		return
@@ -1070,7 +1070,7 @@ func _draw_or_dividers(control: Control, row_data: EventRowData, lane_rect: Rect
 ## `band_rect`, when it is wider than the gutter, is the one margin column a theme with the trigger
 ## icon in the gutter paints (the gutter and the icon's slot), and `first_line_height` above zero
 ## puts the number on the event's first line rather than in the middle of the event.
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null, selected: bool = false,
+func _draw_gutter(control: CanvasItem, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null, selected: bool = false,
 		band_rect: Rect2 = Rect2(), first_line_height: float = 0.0) -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
@@ -1171,7 +1171,7 @@ func _gutter_number_color(hit_uid: String, resting: Color) -> Color:
 ## count, warm when the row is among the run's busiest, and a dim left rail plus x0 when the row
 ## has not fired once since Run. The exact number is one hover away (the gutter tooltip) - at this
 ## width the chip is a glance, not a readout.
-func _draw_hit_count_chip(control: Control, gutter_rect: Rect2, hit_uid: String, font: Font, font_size: int) -> void:
+func _draw_hit_count_chip(control: CanvasItem, gutter_rect: Rect2, hit_uid: String, font: Font, font_size: int) -> void:
 	var count: int = EventSheetRunProfile.calls_for(hit_uid)
 	var fill: Color = HIT_CHIP_FILL
 	var border: Color = HIT_CHIP_BORDER
@@ -1212,7 +1212,7 @@ func _draw_hit_count_chip(control: Control, gutter_rect: Rect2, hit_uid: String,
 ## The breakpoint dot + bookmark pennant, separated so full-bleed rows (group/comment/
 ## section - whose bars cover the whole gutter) can re-stamp JUST the markers on top:
 ## a bookmarked comment or a breakpointed group must still show its indicator.
-func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabled: bool, bookmark_enabled: bool, reading_style: EventSheetReadingStyle = null) -> void:
+func _draw_gutter_markers(control: CanvasItem, gutter_rect: Rect2, breakpoint_enabled: bool, bookmark_enabled: bool, reading_style: EventSheetReadingStyle = null) -> void:
 	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	if breakpoint_enabled:
 		var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
@@ -1252,7 +1252,7 @@ static func condition_parameter_tone(event_style: EventSheetEventStyle) -> Color
 ## the quieter tone from top to foot, then each condition line as its own lighter strip with a 1 px
 ## rule under it, so it is plain where one condition ends. An event with no condition draws no strip at all,
 ## only the quiet tone, empty. `bands` holds one Vector2(y, height) per line.
-func _draw_condition_cell(control: Control, lane_rect: Rect2, bands: Array, line_height: float,
+func _draw_condition_cell(control: CanvasItem, lane_rect: Rect2, bands: Array, line_height: float,
 		event_style: EventSheetEventStyle, radius: int, param_bands: Array = []) -> void:
 	_draw_rounded_rect(control, lane_rect, condition_cell_rest(event_style), radius, 0, radius, 0)
 	# An event with no condition draws NO strip: the whole cell stays in the quiet tone, empty.
@@ -1321,7 +1321,7 @@ static func is_typed_name_span(metadata: Dictionary) -> bool:
 
 ## Paints a typed name: its mark (a local's on a tile), the type in the muted code face and the name in
 ## bold, straight on whatever is behind the line - no cell, no object column.
-func _draw_typed_name(control: Control, span: SemanticSpan, metadata: Dictionary, font: Font, font_size: int,
+func _draw_typed_name(control: CanvasItem, span: SemanticSpan, metadata: Dictionary, font: Font, font_size: int,
 		event_style: EventSheetEventStyle, reading: EventSheetReadingStyle) -> void:
 	var kind: String = str(metadata.get("typed_name", ""))
 	var type_text: String = span.text
@@ -1364,7 +1364,7 @@ static func nesting_line_x(level: int, indent_width: int) -> float:
 ## the whole height of the parent block (every row below the parent down to its foot - `gap_above`
 ## carries it across the air opened before a row, so a block's line is never broken between two
 ## events). Nothing else is drawn in the margin: no fill, no second line, no fold column.
-func _draw_indent_strips(control: Control, row_rect: Rect2, row_data: EventRowData,
+func _draw_indent_strips(control: CanvasItem, row_rect: Rect2, row_data: EventRowData,
 		event_style: EventSheetEventStyle, indent_width: int, gap_above: float, line_color: Color) -> void:
 	var depth: int = row_data.indent
 	if depth < 1 or indent_width < 1:
@@ -1376,7 +1376,7 @@ func _draw_indent_strips(control: Control, row_rect: Rect2, row_data: EventRowDa
 		control.draw_rect(Rect2(line_x, top, line_width, row_rect.end.y - top), line_color, true)
 
 
-func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE,
+func _draw_indent_guides(control: CanvasItem, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE,
 		indent_width: int = INDENT_WIDTH) -> void:
 	for level: int in range(depth):
 		var guide_x: float = row_rect.position.x + EventSheetPalette.GUTTER_WIDTH + float(level * indent_width) + 2.0
@@ -1391,7 +1391,7 @@ func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_co
 
 ## `filled_ink` above zero alpha asks for the filled triangle of the look that nests by lines: a
 ## solid 9 px ▼ (▶ when folded) centred in the fold slot, wholly inside it.
-func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool, filled_ink: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
+func _draw_fold_arrow(control: CanvasItem, fold_rect: Rect2, folded: bool, visible: bool, filled_ink: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	if not visible or fold_rect.size == Vector2.ZERO:
 		return
 	var center: Vector2 = fold_rect.get_center()
@@ -1434,7 +1434,7 @@ func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible:
 		)
 
 
-func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lighten: float, alpha: float) -> void:
+func _draw_row_outline(control: CanvasItem, row_rect: Rect2, base_color: Color, lighten: float, alpha: float) -> void:
 	var outline: Color = base_color.lightened(lighten)
 	outline.a = alpha
 	control.draw_rect(row_rect.grow(-0.5), outline, false, 1.0)
@@ -1450,7 +1450,7 @@ func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lig
 ## nothing else - it reserves no width, is never measured and is never hit-tested, so turning the
 ## card on or off cannot move a single glyph. Border thickness 0 (the Compact starter) draws
 ## nothing here and leaves the older per-row hairlines to say where a row ended.
-func draw_event_card(control: Control, rect: Rect2, event_style: EventSheetEventStyle) -> void:
+func draw_event_card(control: CanvasItem, rect: Rect2, event_style: EventSheetEventStyle) -> void:
 	if control == null or event_style == null or rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
 	var width: int = event_style.event_card_border_width
@@ -1475,7 +1475,7 @@ func draw_event_card(control: Control, rect: Rect2, event_style: EventSheetEvent
 ## looks like a condition and an action like an action, rather than a label naming one. `rect` is the
 ## line's band in the row's coordinates; every span of `lane` inside that band is drawn (the carried
 ## cells, and what sits on their line with them, like an inverted mark).
-func draw_cell_line(control: Control, row_data: EventRowData, lane: String, rect: Rect2,
+func draw_cell_line(control: CanvasItem, row_data: EventRowData, lane: String, rect: Rect2,
 		font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
 	if control == null or row_data == null:
 		return
@@ -1521,7 +1521,7 @@ func draw_cell_line(control: Control, row_data: EventRowData, lane: String, rect
 ## selection keeps its own per-cell outline, which is the difference the reader is being shown.
 ## The corner radius is the event block's own, so containment is the one rounded outline the sheet
 ## draws; a square-cornered theme (radius 0) gets a square frame.
-func draw_event_selection_outline(control: Control, rect: Rect2, event_style: EventSheetEventStyle) -> void:
+func draw_event_selection_outline(control: CanvasItem, rect: Rect2, event_style: EventSheetEventStyle) -> void:
 	if control == null or rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
 	var fill: Color = event_style.selection_fill_color if event_style != null else EventSheetPalette.COLOR_SELECTION
@@ -1543,7 +1543,7 @@ func draw_event_selection_outline(control: Control, rect: Rect2, event_style: Ev
 	box.draw(control.get_canvas_item(), rect.grow(-1.0))
 
 
-func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0), bar_left: float = 0.0) -> void:
+func _draw_group_row_chrome(control: CanvasItem, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0), bar_left: float = 0.0) -> void:
 	var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
 	if event_style != null:
 		bg = event_style.group_background_alt_color if alternating else event_style.group_background_color
@@ -1576,7 +1576,7 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 ## A region fence's chrome. The opener wears the faintest wash of the region's own colour and
 ## a solid rule at its left edge; the closing tick wears the rule alone, over nothing, so it reads
 ## as the end of the dashed rule running down the body rather than as another row.
-func _draw_region_row_chrome(control: Control, row_rect: Rect2, accent: Color, closing: bool,
+func _draw_region_row_chrome(control: CanvasItem, row_rect: Rect2, accent: Color, closing: bool,
 		event_style: EventSheetEventStyle = null) -> void:
 	var ink: Color = accent
 	if ink.a <= 0.01:
@@ -1592,7 +1592,7 @@ func _draw_region_row_chrome(control: Control, row_rect: Rect2, accent: Color, c
 
 ## A dashed box around one badge, drawn as four dashed strokes. Godot's own dashed-line primitive
 ## does the spacing, so the dashes here and the dashed rule down a region's body are the same mark.
-func _draw_dashed_outline(control: Control, rect: Rect2, ink: Color) -> void:
+func _draw_dashed_outline(control: CanvasItem, rect: Rect2, ink: Color) -> void:
 	var corners: Array[Vector2] = [
 		rect.position,
 		Vector2(rect.end.x, rect.position.y),
@@ -1618,7 +1618,7 @@ func _draw_dashed_outline(control: Control, rect: Rect2, ink: Color) -> void:
 ## run is a reading's lead (`effect.` in front of a dial's name), not a value anybody would retype, so
 ## it is skipped.
 func _draw_tune_marks(
-	control: Control,
+	control: CanvasItem,
 	baseline: Vector2,
 	text: String,
 	value_ranges: Array,
@@ -1658,7 +1658,7 @@ func _draw_tune_marks(
 ## against where the word really drew rather than against a second measurement. `word_cards` is a list
 ## of {"start", "length", "card"} over the span's drawn text.
 func _draw_word_cards(
-	control: Control,
+	control: CanvasItem,
 	span: SemanticSpan,
 	metadata: Dictionary,
 	baseline: Vector2,
@@ -1723,7 +1723,7 @@ static func word_card_offsets(metadata: Dictionary, text: String, font: Font, fo
 ## layer hit-tests against it, exactly as the colour swatch and the object label already do. Nothing
 ## re-measures, so what is underlined and what is clickable cannot drift apart.
 func _draw_comment_doors(
-	control: Control,
+	control: CanvasItem,
 	span: SemanticSpan,
 	metadata: Dictionary,
 	text_origin: Vector2,
@@ -1764,7 +1764,7 @@ func _draw_comment_doors(
 
 
 func _draw_spans(
-	control: Control,
+	control: CanvasItem,
 	row_data: EventRowData,
 	font: Font,
 	font_size: int,
@@ -2372,7 +2372,7 @@ func _draw_spans(
 ## word in its family's colour and the monospaced face it was measured in, a vector's X / Y fields in
 ## place of its text, and the `##` note in italics. Anything else falls through to the ordinary
 ## painter.
-func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Dictionary, font: Font,
+func _draw_variable_word(control: CanvasItem, span: SemanticSpan, metadata: Dictionary, font: Font,
 		font_size: int, event_style: EventSheetEventStyle, reading: EventSheetReadingStyle) -> bool:
 	var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 	var centre_y: float = span.rect.position.y + span.rect.size.y * ROW_VERTICAL_CENTER_RATIO
@@ -2438,7 +2438,7 @@ func _family_ink(event_style: EventSheetEventStyle, family: String) -> Color:
 
 
 ## The badge tiles a variable row earns, from where the layout put them, in the theme's badge pairs.
-func _draw_variable_badges(control: Control, span: SemanticSpan, metadata: Dictionary,
+func _draw_variable_badges(control: CanvasItem, span: SemanticSpan, metadata: Dictionary,
 		event_style: EventSheetEventStyle) -> void:
 	var badges: PackedStringArray = PackedStringArray(metadata.get("variable_badges", PackedStringArray()))
 	var style: EventSheetEventStyle = event_style if event_style != null else _fallback_event_style()
@@ -2453,7 +2453,7 @@ func _draw_variable_badges(control: Control, span: SemanticSpan, metadata: Dicti
 ## The muted line beside an open inline editor, starting one gap past the field it belongs to
 ## and clipped to the row. Nothing at all when no field is open or the field has nothing to say -
 ## which is every edit but a rename.
-func _draw_editing_note(control: Control, row_data: EventRowData, editing_span_index: int,
+func _draw_editing_note(control: CanvasItem, row_data: EventRowData, editing_span_index: int,
 		note: String, font: Font, font_size: int, reading: EventSheetReadingStyle) -> void:
 	if note.strip_edges().is_empty() or editing_span_index < 0 or editing_span_index >= row_data.spans.size():
 		return
@@ -2487,7 +2487,7 @@ func _draw_editing_note(control: Control, row_data: EventRowData, editing_span_i
 static var _rounded_box_cache: Dictionary = {}
 
 
-func _draw_rounded_rect(control: Control, rect: Rect2, color: Color, top_left: int, top_right: int, bottom_left: int, bottom_right: int) -> void:
+func _draw_rounded_rect(control: CanvasItem, rect: Rect2, color: Color, top_left: int, top_right: int, bottom_left: int, bottom_right: int) -> void:
 	if top_left == 0 and top_right == 0 and bottom_left == 0 and bottom_right == 0:
 		control.draw_rect(rect, color, true)
 		return
@@ -2504,7 +2504,7 @@ func _draw_rounded_rect(control: Control, rect: Rect2, color: Color, top_left: i
 	box.draw(control.get_canvas_item(), rect)
 
 
-func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary, cell_radius: int = 4) -> void:
+func _draw_chip_span(control: CanvasItem, span: SemanticSpan, metadata: Dictionary, cell_radius: int = 4) -> void:
 	# Flat event-sheet/GDevelop-style cell with softly rounded corners (the radius is the
 	# theme's cell_corner_radius token; 0 = the classic square cell).
 	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
@@ -2561,7 +2561,7 @@ static func hover_link_label(span_kind: String) -> String:
 ## the pointer is on it. Painted in the span's rect and nowhere else, so the click that opens the
 ## picker lands exactly where the words are. A theme that leaves the link colour clear gets the
 ## span's own ink.
-func _draw_add_link(control: Control, span: SemanticSpan, span_kind: String, font: Font, font_size: int,
+func _draw_add_link(control: CanvasItem, span: SemanticSpan, span_kind: String, font: Font, font_size: int,
 		metadata: Dictionary, event_style: EventSheetEventStyle, hovered: bool) -> void:
 	if font == null:
 		return
@@ -2591,7 +2591,7 @@ func _draw_add_link(control: Control, span: SemanticSpan, span_kind: String, fon
 ## an outline, brightening on hover - so the add gestures read as clickable buttons instead of
 ## stray muted text (newcomers don't click things that look like notes). Alpha is fixed here; the
 ## accent's own alpha is ignored (the affordance text is deliberately faded to 55%).
-static func _draw_add_affordance_pill(control: Control, rect: Rect2, accent: Color, hovered: bool) -> void:
+static func _draw_add_affordance_pill(control: CanvasItem, rect: Rect2, accent: Color, hovered: bool) -> void:
 	var pill: StyleBoxFlat = StyleBoxFlat.new()
 	pill.set_corner_radius_all(8)
 	pill.set_border_width_all(1)
@@ -2636,7 +2636,7 @@ static func resolve_block_groups(spans: Array) -> Dictionary:
 ## One merged cell for a multi-line block. In-flow GDScript additionally gets a code
 ## stripe + cool tint, so "this cell is code" reads at a glance (user call: it must be
 ## visually obvious when an action is just GDScript).
-func _draw_block_cell(control: Control, rect: Rect2, metadata: Dictionary) -> void:
+func _draw_block_cell(control: CanvasItem, rect: Rect2, metadata: Dictionary) -> void:
 	if bool(metadata.get("code_cell", false)):
 		control.draw_rect(rect, CODE_CELL_BG, true)
 		control.draw_rect(Rect2(rect.position.x, rect.position.y, 2.0, rect.size.y), CODE_CELL_STRIPE, true)
@@ -2647,12 +2647,12 @@ func _draw_block_cell(control: Control, rect: Rect2, metadata: Dictionary) -> vo
 
 ## Flat, clearly-visible hover for a single condition/action cell: a neutral light tint over
 ## just that cell (distinct from the accent-coloured selection), so it reads as "this cell".
-func _draw_cell_hover(control: Control, rect: Rect2, tint: Color) -> void:
+func _draw_cell_hover(control: CanvasItem, rect: Rect2, tint: Color) -> void:
 	control.draw_rect(rect, tint, true)
 
 
 func _draw_chip_selected_span(
-	control: Control,
+	control: CanvasItem,
 	span: SemanticSpan,
 	metadata: Dictionary,
 	selection_fill: Color,
@@ -2666,7 +2666,7 @@ func _draw_chip_selected_span(
 
 
 func _draw_drag_feedback(
-	control: Control,
+	control: CanvasItem,
 	rect: Rect2,
 	text: String,
 	font: Font,
@@ -2718,7 +2718,7 @@ static func opaque_segments(segments: Array) -> Array:
 ## The flat lilac wash + 2px left rule every variable row wears. Flat is the shipped look: the wash
 ## draws as one rectangle unless the theme states a different right-edge colour, and only then does
 ## it become a two-triangle fade across the row.
-func _draw_variable_row_wash(control: Control, row_rect: Rect2, reading: EventSheetReadingStyle) -> void:
+func _draw_variable_row_wash(control: CanvasItem, row_rect: Rect2, reading: EventSheetReadingStyle) -> void:
 	var wash: Color = reading.variable_row_wash_color
 	var wash_end: Color = reading.variable_row_wash_end_color
 	if wash_end == wash:
@@ -2744,7 +2744,7 @@ func _draw_variable_row_wash(control: Control, row_rect: Rect2, reading: EventSh
 ## edge (the event card's where the theme leaves them clear) with its corner radius, inset top and
 ## bottom by half the gap so two cards stand apart. One StyleBoxFlat per colour set, so a frame
 ## allocates nothing.
-func _draw_variable_card(control: Control, row_rect: Rect2, event_style: EventSheetEventStyle) -> void:
+func _draw_variable_card(control: CanvasItem, row_rect: Rect2, event_style: EventSheetEventStyle) -> void:
 	var gap: float = row_rect.size.y * (1.0 - VARIABLE_CARD_FILL) * 0.5
 	var card: Rect2 = Rect2(row_rect.position + Vector2(0.0, gap), Vector2(row_rect.size.x, row_rect.size.y - gap * 2.0))
 	var fill: Color = EventSheetEventStyle.stated_or(event_style.variable_card_fill_color, event_style.row_background_color)
@@ -2762,7 +2762,7 @@ func _draw_variable_card(control: Control, row_rect: Rect2, event_style: EventSh
 	control.draw_style_box(box, card)
 
 
-func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary,
+func _draw_badge_span(control: CanvasItem, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary,
 		event_style: EventSheetEventStyle = null) -> void:
 	var badge_rect: Rect2 = span.rect
 	var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
@@ -2953,7 +2953,7 @@ static func _badge_icon(glyph: String, side_px: int) -> Texture2D:
 ## (⟳ every tick, ▶ once, ⌨ input, ➜ signal). Antialiased primitives scaled to the badge
 ## radius, so every size and font renders the same crisp mark. Returns false for unknown
 ## glyphs - the caller then draws the text as before.
-func _draw_tempo_glyph(control: Control, center: Vector2, radius: float, glyph: String, color: Color) -> bool:
+func _draw_tempo_glyph(control: CanvasItem, center: Vector2, radius: float, glyph: String, color: Color) -> bool:
 	match glyph:
 		"⟳":
 			# Refresh loop: a 300-degree arc with a tangential arrowhead closing the circle.
@@ -3017,7 +3017,7 @@ func _draw_tempo_glyph(control: Control, center: Vector2, radius: float, glyph: 
 	return false
 
 
-func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_size: int, debug_text: String) -> void:
+func _draw_debug_overlay(control: CanvasItem, row_rect: Rect2, font: Font, font_size: int, debug_text: String) -> void:
 	var badge_width: float = font.get_string_size(debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x + 10.0
 	var badge_rect := Rect2(row_rect.end.x - badge_width - 8.0, row_rect.position.y + 5.0, badge_width, row_rect.size.y - 10.0)
 	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 4.0, row_rect.size.y), EventSheetPalette.COLOR_DEBUG, true)

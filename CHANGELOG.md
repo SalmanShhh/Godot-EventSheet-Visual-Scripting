@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed: a hover, a keystroke or a selection repaints the row it touched, not every visible row
+
+- Every visible row now lives on a retained canvas item (`EventSheetRetainedPaintItem`, a pooled `Node2D`: no layout, no input, no theme) that is recorded again only when the row's paint signature changes (the row's plain fields, hover, selection and the edit in progress, the layout's identity, and the frame's zoom, size, look and font). The items draw behind the canvas's own paint, so the stacking is unchanged: background and fills, the rows, then the event cards, selection frames, brackets and ghost. A row a drag only moves is repositioned, not repainted; a row the drag changes is still drawn inline. Screenshots of the real editor are pixel-identical to the old paint at rest, on hover, on selection and in a held drag, in the dark and the light look. `EVENTFORGE_NO_RETAINED_PAINT=1` turns it off. Measured on boomer_level, 240 frames, median of 3: hover frame p90 40 -> 8 ms, drag frame median 28 -> 11 ms (p90 97 -> 18 ms); on the juice pack, drag p90 63 -> 15 ms. Pinned by `retained_row_paint_test`.
+
 ### Fixed: folding a row no longer rebuilds every row of the sheet
 
 - A fold changes what the rows show, not what they are. Folding or unfolding now flattens the rows already built and re-dresses the words of the rows whose fold flipped (a folded group names what it holds, a folded region counts its events) with the same builders a full build uses. A row of a kind that wears its fold state in other words (an enum's sentence, a moment's steps, a variable section) still goes through the full rebuild, so the answer is always the one a rebuild gives. Measured in the real editor, the longest frame of a fold click: boomer_level (32 rows) 360 - 420 ms -> 45 - 70 ms; juice pack (803 rows) 6.8 s -> 0.9 s. Pinned by `fold_reflow_test`, which folds and unfolds rows of real sheets both ways and compares every row's identity, indent, numbers, height, words and selection.

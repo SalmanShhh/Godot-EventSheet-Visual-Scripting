@@ -143,7 +143,7 @@ static func declaration_of(line: String) -> Dictionary:
 ## Paints a rounded bar inside `row_rect`: `fill` inside an edge of `edge`, its corners rounded by
 ## `radius` (never more than half the bar's height, which is the pill end of the bar), the edge
 ## `edge_width` pixels wide (0 = the Include bar's own BAR_EDGE).
-static func draw_rounded_bar(control: Control, row_rect: Rect2, fill: Color, edge: Color, radius: float,
+static func draw_rounded_bar(control: CanvasItem, row_rect: Rect2, fill: Color, edge: Color, radius: float,
 		edge_width: float = 0.0) -> void:
 	var bar: Rect2 = row_rect.grow_individual(-BAR_INSET, -BAR_INSET, -BAR_INSET, -BAR_INSET)
 	if bar.size.x <= 0.0 or bar.size.y <= 0.0:
@@ -174,7 +174,7 @@ static func block_frame_rect(row_rect: Rect2, gutter_rect: Rect2, frame_indent: 
 
 ## Paints one row's part of a block: the block's fill, its two side edges, and a top or bottom edge
 ## where the row opens or closes the block.
-static func draw_block_frame(control: Control, row_data: EventRowData, frame: Rect2) -> void:
+static func draw_block_frame(control: CanvasItem, row_data: EventRowData, frame: Rect2) -> void:
 	if frame.size.x <= 0.0:
 		return
 	if row_data.frame_fill.a > 0.01:

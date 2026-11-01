@@ -31,7 +31,7 @@ static func elbow_reach(indent_width: int = EventSheetPalette.INDENT_WIDTH) -> f
 ## event has no parent to connect to), and each level above that gets a trunk. The trunk spans
 ## the FULL row height with no inset, so consecutive sub-events read as one continuous line
 ## instead of a dotted column of dashes.
-static func draw_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color,
+static func draw_guides(control: CanvasItem, row_rect: Rect2, depth: int, guide_color: Color,
 		indent_width: int = EventSheetPalette.INDENT_WIDTH) -> void:
 	if control == null or depth < 1:
 		return
