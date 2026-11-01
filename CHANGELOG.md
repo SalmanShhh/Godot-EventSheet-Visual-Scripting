@@ -11,6 +11,34 @@
   `pack_variable_descriptions_test` already fails any pack enum or state added without a line, and
   the same rule now also covers every enum in `demo/showcase/`, with real values pinned.
 
+### Fixed: Wave 16b review closure
+
+- A state renamed or removed in the States window now SAVES the declaring sheet in the same step that
+  writes the other scripts naming it, so the project on disk compiles whether or not the tab is saved
+  again. Undo and Redo do the same, in that order.
+- Undo and Redo of such an edit never write over a file somebody changed after it (on disk, or open in
+  Godot's script editor with unsaved changes): the step then writes no file, leaves the sheet unsaved,
+  and says which file.
+- Removing a state names, before Apply, each file whose tests of that state (`== Player.State.JUMP`, a
+  `match` branch) will test the default instead, and each scene or resource that saved the state
+  variable as a number, whose meaning a removal from the middle of the list shifts.
+- "Also run the parent's version", picked into a function, is written with that function's own
+  parameters (`super(amount)`), and as `return super(...)` where the parent's function answers. Where
+  it may be offered is now part of the picker's one closed list of what may be hidden.
+- The live state row is laid out at most four times a second while a machine flips state, instead of
+  at every flip.
+- The "From <parent>" group a kind of a class inherits starts folded to its bar, as the class board
+  draws it.
+- A function body of an opened file that has not been made editable no longer shows a "+ Add action"
+  that does nothing when clicked (Editor Native draws the add line at rest, and a one-step function
+  draws its step's line in its head). "Make Function Body Editable" brings it back.
+- Renaming a state in a hand-written file wrote the state helpers (`state_changed`, `previous_state`,
+  `state_entered_msec`) between `class_name` and `extends`, so the saved file no longer parsed. They
+  now go under `extends` and the class description. The States window also grows to hold the list of
+  what a removal reaches, so its Apply button stays inside it.
+- The status bar counts the events inside functions too, so a behaviour pack's sheet no longer says
+  "0 events".
+
 ### Fixed: the editor's own MatchRow script reads without a stray row
 
 - `match_row.gd` wrote its default branch text as a string running over two source lines, which
@@ -29,6 +57,7 @@
 
 - `_deadline` said it held the seconds left to answer; it holds the engine time the open prompt runs
   out, and `_opened_at` no longer describes both variables in one sentence.
+
 ### Changed: Editor Native lays an event out as one panel, with its nesting as lines in the margin
 
 - Nesting is ONE 1 px line per level down the margin, on each block's left edge and running the whole
@@ -67,8 +96,8 @@
 
 - The fold arrow of an event stays beside the block's FIRST line in every look (the strips look used to
   move it to the block's foot). Events and sub-events in Editor Native sit 1 px apart instead of 8, so
-  no empty band opens between two events. A nesting strip is filled with its parent's condition-lane
-  colour (or the group's tint), so it reads as the parent's lane carried down beside its children. An
+  no empty band opens between two events. (The nesting strips this entry first filled with the parent's
+  lane colour are gone: nesting is now one line per level in the margin, as the entry above says.) An
   object name the fixed column cuts short ("CharacterBo...") is read whole on hover. Drawing only: no
   reading, no emitted byte and no saved sheet changes.
 

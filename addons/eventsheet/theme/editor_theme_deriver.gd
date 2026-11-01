@@ -369,8 +369,9 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	for token_name: String in colours:
 		event_style.set(token_name, colours[token_name])
 	# The density the design is drawn at: 24 px rows, a 92 px object name after its 14 px icon and the
-	# 8 px gap (114 px in all, the column counting the icon), 1 px between two events, an 18 px nesting step,
-	# a 7 px lane divider and square-ish cards with a one-pixel edge.
+	# 8 px gap (114 px in all, the column counting the icon) in the conditions lane, a 140 px object column
+	# in the actions lane, 1 px between two events, a 16 px nesting step, a 7 px lane divider and
+	# square-ish cards with a one-pixel edge.
 	event_style.condition_lane_ratio = 0.42
 	event_style.minimum_row_height = 24
 	event_style.group_row_height = 36

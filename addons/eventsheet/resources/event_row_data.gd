@@ -15,9 +15,6 @@ REGION
 }
 
 var indent: int = 0
-## One bit per nesting level, set when the ancestor at that level is a GROUP (clear: an event). Stamped
-## by the canvas as it flattens the tree; the indent strips read it to paint each in its parent's colour.
-var strip_groups: int = 0
 ## True when the row is a child of an EVENT (a local declared in its body, a sub-event, a comment above
 ## one), clear under a group or at the top. Stamped by the canvas as it flattens the tree.
 var inside_event: bool = false

@@ -11,8 +11,51 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 
 
+## A body nothing can write to offers no way to add to it. A one-step function's actions are drawn in its
+## head's action lane, and so was that step's "+ Add action" - a door whose click found no step to add to.
+static func _test_head_add_door() -> bool:
+	var path: String = "user://_opt_in_head_door_test.gd"
+	var sheet: EventSheetResource = SUPPORT.reopen("extends Node
+
+
+func take_damage(amount: int) -> void:
+	print(\"ouch\")
+
+
+func heal(amount: int) -> void:
+	print(\"better\")
+", true, path)
+	sheet.external_source_path = path
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var view: EventSheetViewport = dock._active_view()
+	var before: Array = [_head_offers_add(view, "take_damage"), _head_offers_add(view, "heal")]
+	view.toggle_function_body_editable("take_damage")
+	var after: Array = [_head_offers_add(view, "take_damage"), _head_offers_add(view, "heal")]
+	dock.free()
+	return SUPPORT.pins("function_body_opt_in_test", [
+		["an opened file's function heads offer no Add action while their bodies are read-only", before, [false, false]],
+		["made editable, its head offers Add action; its sibling still none", after, [true, false]],
+	])
+
+
+## Whether the head row of verb `verb_name` carries a "+ Add action" door.
+static func _head_offers_add(view: EventSheetViewport, verb_name: String) -> bool:
+	for entry: Variant in view.get_flat_rows():
+		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
+		if row == null or not (row.source_resource is EventFunction) \
+				or(row.source_resource as EventFunction).function_name != verb_name:
+			continue
+		for span: SemanticSpan in row.spans:
+			if str((span.metadata as Dictionary).get("kind", "")) == "add_action":
+				return true
+	return false
+
+
 static func run() -> bool:
 	var ok: bool = true
+	ok = _test_head_add_door() and ok
 
 	# An OPENED pack (external_source_path set) with two lifted verbs, each a one-line body.
 	var sheet: EventSheetResource = EventSheetResource.new()

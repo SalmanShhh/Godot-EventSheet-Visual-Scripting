@@ -213,8 +213,8 @@ static func _test_strip_kinds() -> bool:
 	group.children = [event]
 	viewport._flatten_row(group, null)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["a row under a group and an event: level 0 is the group's, level 1 the event's",
-			[group.strip_groups, event.strip_groups, sub.strip_groups], [0, 1, 1]],
+		["a row is inside an event only when its parent is one: [group, event under the group, sub-event]",
+			[group.inside_event, event.inside_event, sub.inside_event], [false, false, true]],
 	])
 	viewport.free()
 	return ok

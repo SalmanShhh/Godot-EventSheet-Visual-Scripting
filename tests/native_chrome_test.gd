@@ -32,6 +32,7 @@ static func run() -> bool:
 	ok = _test_the_status_layout() and ok
 	ok = _test_comment_notes() and ok
 	ok = _test_the_selection_frame() and ok
+	ok = _test_counts_on_a_pack_sheet() and ok
 	EventSheetActiveTheme.publish(null)
 	return ok
 
@@ -187,6 +188,31 @@ static func _span(text: String, metadata: Dictionary) -> SemanticSpan:
 	span.text = text
 	span.metadata = metadata
 	return span
+
+
+## A behaviour pack is mostly functions: the status bar counts the events the margin numbers inside them
+## too, rather than saying "0 events" over a sheet of numbered rows.
+static func _test_counts_on_a_pack_sheet() -> bool:
+	var sheet: EventSheetResource = _sheet_with_events(1)
+	var function: EventFunction = EventFunction.new()
+	function.function_name = "fmt_short"
+	for index: int in range(2):
+		var inner := EventRow.new()
+		inner.trigger_id = "OnProcess"
+		function.events.append(inner)
+	sheet.functions.append(function)
+	var expected: int = EventSheetResource.event_numbers(sheet.events, sheet.functions).size()
+	var editor: EventSheetEditor = _editor(NATIVE_THEME, sheet)
+	editor._update_sheet_counts_status()
+	var shown: String = editor._event_count_label.text
+	editor.free()
+	var row := EventRowData.new()
+	row.event_number = 2
+	return SUPPORT.pins(TEST_NAME, [
+		["the margin numbers the function's events as well as the sheet's", expected > 1, true],
+		["the count says every numbered event", shown, "%d events" % expected],
+		["and the address counts them the same way", EventSheetDock.row_address_text(row, sheet), "event 2 of %d" % expected],
+	])
 
 
 static func _editor(theme_path: String, sheet: EventSheetResource) -> EventSheetEditor:

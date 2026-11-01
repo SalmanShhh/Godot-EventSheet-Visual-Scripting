@@ -409,8 +409,9 @@ var humanize_names_override: int = -1
 ## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
 ## set_sheet, exactly like show_object_icons.
 var familiar_words: bool = false
-## Whether the "From <parent>" group of a kind of a project class is folded to its one bar.
-var inherited_folded: bool = false
+## Whether the "From <parent>" group of a kind of a project class is folded to its one bar. It starts
+## folded, as the class board draws it: what a kind inherits is one bar until somebody opens it.
+var inherited_folded: bool = true
 ## The Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
 ## an Object pool, a Wait sequence) is named on its number's hover card and in the help strip -
 ## never as a chip inside the row - and the row's hover says what the evidence for that claim was.
@@ -3804,12 +3805,6 @@ func _get_condition_track_start(
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 	_flat_rows.append({"row": row_data, "parent": parent_row})
 	if parent_row != null:
-		# Which of this row's ancestors are groups, by nesting level: the indent strips take their
-		# parent's colour from it.
-		var group_bit: int = 0
-		if parent_row.row_type == EventRowData.RowType.GROUP and parent_row.indent < 30:
-			group_bit = 1 << parent_row.indent
-		row_data.strip_groups = parent_row.strip_groups | group_bit
 		row_data.inside_event = parent_row.row_type == EventRowData.RowType.EVENT
 		# A local declared in an event's body is one tight line at its step, never a card of its own: in
 		# a look that nests by lines it stands on the sheet with no band and no gap round it.
@@ -3817,7 +3812,6 @@ func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 			row_data.variable_card = false
 			row_data.height_scale = 1.0
 	else:
-		row_data.strip_groups = 0
 		row_data.inside_event = false
 	if row_data.folded:
 		return
@@ -5092,10 +5086,6 @@ func press_target_at(local_position: Vector2) -> Dictionary:
 	}
 
 
-## THE EVENT'S OWN RECTANGLE: the union of every row one event is drawn on, from the left edge of
-## the number gutter to the end of the action lane. One event is one shape whether it reads as one
-## row or several, so the frame the selection draws and the card a press lands in are this same
-## rectangle, measured once.
 ## Where a nested event's block begins when the look draws nesting as lines in the margin: the slot
 ## its trigger mark sits in, one step in from its parent's. 0.0 for a top-level event, a row that is
 ## not an event, or a look that nests by other means.
@@ -5109,6 +5099,11 @@ func nested_block_left(row_index: int) -> float:
 	return EventRowRenderer.nested_block_left_for(row_data.indent, event_style.sub_event_indent)
 
 
+## THE EVENT'S OWN RECTANGLE: the union of every row one event is drawn on, from the left edge of
+## the number gutter to the end of the action lane. One event is one shape whether it reads as one
+## row or several, and a press anywhere in it lands on that event. The card PAINTED round it is
+## event_card_border_rect, which takes the number gutter off the front and, for a nested event in a
+## look that nests by lines, starts where its block does (nested_block_left).
 func event_card_rect(row_index: int) -> Rect2:
 	if row_index < 0 or row_index >= _flat_rows.size():
 		return Rect2()

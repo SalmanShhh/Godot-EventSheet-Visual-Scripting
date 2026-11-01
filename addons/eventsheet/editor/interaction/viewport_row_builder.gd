@@ -17153,6 +17153,17 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 ## choke point and selection paths before any span data is read. Idempotent: built
 ## spans are never empty (a "+ Add" span is always present), so is_empty() reliably
 ## means "not yet built".
+## `spans` without the "+ Add action" and "+ Add condition" doors.
+static func _without_add_doors(spans: Array[SemanticSpan]) -> Array[SemanticSpan]:
+	var kept: Array[SemanticSpan] = []
+	for span: SemanticSpan in spans:
+		if span != null and span.metadata is Dictionary \
+				and str((span.metadata as Dictionary).get("kind", "")) in ["add_action", "add_condition"]:
+			continue
+		kept.append(span)
+	return kept
+
+
 func _ensure_event_spans(row_data: EventRowData) -> void:
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 		return
@@ -17187,6 +17198,12 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		_spawn_copy_names = outer_copies
 		_walked_names = outer_walked
 		row_data.spans = _split_function_reference_spans(row_data.spans)
+		# An inert row takes nothing added to it - nothing that writes can reach it - so it offers no
+		# "+ Add action" / "+ Add condition": a door that opens nothing is worse than no door. That is a
+		# function body of an opened file the reader has not made editable (and, merged into its head,
+		# the head's own action lane).
+		if row_data.source_resource == null:
+			row_data.spans = _without_add_doors(row_data.spans)
 		# Which condition lines carry an "or" above them. A sliced row hides its conditions, so
 		# it keeps none: there is nothing left to divide.
 		row_data.or_condition_lines = PackedInt32Array() if row_data.conditions_hidden else _pending_or_lines
