@@ -2250,8 +2250,10 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	# and upgrade the row where it does. A curated sentence never reaches here and is therefore never
 	# marked, which is the whole ordering: a written-by-a-person sentence outranks a read-off-the-API
 	# one, and landing a curated table later takes a row back off this path with the file untouched.
+	var member_text: String = str(split[1])
+	var axis_name: String = axis_word(member_text)
 	var written: Dictionary = _sentence(object_name, "Set {name} to {value}", {
-		"name": [str(split[1]), "name"],
+		"name": [axis_name if not axis_name.is_empty() else member_text, "name"],
 		"value": [shown_value, "value"]
 	})
 	written["generic"] = GENERIC_PROPERTY_SET
@@ -5275,16 +5277,59 @@ static func is_engine_property(property_name: String, context: Dictionary) -> bo
 ## What an engine property chain is CALLED on the row: an event sheet writes an object's place as X
 ## and Y, so `position.x` reads X. Everything else keeps its chain and the possessive lens spells it.
 static func engine_member_name(chain: String) -> String:
-	var parts: PackedStringArray = chain.split(".", false)
-	if parts.size() == 2 and (parts[0] == "position" or parts[0] == "global_position"):
-		var axis: String = parts[1].to_lower()
-		if axis == "x" or axis == "y" or axis == "z":
-			return axis.to_upper()
+	var axis: String = axis_word(chain)
+	if not axis.is_empty():
+		return axis
 	# An event-sheet object has an ANGLE. `rotation` is the same angle in radians, and saying so is
 	# the one Godot fact worth keeping - the two numbers are not interchangeable.
 	if MEMBER_WORDS.has(chain):
 		return translate(str(MEMBER_WORDS[chain]))
 	return chain
+
+
+## The words for ONE axis of a node's place. `position.*` is measured from the parent node and reads
+## X / Y / Z; `global_position.*` is the place in the world and reads "world X" / "world Y" /
+## "world Z", so a reader can tell the two apart. This is a small table of its own on purpose: it is
+## NOT derived from the importer's table of object properties, because that table maps an imported
+## X / Y onto the WORLD place (the only one that stays right for a nested child) and so says nothing
+## about what a plain local write is called. Anything not here (a whole vector, a depth) keeps its own
+## spelling.
+const POSITION_AXIS_WORDS: Dictionary = {
+	"position.x": "X", "position.y": "Y", "position.z": "Z",
+	"global_position.x": "world X", "global_position.y": "world Y", "global_position.z": "world Z",
+	"global_position": "world position"
+}
+
+
+## The word an axis member is called on a row, or "" when the member is not one of the six above.
+static func axis_word(member: String) -> String:
+	var wanted: String = member.strip_edges()
+	if not POSITION_AXIS_WORDS.has(wanted):
+		return ""
+	var word: String = str(POSITION_AXIS_WORDS[wanted])
+	return translate(word) if word.begins_with("world") else word
+
+
+## What hovering an axis word says: which place it measures and the name of the other one. "" for any
+## other text, so a caller can ask this of every span's text.
+static func axis_hover(shown_text: String) -> String:
+	var wanted: String = shown_text.strip_edges()
+	var axes: PackedStringArray = PackedStringArray(["X", "Y", "Z"])
+	for axis: String in axes:
+		if wanted == axis:
+			return translate("%s is measured from the parent node. Set world %s to place it in the world instead.") % [axis, axis]
+		if wanted == axis_word("global_position.%s" % axis.to_lower()):
+			return translate("world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.") % [axis, axis]
+	return ""
+
+
+## The axis hover for a whole action cell ("Set Y to -8", "Set world X to 3"): the word between "Set "
+## and " to " is looked up. "" for any cell that is not exactly one axis write.
+static func axis_hover_of_cell(cell_text: String) -> String:
+	var cell: String = cell_text.strip_edges()
+	if not cell.begins_with("Set ") or not cell.contains(" to "):
+		return ""
+	return axis_hover(cell.substr(4, cell.find(" to ") - 4))
 
 
 ## The type a value plainly declares, for a `:=` local. Only the unmistakable forms are claimed.

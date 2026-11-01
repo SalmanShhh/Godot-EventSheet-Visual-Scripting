@@ -128,7 +128,7 @@ static var EXPRESSION_READINGS: Dictionary = {
 ## circle whose cosine and sine are different angles is not a circle.
 static var REFUSED: Dictionary = {
 	"basis = basis.slerp(desired, 0.1)": "Player ▸ Set basis to basis.slerp(desired, 0.1)",
-	"crate.global_position = ground.position": "crate ▸ Set global_position to ground.position",
+	"crate.global_position = ground.position": "crate ▸ Set world position to ground.position",
 	"Vector2(cos(a), sin(b)) * radius": "(cos(a), sin(b)) * radius"
 }
 

@@ -77,7 +77,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Subtract 1 from _jumps_left",
 	"System ▸ Add amount to _coyote_timer",
 	"System ▸ Set _coyote_timer to max(_coyote_timer - amount, 0)",
-	"host ▸ Set position.x to amount * 2",
+	"host ▸ Set X to amount * 2",
 	# A local whose value has to be worked out declares at the top of its event with the number's
 	# own starting value, and the work stays where the line is, as the Set action it is.
 	"remaining ▸ float",
@@ -211,7 +211,7 @@ static func _picked_matches_typed() -> bool:
 	# object has a name, and a row acting on the script itself says that name.
 	for expected: String in ["host ▸ does not exist", "System ▸ Set _coyote_timer to 0",
 			"Fixture ▸ Signal On Jumped", "Fixture ▸ Destroy", "System ▸ Stop event",
-			"host ▸ Set position.x to 1"]:
+			"host ▸ Set X to 1"]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok
 

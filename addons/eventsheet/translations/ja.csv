@@ -9843,3 +9843,9 @@ Right-click to replace it in %s.,右クリックで %s の中で置き換えま�
 "+ Add to ""%s""…","+ ""%s"" に追加…"
 "Add event to ""%s""","""%s"" にイベントを追加"
 Set to,に設定
+world X,ワールドX
+world Y,ワールドY
+world Z,ワールドZ
+%s is measured from the parent node. Set world %s to place it in the world instead.,%s は親ノードからの相対位置です。ワールド%s を設定すると、ワールド上の位置に配置できます。
+"world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",ワールド%s はワールド上の位置で、親ノードの影響を受けません。%s を設定すると、親ノードからの相対位置に配置できます。
+world position,ワールド位置

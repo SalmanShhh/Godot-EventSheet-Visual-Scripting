@@ -9843,3 +9843,9 @@ Right-click to replace it in %s.,Clic derecho para reemplazarla en %s.
 "+ Add to ""%s""…","+ Añadir a ""%s""…"
 "Add event to ""%s""","Añadir evento a ""%s"""
 Set to,Establecer en
+world X,X mundial
+world Y,Y mundial
+world Z,Z mundial
+%s is measured from the parent node. Set world %s to place it in the world instead.,%s se mide desde el nodo padre. Establece %s mundial para colocarlo en el mundo.
+"world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","%s mundial es la posición en el mundo, sin importar el nodo padre. Establece %s para colocarlo relativo al nodo padre."
+world position,posición mundial

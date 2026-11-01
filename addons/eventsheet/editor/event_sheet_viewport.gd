@@ -5045,6 +5045,9 @@ func _get_tooltip(at_position: Vector2) -> String:
 			if not evidence_line.is_empty():
 				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
+			var axis_note: String = _axis_note(hit) if kind == "action" else ""
+			if not axis_note.is_empty():
+				sentence_prefix += "%s\n\n" % axis_note
 			# A Create object cell stands for two or three statements. Hover shows all of them, so
 			# the shorter reading never costs the reader the ability to see what the file actually says.
 			# A folded literal shows its first three entries and says how many are left. The
@@ -5149,6 +5152,16 @@ func _glossary_tooltip(hit: Dictionary) -> String:
 	if span == null:
 		return ""
 	return EventSheetWords.glossary_hover(span.text)
+
+
+## What an action cell that writes one axis of a node's place adds to its hover: which place the
+## axis measures and the name of the other one. "" for every other cell.
+func _axis_note(hit: Dictionary) -> String:
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return ""
+	return EventSheetSentence.axis_hover_of_cell(row_data.spans[span_index].text)
 
 
 func _mark_tooltip(hit: Dictionary) -> String:

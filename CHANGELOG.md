@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed: a write to a node's place tells local from world
+
+- `$Tree.position.y = -8` reads "Tree | Set Y to -8" and `position.x = 5` reads "Set X to 5" (Z too, for 3D nodes; Controls read the same), instead of "Set position.y to ...". A place in the world reads "Set world X / Y / Z" for `global_position.x/.y/.z` and "Set world position to ..." for the whole `global_position`. A whole `position` and every other member keep the words they had. The words live in a small table of their own in the reading code.
+- Hovering one of these cells adds a line saying the axis is relative to the parent node and naming the world version (or the reverse for a world axis). New words are in all nine translation files. Readings only: no ace id, template or file byte moves.
+- Imported X and Y are world coordinates, so the importer now maps them to `global_position`: `Player.X` in an expression becomes `$Player.global_position.x`, Set Position writes `global_position = Vector2(...)` through the plain property row (the frozen Set Position template is untouched), and Set X / Set Y rows, which had no entry, write `global_position.x` / `.y`.
+- Set Position (3D) and Get Position (3D) no longer claim a "world position": both work on the position relative to the parent. Descriptions only.
+
 ### Changed: Editor Native closes the event alignment board
 
 - A line's words stand where the board puts them: 118 px into the block in the conditions lane and 154 px into the actions lane (they stood at 145 and 171), the object's name 26 px in (it stood at 31) after the bare icon, and the divider between the lanes 6 px further right at the board's width.

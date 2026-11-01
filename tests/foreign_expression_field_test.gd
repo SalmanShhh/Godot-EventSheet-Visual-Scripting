@@ -32,9 +32,9 @@ static func _the_rewrite() -> bool:
 	return SUPPORT.pins("foreign_expression_field_test", [
 		["an object's X, a random and a joined unit",
 			EventSheetForeignACEMap.field_expression("Player.X + random(10) & \" px\"", scene, true),
-			"str($Player.position.x + randf_range(0.0, 10)) + \" px\""],
+			"str($Player.global_position.x + randf_range(0.0, 10)) + \" px\""],
 		["Self is the object the sheet is on",
-			EventSheetForeignACEMap.field_expression("Self.X + 4", scene, false), "position.x + 4"],
+			EventSheetForeignACEMap.field_expression("Self.X + 4", scene, false), "global_position.x + 4"],
 		["a nested node keeps its path", EventSheetForeignACEMap.field_expression("Label.Text", scene, true),
 			"$HUD/Label.text"],
 		["two numbers joined by & in a number field stay bitwise AND",
@@ -74,9 +74,9 @@ static func _in_the_dialog() -> bool:
 	var ok: bool = SUPPORT.pins("foreign_expression_field_test", [
 		["the field is not refused", refused, false],
 		["it carries a quiet note, not an error", note.get("level", ""), EventSheetParamFieldFactory.LEVEL_NOTE],
-		["the note says the GDScript", note.get("body", ""), "str($Player.position.x + randf_range(0.0, 10)) + \" px\""],
+		["the note says the GDScript", note.get("body", ""), "str($Player.global_position.x + randf_range(0.0, 10)) + \" px\""],
 		["nothing is said beside OK", note.get("reason", "x"), ""],
-		["OK writes the GDScript", written, "str($Player.position.x + randf_range(0.0, 10)) + \" px\""],
+		["OK writes the GDScript", written, "str($Player.global_position.x + randf_range(0.0, 10)) + \" px\""],
 		["a keystroke after it reads afresh", after_keystroke, "Player.X + random(10) &"],
 		["and an unfinished line is refused again", dialog._first_invalid_expression() != null, true],
 	])

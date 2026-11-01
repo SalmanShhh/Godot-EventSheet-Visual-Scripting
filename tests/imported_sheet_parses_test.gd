@@ -85,7 +85,7 @@ static func _missing_parameter() -> bool:
 	var filled: Dictionary = _import([_block([], [_action("Player", "set-position", {"X": "10", "Y": "20"})])], objects)
 	var filled_text: String = str(SheetCompiler.compile(filled["sheet"] as EventSheetResource, "", true)["output"])
 	passed = _check("a row whose slots the export DID carry is written in full",
-		filled_text.contains("$Player.position = Vector2(10, 20)"), true) and passed
+		filled_text.contains("$Player.global_position = Vector2(10, 20)"), true) and passed
 	return passed
 
 

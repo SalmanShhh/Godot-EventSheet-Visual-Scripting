@@ -121,16 +121,16 @@ static var STATEMENT_READINGS: Dictionary = {
 ## spelling belongs to everybody. The words on the right are the plain readings they keep.
 static var REFUSALS: Dictionary = {
 	"scale = stray.scale": "Lantern ▸ Set scale to stray.scale",
-	"global_position.x = stray.global_position.x": "Lantern ▸ Set X to stray.global_position.x",
-	"global_position.y = stray.global_position.y": "Lantern ▸ Set Y to stray.global_position.y",
+	"global_position.x = stray.global_position.x": "Lantern ▸ Set world X to stray.global_position.x",
+	"global_position.y = stray.global_position.y": "Lantern ▸ Set world Y to stray.global_position.y",
 	# A lerp with a FIXED weight is a fixed-fraction lerp, not a follow with a speed.
 	"global_position = global_position.lerp(stray.global_position, 0.5)":
-		"Lantern ▸ Set global_position to global_position.lerp(stray.global_position, 0.5)",
+		"Lantern ▸ Set world position to global_position.lerp(stray.global_position, 0.5)",
 	# THE one that cost a shipped reading: a camera closing on a target is written with exactly the
 	# soft pin's bytes, and the sheet has had words for that for longer. A per-second lerp toward
 	# another object only reads as a pin in a file that pins that anchor somewhere else too.
 	"global_position = global_position.lerp(stray.global_position, 5 * delta)":
-		"Lantern ▸ Set global_position to global_position.lerp(stray.global_position, 5 * dt)"
+		"Lantern ▸ Set world position to global_position.lerp(stray.global_position, 5 * dt)"
 }
 
 ## Gate three: {ace_id: [params, the sentence the line it writes must read as]}. The picker row and

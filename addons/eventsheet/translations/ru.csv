@@ -9843,3 +9843,9 @@ Right-click to replace it in %s.,Правый щелчок - заменить в
 "+ Add to ""%s""…","+ Добавить в ""%s""…"
 "Add event to ""%s""","Добавить событие в ""%s"""
 Set to,Установить в
+world X,мировой X
+world Y,мировой Y
+world Z,мировой Z
+%s is measured from the parent node. Set world %s to place it in the world instead.,"%s отсчитывается от родительского узла. Задайте мировой %s, чтобы разместить в мире."
+"world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.","Мировой %s - это положение в мире, независимо от родительского узла. Задайте %s, чтобы разместить относительно родительского узла."
+world position,мировая позиция

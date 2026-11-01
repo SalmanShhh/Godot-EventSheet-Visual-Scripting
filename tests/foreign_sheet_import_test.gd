@@ -52,7 +52,7 @@ static func run() -> bool:
 	all_passed = _check("a key name becomes the key constant",
 		output.contains("event.physical_keycode == KEY_SPACE"), true) and all_passed
 	all_passed = _check("an object property becomes the node property",
-		output.contains("$Player.position = Vector2($Player.position.x, 200)"), true) and all_passed
+		output.contains("$Player.global_position = Vector2($Player.global_position.x, 200)"), true) and all_passed
 	all_passed = _check("an expression name becomes the call behind it",
 		output.contains("$ScoreLabel.text = str(\"%03d\" % score)"), true) and all_passed
 	all_passed = _check("random becomes the call it means", output.contains("score += randf_range(1, 6)"), true) and all_passed

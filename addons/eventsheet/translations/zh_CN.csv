@@ -9843,3 +9843,9 @@ Right-click to replace it in %s.,右键单击可在 %s 中替换它。
 "+ Add to ""%s""…","+ 向 ""%s"" 添加…"
 "Add event to ""%s""","向 ""%s"" 添加事件"
 Set to,设置为
+world X,世界X
+world Y,世界Y
+world Z,世界Z
+%s is measured from the parent node. Set world %s to place it in the world instead.,%s 相对于父节点。设置世界%s 可将其放在世界坐标中。
+"world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",世界%s 是世界中的位置，不受父节点影响。设置 %s 可相对于父节点放置。
+world position,世界位置

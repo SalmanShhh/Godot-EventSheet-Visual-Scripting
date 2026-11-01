@@ -5372,7 +5372,7 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **World Raycast Hits? (3D)** (`from: String, to: String`) - True when a ray cast between two points hits anything in the 3D world.
 
 #### Actions
-- **Set Position (3D)** (`pos: String, target: String`) - Teleports a 3D node to an exact world position.
+- **Set Position (3D)** (`pos: String, target: String`) - Teleports a 3D node to an exact position relative to its parent.
 - **Move By (3D)** (`offset: String, target: String`) - Nudges a 3D node by an offset relative to its own facing (local space).
 - **Rotate (3D)** (`axis: String, radians: String, target: String`) - Spins a 3D node around an axis by an angle, often using speed times delta.
 - **Set Rotation (3D, Degrees)** (`degrees: String, target: String`) - Sets a 3D node's rotation directly using degree angles.
@@ -5401,7 +5401,7 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **Set Surface Redraw** (`mode: String, target: String`) - Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.
 
 #### Expressions
-- **Get Position (3D)** (`target: String`) - Returns a 3D node's current world position as a Vector3.
+- **Get Position (3D)** (`target: String`) - Returns a 3D node's current position relative to its parent as a Vector3.
 - **Get Velocity (3D)** (`target: String`) - Returns a 3D character body's current velocity vector.
 - **Input Vector** (`left: String, right: String, up: String, down: String`) - Returns a movement direction from four input actions, ideal for player movement.
 - **RayCast Collider (3D)** (`target: String`) - Returns the object a RayCast3D is currently hitting.

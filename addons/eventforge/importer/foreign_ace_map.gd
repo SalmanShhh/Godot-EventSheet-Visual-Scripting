@@ -107,7 +107,11 @@ const ROWS: Dictionary = {
 	"Object/add-to-group": {"ace": "AddToGroup", "kind": KIND_ACTION, "params": {"target": "@self", "group": "#Family"}},
 
 	# --- sprites ----------------------------------------------------------------------------
-	"Sprite/set-position": {"ace": "SetPosition2D", "kind": KIND_ACTION, "params": {"target": "@node", "pos": "%Vector2(%s, %s)|#X|#Y"}},
+	# An imported X / Y is a WORLD coordinate, and only global_position stays right for a nested
+	# child, so the place is written through the generic property row rather than Set Position.
+	"Sprite/set-position": {"ace": "SetProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position", "value": "%Vector2(%s, %s)|#X|#Y"}},
+	"Sprite/set-x": {"ace": "SetProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position.x", "value": "#X"}},
+	"Sprite/set-y": {"ace": "SetProperty", "kind": KIND_ACTION, "params": {"target": "@self", "property": "$global_position.y", "value": "#Y"}},
 	"Sprite/move-at-angle": {"ace": "MoveBy2D", "kind": KIND_ACTION, "params": {"target": "@node", "offset": "%Vector2.RIGHT.rotated(deg_to_rad(%s)) * %s|#Angle|#Distance"}},
 	"Sprite/set-angle": {"ace": "SetRotationDeg", "kind": KIND_ACTION, "params": {"target": "@node", "degrees": "#Angle"}},
 	"Sprite/set-animation": {"ace": "PlaySpriteAnimation", "kind": KIND_ACTION, "params": {"target": "@node", "anim": "#Animation"}},
@@ -255,8 +259,8 @@ const NO_HOME: Dictionary = {
 ## The properties a placed object answers to, in both vocabularies. Used to rewrite `Player.X`
 ## into the node property it means, so an imported expression names something that exists.
 const OBJECT_PROPERTIES: Dictionary = {
-	"X": "position.x",
-	"Y": "position.y",
+	"X": "global_position.x",
+	"Y": "global_position.y",
 	"Angle": "rotation_degrees",
 	"Text": "text",
 	"Opacity": "modulate.a",

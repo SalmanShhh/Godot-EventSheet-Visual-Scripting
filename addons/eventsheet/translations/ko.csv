@@ -9843,3 +9843,9 @@ Right-click to replace it in %s.,오른쪽 클릭하여 %s에서 대체합니다
 "+ Add to ""%s""…","+ ""%s""에 추가…"
 "Add event to ""%s""","""%s""에 이벤트 추가"
 Set to,다음으로 설정
+world X,월드 X
+world Y,월드 Y
+world Z,월드 Z
+%s is measured from the parent node. Set world %s to place it in the world instead.,%s 는 부모 노드를 기준으로 측정됩니다. 월드 %s 를 설정하면 월드 좌표로 배치됩니다.
+"world %s is the place in the world, whatever the parent node does. Set %s to place it relative to the parent node instead.",월드 %s 는 부모 노드와 무관한 월드 상의 위치입니다. %s 를 설정하면 부모 노드 기준으로 배치됩니다.
+world position,월드 위치
