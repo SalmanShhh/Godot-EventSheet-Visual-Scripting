@@ -82,6 +82,24 @@ static func run() -> bool:
 		viewport.set_sheet(sheet)
 		var found: Array[int] = viewport.search_rows(needle) if not needle.is_empty() else []
 		passed = SUPPORT.check(P, "search finds text in rows nobody has laid out", found.is_empty(), false) and passed
+	# Else rows carry "neither of N" from the first build, built or not on screen yet: the note is
+	# written when the rows are numbered, so those rows' words exist at once.
+	var else_rows: int = 0
+	var blank_notes: int = 0
+	for entry: Dictionary in viewport.get_flat_rows():
+		var else_data: EventRowData = entry.get("row")
+		if else_data == null or not (else_data.source_resource is EventRow):
+			continue
+		if (else_data.source_resource as EventRow).else_mode != EventRow.ElseMode.ELSE:
+			continue
+		else_rows += 1
+		for span in else_data.spans:
+			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("else_follows", false)) \
+					and span.text.is_empty():
+				blank_notes += 1
+	passed = SUPPORT.check(P, "the sample has Else rows (%d)" % else_rows, else_rows > 0, true) and passed
+	passed = SUPPORT.check(P, "no Else row reads a blank 'neither of N' before it is scrolled to", blank_notes, 0) and passed
+
 	# The windows and exports that read words without laying a row out ask for them first.
 	viewport.set_sheet(sheet)
 	rows = viewport.get_flat_rows()

@@ -537,6 +537,9 @@ func apply_else_follows_labels(numbered_rows: Array) -> void:
 			continue
 		if (row_data.source_resource as EventRow).else_mode != EventRow.ElseMode.ELSE:
 			continue
+		# An Else whose words are not built yet has no span to write the note into, and an Else row
+		# is cheap: build this one's words rather than leave "neither of N" blank until it is scrolled to.
+		_ensure_event_spans(row_data)
 		for span: SemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("else_follows", false)):
 				span.text = else_follows_text(numbered_rows, index, row_data.indent)
