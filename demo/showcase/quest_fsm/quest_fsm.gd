@@ -1,7 +1,15 @@
 class_name QuestFsm
 extends Node2D
 
-enum QuestState { OFFERED, ACTIVE, COMPLETE }
+## How far the quest has come, from first offered to handed in.
+enum QuestState {
+	## The quest is on the table; the next beat accepts it.
+	OFFERED,
+	## The quest is accepted and each beat grants gold until the log holds three entries.
+	ACTIVE,
+	## The log is full and the quest is finished.
+	COMPLETE,
+}
 
 signal item_collected(id: String)
 signal quest_advanced(phase: int)

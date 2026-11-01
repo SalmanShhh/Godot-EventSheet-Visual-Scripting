@@ -1,7 +1,13 @@
 class_name Starfall
 extends Node2D
 
-enum State { PLAYING, GAME_OVER }
+## Whether the round is still running or the player has run out of lives.
+enum State {
+	## Stars fall, the ship moves and every catch scores.
+	PLAYING,
+	## Play has stopped after the third miss; ui_accept starts a fresh round.
+	GAME_OVER,
+}
 
 ## Stars caught.
 @export_range(0, 999, 1) var score: int = 0

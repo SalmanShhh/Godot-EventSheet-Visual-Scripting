@@ -37,6 +37,7 @@ static func run() -> bool:
 	all_passed = _test_the_rule_on_small_sources() and all_passed
 	all_passed = _test_every_shipped_pack() and all_passed
 	all_passed = _test_the_notes_survive_the_reading() and all_passed
+	all_passed = _test_every_showcase_machine() and all_passed
 	return all_passed
 
 
@@ -68,6 +69,31 @@ static func _test_the_rule_on_small_sources() -> bool:
 static func _test_every_shipped_pack() -> bool:
 	var problems: PackedStringArray = problems_under(PACK_ROOT)
 	return SUPPORT.check("pack_variable_descriptions_test", "every variable, machine and state in every shipped pack is described", problems, PackedStringArray())
+
+
+## The showcase sheets that declare a state enum describe the machine and every state, the same
+## rule a pack's enum answers to (their variables carry their own wording and are not held to it).
+static func _test_every_showcase_machine() -> bool:
+	var problems: PackedStringArray = PackedStringArray()
+	var enums_seen: int = 0
+	for folder_name: String in DirAccess.get_directories_at("res://demo/showcase"):
+		var folder: String = "res://demo/showcase/%s" % folder_name
+		for file_name: String in _scripts_in(folder):
+			var source: String = FileAccess.get_file_as_string("%s/%s" % [folder, file_name])
+			enums_seen += source.count("
+enum ")
+			for problem: String in _problems_in(source):
+				if problem.begins_with("enum ") or problem.begins_with("state ") or problem.begins_with("an enum "):
+					problems.append("%s/%s: %s" % [folder_name, file_name, problem])
+	var starfall: String = FileAccess.get_file_as_string("res://demo/showcase/starfall/starfall.gd")
+	return SUPPORT.pins("pack_variable_descriptions_test", [
+		["every showcase enum and state is described", problems, PackedStringArray()],
+		["the showcases gave enums to check", enums_seen >= 2, true],
+		["Starfall's machine says what it is for", starfall.contains("## Whether the round is still running or the player has run out of lives.
+enum State {"), true],
+		["Starfall's GAME_OVER says what the game is doing", starfall.contains("	## Play has stopped after the third miss; ui_accept starts a fresh round.
+	GAME_OVER,"), true],
+	])
 
 
 static func _test_the_notes_survive_the_reading() -> bool:

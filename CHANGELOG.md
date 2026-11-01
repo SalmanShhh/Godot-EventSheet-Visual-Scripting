@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added: the showcase state enums describe their machine and every state
+
+- Starfall's `State` and the quest showcase's `QuestState` carry a `##` line above the enum (what the
+  machine is for) and one above each member (what the object is doing in it), written in
+  `tools/build_examples.gd`. No shipped behaviour pack declares an enum machine today (the state
+  machine pack keeps its states as free strings), so the pack rule in
+  `pack_variable_descriptions_test` already fails any pack enum or state added without a line, and
+  the same rule now also covers every enum in `demo/showcase/`, with real values pinned.
+
 ### Fixed: the editor's own MatchRow script reads without a stray row
 
 - `match_row.gd` wrote its default branch text as a string running over two source lines, which

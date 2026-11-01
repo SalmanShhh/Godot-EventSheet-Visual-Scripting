@@ -634,6 +634,9 @@ func _build_starfall() -> bool:
 	var state_enum: EnumRow = EnumRow.new()
 	state_enum.enum_name = "State"
 	state_enum.members = PackedStringArray(["PLAYING", "GAME_OVER"])
+	state_enum.description = "Whether the round is still running or the player has run out of lives."
+	state_enum.member_notes["PLAYING"] = "Stars fall, the ship moves and every catch scores."
+	state_enum.member_notes["GAME_OVER"] = "Play has stopped after the third miss; ui_accept starts a fresh round."
 	sheet.events.append(state_enum)
 
 	sheet.variables = {
@@ -769,6 +772,10 @@ func _build_quest_fsm() -> bool:
 	var qstate: EnumRow = EnumRow.new()
 	qstate.enum_name = "QuestState"
 	qstate.members = PackedStringArray(["OFFERED", "ACTIVE", "COMPLETE"])
+	qstate.description = "How far the quest has come, from first offered to handed in."
+	qstate.member_notes["OFFERED"] = "The quest is on the table; the next beat accepts it."
+	qstate.member_notes["ACTIVE"] = "The quest is accepted and each beat grants gold until the log holds three entries."
+	qstate.member_notes["COMPLETE"] = "The log is full and the quest is finished."
 	sheet.events.append(qstate)
 
 	var sig_item: SignalRow = SignalRow.new()

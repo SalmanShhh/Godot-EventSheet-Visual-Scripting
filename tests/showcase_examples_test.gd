@@ -428,7 +428,7 @@ static func run() -> bool:
 
 	# Starfall - enum + match FSM, group pick-filter, spawner.
 	passed = _check_sheet("starfall", "res://demo/showcase/starfall/starfall.gd", [
-		"enum State { PLAYING, GAME_OVER }",
+		"enum State {\n\t## Stars fall, the ship moves and every catch scores.\n\tPLAYING,",
 		"match state:",
 		"for star in get_tree().get_nodes_in_group(\"stars\")",
 		"if not (star.position.y > 560.0):",
