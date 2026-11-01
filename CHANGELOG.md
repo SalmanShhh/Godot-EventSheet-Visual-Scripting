@@ -6,6 +6,22 @@
 
 Every window the editor opens now goes through one helper, `EventSheetWindowPlacement`, that works against the usable rect (the screen less the task bar) of the screen the window belongs to. A dialog is centred on the visible part of the editor window it opens over (the engine centred it on the screen, far from a small or moved editor window), shrunk when it is larger than the room it has, and kept clear of the title bar's reserve. A menu, panel or list opened at the pointer or under a field flips above and left-aligns to its anchor when there is no room below or to the right, on the monitor the anchor is on. Pointer positions follow the editor's sub-window mode, so a menu is no longer placed by screen coordinates when the editor embeds its sub-windows. The blend-mode strip opened at the top-left of the editor window instead of under its field; it now opens under the field. A sweep test fails when a new opener calls an engine popup function directly.
 
+### Fixed: four Wave 16b decisions
+
+- The no-em-dash rule covers the translation catalogs: every em-dash in the Russian and Simplified
+  Chinese files is a plain " - " (or a comma in Chinese), and `translation_catalogs_test` fails the
+  suite on a new one in any shipped `.csv`.
+- A state rename or removal changes only the names it renames or removes. The setter, `state_changed`
+  and the two helper variables are written only when the States window DECLARES a machine the sheet does
+  not have yet; a hand-written `enum State` and `var state` is edited in place and nothing else in the
+  file moves (pinned in `states_project_wide_test`).
+- The sheet head's events count and the status bar agree: both count every event, the ones inside
+  functions included, and say "1 event" for one. 93 sheets' head cells move (10 gain a count they never
+  showed), and nothing else in the reading does.
+- The Wave 16 nested-divider check is rewritten to the Editor Native rule (one 1 px line per nesting
+  level at the block's left edge, the cell beginning at its own block) and still holds in Classic Sheet
+  (`sub_event_strips_test`).
+
 ### Added: the showcase state enums describe their machine and every state
 
 - Starfall's `State` and the quest showcase's `QuestState` carry a `##` line above the enum (what the

@@ -24,7 +24,63 @@ static func run() -> bool:
 	ok = _test_strip_kinds() and ok
 	ok = _test_name_column_cap() and ok
 	ok = _test_strip_fill_and_cut_names() and ok
+	ok = _test_nested_block_starts_past_the_margin() and ok
 	return ok
+
+
+## A three-deep sheet laid out under both looks. Editor Native draws nesting as one 1 px line per level
+## in the margin at the block's left edge, so a nested event's condition cell begins at its own block
+## (past the number column and the ancestors' lines) and each level steps one indent right; the lines of
+## a level sit left of the block that level opens and run its parent's whole height, so a nested row
+## draws no divider of its own in the margin. Classic Sheet keeps the old lane start and steps.
+static func _test_nested_block_starts_past_the_margin() -> bool:
+	var rows: Array = []
+	for theme_path: String in [NATIVE_THEME, "res://addons/eventsheet/themes/classic_sheet_theme.tres"]:
+		var native: bool = theme_path == NATIVE_THEME
+		var sheet := EventSheetResource.new()
+		sheet.editor_style = load(theme_path) as EventSheetEditorStyle
+		var top := EventRow.new()
+		top.trigger_id = "OnProcess"
+		var mid := EventRow.new()
+		mid.trigger_id = "OnProcess"
+		var deep := EventRow.new()
+		deep.trigger_id = "OnProcess"
+		mid.sub_events.append(deep)
+		top.sub_events.append(mid)
+		sheet.events.append(top)
+		var view := EventSheetViewport.new()
+		view.set_ace_registry(EventSheetACERegistry.new())
+		view.set_sheet(sheet)
+		var step: int = view.indent_width()
+		var lefts: Array = []
+		var lines: Array = []
+		for index: int in range(view.get_flat_rows().size()):
+			var row_data: EventRowData = view._row_at(index)
+			if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+				continue
+			var layout: Dictionary = view.get_row_layout_for_test(index, 1300.0)
+			lefts.append((layout.get("condition_lane_rect", Rect2()) as Rect2).position.x)
+			var drawn: Array = []
+			for level: int in range(row_data.indent):
+				drawn.append(EventRowRenderer.nesting_line_x(level, step))
+			lines.append(drawn)
+		var origin: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
+		var label: String = "Editor Native" if native else "Classic Sheet"
+		rows.append(["%s: three events are laid out, one per depth" % label, lefts.size(), 3])
+		if native:
+			rows.append(["Editor Native: a nested event's cell begins at its own block, one step right per level",
+				[lefts[1], lefts[2]], [origin + float(step), origin + 2.0 * float(step)]])
+			rows.append(["Editor Native: it draws one line per level, each left of the block its level opens",
+				[(lines[0] as Array).size(), (lines[1] as Array).size(), (lines[2] as Array).size()], [0, 1, 2]])
+			rows.append(["Editor Native: the lines of a row are the ancestors' lines, one step apart",
+				lines[2], [origin - 2.0, origin - 2.0 + float(step)]])
+		else:
+			rows.append(["Classic Sheet: a nested cell does not start at the margin block",
+				[lefts[1] != origin + float(step), lefts[2] != origin + 2.0 * float(step)], [true, true]])
+			rows.append(["Classic Sheet: each level still steps the lane start by one indent",
+				[lefts[1] - lefts[0], lefts[2] - lefts[1]], [float(step), float(step)]])
+		view.free()
+	return SUPPORT.pins(TEST_NAME, rows)
 
 
 ## Nesting is one 1 px line per level at the fold arrow's column, a nested block begins past the lines
