@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: a drag slide asks for one draw a frame, not two
+
+- The pointer move that drives a drag queues a redraw and the per-frame slide step queued a second one that ran after it, so a slide drew the whole canvas twice in a frame. The slide is a function of the clock, so a frame that has already drawn skips the slide's own redraw while it is still moving; the frame the slide stops is never skipped, so the last picture drawn is the rest position. 327 -> 241 canvas draws per 240 drag frames. Pinned by `drag_redraw_coalesce_test`.
+
 ### Fixed: a drag no longer relays out every visible row on each move
 
 - The layout cache key carried the whole drag signature (target row, drop mode, ACE target lane and slot) in EVERY row's key, so each change of the drop target missed the cache for every visible row. Only the row the drop would land on and the row an ACE drop would land in read the drag state, so only those two carry it now; every other row's key holds just whether a drag is live. Measured in the real editor on the boomer_level showcase (32 rows), 240 drag frames: layout misses 1,215 -> 254. Pinned by `layout_drag_key_test`.

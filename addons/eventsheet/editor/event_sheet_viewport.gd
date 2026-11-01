@@ -287,6 +287,8 @@ var _rows_revision: int = 0
 ## How many row builds this view has ever done. Unlike _rows_revision it is never restored from a
 ## kept reading, so it answers "was anything built?" across a tab switch - see row_builds().
 var _row_builds: int = 0
+## The engine frame the canvas was last drawn in, so a frame asks for one draw, not two.
+var _last_draw_frame: int = -1
 ## Bumped whenever the flat row list is replaced or reseated (a rebuild, a kept reading adopted). Never
 ## restored from a kept reading, so two readings can never share a number: it is what keys the two
 ## whole-sheet answers a draw reuses below.
@@ -497,7 +499,7 @@ func _process(_delta: float) -> void:
 	# it stops, so the last frame drawn is the rest position.
 	if _drag_motion.active:
 		var moving: bool = _drag_motion.advance()
-		if moving or _drag_motion_was_moving:
+		if slide_needs_redraw(moving, _drag_motion_was_moving):
 			queue_redraw()
 		_drag_motion_was_moving = moving
 	elif _drag_motion_was_moving:
@@ -512,6 +514,17 @@ func _process(_delta: float) -> void:
 		_last_scroll_size = scroll.size
 		_update_canvas_min_size()
 		queue_redraw()
+
+
+## Whether a slide frame still owes a redraw. The slide is a function of the clock, so a draw that
+## already ran in this frame (the pointer move that drove the drag queues one) shows the slide as it
+## stands: a second full draw in the same frame is the same picture twice. The frame the slide stops
+## is never skipped - the last picture drawn must be the rest position, and the draw before it was
+## taken while the slide was still moving.
+func slide_needs_redraw(moving: bool, was_moving: bool) -> bool:
+	if not moving:
+		return was_moving
+	return _last_draw_frame != Engine.get_process_frames()
 
 
 ## The shared per-sheet view state (created on demand around this view's dictionaries).
@@ -2457,6 +2470,7 @@ func _notification(what: int) -> void:
 
 
 func _draw() -> void:
+	_last_draw_frame = Engine.get_process_frames()
 	var zoom: float = max(_zoom_factor, 0.001)
 	var width: float = _get_logical_canvas_width()
 	var background_color: Color = _get_event_style().sheet_background_color
