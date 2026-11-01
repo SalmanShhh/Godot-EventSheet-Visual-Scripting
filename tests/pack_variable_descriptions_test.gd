@@ -36,6 +36,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_the_rule_on_small_sources() and all_passed
 	all_passed = _test_every_shipped_pack() and all_passed
+	all_passed = _test_every_root_runtime_script() and all_passed
 	all_passed = _test_the_notes_survive_the_reading() and all_passed
 	all_passed = _test_every_showcase_machine() and all_passed
 	return all_passed
@@ -73,6 +74,34 @@ static func _test_the_rule_on_small_sources() -> bool:
 static func _test_every_shipped_pack() -> bool:
 	var problems: PackedStringArray = problems_under(PACK_ROOT)
 	return SUPPORT.check("pack_variable_descriptions_test", "every variable, machine and state in every shipped pack is described", problems, PackedStringArray())
+
+
+## The runtime scripts that sit loose in the pack root, beside the pack folders (bus_mix, haptics,
+## sequencer, world_look and the rest), answer to the same rule: one brief note per declaration, never
+## one note written for a group of them. The builder-less demo_ scripts are examples, not shipped
+## runtime, and are left out.
+static func _test_every_root_runtime_script() -> bool:
+	var problems: PackedStringArray = root_problems_under(PACK_ROOT)
+	var scripts_seen: int = 0
+	for file_name: String in _scripts_in(PACK_ROOT):
+		if not file_name.begins_with("demo_"):
+			scripts_seen += 1
+	return SUPPORT.pins("pack_variable_descriptions_test", [
+		["every declaration in every root runtime script is described", problems, PackedStringArray()],
+		["the pack root gave runtime scripts to check", scripts_seen >= 8, true],
+	])
+
+
+## Every problem in the loose scripts directly under `root`. Public for the same reason as problems_under.
+static func root_problems_under(root: String) -> PackedStringArray:
+	var problems: PackedStringArray = PackedStringArray()
+	for file_name: String in _scripts_in(root):
+		if file_name.begins_with("demo_"):
+			continue
+		var source: String = FileAccess.get_file_as_string("%s/%s" % [root, file_name])
+		for problem: String in _problems_in(source):
+			problems.append("%s: %s" % [file_name, problem])
+	return problems
 
 
 ## The showcase sheets that declare a state enum describe the machine and every state, the same

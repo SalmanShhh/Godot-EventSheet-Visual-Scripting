@@ -43,32 +43,35 @@ extends RefCounted
 # lands; at rest the whole file costs nothing at all. A snapshot is one walk of the bus list, taken
 # when the row runs and never per frame. Nothing here allocates while a sweep is in the air.
 
-## The three kinds a bus is swept by, spelled once so the rows, the resting values and the tests all
-## say the same word.
+## The sweep kind that closes a low-pass filter on a bus.
 const MUFFLE: String = "muffle"
+## The sweep kind that lowers a bus's level through an amplify effect.
 const DIVE: String = "dive"
+## The sweep kind that raises a reverb's wet amount.
 const WASH: String = "wash"
 
-## The cutoff at which a low-pass is not there: above anything a person hears, which is why arming a
-## muffle is silent until the sweep starts moving.
+## The low-pass cutoff in hertz above anything audible, so a new muffle filter starts silent.
 const OPEN_CUTOFF_HZ: float = 20500.0
 
-## The level at which an amplify is not there, and the wet at which a reverb is not there.
+## The amplify level in decibels at which the effect changes nothing.
 const OPEN_VOLUME_DB: float = 0.0
+## The reverb wet amount at which the effect adds nothing.
 const OPEN_WET: float = 0.0
 
-## Where the live sweeps, the resting values and the named snapshots are kept. On the Engine, because
-## a mix outlives the scene that changed it: a dive started in the arena has to finish even if the
-## arena is freed halfway through, and a snapshot taken at startup has to be there in the third
-## level. The names are constants so a test can put back exactly what it found.
+# The sweeps, resting values and snapshots live on the Engine because a mix outlives the scene that changed it:
+# a dive started in the arena has to finish even if the arena is freed halfway through.
+## The Engine meta key holding the tweens of sweeps still in the air.
 const SWEEPING_META: StringName = &"eventforge_bus_sweeping"
+## The Engine meta key holding where each bus rested for each kind before any sweep touched it.
 const RESTING_META: StringName = &"eventforge_bus_resting"
+## The Engine meta key holding the named snapshots of the mix.
 const SNAPSHOTS_META: StringName = &"eventforge_bus_snapshots"
 
-## The three things a snapshot remembers about one bus. Level, silence and focus: what a mix IS from
-## the outside, and all three restorable without touching a single effect the game set up by hand.
+## The snapshot entry holding a bus's level in decibels.
 const VOLUME_KEY: String = "volume_db"
+## The snapshot entry holding whether a bus is muted.
 const MUTED_KEY: String = "muted"
+## The snapshot entry holding whether a bus is soloed.
 const SOLOED_KEY: String = "soloed"
 
 

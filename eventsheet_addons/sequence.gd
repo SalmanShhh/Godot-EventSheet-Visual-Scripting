@@ -25,22 +25,19 @@ extends Resource
 # PLAIN GDSCRIPT, AND NOT THE PLUGIN'S. This file ships in the project's own folder and names no
 # plugin class, so a `.tres` made from it goes on loading after the editor is gone.
 
-## The beats a bar is counted in. Four, because that is what steps-per-bar means to everybody who
-## has ever written a drum pattern, and a number here rather than a field because a sequence whose
-## bar is a different length is a sequence with a different steps-per-bar.
+# Four, because that is what steps-per-bar means to anyone who has written a drum pattern.
+## The beats a bar is counted in.
 const BEATS_PER_BAR: float = 4.0
 
-## How fast the grid runs when nothing else says: beats per minute. The Play Sequence row can hand
-## over another, and a Music track playing beside it overrides both, because a game with a song in
-## it has exactly one clock.
+# Play Sequence can hand over another tempo, and a Music track playing beside it overrides both.
+## How fast the grid runs when nothing else says, in beats per minute.
 @export_range(20.0, 300.0, 0.5, "or_greater") var bpm: float = 120.0
 
 ## How many steps one bar is divided into. 16 is a sixteenth-note grid, 4 is one step a beat.
 @export_range(1, 64, 1, "or_greater") var steps_per_bar: int = 16
 
-## The tracks, in order. Each is a dictionary of a name and its cells: {"name": "lights",
-## "cells": ["pulse", "", "pulse", ""]}. The name is the group the track speaks to; a cell holding
-## nothing is a step where that track is silent.
+# Example: {"name": "lights", "cells": ["pulse", "", "pulse", ""]}. A cell holding nothing is a silent step.
+## The tracks in order, each a dictionary of a name and its cells; the name is the group the track speaks to.
 @export var tracks: Array[Dictionary] = []
 
 

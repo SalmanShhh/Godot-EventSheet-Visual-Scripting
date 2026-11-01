@@ -26,8 +26,7 @@ extends Resource
 # PLAIN GDSCRIPT, AND NOT THE PLUGIN'S. This file ships in the project's own folder and names no
 # plugin class, so a `.tres` made from it goes on loading after the editor is gone.
 
-## How hard the pulse is, from 0 (nothing) to 1 (as hard as the device goes). Scaled by the player's
-## own haptic strength before it reaches the device.
+## How hard the pulse is, from 0 to 1, scaled by the player's haptic strength before it reaches the device.
 @export_range(0.0, 1.0, 0.01) var amplitude: float = 1.0
 
 ## How long one pulse lasts, in seconds.

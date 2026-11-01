@@ -19,11 +19,14 @@ static func run() -> bool:
 	var source: String = FileAccess.get_file_as_string(FIXTURE)
 	var sheet: EventSheetResource = SUPPORT.reopen(source, true, FIXTURE)
 	var variables: PackedStringArray = PackedStringArray()
+	var greeting_value: String = ""
 	var verbatim_rows: int = 0
 	if sheet != null:
 		for row: Variant in sheet.events:
 			if row is LocalVariable:
 				variables.append((row as LocalVariable).name)
+				if (row as LocalVariable).name == "greeting":
+					greeting_value = str((row as LocalVariable).default_value)
 			elif row is RawCodeRow and str((row as RawCodeRow).code).contains("world\""):
 				verbatim_rows += 1
 	var typed: String = "extends Node\n\nvar note: String = \"one\ntwo\"  # trailing\nvar after: int = 1\n"
@@ -34,4 +37,8 @@ static func run() -> bool:
 		["the fixture saves back byte for byte", SUPPORT.reemit(source, VERIFY_PATH), source],
 		["a typed literal over two lines with a trailing comment saves back byte for byte", SUPPORT.reemit(typed, VERIFY_PATH), typed],
 		["a single-line string with an escaped quote is unchanged", SUPPORT.reemit(single, VERIFY_PATH), single],
+		["the row's value text shows the break as the backslash-n escape", ViewportRowBuilder.string_break_as_escape(greeting_value), "\"hello\\nworld\""],
+		["a single-quoted literal reads the same way", ViewportRowBuilder.string_break_as_escape("'a\nb'"), "'a\\nb'"],
+		["a one-line string is left as it is", ViewportRowBuilder.string_break_as_escape("\"a\\nb\""), "\"a\\nb\""],
+		["a value that is not one quoted literal is left as it is", ViewportRowBuilder.string_break_as_escape("[\n1,\n2\n]"), "[\n1,\n2\n]"],
 	])

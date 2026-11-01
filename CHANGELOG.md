@@ -22,6 +22,17 @@ Every window the editor opens now goes through one helper, `EventSheetWindowPlac
   level at the block's left edge, the cell beginning at its own block) and still holds in Classic Sheet
   (`sub_event_strips_test`).
 
+### Fixed: two Wave 16b leftovers
+
+- A string default written over two source lines shows its break in the row. The value read
+  `"helloworld"`; it now reads `"hello\nworld"`, the escape a one-line spelling of the same string would
+  use (`ViewportRowBuilder.string_break_as_escape`). The file is untouched and saves back byte for byte.
+- The loose runtime scripts beside the pack folders (`bus_mix`, `haptics`, `sequencer`, `sequence`,
+  `world_look`, `free_spot`, `pooled_nodes`, `haptic_pattern`) give every declaration its own brief,
+  true `##` note instead of one note written for a group. `pack_variable_descriptions_test` now holds
+  these scripts to the same rule as the pack folders (described, one line, not a paragraph, no
+  neighbour named, not shouting, not cut off).
+
 ### Fixed: a string default written over two source lines opens as one variable row
 
 - `var note := "one` then `two"` used to open as the variable plus a stray wordless `pass"` row. The

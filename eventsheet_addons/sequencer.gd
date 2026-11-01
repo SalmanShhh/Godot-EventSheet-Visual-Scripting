@@ -27,46 +27,44 @@ extends Node
 # plugin declares, and this file ships in the project's OWN folder, so a sheet holding one of these
 # rows goes on parsing and running after the editor is gone.
 
-## The name the play head is added under, so a second Play Sequence on the same object finds the one
-## that is already there rather than starting a second head over the top of it.
+## The name the play head is added under, so a second Play Sequence on an object finds the head already there.
 const NODE_NAME: String = "EventForgeSequencer"
 
-## The signal a crossed cell is said on. A plain signal the sheet declares for itself, which is why
-## it is a name here and not a mechanism.
+## The signal a crossed cell is said on, declared by the sheet itself.
 const STEPPED_SIGNAL: StringName = &"sequence_stepped"
 
-## The autoload a song's clock is read from, and the two things it has to be able to answer. Asked by
-## NAME and by method, never by class, so this file names no pack.
+## The autoload name the song's clock is read from.
 const MUSIC_AUTOLOAD: String = "Music"
-## The same word as a path, spelled once, so the per-frame look-up builds nothing.
+## The Music autoload as a node path, spelled once so the per-frame look-up builds nothing.
 const MUSIC_PATH: NodePath = ^"Music"
+## The method asked of the song's clock for the current beat number.
 const BEAT_NUMBER_METHOD: StringName = &"beat_number"
+## The method asked of the song's clock for how far through the beat it is.
 const BEAT_PHASE_METHOD: StringName = &"beat_phase"
 
-## What a track's group members are asked to do with a cell's name: the door a project writes for
-## itself, and then the verb the Juice behaviour already carries. Both take the name and a strength,
-## so a lights track of Juice nodes plays its cells with nothing written for it - which is what
-## "reaches every light listening on it" has to mean when no shipped pack answers to the first name.
+## The method a track's group members are asked to run with a cell's name and a strength; a project writes its own.
 const PLAY_METHOD: StringName = &"play_moment"
+## The Juice behaviour's own method for the same ask.
 const MOMENT_METHOD: StringName = &"moment"
+## Both method names in the order a group member is asked; the first one it has is called.
 const PLAY_METHODS: Array[StringName] = [PLAY_METHOD, MOMENT_METHOD]
 
-## The answer a frame that crossed nothing gives: one list, made once and never written to, because
-## a head that is playing answers this on nearly every frame it is asked.
+## The shared empty answer for a frame that crossed nothing, made once and never written to.
 const NOTHING_CROSSED: Array[Dictionary] = []
 
 ## Whose sequence this is - the node the signal is raised on.
 var host: Node = null
 
-## The grid being stepped, the tempo it is counted at when no song is playing, and whether the head
-## is moving.
+## The grid being stepped.
 var sequence: SequenceResource = null
+## The tempo the grid is counted at when no song is playing, in beats per minute.
 var bpm: float = 120.0
+## Whether the head is moving.
 var playing: bool = false
 
-## Where the head is, in beats, and the last step it said out loud. The step is kept rather than
-## derived so a frame that crosses three steps says all three rather than only the last.
+## Where the head is, in beats.
 var beat_position: float = 0.0
+## The last step the head said out loud, kept so a frame that crosses several steps says all of them.
 var last_step: int = -1
 
 

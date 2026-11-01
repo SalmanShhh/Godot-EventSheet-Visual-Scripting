@@ -33,22 +33,18 @@ extends RefCounted
 # engine parks and frees the moment the last pulse lands. A continuous rumble is ONE call at the
 # start and one at the stop, not a call a frame. At rest the whole file costs nothing.
 
-## The player's own dial, spelled the same way the other accessibility dials are: a number on the
-## Engine, 1 until somebody sets it, 0 for off.
+## The Engine meta key for the player's haptic strength dial: 1 until set, 0 for off.
 const STRENGTH_META: StringName = &"haptic_strength"
 
-## What is in the hand right now - the moment the last pulse of a pattern ends, and whether a
-## continuous rumble is running. Both on the Engine, because the answer outlives the scene that
-## started it.
+## The Engine meta key for the time in milliseconds at which the last pulse of a pattern ends.
 const UNTIL_META: StringName = &"eventforge_haptics_until"
+## The Engine meta key for whether a continuous rumble is running.
 const CONTINUOUS_META: StringName = &"eventforge_haptics_continuous"
 
-## How long an emphasis is: the shortest pulse a hand reads as a single knock rather than a buzz.
-## A fact about hands rather than a taste, which is why it is a number here and not a field.
+## How long an emphasis pulse lasts in seconds, the shortest a hand reads as one knock.
 const EMPHASIS_SECONDS: float = 0.05
 
-## The platforms with nothing to rumble. A page has no motors, and reaching for them there is a
-## silence rather than a failure.
+## The operating systems with no motors to rumble, where reaching for them stays silent.
 const SILENT_PLATFORMS: PackedStringArray = ["Web"]
 
 

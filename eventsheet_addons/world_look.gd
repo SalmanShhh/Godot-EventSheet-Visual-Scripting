@@ -42,24 +42,19 @@ extends RefCounted
 # packs, in the folder that is the project's own, so deleting the editor addon leaves every emitted
 # line that names it still parsing and still running. That is the whole reason the rows can call it.
 
-## Where the path a worn look came from is remembered. A copy has no `resource_path` of its own -
-## that is what makes it a copy - so the file it came from is written down beside it, on the node.
+## The meta key on a node that remembers the file path its worn look came from.
 const LOOK_META: StringName = &"eventforge_world_look"
 
-## The signal a finished blend raises on the node it was asked of. A plain signal the sheet declares
-## for itself (`signal world_look_blended(look)`), which is why this is a name and not a mechanism.
+## The signal a finished blend raises on the node it was asked of, declared by the sheet itself.
 const BLENDED_SIGNAL: StringName = &"world_look_blended"
 
-## The property types a blend can walk THROUGH rather than cut TO. Everything else - switches, modes,
-## the sky, a colour-grade picture - has nothing in between, so it is cut at the halfway point.
+## The property types a blend can walk through; every other type is cut at the halfway point.
 const CROSSED_TYPES: Array[int] = [TYPE_FLOAT, TYPE_VECTOR2, TYPE_VECTOR3, TYPE_COLOR]
 
 ## The class the two calls read their property list from, so a look holds exactly what an Environment holds and nothing else is copied across.
 const ENVIRONMENT_CLASS: StringName = &"Environment"
 
-## The class whose own properties are NOT part of a look. A resource's name, its path and whether it
-## is local to the scene say where a file lives rather than what a world looks like, and carrying them
-## across would hand this scene the artist file's identity along with its appearance.
+## The class whose own properties are not part of a look: a resource's name, path and scene-local flag say where a file lives, not how a world looks.
 const IDENTITY_CLASS: StringName = &"Resource"
 ## A private, deep copy of the look at a path, or null when the path names no Environment. Deep,
 ## because an Environment holds a Sky which holds a sky material, and a shallow copy would hand the

@@ -12916,6 +12916,7 @@ func _build_variable_row(
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
 	if unassigned_slot:
 		value_text = "null"
+	value_text = string_break_as_escape(value_text)
 	# The value reads as the code writes it: `220.0` beside the word `float`, the same number the
 	# file holds. Only an empty collection is put in words - on a sentence row. An Inspector-style row
 	# keeps `[]` as written, beside the `Array[Node2D]` it is the empty one of.
@@ -13210,6 +13211,19 @@ static func _inferred_type_word(default_value: Variant, expression_default: bool
 		if made != "Variant":
 			return friendly_type_word(made)
 	return ""
+
+
+## A string literal written over several source lines holds real line breaks, which a one-line cell
+## would run together (`"hello` and `world"` reading as helloworld). The break reads as the backslash-n escape
+## a one-line spelling of the same string would use. Anything that is not one quoted literal is
+## returned as it came.
+static func string_break_as_escape(value_text: String) -> String:
+	if not value_text.contains("\n") or value_text.length() < 2:
+		return value_text
+	var quote: String = value_text.substr(0, 1)
+	if (quote != "\"" and quote != "'") or not value_text.ends_with(quote):
+		return value_text
+	return value_text.replace("\r\n", "\n").replace("\n", "\\n")
 
 
 ## A value in the reading shape: an empty collection reads `empty` - `[]` and `{}` are punctuation a
