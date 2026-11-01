@@ -16843,7 +16843,11 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 	# actions, no sub-events - which is exactly the one-line verb body (`ƒ Wall Normal X`) the pair
 	# was designed for. Otherwise it survives and the branch rows become its sub-events, which is
 	# both what an event sheet draws and what keeps the head's conditions gating them.
-	var head_blank: bool = _slice_row_is_blank(head) and (hide_conditions or row.children.is_empty())
+	# In the look that nests by lines a head that says only its placeholder ("Always" over an event with
+	# no condition and no action ahead of the branch) says nothing either: the locals it carried now
+	# stand at its step, so the branch rows and the run after them take the head's own level.
+	var nests_by_lines: bool = _viewport._get_event_style() != null and _viewport._get_event_style().sub_event_strips
+	var head_blank: bool = _slice_row_is_blank(head, nests_by_lines) and (hide_conditions or row.children.is_empty())
 	var branch_indent: int = indent if head_blank else indent + 1
 	var branch_rows: Array[EventRowData] = _build_ternary_branch_rows(
 		row, action_index, found, branch_indent, str(action_index))
@@ -17220,9 +17224,11 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 
 ## True when a slice draws nothing a reader would see - the case where keeping the row would put an
 ## empty two-lane strip above the branch rows.
-func _slice_row_is_blank(row: EventRowData) -> bool:
+func _slice_row_is_blank(row: EventRowData, placeholder_is_blank: bool = false) -> bool:
 	for span: SemanticSpan in row.spans:
 		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
+			continue
+		if placeholder_is_blank and bool(span.metadata.get("placeholder", false)):
 			continue
 		if not span.text.strip_edges().is_empty():
 			return false
