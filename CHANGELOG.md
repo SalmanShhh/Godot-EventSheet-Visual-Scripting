@@ -5,6 +5,7 @@
 ### Fixed: an Else row's "neither of N" note stayed blank until the row was scrolled to
 
 - With words built as rows come into view, an Else row that had not been drawn yet had no span to write its "neither of N" note into when the rows were numbered, so the note read blank (106 rows across the shipped packs) until it was scrolled to. Numbering now builds the words of an Else row first. Found by the reading gate: a dump of every shipped sheet's readings with the old eager limit and with the new one differed in exactly those cells, and is byte-identical (44,728 readings, same sha) with this fix. Pinned in `lazy_span_window_test`.
+
 ### Changed: opening an unchanged .gd again reads its lifted sheet back instead of lifting it again
 
 - The lift (every function reverse-matched against the vocabulary, the whole sheet recompiled to verify it) is linear in the file and was paid in full on every open. `addons/eventforge/importer/lift_cache.gd` now keeps the lifted sheet of a file in `.godot/eventsheets_lift_cache/` as a binary resource, one per source file, and the open job reads it back when the key still holds: the md5 of the source text, the compiler version, the engine, the name and modified time of every script under `addons/eventforge/`, `addons/eventsheet/ace/` and `eventsheet_addons/` (the importer, the lifter, the compiler and the vocabulary), and the number of ACEs the vocabulary holds. One changed byte, a bumped version, an edited lifter or a pack that adds a verb is a fresh lift. A file changed outside the editor has another md5, so it lifts again.
