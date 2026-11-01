@@ -1186,6 +1186,8 @@ func _landing_row(resource: Resource) -> EventRowData:
 	if selected != null and selected.source_resource == resource:
 		return selected
 	var rows: Array = (view.rows_for_resources([resource]) as Dictionary).get("rows", [])
+	if not rows.is_empty() and view.has_method("ensure_words_in"):
+		view.ensure_words_in([rows[0]])
 	return rows[0] as EventRowData if not rows.is_empty() else null
 
 

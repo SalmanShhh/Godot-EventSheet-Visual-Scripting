@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed: rows get their words as they come into view on every shipped pack, not only on huge sheets
+
+- `EAGER_SPAN_LIMIT` falls from 1,500 to 100. The sentence reading of every row used to be built up front for any sheet of up to 1,500 rows, which is every shipped pack (the limit sat 8 rows above the biggest), although only a screenful is ever drawn. Rows now build their words when a layout, hit-test, selection, search or fold reaches them. The windows and exports that read a row's text without laying it out (the bookmarks list, the sheet as text and Markdown export, Copy as text, an error's address, the picker's landing row) ask for the words first through the new `ensure_words_in`.
+- Measured on the 1,492-row pathfinding pack in fresh processes, median of 3: a row rebuild 13,731 ms (12,251 - 14,702) -> 9,374 ms (8,974 - 9,558), and the first open's row build 17,018 ms (16,780 - 19,965) -> 13,969 ms (13,836 - 14,489). Pinned by `lazy_span_window_test` (a sheet over the limit leaves event rows unbuilt; a lazy row's precomputed line count equals its built spans' for every event of a real pack; selecting, searching and `ensure_words_in` build words; a sheet under the limit still builds all) beside the existing rebuild budget.
+- Driven in the real editor on pathfinding: 401 of 1,038 event rows have words at open, a scroll to row 750 builds the window as it is drawn, click selects, hover answers, Find returns 116 hits and go-to lands on the last, a drag lifts a row, the minimap reads all 1,516 rows, and Copy as text of rows never laid out lists their conditions and actions.
 ### Fixed: scrolling a long sheet no longer walks every row of it on every frame
 
 - Each draw worked out the margin brackets (one dictionary per row of the whole sheet) and the variable-folder runs (two more walks of every row). They are held now, keyed to the rows' generation, the layout, the width, the font, the zoom and the look's colours, so a frame that changed none of those reuses them; a rebuild (an edit, a fold, a diagnostics change), a resize, a zoom or a look change computes them again.

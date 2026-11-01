@@ -624,6 +624,7 @@ func sheet_text_markdown() -> String:
 	var view: EventSheetViewport = _dock._active_view()
 	if view == null:
 		return ""
+	view.ensure_words_in(view.get_row_tree())
 	return load(TEXT_LISTING_PATH).markdown_for_rows(view.get_row_tree(), _exported_script_basename())
 
 

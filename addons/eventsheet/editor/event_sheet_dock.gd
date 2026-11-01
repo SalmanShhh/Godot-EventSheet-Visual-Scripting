@@ -3775,6 +3775,7 @@ func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
 				continue
 			located["resource"] = resource
 			located["event_number"] = row_data.event_number
+			view.ensure_words_in([row_data])
 			located["reading"] = row_reading(row_data)
 			return located
 	return located
@@ -8768,6 +8769,7 @@ func _write_sheet_picture(path: String, kind: String) -> void:
 			_set_status(EventSheetL10n.translate("Exported %d page(s) to %s.") % [pages.size(), path])
 		"md":
 			var figures: Array = _write_sheet_figures(path, picture)
+			_active_view().ensure_words_in(_active_view().get_row_tree())
 			var text: String = load(SHEET_EXPORT_PATH).markdown_with_figures(
 				_active_view().get_row_tree(), _sheet_io._exported_script_basename(), figures)
 			var document: FileAccess = FileAccess.open(path, FileAccess.WRITE)

@@ -122,6 +122,7 @@ func selection_listing(targets: Array) -> String:
 	var view: EventSheetViewport = _dock._active_view()
 	if view != null and not rows.is_empty():
 		var found: Dictionary = view.rows_for_resources(rows)
+		view.ensure_words_in(found.get("rows", []))
 		lines.append_array(EventSheetTextListing.lines_for_rows(found.get("rows", []), false, int(found.get("indent", 0))))
 	return "\n".join(lines)
 

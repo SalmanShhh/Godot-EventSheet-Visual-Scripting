@@ -142,6 +142,7 @@ func refresh() -> void:
 			var row_data: EventRowData = flat_entry.get("row")
 			if row_data == null or not row_data.bookmark_enabled or row_data.source_resource == null:
 				continue
+			view.ensure_words_in([row_data])
 			var entry: TreeItem = tree.create_item(sheet_header)
 			entry.set_text(0, entry_label(row_data))
 			if entry_icon != null and row_data.event_number <= 0:

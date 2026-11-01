@@ -228,7 +228,14 @@ const MIN_COMMENT_WRAP_WIDTH := 80.0
 ## Sheets with at most this many rows build all event spans up front (matching the
 ## original non-virtualized behavior exactly). Larger sheets keep spans lazy - built
 ## on demand during layout/hit/selection - so they load fast regardless of size.
-const EAGER_SPAN_LIMIT := 1500
+##
+## 100, not 1500: the limit sat 8 rows above the biggest shipped pack, so the lazy path never ran in
+## the field and every shipped sheet paid for the sentence reading of ALL its rows on every rebuild
+## (3.7 - 5.4 s of the 1,492-row pathfinding pack's rebuild) although only a screenful is ever seen.
+## Heights come from a line count that is pinned equal to the built spans' count, and every
+## consumer that needs a row's words (layout, hit-test, selection, search, fold, copy) builds that
+## row's spans on the way in.
+const EAGER_SPAN_LIMIT := 100
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -938,6 +945,18 @@ func rows_for_resources(resources: Array) -> Dictionary:
 			shallowest = row_data.indent
 			first = false
 	return {"rows": found, "indent": shallowest}
+
+
+## Builds the words of these rows and everything under them, for a window or an export that reads a
+## row's text without ever laying it out (the bookmarks list, the sheet as text, a copy as text, an
+## error's address). Rows past the first screenful keep their words unbuilt until something asks.
+func ensure_words_in(rows: Array) -> void:
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry.get("row") if entry is Dictionary else entry as EventRowData
+		if row_data == null:
+			continue
+		_row_builder._ensure_event_spans(row_data)
+		ensure_words_in(row_data.children)
 
 
 func _collect_rows_for_resources(row_data: EventRowData, resources: Array, into: Array[EventRowData]) -> void:
