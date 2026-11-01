@@ -363,6 +363,10 @@ var _figure_max_width: float = -1.0
 var _figure_content_width: float = -1.0
 var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
+## The row_uid of the ONE branch row of a pair a plain click picked, or "". The pair is one statement
+## and every edit addresses it as one, but a branch is an event of its own in the margin, so a click on
+## it marks just that row; any other selection gesture (a range, a toggle, a click elsewhere) drops it.
+var _branch_focus_uid: String = ""
 var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
 ## Reading Mode (the Simple Mode pill's lens): comment rows in an event body render as italic
@@ -3194,7 +3198,9 @@ func _refresh_rows() -> void:
 		line_row.event_number = int(event_numbers.get(numbered.get_instance_id(), 0)) if (gutter_owner and numbered != null) else 0
 		if branch_shifts.has(line_row.get_instance_id()):
 			var shift: Array = branch_shifts[line_row.get_instance_id()]
-			if gutter_owner:
+			if line_row.row_type == EventRowData.RowType.GROUP:
+				line_row.branch_number = int(shift[1])
+			elif gutter_owner:
 				line_row.event_number += int(shift[0]) if line_row.event_number > 0 else 0
 			else:
 				line_row.branch_number = int(shift[1])
@@ -3292,7 +3298,13 @@ func _walk_branch_numbers(rows: Array, event_numbers: Dictionary, state: Diction
 			continue
 		var is_owner: bool = row_data.ternary_anchor_uid.is_empty() or row_data.ternary_lead
 		var numbered: Resource = row_data.source_resource if row_data.source_resource != null else row_data.reading_resource
-		if row_data.row_type == EventRowData.RowType.EVENT:
+		if row_data.row_type == EventRowData.RowType.GROUP and row_data.source_resource is EventGroup:
+			# A group takes a place in the margin sequence of its own, ahead of what it holds, the way
+			# a branch does: the events after it move down one.
+			state["grown"] = int(state["grown"]) + 1
+			state["last"] = int(state["last"]) + 1
+			shifts[row_data.get_instance_id()] = [int(state["grown"]), int(state["last"])]
+		elif row_data.row_type == EventRowData.RowType.EVENT:
 			var own: int = int(event_numbers.get(numbered.get_instance_id(), 0)) if (is_owner and numbered != null) else 0
 			if own > 0:
 				state["last"] = own + int(state["grown"])
@@ -4168,6 +4180,7 @@ func _get_logical_canvas_width() -> float:
 
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
+	_branch_focus_uid = ""
 	# The param cursor is bound to the previously selected row's values - moving selection drops it.
 	_param_cursor = {}
 	# Selection state is delegated so event-body selection can include descendant
@@ -4206,6 +4219,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 ## Shift+Arrow range gesture. Preserves _selection_anchor_index so the range can grow or shrink
 ## from the same origin, and clears any span-level selection (range selection is whole-row).
 func _select_range(target_index: int) -> void:
+	_branch_focus_uid = ""
 	if _flat_rows.is_empty():
 		return
 	var anchor: int = _selection_anchor_index if _selection_anchor_index >= 0 else _selected_row_index
@@ -4236,8 +4250,18 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 			_clear_selection()
 		return
 	if not toggle:
+		_branch_focus_uid = ""
 		_select_row(row_index, span_index)
+		# A branch of a pair is an event of its own in the margin, so a click on it marks that row alone.
+		var clicked: EventRowData = _row_at(row_index)
+		var nests: bool = _get_event_style() != null and _get_event_style().sub_event_strips
+		if nests and clicked != null and clicked.ternary_view and not clicked.ternary_anchor_uid.is_empty() \
+				and clicked.row_uid.contains("_branch_"):
+			_branch_focus_uid = clicked.row_uid
+			_sync_row_selection_flags()
+			queue_redraw()
 		return
+	_branch_focus_uid = ""
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return
@@ -4304,6 +4328,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 
 
 func _clear_selection() -> void:
+	_branch_focus_uid = ""
 	_selected_row_uids.clear()
 	_selected_span_indices.clear()
 	_span_only_row_uids.clear()
@@ -4319,6 +4344,11 @@ func _clear_selection() -> void:
 ## hover grows or shrinks by it.
 func _sync_row_selection_flags() -> void:
 	_selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
+	if not _branch_focus_uid.is_empty():
+		for flat: Variant in _flat_rows:
+			var flat_row: EventRowData = (flat as Dictionary).get("row")
+			if flat_row != null and flat_row.selected and flat_row.statement_uid() == _branch_focus_uid.get_slice("_branch_", 0):
+				flat_row.selected = flat_row.row_uid == _branch_focus_uid
 	_refresh_resting_add_lines()
 
 

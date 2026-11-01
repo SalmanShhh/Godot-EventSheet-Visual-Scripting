@@ -12,6 +12,15 @@
 - The margin is bare: numbers stand straight on the canvas in a 34 px column, with no band, rail or fill (a selected event still fills it). Blocks step 18 px per level from 52 px (top level 52, sub-events 70, 88), each level's line stands in its slot, the fold arrow is a filled triangle wholly inside its slot on the first line, and events and sub-events are exactly 1 px apart with no card border round them.
 - A group is one flat bar from its own slot (fold triangle, bold name, nothing at the right but the on/off switch while it is off or pointed at), its body is marked by its slot's line instead of a bracket at the canvas edge, and its foot reads `Add event to "Setup"` and `+ Add to "Setup"...` (translated in all nine CSVs).
 - An inverted condition's cross leads its words, no line is drawn between the object and words columns, a line with an object name but no icon starts the name where the lane's other names start, and an inert function body offers none of the add doors (`+ Add...` included). Classic Sheet is unchanged.
+### Changed: the Editor Native readings the event-alignment board asks for
+
+- A branch of an if/else pair closes its action lane with the same "+ Add action" / "+ Add..." line an event does, and leads with its object's icon. The function head's action lane ends with that line too (a click on it on a body with no first step puts a blank step first and fills it).
+- A return reads "Function | Return ..." in an event and in a branch alike. A line about a node named by its path (`$House3x3`) reads under the node's name with a capitalised verb, and a name taken off a `$Path` never borrows the icon of an engine class that shares the word (`$Tree`).
+- A local declared by a ternary (`var sign_text = "-" if value < 0 else ""`) reads as its own Local row (type, name, the value when no branch ran) ahead of the pair, and each arm reads "sign_text | Set to ...". A reading only: the file is untouched and saves back byte for byte.
+- A condition-less event draws an empty condition cell in the rest tone: no "Always" or "Every Tick" word, no strip, and the add-condition door waits for the pointer.
+- A group takes a number in the margin ahead of what it holds; the events after it move down. Find in project and the Project Doctor name events by the margin's number (branches and groups counted), through `EventSheetResource.margin_numbers`.
+- A plain click on a branch marks that branch alone; ranges and toggles still address the whole statement.
+- `_ready` on a script that is not the scene's own reads "System | On ready" (it read "<script> | On created").
 
 ### Fixed: the gap a carried event opens lines up with the blocks of its level, and opens after the whole event when carried over a branch
 

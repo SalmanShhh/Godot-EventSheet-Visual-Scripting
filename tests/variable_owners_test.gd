@@ -597,7 +597,7 @@ static func _note_text(row: EventRowData) -> String:
 static func _object_label_of(row: EventRowData) -> String:
 	for span: SemanticSpan in row.spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-		var label: String = str(metadata.get("object_label", ""))
+		var label: String = str(metadata.get("object_label", "")) if str(metadata.get("lane", "")) == "action" else ""
 		if not label.is_empty():
 			return label
 	return ""

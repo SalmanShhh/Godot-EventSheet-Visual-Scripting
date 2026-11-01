@@ -55,7 +55,7 @@ static func _test_listing() -> bool:
 	viewport.set_sheet(_fixture_sheet())
 	var listing: String = EventSheetTextListing.text_for_rows(viewport.get_row_tree(), false)
 	viewport.free()
-	var expected: String = "+ On created\n    -> SetVariable\n    + CompareVariable\n        -> SetVariable"
+	var expected: String = "+ On ready\n    -> SetVariable\n    + CompareVariable\n        -> SetVariable"
 	return _check("the listing reads + condition / -> action, indented by sub-event", listing, expected)
 
 

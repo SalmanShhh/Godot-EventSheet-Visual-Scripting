@@ -313,7 +313,7 @@ static func resting_add_line_kinds(row_data: EventRowData, event_style: EventShe
 			has_action = true
 		elif kind == "trigger" or (kind == "condition" and not bool(metadata.get("placeholder", false))):
 			has_condition = true
-	if not EventRowRenderer.add_door_revealed(false, false, has_condition):
+	if not EventRowRenderer.add_condition_door_revealed(false, false, has_condition, event_style):
 		kinds.append("add_condition")
 	if not EventRowRenderer.add_door_revealed(false, false, has_action) \
 			and not EventRowRenderer.add_action_line_rests(event_style):

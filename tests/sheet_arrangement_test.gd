@@ -114,11 +114,11 @@ static func _test_arrange_by_trigger() -> bool:
 	var headers: PackedStringArray = PackedStringArray()
 	for bucket: Variant in planned:
 		headers.append(str((bucket as Dictionary).get("header", "")))
-	# The headers are the words the ROWS use, not the raw trigger ids - "On created" for `_ready` on
+	# The headers are the words the ROWS use, not the raw trigger ids - "On ready" for `_ready` on
 	# an object, and the tick trigger's own spelling.
 	var passed: bool = _check("the headers are the triggers, in first-appearance order",
-		", ".join(headers), "On created, Every tick (draw)")
-	passed = _check("both On created events read under the one header",
+		", ".join(headers), "On ready, Every tick (draw)")
+	passed = _check("both On ready events read under the one header",
 		((planned[0] as Dictionary).get("rows", []) as Array).size(), 2) and passed
 	passed = _check("the tick event reads under its own header",
 		((planned[1] as Dictionary).get("rows", []) as Array).size(), 1) and passed
@@ -189,7 +189,7 @@ static func _test_outline_follows() -> bool:
 	var entries: Array = EventSheetOutlinePanel.arranged_entries(sheet, rows, EventSheetArrangement.MODE_TRIGGER)
 	var first: Dictionary = entries[0]
 	var second: Dictionary = entries[1]
-	var passed: bool = _check("the first entry is the first header", str(first.get("label", "")), "On created")
+	var passed: bool = _check("the first entry is the first header", str(first.get("label", "")), "On ready")
 	passed = _check("a header is a group in the jump tree", str(first.get("kind", "")), "group") and passed
 	passed = _check("its events hang under it", int(second.get("parent", -1)), 0) and passed
 	passed = _check("an arranged event still points at its own event row",

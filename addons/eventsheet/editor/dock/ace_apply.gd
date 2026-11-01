@@ -154,6 +154,8 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 		return
 	# A function's head draws its own actions, so its Add action fills the step they belong to.
 	var event_row: EventRow = _dock._active_view().ace_owner(row_data.source_resource) if row_data != null else null
+	if event_row == null and lane == "action" and row_data != null and row_data.source_resource is EventFunction:
+		event_row = _first_step_for_head_action(row_data.source_resource as EventFunction)
 	if event_row == null:
 		return
 	match lane:
@@ -161,6 +163,40 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 			_dock._ace_picker.open("append_action", false, event_row)
 		_:
 			_dock._ace_picker.open("append_condition", false, event_row)
+
+
+## The step a function head's "+ Add action" fills when the function has no step of its own to show
+## beside its head yet: a blank event put first in its body (a blank event runs whenever the function
+## does), which the picked action then makes the head's own action lane. Null when the body cannot be
+## edited. The new step is read back from the live sheet, because the undo funnel replaces resources.
+func _first_step_for_head_action(event_function: EventFunction) -> EventRow:
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null or not view._row_builder._function_body_editable(event_function):
+		return null
+	var function_name: String = event_function.function_name
+	var added: bool = _dock._perform_undoable_sheet_edit("Add Action", func() -> bool:
+		var live: EventFunction = _live_function_named(function_name)
+		if live == null:
+			return false
+		var body: Array = live.events if not live.events.is_empty() or live.rows.is_empty() else live.rows
+		body.insert(0, EventRow.new())
+		return true)
+	if not added:
+		return null
+	var live_function: EventFunction = _live_function_named(function_name)
+	if live_function == null:
+		return null
+	var live_body: Array = live_function.events if not live_function.events.is_empty() else live_function.rows
+	return live_body[0] as EventRow if not live_body.is_empty() else null
+
+
+func _live_function_named(function_name: String) -> EventFunction:
+	if _dock._current_sheet == null:
+		return null
+	for candidate: Variant in _dock._current_sheet.functions:
+		if candidate is EventFunction and (candidate as EventFunction).function_name == function_name:
+			return candidate as EventFunction
+	return null
 
 
 func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:

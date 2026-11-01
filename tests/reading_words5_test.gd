@@ -61,7 +61,7 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 ## And the PART file, which sits on a child node of the same scene: its _ready is that object being
 ## created, not the layout opening.
 static var PART_READINGS: PackedStringArray = PackedStringArray([
-	"opened_script_words5_part ▸ On created"
+	"System ▸ On ready"
 ])
 
 
@@ -189,7 +189,7 @@ static func _lifecycle_trigger_words() -> bool:
 	for row: Array in [
 		# The same trigger id, the two answers the scene decides between
 		["OnReady", true, "On start of layout", "System"],
-		["OnReady", false, "On created", "Player"],
+		["OnReady", false, "On ready", "System"],
 		["OnExitTree", true, "On end of layout", "System"],
 		["OnExitTree", false, "On destroyed", "Player"],
 		# The rest read the same wherever the script sits
@@ -206,7 +206,7 @@ static func _lifecycle_trigger_words() -> bool:
 	# A script with no name of its own keeps whatever label the row already had.
 	ok = _check("a nameless script keeps the row's own object",
 		str(EventSheetViewportReadingRows.lifecycle_trigger_reading(
-			"OnReady", "Whatever", false, "").get("object", "")), "Whatever") and ok
+			"OnReady", "Whatever", false, "").get("object", "")), "System") and ok
 	# Every other trigger is left exactly as it was.
 	ok = _check("a tick trigger is not a lifecycle one",
 		EventSheetViewportReadingRows.lifecycle_trigger_reading("OnProcess", "System", false, "Player"),
@@ -322,7 +322,7 @@ static func _picked_matches_typed() -> bool:
 	var readings: PackedStringArray = _render(sheet)
 	for expected: String in [
 		# A sheet that is nobody's scene root reads its _ready as its object being created
-		"Player ▸ On created",
+		"System ▸ On ready",
 		"System ▸ is in the editor",
 		"Player ▸ Set Every tick (physics) deactivated",
 		"Player ▸ Set Every tick (draw) activated",

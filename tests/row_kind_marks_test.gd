@@ -10,7 +10,7 @@
 #   2. the trigger and the inverted badges are built in every look (the native look's number gutter
 #      no longer swallows the trigger's badge) and the marks' colours per hand;
 #   3. the function head, its parameter lines and a local line, with no kind word anywhere, and a
-#      function's return line, which like the head names no object;
+#      function's return line, which reads "Function | Return ...";
 #   4. a behaviour's action words lead with "Name: " and the old object-column shape is retired;
 #   5. every line leads with an icon whichever builder made its row (an event, a setter, a switch's
 #      branch and its Else, a declared signal and its values), and which icon a class resolves to;
@@ -243,8 +243,8 @@ func _physics_process(delta: float) -> void:
 	raw_call.code = "returned_count += 1"
 	dock.free()
 	return SUPPORT.pins(TEST_NAME, [
-		["a function's return line names no object and leads with the function icon",
-			lines.get("Return left", []), ["", NativeRowMarks.OBJECT_GLYPH_FUNCTION]],
+		["a function's return line reads under Function and leads with the function icon",
+			lines.get("Return left", []), ["Function", NativeRowMarks.OBJECT_GLYPH_FUNCTION]],
 		["a bare return in an event keeps its own reading and object", lines.get("Stop event", []), ["System", ""]],
 		["the Core Return action is a return", ViewportRowBuilder.is_function_return(return_ace), true],
 		["a return written as code is one", ViewportRowBuilder.is_function_return(raw_return), true],

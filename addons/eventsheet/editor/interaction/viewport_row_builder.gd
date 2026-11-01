@@ -4364,7 +4364,26 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		lines = maxi(lines, int((span.metadata as Dictionary).get("line_index", 0)) + 1)
 	row_data.line_count = lines
 	_merge_first_body_step_into_header(row_data)
+	_append_head_add_doors(row_data, event_function)
 	return row_data
+
+
+## The head's action lane ends with the add line an event's does - "+ Add action" and "+ Add..." - even
+## when the function has no step of its own to show beside its head (the step's own add line comes up
+## with it when it has). Only a body that can be edited offers it: a door that opens nothing is worse
+## than none.
+func _append_head_add_doors(row_data: EventRowData, event_function: EventFunction) -> void:
+	if _scaffolding_suppressed() or not _function_body_editable(event_function) \
+			or not EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+		return
+	var action_lines: int = 0
+	for span: SemanticSpan in row_data.spans:
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("kind", "")) == "add_action":
+			return
+		if str(metadata.get("lane", "")) == "action":
+			action_lines = maxi(action_lines, int(metadata.get("line_index", 0)) + 1)
+	_append_branch_add_doors(row_data, action_lines)
 
 
 ## The head of an editor callback or an animation-called function, or [] for every other function.
@@ -4962,6 +4981,15 @@ func _make_row_inert(row_data: EventRowData) -> void:
 	# stays lazy, which is the case worth being lazy for: a two-thousand-line script.
 	if _viewport != null and _viewport._sheet != null and _viewport._sheet.read_only:
 		_ensure_event_spans(row_data)
+	# A row whose words were built eagerly (a branch of a pair) offers no door that opens nothing.
+	if row_data.ternary_view and not row_data.spans.is_empty():
+		var kept: Array[SemanticSpan] = _without_add_doors(row_data.spans)
+		if kept.size() != row_data.spans.size():
+			row_data.spans = kept
+			var lines: int = 1
+			for span: SemanticSpan in kept:
+				lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
+			row_data.line_count = lines
 	row_data.source_resource = null
 	for child: EventRowData in row_data.children:
 		_make_row_inert(child)
@@ -14847,6 +14875,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# so the lane stays empty and the hover says what blank means here.
 	if _blank_sub_event(event_row):
 		always_placeholder_suppressed = true
+	# The look that nests by lines draws a condition-less event's condition cell EMPTY, in the rest tone:
+	# no "Always" word and no "Every Tick" word, because a cell that says nothing already says it runs.
+	if EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+		always_placeholder_suppressed = true
 	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE and not always_placeholder_suppressed:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare
 		# text) so the condition lane still shows a clear, clickable empty event block.
@@ -15486,9 +15518,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 const FUNCTION_RETURN_ACE_IDS: PackedStringArray = ["ReturnValue", "ReturnEarly"]
 
 
-## A function's return line reads like its head: the function icon, then "Return <value>" straight
-## after it. The icon already says whose line it is, so no object name ("Functions", "Function",
-## System or the script's own) stands in the object column. Only a return that reads as one is
+## A function's return line reads "Function | Return <value>" with the function icon leading, the same
+## two columns a branch's return draws, so a return reads alike in an event and in a branch. Whatever
+## object name the line carried ("Functions", System or the script's own) becomes "Function". Only a return that reads as one is
 ## touched: a call to a function keeps its object, a bare `return` keeps its own unless the line is
 ## already the function's (it reads "Stop event" anywhere else), and inside an editor callback or an
 ## edit handed to the undo funnel a return reads as that question's answer and keeps its object too.
@@ -15513,7 +15545,7 @@ func _dress_function_return_lines(spans: Array[SemanticSpan], event_row: EventRo
 			continue
 		if not function_returns_value(action) and not function_words.has(str(metadata.get("object_label", ""))):
 			continue
-		metadata["object_label"] = ""
+		metadata["object_label"] = EventSheetL10n.translate(EventSheetSentence.OBJECT_FUNCTION)
 		metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_FUNCTION
 		metadata["object_icon"] = _glyph_icon_slot()
 
@@ -15578,6 +15610,10 @@ func line_object_icon(object_label: String) -> Texture2D:
 
 ## Object label -> the icon its lines lead with, per sheet (cleared with the other lens caches).
 var _line_icon_cache: Dictionary = {}
+## The object names that were read off a `$Path` reference: node names, not classes. Their icon comes
+## from the node's class in the scene (else the plain node's), and never from a class that merely
+## shares the name.
+var _node_reference_labels: Dictionary = {}
 
 
 func _resolve_line_object_icon(object_label: String) -> Texture2D:
@@ -15590,6 +15626,11 @@ func _resolve_line_object_icon(object_label: String) -> Texture2D:
 		var own_icon: Texture2D = _script_icon_texture(sheet.custom_class_icon.strip_edges())
 		if own_icon != null:
 			return own_icon
+	# A name that came off a `$Path` is a NODE's name, never a class: `$Tree` is the node called Tree, so
+	# its icon is its real class in the scene, else the plain node's - not Godot's Tree control.
+	if _node_reference_labels.has(object_label):
+		var node_class: String = str(_lens_class_map.get(object_label, ""))
+		return class_icon_with_ancestry(node_class if not node_class.is_empty() else "Node")
 	var class_text: String = object_label if ClassDB.class_exists(StringName(object_label)) \
 		else str(_lens_class_map.get(object_label, ""))
 	# The script's own object is the class the script extends, whatever the class map knows of it.
@@ -16602,6 +16643,10 @@ func _find_slice_for_step(rows: Array, step: int) -> Dictionary:
 		var candidate: EventRowData = rows[position] as EventRowData
 		if candidate == null or candidate.row_type != EventRowData.RowType.EVENT:
 			continue
+		# A local the ternary itself declares stands ahead of the first branch that sets it, at the
+		# branches' own level - inside the head that gates them when the head survived.
+		if candidate.ternary_view and candidate.ternary_action_index == step and candidate.row_uid.contains("_branch_"):
+			return {"list": rows, "at": position}
 		if candidate.event_slice:
 			var slice_end: int = candidate.action_slice_to if candidate.action_slice_to >= 0 else 1 << 30
 			if step >= candidate.action_slice_from and step < slice_end:
@@ -16979,10 +17024,44 @@ func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dic
 			row, action_index, arm, indent + 1, branch_path)
 		if nested.is_empty():
 			_append_branch_action_spans(branch_row, row, action_index, arm)
+			_dress_function_return_lines(branch_row.spans, row.source_resource as EventRow)
+			_append_branch_add_doors(branch_row, 1)
 		else:
 			branch_row.children.append_array(nested)
+		# A branch's test, its Else and its action lead with their object's icon, as an event's do.
+		_dress_line_object_icons(branch_row.spans)
 		rows.append(branch_row)
 	return rows
+
+
+## The add line a branch's action lane ends with - "+ Add action" at the left and "+ Add..." at the
+## right, the line an event closes its actions with - so a branch is one more event to add to. The
+## click lands on the event the branch reads (the row carries its source), like the event's own door.
+## An inert body strips these again when it is made inert, and a read-only sheet never draws them.
+func _append_branch_add_doors(branch_row: EventRowData, action_lines: int) -> void:
+	# Only the look that closes every event with its add line gives a branch one; the others keep a
+	# pair as the plain rows it always was.
+	if _scaffolding_suppressed() or not EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+		return
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var add_color: Color = action_style.get("text_color", _viewport._get_action_style().text_color)
+	add_color.a *= 0.55
+	branch_row.spans.append(_make_span(EventSheetL10n.translate("+ Add action"), SemanticSpan.SpanType.ACTION, {
+		"lane": "action",
+		"kind": "add_action",
+		"line_index": action_lines,
+		"text_color": add_color,
+		"font_size_delta": action_style.get("font_size_delta", 0)
+	}))
+	branch_row.spans.append(_make_span(EventSheetL10n.translate("+ Add…"), SemanticSpan.SpanType.ACTION, {
+		"lane": "action",
+		"kind": "add_menu",
+		"align_right": true,
+		"line_index": action_lines,
+		"text_color": add_color,
+		"font_size_delta": action_style.get("font_size_delta", 0)
+	}))
+	branch_row.line_count = maxi(branch_row.line_count, action_lines + 1)
 
 
 ## One branch row's shell plus its CONDITION cells - the branch test read through the grammar's
@@ -17168,6 +17247,21 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 	else:
 		branch_action.parameters[param_key] = value
 	var declaration: Dictionary = grammar_action_declaration(branch_action)
+	if not declaration.is_empty() and bool(local_declaration_promotion(action).get("ternary", false)):
+		# The Local row ahead of the pair declares the variable; each arm only fills it in.
+		spans.append(_make_span("%s %s" % [EventSheetL10n.translate("Set to"), str(declaration.get("value", ""))],
+			SemanticSpan.SpanType.ACTION, {
+				"lane": "action",
+				"kind": "action",
+				"ace_index": action_index,
+				"ace_enabled": action.enabled,
+				"chip": true,
+				"line_index": 0,
+				"object_label": str(declaration.get("name", "")),
+				"object_glyph": NativeRowMarks.OBJECT_GLYPH_LOCAL,
+				"object_icon": _glyph_icon_slot()
+			}.merged(action_style_meta, true)))
+		return
 	if not declaration.is_empty():
 		append_local_declaration_spans(spans, declaration, {
 			"lane": "action",
@@ -17743,6 +17837,13 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 			# name: `Player`, `spike_ring`. The class it extends is the icon in front of the name. A
 			# line whose target names another node - `enemy` - is about that node, and keeps the class.
 			var target: String = str(params.get("target", "")).strip_edges()
+			# A node named by its path (`$House3x3`, `%Hud`) is the object the line is about, by the name
+			# the scene tree shows - not the class the vocabulary files the verb under.
+			if target.begins_with("$") or target.begins_with("%"):
+				var named: String = EventSheetSentence.object_of_reference(target)
+				if not named.is_empty() and named != target:
+					_node_reference_labels[named] = true
+					return named
 			if not target.is_empty() and target != "self":
 				return node_type
 			var own: String = _own_object_for_class(node_type)
@@ -18098,6 +18199,12 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	if not attached.is_empty():
 		row_note = attached if row_note.is_empty() else "%s · %s" % [attached, row_note]
 	var base_text: String = _reading_sentence(_humanized_input_event_text(_format_action_descriptor_base(action)))
+	# A line about a node named by its path reads like every other line of its object: "Set ...", never
+	# the vocabulary's lower-case sentence.
+	var path_target: String = str((action.params if not action.params.is_empty() else action.parameters).get("target", "")).strip_edges()
+	if (path_target.begins_with("$") or path_target.begins_with("%")) and not base_text.is_empty() \
+			and base_text[0] != base_text[0].to_upper():
+		base_text = base_text[0].to_upper() + base_text.substr(1)
 	if not row_note.is_empty():
 		base_text += "   💬 %s" % row_note
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
@@ -20431,7 +20538,8 @@ func event_promotes_locals(event_row: EventRow) -> bool:
 		if not (action_resource is ACEAction):
 			return true
 		var promotion: Dictionary = local_declaration_promotion(action_resource as ACEAction)
-		if promotion.is_empty() or not str(promotion.get("set_value", "")).is_empty():
+		if promotion.is_empty() or not str(promotion.get("set_value", "")).is_empty() \
+				or bool(promotion.get("ternary", false)):
 			return true
 	return false
 
@@ -20448,7 +20556,7 @@ func local_declaration_promotion(action: ACEAction) -> Dictionary:
 	# declaration itself once per arm. Promoting it too would say the same thing three times.
 	var raw_value: String = str(declaration.get("raw_value", ""))
 	if raw_value.contains(" if ") and raw_value.contains(" else "):
-		return {}
+		return _ternary_local_promotion(action, raw_value)
 	# The follower a hierarchy row writes out is plumbing the row already stands for, not a
 	# value the reader introduced - promoting it would put a name nobody typed at the top of the
 	# event, one line above the row that explains it.
@@ -20458,6 +20566,29 @@ func local_declaration_promotion(action: ACEAction) -> Dictionary:
 	var promoted: Dictionary = declaration.duplicate(true)
 	promoted["value"] = str(split.get("value", ""))
 	return {"declaration": promoted, "set_value": str(split.get("set_value", ""))}
+
+
+## A local declared by a ternary (`var sign_text = "-" if value < 0 else ""`) reads as its own Local row -
+## type, name, and the value it holds when no branch ran: the final arm - ahead of the pair, and the
+## arms read as the Sets that fill it in. {} when the value does not split into plain arms (an arm that
+## itself branches keeps the per-arm declaration reading it always had). A reading only: the line stays
+## the one statement the file holds, so emission and the round trip never move.
+func _ternary_local_promotion(action: ACEAction, raw_value: String) -> Dictionary:
+	var arms: Array = EventSheetSentence.value_branches(raw_value)
+	if arms.size() < 2:
+		return {}
+	var default_code: String = str((arms[arms.size() - 1] as Dictionary).get("code", "")).strip_edges()
+	if default_code.is_empty() or _may_branch(default_code):
+		return {}
+	var default_action: ACEAction = action.duplicate(true) as ACEAction
+	if not default_action.params.is_empty():
+		default_action.params["value"] = default_code
+	else:
+		default_action.parameters["value"] = default_code
+	var default_declaration: Dictionary = grammar_action_declaration(default_action)
+	if default_declaration.is_empty():
+		return {}
+	return {"declaration": default_declaration, "set_value": "", "ternary": true}
 
 
 ## The GDScript line a lifted Start Timer / Stop Timer row stands for, so the row reads through
@@ -20718,6 +20849,23 @@ func invalidate_lens_caches() -> void:
 	_lens_sheet_stamp = 0
 
 
+## The node names the sheet's own source reaches by path (`$Tree`, `%Hud`, `$"A/B"` -> B), as a set. A
+## name in it is a NODE's name wherever an object column shows it, so it never takes the icon of an
+## engine class that merely shares the word. Read off the script's own text; a sheet with no file has none.
+func _node_references_in(sheet: EventSheetResource) -> Dictionary:
+	var found: Dictionary = {}
+	if sheet == null:
+		return found
+	var path: String = str(sheet.external_source_path).strip_edges()
+	if path.is_empty() or not FileAccess.file_exists(path):
+		return found
+	var matcher := RegEx.new()
+	matcher.compile("[$%]\"?(?:[A-Za-z0-9_]+/)*([A-Za-z_][A-Za-z0-9_]*)")
+	for hit: RegExMatch in matcher.search_all(FileAccess.get_file_as_string(path)):
+		found[hit.get_string(1)] = true
+	return found
+
+
 func _reset_lens_caches_if_stale() -> void:
 	var sheet: EventSheetResource = _viewport._sheet
 	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
@@ -20725,6 +20873,7 @@ func _reset_lens_caches_if_stale() -> void:
 		return
 	_lens_sheet_stamp = stamp
 	_line_icon_cache = {}
+	_node_reference_labels = _node_references_in(sheet)
 	_global_class_index_built = false
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)

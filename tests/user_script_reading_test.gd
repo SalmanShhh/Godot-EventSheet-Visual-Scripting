@@ -210,8 +210,8 @@ static func _test_pack_reads_under_one_name() -> bool:
 	dock._viewport.set_reading_mode(true)
 	var lines: PackedStringArray = _lines(dock)
 	var ok: bool = SUPPORT.pins(NAME, [
-		["a pack's trigger reads under the pack's own name", _line_with(lines, "On created", 0).get_slice(" | ", 0),
-			"Health: On created"],
+		["a pack's trigger reads under the pack's own name", _line_with(lines, "On ready", 0).get_slice(" | ", 0),
+			"System: On ready"],
 		["a line that fills one of the pack's own tables reads under the same name",
 			_line_with(lines, "HealthPool.new()", 0).get_slice(" | ", 1), "Health: Set health_pools[type] to HealthPool.new()"],
 		# Folded, a data type's line names its first fields the way they are written.

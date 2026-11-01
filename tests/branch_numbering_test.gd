@@ -84,11 +84,11 @@ static func _test_numbers() -> bool:
 		["Editor Native: the pair's two branches take 3 and 4, the events after move down, the placeholder head is gone",
 			native_shape, PackedStringArray([
 				"event:0:1", "event:1:2", "event:2:b3", "event:2:b4", "event:1:5",
-				"event:1:6", "event:1:b7", "local:1", "local:1", "event:1:b8", "event:1:9", "event:1:10"])],
+				"local:1", "event:1:6", "event:1:b7", "local:1", "local:1", "event:1:b8", "event:1:9", "event:1:10"])],
 		["Classic Sheet keeps one number per event and no branch number",
 			classic_shape, PackedStringArray([
 				"event:0:1", "event:1:2", "event:2:-", "event:2:-", "event:1:3",
-				"event:1:4", "event:2:-", "event:2:-", "event:2:-", "local:2", "local:2", "event:1:5", "event:1:6"])],
+				"event:1:4", "event:2:-", "event:2:-", "event:2:-", "local:2", "local:2", "local:2", "event:1:5", "event:1:6"])],
 	])
 
 

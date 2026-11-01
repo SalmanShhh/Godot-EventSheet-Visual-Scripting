@@ -32,7 +32,7 @@ static func _labels(host_class: String) -> String:
 
 static func _test_curated_classes() -> bool:
 	var passed: bool = _check("a body starts with the four events it always gets",
-		_labels("CharacterBody2D"), "On created, Every tick (physics), On hit, On died")
+		_labels("CharacterBody2D"), "On ready, Every tick (physics), On hit, On died")
 	passed = _check("a button starts with the one event it has", _labels("Button"), "On clicked") and passed
 	passed = _check("a timer starts with its timeout", _labels("Timer"), "On timer") and passed
 	passed = _check("an area starts with the collision", _labels("Area2D"), "On collision with") and passed
@@ -51,8 +51,8 @@ static func _test_inherited_and_derived() -> bool:
 	passed = _check("a class nobody curated derives its own signals",
 		Array(derived).has("signal:request_completed"), true) and passed
 	var starters: Array = EventSheetStarterEvents.starters_for("HTTPRequest")
-	passed = _check("a derived set still leads with On created",
-		str((starters[0] as Dictionary).get("label", "")), "On created") and passed
+	passed = _check("a derived set still leads with On ready",
+		str((starters[0] as Dictionary).get("label", "")), "On ready") and passed
 	passed = _check("a derived set stays a starter set, not a directory",
 		starters.size() <= EventSheetStarterEvents.DERIVED_LIMIT + 1, true) and passed
 	return passed

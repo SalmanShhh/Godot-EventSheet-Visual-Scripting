@@ -86,12 +86,12 @@ static func _test_levels() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["Editor Native: no head row, and the branches, locals and runs all stand on the body's level",
 			native_shape, PackedStringArray([
-				"event:0", "event:1", "event:1", "local:1", "local:1", "event:1", "event:1", "local:1", "event:1"])],
+				"event:0", "local:1", "event:1", "event:1", "local:1", "local:1", "event:1", "event:1", "local:1", "event:1"])],
 		["Classic Sheet reads this body as it always did (the look decides, not the shape)",
 			classic_shape, PackedStringArray([
-				"event:0", "event:1", "event:1", "event:1", "local:1", "local:1", "event:1", "event:1", "local:2"])],
+				"event:0", "event:1", "event:1", "event:1", "local:1", "local:1", "local:1", "event:1", "event:1", "local:2"])],
 		["a head with a condition of its own is kept, and its branches stay under it",
-			guarded_shape, PackedStringArray(["event:0", "event:1", "event:2", "event:2", "event:2", "event:1"])],
+			guarded_shape, PackedStringArray(["event:0", "event:1", "local:2", "event:2", "event:2", "event:2", "event:1"])],
 	])
 
 

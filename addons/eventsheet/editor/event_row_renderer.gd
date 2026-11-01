@@ -724,6 +724,15 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			group_tint = row_data.custom_color
 		_draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint,
 			nested_block_left_for(row_data.indent, row_indent_width) if strips_look else 0.0)
+		# The look that numbers groups in the margin: the bar's chrome has just covered the gutter, so
+		# the number is set down again over it, in the margin's own ink.
+		if show_event_numbers and int(layout.get("branch_number", 0)) > 0 and font != null and gutter_rect.size != Vector2.ZERO:
+			var group_text: String = str(int(layout.get("branch_number", 0)))
+			var group_box: Vector2 = gutter_number_box(gutter_rect,
+				font.get_string_size(group_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x, false)
+			_draw_text(control, Vector2(group_box.x, gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)),
+				group_text, group_box.y, font, font_size - 1,
+				event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT)
 	elif row_data.row_type == EventRowData.RowType.REGION:
 		# A region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and a
 		# solid 2px rule on the head, and nothing but that rule on the closing tick, so the fences
@@ -1220,14 +1229,13 @@ static func condition_cell_rest(event_style: EventSheetEventStyle) -> Color:
 
 ## The condition cell as ONE panel the full height of its event, however many actions the event has:
 ## the quieter tone from top to foot, then each condition line as its own lighter strip with a 1 px
-## rule under it, so it is plain where one condition ends. An event with no condition draws one empty
-## strip of normal height and the quiet tone below it. `bands` holds one Vector2(y, height) per line.
+## rule under it, so it is plain where one condition ends. An event with no condition draws no strip at all,
+## only the quiet tone, empty. `bands` holds one Vector2(y, height) per line.
 func _draw_condition_cell(control: Control, lane_rect: Rect2, bands: Array, line_height: float,
 		event_style: EventSheetEventStyle, radius: int) -> void:
 	_draw_rounded_rect(control, lane_rect, condition_cell_rest(event_style), radius, 0, radius, 0)
+	# An event with no condition draws NO strip: the whole cell stays in the quiet tone, empty.
 	var strips: Array = bands
-	if strips.is_empty():
-		strips = [Vector2(lane_rect.position.y, minf(line_height, lane_rect.size.y))]
 	var rule: float = EventSheetPalette.scaled_f(1.0)
 	for band: Vector2 in strips:
 		var top: float = maxf(band.x, lane_rect.position.y)
@@ -1734,7 +1742,7 @@ func _draw_spans(
 			row_has_condition = true
 	var reveal_add_action: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_action) \
 			or add_action_line_rests(event_style)
-	var reveal_add_condition: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_condition)
+	var reveal_add_condition: bool = add_condition_door_revealed(row_data.hovered, row_data.selected, row_has_condition, event_style)
 	# A look that nests by lines puts an inverted condition's cross at the head of its WORDS, after the
 	# object, so the cross and the sentence read as one thing: the lines that carry one are found here.
 	var strips_look: bool = event_style != null and event_style.sub_event_strips
@@ -2383,6 +2391,16 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary,
 ## and for the pills; the toggle changes how the door is drawn, never where.
 static func add_door_revealed(hovered: bool, selected: bool, lane_filled: bool) -> bool:
 	return hovered or selected or not lane_filled
+
+
+## The same question for the "+ Add condition" door. The look that nests by lines draws a condition-less
+## event's condition cell EMPTY at rest - the cell says nothing and invites nothing - and the door
+## appears only under the pointer or on a selected event.
+static func add_condition_door_revealed(hovered: bool, selected: bool, lane_filled: bool,
+		event_style: EventSheetEventStyle) -> bool:
+	if add_menu_link_wanted(event_style):
+		return hovered or selected
+	return add_door_revealed(hovered, selected, lane_filled)
 
 
 ## True when the look keeps "+ Add action" under every event's actions at rest, not only on hover: the

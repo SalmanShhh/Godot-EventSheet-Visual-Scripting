@@ -2097,7 +2097,9 @@ static func lifecycle_trigger_reading(trigger_id: String, object_label: String,
 		"OnReady":
 			if scene_root:
 				return {"text": EventSheetL10n.translate("On start of layout"), "object": system}
-			return {"text": EventSheetL10n.translate("On created"), "object": owner}
+			# `_ready` reads as what it is - the node being ready - said by System like the other
+			# whole-game triggers, not as the script's own object being "created".
+			return {"text": EventSheetL10n.translate("On ready"), "object": system}
 		"OnExitTree":
 			if scene_root:
 				return {"text": EventSheetL10n.translate("On end of layout"), "object": system}

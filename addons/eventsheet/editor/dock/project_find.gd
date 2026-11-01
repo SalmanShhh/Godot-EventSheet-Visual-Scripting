@@ -198,7 +198,7 @@ static func _event_numbers_by_uid(sheet: EventSheetResource) -> Dictionary:
 	var by_uid: Dictionary = {}
 	if sheet == null:
 		return by_uid
-	var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events, sheet.functions)
+	var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
 	for id: int in numbers:
 		var row: Object = instance_from_id(id)
 		if row is EventRow and not (row as EventRow).event_uid.is_empty():

@@ -185,6 +185,21 @@ static func event_numbers(entries: Array, functions: Array = []) -> Dictionary:
 	return numbers
 
 
+## instance-id -> the number the sheet's MARGIN draws for it, in the look the sheet is drawn in. The
+## same as event_numbers unless that look numbers more than the events (the look that nests by lines
+## numbers the branches of a pair and the groups), and then the number the gutter shows: the events
+## after those move down. Doctor findings and Find results name an event through THIS, so "event 6"
+## means the same row there as in the margin. Pure over the sheet; the editor's reading answers it.
+static func margin_numbers(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var reading: Script = load("res://addons/eventsheet/editor/interaction/margin_numbering.gd") as Script \
+		if ResourceLoader.exists("res://addons/eventsheet/editor/interaction/margin_numbering.gd") else null
+	if reading == null:
+		return event_numbers(sheet.events, sheet.functions)
+	return reading.call("numbers", sheet)
+
+
 ## How many events the margin numbers: the highest number event_numbers hands out. A function and the
 ## step it draws as its own actions share one number, so this is NOT the size of that map - counting its
 ## keys would count each function twice. The sheet head, the status bar and "event N of M" all say this.
