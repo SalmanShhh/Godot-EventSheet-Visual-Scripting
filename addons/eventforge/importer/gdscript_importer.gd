@@ -559,6 +559,11 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 	# whole declaration stays one block of code; the multi-line collection lift may still claim it.
 	if EventSheetACELifter._bracket_delta(declaration) > 0:
 		return null
+	# A string literal left open at the end of the line runs on over the next lines. This line alone
+	# would read as a variable whose value is the opening quote and a word, with the rest stranded in
+	# code blocks after it; the multi-line lift takes the whole literal instead.
+	if not _open_string_quote(declaration, "").is_empty():
+		return null
 	# The inferred-type walrus (`var hp := 100`, `const SPEED := 2.5`, `@export var x := ...`):
 	# beginner-style files declare everything this way, and the typed parser cannot represent it.
 	# Keep the default as verbatim source text and flag the spelling so emission reproduces it;
@@ -697,6 +702,9 @@ func _try_lift_written_variable(lines: PackedStringArray, index: int) -> Diction
 	var stripped: String = head.strip_edges()
 	if stripped.ends_with("{") or stripped.ends_with("["):
 		return {}
+	var open_quote: String = _open_string_quote(head, "")
+	if not open_quote.is_empty():
+		return _lift_multiline_string_variable(lines, index, open_quote)
 	var last: int = index
 	var open: int = EventSheetACELifter._bracket_delta(head)
 	if open > 0:
@@ -732,6 +740,56 @@ func _try_lift_written_variable(lines: PackedStringArray, index: int) -> Diction
 	if lifted.written_value.is_empty() or SheetCompiler._emit_tree_variable_line(lifted) != str(joined["written"]):
 		return {}
 	return {"var": lifted, "consumed": run.size(), "written": str(joined["written"])}
+
+
+## The quote still open at the end of `line` when it starts inside a string opened with `quote_in`
+## ("" for none): `"` or `'` when the line leaves a string literal unfinished, "" when every string it
+## opens is closed. Escapes are skipped and a `#` outside a string ends the line. A triple-quoted
+## string is not this lift's, so a line that holds one reads as closed.
+static func _open_string_quote(line: String, quote_in: String) -> String:
+	if line.contains("\"\"\"") or line.contains("'''"):
+		return ""
+	var quote: String = quote_in
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 1
+			elif character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			break
+		index += 1
+	return quote
+
+
+## A declaration whose string literal runs over several lines - `var note := "one` then `two"` - lifted
+## whole: {var, consumed, written}, or {} when it cannot be. The line breaks are part of the value, so the
+## lines are kept exactly as written (nothing is joined) and the value stays the verbatim text. Byte-gated
+## like every lift: the row must write back the very lines it was read from.
+func _lift_multiline_string_variable(lines: PackedStringArray, index: int, open_quote: String) -> Dictionary:
+	var last: int = index
+	var quote: String = open_quote
+	while not quote.is_empty() and last + 1 < lines.size():
+		last += 1
+		quote = _open_string_quote(lines[last], quote)
+	if not quote.is_empty():
+		return {}
+	var run: PackedStringArray = lines.slice(index, last + 1)
+	var text: String = "\n".join(run)
+	var lifted: LocalVariable = _try_lift_variable(text, true)
+	if lifted == null:
+		lifted = _typed_expression_variable(text)
+	if lifted == null:
+		return {}
+	if not (lifted.default_value is String):
+		return {}
+	if SheetCompiler._emit_tree_variable_line(lifted) != text:
+		return {}
+	return {"var": lifted, "consumed": run.size(), "written": text}
 
 
 ## A typed declaration whose value is kept as the text it was written as - `const WORDS:

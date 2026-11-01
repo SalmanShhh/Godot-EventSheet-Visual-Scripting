@@ -22,6 +22,18 @@ Every window the editor opens now goes through one helper, `EventSheetWindowPlac
   level at the block's left edge, the cell beginning at its own block) and still holds in Classic Sheet
   (`sub_event_strips_test`).
 
+### Fixed: a string default written over two source lines opens as one variable row
+
+- `var note := "one` then `two"` used to open as the variable plus a stray wordless `pass"` row. The
+  declaration lift now takes the whole literal, keeps its lines exactly as written, and is gated by
+  byte-exact re-emission like every lift. Fixture `tests/fixtures/multiline_string_default.gd`.
+
+### Fixed: the inherited bar counts in the singular
+
+- "1 variables / 2 functions" now reads "1 variable / 2 functions". `EventSheetL10n.counted(one, many, count)`
+  picks the singular row for exactly one and the plural row otherwise; all nine translation files already
+  carry both rows, so each language words its own.
+
 ### Fixed: behaviour variable descriptions say what the code does
 
 - A pack-wide fold had put notes written for a group of declarations onto the first one. Every pack

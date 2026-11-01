@@ -237,6 +237,15 @@ static func translate(text: String) -> String:
 	return str(catalog.get(text, text))
 
 
+## A count with its noun in the right number: the `one` key ("1 variable") when `count` is exactly 1,
+## otherwise the `many` key ("%d variables") filled with the count. Both keys are rows of every
+## translation file, so each language words its own singular and plural.
+static func counted(one: String, many: String, count: int) -> String:
+	if count == 1:
+		return translate(one)
+	return translate(many) % count
+
+
 ## Assigns the plugin's translation domain to a UI root (the dock, a detached window): every
 ## descendant Control's text/tooltip then auto-translates. Idempotent.
 static func apply_to(node: Node) -> void:

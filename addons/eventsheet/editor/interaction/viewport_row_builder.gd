@@ -3009,7 +3009,7 @@ func _build_inherited_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 		_make_span(kinds.word("from", familiar), SemanticSpan.SpanType.VALUE, fold_meta.merged({"text_color": inks["tag"]}, true)),
 		_make_span(parent_text, SemanticSpan.SpanType.KEYWORD, open_meta.merged({"text_color": inks["name"]}, true)),
 	]
-	var counts: String = EventSheetL10n.translate("%d variables · %d functions") % [variables.size(), functions.size()]
+	var counts: String = EventSheetL10n.counted("1 variable", "%d variables", variables.size()) + " · " + EventSheetL10n.counted("1 function", "%d functions", functions.size())
 	if folded:
 		bar.spans.append(_make_span(counts, SemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
 	else:
