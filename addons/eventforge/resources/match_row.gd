@@ -16,8 +16,7 @@ extends Resource
 ##   _:
 ##       pass
 ## Used only when `cases` is empty (the raw-text form / the escape hatch and the current importer lift).
-@export_multiline var branches_text: String = "_:
-	pass"
+@export_multiline var branches_text: String = "_:\n\tpass"
 ## Structured branches (the switch/case form). When non-empty, the match compiles from these instead of
 ## branches_text: each MatchCase is one `pattern:` branch whose action-lane body compiles one indent deeper.
 ## Additive - an old raw-text MatchRow leaves this empty and keeps working unchanged. See match_case.gd.

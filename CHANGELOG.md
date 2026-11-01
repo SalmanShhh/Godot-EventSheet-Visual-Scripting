@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed: the editor's own MatchRow script reads without a stray row
+
+- `match_row.gd` wrote its default branch text as a string running over two source lines, which
+  opened as the variable plus a wordless `pass"` row and put the file over its group's wordless-row
+  ceiling the day the self-reading sample picked it. The default is the same text, written on one
+  line with `\n\t`.
+
 ### Fixed: a name cut short in a chip cell is read whole on hover
 
 - In a cell drawn as a chip (Editor Native's condition and action cells) the hover measured the
