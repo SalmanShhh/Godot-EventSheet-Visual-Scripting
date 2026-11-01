@@ -9738,7 +9738,7 @@ Two states are named %s. Each state needs a name of its own.,Два состоя
 "%s is still used by %d row(s), so it was not removed. Point those rows at another state first, then remove it.","%s всё ещё используется в %d строк(ах), поэтому не удалено. Сначала направьте эти строки на другое состояние, затем удалите его."
 the default state,состояние по умолчанию
 %s · %s s,%s · %s с
-A list whose items are all %s. Items are numbered from 0 and the list grows and shrinks as you add and remove.,"Список, все элементы которого — %s. Элементы нумеруются с 0, а список растёт и сжимается при добавлении и удалении."
+A list whose items are all %s. Items are numbered from 0 and the list grows and shrinks as you add and remove.,"Список, все элементы которого - %s. Элементы нумеруются с 0, а список растёт и сжимается при добавлении и удалении."
 Godot class reference: Array,Справочник классов Godot: Array
 "A table of keys and values, with the key and value types written in the brackets.",Таблица ключей и значений; типы ключа и значения записаны в скобках.
 Godot class reference: Dictionary,Справочник классов Godot: Dictionary
@@ -9769,7 +9769,7 @@ A 3D rotation stored in a form that does not suffer gimbal lock.,"3D-повор�
 A list of values of any type. Items are numbered from 0 and the list grows and shrinks as you add and remove.,"Список значений любого типа. Элементы нумеруются с 0, а список растёт и сжимается при добавлении и удалении."
 A table of keys and values: look a value up by its key.,Таблица ключей и значений: значение ищется по его ключу.
 A function that can be stored in a variable and called later.,"Функция, которую можно сохранить в переменной и вызвать позже."
-"A message an object can send, which any other object can listen for.","Сообщение, которое объект может отправить, а любой другой объект — прослушивать."
+"A message an object can send, which any other object can listen for.","Сообщение, которое объект может отправить, а любой другой объект - прослушивать."
 A low-level handle Godot's servers use to refer to a resource they own.,"Низкоуровневый дескриптор, которым серверы Godot ссылаются на принадлежащий им ресурс."
 The base of everything Godot can hold in a variable and call functions on.,"Основа всего, что Godot может хранить в переменной и у чего может вызывать функции."
 A compact list of text values.,Компактный список текстовых значений.
@@ -9789,7 +9789,7 @@ is {state} for over {seconds} s,в состоянии {state} дольше {seco
 was {state},был в состоянии {state}
 go to {state},перейти в состояние {state}
 Is A Kind Of,Является разновидностью
-"True when a value is the named class or a kind of it - a Slime that extends Enemy passes for Enemy. The class field completes from your own classes first, then Godot's.","Истинно, когда значение — названный класс или его разновидность: Slime, расширяющий Enemy, считается Enemy. Поле класса дополняет сначала ваши собственные классы, затем классы Godot."
+"True when a value is the named class or a kind of it - a Slime that extends Enemy passes for Enemy. The class field completes from your own classes first, then Godot's.","Истинно, когда значение - названный класс или его разновидность: Slime, расширяющий Enemy, считается Enemy. Поле класса дополняет сначала ваши собственные классы, затем классы Godot."
 {value} is a kind of {kind},{value} является разновидностью {kind}
 A class of your project or of Godot. Your own classes complete first.,Класс вашего проекта или Godot. Ваши собственные классы дополняются первыми.
 Also Run Parent Function,Также выполнить родительскую функцию
@@ -9833,8 +9833,8 @@ Fold or unfold what this kind inherits.,Свернуть или разверну
 "Open the parent's sheet, where these are changed.","Открывает лист родителя, где это изменяется."
 %d variables · %d functions,переменных: %d · функций: %d
 "read here, changed on %s's sheet","читается здесь, меняется на листе %s"
-Double-click to start it at another value.,Двойной щелчок — начать с другого значения.
-Right-click to replace it in %s.,Правый щелчок — заменить в %s.
+Double-click to start it at another value.,Двойной щелчок - начать с другого значения.
+Right-click to replace it in %s.,Правый щелчок - заменить в %s.
 "%s changed since this step, so no file was written and the sheet is not saved.","%s изменился после этого шага, поэтому ни один файл не записан и лист не сохранён."
 "In %s, 1 test of %s will test %s instead.","В %s 1 проверка %s теперь будет проверять %s."
 "In %s, %d tests of %s will test %s instead.","В %s: проверок (%d) состояния %s теперь будут проверять %s."

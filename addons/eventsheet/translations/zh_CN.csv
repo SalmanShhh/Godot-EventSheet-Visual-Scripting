@@ -5058,13 +5058,13 @@ Go to mode {mode},切换到模式 {mode}
 Mode,模式
 Which of this game's declared modes. The Edit modes dialog on the sheet head is where they are declared.,本游戏已声明的模式之一。它们在事件表头部的“编辑模式”对话框中声明。
 In Mode,处于模式
-"True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own ""runs in"" word does this for every row inside it.",当游戏处于该模式时为真。对于一整组行，请改为在分组上写一次——分组自身的“运行于”一词会为其中每一行做到这一点。
+"True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own ""runs in"" word does this for every row inside it.",当游戏处于该模式时为真。对于一整组行，请改为在分组上写一次，分组自身的“运行于”一词会为其中每一行做到这一点。
 In mode {mode},处于模式 {mode}
 Push Mode,叠加模式
-"Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.",进入某个模式并记住其下方的模式——在游玩之上是暂停，暂停之上又打开了菜单。返回会回到其下方的模式，这正是用词汇本身解决的 Esc 键问题。
+"Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.",进入某个模式并记住其下方的模式，在游玩之上是暂停，暂停之上又打开了菜单。返回会回到其下方的模式，这正是用词汇本身解决的 Esc 键问题。
 Push mode {mode},叠加模式 {mode}
 Go Back,返回
-"Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.",返回到位于其下方的模式——菜单会合上，落回它所覆盖的暂停之上。若没有叠加任何内容，它什么也不做，因此可以放心绑定到某个按键。
+"Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.",返回到位于其下方的模式，菜单会合上，落回它所覆盖的暂停之上。若没有叠加任何内容，它什么也不做，因此可以放心绑定到某个按键。
 Go back,返回
 On Entering Mode,进入模式时
 "Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.",在游戏进入该模式的那一刻运行。离开时总是先触发，顺序始终如此，好让上一个房间先清空，再填满下一个。
@@ -5073,7 +5073,7 @@ On Leaving Mode,离开模式时
 "Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.",在游戏离开该模式的那一刻运行，先于任何响应即将进入的模式的内容。在这里把音乐淡出，在另一边再把它带回来。
 On leaving {mode},离开 {mode} 时
 Keep Between,保持在范围内
-"Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.",无论其他地方如何改动，都把一个值保持在范围内——不能超过上限的生命值、不能为负的音量、有下限和上限的相机缩放。在这里写一次，而不是在每个改动该值的地方写两个比较。
+"Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.",无论其他地方如何改动，都把一个值保持在范围内，不能超过上限的生命值、不能为负的音量、有下限和上限的相机缩放。在这里写一次，而不是在每个改动该值的地方写两个比较。
 Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i],将 [b]{var_name}[/b] 保持在 [i]{low}[/i] 与 [i]{high}[/i] 之间
 The value being kept in range.,被保持在范围内的值。
 At least,至少
@@ -5081,14 +5081,14 @@ It never goes below this.,它永远不会低于此值。
 At most,至多
 It never goes above this.,它永远不会高于此值。
 Move Toward (each tick),逐帧靠近
-"Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.",让一个值平滑地靠近另一个值——逐渐稳定的相机缩放、追赶上来的进度条、渐渐褪去的颜色。它每一帧缩短剩余差距的一部分，因此越接近越慢，且永远不会完全到达。这也意味着在快机器上移动得比慢机器更多：若需要各处速度一致，请改用“平滑靠近”，它以每秒为单位表达同一件事。
+"Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.",让一个值平滑地靠近另一个值，逐渐稳定的相机缩放、追赶上来的进度条、渐渐褪去的颜色。它每一帧缩短剩余差距的一部分，因此越接近越慢，且永远不会完全到达。这也意味着在快机器上移动得比慢机器更多：若需要各处速度一致，请改用“平滑靠近”，它以每秒为单位表达同一件事。
 Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick,每帧将 [b]{var_name}[/b] 向 [i]{target}[/i] 靠近 [i]{weight}[/i]
 The value being eased.,被靠近的值。
 The value it heads for.,它所趋向的值。
 Each tick,每帧
 How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.,每帧缩短剩余差距的多少。0.1 表示十分之一。
 Rescale,重新映射
-"Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.",把在一种标度上测得的数字换算为另一种标度上的同一数字——以点数计的生命值换成进度条的 0 到 1、温度换成颜色上的位置、滑块的百分比换成音量。没人记得住的那个算式，用它的用途来称呼。
+"Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.",把在一种标度上测得的数字换算为另一种标度上的同一数字，以点数计的生命值换成进度条的 0 到 1、温度换成颜色上的位置、滑块的百分比换成音量。没人记得住的那个算式，用它的用途来称呼。
 Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b],将 [i]{amount}[/i] 从 [i]{in_low}[/i]..[i]{in_high}[/i] 映射到 [i]{out_low}[/i]..[i]{out_high}[/i] 并存入 [b]{into}[/b]
 Where the rescaled number is put.,换算后的数字存放的位置。
 The number being rescaled.,被换算的数字。
@@ -5098,64 +5098,64 @@ Into range,目标范围
 What empty becomes.,“空”将变成什么。
 What full becomes.,“满”将变成什么。
 Wrap Around,循环回绕
-"Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.",让一个值绕圈回环，而不是越过末端跑掉——越过 360 后回到 0 的朝向、越过最后一项回到第一项的索引、时钟。下端包含在内、上端不包含，这正是 360 与 0 是同一个朝向而不是两个的原因。
+"Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.",让一个值绕圈回环，而不是越过末端跑掉，越过 360 后回到 0 的朝向、越过最后一项回到第一项的索引、时钟。下端包含在内、上端不包含，这正是 360 与 0 是同一个朝向而不是两个的原因。
 Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i],将 [b]{var_name}[/b] 在 [i]{low}[/i]..[i]{high}[/i] 内循环回绕
 The value being wrapped.,被回绕的值。
 The low end it comes back to.,它回到的下端。
 The high end it goes past.,它越过的上端。
 Move Forward,向前移动
-"Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.",让一个 2D 节点朝它所面向的方向移动，无论那是哪个方向——推进中的飞船、沿着自己枪管飞出的子弹、沿车头方向行驶的汽车。旋转节点会一并旋转方向，这正是它与“按世界方向移动”的区别。
+"Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.",让一个 2D 节点朝它所面向的方向移动，无论那是哪个方向，推进中的飞船、沿着自己枪管飞出的子弹、沿车头方向行驶的汽车。旋转节点会一并旋转方向，这正是它与“按世界方向移动”的区别。
 Move [b]forward[/b] [i]{speed}[/i]/s · its own facing,[b]向前[/b] [i]{speed}[/i]/秒 · 自身朝向
 Pixels a second.,每秒像素数。
 Move (the world's way),移动（按世界方向）
-"Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.",无论节点如何旋转，都按屏幕所指的方向移动 2D 节点——飘过的云、落下的雪、轨道上的平台。旋转节点不会改变它前进的方向，这正是它与“沿自身朝向移动”的区别。
+"Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.",无论节点如何旋转，都按屏幕所指的方向移动 2D 节点，飘过的云、落下的雪、轨道上的平台。旋转节点不会改变它前进的方向，这正是它与“沿自身朝向移动”的区别。
 Move [b]{direction}[/b] [i]{speed}[/i]/s · the world's way,[b]{direction}[/b] [i]{speed}[/i]/秒 · 按世界方向
-Which way the SCREEN means - it does not turn with the node.,屏幕所指的方向——它不会随节点旋转。
-"Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.",让一个 2D 节点以恒定速率绕某个点转动并保持距离——绕行星的月亮、装在合页上的门、扫描中的卫星天线。人人都用正弦余弦写出的轨道，用它本来的名字说出来。节点自身的角度不会被改动：若它应朝向前进方向，请一并旋转它。
+Which way the SCREEN means - it does not turn with the node.,屏幕所指的方向，它不会随节点旋转。
+"Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.",让一个 2D 节点以恒定速率绕某个点转动并保持距离，绕行星的月亮、装在合页上的门、扫描中的卫星天线。人人都用正弦余弦写出的轨道，用它本来的名字说出来。节点自身的角度不会被改动：若它应朝向前进方向，请一并旋转它。
 Turn around [i]{centre}[/i] at [b]{degrees_per_second}[/b]°/s,绕 [i]{centre}[/i] 以 [b]{degrees_per_second}[/b]°/秒 转动
-"The place it goes round - a marker, another node's position, a point.",它绕行的位置——一个标记、另一个节点的位置、或一个点。
+"The place it goes round - a marker, another node's position, a point.",它绕行的位置，一个标记、另一个节点的位置、或一个点。
 "Degrees a second, turning clockwise on screen; a negative number goes the other way.",每秒的角度，在屏幕上为顺时针；负数则反向转动。
 Face,朝向
-"Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.",让一个 2D 节点以一个最大速度转向某处，而不是瞬间对准——追踪目标的炮塔、必须先转过身才能冲锋的敌人。它绝不会转过头，且在朝向正确时停下。
+"Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.",让一个 2D 节点以一个最大速度转向某处，而不是瞬间对准，追踪目标的炮塔、必须先转过身才能冲锋的敌人。它绝不会转过头，且在朝向正确时停下。
 "Face [i]{target}[/i], max [b]{degrees_per_second}[/b]°/s",朝向 [i]{target}[/i]，最快 [b]{degrees_per_second}[/b]°/秒
-"The place to turn toward - a node's global position, or a point.",要朝向的位置——某个节点的全局位置，或一个点。
+"The place to turn toward - a node's global position, or a point.",要朝向的位置，某个节点的全局位置，或一个点。
 Max degrees per second,每秒最大角度
 The fastest it may turn. Make it huge to snap.,它可以转动的最快速度。设得很大即可瞬间对准。
 Swing,摆动
-"Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.",让一个 2D 节点在一段时间内摆动一定角度并停在那里——开启的门、扳下的拉杆、吊桥。它绕节点自身的原点旋转，因此原点在哪里，合页就在哪里：在编辑器中把原点移到门的边缘，门就会以边缘为轴摆动。
+"Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.",让一个 2D 节点在一段时间内摆动一定角度并停在那里，开启的门、扳下的拉杆、吊桥。它绕节点自身的原点旋转，因此原点在哪里，合页就在哪里：在编辑器中把原点移到门的边缘，门就会以边缘为轴摆动。
 Swing [b]{degrees}[/b]° over [i]{seconds}[/i] s,在 [i]{seconds}[/i] 秒内摆动 [b]{degrees}[/b]°
 How far it swings from where it is now.,从当前位置摆动多少。
 Over,历时
 How long the swing takes.,这次摆动持续多久。
 Queue Animation,排入动画
-"Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.",排入一个动画，在当前动画结束时自动播放——连招衔接，或攻击后回到待机，无需计时器。
+"Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.",排入一个动画，在当前动画结束时自动播放，连招衔接，或攻击后回到待机，无需计时器。
 queue animation {animation},排入动画 {animation}
 The clip to play once the current one finishes.,当前片段结束后要播放的片段。
 Set Current Animation,设置当前动画
-Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.,切换当前是哪个片段（赋值即开始播放）——在不需要“播放”的混合参数时的直接设置。
+Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.,切换当前是哪个片段（赋值即开始播放），在不需要“播放”的混合参数时的直接设置。
 set current animation to {animation},将当前动画设置为 {animation}
 The clip to make current (assigning it also plays it).,要设为当前的片段（赋值也会播放它）。
 Has Animation,拥有动画
-True when this player owns a clip by that name - guard a Play so a missing animation never errors.,当该播放器拥有同名片段时为真——用它守住“播放”，缺失的动画就不会报错。
+True when this player owns a clip by that name - guard a Play so a missing animation never errors.,当该播放器拥有同名片段时为真，用它守住“播放”，缺失的动画就不会报错。
 has animation {animation},拥有动画 {animation}
 Clip name to check for.,要检查的片段名称。
 Play Then,播放然后
-"Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.",播放一个动画，并把下一个排在它后面——攻击然后待机、跳跃然后下落。等待由引擎自己完成：第一个结束的瞬间第二个就开始，无需保持同步的计时器。循环播放的动画永远不会结束，因此排在它后面的衔接永远不会到来。
+"Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.",播放一个动画，并把下一个排在它后面，攻击然后待机、跳跃然后下落。等待由引擎自己完成：第一个结束的瞬间第二个就开始，无需保持同步的计时器。循环播放的动画永远不会结束，因此排在它后面的衔接永远不会到来。
 Play {animation} then {next},播放 {animation} 然后 {next}
 The clip to play now.,现在要播放的片段。
 Then,然后
 The clip that plays the moment the first one ends.,第一个片段结束的瞬间播放的片段。
 Reached Marker,到达标记
-"True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.",当某个片段的播放头越过其时间线上一个具名瞬间时为真——命中落点的那一帧，这是关键帧动画唯一能表达它的形式。在动画面板中重新调整该瞬间会一并移动它；而这一行不会改变。
+"True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.",当某个片段的播放头越过其时间线上一个具名瞬间时为真，命中落点的那一帧，这是关键帧动画唯一能表达它的形式。在动画面板中重新调整该瞬间会一并移动它；而这一行不会改变。
 {animation} has reached {marker},{animation} 已到达 {marker}
 The clip whose timeline the moment lives on.,该瞬间所在时间线归属的片段。
 Marker,标记
 The named moment on that clip's timeline.,该片段时间线上的具名瞬间。
 On Something Went Wrong,出错时
-"Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a ""please send this"" dialog, or just skip the broken thing and keep playing.",当游戏运行时发生脚本错误就会执行——不只是在编辑器里，也包括玩家手中的构建版本。报告会说明什么失败了、在哪里失败。把它保存到文件、弹出一个“请把它发给我们”的对话框，或者干脆跳过出错的部分继续游戏。
+"Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a ""please send this"" dialog, or just skip the broken thing and keep playing.",当游戏运行时发生脚本错误就会执行，不只是在编辑器里，也包括玩家手中的构建版本。报告会说明什么失败了、在哪里失败。把它保存到文件、弹出一个“请把它发给我们”的对话框，或者干脆跳过出错的部分继续游戏。
 On something went wrong ([b]report[/b]),出错时（[b]report[/b]）
 report,report
-"What failed and where, as the engine said it - the message, the script and the line. Filled in for you when the trigger fires.",什么失败了、在哪里失败，用引擎自己的说法给出——消息、脚本和行号。触发时会自动为你填好。
+"What failed and where, as the engine said it - the message, the script and the line. Filled in for you when the trigger fires.",什么失败了、在哪里失败，用引擎自己的说法给出，消息、脚本和行号。触发时会自动为你填好。
 On The Frame Running Long,在帧变长的那一帧
 "True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.",在你指定的整段连续帧中都超出预算的那一帧上为真，之后保持沉默，直到再次出现一帧回到预算之内。这里正是游戏自行调低效果的地方。需要一个逐帧触发器。
 On the frame running long [b]{ms}[/b] ms for [b]{frames}[/b] frames,连续 [b]{frames}[/b] 帧超过 [b]{ms}[/b] 毫秒时
@@ -5167,21 +5167,21 @@ On The Frame Recovered,在帧恢复的那一帧
 "True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.",在此前曾超出预算之后，于你指定的整段连续帧中都跑得从容的那一帧上为真。这里正是把效果重新打开的地方。在出现过一段长帧之前它绝不会触发，因此一开始就顺畅的游戏什么也听不到。需要一个逐帧触发器。
 On the frame recovered under [b]{ms}[/b] ms for [b]{frames}[/b] frames,连续 [b]{frames}[/b] 帧低于 [b]{ms}[/b] 毫秒而恢复时
 Under Milliseconds,低于毫秒
-A frame shorter than this counts as calm. Keep it comfortably under the long threshold - the gap between the two is what stops the game flapping.,比这更短的帧算作平稳。请把它设得明显低于长帧阈值——两者之间的差距正是防止游戏来回反复的关键。
+A frame shorter than this counts as calm. Keep it comfortably under the long threshold - the gap between the two is what stops the game flapping.,比这更短的帧算作平稳。请把它设得明显低于长帧阈值，两者之间的差距正是防止游戏来回反复的关键。
 How many calm frames in a row before this fires. Long enough that a lull in the action is not mistaken for a fix.,触发前需要连续多少个平稳帧。要足够长，以免把动作上的短暂停歇误认为问题已解决。
 Draw In Front Of,绘制在其前
 "Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.",把这个节点在绘制顺序上放到另一个节点前面一格，无论那个节点自身的顺序是多少。刻意采用相对方式：把这一对挪到哪里都会保持顺序，而两个手工设定的数字迟早会走样。
 Rendering,渲染
 draw in front of {other},绘制在 {other} 之前
 In front of,置于其前
-The node to draw over - this one takes its drawing order plus one.,要覆盖绘制的节点——本节点取它的绘制顺序加一。
+The node to draw over - this one takes its drawing order plus one.,要覆盖绘制的节点，本节点取它的绘制顺序加一。
 Show Only To,仅对其可见
 "Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else.",限制哪些相机会绘制这个节点：相机只绘制其剔除掩码与节点可见层的交集。层名称取自项目自身（项目设置 > 层名称 > 2D Render），小地图标记之所以只被小地图看到，就是靠这一点。
 show only to {layers},仅对 {layers} 可见
 Visible to,可见于
 "The visibility layers that may see this node, by their project names.",可以看到这个节点的可见层，使用它们在项目中的名称。
 Is On Screen,在屏幕上
-"True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.",当节点处于某个相机所显示的范围内时为真。它通过引擎自带的 VisibleOnScreenNotifier2D 工作；若节点没有，会在首次询问时为它添加一个——一个在场景中可见、可移动、可调整大小并保留下来的普通子节点。
+"True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.",当节点处于某个相机所显示的范围内时为真。它通过引擎自带的 VisibleOnScreenNotifier2D 工作；若节点没有，会在首次询问时为它添加一个，一个在场景中可见、可移动、可调整大小并保留下来的普通子节点。
 is on screen,在屏幕上
 The node to ask about.,要询问的节点。
 The child that was just added under this node. Filled in for you when the trigger fires.,刚刚添加到该节点下的子节点。触发时会自动为你填好。
@@ -7149,16 +7149,16 @@ Hit,命中对象
 "This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about.",这是从这一行里写着的路径读出来的：拼接而成的路径，或存在变量里的路径，是这项检查无话可说的路径。
 "Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name. A platform with no chooser of its own, and one that has one but could not open it, both fall through to the engine's own window, so the row always ends at one of those two events.",打开玩家自己的文件选择窗口，让他们挑一个要读取的文件。答案会作为 当选择了文件 或 当取消了询问 到来，事件表两者都需要有事件，因为生成的那一行是按名字调用它们的。没有原生选择窗口的平台，以及有却打不开的平台，都会退回到引擎自己的窗口，所以这一行总会以这两个事件之一结束。
 "Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing. A platform with no chooser of its own, and one that has one but could not open it, both fall through to the engine's own window.",打开玩家自己的保存窗口，让他们指定要写入的文件和文件夹。这一行不写任何东西：路径会作为 当选择了文件 到来，真正写入的是写入行。没有原生选择窗口的平台，以及有却打不开的平台，都会退回到引擎自己的窗口。
-"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name. An entry the reader answers with no bytes for - a truncated or corrupted archive, and an entry that really is empty, which reads exactly the same way - is SKIPPED rather than written as a 0-byte file, and so is one the machine refuses to write; On Unpack Finished counts them, so a run that reached the end without unpacking all of it says so.",读取一个 .zip 压缩包，并把其中的条目写入一个文件夹。每个条目的路径都会在写入任何内容之前与该文件夹比对，指向外部的条目会中止解压并触发 当解压被拒绝：zip 是别人做的内容，条目的路径由它自己决定。运行过程通过 解压进度 报告，并在 当解压完成 结束，生成的循环会按名字调用它们。读取器返回不到一个字节的条目——被截断或损坏的压缩包，以及真正为空、读起来完全一样的条目——会被跳过，而不是写成 0 字节的文件；机器拒绝写入的条目同样如此。当解压完成 会统计它们，所以一次走到末尾却没有全部解压的运行会如实说明。
-"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries. Prefer a variable here: the line reads this to make the folder, again to work out where it really is, and once more for every entry in the archive.",每个条目写入所在的文件夹，若不存在会先创建。任何条目都不得落在它之外——生成的守卫会在试图越界的条目上中止解压。这里最好用变量：这一行会读它一次以创建文件夹，再读一次以求出它真正的位置，还会为压缩包里的每个条目各读一次。
-"Runs once per entry an unpack writes, with what has landed so far and how many entries the archive holds - the two numbers a progress bar is made of. THE WHOLE UNPACK HAPPENS INSIDE THE ONE ROW: there is no waiting in the loop, so these arrive in a burst and the window repaints once the row is done. What a bar reads off them is how far the run got, not the run happening.",解压每写入一个条目就运行一次，带上目前已写入的量以及压缩包共有多少条目——构成进度条的两个数字。整个解压都发生在这一行之内：循环里没有等待，所以这些报告是成批到达的，窗口要等这一行结束后才重绘。进度条从中读到的是这次运行走到了哪里，而不是运行的过程。
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name. An entry the reader answers with no bytes for - a truncated or corrupted archive, and an entry that really is empty, which reads exactly the same way - is SKIPPED rather than written as a 0-byte file, and so is one the machine refuses to write; On Unpack Finished counts them, so a run that reached the end without unpacking all of it says so.",读取一个 .zip 压缩包，并把其中的条目写入一个文件夹。每个条目的路径都会在写入任何内容之前与该文件夹比对，指向外部的条目会中止解压并触发 当解压被拒绝：zip 是别人做的内容，条目的路径由它自己决定。运行过程通过 解压进度 报告，并在 当解压完成 结束，生成的循环会按名字调用它们。读取器返回不到一个字节的条目，被截断或损坏的压缩包，以及真正为空、读起来完全一样的条目，会被跳过，而不是写成 0 字节的文件；机器拒绝写入的条目同样如此。当解压完成 会统计它们，所以一次走到末尾却没有全部解压的运行会如实说明。
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries. Prefer a variable here: the line reads this to make the folder, again to work out where it really is, and once more for every entry in the archive.",每个条目写入所在的文件夹，若不存在会先创建。任何条目都不得落在它之外，生成的守卫会在试图越界的条目上中止解压。这里最好用变量：这一行会读它一次以创建文件夹，再读一次以求出它真正的位置，还会为压缩包里的每个条目各读一次。
+"Runs once per entry an unpack writes, with what has landed so far and how many entries the archive holds - the two numbers a progress bar is made of. THE WHOLE UNPACK HAPPENS INSIDE THE ONE ROW: there is no waiting in the loop, so these arrive in a burst and the window repaints once the row is done. What a bar reads off them is how far the run got, not the run happening.",解压每写入一个条目就运行一次，带上目前已写入的量以及压缩包共有多少条目，构成进度条的两个数字。整个解压都发生在这一行之内：循环里没有等待，所以这些报告是成批到达的，窗口要等这一行结束后才重绘。进度条从中读到的是这次运行走到了哪里，而不是运行的过程。
 On unpack progress {entries} {bytes} {total},解压进度 {entries} {bytes} {total}
-"How many entries the archive holds in all - the number to divide by. It counts the entries the loop will try, so the folder entries it steps over are not among them. An entry that is skipped never reports, so the last count can stop short of this.",压缩包一共有多少条目——用来做除数的那个数。它统计循环将会尝试的条目，因此被跳过的文件夹条目不在其中。被跳过的条目不会报告，所以最后的计数可能达不到这个数。
+"How many entries the archive holds in all - the number to divide by. It counts the entries the loop will try, so the folder entries it steps over are not among them. An entry that is skipped never reports, so the last count can stop short of this.",压缩包一共有多少条目，用来做除数的那个数。它统计循环将会尝试的条目，因此被跳过的文件夹条目不在其中。被跳过的条目不会报告，所以最后的计数可能达不到这个数。
 "Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts - and the third number says whether they are all there.",当一次解压走到最后一个条目且没有任何条目被拒绝时运行。文件此刻已在磁盘上，所以等待它们的事情从这里开始，而第三个数字会告诉你它们是否齐全。
 On unpack finished {entries} {bytes} {skipped},当解压完成 {entries} {bytes} {skipped}
 Skipped,已跳过
-"How many entries did not land: one the reader answered with no bytes for - a truncated or corrupted archive, or an entry that really is empty, which reads exactly the same way - and one the machine refused to write, such as a name the file system will not take or a full disk. Nothing of theirs is on disk. A finish with a number here reached the end of the archive but did not unpack all of it, which is worth saying on screen rather than treating as a clean install.",有多少条目没有写入：读取器返回不到一个字节的条目——被截断或损坏的压缩包，或真正为空、读起来完全一样的条目——以及机器拒绝写入的条目，例如文件系统不接受的名字或磁盘已满。它们没有任何内容留在磁盘上。这里带着数字的完成，意味着走到了压缩包的末尾却没有全部解压，值得在画面上说出来，而不是当作一次干净的安装。
-"How many numbers to try before giving up. The questions are only asked when the path you wanted is already taken - and then ALL of them are asked, not just up to the first free one: the line builds every candidate and keeps the free ones, so a taken path costs this many file_exists questions whatever the answer turns out to be. When all of them are taken the answer is the path you asked for, so the row after this one overwrites - name a number you are comfortable with.",在放弃之前尝试多少个编号。只有当你想要的路径已被占用时才会发问，而一旦发问就会全部问一遍，而不是问到第一个空闲的为止：这一行会构造出每个候选并保留空闲的那些，所以一个被占用的路径无论结果如何都要花掉这么多次 file_exists。若全部被占用，答案就是你原本要的路径，于是下一行会覆盖它——请填一个你放心的数字。
+"How many entries did not land: one the reader answered with no bytes for - a truncated or corrupted archive, or an entry that really is empty, which reads exactly the same way - and one the machine refused to write, such as a name the file system will not take or a full disk. Nothing of theirs is on disk. A finish with a number here reached the end of the archive but did not unpack all of it, which is worth saying on screen rather than treating as a clean install.",有多少条目没有写入：读取器返回不到一个字节的条目，被截断或损坏的压缩包，或真正为空、读起来完全一样的条目，以及机器拒绝写入的条目，例如文件系统不接受的名字或磁盘已满。它们没有任何内容留在磁盘上。这里带着数字的完成，意味着走到了压缩包的末尾却没有全部解压，值得在画面上说出来，而不是当作一次干净的安装。
+"How many numbers to try before giving up. The questions are only asked when the path you wanted is already taken - and then ALL of them are asked, not just up to the first free one: the line builds every candidate and keeps the free ones, so a taken path costs this many file_exists questions whatever the answer turns out to be. When all of them are taken the answer is the path you asked for, so the row after this one overwrites - name a number you are comfortable with.",在放弃之前尝试多少个编号。只有当你想要的路径已被占用时才会发问，而一旦发问就会全部问一遍，而不是问到第一个空闲的为止：这一行会构造出每个候选并保留空闲的那些，所以一个被占用的路径无论结果如何都要花掉这么多次 file_exists。若全部被占用，答案就是你原本要的路径，于是下一行会覆盖它，请填一个你放心的数字。
 "This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.","本项目会播放触觉反馈（首次出现在 %s）。它在手柄和手机上可以感受到，在网页和没有手柄的桌面上则完全静默，也不会为每一行发出警告。请同时用声音或画面传达同样的节拍，并让选项界面可以调低震动：Set Haptic Strength 是每一条触觉行都会读取的唯一旋钮。"
 New Moment…,新建时刻…
 Open Moment File As Block…,将时刻文件作为块打开…

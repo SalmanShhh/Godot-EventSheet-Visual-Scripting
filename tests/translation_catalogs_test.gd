@@ -32,8 +32,32 @@ static func run() -> bool:
 	all_passed = _run_hand_made() and all_passed
 	all_passed = _run_table() and all_passed
 	all_passed = _run_view() and all_passed
+	all_passed = _run_no_em_dash() and all_passed
 	_clean()
 	return all_passed
+
+
+## The no-em-dash house rule covers translation catalogs too: every shipped .csv (the nine language
+## files, the word tables and the packs' own catalogs) uses a plain " - " or the language's own plain
+## punctuation.
+static func _run_no_em_dash() -> bool:
+	var em_dash: String = String.chr(0x2014)
+	var dashed: PackedStringArray = PackedStringArray()
+	for root: String in ["res://addons/eventsheet", "res://eventsheet_addons"]:
+		for path: String in _csv_files(root):
+			if FileAccess.get_file_as_string(path).contains(em_dash):
+				dashed.append(path)
+	return SUPPORT.pins(NAME, [["no shipped translation catalog holds an em-dash", ", ".join(dashed), ""]])
+
+
+static func _csv_files(folder: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for file: String in DirAccess.get_files_at(folder):
+		if file.ends_with(".csv"):
+			found.append(folder.path_join(file))
+	for sub: String in DirAccess.get_directories_at(folder):
+		found.append_array(_csv_files(folder.path_join(sub)))
+	return found
 
 
 static func _run_folders() -> bool:
