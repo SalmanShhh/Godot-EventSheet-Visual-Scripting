@@ -1135,6 +1135,9 @@ func _on_translations_maybe_changed() -> void:
 	# The Project bar keeps no watcher of its own: it listens to exactly this ping, and only
 	# when it is open, so a hidden bar costs nothing on a filesystem change.
 	_project_bar_glue.on_filesystem_changed()
+	# The lifted-sheet memory stamps the code that lifts (the lifter, the compiler, the packs) once per
+	# session; a pack provider edited and saved mid-session is new code, so the stamp is taken again.
+	_clear_if_loaded("res://addons/eventforge/importer/lift_cache.gd", "forget_code_stamp")
 	# The project-wide scene index (which .tscn a script is the ROOT of) is what names an object on a
 	# row, a sheet title and a thumbnail, and it was built ONCE per session: a scene saved, added or
 	# re-pointed mid-session went on reading as the object it used to be until a restart.

@@ -62,6 +62,23 @@ static func run() -> bool:
 		str(SheetCompiler.echo(second, true).get("output", "")), FIXTURE_SOURCE) and passed
 	passed = SUPPORT.check(P, "and says what a fresh lift said (functions)", second.functions.size(), first.functions.size()) and passed
 	passed = SUPPORT.check(P, "and knows its file", second.external_source_path, FIXTURE) and passed
+	# A fresh lift has no resource path; a loaded entry had the entry's own. Every reader that asks
+	# resource_path (the secret marks, an unnamed compile's output) would have been pointed into the
+	# cache folder.
+	passed = SUPPORT.check(P, "and is not the entry file: no resource path, like a fresh lift",
+		[second.resource_path, first.resource_path], ["", ""]) and passed
+	passed = SUPPORT.check(P, "and nothing inside it names the entry either", _entry_paths_in(second, {}), PackedStringArray()) and passed
+
+	# 1b. What the project's scenes say about a file is part of what its lift reads (a handler a .tscn
+	# wires lifts as a trigger with no connect line in the text), so it is part of the key: an entry
+	# lifted against one scene is not handed back after the scene changed.
+	var scene_read: String = "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
+	passed = SUPPORT.check(P, "a script a scene uses has something the scenes say about it",
+		cache.scene_stamp(scene_read) == cache.scene_stamp("res://no_scene_uses_this.gd"), false) and passed
+	passed = SUPPORT.check(P, "and the same text under that scene keys differently",
+		cache.key_for(FIXTURE_SOURCE, "stamp", scene_read) == cache.key_for(FIXTURE_SOURCE, "stamp", "res://no_scene_uses_this.gd"), false) and passed
+	passed = SUPPORT.check(P, "the key carries what the scenes say", cache.key_for(FIXTURE_SOURCE, "stamp", scene_read).contains(
+		"|%s|" % cache.scene_stamp(scene_read)), true) and passed
 
 	# 2. One byte changed outside the editor: lifted again, and the new text is what comes back.
 	var changed: String = FIXTURE_SOURCE + "# one more byte\n"
@@ -159,6 +176,23 @@ static func _open(path: String) -> EventSheetResource:
 	var job: EventSheetOpenJob = EventSheetOpenJob.new()
 	job.start(path)
 	return job.finish()
+
+
+## Every path inside a sheet that points into the cache folder.
+static func _entry_paths_in(value: Variant, seen: Dictionary) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if value is Array:
+		for item: Variant in value:
+			found.append_array(_entry_paths_in(item, seen))
+	elif value is Resource and not seen.has((value as Resource).get_instance_id()):
+		var resource: Resource = value
+		seen[resource.get_instance_id()] = true
+		if resource.resource_path.begins_with(FOLDER):
+			found.append(resource.resource_path)
+		for property: Dictionary in resource.get_property_list():
+			if int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE and int(property.get("type", TYPE_NIL)) in [TYPE_OBJECT, TYPE_ARRAY]:
+				found.append_array(_entry_paths_in(resource.get(str(property.get("name", ""))), seen))
+	return found
 
 
 static func _write(path: String, text: String) -> void:

@@ -48,7 +48,7 @@ const STAMPED_ROOTS: PackedStringArray = ["res://addons/eventforge/", "res://add
 static func fetch(path: String, source: String) -> EventSheetResource:
 	if not enabled:
 		return null
-	var key: String = key_for(source)
+	var key: String = key_for(source, "", path)
 	if _distrusted.get(path, "") == key:
 		return null
 	var entry_path: String = entry_path_for(path)
@@ -66,6 +66,11 @@ static func fetch(path: String, source: String) -> EventSheetResource:
 		_discard(path, key, entry_path, false)
 		return null
 	sheet.remove_meta(META_KEY)
+	# A loaded resource carries the ENTRY's path (and its parts "<entry>::<id>"), where a fresh lift
+	# carries none. Left on, the sheet answered "which file am I" with a file in `.godot/` to every
+	# reader that asks resource_path (the secret marks are keyed by it, an unnamed compile writes its
+	# output beside it), so it is taken off everything the entry held.
+	_forget_entry_paths(sheet, sheet.resource_path, {})
 	sheet.external_source_path = path
 	load(IMPORTER_PATH)._recover_autoload_identity(sheet, path)
 	# The binding check: the remembered sheet must write the file back exactly.
@@ -85,7 +90,7 @@ static func store(path: String, source: String, sheet: EventSheetResource) -> vo
 	if not DirAccess.dir_exists_absolute(folder):
 		if DirAccess.make_dir_recursive_absolute(folder) != OK:
 			return
-	var key: String = key_for(source)
+	var key: String = key_for(source, "", path)
 	sheet.set_meta(META_KEY, key)
 	var entry_path: String = entry_path_for(path)
 	var side_path: String = "%s%s.%d.tmp.res" % [cache_dir, path.md5_text(), OS.get_process_id()]
@@ -108,10 +113,25 @@ static func clear() -> void:
 		DirAccess.remove_absolute(folder.path_join(file))
 
 
-## The key a remembered sheet must carry to be used for `source`.
-static func key_for(source: String, code_stamp: String = "") -> String:
+## The key a remembered sheet must carry to be used for `source`, the text of the file at `path`.
+static func key_for(source: String, code_stamp: String = "", path: String = "") -> String:
 	var stamp: String = code_stamp if not code_stamp.is_empty() else code_stamp_now()
-	return "%d|%s|%s|%d|%s" % [FORMAT, source.md5_text(), SheetCompiler.VERSION, ACERegistry.descriptor_count(), stamp]
+	return "%d|%s|%s|%d|%s|%s" % [FORMAT, source.md5_text(), SheetCompiler.VERSION, ACERegistry.descriptor_count(),
+		scene_stamp(path), stamp]
+
+
+## What the project's SCENES tell the lift about the file at `path`, as a digest: the signal handlers a
+## .tscn wires to it (lifted as triggers, with no connect line in the file), the nodes wearing a shader
+## material it turns dials on, and the class of every node it names (the gate on a light row). None of
+## it is in the file's text, so a scene edited, added or deleted between two opens of an unchanged file
+## lifts it again instead of handing back what the old scene said. Asked of the same readers the lift
+## asks, so the key holds exactly what the lift would read.
+static func scene_stamp(path: String) -> String:
+	if path.is_empty():
+		return ""
+	return ("%s|%s|%s" % [str(EventSheetSceneConnections.for_script(path)),
+		str(EventSheetSceneEffects.wearers_of_script(path)),
+		str(EventSheetSceneLights.classes_for_script(path))]).md5_text()
 
 
 static func entry_path_for(path: String) -> String:
@@ -158,6 +178,34 @@ static func _collect_scripts(folder: String, into: PackedStringArray) -> void:
 		if sub.begins_with("."):
 			continue
 		_collect_scripts(folder.path_join(sub), into)
+
+
+## Clears the entry's path off `value` and every resource inside it that the entry itself held,
+## through arrays and dictionaries, each once. A resource from a file of its own (a texture, a
+## script) keeps its path: only `entry_path` and its "::" parts are taken off.
+static func _forget_entry_paths(value: Variant, entry_path: String, seen: Dictionary) -> void:
+	if value is Array:
+		for item: Variant in value:
+			_forget_entry_paths(item, entry_path, seen)
+		return
+	if value is Dictionary:
+		for item: Variant in (value as Dictionary).values():
+			_forget_entry_paths(item, entry_path, seen)
+		return
+	if not (value is Resource):
+		return
+	var resource: Resource = value
+	if seen.has(resource.get_instance_id()):
+		return
+	seen[resource.get_instance_id()] = true
+	if not resource.resource_path.is_empty():
+		if resource.resource_path != entry_path and not resource.resource_path.begins_with(entry_path + "::"):
+			return
+		resource.resource_path = ""
+	for property: Dictionary in resource.get_property_list():
+		if int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE \
+				and int(property.get("type", TYPE_NIL)) in [TYPE_OBJECT, TYPE_ARRAY, TYPE_DICTIONARY]:
+			_forget_entry_paths(resource.get(str(property.get("name", ""))), entry_path, seen)
 
 
 static func _discard(path: String, key: String, entry_path: String, distrust: bool) -> void:

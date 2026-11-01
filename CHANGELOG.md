@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed: a remembered lift answered from a stale scene and named a file in .godot/ as its own
+
+- What the project's scenes say about a file is read by its lift (a signal handler a .tscn wires lifts as a trigger with no connect line in the text; the nodes wearing a shader material; the class of each node a light row names), and none of it is in the file's text, so the lifted-sheet memory handed back what an OLD scene said after the scene changed - across editor restarts, for as long as the .gd itself stayed unchanged. The byte check cannot see it, because those readings emit nothing. The key now carries a digest of the same three scene answers the lift asks for.
+- A remembered sheet came back with the entry's path in `resource_path` (and its parts' `<entry>::<id>`), where a fresh lift has none, so the readers that ask resource_path (the secret marks are keyed by it, an unnamed compile writes beside it) were pointed into `.godot/eventsheets_lift_cache/`. The paths are taken off on the read. A deep compare of every stored property of a fresh lift and a remembered one over 11 shipped files found nothing else apart (the event uids, which every lift rolls fresh).
+- The code stamp is taken once per session; a filesystem change (a pack provider edited and saved) now drops it so the next open stamps again. Pinned in `lift_cache_test`.
+
 ### Fixed: a state machine flipping every frame could lay the sheet out on every flip
 
 - The live state row lays the sheet out at most once per 250 ms window, but the window was stamped when a layout STARTED, so a layout slower than the window (a big sheet, a loaded machine) left no window after it and every flip laid the sheet out again. The window now opens when the layout ends. `states_project_wide_test` pins it, and no longer lets the once-per-session cold start of the live-values panel and the state trail (215 ms of the 250 ms window measured cold, all of it under a parallel run) decide whether its three flips land inside the window - the red its "three more flips" check went in a loaded parallel run.
