@@ -116,7 +116,6 @@ static func _test_strip_fill_and_cut_names() -> bool:
 	return ok
 
 
-<<<<<<< HEAD
 ## A chip cell starts its column after its padding, so a name only a few pixels too wide for the
 ## column is drawn "CharacterBo…" - and the hover must read it whole too. Every length from short to
 ## long: the hover answers exactly when the renderer's own elide (column less 6 px) cuts the name.
@@ -145,7 +144,8 @@ static func _test_cut_name_agrees_with_the_drawn_ellipsis(view: EventSheetViewpo
 		["some of the names are cut by the column", cut_seen > 0, true],
 		["the hover reads a name whole exactly when the drawn name ends in an ellipsis", ", ".join(disagreements), ""],
 	])
-=======
+
+
 static func _filled_event_row() -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.row_type = EventRowData.RowType.EVENT
@@ -161,7 +161,6 @@ static func _hover_style(strips: bool) -> EventSheetEventStyle:
 	style.add_lines_on_hover = true
 	style.sub_event_strips = strips
 	return style
->>>>>>> 69d89478 (feat(sheet): Editor Native lays an event out as one panel - nesting as one line per level, ruled condition strips, locals on the sheet, add action at rest, System for expression tests)
 
 
 static func _test_token() -> bool:
