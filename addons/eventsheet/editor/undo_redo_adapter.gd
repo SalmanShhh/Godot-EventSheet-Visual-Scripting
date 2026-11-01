@@ -55,6 +55,13 @@ func _method_payload(target: Object, method_name: String, args: Array) -> Array:
 	return payload
 
 
+## Whether commit_action runs the step's do methods: the editor's manager does, the plain UndoRedo does
+## not (see commit_action). A step whose do method does more than the caller already did (writes files)
+## asks this to know whether that part still has to be run by hand.
+func runs_step_on_commit() -> bool:
+	return not (_manager is UndoRedo)
+
+
 ## The plain UndoRedo records the step WITHOUT running it: every caller has already applied its edit,
 ## and with no editor around the step never ran at commit before either (its methods were refused),
 ## so the fallback keeps what it did and gains a history that undo and redo can walk.

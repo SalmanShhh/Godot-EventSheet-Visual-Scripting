@@ -383,6 +383,10 @@ var _exposed_node: EventSheetExposedNode = EventSheetExposedNode.new()
 var _ace_sources: Array[Object] = []  # instances we created (sheet providers / demo); freed on refresh
 var _manual_ace_sources: Array[Object] = []  # externally supplied (caller-owned, not freed)
 var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.new()
+## The fewest milliseconds between two layouts the live state row asks for, and when it last had one.
+const STATE_ROWS_REBUILD_MSEC: int = 250
+var _state_rows_rebuilt_at: int = -STATE_ROWS_REBUILD_MSEC
+var _state_rows_pending: bool = false
 
 # ── Extracted sub-components ─────────────────────────────────────────────────
 # A delegate the first paint does not draw (a dialog, a window, a studio, the row and ACE edit ops)
@@ -3629,9 +3633,27 @@ func _ensure_live_values_window() -> void:
 
 
 ## Lays the open sheet's rows out again when its state row's live room changed. Only a sheet that has a
-## state machine pays for it.
+## state machine pays for it, and at most once per STATE_ROWS_REBUILD_MSEC: a machine that flips state
+## every few frames would otherwise lay out every row of a large sheet that often while the game runs.
+## A change inside the window is laid out once, when it closes.
 func _refresh_state_rows() -> void:
-	if _viewport != null and _current_sheet != null and not EventSheetStateFacts.machines(_current_sheet).is_empty():
+	if _viewport == null or _current_sheet == null or EventSheetStateFacts.machines(_current_sheet).is_empty():
+		return
+	var since: int = Time.get_ticks_msec() - _state_rows_rebuilt_at
+	if since >= STATE_ROWS_REBUILD_MSEC:
+		_rebuild_state_rows_now()
+		return
+	if _state_rows_pending:
+		return
+	_state_rows_pending = true
+	if is_inside_tree():
+		get_tree().create_timer(float(STATE_ROWS_REBUILD_MSEC - since) / 1000.0).timeout.connect(_rebuild_state_rows_now)
+
+
+func _rebuild_state_rows_now() -> void:
+	_state_rows_pending = false
+	_state_rows_rebuilt_at = Time.get_ticks_msec()
+	if _viewport != null:
 		_viewport.rebuild_rows()
 
 
@@ -7464,7 +7486,8 @@ func _update_sheet_counts_status() -> void:
 	# here); the classic address keeps its own selection-driven refresh.
 	if _apply_status_layout() or EventSheetActiveTheme.active().status_bar_selection_line:
 		_update_row_address_status()
-	_event_count_label.text = event_count_text(EventSheetViewport.event_numbers_for(_current_sheet.events).size())
+	# Every event the margin numbers, a function's body included: a behaviour pack is mostly functions.
+	_event_count_label.text = event_count_text(EventSheetViewport.event_numbers_for(_current_sheet.events, _current_sheet.functions).size())
 	_event_count_label.modulate = chrome.row_address_color
 
 
@@ -7835,7 +7858,7 @@ func apply_collision_fix(finding: Dictionary) -> String:
 static func row_address_text(row_data: EventRowData, sheet: EventSheetResource) -> String:
 	if row_data == null or sheet == null or row_data.event_number <= 0:
 		return ""
-	var total: int = EventSheetViewport.event_numbers_for(sheet.events).size()
+	var total: int = EventSheetViewport.event_numbers_for(sheet.events, sheet.functions).size()
 	var text: String = EventSheetL10n.translate("event %d of %d") % [row_data.event_number, total]
 	if row_data.line_number > 0:
 		text += " · " + EventSheetL10n.translate("line %d") % row_data.line_number
@@ -8073,7 +8096,8 @@ func _capture_sheet_snapshot() -> EventSheetResource:
 
 
 ## Writes the other project scripts one edit reached ({path: text}), each backed up first, and tells the
-## editor's file system so the files re-import. A file is only ever written back to a text it was read as.
+## editor's file system so the files re-import. Callers check first (project_texts_changed) that every file
+## still holds the text the step expects, so a file is only ever written back to a text it was read as.
 func _write_project_texts(texts: Dictionary) -> void:
 	for path: Variant in texts:
 		EventSheetBackups.backup_sheet(str(path))
@@ -8085,6 +8109,68 @@ func _write_project_texts(texts: Dictionary) -> void:
 			var file_system: EditorFileSystem = EditorInterface.get_resource_filesystem()
 			if file_system != null:
 				file_system.update_file(str(path))
+
+
+## The files of `expected` ({path: text}) that no longer hold that text: changed on disk since the step,
+## or open in Godot's script editor with changes not yet saved. Writing over either would lose somebody's
+## work, so a step that finds any writes none of them.
+func project_texts_changed(expected: Dictionary) -> PackedStringArray:
+	var changed: PackedStringArray = PackedStringArray()
+	var unsaved: Dictionary = _scripts_with_unsaved_changes()
+	for path: Variant in expected:
+		var on_disk: String = FileAccess.get_file_as_string(str(path)) if FileAccess.file_exists(str(path)) else ""
+		if on_disk != str(expected[path]) or unsaved.has(str(path)):
+			changed.append(str(path))
+	return changed
+
+
+## Every script open in Godot's script editor whose text has changes not yet saved: {path: true}.
+func _scripts_with_unsaved_changes() -> Dictionary:
+	var unsaved: Dictionary = {}
+	if not Engine.is_editor_hint():
+		return unsaved
+	var script_editor: ScriptEditor = EditorInterface.get_script_editor()
+	if script_editor == null:
+		return unsaved
+	var scripts: Array[Script] = script_editor.get_open_scripts()
+	var editors: Array[ScriptEditorBase] = script_editor.get_open_script_editors()
+	for index: int in mini(scripts.size(), editors.size()):
+		var code: Control = editors[index].get_base_editor()
+		if code is TextEdit and (code as TextEdit).get_version() != (code as TextEdit).get_saved_version():
+			unsaved[scripts[index].resource_path] = true
+	return unsaved
+
+
+## One side of an edit that reaches other project files (a state renamed project-wide): the sheet goes
+## back to `snapshot`, is SAVED, and only then are the other files written - so the declaring file and
+## every file naming its states are on disk together, and the project compiles whether or not the tab is
+## ever saved again. A file that no longer holds the text this step expects is never written over; the
+## step then writes nothing, leaves the sheet unsaved, and says which file.
+func _restore_with_project_texts(snapshot: EventSheetResource, texts: Dictionary, expected: Dictionary) -> void:
+	_restore_sheet_snapshot(snapshot)
+	var owner_tab: String = _tab_state.snapshot_owner(snapshot)
+	if not owner_tab.is_empty() and owner_tab != _tab_state.active_tab_id():
+		return
+	_save_with_project_texts(texts, expected)
+
+
+## Saves the open sheet, then writes `texts` - refusing both when a file of `expected` has changed since.
+## Returns whether everything was written.
+func _save_with_project_texts(texts: Dictionary, expected: Dictionary) -> bool:
+	if texts.is_empty():
+		return true
+	var changed: PackedStringArray = project_texts_changed(expected)
+	if not changed.is_empty():
+		var names: PackedStringArray = PackedStringArray()
+		for path: String in changed:
+			names.append(path.get_file())
+		_set_status(EventSheetL10n.translate("%s changed since this step, so no file was written and the sheet is not saved.") % ", ".join(names), true)
+		return false
+	_sheet_io._on_save_requested()
+	if _dirty:
+		return false
+	_write_project_texts(texts)
+	return true
 
 
 func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
@@ -8165,8 +8251,8 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable, file
 		texts_after[edited] = str((file_edits[edited] as Dictionary)["after"])
 		texts_before[edited] = str((file_edits[edited] as Dictionary)["before"])
 	if not _undo_redo_adapter.has_manager():
-		_write_project_texts(texts_after)
 		_refresh_after_edit()
+		_save_with_project_texts(texts_after, texts_before)
 		return true
 	# Both sides of the step are tagged with the tab they were made on, before the commit runs the
 	# do method: the undo stack is the host editor's and outlives a tab switch, so a restore has to
@@ -8174,12 +8260,19 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable, file
 	_tab_state.remember_snapshot_owner(before)
 	_tab_state.remember_snapshot_owner(after)
 	_undo_redo_adapter.create_action(action_name)
-	_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
-	_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
-	if not texts_after.is_empty():
-		_undo_redo_adapter.add_do_method(self, "_write_project_texts", [texts_after])
-		_undo_redo_adapter.add_undo_method(self, "_write_project_texts", [texts_before])
+	if texts_after.is_empty():
+		_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
+		_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
+	else:
+		# Each side saves the sheet and writes the files it reached, in that order, so the project on
+		# disk is whole after the edit, after its Undo and after its Redo.
+		_undo_redo_adapter.add_do_method(self, "_restore_with_project_texts", [after, texts_after, texts_before])
+		_undo_redo_adapter.add_undo_method(self, "_restore_with_project_texts", [before, texts_before, texts_after])
 	_undo_redo_adapter.commit_action()
+	# The plain UndoRedo (no editor around) records the step without running it, so the save and the
+	# file writes the do method would have made are made here.
+	if not texts_after.is_empty() and not _undo_redo_adapter.runs_step_on_commit():
+		_save_with_project_texts(texts_after, texts_before)
 	# The toolbar's Undo/Redo icons follow the history, and this is the one place every edit passes
 	# through - so they are refreshed here rather than polled every frame.
 	_menu_bar.refresh_history_buttons()

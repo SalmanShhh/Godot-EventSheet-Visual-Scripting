@@ -14,6 +14,12 @@ const P := "states_project_wide_test"
 
 const OTHER_SCRIPT := "extends Node\n\nfunc check(p: Player) -> void:\n\tif p.state == Player.State.RUN:\n\t\tprint(\"running\")\n\tmatch p.state:\n\t\tPlayer.State.RUN:\n\t\t\tpass\n\t\tPlayer.State.JUMP:\n\t\t\tpass\n"
 const CHILD_SCRIPT := "extends Player\n\nfunc _ready() -> void:\n\tstate = State.RUN\n"
+const DISK_DIR := "user://states_project_wide"
+const PLAYER_PATH := "user://states_project_wide/player.gd"
+const GUARD_PATH := "user://states_project_wide/guard.gd"
+## Names the declaring class's state the way another project script does: a state the declaring file no
+## longer has is a parse error here.
+const GUARD_SCRIPT := "extends Node\n\nconst StatesPwPlayer = preload(\"user://states_project_wide/player.gd\")\n\n\nfunc is_running(state: int) -> bool:\n\treturn state == StatesPwPlayer.State.RUN\n"
 const UNRELATED_SCRIPT := "extends Node\n\nenum State { IDLE, RUN }\nvar state: State = State.RUN\n"
 
 
@@ -52,7 +58,22 @@ static func run() -> bool:
 	var removal: Dictionary = EventSheetStatesDialog.model_of(sheet)
 	(removal["states"] as Array).remove_at(1)
 	rows.append(["a removal lists the users and where they go",
-		EventSheetStatesDialog.effect_lines(sheet, removal, {}, sources), PackedStringArray(["RUN is removed. These move to IDLE, the default: this sheet (4 rows), slime.gd (1 place), hud.gd (2 places)."])])
+		EventSheetStatesDialog.effect_lines(sheet, removal, {}, sources), PackedStringArray(["RUN is removed. These move to IDLE, the default: this sheet (4 rows), slime.gd (1 place), hud.gd (2 places).",
+			"In hud.gd, 2 tests of RUN will test IDLE instead."])])
+	rows.append(["a test of the state is told from setting it", [EventSheetStateUses.comparisons(OTHER_SCRIPT, "Player", "State", "RUN"),
+		EventSheetStateUses.comparisons(CHILD_SCRIPT, "Player", "State", "RUN")], [2, 0]])
+	var saved_as_number: Dictionary = {
+		"res://levels/one.tscn": "[ext_resource type=\"Script\" path=\"res://player.gd\" id=\"1\"]\n\n[node name=\"Player\" type=\"CharacterBody2D\"]\nscript = ExtResource(\"1\")\nstate = 2\n",
+		"res://levels/two.tscn": "[node name=\"Other\" type=\"Node\"]\nstate = 2\n",
+		"res://levels/three.tscn": "[ext_resource type=\"Script\" path=\"res://player.gd\" id=\"1\"]\n\n[node name=\"Player\" type=\"CharacterBody2D\"]\nscript = ExtResource(\"1\")\n"}
+	var on_file: EventSheetResource = sheet.duplicate(true)
+	on_file.external_source_path = "res://player.gd"
+	rows.append(["a scene that saved the state as a number is named, one that did not or runs another script is not",
+		EventSheetStatesDialog.effect_lines(on_file, removal, {}, {}, saved_as_number),
+		PackedStringArray(["RUN is removed. These move to IDLE, the default: this sheet (4 rows).",
+			"one.tscn saves state as a number: after the removal, a saved number can name a different state."])])
+	rows.append(["a rename moves no number, so no scene is named",
+		EventSheetStatesDialog.effect_lines(on_file, model, {}, {}, saved_as_number), PackedStringArray(["RUN becomes SPRINT in: this sheet (4 rows)."])])
 	var moved: String = str((EventSheetStatesDialog.project_file_edits(sheet, removal, {}, sources)["res://enemies/slime.gd"] as Dictionary)["after"])
 	rows.append(["...and the file's users move to the default", moved.contains("state = State.IDLE"), true])
 
@@ -153,7 +174,132 @@ static func run() -> bool:
 				marks[str((head as Dictionary).get("title", span.text))] = bool((span.metadata as Dictionary).get("hover_card_mark", false))
 	rows.append(["every drawn type word has a dotted rule and a card", [marks.get("int"), marks.get("float"), marks.get("bool"), marks.get("String"), marks.get("Vector2"), marks.get("Node2D"), marks.get("Texture2D")],
 		[true, true, true, true, true, true, true]])
+	rows.append_array(_on_disk_rows())
+	rows.append_array(_flip_rows())
+	rows.append_array(_opened_file_rows())
 	return SUPPORT.pins(P, rows)
+
+
+## A hand-written file opened as a sheet: the declarations a rename adds (the setter's helpers) go under
+## `extends` and the class description, never above them, so the saved file still parses.
+static func _opened_file_rows() -> Array:
+	var source: String = "class_name StatesPwMover\nextends Node\n\n## Moves about.\n\nenum State { IDLE, RUN }\n\nvar state: State = State.IDLE\n\n\nfunc _process(_delta: float) -> void:\n\tif state == State.RUN:\n\t\tprint(\"running\")\n"
+	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "user://states_project_wide/mover.gd")
+	sheet.external_source_path = "user://states_project_wide/mover.gd"
+	var model: Dictionary = EventSheetStatesDialog.model_of(sheet)
+	((model["states"] as Array)[1] as Dictionary)["name"] = "SPRINT"
+	var applied: bool = EventSheetStatesDialog.apply_model(sheet, model)
+	var emitted: String = SUPPORT.compile_output(sheet)
+	var parsed: GDScript = GDScript.new()
+	parsed.source_code = emitted
+	return [
+		["the rename applies to the opened file", applied, true],
+		["the file still opens with its class name, extends and description",
+			emitted.begins_with("class_name StatesPwMover\nextends Node\n\n## Moves about.\n"), true],
+		["the renamed file parses", parsed.reload(), OK],
+		["...and says the new name", emitted.contains("State.SPRINT"), true],
+	]
+
+
+## A machine that flips state every frame lays the sheet out at most once per window, not once per flip.
+static func _flip_rows() -> Array:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(_machine_sheet())
+	EventSheetStateWatch.clear()
+	dock.update_live_values({"state": "RUN", "state_seconds": 0.5})
+	var first: Array = [_reserved_tokens(dock), dock._state_rows_pending]
+	dock.update_live_values({"state": "IDLE", "state_seconds": 0.0})
+	dock.update_live_values({"state": "RUN", "state_seconds": 0.0})
+	dock.update_live_values({"state": "IDLE", "state_seconds": 0.0})
+	var flipping: Array = [_reserved_tokens(dock), dock._state_rows_pending]
+	dock._rebuild_state_rows_now()
+	var settled: Array = [_reserved_tokens(dock), dock._state_rows_pending]
+	EventSheetStateWatch.clear()
+	dock.free()
+	return [
+		["the first change of state is laid out at once", first, [PackedStringArray(["RUN · 99.9 s"]), false]],
+		["three more flips inside the window lay nothing out, and one layout waits", flipping, [PackedStringArray(["RUN · 99.9 s"]), true]],
+		["the waiting layout reads the state the game ended in", settled, [PackedStringArray(["IDLE · 99.9 s"]), false]],
+	]
+
+
+## The token texts of the state row that hold room for a live time.
+static func _reserved_tokens(dock: EventSheetDock) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for entry: Variant in dock.get_viewport_control().get_flat_rows():
+		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
+		if row == null:
+			continue
+		for span: SemanticSpan in row.spans:
+			if span.text.ends_with("99.9 s"):
+				found.append(span.text)
+	return found
+
+
+## Apply writes the project as ONE consistent step on disk: the declaring sheet is saved with the files that
+## name its states, so the project parses with the tab never saved again. Undo puts both back the same way,
+## and refuses to write over a file somebody changed after the rename.
+static func _on_disk_rows() -> Array:
+	var rows: Array = []
+	DirAccess.make_dir_recursive_absolute(DISK_DIR)
+	var declaring: EventSheetResource = _machine_sheet()
+	declaring.custom_class_name = "StatesPwPlayer"
+	# The loose `if` line stands for code in a function body; on its own in a file it is no class member.
+	declaring.events.remove_at(declaring.events.size() - 1)
+	var player_text: String = SUPPORT.compile_output(declaring, PLAYER_PATH)
+	_write(PLAYER_PATH, player_text)
+	_write(GUARD_PATH, GUARD_SCRIPT)
+	var sheet: EventSheetResource = SUPPORT.reopen(player_text, true, PLAYER_PATH)
+	sheet.external_source_path = PLAYER_PATH
+	sheet.read_only = false
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(sheet)
+	var model: Dictionary = EventSheetStatesDialog.model_of(dock._current_sheet)
+	((model["states"] as Array)[1] as Dictionary)["name"] = "SPRINT"
+	var edits: Dictionary = EventSheetStatesDialog.project_file_edits(dock._current_sheet, model, {},
+		{GUARD_PATH: FileAccess.get_file_as_string(GUARD_PATH)})
+	var applied: bool = dock._perform_undoable_sheet_edit("Edit states", func() -> bool:
+		return EventSheetStatesDialog.apply_model(dock._current_sheet, model), edits)
+	rows.append(["the rename reaches the other file", [applied, edits.keys()], [true, [GUARD_PATH]]])
+	rows.append(["Apply saves the declaring file with the new name",
+		[FileAccess.get_file_as_string(PLAYER_PATH).contains("SPRINT"), dock._dirty], [true, false]])
+	rows.append(["...and writes the other file", FileAccess.get_file_as_string(GUARD_PATH).contains("StatesPwPlayer.State.SPRINT"), true])
+	rows.append(["the declaring file and the file naming its state parse together", _parse_clean(), [true, true]])
+	dock._undo_redo_adapter.undo()
+	rows.append(["Undo saves the declaring file back", FileAccess.get_file_as_string(PLAYER_PATH) == player_text, true])
+	rows.append(["...and puts the other file back", FileAccess.get_file_as_string(GUARD_PATH) == GUARD_SCRIPT, true])
+	rows.append(["...and the two parse together again", _parse_clean(), [true, true]])
+	dock._undo_redo_adapter.redo()
+	rows.append(["Redo writes both again", [FileAccess.get_file_as_string(PLAYER_PATH).contains("SPRINT"),
+		FileAccess.get_file_as_string(GUARD_PATH).contains("StatesPwPlayer.State.SPRINT")], [true, true]])
+	# Somebody edits guard.gd after the rename, then presses Ctrl+Z on the sheet.
+	var edited_later: String = FileAccess.get_file_as_string(GUARD_PATH) + "\n# a line written after the rename\n"
+	_write(GUARD_PATH, edited_later)
+	rows.append(["a file changed since the step is named", dock.project_texts_changed({GUARD_PATH: GUARD_SCRIPT.replace("RUN", "SPRINT")}),
+		PackedStringArray([GUARD_PATH])])
+	dock._undo_redo_adapter.undo()
+	rows.append(["Undo never writes over the later edit", FileAccess.get_file_as_string(GUARD_PATH) == edited_later, true])
+	rows.append(["...nor saves the sheet, so the files on disk still agree", [FileAccess.get_file_as_string(PLAYER_PATH).contains("SPRINT"), _parse_clean()],
+		[true, [true, true]]])
+	if dock._status_label != null:
+		rows.append(["...and says which file", dock._status_label.tooltip_text.begins_with("guard.gd changed since this step"), true])
+	dock.free()
+	return rows
+
+
+static func _write(path: String, text: String) -> void:
+	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	handle.store_string(text)
+	handle.close()
+
+
+## [declaring file parses, other file parses], each read fresh from disk.
+static func _parse_clean() -> Array:
+	var player: Script = ResourceLoader.load(PLAYER_PATH, "", ResourceLoader.CACHE_MODE_REPLACE) as Script
+	var player_ok: bool = player != null and player.can_instantiate()
+	var guard: GDScript = GDScript.new()
+	guard.source_code = FileAccess.get_file_as_string(GUARD_PATH)
+	return [player_ok, guard.reload() == OK]
 
 
 static func _paths(uses: Array[Dictionary]) -> Array:

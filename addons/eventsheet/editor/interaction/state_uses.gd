@@ -118,3 +118,69 @@ static func list_lines(uses: Array[Dictionary]) -> PackedStringArray:
 		lines.append("%s - %s" % [str(entry["path"]).get_file(),
 			EventSheetL10n.translate("1 place") if count == 1 else EventSheetL10n.translate("%d places") % count])
 	return lines
+
+
+## How many of the references `rewrite` would change in `text` are a TEST of the state - a comparison
+## (`== Player.State.JUMP`, `!=`) or a `match` branch - rather than a state being set. A removal moves every
+## reference to the default, so such a test starts asking about the default instead: a change of what the
+## code does, which the window names before Apply.
+static func comparisons(text: String, declaring_class: String, enum_name: String, member: String) -> int:
+	var pattern: RegEx = reference_pattern(declaring_class, enum_name, PackedStringArray([member]),
+		extends_class(text, declaring_class))
+	var counted: int = 0
+	for hit: RegExMatch in pattern.search_all(text):
+		var line_start: int = text.rfind("\n", hit.get_start()) + 1
+		var line_end: int = text.find("\n", hit.get_end())
+		if line_end < 0:
+			line_end = text.length()
+		var before: String = text.substr(line_start, hit.get_start() - line_start).strip_edges()
+		var after: String = text.substr(hit.get_end(), line_end - hit.get_end()).strip_edges()
+		if before.ends_with("==") or before.ends_with("!=") or after.begins_with("==") or after.begins_with("!=") \
+				or (before.is_empty() and after.begins_with(":")):
+			counted += 1
+	return counted
+
+
+## The scenes and resources (`files`, {path: text} of `.tscn` / `.tres`) that store this machine's variable
+## as a number for a node running `script_path`: a line `<variable> = <int>` in a file that names the script.
+## An enum member's number is its place in the list, so removing a state from the middle makes every later
+## state's number mean the one before it in those files. Path-ordered.
+static func stored_numbers(files: Dictionary, script_path: String, variable: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if script_path.is_empty() or variable.is_empty():
+		return found
+	var stored: RegEx = RegEx.new()
+	stored.compile("(?m)^%s = -?\\d+\\s*$" % variable)
+	var paths: Array = files.keys()
+	paths.sort()
+	for path: Variant in paths:
+		var text: String = str(files[path])
+		if text.contains("path=\"%s\"" % script_path) and stored.search(text) != null:
+			found.append(str(path))
+	return found
+
+
+## Reads every project scene and resource as {path: text}, leaving out the plugin folders and the behaviour
+## packs. Asked only while a removal is being worked out in the States window, never on open.
+static func read_project_scenes(root: String = "res://") -> Dictionary:
+	var files: Dictionary = {}
+	var directories: Array[String] = [root]
+	while not directories.is_empty():
+		var current: String = directories.pop_back()
+		if current.begins_with("res://addons") or current.begins_with(PACK_ROOT.trim_suffix("/")):
+			continue
+		var dir: DirAccess = DirAccess.open(current)
+		if dir == null:
+			continue
+		dir.list_dir_begin()
+		var entry: String = dir.get_next()
+		while not entry.is_empty():
+			var entry_path: String = current.path_join(entry)
+			if dir.current_is_dir():
+				if not entry.begins_with("."):
+					directories.append(entry_path)
+			elif entry.get_extension() in ["tscn", "tres"]:
+				files[entry_path] = FileAccess.get_file_as_string(entry_path)
+			entry = dir.get_next()
+		dir.list_dir_end()
+	return files

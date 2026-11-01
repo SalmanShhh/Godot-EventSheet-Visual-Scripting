@@ -62,6 +62,10 @@ var _effects: VBoxContainer = null
 ## Every project script as {path: text}, read once when a change first needs it and dropped on close.
 var _sources: Dictionary = {}
 var _sources_ready: bool = false
+## The project's scenes and resources, read once while a removal is being worked out (a removal can change
+## what a number saved in one of them means).
+var _scenes: Dictionary = {}
+var _scenes_ready: bool = false
 
 
 func init(dock: Control) -> void:
@@ -92,6 +96,8 @@ func open(variable_name: String = EventSheetStateFacts.STATE_VARIABLE, picked: S
 			_picked = index
 	_sources.clear()
 	_sources_ready = false
+	_scenes.clear()
+	_scenes_ready = false
 	_dialog.title = EventSheetL10n.translate("States of %s") % variable_name
 	_description_edit.text = _description
 	_problem_label.say("")
@@ -337,7 +343,10 @@ func _refresh_effects() -> void:
 	var model: Dictionary = _working_model()
 	if renames_of(model).is_empty() and (model["removed"] as PackedStringArray).is_empty():
 		return
-	var lines: PackedStringArray = effect_lines(sheet, model, _found, _project_sources())
+	if not (model["removed"] as PackedStringArray).is_empty() and not _scenes_ready:
+		_scenes = EventSheetStateUses.read_project_scenes()
+		_scenes_ready = true
+	var lines: PackedStringArray = effect_lines(sheet, model, _found, _project_sources(), _scenes)
 	for line: String in lines:
 		var label: Label = Label.new()
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -345,6 +354,23 @@ func _refresh_effects() -> void:
 		label.text = line
 		label.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 		_effects.add_child(label)
+	# The list arrives after the window opened, so the window grows to hold it - its Apply button would
+	# otherwise sit past its foot - and stays on the screen it is on.
+	_refit.call_deferred()
+
+
+## Grows the open window to what it now holds and moves it up as far as it must to keep its foot on the
+## screen. Never shrinks it: a window that jumped smaller under the pointer would lose the reader's place.
+func _refit() -> void:
+	if _dialog == null or not _dialog.visible:
+		return
+	var fitted: Vector2i = EventSheetPopupUI.fitted_size(_dialog, Vector2i(620, 480))
+	_dialog.size = _dialog.size.max(fitted)
+	var bounds: Rect2i = DisplayServer.screen_get_usable_rect(_dialog.current_screen)
+	if _dialog.is_embedded():
+		bounds = Rect2i(Vector2i.ZERO, Vector2i(_dialog.get_parent_viewport().get_visible_rect().size))
+	var top: int = mini(_dialog.position.y, bounds.end.y - _dialog.size.y)
+	_dialog.position.y = maxi(top, bounds.position.y)
 
 
 func _show_code() -> void:
@@ -448,8 +474,11 @@ static func default_name_of(model: Dictionary) -> String:
 
 
 ## What Apply will change, one sentence per rename and per removal: this sheet's rows, then each other
-## file with its count. `sources` is {path: text} of the project's scripts. Empty when nothing changes.
-static func effect_lines(sheet: EventSheetResource, model: Dictionary, found: Dictionary, sources: Dictionary) -> PackedStringArray:
+## file with its count. `sources` is {path: text} of the project's scripts, `scenes` of its scenes and
+## resources. A removal also names each file whose tests of the state will ask about the default instead,
+## and each scene or resource that saved the variable as a number. Empty when nothing changes.
+static func effect_lines(sheet: EventSheetResource, model: Dictionary, found: Dictionary, sources: Dictionary,
+		scenes: Dictionary = {}) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
 	var declaring: String = sheet.custom_class_name.strip_edges()
 	var enum_name: String = str(found.get("enum_name", EventSheetStateFacts.ENUM_NAME))
@@ -477,11 +506,25 @@ static func effect_lines(sheet: EventSheetResource, model: Dictionary, found: Di
 				lines.append(EventSheetL10n.translate("%s is removed. No row uses it.") % member)
 			else:
 				lines.append(EventSheetL10n.translate("%s is removed. These move to %s, the default: %s.") % [member, str(change[1]), ", ".join(places)])
+			# A test of the removed state becomes a test of the default: what that code does changes, so
+			# each such file is named on its own line before Apply.
+			for entry: Dictionary in uses:
+				var tests: int = EventSheetStateUses.comparisons(str(sources[entry["path"]]), declaring, enum_name, member)
+				if tests == 1:
+					lines.append(EventSheetL10n.translate("In %s, 1 test of %s will test %s instead.") % [str(entry["path"]).get_file(), member, str(change[1])])
+				elif tests > 1:
+					lines.append(EventSheetL10n.translate("In %s, %d tests of %s will test %s instead.") % [str(entry["path"]).get_file(), tests, member, str(change[1])])
 		else:
 			if places.is_empty():
 				lines.append(EventSheetL10n.translate("%s becomes %s. No row uses it.") % [member, str(change[1])])
 			else:
 				lines.append(EventSheetL10n.translate("%s becomes %s in: %s.") % [member, str(change[1]), ", ".join(places)])
+	# A state's number is its place in the list, so a removal moves every later state's number down by one
+	# in a scene or resource that saved the variable as a number.
+	if not removed_members(sheet, model, found).is_empty():
+		var variable: String = str(found.get("variable_name", EventSheetStateFacts.STATE_VARIABLE))
+		for path: String in EventSheetStateUses.stored_numbers(scenes, sheet.external_source_path, variable):
+			lines.append(EventSheetL10n.translate("%s saves %s as a number: after the removal, a saved number can name a different state.") % [path.get_file(), variable])
 	return lines
 
 
@@ -737,7 +780,7 @@ static func write(sheet: EventSheetResource, declared: PackedStringArray, starts
 	if enum_row == null:
 		enum_row = EnumRow.new()
 		enum_row.enum_name = EventSheetStateFacts.ENUM_NAME
-		sheet.events.insert(0, enum_row)
+		sheet.events.insert(head_end(sheet), enum_row)
 	enum_row.members = members
 	_ensure_signal(sheet)
 	var opening: String = "%s.%s" % [EventSheetStateFacts.ENUM_NAME,
@@ -824,7 +867,7 @@ static func _ensure_variable(sheet: EventSheetResource, name: String, type_name:
 	if declared == null:
 		declared = LocalVariable.new()
 		declared.name = name
-		sheet.events.insert(mini(1, sheet.events.size()), declared)
+		sheet.events.insert(_declaration_index(sheet), declared)
 	declared.type_name = type_name
 	declared.default_value = initial
 	declared.expression_default = true
@@ -840,4 +883,29 @@ static func _ensure_signal(sheet: EventSheetResource) -> void:
 	declared.signal_name = EventSheetStateFacts.CHANGED_SIGNAL
 	declared.params = EventSheetStateFacts.CHANGED_SIGNAL_PARAMS
 	declared.description = "Says this object's state changed, and what it changed from."
-	sheet.events.insert(mini(1, sheet.events.size()), declared)
+	sheet.events.insert(_declaration_index(sheet), declared)
+
+
+## Where a sheet's own rows begin: past the lines a GDScript file must open with when it was read from
+## one - `@tool` and the other script annotations, `class_name`, `extends` - and the class's `##`
+## description under them. A declaration written above `extends` is a file that does not parse.
+static func head_end(sheet: EventSheetResource) -> int:
+	var at: int = 0
+	while at < sheet.events.size():
+		var raw: RawCodeRow = sheet.events[at] as RawCodeRow
+		if raw == null:
+			break
+		var code: String = raw.code.strip_edges()
+		if not (code.begins_with("class_name") or code.begins_with("extends") or code.begins_with("@") 				or code.begins_with("##")):
+			break
+		at += 1
+	return at
+
+
+## Where a declaration the window adds goes: straight after the head, and after the State enum when that
+## is the row there, so the enum stays the first thing the sheet declares.
+static func _declaration_index(sheet: EventSheetResource) -> int:
+	var at: int = head_end(sheet)
+	if at < sheet.events.size() and sheet.events[at] is EnumRow:
+		at += 1
+	return mini(at, sheet.events.size())

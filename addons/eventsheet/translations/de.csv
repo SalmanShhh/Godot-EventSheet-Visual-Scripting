@@ -9835,3 +9835,7 @@ Fold or unfold what this kind inherits.,"Klappt ein oder aus, was diese Art erbt
 "read here, changed on %s's sheet","hier gelesen, geändert auf dem Blatt von %s"
 Double-click to start it at another value.,"Doppelklick, um es bei einem anderen Wert zu starten."
 Right-click to replace it in %s.,"Rechtsklick, um es in %s zu ersetzen."
+"%s changed since this step, so no file was written and the sheet is not saved.","%s wurde seit diesem Schritt geändert, daher wurde keine Datei geschrieben und das Blatt nicht gespeichert."
+"In %s, 1 test of %s will test %s instead.","In %s prüft 1 Test auf %s künftig stattdessen auf %s."
+"In %s, %d tests of %s will test %s instead.","In %s prüfen %d Tests auf %s künftig stattdessen auf %s."
+"%s saves %s as a number: after the removal, a saved number can name a different state.","%s speichert %s als Zahl: Nach dem Entfernen kann eine gespeicherte Zahl einen anderen Zustand bezeichnen."

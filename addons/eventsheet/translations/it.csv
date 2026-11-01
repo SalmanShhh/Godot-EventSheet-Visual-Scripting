@@ -9835,3 +9835,7 @@ Fold or unfold what this kind inherits.,Comprimi o espandi ciò che questo tipo 
 "read here, changed on %s's sheet","letto qui, modificato nel foglio di %s"
 Double-click to start it at another value.,Doppio clic per avviarlo con un altro valore.
 Right-click to replace it in %s.,Clic destro per sostituirla in %s.
+"%s changed since this step, so no file was written and the sheet is not saved.","%s è cambiato dopo questo passaggio, quindi nessun file è stato scritto e il foglio non è stato salvato."
+"In %s, 1 test of %s will test %s instead.","In %s, 1 verifica di %s verificherà invece %s."
+"In %s, %d tests of %s will test %s instead.","In %s, %d verifiche di %s verificheranno invece %s."
+"%s saves %s as a number: after the removal, a saved number can name a different state.","%s salva %s come numero: dopo la rimozione, un numero salvato può indicare uno stato diverso."

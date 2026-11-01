@@ -9835,3 +9835,7 @@ Fold or unfold what this kind inherits.,Pliega o despliega lo que hereda este ti
 "read here, changed on %s's sheet","se lee aquí, se cambia en la hoja de %s"
 Double-click to start it at another value.,Doble clic para iniciarlo en otro valor.
 Right-click to replace it in %s.,Clic derecho para reemplazarla en %s.
+"%s changed since this step, so no file was written and the sheet is not saved.","%s cambió desde este paso, así que no se escribió ningún archivo y la hoja no se guardó."
+"In %s, 1 test of %s will test %s instead.","En %s, 1 prueba de %s pasará a probar %s."
+"In %s, %d tests of %s will test %s instead.","En %s, %d pruebas de %s pasarán a probar %s."
+"%s saves %s as a number: after the removal, a saved number can name a different state.","%s guarda %s como número: tras la eliminación, un número guardado puede nombrar otro estado."

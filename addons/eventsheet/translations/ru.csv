@@ -9835,3 +9835,7 @@ Fold or unfold what this kind inherits.,Свернуть или разверну
 "read here, changed on %s's sheet","читается здесь, меняется на листе %s"
 Double-click to start it at another value.,Двойной щелчок — начать с другого значения.
 Right-click to replace it in %s.,Правый щелчок — заменить в %s.
+"%s changed since this step, so no file was written and the sheet is not saved.","%s изменился после этого шага, поэтому ни один файл не записан и лист не сохранён."
+"In %s, 1 test of %s will test %s instead.","В %s 1 проверка %s теперь будет проверять %s."
+"In %s, %d tests of %s will test %s instead.","В %s: проверок (%d) состояния %s теперь будут проверять %s."
+"%s saves %s as a number: after the removal, a saved number can name a different state.","%s хранит %s как число: после удаления сохранённое число может обозначать другое состояние."
