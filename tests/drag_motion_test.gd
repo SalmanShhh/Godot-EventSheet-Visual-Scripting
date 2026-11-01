@@ -75,6 +75,8 @@ static func _test_event_carried() -> bool:
 	var rested: Array = [motion.is_animating(), motion._value("fold"), gap.size.y, gap.position.y,
 		motion.row_offset(first), motion.row_offset(third + 1)]
 	# A point inside the gap keeps the target; a point on the moved first event reads back to it.
+	var gap_left: float = gap.position.x
+	var gap_expected: float = 48.0 if viewport._get_event_style().sub_event_strips else float(EventSheetPalette.GUTTER_WIDTH)
 	var in_gap: Dictionary = motion.to_logical(Vector2(300.0, gap.position.y + gap.size.y * 0.5))
 	var on_first: Dictionary = motion.to_logical(Vector2(300.0, first_top + row_height + 3.0))
 	motion.finish()
@@ -85,6 +87,8 @@ static func _test_event_carried() -> bool:
 		["on the first frame the fold and the gap are on their way, not there", moving, [true, true, true]],
 		["at rest: still, folded, the gap its height at event 1's place, rows moved by it", rested,
 			[false, row_height, row_height, first_top, row_height, 0.0]],
+		["the gap of a top-level place begins where that level of event block does",
+			gap_left, gap_expected],
 		["a point inside the gap keeps the target", bool(in_gap.get("in_gap", false)), true],
 		["a point on the moved event 1 reads back to event 1's own place",
 			[bool(on_first.get("in_gap", true)), (on_first.get("position", Vector2.ZERO) as Vector2).y], [false, first_top + 3.0]],

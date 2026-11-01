@@ -2717,13 +2717,21 @@ func place_drag_gap(hit: Dictionary) -> void:
 			or _drag_row_indices.has(target) or drag_targets_dragged_statement(target_row_data):
 		_drag_motion.target_row_slot(-1, 0)
 		return
+	# A target on a reading of a statement (a branch of a pair) stands for the statement's LEAD: the drop
+	# is made on the event the pair belongs to, so the gap opens at that event's level and after
+	# everything it draws (its branches, the run after them, its sub-events), not between its rows.
+	var anchor: int = statement_lead_index(target)
+	var anchor_row: EventRowData = _row_at(anchor)
+	if anchor_row == null:
+		anchor_row = target_row_data
+		anchor = target
 	match mode:
 		"before":
-			_drag_motion.target_row_slot(statement_lead_index(target), target_row_data.indent)
+			_drag_motion.target_row_slot(anchor, anchor_row.indent)
 		"inside":
-			_drag_motion.target_row_slot(_drag_motion.subtree_last(target) + 1, target_row_data.indent + 1)
+			_drag_motion.target_row_slot(_drag_motion.subtree_last(anchor) + 1, anchor_row.indent + 1)
 		_:
-			_drag_motion.target_row_slot(_drag_motion.subtree_last(target) + 1, target_row_data.indent)
+			_drag_motion.target_row_slot(_drag_motion.subtree_last(anchor) + 1, anchor_row.indent)
 
 
 ## The pointer moved INSIDE the open gap of a carried event: the gap stays where it is, and the

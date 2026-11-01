@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed: the gap a carried event opens lines up with the blocks of its level, and opens after the whole event when carried over a branch
+
+- In Editor Native the dashed gap an event is carried into began at the wrong edge (10 px short for a nested level, inside the number column for a top-level one); it now begins at the left edge of the blocks of the level it opens at. Proven in the real editor, in both looks and both skins, over a 1-, 2- and 3-deep event.
+- Carried over a branch of a pair (`x = a if c else b`), the gap opened one level too deep and before the event's own sub-events, although the drop lands after the event the pair belongs to. It now opens at that event's level, below everything the event draws.
+
 ### Changed: Editor Native numbers the branches of a pair as events of their own
 
 - Where a statement hoists a ternary into two rows (`return "A" if c else "B"`, `var s = "-" if c else ""`), each branch is an event of its own in the margin: the rows of the pair take the next numbers (a guard 2 with two branches reads 2, 3, 4) and the events after them move down, as does the run of actions after a pair. Folding never renumbers anything (the walk reads folded rows too), and Classic Sheet keeps one number per event.

@@ -402,7 +402,7 @@ func gap_rects() -> Array:
 		if str(gap["kind"]) == "row":
 			var slot: int = int(gap["slot"])
 			var top: float = _slot_top(slot)
-			var indent_x: float = float(EventSheetPalette.GUTTER_WIDTH) + float(int(gap["indent"])) * _indent_width()
+			var indent_x: float = _row_gap_left(int(gap["indent"]))
 			out.append({"rect": Rect2(indent_x, top, maxf(width - indent_x - 2.0, 1.0), height),
 				"open": height / maxf(carried_height, 1.0)})
 		else:
@@ -412,6 +412,20 @@ func gap_rects() -> Array:
 			out.append({"rect": Rect2(lane_rect.position.x + 2.0, y, maxf(lane_rect.size.x - 4.0, 1.0), height),
 				"open": height / maxf(carried_height, 1.0)})
 	return out
+
+
+## Where a row gap opened at nesting level `indent` begins: the left edge of the event blocks that
+## level draws. In the look that nests by lines a nested block begins past the margin padding, the
+## number column and the lines of its ancestors (so a gap at a level lines up with the events of that
+## level), and a top-level block begins where its condition lane does; the other looks keep the
+## gutter plus one step per level.
+func _row_gap_left(indent: int) -> float:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	if event_style != null and event_style.sub_event_strips:
+		if indent <= 0:
+			return EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH) + 18.0
+		return EventRowRenderer.nested_block_left_for(indent, int(_indent_width()))
+	return float(EventSheetPalette.GUTTER_WIDTH) + float(indent) * _indent_width()
 
 
 ## The top of a row gap opened before flat row `slot` (the row count for the very end), as drawn.
