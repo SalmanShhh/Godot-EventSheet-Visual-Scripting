@@ -30,11 +30,14 @@ extends RefCounted
 const EDGE_MARGIN: int = 8
 ## What a native title bar costs at editor-scale 1; the engine does not say before the window shows.
 const NATIVE_TITLE_BAR: int = 32
-## The smallest content scale a window is shrunk to when its content is bigger than the room it has.
-const MIN_SCALE: float = 0.35
-const SCALE_SLACK: float = 0.95
-## Set on a window this file has scaled, so the next open puts it back before measuring.
-const SCALED_META: StringName = &"window_placement_scaled"
+## Set on a window whose original min_size was lowered to fit its room, so the next open restores it.
+const MIN_SIZE_META: StringName = &"window_placement_min_size"
+## Set on a scroll the plugin built with its own least size, which is that size where the room has it.
+const WANTED_MIN_META: StringName = &"window_placement_wanted_min"
+## The size a body is given to measure its window's frame by, bigger than any screen.
+const PROBE: float = 16000.0
+## The least a scrolled body is ever squeezed to (editor-scale-1 pixels), however little room is left.
+const BODY_LEAST: float = 120.0
 
 
 # ── Pure rect maths ───────────────────────────────────────────────────────────────────────────
@@ -243,6 +246,22 @@ static func keep_on_screen(window: Window) -> void:
 	if window == null or not window.visible or not window.is_inside_tree():
 		return
 	var room: Dictionary = room_for(window, Rect2i(window.position, window.size))
+	fit_bodies(window, room["bounds"])
+	_keep_inside(window, room["bounds"])
+
+
+## Makes an open window at least as big as its content needs and no bigger than its room: the body is
+## re-measured against the room (so it scrolls instead of outgrowing it), then the window grows to the
+## content's least size and is pulled back inside. On a window that is hidden or not in the tree there is no room to measure: it only grows it.
+static func fit_to_content(window: Window) -> void:
+	if window == null:
+		return
+	if not window.is_inside_tree() or not window.visible:
+		window.size = window.size.max(Vector2i(window.get_contents_minimum_size().ceil()))
+		return
+	var room: Dictionary = room_for(window, Rect2i(window.position, window.size))
+	fit_bodies(window, room["bounds"])
+	window.size = window.size.max(Vector2i(window.get_contents_minimum_size().ceil()))
 	_keep_inside(window, room["bounds"])
 
 
@@ -251,40 +270,131 @@ static func keep_on_screen(window: Window) -> void:
 
 ## The size a window opens at: the one asked for, else the one it has, else what its content needs.
 ## A window whose content cannot be any smaller than the room it has (a long form in a small editor
-## window, or on a small screen) is scaled down with the engine's own content scale until it fits, so
-## the whole window - title bar and buttons - stays reachable instead of running off the edge. A window
-## that fits is put back to scale 1.
+## window, or on a small screen) never shrinks its text: it is clamped to the room and its BODY
+## scrolls (see fit_bodies), while its title bar and button row stay put and visible.
 static func _size_wanted(window: Window, size: Vector2i, bounds: Rect2i = Rect2i()) -> Vector2i:
 	var wanted: Vector2i = size
-	var least: Vector2 = window.get_contents_minimum_size()
-	if window.has_meta(SCALED_META):
-		window.content_scale_factor = 1.0
-		window.remove_meta(SCALED_META)
-		least = window.get_contents_minimum_size()
+	var is_menu: bool = window is PopupMenu
+	if not is_menu:
+		fit_bodies(window, bounds)
+	var least: Vector2i = Vector2i(window.get_contents_minimum_size().ceil())
 	if wanted.x <= 0 or wanted.y <= 0:
 		# A menu is exactly as big as its items; every other window keeps the size it has.
-		wanted = Vector2i(least.ceil()) if window is PopupMenu else window.size
-	var factor: float = scale_to_fit(Vector2i(least.ceil()).max(window.min_size), bounds) if not (window is PopupMenu) else 1.0
-	if factor < 1.0:
-		window.content_scale_factor = factor
-		window.set_meta(SCALED_META, true)
-		window.min_size = window.min_size.min(bounds.size)
-		var scaled: Vector2i = Vector2i((Vector2(wanted.max(Vector2i(least.ceil()))) * factor).ceil())
-		return scaled.min(bounds.size)
-	wanted = wanted.max(Vector2i(least.ceil())).max(window.min_size)
+		wanted = least if is_menu else window.size
+	wanted = wanted.max(least).max(window.min_size)
+	if not is_menu and bounds.size.x > 0 and bounds.size.y > 0:
+		wanted = wanted.min(bounds.size)
 	return Vector2i(maxi(wanted.x, 1), maxi(wanted.y, 1))
 
 
-## How far a window whose content needs at least `least` pixels must be scaled to fit `bounds`: 1.0
-## when it already fits (or there is no room to measure), never below MIN_SCALE - a window that would
-## need less than that is left at MIN_SCALE and kept inside by the clamp instead of becoming unreadable.
-static func scale_to_fit(least: Vector2i, bounds: Rect2i) -> float:
-	if bounds.size.x <= 0 or bounds.size.y <= 0 or least.x <= 0 or least.y <= 0:
-		return 1.0
-	if least.x <= bounds.size.x and least.y <= bounds.size.y:
-		return 1.0
-	# A hair under the exact ratio: a popup's panel margins are not scaled with its content.
-	return clampf(minf(float(bounds.size.x) / float(least.x), float(bounds.size.y) / float(least.y)) * SCALE_SLACK, MIN_SCALE, 1.0)
+## Makes `window`'s content fit the room `bounds` without shrinking it: when the content's least size
+## is bigger than the room, the body of the dialog (everything but its title bar and its button row)
+## is put in a BodyScroll, whose own least size is the content's clamped to what is left of the room
+## after the window's chrome. A body that already scrolls is re-measured, so a window opened again in a
+## bigger room gets its whole content back and one opened in a smaller room scrolls. A window whose
+## content fits is left as it was. Popup menus and popups are untouched (they size to their items).
+static func fit_bodies(window: Window, bounds: Rect2i) -> void:
+	if window == null or window is PopupMenu:
+		return
+	if window is Popup:
+		clamp_own_scrolls(window, bounds)
+	if window.has_meta(MIN_SIZE_META):
+		window.min_size = window.get_meta(MIN_SIZE_META)
+		window.remove_meta(MIN_SIZE_META)
+	if bounds.size.x <= 0 or bounds.size.y <= 0:
+		return
+	var scrolls: Array = body_scrolls(window)
+	for scroll: Variant in scrolls:
+		(scroll as Control).custom_minimum_size = Vector2.ZERO
+	if scrolls.is_empty():
+		var needed: Vector2i = Vector2i((window.get_contents_minimum_size() + _panel_extra(window)).ceil()).max(window.min_size)
+		if needed.x <= bounds.size.x and needed.y <= bounds.size.y:
+			return
+		scrolls = wrap_bodies(window)
+		if scrolls.is_empty():
+			return
+	if window.min_size.x > bounds.size.x or window.min_size.y > bounds.size.y:
+		window.set_meta(MIN_SIZE_META, window.min_size)
+		window.min_size = window.min_size.min(bounds.size)
+	var left: Vector2 = Vector2(bounds.size) - frame_of(window, scrolls)
+	for scroll: Variant in scrolls:
+		(scroll as BodyScroll).fit_to(left)
+
+
+## A popup panel whose content is a scroll of its own with a least size (the blend-mode strip) keeps
+## that size where the room has it and is clamped to what is left of the room where it has not.
+static func clamp_own_scrolls(popup: Window, bounds: Rect2i) -> void:
+	if bounds.size.x <= 0 or bounds.size.y <= 0:
+		return
+	var scrolls: Array = []
+	for child: Node in popup.get_children():
+		if child is ScrollContainer and not child is BodyScroll:
+			scrolls.append(child)
+			if not child.has_meta(WANTED_MIN_META):
+				child.set_meta(WANTED_MIN_META, (child as Control).custom_minimum_size)
+			(child as Control).custom_minimum_size = Vector2.ZERO
+	if scrolls.is_empty():
+		return
+	var left: Vector2 = Vector2(bounds.size) - frame_of(popup, scrolls)
+	for scroll: Variant in scrolls:
+		var wanted: Vector2 = (scroll as Node).get_meta(WANTED_MIN_META)
+		(scroll as Control).custom_minimum_size = Vector2(minf(wanted.x, maxf(left.x, 0.0)), minf(wanted.y, maxf(left.y, 0.0)))
+
+
+## What `window` needs around its scrolled bodies: the dialog's margins, its button row, a popup's
+## panel. Read by giving the first body a size nothing else in the window can match, so the window's
+## least size is that body plus exactly its frame (a button row is as wide as it is, and is no part of
+## the frame's width, so subtracting its own least size would take it for one).
+static func frame_of(window: Window, scrolls: Array) -> Vector2:
+	if scrolls.is_empty():
+		return Vector2.ZERO
+	var probe: Vector2 = Vector2(PROBE, PROBE)
+	var first: Control = scrolls[0] as Control
+	first.custom_minimum_size = probe
+	var frame: Vector2 = window.get_contents_minimum_size() + _panel_extra(window) - probe
+	first.custom_minimum_size = Vector2.ZERO
+	return frame.max(Vector2.ZERO)
+
+
+## The BodyScrolls `window` already holds (a dialog's own children, or one level down in a plain
+## window's backdrop).
+static func body_scrolls(window: Window) -> Array:
+	var found: Array = []
+	for child: Node in window.get_children():
+		if child is BodyScroll:
+			found.append(child)
+		elif child is EventSheetPopupUI.WindowBackdrop:
+			for inner: Node in child.get_children():
+				if inner is BodyScroll:
+					found.append(inner)
+	return found
+
+
+## Puts each content control of `window` in a BodyScroll, in the same place in the tree, and returns the
+## scrolls. A dialog's content controls are its direct children; a plain window's content sits under
+## the backdrop window_body gives it, which stays the window's child (it fits the window and closes it
+## on ESC), so it is the backdrop's children that are wrapped.
+static func wrap_bodies(window: Window) -> Array:
+	var host: Node = window
+	for child: Node in window.get_children():
+		if child is EventSheetPopupUI.WindowBackdrop:
+			host = child
+			break
+	var wrapped: Array = []
+	for child: Node in host.get_children():
+		if not child is Control or child is ScrollContainer:
+			continue
+		var content: Control = child as Control
+		var index: int = content.get_index()
+		var scroll: BodyScroll = BodyScroll.new()
+		host.remove_child(content)
+		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		scroll.add_child(content)
+		host.add_child(scroll)
+		host.move_child(scroll, index)
+		wrapped.append(scroll)
+	return wrapped
 
 
 ## After the engine has shown the window: its real rect may differ from the one asked for (a dialog
@@ -300,6 +410,13 @@ static func _keep_inside(window: Window, bounds: Rect2i) -> void:
 		window.position = fitted.position
 
 
+## What a popup panel's own background adds around its content, which its content minimum leaves out.
+static func _panel_extra(window: Window) -> Vector2:
+	if window is PopupPanel and window.has_theme_stylebox("panel", "PopupPanel"):
+		return window.get_theme_stylebox("panel", "PopupPanel").get_minimum_size()
+	return Vector2.ZERO
+
+
 static func _margin(decorated: bool) -> int:
 	return int(EventSheetPalette.scaled_f(float(EDGE_MARGIN))) if decorated else 0
 
@@ -310,3 +427,49 @@ static func _host_of(window: Window) -> Window:
 		return null
 	var parent: Node = window.get_parent()
 	return parent.get_window() if parent != null else window.get_window()
+
+
+## A dialog's scrolling body: a ScrollContainer that reports the content's own least size as its
+## least size, clamped to the room it was given, so the window can neither be forced bigger than its
+## room by the content nor cut the content off - what does not fit scrolls.
+class BodyScroll extends ScrollContainer:
+
+	var _refit_pending: bool = false
+
+
+	func _init() -> void:
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		size_flags_vertical = Control.SIZE_EXPAND_FILL
+		horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+
+
+	## Sets the least size to the content's, no more than `room` (never under BODY_LEAST). When the
+	## height has to scroll the width keeps a scroll bar's room, so the bar does not add a horizontal one.
+	func fit_to(room: Vector2) -> void:
+		var content: Control = get_child(0) as Control if get_child_count() > 0 else null
+		if content == null:
+			return
+		if not content.minimum_size_changed.is_connected(_content_changed):
+			content.minimum_size_changed.connect(_content_changed)
+		var want: Vector2 = content.get_combined_minimum_size()
+		var floor_size: float = EventSheetPalette.scaled_f(BODY_LEAST)
+		var limit: Vector2 = Vector2(maxf(room.x, floor_size), maxf(room.y, floor_size))
+		if want.y > limit.y:
+			want.x += get_v_scroll_bar().get_combined_minimum_size().x
+		custom_minimum_size = Vector2(minf(want.x, limit.x), minf(want.y, limit.y))
+
+
+	## The content grew or shrank after the window opened (its labels wrapped, a list filled in): the
+	## window is measured against its room again once, however many times that is said in a frame.
+	func _content_changed() -> void:
+		if _refit_pending:
+			return
+		_refit_pending = true
+		_refit.call_deferred()
+
+
+	func _refit() -> void:
+		_refit_pending = false
+		if is_inside_tree():
+			EventSheetWindowPlacement.fit_to_content(get_window())

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: a dialog bigger than its room keeps its text full size and scrolls its body
+
+- A dialog or window whose content is taller or wider than the editor window or screen it opens in is no longer scaled down (the Welcome dialog in a small editor drew its words at a few pixels). It is clamped to the room, its body sits in a scroll with a scroll bar, and its title bar and button row stay put and in reach; a dialog that fits is left exactly as it was, and one opened again in a bigger room gets its whole content back. The scaling path and its pins are gone.
+
 ### Fixed: the gap a carried event opens lines up with the blocks of its level, and opens after the whole event when carried over a branch
 
 - In Editor Native the dashed gap an event is carried into began at the wrong edge (10 px short for a nested level, inside the number column for a top-level one); it now begins at the left edge of the blocks of the level it opens at. Proven in the real editor, in both looks and both skins, over a 1-, 2- and 3-deep event.

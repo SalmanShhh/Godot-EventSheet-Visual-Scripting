@@ -54,11 +54,6 @@ static func run() -> bool:
 			W.visible_part(Rect2i(1700, 100, 1000, 800), screen), screen), Rect2i(1320, 350, 600, 300)],
 		["a window wholly off screen centres on the screen", W.visible_part(Rect2i(5000, 5000, 100, 100), screen), screen],
 		["centred oversize shrinks to the screen", W.centred(Vector2i(4000, 3000), Rect2i(0, 0, 1920, 1040), screen), screen],
-		# scale_to_fit: content bigger than the room is scaled down (never below the floor), else left alone.
-		["content that fits is not scaled", W.scale_to_fit(Vector2i(500, 400), Rect2i(0, 0, 900, 650)), 1.0],
-		["content a little too big is scaled by the tighter side", W.scale_to_fit(Vector2i(1000, 700), Rect2i(0, 0, 900, 650)), (900.0 / 1000.0) * W.SCALE_SLACK],
-		["content far too big stops at the floor", W.scale_to_fit(Vector2i(1000, 2000), Rect2i(0, 0, 900, 650)), W.MIN_SCALE],
-		["no room to measure is no scaling", W.scale_to_fit(Vector2i(1000, 2000), Rect2i()), 1.0],
 		# anchored: below and left-aligned; flips above; right-aligns; oversize still lands inside.
 		["anchored below its anchor", W.anchored(Vector2i(200, 100), Rect2i(100, 100, 150, 24), screen), Rect2i(100, 124, 200, 100)],
 		["anchored flips above at the bottom edge", W.anchored(Vector2i(200, 100), Rect2i(100, 1000, 150, 24), screen), Rect2i(100, 900, 200, 100)],
@@ -82,6 +77,7 @@ static func run() -> bool:
 	ok = _second_monitor(screen) and ok
 	ok = _scale(screen) and ok
 	ok = _blend_strip() and ok
+	ok = _oversize_dialog() and ok
 	ok = _sweep() and ok
 	return ok
 
@@ -139,6 +135,47 @@ static func _blend_strip() -> bool:
 		["the strip asks for a bounded height", least.y <= int(EventSheetPalette.scaled_f(600.0)), true],
 		["the strip asks for a real width", least.x >= int(EventSheetPalette.scaled_f(300.0)), true],
 	])
+
+
+## A dialog whose content is bigger than its room is never scaled down: it is clamped to the room and
+## its body scrolls, the button row staying inside the room. A dialog that fits is left alone, and one
+## opened again in a bigger room gets its whole content back.
+static func _oversize_dialog() -> bool:
+	var room: Rect2i = Rect2i(0, 0, 700, 500)
+	var dialog: ConfirmationDialog = ConfirmationDialog.new()
+	var form: VBoxContainer = VBoxContainer.new()
+	var tall: Control = Control.new()
+	tall.custom_minimum_size = Vector2(1600, 1500)
+	form.add_child(tall)
+	dialog.add_child(EventSheetPopupUI.margined(form))
+	var natural: Vector2i = Vector2i(dialog.get_contents_minimum_size().ceil())
+	W.fit_bodies(dialog, Rect2i(0, 0, 5000, 5000))
+	var untouched: bool = W.body_scrolls(dialog).is_empty()
+	W.fit_bodies(dialog, room)
+	var scrolls: Array = W.body_scrolls(dialog)
+	var scroll: ScrollContainer = scrolls[0] if not scrolls.is_empty() else null
+	var content_min: Vector2 = scroll.get_child(0).get_combined_minimum_size() if scroll != null else Vector2.ZERO
+	# A control outside the tree keeps its first measured minimum, so the window's own minimum is
+	# rebuilt from the parts: its chrome (the unwrapped minimum less the body) plus the body's least.
+	var chrome: Vector2i = natural - Vector2i(content_min.ceil())
+	var viewport_min: Vector2 = scroll.custom_minimum_size if scroll != null else Vector2.ZERO
+	var squeezed: Vector2i = chrome + Vector2i(viewport_min.ceil())
+	var button_row: float = dialog.get_ok_button().get_combined_minimum_size().y
+	W.fit_bodies(dialog, Rect2i(0, 0, 5000, 5000))
+	var restored: Vector2 = scroll.custom_minimum_size if scroll != null else Vector2.ZERO
+	var result: bool = SUPPORT.pins(P + " (oversize dialog)", [
+		["a dialog that fits is not wrapped", untouched, true],
+		["an oversize dialog gets one scrolling body", scrolls.size(), 1],
+		["its least width fits the room", squeezed.x <= room.size.x, true],
+		["its least height fits the room, button row included", squeezed.y <= room.size.y, true],
+		["the button row is part of what fits", button_row > 0.0 and squeezed.y >= int(button_row), true],
+		["its text is never scaled", dialog.content_scale_factor, 1.0],
+		["the body is taller than its view, so it scrolls to reveal the last control", content_min.y > viewport_min.y, true],
+		["the body is wider than its view, so it can scroll sideways when it must", content_min.x > viewport_min.x, true],
+		["in a bigger room the whole content comes back", restored, content_min],
+	])
+	dialog.free()
+	return result
 
 
 ## No file of the plugin may open a window with an engine popup call. A window that lands by the

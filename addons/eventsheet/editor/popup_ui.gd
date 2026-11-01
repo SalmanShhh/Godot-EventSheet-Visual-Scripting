@@ -161,6 +161,8 @@ static func popup_fitted(window: Window, least: Vector2i = Vector2i.ZERO) -> voi
 	window.get_tree().create_timer(WindowBackdrop.SETTLE_SECONDS).timeout.connect(func() -> void:
 		if not is_instance_valid(window) or not window.visible:
 			return
+		# The body is measured again too: its labels have wrapped, so what it needs has shrunk.
+		EventSheetWindowPlacement.keep_on_screen(window)
 		var fitted: Vector2i = fitted_size(window, least)
 		if fitted.x < window.size.x or fitted.y < window.size.y:
 			var centre: Vector2i = window.position + window.size / 2
@@ -211,10 +213,7 @@ class WindowBackdrop extends PanelContainer:
 	func fit_window() -> void:
 		var window: Window = get_parent() as Window
 		if window != null:
-			# In the window's own pixels: a window scaled down to fit its room (content_scale_factor
-			# below one) holds its content in fewer of them.
-			window.size = window.size.max(Vector2i((window.get_contents_minimum_size() * window.content_scale_factor).ceil()))
-			EventSheetWindowPlacement.keep_on_screen(window)
+			EventSheetWindowPlacement.fit_to_content(window)
 
 
 	func _unhandled_key_input(event: InputEvent) -> void:
