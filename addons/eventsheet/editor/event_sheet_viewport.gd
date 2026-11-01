@@ -3234,6 +3234,7 @@ func _refresh_rows() -> void:
 func _branch_number_shifts(event_numbers: Dictionary) -> Dictionary:
 	var shifts: Dictionary = {}
 	_display_by_model = {}
+	_branch_growth = 0
 	var style: EventSheetEventStyle = _get_event_style()
 	if style == null or not style.sub_event_strips:
 		return shifts
@@ -3241,12 +3242,21 @@ func _branch_number_shifts(event_numbers: Dictionary) -> Dictionary:
 	_walk_branch_numbers(_root_rows, event_numbers, state, shifts)
 	if int(state["grown"]) > 0:
 		_display_by_model = state["by_model"]
+		_branch_growth = int(state["grown"])
 	return shifts
 
 
 ## The number each real event wears in the margin, by the number the sheet itself gives it. Empty (every
 ## event wears its own) unless the look nests by lines and a pair has branched.
 var _display_by_model: Dictionary = {}
+## How many places the numbering has grown by - the rows of pairs that took a number of their own.
+var _branch_growth: int = 0
+
+
+## The events the margin counts beyond the sheet's own: the total "event N of M" speaks of is the
+## sheet's event count plus this.
+func branch_growth() -> int:
+	return _branch_growth
 
 
 ## The number the margin shows for the event the sheet numbers `model_number`: the same number, unless a

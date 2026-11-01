@@ -7515,9 +7515,9 @@ func _update_row_address_status() -> void:
 	var selected_row: EventRowData = _viewport.get_selected_row_data() if _viewport != null else null
 	if EventSheetActiveTheme.active().status_bar_selection_line:
 		_row_address_label.text = selection_line_text(selected_row)
-		_row_address_label.tooltip_text = row_address_text(selected_row, _current_sheet)
+		_row_address_label.tooltip_text = row_address_text(selected_row, _current_sheet, _viewport.branch_growth() if _viewport != null else 0)
 		return
-	_row_address_label.text = row_address_text(selected_row, _current_sheet)
+	_row_address_label.text = row_address_text(selected_row, _current_sheet, _viewport.branch_growth() if _viewport != null else 0)
 	_row_address_label.tooltip_text = _row_address_label.text
 
 
@@ -7856,10 +7856,10 @@ func apply_collision_fix(finding: Dictionary) -> String:
 
 
 ## The status bar's address sentence for one row, as a pure function so tests can pin the words.
-static func row_address_text(row_data: EventRowData, sheet: EventSheetResource) -> String:
+static func row_address_text(row_data: EventRowData, sheet: EventSheetResource, branch_growth: int = 0) -> String:
 	if row_data == null or sheet == null or row_data.event_number <= 0:
 		return ""
-	var total: int = EventSheetResource.event_count(sheet.events, sheet.functions)
+	var total: int = EventSheetResource.event_count(sheet.events, sheet.functions) + branch_growth
 	var text: String = EventSheetL10n.translate("event %d of %d") % [row_data.event_number, total]
 	if row_data.line_number > 0:
 		text += " · " + EventSheetL10n.translate("line %d") % row_data.line_number

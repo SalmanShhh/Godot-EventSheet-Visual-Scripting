@@ -130,6 +130,9 @@ static func _test_translation() -> bool:
 		["an event before the pair keeps its number", view.display_event_number(2), 2],
 		["Classic Sheet never renumbers", classic.display_event_number(3), 3],
 		["Classic Sheet's margin number is the sheet's", classic.model_event_number(3), 3],
+		["the margin counts four more places than the sheet has events: two branches, the Else after the 6, the run after it",
+			view.branch_growth(), 4],
+		["Classic Sheet counts none", classic.branch_growth(), 0],
 	]
 	view.free()
 	classic.free()
