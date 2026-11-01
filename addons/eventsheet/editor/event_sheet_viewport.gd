@@ -3759,21 +3759,30 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 ## Paints per-row error markers from EventSheetDiagnostics (each: {uid, message, suggestion}).
 ## Returns the number of distinct flagged rows; re-applied on every rebuild. Replaces the prior
 ## set, so passing [] clears it.
+##
+## A set that equals the one already painted changes nothing on screen, so the rows are NOT rebuilt:
+## the usual save finds no problems on a sheet that had none, and rebuilding every row for that cost
+## 13 s of a 14.4 s save on the 1,492-row pathfinding pack. Rows built since the last set already
+## carry their marks (_build_row_from_resource re-applies the map), so equal maps mean equal rows.
 func set_row_diagnostics(diagnostics: Array) -> int:
-	_row_diagnostics.clear()
-	_first_diagnostic_uid = ""
+	var next: Dictionary = {}
+	var first_uid: String = ""
 	for diagnostic in diagnostics:
 		if not (diagnostic is Dictionary):
 			continue
 		var uid: String = str((diagnostic as Dictionary).get("uid", ""))
-		if uid.is_empty() or _row_diagnostics.has(uid):
+		if uid.is_empty() or next.has(uid):
 			continue
 		var message: String = str((diagnostic as Dictionary).get("message", ""))
 		var suggestion: String = str((diagnostic as Dictionary).get("suggestion", ""))
-		_row_diagnostics[uid] = message + ("  " + suggestion if not suggestion.is_empty() else "")
-		if _first_diagnostic_uid.is_empty():
-			_first_diagnostic_uid = uid
-	_refresh_rows()
+		next[uid] = message + ("  " + suggestion if not suggestion.is_empty() else "")
+		if first_uid.is_empty():
+			first_uid = uid
+	var changed: bool = next != _row_diagnostics
+	_row_diagnostics = next
+	_first_diagnostic_uid = first_uid
+	if changed:
+		_refresh_rows()
 	return _row_diagnostics.size()
 
 

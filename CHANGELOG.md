@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: saving a sheet with nothing to report no longer rebuilds every row
+
+- `set_row_diagnostics` rebuilt the whole canvas on every save, even when the problem list was empty and had been empty before. It now rebuilds only when the list changed (a flag appears, moves, changes its words or clears); an equal list changes nothing on screen, because rows built since the last list already carry their marks.
+- Measured on the 1,492-row pathfinding pack in fresh processes, median of 3: `_run_diagnostics` after a save 21,095 ms (14,388 - 22,397) -> 6,659 ms (6,219 - 6,659) the first call of a session, and 12,439 ms (9,260 - 14,367) -> 797 ms (745 - 824) every call after it, with the row builds per call going 1 -> 0. The machine was shared and loaded, so read the before figures as a band; the 13 s rebuild is gone and the ~0.8 s that remains is the analysis. Pinned by `diagnostics_repaint_test` (row builds unchanged across a clean `_run_diagnostics`, an equal empty list and an equal non-empty list; a changed list still rebuilds; a 600 ms wall on a 346-row pack, measured 178 ms).
 ### Fixed: a sheet that saves no longer compiles the Project Doctor to draw its "saved" badge
 
 - The first row build of any sheet whose source mentions `save_` asked the Project Doctor which names the Save System keeps, and loading the Doctor is a multi-second GDScript compile. The question is now answered by `addons/eventforge/save_key_scan.gd`, a small file with no dependencies that the Doctor itself delegates `save_key_usage` to, so a badge and a finding still read the same text the same way.
