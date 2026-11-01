@@ -7,7 +7,7 @@ extends RefCounted
 # A file used to open with a head card over the sheet, a folded group row under it, the file's prose
 # hoisted to the top as a comment row and a Behaviors band among the rows. It opens on one bar now:
 #
-#     ◆ CarouselOfJuice  Custom node · extends Node2D            4 variables · 2 events · 34 behaviours
+#     ◆ CarouselOfJuice  Custom node · extends Node2D            4 variables · 4 events · 34 behaviours
 #
 # and everything else lives one hover away, on the card behind the name or a count. Five things are
 # pinned here, each by VALUE:
@@ -48,7 +48,7 @@ static func _one_bar_for_a_showcase() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
 		["input_rebind head bar", _words_of(head[0]),
-			"◆ InputRebindDemo Custom node · extends Control 1 variable · 8 events · 1 behaviour"],
+			"◆ InputRebindDemo Custom node · extends Control 1 variable · 18 events · 1 behaviour"],
 		["the head bar is the sheet's", _stable_uid(head[0]), "sheet_head_bar"],
 		["the head bar folds nothing", head[0].children.size(), 0],
 		["the head bar is a bar, not a group", head[0].row_type, EventRowData.RowType.SECTION],
@@ -108,7 +108,7 @@ static func _behaviours_are_a_count_with_a_card() -> bool:
 	var first: Array = (card.get("links", [[""]]) as Array)[0] as Array
 	return SUPPORT.pins(P, [
 		["carousel head bar", _words_of(head[0]),
-			"◆ CarouselOfJuice Custom node · extends Node2D 4 variables · 2 events · 34 behaviours"],
+			"◆ CarouselOfJuice Custom node · extends Node2D 4 variables · 4 events · 34 behaviours"],
 		["carousel behaviour kinds on the card", " · ".join(kinds),
 			"Spring 10 · Tween 10 · Flash 2 · Juice · Scenes · Blend Modes · Screen FX · Sine 8"],
 		["a kind opens its pack", str(first[1]).get_file(), "spring_behavior.gd"],

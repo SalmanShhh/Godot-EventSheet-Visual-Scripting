@@ -111,7 +111,7 @@ static func _scene_sheet_rows() -> bool:
 	# file it runs, with its counts on the right.
 	ok = _check("each script sits under its head bar, named by its NODE",
 		_first_containing(texts, "| HUD |"),
-		"◆ | HUD | Custom node · extends | CanvasLayer | · opened_scene_hud.gd | 1 variable | · | 1 event") and ok
+		"◆ | HUD | Custom node · extends | CanvasLayer | · opened_scene_hud.gd | 1 variable | · | 3 events") and ok
 	# The wiring the SCENE file holds, on a script that is not the scene root: before this, a child
 	# node's handler had no way of knowing what wired it.
 	ok = _check("a child node's scene wiring reads as its trigger",
