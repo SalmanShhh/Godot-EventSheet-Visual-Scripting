@@ -251,7 +251,15 @@ func _build_strip() -> PopupPanel:
 	var panel: PopupPanel = PopupPanel.new()
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
-	panel.add_child(column)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# The shelves wrap, and a wrapping row reports its height at the width it has been laid out at -
+	# before the first layout that is zero, so the panel opened as a sliver two screens tall. A scroll
+	# of a fixed width bounds both sides: the strip opens a sensible size and never taller than that.
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(460.0), EventSheetPalette.scaled_f(420.0))
+	scroll.add_child(column)
+	panel.add_child(scroll)
 	for group: Dictionary in GROUPS:
 		var heading: Label = Label.new()
 		heading.text = EventSheetL10n.translate(str(group["title"]))

@@ -54,6 +54,11 @@ static func run() -> bool:
 			W.visible_part(Rect2i(1700, 100, 1000, 800), screen), screen), Rect2i(1320, 350, 600, 300)],
 		["a window wholly off screen centres on the screen", W.visible_part(Rect2i(5000, 5000, 100, 100), screen), screen],
 		["centred oversize shrinks to the screen", W.centred(Vector2i(4000, 3000), Rect2i(0, 0, 1920, 1040), screen), screen],
+		# scale_to_fit: content bigger than the room is scaled down (never below the floor), else left alone.
+		["content that fits is not scaled", W.scale_to_fit(Vector2i(500, 400), Rect2i(0, 0, 900, 650)), 1.0],
+		["content a little too big is scaled by the tighter side", W.scale_to_fit(Vector2i(1000, 700), Rect2i(0, 0, 900, 650)), (900.0 / 1000.0) * W.SCALE_SLACK],
+		["content far too big stops at the floor", W.scale_to_fit(Vector2i(1000, 2000), Rect2i(0, 0, 900, 650)), W.MIN_SCALE],
+		["no room to measure is no scaling", W.scale_to_fit(Vector2i(1000, 2000), Rect2i()), 1.0],
 		# anchored: below and left-aligned; flips above; right-aligns; oversize still lands inside.
 		["anchored below its anchor", W.anchored(Vector2i(200, 100), Rect2i(100, 100, 150, 24), screen), Rect2i(100, 124, 200, 100)],
 		["anchored flips above at the bottom edge", W.anchored(Vector2i(200, 100), Rect2i(100, 1000, 150, 24), screen), Rect2i(100, 900, 200, 100)],
@@ -76,6 +81,7 @@ static func run() -> bool:
 	]) and ok
 	ok = _second_monitor(screen) and ok
 	ok = _scale(screen) and ok
+	ok = _blend_strip() and ok
 	ok = _sweep() and ok
 	return ok
 
@@ -118,6 +124,20 @@ static func _scale(screen: Rect2i) -> bool:
 		["a dialog at 200% still fits the room it has", W.fit(Rect2i(0, 0, 3000, 900), two).size.x, two.size.x],
 		["the scaled margin follows the palette", W._margin(true), int(EventSheetPalette.scaled_f(float(W.EDGE_MARGIN)))],
 		["a window with no title bar has no margin", W._margin(false), 0],
+	])
+
+
+## The blend-mode strip's content must not ask for more room than a screen has: its wrapping shelves
+## used to report a height of two screens before their first layout, and no placement can fit that.
+static func _blend_strip() -> bool:
+	var field: LineEdit = load("res://addons/eventsheet/editor/blend_mode_field.gd").new()
+	var strip: PopupPanel = field.call("_build_strip")
+	var least: Vector2i = Vector2i(strip.get_contents_minimum_size().ceil())
+	strip.free()
+	field.free()
+	return SUPPORT.pins(P + " (blend strip)", [
+		["the strip asks for a bounded height", least.y <= int(EventSheetPalette.scaled_f(600.0)), true],
+		["the strip asks for a real width", least.x >= int(EventSheetPalette.scaled_f(300.0)), true],
 	])
 
 

@@ -211,7 +211,10 @@ class WindowBackdrop extends PanelContainer:
 	func fit_window() -> void:
 		var window: Window = get_parent() as Window
 		if window != null:
-			window.size = window.size.max(Vector2i(window.get_contents_minimum_size().ceil()))
+			# In the window's own pixels: a window scaled down to fit its room (content_scale_factor
+			# below one) holds its content in fewer of them.
+			window.size = window.size.max(Vector2i((window.get_contents_minimum_size() * window.content_scale_factor).ceil()))
+			EventSheetWindowPlacement.keep_on_screen(window)
 
 
 	func _unhandled_key_input(event: InputEvent) -> void:

@@ -30,6 +30,11 @@ extends RefCounted
 const EDGE_MARGIN: int = 8
 ## What a native title bar costs at editor-scale 1; the engine does not say before the window shows.
 const NATIVE_TITLE_BAR: int = 32
+## The smallest content scale a window is shrunk to when its content is bigger than the room it has.
+const MIN_SCALE: float = 0.35
+const SCALE_SLACK: float = 0.95
+## Set on a window this file has scaled, so the next open puts it back before measuring.
+const SCALED_META: StringName = &"window_placement_scaled"
 
 
 # ── Pure rect maths ───────────────────────────────────────────────────────────────────────────
@@ -175,7 +180,7 @@ static func pointer_over(source: Node) -> Vector2i:
 ## has), fully inside the screen. The replacement for Window.popup_centered.
 static func popup_centered(window: Window, size: Vector2i = Vector2i.ZERO) -> void:
 	var room: Dictionary = room_for(window)
-	var wanted: Vector2i = _size_wanted(window, size)
+	var wanted: Vector2i = _size_wanted(window, size, room["bounds"])
 	window.popup(centred(wanted, room["around"], room["bounds"]))
 	_keep_inside(window, room["bounds"])
 
@@ -193,7 +198,7 @@ static func popup_centered_ratio(window: Window, ratio: float = 0.8) -> void:
 ## get_screen_position() and size), below it or above when there is no room below.
 static func popup_below(window: Window, anchor: Rect2i, size: Vector2i = Vector2i.ZERO) -> void:
 	var room: Dictionary = room_for(window, anchor)
-	window.popup(anchored(_size_wanted(window, size), anchor, room["bounds"]))
+	window.popup(anchored(_size_wanted(window, size, room["bounds"]), anchor, room["bounds"]))
 	_keep_inside(window, room["bounds"])
 
 
@@ -201,7 +206,7 @@ static func popup_below(window: Window, anchor: Rect2i, size: Vector2i = Vector2
 ## flipping away from the edges it would cross. A menu's size is measured, not guessed.
 static func popup_at(window: Window, point: Vector2i, size: Vector2i = Vector2i.ZERO) -> void:
 	var room: Dictionary = room_for(window, Rect2i(point, Vector2i.ONE))
-	window.popup(at_point(_size_wanted(window, size), point, room["bounds"]))
+	window.popup(at_point(_size_wanted(window, size, room["bounds"]), point, room["bounds"]))
 	_keep_inside(window, room["bounds"])
 
 
@@ -209,7 +214,7 @@ static func popup_at(window: Window, point: Vector2i, size: Vector2i = Vector2i.
 ## panel that was placed by hand or remembers where it was.
 static func popup_placed(window: Window) -> void:
 	var room: Dictionary = room_for(window, Rect2i(window.position, window.size))
-	window.popup(fit(Rect2i(window.position, _size_wanted(window, Vector2i.ZERO)), room["bounds"]))
+	window.popup(fit(Rect2i(window.position, _size_wanted(window, Vector2i.ZERO, room["bounds"])), room["bounds"]))
 	_keep_inside(window, room["bounds"])
 
 
@@ -225,7 +230,7 @@ static func move_within(window: Window, corner: Vector2i) -> void:
 ## Shows a window that is positioned by hand (the tour) at `corner`, kept inside the room.
 static func show_at(window: Window, corner: Vector2i) -> void:
 	var room: Dictionary = room_for(window, Rect2i(corner, Vector2i.ONE))
-	var rect: Rect2i = fit(Rect2i(corner, _size_wanted(window, Vector2i.ZERO)), room["bounds"])
+	var rect: Rect2i = fit(Rect2i(corner, _size_wanted(window, Vector2i.ZERO, room["bounds"])), room["bounds"])
 	window.position = rect.position
 	window.size = rect.size
 	window.show()
@@ -245,14 +250,41 @@ static func keep_on_screen(window: Window) -> void:
 
 
 ## The size a window opens at: the one asked for, else the one it has, else what its content needs.
-static func _size_wanted(window: Window, size: Vector2i) -> Vector2i:
+## A window whose content cannot be any smaller than the room it has (a long form in a small editor
+## window, or on a small screen) is scaled down with the engine's own content scale until it fits, so
+## the whole window - title bar and buttons - stays reachable instead of running off the edge. A window
+## that fits is put back to scale 1.
+static func _size_wanted(window: Window, size: Vector2i, bounds: Rect2i = Rect2i()) -> Vector2i:
 	var wanted: Vector2i = size
-	var least: Vector2i = Vector2i(window.get_contents_minimum_size().ceil())
+	var least: Vector2 = window.get_contents_minimum_size()
+	if window.has_meta(SCALED_META):
+		window.content_scale_factor = 1.0
+		window.remove_meta(SCALED_META)
+		least = window.get_contents_minimum_size()
 	if wanted.x <= 0 or wanted.y <= 0:
 		# A menu is exactly as big as its items; every other window keeps the size it has.
-		wanted = least if window is PopupMenu else window.size
-	wanted = wanted.max(least).max(window.min_size)
+		wanted = Vector2i(least.ceil()) if window is PopupMenu else window.size
+	var factor: float = scale_to_fit(Vector2i(least.ceil()).max(window.min_size), bounds) if not (window is PopupMenu) else 1.0
+	if factor < 1.0:
+		window.content_scale_factor = factor
+		window.set_meta(SCALED_META, true)
+		window.min_size = window.min_size.min(bounds.size)
+		var scaled: Vector2i = Vector2i((Vector2(wanted.max(Vector2i(least.ceil()))) * factor).ceil())
+		return scaled.min(bounds.size)
+	wanted = wanted.max(Vector2i(least.ceil())).max(window.min_size)
 	return Vector2i(maxi(wanted.x, 1), maxi(wanted.y, 1))
+
+
+## How far a window whose content needs at least `least` pixels must be scaled to fit `bounds`: 1.0
+## when it already fits (or there is no room to measure), never below MIN_SCALE - a window that would
+## need less than that is left at MIN_SCALE and kept inside by the clamp instead of becoming unreadable.
+static func scale_to_fit(least: Vector2i, bounds: Rect2i) -> float:
+	if bounds.size.x <= 0 or bounds.size.y <= 0 or least.x <= 0 or least.y <= 0:
+		return 1.0
+	if least.x <= bounds.size.x and least.y <= bounds.size.y:
+		return 1.0
+	# A hair under the exact ratio: a popup's panel margins are not scaled with its content.
+	return clampf(minf(float(bounds.size.x) / float(least.x), float(bounds.size.y) / float(least.y)) * SCALE_SLACK, MIN_SCALE, 1.0)
 
 
 ## After the engine has shown the window: its real rect may differ from the one asked for (a dialog
