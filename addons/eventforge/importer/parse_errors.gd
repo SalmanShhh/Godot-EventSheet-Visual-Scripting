@@ -65,6 +65,14 @@ static func check_file(path: String) -> Array:
 	return errors.duplicate(true)
 
 
+## Forgets the answer for a file its writer has just replaced. A modified time is in whole seconds, so a
+## fix saved inside the same second as the broken file would otherwise be answered with the old errors.
+static func forget(path: String) -> void:
+	_cache_lock.lock()
+	_cache.erase(path)
+	_cache_lock.unlock()
+
+
 ## The [{line, message}] a check run's output describes, for `path` only. Split out from check_file so
 ## the shape of the engine's report is pinnable without spawning anything. The two lines that matter:
 ##

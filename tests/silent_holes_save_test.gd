@@ -176,6 +176,33 @@ static func _engine_words_land_on_the_row() -> bool:
 		["a stale answer says nothing about the open sheet", str(dock.status), ""],
 		["and stores nothing on it", EventSheetParseErrors.error_count(other), 0],
 	]) and passed
+	# Coming back to the sheet the answer was about: nothing was lost on the way.
+	dock._current_sheet = sheet
+	checks.on_sheet_shown(sheet)
+	passed = SUPPORT.pins(NAME, [
+		["the answer that landed while another tab was up is told on return", str(dock.status).contains("\"flub\" not declared"), true],
+		["and a .gd sheet stores it", EventSheetParseErrors.error_count(sheet), 1],
+	]) and passed
+	dock.status = ""
+	checks.on_sheet_shown(sheet)
+	passed = SUPPORT.check(NAME, "and it is told once", str(dock.status), "") and passed
+	# Two saves in a row: the answer to the first file is about bytes that no longer exist.
+	dock.status = ""
+	checks._waiting = {"path": sheet.external_source_path, "sheet_key": EventSheetCompileFindings.key_of(sheet)}
+	checks._request = request
+	checks._check_returned(errors)
+	passed = SUPPORT.check(NAME, "an answer overtaken by a newer save of the same file says nothing", str(dock.status), "") and passed
+	# A write makes the last engine answer obsolete. Its marks name rows of the file that was just
+	# replaced; counted now they would read "1 row(s) need attention" on a sheet the reader has just fixed.
+	EventSheetSaveChecks.clear_layers()
+	EventSheetSaveChecks.set_engine_layer(sheet, [{"uid": "4242", "message": "old", "suggestion": ""}])
+	checks.after_write(sheet, "user://not_a_project_file.gd", {"warnings": [], "warning_rows": [], "source_map": []})
+	passed = SUPPORT.check(NAME, "a write drops the engine's marks about the file it replaced",
+		EventSheetSaveChecks.merged_diagnostics(sheet), []) and passed
+	# And the marks painted from it do not outlive an answer that says the file is clean.
+	var marks_left: Array = EventSheetSaveChecks.merged_diagnostics(sheet)
+	checks.apply_engine_result(request, [])
+	passed = SUPPORT.check(NAME, "a clean answer after a write leaves no mark", marks_left, []) and passed
 	EventSheetSaveChecks.clear_layers()
 	dock.free()
 	return passed
@@ -194,9 +221,17 @@ static func _engine_check_reads_a_real_file() -> bool:
 	var cached_started: int = Time.get_ticks_msec()
 	var cached: Array = EventSheetParseErrors.check_file(path)
 	var cached_elapsed: int = Time.get_ticks_msec() - cached_started
+	# A file's modified time is in whole seconds: a fix saved inside the same second as the broken file
+	# has the same stamp. The save tells the cache it wrote, so the fix is not answered with the old errors.
+	var fixed: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	fixed.store_string("extends Node\n\n\nfunc _ready() -> void:\n\tvar total: int = 1\n\tprint(total)\n")
+	fixed.close()
+	EventSheetParseErrors.forget(path)
+	var after_fix: Array = EventSheetParseErrors.check_file(path)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	print("silent_holes_save_test: engine check of a 6-line script took %d ms (cached ask %d ms)" % [elapsed, cached_elapsed])
 	return SUPPORT.pins(NAME, [
+		["a file written again is checked again, whatever its time stamp says", after_fix, []],
 		["the engine names the line", int((errors[0] as Dictionary).get("line", 0)) if not errors.is_empty() else 0, 5],
 		["in its own words", str((errors[0] as Dictionary).get("message", "")).contains("flub") if not errors.is_empty() else false, true],
 		["the check is inside its budget", elapsed < ENGINE_CHECK_BUDGET_MS, true],

@@ -36,6 +36,8 @@ var _thread: Thread = null
 ## since been written again would be about bytes that no longer exist.
 var _request: Dictionary = {}
 var _waiting: Dictionary = {}
+## {sheet key: [request, errors]}: answers that landed while another tab was up, told when it comes back.
+var _untold: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -51,6 +53,11 @@ func after_write(sheet: EventSheetResource, written_path: String, compile_result
 	var warnings_changed: bool = EventSheetCompileFindings.record(sheet, compile_result)
 	if warnings_changed:
 		_repaint_rows()
+	# The last answer was about the bytes this write replaced. Its marks name rows that an edit since has
+	# replaced, and a diagnostics pass counting them now would call a fixed sheet broken; the new answer
+	# paints its own.
+	EventSheetSaveChecks.set_engine_layer(sheet, [])
+	EventSheetParseErrors.forget(written_path)
 	_begin_engine_check({
 		"path": written_path,
 		"sheet_key": EventSheetCompileFindings.key_of(sheet),
@@ -85,7 +92,9 @@ func _check_returned(errors: Array) -> void:
 		_thread = null
 	var request: Dictionary = _request
 	_request = {}
-	apply_engine_result(request, errors)
+	# A newer save of the same file is waiting: this answer is about bytes that no longer exist.
+	if str(_waiting.get("sheet_key", "")) != str(request.get("sheet_key", "")):
+		apply_engine_result(request, errors)
 	if not _waiting.is_empty():
 		var next: Dictionary = _waiting
 		_waiting = {}
@@ -110,24 +119,35 @@ func apply_engine_result(request: Dictionary, errors: Array) -> void:
 	if key.is_empty():
 		return
 	var rows: Array = EventSheetParseErrors.row_diagnostics(errors, request.get("source_map", []))
-	var layers: Dictionary = _layers_of(key)
-	var changed: bool = layers.get("engine", []) != rows
-	layers["engine"] = rows
+	_layers_of(key)["engine"] = rows
 	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
 	if sheet == null or EventSheetCompileFindings.key_of(sheet) != key:
+		# Told when the reader is back on that sheet: this check exists so a failure is never dropped.
+		_untold[key] = [request, errors]
 		return
+	_untold.erase(key)
 	var head_changed: bool = false
 	if bool(request.get("backed", false)):
 		head_changed = EventSheetParseErrors.errors_for(sheet) != errors
 		EventSheetParseErrors.store_on_sheet(sheet, errors)
-	if changed or head_changed:
-		_paint(sheet, head_changed)
+	# Painted whatever the layer held before: the write that asked emptied it, and the marks on screen
+	# are the old ones. An unchanged set rebuilds nothing (the viewport's own rule).
+	_paint(sheet, head_changed)
 	if not errors.is_empty():
 		var first: Dictionary = errors[0]
 		_dock._set_status(EventSheetL10n.translate(
 			"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.") % [
 			str(first.get("message", "")), int(first.get("line", 0)), str(request.get("path", "")).get_file()]
 			+ EventSheetCompileFindings.tail_for(key), true)
+
+
+## A tab came forward: an answer that landed while it was behind another one is told now.
+func on_sheet_shown(sheet: EventSheetResource) -> void:
+	var key: String = EventSheetCompileFindings.key_of(sheet)
+	if not _untold.has(key):
+		return
+	var held: Array = _untold[key]
+	apply_engine_result(held[0], held[1])
 
 
 ## The row marks the lint pass found, remembered beside the engine's so the two are painted together.

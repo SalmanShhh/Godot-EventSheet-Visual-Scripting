@@ -1307,6 +1307,9 @@ func _activate_tab(index: int) -> void:
 	_refresh_tab_bar()
 	# The help strip speaks for the selection in front of the reader: this tab's, never the one left.
 	_update_row_help_strip(_viewport.get_selected_row_data())
+	# A save's engine check that answered while this tab was behind another one says so now.
+	if _save_checks != null:
+		_save_checks.on_sheet_shown(_current_sheet)
 	# Godot-native default (welcome panel choice): the generated-GDScript panel rides
 	# along with every sheet, so the honest output is always in view.
 	if bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)) and not is_code_panel_visible():

@@ -946,7 +946,13 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("\t\t\treturn")
 		lines.append("\t\t_said[location] = true")
 		lines.append("\t\tvar message: String = rationale if not rationale.is_empty() else code")
-		lines.append("\t\tEngineDebugger.send_message.call_deferred(\"eventsheets:runtime_error\", [message, file, line])")
+		# Said at once on the main thread: a script error stops the game in the debugger right after this
+		# call returns, and a deferred send would wait for Continue and be lost to Stop. A logger can also
+		# fire on another thread, where only the deferred call is safe.
+		lines.append("\t\tif OS.get_thread_caller_id() == OS.get_main_thread_id():")
+		lines.append("\t\t\tEngineDebugger.send_message(\"eventsheets:runtime_error\", [message, file, line])")
+		lines.append("\t\telse:")
+		lines.append("\t\t\tEngineDebugger.send_message.call_deferred(\"eventsheets:runtime_error\", [message, file, line])")
 
 	# The SHIPPED reporter, emitted only for a sheet that carries the On Something Went Wrong
 	# trigger. The same idea as the one above and none of its conditions: no debugger, no editor,

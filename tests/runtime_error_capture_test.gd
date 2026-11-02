@@ -47,7 +47,7 @@ static func run() -> bool:
 	ok = _check("each failing line is announced once per run",
 		output.contains("if _said.has(location):"), true) and ok
 	ok = _check("the announce carries message, file and line on the sheet's channel",
-		output.contains("EngineDebugger.send_message.call_deferred(\"eventsheets:runtime_error\", [message, file, line])"),
+		output.contains("			EngineDebugger.send_message(\"eventsheets:runtime_error\", [message, file, line])"),
 		true) and ok
 
 	# ── The emitted debug script still parses (the reporter rides inside a real class) ──
