@@ -3802,22 +3802,14 @@ func _count_attention_rows(rows: Array) -> int:
 
 func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	var root_rows: Array[EventRowData] = []
-	# The pattern registry lives exactly as long as one row build: the readings fill it as they go,
-	# and everything that talks ABOUT patterns (the chip on an event, its hover evidence, the
-	# coverage counts) reads what they claimed. Cleared here so a rebuild can never show a pattern
-	# the sheet no longer has - and the file-level readings claim IMMEDIATELY after, in the same
-	# breath, because this is the last clear of a sweep. Claiming anywhere earlier (a cached context
-	# build, say, which by definition runs once and not per sweep) puts the claims BEFORE this line
-	# and the clear wipes every one of them, leaving only whatever the span pass claims later.
-	EventSheetPatternFacts.clear(sheet)
-	EventSheetViewportReadingRows.claim_patterns(sheet)
-	# The nearest-in-family loop is a shape spread over a `for`, the compare inside it and the
-	# assignment after, so it is claimed from the file here for the same reason the readings above
-	# are: anywhere earlier and the clear on the line above would wipe it.
-	EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
 	# A whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
-	# object bar, each read by this very function. A composite has no events of its own.
+	# object bar, each read by this very function. A composite has no events of its own, so the
+	# registry it holds is cleared and stated here, once; a script of the scene clears and states
+	# its own when it is read.
 	if EventSheetSceneSheet.is_scene_sheet(sheet):
+		EventSheetPatternFacts.clear(sheet)
+		EventSheetViewportReadingRows.claim_patterns(sheet)
+		EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
 		return _build_scene_sheet_rows(sheet)
 	# Per-sweep class-uid counters: same-named class blocks suffix "-2"/"-3" in build order.
 	# Reset HERE (not lazily) so the suffixes stay stable across rebuilds.
@@ -3844,10 +3836,15 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# Claims live exactly as long as one row build, so they are forgotten here and filled again as
 	# this sweep recognises them. Everything that talks ABOUT patterns - the chip on the owning
 	# event, the hover evidence, Adopt behavior, the Doctor's smells - reads the claims rather than
-	# re-deriving anything, and this is the one moment they are all keyed to.
+	# re-deriving anything, and this is the one moment they are all keyed to. This is the last clear
+	# of a sweep, so every claim made from the file is made AFTER it: the walk over the whole file
+	# (EventSheetViewportReadingRows.ensure_claims) waits for the first reader, once, and the
+	# nearest-in-family loop - a shape spread over a `for`, the compare inside it and the assignment
+	# after - is claimed here. (Both used to be made before this line and thrown away by it.)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	EventSheetViewportReadingRows.claim_behavior_patterns(sheet)
+	EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
 	# Read the LEADING run of class scaffolding (prelude / annotations / host-binding) as the
 	# sheet's HEAD: one band per line, so an opened .gd reads as its own first lines rather than as a
 	# wall of boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into

@@ -431,6 +431,11 @@ static func _is_pattern_search(value: String, patterns: Dictionary) -> bool:
 	return patterns.has(str(call.get("target", "")).strip_edges())
 
 
+## How many times the file-level claim walk below has run, over the whole session. A receipt, like
+## the viewport's row_builds(): one rebuild must not pay for the walk twice.
+static var claim_walks: int = 0
+
+
 ## Batch 8. Re-state every pattern this sheet writes in the registry, on the row that OWNS it - the
 ## trigger, tick event or function whose body holds the lines. Called once per rebuild, right after
 ## the registry is cleared, so the chips, the hover evidence, Adopt behavior and the Doctor all read
@@ -441,6 +446,7 @@ static func _is_pattern_search(value: String, patterns: Dictionary) -> bool:
 static func claim_patterns(sheet: EventSheetResource) -> void:
 	if sheet == null:
 		return
+	claim_walks += 1
 	EventSheetPatternFacts.mark_stated(sheet)
 	var file_facts: Dictionary = EventSheetPatternReadings.facts(ordered_code_lines(sheet))
 	for event_entry: Variant in sheet.events:
