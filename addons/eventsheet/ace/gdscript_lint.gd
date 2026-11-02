@@ -247,8 +247,7 @@ static func structural_syntax_error(code: String) -> String:
 ## their real signatures (see typed_variable_lines / typed_function_lines), so Godot's own analyzer
 ## judges the kinds of value; `extra_lines` goes in front of the code (stand-ins for `$Node`
 ## references). The default keeps the untyped stand-ins every existing caller was written against.
-static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetResource, typed: bool = false,
-		extra_lines: PackedStringArray = PackedStringArray()) -> String:
+static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetResource, typed: bool = false, extra_lines: PackedStringArray = PackedStringArray()) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "RefCounted"
 	# Behavior sheets compile to Node components with a typed `host` accessor - the probe

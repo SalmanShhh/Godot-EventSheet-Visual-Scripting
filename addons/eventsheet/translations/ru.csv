@@ -10065,7 +10065,7 @@ Worked out while the game runs.,Определяется во время раб�
 "%s has no type here, so what it holds cannot be checked now. Nothing is wrong yet.","У %s здесь нет типа, поэтому его содержимое сейчас проверить нельзя. Пока ничего не неверно."
 Check the spelling of %s.,Проверьте написание %s.
 %s has no %s.,У %s нет %s.
-"(%s is a %s, read from the scene.)","(%s — это %s, прочитано из сцены.)"
+"(%s is a %s, read from the scene.)","(%s - это %s, прочитано из сцены.)"
 %s has no %s,у %s нет %s
 a whole number,целое число
 two numbers (Vector2),два числа (Vector2)
@@ -10085,8 +10085,8 @@ a node (%s),узел (%s)
 "Write a node, like $Name, or a value that gives one.","Напишите узел, например $Name, или значение, дающее узел."
 %s holds %s.,%s хранит %s.
 This takes %s.,Здесь нужно: %s.
-%s is %s.,%s — это %s.
-"It cannot be used with ""%s"" against %s, which is %s. Both sides need the same kind of value.","Нельзя использовать с ""%s"" вместе с %s — это %s. С обеих сторон нужен один и тот же вид значения."
+%s is %s.,%s - это %s.
+"It cannot be used with ""%s"" against %s, which is %s. Both sides need the same kind of value.","Нельзя использовать с ""%s"" вместе с %s - это %s. С обеих сторон нужен один и тот же вид значения."
 %s and %s do not mix.,%s и %s несовместимы.
 """%s"" needs the same kind of value on both sides.","""%s"" требует одного и того же вида значения с обеих сторон."
 %s takes %d value(s),%s принимает значений: %d
