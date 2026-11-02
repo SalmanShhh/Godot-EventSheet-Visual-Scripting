@@ -10016,3 +10016,46 @@ code only,仅在代码中
 A scene file.,场景文件。
 Singleton,单例
 Built-in type,内置类型
+Open %s first: this door changes the open sheet.,请先打开 %s:此入口会修改当前打开的事件表。
+That row no longer says it - nothing to change.,该行已不再这样写 - 没有可更改的内容。
+"Pick the control this row means in Project > Project Settings > Input Map, then use its name here.","在 项目 > 项目设置 > Input Map 中选择这一行所指的控制,然后在这里使用它的名称。"
+Now %s.,现在是 %s。
+That word could not be found in the row to change it.,"在该行中找不到这个词,无法更改。"
+Point at %s,指向 %s
+The row now acts on %s.,该行现在作用于 %s。
+"Noted: %s is made while the game runs, so this sheet will not be asked about it again.","已记录:%s 是在游戏运行时创建的,因此这个事件表不会再询问它。"
+Stop after %d rounds,%d 轮后停止
+The loop now stops after %d rounds.,循环现在会在 %d 轮后停止。
+%d mistake(s) the game would only meet when it runs - the first: %s,"有 %d 处错误,游戏只有在运行时才会遇到 - 第一处:%s"
+this node,此节点
+"This node is a %s, which has no ""%s"" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.","此节点是 %s,没有 ""%s"" - 该行却向它索取。Godot 会拒绝该脚本(解析错误:not found in base self),因此它不会加载。请把这一行放到拥有它的节点上,或选择其他动作。"
+"%s is a %s, which has no ""%s"" - the row asks it for one. Godot stops the function when the line runs (""Invalid call. Nonexistent function"" for a method, ""Invalid assignment of property"" for a property). Point it at a node that has it, or pick another action.","%s 是 %s,没有 ""%s"" - 该行却向它索取。该行运行时 Godot 会中止函数(方法为 ""Invalid call. Nonexistent function"",属性为 ""Invalid assignment of property"")。请指向拥有它的节点,或选择其他动作。"
+%s is not in the project. It may have been renamed or moved. preload() of it is a parse error and the script does not load; load() prints errors and returns nothing.,"%s 不在项目中。它可能已被重命名或移动。对它使用 preload() 是解析错误,脚本不会加载;load() 会打印错误并不返回任何内容。"
+The closest file is %s.,最接近的文件是 %s。
+"No node is in ""%s"": no scene has it and no script or sheet adds it. A loop over it does nothing and Godot prints nothing. Fine if a node joins it some other way at run time.","""%s"" 中没有任何节点:没有场景包含它,也没有脚本或事件表向其中添加。对它的循环什么也不做,Godot 也不会打印任何内容。如果有节点在运行时以其他方式加入,则没有问题。"
+"Use ""%s""","使用 ""%s"""
+It is added at run time,它在运行时添加
+"""%s"" is not in the Input Map, so the control never fires; Godot prints ""The InputMap action doesn't exist"" when the line runs. Names are case-sensitive.","""%s"" 不在 Input Map 中,因此该控制永远不会触发;该行运行时 Godot 会打印 ""The InputMap action doesn't exist""。名称区分大小写。"
+"The map has ""%s"".","映射中有 ""%s""。"
+"Add ""%s"" to the Input Map","将 ""%s"" 添加到 Input Map"
+Pick an existing action...,选择一个已有动作...
+"There is no node %s in %s. Godot prints ""Node not found"" and hands back nothing, so the next line that uses it stops. Fine if it is spawned at run time.","%s 中没有节点 %s。Godot 会打印 ""Node not found"" 并不返回任何内容,因此下一个使用它的行会中止。如果它在运行时生成,则没有问题。"
+It is spawned at run time,它在运行时生成
+"%s sends %s, and this emits it with %s. Nothing is said while no handler is connected; once one is, Godot prints ""Error calling from signal"" and the handler does not run.","%s 发出 %s,而这里用 %s 来触发它。在没有连接处理器时不会有任何提示;一旦连接,Godot 会打印 ""Error calling from signal"",处理器不会运行。"
+no values,没有值
+"The handler takes %s, and %s sends %s. When it is emitted Godot prints ""Error calling from signal"" and the handler does not run.","处理器接收 %s,而 %s 发出 %s。触发时 Godot 会打印 ""Error calling from signal"",处理器不会运行。"
+"Nothing inside this While changes what ""%s"" reads (%s). Once it is true it stays true, so the loop never ends and the game stops responding. Change one of them inside it, add a stop, or make it an If.","这个「当」之内没有任何东西会改变 ""%s"" 所读取的值(%s)。它一旦为真就一直为真,因此循环永远不会结束,游戏会停止响应。请在其中改变其中一个,添加停止,或把它改成「如果」。"
+"This event declares %s, and the function already has a parameter called %s. Godot refuses it (""There is already a parameter named"") and the script does not load. Rename the local, or use the parameter.","此事件声明了 %s,而该函数已有一个名为 %s 的参数。Godot 会拒绝它(""There is already a parameter named""),脚本不会加载。请重命名局部变量,或使用该参数。"
+"This event's %s hides the sheet's %s. Changes to %s here are made to the local, which is gone when the event ends; the sheet's %s stays the same. Godot warns about it (SHADOWED_VARIABLE).","此事件的 %s 遮住了事件表的 %s。在这里对 %s 的更改是作用在局部变量上的,事件结束时它就消失了;事件表的 %s 保持不变。Godot 会对此发出警告(SHADOWED_VARIABLE)。"
+"%s takes the remainder of a division by zero. Godot stops here with a ""Modulo by zero error"".","%s 对除以零取余。Godot 会在这里以 ""Modulo by zero error"" 中止。"
+"%s divides by zero. With decimals Godot gives inf and says nothing, so everything computed from it becomes inf too.","%s 除以零。对小数 Godot 会给出 inf 且不作提示,因此由它算出的所有结果也都会变成 inf。"
+"%s divides whole numbers by zero. Godot refuses the script (""Division by zero error in operator"") and it does not load.","%s 对整数除以零。Godot 会拒绝该脚本(""Division by zero error in operator""),它不会加载。"
+"%s divides a whole number by zero, so the game stops here with a ""Division by zero error"".","%s 对一个整数除以零,因此游戏会在这里以 ""Division by zero error"" 中止。"
+the value,该值
+"%s divides by zero. If %s holds a whole number the game stops here with a ""Division by zero error""; with a decimal the answer is inf.","%s 除以零。如果 %s 保存的是整数,游戏会在这里以 ""Division by zero error"" 中止;如果是小数,结果为 inf。"
+"Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.","错误检查:已读取 %d 个脚本,其中 %d 个含有无法运行或与其所述不符的行。"
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","同样的生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置在添加副本之前设置,所以它是相对于父节点的位置,而不是关卡中的位置;请使用 SpawnNewCopyDeferredWorld,它会把副本放在 At 字段所指的位置。"
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","同样的 3D 生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置在添加副本之前设置,所以它是相对于父节点的位置,而不是关卡中的位置;请使用 SpawnNewCopyDeferredWorld3D,它会把副本放在 At 字段所指的位置。"
+When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,"副本何时加入场景树。在碰撞或物体处理器中请选择下一个空闲时刻:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作)。两种选择会把副本放在相同的位置 - 形状在两种情况下都是在世界中测量的。"
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","与 生成一个副本 相同的生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置是关卡中的位置,在添加副本后立即设置,因此无论父节点是谁,副本都会落在那里。"
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","与 生成副本 (3D) 相同的 3D 生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置是关卡中的位置,在添加副本后立即设置,因此无论父节点是谁,副本都会落在那里。"

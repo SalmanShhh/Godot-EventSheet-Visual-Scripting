@@ -10016,3 +10016,46 @@ code only,コードのみ
 A scene file.,シーンファイル。
 Singleton,シングルトン
 Built-in type,組み込み型
+Open %s first: this door changes the open sheet.,先に %s を開いてください: このドアは開いているシートを変更します。
+That row no longer says it - nothing to change.,その行はもうそれを言っていません - 変更するものはありません。
+"Pick the control this row means in Project > Project Settings > Input Map, then use its name here.",この行が指すコントロールを プロジェクト > プロジェクト設定 > Input Map で選び、ここでその名前を使ってください。
+Now %s.,現在は %s です。
+That word could not be found in the row to change it.,行の中にその語が見つからなかったため、変更できませんでした。
+Point at %s,%s を指す
+The row now acts on %s.,この行は %s に対して動作するようになりました。
+"Noted: %s is made while the game runs, so this sheet will not be asked about it again.",メモしました: %s はゲームの実行中に作られるため、このシートでは今後これについて確認しません。
+Stop after %d rounds,%d 回で停止
+The loop now stops after %d rounds.,ループは %d 回で停止するようになりました。
+%d mistake(s) the game would only meet when it runs - the first: %s,ゲームが実行時にしか遭遇しないミスが %d 件 - 最初の1件: %s
+this node,このノード
+"This node is a %s, which has no ""%s"" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.","このノードは %s で、""%s"" を持っていません - 行はそれを求めています。Godot はスクリプトを拒否し(パースエラー: not found in base self)、読み込まれません。この行を持っているノードに置くか、別のアクションを選んでください。"
+"%s is a %s, which has no ""%s"" - the row asks it for one. Godot stops the function when the line runs (""Invalid call. Nonexistent function"" for a method, ""Invalid assignment of property"" for a property). Point it at a node that has it, or pick another action.","%s は %s で、""%s"" を持っていません - 行はそれを求めています。その行が実行されると Godot は関数を停止します(メソッドなら ""Invalid call. Nonexistent function""、プロパティなら ""Invalid assignment of property"")。持っているノードを指すか、別のアクションを選んでください。"
+%s is not in the project. It may have been renamed or moved. preload() of it is a parse error and the script does not load; load() prints errors and returns nothing.,%s はプロジェクト内にありません。名前が変わったか移動した可能性があります。それへの preload() はパースエラーでスクリプトが読み込まれず、load() はエラーを出力して何も返しません。
+The closest file is %s.,最も近いファイルは %s です。
+"No node is in ""%s"": no scene has it and no script or sheet adds it. A loop over it does nothing and Godot prints nothing. Fine if a node joins it some other way at run time.","""%s"" にはノードがありません: どのシーンにもなく、スクリプトやシートが追加することもありません。それに対するループは何もせず、Godot も何も出力しません。実行時に別の方法でノードが参加するなら問題ありません。"
+"Use ""%s""","""%s"" を使う"
+It is added at run time,実行時に追加される
+"""%s"" is not in the Input Map, so the control never fires; Godot prints ""The InputMap action doesn't exist"" when the line runs. Names are case-sensitive.","""%s"" は Input Map にないため、コントロールは発火しません。行が実行されると Godot は ""The InputMap action doesn't exist"" を出力します。名前は大文字と小文字を区別します。"
+"The map has ""%s"".","マップには ""%s"" があります。"
+"Add ""%s"" to the Input Map","""%s"" を Input Map に追加"
+Pick an existing action...,既存のアクションを選択...
+"There is no node %s in %s. Godot prints ""Node not found"" and hands back nothing, so the next line that uses it stops. Fine if it is spawned at run time.","%s というノードは %s にありません。Godot は ""Node not found"" を出力して何も返さないため、それを使う次の行が停止します。実行時に生成されるなら問題ありません。"
+It is spawned at run time,実行時に生成される
+"%s sends %s, and this emits it with %s. Nothing is said while no handler is connected; once one is, Godot prints ""Error calling from signal"" and the handler does not run.","%s は %s を送信し、これは %s で発行します。ハンドラーが接続されていない間は何も言われません。接続されると Godot は ""Error calling from signal"" を出力し、ハンドラーは実行されません。"
+no values,値なし
+"The handler takes %s, and %s sends %s. When it is emitted Godot prints ""Error calling from signal"" and the handler does not run.","ハンドラーは %s を受け取りますが、%s は %s を送信します。発行されると Godot は ""Error calling from signal"" を出力し、ハンドラーは実行されません。"
+"Nothing inside this While changes what ""%s"" reads (%s). Once it is true it stays true, so the loop never ends and the game stops responding. Change one of them inside it, add a stop, or make it an If.","この「の間」の中には、""%s"" が読む値(%s)を変えるものがありません。一度真になると真のままなので、ループは終わらずゲームが応答しなくなります。中でどちらかを変えるか、停止を追加するか、「もし」にしてください。"
+"This event declares %s, and the function already has a parameter called %s. Godot refuses it (""There is already a parameter named"") and the script does not load. Rename the local, or use the parameter.","このイベントは %s を宣言していますが、関数にはすでに %s というパラメーターがあります。Godot はこれを拒否し(""There is already a parameter named"")、スクリプトは読み込まれません。ローカル変数の名前を変えるか、パラメーターを使ってください。"
+"This event's %s hides the sheet's %s. Changes to %s here are made to the local, which is gone when the event ends; the sheet's %s stays the same. Godot warns about it (SHADOWED_VARIABLE).",このイベントの %s は、シートの %s を隠しています。ここでの %s への変更はローカル変数に対して行われ、イベントが終わると消えます。シートの %s は変わりません。Godot はこれを警告します(SHADOWED_VARIABLE)。
+"%s takes the remainder of a division by zero. Godot stops here with a ""Modulo by zero error"".","%s はゼロによる除算の剰余を取ります。Godot はここで ""Modulo by zero error"" を出して停止します。"
+"%s divides by zero. With decimals Godot gives inf and says nothing, so everything computed from it becomes inf too.",%s はゼロで割っています。小数の場合 Godot は inf を返して何も言わないため、そこから計算されるものもすべて inf になります。
+"%s divides whole numbers by zero. Godot refuses the script (""Division by zero error in operator"") and it does not load.","%s は整数をゼロで割っています。Godot はスクリプトを拒否し(""Division by zero error in operator"")、読み込まれません。"
+"%s divides a whole number by zero, so the game stops here with a ""Division by zero error"".","%s は整数をゼロで割るため、ゲームはここで ""Division by zero error"" を出して停止します。"
+the value,値
+"%s divides by zero. If %s holds a whole number the game stops here with a ""Division by zero error""; with a decimal the answer is inf.","%s はゼロで割っています。%s が整数を保持している場合、ゲームはここで ""Division by zero error"" を出して停止します。小数の場合、答えは inf です。"
+"Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.",ミスのチェック: スクリプトを %d 件読み込み、実行できない行や言っていることと違う動作をする行があるものは %d 件です。
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.",同じ生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はコピーを追加する前に設定されるため、レベル内の位置ではなく親を基準にした位置になります。At フィールドの場所にコピーを置く SpawnNewCopyDeferredWorld を使ってください。
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.",同じ 3D の生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はコピーを追加する前に設定されるため、レベル内の位置ではなく親を基準にした位置になります。At フィールドの場所にコピーを置く SpawnNewCopyDeferredWorld3D を使ってください。
+When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,コピーがツリーに入るタイミング。衝突やボディのハンドラー内では次のアイドル時を選んでください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。どちらの答えでもコピーは同じ場所に置かれます - 形はどちらの場合もワールドで測られます。
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",コピーを生成 と同じ生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はレベル内の位置で、コピーを追加した直後に設定されるため、親が誰であってもそこに配置されます。
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",コピーを生成 (3D) と同じ 3D の生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はレベル内の位置で、コピーを追加した直後に設定されるため、親が誰であってもそこに配置されます。

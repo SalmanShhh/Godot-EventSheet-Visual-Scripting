@@ -1029,6 +1029,14 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 		var error_stripe: Color = reading_style.error_stripe_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
 		control.draw_rect(row_fill_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
+	elif row_data.attention_severe and not row_data.attention_note.is_empty():
+		# The quiet RED state: a finding that says the line cannot run. The same stripe and wash an
+		# error mark wears, with the thin inset the amber state wears, and still nothing drawn inside
+		# the row - the sentence is the help strip's and the Doctor's. Drawn over the selection fill
+		# below like the amber one, so selecting the row does not wash it away.
+		var severe_red: Color = reading_style.error_stripe_color
+		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), severe_red, true)
+		control.draw_rect(row_fill_rect, Color(severe_red.r, severe_red.g, severe_red.b, 0.10), true)
 	if row_data.firing or row_data.firing_intensity > 0.0:
 		# Live event trace: a cyan left stripe + faint wash on events firing right now (debug
 		# run), PULSING - the intensity decays after each fire so a one-shot reads as a fading
@@ -1064,7 +1072,10 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 		control.draw_rect(selection_rect, row_selection, true)
 		if row_data.row_type != EventRowData.RowType.EVENT and not in_run:
 			_draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
-	if not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
+	if row_data.attention_severe and not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
+		var severe_ring: Color = reading_style.error_stripe_color
+		control.draw_rect(row_fill_rect.grow(-1.0), Color(severe_ring.r, severe_ring.g, severe_ring.b, 0.5), false, 2.0)
+	elif not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
 		# The quiet amber state: a faint warning-colour tint over the row and a thin inset of the
 		# same colour just inside its edge, with NOTHING drawn inside the row - no note, no icon, no
 		# sentence. The words live in the Doctor's inbox and in the help strip under the selection.

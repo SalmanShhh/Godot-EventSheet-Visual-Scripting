@@ -1164,6 +1164,9 @@ func _on_translations_maybe_changed() -> void:
 	# claims `$Torch.energy = 1.2` as a light row. Kept for the session, a light added to the scene
 	# was invisible and a deleted one went on being claimed until the editor restarted.
 	EventSheetSceneLights.clear_cache()
+	# And what the mistake checks hold about the project: which groups exist and which scene runs
+	# which script. A group added to a scene a second ago must stop being "a group nothing is in".
+	EventSheetMistakeFindings.clear_cache()
 	EventSheetSceneLightingFacts.clear_cache()
 	# And what it says about COLLISION: the layer census and the group memberships are answers about
 	# every scene in the project, so a mask edited in the Inspector a second ago has to reach the head
@@ -7686,7 +7689,8 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 		_row_help_label.tooltip_text = "%s\n\n%s" % [_row_help_label.text, pattern_line]
 	# The colour is read from the theme every time the strip is shown, not once when it was built: a
 	# theme reloaded mid-session would otherwise leave it wearing the old theme's warning colour.
-	_row_help_label.modulate = EventSheetActiveTheme.chrome().object_bar_warning_color
+	_row_help_label.modulate = EventSheetActiveTheme.reading().error_text_color if row_data.attention_severe \
+		else EventSheetActiveTheme.chrome().object_bar_warning_color
 	_row_help_label.visible = true
 	# The door is the FIRST finding's, because one row rarely has two and offering two buttons for
 	# one row would be a menu rather than a strip.
@@ -7700,6 +7704,11 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	if _row_help_button_second != null:
 		_row_help_button_second.text = second
 		_row_help_button_second.visible = not second.is_empty()
+	# The mistake checks have three doors at most (use the name, add it, pick another).
+	var third: String = str(_row_help_finding.get("third_fix_label", ""))
+	if _row_help_button_third != null:
+		_row_help_button_third.text = third
+		_row_help_button_third.visible = not third.is_empty()
 
 
 ## The muted half of the same strip: "newer spelling: Go to state", for a selected row whose verb has
@@ -7795,6 +7804,9 @@ func apply_selected_row_fix() -> void:
 	if str(finding.get("family", "")) == EventSheetRegionFacts.FINDING_FAMILY:
 		fix_region_fence(finding)
 		return
+	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
+		EventSheetMistakeFixes.apply(self, finding, "fix")
+		return
 	if str(finding.get("fix", "")) == EventSheetMigrationFindings.FIX_SEE_REPLACEMENT:
 		see_what_replaced_it(finding)
 		return
@@ -7819,9 +7831,22 @@ func apply_selected_row_fix() -> void:
 ## them should be able to see both words at once.
 func apply_selected_row_second_fix() -> void:
 	var finding: Dictionary = _row_help_finding
-	if _run_variable_link(1) or str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
+	if _run_variable_link(1):
+		return
+	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
+		EventSheetMistakeFixes.apply(self, finding, "second_fix")
+		return
+	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
 		return
 	_keep_as_code_dialog.open(finding)
+
+
+## The strip's THIRD door: a variable's third link, or the third answer of a mistake check.
+func apply_selected_row_third_fix() -> void:
+	if _run_variable_link(2):
+		return
+	if str(_row_help_finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
+		EventSheetMistakeFixes.apply(self, _row_help_finding, "third_fix")
 
 
 ## The head band's migration count, pressed. It is the ONE place a row is rewritten onto a newer

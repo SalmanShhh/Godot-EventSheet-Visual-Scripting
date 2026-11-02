@@ -185,6 +185,10 @@ static func run() -> Dictionary:
 	# The Spawning section: the four ways putting a node into the world and taking it out again go
 	# wrong at run time while the editor says nothing. Same seam, same reason.
 	EventSheetSpawningDoctor.ensure_registered()
+	# The Mistake checks section: the lines that cannot run or do not do what they say (a node of the
+	# wrong type, a path or group that is not there, a signal sent the wrong number of values, a While
+	# that cannot end, a local hiding a variable, a division by a literal zero). Same seam, same reason.
+	EventSheetMistakeChecksDoctor.ensure_registered()
 	# The Collision Layers section: a row about a layer number the project no longer names. Same
 	# seam, same reason - a pack shipping collision verbs of its own lands in this section too.
 	EventSheetCollisionLayerDoctor.ensure_registered()

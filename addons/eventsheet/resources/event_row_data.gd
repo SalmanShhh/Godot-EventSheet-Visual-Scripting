@@ -79,6 +79,11 @@ var attention_note: String = ""
 # deriving anything of its own - the join happened once, when the sheet was built. Empty = nothing
 # wrong. View-only and recomputed per rebuild, never serialized.
 var attention_findings: Array[Dictionary] = []
+# True when a finding behind the amber state says the line CANNOT run (a node of the wrong type, a
+# path that is not there, a signal sent the wrong number of values, a division of whole numbers by
+# zero). The state is then red rather than amber: the same quiet look as an error mark, with the words
+# in the help strip and the Doctor. View-only, recomputed per rebuild, never serialized.
+var attention_severe: bool = false
 # The muted "newer spelling: …" hintline for a row whose verb has been superseded. Deliberately NOT
 # the amber state and deliberately nothing in the sheet: a row written in the older spelling is not
 # wrong, it still compiles byte for byte, and the only place it is mentioned is the help strip once

@@ -10016,3 +10016,46 @@ code only,코드에만 있음
 A scene file.,씬 파일.
 Singleton,싱글톤
 Built-in type,내장 타입
+Open %s first: this door changes the open sheet.,먼저 %s을(를) 여세요: 이 문은 열려 있는 시트를 변경합니다.
+That row no longer says it - nothing to change.,그 행은 더 이상 그렇게 말하지 않습니다 - 바꿀 것이 없습니다.
+"Pick the control this row means in Project > Project Settings > Input Map, then use its name here.","프로젝트 > 프로젝트 설정 > Input Map에서 이 행이 뜻하는 컨트롤을 고른 다음, 여기에 그 이름을 사용하세요."
+Now %s.,이제 %s입니다.
+That word could not be found in the row to change it.,행에서 그 단어를 찾지 못해 변경할 수 없습니다.
+Point at %s,%s을(를) 가리키기
+The row now acts on %s.,이제 행이 %s에 대해 동작합니다.
+"Noted: %s is made while the game runs, so this sheet will not be asked about it again.","기록했습니다: %s은(는) 게임이 실행되는 동안 만들어지므로, 이 시트는 더 이상 이에 대해 묻지 않습니다."
+Stop after %d rounds,%d회 후 중지
+The loop now stops after %d rounds.,이제 루프는 %d회 후에 멈춥니다.
+%d mistake(s) the game would only meet when it runs - the first: %s,게임이 실행 중에야 만나게 될 실수 %d건 - 첫 번째: %s
+this node,이 노드
+"This node is a %s, which has no ""%s"" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.","이 노드는 %s이며 ""%s""이(가) 없습니다 - 행이 그것을 요구합니다. Godot가 스크립트를 거부하므로(파싱 오류: not found in base self) 로드되지 않습니다. 이 행을 그것을 가진 노드에 두거나 다른 액션을 고르세요."
+"%s is a %s, which has no ""%s"" - the row asks it for one. Godot stops the function when the line runs (""Invalid call. Nonexistent function"" for a method, ""Invalid assignment of property"" for a property). Point it at a node that has it, or pick another action.","%s은(는) %s이며 ""%s""이(가) 없습니다 - 행이 그것을 요구합니다. 행이 실행되면 Godot가 함수를 멈춥니다(메서드는 ""Invalid call. Nonexistent function"", 속성은 ""Invalid assignment of property""). 그것을 가진 노드를 가리키거나 다른 액션을 고르세요."
+%s is not in the project. It may have been renamed or moved. preload() of it is a parse error and the script does not load; load() prints errors and returns nothing.,"%s은(는) 프로젝트에 없습니다. 이름이 바뀌었거나 옮겨졌을 수 있습니다. 그것에 대한 preload()는 파싱 오류라 스크립트가 로드되지 않고, load()는 오류를 출력하고 아무것도 반환하지 않습니다."
+The closest file is %s.,가장 가까운 파일은 %s입니다.
+"No node is in ""%s"": no scene has it and no script or sheet adds it. A loop over it does nothing and Godot prints nothing. Fine if a node joins it some other way at run time.","""%s""에 노드가 없습니다: 어떤 씬에도 없고 어떤 스크립트나 시트도 추가하지 않습니다. 그것에 대한 루프는 아무 일도 하지 않으며 Godot도 아무것도 출력하지 않습니다. 실행 중에 다른 방식으로 노드가 합류한다면 괜찮습니다."
+"Use ""%s""","""%s"" 사용"
+It is added at run time,실행 중에 추가됩니다
+"""%s"" is not in the Input Map, so the control never fires; Godot prints ""The InputMap action doesn't exist"" when the line runs. Names are case-sensitive.","""%s""은(는) Input Map에 없으므로 컨트롤이 절대 발동하지 않습니다. 행이 실행되면 Godot가 ""The InputMap action doesn't exist""를 출력합니다. 이름은 대소문자를 구분합니다."
+"The map has ""%s"".","맵에는 ""%s""이(가) 있습니다."
+"Add ""%s"" to the Input Map","Input Map에 ""%s"" 추가"
+Pick an existing action...,기존 액션 선택...
+"There is no node %s in %s. Godot prints ""Node not found"" and hands back nothing, so the next line that uses it stops. Fine if it is spawned at run time.","%s 노드가 %s에 없습니다. Godot가 ""Node not found""를 출력하고 아무것도 돌려주지 않으므로, 그것을 쓰는 다음 줄이 멈춥니다. 실행 중에 생성된다면 괜찮습니다."
+It is spawned at run time,실행 중에 생성됩니다
+"%s sends %s, and this emits it with %s. Nothing is said while no handler is connected; once one is, Godot prints ""Error calling from signal"" and the handler does not run.","%s은(는) %s을(를) 보내고, 이것은 %s(으)로 내보냅니다. 핸들러가 연결되지 않은 동안에는 아무 말도 없지만, 연결되면 Godot가 ""Error calling from signal""을 출력하고 핸들러는 실행되지 않습니다."
+no values,값 없음
+"The handler takes %s, and %s sends %s. When it is emitted Godot prints ""Error calling from signal"" and the handler does not run.","핸들러는 %s을(를) 받고, %s은(는) %s을(를) 보냅니다. 내보내지면 Godot가 ""Error calling from signal""을 출력하고 핸들러는 실행되지 않습니다."
+"Nothing inside this While changes what ""%s"" reads (%s). Once it is true it stays true, so the loop never ends and the game stops responding. Change one of them inside it, add a stop, or make it an If.","이 동안 안의 어떤 것도 ""%s""이(가) 읽는 값(%s)을 바꾸지 않습니다. 한 번 참이 되면 계속 참이므로 루프가 끝나지 않고 게임이 응답하지 않게 됩니다. 안에서 둘 중 하나를 바꾸거나, 중지를 추가하거나, 만약으로 바꾸세요."
+"This event declares %s, and the function already has a parameter called %s. Godot refuses it (""There is already a parameter named"") and the script does not load. Rename the local, or use the parameter.","이 이벤트는 %s을(를) 선언하는데, 함수에 이미 %s이라는 매개변수가 있습니다. Godot가 이를 거부하며(""There is already a parameter named"") 스크립트가 로드되지 않습니다. 지역 변수의 이름을 바꾸거나 매개변수를 사용하세요."
+"This event's %s hides the sheet's %s. Changes to %s here are made to the local, which is gone when the event ends; the sheet's %s stays the same. Godot warns about it (SHADOWED_VARIABLE).","이 이벤트의 %s이(가) 시트의 %s을(를) 가립니다. 여기서 %s에 한 변경은 지역 변수에 적용되며, 이벤트가 끝나면 사라집니다. 시트의 %s은(는) 그대로입니다. Godot가 이를 경고합니다(SHADOWED_VARIABLE)."
+"%s takes the remainder of a division by zero. Godot stops here with a ""Modulo by zero error"".","%s은(는) 0으로 나눈 나머지를 구합니다. Godot가 여기서 ""Modulo by zero error""와 함께 멈춥니다."
+"%s divides by zero. With decimals Godot gives inf and says nothing, so everything computed from it becomes inf too.","%s은(는) 0으로 나눕니다. 소수에서는 Godot가 inf를 주고 아무 말도 하지 않으므로, 그로부터 계산되는 모든 것도 inf가 됩니다."
+"%s divides whole numbers by zero. Godot refuses the script (""Division by zero error in operator"") and it does not load.","%s은(는) 정수를 0으로 나눕니다. Godot가 스크립트를 거부하며(""Division by zero error in operator"") 로드되지 않습니다."
+"%s divides a whole number by zero, so the game stops here with a ""Division by zero error"".","%s은(는) 정수를 0으로 나누므로, 게임이 여기서 ""Division by zero error""와 함께 멈춥니다."
+the value,값
+"%s divides by zero. If %s holds a whole number the game stops here with a ""Division by zero error""; with a decimal the answer is inf.","%s은(는) 0으로 나눕니다. %s이(가) 정수를 담고 있으면 게임이 여기서 ""Division by zero error""와 함께 멈추고, 소수이면 결과는 inf입니다."
+"Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.","실수 검사: 스크립트 %d개를 읽었고, 실행될 수 없거나 말한 대로 동작하지 않는 줄이 있는 것은 %d개입니다."
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","같은 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본이 추가되기 전에 설정되므로 레벨 안의 위치가 아니라 부모 기준의 위치입니다. 복사본을 At 필드가 말하는 곳에 놓는 SpawnNewCopyDeferredWorld를 사용하세요."
+"The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","같은 3D 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본이 추가되기 전에 설정되므로 레벨 안의 위치가 아니라 부모 기준의 위치입니다. 복사본을 At 필드가 말하는 곳에 놓는 SpawnNewCopyDeferredWorld3D를 사용하세요."
+When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,복사본이 트리에 합류하는 시점. 충돌 또는 바디 핸들러 안에서는 다음 유휴 시점을 고르세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 합니다(노드는 추가되고 동작합니다). 두 답 모두 복사본을 같은 자리에 놓습니다 - 모양은 어느 쪽이든 월드에서 측정됩니다.
+"The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","복사본 생성과 같은 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 안의 위치이므로, 부모가 누구든 그곳에 놓입니다."
+"The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","복사본 생성 (3D)과 같은 3D 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 안의 위치이므로, 부모가 누구든 그곳에 놓입니다."

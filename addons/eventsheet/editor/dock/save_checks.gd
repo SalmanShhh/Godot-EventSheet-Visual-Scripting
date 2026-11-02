@@ -64,7 +64,15 @@ func after_write(sheet: EventSheetResource, written_path: String, compile_result
 		"source_map": compile_result.get("source_map", []),
 		"backed": not sheet.external_source_path.is_empty(),
 	})
-	return EventSheetCompileFindings.summary(warnings)
+	var compiler_words: String = EventSheetCompileFindings.summary(warnings)
+	# The mistake checks join the save of the sheet being saved: the rows that cannot run, counted on
+	# the status line beside the compiler's warnings. Derived from the rows just written, so a save of
+	# a sheet with nothing to say adds nothing.
+	var mistake_words: String = EventSheetMistakeFindings.summary(EventSheetMistakeFindings.findings(sheet,
+		sheet.external_source_path))
+	if compiler_words.is_empty():
+		return mistake_words
+	return compiler_words if mistake_words.is_empty() else compiler_words + " - " + mistake_words
 
 
 ## Starts the check on a worker thread, or queues it behind the one already running. Nothing here

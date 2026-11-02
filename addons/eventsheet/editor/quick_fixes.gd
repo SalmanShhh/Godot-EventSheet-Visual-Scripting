@@ -32,6 +32,27 @@ extends RefCounted
 ## check id -> the fixes it offers, each {"label", "id"}. The labels are what the row shows on
 ## its chips; `id` is what `apply` dispatches on.
 const OFFERED := {
+	# The mistake checks. "%to" is the name the check found to put in place of the wrong one (a
+	# near group, a near file, the scene's own node), and a door whose "%to" has no answer is not
+	# offered. Each door writes one change to the open sheet through undo, or remembers a fact about
+	# the game in the project; none of them guesses.
+	"path-not-in-project": [
+		{"id": "use_the_name", "label": "Use %to"},
+	],
+	"group-nothing-is-in": [
+		{"id": "use_the_name", "label": "Use \"%to\""},
+		{"id": "known_at_run_time", "label": "It is added at run time"},
+	],
+	"node-path-not-in-scene": [
+		{"id": "use_the_name", "label": "Use %to"},
+		{"id": "known_at_run_time", "label": "It is spawned at run time"},
+	],
+	"wrong-node-type": [
+		{"id": "point_at_node", "label": "Point at %to"},
+	],
+	"while-never-ends": [
+		{"id": "stop_after_rounds", "label": "Stop after 1000 rounds"},
+	],
 	"unknown-input-action": [
 		{"id": "add_input_action", "label": "Add \"%s\" to the Input Map"},
 		{"id": "pick_input_action", "label": "Pick an existing action…"},
@@ -217,6 +238,11 @@ static func fixes_for(finding: Dictionary) -> Array[Dictionary]:
 	for offer: Variant in (OFFERED[check] as Array):
 		var entry: Dictionary = (offer as Dictionary).duplicate()
 		var label: String = str(entry.get("label", ""))
+		if label.contains("%to"):
+			var near: String = str(finding.get("to", "")).strip_edges()
+			if near.is_empty():
+				continue
+			label = label.replace("%to", near)
 		if label.contains("%s"):
 			if subject.is_empty():
 				continue
@@ -248,6 +274,8 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 	var subject: String = subject_of(finding)
 	var dock: Variant = context.get("dock", null)
 	match fix_id:
+		"use_the_name", "known_at_run_time", "point_at_node", "stop_after_rounds":
+			return EventSheetMistakeFixes.apply_from_report(dock, fix_id, finding)
 		"add_input_action":
 			return _add_input_action(subject)
 		"never_ask_error_report":

@@ -150,6 +150,7 @@ const FINDINGS_FEEDBACK := "feedback"
 const FINDINGS_INPUT := "input"
 const FINDINGS_INCLUDES := "includes"
 const FINDINGS_COMPILER := "compiler"
+const FINDINGS_MISTAKES := "mistakes"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -1214,10 +1215,17 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 	# A message anyone may send that writes a value every peer keeps in step, without ever
 	# asking who sent it. It is about the MESSAGE, so the amber state sits on its head - the quiet
 	# sheet law, at a function anchor: no note row, the words in the inbox and the strip.
-	_stamp_attention(head_row, _tagged(FINDINGS_MULTIPLAYER,
+	var head_findings: Array[Dictionary] = _tagged(FINDINGS_MULTIPLAYER,
 		EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
 			EventSheetMultiplayerFindings.ANCHOR_FUNCTION,
-			event_function.function_name.strip_edges())))
+			event_function.function_name.strip_edges()))
+	# A function whose body is one plain event reads as its head row alone: the event IS the head, so a
+	# mistake in that event (a signal sent the wrong values, a division by zero) colours the head.
+	var lane: EventRow = event_function.lane_event()
+	if lane != null:
+		head_findings.append_array(_tagged(FINDINGS_MISTAKES,
+			findings_at_event(_sheet_findings(FINDINGS_MISTAKES), lane)))
+	_stamp_attention(head_row, head_findings)
 	return rows
 
 
@@ -1383,6 +1391,7 @@ func _kept_marks(original: EventRowData, rebuilt: EventRowData) -> EventRowData:
 	if rebuilt.attention_note.is_empty() and not original.attention_note.is_empty():
 		rebuilt.attention_note = original.attention_note
 		rebuilt.attention_findings = original.attention_findings
+		rebuilt.attention_severe = original.attention_severe
 	return rebuilt
 
 
@@ -5433,6 +5442,13 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			SemanticSpan.SpanType.VALUE,
 			{"kind": "custom_block_row", "text_color": _viewport._get_reading_style().error_text_color}
 		))
+	# A preload of a file the project does not have wears the quiet red state; the words are the strip's.
+	if block.kind_id == "preload":
+		var about_block: Array[Dictionary] = []
+		for finding: Dictionary in _sheet_findings(FINDINGS_MISTAKES):
+			if str(finding.get("anchor", "")) == EventSheetMistakeFindings.ANCHOR_BLOCK and is_same(finding.get("block"), block):
+				about_block.append(finding)
+		_stamp_attention(row_data, _tagged(FINDINGS_MISTAKES, about_block))
 	return row_data
 
 
@@ -8300,6 +8316,9 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: St
 	# and each accessor folds under it as a condition/action child (`set(value)` / `get` in the condition
 	# cell, its body lines as actions). Double-click the variable row still opens the Variable dialog.
 	_attach_property_accessors(row_data, variable, indent)
+	# A starting value naming a file the project does not have: the quiet state on the declaring row.
+	_stamp_attention(row_data, _tagged(FINDINGS_MISTAKES, EventSheetMultiplayerFindings.for_subject(
+		_sheet_findings(FINDINGS_MISTAKES), EventSheetMistakeFindings.ANCHOR_VARIABLE, variable.name)))
 	return row_data
 
 
@@ -12347,6 +12366,14 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# warnings it has always returned and nothing in the editor ever showed. Read from
 				# the record the last save made, never from a compile: a canvas does not pay for one.
 				_sheet_findings_cache[family] = EventSheetCompileFindings.findings(sheet)
+			FINDINGS_MISTAKES:
+				# The nine mistakes Godot only reports when the game runs: a node of the wrong type, a
+				# path or a group that is not there, a control the Input Map lacks, a $Path the scene
+				# lacks, a signal with the wrong number of values, a While that cannot end, a local
+				# hiding a variable, a division by a literal zero. Derived from the rows once per sweep;
+				# the project-wide facts it leans on are held for the session.
+				_sheet_findings_cache[family] = EventSheetMistakeFindings.findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "")
 			FINDINGS_RENAME:
 				# The rows a rename made somewhere else left pointing at nothing. The witness is
 				# built from the sheet's own file and the scene that runs it, and it answers with
@@ -12385,7 +12412,7 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 	for family: String in [FINDINGS_MULTIPLAYER, FINDINGS_LIGHTING, FINDINGS_EFFECTS, FINDINGS_SPAWNING,
 			FINDINGS_PERFORMANCE, FINDINGS_COLLISIONS, FINDINGS_LAYERS, FINDINGS_TOOL_EDITS,
 			FINDINGS_SCENE_TRUST, FINDINGS_MIGRATION, FINDINGS_RENAME, FINDINGS_FEEDBACK,
-			FINDINGS_COMPILER]:
+			FINDINGS_COMPILER, FINDINGS_MISTAKES]:
 		var found: Array[Dictionary] = []
 		match family:
 			FINDINGS_EFFECTS:
@@ -12570,9 +12597,14 @@ func _successor_hint_for(provider_id: String, ace_id: String) -> String:
 func _stamp_attention(row_data: EventRowData, found: Array[Dictionary]) -> void:
 	row_data.attention_findings = found
 	var said: PackedStringArray = PackedStringArray()
+	var severe: bool = false
 	for finding: Dictionary in found:
 		said.append(str(finding.get("message", "")))
+		# A finding that says the line cannot run wears the red state; the rest wear amber. Only the
+		# families that mark themselves (`red`) ask for it, so no older family changes colour.
+		severe = severe or bool(finding.get("red", false))
 	row_data.attention_note = " · ".join(said)
+	row_data.attention_severe = severe
 
 
 ## The receipt of an optimiser fix already applied to this row, said under it - only while the costs
@@ -17377,6 +17409,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 	slice_row.error_message = row.error_message
 	slice_row.attention_note = row.attention_note
 	slice_row.attention_findings = row.attention_findings
+	slice_row.attention_severe = row.attention_severe
 	slice_row.successor_hint = row.successor_hint
 	slice_row.ternary_view = true
 	slice_row.event_slice = true

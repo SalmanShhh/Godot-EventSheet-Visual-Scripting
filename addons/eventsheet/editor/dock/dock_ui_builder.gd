@@ -442,7 +442,7 @@ func build_ui() -> void:
 	_dock._row_help_button_third.name = "EventSheetRowHelpThird"
 	_dock._row_help_button_third.flat = true
 	_dock._row_help_button_third.visible = false
-	_dock._row_help_button_third.pressed.connect(func() -> void: _dock._run_variable_link(2))
+	_dock._row_help_button_third.pressed.connect(_dock.apply_selected_row_third_fix)
 	status_strip.add_child(_dock._row_help_button_third)
 	# Live edit: the ⟳ offer sits between the message and the address, hidden unless a game is
 	# running and this sheet has an unapplied edit - a button that can never do anything is worse
