@@ -10098,3 +10098,41 @@ not written: %s,nicht geschrieben: %s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s","Die Variablen und Funktionen des Blatts konnten nicht mit ihren Typen geschrieben werden, daher wird die Art der Werte nicht geprüft. Godot sagt: %s"
 GODOT SAYS,GODOT SAGT
 Enter will not write it.,Enter schreibt es nicht.
+Godot says:,Godot sagt:
+The loop now changes %s each round.,Die Schleife ändert %s jetzt in jeder Runde.
+Make it an If,Zu einem Wenn machen
+Now an If: the body runs once when it is true.,"Jetzt ein Wenn: Der Inhalt läuft einmal, wenn es wahr ist."
+Emit %s,%s senden
+%s now sends what it declares.,"%s sendet jetzt, was es deklariert."
+Fit the handler to %s,Handler an %s anpassen
+The handler now takes what %s sends.,"Der Handler nimmt jetzt, was %s sendet."
+Add to %s,Zu %s hinzufügen
+%s now declares %s. Check the rows that emit it.,"%s deklariert jetzt %s. Prüfe die Zeilen, die es senden."
+Rename the local to %s,Lokale Variable in %s umbenennen
+The local is now %s.,Die lokale Variable heißt jetzt %s.
+Remove the local %s,Lokale Variable %s entfernen
+The local is gone; %s now means what it hid.,"Die lokale Variable ist weg; %s meint jetzt, was sie verdeckt hat."
+Open the scene that runs this sheet to pick a node from it.,"Öffne die Szene, die dieses Blatt ausführt, um daraus einen Node zu wählen."
+Open the row and choose the file there.,Öffne die Zeile und wähle dort die Datei.
+"Open a scene to add ""%s"" to a node in it.","Öffne eine Szene, um ""%s"" einem Node darin hinzuzufügen."
+Add to group %s,Zu Gruppe %s hinzufügen
+"%s is in ""%s"" now. Save the scene and this row stops asking.","%s ist jetzt in ""%s"". Speichere die Szene, dann fragt diese Zeile nicht mehr."
+Show row,Zeile zeigen
+Row %d of %s.,Zeile %d von %s.
+Pick another node...,Anderen Node wählen...
+Pick another action...,Andere Aktion wählen...
+Pick a file...,Datei wählen...
+Add the group to a node...,Gruppe einem Node hinzufügen...
+Add %s,%s hinzufügen
+Remove the extra value,Überzähligen Wert entfernen
+Open the signal,Signal öffnen
+Drop %s,%s entfernen
+Add %s to the signal,%s zum Signal hinzufügen
+Add: Subtract 1 from %s,Hinzufügen: 1 von %s abziehen
+Add: Add 1 to %s,Hinzufügen: 1 zu %s addieren
+Remove the local (use the parameter %s),Lokale Variable entfernen (Parameter %s verwenden)
+Remove the local (use the sheet's %s),Lokale Variable entfernen (%s des Blatts verwenden)
+Open the value,Wert öffnen
+Open the parameters,Parameter öffnen
+Go to %s,Zu %s gehen
+Value of the wrong kind,Wert der falschen Art

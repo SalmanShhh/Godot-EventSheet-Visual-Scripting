@@ -10098,3 +10098,41 @@ not written: %s,未写入：%s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s",无法带类型写出工作表的变量和函数，因此不检查各个值的种类。Godot 的提示：%s
 GODOT SAYS,GODOT 提示
 Enter will not write it.,按回车不会写入。
+Godot says:,Godot 提示:
+The loop now changes %s each round.,循环现在每轮都会改变 %s。
+Make it an If,改为 If
+Now an If: the body runs once when it is true.,现在是 If:条件为真时主体运行一次。
+Emit %s,发出 %s
+%s now sends what it declares.,%s 现在发送其声明的值。
+Fit the handler to %s,让处理函数匹配 %s
+The handler now takes what %s sends.,处理函数现在接收 %s 发送的值。
+Add to %s,添加到 %s
+%s now declares %s. Check the rows that emit it.,%s 现在声明 %s。请检查发出它的行。
+Rename the local to %s,将局部变量重命名为 %s
+The local is now %s.,局部变量现在名为 %s。
+Remove the local %s,移除局部变量 %s
+The local is gone; %s now means what it hid.,局部变量已移除;%s 现在指它原先遮蔽的对象。
+Open the scene that runs this sheet to pick a node from it.,"请打开运行此表的场景,从中选择节点。"
+Open the row and choose the file there.,请打开该行并在其中选择文件。
+"Open a scene to add ""%s"" to a node in it.","请打开场景,将 ""%s"" 添加到其中的节点。"
+Add to group %s,添加到组 %s
+"%s is in ""%s"" now. Save the scene and this row stops asking.","%s 现已在 ""%s"" 中。保存场景后此行不再提示。"
+Show row,显示该行
+Row %d of %s.,第 %d 行(%s)。
+Pick another node...,选择其他节点...
+Pick another action...,选择其他动作...
+Pick a file...,选择文件...
+Add the group to a node...,将组添加到节点...
+Add %s,添加 %s
+Remove the extra value,移除多余的值
+Open the signal,打开信号
+Drop %s,去掉 %s
+Add %s to the signal,将 %s 添加到信号
+Add: Subtract 1 from %s,添加:从 %s 减去 1
+Add: Add 1 to %s,添加:给 %s 加 1
+Remove the local (use the parameter %s),移除局部变量(使用参数 %s)
+Remove the local (use the sheet's %s),移除局部变量(使用表的 %s)
+Open the value,打开该值
+Open the parameters,打开参数
+Go to %s,转到 %s
+Value of the wrong kind,类型不对的值

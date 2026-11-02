@@ -10098,3 +10098,41 @@ not written: %s,non scritto: %s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s","Le variabili e le funzioni del foglio non si sono potute scrivere con i loro tipi, quindi il tipo di ogni valore non viene controllato. Godot dice: %s"
 GODOT SAYS,GODOT DICE
 Enter will not write it.,Invio non lo scriverà.
+Godot says:,Godot dice:
+The loop now changes %s each round.,Il ciclo ora cambia %s a ogni giro.
+Make it an If,Trasforma in Se
+Now an If: the body runs once when it is true.,Ora è un Se: il corpo viene eseguito una volta quando è vero.
+Emit %s,Emetti %s
+%s now sends what it declares.,%s ora invia ciò che dichiara.
+Fit the handler to %s,Adatta il gestore a %s
+The handler now takes what %s sends.,Il gestore ora riceve ciò che %s invia.
+Add to %s,Aggiungi a %s
+%s now declares %s. Check the rows that emit it.,%s ora dichiara %s. Controlla le righe che lo emettono.
+Rename the local to %s,Rinomina la locale in %s
+The local is now %s.,La locale ora è %s.
+Remove the local %s,Rimuovi la locale %s
+The local is gone; %s now means what it hid.,La locale non c'è più; %s ora indica ciò che nascondeva.
+Open the scene that runs this sheet to pick a node from it.,Apri la scena che esegue questo foglio per sceglierne un nodo.
+Open the row and choose the file there.,Apri la riga e scegli lì il file.
+"Open a scene to add ""%s"" to a node in it.","Apri una scena per aggiungere ""%s"" a un suo nodo."
+Add to group %s,Aggiungi al gruppo %s
+"%s is in ""%s"" now. Save the scene and this row stops asking.","%s ora è in ""%s"". Salva la scena e questa riga smetterà di chiedere."
+Show row,Mostra riga
+Row %d of %s.,Riga %d di %s.
+Pick another node...,Scegli un altro nodo...
+Pick another action...,Scegli un'altra azione...
+Pick a file...,Scegli un file...
+Add the group to a node...,Aggiungi il gruppo a un nodo...
+Add %s,Aggiungi %s
+Remove the extra value,Rimuovi il valore in più
+Open the signal,Apri il segnale
+Drop %s,Togli %s
+Add %s to the signal,Aggiungi %s al segnale
+Add: Subtract 1 from %s,Aggiungi: sottrai 1 da %s
+Add: Add 1 to %s,Aggiungi: aggiungi 1 a %s
+Remove the local (use the parameter %s),Rimuovi la locale (usa il parametro %s)
+Remove the local (use the sheet's %s),Rimuovi la locale (usa %s del foglio)
+Open the value,Apri il valore
+Open the parameters,Apri i parametri
+Go to %s,Vai a %s
+Value of the wrong kind,Valore del tipo sbagliato

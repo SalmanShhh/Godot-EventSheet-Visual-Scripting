@@ -10098,3 +10098,41 @@ not written: %s,non écrit : %s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s","Les variables et fonctions de la feuille n'ont pas pu être écrites avec leurs types, le genre de chaque valeur n'est donc pas vérifié. Godot dit : %s"
 GODOT SAYS,GODOT DIT
 Enter will not write it.,Entrée ne l'écrira pas.
+Godot says:,Godot dit :
+The loop now changes %s each round.,La boucle change maintenant %s à chaque tour.
+Make it an If,En faire un Si
+Now an If: the body runs once when it is true.,C'est maintenant un Si : le corps s'exécute une fois quand c'est vrai.
+Emit %s,Émettre %s
+%s now sends what it declares.,%s envoie maintenant ce qu'il déclare.
+Fit the handler to %s,Adapter le gestionnaire à %s
+The handler now takes what %s sends.,Le gestionnaire reçoit maintenant ce que %s envoie.
+Add to %s,Ajouter à %s
+%s now declares %s. Check the rows that emit it.,%s déclare maintenant %s. Vérifiez les lignes qui l'émettent.
+Rename the local to %s,Renommer la locale en %s
+The local is now %s.,La locale s'appelle maintenant %s.
+Remove the local %s,Retirer la locale %s
+The local is gone; %s now means what it hid.,La locale a disparu ; %s désigne maintenant ce qu'elle masquait.
+Open the scene that runs this sheet to pick a node from it.,Ouvrez la scène qui exécute cette feuille pour y choisir un nœud.
+Open the row and choose the file there.,Ouvrez la ligne et choisissez-y le fichier.
+"Open a scene to add ""%s"" to a node in it.","Ouvrez une scène pour ajouter ""%s"" à l'un de ses nœuds."
+Add to group %s,Ajouter au groupe %s
+"%s is in ""%s"" now. Save the scene and this row stops asking.","%s est maintenant dans ""%s"". Enregistrez la scène et cette ligne cessera de demander."
+Show row,Afficher la ligne
+Row %d of %s.,Ligne %d de %s.
+Pick another node...,Choisir un autre nœud...
+Pick another action...,Choisir une autre action...
+Pick a file...,Choisir un fichier...
+Add the group to a node...,Ajouter le groupe à un nœud...
+Add %s,Ajouter %s
+Remove the extra value,Retirer la valeur en trop
+Open the signal,Ouvrir le signal
+Drop %s,Retirer %s
+Add %s to the signal,Ajouter %s au signal
+Add: Subtract 1 from %s,Ajouter : retirer 1 à %s
+Add: Add 1 to %s,Ajouter : ajouter 1 à %s
+Remove the local (use the parameter %s),Retirer la locale (utiliser le paramètre %s)
+Remove the local (use the sheet's %s),Retirer la locale (utiliser %s de la feuille)
+Open the value,Ouvrir la valeur
+Open the parameters,Ouvrir les paramètres
+Go to %s,Aller à %s
+Value of the wrong kind,Valeur du mauvais genre

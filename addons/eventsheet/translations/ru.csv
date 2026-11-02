@@ -10098,3 +10098,41 @@ not written: %s,не записано: %s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s","Переменные и функции листа не удалось записать с их типами, поэтому вид каждого значения не проверяется. Godot сообщает: %s"
 GODOT SAYS,GODOT СООБЩАЕТ
 Enter will not write it.,Enter это не запишет.
+Godot says:,Godot сообщает:
+The loop now changes %s each round.,Теперь цикл меняет %s на каждом шаге.
+Make it an If,Сделать условием Если
+Now an If: the body runs once when it is true.,"Теперь это условие Если: тело выполняется один раз, когда оно истинно."
+Emit %s,Отправить %s
+%s now sends what it declares.,"%s теперь отправляет то, что объявляет."
+Fit the handler to %s,Подогнать обработчик под %s
+The handler now takes what %s sends.,"Теперь обработчик принимает то, что отправляет %s."
+Add to %s,Добавить в %s
+%s now declares %s. Check the rows that emit it.,"%s теперь объявляет %s. Проверьте строки, которые его отправляют."
+Rename the local to %s,Переименовать локальную в %s
+The local is now %s.,Теперь локальная называется %s.
+Remove the local %s,Удалить локальную %s
+The local is gone; %s now means what it hid.,"Локальной больше нет; %s теперь означает то, что она скрывала."
+Open the scene that runs this sheet to pick a node from it.,"Откройте сцену, которая запускает этот лист, чтобы выбрать в ней узел."
+Open the row and choose the file there.,Откройте строку и выберите файл там.
+"Open a scene to add ""%s"" to a node in it.","Откройте сцену, чтобы добавить ""%s"" к её узлу."
+Add to group %s,Добавить в группу %s
+"%s is in ""%s"" now. Save the scene and this row stops asking.","%s теперь в ""%s"". Сохраните сцену, и эта строка перестанет спрашивать."
+Show row,Показать строку
+Row %d of %s.,Строка %d в %s.
+Pick another node...,Выбрать другой узел...
+Pick another action...,Выбрать другое действие...
+Pick a file...,Выбрать файл...
+Add the group to a node...,Добавить группу к узлу...
+Add %s,Добавить %s
+Remove the extra value,Удалить лишнее значение
+Open the signal,Открыть сигнал
+Drop %s,Убрать %s
+Add %s to the signal,Добавить %s в сигнал
+Add: Subtract 1 from %s,Добавить: вычесть 1 из %s
+Add: Add 1 to %s,Добавить: прибавить 1 к %s
+Remove the local (use the parameter %s),Удалить локальную (использовать параметр %s)
+Remove the local (use the sheet's %s),Удалить локальную (использовать %s листа)
+Open the value,Открыть значение
+Open the parameters,Открыть параметры
+Go to %s,Перейти к %s
+Value of the wrong kind,Значение не того вида

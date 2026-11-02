@@ -451,13 +451,13 @@ static func _doctor_offers() -> bool:
 		["and Show row", chips.has("show_row"), true],
 	])
 	# The Doctor's own finding about a missing control now carries the row that names it.
-	var scratch: String = "res://tests/fixtures/mistake_rows_level.gd"
-	var file: FileAccess = FileAccess.open(scratch, FileAccess.WRITE)
+	var fixture: String = "res://tests/fixtures/mistake_rows_level.gd"
+	var file: FileAccess = FileAccess.open(fixture, FileAccess.WRITE)
 	file.store_string("extends Node2D\n\n\nfunc _process(delta: float) -> void:\n\tif Input.is_action_pressed(\"ui_lef\"):\n\t\tprint(1)\n")
 	file.close()
 	EventSheetProjectDoctor.clear_project_scripts()
 	var mine: Dictionary = {}
-	EventSheetProjectDoctor._address_missing_control(scratch, PackedStringArray(["ui_lef"]), mine)
+	EventSheetProjectDoctor._address_missing_control(fixture, PackedStringArray(["ui_lef"]), mine)
 	result = SUPPORT.pins(TEST_NAME, [
 		["the missing control is addressed to its row", int(mine.get("event", 0)) > 0, true],
 		["and offers the near name first", str(mine.get("to", "")), "ui_left"],

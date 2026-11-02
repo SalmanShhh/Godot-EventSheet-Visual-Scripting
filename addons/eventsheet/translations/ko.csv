@@ -10098,3 +10098,41 @@ not written: %s,기록되지 않음: %s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s",시트의 변수와 함수를 타입과 함께 쓸 수 없어 각 값의 종류를 검사하지 않습니다. Godot의 메시지: %s
 GODOT SAYS,GODOT 메시지
 Enter will not write it.,Enter로는 기록되지 않습니다.
+Godot says:,Godot 메시지:
+The loop now changes %s each round.,이제 루프가 매 회차마다 %s을(를) 바꿉니다.
+Make it an If,If로 바꾸기
+Now an If: the body runs once when it is true.,이제 If입니다. 참일 때 본문이 한 번 실행됩니다.
+Emit %s,%s 보내기
+%s now sends what it declares.,이제 %s이(가) 선언한 값을 보냅니다.
+Fit the handler to %s,핸들러를 %s에 맞추기
+The handler now takes what %s sends.,이제 핸들러가 %s이(가) 보내는 값을 받습니다.
+Add to %s,%s에 추가
+%s now declares %s. Check the rows that emit it.,이제 %s이(가) %s을(를) 선언합니다. 이를 보내는 행을 확인하세요.
+Rename the local to %s,지역 변수 이름을 %s(으)로 변경
+The local is now %s.,지역 변수 이름이 이제 %s입니다.
+Remove the local %s,지역 변수 %s 제거
+The local is gone; %s now means what it hid.,지역 변수를 제거했습니다. 이제 %s은(는) 가려져 있던 대상을 뜻합니다.
+Open the scene that runs this sheet to pick a node from it.,이 시트를 실행하는 씬을 열어 노드를 선택하세요.
+Open the row and choose the file there.,행을 열어 파일을 선택하세요.
+"Open a scene to add ""%s"" to a node in it.","씬을 열어 노드에 ""%s""을(를) 추가하세요."
+Add to group %s,그룹 %s에 추가
+"%s is in ""%s"" now. Save the scene and this row stops asking.","이제 %s은(는) ""%s""에 있습니다. 씬을 저장하면 이 행은 더 묻지 않습니다."
+Show row,행 표시
+Row %d of %s.,%d행 (%s).
+Pick another node...,다른 노드 선택...
+Pick another action...,다른 동작 선택...
+Pick a file...,파일 선택...
+Add the group to a node...,노드에 그룹 추가...
+Add %s,%s 추가
+Remove the extra value,남는 값 제거
+Open the signal,시그널 열기
+Drop %s,%s 빼기
+Add %s to the signal,시그널에 %s 추가
+Add: Subtract 1 from %s,추가: %s에서 1 빼기
+Add: Add 1 to %s,추가: %s에 1 더하기
+Remove the local (use the parameter %s),지역 변수 제거 (매개변수 %s 사용)
+Remove the local (use the sheet's %s),지역 변수 제거 (시트의 %s 사용)
+Open the value,값 열기
+Open the parameters,매개변수 열기
+Go to %s,%s(으)로 이동
+Value of the wrong kind,잘못된 종류의 값

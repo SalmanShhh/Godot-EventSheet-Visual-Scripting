@@ -10098,3 +10098,41 @@ not written: %s,書き込まれません: %s
 "The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s",シートの変数と関数を型付きで書き出せなかったため、各値の種類は確認されていません。Godot のメッセージ: %s
 GODOT SAYS,GODOT より
 Enter will not write it.,Enter では書き込まれません。
+Godot says:,Godot のメッセージ:
+The loop now changes %s each round.,ループは毎回 %s を変更するようになりました。
+Make it an If,If に変える
+Now an If: the body runs once when it is true.,If になりました。真のとき本体を 1 回実行します。
+Emit %s,%s を発信
+%s now sends what it declares.,%s は宣言どおりの値を送るようになりました。
+Fit the handler to %s,ハンドラーを %s に合わせる
+The handler now takes what %s sends.,ハンドラーは %s が送る値を受け取るようになりました。
+Add to %s,%s に追加
+%s now declares %s. Check the rows that emit it.,%s は %s を宣言するようになりました。発信する行を確認してください。
+Rename the local to %s,ローカル変数を %s に改名
+The local is now %s.,ローカル変数は %s になりました。
+Remove the local %s,ローカル変数 %s を削除
+The local is gone; %s now means what it hid.,ローカル変数を削除しました。%s は隠していた対象を指します。
+Open the scene that runs this sheet to pick a node from it.,このシートを実行するシーンを開いてノードを選んでください。
+Open the row and choose the file there.,行を開いてファイルを選んでください。
+"Open a scene to add ""%s"" to a node in it.","シーンを開いてノードに ""%s"" を追加してください。"
+Add to group %s,グループ %s に追加
+"%s is in ""%s"" now. Save the scene and this row stops asking.","%s は ""%s"" に入りました。シーンを保存するとこの行の指摘は消えます。"
+Show row,行を表示
+Row %d of %s.,行 %d (%s)。
+Pick another node...,別のノードを選ぶ...
+Pick another action...,別のアクションを選ぶ...
+Pick a file...,ファイルを選ぶ...
+Add the group to a node...,グループをノードに追加...
+Add %s,%s を追加
+Remove the extra value,余分な値を削除
+Open the signal,シグナルを開く
+Drop %s,%s を外す
+Add %s to the signal,%s をシグナルに追加
+Add: Subtract 1 from %s,追加: %s から 1 を引く
+Add: Add 1 to %s,追加: %s に 1 を足す
+Remove the local (use the parameter %s),ローカル変数を削除 (引数 %s を使う)
+Remove the local (use the sheet's %s),ローカル変数を削除 (シートの %s を使う)
+Open the value,値を開く
+Open the parameters,パラメーターを開く
+Go to %s,%s へ移動
+Value of the wrong kind,種類の違う値

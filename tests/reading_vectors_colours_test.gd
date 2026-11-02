@@ -42,16 +42,18 @@ func _process(delta: float) -> void:
 
 ## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	"System ▸ Set tint to red, 20% darker",
-	"System ▸ Set tint to red at 50% opacity",
+	# A colour on a row leads with its square and reads as it was written, or as the project asks colours to
+	# read: the words below are the grammar's, for a colour inside a sentence of something else.
+	"System ▸ Set tint to Color.RED.darkened(0.2)",
+	"System ▸ Set tint to Color(1, 0, 0, 0.5)",
 	"eventforge_reading_vectors_colours ▸ Ease colour toward white at 5"
 ])
 
 ## Readings the file must NOT contain: the code each shape replaced. A reading that silently stops
 ## firing would otherwise pass the list above by never being asked about.
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
-	"System ▸ Set tint to Color.RED.darkened(0.2)",
-	"System ▸ Set tint to Color(1, 0, 0, 0.5)"
+	"System ▸ Set tint to red, 20% darker",
+	"System ▸ Set tint to red at 50% opacity"
 ])
 
 ## One value expression, one reading. These are the words the row shows in place of the call.

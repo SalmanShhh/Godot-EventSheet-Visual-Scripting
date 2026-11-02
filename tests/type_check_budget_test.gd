@@ -12,6 +12,11 @@ const NAME := "type_check_budget_test"
 const PACK_PATH := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
 ## The median time of one check, in milliseconds.
 const CHECK_BUDGET_MS: float = 50.0
+## What the row sweep adds to the biggest sheet, in milliseconds: every line compiled at once the first time
+## the sheet's types are seen (measured about 180 ms), and with every line known, what an edit costs on top of
+## the walk (measured about 20 ms). Both three times that and rounded up.
+const SWEEP_COLD_BUDGET_MS: float = 600.0
+const SWEEP_WARM_BUDGET_MS: float = 60.0
 
 
 static func run() -> bool:
@@ -42,7 +47,31 @@ static func run() -> bool:
 		["an accepted value is checked within the budget", accepted[2] < CHECK_BUDGET_MS, true],
 	])
 	print("[INFO] %s: median %.1f ms refused, %.1f ms accepted (budget %.0f ms)" % [NAME, refused[2], accepted[2], CHECK_BUDGET_MS])
-	return ok
+	return _sweep_within_budget(sheet) and ok
+
+
+static func _sweep_within_budget(sheet: EventSheetResource) -> bool:
+	var lines: Array[Dictionary] = []
+	for function_entry: Variant in sheet.functions:
+		for event_entry: Variant in (function_entry as EventFunction).events:
+			if event_entry is EventRow:
+				for action: Variant in (event_entry as EventRow).actions:
+					lines.append({"code": EventSheetMistakeFindings.emitted_line(action), "condition": false})
+	EventSheetTypeCheck.forget_lines()
+	var started: int = Time.get_ticks_usec()
+	EventSheetTypeCheck.judge_lines(sheet, lines, {})
+	var cold: float = float(Time.get_ticks_usec() - started) / 1000.0
+	var warm: Array[float] = []
+	for _round: int in range(5):
+		var again: int = Time.get_ticks_usec()
+		EventSheetTypeCheck.judge_lines(sheet, lines, {})
+		warm.append(float(Time.get_ticks_usec() - again) / 1000.0)
+	warm.sort()
+	print("[INFO] %s: %d lines swept in %.0f ms the first time, %.1f ms again" % [NAME, lines.size(), cold, warm[2]])
+	return SUPPORT.pins(NAME, [
+		["a sheet's lines are compiled together within the budget", cold < SWEEP_COLD_BUDGET_MS, true],
+		["and an edit that changed none of them stays within its budget", warm[2] < SWEEP_WARM_BUDGET_MS, true],
+	])
 
 
 static func _once(sheet: EventSheetResource, variable_name: String, value: String) -> float:
