@@ -182,7 +182,7 @@ static func run() -> bool:
 	all_passed = _check("the filesystem hook drops what the scene said about its effects",
 		filesystem_hook.contains("EventSheetSceneEffects.clear_cache()"), true) and all_passed
 	all_passed = _check("and the shader files' own dials",
-		filesystem_hook.contains("EventForgeShaderUniforms.clear_cache()"), true) and all_passed
+		filesystem_hook.contains("load(SHADER_UNIFORMS_PATH).clear_cache()"), true) and all_passed
 	all_passed = _check("and the project-wide scan behind every sharing count",
 		filesystem_hook.contains("EventSheetProjectShareIndex.clear_cache()"), true) and all_passed
 	all_passed = _check("and the shared scene parse the lighting and effect reads sit on",
@@ -190,7 +190,7 @@ static func run() -> bool:
 	all_passed = _check("and the listing of the project's own scripts",
 		filesystem_hook.contains("_clear_if_loaded(PROJECT_DOCTOR_PATH, \"clear_project_scripts\")"), true) and all_passed
 	all_passed = _check("and what a script the rows are aimed at declares",
-		filesystem_hook.contains("EventSheetScriptMembers.clear_cache()"), true) and all_passed
+		filesystem_hook.contains("load(SCRIPT_MEMBERS_PATH).clear_cache()"), true) and all_passed
 	all_passed = _check("and what the scenes said about collision",
 		filesystem_hook.contains("EventSheetSceneCollisionFacts.clear_cache()"), true) and all_passed
 	# THE AUDIT DROPS THEM TOO. Outside the editor there is no filesystem signal, and the audit is
