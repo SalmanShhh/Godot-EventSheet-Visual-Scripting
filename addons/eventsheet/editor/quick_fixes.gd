@@ -275,7 +275,7 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 	var dock: Variant = context.get("dock", null)
 	match fix_id:
 		"use_the_name", "known_at_run_time", "point_at_node", "stop_after_rounds":
-			return EventSheetMistakeFixes.apply_from_report(dock, fix_id, finding)
+			return load("res://addons/eventsheet/editor/dock/mistake_fixes.gd").apply_from_report(dock, fix_id, finding)
 		"add_input_action":
 			return _add_input_action(subject)
 		"never_ask_error_report":

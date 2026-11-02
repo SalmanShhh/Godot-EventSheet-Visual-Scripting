@@ -151,6 +151,10 @@ const FINDINGS_INPUT := "input"
 const FINDINGS_INCLUDES := "includes"
 const FINDINGS_COMPILER := "compiler"
 const FINDINGS_MISTAKES := "mistakes"
+## The mistake checks are named by path: this file is on the boot path, and a class name would compile the checks into the first open.
+const MISTAKE_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/mistake_findings.gd"
+const MISTAKE_ANCHOR_VARIABLE := "variable"
+const MISTAKE_ANCHOR_BLOCK := "block"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -5446,7 +5450,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	if block.kind_id == "preload":
 		var about_block: Array[Dictionary] = []
 		for finding: Dictionary in _sheet_findings(FINDINGS_MISTAKES):
-			if str(finding.get("anchor", "")) == EventSheetMistakeFindings.ANCHOR_BLOCK and is_same(finding.get("block"), block):
+			if str(finding.get("anchor", "")) == MISTAKE_ANCHOR_BLOCK and is_same(finding.get("block"), block):
 				about_block.append(finding)
 		_stamp_attention(row_data, _tagged(FINDINGS_MISTAKES, about_block))
 	return row_data
@@ -8318,7 +8322,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: St
 	_attach_property_accessors(row_data, variable, indent)
 	# A starting value naming a file the project does not have: the quiet state on the declaring row.
 	_stamp_attention(row_data, _tagged(FINDINGS_MISTAKES, EventSheetMultiplayerFindings.for_subject(
-		_sheet_findings(FINDINGS_MISTAKES), EventSheetMistakeFindings.ANCHOR_VARIABLE, variable.name)))
+		_sheet_findings(FINDINGS_MISTAKES), MISTAKE_ANCHOR_VARIABLE, variable.name)))
 	return row_data
 
 
@@ -12372,7 +12376,7 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# lacks, a signal with the wrong number of values, a While that cannot end, a local
 				# hiding a variable, a division by a literal zero. Derived from the rows once per sweep;
 				# the project-wide facts it leans on are held for the session.
-				_sheet_findings_cache[family] = EventSheetMistakeFindings.findings(sheet,
+				_sheet_findings_cache[family] = load(MISTAKE_FINDINGS_PATH).findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
 			FINDINGS_RENAME:
 				# The rows a rename made somewhere else left pointing at nothing. The witness is

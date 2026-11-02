@@ -68,7 +68,7 @@ func after_write(sheet: EventSheetResource, written_path: String, compile_result
 	# The mistake checks join the save of the sheet being saved: the rows that cannot run, counted on
 	# the status line beside the compiler's warnings. Derived from the rows just written, so a save of
 	# a sheet with nothing to say adds nothing.
-	var mistake_words: String = EventSheetMistakeFindings.summary(EventSheetMistakeFindings.findings(sheet,
+	var mistake_words: String = load("res://addons/eventsheet/editor/interaction/mistake_findings.gd").summary(load("res://addons/eventsheet/editor/interaction/mistake_findings.gd").findings(sheet,
 		sheet.external_source_path))
 	if compiler_words.is_empty():
 		return mistake_words

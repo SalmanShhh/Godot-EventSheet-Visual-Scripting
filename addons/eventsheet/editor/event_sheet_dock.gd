@@ -24,6 +24,8 @@ const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 const DOC_EXPLAIN_PATH := "res://addons/eventsheet/editor/docs/doc_explain.gd"
 const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
 const PROJECT_FILES_PATH := "res://addons/eventforge/project_files.gd"
+const MISTAKE_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/mistake_findings.gd"
+const MISTAKE_FIXES_PATH := "res://addons/eventsheet/editor/dock/mistake_fixes.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const ACE_PICKER_PATH := "res://addons/eventsheet/editor/ace_picker.gd"
@@ -1166,7 +1168,7 @@ func _on_translations_maybe_changed() -> void:
 	EventSheetSceneLights.clear_cache()
 	# And what the mistake checks hold about the project: which groups exist and which scene runs
 	# which script. A group added to a scene a second ago must stop being "a group nothing is in".
-	EventSheetMistakeFindings.clear_cache()
+	_clear_if_loaded(MISTAKE_FINDINGS_PATH, "clear_cache")
 	EventSheetSceneLightingFacts.clear_cache()
 	# And what it says about COLLISION: the layer census and the group memberships are answers about
 	# every scene in the project, so a mask edited in the Inspector a second ago has to reach the head
@@ -7805,7 +7807,7 @@ func apply_selected_row_fix() -> void:
 		fix_region_fence(finding)
 		return
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
-		EventSheetMistakeFixes.apply(self, finding, "fix")
+		load(MISTAKE_FIXES_PATH).apply(self, finding, "fix")
 		return
 	if str(finding.get("fix", "")) == EventSheetMigrationFindings.FIX_SEE_REPLACEMENT:
 		see_what_replaced_it(finding)
@@ -7834,7 +7836,7 @@ func apply_selected_row_second_fix() -> void:
 	if _run_variable_link(1):
 		return
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
-		EventSheetMistakeFixes.apply(self, finding, "second_fix")
+		load(MISTAKE_FIXES_PATH).apply(self, finding, "second_fix")
 		return
 	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
 		return
@@ -7846,7 +7848,7 @@ func apply_selected_row_third_fix() -> void:
 	if _run_variable_link(2):
 		return
 	if str(_row_help_finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
-		EventSheetMistakeFixes.apply(self, _row_help_finding, "third_fix")
+		load(MISTAKE_FIXES_PATH).apply(self, _row_help_finding, "third_fix")
 
 
 ## The head band's migration count, pressed. It is the ONE place a row is rewritten onto a newer

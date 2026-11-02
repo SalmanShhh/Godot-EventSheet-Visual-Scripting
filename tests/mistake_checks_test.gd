@@ -19,6 +19,9 @@ const TEST_NAME: String = "mistake_checks"
 const LEVEL := "res://tests/fixtures/mistake_level.gd"
 const LEVEL_SCENE := "res://tests/fixtures/mistake_level.tscn"
 
+## The warm pass over the biggest pack, with about three times the measured headroom.
+const PACK_BUDGET_MS: float = 250.0
+
 
 static func run() -> bool:
 	EventSheetSceneConnections.clear_cache()
@@ -356,7 +359,7 @@ static func _budget_pins() -> bool:
 	print("[measure] mistake findings on the pathfinding pack, warm: %.1f ms" % elapsed_ms)
 	return SUPPORT.pins(TEST_NAME, [
 		["the shipped pack earns no mistake finding", found.size(), 0],
-		["a warm pass over the biggest pack stays inside its budget (250 ms)", elapsed_ms < 250.0, true],
+		["a warm pass over the biggest pack stays inside its budget (250 ms)", elapsed_ms < PACK_BUDGET_MS, true],
 	])
 
 

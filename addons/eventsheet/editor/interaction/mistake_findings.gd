@@ -2,7 +2,7 @@
 #
 # Each of these passes in silence today: the sheet compiles, the editor is content, and the mistake
 # is met the first time the line is reached. Every rule here is checked against what Godot really
-# does (a scratch run on the real engine, not a belief about it), and every sentence states that and
+# does (a real run of the engine, not a belief about it), and every sentence states that and
 # nothing more:
 #
 #   wrong node type      a row asks a node for something its class does not have. Godot stops the
