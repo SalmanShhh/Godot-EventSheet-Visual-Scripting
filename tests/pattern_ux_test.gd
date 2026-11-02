@@ -29,6 +29,7 @@ static func run() -> bool:
 	ok = _test_the_adopt_plan() and ok
 	ok = _test_the_adopt_refusals() and ok
 	ok = _test_the_doctor_smells() and ok
+	ok = _test_health_and_doctor_leave_the_live_claims() and ok
 	ok = _test_the_manual_page() and ok
 	ok = _test_the_theme_token_derives() and ok
 	ok = _test_round_trip_is_byte_identical() and ok
@@ -481,3 +482,31 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 		return true
 	print("  [FAIL] %s\n    expected: %s\n    actual:   %s" % [label, str(expected), str(actual)])
 	return false
+
+
+## The health card and the Doctor clear and re-claim to get fresh facts for their own read; the claims
+## the OPEN sheet's rows made while their words were built (some come only from the row build's span
+## pass) must be the same after as before.
+static func _test_health_and_doctor_leave_the_live_claims() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = _sheet(COUNTDOWN_PATH)
+	EventSheetPatternFacts.clear(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
+	# A claim only the row build makes: no fresh claim_patterns walk reproduces it.
+	EventSheetPatternFacts.claim(sheet, "ui", "live-only-row", "live-only-event", PackedStringArray(), "Live", "")
+	var before: Array = EventSheetPatternFacts.claims(sheet)
+	var summary_before: Dictionary = EventSheetPatternFacts.summary(sheet)
+	EventSheetHealthCard.card_for(sheet, "res://player.gd", [])
+	ok = _check("a health card leaves the open sheet's claims as they were",
+		EventSheetPatternFacts.claims(sheet), before) and ok
+	var findings: Array[Dictionary] = []
+	EventSheetProjectDoctor.scan_pattern_smells(sheet, "res://player.gd", findings)
+	ok = _check("a Doctor scan leaves the open sheet's claims as they were",
+		EventSheetPatternFacts.claims(sheet), before) and ok
+	ok = _check("so the patterns count the Project bar reads is unchanged",
+		EventSheetPatternFacts.summary(sheet), summary_before) and ok
+	var never_built: EventSheetResource = _sheet(COUNTDOWN_PATH)
+	EventSheetHealthCard.card_for(never_built, "res://player.gd", [])
+	ok = _check("a sheet that was never built is left unclaimed and unstated",
+		[EventSheetPatternFacts.claims(never_built).size(), EventSheetPatternFacts.has_stated(never_built)], [0, false]) and ok
+	return ok

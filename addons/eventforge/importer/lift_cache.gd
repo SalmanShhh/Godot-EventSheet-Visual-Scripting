@@ -33,9 +33,20 @@ static var discarded: int = 0
 static var _distrusted: Dictionary = {}
 static var _code_stamp_value: String = ""
 static var _code_stamp_built: bool = false
+## Whether this session has swept the folder yet (see `prune`).
+static var _pruned: bool = false
 
 const IMPORTER_PATH: String = "res://addons/eventforge/importer/gdscript_importer.gd"
 const FORMAT: int = 1
+const INDEX_FILE: String = "index.json"
+## The caps `prune` holds the folder to. Measured by opening every .gd under eventsheet_addons/ (181
+## files) with the cache on: 181 entries, 9.7 MB in all, 53 KB on average, 623 KB the largest. So a
+## project of several times the shipped library fits: 1,000 entries and 64 MB (about 6.6 runs of the
+## whole shipped set) never evicts a live project, and still bounds the folder for good.
+const MAX_ENTRIES: int = 1000
+const MAX_BYTES: int = 64 * 1024 * 1024
+## A tmp file older than this belongs to a process that died mid-write.
+const STALE_TMP_SECONDS: int = 86400
 const META_KEY: String = "eventsheets_lift_cache_key"
 ## The folders whose scripts decide what a lift answers: the importer and lifter, the compiler that
 ## byte-verifies it, the vocabulary it reverse-matches, and the packs that add to that vocabulary.
@@ -48,6 +59,7 @@ const STAMPED_ROOTS: PackedStringArray = ["res://addons/eventforge/", "res://add
 static func fetch(path: String, source: String) -> EventSheetResource:
 	if not enabled:
 		return null
+	_prune_once()
 	var key: String = key_for(source, "", path)
 	if _distrusted.get(path, "") == key:
 		return null
@@ -90,6 +102,7 @@ static func store(path: String, source: String, sheet: EventSheetResource) -> vo
 	if not DirAccess.dir_exists_absolute(folder):
 		if DirAccess.make_dir_recursive_absolute(folder) != OK:
 			return
+	_prune_once()
 	var key: String = key_for(source, "", path)
 	sheet.set_meta(META_KEY, key)
 	var entry_path: String = entry_path_for(path)
@@ -99,13 +112,102 @@ static func store(path: String, source: String, sheet: EventSheetResource) -> vo
 	if saved != OK:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(side_path))
 		return
+	# The index row goes in before the entry does, so an entry is never in the folder without a name.
+	var index: Dictionary = _read_index()
+	index[path.md5_text()] = path
+	_write_index(index)
 	if DirAccess.rename_absolute(ProjectSettings.globalize_path(side_path), ProjectSettings.globalize_path(entry_path)) != OK:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(side_path))
+
+
+## Sweeps the folder: drops every entry whose source file no longer exists (renamed or deleted), every
+## entry the index cannot name a source for, tmp files a dead process left, and then the oldest
+## entries beyond `max_entries` or `max_bytes`. Returns how many entry files it removed. Off, it
+## touches nothing. The index (md5 of a path -> the path) is what lets an entry, which is named only
+## by a digest, be checked against the disk.
+static func prune(max_entries: int = MAX_ENTRIES, max_bytes: int = MAX_BYTES) -> int:
+	if not enabled:
+		return 0
+	var folder: String = ProjectSettings.globalize_path(cache_dir)
+	if not DirAccess.dir_exists_absolute(folder):
+		return 0
+	var index: Dictionary = _read_index()
+	var kept: Array = []
+	var removed: int = 0
+	var now: int = int(Time.get_unix_time_from_system())
+	for file: String in DirAccess.get_files_at(folder):
+		var full: String = folder.path_join(file)
+		if file.ends_with(".tmp.res"):
+			if now - FileAccess.get_modified_time(full) > STALE_TMP_SECONDS:
+				DirAccess.remove_absolute(full)
+			continue
+		if file.get_extension() != "res":
+			continue
+		var source: String = str(index.get(file.get_basename(), ""))
+		if source.is_empty() or not FileAccess.file_exists(source):
+			DirAccess.remove_absolute(full)
+			index.erase(file.get_basename())
+			removed += 1
+			continue
+		kept.append({"id": file.get_basename(), "full": full, "time": FileAccess.get_modified_time(full),
+			"size": FileAccess.get_file_as_bytes(full).size()})
+	kept.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["time"]) < int(b["time"]))
+	var total: int = 0
+	for entry: Dictionary in kept:
+		total += int(entry["size"])
+	var count: int = kept.size()
+	for entry: Dictionary in kept:
+		if count <= max_entries and total <= max_bytes:
+			break
+		DirAccess.remove_absolute(str(entry["full"]))
+		index.erase(str(entry["id"]))
+		count -= 1
+		total -= int(entry["size"])
+		removed += 1
+	# Index rows whose entry is gone (a row is written before its entry is moved in) go too.
+	for id: String in index.keys():
+		if not FileAccess.file_exists("%s%s.res" % [cache_dir, id]):
+			index.erase(id)
+	_write_index(index)
+	return removed
+
+
+## The first use in a session sweeps once, so a long-lived project's folder is checked a session at a
+## time and never on every open.
+static func _prune_once() -> void:
+	if _pruned or not enabled:
+		return
+	_pruned = true
+	prune()
+
+
+static func _index_path() -> String:
+	return cache_dir + INDEX_FILE
+
+
+static func _read_index() -> Dictionary:
+	if not FileAccess.file_exists(_index_path()):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_index_path()))
+	return parsed if parsed is Dictionary else {}
+
+
+## Written beside its place and moved in, like an entry, so a reader sees the old index or the new.
+static func _write_index(index: Dictionary) -> void:
+	var side_path: String = "%s%s.%d.tmp.res" % [cache_dir, INDEX_FILE, OS.get_process_id()]
+	var file: FileAccess = FileAccess.open(side_path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(index))
+	file.close()
+	if DirAccess.rename_absolute(ProjectSettings.globalize_path(side_path), ProjectSettings.globalize_path(_index_path())) != OK:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(side_path))
 
 
 ## Forgets everything remembered in this folder and everything this session distrusts.
 static func clear() -> void:
 	_distrusted.clear()
+	_pruned = false
 	var folder: String = ProjectSettings.globalize_path(cache_dir)
 	if not DirAccess.dir_exists_absolute(folder):
 		return

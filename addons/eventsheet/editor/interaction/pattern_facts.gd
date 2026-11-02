@@ -76,6 +76,35 @@ static func clear(sheet: EventSheetResource) -> void:
 	_stated.erase(sheet.get_instance_id())
 
 
+## What this sheet's registry holds right now, to hand back with `restore`. A reader that wants FRESH
+## facts for its own read (the health card, the Doctor) clears, claims, reads, and then restores this,
+## so the claims the open sheet's rows made while their words were built are not lost to it.
+static func snapshot(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var key: int = sheet.get_instance_id()
+	return {
+		"has_claims": _claims.has(key), "claims": (_claims.get(key, []) as Array).duplicate(true),
+		"stated": _stated.has(key),
+	}
+
+
+## Puts back what `snapshot` took: the claims and the stated marker exactly as they were, or absent
+## if they were absent.
+static func restore(sheet: EventSheetResource, taken: Dictionary) -> void:
+	if sheet == null:
+		return
+	var key: int = sheet.get_instance_id()
+	if bool(taken.get("has_claims", false)):
+		_claims[key] = taken.get("claims", [])
+	else:
+		_claims.erase(key)
+	if bool(taken.get("stated", false)):
+		_stated[key] = true
+	else:
+		_stated.erase(key)
+
+
 ## Record that a reading recognised a pattern. Unknown pattern ids are refused loudly in the editor
 ## (a typo here would silently hide a chip) and ignored at runtime.
 static func claim(sheet: EventSheetResource, pattern: String, row_uid: String, event_uid: String,

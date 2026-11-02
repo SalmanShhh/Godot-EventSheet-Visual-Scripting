@@ -38,9 +38,11 @@ static func card_for(sheet: EventSheetResource, sheet_path: String,
 	var coverage: Dictionary = EventSheetReadingCoverage.measure(sheet)
 	# The pattern registry is per-rebuild, so a sheet that was merely loaded has claimed nothing
 	# yet: state its patterns here the same way a rebuild does, and read the summary off that.
+	var live_facts: Dictionary = EventSheetPatternFacts.snapshot(sheet)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var patterns: Dictionary = EventSheetPatternFacts.summary(sheet)
+	EventSheetPatternFacts.restore(sheet, live_facts)
 	var doctor: Dictionary = doctor_counts(doctor_findings, sheet_path)
 	var tests: PackedStringArray = test_sheets_for(sheet, sheet_path)
 	return {

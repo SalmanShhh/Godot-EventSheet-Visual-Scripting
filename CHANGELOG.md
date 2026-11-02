@@ -9,6 +9,14 @@
 - The compiler's warnings (it always returned them; only the MCP server read them) now set the quiet amber state on the event they belong to (`warning_rows` beside the unchanged `warnings` list, emitted bytes untouched), are counted on the status line after a save, and are listed in the Doctor under Compiler.
 - A runtime error from the running game is mapped to its row for ANY open sheet, with the Code panel closed: the tab whose script the error names is found, its source map is computed on demand (kept while the file is unchanged), and Jump to event brings that tab forward. A sheet edited since its file was written points at no row rather than the wrong one. The game still reports errors only through the debug build's announce, so this works for a game started from the editor; nothing is added to emitted code.
 
+### Fixed: a health check or a Doctor run no longer wipes the open sheet's pattern claims
+
+- The sheet health card and the Doctor's pattern smells cleared the pattern registry of the sheet they were asked about and re-claimed for their own read. On the OPEN sheet that threw away the claims its rows made while their words were built (some are made only by the row build), so the Project bar's "N patterns", an object's "could adopt" and the Manual's "Patterns using this" went wrong until the next rebuild. Both now take a snapshot first and put it back after their read.
+
+### Fixed: the remembered lifts in .godot/ no longer grow without bound
+
+- An entry for a renamed or deleted .gd was never removed. The first use of the lift cache in a session now sweeps the folder: entries whose source file is gone, entries nothing names (an index of path digests is kept beside them), stale tmp files, and then the oldest entries beyond 1,000 entries or 64 MB. Measured by opening all 181 shipped pack .gd files with the cache on: 9.7 MB in all, 53 KB on average, 623 KB the largest, so the caps hold about six whole shipped sets and never evict a live project. With the cache off nothing is written or removed.
+
 ### Fixed: a row that got its words as it came into view was drawn into a height that did not fit it
 
 - Since rows past the first screenful build their words lazily (every shipped pack, not only sheets over 1,500 rows), their height was a guess from the line count, which knows nothing of a cell that wraps or of the add lines a resting or inert row hides - and a row's height was never measured again once its words arrived. In a real editor at 760 px the fps controller pack drew "capture_mouse_on_re" cut off under the next row and long actions clipped mid-sentence; measured headless at a 640 px canvas, 65 of its 74 lazy rows had a guessed height that was not their built one. The rows a draw is about to paint are now measured again with their words and the rows below move by what they gained (`settle_built_rows`), and the sheet-as-one-picture export measures every row before it reads the total height.

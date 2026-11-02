@@ -153,6 +153,10 @@ static func run() -> bool:
 	passed = SUPPORT.check(P, "with the cache off nothing is written", FileAccess.file_exists(cache.entry_path_for(FIXTURE)), false) and passed
 	cache.enabled = true
 
+	# 6b. Pruning: an entry whose source file is gone is dropped, a live one kept, the cap holds oldest
+	# first, and off it touches nothing.
+	passed = _prune_checks(cache) and passed
+
 	# 7. The wall budget on the remembered stage, on a real pack.
 	cache.clear()
 	var pack_source: String = FileAccess.get_file_as_string(SAMPLE_PACK)
@@ -169,6 +173,52 @@ static func run() -> bool:
 	cache.clear()
 	cache.cache_dir = saved_dir
 	cache.enabled = was_enabled
+	return passed
+
+
+static func _prune_checks(cache: Script) -> bool:
+	var passed: bool = true
+	var gone: String = "user://lift_cache_gone.gd"
+	var live: String = "user://lift_cache_live.gd"
+	var oldest: String = "user://lift_cache_oldest.gd"
+	for path: String in [gone, live, oldest]:
+		_write(path, FIXTURE_SOURCE.replace("120.0", str(path.length())))
+	cache.clear()
+	_open(oldest)
+	# Entries are aged by file time (whole seconds), so each is stored a second after the one before.
+	passed = SUPPORT.check(P, "an entry is named in the index once stored",
+		cache._read_index().get(oldest.md5_text(), ""), oldest) and passed
+	OS.delay_msec(1100)
+	_open(gone)
+	OS.delay_msec(1100)
+	_open(live)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(gone))
+	cache.enabled = false
+	passed = SUPPORT.check(P, "with the cache off a prune removes nothing", cache.prune(), 0) and passed
+	passed = SUPPORT.check(P, "and the stale entry is still there",
+		FileAccess.file_exists(cache.entry_path_for(gone)), true) and passed
+	cache.enabled = true
+	passed = SUPPORT.check(P, "a prune drops the entry whose source file is gone", cache.prune(), 1) and passed
+	passed = SUPPORT.check(P, "the stale entry is removed", FileAccess.file_exists(cache.entry_path_for(gone)), false) and passed
+	passed = SUPPORT.check(P, "the live entries are kept",
+		[FileAccess.file_exists(cache.entry_path_for(live)), FileAccess.file_exists(cache.entry_path_for(oldest))], [true, true]) and passed
+	passed = SUPPORT.check(P, "and the index forgot the stale row",
+		cache._read_index().has(gone.md5_text()), false) and passed
+	passed = SUPPORT.check(P, "a prune with nothing stale removes nothing", cache.prune(), 0) and passed
+	passed = SUPPORT.check(P, "the entry cap evicts oldest first", cache.prune(1), 1) and passed
+	passed = SUPPORT.check(P, "and keeps the newest",
+		[FileAccess.file_exists(cache.entry_path_for(live)), FileAccess.file_exists(cache.entry_path_for(oldest))], [true, false]) and passed
+	passed = SUPPORT.check(P, "the byte cap evicts too", cache.prune(100, 1), 1) and passed
+	passed = SUPPORT.check(P, "leaving the folder without entries", FileAccess.file_exists(cache.entry_path_for(live)), false) and passed
+	# An entry the index cannot name (one from before the index) cannot be checked, so it goes.
+	_open(live)
+	var index: Dictionary = cache._read_index()
+	index.erase(live.md5_text())
+	cache._write_index(index)
+	passed = SUPPORT.check(P, "an entry with no name in the index is dropped", cache.prune(), 1) and passed
+	for path: String in [gone, live, oldest]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	cache.clear()
 	return passed
 
 

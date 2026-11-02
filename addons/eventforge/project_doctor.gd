@@ -3208,6 +3208,15 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 		findings: Array[Dictionary]) -> void:
 	if sheet == null:
 		return
+	# The sheet may be the OPEN one, whose claims its rows made while their words were built: this
+	# scan clears and re-claims for its own read, then hands those claims back.
+	var live_facts: Dictionary = EventSheetPatternFacts.snapshot(sheet)
+	_scan_pattern_smells_fresh(sheet, sheet_path, findings)
+	EventSheetPatternFacts.restore(sheet, live_facts)
+
+
+static func _scan_pattern_smells_fresh(sheet: EventSheetResource, sheet_path: String,
+		findings: Array[Dictionary]) -> void:
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)
 	# The three notes that accuse a MISSING half, which is exactly what a claim
