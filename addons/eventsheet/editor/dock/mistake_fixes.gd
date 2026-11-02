@@ -624,12 +624,19 @@ static func _use_value(dock: Control, finding: Dictionary) -> bool:
 	return true
 
 
-## Opens the row's own parameters, on the event the finding is about.
+## Opens the row's own parameters, on the event the finding is about. Asked of the event itself: a function
+## whose body is one plain event has only its head row to click, and the head is not the event.
 static func _open_value(dock: Control, finding: Dictionary) -> bool:
-	var row_data: EventRowData = _row_of(dock, finding)
-	if row_data == null:
+	var event_row: EventRow = finding.get("event") as EventRow
+	if event_row == null:
 		return false
-	dock.get("_ace_apply")._on_viewport_ace_edit_requested(row_data, -1, {"kind": str(finding.get("lane", "")), "ace_index": int(finding.get("index", -1))})
+	_row_of(dock, finding)
+	var context: Dictionary = dock.get("_queries").build_ace_edit_context(event_row, -1,
+		{"kind": str(finding.get("lane", "")), "ace_index": int(finding.get("index", -1))})
+	var definition: ACEDefinition = context.get("definition", null)
+	if definition == null:
+		return false
+	dock.get("_ace_params").open_with_values(definition, context, context.get("existing_params", {}))
 	return true
 
 
@@ -637,9 +644,22 @@ static func _open_value(dock: Control, finding: Dictionary) -> bool:
 static func _row_of(dock: Control, finding: Dictionary) -> EventRowData:
 	var view: Variant = dock.call("_active_view")
 	var event_row: EventRow = finding.get("event") as EventRow
-	if view == null or event_row == null or not bool(view.call("reveal_resource", event_row)):
+	if view == null or event_row == null or not reveal_event(view, event_row, dock.get("_current_sheet") as EventSheetResource):
 		return null
 	return view.call("_row_at", int(view.get("_selected_row_index"))) as EventRowData
+
+
+## Selects an event's row. A function whose body is one plain event reads as its head row alone, so that event
+## has no row of its own and the head is what shows it.
+static func reveal_event(view: Variant, event_row: EventRow, sheet: EventSheetResource) -> bool:
+	if bool(view.call("reveal_resource", event_row)):
+		return true
+	if sheet == null:
+		return false
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).lane_event() == event_row:
+			return bool(view.call("reveal_resource", entry))
+	return false
 
 
 static func _go_to_variable(dock: Control, finding: Dictionary) -> bool:

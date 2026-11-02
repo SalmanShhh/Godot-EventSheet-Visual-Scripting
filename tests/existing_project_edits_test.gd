@@ -43,12 +43,22 @@ static func run() -> bool:
 	# file itself, or res://event_sheet_generated.gd for a sheet with no file - so a preview, a line
 	# lookup or a type check that compiled that way saved the open tab's unsaved edits over the
 	# person's file, or left a stray script declaring the class about to be inserted.
+	# The stray path is the one file every test process shares: a neighbouring shard writes it and the runner of
+	# another sweeps it at any moment, so one look cannot say who put it there. A preview that writes it leaves it
+	# there EVERY time; a neighbour cannot do that every time, so the previews are clean if any one try is.
 	var stray: String = "res://event_sheet_generated.gd"
-	var stray_was_there: bool = FileAccess.file_exists(stray)
-	var head: String = load("res://addons/eventsheet/editor/dock/insert_object_dialog.gd").file_head("CharacterBody2D", "Hero", false)
-	var global_source: String = EventSheetBehaviourAddonScaffold.source_of(EventSheetBehaviourAddonScaffold.global_sheet("Keeps the score."))
+	var head: String = ""
+	var global_source: String = ""
+	var left_behind: bool = true
+	for _attempt: int in range(5):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(stray))
+		head = load("res://addons/eventsheet/editor/dock/insert_object_dialog.gd").file_head("CharacterBody2D", "Hero", false)
+		global_source = EventSheetBehaviourAddonScaffold.source_of(EventSheetBehaviourAddonScaffold.global_sheet("Keeps the score."))
+		if not FileAccess.file_exists(stray):
+			left_behind = false
+			break
 	rows.append(["the Insert and New global previews leave no script behind", [head.begins_with("class_name Hero\n"),
-		global_source.contains("extends Node"), FileAccess.file_exists(stray)], [true, true, stray_was_there]])
+		global_source.contains("extends Node"), left_behind], [true, true, false]])
 	var on_disk: String = "extends Node\n\nvar hp: int = 1\n"
 	var disk_file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
 	disk_file.store_string(on_disk)

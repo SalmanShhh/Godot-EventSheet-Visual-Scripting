@@ -681,7 +681,7 @@ static func _refusals(sheet: EventSheetResource, lines: Array[Dictionary], typed
 			break
 		var functions: PackedStringArray = PackedStringArray()
 		for index: int in range(rest.size()):
-			functions.append("func __row_%d() -> void:\n%s" % [index, str(rest[index]["typed" if typed else "untyped"])])
+			functions.append("func __row_%d():\n%s" % [index, str(rest[index]["typed" if typed else "untyped"])])
 		var source: String = EventSheetGDScriptLint.build_probe_source("\n".join(functions), false, sheet, typed, declarations)
 		var probe_lines: PackedStringArray = source.split("\n")
 		var starts: PackedInt32Array = PackedInt32Array()

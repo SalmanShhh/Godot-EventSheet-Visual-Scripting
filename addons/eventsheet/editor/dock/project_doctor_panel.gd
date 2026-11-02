@@ -340,7 +340,9 @@ func _show_finding_row(finding: Dictionary) -> void:
 	var wanted: int = numbers.find_key(number) if numbers.find_key(number) != null else 0
 	var row: Object = instance_from_id(wanted) if wanted != 0 else null
 	var view: EventSheetViewport = _dock._active_view()
-	if view != null and row is Resource:
+	if view != null and row is EventRow:
+		load("res://addons/eventsheet/editor/dock/mistake_fixes.gd").reveal_event(view, row as EventRow, sheet)
+	elif view != null and row is Resource:
 		view.reveal_resource(row as Resource)
 	_dock._set_status(EventSheetL10n.translate("Row %d of %s.") % [number, path.get_file()])
 

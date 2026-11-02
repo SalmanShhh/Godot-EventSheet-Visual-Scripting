@@ -149,8 +149,11 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	if _dock._current_sheet == null:
 		return names
-	for key: Variant in _dock._current_sheet.variables.keys():
-		names.append(str(key))
+	# A sheet opened from a .gd keeps its variables as rows, an older one in its table: the row-kept ones are
+	# what a Variable dropdown offers on every written sheet.
+	for variable_name: String in EventSheetGDScriptLint._sheet_variable_names(_dock._current_sheet):
+		if not names.has(variable_name):
+			names.append(variable_name)
 	names.sort()
 	return names
 

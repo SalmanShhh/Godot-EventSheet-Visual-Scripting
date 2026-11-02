@@ -4156,7 +4156,9 @@ func colour_request_for(row_data: EventRowData, metadata: Dictionary, found: Dic
 		return {}
 	var zoom: float = maxf(_zoom_factor, 0.001)
 	var rect: Rect2 = found["rect"]
+	# Where the picker opens, in the coordinates a window opens in: the screen's, unless the editor embeds it.
 	var on_screen: Rect2 = get_global_transform() * Rect2(rect.position * zoom, rect.size * zoom)
+	on_screen.position += get_screen_position() - get_global_position()
 	return {"target": target, "param": str(mark.get("param", "")), "variable": str(mark.get("variable", "")),
 		"raw": str(mark.get("raw", "")), "alpha_slot": bool(mark.get("alpha_slot", true)),
 		"editable": bool(mark.get("editable", true)), "anchor": Rect2i(on_screen), "kind": kind,

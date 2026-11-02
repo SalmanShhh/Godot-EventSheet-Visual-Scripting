@@ -239,7 +239,7 @@ static func _read(sheet: EventSheetResource) -> Dictionary:
 	var walk: Dictionary = {
 		"rows": [] as Array[Dictionary], "variable_rows": [], "sheet_variables": {}, "signals": {},
 		"functions": {}, "connected": {}, "events": [] as Array[Dictionary], "text": "",
-		"verbatim": [], "behavior": sheet.behavior_mode, "host_class": sheet.host_class,
+		"verbatim": [], "behavior": sheet.behavior_mode, "host_class": sheet.host_class, "sheet": sheet,
 	}
 	_collect_declarations(sheet.events, walk)
 	for name_key: Variant in sheet.variables.keys():
@@ -647,6 +647,10 @@ static func _wrong_node_types(rows: Array[Dictionary], scene: Dictionary, walk: 
 				actual_class = actual
 		if verdicts.is_empty() or verdicts.has("unknown") or verdicts.has("fits"):
 			continue
+		# A row on the node itself that names a local of its body is about the local: `amount = 2` in a function
+		# with `var amount` reads like a verb's "set amount", and it asks the node for nothing.
+		if on_self and _is_a_local_name(culprit, walk):
+			continue
 		var event_row: EventRow = context["event"] as EventRow
 		var key: String = "%d|%s|%s" % [event_row.get_instance_id(), target, culprit]
 		if seen.has(key):
@@ -670,6 +674,12 @@ static func _wrong_node_types(rows: Array[Dictionary], scene: Dictionary, walk: 
 		var extra: Dictionary = {"to": better, "red": true, "member": culprit}
 		extra.merge(_door_keys(doors))
 		found.append(_finding(KIND_WRONG_NODE_TYPE, "error", event_row, node_label, sentence, "", "", context, extra))
+
+
+## True when any body of the sheet can call something by this name: a local, a loop's item, a parameter.
+static func _is_a_local_name(word: String, walk: Dictionary) -> bool:
+	return (walk.get("sheet") as EventSheetResource) != null \
+		and EventSheetGDScriptLint.scope_names_of(walk["sheet"] as EventSheetResource).has(word)
 
 
 ## The members of the node a row's template reaches through its "On node" slot: `{target.}play(&{anim})`

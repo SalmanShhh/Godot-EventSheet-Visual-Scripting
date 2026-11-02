@@ -21720,9 +21720,9 @@ func _note_colour_param(key: String, index: int, raw: String, shown: String, hin
 	var spelled_as_colour: bool = text.begins_with("Color.") or text.begins_with("Color(") or text.begins_with("Color8(")
 	if kind == EventSheetColourValue.KIND_COLOUR and (slot or spelled_as_colour):
 		var info: Dictionary = EventSheetColourValue.parse(text)
-		var words: String = shown
-		if not _viewport.is_reading_mode() and shown == raw:
-			words = EventSheetColourValue.read_info(info, text, EventSheetColourValue.project_reading(), true)
+		# Whichever way the row is read, a colour value says what the project asks colours to say: as written by
+		# default, and a form a reader chose reaches every row the same.
+		var words: String = EventSheetColourValue.read_info(info, text, EventSheetColourValue.project_reading(), true)
 		var colour: Color = info["color"]
 		_pending_colour_params.append({"key": key, "index": index, "shown": words, "kind": kind, "slot": slot,
 			"mark": {"param": key, "raw": text, "color": EventSheetColourValue.square_colour(colour),
@@ -21768,7 +21768,7 @@ func _colours_in_reading(ace: Resource, text: String) -> Dictionary:
 		if at < 0:
 			continue
 		var folded: bool = bool(info.get("folded", false))
-		var words: String = raw if folded else (said if _viewport.is_reading_mode() else EventSheetColourValue.read_info(info, raw, EventSheetColourValue.project_reading(), true))
+		var words: String = raw if folded else EventSheetColourValue.read_info(info, raw, EventSheetColourValue.project_reading(), true)
 		written = written.substr(0, at) + words + written.substr(at + said.length())
 		cursor = at + words.length()
 		marks.append({"param": str(key), "raw": raw, "color": EventSheetColourValue.square_colour(info["color"]),

@@ -28,6 +28,9 @@ static func run() -> bool:
 	ok = _zero_door() and ok
 	ok = _trigger_lane_door() and ok
 	ok = _a_door_pressed_after_an_edit_finds_the_live_row() and ok
+	ok = _a_local_is_not_a_member_the_node_lacks() and ok
+	ok = _a_wrong_kind_on_the_row() and ok
+	ok = _a_written_sheet_offers_its_variables() and ok
 	ROWS._put_the_fixture_back()
 	ok = _doctor_offers() and ok
 	ROWS._put_the_fixture_back()
@@ -341,6 +344,16 @@ static func _trigger_lane_door() -> bool:
 	return result
 
 
+## A hand-written `amount = 2` on a local reads like a verb's "set amount"; it asks the node for nothing.
+static func _a_local_is_not_a_member_the_node_lacks() -> bool:
+	var sheet: EventSheetResource = SUPPORT.reopen("extends Node\n\n\nfunc grow(level: int) -> float:\n\tvar amount: float = 1.0\n\tamount = amount * level\n\treturn amount\n", true, LEVEL)
+	sheet.external_source_path = LEVEL
+	var kinds: Array = []
+	for finding: Dictionary in EventSheetMistakeFindings.findings(sheet, LEVEL):
+		kinds.append(finding["kind"])
+	return SUPPORT.pins(TEST_NAME, [["the local is not called a member of the node", kinds.has("wrong-node-type"), false]])
+
+
 ## The funnel replaces every resource with a snapshot copy, so a finding read before an edit holds rows
 ## nobody is looking at any more. A door pressed then must find the live row, not write to a ghost.
 static func _a_door_pressed_after_an_edit_finds_the_live_row() -> bool:
@@ -365,6 +378,59 @@ static func _a_door_pressed_after_an_edit_finds_the_live_row() -> bool:
 	])
 	dock.free()
 	return result
+
+
+## The check the field runs, asked of every row: the row wears red, the strip has the sentence and Godot's own
+## words, the Doctor has the entry, and a right value says nothing at all.
+static func _a_wrong_kind_on_the_row() -> bool:
+	var source: String = "extends Node2D\n\nvar score: int = 0\nvar speed: float = 1.0\nvar label_text: String = \"\"\n\n\nfunc heal(amount: int) -> void:\n\tscore += amount\n\n\nfunc fine() -> void:\n\tscore = 3\n\tspeed = score * 2\n\tlabel_text = str(score)\n\theal(1)\n\n\nfunc wrong() -> void:\n\tscore = \"10\"\n\n\nfunc wrong_count() -> void:\n\theal(1, 2)\n"
+	var dock: EventSheetDock = _dock(source)
+	var kinds: Array = []
+	var subjects: Array = []
+	var words: String = ""
+	for finding: Dictionary in EventSheetMistakeFindings.findings(dock._current_sheet, LEVEL):
+		kinds.append(finding["kind"])
+		if finding["kind"] == EventSheetMistakeFindings.KIND_WRONG_KIND:
+			subjects.append(finding["subject"])
+			if words.is_empty():
+				words = str(finding["message"]) + "|" + str(finding.get("original", ""))
+	var row: EventRowData = ROWS._stamped(dock, EventSheetMistakeFindings.KIND_WRONG_KIND)
+	var red: bool = row != null and row.attention_severe
+	var labels: Array = _labels(row)
+	dock._update_row_help_strip(row)
+	var hover: String = dock._row_help_label.tooltip_text
+	_press(dock, EventSheetMistakeFindings.KIND_WRONG_KIND, 0)
+	var after: String = _compiled(dock)
+	var after_subjects: Array = []
+	for finding: Dictionary in EventSheetMistakeFindings.findings(dock._current_sheet, LEVEL):
+		if finding["kind"] == EventSheetMistakeFindings.KIND_WRONG_KIND:
+			after_subjects.append(finding["subject"])
+	var filed: Array[Dictionary] = EventSheetMistakeChecksDoctor.script_findings(LEVEL,
+		EventSheetMistakeFindings.findings(dock._current_sheet, LEVEL), EventSheetResource.margin_numbers(dock._current_sheet))
+	var doctor_check: bool = false
+	for finding: Dictionary in filed:
+		doctor_check = doctor_check or str(finding["check"]) == "value-of-the-wrong-kind"
+	var result: bool = SUPPORT.pins(TEST_NAME, [
+		["only the two wrong lines are found", subjects, ["score = \"10\"", "heal(1, 2)"]],
+		["the sentence is the field's, and Godot's words are kept", words, "score holds a whole number. \"10\" is text. Write a number, or an expression that gives a number.|Cannot assign a value of type \"String\" as \"int\"."],
+		["the row is red", red, true],
+		["the board's three doors", labels, ["Use 10", "Open the parameters", "Go to score"]],
+		["Godot's words are on the strip's hover", hover.contains("Cannot assign a value of type"), true],
+		["the door writes the value", after.contains("\tscore = 10\n"), true],
+		["and that row stops saying it, at once", after_subjects, ["heal(1, 2)"]],
+		["the Doctor has the entry", doctor_check, true],
+	])
+	dock.free()
+	return result
+
+
+## A sheet opened from a .gd holds its variables as rows. The parameters dialog asks this for its Variable
+## dropdown: empty, it read "No variables available" and refused every Set value on the sheet.
+static func _a_written_sheet_offers_its_variables() -> bool:
+	var dock: EventSheetDock = _dock("extends Node2D\n\nvar score: int = 0\nvar lives: int = 3\n")
+	var names: PackedStringArray = dock._variables._collect_sheet_variable_names()
+	dock.free()
+	return SUPPORT.pins(TEST_NAME, [["the dialog's list holds the variable rows", Array(names), ["lives", "score"]]])
 
 
 static func _doctor_offers() -> bool:
