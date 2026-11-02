@@ -25,6 +25,7 @@ const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
 const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+const SAVE_CHECKS_PATH := "res://addons/eventsheet/editor/dock/save_checks.gd"
 ## The list the public API keeps its lifecycle listeners on, in a file that names nothing: asking
 ## the API itself here would compile it, and everything it names, into the first open.
 const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
@@ -386,10 +387,13 @@ func _flag_parse_error_rows(sheet: EventSheetResource, resolved_path: String) ->
 		return
 	var errors: Array = EventSheetParseErrors.errors_for(sheet)
 	if errors.is_empty():
+		load(SAVE_CHECKS_PATH).set_engine_layer(sheet, [])
 		_dock._viewport.clear_row_diagnostics()
 		return
 	var source_map: Array = load(SHEET_COMPILER_PATH).compile(sheet, resolved_path).get("source_map", [])
-	_dock._viewport.set_row_diagnostics(EventSheetParseErrors.row_diagnostics(errors, source_map))
+	var marks: Array = EventSheetParseErrors.row_diagnostics(errors, source_map)
+	load(SAVE_CHECKS_PATH).set_engine_layer(sheet, marks)
+	_dock._viewport.set_row_diagnostics(marks)
 
 
 ## Opens a freshly-created .gd as an EDITABLE sheet tab, NOT the read-only preview a casual Open
@@ -417,6 +421,7 @@ func _open_new_sheet(path: String) -> void:
 ## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
 ## refuse to open a stale source when the sheet doesn't currently compile.
 func _save_backed_sheet() -> bool:
+	_last_warning_summary = ""
 	# The .gd IS the sheet on this path - it deserves the same backup ring a .tres save
 	# gets (pre-save bytes first; the ring dedups no-op saves so it doesn't churn).
 	EventSheetBackups.backup_sheet(_dock._current_sheet.external_source_path)
@@ -428,6 +433,10 @@ func _save_backed_sheet() -> bool:
 	_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	_dock._refresh_title_strip()
+	# The file is written: record the compiler's warnings and ask the engine (on a worker thread, so
+	# the save is not slowed) whether it still parses - the check that used to run only on open.
+	_last_warning_summary = _dock.save_checks().after_write(_dock._current_sheet,
+		_dock._current_sheet.external_source_path, compile_result)
 	# The project's one-line record of which vocabulary its sheets were last edited under. Nothing is
 	# written into the .gd - it is a plain script and stays one - and this only writes at all when the
 	# value would change, so a project file is touched once per version rather than once per save.
@@ -521,7 +530,8 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 	# an untouched sheet reproduces the file byte-identically).
 	if not _dock._current_sheet.external_source_path.is_empty():
 		if _save_backed_sheet():
-			_dock._set_status("Saved GDScript: %s" % _dock._current_sheet.external_source_path.get_file())
+			_dock._set_status("Saved GDScript: %s%s" % [_dock._current_sheet.external_source_path.get_file(),
+				_warning_tail()])
 			_refresh_documentation_for(_dock._current_sheet.external_source_path)
 			_reload_after_editor_save()
 		return
@@ -546,8 +556,16 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 		# play-testing can never hit a stale generated script. Export integrity still
 		# covers exports; this covers F5.
 		var compile_on_save: bool = bool(ProjectSettings.get_setting("eventsheets/editor/compile_on_save", true))
+		var warning_tail: String = ""
 		if compile_on_save:
 			var auto_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, "")
+			if bool(auto_result.get("success", false)):
+				# The script is written. Record what the compiler warned about, and ask the engine
+				# (off the main thread) whether the WHOLE script compiles - the row lint below only
+				# sees a row's own code, so a failure it cannot explain used to be dropped.
+				_last_warning_summary = _dock.save_checks().after_write(_dock._current_sheet,
+					load(SHEET_COMPILER_PATH)._resolve_output_path(_dock._current_sheet, ""), auto_result)
+				warning_tail = _warning_tail()
 			if not bool(auto_result.get("success", false)):
 				_dock._run_diagnostics()
 				# Friendly + actionable first (diagnostics just flagged + jumped to the bad row), with
@@ -560,11 +578,23 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 		var issue_count: int = _dock._run_diagnostics()
 		_dock._refresh_title_strip()
 		if issue_count > 0:
-			_dock._set_status("Saved: %s - %d row(s) need attention (jumped to the first)." % [save_path.get_file(), issue_count], true)
+			_dock._set_status("Saved: %s - %d row(s) need attention (jumped to the first).%s" % [save_path.get_file(), issue_count, warning_tail], true)
 		else:
-			_dock._set_status("Saved: %s" % save_path.get_file())
+			_dock._set_status("Saved: %s%s" % [save_path.get_file(), warning_tail])
 	else:
 		_dock._set_status("Save failed (error %d)." % err, true)
+
+
+## The compiler's warnings of the last write, as the one sentence the status line carries ("" when there
+## were none) - set by the save, read when it composes its message.
+var _last_warning_summary: String = ""
+
+
+## The compiler's warning count for the status line, after the sentence it follows: "" when the last
+## write had none, else " - N compiler warning(s) - the first: ..." (the amber rows and the Doctor's
+## inbox carry the rest).
+func _warning_tail() -> String:
+	return "" if _last_warning_summary.is_empty() else " - %s" % _last_warning_summary
 
 
 ## What a save costs this sheet's own documentation: its manual page rewritten and its entry in the

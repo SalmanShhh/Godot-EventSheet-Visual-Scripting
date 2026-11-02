@@ -9974,3 +9974,5 @@ An axis cannot be left blank.,Un asse non può restare vuoto.
 Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,Le espressioni non vengono controllate: la variabile del foglio %s ha lo stesso nome di un membro di %s. Rinominala per riattivare il controllo.
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,Le espressioni non vengono controllate: il codice di questo foglio non compila. Correggi prima il foglio per riattivare il controllo.
 compile check paused,controllo in pausa
+"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","Salvato, ma Godot non riesce a compilare lo script scritto da questo foglio: %s (riga %d di %s) - la riga di origine è contrassegnata."
+%d compiler warning(s) - the first: %s,%d avviso/i del compilatore - il primo: %s

@@ -29,6 +29,8 @@ const PARSE_ERRORS_META: String = "__parse_errors"
 
 ## path -> {"mtime": int, "errors": Array}. A file the user has not touched is never re-checked.
 static var _cache: Dictionary = {}
+## The cache is read and written by the open job's worker and by a save's check at the same time.
+static var _cache_lock: Mutex = Mutex.new()
 
 
 ## The engine's parse errors for a res:// script, as [{line: int, message: String}] sorted by line.
@@ -38,7 +40,9 @@ static func check_file(path: String) -> Array:
 	if not path.begins_with("res://") or not FileAccess.file_exists(path):
 		return []
 	var modified_time: int = FileAccess.get_modified_time(path)
-	var cached: Dictionary = _cache.get(path, {}) as Dictionary
+	_cache_lock.lock()
+	var cached: Dictionary = (_cache.get(path, {}) as Dictionary).duplicate()
+	_cache_lock.unlock()
 	if not cached.is_empty() and int(cached.get("mtime", -1)) == modified_time:
 		return (cached.get("errors", []) as Array).duplicate(true)
 	var executable: String = OS.get_executable_path()
@@ -55,7 +59,9 @@ static func check_file(path: String) -> Array:
 	var errors: Array = []
 	if exit_code != 0:
 		errors = parse_output("\n".join(PackedStringArray(output)), path)
+	_cache_lock.lock()
 	_cache[path] = {"mtime": modified_time, "errors": errors}
+	_cache_lock.unlock()
 	return errors.duplicate(true)
 
 

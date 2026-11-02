@@ -254,6 +254,10 @@ static func run() -> Dictionary:
 	# the shape of mistake that never surfaces on its own. Quiet on a sheet no scene runs and on a
 	# scene with no player in it - without a list to hold the row up against there is no evidence.
 	EventSheetFeedbackDoctor.ensure_registered()
+	# The Compiler section: the warnings the compiler returned the last time a sheet was written in this
+	# editor. They were only ever read by the MCP server; here they are in the inbox with the file in
+	# front, beside the amber the same sentence puts on the event it belongs to.
+	EventSheetCompilerWarningsDoctor.ensure_registered()
 	# The Shapes section: a row that marches a shape's dashes on a shape whose Dashed box is off.
 	# Scroll Dashes moves a pattern along and does not make one, so the offset climbs and the line
 	# sits still with nothing anywhere reporting it. Whether a shape is dashed is an Inspector fact,

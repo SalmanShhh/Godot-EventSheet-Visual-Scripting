@@ -9974,3 +9974,5 @@ An axis cannot be left blank.,Ось не может оставаться пус
 Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,"Выражения не проверяются на компилируемость: переменная листа %s называется так же, как член класса %s. Переименуйте её, чтобы вернуть проверку."
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,"Выражения не проверяются на компилируемость: собственный код этого листа не компилируется. Сначала исправьте лист, чтобы вернуть проверку."
 compile check paused,проверка приостановлена
+"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","Сохранено, но Godot не может скомпилировать скрипт, который пишет этот лист: %s (строка %d файла %s) - строка-источник помечена."
+%d compiler warning(s) - the first: %s,Предупреждений компилятора: %d - первое: %s

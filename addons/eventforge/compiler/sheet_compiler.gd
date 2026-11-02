@@ -222,6 +222,14 @@ static var _behavior_host_default: String = ""
 static var _compile_mutex: Mutex = Mutex.new()
 ## False while echo() compiles: the output is returned and written nowhere. Set under the lock.
 static var _writes_output: bool = true
+## The warnings of the compile under way that belong to ONE event, as [{uid, message}] - the same
+## sentences as result["warnings"], told which row they came from. Filled by _emit_event_body, which
+## claims every warning appended while an event wrote its lines; the sentences themselves (and so
+## every emitted byte) are untouched. Handed to the caller as result["warning_rows"].
+static var _warning_rows: Array = []
+## Which indexes of the running compile's warnings an event has already claimed, so a sub-event's
+## warning stays the sub-event's and is not claimed again by the event around it.
+static var _warning_claimed: Dictionary = {}
 ## The lines each class written inside the file emits, by the InnerClassRow's instance id: its body,
 ## written by echo() before the file around it and set here for that file's compile alone.
 static var _inner_class_lines: Dictionary = {}
@@ -302,7 +310,12 @@ static func _compile_locked(sheet: EventSheetResource, output_path: String, omit
 	var inner_class_lines: Dictionary = _write_inner_class_bodies(sheet)
 	_writes_output = writes
 	_inner_class_lines = inner_class_lines
+	_warning_rows = []
+	_warning_claimed = {}
 	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner, own_file)
+	locked_result["warning_rows"] = _warning_rows
+	_warning_rows = []
+	_warning_claimed = {}
 	_inner_class_lines = outer_inner_class_lines
 	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
 	for unresolved: String in ActionCodegen.unresolved_starting_values:
@@ -2589,6 +2602,10 @@ static func _emit_event_body(
 ) -> bool:
 	var had_body: bool = false
 	var indent: String = "\t".repeat(depth)
+	# The event whose lines are being written and where its warnings start, so the warnings it adds
+	# can be filed under it when the next turn of the loop (or the end of it) is reached.
+	var warned_event: EventRow = null
+	var warning_mark: int = warnings.size()
 	# True while the previous sibling ended an if/elif block at this depth, meaning an
 	# ELSE/ELIF sibling may legally chain onto it.
 	var chain_open: bool = false
@@ -2596,6 +2613,9 @@ static func _emit_event_body(
 	# next turn of this loop, or after it.
 	var closers_owed: Array = []
 	for event_item: Variant in events:
+		_claim_warnings(warnings, warning_mark, warned_event)
+		warned_event = null
+		warning_mark = warnings.size()
 		if not closers_owed.is_empty():
 			_emit_riding_fences(closers_owed, indent, lines, source_map)
 			closers_owed = []
@@ -2651,6 +2671,7 @@ static func _emit_event_body(
 		if not (event_item is EventRow):
 			continue
 		var event_row: EventRow = event_item as EventRow
+		warned_event = event_row
 		# An event that is off is left out - except in a sheet that is its own .gd, where it is the
 		# file's only copy: there it is written behind a false guard under OFF_ROW_MARKER and never
 		# runs. A connect read in place has no guard to sit behind (the connect IS the row), so it is
@@ -3056,8 +3077,22 @@ static func _emit_event_body(
 		# Else sibling chained onto the first and wrote `else:` twice in a row, which is a file that
 		# does not parse. An `elif` keeps the chain open, because more may still follow it.
 		chain_open = emitted_block and not (wants_chain and condition_texts.is_empty())
+	_claim_warnings(warnings, warning_mark, warned_event)
 	_emit_riding_fences(closers_owed, indent, lines, source_map)
 	return had_body
+
+
+## Files the warnings added since `from_index` under `event_row`, skipping any a deeper event already
+## claimed. Only the bookkeeping beside the warnings: no warning is added, changed or dropped.
+static func _claim_warnings(warnings: Array, from_index: int, event_row: EventRow) -> void:
+	if event_row == null:
+		return
+	for index: int in range(from_index, warnings.size()):
+		var claim: String = "%d|%s" % [index, str(warnings[index])]
+		if _warning_claimed.has(claim):
+			continue
+		_warning_claimed[claim] = true
+		_warning_rows.append({"uid": str(event_row.get_instance_id()), "message": str(warnings[index])})
 
 
 ## Rewrites an event's uses of its Static locals onto the members they were hoisted to, over the

@@ -149,6 +149,7 @@ const FINDINGS_RENAME := "rename"
 const FINDINGS_FEEDBACK := "feedback"
 const FINDINGS_INPUT := "input"
 const FINDINGS_INCLUDES := "includes"
+const FINDINGS_COMPILER := "compiler"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -12323,6 +12324,11 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# bar wears the amber for it; the sentence and the door live in the strip and in the
 				# Doctor's inbox, exactly as every other family's do.
 				_sheet_findings_cache[family] = EventSheetInputMapFacts.findings(sheet)
+			FINDINGS_COMPILER:
+				# What the compiler said about the events when this sheet was last written - the
+				# warnings it has always returned and nothing in the editor ever showed. Read from
+				# the record the last save made, never from a compile: a canvas does not pay for one.
+				_sheet_findings_cache[family] = EventSheetCompilerFindings.findings(sheet)
 			FINDINGS_RENAME:
 				# The rows a rename made somewhere else left pointing at nothing. The witness is
 				# built from the sheet's own file and the scene that runs it, and it answers with
@@ -12360,7 +12366,8 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 	var about: Array[Dictionary] = []
 	for family: String in [FINDINGS_MULTIPLAYER, FINDINGS_LIGHTING, FINDINGS_EFFECTS, FINDINGS_SPAWNING,
 			FINDINGS_PERFORMANCE, FINDINGS_COLLISIONS, FINDINGS_LAYERS, FINDINGS_TOOL_EDITS,
-			FINDINGS_SCENE_TRUST, FINDINGS_MIGRATION, FINDINGS_RENAME, FINDINGS_FEEDBACK]:
+			FINDINGS_SCENE_TRUST, FINDINGS_MIGRATION, FINDINGS_RENAME, FINDINGS_FEEDBACK,
+			FINDINGS_COMPILER]:
 		var found: Array[Dictionary] = []
 		match family:
 			FINDINGS_EFFECTS:

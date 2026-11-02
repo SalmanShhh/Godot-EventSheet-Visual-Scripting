@@ -9974,3 +9974,5 @@ An axis cannot be left blank.,축을 비워 둘 수 없습니다.
 Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,식의 컴파일 검사가 꺼져 있습니다. 시트 변수 %s 의 이름이 %s 의 멤버와 같습니다. 이름을 바꾸면 검사가 다시 켜집니다.
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,식의 컴파일 검사가 꺼져 있습니다. 이 시트 자체의 코드가 컴파일되지 않습니다. 먼저 시트를 고치면 검사가 다시 켜집니다.
 compile check paused,컴파일 검사 일시 중지
+"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","저장했지만 이 시트가 작성한 스크립트를 Godot이 컴파일할 수 없습니다: %s (%d번째 줄, %s) - 원인이 된 행에 표시했습니다."
+%d compiler warning(s) - the first: %s,컴파일러 경고 %d건 - 첫 번째: %s

@@ -9974,3 +9974,5 @@ An axis cannot be left blank.,坐标轴不能留空。
 Expressions are not being compile-checked: the sheet variable %s has the same name as a member of %s. Rename it to turn the check back on.,表达式未进行编译检查：工作表变量 %s 与 %s 的成员同名。重命名后即可恢复检查。
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,表达式未进行编译检查：此工作表自身的代码无法编译。请先修复工作表以恢复检查。
 compile check paused,编译检查已暂停
+"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.",已保存，但 Godot 无法编译此工作表生成的脚本：%s（第 %d 行，%s）- 已标记对应的行。
+%d compiler warning(s) - the first: %s,%d 条编译器警告 - 第一条：%s

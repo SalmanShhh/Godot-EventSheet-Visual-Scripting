@@ -78,6 +78,7 @@ const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
 const REPLACE_OBJECT_PATH := "res://addons/eventsheet/editor/dock/replace_object.gd"
 const RESCUE_TIPS_PATH := "res://addons/eventsheet/editor/rescue_tips.gd"
 const RUNTIME_ERROR_WORDS_PATH := "res://addons/eventsheet/editor/dock/runtime_error_words.gd"
+const RUNTIME_ERROR_LOCATOR_PATH := "res://addons/eventsheet/editor/dock/runtime_error_locator.gd"
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
 const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
 const SHEET_EXPORT_PATH := "res://addons/eventsheet/editor/dock/sheet_export.gd"
@@ -1811,6 +1812,9 @@ func _notification(what: int) -> void:
 		_release_ace_sources()
 		# A .gd still opening: join its worker before the job (and its Thread) is freed with us.
 		_sheet_io._abandon_open_job()
+		# And a save's engine check, if one is still running, for the same reason.
+		if _save_checks != null:
+			_save_checks.join()
 		# The Scene dock outlives this dock: a selection_changed connection left behind would call
 		# into a freed Control on the reader's very next click there.
 		if _scene_link != null:
@@ -3741,6 +3745,7 @@ func report_runtime_error(message: String, script_path: String, line: int = 0) -
 	var report: Dictionary = words.report(message, script_path,
 		int(located.get("event_number", 0)), str(located.get("reading", "")))
 	report["row_resource"] = located.get("resource")
+	report["tab_index"] = int(located.get("tab_index", -1))
 	report["line"] = line
 	_runtime_error_report = report
 	for output_line: String in words.output_lines(report):
@@ -3761,19 +3766,48 @@ func report_runtime_error(message: String, script_path: String, line: int = 0) -
 ## than a refusal: a failure in a file this tab is not showing still gets its sentence, it just has
 ## less of an address in front of it.
 func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
-	var located: Dictionary = {"resource": null, "event_number": 0, "reading": ""}
+	var located: Dictionary = {"resource": null, "event_number": 0, "reading": "", "tab_index": -1}
 	var view: EventSheetViewport = _active_view()
 	if view == null or line <= 0:
 		return located
 	var wanted: String = script_path.strip_edges()
-	if not wanted.is_empty() and not _current_sheet_path.is_empty() \
-			and wanted.get_file() != _current_sheet_path.get_file():
+	# The sheet whose script the error names - ANY open tab, not only the one on screen. A path that no
+	# tab wrote falls back to the tab on screen, as it always did, unless that tab's file name says the
+	# error is about some other script.
+	var locator: Script = load(RUNTIME_ERROR_LOCATOR_PATH)
+	var tab_index: int = locator.tab_for(_open_tabs, wanted)
+	if tab_index < 0:
+		if not wanted.is_empty() and not _current_sheet_path.is_empty() \
+				and wanted.get_file() != _current_sheet_path.get_file():
+			return located
+		tab_index = _active_tab_index
+	var tab_sheet: EventSheetResource = _current_sheet if tab_index == _active_tab_index \
+		else (_open_tabs[tab_index] as Dictionary).get("sheet") as EventSheetResource
+	if tab_sheet == null:
 		return located
-	for entry: Variant in EventSheetLineRowMapper.entries_for_line(_code_source_map, line):
+	located["tab_index"] = tab_index
+	# The map is computed on demand, so it is there with the Code panel closed and for a tab the reader
+	# is not looking at; a sheet edited since its file was written has no row to point at.
+	var unsaved: bool = _dirty if tab_index == _active_tab_index \
+		else bool((_open_tabs[tab_index] as Dictionary).get("dirty", false))
+	var mapped: Dictionary = locator.source_map_for(tab_sheet, unsaved)
+	if bool(mapped.get("stale", false)):
+		return located
+	var entries: Array = EventSheetLineRowMapper.entries_for_line(mapped.get("map", []), line)
+	# The map the Code panel last compiled still answers for the tab on screen when the fresh one has no
+	# row for the line (the panel compiles a debug build's extra lines the plain echo does not).
+	if entries.is_empty() and tab_index == _active_tab_index:
+		entries = EventSheetLineRowMapper.entries_for_line(_code_source_map, line)
+	for entry: Variant in entries:
 		var resource: Resource = instance_from_id(
 			int(str((entry as Dictionary).get("uid", "0")))) as Resource
 		if resource == null:
 			continue
+		if tab_index != _active_tab_index:
+			# A row of a tab on another page: it has no rows on screen to read, so the address is the
+			# resource and the tab; Jump brings the tab forward and selects it there.
+			located["resource"] = resource
+			return located
 		for flat: Variant in view.get_flat_rows():
 			var row_data: EventRowData = (flat as Dictionary).get("row")
 			if row_data == null or row_data.source_resource != resource:
@@ -3821,6 +3855,10 @@ static func row_reading(row_data: EventRowData) -> String:
 ## Jump to event: the deep-link that already existed, aimed at the row the failure came from.
 func _jump_to_runtime_error_row() -> void:
 	var resource: Variant = _runtime_error_report.get("row_resource")
+	# The error may belong to a sheet on another tab: bring that tab forward first.
+	var report_tab: int = int(_runtime_error_report.get("tab_index", -1))
+	if resource != null and report_tab >= 0 and report_tab != _active_tab_index and report_tab < _open_tabs.size():
+		_activate_tab(report_tab)
 	var view: EventSheetViewport = _active_view()
 	if resource == null or view == null:
 		goto_generated_line(int(_runtime_error_report.get("line", 0)))
@@ -4792,6 +4830,19 @@ func _open_project_doctor() -> void:  # Tools menu (id 7)
 	_doctor.open()
 
 
+## What a save learns about the file it wrote (the engine's check of the whole script, the compiler's
+## warnings), built the first time a save needs it.
+const SAVE_CHECKS_PATH := "res://addons/eventsheet/editor/dock/save_checks.gd"
+var _save_checks: RefCounted = null
+
+
+func save_checks() -> RefCounted:
+	if _save_checks == null:
+		_save_checks = load(SAVE_CHECKS_PATH).new()
+		_save_checks.init(self)
+	return _save_checks
+
+
 ## Runs EventSheetDiagnostics over the current sheet, paints per-row error markers on the active
 ## view, and jumps to the first flagged row. Returns the flagged-row count. The "error → row"
 ## deep-link: a bad ƒx expression or GDScript block lands you ON the offending row, not a status
@@ -4803,7 +4854,11 @@ func _run_diagnostics() -> int:
 	if view == null:
 		return 0
 	var diagnostics: Array = load(DIAGNOSTICS_PATH).analyze(_current_sheet, _ace_registry)
-	var count: int = view.set_row_diagnostics(diagnostics)
+	# The lint's marks and the engine's (a save's whole-script check) are painted together: a row the
+	# lint could only call "does not compile" takes the engine's sentence, and rows only the engine
+	# could place keep their mark.
+	load(SAVE_CHECKS_PATH).set_lint_layer(_current_sheet, diagnostics)
+	var count: int = view.set_row_diagnostics(load(SAVE_CHECKS_PATH).merged_diagnostics(_current_sheet))
 	if count > 0:
 		view.reveal_and_select_first_diagnostic()
 	# Push the result to the banner's health chip - save-time / on-demand only, so the chip

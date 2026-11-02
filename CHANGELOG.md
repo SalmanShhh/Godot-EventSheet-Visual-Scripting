@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed: a save no longer drops what it learned about the file it wrote, and runtime errors find their row without the Code panel
+
+- After a save, the engine's own verdict on the whole script the sheet wrote is read on a worker thread (a second Godot parses the file, about 0.4 s, cached by file time, so the save itself is not slowed). A failure no row's lint explained - a template's output, a pasted block - now marks the row that wrote the failing line (the red marker, whose hover is the engine's sentence) and the status line says the engine's words with the line. The lint's generic "does not compile" on a row is replaced by the engine's reason when it names the same row.
+- A sheet that is a .gd had its parse check only on open; the same check now re-runs after every save and refreshes the row marks and the head bar's count.
+- The compiler's warnings (it always returned them; only the MCP server read them) now set the quiet amber state on the event they belong to (`warning_rows` beside the unchanged `warnings` list, emitted bytes untouched), are counted on the status line after a save, and are listed in the Doctor under Compiler.
+- A runtime error from the running game is mapped to its row for ANY open sheet, with the Code panel closed: the tab whose script the error names is found, its source map is computed on demand (kept while the file is unchanged), and Jump to event brings that tab forward. A sheet edited since its file was written points at no row rather than the wrong one. The game still reports errors only through the debug build's announce, so this works for a game started from the editor; nothing is added to emitted code.
+
 ### Fixed: a row that got its words as it came into view was drawn into a height that did not fit it
 
 - Since rows past the first screenful build their words lazily (every shipped pack, not only sheets over 1,500 rows), their height was a guess from the line count, which knows nothing of a cell that wraps or of the add lines a resting or inert row hides - and a row's height was never measured again once its words arrived. In a real editor at 760 px the fps controller pack drew "capture_mouse_on_re" cut off under the next row and long actions clipped mid-sentence; measured headless at a 640 px canvas, 65 of its 74 lazy rows had a guessed height that was not their built one. The rows a draw is about to paint are now measured again with their words and the rows below move by what they gained (`settle_built_rows`), and the sheet-as-one-picture export measures every row before it reads the total height.
