@@ -390,6 +390,12 @@ func can_redress_fold(row_data: EventRowData) -> bool:
 	if row_data.source_resource is CustomBlockRow:
 		return row_data.row_type == EventRowData.RowType.REGION and row_data.has_meta("region_fold_key") \
 			and not EventSheetRegionFacts.is_closing_fence(row_data.source_resource)
+	# A code card ("Script block - 12 lines") builds its opened code as its one child whether it is
+	# folded or not, and says the same words either way: the fold only decides whether that child
+	# shows, which the flatten already honours.
+	if row_data.source_resource is RawCodeRow:
+		return row_data.row_type == EventRowData.RowType.SECTION and row_data.children.size() == 1 \
+			and row_data.children[0].row_uid == "%s_code" % row_data.row_uid
 	return false
 
 

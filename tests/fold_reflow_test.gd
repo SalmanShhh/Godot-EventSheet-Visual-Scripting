@@ -25,6 +25,8 @@ const SHEETS: Array[String] = [
 	# Events whose head is a slice of a split ternary: the row the reader folds is built afresh.
 	"res://demo/showcase/platformer_shooter/platformer_shooter.gd",
 	"res://eventsheet_addons/idle_generator/idle_generator_behavior.gd",
+	# A pack read as a page: its folds are code cards (a script block that opens to its lines).
+	"res://eventsheet_addons/juice/juice_behavior.gd",
 ]
 ## A region around two functions, one of them folded by default: the opener names what it holds.
 const REGION_SOURCE := """extends Node
@@ -52,6 +54,7 @@ static func run() -> bool:
 	var reflowed_groups: int = 0
 	var reflowed_events: int = 0
 	var reflowed_regions: int = 0
+	var reflowed_cards: int = 0
 	var full_rebuilds: int = 0
 	var rows_checked: int = 0
 	var sources: Array = []
@@ -63,6 +66,8 @@ static func run() -> bool:
 	for source_entry: Array in sources:
 		var path: String = str(source_entry[0])
 		var sheet: EventSheetResource = _authored_groups() if source_entry[1] == null else SUPPORT.reopen(str(source_entry[1]), true, path)
+		if path.get_file() == "juice_behavior.gd":
+			sheet.read_only = true  # opened to be read, as a pack is: its script blocks fold to code cards
 		var reflow_view: EventSheetViewport = _view_of(sheet)
 		var full_view: EventSheetViewport = _view_of(sheet)
 		# A selection the folds must keep on the same rows.
@@ -82,12 +87,15 @@ static func run() -> bool:
 			var kind_is_group: bool = reflow_row.source_resource is EventGroup
 			var kind_is_event: bool = reflow_row.source_resource is EventRow or reflow_row.source_resource is EventFunction
 			var kind_is_region: bool = reflow_row.row_type == EventRowData.RowType.REGION
+			var kind_is_card: bool = reflow_row.source_resource is RawCodeRow
 			reflow_view._folding.toggle_row_fold_by_uid(target_uid)
 			var reflowed: bool = reflow_view.row_builds() == builds_before
 			if reflowed and kind_is_group:
 				reflowed_groups += 1
 			elif reflowed and kind_is_region:
 				reflowed_regions += 1
+			elif reflowed and kind_is_card:
+				reflowed_cards += 1
 			elif reflowed and kind_is_event:
 				reflowed_events += 1
 			elif not reflowed:
@@ -114,9 +122,10 @@ static func run() -> bool:
 
 	ok = SUPPORT.check(TEST_NAME, "groups were folded by reflow", reflowed_groups > 0, true) and ok
 	ok = SUPPORT.check(TEST_NAME, "regions were folded by reflow", reflowed_regions > 0, true) and ok
+	ok = SUPPORT.check(TEST_NAME, "code cards were folded by reflow", reflowed_cards > 0, true) and ok
 	ok = SUPPORT.check(TEST_NAME, "events were folded by reflow", reflowed_events > 0, true) and ok
 	ok = SUPPORT.check(TEST_NAME, "rows were compared", rows_checked > 0, true) and ok
-	print("fold_reflow_test: reflow groups=%d regions=%d events=%d full=%d rows=%d" % [reflowed_groups, reflowed_regions, reflowed_events, full_rebuilds, rows_checked])
+	print("fold_reflow_test: reflow groups=%d regions=%d cards=%d events=%d full=%d rows=%d" % [reflowed_groups, reflowed_regions, reflowed_cards, reflowed_events, full_rebuilds, rows_checked])
 	return ok
 
 
@@ -199,6 +208,10 @@ static func _full_rebuild_sweep(view: EventSheetViewport, folded: bool) -> void:
 
 ## One line per flat row: everything a fold could get wrong about it.
 static func _shape(view: EventSheetViewport) -> PackedStringArray:
+	# A large sheet measures a row from its line count until the row's words are built, and a fold keeps
+	# the words it built while a full rebuild starts over, so both are settled before they are compared:
+	# what is pinned is the rows' final heights, not the estimate on the way there.
+	view.settle_all_row_heights()
 	var lines := PackedStringArray()
 	for index: int in range(view.get_total_row_count()):
 		var row_data: EventRowData = view._row_at(index)
