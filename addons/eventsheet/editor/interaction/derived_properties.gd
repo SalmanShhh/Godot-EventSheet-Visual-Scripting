@@ -50,6 +50,7 @@ class_name EventSheetDerivedProperties
 extends RefCounted
 
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
 
 ## `<class>|<script path>|<property>` -> what that property is. One entry per property a file
 ## actually writes or asks about, so a sheet pays for the properties in front of the reader.
@@ -222,7 +223,7 @@ static func _read_property(class_text: String, script_path: String, property: St
 	var engine_class: String = ""
 	while not path.is_empty() and not seen.has(path):
 		seen[path] = true
-		var declared: Dictionary = EventSheetScriptMembers.of_script(path)
+		var declared: Dictionary = load(SCRIPT_MEMBERS_PATH).of_script(path)
 		for entry: Variant in (declared.get("properties", []) as Array):
 			var member: Dictionary = entry
 			if str(member.get("name", "")) != property:

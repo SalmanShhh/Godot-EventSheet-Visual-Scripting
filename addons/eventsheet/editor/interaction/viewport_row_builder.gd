@@ -19317,7 +19317,7 @@ static func reads_as_one_call(code: String) -> bool:
 	var lines: PackedStringArray = code.split("\n")
 	return not is_comment_only_block(lines) and data_literal_info(code).is_empty() \
 		and is_single_statement(code) and undo_step_parts(code).is_empty() \
-		and not EventSheetInlineFunctions.folded(code).is_empty()
+		and not load(INLINE_FUNCTIONS_PATH).folded(code).is_empty()
 
 
 ## The span for a statement that hands a function written over several lines to a call: the call read
@@ -19330,9 +19330,9 @@ func _append_inline_function_spans(spans: Array, raw: RawCodeRow, action_index: 
 	# Spelled as its one-line twin first, so a reading that knows that twin (Sort by, Total of) says
 	# the same thing about both; any other call shows the function without the word `return`.
 	var one_line: RawCodeRow = RawCodeRow.new()
-	one_line.code = EventSheetInlineFunctions.folded(raw.code, true)
+	one_line.code = load(INLINE_FUNCTIONS_PATH).folded(raw.code, true)
 	if statement_sentence(one_line.code, sentence_context()).is_empty():
-		one_line.code = EventSheetInlineFunctions.folded(raw.code)
+		one_line.code = load(INLINE_FUNCTIONS_PATH).folded(raw.code)
 	one_line.enabled = raw.enabled
 	if _append_sentence_spans(spans, one_line, action_index, line_index, action_style_meta):
 		return true
@@ -21173,6 +21173,7 @@ func _message_owner_label(provider_id: String, ace_id: String, params: Dictionar
 ## The pattern name a light row is evidence of - the same one the reading claims for the
 ## hand-written line, so a lit file claims it whichever way its lines came in.
 const LIGHTING_PATTERN := "lighting"
+const INLINE_FUNCTIONS_PATH: String = "res://addons/eventsheet/editor/interaction/inline_functions.gd"
 
 
 ## The lighting class a verb is hosted on, or "" when it is not one of this vocabulary's

@@ -41,6 +41,13 @@
 - A vector's axis boxes get the same structural and compile check an expression field gets: a bad axis tints red as it is typed and blocks OK, and a blank axis (which wrote `Vector2(, 3)`) is refused.
 - The sheet's inline value editor and the Properties bar ask the dialog's own gate (`blocking_problem_for`) before writing: a refused value keeps its text, shows the reason under the field or on the status line, writes nothing, and Esc still cancels.
 - A code box's completion popup shows each suggestion's type or description after its name ("hp    int"), as the sheet's other completion popup does; the inserted text is still the exact name.
+### Changed: the first sheet open compiles about 37 fewer scripts, and the first-run welcome no longer compiles the picker and the Doctor
+
+- The block-kind scan followed a pack script's `extends` one hop and loaded anything that extended another script, so the vector shapes and post effects (28 scripts, about 5,500 lines) were compiled on every editor build only to learn they are not block kinds. It now follows the chain by reading text down to an engine class (`tests/lift_perf_test.gd` pins a shape false and the demo note block true).
+- The refactor menu named Wrap, Inline and Duplicate as Variant as classes, which compiled them and the snippet and paste readers behind them when the context menus were built; they load by path where a gesture asks. Six readers only an action reaches (shader dials, file arguments, script members, sheet descriptions and prose, one-line function folding) load by path too.
+- The welcome window's tour, preferences and docs buttons named the public API class, which compiled the picker, the parameters dialog and the whole Doctor (about 20,000 lines) on a project's first open. They reach it by path now.
+- Findings: the scripts loaded by the end of a first open fall from 444 to 406 (186,000 to 178,000 lines) in a bare process, and from 479 to 442 in the real editor. Wall time moved less than the machine's noise (small sheet median 21.9 s -> 21.4 s), because the other 94% of the compiled code is called during the open.
+- `tests/cold_boot_probe.gd` now keeps these scripts, and everything the welcome window would pull in, out of the loaded set.
 
 ### Fixed: three showcases no longer add nodes inside the physics step
 

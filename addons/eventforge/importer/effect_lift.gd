@@ -44,6 +44,7 @@ const MARK: String = "material"
 const FIXTURE_NODE: String = "$Aura"
 const FIXTURE_DIAL: String = "glow"
 const FIXTURE_SHADER: String = "res://tests/fixtures/effect_glow.gdshader"
+const SHADER_UNIFORMS_PATH: String = "res://addons/eventforge/importer/shader_uniforms.gd"
 
 ## Node reference -> the wearing node it names, for the file being lifted: every material-wearing
 ## node of its scenes, plus every variable the file declares that holds one. Filled once per lift,
@@ -153,7 +154,7 @@ static func _turns_a_declared_dial(captures: Dictionary) -> bool:
 	var wearer: Dictionary = wearer_of(str(captures.get("target", "")))
 	if wearer.is_empty():
 		return false
-	return EventForgeShaderUniforms.declares(str(wearer.get("shader_path", "")),
+	return load(SHADER_UNIFORMS_PATH).declares(str(wearer.get("shader_path", "")),
 		str(captures.get(V.DIAL_PARAM, "")))
 
 

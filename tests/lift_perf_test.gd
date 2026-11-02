@@ -141,6 +141,13 @@ static func _pin_block_kind_prefilter() -> bool:
 	var passed: bool = true
 	passed = _check("a pack extending an engine class is not loaded by the block-kind scan",
 		EventSheetBlockRegistry._could_extend_block_kind(ENGINE_BASE_PACK), false) and passed
+	# And a script whose base is ANOTHER script is followed down its chain by text: the vector shapes
+	# extend a pack base class that extends Node2D, so none of them can be a kind and none is loaded;
+	# the demo note block extends the block kind base itself, so it is.
+	passed = _check("a pack extending a pack base that ends at an engine class is not loaded",
+		EventSheetBlockRegistry._could_extend_block_kind("res://eventsheet_addons/vector_shapes/shape_disc_2d.gd"), false) and passed
+	passed = _check("a pack extending the block kind base is still loaded",
+		EventSheetBlockRegistry._could_extend_block_kind("res://eventsheet_addons/demo_note_block.gd"), true) and passed
 	# The prefilter must never hide a real kind. Checked by MEMBERSHIP, not by the whole list: other
 	# tests in the same run register their own kinds into the same process-wide registry.
 	var ids: PackedStringArray = PackedStringArray()

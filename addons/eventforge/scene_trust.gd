@@ -133,6 +133,7 @@ const BUILDING_MAKERS: PackedStringArray = ["Object(", "Resource("]
 ## and carries on there. Decoding the escapes would be a second copy of the engine's parser, kept in
 ## step by hope. Refusing the glyph is the same answer in one line, and unfamiliar is not cleared.
 const ESCAPE_GLYPH := "\\"
+const OUTSIDE_PATHS_PATH: String = "res://addons/eventforge/outside_paths.gd"
 
 
 ## The scene paths one line builds, as the expressions they are written as, in the order they appear.
@@ -143,8 +144,8 @@ static func loaded_scene_paths(line: String) -> PackedStringArray:
 	for call_text: String in LOAD_CALLS:
 		var at: int = _call_at(line, call_text)
 		while at >= 0:
-			var argument: String = EventForgeOutsidePaths.first_argument(
-				EventForgeOutsidePaths.arguments_after(line, at + call_text.length()))
+			var argument: String = load(OUTSIDE_PATHS_PATH).first_argument(
+				load(OUTSIDE_PATHS_PATH).arguments_after(line, at + call_text.length()))
 			if names_a_scene(argument) and not found.has(argument):
 				found.append(argument)
 			at = _call_at(line, call_text, at + call_text.length())
@@ -185,8 +186,8 @@ static func untrusted_code_file_paths(line: String) -> PackedStringArray:
 	for call_text: String in LOAD_CALLS:
 		var at: int = _call_at(line, call_text)
 		while at >= 0:
-			var argument: String = EventForgeOutsidePaths.first_argument(
-				EventForgeOutsidePaths.arguments_after(line, at + call_text.length()))
+			var argument: String = load(OUTSIDE_PATHS_PATH).first_argument(
+				load(OUTSIDE_PATHS_PATH).arguments_after(line, at + call_text.length()))
 			if names_a_code_file(argument) and not found.has(argument) \
 					and outside_the_games_own(argument):
 				found.append(argument)
@@ -222,7 +223,7 @@ static func guarded_paths(text: String) -> PackedStringArray:
 	var mark: String = HELPER_NAME + "("
 	var at: int = text.find(mark)
 	while at >= 0:
-		var argument: String = EventForgeOutsidePaths.first_argument(EventForgeOutsidePaths.arguments_after(text, at + mark.length()))
+		var argument: String = load(OUTSIDE_PATHS_PATH).first_argument(load(OUTSIDE_PATHS_PATH).arguments_after(text, at + mark.length()))
 		if not argument.is_empty() and not asked.has(argument) and _stands_as_a_requirement(text, at):
 			asked.append(argument)
 		at = text.find(mark, at + mark.length())

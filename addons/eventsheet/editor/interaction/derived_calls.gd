@@ -51,6 +51,7 @@ const SOURCE_NODE: String = "node"
 const SOURCE_DECLARED: String = "declared"
 const SOURCE_AUTOLOAD: String = "autoload"
 const SOURCE_CLASS: String = "class"
+const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
 
 ## `<class>|<script path>|<method>` -> what that method is. One entry per method a file actually
 ## calls, so a sheet pays for the methods in front of the reader rather than for every method in the
@@ -270,7 +271,7 @@ static func _read_method(class_text: String, script_path: String, method: String
 	var engine_class: String = ""
 	while not path.is_empty() and not seen.has(path):
 		seen[path] = true
-		var declared: Dictionary = EventSheetScriptMembers.of_script(path)
+		var declared: Dictionary = load(SCRIPT_MEMBERS_PATH).of_script(path)
 		for entry: Variant in (declared.get("methods", []) as Array):
 			var member: Dictionary = entry
 			if str(member.get("name", "")) != method:

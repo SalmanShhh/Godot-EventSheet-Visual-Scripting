@@ -42,6 +42,7 @@ const MAX_PASSES: int = 8
 
 ## How a material writes down a dial it has moved off the shader's own default.
 const PARAMETER_PREFIX: String = "shader_parameter/"
+const SHADER_UNIFORMS_PATH: String = "res://addons/eventforge/importer/shader_uniforms.gd"
 
 ## script path -> the wearing nodes of its scenes. Session-lifetime, shared by every asker.
 static var _cache: Dictionary = {}
@@ -143,7 +144,7 @@ static func reference_key_of(written: String) -> String:
 ## answer that leaves the ordinary value field in charge.
 static func dial_declaration(script_path: String, reference: String, dial_name: String) -> Dictionary:
 	var shader_path: String = shader_of(script_path, reference)
-	return {} if shader_path.is_empty() else EventForgeShaderUniforms.find(shader_path, dial_name)
+	return {} if shader_path.is_empty() else load(SHADER_UNIFORMS_PATH).find(shader_path, dial_name)
 
 
 ## Drops every cache. The editor calls this when the filesystem changes; tests call it between
@@ -175,7 +176,7 @@ static func _wearer(node: Dictionary, held: String, scene_path: String, host_pat
 		"material": held,
 		"material_path": material_path,
 		"shader_path": shader_path,
-		"dials": EventForgeShaderUniforms.for_shader(shader_path),
+		"dials": load(SHADER_UNIFORMS_PATH).for_shader(shader_path),
 		"properties": node.get("properties", {}),
 		"parameters": _overridden_dials(held, material_path, inside)
 	}

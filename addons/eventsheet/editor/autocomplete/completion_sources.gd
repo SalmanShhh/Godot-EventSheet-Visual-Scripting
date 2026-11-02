@@ -187,6 +187,8 @@ const CACHE_LIMIT: int = 120
 ## the project rather than with the sheet, and a reader picking a texture is not helped by the
 ## ten-thousandth one.
 const FILE_LIMIT: int = 4000
+const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
+const SHADER_UNIFORMS_PATH: String = "res://addons/eventforge/importer/shader_uniforms.gd"
 
 ## "<sheet instance>|<kind>" -> the built list, and the order those keys were built in (oldest
 ## first) so the cap drops the least recently built.
@@ -384,9 +386,9 @@ static func _function_detail(event_function: EventFunction) -> String:
 ## at run time keeps its typed string, and a guessed list would be worse than none.
 static func _method_entries(sheet: EventSheetResource, target: String) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	for member: Dictionary in EventSheetScriptMembers.methods_for(sheet, target):
+	for member: Dictionary in load(SCRIPT_MEMBERS_PATH).methods_for(sheet, target):
 		entries.append({"text": str(member["name"]),
-			"detail": EventSheetScriptMembers.detail_of(member), "kind": KIND_MEMBER})
+			"detail": load(SCRIPT_MEMBERS_PATH).detail_of(member), "kind": KIND_MEMBER})
 	return entries
 
 
@@ -592,7 +594,7 @@ static func _dial_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			entries.append({
 				"text": dial_name,
 				"detail": "%s %s %s" % [shader_path.get_file(), SEPARATOR,
-					EventForgeShaderUniforms.reading(dial as Dictionary)],
+					load(SHADER_UNIFORMS_PATH).reading(dial as Dictionary)],
 				"kind": KIND_DIAL,
 			})
 	return entries

@@ -20,6 +20,7 @@ signal add_requested
 ## The row kinds `function_rows` returns.
 const KIND_SHEET: String = "sheet"
 const KIND_CODE: String = "code"
+const SHEET_DESCRIPTIONS_PATH: String = "res://addons/eventsheet/editor/self_doc/sheet_descriptions.gd"
 
 ## The function list itself: column 0 the icon and the name, column 1 the count. A sheet function's
 ## row carries {"kind": "sheet", "index": <its index in sheet.functions>} as its metadata, a code
@@ -181,7 +182,7 @@ static func function_rows(sheet: EventSheetResource) -> Array:
 		if function == null:
 			continue
 		var calls: int = int(calls_by_name.get(function.function_name, 0))
-		var description: String = EventSheetDescriptions.display(EventSheetDescriptions.for_function(function))
+		var description: String = load(SHEET_DESCRIPTIONS_PATH).display(load(SHEET_DESCRIPTIONS_PATH).for_function(function))
 		var signature: String = signature_of(function)
 		rows.append({
 			"kind": KIND_SHEET,

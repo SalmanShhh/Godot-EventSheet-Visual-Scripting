@@ -81,6 +81,8 @@ const RUNTIME_ERROR_WORDS_PATH := "res://addons/eventsheet/editor/dock/runtime_e
 const RUNTIME_ERROR_LOCATOR_PATH := "res://addons/eventsheet/editor/dock/runtime_error_locator.gd"
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
 const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
+const SHADER_UNIFORMS_PATH: String = "res://addons/eventforge/importer/shader_uniforms.gd"
 const SHEET_EXPORT_PATH := "res://addons/eventsheet/editor/dock/sheet_export.gd"
 const SHEET_MAP_PANEL_PATH := "res://addons/eventsheet/editor/dock/sheet_map_panel.gd"
 const STARTER_EVENTS_PATH := "res://addons/eventsheet/editor/dock/starter_events.gd"
@@ -1180,7 +1182,7 @@ func _on_translations_maybe_changed() -> void:
 	# a uniform renamed in the shader has to reach the rows naming it, and the project-wide "who else
 	# wears this file" scan has to start again rather than answer with yesterday's scenes.
 	EventSheetSceneEffects.clear_cache()
-	EventForgeShaderUniforms.clear_cache()
+	load(SHADER_UNIFORMS_PATH).clear_cache()
 	EventSheetProjectShareIndex.clear_cache()
 	# And what a FIELD can be completed with. Half of those lists are answers about the project - the
 	# Input Map, the node groups, the scene's nodes, the project's classes and its files - so a file
@@ -1191,7 +1193,7 @@ func _on_translations_maybe_changed() -> void:
 	# the signals a Connect Signal one does. Entries are keyed by the file's identity, so a saved
 	# script adds a key and the superseded one would sit there for the rest of the session: correct,
 	# and one entry per save of every script until the editor restarts.
-	EventSheetScriptMembers.clear_cache()
+	load(SCRIPT_MEMBERS_PATH).clear_cache()
 	# And what a call the sheet DERIVED a row from was aimed at. Same reason, one layer up: a method
 	# renamed, added or documented in a file nobody opened still has to reach the rows calling it,
 	# and the class-name to script map has to see a class declared since the editor started.

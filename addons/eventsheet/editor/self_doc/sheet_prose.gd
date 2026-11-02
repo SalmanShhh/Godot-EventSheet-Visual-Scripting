@@ -22,6 +22,7 @@ extends RefCounted
 ## function or group it sits in, "" at sheet level), and the marker it writes. Frozen with the manual
 ## page's shape, because an exported page lands in version control.
 const PARAGRAPH_KEYS: PackedStringArray = ["text", "where", "marker"]
+const SHEET_DESCRIPTIONS_PATH: String = "res://addons/eventsheet/editor/self_doc/sheet_descriptions.gd"
 
 
 ## Every DOCUMENTATION paragraph in one sheet, in sheet order - the prose the manual sets between its
@@ -79,7 +80,7 @@ static func _walk(rows: Array, where: String, into: Array[Dictionary]) -> void:
 		if entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_walk(group.events if not group.events.is_empty() else group.rows,
-				EventSheetDescriptions.group_name_of(group), into)
+				load(SHEET_DESCRIPTIONS_PATH).group_name_of(group), into)
 		elif entry is CommentRow:
 			var comment_row: CommentRow = entry as CommentRow
 			if is_readable(comment_row):
@@ -107,7 +108,7 @@ static func _walk_tasks(rows: Array, where: String, into: Array[Dictionary]) -> 
 		if entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_walk_tasks(group.events if not group.events.is_empty() else group.rows,
-				EventSheetDescriptions.group_name_of(group), into)
+				load(SHEET_DESCRIPTIONS_PATH).group_name_of(group), into)
 		elif entry is CommentRow:
 			_append_task(entry as CommentRow, where, into)
 		elif entry is EventRow:

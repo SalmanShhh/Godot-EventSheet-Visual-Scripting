@@ -206,7 +206,7 @@ static func idle_screen_effects(scene_path: String) -> Array[Dictionary]:
 	var idle: Array[Dictionary] = []
 	for wearer: Dictionary in EventSheetSceneEffects.for_scene(scene_path):
 		var shader_path: String = str(wearer.get("shader_path", ""))
-		if shader_path.is_empty() or not EventForgeShaderUniforms.reads_the_screen(shader_path):
+		if shader_path.is_empty() or not load(SHADER_UNIFORMS_PATH).reads_the_screen(shader_path):
 			continue
 		if str((wearer.get("properties", {}) as Dictionary).get("visible", "true")) == "false":
 			continue
@@ -223,10 +223,10 @@ static func idle_screen_effects(scene_path: String) -> Array[Dictionary]:
 static func _every_dial_at_rest(wearer: Dictionary) -> bool:
 	var overrides: Dictionary = wearer.get("parameters", {})
 	for dial_name: Variant in overrides:
-		var declared: Dictionary = EventForgeShaderUniforms.find(
+		var declared: Dictionary = load(SHADER_UNIFORMS_PATH).find(
 			str(wearer.get("shader_path", "")), str(dial_name))
 		if str(overrides[dial_name]).strip_edges() \
-				!= EventForgeShaderUniforms.gdscript_default(declared):
+				!= load(SHADER_UNIFORMS_PATH).gdscript_default(declared):
 			return false
 	return true
 
@@ -401,7 +401,7 @@ static func _finding_for(ace: Resource, judged: Dictionary, event_row: EventRow,
 	var shader_path: String = str(wearer.get("shader_path", ""))
 	if shader_path.is_empty():
 		return {}
-	if not EventForgeShaderUniforms.declares(shader_path, dial):
+	if not load(SHADER_UNIFORMS_PATH).declares(shader_path, dial):
 		return _unknown_dial(shader_path, dial, dial_param_of(ace), event_row, lane, slot)
 	return _shared_material(wearer, reference, ace, judged, event_row, lane, slot)
 
@@ -457,7 +457,7 @@ static func _first_quoted(text: String) -> String:
 static func _unknown_dial(shader_path: String, dial: String, dial_param: String, event_row: EventRow,
 		lane: String, slot: int) -> Dictionary:
 	var nearest: String = EventSheetVariableOwners.nearest_name(
-		EventForgeShaderUniforms.for_shader(shader_path), dial)
+		load(SHADER_UNIFORMS_PATH).for_shader(shader_path), dial)
 	var message: String = EventSheetL10n.translate("%s declares no dial called %s, so this row does nothing when the game runs.") % [
 		shader_path.get_file(), dial]
 	if not nearest.is_empty():
@@ -733,6 +733,7 @@ static func interface_layer_of(scene_path: String) -> String:
 ## Anything else - a Label, a Button, a bar, a container - is a reader's business and makes the layer
 ## an interface, which is what the note is about.
 const COVER_CONTROLS: PackedStringArray = ["ColorRect", "TextureRect"]
+const SHADER_UNIFORMS_PATH: String = "res://addons/eventforge/importer/shader_uniforms.gd"
 
 
 ## True when the line makes one of these calls. Kept beside the tables it is asked with, so a table

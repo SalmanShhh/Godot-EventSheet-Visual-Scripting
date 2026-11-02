@@ -32,6 +32,9 @@ const MENU_DUPLICATE_VARIANT := 4
 ## ACTION_MENU_* range: that dispatcher matches its own ids and ignores everything else, so the
 ## two handlers on one popup never collide.
 const ACTION_MENU_INLINE_CALL := 720
+const WRAP_UNWRAP_PATH: String = "res://addons/eventsheet/editor/wrap_unwrap.gd"
+const INLINE_OPS_PATH: String = "res://addons/eventsheet/editor/inline_function.gd"
+const DUPLICATE_VARIANT_DIALOG_PATH: String = "res://addons/eventsheet/editor/dock/duplicate_variant_dialog.gd"
 
 
 ## Creates the Refactor ▸ submenu as a child of the row menu, once, wired to its own dispatcher.
@@ -54,18 +57,18 @@ static func configure_submenu(dock: Control, row_data: EventRowData) -> bool:
 	var function: EventFunction = row_data.source_resource as EventFunction if row_data != null else null
 	if event != null:
 		submenu.add_item("Wrap in Condition…", MENU_WRAP)
-		var wrap_problem: String = EventSheetWrapUnwrap.wrap_refusal(event, _wrap_targets(dock, event))
+		var wrap_problem: String = load(WRAP_UNWRAP_PATH).wrap_refusal(event, _wrap_targets(dock, event))
 		submenu.set_item_disabled(submenu.item_count - 1, not wrap_problem.is_empty())
 		submenu.set_item_tooltip(submenu.item_count - 1, wrap_problem if not wrap_problem.is_empty()
 			else "Move these actions into a fresh sub-event guarded by a condition you pick.")
 		submenu.add_item("Unwrap Event", MENU_UNWRAP)
-		var unwrap_problem: String = EventSheetWrapUnwrap.unwrap_refusal(dock._current_sheet, event)
+		var unwrap_problem: String = load(WRAP_UNWRAP_PATH).unwrap_refusal(dock._current_sheet, event)
 		submenu.set_item_disabled(submenu.item_count - 1, not unwrap_problem.is_empty())
 		submenu.set_item_tooltip(submenu.item_count - 1, unwrap_problem if not unwrap_problem.is_empty()
 			else "Lift this sub-event's rows into the event above it and drop the empty shell.")
 	if function != null:
 		submenu.add_item("Inline Everywhere and Remove", MENU_INLINE_EVERYWHERE)
-		var fold_problem: String = EventSheetInlineOps.inline_everywhere_refusal(dock._current_sheet, function)
+		var fold_problem: String = load(INLINE_OPS_PATH).inline_everywhere_refusal(dock._current_sheet, function)
 		submenu.set_item_disabled(submenu.item_count - 1, not fold_problem.is_empty())
 		submenu.set_item_tooltip(submenu.item_count - 1, fold_problem if not fold_problem.is_empty()
 			else "Put this function's rows back at every call site, then remove the function.")
@@ -96,7 +99,7 @@ static func wrap_requested(dock: Control) -> void:
 		dock._set_status("Right-click an event (or a run of its actions) to wrap it in a condition.", true)
 		return
 	var to_wrap: Array = _wrap_targets(dock, event)
-	var problem: String = EventSheetWrapUnwrap.wrap_refusal(event, to_wrap)
+	var problem: String = load(WRAP_UNWRAP_PATH).wrap_refusal(event, to_wrap)
 	if not problem.is_empty():
 		dock._set_status(problem, true)
 		return
@@ -105,13 +108,13 @@ static func wrap_requested(dock: Control) -> void:
 
 static func unwrap_requested(dock: Control) -> void:
 	var event: EventRow = dock._context_row.source_resource as EventRow if dock._context_row != null else null
-	var problem: String = EventSheetWrapUnwrap.unwrap_refusal(dock._current_sheet, event)
+	var problem: String = load(WRAP_UNWRAP_PATH).unwrap_refusal(dock._current_sheet, event)
 	if not problem.is_empty():
 		dock._set_status(problem, true)
 		return
 	var lifted: Dictionary = {"count": 0}
 	var changed: bool = dock._perform_undoable_sheet_edit("Unwrap Event", func() -> bool:
-		lifted["count"] = EventSheetWrapUnwrap.unwrap_event(dock._current_sheet, event)
+		lifted["count"] = load(WRAP_UNWRAP_PATH).unwrap_event(dock._current_sheet, event)
 		return int(lifted["count"]) >= 0
 	)
 	if changed:
@@ -122,40 +125,40 @@ static func unwrap_requested(dock: Control) -> void:
 static func inline_call_requested(dock: Control) -> void:
 	var event: EventRow = dock._context_row.source_resource as EventRow if dock._context_row != null else null
 	var call_index: int = int(dock._context_hit.get("ace_index", -1))
-	var problem: String = EventSheetInlineOps.inline_refusal(dock._current_sheet, event, call_index)
+	var problem: String = load(INLINE_OPS_PATH).inline_refusal(dock._current_sheet, event, call_index)
 	if not problem.is_empty():
 		dock._set_status(problem, true)
 		return
-	var verb_name: String = EventSheetInlineOps.called_function_name(event.actions[call_index])
-	var body_rows: int = EventSheetInlineOps.body_actions(EventSheetInlineOps.find_function(dock._current_sheet, verb_name)).size()
+	var verb_name: String = load(INLINE_OPS_PATH).called_function_name(event.actions[call_index])
+	var body_rows: int = load(INLINE_OPS_PATH).body_actions(load(INLINE_OPS_PATH).find_function(dock._current_sheet, verb_name)).size()
 	var changed: bool = dock._perform_undoable_sheet_edit("Inline This Call", func() -> bool:
-		return EventSheetInlineOps.inline_function_call(dock._current_sheet, event, call_index)
+		return load(INLINE_OPS_PATH).inline_function_call(dock._current_sheet, event, call_index)
 	)
 	if changed:
-		dock._mark_dirty(EventSheetInlineOps.summary(verb_name, 1, body_rows))
+		dock._mark_dirty(load(INLINE_OPS_PATH).summary(verb_name, 1, body_rows))
 
 
 ## Inline Everywhere and Remove: every call site folded back in and the verb un-published, as one
 ## undo step - the exact inverse of Extract to Function, so a premature abstraction is reversible.
 static func inline_everywhere_requested(dock: Control) -> void:
 	var function: EventFunction = dock._context_row.source_resource as EventFunction if dock._context_row != null else null
-	var problem: String = EventSheetInlineOps.inline_everywhere_refusal(dock._current_sheet, function)
+	var problem: String = load(INLINE_OPS_PATH).inline_everywhere_refusal(dock._current_sheet, function)
 	if not problem.is_empty():
 		dock._set_status(problem, true)
 		return
 	var verb_name: String = function.function_name
-	var body_rows: int = EventSheetInlineOps.body_actions(function).size()
+	var body_rows: int = load(INLINE_OPS_PATH).body_actions(function).size()
 	var folded: Dictionary = {"sites": 0}
 	var changed: bool = dock._perform_undoable_sheet_edit("Inline Everywhere and Remove", func() -> bool:
 		# Re-fetched from the LIVE sheet: the funnel replaces resources on commit, and the row that
 		# opened this menu belongs to the sheet as it was when the menu opened.
-		var live: EventFunction = EventSheetInlineOps.find_function(dock._current_sheet, verb_name)
-		folded["sites"] = EventSheetInlineOps.inline_everywhere_and_remove(dock._current_sheet, live)
+		var live: EventFunction = load(INLINE_OPS_PATH).find_function(dock._current_sheet, verb_name)
+		folded["sites"] = load(INLINE_OPS_PATH).inline_everywhere_and_remove(dock._current_sheet, live)
 		return int(folded["sites"]) >= 0
 	)
 	if changed:
 		dock._code_panel_glue.refresh_functions_list()
-		dock._mark_dirty(EventSheetInlineOps.summary(verb_name, int(folded["sites"]), body_rows))
+		dock._mark_dirty(load(INLINE_OPS_PATH).summary(verb_name, int(folded["sites"]), body_rows))
 
 
 static func duplicate_variant_requested(dock: Control) -> void:
@@ -165,7 +168,7 @@ static func duplicate_variant_requested(dock: Control) -> void:
 	if rows.is_empty():
 		dock._set_status("Select the rows to make a variant of first.", true)
 		return
-	EventSheetDuplicateVariantDialog.open_for(dock, rows)
+	load(DUPLICATE_VARIANT_DIALOG_PATH).open_for(dock, rows)
 
 
 ## What a wrap would take: the selected action cells of this event, or - with none selected - all

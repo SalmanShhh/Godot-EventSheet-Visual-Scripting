@@ -63,6 +63,10 @@ const EDITOR_ONLY_ARGUMENT: String = "--editor-only"
 ## The sheet resource the workspace opens on its first paint, by path for the reason above.
 const SHEET_RESOURCE_SCRIPT: String = "res://addons/eventforge/resources/event_sheet.gd"
 const PICKER_WARMUP_SCRIPT: String = "res://addons/eventsheet/editor/picker_warmup.gd"
+## The first-run welcome window: the workspace builds it on a project's first open and a headless
+## process never does, so the probe loads its script itself. Its buttons once named the public API
+## class, which compiled the picker, the parameters dialog and the whole Doctor on a first open.
+const WELCOME_WINDOW_SCRIPT: String = "res://addons/eventsheet/editor/dock/welcome_window.gd"
 
 ## The scripts a click compiles and the first open of the workspace must not: the picker, the
 ## parameters and variable dialogs, the Doctor and the public API. Every script in the Manual's
@@ -83,6 +87,29 @@ const RUNTIME_HEAVY: Array[String] = [
 	"res://addons/eventsheet/editor/dock/navigate.gd",
 	"res://addons/eventsheet/editor/dock/add_row_requests.gd",
 	"res://addons/eventsheet/editor/dock/variable_grouping.gd",
+	# The readers only an action reaches, each once pulled in by a static class reference in a script
+	# the first open does need: the shader dial reader, the file-argument reader, the script member
+	# reader, the descriptions reader and the one-line-function folder are loaded by path where they
+	# are asked now; the refactor menu names Wrap, Inline and Duplicate as Variant by path, which
+	# also keeps the snippet and paste-special readers behind them out of the open.
+	"res://addons/eventforge/importer/shader_uniforms.gd",
+	"res://addons/eventforge/outside_paths.gd",
+	"res://addons/eventsheet/ace/script_members.gd",
+	"res://addons/eventsheet/editor/self_doc/sheet_descriptions.gd",
+	"res://addons/eventsheet/editor/self_doc/sheet_prose.gd",
+	"res://addons/eventsheet/editor/interaction/inline_functions.gd",
+	"res://addons/eventsheet/editor/wrap_unwrap.gd",
+	"res://addons/eventsheet/editor/inline_function.gd",
+	"res://addons/eventsheet/editor/dock/duplicate_variant_dialog.gd",
+	"res://addons/eventsheet/editor/duplicate_variant.gd",
+	"res://addons/eventsheet/editor/paste_special.gd",
+	# And the pack scripts the block-kind scan used to compile to learn they were not kinds: every
+	# vector shape and post effect extends a pack base class, and the scan now follows that chain by
+	# reading text. Only a script that really is a kind is loaded.
+	"res://eventsheet_addons/vector_shapes/vector_shape_2d.gd",
+	"res://eventsheet_addons/vector_shapes/vector_shape_3d.gd",
+	"res://eventsheet_addons/vector_shapes/shape_disc_2d.gd",
+	"res://eventsheet_addons/post_kit/effects/post_effect.gd",
 ]
 const MANUAL_FOLDER: String = "res://addons/eventsheet/editor/docs/"
 
@@ -226,6 +253,7 @@ func _time_editor_build() -> String:
 		(editor as Node).call("_load_sheet_from_path", FIRST_SHEET)
 		(editor as Node).call("_load_sheet_from_path", SAVING_SHEET)
 		(load(PICKER_WARMUP_SCRIPT) as Object).call("warm_now")
+		load(WELCOME_WINDOW_SCRIPT)
 		var cached: PackedStringArray = PackedStringArray()
 		for path: String in runtime_heavy_paths():
 			if ResourceLoader.has_cached(path):

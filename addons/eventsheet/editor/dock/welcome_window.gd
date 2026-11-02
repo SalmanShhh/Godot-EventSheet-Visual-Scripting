@@ -44,6 +44,8 @@ const KIT_SCROLL_TALLEST := 220.0
 const KIT_SCROLL_SHORTEST := 72.0
 ## Room kept above and below the window inside the editor, beside its title bar.
 const EDITOR_MARGIN := 24.0
+const EVENTSHEETS_API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
+const PLUGIN_PATH: String = "res://addons/eventforge/plugin.gd"
 
 var _dock: Control = null
 var _welcome_window: ConfirmationDialog = null
@@ -226,14 +228,14 @@ func _build() -> void:
 	# The showcase door is offered only when the project holds a showcase scene: a project the plugin
 	# was installed into has none (the two addon folders are all it copies), and a door that does
 	# nothing when clicked reads as a broken plugin.
-	var has_showcase: bool = not EventForgePlugin._find_showcase_scene().is_empty()
+	var has_showcase: bool = not load(PLUGIN_PATH)._find_showcase_scene().is_empty()
 	for door: Array in [
 		["Take the 2-minute tour", func() -> void: _dock.start_tour()],
 		# The game most event-sheet users built first, rebuilt row by row - ten steps on the same
 		# tour window, ending at the finished showcase.
-		["Build a top-down shooter (10 steps)", func() -> void: EventSheets.start_tour(EventSheetShooterTour.steps())],
+		["Build a top-down shooter (10 steps)", func() -> void: load(EVENTSHEETS_API_PATH).start_tour(EventSheetShooterTour.steps())],
 		["Open the playable showcase scene", func() -> void:
-			var showcase_scene: String = EventForgePlugin._find_showcase_scene()
+			var showcase_scene: String = load(PLUGIN_PATH)._find_showcase_scene()
 			if Engine.is_editor_hint() and _dock.is_inside_tree() and not showcase_scene.is_empty():
 				EditorInterface.open_scene_from_path(showcase_scene)],
 		["New sheet from a starter template", func() -> void: _dock._open_template_menu()],
@@ -272,7 +274,7 @@ func _build() -> void:
 	prefs_box.add_child(EventSheetPopupUI.form_row("Editor language", _language_picker))
 	# Extension preferences (EventSheets.register_preference): each builder returns one Control
 	# row - extensions get a settings home without inventing their own dialog.
-	for preference_builder: Callable in EventSheets.preference_builders():
+	for preference_builder: Callable in load(EVENTSHEETS_API_PATH).preference_builders():
 		if preference_builder.is_valid():
 			var preference_row: Variant = preference_builder.call()
 			if preference_row is Control:
@@ -505,7 +507,7 @@ func apply_choice(choice: String) -> void:
 	if Engine.is_editor_hint() and DisplayServer.get_name() != "headless":
 		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "came_from", choice)
 	if not str(settings["guide"]).is_empty():
-		EventSheets.open_docs(str(settings["guide"]))
+		load(EVENTSHEETS_API_PATH).open_docs(str(settings["guide"]))
 	if bool(settings["tour"]) and _dock != null and _welcome_window != null:
 		_welcome_window.hide()
 		_dock.start_tour()

@@ -8,6 +8,9 @@
 class_name EventSheetBlockRegistry
 extends RefCounted
 
+## How many `extends` hops the pre-filter below follows before it stops guessing and lets the load decide.
+const BASE_CHAIN_WALK_LIMIT: int = 16
+
 static var _kinds: Dictionary = {}
 static var _built_ins_registered: bool = false
 
@@ -129,8 +132,9 @@ static func rescan_pack_kinds() -> void:
 
 
 static func _scan_pack_kinds() -> void:
+	var class_paths: Dictionary = _global_class_paths()
 	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
-		if not _could_extend_block_kind(script_path):
+		if not _could_extend_block_kind(script_path, class_paths):
 			continue
 		var script: GDScript = load(script_path) as GDScript
 		if script == null or not _extends_block_kind(script):
@@ -154,23 +158,56 @@ static func _scan_pack_kinds() -> void:
 ## so `_extends_block_kind` can only ever answer false for it, and loading it was pure cost. Nearly
 ## every pack script extends Node / Resource / Node2D, so this turns ~90 GDScript compiles into ~90
 ## small file reads: measured on this tree, the first block-kind scan went from 807 ms to 46 ms.
-## The answer is identical to the post-load check - this only skips files that provably cannot match.
-static func _could_extend_block_kind(script_path: String) -> bool:
+##
+## A script whose `extends` names ANOTHER SCRIPT is followed down the same way, by reading that
+## script's own `extends` line, until the chain ends at an engine class (cannot be a kind) or reaches
+## the block kind base (can). The vector shapes and the post effects all extend a pack base class, so
+## the single hop used to compile twenty-eight scripts, about five thousand lines, to learn they
+## were not kinds. A base the walk cannot name (an inner class, a preload, a class missing from the
+## project's class list) answers true, so the post-load check still decides: the answer is identical,
+## this only skips files that provably cannot match.
+static func _could_extend_block_kind(script_path: String, class_paths: Dictionary = {}) -> bool:
+	return _chain_could_reach_block_kind(script_path, class_paths if not class_paths.is_empty() else _global_class_paths(), 0)
+
+
+static func _chain_could_reach_block_kind(script_path: String, class_paths: Dictionary, depth: int) -> bool:
+	if depth > BASE_CHAIN_WALK_LIMIT:
+		return true
 	var source: String = FileAccess.get_file_as_string(script_path)
 	if source.is_empty():
 		return false
-	for raw_line: String in source.split("\n"):
+	for raw_line: String in source.split("
+"):
 		var line: String = raw_line.strip_edges()
 		if not line.begins_with("extends "):
 			continue
-		if raw_line.begins_with("\t") or raw_line.begins_with(" "):
+		if raw_line.begins_with("	") or raw_line.begins_with(" "):
 			continue  # an inner class's extends, not the file's own
 		var base_name: String = line.substr("extends ".length()).strip_edges()
-		# A quoted path or a preload() base is a script base - always worth loading.
+		# A quoted path base names a script file: follow it. A preload() base is always worth loading.
+		if base_name.begins_with("\"") and base_name.ends_with("\"") and base_name.length() > 2:
+			var base_path: String = base_name.substr(1, base_name.length() - 2)
+			if base_path.ends_with("registration/block_kind.gd"):
+				return true
+			return _chain_could_reach_block_kind(base_path, class_paths, depth + 1)
 		if not base_name.is_valid_identifier():
 			return true
-		return not ClassDB.class_exists(base_name)
+		if ClassDB.class_exists(base_name):
+			return false
+		if base_name == "EventSheetBlockKind":
+			return true
+		if not class_paths.has(base_name):
+			return true
+		return _chain_could_reach_block_kind(str(class_paths[base_name]), class_paths, depth + 1)
 	return false  # no top-level extends: the implicit base is RefCounted, an engine class
+
+
+## class_name -> script path for every global class of the project, read once per scan.
+static func _global_class_paths() -> Dictionary:
+	var paths: Dictionary = {}
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		paths[str(entry.get("class", ""))] = str(entry.get("path", ""))
+	return paths
 
 
 static func _extends_block_kind(script: GDScript) -> bool:
