@@ -10059,3 +10059,42 @@ the value,el valor
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,Cuándo se unen las copias al árbol. Elige el siguiente momento de reposo dentro de un manejador de colisión o de cuerpo: un cuerpo o área de física 2D añadido ahí hace que Godot imprima un error mientras el servidor de física está ocupado (el nodo se añade igualmente y funciona). Ambas respuestas colocan las copias en los mismos sitios - la forma se mide en el mundo en cualquier caso.
 "The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","La misma generación que Generar una copia, añadida en el siguiente momento de reposo en lugar de ahora mismo. Úsala dentro de un manejador de colisión o de cuerpo: un cuerpo o área de física 2D añadido ahí hace que Godot imprima un error mientras el servidor de física está ocupado (el nodo se añade igualmente y funciona), y esta fila espera a que termine para que no se imprima nada. La posición es una posición en el nivel, fijada justo después de añadir la copia, así que queda ahí sea quien sea el padre."
 "The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","La misma generación 3D que Crear una copia (3D), añadida en el siguiente momento de reposo en lugar de ahora mismo. Úsala dentro de un manejador de colisión o de cuerpo: un cuerpo o área de física 2D añadido ahí hace que Godot imprima un error mientras el servidor de física está ocupado (el nodo se añade igualmente y funciona), y esta fila espera a que termine para que no se imprima nada. La posición es una posición en el nivel, fijada justo después de añadir la copia, así que queda ahí sea quien sea el padre."
+Godot would refuse this.,Godot rechazaría esto.
+It does not fit where it is written. Godot says:,No encaja donde se escribe. Godot dice:
+Worked out while the game runs.,Se resuelve mientras corre el juego.
+"%s has no type here, so what it holds cannot be checked now. Nothing is wrong yet.","%s no tiene tipo aquí, así que no se puede comprobar lo que contiene ahora. Aún no hay ningún error."
+Check the spelling of %s.,Revisa cómo está escrito %s.
+%s has no %s.,%s no tiene %s.
+"(%s is a %s, read from the scene.)","(%s es un %s, leído de la escena.)"
+%s has no %s,%s no tiene %s
+a whole number,un número entero
+two numbers (Vector2),dos números (Vector2)
+two whole numbers (Vector2i),dos números enteros (Vector2i)
+three numbers (Vector3),tres números (Vector3)
+a colour,un color
+a node path,una ruta de nodo
+a list,una lista
+a dictionary,un diccionario
+a node (%s),un nodo (%s)
+"Write a number, or an expression that gives a number.",Escribe un número o una expresión que dé un número.
+"Write text in quotes, or put the value in str(...) to turn it into text.",Escribe texto entre comillas o pon el valor en str(...) para convertirlo en texto.
+"Write true or false, or a question that gives one.","Escribe true o false, o una pregunta que dé uno de los dos."
+"Write Vector2(x, y), or a value that gives a Vector2.","Escribe Vector2(x, y) o un valor que dé un Vector2."
+"Write Vector2i(x, y) with whole numbers, or a value that gives a Vector2i.","Escribe Vector2i(x, y) con números enteros o un valor que dé un Vector2i."
+"Write a Color, like Color(1, 0.5, 0), or a value that gives one.","Escribe un Color, como Color(1, 0.5, 0), o un valor que dé uno."
+"Write a node, like $Name, or a value that gives one.","Escribe un nodo, como $Name, o un valor que dé uno."
+%s holds %s.,%s guarda %s.
+This takes %s.,Aquí va %s.
+%s is %s.,%s es %s.
+"It cannot be used with ""%s"" against %s, which is %s. Both sides need the same kind of value.","No se puede usar con ""%s"" frente a %s, que es %s. Ambos lados necesitan la misma clase de valor."
+%s and %s do not mix.,%s y %s no se pueden mezclar.
+"""%s"" needs the same kind of value on both sides.","""%s"" necesita la misma clase de valor en ambos lados."
+%s takes %d value(s),%s toma %d valor(es)
+"This gives %d. Remove the extra ones, or add a parameter to %s.",Aquí se dan %d. Quita los que sobran o añade un parámetro a %s.
+"This gives %d. Add the missing ones, or remove a parameter from %s.",Aquí se dan %d. Añade los que faltan o quita un parámetro de %s.
+%s's %s,%s de %s
+%s's value %d,"%s, valor %d"
+not written: %s,no escrito: %s
+"The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s","Las variables y funciones de la hoja no se pudieron escribir con sus tipos, así que no se comprueba la clase de cada valor. Godot dice: %s"
+GODOT SAYS,GODOT DICE
+Enter will not write it.,Enter no lo escribirá.

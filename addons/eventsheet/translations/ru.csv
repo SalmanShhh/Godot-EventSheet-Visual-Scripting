@@ -10059,3 +10059,42 @@ the value,значение
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,"Когда копии попадают в дерево. Выберите следующий момент простоя внутри обработчика столкновения или тела: добавленные там 2D-физическое тело или область заставляют Godot выводить ошибку, пока физический сервер занят (узел всё равно добавляется и работает). Оба ответа помещают копии в одни и те же места - форма в любом случае измеряется в мире."
 "The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","То же создание, что и Создать копию, но добавляется в следующий момент простоя, а не сразу. Используйте его внутри обработчика столкновения или тела: добавленные там 2D-физическое тело или область заставляют Godot выводить ошибку, пока физический сервер занят (узел всё равно добавляется и работает), а эта строка ждёт его завершения, чтобы ничего не выводилось. Место - это место в уровне, задаваемое сразу после добавления копии, поэтому копия оказывается там, кто бы ни был родителем."
 "The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","То же 3D-создание, что и Создать копию (3D), но добавляется в следующий момент простоя, а не сразу. Используйте его внутри обработчика столкновения или тела: добавленные там 2D-физическое тело или область заставляют Godot выводить ошибку, пока физический сервер занят (узел всё равно добавляется и работает), а эта строка ждёт его завершения, чтобы ничего не выводилось. Место - это место в уровне, задаваемое сразу после добавления копии, поэтому копия оказывается там, кто бы ни был родителем."
+Godot would refuse this.,Godot это отклонит.
+It does not fit where it is written. Godot says:,"Это не подходит к месту, где записано. Godot сообщает:"
+Worked out while the game runs.,Определяется во время работы игры.
+"%s has no type here, so what it holds cannot be checked now. Nothing is wrong yet.","У %s здесь нет типа, поэтому его содержимое сейчас проверить нельзя. Пока ничего не неверно."
+Check the spelling of %s.,Проверьте написание %s.
+%s has no %s.,У %s нет %s.
+"(%s is a %s, read from the scene.)","(%s — это %s, прочитано из сцены.)"
+%s has no %s,у %s нет %s
+a whole number,целое число
+two numbers (Vector2),два числа (Vector2)
+two whole numbers (Vector2i),два целых числа (Vector2i)
+three numbers (Vector3),три числа (Vector3)
+a colour,цвет
+a node path,путь к узлу
+a list,список
+a dictionary,словарь
+a node (%s),узел (%s)
+"Write a number, or an expression that gives a number.","Напишите число или выражение, дающее число."
+"Write text in quotes, or put the value in str(...) to turn it into text.","Напишите текст в кавычках или поместите значение в str(...), чтобы превратить его в текст."
+"Write true or false, or a question that gives one.","Напишите true или false либо вопрос, дающий одно из них."
+"Write Vector2(x, y), or a value that gives a Vector2.","Напишите Vector2(x, y) или значение, дающее Vector2."
+"Write Vector2i(x, y) with whole numbers, or a value that gives a Vector2i.","Напишите Vector2i(x, y) с целыми числами или значение, дающее Vector2i."
+"Write a Color, like Color(1, 0.5, 0), or a value that gives one.","Напишите Color, например Color(1, 0.5, 0), или значение, дающее Color."
+"Write a node, like $Name, or a value that gives one.","Напишите узел, например $Name, или значение, дающее узел."
+%s holds %s.,%s хранит %s.
+This takes %s.,Здесь нужно: %s.
+%s is %s.,%s — это %s.
+"It cannot be used with ""%s"" against %s, which is %s. Both sides need the same kind of value.","Нельзя использовать с ""%s"" вместе с %s — это %s. С обеих сторон нужен один и тот же вид значения."
+%s and %s do not mix.,%s и %s несовместимы.
+"""%s"" needs the same kind of value on both sides.","""%s"" требует одного и того же вида значения с обеих сторон."
+%s takes %d value(s),%s принимает значений: %d
+"This gives %d. Remove the extra ones, or add a parameter to %s.",Здесь передано: %d. Уберите лишние или добавьте параметр к %s.
+"This gives %d. Add the missing ones, or remove a parameter from %s.",Здесь передано: %d. Добавьте недостающие или уберите параметр у %s.
+%s's %s,%s: %s
+%s's value %d,"%s, значение %d"
+not written: %s,не записано: %s
+"The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s","Переменные и функции листа не удалось записать с их типами, поэтому вид каждого значения не проверяется. Godot сообщает: %s"
+GODOT SAYS,GODOT СООБЩАЕТ
+Enter will not write it.,Enter это не запишет.

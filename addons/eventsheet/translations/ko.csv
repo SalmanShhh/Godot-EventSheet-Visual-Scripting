@@ -10059,3 +10059,42 @@ the value,값
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,복사본이 트리에 합류하는 시점. 충돌 또는 바디 핸들러 안에서는 다음 유휴 시점을 고르세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 합니다(노드는 추가되고 동작합니다). 두 답 모두 복사본을 같은 자리에 놓습니다 - 모양은 어느 쪽이든 월드에서 측정됩니다.
 "The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","복사본 생성과 같은 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 안의 위치이므로, 부모가 누구든 그곳에 놓입니다."
 "The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","복사본 생성 (3D)과 같은 3D 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 안의 위치이므로, 부모가 누구든 그곳에 놓입니다."
+Godot would refuse this.,Godot가 이것을 거부합니다.
+It does not fit where it is written. Godot says:,쓰인 위치에 맞지 않습니다. Godot의 메시지:
+Worked out while the game runs.,게임이 실행되는 동안 결정됩니다.
+"%s has no type here, so what it holds cannot be checked now. Nothing is wrong yet.",%s에는 여기서 타입이 없어 지금은 내용을 검사할 수 없습니다. 아직 문제는 없습니다.
+Check the spelling of %s.,%s의 철자를 확인하세요.
+%s has no %s.,%s에는 %s이(가) 없습니다.
+"(%s is a %s, read from the scene.)",(%s은(는) %s이며 씬에서 읽었습니다.)
+%s has no %s,%s에 %s 없음
+a whole number,정수
+two numbers (Vector2),숫자 두 개 (Vector2)
+two whole numbers (Vector2i),정수 두 개 (Vector2i)
+three numbers (Vector3),숫자 세 개 (Vector3)
+a colour,색상
+a node path,노드 경로
+a list,목록
+a dictionary,딕셔너리
+a node (%s),노드 (%s)
+"Write a number, or an expression that gives a number.",숫자 또는 숫자가 되는 식을 쓰세요.
+"Write text in quotes, or put the value in str(...) to turn it into text.","텍스트는 따옴표로 감싸거나, 값을 str(...)에 넣어 텍스트로 바꾸세요."
+"Write true or false, or a question that gives one.","true 또는 false, 또는 그 값을 주는 조건을 쓰세요."
+"Write Vector2(x, y), or a value that gives a Vector2.","Vector2(x, y) 또는 Vector2가 되는 값을 쓰세요."
+"Write Vector2i(x, y) with whole numbers, or a value that gives a Vector2i.","정수로 Vector2i(x, y) 또는 Vector2i가 되는 값을 쓰세요."
+"Write a Color, like Color(1, 0.5, 0), or a value that gives one.","Color(1, 0.5, 0) 같은 Color 또는 Color가 되는 값을 쓰세요."
+"Write a node, like $Name, or a value that gives one.",$Name 같은 노드 또는 노드가 되는 값을 쓰세요.
+%s holds %s.,%s은(는) %s을(를) 담습니다.
+This takes %s.,여기에는 %s이(가) 들어갑니다.
+%s is %s.,%s은(는) %s입니다.
+"It cannot be used with ""%s"" against %s, which is %s. Both sides need the same kind of value.","""%s""로 %s(%s)와 비교할 수 없습니다. 양쪽은 같은 종류의 값이어야 합니다."
+%s and %s do not mix.,%s와(과) %s은(는) 섞을 수 없습니다.
+"""%s"" needs the same kind of value on both sides.","""%s""는 양쪽에 같은 종류의 값이 필요합니다."
+%s takes %d value(s),%s은(는) 값 %d개를 받습니다
+"This gives %d. Remove the extra ones, or add a parameter to %s.",여기서는 %d개를 줍니다. 남는 값을 지우거나 %s에 매개변수를 추가하세요.
+"This gives %d. Add the missing ones, or remove a parameter from %s.",여기서는 %d개를 줍니다. 부족한 값을 추가하거나 %s에서 매개변수를 지우세요.
+%s's %s,%s의 %s
+%s's value %d,%s의 값 %d
+not written: %s,기록되지 않음: %s
+"The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s",시트의 변수와 함수를 타입과 함께 쓸 수 없어 각 값의 종류를 검사하지 않습니다. Godot의 메시지: %s
+GODOT SAYS,GODOT 메시지
+Enter will not write it.,Enter로는 기록되지 않습니다.

@@ -10059,3 +10059,42 @@ the value,値
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,コピーがツリーに入るタイミング。衝突やボディのハンドラー内では次のアイドル時を選んでください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。どちらの答えでもコピーは同じ場所に置かれます - 形はどちらの場合もワールドで測られます。
 "The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",コピーを生成 と同じ生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はレベル内の位置で、コピーを追加した直後に設定されるため、親が誰であってもそこに配置されます。
 "The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",コピーを生成 (3D) と同じ 3D の生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はレベル内の位置で、コピーを追加した直後に設定されるため、親が誰であってもそこに配置されます。
+Godot would refuse this.,Godot はこれを受け付けません。
+It does not fit where it is written. Godot says:,書かれている場所に合いません。Godot のメッセージ:
+Worked out while the game runs.,ゲームの実行中に決まります。
+"%s has no type here, so what it holds cannot be checked now. Nothing is wrong yet.",%s にはここで型がないため、中身は今は確認できません。今のところ問題はありません。
+Check the spelling of %s.,%s のつづりを確認してください。
+%s has no %s.,%s に %s はありません。
+"(%s is a %s, read from the scene.)",(%s は %s で、シーンから読み取りました。)
+%s has no %s,%s に %s はない
+a whole number,整数
+two numbers (Vector2),2つの数値 (Vector2)
+two whole numbers (Vector2i),2つの整数 (Vector2i)
+three numbers (Vector3),3つの数値 (Vector3)
+a colour,色
+a node path,ノードパス
+a list,リスト
+a dictionary,辞書
+a node (%s),ノード (%s)
+"Write a number, or an expression that gives a number.",数値、または数値になる式を書いてください。
+"Write text in quotes, or put the value in str(...) to turn it into text.",テキストは引用符で囲むか、値を str(...) に入れてテキストに変換してください。
+"Write true or false, or a question that gives one.",true か false、またはそのどちらかになる条件を書いてください。
+"Write Vector2(x, y), or a value that gives a Vector2.","Vector2(x, y)、または Vector2 になる値を書いてください。"
+"Write Vector2i(x, y) with whole numbers, or a value that gives a Vector2i.","整数で Vector2i(x, y)、または Vector2i になる値を書いてください。"
+"Write a Color, like Color(1, 0.5, 0), or a value that gives one.","Color(1, 0.5, 0) のような Color、または Color になる値を書いてください。"
+"Write a node, like $Name, or a value that gives one.",$Name のようなノード、またはノードになる値を書いてください。
+%s holds %s.,%s は %s を保持します。
+This takes %s.,ここには %s が入ります。
+%s is %s.,%s は %s です。
+"It cannot be used with ""%s"" against %s, which is %s. Both sides need the same kind of value.","""%s"" で %s（%s）と比べることはできません。両側は同じ種類の値である必要があります。"
+%s and %s do not mix.,%s と %s は組み合わせられません。
+"""%s"" needs the same kind of value on both sides.","""%s"" は両側に同じ種類の値が必要です。"
+%s takes %d value(s),%s は %d 個の値を取ります
+"This gives %d. Remove the extra ones, or add a parameter to %s.",ここでは %d 個です。余分なものを削除するか、%s にパラメータを追加してください。
+"This gives %d. Add the missing ones, or remove a parameter from %s.",ここでは %d 個です。足りないものを追加するか、%s からパラメータを削除してください。
+%s's %s,%s の %s
+%s's value %d,%s の値 %d
+not written: %s,書き込まれません: %s
+"The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s",シートの変数と関数を型付きで書き出せなかったため、各値の種類は確認されていません。Godot のメッセージ: %s
+GODOT SAYS,GODOT より
+Enter will not write it.,Enter では書き込まれません。
