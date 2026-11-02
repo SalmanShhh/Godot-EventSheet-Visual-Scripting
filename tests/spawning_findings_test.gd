@@ -38,6 +38,7 @@ static func run() -> bool:
 	passed = _test_the_strip_reads_the_stamp() and passed
 	passed = _test_the_doctor_files_each_kind() and passed
 	passed = _test_the_doctor_files_a_real_finding() and passed
+	passed = _test_shipped_showcases_add_nothing_during_physics() and passed
 	return passed
 
 
@@ -659,6 +660,28 @@ static func _test_the_doctor_files_a_real_finding() -> bool:
 		str(filed[1].get("subject", "")), "foe") and passed
 	passed = _check("and the file a double-click would open", str(filed[1].get("path", "")), path) and passed
 	return passed
+
+
+## The shipped showcases are scripts a reader opens first, so none of them may hold the finding the
+## Doctor files against everyone else: a node added to the tree inside a physics callback.
+static func _test_shipped_showcases_add_nothing_during_physics() -> bool:
+	var scripts: PackedStringArray = PackedStringArray()
+	var root: DirAccess = DirAccess.open("res://demo/showcase")
+	if root == null:
+		return _check("the showcase folder can be read", false, true)
+	for folder: String in root.get_directories():
+		var inside: DirAccess = DirAccess.open("res://demo/showcase/%s" % folder)
+		if inside == null:
+			continue
+		for file_name: String in inside.get_files():
+			if file_name.ends_with(".gd"):
+				scripts.append("res://demo/showcase/%s/%s" % [folder, file_name])
+	var offenders: PackedStringArray = PackedStringArray()
+	for filed: Dictionary in EventSheetSpawningDoctor.report(scripts):
+		if str(filed.get("check", "")) == EventSheetSpawningDoctor.CHECK_PHYSICS:
+			offenders.append(str(filed.get("path", "")))
+	return _check("no shipped showcase adds a node while the physics server is busy",
+		offenders, PackedStringArray())
 
 
 ## The fixture: a parenting inside the physics callback, which is the rule the pre-read admits on two

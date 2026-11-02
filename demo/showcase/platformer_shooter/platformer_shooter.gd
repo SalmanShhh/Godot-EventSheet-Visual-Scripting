@@ -15,7 +15,7 @@ func _physics_process(delta: float) -> void:
 		var __spawn_shot = load("res://demo/showcase/platformer_shooter/shot.tscn").instantiate()
 		__spawn_shot.position = $Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)
 		__spawn_shot.rotation_degrees = 0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0
-		add_child(__spawn_shot)
+		call_deferred("add_child", __spawn_shot)
 		if "shots" != "": __spawn_shot.add_to_group("shots")
 	$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)
 	__every_ps_spawn += delta
@@ -24,7 +24,7 @@ func _physics_process(delta: float) -> void:
 		var __spawn_shot = load("res://demo/showcase/platformer_shooter/target.tscn").instantiate()
 		__spawn_shot.position = Vector2(1240.0, randf_range(120.0, 540.0))
 		__spawn_shot.rotation_degrees = 180.0
-		add_child(__spawn_shot)
+		call_deferred("add_child", __spawn_shot)
 		if "targets" != "": __spawn_shot.add_to_group("targets")
 	for __shot in get_tree().get_nodes_in_group("shots"):
 		for __target in get_tree().get_nodes_in_group("targets"):

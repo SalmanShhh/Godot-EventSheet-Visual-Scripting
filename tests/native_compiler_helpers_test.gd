@@ -75,7 +75,7 @@ static func _test_native_rows() -> bool:
 			"[PlatformerShooter] Weapon: Fire",
 			"[shot.tscn] Set position to $Player.position + (32 * $Player/PlatformerMovement.facing_direction(), -6)",
 		]],
-		["the line that adds it is the Spawn", rows.get("fire_plant", []), ["[System] Spawn shot.tscn"]],
+		["the line that adds it is the Spawn", rows.get("fire_plant", []), ["[PlatformerShooter] call_deferred(\"add_child\", shot.tscn)"]],
 		["and so is each arm of the angle", rows.get("fire_arms", []),
 			["[shot.tscn] Set angle to 0", "[shot.tscn] Set angle to 180"]],
 		["its sub-event names the parent's copy", rows.get("shots_group", []), ["[shot.tscn] Add to group \"shots\""]],
@@ -84,7 +84,7 @@ static func _test_native_rows() -> bool:
 		["and its wrap beside the spawn", rows.get("timer", []), [
 			"[target.tscn] Set position to (1240, random number 120 to 540)",
 			"[target.tscn] Set angle to 180",
-			"[System] Spawn target.tscn",
+			"[PlatformerShooter] call_deferred(\"add_child\", target.tscn)",
 		]],
 		["the second spawn's sub-event names its own scene", rows.get("targets_group", []),
 			["[target.tscn] Add to group \"targets\""]],
@@ -103,7 +103,7 @@ static func _test_classic_rows_unchanged() -> bool:
 			"[PlatformerShooter] Weapon: Fire",
 			"[__spawn_shot] Set position to $Player.position + (32 * $Player/PlatformerMovement.facing_direction(), -6)",
 		]],
-		["classic: the plant reads as the file writes it", rows.get("fire_plant", []), ["[System] add child __spawn_shot"]],
+		["classic: the plant reads as the file writes it", rows.get("fire_plant", []), ["[PlatformerShooter] call_deferred(\"add_child\", __spawn_shot)"]],
 		["classic: the upkeep is listed", rows.get("clamp", []), [
 			"[System] Keep $Player.position.x between 40.0 and 1112.0",
 			"[System] Add dt to __every_ps_spawn",

@@ -42,6 +42,10 @@
 - The sheet's inline value editor and the Properties bar ask the dialog's own gate (`blocking_problem_for`) before writing: a refused value keeps its text, shows the reason under the field or on the status line, writes nothing, and Esc still cancels.
 - A code box's completion popup shows each suggestion's type or description after its name ("hp    int"), as the sheet's other completion popup does; the inserted text is still the exact name.
 
+### Fixed: three showcases no longer add nodes inside the physics step
+
+- The Project Doctor filed "adds a node to the tree while the physics server is busy" against Draw Lab, Platformer Shooter (two rows) and Starfall. Starfall's star spawner and Platformer Shooter's shot and target spawners now parent the copy with `call_deferred("add_child", ...)`, the spelling the Doctor's own repair writes; Draw Lab's one-time gem bake moved from its physics row into an idle (`_process`) row, since it builds a layer of nodes that the bake then needs in the tree. The scenes behave as before in play. `spawning_findings_test` now sweeps every shipped showcase script and fails on any such finding.
+
 ### Fixed: an Else row's "neither of N" note stayed blank until the row was scrolled to
 
 - With words built as rows come into view, an Else row that had not been drawn yet had no span to write its "neither of N" note into when the rows were numbered, so the note read blank (106 rows across the shipped packs) until it was scrolled to. Numbering now builds the words of an Else row first. Found by the reading gate: a dump of every shipped sheet's readings with the old eager limit and with the new one differed in exactly those cells, and is byte-identical (44,728 readings, same sha) with this fix. Pinned in `lazy_span_window_test`.

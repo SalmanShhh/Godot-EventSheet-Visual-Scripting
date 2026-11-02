@@ -96,7 +96,7 @@ static func _test_lane_chips() -> bool:
 
 static func _test_strip() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
-	var sheet: EventSheetResource = _shooter(NATIVE_THEME)
+	var sheet: EventSheetResource = _shooter(NATIVE_THEME, true, true)
 	dock.setup(sheet)
 	var clean: EventRowData = null
 	var flagged: EventRowData = null
@@ -177,8 +177,18 @@ static func _test_number_card() -> bool:
 	])
 
 
-static func _shooter(theme_path: String, help_strip: bool = true) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHOWCASE)
+## `unsafe_spawns` opens a copy of the showcase with its two parentings spelled the plain way, inside
+## the physics callback. The shipped showcase defers them and so holds no finding of its own; the
+## copy is the one mistake the strip must say first.
+static func _shooter(theme_path: String, help_strip: bool = true, unsafe_spawns: bool = false) -> EventSheetResource:
+	var source_path: String = SHOWCASE
+	if unsafe_spawns:
+		source_path = "user://native_pattern_strip_unsafe_shooter.gd"
+		var text: String = FileAccess.get_file_as_string(SHOWCASE).replace("call_deferred(\"add_child\", __spawn_shot)", "add_child(__spawn_shot)")
+		var written: FileAccess = FileAccess.open(source_path, FileAccess.WRITE)
+		written.store_string(text)
+		written.close()
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(source_path)
 	if not theme_path.is_empty():
 		sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
 		sheet.editor_style.get_event_style().pattern_in_help_strip = help_strip

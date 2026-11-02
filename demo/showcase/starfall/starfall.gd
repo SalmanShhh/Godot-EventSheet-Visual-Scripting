@@ -46,7 +46,7 @@ func _physics_process(delta: float) -> void:
 		var __spawn_star = load("res://demo/showcase/starfall/star.tscn").instantiate()
 		__spawn_star.position = Vector2(randf_range(60.0, 1100.0), -20.0)
 		__spawn_star.rotation_degrees = 90.0
-		add_child(__spawn_star)
+		call_deferred("add_child", __spawn_star)
 	if state == State.PLAYING:
 		for star in get_tree().get_nodes_in_group("stars"):
 			if not (star.position.y > 560.0):
