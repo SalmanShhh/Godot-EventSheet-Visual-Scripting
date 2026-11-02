@@ -1678,7 +1678,16 @@ func get_visible_row_range() -> Vector2i:
 		return Vector2i(-1, -1)
 	var zoom: float = max(_zoom_factor, 0.001)
 	var viewport_height: float = max(_get_viewport_height() / zoom, _get_event_line_height(_get_font_size()))
-	var scroll_offset: float = float(_get_scroll_offset()) / zoom
+	return visible_rows_at(float(_get_scroll_offset()) / zoom, viewport_height)
+
+
+## The rows a window of `viewport_height` at `scroll_offset` shows (logical pixels). An offset past the
+## end of the rows (zooming out while scrolled deep, for the one frame before the scroller catches up)
+## shows the last row, not every row from the first.
+func visible_rows_at(scroll_offset: float, viewport_height: float) -> Vector2i:
+	var last_row: int = _flat_rows.size() - 1
+	if scroll_offset >= _row_metrics_helper.row_top(last_row) + _row_metrics_helper.row_height(last_row):
+		return Vector2i(last_row, last_row)
 	var start_index: int = _row_metrics_helper.row_index_at_y(scroll_offset)
 	var end_index: int = _row_metrics_helper.row_index_at_y(scroll_offset + viewport_height)
 	if start_index < 0:
@@ -2554,31 +2563,29 @@ func _draw() -> void:
 		if row_data == null:
 			continue
 		var layout: Dictionary = _layout_builder.get_or_build_row_layout(index, width, font, font_size)
-		var drawn_inline: bool = true
 		if retained:
 			var offset: float = 0.0
-			var placeable: bool = true
+			var in_motion: bool = false
 			if drag_moving:
 				# A row a drag in hand leaves alone is the same paint moved down: its item is placed at the
-				# offset. A row the drag changes (a veil, a gap in its lane, a cell lifted) is drawn inline.
+				# offset. A row the drag changes (a veil, a gap in its lane, a cell lifted) is recorded again
+				# each frame through the motion path, still on its own item so it keeps its place in the
+				# row order: the row below it slides over it, not under it.
 				var plan: Dictionary = _drag_motion.row_plan(index)
 				if float(plan["faded"]) <= 0.01:
 					continue
-				placeable = float(plan["faded"]) >= 0.999 and (plan["span_shift"] as Dictionary).is_empty() \
-					and (plan["hidden"] as Array).is_empty() and absf(float(plan["growth"])) < 0.01 \
-					and not (_drag_motion.kind == "cells" and index == int(_drag_motion._source_cell.get("row", -1)))
+				in_motion = float(plan["faded"]) < 0.999 or not (plan["span_shift"] as Dictionary).is_empty() \
+					or not (plan["hidden"] as Array).is_empty() or absf(float(plan["growth"])) >= 0.01 \
+					or (_drag_motion.kind == "cells" and index == int(_drag_motion._source_cell.get("row", -1)))
 				offset = float(plan["offset"])
-			if placeable:
-				_place_row_item(index, layout, row_data, font, font_size, zoom, offset, frame_signature)
-				drawn_inline = false
-				if drag_moving:
-					draw_set_transform(Vector2(0.0, offset * zoom), 0.0, Vector2(zoom, zoom))
-		if drawn_inline:
+			_place_row_item(index, layout, row_data, font, font_size, zoom, offset, frame_signature, in_motion)
 			if drag_moving:
-				if not _draw_row_in_motion(index, layout, row_data, font, font_size, zoom):
-					continue
-			else:
-				_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+				draw_set_transform(Vector2(0.0, offset * zoom), 0.0, Vector2(zoom, zoom))
+		elif drag_moving:
+			if not _draw_row_in_motion(self, index, layout, row_data, font, font_size, zoom):
+				continue
+		else:
+			_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
 		# The laid-out band of THIS row. Read under the name the layout builder writes it as: a
 		# mistaken key here fails silently as an empty rect at the top of the canvas, which is
 		# where every chip, wash and grip dot below then lands.
@@ -2632,6 +2639,9 @@ func _draw() -> void:
 # is the old one: background and fills, the rows, then everything this function draws over them.
 
 
+## How many items are kept for reuse beyond the ones on screen: a screenful, near enough. A frame with
+## far more rows on it than that (zoomed right out) gives the surplus back instead of keeping the nodes.
+const RETAINED_POOL_SPARE: int = 64
 ## Switched off for A/B comparison and as an escape hatch: EVENTFORGE_NO_RETAINED_PAINT=1.
 static var retained_paint_allowed: bool = OS.get_environment("EVENTFORGE_NO_RETAINED_PAINT") != "1"
 
@@ -2646,8 +2656,12 @@ func _retained_paint_active() -> bool:
 
 ## The part of every row's signature that is the same for the whole frame.
 func _frame_paint_signature(zoom: float, font: Font, font_size: int) -> int:
-	return hash([zoom, size, font.get_instance_id() if font != null else 0, font_size,
+	# Only the width: a row's paint reads the canvas' right edge, and the canvas' height changes whenever
+	# an event grows its add lines, which must not record every visible row again.
+	return hash([zoom, size.x, font.get_instance_id() if font != null else 0, font_size,
 		_editor_style.get_instance_id() if _editor_style != null else 0, _layout_style_signature,
+		EventSheetRetainedPaintItem.look_signature(_editor_style),
+		EventSheetActiveTheme.chrome().object_bar_warning_color,
 		_renderer.show_event_numbers, _renderer.show_trigger_icons, _renderer.show_value_glyphs,
 		_renderer.show_variable_badges, _renderer.show_hover_add_links])
 
@@ -2699,10 +2713,16 @@ func paint_retained_row(item: CanvasItem, layout: Dictionary, row_data: EventRow
 	_renderer.draw_row(item, layout, row_data, font, font_size, _editor_style)
 
 
+## Draws a row a drag in hand changes onto its retained item, through the motion path.
+func paint_retained_row_in_motion(item: CanvasItem, index: int, layout: Dictionary, row_data: EventRowData,
+		font: Font, font_size: int, zoom: float) -> void:
+	_draw_row_in_motion(item, index, layout, row_data, font, font_size, zoom)
+
+
 ## Puts row `index` on an item (taking a recycled one when it has none) and records it when its
 ## paint changed.
 func _place_row_item(index: int, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int,
-		zoom: float, offset: float, frame_signature: int) -> void:
+		zoom: float, offset: float, frame_signature: int, in_motion: bool = false) -> void:
 	var item: EventSheetRetainedPaintItem = _row_items.get(index) as EventSheetRetainedPaintItem
 	if item == null or not is_instance_valid(item):
 		item = _row_item_pool.pop_back() as EventSheetRetainedPaintItem if not _row_item_pool.is_empty() else null
@@ -2711,11 +2731,14 @@ func _place_row_item(index: int, layout: Dictionary, row_data: EventRowData, fon
 		_row_items[index] = item
 	_row_items_placed[index] = true
 	item.visible = true
-	var placed_at := Vector2(0.0, offset * zoom)
+	# A row in motion draws its own offset along with its veil and its moved cells.
+	var placed_at := Vector2.ZERO if in_motion else Vector2(0.0, offset * zoom)
 	if item.position != placed_at:
 		item.position = placed_at
 	var signature: int = EventSheetRetainedPaintItem.paint_signature(row_data, layout, frame_signature)
-	if item.needs_record(layout, row_data, signature):
+	if in_motion or item.in_motion or item.needs_record(layout, row_data, signature):
+		item.in_motion = in_motion
+		item.row_index = index
 		item.font = font
 		item.font_size = font_size
 		item.zoom = zoom
@@ -2736,6 +2759,10 @@ func _release_unplaced_row_items() -> void:
 		if item != null and is_instance_valid(item):
 			item.forget()
 			_row_item_pool.append(item)
+	while _row_item_pool.size() > RETAINED_POOL_SPARE:
+		var spare: Variant = _row_item_pool.pop_back()
+		if is_instance_valid(spare):
+			(spare as Node).queue_free()
 	var placed: Array = _row_items_placed.keys()
 	placed.sort()
 	var previous_position: int = -1
@@ -2880,17 +2907,17 @@ func _draw_selection_run_frames(runs: Array) -> void:
 ## once the pointer has left it, and a lifted source drawn faint with a dashed edge. False when the
 ## row is not drawn at all (a carried row that has folded away). The row's spans are put back as they
 ## were before this returns, so hit-testing and the layout cache never see a moved rect.
-func _draw_row_in_motion(index: int, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, zoom: float) -> bool:
+func _draw_row_in_motion(canvas: CanvasItem, index: int, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, zoom: float) -> bool:
 	var plan: Dictionary = _drag_motion.row_plan(index)
 	var faded: float = float(plan["faded"])
 	if faded <= 0.01:
 		return false
-	draw_set_transform(Vector2(0.0, float(plan["offset"]) * zoom), 0.0, Vector2(zoom, zoom))
+	canvas.draw_set_transform(Vector2(0.0, float(plan["offset"]) * zoom), 0.0, Vector2(zoom, zoom))
 	var shifts: Dictionary = plan["span_shift"]
 	var hidden: Array = plan["hidden"]
 	var resize: float = float(plan["growth"])
 	if shifts.is_empty() and hidden.is_empty() and absf(resize) < 0.01:
-		_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+		_renderer.draw_row(canvas, layout, row_data, font, font_size, _editor_style)
 	else:
 		var kept_spans: Array[SemanticSpan] = row_data.spans.duplicate()
 		var moved_layout: Dictionary = layout.duplicate()
@@ -2914,15 +2941,15 @@ func _draw_row_in_motion(index: int, layout: Dictionary, row_data: EventRowData,
 				moved.hoverable = span.hoverable
 				moved.rect = Rect2(span.rect.position + Vector2(0.0, float(shifts[span_index])), span.rect.size)
 				row_data.spans[span_index] = moved
-		_renderer.draw_row(self, moved_layout, row_data, font, font_size, _editor_style)
+		_renderer.draw_row(canvas, moved_layout, row_data, font, font_size, _editor_style)
 		row_data.spans = kept_spans
 	if faded < 1.0:
 		# The place a lifted row came from: the row under a veil of the sheet, and a dashed edge.
 		var row_rect: Rect2 = layout.get("row_rect", Rect2())
 		var veil: Color = _get_event_style().sheet_background_color
 		veil.a = 1.0 - faded
-		draw_rect(row_rect, veil, true)
-		_draw_dashed_rect(row_rect.grow(-1.0), _get_reading_style().drag_line_color)
+		canvas.draw_rect(row_rect, veil, true)
+		_draw_dashed_rect(row_rect.grow(-1.0), _get_reading_style().drag_line_color, canvas)
 	if _drag_motion.kind == "cells" and index == int(_drag_motion._source_cell.get("row", -1)) \
 			and not _drag_motion.left_source:
 		var cell: Rect2 = Rect2(_drag_motion._lane_rect(index, str(_drag_motion._source_cell["lane"])).position.x,
@@ -2931,8 +2958,8 @@ func _draw_row_in_motion(index: int, layout: Dictionary, row_data: EventRowData,
 			_drag_motion.source_cell_bottom() - _drag_motion.source_cell_top() + 2.0)
 		var veil_cell: Color = _get_event_style().sheet_background_color
 		veil_cell.a = 1.0 - ViewportDragMotion.LIFTED_ALPHA
-		draw_rect(cell, veil_cell, true)
-		_draw_dashed_rect(cell, _get_reading_style().drag_line_color)
+		canvas.draw_rect(cell, veil_cell, true)
+		_draw_dashed_rect(cell, _get_reading_style().drag_line_color, canvas)
 	return true
 
 
@@ -2947,13 +2974,14 @@ func _draw_drag_gaps() -> void:
 		_draw_dashed_rect(rect.grow(-2.0), line)
 
 
-func _draw_dashed_rect(rect: Rect2, color: Color) -> void:
+func _draw_dashed_rect(rect: Rect2, color: Color, canvas: CanvasItem = null) -> void:
 	if rect.size.x <= 2.0 or rect.size.y <= 2.0:
 		return
+	var target: CanvasItem = canvas if canvas != null else self
 	var corners: PackedVector2Array = PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y),
 		rect.end, Vector2(rect.position.x, rect.end.y), rect.position])
 	for side: int in range(4):
-		draw_dashed_line(corners[side], corners[side + 1], color, 1.0, ViewportDragMotion.GAP_DASH)
+		target.draw_dashed_line(corners[side], corners[side + 1], color, 1.0, ViewportDragMotion.GAP_DASH)
 
 
 ## A rectangle over rows `first` to `last`, moved and stretched the way a drag in hand draws those

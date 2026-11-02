@@ -68,6 +68,22 @@ static func _test_signature() -> bool:
 	changes.append(["the lit uses of a hovered variable", EventSheetRetainedPaintItem.paint_signature(row_data, matches, 7)])
 	for change: Array in changes:
 		rows.append(["%s moves the signature" % change[0], int(change[1]) != base, true])
+	# A state row asks the running game at draw time: its token's seconds change with no rebuild.
+	var state_span: SemanticSpan = SemanticSpan.new()
+	state_span.metadata = {"state_name": "CHASE"}
+	row_data.spans = [state_span]
+	EventSheetStateWatch.clear()
+	var resting: int = EventSheetRetainedPaintItem.paint_signature(row_data, layout, 7)
+	EventSheetStateWatch.note_frame({"state": "CHASE", "state_seconds": 1.0})
+	var live_one: int = EventSheetRetainedPaintItem.paint_signature(row_data, layout, 7)
+	EventSheetStateWatch.note_frame({"state": "CHASE", "state_seconds": 2.5})
+	var live_two: int = EventSheetRetainedPaintItem.paint_signature(row_data, layout, 7)
+	EventSheetStateWatch.note_frame({"state": "PATROL", "state_seconds": 2.5})
+	var left_it: int = EventSheetRetainedPaintItem.paint_signature(row_data, layout, 7)
+	EventSheetStateWatch.clear()
+	rows.append(["a state coming live moves the signature", live_one != resting, true])
+	rows.append(["its seconds move the signature", live_two != live_one, true])
+	rows.append(["the game leaving that state moves it too", left_it != live_two, true])
 	return SUPPORT.pins(TEST_NAME, rows)
 
 
@@ -143,5 +159,65 @@ static func _test_placement() -> bool:
 	place.call(0, 2)
 	rows.append(["rows far away left only their own items", view.retained_paint_stats()["placed"], 3])
 	rows.append(["the others are pooled for reuse", view.retained_paint_stats()["pooled"] >= 3, true])
+
+	# One frame with many rows on it (zoomed far out on a long sheet) must not leave as many nodes behind.
+	var total_rows: int = view.get_total_row_count()
+	place.call(0, total_rows - 1)
+	place.call(0, 2)
+	rows.append(["a frame with every row on it leaves a bounded pool", view.retained_paint_stats()["pooled"] <= EventSheetViewport.RETAINED_POOL_SPARE, true])
+	var alive: int = 0
+	for child: Node in view.get_children():
+		if child is EventSheetRetainedPaintItem and not child.is_queued_for_deletion():
+			alive += 1
+	rows.append(["and the rest of the items are gone", alive <= 3 + EventSheetViewport.RETAINED_POOL_SPARE, true])
+
+	# Zooming out while scrolled deep leaves the scroll offset past the end of the canvas for one frame:
+	# that frame is not a reason to draw (and make an item for) every row of the sheet.
+	var host: ScrollContainer = ScrollContainer.new()
+	host.size = Vector2(1200.0, 300.0)
+	host.add_child(view)
+	var deep: Vector2i = view.visible_rows_at(view._row_metrics_helper.row_top(total_rows - 1) + 90000.0, 300.0)
+	rows.append(["a scroll offset past the end asks for the last row, not all of them", deep, Vector2i(total_rows - 1, total_rows - 1)])
+	host.remove_child(view)
+	host.free()
+
+	# The frame-wide part. The canvas grows and shrinks as an event opens its add lines, and only its width
+	# reaches a row's paint; a colour changed in place on the look (the Inspector edits a sheet's own one)
+	# must reach every row although the look is the same object.
+	view.apply_editor_style(EventSheetEditorThemeDeriver.promoted_default_style())
+	var framed: int = view._frame_paint_signature(1.0, font, font_size)
+	var was_size: Vector2 = view.size
+	view.size = was_size + Vector2(0.0, 500.0)
+	rows.append(["a taller canvas leaves the frame signature alone", view._frame_paint_signature(1.0, font, font_size), framed])
+	view.size = was_size + Vector2(200.0, 0.0)
+	rows.append(["a wider canvas moves it", view._frame_paint_signature(1.0, font, font_size) != framed, true])
+	view.size = was_size
+	var event_style: EventSheetEventStyle = view._get_event_style()
+	var kept_colour: Color = event_style.row_background_color
+	event_style.row_background_color = Color(0.5, 0.1, 0.1)
+	rows.append(["a colour changed in place on the look moves it", view._frame_paint_signature(1.0, font, font_size) != framed, true])
+	event_style.row_background_color = kept_colour
+	rows.append(["and putting it back settles it", view._frame_paint_signature(1.0, font, font_size), framed])
+
+	# A row a drag in hand changes stays on its own item (the row below slides over it, not under it), is
+	# recorded every frame, and draws its own offset; left alone again it records once more and stands still.
+	view._row_items_placed.clear()
+	var moving_index: int = 1
+	var moving_row: EventRowData = view._row_at(moving_index)
+	var moving_layout: Dictionary = view._layout_builder.get_or_build_row_layout(moving_index, width, font, font_size)
+	view._place_row_item(moving_index, moving_layout, moving_row, font, font_size, 1.0, 40.0, frame[0], true)
+	var motion_one: Dictionary = view.retained_paint_stats()
+	view._place_row_item(moving_index, moving_layout, moving_row, font, font_size, 1.0, 40.0, frame[0], true)
+	var motion_two: Dictionary = view.retained_paint_stats()
+	var moving_item: EventSheetRetainedPaintItem = view._row_items[moving_index]
+	rows.append(["a row in motion is recorded every frame", int(motion_two["requests"]) - int(motion_one["requests"]), 1])
+	rows.append(["and draws its own offset, so its item does not move", moving_item.position, Vector2.ZERO])
+	rows.append(["it remembers which row it draws", moving_item.row_index, moving_index])
+	view._place_row_item(moving_index, moving_layout, moving_row, font, font_size, 1.0, 40.0, frame[0], false)
+	var settled: Dictionary = view.retained_paint_stats()
+	rows.append(["leaving the motion path records it once more", int(settled["requests"]) - int(motion_two["requests"]), 1])
+	rows.append(["and it is placed at the offset like any other row", moving_item.position, Vector2(0.0, 40.0)])
+	view._place_row_item(moving_index, moving_layout, moving_row, font, font_size, 1.0, 40.0, frame[0], false)
+	rows.append(["after that the same paint moved asks for nothing", int(view.retained_paint_stats()["requests"]) - int(settled["requests"]), 0])
 	view.free()
 	return SUPPORT.pins(TEST_NAME, rows)

@@ -26,6 +26,8 @@ const KIND_ROW: int = 1
 const SKIPPED_FIELDS: Array[String] = ["spans", "children"]
 
 static var _signature_fields: PackedStringArray = PackedStringArray()
+## The plain fields of each part of a look, by its script.
+static var _look_field_names: Dictionary = {}
 
 var kind: int = KIND_ROW
 var viewport: Control = null
@@ -38,6 +40,10 @@ var font_size: int = 16
 var zoom: float = 1.0
 ## The viewport's size, for the paint that reads it (a note's right edge).
 var size: Vector2 = Vector2.ZERO
+## This frame's row is one a drag in hand changes (a veil, a gap in its lane, a cell lifted): it is
+## drawn through the viewport's motion path, on this item, so it keeps its place in the row order.
+var in_motion: bool = false
+var row_index: int = -1
 ## How many times this item has been drawn, and how many times it was asked to be recorded, for the
 ## tests and the bench.
 var records: int = 0
@@ -58,6 +64,9 @@ func _draw() -> void:
 	if paint_row == null:
 		return
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+	if in_motion:
+		viewport.paint_retained_row_in_motion(self, row_index, paint_layout, paint_row, font, font_size, zoom)
+		return
 	viewport.paint_retained_row(self, paint_layout, paint_row, font, font_size)
 
 
@@ -93,6 +102,8 @@ func forget() -> void:
 	paint_layout = {}
 	paint_row = null
 	paint_signature_value = 0
+	in_motion = false
+	row_index = -1
 	visible = false
 
 
@@ -112,7 +123,48 @@ static func paint_signature(row_data: EventRowData, layout: Dictionary, frame_si
 	values.append(layout.get("editing_select_anchor", -1))
 	values.append(layout.get("editing_note", ""))
 	values.append(layout.get("total_selected_spans", 0))
+	# A state row's live token: the renderer asks the running game's state at draw time, and the seconds
+	# change inside the room the row already holds, with no rebuild and no new layout.
+	if EventSheetStateWatch.is_live():
+		values.append(_live_state_reading(row_data))
 	return hash(values)
+
+
+## What the row's state tokens say right now: "" for a member no running game is in.
+static func _live_state_reading(row_data: EventRowData) -> PackedStringArray:
+	var reading: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).has("state_name"):
+			reading.append(EventSheetStateWatch.token_text(str((span.metadata as Dictionary)["state_name"])))
+	return reading
+
+
+## A hash of every plain value a look holds. A look is a resource a reader can change in place (the
+## Inspector edits a sheet's own one) and nothing announces that: the row items must not keep the old
+## colours. The look's parts are looked at once per drawn frame, never per row.
+static func look_signature(style: EventSheetEditorStyle) -> int:
+	if style == null:
+		return 0
+	var values: Array = []
+	for part: Resource in [style.event_style, style.condition_style, style.action_style, style.reading_style, style.chrome_style]:
+		if part == null:
+			values.append(0)
+			continue
+		for field: String in _look_fields(part):
+			values.append(part.get(field))
+	return hash(values)
+
+
+static func _look_fields(part: Resource) -> PackedStringArray:
+	var script: Script = part.get_script()
+	if _look_field_names.has(script):
+		return _look_field_names[script]
+	var names: PackedStringArray = PackedStringArray()
+	for property: Dictionary in part.get_property_list():
+		if (int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE) != 0 and int(property["type"]) != TYPE_OBJECT:
+			names.append(str(property["name"]))
+	_look_field_names[script] = names
+	return names
 
 
 static func _fields() -> PackedStringArray:

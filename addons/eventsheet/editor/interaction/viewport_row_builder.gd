@@ -16979,6 +16979,9 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 	if not hide_conditions:
 		children.append_array(row.children)
 	head.children = children
+	# The head is what the reader folds, and it is built afresh here, so it takes the fold the way every
+	# other row does: a fold that lived only on the row it replaced would open again on the next build.
+	head.folded = bool(_viewport._fold_state.get(head.row_uid, false))
 	return [head]
 
 

@@ -22,6 +22,9 @@ const SHEETS: Array[String] = [
 	"res://demo/showcase/menu_starter/menu_starter.gd",
 	"res://demo/showcase/quest_fsm/quest_fsm.gd",
 	"res://demo/showcase/carousel/showcase_carousel.gd",
+	# Events whose head is a slice of a split ternary: the row the reader folds is built afresh.
+	"res://demo/showcase/platformer_shooter/platformer_shooter.gd",
+	"res://eventsheet_addons/idle_generator/idle_generator_behavior.gd",
 ]
 ## A region around two functions, one of them folded by default: the opener names what it holds.
 const REGION_SOURCE := """extends Node
