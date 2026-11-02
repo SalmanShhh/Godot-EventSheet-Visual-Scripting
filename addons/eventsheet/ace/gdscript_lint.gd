@@ -243,7 +243,12 @@ static func structural_syntax_error(code: String) -> String:
 
 
 ## The throwaway probe script used for linting: host-class extends + sheet symbol stubs + the code.
-static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetResource) -> String:
+## `typed` writes the sheet's variables with the types they were declared with and its functions with
+## their real signatures (see typed_variable_lines / typed_function_lines), so Godot's own analyzer
+## judges the kinds of value; `extra_lines` goes in front of the code (stand-ins for `$Node`
+## references). The default keeps the untyped stand-ins every existing caller was written against.
+static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetResource, typed: bool = false,
+		extra_lines: PackedStringArray = PackedStringArray()) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "RefCounted"
 	# Behavior sheets compile to Node components with a typed `host` accessor - the probe
@@ -259,10 +264,15 @@ static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetRes
 		for entry in sheet.events:
 			if entry is SignalRow and (entry as SignalRow).enabled:
 				lines.append(SheetCompiler._emit_signal_line(entry))
-	for variable_name in _sheet_variable_names(sheet):
-		lines.append("var %s" % variable_name)
-	for function_name in _sheet_function_names(sheet):
-		lines.append("func %s(_a = null, _b = null, _c = null, _d = null, _e = null, _f = null, _g = null, _h = null) -> Variant: return null" % function_name)
+	if typed:
+		lines.append_array(typed_variable_lines(sheet))
+		lines.append_array(typed_function_lines(sheet))
+	else:
+		for variable_name in _sheet_variable_names(sheet):
+			lines.append("var %s" % variable_name)
+		for function_name in _sheet_function_names(sheet):
+			lines.append("func %s(_a = null, _b = null, _c = null, _d = null, _e = null, _f = null, _g = null, _h = null) -> Variant: return null" % function_name)
+	lines.append_array(extra_lines)
 	if in_flow:
 		lines.append("func __eventsheet_lint() -> void:")
 		for code_line: String in code.split("\n"):
@@ -536,3 +546,155 @@ static func _sheet_function_names(sheet: EventSheetResource) -> Array[String]:
 			names.append((function_resource as EventFunction).function_name)
 	names.sort()
 	return names
+
+
+## The Variant types GDScript spells by name, plus the two collection kinds a typed array builds on.
+const VALUE_TYPE_NAMES: PackedStringArray = [
+	"bool", "int", "float", "String", "Vector2", "Vector2i", "Rect2", "Rect2i", "Vector3", "Vector3i",
+	"Transform2D", "Vector4", "Vector4i", "Plane", "Quaternion", "AABB", "Basis", "Transform3D",
+	"Projection", "Color", "StringName", "NodePath", "RID", "Callable", "Signal", "Dictionary", "Array",
+	"PackedByteArray", "PackedInt32Array", "PackedInt64Array", "PackedFloat32Array", "PackedFloat64Array",
+	"PackedStringArray", "PackedVector2Array", "PackedVector3Array", "PackedColorArray", "PackedVector4Array",
+]
+
+
+## Whether the probe can spell `type_name` as a declaration without help: a Variant value type, an engine
+## class, a project class (class_name), a sheet enum, or an array of one of those. A name the probe could not
+## resolve (an inner class the probe does not declare, a type from a pack that is not loaded) would fail the
+## whole probe script, so the variable is declared without a type instead - an untyped stand-in can only
+## say less, never something false.
+static func is_known_type(type_name: String, enum_names: PackedStringArray, global_classes: Dictionary) -> bool:
+	var name_text: String = type_name.strip_edges()
+	if name_text.is_empty() or name_text == "Variant" or name_text == "void":
+		return false
+	if name_text.begins_with("Array[") and name_text.ends_with("]"):
+		var element: String = name_text.substr(6, name_text.length() - 7).strip_edges()
+		return element != "Variant" and not element.begins_with("Array[") \
+			and is_known_type(element, enum_names, global_classes)
+	if VALUE_TYPE_NAMES.has(name_text) or ClassDB.class_exists(name_text) or enum_names.has(name_text) \
+			or global_classes.has(name_text):
+		return true
+	var dot: int = name_text.find(".")
+	return dot > 0 and ClassDB.class_has_enum(name_text.substr(0, dot), name_text.substr(dot + 1))
+
+
+## {class_name: true} for every project class, read once per probe build.
+static func _global_class_names() -> Dictionary:
+	var names: Dictionary = {}
+	for entry: Variant in ProjectSettings.get_global_class_list():
+		names[str((entry as Dictionary).get("class", ""))] = true
+	return names
+
+
+static func _sheet_enum_names(sheet: EventSheetResource) -> PackedStringArray:
+	var enum_names: PackedStringArray = PackedStringArray()
+	for enum_row: EnumRow in _sheet_enums(sheet):
+		enum_names.append(enum_row.enum_name)
+	return enum_names
+
+
+## `var name: Type` for every variable the sheet declares, with the type each was declared with - the
+## sheet's variable table and the variable rows - and a bare `var name` for one whose type is `Variant`,
+## inferred (`:=`), untyped, or a name the probe cannot resolve. Sorted like _sheet_variable_names.
+static func typed_variable_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return lines
+	var enum_names: PackedStringArray = _sheet_enum_names(sheet)
+	var classes: Dictionary = _global_class_names()
+	var types: Dictionary = {}
+	for key: Variant in sheet.variables.keys():
+		var descriptor: Variant = sheet.variables[key]
+		types[str(key)] = str((descriptor as Dictionary).get("type", "")) if descriptor is Dictionary else ""
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable and not (entry as LocalVariable).name.strip_edges().is_empty():
+			var variable: LocalVariable = entry as LocalVariable
+			if sheet.behavior_mode and variable.name == "host":
+				continue
+			types[variable.name] = "" if variable.inferred_type or variable.untyped else variable.type_name
+	var names: Array = types.keys()
+	names.sort()
+	for variable_name: Variant in names:
+		var type_name: String = str(types[variable_name]).strip_edges()
+		if is_known_type(type_name, enum_names, classes):
+			lines.append("var %s: %s" % [variable_name, type_name])
+		else:
+			lines.append("var %s" % variable_name)
+	return lines
+
+
+## The `func` line of every sheet function as the compiler writes it - its parameters with their types,
+## its return type - and the stub the compiler writes for an empty body, so the probe knows what the real
+## script knows. A function naming a type the probe cannot resolve, or whose parameter default is more than
+## a literal, keeps the loose eight-optional-arguments stand-in: that one function checks as before.
+static func typed_function_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return lines
+	var enum_names: PackedStringArray = _sheet_enum_names(sheet)
+	var classes: Dictionary = _global_class_names()
+	var seen: Dictionary = {}
+	var entries: Array[EventFunction] = []
+	for function_resource: Variant in sheet.functions:
+		if function_resource is EventFunction and not (function_resource as EventFunction).function_name.strip_edges().is_empty():
+			entries.append(function_resource as EventFunction)
+	entries.sort_custom(func(a: EventFunction, b: EventFunction) -> bool: return a.function_name < b.function_name)
+	for event_function: EventFunction in entries:
+		if seen.has(event_function.function_name):
+			continue
+		seen[event_function.function_name] = true
+		if _function_is_spellable(event_function, enum_names, classes):
+			lines.append(SheetCompiler._function_header_line(event_function))
+			lines.append(_stub_body(event_function, enum_names))
+		else:
+			lines.append("func %s(_a = null, _b = null, _c = null, _d = null, _e = null, _f = null, _g = null, _h = null) -> Variant: return null" % event_function.function_name)
+	return lines
+
+
+## A body that is valid for the return type the function declares: nothing for void, the type's own empty
+## value for a Variant value type, `[]` for a typed array, `0` for an enum, `null` for a class or Variant.
+## (The compiler's stub for an empty function is `return null`, which a Dictionary or a String return
+## does not accept; the probe must load whatever the sheet declares.)
+static func _stub_body(event_function: EventFunction, enum_names: PackedStringArray) -> String:
+	if event_function.no_return_annotation:
+		return "\tpass"
+	var type_name: String = SheetCompiler._function_return_type_name(event_function).strip_edges()
+	if type_name == "void":
+		return "\tpass"
+	if type_name.begins_with("Array["):
+		return "\treturn []"
+	if enum_names.has(type_name) or type_name.contains("."):
+		return "\treturn 0"
+	if VALUE_TYPE_NAMES.has(type_name):
+		return "\treturn %s()" % type_name
+	return "\treturn null"
+
+
+static func _function_is_spellable(event_function: EventFunction, enum_names: PackedStringArray, classes: Dictionary) -> bool:
+	if event_function.is_async or not event_function.looping_iterator.is_empty():
+		return false
+	if not event_function.params.is_empty():
+		for param: ACEParam in event_function.params:
+			if param == null:
+				continue
+			var type_name: String = param.type_name.strip_edges()
+			if not type_name.is_empty() and type_name != "Variant" and not is_known_type(type_name, enum_names, classes):
+				return false
+			var default_text: String = param.gdscript_default.strip_edges()
+			if not default_text.is_empty() and not _is_literal_default(default_text):
+				return false
+	else:
+		for parameter: String in event_function.parameters:
+			if parameter.contains("=") or parameter.contains(":"):
+				return false
+	var named_return: String = event_function.return_type_name.strip_edges()
+	if not named_return.is_empty() and named_return != "void" and named_return != "Variant" \
+			and not is_known_type(named_return, enum_names, classes):
+		return false
+	return true
+
+
+static func _is_literal_default(text: String) -> bool:
+	if text.is_valid_int() or text.is_valid_float() or text in ["true", "false", "null", "[]", "{}"]:
+		return true
+	return text.length() >= 2 and text.begins_with("\"") and text.ends_with("\"") and not text.substr(1, text.length() - 2).contains("\"")
