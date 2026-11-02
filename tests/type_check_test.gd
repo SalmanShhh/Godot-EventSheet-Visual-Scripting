@@ -23,6 +23,9 @@ static func run() -> bool:
 	all_passed = _scene_nodes_are_typed_and_checked() and all_passed
 	all_passed = _the_dialog_gate_refuses_and_says_why() and all_passed
 	all_passed = _a_message_without_a_plain_form_is_left_to_the_compile_check() and all_passed
+	all_passed = _no_false_refusals_around_scene_nodes() and all_passed
+	all_passed = _self_is_said_by_its_class_and_a_foreign_host_says_nothing() and all_passed
+	all_passed = _the_scene_that_judges_is_the_one_that_runs_the_sheet() and all_passed
 	return all_passed
 
 
@@ -389,3 +392,79 @@ static func _a_message_without_a_plain_form_is_left_to_the_compile_check() -> bo
 		["a field without a template is judged as an expression", _says("", "value", "heal(1, 2)", {}), ["error", "heal takes 1 value(s) (amount: int)."]],
 	]
 	return SUPPORT.pins(NAME + ": left to the compile check", rows)
+
+
+## Valid values that the node stand-ins and the member check must leave alone.
+static func _no_false_refusals_around_scene_nodes() -> bool:
+	var root: Node2D = Node2D.new()
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.name = "Sprite"
+	root.add_child(sprite)
+	sprite.owner = root
+	var dynamic: Node = Node.new()
+	dynamic.name = "Dynamic"
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends Node\nfunc _get(property: StringName) -> Variant:\n\treturn 1\n"
+	script.reload()
+	dynamic.set_script(script)
+	root.add_child(dynamic)
+	dynamic.owner = root
+	var broken_path: String = "user://type_check_broken_script.gd"
+	var broken_file: FileAccess = FileAccess.open(broken_path, FileAccess.WRITE)
+	broken_file.store_string("extends Node\nvar x: int = \"a\"\n")
+	broken_file.close()
+	var fine_path: String = "res://tests/fixtures/type_check_host.gd"
+	var rows: Array = [
+		["a node path inside text is text", _says(SET_VAR, "value", "\"$Sprite.nothing costs 5\"", {"var_name": "player_name"}, root), ["", ""]],
+		["a unique name inside text is text", _says(SET_VAR, "value", "\"%Sprite.nothing\"", {"var_name": "player_name"}, root), ["", ""]],
+		["a longer name beginning with a node's name", _says(SET_VAR, "value", "$Sprite.position.x + $Sprite2.y", {"var_name": "speed"}, root), ["", ""]],
+		["a script that answers names of its own making", _says(SET_VAR, "value", "$Dynamic.anything", {"var_name": "speed"}, root), ["", ""]],
+		["a script that does not compile is not a whole list", EventSheetTypeCheck.run_probe("extends \"%s\"\n" % broken_path).get("ok"), false],
+		["a script that compiles is", EventSheetTypeCheck.script_compiles(load(fine_path)), true],
+	]
+	for member: String in ["free", "queue_free", "call_deferred", "call", "callv", "get", "set", "connect", "emit_signal", "get_class", "is_class", "has_method", "get_meta", "add_child", "tree_exited", "script", "name", "texture"]:
+		rows.append(["%s is a member of a node" % member, _says(SET_VAR, "value", "$Sprite.%s" % member, {"var_name": "mystery"}, root)[1].contains("has no"), false])
+	var result: bool = SUPPORT.pins(NAME + ": around scene nodes", rows)
+	root.free()
+	DirAccess.remove_absolute(broken_path)
+	return result
+
+
+## A stand-in script has no name, so Godot says `gdscript://-123.gd` for `self`. The reader never sees it; and
+## a host the stand-in does not stand for (no class it can extend) is not judged by what `self` is.
+static func _self_is_said_by_its_class_and_a_foreign_host_says_nothing() -> bool:
+	var behaviour: EventSheetResource = _sheet()
+	behaviour.behavior_mode = true
+	var finding: Dictionary = EventSheetTypeCheck.check_field(SET_VAR, "value", "self", {"var_name": "target_node"}, behaviour)
+	var foreign: EventSheetResource = _sheet()
+	foreign.host_class = "NoSuchProjectClass"
+	var project_class: EventSheetResource = _sheet()
+	project_class.host_class = "EventSheetFixtureHost"
+	return SUPPORT.pins(NAME + ": self", [
+		["a behaviour's self is a Node, which a Node2D variable refuses", str(finding.get("level", "")), "error"],
+		["Godot's words name the class", str(finding.get("original", "")), "Value of type \"Node\" cannot be assigned to a variable of type \"Node2D\"."],
+		["no address reaches the sentence", str(finding.get("body", "")).contains("gdscript://"), false],
+		["no address reaches the reason", str(finding.get("reason", "")).contains("gdscript://"), false],
+		["a host the stand-in cannot extend: self is not judged", EventSheetTypeCheck.check_field(SET_VAR, "value", "self", {"var_name": "target_node"}, foreign), {}],
+		["a project class as the host: its self is a node", EventSheetTypeCheck.check_field(SET_VAR, "value", "self", {"var_name": "target_node"}, project_class), {}],
+		["a project class as the host: inherited members compile", EventSheetGDScriptLint.lint_expression("position", project_class).get("ok"), true],
+	])
+
+
+## A `$Path` is read from the node that runs the sheet; a scene that does not run it says nothing.
+static func _the_scene_that_judges_is_the_one_that_runs_the_sheet() -> bool:
+	var sheet: EventSheetResource = _sheet()
+	sheet.external_source_path = "res://tests/fixtures/type_check_host.gd"
+	var root: Node2D = Node2D.new()
+	var carrier: Node2D = Node2D.new()
+	carrier.name = "Carrier"
+	root.add_child(carrier)
+	var other_scene: Node2D = Node2D.new()
+	var pins: Array = [["a scene that does not run the sheet has no host", EventSheetTypeCheck.host_in_scene(other_scene, sheet), null]]
+	carrier.set_script(load(sheet.external_source_path))
+	pins.append(["the node that runs the script is the host", EventSheetTypeCheck.host_in_scene(root, sheet), carrier])
+	pins.append(["a sheet with no file has no host", EventSheetTypeCheck.host_in_scene(root, EventSheetResource.new()), null])
+	var result: bool = SUPPORT.pins(NAME + ": host", pins)
+	root.free()
+	other_scene.free()
+	return result

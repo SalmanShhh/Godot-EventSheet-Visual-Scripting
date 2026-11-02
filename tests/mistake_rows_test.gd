@@ -112,7 +112,8 @@ static func _strip_pins() -> bool:
 		["and the red row's words are not drawn in the amber colour", red_modulate != amber_modulate, true],
 		["the amber row's sentence names the group and what Godot does", amber_text.contains("\"enemys\"") and amber_text.contains("Godot prints nothing"), true],
 		["a group with a near name offers it first", [door, door_shown], ["Use \"enemies\"", true]],
-		["and the run-time door second", second, "It is added at run time"],
+		["and a node for it second", second, "Add the group to a node..."],
+		["and the run-time door third", dock._row_help_button_third.text, "It is added at run time"],
 	])
 	dock.free()
 	return ok
@@ -148,7 +149,7 @@ static func _stop_after_pins(dock: EventSheetDock) -> bool:
 	if loop == null:
 		return false
 	dock._update_row_help_strip(loop)
-	dock.apply_selected_row_fix()
+	dock.apply_selected_row_second_fix()
 	var compiled: String = SUPPORT.compile_output(dock._current_sheet, "")
 	var kinds: Array = []
 	for finding: Dictionary in EventSheetMistakeFindings.findings(dock._current_sheet, LEVEL):
@@ -173,18 +174,12 @@ static func _doctor_pins() -> bool:
 	var offered: Array = []
 	for offer: Dictionary in EventSheetQuickFixes.fixes_for(while_finding):
 		offered.append(offer["label"])
-	var group_offers: Array = []
-	for offer: Dictionary in EventSheetQuickFixes.fixes_for({"check": "group-nothing-is-in", "subject": "enemys", "to": "enemies"}):
-		group_offers.append(offer["label"])
-	var group_without_near: Array = EventSheetQuickFixes.fixes_for({"check": "group-nothing-is-in", "subject": "enemys", "to": ""})
 	return SUPPORT.pins(TEST_NAME, [
 		["the section's summary leads and is a note", summary_first, true],
 		["the script's two mistakes are filed under their own check ids", checks.has("signal-emit-value-count") and checks.has("while-never-ends"), true],
 		["with their own severities (error, warning)", severities.has("error") and severities.has("warning"), true],
 		["a finding names the sheet's margin number for the row", int(while_finding.get("event", 0)) > 0, true],
-		["the While offers the guard", offered, ["Stop after 1000 rounds"]],
-		["a group with a near name offers use-it and run-time", group_offers, ["Use \"enemies\"", "It is added at run time"]],
-		["a group with no near name offers only run-time", group_without_near.size(), 1],
+		["the While offers its doors", offered, ["Add: Subtract 1 from lives", "Stop after 1000 rounds", "Make it an If"]],
 		["a clean corpus reports nothing at all", EventSheetMistakeChecksDoctor.report(PackedStringArray(["res://tests/fixtures/mistake_level.gd"])), []],
 		["the missing control is not said twice: it stays the Doctor's own finding", EventSheetMistakeChecksDoctor.SAID_ELSEWHERE.has("input-action-not-in-map"), true],
 	])

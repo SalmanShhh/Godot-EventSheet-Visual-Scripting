@@ -7697,6 +7697,10 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	# The door is the FIRST finding's, because one row rarely has two and offering two buttons for
 	# one row would be a menu rather than a strip.
 	_row_help_finding = found[0]
+	# A finding Godot itself put in words keeps them, exactly, on the strip's hover.
+	var godot_says: String = str(_row_help_finding.get("original", ""))
+	if not godot_says.is_empty():
+		_row_help_label.tooltip_text = "%s\n\n%s %s" % [_row_help_label.tooltip_text, EventSheetL10n.translate("Godot says:"), godot_says]
 	var label: String = str(_row_help_finding.get("fix_label", ""))
 	_row_help_button.text = label
 	_row_help_button.visible = not label.is_empty()

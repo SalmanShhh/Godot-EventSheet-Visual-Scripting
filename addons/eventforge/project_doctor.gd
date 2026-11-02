@@ -2314,6 +2314,29 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 		# The control's own name, so the quick fix on the row can add it without reading the
 		# message back out of English.
 		findings[findings.size() - 1]["subject"] = missing[0]
+		_address_missing_control(script_path, missing, findings[findings.size() - 1])
+
+
+## Gives a missing-control finding the row that names the control: its margin number, the near name the map
+## has, and the row's own doors. Only scripts that earned the finding are opened as sheets. A script whose
+## control no row can be found saying keeps the per-script finding it has.
+static func _address_missing_control(script_path: String, missing: PackedStringArray, finding: Dictionary) -> void:
+	var sheet: EventSheetResource = sheet_of(script_path)
+	if sheet == null:
+		return
+	var numbers: Dictionary = margin_numbers_of(sheet)
+	for row_finding: Dictionary in load("res://addons/eventsheet/editor/interaction/mistake_findings.gd").findings(sheet, script_path):
+		if str(row_finding.get("kind", "")) != "input-action-not-in-map" or not missing.has(str(row_finding.get("subject", ""))):
+			continue
+		var event_row: Object = row_finding.get("event") as Object
+		if event_row != null:
+			finding["event"] = int(numbers.get(event_row.get_instance_id(), 0))
+		finding["subject"] = str(row_finding.get("subject", ""))
+		finding["to"] = str(row_finding.get("to", ""))
+		finding["kind"] = "input-action-not-in-map"
+		finding["lane"] = str(row_finding.get("lane", ""))
+		finding["index"] = int(row_finding.get("index", -1))
+		return
 
 
 ## Bindings changed at runtime but never saved. A rebind screen that calls

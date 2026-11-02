@@ -41,6 +41,7 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetMistakeFindings.KIND_LOCAL_HIDES_VARIABLE: "local-hides-variable",
 	EventSheetMistakeFindings.KIND_LOCAL_HIDES_PARAMETER: "local-hides-parameter",
 	EventSheetMistakeFindings.KIND_DIVIDE_BY_ZERO: "divide-by-literal-zero",
+	EventSheetMistakeFindings.KIND_WRONG_KIND: "value-of-the-wrong-kind",
 }
 
 ## The missing-control finding is the Doctor's own already (per script, with Add and Pick doors).
@@ -123,9 +124,18 @@ static func script_findings(script_path: String, mine: Array[Dictionary], number
 		filed["to"] = str(finding.get("to", ""))
 		filed["lane"] = str(finding.get("lane", ""))
 		filed["index"] = int(finding.get("index", -1))
-		filed["fix_ids"] = [str(finding.get("fix", "")), str(finding.get("second_fix", "")), str(finding.get("third_fix", ""))]
+		filed["doors"] = doors_of(finding)
 		findings.append(filed)
 	return findings
+
+
+## A row finding's doors as the Doctor's chips read them: [{id, label}], in the strip's order.
+static func doors_of(finding: Dictionary) -> Array:
+	var doors: Array = []
+	for keys: Array in [["fix", "fix_label"], ["second_fix", "second_fix_label"], ["third_fix", "third_fix_label"]]:
+		if not str(finding.get(keys[0], "")).is_empty():
+			doors.append({"id": str(finding[keys[0]]), "label": str(finding.get(keys[1], ""))})
+	return doors
 
 
 ## The scripts of a corpus that could earn a finding, strongest evidence first and then by path.
@@ -156,6 +166,9 @@ static func evidence(source: String, script_path: String = "") -> int:
 	if _says_any(source, GROUP_WORDS):
 		weight += 1
 	if _hides_a_name(source):
+		weight += 1
+	# A typed variable is what a wrong kind of value is judged against: the weakest evidence, since most scripts have one.
+	if source.contains("\nvar ") and source.contains(": "):
 		weight += 1
 	if _says_any(source, SCENE_WORDS) and (script_path.is_empty()
 			or not EventSheetSceneReplication.scenes_using(script_path).is_empty()):

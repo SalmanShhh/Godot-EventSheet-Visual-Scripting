@@ -3124,6 +3124,14 @@ func _validation_scene_root() -> Node:
 	return EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
 
 
+## The node this sheet's `$Path` lines are read from: the node of the open scene that runs its script, or null
+## when the open scene does not run it, so a node of the same name in another scene never judges this sheet.
+func _sheet_host_node() -> Node:
+	if node_validation_scene_override != null:
+		return node_validation_scene_override
+	return EventSheetTypeCheck.host_in_scene(_validation_scene_root(), _lint_sheet())
+
+
 ## The node parameter, picked out of the layout that is open RIGHT NOW (hint "scene_node"): an
 ## editable suggest-combo whose choices are the tree the editor is showing, in the spellings a row
 ## writes. Enumerated when the dialog builds - never baked into the descriptor - so a node added a
@@ -3225,7 +3233,7 @@ func _validate_plain_expression(edit: Control) -> void:
 		# Valid GDScript - but a literal $node / get_node("…") path that does NOT exist in the edited
 		# scene is almost always a typo. Flag it amber (a warning, not a red error: the node may be
 		# spawned at runtime) so "$Enmy" is caught at author time instead of failing silently in game.
-		var unresolved: String = unresolved_node_reference(str(edit.get("text")), _validation_scene_root())
+		var unresolved: String = unresolved_node_reference(str(edit.get("text")), _sheet_host_node())
 		if unresolved.is_empty():
 			edit.remove_theme_color_override("font_color")
 			_record_expression_note(edit, "", "", "", "", "")
@@ -3332,7 +3340,7 @@ func _type_finding_for(key: String) -> Dictionary:
 	if sheet != null and _lint_paused_reason.is_empty() and not _holds_foreign_reading(edit as Control) \
 			and bool((edit as Control).get_meta("plain_ok", edit is LineEdit)):
 		finding = EventSheetTypeCheck.check_field(str(_definition.metadata.get("codegen_template", "")),
-			key, str((edit as Control).get("text")), _slot_values(), sheet, _scope_names_for(sheet), _validation_scene_root())
+			key, str((edit as Control).get("text")), _slot_values(), sheet, _scope_names_for(sheet), _sheet_host_node())
 	_type_findings[key] = {"signature": signature, "finding": finding}
 	return finding
 
@@ -3994,7 +4002,7 @@ func _type_problem_for(param: Dictionary, value: String, template: String, value
 	if sheet == null:
 		return {}
 	var finding: Dictionary = EventSheetTypeCheck.check_field(template, str(param.get("id", "")), value, values,
-		sheet, _scope_names_for(sheet), _validation_scene_root())
+		sheet, _scope_names_for(sheet), _sheet_host_node())
 	if str(finding.get("level", "")) == EventSheetTypeCheck.LEVEL_ERROR:
 		return {"message": "%s %s" % [str(finding.get("head", "")), str(finding.get("body", ""))],
 			"reason": EventSheetL10n.translate("not written: %s") % str(finding.get("reason", "")),

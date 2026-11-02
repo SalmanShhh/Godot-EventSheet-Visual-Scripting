@@ -36,7 +36,37 @@ static func _event_marks(editor: EventSheetEditor, event: EventRow) -> Array:
 	return found
 
 
+## A line written by hand reads through the shared grammar, not a verb's template: it gets the same square in
+## the same place, in an action and in a condition, and a value the grammar would half translate reads as written.
+static func _hand_written_lines_get_squares() -> bool:
+	var source: String = "extends Node2D\n\nvar tint: Color = Color.WHITE\n\n\nfunc _ready() -> void:\n\tmodulate = Color.RED.lerp(Color.BLUE, 0.5)\n\ttint = Color.WHITE\n\ttint = Color(1, 0, 0)\n\tif tint == Color.RED:\n\t\tprint(1)\n"
+	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "")
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	var found: Dictionary = {}
+	var viewport: EventSheetViewport = editor.get_viewport_control()
+	for entry: Variant in viewport.get_flat_rows():
+		var row: EventRowData = (entry as Dictionary).get("row")
+		if row == null or not (row.source_resource is EventRow):
+			continue
+		viewport._row_builder._ensure_event_spans(row)
+		for span: SemanticSpan in row.spans:
+			if span.metadata is Dictionary and str(span.metadata.get("kind", "")) in ["action", "condition"]:
+				var marks: Array = span.metadata.get("colour_marks", [])
+				found[span.text] = [(marks[0] as Dictionary).get("at", -1), (marks[0] as Dictionary).get("folded", false), (marks[0] as Dictionary).get("raw", "")] if not marks.is_empty() else []
+	var result: bool = SUPPORT.pins(NAME + ": hand-written", [
+		["a folded value reads as written, with its folded square", found.get("Set tint to Color.RED.lerp(Color.BLUE, 0.5)", ["absent", found.keys()]), [12, true, "Color.RED.lerp(Color.BLUE, 0.5)"]],
+		["a named constant in a variable write", found.get("Set tint to white", ["absent", found.keys()]), [12, false, "Color.WHITE"]],
+		["numbers read as written", found.get("Set tint to Color(1, 0, 0)", ["absent", found.keys()]), [12, false, "Color(1, 0, 0)"]],
+		["a colour condition", found.get("tint = red", ["absent", found.keys()]), [7, false, "Color.RED"]],
+	])
+	editor.free()
+	return result
+
+
 static func run() -> bool:
+	if not _hand_written_lines_get_squares():
+		return false
 	var rows: Array = []
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"

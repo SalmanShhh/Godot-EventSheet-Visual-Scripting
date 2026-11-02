@@ -14854,6 +14854,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				condition_text = _compiler_names_text(condition_text)
 			var condition_owner: String = str(joined_lead.get("object", "")) if not joined_lead.is_empty() \
 				else _object_label_or_pending(condition.provider_id, condition.ace_id, _row_params(condition))
+			var condition_colours: Dictionary = _colours_in_reading(condition, condition_text)
+			condition_text = str(condition_colours["text"])
 			spans.append(
 				_make_span(
 					condition_text,
@@ -14871,6 +14873,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						state_progress_metadata(condition), true)
 				)
 			)
+			_stamp_colour_marks(spans, condition_colours)
 			condition_line_index += 1
 	# "With node X:" scope renders as a chip in the condition lane (it scopes the row's actions to a
 	# node); double-click opens the target editor.
@@ -15271,6 +15274,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					action_words = _spawn_copy_text(action_resource as ACEAction, action_words)
 				var action_object: String = _object_label_or_pending((action_resource as ACEAction).provider_id,
 					(action_resource as ACEAction).ace_id, _row_params(action_resource))
+				var action_colours: Dictionary = _colours_in_reading(action_resource, action_words)
+				action_words = str(action_colours["text"])
 				spans.append(
 					_make_span(
 						action_words,
@@ -15292,6 +15297,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						}.merged(action_style_meta, true)
 					)
 				)
+				_stamp_colour_marks(spans, action_colours)
 				_append_signal_fanout_span(spans, action_resource as ACEAction, action_index, action_line_index)
 				_append_removal_guard_span(spans, action_resource as ACEAction, event_row, action_index, action_line_index)
 				action_line_index += 1
@@ -21727,6 +21733,59 @@ func _note_colour_param(key: String, index: int, raw: String, shown: String, hin
 		_pending_colour_params.append({"key": key, "index": index, "shown": shown, "kind": kind, "slot": slot,
 			"mark": {"param": key, "raw": text, "square": false, "kind": kind, "len": shown.length(), "alpha_slot": true}})
 	return shown
+
+
+## The colours in a row the shared grammar read, where no verb's template said which words are a parameter:
+## {text, marks}. Each value written as a Color reads as a template row would read it (the project's reading, a
+## folded value as written), and is found in the sentence by what the grammar made of it. A row a template
+## already noted, or one whose words do not hold the value, is left exactly as it is.
+func _colours_in_reading(ace: Resource, text: String) -> Dictionary:
+	var answer: Dictionary = {"text": text, "marks": []}
+	# A template's own note holds only while its sentence is still the row's: the grammar's constant words may
+	# have read inside a value since (`Color.RED.lerp(blue, 0.5)`), and then it is this reading's to mark.
+	if not (_pending_param_ranges.get("colour_params", []) as Array).is_empty() \
+			and text.contains(str(_pending_param_ranges.get("text", ""))):
+		return answer
+	var params: Dictionary = _row_params(ace)
+	var written: String = text
+	var cursor: int = 0
+	var marks: Array = []
+	for key: Variant in params.keys():
+		var raw: String = str(params[key]).strip_edges()
+		if not (raw.begins_with("Color.") or raw.begins_with("Color(") or raw.begins_with("Color8(")):
+			continue
+		var info: Dictionary = EventSheetColourValue.parse(raw)
+		if not bool(info.get("ok", false)):
+			continue
+		var said: String = ""
+		var at: int = -1
+		for candidate: String in [EventSheetSentence.expression_text(raw, sentence_context()),
+				EventSheetSentence.constant_words(raw, sentence_context()), raw]:
+			at = written.find(candidate, cursor) if not candidate.is_empty() else -1
+			if at >= 0:
+				said = candidate
+				break
+		if at < 0:
+			continue
+		var folded: bool = bool(info.get("folded", false))
+		var words: String = raw if folded else (said if _viewport.is_reading_mode() else EventSheetColourValue.read_info(info, raw, EventSheetColourValue.project_reading(), true))
+		written = written.substr(0, at) + words + written.substr(at + said.length())
+		cursor = at + words.length()
+		marks.append({"param": str(key), "raw": raw, "color": EventSheetColourValue.square_colour(info["color"]),
+			"hdr": bool(info.get("overbright", false)), "folded": folded, "editable": bool(info.get("editable", true)),
+			"square": true, "kind": EventSheetColourValue.KIND_COLOUR, "len": words.length(), "alpha_slot": true, "at": at})
+	answer["text"] = written
+	answer["marks"] = marks
+	return answer
+
+
+## Puts the marks `_colours_in_reading` found on the span just made for that row.
+func _stamp_colour_marks(spans: Array, colours: Dictionary) -> void:
+	if (colours["marks"] as Array).is_empty() or spans.is_empty():
+		return
+	var span: SemanticSpan = spans[spans.size() - 1] as SemanticSpan
+	if span != null and span.metadata is Dictionary and not span.metadata.has("colour_marks"):
+		span.metadata["colour_marks"] = colours["marks"]
 
 
 ## Where each colour parameter landed in a made sentence: the marks, each with the offset its value starts at.

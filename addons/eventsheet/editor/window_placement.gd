@@ -146,8 +146,7 @@ static func is_embedded(window: Window) -> bool:
 static func room_for(window: Window, focus: Rect2i = Rect2i()) -> Dictionary:
 	var decorated: bool = not (window is Popup) and not window.borderless
 	if is_embedded(window):
-		var parent: Node = window.get_parent()
-		var hosting: Viewport = parent.get_viewport() if parent != null else window.get_viewport()
+		var hosting: Viewport = _embedder_of(window)
 		var whole: Rect2i = Rect2i(Vector2i.ZERO, Vector2i(hosting.get_visible_rect().size))
 		var bar: int = window.get_theme_constant("title_height", "Window") if decorated else 0
 		return {"bounds": inset(whole, _margin(decorated), bar), "around": whole}
@@ -164,10 +163,22 @@ static func room_for(window: Window, focus: Rect2i = Rect2i()) -> Dictionary:
 ## Where the pointer is, in the coordinates `window` is positioned in.
 static func pointer_for(window: Window) -> Vector2i:
 	if is_embedded(window):
-		var parent: Node = window.get_parent()
-		var hosting: Viewport = parent.get_viewport() if parent != null else window.get_viewport()
-		return Vector2i(hosting.get_mouse_position())
+		return Vector2i(_embedder_of(window).get_mouse_position())
 	return DisplayServer.mouse_get_position()
+
+
+## The viewport an embedded window really lives in, whose pixels its position is in. A window opened from a
+## control inside an embedded dialog or popup has that dialog as its parent, and the dialog embeds nothing: its
+## own small rect is not the room the window has, and the window's position is not in its pixels.
+static func _embedder_of(window: Window) -> Viewport:
+	var parent: Node = window.get_parent()
+	var hosting: Viewport = parent.get_viewport() if parent != null else window.get_viewport()
+	while hosting != null and not hosting.is_embedding_subwindows():
+		var above: Node = hosting.get_parent()
+		if above == null:
+			break
+		hosting = above.get_viewport()
+	return hosting if hosting != null else window.get_viewport()
 
 
 ## Where the pointer is, in the coordinates a window opened from `source` is positioned in: the

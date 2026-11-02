@@ -32,27 +32,6 @@ extends RefCounted
 ## check id -> the fixes it offers, each {"label", "id"}. The labels are what the row shows on
 ## its chips; `id` is what `apply` dispatches on.
 const OFFERED := {
-	# The mistake checks. "%to" is the name the check found to put in place of the wrong one (a
-	# near group, a near file, the scene's own node), and a door whose "%to" has no answer is not
-	# offered. Each door writes one change to the open sheet through undo, or remembers a fact about
-	# the game in the project; none of them guesses.
-	"path-not-in-project": [
-		{"id": "use_the_name", "label": "Use %to"},
-	],
-	"group-nothing-is-in": [
-		{"id": "use_the_name", "label": "Use \"%to\""},
-		{"id": "known_at_run_time", "label": "It is added at run time"},
-	],
-	"node-path-not-in-scene": [
-		{"id": "use_the_name", "label": "Use %to"},
-		{"id": "known_at_run_time", "label": "It is spawned at run time"},
-	],
-	"wrong-node-type": [
-		{"id": "point_at_node", "label": "Point at %to"},
-	],
-	"while-never-ends": [
-		{"id": "stop_after_rounds", "label": "Stop after 1000 rounds"},
-	],
 	"unknown-input-action": [
 		{"id": "add_input_action", "label": "Add \"%s\" to the Input Map"},
 		{"id": "pick_input_action", "label": "Pick an existing action…"},
@@ -229,6 +208,13 @@ const MISSING_KEYS_PATH := "user://eventsheets_missing_keys.csv"
 static func fixes_for(finding: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var check: String = str(finding.get("check", ""))
+	# A row finding brings its own doors, already in words: the check found the near name they offer.
+	if finding.has("doors"):
+		for door: Variant in finding["doors"] as Array:
+			var chip: Dictionary = (door as Dictionary).duplicate()
+			chip["check"] = check
+			out.append(chip)
+		return out
 	if not OFFERED.has(check):
 		return out
 	# Tidying sends packs to the trash on the promise that the library still has them.
@@ -274,7 +260,10 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 	var subject: String = subject_of(finding)
 	var dock: Variant = context.get("dock", null)
 	match fix_id:
-		"use_the_name", "known_at_run_time", "point_at_node", "stop_after_rounds":
+		"use_the_name", "known_at_run_time", "point_at_node", "stop_after_rounds", "pick_another_node", "pick_another_action", \
+				"pick_a_file", "add_group_to_node", "fit_emit_values", "open_the_signal", "fit_handler_values", "add_to_the_signal", \
+				"change_the_variable", "make_it_an_if", "rename_the_local", "remove_the_local", "open_the_value", "use_the_value", \
+				"go_to_the_variable":
 			return load("res://addons/eventsheet/editor/dock/mistake_fixes.gd").apply_from_report(dock, fix_id, finding)
 		"add_input_action":
 			return _add_input_action(subject)

@@ -274,7 +274,7 @@ static func _read_json(path: String) -> Dictionary:
 static func request_build() -> void:
 	if _build_started or _loaded or FileAccess.file_exists(reference_path()):
 		return
-	if DisplayServer.get_name() == "headless":
+	if DisplayServer.get_name() == "headless" or not OS.has_feature("editor"):
 		return
 	_build_started = true
 	_thread = Thread.new()
@@ -288,6 +288,11 @@ static func build_blocking() -> bool:
 	if FileAccess.file_exists(reference_path()) and FileAccess.file_exists(docs_path()):
 		reset()
 		return true
+	# Only the editor's own binary can dump: run from a game, the executable IS the game, and asking it to
+	# dump would start it. The dump lands in the folder it is run from, which is here a temporary one under
+	# the user folder, never the project.
+	if not OS.has_feature("editor"):
+		return false
 	var dump_folder: String = ProjectSettings.globalize_path("user://").path_join("class_reference_dump_%d" % OS.get_process_id())
 	DirAccess.make_dir_recursive_absolute(dump_folder)
 	var executable: String = OS.get_executable_path()

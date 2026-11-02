@@ -22,6 +22,8 @@ const LEVEL_PAUSED: String = "paused"
 ## The word a slot the field does not own is filled with: an untyped variable, so the field being checked
 ## is the only thing that can fail.
 const STAND_IN: String = "__slot__"
+## How Godot names a script that has no file.
+static var GDSCRIPT_ADDRESS: RegEx = RegEx.create_from_string("gdscript://-?\\d+\\.gd")
 
 
 ## Hears the analyzer. Godot prints a script's parse and analyze errors through its error handler while
@@ -130,21 +132,78 @@ static func node_class_of(node: Node) -> String:
 	return node.get_class()
 
 
+## The node a sheet's `$Path` lines are read from in an open scene: the node that runs this sheet's script,
+## or null when the open scene does not run it. A `$Path` is relative to the node the script is on, so the
+## edited scene's root says nothing about a sheet on a child, and a scene that does not run the sheet at all
+## says nothing about it: a `$Score` there may be a different node of a different class.
+static func host_in_scene(scene_root: Node, sheet: EventSheetResource) -> Node:
+	if scene_root == null or sheet == null:
+		return null
+	var path: String = sheet.external_source_path.strip_edges()
+	return _node_running(scene_root, path) if not path.is_empty() else null
+
+
+static func _node_running(node: Node, script_path: String) -> Node:
+	var script: Script = node.get_script() as Script
+	if script != null and script.resource_path == script_path:
+		return node
+	for child: Node in node.get_children():
+		var found: Node = _node_running(child, script_path)
+		if found != null:
+			return found
+	return null
+
+
+## `text` with every string literal's contents and every comment blanked, so the same offsets name the same
+## characters and a pattern looking for code cannot match inside a string (`"$Player.x costs 5"`).
+static func mask_strings(text: String) -> String:
+	var masked: PackedStringArray = PackedStringArray()
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\" and index + 1 < text.length():
+				masked.append("  ")
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+				masked.append(character)
+			else:
+				masked.append(" ")
+		elif character == "\"" or character == "'":
+			quote = character
+			masked.append(character)
+		elif character == "#":
+			while index < text.length() and text[index] != "\n":
+				masked.append(" ")
+				index += 1
+			continue
+		else:
+			masked.append(character)
+		index += 1
+	return "".join(masked)
+
+
 ## `$Path` and `%Unique` references in `code` rewritten to typed stand-in variables when the open scene
 ## holds that node, with the declarations they need: {code, lines}. A reference the scene does not hold
-## is left as written (untyped), because a node that only exists at runtime is not an error.
+## is left as written (untyped), because a node that only exists at runtime is not an error, and a
+## reference inside a string is text.
 static func type_node_references(code: String, scene_root: Node, classes: Dictionary) -> Dictionary:
 	var lines: PackedStringArray = PackedStringArray()
 	if scene_root == null:
 		return {"code": code, "lines": lines}
 	var declared: Dictionary = {}
-	var rewritten: String = code
-	for found: RegExMatch in RegEx.create_from_string("([$%])([A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*)").search_all(code):
+	var rewritten: String = ""
+	var cursor: int = 0
+	var masked: String = mask_strings(code)
+	for found: RegExMatch in RegEx.create_from_string("([$%])([A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*)").search_all(masked):
 		var sigil: String = found.get_string(1)
 		var path_text: String = found.get_string(2)
 		var start: int = found.get_start()
 		if sigil == "%" and start > 0:
-			var previous: String = code.substr(0, start).strip_edges(false, true)
+			var previous: String = masked.substr(0, start).strip_edges(false, true)
 			if not previous.is_empty() and (previous[-1] == ")" or previous[-1] == "]" or previous[-1] == "_" \
 					or previous.right(1).is_valid_identifier() or previous.right(1).is_valid_int()):
 				continue  # `a %b` is a remainder, not a unique-name node
@@ -158,8 +217,9 @@ static func type_node_references(code: String, scene_root: Node, classes: Dictio
 		if not declared.has(stand_in):
 			declared[stand_in] = true
 			lines.append("var %s: %s" % [stand_in, type_name])
-		rewritten = rewritten.replace(found.get_string(), stand_in)
-	return {"code": rewritten, "lines": lines}
+		rewritten += code.substr(cursor, start - cursor) + stand_in
+		cursor = found.get_end()
+	return {"code": rewritten + code.substr(cursor), "lines": lines}
 
 
 # ── Running a check ──────────────────────────────────────────────────────────────────────────
@@ -249,6 +309,17 @@ static func _is_about_the_value(message: String, value: String, in_call: bool) -
 	return true
 
 
+## The class `self` really is in the script a sheet compiles to, "" when the stand-in does not stand for it.
+static func _stand_in_class(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	if sheet.behavior_mode:
+		return "Node"
+	if ClassDB.class_exists(sheet.host_class) or EventSheetGDScriptLint._global_class_names().has(sheet.host_class):
+		return sheet.host_class
+	return ""
+
+
 ## The finding for a typed failure: the messages on the line that holds the field's value, in words.
 ## {} when the failure is not the value's kind - a line the value is not on, or a message with no plain form
 ## that the untyped stand-in raises too (that is the plain compile check's to report).
@@ -256,7 +327,15 @@ static func _finding_from(run: Dictionary, body: PackedStringArray, value_line: 
 		sheet: EventSheetResource, in_call: bool) -> Dictionary:
 	var first_line: int = int(run["first_line"])
 	var heard: Array = []
+	var own_class: String = _stand_in_class(sheet)
 	for message: Dictionary in run["messages"]:
+		# The stand-in script has no name, so Godot calls `self` by the address it was compiled at. That is
+		# the sheet's own node: said by its class, or - when the host is one the stand-in cannot extend - not
+		# said at all, because then the stand-in is not the kind of node the real script is.
+		if GDSCRIPT_ADDRESS.search(str(message["text"])) != null:
+			if own_class.is_empty():
+				continue
+			message = {"line": message["line"], "text": GDSCRIPT_ADDRESS.sub(str(message["text"]), own_class, true)}
 		# An error above the body is the stand-in's own (a declaration it could not write), not the value's.
 		if int(message["line"]) < first_line:
 			return {"level": LEVEL_PAUSED, "reason": str(message["text"]), "messages": [str(message["text"])]}
@@ -422,6 +501,263 @@ static func _variant_note(value: String, scope_lines: PackedStringArray, sheet: 
 	return {}
 
 
+# ── Every row of a sheet at once ─────────────────────────────────────────────────────────────
+
+
+## What each line of a sheet was found to be, per stand-in script (the sheet's types and its scene's node
+## classes): {header: {line: the analyzer's words, "" when it has none}}. A sheet is judged on every edit and
+## one edit changes one line, so only a line never seen under this stand-in is compiled - the sweep costs one
+## small reload, and Godot says a line's error in the Output once instead of once an edit.
+static var _line_verdicts: Dictionary = {}
+const STAND_INS_KEPT: int = 6
+## How many times a sweep goes round a line Godot cannot even parse. Each round finds one.
+const SYNTAX_ROUNDS: int = 3
+static var _identifier_regex: RegEx = null
+static var _node_reference_regex: RegEx = null
+
+
+## Forgets every line's verdict. The editor calls this when the project's files changed, because a line's
+## answer can lean on any script in it.
+static func forget_lines() -> void:
+	_line_verdicts.clear()
+
+
+## For each of `lines` ({code, condition}), the words of the analyzer's refusal of it, or "". Only a line the
+## typed stand-in refuses, in words the plain table knows, and the untyped stand-in accepts is refused here:
+## one that fails for any other reason (a helper this stand-in does not declare) is the compile check's.
+## `node_classes` is {"$Path": class} from the scene that runs the sheet.
+static func judge_lines(sheet: EventSheetResource, lines: Array[Dictionary], node_classes: Dictionary) -> Array:
+	var answers: Array = []
+	answers.resize(lines.size())
+	answers.fill("")
+	if sheet == null or lines.is_empty():
+		return answers
+	var header: String = EventSheetGDScriptLint.build_probe_source("", false, sheet, true)
+	var key: String = str(hash(header)) + JSON.stringify(node_classes)
+	if not _line_verdicts.has(key):
+		while _line_verdicts.size() >= STAND_INS_KEPT:
+			_line_verdicts.erase(_line_verdicts.keys()[0])
+		_line_verdicts[key] = {}
+	var known: Dictionary = _line_verdicts[key]
+	var names: Dictionary = _names_with_types(sheet)
+	var unseen: Array[Dictionary] = []
+	var line_keys: PackedStringArray = PackedStringArray()
+	for line: Dictionary in lines:
+		var line_key: String = ("?" if bool(line["condition"]) else "!") + str(line["code"])
+		line_keys.append(line_key)
+		if known.has(line_key):
+			continue
+		if _types_can_matter(str(line["code"]), names, node_classes):
+			known[line_key] = ""
+			unseen.append({"code": str(line["code"]), "condition": bool(line["condition"]), "key": line_key})
+		else:
+			known[line_key] = ""
+	if not unseen.is_empty():
+		_judge_unseen(sheet, unseen, node_classes, known)
+	for index: int in range(lines.size()):
+		answers[index] = str(known.get(line_keys[index], ""))
+	return answers
+
+
+## {name: true} for every sheet variable declared with a type and every sheet function with a real signature:
+## a line that names none of them, and no node of the scene, reads the same in both stand-ins.
+static func _names_with_types(sheet: EventSheetResource) -> Dictionary:
+	var names: Dictionary = {}
+	for line: String in EventSheetGDScriptLint.typed_variable_lines(sheet):
+		if line.contains(":"):
+			names[line.trim_prefix("var ").get_slice(":", 0)] = true
+	for line: String in EventSheetGDScriptLint.typed_function_lines(sheet):
+		if line.begins_with("func ") and not line.contains("_a = null, _b = null"):
+			names[line.trim_prefix("func ").get_slice("(", 0)] = true
+		elif line.begins_with("static func ") and not line.contains("_a = null, _b = null"):
+			names[line.trim_prefix("static func ").get_slice("(", 0)] = true
+	return names
+
+
+static func _types_can_matter(code: String, names: Dictionary, node_classes: Dictionary) -> bool:
+	var masked: String = mask_strings(code)
+	if not node_classes.is_empty() and (masked.contains("$") or masked.contains("%")):
+		for found: RegExMatch in _node_references().search_all(masked):
+			if node_classes.has(found.get_string()):
+				return true
+	for found: RegExMatch in _identifiers().search_all(masked):
+		if names.has(found.get_string()):
+			return true
+	return false
+
+
+static func _identifiers() -> RegEx:
+	if _identifier_regex == null:
+		_identifier_regex = RegEx.create_from_string("[A-Za-z_][A-Za-z0-9_]*")
+	return _identifier_regex
+
+
+static func _node_references() -> RegEx:
+	if _node_reference_regex == null:
+		_node_reference_regex = RegEx.create_from_string("[$%][A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*")
+	return _node_reference_regex
+
+
+## Compiles the lines no verdict is known for and files what comes back.
+static func _judge_unseen(sheet: EventSheetResource, unseen: Array[Dictionary], node_classes: Dictionary, known: Dictionary) -> void:
+	var scope: Dictionary = {}
+	for scope_name: String in EventSheetGDScriptLint.scope_names_of(sheet):
+		scope[scope_name] = true
+	var pending: Array[Dictionary] = []
+	var stand_ins: Dictionary = {}
+	for line: Dictionary in unseen:
+		var function_text: String = _row_function(line, scope, true, node_classes, stand_ins)
+		if function_text.is_empty():
+			continue
+		line["typed"] = function_text
+		line["untyped"] = _row_function(line, scope, false, {}, stand_ins)
+		pending.append(line)
+	var declarations: PackedStringArray = PackedStringArray()
+	for stand_in: Variant in stand_ins.keys():
+		declarations.append("var %s: %s" % [str(stand_in), str(stand_ins[stand_in])])
+	var refused: Dictionary = _refusals(sheet, pending, true, declarations)
+	if refused.is_empty():
+		return
+	var kept: Array[Dictionary] = []
+	for line: Dictionary in pending:
+		if refused.has(line["key"]):
+			kept.append(line)
+	var untyped_refused: Dictionary = _refusals(sheet, kept, false)
+	for line_key: Variant in refused.keys():
+		if not untyped_refused.has(line_key):
+			known[line_key] = refused[line_key]
+
+
+## One line as a function of its own, in the stand-in `typed` or not. "" for a line that is not whole code on
+## its own (a verbatim block that opens something the next one closes).
+static func _row_function(line: Dictionary, scope: Dictionary, typed: bool, node_classes: Dictionary, stand_ins: Dictionary) -> String:
+	var code: String = str(line["code"])
+	if not EventSheetGDScriptLint.structural_syntax_error(code).is_empty() or code.strip_edges(false, true).ends_with(":"):
+		return ""
+	var masked: String = mask_strings(code)
+	var declared: Dictionary = {}
+	var body: PackedStringArray = PackedStringArray()
+	for found: RegExMatch in RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)").search_all(masked):
+		declared[found.get_string(1)] = true
+	for found: RegExMatch in _identifiers().search_all(masked):
+		var word: String = found.get_string()
+		if scope.has(word) and not declared.has(word):
+			declared[word] = true
+			body.append("\tvar %s = null" % word)
+	if typed and not node_classes.is_empty():
+		code = _typed_nodes_in(code, masked, node_classes, stand_ins)
+	if bool(line["condition"]):
+		body.append("\tvar __condition__ = (%s)" % code.replace("\n", " "))
+	else:
+		for code_line: String in code.split("\n"):
+			body.append("\t" + code_line)
+	return "\n".join(body)
+
+
+## `$Path` in a line rewritten to a typed stand-in variable; `stand_ins` is told what to declare.
+static func _typed_nodes_in(code: String, masked: String, node_classes: Dictionary, stand_ins: Dictionary) -> String:
+	var written: String = ""
+	var cursor: int = 0
+	for found: RegExMatch in _node_references().search_all(masked):
+		var reference: String = found.get_string()
+		if not node_classes.has(reference):
+			continue
+		var stand_in: String = "__node_" + ("u_" if reference.begins_with("%") else "") + reference.substr(1).replace("/", "_")
+		stand_ins[stand_in] = str(node_classes[reference])
+		written += code.substr(cursor, found.get_start() - cursor) + stand_in
+		cursor = found.get_end()
+	return written + code.substr(cursor)
+
+
+## The lines one stand-in refuses in words the plain table knows, as {line key: the lead message}. A line
+## Godot cannot parse stops the parser before anything else is judged, so it is taken out and the rest asked
+## again, a few times at most: past that the rest are simply not judged, which can only say less.
+static func _refusals(sheet: EventSheetResource, lines: Array[Dictionary], typed: bool, declarations: PackedStringArray = PackedStringArray()) -> Dictionary:
+	var refused: Dictionary = {}
+	var rest: Array[Dictionary] = lines.duplicate()
+	var own_class: String = _stand_in_class(sheet)
+	for _round: int in range(SYNTAX_ROUNDS):
+		if rest.is_empty():
+			break
+		var functions: PackedStringArray = PackedStringArray()
+		for index: int in range(rest.size()):
+			functions.append("func __row_%d() -> void:\n%s" % [index, str(rest[index]["typed" if typed else "untyped"])])
+		var source: String = EventSheetGDScriptLint.build_probe_source("\n".join(functions), false, sheet, typed, declarations)
+		var probe_lines: PackedStringArray = source.split("\n")
+		var starts: PackedInt32Array = PackedInt32Array()
+		for number: int in range(probe_lines.size()):
+			if probe_lines[number].begins_with("func __row_"):
+				starts.append(number + 1)
+		var run: Dictionary = run_probe(source)
+		if bool(run["ok"]):
+			break
+		var heard: Dictionary = {}
+		var above: bool = false
+		for message: Dictionary in run["messages"]:
+			var at: int = starts.bsearch(int(message["line"]) + 1) - 1
+			if at < 0:
+				above = true
+				continue
+			var text: String = str(message["text"])
+			if GDSCRIPT_ADDRESS.search(text) != null:
+				if own_class.is_empty():
+					continue
+				text = GDSCRIPT_ADDRESS.sub(text, own_class, true)
+			if not heard.has(at):
+				heard[at] = []
+			(heard[at] as Array).append(text)
+		# An error above the rows is the stand-in's own: nothing can be said about any line under it.
+		if above or heard.is_empty():
+			break
+		var plain_found: bool = false
+		for at: Variant in heard.keys():
+			var lead: String = EventSheetTypeWords.lead_message(heard[at])
+			if not EventSheetTypeWords.recognise(lead).is_empty():
+				refused[str(rest[int(at)]["key"])] = lead
+				plain_found = true
+		# Only a failure to parse hides other lines, and it is the one message of its run.
+		if plain_found or (run["messages"] as Array).size() != 1:
+			break
+		var left: Array[Dictionary] = []
+		for index: int in range(rest.size()):
+			if not heard.has(index):
+				left.append(rest[index])
+		rest = left
+	return refused
+
+
+## The words for a line the analyzer refused: {head, body, target, param, rewrite}. `param` is the row's value
+## the refusal is about, when one holds exactly that text; `rewrite` is its one-click replacement, or "".
+static func line_finding(lead: String, code: String, sheet: EventSheetResource, params: Dictionary) -> Dictionary:
+	var recognised: Dictionary = EventSheetTypeWords.recognise(lead)
+	var fields: Dictionary = recognised.get("fields", {})
+	var target: String = _assigned_name(code)
+	var value: String = code
+	match str(recognised.get("id", "")):
+		"assign", "assigned":
+			var equals: int = mask_strings(code).find("=")
+			value = code.substr(equals + 1).strip_edges() if equals >= 0 else code
+		"operands":
+			var sides: Array = EventSheetTypeWords._sides_of(code, str(fields.get("op", "")))
+			value = str(sides[1]) if sides.size() == 2 else code
+		"many", "few", "argument", "pass":
+			var call_at: int = code.find(str(fields.get("fn", "")) + "(")
+			if call_at >= 0:
+				var opened: int = call_at + str(fields.get("fn", "")).length()
+				value = EventSheetMistakeFindings._balanced_after(code, opened)
+		"member":
+			value = str(fields.get("member", ""))
+	var words: Dictionary = EventSheetTypeWords.sentence(lead, {"value": value, "code": code, "sheet": sheet, "target": target})
+	var param: String = ""
+	for param_key: Variant in params.keys():
+		if str(params[param_key]).strip_edges() == value:
+			param = str(param_key)
+			break
+	var rewrites: Array = rewrites_for(lead, value, span_of(lead, value))
+	return {"head": str(words.get("head", "")), "body": str(words.get("body", "")), "target": target, "param": param,
+		"rewrite": str((rewrites[0] as Dictionary).get("name", "")) if not rewrites.is_empty() else ""}
+
+
 # ── $Node.member ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -433,15 +769,15 @@ static func _variant_note(value: String, scope_lines: PackedStringArray, sheet: 
 static func scene_member_finding(value: String, scene_root: Node) -> Dictionary:
 	if scene_root == null:
 		return {}
-	for found: RegExMatch in RegEx.create_from_string("[$%](?:\"([^\"]+)\"|([A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*))\\.([A-Za-z_][A-Za-z0-9_]*)").search_all(value):
+	for found: RegExMatch in RegEx.create_from_string("[$%]([A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*)\\.([A-Za-z_][A-Za-z0-9_]*)").search_all(mask_strings(value)):
 		var is_unique: bool = value[found.get_start()] == "%"
-		var path_text: String = found.get_string(1) if not found.get_string(1).is_empty() else found.get_string(2)
-		var member: String = found.get_string(3)
+		var path_text: String = found.get_string(1)
+		var member: String = found.get_string(2)
 		var node: Node = scene_root.get_node_or_null(NodePath(("%" + path_text) if is_unique else path_text))
 		if node == null:
 			continue
 		var members: Dictionary = node_members(node)
-		if members.is_empty() or members.has(member):
+		if members.is_empty() or members.has(member) or not script_compiles(node.get_script() as Script):
 			continue
 		var node_label: String = path_text.get_slice("/", path_text.get_slice_count("/") - 1)
 		var closest: String = ""
@@ -454,7 +790,7 @@ static func scene_member_finding(value: String, scene_root: Node) -> Dictionary:
 		var body: String = EventSheetL10n.translate("Check the spelling of %s.") % member
 		if not closest.is_empty():
 			body = EventSheetL10n.translate("Did you mean %s?") % closest
-		var start: int = found.get_start(3)
+		var start: int = found.get_start(2)
 		return {
 			"level": LEVEL_ERROR,
 			"head": EventSheetL10n.translate("%s has no %s.") % [node_label, member],
@@ -469,11 +805,27 @@ static func scene_member_finding(value: String, scene_root: Node) -> Dictionary:
 	return {}
 
 
+## Whether a node's script (and everything it extends) compiles, so that a list of its members is the whole
+## list. In the editor a script that is not a tool cannot be instantiated whatever its state, so the question
+## is put to Godot: a script can only extend one that compiles. A script with no file of its own cannot be
+## extended by path and is asked directly.
+static func script_compiles(script: Script) -> bool:
+	if script == null:
+		return true
+	var path: String = script.resource_path
+	if path.is_empty() or path.contains("::"):
+		return script.can_instantiate()
+	return bool(run_probe("extends \"%s\"\n" % path).get("ok", false))
+
+
 ## Every name one may follow a dot after on `node`: its engine class's properties, methods, signals and
 ## constants, and those its script and the scripts it extends declare. {} when any script on the chain
-## cannot be read in full - a finding is only made from a complete list.
+## cannot be read in full, or answers names of its own making (`_get`) - a finding is only made from a
+## complete list. A script that does not compile is said for by `script_compiles`, asked only when a member
+## is about to be called missing.
 static func node_members(node: Node) -> Dictionary:
-	var members: Dictionary = {}
+	# `script` is every object's and is no class's property.
+	var members: Dictionary = {"script": true}
 	var native: String = node.get_class()
 	for property: Dictionary in ClassDB.class_get_property_list(native):
 		members[str(property.get("name", ""))] = true
@@ -487,12 +839,14 @@ static func node_members(node: Node) -> Dictionary:
 		members[enum_name] = true
 	var script: Script = node.get_script() as Script
 	while script != null:
-		if not (script is GDScript) or not script.can_instantiate():
+		if not (script is GDScript):
 			return {}
 		for property: Dictionary in script.get_script_property_list():
 			members[str(property.get("name", ""))] = true
 		for method: Dictionary in script.get_script_method_list():
 			members[str(method.get("name", ""))] = true
+			if str(method.get("name", "")) in ["_get", "_get_property_list"]:
+				return {}
 		for signal_info: Dictionary in script.get_script_signal_list():
 			members[str(signal_info.get("name", ""))] = true
 		for constant_name: Variant in script.get_script_constant_map().keys():

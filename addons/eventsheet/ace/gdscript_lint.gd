@@ -249,7 +249,10 @@ static func structural_syntax_error(code: String) -> String:
 ## references). The default keeps the untyped stand-ins every existing caller was written against.
 static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetResource, typed: bool = false, extra_lines: PackedStringArray = PackedStringArray()) -> String:
 	var lines: PackedStringArray = PackedStringArray()
-	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "RefCounted"
+	# A project class (`extends Player`) is what the real script extends too, so its members and its `self` are
+	# the real ones. A class that will not load fails every probe, which is what pauses the check.
+	var host_class: String = sheet.host_class if sheet != null and (ClassDB.class_exists(sheet.host_class)
+			or _global_class_names().has(sheet.host_class)) else "RefCounted"
 	# Behavior sheets compile to Node components with a typed `host` accessor - the probe
 	# script mirrors that so `host.member` references lint correctly.
 	if sheet != null and sheet.behavior_mode:

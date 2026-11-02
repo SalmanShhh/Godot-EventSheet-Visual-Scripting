@@ -62,6 +62,7 @@ const KIND_ENDLESS_WHILE := "while-never-ends"
 const KIND_LOCAL_HIDES_VARIABLE := "local-hides-variable"
 const KIND_LOCAL_HIDES_PARAMETER := "local-hides-parameter"
 const KIND_DIVIDE_BY_ZERO := "divide-by-literal-zero"
+const KIND_WRONG_KIND := "value-of-the-wrong-kind"
 
 ## The one-click repairs a finding offers. "" on a finding whose repair is a decision.
 const FIX_USE_NAME := "use_the_name"
@@ -70,6 +71,21 @@ const FIX_ADD_ACTION := "add_input_action"
 const FIX_PICK_ACTION := "pick_input_action"
 const FIX_RUN_TIME := "known_at_run_time"
 const FIX_STOP_AFTER := "stop_after_rounds"
+const FIX_PICK_NODE := "pick_another_node"
+const FIX_PICK_ROW := "pick_another_action"
+const FIX_PICK_FILE := "pick_a_file"
+const FIX_GROUP_ON_NODE := "add_group_to_node"
+const FIX_EMIT_VALUES := "fit_emit_values"
+const FIX_OPEN_SIGNAL := "open_the_signal"
+const FIX_HANDLER_VALUES := "fit_handler_values"
+const FIX_ADD_TO_SIGNAL := "add_to_the_signal"
+const FIX_CHANGE_VARIABLE := "change_the_variable"
+const FIX_MAKE_IF := "make_it_an_if"
+const FIX_RENAME_LOCAL := "rename_the_local"
+const FIX_REMOVE_LOCAL := "remove_the_local"
+const FIX_OPEN_VALUE := "open_the_value"
+const FIX_USE_VALUE := "use_the_value"
+const FIX_GO_TO_VARIABLE := "go_to_the_variable"
 
 ## Where a finding hangs: under the event whose row says the mistake, or on a variable's own row.
 const ANCHOR_EVENT := "event"
@@ -79,6 +95,9 @@ const ANCHOR_BLOCK := "block"
 ## The project setting that remembers "it is spawned / added at run time": a Dictionary of
 ## sheet path -> Array of "kind|subject" strings. In the project, never in the sheet file.
 const REMEMBER_SETTING := "eventsheets/mistakes/known_at_run_time"
+
+## A renamed local's new name starts with this, so "score" reads "round_score": it lasts one run of the event.
+const RENAMED_LOCAL_PREFIX := "round_"
 
 ## The guard "Stop after 1000 rounds" writes, spelled once so the door, the test and the sentence agree.
 const GUARD_LIMIT: int = 1000
@@ -128,6 +147,7 @@ static func clear_cache() -> void:
 	_project_groups.clear()
 	_project_groups_built = false
 	_scene_cache.clear()
+	EventSheetTypeCheck.forget_lines()
 
 
 ## Every mistake this sheet makes, in the order the rules run. `script_path` is the file the sheet
@@ -142,7 +162,8 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 		own_path = sheet.external_source_path
 	var walk: Dictionary = _read(sheet)
 	var rows: Array[Dictionary] = walk["rows"]
-	if rows.is_empty() and (walk["variable_rows"] as Array).is_empty():
+	# An event with no rows yet still has a trigger: a handler's own parameters can be wrong before its first action.
+	if rows.is_empty() and (walk["variable_rows"] as Array).is_empty() and (walk["events"] as Array).is_empty():
 		return found
 	var remembered: PackedStringArray = remembered_for(own_path)
 	var scene: Dictionary = scene_facts(own_path)
@@ -155,6 +176,7 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	_endless_whiles(rows, walk, found)
 	_hidden_locals(walk, found)
 	_zero_divisions(rows, walk, found)
+	_wrong_kinds(sheet, rows, scene, walk, found)
 	return found
 
 
@@ -217,7 +239,7 @@ static func _read(sheet: EventSheetResource) -> Dictionary:
 	var walk: Dictionary = {
 		"rows": [] as Array[Dictionary], "variable_rows": [], "sheet_variables": {}, "signals": {},
 		"functions": {}, "connected": {}, "events": [] as Array[Dictionary], "text": "",
-		"verbatim": [], "behavior": sheet.behavior_mode,
+		"verbatim": [], "behavior": sheet.behavior_mode, "host_class": sheet.host_class,
 	}
 	_collect_declarations(sheet.events, walk)
 	for name_key: Variant in sheet.variables.keys():
@@ -292,8 +314,18 @@ static func _walk_rows(items: Array, function_name: String, function_params: Pac
 
 static func _walk_event(event_row: EventRow, function_name: String, function_params: PackedStringArray,
 		outer_locals: Array, walk: Dictionary) -> void:
+	# What a trigger hands its handler is a parameter of the function it compiles to, exactly like a
+	# function's own: a local of that name is the same parse error.
+	var parameters: PackedStringArray = function_params
+	if not event_row.trigger_id.is_empty() or not event_row.trigger_args.is_empty():
+		parameters = function_params.duplicate()
+		var written: String = event_row.trigger_args
+		if written.strip_edges().is_empty() and not event_row.trigger_id.is_empty():
+			written = str(TriggerResolver.resolve_trigger(event_row).get("args", ""))
+		for piece: String in split_top_level(written):
+			parameters.append(piece.get_slice("=", 0).get_slice(":", 0).strip_edges())
 	var event_info: Dictionary = {
-		"event": event_row, "function": function_name, "params": function_params,
+		"event": event_row, "function": function_name, "params": parameters,
 		"locals": [], "outer_locals": outer_locals,
 	}
 	(walk["events"] as Array).append(event_info)
@@ -326,9 +358,9 @@ static func _walk_event(event_row: EventRow, function_name: String, function_par
 	carried.append_array(event_info["locals"] as Array)
 	for child: Variant in event_row.sub_events:
 		if child is EventRow and (child as EventRow).enabled:
-			_walk_event(child as EventRow, function_name, function_params, carried, walk)
+			_walk_event(child as EventRow, function_name, parameters, carried, walk)
 		elif child is EventGroup:
-			_walk_rows(EventSheetGroupFacts.children(child as EventGroup), function_name, function_params, walk)
+			_walk_rows(EventSheetGroupFacts.children(child as EventGroup), function_name, parameters, walk)
 
 
 ## The name a row declares as a local, or "" - the two local-variable verbs, and a verbatim `var`.
@@ -628,10 +660,16 @@ static func _wrong_node_types(rows: Array[Dictionary], scene: Dictionary, walk: 
 		else:
 			sentence = EventSheetL10n.translate("%s is a %s, which has no \"%s\" - the row asks it for one. Godot stops the function when the line runs (\"Invalid call. Nonexistent function\" for a method, \"Invalid assignment of property\" for a property). Point it at a node that has it, or pick another action.") % [
 				node_label, actual_class, culprit]
-		found.append(_finding(KIND_WRONG_NODE_TYPE, "error", event_row, node_label, sentence,
-			FIX_POINT_AT_NODE if not better.is_empty() else "",
-			EventSheetL10n.translate("Point at %s") % better.substr(1) if not better.is_empty() else "",
-			context, {"to": better, "red": true, "member": culprit}))
+		var doors: Array = []
+		if not better.is_empty():
+			var better_class: String = str((scene["tables"][0]["paths"] as Dictionary).get(better.substr(1), ""))
+			doors.append([FIX_POINT_AT_NODE, EventSheetL10n.translate("Point at %s") % ("%s (%s)" % [better.substr(1), better_class])])
+		if not on_self:
+			doors.append([FIX_PICK_NODE, EventSheetL10n.translate("Pick another node...")])
+		doors.append([FIX_PICK_ROW, EventSheetL10n.translate("Pick another action...")])
+		var extra: Dictionary = {"to": better, "red": true, "member": culprit}
+		extra.merge(_door_keys(doors))
+		found.append(_finding(KIND_WRONG_NODE_TYPE, "error", event_row, node_label, sentence, "", "", context, extra))
 
 
 ## The members of the node a row's template reaches through its "On node" slot: `{target.}play(&{anim})`
@@ -704,22 +742,32 @@ static func _missing_paths(rows: Array[Dictionary], variable_rows: Array, found:
 				continue
 			seen[key] = true
 			var closest: String = closest_file(path)
-			found.append(_finding(KIND_MISSING_PATH, "error", event_row, path, path_sentence(path, closest),
-				FIX_USE_NAME if not closest.is_empty() else "",
-				EventSheetL10n.translate("Use %s") % closest if not closest.is_empty() else "",
-				context, {"to": closest, "red": true}))
+			var extra: Dictionary = {"to": closest, "red": true}
+			extra.merge(_door_keys(_path_doors(closest)))
+			found.append(_finding(KIND_MISSING_PATH, "error", event_row, path, path_sentence(path, closest), "", "", context, extra))
 	for entry: Variant in variable_rows:
 		var variable: LocalVariable = (entry as Dictionary)["variable"] as LocalVariable
 		var block: CustomBlockRow = (entry as Dictionary)["block"] as CustomBlockRow
 		for path: String in missing_paths_in(str((entry as Dictionary)["text"])):
 			var closest: String = closest_file(path)
-			found.append({
+			var declared_here: Dictionary = {
 				"kind": KIND_MISSING_PATH, "severity": "error",
 				"anchor": ANCHOR_VARIABLE if variable != null else ANCHOR_BLOCK,
 				"subject": variable.name.strip_edges() if variable != null else str((entry as Dictionary).get("name", "")),
 				"block": block, "path": path, "message": path_sentence(path, closest),
-				"fix": "", "fix_label": "", "to": closest, "red": true, "lane": "variable", "index": -1,
-			})
+				"to": closest, "red": true, "lane": "variable" if variable != null else "block", "index": -1,
+			}
+			declared_here.merge(_door_keys(_path_doors(closest)))
+			found.append(declared_here)
+
+
+## The doors on a missing file: its closest, when there is one, and the picker.
+static func _path_doors(closest: String) -> Array:
+	var doors: Array = []
+	if not closest.is_empty():
+		doors.append([FIX_USE_NAME, EventSheetL10n.translate("Use %s") % closest])
+	doors.append([FIX_PICK_FILE, EventSheetL10n.translate("Pick a file...")])
+	return doors
 
 
 static func path_sentence(path: String, closest: String) -> String:
@@ -810,11 +858,14 @@ static func _empty_groups(rows: Array[Dictionary], sheet: EventSheetResource, ow
 		var sentence: String = EventSheetL10n.translate("No node is in \"%s\": no scene has it and no script or sheet adds it. A loop over it does nothing and Godot prints nothing. Fine if a node joins it some other way at run time.") % group_name
 		if not closest.is_empty():
 			sentence += " " + EventSheetL10n.translate("Did you mean \"%s\"?") % closest
-		found.append(_finding(KIND_EMPTY_GROUP, "warning", event_row, group_name, sentence,
-			FIX_USE_NAME if not closest.is_empty() else FIX_RUN_TIME,
-			EventSheetL10n.translate("Use \"%s\"") % closest if not closest.is_empty() else EventSheetL10n.translate("It is added at run time"),
-			context, {"to": closest, "second_fix": FIX_RUN_TIME if not closest.is_empty() else "",
-				"second_fix_label": EventSheetL10n.translate("It is added at run time") if not closest.is_empty() else ""}))
+		var doors: Array = []
+		if not closest.is_empty():
+			doors.append([FIX_USE_NAME, EventSheetL10n.translate("Use \"%s\"") % closest])
+		doors.append([FIX_GROUP_ON_NODE, EventSheetL10n.translate("Add the group to a node...")])
+		doors.append([FIX_RUN_TIME, EventSheetL10n.translate("It is added at run time")])
+		var extra: Dictionary = {"to": closest}
+		extra.merge(_door_keys(doors))
+		found.append(_finding(KIND_EMPTY_GROUP, "warning", event_row, group_name, sentence, "", "", context, extra))
 
 
 ## The group names a line asks about (a literal first argument of a group call).
@@ -1099,10 +1150,13 @@ static func _signal_counts(sheet: EventSheetResource, walk: Dictionary, rows: Ar
 			if seen.has(key):
 				continue
 			seen[key] = true
+			var extra: Dictionary = {"red": true, "signal": signal_name, "sent": sent, "wanted": int(expected[0]),
+				"wanted_names": signal_parameters(signal_name, declared, sheet.host_class)}
+			extra.merge(_door_keys(_emit_doors(extra, declared.has(signal_name))))
 			found.append(_finding(KIND_EMIT_COUNT, "error", event_row, signal_name,
 				EventSheetL10n.translate("%s sends %s, and this emits it with %s. Nothing is said while no handler is connected; once one is, Godot prints \"Error calling from signal\" and the handler does not run.") % [
 					signal_name, values_phrase(int(expected[0]), str(expected[1])), values_phrase(sent, "")],
-				"", "", context, {"red": true}))
+				"", "", context, extra))
 	for event_info: Dictionary in walk["events"]:
 		var event_row: EventRow = event_info["event"] as EventRow
 		var trigger_id: String = event_row.trigger_id
@@ -1115,9 +1169,11 @@ static func _signal_counts(sheet: EventSheetResource, walk: Dictionary, rows: Ar
 		var handled: Array = handler_values(event_row.trigger_args)
 		if int(expected[0]) >= int(handled[0]) and int(expected[0]) <= int(handled[1]):
 			continue
+		var extra: Dictionary = {"red": true, "signal": signal_name}
+		extra.merge(_door_keys(_handler_doors(event_row, signal_name, declared, sheet.host_class, extra)))
 		found.append(_finding(KIND_HANDLER_COUNT, "error", event_row, signal_name,
 			handler_sentence(signal_name, int(expected[0]), str(expected[1]), handled, event_row.trigger_args),
-			"", "", {"lane": "trigger", "index": -1}, {"red": true}))
+			"", "", {"lane": "trigger", "index": -1}, extra))
 	# A function connected by hand: `hit.connect(_on_hit)` in a verbatim block.
 	var functions: Dictionary = walk["functions"]
 	for connection: Dictionary in walk["connected"].values():
@@ -1154,6 +1210,78 @@ static func _signal_counts(sheet: EventSheetResource, walk: Dictionary, rows: Ar
 		found.append(_finding(KIND_HANDLER_COUNT, "error", anchor, signal_name,
 			handler_sentence(signal_name, int(expected[0]), str(expected[1]), handled, ", ".join(names)),
 			"", "", {"lane": "trigger", "index": -1}, {"red": true}))
+
+
+## The doors on an emit with the wrong count: the values it lacks by their names, or the ones it has too
+## many of, and the row that declares the signal. A value is only added or removed where the row says emit.
+static func _emit_doors(extra: Dictionary, declared_here: bool) -> Array:
+	var doors: Array = []
+	var sent: int = int(extra["sent"])
+	var wanted: PackedStringArray = extra["wanted_names"]
+	if sent < wanted.size():
+		var names: PackedStringArray = PackedStringArray()
+		for index: int in range(sent, wanted.size()):
+			names.append(wanted[index].get_slice(":", 0).strip_edges())
+		doors.append([FIX_EMIT_VALUES, EventSheetL10n.translate("Add %s") % ", ".join(names)])
+	elif sent > wanted.size():
+		doors.append([FIX_EMIT_VALUES, EventSheetL10n.translate("Remove the extra value")])
+	if declared_here:
+		doors.append([FIX_OPEN_SIGNAL, EventSheetL10n.translate("Open the signal")])
+	return doors
+
+
+## The doors on a handler whose values do not match its signal: take off what the body does not read and
+## add to the signal what it lacks, or take from the signal what the handler lacks. `extra` is told what each
+## door writes, worked out here so the door never has to read a label.
+static func _handler_doors(event_row: EventRow, signal_name: String, declared: Dictionary, host_class: String, extra: Dictionary) -> Array:
+	var doors: Array = []
+	var pieces: PackedStringArray = split_top_level(event_row.trigger_args)
+	var wanted: PackedStringArray = signal_parameters(signal_name, declared, host_class)
+	if pieces.size() > wanted.size():
+		var over: PackedStringArray = pieces.slice(wanted.size())
+		var over_names: PackedStringArray = PackedStringArray()
+		var body: String = code_only(body_text(event_row))
+		for condition: Variant in event_row.conditions:
+			body += "\n" + code_only(emitted_line(condition))
+		var read_in_body: bool = false
+		for piece: String in over:
+			var word: String = piece.get_slice("=", 0).get_slice(":", 0).strip_edges()
+			over_names.append(word)
+			read_in_body = read_in_body or _has_word(body, word)
+		var names_text: String = ", ".join(over_names)
+		if not read_in_body:
+			extra["handler_args"] = ", ".join(pieces.slice(0, wanted.size()))
+			doors.append([FIX_HANDLER_VALUES, EventSheetL10n.translate("Drop %s") % names_text])
+		if declared.has(signal_name):
+			var widened: PackedStringArray = wanted.duplicate()
+			widened.append_array(over)
+			extra["signal_params"] = widened
+			doors.append([FIX_ADD_TO_SIGNAL, EventSheetL10n.translate("Add %s to the signal") % names_text])
+	elif pieces.size() < wanted.size():
+		var lacking: PackedStringArray = wanted.slice(pieces.size())
+		var lacking_names: PackedStringArray = PackedStringArray()
+		for piece: String in lacking:
+			lacking_names.append(piece.get_slice(":", 0).strip_edges())
+		var taken: PackedStringArray = pieces.duplicate()
+		taken.append_array(lacking)
+		extra["handler_args"] = ", ".join(taken)
+		doors.append([FIX_HANDLER_VALUES, EventSheetL10n.translate("Add %s") % ", ".join(lacking_names)])
+	if declared.has(signal_name) and pieces.size() <= wanted.size():
+		doors.append([FIX_OPEN_SIGNAL, EventSheetL10n.translate("Open the signal")])
+	return doors
+
+
+## A signal's values as they are declared ("damage: int"), in order.
+static func signal_parameters(signal_name: String, declared: Dictionary, host_class: String) -> PackedStringArray:
+	if declared.has(signal_name):
+		return PackedStringArray(declared[signal_name])
+	var names: PackedStringArray = PackedStringArray()
+	if not host_class.is_empty() and ClassDB.class_exists(host_class):
+		for entry: Dictionary in ClassDB.class_get_signal_list(host_class):
+			if str(entry.get("name", "")) == signal_name:
+				for argument: Dictionary in entry.get("args", []):
+					names.append(str(argument.get("name", "")))
+	return names
 
 
 ## [count, "(damage: int)" phrase] for a signal, or [] when it is not a signal this sheet can compare.
@@ -1285,23 +1413,38 @@ static func _endless_whiles(rows: Array[Dictionary], walk: Dictionary, found: Ar
 				continue
 			var condition: String = pick.collection_value.strip_edges()
 			var body: String = body_text(event_row)
-			if not loop_cannot_end(condition, body, walk["functions"]):
+			if not loop_cannot_end(condition, body, walk["functions"], str(walk.get("host_class", ""))):
 				continue
 			var reads: PackedStringArray = condition_chains(condition)
 			var read_names: PackedStringArray = PackedStringArray()
 			for chain: String in reads:
 				read_names.append(chain)
 			var subject: String = condition
-			# The guard puts a counter local on the line before the loop, which is a sibling event; an
-			# event with a trigger or a condition has no such place, so it gets the words and no door.
-			var plain: bool = event_row.trigger_id.is_empty() and event_row.trigger == null \
-				and event_row.conditions.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE
+			var extra: Dictionary = {}
+			var doors: Array = []
+			var change: Dictionary = change_that_ends(condition)
+			if not change.is_empty():
+				extra["change"] = change
+				doors.append([FIX_CHANGE_VARIABLE, str(change["label"])])
+			doors.append([FIX_STOP_AFTER, EventSheetL10n.translate("Stop after %d rounds") % GUARD_LIMIT])
+			doors.append([FIX_MAKE_IF, EventSheetL10n.translate("Make it an If")])
+			extra.merge(_door_keys(doors))
 			found.append(_finding(KIND_ENDLESS_WHILE, "warning", event_row, subject,
 				EventSheetL10n.translate("Nothing inside this While changes what \"%s\" reads (%s). Once it is true it stays true, so the loop never ends and the game stops responding. Change one of them inside it, add a stop, or make it an If.") % [
 					condition, ", ".join(read_names) if not read_names.is_empty() else condition],
-				FIX_STOP_AFTER if plain else "",
-				EventSheetL10n.translate("Stop after %d rounds") % GUARD_LIMIT if plain else "",
-				{"lane": "pick", "index": pick_index}, {}))
+				"", "", {"lane": "pick", "index": pick_index}, extra))
+
+
+## The one row that would end a loop on a plain comparison of a variable: `lives > 0` counts down, `lives < 9`
+## counts up. {} for any other shape, where which way is the right way is the reader's to say.
+static func change_that_ends(condition: String) -> Dictionary:
+	var found: RegExMatch = RegEx.create_from_string("^(?<name>[A-Za-z_][A-Za-z0-9_]*)\\s*(?<op>>=|<=|>|<)\\s*[-A-Za-z0-9_.]+$").search(condition)
+	if found == null or CONDITION_WORDS.has(found.get_string("name")):
+		return {}
+	var name_text: String = found.get_string("name")
+	if found.get_string("op").begins_with(">"):
+		return {"ace_id": "SubtractVar", "name": name_text, "label": EventSheetL10n.translate("Add: Subtract 1 from %s") % name_text}
+	return {"ace_id": "AddVar", "name": name_text, "label": EventSheetL10n.translate("Add: Add 1 to %s") % name_text}
 
 
 ## Every line the body of an event compiles to, sub-events included.
@@ -1323,7 +1466,7 @@ static func body_text(event_row: EventRow) -> String:
 
 
 ## True when a loop condition cannot change while its body runs. The body is judged by its code.
-static func loop_cannot_end(condition: String, body: String, sheet_functions: Dictionary) -> bool:
+static func loop_cannot_end(condition: String, body: String, sheet_functions: Dictionary, host_class: String = "") -> bool:
 	if condition.is_empty():
 		return false
 	var plain_body: String = code_only(body)
@@ -1334,6 +1477,11 @@ static func loop_cannot_end(condition: String, body: String, sheet_functions: Di
 	for function_name: Variant in sheet_functions.keys():
 		if not str(function_name).is_empty() and plain_body.contains(str(function_name) + "("):
 			return false
+	# So is a method of the sheet's own node (`move_and_slide()`, a project class's own): it can change
+	# whatever the condition reads. A call on another node, or one of the language's own, cannot reach a
+	# plain variable of this sheet.
+	if _calls_its_own_node(plain_body, host_class):
+		return false
 	if plain_body.contains(".emit(") or plain_body.contains(".call(") or plain_body.contains("emit_signal(") \
 			or plain_body.contains("call_deferred(") or plain_body.contains(".connect("):
 		return false
@@ -1351,6 +1499,27 @@ static func loop_cannot_end(condition: String, body: String, sheet_functions: Di
 		if body_changes(plain_body, chain):
 			return false
 	return true
+
+
+## True when a body calls something on `self` the check cannot see inside: a bare call that is a method of the
+## host class, or any bare call at all under a host Godot does not know (a project class of unknown members).
+## The language's own functions (print, str, randf...) are in neither.
+static func _calls_its_own_node(plain_body: String, host_class: String) -> bool:
+	var native: bool = ClassDB.class_exists(host_class)
+	for hit: RegExMatch in RegEx.create_from_string("(?<![\\w.$%])(?<name>[A-Za-z_][A-Za-z0-9_]*)\\s*\\(").search_all(plain_body):
+		var called: String = hit.get_string("name")
+		if native:
+			if ClassDB.class_has_method(host_class, called):
+				return true
+		elif not host_class.is_empty() and not _is_language_call(called):
+			return true
+	return false
+
+
+## True for a name the language itself answers: a utility function or a type's constructor.
+static func _is_language_call(called: String) -> bool:
+	return EventSheetGDScriptLint.GDSCRIPT_GLOBAL_HINTS.has(called) or called in ["print", "printerr", "push_error", "push_warning", "range", "len", "typeof", "assert", "print_rich", "print_debug", "preload", "load"] \
+		or EventSheetGDScriptLint.VALUE_TYPE_NAMES.has(called) or ClassDB.class_exists(called)
 
 
 ## True when a body writes the chain (`lives`, `player.hp`), a part of it, or calls a method on its root.
@@ -1403,13 +1572,50 @@ static func _hidden_locals(walk: Dictionary, found: Array[Dictionary]) -> void:
 			if local_name.is_empty():
 				continue
 			if (event_info["params"] as PackedStringArray).has(local_name):
+				var extra: Dictionary = {"red": true}
+				extra.merge(_local_doors(event_row, local_name, variables, event_info,
+					EventSheetL10n.translate("Remove the local (use the parameter %s)") % local_name, extra))
 				found.append(_finding(KIND_LOCAL_HIDES_PARAMETER, "error", event_row, local_name,
 					EventSheetL10n.translate("This event declares %s, and the function already has a parameter called %s. Godot refuses it (\"There is already a parameter named\") and the script does not load. Rename the local, or use the parameter.") % [local_name, local_name],
-					"", "", {"lane": "local", "index": -1}, {"red": true}))
+					"", "", {"lane": "local", "index": -1}, extra))
 			elif variables.has(local_name):
+				var extra: Dictionary = {}
+				extra.merge(_local_doors(event_row, local_name, variables, event_info,
+					EventSheetL10n.translate("Remove the local (use the sheet's %s)") % local_name, extra))
 				found.append(_finding(KIND_LOCAL_HIDES_VARIABLE, "warning", event_row, local_name,
 					EventSheetL10n.translate("This event's %s hides the sheet's %s. Changes to %s here are made to the local, which is gone when the event ends; the sheet's %s stays the same. Godot warns about it (SHADOWED_VARIABLE).") % [local_name, local_name, local_name, local_name],
-					"", "", {"lane": "local", "index": -1}, {}))
+					"", "", {"lane": "local", "index": -1}, extra))
+
+
+## The doors on a hiding local: a free name for it, and - where the declaring row is one the door can take out
+## without touching hand-written code - removing it. `extra` is told the new name.
+static func _local_doors(event_row: EventRow, local_name: String, variables: Dictionary, event_info: Dictionary,
+		remove_label: String, extra: Dictionary) -> Dictionary:
+	var taken: Dictionary = variables.duplicate()
+	for other: Variant in event_info["locals"] as Array:
+		taken[str(other)] = true
+	var new_name: String = RENAMED_LOCAL_PREFIX + local_name
+	var attempt: int = 2
+	while taken.has(new_name):
+		new_name = "%s%s_%d" % [RENAMED_LOCAL_PREFIX, local_name, attempt]
+		attempt += 1
+	extra["new_name"] = new_name
+	var doors: Array = [[FIX_RENAME_LOCAL, EventSheetL10n.translate("Rename the local to %s") % new_name]]
+	if declaring_row(event_row, local_name) != null:
+		doors.append([FIX_REMOVE_LOCAL, remove_label])
+	return _door_keys(doors)
+
+
+## The row of an event that declares a local of this name and can be removed whole: an entry of its local
+## list, or an action written by one of the local-variable verbs. Null for a `var` in a verbatim block.
+static func declaring_row(event_row: EventRow, local_name: String) -> Resource:
+	for local: Variant in event_row.local_variables:
+		if local is LocalVariable and (local as LocalVariable).name.strip_edges() == local_name:
+			return local as LocalVariable
+	for action: Variant in event_row.actions:
+		if action is ACEAction and _declared_local(action) == local_name:
+			return action as ACEAction
+	return null
 
 
 # -- 9. Division by a literal zero -----------------------------------------------------------------------------
@@ -1430,8 +1636,11 @@ static func _zero_divisions(rows: Array[Dictionary], walk: Dictionary, found: Ar
 			if seen.has(key):
 				continue
 			seen[key] = true
+			var extra: Dictionary = {"red": str(hit["severity"]) == "error"}
+			if str(context["lane"]) in ["action", "condition"] and not (context["row"] is RawCodeRow):
+				extra.merge(_door_keys([[FIX_OPEN_VALUE, EventSheetL10n.translate("Open the value")]]))
 			found.append(_finding(KIND_DIVIDE_BY_ZERO, str(hit["severity"]), event_row, str(hit["text"]),
-				str(hit["message"]), "", "", context, {"red": str(hit["severity"]) == "error"}))
+				str(hit["message"]), "", "", context, extra))
 
 
 ## The divisions by a literal zero one line makes: {"text", "severity", "message"}.
@@ -1471,7 +1680,83 @@ static func zero_divisions_in(line: String, variables: Dictionary = {}) -> Array
 	return hits
 
 
+# -- 10. A value of the wrong kind ------------------------------------------------------------------------
+
+
+## The same question the field asks as you type, asked of every row of the sheet: the line it compiles to,
+## in a stand-in script that knows the sheet's types. Only what Godot's own analyzer refuses, in a line the
+## untyped stand-in accepts, is a finding - so a mistake here is exactly what the field would have refused.
+static func _wrong_kinds(sheet: EventSheetResource, rows: Array[Dictionary], scene: Dictionary, walk: Dictionary,
+		found: Array[Dictionary]) -> void:
+	var lines: Array[Dictionary] = []
+	var contexts: Array[Dictionary] = []
+	for context: Dictionary in rows:
+		var lane: String = str(context["lane"])
+		if lane != "action" and lane != "condition":
+			continue
+		var code: String = str(context["line"]).strip_edges()
+		if code.is_empty() or code.begins_with("#") or not quote_left_open(code).is_empty():
+			continue
+		lines.append({"code": code, "condition": lane == "condition"})
+		contexts.append(context)
+	var variables: Dictionary = walk["sheet_variables"]
+	var verdicts: Array = EventSheetTypeCheck.judge_lines(sheet, lines, _classes_of_nodes(scene))
+	for index: int in range(verdicts.size()):
+		var lead: String = str(verdicts[index])
+		if lead.is_empty():
+			continue
+		var context: Dictionary = contexts[index]
+		var entry: Resource = context["row"] as Resource
+		var words: Dictionary = EventSheetTypeCheck.line_finding(lead, str(lines[index]["code"]), sheet, context["params"] as Dictionary)
+		var doors: Array = []
+		var extra: Dictionary = {"red": true, "original": lead, "to": str(words.get("rewrite", "")), "param": str(words.get("param", ""))}
+		if not str(extra["to"]).is_empty() and not str(extra["param"]).is_empty():
+			doors.append([FIX_USE_VALUE, EventSheetL10n.translate("Use %s") % str(extra["to"])])
+		if entry is ACEAction or entry is ACECondition:
+			doors.append([FIX_OPEN_VALUE, EventSheetL10n.translate("Open the parameters")])
+		var target: String = str(words.get("target", ""))
+		if variables.has(target):
+			extra["variable"] = target
+			doors.append([FIX_GO_TO_VARIABLE, EventSheetL10n.translate("Go to %s") % target])
+		extra.merge(_door_keys(doors))
+		found.append(_finding(KIND_WRONG_KIND, "error", context["event"] as EventRow, str(lines[index]["code"]),
+			"%s %s" % [str(words["head"]), str(words["body"])], "", "", context, extra))
+
+
+## The `$Path` / `%Name` references every scene running this script agrees the class of, as {reference: class}.
+static func _classes_of_nodes(scene: Dictionary) -> Dictionary:
+	var classes: Dictionary = {}
+	if not bool(scene.get("known", false)):
+		return classes
+	var tables: Array = scene["tables"]
+	if tables.is_empty() or bool((tables[0] as Dictionary).get("inherited", false)):
+		return classes
+	for sigil_table: Array in [["$", "paths"], ["%", "unique"]]:
+		for path: Variant in ((tables[0] as Dictionary)[sigil_table[1]] as Dictionary).keys():
+			var the_class: String = str(((tables[0] as Dictionary)[sigil_table[1]] as Dictionary)[path])
+			if str(path) == "." or the_class.is_empty() or not ClassDB.class_exists(the_class):
+				continue
+			var agreed: bool = true
+			for table: Variant in tables:
+				agreed = agreed and not bool((table as Dictionary).get("inherited", false)) \
+					and str(((table as Dictionary)[sigil_table[1]] as Dictionary).get(path, "")) == the_class
+			if agreed:
+				classes[str(sigil_table[0]) + str(path)] = the_class
+	return classes
+
+
 # -- The shape every family speaks ---------------------------------------------------------------------------------
+
+
+## The doors a finding offers, as the keys the strip and the Doctor read: at most three, first the likeliest.
+## Each door is [id, label].
+static func _door_keys(doors: Array) -> Dictionary:
+	var keys: Dictionary = {}
+	var slots: Array = [["fix", "fix_label"], ["second_fix", "second_fix_label"], ["third_fix", "third_fix_label"]]
+	for index: int in range(mini(doors.size(), slots.size())):
+		keys[str(slots[index][0])] = str(doors[index][0])
+		keys[str(slots[index][1])] = str(doors[index][1])
+	return keys
 
 
 ## One finding, with every key its readers address filled in. `lane` and `index` say where in the event

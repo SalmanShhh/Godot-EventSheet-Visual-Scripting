@@ -33,6 +33,8 @@ var _page: Array[Dictionary] = []
 ## True from a fix being applied until the re-run redraws the page, so the second click of a
 ## double-click (which Godot also reports as an activation) does not apply the same fix again.
 var _fix_pending: bool = false
+## The door every row finding has: its sheet opened on that row.
+const SHOW_ROW := "show_row"
 ## Where each check's Learn more goes, found once a session: reading the whole Manual is not free.
 static var _learn_more_cache: Dictionary = {}
 
@@ -48,6 +50,9 @@ static func offers_for(finding: Dictionary) -> Array[Dictionary]:
 	var offers: Array[Dictionary] = EventSheetQuickFixes.fixes_for(finding)
 	if finding.get("fix") is Callable:
 		offers.append({"id": "", "label": str(finding.get("fix_label", EventSheetL10n.translate("Apply its fix")))})
+	# A row finding's address is a door too: the sheet opened with that row selected.
+	if finding.has("doors") and int(finding.get("event", 0)) > 0:
+		offers.append({"id": SHOW_ROW, "label": EventSheetL10n.translate("Show row")})
 	return offers
 
 
@@ -306,6 +311,10 @@ func _apply_fix_row(item: TreeItem) -> bool:
 	_fix_pending = true
 	var finding: Dictionary = item.get_parent().get_metadata(1) as Dictionary
 	var fix_id: String = str((item.get_metadata(2) as Dictionary).get("id", ""))
+	if fix_id == SHOW_ROW:
+		_fix_pending = false
+		_show_finding_row(finding)
+		return true
 	if fix_id.is_empty():
 		(finding["fix"] as Callable).call(finding)
 	else:
@@ -314,6 +323,26 @@ func _apply_fix_row(item: TreeItem) -> bool:
 	# Deferred: the click that got here is still being handled by the tree this clears.
 	_run_project_doctor.call_deferred()
 	return true
+
+
+## Opens a finding's sheet and selects the row it is about, found by the number the margin draws.
+func _show_finding_row(finding: Dictionary) -> void:
+	var path: String = str(finding.get("path", ""))
+	if path.is_empty():
+		return
+	_dock._load_sheet_from_path(path)
+	_doctor_window.hide()
+	var sheet: EventSheetResource = _dock._current_sheet
+	var number: int = int(finding.get("event", 0))
+	if sheet == null or number <= 0:
+		return
+	var numbers: Dictionary = EventSheetResource.margin_numbers(sheet)
+	var wanted: int = numbers.find_key(number) if numbers.find_key(number) != null else 0
+	var row: Object = instance_from_id(wanted) if wanted != 0 else null
+	var view: EventSheetViewport = _dock._active_view()
+	if view != null and row is Resource:
+		view.reveal_resource(row as Resource)
+	_dock._set_status(EventSheetL10n.translate("Row %d of %s.") % [number, path.get_file()])
 
 
 ## The front page as rows of a Tree: one branch per severity, worst first, each finding under it with

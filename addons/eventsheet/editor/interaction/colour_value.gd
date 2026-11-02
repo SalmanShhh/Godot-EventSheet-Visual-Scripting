@@ -176,6 +176,11 @@ static func classify(text: String) -> String:
 		return KIND_EMPTY
 	if bool(parse(t).get("ok", false)):
 		return KIND_COLOUR
+	# Text that spells a colour and a whole number in hex are values Godot itself turns into a Color when it
+	# is assigned (`modulate = "red"` loads and runs), so neither is called wrong. They are left for the game
+	# to work out rather than read, because a pick would not know what to keep of them.
+	if t.is_valid_hex_number(true) or bool(parse(str(_unquote(t)[0])).get("ok", false)):
+		return KIND_RUNTIME
 	if _looks_wrong(t):
 		return KIND_WRONG
 	return KIND_RUNTIME

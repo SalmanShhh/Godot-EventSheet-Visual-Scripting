@@ -565,11 +565,8 @@ func _place(size: Vector2i) -> void:
 			var left: float = line.get_theme_stylebox("normal").get_content_margin(SIDE_LEFT)
 			var x: float = left + _word_width(before.substr(0, word_start)) - float(line.get_scroll_offset())
 			anchor = Rect2i(Vector2i(line.get_screen_position() + Vector2(clampf(x, 0.0, maxf(line.size.x - 40.0, 0.0)), 0.0)), Vector2i(0, int(line.size.y)))
-	if replaces_word:
-		# The corner sits on the word being completed, so the list reads as hanging from it.
-		EventSheetWindowPlacement.popup_at(_window, anchor.position + Vector2i(0, anchor.size.y), size)
-	else:
-		EventSheetWindowPlacement.popup_below(_window, anchor, size)
+	# Below the word, so the list reads as hanging from it; above it when there is no room below, never over it.
+	EventSheetWindowPlacement.popup_below(_window, anchor, size)
 
 
 func _word_width(text: String) -> float:
