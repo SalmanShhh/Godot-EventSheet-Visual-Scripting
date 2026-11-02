@@ -12328,7 +12328,7 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# What the compiler said about the events when this sheet was last written - the
 				# warnings it has always returned and nothing in the editor ever showed. Read from
 				# the record the last save made, never from a compile: a canvas does not pay for one.
-				_sheet_findings_cache[family] = EventSheetCompilerFindings.findings(sheet)
+				_sheet_findings_cache[family] = EventSheetCompileFindings.findings(sheet)
 			FINDINGS_RENAME:
 				# The rows a rename made somewhere else left pointing at nothing. The witness is
 				# built from the sheet's own file and the scene that runs it, and it answers with

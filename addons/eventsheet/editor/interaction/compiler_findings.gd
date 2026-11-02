@@ -17,7 +17,7 @@
 #
 # PURE + STATIC: no viewport, no dialog, no display server, so every word is pinned headless.
 @tool
-class_name EventSheetCompilerFindings
+class_name EventSheetCompileFindings
 extends RefCounted
 
 ## The one finding kind, by id. Frozen: the amber state, the strip and the Doctor's line address it.
@@ -96,6 +96,13 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 			"fix": "", "fix_label": "",
 		})
 	return found
+
+
+## " - N compiler warning(s)" for the sentence another message ends with, or "" when the file has none
+## on record - so a second finding about the same save never hides the first.
+static func tail_for(path: String) -> String:
+	var count: int = warnings_at(path).size()
+	return "" if count == 0 else " - " + EventSheetL10n.translate("%d compiler warning(s) - the first: %s") % [count, str(warnings_at(path)[0])]
 
 
 ## The words after a save: how many warnings, and the first. "" when there were none.

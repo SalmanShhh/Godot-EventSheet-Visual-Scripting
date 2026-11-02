@@ -6,7 +6,7 @@
 # after a save and the rows' help strips say once selected, so a reader meets one wording wherever the
 # problem turns up.
 #
-# WHAT IT READS. The record the editor keeps of each sheet's last write (EventSheetCompilerFindings),
+# WHAT IT READS. The record the editor keeps of each sheet's last write (EventSheetCompileFindings),
 # not a fresh compile of every sheet in the project: compiling a whole project's sheets to audit it
 # would make the Doctor as slow as opening every one of them, and the words are no better for it. So a
 # sheet nobody saved this session earns nothing, and the headless runners (CLI, CI) - which write no
@@ -28,7 +28,7 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetCompilerFindings.recorded_paths()))
+	findings.append_array(report(EventSheetCompileFindings.recorded_paths()))
 
 
 ## The whole section as findings for the given sheet files. Pure over the record, so a test can hand
@@ -38,7 +38,7 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 	var total: int = 0
 	var first_path: String = ""
 	for path: String in paths:
-		var warnings: Array = EventSheetCompilerFindings.warnings_at(path)
+		var warnings: Array = EventSheetCompileFindings.warnings_at(path)
 		if warnings.is_empty():
 			continue
 		if first_path.is_empty():

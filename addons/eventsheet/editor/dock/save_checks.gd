@@ -48,16 +48,16 @@ func init(dock: Control) -> void:
 ## warnings ("" when there were none), so the caller can put them beside its own sentence.
 func after_write(sheet: EventSheetResource, written_path: String, compile_result: Dictionary) -> String:
 	var warnings: Array = compile_result.get("warnings", [])
-	var warnings_changed: bool = EventSheetCompilerFindings.record(sheet, compile_result)
+	var warnings_changed: bool = EventSheetCompileFindings.record(sheet, compile_result)
 	if warnings_changed:
 		_repaint_rows()
 	_begin_engine_check({
 		"path": written_path,
-		"sheet_key": EventSheetCompilerFindings.key_of(sheet),
+		"sheet_key": EventSheetCompileFindings.key_of(sheet),
 		"source_map": compile_result.get("source_map", []),
 		"backed": not sheet.external_source_path.is_empty(),
 	})
-	return EventSheetCompilerFindings.summary(warnings)
+	return EventSheetCompileFindings.summary(warnings)
 
 
 ## Starts the check on a worker thread, or queues it behind the one already running. Nothing here
@@ -114,7 +114,7 @@ func apply_engine_result(request: Dictionary, errors: Array) -> void:
 	var changed: bool = layers.get("engine", []) != rows
 	layers["engine"] = rows
 	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
-	if sheet == null or EventSheetCompilerFindings.key_of(sheet) != key:
+	if sheet == null or EventSheetCompileFindings.key_of(sheet) != key:
 		return
 	var head_changed: bool = false
 	if bool(request.get("backed", false)):
@@ -126,19 +126,20 @@ func apply_engine_result(request: Dictionary, errors: Array) -> void:
 		var first: Dictionary = errors[0]
 		_dock._set_status(EventSheetL10n.translate(
 			"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.") % [
-			str(first.get("message", "")), int(first.get("line", 0)), str(request.get("path", "")).get_file()], true)
+			str(first.get("message", "")), int(first.get("line", 0)), str(request.get("path", "")).get_file()]
+			+ EventSheetCompileFindings.tail_for(key), true)
 
 
 ## The row marks the lint pass found, remembered beside the engine's so the two are painted together.
 static func set_lint_layer(sheet: EventSheetResource, diagnostics: Array) -> void:
-	_layers_of(EventSheetCompilerFindings.key_of(sheet))["lint"] = diagnostics
+	_layers_of(EventSheetCompileFindings.key_of(sheet))["lint"] = diagnostics
 
 
 ## Every red mark a sheet wears: the lint's, then the engine's for the rows the lint did not mark. A row
 ## the lint marked with its generic "does not compile" wording takes the engine's sentence when the
 ## engine named the same row, because the engine's words are the reason.
 static func merged_diagnostics(sheet: EventSheetResource) -> Array:
-	var layers: Dictionary = _layers.get(EventSheetCompilerFindings.key_of(sheet), {})
+	var layers: Dictionary = _layers.get(EventSheetCompileFindings.key_of(sheet), {})
 	var merged: Array = []
 	var by_uid: Dictionary = {}
 	for entry: Variant in layers.get("lint", []):
@@ -170,7 +171,7 @@ static func _layers_of(key: String) -> Dictionary:
 
 ## Replaces the engine layer of a sheet's marks - what a parse check found.
 static func set_engine_layer(sheet: EventSheetResource, marks: Array) -> void:
-	_layers_of(EventSheetCompilerFindings.key_of(sheet))["engine"] = marks
+	_layers_of(EventSheetCompileFindings.key_of(sheet))["engine"] = marks
 
 
 ## Forgets every layer. A test's way back to a clean slate.

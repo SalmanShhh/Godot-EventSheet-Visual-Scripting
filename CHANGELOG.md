@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed: a sheet whose compile check cannot run no longer paints every expression red
+
+- When a sheet variable shadows a member of the host class, the compile check cannot run; the parameter window used to colour every expression field red and say "fix X first" for the probe's fault. It now leaves the fields alone and says "compile check paused" beside Done (the reason on hover). A save that finds both an engine error and compiler warnings keeps the warning count on the status line.
+
 ### Fixed: a save no longer drops what it learned about the file it wrote, and runtime errors find their row without the Code panel
 
 - After a save, the engine's own verdict on the whole script the sheet wrote is read on a worker thread (a second Godot parses the file, about 0.4 s, cached by file time, so the save itself is not slowed). A failure no row's lint explained - a template's output, a pasted block - now marks the row that wrote the failing line (the red marker, whose hover is the engine's sentence) and the status line says the engine's words with the line. The lint's generic "does not compile" on a row is replaced by the engine's reason when it names the same row.

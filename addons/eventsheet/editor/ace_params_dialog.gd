@@ -313,6 +313,9 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_scope_names_sheet = null
 	_variable_names = _resolve_variable_names()
 	_read_variable_context()
+	# Read before the form is built: the fields check themselves as they are made, and a probe that
+	# cannot run must not paint every one of them red.
+	_lint_paused_reason = _lint_unhealthy_reason()
 	# Fresh add (no existing params, not a re-edit) prefills from session memory of
 	# the last values used for this ACE.
 	var form_values: Dictionary = initial_values
@@ -321,7 +324,6 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_build_form(definition, form_values)
 	_attach_recent_value_combos()
 	_fill_header()
-	_lint_paused_reason = _lint_unhealthy_reason()
 	_refresh_live_reading()
 	_dialog.get_ok_button().disabled = _apply_blocked
 	# Back returns to the picker - from the add flow OR a row edit (which opens in a replace_* mode),
@@ -3118,6 +3120,10 @@ func _validate_expression_field(edit: Control) -> void:
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet,
 		_scope_names_for(sheet))
+	# A probe that cannot run says nothing about the text: every expression "fails" it. The paused note
+	# beside OK says so once; the field is not painted red for the probe's fault.
+	if not _lint_paused_reason.is_empty():
+		lint_result = {"ok": true, "error": ""}
 	var key: String = _key_of_field(edit)
 	var param: Dictionary = _param_dict(key)
 	if edit.has_meta(FOREIGN_READING_META):

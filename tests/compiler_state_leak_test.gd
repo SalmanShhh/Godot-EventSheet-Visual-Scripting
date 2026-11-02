@@ -62,7 +62,10 @@ const SWEPT_STATICS: Array[String] = [
 	"starting_values", "unresolved_starting_values",
 	# The lines each class written inside the file writes, set by the entry point for that compile
 	# alone (its bodies are written first) and put back after it, so a poisoned value is overwritten.
-	"_inner_class_lines"
+	"_inner_class_lines",
+	# The warnings an event claimed during this compile, and which were already claimed: both are
+	# emptied by the entry point before and after every compile.
+	"_warning_rows", "_warning_claimed"
 ]
 
 ## The public statics of the compiler that are not emission entry points: pure answers about a row, a

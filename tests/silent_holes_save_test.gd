@@ -8,6 +8,8 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "silent_holes_save_test"
+## What one engine check of a six-line script may cost on a slow runner; it runs alone, in the tail.
+const ENGINE_CHECK_BUDGET_MS := 5000
 
 ## A stand-in for the dock with exactly what the save checks reach for.
 const DOCK_STUB := "extends Control\nvar _current_sheet = null\nvar status := ''\nvar status_is_error := false\nfunc _active_view():\n\treturn null\nfunc _set_status(text, is_error = false):\n\tstatus = text\n\tstatus_is_error = is_error\n"
@@ -62,17 +64,17 @@ static func _compiler_attributes_warnings_to_rows() -> bool:
 
 
 static func _warnings_are_recorded_and_found() -> bool:
-	EventSheetCompilerFindings.clear()
+	EventSheetCompileFindings.clear()
 	var made: Array = _ghost_sheet()
 	var sheet: EventSheetResource = made[0]
 	var event_row: EventRow = made[1]
 	sheet.external_source_path = "res://tests/silent_holes_ghost_sheet.gd"
 	var result: Dictionary = SheetCompiler.echo(sheet)
-	var first_record: bool = EventSheetCompilerFindings.record(sheet, result)
-	var same_record: bool = EventSheetCompilerFindings.record(sheet, result)
-	var found: Array[Dictionary] = EventSheetCompilerFindings.findings(sheet)
+	var first_record: bool = EventSheetCompileFindings.record(sheet, result)
+	var same_record: bool = EventSheetCompileFindings.record(sheet, result)
+	var found: Array[Dictionary] = EventSheetCompileFindings.findings(sheet)
 	var at_event: Array[Dictionary] = ViewportRowBuilder.findings_at_event(found, event_row)
-	var summary: String = EventSheetCompilerFindings.summary(EventSheetCompilerFindings.warnings_for(sheet))
+	var summary: String = EventSheetCompileFindings.summary(EventSheetCompileFindings.warnings_for(sheet))
 	var passed: bool = SUPPORT.pins(NAME, [
 		["the first record is a change", first_record, true],
 		["recording the same warnings again is not", same_record, false],
@@ -84,23 +86,23 @@ static func _warnings_are_recorded_and_found() -> bool:
 	])
 	# A fixed sheet stops being reported.
 	var clean: Dictionary = {"warnings": [], "warning_rows": []}
-	var cleared: bool = EventSheetCompilerFindings.record(sheet, clean)
+	var cleared: bool = EventSheetCompileFindings.record(sheet, clean)
 	passed = SUPPORT.pins(NAME, [
 		["a clean write is a change from a warned one", cleared, true],
-		["and leaves nothing on record", EventSheetCompilerFindings.recorded_paths().size(), 0],
-		["nor any finding", EventSheetCompilerFindings.findings(sheet).size(), 0],
-		["nor words for the status line", EventSheetCompilerFindings.summary([]), ""],
+		["and leaves nothing on record", EventSheetCompileFindings.recorded_paths().size(), 0],
+		["nor any finding", EventSheetCompileFindings.findings(sheet).size(), 0],
+		["nor words for the status line", EventSheetCompileFindings.summary([]), ""],
 	]) and passed
-	EventSheetCompilerFindings.clear()
+	EventSheetCompileFindings.clear()
 	return passed
 
 
 static func _doctor_lists_them() -> bool:
-	EventSheetCompilerFindings.clear()
+	EventSheetCompileFindings.clear()
 	var made: Array = _ghost_sheet()
 	var sheet: EventSheetResource = made[0]
 	sheet.external_source_path = "res://tests/silent_holes_ghost_sheet.gd"
-	EventSheetCompilerFindings.record(sheet, SheetCompiler.echo(sheet))
+	EventSheetCompileFindings.record(sheet, SheetCompiler.echo(sheet))
 	var findings: Array[Dictionary] = []
 	EventSheetCompilerWarningsDoctor.check(PackedStringArray(), findings)
 	var passed: bool = SUPPORT.pins(NAME, [
@@ -110,7 +112,7 @@ static func _doctor_lists_them() -> bool:
 		["with the file in front of the words", str(findings[1].get("message", "")).begins_with("silent_holes_ghost_sheet.gd "), true],
 		["and the file it is about", str(findings[1].get("path", "")), "res://tests/silent_holes_ghost_sheet.gd"],
 	]) if findings.size() == 2 else SUPPORT.check(NAME, "the Doctor lists the recorded warning", findings.size(), 2)
-	EventSheetCompilerFindings.clear()
+	EventSheetCompileFindings.clear()
 	var empty: Array[Dictionary] = []
 	EventSheetCompilerWarningsDoctor.check(PackedStringArray(), empty)
 	return SUPPORT.check(NAME, "nothing on record, nothing in the inbox", empty.size(), 0) and passed
@@ -132,7 +134,7 @@ static func _engine_words_land_on_the_row() -> bool:
 	var checks: EventSheetSaveChecks = EventSheetSaveChecks.new()
 	checks.init(dock)
 	var request: Dictionary = {
-		"path": sheet.external_source_path, "sheet_key": EventSheetCompilerFindings.key_of(sheet),
+		"path": sheet.external_source_path, "sheet_key": EventSheetCompileFindings.key_of(sheet),
 		"source_map": [{"uid": "4242", "start": 3, "end": 5, "kind": "event"}], "backed": true,
 	}
 	var errors: Array = [{"line": 4, "message": "Identifier \"flub\" not declared in the current scope."}]
@@ -183,7 +185,7 @@ static func _engine_check_reads_a_real_file() -> bool:
 	var path: String = "res://tests/fixtures/silent_holes_runtime_broken.gd"
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		return SUPPORT.check(NAME, "the scratch script can be written", false, true)
+		return SUPPORT.check(NAME, "the temporary script can be written", false, true)
 	file.store_string("extends Node\n\n\nfunc _ready() -> void:\n\tvar total: int = flub + 1\n\tprint(total)\n")
 	file.close()
 	var started: int = Time.get_ticks_msec()
@@ -197,5 +199,6 @@ static func _engine_check_reads_a_real_file() -> bool:
 	return SUPPORT.pins(NAME, [
 		["the engine names the line", int((errors[0] as Dictionary).get("line", 0)) if not errors.is_empty() else 0, 5],
 		["in its own words", str((errors[0] as Dictionary).get("message", "")).contains("flub") if not errors.is_empty() else false, true],
+		["the check is inside its budget", elapsed < ENGINE_CHECK_BUDGET_MS, true],
 		["a second ask of the same bytes is answered from the cache", cached, errors],
 	])
