@@ -44,7 +44,7 @@ static func build() -> bool:
 		"var _last_despawned: Node = null",
 		"",
 		"# THE HANDING BACK WAITS FOR THE FRAME. A pool takes a node back by REPARENTING it - out of the",
-		"# running scene and under the pool - and Godot refuses a reparent while the physics server is",
+		"# running scene and under the pool - and a 2D physics body reparented while the physics server is",
 		"# flushing its queries, which is the whole of a collision or area callback and exactly where a",
 		"# bullet is despawned. So Despawn BOOKS the handing back on the message queue and it lands at the",
 		"# next idle moment: the node is still in the world for the rest of the event, and no row can raise",
@@ -146,7 +146,7 @@ static func build() -> bool:
 		"\t\t(node as Control).position = at as Vector2",
 		"",
 		"# THE JOINING WAITS FOR THE FRAME TOO, for Spawn Safely and for that row only. Handing a copy out",
-		"# is a reparent exactly as handing one back is, and Godot refuses a reparent while the physics",
+		"# is a reparent exactly as handing one back is, and a reparented 2D physics body prints an error while the physics",
 		"# server is flushing its queries - the whole of a collision or area callback. So Spawn Safely does",
 		"# everything but the reparent on the line and books this, and On Spawned is raised HERE, with the",
 		"# copy already in the world, so a row under that trigger can read the copy's parent.",
@@ -257,7 +257,7 @@ static func build() -> bool:
 	_expr_node(sheet, "spawn", "Spawn", "Object Pool", "Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.",
 		[["pool_name", "String"]],
 		"var node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_wake(node)\n(_pools[pool_name].active as Array).append(node)\n_last_spawned = node\non_spawned.emit()\nreturn node")
-	_expr_node(sheet, "spawn_safely", "Spawn Safely", "Object Pool", "The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: Godot refuses to reparent a node while the physics server is flushing its queries, and this row waits for that to finish rather than erroring. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.",
+	_expr_node(sheet, "spawn_safely", "Spawn Safely", "Object Pool", "The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: A 2D physics body reparented while the physics server is flushing its queries makes Godot print an error (the move still happens), and this row waits for that to finish so nothing is printed. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.",
 		[["pool_name", "String"], ["at", "Variant"]],
 		"var node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_ready_for_use(node)\n_place(node, at)\n(_pools[pool_name].active as Array).append(node)\ncall_deferred(&\"_join_world_by_id\", node.get_instance_id())\nreturn node")
 	_field(sheet, "at", "Vector2.ZERO", "Where the copy goes, set before it joins the world - so it is a place relative to the parent it is about to get, and a pool has no transform of its own. A Vector3 places a 3D copy; a value of the wrong shape for the copy is left alone.")

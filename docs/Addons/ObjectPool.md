@@ -42,8 +42,8 @@ prewarm; and the custom way, Create Empty Pool then Add To Pool your own nodes. 
 - **Despawn parks it, it does not free it.** A despawned node is hidden, its processing stopped, and it is
   moved back into the pool to wait for the next Spawn. The move itself lands at the next idle moment rather
   than on the line, exactly as a destroy does, so the node is still in the world for the rest of the event
-  and Despawn is safe to call from inside a collision or area callback - where Godot refuses a reparent
-  while the physics server is flushing its queries.
+  and Despawn is safe to call from inside a collision or area callback - where reparenting a 2D physics
+  body makes Godot print "Can't change this state while flushing queries" (the move still happens).
 - **Prewarm to avoid the first-use cost.** Make the copies up front (at load time) so the first burst of
   spawns is already smooth.
 
@@ -94,7 +94,7 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 | Expression | Parameters | Returns | Description |
 |-----------|-----------|---------|-------------|
 | Spawn | pool_name | Node | Hands out a ready node (reusing a free one, else a new copy), added to the scene and returned. Fires On Spawned. |
-| Spawn Safely | pool_name, at | Node | The same spawn, placed and returned on the line but joining the world on the next idle moment. Use it inside a collision or area callback, where Godot refuses a reparent. Fires On Spawned when the copy is actually in the world. |
+| Spawn Safely | pool_name, at | Node | The same spawn, placed and returned on the line but joining the world on the next idle moment. Use it inside a collision or area callback, where reparenting a 2D physics body makes Godot print an error. Fires On Spawned when the copy is actually in the world. |
 | Last Spawned | (none) | Node | The node most recently spawned. |
 | Last Despawned | (none) | Node | The node most recently despawned. |
 | Free Count | pool_name | int | How many ready (unused) nodes a pool holds. |
@@ -256,8 +256,9 @@ On fire
 The oldest shots despawn on their own (hit or off-screen), freeing room for the next volley.
 
 **16. Spawn from inside a collision or area callback.** A hit spark asked for on the line raises "can't
-change this state while flushing queries", because handing a copy out of a pool is a reparent and Godot
-refuses one while the physics server is busy. Spawn Safely is the row for that spot.
+change this state while flushing queries", because handing a copy out of a pool is a reparent and a 2D
+physics body reparented while the physics server is busy makes Godot print that error (the move still
+happens). Spawn Safely is the row for that spot.
 
 ```
 Bullet On Body Entered

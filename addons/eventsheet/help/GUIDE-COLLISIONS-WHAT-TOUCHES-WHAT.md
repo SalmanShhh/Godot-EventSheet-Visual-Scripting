@@ -263,8 +263,9 @@ module guide; what matters here is when each one is the right reach.
   end of the frame rather than on the next line.
 
 One row that belongs beside all of these: **Spawn A Copy Safely** writes `call_deferred("add_child",
-…)`, because Godot refuses to add a child while the physics server is flushing, which is most of
-what a collision handler is.
+…)`, because a 2D physics body or area added from a collision handler makes Godot print "Can't change
+this state while flushing queries" (the node is still added and works). A plain node, or any 3D node,
+prints nothing there.
 
 ## Opening a project that already collides
 
@@ -335,9 +336,11 @@ inbox, and the help strip under the row once the row is selected.
 - **And do not move the floor gate behind another question.** The chain short-circuits, so the
   memory is not updated on the steps the question in front of it is false. See *What the floor edges
   do at the edges* above, which also covers the first physics step, a pause, and a flickering slope.
-- **Adding a child inside a collision handler needs the deferred spelling.** Godot refuses while the
-  physics server is flushing. **Spawn A Copy Safely** is the row that admits the deferral in its own
-  sentence.
+- **Adding a child inside a collision handler wants the deferred spelling.** A 2D physics body or area
+  added there makes Godot print "Can't change this state while flushing queries" - the node is still
+  added and works, but the error names a line nobody was looking at. A plain node or a 3D node prints
+  nothing, and `_physics_process` is fine. **Spawn A Copy Safely** is the row that admits the deferral
+  in its own sentence.
 - **A layer renamed in Project Settings renames every row about it, and moves no file.** That is the
   right way round, and its one consequence is that a layer which stops being named stops being
   readable: the sentence quietly goes back to saying a number. Doctor ▸ Collision Layers is what

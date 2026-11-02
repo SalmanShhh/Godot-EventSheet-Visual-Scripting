@@ -41,8 +41,9 @@
 # swap for Destroy and never the other way round.
 #
 # AND WHAT IT TAKES FOR THAT SWAP TO BE SAFE, because it is not free. A pool takes a node back by
-# REPARENTING it, and Godot refuses a reparent while the physics server is flushing - which is the
-# whole of the collision handler a bullet is retired in. So the runtime file BOOKS the handing back
+# REPARENTING it, and a 2D physics body reparented while the physics server is flushing makes Godot
+# print an error (the move still happens) - and flushing is the whole of the collision handler a
+# bullet is retired in. So the runtime file BOOKS the handing back
 # for the next idle moment, exactly as `queue_free()` books a deletion for the end of the frame:
 # both halves of the verb leave the node in the world for the rest of the event, and neither can
 # raise an error from inside a callback. A node that is retired twice goes back once.

@@ -19,7 +19,7 @@ extends RefCounted
 #
 # THE HANDING BACK WAITS FOR THE FRAME, and that is what makes retiring a safe swap for destroying
 # rather than only nearly one. A pool takes a node back by REPARENTING it - out of the running scene
-# and under the pool - and Godot refuses a reparent while the physics server is flushing its queries,
+# and under the pool - and a 2D physics body reparented while the physics server is flushing its queries makes Godot print an error,
 # which is the whole of a collision or body callback and exactly where a bullet is retired. Freeing
 # has never had this problem, because `queue_free()` already waits for the end of the frame; so the
 # pool half waits too, booked on the message queue and done at the next idle moment. Both halves of
@@ -82,7 +82,7 @@ static func retire(node: Node) -> void:
 ## is something only a running game has. A null pool is the ordinary case and means destroy.
 ##
 ## The pool answer is BOOKED rather than done on this line, for the reason the header states: taking
-## a node back is a reparent, and a reparent inside a physics callback is what Godot refuses.
+## a node back is a reparent, and a reparent of a 2D physics body inside a physics callback is what makes Godot print an error.
 static func retire_into(node: Node, pool: Node) -> void:
 	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
 		return
