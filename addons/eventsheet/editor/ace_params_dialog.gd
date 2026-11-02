@@ -321,6 +321,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	var form_values: Dictionary = initial_values
 	if initial_values.is_empty() and not _is_reedit_flow() and _remembered_values.has(definition.id):
 		form_values = (_remembered_values[definition.id] as Dictionary).duplicate(true)
+	_opening_values = form_values
 	_build_form(definition, form_values)
 	_attach_recent_value_combos()
 	_fill_header()
@@ -2900,6 +2901,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 		edit.request_code_completion()
 	)
 	edit.code_completion_requested.connect(func() -> void: _populate_expression_completion(edit))
+	edit.draw.connect(make_room_for_completion.bind(edit))
 	# Registered BEFORE the first check, so what the check finds is filed under this parameter and the
 	# window opens already saying what is wrong with a value it was handed.
 	_fields[key] = edit
@@ -3120,6 +3122,8 @@ func _validate_expression_field(edit: Control) -> void:
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet,
 		_scope_names_for(sheet))
+	if not bool(lint_result.get("ok", true)) and _compiles_in_its_slot(_key_of_field(edit), str(edit.get("text")), sheet):
+		lint_result = {"ok": true, "error": ""}
 	# A probe that cannot run says nothing about the text: every expression "fails" it. The paused note
 	# beside OK says so once; the field is not painted red for the probe's fault.
 	if not _lint_paused_reason.is_empty():
@@ -3247,6 +3251,13 @@ var _field_notes: Dictionary = {}
 ## Why the compile check cannot run for the sheet this window opened on ("" when it can), read once per
 ## open. Said beside OK and under an expression field, so an unchecked field never looks checked.
 var _lint_paused_reason: String = ""
+## What a code box remembers while it has grown for its completion popup, and the popup's size (CodeEdit
+## shows at most seven suggestions at a time).
+const RESTING_HEIGHT_META := "completion_resting_height"
+const COMPLETION_LINES := 7
+const COMPLETION_MARGIN := 12
+## The values this window opened with, for a field that checks itself before its neighbours are built.
+var _opening_values: Dictionary = {}
 
 
 ## The closest name the sheet already knows (variable / tree var / sheet function / host
@@ -3379,6 +3390,7 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var before_caret: String = edit.get_line(edit.get_caret_line()).substr(0, edit.get_caret_column())
+	var columns: int = completion_columns(edit)
 	# The seam reads the caret's context itself: `host.` / a typed variable / `$Behavior.` offer
 	# that type's members, `$` and `%` the scene's two spellings, everything else the flat list.
 	for entry: Dictionary in EventSheetCompletions.for_field(sheet,
@@ -3386,7 +3398,7 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 		var text: String = str(entry.get("text", ""))
 		edit.add_code_completion_option(
 			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))),
-			completion_label(text, str(entry.get("detail", ""))), text)
+			completion_label(text, str(entry.get("detail", "")), columns), text)
 	# The expressions dictionary, while typing (an event-sheet reflex): every EXPRESSION verb the
 	# picker window lists also autocompletes right in the field - display name shown, the code
 	# FRAGMENT inserted. These stay beside the seam rather than inside it because what they insert
@@ -3398,11 +3410,34 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 				edit.add_code_completion_option(
 					CodeEdit.KIND_FUNCTION,
 					completion_label(expression_definition.display_name,
-						first_sentence(expression_definition.description)),
+						first_sentence(expression_definition.description), columns),
 					_expression_picker._expression_template(expression_definition)
 				)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
+
+
+## A code box here is one line tall, and CodeEdit draws its completion popup inside its own rectangle,
+## which it clips: left alone, the popup is a sliver under the text and nobody can read a suggestion. The
+## box makes room while one is open (the popup's lines, under the line being typed) and goes back to its
+## height when it closes, so the list can be read and clicked as in the script editor.
+static func make_room_for_completion(edit: CodeEdit) -> void:
+	var open: bool = edit.get_code_completion_selected_index() >= 0
+	if open and not edit.has_meta(RESTING_HEIGHT_META):
+		edit.set_meta(RESTING_HEIGHT_META, edit.custom_minimum_size.y)
+		var lines: int = mini(edit.get_code_completion_options().size(), COMPLETION_LINES) + 1
+		edit.custom_minimum_size.y = maxf(edit.custom_minimum_size.y, float(lines * edit.get_line_height() + COMPLETION_MARGIN))
+		# As wide as the box and no wider: a popup wider than the box is pushed left out of it.
+		edit.add_theme_constant_override("completion_max_width", completion_columns(edit))
+	elif not open and edit.has_meta(RESTING_HEIGHT_META):
+		edit.custom_minimum_size.y = float(edit.get_meta(RESTING_HEIGHT_META))
+		edit.remove_meta(RESTING_HEIGHT_META)
+
+
+## How many characters a suggestion's line has room for in this box.
+static func completion_columns(edit: CodeEdit) -> int:
+	var column: float = edit.get_theme_font("font").get_string_size("M", HORIZONTAL_ALIGNMENT_LEFT, -1, edit.get_theme_font_size("font_size")).x
+	return maxi(int((edit.size.x - float(edit.get_line_height()) * 2.0) / maxf(column, 1.0)), 16)
 
 
 ## What a code box's completion popup SHOWS for a suggestion: the name, then its type or description
@@ -3410,9 +3445,20 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 ## popup has no detail column; the insert text (the third argument at the call site) stays the bare
 ## name, so what lands in the field is exact. The label still begins with the name, so Godot's
 ## prefix filter keeps matching what is typed.
-static func completion_label(text: String, detail: String) -> String:
+##
+## `columns` is the room the line has. CodeEdit right-aligns a line too long for its popup, which cuts off
+## its START, so the words after the name are shortened to fit: the name always shows, whole.
+static func completion_label(text: String, detail: String, columns: int = 0) -> String:
 	var shown: String = detail.strip_edges()
-	return text if shown.is_empty() else "%s    %s" % [text, shown]
+	if shown.is_empty():
+		return text
+	if columns > 0:
+		var room: int = columns - text.length() - 4
+		if room < 4:
+			return text
+		if shown.length() > room:
+			shown = shown.substr(0, room - 3).strip_edges() + "..."
+	return "%s    %s" % [text, shown]
 
 
 ## The first sentence of a description, capped, for the one line a popup row has room for.
@@ -3584,7 +3630,7 @@ func _expression_boxes() -> Array[Dictionary]:
 			continue
 		if field is CodeEdit:
 			if not _holds_foreign_reading(field):
-				boxes.append({"field": field, "text": str(field.get("text"))})
+				boxes.append({"field": field, "text": str(field.get("text")), "key": str(key)})
 		elif field.has_meta("vector_axis_edits"):
 			for axis_edit: Variant in (field.get_meta("vector_axis_edits") as Array):
 				boxes.append({"field": axis_edit as Control, "text": str((axis_edit as LineEdit).text)})
@@ -3599,9 +3645,27 @@ func _first_invalid_expression() -> Control:
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	for box: Dictionary in _expression_boxes():
 		if not bool(EventSheetGDScriptLint.lint_expression(str(box["text"]), sheet,
-				_scope_names_for(sheet)).get("ok", true)):
+				_scope_names_for(sheet)).get("ok", true)) \
+				and not _compiles_in_its_slot(str(box.get("key", "")), str(box["text"]), sheet):
 			return box["field"] as Control
 	return null
+
+
+## Whether a field's text, failing as an expression of its own, compiles where this window's verb writes it.
+func _compiles_in_its_slot(key: String, text: String, sheet: EventSheetResource) -> bool:
+	if _definition == null or key.is_empty():
+		return false
+	# The fields check themselves as they are built, so a field below this one may not exist yet: the
+	# window's opening values and the verb's defaults stand in for it (Filter's test reads the element name
+	# from the field under it).
+	var values: Dictionary = {}
+	for parameter: Variant in _definition.parameters:
+		if parameter is Dictionary:
+			values[str((parameter as Dictionary).get("id", ""))] = str((parameter as Dictionary).get("default_value", ""))
+	values.merge(_opening_values, true)
+	values.merge(_current_values(), true)
+	return EventSheetGDScriptLint.compiles_in_its_slot(str(_definition.metadata.get("codegen_template", "")),
+		key, text, values, sheet, _scope_names_for(sheet))
 
 
 ## The first expression field (or vector axis box) with a STRUCTURAL syntax error (unbalanced brackets /
@@ -3657,7 +3721,7 @@ func _blocking_param_note() -> Dictionary:
 			continue
 		var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, ""))
 		var note: Dictionary = EventSheetParamFieldFactory.validate(param, str(_extract_value(field)),
-			_variable_entries, _row_owner, takes, _lint_sheet())
+			_variable_entries, _row_owner, takes, _lint_sheet(), _scope_names_for(_lint_sheet()))
 		if str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
 			return {"field": _focus_target_of(field), "message": "✗ %s" % str(note.get("body", "")),
 				"reason": str(note.get("reason", ""))}
@@ -3679,12 +3743,15 @@ func _focus_target_of(field: Control) -> Control:
 ## `is_expression` is true when the parameter takes GDScript. Returns {} when the value may be written,
 ## else {message, reason} - the sentence for the status line and the short reason for beside a field.
 ## Warnings never block.
-func blocking_problem_for(param: Dictionary, value: String, is_expression: bool, takes: String = "") -> Dictionary:
+func blocking_problem_for(param: Dictionary, value: String, is_expression: bool, takes: String = "",
+		template: String = "", values: Dictionary = {}) -> Dictionary:
 	var sheet: EventSheetResource = _lint_sheet()
 	if _variable_entries.is_empty() or _definition == null:
 		_read_variable_context()
+	if _definition == null:
+		_scope_names_sheet = null
 	var note: Dictionary = EventSheetParamFieldFactory.validate(param, value, _variable_entries, _row_owner,
-		takes, sheet)
+		takes, sheet, _scope_names_for(sheet))
 	if str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
 		return {"message": str(note.get("body", "")), "reason": str(note.get("reason", ""))}
 	if not is_expression:
@@ -3694,9 +3761,9 @@ func blocking_problem_for(param: Dictionary, value: String, is_expression: bool,
 		return {"message": structural, "reason": EventSheetL10n.translate("this will not compile")}
 	if sheet == null or not _lint_context_healthy():
 		return {}
-	if _definition == null:
-		_scope_names_sheet = null
-	if not bool(EventSheetGDScriptLint.lint_expression(value, sheet, _scope_names_for(sheet)).get("ok", true)):
+	if not bool(EventSheetGDScriptLint.lint_expression(value, sheet, _scope_names_for(sheet)).get("ok", true)) \
+			and not EventSheetGDScriptLint.compiles_in_its_slot(template, str(param.get("id", "")), value, values,
+				sheet, _scope_names_for(sheet)):
 		return {"message": EventSheetL10n.translate("This is not an expression this sheet can compile."),
 			"reason": EventSheetL10n.translate("this will not compile")}
 	return {}
@@ -4121,7 +4188,7 @@ func _note_for(key: String) -> Dictionary:
 		return {}
 	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, "")) if _definition != null else ""
 	return EventSheetParamFieldFactory.validate(param, str(_extract_value(_fields[key])),
-		_variable_entries, _row_owner, takes, _lint_sheet())
+		_variable_entries, _row_owner, takes, _lint_sheet(), _scope_names_for(_lint_sheet()))
 
 
 ## Points the strip at one parameter: its description and what its kind of field takes, or - when

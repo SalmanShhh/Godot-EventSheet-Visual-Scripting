@@ -172,7 +172,8 @@ func blocking_problem_of_edit(ace: Resource, key: String, new_text: String) -> D
 				_check_factory.init(_dock)
 			var is_expression: bool = EventSheetCompletions.kind_for_param(
 				str((parameter as Dictionary).get("hint", "")), key) == EventSheetCompletions.FIELD_EXPRESSION
-			return _check_factory.blocking_problem(parameter as Dictionary, new_text, is_expression, definition.id)
+			return _check_factory.blocking_problem(parameter as Dictionary, new_text, is_expression, definition.id,
+				str(definition.metadata.get("codegen_template", "")), ace.get("params") as Dictionary)
 	return {}
 
 

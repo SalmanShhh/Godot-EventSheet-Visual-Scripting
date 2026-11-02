@@ -106,12 +106,13 @@ func value_of(field: Control) -> String:
 ## closes with - a required value left blank, a name that is not a variable, a malformed or
 ## non-compiling expression - so the Properties bar and the sheet's inline value editor cannot commit
 ## what the dialog would have refused. `is_expression` is true when the parameter takes GDScript;
-## `definition_id` is the verb's id, which settles what kind of value it needs. Returns {} when the
-## value may be written, else {message, reason}. Warnings never block.
+## `definition_id` is the verb's id, which settles what kind of value it needs; `template` and `values`
+## are the verb's template and the row's other fields, for a value judged where it is written. Returns {}
+## when the value may be written, else {message, reason}. Warnings never block.
 func blocking_problem(descriptor: Dictionary, value: String, is_expression: bool,
-		definition_id: String = "") -> Dictionary:
+		definition_id: String = "", template: String = "", values: Dictionary = {}) -> Dictionary:
 	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(definition_id, ""))
-	return _builder.blocking_problem_for(descriptor, value, is_expression, takes)
+	return _builder.blocking_problem_for(descriptor, value, is_expression, takes, template, values)
 
 
 ## True when a built widget holds GDScript (a code box, or a vector's axis boxes) rather than a
@@ -472,7 +473,8 @@ const LEVEL_NOTE := "note"
 ## is the kind of value the VERB needs ("number" / "boolean" / ""), which a parameter's declared
 ## type cannot say for itself - every expression parameter declares String.
 static func validate(param: Dictionary, value: String, entries: Array[Dictionary],
-		owner: String, takes: String = "", host_sheet: EventSheetResource = null) -> Dictionary:
+		owner: String, takes: String = "", host_sheet: EventSheetResource = null,
+		scope_names: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var text: String = value.strip_edges()
 	var name_text: String = str(param.get("display_name", param.get("id", "")))
 	if text.is_empty() and _is_required(param):
@@ -483,7 +485,9 @@ static func validate(param: Dictionary, value: String, entries: Array[Dictionary
 			"reason": EventSheetL10n.translate("%s is empty") % name_text,
 			"fixes": [],
 		}
-	if _asks_for_a_variable(param) and text.is_valid_identifier() and not entries.is_empty():
+	# A local or a parameter is a variable the row can write to, though the sheet's catalog does not list it.
+	if _asks_for_a_variable(param) and text.is_valid_identifier() and not entries.is_empty() \
+			and not scope_names.has(text):
 		var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, text, owner, host_sheet)
 		if not unknown.is_empty():
 			var fixes: Array = []

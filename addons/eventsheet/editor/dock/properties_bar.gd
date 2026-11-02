@@ -277,8 +277,10 @@ func _apply(ace: Resource, param_id: String, text: String, descriptor: Dictionar
 		var problem: Dictionary = {}
 		var params: Variant = target.get("params")
 		if params is Dictionary and str((params as Dictionary).get(param_id, "")) != text:
+			var definition: ACEDefinition = _dock._find_definition(str(target.get("provider_id")), str(target.get("ace_id")))
 			problem = _field_factory.blocking_problem(descriptor, text,
-				EventSheetParamFieldFactory.holds_expression(field), _definition_id_of(target))
+				EventSheetParamFieldFactory.holds_expression(field), definition.id if definition != null else "",
+				str(definition.metadata.get("codegen_template", "")) if definition != null else "", params as Dictionary)
 		if not problem.is_empty():
 			field.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 			_dock._set_status(str(problem.get("message", "")), true)
@@ -288,13 +290,6 @@ func _apply(ace: Resource, param_id: String, text: String, descriptor: Dictionar
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Parameter updated.")
 	refresh()
-
-
-func _definition_id_of(ace: Resource) -> String:
-	if ace == null:
-		return ""
-	var definition: ACEDefinition = _dock._find_definition(str(ace.get("provider_id")), str(ace.get("ace_id")))
-	return definition.id if definition != null else ""
 
 
 func _show_group(group: EventGroup) -> void:

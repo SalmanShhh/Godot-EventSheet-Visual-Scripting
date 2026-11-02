@@ -18,7 +18,10 @@ static func run() -> bool:
 	all_passed = _lint_probe_unhealthy_is_said() and all_passed
 	all_passed = _vector_axes_are_checked() and all_passed
 	all_passed = _shared_gate_for_inline_editors() and all_passed
+	all_passed = _locals_and_parameters_are_variables() and all_passed
+	all_passed = _values_are_judged_where_they_are_written() and all_passed
 	all_passed = _completion_keeps_its_detail() and all_passed
+	all_passed = _completion_label_keeps_the_name() and all_passed
 	return all_passed
 
 
@@ -151,6 +154,83 @@ static func _tinted(control: Control) -> bool:
 	return control.has_theme_color_override("font_color")
 
 
+## A variable picker holds a name the row can write to, and a local or a parameter is one: an opened
+## `left -= 1` inside a function must not lock its dialog behind "left is not a variable".
+static func _locals_and_parameters_are_variables() -> bool:
+	var source: String = "extends Node2D\n\nvar kills: int = 0\n\n\nfunc hurt(amount: int) -> void:\n\tvar left: int = amount - 1\n\tfor i in range(3):\n\t\tkills += i + left\n\n\nfunc _on_entered(body: Node2D) -> void:\n\tprint(body)\n"
+	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "res://tests/silent_holes_scope_source.gd")
+	var dialog: ACEParamsDialog = ACEParamsDialog.new()
+	dialog.set_lint_context_provider(func() -> EventSheetResource: return sheet)
+	var picker: Dictionary = {"id": "variable", "display_name": "Variable", "hint": "variable_reference"}
+	var rows: Array = []
+	for name_text: String in ["kills", "position", "amount", "left", "i", "body"]:
+		rows.append(["%s may be written to" % name_text, dialog.blocking_problem_for(picker, name_text, false), {}])
+	rows.append(["a name nothing declares is still refused", dialog.blocking_problem_for(picker, "kils", false).is_empty(), false])
+	# The form's own gate asks the same question.
+	var definition: ACEDefinition = _definition_with([picker])
+	var picker_edit: LineEdit = LineEdit.new()
+	picker_edit.text = "left"
+	var form: ACEParamsDialog = _dialog_with(definition, {"variable": picker_edit}, sheet)
+	rows.append(["the form lets OK through for a local", form._blocking_expression_field(), {}])
+	picker_edit.text = "kils"
+	rows.append(["and refuses a typo", form._blocking_expression_field().is_empty(), false])
+	picker_edit.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+## Some values are not expressions on their own and are perfectly good where their verb writes them: a
+## test on the element a sibling field names, the statement a body runs, a list of values between brackets,
+## the name a lambda binds. Asked of the verb's own template, a good one passes and a typo still does not.
+static func _values_are_judged_where_they_are_written() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var dialog: ACEParamsDialog = ACEParamsDialog.new()
+	dialog.set_lint_context_provider(func() -> EventSheetResource: return sheet)
+	var filter: String = "{var_name}.filter(func({element}): return {predicate})"
+	var predicate: Dictionary = {"id": "predicate", "display_name": "Where", "hint": "expression"}
+	var element: Dictionary = {"id": "element", "display_name": "Element", "hint": "expression"}
+	var values: Dictionary = {"var_name": "items", "element": "x", "predicate": "x > 0"}
+	var pick: String = "[{values}].pick_random()"
+	var code: String = "{code}"
+	var body: Dictionary = {"id": "code", "display_name": "Code", "hint": "expression"}
+	var rows: Array = [
+		["a test on the element a sibling names passes", dialog.blocking_problem_for(predicate, "x > 5", true, "", filter, values), {}],
+		["a typo in that test does not", dialog.blocking_problem_for(predicate, "y > 5", true, "", filter, values).is_empty(), false],
+		["the name the lambda binds passes", dialog.blocking_problem_for(element, "item", true, "", filter, {"predicate": "item > 0"}), {}],
+		["a list between brackets passes", dialog.blocking_problem_for({"id": "values", "hint": "expression"}, "1, 2, 3", true, "", pick, {}), {}],
+		["a statement a body runs passes", dialog.blocking_problem_for(body, "var total := 1", true, "", code, {}), {}],
+		["a statement that cannot compile does not", dialog.blocking_problem_for(body, "var total := no_such_name", true, "", code, {}).is_empty(), false],
+		["without a template the value stands alone, as before", dialog.blocking_problem_for(predicate, "x > 5", true).is_empty(), false],
+	]
+	# The form's own gate, with the shipped verb.
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	var no_sources: Array[Object] = []
+	registry.refresh_from_sources(no_sources, true)
+	for definition: ACEDefinition in registry.get_all_definitions():
+		if definition.id != "ArrayFilter":
+			continue
+		var form: ACEParamsDialog = ACEParamsDialog.new()
+		form.set_lint_context_provider(func() -> EventSheetResource: return sheet)
+		form._definition = definition
+		var made: Array[Control] = []
+		for parameter: Variant in definition.parameters:
+			var described: Dictionary = parameter
+			var key: String = str(described["id"])
+			form._param_dicts[key] = described
+			var seeded: String = "items" if key == "var_name" else str(described.get("default_value", ""))
+			made.append(form._create_field(described, {key: seeded}, key, str(described.get("hint", ""))))
+		form._read_variable_context()
+		rows.append(["Filter's own defaults close the form", form._blocking_expression_field().get("message", ""), ""])
+		rows.append(["and its test wears no error as it is built, before the element's field exists",
+			str((form._field_notes.get("predicate", {}) as Dictionary).get("level", "")), ""])
+		var box: CodeEdit = form._fields["predicate"]
+		box.draw.emit()
+		rows.append(["a box with no suggestions open keeps its one line", box.custom_minimum_size.y, 31.0])
+		for control: Control in made:
+			control.free()
+	return SUPPORT.pins(NAME, rows)
+
+
 static func _shared_gate_for_inline_editors() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	var dialog: ACEParamsDialog = ACEParamsDialog.new()
@@ -186,6 +266,18 @@ static func _shared_gate_for_inline_editors() -> bool:
 	code.free()
 	plain.free()
 	return passed
+
+
+## CodeEdit right-aligns a line too long for its popup, so a long detail would hide the name it describes.
+static func _completion_label_keeps_the_name() -> bool:
+	var long_detail: String = "a sentence far longer than any one line of the popup has any room for at all"
+	var fitted: String = ACEParamsDialog.completion_label("kills", long_detail, 30)
+	return SUPPORT.pins(NAME, [
+		["the line fits the room", fitted.length() <= 30, true],
+		["and starts with the whole name", fitted.begins_with("kills    a sentence"), true],
+		["a name with no room beside it stands alone", ACEParamsDialog.completion_label("a_very_long_variable_name_here", long_detail, 30), "a_very_long_variable_name_here"],
+		["a short detail is left whole", ACEParamsDialog.completion_label("kills", "int", 30), "kills    int"],
+	])
 
 
 static func _completion_keeps_its_detail() -> bool:

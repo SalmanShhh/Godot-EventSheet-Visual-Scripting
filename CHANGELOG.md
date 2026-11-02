@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed: the review of the retained row paint and the fold reflow
+
+- A state row's live token kept the seconds it was recorded with while the game ran, because the renderer asks the running game at draw time and the seconds change with no rebuild. A colour changed in place on a sheet's look stayed on the rows for the same reason. Both are in a row's paint signature now.
+- While a drag closed the gap a row left, the lifted row and its veil were drawn over the row sliding into its place instead of under it. A row a drag changes is recorded on its own item, so it keeps its place in the row order.
+- A canvas that grew or shrank (an event opening its add lines) recorded every visible row again. Only the canvas' width reaches a row's paint.
+- One frame with every row on it (zooming out while scrolled deep asks for all of them) left that many nodes behind for good. The pool of spare row items is bounded, and an offset past the end of the rows asks for the last row.
+- Folding an event whose head is a split ternary opened again on the next rebuild, and before the reflow it did nothing at all. The head takes its fold from the same place every other row does.
+
+### Fixed: the review of the save checks and the commit gate
+
+- A failure in a game started from the editor reached the sheet only after pressing Continue in the debugger, and never if the reader pressed Stop: the debug compile's reporter sent it deferred, and the game stops at the error first. It is said at once now, so the strip, Jump to event and the tab focus work while the game is stopped.
+- The compile check refused values that are good where their verb writes them, in the dialog and now in the inline editor and the Properties bar too: a test on the element a sibling field names (Filter's own `x > 0` could not close its window), the statement a body runs, a list between brackets, the name a lambda binds. A value that does not compile by itself is asked again in the verb's template, with the sibling names it declares.
+- A local, a loop's counter or a function's parameter named in a variable field was refused as "not a variable", which locked the dialog of a row that writes one.
+- The completion popup of a code box was a sliver under one line of text, cut off by the box, and its new detail pushed the name out of the line. The box makes room while suggestions are open, and the detail is shortened to fit behind the whole name.
+- A save counted the engine marks of the file it had just replaced, so a fixed sheet could read "1 row(s) need attention"; a fix saved inside the same second as the broken file was answered from the cache with the old errors; an answer overtaken by a newer save was still said; and an answer that landed while another tab was up was dropped. The write clears the old answer, the cache forgets the file, the newer save wins, and the tab says it when it comes back.
+
+### Added: budgets for what a pointer on the sheet may cost
+
+- `sheet_interaction_budget_test` pins what a drag move, a fold, a hover crossing and the per-frame paint check may touch and how long they may take, at three times the median measured on the 800-row pack.
+
 ### Fixed: a look that shows add lines on hover no longer relays out the screen on every hover
 
 - Moving the pointer between two events grew one and shrank the other, and the re-measure walked every row and discarded every cached layout. Only the two rows are looked at now, the rows below shift only while the gain and the loss have not cancelled out, and only the layouts of the rows that moved are dropped. The hover flag moves between two rows instead of walking all of them. The metrics generation renews on any change of height. Pinned by `add_lines_incremental_test`, which walks hovers and selections and compares the metrics with a fresh measure at every step.
