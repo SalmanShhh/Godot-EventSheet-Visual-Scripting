@@ -58,9 +58,35 @@ func generation() -> int:
 	return _generation
 
 
-func rebuild() -> void:
+## The measurement of every row on the flat list right now, by the row's instance id, for a rebuild
+## that keeps most rows exactly as they are (a fold) to hand back to rebuild(). Taken BEFORE the flat
+## list is rebuilt: it reads the list the metrics belong to.
+func measured_rows() -> Dictionary:
+	var measured: Dictionary = {}
+	# Measurements that are not one per row of the list are measurements of some other list.
+	if _row_metrics.size() != _viewport._flat_rows.size():
+		return measured
+	for index: int in range(_row_metrics.size()):
+		var row_data: EventRowData = _viewport._row_at(index)
+		if row_data != null:
+			measured[row_data.get_instance_id()] = _row_metrics[index]
+	return measured
+
+
+## Lays every row out again: its top from the rows above it, its height from its words.
+##
+## `kept` ({row instance id: its measurement}, from measured_rows) names rows whose words, kind and
+## size cannot have changed since they were measured - a fold keeps every row it did not re-dress - so
+## their height (and the open / lazy marks it was measured with) is taken as it was instead of being
+## worked out again from the text, which is nearly all of the time a fold spends on a large sheet. A
+## row's TOP is always worked out again: it depends on the rows above it, and those are what changed.
+## Answers as if nothing were kept when the canvas is not the width the kept measurements were made at.
+func rebuild(kept: Dictionary = {}) -> void:
 	_generation += 1
+	var previous_width: float = _metrics_canvas_width
 	_metrics_canvas_width = _viewport._get_logical_canvas_width()
+	if not is_equal_approx(previous_width, _metrics_canvas_width):
+		kept = {}
 	_row_metrics.clear()
 	# The sheet starts BELOW the corner links' band where that band is drawn, so "Add event" and
 	# "+ Add…" have somewhere of their own to be. Without it the two links were painted straight
@@ -101,15 +127,22 @@ func rebuild() -> void:
 			# A look that nests by lines packs a sub-event the same 1 px below its parent as it packs
 			# two siblings: every block stands off the one above by exactly the block gap.
 			top += _viewport.event_block_gap() * EventSheetPalette.row_density()
-		var height: float = _resolve_row_height(row_data)
-		# "open": whether the row was measured hovered or selected - the state a theme that shows the add
-		# lines on hover measures an event in (remeasure_open_rows reads it back).
-		# "lazy": whether the row was measured before its words were built, from the line count alone -
-		# which knows nothing of a cell that wraps, or of the add lines a resting or inert row does not
-		# show. settle_built_rows measures it again once its words exist.
-		_row_metrics.append({"top": top, "height": height,
-			"open": row_data != null and (row_data.hovered or row_data.selected),
-			"lazy": _measured_lazily(row_data)})
+		var height: float = 0.0
+		var kept_metric: Variant = kept.get(row_data.get_instance_id()) if (row_data != null and not kept.is_empty()) else null
+		if kept_metric is Dictionary:
+			height = float((kept_metric as Dictionary)["height"])
+			_row_metrics.append({"top": top, "height": height,
+				"open": (kept_metric as Dictionary)["open"], "lazy": (kept_metric as Dictionary)["lazy"]})
+		else:
+			height = _resolve_row_height(row_data)
+			# "open": whether the row was measured hovered or selected - the state a theme that shows the add
+			# lines on hover measures an event in (remeasure_open_rows reads it back).
+			# "lazy": whether the row was measured before its words were built, from the line count alone -
+			# which knows nothing of a cell that wraps, or of the add lines a resting or inert row does not
+			# show. settle_built_rows measures it again once its words exist.
+			_row_metrics.append({"top": top, "height": height,
+				"open": row_data != null and (row_data.hovered or row_data.selected),
+				"lazy": _measured_lazily(row_data)})
 		top += height
 		if row_data != null:
 			previous_indent = row_data.indent

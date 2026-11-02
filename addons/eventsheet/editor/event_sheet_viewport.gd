@@ -3592,19 +3592,25 @@ func reflow_after_fold(changed: Array[EventRowData]) -> bool:
 			return false
 	for row_data: EventRowData in changed:
 		_row_builder.redress_fold(row_data)
+	# Every row but the re-dressed ones is the row it was a moment ago, so it keeps its measurement:
+	# the sheet is laid out again from the rows above each row, not measured again row by row.
+	var kept_metrics: Dictionary = _row_metrics_helper.measured_rows()
+	for row_data: EventRowData in changed:
+		kept_metrics.erase(row_data.get_instance_id())
 	_param_cursor = {}
 	_rows_revision += 1
 	_figure_content_width = -1.0
 	if figure_mode:
 		_figure_logical_width = FIGURE_PROBE_WIDTH
-	_reflow_flat_rows()
+	_reflow_flat_rows(kept_metrics)
 	return true
 
 
 ## Everything a rebuild does once the rows exist: flatten them (honouring folds and the lens),
 ## build the words of a small sheet, measure, number, restore the selection and hover flags, and
 ## ask for a draw. The one place both a full rebuild and a fold's reflow end up.
-func _reflow_flat_rows() -> void:
+## `kept_metrics` (see ViewportRowMetrics.rebuild) are the measurements a fold keeps; a full rebuild keeps none.
+func _reflow_flat_rows(kept_metrics: Dictionary = {}) -> void:
 	_group_breadcrumb.invalidate()
 	_flat_rows.clear()
 	_flat_generation += 1
@@ -3633,7 +3639,7 @@ func _reflow_flat_rows() -> void:
 	if _flat_rows.size() <= EAGER_SPAN_LIMIT:
 		for entry in _flat_rows:
 			_row_builder._ensure_event_spans(entry.get("row"))
-	_row_metrics_helper.rebuild()
+	_row_metrics_helper.rebuild(kept_metrics)
 	_word_filler.restart()
 	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [], _sheet.functions if _sheet != null else [])
 	# The look that nests by lines numbers a pair's branches as events of their own, so the events after
