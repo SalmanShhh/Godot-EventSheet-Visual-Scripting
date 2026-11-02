@@ -1826,6 +1826,10 @@ func _notification(what: int) -> void:
 		# with it rather than staying listed against a freed workspace.
 		DOCK_REGISTRY.forget(self)
 		_release_ace_sources()
+		# The parameters dialog and its two sub-helpers hold each other: break the loop so the trio is
+		# released with the workspace instead of surviving every disable of the plugin.
+		if _ace_params_built:
+			_ace_params.release()
 		# A .gd still opening: join its worker before the job (and its Thread) is freed with us.
 		_sheet_io._abandon_open_job()
 		# And a save's engine check, if one is still running, for the same reason.

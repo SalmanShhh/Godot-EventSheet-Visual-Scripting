@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed: disabling the plugin left the whole workspace in memory
+
+- The workspace and the docs dock were taken out of the tree and then only queued for deletion, and the engine never collects a node that is queued while outside the tree. Every disable therefore kept about nine hundred orphan nodes alive (874 measured at the review), and each enable built another copy. They are now freed outright. Measured in the real editor over five disable/enable cycles with a sheet open: orphans 314 before enabling, 314 after every disable (it was +906 each time), nodes back to the same 21480.
+- The Parameters dialog and its two sub-helpers each held the other, so the trio was never released with the workspace; the dock now lets go of the loop as it is freed.
+- Still held after a disable: the project-wide vocabulary and icon caches (shared by design, they do not grow), and about nine small objects per cycle held by callables the engine keeps after the controls are gone.
+
 ### Fixed: the review of colour values, autocomplete, mistake checks and type checking
 
 - A field was judged against whatever scene happened to be open, read from its root: a `$Score` that is a Label in another scene refused a value that is right in this sheet's. It is now read from the node that runs the sheet, and a scene that does not run it says nothing.

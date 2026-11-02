@@ -120,6 +120,14 @@ var _node_picker: ACEParamsNodePicker = ACEParamsNodePicker.new()
 var _expression_picker: ACEParamsExpressionPicker = ACEParamsExpressionPicker.new()
 
 
+## Lets go of the back-references its two sub-helpers hold to this dialog. Each helper keeps a strong
+## reference to the dialog that owns it, and the dialog keeps the helper, so the pair stays alive
+## after the workspace that built it is freed. Called by the dock as it is freed.
+func release() -> void:
+	_node_picker._host = null
+	_expression_picker._host = null
+
+
 ## Initialise and attach the dialog to parent_node. Must be called before open().
 ## registry powers the Insert Expression picker; variable_names_provider returns the
 ## current sheet variable names (Callable -> PackedStringArray/Array).
