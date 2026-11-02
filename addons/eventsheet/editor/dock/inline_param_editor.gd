@@ -74,7 +74,9 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		_param_edit_problem.custom_minimum_size = Vector2(220.0, 0.0)
 		_param_edit_problem.visible = false
 		box.add_child(_param_edit_problem)
-		_param_edit_field.text_changed.connect(func(_t: String) -> void: _clear_param_edit_problem())
+		_param_edit_field.text_changed.connect(func(_t: String) -> void:
+			_clear_param_edit_problem()
+			_queue_live_check())
 		_param_edit_popup.add_child(box)
 		_dock.add_child(_param_edit_popup)
 		# The one completion popup, on the sheet's own value editor - so typing in a row is never
@@ -178,6 +180,40 @@ func blocking_problem_of_edit(ace: Resource, key: String, new_text: String) -> D
 			return _check_factory.blocking_problem(parameter as Dictionary, new_text, is_expression, definition.id,
 				str(definition.metadata.get("codegen_template", "")), ace.get("params") as Dictionary)
 	return {}
+
+
+## How long after the last key the editor checks what was typed - the same pause the parameters dialog
+## waits, so the two say the same thing at the same rhythm.
+const LIVE_CHECK_DELAY: float = 0.3
+var _live_check_generation: int = 0
+
+
+## Checks the typed value once typing pauses and says what Enter would refuse, under the field, before
+## Enter is pressed. The check is the commit gate's own (blocking_problem_of_edit), so what is said here
+## is exactly what Enter would answer.
+func _queue_live_check() -> void:
+	_live_check_generation += 1
+	var generation: int = _live_check_generation
+	if _dock == null or not _dock.is_inside_tree():
+		return
+	_dock.get_tree().create_timer(LIVE_CHECK_DELAY).timeout.connect(func() -> void:
+		if generation != _live_check_generation or _param_edit_popup == null or not _param_edit_popup.visible:
+			return
+		show_live_problem())
+
+
+## Puts the commit gate's answer for the text now in the field under it, or clears it.
+func show_live_problem() -> void:
+	if _param_edit_target == null or _param_edit_field == null:
+		return
+	var problem: Dictionary = blocking_problem_of_edit(_param_edit_target, _param_edit_key, _param_edit_field.text)
+	if problem.is_empty():
+		_clear_param_edit_problem()
+		return
+	_param_edit_problem.text = "%s %s" % [str(problem.get("message", "")),
+		EventSheetL10n.translate("Enter will not write it.")]
+	_param_edit_problem.visible = true
+	_param_edit_field.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 
 
 func _clear_param_edit_problem() -> void:

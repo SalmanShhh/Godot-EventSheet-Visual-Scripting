@@ -2960,7 +2960,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 			edit.text = edit.text.replace("
 ", " ")
 			edit.set_caret_column(mini(caret, edit.text.length()))
-		_validate_expression_field(edit)
+		_validate_expression_field(edit, true)
 	)
 	# The completion list and the signature hint, asked with the text before the caret and the event
 	# this field belongs to. The expressions dictionary's words are offered beside the sheet's names.
@@ -3182,7 +3182,12 @@ static func is_bare_node_path(node_path: String) -> bool:
 ## Live expression validation: compile-checks the field against the sheet context
 ## (variables, host members) and tints the text red when it would not compile. The lint
 ## context provider is optional - without it the field stays unvalidated.
-func _validate_expression_field(edit: Control) -> void:
+func _validate_expression_field(edit: Control, debounce: bool = false) -> void:
+	_validate_plain_expression(edit)
+	_queue_type_check(edit, debounce)
+
+
+func _validate_plain_expression(edit: Control) -> void:
 	if not _lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
@@ -3192,6 +3197,9 @@ func _validate_expression_field(edit: Control) -> void:
 		lint_result = {"ok": true, "error": ""}
 	# A probe that cannot run says nothing about the text: every expression "fails" it. The paused note
 	# beside OK says so once; the field is not painted red for the probe's fault.
+	# The type check only speaks about text that compiles on its own: a value Godot cannot read has a
+	# plainer problem than its kind, and the notes below already say it.
+	edit.set_meta("plain_ok", bool(lint_result.get("ok", true)) and _lint_paused_reason.is_empty())
 	if not _lint_paused_reason.is_empty():
 		lint_result = {"ok": true, "error": ""}
 	var key: String = _key_of_field(edit)
@@ -3250,6 +3258,142 @@ func _validate_expression_field(edit: Control) -> void:
 			body, undeclared, suggestion)
 	if _dialog != null:
 		_refresh_live_reading()
+
+
+## Asks for the type check of one expression field: now, or - while it is being typed into - after the
+## typing has paused for TYPE_CHECK_DELAY. Anything the field said about its kind before is dropped the
+## moment its text changes, so an underline never points at characters that moved.
+func _queue_type_check(edit: Control, debounce: bool) -> void:
+	var key: String = _key_of_field(edit)
+	if key.is_empty() or not _is_type_checked(key, edit):
+		return
+	var generation: int = int(edit.get_meta("type_check_generation", 0)) + 1
+	edit.set_meta("type_check_generation", generation)
+	if not _type_findings.has(key) or str((_type_findings[key] as Dictionary).get("signature", "")) != _type_signature(key, edit):
+		_type_findings.erase(key)
+		_underline_field(edit, {})
+	var tree: SceneTree = edit.get_tree() if edit.is_inside_tree() else null
+	if not debounce or tree == null:
+		_run_type_check(edit)
+		_refresh_live_reading()
+		return
+	tree.create_timer(TYPE_CHECK_DELAY).timeout.connect(func() -> void:
+		if is_instance_valid(edit) and int(edit.get_meta("type_check_generation", 0)) == generation:
+			_run_type_check(edit)
+			_refresh_live_reading())
+
+
+## Whether a field's value gets the kind-of-value check: an expression box, or the plain text field that
+## holds the arguments of a call (`{function_name}({args})`), which is code the same way.
+func _is_type_checked(key: String, field: Control) -> bool:
+	if _definition == null:
+		return false
+	return field is CodeEdit or (field is LineEdit and slot_is_call_arguments(
+		str(_definition.metadata.get("codegen_template", "")), key))
+
+
+## True when `template` writes `{param_id}` as the whole argument list of a call.
+static func slot_is_call_arguments(template: String, param_id: String) -> bool:
+	return template.contains("({%s})" % param_id)
+
+
+## What a type finding for `key` was worked out from: the field's text and the values of the fields around
+## it that the line it becomes is built from.
+func _type_signature(key: String, edit: Control) -> String:
+	return "%s|%s" % [str(edit.get("text")), JSON.stringify(_slot_values())]
+
+
+## Every field of the row by id, the opening values and the verb's defaults standing in for a field that is
+## not built yet (a field checks itself as it is built, before the ones below it exist).
+func _slot_values() -> Dictionary:
+	var values: Dictionary = {}
+	if _definition != null:
+		for parameter: Variant in _definition.parameters:
+			if parameter is Dictionary:
+				values[str((parameter as Dictionary).get("id", ""))] = str((parameter as Dictionary).get("default_value", ""))
+	values.merge(_opening_values, true)
+	values.merge(_current_values(), true)
+	return values
+
+
+## The finding for one field's current text, from the cache when nothing it was worked out from changed.
+## {} when nothing is wrong or the check does not apply. The commit gate calls this too, so pressing OK
+## inside the pause answers exactly what the field would have said a moment later.
+func _type_finding_for(key: String) -> Dictionary:
+	var edit: Variant = _fields.get(key, null)
+	if not (edit is Control) or not is_instance_valid(edit) or not _is_type_checked(key, edit as Control):
+		return {}
+	var sheet: EventSheetResource = _lint_sheet()
+	var signature: String = _type_signature(key, edit as Control)
+	var cached: Variant = _type_findings.get(key, null)
+	if cached is Dictionary and str((cached as Dictionary).get("signature", "")) == signature:
+		return (cached as Dictionary).get("finding", {})
+	var finding: Dictionary = {}
+	if sheet != null and _lint_paused_reason.is_empty() and not _holds_foreign_reading(edit as Control) \
+			and bool((edit as Control).get_meta("plain_ok", edit is LineEdit)):
+		finding = EventSheetTypeCheck.check_field(str(_definition.metadata.get("codegen_template", "")),
+			key, str((edit as Control).get("text")), _slot_values(), sheet, _scope_names_for(sheet), _validation_scene_root())
+	_type_findings[key] = {"signature": signature, "finding": finding}
+	return finding
+
+
+## Why the kinds of value are not being checked, or "": the first field whose stand-in script could not be
+## written for a reason that is not its value's.
+func _type_paused_reason() -> String:
+	for entry: Variant in _type_findings.values():
+		var finding: Dictionary = (entry as Dictionary).get("finding", {})
+		if str(finding.get("level", "")) == EventSheetTypeCheck.LEVEL_PAUSED:
+			return str(finding.get("reason", ""))
+	return ""
+
+
+func _run_type_check(edit: Control) -> void:
+	var key: String = _key_of_field(edit)
+	if not key.is_empty():
+		_underline_field(edit, _type_finding_for(key))
+
+
+## Draws (or removes) the underline a finding asks for under its characters, in the colour of its level.
+func _underline_field(edit: Control, finding: Dictionary) -> void:
+	if not (edit is TextEdit):
+		return
+	var overlay: EventSheetSpanUnderline = EventSheetSpanUnderline.of(edit as TextEdit)
+	var span: Variant = finding.get("span", Vector2i(-1, -1))
+	if str(finding.get("level", "")) != EventSheetTypeCheck.LEVEL_ERROR or not (span is Vector2i) or (span as Vector2i).x < 0:
+		overlay.clear()
+		return
+	var offset: int = int(finding.get("offset", 0))
+	var spans: Array[Vector2i] = [Vector2i((span as Vector2i).x + offset, (span as Vector2i).y + offset)]
+	overlay.underline(spans, EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
+
+
+## A type finding as the note the strip, the row under the field and the reason beside OK all read - the
+## same shape the other checks answer in, plus `original` (Godot's own words) and `underline` (the
+## characters are marked in the field itself, so the field's whole text is not tinted as well).
+func _type_note(finding: Dictionary) -> Dictionary:
+	var is_error: bool = str(finding.get("level", "")) == EventSheetTypeCheck.LEVEL_ERROR
+	return {
+		"level": EventSheetParamFieldFactory.LEVEL_ERROR if is_error else EventSheetParamFieldFactory.LEVEL_NOTE,
+		"heading": str(finding.get("head", "")),
+		"body": str(finding.get("body", "")),
+		"row_body": "%s %s" % [str(finding.get("head", "")), str(finding.get("body", ""))],
+		"original": str(finding.get("original", "")),
+		"reason": EventSheetL10n.translate("not written: %s") % str(finding.get("reason", "")) if is_error else "",
+		"fixes": finding.get("fixes", []),
+		"underline": is_error,
+	}
+
+
+## The kinds of value in `key`'s field are re-checked when a neighbouring field changed what they were
+## worked out from.
+func _requeue_type_checks() -> void:
+	for key: Variant in _fields.keys():
+		var field: Variant = _fields[key]
+		if field is Control and is_instance_valid(field) and _is_type_checked(str(key), field as Control):
+			var cached: Variant = _type_findings.get(key, null)
+			if cached is Dictionary and str((cached as Dictionary).get("signature", "")) == _type_signature(str(key), field as Control):
+				continue
+			_queue_type_check(field as Control, true)
 
 
 ## The meta an expression field carries while it holds another editor's spelling that reads as
@@ -3314,6 +3458,13 @@ var _variable_adder: Callable = Callable()
 ## its entry as it is typed (the lint runs there anyway); everything else is checked on demand. The
 ## strip and the reason beside OK both read from here, so one keystroke costs one check.
 var _field_notes: Dictionary = {}
+## What the type check found in each expression field, as {param id -> {signature, finding}}. The
+## signature is the text and the values around it that the answer was worked out from, so a finding
+## that the next keystroke (or a change to a neighbouring field) made stale is never read.
+var _type_findings: Dictionary = {}
+## How long after the last key the type check runs. The plain compile check is quick enough to answer
+## every key; the typed one builds a bigger stand-in and waits for the typing to stop.
+const TYPE_CHECK_DELAY: float = 0.3
 ## Why the compile check cannot run for the sheet this window opened on ("" when it can), read once per
 ## open. Said beside OK and under an expression field, so an unchecked field never looks checked.
 var _lint_paused_reason: String = ""
@@ -3751,7 +3902,24 @@ func _blocking_expression_field() -> Dictionary:
 	var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
 	if invalid_field != null:
 		return {"field": invalid_field, "message": "✗ An expression doesn't compile - fix it before applying."}
+	var wrong_kind: Dictionary = _blocking_type_finding()
+	if not wrong_kind.is_empty():
+		return wrong_kind
 	return _blocking_param_note()
+
+
+## The first expression field whose value is the wrong KIND for where it is written (the type check's
+## errors only - a warning, or "cannot be known yet", never blocks), as {field, message, reason}, or {}.
+func _blocking_type_finding() -> Dictionary:
+	for key: Variant in _fields.keys():
+		var field: Variant = _fields[key]
+		if not (field is Control) or not is_instance_valid(field) or not _is_type_checked(str(key), field as Control):
+			continue
+		var finding: Dictionary = _type_finding_for(str(key))
+		if str(finding.get("level", "")) == EventSheetTypeCheck.LEVEL_ERROR:
+			return {"field": field, "message": "✗ %s %s" % [str(finding.get("head", "")), str(finding.get("body", ""))],
+				"reason": EventSheetL10n.translate("not written: %s") % str(finding.get("reason", ""))}
+	return {}
 
 
 ## The first field the shared per-parameter check calls an ERROR (a required value left blank, a name
@@ -3801,8 +3969,11 @@ func blocking_problem_for(param: Dictionary, value: String, is_expression: bool,
 		takes, sheet, _scope_names_for(sheet))
 	if str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
 		return {"message": str(note.get("body", "")), "reason": str(note.get("reason", ""))}
-	if not is_expression:
+	var arguments_slot: bool = slot_is_call_arguments(template, str(param.get("id", "")))
+	if not is_expression and not arguments_slot:
 		return {}
+	if arguments_slot and not is_expression:
+		return _type_problem_for(param, value, template, values, sheet)
 	var structural: String = EventSheetGDScriptLint.structural_syntax_error(value)
 	if not structural.is_empty():
 		return {"message": structural, "reason": EventSheetL10n.translate("this will not compile")}
@@ -3813,6 +3984,22 @@ func blocking_problem_for(param: Dictionary, value: String, is_expression: bool,
 				sheet, _scope_names_for(sheet)):
 		return {"message": EventSheetL10n.translate("This is not an expression this sheet can compile."),
 			"reason": EventSheetL10n.translate("this will not compile")}
+	return _type_problem_for(param, value, template, values, sheet)
+
+
+## What the kind-of-value check refuses in `value`, as the gate's {message, reason, ...}, or {}. The same
+## check the dialog's field runs, so the sheet and the dialog never disagree about a wrong kind.
+func _type_problem_for(param: Dictionary, value: String, template: String, values: Dictionary,
+		sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var finding: Dictionary = EventSheetTypeCheck.check_field(template, str(param.get("id", "")), value, values,
+		sheet, _scope_names_for(sheet), _validation_scene_root())
+	if str(finding.get("level", "")) == EventSheetTypeCheck.LEVEL_ERROR:
+		return {"message": "%s %s" % [str(finding.get("head", "")), str(finding.get("body", ""))],
+			"reason": EventSheetL10n.translate("not written: %s") % str(finding.get("reason", "")),
+			"head": str(finding.get("head", "")), "original": str(finding.get("original", "")),
+			"fixes": finding.get("fixes", [])}
 	return {}
 
 
@@ -4160,6 +4347,7 @@ func _refresh_live_reading() -> void:
 			row_code_line(_definition, values, starting))
 	for caption: Callable in _choice_captions:
 		caption.call()
+	_requeue_type_checks()
 	_refresh_notes()
 
 
@@ -4174,10 +4362,11 @@ func _refresh_notes() -> void:
 		var note: Dictionary = _note_for(str(key))
 		var level: String = str(note.get("level", ""))
 		var problem: bool = level in [EventSheetParamFieldFactory.LEVEL_ERROR, EventSheetParamFieldFactory.LEVEL_WARNING]
-		_tint_field(_fields[key] as Control, level if problem else "")
+		# A kind-of-value finding marks its own characters in the field, so the whole text is not tinted too.
+		_tint_field(_fields[key] as Control, level if problem and not (bool(note.get("underline", false)) and _fields[key] is TextEdit) else "")
 		var row_note: EventSheetPopupUI.StateNote = (_rows.get(str(key), {}) as Dictionary).get("note")
 		if row_note != null:
-			row_note.say(str(note.get("body", "")) if problem else "", level)
+			row_note.say(str(note.get("row_body", note.get("body", ""))) if problem else "", level)
 		if note.is_empty():
 			continue
 		if strongest.is_empty() or level == EventSheetParamFieldFactory.LEVEL_ERROR:
@@ -4192,6 +4381,12 @@ func _refresh_notes() -> void:
 		if strongest.is_empty() and not _lint_paused_reason.is_empty():
 			_ok_reason.text = EventSheetL10n.translate("compile check paused")
 			_ok_reason.tooltip_text = _lint_paused_reason
+			_ok_reason.mouse_filter = Control.MOUSE_FILTER_STOP
+		elif strongest.is_empty() and not _type_paused_reason().is_empty():
+			# The sheet's types could not be written into the stand-in script, so kinds of value are not
+			# being checked: said quietly, with Godot's reason on hover, never as a red field.
+			_ok_reason.text = EventSheetL10n.translate("compile check paused")
+			_ok_reason.tooltip_text = EventSheetL10n.translate("The sheet's variables and functions could not be written with their types, so the kind of each value is not being checked. Godot says: %s") % _type_paused_reason()
 			_ok_reason.mouse_filter = Control.MOUSE_FILTER_STOP
 
 
@@ -4227,6 +4422,16 @@ func _highlight_row(key: String) -> void:
 ## first (it was computed as the field was typed and knows things a table cannot), then the shared
 ## per-parameter checks.
 func _note_for(key: String) -> Dictionary:
+	# What the type check last found for this text, if it has run: an error outranks every other note, a
+	# "cannot be known yet" note only speaks when nothing else has anything to say.
+	var type_finding: Dictionary = {}
+	var cached: Variant = _type_findings.get(key, null)
+	var field: Variant = _fields.get(key, null)
+	if cached is Dictionary and field is Control and is_instance_valid(field) \
+			and str((cached as Dictionary).get("signature", "")) == _type_signature(key, field as Control):
+		type_finding = (cached as Dictionary).get("finding", {})
+	if str(type_finding.get("level", "")) == EventSheetTypeCheck.LEVEL_ERROR:
+		return _type_note(type_finding)
 	var lint_note: Dictionary = _field_notes.get(key, {})
 	if not lint_note.is_empty():
 		return lint_note
@@ -4234,13 +4439,41 @@ func _note_for(key: String) -> Dictionary:
 	if param.is_empty() or not is_instance_valid(_fields.get(key, null)):
 		return {}
 	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, "")) if _definition != null else ""
-	return EventSheetParamFieldFactory.validate(param, str(_extract_value(_fields[key])),
+	var checked: Dictionary = EventSheetParamFieldFactory.validate(param, str(_extract_value(_fields[key])),
 		_variable_entries, _row_owner, takes, _lint_sheet(), _scope_names_for(_lint_sheet()))
+	if checked.is_empty() and str(type_finding.get("level", "")) == EventSheetTypeCheck.LEVEL_NOTE:
+		return _type_note(type_finding)
+	return checked
 
 
 ## Points the strip at one parameter: its description and what its kind of field takes, or - when
 ## something is wrong with the value - the complaint, in the tone it deserves, with the fixes.
 func _describe_field(key: String) -> void:
+	_describe_field_note(key)
+	_say_godots_words(key)
+
+
+## The line under the strip that holds Godot's own message for a finding that came from Godot: the
+## sentence above it is the plain form, this is exactly what the script editor would have said. Made on
+## first use, empty (hidden) when the focused field has nothing from Godot to quote.
+func _say_godots_words(key: String) -> void:
+	if _help_strip == null:
+		return
+	var original: String = str(_note_for(key).get("original", ""))
+	if _godot_says == null:
+		if original.is_empty():
+			return
+		_godot_says = _help_strip.add_line(EventSheetL10n.translate("GODOT SAYS"))
+		var mono: Font = EventSheetPopupUI.editor_font("doc_source")
+		if mono != null:
+			_godot_says.add_theme_font_override("font", mono)
+	_help_strip.set_line(_godot_says, original)
+
+
+var _godot_says: Label = null
+
+
+func _describe_field_note(key: String) -> void:
 	if _help_strip == null:
 		return
 	_focused_key = key
