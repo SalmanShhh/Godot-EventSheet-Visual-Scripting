@@ -32,6 +32,14 @@ static var _next: int = 0
 static var _started: bool = false
 static var _pumping: bool = false
 
+## Answers whether the editor is busy with something the reader is waiting on - a sheet opening,
+## its lift running. Set by the dock; while it says yes the warm takes no step at all, because a
+## step that compiles a few dozen scripts on the main thread lengthens the open it lands inside by
+## exactly its own cost (one measured run: 21 s became 26 s).
+static var _hold: Callable = Callable()
+## Frames the editor has been free for since the hold last let go.
+static var _quiet_frames: int = 0
+
 
 ## Starts the warm if it has not started. Cheap to call, and a second call while one is running is
 ## ignored rather than starting a second pass.
@@ -45,6 +53,17 @@ static func request() -> void:
 	_next = 0
 	_steps = _build_steps()
 	_arm()
+
+
+## The frames the editor must stay free for before a step is taken after a hold. A session restore
+## opens its tabs one after another with a frame or two between them; this bridges those gaps so the
+## warm does not slip in between two opens of the same restore.
+const QUIET_FRAMES_NEEDED: int = 30
+
+
+## Hands over the predicate that says the editor is busy (see _hold). A later call replaces it.
+static func set_hold(hold: Callable) -> void:
+	_hold = hold
 
 
 ## True once every question has been asked. What a test reads; nothing in the editor waits on it.
@@ -96,6 +115,8 @@ static func reset_for_tests() -> void:
 	_next = 0
 	_started = false
 	_pumping = false
+	_hold = Callable()
+	_quiet_frames = 0
 
 
 ## One callable per question. Per PACK rather than per pack folder in one go, because reading a
@@ -177,5 +198,13 @@ static func _schedule_slice() -> bool:
 
 static func _pump() -> void:
 	_pumping = false
+	if _hold.is_valid() and bool(_hold.call()):
+		_quiet_frames = 0
+		_arm()
+		return
+	if _quiet_frames < QUIET_FRAMES_NEEDED:
+		_quiet_frames += 1
+		_arm()
+		return
 	if not advance():
 		_arm()

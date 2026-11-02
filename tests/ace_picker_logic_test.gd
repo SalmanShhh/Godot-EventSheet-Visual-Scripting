@@ -302,6 +302,35 @@ static func _test_the_warm() -> bool:
 		EventSheetPickerWarmup._steps.size(),
 		EventSheetEditorToolCensus.pack_directories().size() + 2 + EventSheetPickerWarmup.ICON_SLICES) and all_passed
 	EventSheetPickerWarmup.reset_for_tests()
+	all_passed = _test_the_warm_holds_while_a_sheet_opens() and all_passed
+	return all_passed
+
+
+## THE HOLD. While the editor says it is opening a sheet the warm takes no step, and after the hold
+## lets go it still waits out the quiet frames before the first one - so a warm step cannot land
+## inside an open or in the gap between two opens of a session restore.
+static func _test_the_warm_holds_while_a_sheet_opens() -> bool:
+	var all_passed: bool = true
+	var ran: Array[int] = [0]
+	var busy: Array[bool] = [true]
+	EventSheetPickerWarmup.reset_for_tests()
+	EventSheetPickerWarmup._started = true
+	EventSheetPickerWarmup._steps = [func() -> void: ran[0] += 1] as Array[Callable]
+	EventSheetPickerWarmup.set_hold(func() -> bool: return busy[0])
+	for _frame in EventSheetPickerWarmup.QUIET_FRAMES_NEEDED * 2:
+		EventSheetPickerWarmup._pump()
+	all_passed = _check("a warm held by an opening sheet takes no step however many frames pass", ran[0], 0) and all_passed
+	busy[0] = false
+	for _frame in EventSheetPickerWarmup.QUIET_FRAMES_NEEDED:
+		EventSheetPickerWarmup._pump()
+	all_passed = _check("and once free it still waits out the quiet frames", ran[0], 0) and all_passed
+	EventSheetPickerWarmup._pump()
+	all_passed = _check("then takes its step", ran[0], 1) and all_passed
+	busy[0] = true
+	EventSheetPickerWarmup._pump()
+	all_passed = _check("a hold that comes back starts the quiet count again",
+		EventSheetPickerWarmup._quiet_frames, 0) and all_passed
+	EventSheetPickerWarmup.reset_for_tests()
 	return all_passed
 
 

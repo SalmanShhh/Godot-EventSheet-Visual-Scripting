@@ -103,6 +103,9 @@ const RUNTIME_HEAVY: Array[String] = [
 	"res://addons/eventsheet/editor/dock/duplicate_variant_dialog.gd",
 	"res://addons/eventsheet/editor/duplicate_variant.gd",
 	"res://addons/eventsheet/editor/paste_special.gd",
+	# The row builder's functions no ordinary open reads (head bars, findings and rows only some sheets
+	# show), kept in a helper of their own that is loaded by path the first time one is called.
+	"res://addons/eventsheet/editor/interaction/viewport_row_builder_on_demand.gd",
 	# And the pack scripts the block-kind scan used to compile to learn they were not kinds: every
 	# vector shape and post effect extends a pack base class, and the scan now follows that chain by
 	# reading text. Only a script that really is a kind is loaded.

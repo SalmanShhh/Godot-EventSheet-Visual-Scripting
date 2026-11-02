@@ -1102,6 +1102,8 @@ func _ready() -> void:
 	# The Add picker's first click of a session used to pay for a pile of answers that had nothing
 	# to do with what was clicked. They are asked here instead, a few milliseconds per idle frame,
 	# and the warm schedules nothing at all outside the editor.
+	EventSheetPickerWarmup.set_hold(func() -> bool:
+		return _sheet_io != null and _sheet_io.get("_open_job") != null)
 	EventSheetPickerWarmup.request()
 	_ui_builder.build_ui()
 	_ui_builder.ensure_editor_dialogs_initialized()

@@ -27,6 +27,7 @@ const DOCK_REGISTRY_PATH := "res://addons/eventsheet/api/dock_registry.gd"
 
 ## What a click opens, and the first open of a sheet must not compile.
 const CLICK_ONLY := [
+	"res://addons/eventsheet/editor/interaction/viewport_row_builder_on_demand.gd",
 	"res://addons/eventsheet/editor/docs/doc_window.gd",
 	"res://addons/eventsheet/editor/docs/doc_chores.gd",
 	"res://addons/eventsheet/editor/dock/welcome_window.gd",
