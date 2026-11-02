@@ -21,10 +21,6 @@ var _param_edit_field: LineEdit = null
 var _param_edit_hint: Label = null
 var _param_edit_target: Resource = null
 var _param_edit_key: String = ""
-var _color_swatch_popup: PopupPanel = null
-var _color_swatch_picker: ColorPicker = null
-var _color_swatch_target: Resource = null
-var _color_swatch_key: String = ""
 var _field_edit_popup: PopupPanel = null
 var _field_edit_field: LineEdit = null
 var _field_edit_raw: Resource = null
@@ -345,81 +341,6 @@ func _emit_data_class_default_edit(raw_row: Resource, field_index: int, new_valu
 	entry["has_default"] = not new_value.is_empty()
 	entry["default"] = new_value
 	return ViewportRowBuilder.emit_data_class(model)
-
-
-## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
-## The pick is committed once, when the popup closes - so dragging the picker is one clean undo step, not
-## one per colour change. The picker carries the project's SAVED PALETTE (the event-sheet swatch shelf):
-## presets a user saves persist per project and reappear in every session; saving/removing one
-## in the picker updates the store live. Headless-safe: state arms and presets load, only the
-## window itself is skipped - tests drive the same commit path a real close takes.
-func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:
-	if _color_swatch_popup == null:
-		_color_swatch_popup = PopupPanel.new()
-		_color_swatch_picker = ColorPicker.new()
-		_color_swatch_picker.edit_alpha = true
-		_color_swatch_picker.custom_minimum_size = Vector2(280.0, 0.0)
-		_color_swatch_popup.add_child(_color_swatch_picker)
-		_dock.add_child(_color_swatch_popup)
-		# Commit once on close (final colour) rather than on every continuous color_changed.
-		_color_swatch_popup.popup_hide.connect(func() -> void: _commit_color_swatch_edit(_color_swatch_picker.color))
-		for preset: Color in EventSheetColorPresets.all():
-			_color_swatch_picker.add_preset(preset)
-		_color_swatch_picker.preset_added.connect(func(color: Color) -> void: EventSheetColorPresets.add(color))
-		_color_swatch_picker.preset_removed.connect(func(color: Color) -> void: EventSheetColorPresets.remove(color))
-	_color_swatch_target = ace
-	_color_swatch_key = param_id
-	_color_swatch_picker.color = current_color
-	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
-		return
-	_color_swatch_popup.reset_size()
-	EventSheetWindowPlacement.popup_at(_color_swatch_popup, EventSheetWindowPlacement.pointer_for(_color_swatch_popup), _color_swatch_popup.size)
-
-
-func _commit_color_swatch_edit(new_color: Color) -> void:
-	if _color_swatch_target == null:
-		return
-	if _color_swatch_target is LocalVariable:
-		_commit_variable_color_edit(_color_swatch_target as LocalVariable, new_color)
-		return
-	if _color_swatch_key.is_empty():
-		return
-	var target: Resource = _color_swatch_target
-	var key: String = _color_swatch_key
-	var new_text: String = ACEParamsDialog.color_to_literal(new_color)
-	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Colour", func() -> bool:
-		var params: Dictionary = target.get("params")
-		if str(params.get(key, "")) == new_text:
-			return false
-		params[key] = new_text
-		return true
-	)
-	if changed:
-		_dock._refresh_after_edit()
-		_dock._mark_dirty("Colour updated.")
-
-
-## The same picker, committed onto a VARIABLE row. Two things make this different from a
-## param: the value is written back IN THE SPELLING THE LINE ALREADY USED (`Color.RED` stays a named
-## constant, `Color("#ff9b3c")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers), so a colour
-## edit moves the colour and not one byte more; and the variable is re-found BY NAME inside the edit,
-## because the undo funnel's commit replaces every resource with a snapshot duplicate.
-func _commit_variable_color_edit(variable: LocalVariable, new_color: Color) -> void:
-	var target_name: String = variable.name
-	var new_text: String = EventSheetVariableSentence.color_literal_in_spelling(
-		new_color, str(variable.default_value)
-	)
-	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Colour", func() -> bool:
-		var live: LocalVariable = find_variable_by_name(_dock._current_sheet, target_name)
-		if live == null or str(live.default_value) == new_text:
-			return false
-		live.default_value = new_text
-		live.expression_default = true
-		return true
-	)
-	if changed:
-		_dock._refresh_after_edit()
-		_dock._mark_dirty("Colour updated.")
 
 
 ## The LocalVariable a sheet declares under this name, at any depth, or null. Name-addressed on

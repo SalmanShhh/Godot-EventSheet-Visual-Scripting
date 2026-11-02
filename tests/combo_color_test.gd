@@ -90,10 +90,11 @@ static func run() -> bool:
 		(enum_dropdown.get_meta("code_note") as Label).text, "State.IDLE") and all_passed
 	enum_field.free()
 	var color_field: Control = dialog._create_color_field("tint", "Color(1, 0, 0, 1)")
-	all_passed = _check("color params render a picker", color_field is ColorPickerButton, true) and all_passed
-	all_passed = _check("picker preloads the literal", (color_field as ColorPickerButton).color, Color(1, 0, 0, 1)) and all_passed
-	all_passed = _check("picker values round-trip as canonical literals",
-		dialog._extract_value(color_field), "Color(1.0, 0.0, 0.0, 1.0)") and all_passed
+	var color_button: ColorPickerButton = color_field.get_child(0).get_child(0) as ColorPickerButton
+	all_passed = _check("color params render a picker beside a text field", color_button != null and dialog._fields["tint"] is LineEdit, true) and all_passed
+	all_passed = _check("picker preloads the literal", color_button.color, Color(1, 0, 0, 1)) and all_passed
+	all_passed = _check("the field keeps the literal as typed",
+		dialog._extract_value(dialog._fields["tint"]), "Color(1, 0, 0, 1)") and all_passed
 	color_field.free()
 	all_passed = _check("combo defaults must be an option",
 		VariableDialog.parse_options("easy, normal , hard").size(), 3) and all_passed
@@ -120,9 +121,10 @@ static func run() -> bool:
 	viewport._row_builder._ensure_event_spans(event_row_data)
 	var swatch_found: bool = false
 	for span in event_row_data.spans:
-		if span.metadata is Dictionary and (span.metadata as Dictionary).get("swatch_color") is Color:
-			swatch_found = ((span.metadata as Dictionary).get("swatch_color") as Color).is_equal_approx(Color(0.2, 0.6, 1, 1))
-	all_passed = _check("color params surface a swatch on the action text", swatch_found, true) and all_passed
+		var marks: Array = EventRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
+		if not marks.is_empty():
+			swatch_found = ((marks[0] as Dictionary)["color"] as Color).is_equal_approx(Color(0.2, 0.6, 1, 1))
+	all_passed = _check("color params surface a square on the action text", swatch_found, true) and all_passed
 	editor.free()
 
 	return all_passed

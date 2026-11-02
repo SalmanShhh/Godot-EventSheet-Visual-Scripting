@@ -134,9 +134,9 @@ static func _test_setting_facts() -> bool:
 		_texts(look.children[1]), "x | Instance | folder | shot_folder | ⚙ | = | \"\" | @export_dir var shot_folder: String = \"\"") and ok
 	ok = _check("a multiline text knob says so",
 		_texts(look.children[2]), "x | Instance | text | intro_text | ⚙ | = | \"\" | multiline | @export_multiline var intro_text: String = \"\"") and ok
-	ok = _check("a colour reads as its word",
-		_texts(look.children[3]), "x | Instance | color | tint | ⚙ | = | white | #ffffff | @export_color_no_alpha var tint: Color = Color.WHITE") and ok
-	ok = _check("and it carries the swatch that IS the fact",
+	ok = _check("a colour reads as the word it was written in",
+		_texts(look.children[3]), "x | Instance | color | tint | ⚙ | = | white | @export_color_no_alpha var tint: Color = Color.WHITE") and ok
+	ok = _check("and it carries the square that IS the fact",
 		_swatch(look.children[3]), Color.WHITE) and ok
 	ok = _check("a bit field says flags, and names the bits",
 		_texts(look.children[4]), "x | Instance | flags | elements | ⚙ | = | 0 | Fire / Water / Wind | @export_flags(\"Fire\", \"Water\", \"Wind\") var elements: int = 0") and ok
@@ -146,8 +146,8 @@ static func _test_setting_facts() -> bool:
 	colour_variable.type_name = "Color"
 	colour_variable.default_value = "Color(0.2, 0.4, 0.3, 1)"
 	colour_variable.expression_default = true
-	ok = _check("a colour nobody has a word for reads as its hex",
-		str(EventSheetSettingFacts.facts(colour_variable).get("value_text", "")), "#33664d") and ok
+	ok = _check("a colour nobody has a word for reads as it was written",
+		str(EventSheetSettingFacts.facts(colour_variable).get("value_text", "")), "Color(0.2, 0.4, 0.3, 1)") and ok
 	ok = _check("black is a word", EventSheetSettingFacts.colour_word(Color.BLACK), "black") and ok
 	ok = _check("and an odd green is not", EventSheetSettingFacts.colour_word(Color(0.31, 0.44, 0.29)), "") and ok
 	view.free()
@@ -308,8 +308,9 @@ static func _swatch(row_data: EventRowData) -> Variant:
 	if row_data == null:
 		return null
 	for span: SemanticSpan in row_data.spans:
-		if span.metadata is Dictionary and (span.metadata as Dictionary).get("swatch_color") is Color:
-			return (span.metadata as Dictionary)["swatch_color"]
+		var marks: Array = EventRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
+		if not marks.is_empty():
+			return (marks[0] as Dictionary)["color"]
 	return null
 
 

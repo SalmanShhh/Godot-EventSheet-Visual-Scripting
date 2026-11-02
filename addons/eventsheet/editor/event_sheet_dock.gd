@@ -565,6 +565,12 @@ var _inline_params: RefCounted = null:  # double-click value / swatch / node-dro
 			_inline_params = load("res://addons/eventsheet/editor/dock/inline_param_editor.gd").new()
 			_inline_params.init(self)
 		return _inline_params
+var _colour_squares: RefCounted = null:  # the square leading a colour value: picker, preview, Copy As (dock/colour_square_editor.gd)
+	get:
+		if _colour_squares == null:
+			_colour_squares = load("res://addons/eventsheet/editor/dock/colour_square_editor.gd").new()
+			_colour_squares.init(self)
+		return _colour_squares
 var _doctor: RefCounted = null:  # Tools ▸ Project Doctor health-audit window (dock/project_doctor_panel.gd)
 	get:
 		if _doctor == null:
@@ -4241,8 +4247,12 @@ func _on_param_value_edit_requested(ace: Resource, param_id: String, current_tex
 	_inline_params.on_param_value_edit_requested(ace, param_id, current_text)
 
 
-func _on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:  # viewport color_swatch_edit_requested
-	_inline_params.on_color_swatch_edit_requested(ace, param_id, current_color)
+func _on_colour_pick_requested(request: Dictionary) -> void:  # viewport colour_pick_requested
+	_colour_squares.open(request)
+
+
+func _on_colour_menu_requested(request: Dictionary, global_position: Vector2) -> void:  # viewport colour_menu_requested
+	_colour_squares.open_menu(request, global_position)
 
 
 func _on_param_node_drop_requested(ace: Resource, param_id: String, node_reference: String) -> void:  # viewport param_node_drop_requested

@@ -5063,21 +5063,6 @@ func _function_body_editable(event_function: EventFunction) -> bool:
 	return _viewport.is_function_body_editable_opt_in(event_function.function_name)
 
 
-## First Color(...) literal among an ACE's param values (null when none) - drives the
-## little color swatch drawn after the condition/action text.
-func _first_color_in_params(ace: Resource) -> Variant:
-	var params: Variant = ace.get("params")
-	if not (params is Dictionary):
-		return null
-	for key: Variant in (params as Dictionary).keys():
-		var value: Variant = (params as Dictionary)[key]
-		if value is String and (value as String).strip_edges().begins_with("Color("):
-			var parsed: Variant = str_to_var((value as String).strip_edges())
-			if parsed is Color:
-				return parsed
-	return null
-
-
 ## The one extra fact the Is in X for over Ns cell carries: how long that row is waiting for, as a
 ## plain number. While a game is running the editor draws the object's progress against it right
 ## after the cell ("3.2 of 6"), so the number is read off the row ONCE here rather than parsed in the
@@ -12413,6 +12398,7 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 			_:
 				found = findings_at_event(_sheet_findings(family), event_row)
 		about.append_array(_tagged(family, found))
+	about.append_array(_wrong_colour_findings(event_row))
 	# The event whose trigger compiles to the function that replaced the shared base's.
 	if event_row != null:
 		var over: Array[Dictionary] = []
@@ -12421,6 +12407,47 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 				over.append(finding)
 		about.append_array(_tagged(FINDINGS_INCLUDES, over))
 	return about
+
+
+## Text that is not a colour, sitting in a Color slot of this event: the row wears the quiet amber state and the
+## words of the help strip say what the slot takes. Nothing is written into the sheet and the line is never
+## refused - the amber is how the sheet says Godot will not accept it.
+func _wrong_colour_findings(event_row: EventRow) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if event_row == null:
+		return found
+	var aces: Array = []
+	if event_row.trigger != null:
+		aces.append(event_row.trigger)
+	aces.append_array(event_row.conditions)
+	aces.append_array(event_row.actions)
+	for ace: Variant in aces:
+		if not (ace is Resource) or not (((ace as Resource).get("params")) is Dictionary):
+			continue
+		var params: Dictionary = (ace as Resource).get("params")
+		var provider: String = str((ace as Resource).get("provider_id"))
+		var ace_name: String = str((ace as Resource).get("ace_id"))
+		var slots: Array = []
+		var definition: ACEDefinition = _viewport._find_definition(provider, ace_name)
+		if definition != null:
+			for parameter: Variant in definition.parameters:
+				if parameter is Dictionary:
+					slots.append([str((parameter as Dictionary).get("id", "")), str((parameter as Dictionary).get("display_name", "")),
+						str((parameter as Dictionary).get("hint", "")) == "color" or int((parameter as Dictionary).get("type", TYPE_NIL)) == TYPE_COLOR])
+		else:
+			var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider, ace_name)
+			if descriptor != null:
+				for parameter: ACEParam in descriptor.params:
+					if parameter != null:
+						slots.append([parameter.id, parameter.display_name, parameter.hint == "color" or parameter.type == TYPE_COLOR])
+		for slot: Array in slots:
+			if not bool(slot[2]):
+				continue
+			var text: String = str(params.get(str(slot[0]), ""))
+			if EventSheetColourValue.classify(text) == EventSheetColourValue.KIND_WRONG:
+				var label: String = str(slot[1]) if not str(slot[1]).is_empty() else str(slot[0])
+				found.append({"family": "colour", "message": EventSheetColourValue.wrong_type_words(label, text), "subject": str(slot[0])})
+	return found
 
 
 ## The findings as the row will carry them: copies, each tagged with the family that said it, so the
@@ -13034,12 +13061,26 @@ func _build_variable_row(
 	# `null` is the absence of a value, so it reads muted beside the values that are there.
 	if inspector_rows and value_text == "null":
 		value_meta["text_color"] = reading_style.muted_text_color
-	# The swatch belongs beside the colour's WORD, not trailing the row: "tint = white [] #ffffff"
-	# reads as one value with its picture, where the same swatch parked after the hex read as an
-	# afterthought. The span reserves the swatch's room when it measures, so the muted hex that
-	# follows keeps its first character.
-	if facts.get("swatch") is Color:
-		value_meta["swatch_color"] = facts["swatch"] as Color
+	# A colour leads with its square, drawn into the value's own text run, and the value reads as it was
+	# written (or as the project asks colours to read). Typing into the field edits what the file holds.
+	var colour_raw: String = str(facts.get("colour_text", ""))
+	if colour_raw.is_empty() and not hide_value and (type_family == NativeVariableMarks.FAMILY_COLOR \
+			or EventSheetSettingFacts.is_colour_literal(str(default_value)) or default_value is Color):
+		# A variable the Inspector facts did not read (a local, a borrowed declaration) is still a colour.
+		var guessed: String = EventSheetSettingFacts.colour_text_of(default_value)
+		var guessed_info: Dictionary = EventSheetColourValue.parse(guessed)
+		if bool(guessed_info.get("ok", false)):
+			colour_raw = guessed
+			value_text = EventSheetColourValue.read_info(guessed_info, guessed, EventSheetColourValue.project_reading(), true)
+	if not colour_raw.is_empty():
+		var colour_info: Dictionary = EventSheetColourValue.parse(colour_raw)
+		if bool(colour_info.get("ok", false)):
+			value_meta["edit_text"] = colour_raw
+			value_meta["colour_marks"] = [{"variable": var_name, "raw": colour_raw,
+				"color": EventSheetColourValue.square_colour(colour_info["color"]),
+				"hdr": bool(colour_info.get("overbright", false)), "folded": bool(colour_info.get("folded", false)),
+				"editable": bool(colour_info.get("editable", true)), "square": true, "kind": EventSheetColourValue.KIND_COLOUR,
+				"len": value_text.length(), "at": 0, "alpha_slot": bool(facts.get("alpha_slot", true))}]
 	# The value as the Inspector draws it (View > Value Glyphs): a tick box, X / Y fields, a resource
 	# chip. Facts only - the text stays the value's reading, and the painter decides.
 	var glyph: Dictionary = NativeVariableMarks.value_glyph(type_family, value_text, default_value,
@@ -13048,18 +13089,6 @@ func _build_variable_row(
 		value_meta["value_glyph"] = str(glyph["glyph"])
 		value_meta["value_axes"] = glyph.get("axes", PackedStringArray())
 		value_meta["value_on"] = bool(glyph.get("on", false))
-	# The Inspector draws a colour as its swatch then its hex, never as the numbers it was written
-	# with: the swatch leads (and still opens the picker), and the hex is the value's text.
-	if inspector_rows and type_family == NativeVariableMarks.FAMILY_COLOR:
-		var colour: Variant = facts["swatch"] if facts.get("swatch") is Color \
-			else NativeVariableMarks.color_of(default_value)
-		if colour is Color:
-			# Typing into the field edits what the file holds, not the hex the row shows.
-			value_meta["edit_text"] = value_text
-			value_text = NativeVariableMarks.color_hex(colour as Color)
-			value_meta.erase("swatch_color")
-			value_meta["value_glyph"] = NativeVariableMarks.GLYPH_COLOR
-			value_meta["value_swatch"] = colour as Color
 	# An enum's value reads as the choice alone, the type already standing at the row's left:
 	# `GateState.CLOSED` loses its repeated type name and reads "CLOSED", spelled as the file spells it.
 	if inspector_rows and type_family == NativeVariableMarks.FAMILY_ENUM:
@@ -14801,8 +14830,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						"chip": true,
 						"line_index": line_index,
 						"object_label": condition_owner,
-						"object_icon": _object_icon_for(condition.provider_id, condition.ace_id),
-						"swatch_color": _first_color_in_params(condition)
+						"object_icon": _object_icon_for(condition.provider_id, condition.ace_id)
 					}.merged(condition_style_meta, true).merged(
 						state_progress_metadata(condition), true)
 				)
@@ -15224,7 +15252,6 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							# look that nests by lines draws every such line with the one node icon.
 							"behaviour_write": not action_object.is_empty() \
 								and action_object == _behaviour_write_object((action_resource as ACEAction).ace_id, _row_params(action_resource)),
-							"swatch_color": _first_color_in_params(action_resource),
 							"compiled_lines": compiled_line_count(action_resource as ACEAction)
 						}.merged(action_style_meta, true)
 					)
@@ -17331,8 +17358,7 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 		"chip": true,
 		"line_index": 0,
 		"object_label": _object_label_or_pending(action.provider_id, action.ace_id, _row_params(action)),
-		"object_icon": _object_icon_for(action.provider_id, action.ace_id),
-		"swatch_color": _first_color_in_params(action)
+		"object_icon": _object_icon_for(action.provider_id, action.ace_id)
 	}.merged(action_style_meta, true)))
 
 
@@ -17708,15 +17734,10 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 					PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size)
 			NativeVariableMarks.GLYPH_BOOL, NativeVariableMarks.GLYPH_RESOURCE:
 				span_width += NativeVariableMarks.glyph_extra_width(str(metadata["value_glyph"]))
-			NativeVariableMarks.GLYPH_COLOR:
-				span_width = NativeVariableMarks.color_value_width(display_text, font, draw_font_size)
 	if _viewport.show_variable_badges and bool(metadata.get("inspector_badge", false)):
 		return 0.0
-	if metadata.get("swatch_color") is Color:
-		# The swatch draws just past the span's text, so the span has to OWN that room; without it
-		# the next span starts under the swatch and loses its first character. Mirrors the
-		# renderer's gap + box exactly, which is why the size lives in one place.
-		span_width += EventRowRenderer.swatch_advance_for(draw_font_size)
+	# The squares that lead a span's colour values stand in gaps of spaces, so the span owns that room too.
+	span_width += EventRowRenderer.colour_gap_width(metadata, font, draw_font_size)
 	if bool(metadata.get("badge", false)):
 		# A MARK badge states its box outright: its art is a drawn glyph, not text, so measuring the
 		# font would size the cue by whichever fallback glyph happened to exist.
@@ -21529,6 +21550,12 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 					for entry: Variant in _pending_param_ranges.get("ranges", []):
 						shifted.append([int(entry[0]) + at, int(entry[1])])
 					span.metadata["param_ranges"] = shifted
+					var colour_marks: Array = colour_marks_for(str(_pending_param_ranges.get("template", "")), pending_text,
+						_pending_param_ranges.get("ranges", []), _pending_param_ranges.get("colour_params", []))
+					if not colour_marks.is_empty():
+						for mark: Dictionary in colour_marks:
+							mark["at"] = int(mark["at"]) + at
+						span.metadata["colour_marks"] = colour_marks
 	# The state variable wears the state glyph where an object wears its icon.
 	if str(span.metadata.get("object_label", "")) == EventSheetStateFacts.STATE_VARIABLE \
 			and str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] \
@@ -21629,6 +21656,72 @@ func _read_through_lens(lens: String, shown: String) -> String:
 	return read
 
 
+var _pending_colour_params: Array = []
+
+
+## A colour parameter's value, as the row shows it, and a note of it for the span that is about to be made:
+## the square it will lead with. A value reads under the project's colour reading ("As written" by default:
+## the call around a hex or a name is dropped); a value the running game works out gets no square and no
+## guessed words. The stored text never changes - this is the canvas's reading only.
+## Only a Color slot (or a value written as a Color call or constant) is a colour here: a plain word in a
+## text parameter is never mistaken for one.
+func _note_colour_param(key: String, index: int, raw: String, shown: String, hint: String, type_id: int,
+		type_name: String, lens: String) -> String:
+	if not lens.strip_edges().is_empty():
+		return shown
+	var slot: bool = hint == "color" or type_id == TYPE_COLOR or type_name == "Color"
+	var text: String = raw.strip_edges()
+	if text.is_empty():
+		return shown
+	var kind: String = EventSheetColourValue.classify(text)
+	var spelled_as_colour: bool = text.begins_with("Color.") or text.begins_with("Color(") or text.begins_with("Color8(")
+	if kind == EventSheetColourValue.KIND_COLOUR and (slot or spelled_as_colour):
+		var info: Dictionary = EventSheetColourValue.parse(text)
+		var words: String = shown
+		if not _viewport.is_reading_mode() and shown == raw:
+			words = EventSheetColourValue.read_info(info, text, EventSheetColourValue.project_reading(), true)
+		var colour: Color = info["color"]
+		_pending_colour_params.append({"key": key, "index": index, "shown": words, "kind": kind, "slot": slot,
+			"mark": {"param": key, "raw": text, "color": EventSheetColourValue.square_colour(colour),
+				"hdr": bool(info.get("overbright", false)), "folded": bool(info.get("folded", false)),
+				"editable": bool(info.get("editable", true)), "square": true, "kind": kind, "len": words.length(), "alpha_slot": true}})
+		return words
+	if slot and (kind == EventSheetColourValue.KIND_RUNTIME or kind == EventSheetColourValue.KIND_WRONG):
+		_pending_colour_params.append({"key": key, "index": index, "shown": shown, "kind": kind, "slot": slot,
+			"mark": {"param": key, "raw": text, "square": false, "kind": kind, "len": shown.length(), "alpha_slot": true}})
+	return shown
+
+
+## Where each colour parameter landed in a made sentence: the marks, each with the offset its value starts at.
+## Ranges are in text order; the parameters are claimed in the order their tokens stand in the template, so
+## two parameters that show the same words keep their own squares.
+static func colour_marks_for(template: String, text: String, ranges: Array, colour_params: Array) -> Array:
+	if colour_params.is_empty():
+		return []
+	var ordered: Array = colour_params.duplicate()
+	var positions: Dictionary = {}
+	for entry: Dictionary in ordered:
+		var at_key: int = template.find("{%s}" % str(entry["key"]))
+		var at_index: int = template.find("{%d}" % int(entry["index"]))
+		var first: int = at_key if at_index == -1 else (at_index if at_key == -1 else mini(at_key, at_index))
+		positions[entry] = first if first != -1 else 1 << 30
+	ordered.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return int(positions[left]) < int(positions[right]))
+	var marks: Array = []
+	var cursor: int = 0
+	for entry: Dictionary in ordered:
+		var words: String = str(entry["shown"])
+		for range_index: int in range(cursor, ranges.size()):
+			var start: int = int((ranges[range_index] as Array)[0])
+			var length: int = int((ranges[range_index] as Array)[1])
+			if length == words.length() and text.substr(start, length) == words:
+				var mark: Dictionary = (entry["mark"] as Dictionary).duplicate()
+				mark["at"] = start
+				marks.append(mark)
+				cursor = range_index + 1
+				break
+	return marks
+
+
 ## A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%
 ## opacity" - rather than as the Color call that built it. Only a value that IS a colour expression
 ## goes through the grammar: everything else is the author's own GDScript and stays exactly as typed.
@@ -21682,9 +21775,15 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# spelling - the row still stores and emits the author's own colour.
 			shown = _read_through_lens(EventForgeValueLens.lens_of(parameter as Dictionary), shown)
 			shown = _read_group_name(str(definition.metadata.get("codegen_template", "")), key, shown, value)
+			shown = _note_colour_param(key, index, str(value), shown, str((parameter as Dictionary).get("hint", "")),
+				int((parameter as Dictionary).get("type", TYPE_NIL)), str((parameter as Dictionary).get("type_name", "")),
+				EventForgeValueLens.lens_of(parameter as Dictionary))
 			replacements.append(["{%d}" % index, shown])
 			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
+		substituted["template"] = template
+		substituted["colour_params"] = _pending_colour_params
+		_pending_colour_params = []
 		_pending_param_ranges = substituted
 		return str(substituted.get("text", ""))
 	if descriptor == null:
@@ -21710,9 +21809,14 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			EventForgeACEFactory.comparison_glyph(EventSheetGameCatalog.preview_param(
 				_translated_option_label(param.display_value(param_value), str(param_value)))))
 		param_shown = _read_group_name(descriptor.codegen_template, param_key, param_shown, param_value)
+		param_shown = _note_colour_param(param_key, i, str(param_value), param_shown, param.hint, param.type,
+			param.type_name, param.display_lens)
 		descriptor_replacements.append(["{%d}" % i, param_shown])
 		descriptor_replacements.append(["{%s}" % param_key, param_shown])
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)
+	descriptor_substituted["template"] = descriptor_template
+	descriptor_substituted["colour_params"] = _pending_colour_params
+	_pending_colour_params = []
 	_pending_param_ranges = descriptor_substituted
 	return str(descriptor_substituted.get("text", ""))
 

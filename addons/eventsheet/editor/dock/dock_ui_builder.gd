@@ -294,7 +294,8 @@ func build_ui() -> void:
 	_dock._viewport.param_value_edit_requested.connect(_dock._on_param_value_edit_requested)
 	_dock._viewport.param_value_edit_at_rect_requested.connect(func(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2) -> void:
 		_dock._inline_params.on_param_value_edit_requested(ace, param_id, current_text, anchor_screen))
-	_dock._viewport.color_swatch_edit_requested.connect(_dock._on_color_swatch_edit_requested)
+	_dock._viewport.colour_pick_requested.connect(_dock._on_colour_pick_requested)
+	_dock._viewport.colour_menu_requested.connect(_dock._on_colour_menu_requested)
 	_dock._viewport.param_node_drop_requested.connect(_dock._on_param_node_drop_requested)
 	_dock._viewport.variable_edit_requested.connect(_dock._on_viewport_variable_edit_requested)
 	_dock._viewport.comment_edit_requested.connect(_dock._open_comment_dialog)

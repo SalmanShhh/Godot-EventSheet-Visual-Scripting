@@ -36,8 +36,11 @@ signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dic
 ## that parameter (no full dialog). Emitted with the resolved ACE + param id.
 signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
 signal param_value_edit_at_rect_requested(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2)
-## Clicking the inline colour swatch on a condition/action cell - opens the colour picker (no dialog).
-signal color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color)
+## Clicking the square that leads a colour value (on a variable, a condition or an action) - opens the
+## colour picker under it, with no parameters window. The request is built by colour_request_for.
+signal colour_pick_requested(request: Dictionary)
+## Right-clicking a colour value's square: Copy As and Read Colours As, at the pointer.
+signal colour_menu_requested(request: Dictionary, global_position: Vector2)
 ## Dropping a scene-tree node onto a condition/action param VALUE - sets that param to the node reference.
 signal param_node_drop_requested(ace: Resource, param_id: String, node_reference: String)
 ## Dropping an Inspector property onto the sheet - the dock builds a Set Property action
@@ -1832,7 +1835,7 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 		var range_entry: Array = ranges[range_index]
 		var start: int = int(range_entry[0])
 		var length: int = int(range_entry[1])
-		var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+		var prefix_width: float = _span_gapped_prefix_width(span, start, font, draw_font_size)
 		var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		if logical_x >= origin_x + prefix_width and logical_x <= origin_x + prefix_width + value_width:
 			var value_text: String = span.text.substr(start, length)
@@ -1842,6 +1845,20 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 					occurrence += 1
 			return [value_text, occurrence]
 	return []
+
+
+## How far into a span's text `offset` lands once the squares that lead its colour values have taken their
+## room: a value that starts at a square starts after it.
+func _span_gapped_prefix_width(span: SemanticSpan, offset: int, font: Font, draw_font_size: int) -> float:
+	var prefix: String = span.text.substr(0, offset)
+	var marks: Array = EventRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
+	if not marks.is_empty():
+		var leading: Array = []
+		for mark: Dictionary in marks:
+			if int(mark["at"]) <= offset:
+				leading.append(mark)
+		prefix = EventRowRenderer.text_with_colour_gaps(prefix, leading, EventRowRenderer.colour_gap_text(font, draw_font_size))
+	return font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 
 
 ## Where the span's TEXT begins, in logical coordinates - the renderer indents it past the object
@@ -1926,13 +1943,23 @@ func _param_value_entries(row_data: EventRowData) -> Array:
 		if kind not in ["condition", "trigger", "action"]:
 			continue
 		var ranges: Array = metadata.get("value_ranges", [])
-		if ranges.is_empty():
+		var colour_values: Array = EventRowRenderer.colour_square_marks(metadata)
+		if ranges.is_empty() and colour_values.is_empty():
 			continue
 		var lane: String = "action" if kind == "action" else "condition"
 		var ace: Resource = row_data.source_resource.trigger if kind == "trigger" \
 				else _resolve_ace_resource(row_data.source_resource, lane, int(metadata.get("ace_index", -1)))
 		if ace == null:
 			continue
+		# A colour value is a stop of its own: Enter on it opens the picker, not a text field.
+		var span_entries_from: int = entries.size()
+		for colour_index: int in range(colour_values.size()):
+			var colour_mark: Dictionary = colour_values[colour_index]
+			if str(colour_mark.get("param", "")).is_empty():
+				continue
+			entries.append({"span_index": span_index, "range_index": -1, "colour_index": colour_index,
+				"text": str(colour_mark.get("raw", "")), "occurrence": 0, "param_id": str(colour_mark.get("param", "")),
+				"ace": ace, "start": int(colour_mark.get("at", 0))})
 		for range_index in range(ranges.size()):
 			var text: String = span.text.substr(int(ranges[range_index][0]), int(ranges[range_index][1]))
 			var occurrence: int = 0
@@ -1949,7 +1976,12 @@ func _param_value_entries(row_data: EventRowData) -> Array:
 				"occurrence": occurrence,
 				"param_id": param_id,
 				"ace": ace,
+				"start": int(ranges[range_index][0]),
 			})
+		# One span's stops read left to right, colours among its numbers and words.
+		var span_group: Array = entries.slice(span_entries_from)
+		span_group.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return int(left.get("start", 0)) < int(right.get("start", 0)))
+		entries = entries.slice(0, span_entries_from) + span_group
 	return entries
 
 
@@ -2002,6 +2034,23 @@ func _open_param_cursor_editor() -> void:
 	var entry: Dictionary = _param_cursor_entry()
 	if entry.is_empty():
 		return
+	# On a colour value Enter opens the colour picker under its square (a worked-out expression opens the
+	# parameters window instead), exactly as a click on the square does.
+	if int(entry.get("colour_index", -1)) >= 0:
+		var colour_row: EventRowData = _row_at(_selected_row_index)
+		var colour_span: SemanticSpan = colour_row.spans[int(entry["span_index"])]
+		var found: Dictionary = {"mark": EventRowRenderer.colour_square_marks(colour_span.metadata)[int(entry["colour_index"])],
+			"rect": ((colour_span.metadata.get("colour_square_rects", []) as Array)[int(entry["colour_index"])] as Rect2)
+				if (colour_span.metadata.get("colour_square_rects", []) as Array).size() > int(entry["colour_index"]) else Rect2(),
+			"index": int(entry["colour_index"])}
+		var colour_request: Dictionary = colour_request_for(colour_row, colour_span.metadata, found)
+		if not colour_request.is_empty():
+			exit_param_scope()
+			if bool(colour_request.get("editable", true)):
+				colour_pick_requested.emit(colour_request)
+			else:
+				ace_edit_requested.emit(colour_row, int(entry["span_index"]), colour_span.metadata)
+		return
 	param_value_edit_at_rect_requested.emit(
 		entry.get("ace"),
 		str(entry.get("param_id")),
@@ -2035,13 +2084,19 @@ func _param_value_logical_rect(row_data: EventRowData, entry: Dictionary, font: 
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	var ranges: Array = metadata.get("value_ranges", [])
 	var range_index: int = int(entry.get("range_index", -1))
+	if int(entry.get("colour_index", -1)) >= 0:
+		var colour_rects: Variant = metadata.get("colour_value_rects")
+		var colour_index: int = int(entry["colour_index"])
+		if colour_rects is Array and colour_index < (colour_rects as Array).size():
+			return (colour_rects as Array)[colour_index] as Rect2
+		return Rect2()
 	if range_index < 0 or range_index >= ranges.size():
 		return Rect2()
 	var draw_font_size: int = _span_draw_font_size(span, font_size)
 	var text_x: float = _span_text_origin_x(span, font, font_size)
 	var start: int = int(ranges[range_index][0])
 	var length: int = int(ranges[range_index][1])
-	var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+	var prefix_width: float = _span_gapped_prefix_width(span, start, font, draw_font_size)
 	var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	return Rect2(text_x + prefix_width, span.rect.position.y, value_width, span.rect.size.y)
 
@@ -4069,15 +4124,43 @@ func open_add_menu_for(row_index: int) -> void:
 
 
 ## The param KEY holding that first Color literal ("" when none) - needed to write a picked colour back.
-func _first_color_param_id(ace: Resource) -> String:
-	var params: Variant = ace.get("params")
-	if not (params is Dictionary):
-		return ""
-	for key: Variant in (params as Dictionary).keys():
-		var value: Variant = (params as Dictionary)[key]
-		if value is String and (value as String).strip_edges().begins_with("Color(") and str_to_var((value as String).strip_edges()) is Color:
-			return str(key)
-	return ""
+## The colour square under a logical point on one span: {mark, rect, index}, or {} when the point is on
+## none. `whole_value` also counts the value's own words beside the square (the hover and the menu use
+## them; a click on the words is the ordinary edit, so the click does not).
+static func colour_square_at(metadata: Dictionary, logical_position: Vector2, whole_value: bool = false) -> Dictionary:
+	var rects: Variant = metadata.get("colour_value_rects" if whole_value else "colour_square_rects")
+	var marks: Variant = metadata.get("colour_square_marks")
+	if not (rects is Array) or not (marks is Array):
+		return {}
+	for index: int in range(mini((rects as Array).size(), (marks as Array).size())):
+		if ((rects as Array)[index] as Rect2).has_point(logical_position):
+			return {"mark": (marks as Array)[index], "rect": ((metadata.get("colour_square_rects") as Array)[index] as Rect2), "index": index}
+	return {}
+
+
+## Everything the dock needs to work on one colour square: the thing it edits (a variable, or an action or
+## condition and the parameter the value fills), the text the file holds, where the square is on screen,
+## and whether a pick may replace the value (a folded expression is read, never overwritten).
+func colour_request_for(row_data: EventRowData, metadata: Dictionary, found: Dictionary) -> Dictionary:
+	if row_data == null or found.is_empty():
+		return {}
+	var mark: Dictionary = found["mark"]
+	var kind: String = str(metadata.get("kind", ""))
+	var target: Resource = null
+	if kind == "variable":
+		target = row_data.source_resource
+	elif row_data.source_resource is EventRow or row_data.source_resource is EventFunction:
+		target = (ace_owner(row_data.source_resource).trigger if ace_owner(row_data.source_resource) != null else null) if kind == "trigger" \
+			else _resolve_ace_resource(row_data.source_resource, "action" if kind == "action" else "condition", int(metadata.get("ace_index", -1)))
+	if target == null:
+		return {}
+	var zoom: float = maxf(_zoom_factor, 0.001)
+	var rect: Rect2 = found["rect"]
+	var on_screen: Rect2 = get_global_transform() * Rect2(rect.position * zoom, rect.size * zoom)
+	return {"target": target, "param": str(mark.get("param", "")), "variable": str(mark.get("variable", "")),
+		"raw": str(mark.get("raw", "")), "alpha_slot": bool(mark.get("alpha_slot", true)),
+		"editable": bool(mark.get("editable", true)), "anchor": Rect2i(on_screen), "kind": kind,
+		"row_data": row_data, "span_metadata": metadata}
 
 # uid (str instance id) -> error message, from set_row_diagnostics(). Re-applied to row_data
 # on every rebuild so the marker survives edits/scrolling (the "error → row" deep-link).
@@ -5235,6 +5318,72 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 	var on_screen: Rect2 = get_global_transform() * Rect2(tile.position * zoom, tile.size * zoom)
 	_head_card.call("hover_word", card, on_screen, at_once)
 	return true
+
+
+## The hover card behind a colour value: what colour it is, and anything the reader should know about the way
+## it is written - or that the running game works it out. The same floating card the head bar's words open.
+## True when the pointer is on a colour, so the caller leaves the head bar's own card alone.
+func update_colour_card(hit: Dictionary, logical_position: Vector2, at_once: bool = false) -> bool:
+	var metadata: Variant = hit.get("span_metadata", {})
+	if not (metadata is Dictionary):
+		return false
+	var found: Dictionary = colour_square_at(metadata as Dictionary, logical_position, true)
+	if found.is_empty():
+		var marks: Variant = (metadata as Dictionary).get("colour_marks")
+		if marks is Array:
+			for entry: Variant in (marks as Array):
+				if entry is Dictionary and not bool((entry as Dictionary).get("square", true)) \
+						and _runtime_colour_hover_rect(hit, entry as Dictionary).has_point(logical_position):
+					return _show_colour_card(hit, EventSheetColourValue.runtime_card(str((entry as Dictionary).get("raw", ""))),
+						_runtime_colour_hover_rect(hit, entry as Dictionary), at_once)
+		return false
+	var mark: Dictionary = found["mark"]
+	var card: Dictionary = EventSheetColourValue.hover_card(str(mark.get("raw", "")), bool(mark.get("alpha_slot", true)),
+		colour_switch_note(str(mark.get("raw", ""))))
+	if card.is_empty():
+		return false
+	return _show_colour_card(hit, card, ((metadata as Dictionary)["colour_value_rects"] as Array)[int(found["index"])] as Rect2, at_once)
+
+
+## The hover card for a value with no square (worked out while the game runs) is hung from the span.
+func _runtime_colour_hover_rect(hit: Dictionary, _mark: Dictionary) -> Rect2:
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return Rect2()
+	return row_data.spans[span_index].rect
+
+
+func _show_colour_card(hit: Dictionary, said: Dictionary, logical_rect: Rect2, at_once: bool) -> bool:
+	if said.is_empty():
+		return false
+	var code: String = str(said.get("code", ""))
+	var card: Dictionary = {"id": "colour:%s:%s" % [code, str(said.get("text", ""))], "title": str(said.get("title", "")),
+		"mono": code, "lines": PackedStringArray([str(said.get("text", ""))]), "width": 270.0, "anchor": "right", "code_last": true}
+	if _head_card == null:
+		_head_card = load(HEAD_CARD_PATH).new()
+		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
+		add_child(_head_card)
+	var zoom: float = maxf(_zoom_factor, 0.001)
+	var on_screen: Rect2 = get_global_transform() * Rect2(logical_rect.position * zoom, logical_rect.size * zoom)
+	_head_card.call("hover_word", card, on_screen, at_once)
+	return true
+
+
+## The sentence the hover adds when a value last had to change its form (a name picked to one with no name).
+## Session-only: nothing about it is written into the sheet.
+var _colour_switch_notes: Dictionary = {}
+
+
+func colour_switch_note(written_text: String) -> String:
+	return str(_colour_switch_notes.get(written_text.strip_edges(), ""))
+
+
+func remember_colour_switch(written_text: String, note: String) -> void:
+	if note.is_empty():
+		_colour_switch_notes.erase(written_text.strip_edges())
+	else:
+		_colour_switch_notes[written_text.strip_edges()] = note
 
 
 ## The hover card behind an event's NUMBER (ViewportTooltipHelper.event_number_card): the event,

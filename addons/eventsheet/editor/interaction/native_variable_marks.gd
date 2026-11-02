@@ -33,17 +33,10 @@ const FAMILY_ENUM := "enum"
 const FAMILY_COLLECTION := "collection"
 const FAMILY_CLASS := "class"
 
-## The value glyphs. A colour's swatch is the row's own trailing one, except on an Inspector-style
-## row (inspector_variable_rows), where the swatch leads and the value reads as its #RRGGBB hex.
+## The value glyphs. A colour is not one: its square leads the value's own text (see EventSheetColourValue).
 const GLYPH_BOOL := "bool"
 const GLYPH_VECTOR := "vector"
 const GLYPH_RESOURCE := "resource"
-const GLYPH_COLOR := "color"
-
-## The leading colour swatch of an Inspector-style row, and the gap between it and the hex.
-const SWATCH_WIDTH := 34.0
-const SWATCH_HEIGHT := 14.0
-const SWATCH_GAP := 6.0
 
 ## The code shape a badge's card quotes when the row has no variable to read it from.
 const BADGE_CODE_SHAPES: Dictionary = {
@@ -487,24 +480,6 @@ static func color_of(default_value: Variant) -> Variant:
 ## `#RRGGBB`, or `#RRGGBBAA` when the colour is not fully opaque - the Inspector's own spelling.
 static func color_hex(colour: Color) -> String:
 	return "#%s" % (colour.to_html(false) if is_equal_approx(colour.a, 1.0) else colour.to_html(true)).to_upper()
-
-
-## The width a colour value draws at: the swatch, the gap, and its hex in the type word's face.
-static func color_value_width(hex: String, base: Font, font_size: int) -> float:
-	return SWATCH_WIDTH + SWATCH_GAP + type_word_width(hex, base, font_size)
-
-
-## Paints a colour value from `x`, centred on `centre_y`: the swatch edged in `frame`, then the hex in
-## `ink` in the type word's face. Returns the swatch's rect, which a click on it opens the picker from.
-static func draw_color_value(control: CanvasItem, x: float, centre_y: float, colour: Color, hex: String,
-		base: Font, font_size: int, ink: Color, frame: Color) -> Rect2:
-	var swatch := Rect2(x, centre_y - SWATCH_HEIGHT * 0.5, SWATCH_WIDTH, SWATCH_HEIGHT)
-	_fill_rounded(control, swatch, colour, 2)
-	control.draw_rect(swatch.grow(-0.5), frame, false, 1.0)
-	var size: int = type_font_size(font_size)
-	control.draw_string(mono_font(base), Vector2(swatch.end.x + SWATCH_GAP, centre_y + float(size) * 0.35), hex,
-		HORIZONTAL_ALIGNMENT_LEFT, -1.0, size, ink)
-	return swatch
 
 
 ## True for a member the compiler writes for its own bookkeeping, never one an author declared.

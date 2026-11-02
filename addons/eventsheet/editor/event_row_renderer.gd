@@ -57,12 +57,16 @@ const INVERTED_MARK_ADVANCE := 13.0
 ## dark sheet) and darker under dark ink (a light one), so the tile reads in both.
 const OBJECT_ICON_TILE_DARK := EventSheetPalette.COLOR_OBJECT_ICON_TILE_DARK
 const OBJECT_ICON_TILE_LIGHT := EventSheetPalette.COLOR_OBJECT_ICON_TILE_LIGHT
-# A colour value's live swatch, drawn just past its span's text. The gap and the box are constants
-# here, and the width the span must RESERVE for them is derived from the same two numbers, so a
-# swatch can sit on any span in a row without painting over whatever follows it.
-const SWATCH_GAP := 6.0
+# A colour value's square, drawn into a gap of spaces ahead of the value inside its span's text. The box
+# size and the gap are constants here, and the width the span must RESERVE for them is derived from the
+# same numbers, so a square can lead any value in a row without painting over whatever follows it.
 const SWATCH_MIN_BOX := 8.0
-const SWATCH_FONT_RATIO := 0.7
+const COLOUR_SQUARE_RATIO := 0.9
+const COLOUR_GAP_AFTER := 4.0
+const COLOUR_CHECK_LIGHT := Color(1.0, 1.0, 1.0, 1.0)
+const COLOUR_CHECK_DARK := Color(0.7, 0.7, 0.7, 1.0)
+const COLOUR_HDR_MARK := Color(1.0, 1.0, 1.0, 0.95)
+const COLOUR_HDR_MARK_EDGE := Color(0.0, 0.0, 0.0, 0.7)
 # The rule down the left edge of a variable row, in logical pixels.
 const VARIABLE_ROW_RULE_WIDTH := 2.0
 ## How much of a variable card's row the card fills: 28 px of the 32 the row takes, the rest the gap.
@@ -264,18 +268,144 @@ static func object_column_width_for(event_style: EventSheetEventStyle, lane: Str
 	return minf(column, lane_width * OBJECT_COLUMN_LANE_SHARE) if lane_width > 0.0 else column
 
 
-## The side of the colour box drawn for a span carrying `swatch_color`, at the size that span's
-## text draws at - so the swatch grows with the row and with the editor's scale.
+## The side of a colour value's square, at the size the text beside it draws at - so the square grows
+## with the row and with the editor's scale, and stands at the height of the words.
 static func swatch_box_for(draw_font_size: int) -> float:
-	return maxf(float(draw_font_size) * SWATCH_FONT_RATIO, SWATCH_MIN_BOX)
+	return maxf(float(draw_font_size) * COLOUR_SQUARE_RATIO, SWATCH_MIN_BOX)
 
 
-## What a span carrying `swatch_color` must add to its measured text width: the gap before the box
-## plus the box itself. The measurement side calls this so the reserve and the drawing can never
-## disagree, which is what lets a swatch ride ANY span (a value, a muted hex note, a parameter)
-## instead of only the last one in the row.
-static func swatch_advance_for(draw_font_size: int) -> float:
-	return SWATCH_GAP + swatch_box_for(draw_font_size)
+## The room a colour square takes inside the text it leads: the gap string is spaces, so the text the
+## square stands in front of is measured and drawn like any other and the square is drawn into the hole.
+## One function for the measure, the draw and the hit-test, so they can never disagree.
+static func colour_gap_text(font: Font, draw_font_size: int) -> String:
+	var wanted: float = swatch_box_for(draw_font_size) + COLOUR_GAP_AFTER
+	var space: float = maxf(font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, 1.0)
+	return " ".repeat(maxi(int(ceil(wanted / space)), 1))
+
+
+## The marks of a span that stand as a square: sorted by where they lead.
+static func colour_square_marks(metadata: Dictionary) -> Array:
+	var found: Array = []
+	for mark: Variant in metadata.get("colour_marks", []):
+		if mark is Dictionary and bool((mark as Dictionary).get("square", true)):
+			found.append(mark)
+	found.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return int(left["at"]) < int(right["at"]))
+	return found
+
+
+## What a span's text measures at, beyond its own words, because of the squares leading its colours.
+static func colour_gap_width(metadata: Dictionary, font: Font, draw_font_size: int) -> float:
+	var marks: Array = colour_square_marks(metadata)
+	if marks.is_empty():
+		return 0.0
+	return float(marks.size()) * font.get_string_size(colour_gap_text(font, draw_font_size), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+
+
+## `text` with a gap put in front of each square mark.
+static func text_with_colour_gaps(text: String, marks: Array, gap: String) -> String:
+	var out: String = ""
+	var cursor: int = 0
+	for mark: Dictionary in marks:
+		var at: int = clampi(int(mark["at"]), cursor, text.length())
+		out += text.substr(cursor, at - cursor) + gap
+		cursor = at
+	return out + text.substr(cursor)
+
+
+## `[start, length, ...]` ranges moved to where the gaps put the text they cover: a range that starts at or
+## after a mark moves right by one gap, a range a mark falls inside grows by one.
+static func ranges_with_colour_gaps(ranges: Array, marks: Array, gap_length: int) -> Array:
+	if marks.is_empty():
+		return ranges
+	var moved: Array = []
+	for entry: Variant in ranges:
+		if not (entry is Array) or (entry as Array).size() < 2:
+			moved.append(entry)
+			continue
+		var start: int = int((entry as Array)[0])
+		var length: int = int((entry as Array)[1])
+		var shift: int = 0
+		var grow: int = 0
+		for mark: Dictionary in marks:
+			var at: int = int(mark["at"])
+			if at <= start:
+				shift += gap_length
+			elif at < start + length:
+				grow += gap_length
+		var copy: Array = (entry as Array).duplicate()
+		copy[0] = start + shift
+		copy[1] = length + grow
+		moved.append(copy)
+	return moved
+
+
+## Styled segments with the same gaps put in the segment each mark falls in.
+static func segments_with_colour_gaps(segments: Array, marks: Array, gap: String) -> Array:
+	var moved: Array = []
+	var offset: int = 0
+	var mark_index: int = 0
+	for position: int in range(segments.size()):
+		var copy: Dictionary = (segments[position] as Dictionary).duplicate()
+		var piece: String = str(copy.get("text", ""))
+		var last: bool = position == segments.size() - 1
+		var local: Array = []
+		while mark_index < marks.size() and (int((marks[mark_index] as Dictionary)["at"]) < offset + piece.length() or last):
+			local.append({"at": maxi(int((marks[mark_index] as Dictionary)["at"]) - offset, 0)})
+			mark_index += 1
+		copy["text"] = text_with_colour_gaps(piece, local, gap)
+		offset += piece.length()
+		moved.append(copy)
+	return moved
+
+
+## Paints the squares a span's colour marks stand for, into the gaps `text_with_colour_gaps` left, and
+## stamps each square's rect (and the rect of the value beside it) back on the span for the click, the
+## hover and the right-click to hit-test. `drawn_text` is the text WITH the gaps.
+func _draw_colour_squares(control: CanvasItem, span: SemanticSpan, marks: Array, drawn_text: String,
+		gap_length: int, text_x: float, font: Font, draw_font_size: int, reading: EventSheetReadingStyle) -> void:
+	var rects: Array = []
+	var value_rects: Array = []
+	var side: float = swatch_box_for(draw_font_size)
+	for index: int in range(marks.size()):
+		var mark: Dictionary = marks[index]
+		var gap_at: int = clampi(int(mark["at"]) + index * gap_length, 0, drawn_text.length())
+		var square_x: float = text_x + font.get_string_size(drawn_text.substr(0, gap_at), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+		var square := Rect2(square_x, span.rect.position.y + (span.rect.size.y - side) * 0.5, side, side)
+		if square.end.x > span.rect.end.x:
+			rects.append(Rect2())
+			value_rects.append(Rect2())
+			continue
+		_draw_colour_square(control, square, mark, reading)
+		rects.append(square)
+		var value_end: int = clampi(gap_at + gap_length + int(mark.get("len", 0)), gap_at, drawn_text.length())
+		var value_width: float = font.get_string_size(drawn_text.substr(gap_at, value_end - gap_at), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+		value_rects.append(Rect2(square_x, span.rect.position.y, minf(value_width, maxf(span.rect.end.x - square_x, 0.0)), span.rect.size.y))
+	span.metadata["colour_square_rects"] = rects
+	span.metadata["colour_value_rects"] = value_rects
+	span.metadata["colour_square_marks"] = marks
+
+
+## One colour square: the checkerboard first when the colour is see-through, the colour over it, a hairline
+## frame, and the small corner mark of a colour brighter than the screen can show.
+func _draw_colour_square(control: CanvasItem, square: Rect2, mark: Dictionary, reading: EventSheetReadingStyle) -> void:
+	var fill: Color = mark.get("color", COLOUR_CHECK_LIGHT)
+	if fill.a < 0.999:
+		var cell: float = maxf(floorf(square.size.x / 3.0), 2.0)
+		control.draw_rect(square, COLOUR_CHECK_LIGHT, true)
+		var rows: int = int(ceil(square.size.y / cell))
+		var columns: int = int(ceil(square.size.x / cell))
+		for row_index: int in range(rows):
+			for column_index: int in range(columns):
+				if (row_index + column_index) % 2 == 1:
+					var piece := Rect2(square.position + Vector2(column_index, row_index) * cell, Vector2(cell, cell))
+					control.draw_rect(piece.intersection(square), COLOUR_CHECK_DARK, true)
+	control.draw_rect(square, fill, true)
+	control.draw_rect(square, reading.color_swatch_border_color, false, 1.0)
+	if bool(mark.get("hdr", false)):
+		var corner: float = maxf(square.size.x * 0.42, 3.0)
+		var tip: Vector2 = square.position + Vector2(square.size.x, 0.0)
+		control.draw_colored_polygon(PackedVector2Array([tip - Vector2(corner, 0.0), tip, tip + Vector2(0.0, corner)]), COLOUR_HDR_MARK)
+		control.draw_polyline(PackedVector2Array([tip - Vector2(corner, 0.0), tip + Vector2(0.0, corner)]), COLOUR_HDR_MARK_EDGE, 1.0)
 
 
 static func _object_icon_plate_style(ink: Color) -> StyleBoxFlat:
@@ -2162,6 +2292,19 @@ func _draw_spans(
 			painted_ranges = NativeRowMarks.merged_word_ranges(value_ranges, metadata.get("variable_ranges", []))
 		var param_ranges: Array = metadata.get("param_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
+		# A colour value leads with its square, drawn into a gap of spaces left in the words ahead of
+		# it: the text, its value ranges and its styled pieces are all moved by the same gap, so
+		# nothing about how the words paint changes and the square is part of the run.
+		var colour_marks: Array = colour_square_marks(metadata) if span_index != editing_span_index and live_token_text.is_empty() else []
+		var colour_gap: String = ""
+		if not colour_marks.is_empty():
+			colour_gap = colour_gap_text(font, draw_font_size)
+			draw_text = text_with_colour_gaps(draw_text, colour_marks, colour_gap)
+			value_ranges = ranges_with_colour_gaps(value_ranges, colour_marks, colour_gap.length())
+			painted_ranges = ranges_with_colour_gaps(painted_ranges, colour_marks, colour_gap.length())
+			param_ranges = ranges_with_colour_gaps(param_ranges, colour_marks, colour_gap.length())
+			if not bbcode_segments.is_empty():
+				bbcode_segments = segments_with_colour_gaps(bbcode_segments, colour_marks, colour_gap)
 		var plain_weight: bool = strips_look and span_kind in ["condition", "action"]
 		# The code echo rests at a fraction of its colour so the sentence leads, and comes up
 		# to full the moment the pointer is on the row it belongs to.
@@ -2312,25 +2455,16 @@ func _draw_spans(
 		if not (metadata.get("word_cards", []) as Array).is_empty() and span_index != editing_span_index:
 			_draw_word_cards(control, span, metadata, Vector2(text_x, baseline_y), draw_text,
 				text_width, font, draw_font_size, reading.muted_text_color)
-		# Color params get a small swatch right after the text (event-sheet-style color preview).
-		var swatch: Variant = metadata.get("swatch_color")
-		if swatch is Color:
-			var swatch_advance: float = minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width)
-			var swatch_size: float = swatch_box_for(draw_font_size)
-			var swatch_rect: Rect2 = Rect2(text_x + swatch_advance + SWATCH_GAP, span.rect.position.y + (span.rect.size.y - swatch_size) * 0.5, swatch_size, swatch_size)
-			control.draw_rect(swatch_rect, swatch as Color, true)
-			control.draw_rect(swatch_rect, reading.color_swatch_border_color, false, 1.0)
-			# Record where the swatch landed so a click can hit-test it and open the inline colour picker
-			# (no dialog) - the viewport reads span.metadata["swatch_rect"] in _handle_mouse_button.
-			span.metadata["swatch_rect"] = swatch_rect
+		if not colour_marks.is_empty():
+			_draw_colour_squares(control, span, colour_marks, draw_text, colour_gap.length(), text_x, font, draw_font_size, reading)
+		else:
+			span.metadata.erase("colour_square_rects")
 		# Compression cue: an ACE that compiles to MORE than one line is doing abstraction
 		# work - a quiet "→N" after the text makes that legible, so plain 1:1 rows read as
 		# Extract-to-Function candidates and compressing rows read as earned leverage.
 		var compiled_lines: int = int(metadata.get("compiled_lines", 0))
 		if compiled_lines > 1 and span_index != editing_span_index:
 			var cue_x: float = text_x + minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width) + 8.0
-			if swatch is Color:
-				cue_x += swatch_box_for(draw_font_size) + 8.0
 			var cue_font_size: int = maxi(draw_font_size - 2, 8)
 			var cue_color: Color = Color(TEXT_MUTED, TEXT_MUTED.a * 0.85)
 			_draw_text(control, Vector2(cue_x, baseline_y), "→%d" % compiled_lines, 64.0, font, cue_font_size, cue_color)
@@ -2413,13 +2547,6 @@ func _draw_variable_word(control: CanvasItem, span: SemanticSpan, metadata: Dict
 		NativeVariableMarks.draw_vector_fields(control, span.rect.position.x, span.rect.get_center().y,
 			PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size, value_ink,
 			NativeVariableMarks.axis_colors(surface), NativeVariableMarks.frame_ink(surface))
-		return true
-	if str(metadata.get("value_glyph", "")) == NativeVariableMarks.GLYPH_COLOR and metadata.get("value_swatch") is Color:
-		var swatch_surface: Color = section_fill(event_style, false)
-		# Where the swatch landed, so a click on it opens the picker the way the trailing swatch does.
-		span.metadata["swatch_rect"] = NativeVariableMarks.draw_color_value(control, span.rect.position.x,
-			span.rect.get_center().y, metadata["value_swatch"] as Color, span.text, font, draw_font_size,
-			reading.secondary_text_color, NativeVariableMarks.frame_ink(swatch_surface))
 		return true
 	if bool(metadata.get("variable_doc_note", false)) and not bool(metadata.get("comment_wrap", false)):
 		var note_ink: Color = metadata.get("text_color", reading.muted_text_color)

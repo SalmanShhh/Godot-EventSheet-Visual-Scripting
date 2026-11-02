@@ -104,8 +104,7 @@ func _over_color_swatch(hit: Dictionary, local_position: Vector2) -> bool:
 	var metadata: Variant = hit.get("span_metadata", {})
 	if not (metadata is Dictionary):
 		return false
-	var swatch_rect: Variant = (metadata as Dictionary).get("swatch_rect")
-	return swatch_rect is Rect2 and (swatch_rect as Rect2).has_point(local_position)
+	return not EventSheetViewport.colour_square_at(metadata as Dictionary, local_position).is_empty()
 
 
 ## The comment door under the pointer, or {} when there is none. Reads the rectangles the RENDERER
@@ -155,7 +154,8 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	# variable's mark tile opens its own card the same way. Not while something is carried: the ghost
 	# is the only thing that talks then, and a card under the pointer would take the drop.
 	if not _viewport._drag_motion.active:
-		if not _viewport.update_badge_card(hit, local_position) and not _viewport.update_event_number_card(hit):
+		if not _viewport.update_badge_card(hit, local_position) and not _viewport.update_event_number_card(hit) \
+				and not _viewport.update_colour_card(hit, local_position):
 			_viewport.update_head_card(hit, false, local_position)
 	# Cursor affordance, in priority order: the empty non-cell area of an event row is the
 	# whole-event DRAG handle (✥ move cursor) - dragging there reorders the event or nests it as a
@@ -245,6 +245,17 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		if not event.pressed:
 			return
 		_viewport.grab_focus()
+		# A colour value's square (or its words) has a menu of its own: Copy As, and Read Colours As.
+		if row_index >= 0 and hit.get("span_metadata", {}) is Dictionary:
+			var menu_metadata: Dictionary = hit.get("span_metadata", {})
+			var colour_found: Dictionary = EventSheetViewport.colour_square_at(menu_metadata, local_position, true)
+			var colour_row: EventRowData = _viewport._row_at(row_index)
+			if not colour_found.is_empty() and colour_row != null:
+				var menu_request: Dictionary = _viewport.colour_request_for(colour_row, menu_metadata, colour_found)
+				if not menu_request.is_empty():
+					_viewport.colour_menu_requested.emit(menu_request, EventSheetWindowPlacement.pointer_over(_viewport))
+					_viewport.accept_event()
+					return
 		# Footer "Add event…" rows are pure affordances - no context menu / selection.
 		if _viewport._row_is_add_event_footer(_viewport._row_at(row_index)):
 			_viewport.accept_event()
@@ -316,31 +327,21 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.comment_door_requested.emit(comment_door)
 				_viewport.accept_event()
 				return
-		# Click the inline colour swatch -> open the colour picker directly (no params dialog). The
-		# renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
-		# it and the cell's ACE has a Color param, hand off to the dock's picker popup.
-		# The same swatch, the same picker, on a VARIABLE row. A colour is a colour wherever it
-		# is written; the write-back keeps the spelling the line already used.
-		# An Inspector-style row's swatch leads its hex (value_swatch) instead of trailing it.
-		var variable_swatch: Variant = metadata.get("swatch_color", metadata.get("value_swatch"))
-		if row_data != null and variable_swatch is Color and metadata.get("swatch_rect") is Rect2 \
-				and (metadata["swatch_rect"] as Rect2).has_point(local_position) \
-				and str(metadata.get("kind", "")) == "variable" and row_data.source_resource is LocalVariable:
-			_viewport.color_swatch_edit_requested.emit(
-				row_data.source_resource, "", variable_swatch as Color
-			)
-			_viewport.accept_event()
-			return
-		if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
-				and (metadata["swatch_rect"] as Rect2).has_point(local_position) and row_data.source_resource is EventRow:
-			var swatch_kind: String = str(metadata.get("kind", ""))
-			var swatch_ace: Resource = (row_data.source_resource as EventRow).trigger if swatch_kind == "trigger" else _viewport._resolve_ace_resource(row_data.source_resource, "action" if swatch_kind == "action" else "condition", int(metadata.get("ace_index", -1)))
-			if swatch_ace != null:
-				var color_param: String = _viewport._first_color_param_id(swatch_ace)
-				if not color_param.is_empty():
-					_viewport.color_swatch_edit_requested.emit(swatch_ace, color_param, metadata["swatch_color"] as Color)
-					_viewport.accept_event()
-					return
+		# Click the square that leads a colour value -> the picker opens under it, with no parameters
+		# window (a double-click on the words still opens the window). The renderer stamped where each
+		# square landed; a value a pick would replace whole (a folded expression) opens the window instead.
+		var square_hit: Dictionary = EventSheetViewport.colour_square_at(metadata, local_position)
+		if row_data != null and not square_hit.is_empty() and not event.double_click:
+			var colour_request: Dictionary = _viewport.colour_request_for(row_data, metadata, square_hit)
+			if not colour_request.is_empty():
+				if bool(colour_request.get("editable", true)):
+					_viewport.colour_pick_requested.emit(colour_request)
+				elif str(metadata.get("kind", "")) == "variable":
+					_viewport.variable_edit_requested.emit(row_data, metadata)
+				else:
+					_viewport.ace_edit_requested.emit(row_data, span_index, metadata)
+				_viewport.accept_event()
+				return
 		if row_data != null and row_data.source_resource != null and str(metadata.get("kind", "")) == "add_action":
 			_viewport.ace_picker_requested.emit(row_data, "action")
 			_viewport.accept_event()

@@ -17,21 +17,6 @@ static func run() -> bool:
 	var all_passed: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 
-	var action: ACEAction = ACEAction.new()
-	action.provider_id = "Core"
-	action.ace_id = "SetModulateColor"
-	action.params = {"target": "$Sprite2D", "color": "Color(1, 0, 0, 1)"}
-
-	all_passed = _check("finds the Color param's key", viewport._first_color_param_id(action), "color") and all_passed
-	var read_color: Variant = viewport._row_builder._first_color_in_params(action)
-	all_passed = _check("reads the swatch Color value",
-		read_color is Color and (read_color as Color).is_equal_approx(Color(1, 0, 0, 1)), true) and all_passed
-
-	var no_color: ACEAction = ACEAction.new()
-	no_color.params = {"x": "5", "name": "\"hi\""}
-	all_passed = _check("an ACE with no Color param yields an empty key",
-		viewport._first_color_param_id(no_color), "") and all_passed
-
 	# The picked colour must round-trip through color_to_literal -> str_to_var (write-back fidelity).
 	var picked: Color = Color(0.25, 0.5, 0.75, 1.0)
 	var literal: String = ACEParamsDialog.color_to_literal(picked)
@@ -58,13 +43,13 @@ static func run() -> bool:
 	all_passed = _check("the shelf stays capped", EventSheetColorPresets.all().size(),
 		EventSheetColorPresets.MAX_PRESETS) and all_passed
 
-	# ── The swatch hover predicate (drives the hand cursor) ──
-	var over: Dictionary = {"span_metadata": {"swatch_rect": Rect2(10, 10, 16, 16)}}
-	all_passed = _check("hovering inside the swatch reads as over it",
+	# ── The square hover predicate (drives the hand cursor) ──
+	var over: Dictionary = {"span_metadata": {"colour_square_rects": [Rect2(10, 10, 16, 16)], "colour_square_marks": [{"param": "color"}]}}
+	all_passed = _check("hovering inside the square reads as over it",
 		viewport._input_handlers._over_color_swatch(over, Vector2(12, 12)), true) and all_passed
-	all_passed = _check("hovering outside the swatch reads as not over it",
+	all_passed = _check("hovering outside the square reads as not over it",
 		viewport._input_handlers._over_color_swatch(over, Vector2(40, 12)), false) and all_passed
-	all_passed = _check("a span without a swatch never matches",
+	all_passed = _check("a span without a square never matches",
 		viewport._input_handlers._over_color_swatch({"span_metadata": {}}, Vector2(12, 12)), false) and all_passed
 	viewport.free()
 
@@ -86,8 +71,9 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	editor.setup(sheet)
 	var live_action: ACEAction = _live_color_action(editor)
-	editor._inline_params.on_color_swatch_edit_requested(live_action, "color", Color(1, 0, 0, 1))
-	var picker: ColorPicker = editor._inline_params._color_swatch_picker
+	var request: Dictionary = {"target": live_action, "param": "color", "raw": "Color(1, 0, 0, 1)", "alpha_slot": true, "editable": true}
+	editor._colour_squares.open(request)
+	var picker: ColorPicker = editor._colour_squares._picker
 	all_passed = _check("the opened picker carries the saved shelf",
 		picker.get_presets().size() == 1 and picker.get_presets()[0].is_equal_approx(Color.ORANGE), true) and all_passed
 	all_passed = _check("the picker starts on the cell's current colour",
@@ -96,11 +82,21 @@ static func run() -> bool:
 	picker.preset_added.emit(Color.DODGER_BLUE)
 	all_passed = _check("a preset saved in the picker lands on the shelf",
 		EventSheetColorPresets.all().size(), 2) and all_passed
-	# Closing commits ONCE through the undo funnel onto the LIVE sheet.
-	editor._inline_params._commit_color_swatch_edit(Color(0.2, 0.6, 0.9, 1.0))
+	# Dragging previews on the row and writes nothing to the undo stack; closing commits ONCE.
+	editor._colour_squares.preview(Color(0.2, 0.6, 0.9, 1.0))
+	all_passed = _check("while dragging the picker the pick is previewed in the value's form",
+		editor._colour_squares.live_text(), "Color(0.2, 0.6, 0.9, 1)") and all_passed
+	editor._colour_squares.finish(true)
 	live_action = _live_color_action(editor)
-	all_passed = _check("closing the picker writes the colour literal onto the live ACE",
-		str(live_action.params.get("color", "")), ACEParamsDialog.color_to_literal(Color(0.2, 0.6, 0.9, 1.0))) and all_passed
+	all_passed = _check("closing the picker writes the colour in the form it was typed in",
+		str(live_action.params.get("color", "")), "Color(0.2, 0.6, 0.9, 1)") and all_passed
+	# Esc puts it back and writes nothing.
+	var before_escape: String = str(live_action.params.get("color", ""))
+	editor._colour_squares.open({"target": live_action, "param": "color", "raw": before_escape, "alpha_slot": true, "editable": true})
+	editor._colour_squares.preview(Color(1.0, 0.0, 1.0, 1.0))
+	editor._colour_squares.finish(false)
+	live_action = _live_color_action(editor)
+	all_passed = _check("Esc reverts the pick and writes nothing", str(live_action.params.get("color", "")), before_escape) and all_passed
 	EventSheetColorPresets.reset_for_tests()
 	editor.free()
 	return all_passed

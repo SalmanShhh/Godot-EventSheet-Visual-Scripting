@@ -88,13 +88,20 @@ static func run() -> bool:
 		inferred_facts.get("swatch") is Color and (inferred_facts["swatch"] as Color).is_equal_approx(Color.WHITE),
 		true) and ok
 	ok = _check("…and reads as its word", str(inferred_facts.get("value_text", "")), "white") and ok
-	ok = _check("…with the hex as its note", str(inferred_facts.get("note", "")), "#ffffff") and ok
+	ok = _check("…and says nothing more beside it", str(inferred_facts.get("note", "")), "") and ok
 	var call_variable := LocalVariable.new()
 	call_variable.name = "shifted"
 	call_variable.default_value = "Color.from_hsv(0.5, 1, 1)"
 	call_variable.expression_default = true
-	ok = _check("a Color CALL is not a colour word, so it gets no swatch",
-		EventSheetSettingFacts.facts(call_variable).get("swatch") == null, true) and ok
+	ok = _check("a Color CALL has a colour the editor can work out, so it gets its square",
+		EventSheetSettingFacts.facts(call_variable).get("swatch") is Color, true) and ok
+	var runtime_variable := LocalVariable.new()
+	runtime_variable.name = "worked_out"
+	runtime_variable.type_name = "Color"
+	runtime_variable.default_value = "other.modulate"
+	runtime_variable.expression_default = true
+	ok = _check("a colour only the running game knows gets no square and no guess",
+		EventSheetSettingFacts.facts(runtime_variable).get("swatch") == null, true) and ok
 
 	# ── The write-back keeps the spelling the line already used ──
 	ok = _check("a named constant stays a named constant",

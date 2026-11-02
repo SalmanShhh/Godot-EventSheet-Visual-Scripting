@@ -61,6 +61,9 @@ const LINT_ALLOWANCES := {
 		# The hit-count chip family and the object-icon plate: the debugger's own lens chrome and a
 		# neutral plate, both drawn over whatever the row is, neither a token a theme would set.
 		"HIT_CHIP", "OBJECT_ICON_PLATE", "CODE_CELL",
+		# A colour square's checkerboard and its overbright corner mark: a neutral board a see-through colour
+		# is judged against, and a mark that must read on any colour - not tokens a theme would set.
+		"COLOUR_CHECK", "COLOUR_HDR_MARK",
 		# A transparent sentinel: "this row asked for no tint at all".
 		"Color(0.0, 0.0, 0.0, 0.0)",
 	],
