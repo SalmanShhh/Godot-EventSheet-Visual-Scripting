@@ -9997,3 +9997,22 @@ Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as y
 Worked out while the game runs: %s is a variable and can change. It starts as %s.,게임이 실행되는 동안 계산됩니다. %s은(는) 변수이며 바뀔 수 있습니다. 처음 값은 %s입니다.
 "Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","허용: #ff8000 또는 ff8000, 이름 (orange), Color(1, 0.5, 0) 또는 Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, 또는 Color를 만드는 식."
 "%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s에는 Color가 필요합니다. %s은(는) 문자열이며 색이 아닙니다. #ff8000, orange, Color(1, 0.5, 0), Color.ORANGE 중 하나를 쓰거나 값을 클릭해 색을 고르세요."
+Escape closes,Esc로 닫기
+worked out while the game runs,게임이 실행되는 동안 결정됩니다
+starts %s,시작값 %s
+Parameter of %s,%s의 매개변수
+Handed in by the trigger,트리거가 넘겨주는 값
+Local to this event,이 이벤트의 지역 변수
+Local to a parent event,상위 이벤트의 지역 변수
+Input Map control.,입력 맵 컨트롤.
+"%d frames, loops","%d프레임, 반복"
+%d frames,%d프레임
+%s's SpriteFrames.,%s의 SpriteFrames.
+%s's animations.,%s의 애니메이션.
+In the open scene.,열려 있는 씬에 있음.
+"In the open scene, and add_to_group in %s.",열려 있는 씬과 %s의 add_to_group.
+"add_to_group(""%s"", true) in %s.","add_to_group(""%s"", true) (%s 안)"
+code only,코드에만 있음
+A scene file.,씬 파일.
+Singleton,싱글톤
+Built-in type,내장 타입

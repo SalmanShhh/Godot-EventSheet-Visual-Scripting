@@ -9997,3 +9997,22 @@ Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as y
 Worked out while the game runs: %s is a variable and can change. It starts as %s.,Calcolato mentre il gioco gira: %s è una variabile e può cambiare. Parte come %s.
 "Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","Accettato: #ff8000 o ff8000, un nome (orange), Color(1, 0.5, 0) o Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, o un'espressione che dia un Color."
 "%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s si aspetta un Color. %s è un pezzo di testo, non un colore. Scrivi #ff8000, orange, Color(1, 0.5, 0) o Color.ORANGE, oppure fai clic sul valore per sceglierne uno."
+Escape closes,Esc chiude
+worked out while the game runs,determinato mentre il gioco è in esecuzione
+starts %s,parte da %s
+Parameter of %s,Parametro di %s
+Handed in by the trigger,Passato dal trigger
+Local to this event,Locale a questo evento
+Local to a parent event,Locale a un evento padre
+Input Map control.,Controllo della mappa degli input.
+"%d frames, loops","%d fotogrammi, in loop"
+%d frames,%d fotogrammi
+%s's SpriteFrames.,SpriteFrames di %s.
+%s's animations.,Animazioni di %s.
+In the open scene.,Nella scena aperta.
+"In the open scene, and add_to_group in %s.",Nella scena aperta e con add_to_group in %s.
+"add_to_group(""%s"", true) in %s.","add_to_group(""%s"", true) si trova in %s."
+code only,solo nel codice
+A scene file.,Un file di scena.
+Singleton,Istanza unica
+Built-in type,Tipo integrato

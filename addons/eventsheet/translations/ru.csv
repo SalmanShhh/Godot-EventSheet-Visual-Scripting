@@ -9997,3 +9997,22 @@ Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as y
 Worked out while the game runs: %s is a variable and can change. It starts as %s.,Вычисляется во время работы игры: %s - переменная и может меняться. Она начинается как %s.
 "Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","Допустимо: #ff8000 или ff8000, имя (orange), Color(1, 0.5, 0) или Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl или выражение, дающее Color."
 "%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s ожидает Color. %s - это кусок текста, а не цвет. Напишите #ff8000, orange, Color(1, 0.5, 0) или Color.ORANGE, либо щёлкните значение, чтобы выбрать цвет."
+Escape closes,Esc закрывает
+worked out while the game runs,определяется во время игры
+starts %s,начинается с %s
+Parameter of %s,Параметр %s
+Handed in by the trigger,Передаётся триггером
+Local to this event,Локальная в этом событии
+Local to a parent event,Локальная в родительском событии
+Input Map control.,Элемент управления из карты ввода.
+"%d frames, loops","%d кадров, зациклена"
+%d frames,%d кадров
+%s's SpriteFrames.,SpriteFrames узла %s.
+%s's animations.,Анимации узла %s.
+In the open scene.,В открытой сцене.
+"In the open scene, and add_to_group in %s.",В открытой сцене и через add_to_group в %s.
+"add_to_group(""%s"", true) in %s.","add_to_group(""%s"", true) в %s."
+code only,только в коде
+A scene file.,Файл сцены.
+Singleton,Синглтон
+Built-in type,Встроенный тип

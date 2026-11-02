@@ -9997,3 +9997,22 @@ Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as y
 Worked out while the game runs: %s is a variable and can change. It starts as %s.,ゲームの実行中に計算されます。%s は変数で、変わることがあります。最初は %s です。
 "Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","使える形式: #ff8000 または ff8000、名前 (orange)、Color(1, 0.5, 0) または Color(1, 0.5, 0, 0.5)、Color(""#ff8000"")、Color.ORANGE、Color8 / Color.from_rgba8 (0-255)、Color.from_hsv、Color.from_ok_hsl、または Color になる式。"
 "%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s には Color が必要です。%s は文字列で、色ではありません。#ff8000、orange、Color(1, 0.5, 0)、Color.ORANGE のいずれかを書くか、値をクリックして色を選んでください。"
+Escape closes,Esc で閉じる
+worked out while the game runs,ゲームの実行中に決まります
+starts %s,初期値 %s
+Parameter of %s,%s の引数
+Handed in by the trigger,トリガーから渡される値
+Local to this event,このイベント内のローカル
+Local to a parent event,親イベントのローカル
+Input Map control.,入力マップのコントロール。
+"%d frames, loops",%d フレーム、ループ
+%d frames,%d フレーム
+%s's SpriteFrames.,%s の SpriteFrames。
+%s's animations.,%s のアニメーション。
+In the open scene.,開いているシーン内。
+"In the open scene, and add_to_group in %s.",開いているシーンと、%s の add_to_group。
+"add_to_group(""%s"", true) in %s.","add_to_group(""%s"", true)（%s 内）"
+code only,コードのみ
+A scene file.,シーンファイル。
+Singleton,シングルトン
+Built-in type,組み込み型

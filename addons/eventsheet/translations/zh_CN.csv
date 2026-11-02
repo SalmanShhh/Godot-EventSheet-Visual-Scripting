@@ -9997,3 +9997,22 @@ Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as y
 Worked out while the game runs: %s is a variable and can change. It starts as %s.,"在游戏运行时才会计算: %s 是变量, 可能变化。它的初始值是 %s。"
 "Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","可接受: #ff8000 或 ff8000、名称 (orange)、Color(1, 0.5, 0) 或 Color(1, 0.5, 0, 0.5)、Color(""#ff8000"")、Color.ORANGE、Color8 / Color.from_rgba8 (0-255)、Color.from_hsv、Color.from_ok_hsl, 或得到 Color 的表达式。"
 "%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s 需要 Color。%s 是一段文字, 不是颜色。请写 #ff8000、orange、Color(1, 0.5, 0) 或 Color.ORANGE, 或点击该值来选择颜色。"
+Escape closes,Esc 关闭
+worked out while the game runs,在游戏运行时才能确定
+starts %s,初始值 %s
+Parameter of %s,%s 的参数
+Handed in by the trigger,由触发器传入
+Local to this event,此事件的局部变量
+Local to a parent event,父事件的局部变量
+Input Map control.,输入映射中的控制项。
+"%d frames, loops",%d 帧，循环
+%d frames,%d 帧
+%s's SpriteFrames.,%s 的 SpriteFrames。
+%s's animations.,%s 的动画。
+In the open scene.,在打开的场景中。
+"In the open scene, and add_to_group in %s.",在打开的场景中，以及 %s 里的 add_to_group。
+"add_to_group(""%s"", true) in %s.","add_to_group(""%s"", true)，位于 %s。"
+code only,仅在代码中
+A scene file.,场景文件。
+Singleton,单例
+Built-in type,内置类型
