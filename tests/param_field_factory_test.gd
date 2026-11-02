@@ -23,9 +23,9 @@ static func run() -> bool:
 static func _test_widget_per_hint() -> bool:
 	var passed: bool = true
 	var factory: EventSheetParamFieldFactory = EventSheetParamFieldFactory.new()
-	passed = _check("a colour parameter is a swatch",
+	passed = _check("a colour parameter is a text field beside a colour button",
 		_class_of(factory, {"id": "tint", "type": TYPE_COLOR, "hint": "color"}, "Color(1, 0.6, 0.2, 1)"),
-		"ColorPickerButton") and passed
+		"LineEdit") and passed
 	passed = _check("a fixed-option parameter is a dropdown",
 		_class_of(factory, {"id": "mode", "type": TYPE_STRING, "hint": "", "options": ["one", "two"]}, "one"),
 		"OptionButton") and passed
