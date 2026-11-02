@@ -837,6 +837,7 @@ func _exit_tree() -> void:
 		_import_tools_plugin.call("detach")
 		_import_tools_plugin = null
 	if _live_values_debugger != null:
+		_live_values_debugger.release_error_feed()
 		remove_debugger_plugin(_live_values_debugger)
 		_live_values_debugger = null
 	if _feedback_player_inspector != null:

@@ -3766,6 +3766,7 @@ func report_runtime_error(message: String, script_path: String, line: int = 0) -
 		int(located.get("event_number", 0)), str(located.get("reading", "")))
 	report["row_resource"] = located.get("resource")
 	report["tab_index"] = int(located.get("tab_index", -1))
+	report["candidates"] = located.get("candidates", [])
 	report["line"] = line
 	_runtime_error_report = report
 	for output_line: String in words.output_lines(report):
@@ -3818,6 +3819,7 @@ func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
 	# row for the line (the panel compiles a debug build's extra lines the plain echo does not).
 	if entries.is_empty() and tab_index == _active_tab_index:
 		entries = EventSheetLineRowMapper.entries_for_line(_code_source_map, line)
+	var candidates: Array = []
 	for entry: Variant in entries:
 		var resource: Resource = instance_from_id(
 			int(str((entry as Dictionary).get("uid", "0")))) as Resource
@@ -3825,9 +3827,12 @@ func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
 			continue
 		if tab_index != _active_tab_index:
 			# A row of a tab on another page: it has no rows on screen to read, so the address is the
-			# resource and the tab; Jump brings the tab forward and selects it there.
-			located["resource"] = resource
-			return located
+			# resources (most specific first) and the tab; Jump brings the tab forward and walks outward
+			# until one of them is a row there, the way the Code panel's line click does.
+			candidates.append(resource)
+			located["resource"] = candidates[0]
+			located["candidates"] = candidates
+			continue
 		for flat: Variant in view.get_flat_rows():
 			var row_data: EventRowData = (flat as Dictionary).get("row")
 			if row_data == null or row_data.source_resource != resource:
@@ -3883,8 +3888,15 @@ func _jump_to_runtime_error_row() -> void:
 	if resource == null or view == null:
 		goto_generated_line(int(_runtime_error_report.get("line", 0)))
 		return
-	if not view.select_resource(resource as Resource):
-		view.reveal_resource(resource as Resource)
+	if view.select_resource(resource as Resource):
+		return
+	if view.reveal_resource(resource as Resource):
+		return
+	# The row of a tab that was not on screen: the first resource was the most specific one, which may
+	# have no row of its own (a statement inside a function), so walk outward.
+	for candidate: Variant in (_runtime_error_report.get("candidates", []) as Array):
+		if view.select_resource(candidate as Resource) or view.reveal_resource(candidate as Resource):
+			return
 
 
 ## Explain: the Manual page that answers the question this failure raises - picking and existence

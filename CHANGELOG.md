@@ -12,6 +12,12 @@
 
 - Every picture under `docs/previews/` was retaken in the real editor in the Editor Native look: the workspace, the Generated GDScript panel beside the sheet, the picker, and the sheet rows on their own. Three new ones sit beside the colour values, type checking and autocomplete bullets in the README. The four pictures nothing referenced any more were removed.
 
+### Fixed: a runtime error in a `.gd` sheet reaches its row
+
+- An error in a running game found its row only for a `.tres` sheet with a debug compile, because the game itself announced the failure. A `.gd` sheet (the default format, whose file must stay byte-identical) and a hand-written script got nothing. The editor already receives every script error of a game it started, so the strip now reads those: nothing is added to the game, the file, the project settings or an export. The strip, the Output line, Jump to event and Explain are the same as before, for any open tab; a sheet edited since its file was written points at no row rather than the wrong one.
+- A failure that arrives twice (the `.tres` debug compile's own announce and the editor's) is said once per file and line per run.
+- Jump to event on a tab that was not in front walks outward from the line's innermost row (a statement inside a function has no row of its own) until it lands on one, as the Code panel's line click does.
+
 ### Fixed: the review of colour values, autocomplete, mistake checks and type checking
 
 - A field was judged against whatever scene happened to be open, read from its root: a `$Score` that is a Label in another scene refused a value that is right in this sheet's. It is now read from the node that runs the sheet, and a scene that does not run it says nothing.

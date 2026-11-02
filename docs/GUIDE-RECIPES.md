@@ -141,7 +141,11 @@ When something misbehaves, you have five tools - no `print()` required.
   empty target, lists for a position that is not there), and **Godot's words** shows the engine's
   own message unchanged - it is never hidden, because it is what every search and every issue
   tracker speaks. A message the table does not recognise is repeated verbatim rather than guessed
-  at. You can also paste any error or stack-trace line straight into the command palette
+  at. It works for every sheet, a `.gd` sheet and a hand-written script included: the sheet reads
+  the errors the editor's own debugger already receives, so nothing is added to your file or your
+  game. If the sheet was edited after its file was written, the sentence still appears but points
+  at no row, rather than the wrong one. Godot itself takes you to the Script screen when a game
+  fails; the strip is waiting under the sheet when you come back. You can also paste any error or stack-trace line straight into the command palette
   (Ctrl+P): it jumps to the row *and* re-says the message there.
 - **Event Trace.** Tools ▸ Event Trace highlights the rows whose events *fire* during a debug run
   (a cyan PULSE: full glow the instant an event fires, fading over half a second, held bright while it keeps firing) - so "is this event even running?" AND "what just fired?" are answered at a glance. It

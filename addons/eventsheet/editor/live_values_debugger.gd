@@ -33,13 +33,21 @@ signal children_report_received(report: Dictionary)
 ## Replay recording: one control the running game saw go down or come up, with the engine frame it
 ## happened on. [action, pressed, frame] - the three facts a replay row is written from.
 signal input_recorded(action: String, pressed: bool, frame: int)
-## Emitted when the running game announces a script error (debug compiles carry a Logger that says
-## each failure's message, file and line to the editor - the engine's own error channel never
-## reaches editor plugins, so the game reports its own trouble, the paused-row pattern). The dock
-## re-says it as the row said it on the runtime-error strip.
+## Emitted when a running game has a script error, once per file and line per run. It comes from the
+## editor's own debugger feed (any script, any sheet format, nothing in the game) or from a debug
+## compile's Logger announce, whichever arrives first. The dock re-says it as the row said it on the
+## runtime-error strip.
 signal runtime_error_received(message: String, script_path: String, line: int)
 
+const ERROR_FEED_PATH := "res://addons/eventsheet/editor/dock/editor_error_feed.gd"
+
 var _last_session_id: int = -1
+## Script errors read from the editor's own debugger (see EventSheetEditorErrorFeed): no game-side code,
+## so a `.gd` sheet and a hand-written script are covered like a debug compile.
+var _error_feed: RefCounted = null
+## The (file, line) places said this run - the strip holds one report, and the same failure arrives from
+## both the editor's feed and a debug compile's own announce.
+var _errors_said: Dictionary = {}
 ## Session id -> the feature tag that copy of the game was started with. Read once when the
 ## game starts, because the editor setting can be changed while a game runs and the chip must go
 ## on saying which window it is describing.
@@ -79,8 +87,10 @@ func _on_session_started(session_id: int) -> void:
 	# runs, and the chip must say which window the values it shows came from.
 	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
 	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)
+	_attach_error_feed()
 	if not starts_new_run(_other_active_sessions(session_id)):
 		return
+	_errors_said.clear()
 	var counts: GDScript = load("res://addons/eventsheet/editor/trace_hit_counts.gd")
 	if counts != null:
 		counts.reset()
@@ -94,6 +104,37 @@ func _on_session_started(session_id: int) -> void:
 	var trail: GDScript = load("res://addons/eventsheet/editor/state_trail.gd")
 	if trail != null:
 		trail.clear()
+
+
+## Starts listening to the editor's debugger nodes for script errors. Loaded by path and only when a game
+## starts. A Godot that lacks the node or its signal leaves this a no-op.
+func _attach_error_feed() -> void:
+	if _error_feed == null:
+		var feed_script: GDScript = load(ERROR_FEED_PATH)
+		if feed_script == null:
+			return
+		_error_feed = feed_script.new()
+		_error_feed.error_seen.connect(_on_feed_error)
+	_error_feed.attach_all(EditorInterface.get_base_control())
+
+
+## Gives the feed's connections back; the plugin calls this as it is taken out.
+func release_error_feed() -> void:
+	if _error_feed != null:
+		_error_feed.release()
+		_error_feed = null
+
+
+func _on_feed_error(message: String, script_path: String, line: int) -> void:
+	_relay_runtime_error(message, script_path, line)
+
+
+## One failure on its way to the strip, once per place per run, from whichever channel said it first.
+func _relay_runtime_error(message: String, script_path: String, line: int) -> void:
+	var feed_script: GDScript = load(ERROR_FEED_PATH)
+	if feed_script != null and feed_script.is_repeat(_errors_said, script_path, line):
+		return
+	runtime_error_received.emit(message, script_path, line)
 
 
 ## How many OTHER debugger tabs have a game running right now.
@@ -159,7 +200,7 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		# Fails closed: a malformed announce with no message is dropped rather than showing the
 		# strip with nothing to say on it.
 		if not str(report.get("message", "")).is_empty():
-			runtime_error_received.emit(str(report.get("message", "")),
+			_relay_runtime_error(str(report.get("message", "")),
 				str(report.get("script_path", "")), int(report.get("line", 0)))
 		return true
 	return false
