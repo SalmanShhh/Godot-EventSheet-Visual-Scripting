@@ -9,9 +9,9 @@ The point is **speed-to-game**: whether you've never written code, want logic to
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
-![The EventSheet workspace inside the Godot editor: a plain platformer_shooter.gd opened as numbered two-lane event rows that call behaviour verbs like $Player/PlatformerMovement.jump() and $Player/WeaponKit.fire(), with the Scene dock showing the PlatformerMovement and WeaponKit behaviour children and the Inspector showing that behaviour's own knobs - Gravity Angle, Max Jumps, Coyote Time.](docs/previews/editor-hero.png)
+![The EventSheet workspace inside the Godot editor in the Editor Native look: boomer_level.gd opened as a sheet, with typed variables above numbered two-lane event rows that show an object and an icon beside every condition and action, the Scene dock with the level's nodes on the left and the Inspector on the right.](docs/previews/editor-hero.png)
 
-It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* `platformer_shooter.gd`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
+It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* `boomer_level.gd`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
 
 ## What it compiles to
 
@@ -45,7 +45,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 **View > Generated GDScript** puts the compiled output beside the sheet, refreshed live as you edit:
 
-![The same sheet with the Generated GDScript panel open beside it inside the Godot editor: on the left the numbered event rows, on the right the typed GDScript they compile to - class_name, an @export var, and a _physics_process reading Input.is_action_just_pressed - captioned as read-only and refreshed live as you edit.](docs/previews/editor-generated-code.png)
+![The same sheet with the Generated GDScript panel open beside it in the Godot editor: the numbered event rows on the left, the typed GDScript they compile to on the right - class_name, typed vars, an @export var and a _physics_process - captioned as read-only and refreshed live as you edit.](docs/previews/editor-generated-code.png)
 
 ## Quick start
 
@@ -124,8 +124,17 @@ What it brings, in one screen:
 - **Faster** - the editor starts in about 11 s instead of 30, the picker lists every pack verb (it had shown 142 of 4,477), and CI answers in about four minutes instead of twenty. A performance pass on the sheet itself, measured on the largest shipped pack (pathfinding): the saved-names badge went from 6.1 s to 9 ms, a save's diagnostics from 12.4 s to 0.8 s, the draw of a 1,516-row sheet from 44.6 to 24.4 ms, a full row rebuild from 13.7 to 9.4 s, and reopening an unchanged `.gd` skips the lift (10.6 s to 1.3 s, from a byte-checked cache in `.godot/`); rows now get their words as they scroll into view.
 - **Smooth interaction** - measured in the real editor (frame p90): hovering a small sheet went from 26 to 7.7 ms, dragging from 83 to 13.2 ms, dragging on an 803-row sheet from 60 to 9.4 ms, and a fold click on those 803 rows from 6.07 to 0.51 s. Each row keeps its own recorded drawing instead of being redrawn.
 - **Colour values you can see** - every Color form (Godot's named colours, hex, numbers, HSV, `Color.html` and more) shows a square of the colour in the value's text; click it for Godot's own ColorPicker, with no parameters window. The value keeps the form you typed, and **Read Colours As** and **Copy As** change how colours read or copy.
+
+  ![Three Color variables in a sheet, each with a small square of its colour beside the value.](docs/previews/editor-colour-values.png)
+
 - **Type checking as you type** - Godot's own analyzer checks what you write against typed stand-ins, answers in a plain sentence plus Godot's own words, underlines the exact span, and an error blocks OK and Enter.
+
+  ![The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused.](docs/previews/editor-type-check.png)
+
 - **Autocomplete that follows the code** - dot completion through chains and built-in values, argument hints that follow the receiver, names inside quotes, and descriptions taken from Godot's class reference.
+
+  ![A completion list under a value box offering the sheet's own variables and verbs with their types and a short description.](docs/previews/editor-autocomplete.png)
+
 - **Mistake checks with a fix beside each** - a wrong node type, a `res://` path that is missing, an empty group, an input action that does not exist, a `$Path` that is not in the scene, a signal given the wrong number of values, a While that cannot end, a local hiding a variable or parameter, and a division by a literal zero. Each shows on the row's quiet state with its fix door, and in the Doctor.
 - **Checks on save** - a broken script marks its row with Godot's own words, and compiler warnings reach the row. Run-time errors link back to their row for a `.tres` sheet compiled with a debug compile, in a game started from the editor; `.gd` sheets do not get that link yet.
 

@@ -2,7 +2,7 @@
 
 Short, concrete walkthroughs that each build one real thing - a platformer character, a health system, an auto-attacking shooter with game feel - and show the exact GDScript it compiles to. Each recipe assumes the plugin is enabled and you've opened the **EventSheet** tab. New to the vocabulary? Keep the [glossary](REFERENCE-GLOSSARY.md) open. Coming from Construct 3? The [migration guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) maps every concept.
 
-![A platformer character sheet in the editor: two-lane condition/action rows, a colored Combat region, an inline GDScript block, exported variables with @export badges, and a sheet-built heal() function](previews/editor-event-sheet.png)
+![A game sheet in the editor: typed variables with their descriptions above two-lane condition and action rows, an object and an icon beside every word, and a sheet-built function called from other rows](previews/editor-event-sheet.png)
 
 ## Table of Contents
 

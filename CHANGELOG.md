@@ -8,6 +8,10 @@
 - The Parameters dialog and its two sub-helpers each held the other, so the trio was never released with the workspace; the dock now lets go of the loop as it is freed.
 - Still held after a disable: the project-wide vocabulary and icon caches (shared by design, they do not grow), and about nine small objects per cycle held by callables the engine keeps after the controls are gone.
 
+### Changed: the README and doc pictures show the editor as it looks now
+
+- Every picture under `docs/previews/` was retaken in the real editor in the Editor Native look: the workspace, the Generated GDScript panel beside the sheet, the picker, and the sheet rows on their own. Three new ones sit beside the colour values, type checking and autocomplete bullets in the README. The four pictures nothing referenced any more were removed.
+
 ### Fixed: the review of colour values, autocomplete, mistake checks and type checking
 
 - A field was judged against whatever scene happened to be open, read from its root: a `$Score` that is a Label in another scene refused a value that is right in this sheet's. It is now read from the node that runs the sheet, and a scene that does not run it says nothing.
