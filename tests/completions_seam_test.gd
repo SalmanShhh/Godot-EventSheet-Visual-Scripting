@@ -146,9 +146,9 @@ static func _test_the_seam_answers_per_field_kind() -> bool:
 	var sheet: EventSheetResource = _fixture()
 	return SUPPORT.pin_table("completions_per_field_kind", {
 		EventSheetCompletions.FIELD_VARIABLE: {"text": "hp",
-			"detail": "Player · Instance whole number hp = 100", "kind": "variable"},
+			"detail": "Player · Instance whole number hp = 100", "kind": "variable", "type": "int"},
 		EventSheetCompletions.FIELD_FUNCTION: {"text": "take_damage",
-			"detail": "function(amount)", "kind": "function"},
+			"detail": "function(amount)", "kind": "function", "type": "void"},
 		EventSheetCompletions.FIELD_SIGNAL: {"text": "died", "detail": "signal", "kind": "signal"},
 		"enum_value:State": {"text": "State.IDLE", "detail": "State · enum value", "kind": "enum"},
 	}, func(kind: String) -> Variant:
@@ -202,8 +202,8 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 	# The sheet's own variable leads its host class's members, and a function's parameter is offered
 	# by name - the one thing the flat vocabulary used to be missing.
 	ok = SUPPORT.pin_table("completions_expression_first_answer", {
-		"hp": {"text": "hp", "detail": "Player · Instance whole number hp = 100", "kind": "variable"},
-		"take": {"text": "take_damage", "detail": "function(amount)", "kind": "function"},
+		"hp": {"text": "hp", "detail": "Player · Instance whole number hp = 100", "kind": "variable", "type": "int"},
+		"take": {"text": "take_damage", "detail": "function(amount)", "kind": "function", "type": "void"},
 		"amou": {"text": "amount", "detail": "take_damage · parameter", "kind": "variable"},
 		"ma": {"text": "max()", "detail": "built-in · max(a, b, ...) - the largest", "kind": "builtin"},
 	}, func(typed: String) -> Variant:

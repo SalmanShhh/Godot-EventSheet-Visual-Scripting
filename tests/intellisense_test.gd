@@ -66,7 +66,7 @@ static func run() -> bool:
 	all_passed = _check("unknown token offers nothing", EventSheetGDScriptLint.dot_completion_candidates("mystery", sheet).is_empty(), true) and all_passed
 
 	# Signature hints.
-	all_passed = _check("sheet-function hint", EventSheetGDScriptLint.signature_hint("reload(", sheet), "reload(ammo: int)") and all_passed
+	all_passed = _check("sheet-function hint", EventSheetGDScriptLint.signature_hint("reload(", sheet), "reload(ammo: int) -> void") and all_passed
 	var host_hint: String = EventSheetGDScriptLint.signature_hint("x = move_and_collide(", sheet)
 	all_passed = _check("host-method hint resolves", host_hint.begins_with("move_and_collide("), true) and all_passed
 	all_passed = _check("no call context, no hint", EventSheetGDScriptLint.signature_hint("health + 1", sheet), "") and all_passed

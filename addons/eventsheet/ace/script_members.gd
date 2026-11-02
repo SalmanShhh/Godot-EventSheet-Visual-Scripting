@@ -241,7 +241,7 @@ static func _read(script_path: String) -> Dictionary:
 	var properties: Array[Dictionary] = []
 	var base: String = ""
 	var doc_lines: PackedStringArray = PackedStringArray()
-	var method_head: RegEx = RegEx.create_from_string("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)")
+	var method_head: RegEx = RegEx.create_from_string("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?:\\s*->\\s*([A-Za-z_][A-Za-z0-9_.]*(?:\\[[^\\]]*\\])?))?")
 	var signal_head: RegEx = RegEx.create_from_string("^signal ([A-Za-z_][A-Za-z0-9_]*)(?:\\((.*)\\))?")
 	# A property declaration in any of the spellings a real file uses: a plain `var`, an `@onready`
 	# one, a `static var`, and the typed and untyped forms of each. The TYPE is captured where the
@@ -262,7 +262,9 @@ static func _read(script_path: String) -> Dictionary:
 		var found: RegExMatch = method_head.search(line)
 		if found != null:
 			if not found.get_string(1).begins_with(_PRIVATE_PREFIX):
-				methods.append(_member(found.get_string(1), found.get_string(2), doc_lines))
+				var declared_method: Dictionary = _member(found.get_string(1), found.get_string(2), doc_lines)
+				declared_method["ret"] = found.get_string(3)
+				methods.append(declared_method)
 		else:
 			found = signal_head.search(line)
 			if found != null and not found.get_string(1).begins_with(_PRIVATE_PREFIX):

@@ -368,34 +368,11 @@ static func _builtin_collection_members(type_name: String) -> PackedStringArray:
 
 ## Signature hint for the innermost unclosed call before the caret ("" = none): sheet
 ## functions show their declared params, host/dotted-class methods come from ClassDB.
+##
+## The call is read the way the caret reads it (see EventSheetExpressionWalk): `$Sprite.play(` is
+## AnimatedSprite2D's play, `Input.get_axis(` is Input's, `velocity.move_toward(` is Vector2's.
 static func signature_hint(text_before_caret: String, sheet: EventSheetResource) -> String:
-	var call_regex: RegEx = RegEx.new()
-	if call_regex.compile("([A-Za-z_][A-Za-z0-9_]*)\\(([^()]*)$") != OK:
-		return ""
-	var call_match: RegExMatch = call_regex.search(text_before_caret)
-	if call_match == null:
-		return ""
-	var function_name: String = call_match.get_string(1)
-	if sheet != null:
-		for function_resource in sheet.functions:
-			if function_resource is EventFunction and (function_resource as EventFunction).function_name == function_name:
-				var parts: PackedStringArray = PackedStringArray()
-				for param in (function_resource as EventFunction).params:
-					if param is ACEParam:
-						parts.append("%s: %s" % [(param as ACEParam).id, (param as ACEParam).type_name])
-				return "%s(%s)" % [function_name, ", ".join(parts)]
-	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else ""
-	if not host_class.is_empty():
-		for method_info in ClassDB.class_get_method_list(host_class):
-			if str(method_info.get("name", "")) != function_name:
-				continue
-			var arg_parts: PackedStringArray = PackedStringArray()
-			for argument in method_info.get("args", []):
-				var arg_type: int = int((argument as Dictionary).get("type", TYPE_NIL))
-				var arg_name: String = str((argument as Dictionary).get("name", ""))
-				arg_parts.append(arg_name if arg_type == TYPE_NIL else "%s: %s" % [arg_name, type_string(arg_type)])
-			return "%s(%s)" % [function_name, ", ".join(arg_parts)]
-	return str(GDSCRIPT_GLOBAL_HINTS.get(function_name, ""))
+	return str(EventSheetExpressionWalk.hint(text_before_caret, sheet).get("text", ""))
 
 
 ## Signature + plain-word hints for the GDScript global functions an expression author reaches

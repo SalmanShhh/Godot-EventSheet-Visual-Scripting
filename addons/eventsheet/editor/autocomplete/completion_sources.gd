@@ -132,6 +132,11 @@ const KIND_ANIMATION := "animation"
 const KIND_MARKER := "marker"
 const KIND_ENUM := "enum"
 const KIND_BUILTIN := "builtin"
+## The kinds reflection adds: a local of the event being edited, and the four things a type has.
+const KIND_LOCAL := "local"
+const KIND_PROPERTY := "property"
+const KIND_METHOD := "method"
+const KIND_CONSTANT := "constant"
 ## What the Quick Add field's answers can BE. Ids like the rest, never display strings: an answer
 ## says its kind in the reader's own language through the ask, and pins itself in tests through this.
 const KIND_ROW := "row"
@@ -152,6 +157,10 @@ const CODE_EDIT_KINDS: Dictionary = {
 	KIND_CLASS: CodeEdit.KIND_CLASS,
 	KIND_NODE: CodeEdit.KIND_NODE_PATH,
 	KIND_FILE: CodeEdit.KIND_FILE_PATH,
+	KIND_LOCAL: CodeEdit.KIND_VARIABLE,
+	KIND_PROPERTY: CodeEdit.KIND_MEMBER,
+	KIND_METHOD: CodeEdit.KIND_FUNCTION,
+	KIND_CONSTANT: CodeEdit.KIND_CONSTANT,
 }
 
 
@@ -208,12 +217,16 @@ static var scene_root_override: Node = null
 ## `prefix` is what the reader has typed. For every kind but the expression one that is the word
 ## itself; for an expression it is the whole text BEFORE THE CARET, because `hp.` and `hp` want
 ## different answers and only the text before the caret can tell them apart.
-static func for_field(sheet: EventSheetResource, field_kind: String, prefix: String = "") -> Array[Dictionary]:
+##
+## `within` is the event the field belongs to, for an expression: its locals (and those of the events
+## around it) are names it can say, and no other event's are.
+static func for_field(sheet: EventSheetResource, field_kind: String, prefix: String = "", within: Resource = null) -> Array[Dictionary]:
 	var kind: String = field_kind.strip_edges()
 	if kind.is_empty():
 		return []
 	if kind == FIELD_EXPRESSION:
-		return rank(_expression_pool(sheet, prefix), trailing_word(prefix))
+		var answer: Dictionary = expression_answer(sheet, prefix, within)
+		return rank(answer["entries"], str(answer["needle"]))
 	return rank(_pool(sheet, kind), prefix)
 
 
@@ -331,16 +344,32 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 ## Every variable the sheet can name - its own, the globals it reaches for, the locals in view -
 ## inserting what the code needs (`Game.Score` keeps its prefix, a local does not) and explained by
 ## the same sentence its row reads with.
-static func _variable_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+##
+## `with_locals` false leaves out the locals: an expression offers only the ones in view of the event
+## it is in (see _scope_entries), and every other event's would be a name that cannot be said there.
+static func _variable_entries(sheet: EventSheetResource, with_locals: bool = true) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for entry: Dictionary in EventSheetVariableOwners.catalog(sheet):
+		if not with_locals and str(entry.get("group", "")) == EventSheetVariableOwners.GROUP_LOCAL:
+			continue
 		entries.append({
 			"text": str(entry.get("insert_text", entry.get("name", ""))),
 			"detail": "%s %s %s" % [str(entry.get("owner", "")), SEPARATOR,
 				EventSheetVariableOwners.sentence(entry)],
 			"kind": KIND_VARIABLE,
+			"type": _type_word_of(str(entry.get("type_name", "")), str(entry.get("value", ""))),
 		})
 	return entries
+
+
+## The type a variable reads with in a list: its declared type, else the one its starting value
+## gives, else nothing (an honest blank beats "Variant" on a name that never said).
+static func _type_word_of(type_name: String, value_text: String) -> String:
+	var declared: String = type_name.strip_edges()
+	if not declared.is_empty() and declared != "Variant":
+		return declared
+	var walked: Dictionary = EventSheetExpressionWalk.resolve(value_text, null)
+	return str(walked.get("type", "")) if bool(walked.get("known", false)) and not bool(walked.get("static", false)) else ""
 
 
 ## The functions this sheet publishes, each explained by the parameters it takes.
@@ -356,8 +385,17 @@ static func _function_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"text": event_function.function_name,
 			"detail": _function_detail(event_function),
 			"kind": KIND_FUNCTION,
+			"type": _return_word_of(event_function),
 		})
 	return entries
+
+
+## What a sheet function gives back, in Godot's spelling: its named return type, its basic one, or
+## void for a function that returns nothing.
+static func _return_word_of(event_function: EventFunction) -> String:
+	if not event_function.return_type_name.strip_edges().is_empty():
+		return event_function.return_type_name.strip_edges()
+	return "void" if event_function.return_type == TYPE_NIL else type_string(event_function.return_type)
 
 
 ## What a function's line says: the parameters it takes, or the word for what it is when it takes
@@ -846,14 +884,22 @@ static func _project_files() -> PackedStringArray:
 ## is more sure of what they want than one who has typed none. Reading the last character instead
 ## meant the list turned back into the sheet's own vocabulary the moment anything was typed, and
 ## accepting from it wrote a top-level name after the dot.
-static func _expression_pool(sheet: EventSheetResource, text_before_caret: String) -> Array[Dictionary]:
-	var receiver: String = member_receiver(text_before_caret)
-	if not receiver.is_empty():
-		var members: Array[Dictionary] = []
-		for candidate: Dictionary in load(LINT_PATH).dot_completion_candidates(receiver, sheet):
-			members.append({"text": str(candidate.get("label", "")), "detail": receiver,
-				"kind": KIND_MEMBER})
-		return members
+##
+## What it returns is {"entries": the candidates, unranked, "needle": what to rank them against,
+## "note": why there is nothing to offer, when that is worth saying}.
+static func expression_answer(sheet: EventSheetResource, text_before_caret: String, within: Resource = null) -> Dictionary:
+	var needle: String = trailing_word(text_before_caret)
+	var locals: Dictionary = scope_types(sheet, within)
+	# Inside a string literal the caret is asking for a NAME the call wants, or nothing at all.
+	var quoted: Dictionary = EventSheetExpressionWalk.string_context(text_before_caret)
+	if not quoted.is_empty():
+		return {"entries": _quoted_entries(sheet, quoted, locals), "needle": str(quoted["text"]), "note": ""}
+	var head: String = _before_the_typed_word(text_before_caret)
+	if head.ends_with("."):
+		var receiver_text: String = EventSheetExpressionWalk.receiver_before_dot(head)
+		if not receiver_text.is_empty():
+			return _member_answer(sheet, receiver_text, needle, locals)
+		return {"entries": [] as Array[Dictionary], "needle": needle, "note": ""}
 	# The sigil is already typed, so the entries drop theirs - and the one that was typed picks
 	# which spelling is on offer: `$` the paths, `%` the unique names.
 	var sigil: String = node_sigil(text_before_caret)
@@ -864,43 +910,546 @@ static func _expression_pool(sheet: EventSheetResource, text_before_caret: Strin
 			if text.begins_with(sigil):
 				addressed.append({"text": text.substr(1), "detail": str(entry.get("detail", "")),
 					"kind": KIND_NODE})
-		return addressed
-	return _pool(sheet, FIELD_EXPRESSION)
+		return {"entries": addressed, "needle": needle, "note": ""}
+	var flat: Array[Dictionary] = []
+	flat.append_array(_pool(sheet, FIELD_EXPRESSION))
+	flat.append_array(_global_pool())
+	var scoped: Array[Dictionary] = _scope_entries(sheet, within)
+	if scoped.is_empty():
+		return {"entries": flat, "needle": needle, "note": "", "flat": true}
+	# The names in view of this event come right after the sheet's own, before the host's and the
+	# language's - the order a sheet is read in.
+	var merged: Array[Dictionary] = []
+	var inserted: bool = false
+	for entry: Dictionary in flat:
+		if not inserted and str(entry.get("group", "")) == "host":
+			merged.append_array(scoped)
+			inserted = true
+		merged.append(entry)
+	if not inserted:
+		merged.append_array(scoped)
+	return {"entries": merged, "needle": needle, "note": "", "flat": true}
+
+
+## The members after a dot, or the honest reason there are none.
+static func _member_answer(sheet: EventSheetResource, receiver_text: String, needle: String, locals: Dictionary) -> Dictionary:
+	var typed: Dictionary = EventSheetExpressionWalk.resolve(receiver_text, sheet, locals)
+	if bool(typed.get("known", false)):
+		var type_text: String = str(typed["type"])
+		var listed: Array[Dictionary] = []
+		if type_text.begins_with(EventSheetMemberCatalog.ENUM_PREFIX):
+			listed = _sheet_enum_members(sheet, type_text.trim_prefix(EventSheetMemberCatalog.ENUM_PREFIX))
+		elif bool(typed.get("static", false)):
+			listed = EventSheetMemberCatalog.statics(type_text)
+			# A name that is also a value (a singleton, a script class) offers its instance members too.
+			if listed.is_empty() or type_text.begins_with(EventSheetMemberCatalog.SCRIPT_PREFIX):
+				listed = listed + EventSheetMemberCatalog.members(type_text)
+		else:
+			listed = EventSheetMemberCatalog.members(type_text)
+			# `self` is the sheet's own node: what the sheet declares comes first, then the host's.
+			if receiver_text == "self":
+				var own: Array[Dictionary] = _own_members(sheet)
+				own.append_array(listed)
+				listed = own
+		if not listed.is_empty():
+			return {"entries": listed, "needle": needle, "note": ""}
+	# The older readings still answer what the walk does not type: `host.` of a behaviour sheet is
+	# typed above, but a `$Child` that is a script class living outside the open scene is not.
+	var fallback: Array[Dictionary] = []
+	var first: String = receiver_text
+	if not first.contains(".") and not first.contains("("):
+		for candidate: Dictionary in load(LINT_PATH).dot_completion_candidates(first, sheet):
+			fallback.append({"text": str(candidate.get("label", "")), "detail": first, "kind": KIND_MEMBER})
+	if not fallback.is_empty():
+		return {"entries": fallback, "needle": needle, "note": ""}
+	return {"entries": [] as Array[Dictionary], "needle": needle, "note": UNTYPED_NOTE}
+
+
+## What the sheet declares on its own node, as members: its variables, then its functions.
+static func _own_members(sheet: EventSheetResource) -> Array[Dictionary]:
+	var own: Array[Dictionary] = []
+	for entry: Dictionary in _variable_entries(sheet, false):
+		var text: String = str(entry["text"])
+		if not text.contains("."):
+			var member: Dictionary = entry.duplicate()
+			member["lower"] = text.to_lower()
+			own.append(member)
+	for function_resource: Variant in sheet.functions:
+		var event_function: EventFunction = function_resource as EventFunction
+		if event_function == null or event_function.function_name.strip_edges().is_empty():
+			continue
+		var names: PackedStringArray = PackedStringArray()
+		for param: Variant in event_function.params:
+			if param is ACEParam:
+				names.append((param as ACEParam).id)
+		own.append({"text": event_function.function_name + "()", "label": "%s(%s)" % [event_function.function_name, ", ".join(names)],
+			"detail": _function_detail(event_function), "kind": KIND_FUNCTION, "type": _return_word_of(event_function),
+			"lower": event_function.function_name.to_lower(), "caret_back": 1 if not names.is_empty() else 0})
+	return own
+
+
+## The sentence a list says when a step cannot be typed from the sheet alone.
+const UNTYPED_NOTE := "worked out while the game runs"
+
+
+## The members of one of the sheet's own enums, as the entries `State.` has always offered.
+static func _sheet_enum_members(sheet: EventSheetResource, enum_name: String) -> Array[Dictionary]:
+	var members: Array[Dictionary] = []
+	for enum_row: EnumRow in sheet_enums_of(sheet):
+		if enum_row.enum_name == enum_name:
+			for member: String in enum_row.members:
+				var member_name: String = member.get_slice("=", 0).strip_edges()
+				members.append({"text": member_name, "detail": enum_name, "kind": KIND_MEMBER, "type": enum_name})
+	return members
+
+
+## Why a list has nothing to say, when the caret is where a type was expected: "" or the sentence
+## (already in the editor's language) for the empty-list line.
+static func empty_note(sheet: EventSheetResource, text_before_caret: String, within: Resource = null) -> String:
+	var answer: Dictionary = expression_answer(sheet, text_before_caret, within)
+	return EventSheetL10n.translate("worked out while the game runs") if not str(answer["note"]).is_empty() else ""
+
+
+## The enums the sheet declares, at any depth.
+static func sheet_enums_of(sheet: EventSheetResource) -> Array[EnumRow]:
+	return _sheet_enums(sheet.events) if sheet != null else ([] as Array[EnumRow])
+
+
+## The scene the open sheet's fields look names up in (the injected one in a test).
+static func scene_root() -> Node:
+	return _scene_root()
+
+
+## The path of a project script class by its class_name, "" when there is none.
+static func global_class_path(class_text: String) -> String:
+	return str(load(LINT_PATH)._global_class_path(class_text))
+
+
+## {name: {"type", "function"}} for the sheet's own variables and functions: what the walk types a
+## first word by. Held per sheet, dropped with the rest when the sheet is edited.
+static func symbol_types(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var key: String = "%d|__symbols" % sheet.get_instance_id()
+	if _symbol_cache.has(key):
+		return _symbol_cache[key]
+	var table: Dictionary = {}
+	for entry: Dictionary in EventSheetVariableOwners.catalog(sheet):
+		# An autoload's variable is reached through the autoload's name, and a local only from inside
+		# its own event (the walk is handed those separately).
+		if str(entry.get("autoload", "")) != "" or str(entry.get("group", "")) == EventSheetVariableOwners.GROUP_LOCAL:
+			continue
+		var name_text: String = str(entry.get("name", ""))
+		var type_text: String = _type_word_of(str(entry.get("type_name", "")), str(entry.get("value", "")))
+		if not table.has(name_text) or (str(table[name_text].get("type", "")).is_empty() and not type_text.is_empty()):
+			table[name_text] = {"type": type_text, "function": false}
+	for function_resource: Variant in sheet.functions:
+		var event_function: EventFunction = function_resource as EventFunction
+		if event_function != null and not event_function.function_name.is_empty():
+			table[event_function.function_name] = {"type": _return_word_of(event_function), "function": true}
+	_symbol_cache[key] = table
+	return table
+
+
+static var _symbol_cache: Dictionary = {}
+static var _scope_cache: Dictionary = {}
+
+
+## {name: type} for what the event `within` can say that is its own: its locals and those of the
+## events it sits under, the values its trigger hands in, and the parameters of the function it is in.
+static func scope_types(sheet: EventSheetResource, within: Resource) -> Dictionary:
+	var types: Dictionary = {}
+	for entry: Dictionary in _scope_facts(sheet, within):
+		types[str(entry["name"])] = str(entry["type"])
+	return types
+
+
+## The names in view of an event, as list entries (kind local).
+static func _scope_entries(sheet: EventSheetResource, within: Resource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for fact: Dictionary in _scope_facts(sheet, within):
+		var starts: String = str(fact.get("value", ""))
+		var said: String = str(fact["origin"])
+		if not starts.is_empty():
+			said += " %s %s" % [SEPARATOR, EventSheetL10n.translate("starts %s") % starts]
+		entries.append({"text": str(fact["name"]), "detail": said, "kind": KIND_LOCAL,
+			"type": str(fact["type"]), "lower": str(fact["name"]).to_lower()})
+	return entries
+
+
+## The locals and parameters in view of `within`, outermost first: [{name, type, value, origin}].
+static func _scope_facts(sheet: EventSheetResource, within: Resource) -> Array[Dictionary]:
+	var facts: Array[Dictionary] = []
+	if sheet == null or within == null:
+		return facts
+	var key: String = "%d|%d" % [sheet.get_instance_id(), within.get_instance_id()]
+	if _scope_cache.has(key):
+		return _scope_cache[key]
+	var path: Array = []
+	var holder: Resource = null
+	for function_resource: Variant in sheet.functions:
+		var event_function: EventFunction = function_resource as EventFunction
+		if event_function != null and _path_to(event_function.events, within, path):
+			holder = event_function
+			break
+	if holder == null:
+		path = []
+		_path_to(sheet.events, within, path)
+	if holder is EventFunction:
+		for param: Variant in (holder as EventFunction).params:
+			var typed_param: ACEParam = param as ACEParam
+			if typed_param != null and not typed_param.id.strip_edges().is_empty():
+				facts.append({"name": typed_param.id, "type": typed_param.type_name, "value": "",
+					"origin": EventSheetL10n.translate("Parameter of %s") % (holder as EventFunction).function_name})
+	for index: int in range(path.size()):
+		var event_row: EventRow = path[index] as EventRow
+		if event_row == null:
+			continue
+		if index == 0 or event_row.trigger_id != "":
+			for parameter: String in str(TriggerResolver.resolve_trigger(event_row).get("args", "")).split(","):
+				var piece: String = parameter.strip_edges()
+				if piece.is_empty():
+					continue
+				facts.append({"name": piece.get_slice(":", 0).strip_edges(), "type": piece.get_slice(":", 1).strip_edges() if piece.contains(":") else "",
+					"value": "", "origin": EventSheetL10n.translate("Handed in by the trigger")})
+		for local: LocalVariable in event_row.local_variables:
+			if local != null and not local.name.strip_edges().is_empty():
+				facts.append({"name": local.name.strip_edges(), "type": _type_word_of(local.type_name, EventSheetVariableOwners.default_text(local.default_value)),
+					"value": EventSheetVariableOwners.default_text(local.default_value),
+					"origin": EventSheetL10n.translate("Local to this event") if index == path.size() - 1 else EventSheetL10n.translate("Local to a parent event")})
+		# A local made by a "Set local variable" action is the other way an event declares one.
+		for action: Resource in event_row.actions:
+			var declaring: ACEAction = action as ACEAction
+			if declaring == null or not str(declaring.ace_id).begins_with("SetLocal"):
+				continue
+			var declared: Dictionary = declaring.params if not declaring.params.is_empty() else declaring.parameters
+			var local_name: String = str(declared.get("name", "")).strip_edges()
+			if local_name.is_empty():
+				continue
+			var value_text: String = str(declared.get("value", "")).strip_edges()
+			var local_type: String = str(declared.get("var_type", declared.get("const_type", "")))
+			if local_type.is_empty():
+				local_type = "float" if str(declaring.ace_id) == "SetLocalFromAxis" else _type_word_of("", value_text)
+			facts.append({"name": local_name, "type": local_type, "value": value_text,
+				"origin": EventSheetL10n.translate("Local to this event") if index == path.size() - 1 else EventSheetL10n.translate("Local to a parent event")})
+	_scope_cache[key] = facts
+	return facts
+
+
+## The event a condition or action belongs to (the event itself when handed one), null when the
+## sheet holds no such resource. Asked once when a field opens, never per keystroke.
+static func event_holding(sheet: EventSheetResource, resource: Resource) -> Resource:
+	if sheet == null or resource == null:
+		return null
+	if resource is EventRow:
+		return resource
+	var found: Resource = _holder_in(sheet.events, resource)
+	if found != null:
+		return found
+	for function_resource: Variant in sheet.functions:
+		var event_function: EventFunction = function_resource as EventFunction
+		if event_function != null:
+			found = _holder_in(event_function.events, resource)
+			if found != null:
+				return found
+	return null
+
+
+static func _holder_in(entries: Array, resource: Resource) -> Resource:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			var event_row: EventRow = entry as EventRow
+			if event_row.trigger == resource or event_row.conditions.has(resource) or event_row.actions.has(resource):
+				return event_row
+			var deeper: Resource = _holder_in(event_row.sub_events, resource)
+			if deeper != null:
+				return deeper
+		elif entry is EventGroup:
+			var in_group: Resource = _holder_in(EventSheetGroupFacts.children(entry as EventGroup), resource)
+			if in_group != null:
+				return in_group
+	return null
+
+
+## Fills `path` with the events from the top down to `target` inside `entries` (groups looked
+## through) and says whether it was found.
+static func _path_to(entries: Array, target: Resource, path: Array) -> bool:
+	for entry: Variant in entries:
+		if entry == target:
+			path.append(entry)
+			return true
+		if entry is EventRow:
+			path.append(entry)
+			if _path_to((entry as EventRow).sub_events, target, path):
+				return true
+			path.pop_back()
+		elif entry is EventGroup:
+			if _path_to(EventSheetGroupFacts.children(entry as EventGroup), target, path):
+				return true
+	return false
+
+
+# ── Names inside quotes ───────────────────────────────────────────────────────────────────
+
+
+## What the argument under the caret wants, as one of "action", "animation", "group", "scene",
+## "path" - or "" when it wants no particular name. Decided by what the engine's own reference says
+## the argument is (its declared name and the class that owns the call), never by guessing from the
+## text: a string inside print() or get_node() offers nothing.
+static func quoted_kind(sheet: EventSheetResource, call: Dictionary, locals: Dictionary) -> String:
+	if call.is_empty() or not bool(call.get("direct", false)):
+		return ""
+	var callee: String = str(call["callee"])
+	var arg_index: int = int(call["arg"])
+	var receiver_text: String = str(call["receiver"])
+	var receiver_type: String = ""
+	if not receiver_text.is_empty():
+		var typed: Dictionary = EventSheetExpressionWalk.resolve(receiver_text, sheet, locals)
+		if not bool(typed.get("known", false)):
+			return ""
+		receiver_type = EventSheetMemberCatalog.base_of(str(typed["type"]))
+	elif callee in ["load", "preload"] and arg_index == 0:
+		return "path"
+	var info: Dictionary = {}
+	if not receiver_text.is_empty():
+		info = EventSheetMemberCatalog.method_info(receiver_type, callee)
+	else:
+		info = EventSheetExpressionWalk.bare_signature(callee, sheet)
+	var args: Array = info.get("args", [])
+	if arg_index >= args.size():
+		return ""
+	var arg_name: String = str((args[arg_index] as Dictionary).get("n", ""))
+	var arg_type: String = str((args[arg_index] as Dictionary).get("t", ""))
+	if arg_type not in ["StringName", "String", "NodePath"]:
+		return ""
+	# Godot's own naming: an action argument is called `action` or ends in `_action`, and every name an
+	# Input call takes is an Input Map entry (get_axis's negative_x, get_vector's positive_y...).
+	if arg_name == "action" or arg_name.ends_with("_action") or (receiver_type == "Input" and arg_type == "StringName"):
+		return "action"
+	if arg_name == "group":
+		return "group"
+	if arg_name in ["name", "anim", "animation", "animation_name"] and _is_animated(receiver_type):
+		return "animation"
+	if arg_name == "path" and (callee == "change_scene_to_file" or receiver_type == "ResourceLoader"):
+		return "scene" if callee == "change_scene_to_file" else "path"
+	return ""
+
+
+## True when the class (or a script's base) is one that plays animations by name.
+static func _is_animated(type_text: String) -> bool:
+	var current: String = type_text
+	if current.begins_with(EventSheetMemberCatalog.SCRIPT_PREFIX):
+		current = str(load(SCRIPT_MEMBERS_PATH).of_script(current.trim_prefix(EventSheetMemberCatalog.SCRIPT_PREFIX)).get("base", ""))
+	while not current.is_empty():
+		if current in ["AnimatedSprite2D", "AnimatedSprite3D", "AnimationPlayer", "SpriteFrames"]:
+			return true
+		current = str(ClassDB.get_parent_class(current))
+	return false
+
+
+
+
+## The names a string literal's call wants, said without their quotes (the quote is typed).
+static func _quoted_entries(sheet: EventSheetResource, quoted: Dictionary, locals: Dictionary) -> Array[Dictionary]:
+	var call: Dictionary = quoted["call"]
+	var wanted: String = quoted_kind(sheet, call, locals)
+	if wanted.is_empty():
+		return [] as Array[Dictionary]
+	# Held like every other list: what a call wants is the same on every keystroke inside its quotes.
+	var scope: String = "project"
+	var key_text: String = wanted
+	if wanted == "animation":
+		scope = str(sheet.get_instance_id() if sheet != null else 0)
+		key_text = "animation:" + str(call["receiver"])
+	var key: String = "%s|quoted:%s" % [scope, key_text]
+	if _cache.has(key):
+		return _cache[key]
+	var entries: Array[Dictionary] = []
+	match wanted:
+		"action":
+			for entry: Dictionary in _pool(null, FIELD_INPUT_ACTION):
+				entries.append({"text": str(entry["text"]).trim_prefix("\"").trim_suffix("\""), "detail": str(entry.get("detail", "")),
+					"kind": KIND_ACTION, "type": str(entry.get("detail", "")), "desc": EventSheetL10n.translate("Input Map control.")})
+		"animation":
+			entries = _animation_names_of(sheet, call, locals)
+		"group":
+			entries = _code_aware_groups()
+		"scene", "path":
+			entries = _path_entries_for(wanted == "scene")
+	_cache[key] = entries
+	_cache_order.append(key)
+	while _cache_order.size() > CACHE_LIMIT:
+		_cache.erase(_cache_order.pop_front())
+	return entries
+
+
+## The animations the receiver of `play(` really has: its own SpriteFrames or AnimationPlayer
+## library, read off the node in the open scene. Without a node to read, the scene's animations.
+static func _animation_names_of(sheet: EventSheetResource, call: Dictionary, locals: Dictionary) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var receiver_text: String = str(call["receiver"])
+	var node: Node = null
+	if receiver_text.begins_with("$") or receiver_text.begins_with("%"):
+		var root: Node = _scene_root()
+		if root != null:
+			var path: String = receiver_text.substr(1).trim_prefix("\"").trim_suffix("\"")
+			node = root.get_node_or_null(NodePath(path if receiver_text.begins_with("$") else "%" + path))
+	if node != null:
+		var owner_name: String = str(node.name)
+		var frames: Variant = node.get("sprite_frames") if "sprite_frames" in node else null
+		if frames is SpriteFrames:
+			for clip: String in (frames as SpriteFrames).get_animation_names():
+				var count: int = (frames as SpriteFrames).get_frame_count(clip)
+				var loops: bool = (frames as SpriteFrames).get_animation_loop(clip)
+				entries.append({"text": clip, "kind": KIND_ANIMATION, "detail": owner_name,
+					"type": (EventSheetL10n.translate("%d frames, loops") if loops else EventSheetL10n.translate("%d frames")) % count,
+					"desc": EventSheetL10n.translate("%s's SpriteFrames.") % owner_name})
+			return entries
+		if node is AnimationPlayer:
+			for clip: String in (node as AnimationPlayer).get_animation_list():
+				var animation: Animation = (node as AnimationPlayer).get_animation(clip)
+				entries.append({"text": clip, "kind": KIND_ANIMATION, "detail": owner_name,
+					"type": EventSheetL10n.translate("%s s") % String.num(animation.length, 2),
+					"desc": EventSheetL10n.translate("%s's animations.") % owner_name})
+			return entries
+	for entry: Dictionary in _pool(sheet, FIELD_ANIMATION):
+		entries.append({"text": str(entry["text"]).trim_prefix("\"").trim_suffix("\""), "kind": KIND_ANIMATION,
+			"detail": str(entry.get("detail", "")), "type": "", "desc": str(entry.get("detail", ""))})
+	return entries
+
+
+## The scene's groups, and the groups only code adds, each saying where it was found.
+static func _code_aware_groups() -> Array[Dictionary]:
+	var key: String = "project|__code_groups"
+	var found_in_code: Dictionary = {}
+	if _cache.has(key):
+		found_in_code = _cache[key][0]
+	else:
+		found_in_code = _scan_code_groups()
+		_cache[key] = [found_in_code]
+		_cache_order.append(key)
+	var entries: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	var scene_root: Node = _scene_root()
+	for choice: Variant in ReadingDoors.params_dialog().group_choices(scene_root):
+		var group_name: String = str(choice).trim_prefix("\"").trim_suffix("\"")
+		seen[group_name] = true
+		var where: String = EventSheetL10n.translate("In the open scene.")
+		if found_in_code.has(group_name):
+			where = EventSheetL10n.translate("In the open scene, and add_to_group in %s.") % str(found_in_code[group_name])
+		entries.append({"text": group_name, "kind": KIND_GROUP, "detail": where,
+			"type": EventSheetParamFieldFactory.node_group_note(group_name, scene_root), "desc": where})
+	for group_name: Variant in found_in_code.keys():
+		if seen.has(str(group_name)):
+			continue
+		var from_file: String = EventSheetL10n.translate("add_to_group(\"%s\", true) in %s.") % [str(group_name), str(found_in_code[group_name])]
+		entries.append({"text": str(group_name), "kind": KIND_GROUP, "detail": from_file,
+			"type": EventSheetL10n.translate("code only"), "desc": from_file})
+	return entries
+
+
+## {group: first file that adds it} for every add_to_group("name") the project's scripts write.
+static func _scan_code_groups() -> Dictionary:
+	var found: Dictionary = {}
+	var pattern: RegEx = RegEx.create_from_string("add_to_group\\(\\s*[\"']([A-Za-z0-9][A-Za-z0-9_ .\\-]{0,47})[\"']")
+	for path: String in _project_files():
+		if not path.ends_with(".gd"):
+			continue
+		var text: String = FileAccess.get_file_as_string(path)
+		if text.length() > 200000 or not text.contains("add_to_group"):
+			continue
+		for hit: RegExMatch in pattern.search_all(text):
+			if not found.has(hit.get_string(1)):
+				found[hit.get_string(1)] = path.get_file()
+	return found
+
+
+## The project's files for a quoted path: scenes first, then everything else; `scenes_only` for a call
+## that changes scene. The type column says what the file is.
+static func _path_entries_for(scenes_only: bool) -> Array[Dictionary]:
+	var scenes: Dictionary = {}
+	for extension: String in ResourceLoader.get_recognized_extensions_for_type("PackedScene"):
+		scenes[extension.to_lower()] = true
+	var first: Array[Dictionary] = []
+	var rest: Array[Dictionary] = []
+	for path: String in _project_files():
+		var is_scene: bool = scenes.has(path.get_extension().to_lower())
+		if scenes_only and not is_scene:
+			continue
+		var entry: Dictionary = {"text": path, "kind": KIND_FILE, "detail": path.get_base_dir(),
+			"type": _file_type(path, is_scene), "desc": EventSheetL10n.translate("A scene file.") if is_scene else path.get_file()}
+		if is_scene:
+			first.append(entry)
+		else:
+			rest.append(entry)
+	return first + rest
+
+
+static func _file_type(path: String, is_scene: bool) -> String:
+	if is_scene:
+		return "PackedScene"
+	if Engine.is_editor_hint():
+		return str(EditorInterface.get_resource_filesystem().get_file_type(path))
+	return ""
 
 
 ## The flat expression vocabulary: the sheet's variables, its functions, its enums, the host
 ## class's own members, and the language's globals. Everything a reader can say in a value field
 ## without reaching through a dot first.
 static func _build_expression_entries(sheet: EventSheetResource) -> Array[Dictionary]:
-	var entries: Array[Dictionary] = _variable_entries(sheet)
+	# The locals are NOT here: they are the event's own and are added per ask (see expression_answer).
+	var entries: Array[Dictionary] = _variable_entries(sheet, false)
 	entries.append_array(_function_entries(sheet))
 	entries.append_array(_parameter_entries(sheet))
 	entries.append_array(_spawn_chip_entries(sheet))
 	entries.append_array(_enum_entries(sheet, ""))
 	if sheet != null and ClassDB.class_exists(sheet.host_class):
-		for info: Dictionary in ClassDB.class_get_property_list(sheet.host_class):
-			var property_name: String = str(info.get("name", ""))
-			if property_name.is_empty() or property_name.begins_with("_") or property_name.contains("/"):
-				continue
-			# A property list also carries the Inspector's own furniture - the category and group
-			# headings a class sorts its properties under ("Thread Group"). They are not members and
-			# completing one writes a name nothing has.
-			if int(info.get("usage", 0)) & (PROPERTY_USAGE_CATEGORY | PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
-				continue
-			entries.append({"text": property_name, "detail": "%s %s %s" % [sheet.host_class,
-				SEPARATOR, EventSheetL10n.translate("property")], "kind": KIND_MEMBER})
-		for info: Dictionary in ClassDB.class_get_method_list(sheet.host_class):
-			var method_name: String = str(info.get("name", ""))
-			if method_name.is_empty() or method_name.begins_with("_"):
-				continue
-			entries.append({"text": "%s()" % method_name, "detail": "%s %s %s" % [sheet.host_class,
-				SEPARATOR, EventSheetL10n.translate("method")], "kind": KIND_MEMBER})
+		# The host's own members, with their types, from the same catalog a dot reads. Marked so the
+		# event's locals can be slotted in just ahead of them.
+		for member: Dictionary in EventSheetMemberCatalog.members(sheet.host_class):
+			var hosted: Dictionary = member.duplicate()
+			hosted["group"] = "host"
+			entries.append(hosted)
+		for constant: Dictionary in EventSheetMemberCatalog.statics(sheet.host_class):
+			if str(constant.get("member_kind", "")) == "c":
+				var hosted_constant: Dictionary = constant.duplicate()
+				hosted_constant["group"] = "host"
+				entries.append(hosted_constant)
 	var global_hints: Dictionary = load(LINT_PATH).GDSCRIPT_GLOBAL_HINTS
 	for global_name: Variant in global_hints.keys():
 		entries.append({"text": "%s()" % str(global_name),
 			"detail": "%s %s %s" % [EventSheetL10n.translate("built-in"), SEPARATOR,
 				str(global_hints[global_name])],
 			"kind": KIND_BUILTIN})
+	return entries
+
+
+## The names the engine itself puts in scope everywhere: singletons (Input, Time...), the built-in
+## value types (Vector2, Color...) and the global enum values (KEY_SPACE, MOUSE_BUTTON_LEFT...). The
+## value types and enums come from the class reference, which is nothing until it has been built -
+## so this list is held only once it is complete, and rebuilt (cheaply) until then.
+static func _global_pool() -> Array[Dictionary]:
+	var key: String = "project|__globals"
+	if _cache.has(key):
+		return _cache[key]
+	var entries: Array[Dictionary] = []
+	var reference: GDScript = load("res://addons/eventsheet/ace/class_reference.gd")
+	for singleton: String in Engine.get_singleton_list():
+		entries.append({"text": singleton, "detail": EventSheetL10n.translate("Singleton"), "kind": KIND_CLASS,
+			"type": singleton, "lower": singleton.to_lower()})
+	var complete: bool = reference.ready()
+	for type_name: String in reference.builtin_names():
+		entries.append({"text": type_name, "detail": EventSheetL10n.translate("Built-in type"), "kind": KIND_CLASS,
+			"type": "", "lower": type_name.to_lower(), "member_kind": "t", "owner": type_name, "member": type_name, "engine": true, "builtin": true})
+	for enum_name: Variant in reference.global_enums().keys():
+		for value: Variant in reference.global_enums()[enum_name]:
+			var constant_name: String = str((value as Dictionary).get("n", ""))
+			entries.append({"text": constant_name, "detail": str(enum_name), "kind": KIND_CONSTANT,
+				"type": "%s = %d" % [enum_name, int((value as Dictionary).get("v", 0))], "lower": constant_name.to_lower(),
+				"member_kind": "c", "owner": "", "member": constant_name, "engine": true, "enum_value": true, "nofuzzy": true})
+	if complete:
+		_cache[key] = entries
+		_cache_order.append(key)
 	return entries
 
 
@@ -1134,7 +1683,7 @@ static func score_of(entry: Dictionary, query: String, allow_fuzzy: bool = true)
 		score = 250
 	elif str(entry.get("detail", "")).to_lower().contains(query):
 		score = 100
-	elif allow_fuzzy and query.length() >= FUZZY_FLOOR and ReadingDoors.picker_dialog().fuzzy_match(query, text):
+	elif allow_fuzzy and not entry.has("nofuzzy") and query.length() >= FUZZY_FLOOR and ReadingDoors.picker_dialog().fuzzy_match(query, text):
 		score = 50
 	if score > 0:
 		score -= mini(text.length(), 99)
@@ -1177,6 +1726,10 @@ static func invalidate(sheet: EventSheetResource) -> void:
 		if key.begins_with(prefix):
 			_cache.erase(key)
 			_cache_order.erase(key)
+	for table: Dictionary in [_symbol_cache, _scope_cache]:
+		for key: String in table.keys():
+			if key.begins_with(prefix):
+				table.erase(key)
 
 
 ## Drops what was built for a kind whose answer is a folder the GAME writes to while it runs, and
@@ -1201,6 +1754,9 @@ static func forget_live_folders(field_kind: String = FIELD_PATH) -> void:
 static func clear_cache() -> void:
 	_cache.clear()
 	_cache_order.clear()
+	_symbol_cache.clear()
+	_scope_cache.clear()
+	EventSheetMemberCatalog.clear_cache()
 
 
 ## Adds (or replaces) a source for one field kind. `source` is Callable(sheet, field_kind) and
