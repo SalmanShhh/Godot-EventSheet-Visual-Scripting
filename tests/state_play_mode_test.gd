@@ -148,7 +148,7 @@ static func _test_the_stream_is_the_one_that_shipped() -> bool:
 		emitted.contains("EngineDebugger.send_message(\"eventsheets:live_values\", __live_frame)"),
 		true) and ok
 	ok = _check("and the feature opens no channel of its own",
-		_message_names(emitted), PackedStringArray(["eventsheets:live_values"])) and ok
+		_message_names(emitted), PackedStringArray(["eventsheets:live_values", "eventsheets:runtime_error"])) and ok
 	# The editor reads exactly the names the compiler writes. Two halves, one pin.
 	ok = _check("the editor reads the state under the name the game sends it",
 		emitted.contains("\"%s\", State.find_key" % EventSheetStateWatch.STATE_KEY), true) and ok

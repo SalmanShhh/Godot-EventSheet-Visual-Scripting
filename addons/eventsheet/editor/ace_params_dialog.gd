@@ -3651,6 +3651,37 @@ func _first_invalid_expression() -> Control:
 	return null
 
 
+## Whether a value that does not compile as an expression of its own compiles where its verb writes it:
+## a test on the element a sibling field names (`func({element}): return {predicate}`), the statement a
+## body runs, a list between brackets, the name a lambda binds. `template` is the verb's template, `value`
+## goes in `param_id`'s slot and `values` holds the other fields: a slot that declares a name takes the
+## field's own word, because the value may use it, and every other slot takes a stand-in, so what is asked
+## about is this one value. Only ever a second chance: a value that compiles by itself never gets here.
+static func compiles_in_its_slot(template: String, param_id: String, value: String, values: Dictionary,
+		sheet: EventSheetResource, scope: PackedStringArray = []) -> bool:
+	if template.is_empty() or not template.contains("{%s}" % param_id):
+		return false
+	var code: String = template.replace("{target.}", "").replace("{%s}" % param_id, value)
+	var binder: RegEx = RegEx.create_from_string("func\\(([^)]*)\\)|for\\s+\\{(\\w+)\\}|var\\s+\\{(\\w+)\\}")
+	var slot: RegEx = RegEx.create_from_string("\\{(\\w+)\\}")
+	for declared: RegExMatch in binder.search_all(code):
+		for found: RegExMatch in slot.search_all(declared.get_string()):
+			var word: String = str(values.get(found.get_string(1), "")).strip_edges()
+			if not word.is_empty():
+				code = code.replace(found.get_string(), word)
+	code = slot.sub(code, "__slot__", true)
+	var lines: PackedStringArray = PackedStringArray(["var __slot__ = null"])
+	for scope_name: String in scope:
+		if scope_name.is_valid_identifier():
+			lines.append("var %s = null" % scope_name)
+	lines.append(code)
+	if bool(EventSheetGDScriptLint.lint("\n".join(lines), true, sheet).get("ok", false)):
+		return true
+	# A verb whose template is a value (a lambda cannot stand alone as a statement).
+	lines[lines.size() - 1] = "var __slot_value__ = %s" % code
+	return bool(EventSheetGDScriptLint.lint("\n".join(lines), true, sheet).get("ok", false))
+
+
 ## Whether a field's text, failing as an expression of its own, compiles where this window's verb writes it.
 func _compiles_in_its_slot(key: String, text: String, sheet: EventSheetResource) -> bool:
 	if _definition == null or key.is_empty():
@@ -3664,7 +3695,7 @@ func _compiles_in_its_slot(key: String, text: String, sheet: EventSheetResource)
 			values[str((parameter as Dictionary).get("id", ""))] = str((parameter as Dictionary).get("default_value", ""))
 	values.merge(_opening_values, true)
 	values.merge(_current_values(), true)
-	return EventSheetGDScriptLint.compiles_in_its_slot(str(_definition.metadata.get("codegen_template", "")),
+	return compiles_in_its_slot(str(_definition.metadata.get("codegen_template", "")),
 		key, text, values, sheet, _scope_names_for(sheet))
 
 
@@ -3762,7 +3793,7 @@ func blocking_problem_for(param: Dictionary, value: String, is_expression: bool,
 	if sheet == null or not _lint_context_healthy():
 		return {}
 	if not bool(EventSheetGDScriptLint.lint_expression(value, sheet, _scope_names_for(sheet)).get("ok", true)) \
-			and not EventSheetGDScriptLint.compiles_in_its_slot(template, str(param.get("id", "")), value, values,
+			and not compiles_in_its_slot(template, str(param.get("id", "")), value, values,
 				sheet, _scope_names_for(sheet)):
 		return {"message": EventSheetL10n.translate("This is not an expression this sheet can compile."),
 			"reason": EventSheetL10n.translate("this will not compile")}
