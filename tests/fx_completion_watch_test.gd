@@ -38,7 +38,7 @@ static func run() -> bool:
 			code_edit = child
 	all_passed = _check("expression field is a completion-capable CodeEdit", code_edit != null, true) and all_passed
 	if code_edit != null:
-		all_passed = _check("completion is enabled", code_edit.code_completion_enabled, true) and all_passed
+		all_passed = _check("completion is the shared popup, not the engine one", code_edit.has_meta("expression_assist") and not code_edit.code_completion_enabled, true) and all_passed
 		all_passed = _check("field value extracts as the expression", str(dialog._extract_value(code_edit)), "health + 10") and all_passed
 		code_edit.text = "health +\n10"
 		all_passed = _check("newlines never reach the value", str(dialog._extract_value(code_edit)).contains("\n"), false) and all_passed

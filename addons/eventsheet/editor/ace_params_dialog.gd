@@ -2915,8 +2915,9 @@ static func color_to_literal(value: Color) -> String:
 
 
 func _create_expression_field(key: String, default_value: Variant) -> Control:
-	var container: HBoxContainer = HBoxContainer.new()
-	container.add_theme_constant_override("separation", 4)
+	# The signature hint sits above the box, in the same column.
+	var container: VBoxContainer = VBoxContainer.new()
+	container.add_theme_constant_override("separation", 2)
 	# A single-line CodeEdit instead of a LineEdit: same look, but with completion popups
 	# for sheet variables/functions and host members (Ctrl+Space or just typing).
 	var edit: CodeEdit = CodeEdit.new()
@@ -2929,12 +2930,14 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	# LOGICAL line (wrap is visual only; the newline-strip below keeps Enter confirming the dialog).
 	edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	edit.gutters_draw_line_numbers = false
-	edit.code_completion_enabled = true
+	# The engine's own completion popup stays off: the list, its types and its one-line
+	# descriptions come from the one popup every completing field shares (EventSheetExpressionAssist).
+	edit.code_completion_enabled = false
 	EventSheetPopupUI.configure_code_editor(edit)  # auto-close brackets/quotes - prevent syntax errors at the source
 	# Expressions are plain GDScript - say so explicitly so event-sheet users learn there is no
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
-	edit.tooltip_text = "Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back)."
+	edit.tooltip_text = "Plain GDScript - anything valid in an expression works here. Typing a name, a dot or a quote completes it; Ctrl+Space opens the list anywhere. Alt+Enter grows the box for a long expression (and shrinks it back)."
 	# Alt+Enter toggles a TALL editing box (an event-sheet reflex): the same one logical expression, just
 	# room to read it - wrap already fills the height. Plain Enter keeps confirming the dialog.
 	edit.gui_input.connect(func(event: InputEvent) -> void:
@@ -2958,16 +2961,19 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 ", " ")
 			edit.set_caret_column(mini(caret, edit.text.length()))
 		_validate_expression_field(edit)
-		edit.request_code_completion()
 	)
-	edit.code_completion_requested.connect(func() -> void: _populate_expression_completion(edit))
-	edit.draw.connect(make_room_for_completion.bind(edit))
+	# The completion list and the signature hint, asked with the text before the caret and the event
+	# this field belongs to. The expressions dictionary's words are offered beside the sheet's names.
+	var assist: EventSheetExpressionAssist = EventSheetExpressionAssist.attach(edit, _lint_context_provider,
+		func() -> Resource: return _scope_event(), _expression_dictionary_entries)
+	edit.set_meta("expression_assist", assist)
 	# Registered BEFORE the first check, so what the check finds is filed under this parameter and the
 	# window opens already saying what is wrong with a value it was handed.
 	_fields[key] = edit
 	_validate_expression_field(edit)
 	# No button per box: the Expressions panel beside the form inserts into whichever box is focused,
 	# and an object row carries its own "click to choose" door into the node search.
+	container.add_child(assist.hint_box)
 	container.add_child(edit)
 	return container
 
@@ -3311,11 +3317,12 @@ var _field_notes: Dictionary = {}
 ## Why the compile check cannot run for the sheet this window opened on ("" when it can), read once per
 ## open. Said beside OK and under an expression field, so an unchecked field never looks checked.
 var _lint_paused_reason: String = ""
-## What a code box remembers while it has grown for its completion popup, and the popup's size (CodeEdit
-## shows at most seven suggestions at a time).
-const RESTING_HEIGHT_META := "completion_resting_height"
-const COMPLETION_LINES := 7
-const COMPLETION_MARGIN := 12
+## The event an expression field belongs to (see _scope_event), and the sheet it was found in.
+var _within_event: Resource = null
+var _within_event_sheet: EventSheetResource = null
+## The expressions dictionary's words for the completion list, built once per registry.
+var _expression_words: Array[Dictionary] = []
+var _expression_words_registry: Object = null
 ## The values this window opened with, for a field that checks itself before its neighbours are built.
 var _opening_values: Dictionary = {}
 
@@ -3441,84 +3448,35 @@ func _param_label(key: String) -> String:
 	return str(param.get("display_name", key)) if not param.is_empty() else key
 
 
-## Fills the completion popup from the one completion seam - the same names, in the same order,
-## that the sheet's inline value editor and every other completing field get. A code box keeps
-## Godot's OWN popup (a reader writing GDScript already knows its keys, and this editor should not
-## teach a second set for the same box); what the plugin contributes to it is the names.
-func _populate_expression_completion(edit: CodeEdit) -> void:
-	if not _lint_context_provider.is_valid():
-		return
-	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-	var before_caret: String = edit.get_line(edit.get_caret_line()).substr(0, edit.get_caret_column())
-	var columns: int = completion_columns(edit)
-	# The seam reads the caret's context itself: `host.` / a typed variable / `$Behavior.` offer
-	# that type's members, `$` and `%` the scene's two spellings, everything else the flat list.
-	for entry: Dictionary in EventSheetCompletions.for_field(sheet,
-			EventSheetCompletions.FIELD_EXPRESSION, before_caret):
-		var text: String = str(entry.get("text", ""))
-		edit.add_code_completion_option(
-			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))),
-			completion_label(text, str(entry.get("detail", "")), columns), text)
-	# The expressions dictionary, while typing (an event-sheet reflex): every EXPRESSION verb the
-	# picker window lists also autocompletes right in the field - display name shown, the code
-	# FRAGMENT inserted. These stay beside the seam rather than inside it because what they insert
-	# is a filled template built by the dictionary, not a name. Skipped in member (`x.`) position,
-	# where only that type's members apply.
-	if _registry != null and not text_before_dot(before_caret):
+## The event the field being edited belongs to, found once per window: its locals (and those of the events it
+## sits under) are names it can say, and no other event's are. Null for a field with no event around it
+## (a sheet-level row, a dialog opened on nothing).
+func _scope_event() -> Resource:
+	var sheet: EventSheetResource = _lint_sheet()
+	if sheet != _within_event_sheet:
+		_within_event_sheet = sheet
+		_within_event = EventSheetCompletions.event_holding(sheet, _context.get("selected_resource", null) as Resource)
+	return _within_event
+
+
+## The expressions dictionary, while typing (an event-sheet reflex): every EXPRESSION verb the picker
+## window lists also completes right in the field - the display name shown, the code FRAGMENT inserted.
+## These stay beside the seam rather than inside it because what they insert is a filled template built
+## by the dictionary, not a name. Built once per window. The plain-name list only: the completion popup
+## leaves them out after a dot and inside quotes, where only that position's names apply.
+func _expression_dictionary_entries() -> Array[Dictionary]:
+	if _registry == null:
+		return [] as Array[Dictionary]
+	if _expression_words_registry != _registry:
+		_expression_words_registry = _registry
+		_expression_words = []
 		for expression_definition: ACEDefinition in _registry.get_all_definitions():
 			if expression_definition.ace_type == ACEDefinition.ACEType.EXPRESSION:
-				edit.add_code_completion_option(
-					CodeEdit.KIND_FUNCTION,
-					completion_label(expression_definition.display_name,
-						first_sentence(expression_definition.description), columns),
-					_expression_picker._expression_template(expression_definition)
-				)
-	edit.update_code_completion_options(true)
-	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
-
-
-## A code box here is one line tall, and CodeEdit draws its completion popup inside its own rectangle,
-## which it clips: left alone, the popup is a sliver under the text and nobody can read a suggestion. The
-## box makes room while one is open (the popup's lines, under the line being typed) and goes back to its
-## height when it closes, so the list can be read and clicked as in the script editor.
-static func make_room_for_completion(edit: CodeEdit) -> void:
-	var open: bool = edit.get_code_completion_selected_index() >= 0
-	if open and not edit.has_meta(RESTING_HEIGHT_META):
-		edit.set_meta(RESTING_HEIGHT_META, edit.custom_minimum_size.y)
-		var lines: int = mini(edit.get_code_completion_options().size(), COMPLETION_LINES) + 1
-		edit.custom_minimum_size.y = maxf(edit.custom_minimum_size.y, float(lines * edit.get_line_height() + COMPLETION_MARGIN))
-		# As wide as the box and no wider: a popup wider than the box is pushed left out of it.
-		edit.add_theme_constant_override("completion_max_width", completion_columns(edit))
-	elif not open and edit.has_meta(RESTING_HEIGHT_META):
-		edit.custom_minimum_size.y = float(edit.get_meta(RESTING_HEIGHT_META))
-		edit.remove_meta(RESTING_HEIGHT_META)
-
-
-## How many characters a suggestion's line has room for in this box.
-static func completion_columns(edit: CodeEdit) -> int:
-	var column: float = edit.get_theme_font("font").get_string_size("M", HORIZONTAL_ALIGNMENT_LEFT, -1, edit.get_theme_font_size("font_size")).x
-	return maxi(int((edit.size.x - float(edit.get_line_height()) * 2.0) / maxf(column, 1.0)), 16)
-
-
-## What a code box's completion popup SHOWS for a suggestion: the name, then its type or description
-## after a gap - the same "name    detail" line the sheet's other completion popup draws. CodeEdit's
-## popup has no detail column; the insert text (the third argument at the call site) stays the bare
-## name, so what lands in the field is exact. The label still begins with the name, so Godot's
-## prefix filter keeps matching what is typed.
-##
-## `columns` is the room the line has. CodeEdit right-aligns a line too long for its popup, which cuts off
-## its START, so the words after the name are shortened to fit: the name always shows, whole.
-static func completion_label(text: String, detail: String, columns: int = 0) -> String:
-	var shown: String = detail.strip_edges()
-	if shown.is_empty():
-		return text
-	if columns > 0:
-		var room: int = columns - text.length() - 4
-		if room < 4:
-			return text
-		if shown.length() > room:
-			shown = shown.substr(0, room - 3).strip_edges() + "..."
-	return "%s    %s" % [text, shown]
+				_expression_words.append({"text": _expression_picker._expression_template(expression_definition),
+					"label": expression_definition.display_name, "lower": expression_definition.display_name.to_lower(),
+					"detail": first_sentence(expression_definition.description), "kind": EventSheetCompletions.KIND_FUNCTION,
+					"type": "", "desc": first_sentence(expression_definition.description)})
+	return _expression_words
 
 
 ## The first sentence of a description, capped, for the one line a popup row has room for.
@@ -3530,11 +3488,6 @@ static func first_sentence(description: String) -> String:
 	line = line.trim_suffix(".")
 	return line if line.length() <= 60 else line.substr(0, 57).strip_edges() + "..."
 
-
-## True when the caret sits in member position (`token.`), where only that type's members
-## should complete - the dictionary's global verbs would be noise there.
-static func text_before_dot(before_caret: String) -> bool:
-	return before_caret.ends_with(".")
 
 
 ## Extract the typed value from a registered field node.

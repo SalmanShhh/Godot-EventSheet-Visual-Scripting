@@ -21,7 +21,6 @@ static func run() -> bool:
 	all_passed = _locals_and_parameters_are_variables() and all_passed
 	all_passed = _values_are_judged_where_they_are_written() and all_passed
 	all_passed = _completion_keeps_its_detail() and all_passed
-	all_passed = _completion_label_keeps_the_name() and all_passed
 	return all_passed
 
 
@@ -268,22 +267,9 @@ static func _shared_gate_for_inline_editors() -> bool:
 	return passed
 
 
-## CodeEdit right-aligns a line too long for its popup, so a long detail would hide the name it describes.
-static func _completion_label_keeps_the_name() -> bool:
-	var long_detail: String = "a sentence far longer than any one line of the popup has any room for at all"
-	var fitted: String = ACEParamsDialog.completion_label("kills", long_detail, 30)
-	return SUPPORT.pins(NAME, [
-		["the line fits the room", fitted.length() <= 30, true],
-		["and starts with the whole name", fitted.begins_with("kills    a sentence"), true],
-		["a name with no room beside it stands alone", ACEParamsDialog.completion_label("a_very_long_variable_name_here", long_detail, 30), "a_very_long_variable_name_here"],
-		["a short detail is left whole", ACEParamsDialog.completion_label("kills", "int", 30), "kills    int"],
-	])
-
-
+## A dictionary word's description is cut to the one sentence the list's line has room for.
 static func _completion_keeps_its_detail() -> bool:
 	return SUPPORT.pins(NAME, [
-		["a detail follows the name after a gap", ACEParamsDialog.completion_label("hp", "int"), "hp    int"],
-		["no detail leaves the bare name", ACEParamsDialog.completion_label("hp", "  "), "hp"],
 		["the first sentence of a description", ACEParamsDialog.first_sentence("Rounds down. Then more."), "Rounds down"],
 		["a long description is cut", ACEParamsDialog.first_sentence("x".repeat(80)).length() <= 60, true],
 	])

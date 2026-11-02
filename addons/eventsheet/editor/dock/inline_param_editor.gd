@@ -30,6 +30,9 @@ var _field_edit_part: String = ""
 ## completing for. Typing in the sheet is never blinder than typing in the dialog showing the same
 ## parameter, which is what this one line buys.
 var _param_edit_completions: EventSheetCompletionPopup = null
+var _param_edit_assist: EventSheetExpressionAssist = null
+## The event the parameter being edited belongs to: its locals are names the value can say.
+var _param_edit_within: Resource = null
 ## The sentence under the value field when the dialog's own gate refuses what was typed. The text is
 ## kept so it can be fixed; Esc still closes the popup and cancels.
 var _param_edit_problem: Label = null
@@ -48,6 +51,12 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		var box: VBoxContainer = VBoxContainer.new()
 		box.add_theme_constant_override("separation", 2)
 		_param_edit_field = LineEdit.new()
+		# The same assist the parameters dialog's expression box has: the list, the signature hint above
+		# the field, Ctrl+Space, and every question asked with the text before the caret.
+		_param_edit_assist = EventSheetExpressionAssist.attach(_param_edit_field,
+			func() -> EventSheetResource: return _dock._current_sheet,
+			func() -> Resource: return _param_edit_within)
+		box.add_child(_param_edit_assist.hint_box)
 		_param_edit_field.custom_minimum_size = Vector2(180.0, 0.0)
 		_param_edit_field.text_submitted.connect(func(_t: String) -> void: _commit_inline_param_edit())
 		_param_edit_field.gui_input.connect(_on_param_field_input)
@@ -71,16 +80,14 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		# The one completion popup, on the sheet's own value editor - so typing in a row is never
 		# blinder than typing in the dialog that shows the same parameter. It asks the seam for
 		# whatever kind of field the parameter is, which is re-read per open just below.
-		_param_edit_completions = EventSheetCompletionPopup.attach_entries(_param_edit_field,
-			func(typed: String) -> Array[Dictionary]:
-				return EventSheetCompletions.for_field(_dock._current_sheet, _param_edit_kind, typed))
+		_param_edit_completions = _param_edit_assist.popup
 	_param_edit_target = ace
 	_param_edit_key = param_id
 	_param_edit_kind = field_kind_of(_dock._ace_registry, ace, param_id)
-	if _param_edit_completions != null:
-		# An expression keeps what is already written and swaps only the word under the caret; every
-		# other field holds one value, so accepting replaces it whole.
-		_param_edit_completions.replaces_word = _param_edit_kind == EventSheetCompletions.FIELD_EXPRESSION
+	_param_edit_within = EventSheetCompletions.event_holding(_dock._current_sheet, ace)
+	# An expression keeps what is already written and swaps only the word under the caret; every
+	# other field holds one value, so accepting replaces it whole.
+	_param_edit_assist.set_kind(_param_edit_kind)
 	_param_edit_field.text = current_text
 	_clear_param_edit_problem()
 	# Name the param being edited (placeholder when empty + tooltip always), so a blind popup never
