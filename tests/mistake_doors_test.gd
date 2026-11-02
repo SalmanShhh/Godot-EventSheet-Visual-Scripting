@@ -169,6 +169,12 @@ static func _while_doors() -> bool:
 	var rising: EventSheetDock = _dock("extends Node2D\n\nvar lives: int = 3\nvar score: int = 0\n\n\nfunc grind() -> void:\n\twhile lives < 9:\n\t\tscore += 1\n")
 	ok = SUPPORT.pins(TEST_NAME, [["a loop that climbs offers to add", _labels(ROWS._stamped(rising, "while-never-ends"))[0], "Add: Add 1 to lives"]]) and ok
 	rising.free()
+	ok = SUPPORT.pins(TEST_NAME, [
+		["a method of the node itself can change what the loop reads", EventSheetMistakeFindings.loop_cannot_end("position.x < 9.0", "move_and_slide()", {}, "CharacterBody2D"), false],
+		["so can any call under a host Godot does not know", EventSheetMistakeFindings.loop_cannot_end("lives > 0", "take_damage()", {}, "ProjectHero"), false],
+		["a language function cannot", EventSheetMistakeFindings.loop_cannot_end("lives > 0", "print(lives)", {}, "ProjectHero"), true],
+		["nor a call on another node", EventSheetMistakeFindings.loop_cannot_end("lives > 0", "$Score.hide()", {}, "Node2D"), true],
+	]) and ok
 	var flagged: EventSheetDock = _dock("extends Node2D\n\nvar running: bool = true\nvar score: int = 0\n\n\nfunc grind() -> void:\n\twhile running:\n\t\tscore += 1\n")
 	ok = SUPPORT.pins(TEST_NAME, [["a condition with no number has no change door", _labels(ROWS._stamped(flagged, "while-never-ends")), ["Stop after 1000 rounds", "Make it an If"]]]) and ok
 	flagged.free()

@@ -330,8 +330,11 @@ func _show_finding_row(finding: Dictionary) -> void:
 	var path: String = str(finding.get("path", ""))
 	if path.is_empty():
 		return
-	_dock._load_sheet_from_path(path)
+	# An open tab comes forward; a closed file opens on a worker, and the row exists when that has landed.
+	_dock.open_or_focus_sheet(path)
 	_doctor_window.hide()
+	while _dock._sheet_io.get("_open_job") != null:
+		await _dock.get_tree().process_frame
 	var sheet: EventSheetResource = _dock._current_sheet
 	var number: int = int(finding.get("event", 0))
 	if sheet == null or number <= 0:

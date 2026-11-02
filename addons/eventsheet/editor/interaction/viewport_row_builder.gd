@@ -21736,9 +21736,9 @@ func _note_colour_param(key: String, index: int, raw: String, shown: String, hin
 
 
 ## The colours in a row the shared grammar read, where no verb's template said which words are a parameter:
-## {text, marks}. Each value written as a Color reads as a template row would read it (the project's reading, a
-## folded value as written), and is found in the sentence by what the grammar made of it. A row a template
-## already noted, or one whose words do not hold the value, is left exactly as it is.
+## {text, marks}. Each value written as a Color reads as a template row would read it (the project's reading),
+## and is found in the sentence by what the grammar made of it. A row a template already noted, or one whose
+## words do not hold the value, is left exactly as it is.
 func _colours_in_reading(ace: Resource, text: String) -> Dictionary:
 	var answer: Dictionary = {"text": text, "marks": []}
 	# A template's own note holds only while its sentence is still the row's: the grammar's constant words may
@@ -21768,7 +21768,7 @@ func _colours_in_reading(ace: Resource, text: String) -> Dictionary:
 		if at < 0:
 			continue
 		var folded: bool = bool(info.get("folded", false))
-		var words: String = raw if folded else EventSheetColourValue.read_info(info, raw, EventSheetColourValue.project_reading(), true)
+		var words: String = EventSheetColourValue.read_info(info, raw, EventSheetColourValue.project_reading(), true)
 		written = written.substr(0, at) + words + written.substr(at + said.length())
 		cursor = at + words.length()
 		marks.append({"param": str(key), "raw": raw, "color": EventSheetColourValue.square_colour(info["color"]),

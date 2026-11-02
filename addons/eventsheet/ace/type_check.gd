@@ -635,6 +635,8 @@ static func _row_function(line: Dictionary, scope: Dictionary, typed: bool, node
 	if not EventSheetGDScriptLint.structural_syntax_error(code).is_empty() or code.strip_edges(false, true).ends_with(":"):
 		return ""
 	var masked: String = mask_strings(code)
+	if _says_nothing_about_kinds(masked):
+		return ""
 	var declared: Dictionary = {}
 	var body: PackedStringArray = PackedStringArray()
 	for found: RegExMatch in RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)").search_all(masked):
@@ -652,6 +654,16 @@ static func _row_function(line: Dictionary, scope: Dictionary, typed: bool, node
 		for code_line: String in code.split("\n"):
 			body.append("\t" + code_line)
 	return "\n".join(body)
+
+
+## A line this stand-in would fail for a reason that is not a kind of value: a local inferred from a value that
+## is untyped here, or one of a type declared only in the real script. Godot prints every failed line in the
+## Output, so one that can say nothing is not compiled at all.
+static func _says_nothing_about_kinds(masked: String) -> bool:
+	if masked.contains(":="):
+		return true
+	var typed_local: RegExMatch = RegEx.create_from_string("\\bvar\\s+[A-Za-z_][A-Za-z0-9_]*\\s*:\\s*([A-Za-z_][A-Za-z0-9_.\\[\\]]*)").search(masked)
+	return typed_local != null and not EventSheetGDScriptLint.is_known_type(typed_local.get_string(1), PackedStringArray(), EventSheetGDScriptLint._global_class_names())
 
 
 ## `$Path` in a line rewritten to a typed stand-in variable; `stand_ins` is told what to declare.
