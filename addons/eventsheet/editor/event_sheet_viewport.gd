@@ -2716,7 +2716,7 @@ func _frame_paint_signature(zoom: float, font: Font, font_size: int) -> int:
 	return hash([zoom, size.x, font.get_instance_id() if font != null else 0, font_size,
 		_editor_style.get_instance_id() if _editor_style != null else 0, _layout_style_signature,
 		EventSheetRetainedPaintItem.look_signature(_editor_style),
-		EventSheetActiveTheme.chrome().object_bar_warning_color,
+		EventSheetActiveTheme.chrome().object_bar_warning_color, EventSheetEditorIcons.generation(),
 		_renderer.show_event_numbers, _renderer.show_trigger_icons, _renderer.show_value_glyphs,
 		_renderer.show_variable_badges, _renderer.show_hover_add_links])
 

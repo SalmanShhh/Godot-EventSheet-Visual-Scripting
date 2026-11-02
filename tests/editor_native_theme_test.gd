@@ -117,7 +117,7 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	rows.append(["light reference: head bar, variable card and edge, group box and edge", [light.head_bar_color.to_html(false),
 		light.variable_card_fill_color.to_html(false), light.variable_card_border_color.to_html(false),
 		light.variable_group_fill_color.to_html(false), light.variable_group_border_color.to_html(false)],
-		["cfcfcf", "eef7e8", "b7cdaa", "c9c9c9", "a9a9a9"]])
+		["cfcfcf", "d2d2d2", "c4c4c4", "c9c9c9", "a9a9a9"]])
 	rows.append(["the comment band, dark and light: fill, words, an edge that is the fill", [
 		dark.comment_row_background_color.to_html(false), dark.comment_text_color.to_html(false),
 		dark.comment_border_color.to_html(false), light.comment_row_background_color.to_html(false),

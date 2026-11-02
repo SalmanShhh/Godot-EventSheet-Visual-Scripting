@@ -2,11 +2,21 @@
 
 ## [Unreleased]
 
+### Fixed: the Editor Native look on Godot's Light editor theme, and a live switch of the editor theme
+
+- The open sheet tab was a near-black block with unreadable words on a light editor: a tab bar that is not in the tree yet asks the engine's defaults rather than the editor's theme, and the defaults' selected tab is a 60% black plate. A light editor now waits for the bar to enter the tree and borrows the editor's own selected-tab box, keeping the accent edge. A dark editor is untouched.
+- Variable rows were pale green with a green edge in the light hand; they are now the design's neutral band (#d2d2d2 with a #c4c4c4 edge), as the dark hand's are neutral greys. A new test holds every fill of the light hand to be light, every fill of the dark hand to be dark, the variable cards to be neutral, and every ink-on-fill pair the sheet draws (sentences on both lanes, notes, group titles, badges, include and class cards) to a contrast ratio at four editor bases.
+- Switching the editor between dark and light with the workspace open left every icon the plugin had fetched in the old theme's colours (white strokes on pale buttons, a pale gear on every row). The editor's icon set is now noticed when it is replaced: the dock's buttons, fields, tabs, lists, trees and menus are re-pointed at the same names in the new set, the row builder's and the row marks' icon caches are dropped, the retained row paint's frame signature carries the icon generation so rows that did not otherwise change are painted again, and the strip and tab edge are restyled. Nothing needs a restart. Windows opened after the switch read the new theme as they are built; a dialog already open keeps what it was built with until it is reopened.
+
 ### Fixed: disabling the plugin left the whole workspace in memory
 
 - The workspace and the docs dock were taken out of the tree and then only queued for deletion, and the engine never collects a node that is queued while outside the tree. Every disable therefore kept about nine hundred orphan nodes alive (874 measured at the review), and each enable built another copy. They are now freed outright. Measured in the real editor over five disable/enable cycles with a sheet open: orphans 314 before enabling, 314 after every disable (it was +906 each time), nodes back to the same 21480.
 - The Parameters dialog and its two sub-helpers each held the other, so the trio was never released with the workspace; the dock now lets go of the loop as it is freed.
 - Still held after a disable: the project-wide vocabulary and icon caches (shared by design, they do not grow), and about nine small objects per cycle held by callables the engine keeps after the controls are gone.
+
+### Changed: the README pictures come in a light and a dark version
+
+- Every README picture now has a `-light` twin beside it under `docs/previews/` (the workspace, the Generated GDScript panel, the picker, the sheet rows, the type check, the autocomplete list and the colour squares), taken in the real editor on Godot's Light theme, and the README shows each through a `<picture>` element so GitHub serves the one that matches the reader's colour scheme. The dark pictures were retaken from the same script, so the pair has the same content.
 
 ### Changed: the README and doc pictures show the editor as it looks now
 

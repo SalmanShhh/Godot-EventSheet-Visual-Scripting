@@ -1849,6 +1849,7 @@ func _notification(what: int) -> void:
 		# (no-op when an explicit sheet theme is active) and re-skin the code panel.
 		# apply_zoom=false: never reset the user's manual zoom on a theme change.
 		_apply_editor_native_defaults()
+		_follow_editor_icons()
 		if _code_edit != null:
 			_code_panel_glue.apply_editor_code_settings(_code_edit)
 
@@ -5565,6 +5566,30 @@ func _apply_editor_native_defaults() -> void:
 	if reseats_on_editor_theme(_current_sheet, _theme_manager.get_active_theme_style()):
 		_viewport.set_sheet(_current_sheet)
 		_theme_manager._publish_active_style()
+
+
+## A switch between a dark and a light editor hands out new icon textures: every icon a control of
+## this dock was given earlier is the old theme's, so the controls are re-pointed at the same names
+## in the new set, the sheet's rows are built again (their icons were fetched at build time) and the
+## strip is restyled. Nothing happens when the icon set did not change.
+func _follow_editor_icons() -> void:
+	if not Engine.is_editor_hint():
+		return
+	EventSheetEditorIcons.retarget(self)
+	if not _icons_stale():
+		return
+	_icons_seen = EventSheetEditorIcons.generation()
+	if _viewport != null:
+		_viewport.rebuild_rows()
+	if _menu_bar != null:
+		_menu_bar.apply_theme_chrome()
+
+
+var _icons_seen: int = 0
+
+
+func _icons_stale() -> bool:
+	return EventSheetEditorIcons.generation() != _icons_seen
 
 
 ## Whether a switch of the editor's theme re-seats the open sheet: a sheet is open, and it either has

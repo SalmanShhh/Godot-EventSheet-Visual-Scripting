@@ -1699,6 +1699,17 @@ func _apply_tab_edge() -> void:
 	if edge.a <= 0.0:
 		return
 	var base: StyleBox = tab_bar.get_theme_stylebox("tab_selected")
+	# A bare TabBar in the editor carries no selected-tab box of its own, so Godot's built-in one (a
+	# 60% black plate) comes back - near-black behind dark text on a light editor. The editor's tab
+	# container does state one, in the editor's own greys; a light editor borrows it.
+	if EventSheetEditorThemeDeriver.is_light_base(EventSheetEditorThemeDeriver.running_editor_base()):
+		# A control outside the tree asks the engine's defaults, not the editor's theme: wait for it.
+		if not tab_bar.is_inside_tree():
+			if not tab_bar.tree_entered.is_connected(_apply_tab_edge):
+				tab_bar.tree_entered.connect(_apply_tab_edge, CONNECT_ONE_SHOT)
+			return
+		if tab_bar.has_theme_stylebox("tab_selected", "TabContainer"):
+			base = tab_bar.get_theme_stylebox("tab_selected", "TabContainer")
 	var edged: StyleBoxFlat = null
 	if base is StyleBoxFlat:
 		edged = (base as StyleBoxFlat).duplicate() as StyleBoxFlat

@@ -113,6 +113,8 @@ const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction
 const WORD_VARIABLE := "variable"
 
 static var _editor_icon_cache: Dictionary = {}
+## The editor icon set the cache above was filled from; a new theme's icons are new textures.
+static var _editor_icon_generation: int = 0
 ## The note cards' styleboxes, one per fill/border pair, so a note is not a new allocation per frame.
 static var _note_box_cache: Dictionary = {}
 
@@ -572,6 +574,10 @@ static func _units(rect: Rect2, length: float) -> float:
 static func _editor_icon(icon_name: String) -> Texture2D:
 	if icon_name.is_empty():
 		return null
+	var icon_generation: int = EventSheetEditorIcons.generation()
+	if icon_generation != _editor_icon_generation:
+		_editor_icon_cache.clear()
+		_editor_icon_generation = icon_generation
 	if _editor_icon_cache.has(icon_name):
 		return _editor_icon_cache[icon_name]
 	# Only a FOUND icon is kept: a miss before the editor theme exists must not stick for the session.

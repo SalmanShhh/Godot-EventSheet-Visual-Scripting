@@ -22080,6 +22080,9 @@ func _resolve_span_lane(span: SemanticSpan) -> String:
 # Cache: "provider::ace" → Texture2D or null. Spans are rebuilt often; icon resolution
 # (registry lookup + editor-theme/texture fetch) must not run per rebuild per span.
 var _ace_icon_cache: Dictionary = {}
+## The editor icon set the cache above was filled from: a switch of the editor's theme hands out new
+## textures, so a cache from the old set is dropped whole.
+var _ace_icon_generation: int = 0
 
 
 ## Icon shown before an ACE's object label in row cells (event sheets show the object's icon next
@@ -22089,6 +22092,10 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 	if not _viewport.show_object_icons:
 		return null  # user turned icons off; the cache stays warm for turning them back on
 	var cache_key: String = "%s::%s" % [provider_id, ace_id]
+	var icon_generation: int = EventSheetEditorIcons.generation()
+	if icon_generation != _ace_icon_generation:
+		_ace_icon_cache.clear()
+		_ace_icon_generation = icon_generation
 	if _ace_icon_cache.has(cache_key):
 		return _ace_icon_cache[cache_key]
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
