@@ -49,7 +49,7 @@ const CHECK_FOR_KIND: Dictionary = {
 ## only opened when its own text says it could earn one of the four findings.
 ##
 ## AND THE QUESTION IS ASKED PER FUNCTION, not per file. "Says add_child somewhere and says
-## _physics_process somewhere" describes half the scripts in a game and none of them any better than
+## _body_entered somewhere" describes half the scripts in a game and none of them any better than
 ## the others; what the rule is about is a parenting INSIDE that callback, so that is what the
 ## pre-read looks for - the two words in one function body. It is the same move the Multiplayer
 ## section makes by asking the importer's own question of each line before opening anything, and it
@@ -61,8 +61,7 @@ const PARENTING_WORD := "add_child("
 const FREEING_WORD := "queue_free"
 const MEMBER_FREEING_WORD := ".queue_free"
 const MAKING_WORD := ".instantiate()"
-const PHYSICS_WORDS: PackedStringArray = ["_physics_process", "_body_entered", "_body_exited",
-	"_area_entered", "_area_exited"]
+const PHYSICS_WORDS: PackedStringArray = ["_body_entered", "_body_exited", "_area_entered", "_area_exited"]
 const BOOKING_WORDS: PackedStringArray = ["create_timer(", "create_tween("]
 const CREATED_WORD := "_ready"
 

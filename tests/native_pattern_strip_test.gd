@@ -23,7 +23,7 @@ const SHOWCASE := "res://demo/showcase/platformer_shooter/platformer_shooter.gd"
 const NATIVE_THEME := "res://addons/eventsheet/themes/editor_native_theme.tres"
 const CLASSIC_THEME := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
 const PATTERN_WORDS := "⟡ Making an object and putting it somewhere"
-const SPAWN_FINDING := "This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead."
+const SPAWN_FINDING := "This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead."
 const OTHER_THEMES := [
 	"res://addons/eventsheet/themes/classic_sheet_theme.tres",
 	"res://addons/eventsheet/themes/mockup_slate_theme.tres",
@@ -177,18 +177,22 @@ static func _test_number_card() -> bool:
 	])
 
 
-## `unsafe_spawns` opens a copy of the showcase with its two parentings spelled the plain way, inside
-## the physics callback. The shipped showcase defers them and so holds no finding of its own; the
-## copy is the one mistake the strip must say first.
-static func _shooter(theme_path: String, help_strip: bool = true, unsafe_spawns: bool = false) -> EventSheetResource:
-	var source_path: String = SHOWCASE
-	if unsafe_spawns:
-		source_path = "user://native_pattern_strip_unsafe_shooter.gd"
-		var text: String = FileAccess.get_file_as_string(SHOWCASE).replace("call_deferred(\"add_child\", __spawn_shot)", "add_child(__spawn_shot)")
-		var written: FileAccess = FileAccess.open(source_path, FileAccess.WRITE)
-		written.store_string(text)
-		written.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(source_path)
+## `collision_spawn` moves the showcase's first physics-step spawn row onto a collision trigger. The
+## showcase adds its copies from the physics step, which Godot allows and the Doctor does not flag;
+## the moved row is the one mistake the strip must say first.
+static func _shooter(theme_path: String, help_strip: bool = true, collision_spawn: bool = false) -> EventSheetResource:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHOWCASE)
+	if collision_spawn:
+		for block: Resource in sheet.events:
+			var event_row: EventRow = block as EventRow
+			if event_row == null or event_row.trigger_id != "OnPhysicsProcess":
+				continue
+			var parents: bool = false
+			for action: Resource in event_row.actions:
+				parents = parents or str(action.get("ace_id")) == "AddChild"
+			if parents:
+				event_row.trigger_id = "OnBodyEntered"
+				break
 	if not theme_path.is_empty():
 		sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
 		sheet.editor_style.get_event_style().pattern_in_help_strip = help_strip

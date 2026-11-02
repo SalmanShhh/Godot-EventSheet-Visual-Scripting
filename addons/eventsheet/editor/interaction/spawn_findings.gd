@@ -3,9 +3,9 @@
 # Spawning is three lines of Godot and none of them is hard. What IS hard is the ways those three
 # lines go wrong, every one of which is silent in the editor and loud at run time:
 #
-#   added while physics is busy - a node parented inside a collision or physics callback. Godot
-#                                 refuses to add a child while the physics server is flushing its
-#                                 queries, and the error names a line nobody was looking at.
+#   added while physics is busy - a node parented inside a collision callback. A 2D physics body
+#                                 or area added while the physics server is flushing its queries
+#                                 makes Godot print an error that names a line nobody was looking at.
 #   a reference that may be gone - a node kept in a variable across frames and then touched without
 #                                 asking whether it is still there. Godot's "previously freed" error.
 #   the scene that spawns itself - a scene whose own sheet spawns that same scene, with nothing in
@@ -59,11 +59,15 @@ const FIX_REMOVE_LAST := "remove_last"
 ## anchor at the event - the same anchor the networking notes use for the same reason.
 const ANCHOR_EVENT := "event"
 
-## The triggers that run while the physics server is flushing. Godot's own answer for all of them is
-## the same - defer the parenting - so they are one list rather than four rules. `_physics_process`
-## is here beside the collision callbacks because the flush is what the tick IS.
+## The triggers that run while the physics server is flushing its queries: the four collision
+## callbacks. Godot's own answer for all of them is the same - defer the parenting - so they are one
+## list rather than four rules. `_physics_process` is NOT here: it runs outside the flush, and a node
+## added from it (physics body or not) goes in without a word. Checked against a real run: a 2D
+## body or area added from a collision callback prints "Can't change this state while flushing
+## queries" (the node is still added and works); a plain node there, any 3D node there, and anything
+## from `_physics_process` print nothing.
 const PHYSICS_TRIGGER_IDS: PackedStringArray = [
-	"OnPhysicsProcess", "OnBodyEntered", "OnBodyExited", "OnAreaEntered", "OnAreaExited",
+	"OnBodyEntered", "OnBodyExited", "OnAreaEntered", "OnAreaExited",
 ]
 
 ## The parenting call, as it is spelled in the line a row compiles to, and the spelling that is
@@ -221,9 +225,9 @@ static func deferred_spelling(line_text: String) -> String:
 # -- The four rules ------------------------------------------------------------------------------
 
 
-## A node parented inside a callback that runs while the physics server is flushing. Godot refuses
-## the add and prints an error naming a line the author was not looking at; the deferred spelling is
-## the whole of the answer, and it is one click away.
+## A node parented inside a callback that runs while the physics server is flushing. For a 2D body
+## or area Godot prints an error naming a line the author was not looking at (the node is still
+## added); the deferred spelling is the whole of the answer, and it is one click away.
 static func _added_during_physics(rows: Array[Dictionary], found: Array[Dictionary]) -> void:
 	var seen: Dictionary = {}
 	for context: Dictionary in rows:
@@ -247,7 +251,7 @@ static func _added_during_physics(rows: Array[Dictionary], found: Array[Dictiona
 		# than none - the sentence still says exactly what to reach for.
 		var verbatim: bool = context.get("row") is RawCodeRow
 		found.append(_finding(KIND_ADDED_DURING_PHYSICS, "warning", event_row, subject,
-			EventSheetL10n.translate("This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead."),
+			EventSheetL10n.translate("This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead."),
 			FIX_DEFER_THE_ADD if verbatim or not twin.is_empty() else "",
 			EventSheetL10n.translate("Add it on the next idle moment") if verbatim \
 				else EventSheetL10n.translate("Use the safe spawn row"),

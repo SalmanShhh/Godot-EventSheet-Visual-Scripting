@@ -688,13 +688,13 @@ func _build_starfall() -> bool:
 	clamp_row.actions.append(_raw("$Ship.position = Vector2(clampf($Ship.position.x, 40.0, 1112.0), $Ship.position.y)"))
 	sheet.events.append(clamp_row)
 
-	# Spawn a star every 2s while playing (parented on the next idle moment: the physics step refuses an add).
+	# Spawn a star every 2s while playing.
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnPhysicsProcess"
 	spawn.conditions.append(_condition("Core", "CompareVar", "{var_name} {op} {value}", {"var_name": "state", "op": "==", "value": "State.PLAYING"}))
 	spawn.conditions.append(_every("spawn_sf", "2.0"))
 	spawn.actions.append(_action("Core", "SpawnSceneAt",
-		"var __spawn_star = load(\"res://demo/showcase/starfall/star.tscn\").instantiate()\n__spawn_star.position = Vector2(randf_range(60.0, 1100.0), -20.0)\n__spawn_star.rotation_degrees = 90.0\ncall_deferred(\"add_child\", __spawn_star)", {}))
+		"var __spawn_star = load(\"res://demo/showcase/starfall/star.tscn\").instantiate()\n__spawn_star.position = Vector2(randf_range(60.0, 1100.0), -20.0)\n__spawn_star.rotation_degrees = 90.0\nadd_child(__spawn_star)", {}))
 	sheet.events.append(spawn)
 
 	# Score / cull via a GROUP pick-filter (for-each star past the catch line).
@@ -1185,7 +1185,7 @@ func _build_platformer_shooter() -> bool:
 	fire.conditions.append(_condition("Core", "IsActionPressed", "Input.is_action_pressed(&{action})", {"action": "\"ui_accept\""}))
 	fire.conditions.append(_condition("WeaponKit", "method:can_fire", "{target}.can_fire()", {"target": "$Player/WeaponKit"}))
 	fire.actions.append(_action("WeaponKit", "method:fire", "{target}.fire()", {"target": "$Player/WeaponKit"}))
-	fire.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\ncall_deferred(\"add_child\", __spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/platformer_shooter/shot.tscn\"", "position": "$Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)", "rotation": "0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0", "group": "\"shots\""}))
+	fire.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/platformer_shooter/shot.tscn\"", "position": "$Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)", "rotation": "0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0", "group": "\"shots\""}))
 	sheet.events.append(fire)
 
 	# Keep the player on screen.
@@ -1198,7 +1198,7 @@ func _build_platformer_shooter() -> bool:
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnPhysicsProcess"
 	spawn.conditions.append(_every("ps_spawn", "1.5"))
-	spawn.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\ncall_deferred(\"add_child\", __spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/platformer_shooter/target.tscn\"", "position": "Vector2(1240.0, randf_range(120.0, 540.0))", "rotation": "180.0", "group": "\"targets\""}))
+	spawn.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/platformer_shooter/target.tscn\"", "position": "Vector2(1240.0, randf_range(120.0, 540.0))", "rotation": "180.0", "group": "\"targets\""}))
 	sheet.events.append(spawn)
 
 	# Hit detection (shots x targets) + off-screen culling.
@@ -2831,18 +2831,7 @@ func _build_draw_lab() -> bool:
 		"paste_timer -= delta",
 		"if paste_timer <= 0.0 and $Comet.has_node(\"Icon\"):",
 		"\tpaste_timer = 0.12",
-		"\t$PaintLayer/Paint.paste_node($Comet/Icon)"
-	]))
-	tick.actions.append(tick_body)
-	sheet.events.append(tick)
-
-	# The one-time bake runs in the idle step, not the physics step: it adds nodes to the tree, and the
-	# physics server refuses an add while it is flushing queries.
-	var bake_row: EventRow = EventRow.new()
-	bake_row.trigger_provider_id = "Core"
-	bake_row.trigger_id = "OnProcess"
-	var bake_body: RawCodeRow = RawCodeRow.new()
-	bake_body.code = "\n".join(PackedStringArray([
+		"\t$PaintLayer/Paint.paste_node($Comet/Icon)",
 		"# Paste Layer In Box (once, at load): scatter a gem LAYER, bake every gem inside the box onto the",
 		"# persistent canvas, then free the originals - one texture instead of N sprites. Done on the first",
 		"# live tick (an on-ready bake would buffer before the canvas surface exists).",
@@ -2859,8 +2848,8 @@ func _build_draw_lab() -> bool:
 		"\t$DecorLayer/Decor.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)",
 		"\tgems.queue_free()"
 	]))
-	bake_row.actions.append(bake_body)
-	sheet.events.append(bake_row)
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
 
 	# The paint trail: a persistent splat under the Player, ten times a second - the
 	# accumulate-until-cleared half of the canvas story.

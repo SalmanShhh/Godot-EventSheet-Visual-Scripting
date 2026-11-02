@@ -21,6 +21,11 @@
 ### Fixed: a drag no longer relays out every visible row on each move
 
 - The layout cache key carried the whole drag signature (target row, drop mode, ACE target lane and slot) in EVERY row's key, so each change of the drop target missed the cache for every visible row. Only the row the drop would land on and the row an ACE drop would land in read the drag state, so only those two carry it now; every other row's key holds just whether a drag is live. Measured in the real editor on the boomer_level showcase (32 rows), 240 drag frames: layout misses 1,215 -> 254. Pinned by `layout_drag_key_test`.
+
+### Fixed: the Doctor no longer warns about adding a node from `_physics_process`
+
+- The spawning check "adds a node to the tree while the physics server is busy" also fired on rows under On Physics Process (it filed Starfall, Platformer Shooter and Draw Lab). A real run shows Godot adds a body, an area or a plain node from `_physics_process` without a word, so that trigger is no longer checked. The collision callbacks (body and area entered and exited) still are: there a 2D body or area added makes Godot print "Can't change this state while flushing queries" (the node is still added and works), while a plain node or any 3D node prints nothing. The sentence now says exactly that instead of claiming Godot refuses the add, and has fresh translations in all nine files. The three showcases are back to their plain, readable spawn rows.
+
 ### Fixed: a sheet whose compile check cannot run no longer paints every expression red
 
 - When a sheet variable shadows a member of the host class, the compile check cannot run; the parameter window used to colour every expression field red and say "fix X first" for the probe's fault. It now leaves the fields alone and says "compile check paused" beside Done (the reason on hover). A save that finds both an engine error and compiler warnings keeps the warning count on the status line.
@@ -71,10 +76,6 @@
 - The welcome window's tour, preferences and docs buttons named the public API class, which compiled the picker, the parameters dialog and the whole Doctor (about 20,000 lines) on a project's first open. They reach it by path now.
 - Findings: the scripts loaded by the end of a first open fall from 444 to 406 (186,000 to 178,000 lines) in a bare process, and from 479 to 442 in the real editor. Wall time moved less than the machine's noise (small sheet median 21.9 s -> 21.4 s), because the other 94% of the compiled code is called during the open.
 - `tests/cold_boot_probe.gd` now keeps these scripts, and everything the welcome window would pull in, out of the loaded set.
-
-### Fixed: three showcases no longer add nodes inside the physics step
-
-- The Project Doctor filed "adds a node to the tree while the physics server is busy" against Draw Lab, Platformer Shooter (two rows) and Starfall. Starfall's star spawner and Platformer Shooter's shot and target spawners now parent the copy with `call_deferred("add_child", ...)`, the spelling the Doctor's own repair writes; Draw Lab's one-time gem bake moved from its physics row into an idle (`_process`) row, since it builds a layer of nodes that the bake then needs in the tree. The scenes behave as before in play. `spawning_findings_test` now sweeps every shipped showcase script and fails on any such finding.
 
 ### Fixed: an Else row's "neither of N" note stayed blank until the row was scrolled to
 

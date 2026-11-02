@@ -5355,7 +5355,7 @@ pooled as %s,以 %s 池化
 browse the scene,查看场景
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.",这一项由表在运行时算出的表达式指定，因此没有文件可以显示。
 %s - shown in the FileSystem dock.,%s - 已在文件系统面板中显示。
-"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.",这会在物理服务器忙碌时把节点加入场景树，Godot 会拒绝。请改在下一个空闲时刻添加。
+"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.",这会在碰撞回调中把节点加入场景树。在那里添加的 2D 物理体或区域会让 Godot 在物理服务器忙碌时输出错误。请改在下一个空闲时刻添加。
 Add it on the next idle moment,在下一个空闲时刻添加
 Use the safe spawn row,使用安全的生成行
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.",%s 会跨帧保留，此刻可能已被别处销毁。使用它之前先问一句它是否还在。

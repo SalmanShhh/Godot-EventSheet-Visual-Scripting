@@ -957,10 +957,11 @@ never reads as a clean bill of health. **How many is a count, not a stopwatch**:
 audited on a laptop and on a build server reports the same findings, because a report that changes
 without the project changing is not one you can act on.
 
-**A node added while physics is busy.** Godot refuses to add a child while the physics server is
-flushing its queries, which is most of what a collision callback is, and the error names a line
-nobody was looking at. Any parenting inside `_physics_process`, a body callback or an area callback
-earns the note. One click respells it: a verbatim line becomes `call_deferred("add_child", …)` in
+**A node added while physics is busy.** A 2D physics body or area added while the physics server is
+flushing its queries, which is most of what a collision callback is, makes Godot print an error
+that names a line nobody was looking at (the node is still added). Any parenting inside a body
+callback or an area callback earns the note; `_physics_process` does not, because the tick runs
+outside the flush and Godot adds a node there without a word. One click respells it: a verbatim line becomes `call_deferred("add_child", …)` in
 place, and a Spawn A Copy row is swapped for Spawn A Copy Safely, which takes the same parameters.
 The status line shows the line before and the line after, and the whole thing is one undo step.
 

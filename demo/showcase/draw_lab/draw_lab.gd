@@ -44,9 +44,6 @@ func _physics_process(delta: float) -> void:
 	if paste_timer <= 0.0 and $Comet.has_node("Icon"):
 		paste_timer = 0.12
 		$PaintLayer/Paint.paste_node($Comet/Icon)
-
-
-func _process(delta: float) -> void:
 	# Paste Layer In Box (once, at load): scatter a gem LAYER, bake every gem inside the box onto the
 	# persistent canvas, then free the originals - one texture instead of N sprites. Done on the first
 	# live tick (an on-ready bake would buffer before the canvas surface exists).
@@ -62,6 +59,9 @@ func _process(delta: float) -> void:
 			gem.global_position = gem_spot
 		$DecorLayer/Decor.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)
 		gems.queue_free()
+
+
+func _process(delta: float) -> void:
 	__every_paint += delta
 	if __every_paint >= maxf(0.1, 0.001):
 		__every_paint = fmod(__every_paint, maxf(0.1, 0.001))

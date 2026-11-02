@@ -38,7 +38,6 @@ static func run() -> bool:
 	passed = _test_the_strip_reads_the_stamp() and passed
 	passed = _test_the_doctor_files_each_kind() and passed
 	passed = _test_the_doctor_files_a_real_finding() and passed
-	passed = _test_shipped_showcases_add_nothing_during_physics() and passed
 	return passed
 
 
@@ -161,9 +160,9 @@ static func _test_added_during_physics() -> bool:
 	var found: Array[Dictionary] = EventSheetSpawnFindings.findings(bad)
 	passed = _check("a naked add_child in a collision callback is found",
 		_kinds(found), PackedStringArray([EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS])) and passed
-	passed = _check("and says why Godot refuses it",
+	passed = _check("and says what Godot does about it",
 		_message_of(found, EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS),
-		"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.") and passed
+		"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.") and passed
 	passed = _check("with the one-click respelling beside it",
 		_fix_of(found, EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS),
 		EventSheetSpawnFindings.FIX_DEFER_THE_ADD) and passed
@@ -176,6 +175,17 @@ static func _test_added_during_physics() -> bool:
 		[_raw("call_deferred(\"add_child\", Bullet.instantiate())")]))
 	passed = _check("a line that already defers the add is not reported",
 		_kinds(EventSheetSpawnFindings.findings(deferred)), PackedStringArray()) and passed
+	# The physics TICK is not a flush: a real run adds bodies and areas from it without a word.
+	var ticking: EventSheetResource = _sheet()
+	ticking.events.append(_event("OnPhysicsProcess", [_raw("add_child(Bullet.instantiate())")]))
+	passed = _check("a naked add_child in the physics tick is not reported",
+		_kinds(EventSheetSpawnFindings.findings(ticking)), PackedStringArray()) and passed
+	for trigger_id: String in ["OnBodyExited", "OnAreaEntered", "OnAreaExited"]:
+		var in_callback: EventSheetResource = _sheet()
+		in_callback.events.append(_event(trigger_id, [_raw("add_child(Bullet.instantiate())")]))
+		passed = _check("a naked add_child on %s is found" % trigger_id,
+			_kinds(EventSheetSpawnFindings.findings(in_callback)),
+			PackedStringArray([EventSheetSpawnFindings.KIND_ADDED_DURING_PHYSICS])) and passed
 	# Nor is the same line anywhere the physics server is not flushing.
 	var elsewhere: EventSheetResource = _sheet()
 	elsewhere.events.append(_event("OnReady", [_raw("add_child(Bullet.instantiate())")]))
@@ -468,7 +478,7 @@ static func _test_the_strip_reads_the_stamp() -> bool:
 	dock._update_row_help_strip(stamped)
 	passed = _check("selecting it puts the finding's sentence on the strip",
 		dock._row_help_label.text,
-		"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.") and passed
+		"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.") and passed
 	passed = _check("and shows it", dock._row_help_label.visible, true) and passed
 	passed = _check("with the door's own label on the button",
 		dock._row_help_button.text, "Add it on the next idle moment") and passed
@@ -500,12 +510,12 @@ static func _test_the_doctor_files_each_kind() -> bool:
 	# THE PRE-READ, which is what decides whether a script is opened at all. Asked per FUNCTION, so
 	# the two words a rule needs have to be in ONE body: a file that parents somewhere and has a
 	# physics callback somewhere else is not a candidate, and a file that does both in one is.
-	passed = _check("a parenting inside a physics callback is worth opening",
+	passed = _check("a parenting inside a collision callback is worth opening",
 		EventSheetSpawningDoctor.says_enough(
-			"func _physics_process(delta: float) -> void:\n\tadd_child(Bullet.instantiate())\n"), true) and passed
+			"func _on_body_entered(body: Node) -> void:\n\tadd_child(Bullet.instantiate())\n"), true) and passed
 	passed = _check("the same two words in different functions are not",
 		EventSheetSpawningDoctor.says_enough(
-			"func _physics_process(delta: float) -> void:\n\tposition.x += 1.0\n\n\nfunc build() -> void:\n\tadd_child(Label.new())\n"),
+			"func _on_body_entered(body: Node) -> void:\n\tposition.x += 1.0\n\n\nfunc build() -> void:\n\tadd_child(Label.new())\n"),
 		false) and passed
 	passed = _check("and a file that says neither is never opened",
 		EventSheetSpawningDoctor.says_enough("func _process(delta: float) -> void:\n\tpass\n"),
@@ -525,7 +535,7 @@ static func _test_the_doctor_files_each_kind() -> bool:
 	# broken by path so two audits of an unchanged project read the same.
 	passed = _check("a script that could earn two findings outweighs one that could earn one",
 		EventSheetSpawningDoctor.evidence(
-			"func _physics_process(delta: float) -> void:\n\tadd_child(Bullet.instantiate())\n\tget_tree().create_timer(1.0)\n\tfoe.queue_free()\n")
+			"func _on_body_entered(body: Node) -> void:\n\tadd_child(Bullet.instantiate())\n\tget_tree().create_timer(1.0)\n\tfoe.queue_free()\n")
 			> EventSheetSpawningDoctor.evidence("var boss: Node2D = null\n\n\nfunc go() -> void:\n\tboss.queue_free()\n"),
 		true) and passed
 
@@ -655,42 +665,21 @@ static func _test_the_doctor_files_a_real_finding() -> bool:
 		str(filed[1].get("check", "")), EventSheetSpawningDoctor.CHECK_PHYSICS) and passed
 	passed = _check("and names the file in front of the sentence a reader acts on",
 		str(filed[1].get("message", "")),
-		"eventforge_spawning_doctor_fixture.gd This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.") and passed
+		"eventforge_spawning_doctor_fixture.gd This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.") and passed
 	passed = _check("and carries the name the row gave the copy",
 		str(filed[1].get("subject", "")), "foe") and passed
 	passed = _check("and the file a double-click would open", str(filed[1].get("path", "")), path) and passed
 	return passed
 
 
-## The shipped showcases are scripts a reader opens first, so none of them may hold the finding the
-## Doctor files against everyone else: a node added to the tree inside a physics callback.
-static func _test_shipped_showcases_add_nothing_during_physics() -> bool:
-	var scripts: PackedStringArray = PackedStringArray()
-	var root: DirAccess = DirAccess.open("res://demo/showcase")
-	if root == null:
-		return _check("the showcase folder can be read", false, true)
-	for folder: String in root.get_directories():
-		var inside: DirAccess = DirAccess.open("res://demo/showcase/%s" % folder)
-		if inside == null:
-			continue
-		for file_name: String in inside.get_files():
-			if file_name.ends_with(".gd"):
-				scripts.append("res://demo/showcase/%s/%s" % [folder, file_name])
-	var offenders: PackedStringArray = PackedStringArray()
-	for filed: Dictionary in EventSheetSpawningDoctor.report(scripts):
-		if str(filed.get("check", "")) == EventSheetSpawningDoctor.CHECK_PHYSICS:
-			offenders.append(str(filed.get("path", "")))
-	return _check("no shipped showcase adds a node while the physics server is busy",
-		offenders, PackedStringArray())
-
-
-## The fixture: a parenting inside the physics callback, which is the rule the pre-read admits on two
+## The fixture: a parenting inside a collision callback, which is the rule the pre-read admits on two
 ## words in one function body and the rules then confirm by reading the rows.
 ##
 ## WRITTEN AS ESCAPED LINES rather than as a `"""` block ON PURPOSE. This file is in the corpus the
-## Doctor sweeps over its own repository, and a block quote would put a real `func _physics_process`
+## Doctor sweeps over its own repository, and a block quote would put a real `func _on_body_entered`
 ## with a real `add_child` at column 0 inside it - which this very section would then open, lift and
 ## report as a finding against the test that wrote it.
-const PHYSICS_SPAWN_SOURCE: String = "extends Node2D\n\n\nfunc _physics_process(_delta: float) -> void:\n"\
+const PHYSICS_SPAWN_SOURCE: String = "extends Area2D\n\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\n\n"\
+	+ "func _on_body_entered(_body: Node2D) -> void:\n"\
 	+ "\tvar foe = load(\"res://enemy.tscn\").instantiate()\n"\
 	+ "\tadd_child(foe)\n\tfoe.global_position = global_position\n"

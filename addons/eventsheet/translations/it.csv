@@ -5355,7 +5355,7 @@ pooled as %s,in pool come %s
 browse the scene,mostra la scena
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.","Questa è nominata da un'espressione che il foglio calcola mentre gira, quindi non c'è nessun file da mostrare."
 %s - shown in the FileSystem dock.,%s - mostrato nel pannello FileSystem.
-"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.","Questo aggiunge un nodo all'albero mentre il server di fisica è occupato, e Godot lo rifiuta. Aggiungilo al prossimo momento libero."
+"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.",Questo aggiunge un nodo all'albero dentro un callback di collisione. Un corpo o un'area di fisica 2D aggiunto lì fa stampare errori a Godot mentre il server di fisica è occupato. Aggiungilo al prossimo momento libero.
 Add it on the next idle moment,Aggiungilo al prossimo momento libero
 Use the safe spawn row,Usa la riga di spawn sicura
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.","%s viene conservato tra un frame e l'altro, e qualsiasi cosa potrebbe averlo già distrutto. Chiedi se è ancora qui prima di usarlo."
