@@ -12188,12 +12188,17 @@ static func _collect_code_declared_names(written: String, names: Dictionary) -> 
 	for line: String in written.split("\n"):
 		bare_lines.append(_code_words_of(line))
 	var code: String = "\n".join(bare_lines)
-	var declared := RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)")
-	for found: RegExMatch in declared.search_all(code):
+	if _declared_name_regex == null:
+		_declared_name_regex = RegEx.create_from_string("\\b(?:var|for)\\s+([A-Za-z_][A-Za-z0-9_]*)")
+		_inline_func_regex = RegEx.create_from_string("\\bfunc\\s*(?:[A-Za-z_][A-Za-z0-9_]*\\s*)?\\(([^)]*)\\)")
+	for found: RegExMatch in _declared_name_regex.search_all(code):
 		names[found.get_string(1)] = true
-	var inline := RegEx.create_from_string("\\bfunc\\s*(?:[A-Za-z_][A-Za-z0-9_]*\\s*)?\\(([^)]*)\\)")
-	for found: RegExMatch in inline.search_all(code):
+	for found: RegExMatch in _inline_func_regex.search_all(code):
 		_collect_parameter_names(found.get_string(1).split(","), names)
+
+
+static var _declared_name_regex: RegEx = null
+static var _inline_func_regex: RegEx = null
 
 
 ## One line with the insides of its strings blanked and its `#` comment cut off: what is left is code.
@@ -18398,7 +18403,12 @@ func _format_action_descriptor(action: ACEAction) -> String:
 ## run of plain letters, a space, and then no operator, so `velocity = 3` and `apply_impulse(...)`
 ## are names and stay as written.
 static func _opens_on_sentence_word(text: String) -> bool:
-	return RegEx.create_from_string("^[a-z]+ (?![=+\\-*/<>!%&|^])").search(text) != null
+	if _sentence_word_regex == null:
+		_sentence_word_regex = RegEx.create_from_string("^[a-z]+ (?![=+\\-*/<>!%&|^])")
+	return _sentence_word_regex.search(text) != null
+
+
+static var _sentence_word_regex: RegEx = null
 
 
 ## The task notes an action lane carries, as {"consumed": {index: true}, "notes": {index: text}}.

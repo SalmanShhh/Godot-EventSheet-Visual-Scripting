@@ -5078,6 +5078,33 @@ static func is_simple_target(text: String) -> bool:
 ## The index of the first `operator` at bracket/quote depth 0, or -1. A plain find() would split on
 ## the ` = ` inside `x = "a = b"` and produce a confidently wrong sentence.
 static func top_level_index(text: String, operator: String) -> int:
+	# The two answers the walk below can only give by visiting every character, found at the speed
+	# of a string search instead: an operator the text does not hold at all is nowhere, and when
+	# nothing before the first one is a quote or a bracket there is no depth and no string to skip
+	# yet, so the first one IS the first top-level one. (Every whole-file reading asks this of every
+	# line.) An operator made of quotes or brackets, or an empty one, keeps the walk.
+	if operator.is_empty() or _has_quote_or_bracket(operator):
+		return _top_level_index_walk(text, operator)
+	var first_at: int = text.find(operator)
+	if first_at < 0:
+		return -1
+	if first_at == 0 or not _has_quote_or_bracket(text.substr(0, first_at)):
+		return first_at
+	return _top_level_index_walk(text, operator)
+
+
+## Whether a text holds a character the depth walk has to account for.
+static func _has_quote_or_bracket(text: String) -> bool:
+	if _quote_or_bracket_regex == null:
+		_quote_or_bracket_regex = RegEx.create_from_string("[\"'(){}\\[\\]]")
+	return _quote_or_bracket_regex.search(text) != null
+
+
+static var _quote_or_bracket_regex: RegEx = null
+
+
+## The character-by-character walk: the answer in full, for a text with quotes or brackets in it.
+static func _top_level_index_walk(text: String, operator: String) -> int:
 	var depth: int = 0
 	var index: int = 0
 	while index < text.length():
@@ -5370,8 +5397,9 @@ static func axis_hover_of_action(action: Resource, receiver_types: Dictionary = 
 	var line: String = action_axis_line(action)
 	if line.is_empty():
 		return ""
-	var matcher: RegEx = RegEx.create_from_string(AXIS_WRITE_PATTERN)
-	var found: RegExMatch = matcher.search(line)
+	if _axis_write_regex == null:
+		_axis_write_regex = RegEx.create_from_string(AXIS_WRITE_PATTERN)
+	var found: RegExMatch = _axis_write_regex.search(line)
 	if found == null:
 		return ""
 	var receiver: String = found.get_string(1)
@@ -5479,6 +5507,16 @@ static func _string_end(text: String, start: int) -> int:
 
 ## The index of the first `(` outside any string literal, or -1.
 static func _first_open_paren(text: String) -> int:
+	# The first `(` found at the speed of a string search, when nothing before it is a quote (so no
+	# string literal could be hiding it); a quote ahead of it keeps the walk.
+	var paren_at: int = text.find("(")
+	if paren_at < 0:
+		return -1
+	var double_quote_at: int = text.find("\"")
+	var single_quote_at: int = text.find("'")
+	var quote_ahead: bool = (double_quote_at >= 0 and double_quote_at < paren_at) or (single_quote_at >= 0 and single_quote_at < paren_at)
+	if not quote_ahead:
+		return paren_at
 	var index: int = 0
 	while index < text.length():
 		var character: String = text[index]
@@ -5730,6 +5768,11 @@ static func _unwrapped_group(text: String) -> String:
 static func _split_arguments(inner: String) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	if inner.strip_edges().is_empty():
+		return out
+	# No quote and no bracket anywhere: every comma is a top-level one.
+	if not _has_quote_or_bracket(inner):
+		for piece: String in inner.split(","):
+			out.append(piece.strip_edges())
 		return out
 	var depth: int = 0
 	var start: int = 0
@@ -7110,6 +7153,7 @@ static var _compiled_familiar_patterns: Array = []
 static var _brace_slot_regex: RegEx = null
 static var _percent_slot_regex: RegEx = null
 static var _delta_regex: RegEx = null
+static var _axis_write_regex: RegEx = null
 static var _leading_word_regex: RegEx = null
 static var _identifier_regex: RegEx = null
 static var _color_constant_regex: RegEx = null

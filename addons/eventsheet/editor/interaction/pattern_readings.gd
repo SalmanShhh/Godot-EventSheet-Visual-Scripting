@@ -69,14 +69,35 @@ const FLOOR_NORMAL := "get_floor_normal()"
 ## Takes the file's lines rather than the sheet, so nothing here has to know what a sheet is: the
 ## caller already walks the rows once for the other fact maps and hands the same lines to all of them.
 static func facts(lines: PackedStringArray) -> Dictionary:
+	# The facts are a pure reading of the lines, and one rebuild asks for them twice with the very
+	# same lines (the row builder's sentence context, then the claims the chips are made of), so the
+	# last answer is kept against the lines it was read from and handed back (as a copy) to a caller
+	# that asks again.
+	if _facts_known and lines == _facts_lines:
+		return _facts_answer.duplicate(true)
+	var answer: Dictionary = _read_facts(lines)
+	_facts_lines = lines.duplicate()
+	_facts_answer = answer.duplicate(true)
+	_facts_known = true
+	return answer
+
+
+## The lines the last answer of facts() was read from, and that answer.
+static var _facts_lines: PackedStringArray = PackedStringArray()
+static var _facts_answer: Dictionary = {}
+static var _facts_known: bool = false
+
+
+static func _read_facts(lines: PackedStringArray) -> Dictionary:
 	var machine: Dictionary = EventSheetStateMachineFacts.facts(lines)
 	if not machine.is_empty():
 		# The declarations the one FSM line stands for ride along with the facts, so the claim can
 		# show them as its evidence without a second walk over the file.
 		machine["evidence"] = EventSheetStateMachineFacts.evidence(lines, machine)
 	var pity: Dictionary = pity_facts(lines)
+	var countdowns: Dictionary = countdown_variables(lines)
 	return {
-		"countdown_variables": countdown_variables(lines),
+		"countdown_variables": countdowns,
 		"pool_variables": pool_variables(lines),
 		"state_machine": machine,
 		# ───────────────────────────────────────────────────────────────────────────────────────
@@ -88,7 +109,7 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		"pity_unreset": pity.get("unreset", {}),
 		"meter_variables": meter_variables(lines),
 		"boss_phase_steps": boss_phase_steps(lines),
-		"mission_timers": mission_timers(lines, countdown_variables(lines)),
+		"mission_timers": mission_timers(lines, countdowns),
 		# Which values hold a tilt measured from a neutral point, and which hold a rotation
 		# rate. A single line cannot tell `tilt.x * speed * delta` from any other multiplication, so
 		# the two questions are answered from one walk of the file here.

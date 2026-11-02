@@ -39,6 +39,22 @@ const HOST_LABEL := "host"
 static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {}
+	# The sheet does not change while its facts are read, and a dozen of the readings below each walk
+	# it for the same two lists of code lines, so for the length of this one call the lists are kept.
+	_scoped_lines.clear()
+	_scoping_lines = true
+	var extras: Dictionary = _read_sentence_context_extras(sheet)
+	_scoping_lines = false
+	_scoped_lines.clear()
+	return extras
+
+
+## While true, ordered_code_lines and behavior_code_lines answer a sheet from _scoped_lines.
+static var _scoping_lines: bool = false
+static var _scoped_lines: Dictionary = {}
+
+
+static func _read_sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The sheet's own enums (so an unambiguous member can drop its enum name) and the class behind
 	# every object label (so `play` can tell an animation from a sound). Both are plain walks of the
@@ -1033,9 +1049,18 @@ static func behavior_words_facts(sheet: EventSheetResource) -> Dictionary:
 ## prevent. Order matters as well as content: the boolean a drag raises is only recognised BY sitting
 ## beside the line that remembers the grab offset.
 static func behavior_code_lines(sheet: EventSheetResource) -> PackedStringArray:
-	var lines: PackedStringArray = PackedStringArray()
 	if sheet == null:
-		return lines
+		return PackedStringArray()
+	if _scoping_lines:
+		var key: String = "behavior:%d" % sheet.get_instance_id()
+		if not _scoped_lines.has(key):
+			_scoped_lines[key] = _walk_behavior_code_lines(sheet)
+		return (_scoped_lines[key] as PackedStringArray).duplicate()
+	return _walk_behavior_code_lines(sheet)
+
+
+static func _walk_behavior_code_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
 	for entry: Variant in sheet.events:
 		_append_behavior_lines(entry, lines, 0, true)
 	for entry: Variant in sheet.functions:
@@ -1409,9 +1434,18 @@ static func _tween_declared_local(text: String) -> String:
 ## the fact maps use elsewhere cannot answer a question about what comes BEFORE what, which is the
 ## only question a chain of steps asks.
 static func ordered_code_lines(sheet: EventSheetResource) -> PackedStringArray:
-	var lines: PackedStringArray = PackedStringArray()
 	if sheet == null:
-		return lines
+		return PackedStringArray()
+	if _scoping_lines:
+		var key: String = "ordered:%d" % sheet.get_instance_id()
+		if not _scoped_lines.has(key):
+			_scoped_lines[key] = _walk_ordered_code_lines(sheet)
+		return (_scoped_lines[key] as PackedStringArray).duplicate()
+	return _walk_ordered_code_lines(sheet)
+
+
+static func _walk_ordered_code_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
 	for event_entry: Variant in sheet.events:
 		_append_file_lines(event_entry, lines, 0)
 	for function_entry: Variant in sheet.functions:
