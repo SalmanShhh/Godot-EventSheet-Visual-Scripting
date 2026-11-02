@@ -9976,3 +9976,24 @@ Expressions are not being compile-checked: this sheet's own code does not compil
 compile check paused,编译检查已暂停
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.",已保存，但 Godot 无法编译此工作表生成的脚本：%s（第 %d 行，%s）- 已标记对应的行。
 %d compiler warning(s) - the first: %s,%d 条编译器警告 - 第一条：%s
+Worked out while the game runs. Picking a colour replaces this expression with a constant.,在游戏运行时才会计算。选择颜色会把这个表达式替换为常量。
+"Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","由常量算出: %s。选择后会把表达式替换为 Color(""#..."")。"
+Written as %s.,将写为 %s。
+Colour updated.,颜色已更新。
+Copy As,复制为
+Read Colours As,颜色显示方式
+Hex,Hex
+RGB 0-255,RGB 0-255
+RGB 0-1,RGB 0-1
+HSV,HSV
+Godot code,Godot 代码
+"was %s: %s has no name, written as hex","原为 %s: %s 没有名称, 已写为 hex"
+Brighter than the screen can show: %s is %s. Drawn here at full %s; in the game it is extra bright where glow or HDR is on.,比屏幕能显示的更亮: %s 为 %s。这里按最大的 %s 绘制; 在游戏中开启辉光或 HDR 的地方会更亮。
+"Worked out from constants: %s. Picking a colour here would replace the whole expression, so the click opens the parameters dialog instead of the picker.","由常量算出: %s。在这里选择会替换整个表达式, 所以点击会打开参数窗口而不是取色器。"
+%d%% see-through. The checkerboard behind the square is what shows through.,%d%% 透明。方块后面的棋盘格就是透出来的部分。
+"Godot's named colour %s, %s.","Godot 的命名颜色 %s, %s。"
+Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as you typed it.,"Color8 在 Godot 4.7 中已弃用, 由 Color.from_rgba8 取代。它会保持你输入的样子。"
+"Worked out while the game runs: this is not a constant, so it can change.","在游戏运行时才会计算: 它不是常量, 所以可能变化。"
+Worked out while the game runs: %s is a variable and can change. It starts as %s.,"在游戏运行时才会计算: %s 是变量, 可能变化。它的初始值是 %s。"
+"Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","可接受: #ff8000 或 ff8000、名称 (orange)、Color(1, 0.5, 0) 或 Color(1, 0.5, 0, 0.5)、Color(""#ff8000"")、Color.ORANGE、Color8 / Color.from_rgba8 (0-255)、Color.from_hsv、Color.from_ok_hsl, 或得到 Color 的表达式。"
+"%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s 需要 Color。%s 是一段文字, 不是颜色。请写 #ff8000、orange、Color(1, 0.5, 0) 或 Color.ORANGE, 或点击该值来选择颜色。"

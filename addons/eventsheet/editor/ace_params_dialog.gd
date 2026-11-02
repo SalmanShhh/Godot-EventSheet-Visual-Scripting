@@ -2027,25 +2027,85 @@ func _create_enum_reference_field(key: String, default_value: Variant, enum_name
 	return EventSheetPopupUI.code_noted_option(_create_options_field(key, member_options, default_value))
 
 
-## Color picker param (hint "color" or a Color-typed param). The value round-trips as a
-## canonical Color(r, g, b, a) literal so the sheet can show a swatch next to the text.
+## Color param (hint "color" or a Color-typed param): Godot's own colour button BESIDE a text field, both
+## editing one value. The button is the Inspector's Color editor; the field keeps what was typed - a hex, a
+## name, a Color call, or any expression that gives a Color - so OK writes the field byte for byte, and only
+## a pick through the button re-writes it (in the form the field already holds, EventSheetColourValue). A value
+## only the running game knows (a variable, a node's colour) hatches the button: no colour until it runs. Text
+## that is not a colour at all is said so under the field, in amber, with the forms it takes.
 ##
 ## The picker opens on the SAVED SHELF - the colours this project has already used, kept by the same
 ## store the canvas's inline swatch picker keeps them in. A team colour picked on a row is on the
 ## shelf of every colour field afterwards, which is the whole point of a shelf.
 func _create_color_field(key: String, default_value: Variant) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 2)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	column.add_child(row)
 	var picker: ColorPickerButton = ColorPickerButton.new()
-	picker.custom_minimum_size = Vector2(72.0, 0.0)
-	var parsed: Variant = str_to_var(str(default_value))
-	picker.color = parsed if parsed is Color else Color.WHITE
+	picker.custom_minimum_size = Vector2(56.0, 0.0)
+	picker.edit_alpha = true
+	row.add_child(picker)
+	var edit: LineEdit = LineEdit.new()
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit.text = str(default_value)
+	edit.set_meta("colour_slot", true)
+	row.add_child(edit)
+	var note: Label = Label.new()
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size = Vector2(320.0, 0.0)
+	note.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
+	note.visible = false
+	column.add_child(note)
+	picker.draw.connect(func() -> void:
+		if picker.has_meta("hatched"):
+			var rect: Rect2 = Rect2(Vector2(3.0, 3.0), picker.size - Vector2(6.0, 6.0))
+			var step: float = 6.0
+			var offset: float = 0.0
+			while offset < rect.size.x + rect.size.y:
+				var from := Vector2(rect.position.x + minf(offset, rect.size.x), rect.position.y + maxf(offset - rect.size.x, 0.0))
+				var to := Vector2(rect.position.x + maxf(offset - rect.size.y, 0.0), rect.position.y + minf(offset, rect.size.y))
+				picker.draw_line(from, to, Color(0.55, 0.55, 0.55, 0.9), 1.0)
+				offset += step)
+	var sync: Callable = func(_ignored: Variant = null) -> void:
+		var text: String = edit.text.strip_edges()
+		var kind: String = EventSheetColourValue.classify(text)
+		var info: Dictionary = EventSheetColourValue.parse(text)
+		if kind == EventSheetColourValue.KIND_COLOUR:
+			picker.color = info["color"]
+			picker.remove_meta("hatched")
+		else:
+			picker.set_meta("hatched", true)
+			picker.color = Color(0.0, 0.0, 0.0, 0.0)
+		picker.queue_redraw()
+		var wrong: bool = kind == EventSheetColourValue.KIND_WRONG
+		note.visible = wrong
+		note.text = EventSheetColourValue.accepted_forms_note() if wrong else ""
+		if wrong:
+			edit.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
+		else:
+			edit.remove_theme_color_override("font_color")
+		if kind == EventSheetColourValue.KIND_RUNTIME:
+			picker.tooltip_text = EventSheetL10n.translate("Worked out while the game runs. Picking a colour replaces this expression with a constant.")
+		elif kind == EventSheetColourValue.KIND_COLOUR and bool(info.get("folded", false)):
+			picker.tooltip_text = EventSheetL10n.translate("Worked out from constants: %s. Picking replaces the expression with Color(\"#...\").") % EventSheetColourValue.hex_text(info["color"], false)
+		else:
+			picker.tooltip_text = ""
+	sync.call()
+	edit.text_changed.connect(sync)
+	picker.color_changed.connect(func(color: Color) -> void:
+		var written: Dictionary = EventSheetColourValue.write_back(edit.text, color, true)
+		edit.text = str(written["text"])
+		edit.text_changed.emit(edit.text))
 	var shelf: ColorPicker = picker.get_picker()
 	if shelf != null:
 		for saved: Color in EventSheetColorPresets.all():
 			shelf.add_preset(saved)
 		shelf.preset_added.connect(func(color: Color) -> void: EventSheetColorPresets.add(color))
 		shelf.preset_removed.connect(func(color: Color) -> void: EventSheetColorPresets.remove(color))
-	_fields[key] = picker
-	return picker
+	_fields[key] = edit
+	return column
 
 
 ## THE dial's value field: whichever editor the shader's own declaration asks for. The Inspector
@@ -3595,6 +3655,9 @@ func _extract_value(field: Control) -> Variant:
 			var globe: Button = field.get_meta("translatable_toggle")
 			if globe != null and globe.button_pressed:
 				return "tr(\"%s\")" % (field as LineEdit).text.replace("\\", "\\\\").replace("\"", "\\\"")
+		# A bare #ff8000 or orange typed in a Color slot is written as Color("..."), a valid line.
+		if field.has_meta("colour_slot"):
+			return EventSheetColourValue.normalise_slot_text((field as LineEdit).text)
 		return (field as LineEdit).text
 	if field is CodeEdit:
 		# Another editor's spelling commits as the GDScript it reads as - one truth on disk.

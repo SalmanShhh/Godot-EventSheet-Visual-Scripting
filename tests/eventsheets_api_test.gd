@@ -136,7 +136,7 @@ static func run() -> bool:
 		EventSheetParamFieldFactory.hint_paragraph("color"), "A wave, actually.") and ok
 	EventSheets.register_param_help("color", "")
 	ok = _check("clearing it hands the builtin wording back",
-		EventSheetParamFieldFactory.hint_paragraph("color").contains("#ff4d4d"), true) and ok
+		EventSheetParamFieldFactory.hint_paragraph("color").contains("#ff8000"), true) and ok
 	# An option may declare the line that reads under it; one without a note is unchanged.
 	var noted: Array = EventSheets.combo_options([
 		{"key": "run", "label": "Run", "note": "double speed, keeps momentum"}, "walk"])

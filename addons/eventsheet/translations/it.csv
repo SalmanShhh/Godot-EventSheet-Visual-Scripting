@@ -9976,3 +9976,24 @@ Expressions are not being compile-checked: this sheet's own code does not compil
 compile check paused,controllo in pausa
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","Salvato, ma Godot non riesce a compilare lo script scritto da questo foglio: %s (riga %d di %s) - la riga di origine è contrassegnata."
 %d compiler warning(s) - the first: %s,%d avviso/i del compilatore - il primo: %s
+Worked out while the game runs. Picking a colour replaces this expression with a constant.,Calcolato mentre il gioco gira. Scegliere un colore sostituisce questa espressione con una costante.
+"Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","Calcolato da costanti: %s. Scegliere sostituisce l'espressione con Color(""#..."")."
+Written as %s.,Scritto come %s.
+Colour updated.,Colore aggiornato.
+Copy As,Copia come
+Read Colours As,Leggi i colori come
+Hex,Hex
+RGB 0-255,RGB 0-255
+RGB 0-1,RGB 0-1
+HSV,HSV
+Godot code,Codice Godot
+"was %s: %s has no name, written as hex","era %s: %s non ha un nome, scritto come hex"
+Brighter than the screen can show: %s is %s. Drawn here at full %s; in the game it is extra bright where glow or HDR is on.,Più luminoso di quanto lo schermo possa mostrare: %s è %s. Disegnato qui con %s al massimo; nel gioco brilla di più dove glow o HDR sono attivi.
+"Worked out from constants: %s. Picking a colour here would replace the whole expression, so the click opens the parameters dialog instead of the picker.","Calcolato da costanti: %s. Scegliere qui sostituirebbe l'intera espressione, quindi il clic apre la finestra dei parametri invece del selettore."
+%d%% see-through. The checkerboard behind the square is what shows through.,%d%% trasparente. La scacchiera dietro il quadrato è ciò che traspare.
+"Godot's named colour %s, %s.","Colore con nome di Godot %s, %s."
+Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as you typed it.,Color8 è deprecato in Godot 4.7: lo sostituisce Color.from_rgba8. Resta come l'hai scritto.
+"Worked out while the game runs: this is not a constant, so it can change.","Calcolato mentre il gioco gira: non è una costante, quindi può cambiare."
+Worked out while the game runs: %s is a variable and can change. It starts as %s.,Calcolato mentre il gioco gira: %s è una variabile e può cambiare. Parte come %s.
+"Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","Accettato: #ff8000 o ff8000, un nome (orange), Color(1, 0.5, 0) o Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, o un'espressione che dia un Color."
+"%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s si aspetta un Color. %s è un pezzo di testo, non un colore. Scrivi #ff8000, orange, Color(1, 0.5, 0) o Color.ORANGE, oppure fai clic sul valore per sceglierne uno."

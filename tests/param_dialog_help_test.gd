@@ -110,7 +110,7 @@ static func _test_strip_text_per_hint() -> bool:
 		EventSheetParamFieldFactory.strip_body(amount, "Player").contains("Player's variables"),
 		true) and passed
 	passed = _check("a colour parameter says what a colour may be",
-		EventSheetParamFieldFactory.hint_paragraph("color").contains("#ff4d4d"), true) and passed
+		EventSheetParamFieldFactory.hint_paragraph("color").contains("#ff8000"), true) and passed
 	passed = _check("a key capture says how to answer it",
 		EventSheetParamFieldFactory.hint_paragraph("key_capture").begins_with("Press the key"),
 		true) and passed

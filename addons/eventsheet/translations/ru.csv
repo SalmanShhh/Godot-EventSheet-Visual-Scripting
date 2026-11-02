@@ -9976,3 +9976,24 @@ Expressions are not being compile-checked: this sheet's own code does not compil
 compile check paused,проверка приостановлена
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","Сохранено, но Godot не может скомпилировать скрипт, который пишет этот лист: %s (строка %d файла %s) - строка-источник помечена."
 %d compiler warning(s) - the first: %s,Предупреждений компилятора: %d - первое: %s
+Worked out while the game runs. Picking a colour replaces this expression with a constant.,Вычисляется во время работы игры. Выбор цвета заменит это выражение константой.
+"Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","Вычислено из констант: %s. Выбор заменит выражение на Color(""#..."")."
+Written as %s.,Записывается как %s.
+Colour updated.,Цвет обновлён.
+Copy As,Копировать как
+Read Colours As,Показывать цвета как
+Hex,Hex
+RGB 0-255,RGB 0-255
+RGB 0-1,RGB 0-1
+HSV,HSV
+Godot code,Код Godot
+"was %s: %s has no name, written as hex","было %s: у %s нет имени, записано как hex"
+Brighter than the screen can show: %s is %s. Drawn here at full %s; in the game it is extra bright where glow or HDR is on.,"Ярче, чем может показать экран: %s равно %s. Здесь нарисовано с полным значением %s; в игре светится сильнее, где включено свечение или HDR."
+"Worked out from constants: %s. Picking a colour here would replace the whole expression, so the click opens the parameters dialog instead of the picker.","Вычислено из констант: %s. Выбор здесь заменил бы всё выражение, поэтому щелчок открывает окно параметров вместо выбора цвета."
+%d%% see-through. The checkerboard behind the square is what shows through.,"%d%% прозрачности. Шахматная доска за квадратом - это то, что просвечивает."
+"Godot's named colour %s, %s.","Именованный цвет Godot %s, %s."
+Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as you typed it.,"Color8 устарел в Godot 4.7: его заменяет Color.from_rgba8. Он остаётся таким, как вы его написали."
+"Worked out while the game runs: this is not a constant, so it can change.","Вычисляется во время работы игры: это не константа, поэтому может меняться."
+Worked out while the game runs: %s is a variable and can change. It starts as %s.,Вычисляется во время работы игры: %s - переменная и может меняться. Она начинается как %s.
+"Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","Допустимо: #ff8000 или ff8000, имя (orange), Color(1, 0.5, 0) или Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl или выражение, дающее Color."
+"%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s ожидает Color. %s - это кусок текста, а не цвет. Напишите #ff8000, orange, Color(1, 0.5, 0) или Color.ORANGE, либо щёлкните значение, чтобы выбрать цвет."

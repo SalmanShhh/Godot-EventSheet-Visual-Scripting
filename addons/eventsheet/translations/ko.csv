@@ -9976,3 +9976,24 @@ Expressions are not being compile-checked: this sheet's own code does not compil
 compile check paused,컴파일 검사 일시 중지
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","저장했지만 이 시트가 작성한 스크립트를 Godot이 컴파일할 수 없습니다: %s (%d번째 줄, %s) - 원인이 된 행에 표시했습니다."
 %d compiler warning(s) - the first: %s,컴파일러 경고 %d건 - 첫 번째: %s
+Worked out while the game runs. Picking a colour replaces this expression with a constant.,게임이 실행되는 동안 계산됩니다. 색을 고르면 이 식이 상수로 바뀝니다.
+"Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","상수로 계산됨: %s. 고르면 식이 Color(""#..."")로 바뀝니다."
+Written as %s.,%s(으)로 기록됩니다.
+Colour updated.,색을 업데이트했습니다.
+Copy As,다음 형식으로 복사
+Read Colours As,색을 읽는 방식
+Hex,Hex
+RGB 0-255,RGB 0-255
+RGB 0-1,RGB 0-1
+HSV,HSV
+Godot code,Godot 코드
+"was %s: %s has no name, written as hex",원래 %s: %s에는 이름이 없어 hex로 기록했습니다
+Brighter than the screen can show: %s is %s. Drawn here at full %s; in the game it is extra bright where glow or HDR is on.,"화면이 표시할 수 있는 것보다 밝습니다: %s이(가) %s입니다. 여기서는 %s을(를) 최대로 그렸으며, 게임에서는 글로우나 HDR이 켜진 곳에서 더 밝게 빛납니다."
+"Worked out from constants: %s. Picking a colour here would replace the whole expression, so the click opens the parameters dialog instead of the picker.","상수로 계산됨: %s. 여기서 고르면 식 전체가 바뀌므로, 클릭하면 선택기 대신 매개변수 창이 열립니다."
+%d%% see-through. The checkerboard behind the square is what shows through.,%d%% 투명. 사각형 뒤의 체크무늬가 비쳐 보이는 부분입니다.
+"Godot's named colour %s, %s.","Godot의 이름 있는 색 %s, %s."
+Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as you typed it.,Color8은 Godot 4.7에서 더 이상 권장되지 않습니다. Color.from_rgba8이 대신합니다. 입력한 그대로 유지됩니다.
+"Worked out while the game runs: this is not a constant, so it can change.",게임이 실행되는 동안 계산됩니다. 상수가 아니므로 바뀔 수 있습니다.
+Worked out while the game runs: %s is a variable and can change. It starts as %s.,게임이 실행되는 동안 계산됩니다. %s은(는) 변수이며 바뀔 수 있습니다. 처음 값은 %s입니다.
+"Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","허용: #ff8000 또는 ff8000, 이름 (orange), Color(1, 0.5, 0) 또는 Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, 또는 Color를 만드는 식."
+"%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s에는 Color가 필요합니다. %s은(는) 문자열이며 색이 아닙니다. #ff8000, orange, Color(1, 0.5, 0), Color.ORANGE 중 하나를 쓰거나 값을 클릭해 색을 고르세요."

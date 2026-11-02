@@ -9976,3 +9976,24 @@ Expressions are not being compile-checked: this sheet's own code does not compil
 compile check paused,コンパイルチェック停止中
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.",保存しましたが、このシートが書き出すスクリプトを Godot がコンパイルできません: %s（%d 行目、%s）- 原因の行に印を付けました。
 %d compiler warning(s) - the first: %s,コンパイラの警告 %d 件 - 最初の警告: %s
+Worked out while the game runs. Picking a colour replaces this expression with a constant.,ゲームの実行中に計算されます。色を選ぶと、この式は定数に置き換わります。
+"Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","定数から計算: %s。選ぶと式が Color(""#..."") に置き換わります。"
+Written as %s.,%s として書き込まれます。
+Colour updated.,色を更新しました。
+Copy As,次の形式でコピー
+Read Colours As,色の表示形式
+Hex,Hex
+RGB 0-255,RGB 0-255
+RGB 0-1,RGB 0-1
+HSV,HSV
+Godot code,Godot コード
+"was %s: %s has no name, written as hex",元は %s: %s には名前がないため、hex で書き込みました
+Brighter than the screen can show: %s is %s. Drawn here at full %s; in the game it is extra bright where glow or HDR is on.,画面で表示できる範囲より明るい色です: %s は %s。ここでは %s を最大で描いています。ゲームでは、グローや HDR が有効な場所でより明るく光ります。
+"Worked out from constants: %s. Picking a colour here would replace the whole expression, so the click opens the parameters dialog instead of the picker.",定数から計算: %s。ここで選ぶと式全体が置き換わるため、クリックでは選択ツールではなくパラメータ画面が開きます。
+%d%% see-through. The checkerboard behind the square is what shows through.,%d%% 透明。四角の後ろの市松模様が透けて見える部分です。
+"Godot's named colour %s, %s.",Godot の名前付きカラー %s、%s。
+Color8 is deprecated in Godot 4.7: Color.from_rgba8 replaces it. It is kept as you typed it.,Color8 は Godot 4.7 で非推奨です。代わりに Color.from_rgba8 を使います。入力したまま保持されます。
+"Worked out while the game runs: this is not a constant, so it can change.",ゲームの実行中に計算されます。定数ではないため、変わることがあります。
+Worked out while the game runs: %s is a variable and can change. It starts as %s.,ゲームの実行中に計算されます。%s は変数で、変わることがあります。最初は %s です。
+"Accepted: #ff8000 or ff8000, a name (orange), Color(1, 0.5, 0) or Color(1, 0.5, 0, 0.5), Color(""#ff8000""), Color.ORANGE, Color8 / Color.from_rgba8 (0-255), Color.from_hsv, Color.from_ok_hsl, or an expression that gives a Color.","使える形式: #ff8000 または ff8000、名前 (orange)、Color(1, 0.5, 0) または Color(1, 0.5, 0, 0.5)、Color(""#ff8000"")、Color.ORANGE、Color8 / Color.from_rgba8 (0-255)、Color.from_hsv、Color.from_ok_hsl、または Color になる式。"
+"%s expects a Color. %s is a piece of text, not a colour. Write #ff8000, orange, Color(1, 0.5, 0) or Color.ORANGE, or click the value to pick one.","%s には Color が必要です。%s は文字列で、色ではありません。#ff8000、orange、Color(1, 0.5, 0)、Color.ORANGE のいずれかを書くか、値をクリックして色を選んでください。"

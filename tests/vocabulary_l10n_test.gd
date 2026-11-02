@@ -514,7 +514,8 @@ static func _test_the_catalog_actually_translates() -> bool:
 const ENGLISH_EQUAL_CEILING: Dictionary = {
 	# The positioning wave added the axis letters X, Y and Z, which every language spells the same,
 	# and the words Position (German, French) and Destination (French), which are shared too.
-	"de": 149, "es": 110, "fr": 205, "it": 124, "ja": 51, "ko": 55, "ru": 51, "zh_CN": 48,
+	# The colour reading names - Hex, RGB 0-255, RGB 0-1, HSV - are the same words in every language.
+	"de": 153, "es": 114, "fr": 206, "it": 128, "ja": 55, "ko": 59, "ru": 55, "zh_CN": 52,
 }
 
 

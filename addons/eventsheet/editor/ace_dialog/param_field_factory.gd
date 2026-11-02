@@ -163,7 +163,7 @@ static func change_signal_of(field: Control) -> String:
 const HINT_PARAGRAPHS: Dictionary = {
 	"expression": "A number, a variable, or an expression. In scope are the event's trigger parameters, %s's variables and the globals - the Expressions panel beside the form lists them all, and the arrow holds what you typed here before.",
 	"variable_reference": "One of %s's variables. The list shows each one's type and, while the game runs, its value.",
-	"color": "A colour word (red), a hex (#ff4d4d) or Color(1, 0.3, 0.3). The swatch opens the palette with your saved colours; the row shows the word and the swatch.",
+	"color": "A colour: #ff8000, orange, Color(1, 0.5, 0), Color.ORANGE, or an expression that gives a Color. The button opens the picker with your saved colours; the field keeps what you typed.",
 	"key_capture": "Press the key you want while this box is focused. Prefer an Input Map action when the player may rebind it.",
 	"input_action": "An action from the project's Input Map, with the keys bound to it beside each name. New action adds one the map does not have yet.",
 	"group_reference": "A node group, with how many nodes of the open scene are in each. Any node joins a group from the Node dock.",
