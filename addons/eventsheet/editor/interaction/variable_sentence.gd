@@ -192,56 +192,7 @@ static func hex_text(colour: Color) -> String:
 
 
 ## A picked colour written back in THE SPELLING THE LINE ALREADY USED, so writing a colour through
-## the swatch moves the value and nothing else: `Color.RED` stays a named constant when the new
-## colour has a name (and falls back to hex when it does not), `Color("#ff9b3c")` stays a hex string,
-## `Color(1, 0.6, 0.2)` stays numbers with the argument count it was written with.
+## the swatch moves the value and nothing else: the same call, argument count, hex length and case. The
+## one writer is EventSheetColourValue.write_back, shared with every colour parameter.
 static func color_literal_in_spelling(colour: Color, source_text: String) -> String:
-	var source: String = source_text.strip_edges()
-	if source.begins_with("Color."):
-		var name_constant: String = color_constant_name(colour)
-		if not name_constant.is_empty():
-			return "Color.%s" % name_constant
-		return "Color(\"%s\")" % hex_text(colour)
-	if source.begins_with("Color(\"") or source.begins_with("Color('"):
-		return "Color(\"%s\")" % hex_text(colour)
-	if source.begins_with("\"#") or source.begins_with("#"):
-		return hex_text(colour)
-	var keep_alpha: bool = not is_equal_approx(colour.a, 1.0) or _spelled_with_alpha(source)
-	var numbers: PackedStringArray = PackedStringArray([
-		_number_text(colour.r), _number_text(colour.g), _number_text(colour.b)
-	])
-	if keep_alpha:
-		numbers.append(_number_text(colour.a))
-	return "Color(%s)" % ", ".join(numbers)
-
-
-## The `Color.NAME` constant a colour matches, "" when it matches none. Derived from the words the
-## setting facts already name, so the swatch, the row and the write-back never name a colour three
-## different ways.
-static func color_constant_name(colour: Color) -> String:
-	for key: String in EventSheetSettingFacts.COLOUR_WORDS:
-		var parts: PackedStringArray = key.split(",")
-		if parts.size() < 4:
-			continue
-		var candidate := Color(float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3]))
-		if candidate.is_equal_approx(colour):
-			return str(EventSheetSettingFacts.COLOUR_WORDS[key]).to_upper()
-	return ""
-
-
-## True when the source literal spelled four arguments - a `Color(1, 1, 1, 1)` keeps its four.
-static func _spelled_with_alpha(source: String) -> bool:
-	if not source.begins_with("Color("):
-		return false
-	return source.trim_prefix("Color(").trim_suffix(")").split(",").size() >= 4
-
-
-## A colour channel as GDScript spells it: no trailing zeroes a reader has to skip, but never an
-## integer where a float was meant (`1` is a valid float literal in a Color call).
-static func _number_text(value: float) -> String:
-	var text: String = String.num(value, 4)
-	while text.contains(".") and text.ends_with("0"):
-		text = text.substr(0, text.length() - 1)
-	if text.ends_with("."):
-		text = text.substr(0, text.length() - 1)
-	return text if not text.is_empty() else "0"
+	return str(EventSheetColourValue.write_back(source_text, colour)["text"])

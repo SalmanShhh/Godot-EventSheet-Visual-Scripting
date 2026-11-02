@@ -198,25 +198,44 @@ static func _apply_node_path(found: Dictionary, variable: LocalVariable, attribu
 	found["note"] = " / ".join(names)
 
 
-## A colour shows itself. The swatch is the fact; the word beside it is a courtesy for the handful of
-## colours anybody names out loud, and every other colour keeps the numbers it was written with.
+## A colour shows itself: its square is the fact, and its words are the value as it was written (or as the
+## project asks colours to read). A value only the running game knows - a variable, a call - has no colour
+## here and gets no square; it is never guessed at.
 static func _apply_colour(found: Dictionary, variable: LocalVariable) -> void:
-	# A colour is ALWAYS a swatch, whether or not the line bothered to declare the type:
-	# `var tint := Color.WHITE` is as much a colour as `var tint: Color = ...`, and the swatch is the
-	# half of the row a reader actually uses.
-	if variable.type_name.strip_edges() != "Color" and not is_colour_literal(str(variable.default_value)):
+	var raw: String = colour_source_text(variable)
+	if variable.type_name.strip_edges() != "Color" and not is_colour_literal(raw):
 		return
-	var colour: Color = _colour_of(variable)
-	found["swatch"] = colour
-	# The word for the colours anybody says out loud, else the hex - never raw floats. The hex trails
-	# a named colour as its muted note, because "#ffffff" is the thing you paste somewhere else.
-	var word: String = colour_word(colour)
-	if word.is_empty():
-		found["value_text"] = colour_hex(colour)
+	var info: Dictionary = EventSheetColourValue.parse(raw)
+	if not bool(info.get("ok", false)):
 		return
-	found["value_text"] = word
-	if found["note"] == "":
-		found["note"] = colour_hex(colour)
+	found["swatch"] = info["color"]
+	found["colour_text"] = raw
+	found["alpha_slot"] = colour_has_alpha(variable)
+	found["value_text"] = EventSheetColourValue.read_info(info, raw.strip_edges(), EventSheetColourValue.project_reading(),
+		colour_has_alpha(variable))
+
+
+## False for a slot that holds no alpha (`@export_color_no_alpha`): its alpha is never read or picked.
+static func colour_has_alpha(variable: LocalVariable) -> bool:
+	if variable.export_hint.strip_edges() == "@export_color_no_alpha":
+		return false
+	return not (variable.attributes is Dictionary and bool((variable.attributes as Dictionary).get("no_alpha", false)))
+
+
+## The text a colour variable's default is written as: a real Color becomes the call that makes it.
+static func colour_source_text(variable: LocalVariable) -> String:
+	return colour_text_of(variable.default_value)
+
+
+static func colour_text_of(default_value: Variant) -> String:
+	if default_value is Color:
+		var colour: Color = default_value as Color
+		var channels: PackedStringArray = [EventSheetColourValue.number_text(colour.r), EventSheetColourValue.number_text(colour.g),
+			EventSheetColourValue.number_text(colour.b)]
+		if colour.a < 1.0 - 1.0e-6:
+			channels.append(EventSheetColourValue.number_text(colour.a))
+		return "Color(%s)" % ", ".join(channels)
+	return str(default_value).strip_edges()
 
 
 ## `#rrggbb`, or `#rrggbbaa` when the colour is not fully opaque - the spelling everybody pastes.
@@ -227,28 +246,7 @@ static func colour_hex(colour: Color) -> String:
 ## True when a value was WRITTEN as a colour - `Color.RED`, `Color(1, 0.6, 0.2)`, `Color("#ff9b3c")`.
 static func is_colour_literal(value_text: String) -> bool:
 	var text: String = value_text.strip_edges()
-	# `Color.from_hsv(...)` is a CALL, not the colour word red - a swatch for it would be a guess.
-	if text.begins_with("Color.") and not text.contains("("):
-		return true
-	return text.begins_with("Color(")
-
-
-## The colour a variable holds, whichever way it was written - a real Color value, a `Color.RED`
-## constant, a `Color(1, 1, 1, 1)` literal or an "#ff0000" string.
-static func _colour_of(variable: LocalVariable) -> Color:
-	if variable.default_value is Color:
-		return variable.default_value as Color
-	var text: String = str(variable.default_value).strip_edges()
-	if text.begins_with("Color."):
-		return Color.from_string(text.trim_prefix("Color.").replace("_", "").to_lower(), Color.WHITE)
-	if text.begins_with("Color("):
-		var numbers: PackedStringArray = text.trim_prefix("Color(").trim_suffix(")").split(",")
-		if numbers.size() >= 3:
-			return Color(
-				float(numbers[0]), float(numbers[1]), float(numbers[2]),
-				float(numbers[3]) if numbers.size() > 3 else 1.0
-			)
-	return Color.from_string(text, Color.WHITE)
+	return text.begins_with("Color.") or text.begins_with("Color(") or text.begins_with("Color8(")
 
 
 ## The word for a colour, "" when it is not one of the primaries.
