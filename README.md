@@ -78,7 +78,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **It's a bridge, not a wall.** Complex logic eventually pulls you toward GDScript by design; to *never* see code, C3 still hides it better.
 - **2D-first.** The 3D vocabularies, raycasts and movement packs are real, but deeper 3D still reaches for ƒx.
 - **Some C3 plugins have no equivalent** (XML) - routed to the native Godot feature.
-- **The first sheet tab of a session is slow** on a large project (about 17 to 22 s on our test machine while Godot compiles the editor; a study of the compile found about 93% of that script cluster is really called, so lazy loading did not shrink it). Interaction is much faster but not done: dropping a drag takes about 3 s on an 803-row sheet, and a fold click on a large sheet about 0.5 s.
+- **The first sheet tab of a session is slow** on a large project (about 17 to 22 s on our test machine while Godot compiles the editor; a study of the compile found about 93% of that script cluster is really called, so lazy loading did not shrink it). Interaction is much faster but not done: dropping a drag takes about 0.75 s on an 803-row sheet (it was 2.8 s), and a fold click on a large sheet is under 50 ms (it was about 0.5 s).
 - **Experimental.** A large CI suite stands in for mileage it hasn't earned.
 
 The deeper belief, in one line: the condition/action grid is the shape code already has - a trigger is a signal handler, conditions are the `if`, actions are its body, sub-events are nesting - so everything learned in a sheet transfers straight to scripting, and "graduating" to code is noticing you already understand the code your sheets have been writing.
@@ -97,7 +97,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 
 ## Current status
 
-The latest tagged release is **`v0.18.0` - "Refactor Anything, Render Anything & Feel Everything"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.18.0), [CHANGELOG](CHANGELOG.md) for the full ledger). In one screen:
+The latest tagged release is **`v0.18.0` - "Refactor Anything, Render Anything & Feel Everything"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.18.0), [full notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/changelog/v0.18.0.md) for the full ledger). In one screen:
 
 - **Refactor anything** - a moved verb carries a forwarding address and Migrate… proves every rewrite twice; renames list what they touch first; taking a pack's new version is replacing its folder and reading the version-control diff; an object's states are a variable (Declare states…, Is in / Go to / On entering, a live band, the Trail), and a hand-written `match state:` machine opens as those rows byte-exact. ([refactoring](docs/GUIDE-UPDATING-AND-REFACTORING.md), [states](docs/GUIDE-STATES.md))
 - **Render anything** - the environment, sky, surface and lens in words; the Camera shelf finished in 2D and 3D; the light and the shader dial as the object; twenty blend modes as one row; a post stack with looks saved from the live game; seven distance-field shape nodes crisp at any zoom, with an Inspector of unit drawers, card lists, show-if groups and draggable handles.
@@ -128,7 +128,7 @@ What it brings, in one screen:
 - **New rows, each the Godot way** - Tell Children, First Parent Of Type, Next / Previous Sibling, Reset Variable(s), Pick First / Last Where, Has Been True For, **pause requests** (the game stays paused until everyone who asked lets go), and the **Flock** and **Flock 3D** packs.
 - **Truer error checking** - a property the host class really has (`global_position`, `position`, a Control's size) is no longer flagged as an unknown variable.
 - **Faster** - the editor starts in about 11 s instead of 30, the picker lists every pack verb (it had shown 142 of 4,477), and CI answers in about four minutes instead of twenty. A performance pass on the sheet itself, measured on the largest shipped pack (pathfinding): the saved-names badge went from 6.1 s to 9 ms, a save's diagnostics from 12.4 s to 0.8 s, the draw of a 1,516-row sheet from 44.6 to 24.4 ms, a full row rebuild from 13.7 to 9.4 s, and reopening an unchanged `.gd` skips the lift (10.6 s to 1.3 s, from a byte-checked cache in `.godot/`); rows now get their words as they scroll into view.
-- **Smooth interaction** - measured in the real editor (frame p90): hovering a small sheet went from 26 to 7.7 ms, dragging from 83 to 13.2 ms, dragging on an 803-row sheet from 60 to 9.4 ms, and a fold click on those 803 rows from 6.07 to 0.51 s. Each row keeps its own recorded drawing instead of being redrawn.
+- **Smooth interaction** - measured in the real editor (frame p90): hovering a small sheet went from 26 to 7.7 ms, dragging from 83 to 13.2 ms, dragging on an 803-row sheet from 60 to 9.4 ms, and a fold click on those 803 rows from 6.07 to 0.51 s, and later to under 50 ms; dropping a drag on that sheet went from 2.8 to about 0.75 s. Each row keeps its own recorded drawing instead of being redrawn. Disabling the plugin now frees its workspace.
 - **Colour values you can see** - every Color form (Godot's named colours, hex, numbers, HSV, `Color.html` and more) shows a square of the colour in the value's text; click it for Godot's own ColorPicker, with no parameters window. The value keeps the form you typed, and **Read Colours As** and **Copy As** change how colours read or copy.
 
   <picture>
@@ -151,7 +151,7 @@ What it brings, in one screen:
   </picture>
 
 - **Mistake checks with a fix beside each** - a wrong node type, a `res://` path that is missing, an empty group, an input action that does not exist, a `$Path` that is not in the scene, a signal given the wrong number of values, a While that cannot end, a local hiding a variable or parameter, and a division by a literal zero. Each shows on the row's quiet state with its fix door, and in the Doctor.
-- **Checks on save** - a broken script marks its row with Godot's own words, and compiler warnings reach the row. Run-time errors link back to their row for a `.tres` sheet compiled with a debug compile, in a game started from the editor; `.gd` sheets do not get that link yet.
+- **Checks on save** - a broken script marks its row with Godot's own words, and compiler warnings reach the row. A run-time error in a `.gd` sheet or a hand-written script reaches the sheet's strip and Jump selects its row, in a game started from the editor, through the editor's own debugger feed, with nothing added to the game (a game you start outside the editor has no feed to read).
 
 **Measured** - on our test machine this week: enabling the plugin takes **310 to 450 ms**, and the first sheet tab of a session **17 to 22 s** (about 30 s at `v0.18.0`; it is still the slowest moment, most of it Godot compiling the editor's own scripts). More interaction and first-open work is in progress.
 
@@ -159,7 +159,7 @@ What it brings, in one screen:
 
 ## Milestones
 
-Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line themes:
+Every release has full notes in its own file under [docs/changelog](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/tree/main/docs/changelog), indexed in [CHANGELOG.md](CHANGELOG.md); the one-line themes:
 
 | Release | Theme |
 |---|---|
@@ -176,7 +176,7 @@ Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line theme
 | `v0.17.0` | Adopt anything, read anything: real `.gd` files open as rows byte-exact, your classes as vocabulary, Construct-style reading, the pattern / dev-experience / i18n waves, docs inside the editor |
 | `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, the render vocabulary and shape nodes, the Feedback Player, the gameplay systems, the resting toolbar and the Manual |
 | _Unreleased on main_ | Feels native, reads familiar, saves everything: the Editor Native look, variables as the Inspector shows them, one Save choice per variable, behaviours and globals as forms, functions as events, the Inspector Designer shaping a field, groups and regions, an aligned sheet, states and class names, world and local positions, a performance pass, the plugin's own code opening as rows, every `.gd` save loss fixed (🚧 feature-complete, four `.gd` save details and the tag to go) |
-| _Next_ | Dropping a drag and folding on a big sheet under a frame or two, a first sheet tab in seconds (about 17 to 22 s today), saving a behaviour or global decided when you make it, then whatever you ask for |
+| _Next_ | Dropping a drag on a big sheet under a frame or two (about 0.75 s on 803 rows today, a fold click is already under 50 ms), a first sheet tab in seconds (about 17 to 22 s today), saving a behaviour or global decided when you make it, then whatever you ask for |
 
 ## Project layout
 
