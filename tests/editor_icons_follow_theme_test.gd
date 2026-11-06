@@ -76,5 +76,34 @@ static func run() -> bool:
 	rows.append(["and the old textures are worn again", [save_button.icon == dark_save, play_button.icon == dark_play], [true, true]])
 
 	root.free()
+	rows.append_array(_mirror_rows(theme))
 	_reset()
 	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## The undo arrow is the editor's redo arrow flipped, so it is no texture of the theme's list. It has to
+## follow a switch as well: it used to stay in the old theme's colour beside a redo arrow in the new one.
+static func _mirror_rows(theme: Theme) -> Array:
+	theme.set_icon("Redo", "EditorIcons", _texture(1.0))
+	EventSheetEditorIcons.generation()
+	var undo_button: Button = Button.new()
+	var first_mirror: Texture2D = EventSheetEditorIcons.icon("Undo")
+	undo_button.icon = first_mirror
+	theme.set_icon("Save", "EditorIcons", _texture(0.3))
+	theme.set_icon("Redo", "EditorIcons", _texture(0.1))
+	EventSheetEditorIcons.retarget(undo_button)
+	var second_mirror: Texture2D = undo_button.icon
+	var moved_first: bool = second_mirror != first_mirror
+	var is_current: bool = second_mirror == EventSheetEditorIcons.icon("Undo")
+	var dark_pixel: float = second_mirror.get_image().get_pixel(0, 0).r
+	theme.set_icon("Save", "EditorIcons", _texture(0.4))
+	theme.set_icon("Redo", "EditorIcons", _texture(0.9))
+	EventSheetEditorIcons.retarget(undo_button)
+	var back_pixel: float = undo_button.icon.get_image().get_pixel(0, 0).r
+	undo_button.free()
+	return [
+		["a mirrored icon follows a switch", moved_first, true],
+		["onto the mirror of the new theme's icon", is_current, true],
+		["drawn from the new texture", roundi(dark_pixel * 10.0), 1],
+		["and it follows the switch back", roundi(back_pixel * 10.0), 9],
+	]

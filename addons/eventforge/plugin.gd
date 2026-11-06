@@ -15,6 +15,8 @@ const PLUGIN_ICON_PATH: String = "res://addons/eventsheet/icons/eventsheet.svg"
 const PLUGIN_ICON_INK: String = "#E0E0E0"
 ## A plain one-ink editor icon, read for the colour the editor draws such icons in right now.
 const EDITOR_INK_SAMPLE_ICON: String = "Node"
+## How long after a theme notification the plugin icon is checked (see _schedule_plugin_icon_refresh).
+const PLUGIN_ICON_REFRESH_DELAY_SEC: float = 0.5
 const SETTINGS_HOVER_PATH: String = "res://addons/eventforge/editor/settings_hover_plugin.gd"
 
 # Cold-path helpers load BY PATH, not by class name: naming a global class in any function body
@@ -62,6 +64,10 @@ const IMPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/import_
 const DOC_DOCK_PATH: String = "res://addons/eventsheet/editor/docs/doc_dock.gd"
 
 var _event_sheet_editor: Control = null
+## A plugin icon check is waiting on its timer (see _schedule_plugin_icon_refresh).
+var _plugin_icon_refresh_pending: bool = false
+## The editor icon ink the plugin icon was last reimported for; never asked twice for the same one.
+var _plugin_icon_reimported_for: Color = Color(0.0, 0.0, 0.0, 0.0)
 var _export_integrity_plugin: EditorExportPlugin = null
 # The On Project Export bake step. Loaded by path (it has no class_name on purpose, so registering it
 # never widens the boot compile) and typed as the engine base class.
@@ -183,13 +189,39 @@ func _refresh_plugin_icon_import() -> void:
 		if not file_system.filesystem_changed.is_connected(_refresh_plugin_icon_import):
 			file_system.filesystem_changed.connect(_refresh_plugin_icon_import, CONNECT_ONE_SHOT)
 		return
+	var ink: Color = editor_icon_ink(get_editor_interface().get_editor_theme())
+	# Once per ink: a reimport that did not land in it (an importer told not to follow the editor's
+	# colours) is not asked again on every later theme notification, which kept the editor reimporting.
+	if ink.is_equal_approx(_plugin_icon_reimported_for):
+		return
 	var imported: Texture2D = load(PLUGIN_ICON_PATH) as Texture2D
-	if imported != null and not is_in_ink(imported, editor_icon_ink(get_editor_interface().get_editor_theme())):
+	if imported != null and not is_in_ink(imported, ink):
+		_plugin_icon_reimported_for = ink
 		file_system.reimport_files(PackedStringArray([PLUGIN_ICON_PATH]))
 
 
 func _on_editor_theme_changed() -> void:
-	_refresh_plugin_icon_import.call_deferred()
+	_schedule_plugin_icon_refresh()
+
+
+## One check a little after the editor's theme settles, never a deferred call. A switch of the theme
+## sends the base control a burst of theme notifications, and a reimport opens a progress dialog, which
+## the editor refuses while it flushes deferred calls: each call of the burst raised that error, and
+## the editor could close outright partway through repainting itself in the new theme. A timer fires
+## from the frame, after the burst, and the flag folds the burst into one check.
+func _schedule_plugin_icon_refresh() -> void:
+	if _plugin_icon_refresh_pending or not is_inside_tree():
+		return
+	_plugin_icon_refresh_pending = true
+	get_tree().create_timer(PLUGIN_ICON_REFRESH_DELAY_SEC).timeout.connect(_on_plugin_icon_refresh_due)
+
+
+## The flag stays up through the check: a reimport runs frames of its own, and a timer that fired in one
+## of them started a second reimport inside the first, which the editor refuses.
+func _on_plugin_icon_refresh_due() -> void:
+	if is_inside_tree():
+		_refresh_plugin_icon_import()
+	_plugin_icon_refresh_pending = false
 
 
 ## True when the most opaque pixel of `texture` is `ink`, give or take rounding (2/255 per channel).
@@ -542,7 +574,7 @@ func _enter_tree() -> void:
 	# The @icon a sheet resource wears in the FileSystem is the imported svg, which the importer draws in
 	# the editor's colours of the day it ran. After a switch between a dark and a light editor theme it
 	# is redrawn once, so it does not stay pale on the light theme.
-	_refresh_plugin_icon_import.call_deferred()
+	_schedule_plugin_icon_refresh()
 	# A switch of the editor theme while the editor runs redraws the sheet resources' icon the same way.
 	var base: Control = get_editor_interface().get_base_control()
 	if base != null and not base.theme_changed.is_connected(_on_editor_theme_changed):

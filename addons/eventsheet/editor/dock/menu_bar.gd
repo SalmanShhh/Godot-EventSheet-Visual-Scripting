@@ -212,6 +212,9 @@ func build(root: Node) -> void:
 	_toolbar.add_theme_constant_override("h_separation", 4)
 	_dock._toolbar = _toolbar
 	_toolbar_ref = _toolbar
+	# The strip hears every theme it is given (entering the editor, a live switch) and keeps its words
+	# readable after the change has reached its buttons.
+	_toolbar.theme_changed.connect(_queue_strip_ink)
 	root.add_child(_toolbar)
 
 	# ── THE STRIP AT REST ──────────────────────────────────────────────────────────────────────
@@ -1540,6 +1543,7 @@ func apply_theme_chrome() -> void:
 	_apply_tab_edge()
 	_apply_tab_position()
 	_apply_workspace_bands()
+	keep_strip_readable()
 
 
 ## The bands between the strip and the sheet: the title strip and the identity band are never shown.
@@ -1725,6 +1729,111 @@ func _apply_tab_edge() -> void:
 	edged.border_width_top = EventSheetPalette.scaled(2)
 	edged.border_color = edge
 	tab_bar.add_theme_stylebox_override("tab_selected", edged)
+
+
+## Every word of the strip and of the open-sheet tabs stays readable on the box it sits on. The strip
+## wears the editor's own button and tab styles, and an editor whose fonts are set to the light colour
+## on a light base hands out white words on white boxes: the strip's Menu, Code and Both buttons went
+## blank. A word the editor already draws readably is left exactly as it is, so a dark editor and an
+## ordinary light one see no change. Asked again on every theme change, after its own inks are taken off.
+func keep_strip_readable() -> void:
+	_strip_ink_queued = false
+	if _toolbar_ref == null or not _toolbar_ref.is_inside_tree():
+		return
+	var backdrop: Color = EventSheetEditorThemeDeriver.running_editor_base()
+	if backdrop.a <= 0.0:
+		backdrop = _toolbar_ref.get_theme_color("base_color", "Editor")
+	for found: Node in _toolbar_ref.find_children("*", "Button", true, false):
+		keep_readable(found as Control, BUTTON_INK_SLOTS, backdrop)
+	for found: Node in _toolbar_ref.find_children("*", "LineEdit", true, false):
+		keep_readable(found as Control, LINE_EDIT_INK_SLOTS, backdrop)
+	var tab_bar: TabBar = _dock._tab_bar if _dock != null else null
+	if tab_bar != null:
+		keep_readable(tab_bar, TAB_INK_SLOTS, backdrop)
+
+
+var _strip_ink_queued: bool = false
+
+
+## A theme change reaches the strip before its buttons, so the check waits for the end of the frame,
+## once however many notifications the change sends.
+func _queue_strip_ink() -> void:
+	if _strip_ink_queued:
+		return
+	_strip_ink_queued = true
+	keep_strip_readable.call_deferred()
+
+
+## The font slots a strip button draws its word in, each beside the box it is drawn on.
+const BUTTON_INK_SLOTS: Array = [
+	["font_color", "normal"], ["font_hover_color", "hover"], ["font_pressed_color", "pressed"],
+	["font_hover_pressed_color", "hover_pressed"], ["font_focus_color", "normal"],
+]
+## The same for the strip's fields (Quick add, Find): the typed words and the hint.
+const LINE_EDIT_INK_SLOTS: Array = [["font_color", "normal"], ["font_placeholder_color", "normal"]]
+## The same for a tab bar's tabs.
+const TAB_INK_SLOTS: Array = [
+	["font_selected_color", "tab_selected"], ["font_unselected_color", "tab_unselected"],
+	["font_hovered_color", "tab_hovered"],
+]
+## Below this contrast ratio a word is redrawn in a readable ink: the usual floor for large text.
+const STRIP_INK_MIN_CONTRAST: float = 3.0
+## The slots of a control whose colour this file set, so the next theme change can take them off first.
+const STRIP_INK_META: StringName = &"eventsheet_strip_inks"
+
+
+## Takes off the inks set here before, then sets a readable one on every `[slot, box]` of `control`
+## whose word stands out from its box by less than STRIP_INK_MIN_CONTRAST. A slot with a colour of its
+## own (the view switch's accent) is the owner's to choose and is left alone. A flat button, or a box
+## that draws nothing, puts the word on `backdrop`.
+static func keep_readable(control: Control, slots: Array, backdrop: Color) -> void:
+	if control == null:
+		return
+	var ours: PackedStringArray = control.get_meta(STRIP_INK_META, PackedStringArray())
+	for slot: String in ours:
+		control.remove_theme_color_override(slot)
+	var set_now: PackedStringArray = PackedStringArray()
+	for pair: Array in slots:
+		var slot: String = pair[0]
+		if control.has_theme_color_override(slot):
+			continue
+		var fill: Color = _fill_behind(control, str(pair[1]), backdrop)
+		var ink: Color = control.get_theme_color(slot)
+		var readable: Color = readable_strip_ink(ink, fill)
+		if readable != ink:
+			control.add_theme_color_override(slot, readable)
+			set_now.append(slot)
+	if set_now.is_empty():
+		control.remove_meta(STRIP_INK_META)
+	else:
+		control.set_meta(STRIP_INK_META, set_now)
+
+
+## The colour a word of `control` is drawn on in the state whose box is `box_name`.
+static func _fill_behind(control: Control, box_name: String, backdrop: Color) -> Color:
+	if control is Button and (control as Button).flat:
+		return backdrop
+	if not control.has_theme_stylebox(box_name):
+		return backdrop
+	var box: StyleBox = control.get_theme_stylebox(box_name)
+	if not box is StyleBoxFlat or not (box as StyleBoxFlat).draw_center:
+		return backdrop
+	var bg: Color = (box as StyleBoxFlat).bg_color
+	return backdrop.lerp(Color(bg.r, bg.g, bg.b, 1.0), bg.a)
+
+
+## `ink` itself when a word drawn in it stands out from `fill`, else black or white, whichever stands
+## out more, at the editor's usual strength for a word.
+static func readable_strip_ink(ink: Color, fill: Color) -> Color:
+	var opaque_fill: Color = Color(fill.r, fill.g, fill.b, 1.0)
+	var shown: Color = opaque_fill.lerp(Color(ink.r, ink.g, ink.b, 1.0), ink.a)
+	if EventSheetEditorThemeDeriver.contrast_ratio(shown, opaque_fill) >= STRIP_INK_MIN_CONTRAST:
+		return ink
+	var dark: Color = Color(0.0, 0.0, 0.0, 0.85)
+	var light: Color = Color(1.0, 1.0, 1.0, 0.85)
+	var on_dark: float = EventSheetEditorThemeDeriver.contrast_ratio(opaque_fill.lerp(Color.BLACK, dark.a), opaque_fill)
+	var on_light: float = EventSheetEditorThemeDeriver.contrast_ratio(opaque_fill.lerp(Color.WHITE, light.a), opaque_fill)
+	return dark if on_dark >= on_light else light
 
 
 ## The Sentences menu: the three variable-row modes as a radio (ticked on the one every pane reads

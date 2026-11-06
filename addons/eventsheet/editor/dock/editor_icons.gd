@@ -97,6 +97,8 @@ static func _mirror_of(editor_theme: Theme, icon_name: String) -> Texture2D:
 	image.flip_x()
 	var made: ImageTexture = ImageTexture.create_from_image(image)
 	_mirrored[icon_name] = [source.get_instance_id(), made]
+	# A mirror is not in the theme's list, and a live switch has to know what it was too.
+	_names_by_texture[made.get_instance_id()] = icon_name
 	return made
 
 
@@ -149,6 +151,9 @@ static func _remember(editor_theme: Theme) -> void:
 	_names_by_texture.clear()
 	for icon_name: StringName in editor_theme.get_icon_list("EditorIcons"):
 		_names_by_texture[editor_theme.get_icon(icon_name, "EditorIcons").get_instance_id()] = str(icon_name)
+	for mirrored_name: Variant in _mirrored:
+		var made: Texture2D = (_mirrored[mirrored_name] as Array)[1]
+		_names_by_texture[made.get_instance_id()] = str(mirrored_name)
 
 
 ## The name of the editor icon `texture` is (as of the last theme read), or "".

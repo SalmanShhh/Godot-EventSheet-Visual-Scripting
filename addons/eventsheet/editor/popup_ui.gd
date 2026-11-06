@@ -1547,14 +1547,27 @@ class ViewSwitch extends HBoxContainer:
 			button.text = str(labels[id])
 			button.tooltip_text = str(tips[id])
 			button.toggle_mode = true
-			# The chosen view reads in the one accent, the way the editor marks its own choice.
-			button.add_theme_color_override("font_pressed_color", EventSheetPopupUI.accent_color())
-			button.add_theme_color_override("font_hover_pressed_color", EventSheetPopupUI.accent_color())
 			button.button_group = group
 			button.pressed.connect(choose.bind(id))
 			add_child(button)
 			buttons[id] = button
+		_wear_accent()
 		choose(start, false)
+
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_THEME_CHANGED:
+			_wear_accent()
+
+
+	## The chosen view reads in the one accent, the way the editor marks its own choice. On a light
+	## editor's grey button the accent as it stands is too pale to read, so it goes through the same
+	## darkening every other coloured word on a panel does; a dark editor's accent is untouched.
+	func _wear_accent() -> void:
+		var ink: Color = EventSheetPopupUI.readable_on_panel(EventSheetPopupUI.accent_color())
+		for id: String in buttons:
+			(buttons[id] as Button).add_theme_color_override("font_pressed_color", ink)
+			(buttons[id] as Button).add_theme_color_override("font_hover_pressed_color", ink)
 
 
 	func choose(wanted: String, announce: bool = true) -> void:
