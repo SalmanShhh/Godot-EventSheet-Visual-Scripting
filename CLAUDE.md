@@ -67,6 +67,9 @@ GODOT="/path/to/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
 - **The analyzer reads `@ace_*` annotations off DISK** (`script.resource_path`). A `GDScript` built from a `source_code` string in memory has no file, so every annotation silently does nothing - an annotation round-trip test written that way PASSES for the wrong reason. Write a real file (`user://` is fine) and `load()` it.
 - **`EventSheetProjectFind.list_project_sheets()` only finds `.tres`**, but `.gd` is the default sheet format. Any Doctor check built on `sheet_paths` therefore skips most real projects while looking like it works. Check emitted output instead when the failure lives in emitted code.
 
+- **A first-open figure needs a scene open and `.godot/editor/editor_script_doc_cache.res` present.** Without that file the editor's worker compiles every script during the run, plugin or no plugin; the editor deletes it at start and saves it only on a normal close, so a killed run removes it. Without a scene open, rows skip whatever asks about the scene.
+- **Under `--editor --script`, a node queued while outside the tree is never freed.** That run's main loop is not the tree the queue goes to; a plain `--editor` run frees it. Orphan counts from such a harness are not real.
+
 ## Standing contracts (violating these breaks user projects)
 
 - **Lossless round-trip**: opening a `.gd` as a sheet and saving untouched reproduces the file byte-identically. Every importer lift is gated by byte-exact re-emission; a lift that cannot reproduce the source must not fire (degrade to a verbatim block, never corrupt).

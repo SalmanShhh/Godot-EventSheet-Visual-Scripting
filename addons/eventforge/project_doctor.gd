@@ -1635,31 +1635,14 @@ static func _requirement_present(requirement: String) -> bool:
 	return false
 
 
-## The class whose members a sheet's variables actually share a script with:
-## behavior/autoload sheets compile to Node components (host members live behind
-## `host.`), everything else extends the host class directly.
+## The class whose members a sheet's variables share a script with, and the class whose member a name
+## shadows. The rule lives with the variables, so asking it does not compile this file.
 static func variable_scope_class(sheet: EventSheetResource) -> String:
-	if sheet == null:
-		return "Node"
-	if sheet.behavior_mode or sheet.autoload_mode:
-		return "Node"
-	return sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"
+	return EventSheetVariableOwners.variable_scope_class(sheet)
 
 
-## "" when the name is free, else the class whose member it shadows. A shadowing
-## variable (e.g. `velocity` on a CharacterBody2D sheet) makes the generated script
-## unparseable AND blinds expression lint - the one rule shared by the doctor check
-## and the variable dialog's refusal.
 static func shadowed_member_class(sheet: EventSheetResource, variable_name: String) -> String:
-	var scope_class: String = variable_scope_class(sheet)
-	if ClassDB.class_has_method(scope_class, variable_name, false) \
-			or ClassDB.class_has_signal(scope_class, variable_name) \
-			or ClassDB.class_has_integer_constant(scope_class, variable_name):
-		return scope_class
-	for property: Dictionary in ClassDB.class_get_property_list(scope_class):
-		if str(property.get("name")) == variable_name:
-			return scope_class
-	return ""
+	return EventSheetVariableOwners.shadowed_member_class(sheet, variable_name)
 
 
 ## Variables shadowing host members break the generated script at load (duplicate

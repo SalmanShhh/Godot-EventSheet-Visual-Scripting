@@ -12,6 +12,12 @@
 class_name ACEParamsDialog
 extends RefCounted
 
+## The registries on their own and the public API by path: naming `EventSheets` from this file compiled
+## about 78 more scripts, the Doctor among them, into the first click on Add. Learn more is the one
+## thing here that wants the API, and it pays for it when clicked.
+const EXTENSION_REGISTRIES := preload("res://addons/eventsheet/api/extension_registries.gd")
+const PUBLIC_API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
+
 ## Emitted when the user confirms the parameter form.
 ## values is a Dictionary of { param_id -> typed_value }.
 signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary)
@@ -564,7 +570,7 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	# hint (or type_name) supplies the field. Contract: it returns a LineEdit (subclass freely -
 	# buttons, popups, validation) so the dialog's value read (.text) needs no special case.
 	var field: Control = null
-	var editor_factory: Callable = EventSheets.param_editor_for(hint if not hint.is_empty() else str(param_dict.get("type_name", "")))
+	var editor_factory: Callable = EXTENSION_REGISTRIES.param_editor_for(hint if not hint.is_empty() else str(param_dict.get("type_name", "")))
 	if editor_factory.is_valid():
 		var custom_field: Variant = editor_factory.call(param_dict, str(initial_values.get(key, param_dict.get("default", ""))))
 		if custom_field is LineEdit:
@@ -3087,40 +3093,14 @@ static func unresolved_node_reference(expression: String, scene_root: Node) -> S
 	return ""
 
 
-## Every node under `scene_root` as a relative path (Player, UI, UI/Score, …), capped, for `$` node
-## autocomplete. Depth-first so siblings stay grouped under their parent.
+## The two lists `$` and `%` autocomplete from, which live with the scene's other unique-name facts.
 static func scene_node_paths(scene_root: Node, limit: int = 200) -> PackedStringArray:
-	var paths: PackedStringArray = PackedStringArray()
-	if scene_root != null:
-		_collect_node_paths(scene_root, scene_root, paths, limit)
-	return paths
+	return EventSheetSceneUniqueNames.scene_node_paths(scene_root, limit)
 
 
-static func _collect_node_paths(node: Node, scene_root: Node, paths: PackedStringArray, limit: int) -> void:
-	for child: Node in node.get_children():
-		if paths.size() >= limit:
-			return
-		paths.append(str(scene_root.get_path_to(child)))
-		_collect_node_paths(child, scene_root, paths, limit)
-
-
-## The unique names (`%Name`) reachable from anywhere in `scene_root`: nodes flagged
-## unique_name_in_owner whose owner is the scene root (owner-scoped - an instanced sub-scene's own
-## uniques are encapsulated and not reachable via `%` here). Drives `%` validation + autocomplete.
 static func scene_unique_names(scene_root: Node, limit: int = 200) -> PackedStringArray:
-	var names: PackedStringArray = PackedStringArray()
-	if scene_root != null:
-		_collect_unique_names(scene_root, scene_root, names, limit)
-	return names
+	return EventSheetSceneUniqueNames.scene_unique_names(scene_root, limit)
 
-
-static func _collect_unique_names(node: Node, scene_root: Node, names: PackedStringArray, limit: int) -> void:
-	for child: Node in node.get_children():
-		if names.size() >= limit:
-			return
-		if child.unique_name_in_owner and child.owner == scene_root:
-			names.append(child.name)
-		_collect_unique_names(child, scene_root, names, limit)
 
 ## The scene to validate node paths against: a test-injected tree, else the edited scene (editor only).
 var node_validation_scene_override: Node = null  # tests inject a tree here
@@ -4134,7 +4114,7 @@ var _commit_validation_prompt: ConfirmationDialog = null
 ## ({} when every field passes). Validators see the raw committed String value.
 func _first_commit_validation_prompt(values: Dictionary) -> Dictionary:
 	for key: Variant in values.keys():
-		var validator: Callable = EventSheets.param_commit_validator_for(_hint_of(str(key)))
+		var validator: Callable = EXTENSION_REGISTRIES.param_commit_validator_for(_hint_of(str(key)))
 		if not validator.is_valid():
 			continue
 		var prompt: Variant = validator.call(str(values[key]))
@@ -4664,7 +4644,7 @@ func _offer_learn_more() -> void:
 	var anchor: String = str(section.get("anchor", ""))
 	_help_strip.offer_learn_more(
 		"%s  ·  %s" % [EventSheetL10n.translate("Learn more"), EventSheetDocTeaches.section_line(section)],
-		func() -> void: EventSheets.open_docs(doc_id, anchor))
+		func() -> void: load(PUBLIC_API_PATH).open_docs(doc_id, anchor))
 
 
 ## The plainer reading of what is already typed, as a button on the strip: a Set value whose

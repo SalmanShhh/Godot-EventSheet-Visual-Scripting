@@ -16,6 +16,10 @@
 class_name ACEPickerDialog
 extends RefCounted
 
+## The pack map on its own, not through the public API: naming `EventSheets` from this file compiled
+## about 78 more scripts, the Doctor among them, into the first click on Add.
+const PACK_DIRECTORIES := preload("res://addons/eventsheet/api/pack_directories.gd")
+
 ## Emitted when the user double-clicks or activates a definition in the picker.
 ## context is the same dictionary passed to open().
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
@@ -1924,7 +1928,7 @@ func _populate_object_cards() -> void:
 		# nothing said so. The census reads the pack's own emitted scripts, so the card cannot claim a
 		# dock the pack stopped hanging.
 		var adds: String = EventSheetEditorToolCensus.summary(
-			EventSheetEditorToolCensus.from_pack(EventSheets.addon_pack_directory(provider)))
+			EventSheetEditorToolCensus.from_pack(PACK_DIRECTORIES.addon_pack_directory(provider)))
 		if not adds.is_empty():
 			item.set_text(0, "%s  ·  %s" % [label, adds])
 			tooltip += "\n%s" % adds

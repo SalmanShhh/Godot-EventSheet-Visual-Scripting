@@ -123,7 +123,7 @@ static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource
 static func _check_local_var(local: LocalVariable, sheet: EventSheetResource, diagnostics: Array) -> void:
 	if local.name.strip_edges().is_empty():
 		return
-	var owner: String = ReadingDoors.doctor().shadowed_member_class(sheet, local.name)
+	var owner: String = EventSheetVariableOwners.shadowed_member_class(sheet, local.name)
 	if not owner.is_empty():
 		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member - rename it." % [local.name, owner], ""))
 

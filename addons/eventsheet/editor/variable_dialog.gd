@@ -2041,7 +2041,7 @@ func row_preview_text() -> String:
 ## The declaration the compiler will write for these choices, built by THE COMPILER'S OWN EMITTER
 ## over a throwaway variable, so the window can never promise a line the sheet would not write.
 func code_line_text() -> String:
-	var line: String = EventSheets.row_code_line(_preview_variable(_collect_attributes(_selected_stored_type())))
+	var line: String = EventSheetCodeEcho.line_for(_preview_variable(_collect_attributes(_selected_stored_type())))
 	var autoload_name: String = str(selected_global_target().get("name", "")).strip_edges()
 	if _writes_project_global and not autoload_name.is_empty():
 		return "%s    # read elsewhere as %s.%s" % [line, autoload_name, _shown_name()]
@@ -2181,7 +2181,7 @@ func set_sheet_provider(provider: Callable) -> void:
 ## Owner class if `var_name` shadows a host-class member, else "".
 func _shadow_owner(var_name: String) -> String:
 	var sheet: EventSheetResource = _sheet()
-	return "" if sheet == null else EventSheetProjectDoctor.shadowed_member_class(sheet, var_name.strip_edges())
+	return "" if sheet == null else EventSheetVariableOwners.shadowed_member_class(sheet, var_name.strip_edges())
 
 
 ## A clash is shown INLINE while the name is typed; finding out on OK is finding out too late.

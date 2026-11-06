@@ -300,7 +300,7 @@ static func _test_the_warm() -> bool:
 	all_passed = _check("asked by hand, it finishes", EventSheetPickerWarmup.is_warm(), true) and all_passed
 	all_passed = _check("and it covers every installed pack",
 		EventSheetPickerWarmup._steps.size(),
-		EventSheetEditorToolCensus.pack_directories().size() + 2 + EventSheetPickerWarmup.ICON_SLICES) and all_passed
+		EventSheetEditorToolCensus.pack_directories().size() + 3 + EventSheetPickerWarmup.ICON_SLICES) and all_passed
 	EventSheetPickerWarmup.reset_for_tests()
 	all_passed = _test_the_warm_holds_while_a_sheet_opens() and all_passed
 	return all_passed

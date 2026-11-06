@@ -611,3 +611,30 @@ static func _collect_locals(rows: Array, into: Array[LocalVariable]) -> void:
 				if local_entry is LocalVariable:
 					into.append(local_entry as LocalVariable)
 			_collect_locals(event_row.sub_events, into)
+
+
+## The class whose members a sheet's variables actually share a script with:
+## behavior/autoload sheets compile to Node components (host members live behind
+## `host.`), everything else extends the host class directly.
+static func variable_scope_class(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return "Node"
+	if sheet.behavior_mode or sheet.autoload_mode:
+		return "Node"
+	return sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"
+
+
+## "" when the name is free, else the class whose member it shadows. A shadowing
+## variable (e.g. `velocity` on a CharacterBody2D sheet) makes the generated script
+## unparseable AND blinds expression lint - the one rule shared by the doctor check,
+## the row's diagnostic and the variable dialog's refusal.
+static func shadowed_member_class(sheet: EventSheetResource, variable_name: String) -> String:
+	var scope_class: String = variable_scope_class(sheet)
+	if ClassDB.class_has_method(scope_class, variable_name, false) \
+			or ClassDB.class_has_signal(scope_class, variable_name) \
+			or ClassDB.class_has_integer_constant(scope_class, variable_name):
+		return scope_class
+	for property: Dictionary in ClassDB.class_get_property_list(scope_class):
+		if str(property.get("name")) == variable_name:
+			return scope_class
+	return ""

@@ -1207,6 +1207,7 @@ static func scripts_calling(function_name: String, own_script: String = "") -> P
 ## start (measured: a ~330 ms boot closure became ~19,000 ms when one registration was made through
 ## the API). The methods below are unchanged and stay the way every feature reaches them.
 const EXTENSION_REGISTRIES := preload("res://addons/eventsheet/api/extension_registries.gd")
+const PACK_DIRECTORIES := preload("res://addons/eventsheet/api/pack_directories.gd")
 
 ## Extension starters: [{label, build: Callable()->EventSheetResource}] - ids 1000+ in the dialog.
 static var _starters: Array[Dictionary] = []
@@ -1486,24 +1487,12 @@ static func param_help_for(hint: String) -> String:
 ## The dialog owns the tricky part ONCE - the commit is deferred and then delivered
 ## exactly one time whichever way the prompt closes (confirm, cancel, Esc, titlebar X),
 ## with on_confirm invoked only on confirm. One validator per hint; last registration wins.
-static var _param_commit_validators: Dictionary = {}
-static var _builtin_validators_registered: bool = false
-
-
 static func register_param_commit_validator(hint: String, validator: Callable) -> void:
-	_param_commit_validators[hint] = validator
+	EXTENSION_REGISTRIES.register_param_commit_validator(hint, validator)
 
 
 static func param_commit_validator_for(hint: String) -> Callable:
-	_ensure_builtin_validators()
-	return _param_commit_validators.get(hint, Callable())
-
-
-static func _ensure_builtin_validators() -> void:
-	if _builtin_validators_registered:
-		return
-	_builtin_validators_registered = true
-	register_param_commit_validator("feature_tag", EventSheetFeatureTags.commit_validator)
+	return EXTENSION_REGISTRIES.param_commit_validator_for(hint)
 
 
 ## Adds a row to the Welcome window's Preferences card: `builder()` returns the Control (built
@@ -2351,15 +2340,6 @@ const _GUIDE_ACRONYMS := {
 	"npc": "NPC", "uhtn": "UHTN", "ui": "UI",
 }
 
-## provider id -> pack directory, built in ONE pass over the addon scripts and reused for the
-## whole session. Per-provider scanning was measured at ~63 ms per newly seen provider on a
-## corpus this size, and this map is read on the picker's selection-change path, so a
-## per-provider scan is a visible stall every time the reader arrows onto a new pack. Builtin
-## providers are not in the map at all - the miss must cost nothing, not a full corpus read.
-static var _pack_dir_by_provider: Dictionary = {}
-## Set ONLY by the function that fills the map completely (a flag pre-set by a partial scan is
-## how a lazy cache silently loses entries).
-static var _pack_dir_map_built: bool = false
 ## pack directory -> its `@ace_help` URL ("" when it declares none), so the doc panel's per-page
 ## read path also costs one directory read per pack per session rather than one per page.
 static var _pack_help_by_dir: Dictionary = {}
@@ -2523,31 +2503,7 @@ static func module_guide_units() -> PackedStringArray:
 ## found by locating the script that declares that class_name under the addon directories.
 ## "" for a builtin or project-local provider, which has no pack guide.
 static func addon_pack_directory(provider_id: String) -> String:
-	var wanted: String = provider_id.strip_edges()
-	if wanted.is_empty():
-		return ""
-	_ensure_pack_directory_map()
-	return str(_pack_dir_by_provider.get(wanted, ""))
-
-
-## Reads every addon script ONCE and records every class_name it finds against the directory it
-## was declared in. The scan already had to open every file to answer one question, so answering
-## all of them in the same pass is free - and it makes a builtin provider's "no pack" answer a
-## dictionary miss instead of a full-corpus read.
-static func _ensure_pack_directory_map() -> void:
-	if _pack_dir_map_built:
-		return
-	var matcher: RegEx = RegEx.create_from_string("(?m)^class_name[ \\t]+([A-Za-z_][A-Za-z0-9_]*)")
-	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
-		var source: String = _read_text_file(script_path)
-		if source.is_empty():
-			continue
-		var directory: String = script_path.get_base_dir().get_file()
-		for found: RegExMatch in matcher.search_all(source):
-			var declared: String = found.get_string(1)
-			if not _pack_dir_by_provider.has(declared):
-				_pack_dir_by_provider[declared] = directory
-	_pack_dir_map_built = true
+	return PACK_DIRECTORIES.addon_pack_directory(provider_id)
 
 
 ## The documentation target for a PACK DIRECTORY: its own `@ace_help` URL when it declares one,
@@ -2577,16 +2533,7 @@ static func open_addon_guide(provider_id: String) -> bool:
 ## addon_pack_directory, answered from the same one-pass map - so asking "what does this pack
 ## publish?" costs a dictionary walk rather than a second scan of every addon script.
 static func pack_providers(pack_dir: String) -> PackedStringArray:
-	var wanted: String = pack_dir.strip_edges().trim_suffix("/").get_file()
-	var providers: PackedStringArray = PackedStringArray()
-	if wanted.is_empty():
-		return providers
-	_ensure_pack_directory_map()
-	for provider_id: Variant in _pack_dir_by_provider:
-		if str(_pack_dir_by_provider[provider_id]) == wanted:
-			providers.append(str(provider_id))
-	providers.sort()
-	return providers
+	return PACK_DIRECTORIES.pack_providers(pack_dir)
 
 
 ## Every verb the LIVE registry currently offers for a provider, as immutable ACEDefinitions.

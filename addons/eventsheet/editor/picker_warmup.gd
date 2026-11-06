@@ -124,6 +124,7 @@ static func reset_for_tests() -> void:
 ## stall wherever it happens.
 static func _build_steps() -> Array[Callable]:
 	var steps: Array[Callable] = []
+	steps.append(_compile_picker_in_background)
 	# Which classes this project publishes - the object cards' "Your Project" section, and the
 	# reflection behind any of them a reader picks.
 	steps.append(func() -> void: EventSheetProjectScanner.list_project_classes())
@@ -140,6 +141,16 @@ static func _build_steps() -> Array[Callable]:
 	for slice_index in ICON_SLICES:
 		steps.append(func() -> void: _warm_icons(slice_index))
 	return steps
+
+
+## The picker's own scripts, compiled on a worker while nothing is asked of the editor. They are about
+## 22,000 lines and 2.7 s, which a slice of the main thread could never hold and the first click on Add
+## should not. The dock's `load()` of the same path simply waits for this if the click comes first.
+## A headless run has no click to be ready for, and leaves what it compiled up to what it asks.
+static func _compile_picker_in_background() -> void:
+	if DisplayServer.get_name() == "headless" or ResourceLoader.has_cached(ACE_PICKER_PATH):
+		return
+	ResourceLoader.load_threaded_request(ACE_PICKER_PATH)
 
 
 ## How many steps the icon warm is spread over. Chosen so a slice is a few milliseconds on a

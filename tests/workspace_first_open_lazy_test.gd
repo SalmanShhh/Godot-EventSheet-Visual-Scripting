@@ -27,7 +27,6 @@ const DOCK_REGISTRY_PATH := "res://addons/eventsheet/api/dock_registry.gd"
 
 ## What a click opens, and the first open of a sheet must not compile.
 const CLICK_ONLY := [
-	"res://addons/eventsheet/editor/interaction/viewport_row_builder_on_demand.gd",
 	"res://addons/eventsheet/editor/docs/doc_window.gd",
 	"res://addons/eventsheet/editor/docs/doc_chores.gd",
 	"res://addons/eventsheet/editor/dock/welcome_window.gd",
@@ -108,6 +107,19 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/ace/pack_catalog.gd",
 ]
 
+## The two scripts the first click on Add compiles, and what that click must leave for its own moment.
+const FIRST_CLICK_FILES := [
+	"res://addons/eventsheet/editor/ace_picker.gd",
+	"res://addons/eventsheet/editor/ace_params_dialog.gd",
+	"res://addons/eventsheet/editor/variable_dialog.gd",
+	"res://addons/eventsheet/editor/dock/variables_manager.gd",
+	"res://addons/eventsheet/ace/diagnostics.gd",
+]
+const FIRST_CLICK_LEAVES_OUT := [
+	"res://addons/eventsheet/api/eventsheets.gd",
+	"res://addons/eventforge/project_doctor.gd",
+]
+
 ## The ids a first-paint file spells out rather than reading off a file it must not compile, each
 ## beside the constant it copies: [file, its constant, the source file, the source's constant].
 const SPELLED_OUT := [
@@ -181,6 +193,36 @@ static func run() -> bool:
 	all_passed = _check("and the public API no longer names the dock",
 		(graph["edges"] as Dictionary).get("res://addons/eventsheet/api/eventsheets.gd", PackedStringArray()).has(DOCK_PATH),
 		false) and all_passed
+
+	# The first click on Add compiles the picker and the parameters dialog, and neither may bring the
+	# public API with it: one call through `EventSheets` was 78 more scripts, the Doctor among them.
+	for door: String in FIRST_CLICK_FILES:
+		var door_graph: Dictionary = tool.build_graph("res://addons/", door)
+		var reached: PackedStringArray = tool.reach(door_graph["edges"], door, "")
+		for path: String in FIRST_CLICK_LEAVES_OUT:
+			all_passed = _check("%s does not compile %s" % [door.get_file(), path.get_file()],
+				reached.has(path), false) and all_passed
+	all_passed = _check("the shipped commit validator is still answered without the API",
+		load("res://addons/eventsheet/api/extension_registries.gd").param_commit_validator_for("feature_tag").is_valid(), true) and all_passed
+	all_passed = _check("and the API answers with the same one",
+		EventSheets.param_commit_validator_for("feature_tag").get_method(), &"commit_validator") and all_passed
+	all_passed = _check("the pack map answers without the API, as the API does",
+		load("res://addons/eventsheet/api/pack_directories.gd").pack_providers("juice"), EventSheets.pack_providers("juice")) and all_passed
+
+	# A comment row asks the completion seam for the open scene's nodes while a sheet opens, so that seam
+	# reaches no dialog for them. Only with a scene open does it run at all, which the static walk and a
+	# bare process cannot see: `editor_boot_budget_test` asks the same of a real editor.
+	var completion_code: String = FileAccess.get_file_as_string("res://addons/eventsheet/editor/autocomplete/completion_sources.gd")
+	all_passed = _check("listing the open scene's nodes goes through no dialog",
+		[completion_code.contains("params_dialog().scene_node_paths"), completion_code.contains("params_dialog().scene_unique_names")],
+		[false, false]) and all_passed
+	var listing_scene: Node = Node.new()
+	var listed_child: Node = Node.new()
+	listed_child.name = "Listed"
+	listing_scene.add_child(listed_child)
+	all_passed = _check("and the dialog's own answer is the same one",
+		ACEParamsDialog.scene_node_paths(listing_scene), EventSheetSceneUniqueNames.scene_node_paths(listing_scene)) and all_passed
+	listing_scene.free()
 
 	# 2. No heavy name in the code of the files the first paint builds.
 	for path: String in FIRST_PAINT_FILES:

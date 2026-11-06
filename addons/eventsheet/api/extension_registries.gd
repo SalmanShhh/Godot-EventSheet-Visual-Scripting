@@ -16,9 +16,9 @@
 # few lines instead of a compile of the plugin.
 #
 # DELIBERATELY NO `class_name`: a global name is the exact thing a boot file must not use, and this
-# file exists so that there is nothing here worth naming. Readers that are already paying for the
-# API (the params dialog, the card drawer) keep going through `EventSheets` and should - the split
-# is about who may write at boot, not about routing every caller around the front door.
+# file exists so that there is nothing here worth naming. The picker's and the parameters dialog's
+# reads come here too, for the same reason at a later moment: naming the API from either compiled
+# about 78 more scripts (the Doctor among them) into the first click on Add.
 @tool
 extends RefCounted
 
@@ -28,6 +28,9 @@ static var _param_editors: Dictionary = {}
 static var _param_help: Dictionary = {}
 ## Card schemas: schema name -> Callable() -> Dictionary, asked when an Inspector draws the list.
 static var _card_schemas: Dictionary = {}
+## Commit validators: hint -> Callable, asked when the parameters dialog commits a field of that kind.
+static var _param_commit_validators: Dictionary = {}
+static var _builtin_validators_registered: bool = false
 
 
 static func register_param_editor(tag: String, factory: Callable) -> void:
@@ -43,6 +46,23 @@ static func unregister_param_editor(tag: String) -> void:
 
 static func param_editor_for(tag: String) -> Callable:
 	return _param_editors.get(tag, Callable())
+
+
+static func register_param_commit_validator(hint: String, validator: Callable) -> void:
+	_param_commit_validators[hint] = validator
+
+
+static func param_commit_validator_for(hint: String) -> Callable:
+	_ensure_builtin_validators()
+	return _param_commit_validators.get(hint, Callable())
+
+
+## The one validator the plugin ships for itself, reached by path because this file names nothing.
+static func _ensure_builtin_validators() -> void:
+	if _builtin_validators_registered:
+		return
+	_builtin_validators_registered = true
+	register_param_commit_validator("feature_tag", Callable(load("res://addons/eventsheet/editor/feature_tags.gd"), "commit_validator"))
 
 
 static func register_param_help(hint: String, paragraph: String) -> void:

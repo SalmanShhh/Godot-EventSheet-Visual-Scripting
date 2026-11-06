@@ -134,3 +134,42 @@ static func class_of(script_path: String, reference: String) -> String:
 	if text.is_empty():
 		return ""
 	return str(classes_for_script(script_path).get(text, ""))
+
+
+## Every node under `scene_root` as a relative path (Player, UI, UI/Score, ...), capped, for `$` node
+## autocomplete. Depth-first so siblings stay grouped under their parent. Lives here rather than on the
+## parameters dialog because a comment row's doors ask for it while a first sheet opens: reaching
+## it through the dialog compiled the dialog, the picker and everything they name into that open
+## whenever a scene was open in the editor.
+static func scene_node_paths(scene_root: Node, limit: int = 200) -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray()
+	if scene_root != null:
+		_collect_node_paths(scene_root, scene_root, paths, limit)
+	return paths
+
+
+static func _collect_node_paths(node: Node, scene_root: Node, paths: PackedStringArray, limit: int) -> void:
+	for child: Node in node.get_children():
+		if paths.size() >= limit:
+			return
+		paths.append(str(scene_root.get_path_to(child)))
+		_collect_node_paths(child, scene_root, paths, limit)
+
+
+## The unique names (`%Name`) reachable from anywhere in `scene_root`: nodes flagged
+## unique_name_in_owner whose owner is the scene root (owner-scoped - an instanced sub-scene's own
+## uniques are encapsulated and not reachable via `%` here). Drives `%` validation + autocomplete.
+static func scene_unique_names(scene_root: Node, limit: int = 200) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	if scene_root != null:
+		_collect_unique_names(scene_root, scene_root, names, limit)
+	return names
+
+
+static func _collect_unique_names(node: Node, scene_root: Node, names: PackedStringArray, limit: int) -> void:
+	for child: Node in node.get_children():
+		if names.size() >= limit:
+			return
+		if child.unique_name_in_owner and child.owner == scene_root:
+			names.append(child.name)
+		_collect_unique_names(child, scene_root, names, limit)

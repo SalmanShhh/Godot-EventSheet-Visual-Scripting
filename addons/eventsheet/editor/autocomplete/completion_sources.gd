@@ -607,10 +607,10 @@ static func _node_entries() -> Array[Dictionary]:
 	var scene_root: Node = _scene_root()
 	if scene_root == null:
 		return entries
-	for path: String in ReadingDoors.params_dialog().scene_node_paths(scene_root):
+	for path: String in EventSheetSceneUniqueNames.scene_node_paths(scene_root):
 		entries.append({"text": "$%s" % path, "detail": EventSheetL10n.translate("node"),
 			"kind": KIND_NODE})
-	for unique_name: String in ReadingDoors.params_dialog().scene_unique_names(scene_root):
+	for unique_name: String in EventSheetSceneUniqueNames.scene_unique_names(scene_root):
 		entries.append({"text": "%%%s" % unique_name,
 			"detail": EventSheetL10n.translate("node"), "kind": KIND_NODE})
 	return entries

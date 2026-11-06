@@ -19,6 +19,12 @@
 # named on the boot path (enabling used to cost about 2,000 ms), or a first open that starts building
 # per sheet what it builds once.
 #
+# Two more answers from the same child, values rather than times, because they catch what a timing
+# never could. The first open compiled none of the scripts a click compiles, asked of a real editor
+# with the row kinds of a lifted sheet behind it; and the first click on Add left the public API,
+# and with it the Doctor, uncompiled. Naming `EventSheets` from the picker for one call cost 3.7 s on
+# that click.
+#
 # THE WARN LINES are the tighter half: about one and a half times the same medians. Past one, the
 # test prints a loud `[boot] WARN` line and still passes - a slower first open is seen on the run that
 # made it, without a shared runner's bad minute failing the suite. The launcher repeats every
@@ -33,6 +39,8 @@ const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "editor_boot_budget_test"
 const MEASURE_TOOL: String = "res://tools/measure_editor_boot.gd"
 const RESULT_PREFIX: String = "editor boot: "
+const HEAVY_PREFIX: String = "editor boot heavy:"
+const SCRIPT_DOC_CACHE: String = "res://.godot/editor/editor_script_doc_cache.res"
 
 ## Enabling the plugin in a running editor, through the next frame. Median measured 314 ms.
 const ENABLE_BUDGET_MS: int = 1500
@@ -46,9 +54,16 @@ const FIRST_OPEN_WARN_MS: int = 24700
 
 static func run() -> bool:
 	var output: Array = []
+	# Without the editor's documentation file the child would also run the editor's walk of every
+	# script, which compiles the very scripts this test asks about. The tool writes an empty file for it
+	# to read, and what the child's exit saves in its place only says what that one run compiled, so
+	# it goes again unless this checkout had a file of its own to begin with.
+	var had_doc_cache: bool = FileAccess.file_exists(SCRIPT_DOC_CACHE)
 	var arguments: PackedStringArray = PackedStringArray(["--editor", "--headless", "--path",
-		ProjectSettings.globalize_path("res://"), "--script", MEASURE_TOOL])
+		ProjectSettings.globalize_path("res://"), "--script", MEASURE_TOOL, "--", "no-doc-walk"])
 	OS.execute(OS.get_executable_path(), arguments, output, true)
+	if not had_doc_cache:
+		DirAccess.remove_absolute(SCRIPT_DOC_CACHE)
 	var numbers: Dictionary = _numbers(output)
 	if not numbers.has("first_open_ms"):
 		# A budget nobody measured is worse than none, so an editor that answered nothing fails.
@@ -71,6 +86,10 @@ static func run() -> bool:
 		["the timed open reopened no earlier session (the blank sheet and the one opened)", tabs, 2],
 		["enabling the plugin stays inside its budget", enable_ms <= float(ENABLE_BUDGET_MS), true],
 		["the first sheet open stays inside its budget", first_open_ms <= float(FIRST_OPEN_BUDGET_MS), true],
+		["the editor's own walk of every script stayed out of the run", int(numbers.get("doc_walk", -1.0)), 0],
+		["the first open compiled none of what a click compiles", _heavy_names(output), PackedStringArray()],
+		["the first click on Add measured", float(numbers.get("first_picker_ms", -1.0)) >= 0.0, true],
+		["the first click on Add left the public API uncompiled", int(numbers.get("api_after_picker", -1.0)), 0],
 		["numbers inside their warn lines say nothing more", warnings(314.0, 16453.0), PackedStringArray()],
 		["a first open past its warn line is said loudly", warnings(314.0, 30000.0), PackedStringArray([
 			"  [boot] WARN the first sheet open took 30000 ms, past the 24700 ms warn line (median 16,453)"])],
@@ -87,6 +106,15 @@ static func warnings(enable_ms: float, first_open_ms: float) -> PackedStringArra
 		lines.append("  [boot] WARN the first sheet open took %d ms, past the %d ms warn line (median 16,453)" % [
 			roundi(first_open_ms), FIRST_OPEN_WARN_MS])
 	return lines
+
+
+## The scripts the tool's second line names; a list so that a failure reads as what was compiled.
+static func _heavy_names(output: Array) -> PackedStringArray:
+	for chunk: Variant in output:
+		for line: String in str(chunk).split("\n"):
+			if line.begins_with(HEAVY_PREFIX):
+				return line.trim_prefix(HEAVY_PREFIX).strip_edges().split(", ", false)
+	return PackedStringArray(["the tool printed no heavy line"])
 
 
 ## The `key=value` pairs off the tool's one result line.
