@@ -23,11 +23,17 @@ class NoSignal extends RefCounted:
 	pass
 
 
+class GoneDebugger extends Object:
+	signal debug_data(message: String, data: Array)
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _parse_pins() and ok
 	ok = _repeat_pins() and ok
 	ok = _attach_pins() and ok
+	ok = _gone_tab_pins() and ok
+	ok = _new_run_pins() and ok
 	ok = _gd_sheet_pins() and ok
 	return ok
 
@@ -84,6 +90,36 @@ static func _repeat_pins() -> bool:
 		["the same place again is a repeat", again, true],
 		["another line is new", other_line, false],
 		["another file is new", other_file, false],
+	])
+
+
+## The extra debugger tab of a second game instance is freed when the game stops, with the feed still
+## holding it. Release has to get past it and let go of the next one.
+static func _gone_tab_pins() -> bool:
+	var feed: EventSheetEditorErrorFeed = FEED.new()
+	var gone: GoneDebugger = GoneDebugger.new()
+	var stays: GoneDebugger = GoneDebugger.new()
+	feed.attach(gone)
+	feed.attach(stays)
+	gone.free()
+	feed.release()
+	var stays_connected: int = stays.get_signal_connection_list("debug_data").size()
+	var left: int = feed._attached.size()
+	stays.free()
+	return SUPPORT.pins(NAME, [
+		["release gets past a tab that was freed and lets go of the next", stays_connected, 0],
+		["and holds nothing afterwards", left, 0],
+	])
+
+
+## Two copies of a game can connect in the same poll, each finding the other already active. The Run
+## before them having ended is what makes it a new Run, or its errors are repeats of the last Run's.
+static func _new_run_pins() -> bool:
+	return SUPPORT.pins(NAME, [
+		["a game with nothing else running starts a Run", EventSheetLiveValuesDebugger.starts_new_run(0), true],
+		["a second copy joins the Run the first began", EventSheetLiveValuesDebugger.starts_new_run(1), false],
+		["two copies connecting together after a finished Run start a new one",
+			EventSheetLiveValuesDebugger.starts_new_run(1, true), true],
 	])
 
 

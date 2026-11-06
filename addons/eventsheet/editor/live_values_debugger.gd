@@ -42,6 +42,8 @@ signal runtime_error_received(message: String, script_path: String, line: int)
 const ERROR_FEED_PATH := "res://addons/eventsheet/editor/dock/editor_error_feed.gd"
 
 var _last_session_id: int = -1
+## Every game of the last Run has stopped, so the next game to start begins a new one.
+var _run_over: bool = true
 ## Script errors read from the editor's own debugger (see EventSheetEditorErrorFeed): no game-side code,
 ## so a `.gd` sheet and a hand-written script are covered like a debug compile.
 var _error_feed: RefCounted = null
@@ -88,8 +90,9 @@ func _on_session_started(session_id: int) -> void:
 	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
 	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)
 	_attach_error_feed()
-	if not starts_new_run(_other_active_sessions(session_id)):
+	if not starts_new_run(_other_active_sessions(session_id), _run_over):
 		return
+	_run_over = false
 	_errors_said.clear()
 	var counts: GDScript = load("res://addons/eventsheet/editor/trace_hit_counts.gd")
 	if counts != null:
@@ -149,10 +152,13 @@ func _other_active_sessions(session_id: int) -> int:
 
 ## Whether a game starting is a new Run. Play as host + client starts two copies a moment apart, and
 ## the second one is joining the Run the first began: emptying the stores then would drop what the
-## host already streamed and restart its trail's clock mid-run. Static like the parsers below, because
-## `EditorDebuggerPlugin` cannot be instantiated headless, so the rule is pinned here or nowhere.
-static func starts_new_run(other_active_sessions: int) -> bool:
-	return other_active_sessions == 0
+## host already streamed and restart its trail's clock mid-run. Two copies can also connect in the same
+## poll, each then finding the other already active, so a Run that has wholly ended (`run_over`) makes
+## the next start a new one whatever else is connected by then: without it the stores were never emptied
+## and the second Run's errors were dropped as repeats of the first's. Static like the parsers below,
+## because `EditorDebuggerPlugin` cannot be instantiated headless, so the rule is pinned here or nowhere.
+static func starts_new_run(other_active_sessions: int, run_over: bool = false) -> bool:
+	return run_over or other_active_sessions == 0
 
 
 ## The run ended. Announced rather than inferred: "no values have arrived recently" and "the game is
@@ -163,6 +169,8 @@ static func starts_new_run(other_active_sessions: int) -> bool:
 ## debugged would go back to reading as a lone run while the other one was the thing that ended.
 func _on_session_stopped(session_id: int) -> void:
 	_instance_labels = labels_after_stop(_instance_labels, session_id)
+	if _other_active_sessions(session_id) == 0:
+		_run_over = true
 	session_ended.emit()
 
 
