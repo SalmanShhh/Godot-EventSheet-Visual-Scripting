@@ -875,14 +875,13 @@ func _exit_tree() -> void:
 		_new_sheet_dialog = null
 	if _doc_dock != null:
 		remove_dock(_doc_dock)
-		# free(), not queue_free(): a node already out of the tree that is only queued is never
-		# collected (the delete queue skips it), so it stayed alive as an orphan with all its children.
-		_doc_dock.free()
+		_doc_dock.queue_free()
 		_doc_dock = null
 	if _event_sheet_editor != null:
 		if _event_sheet_editor.get_parent() != null:
 			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)
-		# free(), not queue_free(): see the doc dock above - the workspace is out of the tree here.
-		_event_sheet_editor.free()
+		# Queued, not freed on the spot: a disable can arrive from a call that is still inside the
+		# workspace, and the frame's end is the first moment nothing of it is on the stack.
+		_event_sheet_editor.queue_free()
 		_event_sheet_editor = null
 	print("[Godot EventSheets] unloaded")

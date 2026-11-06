@@ -1,9 +1,15 @@
-# EventForge - the disabled plugin's workspace and docs dock actually go away.
-# A node already taken out of the tree and then only queue_free()d is never collected (the engine's
-# delete queue skips it), so disabling the plugin left the whole workspace, about nine hundred
-# nodes, alive and unreachable; every enable/disable cycle added another copy. _exit_tree frees them
-# with free(). The second half pins that nothing keeps the workspace's helpers alive after it is
-# freed (no helper cycle through a strong back-reference).
+# EventForge - the disabled plugin's workspace and docs dock go away, and take their helpers along.
+# _exit_tree queues them rather than freeing them on the spot, because a disable can arrive from a call
+# still inside the workspace: the frame's end is the first moment nothing of it is on the stack.
+#
+# TRAP this file once fell into: under `--editor --script`, a node queued while outside the tree is NOT
+# collected. That run's main loop is the script's SceneTree, and the queue of an out-of-tree node goes
+# to the engine's singleton tree, which is not the one that flushes. A real editor collects it
+# (never-in-tree and removed-then-queued both freed, in a plain `--editor` run of a probe plugin), so an
+# orphan count from a `--script` harness that grows by the workspace's size per disable is the harness.
+#
+# The second half pins that nothing keeps the workspace's helpers alive after it is freed (no helper
+# cycle through a strong back-reference).
 @tool
 class_name PluginWorkspaceFreedTest
 extends RefCounted
@@ -11,10 +17,8 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const PLUGIN_PATH: String = "res://addons/eventforge/plugin.gd"
 const EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
-# Helpers that outlive a freed workspace and are NOT a cycle this test can ask the workspace to break:
-# the UI builder is kept by a callable the engine still holds after the controls are freed (one small
-# object per disable, measured in the real editor and listed in the changelog as the remaining residue).
-const KNOWN_RESIDUE: Array[String] = ["_ui_builder"]
+# Helpers that outlive a freed workspace and are NOT a cycle this test can ask the workspace to break.
+const KNOWN_RESIDUE: Array[String] = []
 
 
 static func run() -> bool:
@@ -23,9 +27,9 @@ static func run() -> bool:
 	var start: int = source.find("func _exit_tree()")
 	var body: String = source.substr(start) if start >= 0 else ""
 	passed = _check("_exit_tree found", start >= 0, true) and passed
-	passed = _check("the workspace is freed immediately", body.contains("_event_sheet_editor.free()"), true) and passed
-	passed = _check("the docs dock is freed immediately", body.contains("_doc_dock.free()"), true) and passed
-	passed = _check("neither is merely queued", body.contains("_event_sheet_editor.queue_free()") or body.contains("_doc_dock.queue_free()"), false) and passed
+	passed = _check("the workspace is queued, so a call inside it can finish", body.contains("_event_sheet_editor.queue_free()"), true) and passed
+	passed = _check("and so is the docs dock", body.contains("_doc_dock.queue_free()"), true) and passed
+	passed = _check("neither is freed on the spot", body.contains("_event_sheet_editor.free()") or body.contains("_doc_dock.free()"), false) and passed
 	var editor: Object = load(EDITOR_PATH).new()
 	var refs: Array = []
 	var names: Array = []

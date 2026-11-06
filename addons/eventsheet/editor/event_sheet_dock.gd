@@ -1827,6 +1827,9 @@ func _notification(what: int) -> void:
 		# The palette commands and row items this dock registered are closures over it, so they go
 		# with it rather than staying listed against a freed workspace.
 		DOCK_REGISTRY.forget(self)
+		# A static holding a closure over the UI builder, which reads this dock: it would keep the builder
+		# alive and, when a thumbnail lands after a disable, call into the freed dock.
+		EventSheetObjectThumbnails.set_arrival_handler(Callable())
 		_release_ace_sources()
 		# The parameters dialog and its two sub-helpers hold each other: break the loop so the trio is
 		# released with the workspace instead of surviving every disable of the plugin.
