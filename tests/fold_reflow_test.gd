@@ -28,6 +28,9 @@ const SHEETS: Array[String] = [
 	# A pack read as a page: its folds are code cards (a script block that opens to its lines).
 	"res://eventsheet_addons/juice/juice_behavior.gd",
 ]
+## A sheet past this many rows has only LARGE_SHEET_TARGETS of its folds toggled.
+const LARGE_SHEET_ROWS: int = 400
+const LARGE_SHEET_TARGETS: int = 3
 ## A region around two functions, one of them folded by default: the opener names what it holds.
 const REGION_SOURCE := """extends Node
 
@@ -77,6 +80,8 @@ static func run() -> bool:
 		var toggled: Array[String] = []
 		var mismatch: String = ""
 		var targets: Array[String] = _foldable_uids(reflow_view)
+		if reflow_view.get_total_row_count() > LARGE_SHEET_ROWS:
+			targets = _few_targets(reflow_view, targets)
 		for step: int in range(targets.size() * 2):
 			var target_uid: String = targets[step % targets.size()]
 			var reflow_row: EventRowData = _row_by_uid(reflow_view, target_uid)
@@ -163,6 +168,21 @@ static func _view_of(sheet: EventSheetResource) -> EventSheetViewport:
 	view.size = Vector2(1200.0, 900.0)
 	view.set_sheet(sheet)
 	return view
+
+
+## The pack's full rebuild beside every toggle is seconds each and was two thirds of this test's minute.
+## What it adds to the small sheets is the code card, so the cards come first in the few it keeps.
+static func _few_targets(view: EventSheetViewport, targets: Array[String]) -> Array[String]:
+	var cards: Array[String] = []
+	var others: Array[String] = []
+	for uid: String in targets:
+		var row: EventRowData = _row_by_uid(view, uid)
+		if row != null and row.source_resource is RawCodeRow:
+			cards.append(uid)
+		else:
+			others.append(uid)
+	cards.append_array(others)
+	return cards.slice(0, LARGE_SHEET_TARGETS)
 
 
 ## The first row (in flat order) that holds children, cycling so a sheet's first few foldable rows are
