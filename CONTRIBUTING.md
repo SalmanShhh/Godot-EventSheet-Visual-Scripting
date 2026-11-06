@@ -165,7 +165,9 @@ named build error rather than a silent code block. Fix the fence, or mark it `<!
 
 Push a `v*` tag: `.github/workflows/release.yml` runs the gate, stamps `plugin.cfg`, and
 publishes `godot-eventsheets-<v>.zip` + `godot-eventsheets-samples-<v>.zip`. Roll the
-CHANGELOG `[Unreleased]` section into a dated version section in the same commit.
+CHANGELOG `[Unreleased]` section into a dated version section in the same commit: the section
+moves to its own file `docs/changelog/vX.Y.Z.md`, and `CHANGELOG.md` gains a line for it in its
+release index (date, title, a one- or two-line summary, a link).
 
 ## Code style
 
@@ -189,7 +191,8 @@ git config diff.eventsheet.textconv "sh tools/sheet_diff.sh"
 ## Release ritual
 
 Tagging `vX.Y.Z` (push the tag; CI publishes the zips) also means:
-1. Roll `[Unreleased]` into the version section in `CHANGELOG.md`.
+1. Roll `[Unreleased]` into `docs/changelog/vX.Y.Z.md` (heading `## [X.Y.Z] - date - title`) and add
+   its line to the release index in `CHANGELOG.md`.
 2. Refresh `README.md` + `demo/README.md` (status, milestones, counts).
 3. **Refresh the demo showcase**: `demo/` must exercise the release's headline
    features - every release ships a playable example making full use of what's new

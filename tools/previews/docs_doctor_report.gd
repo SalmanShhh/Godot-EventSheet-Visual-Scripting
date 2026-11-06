@@ -34,7 +34,7 @@ static func build(host: Window) -> Control:
 	# is not loaded there, so a guide costs seconds instead of a lookup. Paying that here is the point:
 	# the picture has to be of the page an editor draws.
 	var findings: Array[Dictionary] = EventSheetDocsDoctor.report(EventSheetDocsDoctor.guide_pages(),
-		FileAccess.get_file_as_string(EventSheetDocWhatsNew.SOURCE_PATH),
+		EventSheetDocWhatsNew.ledger_text(),
 		EventSheetDocsDoctor.GUIDES_READ_LIMIT)
 	# Triaged against an EMPTY read, so every line wears its "new since you last looked" mark: the
 	# picture is of a page somebody is opening for the first time, which is the state the section is

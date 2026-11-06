@@ -32,4 +32,4 @@ This release is about changing a project without fear, saying what the whole wor
 
 **Quality:** every feature landed suite-green with byte-exact round-trip gates and `drifted=0` across all **138 packs** and **28 showcases**; the pack builders are held against the shipped packs, every pack's default rows compile in their host, and the Doctor, the standing-contract gate and the translation harvest are all CI gates. The suite stands at **27,176 assertions across 806 test files**, run sharded on Windows and serially on Linux on every push. Verified on Godot 4.7 stable.
 
-Full ledger: [CHANGELOG.md](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/CHANGELOG.md)
+Full ledger: [docs/changelog/v0.18.0.md](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/changelog/v0.18.0.md)

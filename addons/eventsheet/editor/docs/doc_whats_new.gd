@@ -25,8 +25,16 @@ extends RefCounted
 const BUNDLE_PATH := "res://addons/eventsheet/help/whatsnew.esdoc"
 const BUNDLE_HEADER := "[eventsheet-whatsnew v1]"
 
-## The repository file the page is extracted from, at build time.
+## The repository file the page is extracted from, at build time. It holds the unreleased section
+## and an index of the releases; each released version keeps its full notes in its own file under
+## RELEASES_SUBDIR (beside it), so the whole ledger is SOURCE_PATH's unreleased part plus those files.
 const SOURCE_PATH := "res://CHANGELOG.md"
+const RELEASES_SUBDIR := "docs/changelog"
+
+## The heading that starts the release index at the foot of the CHANGELOG. Everything from it on is
+## links, not notes, so the ledger leaves it out.
+const RELEASE_INDEX_HEADING := "
+## Releases"
 
 ## The page's own title and the reference kind it is addressed by. Frozen with the id scheme.
 const PAGE_TITLE := "What's new"
@@ -56,6 +64,44 @@ const MAINTAINER_SUBSECTION := "### Maintenance"
 
 static var _markdown: String = ""
 static var _loaded: bool = false
+
+
+## The whole ledger as one text: the CHANGELOG's unreleased section, then every released version's
+## own file, newest first, each starting at its `## [x.y.z]` heading. Empty when the repository keeps
+## no CHANGELOG (an installed plugin has none beside it). This is the one place that knows the
+## ledger is split, so the page, the Docs Doctor and the coverage sweep all ask it.
+static func ledger_text() -> String:
+	var head: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.READ)
+	if head == null:
+		return ""
+	var text: String = head.get_as_text()
+	var cut: int = text.find(RELEASE_INDEX_HEADING)
+	if cut >= 0:
+		text = text.substr(0, cut)
+	var files: Array[Dictionary] = []
+	var releases_dir: String = SOURCE_PATH.get_base_dir().path_join(RELEASES_SUBDIR)
+	var dir: DirAccess = DirAccess.open(releases_dir)
+	if dir != null:
+		for name: String in dir.get_files():
+			if name.begins_with("v") and name.ends_with(".md"):
+				files.append({"name": name, "key": _version_key(name.trim_prefix("v").trim_suffix(".md"))})
+	files.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["key"]) > str(b["key"]))
+	for entry: Dictionary in files:
+		var file: FileAccess = FileAccess.open(releases_dir.path_join(str(entry["name"])), FileAccess.READ)
+		if file != null:
+			text = text.rstrip("
+") + "
+
+" + file.get_as_text()
+	return text
+
+
+## A version's parts zero-padded, so a plain string compare orders 0.9.5 before 0.10.0.
+static func _version_key(version: String) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for part: String in version.split("."):
+		parts.append(part.pad_zeros(5))
+	return ".".join(parts)
 
 
 ## The page's Markdown, read from the bundle once per session. Empty when no bundle is installed

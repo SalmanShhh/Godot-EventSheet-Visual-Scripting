@@ -502,4 +502,4 @@ static func _first_heading(source: String) -> String:
 ## the three exist so that one question gets one answer, and a literal here would be a second place
 ## to change if a project ever kept its ledger anywhere else.
 static func _changelog_text() -> String:
-	return _read(EventSheetDocWhatsNew.SOURCE_PATH)
+	return EventSheetDocWhatsNew.ledger_text()

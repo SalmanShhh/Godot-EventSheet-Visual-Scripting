@@ -186,8 +186,9 @@ into a real sheet rather than only read them.
 
 ### What's new
 
-`Manual ▸ What's new` is the repository's own `CHANGELOG.md` - the `[Unreleased]` section and the
-last release, and nothing older. It is extracted and baked into the bundle by the build tool (the
+`Manual ▸ What's new` is the repository's own ledger - the `[Unreleased]` section of `CHANGELOG.md`
+and the last release (each released version's notes live in `docs/changelog/vX.Y.Z.md`), and
+nothing older. It is extracted and baked into the bundle by the build tool (the
 CHANGELOG itself does not ship with the plugin), so **editing the CHANGELOG means regenerating the
 bundle**, exactly as editing a guide does. A reader who has not opened the page since the plugin's
 version changed sees a dot on the Manual entry.

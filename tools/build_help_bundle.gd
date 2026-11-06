@@ -193,7 +193,7 @@ static func _is_gatable(language: String, body: String) -> bool:
 ## corpus, because a Markdown page in the help folder with no source under docs/ would be reported
 ## as drift forever.
 static func whats_new_text() -> String:
-	return EventSheetDocWhatsNew.bundle_text(read_text(EventSheetDocWhatsNew.SOURCE_PATH),
+	return EventSheetDocWhatsNew.bundle_text(EventSheetDocWhatsNew.ledger_text(),
 		EventSheets.docs_version())
 
 
@@ -240,7 +240,7 @@ static func figures_text(gates: Dictionary) -> String:
 static func report_ace_reference_drift(pages: Dictionary) -> void:
 	var checked: int = 0
 	var differing: PackedStringArray = PackedStringArray()
-	var changelog: String = read_text(EventSheetDocWhatsNew.SOURCE_PATH)
+	var changelog: String = EventSheetDocWhatsNew.ledger_text()
 	for id: Variant in pages:
 		var page_id: String = str(id)
 		if EventSheetDocAceReference.packs_for_page(page_id).is_empty():

@@ -93,6 +93,11 @@ const BANNED_WORD: String = "scratch"
 ## still have to appear in a file, a string or a catalogue, and every one of those is swept.
 const BANNED_WORD_EXEMPT_FILES: Array[String] = ["CHANGELOG.md", "whatsnew.esdoc"]
 
+## The per-release files the changelog was split into carry the same history, so they are exempt
+## for the same reason as the changelog itself, and a file there is named by its version (`v0.9.5.md`),
+## which the file-name check would otherwise read as a label.
+const BANNED_WORD_EXEMPT_FOLDER: String = "docs/changelog/"
+
 ## The one line of prose that keeps the word, because there the word is a name: the README credits
 ## the block-programming project it is named after, beside its own address. An acknowledgement that
 ## renamed the thing it acknowledges would be a false attribution.
@@ -181,13 +186,15 @@ static func run() -> bool:
 ## The first design-shorthand leak in `text`, as a reportable line, or "" when it is clean.
 ## Static and pure, so the rule above is provable without touching the filesystem.
 static func _first_violation(path: String, text: String) -> String:
-	var name_hit: String = _label_in_file_name(path.get_file())
+	var in_release_folder: bool = path.trim_prefix("res://").begins_with(BANNED_WORD_EXEMPT_FOLDER)
+	var name_hit: String = "" if in_release_folder else _label_in_file_name(path.get_file())
 	if not name_hit.is_empty():
 		return "%s - the file name says '%s' instead of what it pins" % [path, name_hit]
 	if path.get_file().to_lower().contains(BANNED_WORD):
 		return "%s - the file name carries the banned word '%s'" % [path, BANNED_WORD]
 	var is_code: bool = CODE_EXTENSIONS.has(path.get_extension().to_lower())
-	var banned_word_allowed: bool = BANNED_WORD_EXEMPT_FILES.has(path.get_file())
+	var banned_word_allowed: bool = BANNED_WORD_EXEMPT_FILES.has(path.get_file()) \
+		or in_release_folder
 	var lines: PackedStringArray = text.split("\n")
 	for index: int in lines.size():
 		var line: String = lines[index]

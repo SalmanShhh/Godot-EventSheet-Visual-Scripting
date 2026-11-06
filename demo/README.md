@@ -182,7 +182,7 @@ What they're for:
 
 The release history runs through **v0.15.0** (Save Anything, Control Anything & BBcode it), with an unreleased wave on `main`. To keep
 this page from drifting, the milestone table now lives in one place - the
-[root README](../README.md#milestones) - with the feature-by-feature detail in the [CHANGELOG](../CHANGELOG.md).
+[root README](../README.md#milestones) - with the feature-by-feature detail in the [CHANGELOG](../CHANGELOG.md) and its per-release files under [docs/changelog](../docs/changelog/).
 
 Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)
 

@@ -215,9 +215,9 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 	return out
 
 
-## The ledger this project keeps, or "" when it keeps none. An installed plugin has no CHANGELOG.md
-## beside it, and the unwritten-change question simply does not arise there - which is correct: it is
-## a question about a repository, and a project without one has nothing to be behind on.
+## The ledger this project keeps (the CHANGELOG's unreleased section plus the per-version files under
+## docs/changelog), or "" when it keeps none. An installed plugin has no CHANGELOG.md beside it, and
+## the unwritten-change question simply does not arise there - which is correct: it is a question
+## about a repository, and a project without one has nothing to be behind on.
 static func _changelog_text() -> String:
-	var file: FileAccess = FileAccess.open(EventSheetDocWhatsNew.SOURCE_PATH, FileAccess.READ)
-	return "" if file == null else file.get_as_text()
+	return EventSheetDocWhatsNew.ledger_text()
