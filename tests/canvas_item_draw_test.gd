@@ -49,6 +49,7 @@ static func run() -> bool:
 	all_passed = _a_hand_written_call_opens_as_the_same_row() and all_passed
 	all_passed = _the_draw_calls_are_offered_only_under_on_draw() and all_passed
 	all_passed = _a_later_optional_fills_the_blanks_before_it() and all_passed
+	all_passed = _the_rows_read_with_a_capital_and_no_name_is_shared() and all_passed
 	return all_passed
 
 
@@ -231,3 +232,26 @@ static func _a_later_optional_fills_the_blanks_before_it() -> bool:
 		["a value the author gave is never replaced", ACEParamsDialog.row_code_line(line, base.merged({"width": "3.0", "antialiased": "true"}, true)), "draw_line(a, b, c, 3.0, true)"],
 	]
 	return SUPPORT.pins(NAME + ": chain defaults", rows)
+
+
+## Every row of the family reads as a sentence that starts with a capital, and no display name of it is
+## the name of another action of the whole vocabulary (the older rows that paint onto another node's
+## canvas carry "On Node").
+static func _the_rows_read_with_a_capital_and_no_name_is_shared() -> bool:
+	var rows: Array = []
+	var names: Dictionary = {}
+	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
+		if descriptor.ace_type == ACEDescriptor.ACEType.ACTION:
+			var shown: String = descriptor.display_name
+			names[shown] = int(names.get(shown, 0)) + 1
+	for ace_id: String in ["CanvasItemDrawLine", "CanvasItemDrawRect", "CanvasItemDrawRectOutline", "CanvasItemDrawCircle",
+			"CanvasItemDrawCircleOutline", "CanvasItemDrawArc", "CanvasItemDrawPolyline", "CanvasItemDrawPolygon",
+			"CanvasItemDrawString", "CanvasItemDrawTexture", "CanvasItemDrawTextureRect",
+			"CanvasItemDrawTextureRectRegion", "CanvasItemDrawSetTransform", "CanvasItemQueueRedraw"]:
+		var descriptor: ACEDescriptor = _descriptor(ace_id)
+		var sentence: String = descriptor.get_display_text() if descriptor != null else ""
+		rows.append(["%s starts with a capital" % ace_id, sentence.substr(0, 1) == sentence.substr(0, 1).to_upper() and sentence.substr(0, 1) != sentence.substr(0, 1).to_lower(), true])
+		rows.append(["%s has a display name of its own" % ace_id, int(names.get(descriptor.display_name, 0)) if descriptor != null else -1, 1])
+	rows.append(["the older line row says whose canvas", _descriptor("DrawLine").display_name, "Draw Line On Node"])
+	rows.append(["the older circle row says whose canvas", _descriptor("DrawCircle").display_name, "Draw Circle On Node"])
+	return SUPPORT.pins(NAME + ": names", rows)

@@ -42,7 +42,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var d: Array[ACEDescriptor] = []
 
 	d.append(F.act("CanvasItemDrawLine", "Draw Line", "draw_line({from}, {to}, {color}{, width}{, antialiased})", CAT,
-		"draw line from [b]{from}[/b] to [b]{to}[/b] in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
+		"Draw line from [b]{from}[/b] to [b]{to}[/b] in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
 		"Godot's draw_line: a straight line between two points, drawn by this node. Only works under On Draw.", HOST)
 		.param_typed("Vector2", "from", "Vector2(0, 0)", "From", "Where the line starts, in this node's own coordinates.", "expression")
 		.param_typed("Vector2", "to", "Vector2(64, 0)", "To", "Where the line ends.", "expression")
@@ -51,7 +51,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()).featured())
 
 	d.append(F.act("CanvasItemDrawRect", "Draw Rectangle", "draw_rect({rect}, {color}{, filled}{, width}{, antialiased})", CAT,
-		"draw rectangle [b]{rect}[/b] in [b]{color}[/b]",
+		"Draw rectangle [b]{rect}[/b] in [b]{color}[/b]",
 		"Godot's draw_rect, filled in: a solid rectangle drawn by this node. Only works under On Draw.", HOST)
 		.param_built(_rect())
 		.param_built(_color())
@@ -60,7 +60,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()).featured())
 
 	d.append(F.act("CanvasItemDrawRectOutline", "Draw Rectangle Outline", "draw_rect({rect}, {color}, false{, width}{, antialiased})", CAT,
-		"draw rectangle outline [b]{rect}[/b] in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
+		"Draw rectangle outline [b]{rect}[/b] in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
 		"Godot's draw_rect with filled false: only the rectangle's edge, drawn by this node. Only works under On Draw.", HOST)
 		.param_built(_rect())
 		.param_built(_color())
@@ -68,7 +68,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()))
 
 	d.append(F.act("CanvasItemDrawCircle", "Draw Circle", "draw_circle({position}, {radius}, {color}{, filled}{, width}{, antialiased})", CAT,
-		"draw circle at [b]{position}[/b], radius [b]{radius}[/b], in [b]{color}[/b]",
+		"Draw circle at [b]{position}[/b], radius [b]{radius}[/b], in [b]{color}[/b]",
 		"Godot's draw_circle, filled in: a solid disc drawn by this node. Only works under On Draw.", HOST)
 		.param_typed("Vector2", "position", "Vector2(0, 0)", "Position", "The centre of the circle, in this node's own coordinates.", "expression")
 		.param_typed("float", "radius", "16.0", "Radius", "How far the circle reaches from its centre, in pixels.", "expression")
@@ -78,7 +78,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()))
 
 	d.append(F.act("CanvasItemDrawCircleOutline", "Draw Circle Outline", "draw_circle({position}, {radius}, {color}, false{, width}{, antialiased})", CAT,
-		"draw circle outline at [b]{position}[/b], radius [b]{radius}[/b], in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
+		"Draw circle outline at [b]{position}[/b], radius [b]{radius}[/b], in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
 		"Godot's draw_circle with filled false: only the circle's edge, drawn by this node. Only works under On Draw.", HOST)
 		.param_typed("Vector2", "position", "Vector2(0, 0)", "Position", "The centre of the circle, in this node's own coordinates.", "expression")
 		.param_typed("float", "radius", "16.0", "Radius", "How far the circle reaches from its centre, in pixels.", "expression")
@@ -87,7 +87,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()))
 
 	d.append(F.act("CanvasItemDrawArc", "Draw Arc", "draw_arc({center}, {radius}, {start_angle}, {end_angle}, {point_count}, {color}{, width}{, antialiased})", CAT,
-		"draw arc at [b]{center}[/b], radius [b]{radius}[/b], from [b]{start_angle}[/b] to [b]{end_angle}[/b], in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
+		"Draw arc at [b]{center}[/b], radius [b]{radius}[/b], from [b]{start_angle}[/b] to [b]{end_angle}[/b], in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
 		"Godot's draw_arc: part of a circle's edge, drawn by this node. Angles are in radians, so TAU is a full turn. Only works under On Draw.", HOST)
 		.param_typed("Vector2", "center", "Vector2(0, 0)", "Center", "The centre of the circle the arc is part of.", "expression")
 		.param_typed("float", "radius", "32.0", "Radius", "How far the arc is from the centre, in pixels.", "expression")
@@ -99,7 +99,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()))
 
 	d.append(F.act("CanvasItemDrawPolyline", "Draw Polyline", "draw_polyline({points}, {color}{, width}{, antialiased})", CAT,
-		"draw polyline through [b]{points}[/b] in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
+		"Draw polyline through [b]{points}[/b] in [b]{color}[/b]{?width}, width [b]{width}[/b]{/width}",
 		"Godot's draw_polyline: one connected line through a list of points, drawn by this node. Only works under On Draw.", HOST)
 		.param_typed("PackedVector2Array", "points", "PackedVector2Array([Vector2(0, 0), Vector2(32, 16), Vector2(64, 0)])", "Points", "The corners the line passes through, in order.", "expression")
 		.param_built(_color())
@@ -107,7 +107,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_built(_antialiased()))
 
 	d.append(F.act("CanvasItemDrawPolygon", "Draw Polygon", "draw_polygon({points}, {colors}{, uvs}{, texture})", CAT,
-		"draw polygon through [b]{points}[/b] in [b]{colors}[/b]",
+		"Draw polygon through [b]{points}[/b] in [b]{colors}[/b]",
 		"Godot's draw_polygon: a filled shape through a list of points, one colour per corner or one colour for all. Only works under On Draw.", HOST)
 		.param_typed("PackedVector2Array", "points", "PackedVector2Array([Vector2(0, 0), Vector2(64, 0), Vector2(32, 48)])", "Points", "The corners of the shape, in order.", "expression")
 		.param_typed("PackedColorArray", "colors", "PackedColorArray([Color.WHITE])", "Colors", "One colour for every corner, or one colour per corner.", "expression")
@@ -115,7 +115,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_typed("Texture2D", "texture", "null", "Texture", "A picture to paint the shape with. null for plain colour.", "expression"))
 
 	d.append(F.act("CanvasItemDrawString", "Draw Text", "draw_string({font}, {pos}, {text}{, alignment}{, width}{, font_size}{, modulate})", CAT,
-		"draw text [b]{text}[/b] at [b]{pos}[/b] in [b]{font}[/b]{?font_size}, size [b]{font_size}[/b]{/font_size}{?modulate}, [b]{modulate}[/b]{/modulate}",
+		"Draw text [b]{text}[/b] at [b]{pos}[/b] in [b]{font}[/b]{?font_size}, size [b]{font_size}[/b]{/font_size}{?modulate}, [b]{modulate}[/b]{/modulate}",
 		"Godot's draw_string: a line of text, drawn by this node. The position is the left end of the text's baseline. Only works under On Draw.", HOST)
 		.param_typed("Font", "font", "ThemeDB.fallback_font", "Font", "The font to write with. ThemeDB.fallback_font is the one Godot always has.", "expression")
 		.param_typed("Vector2", "pos", "Vector2(0, 16)", "Pos", "Where the text starts, at the left end of its baseline.", "expression")
@@ -126,14 +126,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_typed("Color", "modulate", "Color.WHITE", "Modulate", "The text's colour. Godot's default is Color.WHITE.", "expression"))
 
 	d.append(F.act("CanvasItemDrawTexture", "Draw Texture", "draw_texture({texture}, {position}{, modulate})", CAT,
-		"draw texture [b]{texture}[/b] at [b]{position}[/b]",
+		"Draw texture [b]{texture}[/b] at [b]{position}[/b]",
 		"Godot's draw_texture: a picture at its own size, its top-left corner at a point, drawn by this node. Only works under On Draw.", HOST)
 		.param_typed("Texture2D", "texture", "null", "Texture", "The picture to draw.", "expression")
 		.param_typed("Vector2", "position", "Vector2(0, 0)", "Position", "Where the picture's top-left corner goes.", "expression")
 		.param_built(_modulate()))
 
 	d.append(F.act("CanvasItemDrawTextureRect", "Draw Texture Rect", "draw_texture_rect({texture}, {rect}, {tile}{, modulate}{, transpose})", CAT,
-		"draw texture [b]{texture}[/b] into [b]{rect}[/b]",
+		"Draw texture [b]{texture}[/b] into [b]{rect}[/b]",
 		"Godot's draw_texture_rect: a picture stretched, or tiled, to fill a rectangle, drawn by this node. Only works under On Draw.", HOST)
 		.param_typed("Texture2D", "texture", "null", "Texture", "The picture to draw.", "expression")
 		.param_built(_rect())
@@ -142,7 +142,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_typed("bool", "transpose", "false", "Transpose", "True swaps the picture's x and y. Godot's default is false.", "expression"))
 
 	d.append(F.act("CanvasItemDrawTextureRectRegion", "Draw Texture Region", "draw_texture_rect_region({texture}, {rect}, {src_rect}{, modulate}{, transpose}{, clip_uv})", CAT,
-		"draw part [b]{src_rect}[/b] of texture [b]{texture}[/b] into [b]{rect}[/b]",
+		"Draw part [b]{src_rect}[/b] of texture [b]{texture}[/b] into [b]{rect}[/b]",
 		"Godot's draw_texture_rect_region: one piece of a picture, stretched to fill a rectangle, drawn by this node - a frame of a sprite sheet. Only works under On Draw.", HOST)
 		.param_typed("Texture2D", "texture", "null", "Texture", "The picture to take the piece from.", "expression")
 		.param_built(_rect())
@@ -152,14 +152,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param_typed("bool", "clip_uv", "true", "Clip UV", "Keeps the piece from bleeding into its neighbours. Godot's default is true.", "expression"))
 
 	d.append(F.act("CanvasItemDrawSetTransform", "Set Draw Transform", "draw_set_transform({position}{, rotation}{, scale})", CAT,
-		"set draw transform to [b]{position}[/b]",
+		"Set draw transform to [b]{position}[/b]",
 		"Godot's draw_set_transform: moves, turns and scales everything this node draws after it, until the next one. Call it with just a position to put the origin there. Only works under On Draw.", HOST)
 		.param_typed("Vector2", "position", "Vector2(0, 0)", "Position", "Where the drawing origin moves to.", "expression")
 		.param_typed("float", "rotation", "0.0", "Rotation", "How far to turn the drawing, in radians. Godot's default is 0.0.", "expression")
 		.param_typed("Vector2", "scale", "Vector2(1, 1)", "Scale", "How much to scale the drawing. Godot's default is Vector2(1, 1).", "expression"))
 
 	d.append(F.act("CanvasItemQueueRedraw", "Redraw", "queue_redraw()", CAT,
-		"redraw",
+		"Redraw",
 		"Godot's queue_redraw: asks the node to paint itself again, which runs its On Draw event. A node paints once and keeps the picture, so call this whenever what it should show has changed. Works anywhere.", HOST).featured())
 
 	return d
