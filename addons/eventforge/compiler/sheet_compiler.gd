@@ -1183,6 +1183,18 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			pass  # emitted in place by its EventAnchorRow, just above it in this array
 		elif entry is EventRow or entry is EventGroup:
 			added_event_rows.append(entry)
+		elif entry is CommentRow and (entry as CommentRow).written_in_place:
+			# A comment of the opened file, written exactly where it sits: its own lines, no blank added.
+			var slot_comment: CommentRow = entry as CommentRow
+			for _blank_above: int in range(maxi(slot_comment.blank_lines_before, 0)):
+				lines.append("")
+			var slot_lines: PackedStringArray = _comment_written_lines(slot_comment)
+			if not slot_lines.is_empty():
+				var slot_start: int = lines.size() + 1
+				lines.append_array(slot_lines)
+				source_map.append({"uid": str(slot_comment.get_instance_id()), "start": slot_start, "end": lines.size(), "kind": "comment"})
+			for _blank_below: int in range(maxi(slot_comment.blank_lines_after, 0)):
+				lines.append("")
 		elif entry is CommentRow and anchored_comments.has(entry):
 			pass  # emitted in place by its EventAnchorRow, above the event it sits over
 		elif entry is CommentRow and class_level_comments.has(entry):
@@ -1393,7 +1405,8 @@ static func _comments_above_anchored_events(rows: Array, uids: Dictionary) -> Ar
 	var waiting: Array = []
 	var after_anchored: bool = false
 	for entry: Variant in rows:
-		if entry is CommentRow:
+		# A comment the file keeps where it sits is written in its own slot, not with the event below it.
+		if entry is CommentRow and not (entry as CommentRow).written_in_place:
 			waiting.append(entry)
 			continue
 		var anchored: bool = entry is EventRow and uids.has((entry as EventRow).event_uid)
@@ -1414,7 +1427,7 @@ static func _comments_over_class_rows(rows: Array) -> Dictionary:
 	var in_place: Dictionary = {}
 	var waiting: Array = []
 	for entry: Variant in rows:
-		if entry is CommentRow:
+		if entry is CommentRow and not (entry as CommentRow).written_in_place:
 			waiting.append(entry)
 			continue
 		if not (entry is EventRow or entry is EventGroup):

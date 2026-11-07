@@ -24,6 +24,16 @@ enum CommentStyle {
 ## ordinary "# " form, which is what every authored comment and every generated file uses, so
 ## existing sheets and packs are unaffected.
 @export var source_marker: String = ""
+## True for a comment the opened .gd keeps at the top level of the file - above a function, over a
+## declaration, between two blocks. It is written exactly where it sits in the row list, its own lines and
+## nothing added around them (no blank line, no riding on the event below), which is what lets a `#` note
+## open as a comment row and save back to the same lines. A comment typed in the sheet leaves this off.
+@export var written_in_place: bool = false
+## The empty lines the opened file kept just above and just below this comment (only for a comment that is
+## written_in_place). They are spacing, not rows: they ride on the comment so a note between two blocks does
+## not leave a blank row behind it, and they are written back around the comment's own lines.
+@export var blank_lines_before: int = 0
+@export var blank_lines_after: int = 0
 
 
 ## The marker emission should write before each line of `text`.

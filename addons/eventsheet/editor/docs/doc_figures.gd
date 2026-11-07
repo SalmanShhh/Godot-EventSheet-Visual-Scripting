@@ -262,6 +262,10 @@ static func lifted_row_count(sheet: EventSheetResource) -> int:
 		return 0
 	var count: int = 0
 	for row: Variant in sheet.events:
+		# A note the file keeps at its top level is a comment row, but it is no lifted code: a figure of a
+		# script whose every statement stayed verbatim has nothing to draw however many notes it has.
+		if row is CommentRow and (row as CommentRow).written_in_place:
+			continue
 		if not (row is RawCodeRow):
 			count += 1
 	return count

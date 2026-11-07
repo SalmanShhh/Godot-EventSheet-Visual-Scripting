@@ -339,6 +339,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	if sheet == null or not lift_functions:
 		var lifted_events_only: bool = _lift_body_reading_comments(sheet, source, lift_functions)
 		SpawnRunLift.note_host_class("")
+		read_comment_runs(sheet)
 		return lifted_events_only
 	progress_phase = "lifting"
 	progress_functions_done = 0
@@ -353,9 +354,111 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# standing would be the NEXT read's answer to a question that read never asked. CI runs the suite
 	# in one process, so a carried value is a row shown in the wrong dimension a whole test later.
 	SpawnRunLift.note_host_class("")
+	read_comment_runs(sheet)
 	progress_functions_done = progress_functions_total
 	progress_phase = "done"
 	return lifted
+
+
+## The `#` notes a file keeps at its top level - above a function, over a declaration, between two blocks -
+## read as comment rows of the sheet, each written back exactly where it sits (CommentRow.written_in_place).
+## They are lines of the verbatim blocks the lift left, so this takes them out of those blocks and nothing
+## else: the blocks before and after keep every other line, in order, and the rows re-emit the same bytes.
+## `##` documentation lines stay with the function they describe, `#region` fences and `# @` markers are
+## code to other readers, and a line inside a triple-quoted string is text, not a note.
+static func read_comment_runs(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
+	var rebuilt: Array = []
+	var changed: bool = false
+	for entry: Variant in sheet.events:
+		var block: RawCodeRow = entry as RawCodeRow
+		if block == null or not block.enabled or not block.code.contains("#"):
+			rebuilt.append(entry)
+			continue
+		var pieces: Array = _split_block_comments(block)
+		if pieces.is_empty():
+			rebuilt.append(entry)
+			continue
+		rebuilt.append_array(pieces)
+		changed = true
+	if changed:
+		sheet.events = _to_resource_array(rebuilt)
+
+
+## The rows a verbatim block turns into when its top-level `#` notes are taken out as comment rows, in
+## order, or [] when it holds none (or the pieces would not write the block's lines back exactly).
+static func _split_block_comments(block: RawCodeRow) -> Array:
+	var lines: PackedStringArray = block.code.split("\n")
+	var interior: PackedInt32Array = _string_interior_mask(lines)
+	var pieces: Array = []
+	var code_run: PackedStringArray = PackedStringArray()
+	var found_note: bool = false
+	var line_index: int = 0
+	while line_index < lines.size():
+		if interior[line_index] != 0 or not _is_plain_note_line(lines[line_index]):
+			code_run.append(lines[line_index])
+			line_index += 1
+			continue
+		found_note = true
+		# The empty lines right above the run are the spacing the note sits in, so they ride on it.
+		var blanks_above: int = 0
+		while not code_run.is_empty() and code_run[code_run.size() - 1].is_empty():
+			code_run.remove_at(code_run.size() - 1)
+			blanks_above += 1
+		if not code_run.is_empty():
+			pieces.append(_block_from(block, code_run))
+			code_run = PackedStringArray()
+		var note_run: PackedStringArray = PackedStringArray()
+		while line_index < lines.size() and interior[line_index] == 0 and _is_plain_note_line(lines[line_index]):
+			note_run.append(lines[line_index])
+			line_index += 1
+		var blanks_below: int = 0
+		while line_index < lines.size() and lines[line_index].is_empty() and interior[line_index] == 0:
+			blanks_below += 1
+			line_index += 1
+		var note_rows: Array = _note_rows(note_run)
+		(note_rows[0] as CommentRow).blank_lines_before = blanks_above
+		(note_rows[note_rows.size() - 1] as CommentRow).blank_lines_after = blanks_below
+		pieces.append_array(note_rows)
+	if not found_note:
+		return []
+	if not code_run.is_empty():
+		pieces.append(_block_from(block, code_run))
+	return pieces
+
+
+## True for a top-level line that is a note somebody wrote to be read: a single `#`, not a `##`
+## documentation line, a `#region` / `#endregion` fence or a `# @...` marker the compiler or a tool reads.
+static func _is_plain_note_line(line: String) -> bool:
+	if not line.begins_with("#") or line.begins_with("##"):
+		return false
+	if line.begins_with("#region") or line.begins_with("#endregion") or line.begins_with("# @") or line.begins_with("#@"):
+		return false
+	return not line.strip_edges().trim_prefix("#").strip_edges().is_empty()
+
+
+static func _block_from(source_block: RawCodeRow, lines: PackedStringArray) -> RawCodeRow:
+	var piece: RawCodeRow = RawCodeRow.new()
+	piece.code = "\n".join(lines)
+	piece.lift_note = source_block.lift_note
+	return piece
+
+
+## One comment row per run of notes that share a marker (and per commented-out statement), each kept where it sits.
+static func _note_rows(note_lines: PackedStringArray) -> Array:
+	var rows: Array = []
+	for group: Dictionary in _split_comment_run(note_lines):
+		var marker: String = str(group["marker"])
+		var texts: PackedStringArray = PackedStringArray()
+		for note_line: String in (group["lines"] as PackedStringArray):
+			texts.append(note_line.substr(marker.length()))
+		var note: CommentRow = CommentRow.new()
+		note.text = "\n".join(texts)
+		note.source_marker = "" if marker == "# " else marker
+		note.written_in_place = true
+		rows.append(note)
+	return rows
 
 
 ## Every top-level function row the two lift passes below may attempt, counted before either runs -
@@ -4897,10 +5000,13 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 		# A note written INSIDE a block that stayed code (a callback's body, an unlifted branch) is
 		# still a note: the run of comment lines at one indent becomes comment rows whose marker
 		# carries that indent, so each line writes back exactly as it was.
+		# The same holds for a note at the run's own depth, written among the statements it explains: it
+		# is a comment row in the lane, between the actions on either side of it, not a line of code.
 		var note_indent: String = _note_indent(statements[piece_index])
-		if not note_indent.is_empty():
+		if not note_indent.is_empty() or _is_base_note_piece(statements[piece_index]):
 			var note_lines: PackedStringArray = PackedStringArray()
-			while piece_index < statements.size() and _note_indent(statements[piece_index]) == note_indent:
+			while piece_index < statements.size() and ((note_indent.is_empty() and _is_base_note_piece(statements[piece_index])) \
+					or (not note_indent.is_empty() and _note_indent(statements[piece_index]) == note_indent)):
 				for note_line: String in statements[piece_index]:
 					note_lines.append(note_line.substr(note_indent.length()))
 				piece_index += 1
@@ -4911,7 +5017,8 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 				for group_line: String in (group["lines"] as PackedStringArray):
 					group_text.append(group_line.substr(group_marker.length()))
 				indented_note.text = "\n".join(group_text)
-				indented_note.source_marker = note_indent + group_marker
+				indented_note.source_marker = note_indent + group_marker if not note_indent.is_empty() \
+					else ("" if group_marker == "# " else group_marker)
 				if first:
 					_stamp_body_blanks(indented_note, blank_box)
 					first = false
@@ -4941,6 +5048,18 @@ static func _note_indent(piece: PackedStringArray) -> String:
 		if not line.begins_with(tabs) or not line.substr(tabs.length()).begins_with("#"):
 			return ""
 	return tabs
+
+
+## True when a statement piece is nothing but notes at the run's own depth (`# why`), not a fence
+## (`#region`) or a marker the compiler or a tool reads (`# @off`, `# @group`).
+static func _is_base_note_piece(piece: PackedStringArray) -> bool:
+	if piece.is_empty():
+		return false
+	for line: String in piece:
+		if not line.begins_with("#") or line.begins_with("#region") or line.begins_with("#endregion") \
+				or line.begins_with("# @") or line.begins_with("#@"):
+			return false
+	return true
 
 
 ## Which lines sit INSIDE a triple-quoted string. A multi-line string is ONE statement however its
