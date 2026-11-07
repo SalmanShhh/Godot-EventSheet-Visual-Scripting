@@ -4,7 +4,9 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed: the two pictures at the top of the README welcome a new user
+
+- The workspace and Generated GDScript pictures now show the small player example the README compiles (two variables, three events, fifteen lines of GDScript) at a comfortable editor zoom instead of a dense level at the default one, so every word reads at the README's width. The example lives in `demo/readme_example/` as a script and a scene.
 
 ## Releases
 

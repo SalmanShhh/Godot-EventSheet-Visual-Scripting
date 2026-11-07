@@ -6,7 +6,9 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
-Nothing yet.
+### Changed: the two pictures at the top of the README welcome a new user
+
+- The workspace and Generated GDScript pictures now show the small player example the README compiles (two variables, three events, fifteen lines of GDScript) at a comfortable editor zoom instead of a dense level at the default one, so every word reads at the README's width. The example lives in `demo/readme_example/` as a script and a scene.
 
 ## 0.20.0 - 2026-11-07 - Feel Native
 

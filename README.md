@@ -11,7 +11,7 @@ Godot EventSheets (engine codename *EventForge*, the prefix on internal class na
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-hero-light.png">
-  <img alt="The EventSheet workspace inside the Godot editor in the Editor Native look: boomer_level.gd opened as a sheet, with typed variables above numbered two-lane event rows that show an object and an icon beside every condition and action, the Scene dock with the level's nodes on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
+  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on start, move while the right action is held, and subtract 10 health when an enemy body enters - the Scene dock on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
 </picture>
 
 It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* `boomer_level.gd`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
@@ -50,7 +50,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-generated-code-light.png">
-  <img alt="The same sheet with the Generated GDScript panel open beside it in the Godot editor: the numbered event rows on the left, the typed GDScript they compile to on the right - class_name, typed vars, an @export var and a _physics_process - captioned as read-only and refreshed live as you edit." src="docs/previews/editor-generated-code.png">
+  <img alt="The same player sheet with the Generated GDScript panel open beside it in the Godot editor: the three event rows on the left, the fifteen lines of typed GDScript they compile to on the right - extends CharacterBody2D, two @export vars, _ready, _process and _on_body_entered - captioned as read-only and refreshed live as you edit." src="docs/previews/editor-generated-code.png">
 </picture>
 
 ## Quick start
