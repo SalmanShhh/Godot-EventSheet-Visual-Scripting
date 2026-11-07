@@ -237,6 +237,35 @@ static func _apply_template(template: String, params: Dictionary) -> String:
 	return result
 
 
+## The values of a row whose template ends in a chain of optional commas (`{, width}{, antialiased}`),
+## with every blank optional that stands BEFORE the last given one filled from `defaults` (field id to
+## its declared default). A call has no way to leave an argument out of the middle, so a call written
+## as `draw_rect(r, c, , 2.0)` is not GDScript; giving a later argument therefore writes the earlier
+## ones with the values the call would have taken anyway. A chain with nothing given after a blank is
+## left alone, so a short call still writes the short call. Returns `values` itself when nothing needs
+## filling.
+static func settle_optional_commas(template: String, values: Dictionary, defaults: Dictionary) -> Dictionary:
+	if not template.contains("{,"):
+		return values
+	var chain: Array[String] = []
+	for found: RegExMatch in RegEx.create_from_string("\\{,\\s*([A-Za-z_][A-Za-z0-9_]*)\\}").search_all(template):
+		chain.append(found.get_string(1))
+	var last_given: int = -1
+	for index: int in chain.size():
+		if not str(values.get(chain[index], "")).strip_edges().is_empty():
+			last_given = index
+	var settled: Dictionary = values
+	var copied: bool = false
+	for index: int in last_given:
+		var field: String = chain[index]
+		if str(values.get(field, "")).strip_edges().is_empty() and not str(defaults.get(field, "")).strip_edges().is_empty():
+			if not copied:
+				copied = true
+				settled = values.duplicate()
+			settled[field] = str(defaults[field])
+	return settled
+
+
 ## Returns action params while preserving backwards compatibility with the first PR scaffold.
 static func _get_params(action: ACEAction) -> Dictionary:
 	if not action.params.is_empty():

@@ -4083,6 +4083,7 @@ func _commit(chain: bool) -> void:
 	for key: Variant in _fields.keys():
 		values[str(key)] = _angled(str(key), _extract_value(_fields[key]))
 	_remembered_values[_definition.id] = values.duplicate(true)
+	values = with_chain_defaults(_definition, values)
 	# Recent values: every committed STRING value joins its parameter's project-wide ring, so the
 	# suggestion combo can offer it next time (bools/checkboxes have nothing worth ringing).
 	for key: Variant in values.keys():
@@ -4246,12 +4247,26 @@ func _is_reedit_flow() -> bool:
 const PREVIEW_UID: String = "row"
 
 
+## The row's values with the blank optional arguments that stand before a given one filled from their
+## declared defaults, so a later optional argument never leaves a gap in the middle of the call.
+static func with_chain_defaults(definition: ACEDefinition, values: Dictionary) -> Dictionary:
+	var template: String = str(definition.metadata.get("codegen_template", ""))
+	if not template.contains("{,"):
+		return values
+	var defaults: Dictionary = {}
+	for parameter: Variant in definition.parameters:
+		if parameter is Dictionary:
+			defaults[str((parameter as Dictionary).get("id", ""))] = str((parameter as Dictionary).get("default_value", ""))
+	return ActionCodegen.settle_optional_commas(template, values, defaults)
+
+
 ## The line the compiler will write for this row, with the values as typed - produced BY the
 ## emitter, from a throwaway row, so the dialog cannot promise a spelling the compiler would not
 ## use. "" for a definition whose kind has no line of its own.
 static func row_code_line(definition: ACEDefinition, values: Dictionary, starting: Dictionary = {}) -> String:
 	if definition == null:
 		return ""
+	values = with_chain_defaults(definition, values)
 	# A Reset row's value is the declaration's, so its line is the one the compiler will write from
 	# the open sheet's declarations rather than the template with its slot still in it.
 	var reset_template: String = str(definition.metadata.get("codegen_template", ""))

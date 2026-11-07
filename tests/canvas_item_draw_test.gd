@@ -48,6 +48,7 @@ static func run() -> bool:
 	all_passed = _the_rows_write_godots_calls() and all_passed
 	all_passed = _a_hand_written_call_opens_as_the_same_row() and all_passed
 	all_passed = _the_draw_calls_are_offered_only_under_on_draw() and all_passed
+	all_passed = _a_later_optional_fills_the_blanks_before_it() and all_passed
 	return all_passed
 
 
@@ -202,3 +203,31 @@ static func _the_draw_calls_are_offered_only_under_on_draw() -> bool:
 			listed.append(definition.id)
 	rows.append(["thirteen draw calls are marked, Redraw is not", [listed.size(), listed.has("CanvasItemQueueRedraw")], [13, false]])
 	return SUPPORT.pins(NAME + ": picker", rows)
+
+
+## The window writes a valid call: giving a later optional argument fills the blank ones before it
+## with the values Godot's own call would have taken, and a short call still writes the short call.
+static func _a_later_optional_fills_the_blanks_before_it() -> bool:
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	var line: ACEDefinition = null
+	var rect: ACEDefinition = null
+	for definition: ACEDefinition in registry.get_all_definitions():
+		if definition.id == "CanvasItemDrawLine":
+			line = definition
+		elif definition.id == "CanvasItemDrawRect":
+			rect = definition
+	if line == null or rect == null:
+		return SUPPORT.check(NAME, "the draw rows are registered", false, true)
+	var base: Dictionary = {"from": "a", "to": "b", "color": "c", "width": "", "antialiased": ""}
+	var rect_base: Dictionary = {"rect": "r", "color": "c", "filled": "", "width": "", "antialiased": ""}
+	var rows: Array = [
+		["a short call stays short", ACEParamsDialog.row_code_line(line, base), "draw_line(a, b, c)"],
+		["a width alone stays without a gap", ACEParamsDialog.row_code_line(line, base.merged({"width": "2.0"}, true)), "draw_line(a, b, c, 2.0)"],
+		["antialiased alone fills the width before it", ACEParamsDialog.row_code_line(line, base.merged({"antialiased": "true"}, true)), "draw_line(a, b, c, -1.0, true)"],
+		["the last of three fills the two before it", ACEParamsDialog.row_code_line(rect, rect_base.merged({"antialiased": "true"}, true)), "draw_rect(r, c, true, -1.0, true)"],
+		["a width alone fills only filled", ACEParamsDialog.row_code_line(rect, rect_base.merged({"width": "2.0"}, true)), "draw_rect(r, c, true, 2.0)"],
+		["the values handed back hold the filled defaults", ACEParamsDialog.with_chain_defaults(line, base.merged({"antialiased": "true"}, true)).get("width"), "-1.0"],
+		["a value the author gave is never replaced", ACEParamsDialog.row_code_line(line, base.merged({"width": "3.0", "antialiased": "true"}, true)), "draw_line(a, b, c, 3.0, true)"],
+	]
+	return SUPPORT.pins(NAME + ": chain defaults", rows)
