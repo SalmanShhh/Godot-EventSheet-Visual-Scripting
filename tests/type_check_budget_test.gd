@@ -4,18 +4,22 @@ extends RefCounted
 
 # The keystroke path stays responsive: one type check on the biggest shipped pack (114 variables, 217
 # functions, so the largest stand-in script the check ever builds) is a few milliseconds. Measured at
-# about 15 ms warm on the development machine for a refused value and for an accepted one; the budget is
-# three times that, so a loaded machine passes and a check that grew a second probe per field does not.
+# 13 to 15 ms warm on an idle development machine for a refused value and 19 to 22 ms for an accepted one
+# (5 runs), and 26 to 28 ms refused and 35 to 43 ms accepted while the parallel suite was running beside it. The
+# budget is 100 ms: more than twice the loaded worst, so a busy machine passes, and a check that grew a second
+# probe per field (twice the time, then a probe per keystroke) or a stand-in rebuilt on every call (ten times)
+# still does not.
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "type_check_budget_test"
 const PACK_PATH := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
 ## The median time of one check, in milliseconds.
-const CHECK_BUDGET_MS: float = 50.0
+const CHECK_BUDGET_MS: float = 100.0
 ## What the row sweep adds to the biggest sheet, in milliseconds: every line compiled at once the first time
-## the sheet's types are seen (measured about 180 ms), and with every line known, what an edit costs on top of
-## the walk (measured about 20 ms). Both three times that and rounded up.
-const SWEEP_COLD_BUDGET_MS: float = 600.0
+## the sheet's types are seen (210 to 234 ms idle, 318 to 480 ms under the parallel suite), and with every line
+## known, what an edit costs on top of the walk (10 to 13 ms idle, 22 to 25 ms loaded). Both a little over twice
+## the loaded worst, rounded up.
+const SWEEP_COLD_BUDGET_MS: float = 1000.0
 const SWEEP_WARM_BUDGET_MS: float = 60.0
 
 
