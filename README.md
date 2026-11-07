@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (34,236 CI-gated assertions across 985 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (34,371 CI-gated assertions across 993 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -97,22 +97,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 
 ## Current status
 
-The latest tagged release is **`v0.18.0` - "Refactor Anything, Render Anything & Feel Everything"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.18.0), [full notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/changelog/v0.18.0.md) for the full ledger). In one screen:
-
-- **Refactor anything** - a moved verb carries a forwarding address and Migrate… proves every rewrite twice; renames list what they touch first; taking a pack's new version is replacing its folder and reading the version-control diff; an object's states are a variable (Declare states…, Is in / Go to / On entering, a live band, the Trail), and a hand-written `match state:` machine opens as those rows byte-exact. ([refactoring](docs/GUIDE-UPDATING-AND-REFACTORING.md), [states](docs/GUIDE-STATES.md))
-- **Render anything** - the environment, sky, surface and lens in words; the Camera shelf finished in 2D and 3D; the light and the shader dial as the object; twenty blend modes as one row; a post stack with looks saved from the live game; seven distance-field shape nodes crisp at any zoom, with an Inspector of unit drawers, card lists, show-if groups and draggable handles.
-- **Feel everything** - the **Feedback Player**, a node whose Inspector is a list of cards and every gesture a row by label, and the **Moment** block that plays a whole beat by name; named cooldowns and countdowns, music that follows the game, ownership and wounds, **Targeting** in 2D and 3D, tilemap questions, a whole wave in one row, a seeded grid that walks itself into a level.
-- **Scenes, files and playing together** - layouts on top of the running game, `%name` as a word, 3D spawning, saving what a player built behind a data-only trust check; `user://` vs `res://` taught at the path field and user content arriving as data, never code; Godot's high-level multiplayer in sentences, byte-exact both ways, with the silent networking, lighting and collision mistakes caught by the Doctor. ([scenes](docs/GUIDE-SCENES.md))
-- **The editor** - the resting toolbar (seven controls that never wrap, nothing removed), autocomplete in every name field, one debugger with four tabs, the Manual docked beside the sheet, all fifteen editor-tool shapes as starter sheets, and the API as vocabulary: ordinary calls and property writes on known classes read as rows with zero authoring. ([toolbar](docs/GUIDE-THE-TOOLBAR.md))
-
-### The next release: on `main`, not yet tagged
-
-**Where it stands (2026-11-02):** 596 commits on `main` since `v0.18.0`, every one listed in the [CHANGELOG](CHANGELOG.md) under `[Unreleased]`. The features are in, the full test suite and CI are green, and nothing in it is half-built. Two things stand between it and a tag:
-
-1. **Four small `.gd` save details wait on a design call** - where a comment row is written in a `.gd` file (today it moves to the end), whether a comment's colour is saved there at all, whether a plain (non-exported) variable's description is saved, and a `#region` drawn around events at the top of a sheet (it reopens empty). Nothing else a `.gd` save could drop is left: eleven such losses were found and fixed for this release, each pinned by a test that saves and reopens a real file.
-2. **The release itself** - version bump, release notes, README milestones, tag.
-
-What it brings, in one screen:
+The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.20.0), [full notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/changelog/v0.20.0.md) for the full ledger). It makes the editor sit inside Godot like one of its own docks, and makes it sturdier after a heavy overhaul of how it looks and behaves. In one screen:
 
 - **Editor Native, and names you already know** - a starter look that sits inside Godot like one of its own docks (variables listed the way the Inspector lists a property, blue condition and green action lanes, the compiler's `__` names kept out of sight); the picker answers to `GetComponentInParent`, `WaitForSeconds` and another event-sheet editor's verbs, and an expression field reads `Mathf.Lerp` and `Random.Range`.
 - **A sheet that lines up** - words, names and values sit in aligned columns, plain values share one text colour and weight, the parameter band hangs under the function line, branches of a pair are numbered as events of their own, and a function counts as one event in the head card and the status bar.
@@ -175,8 +160,8 @@ Every release has full notes in its own file under [docs/changelog](https://gith
 | `v0.16.0` | Open anything, publish anything: nine editor languages, the Custom Resource wizard, `publish_pack`, the reads-like-code pass, 88 raycasting verbs + two labs, the curation pass |
 | `v0.17.0` | Adopt anything, read anything: real `.gd` files open as rows byte-exact, your classes as vocabulary, Construct-style reading, the pattern / dev-experience / i18n waves, docs inside the editor |
 | `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, the render vocabulary and shape nodes, the Feedback Player, the gameplay systems, the resting toolbar and the Manual |
-| _Unreleased on main_ | Feels native, reads familiar, saves everything: the Editor Native look, variables as the Inspector shows them, one Save choice per variable, behaviours and globals as forms, functions as events, the Inspector Designer shaping a field, groups and regions, an aligned sheet, states and class names, world and local positions, a performance pass, the plugin's own code opening as rows, every `.gd` save loss fixed (🚧 feature-complete, four `.gd` save details and the tag to go) |
-| _Next_ | Dropping a drag on a big sheet under a frame or two (about 0.75 s on 803 rows today, a fold click is already under 50 ms), a first sheet tab in seconds (about 17 to 22 s today), saving a behaviour or global decided when you make it, then whatever you ask for |
+| `v0.20.0` | Feel native: the Editor Native look in Godot's light and dark themes, names you already know, variables as the Inspector shows them, one Save choice per variable, functions as events, the Inspector Designer shaping a field, world and local positions, type checking, autocomplete, colour squares and mistake checks as you type, smooth interaction on big sheets, every `.gd` save loss fixed |
+| _Next_ | Four small `.gd` save details (where a comment row is written, a comment's colour, a plain variable's description, a `#region` around the top events), dropping a drag on a big sheet under a frame or two (about 0.75 s on 803 rows today, a fold click is already under 50 ms), a first sheet tab in seconds (about 17 to 22 s today), saving a behaviour or global decided when you make it, then whatever you ask for |
 
 ## Project layout
 

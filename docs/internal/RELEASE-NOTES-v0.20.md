@@ -1,14 +1,12 @@
 # v0.20.0 - Feel Native
 
-DRAFT for review: the bullets below are not final until the maintainer approves them.
-
 This release makes the editor sit inside Godot like one of its own docks, and makes it sturdier after a heavy overhaul of how it looks and behaves. Nearly every window, row and menu was reworked to say plainly what it does, to work in Godot's light and dark themes, and to stay quick on big sheets. If your daily driver is Construct 3 or Godot, the picker, the sheet and the fields now answer to names you already know.
 
 ## A look that belongs in Godot
 
 - A new default look, Editor Native, that reads like Godot's own docks: variables listed the way the Inspector lists a property, blue condition lanes and green action lanes, and each event drawn as one panel with its nesting as lines in the margin.
 - Words, names and values sit in aligned columns, the parameter band hangs under a function's line, and sub-events pack tight under their parent.
-- It follows Godot's Light and Default editor themes, and switching the editor theme while a sheet is open re-colours every icon with no restart.
+- It follows Godot's Light and Default editor themes from the moment the editor starts, keeps its toolbar words readable on any theme base, and switching the editor theme while a sheet is open re-colours the sheet with no restart.
 - A sheet opens on one thin head bar, the side panel rests as a rail, and every line leads with its icon instead of a word in front of it.
 
 ## Familiar names, familiar flow
@@ -32,7 +30,7 @@ This release makes the editor sit inside Godot like one of its own docks, and ma
 
 - Functions written inside a call, classes inside a script, values over several lines and statements continued with `\` open as rows and save back byte-exact.
 - The plugin's own scripts open as rows too, with no block of code on screen.
-- Hand-written `.gd` scripts read the way the design boards draw sheets, and every way a `.gd` save used to drop something (disabled events, groups, regions, class descriptions) is closed.
+- Hand-written `.gd` scripts open as tidy, readable rows, and every way a `.gd` save used to drop something (disabled events, groups, regions, class descriptions) is closed.
 - Position rows say which space they mean: Set X / Y / Z read relative to the parent, and world twins sit beside them for setting, reading, spawning, wrapping, bounding and gliding.
 - New rows: Tell Children, First Parent Of Type, Next / Previous Sibling, Reset Variable(s), Pick First / Last Where, Has Been True For, and pause requests that keep the game paused until everyone who asked lets go.
 - New packs: Flock and Flock 3D (birds, fish and swarms that steer by their neighbours), and a Platformer Pathfinding that learns every way a character gets around.
@@ -41,7 +39,7 @@ This release makes the editor sit inside Godot like one of its own docks, and ma
 
 - Type checking in every field: Godot's own analyzer answers in a plain sentence plus its own words, underlines the exact span, and blocks OK on an error.
 - Autocomplete follows the code the way Godot's script editor does: dot completion through chains, argument hints, names inside quotes, and descriptions from the class reference.
-- Colour values show a square of the colour; click it for Godot's own ColorPicker.
+- Colour values show a square of the colour and read the way you typed them: click the square for Godot's own ColorPicker with no window in between, right-click it to Copy As hex, RGB, HSV or code, and pick how every colour reads with Read Colours As (your code never changes).
 - Nine mistakes Godot only reports when the game runs are caught on the row with a fix beside each, and a broken script marks its row with Godot's own words on save.
 - A run-time error in a `.gd` sheet or a hand-written script links to its row, in a game started from the editor, with nothing added to the game.
 
@@ -56,4 +54,4 @@ This release makes the editor sit inside Godot like one of its own docks, and ma
 
 - The editor starts in about 11 seconds instead of 30, and the picker lists every pack verb (it showed 142 of 4,477).
 - Dropping a drag on an 803-row sheet takes about 0.75 s (it was 2.8 s), and a fold click on a large sheet is under 50 ms (it was about 0.5 s), and hover and drag repaint only the row they touch.
-- Disabling the plugin frees its whole workspace instead of leaving it in memory, and Undo and Redo work inside the editor.
+- Disabling the plugin frees its whole workspace instead of leaving it in memory.
