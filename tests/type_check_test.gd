@@ -27,6 +27,7 @@ static func run() -> bool:
 	all_passed = _self_is_said_by_its_class_and_a_foreign_host_says_nothing() and all_passed
 	all_passed = _the_scene_that_judges_is_the_one_that_runs_the_sheet() and all_passed
 	all_passed = _a_clause_head_is_never_probed_as_a_statement() and all_passed
+	all_passed = _optional_commas_are_settled_before_a_field_is_judged() and all_passed
 	return all_passed
 
 
@@ -476,14 +477,8 @@ static func _the_scene_that_judges_is_the_one_that_runs_the_sheet() -> bool:
 ## does not parse. Godot printed the parse error on every open, and the lines judged after it were lost.
 static func _a_clause_head_is_never_probed_as_a_statement() -> bool:
 	var sheet: EventSheetResource = _sheet()
-	var clauses: Array[String] = ["GIMode.NONE:
-		score = 1", "OPTION_ONE:
-	score = 1", "1, 2:
-	score = 1",
-		"_:
-	score = 1", "elif score > 1:
-	score = 1", "else:
-	score = 1", "STATE_IDLE: score = 1"]
+	var clauses: Array[String] = ["GIMode.NONE:\n\t\tscore = 1", "OPTION_ONE:\n\tscore = 1", "1, 2:\n\tscore = 1",
+		"_:\n\tscore = 1", "elif score > 1:\n\tscore = 1", "else:\n\tscore = 1", "STATE_IDLE: score = 1"]
 	var lines: Array[Dictionary] = []
 	for clause: String in clauses:
 		lines.append({"code": clause, "condition": false})
@@ -500,8 +495,7 @@ static func _a_clause_head_is_never_probed_as_a_statement() -> bool:
 			unparsed += 1
 	var rows: Array = [["no probe failed to parse", unparsed, 0]]
 	for index: int in range(clauses.size()):
-		rows.append(["a clause head says nothing: " + clauses[index].get_slice("
-", 0), answers[index], ""])
+		rows.append(["a clause head says nothing: " + clauses[index].get_slice("\n", 0), answers[index], ""])
 	rows.append(["the wrong kind after them is still refused", str(answers[clauses.size()]).is_empty(), false])
 	rows.append(["a lambda is still a statement", _statement_kinds(["score = 1", "var f = func(a): return a", "if score:", "x: int = 1"]), [false, false, false, true]])
 	return SUPPORT.pins(NAME + ": clause heads", rows)
@@ -512,3 +506,19 @@ static func _statement_kinds(codes: Array) -> Array:
 	for code: String in codes:
 		kinds.append(EventSheetTypeCheck._opens_with_a_clause(EventSheetTypeCheck.mask_strings(code)))
 	return kinds
+
+
+## A template's optional comma (`{, width}`) is not a slot: left in the line, it would not parse and no field of
+## the row could be judged. It is dropped while its field is blank and written as an argument once it holds one.
+static func _optional_commas_are_settled_before_a_field_is_judged() -> bool:
+	var template: String = "draw_line({from}, {to}{, width}{, antialiased})"
+	var rows: Array = [
+		["blank optional fields are dropped", EventSheetTypeCheck.assemble(template, "from", "a", {}).get("code", ""),
+			"draw_line(a, __slot__)"],
+		["a held optional field is an argument", EventSheetTypeCheck.assemble(template, "from", "a", {"width": "2.0"}).get("code", ""),
+			"draw_line(a, __slot__, __slot__)"],
+		["the field being judged counts as held", EventSheetTypeCheck.assemble(template, "width", "2.0", {}).get("code", ""),
+			"draw_line(__slot__, __slot__, 2.0)"],
+		["and is placed in its own slot", EventSheetTypeCheck.assemble(template, "width", "2.0", {}).get("in_call", false), true],
+	]
+	return SUPPORT.pins(NAME + ": optional commas", rows)

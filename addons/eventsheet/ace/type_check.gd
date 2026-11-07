@@ -74,11 +74,30 @@ static func is_structural(text: String) -> bool:
 	return true
 
 
+## A template's optional commas settled against the fields: `{, width}` is dropped while the field is blank
+## and becomes `, {width}` while it holds something - the field being checked always counts as held. Left
+## alone, the mark is not a slot, so the line built from it would not parse and no field of the row could
+## be judged.
+static func _with_optional_commas_settled(template: String, param_id: String, values: Dictionary) -> String:
+	if not template.contains("{,"):
+		return template
+	var settled: String = ""
+	var cursor: int = 0
+	for found: RegExMatch in RegEx.create_from_string("\\{, ([A-Za-z_][A-Za-z0-9_]*)\\}").search_all(template):
+		settled += template.substr(cursor, found.get_start() - cursor)
+		cursor = found.get_end()
+		var field: String = found.get_string(1)
+		if field == param_id or not str(values.get(field, "")).strip_edges().is_empty():
+			settled += ", {%s}" % field
+	return settled + template.substr(cursor)
+
+
 ## The template with `value` in `param_id`'s slot, as {code, line, column}: the GDScript the verb writes,
 ## the zero-based line of it that holds the value, and the column the value starts at on that line. {}
 ## when the template has no such slot. `{target.}` is the optional "On node" prefix and reads the `target`
 ## field; every other slot takes its own word when that is a name or an operator, else a stand-in.
 static func assemble(template: String, param_id: String, value: String, values: Dictionary) -> Dictionary:
+	template = _with_optional_commas_settled(template, param_id, values)
 	if template.is_empty() or not template.contains("{%s}" % param_id):
 		return {}
 	var code: String = ""
