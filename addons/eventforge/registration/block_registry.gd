@@ -482,7 +482,9 @@ class SignalBlockKind extends EventSheetBlockKind:
 			return PackedStringArray()
 		var params: PackedStringArray = _clean_params(signal_row)
 		if params.is_empty():
-			return PackedStringArray(["signal %s" % signal_row.signal_name.strip_edges()])
+			# A signal opened as `signal done()` keeps its brackets; one made in the sheet has none.
+			var brackets: String = "()" if signal_row.empty_brackets else ""
+			return PackedStringArray(["signal %s%s" % [signal_row.signal_name.strip_edges(), brackets]])
 		return PackedStringArray(["signal %s(%s)" % [signal_row.signal_name.strip_edges(), ", ".join(params)]])
 
 	func lift(lines: PackedStringArray, i: int) -> Dictionary:
@@ -498,7 +500,9 @@ class SignalBlockKind extends EventSheetBlockKind:
 		var lifted: SignalRow = SignalRow.new()
 		lifted.signal_name = signal_match.get_string(1)
 		var params_text: String = signal_match.get_string(2)
-		if not params_text.is_empty():
+		if params_text.is_empty():
+			lifted.empty_brackets = line.ends_with("()")
+		else:
 			# Top-level split only: `scores: Dictionary[String, int]` is ONE param. The naive
 			# split fragmented it yet rejoined byte-identically, slipping past the gate below.
 			lifted.params = EventSheetBlockRegistry.split_params_top_level(params_text)

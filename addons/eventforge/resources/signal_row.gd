@@ -11,6 +11,9 @@ extends Resource
 @export var signal_name: String = "my_signal"
 ## Parameter declarations in order ("damage" or "damage: int").
 @export var params: PackedStringArray = PackedStringArray()
+## True when the file wrote the signal with empty brackets (`signal done()`). Emission writes them back
+## for as long as the signal has no values; a signal made in the sheet has none, as `signal done`.
+@export var empty_brackets: bool = false
 
 ## When true the signal also publishes as a TRIGGER ACE: the compiler prefixes the declaration with
 ## `## @ace_trigger` (+ optional @ace_name / @ace_category), so a behaviour can declare a code-free
