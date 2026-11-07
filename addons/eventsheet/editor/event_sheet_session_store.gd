@@ -48,6 +48,14 @@ func persist() -> void:
 		push_warning("EventSheets: couldn't save the tab session to %s - open tabs won't restore next launch." % SESSION_PATH)
 
 
+## Returns once the dock has no script being read in the background (at once when none is, which is
+## always the case in a headless run that joins the read itself).
+func _wait_for_open_job() -> void:
+	while is_instance_valid(_dock) and _dock.is_inside_tree() and _dock._sheet_io != null \
+			and _dock._sheet_io.get("_open_job") != null:
+		await _dock.get_tree().process_frame
+
+
 ## Reopens last session's tabs (missing files skipped silently - a deleted sheet shouldn't block
 ## startup), then turns persistence on.
 func restore() -> void:
@@ -73,6 +81,13 @@ func restore() -> void:
 						and not _dock._current_sheet.blocked_by_conflict():
 					_dock._current_sheet.read_only = false
 					_dock._preview_glue._refresh_preview_banner()
+				# A script's events are read by a background job, and opening the next script drops the
+				# job still running (the newer open wins). Restoring several tabs back to back therefore
+				# left every tab but the last one as raw function blocks for good; each is let finish
+				# before the next opens, so a restored tab reads exactly as a freshly opened one does.
+				await _wait_for_open_job()
+		if not is_instance_valid(_dock):
+			return
 		if active >= 0 and active < paths.size():
 			var active_path: String = paths[active]
 			for index in _dock._open_tabs.size():
