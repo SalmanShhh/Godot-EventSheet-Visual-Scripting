@@ -6,7 +6,7 @@ GPUParticles2D and CPUParticles2D emitters from rows. Neither needs a pack enabl
 
 The Drawing rows are the interesting half. Every one of them starts with `CanvasSurface.for_node(...)`,
 which lazily builds one offscreen render target for that node and caches it there. So you do not attach
-anything, configure anything, or write a `_draw()` function: you pick **Draw Circle**, point it at a
+anything, configure anything, or write a `_draw()` function: you pick **Draw Circle On Node**, point it at a
 node, and that node has a canvas. Turn auto-clear on and the canvas is a per-frame telegraph (attack
 cones, aim guides, vision fans). Turn it off and the strokes pile up like paint (bullet holes,
 footprints, splatter, a drawing game).
@@ -77,10 +77,10 @@ Every row here takes **On** (the canvas host node).
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Draw Line | Draws a line segment onto a node's canvas - attack direction indicators, lasers, aim guides. | `CanvasSurface.for_node({node}).line({from_x}, {from_y}, {to_x}, {to_y}, {width}, {color})` |
-| Draw Circle | Draws a filled circle onto a node's canvas - the classic soft blob shadow under a character. | `CanvasSurface.for_node({node}).circle({x}, {y}, {radius}, {color})` |
+| Draw Line On Node | Draws a line segment onto a node's canvas - attack direction indicators, lasers, aim guides. | `CanvasSurface.for_node({node}).line({from_x}, {from_y}, {to_x}, {to_y}, {width}, {color})` |
+| Draw Circle On Node | Draws a filled circle onto a node's canvas - the classic soft blob shadow under a character. | `CanvasSurface.for_node({node}).circle({x}, {y}, {radius}, {color})` |
 | Draw Ring | Draws a circle outline onto a node's canvas - selection rings, blast-radius previews. | `CanvasSurface.for_node({node}).ring({x}, {y}, {radius}, {width}, {color})` |
-| Draw Rect | Draws a filled rectangle onto a node's canvas (x/y = top-left corner). | `CanvasSurface.for_node({node}).rect({x}, {y}, {width}, {height}, {color})` |
+| Draw Rect On Node | Draws a filled rectangle onto a node's canvas (x/y = top-left corner). | `CanvasSurface.for_node({node}).rect({x}, {y}, {width}, {height}, {color})` |
 | Draw Dashed Line | Draws a dashed line segment - aim guides, tethers, boundary previews. Dash and gap set the on/off rhythm. | `CanvasSurface.for_node({node}).dashed_line({from_x}, {from_y}, {to_x}, {to_y}, {dash_length}, {gap_length}, {width}, {color})` |
 | Draw Dashed Ring | Draws a dashed circle outline - range rings, dashed selection markers. | `CanvasSurface.for_node({node}).dashed_ring({x}, {y}, {radius}, {dash_length}, {gap_length}, {width}, {color})` |
 | Draw Dashed Rect | Draws a dashed rectangle outline - selection boxes, build-placement previews, zone markers. The dash rhythm carries continuously around all four sides. | `CanvasSurface.for_node({node}).dashed_rect({x}, {y}, {width}, {height}, {dash_length}, {gap_length}, {line_width}, {color})` |
@@ -463,7 +463,7 @@ if process_material is ParticleProcessMaterial:
 
 ### Other use cases
 
-**Painting toy.** Persistent canvas plus Draw Circle at the cursor every frame gives you a brush, and Clear Canvas gives you the eraser - a complete drawing game in three rows.
+**Painting toy.** Persistent canvas plus Draw Circle On Node at the cursor every frame gives you a brush, and Clear Canvas gives you the eraser - a complete drawing game in three rows.
 
 **Tether between two units.** A dashed line redrawn every frame from one unit to the other reads instantly as a leash, a beam, or a repair link, and costs nothing when the rows stop firing.
 
