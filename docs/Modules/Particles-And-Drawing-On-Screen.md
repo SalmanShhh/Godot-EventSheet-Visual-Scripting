@@ -97,6 +97,27 @@ Every row here takes **On** (the canvas host node).
 | Set Ribbon Texture | Skins a running ribbon with a texture, stretched along its length. | `CanvasSurface.for_node({node}).set_ribbon_texture({follow}, {texture})` |
 | Stop Ribbon | Ends the ribbon trailing a node. | `CanvasSurface.for_node({node}).stop_ribbon({follow})` |
 
+### Drawing - Godot's own calls (picker group: Drawing: Godot calls)
+
+These are not the canvas rows above. They write Godot's own `draw_*` calls, with Godot's argument names, for a node that paints itself: use them under an **On Draw** event (Godot refuses them anywhere else, so the picker only lists them there). **Redraw** asks the node to paint again and works anywhere. The trailing arguments Godot lets you leave off can be left off here too, so a hand-written `draw_line(a, b, Color.RED)` opens as Draw Line.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Draw Line | A straight line between two points. | `draw_line({from}, {to}, {color}{, width}{, antialiased})` |
+| Draw Rectangle | A filled rectangle. | `draw_rect({rect}, {color}{, filled}{, width}{, antialiased})` |
+| Draw Rectangle Outline | Only the rectangle's edge. | `draw_rect({rect}, {color}, false{, width}{, antialiased})` |
+| Draw Circle | A filled circle. | `draw_circle({position}, {radius}, {color}{, filled}{, width}{, antialiased})` |
+| Draw Circle Outline | Only the circle's edge. | `draw_circle({position}, {radius}, {color}, false{, width}{, antialiased})` |
+| Draw Arc | Part of a circle's edge, in radians. | `draw_arc({center}, {radius}, {start_angle}, {end_angle}, {point_count}, {color}{, width}{, antialiased})` |
+| Draw Polyline | One connected line through a list of points. | `draw_polyline({points}, {color}{, width}{, antialiased})` |
+| Draw Polygon | A filled shape through a list of points. | `draw_polygon({points}, {colors}{, uvs}{, texture})` |
+| Draw Text | A line of text from the left end of its baseline. | `draw_string({font}, {pos}, {text}{, alignment}{, width}{, font_size}{, modulate})` |
+| Draw Texture | A picture at its own size. | `draw_texture({texture}, {position}{, modulate})` |
+| Draw Texture Rect | A picture stretched or tiled into a rectangle. | `draw_texture_rect({texture}, {rect}, {tile}{, modulate}{, transpose})` |
+| Draw Texture Region | One piece of a picture, stretched into a rectangle. | `draw_texture_rect_region({texture}, {rect}, {src_rect}{, modulate}{, transpose}{, clip_uv})` |
+| Set Draw Transform | Moves, turns and scales everything drawn after it. | `draw_set_transform({position}{, rotation}{, scale})` |
+| Redraw | Asks the node to paint itself again, which runs On Draw. | `{target.}queue_redraw()` |
+
 ### Particles - GPUParticles2D
 
 | Name | What it does | Ships as |

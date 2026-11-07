@@ -3846,6 +3846,25 @@ drawing a node's children INSIDE its own shape, and the two rows that say so.
 - **Clip My Children** (`mode: String, target: String`) - Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.
 - **Stop Clipping** (`target: String`) - Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.
 
+### Canvas Item Draw (`res://addons/eventforge/registration/modules/canvas_item_draw_aces.gd`)
+Godot's own drawing calls, as actions under On Draw.
+
+#### Actions
+- **Draw Line** (`from: Vector2, to: Vector2, color: Color, width: float, antialiased: bool`) - Godot's draw_line: a straight line between two points, drawn by this node. Only works under On Draw.
+- **Draw Rectangle** (`rect: Rect2, color: Color, filled: bool, width: float, antialiased: bool`) - Godot's draw_rect, filled in: a solid rectangle drawn by this node. Only works under On Draw.
+- **Draw Rectangle Outline** (`rect: Rect2, color: Color, width: float, antialiased: bool`) - Godot's draw_rect with filled false: only the rectangle's edge, drawn by this node. Only works under On Draw.
+- **Draw Circle** (`position: Vector2, radius: float, color: Color, filled: bool, width: float, antialiased: bool`) - Godot's draw_circle, filled in: a solid disc drawn by this node. Only works under On Draw.
+- **Draw Circle Outline** (`position: Vector2, radius: float, color: Color, width: float, antialiased: bool`) - Godot's draw_circle with filled false: only the circle's edge, drawn by this node. Only works under On Draw.
+- **Draw Arc** (`center: Vector2, radius: float, start_angle: float, end_angle: float, point_count: int, color: Color, width: float, antialiased: bool`) - Godot's draw_arc: part of a circle's edge, drawn by this node. Angles are in radians, so TAU is a full turn. Only works under On Draw.
+- **Draw Polyline** (`points: PackedVector2Array, color: Color, width: float, antialiased: bool`) - Godot's draw_polyline: one connected line through a list of points, drawn by this node. Only works under On Draw.
+- **Draw Polygon** (`points: PackedVector2Array, colors: PackedColorArray, uvs: PackedVector2Array, texture: Texture2D`) - Godot's draw_polygon: a filled shape through a list of points, one colour per corner or one colour for all. Only works under On Draw.
+- **Draw Text** (`font: Font, pos: Vector2, text: String, alignment: int, width: float, font_size: int, modulate: Color`) - Godot's draw_string: a line of text, drawn by this node. The position is the left end of the text's baseline. Only works under On Draw.
+- **Draw Texture** (`texture: Texture2D, position: Vector2, modulate: Color`) - Godot's draw_texture: a picture at its own size, its top-left corner at a point, drawn by this node. Only works under On Draw.
+- **Draw Texture Rect** (`texture: Texture2D, rect: Rect2, tile: bool, modulate: Color, transpose: bool`) - Godot's draw_texture_rect: a picture stretched, or tiled, to fill a rectangle, drawn by this node. Only works under On Draw.
+- **Draw Texture Region** (`texture: Texture2D, rect: Rect2, src_rect: Rect2, modulate: Color, transpose: bool, clip_uv: bool`) - Godot's draw_texture_rect_region: one piece of a picture, stretched to fill a rectangle, drawn by this node - a frame of a sprite sheet. Only works under On Draw.
+- **Set Draw Transform** (`position: Vector2, rotation: float, scale: Vector2`) - Godot's draw_set_transform: moves, turns and scales everything this node draws after it, until the next one. Call it with just a position to put the origin there. Only works under On Draw.
+- **Redraw** (`target: String`) - Godot's queue_redraw: asks the node to paint itself again, which runs its On Draw event. A node paints once and keeps the picture, so call this whenever what it should show has changed. Works anywhere.
+
 ### Clipboard (`res://addons/eventforge/registration/modules/clipboard_aces.gd`)
 Copying: share codes, the OS clipboard both ways, cloning a node, and
 

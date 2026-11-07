@@ -28,6 +28,8 @@
 #   a row that compiles in     "Also run the parent's version" writes `super(...)`, which means
 #   one place only             something only inside a function that replaces one of the parent's;
 #                              offered there, never anywhere it would not compile
+#   a row that compiles in     Godot's draw_* calls: the engine refuses them outside _draw(), so they are
+#   one place only (too)       offered under an On Draw event, with Redraw (usable anywhere) listed instead
 # None of these is a fixable project state, which is the property that matters: nothing
 # disappears because of something a reader could put right and was never told about.
 #
@@ -139,6 +141,12 @@ const HIDDEN_OUTSIDE_OVERRIDE := "outside_override"
 ## being added to sits in a function that replaces one of the parent's. Asked only of such a row, so a
 ## caller computes it only when is_parent_call says so.
 const IN_OVERRIDE_CONTEXT := "in_override_function"
+## The other row that compiles in one place only: Godot's draw_* calls, which the engine refuses outside
+## _draw(). True when the row being added to sits under an On Draw event. Asked only of such a row.
+const HIDDEN_OUTSIDE_DRAW := "outside_on_draw"
+const IN_DRAW_CONTEXT := "in_on_draw_event"
+## Every one of Godot's draw_* rows has an id that starts with this (Redraw does not: it works anywhere).
+const DRAW_CALL_PREFIX := "CanvasItemDraw"
 
 ## The metadata a definition wears for each: the deprecation mark, the mark that says a row's choices
 ## come from the project, and the scene node a COPY of such a row was built for.
@@ -161,12 +169,20 @@ static func hidden_reason(definition: ACEDefinition, where: Dictionary = {}) -> 
 		return ""
 	if is_parent_call(definition) and where.has(IN_OVERRIDE_CONTEXT) and not bool(where[IN_OVERRIDE_CONTEXT]):
 		return HIDDEN_OUTSIDE_OVERRIDE
+	if is_draw_call(definition) and where.has(IN_DRAW_CONTEXT) and not bool(where[IN_DRAW_CONTEXT]):
+		return HIDDEN_OUTSIDE_DRAW
 	if bool(definition.metadata.get(DEPRECATED_META, false)):
 		return HIDDEN_DEPRECATED
 	if bool(definition.metadata.get(PROJECT_SCOPED_META, false)) \
 			and str(definition.metadata.get(SCENE_TARGET_META, "")).is_empty():
 		return HIDDEN_PROJECT_TEMPLATE
 	return ""
+
+
+## True for one of Godot's draw_* rows (Draw Line, Draw Rectangle, Set Draw Transform and the rest), the
+## rows hidden_reason asks `where` about under IN_DRAW_CONTEXT.
+static func is_draw_call(definition: ACEDefinition) -> bool:
+	return definition != null and str(definition.provider_id) == "Core" and str(definition.id).begins_with(DRAW_CALL_PREFIX)
 
 
 ## True for "Also run the parent's version", the row hidden_reason asks `where` about.

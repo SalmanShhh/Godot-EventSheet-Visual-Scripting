@@ -5120,6 +5120,30 @@ const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = [
 ## falls to the shorter shape with its whole argument list in the one field, which re-emits the same.
 const OPTIONAL_COMMA_REVERSIBLE_ACE_IDS: PackedStringArray = ["TellChildren"]
 
+## The rows that spell Godot's own call, whose optional trailing arguments are an ORDERED chain: the
+## line is the call with its first k optional arguments given, for every k, and never one skipped for a
+## later one - Godot's call has no way to leave an argument out of the middle. Reversed into those
+## shapes only (n + 1 of them, where the unordered spelling above makes 2 to the n), so a three
+## argument `draw_rect(r, c, false)` cannot read as "width" or "antialiased" by registry order alone.
+## Their arguments are also read as whole expressions, commas inside brackets and strings included:
+## `Rect2(a, b)` is ONE argument, which the lazy capture the other rows use would cut in half.
+## An id here must also have its optional tail written in call order in its template.
+const ORDERED_OPTIONAL_COMMA_ACE_IDS: PackedStringArray = [
+	"CanvasItemDrawLine", "CanvasItemDrawRect", "CanvasItemDrawRectOutline", "CanvasItemDrawCircle",
+	"CanvasItemDrawCircleOutline", "CanvasItemDrawArc", "CanvasItemDrawPolyline", "CanvasItemDrawPolygon",
+	"CanvasItemDrawString", "CanvasItemDrawTexture", "CanvasItemDrawTextureRect",
+	"CanvasItemDrawTextureRectRegion", "CanvasItemDrawSetTransform",
+]
+
+## What a row's parameter may read for the row to claim a line, for the rows whose template cannot say
+## it in literal text. The filled rectangle and circle have a `filled` slot that the call fills with
+## whatever it was given - but the row only means "filled", so a line passing `false` (the outline
+## rows' literal) or a variable keeps the reading it already had instead of a row that would not say so.
+const ENTRY_PARAM_GUARDS: Dictionary = {
+	"CanvasItemDrawRect": {"filled": ["true"]},
+	"CanvasItemDrawCircle": {"filled": ["true"]},
+}
+
 ## The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
@@ -5270,7 +5294,8 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 	brace_regex.compile("\\{[^}]*\\}")
 	for descriptor: ACEDescriptor in all_descriptors:
 		var template: String = descriptor.codegen_template.strip_edges()
-		if template.is_empty() or (template.contains("{,") and not OPTIONAL_COMMA_REVERSIBLE_ACE_IDS.has(descriptor.ace_id)):
+		var ordered_chain: bool = ORDERED_OPTIONAL_COMMA_ACE_IDS.has(descriptor.ace_id)
+		if template.is_empty() or (template.contains("{,") and not OPTIONAL_COMMA_REVERSIBLE_ACE_IDS.has(descriptor.ace_id) and not ordered_chain):
 			continue  # optional-segment templates are not reversible (v1), bar the rows named below
 		# Helper ACEs are mostly forward-authoring conveniences with deliberately generic templates
 		# ({code}, math expressions) that would shadow specific ACEs - kept out of the reverse index.
@@ -5316,8 +5341,10 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 				continue
 		# Optional-prefix `{target.}` templates compile to two shapes - the blank-target host form
 		# (`play()`) and the set-target form (`$Enemy.play()`) - so register a reverse entry for each.
-		for variant: String in _optional_comma_variants(_optional_prefix_variants(template)):
-			var regex: RegEx = _template_to_regex(variant)
+		var spellings: Array = _ordered_comma_variants(_optional_prefix_variants(template)) if ordered_chain \
+			else _optional_comma_variants(_optional_prefix_variants(template))
+		for variant: String in spellings:
+			var regex: RegEx = _template_to_regex(variant, ordered_chain)
 			if regex == null:
 				continue
 			var literal_len: int = brace_regex.sub(variant, "", true).length()
@@ -5421,6 +5448,14 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 				lopsided = true
 				break
 		if lopsided:
+			continue
+		# A row that means one answer for a slot (see ENTRY_PARAM_GUARDS) only claims a line that gives it.
+		var guards: Dictionary = ENTRY_PARAM_GUARDS.get(str((entry as Dictionary).get("ace_id", "")), {})
+		var guarded: bool = false
+		for guarded_param: Variant in guards.keys():
+			if params.has(guarded_param) and not (guards[guarded_param] as Array).has(str(params[guarded_param]).strip_edges()):
+				guarded = true
+		if guarded:
 			continue
 		# A declaration template's `{name}` must be a bare identifier - otherwise the lazy capture carved a
 		# string/expression value at an internal `:` or `=` (see decl_name). Reject so the plain form wins.
@@ -5600,6 +5635,48 @@ static func _optional_comma_variants(templates: Array) -> Array:
 	return spelled
 
 
+## Each template with its `{, x}` optional commas read as an ordered chain: the first k given and the
+## rest dropped, for k from all down to none. The chain is what a call with trailing default arguments is.
+static func _ordered_comma_variants(templates: Array) -> Array:
+	var comma_re: RegEx = RegEx.new()
+	comma_re.compile("\\{, ([A-Za-z_][A-Za-z0-9_]*)\\}")
+	var spelled: Array = []
+	for template: Variant in templates:
+		var text: String = str(template)
+		var hits: Array[RegExMatch] = comma_re.search_all(text)
+		if hits.is_empty():
+			spelled.append(text)
+			continue
+		for given: int in range(hits.size(), -1, -1):
+			var written: String = ""
+			var cursor: int = 0
+			for index: int in range(hits.size()):
+				written += text.substr(cursor, hits[index].get_start() - cursor)
+				if index < given:
+					written += ", {%s}" % hits[index].get_string(1)
+				cursor = hits[index].get_end()
+			spelled.append(written + text.substr(cursor))
+	return spelled
+
+
+## The pattern for ONE call argument: any expression with its brackets and quotes balanced and no comma
+## outside them. Built once to a depth of four nested brackets, which is more than any argument a
+## sheet is likely to hold (`Rect2(Vector2(a, b), Vector2(c, d))` is two deep).
+static func _argument_pattern() -> String:
+	if _argument_pattern_cache.is_empty():
+		var quoted: String = "\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*'"
+		var plain: String = "[^()\\[\\]{}\"']"
+		var inside: String = "(?:" + plain + "|" + quoted + ")*"
+		for _depth: int in range(4):
+			var group: String = "\\(" + inside + "\\)|\\[" + inside + "\\]|\\{" + inside + "\\}"
+			inside = "(?:" + plain + "|" + quoted + "|" + group + ")*"
+		_argument_pattern_cache = "(?:[^()\\[\\]{}\"',]|" + quoted + "|\\(" + inside + "\\)|\\[" + inside + "\\]|\\{" + inside + "\\})+"
+	return _argument_pattern_cache
+
+
+static var _argument_pattern_cache: String = ""
+
+
 ## "{amount}" placeholders become lazy named captures; everything else matches literally.
 ## The longest run of LITERAL text in a template - the cheap prefilter _match_entry tries before it
 ## pays for a regex. _template_to_regex emits every literal run escaped verbatim into an anchored
@@ -5635,7 +5712,7 @@ static func _longest_literal_run(template: String) -> String:
 	return longest
 
 
-static func _template_to_regex(template: String) -> RegEx:
+static func _template_to_regex(template: String, balanced: bool = false) -> RegEx:
 	var pattern: String = "^"
 	var cursor: int = 0
 	while cursor < template.length():
@@ -5669,7 +5746,7 @@ static func _template_to_regex(template: String) -> RegEx:
 		if pattern.contains("(?<%s>" % param_name):
 			pattern += "\\k<%s>" % param_name
 		else:
-			pattern += "(?<%s>.%s)" % [param_name, quantifier]
+			pattern += "(?<%s>%s)" % [param_name, _argument_pattern() if balanced else "." + quantifier]
 		cursor = close + 1
 	pattern += "$"
 	var regex: RegEx = RegEx.new()

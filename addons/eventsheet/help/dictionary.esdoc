@@ -241,17 +241,28 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `drag_right_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
 | `drag_top_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
 | `drag_vertical_enabled` | [Follow Tightly](ace:Core/CameraFollowTightly) | Camera | Vocabulary |
+| `draw_arc` | [Draw Arc](ace:Core/CanvasItemDrawArc) | Drawing: Godot calls | Vocabulary |
 | `draw_arc_shape` | [Draw Arc](ace:Core/DrawArcShape) | Drawing | Vocabulary |
 | `draw_arrow` | [Draw Arrow](ace:Core/DrawArrow) | Drawing | Vocabulary |
+| `draw_circle` | [Draw Circle](ace:Core/CanvasItemDrawCircle) | Drawing: Godot calls | Vocabulary |
 | `draw_cross` | [Draw Cross](ace:Core/DrawCross) | Drawing | Vocabulary |
 | `draw_grid` | [Draw Grid](ace:Core/DrawGrid) | Drawing | Vocabulary |
+| `draw_line` | [Draw Line](ace:Core/CanvasItemDrawLine) | Drawing: Godot calls | Vocabulary |
 | `draw_pie` | [Draw Pie](ace:Core/DrawPie) | Drawing | Vocabulary |
+| `draw_polygon` | [Draw Polygon](ace:Core/CanvasItemDrawPolygon) | Drawing: Godot calls | Vocabulary |
 | `draw_polygon_shape` | [Draw Polygon](ace:Core/DrawPolygonShape) | Drawing | Vocabulary |
+| `draw_polyline` | [Draw Polyline](ace:Core/CanvasItemDrawPolyline) | Drawing: Godot calls | Vocabulary |
 | `draw_polyline_shape` | [Draw Polyline](ace:Core/DrawPolylineShape) | Drawing | Vocabulary |
+| `draw_rect` | [Draw Rectangle](ace:Core/CanvasItemDrawRect) | Drawing: Godot calls | Vocabulary |
 | `draw_regular_polygon` | [Draw Regular Polygon](ace:Core/DrawRegularPolygon) | Drawing | Vocabulary |
 | `draw_rounded_rect` | [Draw Rounded Rect](ace:Core/DrawRoundedRect) | Drawing | Vocabulary |
+| `draw_set_transform` | [Set Draw Transform](ace:Core/CanvasItemDrawSetTransform) | Drawing: Godot calls | Vocabulary |
+| `draw_string` | [Draw Text](ace:Core/CanvasItemDrawString) | Drawing: Godot calls | Vocabulary |
 | `draw_text` | [Draw Text](ace:Core/DrawTextShape) | Drawing | Vocabulary |
+| `draw_texture` | [Draw Texture](ace:Core/CanvasItemDrawTexture) | Drawing: Godot calls | Vocabulary |
 | `draw_texture_in_rect` | [Draw Texture](ace:Core/DrawTextureInRect) | Drawing | Vocabulary |
+| `draw_texture_rect` | [Draw Texture Rect](ace:Core/CanvasItemDrawTextureRect) | Drawing: Godot calls | Vocabulary |
+| `draw_texture_rect_region` | [Draw Texture Region](ace:Core/CanvasItemDrawTextureRectRegion) | Drawing: Godot calls | Vocabulary |
 | `duplicate` | [Copy Array](ace:Core/ArrayDuplicate) | Variables: Array | Vocabulary |
 | `duration` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `ease` | [Ease](ace:Core/EaseValue) | Helpers | Vocabulary |
@@ -797,6 +808,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `quaternion` | [Apply Root Motion](ace:Core/ApplyRootMotion3D) | Animation | Vocabulary |
 | `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |
 | `queue_free` | [Queue Free](ace:Core/QueueFree) | General Actions | Vocabulary |
+| `queue_redraw` | [Redraw](ace:Core/CanvasItemQueueRedraw) | Drawing: Godot calls | Vocabulary |
 | `quit` | [Finish](ace:Core/CommandToolFinish) | Editor Tools: Command tool | Vocabulary |
 | `rad_to_deg` | [Radians To Degrees](ace:Core/RadToDeg) | Math & Random | Vocabulary |
 | `radius` | [Make Sphere Mesh](ace:Core/SetSphereMesh) | Mesh | Vocabulary |

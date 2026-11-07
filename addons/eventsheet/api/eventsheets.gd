@@ -2130,6 +2130,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"dev": "Debugging-And-Printing",
 	"device": "Reading-Keyboard-Mouse-And-Gamepad",
 	"drawing": "Particles-And-Drawing-On-Screen",
+	# Godot's own draw_* calls under On Draw are the same subject said in the engine's words, so they
+	# share the Drawing page rather than opening one of their own.
+	"canvas_item_draw": "Particles-And-Drawing-On-Screen",
 	"facing": "Mirroring-And-Flipping",
 	"file": "Working-With-Files",
 	"gradient_curve": "Colors-Gradients-And-Curves",

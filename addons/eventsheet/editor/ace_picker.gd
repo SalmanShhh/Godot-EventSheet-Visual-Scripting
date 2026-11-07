@@ -74,6 +74,11 @@ const UNHIDE_PREFIX := "unhide:"
 ## ("3D: Move & Turn"), and is filed as one even though the row is also scoped to a node type.
 const SPATIAL_PAGE_PREFIX := "3D: "
 
+## The page Godot's own draw_* calls are filed on ("Drawing: Godot calls"), kept as a Drawing page for the
+## same reason: the rows are scoped to a CanvasItem so only a node that can draw is offered them, and a
+## reader looking for drawing looks under Drawing, not under every verb a CanvasItem has.
+const DRAWING_PAGE_PREFIX := "Drawing: "
+
 ## Marks an object-page entry as "one of the open script's own functions - insert a call to it"
 ## rather than a scope target. The rest of the string is the GDScript function name.
 const FUNCTION_PREFIX := "function:"
@@ -2409,9 +2414,10 @@ func _refresh_tree() -> void:
 		# until now it also decided where it was FILED - so every 3D verb sat in one flat "Node3D"
 		# list while the 2D ones were sorted into named sections. A row filed on the 3D page keeps
 		# that page, which is the only way a node-scoped row can be sorted the way an unscoped one
-		# is. Held to that one page on purpose: it is the only category a shipped row spells this
-		# way, so no existing row's group can move under it.
-		var paged: bool = _category_of(definition).begins_with(SPATIAL_PAGE_PREFIX)
+		# is. Held to these two pages on purpose (3D, and Drawing: Godot calls): they are the only
+		# categories a shipped row spells this way, so no existing row's group can move under them.
+		var paged: bool = _category_of(definition).begins_with(SPATIAL_PAGE_PREFIX) \
+			or _category_of(definition).begins_with(DRAWING_PAGE_PREFIX)
 		var is_node_type_group: bool = not node_type.is_empty() and not paged
 		var group_key: String = node_type if is_node_type_group else _category_of(definition)
 		# Every comparison but the lead one files under Variables ▸ All comparisons, wherever
@@ -3025,6 +3031,12 @@ func _also_run_offered() -> bool:
 		_open_sheet(), _context.get("selected_resource") as Resource))
 
 
+## Whether the row being added to sits under an On Draw event, the only place draw_* calls are valid.
+func _draw_offered() -> bool:
+	return bool(load("res://addons/eventsheet/editor/dock/class_kinds.gd").draw_offered(
+		_open_sheet(), _context.get("selected_resource") as Resource))
+
+
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
 		return false
@@ -3037,6 +3049,8 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 	var where: Dictionary = {}
 	if EventSheetPickerGates.is_parent_call(definition):
 		where[EventSheetPickerGates.IN_OVERRIDE_CONTEXT] = _also_run_offered()
+	if EventSheetPickerGates.is_draw_call(definition):
+		where[EventSheetPickerGates.IN_DRAW_CONTEXT] = _draw_offered()
 	if not EventSheetPickerGates.hidden_reason(definition, where).is_empty():
 		return false
 	# The reader's own choice: an entry they hid, authored or derived.

@@ -19897,7 +19897,14 @@ const GRAMMAR_READ_ACE_IDS: PackedStringArray = [
 	"SetAmbientOcclusion", "SetSkyRotation",
 	"SetFaceTheCamera", "SetFaceTheCameraUpright", "SetShowThroughWalls", "SetWorldSize",
 	"SetBarWidth", "SendInputToSurface", "SetSurfaceRedraw",
-	"SetZOrder"
+	"SetZOrder",
+	# Godot's own drawing calls. A call the grammar already reads ("Draw line a to b, red", "Redraw")
+	# keeps that sentence whether it was typed or picked; a call it has nothing to say about (an arc,
+	# a string, an outline with a width) falls through to the row's own words.
+	"CanvasItemDrawLine", "CanvasItemDrawRect", "CanvasItemDrawRectOutline", "CanvasItemDrawCircle",
+	"CanvasItemDrawCircleOutline", "CanvasItemDrawArc", "CanvasItemDrawPolyline", "CanvasItemDrawPolygon",
+	"CanvasItemDrawString", "CanvasItemDrawTexture", "CanvasItemDrawTextureRect",
+	"CanvasItemDrawTextureRectRegion", "CanvasItemDrawSetTransform", "CanvasItemQueueRedraw"
 ]
 
 ## The world twins of the layout and glide verbs. Each writes one line the behaviour shapes read, and
@@ -21852,6 +21859,9 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if template.is_empty():
 			return EventSheetWords.verb_name_words_of(definition.provider_id, definition.id,
 				EventSheetL10n.translate(definition.display_name))
+		# A sentence may carry an optional piece, `{?width}, width {width}{/width}`, kept only while
+		# the field holds a value - the same marks a template's code uses.
+		template = ActionCodegen.collapse_optional_segments(template, params_dict)
 		var replacements: Array = []
 		for index: int in range(definition.parameters.size()):
 			var parameter: Variant = definition.parameters[index]
@@ -21902,6 +21912,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		descriptor.provider_id, descriptor.ace_id, _resolve_template(descriptor.get_display_text()))
 	if descriptor_template.is_empty():
 		return descriptor.ace_id
+	descriptor_template = ActionCodegen.collapse_optional_segments(descriptor_template, params_dict)
 	var descriptor_replacements: Array = []
 	for i: int in range(descriptor.params.size()):
 		var param: ACEParam = descriptor.params[i]

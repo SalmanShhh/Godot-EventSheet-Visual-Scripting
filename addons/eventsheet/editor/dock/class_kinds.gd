@@ -356,6 +356,27 @@ static func parent_function_of(sheet: EventSheetResource, function_name: String,
 	return {}
 
 
+## Whether `target` (the row an action is being added to, or the action being replaced) sits under an
+## On Draw event, at any depth: the only place Godot's draw_* calls are valid.
+static func draw_offered(sheet: EventSheetResource, target: Resource) -> bool:
+	if sheet == null or target == null:
+		return false
+	return _drawing_rows_hold(sheet.events, target, false)
+
+
+static func _drawing_rows_hold(rows: Array, target: Resource, drawing: bool) -> bool:
+	for entry: Variant in rows:
+		if not entry is EventRow:
+			continue
+		var event: EventRow = entry as EventRow
+		var here: bool = drawing or event.trigger_id == "OnDraw"
+		if here and (event == target or _holds_resource(event.actions, target) or _holds_resource(event.conditions, target)):
+			return true
+		if _drawing_rows_hold(event.sub_events, target, here):
+			return true
+	return false
+
+
 ## Whether "Also run the parent's version" is worth offering where `target` (the row an action is
 ## being added to) sits: only inside a function that replaces one of the parent's.
 static func also_run_offered(sheet: EventSheetResource, target: Resource, classes: Dictionary = {}) -> bool:

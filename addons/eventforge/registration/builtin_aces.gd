@@ -40,6 +40,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		_make_node_scoped_targetable(descriptor)
 	return descriptors
 
+## The id prefix of Godot's draw_* rows (canvas_item_draw_aces.gd), spelled here as text because this
+## file runs on the boot path and never names a class it does not need.
+const DRAW_ONLY_PREFIX: String = "CanvasItemDraw"
+
 ## GDScript keywords that can lead a statement: a template line starting with one is control flow, not
 ## a member operation, so it can never be safely prefixed with another node.
 const _STATEMENT_KEYWORDS: PackedStringArray = ["if", "elif", "else", "for", "while", "var", "const", "return", "match", "await", "pass", "break", "continue"]
@@ -61,6 +65,10 @@ static func _make_node_scoped_targetable(descriptor: ACEDescriptor) -> void:
 	if str(descriptor.node_type).is_empty():
 		return
 	if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
+		return
+	# Godot's draw_* calls paint the node that is drawing, inside its own _draw: pointed at another node
+	# they are refused by the engine, so they get no "On node" field. Redraw, in the same family, does.
+	if descriptor.ace_id.begins_with(DRAW_ONLY_PREFIX):
 		return
 	var template: String = str(descriptor.codegen_template)
 	if template.strip_edges().is_empty():

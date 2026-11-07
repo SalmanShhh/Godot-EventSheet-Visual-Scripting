@@ -48,6 +48,7 @@ const VERIFIED_SECTION_ICONS: Dictionary = {
 	"Destroy": "Remove",
 	"Display": "Window",
 	"Drawing": "CanvasItem",
+	"Drawing: Godot calls": "CanvasItem",
 	"Editor Tools": "Tools",
 	"Editor Tools: Command tool": "Tools",
 	"Editor Tools: Files & folders": "Tools",
