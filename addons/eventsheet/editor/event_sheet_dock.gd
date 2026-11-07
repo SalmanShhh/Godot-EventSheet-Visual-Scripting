@@ -1850,13 +1850,13 @@ func _notification(what: int) -> void:
 		# what carries "Open in Godot" edits back into a backed sheet (the .gd changed on disk).
 		_external_watcher.prompt_external_reload_if_changed()
 	elif what == NOTIFICATION_THEME_CHANGED and is_inside_tree():
-		# The user switched their editor theme - re-derive the "Match Editor" default
-		# (no-op when an explicit sheet theme is active) and re-skin the code panel.
-		# apply_zoom=false: never reset the user's manual zoom on a theme change.
-		_apply_editor_native_defaults()
-		_follow_editor_icons()
-		if _code_edit != null:
-			_code_panel_glue.apply_editor_code_settings(_code_edit)
+		# The user switched their editor theme. The follow-up reads the whole sheet again (the rows
+		# are built from the style), which compiles stand-in scripts for the type check - and a script
+		# compile started from inside the engine's own theme notification never returned (the editor
+		# froze, with no thread running, whenever the check's answers had been dropped by a filesystem
+		# change since the sheet was opened). So the notification only asks; the work runs from a
+		# timer, once per burst of notifications, out of the engine's dispatch.
+		_schedule_editor_theme_follow()
 
 # ── External sheet file watching (GDScript-backed sheets; see EventSheetExternalWatcher) ──────
 # mtime of the active external .gd at open/save time; divergence = changed on disk. Kept on the
@@ -5571,6 +5571,34 @@ func _apply_editor_native_defaults() -> void:
 	if reseats_on_editor_theme(_current_sheet, _theme_manager.get_active_theme_style()):
 		_viewport.set_sheet(_current_sheet)
 		_theme_manager._publish_active_style()
+
+
+## How long after the last theme notification the dock follows the new editor theme. A burst of
+## notifications (one per control of the editor) folds into one follow-up.
+const EDITOR_THEME_FOLLOW_DELAY_SEC: float = 0.1
+
+var _editor_theme_follow_pending: bool = false
+
+
+## Asks for the follow-up to an editor theme switch, once per burst, from a timer rather than from the
+## notification that announced it (see the notification handler for why).
+func _schedule_editor_theme_follow() -> void:
+	if _editor_theme_follow_pending or not is_inside_tree():
+		return
+	_editor_theme_follow_pending = true
+	get_tree().create_timer(EDITOR_THEME_FOLLOW_DELAY_SEC).timeout.connect(_follow_editor_theme)
+
+
+## Re-derives the "Match Editor" default (no-op when an explicit sheet theme is active), follows a
+## dark/light switch of the icon set and re-skins the code panel. Never resets the user's zoom.
+func _follow_editor_theme() -> void:
+	_editor_theme_follow_pending = false
+	if not is_inside_tree():
+		return
+	_apply_editor_native_defaults()
+	_follow_editor_icons()
+	if _code_edit != null:
+		_code_panel_glue.apply_editor_code_settings(_code_edit)
 
 
 ## A switch between a dark and a light editor hands out new icon textures: every icon a control of
