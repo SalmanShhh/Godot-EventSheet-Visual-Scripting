@@ -3244,7 +3244,16 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		# back onto the header, so the file it came from re-emits byte for byte.
 		var block_head: String = rest
 		var inline_body: String = ""
-		if at_this_depth and not rest.ends_with(":"):
+		# A note at the end of an `if` / `elif` line (`if alive:  # player only`) belongs to the condition
+		# it follows; the header is read without it and the words ride on the condition (see below).
+		var header_note: Dictionary = {}
+		if at_this_depth and (rest.begins_with("if ") or rest.begins_with("elif ")):
+			header_note = trailing_note_of(rest)
+			if not header_note.is_empty() and str(header_note["code"]).ends_with(":"):
+				block_head = str(header_note["code"])
+			else:
+				header_note = {}
+		if header_note.is_empty() and at_this_depth and not rest.ends_with(":"):
 			var inline_split: Dictionary = _inline_block_split(rest)
 			if not inline_split.is_empty():
 				block_head = str(inline_split.get("head", ""))
@@ -3291,6 +3300,14 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
 			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries, scope_trigger)
+			if representable and not header_note.is_empty():
+				# The note rides on the last condition; a header with none to carry it stays code.
+				if block_event.conditions.is_empty():
+					representable = false
+				else:
+					var noted_condition: ACECondition = block_event.conditions.back() as ACECondition
+					noted_condition.comment = str(header_note["note"])
+					noted_condition.comment_marker = str(header_note["marker"])
 			var inner: Dictionary = {}
 			if representable:
 				# An `if` inherits the loop context of its parent (a break/continue inside it belongs to the
@@ -4656,15 +4673,18 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	# A statement with a comment at the end of its line is the action with a note: the code before the
 	# comment is read as it would be alone, and the words after it ride on the action it becomes. When
 	# the code reads as no action the whole line stays verbatim, note and all.
-	var note_at: int = _action_note_at(line)
-	if note_at > 0:
-		var code_part: String = line.substr(0, note_at)
+	var noted: Dictionary = trailing_note_of(line)
+	if not noted.is_empty():
+		var code_part: String = str(noted["code"])
 		var last_before: Variant = event.actions.back() if not event.actions.is_empty() else null
 		_consume_action_line(event, code_part, _depth, pending_raw, reverse_entries, in_loop, blank_box)
 		if not pending_raw.is_empty() and pending_raw[pending_raw.size() - 1] == code_part:
 			pending_raw[pending_raw.size() - 1] = line
 		elif not event.actions.is_empty() and event.actions.back() is ACEAction and event.actions.back() != last_before:
-			(event.actions.back() as ACEAction).comment = line.substr(note_at + SheetCompiler.ACTION_NOTE_MARKER.length())
+			var noted_action: ACEAction = event.actions.back() as ACEAction
+			noted_action.comment = str(noted["note"])
+			# The spacing before the `#` is kept as written; the ordinary one is not stored at all.
+			noted_action.comment_marker = "" if noted["marker"] == SheetCompiler.ACTION_NOTE_MARKER else str(noted["marker"])
 		else:
 			pending_raw.append(line)
 		return
@@ -4711,10 +4731,12 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	event.actions.append(action)
 
 
-## Where the note at the end of a statement line starts: the index of the two spaces before its `# `,
-## the way the compiler writes an action's note (SheetCompiler.ACTION_NOTE_MARKER), or -1 when the line
-## has none. A `#` inside a string is not a comment, a note has words in it, and a `# @` marker is code.
-static func _action_note_at(line: String) -> int:
+## The note at the end of a statement line, split from the code before it: {code, marker, note}, or {}
+## when the line has none. The marker is the text between the code and the note exactly as written - the
+## spaces or tab before the `#` and the one space after it - so the save puts the same bytes back. A `#`
+## inside a string is not a comment, a note has words in it and no spaces at its edges, and a `# @` marker
+## is code (a template writes it itself).
+static func trailing_note_of(line: String) -> Dictionary:
 	var quote: String = ""
 	var index: int = 0
 	while index < line.length():
@@ -4728,19 +4750,22 @@ static func _action_note_at(line: String) -> int:
 		elif character == "\"" or character == "'":
 			quote = character
 		elif character == "#":
-			var start: int = index - 2
-			if start <= 0 or line.substr(start, SheetCompiler.ACTION_NOTE_MARKER.length()) != SheetCompiler.ACTION_NOTE_MARKER:
-				return -1
-			if line[start - 1] == " " or line[start - 1] == "\t":
-				return -1
-			var note: String = line.substr(start + SheetCompiler.ACTION_NOTE_MARKER.length())
+			var gap_start: int = index
+			while gap_start > 0 and (line[gap_start - 1] == " " or line[gap_start - 1] == "\t"):
+				gap_start -= 1
+			if gap_start == 0 or gap_start == index:
+				return {}
+			var marker_end: int = index + 1
+			if marker_end < line.length() and line[marker_end] == " ":
+				marker_end += 1
+			var note: String = line.substr(marker_end)
 			# A `# @...` after a statement is a marker a template writes itself (`# @ace:Core.ConsoleLog`),
 			# part of the code the action is read from, never a note somebody typed.
-			if note.strip_edges().is_empty() or note != note.strip_edges() or note.begins_with("@"):
-				return -1
-			return start
+			if note.is_empty() or note != note.strip_edges() or note.begins_with("@"):
+				return {}
+			return {"code": line.substr(0, gap_start), "marker": line.substr(gap_start, marker_end - gap_start), "note": note}
 		index += 1
-	return -1
+	return {}
 
 
 ## One matched spelling as the row it is, for every family that recognises the author's own

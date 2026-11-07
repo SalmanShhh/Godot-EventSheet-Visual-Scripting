@@ -500,14 +500,19 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 							replace_row.pick_filters.append(_create_pick_filter_from_definition(definition, params))
 							message["text"] = "Replaced condition with a loop."
 							return true
-						replace_row.conditions[condition_index] = _create_condition_from_definition(definition, params, _context_negated(context))
+						var edited_condition: ACECondition = _create_condition_from_definition(definition, params, _context_negated(context))
+						_carry_notes(replace_row.conditions[condition_index], edited_condition)
+						replace_row.conditions[condition_index] = edited_condition
 						message["text"] = "Updated condition."
 						return true
 			"replace_action":
 				if selected_resource is EventRow:
 					var action_index: int = int(context.get("ace_index", -1))
 					if action_index >= 0 and action_index < (selected_resource as EventRow).actions.size():
-						(selected_resource as EventRow).actions[action_index] = _create_action_from_definition(definition, params)
+						var edited_action: ACEAction = _create_action_from_definition(definition, params)
+						var replaced_action: Variant = (selected_resource as EventRow).actions[action_index]
+						_carry_notes(replaced_action, edited_action)
+						(selected_resource as EventRow).actions[action_index] = edited_action
 						message["text"] = "Updated action."
 						return true
 			"batch_edit_params":
@@ -906,6 +911,17 @@ static func baked_reading_for(definition: ACEDefinition) -> String:
 		return ""
 	var template: String = str(definition.metadata.get("display_template", "")).strip_edges()
 	return template if not template.is_empty() else definition.display_name
+
+
+## The note a row wears (and the spacing the file wrote it with) goes on to the row that replaces it, so
+## editing a condition's or an action's values does not drop what was written beside it.
+static func _carry_notes(previous: Variant, replacement: Resource) -> void:
+	if previous == null or replacement == null or not (previous is ACEAction or previous is ACECondition):
+		return
+	replacement.set("comment", (previous as Resource).get("comment"))
+	replacement.set("comment_marker", (previous as Resource).get("comment_marker"))
+
+
 
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:

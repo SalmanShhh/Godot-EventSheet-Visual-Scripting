@@ -11,6 +11,10 @@ extends Resource
 @export var is_awaited: bool = false
 @export var await_call: bool = false # Backwards-compatible alias for early Phase 1 .tres files.
 @export var comment: String = ""
+## What the file put between this action's code and its note: the spaces (or tab) before the `#` and the
+## space after it. Empty means the ordinary two spaces and `# `. Set by the lift so an opened line is
+## written back with the spacing it had.
+@export var comment_marker: String = ""
 @export var enabled: bool = true
 ## Baked codegen template (from a custom ACE's @ace_codegen_template). When non-empty it
 ## takes precedence over the descriptor registry, so addon ACEs compile without one.

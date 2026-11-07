@@ -85,7 +85,9 @@ const PURE_HELPERS: Array[String] = [
 	# The lines one class written inside a file writes: its body through echo(), nothing kept.
 	"inner_class_lines",
 	# The comment written after an action's code: a read of the action handed in, nothing kept.
-	"action_note_suffix"
+	"action_note_suffix",
+	# The comment written after an event's `if` line: a read of the event handed in, nothing kept.
+	"condition_note_suffix"
 ]
 
 ## What a poisoned static is set to, by type. Any value that is not the default will do - what

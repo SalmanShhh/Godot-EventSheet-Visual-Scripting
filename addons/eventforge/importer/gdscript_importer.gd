@@ -25,6 +25,8 @@ const SAVE_CHOICE_LIFT_PATH := "res://addons/eventforge/importer/save_choice_lif
 var _source_writes_validate_property: bool = false
 ## Off only while a file is read again whole, after its Save choice block failed to read back.
 var _cut_save_block: bool = true
+## Compiled once: the declaration head `_without_spaced_colon` looks for.
+static var _spaced_colon_matcher: RegEx = null
 
 
 ## ── GDScript-backed sheets (open ANY .gd as a sheet, losslessly) ─────────────
@@ -185,7 +187,9 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			sheet.events.append(lifted_property["var"])
 			index += int(lifted_property["consumed"])
 			continue
-		var lifted: LocalVariable = _try_lift_variable(line)
+		var lifted: LocalVariable = _try_lift_decorated_variable(line)
+		if lifted == null:
+			lifted = _try_lift_variable(line)
 		if lifted != null:
 			_absorb_tree_variable_group(lifted, pending, line)
 			_flush_pending(pending, sheet)
@@ -687,6 +691,43 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 	_extract_structured_hint(lifted, line)
 	_extract_custom_hint(lifted, line)
 	return lifted
+## Lifts a declaration dressed in a spelling the plain lift does not know: a note at the end of its line
+## (`const SPEED = 160 # Pixels/second.`, whose words and spacing ride on the row) and a type written with a
+## space before its colon (`var tween : Tween`, remembered as spaced_colon). The declaration is read without
+## the dressing and the row writes it back. Byte-gated like every lift - the row must write the whole line
+## back - and null when the line has neither or the row cannot.
+func _try_lift_decorated_variable(line: String) -> LocalVariable:
+	var code: String = line
+	var noted: Dictionary = {}
+	if line.contains("#"):
+		noted = EventSheetACELifter.trailing_note_of(line)
+		if not noted.is_empty():
+			code = str(noted["code"])
+	var unspaced: String = _without_spaced_colon(code)
+	var spaced: bool = unspaced != code
+	if noted.is_empty() and not spaced:
+		return null
+	var lifted: LocalVariable = _try_lift_variable(unspaced)
+	if lifted == null:
+		return null
+	lifted.spaced_colon = spaced
+	if not noted.is_empty():
+		lifted.trailing_comment = str(noted["note"])
+		lifted.trailing_marker = "" if str(noted["marker"]) == SheetCompiler.ACTION_NOTE_MARKER else str(noted["marker"])
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		return null
+	return lifted
+
+
+## `declaration` with the space before its type's colon taken out (`var tween : Tween` becomes
+## `var tween: Tween`), or the declaration unchanged when it has none.
+static func _without_spaced_colon(declaration: String) -> String:
+	if _spaced_colon_matcher == null:
+		_spaced_colon_matcher = RegEx.create_from_string("^((?:@\\w+(?:\\([^)]*\\))? )*(?:static )?(?:var|const) \\w+) : ")
+	var found: RegExMatch = _spaced_colon_matcher.search(declaration)
+	if found == null:
+		return declaration
+	return found.get_string(1) + ": " + declaration.substr(found.get_end())
 
 
 ## Lifts a declaration whose value runs over several lines - inside open brackets, or after a `\` -

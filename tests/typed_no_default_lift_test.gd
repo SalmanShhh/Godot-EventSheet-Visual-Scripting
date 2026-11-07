@@ -67,9 +67,10 @@ static func run() -> bool:
 		["the default stays empty", _row(rows, "hp").default_value, null],
 	]) and ok
 
-	# A trailing comment with no `=` before it would be read into the type, so that line keeps its
-	# code block rather than opening as a variable of type `PackedScene # set in the Inspector`.
-	ok = SUPPORT.check(TEST_NAME, "a commented declaration stays code", rows.has("note"), false) and ok
+	# A trailing comment with no `=` before it is not part of the type: the declaration is read without it
+	# and the note rides on the row, so the line opens as a variable of type `PackedScene` that keeps its note.
+	ok = SUPPORT.check(TEST_NAME, "a commented declaration opens as a row that keeps its note",
+		[rows.has("note"), _row(rows, "note").type_name, _row(rows, "note").trailing_comment], [true, "PackedScene", "set in the Inspector"]) and ok
 	# An @onready with no value has no node to read, and every reader of an @onready row reads one.
 	ok = SUPPORT.check(TEST_NAME, "an empty @onready stays code", rows.has("cam"), false) and ok
 
@@ -90,7 +91,8 @@ static func run() -> bool:
 			"@export var creak_sound: AudioStream = null"],
 	]) and ok
 
-	# One line at a time: each spelling lifts alone, and the ones that must not lift stay code.
+	# One line at a time: each spelling lifts alone, and the ones that must not lift stay code (an untyped
+	# variable with no value reads as Variant and is written with no type).
 	ok = SUPPORT.pin_table(TEST_NAME, {
 		"var spark: PackedScene": true,
 		"@export var spark: PackedScene": true,
@@ -98,8 +100,8 @@ static func run() -> bool:
 		"static var spark: PackedScene": true,
 		"@onready var spark: Sprite2D": false,
 		"var spark: PackedScene = null": true,
-		"var spark: PackedScene # later": false,
-		"var spark : PackedScene": false,
+		"var spark: PackedScene # later": true,
+		"var spark : PackedScene": true,
 		"var spark": false,
 		"@export var spark": false,
 	}, func(line: String) -> Variant:

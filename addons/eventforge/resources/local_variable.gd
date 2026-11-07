@@ -106,6 +106,15 @@ extends Resource
 ## line, and emission writes the lines back while the value still reads as that one line (see
 ## EventForgeValueLines). Empty for a value written on one line. Set by the importer, byte-gated.
 @export var written_value: Dictionary = {}
+## True when the file wrote the type with a space before its colon (`var tween : Tween`). Emission keeps
+## the spelling; a variable made in the sheet is written `var tween: Tween`.
+@export var spaced_colon: bool = false
+## The note the file wrote at the end of this declaration's line (`const SPEED = 160 # Pixels/second.`),
+## shown in the row's note column. Emission writes it back after the declaration, behind trailing_marker.
+@export var trailing_comment: String = ""
+## What stood between the declaration and its note: the spaces before the `#` and the one after it. Empty
+## means the ordinary two spaces and `# `.
+@export var trailing_marker: String = ""
 
 ## The step a range spec carries when the source left it to Godot: the two-number `@export_range`.
 const RANGE_STEP_UNWRITTEN := ""

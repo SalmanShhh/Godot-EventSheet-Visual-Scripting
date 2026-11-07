@@ -30,6 +30,9 @@ extends Resource
 @export var display_text: String = ""
 ## Event-sheet-style per-ACE note, shown dimmed after the text in the sheet (right-click to edit).
 @export var comment: String = ""
+## The spacing a note read off the end of an `if` line was written with (`  # `), kept so the save puts
+## the same bytes back. Empty for a note typed in the sheet, which is not written into the file.
+@export var comment_marker: String = ""
 ## Stateful conditions: a class member this instance owns (baked with a fresh uid at
 ## apply), a line run every tick BEFORE the if, and a line run just inside it.
 @export var member_declaration: String = ""

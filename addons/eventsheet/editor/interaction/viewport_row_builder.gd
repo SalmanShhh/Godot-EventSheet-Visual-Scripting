@@ -13193,6 +13193,10 @@ func _build_variable_row(
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
 	_append_variable_note(row_data, variable_meta,
 		description_text if not code_only else "", "", true)
+	# The note the file wrote at the end of the declaration's own line (`const SPEED = 160 # Pixels/second.`)
+	# reads in the same note column.
+	if source_variable != null and not code_only:
+		_append_variable_note(row_data, variable_meta, source_variable.trailing_comment.strip_edges(), "", true)
 	_append_code_echo_span(row_data, variable_meta, code_line, view_mode)
 	return row_data
 

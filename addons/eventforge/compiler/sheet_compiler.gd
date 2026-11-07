@@ -2830,14 +2830,14 @@ static func _emit_event_body(
 		if wants_chain:
 			block_header_line = lines.size()
 			if condition_texts.size() > 0:
-				lines.append("%selif %s:" % [indent, joined_conditions])
+				lines.append("%selif %s:%s" % [indent, joined_conditions, condition_note_suffix(event_row)])
 			else:
 				lines.append("%selse:" % indent)
 			emitted_block = true
 			had_body = true
 		elif condition_texts.size() > 0:
 			block_header_line = lines.size()
-			lines.append("%sif %s:" % [indent, joined_conditions])
+			lines.append("%sif %s:%s" % [indent, joined_conditions, condition_note_suffix(event_row)])
 			emitted_block = true
 			had_body = true
 
@@ -3189,14 +3189,29 @@ static func _keeps_state(condition: ACECondition) -> bool:
 			or not condition.codegen_on_true.is_empty() or not condition.codegen_on_exit.is_empty()
 
 
-## What an action's note adds to the end of its code line: two spaces and `# ` before the note, the way
-## a comment is written after a statement, or nothing when the action has no note. A note is one line;
+## What an action's note adds to the end of its code line: two spaces and `# ` before the note (or the
+## spacing the file it came from used), the way a comment is written after a statement, or nothing when
+## the action has no note. A note is one line;
 ## a line break typed into one is written as a space so the statement stays on its line.
 static func action_note_suffix(action: ACEAction) -> String:
 	if action == null:
 		return ""
 	var note: String = action.comment.replace("\r", "").replace("\n", " ").strip_edges()
-	return "" if note.is_empty() else ACTION_NOTE_MARKER + note
+	return "" if note.is_empty() else (ACTION_NOTE_MARKER if action.comment_marker.is_empty() else action.comment_marker) + note
+
+
+## What the note on an event's condition adds to the end of its `if` line, when the file it came from
+## wrote one there: the spacing it used and the words. Nothing for a note typed in the sheet, which stays
+## in the sheet as it always has - only a note the lift read off a line (and so has its spacing) is
+## written back. The last condition carrying one speaks for the line.
+static func condition_note_suffix(event_row: EventRow) -> String:
+	for index: int in range(event_row.conditions.size() - 1, -1, -1):
+		var condition: ACECondition = event_row.conditions[index] as ACECondition
+		if condition == null or not condition.enabled or condition.comment_marker.is_empty():
+			continue
+		var note: String = condition.comment.replace("\r", "").replace("\n", " ").strip_edges()
+		return "" if note.is_empty() else condition.comment_marker + note
+	return ""
 
 
 ## The text lines a generated companion writes for a comment row, each to go behind `# ` at the end of
@@ -5044,6 +5059,12 @@ static func _labeled_value_arguments(entries: Array) -> PackedStringArray:
 ## own it then declares one that refreshes the Inspector (see inspector_condition_controllers).
 static func _emit_tree_variable_line(local_var: LocalVariable, refresh_inspector: bool = false) -> String:
 	var declaration: String = _emit_tree_variable_declaration(local_var, refresh_inspector)
+	# The note at the end of the line, behind the spacing the file used. A property's accessors end the
+	# declaration on lines of their own, so a note there is not carried.
+	if local_var != null and not local_var.trailing_comment.strip_edges().is_empty() and not declaration.is_empty() \
+			and not local_var.has_property_accessors() and local_var.written_value.is_empty():
+		declaration += (ACTION_NOTE_MARKER if local_var.trailing_marker.is_empty() else local_var.trailing_marker) \
+			+ local_var.trailing_comment.replace("\n", " ").strip_edges()
 	# A value the file wrote over several lines goes back on those lines while it reads as it did. It
 	# ends the declaration, so the one line it was joined into is the declaration's own ending.
 	if local_var == null or local_var.written_value.is_empty():
@@ -5177,6 +5198,12 @@ static func _emit_tree_variable_declaration(local_var: LocalVariable, refresh_in
 		var_line = "\n".join(reaction)
 	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
+	# A type written with a space before its colon keeps it (`var tween : Tween`).
+	if local_var.spaced_colon:
+		var spaced_head: String = "%s: " % local_var.name
+		var spaced_at: int = var_line.find(spaced_head)
+		if spaced_at > 0:
+			var_line = var_line.left(spaced_at) + local_var.name + " : " + var_line.substr(spaced_at + spaced_head.length())
 	return _tree_variable_group_prefix(local_var) + var_line
 
 
