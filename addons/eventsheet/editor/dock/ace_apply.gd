@@ -512,6 +512,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						var edited_action: ACEAction = _create_action_from_definition(definition, params)
 						var replaced_action: Variant = (selected_resource as EventRow).actions[action_index]
 						_carry_notes(replaced_action, edited_action)
+						_keep_value_layouts(replaced_action, edited_action)
 						(selected_resource as EventRow).actions[action_index] = edited_action
 						message["text"] = "Updated action."
 						return true
@@ -922,6 +923,36 @@ static func _carry_notes(previous: Variant, replacement: Resource) -> void:
 	replacement.set("comment_marker", (previous as Resource).get("comment_marker"))
 
 
+## The lines a value was written over go on to the row that replaces its action: a value the window
+## handed back with line breaks inside its brackets is read as the one line it says plus the layout it was
+## typed with, and a value left as it was keeps the layout the file had.
+static func _keep_value_layouts(previous: Variant, replacement: ACEAction) -> void:
+	if replacement == null:
+		return
+	# The lines a whole call was written over go on with it; they are written only while the row still writes
+	# the statement they were kept for.
+	if previous is ACEAction and (previous as ACEAction).written_params.has(EventForgeValueLines.STATEMENT):
+		replacement.written_params[EventForgeValueLines.STATEMENT] = (previous as ACEAction).written_params[EventForgeValueLines.STATEMENT]
+	for param_id: Variant in replacement.params.keys():
+		var value: Variant = replacement.params[param_id]
+		if not (value is String):
+			continue
+		var layout: Dictionary = {}
+		if previous is ACEAction and (previous as ACEAction).written_params.has(param_id):
+			layout = (previous as ACEAction).written_params[param_id]
+		if not layout.is_empty() and (value == str(layout.get("written", "")) or value == str(layout.get("one_line", ""))):
+			# Left as it was: the value reads on one line again and the file's layout goes on with it.
+			replacement.params[param_id] = layout["one_line"]
+			replacement.written_params[param_id] = layout
+		elif (value as String).strip_edges().contains("\n"):
+			# Edited with its line breaks: the text is the layout, written as typed. The line breaks that
+			# the old layout kept right inside a bracket stay only when the value sat inside one.
+			var typed: String = str(value) if not layout.is_empty() and str(layout.get("written", "")) != str(layout.get("written", "")).strip_edges() \
+				else str(value).strip_edges()
+			var settled: Dictionary = EventForgeValueLines.settle(typed)
+			if not settled.is_empty():
+				replacement.params[param_id] = settled["one_line"]
+				replacement.written_params[param_id] = settled["layout"]
 
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:

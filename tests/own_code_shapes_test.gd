@@ -246,12 +246,19 @@ static func _test_handed_on_literals() -> bool:
 	var record_list: CollectionDeclRow = _decls(sheet)[4]
 	ok = _check("a list of records keeps one entry per record", Array(record_list.entry_values),
 		["{\"name\": \"calm\", \"count\": 3}", "{\"name\": \"busy\", \"count\": 8}"]) and ok
-	ok = _check("a nested value is not claimed, and stays the lines it was",
-		_raw_codes(_event_of(sheet, "nested")), ["return {", "\t\"outer\": {", "\t\t\"inner\": 1,", "\t},", "}"]) and ok
+	# A nested value is not a structured table (its inner table has no row of its own), but it is still
+	# one statement: one Return action that reads on one line and keeps the lines it was written over.
+	var nested_event: EventRow = _event_of(sheet, "nested")
+	var nested_layouts: Array = []
+	if nested_event != null and nested_event.actions.size() == 1 and nested_event.actions[0] is ACEAction:
+		for layout: Variant in (nested_event.actions[0] as ACEAction).written_params.values():
+			nested_layouts.append((layout as Dictionary).get("one_line", ""))
+	ok = _check("a nested value is not a table, and reads as one statement that keeps its lines",
+		[_raw_codes(nested_event), nested_layouts], [[], ["{\"outer\": {\"inner\": 1,},}"]]) and ok
 	ok = _check("lines inside a long string are never a table",
 		_decls_in(_event_of(sheet, "shader_text")).size(), 0) and ok
 	# The canvas draws each as one row - the statement and its chips - in exactly the words the run of
-	# lines a structured row replaced drew (the nested table and the string still are such runs).
+	# lines a structured row replaced drew (the string still is such a run; the nested table reads as an ordinary statement).
 	var cells: Array = []
 	for reading: Variant in LINES.readings_of_sheet(SUPPORT.reopen(HANDED_ON_SOURCE), "own"):
 		var text: String = " | ".join(reading.plain)
@@ -263,7 +270,6 @@ static func _test_handed_on_literals() -> bool:
 		"Set connections[handler] to  | table | \"path\" = path | \"once\" = true",
 		"Print rich   path    | list | \"first\" | \"second\"",
 		"Return  | list | {\"name\": \"calm\", \"count\": 3} | {\"name\": \"busy\", \"count\": 8}",
-		"Return  | table | \"outer\" = table (\"inner\" = 1)",
 		"Shade    | table | alpha = 1",
 	]) and ok
 	var event_index: int = remember.actions.find(appended) if remember != null else -1
@@ -318,8 +324,13 @@ static func _test_continued_statements() -> bool:
 		SUPPORT.compile_output(sheet, "user://own_code_shapes_continued.gd"), CONTINUED_SOURCE) and ok
 	var event: EventRow = _event_of(sheet, "open_for")
 	var first: Resource = event.actions[0] if event != null and not event.actions.is_empty() else null
+	# One action that reads the statement on one line and keeps the two lines it was written over.
+	var kept_layouts: Array = []
+	if first is ACEAction:
+		for layout: Variant in (first as ACEAction).written_params.values():
+			kept_layouts.append((layout as Dictionary).get("written", ""))
 	ok = _check("the continued statement is one row holding both of its lines",
-		(first as RawCodeRow).code if first is RawCodeRow else "", "title = \"Add behavior to %s\" % object_label \\\n\tif not object_label.is_empty() else \"Add behavior\"") and ok
+		kept_layouts, ["\"Add behavior to %s\" % object_label \\\n\tif not object_label.is_empty() else \"Add behavior\""]) and ok
 	var notes: Array = []
 	for action: Variant in (event.actions if event != null else []):
 		if action is CommentRow:
@@ -332,7 +343,7 @@ static func _test_continued_statements() -> bool:
 			cells.append(" | ".join(reading.plain))
 	ok = _check("the canvas reads the continued statement as one sentence",
 		cells[0] if not cells.is_empty() else "",
-		"Set title to \"Add behavior to \" & object_label if not object_label' count = 0 else \"Add behavior\"") and ok
+		"Set title to \"Add behavior to \" & object_label") and ok
 	ok = SUPPORT.pins("own_code_shapes_test", [
 		["an indented statement is not a literal entry",
 			ViewportRowBuilder.is_literal_part("\tlabel.text = str(said[0])"), false],

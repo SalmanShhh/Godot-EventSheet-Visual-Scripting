@@ -121,6 +121,7 @@ func build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dict
 	var kind: String = str(metadata.get("kind", ""))
 	var definition: ACEDefinition = null
 	var existing_params: Dictionary = {}
+	var written_layouts: Dictionary = {}
 	var mode: String = ""
 	match kind:
 		"trigger":
@@ -142,6 +143,8 @@ func build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dict
 			var action_entry: ACEAction = event_row.actions[ace_index] as ACEAction
 			definition = _dock._find_definition(action_entry.provider_id, action_entry.ace_id)
 			existing_params = action_entry.params if not action_entry.params.is_empty() else action_entry.parameters
+			# A value the file wrote over several lines shows as written in the window.
+			written_layouts = action_entry.written_params.duplicate(true)
 			mode = "replace_action"
 		_:
 			return {}
@@ -151,6 +154,7 @@ func build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dict
 		"row_data": _dock._context_row,
 		"definition": definition,
 		"existing_params": existing_params.duplicate(true),
+		"written_layouts": written_layouts,
 		"ace_index": ace_index,
 		"span_index": span_index,
 		"kind": kind

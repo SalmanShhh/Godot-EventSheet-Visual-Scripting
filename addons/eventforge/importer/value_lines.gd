@@ -64,16 +64,33 @@ static func join(lines: PackedStringArray) -> Dictionary:
 	return {"text": text, "written": written, "map": map}
 
 
+## The key an action's whole statement is kept under in its written_params, beside the parameter ids: the
+## lines a call was written over when they cannot be kept value by value. Its layout reads like any other,
+## {"one_line": the statement as the row writes it, "written": the lines as the file has them}.
+const STATEMENT: String = "__statement"
+
+
 ## The written text that `part` - a piece of the joined line, found once in it - was joined from, or ""
-## when the piece is not in the line exactly once.
+## when the piece is not in the line exactly once. A piece that sits right after an opening bracket takes
+## the line break and indent written there with it, and one right before a closing bracket takes the ones
+## written there, so a call whose `)` stands on a line of its own writes that line back too.
 static func written_part(joined: Dictionary, part: String) -> String:
 	var text: String = str(joined.get("text", ""))
 	var at: int = text.find(part)
 	if part.is_empty() or at < 0 or text.find(part, at + 1) >= 0:
 		return ""
 	var map: PackedInt32Array = joined.get("map", PackedInt32Array())
+	var written_text: String = str(joined.get("written", ""))
 	var start: int = map[at]
-	return str(joined.get("written", "")).substr(start, map[at + part.length() - 1] - start + 1)
+	var last: int = map[at + part.length() - 1]
+	if at > 0 and text[at - 1] in "([{":
+		while start > 0 and written_text[start - 1] in " \t\n":
+			start -= 1
+	var after: int = at + part.length()
+	if after < text.length() and text[after] in ")]}":
+		while last + 1 < written_text.length() and written_text[last + 1] in " \t\n":
+			last += 1
+	return written_text.substr(start, last - start + 1)
 
 
 ## The layout one value keeps: {"one_line", "written"} when `part` of the joined line was written over
@@ -99,10 +116,55 @@ static func written(value: String, layout: Dictionary) -> String:
 static func rewritten(layout: Dictionary, rewrite: Callable) -> Dictionary:
 	var one_line: String = str(rewrite.call(str(layout.get("one_line", ""))))
 	var written_text: String = str(rewrite.call(str(layout.get("written", ""))))
-	var joined: Dictionary = join(written_text.split("\n"))
+	# The line break a layout keeps right inside a bracket is no part of the one line it reads as.
+	var joined: Dictionary = join(written_text.strip_edges().split("\n"))
 	if joined.is_empty() or str(joined["text"]) != one_line:
 		return {}
 	return {"one_line": one_line, "written": written_text}
+
+
+## A value typed with line breaks - in the parameters window, where it shows as written - as the row
+## keeps it: {"one_line": the value read on one line, "layout": {"one_line", "written"}}, or {} when the
+## breaks are not all inside open brackets (or after a `\`) and so are not layout but part of the code.
+static func settle(value: String) -> Dictionary:
+	if not value.strip_edges().contains("\n") or not breaks_inside_brackets(value.strip_edges()):
+		return {}
+	var joined: Dictionary = join(value.strip_edges().split("\n"))
+	if joined.is_empty():
+		return {}
+	var one_line: String = str(joined["text"])
+	return {"one_line": one_line, "layout": {"one_line": one_line, "written": value}}
+
+
+## Whether every line break of `text` stands inside an open bracket or after a trailing `\`: the only
+## places GDScript reads a break as a space, so the text is one value however it is laid out. A
+## triple-quoted string, whose breaks are part of the value, is not.
+static func breaks_inside_brackets(text: String) -> bool:
+	if text.contains("\"\"\"") or text.contains("'''"):
+		return false
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			return false
+		elif character in "([{":
+			depth += 1
+		elif character in ")]}":
+			depth -= 1
+		elif character == "\n" and depth <= 0 and not text.substr(0, index).rstrip(" \t").ends_with("\\"):
+			return false
+		index += 1
+	return depth == 0
 
 
 ## How many entries a list or table literal holds (`[a, b, c]` gives 3, a trailing comma allowed), or

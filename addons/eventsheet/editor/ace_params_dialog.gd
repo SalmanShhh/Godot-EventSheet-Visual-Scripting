@@ -2936,6 +2936,13 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	# for sheet variables/functions and host members (Ctrl+Space or just typing).
 	var edit: CodeEdit = CodeEdit.new()
 	edit.text = str(default_value)
+	# A value the file wrote over several lines shows as written, line breaks and indents included, and
+	# keeps whatever layout it is given: Enter then breaks the line instead of pressing OK.
+	var written_layouts: Variant = _context.get("written_layouts", {})
+	var written_layout: Variant = (written_layouts as Dictionary).get(key, null) if written_layouts is Dictionary else null
+	if written_layout is Dictionary and str((written_layout as Dictionary).get("one_line", "")) == str(default_value):
+		edit.text = str((written_layout as Dictionary).get("written", default_value))
+		edit.set_meta("keeps_layout", true)
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.custom_minimum_size = Vector2(0.0, 31.0)
 	edit.scroll_fit_content_height = true
@@ -2968,8 +2975,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_expression.bind(edit))
 	edit.text_changed.connect(func() -> void:
 		# Keep it single-line (Enter confirms the dialog instead of inserting a newline).
-		if edit.text.contains("
-"):
+		if edit.text.contains("\n") and not edit.has_meta("keeps_layout"):
 			var caret: int = edit.get_caret_column()
 			edit.text = edit.text.replace("
 ", " ")

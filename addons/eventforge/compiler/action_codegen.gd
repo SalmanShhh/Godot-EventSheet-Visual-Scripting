@@ -32,7 +32,10 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 				params[written_id] = EventForgeValueLines.written(str(params[written_id]), action.written_params[written_id])
 	if template.contains("{%s}" % STARTING_VALUE_SLOT) or template.contains("{%s}" % EVERY_STARTING_VALUE_SLOT):
 		return _starting_value_line(template, params, starting_values)
-	return _apply_template(template, params)
+	# A call written over several lines whose values could not be kept one by one goes back on those lines
+	# while the row still writes the statement it was read as.
+	return EventForgeValueLines.written(_apply_template(template, params),
+		action.written_params.get(EventForgeValueLines.STATEMENT, {}))
 
 
 ## The two slots a row never fills itself, because the answer is already written in the file: the

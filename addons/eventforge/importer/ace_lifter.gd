@@ -3565,6 +3565,8 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				if decl != null:
 					_stamp_body_blanks(decl, blank_box)
 					current.actions.append(decl)
+				elif _took_written_statement(current, lines, index, literal_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
+					pass
 				else:
 					for decl_line: String in decl_lines:
 						pending_raw.append(decl_line)
@@ -3579,7 +3581,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# nothing. Take the whole bracketed run as one statement instead.
 			var bracket_end: int = _bracket_run_close(lines, index)
 			if bracket_end > index:
-				if _took_written_declaration(current, lines, index, bracket_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
+				if _took_written_statement(current, lines, index, bracket_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
 					index = bracket_end + 1
 					chain_open = false
 					continue
@@ -3594,7 +3596,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# `else …` or a `+ "…" \` - as orphan rows that began mid-expression.
 			var continued_end: int = _continuation_close(lines, index, depth)
 			if continued_end > index:
-				if _took_written_declaration(current, lines, index, continued_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
+				if _took_written_statement(current, lines, index, continued_end, depth, pending_raw, reverse_entries, in_loop, blank_box):
 					index = continued_end + 1
 					chain_open = false
 					continue
@@ -4625,18 +4627,19 @@ static func _inside_long_string(lines: PackedStringArray, index: int) -> bool:
 	return inside
 
 
-## A local declaration whose value runs over lines `start`..`last` read as ONE action, its value on one
-## line: the lines are joined (EventForgeValueLines), the joined statement is matched like any other,
-## and the row keeps the lines its value was written over. Taken only when that row writes the lines
-## back exactly as they stand; true when it was taken and appended to `event`.
-static func _took_written_declaration(event: EventRow, lines: PackedStringArray, start: int, last: int, depth: int,
+## A statement written over lines `start`..`last` - a declaration, an assignment, a call - read as ONE
+## action, its value on one line: the lines are joined (EventForgeValueLines), the joined statement is
+## matched like any other, and the row keeps the lines its values were written over, the line breaks and
+## indents between the parts of the call included. Taken only when that row writes the lines back exactly
+## as they stand; true when it was taken and appended to `event`.
+static func _took_written_statement(event: EventRow, lines: PackedStringArray, start: int, last: int, depth: int,
 		pending_raw: PackedStringArray, reverse_entries: Array, in_loop: bool, blank_box: Array) -> bool:
 	var run: PackedStringArray = PackedStringArray()
 	for line_index: int in range(start, last + 1):
 		if not lines[line_index].begins_with("\t".repeat(depth)):
 			return false
 		run.append(lines[line_index].substr(depth))
-	if not (run[0].begins_with("var ") or run[0].begins_with("const ")) or _inside_long_string(lines, start):
+	if _inside_long_string(lines, start):
 		return false
 	var joined: Dictionary = EventForgeValueLines.join(run)
 	if joined.is_empty():
@@ -4653,7 +4656,17 @@ static func _took_written_declaration(event: EventRow, lines: PackedStringArray,
 			if not layout.is_empty():
 				action.written_params[param_id] = layout
 	if action.written_params.is_empty() or ActionCodegen.generate_action(action) != str(joined["written"]):
-		return false
+		# The parts of a call that stand on separate parameters are joined by text the verb's template owns (the
+		# commas between its arguments), so the lines cannot be kept value by value. They are kept for the whole
+		# statement instead: written back while the row still says what it said, once it reads as the very
+		# statement that was joined.
+		action.written_params.clear()
+		var read_as: String = ActionCodegen.generate_action(action)
+		if read_as != str(joined["text"]):
+			return false
+		action.written_params[EventForgeValueLines.STATEMENT] = {"one_line": read_as, "written": str(joined["written"])}
+		if ActionCodegen.generate_action(action) != str(joined["written"]):
+			return false
 	_flush_raw(event, pending_raw, blank_box)
 	_stamp_body_blanks(action, blank_box)
 	event.actions.append(action)
