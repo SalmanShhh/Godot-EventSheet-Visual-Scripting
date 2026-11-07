@@ -26,6 +26,7 @@ static func run() -> bool:
 	all_passed = _no_false_refusals_around_scene_nodes() and all_passed
 	all_passed = _self_is_said_by_its_class_and_a_foreign_host_says_nothing() and all_passed
 	all_passed = _the_scene_that_judges_is_the_one_that_runs_the_sheet() and all_passed
+	all_passed = _a_clause_head_is_never_probed_as_a_statement() and all_passed
 	return all_passed
 
 
@@ -468,3 +469,46 @@ static func _the_scene_that_judges_is_the_one_that_runs_the_sheet() -> bool:
 	root.free()
 	other_scene.free()
 	return result
+
+
+## A match arm, an elif or an else is the head of a clause, not a statement: the lines a hand-written match
+## leaves in a code cell (`PATTERN:` and its body) used to be built into a probe function of their own, which
+## does not parse. Godot printed the parse error on every open, and the lines judged after it were lost.
+static func _a_clause_head_is_never_probed_as_a_statement() -> bool:
+	var sheet: EventSheetResource = _sheet()
+	var clauses: Array[String] = ["GIMode.NONE:
+		score = 1", "OPTION_ONE:
+	score = 1", "1, 2:
+	score = 1",
+		"_:
+	score = 1", "elif score > 1:
+	score = 1", "else:
+	score = 1", "STATE_IDLE: score = 1"]
+	var lines: Array[Dictionary] = []
+	for clause: String in clauses:
+		lines.append({"code": clause, "condition": false})
+	lines.append({"code": "score = \"text\"", "condition": false})
+	lines.append({"code": "var f = func(a): return score", "condition": false})
+	var ear: EventSheetTypeCheck.Ear = EventSheetTypeCheck.Ear.new()
+	OS.add_logger(ear)
+	EventSheetTypeCheck.forget_lines()
+	var answers: Array = EventSheetTypeCheck.judge_lines(sheet, lines, {})
+	OS.remove_logger(ear)
+	var unparsed: int = 0
+	for message: Dictionary in ear.messages:
+		if EventSheetTypeWords.recognise(str(message["text"])).is_empty():
+			unparsed += 1
+	var rows: Array = [["no probe failed to parse", unparsed, 0]]
+	for index: int in range(clauses.size()):
+		rows.append(["a clause head says nothing: " + clauses[index].get_slice("
+", 0), answers[index], ""])
+	rows.append(["the wrong kind after them is still refused", str(answers[clauses.size()]).is_empty(), false])
+	rows.append(["a lambda is still a statement", _statement_kinds(["score = 1", "var f = func(a): return a", "if score:", "x: int = 1"]), [false, false, false, true]])
+	return SUPPORT.pins(NAME + ": clause heads", rows)
+
+
+static func _statement_kinds(codes: Array) -> Array:
+	var kinds: Array = []
+	for code: String in codes:
+		kinds.append(EventSheetTypeCheck._opens_with_a_clause(EventSheetTypeCheck.mask_strings(code)))
+	return kinds

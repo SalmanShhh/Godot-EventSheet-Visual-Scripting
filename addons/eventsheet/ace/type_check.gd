@@ -635,6 +635,8 @@ static func _row_function(line: Dictionary, scope: Dictionary, typed: bool, node
 	if not EventSheetGDScriptLint.structural_syntax_error(code).is_empty() or code.strip_edges(false, true).ends_with(":"):
 		return ""
 	var masked: String = mask_strings(code)
+	if _opens_with_a_clause(masked):
+		return ""
 	if _says_nothing_about_kinds(masked):
 		return ""
 	var declared: Dictionary = {}
@@ -654,6 +656,36 @@ static func _row_function(line: Dictionary, scope: Dictionary, typed: bool, node
 		for code_line: String in code.split("\n"):
 			body.append("\t" + code_line)
 	return "\n".join(body)
+
+
+## Whether the text opens with the head of a clause that only means something inside the statement it belongs
+## to: a `match` arm (`PATTERN:` or `PATTERN: call()`), an `elif` or an `else`. On their own in a function
+## they are not code, so the probe built from one would not parse. Block keywords (`if x:`), a typed
+## declaration and a lambda body are statements and are not clauses.
+static func _opens_with_a_clause(masked: String) -> bool:
+	var first: String = ""
+	for text_line: String in masked.split("
+"):
+		if not text_line.strip_edges().is_empty():
+			first = text_line.strip_edges()
+			break
+	if first.is_empty():
+		return false
+	var head: String = first.get_slice(" ", 0).get_slice(":", 0).get_slice("(", 0)
+	if head in ["elif", "else"]:
+		return true
+	if head in ["if", "for", "while", "match", "func", "static", "class", "var", "const", "enum", "signal", "await", "return", "pass", "break", "continue", "assert", "lambda"] 			or first.begins_with("@") or masked.contains("func("):
+		return false
+	var depth: int = 0
+	for index: int in range(first.length()):
+		var character: String = first[index]
+		if "([{".contains(character):
+			depth += 1
+		elif ")]}".contains(character):
+			depth -= 1
+		elif character == ":" and depth == 0 and not (index + 1 < first.length() and first[index + 1] == "="):
+			return true
+	return false
 
 
 ## A line this stand-in would fail for a reason that is not a kind of value: a local inferred from a value that
