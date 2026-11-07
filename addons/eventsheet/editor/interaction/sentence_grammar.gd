@@ -122,8 +122,8 @@ const OWN_POSITION_NAMES: PackedStringArray = ["position", "global_position"]
 ## callbacks. The two are the same gesture, so the switch reads in the sheet's own activation words -
 ## the WHAT of each switch, with "activated" / "deactivated" after it.
 const PROCESS_SWITCH_WORDS: Dictionary = {
-	"set_process": "Every tick (draw)",
-	"set_physics_process": "Every tick (physics)",
+	"set_process": "Every tick",
+	"set_physics_process": "Every physics tick",
 	"set_process_input": "input",
 	"set_process_unhandled_input": "unhandled input",
 	"set_process_unhandled_key_input": "unhandled key input"
@@ -1338,7 +1338,7 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var rewritten: String = _rewrite_calls(joined, context)
 	rewritten = _rewrite_indexing(rewritten)
 	# Last, so no earlier pass ever has to recognise a glyph it did not write.
-	return comparison_symbols(constant_words(_rewrite_delta(_tidy_numbers(rewritten)), context))
+	return comparison_symbols(constant_words(_tidy_numbers(rewritten), context))
 
 
 ## The reader's sheet writes ≥, ≤ and ≠ where GDScript writes >=, <= and !=. A language needs the
@@ -1446,18 +1446,25 @@ static func _system_words(text: String) -> String:
 		out = out.replace("Time.get_ticks_msec()", translate("time in ms"))
 	out = out.replace("Engine.get_frames_per_second()", translate("fps"))
 	# ────────────────────────────────────────────────────────────────────────────────────────────
-	# The rest of the numbers a profiling script reads. `tickcount` and `dt` are names a reader TYPES
-	# into an expression field, so like `fps` above they are whole spellings and unlike it they are
-	# not translated. The microsecond clock keeps its unit, because it is a different number from the
-	# one `time` names and a reader who mixed them up would be out by a million.
+	# The rest of the numbers a profiling script reads. `tickcount` is a whole spelling, and like
+	# `fps` above it is not translated. The microsecond clock keeps its unit, because it is a
+	# different number from the one `time` names and a reader who mixed them up would be out by a
+	# million. The frame step reads `delta`, the name the code gives it - and only as a bare call,
+	# because `host.get_process_delta_time()` is somebody else's call and keeps its own spelling.
 	if out.contains("Engine.get_frames_drawn()"):
 		out = out.replace("Engine.get_frames_drawn()", "tickcount")
 	if out.contains("Time.get_ticks_usec()"):
 		out = out.replace("Time.get_ticks_usec()", translate("now (microseconds)"))
 	if out.contains("delta_time()"):
-		out = out.replace("get_physics_process_delta_time()", "dt")
-		out = out.replace("get_process_delta_time()", "dt")
+		if _bare_delta_call_regex == null:
+			_bare_delta_call_regex = RegEx.create_from_string("(?<![\\w.])get_(?:physics_)?process_delta_time\\(\\)")
+		if _bare_delta_call_regex != null:
+			out = _bare_delta_call_regex.sub(out, "delta", true)
 	return editor_words(out)
+
+
+## Compiled once: the frame-step call, bare (no receiver before it).
+static var _bare_delta_call_regex: RegEx = null
 
 
 ## The four things a tool script asks the EDITOR for, in the Editor object's own names. Whole
@@ -1626,20 +1633,6 @@ static func _constant_token(token: String, context: Dictionary) -> String:
 	if int(enums.get(member, 0)) == 1 and (context.get("enum_names", {}) as Dictionary).has(head):
 		return member
 	return token
-
-
-## `delta` is the per-frame delta the event-sheet grammar calls `dt` - the same number under the
-## name a reader coming from another event-sheet editor writes. Only the whole word is replaced, so
-## `delta_v` and `_delta` keep their own names.
-static func _rewrite_delta(text: String) -> String:
-	if not text.contains("delta"):
-		return text
-	if _delta_regex == null:
-		_delta_regex = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
-	var regex: RegEx = _delta_regex
-	if regex == null:
-		return text
-	return regex.sub(text, "dt", true)
 
 
 ## `"a" + b` and `str(a) + " b"` read with the event-sheet join. Claimed only when a part is plainly
@@ -3549,7 +3542,7 @@ static func theme_lookup_words(text: String) -> String:
 	return _fill(translate("Theme.Colour({name})"), {"name": args[0].strip_edges()})
 
 
-## `set_physics_process(false)` -> "Set Every tick (physics) deactivated". Only the two literals
+## `set_physics_process(false)` -> "Set Every physics tick deactivated". Only the two literals
 ## are claimed: `set_process(enabled)` switches to whatever that variable holds, and no sentence can
 ## say which of the two states a row is in without reading the value.
 static func _process_switch_call(object_name: String, method: String,
@@ -7152,7 +7145,6 @@ static var _compiled_familiar_patterns: Array = []
 ## every value of every row, and building the pattern cost far more than running it.
 static var _brace_slot_regex: RegEx = null
 static var _percent_slot_regex: RegEx = null
-static var _delta_regex: RegEx = null
 static var _axis_write_regex: RegEx = null
 static var _leading_word_regex: RegEx = null
 static var _identifier_regex: RegEx = null

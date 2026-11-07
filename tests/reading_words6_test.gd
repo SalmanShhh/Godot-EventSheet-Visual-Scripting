@@ -139,7 +139,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Keyboard ▸ On \"jump\" pressed",
 	"Mouse ▸ On \"reading_words6_fire\" released",
 	# A HELD poll is a check, so its handler keeps the tick words
-	"System ▸ Every tick (physics)",
+	"System ▸ Every physics tick",
 	"Keyboard ▸ \"hold\" is down",
 	# A one-shot connection is the sheet's own Trigger once
 	"Beat ▸ On Timeout",
@@ -149,7 +149,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 ## Readings the file must NOT contain: the words each shape replaced. A reading that silently stops
 ## firing would otherwise pass the list above by never being asked about.
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
-	"System ▸ Every tick (draw)",
+	"System ▸ Every tick",
 	"System ▸ Add \"!\" to label",
 	"CharacterBody2D ▸ Set collision with layer 2 on",
 	"CharacterBody2D ▸ Set process mode to 3",

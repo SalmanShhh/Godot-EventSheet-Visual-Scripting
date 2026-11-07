@@ -158,7 +158,7 @@ static func _a_lifted_row_reads_both_ways() -> bool:
 	all_passed = _check("and as the two words the other editor uses with it on",
 		_holding(aliased, "Set disabled"), "Set disabled") and all_passed
 	all_passed = _check("a switch the table does not name is untouched either way",
-		_holding(aliased, "Set Every tick (physics)"), "Set Every tick (physics) activated") and all_passed
+		_holding(aliased, "Set Every physics tick"), "Set Every physics tick activated") and all_passed
 	return all_passed
 
 

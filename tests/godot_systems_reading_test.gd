@@ -274,7 +274,7 @@ static func _grammar_values() -> bool:
 	plain["nav_agents"] = {}
 	ok = _check("a plain node's vertical speed is not gravity",
 		_joined_segments(EventSheetSentence.statement("velocity.y += gravity * delta", plain)),
-		"Player ▸ Add gravity * dt to velocity.y") and ok
+		"Player ▸ Add gravity * delta to velocity.y") and ok
 	# A step that is not scaled by the frame time is not one of these words.
 	ok = _check("an unscaled vertical push is not gravity",
 		_joined_segments(EventSheetSentence.statement("velocity.y += 10", context)),

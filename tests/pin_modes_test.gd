@@ -130,7 +130,7 @@ static var REFUSALS: Dictionary = {
 	# soft pin's bytes, and the sheet has had words for that for longer. A per-second lerp toward
 	# another object only reads as a pin in a file that pins that anchor somewhere else too.
 	"global_position = global_position.lerp(stray.global_position, 5 * delta)":
-		"Lantern ▸ Set world position to global_position.lerp(stray.global_position, 5 * dt)"
+		"Lantern ▸ Set world position to global_position.lerp(stray.global_position, 5 * delta)"
 }
 
 ## Gate three: {ace_id: [params, the sentence the line it writes must read as]}. The picker row and

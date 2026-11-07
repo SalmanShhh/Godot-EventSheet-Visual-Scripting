@@ -111,8 +111,8 @@ static var VALUE_READINGS: Dictionary = {
 	"Engine.get_frames_drawn()": "tickcount",
 	"Engine.get_frames_per_second()": "fps",
 	"Time.get_ticks_usec()": "now (microseconds)",
-	"get_process_delta_time()": "dt",
-	"get_physics_process_delta_time()": "dt",
+	"get_process_delta_time()": "delta",
+	"get_physics_process_delta_time()": "delta",
 	"RegEx.new()": "a pattern",
 	"rx.search(text)": "first match of rx in text",
 	"rx.search_all(text)": "all matches of rx in text",
@@ -197,7 +197,7 @@ static func _strictness() -> bool:
 	route["object_classes"] = {}
 	ok = _check("a step nothing declared a path follower for keeps its arithmetic",
 		_joined_segments(EventSheetSentence.statement("follow.progress += speed * delta", route)),
-		"follow ▸ Add speed * dt to progress") and ok
+		"follow ▸ Add speed * delta to progress") and ok
 	ok = _check("a path step that is not scaled by the frame time is not a speed",
 		_joined_segments(EventSheetSentence.statement("follow.progress += 4", _path_context())),
 		"follow ▸ Add 4 to progress") and ok

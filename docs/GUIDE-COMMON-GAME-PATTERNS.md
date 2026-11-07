@@ -488,7 +488,7 @@ with no curve anywhere in your sheet. In 3D the same row projects gravity onto t
 which is what makes a bank carve.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Player | Platform: Is on floor
     -> Player | Skateboard: Roll with the slope
 On push pressed -> Player | Skateboard: Push toward max speed by 40
@@ -515,12 +515,12 @@ all three:
   and puts the body on the point the curve bakes there.
 
 ```
-Every tick (physics)
+Every physics tick
   not Player | Grind: Is grinding
   Condition: Player | Platform: Is falling
   Condition: Player | Grind: Is near rail  Rail, 12
     -> Player | Grind: Start grinding  Rail
-Every tick (physics)
+Every physics tick
   Condition: Player | Grind: Is grinding
     -> Player | Grind: Grind along the rail at 320
 Player | Grind: Has reached the end

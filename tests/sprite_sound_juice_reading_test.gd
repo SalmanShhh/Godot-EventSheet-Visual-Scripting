@@ -138,7 +138,7 @@ static func _check_refusals() -> bool:
 		"camera ▸ Set offset to (random number -s to s, random number -big to big)") and passed
 	passed = _pin("a lerp somewhere other than normal size is not the ease",
 		_reading("scale = scale.lerp(Vector2(2, 2), 10 * delta)"),
-		"System ▸ Set scale to scale.lerp((2, 2), 10 * dt)") and passed
+		"System ▸ Set scale to scale.lerp((2, 2), 10 * delta)") and passed
 	# Re-pin. This was a refusal - a mirror set from a FLAG stayed the plain member write it was
 	# spelled as. It is the verb now, said with what decides it: the same row on every host that can
 	# mirror is the whole point of the Facing page, and `flip_h` was never a word a reader knew.

@@ -4,9 +4,13 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
-### Changed: the two pictures at the top of the README welcome a new user
+### Changed: the two tick triggers read for what they are
 
-- The workspace and Generated GDScript pictures now show the small player example the README compiles (two variables, three events, fifteen lines of GDScript) at a comfortable editor zoom instead of a dense level at the default one, so every word reads at the README's width. The example lives in `demo/readme_example/` as a script and a scene.
+- A `_process` event now reads **Every tick** and a `_physics_process` event reads **Every physics tick**. They used to read "Every tick (draw)" and "Every tick (physics)", and `_process` has nothing to do with drawing. Only the words changed: the trigger ids, the templates and the code a sheet compiles to are exactly what they were. The same words are used where a hand-written `set_process(false)` / `set_physics_process(false)` reads ("Set Every tick deactivated", "Set Every physics tick deactivated"), in the muted note on a conditionless physics tick, and in the Doctor's handler list.
+
+### Fixed: `delta` reads as `delta`
+
+- A row that says `Vector2(speed * delta, 0)` in the code used to read `Vector2(speed * dt, 0)` on the sheet. Rows now read your identifiers exactly as you wrote them, so `delta` stays `delta` everywhere (conditions, actions, expressions, a pack's rows). A bare `get_process_delta_time()` reads `delta` too, and a call on another object (`host.get_process_delta_time()`) keeps its own spelling.
 
 ## Releases
 

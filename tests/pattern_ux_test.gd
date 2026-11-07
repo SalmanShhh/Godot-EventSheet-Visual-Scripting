@@ -89,7 +89,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	# The pattern is never a chip inside the row: the event that OWNS it reads as its own sentence,
 	# and its NUMBER's card is where the name is said.
 	ok = _check("the event that OWNS the pattern reads as its own sentence, no chip in the row",
-		_row_containing(rows, "Subtract dt from cooldown"), "Subtract dt from cooldown") and ok
+		_row_containing(rows, "Subtract delta from cooldown"), "Subtract delta from cooldown") and ok
 	var owner_card: Dictionary = {}
 	for index: int in range(view._flat_rows.size()):
 		var row: EventRowData = view._row_at(index)
@@ -112,8 +112,8 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	plain.patterns_lens = false
 	plain.set_sheet(plain._sheet)
 	ok = _check("with the Patterns lens off the row is its plain sentence again",
-		_row_containing(_row_texts(plain), "Subtract dt from cooldown"),
-		"Subtract dt from cooldown") and ok
+		_row_containing(_row_texts(plain), "Subtract delta from cooldown"),
+		"Subtract delta from cooldown") and ok
 	ok = _check("and its number has no card",
 		ViewportTooltipHelper.event_number_card(plain._sheet, "", 1), {}) and ok
 	return ok

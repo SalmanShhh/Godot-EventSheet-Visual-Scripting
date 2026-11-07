@@ -373,7 +373,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					row_data, int(metadata.get("line_index", 0)), font, font_size)
 				var lane_room: float = max_condition_right - trailing - span_x
 				# A cell flagged natural_width keeps its measured size, so the chip after it reads
-				# straight on from its words ("Every tick (physics), match state") instead of from the
+				# straight on from its words ("Every physics tick, match state") instead of from the
 				# lane's far edge. Mirrors natural_width in the action lane.
 				if bool(metadata.get("natural_width", false)):
 					lane_room = min(span_width, lane_room)

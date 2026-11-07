@@ -335,24 +335,6 @@ static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 	return humanize_identifier(token, knob_names.has(token))
 
 
-## `delta` is the event-sheet `dt` - the same number under the name a sheet reader writes. Applied
-## to a FINISHED sentence (an ACE row's display text), where the grammar's own rewriting never runs,
-## so a lifted `Add gravity * delta to velocity` row reads like the hand-written line beside it.
-## Only the whole word is replaced: `delta_v` and `_delta` are somebody's own names.
-static func dt_words(text: String) -> String:
-	if not text.contains("delta"):
-		return text
-	if _dt_regex == null:
-		_dt_regex = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
-	if _dt_regex == null:
-		return text
-	return _dt_regex.sub(text, "dt", true)
-
-
-## Compiled once: this is asked of every finished sentence on every rebuild.
-static var _dt_regex: RegEx = null
-
-
 ## The leading NOT of a condition sentence, removed so the `not` mark in the badge column can
 ## carry the inversion instead of the word. Returns the sentence unchanged when it does not
 ## start with a negation. `had_not` in the returned dictionary tells the caller whether to draw

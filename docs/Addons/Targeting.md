@@ -242,7 +242,7 @@ Magnetism drags the turn rate while the aim crosses something, so the stick sett
 ```
 Every tick
   -> Player: Set turn_rate to  Player | Targeting: Magnetism  Player.base_turn_rate
-  -> Player: Rotate by  Player.aim_stick.x * Player.turn_rate * dt
+  -> Player: Rotate by  Player.aim_stick.x * Player.turn_rate * delta
 ```
 
 ### 7. A homing bullet that follows the held node

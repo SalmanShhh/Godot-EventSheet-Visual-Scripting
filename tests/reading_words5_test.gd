@@ -41,8 +41,8 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 	# The question a @tool script asks about itself
 	"System ▸ is in the editor",
 	# The tick switches and the process mode
-	"opened_script_words5_root ▸ Set Every tick (physics) deactivated",
-	"opened_script_words5_root ▸ Set Every tick (draw) activated",
+	"opened_script_words5_root ▸ Set Every physics tick deactivated",
+	"opened_script_words5_root ▸ Set Every tick activated",
 	"opened_script_words5_root ▸ Set input deactivated",
 	"opened_script_words5_root ▸ Set disabled",
 	# The wait, then the step that follows it
@@ -108,11 +108,11 @@ static func _statement_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
 		# Switching a tick on and off is the sheet's own activation, said about a tick
-		["set_physics_process(false)", "Player ▸ Set Every tick (physics) deactivated"],
-		["set_process(true)", "Player ▸ Set Every tick (draw) activated"],
+		["set_physics_process(false)", "Player ▸ Set Every physics tick deactivated"],
+		["set_process(true)", "Player ▸ Set Every tick activated"],
 		["set_process_input(false)", "Player ▸ Set input deactivated"],
 		["set_process_unhandled_input(true)", "Player ▸ Set unhandled input activated"],
-		["$Hurtbox.set_physics_process(false)", "Hurtbox ▸ Set Every tick (physics) deactivated"],
+		["$Hurtbox.set_physics_process(false)", "Hurtbox ▸ Set Every physics tick deactivated"],
 		# The process mode, in both of Godot's spellings
 		["process_mode = PROCESS_MODE_DISABLED", "Player ▸ Set disabled"],
 		["process_mode = PROCESS_MODE_INHERIT", "Player ▸ Set enabled"],
@@ -324,8 +324,8 @@ static func _picked_matches_typed() -> bool:
 		# A sheet that is nobody's scene root reads its _ready as its object being created
 		"System ▸ On ready",
 		"System ▸ is in the editor",
-		"Player ▸ Set Every tick (physics) deactivated",
-		"Player ▸ Set Every tick (draw) activated",
+		"Player ▸ Set Every physics tick deactivated",
+		"Player ▸ Set Every tick activated",
 		"Player ▸ Set input deactivated",
 		"Player ▸ Set disabled",
 		"System ▸ ⏳ Wait 2 seconds then Call explode"

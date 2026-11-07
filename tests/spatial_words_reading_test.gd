@@ -188,7 +188,7 @@ static func _grammar_values() -> bool:
 	ok = _check("and a 2D object's move line stays the arithmetic it is",
 		_joined_segments(EventSheetSentence.statement(
 			"position += -transform.basis.z * speed * delta", flat)),
-		"Player ▸ Add -transform.basis.z * speed * dt to position") and ok
+		"Player ▸ Add -transform.basis.z * speed * delta to position") and ok
 	return ok
 
 

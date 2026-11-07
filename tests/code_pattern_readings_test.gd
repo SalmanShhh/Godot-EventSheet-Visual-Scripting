@@ -226,7 +226,7 @@ static func _countdown_sentences() -> bool:
 	# With no countdown facts in the context nothing fires, and every line keeps its own reading.
 	ok = _check("a plain subtraction is still a subtraction",
 		_reading(EventSheetSentence.statement("cooldown -= delta", {"script_object": "Player"})),
-		"System ▸ Subtract dt from cooldown") and ok
+		"System ▸ Subtract delta from cooldown") and ok
 	return ok
 
 

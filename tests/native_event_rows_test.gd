@@ -138,7 +138,7 @@ static func _test_shooter_events() -> bool:
 		["the action keeps the node the behaviour is mounted on", _object_of(jump, "Jump"), "PlatformerShooter"],
 		["the pattern chip yields to the trigger's words", shoot_trailing <= lane * 0.4 + 0.01, true],
 		["a physics tick with no condition reads as its neighbours' trigger cell",
-			[_object_of(blank_tick, "Every tick (physics)"), _texts(blank_tick).contains("every tick (physics)")],
+			[_object_of(blank_tick, "Every physics tick"), _texts(blank_tick).contains("every physics tick")],
 			["System", false]],
 	])
 	native_view.free()
@@ -154,7 +154,7 @@ static func _test_shooter_events() -> bool:
 			[16, "⌨ | On \"ui_up\" pressed | + Add condition | Platformer: Jump | + Add action"]],
 		["and the script's object in the column", _object_of(classic_jump, "Platformer"), "PlatformerShooter"],
 		["and the blank physics tick as the trigger line every look reads, System and all",
-			[_object_of(classic_blank_tick, "Every tick (physics)"), _texts(classic_blank_tick).contains("every tick (physics)")],
+			[_object_of(classic_blank_tick, "Every physics tick"), _texts(classic_blank_tick).contains("every physics tick")],
 			["System", false]],
 		["and the add line reserved, hovered or not",
 			[classic_rest, classic_view._row_metrics_helper.row_height(classic_events[0])], [64.0, 64.0]],

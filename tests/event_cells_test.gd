@@ -75,7 +75,7 @@ static func _every_action_after_a_collapsed_ternary_is_drawn() -> bool:
 	var in_events: bool = false
 	for entry: Variant in LINES.readings_of_sheet(sheet, "fixture"):
 		var words: String = " ".join((entry as LINES.Reading).plain)
-		in_events = in_events or words == "Every tick (draw)"
+		in_events = in_events or words == "Every tick"
 		if in_events:
 			cells.append(words)
 	var dropped: PackedStringArray = PackedStringArray()
@@ -139,11 +139,11 @@ static func _event_count(path: String) -> int:
 ## write after a collapsed value is drawn, and the increment after that is drawn too - in BOTH orders.
 static func _expected_order_cells() -> PackedStringArray:
 	return PackedStringArray([
-		"Every tick (draw)", "Is visible",
+		"Every tick", "Is visible",
 		"fast is true", "Set speed to 1", "Else", "Set speed to 2",
 		"Set text to hp if alive else 0",
 		"Add 1 to speed",
-		"⟳", "Every tick (draw)", "fast is true",
+		"⟳", "Every tick", "fast is true",
 		"Set text to hp if alive else 0",
 		"fast is true", "Set speed to 1", "Else", "Set speed to 2",
 	])

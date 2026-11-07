@@ -117,7 +117,7 @@ static func _test_arrange_by_trigger() -> bool:
 	# The headers are the words the ROWS use, not the raw trigger ids - "On ready" for `_ready` on
 	# an object, and the tick trigger's own spelling.
 	var passed: bool = _check("the headers are the triggers, in first-appearance order",
-		", ".join(headers), "On ready, Every tick (draw)")
+		", ".join(headers), "On ready, Every tick")
 	passed = _check("both On ready events read under the one header",
 		((planned[0] as Dictionary).get("rows", []) as Array).size(), 2) and passed
 	passed = _check("the tick event reads under its own header",

@@ -80,7 +80,7 @@ in its sheet is one of the rows below, and there is no skating math in it anywhe
 4. Draw your rails as ordinary Path2D nodes in the layout. The pickers list them.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Player | Platform: Is on floor
     -> Player | Skateboard: Roll with the slope
 On push pressed  -> Player | Skateboard: Push toward max speed by 40
@@ -192,7 +192,7 @@ Roll with the slope on the floor, push on a key, ollie on another. Nothing else 
 something worth pushing around a ramp.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Player | Platform: Is on floor
     -> Player | Skateboard: Roll with the slope
 On push pressed -> Player | Skateboard: Push toward max speed by 40
@@ -205,7 +205,7 @@ There is no halfpipe code. Draw the U, call Roll With The Slope every tick, and 
 returns what the drop gave you. Raise `slope_grip` above 1 if you want a friendlier pipe.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Player | Platform: Is on floor
     -> Player | Skateboard: Roll with the slope
 ```
@@ -227,7 +227,7 @@ On push pressed
 Hold the trick key in the air to spin, and score it on the landing by how many turns you got.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Player | Skateboard: Is airborne
   Condition: Keyboard: trick is down
     -> Player | Skateboard: Spin 1 turn per second
@@ -252,12 +252,12 @@ The classic. Falling toward a rail while near it starts the grind; the end of th
 button ends it.
 
 ```
-Every tick (physics)
+Every physics tick
   ✕ Player | Grind: Is grinding
   Condition: Player | Platform: Is falling
   Condition: Player | Grind: Is near rail  Rail, 12
     -> Player | Grind: Start grinding  Rail
-Every tick (physics)
+Every physics tick
   Condition: Player | Grind: Is grinding
     -> Player | Grind: Grind along the rail at 320
 Player | Grind: Has reached the end
@@ -271,7 +271,7 @@ Turn Keep Momentum on and the rail stops being a fixed-speed conveyor. Bombing t
 now matters.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Player | Grind: Is grinding
     -> Player | Grind: Grind along the rail at 320   (keep momentum on)
 ```
@@ -294,7 +294,7 @@ everything else with, and let it go and you eat it.
 
 ```
 On manual pressed -> Player | Skateboard: Ride a manual
-Every tick (physics)
+Every physics tick
   Condition: Player | Skateboard: Is in a manual
     -> Player | Skateboard: Steer the balance by  Keyboard.Axis("ui_left", "ui_right")
 ```
@@ -382,7 +382,7 @@ Nothing here says "skateboard" to the player except the sprite. Swap it and the 
 sled run down a hill or a runaway trolley in a supermarket.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Trolley | Platform: Is on floor
     -> Trolley | Skateboard: Roll with the slope
 ```

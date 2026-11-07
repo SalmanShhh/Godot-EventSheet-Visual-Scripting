@@ -917,12 +917,12 @@ pivot turns.
   no condition of its own reads as a BLANK top-level event: nothing at all in the condition lane,
   because in an event sheet a blank event already means "every tick". Hover the row and it says
   `Runs every tick`; the Explain panel says the same. `_physics_process` keeps one muted
-  `every tick (physics)` note, because blank alone cannot say WHICH tick. The moment such an event
+  `every physics tick` note, because blank alone cannot say WHICH tick. The moment such an event
   grows a condition it goes back to saying **Every tick** in full, so the reading never hides a fact
   that matters. Nothing is written to the file for any of this: a blank event compiles into
   `_process(delta)` and re-reads as a blank event, byte for byte.
 
-  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every tick (physics)", and an every-tick event carrying a condition, which keeps its full "Every tick (draw)" words and its tempo badge](images/blank-events.png)
+  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every physics tick", and an every-tick event carrying a condition, which keeps its full "Every tick" words and its tempo badge](images/blank-events.png)
 
   You can author one too. Press **E** and the Add event dialog's first entry is already selected -
   **(none - runs every tick)** - so Enter makes the blank event and **A** fills its actions. Under a
@@ -981,7 +981,7 @@ pivot turns.
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
   with the block's body as its actions, and the `Every tick` words go away - the poll already says
   when the event runs. Only the EDGE polls count: a held `Input.is_action_pressed("hold")` is a
-  check every tick, so its handler keeps `Every tick (physics)` with the check under it.
+  check every tick, so its handler keeps `Every physics tick` with the check under it.
 - **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
   (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way an event sheet
   draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
@@ -1064,8 +1064,8 @@ to the function it names, the same jump the Outline panel makes.
   that name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
   System (`System ▸ Print "ready"`). Any method call reads `Object ▸ what it does ▸ args` with the argument
   names Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its
-  icon, `queue_free()` as Destroy. `delta` reads `dt`; the tick triggers read `Every tick (physics)` /
-  `Every tick (draw)`. `and` never sits inside a condition cell - each conjunct is its own condition
+  icon, `queue_free()` as Destroy. `delta` reads as `delta`, exactly as the code says it; the tick triggers read `Every physics tick` /
+  `Every tick`. `and` never sits inside a condition cell - each conjunct is its own condition
   line, and `or` is the OR block. `"Score: %d" % score` reads `"Score: " & score`, `d["k"]` reads
   `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
   `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
@@ -2053,7 +2053,7 @@ events around it.
 
 - **The clock, and the wait that freezes the game.** `Engine.get_frames_drawn()` reads `tickcount`,
   `Engine.get_frames_per_second()` reads `fps`, `Time.get_ticks_usec()` reads
-  `now (microseconds)` and `get_process_delta_time()` reads `dt`. `OS.delay_msec(500)` reads
+  `now (microseconds)` and `get_process_delta_time()` reads `delta`. `OS.delay_msec(500)` reads
   **System ▸ Wait 0.5 seconds** with a muted **⚠ blocks the game** beside it, because that call
   stops the whole process while it counts - nothing draws, nothing takes input, physics does not
   step - and the sheet's own Wait is the one everybody means by "wait". The Doctor says the same
@@ -2175,7 +2175,7 @@ is instantiated to answer a question.
   flipping Familiar Words from the View menu shows up here as the vocabulary it actually produced.
 - **The third preset renames a handful of VERBS.** With it on a row says *Create object* where Godot
   says *Spawn a copy of*, *is overlapping in family* where it says *is touching*, *Set disabled*
-  where a hand-written `set_process(false)` reads *Set Every tick (draw) deactivated*, and a loop
+  where a hand-written `set_process(false)` reads *Set Every tick deactivated*, and a loop
   over a group reads `For each item in family "enemies"`. The picker carries both names at once -
   *Create object · Spawn A Copy* - so the Godot verb never disappears from the place you pick it,
   and its search answers to either name whichever vocabulary is switched on. An alias is display
@@ -2507,7 +2507,7 @@ The band says what the object **is**. The **Debugger ▸ Trail** tab says what i
 same grammar and in the past tense:
 
 ```
-0.5 s · Every tick (draw) fired - went from Patrol to Chase
+0.5 s · Every tick fired - went from Patrol to Chase
 1 s   · On Hit fired - went from Chase to Stagger
 1.5 s · On Hit fired - re-entered Stagger
 2 s   · On Hit fired - re-entered Stagger

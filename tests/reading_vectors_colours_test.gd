@@ -99,7 +99,7 @@ static var STATEMENT_READINGS: Dictionary = {
 	"self_modulate = self_modulate.lerp(Color.RED, fade * delta)":
 		"Player ▸ Ease colour toward red at fade",
 	# A blend that does NOT read the member it writes is not an ease, and keeps the Set it is.
-	"modulate = other.lerp(Color.WHITE, 5 * delta)": "Player ▸ Set modulate to other.lerp(white, 5 * dt)"
+	"modulate = other.lerp(Color.WHITE, 5 * delta)": "Player ▸ Set modulate to other.lerp(white, 5 * delta)"
 }
 
 

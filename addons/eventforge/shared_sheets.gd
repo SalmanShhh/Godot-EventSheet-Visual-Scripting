@@ -514,7 +514,7 @@ static func _handler_words(handler: String) -> String:
 		"on_tick":
 			return "Every tick"
 		"on_physics_tick":
-			return "Every tick (physics)"
+			return "Every physics tick"
 		"on_input":
 			return "On input"
 	return handler

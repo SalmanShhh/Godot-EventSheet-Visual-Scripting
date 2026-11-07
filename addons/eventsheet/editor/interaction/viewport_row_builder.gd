@@ -5588,7 +5588,7 @@ const EMIT_SIGNAL_ACE_ID := "EmitSignal"
 const SIGNAL_SOURCES_NAMED: int = 3
 
 
-## "fired by Stop Flash · Every tick (draw)" - which of THIS FILE's verbs and events emit the named
+## "fired by Stop Flash · Every tick" - which of THIS FILE's verbs and events emit the named
 ## signal, in file order, read straight off the rows. "" inside anything that is not a pack being
 ## read, and "" when nothing in the file emits it, because a band says a fact or says nothing.
 ##
@@ -14646,7 +14646,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# carries its trigger id and still compiles to exactly the handler it came from.
 		var blank_note: String = str(_blank_tick_reading(event_row).get("note", ""))
 		# Every line has an object column and leads with its object's icon, so the physics note reads
-		# as the trigger cell its neighbours wear - "System | Every tick (physics)" - in every look,
+		# as the trigger cell its neighbours wear - "System | Every physics tick" - in every look,
 		# never as a bare lowercase note with no object.
 		# A tick that runs a switch says so in one sentence on one line, in every look - "System |
 		# Every tick, match state" - so the match head beside it has a trigger to finish. The cell
@@ -14810,7 +14810,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# THE HOST GUARD, folded into the trigger it guards. Every behavior pack opens its tick with the
 	# same line - only while the node it rides still exists - and read as a condition of its own it
 	# spends a whole cell saying something no reader decides anything by. So inside an opened pack it
-	# reads as a quiet word after the trigger: "Every tick (draw)  host is valid". The condition is
+	# reads as a quiet word after the trigger: "Every tick  host is valid". The condition is
 	# still there, still emitted, still the second half of the same `if`; one span moved.
 	var folded_guard: int = _pack_host_guard_index(event_row, condition_line_index)
 	if folded_guard >= 0:
@@ -21401,14 +21401,10 @@ func _reading_class_icon_for(object_label: String) -> Texture2D:
 ## to flip rather than one per lane.
 func _reading_sentence(text: String) -> String:
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
-	# `delta` reads `dt` whatever else is switched on: it is the number's event-sheet name, not a
-	# respelling of somebody's variable, so it does not belong behind the humanized-names toggle.
-	var with_dt: String = EventSheetViewportLenses.dt_words(text)
-	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A named constant reads as the value it IS whatever else is switched on, for the same reason dt
 	# does: `Vector2.ZERO` is not somebody's variable name, it is the point (0, 0). Applied here so a
 	# row that reached the canvas through a display TEMPLATE reads it exactly as a typed line does.
-	var with_constants: String = EventSheetSentence.constant_words(with_dt, sentence_context())
+	var with_constants: String = EventSheetSentence.constant_words(text, sentence_context())
 	if not _viewport.humanize_names_enabled():
 		return with_constants
 	return EventSheetViewportLenses.humanize_sentence(with_constants, _export_knob_names())

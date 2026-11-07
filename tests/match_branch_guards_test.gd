@@ -40,7 +40,7 @@ static func _member_steps() -> bool:
 		["a guarded branch's steps on the object's own variables name the object",
 			_row_containing(rows, "wait_left ≤ 0"),
 			"i2 [System> wait_left ≤ 0 | match_member_steps> Set direction to -direction | match_member_steps> Set wait_left to 2]"],
-		["and so does an unguarded branch's step", _row_containing(rows, "is WALKING"), "i1 [System> mode is WALKING | match_member_steps> Subtract dt from wait_left]"],
+		["and so does an unguarded branch's step", _row_containing(rows, "is WALKING"), "i1 [System> mode is WALKING | match_member_steps> Subtract delta from wait_left]"],
 	])
 
 

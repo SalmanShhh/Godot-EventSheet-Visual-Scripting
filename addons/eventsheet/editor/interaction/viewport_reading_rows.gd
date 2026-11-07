@@ -2055,9 +2055,9 @@ static func class_of_object(object_label: String, class_map: Dictionary) -> Stri
 static func tick_trigger_words(trigger_id: String, display_text: String) -> String:
 	match trigger_id:
 		"OnPhysicsProcess":
-			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(physics)")]
+			return EventSheetL10n.translate("Every physics tick")
 		"OnProcess":
-			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(draw)")]
+			return EventSheetL10n.translate("Every tick")
 	# The collision family reads as the event-sheet's own two triggers.
 	var collision: String = collision_trigger_words(trigger_id)
 	if not collision.is_empty():
@@ -2096,8 +2096,7 @@ static func blank_tick_reading(trigger_id: String, has_conditions: bool, pattern
 	if not BLANK_TICK_TRIGGER_IDS.has(trigger_id):
 		return {}
 	if trigger_id == "OnPhysicsProcess":
-		return {"note": "%s %s" % [
-			EventSheetL10n.translate("every tick"), EventSheetL10n.translate("(physics)")]}
+		return {"note": EventSheetL10n.translate("every physics tick")}
 	return {"note": ""}
 
 

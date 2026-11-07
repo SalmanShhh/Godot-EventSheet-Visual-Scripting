@@ -351,7 +351,7 @@ static func _refusals() -> bool:
 	}
 	ok = _check("a file that never steps is not a projectile",
 		_joined_segments(EventSheetSentence.statement("speed += accel * delta", bare)),
-		"Coin ▸ Add accel * dt to speed") and ok
+		"Coin ▸ Add accel * delta to speed") and ok
 	ok = _check("a distance measured in a file that is not a projectile stays a distance",
 		_joined_segments(EventSheetSentence.condition("position.distance_to(start) > range_px", bare)),
 		"distance to start > range_px") and ok
