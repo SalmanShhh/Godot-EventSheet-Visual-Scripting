@@ -102,7 +102,7 @@ static func run() -> bool:
 		"var spark: PackedScene = null": true,
 		"var spark: PackedScene # later": true,
 		"var spark : PackedScene": true,
-		"var spark": false,
+		"var spark": true,
 		"@export var spark": false,
 	}, func(line: String) -> Variant:
 		var single: String = "extends Node\n\n%s\n" % line

@@ -68,7 +68,7 @@ const CORPUS_DIR: String = "res://tests/corpus/"
 const PINS: Dictionary = {
 	"door_state_machine.gd": {"percent": 100, "entry": 0, "code": 1, "derived": 0},
 	"guard_sight.gd": {"percent": 100, "entry": 7, "code": 0, "derived": 0},
-	"mission_hud.gd": {"percent": 100, "entry": 0, "code": 8, "derived": 0},
+	"mission_hud.gd": {"percent": 100, "entry": 0, "code": 6, "derived": 0},
 	"network_lobby.gd": {"percent": 100, "entry": 5, "code": 0, "derived": 3},
 	"pause_menu.gd": {"percent": 100, "entry": 4, "code": 0, "derived": 0},
 	"pickup_juice.gd": {"percent": 100, "entry": 0, "code": 1, "derived": 1},
@@ -157,14 +157,16 @@ static func _test_the_ledger(files: PackedStringArray) -> bool:
 			int((entry as Dictionary).get("count", 0))])
 	print("[corpus] ledger: %s | one-offs=%d notes=%d" % [", ".join(ranked),
 		(census.get("one_offs", []) as Array).size(), int(census.get("notes", 0))])
-	var ok: bool = _check("the corpus ledger ranks the shape it repeats", ranked,
-		PackedStringArray(["const name:name=text x2"]))
+	# The two `const name: Type = text` lines that used to be the one shape repeated are variable rows now,
+	# so no shape repeats any more.
+	var ok: bool = _check("the corpus ledger ranks the shapes it repeats (none, now that constants are rows)", ranked,
+		PackedStringArray())
 	ok = _check("and counts the shapes nothing else repeats",
 		(census.get("one_offs", []) as Array).size(), 2) and ok
 	ok = _check("and the lines that hold no statement to shape",
 		int(census.get("notes", 0)), 6) and ok
 	ok = _check("which is every stays-code line of the corpus, accounted for",
-		int(census.get("lines", 0)), 10) and ok
+		int(census.get("lines", 0)), 8) and ok
 	return ok
 
 

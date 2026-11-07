@@ -4636,7 +4636,11 @@ static func _emit_signal_line(signal_row: SignalRow) -> String:
 ## Empty for a plain signal - byte-identical to before, so existing signals never change.
 static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray:
 	var annotations: PackedStringArray = PackedStringArray()
-	if signal_row == null or not signal_row.enabled or not signal_row.trigger:
+	if signal_row == null or not signal_row.enabled:
+		return annotations
+	if not signal_row.trigger:
+		# A plain signal writes only what the file kept right above it (`@warning_ignore("unused_signal")`).
+		annotations.append_array(signal_row.leading_lines)
 		return annotations
 	# The prose leads, because a `##` doc comment above a member IS its description to the
 	# analyzer - so the picker shows a sentence under the trigger's name instead of nothing.
@@ -5102,13 +5106,16 @@ static func _emit_tree_variable_declaration(local_var: LocalVariable, refresh_in
 		elif local_var.is_static:
 			walrus_prefix = "static "
 		elif local_var.exported:
-			walrus_prefix = "@export "
+			# A hinted export keeps its annotation as written (`@export_range(1, 1000) var row_size := 100`).
+			walrus_prefix = "@export " if local_var.export_hint.strip_edges().is_empty() \
+				else local_var.export_hint.strip_edges() + " "
 		var_line = "%s%s %s := %s" % [walrus_prefix, "const" if local_var.is_constant else "var", local_var.name, str(local_var.default_value)]
 	elif local_var.is_constant:
-		# A constant whose value was written over several lines keeps that value as the text it was
-		# written as (see _emit_tree_variable_line); every other constant's value is a literal.
+		# A constant whose value is an expression (`preload("res://a.tscn")`, `tan(deg_to_rad(30))`, a
+		# value written over several lines) keeps that value as the text it was written as (see
+		# _emit_tree_variable_line); every other constant's value is a literal.
 		var constant_value: String = str(local_var.default_value) \
-			if local_var.expression_default and not local_var.written_value.is_empty() \
+			if local_var.expression_default \
 			else _to_code_literal(local_var.default_value)
 		var_line = "const %s: %s = %s" % [local_var.name, local_var.type_name, constant_value]
 	# @onready: deferred init (node refs like $Path). The default is a raw EXPRESSION, emitted
@@ -5204,7 +5211,8 @@ static func _emit_tree_variable_declaration(local_var: LocalVariable, refresh_in
 		var spaced_at: int = var_line.find(spaced_head)
 		if spaced_at > 0:
 			var_line = var_line.left(spaced_at) + local_var.name + " : " + var_line.substr(spaced_at + spaced_head.length())
-	return _tree_variable_group_prefix(local_var) + var_line
+	var leading_text: String = "" if local_var.leading_lines.is_empty() else "\n".join(local_var.leading_lines) + "\n"
+	return _tree_variable_group_prefix(local_var) + leading_text + var_line
 
 
 ## The member line a Static local compiles to: `var _hits_taken := 0`. Private (the row is a

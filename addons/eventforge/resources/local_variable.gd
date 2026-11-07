@@ -106,6 +106,9 @@ extends Resource
 ## line, and emission writes the lines back while the value still reads as that one line (see
 ## EventForgeValueLines). Empty for a value written on one line. Set by the importer, byte-gated.
 @export var written_value: Dictionary = {}
+## Lines the file kept directly above this declaration that belong to it and to nothing else - a
+## `@warning_ignore("unused_private_class_variable")` - written back above it, after any Inspector group.
+@export var leading_lines: PackedStringArray = PackedStringArray()
 ## True when the file wrote the type with a space before its colon (`var tween : Tween`). Emission keeps
 ## the spelling; a variable made in the sheet is written `var tween: Tween`.
 @export var spaced_colon: bool = false

@@ -942,6 +942,12 @@ func _current_value_kind() -> String:
 	if stored == "Variant" and _context.get("variable_resource") is LocalVariable \
 			and (_context["variable_resource"] as LocalVariable).expression_default:
 		return "code"
+	# A constant the file gave an expression (`preload("res://a.tscn")`, `tan(deg_to_rad(30))`) is code
+	# whatever type Godot infers for it: its words are the expression, not a literal of that type.
+	if _context.get("variable_resource") is LocalVariable and (_context["variable_resource"] as LocalVariable).is_constant \
+			and (_context["variable_resource"] as LocalVariable).expression_default \
+			and stored == (_context["variable_resource"] as LocalVariable).type_name:
+		return "code"
 	var meta: String = str(_type_option.get_item_metadata(_type_option.selected)) if _type_option.selected >= 0 else stored
 	return value_kind(meta)
 

@@ -14,6 +14,9 @@ extends Resource
 ## True when the file wrote the signal with empty brackets (`signal done()`). Emission writes them back
 ## for as long as the signal has no values; a signal made in the sheet has none, as `signal done`.
 @export var empty_brackets: bool = false
+## Lines the file kept directly above this signal that belong to it (`@warning_ignore("unused_signal")`),
+## written back above the declaration.
+@export var leading_lines: PackedStringArray = PackedStringArray()
 
 ## When true the signal also publishes as a TRIGGER ACE: the compiler prefixes the declaration with
 ## `## @ace_trigger` (+ optional @ace_name / @ace_category), so a behaviour can declare a code-free

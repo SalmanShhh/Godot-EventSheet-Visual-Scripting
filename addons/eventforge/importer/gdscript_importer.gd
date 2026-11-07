@@ -191,7 +191,17 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		if lifted == null:
 			lifted = _try_lift_variable(line)
 		if lifted != null:
-			_absorb_tree_variable_group(lifted, pending, line)
+			# A `@warning_ignore(...)` line right above the declaration belongs to it and travels with it.
+			var attached: PackedStringArray = _take_attached_annotations(pending)
+			var written_declaration: String = line
+			if not attached.is_empty():
+				lifted.leading_lines = attached
+				written_declaration = "\n".join(attached) + "\n" + line
+				if SheetCompiler._emit_tree_variable_line(lifted) != written_declaration:
+					lifted.leading_lines = PackedStringArray()
+					pending.append_array(attached)
+					written_declaration = line
+			_absorb_tree_variable_group(lifted, pending, written_declaration)
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted)
 			index += 1
@@ -215,6 +225,13 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		var lifted_signal: SignalRow = _try_lift_signal(line)
 		if lifted_signal != null:
 			_absorb_signal_trigger_annotations(lifted_signal, pending, line)
+			if not lifted_signal.trigger:
+				var attached_signal: PackedStringArray = _take_attached_annotations(pending)
+				if not attached_signal.is_empty():
+					lifted_signal.leading_lines = attached_signal
+					if "\n".join(SheetCompiler._emit_signal_annotations(lifted_signal)) != "\n".join(attached_signal):
+						lifted_signal.leading_lines = PackedStringArray()
+						pending.append_array(attached_signal)
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted_signal)
 			index += 1
@@ -576,6 +593,7 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 	if walrus_at > 0 and not declaration.strip_edges().ends_with(":"):
 		var walrus_keyword: String = ""
 		var walrus_exported: bool = false
+		var walrus_hint: String = ""
 		if declaration.begins_with("var "):
 			walrus_keyword = "var "
 		elif declaration.begins_with("const "):
@@ -583,15 +601,21 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 		elif declaration.begins_with("@export var "):
 			walrus_keyword = "@export var "
 			walrus_exported = true
+		elif declaration.begins_with("@export_") and declaration.find(" var ") > 0 and declaration.find(" var ") < walrus_at:
+			# A hinted export (`@export_range(1, 1000) var row_size := 100`): the annotation is kept as written.
+			walrus_hint = declaration.substr(0, declaration.find(" var "))
+			walrus_keyword = walrus_hint + " var "
+			walrus_exported = true
 		if not walrus_keyword.is_empty():
 			var walrus_name: String = declaration.substr(walrus_keyword.length(), walrus_at - walrus_keyword.length()).strip_edges()
 			var walrus_default: String = declaration.substr(walrus_at + 4)
 			# Shapes other lifts own stay theirs: a default ending in an OPEN bracket is the head
-			# of a multi-line collection literal (the Declare row's lift), and a preload default
-			# is the preload row's. Claiming either here would strand their structured editors.
+			# of a multi-line collection literal (the Declare row's lift), and a `const` preload or a `var`
+			# load is the preload row's. Claiming either here would strand their structured editors.
 			var walrus_trimmed: String = walrus_default.strip_edges()
 			if walrus_trimmed.ends_with("{") or walrus_trimmed.ends_with("[") \
-					or walrus_trimmed.begins_with("preload(") or walrus_trimmed.begins_with("load("):
+					or (walrus_keyword == "const " and walrus_trimmed.begins_with("preload(")) \
+					or (walrus_keyword == "var " and walrus_trimmed.begins_with("load(")):
 				return null
 			if walrus_name.is_valid_identifier() and not walrus_trimmed.is_empty():
 				var inferred: LocalVariable = LocalVariable.new()
@@ -602,6 +626,7 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 				inferred.inferred_type = true
 				inferred.is_constant = walrus_keyword == "const "
 				inferred.exported = walrus_exported
+				inferred.export_hint = walrus_hint
 				inferred.onready = onready_prefixed
 				inferred.is_static = static_prefixed
 				if SheetCompiler._emit_tree_variable_line(inferred) == line:
@@ -636,10 +661,12 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 	# still needs a type to read and edit by, so it takes the one the value implies, and the flag
 	# keeps the `: int` out of the file. An @onready's value is a node lookup that implies nothing, so
 	# `@onready var label = $Label` reads as Variant. Not for a line ending in `:` (a property header
-	# whose accessors this line cannot hold), nor with no value at all (`var spark`), where there is
-	# nothing to imply a type.
+	# whose accessors this line cannot hold). With no value at all (`var score`) there is nothing to imply
+	# a type, so the row reads as Variant and the file keeps writing no type - except for an export, which
+	# Godot cannot place in the Inspector without a type or a value, so `@export var spark` stays code.
 	lifted.untyped = bool(descriptor.get("untyped", false)) \
-		and not lifted.no_default and not declaration.strip_edges().ends_with(":")
+		and not declaration.strip_edges().ends_with(":") \
+		and not (lifted.no_default and lifted.exported)
 	# With no `=` to stop at, the parser reads a trailing comment as part of the TYPE
 	# (`PackedScene # set in the Inspector`). The line would still round-trip, but the row would
 	# carry a type no picker or value check knows, so that spelling keeps its code block.
@@ -682,6 +709,10 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 			return null
 		lifted.default_value = line.substr(equals + 3)
 		lifted.expression_default = true
+		# A constant that wrote no type reads as the type Godot infers for its value (`float`, `PackedScene`);
+		# the file keeps writing none.
+		if lifted.is_constant and lifted.untyped:
+			lifted.type_name = inferred_expression_type(str(lifted.default_value))
 		if SheetCompiler._emit_tree_variable_line(lifted) != line:
 			return null
 	_extract_drawer_from_hint(lifted, line)
@@ -691,6 +722,49 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 	_extract_structured_hint(lifted, line)
 	_extract_custom_hint(lifted, line)
 	return lifted
+
+
+## The type Godot infers for the value of a constant that wrote none: the resource class a `preload` /
+## `load` of a file reads as, or the type a constant expression of built-in functions and constructors
+## evaluates to (`tan(deg_to_rad(30))` is a float, `Vector2i(1, 0)` a Vector2i). "Variant" when it settles
+## nothing - a name from elsewhere in the file, say, which only the running script can resolve.
+static func inferred_expression_type(expression: String) -> String:
+	var text: String = expression.strip_edges()
+	if text.begins_with("preload(") or text.begins_with("load("):
+		var path: String = text.get_slice("\"", 1)
+		match path.get_extension().to_lower():
+			"tscn", "scn":
+				return "PackedScene"
+			"gd":
+				return "GDScript"
+			"png", "jpg", "jpeg", "webp", "svg", "bmp", "tga", "exr", "hdr":
+				return "Texture2D"
+			"ogg", "wav", "mp3":
+				return "AudioStream"
+			"gdshader":
+				return "Shader"
+			"ttf", "otf", "woff", "woff2":
+				return "FontFile"
+		return "Resource"
+	var parsed: Expression = Expression.new()
+	if parsed.parse(text) != OK:
+		return "Variant"
+	var result: Variant = parsed.execute([], null, false, true)
+	if parsed.has_execute_failed() or typeof(result) == TYPE_NIL:
+		return "Variant"
+	return type_string(typeof(result))
+
+
+## The `@warning_ignore(...)` lines at the tail of `pending`, taken off it: the annotations a declaration
+## right below them carries with it, so the row stays one row instead of leaving a code block above it.
+static func _take_attached_annotations(pending: PackedStringArray) -> PackedStringArray:
+	var taken: PackedStringArray = PackedStringArray()
+	while not pending.is_empty() and pending[pending.size() - 1].begins_with("@warning_ignore("):
+		taken.insert(0, pending[pending.size() - 1])
+		pending.remove_at(pending.size() - 1)
+	return taken
+
+
 ## Lifts a declaration dressed in a spelling the plain lift does not know: a note at the end of its line
 ## (`const SPEED = 160 # Pixels/second.`, whose words and spacing ride on the row) and a type written with a
 ## space before its colon (`var tween : Tween`, remembered as spaced_colon). The declaration is read without
