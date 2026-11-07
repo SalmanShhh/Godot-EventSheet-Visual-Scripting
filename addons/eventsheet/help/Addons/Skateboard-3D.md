@@ -71,7 +71,7 @@ and **Ride Zipline** lets the line's own slope drive it.
 4. Draw your rails as ordinary Path3D nodes. The pickers list them.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Skater | Platform: Is on floor
     -> Skater | Skateboard 3D: Roll with the slope
     -> Skater | Skateboard 3D: Align the board to the surface
@@ -184,7 +184,7 @@ attached:
 Two rows in a tick and two keys. Everything else in this guide is decoration on top of this.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Skater | Platform: Is on floor
     -> Skater | Skateboard 3D: Roll with the slope
     -> Skater | Skateboard 3D: Align the board to the surface
@@ -197,7 +197,7 @@ There is no bowl code. Build the mesh, give it a collision shape, and the surfac
 rest - the deeper the wall, the more of gravity is along it.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Skater | Platform: Is on floor
     -> Skater | Skateboard 3D: Roll with the slope
 ```
@@ -280,12 +280,12 @@ Draw the rail as an ordinary Path3D. Falling near it starts the grind; the end o
 the jump button ends it.
 
 ```
-Every tick (physics)
+Every physics tick
   ✕ Skater | Grind 3D: Is grinding
   Condition: Skater | Platform: Is falling
   Condition: Skater | Grind 3D: Is near rail  Rail, 0.6
     -> Skater | Grind 3D: Start grinding  Rail
-Every tick (physics)
+Every physics tick
   Condition: Skater | Grind 3D: Is grinding
     -> Skater | Grind 3D: Grind along the rail at 10
 ```
@@ -296,7 +296,7 @@ Start Grinding starts the balance meter for you, so a long rail already has tens
 sheet adds is the steer.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Skater | Grind 3D: Is grinding
     -> Skater | Skateboard 3D: Steer the balance by  Keyboard.Axis("ui_left", "ui_right")
 ```
@@ -374,7 +374,7 @@ Spin Turns counts whole turns since leaving the ground, so the game can notice a
 is still happening.
 
 ```
-Every tick (physics)
+Every physics tick
   Condition: Skater | Skateboard 3D: Is airborne
   Condition: Skater.Spin Turns >= 1.5
     -> System: Set Time Scale  0.45

@@ -28,6 +28,9 @@ static func run() -> bool:
 	EventSheetSceneLights.clear_cache()
 	EventSheetMistakeFindings.clear_cache()
 	EventSheetInputMapFacts.clear_cache()
+	# The groups are judged against the fixtures alone, so a group the rest of the project has (the
+	# README example's "enemy") cannot become the nearest name to the typo the pins use.
+	EventSheetMistakeFindings.limit_group_scan_to(PackedStringArray(["res://tests/fixtures/"]))
 	var ok: bool = true
 	ok = _node_type_pins() and ok
 	ok = _path_pins() and ok
@@ -41,6 +44,7 @@ static func run() -> bool:
 	ok = _memory_pins() and ok
 	ok = _shape_pins() and ok
 	ok = _budget_pins() and ok
+	EventSheetMistakeFindings.limit_group_scan_to(PackedStringArray())
 	return ok
 
 

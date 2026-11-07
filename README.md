@@ -11,7 +11,7 @@ Godot EventSheets (engine codename *EventForge*, the prefix on internal class na
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-hero-light.png">
-  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on start, move while the right action is held, and subtract 10 health when an enemy body enters - the Scene dock on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
+  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on start, move while the right action is held, and subtract 10 health when an enemy body enters the hitbox - the Scene dock on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
 </picture>
 
 It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* `boomer_level.gd`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
@@ -20,9 +20,9 @@ It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary 
 
 A sheet isn't interpreted - it **compiles to a plain `.gd` script** you attach and ship. Rows like:
 
-- **On Ready** → *Print* `"Spawned"`
-- **Every tick** · *Is action pressed* `"ui_right"` → *Move by* `Vector2(speed * delta, 0)`
-- **On Body Entered** *(body)* · *body is in group* `"enemy"` → *Add* `-10` *to health*
+- **On start of layout** → *Print* `"Spawned"`
+- **Every tick** · *Keyboard* `"ui_right"` *is down* → *Move by* `Vector2(speed * delta, 0)`
+- **Hitbox** · **On collision with** *(body)* · *body in* `"enemy"` → *Subtract* `10` *from health*
 
 become exactly this - typed GDScript with zero references to the plugin:
 
@@ -39,10 +39,12 @@ func _process(delta: float) -> void:
 	if Input.is_action_pressed(&"ui_right"):
 		position += Vector2(speed * delta, 0)
 
-func _on_body_entered(body: Node) -> void:
+func _on_hitbox_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemy"):
-		health += -10
+		health -= 10
 ```
+
+The hit is wired in the scene, not in code: `player.tscn` has an `Area2D` child named `Hitbox` whose `body_entered` signal is connected to `_on_hitbox_body_entered`, so the sheet reads it as a real *On collision with* trigger on the `Hitbox`. The example lives in `demo/readme_example/`.
 
 Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured with the project's own verify command over 1,647 of this repo's sheet and script files (the deliberately broken test fixtures left out), every one reopens and re-saves byte-for-byte with no answer owed; nearly every code line of the hand-written scripts opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
 
@@ -50,7 +52,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-generated-code-light.png">
-  <img alt="The same player sheet with the Generated GDScript panel open beside it in the Godot editor: the three event rows on the left, the fifteen lines of typed GDScript they compile to on the right - extends CharacterBody2D, two @export vars, _ready, _process and _on_body_entered - captioned as read-only and refreshed live as you edit." src="docs/previews/editor-generated-code.png">
+  <img alt="The same player sheet with the Generated GDScript panel open beside it in the Godot editor: the three event rows on the left, the fifteen lines of typed GDScript they compile to on the right - extends CharacterBody2D, two @export vars, _ready, _process and _on_hitbox_body_entered - captioned as read-only and refreshed live as you edit." src="docs/previews/editor-generated-code.png">
 </picture>
 
 ## Quick start

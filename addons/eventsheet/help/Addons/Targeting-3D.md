@@ -255,7 +255,7 @@ Magnetism drags the turn rate while the aim crosses something, so the stick sett
 ```
 Every tick
   -> Player: Set look_speed to  Player | Targeting 3D: Magnetism  Player.base_look_speed
-  -> Camera: Rotate by  Player.look_stick * Player.look_speed * dt
+  -> Camera: Rotate by  Player.look_stick * Player.look_speed * delta
 ```
 
 ### 8. A homing rocket that follows the held node

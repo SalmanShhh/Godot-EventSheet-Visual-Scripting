@@ -517,7 +517,7 @@ i18n (Godot translations).
   ![View then Outline: regions, nested groups and published functions as one click-to-jump tree](images/outline-panel.png)
 - **View > Arrange by** reads the same sheet four ways: **File order** (the untouched one),
   **Object**, **Trigger** or **Group**. The events are re-grouped under one header each - `Player`
-  / `Enemy` / `HUD`, or `On created` / `Every tick (physics)` / `On hit` - and they stay editable
+  / `Enemy` / `HUD`, or `On created` / `Every physics tick` / `On hit` - and they stay editable
   in place and keep their numbers, because arranging is a way of READING: the file is never
   reordered, the generated GDScript cannot move, and the byte round-trip is untouched. The
   breadcrumb names the header you are scrolled inside and the Outline becomes the same
@@ -526,7 +526,7 @@ i18n (Godot translations).
 
   ![The same sheet arranged by Object: one folder per object with its event count, the events still numbered and editable inside](images/arrange-by-object.png)
 - **Right-click an object in the Object bar > Add common events…** gives you the four events you
-  were about to type: a `CharacterBody2D` starts with `On created`, `Every tick (physics)`, `On
+  were about to type: a `CharacterBody2D` starts with `On created`, `Every physics tick`, `On
   hit` and `On died`, a `Button` with `On clicked`, a `Timer` with `On timer`, an `Area2D` with `On
   collision with`, and an attached behaviour pack adds its own triggers. Each event arrives with an
   empty action lane - the sheet's own `+ Add action` waiting for you. A starter naming a signal the

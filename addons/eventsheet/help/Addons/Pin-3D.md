@@ -189,7 +189,7 @@ straight.
 
 ```
 On Ready   -> Ball | Pin 3D: Pin To Rope  $Crane/Hook, 6
-Every tick -> Ball | subtract 9.8 * dt from y
+Every tick -> Ball | subtract 9.8 * delta from y
 ```
 
 ### 7. Ground shadow decal
@@ -260,7 +260,7 @@ On Hand Over -> Torch | Pin 3D: Unpin
 Shrink the rope and the host is pulled along it, because a rope pulls the moment it is taut.
 
 ```
-Every tick -> Player | Pin 3D: subtract 6 * dt from Pin Length
+Every tick -> Player | Pin 3D: subtract 6 * delta from Pin Length
 ```
 
 ### 15. Ask whether the line is taut

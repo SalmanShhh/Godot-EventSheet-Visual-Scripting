@@ -23,12 +23,15 @@ static func run() -> bool:
 	EventSheetSceneConnections.clear_cache()
 	EventSheetMistakeFindings.clear_cache()
 	_put_the_fixture_back()
+	# Judged against the fixtures alone, so a group elsewhere in the project cannot be nearer to the typo.
+	EventSheetMistakeFindings.limit_group_scan_to(PackedStringArray(["res://tests/fixtures/"]))
 	var ok: bool = true
 	ok = _row_state_pins() and ok
 	ok = _strip_pins() and ok
 	ok = _door_pins() and ok
 	_put_the_fixture_back()
 	ok = _doctor_pins() and ok
+	EventSheetMistakeFindings.limit_group_scan_to(PackedStringArray())
 	return ok
 
 

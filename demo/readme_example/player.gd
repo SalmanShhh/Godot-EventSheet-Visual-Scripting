@@ -10,6 +10,6 @@ func _process(delta: float) -> void:
 	if Input.is_action_pressed(&"ui_right"):
 		position += Vector2(speed * delta, 0)
 
-func _on_body_entered(body: Node) -> void:
+func _on_hitbox_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemy"):
-		health += -10
+		health -= 10

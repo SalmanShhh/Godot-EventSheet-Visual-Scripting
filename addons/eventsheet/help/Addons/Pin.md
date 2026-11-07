@@ -265,7 +265,7 @@ goes straight, which is what makes it swing instead of glide.
 
 ```
 On Ready   -> Lantern | Pin: Pin To Rope  Post, 90
-Every tick -> Lantern | add 220 * dt to y
+Every tick -> Lantern | add 220 * delta to y
 ```
 
 ### 11. A cart behind an engine
@@ -348,7 +348,7 @@ Every tick
 **Set Pin Offset** on a plain pin, or shrinking `pin_length` on a rope, pulls the host in over time.
 
 ```
-Every tick -> Grapple | Pin: subtract 300 * dt from Pin Length
+Every tick -> Grapple | Pin: subtract 300 * delta from Pin Length
 ```
 
 ### 20. Ask whether it is still held

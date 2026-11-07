@@ -137,6 +137,12 @@ static var _add_group_regex: RegEx = null
 static var _project_groups: Dictionary = {}
 static var _project_groups_built: bool = false
 
+## The folders the group scan reads, or empty for the whole project (the editor's case). A test or
+## a tool judging a sheet against a fixture sets it, so the scenes and scripts of the rest of the
+## project cannot answer for the fixture: a project with a group "enemy" would otherwise change
+## which name is nearest to a typo in a fixture that only knows "enemies".
+static var _group_scan_scope: PackedStringArray = PackedStringArray()
+
 ## script path -> the scene facts that script's sheet is judged against, held for the session.
 static var _scene_cache: Dictionary = {}
 
@@ -148,6 +154,23 @@ static func clear_cache() -> void:
 	_project_groups_built = false
 	_scene_cache.clear()
 	EventSheetTypeCheck.forget_lines()
+
+
+## Limits the group scan to the scenes and scripts under these folders (res:// prefixes); an empty
+## list puts the whole project back. Drops the groups held, so the next ask scans again.
+static func limit_group_scan_to(folders: PackedStringArray) -> void:
+	_group_scan_scope = folders
+	_project_groups.clear()
+	_project_groups_built = false
+
+
+static func _in_group_scan_scope(path: String) -> bool:
+	if _group_scan_scope.is_empty():
+		return true
+	for folder: String in _group_scan_scope:
+		if path.begins_with(folder):
+			return true
+	return false
 
 
 ## Every mistake this sheet makes, in the order the rules run. `script_path` is the file the sheet
@@ -910,10 +933,14 @@ static func project_groups() -> Dictionary:
 		return _project_groups
 	var groups: Dictionary = {}
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
+		if not _in_group_scan_scope(scene_path):
+			continue
 		for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
 			for group_name: String in (entry as Dictionary).get("groups", PackedStringArray()):
 				groups[group_name] = "scene"
 	for script_path: String in preload("res://addons/eventforge/project_files.gd").all_scripts():
+		if not _in_group_scan_scope(script_path):
+			continue
 		var source: String = FileAccess.get_file_as_string(script_path)
 		if not source.contains("add_to_group"):
 			continue
