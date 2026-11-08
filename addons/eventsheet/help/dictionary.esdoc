@@ -156,7 +156,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `cfg` | [Has Saved Settings](ace:Core/OptionsHasSavedSettings) | Game Options | Vocabulary |
 | `change_scene_to_file` | [Go To Layout](ace:Core/ChangeScene) | Scene | Vocabulary |
 | `change_scene_to_packed` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
-| `circle` | [Draw Circle](ace:Core/DrawCircle) | Drawing | Vocabulary |
+| `circle` | [Draw Circle On Node](ace:Core/DrawCircle) | Drawing | Vocabulary |
 | `clamp` | [Bound To Layout](ace:Core/BoundToLayout) | Layout Edges | Vocabulary |
 | `clampf` | [Adjust Camera FOV](ace:Core/AdjustCameraFov) | Camera | Vocabulary |
 | `clampi` | [Clamp (int)](ace:Core/ClampIntValue) | Helpers | Vocabulary |
@@ -242,7 +242,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `drag_top_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
 | `drag_vertical_enabled` | [Follow Tightly](ace:Core/CameraFollowTightly) | Camera | Vocabulary |
 | `draw_arc` | [Draw Arc](ace:Core/CanvasItemDrawArc) | Drawing: Godot calls | Vocabulary |
-| `draw_arc_shape` | [Draw Arc](ace:Core/DrawArcShape) | Drawing | Vocabulary |
+| `draw_arc_shape` | [Draw Arc On Node](ace:Core/DrawArcShape) | Drawing | Vocabulary |
 | `draw_arrow` | [Draw Arrow](ace:Core/DrawArrow) | Drawing | Vocabulary |
 | `draw_circle` | [Draw Circle](ace:Core/CanvasItemDrawCircle) | Drawing: Godot calls | Vocabulary |
 | `draw_cross` | [Draw Cross](ace:Core/DrawCross) | Drawing | Vocabulary |
@@ -250,17 +250,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `draw_line` | [Draw Line](ace:Core/CanvasItemDrawLine) | Drawing: Godot calls | Vocabulary |
 | `draw_pie` | [Draw Pie](ace:Core/DrawPie) | Drawing | Vocabulary |
 | `draw_polygon` | [Draw Polygon](ace:Core/CanvasItemDrawPolygon) | Drawing: Godot calls | Vocabulary |
-| `draw_polygon_shape` | [Draw Polygon](ace:Core/DrawPolygonShape) | Drawing | Vocabulary |
+| `draw_polygon_shape` | [Draw Polygon On Node](ace:Core/DrawPolygonShape) | Drawing | Vocabulary |
 | `draw_polyline` | [Draw Polyline](ace:Core/CanvasItemDrawPolyline) | Drawing: Godot calls | Vocabulary |
-| `draw_polyline_shape` | [Draw Polyline](ace:Core/DrawPolylineShape) | Drawing | Vocabulary |
+| `draw_polyline_shape` | [Draw Polyline On Node](ace:Core/DrawPolylineShape) | Drawing | Vocabulary |
 | `draw_rect` | [Draw Rectangle](ace:Core/CanvasItemDrawRect) | Drawing: Godot calls | Vocabulary |
 | `draw_regular_polygon` | [Draw Regular Polygon](ace:Core/DrawRegularPolygon) | Drawing | Vocabulary |
 | `draw_rounded_rect` | [Draw Rounded Rect](ace:Core/DrawRoundedRect) | Drawing | Vocabulary |
 | `draw_set_transform` | [Set Draw Transform](ace:Core/CanvasItemDrawSetTransform) | Drawing: Godot calls | Vocabulary |
 | `draw_string` | [Draw Text](ace:Core/CanvasItemDrawString) | Drawing: Godot calls | Vocabulary |
-| `draw_text` | [Draw Text](ace:Core/DrawTextShape) | Drawing | Vocabulary |
+| `draw_text` | [Draw Text On Node](ace:Core/DrawTextShape) | Drawing | Vocabulary |
 | `draw_texture` | [Draw Texture](ace:Core/CanvasItemDrawTexture) | Drawing: Godot calls | Vocabulary |
-| `draw_texture_in_rect` | [Draw Texture](ace:Core/DrawTextureInRect) | Drawing | Vocabulary |
+| `draw_texture_in_rect` | [Draw Texture On Node](ace:Core/DrawTextureInRect) | Drawing | Vocabulary |
 | `draw_texture_rect` | [Draw Texture Rect](ace:Core/CanvasItemDrawTextureRect) | Drawing: Godot calls | Vocabulary |
 | `draw_texture_rect_region` | [Draw Texture Region](ace:Core/CanvasItemDrawTextureRectRegion) | Drawing: Godot calls | Vocabulary |
 | `duplicate` | [Copy Array](ace:Core/ArrayDuplicate) | Variables: Array | Vocabulary |
@@ -663,7 +663,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `limit_length` | [Clamp Length](ace:Core/VectorLimitLength) | Variables: Vector | Vocabulary |
 | `limit_right` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
 | `limit_top` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
-| `line` | [Draw Line](ace:Core/DrawLine) | Drawing | Vocabulary |
+| `line` | [Draw Line On Node](ace:Core/DrawLine) | Drawing | Vocabulary |
 | `line_of_sight` | [Draw Line Of Sight](ace:Core/DrawLineOfSight) | Drawing | Vocabulary |
 | `linear_damp` | [Set Linear Damping](ace:Core/SetLinearDamping) | Physics | Vocabulary |
 | `linear_to_db` | [Set Volume (0 to 1)](ace:Core/AudioSetVolumeLevel) | Audio | Vocabulary |
@@ -822,7 +822,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
 | `read_file` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `recall` | [Recall Bus Snapshot](ace:Core/AudioRecallBusSnapshot) | Audio Server | Vocabulary |
-| `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
+| `rect` | [Draw Rect On Node](ace:Core/DrawRect) | Drawing | Vocabulary |
 | `reduce` | [Reduce](ace:Core/ArrayReduce) | Variables: Array | Vocabulary |
 | `refuse_new_connections` | [Stop Accepting Players](ace:Core/StopAcceptingPlayers) | Multiplayer | Vocabulary |
 | `region_rect` | [Set Bar Width](ace:Core/SetBarWidth) | World-space UI | Vocabulary |
