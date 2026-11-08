@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: an untyped variable reads `any`
+
+- `var score` with no type reads `any score` on every row look (the Inspector-style row used to read `Variant score`), with the quiet note "no starting value" where its value would be. A variable that spells `: Variant` keeps the word it wrote.
+
 ### Fixed: the Godot-call draw rows start with a capital
 
 - Draw Line, Draw Rectangle, Draw Circle, Draw Arc, Draw Texture and the rest of the Godot-call draw rows read "draw line from a to b" in lower case beside rows that start with a capital. They now read "Draw line from a to b in red", "Set draw transform to ..." and "Redraw" like every other action. Reading only: ids, templates and the code they write are unchanged.

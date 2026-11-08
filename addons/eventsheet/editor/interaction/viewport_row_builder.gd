@@ -12839,6 +12839,10 @@ func _build_variable_row(
 	if inspector_rows:
 		type_word = NativeVariableMarks.gdscript_type_word(type_name, default_value,
 			bool(options.get("expression_default", false)))
+		# A type the file never wrote reads `any` - the word the sentence rows already use - not the engine's
+		# `Variant`, which is what the same declaration writes when it says the type out loud.
+		if type_word == "Variant" and type_name.strip_edges().is_empty():
+			type_word = "any"
 	# The scope word is DERIVED, never stored: the caller settles it from where the sheet lives
 	# (an autoload says Global, a node script Instance, a Resource script Field), and a `const` or a
 	# `static var` answers for itself even when nothing else did.
@@ -13061,6 +13065,11 @@ func _build_variable_row(
 		hide_value = not unassigned_slot
 	if not hide_value:
 		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
+	# An `any` variable with no value written starts on nothing, and says so in a quiet note where the
+	# value would be.
+	if hide_value and not unassigned_slot and type_word == "any" and source_variable != null \
+			and source_variable.no_default and default_value == null and not code_only:
+		_append_variable_note(row_data, variable_meta, EventSheetL10n.translate("no starting value"))
 	# An expression default (`State.PATROL`, `Vector2.ZERO`, a walrus var's verbatim `100`) is
 	# CODE stored as text - quoting it would misread it as a string literal.
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
