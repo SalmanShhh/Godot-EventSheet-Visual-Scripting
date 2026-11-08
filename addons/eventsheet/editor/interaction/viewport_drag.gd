@@ -260,7 +260,14 @@ func update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 		_viewport.queue_redraw()
 		return
 	var row_data: EventRowData = _viewport._row_at(row_index)
-	if row_data == null or not (row_data.source_resource is EventRow):
+	if row_data == null:
+		_viewport.queue_redraw()
+		return
+	# A function's head whose body is still read-only (an opened file's function nobody has unlocked)
+	# draws actions it will not take: the drop says so rather than doing nothing.
+	var owner_event: EventRow = _viewport.ace_owner(row_data.source_resource)
+	var read_only_body: bool = row_data.source_resource is EventFunction and owner_event == null
+	if owner_event == null and not read_only_body:
 		_viewport.queue_redraw()
 		return
 	var drag_kind: String = str(_viewport._drag_ace_entries[0].get("kind", ""))
@@ -273,6 +280,14 @@ func update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 	var kind: String = str(metadata.get("kind", ""))
 	_viewport._drag_ace_target_row_index = row_index
 	_viewport._drag_ace_target_lane = lane
+	if read_only_body:
+		_viewport._drag_ace_drop_valid = false
+		_viewport._drag_feedback_text = EventSheetL10n.translate("This function's body is read-only - right-click it and choose Make Function Body Editable")
+		_viewport._drag_feedback_is_error = true
+		if not _viewport._drag_motion.active:
+			_viewport.tooltip_text = _viewport._drag_feedback_text
+		_viewport.queue_redraw()
+		return
 	if kind == drag_kind:
 		_viewport._drag_ace_target_ace_index = int(metadata.get("ace_index", -1))
 		var span_index: int = int(hit.get("span_index", -1))

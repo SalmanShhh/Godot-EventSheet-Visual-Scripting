@@ -10139,3 +10139,4 @@ Value of the wrong kind,잘못된 종류의 값
 Every physics tick,매 물리 틱
 every physics tick,매 물리 틱
 no starting value,시작 값 없음
+This function's body is read-only - right-click it and choose Make Function Body Editable,이 함수의 본문은 읽기 전용입니다 - 오른쪽 클릭 후 Make Function Body Editable 선택

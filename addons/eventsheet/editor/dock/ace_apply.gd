@@ -1302,11 +1302,19 @@ func _on_viewport_ace_drop_requested(
 ) -> void:
 	if target_row == null or not ["condition", "action"].has(target_lane):
 		return
-	var target_event: EventRow = target_row.source_resource as EventRow
+	var target_event: EventRow = _dock._active_view().ace_owner(target_row.source_resource)
 	if target_event == null:
+		# A function whose body is still read-only takes no drop: say so, never do nothing.
+		if target_row.source_resource is EventFunction:
+			_dock._set_status(EventSheetL10n.translate("This function's body is read-only - right-click it and choose Make Function Body Editable"), true)
 		return
 	var normalized_entries: Array = _normalize_ace_drag_entries(source_entries, target_lane)
 	if normalized_entries.is_empty():
+		# Carried out of a function whose body is still read-only: say so, never do nothing.
+		for entry in source_entries:
+			if entry is Dictionary and (entry as Dictionary).get("source_resource", null) is EventFunction:
+				_dock._set_status(EventSheetL10n.translate("This function's body is read-only - right-click it and choose Make Function Body Editable"), true)
+				break
 		return
 	var trigger_entries: Array = []
 	var excluded_trigger_resources: Array = []
@@ -1383,7 +1391,7 @@ func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
 		if not (entry is Dictionary):
 			continue
 		var entry_dict: Dictionary = entry
-		var source_event: EventRow = entry_dict.get("source_resource", null) as EventRow
+		var source_event: EventRow = _dock._active_view().ace_owner(entry_dict.get("source_resource", null) as Resource)
 		var kind: String = str(entry_dict.get("kind", ""))
 		var ace_index: int = int(entry_dict.get("ace_index", -1))
 		var lane_matches: bool = (

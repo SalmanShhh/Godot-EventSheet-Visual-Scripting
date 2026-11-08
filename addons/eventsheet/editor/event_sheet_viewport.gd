@@ -6022,7 +6022,7 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
 func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictionary:
 	if row_data == null:
 		return {"valid": true}
-	var target_event: EventRow = row_data.source_resource as EventRow
+	var target_event: EventRow = ace_owner(row_data.source_resource)
 	if target_event == null:
 		return {"valid": true}
 	# A local is visible to the event that declares it and to that event's sub-events, and to

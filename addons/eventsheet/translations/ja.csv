@@ -10139,3 +10139,4 @@ Value of the wrong kind,種類の違う値
 Every physics tick,毎物理ティック
 every physics tick,毎物理ティック
 no starting value,初期値なし
+This function's body is read-only - right-click it and choose Make Function Body Editable,この関数の本体は読み取り専用です - 右クリックして Make Function Body Editable を選んでください
