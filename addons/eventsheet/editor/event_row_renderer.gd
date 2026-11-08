@@ -2468,7 +2468,8 @@ func _draw_spans(
 				text_width, font, draw_font_size, reading.muted_text_color)
 		if not colour_marks.is_empty():
 			_draw_colour_squares(control, span, colour_marks, draw_text, colour_gap.length(), text_x, font, draw_font_size, reading)
-		else:
+		elif span.metadata is Dictionary:
+			# (A cell a drag in hand has lifted out of the row is drawn as an empty span with no metadata.)
 			span.metadata.erase("colour_square_rects")
 		# Compression cue: an ACE that compiles to MORE than one line is doing abstraction
 		# work - a quiet "→N" after the text makes that legible, so plain 1:1 rows read as
