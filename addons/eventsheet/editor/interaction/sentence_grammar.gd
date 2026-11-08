@@ -716,9 +716,23 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	# Nothing structural matched, but the expression itself may still hold an idiom
 	# (`is_zero_approx(direction)`) or a type annotation this reading never shows.
 	var rewritten: String = expression_text(text, context)
-	if rewritten != text:
+	if rewritten != text or _names_frame_step(text):
 		return _sentence("", "{value}", {"value": [rewritten, "value"]})
 	return {}
+
+
+## True when an expression names the frame step (`delta`) as a whole word. Such a condition keeps reading
+## as the coloured expression it always has: the step is no longer respelled, so the words stay what the
+## file wrote, but the cell is still an expression a reader is looking at and wears the expression colour.
+static func _names_frame_step(text: String) -> bool:
+	if not text.contains("delta"):
+		return false
+	if _frame_step_regex == null:
+		_frame_step_regex = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
+	return _frame_step_regex != null and _frame_step_regex.search(text) != null
+
+
+static var _frame_step_regex: RegEx = null
 
 
 ## `not <question>` read as that question with the word `not` in front, or {} when the question

@@ -12841,7 +12841,8 @@ func _build_variable_row(
 			bool(options.get("expression_default", false)))
 		# A type the file never wrote reads `any` - the word the sentence rows already use - not the engine's
 		# `Variant`, which is what the same declaration writes when it says the type out loud.
-		if type_word == "Variant" and type_name.strip_edges().is_empty():
+		var declared_untyped: LocalVariable = options.get("variable_resource", options.get("source_resource")) as LocalVariable
+		if type_word == "Variant" and (type_name.strip_edges().is_empty() or (declared_untyped != null and declared_untyped.untyped)):
 			type_word = "any"
 	# The scope word is DERIVED, never stored: the caller settles it from where the sheet lives
 	# (an autoload says Global, a node script Instance, a Resource script Field), and a `const` or a

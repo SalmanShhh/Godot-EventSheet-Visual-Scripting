@@ -18,6 +18,7 @@ static func run() -> bool:
 		var notes: Dictionary = seen["notes"]
 		rows.append(["%s: an untyped variable reads any" % look, types.get("score", "(none)"), "any"])
 		rows.append(["%s: the untyped blank variable says it has no starting value" % look, notes.get("score", false), true])
+		rows.append(["%s: a variable with no type word at all reads any too" % look, types.get("bare", "(none)"), "any"])
 		rows.append(["%s: a typed variable with a value has no such note" % look, notes.get("lives", false), false])
 		if inspector_style:
 			rows.append(["%s: a variable written as Variant keeps the word" % look, types.get("anything", "(none)"), "Variant"])
@@ -33,7 +34,8 @@ static func _read(inspector_style: bool) -> Dictionary:
 	style.ensure_defaults()
 	style.get_event_style().inspector_variable_rows = inspector_style
 	sheet.editor_style = style
-	sheet.events.append(_variable("score", "", null, true))
+	sheet.events.append(_variable("score", "Variant", null, true, true))
+	sheet.events.append(_variable("bare", "", null, true))
 	sheet.events.append(_variable("anything", "Variant", null, true))
 	sheet.events.append(_variable("lives", "int", 3, false))
 	var editor: EventSheetEditor = EventSheetEditor.new()
@@ -60,10 +62,11 @@ static func _read(inspector_style: bool) -> Dictionary:
 	return {"types": types, "notes": notes}
 
 
-static func _variable(name: String, type_name: String, value: Variant, blank: bool) -> LocalVariable:
+static func _variable(name: String, type_name: String, value: Variant, blank: bool, untyped: bool = false) -> LocalVariable:
 	var variable: LocalVariable = LocalVariable.new()
 	variable.name = name
 	variable.type_name = type_name
 	variable.default_value = value
 	variable.no_default = blank
+	variable.untyped = untyped
 	return variable
