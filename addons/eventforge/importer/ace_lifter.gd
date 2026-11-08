@@ -428,11 +428,12 @@ static func _attach_notes_above(entries: Array) -> void:
 
 
 static func _attach_notes_above_in_event(event: EventRow) -> void:
+	# A note opening the body stays where it is: the sheet reads it as the note of the event itself.
 	var index: int = 1
 	while index < event.actions.size():
 		var note: CommentRow = event.actions[index - 1] as CommentRow
 		var action: ACEAction = event.actions[index] as ACEAction
-		if note == null or action == null or not _is_attachable_note(note) or not action.enabled \
+		if index == 1 or note == null or action == null or not _is_attachable_note(note) or not action.enabled \
 				or not action.note_above.is_empty() or action.has_meta("__source_body_blanks"):
 			index += 1
 			continue
@@ -446,6 +447,8 @@ static func _attach_notes_above_in_event(event: EventRow) -> void:
 
 ## True for a comment row that is one plain private note a statement can carry.
 static func _is_attachable_note(note: CommentRow) -> bool:
+	if note.text.begins_with("region") or note.text.begins_with("endregion"):
+		return false
 	if not note.enabled or note.written_in_place or note.style != CommentRow.CommentStyle.NORMAL \
 			or note.source_marker.begins_with("##") or note.text.is_empty():
 		return false

@@ -52,9 +52,9 @@ static func run() -> bool:
 				elif entry is CommentRow:
 					comment_rows.append((entry as CommentRow).text)
 		rows.append(["the notes touching an action ride on it", carried,
-			[["remember to flash\nthen reset the score", ""], ["inside the branch", ""], ["spaceless note", "#"]]])
-		rows.append(["a TODO and a note kept apart by an empty line stay comment rows", comment_rows,
-			["TODO: fix later", "kept apart from the line below"]])
+			[["remember to flash\nthen reset the score", ""], ["spaceless note", "#"]]])
+		rows.append(["a TODO, a note kept apart and a note opening a body stay comment rows", comment_rows,
+			["TODO: fix later", "kept apart from the line below", "inside the branch"]])
 	rows.append(["the file saves back to the same bytes", SUPPORT.reemit(SOURCE, "user://note_above_probe.gd") == SOURCE, true])
 	# Moving the action moves its note: put `score = 0` first and the note is still directly above it.
 	var moved: EventSheetResource = SUPPORT.reopen(SOURCE, true, "")
