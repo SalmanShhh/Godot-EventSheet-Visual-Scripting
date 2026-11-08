@@ -921,6 +921,9 @@ static func _carry_notes(previous: Variant, replacement: Resource) -> void:
 		return
 	replacement.set("comment", (previous as Resource).get("comment"))
 	replacement.set("comment_marker", (previous as Resource).get("comment_marker"))
+	if previous is ACEAction and replacement is ACEAction:
+		(replacement as ACEAction).note_above = (previous as ACEAction).note_above
+		(replacement as ACEAction).note_above_marker = (previous as ACEAction).note_above_marker
 
 
 ## The lines a value was written over go on to the row that replaces its action: a value the window

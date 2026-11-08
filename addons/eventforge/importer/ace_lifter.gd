@@ -384,6 +384,89 @@ static func read_comment_runs(sheet: EventSheetResource) -> void:
 		changed = true
 	if changed:
 		sheet.events = _to_resource_array(rebuilt)
+	_attach_notes_above(sheet.events)
+	for function_row: Variant in sheet.functions:
+		if function_row is EventFunction:
+			_attach_notes_above((function_row as EventFunction).events)
+
+
+## A `#` note written among a function's statements belongs to the statement it sits directly above, so
+## it is that action's note (ACEAction.note_above) rather than a comment row of its own: dragging the
+## action drags its note, and emission writes the same lines in the same place. Only the note touching
+## the action is taken - one directly above, with no empty line between - and only a plain private note:
+## `##` documentation, a commented-out statement (a row switched off) and a note that opens TODO or FIXME
+## (which the sheet already reads as a task) stay the comment rows they are. The empty lines the file kept
+## above the note ride on the action, so the bytes come back exactly.
+static func _attach_notes_above(entries: Array) -> void:
+	for entry: Variant in entries:
+		if entry is EventGroup:
+			_attach_notes_above((entry as EventGroup).events)
+		elif entry is EventRow:
+			var event: EventRow = entry as EventRow
+			_attach_notes_above_in_event(event)
+			_attach_notes_above(event.sub_events)
+	# A note between a branch and the plain statements after it stands in the body's own list, directly
+	# above the row that carries those statements: it is the note of the first of them, as long as that
+	# row is a bare run of statements (no trigger, no condition, no loop) so its first line is its first
+	# action's line.
+	var index: int = 1
+	while index < entries.size():
+		var note: CommentRow = entries[index - 1] as CommentRow
+		var carrier: EventRow = entries[index] as EventRow
+		if note != null and carrier != null and _is_attachable_note(note) and carrier.trigger_id.is_empty() \
+				and carrier.conditions.is_empty() and carrier.pick_filters.is_empty() \
+				and not carrier.has_meta("__source_body_blanks") and not carrier.actions.is_empty():
+			var first: ACEAction = carrier.actions[0] as ACEAction
+			if first != null and first.enabled and first.note_above.is_empty() and not first.has_meta("__source_body_blanks"):
+				first.note_above = note.text
+				first.note_above_marker = note.source_marker
+				if note.has_meta("__source_body_blanks"):
+					first.set_meta("__source_body_blanks", note.get_meta("__source_body_blanks"))
+				entries.remove_at(index - 1)
+				continue
+		index += 1
+
+
+static func _attach_notes_above_in_event(event: EventRow) -> void:
+	var index: int = 1
+	while index < event.actions.size():
+		var note: CommentRow = event.actions[index - 1] as CommentRow
+		var action: ACEAction = event.actions[index] as ACEAction
+		if note == null or action == null or not _is_attachable_note(note) or not action.enabled \
+				or not action.note_above.is_empty() or action.has_meta("__source_body_blanks"):
+			index += 1
+			continue
+		action.note_above = note.text
+		action.note_above_marker = note.source_marker
+		if note.has_meta("__source_body_blanks"):
+			action.set_meta("__source_body_blanks", note.get_meta("__source_body_blanks"))
+		event.actions.remove_at(index - 1)
+		# The action now stands where the note stood; the next pair starts one step on.
+
+
+## True for a comment row that is one plain private note a statement can carry.
+static func _is_attachable_note(note: CommentRow) -> bool:
+	if not note.enabled or note.written_in_place or note.style != CommentRow.CommentStyle.NORMAL \
+			or note.source_marker.begins_with("##") or note.text.is_empty():
+		return false
+	if not note.color_tag.is_empty() or note.custom_color.a > 0.0:
+		return false
+	if not CommentRow.code_text(note.text).is_empty() or _opens_with_task_word(note.text):
+		return false
+	for note_line: String in note.text.split("\n"):
+		if note_line.strip_edges().is_empty():
+			return false
+	return true
+
+
+## True when a note opens with one of the words the sheet reads as a task or a flag (TODO, FIXME, HACK,
+## NOTE), with or without a colon.
+static func _opens_with_task_word(text: String) -> bool:
+	var words: String = text.strip_edges().trim_prefix("#").strip_edges()
+	for marker: String in ["TODO", "FIXME", "HACK", "NOTE"]:
+		if words == marker or words.begins_with("%s " % marker) or words.begins_with("%s:" % marker):
+			return true
+	return false
 
 
 ## The rows a verbatim block turns into when its top-level `#` notes are taken out as comment rows, in

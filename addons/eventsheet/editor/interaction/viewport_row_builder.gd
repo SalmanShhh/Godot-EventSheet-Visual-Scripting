@@ -18385,6 +18385,8 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# would otherwise read as part of the value ("Subtract 1  # ouch from hp"). Split off the params
 	# this row is FORMATTED from - a throwaway copy, the row itself untouched - and drawn as the note
 	# it is, at the end.
+	# The note the file kept directly above this action travels with it, and reads quietly after it.
+	var note_above: String = action.note_above.replace("\n", " ").strip_edges()
 	var noted: Dictionary = _action_without_trailing_notes(action)
 	var row_note: String = str(noted.get("note", ""))
 	if not row_note.is_empty():
@@ -18393,6 +18395,8 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	var attached: String = _take_attached_note()
 	if not attached.is_empty():
 		row_note = attached if row_note.is_empty() else "%s · %s" % [attached, row_note]
+	if not note_above.is_empty():
+		row_note = note_above if row_note.is_empty() else "%s · %s" % [note_above, row_note]
 	var base_text: String = _reading_sentence(_humanized_input_event_text(_format_action_descriptor_base(action)))
 	# A line about a node named by its path reads like every other line of its object: "Set ...", never
 	# the vocabulary's lower-case sentence. Only a sentence's opening WORD is raised: a line that opens on

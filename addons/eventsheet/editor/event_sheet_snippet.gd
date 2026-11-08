@@ -223,6 +223,8 @@ static func _action_to_dict(action: ACEAction) -> Dictionary:
 		"params": action.params.duplicate(true) if not action.params.is_empty() else action.parameters.duplicate(true),
 		"is_awaited": action.is_awaited or action.await_call,
 		"comment": action.comment,
+		"note_above": action.note_above,
+		"note_above_marker": action.note_above_marker,
 		"enabled": action.enabled,
 		"codegen_template": action.codegen_template
 	}
@@ -333,6 +335,8 @@ static func _dict_to_action(data: Dictionary) -> ACEAction:
 	action.params = data.get("params", {}) if data.get("params", {}) is Dictionary else {}
 	action.is_awaited = bool(data.get("is_awaited", false))
 	action.comment = str(data.get("comment", ""))
+	action.note_above = str(data.get("note_above", ""))
+	action.note_above_marker = str(data.get("note_above_marker", ""))
 	action.enabled = bool(data.get("enabled", true))
 	action.codegen_template = str(data.get("codegen_template", ""))
 	return action

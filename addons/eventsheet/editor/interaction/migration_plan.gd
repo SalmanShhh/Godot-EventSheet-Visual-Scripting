@@ -458,6 +458,8 @@ static func _copy_onto(row: Resource, address: PackedStringArray, template: Stri
 		action.is_awaited = (row as ACEAction).is_awaited
 		action.enabled = (row as ACEAction).enabled
 		action.comment = (row as ACEAction).comment
+		action.note_above = (row as ACEAction).note_above
+		action.note_above_marker = (row as ACEAction).note_above_marker
 		return action
 	return null
 

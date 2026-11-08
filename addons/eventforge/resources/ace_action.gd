@@ -15,6 +15,13 @@ extends Resource
 ## space after it. Empty means the ordinary two spaces and `# `. Set by the lift so an opened line is
 ## written back with the spacing it had.
 @export var comment_marker: String = ""
+## The `#` note the file wrote on the lines directly above this action's code, inside a function body,
+## one line per `\n`. It belongs to this action: moving the action moves the note, and emission writes
+## the lines back at the action's own indent just above its code. Empty means no note above.
+@export var note_above: String = ""
+## The marker every line of `note_above` was written with, spacing included (`# `, `#`). Empty means
+## the ordinary `# `, which is what a note typed in the sheet uses.
+@export var note_above_marker: String = ""
 @export var enabled: bool = true
 ## Baked codegen template (from a custom ACE's @ace_codegen_template). When non-empty it
 ## takes precedence over the descriptor registry, so addon ACEs compile without one.
@@ -33,3 +40,15 @@ extends Resource
 ## parameter is edited. Empty on every row applied before this existed, and on every row lifted from
 ## a file whose verb is still installed - both read through the live vocabulary as they always did.
 @export var display_text: String = ""
+
+
+## The lines of `note_above` as they are written into a body at `indent`: one comment line per line of
+## the note, each opening with the marker the file used. Empty when the action carries no note.
+func note_above_lines(indent: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if note_above.is_empty():
+		return out
+	var marker: String = note_above_marker if not note_above_marker.is_empty() else "# "
+	for note_line: String in note_above.split("\n"):
+		out.append("%s%s%s" % [indent, marker, note_line])
+	return out

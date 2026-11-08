@@ -63,9 +63,11 @@ static func run() -> bool:
 	for row: Variant in sheet.events:
 		if row is EventRow:
 			for action: Variant in (row as EventRow).actions:
-				if action is CommentRow:
-					in_function.append((action as CommentRow).text)
-	ok = SUPPORT.check(NAME, "the notes among a function's statements are comment rows in its lane", in_function, PackedStringArray([
+				if action is ACEAction and not (action as ACEAction).note_above.is_empty():
+					in_function.append((action as ACEAction).note_above)
+				elif action is CommentRow:
+					in_function.append("(row) " + (action as CommentRow).text)
+	ok = SUPPORT.check(NAME, "the notes among a function's statements are the notes of the actions below them", in_function, PackedStringArray([
 		"Place bullets randomly.\nKeep them inside.", "between"])) and ok
 	ok = SUPPORT.check(NAME, "the file is written back byte for byte", SUPPORT.reemit(SOURCE, "user://comment_rows_out.gd"), SOURCE) and ok
 	return ok

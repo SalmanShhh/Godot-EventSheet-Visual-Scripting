@@ -2928,6 +2928,7 @@ static func _emit_event_body(
 				if action_line.is_empty():
 					continue
 				_emit_leading_body_blanks(action_item, lines)
+				lines.append_array((action_item as ACEAction).note_above_lines(body_indent))
 				if not gesture_refused and action_slot == gesture_span.x:
 					lines.append(body_indent + EventForgeUndoableEdits.create_line(gesture_words))
 				# THE REMOVAL GUARD, written where it is needed and shown where it is written: a row
@@ -3145,6 +3146,7 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 			var action_line: String = ActionCodegen.generate_action(action, node_target, _behavior_host_default)
 			if action_line.is_empty():
 				continue
+			out.append_array(action.note_above_lines(indent))
 			var removal_guard: String = EventForgeRemovalGuard.guard_expression(
 				action, event_row, _removal_guard_facts)
 			var statement_indent: String = indent
@@ -3307,6 +3309,7 @@ static func _emit_off_action(action: ACEAction, node_target: String, indent: Str
 	if action.is_awaited or action.await_call:
 		code_lines[code_lines.size() - 1] = "await %s" % code_lines[code_lines.size() - 1]
 	var start: int = lines.size() + 1
+	lines.append_array(action.note_above_lines(indent))
 	for code_line: String in code_lines:
 		lines.append(indent + OFF_CELL_PREFIX + code_line)
 	source_map.append({"uid": str(action.get_instance_id()), "start": start, "end": lines.size(), "kind": "action"})
