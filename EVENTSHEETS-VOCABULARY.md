@@ -3911,6 +3911,8 @@ Collections (rich variables)
 - **Is Visible** (`target: String`) - True when the node is currently visible on screen.
 - **Is Equal (approx)** (`a: String, b: String`) - True when two numbers are nearly equal, avoiding tiny floating-point errors.
 - **Is Zero (approx)** (`value: String`) - True when a value is essentially zero, ignoring tiny rounding differences.
+- **For Each Popped From The Front** (`var_name: String, name: String`) - Runs this event's actions once per item, taking each item off the FRONT of the array as it is used - the way a queue is worked through. The array is empty when the loop ends, and items pushed onto it while the loop runs are handled too. Read the current one by the name you give it.
+- **For Each Popped From The Back** (`var_name: String, name: String`) - Runs this event's actions once per item, taking each item off the BACK of the array as it is used - the way a stack is unwound. The array is empty when the loop ends, and items pushed onto it while the loop runs are handled too. Read the current one by the name you give it.
 - **Has Value** (`var_name: String, value: String`) - True when the dictionary contains the given value anywhere.
 - **Text Contains** (`text: String, needle: String`) - True when the text contains the given substring somewhere inside it.
 - **Text Begins With** (`text: String, prefix: String`) - True when the text starts with the given prefix.
@@ -3990,6 +3992,13 @@ Collections (rich variables)
 - **Append Array** (`var_name: String, other: String`) - Adds every item from another array onto the end of this one.
 - **Resize Array** (`var_name: String, size: String`) - Changes the array's length, adding empty slots or trimming items.
 - **Fill Array** (`var_name: String, value: String`) - Sets every slot in the array to the same value.
+- **Pop Back Into** (`var_name: String, name: String, fallback: String`) - Takes the LAST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a stack (last in, first out). Popping an empty array prints an error in Godot and hands back nothing: fill If Empty to make this row safe on its own, or leave it blank and guard the row with Array Is Empty, inverted.
+- **Pop Front Into** (`var_name: String, name: String, fallback: String`) - Takes the FIRST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a queue (first in, first out). Popping an empty array prints an error in Godot and hands back nothing: fill If Empty to make this row safe on its own, or leave it blank and guard the row with Array Is Empty, inverted.
+- **Move Back To** (`var_name: String, to: String`) - Takes the last item of one array and pushes it on the back of another: an undo stack feeding a redo stack, a card from the draw pile to the hand. The first array must have an item - guard it with Array Is Empty, inverted.
+- **Move Front To** (`var_name: String, to: String`) - Takes the first item of one array and pushes it on the back of another: the next waiting job moving to the active list. The first array must have an item - guard it with Array Is Empty, inverted.
+- **Move All To** (`var_name: String, other: String`) - Moves every item of one array onto the back of another, in order, and empties the first. The discard pile going back to the deck, a redo stack cleared into an undo stack.
+- **Swap Arrays** (`var_name: String, other: String`) - Trades two arrays: each name holds what the other held. Two typed arrays must hold the same type of item; the window says so when they do not.
+- **Push Back, Keeping The Last** (`var_name: String, value: String, keep: String`) - Adds a value to the end of an array, then drops items from the front until only the newest few remain. A trail of positions, a replay buffer, the last few chat lines.
 - **Set Part Of** (`var_name: String, part: String, value: String`) - Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.
 - **Set AnimationTree Active** (`active: String, target: String`) - Turns this AnimationTree's playback on or off.
 - **Travel To State** (`state: String, target: String`) - Tells the state machine to transition to the named animation state. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
@@ -4058,8 +4067,10 @@ Collections (rich variables)
 - **Get Monitoring** (`target: String`) - Returns whether the area is currently watching for overlaps.
 - **Get Time Left** (`target: String`) - Returns the seconds remaining before the timer fires.
 - **Get Current Animation** (`target: String`) - Returns the name of the animation currently playing.
-- **First Item** (`var_name: String`) - Returns the first item in the array.
-- **Last Item** (`var_name: String`) - Returns the last item in the array.
+- **First Item** (`var_name: String`) - Returns the first item in the array (the front of a queue), without removing it. On an empty array Godot prints an error and gives nothing: guard the row with Array Is Empty, inverted, or use First Item (or a fallback).
+- **First Item (or a fallback)** (`var_name: String, fallback: String`) - The first item in the array without removing it, or your own fallback when the array is empty, so it never prints Godot's error on an empty list.
+- **Last Item** (`var_name: String`) - Returns the last item in the array (the top of a stack), without removing it. On an empty array Godot prints an error and gives nothing: guard the row with Array Is Empty, inverted, or use Last Item (or a fallback).
+- **Last Item (or a fallback)** (`var_name: String, fallback: String`) - The last item in the array without removing it, or your own fallback when the array is empty, so it never prints Godot's error on an empty list.
 - **Index Of** (`var_name: String, value: String`) - Returns the position of a value in the array, or -1 if it's missing.
 - **Count Of** (`var_name: String, value: String`) - Returns how many times a value appears in the array.
 - **Pop Back** (`var_name: String`) - Removes and returns the last item of the array.
