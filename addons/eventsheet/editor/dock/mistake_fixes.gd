@@ -110,6 +110,10 @@ static func apply(dock: Control, finding: Dictionary, which: String) -> bool:
 			return _use_value(dock, live)
 		EventSheetMistakeFindings.FIX_GO_TO_VARIABLE:
 			return _go_to_variable(dock, live)
+		EventSheetListFindings.FIX_USE_GROUP:
+			return _use_a_group(dock, live)
+		EventSheetListFindings.FIX_DROP_FREED:
+			return _drop_freed_first(dock, live)
 	return false
 
 
@@ -602,6 +606,37 @@ static func _remove_local(dock: Control, finding: Dictionary) -> bool:
 		return true))
 	if done:
 		_say(dock, EventSheetL10n.translate("The local is gone; %s now means what it hid.") % local_name, false)
+	return true
+
+
+## "Use a group instead": the rows that spell the list become the group rows that say the same thing, in one undo step.
+static func _use_a_group(dock: Control, finding: Dictionary) -> bool:
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	var list_name: String = str(finding.get("subject", ""))
+	if sheet == null or list_name.is_empty():
+		return false
+	var done: bool = bool(dock.call("_perform_undoable_sheet_edit", EventSheetL10n.translate("Use a group instead of %s") % list_name, func() -> bool:
+		return EventSheetListFindings.use_a_group(dock.get("_current_sheet") as EventSheetResource, list_name) > 0))
+	if done:
+		_say(dock, EventSheetL10n.translate("%s is now the group \"%s\": add_to_group, remove_from_group, is_in_group and For each in group.") % [list_name, list_name], false)
+	return true
+
+
+## "Drop freed instances first": an event above the loop's, running the clean-up row.
+static func _drop_freed_first(dock: Control, finding: Dictionary) -> bool:
+	var event_row: EventRow = finding.get("event") as EventRow
+	var list_name: String = str(finding.get("subject", ""))
+	if event_row == null or list_name.is_empty():
+		return false
+	var done: bool = bool(dock.call("_perform_undoable_sheet_edit", EventSheetL10n.translate("Drop freed instances first"), func() -> bool:
+		var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+		var placed: bool = EventSheetListFindings.drop_freed_before(sheet.events, event_row, list_name)
+		for entry: Variant in sheet.functions:
+			if not placed and entry is EventFunction:
+				placed = EventSheetListFindings.drop_freed_before((entry as EventFunction).events, event_row, list_name)
+		return placed))
+	if done:
+		_say(dock, EventSheetL10n.translate("Added a row above the loop that drops freed instances from %s.") % list_name, false)
 	return true
 
 

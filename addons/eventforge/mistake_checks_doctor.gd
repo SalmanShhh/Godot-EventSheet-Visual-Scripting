@@ -42,6 +42,9 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetMistakeFindings.KIND_LOCAL_HIDES_PARAMETER: "local-hides-parameter",
 	EventSheetMistakeFindings.KIND_DIVIDE_BY_ZERO: "divide-by-literal-zero",
 	EventSheetMistakeFindings.KIND_WRONG_KIND: "value-of-the-wrong-kind",
+	EventSheetListFindings.KIND_UNORDERED_NODE_LIST: "node-list-never-read-by-order",
+	EventSheetListFindings.KIND_NEVER_CLEANED: "node-list-never-cleaned",
+	EventSheetListFindings.KIND_OTHER_OBJECTS_LIST: "reaches-into-another-objects-list",
 }
 
 ## The missing-control finding is the Doctor's own already (per script, with Add and Pick doors).

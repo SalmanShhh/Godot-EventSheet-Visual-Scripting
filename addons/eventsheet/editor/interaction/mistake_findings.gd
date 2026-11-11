@@ -200,6 +200,7 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	_hidden_locals(walk, found)
 	_zero_divisions(rows, walk, found)
 	_wrong_kinds(sheet, rows, scene, walk, found)
+	found.append_array(EventSheetListFindings.findings(sheet, rows))
 	return found
 
 
