@@ -21,6 +21,28 @@ static func run() -> bool:
 	ok = _test_the_drain_loop_lifts() and ok
 	ok = _test_the_endless_while_check_stays_quiet() and ok
 	ok = _test_the_drain_rows() and ok
+	ok = _test_keeping_the_last() and ok
+	return ok
+
+
+static func _test_keeping_the_last() -> bool:
+	var ok: bool = true
+	var output: String = ROWS.compiled("ArrayAppendKeeping", {"var_name": "jobs", "value": "5", "keep": "20"})
+	ok = SUPPORT.check(NAME, "Push back keeping the last writes the append and the trim",
+		output.contains("\tjobs.append(5)\n\twhile jobs.size() > 20:\n\t\tjobs.pop_front()\n"), true) and ok
+	var generated: GDScript = GDScript.new()
+	generated.source_code = output
+	ok = SUPPORT.check(NAME, "it parses", generated.reload(true), OK) and ok
+	var opened: Dictionary = ROWS.reopened("\tjobs.append(5)\n\twhile jobs.size() > 20:\n\t\tjobs.pop_front()\n")
+	ok = SUPPORT.check(NAME, "the three-line run opens as the one row", opened["ids"], PackedStringArray(["ArrayAppendKeeping"])) and ok
+	ok = SUPPORT.check(NAME, "...and saves back byte for byte", opened["again"], opened["source"]) and ok
+	for case: Array in [
+		["an if for the while", "\tjobs.append(5)\n\tif jobs.size() > 20:\n\t\tjobs.pop_front()\n"],
+		["remove_at(0) for pop_front", "\tjobs.append(5)\n\twhile jobs.size() > 20:\n\t\tjobs.remove_at(0)\n"],
+	]:
+		var kept: Dictionary = ROWS.reopened(str(case[1]))
+		ok = SUPPORT.check(NAME, "%s stays the rows it is" % case[0], kept["ids"].has("ArrayAppendKeeping"), false) and ok
+		ok = SUPPORT.check(NAME, "...and saves back byte for byte (%s)" % case[0], kept["again"], kept["source"]) and ok
 	return ok
 
 
