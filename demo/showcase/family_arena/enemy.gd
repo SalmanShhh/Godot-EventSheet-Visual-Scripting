@@ -2,7 +2,7 @@
 ## @ace_family(Enemy)
 class_name Enemy
 extends Sprite2D
-## A falling enemy, marked as a Family so one rule can move or damage every Enemy at once.
+## A falling enemy that moves itself, marked as a Family so one rule can damage every Enemy at once.
 
 ## Hits this enemy survives before it dies.
 @export var health: int = 3
@@ -14,6 +14,11 @@ func _ready() -> void:
 	fall_speed = randf_range(60.0, 140.0)
 	modulate = Color.from_hsv(randf(), 0.6, 1.0)
 	scale = Vector2(0.4, 0.4)
+
+func _process(delta: float) -> void:
+	position.y += fall_speed * delta
+	if position.y > 560.0:
+		position.y = -20.0
 
 ## @ace_action
 ## @ace_name("Take Damage")

@@ -69,7 +69,7 @@ const SHOWCASE_PITCHES: Dictionary = {
 	"starfall": "Falling objects, a score and a fail state - the whole loop in one small scene.",
 	"menu_starter": "A title screen, options and a pause menu that already talk to each other.",
 	"quest_fsm": "A quest that remembers where you are, as a state machine you can read.",
-	"family_arena": "One rule that drives every enemy at once, through a family.",
+	"family_arena": "Every enemy moves itself, and one family rule strikes them all.",
 	"fps_arena": "A first-person controller with a weapon and targets.",
 	"boomer_level": "A keycard, a locked door, grunts that fight each other, and an exit tally.",
 	"swarm": "Hundreds of things moving at once, and still readable.",

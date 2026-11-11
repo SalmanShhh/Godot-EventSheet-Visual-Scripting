@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the Family Arena showcase teaches call down, signal up
+
+- Each Enemy now moves itself: its own sheet has an Every tick row that moves it by its own fall_speed and wraps it back to the top. The arena sheet no longer reaches into the enemies to move them; it spawns them and runs the one rule that is about the whole family, a strike that walks every Enemy with a typed For each (`for enemy: Enemy in ...`) and may hit each one through Enemy: Take Damage. The showcase plays the same: enemies fall, the strike hits them, they die.
+
 ### Added: a picked instance is an object in Add action and Add condition
 
 - Inside a pick (a For each, Pop back / front into, Pick nearest / first where / random, a typed local, or a signal that hands the event its instance) and every sub-event under it, Add action and Add condition list the picked instance at the top of the objects page, by its type (Unit, Enemy; its name as written when two picks share a type). Choosing it offers that class's own rows and those of what it is a kind of (Node2D: Set position, Set tint, Hide), each already aimed at the picked name. Outside the pick it is not offered.

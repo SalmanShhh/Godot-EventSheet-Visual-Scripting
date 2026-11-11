@@ -515,13 +515,17 @@ static func run() -> bool:
 		"self.add_to_group(\"family_enemy\")",
 		"func take_damage(amount: int)",
 		"@export var health: int = 3",
+		"func _process(delta: float) -> void:
+	position.y += fall_speed * delta",
 	]) and passed
 	passed = _check_sheet("family_arena", "res://demo/showcase/family_arena/family_arena.gd", [
 		"class_name FamilyArena",
-		"for enemy in get_tree().get_nodes_in_group(\"family_enemy\"):",
-		"enemy.position.y += enemy.fall_speed * delta",
-		"__e.take_damage(1)",
+		"for enemy: Enemy in get_tree().get_nodes_in_group(\"family_enemy\"):",
+		"enemy.take_damage(1)",
+		"var __e: Enemy = load(",
 	]) and passed
+	# The arena no longer moves the Enemies from outside: each one moves itself.
+	passed = _check("the arena does not move the Enemies", FileAccess.get_file_as_string("res://demo/showcase/family_arena/family_arena.gd").contains("position.y"), false) and passed
 	passed = _check_scene("family_arena scene has Info HUD", "res://demo/showcase/family_arena/family_arena.tscn", ["Info"]) and passed
 	passed = _check("enemy sub-scene exists", ResourceLoader.exists("res://demo/showcase/family_arena/enemy.tscn"), true) and passed
 
