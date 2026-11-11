@@ -595,6 +595,8 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		row.add_child(unit_label)
 	if _is_object_param(param_dict):
 		row.add_child(_object_chooser(key))
+	if key == INSTANCE_SET_PARAM and _definition != null and INSTANCE_SET_ACES.has(_definition.id):
+		row.add_child(_instance_set_chooser(key))
 	# Batch edit: each param gets its own "apply to all" checkbox, so one field can retune
 	# across the selection while the others keep each instance's own value.
 	if str(_context.get("mode", "")) == "batch_edit_params":
@@ -620,6 +622,57 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	if hint == "file_path":
 		_attach_place_lead(key, row)
 	_watch_field(key, label)
+
+
+## The pick rows that choose among instances, and the parameter that names the set they choose from.
+const INSTANCE_SET_ACES: PackedStringArray = [
+	"PickNearest", "PickRandomInstance", "PickWhere", "PickFirstWhere", "PickLastWhere", "PickTop", "PickBottom",
+]
+const INSTANCE_SET_PARAM: String = "list"
+
+
+## What the "From" box of a pick row can be filled with, in the order Godot recommends: the project's
+## GROUPS first (a group is the unordered set of nodes, and drops a destroyed one by itself), then the
+## sheet's own list variables, then the lists of nodes below the sheet's node. [[label, expression], ...]
+func instance_set_choices() -> Array:
+	var choices: Array = []
+	var scene_root: Node = animation_scene_root_override
+	if scene_root == null and Engine.is_editor_hint():
+		scene_root = EditorInterface.get_edited_scene_root()
+	for group_value: Variant in group_choices(scene_root):
+		var quoted: String = str(group_value)
+		if quoted.is_empty():
+			continue
+		choices.append([EventSheetL10n.translate("group %s") % quoted, "get_tree().get_nodes_in_group(%s)" % quoted])
+	for variable_name: Variant in _variable_names:
+		if _variable_matches_type(str(variable_name), "Array"):
+			choices.append([EventSheetL10n.translate("list %s") % str(variable_name), str(variable_name)])
+	for other: Dictionary in EventSheetScriptMembers.other_arrays(_lint_sheet()):
+		choices.append([EventSheetL10n.translate("list %s") % str(other.get("expression", "")), str(other.get("expression", ""))])
+	return choices
+
+
+## The dropdown beside a pick row's From box. Choosing writes the expression into the box; the box
+## stays free text, so anything else still works.
+func _instance_set_chooser(key: String) -> OptionButton:
+	var chooser: OptionButton = OptionButton.new()
+	chooser.name = "InstanceSetChooser"
+	chooser.fit_to_longest_item = false
+	chooser.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(150.0), 0.0)
+	chooser.add_item(EventSheetL10n.translate("Choose a group or list"))
+	var choices: Array = instance_set_choices()
+	for choice: Variant in choices:
+		chooser.add_item(str((choice as Array)[0]))
+	chooser.item_selected.connect(func(index: int) -> void:
+		if index <= 0 or index > choices.size():
+			return
+		var box: Control = _fields.get(key) as Control
+		if box != null:
+			box.set("text", str((choices[index - 1] as Array)[1]))
+			if box.has_signal("text_changed"):
+				box.emit_signal("text_changed", str((choices[index - 1] as Array)[1]) if box is LineEdit else null)
+		chooser.select(0))
+	return chooser
 
 
 ## The unit a parameter's KIND always means, shown muted beside its box. Only kinds whose unit is a
