@@ -18267,6 +18267,9 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		params_dict, _reading_autoloads())
 	var global_owner: String = str(global_read.get("object", ""))
+	# A row about a list belongs to the list: "undo_stack | Pop back of undo_stack into last".
+	if global_owner.is_empty():
+		global_owner = _array_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	# And when nothing reached through an autoload, the variable the row NAMES still has an
 	# owner: "Player > hp ≤ 0" instead of "System > hp ≤ 0".
 	if global_owner.is_empty():
@@ -18580,6 +18583,9 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		action_params, _reading_autoloads())
 	var global_owner: String = str(global_read.get("object", ""))
+	# A row about a list belongs to the list, by the name the row writes it with.
+	if global_owner.is_empty():
+		global_owner = _array_owner_label(action.provider_id, action.ace_id, action_params)
 	# The same rule the condition lane takes: a step that changes a variable belongs to whoever
 	# owns that variable, so "Player > Subtract 10 from health" leads with the object it changes.
 	if global_owner.is_empty():
@@ -20923,6 +20929,28 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 	return segments
 
 
+## The list a "Variables: Array" row acts on, as the row writes it (`undo_stack`, `$Enemy.draw_pile`),
+## which is what its object column names; "" for every other row. Only the reading moves: the row's id,
+## its template and what it compiles to are the ones it always had.
+func _array_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
+	if not (provider_id.is_empty() or provider_id == "Core") or ace_id.is_empty():
+		return ""
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
+	if descriptor == null or not str(descriptor.category).begins_with(ARRAY_ROWS_CATEGORY):
+		return ""
+	var list: String = str(params.get("var_name", "")).strip_edges()
+	if list.is_empty():
+		return ""
+	_array_object_names[list] = true
+	return list
+
+
+## The picker page every list row is filed under.
+const ARRAY_ROWS_CATEGORY := "Variables: Array"
+## The names a row's object column was given as a list, so the span knows to wear the variable mark.
+var _array_object_names: Dictionary = {}
+
+
 ## A condition's or action's own parameters, under whichever of the two keys the row was saved with.
 func _row_params(row: Variant) -> Dictionary:
 	if row is ACECondition:
@@ -20943,6 +20971,10 @@ func _object_label_or_pending(provider_id: String, ace_id: String, params: Dicti
 	# The state variable is the object of its own rows, named as written: it is not re-read as the class
 	# of its type ("State"), because the machine is the thing, and the variable is its name.
 	if label == EventSheetStateFacts.STATE_VARIABLE and EventSheetStateFacts.is_state_vocabulary(ace_id):
+		_pending_object_note = ""
+		return label
+	# A list is the object of its own rows, by the name written: never re-read as the class its type names.
+	if _array_object_names.has(label) and not _array_owner_label(provider_id, ace_id, params).is_empty():
 		_pending_object_note = ""
 		return label
 	# A "__" copy of a scene is named by the scene it was made from, and a "__" loop name by what the
@@ -21140,6 +21172,7 @@ func _reset_lens_caches_if_stale() -> void:
 	_lens_sheet_stamp = stamp
 	_line_icon_cache = {}
 	_node_reference_labels = _node_references_in(sheet)
+	_array_object_names = {}
 	_global_class_index_built = false
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
@@ -21653,6 +21686,11 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 		var state_words: Array = _state_word_cards(span.text)
 		if not state_words.is_empty():
 			span.metadata["word_cards"] = state_words
+	# A list wears the variable mark where an object wears its icon.
+	if _array_object_names.has(str(span.metadata.get("object_label", ""))) 			and str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] 			and not span.metadata.has("object_glyph"):
+		span.metadata["object_glyph"] = NativeRowMarks.OBJECT_GLYPH_LOCAL
+		if not (span.metadata.get("object_icon") is Texture2D):
+			span.metadata["object_icon"] = _glyph_icon_slot()
 	# The muted variable name that belongs to the object label this span was just given. Only
 	# a span that actually carries a label takes it; the flag is cleared either way, so it can never
 	# land on the next row.
