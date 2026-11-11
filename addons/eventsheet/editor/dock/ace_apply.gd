@@ -891,6 +891,12 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	action.params = _resolve_definition_params(definition, params)
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	action.codegen_template = _baked_template_for(definition)
+	# A pop into a local over a typed list (`Array[Vector2i]`) types the local, so the type check and
+	# autocomplete know what it is. Only a row made on the sheet gets the type; a hand-written untyped pop
+	# keeps its own spelling when it is opened.
+	if definition.provider_id == "Core" and EventForgeStackLift.POP_ACE_IDS.values().has(definition.id):
+		action.codegen_template = EventForgeStackLift.typed_template(action.codegen_template,
+			EventSheetArrayTypes.list_element_type(_dock._current_sheet, str(action.params.get("var_name", ""))))
 	# And the reading beside it, for the same reason: a row must still say what it was written as
 	# when the vocabulary it came from is no longer installed.
 	action.display_text = baked_reading_for(definition)

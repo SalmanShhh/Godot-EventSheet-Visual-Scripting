@@ -20,6 +20,40 @@ static func run() -> bool:
 	ok = _test_the_pop_rows_lift() and ok
 	ok = _test_the_picker_groups() and ok
 	ok = _test_the_fallback() and ok
+	ok = _test_typed_pops() and ok
+	return ok
+
+
+static func _test_typed_pops() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.variables = {
+		"undo_stack": {"type": "Array[Vector2i]", "default": [], "exported": false},
+		"jobs": {"type": "Array", "default": [], "exported": false}
+	}
+	ok = SUPPORT.check(NAME, "a typed list gives its element type", EventSheetArrayTypes.list_element_type(sheet, "undo_stack"), "Vector2i") and ok
+	ok = SUPPORT.check(NAME, "an untyped Array gives none", EventSheetArrayTypes.list_element_type(sheet, "jobs"), "") and ok
+	var canonical: String = EventForgeStackLift.canonical_template("ArrayPopBackInto")
+	var typed_template: String = EventForgeStackLift.typed_template(canonical, "Vector2i")
+	ok = SUPPORT.check(NAME, "the typed template types the local", typed_template.begins_with("var {name}: Vector2i = {var_name}.pop_back()"), true) and ok
+	ok = SUPPORT.check(NAME, "an untyped list leaves the template alone", EventForgeStackLift.typed_template(canonical, ""), canonical) and ok
+	var typed: String = compiled("ArrayPopBackInto", {"var_name": "undo_stack", "name": "last", "fallback": ""}, typed_template)
+	ok = SUPPORT.check(NAME, "a pop over Array[Vector2i] writes a Vector2i local",
+		typed.contains("\tvar last: Vector2i = undo_stack.pop_back()\n"), true) and ok
+	var with_fallback: String = compiled("ArrayPopBackInto", {"var_name": "undo_stack", "name": "last", "fallback": "Vector2i.ZERO"}, typed_template)
+	ok = SUPPORT.check(NAME, "...and the fallback still rides on it",
+		with_fallback.contains("\tvar last: Vector2i = undo_stack.pop_back() if not undo_stack.is_empty() else Vector2i.ZERO\n"), true) and ok
+	var generated: GDScript = GDScript.new()
+	generated.source_code = with_fallback
+	ok = SUPPORT.check(NAME, "it parses", generated.reload(true), OK) and ok
+	# A hand-written typed pop opens as the row and keeps its type; an untyped one keeps its spelling.
+	var typed_open: Dictionary = reopened("\tvar last: Vector2i = undo_stack.pop_back()\n\tprint(last)\n")
+	ok = SUPPORT.check(NAME, "a hand-written typed pop opens as Pop back into", typed_open["ids"].has("ArrayPopBackInto"), true) and ok
+	ok = SUPPORT.check(NAME, "...and saves back with its type", typed_open["again"], typed_open["source"]) and ok
+	var typed_fallback: Dictionary = reopened("\tvar last: Vector2i = undo_stack.pop_back() if not undo_stack.is_empty() else Vector2i.ZERO\n\tprint(last)\n")
+	ok = SUPPORT.check(NAME, "a typed guarded pop saves back with its type", typed_fallback["again"], typed_fallback["source"]) and ok
+	var untyped_open: Dictionary = reopened("\tvar last = undo_stack.pop_back()\n\tprint(last)\n")
+	ok = SUPPORT.check(NAME, "an untyped pop keeps its spelling", untyped_open["again"], untyped_open["source"]) and ok
 	return ok
 
 
