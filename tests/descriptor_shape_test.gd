@@ -62,8 +62,9 @@ const SEGMENT_PATTERN: String = "\\{\\?([A-Za-z_][A-Za-z0-9_]*)(?:=[^}]*)?\\}"
 
 ## Parameters whose EMPTY value is a real answer rather than a missing one:
 ##   args     no arguments at all - `f()` is as valid a call as `f(1)`;
-##   prompt   the optional label a timed input window shows, off when it is blank.
-const EMPTY_IS_AN_ANSWER: Array[String] = ["args", "prompt"]
+##   prompt   the optional label a timed input window shows, off when it is blank;
+##   fallback the optional If empty of a pop: blank is the plain pop, and the row's help says to guard it.
+const EMPTY_IS_AN_ANSWER: Array[String] = ["args", "prompt", "fallback"]
 
 ## Hints that mean "name something in the author's own project". No default can be right for one of
 ## these - a group, a variable, a node or an input action that this project happens to have is a
