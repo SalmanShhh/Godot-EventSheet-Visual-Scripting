@@ -104,7 +104,7 @@ static func keeps_a_count(captures: Dictionary) -> bool:
 ## The three runs, as lift-table entries.
 static func lift_entries() -> Array[Dictionary]:
 	if _entries.is_empty():
-		_entries = [_swap_entry(), _move_all_entry(), _keep_last_entry()]
+		_entries = [_swap_entry(), _move_all_entry(), _keep_last_entry(), _append_once_entry(), _set_from_group_entry(), _drop_freed_entry()]
 	return _entries
 
 
@@ -162,4 +162,50 @@ static func _keep_last_entry() -> Dictionary:
 		"params": ["var_name", "value", "keep"],
 		"shape": "{var_name}.append({value})\nwhile {var_name}.size() > {keep}:\n\t{var_name}.pop_front()",
 		"slots": {"var_name": "trail", "value": "global_position", "keep": "20"}
+	}
+
+
+## Push back, once: the has test, then the append under it.
+static func _append_once_entry() -> Dictionary:
+	return {
+		"id": "array_append_once",
+		"ace_id": "ArrayAppendOnce",
+		"mark": ".has(",
+		"statements": [
+			{"pattern": "^if not (?<var_name>" + LIST + ")\\.has\\((?<value>.+)\\):$"},
+			{"pattern": "^(?<var_name>" + LIST + ")\\.append\\((?<value>.+)\\)$", "indent": 1}
+		],
+		"params": ["var_name", "value"],
+		"shape": "if not {var_name}.has({value}):\n\t{var_name}.append({value})",
+		"slots": {"var_name": "selected", "value": "unit"}
+	}
+
+
+## Set a list to the instances of a group that pass a test.
+static func _set_from_group_entry() -> Dictionary:
+	return {
+		"id": "array_set_from_group",
+		"ace_id": "ArraySetFromGroup",
+		"mark": ".assign(get_tree()",
+		"statements": [
+			{"pattern": "^(?<var_name>" + LIST + ")\\.assign\\(get_tree\\(\\)\\.get_nodes_in_group\\((?<group>.+?)\\)\\.filter\\(func\\(one\\): return (?<test>.+)\\)\\)$"}
+		],
+		"params": ["var_name", "group", "test"],
+		"shape": "{var_name}.assign(get_tree().get_nodes_in_group({group}).filter(func(one): return {test}))",
+		"slots": {"var_name": "selected", "group": "\"units\"", "test": "box.has_point(one.position)"}
+	}
+
+
+## Drop the instances that were freed.
+static func _drop_freed_entry() -> Dictionary:
+	return {
+		"id": "array_drop_freed",
+		"ace_id": "ArrayDropFreed",
+		"mark": "is_instance_valid",
+		"statements": [
+			{"pattern": "^(?<var_name>" + LIST + ")\\.assign\\(\\k<var_name>\\.filter\\(is_instance_valid\\)\\)$"}
+		],
+		"params": ["var_name"],
+		"shape": "{var_name}.assign({var_name}.filter(is_instance_valid))",
+		"slots": {"var_name": "selected"}
 	}
