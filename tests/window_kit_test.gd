@@ -113,7 +113,9 @@ static func _state_note() -> bool:
 	rows.append(["and reads back", note.text, "This name is already used by a function."])
 	rows.append(["a problem by default", note.tone, EventSheetPopupUI.TONE_ERROR])
 	note.say("%Bullets is not in this scene yet.", EventSheetPopupUI.TONE_WARNING)
-	rows.append(["a warning colours its edge amber", _edge(note), EventSheetPalette.COLOR_HEALTH_WARN])
+	var amber: Color = EventSheetPalette.COLOR_HEALTH_WARN
+	rows.append(["a warning tints the note amber", _tint(note), Color(amber.r, amber.g, amber.b, 0.12)])
+	rows.append(["and draws no coloured edge", _edge_width(note), 0])
 	note.say("")
 	rows.append(["saying nothing hides it again", note.visible, false])
 	note.free()
@@ -173,8 +175,12 @@ static func _escape_closes(window: Window) -> int:
 	return asked[0]
 
 
-static func _edge(note: EventSheetPopupUI.StateNote) -> Color:
-	return (note.get_theme_stylebox("panel") as StyleBoxFlat).border_color
+static func _tint(note: EventSheetPopupUI.StateNote) -> Color:
+	return (note.get_theme_stylebox("panel") as StyleBoxFlat).bg_color
+
+
+static func _edge_width(note: EventSheetPopupUI.StateNote) -> int:
+	return (note.get_theme_stylebox("panel") as StyleBoxFlat).border_width_left
 
 
 ## A kit window paints its own backdrop behind the margins, so a light editor theme never shows the

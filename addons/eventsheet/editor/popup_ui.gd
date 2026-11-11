@@ -649,8 +649,6 @@ static func labelled_card(label_text: String, content: Control, pad: float = PAN
 ## because only the dialog knows what its fields currently add up to.
 class HelpStrip extends PanelContainer:
 
-	## The accent rule down the left edge, in px before display scaling.
-	const ACCENT_RULE_WIDTH := 3
 	## The most lines a reading line (READS AS, IN CODE, an added line) wraps to before it ends in "...".
 	const READING_MAX_LINES := 4
 
@@ -691,8 +689,6 @@ class HelpStrip extends PanelContainer:
 		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
 		style.set_content_margin_all(EventSheetPalette.scaled_f(8.0))
 		style.content_margin_left = EventSheetPalette.scaled_f(12.0)
-		style.border_width_left = EventSheetPalette.scaled(ACCENT_RULE_WIDTH)
-		style.border_color = EventSheetPopupUI.accent_color()
 		add_theme_stylebox_override("panel", style)
 		_panel_style = style
 		var box: VBoxContainer = VBoxContainer.new()
@@ -791,15 +787,16 @@ class HelpStrip extends PanelContainer:
 		in_code_row.visible = not in_code.strip_edges().is_empty()
 
 
-	## The voice the strip speaks in: the ordinary accent, amber for a warning, red for an error.
-	## Recolours the rule down the left edge and the heading together, so the tone is legible from
-	## the corner of the eye without reading a word.
+	## The voice the strip speaks in. The panel keeps the plain hairline every inset panel has, the
+	## way Godot's own docks draw theirs: no coloured outline and no coloured edge. The ordinary voice
+	## leaves the heading in the muted caption ink; only a warning (amber) or an error (red) colours
+	## the heading, because that colour is a state and not a decoration.
 	func set_tone(level: String) -> void:
 		tone = level
-		var colour: Color = EventSheetPopupUI.tone_color(level)
-		if _panel_style != null:
-			_panel_style.border_color = colour
-		heading_label.add_theme_color_override("font_color", colour)
+		if level == TONE_WARNING or level == TONE_ERROR or level == EventSheetPopupUI.TONE_OK:
+			heading_label.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(level))
+		else:
+			heading_label.add_theme_color_override("font_color", EventSheetPopupUI.muted_text_color())
 
 
 	## The one-click answers offered under the paragraph. Each entry is {"text": String,
@@ -1232,7 +1229,7 @@ static func tone_color(tone: String) -> Color:
 	return accent_color()
 
 
-## A STATE NOTE: one sentence with a coloured edge, the way a window says what is wrong with the
+## A STATE NOTE: one sentence on a faint tint of its tone, the way a window says what is wrong with the
 ## field above it. `say("")` hides it, so a caller sets it on every change and never toggles
 ## visibility by hand. `text` reads back what it says.
 class StateNote extends PanelContainer:
@@ -1252,7 +1249,7 @@ class StateNote extends PanelContainer:
 		_style.content_margin_right = EventSheetPalette.scaled_f(8.0)
 		_style.content_margin_top = EventSheetPalette.scaled_f(4.0)
 		_style.content_margin_bottom = EventSheetPalette.scaled_f(4.0)
-		_style.border_width_left = EventSheetPalette.scaled(3)
+		_style.set_corner_radius_all(3)
 		add_theme_stylebox_override("panel", _style)
 		_label = Label.new()
 		_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1265,7 +1262,6 @@ class StateNote extends PanelContainer:
 		tone = level
 		_label.text = sentence
 		var colour: Color = EventSheetPopupUI.tone_color(level)
-		_style.border_color = colour
 		_style.bg_color = Color(colour.r, colour.g, colour.b, 0.12)
 		visible = not sentence.strip_edges().is_empty()
 
