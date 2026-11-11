@@ -87,6 +87,9 @@ signal group_action_requested(action: String, group: EventGroup)
 ## misspelled name on that event to the one the sheet actually declares.
 signal variable_note_fix_requested(note_row: EventRowData)
 signal drag_status_requested(message: String, is_error: bool)
+## An edit gesture (a drag, a double-click) landed on a function body that is locked. The dock says why
+## - or, for a shipped pack file, asks once whether to edit it anyway - and the gesture is not performed.
+signal locked_body_gesture(function_name: String)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## The code echo beside a variable row was activated: open the code panel at the line it is.
 signal code_echo_activated(row_data: EventRowData)
@@ -171,6 +174,7 @@ signal rows_rebuilt
 ## that asks them anything - naming any of those classes here would compile it, and all it names,
 ## with the canvas on the first sheet open.
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
+const FunctionLocks := preload("res://addons/eventsheet/editor/interaction/function_locks.gd")
 ## What only an edit or a copy asks for, read by path at that moment.
 const FORMAT_BAR_PATH := "res://addons/eventsheet/editor/bbcode_selection_bar.gd"
 const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
@@ -355,15 +359,20 @@ var _drag_ace_copy_mode: bool = false
 var _drag_ace_drop_valid: bool = true
 var _drag_feedback_text: String = ""
 var _drag_feedback_is_error: bool = false
+## The function a held drag would drop into while its body is locked, "" otherwise.
+var _drag_locked_function: String = ""
 var _last_scroll: int = -1
 var _last_scroll_size: Vector2 = Vector2.ZERO
 var _fold_state: Dictionary = {}
-# Per-function "Make Body Editable" opt-in for an OPENED behaviour pack, keyed by function name (a set;
-# name -> true). Pure editor state - NEVER written to the .gd - so it survives the undo funnel's resource
-# replacement (like _fold_state) and never affects the byte round-trip. An authored sheet ignores this
-# (all its verb bodies are editable already); an opted-in verb's body becomes live and re-emits from its
-# model, while every un-opted sibling stays inert and byte-identical. See _row_builder._function_body_editable.
-var _editable_function_names: Dictionary = {}
+# Which function bodies of an opened .gd are locked (see function_locks.gd). Editor state, remembered
+# in the project's editor metadata keyed by the file's path - NEVER written to the .gd - so it survives
+# the undo funnel's resource replacement and closing the editor, and never touches the byte round trip.
+# `locked`: functions the user locked by hand. `unlocked`: functions unlocked one by one inside a shipped
+# pack file. `file`: the whole shipped pack file unlocked ("Edit it anyway"). An authored sheet ignores
+# all of it: its verb bodies are editable already.
+var _function_locks: Dictionary = FunctionLocks.empty_state()
+## The file `_function_locks` was read for.
+var _function_locks_key: String = ""
 var _debug_rows: Dictionary = {}
 var _breakpoint_rows: Dictionary = {}
 # Session bookmarks (navigation aid; not persisted): row_uid -> true. Ctrl+M / F4.
@@ -606,6 +615,7 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet
 	_folding.load_persisted_region_folds()
 	_folding.load_persisted_collapse_level()
+	_load_function_locks()
 	_editor_style = _resolve_editor_style(sheet)
 	_update_layout_style_signature(_get_font_size())
 	_refresh_rows()
@@ -662,7 +672,6 @@ func capture_view_state() -> Dictionary:
 		"selection_anchor_index": _selection_anchor_index,
 		"focused_lane": _focused_lane,
 		"fold_state": _fold_state.duplicate(),
-		"editable_function_names": _editable_function_names.duplicate(),
 		"tunable_uids": _tunable_uids.duplicate(),
 		"display_by_model": _display_by_model.duplicate(),
 		"branch_growth": _branch_growth,
@@ -706,7 +715,7 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 	_selection_anchor_index = int(state.get("selection_anchor_index", -1))
 	_focused_lane = str(state.get("focused_lane", _focused_lane))
 	_fold_state = (state.get("fold_state", {}) as Dictionary).duplicate()
-	_editable_function_names = (state.get("editable_function_names", {}) as Dictionary).duplicate()
+	_load_function_locks()
 	_tunable_uids = (state.get("tunable_uids", {}) as Dictionary).duplicate()
 	# The branch numbering belongs to the sheet these rows were read from, not the last one built.
 	_display_by_model = (state.get("display_by_model", {}) as Dictionary).duplicate()
@@ -731,23 +740,114 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 	return true
 
 
-## True when the user has opted a specific verb (by function name) into body editing on an opened pack.
-func is_function_body_editable_opt_in(function_name: String) -> bool:
-	return _editable_function_names.has(function_name.strip_edges())
+## True when the open sheet is a script opened from a .gd - an editable one, or a preview its first edit
+## unlocks - which is where function bodies can be locked. Not a sheet a merge left blocked, and not a
+## read-only view of anything else (a scene's, a workbench's).
+func function_locks_apply() -> bool:
+	if _sheet == null or _sheet.external_source_path.strip_edges().is_empty():
+		return false
+	if not _sheet.read_only:
+		return true
+	return _sheet.external_source_path.get_extension().to_lower() == "gd" and not _sheet.blocked_by_conflict()
 
 
-## Flips the per-function "Make Body Editable" opt-in for an opened pack and rebuilds so the verb's body
-## rows switch between inert (read-only) and live (editable). Pure editor state - the .gd is untouched, so
-## the flip alone never dirties the sheet; only a subsequent edit of the now-live body re-emits that verb.
-func toggle_function_body_editable(function_name: String) -> void:
+## True when the file this view shows is a shipped behaviour pack file (a script in a folder the
+## shipped-pack list names): its function bodies stay locked until the user unlocks the file.
+func is_shipped_pack_sheet() -> bool:
+	return _sheet != null and FunctionLocks.is_shipped_pack_file(str(_sheet.external_source_path))
+
+
+## True when the whole shipped pack file was unlocked with "Edit it anyway".
+func is_pack_file_unlocked() -> bool:
+	return bool(_function_locks.get("file", false))
+
+
+## Whether a function's body edits like any event. A script the user wrote has no lock at all; a
+## function the user locked by hand is locked; a shipped pack's function is locked until its file (or
+## that one function) was unlocked.
+func is_function_body_unlocked(function_name: String) -> bool:
+	var key: String = function_name.strip_edges()
+	if (_function_locks["locked"] as Dictionary).has(key):
+		return false
+	if is_shipped_pack_sheet():
+		return is_pack_file_unlocked() or (_function_locks["unlocked"] as Dictionary).has(key)
+	return true
+
+
+## True when the user locked this function by hand (the grey a locked body wears, and the refusal that
+## names the menu item, are for these; a shipped pack's lock says something else).
+func is_function_locked_by_hand(function_name: String) -> bool:
+	return (_function_locks["locked"] as Dictionary).has(function_name.strip_edges())
+
+
+## The right-click item: locks an editable function, unlocks a locked one. Remembered for the project;
+## the .gd is untouched, so the flip alone never dirties the sheet - only a later edit of the body does.
+func toggle_function_body_lock(function_name: String) -> void:
 	var key: String = function_name.strip_edges()
 	if key.is_empty():
 		return
-	if _editable_function_names.has(key):
-		_editable_function_names.erase(key)
+	var locked: Dictionary = _function_locks["locked"]
+	var unlocked: Dictionary = _function_locks["unlocked"]
+	if is_function_body_unlocked(key):
+		if is_shipped_pack_sheet() and not is_pack_file_unlocked():
+			unlocked.erase(key)
+		else:
+			locked[key] = true
 	else:
-		_editable_function_names[key] = true
+		locked.erase(key)
+		if is_shipped_pack_sheet() and not is_pack_file_unlocked():
+			unlocked[key] = true
+	_save_function_locks()
 	_refresh_rows()
+
+
+## The function whose LOCKED body this row belongs to, or "" when the row is not in one. The head of a
+## function draws its own actions, so a click there counts only when it lands on one of them (the
+## name and the parameters are the function's signature, not its body); a row inside a locked body is
+## inert and counts wherever it is hit.
+func locked_function_for_row(row_data: EventRowData, span_metadata: Dictionary = {}) -> String:
+	if row_data == null or not function_locks_apply():
+		return ""
+	var function_row: EventFunction = row_data.source_resource as EventFunction
+	if function_row != null:
+		var kind: String = str(span_metadata.get("kind", ""))
+		if not ["trigger", "condition", "action"].has(kind) or _row_builder._function_body_editable(function_row):
+			return ""
+		return function_row.function_name
+	if row_data.in_verb_body and row_data.source_resource == null and row_data.verb_function != null \
+			and not _row_builder._function_body_editable(row_data.verb_function):
+		return row_data.verb_function.function_name
+	return ""
+
+
+## The sentence a refused edit on a locked function says: why it did not happen, and the way out.
+func locked_body_message(function_name: String) -> String:
+	if is_shipped_pack_sheet() and not is_function_locked_by_hand(function_name):
+		return EventSheetL10n.translate("%s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.") \
+			% str(_sheet.external_source_path).get_file()
+	return EventSheetL10n.translate("This function is locked - right-click it and choose Unlock this function")
+
+
+## "Edit it anyway": unlocks every function of the shipped pack file this view shows, and remembers it.
+## A function the user locked by hand stays locked.
+func unlock_pack_file() -> void:
+	_function_locks["file"] = true
+	_save_function_locks()
+	_refresh_rows()
+
+
+func _load_function_locks() -> void:
+	# The same file again (the undo funnel re-seats its sheet) keeps what this view already holds: every
+	# change is written through to the metadata as it is made, so there is nothing newer to read.
+	var key: String = _folding.sheet_persist_key()
+	if key == _function_locks_key and not key.is_empty():
+		return
+	_function_locks_key = key
+	_function_locks = FunctionLocks.load_state(key)
+
+
+func _save_function_locks() -> void:
+	FunctionLocks.save_state(_folding.sheet_persist_key(), _function_locks)
 
 
 # ── Region fold persistence (editor state, NEVER the sheet's bytes) ────────────────────────────

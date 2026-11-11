@@ -139,8 +139,6 @@ static func run() -> bool:
 	var history := History.new()
 	editor.set_undo_redo_manager(history)
 	var viewport: EventSheetViewport = editor.get_viewport_control()
-	# A file opened from disk keeps each function's body read-only until it is unlocked.
-	viewport.toggle_function_body_editable("hit")
 	var index: int = _flat_index(viewport, hit)
 	rows.append(["the function head is a row", index >= 0, true])
 	if index < 0:
@@ -186,8 +184,6 @@ static func _cross_rows(out: bool) -> Array:
 	var history := History.new()
 	editor.set_undo_redo_manager(history)
 	var viewport: EventSheetViewport = editor.get_viewport_control()
-	viewport.toggle_function_body_editable("hit")
-	viewport.toggle_function_body_editable("other")
 	var hit: EventFunction = _function(sheet, "hit")
 	var other: EventFunction = _function(sheet, "other")
 	var rows: Array = []
@@ -215,7 +211,7 @@ static func _cross_rows(out: bool) -> Array:
 	return rows
 
 
-## A body nobody unlocked refuses the drop in words, and the file is untouched.
+## A function the user locked by hand refuses the drop in words, and the file is untouched.
 static func _locked_rows() -> Array:
 	var sheet: EventSheetResource = SUPPORT.reopen(SOURCE, true, "")
 	sheet.external_source_path = PROBE
@@ -226,6 +222,8 @@ static func _locked_rows() -> Array:
 	var status := Label.new()
 	editor._status_label = status
 	var viewport: EventSheetViewport = editor.get_viewport_control()
+	viewport.toggle_function_body_lock("hit")
+	viewport.toggle_function_body_lock("other")
 	var hit_row: EventRowData = _row_for(viewport, _function(sheet, "hit"))
 	var other_row: EventRowData = _row_for(viewport, _function(sheet, "other"))
 	var rows: Array = [["both functions are rows (locked)", hit_row != null and other_row != null, true]]
@@ -237,7 +235,7 @@ static func _locked_rows() -> Array:
 		other_row, "action", 0, "before", false)
 	rows.append(["a locked body takes no drop", SUPPORT.compile_output(sheet, PROBE), SOURCE])
 	rows.append(["and no undo step is made", history.has_undo(), false])
-	rows.append(["and the status strip says why", status.text.contains("read-only"), true])
+	rows.append(["and the status strip says why", status.text.contains("Unlock this function"), true])
 	editor._status_label = null
 	status.free()
 	editor.free()

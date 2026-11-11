@@ -50,8 +50,6 @@ static func _view_of(theme_path: String, source: String = SOURCE) -> EventSheetV
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.size = Vector2(1200.0, 900.0)
 	view.set_sheet(sheet)
-	if not sheet.external_source_path.strip_edges().is_empty():
-		view.toggle_function_body_editable("calc")
 	return view
 
 

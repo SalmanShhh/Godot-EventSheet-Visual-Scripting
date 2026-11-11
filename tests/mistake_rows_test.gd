@@ -79,6 +79,15 @@ static func _stamped(dock: EventSheetDock, kind: String) -> EventRowData:
 	return null
 
 
+## The rows under a row other than the "+ Add event" door a function's body ends with.
+static func _note_children(row_data: EventRowData) -> int:
+	var count: int = 0
+	for child: EventRowData in row_data.children:
+		if not child.row_uid.begins_with("add_event_footer_"):
+			count += 1
+	return count
+
+
 static func _row_state_pins() -> bool:
 	var dock: EventSheetDock = _dock_of(_sheet())
 	var red: EventRowData = _stamped(dock, "signal-emit-value-count")
@@ -88,7 +97,7 @@ static func _row_state_pins() -> bool:
 		["an error row is stamped, and red", [red != null, red.attention_severe if red != null else false], [true, true]],
 		["a warning row is stamped, and amber", [amber != null, amber.attention_severe if amber != null else true], [true, false]],
 		["a While that cannot end is amber", [loop != null, loop.attention_severe if loop != null else true], [true, false]],
-		["the red row has no note row under it (the quiet sheet law)", red.children.size() if red != null else -1, 0],
+		["the red row has no note row under it (the quiet sheet law)", _note_children(red) if red != null else -1, 0],
 		["and its error mark is not borrowed: the diagnostics layer stays empty", red.error_message if red != null else "x", ""],
 		["the stamp carries the sentence the strip reads", red != null and red.attention_note.contains("Error calling from signal"), true],
 		["two rows are counted for the head's attention count", dock._viewport.attention_row_count() >= 3, true],

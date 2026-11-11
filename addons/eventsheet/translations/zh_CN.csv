@@ -2051,7 +2051,8 @@ Edit the whole function…,编辑整个函数…
 "The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.",此函数返回给调用方的值的类型 - 数字、文本、真/假、位置等。选择与函数实际计算结果相符的一种。
 "What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.",此输入的名称。它会成为生成的 GDScript 中的参数名，也是函数所在行的标签，因此清楚的词胜过缩写。
 Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,将该输入从函数中彻底移除。已经调用该函数的地方会失去在此传递的值。
-Lock Function Body (read-only),锁定函数体 (只读)
+Lock this function,锁定此函数
+Unlock this function,解锁此函数
 Hide this entry,隐藏此条目
 "Minor - new actions, nothing breaks",次版本 - 新增动作，不破坏兼容
 "Patch - fixes, no new actions",补丁 - 仅修复，无新动作
@@ -10139,9 +10140,12 @@ Value of the wrong kind,类型不对的值
 Every physics tick,每个物理 tick
 every physics tick,每个物理 tick
 no starting value,无初始值
-This function's body is read-only - right-click it and choose Make Function Body Editable,此函数的主体是只读的 - 右键单击并选择 Make Function Body Editable
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s 是 Array[%s]，%s 是 Array[%s]，类型化数组只能保存自己的类型。"
 different types,"类型不同"
 the two types differ,"两种类型不同"
 For each popped from the front of %s as %s,"对从 %s 前端取出的每一项，命名为 %s"
 For each popped from the back of %s as %s,"对从 %s 末端取出的每一项，命名为 %s"
+Edit it anyway,仍然编辑
+%s is now editable.,%s 现已可编辑。
+%s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s 是随附的行为:添加该包的新版本会替换此文件及你的修改。
+This function is locked - right-click it and choose Unlock this function,此函数已锁定 - 右键单击并选择“解锁此函数”

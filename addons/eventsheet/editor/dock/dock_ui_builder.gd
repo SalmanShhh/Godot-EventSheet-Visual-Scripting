@@ -327,6 +327,7 @@ func build_ui() -> void:
 	_dock._apply_editor_native_defaults()
 	_dock._viewport.ace_drop_requested.connect(later("_ace_apply", "_on_viewport_ace_drop_requested"))
 	_dock._viewport.drag_status_requested.connect(later("_ace_apply", "_on_viewport_drag_status_requested"))
+	_dock._viewport.locked_body_gesture.connect(later("_ace_apply", "_on_viewport_locked_body_gesture"))
 	_dock._viewport.lane_ratio_changed.connect(_dock._on_viewport_lane_ratio_changed)
 	_dock._viewport.object_column_width_changed.connect(_dock._on_viewport_object_column_width_changed)
 	_dock._viewport.add_event_requested.connect(_dock._on_viewport_add_event_requested)

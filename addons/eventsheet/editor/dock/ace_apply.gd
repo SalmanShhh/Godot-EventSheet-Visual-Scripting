@@ -146,8 +146,18 @@ func _unlock_preview_for_edit() -> void:
 		_dock._preview_glue._on_preview_edit_requested()
 
 
+## A gesture that would edit a locked function body was made: the strip says why, and for a shipped pack
+## file it offers the one door that unlocks the file. The gesture itself is not performed.
+func _on_viewport_locked_body_gesture(function_name: String) -> void:
+	_dock._show_locked_body(function_name)
+
+
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
 	_unlock_preview_for_edit()
+	var locked_function: String = _dock._active_view().locked_function_for_row(row_data, {"kind": "action"})
+	if not locked_function.is_empty():
+		_on_viewport_locked_body_gesture(locked_function)
+		return
 	# A branch of a switch: its Add action fills that branch, the way any event's does.
 	if row_data != null and row_data.match_case is MatchCase and lane == "action":
 		_dock._ace_picker.open("append_action", false, row_data.match_case)
@@ -1323,14 +1333,14 @@ func _on_viewport_ace_drop_requested(
 	if target_event == null:
 		# A function whose body is still read-only takes no drop: say so, never do nothing.
 		if target_row.source_resource is EventFunction:
-			_dock._set_status(EventSheetL10n.translate("This function's body is read-only - right-click it and choose Make Function Body Editable"), true)
+			_on_viewport_locked_body_gesture((target_row.source_resource as EventFunction).function_name)
 		return
 	var normalized_entries: Array = _normalize_ace_drag_entries(source_entries, target_lane)
 	if normalized_entries.is_empty():
 		# Carried out of a function whose body is still read-only: say so, never do nothing.
 		for entry in source_entries:
 			if entry is Dictionary and (entry as Dictionary).get("source_resource", null) is EventFunction:
-				_dock._set_status(EventSheetL10n.translate("This function's body is read-only - right-click it and choose Make Function Body Editable"), true)
+				_on_viewport_locked_body_gesture(((entry as Dictionary).get("source_resource", null) as EventFunction).function_name)
 				break
 		return
 	var trigger_entries: Array = []

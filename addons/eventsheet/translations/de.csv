@@ -2051,7 +2051,8 @@ Edit the whole function…,Ganze Funktion bearbeiten…
 "The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","Die Art von Wert, die diese Funktion zurückgibt - eine Zahl, Text, ein Wahr/Falsch, eine Position und so weiter. Wähle das, was die Funktion tatsächlich ermittelt."
 "What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.",Wie diese Eingabe heißt. Sie wird zum Parameternamen im erzeugten GDScript und zur Beschriftung in der Zeile der Funktion - klare Wörter schlagen Abkürzungen.
 Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,"Entfernt die Eingabe vollständig aus der Funktion. Alles, was die Funktion bereits aufruft, verliert den Wert, den es hier übergeben hat."
-Lock Function Body (read-only),Funktionsrumpf sperren (schreibgeschützt)
+Lock this function,Diese Funktion sperren
+Unlock this function,Diese Funktion entsperren
 Hide this entry,Diesen Eintrag ausblenden
 "Minor - new actions, nothing breaks","Minor - neue Aktionen, nichts bricht"
 "Patch - fixes, no new actions","Patch - Fixes, keine neuen Aktionen"
@@ -10139,9 +10140,12 @@ Value of the wrong kind,Wert der falschen Art
 Every physics tick,Jeder Physik-Tick
 every physics tick,jeder Physik-Tick
 no starting value,kein Startwert
-This function's body is read-only - right-click it and choose Make Function Body Editable,Der Rumpf dieser Funktion ist schreibgeschützt - Rechtsklick und Make Function Body Editable wählen
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s ist Array[%s] und %s ist Array[%s], und ein typisiertes Array enthält nur seinen eigenen Typ."
 different types,"verschiedene Typen"
 the two types differ,"die beiden Typen unterscheiden sich"
 For each popped from the front of %s as %s,"Für jedes vorn entnommene Element von %s als %s"
 For each popped from the back of %s as %s,"Für jedes hinten entnommene Element von %s als %s"
+Edit it anyway,Trotzdem bearbeiten
+%s is now editable.,%s ist jetzt bearbeitbar.
+%s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s ist ein mitgeliefertes Verhalten: Eine neuere Version des Packs hinzuzufügen ersetzt diese Datei und deine Änderungen.
+This function is locked - right-click it and choose Unlock this function,Diese Funktion ist gesperrt - Rechtsklick und Diese Funktion entsperren wählen

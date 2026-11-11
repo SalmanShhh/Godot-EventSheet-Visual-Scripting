@@ -13,6 +13,8 @@ const TAUGHT_PROVIDERS_SETTING := "eventsheets/vocabulary/taught_provider_script
 const PATTERN_HINT_FAMILY := "pattern_hint"
 ## ...and when it is a selected variable's own doors (Move into a group…, Properties…).
 const VARIABLE_LINKS_FAMILY := "variable_links"
+## The help strip's family for a shipped pack file asking once before its first edit.
+const PACK_UNLOCK_FAMILY := "pack_unlock"
 ## Where the workspace announces itself and keeps its palette commands and row menu items: the
 ## storage the public API reads, in a file that names nothing, so building this dock never compiles
 ## the API (and everything the API names) on the way.
@@ -7868,12 +7870,51 @@ func _pattern_hint_text(row_data: EventRowData) -> String:
 	return str(_pattern_hint(row_data).get("text", ""))
 
 
+## An edit gesture landed on a locked function body. A function the user locked by hand says so in the
+## status bar, with the menu item that undoes it. A function of a shipped behaviour pack says on the
+## help strip, once, why editing it is risky, and offers the one door that unlocks the whole file; the
+## gesture itself is not performed, so the user repeats it once the file is unlocked.
+func _show_locked_body(function_name: String) -> void:
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return
+	var message: String = view.locked_body_message(function_name)
+	if not (view.is_shipped_pack_sheet() and not view.is_function_locked_by_hand(function_name)) \
+			or _row_help_label == null or _row_help_button == null:
+		_set_status(message, true)
+		return
+	_row_help_label.text = message
+	_row_help_label.tooltip_text = message
+	_row_help_label.modulate = EventSheetActiveTheme.chrome().object_bar_warning_color
+	_row_help_label.visible = true
+	_row_help_finding = {"family": PACK_UNLOCK_FAMILY}
+	_row_help_button.text = EventSheetL10n.translate("Edit it anyway")
+	_row_help_button.visible = true
+	for door: Button in [_row_help_button_second, _row_help_button_third]:
+		if door != null:
+			door.visible = false
+
+
+## "Edit it anyway": the shipped pack file the strip named is unlocked, every function in it, and
+## remembered for the project. The strip then goes back to describing the selected row.
+func _unlock_pack_file_from_strip() -> void:
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return
+	view.unlock_pack_file()
+	_set_status(EventSheetL10n.translate("%s is now editable.") % str(_current_sheet.external_source_path).get_file())
+	_update_row_help_strip(_viewport.get_selected_row_data())
+
+
 ## The help strip's door was clicked. The finding's family tag says whose door it is: a collision
 ## finding writes one property of the SCENE through the editor's own undo, and every other family's
 ## fix is the very dock operation its inbox chip runs - one gesture, wherever it was clicked from.
 func apply_selected_row_fix() -> void:
 	var finding: Dictionary = _row_help_finding
 	if finding.is_empty() or _run_variable_link(0):
+		return
+	if str(finding.get("family", "")) == PACK_UNLOCK_FAMILY:
+		_unlock_pack_file_from_strip()
 		return
 	if str(finding.get("family", "")) == PATTERN_HINT_FAMILY:
 		load(PATTERN_MANUAL_PATH).open_page(str(finding.get("pattern", "")))

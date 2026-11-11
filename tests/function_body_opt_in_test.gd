@@ -1,8 +1,7 @@
-# EventForge - Phase 2 slice 2b: per-function "Make Body Editable" opt-in on an OPENED behaviour pack.
-# An opened .gd's verb bodies are read-only by default (2a covenant: editing one could change its bytes),
-# so a user opts a SINGLE verb into editing. The opt-in is pure editor state (name-keyed on the viewport,
-# never the .gd), so flipping it alone changes no bytes; only a subsequent edit re-emits that ONE verb, and
-# every un-opted sibling stays inert and byte-identical - the sibling guarantee this test pins.
+# A function body in an opened .gd edits like any event, and the user can lock a SINGLE function by hand.
+# The lock is pure editor state (name-keyed on the viewport, remembered in the project's editor metadata,
+# never the .gd), so flipping it alone changes no bytes; only a subsequent edit re-emits that ONE function,
+# and every locked sibling stays inert and byte-identical - the sibling guarantee this test pins.
 @tool
 class_name FunctionBodyOptInTest
 extends RefCounted
@@ -31,12 +30,12 @@ func heal(amount: int) -> void:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 	var before: Array = [_head_offers_add(view, "take_damage"), _head_offers_add(view, "heal")]
-	view.toggle_function_body_editable("take_damage")
+	view.toggle_function_body_lock("take_damage")
 	var after: Array = [_head_offers_add(view, "take_damage"), _head_offers_add(view, "heal")]
 	dock.free()
 	return SUPPORT.pins("function_body_opt_in_test", [
-		["an opened file's function heads offer no Add action while their bodies are read-only", before, [false, false]],
-		["made editable, its head offers Add action; its sibling still none", after, [true, false]],
+		["an opened file's function heads offer Add action with no lock at all", before, [true, true]],
+		["locked by hand, its head offers none; its sibling still does", after, [false, true]],
 	])
 
 
@@ -112,20 +111,20 @@ static func run() -> bool:
 	var path: String = sheet.external_source_path
 	var output_baseline: String = str(SheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
 
-	# ── Default: BOTH verb bodies are inert (read-only) on an opened pack ──
-	ok = _check("alpha body is inert by default (opened pack)", _body_live(view, "alpha"), false) and ok
-	ok = _check("beta body is inert by default (opened pack)", _body_live(view, "beta"), false) and ok
-	ok = _check("no verb is opted in yet", view.is_function_body_editable_opt_in("alpha"), false) and ok
+	# ── Default: BOTH function bodies are live on a script of the user's own ──
+	ok = _check("alpha body is live by default (opened script)", _body_live(view, "alpha"), true) and ok
+	ok = _check("beta body is live by default (opened script)", _body_live(view, "beta"), true) and ok
+	ok = _check("no function is locked yet", view.is_function_locked_by_hand("beta"), false) and ok
 
-	# ── Opt ALPHA in: only alpha's body goes live; beta stays inert (the per-function gate) ──
-	view.toggle_function_body_editable("alpha")
-	ok = _check("alpha is now opted in", view.is_function_body_editable_opt_in("alpha"), true) and ok
-	ok = _check("alpha body is now LIVE (editable)", _body_live(view, "alpha"), true) and ok
-	ok = _check("beta body stays inert (sibling not opted in)", _body_live(view, "beta"), false) and ok
+	# ── Lock BETA: only beta's body goes inert; alpha stays live (the per-function gate) ──
+	view.toggle_function_body_lock("beta")
+	ok = _check("beta is now locked", view.is_function_locked_by_hand("beta"), true) and ok
+	ok = _check("beta body is now INERT (locked)", _body_live(view, "beta"), false) and ok
+	ok = _check("alpha body stays live (sibling not locked)", _body_live(view, "alpha"), true) and ok
 
-	# ── Opt-in is editor state only: flipping it changed NO bytes (the sheet re-emits identically) ──
+	# ── The lock is editor state only: flipping it changed NO bytes (the sheet re-emits identically) ──
 	var output_opted: String = str(SheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
-	ok = _check("opting a verb in does NOT change the emitted bytes", output_opted == output_baseline, true) and ok
+	ok = _check("locking a function does NOT change the emitted bytes", output_opted == output_baseline, true) and ok
 
 	# ── Edit alpha's now-live body (delete its row through the undo funnel) - the per-function byte-break ──
 	var alpha_body: Resource = _first_body_resource(view, "alpha")
@@ -137,7 +136,7 @@ static func run() -> bool:
 		(loc.get("container") as Array).remove_at(int(loc.get("index")))
 		return true
 	)
-	ok = _check("the funnel edited alpha's opted-in body", edited, true) and ok
+	ok = _check("the funnel edited alpha's body", edited, true) and ok
 	var output_after: String = str(SheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
 	ok = _check("alpha's body changed (its line is gone)", output_after.contains("return 1"), false) and ok
 
@@ -166,6 +165,8 @@ static func run() -> bool:
 	# gamma is a lifted helper, and a read-only preview reads it where the file writes it - no bar
 	# gathers it away from the flat (visible) row list.
 	pview.set_sheet(preview)
+	# A locked function's body is inert, so the header is the only thing the delete can reach.
+	pview.toggle_function_body_lock("gamma")
 	var header_index: int = -1
 	var pflat: Array = pview.get_flat_rows()
 	for i in range(pflat.size()):
@@ -213,7 +214,7 @@ static func _body_live(view: EventSheetViewport, fn_name: String) -> bool:
 	return header.children[0].source_resource != null
 
 
-## The first body row's source_resource for a live (opted-in) verb, or null.
+## The first body row's source_resource for a live verb, or null.
 static func _first_body_resource(view: EventSheetViewport, fn_name: String) -> Resource:
 	var header: EventRowData = _define_row(view, fn_name)
 	if header == null or header.children.is_empty():

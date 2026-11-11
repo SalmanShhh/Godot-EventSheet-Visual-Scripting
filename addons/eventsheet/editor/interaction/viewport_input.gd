@@ -191,6 +191,16 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	if carrying and not _viewport._drag_motion.active and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0 \
 			and _viewport._drag_motion.moved_enough(local_position):
 		_viewport.lift_drag(local_position)
+		# Lifting something out of a locked function body is an edit gesture the lock refuses.
+		var lifted_from: Dictionary = _viewport._drag_press_hit
+		var lifted_row: EventRowData = _viewport._row_at(int(lifted_from.get("row_index", -1)))
+		var lifted_span: int = int(lifted_from.get("span_index", -1))
+		var lifted_meta: Dictionary = {}
+		if lifted_row != null and lifted_span >= 0 and lifted_span < lifted_row.spans.size():
+			lifted_meta = lifted_row.spans[lifted_span].metadata as Dictionary
+		var locked_source: String = _viewport.locked_function_for_row(lifted_row, lifted_meta)
+		if not locked_source.is_empty():
+			_viewport.locked_body_gesture.emit(locked_source)
 	var target_position: Vector2 = local_position
 	if carrying and _viewport._drag_motion.active:
 		_viewport._drag_motion.pointer_moved(local_position)
@@ -523,6 +533,12 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				return
 			# In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
 			var double_click_meta: Dictionary = hit.get("span_metadata", {})
+			# A double-click in a locked function body edits nothing: the lock says why instead.
+			var locked_double: String = _viewport.locked_function_for_row(row_data, double_click_meta)
+			if not locked_double.is_empty():
+				_viewport.locked_body_gesture.emit(locked_double)
+				_viewport.accept_event()
+				return
 			if bool(double_click_meta.get("match_action", false)) and row_data != null and _viewport.ace_owner(row_data.source_resource) != null:
 				var match_target: Resource = _viewport._resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
 				if match_target is MatchRow:

@@ -2051,7 +2051,8 @@ Edit the whole function…,Modifica l'intera funzione…
 "The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","Il tipo di valore che questa funzione restituisce a chi lo chiede: un numero, del testo, un vero/falso, una posizione e così via. Scegli quello che corrisponde a ciò che la funzione calcola."
 "What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.","Come si chiama questo input. Diventa il nome del parametro nel GDScript generato e l'etichetta sulla riga della funzione, quindi le parole chiare battono le abbreviazioni."
 Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,Rimuove del tutto l'input dalla funzione. Tutto ciò che chiama già la funzione perde il valore che passava qui.
-Lock Function Body (read-only),Blocca corpo funzione (sola lettura)
+Lock this function,Blocca questa funzione
+Unlock this function,Sblocca questa funzione
 Hide this entry,Nascondi questa voce
 "Minor - new actions, nothing breaks","Minore - nuove azioni, niente si rompe"
 "Patch - fixes, no new actions","Patch - correzioni, nessuna nuova azione"
@@ -10139,9 +10140,12 @@ Value of the wrong kind,Valore del tipo sbagliato
 Every physics tick,Ogni tick di fisica
 every physics tick,ogni tick di fisica
 no starting value,nessun valore iniziale
-This function's body is read-only - right-click it and choose Make Function Body Editable,Il corpo di questa funzione è di sola lettura - clic destro e scegli Make Function Body Editable
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s è Array[%s] e %s è Array[%s], e un array tipizzato contiene solo il proprio tipo."
 different types,"tipi diversi"
 the two types differ,"i due tipi sono diversi"
 For each popped from the front of %s as %s,"Per ogni elemento estratto dalla testa di %s come %s"
 For each popped from the back of %s as %s,"Per ogni elemento estratto dalla coda di %s come %s"
+Edit it anyway,Modifica comunque
+%s is now editable.,%s ora è modificabile.
+%s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s è un comportamento incluso: aggiungere una versione più recente del pack sostituisce questo file e le tue modifiche.
+This function is locked - right-click it and choose Unlock this function,Questa funzione è bloccata - clic destro e scegli Sblocca questa funzione

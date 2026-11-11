@@ -62,8 +62,8 @@ static func _view_of(theme_path: String, editable: bool = true, read_only: bool 
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.size = Vector2(1200.0, 900.0)
 	view.set_sheet(sheet)
-	if editable:
-		view.toggle_function_body_editable("calc")
+	if not editable:
+		view.toggle_function_body_lock("calc")
 	return view
 
 

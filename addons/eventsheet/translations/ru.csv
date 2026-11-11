@@ -2051,7 +2051,8 @@ Edit the whole function…,Изменить всю функцию…
 "The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","Тип значения, которое эта функция возвращает спрашивающему - число, текст, да/нет, позиция и так далее. Выберите тот, что соответствует тому, что функция вычисляет."
 "What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.","Название этого входа. Оно становится именем параметра в сгенерированном GDScript и подписью в строке функции, поэтому понятные слова лучше сокращений."
 Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,"Полностью убирает вход из функции. Всё, что уже вызывает эту функцию, теряет передаваемое здесь значение."
-Lock Function Body (read-only),Заблокировать тело функции (только чтение)
+Lock this function,Заблокировать эту функцию
+Unlock this function,Разблокировать эту функцию
 Hide this entry,Скрыть эту запись
 "Minor - new actions, nothing breaks","Минорная - новые действия, ничего не ломается"
 "Patch - fixes, no new actions","Патч - исправления, без новых действий"
@@ -10139,9 +10140,12 @@ Value of the wrong kind,Значение не того вида
 Every physics tick,Каждый физический тик
 every physics tick,каждый физический тик
 no starting value,нет начального значения
-This function's body is read-only - right-click it and choose Make Function Body Editable,Тело этой функции доступно только для чтения - щелкните правой кнопкой и выберите Make Function Body Editable
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s - Array[%s], а %s - Array[%s]; типизированный массив хранит только свой тип."
 different types,"разные типы"
 the two types differ,"типы различаются"
 For each popped from the front of %s as %s,"Для каждого элемента, извлечённого из начала %s, как %s"
 For each popped from the back of %s as %s,"Для каждого элемента, извлечённого из конца %s, как %s"
+Edit it anyway,Всё равно изменить
+%s is now editable.,%s теперь можно редактировать.
+%s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s - встроенное поведение: добавление новой версии пака заменит этот файл и ваши правки.
+This function is locked - right-click it and choose Unlock this function,Эта функция заблокирована - щёлкните правой кнопкой и выберите Разблокировать эту функцию

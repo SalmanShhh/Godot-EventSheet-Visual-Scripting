@@ -633,6 +633,11 @@ func _delete_selected_rows() -> void:
 		return
 	var resources_to_delete: Array[Resource] = []
 	for row_data in selected_rows:
+		# Deleting inside a locked function body is an edit the lock refuses, and says why.
+		var locked_function: String = _dock._active_view().locked_function_for_row(row_data, {"kind": "action"})
+		if not locked_function.is_empty():
+			_dock._ace_apply._on_viewport_locked_body_gesture(locked_function)
+			return
 		var source_resource: Resource = row_data.source_resource if row_data != null else null
 		if source_resource == null:
 			continue

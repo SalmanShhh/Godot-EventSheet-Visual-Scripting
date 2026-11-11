@@ -4955,7 +4955,7 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 	# The way IN to a verb's body, mirroring a group's own footer. A freshly created verb has an empty
 	# body, so without this there is nowhere to put its first event - and since a "run only when" guard
 	# is just a condition on an event inside the verb, that first event is exactly what a guard needs.
-	if body_editable and _viewport.add_event_footer_wanted(not body_entries.is_empty()):
+	if body_editable and not _scaffolding_suppressed() and _viewport.add_event_footer_wanted(not body_entries.is_empty()):
 		row_data.children.append(_build_add_event_footer_row(
 			event_function, indent + 1,
 			"+ Add event to '%s'…" % event_function.function_name,
@@ -5068,18 +5068,20 @@ func _mark_verb_body(row_data: EventRowData, verb_kind: int = EventSheetSentence
 		_mark_verb_body(child, verb_kind, verb_function)
 
 
-## True when a published verb's body should render as LIVE, editable event rows. On an AUTHORED sheet (one
-## not backed by an opened .gd - external_source_path empty) every verb body is editable. On an OPENED
-## behaviour pack only a verb the user explicitly opted in (per function, via "Make Body Editable") is live;
-## the rest stay a pure read (rows inert) so their .gd round-trips byte-identically - the sibling guarantee.
-## A read-only preview, or a missing sheet reference, is always inert.
+## True when a published verb's body should render as LIVE, editable event rows. An authored sheet's
+## verb bodies are always editable. On an opened .gd a body is editable like any event unless the user
+## locked that function by hand, or the file is a shipped behaviour pack nobody unlocked (see
+## function_locks.gd). A .gd opened as a preview is the same: its first edit unlocks the preview, as
+## the first edit of any event does. Any other read-only view, or a missing sheet, is always inert.
 func _function_body_editable(event_function: EventFunction) -> bool:
 	var sheet: EventSheetResource = _viewport._sheet
-	if sheet == null or sheet.read_only:
+	if sheet == null:
+		return false
+	if sheet.read_only and not _viewport.function_locks_apply():
 		return false
 	if sheet.external_source_path.strip_edges().is_empty():
 		return true
-	return _viewport.is_function_body_editable_opt_in(event_function.function_name)
+	return _viewport.is_function_body_unlocked(event_function.function_name)
 
 
 ## The one extra fact the Is in X for over Ns cell carries: how long that row is waiting for, as a

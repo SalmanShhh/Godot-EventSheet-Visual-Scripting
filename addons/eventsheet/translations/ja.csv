@@ -2051,7 +2051,8 @@ Edit the whole function…,関数全体を編集…
 "The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.",この関数が呼び出し元に返す値の種類 - 数値、テキスト、真偽値、位置など。関数が実際に求めるものに合うものを選びます。
 "What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.",この入力の名前です。生成される GDScript ではパラメータ名になり、関数の行ではラベルになります。略語より分かりやすい言葉を。
 Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,この入力を関数から完全に削除します。すでにこの関数を呼んでいるものは、ここに渡していた値を失います。
-Lock Function Body (read-only),関数本体をロック (読み取り専用)
+Lock this function,この関数をロック
+Unlock this function,この関数のロックを解除
 Hide this entry,この項目を隠す
 "Minor - new actions, nothing breaks",マイナー - 新しいアクション、破壊的変更なし
 "Patch - fixes, no new actions",パッチ - 修正のみ、新しいアクションなし
@@ -10139,9 +10140,12 @@ Value of the wrong kind,種類の違う値
 Every physics tick,毎物理ティック
 every physics tick,毎物理ティック
 no starting value,初期値なし
-This function's body is read-only - right-click it and choose Make Function Body Editable,この関数の本体は読み取り専用です - 右クリックして Make Function Body Editable を選んでください
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s は Array[%s]、%s は Array[%s] で、型付き配列は自分の型しか持てません。"
 different types,"型が違います"
 the two types differ,"2つの型が異なります"
 For each popped from the front of %s as %s,"%s の先頭から取り出した各要素を %s として"
 For each popped from the back of %s as %s,"%s の末尾から取り出した各要素を %s として"
+Edit it anyway,それでも編集する
+%s is now editable.,%s を編集できるようになりました。
+%s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s は同梱のビヘイビアです。パックの新しいバージョンを追加すると、このファイルと編集内容が置き換えられます。
+This function is locked - right-click it and choose Unlock this function,この関数はロックされています - 右クリックして「この関数のロックを解除」を選んでください

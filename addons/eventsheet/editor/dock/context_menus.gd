@@ -462,14 +462,14 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			_dock.ROW_MENU_MAKE_MESSAGE)
 		if verb_function.tool_button_label.strip_edges().is_empty():
 			menu.add_item(EventSheetL10n.translate("Add An Inspector Button For It…"), _dock.ROW_MENU_ADD_TOOL_BUTTON)
-		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
-		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and
-		# a read-only preview edits nothing, so the toggle only appears for an editable opened pack.
+		# A function in an opened script edits like any event. Anyone who wants one read-only can lock it
+		# here (a shipped pack's functions start locked and unlock the same way). Authored sheets have no
+		# lock, and a read-only preview edits nothing, so the item only appears for an editable opened file.
 		var verb_sheet: EventSheetResource = _dock._current_sheet
-		if verb_sheet != null and not verb_sheet.read_only and not verb_sheet.external_source_path.strip_edges().is_empty():
+		if verb_sheet != null and _dock._active_view().function_locks_apply():
 			var verb_name: String = verb_function.function_name
-			var already_editable: bool = _dock._active_view().is_function_body_editable_opt_in(verb_name)
-			menu.add_item("Lock Function Body (read-only)" if already_editable else "Make Function Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
+			var unlocked: bool = _dock._active_view().is_function_body_unlocked(verb_name)
+			menu.add_item("Lock this function" if unlocked else "Unlock this function", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
 	elif data_class_raw != null:
 		# A lifting data-class holder row, or one of its FIELD rows: field authoring
 		# follows the add/remove-action gesture (one resolver decides for menu + handlers).

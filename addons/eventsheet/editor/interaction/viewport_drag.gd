@@ -241,6 +241,7 @@ func clear_ace_drag() -> void:
 
 
 func clear_drag_feedback() -> void:
+	_viewport._drag_locked_function = ""
 	_viewport._drag_feedback_text = ""
 	_viewport._drag_feedback_is_error = false
 	_viewport.tooltip_text = ""
@@ -282,7 +283,8 @@ func update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 	_viewport._drag_ace_target_lane = lane
 	if read_only_body:
 		_viewport._drag_ace_drop_valid = false
-		_viewport._drag_feedback_text = EventSheetL10n.translate("This function's body is read-only - right-click it and choose Make Function Body Editable")
+		_viewport._drag_locked_function = (row_data.source_resource as EventFunction).function_name
+		_viewport._drag_feedback_text = _viewport.locked_body_message(_viewport._drag_locked_function)
 		_viewport._drag_feedback_is_error = true
 		if not _viewport._drag_motion.active:
 			_viewport.tooltip_text = _viewport._drag_feedback_text
@@ -322,7 +324,9 @@ func complete_ace_drag() -> bool:
 	if _viewport._drag_ace_target_row_index < 0:
 		return true
 	if not _viewport._drag_ace_drop_valid:
-		if not _viewport._drag_feedback_text.is_empty():
+		if not _viewport._drag_locked_function.is_empty():
+			_viewport.locked_body_gesture.emit(_viewport._drag_locked_function)
+		elif not _viewport._drag_feedback_text.is_empty():
 			_viewport.drag_status_requested.emit(_viewport._drag_feedback_text, true)
 		return true
 	var target_row: EventRowData = _viewport._row_at(_viewport._drag_ace_target_row_index)
