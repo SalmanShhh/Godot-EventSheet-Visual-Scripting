@@ -10140,3 +10140,8 @@ Every physics tick,Chaque tick de physique
 every physics tick,chaque tick de physique
 no starting value,aucune valeur de départ
 This function's body is read-only - right-click it and choose Make Function Body Editable,Le corps de cette fonction est en lecture seule - clic droit puis choisir Make Function Body Editable
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s est Array[%s] et %s est Array[%s], et un tableau typé ne contient que son propre type."
+different types,"types différents"
+the two types differ,"les deux types diffèrent"
+For each popped from the front of %s as %s,"Pour chaque élément retiré du début de %s comme %s"
+For each popped from the back of %s as %s,"Pour chaque élément retiré de la fin de %s comme %s"

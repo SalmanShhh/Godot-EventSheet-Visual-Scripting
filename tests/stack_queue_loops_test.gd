@@ -39,6 +39,7 @@ static func _test_keeping_the_last() -> bool:
 	for case: Array in [
 		["an if for the while", "\tjobs.append(5)\n\tif jobs.size() > 20:\n\t\tjobs.pop_front()\n"],
 		["remove_at(0) for pop_front", "\tjobs.append(5)\n\twhile jobs.size() > 20:\n\t\tjobs.remove_at(0)\n"],
+		["a trim by a longer test", "\tjobs.append(5)\n\twhile jobs.size() > 2 and float(jobs[0]) < 3.0:\n\t\tjobs.pop_front()\n"],
 	]:
 		var kept: Dictionary = ROWS.reopened(str(case[1]))
 		ok = SUPPORT.check(NAME, "%s stays the rows it is" % case[0], kept["ids"].has("ArrayAppendKeeping"), false) and ok

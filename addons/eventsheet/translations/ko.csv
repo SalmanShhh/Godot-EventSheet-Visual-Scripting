@@ -10140,3 +10140,8 @@ Every physics tick,매 물리 틱
 every physics tick,매 물리 틱
 no starting value,시작 값 없음
 This function's body is read-only - right-click it and choose Make Function Body Editable,이 함수의 본문은 읽기 전용입니다 - 오른쪽 클릭 후 Make Function Body Editable 선택
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s은(는) Array[%s]이고 %s은(는) Array[%s]이며, 형식이 지정된 배열은 자신의 형식만 담습니다."
+different types,"형식이 다릅니다"
+the two types differ,"두 형식이 다릅니다"
+For each popped from the front of %s as %s,"%s의 앞에서 꺼낸 각 항목을 %s(으)로"
+For each popped from the back of %s as %s,"%s의 뒤에서 꺼낸 각 항목을 %s(으)로"

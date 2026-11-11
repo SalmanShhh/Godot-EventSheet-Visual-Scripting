@@ -10140,3 +10140,8 @@ Every physics tick,Каждый физический тик
 every physics tick,каждый физический тик
 no starting value,нет начального значения
 This function's body is read-only - right-click it and choose Make Function Body Editable,Тело этой функции доступно только для чтения - щелкните правой кнопкой и выберите Make Function Body Editable
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s — Array[%s], а %s — Array[%s]; типизированный массив хранит только свой тип."
+different types,"разные типы"
+the two types differ,"типы различаются"
+For each popped from the front of %s as %s,"Для каждого элемента, извлечённого из начала %s, как %s"
+For each popped from the back of %s as %s,"Для каждого элемента, извлечённого из конца %s, как %s"

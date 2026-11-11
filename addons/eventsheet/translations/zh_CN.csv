@@ -10140,3 +10140,8 @@ Every physics tick,每个物理 tick
 every physics tick,每个物理 tick
 no starting value,无初始值
 This function's body is read-only - right-click it and choose Make Function Body Editable,此函数的主体是只读的 - 右键单击并选择 Make Function Body Editable
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s 是 Array[%s]，%s 是 Array[%s]，类型化数组只能保存自己的类型。"
+different types,"类型不同"
+the two types differ,"两种类型不同"
+For each popped from the front of %s as %s,"对从 %s 前端取出的每一项，命名为 %s"
+For each popped from the back of %s as %s,"对从 %s 末端取出的每一项，命名为 %s"

@@ -10140,3 +10140,8 @@ Every physics tick,毎物理ティック
 every physics tick,毎物理ティック
 no starting value,初期値なし
 This function's body is read-only - right-click it and choose Make Function Body Editable,この関数の本体は読み取り専用です - 右クリックして Make Function Body Editable を選んでください
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s は Array[%s]、%s は Array[%s] で、型付き配列は自分の型しか持てません。"
+different types,"型が違います"
+the two types differ,"2つの型が異なります"
+For each popped from the front of %s as %s,"%s の先頭から取り出した各要素を %s として"
+For each popped from the back of %s as %s,"%s の末尾から取り出した各要素を %s として"

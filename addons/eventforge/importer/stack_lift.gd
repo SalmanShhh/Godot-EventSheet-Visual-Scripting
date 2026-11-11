@@ -90,6 +90,17 @@ static func typed_template(template: String, type: String) -> String:
 	return "var {name}: %s = %s" % [clean, template.substr("var {name} = ".length())]
 
 
+## Whether the trim's limit is a COUNT (a number, a variable, a call, arithmetic) and not a longer test: a
+## `while history.size() > 2 and <something else>:` trims by a rule the row cannot say, so it stays the
+## While it is.
+static func keeps_a_count(captures: Dictionary) -> bool:
+	var limit: String = str(captures.get("keep", ""))
+	for word: String in [" and ", " or ", " not ", "<", ">", "==", "!="]:
+		if limit.contains(word):
+			return false
+	return true
+
+
 ## The three runs, as lift-table entries.
 static func lift_entries() -> Array[Dictionary]:
 	if _entries.is_empty():
@@ -147,6 +158,7 @@ static func _keep_last_entry() -> Dictionary:
 			{"pattern": "^while (?<var_name>" + LIST + ")\\.size\\(\\) > (?<keep>.+):$"},
 			{"pattern": "^(?<var_name>" + LIST + ")\\.pop_front\\(\\)$", "indent": 1}
 		],
+		"guard": Callable(EventForgeStackLift, "keeps_a_count"),
 		"params": ["var_name", "value", "keep"],
 		"shape": "{var_name}.append({value})\nwhile {var_name}.size() > {keep}:\n\t{var_name}.pop_front()",
 		"slots": {"var_name": "trail", "value": "global_position", "keep": "20"}
