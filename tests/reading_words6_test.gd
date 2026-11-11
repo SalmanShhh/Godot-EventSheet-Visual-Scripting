@@ -100,16 +100,16 @@ func reset() -> void:
 ## Every reading the opened file must contain, one per shape this batch claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# The List / Dictionary / Text modules' own words
-	"System ▸ Push back 1 to items",
-	"System ▸ Push front 2 to items",
+	"items ▸ Push back 1 to items",
+	"items ▸ Push front 2 to items",
 	"System ▸ Pop back of items",
-	"System ▸ Insert 3 at 2 in items",
-	"System ▸ Delete at 0 in items",
+	"items ▸ Insert 3 at 2 in items",
+	"items ▸ Delete at 0 in items",
 	"System ▸ Delete value 3 from items",
 	"System ▸ Clear items",
-	"System ▸ Sort items",
-	"System ▸ Shuffle items",
-	"System ▸ Reverse items",
+	"items ▸ Sort items",
+	"items ▸ Shuffle items",
+	"items ▸ Reverse items",
 	"System ▸ Delete key \"potion\" from inventory",
 	"System ▸ Append \"!\" to label",
 	# The deferred family says the delay out loud

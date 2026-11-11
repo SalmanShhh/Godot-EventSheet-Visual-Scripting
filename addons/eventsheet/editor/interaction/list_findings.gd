@@ -49,7 +49,7 @@ static func node_lists(sheet: EventSheetResource) -> Dictionary:
 		if entry is LocalVariable:
 			names.append((entry as LocalVariable).name)
 	for list_name: String in names:
-		var element: String = EventSheetArrayTypes.list_element_type(sheet, list_name)
+		var element: String = EventSheetPickScope.own_list_element(sheet, list_name)
 		if not element.is_empty() and is_node_class(element):
 			lists[list_name] = element
 	return lists
@@ -181,7 +181,7 @@ static func _list_of_type(sheet: EventSheetResource, type_name: String) -> Strin
 	if type_name.is_empty():
 		return ""
 	for list_name: Variant in sheet.variables.keys():
-		if EventSheetArrayTypes.list_element_type(sheet, str(list_name)) == type_name:
+		if EventSheetPickScope.own_list_element(sheet, str(list_name)) == type_name:
 			return str(list_name)
 	return ""
 

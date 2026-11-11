@@ -17,6 +17,21 @@ const FIX_PICK_FROM_GROUP := "pick_from_a_group"
 const FIX_PICK_FROM_LIST := "pick_from_a_list"
 
 
+## The element type of one of the SHEET's own typed lists ("Node2D" for `Array[Node2D]`), or "". Read here
+## rather than through the array-type helper so a first open of a sheet never loads the scene readers.
+static func own_list_element(sheet: EventSheetResource, list_name: String) -> String:
+	var declared: String = ""
+	if sheet.variables.has(list_name):
+		declared = str((sheet.variables[list_name] as Dictionary).get("type", "")).strip_edges()
+	else:
+		for entry: Variant in sheet.events:
+			if entry is LocalVariable and (entry as LocalVariable).name == list_name:
+				declared = str((entry as LocalVariable).type_name).strip_edges()
+	if declared.begins_with("Array[") and declared.ends_with("]"):
+		return declared.substr(6, declared.length() - 7).strip_edges()
+	return ""
+
+
 ## The picks one event makes by itself: [{"name", "type"}]. A For each names its item and takes the
 ## element type of the list it walks; a pop row names the item it took; a typed local names itself.
 static func own_picks(sheet: EventSheetResource, event_row: EventRow) -> Array[Dictionary]:
@@ -32,14 +47,14 @@ static func own_picks(sheet: EventSheetResource, event_row: EventRow) -> Array[D
 			continue
 		var type_name: String = pick.iterator_type.strip_edges()
 		if type_name.is_empty() and pick.collection_kind in [PickFilter.CollectionKind.ARRAY, PickFilter.CollectionKind.EXPRESSION]:
-			type_name = EventSheetArrayTypes.list_element_type(sheet, pick.collection_value.strip_edges())
+			type_name = own_list_element(sheet, pick.collection_value.strip_edges())
 		picks.append({"name": item, "type": type_name})
 	for entry: Variant in event_row.actions:
 		var action: ACEAction = entry as ACEAction
 		if action != null and POP_ACE_IDS.has(action.ace_id):
 			var taken: String = str(action.params.get("name", "")).strip_edges()
 			if taken.is_valid_identifier():
-				picks.append({"name": taken, "type": EventSheetArrayTypes.list_element_type(sheet, str(action.params.get("var_name", "")))})
+				picks.append({"name": taken, "type": own_list_element(sheet, str(action.params.get("var_name", "")))})
 	for entry: Variant in event_row.local_variables:
 		var local: LocalVariable = entry as LocalVariable
 		if local != null and not local.name.strip_edges().is_empty() and local.type_name != "Variant":
