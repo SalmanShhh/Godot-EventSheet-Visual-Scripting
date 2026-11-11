@@ -14,10 +14,21 @@ enum CollectionKind {
 	CUSTOM,
 	REPEAT,  # collection_value = count expression -> for i in range(n)
 	WHILE,   # collection_value = condition expression -> while expr
+	# collection_value = the list; iterator_name = the local each item arrives in. The loop takes each
+	# item off the front (or back) of the list as it uses it, so the list is empty when the loop ends and
+	# an item pushed while it runs is handled too:
+	#     while not <list>.is_empty():
+	#         var <name> = <list>.pop_front()
+	DRAIN_FRONT,
+	DRAIN_BACK,
 }
 
 @export var enabled: bool = true
 @export var iterator_name: String = "item"
+## The type the loop's local is declared with ("Vector2i"), for the drain loops over a typed array:
+## `var scene: PackedScene = queue.pop_front()`. "" (the default) declares it untyped, so every other
+## loop's output is byte-unchanged.
+@export var iterator_type: String = ""
 @export var collection_kind: CollectionKind = CollectionKind.EXPRESSION
 @export var collection_value: String = ""
 @export var source_expression: String = "" # Backwards-compatible alias.

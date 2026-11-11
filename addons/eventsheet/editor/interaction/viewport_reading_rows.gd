@@ -2332,6 +2332,11 @@ static func distance_target(expression: String) -> String:
 	return argument.strip_edges()
 
 
+## Whether a loop kind is one of the two drain loops (For each popped from the front / back).
+static func is_drain_kind(kind: int) -> bool:
+	return kind == PickFilter.CollectionKind.DRAIN_FRONT or kind == PickFilter.CollectionKind.DRAIN_BACK
+
+
 ## The event-sheet words for a loop row, and the object it belongs to.
 ##
 ## Returns {"text", "object"} - `object` empty for the System loops, and the host for a loop over
@@ -2348,11 +2353,18 @@ static func loop_words(kind: int, iterator_name: String, collection: String,
 	var source: String = collection.strip_edges()
 	# Asked before anything else, because a ring loop IS a plain count however the loop was
 	# lifted - what tells a ring from a count is only ever the body under it.
-	if kind != PickFilter.CollectionKind.WHILE and kind != PickFilter.CollectionKind.CHILDREN:
+	if kind != PickFilter.CollectionKind.WHILE and kind != PickFilter.CollectionKind.CHILDREN \
+			and not is_drain_kind(kind):
 		var ring: Dictionary = ring_loop_words(iterator, source, body)
 		if not ring.is_empty():
 			return ring
 	match kind:
+		# A drain loop reads the way the row that made it does: it takes each item off one end of the
+		# list as it uses it, so the event runs once per item and the list is empty when it ends.
+		PickFilter.CollectionKind.DRAIN_FRONT:
+			return {"text": EventSheetL10n.translate("For each popped from the front of %s as %s") % [source, iterator], "object": ""}
+		PickFilter.CollectionKind.DRAIN_BACK:
+			return {"text": EventSheetL10n.translate("For each popped from the back of %s as %s") % [source, iterator], "object": ""}
 		PickFilter.CollectionKind.REPEAT:
 			var bounds: PackedStringArray = EventSheetSentence.split_top_level(source, ", ")
 			# The two loop shapes the reading above leaves over: counting DOWN, and counting in steps. Both are

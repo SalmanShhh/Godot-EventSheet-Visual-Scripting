@@ -50,6 +50,9 @@ var rich_when_value: String = ""
 ## fluent `.looping("line")`.
 var is_looping: bool = false
 var looping_iterator: String = "item"
+## "front" or "back" for a DRAIN loop (set via `.draining("front")`): the loop takes each item off that
+## end of the list as it uses it, rather than walking a copy. "" for every other looping condition.
+var looping_drain: String = ""
 @export var nodeType: String = "" # event-sheet-style alias for node_type.
 @export var params: Array[ACEParam] = []
 @export var signal_name: String = ""
@@ -248,6 +251,16 @@ func rich_text_when(param_id: String, value: String) -> ACEDescriptor:
 func looping(iterator_name: String = "item") -> ACEDescriptor:
 	is_looping = true
 	looping_iterator = iterator_name if iterator_name.is_valid_identifier() else "item"
+	return self
+
+
+## Makes this looping condition a DRAIN loop: `end` is "front" or "back", the end of the list each item is
+## taken from. The row's `var_name` field is the list and its `name` field the local each item arrives
+## in; applying it lands a drain pick filter (see PickFilter.CollectionKind.DRAIN_FRONT) instead of a
+## walk over a collection expression.
+func draining(end: String) -> ACEDescriptor:
+	is_looping = true
+	looping_drain = end if end in ["front", "back"] else "front"
 	return self
 
 

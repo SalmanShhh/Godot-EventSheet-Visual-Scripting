@@ -3586,9 +3586,14 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			var lifted_pick: PickFilter = _loop_pick_filter(rest, is_while)
 			lifted_pick.index_name = loop_index_lift
 			loop_event.pick_filters.append(lifted_pick)
+			var loop_body_start: int = index + (2 if not loop_index_lift.is_empty() else 1)
+			# A drain loop: `while not L.is_empty():` whose first statement takes from that same list. The
+			# take is the loop's own and regenerates from the row, so the body starts past it.
+			if is_while and loop_body_start < lines.size() and _lift_drain_loop(lifted_pick, lines[loop_body_start], depth + 1):
+				loop_body_start += 1
 			# The loop body IS a loop context: break/continue in it (or in an `if` nested in it) lift.
 			# A lifted loop index skips its bump line - it regenerates from index_name on emit.
-			var loop_inner: Dictionary = _parse_body(lines, index + (2 if not loop_index_lift.is_empty() else 1), depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true, scope_trigger)
+			var loop_inner: Dictionary = _parse_body(lines, loop_body_start, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true, scope_trigger)
 			var loop_ok: bool = bool(loop_inner.get("ok", false)) and _adopt_block_body(loop_event, loop_inner.get("rows", []))
 			if not loop_ok:
 				if not lenient_ifs:
@@ -4419,6 +4424,36 @@ static func _loop_pick_filter(rest: String, is_while: bool) -> PickFilter:
 		pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
 		pick.collection_value = collection
 	return pick
+
+
+## Turns a lifted `while not L.is_empty():` into a DRAIN loop when its body's first statement takes from
+## that same list: `var name = L.pop_front()` (or pop_back), typed or not. `take_line` is that statement
+## with its indentation still on, and `body_depth` the tabs it must carry - a line deeper or shallower is
+## not the loop's first statement. Returns true when the loop was claimed; the pick is changed only then.
+static func _lift_drain_loop(pick: PickFilter, take_line: String, body_depth: int) -> bool:
+	if pick.collection_kind != PickFilter.CollectionKind.WHILE:
+		return false
+	if _drain_header_probe == null:
+		_drain_header_probe = RegEx.create_from_string("^not (?<list>" + EventForgeStackLift.LIST + ")\\.is_empty\\(\\)$")
+		_drain_take_probe = RegEx.create_from_string("^var (?<name>[A-Za-z_][A-Za-z0-9_]*)(?:: (?<type>[A-Za-z_][A-Za-z0-9_.]*(?:\\[[^\\]]*\\])?))? = (?<list>" \
+			+ EventForgeStackLift.LIST + ")\\.(?<end>pop_front|pop_back)\\(\\)$")
+	var header: RegExMatch = _drain_header_probe.search(pick.collection_value)
+	var prefix: String = "\t".repeat(body_depth)
+	if header == null or not take_line.begins_with(prefix) or take_line.substr(prefix.length()).begins_with("\t"):
+		return false
+	var take: RegExMatch = _drain_take_probe.search(take_line.substr(prefix.length()))
+	if take == null or take.get_string("list") != header.get_string("list"):
+		return false
+	pick.collection_kind = PickFilter.CollectionKind.DRAIN_FRONT if take.get_string("end") == "pop_front" \
+		else PickFilter.CollectionKind.DRAIN_BACK
+	pick.collection_value = header.get_string("list")
+	pick.iterator_name = take.get_string("name")
+	pick.iterator_type = take.get_string("type")
+	return true
+
+
+static var _drain_header_probe: RegEx = null
+static var _drain_take_probe: RegEx = null
 
 
 ## True only when EXPR is exactly a `range(...)` call whose opening paren closes at the final
@@ -5397,6 +5432,9 @@ const ENTRY_PARAM_GUARDS: Dictionary = {
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	"AudioSetHearingDistance", "AudioSetFalloff",
+	# The two drain loops are read as LOOPS (a `while` whose first statement takes from the list), never
+	# as a term of an `if`: their template is the loop's guard, written for reading only.
+	"ForEachPoppedFromFront", "ForEachPoppedFromBack",
 	# The two mission-clock rows whose templates are a plain Set and a plain Add. Their VALUE is
 	# the minutes:seconds field the picker offers, not a new spelling - so admitting them to the
 	# reverse index would have them claim every assignment and every increment in every project, and

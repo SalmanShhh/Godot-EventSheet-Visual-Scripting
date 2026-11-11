@@ -16885,7 +16885,8 @@ func _picking_words(loop: EventRow) -> Dictionary:
 		return {}
 	# Repeat and While are counts and tests, not collections of instances - an event sheet spells those
 	# with its own loop rows and never as picking.
-	if pick.collection_kind == PickFilter.CollectionKind.REPEAT or pick.collection_kind == PickFilter.CollectionKind.WHILE:
+	if pick.collection_kind == PickFilter.CollectionKind.REPEAT or pick.collection_kind == PickFilter.CollectionKind.WHILE \
+			or EventSheetViewportReadingRows.is_drain_kind(pick.collection_kind):
 		return {}
 	var collection: String = pick.collection_value.strip_edges()
 	if collection.is_empty():
@@ -17912,6 +17913,9 @@ func _format_pick_filter(pick: PickFilter) -> String:
 	if iterator.is_empty():
 		iterator = "item"
 	var collection: String = _pick_collection_words(pick)
+	# A drain loop says what it does: each item comes off one end of the list as it is used.
+	if EventSheetViewportReadingRows.is_drain_kind(pick.collection_kind):
+		return str(EventSheetViewportReadingRows.loop_words(pick.collection_kind, iterator, collection).get("text", ""))
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A loop over what an area is touching is the sheet's own "For each ... overlapping ..." row -
 	# the same words the Is overlapping condition beside it uses, rather than the engine call that

@@ -3343,7 +3343,8 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		# the budget/count break and the pass-restart sit at the TOP of the loop (the body is emitted by the
 		# caller, so there is no after-body hook). Not yet combined with While/Repeat/order-by/pick-first-N.
 		var is_budgeted: bool = pick.frame_spread_count > 0 or pick.frame_spread_budget_ms > 0.0
-		if is_budgeted and (pick.collection_kind == PickFilter.CollectionKind.WHILE or pick.collection_kind == PickFilter.CollectionKind.REPEAT or not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n > 0):
+		var is_drain: bool = pick.collection_kind == PickFilter.CollectionKind.DRAIN_FRONT or pick.collection_kind == PickFilter.CollectionKind.DRAIN_BACK
+		if is_budgeted and (pick.collection_kind == PickFilter.CollectionKind.WHILE or is_drain or pick.collection_kind == PickFilter.CollectionKind.REPEAT or not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n > 0):
 			warnings.append("Frame-spreading ignored on this loop: not yet supported with While/Repeat, order-by, or pick-first-N - emitting a normal loop.")
 			is_budgeted = false
 		if is_budgeted and not pick.index_name.strip_edges().is_empty():
@@ -3391,6 +3392,11 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			if pick.collection_kind == PickFilter.CollectionKind.WHILE:
 				# While loops reuse the picking pipeline (predicate/first-N still apply).
 				lines.append("%swhile %s:" % [indent, collection])
+			elif is_drain:
+				# A drain loop takes each item off the list as it uses it: the loop runs while the list has
+				# something in it, and its first statement is the take. Items pushed while it runs are handled
+				# too, and the list is empty when it ends.
+				lines.append("%swhile not %s.is_empty():" % [indent, collection])
 			else:
 				# Ordered picking (pick nearest/furthest): sort a copy by the order
 				# expression (written in terms of the iterator) before looping.
@@ -3408,6 +3414,10 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			indent = "\t".repeat(body_depth)
 			if not loop_index_name.is_empty():
 				lines.append("%s%s += 1" % [indent, loop_index_name])
+			if is_drain:
+				var taken_type: String = pick.iterator_type.strip_edges()
+				lines.append("%svar %s%s = %s.%s()" % [indent, iterator, (": " + taken_type) if not taken_type.is_empty() else "",
+					collection, "pop_front" if pick.collection_kind == PickFilter.CollectionKind.DRAIN_FRONT else "pop_back"])
 			# Unpick-on-free (the async-events rule): when this event's body awaits, an item
 			# can be freed while the handler is suspended - guard every iteration so freed
 			# objects are skipped, exactly like the budgeted loop's validity check. One flat
@@ -3417,6 +3427,7 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			# all, so the guard there would name the default `item` that nothing declared and
 			# the emitted file would not parse; a `range()` repeat yields ints, never Objects.
 			var guards_iterator: bool = pick.collection_kind != PickFilter.CollectionKind.WHILE \
+				and not is_drain \
 				and pick.collection_kind != PickFilter.CollectionKind.REPEAT \
 				and iterator.is_valid_identifier()
 			if event_awaits and guards_iterator:

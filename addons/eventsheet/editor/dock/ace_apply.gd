@@ -828,8 +828,19 @@ func _is_looping_condition(definition: ACEDefinition) -> bool:
 ## emission, the pick lane UI, frame-spreading, round-trip lift) comes for free.
 func _create_pick_filter_from_definition(definition: ACEDefinition, params: Dictionary) -> PickFilter:
 	var pick: PickFilter = PickFilter.new()
+	var resolved: Dictionary = _resolve_definition_params(definition, params)
+	# A drain loop: the row's list field is the collection, its name field the local each item arrives
+	# in, and a typed array gives that local its element type (`var scene: PackedScene = queue.pop_front()`).
+	var drain: String = str(definition.metadata.get("looping_drain", ""))
+	if not drain.is_empty():
+		pick.collection_kind = PickFilter.CollectionKind.DRAIN_FRONT if drain == "front" else PickFilter.CollectionKind.DRAIN_BACK
+		pick.collection_value = str(resolved.get("var_name", "")).strip_edges()
+		var drained_name: String = str(resolved.get("name", "")).strip_edges()
+		pick.iterator_name = drained_name if drained_name.is_valid_identifier() else "item"
+		pick.iterator_type = EventSheetArrayTypes.list_element_type(_dock._current_sheet, pick.collection_value)
+		return pick
 	pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
-	pick.collection_value = build_looping_collection(definition, _resolve_definition_params(definition, params))
+	pick.collection_value = build_looping_collection(definition, resolved)
 	pick.iterator_name = str(definition.metadata.get("looping_iterator", "item"))
 	return pick
 

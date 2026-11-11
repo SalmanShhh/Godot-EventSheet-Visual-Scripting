@@ -79,6 +79,8 @@ func _ensure_pick_dialog() -> void:
 	_pick_kind_option.add_item("GDScript iterable") # → value verbatim (array, range(), …)
 	_pick_kind_option.add_item("Repeat N times")    # → for i in range(value)
 	_pick_kind_option.add_item("While (condition)") # → while value
+	_pick_kind_option.add_item("Pop from the front (queue)") # → while not list.is_empty(): var item = list.pop_front()
+	_pick_kind_option.add_item("Pop from the back (stack)")  # → while not list.is_empty(): var item = list.pop_back()
 	_pick_kind_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kind_row.add_child(_pick_kind_option)
 	loop_box.add_child(kind_row)
@@ -134,6 +136,10 @@ func _pick_kind_to_option(kind: int) -> int:
 			return 3
 		PickFilter.CollectionKind.WHILE:
 			return 4
+		PickFilter.CollectionKind.DRAIN_FRONT:
+			return 5
+		PickFilter.CollectionKind.DRAIN_BACK:
+			return 6
 		_:
 			return 2
 
@@ -148,6 +154,10 @@ func _pick_option_to_kind(option: int) -> int:
 			return PickFilter.CollectionKind.REPEAT
 		4:
 			return PickFilter.CollectionKind.WHILE
+		5:
+			return PickFilter.CollectionKind.DRAIN_FRONT
+		6:
+			return PickFilter.CollectionKind.DRAIN_BACK
 		_:
 			return PickFilter.CollectionKind.EXPRESSION
 

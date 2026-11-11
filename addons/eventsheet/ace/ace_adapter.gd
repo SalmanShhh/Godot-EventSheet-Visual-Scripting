@@ -50,7 +50,9 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		# already read for annotation-declared pack verbs - a builtin descriptor now reaches the same
 		# channel instead of needing its own.
 		"looping": descriptor.is_looping,
-		"looping_iterator": descriptor.looping_iterator
+		"looping_iterator": descriptor.looping_iterator,
+		# A drain loop ("front" / "back") takes each item off the list as it uses it.
+		"looping_drain": descriptor.looping_drain
 	}
 	return definition
 
