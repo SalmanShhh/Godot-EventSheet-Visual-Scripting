@@ -19,7 +19,80 @@ static func run() -> bool:
 	ok = _test_the_pop_rows() and ok
 	ok = _test_the_pop_rows_lift() and ok
 	ok = _test_the_picker_groups() and ok
+	ok = _test_the_fallback() and ok
 	return ok
+
+
+## A sheet holding one On Ready event with the given action, compiled. `template` bakes the template
+## onto the row the way the dock does at apply time; blank leaves the descriptor's own to be used.
+static func compiled(ace_id: String, params: Dictionary, template: String = "") -> String:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.variables = {
+		"undo_stack": {"type": "Array[Vector2i]", "default": [], "exported": false},
+		"redo_stack": {"type": "Array[Vector2i]", "default": [], "exported": false},
+		"jobs": {"type": "Array", "default": [], "exported": false}
+	}
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.codegen_template = template
+	action.params = params
+	event.actions.append(action)
+	sheet.events.append(event)
+	return SUPPORT.compile_output(sheet, "user://%s_compiled.gd" % NAME)
+
+
+static func _test_the_fallback() -> bool:
+	var ok: bool = true
+	# Blank: the plain pop (and the description says to guard it). Filled: safe on its own.
+	var plain: String = compiled("ArrayPopBackInto", {"var_name": "undo_stack", "name": "last", "fallback": ""})
+	ok = SUPPORT.check(NAME, "a blank If Empty writes the plain pop", plain.contains("\tvar last = undo_stack.pop_back()\n"), true) and ok
+	var safe: String = compiled("ArrayPopBackInto", {"var_name": "undo_stack", "name": "last", "fallback": "Vector2i(-1, -1)"})
+	ok = SUPPORT.check(NAME, "a filled If Empty carries its own fallback",
+		safe.contains("\tvar last = undo_stack.pop_back() if not undo_stack.is_empty() else Vector2i(-1, -1)\n"), true) and ok
+	var queue: String = compiled("ArrayPopFrontInto", {"var_name": "jobs", "name": "job", "fallback": "null"})
+	ok = SUPPORT.check(NAME, "the front pop takes the same field",
+		queue.contains("\tvar job = jobs.pop_front() if not jobs.is_empty() else null\n"), true) and ok
+	# A row saved before the field existed has no value for it and still writes the plain pop.
+	var old_row: String = compiled("ArrayPopBackInto", {"var_name": "undo_stack", "name": "last"})
+	ok = SUPPORT.check(NAME, "a row saved without the field writes the plain pop", old_row.contains("\tvar last = undo_stack.pop_back()\n"), true) and ok
+	# Both spellings open as the row, and save back as written.
+	var with_fallback: Dictionary = reopened("\tvar last = undo_stack.pop_back() if not undo_stack.is_empty() else Vector2i(-1, -1)\n\tprint(last)\n")
+	ok = SUPPORT.check(NAME, "a guarded one-line pop opens as Pop back into", with_fallback["ids"].has("ArrayPopBackInto"), true) and ok
+	ok = SUPPORT.check(NAME, "...with its fallback read", _first_param(with_fallback["sheet"], "fallback"), "Vector2i(-1, -1)") and ok
+	ok = SUPPORT.check(NAME, "...and saves back byte for byte", with_fallback["again"], with_fallback["source"]) and ok
+	# The pooled spawn keeps its own reading: a fallback that builds a scene is not claimed here.
+	var pooled: Dictionary = reopened("\tvar b = jobs.pop_back() if not jobs.is_empty() else load(\"res://x.tscn\").instantiate()\n\tprint(b)\n")
+	ok = SUPPORT.check(NAME, "a pop whose fallback builds a scene is left to its own reading", pooled["ids"].has("ArrayPopBackInto"), false) and ok
+	# The expression twins: Back and Front, or a fallback. The old rows are untouched.
+	ok = SUPPORT.check(NAME, "First Item is the row it always was", _descriptor("ArrayFront").codegen_template, "{var_name}.front()") and ok
+	ok = SUPPORT.check(NAME, "Last Item is the row it always was", _descriptor("ArrayBack").codegen_template, "{var_name}.back()") and ok
+	var front: String = ActionCodegen._apply_template(_descriptor("ArrayFrontOr").codegen_template, {"var_name": "jobs", "fallback": "null"})
+	ok = SUPPORT.check(NAME, "First Item (or a fallback) guards the read", front, "(jobs.front() if not jobs.is_empty() else null)") and ok
+	var back: String = ActionCodegen._apply_template(_descriptor("ArrayBackOr").codegen_template, {"var_name": "undo_stack", "fallback": "Vector2i.ZERO"})
+	ok = SUPPORT.check(NAME, "Last Item (or a fallback) guards the read", back, "(undo_stack.back() if not undo_stack.is_empty() else Vector2i.ZERO)") and ok
+	return ok
+
+
+## One value of the first pop or move row a sheet holds, or "" when there is none.
+static func _first_param(sheet: EventSheetResource, param_id: String) -> String:
+	var found: Array = []
+	_find_action(sheet.events, found)
+	return "" if found.is_empty() else str((found[0] as ACEAction).params.get(param_id, ""))
+
+
+static func _find_action(entries: Array, found: Array) -> void:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is ACEAction and str((action as ACEAction).ace_id).begins_with("Array"):
+					found.append(action)
+			_find_action((entry as EventRow).sub_events, found)
+		elif entry is EventGroup:
+			_find_action((entry as EventGroup).events, found)
 
 
 ## The ace ids of every action in a sheet's events, nested rows included.
@@ -53,7 +126,7 @@ static func _descriptor(ace_id: String) -> ACEDescriptor:
 
 static func _test_the_pop_rows() -> bool:
 	var ok: bool = true
-	for pair: Array in [["ArrayPopBackInto", "var {name} = {var_name}.pop_back()"], ["ArrayPopFrontInto", "var {name} = {var_name}.pop_front()"]]:
+	for pair: Array in [["ArrayPopBackInto", "var {name} = {var_name}.pop_back(){?fallback} if not {var_name}.is_empty() else {fallback}{/fallback}"], ["ArrayPopFrontInto", "var {name} = {var_name}.pop_front(){?fallback} if not {var_name}.is_empty() else {fallback}{/fallback}"]]:
 		var descriptor: ACEDescriptor = _descriptor(str(pair[0]))
 		ok = SUPPORT.check(NAME, "%s exists" % pair[0], descriptor != null, true) and ok
 		if descriptor == null:
@@ -85,9 +158,9 @@ static func _test_the_picker_groups() -> bool:
 	ok = SUPPORT.check(NAME, "two groups, Stack then Queue",
 		[str(shelves[0]["group"]), str(shelves[1]["group"])], ["Variables: Array: Stack", "Variables: Array: Queue"]) and ok
 	ok = SUPPORT.check(NAME, "a stack is push back, pop back into, back",
-		Array(shelves[0]["aces"]), ["ArrayAppend", "ArrayPopBackInto", "ArrayBack"]) and ok
+		Array(shelves[0]["aces"]), ["ArrayAppend", "ArrayPopBackInto", "ArrayBack", "ArrayBackOr"]) and ok
 	ok = SUPPORT.check(NAME, "a queue is push back, pop front into, front",
-		Array(shelves[1]["aces"]), ["ArrayAppend", "ArrayPopFrontInto", "ArrayFront"]) and ok
+		Array(shelves[1]["aces"]), ["ArrayAppend", "ArrayPopFrontInto", "ArrayFront", "ArrayFrontOr"]) and ok
 	ok = SUPPORT.check(NAME, "the Stack group says what a stack is",
 		EventSheetSectionInfo.description_for("Variables: Array: Stack"), "A stack pushes and pops at the back: last in, first out.") and ok
 	ok = SUPPORT.check(NAME, "the Queue group says what a queue is",

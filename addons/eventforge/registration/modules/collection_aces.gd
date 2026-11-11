@@ -24,8 +24,16 @@ const DOUBLE_READ_NOTE := "The value is read twice in the emitted line, so keep 
 
 ## What the two pop rows say about themselves. A stack and a queue name the same two verbs with a
 ## different end taken, so the help is written once and each row fills in its end.
-const POP_BACK_NOTE := "Takes the LAST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a stack (last in, first out). The array must have an item: Godot prints an error when it is empty, so guard this row with Array Is Empty, inverted."
-const POP_FRONT_NOTE := "Takes the FIRST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a queue (first in, first out). The array must have an item: Godot prints an error when it is empty, so guard this row with Array Is Empty, inverted."
+const POP_BACK_NOTE := "Takes the LAST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a stack (last in, first out). Popping an empty array prints an error in Godot and hands back nothing: fill If Empty to make this row safe on its own, or leave it blank and guard the row with Array Is Empty, inverted."
+const POP_FRONT_NOTE := "Takes the FIRST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a queue (first in, first out). Popping an empty array prints an error in Godot and hands back nothing: fill If Empty to make this row safe on its own, or leave it blank and guard the row with Array Is Empty, inverted."
+
+## The optional If Empty field the two pop rows and the Back / Front expressions share. Filled, the line
+## carries its own fallback (`... if not list.is_empty() else <fallback>`), so the row needs no guard;
+## blank, the segment drops and the line is the plain call, which is also what every row saved before
+## the field existed writes. The guard a blank one wants is the existing Array Is Empty, inverted.
+const POP_IF_EMPTY := "{?fallback} if not {var_name}.is_empty() else {fallback}{/fallback}"
+const POP_IF_EMPTY_READING := "{?fallback}, or [b]{fallback}[/b] if empty{/fallback}"
+const POP_IF_EMPTY_WORDS := "Optional. What the row gives when the array is empty. Left blank the row is a plain pop: guard it with Array Is Empty, inverted. Filled, the row is safe on its own."
 
 const PART_OPTIONS: Array = [
 	{"key": "\"x\"", "label": "X (left / right)"},
@@ -45,8 +53,8 @@ const STACK_GROUP: String = "Variables: Array: Stack"
 const QUEUE_GROUP: String = "Variables: Array: Queue"
 
 ## The rows each group lists, as [ace_id, ...]: Push back is the existing ArrayAppend row, listed in both.
-const STACK_GROUP_ACES: PackedStringArray = ["ArrayAppend", "ArrayPopBackInto", "ArrayBack"]
-const QUEUE_GROUP_ACES: PackedStringArray = ["ArrayAppend", "ArrayPopFrontInto", "ArrayFront"]
+const STACK_GROUP_ACES: PackedStringArray = ["ArrayAppend", "ArrayPopBackInto", "ArrayBack", "ArrayBackOr"]
+const QUEUE_GROUP_ACES: PackedStringArray = ["ArrayAppend", "ArrayPopFrontInto", "ArrayFront", "ArrayFrontOr"]
 
 
 static func section_descriptions() -> Dictionary:
@@ -376,8 +384,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.expr("GetCurrentAnimation", "Get Current Animation", "current_animation", "General Expressions", "current_animation", "Returns the name of the animation currently playing.", "AnimationPlayer"))
 
 	# ── More Array helpers (make list manipulation easy without dropping to code) ──
-	descriptors.append(F.expr("ArrayFront", "First Item", "{var_name}.front()", "Variables: Array", "{var_name}.front()", "Returns the first item in the array.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array"))
-	descriptors.append(F.expr("ArrayBack", "Last Item", "{var_name}.back()", "Variables: Array", "{var_name}.back()", "Returns the last item in the array.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array"))
+	descriptors.append(F.expr("ArrayFront", "First Item", "{var_name}.front()", "Variables: Array", "{var_name}.front()", "Returns the first item in the array (the front of a queue), without removing it. On an empty array Godot prints an error and gives nothing: guard the row with Array Is Empty, inverted, or use First Item (or a fallback).").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array"))
+	descriptors.append(F.expr("ArrayFrontOr", "First Item (or a fallback)", "({var_name}.front() if not {var_name}.is_empty() else {fallback})", "Variables: Array", "front of [i]{var_name}[/i], or {fallback} if empty", "The first item in the array without removing it, or your own fallback when the array is empty, so it never prints Godot's error on an empty list.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array").param("fallback", "null", "If Empty", "What this gives when the array is empty.", "expression"))
+	descriptors.append(F.expr("ArrayBack", "Last Item", "{var_name}.back()", "Variables: Array", "{var_name}.back()", "Returns the last item in the array (the top of a stack), without removing it. On an empty array Godot prints an error and gives nothing: guard the row with Array Is Empty, inverted, or use Last Item (or a fallback).").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array"))
+	descriptors.append(F.expr("ArrayBackOr", "Last Item (or a fallback)", "({var_name}.back() if not {var_name}.is_empty() else {fallback})", "Variables: Array", "back of [i]{var_name}[/i], or {fallback} if empty", "The last item in the array without removing it, or your own fallback when the array is empty, so it never prints Godot's error on an empty list.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array").param("fallback", "null", "If Empty", "What this gives when the array is empty.", "expression"))
 	descriptors.append(F.expr("ArrayFind", "Index Of", "{var_name}.find({value})", "Variables: Array", "{var_name}.find({value})", "Returns the position of a value in the array, or -1 if it's missing.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array").param("value", "0", "Value", "Value to find (-1 if missing).", "expression"))
 	descriptors.append(F.expr("ArrayCount", "Count Of", "{var_name}.count({value})", "Variables: Array", "{var_name}.count({value})", "Returns how many times a value appears in the array.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array").param("value", "0", "Value", "Value to count.", "expression"))
 	descriptors.append(F.act("ArrayReverse", "Reverse Array", "{var_name}.reverse()", "Variables: Array", "Reverse {var_name}", "Flips the array so its items run in the opposite order.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array"))
@@ -403,8 +413,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# silently eats items). A typed list (`Array[Vector2i]`) gives the local its element type, written
 	# into the BAKED template when the row is made on a sheet (EventForgeStackLift.typed_template); the
 	# canonical template here stays untyped, and a hand-written untyped pop keeps its spelling.
-	descriptors.append(F.act("ArrayPopBackInto", "Pop Back Into", "var {name} = {var_name}.pop_back()", "Variables: Array", "Pop back of [i]{var_name}[/i] into [b]{name}[/b]", POP_BACK_NOTE).param("var_name", "list", "Array", "The array to take the last item from.", "variable_reference:Array").param("name", "popped", "Name It", "The name the taken item is known by from here on. The rows below use it."))
-	descriptors.append(F.act("ArrayPopFrontInto", "Pop Front Into", "var {name} = {var_name}.pop_front()", "Variables: Array", "Pop front of [i]{var_name}[/i] into [b]{name}[/b]", POP_FRONT_NOTE).param("var_name", "list", "Array", "The array to take the first item from.", "variable_reference:Array").param("name", "popped", "Name It", "The name the taken item is known by from here on. The rows below use it."))
+	descriptors.append(F.act("ArrayPopBackInto", "Pop Back Into", "var {name} = {var_name}.pop_back()" + POP_IF_EMPTY, "Variables: Array", "Pop back of [i]{var_name}[/i] into [b]{name}[/b]" + POP_IF_EMPTY_READING, POP_BACK_NOTE).param("var_name", "list", "Array", "The array to take the last item from.", "variable_reference:Array").param("name", "popped", "Name It", "The name the taken item is known by from here on. The rows below use it.").param("fallback", "", "If Empty", POP_IF_EMPTY_WORDS, "expression"))
+	descriptors.append(F.act("ArrayPopFrontInto", "Pop Front Into", "var {name} = {var_name}.pop_front()" + POP_IF_EMPTY, "Variables: Array", "Pop front of [i]{var_name}[/i] into [b]{name}[/b]" + POP_IF_EMPTY_READING, POP_FRONT_NOTE).param("var_name", "list", "Array", "The array to take the first item from.", "variable_reference:Array").param("name", "popped", "Name It", "The name the taken item is known by from here on. The rows below use it.").param("fallback", "", "If Empty", POP_IF_EMPTY_WORDS, "expression"))
 
 	# ── More Dictionary helpers ──
 	descriptors.append(F.expr("DictDuplicate", "Copy Dictionary", "{var_name}.duplicate()", "Variables: Dictionary", "{var_name}.duplicate()", "Returns an independent copy of the dictionary.").param("var_name", "dict", "Dictionary", "Dictionary variable to copy.", "variable_reference:Dictionary"))
