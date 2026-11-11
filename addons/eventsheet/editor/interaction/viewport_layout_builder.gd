@@ -366,7 +366,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# The look that nests by lines gives a mark its own cell and no reserved slot.
 				if ViewportRowMetrics.strip_mark_advance(span, event_style) >= 0.0:
 					span_width = ViewportRowMetrics.STRIP_MARK_CELL - 2.0
-			elif str(metadata.get("kind", "")) in ["condition", "trigger"]:
+			elif str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
 				# Minus whatever the payload chips after this cell need: a trigger cell that took the
 				# whole lane left them drawn as a sliver against the divider.
 				var trailing: float = _viewport._row_metrics_helper.condition_trailing_width(
@@ -450,7 +450,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var wrap_line: int = int(metadata.get("line_index", 0))
 			if span_lane == "action" and str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)) and not bool(metadata.get("align_right", false)):
 				span_visual_lines = maxi(int(act_line_counts.get(wrap_line, 1)), 1)
-			elif span_lane != "action" and not bool(metadata.get("badge", false)) and str(metadata.get("kind", "")) in ["condition", "trigger"]:
+			elif span_lane != "action" and not bool(metadata.get("badge", false)) and str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
 				span_visual_lines = maxi(int(cond_line_counts.get(wrap_line, 1)), 1)
 		if span_visual_lines > 1:
 			metadata["comment_line_height"] = line_height

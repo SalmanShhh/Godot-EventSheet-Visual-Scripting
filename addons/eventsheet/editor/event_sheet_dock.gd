@@ -311,6 +311,12 @@ var _event_count_label: Label = null
 var _row_help_label: Label = null
 ## The shipped-pack notice: a wrapped line above the status strip with its one door (Edit it anyway).
 var _pack_notice: Control = null
+## A finding's sentence too long for the status bar's share of its width: said whole, wrapped, on a line of its own above the bar.
+var _help_sentence_panel: Control = null
+var _help_sentence_label: Label = null
+## The row whose finding the strip last spoke, so a resize can ask again whether the sentence still fits.
+var _row_help_row: EventRowData = null
+var _help_fitted_width: float = -1.0
 var _pack_notice_label: Label = null
 var _pack_notice_button: Button = null
 var _row_help_button: Button = null
@@ -7740,6 +7746,9 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	_row_help_finding = {}
 	if _pack_notice != null:
 		_pack_notice.visible = false
+	if _help_sentence_panel != null:
+		_help_sentence_panel.visible = false
+	_row_help_row = null
 	if _row_help_label == null or _row_help_button == null:
 		return
 	_row_help_label.visible = false
@@ -7773,9 +7782,9 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 		_row_help_label.tooltip_text = "%s\n\n%s" % [_row_help_label.text, pattern_line]
 	# The colour is read from the theme every time the strip is shown, not once when it was built: a
 	# theme reloaded mid-session would otherwise leave it wearing the old theme's warning colour.
-	_row_help_label.modulate = EventSheetActiveTheme.reading().error_text_color if row_data.attention_severe \
-		else EventSheetActiveTheme.chrome().object_bar_warning_color
-	_row_help_label.visible = true
+	_row_help_row = row_data
+	_say_finding_sentence(EventSheetActiveTheme.reading().error_text_color if row_data.attention_severe \
+		else EventSheetActiveTheme.chrome().object_bar_warning_color)
 	# The door is the FIRST finding's, because one row rarely has two and offering two buttons for
 	# one row would be a menu rather than a strip.
 	_row_help_finding = found[0]
@@ -7797,6 +7806,37 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	if _row_help_button_third != null:
 		_row_help_button_third.text = third
 		_row_help_button_third.visible = not third.is_empty()
+
+
+## Says the finding's sentence in the status bar's strip when it fits there, and otherwise whole, wrapped, on its own
+## line above the bar (plain hairline panel, the state colour on the text only), with the doors left in the bar. The
+## bar's width is only known once it is laid out, so a dock that has not been laid out keeps the sentence in the bar.
+func _say_finding_sentence(color: Color) -> void:
+	_row_help_label.modulate = color
+	_row_help_label.visible = true
+	if _help_sentence_panel == null or _help_sentence_label == null:
+		return
+	var strip: HBoxContainer = _row_help_label.get_parent() as HBoxContainer
+	_help_fitted_width = strip.size.x if strip != null else -1.0
+	if strip == null or strip.size.x <= 0.0:
+		return
+	var font: Font = _row_help_label.get_theme_font("font")
+	var needed: float = font.get_string_size(_row_help_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, _row_help_label.get_theme_font_size("font_size")).x
+	if _variable_gestures.sentence_room(strip, strip.size.x) >= needed:
+		return
+	_row_help_label.visible = false
+	_help_sentence_label.text = _row_help_label.text
+	_help_sentence_label.tooltip_text = _row_help_label.tooltip_text
+	_help_sentence_label.add_theme_color_override("font_color", color)
+	_help_sentence_panel.visible = true
+
+
+## The bar changed width: a sentence that fitted may not any more (and the other way round), so the strip speaks again.
+func _on_status_strip_resized() -> void:
+	var strip: Control = _row_help_label.get_parent() as Control if _row_help_label != null else null
+	if _row_help_row == null or strip == null or is_equal_approx(strip.size.x, _help_fitted_width):
+		return
+	_update_row_help_strip.call_deferred(_row_help_row)
 
 
 ## The muted half of the same strip: "newer spelling: Go to state", for a selected row whose verb has

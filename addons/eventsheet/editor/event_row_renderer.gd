@@ -115,6 +115,8 @@ static var _variable_card_boxes: Dictionary = {}
 # per-row alternative - a dynamic control.get() in the draw loop - is exactly the lookup
 # the rule above forbids.
 var show_event_numbers: bool = true
+## The ink of the event's number while the row has a finding (amber, red when severe); clear = the margin's own.
+var _gutter_attention_ink: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## Stamped the same way: the Event Trace hit-count lens (View > Row Hit Counts, ships OFF).
 ## While false NOTHING below is drawn and the gutter paints exactly as it always has.
 var show_hit_counts: bool = false
@@ -852,6 +854,9 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
 	var hit_uid: String = hit_chip_uid(show_hit_counts or show_costs, is_event_row, str(layout.get("event_uid", "")))
 	# A local on the sheet leaves the number column bare: it is one line of its event, not an event.
+	_gutter_attention_ink = Color(0.0, 0.0, 0.0, 0.0)
+	if is_event_row and not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
+		_gutter_attention_ink = reading_style.error_stripe_color if row_data.attention_severe else EventSheetActiveTheme.chrome().object_bar_warning_color
 	if not local_on_sheet:
 		_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style,
 			is_event_row and row_data.selected, gutter_band, first_line_height)
@@ -1073,20 +1078,18 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 		if row_data.row_type != EventRowData.RowType.EVENT and not in_run:
 			_draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
 	if row_data.attention_severe and not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
-		var severe_ring: Color = reading_style.error_stripe_color
-		control.draw_rect(row_fill_rect.grow(-1.0), Color(severe_ring.r, severe_ring.g, severe_ring.b, 0.5), false, 2.0)
+		# Red state: the wash and stripe above and the red number in the margin say it; no frame is drawn.
+		pass
 	elif not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
-		# The quiet amber state: a faint warning-colour tint over the row and a thin inset of the
-		# same colour just inside its edge, with NOTHING drawn inside the row - no note, no icon, no
+		# The quiet amber state: a faint warning-colour tint over the row and the event's number in the
+		# same colour, with no frame around the row and NOTHING drawn inside it - no note, no icon, no
 		# sentence. The words live in the Doctor's inbox and in the help strip under the selection.
 		# A row that only misbehaves must be findable at a glance without turning the sheet into a
 		# list of complaints. An error still wins: a line that cannot run is not merely something to
 		# look at. Drawn over the selection fill rather than under it, so selecting the row - the
-		# very gesture that makes the strip speak - does not wash the amber away. The inset is
-		# softened rather than full-strength for the same reason the tint is faint: quiet means quiet.
+		# very gesture that makes the strip speak - does not wash the amber away. Quiet means quiet: no outline.
 		var attention: Color = EventSheetActiveTheme.chrome().object_bar_warning_color
 		control.draw_rect(row_fill_rect, Color(attention.r, attention.g, attention.b, 0.10), true)
-		control.draw_rect(row_fill_rect.grow(-1.0), Color(attention.r, attention.g, attention.b, 0.45), false, 2.0)
 	# Hover feedback: individual conditions/actions highlight per-cell (drawn in _draw_spans).
 	# Whole-row hover is only for single-cell rows (group/comment/variable); on a multi-cell
 	# event it lights up the entire block and reads as "selected", which is confusing.
@@ -1224,6 +1227,8 @@ func _draw_gutter(control: CanvasItem, gutter_rect: Rect2, line_number: int, bre
 	# A selected event's margin filled, so the selection reads from the number. Clear leaves it.
 	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
 	var filled: bool = selected and event_style != null and event_style.selected_gutter_fill_color.a > 0.01
+	if _gutter_attention_ink.a > 0.01:
+		gutter_text = _gutter_attention_ink
 	if filled:
 		gutter_bg = event_style.selected_gutter_fill_color
 		# The number turns to the ink that reads on the fill (white on the design's blue).

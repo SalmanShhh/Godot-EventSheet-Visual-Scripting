@@ -248,11 +248,11 @@ func fit_strip(width: float = 0.0) -> void:
 	_fitted_width = width if width > 0.0 else strip.size.x
 	var need: float = label.get_theme_font("font").get_string_size(label.text.left(STRIP_SENTENCE_CHARS),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
-	if _sentence_room(strip, _fitted_width) >= need:
+	if sentence_room(strip, _fitted_width) >= need:
 		return
 	for count: Label in counts:
 		count.visible = false
-	if _sentence_room(strip, _fitted_width) >= need:
+	if sentence_room(strip, _fitted_width) >= need:
 		return
 	var popup: PopupMenu = _more_door.get_popup()
 	popup.clear()
@@ -265,7 +265,7 @@ func fit_strip(width: float = 0.0) -> void:
 
 ## The width the strip's sentence gets at `width`, the way the bar shares it out: what is left after
 ## every shown piece's own width and the gaps, split between the labels that stretch.
-static func _sentence_room(strip: HBoxContainer, width: float) -> float:
+static func sentence_room(strip: HBoxContainer, width: float) -> float:
 	var taken: float = 0.0
 	var ratios: float = 0.0
 	var shown: int = 0

@@ -399,7 +399,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 					cond_badge_x[line] = badge_start + strip_advance
 			else:
 				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
-				if str(metadata.get("kind", "")) in ["condition", "trigger"]:
+				if str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
 					var available_c: float = maxf(
 						max_condition_right - condition_trailing_width(row_data, line, font, font_size) - text_start,
 						_viewport.MIN_SPAN_WIDTH)

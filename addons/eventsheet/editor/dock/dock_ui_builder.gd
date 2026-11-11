@@ -416,6 +416,19 @@ func build_ui() -> void:
 	pack_notice_row.add_child(_dock._pack_notice_button)
 	_dock._pack_notice = pack_notice
 	root.add_child(pack_notice)
+	# A finding's sentence the status bar has no room for takes the same kind of line: whole, wrapped, plain hairline
+	# panel, the state colour on the text alone. The bar keeps the doors.
+	var help_sentence: PanelContainer = PanelContainer.new()
+	help_sentence.name = "EventSheetHelpSentence"
+	help_sentence.add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
+	help_sentence.visible = false
+	_dock._help_sentence_label = Label.new()
+	_dock._help_sentence_label.name = "EventSheetHelpSentenceText"
+	_dock._help_sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dock._help_sentence_label.custom_minimum_size = Vector2(240.0, 0.0)
+	help_sentence.add_child(_dock._help_sentence_label)
+	_dock._help_sentence_panel = help_sentence
+	root.add_child(help_sentence)
 	var status_strip: HBoxContainer = HBoxContainer.new()
 	status_strip.name = "EventSheetStatusStrip"
 	status_strip.add_theme_constant_override("separation", 12)
@@ -487,6 +500,7 @@ func build_ui() -> void:
 	status_strip.add_child(_dock._row_address_label)
 	status_strip.add_child(_dock._build_zoom_pill())
 	_dock._update_sheet_counts_status()
+	status_strip.resized.connect(_dock._on_status_strip_resized)
 	root.add_child(status_strip)
 
 	_dock._exposed_node.name = "EventSheetExposedParams"
