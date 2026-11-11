@@ -155,10 +155,11 @@ static func call_sources(sheet: EventSheetResource) -> Array[Dictionary]:
 	return sources
 
 
-## Every array ANOTHER object declares, each {"expression", "label", "type"}: the arrays of the scripts
-## the nodes of this sheet's scene wear, and of the project's Autoloads, spelled the way a row's list
-## field holds them - `$Enemy.draw_pile`, `%Deck.cards`, `Inventory.items`. `type` is the declaration
-## as written ("Array[Card]", "Array"), which is what a typed local and the swap check read.
+## Every array a node BELOW this sheet's node declares, each {"expression", "label", "type"}: the arrays
+## of the scripts the sheet's descendants wear, spelled the way a row's list field holds them -
+## `$Enemy.draw_pile`, `%Deck.cards`. A parent, a sibling and an Autoload are not offered: the sheet
+## calls down, and asks anything else through a function or a signal. `type` is the declaration as
+## written ("Array[Card]", "Array"), which is what a typed local and the swap check read.
 ##
 ## Only what a script DECLARES is offered: a `var cards: Array[Card]` or a `var cards = []`. An array
 ## built some other way has no declaration to read, and a list guessed at would be worse than none.
@@ -167,22 +168,34 @@ static func other_arrays(sheet: EventSheetResource) -> Array[Dictionary]:
 	var arrays: Array[Dictionary] = []
 	if sheet == null:
 		return arrays
-	for node: Dictionary in _scene_nodes(sheet):
-		var script_path: String = str(node.get("script_path", ""))
-		var path: String = str(node.get("path", ""))
-		if script_path.is_empty() or path == ".":
+	# Calling DOWN only: the lists of nodes below the sheet's own node (`$Child.items`, `%UniqueChild.items`).
+	# A parent, a sibling or an Autoload is reached by asking that object (a function or a signal), so none
+	# of them is offered here; a row that already names one keeps working and is noted by the Doctor.
+	var script_path: String = str(sheet.external_source_path)
+	if script_path.strip_edges().is_empty():
+		return arrays
+	for scene_path: String in EventSheetSceneConnections.scenes_using_script(script_path):
+		var nodes: Array = EventSheetSceneConnections.nodes_of_scene(scene_path)
+		var own_path: String = ""
+		for node: Dictionary in nodes:
+			if str(node.get("script_path", "")) == script_path:
+				own_path = str(node.get("path", ""))
+				break
+		if own_path.is_empty():
 			continue
-		# The scene-unique mark is written as a flag on the node's header in one spelling of a scene and as
-		# a property line under it in the other; either one makes the node reachable as `%Name`.
-		var is_unique: bool = bool(node.get("unique", false)) \
-			or str((node.get("properties", {}) as Dictionary).get("unique_name_in_owner", "")) == "true"
-		var reference: String = "%%%s" % str(node.get("name", "")) if is_unique else "$%s" % path
-		_append_arrays(arrays, reference, str(node.get("name", "")), script_path)
-	for entry: Variant in EventSheetProjectScanner.list_project_classes():
-		var named: Dictionary = entry as Dictionary
-		var autoload: String = str(named.get("autoload", ""))
-		if not autoload.is_empty():
-			_append_arrays(arrays, autoload, autoload, str(named.get("path", "")))
+		for node: Dictionary in nodes:
+			var node_script: String = str(node.get("script_path", ""))
+			var path: String = str(node.get("path", ""))
+			if node_script.is_empty() or path == "." or path == own_path:
+				continue
+			var below: String = path if own_path == "." else (path.substr(own_path.length() + 1) if path.begins_with(own_path + "/") else "")
+			if below.is_empty():
+				continue
+			# The scene-unique mark is written as a flag on the node's header in one spelling of a scene and as
+			# a property line under it in the other; either one makes the node reachable as `%Name`.
+			var is_unique: bool = bool(node.get("unique", false)) 				or str((node.get("properties", {}) as Dictionary).get("unique_name_in_owner", "")) == "true"
+			var reference: String = "%%%s" % str(node.get("name", "")) if is_unique else "$%s" % below
+			_append_arrays(arrays, reference, str(node.get("name", "")), node_script)
 	return arrays
 
 

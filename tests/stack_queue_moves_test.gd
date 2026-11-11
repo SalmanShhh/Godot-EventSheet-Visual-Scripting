@@ -74,6 +74,17 @@ static func _test_other_objects_arrays() -> bool:
 	ok = SUPPORT.check(NAME, "a number is not an array", expressions.has("$Enemy.score"), false) and ok
 	ok = SUPPORT.check(NAME, "a private list is not offered", expressions.has("$Enemy._hidden"), false) and ok
 	ok = SUPPORT.check(NAME, "the sheet's own arrays are left to the sheet's own variables", expressions.has("draw_pile"), false) and ok
+	# Calling down only: where the sheet's script sits on a nested node, its child is offered and its
+	# sibling is not (nested.tscn holds both); nothing is offered from an Autoload.
+	var below: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheetScriptMembers.other_arrays(sheet):
+		below.append(str(entry["expression"]))
+	ok = SUPPORT.check(NAME, "a child of the sheet's node is offered", below.has("$Under.cards") or below.has("$Under.names"), true) and ok
+	var reaches_up: bool = false
+	for expression: String in below:
+		if expression.contains("Side") or expression.contains(".."):
+			reaches_up = true
+	ok = SUPPORT.check(NAME, "a sibling is not offered", reaches_up, false) and ok
 	ok = SUPPORT.check(NAME, "the declared type comes with it",
 		EventSheetArrayTypes.declared_type(sheet, "$Enemy.cards"), "Array[int]") and ok
 	# The parameters window's dropdown offers them after the sheet's own.
