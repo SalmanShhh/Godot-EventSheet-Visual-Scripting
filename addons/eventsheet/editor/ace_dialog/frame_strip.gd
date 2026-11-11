@@ -122,7 +122,7 @@ static func _cell_button(cell: Dictionary, texture: Texture2D, edit: LineEdit, p
 	return button
 
 
-## How the chosen cell is drawn: the editor's own accent as a tint and a border. Asked of the editor
+## How the chosen cell is drawn: the editor's own accent as a tint, with no outline. Asked of the editor
 ## theme where there is one, so the strip matches whatever theme the reader picked, and falling back
 ## to the plugin's own blue where there is not (a preview render, a headless test).
 static func _chosen_look() -> StyleBoxFlat:
@@ -130,9 +130,7 @@ static func _chosen_look() -> StyleBoxFlat:
 	if Engine.is_editor_hint() and EditorInterface.get_editor_theme() != null:
 		accent = EditorInterface.get_editor_theme().get_color("accent_color", "Editor")
 	var look: StyleBoxFlat = StyleBoxFlat.new()
-	look.bg_color = Color(accent.r, accent.g, accent.b, 0.2)
-	look.border_color = accent
-	look.set_border_width_all(2)
+	look.bg_color = Color(accent.r, accent.g, accent.b, 0.3)
 	look.set_corner_radius_all(3)
 	return look
 
