@@ -393,6 +393,29 @@ func build_ui() -> void:
 	# The status strip: the transient message on the left, then the address of the selected row
 	# in the sheet's own words - "event 4 of 61 · line 38" - and the zoom pill pinned right. The
 	# label keeps its name and its dock member, so every _set_status caller and the tests are unmoved.
+	# The shipped-pack notice sits on a line of its own above the status strip, at the dock's whole
+	# width: its sentence is two clauses long and a status bar shares its width with the counts, so
+	# there it was cut off. Wrapped, with its one door beside it, and hidden until a gesture asks.
+	var pack_notice: PanelContainer = PanelContainer.new()
+	pack_notice.name = "EventSheetPackNotice"
+	pack_notice.add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
+	pack_notice.visible = false
+	var pack_notice_row: HBoxContainer = HBoxContainer.new()
+	pack_notice_row.add_theme_constant_override("separation", 12)
+	pack_notice.add_child(pack_notice_row)
+	_dock._pack_notice_label = Label.new()
+	_dock._pack_notice_label.name = "EventSheetPackNoticeText"
+	_dock._pack_notice_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dock._pack_notice_label.custom_minimum_size = Vector2(240.0, 0.0)
+	_dock._pack_notice_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pack_notice_row.add_child(_dock._pack_notice_label)
+	_dock._pack_notice_button = Button.new()
+	_dock._pack_notice_button.name = "EventSheetPackNoticeDoor"
+	_dock._pack_notice_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_dock._pack_notice_button.pressed.connect(_dock.apply_selected_row_fix)
+	pack_notice_row.add_child(_dock._pack_notice_button)
+	_dock._pack_notice = pack_notice
+	root.add_child(pack_notice)
 	var status_strip: HBoxContainer = HBoxContainer.new()
 	status_strip.name = "EventSheetStatusStrip"
 	status_strip.add_theme_constant_override("separation", 12)

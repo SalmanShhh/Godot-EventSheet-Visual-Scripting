@@ -127,6 +127,10 @@ static func _test_the_swap_refusal() -> bool:
 	var note: Dictionary = dialog._swap_type_note()
 	ok = SUPPORT.check(NAME, "the window names both types in one line", str(note.get("body", "")), REFUSAL) and ok
 	ok = SUPPORT.check(NAME, "and it is an error, so OK is refused", str(note.get("level", "")), EventSheetParamFieldFactory.LEVEL_ERROR) and ok
+	# Said once: under the field. The strip keeps describing the field and nothing is written beside OK.
+	ok = SUPPORT.check(NAME, "the refusal is said under its field only", [bool(note.get("row_only", false)), str(note.get("reason", "x"))], [true, ""]) and ok
+	var blocker: Dictionary = dialog._blocking_expression_field()
+	ok = SUPPORT.check(NAME, "OK stays blocked, quietly", [blocker.get("quiet", false), blocker.get("field") != null], [true, true]) and ok
 	second.text = "undo_stack"
 	ok = SUPPORT.check(NAME, "the same type clears it", dialog._swap_type_note().is_empty(), true) and ok
 	first.free()

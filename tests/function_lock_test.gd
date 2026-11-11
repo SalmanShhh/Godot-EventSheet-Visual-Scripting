@@ -162,42 +162,40 @@ static func _test_pack_asks_once() -> bool:
 	var rows: Array = [
 		["a pack file's functions start locked", viewport.is_function_body_unlocked("hit"), false],
 		["the file is a shipped pack", viewport.is_shipped_pack_sheet(), true],
-		["no door is showing before any gesture", editor._row_help_button.visible, false],
+		["no door is showing before any gesture", editor._pack_notice.visible, false],
 	]
 	var first: Dictionary = _drag_in_hit(viewport, sheet)
-	rows.append(["the first drag shows the strip", editor._row_help_label.visible, true])
-	rows.append(["the strip names the file and the risk",
-		editor._row_help_label.text, "lock_probe.gd is a shipped behaviour: adding a newer version of the pack replaces this file and your edits."])
-	rows.append(["with one door, Edit it anyway", [editor._row_help_button.visible, editor._row_help_button.text],
+	rows.append(["the first drag shows the notice line", editor._pack_notice.visible, true])
+	rows.append(["the notice names the file and the risk",
+		editor._pack_notice_label.text, "lock_probe.gd is a shipped behaviour: adding a newer version of the pack replaces this file and your edits."])
+	rows.append(["with one door, Edit it anyway", [editor._pack_notice_button.visible, editor._pack_notice_button.text],
 		[true, "Edit it anyway"]])
-	rows.append(["and no second door", editor._row_help_button_second.visible, false])
+	rows.append(["and the strip itself says nothing at the same time", [editor._row_help_label.visible, editor._row_help_button_second.visible], [false, false]])
 	rows.append(["the gesture itself is not performed", SUPPORT.compile_output(sheet, PROBE), SOURCE])
 	rows.append(["and makes no undo step", history.has_undo(), false])
 	rows.append(["the drag was laid out", bool(first.get("laid_out", false)), true])
 	# A double-click, the Add action gesture and Delete ask the same way.
-	editor._row_help_label.visible = false
-	editor._row_help_button.visible = false
+	editor._pack_notice.visible = false
 	var head: EventRowData = _row_for(viewport, _function(sheet, "hit"))
 	var action_rect: Rect2 = _action_rect(head, 1)
 	var double: InputEventMouseButton = _button(action_rect.get_center(), true)
 	double.double_click = true
 	viewport._input_handlers.handle_mouse_button(double)
 	viewport._input_handlers.handle_mouse_button(_button(action_rect.get_center(), false))
-	rows.append(["a double-click asks too", [editor._row_help_label.visible, editor._row_help_button.visible], [true, true]])
-	editor._row_help_label.visible = false
-	editor._row_help_button.visible = false
+	rows.append(["a double-click asks too", editor._pack_notice.visible, true])
+	editor._pack_notice.visible = false
 	editor._ace_apply._on_viewport_ace_picker_requested(head, "action")
-	rows.append(["Add action asks too", [editor._row_help_label.visible, editor._row_help_button.visible], [true, true]])
-	editor._row_help_label.visible = false
-	editor._row_help_button.visible = false
+	rows.append(["Add action asks too", editor._pack_notice.visible, true])
+	editor._pack_notice.visible = false
 	viewport._select_row(_flat_index(viewport, _function(sheet, "hit")))
 	editor._row_edit_ops._delete_selected_rows()
-	rows.append(["Delete asks too", [editor._row_help_label.visible, editor._row_help_button.visible], [true, true]])
+	rows.append(["Delete asks too", editor._pack_notice.visible, true])
 	rows.append(["and deletes nothing", SUPPORT.compile_output(sheet, PROBE), SOURCE])
 	# The strip's door.
 	_drag_in_hit(viewport, sheet)
 	editor.apply_selected_row_fix()
 	rows.append(["Edit it anyway unlocks the file", viewport.is_pack_file_unlocked(), true])
+	rows.append(["and the notice line goes away", editor._pack_notice.visible, false])
 	rows.append(["every function of it", [viewport.is_function_body_unlocked("hit"), viewport.is_function_body_unlocked("other")], [true, true]])
 	rows.append(["the unlock alone changes no bytes", SUPPORT.compile_output(sheet, PROBE), SOURCE])
 	var again: Dictionary = _drag_in_hit(viewport, sheet)

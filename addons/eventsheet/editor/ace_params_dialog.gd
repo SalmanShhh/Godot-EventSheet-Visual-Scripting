@@ -3923,8 +3923,9 @@ func _blocking_expression_field() -> Dictionary:
 		return wrong_kind
 	var swap_note: Dictionary = _swap_type_note()
 	if not swap_note.is_empty():
+		# Said once, under the field: the strip and the reason beside OK stay quiet about it.
 		return {"field": _focus_target_of(_fields[SWAP_SECOND_FIELD] as Control), "message": "✗ %s" % str(swap_note["body"]),
-			"reason": str(swap_note["reason"])}
+			"reason": "", "quiet": true}
 	return _blocking_param_note()
 
 
@@ -4080,10 +4081,10 @@ func _on_confirmed() -> void:
 	# blocks when the lint context is healthy.
 	var blocker: Dictionary = _blocking_expression_field()
 	if not blocker.is_empty():
-		if _help_strip != null:
+		if _help_strip != null and not bool(blocker.get("quiet", false)):
 			_help_strip.show_note(EventSheetL10n.translate("Cannot be written"),
 				str(blocker.get("message", "")), EventSheetParamFieldFactory.LEVEL_ERROR)
-		if _ok_reason != null:
+		if _ok_reason != null and not bool(blocker.get("quiet", false)):
 			_ok_reason.text = str(blocker.get("reason", EventSheetL10n.translate("this will not compile")))
 			_ok_reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 		(blocker.get("field") as Control).grab_focus()
@@ -4190,10 +4191,10 @@ func _on_custom_action(action: StringName) -> void:
 			return
 		var blocker: Dictionary = _blocking_expression_field()
 		if not blocker.is_empty():
-			if _help_strip != null:
+			if _help_strip != null and not bool(blocker.get("quiet", false)):
 				_help_strip.show_note(EventSheetL10n.translate("Cannot be written"),
 					str(blocker.get("message", "")), EventSheetParamFieldFactory.LEVEL_ERROR)
-			if _ok_reason != null:
+			if _ok_reason != null and not bool(blocker.get("quiet", false)):
 				_ok_reason.text = str(blocker.get("reason", EventSheetL10n.translate("this will not compile")))
 				_ok_reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 			(blocker.get("field") as Control).grab_focus()
@@ -4509,8 +4510,9 @@ func _swap_type_note() -> Dictionary:
 		"level": EventSheetParamFieldFactory.LEVEL_ERROR,
 		"heading": EventSheetL10n.translate("different types"),
 		"body": sentence,
-		"reason": EventSheetL10n.translate("the two types differ"),
+		"reason": "",
 		"fixes": [],
+		"row_only": true,
 	}
 
 
@@ -4548,6 +4550,10 @@ func _describe_field_note(key: String) -> void:
 	_highlight_row(key)
 	var param: Dictionary = _param_dict(key)
 	var note: Dictionary = _note_for(key)
+	# A refusal that is said under its field (the swap's two types) does not say it again here: the
+	# strip keeps describing the field.
+	if bool(note.get("row_only", false)):
+		note = {}
 	if note.is_empty():
 		# A Spawn row is the one row that edits the SCENE as well as itself, so the two things
 		# the scene has to say about it are said while the field that decides them still has focus.

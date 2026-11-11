@@ -309,6 +309,10 @@ var _event_count_label: Label = null
 ## two, because the two answers are genuinely different decisions - pick the verb that stands there
 ## now, or hold the line exactly as written - and neither of them is the obvious one.
 var _row_help_label: Label = null
+## The shipped-pack notice: a wrapped line above the status strip with its one door (Edit it anyway).
+var _pack_notice: Control = null
+var _pack_notice_label: Label = null
+var _pack_notice_button: Button = null
 var _row_help_button: Button = null
 var _row_help_button_second: Button = null
 ## A selected variable can offer three doors (Shape in the Inspector…, Edit range…, Properties…).
@@ -7734,6 +7738,8 @@ static func selection_line_text(row_data: EventRowData) -> String:
 ## present when there is something for it to say.
 func _update_row_help_strip(row_data: EventRowData) -> void:
 	_row_help_finding = {}
+	if _pack_notice != null:
+		_pack_notice.visible = false
 	if _row_help_label == null or _row_help_button == null:
 		return
 	_row_help_label.visible = false
@@ -7871,28 +7877,27 @@ func _pattern_hint_text(row_data: EventRowData) -> String:
 
 
 ## An edit gesture landed on a locked function body. A function the user locked by hand says so in the
-## status bar, with the menu item that undoes it. A function of a shipped behaviour pack says on the
-## help strip, once, why editing it is risky, and offers the one door that unlocks the whole file; the
-## gesture itself is not performed, so the user repeats it once the file is unlocked.
+## status bar, with the menu item that undoes it. A function of a shipped behaviour pack says on its
+## own wrapped line above the status bar, once, why editing it is risky, and offers the one door
+## that unlocks the whole file; the gesture itself is not performed, so the user repeats it once the file is unlocked.
 func _show_locked_body(function_name: String) -> void:
 	var view: EventSheetViewport = _active_view()
 	if view == null:
 		return
 	var message: String = view.locked_body_message(function_name)
 	if not (view.is_shipped_pack_sheet() and not view.is_function_locked_by_hand(function_name)) \
-			or _row_help_label == null or _row_help_button == null:
+			or _pack_notice == null:
 		_set_status(message, true)
 		return
-	_row_help_label.text = message
-	_row_help_label.tooltip_text = message
-	_row_help_label.modulate = EventSheetActiveTheme.chrome().object_bar_warning_color
-	_row_help_label.visible = true
+	# The sentence has the dock's whole width on a line of its own, so it reads whole; the strip's own
+	# sentence and doors are put away so the two never speak at once.
+	_update_row_help_strip(null)
+	_pack_notice_label.text = message
+	_pack_notice_label.tooltip_text = message
+	_pack_notice_label.add_theme_color_override("font_color", EventSheetActiveTheme.chrome().object_bar_warning_color)
+	_pack_notice_button.text = EventSheetL10n.translate("Edit it anyway")
+	_pack_notice.visible = true
 	_row_help_finding = {"family": PACK_UNLOCK_FAMILY}
-	_row_help_button.text = EventSheetL10n.translate("Edit it anyway")
-	_row_help_button.visible = true
-	for door: Button in [_row_help_button_second, _row_help_button_third]:
-		if door != null:
-			door.visible = false
 
 
 ## "Edit it anyway": the shipped pack file the strip named is unlocked, every function in it, and
