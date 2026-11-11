@@ -6,6 +6,41 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: a pick lasts for its event and its sub-events, and nowhere else
+
+- A For each, a Pop back / front into and a typed local are picks. A row under one that acts on the picked name now shows the picked TYPE in the object column (Unit, Enemy); when an event holds two picks of one type (an attacker and a target) each shows its name as written instead. A sub-event inherits the pick, and a sibling event starts with nothing picked.
+- A row that acts on a name another event picked, where nothing by that name is picked, is an amber row. The help strip and the Doctor say \"No Unit is picked here\", with the doors Pick the Unit from a group (for a declared family) and Pick the Unit from a list (when the sheet has an Array of that type); each adds the pick to the event in one undo step.
+
+### Changed: the pick rows can choose their set from a group or a list
+
+- Pick Nearest, Pick A Random One, Pick Where, Pick First Where, Pick Last Where, Pick Top and Pick Bottom have a \"Choose a group or list\" dropdown beside their From box. It lists the project's groups first (a group is Godot's way to keep an unordered set of nodes, and it drops a destroyed one by itself), then the sheet's own list variables, then the lists of nodes below the sheet's node. Choosing writes the expression into the box, which stays free text. A pick never removes from the list; to take the picked one out, follow with Delete value.
+
+### Added: a group is Godot's way to keep a set of nodes, and the sheet says so
+
+- An Array of nodes that the sheet never reads by position or order (only push, delete, contains and For each) is an amber row. The help strip and the Doctor say a group is the Godot way and that it drops a destroyed instance by itself. The door Use a group instead rewrites the rows in one undo step: Push back becomes Add to group, Delete value becomes Remove from group, Contains becomes Is in group, For each over the list becomes For each in group, and the list's declaration goes. The door is only offered when every use of the list is one of those.
+- An ordered list of nodes that is looped over and never has a destroyed instance taken out of it anywhere on the sheet is amber too, with the door Drop freed instances first, which adds an event above the loop with that row.
+- A row that names a list of a parent, a sibling or an Autoload gets a note (never an error): it keeps working, and the words suggest asking that object through a function or a signal.
+
+### Added: three rows for lists of instances
+
+- Push back, once adds a value only when the list does not hold it already (`if not selected.has(unit): selected.append(unit)`). Push back is unchanged, so a deck can still hold two of a card.
+- Set to the instances in a group where a test fills a list from a group in one row (`selected.assign(get_tree().get_nodes_in_group(\"units\").filter(func(one): return box.has_point(one.position)))`). When order does not matter, the group itself is Godot's own tool: it forgets a destroyed instance by itself.
+- Drop freed instances from a list removes the entries whose instance was destroyed (`selected.assign(selected.filter(is_instance_valid))`), for ordered lists that nothing else cleans.
+- Each spelling, written by hand, opens as its row and saves back to the same bytes.
+
+### Changed: a list row reads under its list
+
+- Every row on the Variables: Array page (Push back, Pop back into, Move back to, Clear, Is empty, For each popped...) now shows the list it acts on in the object column, written as the row writes it (`undo_stack`, `$Enemy.draw_pile`), with the variable mark, where it used to say System. Only the reading changed: the rows, their words and the code they write are the same.
+
+### Changed: the Array dropdown offers only the sheet's own lists and those of nodes below it
+
+- The list fields used to offer the arrays of any object in the scene and of every Autoload. They now offer the sheet's own arrays and the arrays of nodes below the sheet's node (`$Child.items`, `%UniqueChild.items`). A parent, a sibling or an Autoload is asked through a function or a signal instead. A row that already names one keeps working and keeps its text when edited.
+
+### Fixed: the shipped-pack warning and the swap refusal say it once, in full
+
+- The warning on the first edit of a shipped behaviour file (\"is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.\") used to share the status bar with the counts and was cut off. It now has a line of its own above the status bar, at the dock's whole width, wrapped, with the Edit it anyway door beside it.
+- Swapping two typed arrays of different types said the same sentence under the field, in the help card and beside Done. It is now said once, under the field; the help card keeps describing the field, nothing is written beside Done, and Done stays blocked.
+
 ### Changed: the help card in every window is a plain panel
 
 - The card that explains the focused field (and the Doctor and row help strips built from it) no longer has a coloured outline or a thick coloured left edge. It keeps the thin hairline every inset panel has, like Godot's own docks. Its heading is the muted caption colour; only a warning (amber) or an error (red) colours the heading.

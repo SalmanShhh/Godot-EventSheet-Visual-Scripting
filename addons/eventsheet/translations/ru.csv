@@ -10149,3 +10149,19 @@ Edit it anyway,Всё равно изменить
 %s is now editable.,%s теперь можно редактировать.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s - встроенное поведение: добавление новой версии пака заменит этот файл и ваши правки.
 This function is locked - right-click it and choose Unlock this function,Эта функция заблокирована - щёлкните правой кнопкой и выберите Разблокировать эту функцию
+group %s,"группа %s"
+list %s,"список %s"
+Choose a group or list,"Выбрать группу или список"
+Use a group instead of %s,"Использовать группу вместо %s"
+"%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s теперь группа ""%s"": add_to_group, remove_from_group, is_in_group и For each in group."
+Pick the %s,"Выбрать %s"
+This event now picks %s.,"Теперь это событие выбирает %s."
+Drop freed instances first,"Сначала убрать освобождённые экземпляры"
+Added a row above the loop that drops freed instances from %s.,"Над циклом добавлена строка, убирающая освобождённые экземпляры из %s."
+Use a group instead,"Использовать группу вместо этого"
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s хранит узлы, но никогда не читается по позиции или порядку. Группа — способ Godot хранить неупорядоченный набор узлов, она сама убирает уничтоженный экземпляр."
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s читается в цикле, но ничто в этом листе не убирает из неё уничтоженный экземпляр, а следующее использование освобождённого — ошибка (группе такая очистка не нужна)."
+Pick the %s from a group,"Выбрать %s из группы"
+Pick the %s from %s,"Выбрать %s из %s"
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","Эта строка лезет в %s — список, принадлежащий другому объекту. Это работает, но объект-владелец списка лучше спрашивать через функцию или сигнал."
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","Здесь не выбран ни один %s. Выбор действует в своём событии и в подсобытиях под ним, поэтому у этой строки нет объекта для действия."

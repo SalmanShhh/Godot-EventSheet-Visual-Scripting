@@ -10149,3 +10149,19 @@ Edit it anyway,Trotzdem bearbeiten
 %s is now editable.,%s ist jetzt bearbeitbar.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s ist ein mitgeliefertes Verhalten: Eine neuere Version des Packs hinzuzufügen ersetzt diese Datei und deine Änderungen.
 This function is locked - right-click it and choose Unlock this function,Diese Funktion ist gesperrt - Rechtsklick und Diese Funktion entsperren wählen
+group %s,"Gruppe %s"
+list %s,"Liste %s"
+Choose a group or list,"Gruppe oder Liste wählen"
+Use a group instead of %s,"Statt %s eine Gruppe verwenden"
+"%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s ist jetzt die Gruppe ""%s"": add_to_group, remove_from_group, is_in_group und For each in group."
+Pick the %s,"%s wählen"
+This event now picks %s.,"Dieses Ereignis wählt jetzt %s."
+Drop freed instances first,"Zuerst freigegebene Instanzen entfernen"
+Added a row above the loop that drops freed instances from %s.,"Über der Schleife wurde eine Zeile eingefügt, die freigegebene Instanzen aus %s entfernt."
+Use a group instead,"Stattdessen eine Gruppe verwenden"
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s enthält Nodes, wird aber nie nach Position oder Reihenfolge gelesen. Eine Gruppe ist Godots Weg, eine ungeordnete Menge von Nodes zu halten, und sie entfernt eine zerstörte Instanz von selbst."
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s wird in einer Schleife gelesen, aber nichts in diesem Sheet entfernt je eine zerstörte Instanz daraus, und die nächste Benutzung einer freigegebenen ist ein Fehler (eine Gruppe braucht diese Aufräumarbeit nicht)."
+Pick the %s from a group,"%s aus einer Gruppe wählen"
+Pick the %s from %s,"%s aus %s wählen"
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","Diese Zeile greift in %s ein, eine Liste, die einem anderen Objekt gehört. Das funktioniert, aber das Objekt, dem eine Liste gehört, sollte stattdessen über eine Funktion oder ein Signal gefragt werden."
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","Hier ist kein %s gewählt. Eine Wahl gilt für ihr eigenes Ereignis und die Unterereignisse darunter, diese Zeile hat also nichts, worauf sie wirken kann."

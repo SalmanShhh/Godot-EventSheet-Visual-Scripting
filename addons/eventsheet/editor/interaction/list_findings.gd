@@ -149,6 +149,23 @@ static func findings(sheet: EventSheetResource, rows: Array[Dictionary]) -> Arra
 				EventSheetL10n.translate("%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).") % list_name,
 				"", "", looped if not looped.is_empty() else context,
 				EventSheetMistakeFindings._door_keys([[FIX_DROP_FREED, EventSheetL10n.translate("Drop freed instances first")]])))
+	for request: Dictionary in EventSheetPickScope.unpicked_requests(sheet, rows):
+		var doors: Array = []
+		var type_name: String = str(request["type"])
+		var family_group: String = str(EventSheetPickingOffer.families().get(type_name, ""))
+		if not family_group.is_empty():
+			doors.append([EventSheetPickScope.FIX_PICK_FROM_GROUP, EventSheetL10n.translate("Pick the %s from a group") % type_name])
+		var list_name: String = _list_of_type(sheet, type_name)
+		if not list_name.is_empty():
+			doors.append([EventSheetPickScope.FIX_PICK_FROM_LIST, EventSheetL10n.translate("Pick the %s from %s") % [type_name, list_name]])
+		var extra: Dictionary = EventSheetMistakeFindings._door_keys(doors)
+		extra["pick_name"] = str(request["name"])
+		extra["pick_type"] = type_name
+		extra["pick_group"] = family_group
+		extra["pick_list"] = list_name
+		found.append(EventSheetMistakeFindings._finding(EventSheetPickScope.FINDING_KIND, "warning", request["event"] as EventRow,
+			str(request["name"]), EventSheetPickScope.sentence(type_name, str(request["name"])), "", "",
+			{"lane": request["lane"], "index": request["index"]}, extra))
 	for context: Dictionary in rows:
 		var reached: String = reaches_into_other_list(context)
 		if reached.is_empty():
@@ -157,6 +174,16 @@ static func findings(sheet: EventSheetResource, rows: Array[Dictionary]) -> Arra
 			EventSheetL10n.translate("This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.") % reached,
 			"", "", context, {}))
 	return found
+
+
+## The sheet's own list of `type_name`, or "" when it has none.
+static func _list_of_type(sheet: EventSheetResource, type_name: String) -> String:
+	if type_name.is_empty():
+		return ""
+	for list_name: Variant in sheet.variables.keys():
+		if EventSheetArrayTypes.list_element_type(sheet, str(list_name)) == type_name:
+			return str(list_name)
+	return ""
 
 
 static func _loop_context(rows: Array[Dictionary], list_name: String) -> Dictionary:

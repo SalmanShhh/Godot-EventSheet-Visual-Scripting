@@ -10149,3 +10149,19 @@ Edit it anyway,それでも編集する
 %s is now editable.,%s を編集できるようになりました。
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s は同梱のビヘイビアです。パックの新しいバージョンを追加すると、このファイルと編集内容が置き換えられます。
 This function is locked - right-click it and choose Unlock this function,この関数はロックされています - 右クリックして「この関数のロックを解除」を選んでください
+group %s,"グループ %s"
+list %s,"リスト %s"
+Choose a group or list,"グループまたはリストを選ぶ"
+Use a group instead of %s,"%s の代わりにグループを使う"
+"%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s はグループ ""%s"" になりました: add_to_group、remove_from_group、is_in_group、For each in group。"
+Pick the %s,"%s を選ぶ"
+This event now picks %s.,"このイベントは %s を選ぶようになりました。"
+Drop freed instances first,"先に解放されたインスタンスを外す"
+Added a row above the loop that drops freed instances from %s.,"ループの上に、%s から解放されたインスタンスを外す行を追加しました。"
+Use a group instead,"代わりにグループを使う"
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s はノードを持っていますが、位置や順序では一度も読まれません。グループは順序のないノードの集まりを持つGodotの方法で、破棄されたインスタンスを自動で外します。"
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s はループで読まれていますが、このシートには破棄されたインスタンスを取り除くものがなく、解放済みのものを次に使うとエラーになります(グループにはこの後片付けが要りません)。"
+Pick the %s from a group,"グループから %s を選ぶ"
+Pick the %s from %s,"%s から %s を選ぶ"
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","この行は別のオブジェクトのリスト %s に手を伸ばしています。動きますが、リストを持つオブジェクトには関数やシグナルで尋ねるほうが適切です。"
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","ここでは %s が選ばれていません。選択は自分のイベントとその下のサブイベントの間だけ続くため、この行には作用する対象がありません。"

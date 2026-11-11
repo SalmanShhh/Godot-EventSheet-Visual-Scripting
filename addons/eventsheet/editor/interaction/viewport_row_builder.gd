@@ -7982,6 +7982,8 @@ const LOCAL_DECLARATION_ACES: PackedStringArray = ["SetLocalVar", "SetLocalVarIn
 var _spawn_copy_names: Dictionary = {}
 ## The "__" loop names the same event can name, {loop name: what it walks}. Set and emptied with it.
 var _walked_names: Dictionary = {}
+## The word the object column shows for each name picked in the event being built: {name: type or name}.
+var _picked_words: Dictionary = {}
 ## The parent event of every sub-event of the sheet, {EventRow: EventRow}, and every entry the walk
 ## that made it saw, so a sub-event names a copy its parent made. Rebuilt when an event turns up that
 ## the walk never saw - an edit replaces rows with duplicates - and only ever while the theme asks.
@@ -17602,11 +17604,14 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		var outer_walked: Dictionary = _walked_names
 		_spawn_copy_names = spawned_copy_names(event)
 		_walked_names = walked_loop_names(event)
+		var outer_picked: Dictionary = _picked_words
+		_picked_words = EventSheetPickScope.object_words(_viewport._sheet as EventSheetResource, _event_chain(event))
 		row_data.spans = _build_event_spans(event, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		_spawn_copy_names = outer_copies
 		_walked_names = outer_walked
+		_picked_words = outer_picked
 		row_data.spans = _split_function_reference_spans(row_data.spans)
 		# An inert row takes nothing added to it - nothing that writes can reach it - so it offers no
 		# "+ Add action" / "+ Add condition": a door that opens nothing is worse than no door. That is a
@@ -18000,6 +18005,10 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 				if not named.is_empty() and named != target:
 					_node_reference_labels[named] = true
 					return named
+			# A target that names something this event (or one above it) PICKED reads as the picked type
+			# ("Unit"), or as the name itself when two picks share a type.
+			if _picked_words.has(target):
+				return str(_picked_words[target])
 			if not target.is_empty() and target != "self":
 				return node_type
 			var own: String = _own_object_for_class(node_type)

@@ -10149,3 +10149,19 @@ Edit it anyway,仍然编辑
 %s is now editable.,%s 现已可编辑。
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s 是随附的行为:添加该包的新版本会替换此文件及你的修改。
 This function is locked - right-click it and choose Unlock this function,此函数已锁定 - 右键单击并选择“解锁此函数”
+group %s,"分组 %s"
+list %s,"列表 %s"
+Choose a group or list,"选择分组或列表"
+Use a group instead of %s,"改用分组代替 %s"
+"%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s 现在是分组 ""%s"":add_to_group、remove_from_group、is_in_group 和 For each in group。"
+Pick the %s,"选择 %s"
+This event now picks %s.,"此事件现在会选择 %s。"
+Drop freed instances first,"先清除已释放的实例"
+Added a row above the loop that drops freed instances from %s.,"已在循环上方添加一行,用于清除 %s 中已释放的实例。"
+Use a group instead,"改用分组"
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s 里存放着节点,但从未按位置或顺序读取。分组是 Godot 保存无序节点集合的方式,并且会自动丢弃已销毁的实例。"
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s 在循环中被读取,但这张表里没有任何地方会把已销毁的实例从中移除,下次使用已释放的实例就会报错(分组不需要这种清理)。"
+Pick the %s from a group,"从分组中选择 %s"
+Pick the %s from %s,"从 %s 中选择 %s"
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","这一行伸手去取 %s,这是属于另一个对象的列表。它能用,但应当通过函数或信号向拥有该列表的对象询问。"
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","这里没有选中任何 %s。选择只在它自己的事件及其下的子事件里有效,所以这一行没有可作用的对象。"

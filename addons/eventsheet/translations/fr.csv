@@ -10149,3 +10149,19 @@ Edit it anyway,Modifier quand même
 %s is now editable.,%s est maintenant modifiable.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s est un comportement fourni : ajouter une version plus récente du pack remplace ce fichier et vos modifications.
 This function is locked - right-click it and choose Unlock this function,Cette fonction est verrouillée - clic droit puis choisissez Déverrouiller cette fonction
+group %s,"groupe %s"
+list %s,"liste %s"
+Choose a group or list,"Choisir un groupe ou une liste"
+Use a group instead of %s,"Utiliser un groupe à la place de %s"
+"%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s est maintenant le groupe ""%s"" : add_to_group, remove_from_group, is_in_group et For each in group."
+Pick the %s,"Choisir %s"
+This event now picks %s.,"Cet événement choisit maintenant %s."
+Drop freed instances first,"Retirer d'abord les instances libérées"
+Added a row above the loop that drops freed instances from %s.,"Une ligne a été ajoutée au-dessus de la boucle pour retirer les instances libérées de %s."
+Use a group instead,"Utiliser un groupe à la place"
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s contient des nodes mais n'est jamais lue par position ou par ordre. Un groupe est la manière de Godot de garder un ensemble non ordonné de nodes, et il retire de lui-même une instance détruite."
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s est lue dans une boucle mais rien dans cette feuille n'en retire jamais une instance détruite, et le prochain usage d'une instance libérée est une erreur (un groupe n'a pas besoin de ce nettoyage)."
+Pick the %s from a group,"Choisir %s depuis un groupe"
+Pick the %s from %s,"Choisir %s depuis %s"
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","Cette ligne va chercher %s, une liste qui appartient à un autre objet. Cela fonctionne, mais l'objet propriétaire d'une liste devrait plutôt être interrogé par une fonction ou un signal."
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","Aucun %s n'est choisi ici. Un choix dure pour son propre événement et les sous-événements dessous, donc cette ligne n'a rien sur quoi agir."

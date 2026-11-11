@@ -114,6 +114,8 @@ static func apply(dock: Control, finding: Dictionary, which: String) -> bool:
 			return _use_a_group(dock, live)
 		EventSheetListFindings.FIX_DROP_FREED:
 			return _drop_freed_first(dock, live)
+		EventSheetPickScope.FIX_PICK_FROM_GROUP, EventSheetPickScope.FIX_PICK_FROM_LIST:
+			return _pick_here(dock, live, fix_id)
 	return false
 
 
@@ -619,6 +621,30 @@ static func _use_a_group(dock: Control, finding: Dictionary) -> bool:
 		return EventSheetListFindings.use_a_group(dock.get("_current_sheet") as EventSheetResource, list_name) > 0))
 	if done:
 		_say(dock, EventSheetL10n.translate("%s is now the group \"%s\": add_to_group, remove_from_group, is_in_group and For each in group.") % [list_name, list_name], false)
+	return true
+
+
+## "Pick the Unit from a group / a list": the event gets the pick the row asked for, so the rows under it have
+## something to act on.
+static func _pick_here(dock: Control, finding: Dictionary, fix_id: String) -> bool:
+	var event_row: EventRow = finding.get("event") as EventRow
+	var item: String = str(finding.get("pick_name", ""))
+	if event_row == null or item.is_empty():
+		return false
+	var done: bool = bool(dock.call("_perform_undoable_sheet_edit", EventSheetL10n.translate("Pick the %s") % item, func() -> bool:
+		var pick: PickFilter = PickFilter.new()
+		pick.iterator_name = item
+		pick.iterator_type = str(finding.get("pick_type", ""))
+		if fix_id == EventSheetPickScope.FIX_PICK_FROM_GROUP:
+			pick.collection_kind = PickFilter.CollectionKind.GROUP
+			pick.collection_value = str(finding.get("pick_group", ""))
+		else:
+			pick.collection_kind = PickFilter.CollectionKind.ARRAY
+			pick.collection_value = str(finding.get("pick_list", ""))
+		event_row.pick_filters.append(pick)
+		return true))
+	if done:
+		_say(dock, EventSheetL10n.translate("This event now picks %s.") % item, false)
 	return true
 
 

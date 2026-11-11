@@ -10149,3 +10149,19 @@ Edit it anyway,Modifica comunque
 %s is now editable.,%s ora è modificabile.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s è un comportamento incluso: aggiungere una versione più recente del pack sostituisce questo file e le tue modifiche.
 This function is locked - right-click it and choose Unlock this function,Questa funzione è bloccata - clic destro e scegli Sblocca questa funzione
+group %s,"gruppo %s"
+list %s,"lista %s"
+Choose a group or list,"Scegli un gruppo o una lista"
+Use a group instead of %s,"Usa un gruppo al posto di %s"
+"%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s ora è il gruppo ""%s"": add_to_group, remove_from_group, is_in_group e For each in group."
+Pick the %s,"Scegli %s"
+This event now picks %s.,"Questo evento ora sceglie %s."
+Drop freed instances first,"Prima elimina le istanze liberate"
+Added a row above the loop that drops freed instances from %s.,"È stata aggiunta una riga sopra il ciclo che elimina le istanze liberate da %s."
+Use a group instead,"Usa invece un gruppo"
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s contiene nodi ma non viene mai letta per posizione o ordine. Un gruppo è il modo di Godot per tenere un insieme non ordinato di nodi, e toglie da solo un'istanza distrutta."
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s viene letta in un ciclo ma nulla in questo foglio toglie mai un'istanza distrutta da essa, e il prossimo uso di una liberata è un errore (un gruppo non ha bisogno di questa pulizia)."
+Pick the %s from a group,"Scegli %s da un gruppo"
+Pick the %s from %s,"Scegli %s da %s"
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","Questa riga entra in %s, una lista che appartiene a un altro oggetto. Funziona, ma all'oggetto proprietario di una lista andrebbe chiesta tramite una funzione o un segnale."
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","Qui non è scelto nessun %s. Una scelta dura quanto il proprio evento e i sottoeventi sotto di esso, quindi questa riga non ha nulla su cui agire."
