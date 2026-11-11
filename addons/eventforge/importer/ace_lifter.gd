@@ -99,6 +99,9 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# A pause request: the change to the set of who is asking, then the switch set from it. Asked
 	# here because the second line alone is Pause The Game, which would lose who asked.
 	preload("res://addons/eventforge/importer/pause_request_lift.gd"),
+	# The three array runs: Move all (append_array then clear), Swap (a `__swap` temporary and two
+	# writes) and Push back keeping the last N (an append, then a while that pops the front).
+	preload("res://addons/eventforge/importer/stack_lift.gd"),
 	# The three statements a ray asked of the physics world directly has always been written as -
 	# the space state, the query, the cast - which mean the one Cast Ray Into row together and three
 	# unrelated declarations apart.

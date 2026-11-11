@@ -9,7 +9,7 @@
 #                                                           ... or Vector2i(-1, -1) if empty
 #     redo_stack.append_array(undo_stack)                   Move all of undo_stack to redo_stack
 #     undo_stack.clear()
-#     var __swap_ab12 := hand                               Swap hand with $Enemy.hand
+#     var __swap_ab12 = hand                                Swap hand with $Enemy.hand
 #     hand = $Enemy.hand
 #     $Enemy.hand = __swap_ab12
 #     trail.append(point)                                   Push back point to trail, keeping the last 20
@@ -110,12 +110,12 @@ static func _swap_entry() -> Dictionary:
 		"ace_id": "ArraySwap",
 		"mark": "var __swap",
 		"statements": [
-			{"pattern": "^var (?<temp>__swap[A-Za-z0-9_]*) := (?<var_name>" + LIST + ")$"},
+			{"pattern": "^var (?<temp>__swap[A-Za-z0-9_]*) :?= (?<var_name>" + LIST + ")$"},
 			{"pattern": "^(?<var_name>" + LIST + ") = (?<other>" + LIST + ")$"},
 			{"pattern": "^(?<other>" + LIST + ") = (?<temp>__swap[A-Za-z0-9_]*)$"}
 		],
 		"params": ["var_name", "other"],
-		"shape": "var __swap_a1 := {var_name}\n{var_name} = {other}\n{other} = __swap_a1",
+		"shape": "var __swap_a1 = {var_name}\n{var_name} = {other}\n{other} = __swap_a1",
 		"slots": {"var_name": "draw_pile", "other": "$Enemy.draw_pile"}
 	}
 

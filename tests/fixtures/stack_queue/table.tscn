@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/stack_queue/table.gd" id="1_table"]
+[ext_resource type="Script" path="res://tests/fixtures/stack_queue/hand.gd" id="2_hand"]
+
+[node name="Table" type="Node2D"]
+script = ExtResource("1_table")
+
+[node name="Enemy" type="Node" parent="."]
+script = ExtResource("2_hand")
+
+[node name="Deck" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_hand")

@@ -155,6 +155,46 @@ static func call_sources(sheet: EventSheetResource) -> Array[Dictionary]:
 	return sources
 
 
+## Every array ANOTHER object declares, each {"expression", "label", "type"}: the arrays of the scripts
+## the nodes of this sheet's scene wear, and of the project's Autoloads, spelled the way a row's list
+## field holds them - `$Enemy.draw_pile`, `%Deck.cards`, `Inventory.items`. `type` is the declaration
+## as written ("Array[Card]", "Array"), which is what a typed local and the swap check read.
+##
+## Only what a script DECLARES is offered: a `var cards: Array[Card]` or a `var cards = []`. An array
+## built some other way has no declaration to read, and a list guessed at would be worse than none.
+## The sheet's own script is left out - those are the sheet's own variables, already in the dropdown.
+static func other_arrays(sheet: EventSheetResource) -> Array[Dictionary]:
+	var arrays: Array[Dictionary] = []
+	if sheet == null:
+		return arrays
+	for node: Dictionary in _scene_nodes(sheet):
+		var script_path: String = str(node.get("script_path", ""))
+		var path: String = str(node.get("path", ""))
+		if script_path.is_empty() or path == ".":
+			continue
+		# The scene-unique mark is written as a flag on the node's header in one spelling of a scene and as
+		# a property line under it in the other; either one makes the node reachable as `%Name`.
+		var is_unique: bool = bool(node.get("unique", false)) \
+			or str((node.get("properties", {}) as Dictionary).get("unique_name_in_owner", "")) == "true"
+		var reference: String = "%%%s" % str(node.get("name", "")) if is_unique else "$%s" % path
+		_append_arrays(arrays, reference, str(node.get("name", "")), script_path)
+	for entry: Variant in EventSheetProjectScanner.list_project_classes():
+		var named: Dictionary = entry as Dictionary
+		var autoload: String = str(named.get("autoload", ""))
+		if not autoload.is_empty():
+			_append_arrays(arrays, autoload, autoload, str(named.get("path", "")))
+	return arrays
+
+
+static func _append_arrays(arrays: Array[Dictionary], reference: String, label: String, script_path: String) -> void:
+	for property: Dictionary in (of_script(script_path)["properties"] as Array[Dictionary]):
+		var type_text: String = str(property.get("args", ""))
+		var is_array: bool = type_text == "Array" or type_text.begins_with("Array[") or bool(property.get("array", false))
+		if is_array:
+			arrays.append({"expression": "%s.%s" % [reference, str(property["name"])], "label": label,
+				"type": type_text if not type_text.is_empty() else "Array"})
+
+
 ## What a picker entry PREFILLS a call's arguments with, from the declaration exactly as the file
 ## writes it: `func hit(amount: int = 1, hard: bool)` -> `1, false`. A parameter the author gave a
 ## default gets that default, because it is the value they said was the ordinary one; a parameter
@@ -272,7 +312,11 @@ static func _read(script_path: String) -> Dictionary:
 			else:
 				found = property_head.search(line)
 				if found != null and not found.get_string(1).begins_with(_PRIVATE_PREFIX):
-					properties.append(_member(found.get_string(1), found.get_string(2), doc_lines))
+					var declared_property: Dictionary = _member(found.get_string(1), found.get_string(2), doc_lines)
+					# An untyped `var cards = []` still declares an array, in the one way a file can say so.
+					if found.get_string(2).is_empty() and (line.contains("= []") or line.contains("= Array(")):
+						declared_property["array"] = true
+					properties.append(declared_property)
 		doc_lines = PackedStringArray()
 	return {"methods": methods, "signals": signal_members, "properties": properties, "base": base}
 

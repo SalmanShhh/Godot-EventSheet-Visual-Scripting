@@ -1911,6 +1911,20 @@ func _create_variable_reference_field(key: String, default_value: Variant, hint:
 	for candidate_name in _variable_names:
 		if required_type.is_empty() or _variable_matches_type(str(candidate_name), required_type):
 			offered_names.append(candidate_name)
+	# An array field offers ANOTHER object's arrays after the sheet's own: `$Enemy.draw_pile`,
+	# `%Deck.cards`, an Autoload's list. A stack or a queue is often one object's list handed to
+	# another, and a row that could only name its own sheet's variables could not say so.
+	if required_type.begins_with("Array"):
+		for other: Dictionary in EventSheetScriptMembers.other_arrays(_lint_sheet()):
+			var other_expression: String = str(other.get("expression", ""))
+			if not other_expression.is_empty() and not offered_names.has(other_expression):
+				offered_names.append(other_expression)
+		# A row that already names another object's array keeps it, even when the scene that proves it
+		# is not open: editing the row must not swap its list for the first one in the dropdown.
+		var current_list: String = str(default_value).strip_edges()
+		if (current_list.contains(".") or current_list.begins_with("$") or current_list.begins_with("%")) \
+				and not offered_names.has(current_list):
+			offered_names.append(current_list)
 	if offered_names.is_empty():
 		# No (matching) variables exist: surface a disabled placeholder and block apply.
 		_apply_blocked = true
@@ -3907,6 +3921,10 @@ func _blocking_expression_field() -> Dictionary:
 	var wrong_kind: Dictionary = _blocking_type_finding()
 	if not wrong_kind.is_empty():
 		return wrong_kind
+	var swap_note: Dictionary = _swap_type_note()
+	if not swap_note.is_empty():
+		return {"field": _focus_target_of(_fields[SWAP_SECOND_FIELD] as Control), "message": "✗ %s" % str(swap_note["body"]),
+			"reason": str(swap_note["reason"])}
 	return _blocking_param_note()
 
 
@@ -4455,12 +4473,45 @@ func _note_for(key: String) -> Dictionary:
 	var param: Dictionary = _param_dict(key)
 	if param.is_empty() or not is_instance_valid(_fields.get(key, null)):
 		return {}
+	# Swap's two lists must hold the same kind of item: said on the second field, in one line.
+	if key == SWAP_SECOND_FIELD:
+		var swap_note: Dictionary = _swap_type_note()
+		if not swap_note.is_empty():
+			return swap_note
 	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, "")) if _definition != null else ""
 	var checked: Dictionary = EventSheetParamFieldFactory.validate(param, str(_extract_value(_fields[key])),
 		_variable_entries, _row_owner, takes, _lint_sheet(), _scope_names_for(_lint_sheet()))
 	if checked.is_empty() and str(type_finding.get("level", "")) == EventSheetTypeCheck.LEVEL_NOTE:
 		return _type_note(type_finding)
 	return checked
+
+
+## The second list of a Swap row. The first is `var_name`, the same name every other Array row gives its list.
+const SWAP_SECOND_FIELD: String = "other"
+const SWAP_ACE_ID: String = "ArraySwap"
+
+
+## The note a Swap row wears while its two lists are typed arrays of different element types: one line
+## naming both types. {} for every other row, and for a swap Godot would accept (an untyped array on
+## either side is the plain Array every row takes). An error, so it also blocks OK.
+func _swap_type_note() -> Dictionary:
+	if _definition == null or _definition.id != SWAP_ACE_ID:
+		return {}
+	var first: Variant = _fields.get("var_name", null)
+	var second: Variant = _fields.get(SWAP_SECOND_FIELD, null)
+	if not (first is Control) or not (second is Control) or not is_instance_valid(first) or not is_instance_valid(second):
+		return {}
+	var sentence: String = EventSheetArrayTypes.swap_problem(_lint_sheet(),
+		str(_extract_value(first as Control)), str(_extract_value(second as Control)))
+	if sentence.is_empty():
+		return {}
+	return {
+		"level": EventSheetParamFieldFactory.LEVEL_ERROR,
+		"heading": EventSheetL10n.translate("different types"),
+		"body": sentence,
+		"reason": EventSheetL10n.translate("the two types differ"),
+		"fixes": [],
+	}
 
 
 ## Points the strip at one parameter: its description and what its kind of field takes, or - when
