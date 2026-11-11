@@ -142,6 +142,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Utility": "Tools",
 	"Variables": "MemberProperty",
 	"Variables: Array": "Array",
+	# The two groups inside the Array folder wear the Array mark: they are the same words, grouped.
+	"Variables: Array: Queue": "Array",
+	"Variables: Array: Stack": "Array",
 	"Variables: Dictionary": "Dictionary",
 	"Variables: String": "String",
 	"Variables: Vector": "Vector2",

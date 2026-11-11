@@ -2478,6 +2478,7 @@ func _refresh_tree() -> void:
 			if __bold != null:
 				item.set_custom_font(0, __bold)
 
+	_add_stack_queue_rows(root, group_nodes, mode, signals_only, query)
 	_add_alias_rows(root, group_nodes, mode, signals_only, query)
 
 	# The picker never renders an EMPTY list: a query that matched nothing gets the NEAREST entries
@@ -2651,9 +2652,17 @@ func _resolve_group_item(root: TreeItem, group_nodes: Dictionary, group_key: Str
 		return flat_item
 	var parent_key: String = parts[0]
 	var child_label: String = parts[1]
+	# A group nested one level deeper ("Variables: Array: Stack" is a Stack folder inside the Array
+	# folder) hangs under the group its first two parts name, created on the way when it is not there.
+	var deeper: int = child_label.find(SUBCATEGORY_SEPARATOR)
+	if deeper != -1:
+		parent_key = "%s%s%s" % [parts[0], SUBCATEGORY_SEPARATOR, child_label.substr(0, deeper).strip_edges()]
+		child_label = child_label.substr(deeper + SUBCATEGORY_SEPARATOR.length()).strip_edges()
 	var parent_item: TreeItem
 	if group_nodes.has(parent_key):
 		parent_item = group_nodes[parent_key]
+	elif deeper != -1:
+		parent_item = _resolve_group_item(root, group_nodes, parent_key, false)
 	else:
 		parent_item = _make_group_item(root, parent_key, false)
 		group_nodes[parent_key] = parent_item
@@ -3437,6 +3446,49 @@ func _on_item_activated() -> void:
 		_commit_library_pack((item_meta as Dictionary)["library_pack"] as Dictionary)
 		return
 	_commit_definition(item_meta if item_meta is ACEDefinition else null)
+
+
+## The Stack and Queue groups of the Variables: Array page. Each lists, again, the Array rows that make
+## that idiom - a stack is Push back and Pop back into with Back to look, a queue is Push back and
+## Pop front into with Front - so a reader who comes for "a stack" finds its words together. The rows
+## are the ordinary ones (the same row in the Array folder above), so nothing about a row changes with
+## the group it is found in. Listed when nothing is typed, or when the query is the idea itself
+## ("stack", "queue"): a search for a verb is already answered by the verb.
+func _add_stack_queue_rows(root: TreeItem, group_nodes: Dictionary, mode: String, signals_only: bool,
+		query: String) -> void:
+	var lowered: String = query.strip_edges().to_lower()
+	for shelf: Dictionary in stack_queue_shelves():
+		var group_key: String = str(shelf["group"])
+		var shelf_name: String = group_key.get_slice(SUBCATEGORY_SEPARATOR, 2).to_lower()
+		if not lowered.is_empty() and not shelf_name.contains(lowered):
+			continue
+		var offered: Array[ACEDefinition] = []
+		for ace_id: String in (shelf["aces"] as PackedStringArray):
+			var shelf_definition: ACEDefinition = _registry.find_definition("Core", ace_id) if _registry != null else null
+			if shelf_definition != null and _is_allowed_for_mode(shelf_definition, mode, signals_only):
+				offered.append(shelf_definition)
+		if offered.is_empty():
+			continue
+		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, false)
+		for shelf_definition: ACEDefinition in offered:
+			var shelf_item: TreeItem = _tree.create_item(group_item)
+			shelf_item.set_text(0, _item_label(shelf_definition))
+			var shelf_icon: Texture2D = resolve_definition_icon(shelf_definition)
+			if shelf_icon != null:
+				shelf_item.set_icon(0, shelf_icon)
+				shelf_item.set_icon_max_width(0, 16)
+			shelf_item.set_tooltip_text(0, _item_tooltip(shelf_definition))
+			shelf_item.set_metadata(0, shelf_definition)
+			_add_help_button(shelf_item, shelf_definition)
+
+
+## The two groups and the rows each lists, in the order they read: [{"group", "aces"}]. Static so a
+## test pins what a stack and a queue are made of without a tree.
+static func stack_queue_shelves() -> Array[Dictionary]:
+	return [
+		{"group": EventForgeCollectionACEs.STACK_GROUP, "aces": EventForgeCollectionACEs.STACK_GROUP_ACES},
+		{"group": EventForgeCollectionACEs.QUEUE_GROUP, "aces": EventForgeCollectionACEs.QUEUE_GROUP_ACES},
+	]
 
 
 ## The alias rows, in the section their descriptor already lives in, right after it. Only

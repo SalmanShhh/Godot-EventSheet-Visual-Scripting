@@ -148,6 +148,8 @@ const VERIFIED_SECTION_ICONS: Dictionary = {
 	"Utility: Window": "Tools",
 	"Variables": "MemberProperty",
 	"Variables: Array": "Array",
+	"Variables: Array: Queue": "Array",
+	"Variables: Array: Stack": "Array",
 	"Variables: Dictionary": "Dictionary",
 	"Variables: String": "String",
 	"Variables: Vector": "Vector2",

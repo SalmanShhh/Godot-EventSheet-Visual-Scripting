@@ -22,6 +22,11 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 ## each time it is read (a method that consumes, deals or advances) runs twice per row.
 const DOUBLE_READ_NOTE := "The value is read twice in the emitted line, so keep it a plain read and not something that changes the game."
 
+## What the two pop rows say about themselves. A stack and a queue name the same two verbs with a
+## different end taken, so the help is written once and each row fills in its end.
+const POP_BACK_NOTE := "Takes the LAST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a stack (last in, first out). The array must have an item: Godot prints an error when it is empty, so guard this row with Array Is Empty, inverted."
+const POP_FRONT_NOTE := "Takes the FIRST item off the array and keeps it in a name you choose, for the rows below to use. This is the pop of a queue (first in, first out). The array must have an item: Godot prints an error when it is empty, so guard this row with Array Is Empty, inverted."
+
 const PART_OPTIONS: Array = [
 	{"key": "\"x\"", "label": "X (left / right)"},
 	{"key": "\"y\"", "label": "Y (up / down)"},
@@ -31,6 +36,24 @@ const PART_OPTIONS: Array = [
 	{"key": "\"b\"", "label": "Blue"},
 	{"key": "\"a\"", "label": "Alpha (see-through)"}
 ]
+
+
+## The two groups the picker's Variables: Array page gains. They only help a reader FIND the rows: a
+## stack and a queue are made of the same Array words, so each row says the same thing wherever it is
+## listed and nothing about it changes with the group.
+const STACK_GROUP: String = "Variables: Array: Stack"
+const QUEUE_GROUP: String = "Variables: Array: Queue"
+
+## The rows each group lists, as [ace_id, ...]: Push back is the existing ArrayAppend row, listed in both.
+const STACK_GROUP_ACES: PackedStringArray = ["ArrayAppend", "ArrayPopBackInto", "ArrayBack"]
+const QUEUE_GROUP_ACES: PackedStringArray = ["ArrayAppend", "ArrayPopFrontInto", "ArrayFront"]
+
+
+static func section_descriptions() -> Dictionary:
+	return {
+		STACK_GROUP: "A stack pushes and pops at the back: last in, first out.",
+		QUEUE_GROUP: "A queue pushes at the back and pops at the front: first in, first out."
+	}
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
@@ -369,6 +392,19 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.expr("ArrayDuplicate", "Copy Array", "{var_name}.duplicate()", "Variables: Array", "{var_name}.duplicate()", "Returns an independent copy of the array so edits don't affect the original.").param("var_name", "list", "Array", "Array variable to copy.", "variable_reference:Array"))
 	descriptors.append(F.act("ArrayResize", "Resize Array", "{var_name}.resize({size})", "Variables: Array", "Resize {var_name} to {size}", "Changes the array's length, adding empty slots or trimming items.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array").param("size", "0", "Size", "New length.", "expression"))
 	descriptors.append(F.act("ArrayFill", "Fill Array", "{var_name}.fill({value})", "Variables: Array", "Fill {var_name} with {value}", "Sets every slot in the array to the same value.").param("var_name", "list", "Array", "Array variable.", "variable_reference:Array").param("value", "0", "Value", "Value to fill every slot with.", "expression"))
+
+	# ── Stacks and queues ──
+	# A stack pushes and pops at the back (last in, first out); a queue pushes at the back and pops at
+	# the front (first in, first out). Push back stays the ArrayAppend row above, unchanged - these are
+	# the rows that finish the idiom, each one a plain Array call the lift reads straight back.
+	#
+	# Pop back into / Pop front into are ACTIONS that keep what they took, so the pop can no longer hide
+	# inside another row's expression (where a pop used twice, or in a condition that runs every frame,
+	# silently eats items). A typed list (`Array[Vector2i]`) gives the local its element type, written
+	# into the BAKED template when the row is made on a sheet (EventForgeStackLift.typed_template); the
+	# canonical template here stays untyped, and a hand-written untyped pop keeps its spelling.
+	descriptors.append(F.act("ArrayPopBackInto", "Pop Back Into", "var {name} = {var_name}.pop_back()", "Variables: Array", "Pop back of [i]{var_name}[/i] into [b]{name}[/b]", POP_BACK_NOTE).param("var_name", "list", "Array", "The array to take the last item from.", "variable_reference:Array").param("name", "popped", "Name It", "The name the taken item is known by from here on. The rows below use it."))
+	descriptors.append(F.act("ArrayPopFrontInto", "Pop Front Into", "var {name} = {var_name}.pop_front()", "Variables: Array", "Pop front of [i]{var_name}[/i] into [b]{name}[/b]", POP_FRONT_NOTE).param("var_name", "list", "Array", "The array to take the first item from.", "variable_reference:Array").param("name", "popped", "Name It", "The name the taken item is known by from here on. The rows below use it."))
 
 	# ── More Dictionary helpers ──
 	descriptors.append(F.expr("DictDuplicate", "Copy Dictionary", "{var_name}.duplicate()", "Variables: Dictionary", "{var_name}.duplicate()", "Returns an independent copy of the dictionary.").param("var_name", "dict", "Dictionary", "Dictionary variable to copy.", "variable_reference:Dictionary"))

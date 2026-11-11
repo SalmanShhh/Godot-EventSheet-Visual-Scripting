@@ -63,6 +63,9 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	# the two things should happen to where the node is (a bare Reparent To to the index, with the
 	# answer swallowed into its one slot). Asked here, before the index, for exactly that reason.
 	preload("res://addons/eventforge/importer/node_dignity_lift.gd"),
+	# The pops of a stack and a queue, `var last = list.pop_back()` and its front twin, typed or with
+	# a fallback. Asked here because the general index would read the line as a plain local.
+	preload("res://addons/eventforge/importer/stack_lift.gd"),
 ]
 
 ## The families that claim a RUN of statements rather than a single line - two or three statements
