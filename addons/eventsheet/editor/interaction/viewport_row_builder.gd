@@ -18279,6 +18279,9 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# A row about a list belongs to the list: "undo_stack | Pop back of undo_stack into last".
 	if global_owner.is_empty():
 		global_owner = _array_owner_label(condition.provider_id, condition.ace_id, params_dict)
+	# A row about something this event (or one above it) picked reads as the picked type.
+	if global_owner.is_empty():
+		global_owner = str(_picked_words.get(str(params_dict.get("target", "")).strip_edges(), ""))
 	# And when nothing reached through an autoload, the variable the row NAMES still has an
 	# owner: "Player > hp ≤ 0" instead of "System > hp ≤ 0".
 	if global_owner.is_empty():
@@ -18595,6 +18598,9 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# A row about a list belongs to the list, by the name the row writes it with.
 	if global_owner.is_empty():
 		global_owner = _array_owner_label(action.provider_id, action.ace_id, action_params)
+	# A row about something this event (or one above it) picked reads as the picked type.
+	if global_owner.is_empty():
+		global_owner = str(_picked_words.get(str(action_params.get("target", "")).strip_edges(), ""))
 	# The same rule the condition lane takes: a step that changes a variable belongs to whoever
 	# owns that variable, so "Player > Subtract 10 from health" leads with the object it changes.
 	if global_owner.is_empty():

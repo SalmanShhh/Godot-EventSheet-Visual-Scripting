@@ -66,5 +66,8 @@ static func run() -> bool:
 		["two picks of one type show each name as written", EventSheetPickScope.object_words(sheet, [twice]), {"unit": "unit", "target": "target"}],
 		["only the sibling's row asks for a pick that is not there", requests.map(func(entry: Dictionary) -> bool: return entry["event"] == sibling), [true]],
 		["the amber row says so in words", no_pick.map(func(entry: Dictionary) -> String: return str(entry["message"]).left(25)), ["No Node2D is picked here."]],
+		["the object column shows the picked type under the pick and the name outside it",
+			ArrayObjectColumnTest._objects_of(sheet).filter(func(entry: Array) -> bool: return entry[0] == "action").map(func(entry: Array) -> String: return entry[1]),
+			["Node2D", "Node2D", "unit"]],
 		["a row under the pick is not flagged", requests.any(func(entry: Dictionary) -> bool: return entry["event"] == picker or entry["event"] == inner), false],
 	])
