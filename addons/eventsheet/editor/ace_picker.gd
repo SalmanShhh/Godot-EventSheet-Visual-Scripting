@@ -983,7 +983,8 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 		_show_classic(true)
 	elif bool(_context.get("object_first", false)) and not signals_only and mode in ["new_event", "new_condition_event", "new_sub_condition_event"]:
 		_reveal_objects_page()
-	elif mode == "append_action" and not signals_only and event_narrows_a_class(selected_resource as Resource):
+	elif mode == "append_action" and not signals_only and (event_narrows_a_class(selected_resource as Resource)
+			or not EventSheetPickScope.offered_objects(_open_sheet(), selected_resource).is_empty()):
 		# An event that has asked "body is a Mob" opens an action's picker on the objects, where
 		# `body` is the first of them: the next row is most often about what it just proved.
 		_reveal_objects_page()
@@ -1817,6 +1818,28 @@ func _populate_narrowed_cards(root: TreeItem) -> void:
 			item.set_icon_max_width(0, 16)
 
 
+## What the event this row joins picked, offered as objects of their own: the Unit a For each walks, the one a
+## pop or a pick took out of a list. The card reads as the picked type (the name as written when two picks share a
+## type); picking it offers that class's rows, then those of what it is a kind of, each written on the picked name.
+## Outside the event that picks (and its sub-events) nothing is offered.
+func _populate_picked_cards(root: TreeItem) -> void:
+	var selected: Resource = _context.get("selected_resource") as Resource
+	for entry: Dictionary in EventSheetPickScope.offered_objects(_open_sheet(), selected):
+		var item: TreeItem = _objects_tree.create_item(root, 0)
+		item.set_text(0, str(entry["word"]))
+		item.set_tooltip_text(0, EventSheetL10n.translate(
+			"The %s this event picked, written as %s. Rows you add here act on it.") % [str(entry["type"]), str(entry["name"])])
+		item.set_metadata(0, "%s%s|%s" % [NARROW_PREFIX, str(entry["name"]), str(entry["type"])])
+		var picked_icon: Texture2D = null
+		for kind: String in class_ancestry(str(entry["type"])):
+			picked_icon = editor_icon(kind)
+			if picked_icon != null:
+				break
+		if picked_icon != null:
+			item.set_icon(0, picked_icon)
+			item.set_icon_max_width(0, 16)
+
+
 func _populate_unique_name_cards(root: TreeItem) -> void:
 	var content: Dictionary = unique_names_page_content(_open_sheet())
 	if content.is_empty():
@@ -1874,6 +1897,51 @@ static func unique_node_definitions(node_name: String, node_class: String, plain
 		})
 		entry.metadata[SCENE_TARGET_META] = reference
 		offered.append(entry)
+	return offered
+
+
+## The class `class_name_text` is, and every class it is a kind of, nearest first: a class of the project walks up
+## through the classes it extends and on into the engine's own.
+static func class_ancestry(class_name_text: String) -> PackedStringArray:
+	var chain: PackedStringArray = PackedStringArray()
+	var kinds: GDScript = load(CLASS_KINDS_PATH)
+	var classes: Dictionary = kinds.project_classes()
+	var here: String = class_name_text.strip_edges()
+	while not here.is_empty() and not chain.has(here):
+		chain.append(here)
+		if classes.has(here):
+			here = str(kinds.parent_of(here, classes))
+			if here.is_empty():
+				here = str((classes[chain[chain.size() - 1]] as Dictionary).get("base", ""))
+		else:
+			here = ClassDB.get_parent_class(here) if ClassDB.class_exists(here) else ""
+	return chain
+
+
+## The builtin rows written for the class a picked name is, or for anything that class is a kind of (Node2D: Set
+## position, Set modulate, Hide), each a COPY with its "On node" answered by the picked name as written. The rows
+## are the vocabulary's own - the same ids and templates - only aimed.
+func _picked_base_definitions() -> Array[ACEDefinition]:
+	var offered: Array[ACEDefinition] = []
+	if _unique_scope.is_empty() or not bool(_unique_scope.get("plain", false)) or _registry == null:
+		return offered
+	var ancestry: PackedStringArray = class_ancestry(str(_unique_scope.get("class", "")))
+	var picked_name: String = str(_unique_scope.get("name", "")).strip_edges()
+	for definition: ACEDefinition in _registry.get_all_definitions():
+		if not ancestry.has(str(definition.metadata.get("node_type", "")).strip_edges()):
+			continue
+		var has_target: bool = false
+		for entry: Variant in definition.parameters:
+			if entry is Dictionary and str((entry as Dictionary).get("id", "")) == "target":
+				has_target = true
+		if not has_target:
+			continue
+		var aimed: ACEDefinition = definition.copy()
+		aimed.parameters = aimed.parameters.duplicate(true)
+		for entry: Variant in aimed.parameters:
+			if entry is Dictionary and str((entry as Dictionary).get("id", "")) == "target":
+				(entry as Dictionary)["default_value"] = picked_name
+		offered.append(aimed)
 	return offered
 
 
@@ -1964,6 +2032,8 @@ func _populate_object_cards() -> void:
 		global_item.set_icon(0, editor_icon("Node"))
 		global_item.set_icon_max_width(0, 16)
 	_populate_project_cards(root)
+	# Last, at the very top: what this event picked is the first thing the next row is about.
+	_populate_picked_cards(root)
 
 
 ## The Your Project section's head, made the first time a card needs it: the project's own globals
@@ -2380,6 +2450,10 @@ func _refresh_tree() -> void:
 			if str(scoped_candidate.provider_id) == _object_filter_provider:
 				provider_scoped.append(scoped_candidate)
 		definitions = provider_scoped
+		# A picked name also offers the rows of what its class is a kind of, aimed at it.
+		for base_definition: ACEDefinition in _picked_base_definitions():
+			if not _contains_definition(definitions, base_definition):
+				definitions.append(base_definition)
 	# Reactivity steering: surface a polling condition's reactive twin beside it (off the shared
 	# ACEDescriptor.REACTS_TO map), so "react instead?" is one keystroke away; _best_match_item then
 	# pre-selects it, and the mode filter below drops the trigger where it is not a valid choice.

@@ -8135,6 +8135,16 @@ func _note_action_events(entries: Variant) -> void:
 				_note_action_events((entry as Resource).get(key))
 
 
+## The picked names whose object column word is a TYPE (not the name itself): only those re-read a "name.member" value
+## as that object's own.
+func _typed_picked_words() -> Dictionary:
+	var typed: Dictionary = {}
+	for picked_name: Variant in _picked_words.keys():
+		if str(_picked_words[picked_name]) != str(picked_name):
+			typed[picked_name] = _picked_words[picked_name]
+	return typed
+
+
 ## `event_row` and the events it is nested in, outermost first.
 func _event_chain(event_row: EventRow) -> Array[EventRow]:
 	var chain: Array[EventRow] = []
@@ -18275,6 +18285,9 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# which one a given row takes is not something this lens should have to know.
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		params_dict, _reading_autoloads())
+	# A test of something a pick made ("unit.health < 20") belongs to the picked type: "Unit | health < 20".
+	if global_read.is_empty():
+		global_read = EventSheetPickScope.read_through(params_dict, _typed_picked_words())
 	var global_owner: String = str(global_read.get("object", ""))
 	# A row about a list belongs to the list: "undo_stack | Pop back of undo_stack into last".
 	if global_owner.is_empty():
@@ -18594,6 +18607,9 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var action_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		action_params, _reading_autoloads())
+	# A step on something a pick made ("unit.health -= 5") belongs to the picked type, as the test does.
+	if global_read.is_empty():
+		global_read = EventSheetPickScope.read_through(action_params, _typed_picked_words())
 	var global_owner: String = str(global_read.get("object", ""))
 	# A row about a list belongs to the list, by the name the row writes it with.
 	if global_owner.is_empty():

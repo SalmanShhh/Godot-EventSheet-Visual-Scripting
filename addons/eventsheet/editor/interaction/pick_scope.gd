@@ -11,7 +11,26 @@
 class_name EventSheetPickScope
 extends RefCounted
 
-const POP_ACE_IDS: PackedStringArray = ["ArrayPopBackInto", "ArrayPopFrontInto"]
+## The rows that take one instance out of (or off) a list and name it: {ace_id: [param naming it, param naming the list]}.
+## Pops name the list as a variable; the pick rows name it as an expression.
+const PICK_ACES: Dictionary = {
+	"ArrayPopBackInto": ["name", "var_name"],
+	"ArrayPopFrontInto": ["name", "var_name"],
+	"PickNearest": ["name", "list"],
+	"PickFarthest": ["name", "list"],
+	"PickRandomInstance": ["name", "list"],
+	"PickWhere": ["name", "list"],
+	"PickFirstWhere": ["name", "list"],
+	"PickLastWhere": ["name", "list"],
+	"PickTop": ["name", "list"],
+	"PickBottom": ["name", "list"],
+}
+## The local rows that declare a typed name: {ace_id: [param naming it, param giving its type]}.
+const TYPED_LOCAL_ACES: Dictionary = {"SetLocalVarTyped": ["name", "var_type"]}
+## Types that are values, never instances: a typed local of one of these is not a pick.
+const VALUE_TYPES: PackedStringArray = ["", "Variant", "int", "float", "bool", "String", "StringName", "NodePath", "Vector2", "Vector2i",
+	"Vector3", "Vector3i", "Vector4", "Vector4i", "Color", "Rect2", "Rect2i", "Transform2D", "Transform3D", "Basis", "Quaternion",
+	"Plane", "AABB", "Projection", "RID", "Callable", "Signal", "Array", "Dictionary", "Object", "void"]
 const FINDING_KIND := "no-pick-here"
 const FIX_PICK_FROM_GROUP := "pick_from_a_group"
 const FIX_PICK_FROM_LIST := "pick_from_a_list"
@@ -32,9 +51,83 @@ static func own_list_element(sheet: EventSheetResource, list_name: String) -> St
 	return ""
 
 
+## True when `type_name` names something with instances in a scene (a node, or a class of the project) rather than a value or a helper object.
+static func is_instance_type(type_name: String) -> bool:
+	var plain: String = type_name.strip_edges()
+	if VALUE_TYPES.has(plain) or plain.begins_with("Array[") or not plain.is_valid_identifier():
+		return false
+	# An engine class has instances in a scene only when it is a node (a Tween or a FileAccess is a helper a
+	# line holds, not something the next rows are about); a class of the project may be anything.
+	return not ClassDB.class_exists(plain) or ClassDB.is_parent_class(plain, "Node")
+
+
+## A loop's item as written - "unit" or "unit: Unit" - as [name, type].
+static func split_item(written: String) -> PackedStringArray:
+	var at: int = written.find(":")
+	if at < 0:
+		return PackedStringArray([written.strip_edges(), ""])
+	return PackedStringArray([written.substr(0, at).strip_edges(), written.substr(at + 1).strip_edges()])
+
+
+## The element type of a list written as an expression: a bare name of one of the sheet's own lists.
+static func list_expression_element(sheet: EventSheetResource, expression: String) -> String:
+	var plain: String = expression.strip_edges()
+	return own_list_element(sheet, plain) if plain.is_valid_identifier() else ""
+
+
+## The instances an event's trigger hands it: the typed arguments of the signal that starts it
+## ("unit: Unit" in `_on_unit_clicked(unit: Unit)`), as [{"name", "type"}]. Arguments of a value type are not instances.
+static func carried_instances(event_row: EventRow) -> Array[Dictionary]:
+	var carried: Array[Dictionary] = []
+	if event_row == null:
+		return carried
+	var signature: String = event_row.trigger_args.strip_edges()
+	if signature.is_empty():
+		signature = str(event_row.trigger_params.get("args", "")).strip_edges()
+	for argument: String in signature.split(","):
+		var written: PackedStringArray = split_item(argument.split("=")[0])
+		if written[0].is_valid_identifier() and is_instance_type(written[1]):
+			carried.append({"name": written[0], "type": written[1]})
+	return carried
+
+
+## The node an event's trigger is aimed at, when it is not the sheet's own: a trigger on a child node
+## ("Enemy | On died") is about that node, so that node is an instance the rows under it can be given as a value.
+## [{"name": the reference as written ($Enemy), "type": ""}].
+static func trigger_sources(event_row: EventRow) -> Array[Dictionary]:
+	var sources: Array[Dictionary] = []
+	if event_row == null:
+		return sources
+	var path: String = event_row.trigger_source_path.strip_edges()
+	if path.is_empty():
+		return sources
+	sources.append({"name": path if path.begins_with("$") or path.begins_with("%") else "$" + path, "type": ""})
+	return sources
+
+
+## Every instance a row at `target` can be given as a value: what the events above it picked, what their triggers
+## carry and what their triggers are aimed at. [{"name", "type"}], nearest-first order is not promised.
+static func values_offered(sheet: EventSheetResource, target: Resource) -> Array[Dictionary]:
+	var offered: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	var chain: Array = chain_for(sheet, target)
+	for entry: Dictionary in in_scope(sheet, chain):
+		if not seen.has(entry["name"]):
+			seen[entry["name"]] = true
+			offered.append({"name": str(entry["name"]), "type": str(entry["type"])})
+	for event_row: Variant in chain:
+		for entry: Dictionary in carried_instances(event_row as EventRow) + trigger_sources(event_row as EventRow):
+			if not seen.has(entry["name"]):
+				seen[entry["name"]] = true
+				offered.append(entry)
+	return offered
+
+
 ## The picks one event makes by itself: [{"name", "type"}]. A For each names its item and takes the
-## element type of the list it walks; a pop row names the item it took; a typed local names itself.
-static func own_picks(sheet: EventSheetResource, event_row: EventRow) -> Array[Dictionary]:
+## element type of the list it walks; a pop or pick row names the item it took; a typed local names itself. The
+## amber "nothing is picked here" check leaves the locals a line declares out (`with_declared_locals`): a name a function
+## also has as a parameter or a member is not a request for a pick.
+static func own_picks(sheet: EventSheetResource, event_row: EventRow, with_declared_locals: bool = true) -> Array[Dictionary]:
 	var picks: Array[Dictionary] = []
 	if event_row == null:
 		return picks
@@ -42,23 +135,40 @@ static func own_picks(sheet: EventSheetResource, event_row: EventRow) -> Array[D
 		var pick: PickFilter = entry as PickFilter
 		if pick == null or not pick.enabled:
 			continue
-		var item: String = pick.iterator_name.strip_edges()
+		var written: PackedStringArray = split_item(pick.iterator_name)
+		var item: String = written[0]
 		if item.is_empty() or item.begins_with("__") or not item.is_valid_identifier():
 			continue
 		var type_name: String = pick.iterator_type.strip_edges()
+		if type_name.is_empty():
+			type_name = written[1]
 		if type_name.is_empty() and pick.collection_kind in [PickFilter.CollectionKind.ARRAY, PickFilter.CollectionKind.EXPRESSION]:
 			type_name = own_list_element(sheet, pick.collection_value.strip_edges())
+		# A loop over a list of values (Array[String]) holds no instances, so it picks nothing the object column names.
+		if not type_name.is_empty() and not is_instance_type(type_name):
+			continue
 		picks.append({"name": item, "type": type_name})
 	for entry: Variant in event_row.actions:
 		var action: ACEAction = entry as ACEAction
-		if action != null and POP_ACE_IDS.has(action.ace_id):
-			var taken: String = str(action.params.get("name", "")).strip_edges()
-			if taken.is_valid_identifier():
-				picks.append({"name": taken, "type": own_list_element(sheet, str(action.params.get("var_name", "")))})
+		if action == null:
+			continue
+		var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		if PICK_ACES.has(action.ace_id):
+			var names: Array = PICK_ACES[action.ace_id]
+			var taken: String = str(params.get(names[0], "")).strip_edges()
+			var taken_type: String = list_expression_element(sheet, str(params.get(names[1], "")))
+			if taken.is_valid_identifier() and (taken_type.is_empty() or is_instance_type(taken_type)):
+				picks.append({"name": taken, "type": taken_type})
+		elif with_declared_locals and TYPED_LOCAL_ACES.has(action.ace_id):
+			var declared: Array = TYPED_LOCAL_ACES[action.ace_id]
+			var local_name: String = str(params.get(declared[0], "")).strip_edges()
+			var local_type: String = str(params.get(declared[1], "")).strip_edges()
+			if local_name.is_valid_identifier() and is_instance_type(local_type):
+				picks.append({"name": local_name, "type": local_type})
 	for entry: Variant in event_row.local_variables:
 		var local: LocalVariable = entry as LocalVariable
-		if local != null and not local.name.strip_edges().is_empty() and local.type_name != "Variant":
-			picks.append({"name": local.name.strip_edges(), "type": local.type_name})
+		if local != null and not local.name.strip_edges().is_empty() and is_instance_type(local.type_name):
+			picks.append({"name": local.name.strip_edges(), "type": local.type_name.strip_edges()})
 	return picks
 
 
@@ -69,6 +179,66 @@ static func in_scope(sheet: EventSheetResource, chain: Array) -> Array[Dictionar
 	for event_row: Variant in chain:
 		picked.append_array(own_picks(sheet, event_row as EventRow))
 	return picked
+
+
+## The event `target` is, or holds (a condition or an action of), and every event above it, outermost first.
+## [] when the sheet has no such event.
+static func chain_for(sheet: EventSheetResource, target: Resource) -> Array:
+	if sheet == null or target == null:
+		return []
+	var tops: Array = [sheet.events]
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			tops.append((entry as EventFunction).events)
+	for top: Variant in tops:
+		var found: Array = _chain_in(top as Array, target, [])
+		if not found.is_empty():
+			return found
+	return []
+
+
+static func _holds(event_row: EventRow, target: Resource) -> bool:
+	if target is ACECondition:
+		return event_row.conditions.has(target as ACECondition)
+	if target is ACEAction:
+		return event_row.actions.has(target as ACEAction)
+	return false
+
+
+static func _chain_in(items: Array, target: Resource, above: Array) -> Array:
+	for item: Variant in items:
+		if item is EventGroup:
+			var inside: Array = _chain_in(EventSheetGroupFacts.children(item as EventGroup), target, above)
+			if not inside.is_empty():
+				return inside
+		elif item is EventRow:
+			var event_row: EventRow = item as EventRow
+			var chain: Array = above + [event_row]
+			if event_row == target or _holds(event_row, target):
+				return chain
+			var deeper: Array = _chain_in(event_row.sub_events, target, chain)
+			if not deeper.is_empty():
+				return deeper
+	return []
+
+
+## The picked instances an Add action / Add condition offers as objects at `target`: [{"name", "type", "word"}], one
+## per pick of a type with instances, by the word the object column reads it with (its type, or its name as written
+## when two picks share a type). [] outside every pick.
+static func offered_objects(sheet: EventSheetResource, target: Resource) -> Array[Dictionary]:
+	var chain: Array = chain_for(sheet, target)
+	var offered: Array[Dictionary] = []
+	if chain.is_empty():
+		return offered
+	var words: Dictionary = object_words(sheet, chain)
+	var seen: Dictionary = {}
+	for entry: Dictionary in in_scope(sheet, chain):
+		var name: String = str(entry["name"])
+		if seen.has(name) or not is_instance_type(str(entry["type"])):
+			continue
+		seen[name] = true
+		offered.append({"name": name, "type": str(entry["type"]), "word": str(words.get(name, name))})
+	return offered
 
 
 ## The word the object column shows for each picked name: its TYPE when exactly one pick of that type is
@@ -87,6 +257,36 @@ static func object_words(sheet: EventSheetResource, chain: Array) -> Dictionary:
 	return words
 
 
+## A row whose values reach THROUGH a picked name to one of its members ("unit.health < 20"), re-read as a row
+## about that object: {"object": the word the object column shows, "params": a COPY of the values with the
+## "unit." taken off}. {} when the row names a target of its own, reaches through no pick, or reaches through
+## two. Nothing here changes the row; the caller reads the copy and throws it away.
+static func read_through(params: Dictionary, words: Dictionary) -> Dictionary:
+	if words.is_empty() or not str(params.get("target", "")).strip_edges().is_empty():
+		return {}
+	var owner: String = ""
+	var rewritten: Dictionary = {}
+	for key: Variant in params.keys():
+		var value: String = str(params[key]).strip_edges()
+		var dot_at: int = value.find(".")
+		var head: String = value.substr(0, dot_at).strip_edges() if dot_at > 0 else ""
+		if head.is_empty() or not words.has(head) or not _opens_with_identifier(value.substr(dot_at + 1)):
+			rewritten[key] = params[key]
+			continue
+		if not owner.is_empty() and owner != head:
+			return {}
+		owner = head
+		rewritten[key] = value.substr(dot_at + 1)
+	if owner.is_empty():
+		return {}
+	return {"object": str(words[owner]), "params": rewritten}
+
+
+static func _opens_with_identifier(text: String) -> bool:
+	var first: String = text.strip_edges().left(1)
+	return first == "_" or (first.to_lower() != first.to_upper())
+
+
 ## Every pick the sheet makes anywhere, with the event that makes it: {name: [{"type", "event"}]}.
 static func all_picks(sheet: EventSheetResource) -> Dictionary:
 	var found: Dictionary = {}
@@ -102,7 +302,7 @@ static func _collect(sheet: EventSheetResource, items: Array, found: Dictionary)
 		if item is EventGroup:
 			_collect(sheet, EventSheetGroupFacts.children(item as EventGroup), found)
 		elif item is EventRow:
-			for entry: Dictionary in own_picks(sheet, item as EventRow):
+			for entry: Dictionary in own_picks(sheet, item as EventRow, false):
 				if not found.has(entry["name"]):
 					found[entry["name"]] = []
 				(found[entry["name"]] as Array).append({"type": entry["type"], "event": item})

@@ -220,6 +220,7 @@ func _refresh_expression_tree() -> void:
 	# self-scoped query ("self", "Self.X") filters WITHIN the section and hides the rest of the
 	# tree, mirroring how typing Self. elsewhere scopes the panel to the object's own list.
 	var self_query: Dictionary = EventSheetSelfExpressions.normalize_query(query)
+	_add_picked_section(root, str(self_query.get("remainder", "")).to_lower())
 	_add_self_section(root, str(self_query.get("remainder", "")))
 	if bool(self_query.get("self_scoped", false)):
 		return
@@ -249,6 +250,27 @@ func _refresh_expression_tree() -> void:
 	# Beyond `self`: the sheet's own variables as one-click leaves, plus - while searching - the typed
 	# members of any class-backed variable (enemy.health) so reflection isn't limited to the host.
 	_add_sheet_variable_expressions(root, query)
+
+
+## The instances this row can be given as a value: what the events above it picked and what its trigger handed it,
+## so "Push back" has the Unit to push without the name being typed. Nothing is shown where nothing is picked.
+func _add_picked_section(root: TreeItem, lowered_query: String) -> void:
+	var offered: Array[Dictionary] = EventSheetPickScope.values_offered(_context_sheet(), _host._context.get("selected_resource") as Resource)
+	var header: TreeItem = null
+	for entry: Dictionary in offered:
+		var label: String = str(entry["name"]) if str(entry["type"]).is_empty() else "%s  (%s)" % [str(entry["name"]), str(entry["type"])]
+		if not lowered_query.is_empty() and not label.to_lower().contains(lowered_query):
+			continue
+		if header == null:
+			header = _expression_tree.create_item(root)
+			header.set_text(0, EventSheetL10n.translate("Picked here"))
+			header.set_custom_color(0, _ink(ACEPickerDialog.GROUP_COLOR_NODE_TYPE))
+			header.set_selectable(0, false)
+			header.set_tooltip_text(0, EventSheetL10n.translate("The instances this event picked or was handed, by the names the code uses."))
+		var item: TreeItem = _expression_tree.create_item(header)
+		item.set_text(0, label)
+		item.set_custom_color(0, _ink(ACEPickerDialog.ITEM_COLOR_EXPRESSION))
+		item.set_metadata(0, str(entry["name"]))
 
 
 ## The pinned Self section: the sheet's own variables, the host's event-sheet-common properties

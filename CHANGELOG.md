@@ -4,6 +4,18 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a picked instance is an object in Add action and Add condition
+
+- Inside a pick (a For each, Pop back / front into, Pick nearest / first where / random, a typed local, or a signal that hands the event its instance) and every sub-event under it, Add action and Add condition list the picked instance at the top of the objects page, by its type (Unit, Enemy; its name as written when two picks share a type). Choosing it offers that class's own rows and those of what it is a kind of (Node2D: Set position, Set tint, Hide), each already aimed at the picked name. Outside the pick it is not offered.
+- Rows on a picked instance read as that object's rows, whether hand-written or picked: `unit.start_turn()` reads "Unit | Start turn", and a test such as `unit.health < 20` reads "Unit | health < 20". A For each written with a typed item (`for unit: Unit in selected`) is understood as a pick, and a sub-event or an Else under it keeps it.
+- Where a row needs a value, the expression picker has a "Picked here" section with the instances the event picked or was handed by its trigger, so Push back, Delete value and Contains do not need the name typed.
+
+### Changed: findings draw no frame, and long sentences are read whole
+
+- A row with a finding is a faint tint and an amber event number (red for one that cannot run). The amber frame round the whole event is gone.
+- A finding's sentence that does not fit the status bar is said whole, wrapped, on a line of its own above it, with the doors left in the bar.
+- A For each or other loop cell wraps in the condition lane like any other long condition instead of being cut mid-word.
+
 ### Added: a pick lasts for its event and its sub-events, and nowhere else
 
 - A For each, a Pop back / front into and a typed local are picks. A row under one that acts on the picked name now shows the picked TYPE in the object column (Unit, Enemy); when an event holds two picks of one type (an attacker and a target) each shows its name as written instead. A sub-event inherits the pick, and a sibling event starts with nothing picked.
