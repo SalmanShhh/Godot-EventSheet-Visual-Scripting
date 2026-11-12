@@ -282,7 +282,7 @@ more than a note.
 ## Adding a variable
 
 **How you get there.** Right-click the canvas and pick **Add Variable ▸ Global variable… /
-Local variable… / Instance variable…** - "add a variable" is really three questions, and the submenu
+Local variable… / Variable…** - "add a variable" is really three questions, and the submenu
 asks the one that matters. Double-clicking a variable row, or **Edit Variable** on its menu, opens
 the same dialog titled *Edit variable*. With a group head selected, `V` adds one of that group's own
 locals.
@@ -322,7 +322,7 @@ Three gates worth knowing:
   the one flag a local can wear.
 - **Constant** greys Static with it - GDScript has no `static const`.
 
-A fresh variable opens on the scope the last one used, so a run of instance variables answers the
+A fresh variable opens on the scope the last one used, so a run of variables answers the
 scope question once rather than five times. An **edit** never moves a variable's scope behind your
 back: it opens on the scope the variable has.
 
@@ -367,7 +367,7 @@ looks for:
 
 | Row | Object column | Why |
 |---|---|---|
-| Subtract 10 from `hp` | Player | `hp` is an instance variable of this sheet's object |
+| Subtract 10 from `hp` | Player | `hp` is a variable of this sheet's object |
 | Set `Game.Score` to 0 | Game | the variable belongs to the autoload |
 | Set the event's own `combo` to 0 | System | a local belongs to the event it sits in, and to nothing you can select |
 
@@ -385,12 +385,8 @@ globals, then the locals in view:
   what picking it inserts ("Inserts Game.Score").
 - **The Anatomy rail** reads "Instance, of Player", "Globals used here, from Game" and "Locals in
   view", each line composed by the same call the rows make.
-- **The Inspector** carries the variables themselves, under *Edit Event Sheet*: a band saying
-  **Instance variables · N** and one row per declared variable - name, type in plain words, initial
-  value, and a pencil that opens the sheet on the line that declares it. Typing a new initial value
-  writes that `var` / `const` line through the sheet's own undo funnel, so one Ctrl+Z takes it back
-  and every other byte of the file is untouched; **+ Add instance variable** opens the same Add
-  variable dialog the sheet uses.
+- **The Inspector** lists every `@export` variable of the script as an ordinary Godot row, under the
+  *Edit Event Sheet* button. The sheet adds nothing of its own beside them.
 
 The two boolean verbs complete the family: **Set boolean** writes `{var_name} = {value}` with true
 and false already in the list, and **Is boolean set** asks `{var_name}` plainly instead of comparing

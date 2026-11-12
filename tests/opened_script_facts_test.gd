@@ -181,8 +181,8 @@ static func _test_autoload_head() -> bool:
 	ok = _check("under the two export groups the file writes, as an edited sheet draws them",
 		rows.filter(func(entry: Dictionary) -> bool:
 			return (entry.get("row") as EventRowData).row_uid.begins_with("variable_tree_group_")).size(), 2) and ok
-	ok = _check("and the per-group / Instance variables split is gone",
-		_bar_titled(rows, "Movement") == null and _bar_titled(rows, "Instance variables") == null, true) and ok
+	ok = _check("and the per-group / Variables split is gone",
+		_bar_titled(rows, "Movement") == null and _bar_titled(rows, "Variables") == null, true) and ok
 	view.free()
 
 	var firing: EventSheetViewport = _open(PLAYER_PATH, true)

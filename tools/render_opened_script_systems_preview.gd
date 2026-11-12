@@ -56,7 +56,7 @@ func _show() -> void:
 		if row_data == null:
 			continue
 		for span: SemanticSpan in row_data.spans:
-			if span.text.strip_edges() == "Instance variables":
+			if span.text.strip_edges() == "Variables":
 				_view._fold_state[row_data.row_uid] = true
 	_view.set_sheet(sheet)
 	_view.set_reading_mode(true)

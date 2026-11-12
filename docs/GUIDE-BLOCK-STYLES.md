@@ -33,7 +33,7 @@ readable line:
   its version; on an autoload it wears the globe and says `autoload (global)`. A chip at its end
   says how much of the file reads as events - `96% reads as events · 3 script blocks ▸` - and
   clicking that chip walks the blocks that stayed code, one per click.
-- **Folders** hang under it: `Instance variables`, one per `@export_group`, `Triggers this pack
+- **Folders** hang under it: `Variables`, one per `@export_group`, `Triggers this pack
   fires`, and `Global variables used here` on a sheet that touches a project global.
 - **A behaviour, a global or any other file of a pack has none of these.** It reads in its file's
   own order under the title row an edited sheet has - `SineBehavior  Behaviour · extends Node` -

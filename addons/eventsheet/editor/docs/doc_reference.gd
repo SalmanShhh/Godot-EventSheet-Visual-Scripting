@@ -165,7 +165,7 @@ static func home_blocks() -> Array[Dictionary]:
 	if bool(EventSheetDocExplain.resolve(HOME_MOVING_ACROSS).get("valid", false)):
 		blocks.append({"kind": "heading", "level": 2, "text": "Coming from another event-sheet editor",
 			"slug": "coming-from-another-event-sheet-editor"})
-		blocks.append({"kind": "paragraph", "bbcode": "Which words change, which stay, and how a family, a layout and an instance variable read here."})
+		blocks.append({"kind": "paragraph", "bbcode": "Which words change, which stay, and how a family, a layout and a variable read here."})
 		blocks.append({"kind": "buttons", "items": [{"label": "Moving from another event-sheet editor", "tooltip": "",
 			"action": ACTION_HOME_OPEN, "argument": "%s#" % HOME_MOVING_ACROSS}]})
 	return blocks

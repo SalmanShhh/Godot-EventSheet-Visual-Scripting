@@ -10168,3 +10168,5 @@ Pick the %s from %s,"Elegir %s de %s"
 Picked here,"Elegidos aquí"
 "The instances this event picked or was handed, by the names the code uses.","Las instancias que este evento eligió o recibió, con los nombres que usa el código."
 "The %s this event picked, written as %s. Rows you add here act on it.","El %s que este evento eligió, escrito como %s. Las filas que añadas aquí actúan sobre él."
+%s - variables,%s - variables
+Variable…,Variable…

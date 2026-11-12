@@ -260,7 +260,7 @@ static func _test_catalog() -> bool:
 	for group: Dictionary in groups:
 		titles.append(str(group.get("title", "")))
 	ok = _check("groups read by owner, this object first",
-		titles, PackedStringArray(["Player - instance variables", "Locals in scope"])) and ok
+		titles, PackedStringArray(["Player - variables", "Locals in scope"])) and ok
 
 	# The verb table: which variables each verb can actually take.
 	ok = _check("Add to offers only the numbers",

@@ -10168,3 +10168,5 @@ Pick the %s from %s,"从 %s 中选择 %s"
 Picked here,"此处已选取"
 "The instances this event picked or was handed, by the names the code uses.","此事件选取或收到的实例，使用代码中的名称。"
 "The %s this event picked, written as %s. Rows you add here act on it.","此事件选取的 %s，写作 %s。你在此添加的行会作用于它。"
+%s - variables,%s - 变量
+Variable…,变量…

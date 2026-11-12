@@ -36,7 +36,7 @@ as, and where to go to see the two side by side.
 | `func _on_state_changed(from_state, to_state)` | On leaving X / On entering X, leaving first - when the handler's `from_state` arms sit above its `to_state` arms, which is the order they run in | Object State |
 | `extends` | family / base class (the word follows View ▸ Familiar Words) | the Object bar |
 | `class_name` | the object's own name in the Object bar | the Object bar |
-| `@export var` | Instance variable · Inspector | Object properties |
+| `@export var` | Variable · Inspector | Object properties |
 | `var` inside a function | Local variable, then a Set row | System |
 | `const` | Constant | System |
 | `add_to_group("x")` | Add To Group (Add to family with Familiar Words on) | Groups |

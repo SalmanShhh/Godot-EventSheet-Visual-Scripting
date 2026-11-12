@@ -67,7 +67,7 @@ static func _test_a_script_with_a_class_name() -> bool:
 		[_row_with_uid(rows, "sheet_head_description_"), _row_with_uid(rows, "head_description_row_")],
 		[null, null]) and ok
 
-	ok = _check("no invented bars: no Triggers, no settings folder, no Instance variables",
+	ok = _check("no invented bars: no Triggers, no settings folder, no Variables folder",
 		_head_bar_titles(rows), "") and ok
 	ok = _test_signals_read_as_triggers(view) and ok
 	ok = _check("the @export_group is the Inspector's section, holding its knobs where the file has them",

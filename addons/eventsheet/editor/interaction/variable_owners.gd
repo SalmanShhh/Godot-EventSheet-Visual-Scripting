@@ -301,7 +301,7 @@ static func owner_for(entries: Array[Dictionary], name_text: String) -> String:
 
 ## The catalog bucketed for a list that shows one heading per owner:
 ## [{"id", "owner", "title", "entries"}], empty groups dropped. The title is what a heading says out
-## loud - "Player - instance variables", "Game - globals", "Locals in scope".
+## loud - "Player - variables", "Game - globals", "Locals in scope".
 static func groups(sheet: EventSheetResource) -> Array[Dictionary]:
 	return group_entries(catalog(sheet))
 
@@ -336,7 +336,7 @@ static func group_title(group_id: String, owner: String) -> String:
 			return EventSheetL10n.translate("%s - globals") % owner
 		GROUP_LOCAL:
 			return EventSheetL10n.translate("Locals in scope")
-	return EventSheetL10n.translate("%s - instance variables") % owner
+	return EventSheetL10n.translate("%s - variables") % owner
 
 
 ## One catalog entry as the sentence its ROW reads with, minus the owner: "whole number hp = 100".

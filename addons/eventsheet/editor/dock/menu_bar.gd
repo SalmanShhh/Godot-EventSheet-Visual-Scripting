@@ -454,10 +454,10 @@ func build(root: Node) -> void:
 	add_popup.add_item("Comment", 16)
 	add_popup.add_separator()
 	add_popup.add_item("Signal Event…", 0)
-	# The sheet's own members are INSTANCE variables of the object the file is; a GLOBAL is
+	# The sheet's own members are the plain variables of the object the file is; a GLOBAL is
 	# one value the whole project shares, and lives on an autoload. Two different things, so two
 	# items, each named the thing it makes.
-	add_popup.add_item("Instance Variable…", 1)
+	add_popup.add_item("Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Global Variable…", 8)
 	# A tool's verbs (Bake, Clear) are buttons in the Inspector: label, editor icon, the function it

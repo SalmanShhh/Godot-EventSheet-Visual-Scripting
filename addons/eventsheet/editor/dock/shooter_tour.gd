@@ -45,8 +45,8 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "Keep a score",
-			"body": "A sheet variable is an instance variable of the object the sheet is on - here, the game itself.",
-			"task": "Add an instance variable score, a whole number starting at 0.",
+			"body": "A sheet variable belongs to the object the sheet is on - here, the game itself.",
+			"task": "Add a variable score, a whole number starting at 0.",
 			"check": func(sheet: EventSheetResource) -> bool: return _writes(sheet, ["var score"]),
 		},
 		{

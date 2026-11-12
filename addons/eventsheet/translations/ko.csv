@@ -10168,3 +10168,5 @@ Pick the %s from %s,"%s에서 %s 고르기"
 Picked here,"여기서 선택됨"
 "The instances this event picked or was handed, by the names the code uses.","이 이벤트가 선택했거나 전달받은 인스턴스이며, 코드에서 쓰는 이름으로 표시됩니다."
 "The %s this event picked, written as %s. Rows you add here act on it.","이 이벤트가 선택한 %s이며 %s(으)로 쓰여 있습니다. 여기서 추가하는 행은 그것에 작용합니다."
+%s - variables,%s - 변수
+Variable…,변수…

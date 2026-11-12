@@ -10168,3 +10168,5 @@ Pick the %s from %s,"Выбрать %s из %s"
 Picked here,"Выбрано здесь"
 "The instances this event picked or was handed, by the names the code uses.","Экземпляры, которые это событие выбрало или получило, под именами из кода."
 "The %s this event picked, written as %s. Rows you add here act on it.","%s, выбранный этим событием, записан как %s. Строки, добавленные здесь, действуют на него."
+%s - variables,%s - переменные
+Variable…,Переменная…

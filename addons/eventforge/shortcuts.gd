@@ -105,7 +105,7 @@ const LABELS: Dictionary = {
 	"add_event_chord": "Add event (Ctrl alternate)",
 	"add_condition_chord": "Add condition (Ctrl alternate)",
 	"add_action_chord": "Add action (Ctrl alternate)",
-	"add_variable_chord": "Add instance variable",
+	"add_variable_chord": "Add variable",
 	"copy_as_text": "Copy as text",
 }
 

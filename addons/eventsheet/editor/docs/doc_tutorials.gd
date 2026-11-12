@@ -186,7 +186,7 @@ const TUTORIALS: Array[Dictionary] = [
 				"check": "sheet_has_condition",
 			},
 			{
-				"text": "An instance variable is a sheet variable: Add ▸ Global Variable… for one the whole sheet shares, Add ▸ Local Variable… for one that lives inside its event.",
+				"text": "A sheet variable belongs to the object the sheet is on: Add ▸ Variable… makes one. Add ▸ Global Variable… for one the whole sheet shares, Add ▸ Local Variable… for one that lives inside its event.",
 				"control": "Add",
 				"check": "sheet_has_variable",
 			},
@@ -287,7 +287,7 @@ const TUTORIALS: Array[Dictionary] = [
 				"check": "sheet_group_runs_on",
 			},
 			{
-				"text": "Give the players a value to agree on: Add ▸ Instance Variable…, and call it hp. In a sheet attached to a scene, right-click that row ▸ Keep in Step ▸ Always hands the value to a MultiplayerSynchronizer - a sheet with no scene behind it cannot do that half, so try it in one that has.",
+				"text": "Give the players a value to agree on: Add ▸ Variable…, and call it hp. In a sheet attached to a scene, right-click that row ▸ Keep in Step ▸ Always hands the value to a MultiplayerSynchronizer - a sheet with no scene behind it cannot do that half, so try it in one that has.",
 				"control": "Add",
 				"check": "sheet_has_variable",
 			},

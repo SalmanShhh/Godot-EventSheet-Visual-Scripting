@@ -52,7 +52,7 @@ func _show() -> void:
 	for entry: Variant in _view._flat_rows:
 		var head_row: EventRowData = (entry as Dictionary).get("row")
 		if head_row != null and not head_row.spans.is_empty() \
-				and head_row.spans[0].text.contains("Instance variables"):
+				and head_row.spans[0].text.contains("Variables"):
 			_view._fold_state[head_row.row_uid] = true
 	_view.set_sheet(sheet)
 	_view.set_reading_mode(true)

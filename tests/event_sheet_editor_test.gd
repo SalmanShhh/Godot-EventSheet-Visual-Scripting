@@ -1304,7 +1304,7 @@ static func run() -> bool:
     all_passed = _check("the Add Variable submenu names the three scopes",
         [dock._add_variable_submenu.get_item_text(0), dock._add_variable_submenu.get_item_text(1),
             dock._add_variable_submenu.get_item_text(2)],
-        ["Global variable…", "Local variable…", "Instance variable…"]) and all_passed
+        ["Global variable…", "Local variable…", "Variable…"]) and all_passed
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_EVENT)
     # "New Event" routes through the same ACE picker as the toolbar / double-click (new-event mode) now,
     # instead of dropping a blank event - so the event count holds until the user picks something.

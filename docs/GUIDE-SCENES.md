@@ -71,7 +71,7 @@ func _process(_delta: float) -> void:
 		%ScoreLabel.text = "%d" % score
 ```
 
-![The four lines above, and the one event they read as: an Every tick event whose condition is player_hp under 25, with four action rows whose object column reads HealthBar ProgressBar twice and ScoreLabel Label twice, over a sheet head declaring the two instance variables](images/unique-name-rows.png)
+![The four lines above, and the one event they read as: an Every tick event whose condition is player_hp under 25, with four action rows whose object column reads HealthBar ProgressBar twice and ScoreLabel Label twice, over a sheet head declaring the two variables](images/unique-name-rows.png)
 
 **Nothing is registered.** The mark lives in the scene file and nowhere else, so there is no second
 list of names to keep in step, and a name the scene stops carrying simply stops resolving: the row

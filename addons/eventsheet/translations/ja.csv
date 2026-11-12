@@ -10168,3 +10168,5 @@ Pick the %s from %s,"%s から %s を選ぶ"
 Picked here,"ここで選択済み"
 "The instances this event picked or was handed, by the names the code uses.","このイベントが選択した、または受け取ったインスタンス（コードで使われている名前）。"
 "The %s this event picked, written as %s. Rows you add here act on it.","このイベントが選択した %s（%s と書かれています）。ここで追加する行はそれに対して働きます。"
+%s - variables,%s - 変数
+Variable…,変数…

@@ -3744,7 +3744,7 @@ func _build_knob_group_rows(sheet: EventSheetResource, all_knobs: Array) -> Arra
 		var object_name: String = EventSheetViewportReadingRows.script_object_name(sheet)
 		var subtitle: String = "%d" % internal.size() if object_name.is_empty() \
 			else EventSheetL10n.translate("of %s") % object_name
-		var title: String = EventSheetL10n.translate("Instance variables")
+		var title: String = EventSheetL10n.translate("Variables")
 		if not pack_name.is_empty():
 			# With the settings in a folder of their own, what is left is exactly what the pack keeps
 			# to itself - so the folder says that rather than naming a language construct.

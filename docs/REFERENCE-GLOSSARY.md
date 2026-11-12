@@ -60,7 +60,7 @@ the same in the picker and in the reading, so what you pick is what you read.
 | **Is boolean set** | `if alive:` | (new) |
 
 That is the order the picker lists them in, under the object that OWNS the variable: your sheet's
-own object for an instance variable, the autoload for a global, System for a local. Each entry names
+own object for a variable, the autoload for a global, System for a local. Each entry names
 the variables it can take ("Add to · hp, speed"), so a verb with nothing of that kind in scope says
 so before you click it, and the panel underneath describes each of them in the sentence its row
 reads with.

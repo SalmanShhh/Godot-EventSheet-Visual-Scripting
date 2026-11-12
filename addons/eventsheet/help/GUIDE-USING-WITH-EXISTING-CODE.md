@@ -598,7 +598,7 @@ That is the order this section is in.
   with its parameters under it and its own actions beside it.
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, its
   head grows an `autoload  Game` band echoing the `project.godot` entry that grants the name, its
-  knobs read as one `Global variables` folder rather than the Instance variables one, and its
+  knobs read as one `Global variables` folder rather than the Variables one, and its
   triggers say `this global fires - N`. The Object bar names it the same way.
 - **A global is declared once and listed where it is used.** Any sheet that reads or writes one of
   the project's globals grows a folded `▸ Global variables used here` folder in its head - `Score ·
@@ -625,7 +625,7 @@ That is the order this section is in.
   `String`, `Array[String]`, `Dictionary`) one hover away. A declared `int` reads "whole number"
   because the author said they wanted no fractions; an undeclared `100` still reads "number". Variables
   a designer can edit wear a small **sliders mark** beside the name (hover: "Editable in the
-  Inspector"), and the head gathers them all in one **Instance variables** folder with those first,
+  Inspector"), and the head gathers them all in one **Variables** folder with those first,
   rather than a Settings / Internal state split. Scope and type are WORDS on the row, never pills:
   the only boxes a variable row wears are its `x` kind badge and that sliders mark.
 - **A `static var` says who shares it.** `static var spawned: int = 0` reads
@@ -876,7 +876,7 @@ pivot turns.
   the lift cannot claim keeps the verbatim accessor block, and the file's bytes are untouched either
   way. Right-click a sheet variable for **Add setter** / **Add getter** to write the shape yourself.
   The accessor events show wherever the variable is listed - down the event tree and inside the
-  head's **Instance variables** folder, which is where a reader goes to find out what a variable IS.
+  head's **Variables** folder, which is where a reader goes to find out what a variable IS.
 - **A property that NAMES its accessors is a property too.** Godot's other spelling for a guarded
   value puts the functions beside the declaration instead of the body under it:
 
@@ -1043,7 +1043,7 @@ to the function it names, the same jump the Outline panel makes.
   says what it is, and for someone reading a plugin the second is the half they need first. Turn
   Familiar Words off and the class reads exactly as the file declares it.
 
-  ![An Instance variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it](images/typed-object-labels.png)
+  ![A Variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it](images/typed-object-labels.png)
 - **A plain script is an object.** Its name band names it (`class_name`, else the file) with its
   class icon, and its Include bar adds the fact no line of the file carries - the root node of the
   scene that runs it, when the script declares no class of its own; its engine properties read under
@@ -1157,7 +1157,7 @@ to the function it names, the same jump the Outline panel makes.
   so the step is the row and the chain calls in front of it are muted notes on it - `repeat 3 times`
   or `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel`.
 
-  ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
+  ![A tween chain read as Tween actions, and a head whose Variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
 
 - **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
   `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` - whether the line is still
@@ -1701,7 +1701,7 @@ Two more families of line that a plain Godot script is full of.
 
 A script that `extends Resource` is not an object in the scene - it is a **data type**, and that is
 what its Include bar says, under the name a designer would use out loud (`enemy_stats.gd` opens as
-an `Enemy Stats`). Its `@export`s are **Field** rows rather than instance variables, because every
+an `Enemy Stats`). Its `@export`s are **Field** rows rather than ordinary variables, because every
 `.tres` saved from it is one asset with those fields filled in. In the events, an asset reads as the
 asset: `load("res://data/slime.tres") as EnemyStats` is **the data asset slime.tres**, a field read
 off one says whose it is (`stats.hp` is **stats's hp**), and `ResourceSaver.save(stats, path)` is
@@ -2327,7 +2327,7 @@ back byte for byte. See **docs/Modules/Around-Objects.md** for the rows themselv
 A `class_name` that other scripts `extends` is a base class. Godot has no view of that shape: to see
 which scripts extend `Enemy`, what they share, and whether the `"enemy"` group agrees with the
 `Enemy` class, a project has to be grepped. An event sheet has had one word for exactly this - an
-object set that shares instance variables and behaviors - so the sheet shows the hierarchy as one
+object set that shares variables and behaviors - so the sheet shows the hierarchy as one
 entry: the base on top, the scripts that extend it as its members, and the base's own variables and
 functions as what they share.
 

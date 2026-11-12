@@ -259,7 +259,7 @@ func build_all() -> void:
 	_dock._add_variable_submenu.name = "EventSheetAddVariableSubmenu"
 	_dock._add_variable_submenu.add_item("Global variable…", _dock.EMPTY_MENU_ADD_VARIABLE)
 	_dock._add_variable_submenu.add_item("Local variable…", _dock.EMPTY_MENU_ADD_LOCAL_VARIABLE)
-	_dock._add_variable_submenu.add_item("Instance variable…", _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE)
+	_dock._add_variable_submenu.add_item("Variable…", _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE)
 	# And the two of these three that have a key say which. Read off the shortcut table, so a
 	# rebound key hints as the key it was rebound to; Local has no key of its own to name.
 	hint_key(_dock._add_variable_submenu, _dock.EMPTY_MENU_ADD_VARIABLE,

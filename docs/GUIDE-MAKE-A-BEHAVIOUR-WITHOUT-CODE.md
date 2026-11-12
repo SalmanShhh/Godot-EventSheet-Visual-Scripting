@@ -119,7 +119,7 @@ A function's parameters render as condition-style cells beneath its name: click 
 
 Functions appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ. Its first three organs are the sheet's variables, grouped the way the rows read them - **Instance, of Player**, **Globals used here, from Game**, **Locals in view** - and every line is the same sentence its row shows (`Instance whole number hp = 100`), so the rail and the canvas can never disagree about how a variable is spelled:
 
-<img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's variables by scope, Triggers, and Actions listed as organs with role pills - the Health pack showing its knobs and state values as Instance variables, 8 triggers, and 16 actions." width="340">
+<img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's variables by scope, Triggers, and Actions listed as organs with role pills - the Health pack showing its knobs and state values as Variables, 8 triggers, and 16 actions." width="340">
 
 Below the Anatomy panel, the collapsible **Picker preview** answers the question the census
 cannot: *how will my vocabulary actually read in the picker?* It renders every published entry
