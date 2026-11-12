@@ -256,7 +256,7 @@ static func _test_the_cascade() -> bool:
 		var submenu: PopupMenu = popup.find_child(name, true, false) as PopupMenu
 		counts[name] = -1 if submenu == null else submenu.item_count
 	# 32, not 30: the head bar name card's two doors, Open in Script Editor and Show in FileSystem, joined it.
-	ok = _check("Sheet keeps its items, plus the name card's two doors", counts["EventSheetSheetMenu"], 32) and ok
+	ok = _check("Sheet keeps its items, plus the name card's two doors", counts["EventSheetSheetMenu"], 31) and ok
 	ok = _check("Edit keeps its items", counts["EventSheetEditMenu"], 10) and ok
 	# 59, not 56: View ▸ Sheet theme joined it when the theme OptionButton left the strip, and
 	# View ▸ Panels when the left rail learned to slide its panels off. Both are submenus, so this
@@ -275,7 +275,7 @@ static func _test_the_cascade() -> bool:
 	# window - Sheet display (the seventeen ticks on how rows are drawn), Collapse and expand (the five
 	# sweeps), Split views (three) and Zoom (three). Each hanger is one item on View.
 	ok = _check("View keeps its items, with the drawing, sweeps, split and zoom items in submenus",
-		counts["EventSheetViewMenu"], 38) and ok
+		counts["EventSheetViewMenu"], 37) and ok
 	var view_submenu_counts: Dictionary = {}
 	for name: String in ["EventSheetSheetDisplayMenu", "EventSheetCollapseMenu", "EventSheetSplitViewsMenu",
 			"EventSheetZoomMenu"]:

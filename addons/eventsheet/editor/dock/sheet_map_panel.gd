@@ -428,6 +428,8 @@ func _open_node(id: String) -> void:
 		"tscn", "scn":
 			if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 				EditorInterface.open_scene_from_path(id)
+			_dock._set_status("Opened %s in the scene editor. Sheet ▸ Open… the same file to read the whole layout as one sheet."
+				% id.get_file())
 
 
 ## A click on a line runs the Find that explains it - the signal's name for a signal edge, the

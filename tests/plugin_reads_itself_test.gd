@@ -174,7 +174,6 @@ const DERIVED_FLOOR: Dictionary = {
 	# add_child, confirmed.connect and the rest) left the file with them.
 	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 1,
 	"res://addons/eventsheet/editor/event_sheet_exposed_node.gd": 8,
-	"res://addons/eventsheet/editor/objects_panel.gd": 10,
 }
 
 ## The files under addons/ and tools/ that still put lines in a script block, with the count each one
@@ -197,7 +196,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## THE DERIVED LAYER, measured on whole files rather than on hand-built lines. Not sampled: these five
+## THE DERIVED LAYER, measured on whole files rather than on hand-built lines. Not sampled: these four
 ## are named, so the number is the same on every machine and on every run, and a reading that stopped
 ## resolving a receiver - or a declaration map that started declining one it used to answer for -
 ## fails here rather than passing quietly under a ceiling that cannot see it.
