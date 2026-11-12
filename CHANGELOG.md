@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: more air between events in the Editor Native look
+
+- Two events in the Editor Native look are now 6 px apart instead of 1, so each reads as its own event and not as a continuation of the one above. The conditions and actions inside one event are exactly as tight as before, and a sub-event still sits 1 px under its parent. The README pictures of the workspace and of the Generated GDScript panel were retaken to show it.
+
 ### Changed: clicking beside the sheet clears the selection
 
 - A click in the strip left of the sheet (the side panel's rail) or right of it, outside every event and variable, now clears the selection, the way a click on the empty canvas does. The sheet keeps keyboard focus, so Delete after that cannot reach the Scene tree. Ctrl and Shift clicks there change nothing.

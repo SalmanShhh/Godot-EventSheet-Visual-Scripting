@@ -4,7 +4,7 @@ extends RefCounted
 #
 # The board's measured values, pinned: the lanes' neutral greys (derived from the editor's base, so a
 # darker editor moves them together), the 1 px divider, the object blue, the 34 px number column,
-# blocks at 52 / 70 / 88 px, the fold slot of each level, exactly 1 px between events, the group
+# blocks at 52 / 70 / 88 px, the fold slot of each level, exactly 1 px between a parent and its child, the group
 # bar's colour, and that Classic Sheet keeps its own geometry.
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -102,7 +102,7 @@ static func _test_geometry() -> bool:
 			[(folds[0] as Rect2).position.x, (folds[0] as Rect2).end.x, (folds[1] as Rect2).position.x, (folds[1] as Rect2).end.x],
 			[34.0, 52.0, 52.0, 70.0]],
 		["a childless event has no fold slot", (folds[2] as Rect2).size, Vector2.ZERO],
-		["exactly 1 px between one event and the next, a parent and its child included", native["gaps"], [1.0, 1.0]],
+		["exactly 1 px between a parent and its child, whatever the gap between two events is", native["gaps"], [1.0, 1.0]],
 		["a 1 px lane divider", native["dividers"], [1.0, 1.0, 1.0]],
 		["nesting lines stand 8 px into their slot",
 			[EventRowRenderer.nesting_line_x(0, 18), EventRowRenderer.nesting_line_x(1, 18)], [42.0, 60.0]],

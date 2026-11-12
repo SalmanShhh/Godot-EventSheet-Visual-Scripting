@@ -124,9 +124,10 @@ func rebuild(kept: Dictionary = {}) -> void:
 			and _viewport.get_event_style() != null
 			and _viewport.get_event_style().sub_event_strips
 		):
-			# A look that nests by lines packs a sub-event the same 1 px below its parent as it packs
-			# two siblings: every block stands off the one above by exactly the block gap.
-			top += _viewport.event_block_gap() * EventSheetPalette.row_density()
+			# A look that nests by lines packs a sub-event 1 px below its parent, however wide the gap
+			# between two sibling events is: the nesting lines say "inside", and the wider gap is what
+			# says "a separate event" between siblings.
+			top += minf(float(_viewport.event_block_gap()), 1.0) * EventSheetPalette.row_density()
 		var height: float = 0.0
 		var kept_metric: Variant = kept.get(row_data.get_instance_id()) if (row_data != null and not kept.is_empty()) else null
 		if kept_metric is Dictionary:
