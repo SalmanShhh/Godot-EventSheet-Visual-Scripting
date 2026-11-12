@@ -6727,7 +6727,10 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# as droppable exactly where the drop will land somewhere sensible.
 	if _is_node_path_drag(data):
 		var node_target: Dictionary = _param_value_at(_to_logical_position(at_position))
-		return not node_target.is_empty() and _param_accepts_node_ref(node_target.get("ace"), str(node_target.get("param_id", "")))
+		if not node_target.is_empty() and _param_accepts_node_ref(node_target.get("ace"), str(node_target.get("param_id", ""))):
+			return true
+		# Anywhere else it is a node the sheet may start using: the same welcome an Objects-list drag gets.
+		return _scene_drag_names_a_node(data)
 	# An Inspector property drag is welcome anywhere: on a param VALUE it inserts the
 	# access expression, anywhere else it becomes a Set Property action.
 	if is_property_drag(data):
@@ -6748,13 +6751,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# An object dropped from the Object bar. Landing on an existing event's ACTION lane means
 	# "do something to it here"; landing anywhere else means "start an event on it".
 	if is_object_bar_drag(data):
-		var object_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
-		var object_row: EventRowData = _row_at(object_row_index) if object_row_index >= 0 else null
-		var in_action_lane: bool = object_row != null \
-			and _to_logical_position(at_position).x > size.x * 0.5 \
-			and object_row.source_resource is EventRow
-		object_bar_dropped.emit(str((data as Dictionary).get("label", "")),
-			object_row.source_resource if object_row != null else null, in_action_lane)
+		_emit_object_drop(str((data as Dictionary).get("label", "")), at_position)
 		return
 	# Scene-tree node dropped on a param value: set that param to the node reference (prefers %unique-names
 	# via the same converter the params dialog uses), no dialog - the deep-node-friendly gesture.
@@ -6765,6 +6762,13 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			if not reference.is_empty():
 				param_node_drop_requested.emit(target.get("ace"), str(target.get("param_id", "")), reference)
 				return
+	# A Scene-dock node not dropped on a param value is the same gesture as that object dragged off the
+	# Objects list: "start an event on it" - Godot's Scene dock is where an unused node comes from.
+	if _is_node_path_drag(data):
+		var scene_label: String = _scene_drag_label(data)
+		if not scene_label.is_empty():
+			_emit_object_drop(scene_label, at_position)
+			return
 	# Inspector property drops: on a param VALUE that takes expressions, insert the access
 	# expression ($Sprite.modulate); anywhere else, the dock builds a Set Property action
 	# (on the row it landed on, or as a new event) with the CURRENT value pre-filled.
@@ -6799,6 +6803,45 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if source_objects[0] is Node:
 		source_label = (source_objects[0] as Node).name
 	ace_preview_requested.emit(source_label, definitions)
+
+
+## Where an object dropped on the canvas lands: landing on an existing event's ACTION lane means "do
+## something to it here"; anywhere else means "start an event on it".
+func _emit_object_drop(object_label: String, at_position: Vector2) -> void:
+	var object_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
+	var object_row: EventRowData = _row_at(object_row_index) if object_row_index >= 0 else null
+	var in_action_lane: bool = object_row != null \
+		and _to_logical_position(at_position).x > size.x * 0.5 \
+		and object_row.source_resource is EventRow
+	object_bar_dropped.emit(object_label, object_row.source_resource if object_row != null else null, in_action_lane)
+
+
+## The scene the paths of a Scene-dock drag are read against: `drop_scene_root` when one is set (a test
+## sets it), else the scene open in the editor.
+var drop_scene_root: Node = null
+
+
+func _drop_scene_root() -> Node:
+	if drop_scene_root != null:
+		return drop_scene_root
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return EditorInterface.get_edited_scene_root()
+	return null
+
+
+## True when a Scene-dock drag names a node of the scene (cheap: asked on every mouse move of a drag).
+func _scene_drag_names_a_node(data: Variant) -> bool:
+	var offers: Script = load("res://addons/eventsheet/editor/dock/scene_node_offers.gd")
+	var node_path: String = offers.dragged_path(data)
+	if node_path.is_empty():
+		return false
+	var scene_root: Node = _drop_scene_root()
+	return scene_root == null or offers.node_for_dragged_path(scene_root, node_path) != null
+
+
+## The object label a Scene-dock node drag stands for, or "" when it names no node of the open scene.
+func _scene_drag_label(data: Variant) -> String:
+	return load("res://addons/eventsheet/editor/dock/scene_node_offers.gd").object_label_for_drag(data, _drop_scene_root(), _sheet)
 
 
 ## True for an Input Map action dragged off the bar's INPUT section

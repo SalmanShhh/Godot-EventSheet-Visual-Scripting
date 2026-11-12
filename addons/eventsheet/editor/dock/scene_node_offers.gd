@@ -72,3 +72,50 @@ static func offer_in_open_scene(object_label: String, reference: String = "") ->
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return ""
 	return offer_for(find_node(EditorInterface.get_edited_scene_root(), object_label, reference))
+
+
+## The path a Scene-dock node drag carries ({type: "nodes", nodes: [NodePath...]}) for its first node,
+## or "" for any other payload. Godot's Scene dock sends each dragged node as a path, never as a node.
+static func dragged_path(data: Variant) -> String:
+	if not (data is Dictionary):
+		return ""
+	var payload: Dictionary = data as Dictionary
+	if str(payload.get("type", "")) != "nodes":
+		return ""
+	var nodes: Variant = payload.get("nodes", [])
+	if not (nodes is Array) or (nodes as Array).is_empty() or (nodes as Array)[0] is Object:
+		return ""
+	return str((nodes as Array)[0])
+
+
+## The node a Scene-dock path names inside `scene_root`, or null. The dock sends the path from the
+## tree's root (`/root/.../Level/Player`); the part from the scene root down is what names the node.
+static func node_for_dragged_path(scene_root: Node, node_path: String) -> Node:
+	if scene_root == null or node_path.is_empty():
+		return null
+	var relative: String = node_path
+	if scene_root.is_inside_tree() and node_path.begins_with(str(scene_root.get_path()) + "/"):
+		relative = node_path.trim_prefix(str(scene_root.get_path()) + "/")
+	elif node_path.begins_with("/"):
+		var marker: String = "/%s/" % scene_root.name
+		var at: int = node_path.find(marker)
+		if at < 0:
+			return scene_root if node_path.ends_with("/" + str(scene_root.name)) else null
+		relative = node_path.substr(at + marker.length())
+	return scene_root.get_node_or_null(NodePath(relative))
+
+
+## The object label an Objects-list drag of the node would have carried: the label of the sheet's own
+## census entry for that node, else the node's name (a node the sheet has not used yet is an object too,
+## and the drop starts using it). With no scene to read the path against, the path's last name.
+static func object_label_for_drag(data: Variant, scene_root: Node, sheet: EventSheetResource) -> String:
+	var node_path: String = dragged_path(data)
+	if node_path.is_empty():
+		return ""
+	var node: Node = node_for_dragged_path(scene_root, node_path)
+	if node == null:
+		return node_path.get_file() if scene_root == null else ""
+	for entry: Dictionary in EventSheetViewportReadingRows.object_census(sheet):
+		if find_node(scene_root, str(entry.get("label", "")), str(entry.get("path", ""))) == node:
+			return str(entry.get("label", ""))
+	return str(node.name)

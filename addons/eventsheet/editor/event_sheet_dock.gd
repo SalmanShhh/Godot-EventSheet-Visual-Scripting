@@ -6872,8 +6872,14 @@ func add_row_for_object(object_label: String, as_action: bool) -> void:
 	if not _ensure_sheet_for_editing():
 		return
 	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
+	var scope: String = str(entry.get("class", "")).strip_edges()
+	if scope.is_empty() and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		# A node the sheet has not used yet (dragged from the Scene dock) has no census entry; the open
+		# scene still knows what it is, so the picker opens on that kind.
+		var unused: Node = load(SCENE_NODE_OFFERS_PATH).find_node(EditorInterface.get_edited_scene_root(), object_label)
+		scope = unused.get_class() if unused != null else ""
 	var context: Dictionary = {
-		"object_scope": str(entry.get("class", "")).strip_edges(),
+		"object_scope": scope,
 		"object_label": object_label
 	}
 	var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)

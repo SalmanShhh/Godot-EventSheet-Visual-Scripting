@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a node dragged from Godot's Scene dock starts an event on it
+
+- Since the Objects list no longer lists the rest of the scene, Godot's Scene dock is where an unused node comes from. Dragging one onto the empty canvas or onto an event now does exactly what dragging the same object off the Objects list does: the picker opens on that object (Add condition, or Add action when it lands in an event's action lane), with the same offers as before for a node in the secret or water group or one that exports needs_key. A node the sheet already uses lands under the name the sheet gives it. Dropped on a parameter value it still fills that parameter with the node reference, as it did.
+- The picture of the Objects rail in the guides is drawn again, now showing only the objects the sheet uses.
+
 ### Changed: a behaviour is added with Godot's own Create Node window
 
 - Every Add behavior... door (the Objects list's right-click, the head's Behaviors folder, the picker's suggestion) now opens Godot's own Create Node window, titled "Add a behaviour to <object>". Every behaviour is a plain script with a class name and an icon, so Godot already lists it there. What you choose goes under that object in the open scene as one undo step (Ctrl+Z takes it out) and is selected, so Godot's Inspector shows its values. If the object is not in the open scene, the status line says so and nothing happens. A behaviour that ships a scene or a shader of its own is still added the way its guide says.

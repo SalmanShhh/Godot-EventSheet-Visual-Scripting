@@ -77,7 +77,6 @@ func _build_rail_stage() -> void:
 	_rail.position = Vector2(8.0, 8.0)
 	_rail.size = Vector2(RAIL_WIDTH, 300.0)
 	root.add_child(_rail)
-	_rail.set_expanded(true)
 	_rail.set_sheet(_sheet)
 	print("[preview] Object bar")
 	for section: Variant in EventSheetObjectsPanel.sections_for(_rail.entries()):
