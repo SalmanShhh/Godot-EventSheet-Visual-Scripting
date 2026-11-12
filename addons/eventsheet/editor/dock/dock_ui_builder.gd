@@ -135,6 +135,7 @@ func build_ui() -> void:
 	_dock._scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_dock._scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_dock._scroll.gui_input.connect(_dock._on_workspace_margin_gui_input.bind(_dock._scroll))
 	# Wrap the viewport in _dock._content_host, then sit it beside the side panel in _dock._workspace_body.
 	_dock._content_host = VBoxContainer.new()
 	_dock._content_host.name = "EventSheetContentHost"

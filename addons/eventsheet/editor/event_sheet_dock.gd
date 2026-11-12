@@ -2672,6 +2672,39 @@ func _active_view() -> EventSheetViewport:
 	return _viewport
 
 
+## A plain left press in the workspace's side margins - the closed side panel's rail on the left
+## and the strip of the scroll area the sheet does not cover - is a press outside every event and
+## variable, so it clears the selection the way a press on the empty canvas does. Those strips are
+## the dock's own controls, not part of the sheet's canvas, so the canvas never sees the press.
+## Focus goes to the sheet, because a selection cleared while focus sat elsewhere would leave Delete
+## to Godot's scene tree. Ctrl, Shift and Meta presses change nothing, and a press the sheet itself
+## covers (it handles those) is ignored.
+func _on_workspace_margin_gui_input(event: InputEvent, source: Control = null) -> void:
+	if not margin_press_clears_selection(event):
+		return
+	var view: EventSheetViewport = _active_view()
+	if view == null or not is_instance_valid(view) or not view.is_inside_tree():
+		return
+	# The press lands in the receiving control's own coordinates; the sheet is asked about the same
+	# point in the window's.
+	var press_at: Vector2 = (event as InputEventMouseButton).position
+	if source != null and source.is_inside_tree():
+		press_at = source.get_global_transform() * press_at
+	if view.get_global_rect().has_point(press_at):
+		return
+	view.clear_selection()
+	view.grab_focus()
+
+
+## Whether an event is the plain left press that clears the selection from a side margin: a left
+## button going down with no Ctrl, Shift, Alt or Meta.
+static func margin_press_clears_selection(event: InputEvent) -> bool:
+	var press: InputEventMouseButton = event as InputEventMouseButton
+	if press == null or not press.pressed or press.button_index != MOUSE_BUTTON_LEFT:
+		return false
+	return not (press.ctrl_pressed or press.shift_pressed or press.meta_pressed or press.alt_pressed)
+
+
 # ── Command palette (Ctrl+P): list + fuzzy filter + popup shell → dock/command_palette.gd ──
 # Thin delegates preserve the original names/signatures so the shortcut caller and tests don't change.
 # filter_commands is static-by-class-name (tests call EventSheetDock.filter_commands); it forwards to the helper's static.

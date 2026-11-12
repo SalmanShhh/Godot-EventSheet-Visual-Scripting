@@ -5917,6 +5917,8 @@ func _hit_test(position: Vector2) -> Dictionary:
 ## the gutter, both lanes, the padding, the gaps between its cells, the band under the shorter lane
 ## and every row of a statement that reads as several - so the only places left to the canvas are
 ## above the first event and below the last, which is exactly where a box selection should start.
+## The strips either side of the sheet (the side panel's rail, the scroll area's padding) are not part of
+## this canvas at all: the dock's margin handler clears the selection for a press there.
 ##
 ## A press that resolved to a cell only because it was somewhere on that cell's LINE (to the right
 ## of the words, in the gap under them) is an event press: the cell keeps its own body, and the

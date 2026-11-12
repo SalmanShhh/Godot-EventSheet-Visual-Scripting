@@ -216,6 +216,7 @@ func build(panels: Dictionary) -> Control:
 
 	_edge = PanelContainer.new()
 	_edge.name = "EventSheetLeftRailEdge"
+	_edge.gui_input.connect(_dock._on_workspace_margin_gui_input.bind(_edge))
 	var edge_column: VBoxContainer = VBoxContainer.new()
 	edge_column.name = "EventSheetLeftRailEdgeColumn"
 	edge_column.alignment = BoxContainer.ALIGNMENT_BEGIN
