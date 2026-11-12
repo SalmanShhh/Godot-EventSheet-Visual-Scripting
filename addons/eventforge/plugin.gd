@@ -32,7 +32,6 @@ const CONNECT_SIGNAL_DIALOG_PATH: String = "res://addons/eventsheet/editor/conne
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
 const FUNCTION_FIELDS_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/function_inspector_plugin.gd"
 const SHAPE_LINK_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/shape_link_inspector_plugin.gd"
-const INSTANCE_VARIABLES_INSPECTOR_PATH: String = "res://addons/eventforge/editor/instance_variables_inspector_plugin.gd"
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
 const INSPECTOR_HANDLES_PATH: String = "res://addons/eventsheet/editor/inspector/handle_plugin.gd"
@@ -101,9 +100,6 @@ var _behavior_gizmos: RefCounted = null
 ## The events overlay (Scene dock + 2D editor badges). Inert until the setting turns it on.
 var _scene_events_overlay: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
-# The Inspector's "Instance variables" band. add_inspector_plugin takes an INSTANCE, so this is
-# constructed at every boot - which is why it is loaded BY PATH and carries no class name here.
-var _instance_variables_inspector: EditorInspectorPlugin = null
 # The Project Settings hover for the plugin's own settings (loaded by path, no class_name).
 var _settings_hover_plugin: EditorInspectorPlugin = null
 # The plugin icon in the editor's own ink, and that ink: made again when the editor's ink changes (a
@@ -374,37 +370,6 @@ func _open_sheet_in_workspace(path: String) -> void:
 	_event_sheet_editor.call("_load_sheet_from_path", path)
 
 
-## The pencil on an Inspector instance-variable row: the sheet, opened on the row that variable's
-## declaration line became. The line travels as the SCRIPT's own line number, which is the same
-## thing a stack trace carries, so both doors land through one reverse-provenance lookup.
-func _open_sheet_line_in_workspace(path: String, line: int) -> void:
-	_open_sheet_in_workspace(path)
-	if _event_sheet_editor != null and _event_sheet_editor.has_method("goto_generated_line"):
-		_event_sheet_editor.call("goto_generated_line", line)
-
-
-## An initial value typed into an Inspector row. It is written by the sheet, through the same undo
-## funnel its own variable table writes through, so the line that lands is the line the table would
-## have written and one Ctrl+Z takes it back.
-func _write_sheet_variable_value(path: String, variable_name: String, value_text: String) -> void:
-	_open_sheet_in_workspace(path)
-	if _event_sheet_editor != null and _event_sheet_editor.has_method("set_instance_variable_value"):
-		_event_sheet_editor.call("set_instance_variable_value", variable_name, value_text)
-
-
-## "+ Add instance variable": the sheet's own Add variable dialog, so a variable born in the
-## Inspector carries every field one born on the sheet does. Falls back to the variables table on a
-## workspace that does not offer the dialog door, so the link is never a dead click.
-func _add_sheet_variable_in_workspace(path: String) -> void:
-	_open_sheet_in_workspace(path)
-	if _event_sheet_editor == null:
-		return
-	if _event_sheet_editor.has_method("add_instance_variable"):
-		_event_sheet_editor.call("add_instance_variable")
-	elif _event_sheet_editor.has_method("open_instance_variables"):
-		_event_sheet_editor.call("open_instance_variables")
-
-
 ## The FileSystem's "Open its sheets": a scene opens as one named tab group holding the
 ## scene-as-sheet and every script in it, in tree order.
 func _open_scene_workspace(scene_path: String) -> void:
@@ -601,14 +566,6 @@ func _enter_tree() -> void:
 	_sheet_edit_button_plugin = EventSheetEditButtonPlugin.new()
 	_sheet_edit_button_plugin.open_sheet = _open_sheet_in_workspace
 	add_inspector_plugin(_sheet_edit_button_plugin)
-	# And under it, the object's own variables as Inspector ROWS - name, type, initial value, and a
-	# pencil that opens the sheet on the line that declares each. Loaded by path (it carries no
-	# class_name), so registering it adds nothing to the boot compile.
-	_instance_variables_inspector = load(INSTANCE_VARIABLES_INSPECTOR_PATH).new()
-	_instance_variables_inspector.open_line = _open_sheet_line_in_workspace
-	_instance_variables_inspector.write_value = _write_sheet_variable_value
-	_instance_variables_inspector.add_variable = _add_sheet_variable_in_workspace
-	add_inspector_plugin(_instance_variables_inspector)
 	# Export integrity: recompile every sheet when an export starts so stale generated
 	# scripts can never ship (see export_integrity_plugin.gd).
 	_export_integrity_plugin = EventSheetExportIntegrityPlugin.new()
@@ -849,9 +806,6 @@ func _exit_tree() -> void:
 	if _sheet_edit_button_plugin != null:
 		remove_inspector_plugin(_sheet_edit_button_plugin)
 		_sheet_edit_button_plugin = null
-	if _instance_variables_inspector != null:
-		remove_inspector_plugin(_instance_variables_inspector)
-		_instance_variables_inspector = null
 	if _settings_hover_plugin != null:
 		remove_inspector_plugin(_settings_hover_plugin)
 		_settings_hover_plugin = null

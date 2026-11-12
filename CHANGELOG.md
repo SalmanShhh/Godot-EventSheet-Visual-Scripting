@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: the Inspector's variables table
+
+- Selecting a node whose script came from a sheet no longer shows an "Instance variables" table at the top of the Inspector. Godot's own Inspector already lists every `@export` variable of the script as an ordinary row, so the table repeated them. The "Shape ..." link and the Edit Event Sheet button stay.
+
 ### Changed: more air between events in the Editor Native look
 
 - Two events in the Editor Native look are now 6 px apart instead of 1, so each reads as its own event and not as a continuation of the one above. The conditions and actions inside one event are exactly as tight as before, and a sub-event still sits 1 px under its parent. The README pictures of the workspace and of the Generated GDScript panel were retaken to show it.

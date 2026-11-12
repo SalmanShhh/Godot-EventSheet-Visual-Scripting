@@ -136,7 +136,6 @@ const SAVING_SHEET: String = "res://eventsheet_addons/health/health_behavior.gd"
 const BY_PATH_BOOT_OBJECTS: Array[String] = [
 	"res://addons/eventforge/editor/export_tools_plugin.gd",
 	"res://addons/eventforge/editor/import_tools_plugin.gd",
-	"res://addons/eventforge/editor/instance_variables_inspector_plugin.gd",
 	"res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd",
 	"res://addons/eventsheet/editor/inspector/feedback_player_inspector_plugin.gd",
 	"res://addons/eventsheet/api/extension_registries.gd",
