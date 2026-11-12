@@ -2093,10 +2093,10 @@ is instantiated to answer a question.
   button that opens the Add variable dialog on that name; come back and the list has it. A required
   field left blank is red too. A literal of the wrong kind for the verb is amber, and names the verb
   that would take it. OK stays where it is with the reason beside it rather than going grey.
-- **The Object bar is a list you glance at, filter, and drag from.** Three sections: **USED IN THIS
-  SHEET** open, with a per-object count and behaviors nested under the object they ride on; **ALSO IN
-  THE SCENE** collapsed (the rest of the scene, one line away, no counts because there are none); and
-  **GLOBALS & FAMILIES** collapsed. A filter box narrows as you type and Enter on a single match pins
+- **The Object bar is a list you glance at, filter, and drag from.** Sections: **USED IN THIS
+  SHEET** open, with a per-object count and behaviors nested under the object they ride on, then the
+  Input section and **GLOBALS & FAMILIES** collapsed. The rest of the scene is Godot's Scene dock's to
+  show, so the bar lists only what the sheet uses. A filter box narrows as you type and Enter on a single match pins
   it; the header's `⇅` switches between reading order, count and name and remembers which. An object
   this sheet uses that the scene does not have is flagged `⚠ not in Player.tscn` rather than listed
   like any other node, and hovering a count splits it into `2 conditions · 3 actions · 1 trigger`.
@@ -2187,7 +2187,7 @@ is instantiated to answer a question.
   project-wide index of `.connect` lines, `emit` sites and `.tscn` `[connection]` rows, built once per
   session, so a note never costs a scan.
 
-<img src="images/objects-rail.png" alt="The Object bar: a header naming the scene and the used/more counts, a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and collapsed ALSO IN THE SCENE and GLOBALS AND FAMILIES sections." width="420">
+<img src="images/objects-rail.png" alt="The Object bar: a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and a collapsed GLOBALS AND FAMILIES section." width="420">
 
 The Object bar's **INPUT** section and the **Input** head bar, on a script that reads four controls -
 three the project has, and one it does not. The Input bar itself says nothing about the missing one:

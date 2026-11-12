@@ -9,7 +9,6 @@ extends VBoxContainer
 #
 #   what this sheet uses   first, as plain rows with per-object counts, behaviors nested under the
 #                          object they ride on - the tab is called Objects, so these need no heading
-#   Also in the scene      collapsed, the rest of the scene, no counts because there are none
 #   Input                  the Input Map actions this file names
 #   Globals & Families     collapsed
 #
@@ -23,8 +22,8 @@ extends VBoxContainer
 # DRAG onto the sheet starts an event on the object, and
 # RIGHT-CLICK offers Add condition / Add action / Select in scene / Open its script as a sheet.
 #
-# Every entry is DERIVED - the census for what the sheet uses, the .tscn for what else is in the
-# scene - so there is no stored list to fall out of date. The panel is shell and gestures only: it
+# Every entry is DERIVED - the census of what the sheet uses - so there is no stored list to fall
+# out of date. The rest of the scene is Godot's Scene dock's to show, not this bar's. The panel is shell and gestures only: it
 # emits what happened and the dock decides what that MEANS, which is what keeps one notion of "the
 # sheet is filtered" in one place.
 
@@ -71,7 +70,6 @@ var filter_edit: LineEdit = null
 
 var _sort_button: Button = null
 var _entries: Array = []
-var _scene_only: Array = []
 var _highlighted: String = ""
 var _filter: String = ""
 var _sort: String = "reading"
@@ -79,7 +77,7 @@ var _sheet: EventSheetResource = null
 var _source_path: String = ""
 var _scene_name: String = ""
 var _input_actions: Array = []
-var _section_folds: Dictionary = {"used": false, "scene": true, "input": false, "globals": true}
+var _section_folds: Dictionary = {"used": false, "input": false, "globals": true}
 var _menu: PopupMenu = null
 var _menu_label: String = ""
 var _class_map: Dictionary = {}
@@ -219,7 +217,6 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	_entries = _with_autoload_identity(EventSheetViewportReadingRows.object_census(sheet), sheet)
 	var scene: Dictionary = ViewportRowBuilder.scene_using_script(_source_path) if not _source_path.is_empty() else {}
 	_scene_name = str(scene.get("scene_path", "")).get_file()
-	_scene_only = scene_only_entries(_entries, str(scene.get("scene_path", "")))
 	EventSheetInputMapFacts.clear_cache()
 	_input_actions = EventSheetInputMapFacts.actions_named_by(sheet)
 	_rebuild_tree()
@@ -260,22 +257,17 @@ func entries() -> Array:
 	return _entries.duplicate(true)
 
 
-## The "also in the scene" half, same reason.
-func scene_entries() -> Array:
-	return _scene_only.duplicate(true)
-
-
 # ── What goes in which section (pure, so tests pin it) ─────────────────────────────────────────
 
 
-## The bar's three sections for one census + scene, as
+## The bar's sections for one census, as
 ##   [{"id", "title", "note", "entries": Array}]
 ## in the order they are drawn. Sections with nothing in them are still returned (the header says so);
 ## the tree simply does not build an empty one.
 ## `familiar_words` decides only what the last section is CALLED - the sheet's word for an
 ## inheritance set is a setting, and every place that says it asks the one helper.
-static func sections_for(census: Array, scene_only: Array, scene_name: String,
-		input_actions: Array = [], familiar_words: bool = false) -> Array:
+static func sections_for(census: Array, input_actions: Array = [],
+		familiar_words: bool = false) -> Array:
 	var used: Array = []
 	var globals: Array = []
 	for entry: Variant in census:
@@ -286,12 +278,6 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String,
 			used.append(record)
 	return [
 		{"id": "used", "title": EventSheetL10n.translate("Used in this sheet"), "note": "", "entries": used},
-		{
-			"id": "scene",
-			"title": EventSheetL10n.translate("Also in the scene"),
-			"note": EventSheetL10n.translate("drag one onto the sheet to use it") if not scene_name.is_empty() else "",
-			"entries": scene_only
-		},
 		# The controls this file names, with what each one is bound to. The Input Map is the
 		# object every input row is really about, and it was the one thing in the bar a reader had to
 		# leave the sheet to look up.
@@ -352,33 +338,6 @@ static func section_tooltip(section: Dictionary, shown: int) -> String:
 	var note: String = str(section.get("note", ""))
 	var counted: String = "%s (%d)" % [str(section.get("title", "")), shown]
 	return counted if note.is_empty() else "%s - %s" % [counted, note]
-
-
-## What the SCENE has that the sheet does not use yet: at most the direct children of the root plus
-## anything carrying a script, so the section stays a bar and never becomes a second Scene dock.
-static func scene_only_entries(census: Array, scene_path: String) -> Array:
-	if scene_path.strip_edges().is_empty():
-		return []
-	var known: Dictionary = {}
-	for entry: Variant in census:
-		known[str((entry as Dictionary).get("label", ""))] = true
-	var found: Array = []
-	var facts: Dictionary = EventSheetObjectFacts.scene_facts(scene_path)
-	for child_entry: Variant in facts.get("children", []):
-		var child: Dictionary = child_entry
-		var child_name: String = str(child.get("name", ""))
-		var parent: String = str(child.get("parent", ""))
-		var direct: bool = parent == "." or parent.is_empty()
-		if known.has(child_name) or child_name.is_empty():
-			continue
-		if not direct and str(child.get("script", "")).is_empty():
-			continue
-		known[child_name] = true
-		found.append({
-			"label": child_name, "kind": "node", "class": str(child.get("type", "")),
-			"path": "", "rows": 0, "verbs": PackedStringArray(), "signals": PackedStringArray()
-		})
-	return found
 
 
 ## The census entries this sheet uses that the scene does NOT have - a `$Enemies/Boss` that is not
@@ -523,8 +482,7 @@ func _rebuild_tree() -> void:
 	# Hoisted: the class map is a read of the whole sheet, and it is the same answer for every entry.
 	_class_map = EventSheetViewportReadingRows.object_class_map(_sheet)
 	var shown: int = 0
-	for section_entry: Variant in sections_for(_entries, _scene_only, _scene_name, _input_actions,
-			_familiar_words()):
+	for section_entry: Variant in sections_for(_entries, _input_actions, _familiar_words()):
 		var section: Dictionary = section_entry
 		var visible_entries: Array = []
 		for entry: Variant in sorted_entries(section.get("entries", []), _sort):
@@ -721,7 +679,7 @@ func _on_item_mouse_selected(_position: Vector2, mouse_button_index: int) -> voi
 	EventSheetWindowPlacement.popup_at(_menu, Vector2i(get_screen_transform() * get_local_mouse_position()))
 
 
-## Folding a section is remembered for the session, so a reader who opens Also in the scene and works
+## Folding a section is remembered for the session, so a reader who opens Globals and works
 ## through it does not have to open it again on every sheet change.
 func _on_section_collapsed(item: TreeItem) -> void:
 	var metadata: Variant = item.get_metadata(0)
@@ -838,17 +796,13 @@ func _cycle_sort() -> void:
 	_rebuild_tree()
 
 
-## The Objects tab's hover: the scene this file is on, and how many objects it uses and how many
-## more the scene has - what the panel's own header line used to say, now that the tab names it.
+## The Objects tab's hover: the scene this file is on and how many objects it uses.
 func tab_tooltip() -> String:
 	var used: int = 0
 	for entry: Variant in _entries:
 		if str((entry as Dictionary).get("kind", "")) not in ["autoload", "group"]:
 			used += 1
-	var counts: String = "%s · %s" % [
-		EventSheetL10n.translate("%d used") % used,
-		EventSheetL10n.translate("%d more") % _scene_only.size()
-	]
+	var counts: String = EventSheetL10n.translate("%d used") % used
 	var scene_note: String = "  %s" % _scene_name if not _scene_name.is_empty() else ""
 	return "%s%s · %s\n%s" % [EventSheetL10n.translate("Objects"), scene_note, counts,
 		EventSheetL10n.translate("Every object this file uses. Click one to highlight its rows, click it again to clear.")]

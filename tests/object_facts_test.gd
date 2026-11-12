@@ -200,34 +200,26 @@ static func _object_bar_sections() -> bool:
 		{"label": "enemies", "kind": "group", "class": "", "path": "", "rows": 1,
 			"verbs": PackedStringArray(), "signals": PackedStringArray()}
 	]
-	var scene_only: Array = EventSheetObjectsPanel.scene_only_entries(census, SCENE_PATH)
-	passed = _check("what the sheet has not used yet is what the scene has left",
-		_names(scene_only), "Camera2D") and passed
-	var sections: Array = EventSheetObjectsPanel.sections_for(census, scene_only, "object_facts_player.tscn")
+	var sections: Array = EventSheetObjectsPanel.sections_for(census)
 	var summary: PackedStringArray = PackedStringArray()
 	for entry: Variant in sections:
 		var section: Dictionary = entry
 		summary.append("%s: %s" % [str(section.get("title", "")), _names(section.get("entries", []))])
-	# Added the INPUT section between the scene and the globals: the controls a reader is looking
-	# at are nearer to hand than the families they rarely touch. It is empty here because this fixture
-	# names no control, and an empty section is never drawn.
-	passed = _check("the bar is four sections, in the order a reader wants them",
+	# The INPUT section sits before the globals: the controls a reader is looking at are nearer to
+	# hand than the families they rarely touch. It is empty here because this fixture names no
+	# control, and an empty section is never drawn.
+	passed = _check("the bar is three sections, in the order a reader wants them",
 		" | ".join(summary),
 		"Used in this sheet: Player · Sprite2D · Boss"
-		+ " | Also in the scene: Camera2D"
 		+ " | Input: "
 		+ " | Globals & Base classes: Game · enemies") and passed
 	passed = _check("a heading is its name alone, so it fits the panel",
-		[EventSheetObjectsPanel.section_line(sections[0], 3), EventSheetObjectsPanel.section_line(sections[1], 1),
-			EventSheetObjectsPanel.section_line(sections[3], 2)],
-		["Used in this sheet", "Also in the scene", "Globals & Base classes"]) and passed
+		[EventSheetObjectsPanel.section_line(sections[0], 3), EventSheetObjectsPanel.section_line(sections[2], 2)],
+		["Used in this sheet", "Globals & Base classes"]) and passed
 	passed = _check("the used section's hover adds nothing",
 		EventSheetObjectsPanel.section_tooltip(sections[0], 3), "") and passed
-	passed = _check("the scene section's hover counts what is left and says what to do with it",
-		EventSheetObjectsPanel.section_tooltip(sections[1], 1),
-		"Also in the scene (1) - drag one onto the sheet to use it") and passed
 	passed = _check("the globals section's hover just counts",
-		EventSheetObjectsPanel.section_tooltip(sections[3], 2), "Globals & Base classes (2)") and passed
+		EventSheetObjectsPanel.section_tooltip(sections[2], 2), "Globals & Base classes (2)") and passed
 	passed = _check("an object's behaviours are counted into one fold under it",
 		EventSheetObjectsPanel.behaviour_fold_counts([
 			{"label": "Spring", "kind": "behaviour"}, {"label": "Tween", "kind": "behaviour"},

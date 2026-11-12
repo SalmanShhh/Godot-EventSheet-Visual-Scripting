@@ -15,15 +15,15 @@ static func run() -> bool:
 	return passed
 
 
-## The INPUT section sits between the scene and the globals: the controls a reader is looking at are
+## The INPUT section sits before the globals: the controls a reader is looking at are
 ## nearer to hand than the families they rarely touch.
 static func _check_section_order() -> bool:
-	var sections: Array = EventSheetObjectsPanel.sections_for([], [], "", [])
+	var sections: Array = EventSheetObjectsPanel.sections_for([], [])
 	var ids: PackedStringArray = PackedStringArray()
 	for entry: Variant in sections:
 		ids.append(str((entry as Dictionary).get("id", "")))
-	var passed: bool = _pin("the bar's sections, in order", ", ".join(ids), "used, scene, input, globals")
-	var input_section: Dictionary = sections[2]
+	var passed: bool = _pin("the bar's sections, in order", ", ".join(ids), "used, input, globals")
+	var input_section: Dictionary = sections[1]
 	passed = _pin("the section header is its name, in sentence case",
 		EventSheetObjectsPanel.section_line(input_section, 4), "Input") and passed
 	passed = _pin("and its hover says what dragging one does",

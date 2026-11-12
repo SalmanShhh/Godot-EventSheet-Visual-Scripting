@@ -18,7 +18,6 @@ const FIXTURE_PATH := "res://tests/fixtures/object_facts_player.gd"
 ## uses, and declares none. Two fixtures, because the two images are about two different things.
 const FUNCTIONS_FIXTURE_PATH := "res://tests/fixtures/picker_functions_fixture.gd"
 const BASE_COLOR := Color("#252525")
-const SCENE_NAME := "object_facts_player.tscn"
 const RAIL_WIDTH := 280.0
 
 var _shots: Array[Image] = []
@@ -81,8 +80,7 @@ func _build_rail_stage() -> void:
 	_rail.set_expanded(true)
 	_rail.set_sheet(_sheet)
 	print("[preview] Object bar")
-	for section: Variant in EventSheetObjectsPanel.sections_for(
-			_rail.entries(), _rail.scene_entries(), SCENE_NAME):
+	for section: Variant in EventSheetObjectsPanel.sections_for(_rail.entries()):
 		print("  bar section: %s" % str((section as Dictionary).get("title", "")))
 		for entry: Variant in (section as Dictionary).get("entries", []):
 			print("    bar: %s" % EventSheetObjectsPanel.entry_text(entry as Dictionary))
