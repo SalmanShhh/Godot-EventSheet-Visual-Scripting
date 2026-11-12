@@ -10192,3 +10192,4 @@ Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node 
 Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,
 Adds nothing. Sheet > Behaviour library… adds any of them later.,
 Nothing will be added. Sheet > Behaviour library… is always there later.,
+Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,

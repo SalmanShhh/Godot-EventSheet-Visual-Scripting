@@ -267,6 +267,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	_apply_ace_definition(definition, values, context)
 	_list_spawn_scene_if_needed(definition, values)
+	_add_notifier_if_needed(definition, values)
 	# The source string IS the key: editing a globe-marked value orphans every translation of it
 	# silently, so offer to move the key in the catalogs the way Rename Everywhere… moves a variable.
 	# Nothing pops up in a project with no catalogs - the offer answers false and the edit is done.
@@ -281,6 +282,25 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 		var selected_resource: Resource = context.get("selected_resource", null)
 		if mode in ["append_condition", "append_action"] and (selected_resource is EventRow or selected_resource is MatchCase):
 			_dock._ace_picker.open(mode, false, selected_resource, {})
+
+
+## An Is On Screen row asks a VisibleOnScreenNotifier2D, so adding the row adds one under the node it asks
+## about (when the open scene runs this sheet and the node has none), as one step of the scene's own undo.
+## Silent for every other row, and when the scene is not open or does not run the sheet.
+func _add_notifier_if_needed(definition: ACEDefinition, values: Dictionary) -> void:
+	var notifier_script: GDScript = load("res://addons/eventsheet/editor/dock/on_screen_notifier.gd") as GDScript
+	if definition == null or definition.id != notifier_script.ACE_ID:
+		return
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	var scene_root: Node = EditorInterface.get_edited_scene_root()
+	var host: Node = EventSheetTypeCheck.host_in_scene(scene_root, _dock._current_sheet)
+	var target: Node = notifier_script.needs_notifier(host, str(values.get(notifier_script.NODE_PARAM, "")))
+	if target == null:
+		return
+	var notifier: Node = notifier_script.add_under(target, scene_root)
+	if notifier != null:
+		_dock._set_status(EventSheetL10n.translate("Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.") % str(target.name), false)
 
 
 ## A Spawn row naming a scene its spawner does not list yet makes the SCENE say so too: a

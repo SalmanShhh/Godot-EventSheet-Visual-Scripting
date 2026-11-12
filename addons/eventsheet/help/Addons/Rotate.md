@@ -3,13 +3,13 @@
 The event-sheet-parity constant-rotation behavior: attach and the host spins at **Speed**
 (degrees/second), optionally ramping by **Acceleration**. One **Rotation Type** knob covers a
 2D node's rotation and a 3D node's X, Y, or Z axis - pickups, fans, windmills, planets,
-drills, radar dishes. One action toggles it, and **Tools > Preview Behaviors on Selected
-Node** animates the spin in the editor without running the game.
+drills, radar dishes. One action toggles it, and the **Preview** button in
+the Inspector animates the spin in the editor without running the game.
 
 ## Where this pack shines
 
 - **Collectible spin in zero rows.** Attach to a coin (2D) or a powerup (3D, Y axis), done.
-- **See it before you run it.** Select the node and Preview Behaviors - the spin animates in
+- **See it before you run it.** Select the behavior and press Preview in the Inspector - the spin animates in
   the editor viewport at the Inspector's live values; tweak Speed and watch it change.
 - **Wind-up mechanics.** Acceleration ramps a drill or a saw from rest; `Reverse Rotation`
   flips a fan when the player hits the switch.
@@ -77,7 +77,7 @@ dock, the section grounds to that node's actual children before you even press R
 
 ### 1. A coin carousel
 
-Attach Rotate (`y`, 120 deg/s) to every 3D coin. Preview Behaviors while placing them to
+Attach Rotate (`y`, 120 deg/s) to every 3D coin. press Preview while placing them to
 check the feel without pressing Play.
 
 ### 2. The saw that spins up

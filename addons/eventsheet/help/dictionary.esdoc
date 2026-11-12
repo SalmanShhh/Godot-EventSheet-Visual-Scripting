@@ -37,7 +37,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `_place` | [Spawn In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
 | `_scene` | [Spawn A Copy In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
 | `_spot` | [Spawn A Copy In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
-| `a` | [Surface Opacity](ace:Core/MaterialSeeThrough) | Material | Vocabulary |
+| `a` | [Set Opacity](ace:Core/SetOpacity) | General Actions | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
 | `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
@@ -275,7 +275,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `emitting` | [Set Emitting](ace:Core/SetEmitting) | Particles | Vocabulary |
 | `emphasis` | [Haptic Emphasis](ace:Core/HapticEmphasis) | Vibration | Vocabulary |
 | `enabled` | [Turn On](ace:Core/LightLitOn) | Lighting | Vocabulary |
-| `end` | [Fit Limits To](ace:Core/CameraFitLimits) | Camera | Vocabulary |
+| `end` | [Right](ace:Core/SpriteRight) | General Expressions | Vocabulary |
 | `ends_with` | [Text Ends With](ace:Core/StringEndsWith) | Variables: String | Vocabulary |
 | `energy` | [Set Brightness](ace:Core/LightSetBrightness) | Lighting | Vocabulary |
 | `energy_multiplier` | [Sky Energy](ace:Core/SkySkyEnergy) | Environment | Vocabulary |
@@ -424,6 +424,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_icon` | [Editor Icon](ace:Core/EditorIcon) | Editor Tools: Panels & menus | Vocabulary |
 | `get_image` | [Screenshot](ace:Core/WindowScreenshot) | Game Window | Vocabulary |
 | `get_index` | [Index In Parent](ace:Core/GetIndexInParent) | Nodes | Vocabulary |
+| `get_instance_id` | [Instance Id](ace:Core/InstanceId) | General Expressions | Vocabulary |
 | `get_item_text` | [Item Text](ace:Core/ListItemText) | UI | Vocabulary |
 | `get_joy_axis` | [Compare Axis](ace:Core/GamepadCompareAxis) | Gamepad | Vocabulary |
 | `get_joy_name` | [Gamepad Name](ace:Core/GamepadName) | Gamepad | Vocabulary |
@@ -474,6 +475,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_process_frames` | [Frame Count](ace:Core/GetFrameCount) | Time | Vocabulary |
 | `get_process_info` | [Active Bodies (2D)](ace:Core/PhysicsActiveObjects2D) | Physics Server | Vocabulary |
 | `get_property_list` | [Apply Preset To Node](ace:Core/ApplyPresetToNode) | Helpers | Vocabulary |
+| `get_rect` | [Width](ace:Core/SpriteWidth) | General Expressions | Vocabulary |
 | `get_remote_sender_id` | [Sender](ace:Core/Sender) | Multiplayer | Vocabulary |
 | `get_rendering_device` | [Uses Modern Renderer](ace:Core/RenderingUsesModernRenderer) | Rendering | Vocabulary |
 | `get_rendering_info` | [Draw Calls (frame)](ace:Core/RenderingDrawCallsInFrame) | Rendering | Vocabulary |
@@ -490,6 +492,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_setting` | [Project Setting](ace:Core/ProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
 | `get_shader_parameter` | [Effect Dial](ace:Core/EffectDial) | Effects | Vocabulary |
 | `get_signal_list` | [Expect Signal](ace:Core/ExpectSignal) | Testing | Vocabulary |
+| `get_size` | [Set Sprite Size](ace:Core/SetSpriteSize) | General Actions | Vocabulary |
 | `get_slice` | [Token At](ace:Core/TextTokenAt) | Text | Vocabulary |
 | `get_slice_count` | [Token Count](ace:Core/TextTokenCount) | Text | Vocabulary |
 | `get_slide_collision_count` | [Slide Collision Count](ace:Core/GetSlideCount) | Collisions | Vocabulary |
@@ -557,7 +560,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `has_node` | [Has Node](ace:Core/HasNode) | Nodes | Vocabulary |
 | `has_overlapping_areas` | [Has Overlapping Areas](ace:Core/HasOverlappingAreas) | Collisions | Vocabulary |
 | `has_overlapping_bodies` | [Has Overlapping Bodies](ace:Core/HasOverlappingBodies) | Collisions | Vocabulary |
-| `has_point` | [Is Inside Area](ace:Core/IsInsideArea) | General Conditions | Vocabulary |
+| `has_point` | [Is Outside The Level Bounds](ace:Core/IsOutsideLevelBounds) | General Conditions | Vocabulary |
 | `has_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
 | `has_snapshot` | [Bus Snapshot Exists](ace:Core/AudioHasBusSnapshot) | Audio Server | Vocabulary |
 | `has_translation_for_locale` | [Language Is Available](ace:Core/LanguageIsAvailable) | Translation | Vocabulary |

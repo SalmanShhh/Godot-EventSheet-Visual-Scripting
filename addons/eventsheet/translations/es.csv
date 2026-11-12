@@ -10208,3 +10208,4 @@ Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node 
 Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,Elige los que encajen. Cada uno añade algunos comportamientos a este proyecto; puedes añadir o quitar cualquiera más tarde desde Hoja > Biblioteca de comportamientos….
 Adds nothing. Sheet > Behaviour library… adds any of them later.,No añade nada. Hoja > Biblioteca de comportamientos… los añade más tarde.
 Nothing will be added. Sheet > Behaviour library… is always there later.,No se añadirá nada. Hoja > Biblioteca de comportamientos… estará siempre disponible más tarde.
+Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,Se añadió un VisibleOnScreenNotifier2D bajo %s para que lo consulte Está en pantalla - Ctrl+Z lo deshace.

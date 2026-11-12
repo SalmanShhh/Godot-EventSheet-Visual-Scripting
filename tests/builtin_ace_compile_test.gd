@@ -72,6 +72,7 @@ const NOT_STANDALONE: Array[String] = [
 	# and the marker beside it. Their two ACTION siblings, Mark Seen and Forget Seen, carry no
 	# synthesized member at all and are compiled here for real.
 	"FirstTimeInSave", "HasSeenInSave",
+	"OnceEver",  # calls a sheet-synthesized helper over its own seen-already slot
 	"OnceThisFrame",  # calls a sheet-synthesized helper over its own per-frame claim slots
 	"FpsBelowFor",  # calls a sheet-synthesized helper over its own drop-started-at slot
 	"HasBeenTrueFor",  # the same shape for any test: its helper and its true-since slot are synthesized beside the class

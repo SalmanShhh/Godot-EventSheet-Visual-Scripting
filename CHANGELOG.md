@@ -4,6 +4,16 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: the everyday object rows, under the names people look for them by
+
+- Set Opacity and Opacity (shown as a percentage, written as Godot's 0 to 1 `modulate.a`), Set Scale, Set Size (a Control's size), Set Sprite Size (the scale that gives a size in pixels), Width, Height, Left, Right, Top and Bottom for a sprite, Instance Id, Marker Position (a Marker2D child), Is Outside The Level Bounds and Is Outside The Camera Limits. Each writes the plain Godot line and its description names the property.
+- Once Ever: run an event one time for the life of the object. It keeps one plain true-or-false variable on the script. Trigger Once keeps its meaning (it fires again each time the condition goes false and then true).
+- Is On Screen now adds a VisibleOnScreenNotifier2D under the node in the scene when you add the row, as one step of the scene's own undo, and says so on the status line. Ctrl+Z takes both back.
+
+### Changed: Is On-Screen and Is Outside Layout are retired
+
+- Both tested the window rectangle, so they were wrong as soon as a camera moved or zoomed. They keep compiling in the sheets that use them, are hidden from the picker, and point at Is On Screen (Rendering).
+
 ### New: press Preview to watch a behaviour in the editor
 
 - Eighteen behaviours that are tuned by eye now carry a Preview button in the Inspector: Sine, Sine 3D, Rotate, Orbit, Orbit 3D, Wave, Flash, Hit Flash, Fade, Light Flicker, Light Pulse, Spring, Juice, Juice 3D, Follow Path, Move To, Move To 3D and Tween. Press it and the behaviour plays on its node in the 2D or 3D view while you drag its values; the button then reads Stop preview. Nothing plays when a scene opens, and every other behaviour is exactly the script it was, with no `@tool`.

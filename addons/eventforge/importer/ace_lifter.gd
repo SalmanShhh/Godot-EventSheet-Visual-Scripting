@@ -5432,6 +5432,10 @@ const ENTRY_PARAM_GUARDS: Dictionary = {
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	"AudioSetHearingDistance", "AudioSetFalloff",
+	# Set Opacity and Opacity, for the reason Make A Copy gives below: `modulate.a = x` already opens as
+	# "Set opacity to 50%" under the object's own name, and the row would claim the same line while
+	# losing that name. They author; a hand-written line keeps the reading it already had.
+	"SetOpacity", "Opacity",
 	# The two drain loops are read as LOOPS (a `while` whose first statement takes from the list), never
 	# as a term of an `if`: their template is the loop's guard, written for reading only.
 	"ForEachPoppedFromFront", "ForEachPoppedFromBack",

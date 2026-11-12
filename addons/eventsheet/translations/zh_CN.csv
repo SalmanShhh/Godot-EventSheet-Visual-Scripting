@@ -10208,3 +10208,4 @@ Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node 
 Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,选择适合的。每项会向本项目添加几个行为；之后可在 表 > 行为库… 中添加或移除。
 Adds nothing. Sheet > Behaviour library… adds any of them later.,不添加任何内容。之后可通过 表 > 行为库… 添加。
 Nothing will be added. Sheet > Behaviour library… is always there later.,不会添加任何内容。之后随时可用 表 > 行为库…。
+Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,已在 %s 下添加 VisibleOnScreenNotifier2D，供“在屏幕上”查询 - Ctrl+Z 可撤销。

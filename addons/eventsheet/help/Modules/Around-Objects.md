@@ -82,6 +82,33 @@ never collide.
 | Pick Bottom | The first instance in the list | `var {name} = {list}.front()` |
 | Pick By UID | Finds one instance again from the id it was remembered by | `var {name} = instance_from_id({uid_value})` |
 
+### Common rows
+
+The everyday properties of an object, under the words people look for them by. Each one is a Godot
+property or call, and its description names it, so the Godot name is learned by using the row.
+Godot has no opacity property: it is the alpha of the node's tint, so Set Opacity writes
+`modulate.a` (0 is invisible, 1 is solid) and the row reads it as a percentage.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Opacity | How see-through a node is | `modulate.a = {opacity}` |
+| Opacity | How solid a node is, from 0 to 1 | `modulate.a` |
+| Set Sprite Size | Makes a sprite a size in pixels, by writing the scale that gives it | `scale = {size} / texture.get_size()` |
+| Width | A sprite's width on screen, in pixels | `(get_rect().size.x * scale.x)` |
+| Height | A sprite's height on screen, in pixels | `(get_rect().size.y * scale.y)` |
+| Left | The x of a sprite's left edge in the level | `(global_position.x + get_rect().position.x * scale.x)` |
+| Right | The x of a sprite's right edge in the level | `(global_position.x + get_rect().end.x * scale.x)` |
+| Top | The y of a sprite's top edge in the level | `(global_position.y + get_rect().position.y * scale.y)` |
+| Bottom | The y of a sprite's bottom edge in the level | `(global_position.y + get_rect().end.y * scale.y)` |
+| Instance Id | A number that names this object while the game runs | `get_instance_id()` |
+| Marker Position | Where a Marker2D child sits in the level | `(get_node({marker}) as Node2D).global_position` |
+| Is Outside The Level Bounds | The node has left a rectangle you name once | `not {bounds}.has_point(global_position)` |
+| Is Outside The Camera Limits | The node is past the limits of the current Camera2D | a comparison against `limit_left`, `limit_right`, `limit_top` and `limit_bottom` |
+| Once Ever | Runs an event one time for the life of the object | a `bool` the script declares and sets |
+
+Trigger Once fires again each time its condition goes false and then true; Once Ever never fires a
+second time.
+
 ### Layers
 
 | Name | What it does | Ships as |

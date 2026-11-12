@@ -285,7 +285,7 @@ static func _test_the_cascade() -> bool:
 		"EventSheetSheetDisplayMenu": 17, "EventSheetCollapseMenu": 5, "EventSheetSplitViewsMenu": 3,
 		"EventSheetZoomMenu": 3}) and ok
 	# The Addon manager left Tools: a pack is a folder, seen in the FileSystem dock.
-	ok = _check("Tools keeps its items, plus Words…, less the Addon manager", counts["EventSheetToolsMenu"], 41) and ok
+	ok = _check("Tools keeps its items, plus Words…, less the Addon manager and the sampler preview", counts["EventSheetToolsMenu"], 40) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	ok = _check("Words… is on Tools, at its own id",
 		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok

@@ -4184,6 +4184,29 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Floor Normal (3D)** - Fires with the slope direction of the floor a 3D body is standing on, handy for slope-aware movement.
 - **Overlapping Bodies (3D)** (`target: String`) - Fires with the list of physics bodies currently inside this 3D Area.
 
+### Common Object (`res://addons/eventforge/registration/modules/common_object_aces.gd`)
+the everyday object rows, under the names people look for them by.
+
+#### Conditions
+- **Is Outside The Level Bounds** (`bounds: String`) - True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed layout size, so the rectangle is yours.
+- **Is Outside The Camera Limits** - True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.
+- **Once Ever** - True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.
+
+#### Actions
+- **Set Opacity** (`opacity: float, target: String`) - Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.
+- **Set Sprite Size** (`size: String, target: String`) - Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.
+
+#### Expressions
+- **Opacity** (`target: String`) - How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.
+- **Width** - How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.
+- **Height** - How tall a sprite is on screen, in pixels: its picture's height times its scale. A sprite has no height property.
+- **Left** - The x of the sprite's left edge in the level. A turned sprite is measured as if it were not.
+- **Right** - The x of the sprite's right edge in the level. A turned sprite is measured as if it were not.
+- **Top** - The y of the sprite's top edge in the level (y grows downward). A turned sprite is measured as if it were not.
+- **Bottom** - The y of the sprite's bottom edge in the level (y grows downward). A turned sprite is measured as if it were not.
+- **Instance Id** (`target: String`) - A number that names this object while the game runs. Keep it in a variable and pick the object again later with Pick By UID. It is not saved between runs.
+- **Marker Position** (`marker: String`) - Where a Marker2D child sits in the level - the muzzle of a gun, a hand, a spawn point. Place the Marker2D under the object in the scene and name it here.
+
 ### Comparison (`res://addons/eventforge/registration/modules/comparison_aces.gd`)
 comparing values of every kind
 
@@ -6143,8 +6166,8 @@ System (event-sheet System parity)
 - **Is About** (`a: String, b: String`) - True when two decimal numbers are near enough to count as the same. Any arithmetic leaves a tiny remainder, so this is the comparison you want wherever == would be a coin flip.
 - **Seconds Have Passed Since** (`seconds: String, since: String`) - True once a stretch of time has gone by since a moment you stamped with Now - the cooldown every shooting, dashing or spawning row needs, without a timer node.
 - **Chance** (`percent: String`) - True for the given share of the times it is asked - a 30% chance is true roughly three times in ten. The roll is fresh every time the row runs.
-- **Is Outside Layout** (`point: String`) - True when a point has left the visible layout on any side - the bullet-culling and stray-enemy question, in one row instead of four edge comparisons.
-- **Is On-Screen** (`point: String, target: String`) - True while a point is inside the visible layout - the guard that keeps off-screen things from doing expensive work.
+- **Is Outside Layout** (`point: String`) - Deprecated. True when a point has left the visible layout on any side - the bullet-culling and stray-enemy question, in one row instead of four edge comparisons.
+- **Is On-Screen** (`point: String, target: String`) - Deprecated. True while a point is inside the visible layout - the guard that keeps off-screen things from doing expensive work.
 - **Is Inside Area** (`area: String, point: String`) - True when a point falls inside a rectangle - a zone, a safe area, a spawn band - without needing an Area2D node in the scene.
 - **Expression Is True** (`expr: String`) - True when your custom GDScript expression evaluates to true; an escape hatch for advanced checks.
 - **Is Group Active** (`group: String`) - True when the named runtime group is currently switched on.

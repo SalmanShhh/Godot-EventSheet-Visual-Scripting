@@ -2064,6 +2064,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"skeleton": "Animation-And-Sprites",
 	"array_functional": "Working-With-Lists",
 	"audio": "Sound-And-Music",
+	"common_object": "Around-Objects",
 	"behavior_shape": "Making-Things-Move-In-2D",
 	"boomer_weapons": "Working-In-3D",
 	# Keys and doors are documented beside the shots and the secrets, because they are the same

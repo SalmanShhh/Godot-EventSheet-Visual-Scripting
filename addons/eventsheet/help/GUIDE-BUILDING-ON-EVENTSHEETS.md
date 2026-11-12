@@ -396,7 +396,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `register_section_description(name, blurb)` | `void` | no |
 | Seams | `register_preference(builder: Callable)` / `preference_builders()` | `void` / `Array[Callable]` | no |
 | Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
-| Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` | `void` / `Callable` | no |
+| Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` (kept, do nothing: behaviours preview with their own Preview button) | `void` / `Callable` | no |
 | Seams | `register_editor_gizmo(script_path, drawer)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
 | Seams | `register_card_schema(name, provider)` / `unregister_card_schema(name)` / `card_schema(name)` - the vocabulary behind a card-list Inspector drawer (`eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>` on an Array of Dictionaries). `provider()` returns `{kinds: [{kind, category, label, help, fields, live, defaults, badge, actions}], label_key, enabled_key, stripes}`; a field's `drawer` word is the same word an export marker uses. A callable rather than a Dictionary because a pack's kinds are known when the Inspector opens, not when the plugin boots. Unregistered reads as `{}`, and such a list still draws and still saves its own bytes | `void` / `void` / `Dictionary` | no |
 | Seams | `card_schema_from_aces(aces, fallback_category := "")` - a card schema DERIVED from ACE descriptors: one kind per verb, its label and help from the words the picker reads out, its fields from the verb's own parameters. The whole registration is then one line: `register_card_schema("my_steps", EventSheets.card_schema_from_aces.bind(my_aces))` | `Dictionary` | no |
@@ -569,35 +569,20 @@ for path: String in _all_sheet_scripts():
 		quit(1)
 ```
 
-### 14. Make your behavior animate in the editor (Preview Behaviors)
+### 14. Make your behavior animate in the editor (the Preview button)
 
-**Scenario:** your pack ships an oscillating or orbiting motion behavior and you want users to see it move in the editor viewport - select the node, run Tools > Preview Behaviors on Selected Node, watch it go, and get the node back exactly where it was when the preview stops.
+**Scenario:** your pack ships an oscillating or orbiting motion behavior and you want users to see it move in the editor viewport - press Preview on the behavior in the Inspector, watch it go, and get the node back exactly where it was when the preview stops.
 
-A behavior opts in by shipping one pure static on its script (in a pack builder, add it as a raw
-GDScript block - the bundled Sine behavior does exactly this):
+In a pack builder, set `sheet.previews = true`. The compiled script then carries `@tool`, a
+Preview / Stop preview button in the Inspector and one guarded line at the top of every
+per-frame callback, so the behavior's own code is what plays - there is no second copy of the
+motion to keep in step. The host's stored properties are written down when Preview starts and
+put back on Stop, on leaving the scene and before every save, so the scene file never changes.
+A behavior that waits to be told to start sets `sheet.preview_begin_code`; one that only moves
+when something sets it off sets `sheet.preview_nudge_code` for a Nudge button.
 
-```gdscript
-static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
-	# params = the behavior node's exported values as the Inspector shows them right now.
-	# base   = the host's rest state ({"position", "rotation", "scale", "modulate"}).
-	# Return the host properties for this frame; {} means "leave the host alone".
-	var angle := time * float(params.get("speed_degrees", 90.0)) * (PI / 180.0)
-	return {"position": (base.get("position") as Vector2) + Vector2.from_angle(angle) * float(params.get("radius", 40.0))}
-```
-
-The editor drives the preview at 30 samples a second, re-reads `params` every tick (so tweaking
-a knob in the Inspector re-shapes the motion live), and restores every property it touched when
-the preview stops - the scene's saved bytes are never affected. The static runs WITHOUT the
-behavior executing, so it works on plain (non-@tool) pack scripts.
-
-For a script you cannot edit (third-party, or generated code you do not control), register the
-sampler externally instead - it takes priority over the static:
-
-```gdscript
-EventSheets.register_editor_preview("res://addons/thirdparty/bob.gd",
-	func(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
-		return {"position": (base.get("position") as Vector2) + Vector2(0.0, sin(time * TAU) * 8.0)})
-```
+`EventSheets.register_editor_preview` and `preview_behaviors` still exist so older code keeps
+running, but they do nothing: the older sampler function and the Tools menu item are gone.
 
 **Editor gizmos** are the preview seam's sibling for STATIC setup: instead of animating the
 host over time, the behavior draws its configuration in the 2D viewport while its node is

@@ -10208,3 +10208,4 @@ Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node 
 Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,合うものを選んでください。それぞれこのプロジェクトにいくつかのビヘイビアを追加します。後からシート > ビヘイビアライブラリ… で追加・削除できます。
 Adds nothing. Sheet > Behaviour library… adds any of them later.,何も追加しません。後からシート > ビヘイビアライブラリ… で追加できます。
 Nothing will be added. Sheet > Behaviour library… is always there later.,何も追加されません。シート > ビヘイビアライブラリ… はいつでも後から使えます。
+Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,「画面内にいる」が参照できるよう、%s の下に VisibleOnScreenNotifier2D を追加しました - Ctrl+Z で元に戻せます。

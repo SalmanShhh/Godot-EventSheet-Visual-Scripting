@@ -10208,3 +10208,4 @@ Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node 
 Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,Выберите подходящие. Каждый добавляет в проект несколько поведений; позже их можно добавить или убрать через Лист > Библиотека поведений….
 Adds nothing. Sheet > Behaviour library… adds any of them later.,Ничего не добавляет. Позже их можно добавить через Лист > Библиотека поведений….
 Nothing will be added. Sheet > Behaviour library… is always there later.,Ничего не будет добавлено. Лист > Библиотека поведений… всегда доступна позже.
+Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,"Добавлен VisibleOnScreenNotifier2D под %s, чтобы «На экране» мог его опрашивать - Ctrl+Z отменяет."

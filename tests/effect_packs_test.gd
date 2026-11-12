@@ -35,6 +35,8 @@ const NODE_PACKS: Array[String] = [HIT_FLASH, DISSOLVE, OUTLINE, GRAYSCALE, WAVE
 ## The line all five must carry, byte for byte: the whole point of the shared block is that no pack
 ## owns its own copy of the private-copy rule.
 const SHARED_COPY: String = "\t_worn = found.duplicate() if own_material else found"
+## The two packs with a Preview button take the copy while previewing too, so a preview never writes into a shared material.
+const SHARED_COPY_PREVIEWING: String = "\t_worn = found.duplicate() if (own_material or _previewing) else found"
 
 
 static func run() -> bool:
@@ -178,7 +180,7 @@ static func _the_packs_share_one_material_block() -> bool:
 	var all_passed: bool = true
 	for path: String in NODE_PACKS:
 		all_passed = _check("%s carries the shared private copy" % path.get_file(),
-			FileAccess.get_file_as_string(path).contains(SHARED_COPY), true) and all_passed
+			FileAccess.get_file_as_string(path).contains(SHARED_COPY_PREVIEWING if [HIT_FLASH, WAVE].has(path) else SHARED_COPY), true) and all_passed
 	return all_passed
 
 
