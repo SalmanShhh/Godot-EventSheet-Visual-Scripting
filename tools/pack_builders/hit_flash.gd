@@ -15,6 +15,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "flash(Color.WHITE, 0.15)"
+	sheet.preview_repeat_seconds = "1.2"
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "HitFlashBehavior"
 	sheet.class_description = "Washes the host's own pixels towards a colour and back, which is the classic hit reaction. Unlike a modulate blink it works on dark sprites too, because it replaces colour rather than multiplying it. Flash takes the colour and how long the wash lasts; the shader file is copied into your project when the pack is added, so the edge cases are yours to tune."

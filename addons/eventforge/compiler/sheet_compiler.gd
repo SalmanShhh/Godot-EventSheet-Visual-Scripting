@@ -44,6 +44,7 @@ const GroupHeaders := preload("res://addons/eventforge/compiler/group_headers.gd
 ## A trigger handler's parameters the events under it never read, written `_name` (Godot's own cure for
 ## "The parameter is never used"). Heads are marked as they are written and spelled once the file is.
 const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
+const BehaviorPreviewEmit := preload("res://addons/eventforge/compiler/behavior_preview_emit.gd")
 ## Stamped by the lift on a kept handler head that was already spelled the compiler's way, so the
 ## compiler may spell it again against the body it has now.
 const UNUSED_PARAMS_SPELLED_META: String = "__source_trigger_header_spelled"
@@ -424,7 +425,10 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("# DO NOT EDIT — this file is regenerated on every compile.")
 		lines.append("")
 	# Tool sheets (EXPERIMENTAL): @tool must precede class_name/extends.
-	if sheet.tool_mode:
+	# A previewing behaviour's `@tool` sits BELOW its `## @ace_*` header lines instead: the pack
+	# analyzer reads those lines from the top of the file and stops at the first annotation.
+	var preview_tool_line: bool = sheet.behavior_mode and sheet.previews and not sheet.tool_mode and not sheet.custom_class_name.strip_edges().is_empty()
+	if sheet.tool_mode or (sheet.behavior_mode and sheet.previews and not preview_tool_line):
 		lines.append("@tool")
 	# Test sheets carry a marker line so a runner can FIND them without a registry: the headless
 	# tools/run_test_sheets.gd and the editor's Run Tests panel both scan for this exact comment.
@@ -464,6 +468,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			lines.append("## @ace_author(\"%s\")" % sheet.addon_author.strip_edges())
 		if not sheet.addon_help_url.strip_edges().is_empty():
 			lines.append("## @ace_help(\"%s\")" % sheet.addon_help_url.strip_edges())
+		if preview_tool_line:
+			lines.append("@tool")
 		if not sheet.custom_class_icon.strip_edges().is_empty():
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())
@@ -529,6 +535,10 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			lines.append("\t\tif not dependency_found:")
 			lines.append("\t\t\tdependency_warnings.append(\"Requires a %s sibling behavior.\" % required_class)")
 			lines.append("\treturn dependency_warnings")
+	if sheet.behavior_mode and sheet.previews:
+		# The Preview button and the scene-safety plumbing behind it (see behavior_preview_emit.gd).
+		lines.append("")
+		lines.append_array(BehaviorPreviewEmit.block_lines(sheet.preview_begin_code, sheet.preview_nudge_code, sheet.preview_repeat_seconds))
 	# Enums emit FIRST so enum-typed variable declarations below can reference them.
 	var enum_rows: Array = []
 	_collect_enum_rows(all_events, enum_rows)
@@ -1040,6 +1050,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_saved_variables(lines, sheet, result)
 	UnusedParams.finish(lines)
+	if sheet.behavior_mode and sheet.previews:
+		BehaviorPreviewEmit.guard_callbacks(lines, result.get("source_map", []))
 	if sheet.behavior_mode:
 		_add_host_contract_line(lines, result.get("source_map", []))
 	var output: String = "\n".join(lines) + "\n"

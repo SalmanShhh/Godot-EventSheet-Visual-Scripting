@@ -11,6 +11,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
 	# Any light, either dimension - see the binding block, which asks the host which property it
 	# spells brightness with rather than naming a light class here.
 	sheet.host_class = "Node"

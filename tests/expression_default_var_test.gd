@@ -55,7 +55,7 @@ static func run() -> bool:
 			expr_defaults += 1
 		elif row is RawCodeRow:
 			var stripped: String = (row as RawCodeRow).code.strip_edges()
-			if stripped.begins_with("var ") or stripped.begins_with("@export"):
+			if stripped.begins_with("var ") or (stripped.begins_with("@export") and not stripped.begins_with("@export_tool_button")):
 				raw_var_blocks += 1
 	ok = _check("juice lifts its expression-default state vars", expr_defaults > 5, true) and ok
 	ok = _check("no `var` block stays raw in juice", raw_var_blocks, 0) and ok

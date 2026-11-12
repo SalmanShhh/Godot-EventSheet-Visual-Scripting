@@ -35,7 +35,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(BEHAVIOUR)
 	return SUPPORT.pins(P, [
 		["a pack's behaviour is read in file order", ViewportRowBuilder.reads_in_file_order(sheet), true],
-		["it opens on its head bar: the name and that it is a behaviour", _words_of(head), "◆ SineBehavior Behaviour"],
+		["it opens on its head bar: the name and that it is a behaviour", _words_of(head), "◆ SineBehavior Behaviour Runs in the editor"],
 		["one head bar, folding none of its lines away",
 			[_uids_starting(rows, "sheet_head_bar_"), head.children.size()], [1, 0]],
 		["no Helpers bar gathers its functions", _uids_starting(rows, "helpers_group_"), 0],

@@ -11,6 +11,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "_preview_put_back(host, _preview_rest_of(host))\nmove_to_position(host.position.x + max_speed, host.position.y)"
+	sheet.preview_repeat_seconds = "1.4"
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "MoveToBehavior"
 	sheet.class_description = "Glides the host Node2D to a point at a steady speed, walks queued waypoints in order, and fires On Arrived at the last stop. Smooth point-to-point movement for enemies, pickups, and cursor tokens without writing tween code."

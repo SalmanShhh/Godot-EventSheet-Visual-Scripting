@@ -13,6 +13,8 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "wave()"
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "WaveBehavior"
 	sheet.class_description = "Ripples the host's picture from side to side in a travelling wave - water, heat haze, a flag, a dizzy spell. Only the drawing moves: positions, collisions and physics are untouched, so a rippling tile is still a flat floor. Wave eases the ripple in, Settle eases it out, and the crest count and speed are dials in the shader file copied into your project."

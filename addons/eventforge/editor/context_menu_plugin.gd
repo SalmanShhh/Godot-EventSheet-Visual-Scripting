@@ -34,6 +34,12 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				# The Scene dock's half of the two-way link: right-click a node and read the
 				# events that are about it, with the sheet already filtered to that object.
 				add_context_menu_item("Show events", _on_show_events_requested)
+				# Behaviours with a Preview button, played together: the same button each one carries
+				# in its own Inspector, so this works for any pack that has it and does nothing else.
+				var previewing: Array[Node] = _previewing_behaviours_of_selection()
+				if not previewing.is_empty():
+					add_context_menu_item("Preview its behaviours", _on_preview_behaviours_requested)
+					add_context_menu_item("Stop previews", _on_stop_previews_requested)
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
 			# Right-clicking ANY .gd (or a sheet .tres) in the FileSystem offers "Open as Event Sheet" -
 			# a GDScript-backed sheet opens an arbitrary script losslessly. The Script glyph makes the item
@@ -147,6 +153,44 @@ func _on_attach_requested(targets: Variant) -> void:
 func _on_connect_signal_requested(targets: Variant) -> void:
 	if connect_signal.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:
 		connect_signal.call((targets as Array)[0])
+
+
+## The behaviours under the one node selected in the Scene dock that carry a Preview button.
+func _previewing_behaviours_of_selection() -> Array[Node]:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return []
+	var selected: Array[Node] = EditorInterface.get_selection().get_selected_nodes()
+	if selected.size() != 1:
+		return []
+	return previewing_behaviours_under(selected[0])
+
+
+## The direct children of `node` that carry a Preview button (a pack's own `_preview_start` and
+## `_preview_stop`). Static so a test asks it of plain nodes, without the editor-only plugin.
+static func previewing_behaviours_under(node: Node) -> Array[Node]:
+	var found: Array[Node] = []
+	if node == null:
+		return found
+	for child: Node in node.get_children():
+		if child.has_method("_preview_start") and child.has_method("_preview_stop"):
+			found.append(child)
+	return found
+
+
+## "Preview its behaviours": presses Preview on each one, so a platform that bobs and spins shows both.
+func _on_preview_behaviours_requested(targets: Variant) -> void:
+	if not (targets is Array) or (targets as Array).is_empty() or not ((targets as Array)[0] is Node):
+		return
+	for behaviour: Node in previewing_behaviours_under((targets as Array)[0] as Node):
+		behaviour.call("_preview_start")
+
+
+## "Stop previews": presses Stop preview on each one, which puts the node back as it was.
+func _on_stop_previews_requested(targets: Variant) -> void:
+	if not (targets is Array) or (targets as Array).is_empty() or not ((targets as Array)[0] is Node):
+		return
+	for behaviour: Node in previewing_behaviours_under((targets as Array)[0] as Node):
+		behaviour.call("_preview_stop")
 
 
 func _on_show_events_requested(targets: Variant) -> void:

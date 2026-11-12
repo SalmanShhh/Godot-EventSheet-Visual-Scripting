@@ -13,6 +13,8 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_nudge_code = "punch_scale(0.4, 0.6)"
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Juice3DBehavior"
 	sheet.class_description = "3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, directional kicks from a world point, head bob, jitter, a held lean, FOV punch/zoom, host blink and punches, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers. Every camera effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched."

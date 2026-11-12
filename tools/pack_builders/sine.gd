@@ -14,6 +14,7 @@ static func build() -> bool:
 	sheet.class_description = "Makes a Node2D oscillate on its own: pick what the wave drives (position, scale, angle, or opacity), how far it swings, how long a cycle takes, and the wave shape (sine, triangle, sawtooth, or square). The fastest way to add the small, endless motion that makes a scene feel alive - no timeline or keyframes."
 	sheet.addon_category = "Sine"
 	sheet.ace_expose_all_mode = "node"
+	sheet.previews = true
 	sheet.variables = {
 		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only"], "description": "Which host property the wave drives - position, size, angle, opacity, or value-only."},
 		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"], "description": "Waveform shape of the oscillation - sine, triangle, sawtooth, reverse-sawtooth, or square."},

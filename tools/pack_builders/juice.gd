@@ -14,6 +14,8 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_nudge_code = "punch_scale(0.4, 0.6)"
 	# CanvasItem is the shared base of Node2D and Control, so Squash & Stretch works on sprites AND UI.
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "JuiceBehavior"

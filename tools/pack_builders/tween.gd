@@ -10,6 +10,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "_preview_put_back(host, _preview_rest_of(host))\ntween_position(host.position.x + 120.0, host.position.y, default_duration * 4.0)"
+	sheet.preview_repeat_seconds = "default_duration * 4.0 + 0.6"
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TweenBehavior"
 	sheet.class_description = "Wraps Godot's tween system in plain event rows: pick the feel once in the Inspector (transition curve and easing), then one action slides, scales, spins, or fades the host, with a trigger when it finishes. Compiles down to a normal create_tween() with zero plugin dependency."

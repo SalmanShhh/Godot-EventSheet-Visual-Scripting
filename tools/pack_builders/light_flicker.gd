@@ -12,6 +12,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
 	# Any light, either dimension. Light2D and Light3D share no ancestor below Node, and the pack
 	# resolves which brightness property its host really has when it starts (see the binding block).
 	sheet.host_class = "Node"

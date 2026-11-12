@@ -1,6 +1,7 @@
 ## @ace_category("Move To 3D")
 ## @ace_expose_all(node)
 ## @ace_version(1.0.0)
+@tool
 @icon("res://eventsheet_addons/move_to_3d/icon.svg")
 class_name MoveTo3DBehavior
 extends Node
@@ -19,6 +20,134 @@ func _enter_tree() -> void:
 	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
 		push_warning("Move To3D Behavior needs a Node3D: put it under one, or set Acts on.")
+
+@warning_ignore("unused_private_class_variable")
+## @ace_hidden
+## Plays in the editor. Your scene is not changed.
+@export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
+
+@warning_ignore("unused_private_class_variable")
+## @ace_hidden
+## Plays in the editor. Your scene is not changed.
+@export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
+
+## True while Preview is playing in the editor. Always false in a running game.
+var _previewing: bool = false
+
+## Counts the Preview presses, so a repeat loop from an earlier press ends.
+var _preview_run: int = 0
+
+## This behaviour's own unsaved values from when Preview started, put back on Stop.
+var _preview_own: Dictionary = {}
+
+func _validate_property(property: Dictionary) -> void:
+	if property.name == "_preview_start_button" and _previewing:
+		property.usage = PROPERTY_USAGE_NONE
+	elif property.name == "_preview_stop_button" and not _previewing:
+		property.usage = PROPERTY_USAGE_NONE
+
+func _notification(what: int) -> void:
+	if not Engine.is_editor_hint() or not _previewing:
+		return
+	if what == NOTIFICATION_EXIT_TREE:
+		_preview_stop()
+	elif what == NOTIFICATION_EDITOR_PRE_SAVE:
+		_preview_put_back(host, _preview_rest_of(host))
+
+static func _preview_values(node: Object, own: bool) -> Dictionary:
+	var values: Dictionary = {}
+	for info: Dictionary in node.get_property_list():
+		var usage: int = info.usage
+		var prop_name: String = info.name
+		if info.type == TYPE_NIL or info.type == TYPE_CALLABLE or prop_name.contains("/") or prop_name == "script" or prop_name == "owner":
+			continue
+		if own:
+			if not (usage & PROPERTY_USAGE_SCRIPT_VARIABLE) or (usage & PROPERTY_USAGE_STORAGE) or prop_name.begins_with("_preview") or prop_name == "host":
+				continue
+		elif not (usage & PROPERTY_USAGE_STORAGE):
+			continue
+		var value: Variant = node.get(prop_name)
+		values[prop_name] = value.duplicate() if (value is Array or value is Dictionary) else value
+	return values
+
+static func _preview_put_back(node: Object, values: Dictionary) -> void:
+	if node == null or not is_instance_valid(node):
+		return
+	for prop_name: String in values:
+		var now: Variant = node.get(prop_name)
+		var rest: Variant = values[prop_name]
+		if typeof(now) != typeof(rest) or now != rest:
+			node.set(prop_name, rest)
+
+static func _preview_table() -> Dictionary:
+	if not Engine.has_meta("_eventsheets_previews"):
+		Engine.set_meta("_eventsheets_previews", {})
+	return Engine.get_meta("_eventsheets_previews")
+
+func _preview_rest_of(node: Object) -> Dictionary:
+	if node == null:
+		return {}
+	var entry: Dictionary = _preview_table().get(node.get_instance_id(), {})
+	return entry.get("rest", {})
+
+func _preview_start() -> void:
+	if not Engine.is_editor_hint() or _previewing or host == null or not is_inside_tree():
+		return
+	var table: Dictionary = _preview_table()
+	var key: int = host.get_instance_id()
+	if table.has(key):
+		_preview_put_back(host, table[key].rest)
+		table[key].users += 1
+	else:
+		table[key] = {"rest": _preview_values(host, false), "users": 1}
+	_preview_own = _preview_values(self, true)
+	_previewing = true
+	_preview_run += 1
+	notify_property_list_changed()
+	_preview_kick()
+	_preview_repeat(_preview_run)
+
+func _preview_stop() -> void:
+	if not _previewing:
+		return
+	_previewing = false
+	_preview_kill_tweens()
+	_preview_put_back(self, _preview_own)
+	var table: Dictionary = _preview_table()
+	var key: int = host.get_instance_id() if host != null else 0
+	if table.has(key):
+		_preview_put_back(host, table[key].rest)
+		table[key].users -= 1
+		if table[key].users <= 0:
+			table.erase(key)
+	notify_property_list_changed()
+
+func _preview_kill_tweens() -> void:
+	for info: Dictionary in get_property_list():
+		if not (info.usage & PROPERTY_USAGE_SCRIPT_VARIABLE) or info.name == "host":
+			continue
+		var held: Variant = get(info.name)
+		var live_tweens: Array = []
+		if held is Tween:
+			live_tweens.append(held)
+		elif held is Dictionary:
+			live_tweens.append_array((held as Dictionary).values())
+		elif held is Array:
+			live_tweens.append_array(held)
+		for candidate: Variant in live_tweens:
+			if candidate is Tween and (candidate as Tween).is_valid():
+				(candidate as Tween).kill()
+
+func _preview_kick() -> void:
+	_preview_put_back(host, _preview_rest_of(host))
+	move_to_position_3d(host.position.x + max_speed, host.position.y, host.position.z)
+
+func _preview_repeat(run: int) -> void:
+	while true:
+		await get_tree().create_timer(maxf(1.4, 0.1)).timeout
+		if not _previewing or run != _preview_run:
+			return
+		_preview_kick()
 
 ## @ace_trigger
 ## @ace_name("On Arrived (3D)")
@@ -49,6 +178,8 @@ func _ready() -> void:
 	set_process(moving)
 
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint() and not _previewing:
+		return
 	if not moving or host == null or waypoints.is_empty():
 		return
 	var target: Vector3 = waypoints[0]

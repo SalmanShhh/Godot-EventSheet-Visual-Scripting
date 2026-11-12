@@ -12,6 +12,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "if route != null and not _following:\n\tfollow_path(route, travel_speed, loop_mode)"
+	sheet.preview_repeat_seconds = "(route.curve.get_baked_length() / maxf(travel_speed, 1.0) + 0.5) if route != null and route.curve != null else 2.0"
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "PathFollowBehavior"
 	sheet.class_description = "Walks the host Node2D along a drawn Path2D at a real speed - patrol routes, conveyors, camera dollies and tower-defence lanes. Once, Loop or Ping-pong, with optional rotate-to-face, and On Path Finished when a one-shot run reaches the end."

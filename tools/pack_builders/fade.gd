@@ -12,6 +12,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "_kill_tween()\n_set_alpha(0.0)\n_tween = create_tween()\n_tween.tween_property(host, \"modulate:a\", 1.0, maxf(fade_in_time, 0.0001))\n_tween.tween_interval(maxf(hold_time, 0.0))\n_tween.tween_property(host, \"modulate:a\", 0.0, maxf(fade_out_time, 0.0001))"
+	sheet.preview_repeat_seconds = "fade_in_time + hold_time + fade_out_time + 0.5"
 	# CanvasItem is the shared base of Node2D and Control, so fading works on sprites AND UI.
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "FadeBehavior"

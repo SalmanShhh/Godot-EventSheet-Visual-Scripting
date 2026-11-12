@@ -62,7 +62,7 @@ static func _one_bar_for_a_showcase() -> bool:
 static func _one_bar_for_a_pack() -> bool:
 	var head: Array = _head_rows(PACK)
 	return SUPPORT.pins(P, [
-		["flash opens on its head bar", _words_of(head[0]), "◆ FlashBehavior Behaviour"],
+		["flash opens on its head bar", _words_of(head[0]), "◆ FlashBehavior Behaviour Runs in the editor"],
 		["and the bar is the one head bar", _stable_uid(head[0]), "sheet_head_bar"],
 		["no row of the head is the @icon line", _uids_matching(PACK, "sheet_head_icon"), ""],
 	])

@@ -25,6 +25,23 @@ extends Resource
 ## to build editor tooling from events (File > Run / Ctrl+Shift+X). Runtime ACEs stay on
 ## stable APIs only - editor APIs are Godot's most volatile surface.
 @export var tool_mode: bool = false
+## Behaviour sheets only: this behaviour can be watched in the editor without playing. The compiled
+## script carries `@tool`, a Preview button in the Inspector (Stop preview while it plays) and one
+## guarded line at the top of every per-frame callback, so in the editor it does nothing until the
+## button is pressed. The host's stored properties are written down when Preview starts and put back
+## on Stop, on leaving the scene and before every save, so the scene file never changes. The list of
+## previewing behaviours is these builder flags and nothing else.
+@export var previews: bool = false
+## GDScript lines run when Preview starts (and again every `preview_repeat_seconds` while it plays):
+## the call that sets the behaviour going, for a behaviour that waits to be told. Empty: the
+## behaviour's own per-frame code is already the whole show.
+@export var preview_begin_code: String = ""
+## GDScript expression (seconds) for how often `preview_begin_code` runs again while previewing, for
+## a behaviour that plays once and stops. Empty: it runs once.
+@export var preview_repeat_seconds: String = ""
+## GDScript lines run by a second Nudge button, for a behaviour that only moves when something sets
+## it off (Preview is pressed first when it is not already playing). Empty: no Nudge button.
+@export var preview_nudge_code: String = ""
 ## Test sheets: the sheet's whole job is to make claims and report pass/fail. Compiles to an
 ## `extends Node` script that declares `signal test_started(test_name: String)` - the signal a test
 ## runner emits to start it - so the On Test Start trigger has something real behind it. Discovered

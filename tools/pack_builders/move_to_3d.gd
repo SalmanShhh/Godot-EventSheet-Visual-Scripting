@@ -8,6 +8,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
+	sheet.previews = true
+	sheet.preview_begin_code = "_preview_put_back(host, _preview_rest_of(host))\nmove_to_position_3d(host.position.x + max_speed, host.position.y, host.position.z)"
+	sheet.preview_repeat_seconds = "1.4"
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "MoveTo3DBehavior"
 	sheet.class_description = "Point-to-point movement for any Node3D: hand it Vector3 targets and it glides the host straight toward each one at a steady speed, popping waypoints off a queue and firing On Arrived at the last stop. Attach under a drone, elevator, pickup, or camera rig and tune the pace with the single max_speed knob."
