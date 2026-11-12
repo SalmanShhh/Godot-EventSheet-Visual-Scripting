@@ -84,109 +84,58 @@ static func run() -> bool:
 	]) and ok
 	ProjectSettings.set_setting("autoload/ZzPanelWorld", null)
 	DirAccess.remove_absolute(scene_path)
-	# The Add behaviour list greys what cannot go on this object, with the reason on hover.
+	# The Behaviour library lists the packs a project lacks, each as a row: its name, the kind of
+	# node it works on and what it is, and what else comes with it. The kind a pack works on is read
+	# from its own source: the typed host, else what it requires, else any node.
 	var bullet: Dictionary = EventSheetPackCatalog.describe("bullet")
-	var plain: Node = Node.new()
-	plain.name = "Enemy"
-	var body: Node2D = Node2D.new()
-	ok = SUPPORT.pins("new_addon_panel_test", [
-		["a pack made for another kind says so", EventSheetAddBehaviorDialog.refusal(bullet, plain), "Made for a Node2D - Enemy is a Node."],
-		["the kind it was made for takes it", EventSheetAddBehaviorDialog.refusal(bullet, body), ""],
-		["with no scene open nothing is greyed", EventSheetAddBehaviorDialog.refusal(bullet, null), ""],
-	]) and ok
-	ProjectSettings.set_setting("autoload/ZzBullet", "*" + str(bullet.get("path")))
-	ok = _check("a global is never added to an object", EventSheetAddBehaviorDialog.refusal(bullet, body),
-		"Bullet is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.") and ok
-	ProjectSettings.set_setting("autoload/ZzBullet", null)
-	# A list of every pack walks the Autoload list once and reads each pack's file once, so the
-	# reason comes from what the caller hands in, not from a fresh read per pack.
-	ok = SUPPORT.pins("new_addon_panel_test", [
-		["the Autoload list handed in decides a global",
-			EventSheetAddBehaviorDialog.refusal(bullet, body, {str(bullet.get("path")).get_basename(): true}, ""),
-			"Bullet is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object."],
-		["the source handed in decides the host",
-			EventSheetAddBehaviorDialog.refusal(bullet, plain, {}, "extends Node\n## @ace_requires(\"Camera3D\")\n"),
-			"Made for a Camera3D - Enemy is a Node."],
-	]) and ok
-	var dialog: EventSheetAddBehaviorDialog = EventSheetAddBehaviorDialog.new()
-	dialog._host = plain
-	var only_bullet: Array[Dictionary] = [bullet]
-	dialog._packs = only_bullet
-	dialog._rebuild_list()
-	dialog._pack_sources[str(bullet.get("path"))] = "extends Node\n## @ace_requires(\"Camera3D\")\n"
-	dialog._rebuild_list()
-	var greyed: Array = []
-	for tile: Button in dialog.tiles():
-		greyed.append(tile.tooltip_text)
-	ok = _check("a rebuild reads the pack from the opening's copy, not the file again", greyed,
-		["Made for a Camera3D - Enemy is a Node."]) and ok
-	# The shelves: your own behaviours first, then one per kind of object - the kinds this object is,
-	# then any node, then the rest - three tiles to a row, each the pack's name and its kind.
-	dialog._pack_sources.clear()
-	var mine: Dictionary = {"name": "Patrol", "dir": "zz_patrol", "category": "Movement", "path": "res://zz_patrol.gd"}
-	dialog._pack_sources["res://zz_patrol.gd"] = "## @ace_tags(custom)\nextends Node\n@onready var host: CharacterBody2D = get_parent()\n"
-	var blink: Dictionary = {"name": "Blink", "dir": "zz_blink", "category": "", "path": "res://zz_blink.gd"}
-	dialog._pack_sources["res://zz_blink.gd"] = "extends Node\n"
-	var fade: Dictionary = {"name": "Fade", "dir": "zz_fade", "category": "", "path": "res://zz_fade.gd"}
-	dialog._pack_sources["res://zz_fade.gd"] = "extends Node\n## @ace_requires(\"Node\")\n"
-	var shelf_packs: Array[Dictionary] = [bullet, mine, blink, fade]
-	dialog._packs = shelf_packs
-	dialog._rebuild_list()
-	var heads: Array = []
-	var columns: Array = []
-	for child: Node in dialog._list.get_children():
-		if child.is_queued_for_deletion() or not (child as Control).visible:
-			continue
-		if child is Label:
-			heads.append((child as Label).text)
-		elif child is GridContainer:
-			columns.append((child as GridContainer).columns)
-	var tile_words: Array = []
-	for tile: Button in dialog.tiles():
-		var said: Array = [tile.disabled]
-		for label: Node in tile.find_children("*", "Label", true, false):
+	var window: EventSheetBehaviourLibraryWindow = EventSheetBehaviourLibraryWindow.new()
+	var mine: Dictionary = {"name": "Patrol", "dir": "zz_patrol", "category": "Movement", "path": "res://zz_patrol.gd", "state": "library"}
+	var blink: Dictionary = {"name": "Blink", "dir": "zz_blink", "category": "", "path": "res://zz_blink.gd", "state": "library"}
+	var row_packs: Array[Dictionary] = [bullet.merged({"state": "library"}), mine, blink]
+	window._packs = row_packs
+	window._rebuild_list()
+	var row_words: Array = []
+	for row: Button in window.rows():
+		var said: Array = []
+		for label: Node in row.find_children("*", "Label", true, false):
 			said.append((label as Label).text)
-		tile_words.append(said)
+		row_words.append(said)
+	var searched: Array = _searched(window, "blin")
+	var no_match: Array = _searched(window, "zzz-nothing")
 	ok = SUPPORT.pins("new_addon_panel_test", [
-		["your behaviours lead, then this object's kind, any node, the rest", heads, ["Your behaviours", "Node", "Any node", "Node2D"]],
-		["each shelf is three tiles wide", columns, [3, 3, 3, 3]],
-		["a tile is its name and the kind it works on; another kind is greyed", tile_words,
-			[[true, "Patrol", "CharacterBody2D"], [false, "Fade", "Node"], [false, "Blink", "Any node"], [true, "Bullet", "Node2D"]]],
-		["a search hides the tiles and shelves it does not match, building nothing", _searched(dialog, "fad"),
-			["Node", "Fade"]],
-		["...and says so when it matches nothing", _searched(dialog, "zzz-nothing"), ["No pack here matches that."]],
+		["the rows read in name order, each its name then its kind", row_words.map(func(said: Array) -> Array: return said.slice(0, 1)),
+			[["Blink"], ["Bullet"], ["Patrol"]]],
+		["a search shows only the rows it matches, building nothing", searched, ["Blink"]],
+		["...and says so when it matches nothing", no_match, ["No behaviour here matches that."]],
 		["the works-on kind reads the typed host before what a pack requires",
-			EventSheetAddBehaviorDialog.works_on("extends Node\n## @ace_requires(\"Camera3D\")\n"), "Camera3D"],
-		["a data pack that is not a node is named by what it extends, not offered for any node",
-			EventSheetAddBehaviorDialog.works_on("class_name ZzLoot\nextends Resource\n"), "Resource"],
-		["and is greyed with the reason, even with no scene open", EventSheetAddBehaviorDialog.refusal(
-			{"name": "Zz Loot", "path": "res://zz_loot.gd"}, null, {}, "class_name ZzLoot\nextends Resource\n"),
-			"Zz Loot is a Resource, not a node: a sheet reads it from its file, so it is never added to an object."],
-		["a node pack is still offered", EventSheetAddBehaviorDialog.refusal(
-			{"name": "Zz Blink", "path": "res://zz_blink.gd"}, null, {}, "extends Node\n"), ""],
+			EventSheetBehaviourLibraryWindow.works_on("extends Node
+## @ace_requires(\"Camera3D\")
+"), "Camera3D"],
+		["a data pack that is not a node is named by what it extends",
+			EventSheetBehaviourLibraryWindow.works_on("class_name ZzLoot
+extends Resource
+"), "Resource"],
+		["a node pack works on any node", EventSheetBehaviourLibraryWindow.works_on("extends Node
+"), ""],
 	]) and ok
-	dialog.free()
-	plain.free()
-	body.free()
+	window.free()
 	host.free()
 	return ok
 
 
-## What the Add behaviour shelves show after typing `query`: each shown heading, then its shown
-## tiles' names (the hidden ones are still there, only not drawn).
-static func _searched(dialog: EventSheetAddBehaviorDialog, query: String) -> Array:
-	var built: int = dialog.tiles().size()
-	dialog._search.text = query
-	dialog._filter_shelves()
+## The names the Behaviour library shows after typing `query` (the hidden rows are still there, only not
+## drawn), or what it says when nothing matches.
+static func _searched(window: EventSheetBehaviourLibraryWindow, query: String) -> Array:
+	var built: int = window.rows().size()
+	window._search.text = query
+	window._filter()
 	var shown: Array = []
-	for child: Node in dialog._list.get_children():
-		if (child as Control).visible and child is Label:
-			shown.append((child as Label).text)
-		elif (child as Control).visible and child is GridContainer:
-			for tile: Button in (child as GridContainer).get_children():
-				if tile.visible:
-					shown.append(str(tile.find_children("*", "Label", true, false)[0].text))
-	return shown if dialog.tiles().size() == built else ["the search rebuilt the tiles"]
+	for row: Button in window.rows():
+		if row.visible:
+			shown.append(str(row.find_children("*", "Label", true, false)[0].text))
+	if shown.is_empty():
+		shown.append(window._no_match.text)
+	return shown if window.rows().size() == built else ["the search rebuilt the rows"]
 
 
 static func _items(dropdown: OptionButton) -> Array:

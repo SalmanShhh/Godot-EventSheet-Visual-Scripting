@@ -8,7 +8,7 @@ extends RefCounted
 # rest sit in addons/eventsheet_library/, and that folder holds a `.gdignore` file, so Godot never
 # imports it: none of its classes reach Create Node, the class list, the picker, an import or an
 # exported game, and the editor boots no slower for it. This file reads the library straight from
-# disk, and only when something asks - the Add behaviour window, the Welcome's "What are you
+# disk, and only when something asks - the Behaviour library window, the Welcome's "What are you
 # making?", the Doctor's Tidy behaviours and the picker's empty search. Nothing here runs at boot.
 #
 # Adding a behaviour is copying its folder in; removing one is sending its folder to the system
@@ -69,7 +69,7 @@ static func packs(root: String = LIBRARY_ROOT, project_root: String = PROJECT_RO
 	return out
 
 
-## The project's packs and the library's together, as the Add behaviour window lists them: every
+## The project's packs and the library's together, as the Behaviour library window lists them: every
 ## project pack marked "project", then every library pack the project does not hold, marked
 ## "library". A pack the project holds is always its own copy, never the library's.
 static func combined(project_packs: Array[Dictionary], library_packs: Array[Dictionary]) -> Array[Dictionary]:

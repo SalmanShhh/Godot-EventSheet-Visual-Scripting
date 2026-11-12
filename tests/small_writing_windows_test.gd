@@ -5,8 +5,8 @@
 # Pins, window by window: Edit Signal holds OK on a bad parameter with a red edge; the Parameter
 # window refuses a misplaced default in the window and deletes with its own button; Edit Comment
 # names a cleared swatch and makes no undo step on an untouched Save; Compare reads the row in its
-# band; Connect Signal reads the event and notes a signal the sheet already handles; Add behavior
-# shows a pack's knobs as typed fields under their own names with the pack's doc line.
+# band; Connect Signal reads the event and notes a signal the sheet already handles; the knobs a pack publishes
+# is read as typed knobs under their own names with the pack's doc line, the way the Inspector shows them.
 @tool
 extends RefCounted
 
@@ -190,17 +190,10 @@ static func _test_add_behavior() -> bool:
 	file.store_string("extends Node\n\n## Grace window (s) to still jump just after walking off a ledge.\n@export var coyote_time: float = 0.1\n@export var double_jump: bool = true\n@export var jumps: int = 2\n@export var label_text: String = \"hop\"\n")
 	file.close()
 	var knobs: Array[Dictionary] = EventSheetAddBehavior.exported_properties(path)
-	var fields: Array = []
-	var texts: Array = []
-	for knob: Dictionary in knobs:
-		var field: Control = EventSheetAddBehaviorDialog.knob_field(knob)
-		fields.append(field.get_class())
-		texts.append(EventSheetAddBehaviorDialog.knob_text(field))
-		field.free()
 	DirAccess.remove_absolute(path)
 	return SUPPORT.pins(NAME, [
 		["each knob keeps the name the pack wrote", [str(knobs[0].get("name")), str(knobs[3].get("name"))], ["coyote_time", "label_text"]],
 		["the pack's doc line says what the knob is for", str(knobs[0].get("description")), "Grace window (s) to still jump just after walking off a ledge."],
-		["a knob is the field its type wants", fields, ["SpinBox", "CheckBox", "SpinBox", "LineEdit"]],
-		["each field reads back the pack's default", texts, ["0.1", "true", "2", "\"hop\""]],
+		["each knob carries its type and its default", knobs.map(func(knob: Dictionary) -> Array: return [knob.get("type"), knob.get("default")]),
+			[["float", "0.1"], ["bool", "true"], ["int", "2"], ["String", "\"hop\""]]],
 	])

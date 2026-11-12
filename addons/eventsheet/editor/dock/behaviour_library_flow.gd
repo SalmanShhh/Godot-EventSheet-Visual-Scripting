@@ -38,7 +38,7 @@ func init(dock: Control) -> void:
 # --- adding -------------------------------------------------------------------------------------
 
 
-## The sentence the Add behaviour window and the status line say once a library pack is in: the
+## The sentence the Behaviour library window and the status line say once a library pack is in: the
 ## pack, what came along because it needs it, and how many folders Godot imported.
 static func added_sentence(pack_name: String, needed_names: PackedStringArray, imported: int) -> String:
 	var folders_said: String = EventSheetL10n.translate("Godot imported 1 folder.") if imported == 1 \
@@ -56,10 +56,12 @@ static func _and_list(names: PackedStringArray) -> String:
 	return EventSheetL10n.translate("%s and %s") % [", ".join(names.slice(0, names.size() - 1)), names[names.size() - 1]]
 
 
-## Copies a library pack and what it needs into the project, waits for Godot to import them, then
-## attaches the pack to the object - one undo step that takes the node out and sends the copied
-## folders to the trash. Returns {"ok", "message", "node", "copied"}. A coroutine: await it.
-func add_and_attach(pack: Dictionary, values: Dictionary, object_label: String) -> Dictionary:
+## Copies a library pack and what it needs into the project and waits for Godot to import them. That
+## is all: the pack then shows in Godot's own Create Node window, and the person adds it with Add Child
+## Node under the node it should act on. One undo step takes the copied folders out again (to the
+## trash, where they can be restored) and Ctrl+Y puts them back. Returns {"ok", "message", "copied"}.
+## A coroutine: await it.
+func add_to_project(pack: Dictionary) -> Dictionary:
 	var pack_dir: String = str(pack.get("dir", ""))
 	var wanted: PackedStringArray = EventSheetPackLibrary.folders_to_add(pack_dir)
 	var copied: Dictionary = await copy_and_import(wanted)
@@ -67,64 +69,22 @@ func add_and_attach(pack: Dictionary, values: Dictionary, object_label: String) 
 		_dock._set_status(str(copied.get("message", "")), true)
 		return copied
 	var added: PackedStringArray = copied.get("copied", PackedStringArray())
-	var in_project: Dictionary = EventSheetPackCatalog.describe(pack_dir)
-	var host: Node = _dock._scene_node_for_object(object_label)
-	if host == null:
-		host = _scene_root_named(object_label)
 	var needed_names: PackedStringArray = PackedStringArray()
 	for folder: String in added:
 		if folder != pack_dir:
 			needed_names.append(str(EventSheetPackCatalog.describe(folder).get("name", folder)))
 	var said: String = added_sentence(str(pack.get("name", pack_dir)), needed_names, added.size())
-	if in_project.is_empty() or host == null:
-		# The folders are in and stay in: the object is not in the open scene, so there is nothing to
-		# attach to yet, and the pack is now one click away in the list.
-		var unattached: String = said + " " + EventSheetL10n.translate("Open the scene holding %s to attach it.") % object_label
-		_dock._set_status(unattached, false)
-		_after_change()
-		return {"ok": true, "message": unattached, "copied": added}
-	var result: Dictionary = EventSheetAddBehavior.attach_node(in_project, host, values)
-	var node: Node = result.get("node") as Node
-	if node != null and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		# The node and the folders are already in; the step only teaches Ctrl+Z to take both back out
-		# (the folders to the trash, where they can be restored) and Ctrl+Y to put both back.
+	if not added.is_empty() and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		# The folders are already in; the step only teaches Ctrl+Z to send them back to the trash and
+		# Ctrl+Y to copy them in again.
 		var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
-		undo.create_action(EventSheetL10n.translate("Add behaviour %s") % str(pack.get("name", pack_dir)), UndoRedo.MERGE_DISABLE, host)
+		undo.create_action(EventSheetL10n.translate("Add behaviour %s to the project") % str(pack.get("name", pack_dir)))
 		undo.add_do_method(self, "_restore_folders", added)
-		undo.add_do_method(host, "add_child", node)
-		undo.add_do_property(node, "owner", node.owner)
-		undo.add_do_reference(node)
-		undo.add_undo_method(host, "remove_child", node)
 		undo.add_undo_method(self, "_trash_folders", added)
 		undo.commit_action(false)
-		EditorInterface.mark_scene_as_unsaved()
 	_after_change()
-	var message: String = said if bool(result.get("ok", false)) else str(result.get("message", ""))
-	_dock._set_status(message, not bool(result.get("ok", false)))
-	return {"ok": bool(result.get("ok", false)), "message": message, "node": node, "copied": added,
-		"host": host}
-
-
-## The open scene's root when it is the object itself - a sheet that is the scene root's own script
-## names no child path to look up, so the object bar's label is the root's own name.
-func _scene_root_named(object_label: String) -> Node:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var edited_root: Node = EditorInterface.get_edited_scene_root()
-	return edited_root if edited_root != null and str(edited_root.name) == object_label else null
-
-
-## Takes the last library add back, the way Ctrl+Z would: the node out, the folders to the trash.
-## The Add behaviour window's Undo, which is the same step on the same history - taken back through
-## the editor's own Undo, so the editor's undo manager and its History panel see the step go (running
-## the scene history's UndoRedo by hand left the manager offering it still).
-func undo_last(host: Node) -> void:
-	if host == null or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return
-	if EventSheetUndoRedoAdapter.run_editor_command("ui_undo"):
-		return
-	var manager: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
-	manager.get_history_undo_redo(manager.get_object_history_id(host)).undo()
+	_dock._set_status(said, false)
+	return {"ok": true, "message": said, "copied": added}
 
 
 ## Copies the folders back in from the library, for the redo of an add.
@@ -254,7 +214,7 @@ func add_kits(chosen: Array[Dictionary]) -> Dictionary:
 		_after_change()
 	var message: String = str(copied.get("message", "")) if not bool(copied.get("ok", false)) \
 		else (EventSheetL10n.translate("Nothing was added.") if added.is_empty()
-			else EventSheetL10n.translate("Added %d behaviours to eventsheet_addons/. Add or remove any of them from an object's Behaviours list.") % added.size())
+			else EventSheetL10n.translate("Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.") % added.size())
 	_dock._set_status(message, not bool(copied.get("ok", false)))
 	return {"ok": bool(copied.get("ok", false)), "message": message, "copied": added}
 

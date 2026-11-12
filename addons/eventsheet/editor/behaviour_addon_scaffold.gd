@@ -16,7 +16,7 @@ extends RefCounted
 
 ## Where every behaviour and global made here lives (and where the plugin reads what they offer).
 const ROOT := "res://eventsheet_addons"
-## The tag that marks a behaviour as one the project made itself, so the Add behaviour list puts it first.
+## The tag that marks a behaviour as one the project made itself, so a list of behaviours can put it first.
 const YOURS_TAG := "custom"
 
 ## A handful of words that can't be a class_name (would collide with the engine or break parsing).

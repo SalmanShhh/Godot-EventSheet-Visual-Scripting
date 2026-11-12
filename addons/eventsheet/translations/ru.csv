@@ -10180,3 +10180,31 @@ Show In FileSystem Dock,Показать в панели «Файловая си
 Show in FileSystem dock {path},Показать {path} в панели «Файловая система»
 Other sheets can start an event from this,Другие листы могут запускать событие от этого
 Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,Показывает этот сигнал как триггер в выборе каждого другого листа. В коде остаётся обычная строка сигнала с коротким комментарием над ней.
+"In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here.","Есть в библиотеке поведений, но ещё не в этом проекте. «Добавить поведение…» откроет библиотеку на нём; отсюда ничего не добавляется."
+"This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A).","Это поведение есть в библиотеке, но не в этом проекте. «Добавить поведение…» откроет библиотеку, где «Добавить в проект» скопирует его. Затем добавьте его к узлу через «Добавить дочерний узел» (Ctrl+A)."
+Behaviour library,Библиотека поведений
+Add to project,Добавить в проект
+"Behaviours not in this project yet. Add one to the project, then add it to a node with Add Child Node (Ctrl+A) in the Scene dock.","Поведения, которых ещё нет в этом проекте. Добавьте одно в проект, затем к узлу через «Добавить дочерний узел» (Ctrl+A) в панели «Сцена»."
+Not in this project,Нет в этом проекте
+The library's behaviours this project does not hold yet.,"Поведения из библиотеки, которых ещё нет в этом проекте."
+"The behaviours this project already holds, to remove from it.","Поведения, которые уже есть в проекте, для удаления."
+This install carries no behaviour library.,В этой установке нет библиотеки поведений.
+Every behaviour in the library is already in this project.,Все поведения из библиотеки уже есть в этом проекте.
+This project holds no behaviours yet.,В этом проекте пока нет поведений.
+No behaviour here matches that.,Подходящих поведений нет.
+Nothing else comes with it.,Больше ничего не добавляется.
+Also adds %s.,Также добавляет: %s.
+Now add it with Add Child Node (Ctrl+A) under the node it should act on.,"Теперь добавьте его через «Добавить дочерний узел» (Ctrl+A) под узлом, на который он должен действовать."
+"%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.","%s нет в открытой сцене, поэтому добавлять поведение некуда. Сначала откройте её сцену."
+Add a behaviour to %s,Добавить поведение к %s
+Added %s to %s.,%s добавлено к %s.
+%s could not be added.,Не удалось добавить %s.
+Add behaviour %s to the project,Добавить поведение %s в проект
+"Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.","Добавлено поведений: %d (в eventsheet_addons/). Добавьте каждое к узлу через «Добавить дочерний узел» (Ctrl+A), а значения задайте в инспекторе."
+Behaviour library…,Библиотека поведений…
+"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node.","Поведения этого плагина, которых ещё нет в проекте. Добавьте одно в проект, затем к узлу через «Добавить дочерний узел»."
+Listed under its own name in the picker and in Godot's Create Node window. The usual choice.,Отображается под своим именем в выборе и в окне Godot «Создать узел». Обычный выбор.
+Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.,"Поведение %s создано в %s. Добавьте его через «Добавить дочерний узел» (Ctrl+A) под узлом, на который оно действует."
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,Выберите подходящие. Каждый добавляет в проект несколько поведений; позже их можно добавить или убрать через Лист > Библиотека поведений….
+Adds nothing. Sheet > Behaviour library… adds any of them later.,Ничего не добавляет. Позже их можно добавить через Лист > Библиотека поведений….
+Nothing will be added. Sheet > Behaviour library… is always there later.,Ничего не будет добавлено. Лист > Библиотека поведений… всегда доступна позже.

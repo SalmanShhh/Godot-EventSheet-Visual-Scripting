@@ -10180,3 +10180,31 @@ Show In FileSystem Dock,Mostra nel pannello FileSystem
 Show in FileSystem dock {path},Mostra {path} nel pannello FileSystem
 Other sheets can start an event from this,Altri fogli possono avviare un evento da questo
 Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,Elenca questo segnale come attivatore nel selettore di ogni altro foglio. Il codice resta una normale riga di segnale con un breve commento sopra.
+"In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here.","Nella libreria dei comportamenti, non ancora in questo progetto. Aggiungi comportamento… apre la libreria su di esso; da qui non viene aggiunto nulla."
+"This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A).","Questo comportamento è nella libreria, non in questo progetto. Aggiungi comportamento… apre la libreria su di esso, dove «Aggiungi al progetto» lo copia. Poi aggiungilo a un nodo con Aggiungi nodo figlio (Ctrl+A)."
+Behaviour library,Libreria dei comportamenti
+Add to project,Aggiungi al progetto
+"Behaviours not in this project yet. Add one to the project, then add it to a node with Add Child Node (Ctrl+A) in the Scene dock.","Comportamenti non ancora in questo progetto. Aggiungine uno al progetto, poi a un nodo con Aggiungi nodo figlio (Ctrl+A) nel pannello Scena."
+Not in this project,Non in questo progetto
+The library's behaviours this project does not hold yet.,I comportamenti della libreria che questo progetto non ha ancora.
+"The behaviours this project already holds, to remove from it.","I comportamenti che questo progetto ha già, da rimuovere."
+This install carries no behaviour library.,Questa installazione non include una libreria di comportamenti.
+Every behaviour in the library is already in this project.,Tutti i comportamenti della libreria sono già in questo progetto.
+This project holds no behaviours yet.,Questo progetto non contiene ancora comportamenti.
+No behaviour here matches that.,Nessun comportamento corrisponde.
+Nothing else comes with it.,Non include nient'altro.
+Also adds %s.,Aggiunge anche %s.
+Now add it with Add Child Node (Ctrl+A) under the node it should act on.,Ora aggiungilo con Aggiungi nodo figlio (Ctrl+A) sotto il nodo su cui deve agire.
+"%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.","%s non è nella scena aperta, quindi non c'è nulla a cui aggiungere un comportamento. Apri prima la sua scena."
+Add a behaviour to %s,Aggiungi un comportamento a %s
+Added %s to %s.,%s aggiunto a %s.
+%s could not be added.,Non è stato possibile aggiungere %s.
+Add behaviour %s to the project,Aggiungi il comportamento %s al progetto
+"Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.",Aggiunti %d comportamenti a eventsheet_addons/. Aggiungi ciascuno a un nodo con Aggiungi nodo figlio (Ctrl+A) e imposta i valori nell'Ispettore.
+Behaviour library…,Libreria dei comportamenti…
+"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node.","I comportamenti di questo plugin che il progetto non ha ancora. Aggiungine uno al progetto, poi a un nodo con Aggiungi nodo figlio."
+Listed under its own name in the picker and in Godot's Create Node window. The usual choice.,Elencato con il proprio nome nel selettore e nella finestra Crea nodo di Godot. La scelta abituale.
+Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.,Creato il comportamento %s in %s. Aggiungilo con Aggiungi nodo figlio (Ctrl+A) sotto il nodo su cui agisce.
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,Scegli quelli che ti servono. Ognuno aggiunge alcuni comportamenti a questo progetto; potrai aggiungerne o rimuoverne in seguito da Foglio > Libreria dei comportamenti….
+Adds nothing. Sheet > Behaviour library… adds any of them later.,Non aggiunge nulla. Foglio > Libreria dei comportamenti… li aggiunge in seguito.
+Nothing will be added. Sheet > Behaviour library… is always there later.,Non verrà aggiunto nulla. Foglio > Libreria dei comportamenti… sarà sempre disponibile in seguito.

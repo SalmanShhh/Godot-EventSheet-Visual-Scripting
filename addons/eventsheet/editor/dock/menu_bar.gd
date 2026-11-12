@@ -301,6 +301,9 @@ func build(root: Node) -> void:
 	sheet_popup.add_item(EventSheetL10n.translate("New behaviour…"), 9)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9), EventSheetL10n.translate(
 		"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to."))
+	sheet_popup.add_item(EventSheetL10n.translate("Behaviour library…"), 26)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(26), EventSheetL10n.translate(
+		"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node."))
 	sheet_popup.add_item(EventSheetL10n.translate("New global…"), 22)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(22), EventSheetL10n.translate(
 		"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload."))
@@ -354,6 +357,7 @@ func build(root: Node) -> void:
 			7: _dock._sheet_io._export_gdscript_requested()
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
+			26: _dock.open_behaviour_library()
 			22: _dock._new_addon_panel.open(true)
 			10: _dock._providers_glue.share_verbs_with_project()
 			11: _dock._open_inspector_designer()

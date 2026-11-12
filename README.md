@@ -94,7 +94,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-type-check-light.png">
-    <img alt="The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused." src="docs/previews/editor-type-check.png">
+	<img alt="The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused." src="docs/previews/editor-type-check.png">
   </picture>
 
 - **Tooling** - Project Doctor (dock, CLI, CI), live debugging, Save Studio, Translation Studio (nine editor languages), the Manual inside the editor, a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.

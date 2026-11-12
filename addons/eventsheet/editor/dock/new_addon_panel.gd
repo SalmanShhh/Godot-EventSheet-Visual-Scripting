@@ -224,7 +224,7 @@ func _fill_shelves() -> void:
 	# (the list was empty, and Create wrote a heading read off no item), and with packs installed
 	# every shelf is one pack's own name, so picking one for the reader filed a new Patrol with Car.
 	EventSheetPopupUI.add_described_item(_shelf_option, EventSheetL10n.translate("Its own name"), EventSheetL10n.translate(
-		"Listed under its own name in the picker and the Add behaviour list. The usual choice."), "")
+		"Listed under its own name in the picker and in Godot's Create Node window. The usual choice."), "")
 	var packs: Array[Dictionary] = EventSheetPackCatalog.packs()
 	for shelf: String in EventSheetPackCatalog.categories(packs):
 		var names: PackedStringArray = PackedStringArray()
@@ -425,7 +425,7 @@ func _on_create() -> void:
 		_open_made(path, EventSheetL10n.translate("Made the behaviour %s at %s and added it to %s.") % [addon_name, path, object_label])
 		return
 	if not _global:
-		_open_made(path, EventSheetL10n.translate("Made the behaviour %s at %s. Add it to an object from the Add behaviour list.") % [addon_name, path])
+		_open_made(path, EventSheetL10n.translate("Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.") % [addon_name, path])
 		return
 	var target: String = path
 	if _kind_option.selected == 1:
@@ -456,7 +456,7 @@ func _source_for(kind: String, addon_name: String, shelf: String, pack_path: Str
 
 
 ## The Works-on class's own editor icon saved beside the behaviour, so it shows as that kind of object
-## in the Scene dock and the Add behaviour list. "" outside the editor, where there is no theme to ask.
+## in the Scene dock and Godot's Create Node window. "" outside the editor, where there is no theme to ask.
 func _write_default_icon(script_path: String) -> String:
 	var icon: Texture2D = EventSheetPopupUI._editor_icon(_icon_class())
 	var image: Image = icon.get_image() if icon != null else null

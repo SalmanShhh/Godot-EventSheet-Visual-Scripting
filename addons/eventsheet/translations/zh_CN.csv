@@ -10180,3 +10180,31 @@ Show In FileSystem Dock,在文件系统面板中显示
 Show in FileSystem dock {path},在文件系统面板中显示 {path}
 Other sheets can start an event from this,其他表可以由此触发事件
 Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,在其他每个表的选择器中将此信号列为触发器。代码仍是普通的信号行，上方带一条简短注释。
+"In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here.",在行为库中，尚未加入此项目。“添加行为…”会在行为库中打开它；这里不会添加任何内容。
+"This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A).",此行为在行为库中，不在本项目里。“添加行为…”会打开行为库，用“添加到项目”复制进来。然后用“添加子节点”（Ctrl+A）把它加到某个节点上。
+Behaviour library,行为库
+Add to project,添加到项目
+"Behaviours not in this project yet. Add one to the project, then add it to a node with Add Child Node (Ctrl+A) in the Scene dock.",尚未加入本项目的行为。先添加到项目，再在场景面板中用“添加子节点”（Ctrl+A）加到节点上。
+Not in this project,不在本项目中
+The library's behaviours this project does not hold yet.,本项目尚未包含的行为库内容。
+"The behaviours this project already holds, to remove from it.",本项目已有的行为，可从中移除。
+This install carries no behaviour library.,此安装不包含行为库。
+Every behaviour in the library is already in this project.,行为库中的所有行为都已在本项目中。
+This project holds no behaviours yet.,本项目尚无行为。
+No behaviour here matches that.,没有匹配的行为。
+Nothing else comes with it.,不会附带其他内容。
+Also adds %s.,同时添加 %s。
+Now add it with Add Child Node (Ctrl+A) under the node it should act on.,现在用“添加子节点”（Ctrl+A）把它加到要作用的节点下面。
+"%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.",%s 不在当前打开的场景中，无处添加行为。请先打开它的场景。
+Add a behaviour to %s,为 %s 添加行为
+Added %s to %s.,已将 %s 添加到 %s。
+%s could not be added.,无法添加 %s。
+Add behaviour %s to the project,将行为 %s 添加到项目
+"Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.",已将 %d 个行为添加到 eventsheet_addons/。用“添加子节点”（Ctrl+A）把每个加到节点上，并在检查器中设置其值。
+Behaviour library…,行为库…
+"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node.",此插件自带、项目尚未包含的行为。先添加到项目，再用“添加子节点”加到节点上。
+Listed under its own name in the picker and in Godot's Create Node window. The usual choice.,在选择器和 Godot 的“创建节点”窗口中以自己的名称列出。通常的选择。
+Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.,已在 %s 创建行为 %s。用“添加子节点”（Ctrl+A）把它加到所作用的节点下面。
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,选择适合的。每项会向本项目添加几个行为；之后可在 表 > 行为库… 中添加或移除。
+Adds nothing. Sheet > Behaviour library… adds any of them later.,不添加任何内容。之后可通过 表 > 行为库… 添加。
+Nothing will be added. Sheet > Behaviour library… is always there later.,不会添加任何内容。之后随时可用 表 > 行为库…。

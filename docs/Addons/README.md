@@ -6,6 +6,11 @@ knobs and values from any ƒx field through the **Self section** (type `self` an
 entries insert as `$PackName.member` chains), fifteen or more worked use cases as event-sheet rows,
 and the tips and gotchas that bite in practice.
 
+A behaviour is a node: add it with Add Child Node (Ctrl+A) in Godot's Scene dock under the node it
+acts on (or right-click the object in the sheet's Object bar > Add behavior…), then set its values in
+Godot's Inspector. If it is not in the list yet, add it to the project from **Sheet > Behaviour
+library…**.
+
 A pack without a guide here is not a dead end: the Manual gives it a reference page listing
 everything it publishes, with a **Write this guide** button that scaffolds one.
 

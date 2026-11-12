@@ -3,8 +3,8 @@
 # The New behaviour / New global form reopens on a file that exists with every answer read from the
 # file's own header, so a file written by hand opens the same way; Save changes writes only what
 # changed, through the sheet, and saves the file. A new name goes through the one rename everywhere.
-# The doors: the file name's click menu, an object's Behaviours list (+ New behaviour…, and a
-# behaviour's right-click), a global's right-click in the picker, and the Start page shelves.
+# The doors: the file name's click menu, the Sheet menu (New behaviour…, and Behaviour library…),
+# a global's right-click in the picker, and the Start page shelves.
 @tool
 extends RefCounted
 
@@ -152,29 +152,13 @@ static func _the_doors() -> bool:
 	var menu: PopupMenu = dock._head_actions._file_menu
 	var rows: Array = [["the file name offers its settings first", _menu_texts(menu),
 		["Behaviour settings…", "Open in the script editor", "Show in FileSystem"]]]
-	# An object's Behaviours list: + New behaviour… for that object, and a behaviour's right-click.
-	var made: Array = []
-	var opened: Array = []
-	var dialog: EventSheetAddBehaviorDialog = EventSheetAddBehaviorDialog.new()
-	dialog.configure(func(_pack: Dictionary, _values: Dictionary, _inline: bool, _label: String) -> void: pass,
-		func(label: String, host_class: String) -> void: made.append([label, host_class]),
-		func(path: String, settings: bool) -> void: opened.append([path, settings]))
-	var body: CharacterBody2D = CharacterBody2D.new()
-	dialog._object_label = "Enemy"
-	dialog._host = body
-	var only_bullet: Array[Dictionary] = [EventSheetPackCatalog.describe("bullet")]
-	dialog._packs = only_bullet
-	dialog._rebuild_list()
-	var last: Button = dialog._list.get_child(dialog._list.get_child_count() - 1) as Button
-	rows.append(["the list ends with + New behaviour…", last.text if last != null else "", "+ New behaviour…"])
-	if last != null:
-		last.pressed.emit()
-	rows.append(["which makes one for that object, on its kind", made, [["Enemy", "CharacterBody2D"]]])
-	dialog.open_card_menu("res://eventsheet_addons/bullet/bullet_behavior.gd")
-	rows.append(["a behaviour's right-click offers its settings or its sheet, then taking it out", _menu_texts(dialog._card_menu),
-		["Behaviour settings…", "Open as sheet", "Read the guide", "", "Remove from project…"]])
-	dialog._card_menu.id_pressed.emit(0)
-	rows.append(["and settings opens that file's form", opened, [["res://eventsheet_addons/bullet/bullet_behavior.gd", true]]])
+	# The Sheet menu keeps the doors that used to sit inside the Add behavior window: New behaviour… (the
+	# form that makes one) and the Behaviour library… window that copies one in.
+	var sheet_menu: PopupMenu = dock.find_children("*", "PopupMenu", true, false).filter(func(menu: Node) -> bool:
+		return (menu as PopupMenu).get_item_index(26) >= 0 and (menu as PopupMenu).get_item_index(9) >= 0)[0]
+	rows.append(["the Sheet menu offers New behaviour… and Behaviour library…",
+		[sheet_menu.get_item_text(sheet_menu.get_item_index(9)), sheet_menu.get_item_text(sheet_menu.get_item_index(26))],
+		["New behaviour…", "Behaviour library…"]])
 	# The New behaviour form opened for an object starts on that object's kind.
 	var panel: EventSheetNewAddonPanel = dock._new_addon_panel
 	panel.open(false, {"label": "Enemy", "class": "Sprite2D"})
@@ -185,8 +169,6 @@ static func _the_doors() -> bool:
 	rows.append(["a kind the list has is chosen, not added again",
 		[panel._kind_option.get_item_text(panel._kind_option.selected), panel._kind_option.item_count], ["CharacterBody2D", 7]])
 	rows.append(["the picker's globals ask for their settings", ACEPickerDialog.new().has_signal("global_settings_requested"), true])
-	dialog.free()
-	body.free()
 	dock.free()
 	DirAccess.remove_absolute(BEHAVIOUR_PATH)
 	return SUPPORT.pins(P, rows)

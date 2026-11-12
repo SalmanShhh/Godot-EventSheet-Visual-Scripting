@@ -1,8 +1,8 @@
-# EventForge - the pack catalog, the Add behavior dialog's core, and the quick fixes.
+# EventForge - the pack catalog, the Behaviour library window's core, and the quick fixes.
 #
 # A pack is a folder of ordinary scripts under eventsheet_addons/: it is installed by being there
 # and removed by deleting the folder. Pinned here at the layer that has no window in it:
-#   the list of installed packs (the Add behavior dialog's shelves read it), the two ways a pack
+#   the list of installed packs (the Behaviour library window lists from it), the two ways a pack
 #   joins an object, which Doctor findings offer a one-step fix, and that the old way of switching
 #   a pack off is gone - the scanner ignores the setting, the Doctor notes it once, and no menu or
 #   palette entry offers a window for managing packs.
@@ -48,66 +48,43 @@ static func run() -> bool:
 
 	# The pack's knobs, read from its own source rather than from an instance.
 	var knobs: Array[Dictionary] = EventSheetAddBehavior.exported_properties("res://eventsheet_addons/health/health_behavior.gd")
-	all_passed = _check("a pack publishes its @export knobs to the Add behavior dialog",
+	all_passed = _check("a pack publishes its @export knobs to the Inspector",
 		knobs.size() > 0, true) and all_passed
 	all_passed = _check("a knob is labelled with its own name, as the pack wrote it",
 		str(knobs[0].get("name", "")) if not knobs.is_empty() else "", "max_health") and all_passed
-	# The card highlight follows the pack's FOLDER, so a name that begins another pack's name never
-	# lights both up.
-	var behavior_dialog: EventSheetAddBehaviorDialog = EventSheetAddBehaviorDialog.new()
+	# The Behaviour library's selection follows the pack's FOLDER, so a name that begins another
+	# pack's name never lights both up.
+	var library_window: EventSheetBehaviourLibraryWindow = EventSheetBehaviourLibraryWindow.new()
 	var two_packs: Array[Dictionary] = [
-		{"name": "Platformer", "dir": "platformer", "category": "Movement"},
-		{"name": "Platformer Pathfinding", "dir": "platformer_pathfinding", "category": "Movement"},
+		{"name": "Platformer", "dir": "platformer", "category": "Movement", "state": "library"},
+		{"name": "Platformer Pathfinding", "dir": "platformer_pathfinding", "category": "Movement", "state": "library"},
 	]
-	behavior_dialog._packs = two_packs
-	behavior_dialog._selected_dir = "platformer"
-	behavior_dialog._rebuild_list()
-	behavior_dialog._rebuild_list_selection()
+	library_window._packs = two_packs
+	library_window._selected_dir = "platformer"
+	library_window._rebuild_list()
 	var lit: PackedStringArray = PackedStringArray()
-	for tile: Button in behavior_dialog.tiles():
-		if tile.button_pressed:
-			lit.append(str(tile.get_meta("pack_dir")))
+	for row: Button in library_window.rows():
+		if row.button_pressed:
+			lit.append(str(row.get_meta("pack_dir")))
 	all_passed = _check("picking Platformer lights Platformer alone", lit, PackedStringArray(["platformer"])) and all_passed
-	behavior_dialog._selected_dir = "platformer_pathfinding"
-	behavior_dialog._rebuild_list_selection()
+	library_window._select("platformer_pathfinding")
 	lit.clear()
-	for tile: Button in behavior_dialog.tiles():
-		if tile.button_pressed:
-			lit.append(str(tile.get_meta("pack_dir")))
+	for row: Button in library_window.rows():
+		if row.button_pressed:
+			lit.append(str(row.get_meta("pack_dir")))
 	all_passed = _check("...and the longer name alone when it is the pick", lit,
 		PackedStringArray(["platformer_pathfinding"])) and all_passed
-	# A tile clips a long name, so its hover leads with the whole name as the pack wrote it.
+	# A row clips a long name, so its hover leads with the whole name as the pack wrote it.
 	var hovers: PackedStringArray = PackedStringArray()
-	behavior_dialog._packs = [{"name": "Platformer Pathfinding", "pitch": "Walks to a point.", "dir": "pp", "category": "Movement"},
-		{"name": "Quiet", "dir": "q", "category": "Movement"}]
-	behavior_dialog._rebuild_list()
-	for tile: Button in behavior_dialog.tiles():
-		hovers.append(tile.tooltip_text)
-	all_passed = _check("a tile's hover is its name, then its pitch", hovers,
+	var hover_packs: Array[Dictionary] = [{"name": "Platformer Pathfinding", "pitch": "Walks to a point.", "dir": "pp", "category": "Movement", "state": "library"},
+		{"name": "Quiet", "dir": "q", "category": "Movement", "state": "library"}]
+	library_window._packs = hover_packs
+	library_window._rebuild_list()
+	for row: Button in library_window.rows():
+		hovers.append(row.tooltip_text)
+	all_passed = _check("a row's hover is its name, then its pitch", hovers,
 		PackedStringArray(["Platformer Pathfinding - Walks to a point.", "Quiet"])) and all_passed
-	# A shelf named for a script class is never greyed by refusal, so it never ranks with the
-	# greyed kinds: beside the object's own kinds when the object's script is that class.
-	var probe_path: String = "user://shelf_rank_probe_%d.gd" % OS.get_process_id()
-	FileAccess.open(probe_path, FileAccess.WRITE).store_string("class_name ShelfRankProbe\nextends Node\n")
-	var scripted_host: Node = Node.new()
-	scripted_host.set_script(load(probe_path))
-	all_passed = SUPPORT.pins("pack_catalog_test", [
-		["a script class the object is ranks with its own kinds", EventSheetAddBehaviorDialog.shelf_rank("ShelfRankProbe", scripted_host), 1],
-		["a script class it is not ranks with any node", EventSheetAddBehaviorDialog.shelf_rank("NoSuchScriptClass", scripted_host), 2],
-		["a Godot kind it is not stays with the greyed kinds", EventSheetAddBehaviorDialog.shelf_rank("Sprite2D", scripted_host), 3],
-		["...and refusal agrees the script class fits", EventSheetAddBehaviorDialog.refusal({"name": "X", "path": ""}, scripted_host, {}, "extends Node\nvar host: NoSuchScriptClass\n"), ""],
-	]) and all_passed
-	scripted_host.free()
-	DirAccess.remove_absolute(probe_path)
-	# A card a pack listed as switched off in an older project is an ordinary card now.
-	var listed_off: Array[Dictionary] = [{"name": "Health", "dir": "health", "category": "Health", "enabled": false}]
-	behavior_dialog._packs = listed_off
-	behavior_dialog._rebuild_list()
-	var greyed: Array = []
-	for tile: Button in behavior_dialog.tiles():
-		greyed.append(tile.disabled)
-	all_passed = _check("no pack tile is ever greyed out as switched off", greyed, [false]) and all_passed
-	behavior_dialog.free()
+	library_window.free()
 	all_passed = _check("a field's text becomes the value the property wants",
 		EventSheetAddBehavior.parse_value("200", "float"), 200.0) and all_passed
 	all_passed = _check("...including a flag", EventSheetAddBehavior.parse_value("true", "bool"), true) and all_passed

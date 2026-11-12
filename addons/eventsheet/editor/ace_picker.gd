@@ -52,7 +52,7 @@ signal recipe_insert_requested(recipe: Dictionary)
 ## Emitted from a global's right-click, Global settings…: the script that global runs. The form that
 ## changes it is the dock's; the picker has closed by then, because the form opens that file.
 signal global_settings_requested(script_path: String)
-## A library pack picked from the empty-search shelf: the dock opens the Add behaviour window on it.
+## A library pack picked from the empty-search shelf: the dock opens the Behaviour library window on it.
 ## Nothing is added from the picker itself.
 signal library_pack_requested(pack_dir: String)
 
@@ -2634,7 +2634,7 @@ func _add_library_rows(root: TreeItem, query: String) -> void:
 		if not str(hit.get("said", "")).is_empty():
 			line += " · " + str(hit.get("said", ""))
 		row.set_text(0, line)
-		row.set_tooltip_text(0, EventSheetL10n.translate("In the behaviour library, not in this project yet. Add behaviour… opens the window on it; nothing is added from here."))
+		row.set_tooltip_text(0, EventSheetL10n.translate("In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here."))
 		row.set_metadata(0, {"library_pack": hit})
 
 
@@ -2650,7 +2650,7 @@ func _show_library_info(hit: Dictionary) -> void:
 	if _add_button != null:
 		_add_button.disabled = false
 		_add_button.text = EventSheetL10n.translate("Add behaviour…")
-	_say(str(hit.get("name", "")), EventSheetL10n.translate("This behaviour is in the library, not in this project. Add behaviour… opens the window on it, where adding copies it in and attaches it."))
+	_say(str(hit.get("name", "")), EventSheetL10n.translate("This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A)."))
 
 
 func _commit_library_pack(hit: Dictionary) -> void:

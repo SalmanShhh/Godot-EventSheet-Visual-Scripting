@@ -2104,16 +2104,17 @@ is instantiated to answer a question.
   drag one onto the sheet to start an event on it - dropping it in an existing event's action lane
   adds an action to that event instead. A script that is not on a scene yet says so, and says what to
   do about it.
-- **Add behavior… is one dialog for every pack.** Right-click an object in the Object bar and pick
-  **Add behavior…** (the head's Behaviors folder has the same "+"). The shelves down the top come
-  from the packs' own categories, the search reads a pack's name, its one-line pitch and its
-  folder ("jump" finds the platformer pack), and the card shows the pack's own `@export` knobs as
-  fields you fill in before it lands. **Where** offers *as a behavior node* - a node carrying the
-  pack's script under the object, which is how every pack works - and *written into this script*
-  for a pack that declares it can be (`## @ace_inline_capable`: the pack's knobs become the
-  script's own exported variables). After adding, the picker under the object lists the
-  behavior's conditions, actions and expressions, the head's Behaviors folder shows it, and the
-  Project Doctor checks the host the pack needs (a CharacterBody2D for the platformer pack).
+- **A behaviour is a node.** Right-click an object in the Object bar and pick **Add behavior…** (the
+  head's Behaviors folder has the same "+"): Godot's own Create Node window opens on that object, listing
+  every behaviour with its icon, and what you pick goes under the object as a child node, one Ctrl+Z
+  takes it out again. You can also add one yourself the way Godot does it: select the node in the Scene
+  dock, press **Add Child Node (Ctrl+A)**, and choose the behaviour. Set its values in **Godot's
+  Inspector** - every `@export` knob of the pack is there under the name the pack wrote. After adding, the
+  picker under the object lists the behaviour's conditions, actions and expressions, the head's
+  Behaviors folder shows it, and the Project Doctor checks the host the pack needs (a CharacterBody2D
+  for the platformer pack). If a behaviour is not in the list yet, it is in the plugin's library:
+  **Sheet > Behaviour library…** lists the ones this project does not hold, with what else each brings
+  along, and **Add to project** copies its folder in so Create Node lists it from then on.
 - **A pack is a folder, and Godot already shows folders.** Every pack is a folder of ordinary
   behaviour scripts under `eventsheet_addons/`, and the FileSystem dock is where you see them. Adding
   one is putting its folder there - from the Asset Library, or a .zip you unpack yourself - and its
@@ -2162,7 +2163,6 @@ is instantiated to answer a question.
   Map* and *Pick an existing action…*, and a variable read but never set offers *Declare it*. Each
   applies through the same operation the dock already owns, and the audit re-runs immediately, so
   the finding's disappearance is proven rather than assumed.
-<img src="images/add-behavior.png" alt="The Add behavior dialog for Player: a scrolling row of category shelves above a search box, a list of pack cards each naming the pack and its one-line pitch, and on the right the selected pack's properties as editable fields above a Where dropdown reading as a behavior node." width="620">
 
 <img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
 

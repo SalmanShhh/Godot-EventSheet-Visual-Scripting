@@ -4,6 +4,13 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a behaviour is added with Godot's own Create Node window
+
+- Every Add behavior... door (the Objects list's right-click, the head's Behaviors folder, the picker's suggestion) now opens Godot's own Create Node window, titled "Add a behaviour to <object>". Every behaviour is a plain script with a class name and an icon, so Godot already lists it there. What you choose goes under that object in the open scene as one undo step (Ctrl+Z takes it out) and is selected, so Godot's Inspector shows its values. If the object is not in the open scene, the status line says so and nothing happens. A behaviour that ships a scene or a shader of its own is still added the way its guide says.
+- The old Add behaviour window is gone: its shelves of tiles, the Properties card of values (set them in the Inspector now), and the Where choice. Nothing in the editor writes a behaviour into a script any more, because that choice lived only there.
+- New: Sheet > Behaviour library... lists the behaviours the plugin carries that the project does not hold yet, each with its icon, what it is and what else comes along with it. One button, Add to project, copies its folder in and lets Godot import it, then says: Now add it with Add Child Node (Ctrl+A) under the node it should act on. A second tab lists the ones the project holds, with Remove from project... as before.
+- Sheet > New behaviour... and a behaviour's file opened as a sheet (the head's Behaviors folder) are where they were. The Welcome page, the guides and the Addons index now say: a behaviour is a node, add it with Add Child Node, set its values in the Inspector, and add it from the Behaviour library if it is not listed.
+
 ### Fixed: a signal can be offered as a trigger again
 
 - The signal window (Declare > Signal... or double-clicking a signal row) has one tick, "Other sheets can start an event from this". Ticked, every other sheet's picker lists the signal as a trigger; the code is the same plain signal line with the short trigger comment above it. A new signal on a behaviour or a global starts ticked, on an ordinary sheet unticked, and reopening the row changes it later in one undo step. It replaces the Add trigger button of the removed Properties and actions window.

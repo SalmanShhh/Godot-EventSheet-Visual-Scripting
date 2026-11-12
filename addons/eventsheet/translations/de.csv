@@ -10180,3 +10180,31 @@ Show In FileSystem Dock,Im Dateisystem-Dock anzeigen
 Show in FileSystem dock {path},{path} im Dateisystem-Dock anzeigen
 Other sheets can start an event from this,Andere Sheets können damit ein Ereignis starten
 Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,Listet dieses Signal als Auslöser in der Auswahl jedes anderen Sheets auf. Im Code bleibt es eine einfache Signalzeile mit einem kurzen Kommentar darüber.
+"In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here.","In der Verhaltensbibliothek, noch nicht in diesem Projekt. Verhalten hinzufügen… öffnet die Verhaltensbibliothek dafür; von hier wird nichts hinzugefügt."
+"This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A).","Dieses Verhalten ist in der Bibliothek, nicht in diesem Projekt. Verhalten hinzufügen… öffnet die Verhaltensbibliothek dafür; „Zum Projekt hinzufügen“ kopiert es hinein. Danach mit „Kindknoten hinzufügen“ (Strg+A) an einen Knoten hängen."
+Behaviour library,Verhaltensbibliothek
+Add to project,Zum Projekt hinzufügen
+"Behaviours not in this project yet. Add one to the project, then add it to a node with Add Child Node (Ctrl+A) in the Scene dock.","Verhalten, die noch nicht in diesem Projekt sind. Eines zum Projekt hinzufügen und dann im Szenen-Dock mit „Kindknoten hinzufügen“ (Strg+A) an einen Knoten hängen."
+Not in this project,Nicht in diesem Projekt
+The library's behaviours this project does not hold yet.,"Die Verhalten der Bibliothek, die dieses Projekt noch nicht hat."
+"The behaviours this project already holds, to remove from it.","Die Verhalten, die dieses Projekt schon hat, zum Entfernen."
+This install carries no behaviour library.,Diese Installation enthält keine Verhaltensbibliothek.
+Every behaviour in the library is already in this project.,Jedes Verhalten der Bibliothek ist schon in diesem Projekt.
+This project holds no behaviours yet.,Dieses Projekt enthält noch keine Verhalten.
+No behaviour here matches that.,Hier passt kein Verhalten dazu.
+Nothing else comes with it.,Es kommt nichts weiter mit.
+Also adds %s.,Fügt außerdem %s hinzu.
+Now add it with Add Child Node (Ctrl+A) under the node it should act on.,"Jetzt mit „Kindknoten hinzufügen“ (Strg+A) unter dem Knoten einfügen, auf den es wirken soll."
+"%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.","%s ist nicht in der geöffneten Szene, also gibt es nichts, dem ein Verhalten hinzugefügt werden kann. Öffne zuerst die Szene."
+Add a behaviour to %s,Verhalten zu %s hinzufügen
+Added %s to %s.,%s zu %s hinzugefügt.
+%s could not be added.,%s konnte nicht hinzugefügt werden.
+Add behaviour %s to the project,Verhalten %s zum Projekt hinzufügen
+"Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.",%d Verhalten zu eventsheet_addons/ hinzugefügt. Jedes mit „Kindknoten hinzufügen“ (Strg+A) an einen Knoten hängen und die Werte im Inspektor setzen.
+Behaviour library…,Verhaltensbibliothek…
+"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node.","Die Verhalten dieses Plugins, die das Projekt noch nicht hat. Eines zum Projekt hinzufügen und dann mit „Kindknoten hinzufügen“ an einen Knoten hängen."
+Listed under its own name in the picker and in Godot's Create Node window. The usual choice.,Wird unter eigenem Namen in der Auswahl und im Godot-Fenster „Node erstellen“ aufgeführt. Die übliche Wahl.
+Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.,"Verhalten %s unter %s erstellt. Mit „Kindknoten hinzufügen“ (Strg+A) unter dem Knoten einfügen, auf den es wirkt."
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,"Wähle, was passt. Jedes fügt diesem Projekt einige Verhalten hinzu; später kannst du sie über Sheet > Verhaltensbibliothek… hinzufügen oder entfernen."
+Adds nothing. Sheet > Behaviour library… adds any of them later.,Fügt nichts hinzu. Sheet > Verhaltensbibliothek… fügt sie später hinzu.
+Nothing will be added. Sheet > Behaviour library… is always there later.,Es wird nichts hinzugefügt. Sheet > Verhaltensbibliothek… steht später jederzeit bereit.

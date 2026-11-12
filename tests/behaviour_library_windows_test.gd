@@ -1,15 +1,15 @@
 # Godot EventSheets - what the behaviour library's windows say, pinned by value.
 #
-# The Add behaviour window (a library tile's line, the card naming what comes along, the Add button's
-# words), the sentence an add leaves, the Remove from project… warning, Tidy behaviours' summary and
+# The Behaviour library window (a row's line naming what comes along, the one line said after an add),
+# the sentence an add leaves, the Remove from project… warning, Tidy behaviours' summary and
 # button, the Welcome's kit line, the Doctor's door on the unused-packs note, and the window itself
-# built over the real library: library packs listed beside the project's, and "In this project"
-# hiding them.
+# built over the real library: the packs the project lacks listed, "In this project" listing the
+# held ones instead, and the one button's words for each.
 @tool
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const DIALOG := preload("res://addons/eventsheet/editor/add_behavior_dialog.gd")
+const DIALOG := preload("res://addons/eventsheet/editor/behaviour_library_window.gd")
 const FLOW := preload("res://addons/eventsheet/editor/dock/behaviour_library_flow.gd")
 const WELCOME := preload("res://addons/eventsheet/editor/dock/welcome_window.gd")
 const P := "behaviour_library_windows_test"
@@ -19,8 +19,13 @@ static func run() -> bool:
 	var library_pack: Dictionary = {"dir": "drawing_canvas", "state": "library"}
 	var own_pack: Dictionary = {"dir": "health", "state": "project"}
 	var ok: bool = SUPPORT.pins(P, [
-		["a library tile says it waits in the library", DIALOG.tile_state_line("Node2D", library_pack), "Node2D · Library"],
-		["a project tile says it is in the project", DIALOG.tile_state_line("Any node", own_pack), "Any node · In project"],
+		["a row names what else the pack brings, in names", DIALOG.needs_line("drawing_canvas", EventSheetPackLibrary.LIBRARY_ROOT, "user://behaviour_library_windows_test_none"),
+			"Also adds Canvas Surface and Drawing Prefab Resource."],
+		["a pack needing nothing says so on its row", DIALOG.needs_line("wrap", EventSheetPackLibrary.LIBRARY_ROOT, "user://behaviour_library_windows_test_none"),
+			"Nothing else comes with it."],
+		["a needed folder the project holds is not listed again", DIALOG.needs_line("drawing_prefab_stamp"), "Nothing else comes with it."],
+		["after an add the window says where it goes next", DIALOG.added_next_step(),
+			"Now add it with Add Child Node (Ctrl+A) under the node it should act on."],
 		["a library pack is told from a project one", [DIALOG.is_library_pack(library_pack), DIALOG.is_library_pack(own_pack)], [true, false]],
 		["the card names the folders @ace_requires drags along", DIALOG.library_needs_text("drawing_canvas", EventSheetPackLibrary.LIBRARY_ROOT, "user://behaviour_library_windows_test_none"),
 			"canvas_surface/\ndrawing_prefab_resource/"],
@@ -75,35 +80,68 @@ static func run() -> bool:
 	DirAccess.remove_absolute(folder.path_join("art"))
 	DirAccess.remove_absolute(folder)
 
-	# The window over the real library: every library pack is listed beside the project's own, as a
-	# tile that says Library, and "In this project" hides them.
-	# This repository's project holds every pack, so the window is handed the library as a project
-	# that holds none of them would see it.
+	# The window over the real library, handed the library as a project that holds none of them would
+	# see it: every pack is a row, the button adds, and "In this project" lists nothing to add.
 	var dialog: ConfirmationDialog = DIALOG.new()
 	var empty: Array[Dictionary] = []
 	dialog._packs = EventSheetPackLibrary.combined(empty,
 		EventSheetPackLibrary.packs(EventSheetPackLibrary.LIBRARY_ROOT, "user://behaviour_library_windows_test_none"))
 	dialog._rebuild_list()
-	var library_tiles: int = 0
-	var shown_library: int = 0
-	for tile: Button in dialog.tiles():
-		for pack: Dictionary in dialog._packs:
-			if str(pack.get("dir", "")) == str(tile.get_meta("pack_dir")) and DIALOG.is_library_pack(pack):
-				library_tiles += 1
-				shown_library += 1 if tile.visible else 0
 	var waiting: int = EventSheetPackLibrary.folders().size()
-	dialog._scope_project.button_pressed = true
-	dialog._filter_shelves()
-	var hidden_library: int = 0
-	for tile: Button in dialog.tiles():
-		for pack: Dictionary in dialog._packs:
-			if str(pack.get("dir", "")) == str(tile.get_meta("pack_dir")) and DIALOG.is_library_pack(pack) and not tile.visible:
-				hidden_library += 1
+	var listed: int = dialog.rows().size()
+	var first_pack: String = str(dialog.rows()[0].get_meta("pack_dir")) if listed > 0 else ""
+	var add_words: Array = [dialog.get_ok_button().text, dialog.get_ok_button().disabled]
+	var needs_on_row: bool = false
+	for label: Node in dialog.rows()[0].find_children("*", "Label", true, false):
+		needs_on_row = needs_on_row or (label as Label).text.begins_with("Also adds") or (label as Label).text == "Nothing else comes with it."
+	dialog._search.text = "zzz-no-such-pack"
+	dialog._filter()
+	var hidden_by_search: int = dialog.rows().filter(func(row: Button) -> bool: return not row.visible).size()
+	var empty_words: String = dialog._no_match.text
+	dialog._search.text = ""
+	dialog._scope_held.button_pressed = true
+	dialog._selected_dir = ""
+	dialog._rebuild_list()
+	# The held scope lists the packs marked "project" - none, here.
+	var held_rows: int = dialog.rows().size()
+	var remove_words: String = dialog.get_ok_button().text
 	ok = SUPPORT.pins(P, [
 		["the library holds every shipped pack", waiting, preload("res://addons/eventforge/shipped_pack_folders.gd").FOLDERS.size()],
-		["every library pack the project lacks has a tile", library_tiles, waiting],
-		["All shows them", shown_library, waiting],
-		["In this project hides every one of them", hidden_library, waiting],
+		["every library pack the project lacks has a row", listed, waiting],
+		["the first row is selected, so the button has something to act on", [first_pack.is_empty(), add_words], [false, ["Add to project", false]]],
+		["a row says what else comes with its pack", needs_on_row, true],
+		["a search that matches nothing hides every row and says so", [hidden_by_search, empty_words], [waiting, "No behaviour here matches that."]],
+		["In this project lists none of them (none is held)", held_rows, 0],
+		["its button says Remove from project…", remove_words, "Remove from project…"],
 	]) and ok
 	dialog.free()
+	ok = _test_adding_under_a_node() and ok
 	return ok
+
+
+## What Godot's Create Node window hands back lands under the node: a behaviour's script path becomes
+## the pack's node, a built-in type name becomes that node, and a node that is not in the scene is said
+## in the status line with nothing added.
+static func _test_adding_under_a_node() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(EventSheetResource.new())
+	var host: Node2D = Node2D.new()
+	host.name = "Player"
+	dock.add_behaviour_node(host, "res://eventsheet_addons/sine/sine_behavior.gd")
+	dock.add_behaviour_node(host, "Timer")
+	dock.add_behaviour_node(host, "SineBehavior")
+	var kids: Array = host.get_children().map(func(child: Node) -> Array:
+		return [str(child.name), child.get_class(), child.get_script() != null, child.owner == host])
+	dock.open_add_behavior_dialog("Ghost")
+	var said: String = dock._status_label.text.trim_prefix("⚠  ")
+	var pins: Array = [
+		["a behaviour's script path becomes its node under the object", kids[0], ["Sine", "Node", true, true]],
+		["a built-in type name becomes that node", kids[1], ["Timer", "Timer", false, true]],
+		["a script class named by its class_name is found too", kids[2][1], "Node"],
+		["a node that is not in the open scene is said, and nothing is added", said,
+			"Ghost is not in the open scene, so there is nothing to add a behaviour to. Open its scene first."],
+	]
+	host.free()
+	dock.free()
+	return SUPPORT.pins(P, pins)

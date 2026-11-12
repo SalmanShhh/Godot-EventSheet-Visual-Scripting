@@ -10180,3 +10180,31 @@ Show In FileSystem Dock,파일시스템 독에서 보이기
 Show in FileSystem dock {path},파일시스템 독에서 {path} 보이기
 Other sheets can start an event from this,다른 시트가 이것으로 이벤트를 시작할 수 있음
 Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,이 시그널을 다른 모든 시트의 선택기에 트리거로 표시합니다. 코드는 위에 짧은 주석이 붙은 일반 시그널 줄로 남습니다.
+"In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here.","동작 라이브러리에 있으며 아직 이 프로젝트에는 없습니다. '동작 추가…'를 누르면 라이브러리가 열리고, 여기서는 아무것도 추가되지 않습니다."
+"This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A).",이 동작은 라이브러리에 있으며 이 프로젝트에는 없습니다. '동작 추가…'를 누르면 라이브러리가 열리고 '프로젝트에 추가'로 복사됩니다. 그런 다음 자식 노드 추가(Ctrl+A)로 노드에 추가하세요.
+Behaviour library,동작 라이브러리
+Add to project,프로젝트에 추가
+"Behaviours not in this project yet. Add one to the project, then add it to a node with Add Child Node (Ctrl+A) in the Scene dock.",아직 이 프로젝트에 없는 동작입니다. 프로젝트에 추가한 뒤 씬 독에서 자식 노드 추가(Ctrl+A)로 노드에 추가하세요.
+Not in this project,이 프로젝트에 없음
+The library's behaviours this project does not hold yet.,이 프로젝트에 아직 없는 라이브러리의 동작.
+"The behaviours this project already holds, to remove from it.",이 프로젝트에 이미 있는 동작. 제거할 수 있습니다.
+This install carries no behaviour library.,이 설치에는 동작 라이브러리가 없습니다.
+Every behaviour in the library is already in this project.,라이브러리의 모든 동작이 이미 이 프로젝트에 있습니다.
+This project holds no behaviours yet.,이 프로젝트에는 아직 동작이 없습니다.
+No behaviour here matches that.,일치하는 동작이 없습니다.
+Nothing else comes with it.,함께 추가되는 것은 없습니다.
+Also adds %s.,%s도 함께 추가됩니다.
+Now add it with Add Child Node (Ctrl+A) under the node it should act on.,이제 자식 노드 추가(Ctrl+A)로 작동시킬 노드 아래에 추가하세요.
+"%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.",%s이(가) 열린 씬에 없어서 동작을 추가할 대상이 없습니다. 먼저 해당 씬을 여세요.
+Add a behaviour to %s,%s에 동작 추가
+Added %s to %s.,%s을(를) %s에 추가했습니다.
+%s could not be added.,%s을(를) 추가할 수 없습니다.
+Add behaviour %s to the project,동작 %s을(를) 프로젝트에 추가
+"Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.","%d개의 동작을 eventsheet_addons/에 추가했습니다. 각각 자식 노드 추가(Ctrl+A)로 노드에 추가하고, 값은 인스펙터에서 설정하세요."
+Behaviour library…,동작 라이브러리…
+"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node.",이 플러그인이 가진 동작 중 프로젝트에 아직 없는 것. 프로젝트에 추가한 뒤 자식 노드 추가로 노드에 추가하세요.
+Listed under its own name in the picker and in Godot's Create Node window. The usual choice.,선택기와 Godot의 노드 생성 창에 자체 이름으로 표시됩니다. 일반적인 선택입니다.
+Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.,동작 %s을(를) %s에 만들었습니다. 자식 노드 추가(Ctrl+A)로 작동시킬 노드 아래에 추가하세요.
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,"맞는 것을 고르세요. 각각 이 프로젝트에 동작 몇 개를 추가하며, 나중에 시트 > 동작 라이브러리…에서 추가하거나 제거할 수 있습니다."
+Adds nothing. Sheet > Behaviour library… adds any of them later.,아무것도 추가하지 않습니다. 나중에 시트 > 동작 라이브러리…에서 추가할 수 있습니다.
+Nothing will be added. Sheet > Behaviour library… is always there later.,아무것도 추가되지 않습니다. 시트 > 동작 라이브러리…는 나중에도 언제든 사용할 수 있습니다.

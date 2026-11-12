@@ -13,7 +13,7 @@ extends RefCounted
 # you making?". Each answer is a kit - a tag the packs themselves carry (`@ace_tags`), titled from a
 # short list of kinds of game (`kit_title`) and listing the packs carrying it by name - so the reader
 # sees exactly what arrives. Nothing is copied until Add and
-# continue; Start with none is a real answer, because an object's Behaviours list adds any of them
+# continue; Start with none is a real answer, because Sheet > Behaviour library… adds any of them
 # later.
 #
 # Extracted from event_sheet_dock.gd so the dock stays focused. The dock owns one instance, calls
@@ -329,7 +329,7 @@ func _build_came_from() -> VBoxContainer:
 func _build_kits() -> VBoxContainer:
 	var card: VBoxContainer = EventSheetPopupUI.form_box()
 	card.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
-		"Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from an object's Behaviours list."),
+		"Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library…."),
 		EventSheetPalette.scaled_f(440.0)))
 	_kits = titled_kits(EventSheetPackLibrary.kits(EventSheetPackLibrary.packs()))
 	_kit_ticks.clear()
@@ -365,12 +365,12 @@ func _build_kits() -> VBoxContainer:
 	none.text = EventSheetL10n.translate("Start with none")
 	none.flat = true
 	none.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
-	none.tooltip_text = EventSheetL10n.translate("Adds nothing. An object's Behaviours list > + Add behaviour… adds any of them later.")
+	none.tooltip_text = EventSheetL10n.translate("Adds nothing. Sheet > Behaviour library… adds any of them later.")
 	none.pressed.connect(func() -> void:
 		for tick: CheckBox in _kit_ticks:
 			tick.set_pressed_no_signal(false)
 		_refresh_kit_summary()
-		_kit_summary.text = EventSheetL10n.translate("Nothing will be added. The Add behaviour window is always there later."))
+		_kit_summary.text = EventSheetL10n.translate("Nothing will be added. Sheet > Behaviour library… is always there later."))
 	footer.add_child(none)
 	_kit_add = EventSheetPopupUI.main_button(Button.new())
 	_kit_add.text = EventSheetL10n.translate("Add and continue")

@@ -43,9 +43,10 @@ const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
 ## Insert new object: a new script class made the way an object is inserted, loaded when asked for.
 const INSERT_OBJECT_PATH := "res://addons/eventsheet/editor/dock/insert_object_dialog.gd"
 const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
-const ADD_BEHAVIOR_DIALOG_PATH := "res://addons/eventsheet/editor/add_behavior_dialog.gd"
+const BEHAVIOUR_LIBRARY_WINDOW_PATH := "res://addons/eventsheet/editor/behaviour_library_window.gd"
 const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
 const PACK_CATALOG_PATH := "res://addons/eventsheet/ace/pack_catalog.gd"
+const PACK_LIBRARY_PATH := "res://addons/eventsheet/ace/pack_library.gd"
 const AUTHOR_LOOP_PATH := "res://addons/eventsheet/editor/dock/author_loop.gd"
 const BOOKMARKS_PANEL_PATH := "res://addons/eventsheet/editor/dock/bookmarks_panel.gd"
 const COMMAND_PALETTE_PATH := "res://addons/eventsheet/editor/dock/command_palette.gd"
@@ -4962,11 +4963,10 @@ func open_documentation(doc_id: String = "", anchor: String = "") -> bool:
 	return false
 
 
-## Opens the Add behaviour window on a pack that waits in the behaviour library, for the object the
-## sheet is about - the picker's library suggestion and a behaviour page's Add to project both land here.
+## Opens the Behaviour library window on a pack that waits in the library - the picker's library
+## suggestion and a behaviour page's Add to project both land here.
 func open_library_pack(pack_dir: String) -> void:
-	open_add_behavior_dialog(str(EventSheetObjectFacts.sheet_object_title(_current_sheet,
-		str(_current_sheet.external_source_path) if _current_sheet != null else "").get("name", "")), pack_dir)
+	open_behaviour_library(pack_dir)
 
 
 ## View > Manual beside the sheet: the Manual as a dock next to the sheet, opened on whatever is
@@ -6456,10 +6456,10 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 			_optimiser_dialog().confirm_one(_finding_for_note(fix_kind, note_meta))
 			return true
 		EventSheetPerformanceFindings.FIX_TIME_SLICER:
-			open_add_behavior_dialog(EventSheetL10n.translate("Time Slicer"))
+			open_add_behavior_dialog(_sheet_object_label(), "time_slicer")
 			return true
 		EventSheetPerformanceFindings.FIX_OBJECT_POOL:
-			open_add_behavior_dialog(EventSheetL10n.translate("Object Pool"))
+			open_add_behavior_dialog(_sheet_object_label(), "object_pool")
 			return true
 		ViewportRowBuilder.FIX_PUT_BACK:
 			if not _optimiser.put_back(note_meta.get("variable_note_event", null) as EventRow):
@@ -8487,13 +8487,13 @@ func _resource_contains_descendant(source: Resource, candidate: Resource) -> boo
 	return false
 
 
-# ── Settings ▸ Words, Tools ▸ Docs Housekeeping, Object bar ▸ Add behavior… ────────────────────
-# The vocabulary is a choice, the documentation chores are one report, and adding a pack to an
-# object is one gesture. The packs themselves need no window: a pack is a folder under
-# eventsheet_addons/, seen in the FileSystem dock like any other. Each window is built on first
-# open and kept, because a session that never opens one should pay nothing for it.
+# ── Settings ▸ Words, Tools ▸ Docs Housekeeping, Add behavior… ─────────────────────────────────
+# The vocabulary is a choice, the documentation chores are one report, and adding a behaviour to an
+# object is Godot's own Create Node window. The packs themselves are plain scripts in folders under
+# eventsheet_addons/. Each window is built on first open and kept, because a session that never
+# opens one should pay nothing for it.
 var _words_settings_dialog: AcceptDialog = null
-var _add_behavior_dialog: ConfirmationDialog = null
+var _behaviour_library_window: ConfirmationDialog = null
 var _docs_housekeeping_dialog: AcceptDialog = null
 
 
@@ -8529,28 +8529,59 @@ func open_docs_housekeeping() -> void:
 	EventSheetWindowPlacement.popup_centered(_docs_housekeeping_dialog, Vector2i(720, 560))
 
 
-## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog. Its "+ New
-## behaviour…" opens the New behaviour form for that object, and a behaviour's right-click opens its
-## settings or its file as a sheet.
-##
-## `preselect` opens the window on one pack - the picker's empty search hands it a library pack.
+## Every "Add behavior…" door (the Objects list's right-click, the head's Behaviors folder, the
+## picker's library suggestion) lands here: Godot's own Create Node window, which already lists every
+## behaviour as a Node with its icon, with the node the sheet calls `object_label` as the parent.
+## What is chosen goes under that node as one undo step and is selected, so Godot's Inspector shows
+## its values. A behaviour the project does not hold yet is added to the project first, from the
+## Behaviour library window (`preselect` is its folder).
 func open_add_behavior_dialog(object_label: String, preselect: String = "") -> void:
-	if _add_behavior_dialog == null:
-		_add_behavior_dialog = load(ADD_BEHAVIOR_DIALOG_PATH).new()
-		_add_behavior_dialog.configure(_apply_add_behavior,
-			func(label: String, host_class: String) -> void: _new_addon_panel.open(false, {"label": label, "class": host_class}),
-			func(path: String, settings: bool) -> void:
-				if settings:
-					_new_addon_panel.open_settings(path)
-					return
-				_navigate.record_current()
-				_navigate.open_or_focus(path),
-			func(pack: Dictionary, values: Dictionary, label: String) -> Dictionary:
-				return await _library_flow.add_and_attach(pack, values, label),
-			func(pack: Dictionary) -> void: _library_flow.confirm_remove(pack),
-			func(host: Node) -> void: _library_flow.undo_last(host))
-		add_child(_add_behavior_dialog)
-	_add_behavior_dialog.open_for(object_label, _scene_node_for_object(object_label), preselect)
+	# By path, never by class name: naming the class here would compile the library reader with the dock.
+	var library: Script = load(PACK_LIBRARY_PATH)
+	if not preselect.is_empty() and library.folders().has(preselect) and not library.in_project(preselect):
+		open_behaviour_library(preselect)
+		return
+	var host: Node = _host_for_behaviour(object_label)
+	if host == null:
+		_set_status(EventSheetL10n.translate("%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.") % object_label, true)
+		return
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	EditorInterface.popup_create_dialog(func(chosen: Variant) -> void: add_behaviour_node(host, str(chosen)),
+		&"Node", "", EventSheetL10n.translate("Add a behaviour to %s") % object_label)
+	_rename_create_button()
+
+
+## Godot's Create Node window words its button "Change" when it is handed no starting type; this
+## is an add, so the button says so.
+func _rename_create_button() -> void:
+	if not is_inside_tree():
+		return
+	for window: Node in get_tree().root.find_children("*", "CreateDialog", true, false):
+		var dialog: ConfirmationDialog = window as ConfirmationDialog
+		if dialog != null and dialog.visible:
+			dialog.ok_button_text = EventSheetL10n.translate("Add")
+
+
+## The name of the object this sheet is about, as the head's Behaviors folder offers it.
+func _sheet_object_label() -> String:
+	return str(EventSheetObjectFacts.sheet_object_title(_current_sheet,
+		str(_current_sheet.external_source_path) if _current_sheet != null else "").get("name", ""))
+
+
+## Sheet ▸ Behaviour library…: the behaviours the plugin carries that the project does not hold yet,
+## each added with one button; `preselect` opens it on one pack's folder.
+func open_behaviour_library(preselect: String = "") -> void:
+	if _behaviour_library_window == null:
+		_behaviour_library_window = load(BEHAVIOUR_LIBRARY_WINDOW_PATH).new()
+		_behaviour_library_window.configure(
+			func(pack: Dictionary) -> Dictionary: return await _library_flow.add_to_project(pack),
+			func(pack: Dictionary) -> void: _library_flow.confirm_remove(pack))
+		_library_flow.on_changed = func() -> void:
+			if _behaviour_library_window != null and _behaviour_library_window.visible:
+				_behaviour_library_window.refresh()
+		add_child(_behaviour_library_window)
+	_behaviour_library_window.open(preselect)
 
 
 ## Project Doctor ▸ the unused-packs note ▸ Tidy behaviours…: the project's packs, unused ones ticked.
@@ -8558,30 +8589,51 @@ func open_tidy_behaviours() -> void:
 	_library_flow.open_tidy()
 
 
-## A behaviour the New behaviour form just made from an object's Behaviours list, added to that object
-## the way picking it in the list adds it.
+## A behaviour the New behaviour form just made, added to the object it was made for.
 func _add_made_behaviour(script_path: String, object_label: String) -> void:
-	var pack: Dictionary = load(PACK_CATALOG_PATH).describe(script_path.get_base_dir().get_file())
-	if not pack.is_empty():
-		_apply_add_behavior(pack, {}, false, object_label)
+	var host: Node = _host_for_behaviour(object_label)
+	if host != null:
+		add_behaviour_node(host, script_path)
 
 
-## The Add button's landing: the node path goes into the open scene, the inline path goes through
-## the undo funnel like every other sheet edit.
-func _apply_add_behavior(pack: Dictionary, values: Dictionary, inline: bool, object_label: String) -> void:
-	if inline:
-		var written: Dictionary = {}
-		var ok: bool = _perform_undoable_sheet_edit("Add behavior %s" % str(pack.get("name", "")), func() -> bool:
-			written = load(ADD_BEHAVIOR_PATH).write_into_sheet(pack, _current_sheet, values)
-			return bool(written.get("ok", false)))
-		_set_status(str(written.get("message", "Nothing was written.")), not ok)
+## Puts what the Create Node window handed back under `host` in the edited scene: `picked` is a
+## script's path (a behaviour or any script class) or the name of a built-in node type. One undo step,
+## like Godot's own Add Child Node, and the new node is selected so the Inspector shows its values.
+## A pack that ships a scene of its own, or a shader its node wears, is added the way the pack says.
+func add_behaviour_node(host: Node, picked: String) -> void:
+	if not is_instance_valid(host):
 		return
-	var host: Node = _scene_node_for_object(object_label)
-	var result: Dictionary = load(ADD_BEHAVIOR_PATH).attach_node(pack, host, values)
-	var added: Node = result.get("node") as Node
-	if added != null and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		# The node is already in the scene; the step only teaches Ctrl+Z (and Ctrl+Y) to take it out and
-		# put it back, the way Godot's own Add Child Node does.
+	var added: Node = null
+	var said: String = ""
+	var script: Script = _script_for_picked(picked)
+	var pack: Dictionary = {}
+	if script != null:
+		pack = load(PACK_CATALOG_PATH).describe(script.resource_path.get_base_dir().get_file())
+	if not pack.is_empty() and str(pack.get("path", "")) == script.resource_path:
+		var result: Dictionary = load(ADD_BEHAVIOR_PATH).attach_node(pack, host, {})
+		added = result.get("node") as Node
+		said = str(result.get("message", ""))
+	else:
+		if script != null:
+			added = ClassDB.instantiate(script.get_instance_base_type()) as Node
+			if added != null:
+				added.set_script(script)
+				added.name = script.get_global_name() if not str(script.get_global_name()).is_empty() \
+					else script.resource_path.get_file().get_basename().to_pascal_case()
+		elif ClassDB.class_exists(picked) and ClassDB.can_instantiate(picked):
+			added = ClassDB.instantiate(picked) as Node
+			if added != null:
+				added.name = picked
+		if added != null:
+			host.add_child(added)
+			added.owner = host.owner if host.owner != null else host
+			said = EventSheetL10n.translate("Added %s to %s.") % [added.name, host.name]
+	if added == null:
+		_set_status(said if not said.is_empty() else EventSheetL10n.translate("%s could not be added.") % picked, true)
+		return
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		# The node is already in the scene; the step teaches Ctrl+Z (and Ctrl+Y) to take it out and put
+		# it back, the way Godot's own Add Child Node does.
 		var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
 		undo.create_action(EventSheetL10n.translate("Add behaviour %s") % added.name, UndoRedo.MERGE_DISABLE, host)
 		undo.add_do_method(host, "add_child", added)
@@ -8590,8 +8642,40 @@ func _apply_add_behavior(pack: Dictionary, values: Dictionary, inline: bool, obj
 		undo.add_undo_method(host, "remove_child", added)
 		undo.commit_action(false)
 		EditorInterface.mark_scene_as_unsaved()
+		EditorInterface.get_selection().clear()
+		EditorInterface.get_selection().add_node(added)
+		EditorInterface.edit_node(added)
 	_refresh_ace_registry()
-	_set_status(str(result.get("message", "")), not bool(result.get("ok", false)))
+	_set_status(said)
+
+
+## The script a Create Node pick stands for: its own path, or - for a script class named by its
+## class_name - the path the project's class list holds. Null for a built-in node type.
+func _script_for_picked(picked: String) -> Script:
+	if picked.begins_with("res://"):
+		return load(picked) as Script
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == picked:
+			return load(str(entry.get("path", ""))) as Script
+	return null
+
+
+## The node an "Add behavior…" door means: the one the Objects list's label stands for, else the
+## scene root when it is that object (the label is its name, or the sheet is its script).
+func _host_for_behaviour(object_label: String) -> Node:
+	var found: Node = _scene_node_for_object(object_label)
+	if found != null or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return found
+	var edited_root: Node = EditorInterface.get_edited_scene_root()
+	if edited_root == null:
+		return null
+	if str(edited_root.name) == object_label:
+		return edited_root
+	var root_script: Script = edited_root.get_script() as Script
+	if root_script != null and _current_sheet != null and not str(_current_sheet.external_source_path).is_empty() \
+			and root_script.resource_path == str(_current_sheet.external_source_path):
+		return edited_root
+	return null
 
 
 ## The node an Object bar label stands for in the open scene, or null when the scene is not open.

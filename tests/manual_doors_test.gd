@@ -126,12 +126,12 @@ static func _test_focus_after_close() -> bool:
 	return SUPPORT.pins(NAME, rows)
 
 
-## Add behaviour's Read the guide, for a pack in the project and one waiting in the library.
+## The Behaviour library's Read the guide, for a pack in the project and one waiting in the library.
 static func _test_read_the_guide() -> bool:
 	return SUPPORT.pins(NAME, [
-		["a project pack reads its shipped guide", EventSheetAddBehaviorDialog.guide_doc_id({"dir": "platformer"}), "guide:Addons/Platformer"],
-		["a library pack reads the same guide", EventSheetAddBehaviorDialog.guide_doc_id({"dir": "platformer", "state": "library"}), "guide:Addons/Platformer"],
-		["a pack with no guide has no link", EventSheetAddBehaviorDialog.guide_doc_id({"dir": "no_such_pack", "state": "library"}), ""],
+		["a project pack reads its shipped guide", EventSheetBehaviourLibraryWindow.guide_doc_id({"dir": "platformer"}), "guide:Addons/Platformer"],
+		["a library pack reads the same guide", EventSheetBehaviourLibraryWindow.guide_doc_id({"dir": "platformer", "state": "library"}), "guide:Addons/Platformer"],
+		["a pack with no guide has no link", EventSheetBehaviourLibraryWindow.guide_doc_id({"dir": "no_such_pack", "state": "library"}), ""],
 	])
 
 

@@ -10180,3 +10180,31 @@ Show In FileSystem Dock,ファイルシステムドックで表示
 Show in FileSystem dock {path},ファイルシステムドックで {path} を表示
 Other sheets can start an event from this,他のシートがこれからイベントを開始できる
 Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,このシグナルを、他のすべてのシートのピッカーにトリガーとして表示します。コードは通常のシグナル行のままで、上に短いコメントが付きます。
+"In the behaviour library, not in this project yet. Add behaviour… opens the Behaviour library on it; nothing is added from here.",ビヘイビアライブラリにあり、このプロジェクトにはまだありません。「ビヘイビアを追加…」でライブラリが開きます。ここからは何も追加されません。
+"This behaviour is in the library, not in this project. Add behaviour… opens the Behaviour library on it, where Add to project copies it in. Then add it to a node with Add Child Node (Ctrl+A).",このビヘイビアはライブラリにあり、このプロジェクトにはありません。「ビヘイビアを追加…」でライブラリが開き、「プロジェクトに追加」でコピーされます。その後、子ノードを追加（Ctrl+A）でノードに追加してください。
+Behaviour library,ビヘイビアライブラリ
+Add to project,プロジェクトに追加
+"Behaviours not in this project yet. Add one to the project, then add it to a node with Add Child Node (Ctrl+A) in the Scene dock.",このプロジェクトにまだないビヘイビアです。プロジェクトに追加してから、シーンドックの「子ノードを追加」（Ctrl+A）でノードに追加します。
+Not in this project,このプロジェクトにない
+The library's behaviours this project does not hold yet.,このプロジェクトにまだないライブラリのビヘイビア。
+"The behaviours this project already holds, to remove from it.",このプロジェクトに既にあるビヘイビア。削除できます。
+This install carries no behaviour library.,このインストールにはビヘイビアライブラリが含まれていません。
+Every behaviour in the library is already in this project.,ライブラリのビヘイビアはすべてこのプロジェクトにあります。
+This project holds no behaviours yet.,このプロジェクトにはまだビヘイビアがありません。
+No behaviour here matches that.,一致するビヘイビアはありません。
+Nothing else comes with it.,他に追加されるものはありません。
+Also adds %s.,%s も追加されます。
+Now add it with Add Child Node (Ctrl+A) under the node it should act on.,次に「子ノードを追加」（Ctrl+A）で、作用させたいノードの下に追加してください。
+"%s is not in the open scene, so there is nothing to add a behaviour to. Open its scene first.",%s は開いているシーンにないため、ビヘイビアを追加する対象がありません。先にそのシーンを開いてください。
+Add a behaviour to %s,%s にビヘイビアを追加
+Added %s to %s.,%s を %s に追加しました。
+%s could not be added.,%s を追加できませんでした。
+Add behaviour %s to the project,ビヘイビア %s をプロジェクトに追加
+"Added %d behaviours to eventsheet_addons/. Add each to a node with Add Child Node (Ctrl+A), and set its values in the Inspector.",%d 個のビヘイビアを eventsheet_addons/ に追加しました。それぞれ「子ノードを追加」（Ctrl+A）でノードに追加し、値はインスペクターで設定してください。
+Behaviour library…,ビヘイビアライブラリ…
+"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node.",このプラグインが持つ、プロジェクトにまだないビヘイビア。プロジェクトに追加してから、子ノードを追加でノードに追加します。
+Listed under its own name in the picker and in Godot's Create Node window. The usual choice.,ピッカーとGodotのノード作成ウィンドウに、独自の名前で表示されます。通常の選択です。
+Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.,ビヘイビア %s を %s に作成しました。「子ノードを追加」（Ctrl+A）で、作用させるノードの下に追加してください。
+Pick any that fit. Each adds a few behaviours to this project; you can add or remove any of them later from Sheet > Behaviour library….,合うものを選んでください。それぞれこのプロジェクトにいくつかのビヘイビアを追加します。後からシート > ビヘイビアライブラリ… で追加・削除できます。
+Adds nothing. Sheet > Behaviour library… adds any of them later.,何も追加しません。後からシート > ビヘイビアライブラリ… で追加できます。
+Nothing will be added. Sheet > Behaviour library… is always there later.,何も追加されません。シート > ビヘイビアライブラリ… はいつでも後から使えます。
