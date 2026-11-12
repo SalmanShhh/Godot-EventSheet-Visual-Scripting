@@ -4,10 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a signal can be offered as a trigger again
+
+- The signal window (Declare > Signal... or double-clicking a signal row) has one tick, "Other sheets can start an event from this". Ticked, every other sheet's picker lists the signal as a trigger; the code is the same plain signal line with the short trigger comment above it. A new signal on a behaviour or a global starts ticked, on an ordinary sheet unticked, and reopening the row changes it later in one undo step. It replaces the Add trigger button of the removed Properties and actions window.
+
 ### Removed: the Properties and actions window
 
 - Sheet > Properties and actions... is gone, and a new behaviour or global no longer opens it. It only listed what the open file offers and had Add buttons that opened the ordinary windows, so nothing it did is lost: Add variable is on the Add menus, New Function > Action / Condition / Expression publishes a function, and the Anatomy tab of the side rail lists a behaviour's properties, actions, conditions and triggers. Turning a global on is Godot's own Project Settings > Globals > Autoload.
-- The one thing the window alone did was add a published trigger (a signal row marked as a trigger); the Declare > Signal... window adds a plain signal.
+- The one thing the window alone did was add a published trigger (a signal row marked as a trigger); that now lives as a tick in the signal window.
 
 ### Removed: the Project bar
 

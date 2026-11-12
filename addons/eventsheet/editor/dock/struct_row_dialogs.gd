@@ -288,8 +288,19 @@ var _signal_band: EventSheetPopupUI.RowBand = null
 var _signal_name_edit: LineEdit = null
 var _signal_params_edit: TextEdit = null
 var _signal_target: SignalRow = null
+var _signal_trigger_check: CheckBox = null
 var _signal_problem_label: EventSheetPopupUI.StateNote = null
 var _signal_strip: EventSheetPopupUI.HelpStrip = null
+
+
+## A fresh signal for the sheet it is declared on. On a behaviour or a global the tick "Other sheets can
+## start an event from this" starts on, because the reason to declare a signal there is to give other
+## sheets something to react to; on an ordinary sheet it starts off.
+static func new_signal_for(sheet: EventSheetResource) -> SignalRow:
+	var fresh: SignalRow = SignalRow.new()
+	fresh.trigger = sheet != null and (sheet.autoload_mode or not sheet.autoload_name.is_empty()
+		or not sheet.custom_class_name.is_empty())
+	return fresh
 
 
 ## Opens the signal editor (double-click or "Add Signal Below").
@@ -324,8 +335,13 @@ func _ensure_signal_dialog() -> void:
 	_signal_params_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_signal_params_edit.text_changed.connect(_refresh_signal)
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Parameters"), _signal_params_edit))
+	_signal_trigger_check = CheckBox.new()
+	_signal_trigger_check.text = EventSheetL10n.translate("Other sheets can start an event from this")
+	box.add_child(_signal_trigger_check)
 	(parts["form"] as VBoxContainer).add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Signal"), box))
 	_finish_window(parts)
+	_signal_strip.follow(_signal_trigger_check, EventSheetL10n.translate("Other sheets can start an event from this"),
+		EventSheetL10n.translate("Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it."))
 	_signal_strip.follow(_signal_name_edit, EventSheetL10n.translate("Signal name"),
 		EventSheetL10n.translate("What the signal is called. It appears in the On signal and Emit signal pickers under this name."))
 	_signal_strip.follow(_signal_params_edit, EventSheetL10n.translate("Parameters"),
@@ -362,11 +378,13 @@ func _on_signal_dialog_confirmed() -> void:
 	_signal_dialog.hide()
 	var new_name: String = str(read["name"])
 	var new_params: PackedStringArray = read["entries"]
+	var new_trigger: bool = _signal_trigger_check.button_pressed
 	_commit("Edit Signal", "Signal updated (it now appears in the On/Emit Signal pickers).", func() -> bool:
-		if target.signal_name == new_name and target.params == new_params:
+		if target.signal_name == new_name and target.params == new_params and target.trigger == new_trigger:
 			return false
 		target.signal_name = new_name
 		target.params = new_params
+		target.trigger = new_trigger
 		return true)
 
 

@@ -179,7 +179,7 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 		_dock.ROW_MENU_OPEN_IN_SPLIT:
 			_dock._open_row_in_split(_dock._context_row)
 		_dock.ROW_MENU_ADD_SIGNAL:
-			var new_signal: SignalRow = SignalRow.new()
+			var new_signal: SignalRow = EventSheetStructRowDialogs.new_signal_for(_dock._current_sheet)
 			_dock._row_edit_ops._insert_context_row_below(new_signal, "Added signal.")
 			_dock._open_signal_dialog(new_signal)
 		_dock.ROW_MENU_ADD_MATCH:

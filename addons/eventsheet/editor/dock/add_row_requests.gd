@@ -99,7 +99,7 @@ func on_declare_enum_requested() -> void:
 func on_declare_signal_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
-	var new_signal: SignalRow = SignalRow.new()
+	var new_signal: SignalRow = EventSheetStructRowDialogs.new_signal_for(_dock._current_sheet)
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Signal", func() -> bool:
 		_dock._ace_apply._insert_row_below_selection(new_signal)
 		return true

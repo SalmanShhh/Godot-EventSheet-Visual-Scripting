@@ -10178,3 +10178,5 @@ words = %s · theme = %s · GDScript panel = %s · tour = %s,слова = %s · 
 Show In FileSystem Dock,Показать в панели «Файловая система»
 "Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.","Показывает папку или файл в панели «Файловая система» Godot и выделяет его - то, что делает инструмент после записи, чтобы было видно, что только что появилось."
 Show in FileSystem dock {path},Показать {path} в панели «Файловая система»
+Other sheets can start an event from this,Другие листы могут запускать событие от этого
+Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,Показывает этот сигнал как триггер в выборе каждого другого листа. В коде остаётся обычная строка сигнала с коротким комментарием над ней.

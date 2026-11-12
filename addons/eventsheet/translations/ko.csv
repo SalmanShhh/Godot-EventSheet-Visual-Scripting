@@ -10178,3 +10178,5 @@ words = %s · theme = %s · GDScript panel = %s · tour = %s,용어 = %s · 테�
 Show In FileSystem Dock,파일시스템 독에서 보이기
 "Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.","Godot의 파일시스템 독에서 폴더나 파일을 드러내고 선택합니다 - 무언가를 쓴 뒤에 도구가 하는 일로, 방금 생긴 것을 볼 수 있게 합니다."
 Show in FileSystem dock {path},파일시스템 독에서 {path} 보이기
+Other sheets can start an event from this,다른 시트가 이것으로 이벤트를 시작할 수 있음
+Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,이 시그널을 다른 모든 시트의 선택기에 트리거로 표시합니다. 코드는 위에 짧은 주석이 붙은 일반 시그널 줄로 남습니다.

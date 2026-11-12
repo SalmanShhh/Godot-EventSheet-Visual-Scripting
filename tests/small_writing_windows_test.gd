@@ -46,8 +46,42 @@ static func _test_signal() -> bool:
 	rows._refresh_signal()
 	var refused: Array = [rows._signal_problem_label.text, rows._signal_dialog.get_ok_button().disabled,
 		rows._signal_params_edit.has_theme_stylebox_override("normal")]
+	rows._signal_dialog.hide()
+	# The trigger tick: off for a plain signal, written on, reopened on, and one undo step back to off.
+	var behaviour_sheet: EventSheetResource = EventSheetResource.new()
+	behaviour_sheet.custom_class_name = "Pulse"
+	var fresh_plain: SignalRow = EventSheetStructRowDialogs.new_signal_for(sheet)
+	var fresh_behaviour: SignalRow = EventSheetStructRowDialogs.new_signal_for(behaviour_sheet)
+	var history: EventSheetEditorTest.FakeEditorUndoRedoManager = EventSheetEditorTest.FakeEditorUndoRedoManager.new()
+	var trigger_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	trigger_dock.set_undo_redo_manager(history)
+	trigger_dock.setup(behaviour_sheet)
+	var announce: SignalRow = SignalRow.new()
+	announce.signal_name = "pulsed"
+	behaviour_sheet.events.append(announce)
+	var trigger_rows: EventSheetStructRowDialogs = trigger_dock._struct_rows
+	trigger_rows.open_signal_dialog(announce)
+	var tick_before: bool = trigger_rows._signal_trigger_check.button_pressed
+	trigger_rows._signal_trigger_check.button_pressed = true
+	trigger_rows._on_signal_dialog_confirmed()
+	var written: SignalRow = trigger_dock._current_sheet.events[0] as SignalRow
+	var written_line: String = "
+".join(SheetCompiler._emit_signal_annotations(written)) + "
+" + SheetCompiler._emit_signal_line(written)
+	trigger_rows.open_signal_dialog(written)
+	var tick_reopened: bool = trigger_rows._signal_trigger_check.button_pressed
+	trigger_rows._signal_dialog.hide()
+	history.undo()
+	var after_undo: SignalRow = trigger_dock._current_sheet.events[0] as SignalRow
+	trigger_dock.free()
 	dock.free()
 	return SUPPORT.pins(NAME, [
+		["a new signal offers itself as a trigger on a behaviour, not on a plain sheet", [fresh_plain.trigger, fresh_behaviour.trigger], [false, true]],
+		["the signal window's tick starts as the row has it", tick_before, false],
+		["ticking writes the trigger comment above the plain signal line", written_line, "## @ace_trigger
+signal pulsed"],
+		["reopening the signal shows the tick on", tick_reopened, true],
+		["one undo puts the signal back to a plain one", after_undo.trigger, false],
 		["the signal window shows the line it writes", opened, ["signal hit(damage: int)", "signal hit(damage: int)", false]],
 		["a bad parameter is said while typing, OK held, the field edged red", refused,
 			["\"class\" can't be a signal parameter name.", true, true]],

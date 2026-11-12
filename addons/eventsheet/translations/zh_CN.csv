@@ -10178,3 +10178,5 @@ words = %s · theme = %s · GDScript panel = %s · tour = %s,用词 = %s · 主�
 Show In FileSystem Dock,在文件系统面板中显示
 "Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.",在 Godot 的文件系统面板中定位并选中某个文件夹或文件 - 工具写出东西之后就该这么做，好让人看到刚落下的是什么。
 Show in FileSystem dock {path},在文件系统面板中显示 {path}
+Other sheets can start an event from this,其他表可以由此触发事件
+Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,在其他每个表的选择器中将此信号列为触发器。代码仍是普通的信号行，上方带一条简短注释。

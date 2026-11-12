@@ -10178,3 +10178,5 @@ words = %s · theme = %s · GDScript panel = %s · tour = %s,mots = %s · thème
 Show In FileSystem Dock,Afficher dans le dock Système de fichiers
 "Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.","Révèle un dossier ou un fichier dans le dock Système de fichiers de Godot et le sélectionne - ce que fait un outil après avoir écrit quelque chose, pour que l'on voie ce qui vient d'arriver."
 Show in FileSystem dock {path},Afficher {path} dans le dock Système de fichiers
+Other sheets can start an event from this,D'autres feuilles peuvent démarrer un événement avec ceci
+Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,Propose ce signal comme déclencheur dans le sélecteur de chaque autre feuille. Le code reste une simple ligne de signal avec un court commentaire au-dessus.

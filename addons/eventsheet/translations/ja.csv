@@ -10178,3 +10178,5 @@ words = %s · theme = %s · GDScript panel = %s · tour = %s,用語 = %s · テ�
 Show In FileSystem Dock,ファイルシステムドックで表示
 "Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.",Godot のファイルシステムドックでフォルダーやファイルを表示して選択します - 何かを書き出した後にツールが行う操作で、今できたものが見えるようになります。
 Show in FileSystem dock {path},ファイルシステムドックで {path} を表示
+Other sheets can start an event from this,他のシートがこれからイベントを開始できる
+Lists this signal as a trigger in every other sheet's picker. The code stays a plain signal line with a short comment above it.,このシグナルを、他のすべてのシートのピッカーにトリガーとして表示します。コードは通常のシグナル行のままで、上に短いコメントが付きます。
