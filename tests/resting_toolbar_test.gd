@@ -271,11 +271,11 @@ static func _test_the_cascade() -> bool:
 	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the side
 	# panel open or closed to its rail. View ▸ Open Sheets Panel left, back to 65: the tabs above the
 	# sheet are the open sheets. View ▸ Manual beside the sheet makes 66: the Manual as a dock.
-	# 40, not 66: twenty-eight items moved into four submenus with their ids, so View fits a 1080p
+	# 39, not 66: twenty-eight items moved into four submenus with their ids, so View fits a 1080p
 	# window - Sheet display (the seventeen ticks on how rows are drawn), Collapse and expand (the five
 	# sweeps), Split views (three) and Zoom (three). Each hanger is one item on View.
 	ok = _check("View keeps its items, with the drawing, sweeps, split and zoom items in submenus",
-		counts["EventSheetViewMenu"], 40) and ok
+		counts["EventSheetViewMenu"], 39) and ok
 	var view_submenu_counts: Dictionary = {}
 	for name: String in ["EventSheetSheetDisplayMenu", "EventSheetCollapseMenu", "EventSheetSplitViewsMenu",
 			"EventSheetZoomMenu"]:

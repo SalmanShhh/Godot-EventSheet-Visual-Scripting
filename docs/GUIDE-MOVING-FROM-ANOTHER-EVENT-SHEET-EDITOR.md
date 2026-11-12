@@ -406,7 +406,7 @@ i18n (Godot translations).
   *Event sheets (scripts)*, *Object types (classes)*, *Families (base classes)* - both words always
   on screen. It is read only: right-click *New scene / New script / New class / Extract base class /
   Import sound* opens Godot's own dialogs, and double-clicking routes a layout to the 2D/3D editor, a
-  script to its sheet, an object type to Object properties, a behavior to its reference page. Drag a
+  script to its sheet, a behavior to its reference page. Drag a
   class onto the canvas to start an event on it, a sound for a *Play sound* action, a scene for a *Go
   to layout* action. The ✕ hides it again.
 - **Preview is on the sheet.** `▶ Preview layout`, `▶▶ Preview project` and `🐞 Debug layout` sit in
@@ -626,16 +626,10 @@ i18n (Godot translations).
 - **Scenes replace layouts** and instancing replaces "create object by name" - spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
 
-### The Hierarchy pane (the panel you are missing, in Godot's terms)
+### Add child flags
 
-Click an object's name in any row and the Object properties popup now has a **Hierarchy** section:
-the object's parent, its children, and what each child carries.
-
-![The Hierarchy section of the Object properties popup: the parent, four children, and the follow-flags each carries](images/hierarchy-pane.png)
-
-The gestures are the ones you already know. Drag an object in from the Object bar to make it a
-child; the four flags open on the drop. Drag a child out onto the canvas to unparent it. Right-click
-a child for **flags…**, **Remove from parent** and **Select in scene**.
+An **Add child** row that was written with flags wears them as chips and ends with a **flags...** chip;
+one click opens the four ticks.
 
 The flags are the honest part. Godot has no single property for "follow everything except size", so
 each tick maps onto something real:

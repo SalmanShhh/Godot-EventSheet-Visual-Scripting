@@ -717,18 +717,6 @@ That is the order this section is in.
 
   ![Three pairs of node rows: make Crate part of Level, a plain add child duplicate beside one naming Godot's own duplicate flags, and a bare reparent beside one that says snapping to it - with the GDScript they compile to underneath](images/node-dignities.png)
 
-**The Hierarchy pane** answers the same questions without opening a row. Click an object's name in
-any row and **Object properties** now carries a Hierarchy section: its **parent** (click to jump to
-that object) and its **children**, each with what it carries - its type, how many children of its
-own it has, a broken link when it ignores its parent's movement, and the three transform ticks when
-it follows some of them and not others. A child the scene file owns shows muted with *in the scene
-file* and offers **edit the scene**, which hands the node to Godot's Scene dock: the pane writes
-runtime rows and never edits a `.tscn`. Drag an object in from the Object bar to make it a child
-(the four flags open on the drop), drag a child out onto the canvas to unparent it, or right-click
-one for **flags…**, **Remove from parent** and **Select in scene**. Every gesture writes ordinary
-rows through the undo funnel, in the same spellings a hand-typed file uses, so the pane and the
-canvas can never disagree about the tree and Ctrl+Z takes a parenting back like any other edit.
-
 The row itself offers the ticks too. An Add child row that was written with flags wears them - `
 transform position ✓ transform angle ✓ transform size ✗ destroy with parent ✓` - and ends with a
 **flags…** chip. One click reopens exactly those ticks, and confirming rewrites the run the chip
@@ -737,8 +725,6 @@ one `top_level`, never two. What comes back out reads as the same flagged row, w
 that lets a reader treat the chips as the truth rather than as a summary.
 
 ![Three opened functions read as rows: On Wire Up setting open sheet to an f Open Sheet In Workspace chip, On Equip reading Add child hat keeping its place with a flags... chip and the four transform ticks beside it, and On Ask Keep Every Tick whose Local ConfirmationDialog row carries the four lines that shape the dialog underneath it](images/reading-dialog-hierarchy-and-function-chips.png)
-
-![The Hierarchy section of Object properties for Player: parent Level (the layout), four children, two of them muted as in the scene file with an edit the scene link, a HealthBar marked as ignoring its parent's movement, and a Hat whose transform ticks say position and angle but not size](images/hierarchy-pane.png)
 
 Three hierarchy footguns are Doctor notes rather than rules - each advisory, each with a one-click
 chip naming the single edit to make. A walk over a node's children that **moves** one of them while
@@ -2080,24 +2066,6 @@ is instantiated to answer a question.
   Tile7`. A behavior tuned differently from its siblings keeps a line of its own, which is the whole
   reason to open the fold. A Godot group is the sheet's
   family; the Godot word stays in the muted note and nowhere else.
-- **Object properties say what the object IS.** Click an object label (or double-click its entry in the
-  Object bar) and the popup adds, above what this sheet does with it: **Instance variables**,
-  **Functions** (a function that answers yes-or-no is marked `condition`), **Triggers** (its signals,
-  read `On Died`, `On Hit  body`), **Behaviors** and **Families**. Two buttons start using it -
-  **Add condition** and **Add action**, both opening the picker already scoped to that object - and
-  **Open enemy.gd as sheet** jumps to the file that says what it is.
-![Object properties for Player: an Instance variables table with Name, Type, Initial value and Inspector columns - speed number 200.0 ticked into the Inspector, hp whole number 100, alive boolean true - each row ending in a pencil and a cross, above + Add instance variable; below it the Add global variable form with Name, Type, Value and Write into, and the row it will write previewed as Global number Score = 0](images/instance-variable-table.png)
-
-- **The object this file IS answers with an editable variable table.** For that one object - the
-  thing the open script declares, not the nodes it merely names - the **Instance variables** row
-  becomes a table you work in: **Name**, **Type** (a dropdown of the sheet's own type words),
-  **Initial value**, an **Inspector** tick, and **✎ ✕**. ✎ opens a description field under the
-  variable; ✕ deletes it; **+ Add instance variable** opens the Add variable dialog on the Instance
-  scope. Renaming in the Name field is **Rename Everywhere** and picking a new type is **Change Type
-  Everywhere**, because a name and a type are used by rows all over the sheet. The same table sits on
-  the Properties bar whenever that object is selected, so a run of variables can be added, retyped
-  and described without opening anything. Every edit writes the same `var` / `@export var` line the
-  Add variable dialog writes, in one undo step, and leaves every other line of the file untouched.
 - **The Add variable dialog asks for the row in the order the row reads.** **Scope** first - a
   dropdown of Instance / Local / Global / Constant / Static, each with the line that says what it
   means - then **Name**, **Type** (Number, Text, Boolean, then Vector, Color, List, Table and the
@@ -2132,8 +2100,7 @@ is instantiated to answer a question.
   it; the header's `⇅` switches between reading order, count and name and remembers which. An object
   this sheet uses that the scene does not have is flagged `⚠ not in Player.tscn` rather than listed
   like any other node, and hovering a count splits it into `2 conditions · 3 actions · 1 trigger`.
-  Hover an entry to preview its rows, click to pin that highlight, double-click for Object properties,
-  right-click for **Add condition · Add action · Add behavior… · Select in scene · Open its script as a sheet**, and
+  Hover an entry to preview its rows, click to pin that highlight, right-click for **Add condition · Add action · Add behavior… · Select in scene · Open its script as a sheet**, and
   drag one onto the sheet to start an event on it - dropping it in an existing event's action lane
   adds an action to that event instead. A script that is not on a scene yet says so, and says what to
   do about it.
@@ -2221,8 +2188,6 @@ is instantiated to answer a question.
   session, so a note never costs a scan.
 
 <img src="images/objects-rail.png" alt="The Object bar: a header naming the scene and the used/more counts, a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and collapsed ALSO IN THE SCENE and GLOBALS AND FAMILIES sections." width="420">
-
-<img src="images/object-popup.png" alt="Object properties for Player: type CharacterBody2D, its instance variables, its functions with their inputs, its triggers, the Health behavior with the value the scene set on it, and its families, above Add condition, Add action and the three navigation buttons." width="560">
 
 The Object bar's **INPUT** section and the **Input** head bar, on a script that reads four controls -
 three the project has, and one it does not. The Input bar itself says nothing about the missing one:
@@ -2656,7 +2621,7 @@ Four things a folder tree cannot show are what earn it the room:
 Import sound* each open Godot's own dialog or one the plugin already has, so there is never a second
 way to do the same thing. Double-click routes: a scene opens in the 2D/3D editor and the sheet offers
 the whole-layout-as-one-sheet reading beside it; a script opens as a sheet or in Godot's script
-editor, whichever you set as your default; a class opens Object properties; a behavior opens its
+editor, whichever you set as your default; a behavior opens its
 pack's reference page. Dragging one onto the canvas means what the sheet already understands - a
 class starts an event on it, a sound is a *Play sound* action, a scene is a *Go to layout* action.
 

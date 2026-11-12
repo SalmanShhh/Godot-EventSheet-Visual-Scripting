@@ -282,8 +282,7 @@ static func matches_filter(entry: Dictionary, filter_text: String) -> bool:
 ## something Godot or the plugin already does, and the caller dispatches it.
 ##   scene       -> the 2D/3D editor, with the scene-as-sheet offered beside it
 ##   script      -> a sheet, or Godot's script editor, per the reader's default
-##   class       -> Object properties
-##   base_class  -> Object properties for the base
+##   class, base_class -> nowhere: the object window is gone, so the double-click does nothing
 ##   behavior    -> that pack's reference page in the Manual
 ##   sound/folder-> Godot's FileSystem dock
 static func route_for(entry: Dictionary, script_opens_as_sheet: bool = true) -> String:
@@ -298,7 +297,7 @@ static func route_for(entry: Dictionary, script_opens_as_sheet: bool = true) -> 
 		"script":
 			return "sheet" if script_opens_as_sheet else "script_editor"
 		"class", "base_class":
-			return "object_properties"
+			return "nothing"
 		"behavior":
 			return "pack_reference"
 	return "file_system"

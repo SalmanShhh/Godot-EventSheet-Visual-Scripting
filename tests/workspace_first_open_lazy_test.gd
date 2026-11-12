@@ -125,8 +125,6 @@ const FIRST_CLICK_LEAVES_OUT := [
 const SPELLED_OUT := [
 	["res://addons/eventsheet/editor/event_sheet_viewport.gd", "PROJECT_BAR_DRAG_TYPE",
 		"res://addons/eventsheet/editor/project_bar.gd", "DRAG_TYPE"],
-	["res://addons/eventsheet/editor/event_sheet_viewport.gd", "HIERARCHY_CHILD_DRAG_TYPE",
-		"res://addons/eventsheet/editor/dock/object_hierarchy.gd", "CHILD_DRAG_TYPE"],
 	["res://addons/eventsheet/editor/interaction/scene_trust_findings.gd", "KIND_UNTRUSTED_SCENE",
 		"res://addons/eventforge/files_doctor.gd", "CHECK_UNTRUSTED_SCENE"],
 	["res://addons/eventsheet/editor/dock/dock_ui_builder.gd", "GODOT_WORDS_LABEL",

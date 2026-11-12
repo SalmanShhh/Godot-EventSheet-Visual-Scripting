@@ -17,7 +17,7 @@ static func run() -> bool:
 	passed = _autoloads_read_as_globals() and passed
 	passed = _packs_read_as_behaviours() and passed
 	passed = _census_lists_every_object() and passed
-	passed = _object_popup_rows() and passed
+	passed = _object_lookup_rows() and passed
 	passed = _round_trip_is_byte_identical() and passed
 	return passed
 
@@ -147,33 +147,18 @@ static func _census_lists_every_object() -> bool:
 	return passed
 
 
-## What the object popup answers with, and which of its buttons can do what it says.
-static func _object_popup_rows() -> bool:
+## The label lookup, and the rail's own line for an entry.
+static func _object_lookup_rows() -> bool:
 	var passed: bool = true
 	var sheet: EventSheetResource = _sheet()
-	var health: Dictionary = EventSheetObjectProperties.find_entry(sheet, "Health")
-	var lines: PackedStringArray = PackedStringArray()
-	for row: Dictionary in EventSheetObjectProperties.property_rows(health, "Player.tscn"):
-		lines.append("%s=%s" % [str(row.get("label", "")), str(row.get("value", ""))])
-	passed = _check("a behaviour's popup names the pack, the path with its scene, and the verbs used",
-		" | ".join(lines),
-		"Type=Health | Path=$Health in Player.tscn | Rows=Take damage · 1 row") and passed
+	var health: Dictionary = EventSheetObjectLookup.find_entry(sheet, "Health")
 	# An autoload is found by the name it READS under too - the "(global)" note is a reading, and a
-	# click on the label must not fall through because the label wears it.
-	var global_entry: Dictionary = EventSheetObjectProperties.find_entry(sheet, "EventForgeBridge (global)")
+	# label wearing it must still find its object.
+	var global_entry: Dictionary = EventSheetObjectLookup.find_entry(sheet, "EventForgeBridge (global)")
 	passed = _check("an object label wearing its global note still finds its object",
 		str(global_entry.get("label", "")), "EventForgeBridge") and passed
 	passed = _check("an object the file no longer uses answers with nothing",
-		EventSheetObjectProperties.find_entry(sheet, "NotHere").is_empty(), true) and passed
-	# Select in scene only means something when there is a path AND a scene holding it.
-	passed = _check("a node in a known scene can be selected there",
-		EventSheetObjectProperties.can_select_in_scene(health, "Player.tscn"), true) and passed
-	passed = _check("with no scene open there is nothing to select in",
-		EventSheetObjectProperties.can_select_in_scene(health, ""), false) and passed
-	passed = _check("a group is a name, not a node, so it cannot be selected in a scene",
-		EventSheetObjectProperties.can_select_in_scene(
-			EventSheetObjectProperties.find_entry(sheet, "enemies"), "Player.tscn"), false) and passed
-	# The rail's own line for an entry, which is what the render shows.
+		EventSheetObjectLookup.find_entry(sheet, "NotHere").is_empty(), true) and passed
 	# The count is the list's right-hand column, so the line does not repeat it.
 	passed = _check("the rail line is the object's name and its note, the count left to its column",
 		EventSheetObjectsPanel.entry_text(health), "Health  $Health · Health") and passed

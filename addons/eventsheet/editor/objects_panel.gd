@@ -19,8 +19,8 @@ extends VBoxContainer
 # It is the Objects tab of the side panel, so it is drawn the way Godot's own docks are: a filter with
 # its sort button beside it, then the rows. When the Project bar is on, it folds in at the foot.
 #
-# Five gestures: HOVER previews an object's rows, CLICK pins that highlight,
-# DOUBLE-CLICK opens Object properties, DRAG onto the sheet starts an event on the object, and
+# Four gestures: HOVER previews an object's rows, CLICK pins that highlight,
+# DRAG onto the sheet starts an event on the object, and
 # RIGHT-CLICK offers Add condition / Add action / Select in scene / Open its script as a sheet.
 #
 # Every entry is DERIVED - the census for what the sheet uses, the .tscn for what else is in the
@@ -33,9 +33,6 @@ signal object_activated(object_label: String)
 
 ## An entry was hovered. The dock previews that object's rows; "" means the pointer left the bar.
 signal object_previewed(object_label: String)
-
-## An entry was double-clicked: Object properties (what it is, what this sheet does with it).
-signal object_properties_requested(object_label: String)
 
 ## Right-click > Add condition / Add action, already scoped to the object.
 signal object_row_requested(object_label: String, as_action: bool)
@@ -129,7 +126,6 @@ func _init() -> void:
 	# selected last rather than on the entry under the pointer.
 	tree.allow_rmb_select = true
 	tree.item_selected.connect(_on_item_selected)
-	tree.item_activated.connect(_on_item_activated)
 	tree.item_mouse_selected.connect(_on_item_mouse_selected)
 	tree.gui_input.connect(_on_tree_gui_input)
 	tree.item_collapsed.connect(_on_section_collapsed)
@@ -711,12 +707,6 @@ func _on_item_selected() -> void:
 	if _highlighted.is_empty():
 		tree.deselect_all()
 	object_activated.emit(label)
-
-
-func _on_item_activated() -> void:
-	var label: String = _selected_label()
-	if not label.is_empty():
-		object_properties_requested.emit(label)
 
 
 func _on_item_mouse_selected(_position: Vector2, mouse_button_index: int) -> void:

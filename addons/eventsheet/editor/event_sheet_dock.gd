@@ -67,7 +67,8 @@ const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_p
 const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
 const MCP_LIVE_LINK_PATH := "res://addons/eventsheet/mcp/mcp_live_link.gd"
 const MODES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/modes_dialog.gd"
-const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+const OBJECT_LOOKUP_PATH := "res://addons/eventsheet/editor/dock/object_lookup.gd"
+const OBJECT_MARKS_PATH := "res://addons/eventsheet/editor/dock/object_marks.gd"
 const OPTIMISE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/optimise_dialog.gd"
 const OUTLINE_PANEL_PATH := "res://addons/eventsheet/editor/dock/outline_panel.gd"
 const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
@@ -765,19 +766,13 @@ var _verb_properties: RefCounted = null:  # a published verb's header click: the
 			_verb_properties = load("res://addons/eventsheet/editor/dock/verb_properties_popup.gd").new()
 			_verb_properties.init(self)
 		return _verb_properties
-var _object_properties: RefCounted = null:  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
-	get:
-		if _object_properties == null:
-			_object_properties = load("res://addons/eventsheet/editor/dock/object_properties_popup.gd").new()
-			_object_properties.init(self)
-		return _object_properties
 var _instance_variables: RefCounted = null:  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
 	get:
 		if _instance_variables == null:
 			_instance_variables = load("res://addons/eventsheet/editor/dock/instance_variable_table.gd").new()
 			_instance_variables.init(self)
 		return _instance_variables
-var _hierarchy_edits: RefCounted = null:  # What the Hierarchy pane's gestures write - Add child + flags dialog, Remove from parent (dock/hierarchy_edits.gd)
+var _hierarchy_edits: RefCounted = null:  # What the flags chip on an Add child row writes (dock/hierarchy_edits.gd)
 	get:
 		if _hierarchy_edits == null:
 			_hierarchy_edits = load("res://addons/eventsheet/editor/dock/hierarchy_edits.gd").new()
@@ -2213,16 +2208,6 @@ func _speak_selected_row() -> void:
 		_set_status("This machine has no voice to read with: %s" % sentence, true)
 		return
 	_set_status(sentence)
-
-
-## Object Properties (View menu, id 45). Clicking a row's object name opens its popup; a keyboard
-## has no pointer, so the same popup opens from the selected row here.
-func _open_properties_for_selected_row() -> void:
-	var object_label: String = _viewport.object_label_for_selected_row() if _viewport != null else ""
-	if object_label.is_empty():
-		_set_status("Select a row that names an object first.", true)
-		return
-	open_object_properties(object_label)
 
 
 ## Manage Includes (browse/add/remove/reorder included library sheets) - see EventSheetIncludeManager.
@@ -6431,11 +6416,6 @@ func open_function_description(event_function: Resource, at: Vector2) -> void:
 		load(EventSheetPropertiesBar.FUNCTION_INSPECTOR_PATH).open_description_editor(self, event_function, at)
 
 
-## A click on a row's object name opens that object's popup.
-func open_object_properties(object_label: String) -> void:
-	_object_properties.open_for(object_label)
-
-
 ## The button on a variable note. An unknown name offers "Use hp", which rewrites every use of
 ## the misspelling in the sheet to the one it declares; a variable of the wrong kind offers "Change
 ## to Set value", which swaps the verb for the one that fits. One undo step either way.
@@ -6827,28 +6807,11 @@ func _retarget_variable_row(note_meta: Dictionary, to_ace_id: String) -> void:
 	})
 
 
-## The four Hierarchy-pane gestures. Thin delegates so the pane, the canvas drop and any test
-## all reach the same writer (dock/hierarchy_edits.gd).
-func hierarchy_add_child(parent_label: String, child_label: String) -> void:
-	if _ensure_sheet_for_editing():
-		_hierarchy_edits.add_child_requested(parent_label, child_label)
-
-
-func hierarchy_edit_flags(parent_label: String, child_label: String) -> void:
-	if _ensure_sheet_for_editing():
-		_hierarchy_edits.flags_requested(parent_label, child_label)
-
-
-## The flags chip on an Add child ROW. The pane's gesture writes a new run; this one edits
+## The flags chip on an Add child ROW: edits
 ## the run the chip sits on, in place.
 func hierarchy_edit_row_flags(payload: Dictionary) -> void:
 	if _ensure_sheet_for_editing():
 		_hierarchy_edits.row_flags_requested(payload)
-
-
-func hierarchy_unparent(child_label: String) -> void:
-	if _ensure_sheet_for_editing():
-		_hierarchy_edits.unparent_requested(child_label)
 
 
 ## Show only the rows that use one object, through the SAME filter lens the Filter button
@@ -6919,7 +6882,7 @@ func preview_object_rows(object_label: String) -> void:
 func add_row_for_object(object_label: String, as_action: bool) -> void:
 	if not _ensure_sheet_for_editing():
 		return
-	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
 	var context: Dictionary = {
 		"object_scope": str(entry.get("class", "")).strip_edges(),
 		"object_label": object_label
@@ -6944,22 +6907,22 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	# An object the reader marked `secret` in its properties has one event worth writing, so
 	# dropping it OFFERS that event first. An offer, not a rule: dismissing the dialog falls through
 	# to the picker the drop has always opened, and nothing is written until the reader says yes.
-	if load(OBJECT_PROPERTIES_PATH).is_secret(_source_path_for_secrets(), object_label):
+	if load(OBJECT_MARKS_PATH).is_secret(_source_path_for_secrets(), object_label):
 		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Count This Secret"),
 			EventSheetL10n.translate("%s is marked a secret. Add the event that counts it the first time the player walks in?")
 			% object_label, EventSheetL10n.translate("Count it"), _on_secret_counter_offer_accepted)
 		return
 	# The same offer for a door: a body the reader named a key for wants the event that TRIES
 	# it when the player walks in, which is the one row that both opens it and refuses it.
-	if not load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label).is_empty():
+	if not load(OBJECT_MARKS_PATH).needs_key_of(_source_path_for_secrets(), object_label).is_empty():
 		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Try This Door"),
 			EventSheetL10n.translate("%s wants the %s key. Add the event that tries it when the player walks in?") % [object_label,
-			load(OBJECT_PROPERTIES_PATH).needs_key_of(_source_path_for_secrets(), object_label)],
+			load(OBJECT_MARKS_PATH).needs_key_of(_source_path_for_secrets(), object_label)],
 			EventSheetL10n.translate("Add the door event"), _on_locked_door_offer_accepted)
 		return
 	# The same offer for the second mark: an area marked `water` has two events worth writing,
 	# the way in and the way out, and dropping it offers the pair before the picker.
-	if load(OBJECT_PROPERTIES_PATH).is_water(_source_path_for_secrets(), object_label):
+	if load(OBJECT_MARKS_PATH).is_water(_source_path_for_secrets(), object_label):
 		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Add The Water Rows"),
 			EventSheetL10n.translate("%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?")
 			% object_label, EventSheetL10n.translate("Add them"), _on_water_rows_offer_accepted)
@@ -6968,7 +6931,7 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 
 
 ## The file the secret marks are keyed against - the sheet being edited, matching the source path
-## the object popup passes when it writes the mark.
+## the marks are stored under.
 func _source_path_for_secrets() -> String:
 	return str(_current_sheet.resource_path) if _current_sheet != null else ""
 
@@ -6986,7 +6949,7 @@ func _offer_marked_drop(object_label: String, on_action_lane: bool, title: Strin
 ## "Count it": the secret's own walked-into event with the shipped Mark Secret Found row in it, plus
 ## the list it counts into when the sheet does not declare one yet. One undo step.
 func _on_secret_counter_offer_accepted(object_label: String) -> void:
-	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Count Secret", func() -> bool:
 		if not _current_sheet.variables.has(load(STARTER_EVENTS_PATH).SECRETS_VARIABLE):
@@ -7004,7 +6967,7 @@ func _on_secret_counter_offer_accepted(object_label: String) -> void:
 ## "Add the door event": the door's own walked-into event with the shipped Try Door row in it, plus
 ## the key list it reads when the sheet does not declare one yet. One undo step.
 func _on_locked_door_offer_accepted(object_label: String) -> void:
-	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Add Door Event", func() -> bool:
 		if not _current_sheet.variables.has(load(STARTER_EVENTS_PATH).KEYS_VARIABLE):
@@ -7022,7 +6985,7 @@ func _on_locked_door_offer_accepted(object_label: String) -> void:
 ## "Add them": the two events that hold the sheet's in-water flag, plus the flag itself when the
 ## sheet does not declare one yet. One undo step.
 func _on_water_rows_offer_accepted(object_label: String) -> void:
-	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	var changed: bool = _perform_undoable_sheet_edit("Add Water Rows", func() -> bool:
 		if not _current_sheet.variables.has(load(STARTER_EVENTS_PATH).WATER_VARIABLE):
@@ -7132,37 +7095,6 @@ func select_object_in_scene(node_path: String, quiet: bool = false) -> void:
 		return
 	EditorInterface.get_selection().clear()
 	EditorInterface.get_selection().add_node(found)
-
-
-## Open the .gd behind the sheet at the first line that names the object, so "Show in code"
-## lands ON the object rather than at the top of the file.
-func show_object_in_code(object_label: String) -> void:
-	if _current_sheet == null or _current_sheet.external_source_path.is_empty():
-		_set_status("This sheet has no .gd file behind it - Save As… a .gd to read its code.", true)
-		return
-	_preview_glue._open_gdscript_path_in_godot(_current_sheet.external_source_path,
-		_first_line_naming(_current_sheet.external_source_path, object_label))
-
-
-## The 1-based line a file first names an object on, or -1 when it never does (or cannot be read).
-static func _first_line_naming(source_path: String, object_label: String) -> int:
-	var wanted: String = object_label.strip_edges()
-	if source_path.is_empty() or wanted.is_empty():
-		return -1
-	var file: FileAccess = FileAccess.open(source_path, FileAccess.READ)
-	if file == null:
-		return -1
-	var line_number: int = 0
-	while not file.eof_reached():
-		var line: String = file.get_line()
-		line_number += 1
-		# Comment lines are skipped for the same reason the census skips them: prose that MENTIONS
-		# the object is not the line a reader asked to be taken to.
-		if not line.strip_edges().begins_with("#") and line.contains(wanted):
-			file.close()
-			return line_number
-	file.close()
-	return -1
 
 
 ## The popup's "Edit…": the existing verb dialog, pre-filled - the ONE place a verb's name, category,
@@ -8712,7 +8644,7 @@ func _scene_node_for_object(object_label: String) -> Node:
 	var edited_root: Node = EditorInterface.get_edited_scene_root()
 	if edited_root == null:
 		return null
-	var path: String = str(load(OBJECT_PROPERTIES_PATH).find_entry(
+	var path: String = str(load(OBJECT_LOOKUP_PATH).find_entry(
 		_current_sheet, object_label).get("path", object_label)).strip_edges().trim_prefix("$").trim_prefix("%")
 	if path.is_empty():
 		return null
@@ -8853,7 +8785,7 @@ func delete_saved_view(name: String) -> void:
 
 ## The class the sheet knows this object is, and the triggers any behaviour pack on it fires.
 func _object_starter_facts(object_label: String) -> Dictionary:
-	var entry: Dictionary = load(OBJECT_PROPERTIES_PATH).find_entry(_current_sheet, object_label)
+	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
 	var host_class: String = str(entry.get("class", "")).strip_edges()
 	if host_class.is_empty() and _current_sheet != null:
 		host_class = str(_current_sheet.host_class).strip_edges()

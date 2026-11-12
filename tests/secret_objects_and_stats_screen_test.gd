@@ -85,34 +85,17 @@ static func _stats_screen_starter() -> bool:
 ## event it offers is the shipped counting row on the object's own walked-into trigger.
 static func _secret_mark() -> bool:
 	var ok: bool = true
-	EventSheetObjectProperties.reset_secret_flags_for_tests()
-	var area: Dictionary = {"label": "SecretRoom", "class": "Area3D", "kind": "node",
-		"path": "SecretRoom", "rows": 1, "verbs": PackedStringArray()}
-	var timer: Dictionary = {"label": "Clock", "class": "Timer", "kind": "node",
-		"path": "Clock", "rows": 1, "verbs": PackedStringArray()}
-	ok = _check("an area can be a secret", EventSheetObjectProperties.can_be_secret(area), true) and ok
-	ok = _check("a timer cannot", EventSheetObjectProperties.can_be_secret(timer), false) and ok
+	EventSheetObjectMarks.reset_secret_flags_for_tests()
 	ok = _check("nothing is a secret until it is marked",
-		EventSheetObjectProperties.is_secret("res://level.gd", "SecretRoom"), false) and ok
-	EventSheetObjectProperties.set_secret("res://level.gd", "SecretRoom", true)
+		EventSheetObjectMarks.is_secret("res://level.gd", "SecretRoom"), false) and ok
+	EventSheetObjectMarks.set_secret("res://level.gd", "SecretRoom", true)
 	ok = _check("marking it sticks",
-		EventSheetObjectProperties.is_secret("res://level.gd", "SecretRoom"), true) and ok
+		EventSheetObjectMarks.is_secret("res://level.gd", "SecretRoom"), true) and ok
 	ok = _check("the mark belongs to the file that made it",
-		EventSheetObjectProperties.is_secret("res://other.gd", "SecretRoom"), false) and ok
-	# The panel offers the mark as a WRITABLE row, and says what ticking it does. An area carries a
-	# second tick beside it (the water mark), so the row is picked by the mark it writes.
-	var secret_row: Dictionary = {}
-	for row: Dictionary in EventSheetObjectProperties.property_rows(area, "", "res://level.gd"):
-		if str(row.get("mark", "")) == "secret":
-			secret_row = row
-	ok = _check("the popup offers the mark as a tick box",
-		str(secret_row.get("label", "")), "Secret") and ok
-	ok = _check("ticked, it reads back as ticked", bool(secret_row.get("checked", false)), true) and ok
-	ok = _check("the tick knows which object it is about",
-		str(secret_row.get("object", "")), "SecretRoom") and ok
-	EventSheetObjectProperties.set_secret("res://level.gd", "SecretRoom", false)
+		EventSheetObjectMarks.is_secret("res://other.gd", "SecretRoom"), false) and ok
+	EventSheetObjectMarks.set_secret("res://level.gd", "SecretRoom", false)
 	ok = _check("unmarking it sticks too",
-		EventSheetObjectProperties.is_secret("res://level.gd", "SecretRoom"), false) and ok
+		EventSheetObjectMarks.is_secret("res://level.gd", "SecretRoom"), false) and ok
 	# The event the drop then offers.
 	var offered: EventRow = EventSheetStarterEvents.secret_counter_event("SecretRoom", "Area3D")
 	ok = _check("it rides the object's own walked-into trigger",

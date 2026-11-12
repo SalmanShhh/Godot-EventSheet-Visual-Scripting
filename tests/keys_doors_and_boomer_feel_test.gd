@@ -118,31 +118,17 @@ static func _door_contract() -> bool:
 ## The mark a reader writes on a door, and the event dropping that door then offers.
 static func _needs_key_mark() -> bool:
 	var ok: bool = true
-	EventSheetObjectProperties.reset_needs_key_for_tests()
-	var door: Dictionary = {"label": "RedDoor", "class": "StaticBody3D", "kind": "node",
-		"path": "RedDoor", "rows": 1, "verbs": PackedStringArray()}
-	var label: Dictionary = {"label": "Hud", "class": "Label", "kind": "node",
-		"path": "Hud", "rows": 1, "verbs": PackedStringArray()}
-	ok = _check("a body can want a key", EventSheetObjectProperties.can_need_key(door), true) and ok
-	ok = _check("a label cannot", EventSheetObjectProperties.can_need_key(label), false) and ok
+	EventSheetObjectMarks.reset_needs_key_for_tests()
 	ok = _check("no door wants a key until one is named",
-		EventSheetObjectProperties.needs_key_of("res://level.gd", "RedDoor"), "") and ok
-	EventSheetObjectProperties.set_needs_key("res://level.gd", "RedDoor", "red_key")
+		EventSheetObjectMarks.needs_key_of("res://level.gd", "RedDoor"), "") and ok
+	EventSheetObjectMarks.set_needs_key("res://level.gd", "RedDoor", "red_key")
 	ok = _check("naming one sticks",
-		EventSheetObjectProperties.needs_key_of("res://level.gd", "RedDoor"), "red_key") and ok
+		EventSheetObjectMarks.needs_key_of("res://level.gd", "RedDoor"), "red_key") and ok
 	ok = _check("the mark belongs to the file that made it",
-		EventSheetObjectProperties.needs_key_of("res://other.gd", "RedDoor"), "") and ok
-	var key_row: Dictionary = {}
-	for row: Dictionary in EventSheetObjectProperties.property_rows(door, "", "res://level.gd"):
-		if str(row.get("form", "")) == "key":
-			key_row = row
-	ok = _check("the popup offers it as a name field",
-		str(key_row.get("label", "")), "Needs key") and ok
-	ok = _check("filled in, it reads back filled in", str(key_row.get("value", "")), "red_key") and ok
-	ok = _check("and knows which door it is about", str(key_row.get("object", "")), "RedDoor") and ok
-	EventSheetObjectProperties.set_needs_key("res://level.gd", "RedDoor", "")
+		EventSheetObjectMarks.needs_key_of("res://other.gd", "RedDoor"), "") and ok
+	EventSheetObjectMarks.set_needs_key("res://level.gd", "RedDoor", "")
 	ok = _check("clearing it sticks too",
-		EventSheetObjectProperties.needs_key_of("res://level.gd", "RedDoor"), "") and ok
+		EventSheetObjectMarks.needs_key_of("res://level.gd", "RedDoor"), "") and ok
 	var offered: EventRow = EventSheetStarterEvents.locked_door_event("RedDoor", "StaticBody3D")
 	ok = _check("the offered event rides the door's own walked-into trigger",
 		offered.trigger_id, "OnBodyEntered") and ok

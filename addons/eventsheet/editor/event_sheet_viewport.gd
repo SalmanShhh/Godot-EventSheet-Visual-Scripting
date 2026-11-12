@@ -22,10 +22,6 @@ signal object_bar_dropped(object_label: String, target_event: Resource, on_actio
 ## starts an "On <action> pressed" event for it, after the event it landed on.
 signal input_action_dropped(action_name: String, target_event: Resource)
 
-## A child dragged OUT of the Hierarchy pane and let go on the canvas. That gesture has exactly
-## one meaning - Remove from parent - so the drop writes it rather than opening anything.
-signal hierarchy_child_dropped(child_label: String)
-
 ## A Project bar entry dropped on the canvas. The payload carries what it IS and what dropping
 ## it means; the dock decides how to write that, exactly as it does for the Object bar's drops.
 signal project_entry_dropped(payload: Dictionary, target_event: Resource)
@@ -117,8 +113,6 @@ signal function_description_requested(event_function: Resource, at: Vector2)
 ## inputs) and everything else the verb is - kind, category, description, what it gives back, the
 ## line it inserts - answers in the ACE properties popup this asks the dock to open.
 signal verb_properties_requested(event_function: Resource)
-## A single click on a row's object name asks for that object's popup.
-signal object_properties_requested(object_label: String)
 ## The flags chip on an Add child row was clicked: the ticks it was written with travel in the
 ## payload, and the dock opens them as the tick dialog and writes the answer back.
 signal hierarchy_flags_requested(payload: Dictionary)
@@ -210,11 +204,9 @@ const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["trigger", "condition", "action"]
-## The Project bar's and the Hierarchy pane's drag payload types, spelled out rather than read off
-## those panels' constants: naming either panel here compiled it into every first open, and both
-## are built only when somebody shows them.
+## The Project bar's drag payload type, spelled out rather than read off that panel's constant:
+## naming the panel here compiled it into every first open, and it is built only when somebody shows it.
 const PROJECT_BAR_DRAG_TYPE := "eventsheet_project_entry"
-const HIERARCHY_CHILD_DRAG_TYPE := "eventsheet_hierarchy_child"
 # Sheet zoom runs 50% to 200% in the six steps the status-bar pill offers; the levels and the
 # remembered value live on the palette, beside row density, because the zoom belongs to the LAYOUT
 # (every open sheet at once) and not to any one view.
@@ -6738,10 +6730,6 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# sheet has no gesture for, so a payload that got this far always means something.
 	if is_object_bar_drag(data) or is_input_action_drag(data) or is_project_bar_drag(data):
 		return true
-	# A child dragged out of the Hierarchy pane. Anywhere on the canvas will do: the gesture
-	# means "out of its parent", and where it lands says nothing more than that.
-	if is_hierarchy_child_drag(data):
-		return true
 	# A scene-tree node dragged ONTO a condition/action param VALUE → fill that param with the node
 	# reference, but only when the param can hold one (not a plain number/bool cell), so the cursor reads
 	# as droppable exactly where the drop will land somewhere sensible.
@@ -6757,10 +6745,6 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
-	# A Hierarchy-pane child let go on the canvas: Remove from parent, written straight.
-	if is_hierarchy_child_drag(data):
-		hierarchy_child_dropped.emit(str((data as Dictionary).get("label", "")))
-		return
 	# An Input Map action dropped on the canvas starts the event it is for: "On <action>
 	# pressed". Where it lands only decides where the new event goes.
 	if is_input_action_drag(data):
@@ -6857,15 +6841,6 @@ static func is_project_bar_drag(data: Variant) -> bool:
 
 
 ## True for the Object bar's own drag payload ({type: "eventsheet_object", label}).
-## The payload a Hierarchy-pane child chip hands its drag.
-static func is_hierarchy_child_drag(data: Variant) -> bool:
-	if not (data is Dictionary):
-		return false
-	var payload: Dictionary = data
-	return str(payload.get("type", "")) == HIERARCHY_CHILD_DRAG_TYPE \
-		and not str(payload.get("label", "")).strip_edges().is_empty()
-
-
 static func is_object_bar_drag(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
@@ -7056,21 +7031,3 @@ func accessible_name_for_row(row_index: int) -> String:
 ## The selected row's sentence, so a caller can say it aloud without reaching for row indices.
 func accessible_name_for_selected_row() -> String:
 	return accessible_name_for_row(_selected_row_index)
-
-
-## The object the selected row names, or "" when it names none. The object label is drawn inside a
-## cell rather than as its own span, so a pointer finds it by hit-testing its stamped bounds - and a
-## keyboard has no pointer. This reads the same stamped metadata, so the object popup a click opens
-## is reachable without one.
-func object_label_for_selected_row() -> String:
-	var row_data: EventRowData = _row_at(_selected_row_index)
-	if row_data == null:
-		return ""
-	_row_builder._ensure_event_spans(row_data)
-	for span: SemanticSpan in row_data.spans:
-		if span == null or not (span.metadata is Dictionary):
-			continue
-		var label: String = str((span.metadata as Dictionary).get("object_label", ""))
-		if not label.is_empty():
-			return label
-	return ""

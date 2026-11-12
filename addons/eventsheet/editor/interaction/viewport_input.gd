@@ -471,21 +471,6 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.verb_properties_requested.emit(row_data.source_resource)
 			_viewport.accept_event()
 			return
-		# ONE click on a row's OBJECT name opens the object popup: what type it is, where in the
-		# scene it lives, which verbs this file uses it with, which of its signals it listens to. The
-		# label is drawn inside the leading edge of the cell rather than as its own span, so the
-		# renderer stamps its drawn bounds and this hit-tests them - the same seam the colour swatch
-		# above uses. Deliberately AFTER the verb header: a ƒ header carries no object label today, so
-		# the two cannot collide, and keeping this second means they still cannot if one ever does.
-		# Skipped on a double-click or with a modifier, so editing a cell and multi-select are untouched.
-		if not event.double_click and not event.ctrl_pressed and not event.meta_pressed and not event.shift_pressed \
-				and metadata.get("object_label_rect") is Rect2 \
-				and (metadata["object_label_rect"] as Rect2).has_point(local_position) \
-				and not str(metadata.get("object_label", "")).is_empty():
-			_viewport._select_from_click(row_index, span_index, false)
-			_viewport.object_properties_requested.emit(str(metadata.get("object_label", "")))
-			_viewport.accept_event()
-			return
 		# Ctrl+Click go-to-definition: when the clicked cell resolves to a jump target (the dock's
 		# probe decides), navigate instead of toggling multi-select - unresolvable cells keep
 		# Ctrl+Click's multi-select meaning, so both gestures coexist.

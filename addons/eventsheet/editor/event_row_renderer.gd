@@ -2265,14 +2265,6 @@ func _draw_spans(
 			# just be a ragged staircase marking a boundary that does not exist.
 			if object_column_width > 0.0 and not strips_look:
 				_draw_object_column_separator(control, span, text_x, event_style)
-			# The drawn bounds of the object column, so ONE click on the name can open the
-			# object popup. The label is not a span of its own (it is drawn inside the leading edge
-			# of the condition/action cell), so the same trick the colour swatch uses applies: the
-			# renderer, which is the only thing that knows where the text actually landed, stamps
-			# its rect and the input layer hit-tests against it.
-			span.metadata["object_label_rect"] = Rect2(
-				span.rect.position.x, span.rect.position.y,
-				text_x - span.rect.position.x, span.rect.size.y)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		# The cross of an inverted condition leads its words, the width of the room it asks for.
 		if strips_look and span_kind == "condition" and str(metadata.get("lane", "")) == "condition" \

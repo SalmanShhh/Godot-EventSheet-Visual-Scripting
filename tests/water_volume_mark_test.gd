@@ -25,7 +25,6 @@ const OTHER_SHEET_PATH := "res://other_level.gd"
 static func run() -> bool:
 	var ok: bool = true
 	ok = _the_mark() and ok
-	ok = _who_can_be_water() and ok
 	ok = _the_rows() and ok
 	ok = _the_reading() and ok
 	return ok
@@ -34,62 +33,24 @@ static func run() -> bool:
 ## 1. The mark is writable, it is remembered, and it belongs to the file that made it.
 static func _the_mark() -> bool:
 	var ok: bool = true
-	EventSheetObjectProperties.reset_water_flags_for_tests()
-	EventSheetObjectProperties.reset_secret_flags_for_tests()
+	EventSheetObjectMarks.reset_water_flags_for_tests()
+	EventSheetObjectMarks.reset_secret_flags_for_tests()
 	ok = _check("nothing is water until it is marked",
-		EventSheetObjectProperties.is_water(SHEET_PATH, "Pool"), false) and ok
-	EventSheetObjectProperties.set_water(SHEET_PATH, "Pool", true)
+		EventSheetObjectMarks.is_water(SHEET_PATH, "Pool"), false) and ok
+	EventSheetObjectMarks.set_water(SHEET_PATH, "Pool", true)
 	ok = _check("marking it sticks",
-		EventSheetObjectProperties.is_water(SHEET_PATH, "Pool"), true) and ok
+		EventSheetObjectMarks.is_water(SHEET_PATH, "Pool"), true) and ok
 	ok = _check("the mark belongs to the file that made it",
-		EventSheetObjectProperties.is_water(OTHER_SHEET_PATH, "Pool"), false) and ok
+		EventSheetObjectMarks.is_water(OTHER_SHEET_PATH, "Pool"), false) and ok
 	ok = _check("and to the object that was ticked",
-		EventSheetObjectProperties.is_water(SHEET_PATH, "Lava"), false) and ok
+		EventSheetObjectMarks.is_water(SHEET_PATH, "Lava"), false) and ok
 	# The two marks are two stores: water is not secret, and marking one leaves the other alone.
 	ok = _check("water is not the secret mark",
-		EventSheetObjectProperties.is_secret(SHEET_PATH, "Pool"), false) and ok
+		EventSheetObjectMarks.is_secret(SHEET_PATH, "Pool"), false) and ok
 
-	# The popup offers it as a tick box beside the secret one, and says what ticking it does.
-	var pool: Dictionary = _entry("Pool", "Area2D", "node")
-	var water_row: Dictionary = _row_marked("water", pool)
-	ok = _check("the popup offers the mark as a tick box",
-		str(water_row.get("label", "")), "Water") and ok
-	ok = _check("ticked, it reads back as ticked", bool(water_row.get("checked", false)), true) and ok
-	ok = _check("and reads in words", str(water_row.get("value", "")), "Counts as water") and ok
-	ok = _check("the tick knows which object it is about",
-		str(water_row.get("object", "")), "Pool") and ok
-	ok = _check("and which file it writes into", str(water_row.get("source", "")), SHEET_PATH) and ok
-	ok = _check("it is the writable form", str(water_row.get("form", "")), "check") and ok
-	ok = _check("the secret tick is still there beside it",
-		str(_row_marked("secret", pool).get("label", "")), "Secret") and ok
-
-	EventSheetObjectProperties.set_water(SHEET_PATH, "Pool", false)
+	EventSheetObjectMarks.set_water(SHEET_PATH, "Pool", false)
 	ok = _check("unticking it sticks too",
-		EventSheetObjectProperties.is_water(SHEET_PATH, "Pool"), false) and ok
-	ok = _check("and the row reads the other way round",
-		str(_row_marked("water", pool).get("value", "")), "Not water") and ok
-	return ok
-
-
-## 2. Only an area is a volume you can be inside. Everything else is asked no question at all.
-static func _who_can_be_water() -> bool:
-	var ok: bool = true
-	ok = _check("a 2D area can be water",
-		EventSheetObjectProperties.can_be_water(_entry("Pool", "Area2D", "node")), true) and ok
-	ok = _check("a 3D area can be water",
-		EventSheetObjectProperties.can_be_water(_entry("Deep", "Area3D", "node")), true) and ok
-	ok = _check("a class that extends an area can be water too",
-		EventSheetObjectProperties.can_be_water(_entry("Ocean", "Area2D", "script")), true) and ok
-	ok = _check("a sprite cannot",
-		EventSheetObjectProperties.can_be_water(_entry("Splash", "Sprite2D", "node")), false) and ok
-	ok = _check("a body cannot either",
-		EventSheetObjectProperties.can_be_water(_entry("Player", "CharacterBody2D", "node")), false) and ok
-	ok = _check("a family is a name, not a volume",
-		EventSheetObjectProperties.can_be_water(_entry("swimmers", "", "group")), false) and ok
-	ok = _check("a scene file is not a volume either",
-		EventSheetObjectProperties.can_be_water(_entry("pool.tscn", "Area2D", "scene")), false) and ok
-	ok = _check("and nothing is nothing",
-		EventSheetObjectProperties.can_be_water({}), false) and ok
+		EventSheetObjectMarks.is_water(SHEET_PATH, "Pool"), false) and ok
 	return ok
 
 
@@ -188,19 +149,6 @@ static func _compiled_water_sheet() -> String:
 
 
 ## One census entry, in the shape the object popup is handed.
-static func _entry(label: String, host_class: String, kind: String) -> Dictionary:
-	return {"label": label, "class": host_class, "kind": kind, "path": label, "rows": 1,
-		"verbs": PackedStringArray()}
-
-
-## The property row carrying one mark's tick box, or {} when the object is not offered that mark.
-static func _row_marked(mark: String, entry: Dictionary) -> Dictionary:
-	for row: Dictionary in EventSheetObjectProperties.property_rows(entry, "", SHEET_PATH):
-		if str(row.get("mark", "")) == mark:
-			return row
-	return {}
-
-
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
 		print("[PASS] water_volume_mark_test: %s" % label)

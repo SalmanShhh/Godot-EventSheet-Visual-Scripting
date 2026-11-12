@@ -115,8 +115,8 @@ static func _routes_and_drags() -> bool:
 		EventSheetProjectOutline.route_for((outline["scripts"] as Array)[0], true), "sheet") and all_passed
 	all_passed = _check("a script opens in the script editor when that is the reader's default",
 		EventSheetProjectOutline.route_for((outline["scripts"] as Array)[0], false), "script_editor") and all_passed
-	all_passed = _check("a class opens Object properties",
-		EventSheetProjectOutline.route_for((outline["classes"] as Array)[0]), "object_properties") and all_passed
+	all_passed = _check("a class has no window to open now",
+		EventSheetProjectOutline.route_for((outline["classes"] as Array)[0]), "nothing") and all_passed
 	all_passed = _check("a behavior opens its pack's reference page",
 		EventSheetProjectOutline.route_for((outline["behaviors"] as Array)[0]), "pack_reference") and all_passed
 	all_passed = _check("a sound has nowhere of its own to open, so it is shown where it lives",

@@ -23,7 +23,6 @@ static func run() -> bool:
 	passed = _script_facts() and passed
 	passed = _scene_facts() and passed
 	passed = _entry_facts() and passed
-	passed = _popup_identity_rows() and passed
 	passed = _sheet_titles() and passed
 	passed = _signal_notes() and passed
 	passed = _object_bar_sections() and passed
@@ -104,31 +103,6 @@ static func _entry_facts() -> bool:
 	var child: Dictionary = {"label": "Camera2D", "kind": "node", "class": "Camera2D", "path": "$Camera2D"}
 	passed = _check("a scene child with no script of its own has nothing to open",
 		EventSheetObjectFacts.script_path_for_entry(child, SCRIPT_PATH), "") and passed
-	return passed
-
-
-static func _popup_identity_rows() -> bool:
-	var passed: bool = true
-	var entry: Dictionary = {"label": "Player", "kind": "script", "class": "CharacterBody2D", "path": ""}
-	var lines: PackedStringArray = PackedStringArray()
-	for row: Dictionary in EventSheetObjectProperties.identity_rows(entry, SCRIPT_PATH):
-		lines.append("%s=%s" % [str(row.get("label", "")), str(row.get("value", ""))])
-	passed = _check("the popup says what the object IS, section by section",
-		" | ".join(lines),
-		"Instance variables=max_speed · hp · target"
-		+ " | Functions=Take Damage (amount) · Flee · Is Alive (condition)"
-		+ " | Triggers=On Died · On Hit (body)"
-		+ " | Behaviors=Health (max health = 50.0)"
-		+ " | Base classes=player · damageable · respawnable") and passed
-	# The Godot word rides along ONCE, muted, on the row that needs the bridge.
-	var families_note: String = ""
-	for row: Dictionary in EventSheetObjectProperties.identity_rows(entry, SCRIPT_PATH):
-		if str(row.get("label", "")) == "Base classes":
-			families_note = str(row.get("note", ""))
-	passed = _check("the Godot word for a family is a muted note, not the name", families_note, "(groups)") and passed
-	passed = _check("an object with no file behind it grows no sections",
-		EventSheetObjectProperties.identity_rows({"label": "enemies", "kind": "group"}, "").is_empty(),
-		true) and passed
 	return passed
 
 

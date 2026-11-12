@@ -57,7 +57,7 @@ static func doc_id_for(sheet: EventSheetResource, resource: Resource, metadata: 
 ## instance of something, and what it can do is what its class can do - so a label the sheet's own
 ## census cannot place resolves to nothing rather than to a page named after a variable.
 static func doc_id_for_object(sheet: EventSheetResource, object_label: String) -> String:
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(sheet, object_label)
+	var entry: Dictionary = EventSheetObjectLookup.find_entry(sheet, object_label)
 	var class_id: String = str(entry.get("class", "")).strip_edges()
 	if class_id.is_empty():
 		return ""

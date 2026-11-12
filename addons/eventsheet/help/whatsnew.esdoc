@@ -6,6 +6,14 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Removed: the Object properties window
+
+- Clicking an object's name in a row no longer opens a window. A click there now only selects the row, like a click anywhere else on the cell. The window repeated what Godot already shows: the Scene dock for the hierarchy, the Inspector for values. It also carried a Hierarchy section (add a child by dragging, unparent, flags), a variables table and the buttons Add condition, Add action, Highlight rows, Select in scene and Show in code. Add condition, Add action, Highlight rows and Select in scene are still on the Objects list (right-click or click an entry). Show in code has no other door. Double-clicking an entry in the Objects list or a class in the Project bar opens nothing now, and View > Object Properties is gone. The flags chip on an Add child row stays.
+
+### Removed: the Inspector's variables table
+
+- Selecting a node whose script came from a sheet no longer shows an \"Instance variables\" table at the top of the Inspector. Godot's own Inspector already lists every `@export` variable of the script as an ordinary row, so the table repeated them. The \"Shape ...\" link and the Edit Event Sheet button stay.
+
 ### Changed: more air between events in the Editor Native look
 
 - Two events in the Editor Native look are now 6 px apart instead of 1, so each reads as its own event and not as a continuation of the one above. The conditions and actions inside one event are exactly as tight as before, and a sub-event still sits 1 px under its parent. The README pictures of the workspace and of the Generated GDScript panel were retaken to show it.

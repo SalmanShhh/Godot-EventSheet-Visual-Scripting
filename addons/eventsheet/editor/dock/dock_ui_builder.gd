@@ -14,7 +14,7 @@ extends RefCounted
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const RAW_CODE_EDIT_PATH := "res://addons/eventsheet/editor/raw_code_edit.gd"
-const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
+const OBJECT_LOOKUP_PATH := "res://addons/eventsheet/editor/dock/object_lookup.gd"
 ## The runtime error strip's button, spelled out here so building the strip does not compile the
 ## error wording it only needs once an error arrives; a test holds it equal to that file's label.
 const GODOT_WORDS_LABEL := "Godot's words"
@@ -194,26 +194,23 @@ func build_ui() -> void:
 	# scene: every node, behaviour, global, group and scene the open file uses, derived from its own
 	# rows. Clicking one highlights its rows through the viewport's filter lens; clicking it again
 	# clears, which is why the dock (not the panel) owns what "highlight" means.
-	# And the five gestures the bar offers: hover previews, click pins, double-click opens the
-	# object's properties, right-click adds a row scoped to it or jumps to it, and dragging one onto
-	# the canvas starts an event on it.
+	# And the gestures the bar offers: hover previews, click pins, right-click adds a row scoped to
+	# it or jumps to it, and dragging one onto the canvas starts an event on it.
 	_dock._objects_panel = EventSheetObjectsPanel.new()
 	_dock._objects_panel.object_activated.connect(func(object_label: String) -> void:
 		_dock.highlight_object_rows(object_label))
 	_dock._objects_panel.object_previewed.connect(func(object_label: String) -> void:
 		_dock.preview_object_rows(object_label))
-	_dock._objects_panel.object_properties_requested.connect(func(object_label: String) -> void:
-		_dock.open_object_properties(object_label))
 	_dock._objects_panel.object_row_requested.connect(func(object_label: String, as_action: bool) -> void:
 		_dock.add_row_for_object(object_label, as_action))
 	_dock._objects_panel.object_scene_selection_requested.connect(func(object_label: String) -> void:
-		_dock.select_object_in_scene(str(load(OBJECT_PROPERTIES_PATH).find_entry(
+		_dock.select_object_in_scene(str(load(OBJECT_LOOKUP_PATH).find_entry(
 			_dock._current_sheet, object_label).get("path", object_label))))
 	_dock._objects_panel.object_behavior_requested.connect(func(object_label: String) -> void:
 		_dock.open_add_behavior_dialog(object_label))
 	_dock._objects_panel.object_script_requested.connect(func(object_label: String) -> void:
 		_dock.open_object_file_as_sheet(EventSheetObjectFacts.script_path_for_entry(
-			load(OBJECT_PROPERTIES_PATH).find_entry(_dock._current_sheet, object_label),
+			load(OBJECT_LOOKUP_PATH).find_entry(_dock._current_sheet, object_label),
 			str(_dock._current_sheet.get("external_source_path")) if _dock._current_sheet != null else "")))
 	# The two starter gestures: the events this object's class is usually given, and this
 	# object's events copied for other objects.
@@ -273,8 +270,6 @@ func build_ui() -> void:
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
-	# A child dragged out of the Hierarchy pane and let go anywhere on the canvas: unparent it.
-	_dock._viewport.hierarchy_child_dropped.connect(_dock.hierarchy_unparent)
 	# The Project bar's own drop: what it means travels in the payload, and the dock writes it.
 	_dock._viewport.project_entry_dropped.connect(_dock.apply_project_entry_drop)
 	# A thumbnail the editor's preview cache renders after the row was drawn: redraw once when
@@ -309,7 +304,6 @@ func build_ui() -> void:
 	_dock._viewport.function_edit_requested.connect(later("_function_dialog_glue", "_open_function_dialog_for"))
 	_dock._viewport.verb_properties_requested.connect(_dock.open_verb_properties)
 	_dock._viewport.function_description_requested.connect(_dock.open_function_description)
-	_dock._viewport.object_properties_requested.connect(_dock.open_object_properties)
 	_dock._viewport.hierarchy_flags_requested.connect(_dock.hierarchy_edit_row_flags)
 	_dock._viewport.data_class_add_field_requested.connect(_dock._open_data_class_add_field_for)
 	_dock._viewport.comment_door_requested.connect(_dock.open_comment_door)

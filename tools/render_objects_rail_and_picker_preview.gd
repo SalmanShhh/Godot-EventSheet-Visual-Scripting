@@ -1,8 +1,7 @@
-# EventForge - render harness (dev tool) for the OBJECT model: the Objects rail, the object popup,
-# and the picker's Functions page. Opens tests/fixtures/objects_reading_fixture.gd the way the dock
-# opens a .gd (a read-only preview) and shoots three images:
+# EventForge - render harness (dev tool) for the OBJECT model: the Objects rail and the picker's
+# Functions page. Opens tests/fixtures/objects_reading_fixture.gd the way the dock
+# opens a .gd (a read-only preview) and shoots two images:
 #   docs/images/objects-rail.png          - the sheet's rows beside the left rail's Objects section
-#   docs/images/object-popup.png          - what a click on a row's object name opens
 #   docs/images/picker-functions-page.png - the picker's object page for an opened .gd
 # Each run also PRINTS what it drew, so it doubles as a text check: the image proves the look, the
 # printout proves the words.
@@ -12,20 +11,14 @@
 @tool
 extends SceneTree
 
-## The Object bar and the Object properties popup are about an object IN A SCENE - its behaviors, its
-## families, the section of things the scene has that the sheet has not used yet - so both are shot
-## from the fixture that HAS one. The objects fixture is about the objects a file names, and is on no
-## scene, which would leave three of the bar's four answers blank.
+## The Object bar is about an object IN A SCENE - its behaviors, its families, the section of things
+## the scene has that the sheet has not used yet - so it is shot from the fixture that HAS one.
 const FIXTURE_PATH := "res://tests/fixtures/object_facts_player.gd"
 ## The picker page needs a file that DECLARES verbs; the objects fixture is about the objects a file
 ## uses, and declares none. Two fixtures, because the two images are about two different things.
 const FUNCTIONS_FIXTURE_PATH := "res://tests/fixtures/picker_functions_fixture.gd"
 const BASE_COLOR := Color("#252525")
 const SCENE_NAME := "object_facts_player.tscn"
-## Which object's popup is shot - the sheet's OWN object, because it is the only entry that exercises
-## every row the popup can answer with: instance variables, functions, triggers, behaviors, families,
-## a scene to be selected in, and both authoring buttons.
-const POPUP_OBJECT := "ObjectFactsPlayer"
 const RAIL_WIDTH := 280.0
 
 var _shots: Array[Image] = []
@@ -39,7 +32,7 @@ var _picker: ACEPickerDialog = null
 
 
 func _init() -> void:
-	root.title = "Objects rail, object popup, picker functions page"
+	root.title = "Objects rail, picker functions page"
 	# Sized to fit the screen, NOT to the width the content would like: a window the display clamps
 	# still LAYS OUT at the size it was asked for, so a generous request pushed the action lane -
 	# the half of each row these images exist to show - past the edge of the captured pixels.
@@ -120,28 +113,6 @@ func _compose_rail_image() -> void:
 	print("[preview] wrote res://docs/images/objects-rail.png (%dx%d)" % [canvas.get_width(), canvas.get_height()])
 
 
-## Stage 2 - the object popup, built by the same static builder the live click uses, so the image
-## cannot show a panel the editor would not.
-func _build_popup_stage() -> void:
-	_clear_stage()
-	var entry: Dictionary = EventSheetObjectProperties.find_entry(_sheet, POPUP_OBJECT)
-	var panel: Control = EventSheetObjectProperties.build_panel(
-		entry, SCENE_NAME, EventSheetViewportReadingRows.object_class_map(_sheet),
-		func() -> void: pass, func() -> void: pass, func() -> void: pass,
-		FIXTURE_PATH, func() -> void: pass, func() -> void: pass, func() -> void: pass
-	)
-	var card: PanelContainer = PanelContainer.new()
-	card.position = Vector2(60.0, 40.0)
-	card.add_child(panel)
-	root.add_child(card)
-	_overlay = card
-	print("[preview] object popup for %s" % POPUP_OBJECT)
-	for row: Dictionary in EventSheetObjectProperties.property_rows(entry, SCENE_NAME, FIXTURE_PATH):
-		print("  popup: %s = %s" % [str(row.get("label", "")), str(row.get("value", ""))])
-	print("  popup: Select in scene enabled = %s" % str(
-		EventSheetObjectProperties.can_select_in_scene(entry, SCENE_NAME)))
-
-
 ## Stage 3 - the picker opened on the fixture, whose object page leads with the script's own
 ## functions. Built through the real dialog so the page is the one a user meets. The picker reads
 ## the open sheet off the node it hangs on (`get_current_sheet`), which in the editor is the dock -
@@ -200,12 +171,8 @@ func _on_frame() -> void:
 		1:
 			_shots.append(_shot())
 			_compose_rail_image()
-			_build_popup_stage()
-		2:
-			# The popup is a small card on a big window - shot whole, it would be mostly empty canvas.
-			_save("res://docs/images/object-popup.png", _overlay)
 			_build_picker_stage()
-		3:
+		2:
 			_save("res://docs/images/picker-functions-page.png")
 			quit(0)
 	_stage += 1

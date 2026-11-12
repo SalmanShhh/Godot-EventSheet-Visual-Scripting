@@ -421,7 +421,7 @@ static func script_path_for_entry(entry: Dictionary, sheet_source_path: String) 
 	return ""
 
 
-## Everything ONE census entry IS, for the Object properties popup:
+## Everything ONE census entry IS, as the facts a test pins:
 ##   {"variables", "functions", "triggers", "behaviors", "families"}
 ## The first three come from the object's own script, the last two from the scene it is placed in
 ## plus its own `add_to_group` lines - which is where Godot keeps each of them.

@@ -20,7 +20,6 @@ extends RefCounted
 
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
-const OBJECT_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/object_properties_popup.gd"
 const FUNCTION_INSPECTOR_PATH := "res://addons/eventsheet/editor/dock/function_inspector.gd"
 const CLASS_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/class_properties.gd"
 
@@ -362,13 +361,12 @@ func let_function_go() -> void:
 		leaving.release()
 
 
-## A selected object reads what the Object properties popup reads - the same facts, in the bar.
+## A selected object: its name, and nothing more until the bar goes.
 func _show_object(object_label: String) -> void:
 	_shown_resource = null
 	_clear_form()
 	_open_for_selection()
 	_heading.text = heading_for(object_label, "object")
-	_append_object_facts(load(OBJECT_PROPERTIES_PATH).find_entry(_dock._current_sheet, object_label), object_label)
 
 
 ## The class this file declares, selected on its head: the Object type fields that write the
@@ -381,34 +379,6 @@ func _show_class() -> void:
 	_heading.text = heading_for(str(_dock._head_actions.head_facts().get("class_name", "")),
 		EventSheetL10n.translate("object type"))
 	_class_properties.build_into(_form)
-	for entry: Dictionary in EventSheetViewportReadingRows.object_census(_dock._current_sheet):
-		if load(OBJECT_PROPERTIES_PATH).owns_sheet_variables(entry):
-			_append_object_facts(entry, str(entry.get("label", "")))
-			return
-
-
-## What an object carries and does, as read-only rows, then its variable table when the object is
-## the one this file declares, then the door to its whole properties popup.
-func _append_object_facts(entry: Dictionary, object_label: String) -> void:
-	for row: Variant in load(OBJECT_PROPERTIES_PATH).property_rows(entry, "", ""):
-		if not (row is Dictionary):
-			continue
-		_form.add_child(EventSheetPopupUI.hint_label(str((row as Dictionary).get("label", "")), 90.0))
-		_form.add_child(EventSheetPopupUI.hint_label(str((row as Dictionary).get("value", "")), 190.0))
-	# The same instance-variable table Object properties carries, in the bar, whenever the
-	# selected object is the one this file IS. Selecting an object and editing its variables
-	# without opening a popup is the whole point of the bar.
-	if load(OBJECT_PROPERTIES_PATH).owns_sheet_variables(entry):
-		var table: Control = _dock._instance_variables.build_for(_dock._current_sheet)
-		if table != null:
-			_form.add_child(EventSheetPopupUI.hint_label(
-				EventSheetL10n.translate("Instance variables"), 90.0))
-			_form.add_child(table)
-	var open_button: Button = Button.new()
-	open_button.text = EventSheetL10n.translate("Object properties…")
-	open_button.pressed.connect(func() -> void: _dock.open_object_properties(object_label))
-	_form.add_child(Control.new())
-	_form.add_child(open_button)
 
 
 ## The first selection opens the bar at the width it was left at - the way the Godot Inspector

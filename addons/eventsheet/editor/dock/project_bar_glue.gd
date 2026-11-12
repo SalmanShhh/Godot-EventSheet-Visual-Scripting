@@ -8,7 +8,7 @@ extends RefCounted
 #
 #   a scene       -> Godot's own 2D/3D editor, with the scene-as-sheet offered beside it
 #   a script      -> a sheet tab, or Godot's script editor, per the reader's default
-#   a class       -> Object properties (the same dialog the Object bar opens)
+#   a class       -> nowhere: the object window is gone
 #   a behavior    -> that pack's reference page in the Manual
 #   New scene / New script / New class / Extract base class / Import sound -> Godot's dialogs and
 #                    the plugin's existing ones, never a second way to do the same thing
@@ -117,8 +117,8 @@ func _on_entry_activated(route: String, entry: Dictionary) -> void:
 			_open_this_editor_file(path)
 		"script_editor":
 			_dock._preview_glue._open_gdscript_path_in_godot(path)
-		"object_properties":
-			_dock.open_object_properties(str(entry.get("label", "")))
+		"nothing":
+			pass
 		"pack_reference":
 			_dock.open_documentation(str(entry.get("note", "")))
 		_:
@@ -165,7 +165,7 @@ func _on_create_requested(what: String) -> void:
 		"new_class":
 			_dock.open_insert_object()
 		"extract_base_class":
-			_dock._set_status("Extract base class lives on the class itself - open Object properties and use its refactor entry.")
+			_dock._set_status("Extract base class has no door in this bar.")
 		"import_sound":
 			_open_godot_create_dialog("Sound", "Drop an audio file into the FileSystem dock and Godot imports it - nothing to do here.")
 

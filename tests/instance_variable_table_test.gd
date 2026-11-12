@@ -67,15 +67,6 @@ static func run() -> bool:
 	ok = _check("a sheet-scope variable is in the table too",
 		_names(EventSheetInstanceVariableTable.rows_for(mixed)), "hp, score") and ok
 
-	# ── Which object answers with a table ──
-	ok = _check("the object the file IS owns the variables",
-		EventSheetObjectProperties.owns_sheet_variables({"kind": "script", "label": "Player"}),
-		true) and ok
-	ok = _check("a node the file merely names does not",
-		EventSheetObjectProperties.owns_sheet_variables({"kind": "node", "label": "Gun"}), false) and ok
-	ok = _check("nor does an autoload it reads",
-		EventSheetObjectProperties.owns_sheet_variables({"kind": "autoload", "label": "Game"}), false) and ok
-
 	# ── Empty sheets answer with nothing rather than with a broken table ──
 	ok = _check("a sheet with no variables lists none",
 		EventSheetInstanceVariableTable.rows_for(EventSheetResource.new()).size(), 0) and ok
