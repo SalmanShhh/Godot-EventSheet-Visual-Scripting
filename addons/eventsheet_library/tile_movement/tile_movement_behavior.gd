@@ -5,6 +5,8 @@
 class_name TileMovementBehavior
 extends Node
 ## Grid-locked movement that steps the host exactly one tile per press and slides smoothly into place. Arrow keys drive it out of the box, Simulate Step feeds it directions from touch buttons or AI, and On Step Finished fires each time a new cell is reached.
+##
+## Changes on its parent: position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

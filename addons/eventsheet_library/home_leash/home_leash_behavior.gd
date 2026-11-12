@@ -5,6 +5,8 @@
 class_name HomeLeashBehavior
 extends Node
 ## Keeps the host Node2D on a leash around a home point. Set Home Here plants the post, Is Beyond Home branches when the host has wandered too far (straight line, one axis, grid steps, or king moves), and Return Home walks it back and fires On Arrived Home. The guard, the shopkeeper, and the patrolling enemy that gives up the chase.
+##
+## Changes on its parent: global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

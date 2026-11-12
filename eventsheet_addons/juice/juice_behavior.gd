@@ -6,6 +6,8 @@
 class_name JuiceBehavior
 extends Node
 ## Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, hitstop, damage flash and blink, punch transforms, ghost trails, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat.
+##
+## Changes on its parent: position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null

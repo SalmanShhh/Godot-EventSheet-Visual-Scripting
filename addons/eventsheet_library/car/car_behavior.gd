@@ -5,6 +5,8 @@
 class_name CarBehavior
 extends Node
 ## Turns a plain CharacterBody2D into a drivable top-down arcade car: arrow keys accelerate, reverse, and steer the moment you press play. Every handling knob (top speed, acceleration, coast, turn rate, grip, drift) is readable and settable live for boost pads, ice, and damage models.
+##
+## Changes on its parent: rotation, velocity, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null

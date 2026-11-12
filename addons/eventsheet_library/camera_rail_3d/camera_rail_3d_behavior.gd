@@ -5,6 +5,8 @@
 class_name CameraRail3DBehavior
 extends Node
 ## A shot list for a Camera3D: fly the camera along a drawn Path3D over a number of seconds while it keeps a node in frame, hold on a beat, blend onto another camera - transform and field of view together - and hand the view over, or cut to one outright. On Shot Finished and On Blend Finished end every shot.
+##
+## Changes on its parent: global_position, global_transform, fov.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Camera3D = null

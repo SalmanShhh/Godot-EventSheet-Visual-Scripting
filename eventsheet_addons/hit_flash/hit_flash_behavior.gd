@@ -6,6 +6,8 @@
 class_name HitFlashBehavior
 extends Node
 ## Washes the host's own pixels towards a colour and back, which is the classic hit reaction. Unlike a modulate blink it works on dark sprites too, because it replaces colour rather than multiplying it. Flash takes the colour and how long the wash lasts; the shader file is copied into your project when the pack is added, so the edge cases are yours to tune.
+##
+## Changes on its parent: material.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null

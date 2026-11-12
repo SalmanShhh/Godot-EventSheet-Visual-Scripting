@@ -5,6 +5,8 @@
 class_name FPSController
 extends Node
 ## A complete first / third person character controller you attach under a CharacterBody3D: mouse look, WASD movement, sprint, jump, crouch, crouch slide, wall ride, and wall jump. Each move fires its own triggers, so a camera lean or a sound is one event row away.
+##
+## Changes on its parent: up_direction, velocity, rotation_degrees, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody3D = null

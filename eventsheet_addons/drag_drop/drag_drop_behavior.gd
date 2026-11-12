@@ -5,6 +5,8 @@
 class_name DragDropBehavior
 extends Node
 ## Makes any 2D node something you can pick up, move, snap into place, and throw, with follow lag, axis locking, magnetism, break-distance auto-drop, and a measured throw velocity on release. Event-driven: you feed it a drag point from any source (mouse, touch, gamepad, AI) and it handles the rest.
+##
+## Changes on its parent: global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

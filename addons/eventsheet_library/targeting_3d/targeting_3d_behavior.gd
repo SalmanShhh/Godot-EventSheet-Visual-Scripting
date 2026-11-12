@@ -5,6 +5,8 @@
 class_name Targeting3DBehavior
 extends Node
 ## Lock-on and aim help for a Node3D: hold the nearest hostile in a cone around the camera's forward, cycle to the next, let go when it dies or leaves the range, bend a stick direction toward whatever the player is nearly pointing at, and snap onto a target when the sights come up. The bend is the accessibility Aim Assist Radius setting, so a zero radius turns the help off from the options screen.
+##
+## Changes on its parent: global_transform.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null

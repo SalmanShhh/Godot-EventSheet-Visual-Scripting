@@ -5,6 +5,8 @@
 class_name WrapBehavior
 extends Node
 ## Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed.
+##
+## Changes on its parent: global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

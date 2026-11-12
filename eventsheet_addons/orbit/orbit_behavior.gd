@@ -5,6 +5,8 @@
 class_name OrbitBehavior
 extends Node
 ## Sweeps a Node2D around a center point every frame: attach to a moon, shield orb, or spinning hazard and it circles on a radius (or tilted ellipse) at a speed you can change live. The center is captured from wherever the node starts, and the node can face the direction it is travelling.
+##
+## Changes on its parent: position, rotation.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

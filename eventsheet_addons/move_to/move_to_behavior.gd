@@ -5,6 +5,8 @@
 class_name MoveToBehavior
 extends Node
 ## Glides the host Node2D to a point at a steady speed, walks queued waypoints in order, and fires On Arrived at the last stop. Smooth point-to-point movement for enemies, pickups, and cursor tokens without writing tween code.
+##
+## Changes on its parent: position, rotation.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

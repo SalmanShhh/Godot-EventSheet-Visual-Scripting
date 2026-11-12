@@ -6,6 +6,8 @@
 class_name PlatformerMovement
 extends Node
 ## Full jump-and-run movement for a CharacterBody2D in one drop: acceleration and friction, gravity with a terminal velocity, coyote time, jump buffering, variable jump height, multi-jump, wall slide, and wall jump. You only fire Jump on the button press, tune the feel in the Inspector, and react to triggers like On Jumped and On Landed.
+##
+## Changes on its parent: up_direction, velocity, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null

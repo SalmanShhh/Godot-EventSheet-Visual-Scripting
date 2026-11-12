@@ -5,6 +5,8 @@
 class_name CheckpointBehavior
 extends Node
 ## Remembers one point to send the host Node2D back to. Set Checkpoint Here marks the spot the host is standing on, Set Checkpoint At marks any point, and Respawn At Checkpoint teleports the host back and fires On Respawned. The starting position is captured on ready, so respawning works before the player ever touches a flag.
+##
+## Changes on its parent: global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

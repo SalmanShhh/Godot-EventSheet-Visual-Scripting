@@ -5,6 +5,8 @@
 class_name BulletBehavior
 extends Node
 ## Fire-and-forget projectile movement for a Node2D: the host launches in the direction it is facing and keeps flying every frame. Tune speed, acceleration, and gravity, redirect or pause it live, and read how far it has flown from plain event rows.
+##
+## Changes on its parent: global_position, rotation, position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

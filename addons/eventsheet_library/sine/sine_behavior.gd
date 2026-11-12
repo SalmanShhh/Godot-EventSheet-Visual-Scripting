@@ -5,6 +5,8 @@
 class_name SineBehavior
 extends Node
 ## Makes a Node2D oscillate on its own: pick what the wave drives (position, scale, angle, or opacity), how far it swings, how long a cycle takes, and the wave shape (sine, triangle, sawtooth, or square). The fastest way to add the small, endless motion that makes a scene feel alive - no timeline or keyframes.
+##
+## Changes on its parent: position, scale, rotation, modulate.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

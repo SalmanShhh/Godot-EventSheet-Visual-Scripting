@@ -6,6 +6,8 @@
 class_name WaveBehavior
 extends Node
 ## Ripples the host's picture from side to side in a travelling wave - water, heat haze, a flag, a dizzy spell. Only the drawing moves: positions, collisions and physics are untouched, so a rippling tile is still a flat floor. Wave eases the ripple in, Settle eases it out, and the crest count and speed are dials in the shader file copied into your project.
+##
+## Changes on its parent: material.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null

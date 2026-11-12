@@ -5,6 +5,8 @@
 class_name EightDirectionMovement
 extends Node
 ## Top-down eight-way movement with nothing to wire: attach under a CharacterBody2D and it reads the built-in ui_left/right/up/down actions every physics frame and moves the host. Arrow keys work the moment you press play; set, nudge, or read the move speed from the sheet.
+##
+## Changes on its parent: velocity, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null

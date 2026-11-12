@@ -5,6 +5,8 @@
 class_name FlashBehavior
 extends Node
 ## Blinks the host node's visibility on and off for a duration, then snaps it back to fully visible and fires On Flash Finished. The classic damage-flicker and invincibility-frames effect, with a single interval knob you can change live.
+##
+## Changes on its parent: visible, modulate.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null

@@ -6,6 +6,8 @@
 class_name SpringBehavior
 extends Node
 ## A bank of named springs on a Node2D: numbers that chase a target with real velocity, overshoot, and settle instead of snapping. One-line helpers spring the host's position, angle, and scale, so squash-and-stretch juice is a single row.
+##
+## Changes on its parent: position, rotation_degrees, scale.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

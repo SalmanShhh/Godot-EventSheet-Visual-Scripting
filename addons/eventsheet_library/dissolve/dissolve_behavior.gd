@@ -6,6 +6,8 @@
 class_name DissolveBehavior
 extends Node
 ## Burns the host away along a noise field with a glowing edge, and burns it back. Dissolve walks the burn to gone over a number of seconds and fires On Dissolved when it arrives; Appear walks it back. The burn's blotch size, edge width and edge colour live in dissolve.gdshader, which is copied into your project when the pack is added.
+##
+## Changes on its parent: material, visible.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null

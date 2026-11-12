@@ -5,6 +5,8 @@
 class_name VirtualCursor
 extends Node
 ## Turns a CharacterBody2D into an input-agnostic pointer: it accelerates and decelerates, bumps into solids, bounces off walls, snaps to targets with a homing magnet, stays inside a play area, reports what it is hovering, and fires named interact buttons. Drive it with the mouse, keys, an analog axis, or scripted moves - it is any thing you steer, not the OS pointer.
+##
+## Changes on its parent: global_position, velocity, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null

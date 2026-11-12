@@ -5,6 +5,8 @@
 class_name Orbit3DBehavior
 extends Node
 ## Sweeps a Node3D around a center point in the horizontal XZ plane every frame, keeping its height level like a moon over a planet. Set the radius and speed, retarget the center to move the whole ring, and retune everything live from the sheet.
+##
+## Changes on its parent: position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null

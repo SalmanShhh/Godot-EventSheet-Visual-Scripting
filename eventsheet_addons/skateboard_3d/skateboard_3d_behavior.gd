@@ -6,6 +6,8 @@
 class_name Skateboard3DMovement
 extends Node
 ## Momentum movement for a CharacterBody3D on a board: Push nudges you toward the top speed along the way the board faces and you keep it, Roll With The Slope projects gravity onto the surface normal so bowls and quarterpipes work, Align The Board To The Surface keeps it flat on ramps, and leaving a near-vertical transition fires On Launched Off The Lip. Tricks are turns in the air judged on touchdown by the board's up against the surface normal, grinds snap to any Path3D, and a trick chain multiplies everything landed without touching down.
+##
+## Changes on its parent: velocity, global_transform, global_position, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody3D = null

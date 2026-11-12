@@ -6,6 +6,8 @@
 class_name SkateboardMovement
 extends Node
 ## Momentum movement for a CharacterBody2D on a board: one Push nudges you toward the top speed and you keep it, Roll With The Slope projects gravity along the floor so halfpipes and ramps work, Ollie leaves the ground, Spin and Flip turn in the air, and touching down either lands clean or bails depending on how square the board is with the floor. Grinds snap to any Path2D rail and ride it, and a trick chain multiplies everything you land without touching down.
+##
+## Changes on its parent: velocity, rotation, global_position, move_and_slide().
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null

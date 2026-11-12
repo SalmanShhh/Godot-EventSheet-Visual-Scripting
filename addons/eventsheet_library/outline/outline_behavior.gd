@@ -6,6 +6,8 @@
 class_name OutlineBehavior
 extends Node
 ## Draws a coloured border around whatever the host's own alpha says its shape is - the selection ring, the highlight, the interactable marker. Outline turns it on with a colour and a thickness, No Outline turns it off, and the border follows the art rather than a rectangle. The shader is copied into your project when the pack is added.
+##
+## Changes on its parent: material.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null

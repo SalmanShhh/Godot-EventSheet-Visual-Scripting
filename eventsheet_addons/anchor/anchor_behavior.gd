@@ -5,6 +5,8 @@
 class_name AnchorBehavior
 extends Node
 ## Where a Control sits when the window changes size, said as a corner rather than as four numbers: anchor to top right, to the centre, to the full rect. Margins are set in pixels from the corner it is anchored to, the corner it is on can be asked about, and On Anchored fires whenever it moves.
+##
+## Changes on its parent: offset_left, offset_top, offset_right, offset_bottom.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Control = null

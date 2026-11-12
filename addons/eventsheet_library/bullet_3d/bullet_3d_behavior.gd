@@ -5,6 +5,8 @@
 class_name Bullet3DBehavior
 extends Node
 ## Flies a Node3D forward every frame like a projectile: it launches along the host forward direction, then gravity bends the path into an arc. Tune speed and gravity in the Inspector or live from the sheet, and relaunch, retarget, or freeze a shot while the game runs.
+##
+## Changes on its parent: global_position, position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null

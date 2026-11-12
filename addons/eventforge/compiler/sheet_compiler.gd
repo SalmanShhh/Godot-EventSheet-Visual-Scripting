@@ -1039,6 +1039,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_saved_variables(lines, sheet, result)
 	UnusedParams.finish(lines)
+	if sheet.behavior_mode:
+		_add_host_contract_line(lines, result.get("source_map", []))
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 
@@ -4388,6 +4390,58 @@ static func spaced_class_name(class_label: String) -> String:
 				spaced += " "
 		spaced += letter
 	return spaced
+
+
+## The properties a behavior writes on its host, found in the text the compile produced: every
+## `host.<property> = ...` (and `+=`, `-=`, `*=`, `/=`, through `.x`-style parts too), in the order they
+## first appear, then `move_and_slide()` when it calls it.
+static func _host_writes(lines: PackedStringArray) -> PackedStringArray:
+	var writes: PackedStringArray = PackedStringArray()
+	var assignment: RegEx = RegEx.create_from_string("\\bhost\\.([a-z_][a-z0-9_]*)(?:\\.[a-z_][a-z0-9_]*|\\[[^\\]]*\\])*\\s*(?:=|\\+=|-=|\\*=|/=)(?!=)")
+	var calls_slide: bool = false
+	for line: String in lines:
+		if line.strip_edges().begins_with("#"):
+			continue
+		for found: RegExMatch in assignment.search_all(line):
+			if not writes.has(found.get_string(1)):
+				writes.append(found.get_string(1))
+		if line.contains("host.move_and_slide("):
+			calls_slide = true
+	if calls_slide:
+		writes.append("move_and_slide()")
+	return writes
+
+
+## Says what a behavior does to its host, on the line a reader finds first: "Changes on its parent:
+## velocity, up_direction, move_and_slide()." It is read off the compiled text, so it can never drift
+## from what the behavior writes, and it is skipped when the description already carries the line.
+static func _add_host_contract_line(lines: PackedStringArray, source_map: Array) -> void:
+	var writes: PackedStringArray = _host_writes(lines)
+	if writes.is_empty():
+		return
+	var extends_at: int = lines.find("extends Node")
+	if extends_at < 0:
+		return
+	var last_description: int = extends_at
+	while last_description + 1 < lines.size() and lines[last_description + 1].begins_with("##") \
+			and not lines[last_description + 1].begins_with("## @ace_"):
+		last_description += 1
+		if lines[last_description].contains("Changes on its parent:"):
+			return
+	var added: PackedStringArray = PackedStringArray()
+	if last_description > extends_at:
+		added.append("##")
+	added.append("## Changes on its parent: %s." % ", ".join(writes))
+	for index: int in range(added.size()):
+		lines.insert(last_description + 1 + index, added[index])
+	for entry: Variant in source_map:
+		if not (entry is Dictionary):
+			continue
+		var span: Dictionary = entry as Dictionary
+		if int(span.get("start", 0)) > last_description + 1:
+			span["start"] = int(span["start"]) + added.size()
+		if int(span.get("end", 0)) > last_description + 1:
+			span["end"] = int(span["end"]) + added.size()
 
 
 ## True when the sheet writes `func <function_name>(` itself, in a function or a code block. The

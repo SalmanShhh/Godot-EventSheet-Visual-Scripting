@@ -5,6 +5,8 @@
 class_name FollowBehavior
 extends Node
 ## Makes the host Node2D trail another node every frame, either easing smoothly toward it or replaying its path with a delay. Built for pets, homing shots, camera dummies, and snake tails without hand-writing lerp code on every object.
+##
+## Changes on its parent: position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

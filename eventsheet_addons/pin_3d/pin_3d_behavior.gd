@@ -5,6 +5,8 @@
 class_name Pin3DBehavior
 extends Node
 ## Sticks a Node3D to another object: every physics frame the host copies that object's position, its angles, or both, kept apart by the offset the pin was made with. The mode picks HOW it follows - straight onto the place, on a rope that only pulls when taut, on a bar that holds its length, softly with a lag, or on a spring that overshoots and settles. Pin To Point rides a named child, which in 3D is usually the BoneAttachment3D a skeleton already keeps on a bone.
+##
+## Changes on its parent: global_basis, scale, global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null

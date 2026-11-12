@@ -5,6 +5,8 @@
 class_name Flock3DBehavior
 extends Node
 ## Flocking for a Node3D: every member of a group steers by the members around it - keep apart from the ones too close, fly the way the rest are flying, drift toward their middle - and flees anything in an avoid group. Weights, speeds, the steering force and both radii are Inspector values with a Set row each.
+##
+## Changes on its parent: global_position, position, basis.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null

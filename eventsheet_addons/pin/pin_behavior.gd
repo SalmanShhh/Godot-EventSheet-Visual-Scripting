@@ -5,6 +5,8 @@
 class_name PinBehavior
 extends Node
 ## Sticks a Node2D to another object: every physics frame the host copies that object's position, its angle, or both, kept apart by the offset the pin was made with. Health bars over heads, a hat on a player, a turret on a tank, a shadow under a jumper - one action instead of a line of transform arithmetic. The mode picks HOW it follows: straight onto the place, on a rope that only pulls when taut, on a bar that holds its length, softly with a lag, or on a spring that overshoots and settles.
+##
+## Changes on its parent: global_rotation, scale, global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

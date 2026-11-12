@@ -5,6 +5,8 @@
 class_name CameraRailBehavior
 extends Node
 ## A shot list for a Camera2D: fly the camera along a drawn Path2D over a number of seconds, hold on a beat, blend onto another camera and hand the view over, or cut to one outright. On Shot Finished and On Blend Finished end every shot, so a cutscene is a chain of rows.
+##
+## Changes on its parent: global_position, global_transform, zoom.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Camera2D = null

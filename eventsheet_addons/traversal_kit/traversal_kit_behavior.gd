@@ -6,6 +6,8 @@
 class_name TraversalKit
 extends Node
 ## Traversal moves for a CharacterBody2D in one drop: ledge grabs (the two-probe test, then Grab / Climb up / Drop), wall slides, wall jumps away from the wall, wall runs, ladders, vaults, crouching and swimming. It writes velocity and leaves the moving to your mover, so it stacks on top of Platformer movement or your own rows.
+##
+## Changes on its parent: global_position, velocity.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null

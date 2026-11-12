@@ -5,6 +5,8 @@
 class_name BoundToBehavior
 extends Node
 ## Keeps a Node2D inside the screen or a custom rectangle, clamped every physics frame. Bind by edge or by origin, and On Hit Bound fires once per press against each side for easy bump feedback.
+##
+## Changes on its parent: global_position.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

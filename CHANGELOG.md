@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a behaviour says what it changes on its parent
+
+- A behaviour that writes into the node it works on now says so in its description, which shows in the Add Node window and the Inspector. For example "Changes on its parent: up_direction, velocity, move_and_slide()." A behaviour that only reads its parent says nothing. The line is read from the behaviour's own code each time the pack is built, so it cannot fall out of date.
+
 ### Added: Acts on, for a behaviour that is not a direct child
 
 - Every behaviour that works on a node of a certain type (Platformer Movement, Bullet, Anchor, Sine and the rest) now has an Acts on field at the top of its Inspector. Leave it empty and the behaviour works on its parent, exactly as before. Set it, and the behaviour can sit anywhere in the scene, for example under a Behaviours folder node.

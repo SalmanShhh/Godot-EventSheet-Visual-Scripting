@@ -5,6 +5,8 @@
 class_name PathFollowBehavior
 extends Node
 ## Walks the host Node2D along a drawn Path2D at a real speed - patrol routes, conveyors, camera dollies and tower-defence lanes. Once, Loop or Ping-pong, with optional rotate-to-face, and On Path Finished when a one-shot run reaches the end.
+##
+## Changes on its parent: global_position, global_rotation.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null

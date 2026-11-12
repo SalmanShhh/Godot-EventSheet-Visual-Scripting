@@ -6,6 +6,8 @@
 class_name GrayscaleBehavior
 extends Node
 ## Drains the colour out of the host, all the way or part of the way, over a time you give. The state a disabled button, a dead unit or a remembered scene is in. The grey can be tinted - a cold blue reads as frozen, a brown as an old photograph - through the gray_tint dial in the shader file copied into your project.
+##
+## Changes on its parent: material.
 
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
