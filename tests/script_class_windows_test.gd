@@ -2,18 +2,16 @@
 extends RefCounted
 # Godot EventSheets - making a script class and changing it. Insert new object picks what the class
 # is from tiles or the class tree, refuses a name it cannot write and writes the head the compiler
-# would; the Properties bar's Object type fields show the class head's lines and each writes exactly
-# its own line, warning before a new type drops members the events use.
+# would.
 
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "script_class_windows_test"
 const INSERT_PATH := "res://addons/eventsheet/editor/dock/insert_object_dialog.gd"
-const CLASS_PROPERTIES_PATH := "res://addons/eventsheet/editor/dock/class_properties.gd"
 
 
 static func run() -> bool:
-	return _test_insert_rules() and _test_insert_window() and _test_class_properties()
+	return _test_insert_rules() and _test_insert_window()
 
 
 static func _test_insert_rules() -> bool:
@@ -97,56 +95,5 @@ static func _test_insert_window() -> bool:
 		["the footer names the file and folder", window._target_label.text, "Creates script_class_probe.gd in res://tests/ and opens it."],
 		["search keeps the matching tiles first", found.slice(0, 2), PackedStringArray(["Area2D", "Area3D"])],
 	])
-	dock.free()
-	return ok
-
-
-static func _test_class_properties() -> bool:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.host_class = "CharacterBody2D"
-	var prelude: RawCodeRow = RawCodeRow.new()
-	prelude.code = "class_name Runner\nextends CharacterBody2D"
-	sheet.events.append(prelude)
-	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
-	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock.setup(sheet)
-	var section: RefCounted = load(CLASS_PROPERTIES_PATH).new(dock)
-	var form: GridContainer = GridContainer.new()
-	form.columns = 2
-	section.build_into(form)
-	var labels: PackedStringArray = PackedStringArray()
-	var undescribed: int = 0
-	var type_shown: String = ""
-	var children: Array[Node] = form.get_children()
-	for index: int in children.size():
-		if index % 2 == 0 and children[index] is Label:
-			labels.append((children[index] as Label).text)
-		for dropdown: Node in [children[index]] + children[index].get_children():
-			if dropdown is OptionButton:
-				for item: int in (dropdown as OptionButton).item_count:
-					if (dropdown as OptionButton).get_item_tooltip(item).is_empty():
-						undescribed += 1
-				if type_shown.is_empty():
-					type_shown = (dropdown as OptionButton).get_item_text((dropdown as OptionButton).selected)
-	var properties: Script = load(CLASS_PROPERTIES_PATH)
-	var ok: bool = SUPPORT.pins(NAME, [
-		["the Object type fields, in the design's order", labels,
-			PackedStringArray(["OBJECT TYPE", "Name", "Type", "Description", "Icon", "Runs in the editor"])],
-		["every choice of every dropdown is described", undescribed, 0],
-		["Type shows what the class extends", type_shown, "CharacterBody2D"],
-		["a narrower type names what the events lose",
-			properties.members_lost("velocity = Vector2.ZERO\nmove_and_slide()\nposition.x += 1", "CharacterBody2D", "Node2D"),
-			PackedStringArray(["move_and_slide", "velocity"])],
-		["a type that extends the old one loses nothing",
-			properties.members_lost("position.x += 1", "Node2D", "CharacterBody2D"), PackedStringArray()],
-		["an unknown class is no warning", properties.members_lost("velocity", "CharacterBody2D", "MyBody"), PackedStringArray()],
-	])
-	section.change_type("Node2D")
-	ok = SUPPORT.check(NAME, "a type with nothing lost writes the extends line", (dock._current_sheet.events[0] as RawCodeRow).code,
-		"class_name Runner\nextends Node2D") and ok
-	dock._head_actions.toggle_tool_mode()
-	ok = SUPPORT.check(NAME, "Runs in the editor writes @tool", (dock._current_sheet.events[0] as RawCodeRow).code,
-		"@tool\nclass_name Runner\nextends Node2D") and ok
-	form.free()
 	dock.free()
 	return ok

@@ -81,6 +81,58 @@ static func type_word_of(variable: LocalVariable) -> String:
 	return ViewportRowBuilder.friendly_type_word(variable.type_name)
 
 
+## One entry per variable the object carries, in the order the sheet declares them. Each:
+## {"name", "type_name", "type_word", "value", "inspector", "description", "scope", "storage",
+## "resource"}
+## where `storage` is "tree" (a LocalVariable placed among the sheet's events) or "sheet" (an entry
+## in the sheet's variables descriptor) - the two shapes a member variable is stored in. `resource`
+## is the LocalVariable a tree row came from (null for a descriptor entry, which has none), so a
+## reader that wants to jump to the row can.
+static func member_rows(sheet: EventSheetResource) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if sheet == null:
+		return rows
+	var resource_host: bool = EventSheetVariableSentence.is_resource_host(str(sheet.host_class))
+	var autoload: bool = not sheet.autoload_singleton_name().is_empty()
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null:
+			continue
+		var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
+		rows.append({
+			"name": variable.name,
+			"type_name": variable.type_name,
+			"type_word": EventSheetVariableOwners.type_word_of(variable),
+			"value": EventSheetVariableOwners.default_text(variable.default_value),
+			"inspector": variable.exported,
+			"description": str(attributes.get("tooltip", "")),
+			"scope": EventSheetVariableSentence.member_scope(
+				variable.is_constant, variable.is_static, autoload, resource_host),
+			"storage": "tree",
+			"resource": variable
+		})
+	var names: Array = sheet.variables.keys()
+	names.sort()
+	for key: Variant in names:
+		var descriptor: Dictionary = sheet.variables.get(key, {})
+		var type_name: String = str(descriptor.get("type", "Variant"))
+		var descriptor_attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+		rows.append({
+			"name": str(key),
+			"type_name": type_name,
+			"type_word": ViewportRowBuilder.friendly_type_word(type_name),
+			"value": EventSheetVariableOwners.default_text(descriptor.get("default", null)),
+			"inspector": bool(descriptor.get("exported", descriptor.get("exposed", true))),
+			"description": str(descriptor_attributes.get("tooltip", "")),
+			"scope": EventSheetVariableSentence.member_scope(
+				bool(descriptor.get("const", descriptor.get("is_constant", false))),
+				false, autoload, resource_host),
+			"storage": "sheet",
+			"resource": null
+		})
+	return rows
+
+
 ## Only the variables the sheet DECLARES - its own object's. Split out because the row builder asks
 ## once per sweep and only ever needs these: a qualified `Game.Score` already carries its owner in
 ## the name, and a local already reads as System, so scanning every autoload's script to answer a
@@ -91,7 +143,7 @@ static func own_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 		return entries
 	var self_object: String = owner_of_sheet(sheet)
 	var seen: Dictionary = {}
-	for row: Dictionary in EventSheetInstanceVariableTable.rows_for(sheet):
+	for row: Dictionary in member_rows(sheet):
 		var name_text: String = str(row.get("name", "")).strip_edges()
 		if name_text.is_empty() or seen.has(name_text):
 			continue

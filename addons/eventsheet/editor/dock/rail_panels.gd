@@ -15,7 +15,8 @@ extends RefCounted
 # sheet already are the open sheets.
 #
 # Whether the panel is open, which tab it shows and how wide it is are remembered per project, in
-# the editor's project metadata (the same record also holds the Properties bar's width).
+# the editor's project metadata. A record saved while the Properties bar existed carries its width
+# and tucked flag too; they are dropped on load.
 #
 # The state model at the top is static and pure, so the tab order, the defaults, the census rule
 # and the stored-state round trip are all pinnable without an editor.
@@ -24,12 +25,8 @@ extends RefCounted
 const META_KEY: String = "eventsheets_rail_panels"
 ## The closed panel's width: the strip with the open button on it, at 1x.
 const CLOSED_WIDTH: float = 30.0
-## The narrowest the Properties bar may be dragged before it counts as "slide it off the edge".
-const EDGE_STRIP_WIDTH: float = 14.0
 ## The open panel's width when nothing has dragged it yet, at 1x.
 const DEFAULT_RAIL_WIDTH: float = 230.0
-## The Properties bar's width when it is open and nothing has dragged it yet.
-const DEFAULT_PROPERTIES_WIDTH: float = 270.0
 
 ## The tabs, in the order the strip shows them.
 const PANEL_IDS: PackedStringArray = ["objects", "functions", "anatomy", "picker_preview"]
@@ -55,15 +52,13 @@ static func panel_title(panel_id: String) -> String:
 	return panel_id
 
 
-## The side panel as it stands before anybody has opened it: closed, on the Objects tab, the panel
-## and the Properties bar at their default widths.
+## The side panel as it stands before anybody has opened it: closed, on the Objects tab, at its
+## default width.
 static func default_state() -> Dictionary:
 	return {
 		"panel_open": false,
 		"panel_tab": "objects",
 		"rail_width": DEFAULT_RAIL_WIDTH,
-		"properties_tucked": false,
-		"properties_width": DEFAULT_PROPERTIES_WIDTH,
 	}
 
 
@@ -80,8 +75,6 @@ static func normalize_state(stored: Variant) -> Dictionary:
 	var tab: String = str(source.get("panel_tab", state["panel_tab"]))
 	state["panel_tab"] = tab if PANEL_IDS.has(tab) else "objects"
 	state["rail_width"] = maxf(CLOSED_WIDTH, float(source.get("rail_width", state["rail_width"])))
-	state["properties_tucked"] = bool(source.get("properties_tucked", state["properties_tucked"]))
-	state["properties_width"] = maxf(0.0, float(source.get("properties_width", state["properties_width"])))
 	return state
 
 
@@ -119,8 +112,7 @@ static func read_state() -> Dictionary:
 	return default_state()
 
 
-## Write the side panel state back for this project, keeping the keys this file does not own (the
-## Properties bar writes its width into the same record). A no-op outside the editor.
+## Write the side panel state back for this project. A no-op outside the editor.
 static func save_state(state: Dictionary) -> void:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", META_KEY, state)
@@ -385,13 +377,11 @@ func apply_state(state: Dictionary) -> void:
 	_apply()
 
 
-## The state to write back: this file's keys over whatever the record already holds, so the
-## Properties bar's width (written by its own file into the same record) is never lost.
+## The state to write back: this file's keys over whatever the record already holds.
 func _merged_state() -> Dictionary:
 	var merged: Dictionary = read_state()
 	for key: Variant in _state.keys():
-		if key != "properties_tucked" and key != "properties_width":
-			merged[key] = _state[key]
+		merged[key] = _state[key]
 	return merged
 
 

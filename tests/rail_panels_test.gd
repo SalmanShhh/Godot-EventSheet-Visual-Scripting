@@ -1,7 +1,7 @@
 @tool
 class_name RailPanelsTest
 extends RefCounted
-# The side panel (dock/rail_panels.gd) and the Properties bar's empty state (dock/properties_bar.gd).
+# The side panel (dock/rail_panels.gd).
 #
 # Pins the model first, because it is what decides what a reader sees before anything is clicked:
 # the tab order, the resting state (closed, on Objects), which tabs are on offer for a given sheet,
@@ -9,7 +9,7 @@ extends RefCounted
 # replaced. Then pins the BUILT panel: a thin rail with one open button, opening to Godot-style tabs
 # (Objects and Functions) with no Open Sheets list, the chosen tab shown alone, every panel's fold
 # header standing down inside its tab, the strip not draggable while closed, and the View menu
-# saying the same. Finally the Properties bar being its splitter handle until something is selected.
+# saying the same.
 
 
 const SUPPORT := preload("res://tests/support.gd")
@@ -42,8 +42,7 @@ static func _model() -> bool:
 		Array(EventSheetRailPanels.panel_ids()), ["objects", "functions", "anatomy", "picker_preview"]) and ok
 	ok = _check("it rests closed, on the Objects tab, 230 px wide when opened",
 		EventSheetRailPanels.default_state(),
-		{"panel_open": false, "panel_tab": "objects", "rail_width": 230.0,
-			"properties_tucked": false, "properties_width": 270.0}) and ok
+		{"panel_open": false, "panel_tab": "objects", "rail_width": 230.0}) and ok
 
 	# The census: a tab nothing can fill is not on offer at all.
 	ok = _check("a plain sheet with the picker closed offers Objects and Functions",
@@ -61,8 +60,7 @@ static func _model() -> bool:
 		["objects", "functions"]) and ok
 
 	# The stored record: written, read back, the same panel.
-	var stored: Dictionary = {"panel_open": true, "panel_tab": "functions", "rail_width": 174.0,
-		"properties_tucked": true, "properties_width": 312.0}
+	var stored: Dictionary = {"panel_open": true, "panel_tab": "functions", "rail_width": 174.0}
 	ok = _check("a stored panel reads back exactly as it was written",
 		EventSheetRailPanels.normalize_state(stored), stored) and ok
 	# The column of stacked panels the side panel replaced kept other keys. Its record reads as the
@@ -71,8 +69,12 @@ static func _model() -> bool:
 		"rail_tucked": false, "rail_width": 200.0, "properties_width": 300.0,
 		"panels": {"open_sheets": {"folded": false, "tucked": false, "height": 150.0}}})
 	ok = _check("the stacked column's record reads as a closed panel on Objects", old_column,
-		{"panel_open": false, "panel_tab": "objects", "rail_width": 200.0,
-			"properties_tucked": false, "properties_width": 300.0}) and ok
+		{"panel_open": false, "panel_tab": "objects", "rail_width": 200.0}) and ok
+	# A record saved while the Properties bar existed carries its width and tucked flag; they read
+	# back as nothing, so a layout saved before the bar went loads clean.
+	ok = _check("the removed bar's keys in an old record are dropped on load",
+		EventSheetRailPanels.normalize_state({"panel_open": true, "panel_tab": "functions", "rail_width": 174.0,
+			"properties_tucked": true, "properties_width": 312.0}), stored) and ok
 	ok = _check("a tab that does not exist reads as Objects",
 		EventSheetRailPanels.normalize_state({"panel_tab": "open_sheets"})["panel_tab"], "objects") and ok
 	ok = _check("a record that is not a dictionary reads as the defaults",
@@ -155,20 +157,6 @@ static func _built_panel() -> bool:
 	panels_menu.id_pressed.emit(0)
 	ok = _check("choosing the ticked one closes the panel", body.visible, false) and ok
 	ok = _check("View has no Open Sheets Panel entry", view_popup.get_item_index(13), -1) and ok
-
-	# The Properties bar is its splitter handle until something is selected.
-	var bar: EventSheetPropertiesBar = dock._properties_bar
-	ok = _check("nothing selected: the bar hands its width back to the canvas",
-		[bar.panel.custom_minimum_size.x, bar._body.visible], [0.0, false]) and ok
-	var group: EventGroup = EventGroup.new()
-	group.group_name = "Walls"
-	bar._show_group(group)
-	ok = _check("the first selection opens the bar with the row's fields",
-		[bar.panel.custom_minimum_size.x > 0.0, bar._body.visible, bar._heading.text],
-		[true, true, "PROPERTIES · Walls · group"]) and ok
-	bar._show_nothing()
-	ok = _check("deselecting closes it again to the handle",
-		[bar.panel.custom_minimum_size.x, bar._body.visible], [0.0, false]) and ok
 
 	dock.free()
 	return ok

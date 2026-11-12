@@ -162,8 +162,8 @@ const READING_SUBTREE := [
 	"EventSheetObjectFacts", "EventSheetSignalFanout", "EventSheetInputMapFacts",
 	"EventSheetEditorToolCensus", "EventSheetSettingFacts", "EventSheetLocalScope",
 	"EventSheetVariableSentence", "EventSheetReadingCoverage", "EventSheetObjectThumbnails",
-	"EventSheetPropertiesBar", "EventSheetFindResultsBar", "EventSheetTextListing",
-	"EventSheetEditorToolBar", "EventSheetGlobalVariables", "EventSheetInstanceVariableTable",
+	"EventSheetFindResultsBar", "EventSheetTextListing",
+	"EventSheetEditorToolBar", "EventSheetGlobalVariables",
 	"EventSheetReplaceObject", "EventSheetParamFieldFactory",
 	"EventSheetSceneSheet", "EventSheetParseErrors",
 ]

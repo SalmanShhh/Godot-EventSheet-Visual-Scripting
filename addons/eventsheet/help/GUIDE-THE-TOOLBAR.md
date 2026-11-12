@@ -258,8 +258,6 @@ that disagree about what is on them help nobody. What it does do, all of it:
   Condition, Action, Group, Comment, Variable, Function, each with its key on hover. It adds; it
   does not run anything.
 - **Shows the Project bar.** The Object bar's *Project* tab, listing the whole project by kind.
-- **Closes the Properties bar.** A beginner's sheet is the sheet. *View > Properties Bar* brings it
-  back at any time.
 - **Pins variable rows to the sentence.** The one-sentence reading rather than the sentence plus its
   compiled echo. Turning Simple Mode off does not push the dial back: your own choice of dial stays
   yours.

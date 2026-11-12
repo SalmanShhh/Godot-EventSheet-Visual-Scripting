@@ -58,9 +58,9 @@ static func _test_held_text_stays_on_its_tab() -> bool:
 	dock._open_sheet_in_tab(other, "")
 	dock._activate_tab(0)
 	var view: EventSheetViewport = dock._active_view()
-	var bar: EventSheetPropertiesBar = dock._properties_bar
+	var bar: EventSheetDock = dock
 	view.select_resource(dock._current_sheet.functions[0])
-	bar.refresh()
+	bar._follow_function()
 	var inspector: RefCounted = bar._function_inspector
 	if inspector != null:
 		inspector.hold("description", "Typed on the first tab.")
@@ -430,9 +430,9 @@ static func _test_script_opened_as_preview() -> bool:
 	sheet.external_source_path = "res://player.gd"
 	dock._current_sheet_path = "res://player.gd"
 	var view: EventSheetViewport = dock._active_view()
-	var bar: EventSheetPropertiesBar = dock._properties_bar
+	var bar: EventSheetDock = dock
 	view.select_resource(sheet.functions[0])
-	bar.refresh()
+	bar._follow_function()
 	var handed: bool = bar._function_inspector != null
 	if handed:
 		# What the Inspector does first when it is handed the object: it asks for the fields.
@@ -442,12 +442,12 @@ static func _test_script_opened_as_preview() -> bool:
 	sheet = dock._current_sheet
 	var after_change: Array = [sheet.read_only, (sheet.functions[0] as EventFunction).is_async]
 	view.clear_selection()
-	bar.refresh()
+	bar._follow_function()
 	sheet.read_only = true
 	sheet.external_source_path = "res://main.tscn"
 	dock._current_sheet_path = "res://main.tscn"
 	view.select_resource(sheet.functions[0])
-	bar.refresh()
+	bar._follow_function()
 	var scene_view: Variant = bar._function_inspector
 	dock.free()
 	return SUPPORT.pins(NAME, [
@@ -461,14 +461,14 @@ static func _test_script_opened_as_preview() -> bool:
 ## selected, writing any text still held on the way out.
 static func _test_follow(dock: EventSheetDock) -> bool:
 	var view: EventSheetViewport = dock._active_view()
-	var bar: EventSheetPropertiesBar = dock._properties_bar
+	var bar: EventSheetDock = dock
 	view.select_resource(dock._current_sheet.functions[0])
-	bar.refresh()
+	bar._follow_function()
 	var followed: String = bar._function_inspector._function_name if bar._function_inspector != null else ""
 	if bar._function_inspector != null:
 		bar._function_inspector.hold("description", "Typed, not yet left.")
 	view.clear_selection()
-	bar.refresh()
+	bar._follow_function()
 	return SUPPORT.pins(NAME, [
 		["selecting the function hands it to the Inspector", followed, "hurt"],
 		["selecting nothing lets it go", bar._function_inspector, null],

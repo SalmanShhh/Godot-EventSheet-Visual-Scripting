@@ -141,12 +141,6 @@ func build_ui() -> void:
 	_dock._content_host.name = "EventSheetContentHost"
 	_dock._content_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._content_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	# The canvas and the Properties bar share a splitter, so the bar resizes like the Inspector.
-	# The code side panel later re-parents _scroll inside this split, which leaves the bar alone.
-	var properties_split: HSplitContainer = HSplitContainer.new()
-	properties_split.name = "EventSheetPropertiesSplit"
-	properties_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	properties_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# The minimap sits beside the canvas in a row of its own, so the code panel's later re-parent of
 	# _scroll (which moves whatever is at _scroll's index) leaves the column exactly where it is.
 	var canvas_row: HBoxContainer = HBoxContainer.new()
@@ -159,9 +153,7 @@ func build_ui() -> void:
 	_dock._minimap.name = "EventSheetMinimap"
 	_dock._minimap.visible = false
 	canvas_row.add_child(_dock._minimap)
-	properties_split.add_child(canvas_row)
-	properties_split.add_child(_dock._properties_bar.build())
-	_dock._content_host.add_child(properties_split)
+	_dock._content_host.add_child(canvas_row)
 	# The Functions tab of the side panel - it used to live inside the Generated-GDScript side
 	# panel, so seeing your functions meant opening the code view. The list's right-click handler
 	# stays on the dock.
@@ -242,7 +234,6 @@ func build_ui() -> void:
 	_dock._rail_panels.attach_split(_dock._workspace_body)
 	# The bands between the strip and the sheet follow the theme; they were all built above.
 	_dock._menu_bar.apply_theme_chrome()
-	_dock._properties_bar.attach_split(properties_split)
 
 	_dock._viewport = EventSheetViewport.new()
 	_dock._viewport.name = "EventSheetViewport"

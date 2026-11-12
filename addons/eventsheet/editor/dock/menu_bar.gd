@@ -755,9 +755,6 @@ func build(root: Node) -> void:
 	zoom_menu.add_item("Zoom Out", 5)
 	zoom_menu.add_item("Reset Zoom", 40)
 	zoom_menu.set_item_tooltip(zoom_menu.get_item_index(40), "Back to 100% (Ctrl + 0). The zoom is remembered for every sheet you open, not for one file.")
-	view_popup.add_check_item("Properties Bar", 41)
-	view_popup.set_item_tooltip(view_popup.get_item_index(41), "Show the selected condition, action, object or group beside the sheet, with its parameters editable in place. Hidden by default in Simple Mode.")
-	view_popup.set_item_checked(view_popup.get_item_index(41), not _dock._simple_mode)
 	view_popup.add_separator()
 	# Sheet theme ▸ - the per-sheet theme picker, which used to be an OptionButton on the strip. Same
 	# preset list, same per-sheet semantics, ticked on the one this sheet wears. The submenu is
@@ -834,7 +831,6 @@ func build(root: Node) -> void:
 			4: _dock._on_zoom_in_requested()
 			5: _dock._on_zoom_out_requested()
 			40: _dock._on_zoom_reset_requested()
-			41: _dock._toggle_properties_bar(view_popup)
 			6: _dock._on_load_theme_requested()
 			7: _dock._on_reload_theme_requested()
 			8: _dock._open_theme_editor()

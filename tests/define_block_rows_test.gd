@@ -499,7 +499,7 @@ static func _description_editor() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
-	var dialog: ConfirmationDialog = load(EventSheetPropertiesBar.FUNCTION_INSPECTOR_PATH).open_description_editor(
+	var dialog: ConfirmationDialog = load(EventSheetDock.FUNCTION_INSPECTOR_PATH).open_description_editor(
 		dock, _find_function_by_name(dock.get_current_sheet(), "heal"), Vector2.ZERO)
 	var text: TextEdit = dialog.find_child("Description", true, false) as TextEdit
 	var passed: bool = SUPPORT.pins("define_block_rows_test", [

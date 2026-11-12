@@ -6,6 +6,11 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Removed: the Properties bar
+
+- The panel to the right of the sheet that showed the selected condition, action, group, class or object as fields is gone, along with its View > Properties Bar item, its drag handle and edge strip, and its width setting. The sheet now uses the full width. Every edit it offered has a place that stays: double-click a parameter for the Edit Parameter dialog, edit a group's name and switch on its own row, and edit the class name, base type, icon, tool switch and description on the sheet's head row. A selected function still opens in Godot's own Inspector. Layouts saved with the bar open or tucked load as before and simply ignore its width.
+- The \"Change type\" question that listed the members an event uses and the new type lacks was only in the bar, so it is gone too.
+
 ### Removed: the Object properties window
 
 - Clicking an object's name in a row no longer opens a window. A click there now only selects the row, like a click anywhere else on the cell. The window repeated what Godot already shows: the Scene dock for the hierarchy, the Inspector for values. It also carried a Hierarchy section (add a child by dragging, unparent, flags), a variables table and the buttons Add condition, Add action, Highlight rows, Select in scene and Show in code. Add condition, Add action, Highlight rows and Select in scene are still on the Objects list (right-click or click an entry). Show in code has no other door. Double-clicking an entry in the Objects list or a class in the Project bar opens nothing now, and View > Object Properties is gone. The flags chip on an Add child row stays.

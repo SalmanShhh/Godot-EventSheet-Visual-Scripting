@@ -1,11 +1,9 @@
-# Godot EventSheets - the object's instance variables as an editable table.
+# Godot EventSheets - the member rows a sheet declares, as the variable owners read them.
 #
-# Pins the VALUES the table says about a sheet - one line per variable, the type word, the
-# initial value in the spelling the Add variable dialog writes back, and whether it wears the
-# Inspector tick - plus the rule that decides WHICH object gets the table (only the object the file
-# itself is, because the table writes into this file).
+# Pins the VALUES: one row per variable, the type word, the initial value in the spelling the Add
+# variable dialog writes back, and whether it wears the Inspector tick.
 @tool
-class_name InstanceVariableTableTest
+class_name VariableMemberRowsTest
 extends RefCounted
 
 
@@ -20,18 +18,19 @@ static func run() -> bool:
 	sheet.events.append(_variable("lives", "int", 3, true, ""))
 	sheet.events.append(_variable("alive", "bool", true, false, ""))
 	sheet.events.append(_variable("tint", "Color", Color(1, 0, 0), false, ""))
-	var rows: Array[Dictionary] = EventSheetInstanceVariableTable.rows_for(sheet)
+	var rows: Array[Dictionary] = EventSheetVariableOwners.member_rows(sheet)
 
 	ok = _check("the table lists every variable the object carries, in file order",
 		_names(rows), "speed, lives, alive, tint") and ok
 	ok = _check("a float reads number, and the value is the one the dialog writes back",
-		EventSheetInstanceVariableTable.row_text(rows[0]), "speed  number  200.0  Inspector") and ok
+		[str(rows[0].get("type_word", "")), str(rows[0].get("value", "")), bool(rows[0].get("inspector", false))],
+		["number", "200.0", true]) and ok
 	ok = _check("a declared int is a whole number",
-		EventSheetInstanceVariableTable.row_text(rows[1]), "lives  whole number  3  Inspector") and ok
+		[str(rows[1].get("type_word", "")), str(rows[1].get("value", ""))], ["whole number", "3"]) and ok
 	ok = _check("a variable with no Inspector tick does not claim one",
-		EventSheetInstanceVariableTable.row_text(rows[2]), "alive  boolean  true") and ok
+		[str(rows[2].get("type_word", "")), bool(rows[2].get("inspector", true))], ["boolean", false]) and ok
 	ok = _check("a colour keeps its literal spelling in the value column",
-		EventSheetInstanceVariableTable.row_text(rows[3]), "tint  color  Color(1.0, 0.0, 0.0, 1.0)") and ok
+		[str(rows[3].get("type_word", "")), str(rows[3].get("value", ""))], ["color", "Color(1.0, 0.0, 0.0, 1.0)"]) and ok
 	ok = _check("the description column carries what the author wrote",
 		str(rows[0].get("description", "")), "how fast it walks") and ok
 	ok = _check("a member of a plain node is an Instance variable",
@@ -48,7 +47,7 @@ static func run() -> bool:
 	data_sheet.host_class = "Resource"
 	data_sheet.events.append(_variable("price", "float", 0.0, true, ""))
 	ok = _check("a Resource script's member is a Field",
-		str(EventSheetInstanceVariableTable.rows_for(data_sheet)[0].get("scope", "")),
+		str(EventSheetVariableOwners.member_rows(data_sheet)[0].get("scope", "")),
 		EventSheetVariableSentence.SCOPE_FIELD) and ok
 	var constant_sheet: EventSheetResource = EventSheetResource.new()
 	constant_sheet.host_class = "Node"
@@ -56,7 +55,7 @@ static func run() -> bool:
 	maximum.is_constant = true
 	constant_sheet.events.append(maximum)
 	ok = _check("a const member is a Constant",
-		str(EventSheetInstanceVariableTable.rows_for(constant_sheet)[0].get("scope", "")),
+		str(EventSheetVariableOwners.member_rows(constant_sheet)[0].get("scope", "")),
 		EventSheetVariableSentence.SCOPE_CONSTANT) and ok
 
 	# ── Sheet-scope variables are members too, and they sort by name after the placed ones ──
@@ -65,13 +64,13 @@ static func run() -> bool:
 	mixed.events.append(_variable("hp", "int", 100, false, ""))
 	mixed.variables["score"] = {"type": "int", "default": 0, "exported": false}
 	ok = _check("a sheet-scope variable is in the table too",
-		_names(EventSheetInstanceVariableTable.rows_for(mixed)), "hp, score") and ok
+		_names(EventSheetVariableOwners.member_rows(mixed)), "hp, score") and ok
 
 	# ── Empty sheets answer with nothing rather than with a broken table ──
 	ok = _check("a sheet with no variables lists none",
-		EventSheetInstanceVariableTable.rows_for(EventSheetResource.new()).size(), 0) and ok
+		EventSheetVariableOwners.member_rows(EventSheetResource.new()).size(), 0) and ok
 	ok = _check("and neither does a missing sheet",
-		EventSheetInstanceVariableTable.rows_for(null).size(), 0) and ok
+		EventSheetVariableOwners.member_rows(null).size(), 0) and ok
 
 	return ok
 
@@ -96,4 +95,4 @@ static func _names(rows: Array[Dictionary]) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return SUPPORT.check("instance_variable_table_test", label, actual, expected)
+	return SUPPORT.check("variable_member_rows_test", label, actual, expected)

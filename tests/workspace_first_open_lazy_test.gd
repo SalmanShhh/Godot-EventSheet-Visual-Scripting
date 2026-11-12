@@ -99,7 +99,7 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/text_listing.gd",
 	# A variable row's doors, submenus and drags: read on the first click that asks for one.
 	"res://addons/eventsheet/editor/dock/variable_gestures.gd",
-	# A function's Properties bar panel: read when a function head is first selected.
+	# A function's Inspector editor: read when a function head is first selected.
 	"res://addons/eventsheet/editor/dock/function_inspector.gd",
 	# The Insert Snippet window: read when the menu item is first chosen.
 	"res://addons/eventsheet/editor/dock/insert_snippet_dialog.gd",
@@ -139,7 +139,6 @@ const FIRST_PAINT_FILES := [
 	"res://addons/eventsheet/editor/dock/sheet_io.gd",
 	"res://addons/eventsheet/editor/dock/theme_manager.gd",
 	"res://addons/eventsheet/editor/dock/sheet_type_glue.gd",
-	"res://addons/eventsheet/editor/dock/properties_bar.gd",
 	"res://addons/eventsheet/editor/dock/dock_ui_builder.gd",
 	"res://addons/eventsheet/editor/dock/live_edit_bar.gd",
 	"res://addons/eventsheet/editor/dock/provider_registry_glue.gd",

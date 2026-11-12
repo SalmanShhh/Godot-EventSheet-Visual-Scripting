@@ -36,6 +36,8 @@ const BLEND_MODE_FIELD_PATH := "res://addons/eventsheet/editor/blend_mode_field.
 const LANGUAGE_VARIANTS_DIALOG_PATH := "res://addons/eventsheet/editor/dock/language_variants_dialog.gd"
 const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
 ## The one shape every quick question takes, loaded the first time a question is asked.
+## The function editor Godot's Inspector shows, reached by path the moment a function is selected.
+const FUNCTION_INSPECTOR_PATH := "res://addons/eventsheet/editor/dock/function_inspector.gd"
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
 ## Insert new object: a new script class made the way an object is inserted, loaded when asked for.
@@ -766,12 +768,6 @@ var _verb_properties: RefCounted = null:  # a published verb's header click: the
 			_verb_properties = load("res://addons/eventsheet/editor/dock/verb_properties_popup.gd").new()
 			_verb_properties.init(self)
 		return _verb_properties
-var _instance_variables: RefCounted = null:  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
-	get:
-		if _instance_variables == null:
-			_instance_variables = load("res://addons/eventsheet/editor/dock/instance_variable_table.gd").new()
-			_instance_variables.init(self)
-		return _instance_variables
 var _hierarchy_edits: RefCounted = null:  # What the flags chip on an Add child row writes (dock/hierarchy_edits.gd)
 	get:
 		if _hierarchy_edits == null:
@@ -785,7 +781,7 @@ var _global_variables: RefCounted = null:  # Add ▸ Global variable…: one val
 			_global_variables.init(self)
 		return _global_variables
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
-var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
+var _function_inspector: RefCounted = null  # the selected function as Godot's Inspector edits it, kept alive while the Inspector shows it (dock/function_inspector.gd)
 var _moment_segment: EventSheetMomentSegment = null  # the strip's contextual Moment segment, assigned by the toolbar build (dock/toolbar_moment_segment.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
 var _ghost_row: RefCounted = null:  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
@@ -1048,7 +1044,6 @@ func _init() -> void:
 	_run_controls.init(self)
 	_beginner_toolbar.init(self)
 	_find_results.init(self)
-	_properties_bar.init(self)
 	# Same rule as _preview_glue: _ui_builder.build_ui() calls _open_progress.build_hairline() and build_link(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
@@ -1289,7 +1284,7 @@ func _activate_tab(index: int) -> void:
 	if index < 0 or index >= _open_tabs.size():
 		return
 	if index != _active_tab_index:
-		_properties_bar.let_function_go()
+		_let_function_go()
 		_sync_active_tab_state()
 		# The tab being left keeps its reading - its rows, their layout, the scroll, the selection
 		# and its log of edits - so coming back to it costs nothing. Here rather than in the sync
@@ -2336,17 +2331,6 @@ func _on_zoom_reset_requested() -> void:
 	_apply_sheet_zoom(1.0)
 
 
-## View ▸ Properties Bar: show/hide the bar beside the sheet and tick the menu to match.
-func _toggle_properties_bar(view_popup: PopupMenu) -> void:
-	var open: bool = not _properties_bar.is_open()
-	_properties_bar.set_open(open)
-	if view_popup != null:
-		var item_index: int = view_popup.get_item_index(41)
-		if item_index >= 0:
-			view_popup.set_item_checked(item_index, open)
-	_set_status("Properties bar %s." % ("shown" if open else "hidden"))
-
-
 # ── Clipboard / copy-paste → dock/clipboard.gd ──────────────────────────────────────
 # The copy/paste cluster (internal clipboard + portable snippets + raw-GDScript paste) lives in
 # EventSheetClipboard, which also OWNS the internal `_clipboard` state (no external reader). Thin
@@ -2738,9 +2722,6 @@ func set_simple_mode(enabled: bool) -> void:
 ## buttons for a beginner would only make two calm strips that disagree about what is on them.
 ## (The picker and the right-click menus apply their own gates when they open.)
 func _apply_simple_mode_gates() -> void:
-	# The Properties bar is an expert surface: a beginner's sheet is the sheet. View ▸ Properties
-	# Bar brings it back at any time.
-	_properties_bar.set_open(not _simple_mode)
 	# Simple mode is the audience flag, so it is what decides these two by default. An
 	# explicit View-menu choice still wins; these only re-resolve the "nobody said" case.
 	_project_bar_glue.apply_visibility()
@@ -6399,13 +6380,38 @@ func _open_function_dialog() -> void:
 	_function_dialog_glue._open_function_dialog()
 
 
+## A selected function on a sheet that can be written is handed to Godot's Inspector, which edits
+## its name, description, return, settings and parameters (dock/function_inspector.gd). Every call
+## after that lets the Inspector read the fields again, so an edit or an undo shows there; once
+## another row is selected or the sheet closes, the Inspector lets the function go.
+func _follow_function() -> void:
+	var view: EventSheetViewport = _active_view()
+	var selected: Variant = view.get_selected_context().get("source_resource", null) if view != null else null
+	if not (selected is EventFunction) or not _preview_glue.can_inspect_function():
+		_let_function_go()
+	elif _function_inspector == null or not _function_inspector.edits(selected as EventFunction):
+		_function_inspector = load(FUNCTION_INSPECTOR_PATH).new(self, selected as EventFunction)
+		_function_inspector.inspect()
+	else:
+		_function_inspector.refresh()
+
+
+## The Inspector lets the function go, writing text still held while its own sheet is on screen. Called
+## before another tab comes up, so held text lands in the sheet it was typed for.
+func _let_function_go() -> void:
+	var leaving: RefCounted = _function_inspector
+	_function_inspector = null
+	if leaving != null:
+		leaving.release()
+
+
 # ── ACE properties: a published verb's header click → dock/verb_properties_popup.gd ─────
 ## Clicking a function's header shows what it is. On a sheet you are writing, and on a script opened
 ## from disk as a preview, the click selects the function and Godot's Inspector edits it (its first
 ## change unlocks the preview); any other read-only view keeps the popup, which only reads.
 func open_verb_properties(event_function: Resource) -> void:
 	if _preview_glue.can_inspect_function():
-		_properties_bar.refresh()
+		_follow_function()
 		return
 	_verb_properties.open_for(event_function)
 
@@ -6413,7 +6419,7 @@ func open_verb_properties(event_function: Resource) -> void:
 ## A double-click on a function's name: its description, edited in a small window beside the row.
 func open_function_description(event_function: Resource, at: Vector2) -> void:
 	if event_function is EventFunction and _current_sheet != null and not _current_sheet.read_only:
-		load(EventSheetPropertiesBar.FUNCTION_INSPECTOR_PATH).open_description_editor(self, event_function, at)
+		load(FUNCTION_INSPECTOR_PATH).open_description_editor(self, event_function, at)
 
 
 ## The button on a variable note. An unknown name offers "Use hp", which rewrites every use of
@@ -7380,7 +7386,7 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	# never grows a button - this is where the buttons for a selection live.
 	if _moment_segment != null and _viewport != null:
 		_moment_segment.follow(_active_view().get_selected_ace_resource(), _selected_block_kind(_row_data))
-	_properties_bar.refresh()
+	_follow_function()
 
 
 ## The block kind the selected row is the head of, or "" for every other row. A block's head carries
@@ -7529,7 +7535,7 @@ func _refresh_after_edit() -> void:
 	_code_panel_glue.refresh_code_panel()
 	_refresh_anatomy_panel()
 	_code_panel_glue.refresh_functions_list()
-	_properties_bar.refresh()
+	_follow_function()
 	_apply_minimap_pref()
 
 

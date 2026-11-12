@@ -170,7 +170,7 @@ static func _test_rename_follows() -> bool:
 ## place on the head, the properties bar's name field, and Replace All finding the name.
 static func _test_rename_doors() -> bool:
 	var results: Array = []
-	for door: String in ["inline", "properties", "replace"]:
+	for door: String in ["inline", "replace"]:
 		var sheet: EventSheetResource = _sheet()
 		sheet.events.append(_switch_row("SetGroupActive", "\"boss\""))
 		sheet.events.append(_switch_row("IsGroupActive", "\"boss\""))
@@ -187,9 +187,6 @@ static func _test_rename_doors() -> bool:
 					if flat_row != null and flat_row.source_resource == boss:
 						head = flat_row
 				dock._on_viewport_span_edit_requested(head, "group_name", "Boss", "Final Boss")
-			"properties":
-				dock.get_viewport_control().select_resource(boss)
-				dock._properties_bar._apply_group_name("Final Boss")
 			"replace":
 				dock._ensure_find_bar()
 				dock._find_edit.text = "Boss"
@@ -204,8 +201,7 @@ static func _test_rename_doors() -> bool:
 	return SUPPORT.pins(NAME, [
 		["the name edited on the head takes the rows, one Ctrl+Z takes both back", results[0],
 			["inline", after_rename, before]],
-		["the properties bar's name field does the same", results[1], ["properties", after_rename, before]],
-		["Replace All on the group's name does the same", results[2], ["replace", after_rename, before]],
+		["Replace All on the group's name does the same", results[1], ["replace", after_rename, before]],
 	])
 
 

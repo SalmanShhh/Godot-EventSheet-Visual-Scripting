@@ -469,26 +469,19 @@ i18n (Godot translations).
   ![The Replace Object References dialog, its From dropdown carrying only the references the selection really uses](images/replace-object.png)
 
   ![The same dialog with the To field's suggestions open, offering the objects the sheet already names](images/replace-autocomplete.png)
-- **The Properties bar is where you edit without leaving the row.** It sits to the right of the
-  canvas, splitter-resizable like the Inspector, and shows whatever is selected: a condition or
-  action's parameters, an object's properties, a group's name and enabled state. Each parameter
-  gets the same field the Edit Parameter dialog would give it - a colour is a swatch you click, a
-  fixed choice is a dropdown, a node reference has its picker, an input action has the live Input
-  Map list, a number has a spinner - so nothing has to be typed as GDScript by hand. Setting a
-  value is one undo step and exactly the edit the dialog would have made, so an opened `.gd` stays
-  byte-exact for every line you did not touch. Simple Mode starts it hidden; **View > Properties
-  Bar** brings it back. The dialog stays for anyone who prefers it.
+- **A parameter is edited in the Edit Parameter dialog.** Double-click it. Each parameter gets the
+  field that fits it - a colour is a swatch you click, a fixed choice is a dropdown, a node reference
+  has its picker, an input action has the live Input Map list, a number has a spinner - so nothing has
+  to be typed as GDScript by hand. Setting a value is one undo step, so an opened `.gd` stays
+  byte-exact for every line you did not touch.
 
   ![One parameters dialog editing every matching action at once, with the "applies to all N matching actions" line under the field](images/batch-param-edit.png)
 
-  ![The Properties bar's fields: a colour swatch, an easing dropdown, an input-action list, a number spinner, a tick and a translatable text field](images/properties-bar-fields.png)
 - **The sheet zooms like a code editor**: Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for
   100%, or the pill in the status bar - 50% to 200% in six steps, with text, chips, icons and
   guide lines scaling together. The zoom is remembered for the layout, not for one file, so the
   next sheet opens at the size you were reading at. Row density (Comfortable / Compact) stays a
   separate choice: density trades whitespace for rows, zoom changes how big everything is drawn.
-![The Find results bar under the sheet, the Properties bar beside it, and the zoom pill in the status bar](images/sheet-bars.png)
-
 - **Right-click a cell > Select All Events Using This**, then retarget or retune the lot:
   *Replace object…* rewrites every `$Node` / `%Unique` / `self` token-safely - offering the
   objects that have the same conditions and actions first, and flagging in the Doctor any

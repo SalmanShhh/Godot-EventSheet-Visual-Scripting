@@ -271,11 +271,11 @@ static func _test_the_cascade() -> bool:
 	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the side
 	# panel open or closed to its rail. View ▸ Open Sheets Panel left, back to 65: the tabs above the
 	# sheet are the open sheets. View ▸ Manual beside the sheet makes 66: the Manual as a dock.
-	# 39, not 66: twenty-eight items moved into four submenus with their ids, so View fits a 1080p
+	# 38, not 66: twenty-eight items moved into four submenus with their ids, so View fits a 1080p
 	# window - Sheet display (the seventeen ticks on how rows are drawn), Collapse and expand (the five
 	# sweeps), Split views (three) and Zoom (three). Each hanger is one item on View.
 	ok = _check("View keeps its items, with the drawing, sweeps, split and zoom items in submenus",
-		counts["EventSheetViewMenu"], 39) and ok
+		counts["EventSheetViewMenu"], 38) and ok
 	var view_submenu_counts: Dictionary = {}
 	for name: String in ["EventSheetSheetDisplayMenu", "EventSheetCollapseMenu", "EventSheetSplitViewsMenu",
 			"EventSheetZoomMenu"]:
@@ -657,7 +657,7 @@ static func _test_simple_mode_lets_the_strip_alone() -> bool:
 	var before: PackedStringArray = _visible_names(editor)
 	editor.set_simple_mode(true)
 	var ok: bool = _check("Simple Mode changes nothing on the strip", _visible_names(editor), before)
-	# The gates that stay: the Add menu's code item disables, and the Properties bar closes.
+	# The gate that stays: the Add menu's code item disables.
 	ok = _check("the Add menu's code item still disables in Simple Mode",
 		editor._add_menu_popup.is_item_disabled(editor._add_menu_popup.get_item_index(4)), true) and ok
 	editor.set_simple_mode(false)

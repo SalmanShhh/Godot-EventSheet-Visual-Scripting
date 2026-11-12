@@ -1,9 +1,9 @@
-# Godot EventSheets - the sheet's plain-text listing, the Find results bar, the Properties bar,
+# Godot EventSheets - the sheet's plain-text listing, the Find results bar,
 # Replace object's ranking, and sheet zoom.
 #
 # Pins VALUES, not counts: the exact listing a fixture produces (the "+ " / "-> " shape, one extra
 # indent per sub-event, the event-number gutter, the Markdown wrapper), the Find results entry
-# shapes, the Properties bar's heading, the ranking Replace object offers, and every zoom step.
+# shapes, the ranking Replace object offers, and every zoom step.
 @tool
 class_name SheetTextFindZoomTest
 extends RefCounted
@@ -16,7 +16,6 @@ static func run() -> bool:
 	all_passed = _test_declaration_row_punctuation() and all_passed
 	all_passed = _test_find_references_carry_their_row() and all_passed
 	all_passed = _test_find_results_summary() and all_passed
-	all_passed = _test_properties_heading() and all_passed
 	all_passed = _test_replace_object_members() and all_passed
 	all_passed = _test_zoom_steps() and all_passed
 	return all_passed
@@ -120,14 +119,6 @@ static func _test_find_references_carry_their_row() -> bool:
 static func _test_find_results_summary() -> bool:
 	var passed: bool = _check("one sheet reads singular", EventSheetFindResultsBar.summary_text(3, 1), "3 in 1 sheet")
 	passed = _check("more than one reads plural", EventSheetFindResultsBar.summary_text(7, 2), "7 in 2 sheets") and passed
-	return passed
-
-
-static func _test_properties_heading() -> bool:
-	var passed: bool = _check("the heading names the thing and what it is",
-		EventSheetPropertiesBar.heading_for("Flash", "action"), "PROPERTIES · Flash · action")
-	passed = _check("nothing selected says only PROPERTIES",
-		EventSheetPropertiesBar.heading_for("  ", "action"), "PROPERTIES") and passed
 	return passed
 
 
