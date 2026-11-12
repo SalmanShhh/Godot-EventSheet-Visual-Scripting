@@ -5,7 +5,7 @@
 @icon("res://eventsheet_addons/rotate/icon.svg")
 class_name RotateBehavior
 extends Node
-## Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor via Tools > Preview Behaviors on Selected Node, no game run needed.
+## Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor with the Preview button in the Inspector, no game run needed.
 
 ## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
@@ -254,27 +254,4 @@ func reverse_rotation() -> void:
 	_current_speed = -_current_speed
 	speed = _current_speed
 
-static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
-	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): pure angle math
-	# over the Inspector values - angle(t) = speed*t + accel*t^2/2 - so the editor animates
-	# the spin without running the behavior. Handles a Node2D's float rotation AND a
-	# Node3D's Vector3 rotation from the same sample.
-	if not bool(params.get("rotate_enabled", true)):
-		return {}
-	var angle: float = deg_to_rad(float(params.get("speed", 90.0)) * time + 0.5 * float(params.get("acceleration", 0.0)) * time * time)
-	var base_rotation: Variant = base.get("rotation", 0.0)
-	var type: String = str(params.get("rotation_type", "2d"))
-	if type == "2d" and (base_rotation is float or base_rotation is int):
-		return {"rotation": float(base_rotation) + angle}
-	if base_rotation is Vector3:
-		var euler: Vector3 = base_rotation
-		match type:
-			"x":
-				return {"rotation": euler + Vector3(angle, 0.0, 0.0)}
-			"y":
-				return {"rotation": euler + Vector3(0.0, angle, 0.0)}
-			"z":
-				return {"rotation": euler + Vector3(0.0, 0.0, angle)}
-	return {}
-
-# Rotate behavior (event-sheet parity): spins the host at Speed degrees/second, ramping by Acceleration. Rotation Type covers a 2D node's rotation and a 3D node's X, Y, or Z axis - one pack for pickups, fans, planets, and drills. Set Rotation Enabled toggles it; Reverse flips direction. Previewable in the editor (Tools > Preview Behaviors on Selected Node). This pack is an event sheet - extend it by editing it.
+# Rotate behavior (event-sheet parity): spins the host at Speed degrees/second, ramping by Acceleration. Rotation Type covers a 2D node's rotation and a 3D node's X, Y, or Z axis - one pack for pickups, fans, planets, and drills. Set Rotation Enabled toggles it; Reverse flips direction. Previewable in the editor with the Preview button in the Inspector. This pack is an event sheet - extend it by editing it.

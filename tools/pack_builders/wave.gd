@@ -32,7 +32,7 @@ static func build() -> bool:
 		"const PUSH_DIAL: String = \"wave_strength\"",
 		""
 	])
-	lines.append_array(Lib.effect_material_lines("Wave", "wave.gdshader"))
+	lines.append_array(Lib.effect_material_lines("Wave", "wave.gdshader", true))
 	lines.append_array(PackedStringArray([
 		"",
 		"## Eases the ripple in to the given strength. Strength is a share of the picture's width:",

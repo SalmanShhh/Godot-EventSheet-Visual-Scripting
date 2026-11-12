@@ -279,7 +279,9 @@ static func light_binding_lines(reach_knob: String = "") -> PackedStringArray:
 ##
 ## `pack_name` and `shader_file` are only spoken in the one warning a mis-set node produces, and
 ## naming them there is what makes that warning worth reading.
-static func effect_material_lines(pack_name: String, shader_file: String) -> PackedStringArray:
+## `previews` is true for a behaviour with a Preview button: in the editor it then always works on a
+## copy, so a preview never writes into a material other nodes share (Stop puts the original back).
+static func effect_material_lines(pack_name: String, shader_file: String, previews: bool = false) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray([
 		"# Give this node its own copy of the material before anything turns a dial on it. A material",
 		"# is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin",
@@ -318,6 +320,10 @@ static func effect_material_lines(pack_name: String, shader_file: String) -> Pac
 		"\treturn _worn",
 		""
 	])
+	if previews:
+		var take_copy: int = lines.find("\t_worn = found.duplicate() if own_material else found")
+		lines[take_copy] = "\t_worn = found.duplicate() if (own_material or _previewing) else found"
+		lines.insert(take_copy, "\t# While previewing, always work on a copy, so a material other nodes share is never written to.")
 	lines.append_array(seed_dials_lines("_worn"))
 	lines.append_array(PackedStringArray([
 		"",

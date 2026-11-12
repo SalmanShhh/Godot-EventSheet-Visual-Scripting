@@ -26,6 +26,8 @@ static func run() -> bool:
 	passed = _shipped_sine() and passed
 	passed = _put_back_machinery() and passed
 	passed = _scene_dock_shortcut() and passed
+	passed = _shared_material_is_never_written() and passed
+	passed = _retired_sampler_door() and passed
 	return passed
 
 
@@ -183,3 +185,74 @@ static func _scene_dock_shortcut() -> bool:
 	])
 	host.free()
 	return passed
+
+
+## Two nodes wear ONE material. A preview on the first, with own_material off, must work on a copy: the
+## second node's material (the very same resource) keeps every value, during the preview and after
+## Stop puts the first node's original reference back.
+static func _shared_material_is_never_written() -> bool:
+	var passed: bool = true
+	for folder: String in ["wave", "hit_flash"]:
+		var shader: Shader = Shader.new()
+		shader.code = "shader_type canvas_item;
+uniform float strength = 0.25;
+uniform float flash_amount = 0.25;
+void fragment() {}
+"
+		var shared: ShaderMaterial = ShaderMaterial.new()
+		shared.shader = shader
+		shared.set_shader_parameter("strength", 0.25)
+		shared.set_shader_parameter("flash_amount", 0.25)
+		var first: Sprite2D = Sprite2D.new()
+		var second: Sprite2D = Sprite2D.new()
+		first.material = shared
+		second.material = shared
+		var behaviour: Node = (load("res://eventsheet_addons/%s/%s" % [folder, "wave_behavior.gd" if folder == "wave" else "hit_flash_behavior.gd"]) as GDScript).new() as Node
+		first.add_child(behaviour)
+		behaviour.set("host", first)
+		behaviour.set("own_material", false)
+		var before: Variant = shared.get_shader_parameter("strength" if folder == "wave" else "flash_amount")
+		# The state the Preview button puts the pack in; the button itself needs an editor.
+		behaviour.set("_previewing", true)
+		var worn: ShaderMaterial = behaviour.call("_effect_material") as ShaderMaterial
+		worn.set_shader_parameter("strength", 0.9)
+		worn.set_shader_parameter("flash_amount", 0.9)
+		var during: Variant = second.material.get_shader_parameter("strength" if folder == "wave" else "flash_amount")
+		var shared_still_second: bool = second.material == shared
+		# Stop: the pack's own put-back of the host's stored properties and its own unsaved state.
+		var script: GDScript = behaviour.get_script() as GDScript
+		var rest: Dictionary = {"material": shared}
+		script.call("_preview_put_back", first, rest)
+		behaviour.set("_previewing", false)
+		passed = SUPPORT.pins(NAME, [
+			["%s: the preview works on a copy, not the shared material" % folder, worn != shared, true],
+			["%s: the other node's material value is unchanged during the preview" % folder, during, before],
+			["%s: the other node still wears the shared material" % folder, shared_still_second, true],
+			["%s: the shared material's values are unchanged" % folder, [shared.get_shader_parameter("strength"), shared.get_shader_parameter("flash_amount")], [0.25, 0.25]],
+			["%s: Stop puts the original material back on the first node" % folder, first.material == shared, true],
+		]) and passed
+		passed = SUPPORT.pin_value(NAME, "%s: the other node's value is unchanged after Stop" % folder,
+			second.material.get_shader_parameter("strength" if folder == "wave" else "flash_amount"), before) and passed
+		first.free()
+		second.free()
+	return passed
+
+
+## The older sampler and the Tools-menu preview are gone; the public calls stay callable and do nothing.
+static func _retired_sampler_door() -> bool:
+	var invoked: Array = []
+	EventSheets.register_editor_preview("res://eventsheet_addons/sine/sine_behavior.gd", func(_p: Dictionary, _b: Dictionary, _t: float) -> Dictionary:
+		invoked.append(true)
+		return {})
+	var sine: String = FileAccess.get_file_as_string("res://eventsheet_addons/sine/sine_behavior.gd")
+	var rotate: String = FileAccess.get_file_as_string("res://eventsheet_addons/rotate/rotate_behavior.gd")
+	var menu: String = FileAccess.get_file_as_string("res://addons/eventsheet/editor/dock/menu_bar.gd")
+	return SUPPORT.pins(NAME, [
+		["a registered sampler is accepted and never resolved", EventSheets.editor_preview_sampler_for("res://eventsheet_addons/sine/sine_behavior.gd").is_valid(), false],
+		["a registered sampler is never called", invoked.size(), 0],
+		["the old toggle returns false", EventSheets.preview_behaviors(), false],
+		["Sine carries no sampler function", sine.contains("editor_preview_sample"), false],
+		["Rotate carries no sampler function", rotate.contains("editor_preview_sample"), false],
+		["the Tools menu has no Preview Behaviors item", menu.contains("Preview Behaviors on Selected Node"), false],
+		["the sampler service file is gone", FileAccess.file_exists("res://addons/eventsheet/editor/behavior_preview.gd"), false],
+	])

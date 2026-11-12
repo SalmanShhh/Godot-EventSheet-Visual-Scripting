@@ -11,6 +11,8 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Spring, Juice and Juice 3D, which only move when set off, have a second Nudge button beside Preview. Several behaviours on one node can preview at once.
 - Right-click a node in the Scene dock: Preview its behaviours presses Preview on every behaviour under it that has the button, and Stop previews puts it all back. It presses the very same buttons, so it only appears for behaviours that carry one.
 - The preview is the behaviour's own code, so it works in a project with no plugin installed: copy the pack's folder in and the button is there. A behaviour declares it in its builder (`previews`), which is the whole list.
+- A preview never writes into a material other nodes share. Wave and Hit Flash with Own Material off work on a copy while previewing, and Stop puts the original back, so the other nodes keep their look. This is in the pack's own code, so it holds with no plugin.
+- The older Tools > Preview Behaviors on Selected Node item (and its Command Palette entry) is gone, and so is the sampler function the Sine, Rotate, Orbit, Orbit 3D and Bullet 3D packs carried for it: with the Preview button it wrote to the host a second time. `EventSheets.register_editor_preview` and `EventSheets.preview_behaviors` still exist so older code runs, and do nothing. Editor gizmos are unchanged.
 
 ### Changed: a node dragged from Godot's Scene dock starts an event on it
 

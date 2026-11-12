@@ -82,15 +82,6 @@ static func run() -> bool:
 	all_passed = _check("Rotate spins by default", rotate.get("rotate_enabled"), true) and all_passed
 	all_passed = _check("Rotate defaults to 2D", rotate.get("rotation_type"), "2d") and all_passed
 	rotate.free()
-	# The preview static: angle(t) = speed*t + accel*t^2/2, on a 2D float and a 3D axis.
-	var preview_2d: Dictionary = rotate_script.editor_preview_sample({"speed": 90.0, "acceleration": 0.0}, {"rotation": 0.0}, 2.0)
-	all_passed = _check("Rotate preview spins a 2D host (90 deg/s for 2s = PI)", is_equal_approx(float(preview_2d.get("rotation", 0.0)), PI), true) and all_passed
-	var preview_accel: Dictionary = rotate_script.editor_preview_sample({"speed": 0.0, "acceleration": 90.0}, {"rotation": 0.0}, 2.0)
-	all_passed = _check("Rotate preview applies acceleration (accel 90 for 2s = PI)", is_equal_approx(float(preview_accel.get("rotation", 0.0)), PI), true) and all_passed
-	var preview_y: Dictionary = rotate_script.editor_preview_sample({"speed": 90.0, "rotation_type": "y"}, {"rotation": Vector3.ZERO}, 1.0)
-	all_passed = _check("Rotate preview spins a 3D Y axis", is_equal_approx((preview_y.get("rotation", Vector3.ZERO) as Vector3).y, PI / 2.0), true) and all_passed
-	var preview_off: Dictionary = rotate_script.editor_preview_sample({"rotate_enabled": false, "speed": 90.0}, {"rotation": 0.0}, 1.0)
-	all_passed = _check("Rotate preview respects the toggle", preview_off.is_empty(), true) and all_passed
 
 	# ── Wrap: the circular constraint
 	var wrap_circle: Node = (load("res://eventsheet_addons/wrap/wrap_behavior.gd") as GDScript).new()

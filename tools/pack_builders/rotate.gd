@@ -14,11 +14,11 @@ static func build() -> bool:
 	sheet.previews = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "RotateBehavior"
-	sheet.class_description = "Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor via Tools > Preview Behaviors on Selected Node, no game run needed."
+	sheet.class_description = "Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor with the Preview button in the Inspector, no game run needed."
 	sheet.addon_category = "Rotate"
 	sheet.addon_tags = PackedStringArray(["movement", "visual"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "Rotate behavior (event-sheet parity): spins the host at Speed degrees/second, ramping by Acceleration. Rotation Type covers a 2D node's rotation and a 3D node's X, Y, or Z axis - one pack for pickups, fans, planets, and drills. Set Rotation Enabled toggles it; Reverse flips direction. Previewable in the editor (Tools > Preview Behaviors on Selected Node). This pack is an event sheet - extend it by editing it."
+	about.text = "Rotate behavior (event-sheet parity): spins the host at Speed degrees/second, ramping by Acceleration. Rotation Type covers a 2D node's rotation and a 3D node's X, Y, or Z axis - one pack for pickups, fans, planets, and drills. Set Rotation Enabled toggles it; Reverse flips direction. Previewable in the editor with the Preview button in the Inspector. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
@@ -99,30 +99,7 @@ static func build() -> bool:
 		"\t\t_current_speed = speed",
 		"\t\t_speed_primed = true",
 		"\t_current_speed = -_current_speed",
-		"\tspeed = _current_speed",
-		"",
-		"# Editor-preview contract (Tools > Preview Behaviors on Selected Node): pure angle math",
-		"# over the Inspector values - angle(t) = speed*t + accel*t^2/2 - so the editor animates",
-		"# the spin without running the behavior. Handles a Node2D's float rotation AND a",
-		"# Node3D's Vector3 rotation from the same sample.",
-		"static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:",
-		"\tif not bool(params.get(\"rotate_enabled\", true)):",
-		"\t\treturn {}",
-		"\tvar angle: float = deg_to_rad(float(params.get(\"speed\", 90.0)) * time + 0.5 * float(params.get(\"acceleration\", 0.0)) * time * time)",
-		"\tvar base_rotation: Variant = base.get(\"rotation\", 0.0)",
-		"\tvar type: String = str(params.get(\"rotation_type\", \"2d\"))",
-		"\tif type == \"2d\" and (base_rotation is float or base_rotation is int):",
-		"\t\treturn {\"rotation\": float(base_rotation) + angle}",
-		"\tif base_rotation is Vector3:",
-		"\t\tvar euler: Vector3 = base_rotation",
-		"\t\tmatch type:",
-		"\t\t\t\"x\":",
-		"\t\t\t\treturn {\"rotation\": euler + Vector3(angle, 0.0, 0.0)}",
-		"\t\t\t\"y\":",
-		"\t\t\t\treturn {\"rotation\": euler + Vector3(0.0, angle, 0.0)}",
-		"\t\t\t\"z\":",
-		"\t\t\t\treturn {\"rotation\": euler + Vector3(0.0, 0.0, angle)}",
-		"\treturn {}"
+		"\tspeed = _current_speed"
 	]))
 	sheet.events.append(block)
 	var ready_row: EventRow = EventRow.new()

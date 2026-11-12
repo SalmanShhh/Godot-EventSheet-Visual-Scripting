@@ -37,7 +37,7 @@ static func build() -> bool:
 		"const AMOUNT_DIAL: String = \"flash_amount\"",
 		""
 	])
-	lines.append_array(Lib.effect_material_lines("Hit Flash", "hit_flash.gdshader"))
+	lines.append_array(Lib.effect_material_lines("Hit Flash", "hit_flash.gdshader", true))
 	lines.append_array(PackedStringArray([
 		"",
 		"## Washes the host towards a colour and lets it drain back over the given time. A second",

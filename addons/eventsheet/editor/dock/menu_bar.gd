@@ -890,7 +890,6 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Sheet Backups…", 9)
 	tools_popup.add_item("Save as Template", 10)
 	tools_popup.add_item("Attach to Selected Node", 11)
-	tools_popup.add_item("Preview Behaviors on Selected Node", 18)
 	tools_popup.add_item("Save Studio…", 19)
 	# Translation Studio sits beside Save Studio because it is the same shape applied to text:
 	# everything about one handoff in one window.
@@ -927,7 +926,6 @@ func build(root: Node) -> void:
 			9: _dock._open_sheet_backups()
 			10: _dock._save_as_project_template()
 			11: _dock._attach_behavior_to_selection()
-			18: _dock.toggle_behavior_preview()
 			19: _dock._save_studio.open()
 			12: _dock._preview_glue._open_lift_report()
 			26: _dock.open_lift_workbench()

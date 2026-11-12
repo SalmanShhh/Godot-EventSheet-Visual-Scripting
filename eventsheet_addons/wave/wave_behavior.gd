@@ -174,7 +174,8 @@ func _effect_material() -> ShaderMaterial:
 			_warned = true
 			push_warning("Wave needs its parent to wear the wave.gdshader material. Add the pack again, or set the material in the Inspector.")
 		return null
-	_worn = found.duplicate() if own_material else found
+	# While previewing, always work on a copy, so a material other nodes share is never written to.
+	_worn = found.duplicate() if (own_material or _previewing) else found
 	host.material = _worn
 	_seed_dials()
 	return _worn

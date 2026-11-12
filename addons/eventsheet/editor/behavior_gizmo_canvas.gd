@@ -8,7 +8,7 @@ extends Node2D
 # behavior's live script variables and hands this canvas to the behavior's drawer, so tweaking
 # a knob in the Inspector repaints the overlay immediately.
 #
-# The drawer contract (the pack API seam, sibling to editor_preview_sample):
+# The drawer contract (the pack API seam):
 #
 #   static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void
 #

@@ -45,7 +45,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 				return row_data.source_resource is LocalVariable and (row_data.source_resource as LocalVariable).name == "host").size()],
 			[0, 1]],
 		["the functions read where the file has them, the last one last",
-			_last_function_uid(rows), "define_fn_editor_preview_sample"],
+			_last_function_uid(rows), "define_fn__wave"],
 		["the name's card says what it is and its facts",
 			[str(card.get("subtitle", "")), str(Array(card.get("notes", [""]))[0])],
 			["· Behaviour", "Works on Node2D · listed under Sine · 7 properties · 4 actions, 0 conditions, 0 triggers, 0 expressions"]],

@@ -552,12 +552,6 @@ var _tour: RefCounted = null:  # Tools ▸ Start the Tour… first-time walkthro
 			_tour = load("res://addons/eventsheet/editor/dock/tour_window.gd").new()
 			_tour.init(self)
 		return _tour
-var _behavior_preview: RefCounted = null:  # Tools ▸ Preview Behaviors on Selected Node (behavior_preview.gd)
-	get:
-		if _behavior_preview == null:
-			_behavior_preview = load("res://addons/eventsheet/editor/behavior_preview.gd").new()
-			_behavior_preview.init(self)
-		return _behavior_preview
 var _starter: RefCounted = null:  # New-from-template starters (dock/starter_templates.gd)
 	get:
 		if _starter == null:
@@ -7117,9 +7111,6 @@ func show_welcome() -> void:  # Tools menu (id 13) + command palette ("Open Welc
 func start_tour() -> void:  # Tools menu (id 17) + the Welcome window's tour button
 	_tour.start()
 
-
-func toggle_behavior_preview() -> void:  # Tools menu (id 18) + command palette
-	_behavior_preview.toggle()
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────

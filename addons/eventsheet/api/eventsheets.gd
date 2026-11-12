@@ -1215,8 +1215,6 @@ static var _starters: Array[Dictionary] = []
 static var _preference_builders: Array[Callable] = []
 ## Dictionary-defined ACEs live in the registry's extras (see register_simple_ace).
 static var _simple_aces: Array[ACEDefinition] = []
-## Editor-preview samplers: behavior script path -> Callable(params, base, time) -> Dictionary.
-static var _editor_preview_samplers: Dictionary = {}
 ## Editor-gizmo drawers: behavior script path -> Callable(params, host, canvas) -> void.
 static var _editor_gizmo_drawers: Dictionary = {}
 
@@ -1571,19 +1569,15 @@ static func register_tour(tour_name: String, steps: Array[Dictionary]) -> void:
 	register_palette_command("Tour: %s" % tour_name, func() -> void: start_tour(steps))
 
 
-## In-editor behavior preview (Tools > Preview Behaviors on Selected Node): a behavior opts in
-## by shipping a pure static on its emitted script -
-##   static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary
-## (params = the behavior node's exported values, base = the host's captured rest state, return =
-## host properties to apply this frame). This call registers a sampler for scripts that CANNOT
-## ship the static (third-party or generated code you don't control): `script_path` is the
-## behavior script's resource path; `sampler` has the same signature and takes priority.
-static func register_editor_preview(script_path: String, sampler: Callable) -> void:
-	_editor_preview_samplers[script_path] = sampler
+## Kept so older callers still compile and run: behaviours now preview with their own Preview
+## button in the Inspector, so a sampler registered here is accepted and never called.
+static func register_editor_preview(_script_path: String, _sampler: Callable) -> void:
+	pass
 
 
-static func editor_preview_sampler_for(script_path: String) -> Callable:
-	return _editor_preview_samplers.get(script_path, Callable())
+## Always an invalid Callable now (see register_editor_preview).
+static func editor_preview_sampler_for(_script_path: String) -> Callable:
+	return Callable()
 
 
 ## In-editor behavior gizmos (select a node, its behaviors draw their setup in the 2D viewport):
@@ -1696,13 +1690,10 @@ static func toggle_icon_provider_for(provider_name: String) -> Callable:
 	return _toggle_icon_providers.get(provider_name, Callable())
 
 
-## Toggles the behavior preview on the current scene-editor selection - the same entry the
-## Tools menu and Command Palette use. Returns false when the workspace is not open.
+## Kept so older callers still compile and run: the Tools-menu preview is gone, behaviours
+## preview with their own Preview button in the Inspector. Always returns false.
 static func preview_behaviors() -> bool:
-	if not _dock_alive() or not ("_behavior_preview" in _dock):
-		return false
-	_dock._behavior_preview.toggle()
-	return true
+	return false
 
 
 ## One-call pack verification for addon authors - the gates that actually bite, bundled:
