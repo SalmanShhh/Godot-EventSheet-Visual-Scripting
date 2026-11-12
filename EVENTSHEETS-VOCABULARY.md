@@ -4681,7 +4681,7 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Set Setting** (`path: String, value: Variant`) - Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.
 - **Save Settings** - Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.
 - **Switch To Workspace** (`workspace: String`) - Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.
-- **Show In Project Bar** (`path: String`) - Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.
+- **Show In FileSystem Dock** (`path: String`) - Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.
 - **Open Script At Line** (`line: int`) - Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.
 - **Add Window** (`window: Node`) - Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.
 - **Add Command** (`title: String, key_name: String, handler: Callable`) - Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.

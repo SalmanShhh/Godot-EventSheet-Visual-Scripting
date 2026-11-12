@@ -70,7 +70,7 @@ One button, five groups, then two doors at its foot:
 | **Sheet** | The file's own life: New, Open, Save, Save As, Export GDScript, Import event sheet, Save as Text, Sheet Type, shared sheets, Manage Includes, the addon / editor-tool / custom-resource starters, Teach a Verb, Inspector Designer, Export Addon, Publish New Version, Name Raw Calls, Health, Export (image / PDF / Markdown), Workspaces, Start page | 23 |
 | **Add** | The whole authoring vocabulary: Event, Condition, Action, Group, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, includes, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind | 20 |
 | **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Include, Find References, Generate from Description | 7 |
-| **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Project bar, Full toolbar, Text labels | 50 |
+| **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Full toolbar, Text labels | 50 |
 | **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Keyboard Shortcuts, Words | 36 |
 | _(foot)_ | **Manual...** and **What's new...**, the two doors a reader looks for by name rather than by group | 2 |
 
@@ -155,7 +155,7 @@ them:
 | 14 | **The expanded strip's four Add buttons** | Add Event, Add Condition, Add Action, Add Code |
 | 15 | **The command palette** | Add Event / Condition / Action / Global Variable / Function, among everything else |
 | 16 | **Paste, and Duplicate** | `Ctrl+V` on copied rows, and duplicating a selection |
-| 17 | **Drag onto the canvas** | A class from the Project bar starts an event on it; a sound becomes a Play sound action; a scene becomes a Go to layout action |
+| 17 | **Drag onto the canvas** | An object from the Objects list starts an event on it; an Input Map action starts an On pressed event |
 
 The whole Add menu also teaches the keys it stands for. Event (`E`), Condition (`C`), Action (`A`),
 Group (`G`), Comment (`Q`), Global Variable (`V`) and Function (`F`) each print their binding beside
@@ -257,7 +257,6 @@ that disagree about what is on them help nobody. What it does do, all of it:
 - **Shows the beginner Add toolbar.** The eight-button strip below the sheet: Event, Sub-event,
   Condition, Action, Group, Comment, Variable, Function, each with its key on hover. It adds; it
   does not run anything.
-- **Shows the Project bar.** The Object bar's *Project* tab, listing the whole project by kind.
 - **Pins variable rows to the sentence.** The one-sentence reading rather than the sentence plus its
   compiled echo. Turning Simple Mode off does not push the dial back: your own choice of dial stays
   yours.

@@ -399,16 +399,7 @@ i18n (Godot translations).
   strip, relabelled the same way.
 
   ![The same play button while a game runs, its face reading Stop](images/play-button-stop.png)
-- **The Project bar is where you left it, under Godot's names or yours.** Turn it on with **View ▸
-  Project bar** (it is already on if you are in Simple mode or started from a template) and the
-  Object bar gains a *Project* tab listing the whole project by kind: Scenes, Scripts, Classes, Base
-  classes, Behaviors, Sounds, Files. With **View ▸ Familiar Words** on it reads *Layouts (scenes)*,
-  *Event sheets (scripts)*, *Object types (classes)*, *Families (base classes)* - both words always
-  on screen. It is read only: right-click *New scene / New script / New class / Extract base class /
-  Import sound* opens Godot's own dialogs, and double-clicking routes a layout to the 2D/3D editor, a
-  script to its sheet, a behavior to its reference page. Drag a
-  class onto the canvas to start an event on it, a sound for a *Play sound* action, a scene for a *Go
-  to layout* action. The ✕ hides it again.
+- **Your project's files are in Godot's FileSystem dock.** The plugin adds no second project list; Quick Open (Ctrl+Shift+O) jumps to a file by name.
 - **Preview is on the sheet.** `▶ Preview layout`, `▶▶ Preview project` and `🐞 Debug layout` sit in
   the play button's dropdown; the keys underneath are Godot's F6 and F5, and while the game runs the
   first two say `■ Stop` and `↻ Restart`. **Menu ▸ Sheet ▸ Start page** is the start page you expect - templates by genre,

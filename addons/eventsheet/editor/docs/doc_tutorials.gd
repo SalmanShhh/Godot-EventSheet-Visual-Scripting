@@ -302,10 +302,10 @@ const TUTORIALS: Array[Dictionary] = [
 		"id": "read-the-editor",
 		"title": "Read the editor's code as events",
 		"minutes": 6,
-		"lead": "This editor is written in the language it reads. In its own repository the Project bar grows a This editor folder, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",
+		"lead": "This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",
 		"steps": [
 			{
-				"text": "Open the folder: View ▸ Project bar, then This editor at the bottom of it. The files are grouped by what each one DOES - Plugin, Workspace, Canvas, Readings, Importer, Compiler, Vocabulary, Manual, Tests, Command tools, Pack recipes - not by the folder it sits in.",
+				"text": "Open the Start page and choose This editor, then find any file of the plugin in Godot's FileSystem dock under addons/. Each opens as a sheet.",
 				"control": "View",
 				"check": "",
 			},
@@ -343,7 +343,7 @@ const TUTORIALS: Array[Dictionary] = [
 		"lead": "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",
 		"steps": [
 			{
-				"text": "Open the Project bar's This editor folder and go to Vocabulary. Each file there is one group of words - the core rows, the maths rows, the editor's own rows.",
+				"text": "Open the plugin's vocabulary files in the FileSystem dock, under addons/eventforge/registration/modules. Each file there is one group of words - the core rows, the maths rows, the editor's own rows.",
 				"control": "View",
 				"check": "",
 			},

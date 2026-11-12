@@ -410,7 +410,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_file` | [Data Folder Problems](ace:Core/DataFolderProblems) | Files | Vocabulary |
 | `get_file_as_bytes` | [File Size (bytes)](ace:Core/GetFileSize) | Files | Vocabulary |
 | `get_file_as_string` | [Read Text File](ace:Core/ReadTextFile) | Files | Vocabulary |
-| `get_file_system_dock` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
+| `get_file_system_dock` | [Show In FileSystem Dock](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
 | `get_files` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `get_files_at` | [List Files](ace:Core/ListFiles) | Files: Directories | Vocabulary |
 | `get_first_node_in_group` | [Get First Node In Group](ace:Core/GetFirstNodeInGroup) | Groups | Vocabulary |
@@ -723,7 +723,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `multiplayer_peer` | [Leave The Game](ace:Core/LeaveGame) | Multiplayer | Vocabulary |
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
-| `navigate_to_path` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
+| `navigate_to_path` | [Show In FileSystem Dock](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
 | `navigation_enabled` | [Set Navigation On Layer](ace:Core/TileMapSetNavigation) | Tilemap | Vocabulary |
 | `near` | [Set Clip Range](ace:Core/CameraSetClipRange) | Camera | Vocabulary |
 | `needs_key` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |

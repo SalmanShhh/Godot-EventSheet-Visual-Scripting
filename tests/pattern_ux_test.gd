@@ -503,7 +503,7 @@ static func _test_health_and_doctor_leave_the_live_claims() -> bool:
 	EventSheetProjectDoctor.scan_pattern_smells(sheet, "res://player.gd", findings)
 	ok = _check("a Doctor scan leaves the open sheet's claims as they were",
 		EventSheetPatternFacts.claims(sheet), before) and ok
-	ok = _check("so the patterns count the Project bar reads is unchanged",
+	ok = _check("so the patterns count the sheet reads is unchanged",
 		EventSheetPatternFacts.summary(sheet), summary_before) and ok
 	var never_built: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	EventSheetHealthCard.card_for(never_built, "res://player.gd", [])

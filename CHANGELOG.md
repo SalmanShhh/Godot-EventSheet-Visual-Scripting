@@ -4,6 +4,12 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: the Project bar
+
+- The Project strip at the foot of the Objects rail is gone, with its View > Project bar item and the saved on/off choice. It listed scenes, scripts, classes, sounds and files, which Godot's FileSystem dock and Quick Open already do. A scene, script or sound is opened, found or dragged the Godot way. Dragging a class, sound or scene out of that strip onto the canvas is gone with it; drag from the Objects list or the FileSystem dock instead.
+- The Welcome page's "coming from another event-sheet editor" answer no longer switches the bar on, and its summary lines no longer mention it. The two Project bar colours are gone from the theme tokens. The word the familiar vocabulary used for the FileSystem dock is now "FileSystem dock", and the editor-tool row that reveals a file reads "Show in FileSystem dock" (its id and the code it writes are unchanged).
+- The Start page's "This editor" card now just opens the plugin's own script as a sheet.
+
 ### Removed: the Objects list no longer lists the rest of the scene
 
 - The "Also in the scene" section is gone. It repeated Godot's Scene dock. The list keeps the objects the sheet itself uses, with their counts, the filter, the right-click menu and dragging onto the sheet. The tab's hover no longer counts the scene's other nodes.

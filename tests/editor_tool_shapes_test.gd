@@ -283,7 +283,7 @@ static func _test_editor_words_glossary() -> bool:
 		EventSheetWords.EDITOR_KEYS.size(), 24) and all_passed
 	for pair: Array in [["editor_plugin", "Editor plugin", "EditorPlugin"],
 			["editor_object", "Editor", "EditorInterface"],
-			["filesystem_dock", "Project bar", "FileSystem dock"],
+			["filesystem_dock", "FileSystem dock", "FileSystem dock"],
 			["editor_preferences", "Preferences", "EditorSettings"],
 			["tool_annotation", "runs in the editor too", "@tool"],
 			["command_tool", "Command tool", "SceneTree script"],
@@ -295,7 +295,7 @@ static func _test_editor_words_glossary() -> bool:
 			"%s / %s" % [EventSheetWords.familiar_default(str(pair[0])), EventSheetWords.plain_default(str(pair[0]))],
 			"%s / %s" % [str(pair[1]), str(pair[2])]) and all_passed
 	all_passed = _check("Godot's spelling is one lookup away from the sheet's",
-		EventSheetWords.godot_word("Project bar"), "FileSystem dock") and all_passed
+		EventSheetWords.godot_word("FileSystem dock"), "FileSystem dock") and all_passed
 	all_passed = _check("and the sheet's is one lookup away from Godot's",
 		EventSheetWords.sheet_word("EditorSettings"), "Preferences") and all_passed
 	all_passed = _check("a word neither vocabulary has says so rather than guessing",
@@ -454,9 +454,9 @@ static func _test_glossary_hover() -> bool:
 	for key: String in EventSheetWords.EDITOR_KEYS:
 		if not EventSheetWords.glossary_hover_for(EventSheetWords.familiar_default(key), true, {}).is_empty():
 			covered += 1
-	# Tools menu is the one noun spelled identically in both vocabularies, so twenty-three of the
-	# twenty-four have something to say. A lens that answered for all of them would be padding.
-	all_passed = _check("every editor noun with two spellings carries the lens", covered, 23) and all_passed
+	# Tools menu and FileSystem dock are spelled identically in both vocabularies, so twenty-two of
+	# the twenty-four have something to say. A lens that answered for all of them would be padding.
+	all_passed = _check("every editor noun with two spellings carries the lens", covered, 22) and all_passed
 	return all_passed
 
 

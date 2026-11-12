@@ -73,20 +73,20 @@ static func offers_door(words: String, has_showcase: bool) -> bool:
 	return has_showcase or words != "Open the playable showcase scene"
 
 
-## What one answer sets: {label, note, words, theme, project_bar, code_panel, guide, tour}. `theme` is a
+## What one answer sets: {label, note, words, theme, code_panel, guide, tour}. `theme` is a
 ## theme file ("" keeps the editor-matching default); `words` is a words preset name.
 static func choice_settings(choice: String) -> Dictionary:
 	match choice:
 		CAME_FROM_SHEETS:
 			return {"label": "I come from another event-sheet editor",
-				"words": EventSheetWords.PRESET_SHEET, "theme": CLASSIC_THEME_PATH, "project_bar": true,
+				"words": EventSheetWords.PRESET_SHEET, "theme": CLASSIC_THEME_PATH,
 				"code_panel": false, "guide": MIGRATION_GUIDE_ID, "tour": false}
 		CAME_FROM_GDSCRIPT:
 			return {"label": "I write GDScript",
-				"words": EventSheetWords.PRESET_GODOT, "theme": "", "project_bar": false,
+				"words": EventSheetWords.PRESET_GODOT, "theme": "",
 				"code_panel": true, "guide": "", "tour": false}
 	return {"label": "I'm new to event sheets",
-		"words": EventSheetWords.PRESET_FAMILIAR, "theme": "", "project_bar": false,
+		"words": EventSheetWords.PRESET_FAMILIAR, "theme": "",
 		"code_panel": false, "guide": "", "tour": true}
 
 
@@ -98,8 +98,6 @@ static func choice_summary(choice: String) -> String:
 	said.append(EventSheetWords.preset_label(str(settings["words"])))
 	said.append(EventSheetL10n.translate("Classic sheet theme") if not str(settings["theme"]).is_empty()
 		else EventSheetL10n.translate("the editor-matching theme"))
-	if bool(settings["project_bar"]):
-		said.append(EventSheetL10n.translate("Project bar on"))
 	if bool(settings["code_panel"]):
 		said.append(EventSheetL10n.translate("the GDScript panel beside every sheet"))
 	if not str(settings["guide"]).is_empty():
@@ -114,10 +112,10 @@ static func choice_sets(choice: String) -> String:
 	var settings: Dictionary = choice_settings(choice)
 	var on: String = EventSheetL10n.translate("on")
 	var off: String = EventSheetL10n.translate("off")
-	return EventSheetL10n.translate("words = %s · theme = %s · Project bar = %s · GDScript panel = %s · tour = %s") % [
+	return EventSheetL10n.translate("words = %s · theme = %s · GDScript panel = %s · tour = %s") % [
 		EventSheetWords.preset_label(str(settings["words"])),
 		EventSheetL10n.translate("Classic sheet") if not str(settings["theme"]).is_empty() else EventSheetL10n.translate("editor"),
-		on if bool(settings["project_bar"]) else off, on if bool(settings["code_panel"]) else off,
+		on if bool(settings["code_panel"]) else off,
 		on if bool(settings["tour"]) else off]
 
 
@@ -497,11 +495,6 @@ func apply_choice(choice: String) -> void:
 		else:
 			_dock._theme_manager.load_theme_style_from_path(theme_path)
 		_dock._theme_manager._refresh_theme_menu_selection()
-	if bool(settings["project_bar"]):
-		# The reader told us which surfaces they expect; View ▸ Project bar takes it away again.
-		EventSheetProjectBarGlue.mark_started_from_template()
-		if _dock != null:
-			_dock._project_bar_glue.apply_visibility()
 	ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default",
 		true if bool(settings["code_panel"]) else null)
 	if Engine.is_editor_hint() and DisplayServer.get_name() != "headless":

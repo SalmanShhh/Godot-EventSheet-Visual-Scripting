@@ -16,7 +16,7 @@ extends VBoxContainer
 # what it is for are its hover, so the name fits the panel's width.
 #
 # It is the Objects tab of the side panel, so it is drawn the way Godot's own docks are: a filter with
-# its sort button beside it, then the rows. When the Project bar is on, it folds in at the foot.
+# its sort button beside it, then the rows.
 #
 # Four gestures: HOVER previews an object's rows, CLICK pins that highlight,
 # DRAG onto the sheet starts an event on the object, and
@@ -81,10 +81,6 @@ var _section_folds: Dictionary = {"used": false, "input": false, "globals": true
 var _menu: PopupMenu = null
 var _menu_label: String = ""
 var _class_map: Dictionary = {}
-# The Project bar rides at the foot of this tab, under its own fold, rather than as a second dock
-# or a tab of its own. It only appears once one is handed over, so a project that never turns it on
-# sees the bar it always had, with nothing extra on it.
-var _project_bar: Control = null
 
 
 func _init() -> void:
@@ -142,16 +138,6 @@ func _notification(what: int) -> void:
 	# The magnifier a Godot dock's filter wears, from the editor's own icons when there are any.
 	if what == NOTIFICATION_THEME_CHANGED and filter_edit != null and has_theme_icon("Search", "EditorIcons"):
 		filter_edit.right_icon = get_theme_icon("Search", "EditorIcons")
-
-
-## Hands this tab the Project bar, which sits at its foot under its own fold. Passing null takes it
-## away again (View ▸ Project bar off, or the ✕).
-func set_project_bar(bar: Control) -> void:
-	if _project_bar != null and _project_bar.get_parent() == self:
-		remove_child(_project_bar)
-	_project_bar = bar
-	if _project_bar != null and _project_bar.get_parent() == null:
-		add_child(_project_bar)
 
 
 ## Highlights one object FROM OUTSIDE - the Scene dock's selection landing on a node this sheet

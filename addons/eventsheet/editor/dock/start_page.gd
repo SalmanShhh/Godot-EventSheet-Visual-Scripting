@@ -294,7 +294,7 @@ static func opens_line(entry: Dictionary) -> String:
 			return EventSheetL10n.translate("%s in the sheet editor.") % target
 		"learn":
 			return EventSheetL10n.translate("This lesson in the Manual, beside the sheet.")
-	return EventSheetL10n.translate("The Project bar, at the editor's own source.")
+	return EventSheetL10n.translate("The editor's own source.")
 
 
 ## The showcase folders on disk, sorted. Empty when the project has no demo folder, which is the
@@ -602,17 +602,10 @@ func _pick_editor_tool() -> void:
 	EventSheetWindowPlacement.popup_at(menu, Vector2i(_window.get_mouse_position()) + _window.position)
 
 
-## The contributor's door: turn the Project bar on, open it, and open the plugin's own script
-## as the first thing they read. Everything here is a gesture the reader could make by hand; the card
-## just makes it one click instead of four.
+## The contributor's door: open the plugin's own script as the first thing they read.
 func _open_this_editor_folder() -> void:
-	_dock._project_bar_glue.set_shown(true)
-	var bar: EventSheetProjectBar = _dock._project_bar_glue.bar()
-	if bar != null:
-		bar.set_expanded(true)
-		bar.open_this_editor_folder()
 	_dock._navigate.open_or_focus(EventSheetThisEditor.PLUGIN_SCRIPT_PATH)
-	_dock._set_status("The editor's own source, in the Project bar under This editor. Every file is read-only until you say Edit anyway.")
+	_dock._set_status("The editor's own source, in the FileSystem dock under the plugin folder. Every file is read-only until you say Edit anyway.")
 
 
 ## The scene a showcase folder runs from. A folder also holds the scenes its main scene spawns (a

@@ -72,11 +72,12 @@ const ROLE_WORDS: Dictionary = {
 	"other": ["Everything else", "the rest of these folders"],
 }
 
-## Where the Project bar records that this project has it turned on. Named here rather than reached
-## through the bar's own glue so the gate below stays a static with no editor classes behind it.
+## The project-metadata flag that turns the This editor folder's costly reads on. The Project bar
+## that used to set it is gone, so nothing writes it now and the gate below stays off unless a
+## project sets it by hand.
 const PROJECT_BAR_SHOWN_KEY: String = "eventsheets_project_bar_shown"
 
-## The kind a listed file carries, so the Project bar's routing tells a this-editor entry apart from
+## The kind a listed file carries, so a this-editor entry is told apart from
 ## an ordinary project script (which opens editable, and is not part of the running editor).
 const ENTRY_KIND: String = "this_editor_script"
 

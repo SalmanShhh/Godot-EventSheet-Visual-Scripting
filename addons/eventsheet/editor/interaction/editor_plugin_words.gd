@@ -156,12 +156,12 @@ const VERBS: Dictionary = {
 ## The right-click surfaces a context menu can be added to, in the names this sheet already uses for
 ## those panels everywhere else. Written as whole constant spellings so a partial match can never
 ## rewrite half an identifier, and LONGEST FIRST: `..._FILESYSTEM` is a prefix of
-## `..._FILESYSTEM_CREATE`, so rewriting the short one first would leave `Project bar_CREATE` behind.
+## `..._FILESYSTEM_CREATE`, so rewriting the short one first would leave `FileSystem dock_CREATE` behind.
 const CONTEXT_SLOTS: Dictionary = {
-	"EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE": "Project bar ▸ Create new",
+	"EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE": "FileSystem dock ▸ Create new",
 	"EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR_CODE": "Script editor ▸ Code",
 	"EditorContextMenuPlugin.CONTEXT_SLOT_SCENE_TREE": "Scene dock",
-	"EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM": "Project bar",
+	"EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM": "FileSystem dock",
 	"EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR": "Script editor"
 }
 

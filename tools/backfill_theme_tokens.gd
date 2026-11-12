@@ -10,7 +10,7 @@
 #   <godot> --headless --path . --script tools/backfill_theme_tokens.gd
 #
 # It only fills tokens the preset FILE does not already state. That word "backfill" is load-bearing:
-# High Contrast picks its minimap hues and its Project bar note by hand, for readers who need them
+# High Contrast picks its minimap hues by hand, for readers who need them
 # separable, and an earlier pass that applied the rule unconditionally flattened all of them back
 # into the general derivation. A stated token is an opinion; the rule only decides what "no opinion"
 # looks like.

@@ -24,9 +24,9 @@ static func build(host: Window) -> Control:
 	dock._current_sheet = _sheet()
 	dock._current_sheet_path = "res://enemy.gd"
 	EventSheetCompletions.clear_cache()
-	EventSheetProjectOutline.set_doctor_findings(_findings())
+	EventSheetProjectDoctorPanel.set_doctor_findings(_findings())
 	var entries: Array[Dictionary] = dock._ask_field.entries(TYPED)
-	EventSheetProjectOutline.clear_doctor_findings()
+	EventSheetProjectDoctorPanel.clear_doctor_findings()
 	dock.free()
 
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
@@ -93,7 +93,7 @@ static func _sheet() -> EventSheetResource:
 	return sheet
 
 
-## What the last Doctor run said - recorded through the one store the Project bar and the inbox both
+## What the last Doctor run said - recorded through the one store the Ask field and the inbox both
 ## read, so the finding in the list is the finding on the Doctor's own page.
 static func _findings() -> Array:
 	return [{

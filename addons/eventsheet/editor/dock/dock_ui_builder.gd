@@ -261,8 +261,6 @@ func build_ui() -> void:
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
-	# The Project bar's own drop: what it means travels in the payload, and the dock writes it.
-	_dock._viewport.project_entry_dropped.connect(_dock.apply_project_entry_drop)
 	# A thumbnail the editor's preview cache renders after the row was drawn: redraw once when
 	# it lands, so the picture appears rather than waiting for the next thing to move.
 	EventSheetObjectThumbnails.set_arrival_handler(func() -> void:
@@ -501,10 +499,8 @@ func build_ui() -> void:
 	_dock._context_menus.build_all()
 	_dock._build_preview_window()
 	_dock._build_theme_file_dialog()
-	# Both surfaces exist now (the View items above, the strip below the menus), so the
-	# "should this project have them" rule can finally be resolved. It could not run inside the menu
-	# build: the strip was not there yet, and a rule that runs against half a UI silently does nothing.
-	_dock._project_bar_glue.apply_visibility()
+	# The strip exists now (the menus above it are built), so the "should this project have it" rule
+	# can finally be resolved; it could not run inside the menu build.
 	_dock._beginner_toolbar.apply_visibility()
 
 

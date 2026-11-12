@@ -3,7 +3,7 @@
 # A long sheet builds a row's words (its spans) when the row is first laid out, so a rebuild pays only
 # for the screenful in view. But building a row's words is also when its readings claim the patterns
 # they recognise, and the readers that count patterns over the WHOLE sheet - the coverage chip on the
-# Project bar, an object's "could adopt", the Manual's "Patterns using this" - answered from however
+# head bar, an object's "could adopt", the Manual's "Patterns using this" - answered from however
 # far the reader had scrolled. This builds the rest a few milliseconds per frame after every rebuild,
 # so those answers arrive at what the whole sheet says without the rebuild waiting for it, and then
 # measures every row again with its words (keeping the view where it was).

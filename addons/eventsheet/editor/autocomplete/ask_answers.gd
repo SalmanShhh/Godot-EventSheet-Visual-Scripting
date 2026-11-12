@@ -18,7 +18,7 @@ extends RefCounted
 # NO NEW INDEX AND NO SECOND STORE. Every answer here is a read of something the editor already
 # holds: the completion seam's per-sheet lists (built once, filtered per keystroke, dropped by the
 # same two invalidations as every other field kind), the project Find's own collection of what a
-# sheet can be found by, and the findings of the last Doctor run as the Project bar already keeps
+# sheet can be found by, and the findings of the last Doctor run as the Project Doctor window keeps
 # them. The join happens at ASK time and is thrown away; nothing is written down.
 #
 # WHAT IS ANSWERED, AND WHAT IS NOT. NAMES come from every sheet the reader has open, because what a

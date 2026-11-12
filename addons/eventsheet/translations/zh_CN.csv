@@ -10173,3 +10173,8 @@ Variable…,变量…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,%s 在 secret 组中。是否添加在玩家首次进入时计数的事件？
 %s exports a needs_key variable. Add the event that tries it when the player walks in?,%s 导出了变量 needs_key。是否添加在玩家进入时尝试它的事件？
 %s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 在 water 组中。是否添加进入时置起标志、离开时放下标志的两行？
+The editor's own source.,编辑器自身的源码。
+words = %s · theme = %s · GDScript panel = %s · tour = %s,用词 = %s · 主题 = %s · GDScript 面板 = %s · 导览 = %s
+Show In FileSystem Dock,在文件系统面板中显示
+"Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.",在 Godot 的文件系统面板中定位并选中某个文件夹或文件 - 工具写出东西之后就该这么做，好让人看到刚落下的是什么。
+Show in FileSystem dock {path},在文件系统面板中显示 {path}

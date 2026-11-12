@@ -152,7 +152,7 @@ Two boundaries, both said out loud rather than guessed at:
 
 Nothing is indexed for any of this. Every answer is a read of a list the editor already holds - the
 same per-sheet lists that fill the completion popups, the same collection the Find window matches
-on, the same findings the Project bar badges with - joined when you ask and thrown away after.
+on, the same findings the Project Doctor window lists - joined when you ask and thrown away after.
 
 ## Code boxes keep Godot's own completion
 

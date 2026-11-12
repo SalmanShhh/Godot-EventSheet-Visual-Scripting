@@ -10173,3 +10173,8 @@ Variable…,변수…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,%s 은(는) secret 그룹에 있습니다. 플레이어가 처음 들어갈 때 세는 이벤트를 추가할까요?
 %s exports a needs_key variable. Add the event that tries it when the player walks in?,%s 은(는) needs_key 변수를 내보냅니다. 플레이어가 들어갈 때 그것을 시도하는 이벤트를 추가할까요?
 %s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 은(는) water 그룹에 있습니다. 들어갈 때 플래그를 올리고 나올 때 내리는 두 행을 추가할까요?
+The editor's own source.,에디터 자체의 소스.
+words = %s · theme = %s · GDScript panel = %s · tour = %s,용어 = %s · 테마 = %s · GDScript 패널 = %s · 투어 = %s
+Show In FileSystem Dock,파일시스템 독에서 보이기
+"Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.","Godot의 파일시스템 독에서 폴더나 파일을 드러내고 선택합니다 - 무언가를 쓴 뒤에 도구가 하는 일로, 방금 생긴 것을 볼 수 있게 합니다."
+Show in FileSystem dock {path},파일시스템 독에서 {path} 보이기

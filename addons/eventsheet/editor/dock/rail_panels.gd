@@ -7,7 +7,7 @@ extends RefCounted
 # a panel styled the way Godot's own docks are - a strip of flat tabs along the top, then whatever
 # the chosen tab holds (a filter, then plain rows with an icon, a name and a count):
 #
-#   Objects     what this file uses and what else is in its scene, plus the Project bar's fold
+#   Objects     the objects this sheet uses
 #   Functions   the sheet's functions and the functions still written as code
 #
 # Two more tabs appear only when there is something behind them: Anatomy for a behaviour pack, and

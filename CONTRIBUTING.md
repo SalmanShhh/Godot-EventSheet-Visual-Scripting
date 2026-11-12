@@ -15,8 +15,7 @@ hours.
 
 ## Read this repository as event sheets
 
-Open this project in the editor and the Project bar grows a **This editor** folder (View ▸ Project
-bar): every file the plugin is built from, listed as a sheet and grouped by what it does. It is
+Open this project in the editor and the Start page offers a **This editor** card: every file the plugin is built from opens as a sheet (find them in the FileSystem dock under addons/). It is
 read-only by default, because saving one reloads the plugin you are using - and a file that does not
 parse is not reloaded at all, so the editor keeps running while you fix it. Two Manual tutorials walk
 it: **Read the editor's code as events** and **Add a word to the vocabulary**. The written version is

@@ -1,6 +1,6 @@
 # Godot EventSheets - the project-level surfaces
 #
-# Five surfaces, one test, because they share one shape: a small pure table decides what the reader
+# The project-level surfaces, one test, because they share one shape: a small pure table decides what the reader
 # sees, and the UI is only a way to show it. Everything pinned here is a VALUE - the exact line an
 # entry reads as, the exact route a double-click takes, the exact button set a mode offers, the exact
 # bindings a preset writes - never a count, because a count passes for the wrong reasons.
@@ -16,10 +16,6 @@ const PIN_MODES_ABOUT: String = "[b]Pin Modes[/b] - six ways one object can ride
 
 static func run() -> bool:
 	var all_passed: bool = true
-	all_passed = _outline_reads_by_kind() and all_passed
-	all_passed = _headings_follow_familiar_words() and all_passed
-	all_passed = _routes_and_drags() and all_passed
-	all_passed = _doctor_badges() and all_passed
 	all_passed = _visibility_rules() and all_passed
 	all_passed = _toolbar_and_preview_buttons() and all_passed
 	all_passed = _shortcut_preset() and all_passed
@@ -28,161 +24,8 @@ static func run() -> bool:
 	return all_passed
 
 
-## A fixture project, as the scan would hand it over: two scenes, three scripts (one of them an
-## autoload), two declared classes where one extends the other, one pack, one sound, some art.
-static func _fixture_scan() -> Dictionary:
-	return {
-		"scenes": PackedStringArray(["res://main_menu.tscn", "res://level_1.tscn"]),
-		"scripts": PackedStringArray(["res://player.gd", "res://slime.gd", "res://game.gd"]),
-		"sounds": PackedStringArray(["res://audio/jump.ogg"]),
-		"others": PackedStringArray(["res://art/hero.png", "res://art/tiles.png", "res://data/levels.json"]),
-		"classes": [
-			{"name": "Player", "path": "res://player.gd", "base": "CharacterBody2D"},
-			{"name": "Slime", "path": "res://slime.gd", "base": "Player"},
-		],
-		"autoloads": {"Game": "res://game.gd"},
-		"packs": PackedStringArray(["health"]),
-	}
-
-
-static func _outline_reads_by_kind() -> bool:
-	var all_passed: bool = true
-	var outline: Dictionary = EventSheetProjectOutline.outline_from(_fixture_scan())
-	all_passed = _check("a scene reads by its name, with its file muted beside it",
-		EventSheetProjectBar.entry_text((outline["scenes"] as Array)[0]),
-		"Main Menu  main_menu.tscn") and all_passed
-	all_passed = _check("a script that declares a class reads under the class name",
-		EventSheetProjectBar.entry_text((outline["scripts"] as Array)[0]),
-		"Player  player.gd") and all_passed
-	all_passed = _check("an autoload reads under its singleton name and says so",
-		EventSheetProjectBar.entry_text((outline["scripts"] as Array)[2]),
-		"Game  autoload · game.gd") and all_passed
-	all_passed = _check("a base class reads with the classes that extend it",
-		EventSheetProjectBar.entry_text((outline["base_classes"] as Array)[0]),
-		"Player  Slime") and all_passed
-	all_passed = _check("only a class something else extends is a base class",
-		(outline["base_classes"] as Array).size(), 1) and all_passed
-	all_passed = _check("an installed pack is a behavior",
-		EventSheetProjectBar.entry_text((outline["behaviors"] as Array)[0]),
-		"Health  health") and all_passed
-	all_passed = _check("a sound reads by its name",
-		EventSheetProjectBar.entry_text((outline["sounds"] as Array)[0]),
-		"Jump  jump.ogg") and all_passed
-	# FILES is folders, not files: the section says "there is also art and data over there", it does
-	# not become a second FileSystem dock.
-	all_passed = _check("files are folders with a count, not a file list",
-		EventSheetProjectBar.entry_text((outline["files"] as Array)[0]),
-		"art  2 files") and all_passed
-	all_passed = _check("a folder with one thing in it says so in the singular",
-		EventSheetProjectBar.entry_text((outline["files"] as Array)[1]),
-		"data  1 file") and all_passed
-	var covered: Dictionary = EventSheetProjectOutline.outline_from(
-		_fixture_scan(), {"res://player.gd": "82% reads as events, 3 script blocks"})
-	all_passed = _check("an open sheet's coverage rides the script's own line",
-		EventSheetProjectBar.entry_text((covered["scripts"] as Array)[0]),
-		"Player  player.gd · 82% reads as events, 3 script blocks") and all_passed
-	all_passed = _check("the filter matches the note as well as the name",
-		EventSheetProjectOutline.matches_filter((outline["scenes"] as Array)[1], "tscn"), true) and all_passed
-	all_passed = _check("a filter that matches nothing says so",
-		EventSheetProjectOutline.matches_filter((outline["scenes"] as Array)[1], "zzz"), false) and all_passed
-	return all_passed
-
-
-static func _headings_follow_familiar_words() -> bool:
-	var all_passed: bool = true
-	all_passed = _check("Godot's word leads with the other editor's beside it",
-		EventSheetProjectOutline.heading_for("scenes", false), "Scenes  (layouts)") and all_passed
-	all_passed = _check("Familiar Words swaps which one leads",
-		EventSheetProjectOutline.heading_for("scenes", true), "Layouts  (scenes)") and all_passed
-	all_passed = _check("scripts are event sheets in the other editor's words",
-		EventSheetProjectOutline.heading_for("scripts", true), "Event sheets  (scripts)") and all_passed
-	all_passed = _check("classes are object types",
-		EventSheetProjectOutline.heading_for("classes", true), "Object types  (classes)") and all_passed
-	all_passed = _check("base classes are families",
-		EventSheetProjectOutline.heading_for("base_classes", false), "Base classes  (families)") and all_passed
-	# A word both editors use is not dressed up as a translation of itself.
-	all_passed = _check("a word both editors share stands alone",
-		EventSheetProjectOutline.heading_for("sounds", true), "Sounds") and all_passed
-	return all_passed
-
-
-static func _routes_and_drags() -> bool:
-	var all_passed: bool = true
-	var outline: Dictionary = EventSheetProjectOutline.outline_from(_fixture_scan())
-	all_passed = _check("a scene opens in the scene editor",
-		EventSheetProjectOutline.route_for((outline["scenes"] as Array)[0]), "scene_editor") and all_passed
-	all_passed = _check("a script opens as a sheet by default",
-		EventSheetProjectOutline.route_for((outline["scripts"] as Array)[0], true), "sheet") and all_passed
-	all_passed = _check("a script opens in the script editor when that is the reader's default",
-		EventSheetProjectOutline.route_for((outline["scripts"] as Array)[0], false), "script_editor") and all_passed
-	all_passed = _check("a class has no window to open now",
-		EventSheetProjectOutline.route_for((outline["classes"] as Array)[0]), "nothing") and all_passed
-	all_passed = _check("a behavior opens its pack's reference page",
-		EventSheetProjectOutline.route_for((outline["behaviors"] as Array)[0]), "pack_reference") and all_passed
-	all_passed = _check("a sound has nowhere of its own to open, so it is shown where it lives",
-		EventSheetProjectOutline.route_for((outline["sounds"] as Array)[0]), "file_system") and all_passed
-	all_passed = _check("dragging a class starts an event on it",
-		EventSheetProjectOutline.drag_intent_for((outline["classes"] as Array)[0]), "start_event") and all_passed
-	all_passed = _check("dragging a sound is a Play sound action",
-		EventSheetProjectOutline.drag_intent_for((outline["sounds"] as Array)[0]), "play_sound") and all_passed
-	all_passed = _check("dragging a scene is a Go to layout action",
-		EventSheetProjectOutline.drag_intent_for((outline["scenes"] as Array)[0]), "go_to_layout") and all_passed
-	all_passed = _check("an entry the sheet has no gesture for refuses the drag",
-		EventSheetProjectOutline.drag_intent_for((outline["files"] as Array)[0]), "") and all_passed
-	# The canvas has to RECOGNISE the payload, or the whole gesture is a drag onto a surface that
-	# quietly ignores it. The Project bar's payload is deliberately its own type, so a class from the
-	# project can never be mistaken for an object the sheet already uses.
-	all_passed = _check("the canvas recognises the Project bar's payload",
-		EventSheetViewport.is_project_bar_drag({"type": EventSheetProjectBar.DRAG_TYPE,
-			"intent": "start_event", "label": "Player"}), true) and all_passed
-	all_passed = _check("and does not mistake it for an Object bar drop",
-		EventSheetViewport.is_object_bar_drag({"type": EventSheetProjectBar.DRAG_TYPE,
-			"intent": "start_event", "label": "Player"}), false) and all_passed
-	all_passed = _check("a payload with no intent is not a Project bar drop",
-		EventSheetViewport.is_project_bar_drag({"type": EventSheetProjectBar.DRAG_TYPE,
-			"label": "levels.json"}), false) and all_passed
-	return all_passed
-
-
-static func _doctor_badges() -> bool:
-	var all_passed: bool = true
-	var findings: Array = [
-		{"severity": "error", "check": "x", "path": "res://player.gd", "message": "boom"},
-		{"severity": "warning", "check": "y", "path": "res://slime.gd", "message": "hmm"},
-		{"severity": "info", "check": "z", "path": "res://game.gd", "message": "note"},
-	]
-	var badges: Dictionary = EventSheetProjectOutline.badge_map(findings)
-	all_passed = _check("an error is counted against its file",
-		int((badges["res://player.gd"] as Dictionary)["errors"]), 1) and all_passed
-	all_passed = _check("a warning is counted apart from an error",
-		int((badges["res://slime.gd"] as Dictionary)["warnings"]), 1) and all_passed
-	EventSheetProjectOutline.set_doctor_findings(findings)
-	all_passed = _check("a file with an error wears the error mark",
-		EventSheetProjectOutline.badge_for({"path": "res://player.gd"}), "●") and all_passed
-	all_passed = _check("a file with only a warning wears the warning mark",
-		EventSheetProjectOutline.badge_for({"path": "res://slime.gd"}), "▲") and all_passed
-	all_passed = _check("an info finding is not a badge",
-		EventSheetProjectOutline.badge_for({"path": "res://game.gd"}), "") and all_passed
-	all_passed = _check("a file the Doctor said nothing about wears nothing",
-		EventSheetProjectOutline.badge_for({"path": "res://level_1.tscn"}), "") and all_passed
-	EventSheetProjectOutline.clear_doctor_findings()
-	all_passed = _check("clearing the findings clears the badges",
-		EventSheetProjectOutline.badge_for({"path": "res://player.gd"}), "") and all_passed
-	return all_passed
-
-
 static func _visibility_rules() -> bool:
 	var all_passed: bool = true
-	all_passed = _check("nobody asked, nothing special: the Project bar stays off",
-		EventSheetProjectBarGlue.should_show(null, false, false), false) and all_passed
-	all_passed = _check("Simple mode turns the Project bar on",
-		EventSheetProjectBarGlue.should_show(null, true, false), true) and all_passed
-	all_passed = _check("a project started from a template turns it on too",
-		EventSheetProjectBarGlue.should_show(null, false, true), true) and all_passed
-	all_passed = _check("an explicit no wins over Simple mode",
-		EventSheetProjectBarGlue.should_show(false, true, true), false) and all_passed
-	all_passed = _check("an explicit yes wins over everything being off",
-		EventSheetProjectBarGlue.should_show(true, false, false), true) and all_passed
 	all_passed = _check("the Add toolbar follows Simple mode when nobody asked",
 		EventSheetBeginnerToolbar.should_show(null, true), true) and all_passed
 	all_passed = _check("the Add toolbar is off outside Simple mode",

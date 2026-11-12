@@ -29,7 +29,7 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
    [a hand-written state machine](#a-hand-written-state-machine-read-as-the-objects-states),
    [watching it run](#watching-the-machine-while-the-game-runs)
    and [beginner spellings](#beginner-spellings-and-the-reading-layer), plus
-   [the Project bar](#the-project-bar---your-project-by-kind-not-by-folder)
+   [finding your project's files](#finding-your-projects-files)
 7b. [Living in a Big Project: the Minimap, the Sheet Map and the History List](#7b-living-in-a-big-project-the-minimap-the-sheet-map-and-the-history-list)
 8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
 9. [Use Cases](#9-use-cases)
@@ -2576,62 +2576,15 @@ On real code the effect compounds. Here is the plugin's own semantic analyzer, w
 
 ---
 
-### The Project bar - your project by kind, not by folder
+### Finding your project's files
 
 Adopting an existing project starts with the same question every time: *where are my event sheets?*
-Godot's FileSystem dock answers "where does this file live"; it has no way to answer "what are the
-things in this project". The **Project bar** does, and it is a tab of the Object bar rather than a
-dock of its own:
+Godot's own FileSystem dock answers it, and Quick Open (Ctrl+Shift+O) jumps to a file by name; the
+plugin adds no second project list. Double-click a `.gd` file in the FileSystem dock to open it in
+Godot's script editor, or open it as a sheet from **Sheet ▸ Open...** or the FileSystem dock's
+right-click menu.
 
-```
-PROJECT                        ⚙ ✕
-▾ Scenes  (layouts)
-    Main Menu    main_menu.tscn
-    Level 1      level_1.tscn
-▾ Scripts  (event sheets)
-    Player       player.gd · 82% reads as events, 3 script blocks
-    Game         autoload · game.gd
-▾ Classes  (object types)
-    Player · Enemy · Coin …
-▾ Base classes  (families)
-    Player       Slime · Bat
-▸ Behaviors     Health · Platformer · FSM …
-▸ Sounds        12
-▸ Files         art · data · shaders
-```
-
-![The Object bar with its Project tab selected: a PROJECT header with the count and a hide button, a filter box, then Scenes (layouts) open with each scene under its own name and its file muted beside it](images/project-bar.png)
-
-The headings follow **View ▸ Familiar Words**: with the toggle off Godot's word leads and the other
-editor's is muted beside it, and with it on the two swap - so both words are always on screen and the
-one you think in comes first. A section both editors call the same thing (Sounds, Files) is not
-dressed up as a translation of itself.
-
-Four things a folder tree cannot show are what earn it the room:
-
-- **which scripts open as sheets, and how far the reading got.** The scripts you have open carry
-  their coverage line, so "which of these is still mostly code" is one glance.
-- **which classes the project declares and who extends whom.** `Player  Slime · Bat` is the whole
-  inheritance of your project, read as one line each. Only a class something else extends is a base
-  class.
-- **which behavior packs are installed.**
-- **the last Project Doctor run's findings**, as a `●` (error) or `▲` (warning) on the item itself.
-
-**It owns no action.** Right-click ▸ *New scene / New script / New class / Extract base class /
-Import sound* each open Godot's own dialog or one the plugin already has, so there is never a second
-way to do the same thing. Double-click routes: a scene opens in the 2D/3D editor and the sheet offers
-the whole-layout-as-one-sheet reading beside it; a script opens as a sheet or in Godot's script
-editor, whichever you set as your default; a behavior opens its
-pack's reference page. Dragging one onto the canvas means what the sheet already understands - a
-class starts an event on it, a sound is a *Play sound* action, a scene is a *Go to layout* action.
-
-**It costs nothing until you open it.** Off by default and collapsed to a thin strip, built the first
-time it is actually shown, and refreshed on the same filesystem ping the rest of the editor listens
-to (and only while it is open). It turns itself on for a project in Simple mode, or one started from
-a template or from the migration guide; **View ▸ Project bar** toggles it by hand at any time and the
-✕ hides it for that project. Filter box on top, arrows and Enter to open, Esc back to the sheet.
-
-Three smaller surfaces come with it and are worth knowing on day one:
+Three smaller surfaces are worth knowing on day one:
 
 - **Menu ▸ Sheet ▸ Start page** - templates by genre with a one-line pitch, what you had open last, and the
   tutorials, on one page. It opens by itself when nothing is open; a checkbox turns that half off.

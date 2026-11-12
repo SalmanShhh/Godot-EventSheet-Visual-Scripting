@@ -10173,3 +10173,8 @@ Variable…,変数…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,%s はグループ secret に入っています。プレイヤーが初めて入ったときに数えるイベントを追加しますか？
 %s exports a needs_key variable. Add the event that tries it when the player walks in?,%s は変数 needs_key をエクスポートしています。プレイヤーが入ったときにそれを試すイベントを追加しますか？
 %s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s はグループ water に入っています。入るときにフラグを立て、出るときに下ろす2つの行を追加しますか？
+The editor's own source.,エディター自身のソース。
+words = %s · theme = %s · GDScript panel = %s · tour = %s,用語 = %s · テーマ = %s · GDScript パネル = %s · ツアー = %s
+Show In FileSystem Dock,ファイルシステムドックで表示
+"Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.",Godot のファイルシステムドックでフォルダーやファイルを表示して選択します - 何かを書き出した後にツールが行う操作で、今できたものが見えるようになります。
+Show in FileSystem dock {path},ファイルシステムドックで {path} を表示

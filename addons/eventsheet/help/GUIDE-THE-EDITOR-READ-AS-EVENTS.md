@@ -1,6 +1,6 @@
 # The Editor, Read as Events
 
-This editor is written in the language it reads. Open its own repository and the Project bar grows one more folder - **This editor** - listing every file the plugin is built from as a sheet, grouped by what each file does. It is the plainest claim the project can make, and the first page a contributor should read: if the editor's own source reads as events, tool code reads as events.
+This editor is written in the language it reads. Open its own repository and every file the plugin is built from opens as a sheet. It is the plainest claim the project can make, and the first page a contributor should read: if the editor's own source reads as events, tool code reads as events.
 
 Nothing here appears in your game. The folder needs two marks side by side - the plugin's `plugin.cfg` **and** the `tools/pack_builders/` folder next to it - and a project that merely installed the plugin has only the first. There is no setting to find and nothing to switch off.
 
@@ -17,11 +17,9 @@ Nothing here appears in your game. The folder needs two marks side by side - the
 
 ## 1. Opening the folder
 
-**View ▸ Project bar**, then **This editor** at the bottom of it. The Start page carries the same door as a card: *"This is the editor's own project - open its source as sheets"*.
+The Start page shows a card in this repository: *"This is the editor's own project - open its source as sheets"*. It opens the plugin's own script as a sheet; every other file of the plugin is in Godot's FileSystem dock under `addons/`.
 
-The folder is built the moment it is first opened and forgotten again when it is folded, so a session that never opens it never pays for the scan. Double-clicking a file opens it as a sheet, **read-only**, with `part of this editor · read-only` and an **Edit anyway** chip on its bar.
-
-![The Project bar's This editor folder, with the plugin and readings groups open](images/this-editor-folder.png)
+A file of the plugin opens as a sheet, **read-only**, with `part of this editor · read-only` and an **Edit anyway** chip on its bar.
 
 ## 2. What each group is
 

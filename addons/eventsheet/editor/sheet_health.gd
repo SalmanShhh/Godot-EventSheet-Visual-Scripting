@@ -157,7 +157,7 @@ static func unused_count(sheet: EventSheetResource) -> int:
 
 ## The card's short form, for a place that lists MANY sheets and must not load any of them: the
 ## file's own note, then how many events it has and how its tests last went. Text reads only - the
-## Project bar hovers with this, and the Start page's Recent list carries it as its second line.
+## Start page's Recent list carries it as its second line.
 static func brief_for_path(path: String, note: String = "") -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	if not note.strip_edges().is_empty():

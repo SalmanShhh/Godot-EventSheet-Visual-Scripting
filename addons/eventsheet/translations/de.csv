@@ -10173,3 +10173,8 @@ Variable…,Variable…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,"%s ist in der Gruppe secret. Das Ereignis hinzufügen, das es beim ersten Betreten durch den Spieler zählt?"
 %s exports a needs_key variable. Add the event that tries it when the player walks in?,"%s exportiert eine Variable needs_key. Das Ereignis hinzufügen, das sie ausprobiert, wenn der Spieler hineingeht?"
 %s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,"%s ist in der Gruppe water. Die beiden Zeilen hinzufügen, die beim Hineingehen die Markierung setzen und beim Verlassen zurücknehmen?"
+The editor's own source.,Der eigene Quelltext des Editors.
+words = %s · theme = %s · GDScript panel = %s · tour = %s,Wörter = %s · Thema = %s · GDScript-Leiste = %s · Tour = %s
+Show In FileSystem Dock,Im Dateisystem-Dock anzeigen
+"Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.","Zeigt einen Ordner oder eine Datei im Dateisystem-Dock von Godot und wählt sie aus - das, was ein Werkzeug tut, nachdem es etwas geschrieben hat, damit man sieht, was gerade angekommen ist."
+Show in FileSystem dock {path},{path} im Dateisystem-Dock anzeigen

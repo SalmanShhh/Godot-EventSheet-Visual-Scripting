@@ -22,9 +22,6 @@ signal object_bar_dropped(object_label: String, target_event: Resource, on_actio
 ## starts an "On <action> pressed" event for it, after the event it landed on.
 signal input_action_dropped(action_name: String, target_event: Resource)
 
-## A Project bar entry dropped on the canvas. The payload carries what it IS and what dropping
-## it means; the dock decides how to write that, exactly as it does for the Object bar's drops.
-signal project_entry_dropped(payload: Dictionary, target_event: Resource)
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
@@ -204,9 +201,6 @@ const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["trigger", "condition", "action"]
-## The Project bar's drag payload type, spelled out rather than read off that panel's constant:
-## naming the panel here compiled it into every first open, and it is built only when somebody shows it.
-const PROJECT_BAR_DRAG_TYPE := "eventsheet_project_entry"
 # Sheet zoom runs 50% to 200% in the six steps the status-bar pill offers; the levels and the
 # remembered value live on the palette, beside row density, because the zoom belongs to the LAYOUT
 # (every open sheet at once) and not to any one view.
@@ -6726,9 +6720,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# An object dragged off the Object bar is welcome anywhere on the canvas: that drag IS how
 	# an event sheet starts using an object, and where it lands decides whether it opens Add condition
 	# (empty canvas or an event's own band) or Add action (an existing event's action lane).
-	# And a Project bar entry the same way: the bar refuses the drag outright for anything the
-	# sheet has no gesture for, so a payload that got this far always means something.
-	if is_object_bar_drag(data) or is_input_action_drag(data) or is_project_bar_drag(data):
+	if is_object_bar_drag(data) or is_input_action_drag(data):
 		return true
 	# A scene-tree node dragged ONTO a condition/action param VALUE → fill that param with the node
 	# reference, but only when the param can hold one (not a plain number/bool cell), so the cursor reads
@@ -6752,15 +6744,6 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		var action_row: EventRowData = _row_at(action_row_index) if action_row_index >= 0 else null
 		input_action_dropped.emit(str((data as Dictionary).get("label", "")),
 			action_row.source_resource if action_row != null else null)
-		return
-	# Something dropped off the PROJECT bar. What it means is decided by what it is, and the bar
-	# already said so in the payload: a class starts an event on it, a sound is a Play sound action, a
-	# scene is a Go to layout action. Where it landed only decides which event it joins.
-	if is_project_bar_drag(data):
-		var project_row_index: int = _row_metrics_helper.row_index_at_y(at_position.y)
-		var project_row: EventRowData = _row_at(project_row_index) if project_row_index >= 0 else null
-		project_entry_dropped.emit(data as Dictionary,
-			project_row.source_resource if project_row != null else null)
 		return
 	# An object dropped from the Object bar. Landing on an existing event's ACTION lane means
 	# "do something to it here"; landing anywhere else means "start an event on it".
@@ -6826,18 +6809,6 @@ static func is_input_action_drag(data: Variant) -> bool:
 	var payload: Dictionary = data
 	return str(payload.get("type", "")) == EventSheetObjectsPanel.DRAG_TYPE_INPUT_ACTION \
 		and not str(payload.get("label", "")).strip_edges().is_empty()
-
-
-## True for the Project bar's drag payload
-## ({type: "eventsheet_project_entry", intent, label, path, kind}). Kept apart from the Object bar's
-## own payload because the two mean different things: that one is an object this sheet already uses,
-## this one is something in the PROJECT, and what dropping it means depends on what it is.
-static func is_project_bar_drag(data: Variant) -> bool:
-	if not (data is Dictionary):
-		return false
-	var payload: Dictionary = data
-	return str(payload.get("type", "")) == PROJECT_BAR_DRAG_TYPE \
-		and not str(payload.get("intent", "")).strip_edges().is_empty()
 
 
 ## True for the Object bar's own drag payload ({type: "eventsheet_object", label}).

@@ -78,7 +78,6 @@ const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_
 const PATTERN_MANUAL_PATH := "res://addons/eventsheet/editor/docs/doc_patterns.gd"
 const PICKER_RECIPES_PATH := "res://addons/eventsheet/editor/picker_recipes.gd"
 const PROJECT_FIND_PATH := "res://addons/eventsheet/editor/dock/project_find.gd"
-const PROJECT_OUTLINE_PATH := "res://addons/eventsheet/editor/interaction/project_outline_facts.gd"
 const PROJECT_VIEW_PANEL_PATH := "res://addons/eventsheet/editor/self_doc/project_view_panel.gd"
 const QUICK_PROMPT_DIALOGS_PATH := "res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd"
 const REFACTOR_PATH := "res://addons/eventforge/sheet_refactor.gd"
@@ -693,7 +692,6 @@ var _variable_grouping: RefCounted = null:  # drag-onto-variable folders + renam
 			_variable_grouping.init(self)
 		return _variable_grouping
 var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + the one cascading Menu (Sheet/Add/Edit/View/Tools) + quick-add (dock/menu_bar.gd)
-var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # The Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
 var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
 var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # The eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
 var _optimiser: RefCounted = null:  # the performance findings' fixes, as ordinary undoable row edits (dock/optimiser.gd)
@@ -1040,7 +1038,6 @@ func _init() -> void:
 	# All three are reached from _ui_builder.build_ui() (the View items, the Preview buttons
 	# and the beginner strip), so their back-references have to be wired before it. init() only
 	# stores _dock; nothing here builds or scans anything.
-	_project_bar_glue.init(self)
 	_run_controls.init(self)
 	_beginner_toolbar.init(self)
 	_find_results.init(self)
@@ -1147,9 +1144,6 @@ func _on_translations_maybe_changed() -> void:
 	# dropped with them; a pack dropped into the project appears on the next row that asks.
 	EventSheetViewportReadingRows.clear_pack_index()
 	EventSheetEditorToolCensus.clear_cache()
-	# The Project bar keeps no watcher of its own: it listens to exactly this ping, and only
-	# when it is open, so a hidden bar costs nothing on a filesystem change.
-	_project_bar_glue.on_filesystem_changed()
 	# The lifted-sheet memory stamps the code that lifts (the lifter, the compiler, the packs) once per
 	# session; a pack provider edited and saved mid-session is new code, so the stamp is taken again.
 	_clear_if_loaded("res://addons/eventforge/importer/lift_cache.gd", "forget_code_stamp")
@@ -2724,7 +2718,6 @@ func set_simple_mode(enabled: bool) -> void:
 func _apply_simple_mode_gates() -> void:
 	# Simple mode is the audience flag, so it is what decides these two by default. An
 	# explicit View-menu choice still wins; these only re-resolve the "nobody said" case.
-	_project_bar_glue.apply_visibility()
 	_beginner_toolbar.apply_visibility()
 	# Simple Mode pins the variable dial at the sentence. Expert mode does not push it back:
 	# the reader's own choice of dial is theirs to keep.
@@ -2952,9 +2945,6 @@ func _apply_familiar_words_pref() -> void:
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.familiar_words = stored
-	# The Project bar's headings follow the same toggle the rows do, so the reader never sees
-	# one surface using Godot's word while the other uses theirs.
-	_project_bar_glue.refresh_reading_prefs()
 
 
 func _toggle_familiar_words(view_popup: PopupMenu) -> void:
@@ -2972,7 +2962,6 @@ func _toggle_familiar_words(view_popup: PopupMenu) -> void:
 		var item_index: int = view_popup.get_item_index(21)
 		if item_index >= 0:
 			view_popup.set_item_checked(item_index, familiar)
-	_project_bar_glue.refresh_reading_prefs()
 	_set_status("Familiar words - layout, time scale, layer; the Godot word is on hover." if familiar
 		else "Godot words - scenes, pausing and CanvasLayers read by their Godot names.")
 
@@ -4008,18 +3997,12 @@ const HIT_COUNTS_VIEW_ID := 9601
 ## The same, for the costs lens - the profiled run's milliseconds in that same gutter chip.
 const COSTS_VIEW_ID := 9605
 
-## The View-menu ids the Project bar and the beginner Add toolbar are registered under,
-## kept beside the one above for the same reason: the toggle and the tick must never drift apart.
-const PROJECT_BAR_VIEW_ID := 9603
+## The View-menu id the beginner Add toolbar is registered under, kept beside the ones above
+## for the same reason: the toggle and the tick must never drift apart.
 const ADD_TOOLBAR_VIEW_ID := 9604
 
 
 # ── the project-level surfaces ────────────────────────────────────────────────────────────────
-## View ▸ Project bar. The bar is a TAB of the Object bar, not a dock of its own.
-func _toggle_project_bar() -> void:
-	_project_bar_glue.set_shown(_project_bar_glue.bar() == null)
-
-
 ## View ▸ Add toolbar - the eight Add gestures as buttons above the canvas.
 func _toggle_add_toolbar() -> void:
 	var strip: Control = _beginner_toolbar_strip()
@@ -4856,7 +4839,7 @@ func _project_view_inputs() -> Dictionary:
 	var sheets: Dictionary = _open_sheets_by_path()
 	return {
 		"sheets": sheets,
-		"findings": load(PROJECT_OUTLINE_PATH).doctor_findings(),
+		"findings": load("res://addons/eventsheet/editor/dock/project_doctor_panel.gd").doctor_findings(),
 		"timings": EventSheetRunProfile.milliseconds_by_sheet(sheets),
 	}
 
@@ -7001,32 +6984,6 @@ func _on_water_rows_offer_accepted(object_label: String) -> void:
 	_mark_dirty(EventSheetL10n.translate("Marking %s as water.") % object_label)
 
 
-## Something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what
-## dropping it MEANS (it refuses the drag for anything the sheet has no gesture for); this turns that
-## into the picker the reader would have opened by hand, with the object step already answered:
-##   a class or base class -> start an event on it
-##   a sound               -> a Play sound action
-##   a scene               -> a Go to layout action
-func apply_project_entry_drop(payload: Dictionary, target_event: Resource) -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	if target_event != null and _active_view() != null:
-		_active_view().select_resource(target_event)
-	var label: String = str(payload.get("label", "")).strip_edges()
-	match str(payload.get("intent", "")):
-		"start_event":
-			# The class IS the object scope the picker groups its verbs by, so the entry's own name
-			# answers the object step outright.
-			_ace_picker.open("new_event", false, null, {"object_scope": label, "object_label": label})
-			_set_status("Starting an event on %s." % label)
-		"play_sound":
-			_quick_add("play sound %s" % str(payload.get("path", "")))
-			_set_status("Added a Play sound action for %s." % label)
-		"go_to_layout":
-			_quick_add("change scene %s" % str(payload.get("path", "")))
-			_set_status("Added a Go to layout action for %s." % label)
-
-
 ## An Input Map action dragged off the bar's INPUT section and dropped on the canvas. An action
 ## is not an object: there is exactly one thing a reader means by dropping "jump" on a sheet, so this
 ## writes that event outright instead of opening the picker. It lands after the event it was dropped
@@ -7359,7 +7316,7 @@ func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palet
 	_starter.open_menu()
 
 
-## Sheet ▸ New Class… and the Project bar's New class…: picks what the class is, names it, writes
+## Sheet ▸ New Class…: picks what the class is, names it, writes
 ## its file and opens it.
 func open_insert_object() -> void:
 	load(INSERT_OBJECT_PATH).new().open(self)

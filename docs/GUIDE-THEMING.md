@@ -65,8 +65,7 @@ sections:
 - **Bars around the sheet - Object bar, status strip, tab title** (`EventSheetChromeStyle`):
   the Object bar's section headings, its ⚠ on a flagged entry, the wash it throws over the
   rows that use the object you point at and the grab dots on them, the status message and the
-  red it turns, the row address, the unsaved ●, and the file path beside a sheet's name. The
-  Project bar's by-kind headings and its quiet note sit here too, and so does the whole minimap
+  red it turns, the row address, the unsaved ●, and the file path beside a sheet's name; and the whole minimap
   column down the right of a long sheet: its sunken ground, the box over the part you are looking
   at, one tint per kind of event (trigger, every-tick, function, group, comment, script block, the
   rest, and a disabled row), the marks for a bookmark and a flagged row, and the band a group
@@ -77,7 +76,7 @@ sections:
 
 ![The Theme Editor's token form scrolled to its new groups: Bars around the sheet, with the Object bar's wash and grips, the status message and the red it turns, the unsaved dot and the file path - and Manual pages below it, where a token left clear means "follow the editor"](images/theme-editor-new-groups.png)
 
-![The Theme Editor open on the Dracula preset, scrolled to the Bars around the sheet card: the Object bar's rows, the Project bar's heading and note, the status strip, and the minimap column's tints - each swatch carrying Dracula's own palette rather than the plugin's default](images/theme-editor-token-rows.png)
+![The Theme Editor open on the Dracula preset, scrolled to the Bars around the sheet card: the Object bar's rows, the status strip, and the minimap column's tints - each swatch carrying Dracula's own palette rather than the plugin's default](images/theme-editor-token-rows.png)
 
 Every Manual token starts with **no opinion** (alpha zero), which means "follow the editor".
 A reader who never picks a theme keeps help that looks like the rest of their Godot editor;

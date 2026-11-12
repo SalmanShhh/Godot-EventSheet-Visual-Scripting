@@ -2,7 +2,7 @@
 class_name OpenTabsModelTest
 extends RefCounted
 # The open-tabs model on EventSheetDock (get_open_sheets_state + the recently-closed list), which
-# the Start page's recent sheets and the Project bar read. Pins: the snapshot reports the open tabs,
+# the Start page's recent sheets and the sheet map read. Pins: the snapshot reports the open tabs,
 # the active index and the dirty flags; recently closed excludes what is still open, dedups and moves
 # to the front; re-selecting the active tab is a no-op; and the side panel stays put across a Split
 # View toggle.

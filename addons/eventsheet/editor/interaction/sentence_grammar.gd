@@ -1499,7 +1499,7 @@ static func editor_words(text: String) -> String:
 	out = out.replace("EditorInterface.get_editor_settings()", "Editor.Settings")
 	out = out.replace("get_undo_redo()", "Editor.UndoHistory")
 	# The right-click surfaces a context menu can be hung on, in the names the sheet uses for
-	# those panels everywhere else - a loop over two slot constants reads "Scene dock, Project bar"
+	# those panels everywhere else - a loop over two slot constants reads "Scene dock, FileSystem dock"
 	# rather than two lines of engine spelling nobody would recognise as the panels they name.
 	out = EventSheetEditorPluginWords.context_slot_words(out)
 	return out

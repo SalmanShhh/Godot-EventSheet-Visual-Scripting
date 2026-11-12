@@ -118,7 +118,7 @@ func shelf() -> Dictionary:
 		var sheet: EventSheetResource = tab.get("sheet") as EventSheetResource
 		if sheet != null and sheet != _dock._current_sheet:
 			sheets.append({"path": str(tab.get("path", "")), "sheet": sheet})
-	return {"sheets": sheets, "findings": EventSheetProjectOutline.doctor_findings()}
+	return {"sheets": sheets, "findings": load("res://addons/eventsheet/editor/dock/project_doctor_panel.gd").doctor_findings()}
 
 
 ## Goes where an answer points. Every branch either arrives somewhere or says on the status line what

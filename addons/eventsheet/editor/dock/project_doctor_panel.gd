@@ -2,6 +2,23 @@
 class_name EventSheetProjectDoctorPanel
 extends RefCounted
 
+## The last Doctor run of this session, exactly as the run reported it. Empty when nobody has run
+## one; nothing here ever runs the Doctor to fill it.
+static var _doctor_findings: Array = []
+
+
+## Records a Doctor run's findings. Called by whoever ran it.
+static func set_doctor_findings(findings: Array) -> void:
+	_doctor_findings = findings.duplicate()
+
+
+static func doctor_findings() -> Array:
+	return _doctor_findings
+
+
+static func clear_doctor_findings() -> void:
+	_doctor_findings = []
+
 # The Project Doctor window (Tools ▸ Project Doctor) - the triage inbox for everything the audit
 # found.
 #
@@ -139,12 +156,9 @@ func _run_project_doctor() -> void:
 	# Through the public API so extension-registered checks (EventSheets.register_doctor_check)
 	# report in the panel exactly like built-ins.
 	var report: Dictionary = EventSheets.doctor()
-	# The Project bar badges its entries from THIS run rather than running the audit itself: a
-	# scan of the whole project on every bar rebuild is exactly the cost that panel promised not to
-	# have. Handing the findings over here is what makes the badges free.
-	EventSheetProjectOutline.set_doctor_findings(report.get("findings", []))
-	if _dock._project_bar_glue.bar() != null:
-		_dock._project_bar_glue.bar().refresh()
+	# One store, so every page that wants to say what the Doctor found reads this run rather than
+	# starting one of its own.
+	set_doctor_findings(report.get("findings", []))
 	# The page, decided once and headlessly: worst first, and what is new against the last read.
 	_page = EventSheetDoctorInbox.triage(report.get("findings", []) as Array,
 		EventSheetDoctorInbox.load_seen())

@@ -119,7 +119,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 static func section_descriptions() -> Dictionary:
 	return {
 		CAT_PREFERENCES: "This project's settings and the user's own Editor Settings - read one, write one, save them, and hear about it when either changes.",
-		CAT_PANELS: "The editor's own surfaces: its icons, its workspace tabs, its Project bar, its script editor and its command palette.",
+		CAT_PANELS: "The editor's own surfaces: its icons, its workspace tabs, its FileSystem dock, its script editor and its command palette.",
 		CAT_LIFECYCLE: "What the editor calls on a plugin: switched on, switched off, handed an object to edit, and the two passes it paints over the 2D view.",
 		CAT_PROPERTIES: "The panel an object's properties are shown in, and the add-on that puts your own buttons and fields in it beside them.",
 		CAT_UNDO: "What Ctrl+Z walks back. A tool that adds its change as a step here is a tool the user can undo like any other edit.",
@@ -146,14 +146,14 @@ static func _dock_slot_param() -> ACEParam:
 
 # ── THE AUTHORING ROWS: the project, the preferences and the editor surfaces ──
 #
-# workspaces, the Project bar, the script editor, the command palette).
+# workspaces, the FileSystem dock, the script editor, the command palette).
 #
 # The third file of the Editor object, beside tooling_aces.gd (the chores a tool runs) and
 # editor_object_aces.gd (what a plugin does to the editor). Where those two cover "run this" and
 # "hang that", this one covers the questions a tool author asks on the first day: which icon does
 # the editor draw for a Node2D, what did the user set their theme to, what is this project's own
 # setting, and the four verbs that move the editor around - switch workspace, show a path in the
-# Project bar, open a script at a line, put a window on the editor's root.
+# FileSystem dock, open a script at a line, put a window on the editor's root.
 #
 # Every row emits the plain EditorInterface / ProjectSettings line it names, so an opened tool
 # script lifts into these rows and re-emits byte-identically. The category is an "Editor Tools: …"
@@ -188,7 +188,7 @@ static func _authoring_descriptors() -> Array[ACEDescriptor]:
 
 	# ── Moving the editor around ──
 	descriptors.append(F.act("SwitchToWorkspace", "Switch To Workspace", "EditorInterface.set_main_screen_editor({workspace})", CAT_PANELS, "Switch to workspace {workspace}", "Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.").param_built(_workspace_param()))
-	descriptors.append(F.act("ShowInProjectBar", "Show In Project Bar", "EditorInterface.get_file_system_dock().navigate_to_path({path})", CAT_PANELS, "Show in Project bar {path}", "Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.").param("path", "\"res://\"", "Path", "The folder or file to reveal, as a res:// path.", "expression"))
+	descriptors.append(F.act("ShowInProjectBar", "Show In FileSystem Dock", "EditorInterface.get_file_system_dock().navigate_to_path({path})", CAT_PANELS, "Show in FileSystem dock {path}", "Reveals a folder or file in Godot's FileSystem dock and selects it - what a tool does after it writes something, so the reader can see what just landed.").param("path", "\"res://\"", "Path", "The folder or file to reveal, as a res:// path.", "expression"))
 	descriptors.append(F.act("OpenScriptAtLine", "Open Script At Line", "EditorInterface.get_script_editor().goto_line({line})", CAT_PANELS, "Open script at line {line}", "Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.").param_typed("int", "line", "0", "Line", "The line to jump to, counted from zero.", "expression"))
 	descriptors.append(F.act("AddEditorWindow", "Add Window", "EditorInterface.get_base_control().add_child({window})", CAT_PANELS, "Add window {window} to the editor's root", "Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.").param_typed("Node", "window", "Window.new()", "Window", "The window or dialog to hang on the editor.", "expression"))
 	descriptors.append(F.act("AddCommandPaletteCommand", "Add Command", "EditorInterface.get_command_palette().add_command({title}, {key_name}, {handler})", CAT_PANELS, "Add command {title}", "Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.").param("title", "\"My Command\"", "Named", "The words the command palette shows.", "expression").param("key_name", "\"my_plugin/my_command\"", "Keyed", "The unique key the palette files it under.", "expression").param_typed("Callable", "handler", "_run_tool", "Calls", "The function to run when the command is chosen.", "expression"))

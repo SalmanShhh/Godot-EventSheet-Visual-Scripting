@@ -426,7 +426,8 @@ func _open_node(id: String) -> void:
 		"gd":
 			_dock.reopen_sheet_path(id)
 		"tscn", "scn":
-			_dock._project_bar_glue._open_scene(id)
+			if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+				EditorInterface.open_scene_from_path(id)
 
 
 ## A click on a line runs the Find that explains it - the signal's name for a signal edge, the

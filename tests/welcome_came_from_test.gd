@@ -5,7 +5,7 @@ extends RefCounted
 # EventForge - the Welcome window's one question: how do you usually make games?
 #
 # Each answer sets settings the editor already owns - the words preset, the sheet theme, the
-# Project bar, the GDScript panel - and says so in one line. These pins hold the table and the line
+# GDScript panel - and says so in one line. These pins hold the table and the line
 # to each other, by value, so the card can never promise one thing and set another:
 #   1. what each answer sets;
 #   2. the sentence under the answers, word for word;
@@ -21,7 +21,6 @@ static func run() -> bool:
 	return SUPPORT.pins("welcome_came_from_test", [
 		["from another event-sheet editor: its words", sheets["words"], EventSheetWords.PRESET_SHEET],
 		["and the Classic sheet look", sheets["theme"], "res://addons/eventsheet/themes/classic_sheet_theme.tres"],
-		["and the Project bar", sheets["project_bar"], true],
 		["and the migration guide", sheets["guide"], "GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR"],
 		["from GDScript: Godot's words and the code beside the sheet", [godot["words"], godot["code_panel"]],
 			[EventSheetWords.PRESET_GODOT, true]],
@@ -29,7 +28,7 @@ static func run() -> bool:
 			[EventSheetWords.PRESET_FAMILIAR, true]],
 		["the sentence for another event-sheet editor",
 			EventSheetWelcomeWindow.choice_summary(EventSheetWelcomeWindow.CAME_FROM_SHEETS),
-			"Sets: Event-sheet-editor words, Classic sheet theme, Project bar on, the migration guide open in the Manual. Change any of it later in Settings ▸ Words and the View menu."],
+			"Sets: Event-sheet-editor words, Classic sheet theme, the migration guide open in the Manual. Change any of it later in Settings ▸ Words and the View menu."],
 		["the sentence for GDScript",
 			EventSheetWelcomeWindow.choice_summary(EventSheetWelcomeWindow.CAME_FROM_GDSCRIPT),
 			"Sets: Godot words, the editor-matching theme, the GDScript panel beside every sheet. Change any of it later in Settings ▸ Words and the View menu."],
@@ -38,7 +37,7 @@ static func run() -> bool:
 			"Sets: Familiar words, the editor-matching theme, the tour. Change any of it later in Settings ▸ Words and the View menu."],
 		["the SETS line names every setting and its value",
 			EventSheetWelcomeWindow.choice_sets(EventSheetWelcomeWindow.CAME_FROM_SHEETS),
-			"words = Event-sheet-editor words · theme = Classic sheet · Project bar = on · GDScript panel = off · tour = off"],
+			"words = Event-sheet-editor words · theme = Classic sheet · GDScript panel = off · tour = off"],
 		["the theme it names ships", ResourceLoader.exists(str(sheets["theme"])), true],
 		["the guide it opens ships in the Manual", EventSheetDocLibrary.has_page(str(sheets["guide"])), true],
 		["a project with no showcase scene is not offered the showcase door",

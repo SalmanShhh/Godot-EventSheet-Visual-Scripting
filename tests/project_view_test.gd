@@ -104,7 +104,7 @@ static func run() -> bool:
 ## the join behaves. This asks the dock what it would hand the window.
 static func _run_wiring() -> bool:
 	var all_passed: bool = true
-	EventSheetProjectOutline.clear_doctor_findings()
+	EventSheetProjectDoctorPanel.clear_doctor_findings()
 	EventSheetRunProfile.forget()
 
 	var player: EventSheetResource = _player_sheet()
@@ -115,7 +115,7 @@ static func _run_wiring() -> bool:
 	dock._open_sheet_in_tab(player, "res://player.tres")
 	dock._open_sheet_in_tab(_menu_sheet(), "res://menu.tres")
 
-	EventSheetProjectOutline.set_doctor_findings([
+	EventSheetProjectDoctorPanel.set_doctor_findings([
 		{"path": "res://player.tres", "severity": "warning", "message": "one"},
 		{"path": "res://player.tres", "severity": "info", "message": "two"},
 	])
@@ -140,7 +140,7 @@ static func _run_wiring() -> bool:
 		rows[0].get("milliseconds") == null, true) and all_passed
 
 	dock.free()
-	EventSheetProjectOutline.clear_doctor_findings()
+	EventSheetProjectDoctorPanel.clear_doctor_findings()
 	EventSheetRunProfile.forget()
 	EventSheetRunProfile.forget_stored_for_test()
 	return all_passed

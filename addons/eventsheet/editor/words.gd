@@ -86,7 +86,7 @@ const WORDS := {
 	"editor_dock": ["a panel docked in the editor", "Panel (dock)", "Dock", []],
 	"inspector": ["the properties panel and its add-ons", "Properties bar", "Inspector", ["Properties bar add-on"]],
 	"scene_dock": ["the tree of the open scene", "Layout's object list", "Scene dock", []],
-	"filesystem_dock": ["the project's file list", "Project bar", "FileSystem dock", []],
+	"filesystem_dock": ["the project's file list", "FileSystem dock", "FileSystem dock", []],
 	"tools_menu": ["Project > Tools", "Tools menu", "Tools menu", []],
 	"undo_history": ["what Ctrl+Z walks back", "Undo history", "UndoRedo", ["Undo/redo"]],
 	"editor_preferences": ["the user's own editor settings", "Preferences", "EditorSettings", []],

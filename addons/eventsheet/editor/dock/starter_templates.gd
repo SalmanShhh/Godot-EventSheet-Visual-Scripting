@@ -144,7 +144,7 @@ const EDITOR_TOOL_SHAPES: Array[Dictionary] = [
 	{"id": 16, "label": "Bottom panel", "note": "beside Output and Debugger"},
 	{"id": 17, "label": "Tools menu item", "note": "Project > Tools > your entry"},
 	{"id": 18, "label": "Properties bar add-on", "note": "buttons and editors in the Inspector"},
-	{"id": 19, "label": "Context menu item", "note": "right-click in the Scene dock or Project bar"},
+	{"id": 19, "label": "Context menu item", "note": "right-click in the Scene or FileSystem dock"},
 	{"id": 20, "label": "Layout view handle", "note": "draw over the 2D view"},
 	{"id": 21, "label": "Thumbnail maker", "note": "previews for a file type"},
 	{"id": 22, "label": "Debugger panel", "note": "a tab while the game runs"},
@@ -679,9 +679,9 @@ static func _build_properties_bar_starter() -> EventSheetResource:
 	return sheet
 
 
-## A CONTEXT MENU ITEM: the right-click menu in the Scene dock or the Project bar.
+## A CONTEXT MENU ITEM: the right-click menu in the Scene dock or the FileSystem dock.
 static func _build_context_menu_starter() -> EventSheetResource:
-	var sheet: EventSheetResource = _tool_starter("EditorContextMenuPlugin", "[b]Context menu item[/b] - your own entry in the right-click menu of the Scene dock or the Project bar. The editor calls this with whatever was right-clicked.\nRegister it from an Editor Plugin sheet with add_context_menu_plugin on plugin enabled.")
+	var sheet: EventSheetResource = _tool_starter("EditorContextMenuPlugin", "[b]Context menu item[/b] - your own entry in the right-click menu of the Scene dock or the FileSystem dock. The editor calls this with whatever was right-clicked.\nRegister it from an Editor Plugin sheet with add_context_menu_plugin on plugin enabled.")
 	sheet.functions.append(_callback_function("_popup_menu", [_fn_param("_paths", "PackedStringArray")], "void", "# add_context_menu_item(\"My Item\", _on_chosen) - one call per entry you want."))
 	return sheet
 
@@ -705,7 +705,7 @@ static func _build_view_handle_starter() -> EventSheetResource:
 
 ## A THUMBNAIL MAKER: the two questions the editor asks before it draws a preview of a file.
 static func _build_thumbnail_maker_starter() -> EventSheetResource:
-	var sheet: EventSheetResource = _tool_starter("EditorResourcePreviewGenerator", "[b]Thumbnail maker[/b] - the little picture the editor draws for a file of your own type, in the Project bar and the file dialogs.\nRegister it from an Editor Plugin sheet with add_resource_preview_generator on plugin enabled.")
+	var sheet: EventSheetResource = _tool_starter("EditorResourcePreviewGenerator", "[b]Thumbnail maker[/b] - the little picture the editor draws for a file of your own type, in the FileSystem dock and the file dialogs.\nRegister it from an Editor Plugin sheet with add_resource_preview_generator on plugin enabled.")
 	sheet.functions.append(_callback_function("_handles", [_fn_param("type", "String")], "bool", "return type == \"Resource\""))
 	sheet.functions.append(_callback_function("_generate", [_fn_param("_resource", "Resource"), _fn_param("_size", "Vector2i"), _fn_param("_metadata", "Dictionary")], "Texture2D", "# Draw the preview and hand back a Texture2D, or null for no thumbnail.\nreturn null"))
 	return sheet
@@ -1484,9 +1484,6 @@ static func create_new_starters() -> Array[Dictionary]:
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
-	# A project that started from a template is one of the two ways a reader says "give me the
-	# familiar surfaces" without being asked, so the Project bar turns itself on for it.
-	EventSheetProjectBarGlue.mark_started_from_template()
 	if template_id >= 100:
 		var template_index: int = template_id - 100
 		if template_index >= _project_template_paths.size():

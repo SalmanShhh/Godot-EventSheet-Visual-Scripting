@@ -201,13 +201,13 @@ static func _every_plugin_class_has_its_own_word() -> bool:
 
 
 ## The four right-click surfaces read as the panels they name, and the longest spelling wins - a
-## naive replace would leave "Project bar_CREATE" behind.
+## naive replace would leave "FileSystem dock_CREATE" behind.
 static func _context_slots_read_as_panels() -> bool:
 	var ok: bool = true
 	var pairs: Array = [
 		["EditorContextMenuPlugin.CONTEXT_SLOT_SCENE_TREE", "Scene dock"],
-		["EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM", "Project bar"],
-		["EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE", "Project bar ▸ Create new"],
+		["EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM", "FileSystem dock"],
+		["EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE", "FileSystem dock ▸ Create new"],
 		["EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR", "Script editor"]
 	]
 	for pair: Array in pairs:

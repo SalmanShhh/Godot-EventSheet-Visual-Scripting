@@ -600,19 +600,11 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(11), _dock._simple_mode)
 	view_popup.add_separator()
 	view_popup.add_item("GDScript Panel (toggle)", 0)
-	# The two project-level surfaces a beginner (or a migrating author) gets by default
-	# and everyone else turns on by hand. Both are off unless Simple mode or a template start asked
-	# for them, and both remember the choice per project.
-	view_popup.add_check_item("Project bar", _dock.PROJECT_BAR_VIEW_ID)
-	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.PROJECT_BAR_VIEW_ID),
-		"The project by KIND - scenes, scripts, classes, base classes, behaviors, sounds, files - as a tab of the Object bar. Read only: every entry opens something you already have.")
 	view_popup.add_check_item("Add toolbar", _dock.ADD_TOOLBAR_VIEW_ID)
 	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.ADD_TOOLBAR_VIEW_ID),
 		"The eight ways to add something, as buttons above the canvas, each naming its key on hover. On in Simple mode.")
 	view_popup.id_pressed.connect(func(id: int) -> void:
-		if id == _dock.PROJECT_BAR_VIEW_ID:
-			_dock._toggle_project_bar()
-		elif id == _dock.ADD_TOOLBAR_VIEW_ID:
+		if id == _dock.ADD_TOOLBAR_VIEW_ID:
 			_dock._toggle_add_toolbar())
 	# Panels: the side panel's tabs, said in words. The tab the open panel shows is ticked; choosing
 	# another opens the panel on it, and choosing the ticked one closes the panel - the two gestures
