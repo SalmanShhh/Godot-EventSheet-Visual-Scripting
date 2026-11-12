@@ -6,13 +6,16 @@ class_name CheckpointBehavior
 extends Node
 ## Remembers one point to send the host Node2D back to. Set Checkpoint Here marks the spot the host is standing on, Set Checkpoint At marks any point, and Respawn At Checkpoint teleports the host back and fires On Respawned. The starting position is captured on ready, so respawning works before the player ever touches a flag.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Checkpoint Behavior needs a Node2D: put it under one.")
+		push_warning("Checkpoint Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Respawned")

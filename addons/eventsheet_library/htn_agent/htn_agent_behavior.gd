@@ -7,13 +7,16 @@ class_name HTNAgent
 extends Node
 ## A small hierarchical task planner on any Node2D: describe goals as compound tasks that break down into primitive steps through methods with preconditions and utility scores. Feed it world-state facts, request a plan, and run the ordered task list it hands back - re-plan when the situation changes instead of rewriting a state machine.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("HTN Agent needs a Node2D: put it under one.")
+		push_warning("HTN Agent needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Task Started")

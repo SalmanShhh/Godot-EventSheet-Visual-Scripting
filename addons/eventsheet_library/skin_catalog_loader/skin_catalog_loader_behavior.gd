@@ -6,13 +6,16 @@ class_name SkinCatalogLoader
 extends Node
 ## The data-driven bridge for the SkinVault pack: attach to a node, drop a Skin Catalog resource (.tres) onto it in the Inspector, and on ready it loads the whole catalog (rarities and skins) into the SkinVault autoload. The Inspector flags the required slot with a warning until a resource is attached.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Skin Catalog Loader needs a parent node: put it under one.")
+		push_warning("Skin Catalog Loader needs a parent node: put it under one, or set Acts on.")
 
 # @inspector_required
 ## Skin Catalog resource. The .tres holding this game's rarities and skins (create one from the SkinCatalogResource class, fill its grids, and drop it here).

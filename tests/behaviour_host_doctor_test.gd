@@ -34,7 +34,7 @@ static func run() -> bool:
 	ok = SUPPORT.check(TEST_NAME, "a behaviour under a Node2D is one finding", wrong.size(), 1) and ok
 	if wrong.size() == 1:
 		ok = SUPPORT.check(TEST_NAME, "its sentence names the behaviour, the node it is under and the type it needs",
-			str(wrong[0]["message"]).begins_with("Platformer Movement is under a Node2D; it needs a CharacterBody2D: put it under one."), true) and ok
+			str(wrong[0]["message"]).begins_with("Platformer Movement is under a Node2D; it needs a CharacterBody2D: put it under one, or set Acts on."), true) and ok
 		ok = SUPPORT.check(TEST_NAME, "it names the nearest node that fits",
 			[str(wrong[0].get("to_path", "")), str(wrong[0].get("to", ""))], ["Player", "Player"]) and ok
 		ok = SUPPORT.check(TEST_NAME, "it carries the five keys every runner reads",
@@ -57,7 +57,7 @@ static func run() -> bool:
 	ok = _move_pins(cache) and ok
 	ok = SUPPORT.pins(TEST_NAME, [
 		["class names read as words", [SheetCompiler.spaced_class_name("PlatformerMovement"), SheetCompiler.spaced_class_name("FPSController"), SheetCompiler.spaced_class_name("Camera3DRig")], ["Platformer Movement", "FPS Controller", "Camera3D Rig"]],
-		["the run-time sentence is the same words", SheetCompiler.host_warning_sentence("PlatformerMovement", "CharacterBody2D"), "Platformer Movement needs a CharacterBody2D: put it under one."],
+		["the run-time sentence is the same words", SheetCompiler.host_warning_sentence("PlatformerMovement", "CharacterBody2D"), "Platformer Movement needs a CharacterBody2D: put it under one, or set Acts on."],
 		["an Area host reads with 'an'", SheetCompiler.host_phrase("Area2D"), "an Area2D"],
 	]) and ok
 	return ok

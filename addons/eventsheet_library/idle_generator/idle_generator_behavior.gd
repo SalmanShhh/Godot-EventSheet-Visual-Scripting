@@ -6,13 +6,16 @@ class_name IdleGeneratorBehavior
 extends Node
 ## A buy-more-to-make-more producer for incremental games - the cursor, farm, or factory you buy in bulk. Costs grow on a geometric curve with exact closed-form bulk buying (Buy One / Buy Amount / Buy Max), a continuous output per second, and an optional fill-and-collect cycle mode; it records what a buy cost but spending from your wallet stays your sheet's job.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Idle Generator Behavior needs a parent node: put it under one.")
+		push_warning("Idle Generator Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Purchased")

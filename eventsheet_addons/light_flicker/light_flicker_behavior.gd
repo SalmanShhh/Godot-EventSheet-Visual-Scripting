@@ -7,13 +7,16 @@ class_name LightFlickerBehavior
 extends Node
 ## Makes a light flicker like a flame. Attach it to any light, 2D or 3D, and its brightness walks between two numbers on a noise field - related from frame to frame, which is what reads as fire rather than as static. Between, Times A Second and Also Flicker Reach are tuned in the Inspector while the game runs; the sheet says when it starts and when it stops, and what it settles at.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Light Flicker Behavior needs a parent node: put it under one.")
+		push_warning("Light Flicker Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## The dimmest and brightest the light gets, as a pair. 0.8 and 1.2 is a candle; 0.2 and 1.4 is a failing bulb.
 @export var between: Vector2 = Vector2(0.8, 1.2)

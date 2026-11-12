@@ -6,13 +6,16 @@ class_name VirtualCursor
 extends Node
 ## Turns a CharacterBody2D into an input-agnostic pointer: it accelerates and decelerates, bumps into solids, bounces off walls, snaps to targets with a homing magnet, stays inside a play area, reports what it is hovering, and fires named interact buttons. Drive it with the mouse, keys, an analog axis, or scripted moves - it is any thing you steer, not the OS pointer.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Virtual Cursor needs a CharacterBody2D: put it under one.")
+		push_warning("Virtual Cursor needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Interact Pressed")

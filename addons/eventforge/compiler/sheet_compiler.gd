@@ -497,11 +497,14 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if behavior_label.is_empty():
 			behavior_label = "This"
 		lines.append("")
-		lines.append("## The node this behavior acts on (its parent). Required host: %s." % host_type)
+		lines.append("## The node this behavior acts on. Empty: its parent.")
+		lines.append("@export var acts_on: %s = null" % host_type)
+		lines.append("")
+		lines.append("## The node this behavior acts on (Acts on, or else its parent). Required host: %s." % host_type)
 		lines.append("var host: %s = null" % host_type)
 		lines.append("")
 		lines.append("func _enter_tree() -> void:")
-		lines.append("\thost = get_parent() as %s" % host_type)
+		lines.append("\thost = acts_on if acts_on != null else get_parent() as %s" % host_type)
 		lines.append("\tif host == null:")
 		lines.append("\t\tpush_warning(\"%s\")" % host_warning_sentence(behavior_label, host_type))
 		# Lane B.2: declared sibling dependencies surface as the editor's ⚠ badge.
@@ -4359,7 +4362,7 @@ static func inspector_conditions_function(conditions: Array) -> PackedStringArra
 ## Movement needs a CharacterBody2D: put it under one." The packs print it at run time and the Doctor
 ## says the same thing about a scene before the game runs.
 static func host_warning_sentence(behavior_label: String, host_type: String) -> String:
-	return "%s needs %s: put it under one." % [spaced_class_name(behavior_label), host_phrase(host_type)]
+	return "%s needs %s: put it under one, or set Acts on." % [spaced_class_name(behavior_label), host_phrase(host_type)]
 
 
 ## "a CharacterBody2D", "an Area2D", and "a parent node" for the plain Node host.

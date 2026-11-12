@@ -6,13 +6,16 @@ class_name TileMovementBehavior
 extends Node
 ## Grid-locked movement that steps the host exactly one tile per press and slides smoothly into place. Arrow keys drive it out of the box, Simulate Step feeds it directions from touch buttons or AI, and On Step Finished fires each time a new cell is reached.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Tile Movement Behavior needs a Node2D: put it under one.")
+		push_warning("Tile Movement Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Step Finished")

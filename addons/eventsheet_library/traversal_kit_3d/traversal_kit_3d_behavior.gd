@@ -7,13 +7,16 @@ class_name TraversalKit3D
 extends Node
 ## Traversal moves for a CharacterBody3D in one drop: ledge grabs (the two-probe test, then Grab / Climb up / Drop), wall slides, wall jumps away from the wall, wall runs, ladders, vaults, crouching, swimming and buoyancy. It writes velocity and leaves the moving to your mover, so it stacks on top of the FPS Controller or your own rows.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody3D.
 var host: CharacterBody3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody3D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody3D
 	if host == null:
-		push_warning("Traversal Kit3D needs a CharacterBody3D: put it under one.")
+		push_warning("Traversal Kit3D needs a CharacterBody3D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Ledge Grabbed")

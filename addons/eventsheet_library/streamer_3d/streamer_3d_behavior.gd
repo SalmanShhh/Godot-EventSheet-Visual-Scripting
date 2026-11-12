@@ -6,13 +6,16 @@ class_name Streamer3DBehavior
 extends Node
 ## Streams a 3D world that is bigger than memory: a folder of chunk scenes named by cell, loaded on a thread within a radius of a node and freed behind it. The grid is flat by default - height only becomes a cell axis when Stream Height is on - and one threaded request per frame with a millisecond budget keeps the frame rate flat while a vehicle crosses it.
 
-## The node this behavior acts on (its parent). Required host: Node3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node3D.
 var host: Node3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node3D
+	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("Streamer3D Behavior needs a Node3D: put it under one.")
+		push_warning("Streamer3D Behavior needs a Node3D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Chunk Loaded")

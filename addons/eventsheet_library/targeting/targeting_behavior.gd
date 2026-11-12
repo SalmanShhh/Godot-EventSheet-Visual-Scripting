@@ -6,13 +6,16 @@ class_name TargetingBehavior
 extends Node
 ## Lock-on and aim help for a Node2D: hold the nearest hostile in a cone, cycle to the next, let go when it dies or leaves the range, and bend a stick direction toward whatever the player is nearly pointing at. The bend is the accessibility Aim Assist Radius setting, so a zero radius turns the help off from the options screen.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Targeting Behavior needs a Node2D: put it under one.")
+		push_warning("Targeting Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Target Locked")

@@ -7,13 +7,16 @@ class_name JuiceBehavior
 extends Node
 ## Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, hitstop, damage flash and blink, punch transforms, ghost trails, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Juice Behavior needs a CanvasItem: put it under one.")
+		push_warning("Juice Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Shake Stopped")

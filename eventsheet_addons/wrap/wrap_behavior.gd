@@ -6,13 +6,16 @@ class_name WrapBehavior
 extends Node
 ## Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Wrap Behavior needs a Node2D: put it under one.")
+		push_warning("Wrap Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Wrapped")

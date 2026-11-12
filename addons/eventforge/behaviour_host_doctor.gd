@@ -73,7 +73,7 @@ static func report_for_scene(scene_path: String, text: String, behaviours: Dicti
 		if actual.is_empty() or fits(actual, host_type):
 			continue
 		var nearest: String = nearest_host(nodes, node, host_type)
-		findings.append(_found(scene_path, node, "%s is under a %s; it needs %s: put it under one." % [
+		findings.append(_found(scene_path, node, "%s is under a %s; it needs %s: put it under one, or set Acts on." % [
 			label, actual, SheetCompiler.host_phrase(host_type)], nearest))
 	return findings
 

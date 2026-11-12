@@ -7,13 +7,16 @@ class_name GrayscaleBehavior
 extends Node
 ## Drains the colour out of the host, all the way or part of the way, over a time you give. The state a disabled button, a dead unit or a remembered scene is in. The grey can be tinted - a cold blue reads as frozen, a brown as an old photograph - through the gray_tint dial in the shader file copied into your project.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Grayscale Behavior needs a CanvasItem: put it under one.")
+		push_warning("Grayscale Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## The dial grayscale.gdshader drains along, named once so a rename there is a one-line change here. 0 is full colour, 1 is fully grey.
 const GREY_DIAL: String = "grayscale"

@@ -6,13 +6,16 @@ class_name HomeLeashBehavior
 extends Node
 ## Keeps the host Node2D on a leash around a home point. Set Home Here plants the post, Is Beyond Home branches when the host has wandered too far (straight line, one axis, grid steps, or king moves), and Return Home walks it back and fires On Arrived Home. The guard, the shopkeeper, and the patrolling enemy that gives up the chase.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Home Leash Behavior needs a Node2D: put it under one.")
+		push_warning("Home Leash Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Arrived Home")

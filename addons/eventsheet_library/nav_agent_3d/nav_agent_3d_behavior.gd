@@ -7,13 +7,16 @@ class_name NavAgent3D
 extends Node
 ## Navmesh pathfinding for 3D with zero wiring: attach under a CharacterBody3D, keep a NavigationRegion3D in the scene, and call Find Path To - a NavigationAgent3D child is inserted and tuned for you and the agent walks the baked navmesh. The actions mirror the 2D Platformer Pathfinding pack, so learning one pack teaches both.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody3D.
 var host: CharacterBody3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody3D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody3D
 	if host == null:
-		push_warning("Nav Agent3D needs a CharacterBody3D: put it under one.")
+		push_warning("Nav Agent3D needs a CharacterBody3D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Path Found")

@@ -6,13 +6,16 @@ class_name EncounterTimelineBehavior
 extends Node
 ## The spawn/beat timeline, worn by whatever runs the encounter: an arena, a boss, a tutorial director, ambient traffic. Load an EncounterResource (.tres) of beats - at_seconds, scene, count, group, note - then Start Encounter and the behavior ticks its own clock, spawns each beat on schedule (through the ObjectPool autoload when one is installed), and fires On Entry Spawned and On Encounter Finished. Write Encounter Report summarises the plan, spawn density included.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Encounter Timeline Behavior needs a parent node: put it under one.")
+		push_warning("Encounter Timeline Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Entry Spawned")

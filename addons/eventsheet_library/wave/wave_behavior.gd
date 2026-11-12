@@ -7,13 +7,16 @@ class_name WaveBehavior
 extends Node
 ## Ripples the host's picture from side to side in a travelling wave - water, heat haze, a flag, a dizzy spell. Only the drawing moves: positions, collisions and physics are untouched, so a rippling tile is still a flat floor. Wave eases the ripple in, Settle eases it out, and the crest count and speed are dials in the shader file copied into your project.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Wave Behavior needs a CanvasItem: put it under one.")
+		push_warning("Wave Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## Shader dial the wave pushes along, as a share of picture width.
 const PUSH_DIAL: String = "wave_strength"

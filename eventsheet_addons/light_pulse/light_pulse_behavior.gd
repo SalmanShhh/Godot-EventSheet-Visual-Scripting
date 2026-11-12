@@ -7,13 +7,16 @@ class_name LightPulseBehavior
 extends Node
 ## Makes a light breathe. Attach it to any light, 2D or 3D, and its brightness rides a smooth wave between two numbers - a beacon, a pickup, a rune that should read as deliberate rather than as merely alight. Between and Period Seconds are tuned in the Inspector while the game runs; the sheet says when it starts and when it stops, and what it settles at.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Light Pulse Behavior needs a parent node: put it under one.")
+		push_warning("Light Pulse Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## The dimmest and brightest the light gets, as a pair. The wave spends most of its time near the middle of the two and only touches the ends.
 @export var between: Vector2 = Vector2(0.6, 1.4)

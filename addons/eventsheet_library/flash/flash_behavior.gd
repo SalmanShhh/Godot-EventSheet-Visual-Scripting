@@ -6,13 +6,16 @@ class_name FlashBehavior
 extends Node
 ## Blinks the host node's visibility on and off for a duration, then snaps it back to fully visible and fires On Flash Finished. The classic damage-flicker and invincibility-frames effect, with a single interval knob you can change live.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Flash Behavior needs a CanvasItem: put it under one.")
+		push_warning("Flash Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Flash Finished")

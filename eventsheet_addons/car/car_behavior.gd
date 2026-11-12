@@ -6,13 +6,16 @@ class_name CarBehavior
 extends Node
 ## Turns a plain CharacterBody2D into a drivable top-down arcade car: arrow keys accelerate, reverse, and steer the moment you press play. Every handling knob (top speed, acceleration, coast, turn rate, grip, drift) is readable and settable live for boost pads, ice, and damage models.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Car Behavior needs a CharacterBody2D: put it under one.")
+		push_warning("Car Behavior needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Drift Started")

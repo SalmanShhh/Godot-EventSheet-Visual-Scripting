@@ -6,13 +6,16 @@ class_name SceneFlowBehavior
 extends Node
 ## Polished scene changes from one node: fade to another scene, fade-reload the current one, jump or reload instantly, and quit the game. The fade overlay parents itself to the tree root instead of the dying scene, so the transition survives the swap instead of vanishing halfway through.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Scene Flow Behavior needs a parent node: put it under one.")
+		push_warning("Scene Flow Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## Fires when a transition started by Go To Scene With or Reload Scene With has finished: the new
 ## scene is up and the cover is off. It arrives on the Scene Flow node in the NEW scene, carrying the

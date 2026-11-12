@@ -6,13 +6,16 @@ class_name EightDirectionMovement
 extends Node
 ## Top-down eight-way movement with nothing to wire: attach under a CharacterBody2D and it reads the built-in ui_left/right/up/down actions every physics frame and moves the host. Arrow keys work the moment you press play; set, nudge, or read the move speed from the sheet.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Eight Direction Movement needs a CharacterBody2D: put it under one.")
+		push_warning("Eight Direction Movement needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## AI drive: take movement from the AI move inputs instead of the keyboard (the standard seam an AI driver flips on).
 @export var ai_controlled: bool = false

@@ -7,13 +7,16 @@ class_name Skateboard3DMovement
 extends Node
 ## Momentum movement for a CharacterBody3D on a board: Push nudges you toward the top speed along the way the board faces and you keep it, Roll With The Slope projects gravity onto the surface normal so bowls and quarterpipes work, Align The Board To The Surface keeps it flat on ramps, and leaving a near-vertical transition fires On Launched Off The Lip. Tricks are turns in the air judged on touchdown by the board's up against the surface normal, grinds snap to any Path3D, and a trick chain multiplies everything landed without touching down.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody3D.
 var host: CharacterBody3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody3D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody3D
 	if host == null:
-		push_warning("Skateboard3D Movement needs a CharacterBody3D: put it under one.")
+		push_warning("Skateboard3D Movement needs a CharacterBody3D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Ollie")

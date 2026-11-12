@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: Acts on, for a behaviour that is not a direct child
+
+- Every behaviour that works on a node of a certain type (Platformer Movement, Bullet, Anchor, Sine and the rest) now has an Acts on field at the top of its Inspector. Leave it empty and the behaviour works on its parent, exactly as before. Set it, and the behaviour can sit anywhere in the scene, for example under a Behaviours folder node.
+- The Doctor and the warning in the Output both say "or set Acts on" as the second way out. Scenes saved before the field existed load with it empty, so nothing in them changes.
+
 ### Added: the Doctor says when a behaviour is under the wrong node
 
 - Check the project now reads every scene and says it when a behaviour sits under the wrong kind of node, before the game runs. For example "Platformer Movement is under a Node2D; it needs a CharacterBody2D: put it under one." The finding offers "Move it under <the nearest node that fits>" and "Show in scene".

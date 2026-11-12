@@ -6,13 +6,16 @@ class_name Flock3DBehavior
 extends Node
 ## Flocking for a Node3D: every member of a group steers by the members around it - keep apart from the ones too close, fly the way the rest are flying, drift toward their middle - and flees anything in an avoid group. Weights, speeds, the steering force and both radii are Inspector values with a Set row each.
 
-## The node this behavior acts on (its parent). Required host: Node3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node3D.
 var host: Node3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node3D
+	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("Flock3D Behavior needs a Node3D: put it under one.")
+		push_warning("Flock3D Behavior needs a Node3D: put it under one, or set Acts on.")
 
 # --- Designer knobs (tune in the Inspector) ---
 # The flock group is joined by the host when it enters the scene, so every

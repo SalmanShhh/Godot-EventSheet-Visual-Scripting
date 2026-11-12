@@ -6,13 +6,16 @@ class_name LootTableLoader
 extends Node
 ## The data-driven bridge for the Loot Table pack: attach it to a node, drop a LootTableResource (.tres) onto its slot in the Inspector, and on ready it loads that table into the LootBox autoload. The Scene dock warns until a resource is attached, so you cannot forget it.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Loot Table Loader needs a parent node: put it under one.")
+		push_warning("Loot Table Loader needs a parent node: put it under one, or set Acts on.")
 
 # @inspector_required
 ## Loot Table resource. The .tres holding this table's drops (create one from the LootTableResource class, fill its entries grid, and drop it here).

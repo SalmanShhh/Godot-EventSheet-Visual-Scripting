@@ -7,13 +7,16 @@ class_name HitFlashBehavior
 extends Node
 ## Washes the host's own pixels towards a colour and back, which is the classic hit reaction. Unlike a modulate blink it works on dark sprites too, because it replaces colour rather than multiplying it. Flash takes the colour and how long the wash lasts; the shader file is copied into your project when the pack is added, so the edge cases are yours to tune.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Hit Flash Behavior needs a CanvasItem: put it under one.")
+		push_warning("Hit Flash Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## Name of the shader dial that sets the flash colour, named once so a rename in the shader file is a one-line change here.
 const COLOUR_DIAL: String = "flash_color"

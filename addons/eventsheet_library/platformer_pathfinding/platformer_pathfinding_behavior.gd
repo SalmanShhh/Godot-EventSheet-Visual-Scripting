@@ -7,13 +7,16 @@ class_name PlatformerPathfinding
 extends Node
 ## Jump-aware navigation for 2D platformers: builds a jump graph from your TileMapLayer so an enemy can actually chase through the level - walking where walking works and jumping where a jump is needed. Attach as a sibling of PlatformerMovement, build the graph once, and call Find Path To; jump reach is derived from the movement pack's real physics and the agent is driven through its ai_move_axis seam.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Platformer Pathfinding needs a CharacterBody2D: put it under one.")
+		push_warning("Platformer Pathfinding needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Portal Taken")

@@ -7,13 +7,16 @@ class_name TimeSlicerBehavior
 extends Node
 ## A managed work queue that spreads heavy work across frames: enqueue items in one event and the slicer drains them a slice at a time, firing On Process Item for each until the per-frame budget runs out. Spawning 500 enemies or carving a dungeon no longer freezes the frame.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Time Slicer Behavior needs a parent node: put it under one.")
+		push_warning("Time Slicer Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Process Item")

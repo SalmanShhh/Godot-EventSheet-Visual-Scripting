@@ -6,13 +6,16 @@ class_name CameraRailBehavior
 extends Node
 ## A shot list for a Camera2D: fly the camera along a drawn Path2D over a number of seconds, hold on a beat, blend onto another camera and hand the view over, or cut to one outright. On Shot Finished and On Blend Finished end every shot, so a cutscene is a chain of rows.
 
-## The node this behavior acts on (its parent). Required host: Camera2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Camera2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Camera2D.
 var host: Camera2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Camera2D
+	host = acts_on if acts_on != null else get_parent() as Camera2D
 	if host == null:
-		push_warning("Camera Rail Behavior needs a Camera2D: put it under one.")
+		push_warning("Camera Rail Behavior needs a Camera2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Shot Finished")

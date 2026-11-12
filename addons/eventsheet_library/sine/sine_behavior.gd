@@ -6,13 +6,16 @@ class_name SineBehavior
 extends Node
 ## Makes a Node2D oscillate on its own: pick what the wave drives (position, scale, angle, or opacity), how far it swings, how long a cycle takes, and the wave shape (sine, triangle, sawtooth, or square). The fastest way to add the small, endless motion that makes a scene feel alive - no timeline or keyframes.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Sine Behavior needs a Node2D: put it under one.")
+		push_warning("Sine Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## Which host property the wave drives - position, size, angle, opacity, or value-only.
 @export_enum("horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only") var movement: String = "horizontal"

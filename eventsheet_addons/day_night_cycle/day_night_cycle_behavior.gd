@@ -7,13 +7,16 @@ class_name DayNightCycleBehavior
 extends Node
 ## A clock that runs the sky. A whole day passes every Day Length Minutes; the sun turns with the hour, and three curves say how bright the sun, the ambient light and the sky itself are through the day. Point Sun Light at a light and World Lighting at a WorldEnvironment or a CanvasModulate - 2D and 3D both work, and an unset target is skipped. On Sunrise, On Sunset, On Midnight and On The Hour are what a game listens to; It Is Night and It Is Day are what it asks.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Day Night Cycle Behavior needs a parent node: put it under one.")
+		push_warning("Day Night Cycle Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## Fires as the clock passes Sunrise Hour - the moment to put the torches out.
 ## @ace_trigger

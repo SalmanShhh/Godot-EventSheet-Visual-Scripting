@@ -6,13 +6,16 @@ class_name FadeBehavior
 extends Node
 ## Fades any sprite or UI node in and out without tween code. Set fade-in, hold, and fade-out times in the Inspector and it runs the whole sequence on its own, optionally freeing the node when done and firing a trigger at each stage.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Fade Behavior needs a CanvasItem: put it under one.")
+		push_warning("Fade Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Faded In")

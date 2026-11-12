@@ -5757,7 +5757,7 @@ static func host_binding_class(code: String) -> String:
 		return ""
 	if _host_bind_regex == null:
 		_host_bind_regex = RegEx.new()
-		if _host_bind_regex.compile("^\\thost = get_parent\\(\\) as ([A-Za-z_][A-Za-z0-9_]*)$") != OK:
+		if _host_bind_regex.compile("^\\thost = (?:acts_on if acts_on != null else )?get_parent\\(\\) as ([A-Za-z_][A-Za-z0-9_]*)$") != OK:
 			return ""
 	var bind_match: RegExMatch = _host_bind_regex.search(lines[1])
 	if bind_match == null:

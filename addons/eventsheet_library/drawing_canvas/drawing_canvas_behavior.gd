@@ -7,13 +7,16 @@ class_name DrawingCanvas
 extends Node
 ## A texture your event sheet draws onto with actions: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Drawing Canvas needs a Node2D: put it under one.")
+		push_warning("Drawing Canvas needs a Node2D: put it under one, or set Acts on.")
 
 # --- Designer knobs (tune in the Inspector) ---
 ## Canvas texture width in pixels.

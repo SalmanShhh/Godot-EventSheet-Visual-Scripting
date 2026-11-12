@@ -2818,7 +2818,7 @@ static func _is_host_binding_body(function_lines: PackedStringArray) -> bool:
 		lines.remove_at(lines.size() - 1)
 	if lines.size() != 4 or lines[0] != "func _enter_tree() -> void:":
 		return false
-	var bind: RegEx = RegEx.create_from_string("^\\thost = get_parent\\(\\) as [A-Za-z_][A-Za-z0-9_]*$")
+	var bind: RegEx = RegEx.create_from_string("^\\thost = (?:acts_on if acts_on != null else )?get_parent\\(\\) as [A-Za-z_][A-Za-z0-9_]*$")
 	if bind == null or bind.search(lines[1]) == null:
 		return false
 	if lines[2] != "\tif host == null:":

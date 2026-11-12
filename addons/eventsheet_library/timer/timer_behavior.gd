@@ -6,13 +6,16 @@ class_name TimerBehavior
 extends Node
 ## A private countdown clock on any node: set the seconds, start it, and On Timer fires when it reaches zero. Turn on repeating for a fixed metronome beat, or leave it off to fire once and stop.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Timer Behavior needs a parent node: put it under one.")
+		push_warning("Timer Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Timer")

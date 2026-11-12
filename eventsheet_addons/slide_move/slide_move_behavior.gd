@@ -6,13 +6,16 @@ class_name SlideMove
 extends Node
 ## Grid movement where a tap sends the host sliding until it slams into a wall - the feel of Tomb of the Mask. Give it a grid size and a wall physics layer; it glides to the farthest open tile at a constant speed and snaps to the grid when it stops.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Slide Move needs a Node2D: put it under one.")
+		push_warning("Slide Move needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Slide Started")

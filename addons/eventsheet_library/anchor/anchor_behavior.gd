@@ -6,13 +6,16 @@ class_name AnchorBehavior
 extends Node
 ## Where a Control sits when the window changes size, said as a corner rather than as four numbers: anchor to top right, to the centre, to the full rect. Margins are set in pixels from the corner it is anchored to, the corner it is on can be asked about, and On Anchored fires whenever it moves.
 
-## The node this behavior acts on (its parent). Required host: Control.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Control = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Control.
 var host: Control = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Control
+	host = acts_on if acts_on != null else get_parent() as Control
 	if host == null:
-		push_warning("Anchor Behavior needs a Control: put it under one.")
+		push_warning("Anchor Behavior needs a Control: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Anchored")

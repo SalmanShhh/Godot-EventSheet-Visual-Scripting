@@ -6,13 +6,16 @@ class_name PhysicsCar
 extends Node
 ## Turns a RigidBody2D into a drivable arcade car: throttle, brake, and steering forces plus lateral grip and drift detection on top of the real physics body, so collisions and pushes stay fully physical. Drive it with Simulate Control, feed it analog Set Throttle / Set Steer values, or let it steer itself with Drive Toward Position.
 
-## The node this behavior acts on (its parent). Required host: RigidBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: RigidBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: RigidBody2D.
 var host: RigidBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as RigidBody2D
+	host = acts_on if acts_on != null else get_parent() as RigidBody2D
 	if host == null:
-		push_warning("Physics Car needs a RigidBody2D: put it under one.")
+		push_warning("Physics Car needs a RigidBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Collided")

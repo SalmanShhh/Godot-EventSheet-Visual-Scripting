@@ -6,13 +6,16 @@ class_name CameraRail3DBehavior
 extends Node
 ## A shot list for a Camera3D: fly the camera along a drawn Path3D over a number of seconds while it keeps a node in frame, hold on a beat, blend onto another camera - transform and field of view together - and hand the view over, or cut to one outright. On Shot Finished and On Blend Finished end every shot.
 
-## The node this behavior acts on (its parent). Required host: Camera3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Camera3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Camera3D.
 var host: Camera3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Camera3D
+	host = acts_on if acts_on != null else get_parent() as Camera3D
 	if host == null:
-		push_warning("Camera Rail3D Behavior needs a Camera3D: put it under one.")
+		push_warning("Camera Rail3D Behavior needs a Camera3D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Shot Finished")

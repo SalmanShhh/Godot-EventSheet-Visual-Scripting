@@ -6,13 +6,16 @@ class_name HudKitBehavior
 extends Node
 ## Drives a whole menu or HUD by node name with zero signal wiring. Attach it to your UI root and set labels, fill bars, show panels, flip screens, and pop toasts by passing the name string, while every descendant Button auto-wires into one On Button Pressed trigger.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Hud Kit Behavior needs a parent node: put it under one.")
+		push_warning("Hud Kit Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Button Pressed")

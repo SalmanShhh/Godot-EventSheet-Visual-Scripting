@@ -6,13 +6,16 @@ class_name Pin3DBehavior
 extends Node
 ## Sticks a Node3D to another object: every physics frame the host copies that object's position, its angles, or both, kept apart by the offset the pin was made with. The mode picks HOW it follows - straight onto the place, on a rope that only pulls when taut, on a bar that holds its length, softly with a lag, or on a spring that overshoots and settles. Pin To Point rides a named child, which in 3D is usually the BoneAttachment3D a skeleton already keeps on a bone.
 
-## The node this behavior acts on (its parent). Required host: Node3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node3D.
 var host: Node3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node3D
+	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("Pin3D Behavior needs a Node3D: put it under one.")
+		push_warning("Pin3D Behavior needs a Node3D: put it under one, or set Acts on.")
 
 # --- Designer knobs (tune in the Inspector) ---
 # The first three pin modes are

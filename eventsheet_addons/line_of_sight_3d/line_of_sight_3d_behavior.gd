@@ -6,13 +6,16 @@ class_name LOS3DBehavior
 extends Node
 ## A per-node eye for 3D: casts a physics ray from the host Node3D to a target and reports whether the view is clear, optionally gated by a sight range and a forward vision cone. Build guard vision, break-line-of-sight chases, auto-targeting towers, and clear-shot checks without writing a raycast by hand.
 
-## The node this behavior acts on (its parent). Required host: Node3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node3D.
 var host: Node3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node3D
+	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("LOS3D Behavior needs a Node3D: put it under one.")
+		push_warning("LOS3D Behavior needs a Node3D: put it under one, or set Acts on.")
 
 ## Maximum distance the host can see - targets farther than this are never visible.
 @export var sight_range: float = 1000.0

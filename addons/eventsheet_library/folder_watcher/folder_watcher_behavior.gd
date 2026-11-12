@@ -7,13 +7,16 @@ class_name FolderWatcher
 extends Node
 ## Watches one folder and raises On A File Appeared / Changed / Removed. Godot has no runtime file watcher, so this POLLS: it reads the folder every few seconds and compares what it finds with what it found last time, by name and by modified time. Watch Folder starts it, Stop Watching parks it, and a stopped watcher costs nothing per frame.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Folder Watcher needs a parent node: put it under one.")
+		push_warning("Folder Watcher needs a parent node: put it under one, or set Acts on.")
 
 ## Raised on the first look that finds a file the look before did not.
 ## @ace_trigger

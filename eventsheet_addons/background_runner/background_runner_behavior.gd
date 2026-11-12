@@ -7,13 +7,16 @@ class_name BackgroundRunner
 extends Node
 ## Runs a pure function on a worker thread so heavy computation never hitches the game. Call Run In Background with a callable, keep playing at full frame rate, and On Done hands the result back on the main thread.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Background Runner needs a parent node: put it under one.")
+		push_warning("Background Runner needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Done")

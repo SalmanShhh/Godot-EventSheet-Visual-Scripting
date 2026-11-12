@@ -6,13 +6,16 @@ class_name PricedTableBehavior
 extends Node
 ## The priced-interaction table, worn by the thing that sells: a vendor, an upgrade kiosk, a toll gate, a skill tree. Load a PriceTableResource (.tres) of entries - id, label, price, currency, stock, locked, requires - and Buy Entry runs the whole transaction (unlocked? in stock? affordable?), takes the money through whatever wallet answers, and fires On Purchased or On Purchase Refused with the reason.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Priced Table Behavior needs a parent node: put it under one.")
+		push_warning("Priced Table Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Purchased")

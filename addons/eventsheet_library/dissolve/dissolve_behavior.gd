@@ -7,13 +7,16 @@ class_name DissolveBehavior
 extends Node
 ## Burns the host away along a noise field with a glowing edge, and burns it back. Dissolve walks the burn to gone over a number of seconds and fires On Dissolved when it arrives; Appear walks it back. The burn's blotch size, edge width and edge colour live in dissolve.gdshader, which is copied into your project when the pack is added.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Dissolve Behavior needs a CanvasItem: put it under one.")
+		push_warning("Dissolve Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Dissolved")

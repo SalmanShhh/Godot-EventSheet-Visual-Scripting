@@ -7,13 +7,16 @@ class_name TraversalKit
 extends Node
 ## Traversal moves for a CharacterBody2D in one drop: ledge grabs (the two-probe test, then Grab / Climb up / Drop), wall slides, wall jumps away from the wall, wall runs, ladders, vaults, crouching and swimming. It writes velocity and leaves the moving to your mover, so it stacks on top of Platformer movement or your own rows.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Traversal Kit needs a CharacterBody2D: put it under one.")
+		push_warning("Traversal Kit needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Ledge Grabbed")

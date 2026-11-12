@@ -7,13 +7,16 @@ class_name SkateboardMovement
 extends Node
 ## Momentum movement for a CharacterBody2D on a board: one Push nudges you toward the top speed and you keep it, Roll With The Slope projects gravity along the floor so halfpipes and ramps work, Ollie leaves the ground, Spin and Flip turn in the air, and touching down either lands clean or bails depending on how square the board is with the floor. Grinds snap to any Path2D rail and ride it, and a trick chain multiplies everything you land without touching down.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Skateboard Movement needs a CharacterBody2D: put it under one.")
+		push_warning("Skateboard Movement needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Ollie")

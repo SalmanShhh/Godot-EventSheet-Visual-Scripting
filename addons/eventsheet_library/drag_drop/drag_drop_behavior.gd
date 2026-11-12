@@ -6,13 +6,16 @@ class_name DragDropBehavior
 extends Node
 ## Makes any 2D node something you can pick up, move, snap into place, and throw, with follow lag, axis locking, magnetism, break-distance auto-drop, and a measured throw velocity on release. Event-driven: you feed it a drag point from any source (mouse, touch, gamepad, AI) and it handles the rest.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Drag Drop Behavior needs a Node2D: put it under one.")
+		push_warning("Drag Drop Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Drag Started")

@@ -7,13 +7,16 @@ class_name PlatformerMovement
 extends Node
 ## Full jump-and-run movement for a CharacterBody2D in one drop: acceleration and friction, gravity with a terminal velocity, coyote time, jump buffering, variable jump height, multi-jump, wall slide, and wall jump. You only fire Jump on the button press, tune the feel in the Inspector, and react to triggers like On Jumped and On Landed.
 
-## The node this behavior acts on (its parent). Required host: CharacterBody2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CharacterBody2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CharacterBody2D
+	host = acts_on if acts_on != null else get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("Platformer Movement needs a CharacterBody2D: put it under one.")
+		push_warning("Platformer Movement needs a CharacterBody2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Jumped")

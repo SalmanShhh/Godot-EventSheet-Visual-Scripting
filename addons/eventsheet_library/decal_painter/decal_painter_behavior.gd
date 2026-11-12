@@ -6,13 +6,16 @@ class_name DecalPainter
 extends Node
 ## Sheet-driven Godot Decal nodes: stamp splats, scorch marks, and target rings onto world surfaces with lifetimes and a FIFO cap. Also keeps a generated blob shadow ground-snapped under any character and can project a Drawing Canvas live texture onto the 3D world.
 
-## The node this behavior acts on (its parent). Required host: Node3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node3D.
 var host: Node3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node3D
+	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("Decal Painter needs a Node3D: put it under one.")
+		push_warning("Decal Painter needs a Node3D: put it under one, or set Acts on.")
 
 # --- Designer knobs (tune in the Inspector) ---
 ## The most spawned decals kept alive - the oldest is freed when the cap is hit.

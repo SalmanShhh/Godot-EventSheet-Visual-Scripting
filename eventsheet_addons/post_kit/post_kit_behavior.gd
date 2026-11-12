@@ -6,13 +6,16 @@ class_name PostKitBehavior
 extends Node
 ## The camera's own post stack, for Forward+: vignette, desaturate, pixelate, tint and fade, under the same names the 2D post stack uses, added by name and pulsed in one row. Plus an outline drawn through walls - mark a group, and a second camera's mask of one visual layer is edge-detected over the frame. Attach it under the Camera3D or the WorldEnvironment that carries the Compositor.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Post Kit Behavior needs a parent node: put it under one.")
+		push_warning("Post Kit Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## Folder holding the effect scripts and compute shaders once installed.
 const EFFECT_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"

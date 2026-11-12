@@ -7,13 +7,16 @@ class_name StatusEffectsBehavior
 extends Node
 ## Burn, poison, slow, stun, freeze and shield on any node: apply a status for a time, let it tick damage of its own kind through the Health pack, stack the way its file says, tint the host and take the tint off again when it ends. The effects are StatusEffectResource files you own - six starters ship beside the pack to edit or delete.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Status Effects Behavior needs a parent node: put it under one.")
+		push_warning("Status Effects Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## Fires when a status lands, including the second and later times it is applied.
 ## @ace_trigger

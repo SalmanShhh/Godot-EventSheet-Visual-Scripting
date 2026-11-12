@@ -17,6 +17,8 @@ static func run() -> bool:
 
 	# ── The strict classifier ──
 	ok = _check("the canonical host binding is recognised", ViewportRowBuilder.host_binding_class(CANONICAL), "Node2D") and ok
+	ok = _check("the binding that honours Acts on is recognised too",
+		ViewportRowBuilder.host_binding_class(CANONICAL.replace("host = get_parent()", "host = acts_on if acts_on != null else get_parent()")), "Node2D") and ok
 	ok = _check("a trailing blank is tolerated", ViewportRowBuilder.host_binding_class(CANONICAL + "\n"), "Node2D") and ok
 	ok = _check("the host class is extracted verbatim",
 		ViewportRowBuilder.host_binding_class(CANONICAL.replace("Node2D", "CharacterBody2D")), "CharacterBody2D") and ok

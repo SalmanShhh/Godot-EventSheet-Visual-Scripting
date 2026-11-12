@@ -7,13 +7,16 @@ class_name OutlineBehavior
 extends Node
 ## Draws a coloured border around whatever the host's own alpha says its shape is - the selection ring, the highlight, the interactable marker. Outline turns it on with a colour and a thickness, No Outline turns it off, and the border follows the art rather than a rectangle. The shader is copied into your project when the pack is added.
 
-## The node this behavior acts on (its parent). Required host: CanvasItem.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: CanvasItem = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: CanvasItem.
 var host: CanvasItem = null
 
 func _enter_tree() -> void:
-	host = get_parent() as CanvasItem
+	host = acts_on if acts_on != null else get_parent() as CanvasItem
 	if host == null:
-		push_warning("Outline Behavior needs a CanvasItem: put it under one.")
+		push_warning("Outline Behavior needs a CanvasItem: put it under one, or set Acts on.")
 
 ## Name of the shader dial that sets the outline colour.
 const COLOUR_DIAL: String = "outline_color"

@@ -6,13 +6,16 @@ class_name TouchGesturesBehavior
 extends Node
 ## Swipes and drawn shapes as triggers. Watches the touch events itself and fires On Swipe (left / right / up / down, or eight ways with the diagonals on) and On Shape Drawn with the name of the closest taught shape. Teach a shape by drawing it once.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Touch Gestures Behavior needs a parent node: put it under one.")
+		push_warning("Touch Gestures Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Swipe")

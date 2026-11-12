@@ -6,13 +6,16 @@ class_name UtilityBrain
 extends Node
 ## Scoring-based AI decisions that replace brittle if/else state machines. Register candidate actions, give each a few considerations (world-state inputs mapped through response curves), feed inputs with Set Input, call Evaluate, and the highest-scoring action wins and fires triggers your sheet reacts to.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Utility Brain needs a parent node: put it under one.")
+		push_warning("Utility Brain needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Decision Made")

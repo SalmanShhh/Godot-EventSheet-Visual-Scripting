@@ -6,13 +6,16 @@ class_name Bullet3DBehavior
 extends Node
 ## Flies a Node3D forward every frame like a projectile: it launches along the host forward direction, then gravity bends the path into an arc. Tune speed and gravity in the Inspector or live from the sheet, and relaunch, retarget, or freeze a shot while the game runs.
 
-## The node this behavior acts on (its parent). Required host: Node3D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node3D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node3D.
 var host: Node3D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node3D
+	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("Bullet3D Behavior needs a Node3D: put it under one.")
+		push_warning("Bullet3D Behavior needs a Node3D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Bullet Hit")

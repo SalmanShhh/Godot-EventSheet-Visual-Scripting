@@ -6,13 +6,16 @@ class_name LOSBehavior
 extends Node
 ## Turns a Node2D into a sensor that answers whether it can actually see a target: it checks distance against sight range, a vision cone around the host's facing, then fires a physics raycast to make sure no wall is in the way. One pair of eyes per node - perfect for guards, turrets, and cameras.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("LOS Behavior needs a Node2D: put it under one.")
+		push_warning("LOS Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## Maximum distance the node can see - targets farther away are never visible.
 @export var sight_range: float = 400.0

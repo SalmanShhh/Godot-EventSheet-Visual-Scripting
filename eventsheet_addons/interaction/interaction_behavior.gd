@@ -7,13 +7,16 @@ class_name InteractionBehavior
 extends Node
 ## The "press E to open it" behavior, worn by the PLAYER. Focus Nearest Interactable keeps one candidate in focus while it is in range, On Focus Changed fires the instant that candidate changes (or goes away) so a prompt label and a highlight can follow it, and Interact With Focus calls the focused thing's own interact() function.
 
-## The node this behavior acts on (its parent). Required host: Node2D.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node2D = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node2D.
 var host: Node2D = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node2D
+	host = acts_on if acts_on != null else get_parent() as Node2D
 	if host == null:
-		push_warning("Interaction Behavior needs a Node2D: put it under one.")
+		push_warning("Interaction Behavior needs a Node2D: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Focus Changed")

@@ -43,8 +43,8 @@ static func run() -> bool:
 	var behavior_output: String = str(SheetCompiler.compile(behavior_sheet, "user://eventforge_behavior.gd").get("output", ""))
 	all_passed = _check("behavior compiles as a Node component", behavior_output.contains("extends Node"), true) and all_passed
 	all_passed = _check("typed host accessor emitted", behavior_output.contains("var host: CharacterBody2D = null"), true) and all_passed
-	all_passed = _check("host binds in _enter_tree", behavior_output.contains("host = get_parent() as CharacterBody2D"), true) and all_passed
-	all_passed = _check("attach-time warning names the behavior", behavior_output.contains("Patrol Behavior needs a CharacterBody2D: put it under one."), true) and all_passed
+	all_passed = _check("host binds in _enter_tree", behavior_output.contains("host = acts_on if acts_on != null else get_parent() as CharacterBody2D"), true) and all_passed
+	all_passed = _check("attach-time warning names the behavior", behavior_output.contains("Patrol Behavior needs a CharacterBody2D: put it under one, or set Acts on."), true) and all_passed
 	all_passed = _check("behavior actions act on the host", behavior_output.contains("host.move_and_slide()"), true) and all_passed
 
 	# Lint understands behavior context: host.<member> resolves.

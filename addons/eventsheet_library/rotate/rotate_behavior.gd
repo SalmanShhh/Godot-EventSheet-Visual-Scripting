@@ -6,13 +6,16 @@ class_name RotateBehavior
 extends Node
 ## Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor via Tools > Preview Behaviors on Selected Node, no game run needed.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Rotate Behavior needs a parent node: put it under one.")
+		push_warning("Rotate Behavior needs a parent node: put it under one, or set Acts on.")
 
 # --- Designer knobs (tune in the Inspector) ---
 ## Spin on/off - Set Rotation Enabled flips it at runtime.

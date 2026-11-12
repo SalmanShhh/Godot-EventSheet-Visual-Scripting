@@ -6,13 +6,16 @@ class_name DialogueKitBehavior
 extends Node
 ## Runs typewriter conversations in your UI: queue lines with a speaker and text, start the dialogue, and it types each line into named labels while waiting for the player to advance. It finds your panel and labels by name, and fires triggers as lines and conversations start and finish.
 
-## The node this behavior acts on (its parent). Required host: Node.
+## The node this behavior acts on. Empty: its parent.
+@export var acts_on: Node = null
+
+## The node this behavior acts on (Acts on, or else its parent). Required host: Node.
 var host: Node = null
 
 func _enter_tree() -> void:
-	host = get_parent() as Node
+	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Dialogue Kit Behavior needs a parent node: put it under one.")
+		push_warning("Dialogue Kit Behavior needs a parent node: put it under one, or set Acts on.")
 
 ## @ace_trigger
 ## @ace_name("On Dialogue Started")
