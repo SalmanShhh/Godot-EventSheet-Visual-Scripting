@@ -6,6 +6,7 @@ class_name TargetingBehavior
 extends Node
 ## Lock-on and aim help for a Node2D: hold the nearest hostile in a cone, cycle to the next, let go when it dies or leaves the range, and bend a stick direction toward whatever the player is nearly pointing at. The bend is the accessibility Aim Assist Radius setting, so a zero radius turns the help off from the options screen.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

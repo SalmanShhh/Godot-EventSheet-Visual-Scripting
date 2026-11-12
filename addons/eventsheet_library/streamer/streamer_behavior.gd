@@ -6,6 +6,7 @@ class_name StreamerBehavior
 extends Node
 ## Streams a 2D world that is bigger than memory: a folder of chunk scenes named by cell, loaded on a thread within a radius of a node and freed behind it. One threaded request per frame and a millisecond budget keep the frame rate flat, a keep radius stops a player on a cell border reloading what they just left, and On Chunk Unloading fires before the free so a sheet can save what the player changed.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

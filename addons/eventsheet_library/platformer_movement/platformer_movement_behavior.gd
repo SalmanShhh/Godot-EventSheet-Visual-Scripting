@@ -9,6 +9,7 @@ extends Node
 ##
 ## Changes on its parent: up_direction, velocity, move_and_slide().
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null
 

@@ -6,6 +6,7 @@ class_name EncounterTimelineBehavior
 extends Node
 ## The spawn/beat timeline, worn by whatever runs the encounter: an arena, a boss, a tutorial director, ambient traffic. Load an EncounterResource (.tres) of beats - at_seconds, scene, count, group, note - then Start Encounter and the behavior ticks its own clock, spawns each beat on schedule (through the ObjectPool autoload when one is installed), and fires On Entry Spawned and On Encounter Finished. Write Encounter Report summarises the plan, spawn density included.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

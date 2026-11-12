@@ -8,6 +8,7 @@ extends Node
 ##
 ## Changes on its parent: position, rotation.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 

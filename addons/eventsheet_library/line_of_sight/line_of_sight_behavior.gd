@@ -6,6 +6,7 @@ class_name LOSBehavior
 extends Node
 ## Turns a Node2D into a sensor that answers whether it can actually see a target: it checks distance against sight range, a vision cone around the host's facing, then fires a physics raycast to make sure no wall is in the way. One pair of eyes per node - perfect for guards, turrets, and cameras.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

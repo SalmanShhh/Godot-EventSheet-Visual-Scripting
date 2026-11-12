@@ -8,6 +8,7 @@ extends Node
 ##
 ## Changes on its parent: offset_left, offset_top, offset_right, offset_bottom.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Control = null
 

@@ -6,6 +6,7 @@ class_name PostKitBehavior
 extends Node
 ## The camera's own post stack, for Forward+: vignette, desaturate, pixelate, tint and fade, under the same names the 2D post stack uses, added by name and pulsed in one row. Plus an outline drawn through walls - mark a group, and a second camera's mask of one visual layer is edge-detected over the frame. Attach it under the Camera3D or the WorldEnvironment that carries the Compositor.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

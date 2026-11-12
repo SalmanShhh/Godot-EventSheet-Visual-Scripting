@@ -18,7 +18,7 @@ static func run() -> bool:
 	ok = SUPPORT.check(TEST_NAME, "the shipped pack declares an exported Acts on of its host type",
 		source.contains("@export var acts_on: CharacterBody2D = null"), true) and ok
 	ok = SUPPORT.check(TEST_NAME, "the pack documents it in one sentence",
-		source.contains("## The node this behavior acts on. Empty: its parent.\n@export var acts_on"), true) and ok
+		source.contains("## @ace_hidden\n## The node this behavior acts on. Empty: its parent.\n@export var acts_on"), true) and ok
 
 	# Empty: the parent, as before.
 	var body: CharacterBody2D = CharacterBody2D.new()

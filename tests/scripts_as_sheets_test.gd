@@ -48,7 +48,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 			_last_function_uid(rows), "define_fn_editor_preview_sample"],
 		["the name's card says what it is and its facts",
 			[str(card.get("subtitle", "")), str(Array(card.get("notes", [""]))[0])],
-			["· Behaviour", "Works on Node2D · listed under Sine · 6 properties · 4 actions, 0 conditions, 0 triggers, 0 expressions"]],
+			["· Behaviour", "Works on Node2D · listed under Sine · 7 properties · 4 actions, 0 conditions, 0 triggers, 0 expressions"]],
 		["and offers the file's options",
 			Array(card.get("doors", [])), [["Behaviour settings…", "file_settings"],
 				["Open in the script editor", "open_script_editor"], ["Show in FileSystem", "show_in_filesystem"]]],

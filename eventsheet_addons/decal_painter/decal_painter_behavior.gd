@@ -6,6 +6,7 @@ class_name DecalPainter
 extends Node
 ## Sheet-driven Godot Decal nodes: stamp splats, scorch marks, and target rings onto world surfaces with lifetimes and a FIFO cap. Also keeps a generated blob shadow ground-snapped under any character and can project a Drawing Canvas live texture onto the 3D world.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 

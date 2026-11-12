@@ -9,6 +9,7 @@ extends Node
 ##
 ## Changes on its parent: velocity, global_transform, global_position, move_and_slide().
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody3D = null
 

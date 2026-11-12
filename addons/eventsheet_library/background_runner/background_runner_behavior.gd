@@ -7,6 +7,7 @@ class_name BackgroundRunner
 extends Node
 ## Runs a pure function on a worker thread so heavy computation never hitches the game. Call Run In Background with a callable, keep playing at full frame rate, and On Done hands the result back on the main thread.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

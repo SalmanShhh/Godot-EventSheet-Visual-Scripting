@@ -6,6 +6,7 @@ class_name SimpleAbilitiesBehavior
 extends Node
 ## A small ability manager for any node: named abilities with their own cooldowns, regenerating charges, tags, and custom data. Grant, activate, and query abilities from plain event rows, with triggers that report which ability fired.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

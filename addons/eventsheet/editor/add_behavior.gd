@@ -31,6 +31,9 @@ static func exported_properties(script_path: String) -> Array[Dictionary]:
 		"(?m)^@export[^\\n]*\\n?\\s*var\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(?::\\s*([A-Za-z_][A-Za-z0-9_\\[\\]]*))?\\s*:?=\\s*([^\\n#]*)")
 	for found: RegExMatch in pattern.search_all(source):
 		var identifier: String = found.get_string(1)
+		# Acts on is where the behaviour sits, which the dialog already decides: it is not a knob to tune.
+		if identifier == "acts_on":
+			continue
 		var declared_type: String = found.get_string(2).strip_edges()
 		var default_text: String = found.get_string(3).strip_edges()
 		if declared_type.is_empty():

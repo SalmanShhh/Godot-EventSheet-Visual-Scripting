@@ -497,6 +497,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if behavior_label.is_empty():
 			behavior_label = "This"
 		lines.append("")
+		lines.append("## @ace_hidden")
 		lines.append("## The node this behavior acts on. Empty: its parent.")
 		lines.append("@export var acts_on: %s = null" % host_type)
 		lines.append("")

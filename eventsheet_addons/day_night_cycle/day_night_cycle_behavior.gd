@@ -7,6 +7,7 @@ class_name DayNightCycleBehavior
 extends Node
 ## A clock that runs the sky. A whole day passes every Day Length Minutes; the sun turns with the hour, and three curves say how bright the sun, the ambient light and the sky itself are through the day. Point Sun Light at a light and World Lighting at a WorldEnvironment or a CanvasModulate - 2D and 3D both work, and an unset target is skipped. On Sunrise, On Sunset, On Midnight and On The Hour are what a game listens to; It Is Night and It Is Day are what it asks.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

@@ -6,6 +6,7 @@ class_name SlideMove
 extends Node
 ## Grid movement where a tap sends the host sliding until it slams into a wall - the feel of Tomb of the Mask. Give it a grid size and a wall physics layer; it glides to the farthest open tile at a constant speed and snaps to the grid when it stops.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

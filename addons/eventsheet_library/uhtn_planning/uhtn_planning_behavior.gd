@@ -7,6 +7,7 @@ class_name UHTNPlanner
 extends Node
 ## An HTN planner steered by Utility AI: tasks decompose into ordered steps through methods with preconditions and backtracking, while response-curve scorers rank the methods at plan time against live world state. Author the whole network in the sheet, or drop a UHTNPlanResource (.tres) onto the Plan Resource slot and drive a hundred agents from one asset.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

@@ -6,6 +6,7 @@ class_name TimerBehavior
 extends Node
 ## A private countdown clock on any node: set the seconds, start it, and On Timer fires when it reaches zero. Turn on repeating for a fixed metronome beat, or leave it off to fire once and stop.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

@@ -6,6 +6,7 @@ class_name TouchGesturesBehavior
 extends Node
 ## Swipes and drawn shapes as triggers. Watches the touch events itself and fires On Swipe (left / right / up / down, or eight ways with the diagonals on) and On Shape Drawn with the name of the closest taught shape. Teach a shape by drawing it once.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

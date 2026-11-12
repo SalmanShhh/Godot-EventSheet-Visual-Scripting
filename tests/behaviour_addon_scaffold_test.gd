@@ -38,6 +38,7 @@ static func run() -> bool:
 		"extends Node",
 		"## Walks between points, waits at each, and says 'arrived'.",
 		"",
+		"## @ace_hidden",
 		"## The node this behavior acts on. Empty: its parent.",
 		"@export var acts_on: CharacterBody2D = null",
 		"",

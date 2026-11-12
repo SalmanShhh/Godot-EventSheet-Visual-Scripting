@@ -6,6 +6,7 @@ class_name StateMachineBehavior
 extends Node
 ## Gives a node one named "what am I doing right now" state and a clean way to switch it. Go to state changes it, Current state is branches on it, and On any state change fires on every switch with the state you left and the state you entered.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

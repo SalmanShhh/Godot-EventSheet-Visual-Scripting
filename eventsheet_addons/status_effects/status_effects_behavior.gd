@@ -7,6 +7,7 @@ class_name StatusEffectsBehavior
 extends Node
 ## Burn, poison, slow, stun, freeze and shield on any node: apply a status for a time, let it tick damage of its own kind through the Health pack, stack the way its file says, tint the host and take the tint off again when it ends. The effects are StatusEffectResource files you own - six starters ship beside the pack to edit or delete.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

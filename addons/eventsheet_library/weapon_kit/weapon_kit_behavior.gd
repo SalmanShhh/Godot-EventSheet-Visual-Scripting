@@ -7,6 +7,7 @@ class_name WeaponKit
 extends Node
 ## Turns any Node2D into a gun: a magazine and reserve pool, a fire-rate cooldown, single / auto / burst modes, and timed or instant reloads with optional auto-reload. Fire spends a round and fires On Fire - inside that trigger you spawn the bullet or cast the hitscan however your game likes.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

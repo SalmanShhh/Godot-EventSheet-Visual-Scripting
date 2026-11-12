@@ -6,6 +6,7 @@ class_name Streamer3DBehavior
 extends Node
 ## Streams a 3D world that is bigger than memory: a folder of chunk scenes named by cell, loaded on a thread within a radius of a node and freed behind it. The grid is flat by default - height only becomes a cell axis when Stream Height is on - and one threaded request per frame with a millisecond budget keeps the frame rate flat while a vehicle crosses it.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 

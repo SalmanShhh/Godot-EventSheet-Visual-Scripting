@@ -8,6 +8,7 @@ extends Node
 ##
 ## Changes on its parent: visible, modulate.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 

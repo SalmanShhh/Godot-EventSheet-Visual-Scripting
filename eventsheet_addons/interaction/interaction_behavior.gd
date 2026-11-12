@@ -7,6 +7,7 @@ class_name InteractionBehavior
 extends Node
 ## The "press E to open it" behavior, worn by the PLAYER. Focus Nearest Interactable keeps one candidate in focus while it is in range, On Focus Changed fires the instant that candidate changes (or goes away) so a prompt label and a highlight can follow it, and Interact With Focus calls the focused thing's own interact() function.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 

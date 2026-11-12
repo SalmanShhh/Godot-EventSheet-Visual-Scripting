@@ -6,6 +6,7 @@ class_name LOS3DBehavior
 extends Node
 ## A per-node eye for 3D: casts a physics ray from the host Node3D to a target and reports whether the view is clear, optionally gated by a sight range and a forward vision cone. Build guard vision, break-line-of-sight chases, auto-targeting towers, and clear-shot checks without writing a raycast by hand.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 

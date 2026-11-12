@@ -7,6 +7,7 @@ class_name LightFlickerBehavior
 extends Node
 ## Makes a light flicker like a flame. Attach it to any light, 2D or 3D, and its brightness walks between two numbers on a noise field - related from frame to frame, which is what reads as fire rather than as static. Between, Times A Second and Also Flicker Reach are tuned in the Inspector while the game runs; the sheet says when it starts and when it stops, and what it settles at.
 
+## @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 

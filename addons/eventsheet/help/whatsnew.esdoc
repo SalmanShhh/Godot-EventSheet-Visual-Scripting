@@ -6,6 +6,20 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: a behaviour says what it changes on its parent
+
+- A behaviour that writes into the node it works on now says so in its description, which shows in the Add Node window and the Inspector. For example \"Changes on its parent: up_direction, velocity, move_and_slide().\" A behaviour that only reads its parent says nothing. The line is read from the behaviour's own code each time the pack is built, so it cannot fall out of date.
+
+### Added: Acts on, for a behaviour that is not a direct child
+
+- Every behaviour that works on a node of a certain type (Platformer Movement, Bullet, Anchor, Sine and the rest) now has an Acts on field at the top of its Inspector. Leave it empty and the behaviour works on its parent, exactly as before. Set it, and the behaviour can sit anywhere in the scene, for example under a Behaviours folder node.
+- The Doctor and the warning in the Output both say \"or set Acts on\" as the second way out. Scenes saved before the field existed load with it empty, so nothing in them changes.
+
+### Added: the Doctor says when a behaviour is under the wrong node
+
+- Check the project now reads every scene and says it when a behaviour sits under the wrong kind of node, before the game runs. For example \"Platformer Movement is under a Node2D; it needs a CharacterBody2D: put it under one.\" The finding offers \"Move it under <the nearest node that fits>\" and \"Show in scene\".
+- A behaviour that cannot find its host says the same words in the Output while the game runs, in place of \"PlatformerMovement behavior requires a CharacterBody2D parent.\" The behaviour scripts stay ordinary scripts that work in any project without the plugin.
+
 ### Changed: the Family Arena showcase teaches call down, signal up
 
 - Each Enemy now moves itself: its own sheet has an Every tick row that moves it by its own fall_speed and wraps it back to the top. The arena sheet no longer reaches into the enemies to move them; it spawns them and runs the one rule that is about the whole family, a strike that walks every Enemy with a typed For each (`for enemy: Enemy in ...`) and may hit each one through Enemy: Take Damage. The showcase plays the same: enemies fall, the strike hits them, they die.
