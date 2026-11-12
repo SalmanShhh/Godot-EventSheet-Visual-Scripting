@@ -6,6 +6,14 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### New: press Preview to watch a behaviour in the editor
+
+- Eighteen behaviours that are tuned by eye now carry a Preview button in the Inspector: Sine, Sine 3D, Rotate, Orbit, Orbit 3D, Wave, Flash, Hit Flash, Fade, Light Flicker, Light Pulse, Spring, Juice, Juice 3D, Follow Path, Move To, Move To 3D and Tween. Press it and the behaviour plays on its node in the 2D or 3D view while you drag its values; the button then reads Stop preview. Nothing plays when a scene opens, and every other behaviour is exactly the script it was, with no `@tool`.
+- The scene is never changed by a preview. The host's stored values are written down when Preview starts and put back on Stop, on leaving the scene (another scene tab, closing it), and before every save, which includes pressing Play. The values are set straight on the node, so the scene tab never shows as modified and the undo history gains nothing.
+- Spring, Juice and Juice 3D, which only move when set off, have a second Nudge button beside Preview. Several behaviours on one node can preview at once.
+- Right-click a node in the Scene dock: Preview its behaviours presses Preview on every behaviour under it that has the button, and Stop previews puts it all back. It presses the very same buttons, so it only appears for behaviours that carry one.
+- The preview is the behaviour's own code, so it works in a project with no plugin installed: copy the pack's folder in and the button is there. A behaviour declares it in its builder (`previews`), which is the whole list.
+
 ### Changed: a node dragged from Godot's Scene dock starts an event on it
 
 - Since the Objects list no longer lists the rest of the scene, Godot's Scene dock is where an unused node comes from. Dragging one onto the empty canvas or onto an event now does exactly what dragging the same object off the Objects list does: the picker opens on that object (Add condition, or Add action when it lands in an event's action lane), with the same offers as before for a node in the secret or water group or one that exports needs_key. A node the sheet already uses lands under the name the sheet gives it. Dropped on a parameter value it still fills that parameter with the node reference, as it did.
