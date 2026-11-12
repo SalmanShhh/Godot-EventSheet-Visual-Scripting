@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (34,371 CI-gated assertions across 993 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (34,851 CI-gated assertions across 1013 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -140,6 +140,20 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 - **Mistake checks with a fix beside each** - a wrong node type, a `res://` path that is missing, an empty group, an input action that does not exist, a `$Path` that is not in the scene, a signal given the wrong number of values, a While that cannot end, a local hiding a variable or parameter, and a division by a literal zero. Each shows on the row's quiet state with its fix door, and in the Doctor.
 - **Checks on save** - a broken script marks its row with Godot's own words, and compiler warnings reach the row. A run-time error in a `.gd` sheet or a hand-written script reaches the sheet's strip and Jump selects its row, in a game started from the editor, through the editor's own debugger feed, with nothing added to the game (a game you start outside the editor has no feed to read).
 
+### On `main` since `v0.20.0`, not yet tagged
+
+51 commits, every one listed in the [CHANGELOG](CHANGELOG.md) under `[Unreleased]`, CI green. In one screen:
+
+- **More of your code opens as rows** - measured on the 459 scripts of Godot's official demo projects, all of which open and save back byte for byte: a statement written over several lines is one row, `#` notes are comment rows or the note of the action under them, a note at the end of a line stays with its line, constants and plain variables at the top of a script are variable rows, and `signal name()` is a signal row. The cells still drawn as code fell from 1,510 to 1,183 of about 25,000, most of the rest being blank spacing lines.
+- **Stacks and queues** - Pop back / Pop front into a name (with an optional If empty fallback, and a typed result from a typed list), Move back / front / all between lists, Swap, For each popped from the front, and Push back keeping the last N, under Stack and Queue groups in the picker. All plain `Array` calls.
+- **Lists of instances, and picking** - a pick lasts for its event and its sub-events: the picked instance is offered as an object in Add action by its type, its rows read under that type, and an event outside the pick says so. Push back once, Set a list to the instances in a group, Drop freed instances. A list of nodes nothing reads in order is pointed at a group, Godot's own tool for a set of nodes, with a door that converts it.
+- **Godot's own drawing calls** - `draw_line`, `draw_rect`, `draw_circle`, `draw_arc`, `draw_string`, `draw_texture` and the rest as actions under On Draw, with optional arguments left off when unused, plus Redraw.
+- **Your own functions edit like events** - a function in a script you opened has no lock; a shipped behaviour pack asks once before its first edit, because a newer version of the pack would replace it; the choice is remembered for the project and never written into the `.gd`. Dragging an action inside a function moves it.
+- **Reads for what it is** - `_process` is Every tick and `_physics_process` is Every physics tick; `delta` reads as `delta`; an untyped variable reads `any`; a list row reads under its list.
+- **Quieter windows and rows** - the help card and field notes are plain panels with no coloured outline, a finding tints its row and colours the event number without a frame, and a long finding sentence wraps so it is read whole.
+- **Fixed** - a restored session read every tab but the last as raw function blocks; the parameters window could write a call with a gap in the middle; the kind check built a broken test script from a `match` arm.
+- **Examples** - the README's player example is real Godot (a Hitbox `Area2D` wired in the scene), and the Family Arena showcase has each enemy move itself while the arena only spawns them and runs the family-wide strike.
+
 **Measured** - on our test machine this week: enabling the plugin takes **310 to 450 ms**, and the first sheet tab of a session **17 to 22 s** (about 30 s at `v0.18.0`; it is still the slowest moment, most of it Godot compiling the editor's own scripts). More interaction and first-open work is in progress.
 
 **Quality** - the full test suite and CI run on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
@@ -163,6 +177,7 @@ Every release has full notes in its own file under [docs/changelog](https://gith
 | `v0.17.0` | Adopt anything, read anything: real `.gd` files open as rows byte-exact, your classes as vocabulary, Construct-style reading, the pattern / dev-experience / i18n waves, docs inside the editor |
 | `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, the render vocabulary and shape nodes, the Feedback Player, the gameplay systems, the resting toolbar and the Manual |
 | `v0.20.0` | Feel native: the Editor Native look in Godot's light and dark themes, names you already know, variables as the Inspector shows them, one Save choice per variable, functions as events, the Inspector Designer shaping a field, world and local positions, type checking, autocomplete, colour squares and mistake checks as you type, smooth interaction on big sheets, every `.gd` save loss fixed |
+| _Unreleased on main_ | More code opening as rows (multi-line statements, notes, constants), stacks and queues, lists of instances and picking that lasts for its event, Godot's drawing calls as actions, functions that edit like events, plainer windows |
 | _Next_ | Four small `.gd` save details (where a comment row is written, a comment's colour, a plain variable's description, a `#region` around the top events), dropping a drag on a big sheet under a frame or two (about 0.75 s on 803 rows today, a fold click is already under 50 ms), a first sheet tab in seconds (about 17 to 22 s today), saving a behaviour or global decided when you make it, then whatever you ask for |
 
 ## Project layout
