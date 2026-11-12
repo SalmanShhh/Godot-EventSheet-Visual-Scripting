@@ -304,9 +304,6 @@ func build(root: Node) -> void:
 	sheet_popup.add_item(EventSheetL10n.translate("New global…"), 22)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(22), EventSheetL10n.translate(
 		"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload."))
-	sheet_popup.add_item(EventSheetL10n.translate("Properties and actions…"), 23)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(23), EventSheetL10n.translate(
-		"What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists."))
 	sheet_popup.add_item("New Editor Tool…", 12)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(12),
@@ -358,7 +355,6 @@ func build(root: Node) -> void:
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
 			22: _dock._new_addon_panel.open(true)
-			23: _dock._new_addon_panel.open_members()
 			10: _dock._providers_glue.share_verbs_with_project()
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)

@@ -1,15 +1,14 @@
-# Godot EventSheets - the New behaviour and New global forms, and the Properties and actions window.
+# Godot EventSheets - the New behaviour and New global forms.
 #
 # The forms ask the familiar questions as described dropdowns, keep the chosen choice's sentence in
 # view, say a name problem while it is typed, and only offer copies that fit (packs made for the same
 # kind of object, or meant to be an autoload). Turning a global on is its row in Godot's own
-# Project Settings > Globals > Autoload. The window lists what a sheet offers from the sheet itself.
+# Project Settings > Globals > Autoload.
 @tool
 class_name NewAddonPanelTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const MEMBERS := preload("res://addons/eventsheet/editor/dock/own_members_window.gd")
 
 
 static func run() -> bool:
@@ -66,7 +65,6 @@ static func run() -> bool:
 	# Turning a global on and off is its row in Project Settings > Globals > Autoload.
 	EventSheetNewAddonPanel.set_global_on("ZzPanelGlobal", "res://zz_panel_global.gd", true)
 	ok = _check("on writes the autoload row", ProjectSettings.get_setting("autoload/ZzPanelGlobal", ""), "*res://zz_panel_global.gd") and ok
-	ok = _check("which the window reads back", MEMBERS.global_name_for("res://zz_panel_global.gd"), "ZzPanelGlobal") and ok
 	EventSheetNewAddonPanel.set_global_on("ZzPanelGlobal", "res://zz_panel_global.gd", false)
 	ok = _check("off removes it", ProjectSettings.has_setting("autoload/ZzPanelGlobal"), false) and ok
 	# An existing project's autoload scene lives anywhere, under any name: its root node's script is
@@ -82,72 +80,10 @@ static func run() -> bool:
 	ProjectSettings.set_setting("autoload/ZzPanelWorld", "*" + scene_path)
 	ok = SUPPORT.pins("new_addon_panel_test", [
 		["a scene autoload names its root node's script", EventSheetACEGenerator.scene_root_script(scene_path), "res://zz_panel_state.gd"],
-		["so that script reads as the global", MEMBERS.global_name_for("res://zz_panel_state.gd"), "ZzPanelWorld"],
 		["and the picker's generator agrees", EventSheetACEGenerator.autoload_name_for_path("res://zz_panel_state.gd"), "ZzPanelWorld"],
-		["a child node's script is not the global", MEMBERS.global_name_for("res://icon.svg"), ""],
 	]) and ok
 	ProjectSettings.set_setting("autoload/ZzPanelWorld", null)
 	DirAccess.remove_absolute(scene_path)
-	var unnamed: EventSheetResource = EventSheetResource.new()
-	unnamed.external_source_path = "res://zz_panel/game_state.gd"
-	ok = _check("a file with no class or autoload name is titled by its file name as written",
-		MEMBERS.identity(unnamed)["name"], "game_state.gd") and ok
-
-	# The window's lists, read from a sheet.
-	var sheet: EventSheetResource = EventSheetBehaviourAddonScaffold.behaviour_sheet("Patrol", "CharacterBody2D", "", "")
-	sheet.external_source_path = "res://eventsheet_addons/patrol/patrol.gd"
-	var speed: LocalVariable = LocalVariable.new()
-	speed.name = "speed"
-	speed.type_name = "float"
-	speed.default_value = 120.0
-	speed.exported = true
-	speed.description = "pixels a second"
-	var state: LocalVariable = LocalVariable.new()
-	state.name = "current"
-	state.type_name = "int"
-	state.default_value = 0
-	sheet.events.append(speed)
-	sheet.events.append(state)
-	var arrived: SignalRow = SignalRow.new()
-	arrived.signal_name = "reached_point"
-	arrived.trigger = true
-	arrived.ace_name = "On reached point"
-	sheet.events.append(arrived)
-	var is_patrolling: EventFunction = EventFunction.new()
-	is_patrolling.function_name = "is_patrolling"
-	is_patrolling.expose_as_ace = true
-	is_patrolling.return_type = TYPE_BOOL
-	is_patrolling.return_type_name = "bool"
-	is_patrolling.ace_display_name = "Is patrolling"
-	sheet.functions.append(is_patrolling)
-	var properties: Array[Dictionary] = MEMBERS.entries(sheet, "properties")
-	ok = SUPPORT.pins("new_addon_panel_test", [
-		["a behaviour's properties are its exported variables", properties.size(), 1],
-		["each with its type, default and meaning", [properties[0]["name"], properties[0]["type"], properties[0]["value"], properties[0]["means"]],
-			["speed", "float", "120.0", "pixels a second"]],
-		["and the line it is in code", properties[0]["line"], "@export var speed: float = 120.0"],
-		["a trigger is listed by its name", MEMBERS.entries(sheet, "triggers")[0]["label"], "On reached point"],
-		["a condition says what it returns", MEMBERS.entries(sheet, "conditions")[0]["returns"], "bool"],
-		["the behaviour is named as its class", MEMBERS.identity(sheet)["name"], "Patrol"],
-		["and is not a global", MEMBERS.identity(sheet)["global"], false],
-	]) and ok
-	# A property written by hand as `@export var enabled := true` keeps its value as source text; the
-	# list reads it as written, with the type Godot infers, not as a Variant holding "true".
-	var enabled: LocalVariable = LocalVariable.new()
-	enabled.name = "enabled"
-	enabled.default_value = "true"
-	enabled.inferred_type = true
-	enabled.exported = true
-	sheet.events.append(enabled)
-	var written: Dictionary = MEMBERS.entries(sheet, "properties")[1]
-	ok = _check("a property written with := reads its inferred type and its value as written",
-		[written["name"], written["type"], written["value"]], ["enabled", "bool", "true"]) and ok
-	sheet.events.erase(enabled)
-	sheet.behavior_mode = false
-	sheet.autoload_mode = true
-	sheet.autoload_name = "GameState"
-	ok = _check("a global's values are every variable but the constants", MEMBERS.entries(sheet, "properties").size(), 2) and ok
-	ok = _check("each kind wears its own word", [MEMBERS.kind_word("action"), MEMBERS.kind_word("trigger")], ["Action", "Trigger"]) and ok
 	# The Add behaviour list greys what cannot go on this object, with the reason on hover.
 	var bullet: Dictionary = EventSheetPackCatalog.describe("bullet")
 	var plain: Node = Node.new()

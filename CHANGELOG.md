@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: the Properties and actions window
+
+- Sheet > Properties and actions... is gone, and a new behaviour or global no longer opens it. It only listed what the open file offers and had Add buttons that opened the ordinary windows, so nothing it did is lost: Add variable is on the Add menus, New Function > Action / Condition / Expression publishes a function, and the Anatomy tab of the side rail lists a behaviour's properties, actions, conditions and triggers. Turning a global on is Godot's own Project Settings > Globals > Autoload.
+- The one thing the window alone did was add a published trigger (a signal row marked as a trigger); the Declare > Signal... window adds a plain signal.
+
 ### Removed: the Project bar
 
 - The Project strip at the foot of the Objects rail is gone, with its View > Project bar item and the saved on/off choice. It listed scenes, scripts, classes, sounds and files, which Godot's FileSystem dock and Quick Open already do. A scene, script or sound is opened, found or dragged the Godot way. Dragging a class, sound or scene out of that strip onto the canvas is gone with it; drag from the Objects list or the FileSystem dock instead.

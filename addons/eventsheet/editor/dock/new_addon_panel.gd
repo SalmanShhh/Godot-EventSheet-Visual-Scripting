@@ -13,7 +13,7 @@ extends RefCounted
 # Every choice is a described dropdown with the chosen choice's sentence kept in view under it. Create
 # writes the file (a behaviour is a folder under eventsheet_addons/, so is a global - that folder is
 # how the plugin reads what it offers), turns a global on in Project Settings > Globals > Autoload as
-# one undo step, and opens the result as a sheet with its Properties and actions window beside it.
+# one undo step, and opens the result as a sheet.
 # The file text comes from EventSheetBehaviourAddonScaffold; this file only asks and writes.
 #
 # Behaviour settings… / Global settings… reopen the same form on a file that exists, every answer
@@ -23,7 +23,6 @@ extends RefCounted
 # and a new name goes through the one rename everywhere, which lists the places before it writes.
 
 const Scaffold := preload("res://addons/eventsheet/editor/behaviour_addon_scaffold.gd")
-const MEMBERS_WINDOW_PATH := "res://addons/eventsheet/editor/dock/own_members_window.gd"
 const START_EMPTY := "empty"
 const START_COPY := "copy"
 const START_SCRIPT := "script"
@@ -32,7 +31,6 @@ const START_AUTOLOAD := "autoload"
 
 var _dock: Control = null
 var _dialog: ConfirmationDialog = null
-var _members: AcceptDialog = null
 var _global: bool = false
 var _name_edit: LineEdit = null
 var _name_note: EventSheetPopupUI.StateNote = null
@@ -121,14 +119,6 @@ static func _choose(dropdown: OptionButton, value: String, description: String) 
 			value if not value.is_empty() else EventSheetL10n.translate("None"), description, value)
 	dropdown.select(at)
 	EventSheetPopupUI.follow_description(dropdown)
-
-
-## The Properties and actions window for the open sheet - the behaviour's or global's own lists.
-func open_members() -> void:
-	if _members == null:
-		_members = load(MEMBERS_WINDOW_PATH).new(_dock)
-		_dock.add_child(_members)
-	_members.open()
 
 
 func _build_dialog() -> void:
@@ -480,7 +470,6 @@ func _open_made(path: String, message: String) -> void:
 	_dock._refresh_ace_registry()
 	_dock._navigate.record_current()
 	_dock._navigate.open_or_focus(path)
-	open_members()
 	_dock._set_status(message)
 
 
