@@ -13,7 +13,7 @@ var host: CanvasItem = null
 func _enter_tree() -> void:
 	host = get_parent() as CanvasItem
 	if host == null:
-		push_warning("HitFlashBehavior behavior requires a CanvasItem parent.")
+		push_warning("Hit Flash Behavior needs a CanvasItem: put it under one.")
 
 ## Name of the shader dial that sets the flash colour, named once so a rename in the shader file is a one-line change here.
 const COLOUR_DIAL: String = "flash_color"

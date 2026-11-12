@@ -13,7 +13,7 @@ var host: Node2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node2D
 	if host == null:
-		push_warning("HTNAgent behavior requires a Node2D parent.")
+		push_warning("HTN Agent needs a Node2D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Task Started")

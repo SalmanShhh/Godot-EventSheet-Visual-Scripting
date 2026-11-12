@@ -13,7 +13,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("StatusEffectsBehavior behavior requires a Node parent.")
+		push_warning("Status Effects Behavior needs a parent node: put it under one.")
 
 ## Fires when a status lands, including the second and later times it is applied.
 ## @ace_trigger

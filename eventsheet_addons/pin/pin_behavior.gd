@@ -12,7 +12,7 @@ var host: Node2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node2D
 	if host == null:
-		push_warning("PinBehavior behavior requires a Node2D parent.")
+		push_warning("Pin Behavior needs a Node2D: put it under one.")
 
 # --- Designer knobs (tune in the Inspector) ---
 # The first three pin modes are

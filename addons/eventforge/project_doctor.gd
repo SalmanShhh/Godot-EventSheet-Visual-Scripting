@@ -258,6 +258,10 @@ static func run() -> Dictionary:
 	# the shape of mistake that never surfaces on its own. Quiet on a sheet no scene runs and on a
 	# scene with no player in it - without a list to hold the row up against there is no evidence.
 	EventSheetFeedbackDoctor.ensure_registered()
+	# The Behaviour hosts section: a behaviour sitting under a node of the wrong type, read from the
+	# scene files as text. The behaviour only logs one line at run time and does nothing, so the
+	# report says it before the game runs. Same seam, same reason.
+	EventSheetBehaviourHostDoctor.ensure_registered()
 	# The Compiler section: the warnings the compiler returned the last time a sheet was written in this
 	# editor. They were only ever read by the MCP server; here they are in the inbox with the file in
 	# front, beside the amber the same sentence puts on the event it belongs to.

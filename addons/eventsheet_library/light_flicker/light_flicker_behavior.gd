@@ -13,7 +13,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("LightFlickerBehavior behavior requires a Node parent.")
+		push_warning("Light Flicker Behavior needs a parent node: put it under one.")
 
 ## The dimmest and brightest the light gets, as a pair. 0.8 and 1.2 is a candle; 0.2 and 1.4 is a failing bulb.
 @export var between: Vector2 = Vector2(0.8, 1.2)

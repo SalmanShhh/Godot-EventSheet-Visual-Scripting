@@ -13,7 +13,7 @@ var host: CanvasItem = null
 func _enter_tree() -> void:
 	host = get_parent() as CanvasItem
 	if host == null:
-		push_warning("GrayscaleBehavior behavior requires a CanvasItem parent.")
+		push_warning("Grayscale Behavior needs a CanvasItem: put it under one.")
 
 ## The dial grayscale.gdshader drains along, named once so a rename there is a one-line change here. 0 is full colour, 1 is fully grey.
 const GREY_DIAL: String = "grayscale"

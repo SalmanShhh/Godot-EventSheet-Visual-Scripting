@@ -5765,7 +5765,7 @@ static func host_binding_class(code: String) -> String:
 	if lines[2] != "\tif host == null:":
 		return ""
 	# The guard line: `\t\tpush_warning("<Label> behavior requires a <Class> parent.")`.
-	if not (lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with("parent.\")")):
+	if not (lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with(".\")")):
 		return ""
 	return bind_match.get_string(1)
 

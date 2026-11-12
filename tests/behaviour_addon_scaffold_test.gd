@@ -44,7 +44,7 @@ static func run() -> bool:
 		"func _enter_tree() -> void:",
 		"\thost = get_parent() as CharacterBody2D",
 		"\tif host == null:",
-		"\t\tpush_warning(\"Patrol behavior requires a CharacterBody2D parent.\")",
+		"\t\tpush_warning(\"Patrol needs a CharacterBody2D: put it under one.\")",
 		"",
 	]))) and ok
 	ok = _check("it parses", _parses(behaviour), OK) and ok

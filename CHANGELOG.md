@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: the Doctor says when a behaviour is under the wrong node
+
+- Check the project now reads every scene and says it when a behaviour sits under the wrong kind of node, before the game runs. For example "Platformer Movement is under a Node2D; it needs a CharacterBody2D: put it under one." The finding offers "Move it under <the nearest node that fits>" and "Show in scene".
+- A behaviour that cannot find its host says the same words in the Output while the game runs, in place of "PlatformerMovement behavior requires a CharacterBody2D parent." The behaviour scripts stay ordinary scripts that work in any project without the plugin.
+
 ### Changed: the Family Arena showcase teaches call down, signal up
 
 - Each Enemy now moves itself: its own sheet has an Every tick row that moves it by its own fall_speed and wraps it back to the top. The arena sheet no longer reaches into the enemies to move them; it spawns them and runs the one rule that is about the whole family, a strike that walks every Enemy with a typed For each (`for enemy: Enemy in ...`) and may hit each one through Enemy: Take Damage. The showcase plays the same: enemies fall, the strike hits them, they die.

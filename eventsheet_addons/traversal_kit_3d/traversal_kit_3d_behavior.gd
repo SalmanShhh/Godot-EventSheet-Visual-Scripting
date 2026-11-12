@@ -13,7 +13,7 @@ var host: CharacterBody3D = null
 func _enter_tree() -> void:
 	host = get_parent() as CharacterBody3D
 	if host == null:
-		push_warning("TraversalKit3D behavior requires a CharacterBody3D parent.")
+		push_warning("Traversal Kit3D needs a CharacterBody3D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Ledge Grabbed")

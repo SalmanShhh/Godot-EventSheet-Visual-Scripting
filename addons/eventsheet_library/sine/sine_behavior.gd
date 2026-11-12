@@ -12,7 +12,7 @@ var host: Node2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node2D
 	if host == null:
-		push_warning("SineBehavior behavior requires a Node2D parent.")
+		push_warning("Sine Behavior needs a Node2D: put it under one.")
 
 ## Which host property the wave drives - position, size, angle, opacity, or value-only.
 @export_enum("horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only") var movement: String = "horizontal"

@@ -12,7 +12,7 @@ var host: Node3D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node3D
 	if host == null:
-		push_warning("Sine3DBehavior behavior requires a Node3D parent.")
+		push_warning("Sine3D Behavior needs a Node3D: put it under one.")
 
 ## Which axis the host oscillates on - x, y, z position or rotation around Y.
 @export_enum("x", "y", "z", "rotation-y") var movement: String = "y"

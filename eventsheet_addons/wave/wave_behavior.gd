@@ -13,7 +13,7 @@ var host: CanvasItem = null
 func _enter_tree() -> void:
 	host = get_parent() as CanvasItem
 	if host == null:
-		push_warning("WaveBehavior behavior requires a CanvasItem parent.")
+		push_warning("Wave Behavior needs a CanvasItem: put it under one.")
 
 ## Shader dial the wave pushes along, as a share of picture width.
 const PUSH_DIAL: String = "wave_strength"

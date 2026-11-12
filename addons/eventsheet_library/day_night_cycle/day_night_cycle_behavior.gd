@@ -13,7 +13,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("DayNightCycleBehavior behavior requires a Node parent.")
+		push_warning("Day Night Cycle Behavior needs a parent node: put it under one.")
 
 ## Fires as the clock passes Sunrise Hour - the moment to put the torches out.
 ## @ace_trigger

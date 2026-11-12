@@ -13,7 +13,7 @@ var host: CanvasItem = null
 func _enter_tree() -> void:
 	host = get_parent() as CanvasItem
 	if host == null:
-		push_warning("OutlineBehavior behavior requires a CanvasItem parent.")
+		push_warning("Outline Behavior needs a CanvasItem: put it under one.")
 
 ## Name of the shader dial that sets the outline colour.
 const COLOUR_DIAL: String = "outline_color"

@@ -12,7 +12,7 @@ var host: CharacterBody2D = null
 func _enter_tree() -> void:
 	host = get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("EightDirectionMovement behavior requires a CharacterBody2D parent.")
+		push_warning("Eight Direction Movement needs a CharacterBody2D: put it under one.")
 
 ## AI drive: take movement from the AI move inputs instead of the keyboard (the standard seam an AI driver flips on).
 @export var ai_controlled: bool = false

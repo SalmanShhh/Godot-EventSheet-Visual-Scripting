@@ -12,7 +12,7 @@ var host: Camera2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Camera2D
 	if host == null:
-		push_warning("CameraRailBehavior behavior requires a Camera2D parent.")
+		push_warning("Camera Rail Behavior needs a Camera2D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Shot Finished")

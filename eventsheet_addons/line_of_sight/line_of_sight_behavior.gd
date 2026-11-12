@@ -12,7 +12,7 @@ var host: Node2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node2D
 	if host == null:
-		push_warning("LOSBehavior behavior requires a Node2D parent.")
+		push_warning("LOS Behavior needs a Node2D: put it under one.")
 
 ## Maximum distance the node can see - targets farther away are never visible.
 @export var sight_range: float = 400.0

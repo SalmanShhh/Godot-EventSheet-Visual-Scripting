@@ -12,7 +12,7 @@ var host: Node2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node2D
 	if host == null:
-		push_warning("SimpleHealthBehavior behavior requires a Node2D parent.")
+		push_warning("Simple Health Behavior needs a Node2D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Damaged")

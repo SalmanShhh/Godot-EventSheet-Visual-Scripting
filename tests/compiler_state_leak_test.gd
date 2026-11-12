@@ -72,6 +72,8 @@ const SWEPT_STATICS: Array[String] = [
 ## group name or a table enum, with no working state behind them. Listed so that a NEW public entry point
 ## fails this file until somebody decides which it is.
 const PURE_HELPERS: Array[String] = [
+	# The words a behavior says when it has no host: text in, text out.
+	"host_warning_sentence", "host_phrase", "spaced_class_name",
 	"condition_source_text", "export_section_line", "group_declaration_lines", "guard_token", "static_local_declaration",
 	"table_enum_entry", "table_enum_key", "table_enum_label", "table_enum_options",
 	"table_enum_pair", "table_enum_type", "variable_emit_order",

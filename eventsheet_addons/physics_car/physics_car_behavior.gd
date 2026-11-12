@@ -12,7 +12,7 @@ var host: RigidBody2D = null
 func _enter_tree() -> void:
 	host = get_parent() as RigidBody2D
 	if host == null:
-		push_warning("PhysicsCar behavior requires a RigidBody2D parent.")
+		push_warning("Physics Car needs a RigidBody2D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Collided")

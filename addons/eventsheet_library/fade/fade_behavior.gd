@@ -12,7 +12,7 @@ var host: CanvasItem = null
 func _enter_tree() -> void:
 	host = get_parent() as CanvasItem
 	if host == null:
-		push_warning("FadeBehavior behavior requires a CanvasItem parent.")
+		push_warning("Fade Behavior needs a CanvasItem: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Faded In")

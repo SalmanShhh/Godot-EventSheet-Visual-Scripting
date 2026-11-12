@@ -13,7 +13,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("FolderWatcher behavior requires a Node parent.")
+		push_warning("Folder Watcher needs a parent node: put it under one.")
 
 ## Raised on the first look that finds a file the look before did not.
 ## @ace_trigger

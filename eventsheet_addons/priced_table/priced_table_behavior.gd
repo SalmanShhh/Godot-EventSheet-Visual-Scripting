@@ -12,7 +12,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("PricedTableBehavior behavior requires a Node parent.")
+		push_warning("Priced Table Behavior needs a parent node: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Purchased")

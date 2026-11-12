@@ -13,7 +13,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("LightPulseBehavior behavior requires a Node parent.")
+		push_warning("Light Pulse Behavior needs a parent node: put it under one.")
 
 ## The dimmest and brightest the light gets, as a pair. The wave spends most of its time near the middle of the two and only touches the ends.
 @export var between: Vector2 = Vector2(0.6, 1.4)

@@ -503,7 +503,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("func _enter_tree() -> void:")
 		lines.append("\thost = get_parent() as %s" % host_type)
 		lines.append("\tif host == null:")
-		lines.append("\t\tpush_warning(\"%s behavior requires a %s parent.\")" % [behavior_label, host_type])
+		lines.append("\t\tpush_warning(\"%s\")" % host_warning_sentence(behavior_label, host_type))
 		# Lane B.2: declared sibling dependencies surface as the editor's ⚠ badge.
 		var required_behaviors: PackedStringArray = PackedStringArray()
 		for required_entry: String in sheet.requires_behaviors:
@@ -4353,6 +4353,38 @@ static func inspector_conditions_function(conditions: Array) -> PackedStringArra
 		else:
 			lines.append("\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY")
 	return lines
+
+
+## The sentence a behavior says when it has no usable host, in the words a person uses: "Platformer
+## Movement needs a CharacterBody2D: put it under one." The packs print it at run time and the Doctor
+## says the same thing about a scene before the game runs.
+static func host_warning_sentence(behavior_label: String, host_type: String) -> String:
+	return "%s needs %s: put it under one." % [spaced_class_name(behavior_label), host_phrase(host_type)]
+
+
+## "a CharacterBody2D", "an Area2D", and "a parent node" for the plain Node host.
+static func host_phrase(host_type: String) -> String:
+	if host_type == "Node":
+		return "a parent node"
+	return ("an " if host_type.substr(0, 1) in ["A", "E", "I", "O", "U"] else "a ") + host_type
+
+
+## A class name as the words a person says it in: "PlatformerMovement" is "Platformer Movement",
+## "FPSController" is "FPS Controller", "Camera3D" stays "Camera3D".
+static func spaced_class_name(class_label: String) -> String:
+	var spaced: String = ""
+	for index: int in range(class_label.length()):
+		var letter: String = class_label.substr(index, 1)
+		if index > 0 and letter != letter.to_lower():
+			var before: String = class_label.substr(index - 1, 1)
+			var after: String = class_label.substr(index + 1, 1)
+			var before_is_lower: bool = before != before.to_upper()
+			var before_is_upper: bool = before != before.to_lower()
+			var after_is_lower: bool = after != "" and after != after.to_upper()
+			if before_is_lower or (before_is_upper and after_is_lower):
+				spaced += " "
+		spaced += letter
+	return spaced
 
 
 ## True when the sheet writes `func <function_name>(` itself, in a function or a code block. The

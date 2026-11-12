@@ -12,7 +12,7 @@ var host: Node3D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node3D
 	if host == null:
-		push_warning("DecalPainter behavior requires a Node3D parent.")
+		push_warning("Decal Painter needs a Node3D: put it under one.")
 
 # --- Designer knobs (tune in the Inspector) ---
 ## The most spawned decals kept alive - the oldest is freed when the cap is hit.

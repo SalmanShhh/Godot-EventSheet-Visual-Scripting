@@ -13,7 +13,7 @@ var host: CharacterBody3D = null
 func _enter_tree() -> void:
 	host = get_parent() as CharacterBody3D
 	if host == null:
-		push_warning("Skateboard3DMovement behavior requires a CharacterBody3D parent.")
+		push_warning("Skateboard3D Movement needs a CharacterBody3D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Ollie")

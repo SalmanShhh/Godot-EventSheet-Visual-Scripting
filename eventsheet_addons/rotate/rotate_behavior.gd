@@ -12,7 +12,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("RotateBehavior behavior requires a Node parent.")
+		push_warning("Rotate Behavior needs a parent node: put it under one.")
 
 # --- Designer knobs (tune in the Inspector) ---
 ## Spin on/off - Set Rotation Enabled flips it at runtime.

@@ -2823,7 +2823,7 @@ static func _is_host_binding_body(function_lines: PackedStringArray) -> bool:
 		return false
 	if lines[2] != "\tif host == null:":
 		return false
-	return lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with("parent.\")")
+	return lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with(".\")")
 
 
 ## `_notification(what)` whose whole body is a `match what:` over NOTIFICATION_* constants: one

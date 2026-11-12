@@ -12,7 +12,7 @@ var host: Node3D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node3D
 	if host == null:
-		push_warning("Flock3DBehavior behavior requires a Node3D parent.")
+		push_warning("Flock3D Behavior needs a Node3D: put it under one.")
 
 # --- Designer knobs (tune in the Inspector) ---
 # The flock group is joined by the host when it enters the scene, so every

@@ -12,7 +12,7 @@ var host: Node3D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node3D
 	if host == null:
-		push_warning("LOS3DBehavior behavior requires a Node3D parent.")
+		push_warning("LOS3D Behavior needs a Node3D: put it under one.")
 
 ## Maximum distance the host can see - targets farther than this are never visible.
 @export var sight_range: float = 1000.0

@@ -12,7 +12,7 @@ var host: Node2D = null
 func _enter_tree() -> void:
 	host = get_parent() as Node2D
 	if host == null:
-		push_warning("OrbitBehavior behavior requires a Node2D parent.")
+		push_warning("Orbit Behavior needs a Node2D: put it under one.")
 
 ## Current angle around the centre, in degrees.
 var angle: float = 0.0

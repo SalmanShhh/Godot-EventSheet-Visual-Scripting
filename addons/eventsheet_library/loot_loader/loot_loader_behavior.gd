@@ -12,7 +12,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("LootTableLoader behavior requires a Node parent.")
+		push_warning("Loot Table Loader needs a parent node: put it under one.")
 
 # @inspector_required
 ## Loot Table resource. The .tres holding this table's drops (create one from the LootTableResource class, fill its entries grid, and drop it here).

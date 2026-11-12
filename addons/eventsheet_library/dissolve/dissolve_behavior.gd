@@ -13,7 +13,7 @@ var host: CanvasItem = null
 func _enter_tree() -> void:
 	host = get_parent() as CanvasItem
 	if host == null:
-		push_warning("DissolveBehavior behavior requires a CanvasItem parent.")
+		push_warning("Dissolve Behavior needs a CanvasItem: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Dissolved")

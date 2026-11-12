@@ -12,7 +12,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = get_parent() as Node
 	if host == null:
-		push_warning("PostKitBehavior behavior requires a Node parent.")
+		push_warning("Post Kit Behavior needs a parent node: put it under one.")
 
 ## Folder holding the effect scripts and compute shaders once installed.
 const EFFECT_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"

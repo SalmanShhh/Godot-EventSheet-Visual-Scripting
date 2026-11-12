@@ -12,7 +12,7 @@ var host: CharacterBody2D = null
 func _enter_tree() -> void:
 	host = get_parent() as CharacterBody2D
 	if host == null:
-		push_warning("VirtualCursor behavior requires a CharacterBody2D parent.")
+		push_warning("Virtual Cursor needs a CharacterBody2D: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Interact Pressed")

@@ -65,6 +65,12 @@ const OFFERED := {
 	"unused-pack": [
 		{"id": "tidy_behaviours", "label": "Tidy behaviours…"},
 	],
+	# A behaviour under the wrong kind of node. Both doors work on the scene FILE, so neither needs
+	# a sheet open: the move rewrites the scene's text, and showing the node opens the scene on it.
+	"behaviour-host": [
+		{"id": "move_behaviour_under", "label": "Move it under %to"},
+		{"id": "show_in_scene", "label": "Show in scene"},
+	],
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
@@ -331,6 +337,27 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Move %s under the node you mirror - a Set Mirrored (whole object) row turns everything beneath it, so the ray reaches the way the character faces." % subject}
 		"keep_upright":
 			return {"ok": true, "message": "Add a Facing ▸ Keep Upright row for %s under the same event that mirrors this object - it re-negates the child's scale so the text reads forwards either way." % subject}
+		"move_behaviour_under":
+			var moved: Dictionary = EventSheetBehaviourHostDoctor.move_under(str(finding.get("path", "")), str(finding.get("node", "")), str(finding.get("to_path", "")))
+			if bool(moved.get("ok", false)) and Engine.has_singleton("EditorInterface"):
+				var moved_editor: Object = Engine.get_singleton("EditorInterface")
+				if (moved_editor.call("get_open_scenes") as PackedStringArray).has(str(finding.get("path", ""))):
+					moved_editor.call("reload_scene_from_path", str(finding.get("path", "")))
+			return moved
+		"show_in_scene":
+			if not Engine.has_singleton("EditorInterface"):
+				return {"ok": false, "message": "Open %s in the editor to see the node." % str(finding.get("path", ""))}
+			var scene_editor: Object = Engine.get_singleton("EditorInterface")
+			scene_editor.call("open_scene_from_path", str(finding.get("path", "")))
+			var scene_root: Node = scene_editor.call("get_edited_scene_root") as Node
+			var shown: Node = null
+			if scene_root != null:
+				shown = scene_root if str(finding.get("node", ".")) == "." else scene_root.get_node_or_null(str(finding.get("node", "")))
+			if shown != null:
+				var selection: EditorSelection = scene_editor.call("get_selection") as EditorSelection
+				selection.clear()
+				selection.add_node(shown)
+			return {"ok": true, "message": "Opened the scene on the behaviour."}
 		"unpin_it":
 			return {"ok": true, "message": "Add Pin ▸ Unpin and let being a child of %s do the carrying. A child is structure and moves with its parent already." % subject}
 		"remove_from_parent":

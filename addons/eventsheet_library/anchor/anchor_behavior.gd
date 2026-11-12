@@ -12,7 +12,7 @@ var host: Control = null
 func _enter_tree() -> void:
 	host = get_parent() as Control
 	if host == null:
-		push_warning("AnchorBehavior behavior requires a Control parent.")
+		push_warning("Anchor Behavior needs a Control: put it under one.")
 
 ## @ace_trigger
 ## @ace_name("On Anchored")
