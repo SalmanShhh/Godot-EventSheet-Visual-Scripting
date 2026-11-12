@@ -1,16 +1,12 @@
-# Godot EventSheets - the WATER mark on an area, and the two rows a drop then offers.
+# Godot EventSheets - the two rows a drop offers for an area in the water group.
 #
-# The second mark in the object popup, built on the secret mark's seam: a tick that says "this area
-# is water", kept in the project's editor metadata so it never reaches the emitted bytes, and read
-# by the canvas drop so the object arrives with the rows it was always going to need.
+# Whether a node is water is Godot's own fact (the group `water`), read by the canvas drop from the
+# scene; scene_node_offers_test pins that. This file pins what the offer then adds.
 #
 # What this pins, in the order the mistakes actually happen:
-#   1. THE STORE. The mark round-trips, it belongs to the file that made it, and unticking clears it.
-#   2. THE GATE. Only an area is a volume you can be INSIDE, so only Area2D / Area3D can be water. A
-#      sprite, a family and a scene file are the negative pins.
-#   3. THE ROWS. The two events the offer adds, by VALUE: the two triggers, the object they ride, the
+#   1. THE ROWS. The two events the offer adds, by VALUE: the two triggers, the object they ride, the
 #      shipped Set value row, and the exact statements it writes.
-#   4. THE READING. The emitted file claims the swim shape, because `in_water = true` on the way in
+#   2. THE READING. The emitted file claims the swim shape, because `in_water = true` on the way in
 #      and `in_water = false` on the way out is literally what the water reading looks for. The flag
 #      alone is only a flag, so the drag a swimmer writes next stands in the file beside it - that is
 #      the reading's own gate, and this proves the rows land on the right side of it.
@@ -18,39 +14,12 @@
 class_name WaterVolumeMarkTest
 extends RefCounted
 
-const SHEET_PATH := "res://water_level.gd"
-const OTHER_SHEET_PATH := "res://other_level.gd"
 
 
 static func run() -> bool:
 	var ok: bool = true
-	ok = _the_mark() and ok
 	ok = _the_rows() and ok
 	ok = _the_reading() and ok
-	return ok
-
-
-## 1. The mark is writable, it is remembered, and it belongs to the file that made it.
-static func _the_mark() -> bool:
-	var ok: bool = true
-	EventSheetObjectMarks.reset_water_flags_for_tests()
-	EventSheetObjectMarks.reset_secret_flags_for_tests()
-	ok = _check("nothing is water until it is marked",
-		EventSheetObjectMarks.is_water(SHEET_PATH, "Pool"), false) and ok
-	EventSheetObjectMarks.set_water(SHEET_PATH, "Pool", true)
-	ok = _check("marking it sticks",
-		EventSheetObjectMarks.is_water(SHEET_PATH, "Pool"), true) and ok
-	ok = _check("the mark belongs to the file that made it",
-		EventSheetObjectMarks.is_water(OTHER_SHEET_PATH, "Pool"), false) and ok
-	ok = _check("and to the object that was ticked",
-		EventSheetObjectMarks.is_water(SHEET_PATH, "Lava"), false) and ok
-	# The two marks are two stores: water is not secret, and marking one leaves the other alone.
-	ok = _check("water is not the secret mark",
-		EventSheetObjectMarks.is_secret(SHEET_PATH, "Pool"), false) and ok
-
-	EventSheetObjectMarks.set_water(SHEET_PATH, "Pool", false)
-	ok = _check("unticking it sticks too",
-		EventSheetObjectMarks.is_water(SHEET_PATH, "Pool"), false) and ok
 	return ok
 
 

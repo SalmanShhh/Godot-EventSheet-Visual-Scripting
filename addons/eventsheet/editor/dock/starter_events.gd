@@ -175,8 +175,8 @@ static func missing_signal_rows(starters: Array, sheet: EventSheetResource) -> A
 	return rows
 
 
-# ── The secrets counter one object marked `secret` is offered on drop ─────────────────────────
-# An area marked a secret has exactly one event worth writing: when the player walks into it, count
+# ── The secrets counter an object in the Godot group `secret` is offered on drop ─────────────────────────
+# An area in the group `secret` has exactly one event worth writing: when the player walks into it, count
 # it - once, however many times they walk back through. That is the shipped Mark Secret Found row,
 # and this is the whole event around it, built here rather than in the dock so it is pure and a
 # test can pin what the offer would add without opening a canvas.
@@ -194,7 +194,7 @@ static func secrets_variable_entry() -> Dictionary:
 		"attributes": {"tooltip": "Every secret counted so far. Each one goes in once, so walking back through a room does not count it twice."}}
 
 
-## The event an object marked `secret` offers: its own "walked into" trigger with the shipped Mark
+## The event an object in the group `secret` offers: its own "walked into" trigger with the shipped Mark
 ## Secret Found row already in the action lane, naming the object as the secret.
 static func secret_counter_event(object_label: String, host_class: String = "Area3D") -> EventRow:
 	var event: EventRow = build_event(entry_for("signal:body_entered", host_class))
@@ -217,8 +217,8 @@ static func secret_counter_template() -> String:
 	return ""
 
 
-# ── The door event an object marked "needs key" is offered on drop ────────────────────────────
-# A body the reader named a key for has exactly one event worth writing: when the player walks into
+# ── The door event an object whose script exports `needs_key` is offered on drop ────────────────────────────
+# A body whose script exports a key to want has exactly one event worth writing: when the player walks into
 # it, try it - and the shipped Try Door row is the whole of trying it, because it opens the door when
 # the key fits and tells the door it was refused when it does not. Built here rather than in the dock
 # so it is pure and a test can pin what the offer would add without opening a canvas.
@@ -236,7 +236,7 @@ static func keys_variable_entry() -> Dictionary:
 		"attributes": {"tooltip": "Every keycard picked up so far, by name. The door rows read this list."}}
 
 
-## The event a body marked with a key offers: its own walked-into trigger with the shipped Try Door
+## The event a body exporting `needs_key` offers: its own walked-into trigger with the shipped Try Door
 ## row already in the action lane, pointed at the door that was dropped.
 static func locked_door_event(object_label: String, host_class: String = "StaticBody3D") -> EventRow:
 	var event: EventRow = build_event(entry_for("signal:body_entered", host_class))
@@ -259,8 +259,8 @@ static func locked_door_template() -> String:
 	return ""
 
 
-# ── The water rows one area marked `water` is offered on drop ─────────────────────────────────
-# A volume the reader calls water has two events, not one: the way in and the way out. Together they
+# ── The water rows an area in the Godot group `water` is offered on drop ─────────────────────────────────
+# A volume in the group `water` has two events, not one: the way in and the way out. Together they
 # hold a flag that says "I am in the water", which is the fact every swimming rule is then written
 # against - the sheet can test it in any condition, and the swim reading recognises the pair.
 
@@ -273,10 +273,10 @@ const WATER_VARIABLE := "in_water"
 ## variables-dictionary shape. Only added when the sheet does not declare it already.
 static func water_variable_entry() -> Dictionary:
 	return {"type": "bool", "default": false, "exported": false,
-		"attributes": {"tooltip": "True while the body is inside a volume marked water. Every swimming rule is written against this."}}
+		"attributes": {"tooltip": "True while the body is inside a volume in the group water. Every swimming rule is written against this."}}
 
 
-## The two events an object marked `water` offers: its own walked-in trigger raising the flag, and
+## The two events an object in the group `water` offers: its own walked-in trigger raising the flag, and
 ## its walked-out trigger lowering it, in that order.
 static func water_volume_events(object_label: String, host_class: String = "Area3D") -> Array:
 	return [

@@ -9,7 +9,7 @@ extends RefCounted
 #      boomer-feel knobs)
 #   B  the end-of-level stats screen starter - kills, secrets and time reaching a named panel
 #      through the shipped HUD Kit rows, and nothing wired by hand
-#   C  the writable `secret` mark on an Area, and the counting event a drop then offers
+#   C  the counting event a drop offers for an Area in the secret group
 #   D  the Boomer Arsenal starter's ammo as a TABLE - an Array of records read with the shipped
 #      Row Where word instead of a Dictionary keyed by weapon name
 #
@@ -81,21 +81,9 @@ static func _stats_screen_starter() -> bool:
 	return ok
 
 
-## C. The mark is writable, it is remembered, it is offered only where it means something, and the
-## event it offers is the shipped counting row on the object's own walked-into trigger.
+## C. The event the secret offer adds is the shipped counting row on the object's own walked-into trigger.
 static func _secret_mark() -> bool:
 	var ok: bool = true
-	EventSheetObjectMarks.reset_secret_flags_for_tests()
-	ok = _check("nothing is a secret until it is marked",
-		EventSheetObjectMarks.is_secret("res://level.gd", "SecretRoom"), false) and ok
-	EventSheetObjectMarks.set_secret("res://level.gd", "SecretRoom", true)
-	ok = _check("marking it sticks",
-		EventSheetObjectMarks.is_secret("res://level.gd", "SecretRoom"), true) and ok
-	ok = _check("the mark belongs to the file that made it",
-		EventSheetObjectMarks.is_secret("res://other.gd", "SecretRoom"), false) and ok
-	EventSheetObjectMarks.set_secret("res://level.gd", "SecretRoom", false)
-	ok = _check("unmarking it sticks too",
-		EventSheetObjectMarks.is_secret("res://level.gd", "SecretRoom"), false) and ok
 	# The event the drop then offers.
 	var offered: EventRow = EventSheetStarterEvents.secret_counter_event("SecretRoom", "Area3D")
 	ok = _check("it rides the object's own walked-into trigger",

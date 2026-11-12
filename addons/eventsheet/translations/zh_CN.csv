@@ -10170,3 +10170,6 @@ Picked here,"此处已选取"
 "The %s this event picked, written as %s. Rows you add here act on it.","此事件选取的 %s，写作 %s。你在此添加的行会作用于它。"
 %s - variables,%s - 变量
 Variable…,变量…
+%s is in the secret group. Add the event that counts it the first time the player walks in?,%s 在 secret 组中。是否添加在玩家首次进入时计数的事件？
+%s exports a needs_key variable. Add the event that tries it when the player walks in?,%s 导出了变量 needs_key。是否添加在玩家进入时尝试它的事件？
+%s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 在 water 组中。是否添加进入时置起标志、离开时放下标志的两行？

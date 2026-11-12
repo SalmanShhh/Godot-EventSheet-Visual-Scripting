@@ -4450,6 +4450,7 @@ func _save_boomer_scene() -> bool:
 
 	var secret: Area3D = _boomer_area(root, "SecretRoom", Vector3(-8.5, 1.3, 5.0),
 		Vector3(2.4, 2.0, 2.4))
+	secret.add_to_group("secret", true)
 	var exit_area: Area3D = _boomer_area(root, "Exit", Vector3(0.0, 1.3, -11.0),
 		Vector3(3.0, 2.0, 1.2))
 

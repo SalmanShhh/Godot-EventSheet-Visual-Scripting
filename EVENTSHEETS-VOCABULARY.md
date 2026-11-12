@@ -3786,7 +3786,7 @@ Weapons in 3D: hitscan, explosions, an arsenal and the secrets counter.
 - **Explode At** (`point: String, radius: String, damage: String, push: String, mask: String`) - Damages and throws everything near a point, fading with distance. The push is real physics, so standing in your own blast throws you - which is how rocket jumping works.
 - **Switch To Next Weapon** (`index: String, weapons: String`) - Moves to the next weapon in the list, wrapping round to the first after the last - the mouse wheel up.
 - **Switch To Previous Weapon** (`index: String, weapons: String`) - Moves to the weapon before this one, wrapping round to the last after the first - the mouse wheel down.
-- **Mark Secret Found** (`name: String, found: String`) - Records a secret the first time it is found and never again, so walking back through the room does not count twice.
+- **Mark Secret Found** (`name: String, found: String`) - Records a secret the first time it is found and never again, so walking back through the room does not count twice. To get this row offered when you drop an area on the canvas, select the node, open the Node dock, Groups, and add it to the group secret.
 - **Alert Enemies Within** (`at: String, radius: String, target: String, group: String`) - Tells every enemy close enough who to come for. The one that saw you shouts, and the room answers - the difference between fighting one guard and fighting a room.
 - **Retaliate Against Attacker** (`attacker: String, group: String, target: String`) - Makes this one turn on whoever hurt it, but only when the attacker is one of its own kind - so a rocket that splashes two of them starts a fight, and a rocket from you does not make them attack you twice.
 - **Respawn After** (`seconds: String`) - Takes the pickup away, waits, and puts it back - the health and ammo that keep a level playable on the way out. It stops being collectable while it is gone, so nothing picks up an invisible one.
@@ -5163,7 +5163,7 @@ Keys and doors: the coloured keycard, said as the sheet's list words.
 
 #### Actions
 - **Pick Up Key** (`key: String, keys: String`) - Adds a key to the list the player carries. Drop it on the keycard's walked-into trigger, beside the row that takes the card off the floor.
-- **Try Door** (`door: String, keys: String`) - Opens the door when its key is in the list, and tells the door it was refused when it is not. The door decides what refusing looks like - that is its On Locked Door Tried event.
+- **Try Door** (`door: String, keys: String`) - Opens the door when its key is in the list, and tells the door it was refused when it is not. The door decides what refusing looks like - that is its On Locked Door Tried event. A door is any node whose script has an exported needs_key variable, and dropping one on the canvas offers this row.
 - **Open Door** (`door: String, opened: String, slide: String, seconds: String`) - Slides the door out of the way, stops it blocking, and leaves it open. The flag is what makes it happen once - walking back through an open door does not re-run the slide.
 
 #### Expressions

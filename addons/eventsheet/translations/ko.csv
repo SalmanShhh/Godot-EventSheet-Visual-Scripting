@@ -10170,3 +10170,6 @@ Picked here,"여기서 선택됨"
 "The %s this event picked, written as %s. Rows you add here act on it.","이 이벤트가 선택한 %s이며 %s(으)로 쓰여 있습니다. 여기서 추가하는 행은 그것에 작용합니다."
 %s - variables,%s - 변수
 Variable…,변수…
+%s is in the secret group. Add the event that counts it the first time the player walks in?,%s 은(는) secret 그룹에 있습니다. 플레이어가 처음 들어갈 때 세는 이벤트를 추가할까요?
+%s exports a needs_key variable. Add the event that tries it when the player walks in?,%s 은(는) needs_key 변수를 내보냅니다. 플레이어가 들어갈 때 그것을 시도하는 이벤트를 추가할까요?
+%s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 은(는) water 그룹에 있습니다. 들어갈 때 플래그를 올리고 나올 때 내리는 두 행을 추가할까요?

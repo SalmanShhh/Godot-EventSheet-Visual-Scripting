@@ -405,11 +405,14 @@ thud, the red flash and the "you need the red keycard" line go.
 
 A door, in full, is any node carrying three things: a `needs_key` text property, an `open_door()`
 function, and the `locked_door_tried(key)` handler that trigger compiles into. New Sheet ▸ Keycard
-Door (3D) writes all three, so taking the starter means never typing one. And a door object you name
-a key for in its Object properties panel OFFERS the event that tries it the moment you drop it on the
-canvas - an offer, so dismissing it still drops the row you asked for.
+Door (3D) writes all three, so taking the starter means never typing one. And a door object whose
+script exports `needs_key` OFFERS the event that tries it the moment you drop it on the canvas - an
+offer, so dismissing it still drops the row you asked for. To get it on a door of your own, give the
+door's script `@export var needs_key: String` and set the key in the Inspector.
 
-![Naming the key a door wants, in its Object properties](../images/keycard-door-mark.png)
+The two other offers read Godot's groups the same way. Select the node, open the Node dock, Groups,
+and add it to the group `secret` to be offered **Mark Secret Found** on its walked-into event, or to
+the group `water` to be offered the pair of rows that raise and lower the in-water flag.
 
 ### Enemies, pickups and the way out
 

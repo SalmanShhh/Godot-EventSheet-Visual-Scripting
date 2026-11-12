@@ -70,7 +70,7 @@ const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
 const MCP_LIVE_LINK_PATH := "res://addons/eventsheet/mcp/mcp_live_link.gd"
 const MODES_DIALOG_PATH := "res://addons/eventsheet/editor/dock/modes_dialog.gd"
 const OBJECT_LOOKUP_PATH := "res://addons/eventsheet/editor/dock/object_lookup.gd"
-const OBJECT_MARKS_PATH := "res://addons/eventsheet/editor/dock/object_marks.gd"
+const SCENE_NODE_OFFERS_PATH := "res://addons/eventsheet/editor/dock/scene_node_offers.gd"
 const OPTIMISE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/optimise_dialog.gd"
 const OUTLINE_PANEL_PATH := "res://addons/eventsheet/editor/dock/outline_panel.gd"
 const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
@@ -6910,39 +6910,33 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 		return
 	if target_event != null and _active_view() != null:
 		_active_view().select_resource(target_event)
-	# An object the reader marked `secret` in its properties has one event worth writing, so
-	# dropping it OFFERS that event first. An offer, not a rule: dismissing the dialog falls through
-	# to the picker the drop has always opened, and nothing is written until the reader says yes.
-	if load(OBJECT_MARKS_PATH).is_secret(_source_path_for_secrets(), object_label):
-		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Count This Secret"),
-			EventSheetL10n.translate("%s is marked a secret. Add the event that counts it the first time the player walks in?")
-			% object_label, EventSheetL10n.translate("Count it"), _on_secret_counter_offer_accepted)
-		return
-	# The same offer for a door: a body the reader named a key for wants the event that TRIES
-	# it when the player walks in, which is the one row that both opens it and refuses it.
-	if not load(OBJECT_MARKS_PATH).needs_key_of(_source_path_for_secrets(), object_label).is_empty():
-		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Try This Door"),
-			EventSheetL10n.translate("%s wants the %s key. Add the event that tries it when the player walks in?") % [object_label,
-			load(OBJECT_MARKS_PATH).needs_key_of(_source_path_for_secrets(), object_label)],
-			EventSheetL10n.translate("Add the door event"), _on_locked_door_offer_accepted)
-		return
-	# The same offer for the second mark: an area marked `water` has two events worth writing,
-	# the way in and the way out, and dropping it offers the pair before the picker.
-	if load(OBJECT_MARKS_PATH).is_water(_source_path_for_secrets(), object_label):
-		_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Add The Water Rows"),
-			EventSheetL10n.translate("%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?")
-			% object_label, EventSheetL10n.translate("Add them"), _on_water_rows_offer_accepted)
-		return
+	# What Godot knows about the node decides the offer: the group `secret` has one event worth
+	# writing, a script that exports `needs_key` has the door event, the group `water` has the pair
+	# that raise and lower the in-water flag. An offer, not a rule: dismissing the dialog falls
+	# through to the picker the drop has always opened, and nothing is written until the reader says
+	# yes. A node the open scene does not hold, or that is in none of these, gets the picker alone.
+	var entry: Dictionary = load(OBJECT_LOOKUP_PATH).find_entry(_current_sheet, object_label)
+	var offers: GDScript = load(SCENE_NODE_OFFERS_PATH)
+	match offers.offer_in_open_scene(object_label, str(entry.get("path", ""))):
+		"secret":
+			_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Count This Secret"),
+				EventSheetL10n.translate("%s is in the secret group. Add the event that counts it the first time the player walks in?")
+				% object_label, EventSheetL10n.translate("Count it"), _on_secret_counter_offer_accepted)
+			return
+		"door":
+			_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Try This Door"),
+				EventSheetL10n.translate("%s exports a needs_key variable. Add the event that tries it when the player walks in?")
+				% object_label, EventSheetL10n.translate("Add the door event"), _on_locked_door_offer_accepted)
+			return
+		"water":
+			_offer_marked_drop(object_label, on_action_lane, EventSheetL10n.translate("Add The Water Rows"),
+				EventSheetL10n.translate("%s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?")
+				% object_label, EventSheetL10n.translate("Add them"), _on_water_rows_offer_accepted)
+			return
 	add_row_for_object(object_label, on_action_lane)
 
 
-## The file the secret marks are keyed against - the sheet being edited, matching the source path
-## the marks are stored under.
-func _source_path_for_secrets() -> String:
-	return str(_current_sheet.resource_path) if _current_sheet != null else ""
-
-
-## The offer a marked object's drop opens - a secret, a locked door, a water volume: the quick
+## The offer a drop opens for a node in the group secret or water, or with a needs_key variable: the quick
 ## question saying what it would write, `main` to write it, and "Just add a row" (or Esc) for the
 ## ordinary drop instead. Nothing is written until the reader says yes.
 func _offer_marked_drop(object_label: String, on_action_lane: bool, title: String, say: String, main: String,

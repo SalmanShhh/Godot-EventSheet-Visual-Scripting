@@ -10170,3 +10170,6 @@ Picked here,"Elegidos aquí"
 "The %s this event picked, written as %s. Rows you add here act on it.","El %s que este evento eligió, escrito como %s. Las filas que añadas aquí actúan sobre él."
 %s - variables,%s - variables
 Variable…,Variable…
+%s is in the secret group. Add the event that counts it the first time the player walks in?,%s está en el grupo secret. ¿Añadir el evento que lo cuenta la primera vez que el jugador entra?
+%s exports a needs_key variable. Add the event that tries it when the player walks in?,%s exporta una variable needs_key. ¿Añadir el evento que la prueba cuando el jugador entra?
+%s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s está en el grupo water. ¿Añadir las dos filas que activan el indicador al entrar y lo desactivan al salir?

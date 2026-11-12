@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: object marks - Godot's groups and exported variables decide the canvas offers
+
+- The plugin's own per-project "marks" (secret, water, needs key) are gone, together with the store that held them. Dropping an object on the canvas now asks Godot itself: a node in the group `secret` is offered the secrets counter, a node in the group `water` is offered the two rows that raise and lower the in-water flag, and a node whose script exports `needs_key` is offered the door event. Add a node to a group in the Node dock, Groups; the answer lives in the scene file, so it travels with the scene and the plugin keeps nothing. An object the open scene does not hold is offered nothing extra. Old projects that still hold the three metadata keys load as before and ignore them. The Secrets guide, Working In 3D, the Mark Secret Found and Try Door descriptions and the Keycard door starter note say how. The boomer_level showcase puts its SecretRoom in the group `secret`. No emitted GDScript, `ace_id` or block `kind_id` changed.
+
 ### Changed: "Instance variables" now reads "Variables"
 
 - The head folder, the Add menu and context menu items, the Add variable shortcut label, the variable list headings in the picker ("Player - variables"), the guided tour, the tutorials and the guides all say "variable" and "Variables" now. The pack folder "Internal state" is unchanged. Only wording changed: no name in the emitted code, no `ace_id` and no block `kind_id` moved. The nine translation files carry the new words.

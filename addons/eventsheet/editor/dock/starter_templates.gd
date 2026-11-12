@@ -1041,7 +1041,7 @@ static func _build_keycard_door_starter() -> EventSheetResource:
 			"attributes": {"tooltip": "The line to show the player when the door refuses. Bind a HUD label to it, or read it from your own row."}}
 	}
 	var note: CommentRow = CommentRow.new()
-	note.text = "[b]Keycard door[/b] - attach this to the door body itself.\nName the key it wants in [code]needs_key[/code]. On the sheet that runs your player, drop [b]Try Door[/b] on the door's walked-into event with your [code]keys[/code] list: the key fits and the door opens, or it does not and the event below runs. Pick keys up with [b]Pick Up Key[/b], and show how many are carried with [b]Keys Held[/b]."
+	note.text = "[b]Keycard door[/b] - attach this to the door body itself.\nName the key it wants in [code]needs_key[/code], an exported variable you set in the Inspector - a node whose script exports it is offered the door event when you drop it on the canvas. On the sheet that runs your player, drop [b]Try Door[/b] on the door's walked-into event with your [code]keys[/code] list: the key fits and the door opens, or it does not and the event below runs. Pick keys up with [b]Pick Up Key[/b], and show how many are carried with [b]Keys Held[/b]."
 	sheet.events.append(note)
 
 	# Opening. A published function rather than an event, because `open_door` is the NAME Try Door

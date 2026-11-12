@@ -567,7 +567,7 @@ static func game_shape_claims(body: PackedStringArray, file_facts: Dictionary) -
 		found.append(mission)
 	# The three traversal shapes, each gated on the thing that makes it that shape
 	# rather than on the velocity write it ends in: the two-probe test, the wall the body is already
-	# touching, and a volume marked water that raises a flag on the way in.
+	# touching, and a volume in the water group that raises a flag on the way in.
 	var ledge: Dictionary = _ledge_claim(body)
 	if not ledge.is_empty():
 		found.append(ledge)

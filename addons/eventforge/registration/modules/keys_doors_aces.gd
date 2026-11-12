@@ -62,7 +62,7 @@ static func _doors(descriptors: Array[ACEDescriptor]) -> void:
 		F.make_param("door", "String", "self", "Door", "The door being tried.", "expression"),
 		F.make_param("keys", "String", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference")
 	], KEYS, "Try door [i]{door}[/i] with [b]{keys}[/b]")
-		.described("Opens the door when its key is in the list, and tells the door it was refused when it is not. The door decides what refusing looks like - that is its On Locked Door Tried event.").featured())
+		.described("Opens the door when its key is in the list, and tells the door it was refused when it is not. The door decides what refusing looks like - that is its On Locked Door Tried event. A door is any node whose script has an exported needs_key variable, and dropping one on the canvas offers this row.").featured())
 	descriptors.append(F.make_descriptor("Core", "OpenDoor", "Open Door", ACEDescriptor.ACEType.ACTION, "\n".join(PackedStringArray([
 		"if not {opened}:",
 		"\t{opened} = true",

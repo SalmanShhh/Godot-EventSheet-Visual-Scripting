@@ -10170,3 +10170,6 @@ Picked here,"ここで選択済み"
 "The %s this event picked, written as %s. Rows you add here act on it.","このイベントが選択した %s（%s と書かれています）。ここで追加する行はそれに対して働きます。"
 %s - variables,%s - 変数
 Variable…,変数…
+%s is in the secret group. Add the event that counts it the first time the player walks in?,%s はグループ secret に入っています。プレイヤーが初めて入ったときに数えるイベントを追加しますか？
+%s exports a needs_key variable. Add the event that tries it when the player walks in?,%s は変数 needs_key をエクスポートしています。プレイヤーが入ったときにそれを試すイベントを追加しますか？
+%s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,%s はグループ water に入っています。入るときにフラグを立て、出るときに下ろす2つの行を追加しますか？

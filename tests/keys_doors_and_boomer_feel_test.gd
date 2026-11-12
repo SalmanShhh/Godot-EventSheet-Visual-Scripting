@@ -118,17 +118,6 @@ static func _door_contract() -> bool:
 ## The mark a reader writes on a door, and the event dropping that door then offers.
 static func _needs_key_mark() -> bool:
 	var ok: bool = true
-	EventSheetObjectMarks.reset_needs_key_for_tests()
-	ok = _check("no door wants a key until one is named",
-		EventSheetObjectMarks.needs_key_of("res://level.gd", "RedDoor"), "") and ok
-	EventSheetObjectMarks.set_needs_key("res://level.gd", "RedDoor", "red_key")
-	ok = _check("naming one sticks",
-		EventSheetObjectMarks.needs_key_of("res://level.gd", "RedDoor"), "red_key") and ok
-	ok = _check("the mark belongs to the file that made it",
-		EventSheetObjectMarks.needs_key_of("res://other.gd", "RedDoor"), "") and ok
-	EventSheetObjectMarks.set_needs_key("res://level.gd", "RedDoor", "")
-	ok = _check("clearing it sticks too",
-		EventSheetObjectMarks.needs_key_of("res://level.gd", "RedDoor"), "") and ok
 	var offered: EventRow = EventSheetStarterEvents.locked_door_event("RedDoor", "StaticBody3D")
 	ok = _check("the offered event rides the door's own walked-into trigger",
 		offered.trigger_id, "OnBodyEntered") and ok

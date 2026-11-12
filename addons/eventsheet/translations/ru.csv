@@ -10170,3 +10170,6 @@ Picked here,"Выбрано здесь"
 "The %s this event picked, written as %s. Rows you add here act on it.","%s, выбранный этим событием, записан как %s. Строки, добавленные здесь, действуют на него."
 %s - variables,%s - переменные
 Variable…,Переменная…
+%s is in the secret group. Add the event that counts it the first time the player walks in?,"%s находится в группе secret. Добавить событие, которое считает его при первом входе игрока?"
+%s exports a needs_key variable. Add the event that tries it when the player walks in?,"%s экспортирует переменную needs_key. Добавить событие, которое пробует её, когда игрок входит?"
+%s is in the water group. Add the two rows that raise the flag on the way in and lower it on the way out?,"%s находится в группе water. Добавить две строки, которые поднимают флаг при входе и опускают при выходе?"

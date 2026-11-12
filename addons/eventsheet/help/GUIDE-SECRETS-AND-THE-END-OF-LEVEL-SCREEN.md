@@ -2,26 +2,23 @@
 
 A shooter counts three things while you play - how many enemies fell, how many secrets you found,
 and how long it took - and shows all three the moment the level ends. This page is the two halves of
-that: marking a room as a secret so the sheet offers to count it, and the starter that puts the tally
+that: putting a room in the `secret` group so the sheet offers to count it, and the starter that puts the tally
 on screen.
 
-## Mark a room a secret
+## Put a room in the secret group
 
-An area is the shape a secret room is made of: a trigger volume you walk into. Click the object in
-the Object bar to open its properties and you now get one writable line at the bottom - **Secret**.
-It is offered on areas (`Area2D`, `Area3D`, and anything that extends them) and on nothing else,
-because "is this a secret?" has no meaning for a timer or a label.
-
-The mark is authoring metadata: it says how the sheet should treat the object, not what the object
-carries. It is remembered per project, alongside the sheet map's layout and your saved views, and it
-never changes the GDScript the sheet compiles to.
+An area is the shape a secret room is made of: a trigger volume you walk into. Select the node
+in the Scene dock, open the Node dock, Groups, and add it to the group `secret`. That is Godot's own
+group, saved in the scene file with the node, so the scene already says which rooms are secrets and
+the sheet reads it from there. Nothing is stored by the plugin and the GDScript the sheet compiles to
+does not change.
 
 ## Drop it on the canvas and the counter is offered
 
-Drag the marked object onto the canvas the way you would any other, and instead of going straight to
+Drag an object in the `secret` group onto the canvas the way you would any other, and instead of going straight to
 the picker the sheet asks first:
 
-![The offer shown when an object marked secret is dropped on the canvas: one line reading "SecretRoom is marked a secret. Add the event that counts it the first time the player walks in?" above a Count it button and a Just add a row button.](images/secret-object-drop-offer.png)
+![The offer shown when an object in the secret group is dropped on the canvas: one line reading "SecretRoom is in the secret group. Add the event that counts it the first time the player walks in?" above a Count it button and a Just add a row button.](images/secret-object-drop-offer.png)
 
 - **Count it** adds one event: the object's own walked-into trigger with the shipped **Mark Secret
   Found** row already in the action lane, naming the object as the secret. If the sheet has no
