@@ -3224,6 +3224,12 @@ func _draw_offered() -> bool:
 		_open_sheet(), _context.get("selected_resource") as Resource))
 
 
+## Whether the open sheet is the sheet of an Inspector look: its script extends EventSheetInspectorLook.
+func _look_sheet_open() -> bool:
+	var sheet: EventSheetResource = _open_sheet()
+	return sheet != null and str(sheet.host_class).strip_edges() == EventSheetPickerGates.LOOK_HOST_CLASS
+
+
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
 		return false
@@ -3238,6 +3244,8 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		where[EventSheetPickerGates.IN_OVERRIDE_CONTEXT] = _also_run_offered()
 	if EventSheetPickerGates.is_draw_call(definition):
 		where[EventSheetPickerGates.IN_DRAW_CONTEXT] = _draw_offered()
+	if EventSheetPickerGates.is_look_row(definition):
+		where[EventSheetPickerGates.IN_LOOK_SHEET] = _look_sheet_open()
 	if not EventSheetPickerGates.hidden_reason(definition, where).is_empty():
 		return false
 	# The reader's own choice: an entry they hid, authored or derived.

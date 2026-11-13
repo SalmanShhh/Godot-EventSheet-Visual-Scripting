@@ -145,6 +145,12 @@ const IN_OVERRIDE_CONTEXT := "in_override_function"
 ## _draw(). True when the row being added to sits under an On Draw event. Asked only of such a row.
 const HIDDEN_OUTSIDE_DRAW := "outside_on_draw"
 const IN_DRAW_CONTEXT := "in_on_draw_event"
+## The rows of the "Inspector Look" shelf compile only in a script that extends EventSheetInspectorLook, so they
+## are offered on such a sheet and no other. True when the open sheet is one. Asked only of such a row.
+const HIDDEN_OUTSIDE_LOOK := "outside_inspector_look"
+const IN_LOOK_SHEET := "in_inspector_look_sheet"
+const LOOK_CATEGORY := "Inspector Look"
+const LOOK_HOST_CLASS := "EventSheetInspectorLook"
 ## Every one of Godot's draw_* rows has an id that starts with this (Redraw does not: it works anywhere).
 const DRAW_CALL_PREFIX := "CanvasItemDraw"
 
@@ -171,6 +177,8 @@ static func hidden_reason(definition: ACEDefinition, where: Dictionary = {}) -> 
 		return HIDDEN_OUTSIDE_OVERRIDE
 	if is_draw_call(definition) and where.has(IN_DRAW_CONTEXT) and not bool(where[IN_DRAW_CONTEXT]):
 		return HIDDEN_OUTSIDE_DRAW
+	if is_look_row(definition) and where.has(IN_LOOK_SHEET) and not bool(where[IN_LOOK_SHEET]):
+		return HIDDEN_OUTSIDE_LOOK
 	if bool(definition.metadata.get(DEPRECATED_META, false)):
 		return HIDDEN_DEPRECATED
 	if bool(definition.metadata.get(PROJECT_SCOPED_META, false)) \
@@ -183,6 +191,11 @@ static func hidden_reason(definition: ACEDefinition, where: Dictionary = {}) -> 
 ## rows hidden_reason asks `where` about under IN_DRAW_CONTEXT.
 static func is_draw_call(definition: ACEDefinition) -> bool:
 	return definition != null and str(definition.provider_id) == "Core" and str(definition.id).begins_with(DRAW_CALL_PREFIX)
+
+
+## True for a row on the Inspector Look shelf (its three triggers, two actions and one expression).
+static func is_look_row(definition: ACEDefinition) -> bool:
+	return definition != null and str(definition.category) == LOOK_CATEGORY
 
 
 ## True for "Also run the parent's version", the row hidden_reason asks `where` about.

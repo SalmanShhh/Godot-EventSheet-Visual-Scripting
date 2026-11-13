@@ -195,6 +195,15 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _redraw() -> void:": "OnDrawGizmo"
 }
 
+## The three functions Godot's Inspector calls on an Inspector look. They lift to triggers only in a file that
+## extends EventSheetInspectorLook: anywhere else the same header is an ordinary function of the author's.
+const LOOK_LIFECYCLE_TRIGGERS: Dictionary = {
+	"func _look_built() -> void:": "OnLookBuilt",
+	"func _value_shown(value: Variant) -> void:": "OnValueShown",
+	"func _value_changed_from_outside(value: Variant) -> void:": "OnValueChangedFromOutside"
+}
+const LOOK_HOST_CLASS: String = "EventSheetInspectorLook"
+
 ## The two tree callbacks that mean something DIFFERENT on an EditorPlugin: `_enter_tree` is not
 ## "on created" there, it is the moment the plugin was switched on. Keyed on the trigger the header
 ## table already resolved, so the rename is a display-level re-pin and the emitted function is the
@@ -2801,9 +2810,19 @@ static func _is_lifecycle_header(header: String) -> bool:
 	# A head whose unread parameters are underscored (`func _process(_delta: float)`) names the same
 	# callback; which ones the body reads is _lift_function's question, asked with the body in hand.
 	var bare: String = UnusedParams.strip_underscores(header)
-	return LIFECYCLE_TRIGGERS.has(header) or ASK_ANSWER_TRIGGERS.has(header) \
-		or LIFECYCLE_TRIGGERS.has(bare) or ASK_ANSWER_TRIGGERS.has(bare) \
+	return _lifecycle_has(header) or ASK_ANSWER_TRIGGERS.has(header) \
+		or _lifecycle_has(bare) or ASK_ANSWER_TRIGGERS.has(bare) \
 		or header == NOTIFICATION_HEADER or _loose_lifecycle_match(header) != null
+
+
+## Whether a header is in the lifecycle table, counting the Inspector look's three functions when the file
+## being lifted is one.
+static func _lifecycle_has(header: String) -> bool:
+	return LIFECYCLE_TRIGGERS.has(header) or (_lift_host_class == LOOK_HOST_CLASS and LOOK_LIFECYCLE_TRIGGERS.has(header))
+
+
+static func _lifecycle_trigger(header: String) -> String:
+	return str(LIFECYCLE_TRIGGERS[header]) if LIFECYCLE_TRIGGERS.has(header) else str(LOOK_LIFECYCLE_TRIGGERS[header])
 
 
 static func _loose_lifecycle_match(header: String) -> RegExMatch:
@@ -2963,7 +2982,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var head: String = str(spelling.get("header", function_lines[0]))
 	var head_spelled: bool = bool(spelling.get("follows", true))
 	var loose_lifecycle: RegExMatch = null
-	if not LIFECYCLE_TRIGGERS.has(head):
+	if not _lifecycle_has(head):
 		loose_lifecycle = _loose_lifecycle_match(head)
 	# An Ask row's answer is a named function nothing connects, so it lifts from its header - unless
 	# this file wired the same name to a signal, in which case that connect line owns the handler.
@@ -2972,7 +2991,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		var answered: String = head.trim_prefix("func ").split("(")[0]
 		if not connections.has(answered):
 			ask_answer = str(ASK_ANSWER_TRIGGERS[head])
-	if LIFECYCLE_TRIGGERS.has(head) or loose_lifecycle != null or not ask_answer.is_empty():
+	if _lifecycle_has(head) or loose_lifecycle != null or not ask_answer.is_empty():
 		if not ask_answer.is_empty():
 			trigger_id = ask_answer
 		elif loose_lifecycle != null:
@@ -2985,7 +3004,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			trigger_id = str(loose_map[loose_lifecycle.get_string(1)])
 			source_header = head
 		else:
-			trigger_id = str(LIFECYCLE_TRIGGERS[head])
+			trigger_id = _lifecycle_trigger(head)
 		# The canonical head with an unread parameter left plain is kept as the file wrote it: the
 		# compiler would underscore it, and the round trip gives back what it was handed.
 		if source_header.is_empty() and not head_spelled:

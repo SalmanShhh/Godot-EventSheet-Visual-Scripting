@@ -347,6 +347,14 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_forward_canvas_gui_input", "event: InputEvent", "bool")
 		"OnDrawGizmo":
 			return _lifecycle("_redraw", "")
+		"OnLookBuilt":
+			# The three functions Godot's Inspector calls on an Inspector look (a script extending
+			# EventSheetInspectorLook). Plain functions on both sides: the base class calls them by name.
+			return _lifecycle("_look_built", "")
+		"OnValueShown":
+			return _lifecycle("_value_shown", "value: Variant")
+		"OnValueChangedFromOutside":
+			return _lifecycle("_value_changed_from_outside", "value: Variant")
 		"OnTestStart":
 			# A Test sheet's start. Signal-backed on the sheet itself: the sheet declares
 			# `signal test_started(test_name: String)` (the compiler emits it for a test sheet) and a

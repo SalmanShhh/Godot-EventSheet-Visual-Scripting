@@ -71,6 +71,7 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Files": "File",
 	"Files: Directories": "Folder",
 	"Functions": "MemberMethod",
+	"Inspector Look": "EditorProperty",
 	"Game Options": "Tools",
 	"Game Window": "Window",
 	"Gamepad": "InputEventJoypadButton",

@@ -71,6 +71,7 @@ const _SEED: Dictionary = {
 	"Metadata": "Store and read your own named values on any node without adding a variable.",
 	"Nodes": "Walk the scene tree - parent, children, find by name, the scene owner.",
 	"Editor Tools": "Automate the Godot editor from a Tool sheet - open and save scenes, add nodes, write resources. These run in the editor, not in your exported game.",
+	"Inspector Look": "What a script that draws one property in Godot's Inspector does: build its controls, show the value, write a new one. Only on a sheet that extends EventSheetInspectorLook.",
 	"Game Window": "Control the game window - fullscreen or windowed, size, title, vsync, and the frame-rate cap.",
 	"Game Options": "The knobs a settings menu changes - audio volume per bus, mute, vsync, frame cap, and saving them to a file.",
 	"Input": "Rebind controls, read whether an action is pressed and how hard, and manage the mouse.",
