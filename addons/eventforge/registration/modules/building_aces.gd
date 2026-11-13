@@ -195,8 +195,10 @@ static func _target_param(label: String, words: String) -> ACEParam:
 
 
 ## The picture a sprite shows. A file field: the row writes the load the way a reader would have.
+## It starts as Godot's own placeholder texture rather than a file, because a file the project may
+## not have turns the row amber the moment it is dropped.
 static func _texture_param() -> ACEParam:
-	return F.make_param("texture", "String", "load(\"res://icon.svg\")", "Picture", "The image the sprite shows.", "texture_path")
+	return F.make_param("texture", "String", "PlaceholderTexture2D.new()", "Picture", "The image the sprite shows.", "texture_path")
 
 
 # ── A tool sheet's own housekeeping ──
