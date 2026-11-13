@@ -4,6 +4,15 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: an Inspector look is one script file
+
+- A look is now a script that extends `EventSheetInspectorLook`, a thin layer over Godot's `EditorProperty`. Drop one in `res://eventsheet_addons/looks/` and it is a look: nothing is registered. The Variable window and the Inspector Designer list it, ask its questions, and write its marker; the Inspector draws it. The look's name, hover, the types it works on, its questions and the line it writes are all read from the file's text, so nothing is run to list it. A file in the project with a shipped look's name replaces it. Make your own with the new guide "Make Your Own Inspector Look".
+- The progress bar is the first look to move onto a file, `addons/eventsheet/looks/progress_bar.gd`. The marker it writes is unchanged byte for byte (a generated corpus of 200 bound pairs proves the two spellings write the same line), and the Inspector draws it with the same pixels as before. Its two questions in the Variable window now read `min` and `max`, the names as written in the file.
+- A marker naming a look the project does not have still opens, saves back byte for byte and is kept by the Variable window as "Look not installed", instead of being dropped.
+- The compiler and the importer gained one generic spelling for a look with no structured attributes of its own (`look` and `look_args` on a variable). No existing branch changed, and markers already in scripts never do.
+- "Save and show": a choice made in the Inspector Designer is saved to the script the way Save does it, with the same guards, and Godot is told the file changed. One `update_file` is all it needs: the selected node's Inspector redraws with the new look at once. The parsed decor lines are forgotten too, so an edit that keeps the script's length is not drawn from the old map.
+- `eventsheet_addons/looks/` is skipped by the scan of `eventsheet_addons/` that finds ACE providers, so no reader of that list ever sees a look.
+
 ### Fixed: searching Clone object finds the copy rows
 
 - Typing "Clone object" in the picker, the sheet's own spelling of Duplicate, found nothing. It now lands on Clone Into first and also finds Duplicate Node.

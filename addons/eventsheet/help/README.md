@@ -44,6 +44,7 @@ Every page below also ships inside the editor: open **Menu > Manual**, or press 
 - [Creating Custom ACE Modules](GUIDE-CREATING-CUSTOM-MODULES.md) - package your own vocabulary as a scanned module.
 - [Custom Blocks](GUIDE-CUSTOM-BLOCKS.md) - register new non-ACE row kinds with byte-gated round-trip.
 - [Inspector Drawers and Export Options](GUIDE-CUSTOM-INSPECTORS.md) - shape how a variable looks and validates in the Inspector.
+- [Make Your Own Inspector Look](GUIDE-MAKE-YOUR-OWN-INSPECTOR-LOOK.md) - one script file in your project draws a property in the Inspector: a star rating, a bar, a dial, with nothing to register.
 - [Data-driven Addons with Custom Resources](GUIDE-DATA-DRIVEN-ADDONS.md) - author content as Inspector-edited `.tres` resources.
 - [Building a Data-driven Game](GUIDE-DATA-DRIVEN-GAMES.md) - drive whole games from Custom Resources.
 - [Building on EventSheets](GUIDE-BUILDING-ON-EVENTSHEETS.md) - the public `EventSheets` API for plugins, build tools, and CI.

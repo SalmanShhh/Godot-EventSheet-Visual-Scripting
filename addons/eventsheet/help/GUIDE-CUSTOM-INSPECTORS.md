@@ -105,9 +105,9 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 ### Progress bar (int / float)
 
-**What it does.** Shows a horizontal bar you drag to set the value, bounded by the look's **Min** and **Max**. Ideal for any 0-to-N stat.
+**What it does.** Shows a horizontal bar you drag to set the value, bounded by the look's `min` and `max`. Ideal for any 0-to-N stat. The progress bar is a look that is a script file, `addons/eventsheet/looks/progress_bar.gd`, and it is the model for making your own (a look added to your project the same way is listed beside it).
 
-**How to use it.** Choose **Inspector look: Progress bar** and fill in its **Min** and **Max** (for example `0` and `100`).
+**How to use it.** Choose **Inspector look: Progress bar** and fill in its `min` and `max` (for example `0` and `100`). The questions are named as the variables are written in the look's file.
 
 **Emits** (the min and max ride inside the marker, so there is no separate `@export_range`):
 ```gdscript
