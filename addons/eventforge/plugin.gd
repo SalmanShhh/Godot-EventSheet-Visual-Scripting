@@ -548,7 +548,7 @@ func _enter_tree() -> void:
 	var settings_changed: bool = EventSheetSettings.register_all()
 	# A key an earlier version saved into project.godot moves to the editor's settings (per user,
 	# never committed). Loaded by path: the boot path names no class the first open does not need.
-	var ask_script: GDScript = load("res://addons/eventsheet/ace/ask.gd")
+	var ask_script: GDScript = load("res://addons/eventforge/ask_key_storage.gd")
 	ask_script.register_editor_keys()
 	(load("res://addons/eventsheet/editor/l10n.gd") as GDScript).register_override_setting()
 	# The authoring shortcuts live in Editor Settings > Shortcuts, rebound there like Godot's own.

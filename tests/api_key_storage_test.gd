@@ -9,6 +9,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const P := "api_key_storage_test"
+const STORAGE := preload("res://addons/eventforge/ask_key_storage.gd")
 
 
 class FakeEditorSettings extends RefCounted:
@@ -41,8 +42,8 @@ static func run() -> bool:
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_KEY, "typed-in-project")
 	project_ignored = EventSheetAsk.secret(EventSheetAsk.SETTING_KEY, EventSheetAsk.ENV_KEY, store)
 	ProjectSettings.set_setting(EventSheetAsk.AI_SETTING_KEY, "ai-typed-in-project")
-	var moved: PackedStringArray = EventSheetAsk.move_project_keys_to_editor(store)
-	var moved_again: PackedStringArray = EventSheetAsk.move_project_keys_to_editor(store)
+	var moved: PackedStringArray = STORAGE.move_project_keys_to_editor(store)
+	var moved_again: PackedStringArray = STORAGE.move_project_keys_to_editor(store)
 	var registered: Array = EventSheetSettings.DEFINITIONS.map(func(entry: Dictionary) -> String: return str(entry.get("name", "")))
 	var ok: bool = SUPPORT.pins(P, [
 		["with nothing set the key is empty", empty_read, ""],
