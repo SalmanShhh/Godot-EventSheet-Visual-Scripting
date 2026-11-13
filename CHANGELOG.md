@@ -18,6 +18,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - The look list in the Variable window shows about five rows without scrolling and opens scrolled to the chosen look. The chosen row is a plain fill with no outline, and each look has its own small picture (dial, bar, table grid, swatches, strip, slider, menu, curve, picture), all drawn by one painter that takes its colours as arguments. The window's card area grows with the screen so the list is not cut.
 - Corner radii: at a narrow Inspector the link button stays icon-sized at the end of the first line of fields instead of sitting alone above them.
 - Inspector Look shelf: five more rows for look sheets (a themed panel, a message line, a number field, a joined strip, and "put this under the first row"), hidden outside look sheets like the first six. The toggle strip is built by the same `joined_strip` builder.
+- The sums behind a weighted table (each row's share, the odds as one line, a seeded roll) are one pure file, `weight_math.gd`; nothing is stored.
 - Markers in user scripts, ace_ids and the stored values are unchanged.
 
 ### Removed: the Manual no longer draws pages for Godot classes
