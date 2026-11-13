@@ -10441,3 +10441,7 @@ Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is li
 "Type a function, signal or variable…",输入函数、信号或变量…
 Required. Assign a value.,必填。请赋一个值。
 reach %s,范围 %s
+Move this row down,将此行下移
+Drag to move this row.,拖动以移动此行。
+Table (1 row),表格（1 行）
+Table (%d rows),表格（%d 行）

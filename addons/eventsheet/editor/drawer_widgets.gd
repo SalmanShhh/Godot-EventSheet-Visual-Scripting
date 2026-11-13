@@ -1182,16 +1182,13 @@ class DrawerTable:
 		for column: Variant in columns:
 			if column is Dictionary and not str((column as Dictionary).get("name", "")).is_empty():
 				_columns.append(column)
-		add_theme_constant_override("separation", 2)
 		_search = LineEdit.new()
 		_search.placeholder_text = EventSheetL10n.translate("Search the rows")
 		_search.clear_button_enabled = true
 		_search.text_changed.connect(search)
 		add_child(_search)
 		_grid = GridContainer.new()
-		_grid.columns = _columns.size() + 3  # row number + cells + move-up + remove
-		_grid.add_theme_constant_override("h_separation", 4)
-		_grid.add_theme_constant_override("v_separation", 2)
+		_grid.columns = _columns.size() + 2  # drag grip + cells + remove
 		add_child(_grid)
 		_pager = HBoxContainer.new()
 		_previous_button = Button.new()
@@ -1210,7 +1207,6 @@ class DrawerTable:
 		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_pager.add_child(gap)
 		_missing_label = Label.new()
-		_missing_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		_pager.add_child(_missing_label)
 		_open_link = LinkButton.new()
 		_open_link.text = EventSheetL10n.translate("Open as a table")
@@ -1219,7 +1215,9 @@ class DrawerTable:
 		_pager.add_child(_open_link)
 		add_child(_pager)
 		_add_button = Button.new()
-		_add_button.text = "+ " + EventSheetL10n.translate("Add row")
+		var add_picture: Texture2D = EventSheetLookStyle.icon(&"Add")
+		_add_button.text = EventSheetL10n.translate("Add row") if add_picture != null else "+ " + EventSheetL10n.translate("Add row")
+		_add_button.icon = add_picture
 		_add_button.pressed.connect(_on_add_row)
 		add_child(_add_button)
 		# Any cell edit can fill or empty a cell, so the count under the grid follows every change.
@@ -1388,40 +1386,24 @@ class DrawerTable:
 			stale.queue_free()
 		_cell_marks.clear()
 		_add_button.disabled = not editable
-		var ink: Color = EventSheetActiveTheme.chrome().drawer_ink_color
-		_grid.add_child(_header(STORED_ORDER, EventSheetL10n.translate("Back to the order the file keeps"), ink))
+		_grid.add_child(_header(STORED_ORDER, EventSheetL10n.translate("Back to the order the file keeps")))
 		for column: Dictionary in _columns:
 			# The column's name exactly as the code writes it; its Description, when it has one, on hover.
 			var about: String = str(column.get("about", ""))
 			_grid.add_child(_header(str(column.get("name")),
-				about if not about.is_empty() else EventSheetL10n.translate("Sort by %s") % str(column.get("name")), ink))
-		_grid.add_child(Control.new())
+				about if not about.is_empty() else EventSheetL10n.translate("Sort by %s") % str(column.get("name"))))
 		_grid.add_child(Control.new())
 		var view: Dictionary = _view()
 		_page = int(view.get("page", 0))
 		for shown: Variant in view.get("rows", []):
 			var row_index: int = int(shown)
 			var row: Dictionary = _value[row_index]
-			var number: Label = Label.new()
-			number.text = str(row_index)
-			number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			number.modulate = Color(ink.r, ink.g, ink.b, 0.6)
-			_grid.add_child(number)
+			_grid.add_child(_grip(row_index))
 			for column: Dictionary in _columns:
 				var cell: Control = _make_cell(row, column)
 				_cell_marks.append([cell, row, column, row_index])
 				_grid.add_child(cell)
-			var up_button: Button = Button.new()
-			up_button.text = "▲"
-			up_button.tooltip_text = EventSheetL10n.translate("Move this row up")
-			# A sorted or searched view does not draw the row above, so "up" there would move a row
-			# past one the reader cannot see; moving waits for the file's own, whole order.
-			up_button.disabled = not editable or row_index == 0 or not _sort_column.is_empty() or not _query.strip_edges().is_empty()
-			up_button.pressed.connect(_on_move_up.bind(row_index))
-			_grid.add_child(up_button)
-			var remove_button: Button = Button.new()
-			remove_button.text = "✕"
-			remove_button.tooltip_text = EventSheetL10n.translate("Remove this row")
+			var remove_button: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this row"))
 			remove_button.disabled = not editable
 			remove_button.pressed.connect(_on_remove.bind(row_index))
 			_grid.add_child(remove_button)
@@ -1434,11 +1416,11 @@ class DrawerTable:
 		_previous_button.disabled = _page <= 0
 		_next_button.disabled = _page >= int(view.get("pages", 1)) - 1
 		_open_link.visible = open_table.is_valid()
-		_missing_label.add_theme_color_override("font_color", Color(ink.r, ink.g, ink.b, 0.6))
+		_missing_label.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		_refresh_missing()
 
 	## A column's name as a flat button: a click sorts by it, and the sorted column carries its arrow.
-	func _header(column_name: String, hover: String, ink: Color) -> Button:
+	func _header(column_name: String, hover: String) -> Button:
 		var head: Button = Button.new()
 		head.flat = true
 		head.text = column_name
@@ -1446,10 +1428,68 @@ class DrawerTable:
 			head.text += " ▼" if _descending else " ▲"
 		head.tooltip_text = hover
 		head.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-		head.modulate = Color(ink.r, ink.g, ink.b, 0.8)
+		head.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		head.pressed.connect(sort_by.bind(column_name))
 		return head
+
+	## Whether rows may be moved now: a sorted or searched view does not draw the row above or below,
+	## so a move there would pass a row the reader cannot see; moving waits for the file's own, whole order.
+	func can_move_rows() -> bool:
+		return editable and _sort_column.is_empty() and _query.strip_edges().is_empty()
+
+	## The handle at the start of a row: drag it onto another row's handle to move the row there. A
+	## right click offers the same move one place up or down, for the keyboard and for a long list.
+	func _grip(row_index: int) -> Button:
+		var grip: Button = Button.new()
+		grip.flat = true
+		grip.focus_mode = Control.FOCUS_NONE
+		var picture: Texture2D = EventSheetLookStyle.icon(&"TripleBar")
+		if picture != null:
+			grip.icon = picture
+		else:
+			grip.text = "≡"
+		grip.tooltip_text = EventSheetL10n.translate("Drag to move this row.")
+		grip.disabled = not can_move_rows()
+		grip.mouse_default_cursor_shape = Control.CURSOR_DRAG
+		grip.set_drag_forwarding(
+			func(_at: Vector2) -> Variant:
+				if not can_move_rows():
+					return null
+				var preview: Label = Label.new()
+				preview.text = str(row_index)
+				grip.set_drag_preview(preview)
+				return {"type": "eventsheet_table_row", "from": row_index, "owner": get_instance_id()},
+			func(_at: Vector2, data: Variant) -> bool:
+				return can_move_rows() and data is Dictionary and str(data.get("type", "")) == "eventsheet_table_row" \
+					and int(data.get("owner", 0)) == get_instance_id() and int(data.get("from", -1)) != row_index,
+			func(_at: Vector2, data: Variant) -> void:
+				move_row(int((data as Dictionary).get("from", -1)), row_index))
+		grip.gui_input.connect(_on_grip_input.bind(grip, row_index))
+		return grip
+
+	func _on_grip_input(event: InputEvent, grip: Button, row_index: int) -> void:
+		if not (event is InputEventMouseButton) or not (event as InputEventMouseButton).pressed \
+				or (event as InputEventMouseButton).button_index != MOUSE_BUTTON_RIGHT or not can_move_rows():
+			return
+		var menu: PopupMenu = PopupMenu.new()
+		menu.add_item(EventSheetL10n.translate("Move this row up"), 0)
+		menu.add_item(EventSheetL10n.translate("Move this row down"), 1)
+		menu.set_item_disabled(0, row_index <= 0)
+		menu.set_item_disabled(1, row_index >= _value.size() - 1)
+		menu.id_pressed.connect(func(id: int) -> void: move_row(row_index, row_index - 1 if id == 0 else row_index + 1))
+		menu.popup_hide.connect(menu.queue_free)
+		grip.add_child(menu)
+		menu.popup(Rect2i(Vector2i(grip.get_screen_position() + (event as InputEventMouseButton).position), Vector2i.ZERO))
+
+	## Moves the row at `from` so it sits at `to`, the other rows closing up or making room.
+	func move_row(from: int, to: int) -> void:
+		if from < 0 or from >= _value.size() or to < 0 or to >= _value.size() or from == to:
+			return
+		var moved: Dictionary = _value[from]
+		_value.remove_at(from)
+		_value.insert(to, moved)
+		_rebuild()
+		value_changed.emit(get_value())
 
 	## Paints every drawn empty cell quietly amber with its hover, and counts the rows that have one.
 	func _refresh_missing() -> void:
@@ -1497,13 +1537,11 @@ class DrawerTable:
 		var column_type: String = str(column.get("type", "String"))
 		match column_type:
 			"int", "float":
-				var spin: SpinBox = SpinBox.new()
-				spin.allow_greater = true
-				spin.allow_lesser = true
-				spin.step = 1.0 if column_type == "int" else 0.01
-				spin.value = float(row.get(column_name, 0))
-				spin.editable = editable
-				spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				var spin: Range = EventSheetLookStyle.number_field("", EventSheetLookStyle.NO_COLOUR, false)
+				EventSheetLookStyle.open_number_field(spin, 1.0 if column_type == "int" else 0.01)
+				spin.custom_minimum_size.x = EventSheetLookStyle.text_room("-1000.00")
+				spin.set_value_no_signal(float(row.get(column_name, 0)))
+				EventSheetLookStyle.set_number_field_locked(spin, not editable)
 				spin.value_changed.connect(func(v: float) -> void:
 					row[column_name] = int(v) if column_type == "int" else v
 					value_changed.emit(get_value()))
@@ -1593,13 +1631,7 @@ class DrawerTable:
 		return cell
 
 	func _on_move_up(row_index: int) -> void:
-		if row_index <= 0 or row_index >= _value.size():
-			return
-		var moved: Dictionary = _value[row_index]
-		_value.remove_at(row_index)
-		_value.insert(row_index - 1, moved)
-		_rebuild()
-		value_changed.emit(get_value())
+		move_row(row_index, row_index - 1)
 
 	func _on_remove(row_index: int) -> void:
 		if row_index < 0 or row_index >= _value.size():

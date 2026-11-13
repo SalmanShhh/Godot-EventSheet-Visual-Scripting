@@ -10441,3 +10441,7 @@ Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is li
 "Type a function, signal or variable…","Funktion, Signal oder Variable eingeben…"
 Required. Assign a value.,Erforderlich. Einen Wert zuweisen.
 reach %s,Reichweite %s
+Move this row down,Diese Zeile nach unten verschieben
+Drag to move this row.,"Ziehen, um diese Zeile zu verschieben."
+Table (1 row),Tabelle (1 Zeile)
+Table (%d rows),Tabelle (%d Zeilen)

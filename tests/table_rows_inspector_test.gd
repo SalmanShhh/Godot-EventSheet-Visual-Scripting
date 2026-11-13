@@ -142,8 +142,8 @@ static func _test_table_widget() -> bool:
 	table.call("sort_by", "weight")
 	var by_weight: Array = table.call("shown_rows")
 	var weight_head: String = ((table.get("_grid") as GridContainer).get_child(4) as Button).text
-	var second_up: Button = (table.get("_grid") as GridContainer).get_child(22) as Button
-	var up_while_sorted: bool = second_up.disabled
+	var second_grip: Button = (table.get("_grid") as GridContainer).get_child(14) as Button
+	var up_while_sorted: bool = second_grip.disabled
 	table.call("sort_by", "weight")
 	var by_weight_light: Array = table.call("shown_rows")
 	table.call("turn_page", 1)
@@ -156,7 +156,7 @@ static func _test_table_widget() -> bool:
 	var back: Array = table.call("shown_rows")
 	var missing: String = (table.get("_missing_label") as Label).text
 	table.call("search", "gem")
-	var up_while_searched: bool = ((table.get("_grid") as GridContainer).get_child(22) as Button).disabled
+	var up_while_searched: bool = ((table.get("_grid") as GridContainer).get_child(14) as Button).disabled
 	table.free()
 	return SUPPORT.pins(NAME, [
 		["a short grid has no search box", short_search, false],

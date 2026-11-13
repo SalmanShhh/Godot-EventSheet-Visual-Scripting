@@ -10441,3 +10441,7 @@ Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is li
 "Type a function, signal or variable…",関数、シグナル、変数を入力…
 Required. Assign a value.,必須です。値を割り当ててください。
 reach %s,到達 %s
+Move this row down,この行を下へ移動
+Drag to move this row.,ドラッグしてこの行を移動します。
+Table (1 row),テーブル (1 行)
+Table (%d rows),テーブル (%d 行)

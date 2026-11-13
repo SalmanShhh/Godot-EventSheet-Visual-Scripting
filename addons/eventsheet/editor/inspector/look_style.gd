@@ -28,6 +28,8 @@ const MINI_WIDTH: float = 44.0
 const MINI_HEIGHT: float = 22.0
 ## The height of a plain field when no editor theme can say.
 const FALLBACK_FIELD_HEIGHT: float = 22.0
+## No colour asked for: a field made with this keeps its own label colour.
+const NO_COLOUR: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## How far a note under a field is dimmed when the editor carries no quiet colour.
 const FALLBACK_QUIET_ALPHA: float = 0.6
 
@@ -131,11 +133,16 @@ static func field_box(locked: bool = false) -> StyleBox:
 	return flat
 
 
-## The box a block of controls sits in (a table, a card list, a picture).
+## The box a block of controls sits in (a table, a card list, a picture): the editor's sub-inspector
+## fill with no border, so it reads as a quiet panel rather than an outlined box.
 static func panel_box() -> StyleBox:
 	var theme: Theme = editor_theme()
 	if theme != null and theme.has_stylebox(&"sub_inspector_bg0", THEME_STYLES):
-		return theme.get_stylebox(&"sub_inspector_bg0", THEME_STYLES).duplicate() as StyleBox
+		var box: StyleBox = theme.get_stylebox(&"sub_inspector_bg0", THEME_STYLES).duplicate() as StyleBox
+		var flat: StyleBoxFlat = box as StyleBoxFlat
+		if flat != null:
+			flat.set_border_width_all(0)
+		return box
 	return field_box()
 
 
@@ -219,7 +226,7 @@ static func accent_box(box: StyleBox) -> StyleBox:
 ## A number field. Godot's own spin slider with a label inside it when running in the editor, and a
 ## SpinBox everywhere else (the headless suite never builds an EditorSpinSlider). Both are Ranges,
 ## so value_changed, set_value_no_signal and step are common to the two.
-static func number_field(label: String = "", label_color: Color = Color(0.0, 0.0, 0.0, 0.0), keep_room: bool = true) -> Range:
+static func number_field(label: String = "", label_color: Color = NO_COLOUR, keep_room: bool = true) -> Range:
 	if Engine.is_editor_hint() and ClassDB.can_instantiate("EditorSpinSlider"):
 		var slider: Range = ClassDB.instantiate("EditorSpinSlider") as Range
 		slider.set("flat", false)
@@ -300,4 +307,10 @@ static func open_number_field(field: Range, step: float = 0.001) -> void:
 static func number_field_min_width() -> float:
 	var font_used: Font = font()
 	var text_width: float = font_used.get_string_size("x -1000.00", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size()).x
+	return text_width + field_box().get_minimum_size().x
+
+
+## The narrowest a field may be and still show `sample` whole inside its box.
+static func text_room(sample: String) -> float:
+	var text_width: float = font().get_string_size(sample, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size()).x
 	return text_width + field_box().get_minimum_size().x

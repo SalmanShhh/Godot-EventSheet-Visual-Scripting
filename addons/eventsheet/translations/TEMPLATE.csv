@@ -10425,3 +10425,7 @@ Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is li
 "Type a function, signal or variable…",
 Required. Assign a value.,
 reach %s,
+Move this row down,
+Drag to move this row.,
+Table (1 row),
+Table (%d rows),
