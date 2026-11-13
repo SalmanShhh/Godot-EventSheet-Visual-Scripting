@@ -70,6 +70,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_theme_font_size_override` | [Set Font Size](ace:Core/SetFontSize) | Text | Vocabulary |
 | `add_to_group` | [Add To Group](ace:Core/AddToGroup) | Groups | Vocabulary |
 | `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
+| `add_under_field` | [Add Under The Field](ace:Core/AddUnderField) | Inspector Look | Vocabulary |
 | `add_undo_method` | [Add Node (Undoable)](ace:Core/AddNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_undo_property` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_undo_reference` | [Remove Node (Undoable)](ace:Core/RemoveNodeUndoable) | Editor Tools: Undo history | Vocabulary |
@@ -649,6 +650,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_valid_int` | [Text Is A Whole Number](ace:Core/TextIsAWholeNumber) | Compare: Text | Vocabulary |
 | `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
 | `join` | [Join To Text](ace:Core/ArrayJoin) | Variables: Array | Vocabulary |
+| `joined_strip` | [A Joined Strip](ace:Core/JoinedStrip) | Inspector Look | Vocabulary |
 | `jump_to` | [Jump To Sequence Step](ace:Core/SequenceJumpTo) | Sequencer | Vocabulary |
 | `keys` | [Dictionary Keys](ace:Core/DictKeys) | Variables: Dictionary | Vocabulary |
 | `kill` | [Blend Toward](ace:Core/BlendToward) | Animation | Vocabulary |
@@ -708,6 +710,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `merge` | [Merge Dictionary](ace:Core/DictMerge) | Variables: Dictionary | Vocabulary |
 | `merged` | [Translated Text With Words](ace:Core/TranslatedTextWithWords) | Translation | Vocabulary |
 | `mesh` | [Clear Mesh](ace:Core/ClearMesh) | Mesh | Vocabulary |
+| `message_line` | [A Message Line](ace:Core/MessageLine) | Inspector Look | Vocabulary |
 | `metallic` | [Metal](ace:Core/MaterialMetal) | Material | Vocabulary |
 | `min` | [Min](ace:Core/MinValue) | Helpers | Vocabulary |
 | `minf` | [Fill Meter](ace:Core/FillMeter) | Meters | Vocabulary |
@@ -742,6 +745,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `normalized` | [Normalized](ace:Core/VectorNormalized) | Variables: Vector | Vocabulary |
 | `not` | [Has Something](ace:Core/HasSomething) | Compare: Types | Vocabulary |
 | `num` | [Format Decimals](ace:Core/FormatDecimals) | Text | Vocabulary |
+| `number_field` | [A Number Field](ace:Core/NumberField) | Inspector Look | Vocabulary |
 | `offset` | [Set Offset](ace:Core/SetCameraOffset) | Camera | Vocabulary |
 | `omni_range` | [Set Reach](ace:Core/LightSetReachOmni) | Lighting | Vocabulary |
 | `one_shot` | [Set One-Shot](ace:Core/SetOneShot) | Particles | Vocabulary |
@@ -1039,6 +1043,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |
 | `texture` | [Set Image](ace:Core/SetSpriteTexture) | Animation | Vocabulary |
 | `texture_scale` | [Set Reach](ace:Core/LightSetReach) | Lighting | Vocabulary |
+| `themed_panel` | [A Themed Panel](ace:Core/ThemedPanel) | Inspector Look | Vocabulary |
 | `tile_map_data` | [Copy Layer](ace:Core/TileMapCopyLayer) | Tilemap | Vocabulary |
 | `tile_set` | [Tiled Area](ace:Core/TiledArea) | Camera | Vocabulary |
 | `tile_size` | [Tiled Area](ace:Core/TiledArea) | Camera | Vocabulary |

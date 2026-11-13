@@ -55,13 +55,13 @@ This road needs no editor code. You will make a look called `heart_row`, give a 
 
 ![The new look opened as a sheet, with On Look Built and On Value Shown](images/look-sheet-3-opened.png)
 
-**4. Add a row.** Select an event and choose **Add action**. The picker has an **Inspector Look** shelf, and only on this sheet: **Set the field's value** (write a new value, one undo step), **Make this control the one focus lands on**, and the expression **the field's value**. Everything else in the picker works as it always does.
+**4. Add a row.** Select an event and choose **Add action**. The picker has an **Inspector Look** shelf, and only on this sheet: **Set the field's value** (write a new value, one undo step), **Make this control the one focus lands on**, and the expression **the field's value**. Five more rows build the parts a look is made of the way Godot's own fields are: **a themed panel**, **a message line**, **a number field**, **a joined strip** of toggle buttons, and **Put this under the first row** for a wide part (a dial, a picture) that sits on a line of its own under the name. Everything else in the picker works as it always does.
 
 ![The picker on the Inspector Look shelf with Make Control Take Focus selected](images/look-sheet-4-picker.png)
 
 **5. Save.** The sheet writes the file.
 
-**6. Give a variable the look.** Open the sheet of a script, add an `int` variable, and set **Inspector look** to **Heart row**. A look that asks questions shows them here, one field each, labelled by the first `##` line above the question's variable in the look's file.
+**6. Give a variable the look.** Open the sheet of a script, add an `int` variable, and pick **Heart row** in the list under **Inspector look**. Each look in that list has a small picture, its name and one grey sentence, under the headings Godot's own, EventSheets looks and In your project. A look that asks questions shows them here, one field each, labelled by the first `##` line above the question's variable in the look's file.
 
 ![The Variable window with Inspector look set to Heart row](images/look-sheet-5-variable.png)
 
@@ -117,7 +117,7 @@ func _pick(number: int) -> void:
 	set_field_value(number)
 ```
 
-Now open the Variable window on an int variable. **Inspector look** lists **Star rating**, and one question under it: `count`. Pick it, leave 5, and the variable is written as:
+Now open the Variable window on an int variable. the list under **Inspector look** shows **Star rating** under In your project, and one question under the list: `count`. Pick it, leave 5, and the variable is written as:
 
 ```gdscript
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:star_rating:5") var rating: int = 3
@@ -191,6 +191,11 @@ On a sheet whose script extends `EventSheetInspectorLook`, the three functions t
 | `set_field_value(value)` | Set the field's value to value |
 | `add_focusable(control)` | Make control the one focus lands on |
 | `field_value()` | the field's value |
+| `themed_panel()` | a themed panel |
+| `message_line(text)` | a line saying text |
+| `number_field(label)` | a number field labelled label |
+| `joined_strip(buttons)` | a joined strip of buttons |
+| `add_under_field(first_row, under)` | Put under under first_row |
 
 The same function names in a script that is not a look stay ordinary functions. The rows are on the **Inspector Look** shelf of the picker, and only a look sheet is offered them.
 

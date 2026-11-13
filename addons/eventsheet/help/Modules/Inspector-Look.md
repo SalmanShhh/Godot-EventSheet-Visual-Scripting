@@ -2,7 +2,7 @@
 
 An **Inspector look** is a script that draws one property in Godot's own Inspector in the place of its plain field: a bar for health, a row of stars for a rating, a dial for a direction. It is an ordinary script that extends `EventSheetInspectorLook`, a thin layer over Godot's `EditorProperty`, and it is one file.
 
-This page is the six rows that make a look on a sheet. They appear on the sheet of a look and on no other sheet, because they only mean something there. Open a look (or start one with **New inspector look**) and the sheet reads in the words Godot's Inspector uses for it.
+This page is the eleven rows that make a look on a sheet. They appear on the sheet of a look and on no other sheet, because they only mean something there. Open a look (or start one with **New inspector look**) and the sheet reads in the words Godot's Inspector uses for it.
 
 - **On Look Built** - the Inspector first needs the look, so it builds it.
 - **On Value Shown** - the Inspector wants the current value drawn.
@@ -10,8 +10,13 @@ This page is the six rows that make a look on a sheet. They appear on the sheet 
 - **Set Field Value** - the person changed something, so write it back.
 - **Make Control Take Focus** - the control the keyboard lands on.
 - **The Field's Value** - the value right now, as an expression.
+- **A Themed Panel** - a panel in the Inspector's own field colour, for a block under the row.
+- **A Message Line** - a wrapping line of words in the Inspector's font.
+- **A Number Field** - Godot's own number field with its label inside.
+- **A Joined Strip** - toggle buttons joined into one strip, the pressed one filled.
+- **Add Under The Field** - a wide part on a line of its own under the name, in the value column.
 
-Every row compiles to the plain function or call it names (`func _look_built() -> void:`, `set_field_value(value)`, `add_focusable(control)`, `field_value()`), so the saved file is ordinary GDScript, and a look written by hand opens as these rows and saves back byte for byte.
+Every row compiles to the plain function or call it names (`func _look_built() -> void:`, `set_field_value(value)`, `add_focusable(control)`, `field_value()`, `themed_panel()`, `message_line(text)`, `number_field(label)`, `joined_strip(buttons)`, `add_under_field(first_row, under)`), so the saved file is ordinary GDScript, and a look written by hand opens as these rows and saves back byte for byte.
 
 ## Table of Contents
 
