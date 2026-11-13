@@ -30,6 +30,7 @@ const CHECK_CANNOT_SEE := "collisions-nothing-can-reach"
 const CHECK_MONITORING := "collisions-monitoring-off"
 const CHECK_NO_SHAPE := "collisions-no-shape"
 const CHECK_ONE_WAY := "collisions-one-way-facing"
+const CHECK_TARGET_NO_SHAPE := "collisions-target-no-shape"
 
 ## Which check id each finding reports as. One table, so the amber row, the help strip and the line
 ## in the report are the same finding under three roofs.
@@ -38,6 +39,7 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetCollisionFindings.KIND_MONITORING_OFF: CHECK_MONITORING,
 	EventSheetCollisionFindings.KIND_NO_SHAPE: CHECK_NO_SHAPE,
 	EventSheetCollisionFindings.KIND_ONE_WAY_FACING: CHECK_ONE_WAY,
+	EventSheetCollisionFindings.KIND_TARGET_NO_SHAPE: CHECK_TARGET_NO_SHAPE,
 }
 
 ## The words a script's own TEXT has to say before it is opened. Reading the rows of a script means
@@ -52,6 +54,10 @@ const CHECK_FOR_KIND: Dictionary = {
 const TOUCH_WORDS: PackedStringArray = [
 	"body_entered", "body_exited", "area_entered", "area_exited", "is_on_floor",
 ]
+
+## The words that say a script asks about ANOTHER node's touches, so it is read even when the node it
+## sits on does not collide (the target rule is about the node a row names).
+const TARGET_WORDS: PackedStringArray = ["overlaps_body(", "overlaps_area("]
 
 ## And the ceiling behind the pre-read: a COUNT, and nothing else. No wall clock - a budget measured
 ## in milliseconds makes the report depend on how fast the machine reading it is, and the same
@@ -143,7 +149,8 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 			continue
 		if not says_enough(EventSheetProjectDoctor.source_of(script_path)):
 			continue
-		if EventSheetSceneCollisionFacts.for_script(script_path).is_empty():
+		if EventSheetSceneCollisionFacts.for_script(script_path).is_empty() \
+				and not _says_any(EventSheetProjectDoctor.source_of(script_path), TARGET_WORDS):
 			continue
 		ordered.append(script_path)
 	ordered.sort()

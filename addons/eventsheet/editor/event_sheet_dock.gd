@@ -7898,6 +7898,9 @@ func apply_selected_row_second_fix() -> void:
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
 		load(MISTAKE_FIXES_PATH).apply(self, finding, "second_fix")
 		return
+	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
+		apply_collision_fix(finding, "second_fix")
+		return
 	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
 		return
 	_keep_as_code_dialog.open(finding)
@@ -7981,7 +7984,7 @@ func see_what_replaced_it(finding: Dictionary) -> void:
 ## One collision finding's door, wherever it was clicked from - the row's help strip, or the chip in
 ## the Doctor's inbox. Returns the sentence it put on the status line, so the inbox can show the same
 ## receipt the sheet does.
-func apply_collision_fix(finding: Dictionary) -> String:
+func apply_collision_fix(finding: Dictionary, slot: String = "fix") -> String:
 	if finding.is_empty():
 		return ""
 	var scene_path: String = str(finding.get("scene", ""))
@@ -7990,7 +7993,13 @@ func apply_collision_fix(finding: Dictionary) -> String:
 	# Only a write earns a rebuild: the third door selects a node and changes nothing, and rebuilding
 	# a sheet to show that nothing moved is a scan nobody asked for.
 	var wrote: bool = false
-	match str(finding.get("fix", "")):
+	match str(finding.get(slot, "")):
+		EventSheetCollisionFindings.FIX_ADD_SHAPE:
+			var added: Dictionary = EventSheetSceneCollisionFacts.add_shape(scene_path, node_path)
+			wrote = bool(added.get("ok", false))
+			said = EventSheetL10n.translate("%s now has a %s.") % [str(finding.get("node_name", "")), str(added.get("added", ""))] if wrote \
+				else str(added.get("reason", ""))
+			_set_status(said, not wrote)
 		EventSheetCollisionFindings.FIX_SEE_THE_LAYER:
 			var written: Dictionary = EventSheetSceneCollisionFacts.let_it_see(
 				scene_path, node_path, int(finding.get("layer", 0)))

@@ -46,6 +46,8 @@ const KIND_CANNOT_SEE := "nothing-can-reach-it"
 const KIND_MONITORING_OFF := "monitoring-off"
 const KIND_NO_SHAPE := "no-collision-shape"
 const KIND_ONE_WAY_FACING := "one-way-faces-down"
+## A row names ANOTHER node (its On node, a body or an area) and that node has no shape.
+const KIND_TARGET_NO_SHAPE := "target-has-no-shape"
 
 ## The doors a finding offers. Two of them write one property of the scene, with the receipt either
 ## side of it; the third only takes the reader to the node, because "add a shape" is a decision about
@@ -53,6 +55,13 @@ const KIND_ONE_WAY_FACING := "one-way-faces-down"
 const FIX_SEE_THE_LAYER := "see_the_layer"
 const FIX_MONITORING_ON := "turn_monitoring_on"
 const FIX_SHOW_IN_SCENE := "show_in_scene"
+const FIX_ADD_SHAPE := "add_a_shape"
+
+## The rows the target rule reads: the Collisions category of the vocabulary, and the parameters of
+## those rows that name a node. Asked of the vocabulary itself, so a collision row added tomorrow is
+## read the day it ships.
+const TARGET_CATEGORY := "Collisions"
+const TARGET_PARAMS: PackedStringArray = ["target", "body", "area"]
 
 ## Where a finding hangs. Almost every one is about the rows waiting on a node, so it anchors at ALL
 ## of them and the canvas puts every one into the amber state. The exception is the one-way advisory
@@ -120,6 +129,7 @@ static func findings(sheet: EventSheetResource, script_path: String = "",
 	if sheet == null:
 		return found
 	var own: Array[Dictionary] = EventSheetSceneCollisionFacts.for_script(script_path)
+	found.append_array(_targets_without_a_shape(sheet, script_path, own))
 	if own.is_empty():
 		return found
 	var events: Array[Dictionary] = touch_events(sheet)
@@ -211,6 +221,132 @@ static func writes_its_own_layers(lines: String) -> bool:
 		if lines.contains(word):
 			return true
 	return false
+
+
+# -- The target rule ------------------------------------------------------------------------------
+
+
+## A collision row that names ANOTHER node - its On node, the body or the area it asks about - where
+## that node has no shape. Nothing can overlap a node with no extent, so the row is quiet and never
+## true. The node is found in the ONE scene that runs this sheet; when it cannot be found there (a
+## node made at run time, a path built from a variable, a sheet no single scene runs) nothing is said,
+## because a guess about a node nobody can see is the check crying wolf.
+static func _targets_without_a_shape(sheet: EventSheetResource, script_path: String,
+		own: Array[Dictionary]) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if script_path.strip_edges().is_empty():
+		return found
+	var rows: Array[Dictionary] = []
+	_walk_target_rows(sheet.events, rows)
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			_walk_target_rows(event_function.events, rows)
+	if rows.is_empty():
+		return found
+	var scene_path: String = EventSheetSceneLightingFacts.attached_scene(script_path)
+	if scene_path.is_empty():
+		return found
+	var collidables: Array[Dictionary] = EventSheetSceneCollisionFacts.collidables_of_scene(scene_path)
+	var by_subject: Dictionary = {}
+	for row: Dictionary in rows:
+		var collidable: Dictionary = _collidable_named(collidables, str(row.get("written", "")))
+		if collidable.is_empty() or bool(collidable.get("has_shape", false)):
+			continue
+		var own_node: bool = false
+		for mine: Dictionary in own:
+			if str(mine.get("path", "")) == str(collidable.get("path", "")):
+				own_node = true
+		if own_node:
+			continue
+		var subject: String = str(collidable.get("name", ""))
+		if by_subject.has(subject):
+			var rows_of: Array = (by_subject[subject] as Dictionary)["events"] as Array
+			if not rows_of.has(row["event"]):
+				rows_of.append(row["event"])
+			continue
+		var anchors: Array[EventRow] = [row["event"] as EventRow]
+		var finding: Dictionary = _finding(KIND_TARGET_NO_SHAPE, "warning", anchors, subject,
+			EventSheetL10n.translate("%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.") % subject,
+			FIX_ADD_SHAPE, EventSheetL10n.translate("Add a shape"), collidable)
+		finding["second_fix"] = FIX_SHOW_IN_SCENE
+		finding["second_fix_label"] = EventSheetL10n.translate("Show me in the scene")
+		by_subject[subject] = finding
+		found.append(finding)
+	return found
+
+
+## Every event row that holds a Collisions row with a node-naming parameter, with the text written
+## in that parameter. Recursive through groups and sub-events.
+static func _walk_target_rows(items: Array, into: Array[Dictionary]) -> void:
+	for item: Variant in items:
+		if item is EventGroup:
+			_walk_target_rows(EventSheetGroupFacts.children(item as EventGroup), into)
+			continue
+		var event_row: EventRow = item as EventRow
+		if event_row == null:
+			continue
+		for lane: Array in [event_row.conditions, event_row.actions]:
+			for entry: Variant in lane:
+				var instance: Resource = entry as Resource
+				if instance == null or not bool(instance.get("enabled")):
+					continue
+				var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
+					str(instance.get("provider_id")), str(instance.get("ace_id")))
+				if descriptor == null or descriptor.category != TARGET_CATEGORY:
+					continue
+				var params: Variant = instance.get("params")
+				if not (params is Dictionary):
+					continue
+				for param_id: String in TARGET_PARAMS:
+					var written: String = str((params as Dictionary).get(param_id, "")).strip_edges()
+					if not node_path_written(written).is_empty():
+						into.append({"event": event_row, "written": written})
+		_walk_target_rows(event_row.sub_events, into)
+
+
+## The scene path a parameter's text names, "" for anything that is not a plain node reference:
+## `$Coin`, `$"Coin"`, `$World/Coin`, `%Coin` and `get_node("Coin")`. An expression is the author's
+## own and is never guessed at. A unique-name reference comes back with its leading percent sign.
+static func node_path_written(written: String) -> String:
+	var text: String = written.strip_edges()
+	if text.begins_with("get_node(") and text.ends_with(")"):
+		text = text.trim_prefix("get_node(").trim_suffix(")").strip_edges()
+		if not (text.begins_with("\"") or text.begins_with("'")):
+			return ""
+		text = "$" + text
+	if not (text.begins_with("$") or text.begins_with("%")):
+		return ""
+	var lead: String = text.substr(0, 1)
+	var rest: String = text.substr(1).strip_edges()
+	if rest.length() >= 2 and ((rest.begins_with("\"") and rest.ends_with("\"")) or (rest.begins_with("'") and rest.ends_with("'"))):
+		rest = rest.substr(1, rest.length() - 2)
+	if rest.is_empty():
+		return ""
+	for character: String in rest:
+		var plain: bool = character == "/" or character == "_" \
+			or character.to_lower() != character.to_upper() or character.is_valid_int()
+		if not plain:
+			return ""
+	return rest if lead == "$" else "%" + rest
+
+
+## The collidable a written reference points at: by path from the scene's root, or, for a unique-name
+## reference, by name when exactly one collidable carries it.
+static func _collidable_named(collidables: Array[Dictionary], written: String) -> Dictionary:
+	var path: String = node_path_written(written)
+	if path.is_empty():
+		return {}
+	if path.begins_with("%"):
+		var matches: Array[Dictionary] = []
+		for collidable: Dictionary in collidables:
+			if str(collidable.get("name", "")) == path.substr(1):
+				matches.append(collidable)
+		return matches[0] if matches.size() == 1 else {}
+	for collidable: Dictionary in collidables:
+		if str(collidable.get("path", "")) == path:
+			return collidable
+	return {}
 
 
 # -- The four rules ------------------------------------------------------------------------------

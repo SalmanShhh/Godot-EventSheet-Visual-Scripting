@@ -4153,7 +4153,7 @@ func _on_confirmed() -> void:
 func _commit(chain: bool) -> void:
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():
-		values[str(key)] = _angled(str(key), _extract_value(_fields[key]))
+		values[str(key)] = _lens_rewritten(str(key), _angled(str(key), _extract_value(_fields[key])))
 	_remembered_values[_definition.id] = values.duplicate(true)
 	values = with_chain_defaults(_definition, values)
 	# Recent values: every committed STRING value joins its parameter's project-wide ring, so the
@@ -4187,6 +4187,22 @@ func _commit(chain: bool) -> void:
 
 
 var _commit_validation_prompt: ConfirmationDialog = null
+
+
+## A field whose reading lens has a commit validator may put the typed text right before it is stored
+## (a percentage typed as 50% stored as 0.5). The validator answers {"value": text}; any other answer
+## leaves the text as typed.
+func _lens_rewritten(key: String, text: String) -> String:
+	var lens: String = EventForgeValueLens.lens_of(_param_dict(key))
+	if lens.is_empty():
+		return text
+	var validator: Callable = EXTENSION_REGISTRIES.param_commit_validator_for("lens:" + lens)
+	if not validator.is_valid():
+		return text
+	var answer: Variant = validator.call(text)
+	if answer is Dictionary and (answer as Dictionary).has("value"):
+		return str((answer as Dictionary)["value"])
+	return text
 
 
 ## The first committed field whose hint-registered validator returns a prompt spec

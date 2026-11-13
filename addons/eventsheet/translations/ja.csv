@@ -10364,3 +10364,48 @@ Instantiate Scene (Full),シーンをインスタンス化 (フル)
 "Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.",シーンを読み込み、そのコピーをこのノードの子として追加します。位置はこのノードを基準に測られるので、コピーはノードと一緒に動きます。レベルに直接置きたい場合は「ワールドにシーンをインスタンス化」を使います。
 "Instantiate {path} at {position}, as a child of this node",{path} を {position} にインスタンス化 (このノードの子として)
 "Instantiate {path} (rot {rotation}, group {group}), as a child of this node",{path} をインスタンス化 (回転 {rotation}、グループ {group}、このノードの子として)
+%s now has a %s.,%s に %s を追加しました。
+"%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.",%s には衝突シェイプがないため、何も重なることができず、それを尋ねる行は常に偽になります。その下にシェイプを追加するか、シーンで表示してください。
+Add a shape,シェイプを追加
+Open %s to add a shape to it.,%s を開いてシェイプを追加してください。
+Set Opacity,不透明度を設定
+"Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.",ノードの透け具合を設定します。Godot に不透明度のプロパティはなく、ノードの色合いのアルファがそれにあたるため、modulate.a に書き込みます。0 が透明、1 が不透明です。
+Set opacity to {opacity},不透明度を {opacity} に設定
+Opacity,不透明度
+"0 to 100, or 0 to 1. 0 is invisible, 100 (or 1) is solid. The row shows a percentage; the script keeps Godot's 0 to 1.",0 から 100、または 0 から 1。0 は透明、100(または 1)は不透明です。行ではパーセントで表示され、スクリプトには Godot の 0 から 1 のまま保存されます。
+"How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.",ノードの不透明さ。0(透明)から 1(不透明)まで。ノードの色合いのアルファ、modulate.a です。
+Set Sprite Size,スプライトのサイズを設定
+"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.",スプライトをピクセル単位のサイズにします。スプライトにサイズのプロパティはなく、サイズは画像のサイズにスケールを掛けたものなので、指定したサイズになるスケールを書き込みます。
+Set size to {size} pixels,サイズを {size} ピクセルに設定
+"Width and height in pixels, as a Vector2.",幅と高さ(ピクセル)。Vector2 で指定します。
+"How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.",スプライトが画面上でどれだけ幅広いか(ピクセル)。画像の幅にスケールを掛けた値です。スプライトに幅のプロパティはありません。
+width,幅
+"How tall a sprite is on screen, in pixels: its picture's height times its scale. A sprite has no height property.",スプライトが画面上でどれだけ高いか(ピクセル)。画像の高さにスケールを掛けた値です。スプライトに高さのプロパティはありません。
+height,高さ
+Left,左
+The x of the sprite's left edge in the level. A turned sprite is measured as if it were not.,レベル内でのスプライトの左端の x。回転したスプライトは回転していないものとして測ります。
+Right,右
+The x of the sprite's right edge in the level. A turned sprite is measured as if it were not.,レベル内でのスプライトの右端の x。回転したスプライトは回転していないものとして測ります。
+Top,上
+The y of the sprite's top edge in the level (y grows downward). A turned sprite is measured as if it were not.,レベル内でのスプライトの上端の y(y は下向きに増えます)。回転したスプライトは回転していないものとして測ります。
+Bottom,下
+The y of the sprite's bottom edge in the level (y grows downward). A turned sprite is measured as if it were not.,レベル内でのスプライトの下端の y(y は下向きに増えます)。回転したスプライトは回転していないものとして測ります。
+Instance Id,インスタンス ID
+A number that names this object while the game runs. Keep it in a variable and pick the object again later with Pick By UID. It is not saved between runs.,ゲームの実行中、このオブジェクトを指す数値です。変数に保存しておき、後で「UID で選ぶ」で同じオブジェクトを選び直せます。実行をまたいでは保存されません。
+instance id,インスタンス ID
+Marker Position,マーカーの位置
+"Where a Marker2D child sits in the level - the muzzle of a gun, a hand, a spawn point. Place the Marker2D under the object in the scene and name it here.",レベル内の Marker2D の子ノードの位置です。銃口、手、スポーン地点などに使います。シーンでオブジェクトの下に Marker2D を置き、ここにその名前を入力してください。
+position of marker {marker},マーカー {marker} の位置
+"The name of the Marker2D child, in quotes.",Marker2D の子ノードの名前を引用符で囲んで入力します。
+Is Outside The Level Bounds,レベルの境界の外にある
+"True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed scene size, so the rectangle is yours.",ノードがレベル用に一度指定した矩形の外へ出たときに真になります。飛んでいった弾や、世界の外へ落ちたプレイヤーなどです。Godot にはシーンの固定サイズがないため、矩形は自分で指定します。
+General Conditions,一般の条件
+is outside the level bounds {bounds},レベルの境界 {bounds} の外にある
+Bounds,境界
+"The level's rectangle, as a Rect2: left, top, width, height.",レベルの矩形を Rect2 で指定します(左、上、幅、高さ)。
+Is Outside The Camera Limits,カメラの制限の外にある
+True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.,ノードが現在の Camera2D に設定された制限の外にあるときに真になります。カメラが映さないレベルの端です。
+is outside the camera limits,カメラの制限の外にある
+Once Ever,一度だけ
+"True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.",イベントの他の条件が初めて成り立ったときだけ真になり、このオブジェクトでは二度と真になりません。一方「一度だけ実行」は、条件が偽になって再び真になるたびにもう一度発動します。スクリプトに真偽値の変数を一つ持ちます。
+Once ever,一度だけ

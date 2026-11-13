@@ -10364,3 +10364,48 @@ Instantiate Scene (Full),实例化场景（完整）
 "Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.",加载场景并将副本作为此节点的子节点添加。位置相对于此节点测量，因此副本会随它移动；若要直接放入关卡，请改用「在世界中实例化场景」。
 "Instantiate {path} at {position}, as a child of this node",在 {position} 实例化 {path}，作为此节点的子节点
 "Instantiate {path} (rot {rotation}, group {group}), as a child of this node",实例化 {path}（旋转 {rotation}，组 {group}），作为此节点的子节点
+%s now has a %s.,%s 现在有了 %s。
+"%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.",%s 没有碰撞形状，因此没有东西能与它重叠，询问它的行永远不会为真。请在它下面添加形状，或在场景中显示它。
+Add a shape,添加形状
+Open %s to add a shape to it.,请打开 %s 来添加形状。
+Set Opacity,设置不透明度
+"Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.",设置节点有多透明。Godot 没有不透明度属性，它就是节点色调的 alpha，因此这里写入 modulate.a，0 为不可见，1 为完全不透明。
+Set opacity to {opacity},将不透明度设为 {opacity}
+Opacity,不透明度
+"0 to 100, or 0 to 1. 0 is invisible, 100 (or 1) is solid. The row shows a percentage; the script keeps Godot's 0 to 1.",0 到 100，或 0 到 1。0 为不可见，100（或 1）为完全不透明。行中显示百分比，脚本保留 Godot 的 0 到 1。
+"How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.",节点有多不透明，从 0（不可见）到 1（完全不透明）。它是节点色调的 alpha，即 modulate.a。
+Set Sprite Size,设置精灵大小
+"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.",让精灵达到指定的像素大小。精灵没有大小属性：它的大小是图片大小乘以缩放，因此这里写入能得到该大小的缩放值。
+Set size to {size} pixels,将大小设为 {size} 像素
+"Width and height in pixels, as a Vector2.",宽度和高度（像素），以 Vector2 表示。
+"How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.",精灵在屏幕上的宽度（像素）：图片宽度乘以缩放。精灵没有宽度属性。
+width,宽度
+"How tall a sprite is on screen, in pixels: its picture's height times its scale. A sprite has no height property.",精灵在屏幕上的高度（像素）：图片高度乘以缩放。精灵没有高度属性。
+height,高度
+Left,左
+The x of the sprite's left edge in the level. A turned sprite is measured as if it were not.,精灵左边缘在关卡中的 x。旋转过的精灵按未旋转计算。
+Right,右
+The x of the sprite's right edge in the level. A turned sprite is measured as if it were not.,精灵右边缘在关卡中的 x。旋转过的精灵按未旋转计算。
+Top,上
+The y of the sprite's top edge in the level (y grows downward). A turned sprite is measured as if it were not.,精灵上边缘在关卡中的 y（y 向下增长）。旋转过的精灵按未旋转计算。
+Bottom,下
+The y of the sprite's bottom edge in the level (y grows downward). A turned sprite is measured as if it were not.,精灵下边缘在关卡中的 y（y 向下增长）。旋转过的精灵按未旋转计算。
+Instance Id,实例 ID
+A number that names this object while the game runs. Keep it in a variable and pick the object again later with Pick By UID. It is not saved between runs.,游戏运行期间用来指代此对象的数字。把它存进变量，之后可用“按 UID 选取”再次选中该对象。它不会在两次运行之间保存。
+instance id,实例 ID
+Marker Position,标记位置
+"Where a Marker2D child sits in the level - the muzzle of a gun, a hand, a spawn point. Place the Marker2D under the object in the scene and name it here.",Marker2D 子节点在关卡中的位置，例如枪口、手或出生点。在场景中把 Marker2D 放在对象下面，并在此填写它的名称。
+position of marker {marker},标记 {marker} 的位置
+"The name of the Marker2D child, in quotes.",Marker2D 子节点的名称，需加引号。
+Is Outside The Level Bounds,在关卡边界之外
+"True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed scene size, so the rectangle is yours.",当节点离开你为关卡指定的矩形时为真，例如飞出去的子弹或掉出世界的玩家。Godot 没有固定的场景大小，所以矩形由你来定。
+General Conditions,通用条件
+is outside the level bounds {bounds},在关卡边界 {bounds} 之外
+Bounds,边界
+"The level's rectangle, as a Rect2: left, top, width, height.",关卡的矩形，以 Rect2 表示：左、上、宽、高。
+Is Outside The Camera Limits,在相机限制之外
+True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.,当节点超出当前 Camera2D 设置的限制时为真，即相机不会再往外显示的关卡边缘。
+is outside the camera limits,在相机限制之外
+Once Ever,仅一次
+"True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.",其他条件第一次成立时为真，此后对该对象再也不会为真。相比之下，“触发一次”会在条件变假再变真时再次触发。它会在脚本中保留一个真/假变量。
+Once ever,仅一次

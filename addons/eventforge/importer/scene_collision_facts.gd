@@ -540,6 +540,40 @@ static func turn_monitoring_on(scene_path: String, node_path: String) -> Diction
 		EventSheetL10n.translate("Switch monitoring on"))
 
 
+## Adds a shape under a collision object of the open scene: a CollisionShape2D with a rectangle (or a
+## CollisionShape3D with a box) as the node's last child, owned by the scene root so it is saved with
+## it. One undo step through the editor's own manager - Ctrl+Z takes the node out again. Refused
+## outside the editor, when the scene is not the one being edited, and when the node is not there.
+## Returns `{"ok", "reason", "added"}`.
+static func add_shape(scene_path: String, node_path: String) -> Dictionary:
+	if not Engine.is_editor_hint():
+		return {"ok": false, "reason": EventSheetL10n.translate("The scene is only editable inside the editor."), "added": ""}
+	var root: Node = EditorInterface.get_edited_scene_root()
+	if root == null or root.scene_file_path != scene_path:
+		return {"ok": false, "reason": EventSheetL10n.translate("Open %s to add a shape to it.") % scene_path.get_file(), "added": ""}
+	var node: Node = root if node_path == "." else root.get_node_or_null(NodePath(node_path))
+	if node == null:
+		return {"ok": false, "reason": EventSheetL10n.translate("%s is not in the open scene any more.") % node_path, "added": ""}
+	var is_3d: bool = dimension_of(node.get_class()) == EventForgePhysicsLayers.DIMENSION_3D
+	var shape_node: Node = CollisionShape3D.new() if is_3d else CollisionShape2D.new()
+	shape_node.set("shape", BoxShape3D.new() if is_3d else RectangleShape2D.new())
+	shape_node.name = "CollisionShape3D" if is_3d else "CollisionShape2D"
+	var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
+	if undo == null:
+		node.add_child(shape_node, true)
+		shape_node.owner = root
+	else:
+		undo.create_action(EventSheetL10n.translate("Add a shape"))
+		undo.add_do_method(node, "add_child", shape_node, true)
+		undo.add_do_property(shape_node, "owner", root)
+		undo.add_do_reference(shape_node)
+		undo.add_undo_method(node, "remove_child", shape_node)
+		undo.commit_action()
+	EditorInterface.mark_scene_as_unsaved()
+	clear_cache()
+	return {"ok": true, "reason": "", "added": str(shape_node.name)}
+
+
 ## The one write both doors go through. `change` takes the property's current value and answers with
 ## the one to set, so the receipt is the pair either side of it rather than a sentence composed twice.
 static func _write_property(scene_path: String, node_path: String, property: String,

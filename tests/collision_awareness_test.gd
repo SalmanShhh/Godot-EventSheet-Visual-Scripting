@@ -25,6 +25,7 @@ extends RefCounted
 ## The corpus every project-wide question here is asked of. Scoped on purpose: "which layers does
 ## anything sit on" is a question about a whole project, and answering it over this repository would
 ## make these sentences depend on every fixture and showcase anybody adds.
+const SUPPORT := preload("res://tests/support.gd")
 const SCENES: PackedStringArray = [
 	"res://tests/fixtures/collision_scene_door.tscn",
 	"res://tests/fixtures/collision_scene_enemy.tscn",
@@ -78,6 +79,7 @@ static func run() -> bool:
 	ok = _test_the_filtered_sentence_is_watched_too() and ok
 	ok = _test_monitoring_is_off() and ok
 	ok = _test_it_has_no_shape() and ok
+	ok = _test_a_named_node_has_no_shape() and ok
 	ok = _test_the_one_way_faces_down() and ok
 	ok = _test_the_sheet_stays_quiet() and ok
 	ok = _test_the_doors() and ok
@@ -327,6 +329,53 @@ static func _test_monitoring_is_off() -> bool:
 			entry.get("event") as EventRow).is_empty())
 	ok = _check("and every row waiting on the switched-off Area wears the amber state",
 		[rows.size(), said], [2, [true, true]]) and ok
+	return ok
+
+
+## A row that names ANOTHER node: Coin has no shape, Wall has one, and a path that cannot be read
+## says nothing.
+static func _test_a_named_node_has_no_shape() -> bool:
+	var bait: String = "res://tests/fixtures/collision_scene_bait.gd"
+	var rows: Dictionary = {}
+	var sheet: EventSheetResource = EventSheetResource.new()
+	for word: String in ["$Coin", "$Wall", "some_variable", "$Missing"]:
+		var event_row: EventRow = EventRow.new()
+		var condition: ACECondition = ACECondition.new()
+		condition.provider_id = "Core"
+		condition.ace_id = "OverlapsBody"
+		condition.params = {"body": word}
+		event_row.conditions.append(condition)
+		sheet.events.append(event_row)
+		rows[word] = event_row
+	var found: Array[Dictionary] = EventSheetCollisionFindings.findings(sheet, bait)
+	var ok: bool = _check("only the node with no shape is named, once",
+		_kinds(found), PackedStringArray([EventSheetCollisionFindings.KIND_TARGET_NO_SHAPE]))
+	if found.is_empty():
+		return false
+	ok = _check("its sentence says which node and what to do",
+		str(found[0].get("message", "")),
+		"Coin has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.") and ok
+	ok = _check("its two doors are add a shape, then show me",
+		[str(found[0].get("fix", "")), str(found[0].get("second_fix", ""))],
+		[EventSheetCollisionFindings.FIX_ADD_SHAPE, EventSheetCollisionFindings.FIX_SHOW_IN_SCENE]) and ok
+	ok = _check("the row asking about Coin wears the amber state and the others do not",
+		[EventSheetCollisionFindings.for_event(found, rows["$Coin"]).size(),
+			EventSheetCollisionFindings.for_event(found, rows["$Wall"]).size(),
+			EventSheetCollisionFindings.for_event(found, rows["some_variable"]).size(),
+			EventSheetCollisionFindings.for_event(found, rows["$Missing"]).size()], [1, 0, 0, 0]) and ok
+	ok = _check("the Doctor files it under its own check",
+		str(EventSheetCollisionsDoctor.CHECK_FOR_KIND.get(EventSheetCollisionFindings.KIND_TARGET_NO_SHAPE, "")),
+		EventSheetCollisionsDoctor.CHECK_TARGET_NO_SHAPE) and ok
+	ok = _check("a sheet no one scene runs says nothing",
+		_kinds(EventSheetCollisionFindings.findings(sheet, "")), PackedStringArray()) and ok
+	var written: Array = []
+	for text: String in ["$Coin", "$\"World/Coin\"", "%Coin", "get_node(\"Coin\")", "Coin", "$Coin.position", "get_node(name)"]:
+		written.append([text, EventSheetCollisionFindings.node_path_written(text), ""])
+	written[0][2] = "Coin"
+	written[1][2] = "World/Coin"
+	written[2][2] = "%Coin"
+	written[3][2] = "Coin"
+	ok = SUPPORT.pins("collision_awareness_test", written) and ok
 	return ok
 
 

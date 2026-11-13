@@ -36,7 +36,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# -- Opacity ------------------------------------------------------------------------
 	var opacity: ACEParam = F.make_param("opacity", "float", "1.0", "Opacity",
-		"0 is invisible, 1 is solid. The row shows it as a percentage; the script keeps Godot's 0 to 1.", "expression")
+		"0 to 100, or 0 to 1. 0 is invisible, 100 (or 1) is solid. The row shows a percentage; the script keeps Godot's 0 to 1.", "expression")
 	opacity.display_lens = EventForgeValueLens.LENS_FRACTION
 	descriptors.append(F.act("SetOpacity", "Set Opacity", "modulate.a = {opacity}", CAT_ACTIONS, "Set opacity to {opacity}",
 		"Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.", "CanvasItem").param_built(opacity))

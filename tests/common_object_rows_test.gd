@@ -10,6 +10,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME: String = "common_object_rows_test"
+const EXTENSION_REGISTRIES_FOR_TEST := preload("res://addons/eventsheet/api/extension_registries.gd")
 
 
 static func run() -> bool:
@@ -18,6 +19,7 @@ static func run() -> bool:
 	passed = _opacity_reads_as_a_percentage() and passed
 	passed = _the_camera_blind_rows_are_retired() and passed
 	passed = _once_ever() and passed
+	passed = _opacity_typed_as_a_percent() and passed
 	passed = _the_notifier_goes_in_with_the_row() and passed
 	return passed
 
@@ -145,4 +147,18 @@ static func _the_notifier_goes_in_with_the_row() -> bool:
 		["a node that is not drawn gets none", notifier_script.needs_notifier(scene_root, "$Timer"), null],
 	])
 	scene_root.free()
+	return passed
+
+
+## Typing 50% or 50 into a fraction field stores 0.5; 0.5 stays 0.5; an expression is left alone.
+static func _opacity_typed_as_a_percent() -> bool:
+	var percent: GDScript = load("res://addons/eventsheet/editor/percent_input.gd")
+	var rows: Array = []
+	for pair: Array in [["50%", "0.5"], ["50", "0.5"], ["0.5", "0.5"], ["1", "1"], ["0", "0"], ["100", "1.0"], ["12.5%", "0.125"],
+			[" 25 ", "0.25"], ["0.25%", "0.0025"], ["alpha", "alpha"], ["fade_amount * 2", "fade_amount * 2"], ["", ""]]:
+		rows.append([str(pair[0]), percent.to_fraction(str(pair[0])), str(pair[1])])
+	var passed: bool = SUPPORT.pins(NAME, rows)
+	var validator: Callable = EXTENSION_REGISTRIES_FOR_TEST.param_commit_validator_for("lens:fraction_percent")
+	passed = SUPPORT.check(NAME, "the fraction lens has its commit validator", validator.is_valid(), true) and passed
+	passed = SUPPORT.check(NAME, "the opacity field names the lens", ACERegistry.find_descriptor("Core", "SetOpacity").params[0].display_lens, "fraction_percent") and passed
 	return passed

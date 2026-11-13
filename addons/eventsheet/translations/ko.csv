@@ -10364,3 +10364,48 @@ Instantiate Scene (Full),장면 인스턴스화 (전체)
 "Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.",장면을 불러와 사본을 이 노드의 자식으로 추가합니다. 위치는 이 노드를 기준으로 측정되므로 사본이 노드와 함께 움직입니다. 대신 레벨에 직접 두려면 '월드에 장면 인스턴스화'를 사용하세요.
 "Instantiate {path} at {position}, as a child of this node",{path}을(를) {position}에 인스턴스화 (이 노드의 자식으로)
 "Instantiate {path} (rot {rotation}, group {group}), as a child of this node","{path}을(를) 인스턴스화 (회전 {rotation}, 그룹 {group}, 이 노드의 자식으로)"
+%s now has a %s.,%s에 %s을(를) 추가했습니다.
+"%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.","%s에는 충돌 모양이 없어서 아무것도 겹칠 수 없고, 이를 묻는 행은 절대 참이 되지 않습니다. 그 아래에 모양을 추가하거나 씬에서 확인하세요."
+Add a shape,모양 추가
+Open %s to add a shape to it.,%s을(를) 열어 모양을 추가하세요.
+Set Opacity,불투명도 설정
+"Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.","노드가 얼마나 비쳐 보이는지 설정합니다. Godot에는 불투명도 속성이 없고 노드 색조의 알파가 그 역할을 하므로 modulate.a에 기록합니다. 0은 투명, 1은 불투명입니다."
+Set opacity to {opacity},불투명도를 {opacity}(으)로 설정
+Opacity,불투명도
+"0 to 100, or 0 to 1. 0 is invisible, 100 (or 1) is solid. The row shows a percentage; the script keeps Godot's 0 to 1.","0에서 100, 또는 0에서 1. 0은 투명, 100(또는 1)은 불투명입니다. 행에는 백분율로 표시되고, 스크립트는 Godot의 0~1 값을 그대로 유지합니다."
+"How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.","노드가 얼마나 불투명한지, 0(투명)에서 1(불투명)까지입니다. 노드 색조의 알파인 modulate.a입니다."
+Set Sprite Size,스프라이트 크기 설정
+"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.","스프라이트를 픽셀 단위 크기로 만듭니다. 스프라이트에는 크기 속성이 없고 크기는 이미지 크기에 스케일을 곱한 값이므로, 지정한 크기가 되는 스케일을 기록합니다."
+Set size to {size} pixels,크기를 {size} 픽셀로 설정
+"Width and height in pixels, as a Vector2.","너비와 높이(픽셀), Vector2로 입력합니다."
+"How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.","스프라이트가 화면에서 차지하는 너비(픽셀)입니다. 이미지 너비에 스케일을 곱한 값이며, 스프라이트에는 너비 속성이 없습니다."
+width,너비
+"How tall a sprite is on screen, in pixels: its picture's height times its scale. A sprite has no height property.","스프라이트가 화면에서 차지하는 높이(픽셀)입니다. 이미지 높이에 스케일을 곱한 값이며, 스프라이트에는 높이 속성이 없습니다."
+height,높이
+Left,왼쪽
+The x of the sprite's left edge in the level. A turned sprite is measured as if it were not.,레벨에서 스프라이트 왼쪽 가장자리의 x입니다. 회전한 스프라이트는 회전하지 않은 것으로 간주해 측정합니다.
+Right,오른쪽
+The x of the sprite's right edge in the level. A turned sprite is measured as if it were not.,레벨에서 스프라이트 오른쪽 가장자리의 x입니다. 회전한 스프라이트는 회전하지 않은 것으로 간주해 측정합니다.
+Top,위쪽
+The y of the sprite's top edge in the level (y grows downward). A turned sprite is measured as if it were not.,레벨에서 스프라이트 위쪽 가장자리의 y입니다(y는 아래로 증가). 회전한 스프라이트는 회전하지 않은 것으로 간주해 측정합니다.
+Bottom,아래쪽
+The y of the sprite's bottom edge in the level (y grows downward). A turned sprite is measured as if it were not.,레벨에서 스프라이트 아래쪽 가장자리의 y입니다(y는 아래로 증가). 회전한 스프라이트는 회전하지 않은 것으로 간주해 측정합니다.
+Instance Id,인스턴스 ID
+A number that names this object while the game runs. Keep it in a variable and pick the object again later with Pick By UID. It is not saved between runs.,게임이 실행되는 동안 이 오브젝트를 가리키는 숫자입니다. 변수에 보관했다가 나중에 UID로 선택으로 다시 오브젝트를 고를 수 있습니다. 실행 사이에는 저장되지 않습니다.
+instance id,인스턴스 ID
+Marker Position,마커 위치
+"Where a Marker2D child sits in the level - the muzzle of a gun, a hand, a spawn point. Place the Marker2D under the object in the scene and name it here.","레벨에서 Marker2D 자식 노드가 있는 위치입니다. 총구, 손, 스폰 지점 등에 쓰입니다. 씬에서 오브젝트 아래에 Marker2D를 두고 여기에 이름을 입력하세요."
+position of marker {marker},마커 {marker}의 위치
+"The name of the Marker2D child, in quotes.",Marker2D 자식 노드의 이름을 따옴표로 묶어 입력합니다.
+Is Outside The Level Bounds,레벨 경계 밖에 있음
+"True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed scene size, so the rectangle is yours.",노드가 레벨용으로 한 번 지정한 사각형을 벗어나면 참입니다. 멀리 날아간 총알이나 월드 밖으로 떨어진 플레이어 등에 씁니다. Godot에는 고정된 씬 크기가 없으므로 사각형은 직접 지정합니다.
+General Conditions,일반 조건
+is outside the level bounds {bounds},레벨 경계 {bounds} 밖에 있음
+Bounds,경계
+"The level's rectangle, as a Rect2: left, top, width, height.","레벨의 사각형을 Rect2로 입력합니다(왼쪽, 위, 너비, 높이)."
+Is Outside The Camera Limits,카메라 제한 밖에 있음
+True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.,노드가 현재 Camera2D에 설정된 제한을 벗어나면 참입니다. 카메라가 더 이상 보여 주지 않는 레벨의 가장자리입니다.
+is outside the camera limits,카메라 제한 밖에 있음
+Once Ever,한 번만
+"True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.","이벤트의 다른 조건이 처음 충족될 때만 참이며, 이 오브젝트에서는 다시는 참이 되지 않습니다. 반면 한 번 실행은 조건이 거짓이 되었다가 다시 참이 될 때마다 다시 발동합니다. 스크립트에 참/거짓 변수 하나를 둡니다."
+Once ever,한 번만

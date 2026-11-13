@@ -4,6 +4,15 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a collision row about a node with no shape says so
+
+- A row that asks about another node (its On node, or the body or area it names) where that node has no collision shape now goes amber, like the check on the sheet's own node did. The help strip says which node and why, and offers Add a shape (a rectangle or box shape under the node, owned by the scene, one undo step) and Show me in the scene. The Doctor files it as collisions-target-no-shape with the same two doors. Nothing is said when the node cannot be found in the one scene that runs the sheet.
+
+### Changed: opacity takes a percent
+
+- Typing 50% or 50 into a percentage field (Set opacity, and the Move toward weight) stores 0.5; 0.5 stays 0.5, and an expression is left exactly as written. The help strip says "0 to 100, or 0 to 1". Rows already in sheets are untouched.
+- The everyday object rows are now translated into the nine editor languages.
+
 ### Changed: the Family Arena strike hits every member
 
 - The Family Arena showcase's group strike now damages every Enemy in the group each time it fires (it used to give each a 15% chance), so the showcase shows groups plainly.

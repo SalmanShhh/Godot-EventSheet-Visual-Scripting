@@ -10364,3 +10364,48 @@ Instantiate Scene (Full),Szene instanziieren (vollständig)
 "Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.","Lädt eine Szene und fügt eine Kopie als Kind dieses Knotens hinzu. Die Position wird von diesem Knoten aus gemessen, die Kopie bewegt sich also mit ihm; Szene in der Welt instanziieren setzt sie stattdessen in den Level."
 "Instantiate {path} at {position}, as a child of this node","{path} bei {position} instanziieren, als Kind dieses Knotens"
 "Instantiate {path} (rot {rotation}, group {group}), as a child of this node","{path} instanziieren (Rot. {rotation}, Gruppe {group}), als Kind dieses Knotens"
+%s now has a %s.,%s hat jetzt: %s.
+"%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.","%s hat keine Kollisionsform, daher kann nichts damit überlappen, und eine Zeile, die danach fragt, ist nie wahr. Füge darunter eine Form hinzu oder zeige es in der Szene."
+Add a shape,Form hinzufügen
+Open %s to add a shape to it.,"Öffne %s, um eine Form hinzuzufügen."
+Set Opacity,Deckkraft setzen
+"Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.","Legt fest, wie durchsichtig der Node ist. Godot hat keine Deckkraft-Eigenschaft: Sie ist der Alphawert der Node-Tönung, daher schreibt dies modulate.a, wobei 0 unsichtbar und 1 deckend ist."
+Set opacity to {opacity},Deckkraft auf {opacity} setzen
+Opacity,Deckkraft
+"0 to 100, or 0 to 1. 0 is invisible, 100 (or 1) is solid. The row shows a percentage; the script keeps Godot's 0 to 1.","0 bis 100 oder 0 bis 1. 0 ist unsichtbar, 100 (oder 1) ist deckend. Die Zeile zeigt Prozent; das Skript behält Godots 0 bis 1."
+"How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.","Wie deckend der Node ist, von 0 (unsichtbar) bis 1 (deckend). Es ist der Alphawert der Node-Tönung, modulate.a."
+Set Sprite Size,Sprite-Größe setzen
+"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.","Gibt einem Sprite eine Größe in Pixeln. Ein Sprite hat keine Größen-Eigenschaft: Seine Größe ist die Bildgröße mal der Skalierung, daher schreibt dies die Skalierung, die die genannte Größe ergibt."
+Set size to {size} pixels,Größe auf {size} Pixel setzen
+"Width and height in pixels, as a Vector2.","Breite und Höhe in Pixeln, als Vector2."
+"How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.","Wie breit ein Sprite auf dem Bildschirm ist, in Pixeln: Bildbreite mal Skalierung. Ein Sprite hat keine Breiten-Eigenschaft."
+width,Breite
+"How tall a sprite is on screen, in pixels: its picture's height times its scale. A sprite has no height property.","Wie hoch ein Sprite auf dem Bildschirm ist, in Pixeln: Bildhöhe mal Skalierung. Ein Sprite hat keine Höhen-Eigenschaft."
+height,Höhe
+Left,Links
+The x of the sprite's left edge in the level. A turned sprite is measured as if it were not.,"Das x der linken Kante des Sprites im Level. Ein gedrehter Sprite wird gemessen, als wäre er nicht gedreht."
+Right,Rechts
+The x of the sprite's right edge in the level. A turned sprite is measured as if it were not.,"Das x der rechten Kante des Sprites im Level. Ein gedrehter Sprite wird gemessen, als wäre er nicht gedreht."
+Top,Oben
+The y of the sprite's top edge in the level (y grows downward). A turned sprite is measured as if it were not.,"Das y der oberen Kante des Sprites im Level (y wächst nach unten). Ein gedrehter Sprite wird gemessen, als wäre er nicht gedreht."
+Bottom,Unten
+The y of the sprite's bottom edge in the level (y grows downward). A turned sprite is measured as if it were not.,"Das y der unteren Kante des Sprites im Level (y wächst nach unten). Ein gedrehter Sprite wird gemessen, als wäre er nicht gedreht."
+Instance Id,Instanz-ID
+A number that names this object while the game runs. Keep it in a variable and pick the object again later with Pick By UID. It is not saved between runs.,"Eine Zahl, die dieses Objekt benennt, solange das Spiel läuft. Speichere sie in einer Variablen und wähle das Objekt später mit Nach UID wählen erneut aus. Sie wird nicht zwischen Läufen gespeichert."
+instance id,Instanz-ID
+Marker Position,Marker-Position
+"Where a Marker2D child sits in the level - the muzzle of a gun, a hand, a spawn point. Place the Marker2D under the object in the scene and name it here.","Wo ein Marker2D-Kind im Level sitzt - die Mündung einer Waffe, eine Hand, ein Spawnpunkt. Platziere den Marker2D in der Szene unter dem Objekt und gib hier seinen Namen an."
+position of marker {marker},Position von Marker {marker}
+"The name of the Marker2D child, in quotes.","Der Name des Marker2D-Kindes, in Anführungszeichen."
+Is Outside The Level Bounds,Ist außerhalb der Levelgrenzen
+"True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed scene size, so the rectangle is yours.","Wahr, wenn der Node ein Rechteck verlassen hat, das du einmal für das Level festlegst - eine davongeflogene Kugel, ein Spieler, der aus der Welt gefallen ist. Godot hat keine feste Szenengröße, daher ist das Rechteck deins."
+General Conditions,Allgemeine Bedingungen
+is outside the level bounds {bounds},ist außerhalb der Levelgrenzen {bounds}
+Bounds,Grenzen
+"The level's rectangle, as a Rect2: left, top, width, height.","Das Rechteck des Levels als Rect2: links, oben, Breite, Höhe."
+Is Outside The Camera Limits,Ist außerhalb der Kameragrenzen
+True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.,"Wahr, wenn der Node jenseits der Grenzen der aktuellen Camera2D liegt - die Ränder des Levels, über die die Kamera nicht hinaus zeigt."
+is outside the camera limits,ist außerhalb der Kameragrenzen
+Once Ever,Einmal im Leben
+"True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.","Wahr, wenn die anderen Bedingungen des Ereignisses das erste Mal zutreffen, und danach nie wieder für dieses Objekt. Einmal auslösen dagegen feuert erneut, sobald die Bedingung falsch und dann wieder wahr wird. Es hält eine Wahr-oder-falsch-Variable im Skript."
+Once ever,Einmal im Leben

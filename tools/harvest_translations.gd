@@ -122,6 +122,7 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# whole, so the whole of each is owed.
 	"res://addons/eventforge/registration/modules/game_state_aces.gd",
 	"res://addons/eventforge/registration/modules/math_words_aces.gd",
+	"res://addons/eventforge/registration/modules/common_object_aces.gd",
 	"res://addons/eventforge/registration/modules/space_words_aces.gd",
 	# The spawn sentence: the row that names a new copy, the deferred spelling beside it, and the
 	# four expressions that answer "where". One module, shipped whole, so the whole of it is owed.

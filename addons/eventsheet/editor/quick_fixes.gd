@@ -179,6 +179,10 @@ const OFFERED := {
 	"collisions-no-shape": [
 		{"id": "show_the_node", "label": "Show me the node in the scene"},
 	],
+	"collisions-target-no-shape": [
+		{"id": "add_a_shape", "label": "Add a shape"},
+		{"id": "show_the_node", "label": "Show me the node in the scene"},
+	],
 	"collisions-one-way-facing": [
 		{"id": "show_the_node", "label": "Show me the node in the scene"},
 	],
@@ -384,9 +388,9 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		# All three reach the SCENE, and all three go through the very door the row's own help strip
 		# offers - so a reader who clicks in the inbox and a reader who clicks under the row get one
 		# operation, one undo step and one receipt rather than two implementations of each.
-		"watch_the_layer", "switch_monitoring_on", "show_the_node":
+		"watch_the_layer", "switch_monitoring_on", "show_the_node", "add_a_shape":
 			return _collision_door(str(finding.get("check", "")), subject,
-				str(finding.get("path", "")), dock)
+				str(finding.get("path", "")), dock, fix_id)
 		"unpin_before_free":
 			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
 		# A door, and only a door: it opens the sheet's own migrate receipt and stops there.
@@ -577,7 +581,7 @@ static func _is_the_open_sheet(dock: Variant, sheet_path: String) -> bool:
 ## off a sweep of the whole project, so the file a finding names is usually not the one on screen.
 ## Double-clicking the finding is what opens its sheet; the chip is what acts once it is there.
 static func _collision_door(check_id: String, subject: String, sheet_path: String,
-		dock: Variant) -> Dictionary:
+		dock: Variant, fix_id: String = "") -> Dictionary:
 	var elsewhere: String = "Open %s and the row's help strip offers this door - double-clicking the finding opens it." % sheet_path.get_file()
 	if dock == null or not dock.has_method("apply_collision_fix") \
 			or not _is_the_open_sheet(dock, sheet_path):
@@ -593,7 +597,9 @@ static func _collision_door(check_id: String, subject: String, sheet_path: Strin
 			str(sheet.external_source_path)):
 		if str(finding.get("kind", "")) != wanted_kind or str(finding.get("subject", "")) != subject:
 			continue
-		var said: String = str(dock.call("apply_collision_fix", finding))
+		# The target finding has two doors; its "show" chip is the second of them.
+		var slot: String = "second_fix" if fix_id == "show_the_node" and str(finding.get("second_fix", "")) != "" else "fix"
+		var said: String = str(dock.call("apply_collision_fix", finding, slot))
 		return {"ok": not said.is_empty(), "message": said}
 	return {"ok": false, "message": "%s no longer reports this - the scene may already have been changed." % sheet_path.get_file()}
 

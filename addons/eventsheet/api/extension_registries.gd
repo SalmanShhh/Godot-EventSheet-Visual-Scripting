@@ -63,6 +63,8 @@ static func _ensure_builtin_validators() -> void:
 		return
 	_builtin_validators_registered = true
 	register_param_commit_validator("feature_tag", Callable(load("res://addons/eventsheet/editor/feature_tags.gd"), "commit_validator"))
+	# A field that reads as a percentage (the fraction lens) takes 50% or 50 and stores 0.5.
+	register_param_commit_validator("lens:fraction_percent", Callable(load("res://addons/eventsheet/editor/percent_input.gd"), "commit_validator"))
 
 
 static func register_param_help(hint: String, paragraph: String) -> void:

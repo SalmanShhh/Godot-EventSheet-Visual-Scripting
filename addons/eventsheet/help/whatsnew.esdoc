@@ -6,6 +6,19 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: a collision row about a node with no shape says so
+
+- A row that asks about another node (its On node, or the body or area it names) where that node has no collision shape now goes amber, like the check on the sheet's own node did. The help strip says which node and why, and offers Add a shape (a rectangle or box shape under the node, owned by the scene, one undo step) and Show me in the scene. The Doctor files it as collisions-target-no-shape with the same two doors. Nothing is said when the node cannot be found in the one scene that runs the sheet.
+
+### Changed: opacity takes a percent
+
+- Typing 50% or 50 into a percentage field (Set opacity, and the Move toward weight) stores 0.5; 0.5 stays 0.5, and an expression is left exactly as written. The help strip says \"0 to 100, or 0 to 1\". Rows already in sheets are untouched.
+- The everyday object rows are now translated into the nine editor languages.
+
+### Changed: the Family Arena strike hits every member
+
+- The Family Arena showcase's group strike now damages every Enemy in the group each time it fires (it used to give each a 15% chance), so the showcase shows groups plainly.
+
 ### Changed: the sheet reads in Godot's own words by default
 
 - A trigger now says the Godot callback it runs on: On ready (on any node, the scene's root included), On enter tree, On exit tree, On process and On physics process, where it used to say On start of layout, On created, On destroyed, Every tick and Every physics tick. The scene rows say scene: Change scene, Reload scene, Add scene on top, Is outside screen. The Inspector is the Inspector on both sides of the Words page.
@@ -19,6 +32,7 @@ What changed in the build you have installed (v0.20.0), in the words the release
 - The other editors' words are the Familiar preset on Settings > Words (Destroy, Spawn a copy of, angle, Is overlapping, On collision with) and the event-sheet-editor words preset for the verb rows. Typing either word in the picker finds the row, and an exact phrase such as go to layout, destroy or spawn now ranks its row first instead of behind every row that shares a word with it.
 - Hovering a word says what the other editors call it, or what Godot calls it, and the Godot call or property it writes (\"Godot writes this as modulate.a\" on Opacity).
 - A blank event, the process switches and the pack descriptions say every frame, On Process or process where they said every tick; the guides say scene where they meant a scene. Wording only: ace ids, templates, emitted code and stored sheets are untouched. The translations follow in all eight languages.
+- Six guide pictures are retaken in the new words (the Words page, the lifecycle readings, the scene readings, the pause pair, the save-branch pair); the pictures that still show old words are listed in the pictures audit, not hidden.
 
 ### New: the everyday object rows, under the names people look for them by
 

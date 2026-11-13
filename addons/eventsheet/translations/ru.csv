@@ -10364,3 +10364,48 @@ Instantiate Scene (Full),Создать экземпляр сцены (полн�
 "Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.","Загружает сцену и добавляет копию как дочерний узел этого узла. Позиция отсчитывается от этого узла, поэтому копия движется вместе с ним; «Создать экземпляр сцены в мире» помещает её в уровень."
 "Instantiate {path} at {position}, as a child of this node","Создать экземпляр {path} в {position}, как дочерний узел этого узла"
 "Instantiate {path} (rot {rotation}, group {group}), as a child of this node","Создать экземпляр {path} (поворот {rotation}, группа {group}), как дочерний узел этого узла"
+%s now has a %s.,У %s теперь есть %s.
+"%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.","У %s нет формы столкновения, поэтому ничто не может с ним пересечься, и строка, которая о нём спрашивает, никогда не истинна. Добавьте под ним форму или покажите его в сцене."
+Add a shape,Добавить форму
+Open %s to add a shape to it.,"Откройте %s, чтобы добавить форму."
+Set Opacity,Задать непрозрачность
+"Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.","Задаёт, насколько узел прозрачен. В Godot нет свойства непрозрачности: это альфа оттенка узла, поэтому действие пишет modulate.a, где 0 - невидим, 1 - непрозрачен."
+Set opacity to {opacity},Задать непрозрачность {opacity}
+Opacity,Непрозрачность
+"0 to 100, or 0 to 1. 0 is invisible, 100 (or 1) is solid. The row shows a percentage; the script keeps Godot's 0 to 1.","От 0 до 100 или от 0 до 1. 0 - невидим, 100 (или 1) - непрозрачен. Строка показывает проценты, а скрипт хранит значение Godot от 0 до 1."
+"How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.","Насколько узел непрозрачен: от 0 (невидим) до 1 (непрозрачен). Это альфа оттенка узла, modulate.a."
+Set Sprite Size,Задать размер спрайта
+"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.","Задаёт спрайту размер в пикселях. У спрайта нет свойства размера: его размер - это размер картинки, умноженный на масштаб, поэтому действие пишет масштаб, дающий нужный размер."
+Set size to {size} pixels,Задать размер {size} пикселей
+"Width and height in pixels, as a Vector2.","Ширина и высота в пикселях, как Vector2."
+"How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.","Ширина спрайта на экране в пикселях: ширина картинки, умноженная на масштаб. У спрайта нет свойства ширины."
+width,ширина
+"How tall a sprite is on screen, in pixels: its picture's height times its scale. A sprite has no height property.","Высота спрайта на экране в пикселях: высота картинки, умноженная на масштаб. У спрайта нет свойства высоты."
+height,высота
+Left,Левая сторона
+The x of the sprite's left edge in the level. A turned sprite is measured as if it were not.,"Координата x левого края спрайта в уровне. Повёрнутый спрайт измеряется так, как будто он не повёрнут."
+Right,Правая сторона
+The x of the sprite's right edge in the level. A turned sprite is measured as if it were not.,"Координата x правого края спрайта в уровне. Повёрнутый спрайт измеряется так, как будто он не повёрнут."
+Top,Верхняя сторона
+The y of the sprite's top edge in the level (y grows downward). A turned sprite is measured as if it were not.,"Координата y верхнего края спрайта в уровне (y растёт вниз). Повёрнутый спрайт измеряется так, как будто он не повёрнут."
+Bottom,Нижняя сторона
+The y of the sprite's bottom edge in the level (y grows downward). A turned sprite is measured as if it were not.,"Координата y нижнего края спрайта в уровне (y растёт вниз). Повёрнутый спрайт измеряется так, как будто он не повёрнут."
+Instance Id,ID экземпляра
+A number that names this object while the game runs. Keep it in a variable and pick the object again later with Pick By UID. It is not saved between runs.,"Число, которое называет этот объект, пока идёт игра. Сохраните его в переменной и позже выберите объект снова через «Выбрать по UID». Между запусками оно не сохраняется."
+instance id,id экземпляра
+Marker Position,Позиция маркера
+"Where a Marker2D child sits in the level - the muzzle of a gun, a hand, a spawn point. Place the Marker2D under the object in the scene and name it here.","Где в уровне находится дочерний Marker2D: дуло оружия, рука, точка появления. Поместите Marker2D под объектом в сцене и укажите здесь его имя."
+position of marker {marker},позиция маркера {marker}
+"The name of the Marker2D child, in quotes.",Имя дочернего Marker2D в кавычках.
+Is Outside The Level Bounds,Находится за границами уровня
+"True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed scene size, so the rectangle is yours.","Истинно, когда узел вышел за прямоугольник, который вы один раз задаёте для уровня: улетевшая пуля, игрок, выпавший из мира. В Godot нет фиксированного размера сцены, поэтому прямоугольник задаёте вы."
+General Conditions,Общие условия
+is outside the level bounds {bounds},находится за границами уровня {bounds}
+Bounds,Границы
+"The level's rectangle, as a Rect2: left, top, width, height.","Прямоугольник уровня как Rect2: слева, сверху, ширина, высота."
+Is Outside The Camera Limits,Находится за пределами камеры
+True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.,"Истинно, когда узел за пределами лимитов текущей Camera2D - краёв уровня, дальше которых камера не показывает."
+is outside the camera limits,находится за пределами камеры
+Once Ever,Только один раз
+"True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.","Истинно в первый раз, когда выполняются остальные условия события, и больше никогда для этого объекта. «Сработать один раз», напротив, срабатывает снова каждый раз, когда условие становится ложным, а затем истинным. Хранит в скрипте одну логическую переменную."
+Once ever,Только один раз
