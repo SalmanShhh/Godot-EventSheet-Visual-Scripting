@@ -5571,8 +5571,8 @@ turning nodes on and off, and pausing them
 - **Activate Node (2D)** (`target: String`) - Shows a node and starts it running again, along with everything under it. The exact undo of Deactivate Node.
 - **Deactivate Node (3D)** (`target: String`) - Hides a 3D node and stops it running, along with everything under it. Reversed by Activate Node.
 - **Activate Node (3D)** (`target: String`) - Shows a 3D node and starts it running again, along with everything under it.
-- **Pause Node** (`target: String`) - Freezes one node and everything under it, whatever the rest of the game is doing - a cutscene actor, a disabled turret, an off-screen room.
-- **Unpause Node** (`target: String`) - Lets a node follow its parent again, undoing Pause Node.
+- **Pause Node** (`target: String`) - Freezes one node and everything under it, whatever the rest of the game is doing - a cutscene actor, a disabled turret, an off-screen room. Everything the node does each frame stops - its code, physics, input, timers, animations and tweens - but a sound it is playing keeps playing, and signals sent to it still arrive.
+- **Unpause Node** (`target: String`) - Lets a node follow its parent again, undoing Pause Node: its code, physics, input, timers, animations and tweens run once more.
 - **Keep Node Running While Paused** (`target: String`) - Exempts a node from the game pause, so it keeps running while everything else is frozen. This is how a pause menu, its music, and its animations stay alive.
 - **Pause Node With The Game** (`target: String`) - Makes a node stop when the game pauses, regardless of what its parent does. The normal behaviour, stated explicitly.
 - **Run Node Only While Paused** (`target: String`) - Runs a node ONLY while the game is paused and never otherwise - a pause overlay that should not tick during play.

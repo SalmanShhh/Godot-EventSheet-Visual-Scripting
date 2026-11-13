@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a node that plays is paused, a behaviour is turned off
+
+- A process-mode write now reads by what the object is: a behaviour or any class of the project is turned off and on, a Timer, an AnimationPlayer, an AnimationTree or a rigid body is paused and resumed, and anything else keeps "Set disabled" and "Set enabled". The line written is exactly the same; a picked Pause Node or Unpause Node row and a hand-written `process_mode` line read alike. Measured in a running game: Disabled stops a node's code, timers, animations, physics and bound tweens, a sound keeps playing and signals still arrive, which the two rows' descriptions and the Scenes, Pausing And Turning Nodes Off guide now say.
+- Search finds the existing rows under the board words: turn off, turn on, disable or enable behavior (Pause Node, Unpause Node), has behavior (Has Child Of Type), change behavior, spawn from a prefab (Instantiate) and save a prefab (Save Data Asset).
+
 ### Changed: a new copy is added under the running scene, and what a row makes is an object for the rows after it
 
 - The Under field of a new Instantiate row (and its 3D, crowd, formation, launched and free-spot spellings) now starts as the running scene, `get_tree().current_scene`, instead of the node that spawned the copy: a bullet added under its shooter turns, scales and is freed with it. A row already in a sheet keeps whatever it stored, and no template changed, so nothing already written compiles differently.

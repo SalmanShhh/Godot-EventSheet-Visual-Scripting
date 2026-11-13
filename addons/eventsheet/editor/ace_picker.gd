@@ -1275,6 +1275,17 @@ const SEARCH_SYNONYMS := {
 	"for each": "pick",
 	"spawn": "instantiate",
 	"create object": "instantiate",
+	# The board words for making and keeping nodes at run time, which land on Godot's own rows. A prefab
+	# is a PackedScene: made with Keep As Prefab, made into a copy with Instantiate, written with Save
+	# Data Asset. Changing a node's behaviour is adding one and taking one away.
+	"spawn from a prefab": "instantiate",
+	"save a prefab": "save data asset",
+	"has behavior": "child of type",
+	"has behaviour": "child of type",
+	"change behavior": "behaviour",
+	"change behaviour": "behaviour",
+	"switch behavior": "behaviour",
+	"give behavior": "behaviour",
 	"destroy": "queue_free",
 	"on collision": "body_entered",
 	"is overlapping": "overlap",
@@ -1462,6 +1473,10 @@ const PHRASE_FIRST := {
 	"remove behaviour": "Core::RemoveBehaviour", "remove behavior": "Core::RemoveBehaviour",
 	"detach behavior": "Core::RemoveBehaviour",
 	"prefab": "Core::KeepAsPrefab", "make prefab": "Core::KeepAsPrefab",
+	# Switching a node or a behaviour off and on is Pause Node and Unpause Node: the process mode.
+	"turn off": "Core::NodePause", "turn on": "Core::NodeResume",
+	"disable behavior": "Core::NodePause", "disable behaviour": "Core::NodePause",
+	"enable behavior": "Core::NodeResume", "enable behaviour": "Core::NodeResume",
 }
 
 

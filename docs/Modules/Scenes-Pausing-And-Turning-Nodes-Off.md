@@ -62,6 +62,12 @@ family stops being confusing.
 - **"Pause this node" and "deactivate this node" set the same property.** Pause Node also writes
   Disabled - it just does not touch visibility. Pick the action that says what you meant; a reader of
   the sheet will thank you.
+- **What Disabled stops, and what it does not.** Measured in a running game: a node's own code
+  (`_process`, `_physics_process`, input), a Timer, an AnimationPlayer, a physics body and a Tween
+  bound to the node all stop. A sound that is already playing keeps playing, and a signal sent to a
+  disabled node still arrives. The sheet reads the same line by what the node is: a behaviour (or any
+  class of your project) is turned off and on, a timer, an animation player or a rigid body is paused
+  and resumed, and any other node reads "Set disabled" and "Set enabled".
 - **Node Is Running answers the WHOLE question.** It compiles to `can_process()`, which already takes
   both the node's mode and the game's pause state into account. Node Is Frozen By The Game Pause is
   the narrower question: the game is paused AND this node is one of the things it froze.

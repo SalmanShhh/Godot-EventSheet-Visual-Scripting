@@ -140,6 +140,13 @@ const PACK_TICK_WORDS: Dictionary = {
 	"set_physics_process": ["Start physics processing", "Stop physics processing"]
 }
 
+## Engine classes whose per-frame work is what Disabled stops, and which a reader calls pausing: a timer
+## counts, an animation plays, a rigid body simulates. Measured in a running game, not assumed: with the
+## mode Disabled a Timer stops counting, an AnimationPlayer stops advancing, a RigidBody2D stops falling
+## and a Tween bound to the node stops. (An audio player does NOT stop - its sound keeps playing - so it
+## is not here, and the signals a disabled node is connected to still arrive.)
+const PROCESS_PLAYBACK_BASES: PackedStringArray = ["Timer", "AnimationMixer", "RigidBody2D", "RigidBody3D"]
+
 ## `process_mode` in the sheet's words. An event sheet says whether a thing runs, always runs, or
 ## only runs while paused; these are Godot's five spellings of exactly that.
 const PROCESS_MODE_WORDS: Dictionary = {
@@ -2427,9 +2434,29 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 				mode = mode.substr(dot_in_mode + 1)
 			if not PROCESS_MODE_WORDS.has(mode):
 				return {}
+			var switch_verb: String = process_mode_verb(object_class, mode)
+			if not switch_verb.is_empty():
+				return _sentence(object_name, switch_verb, {})
 			return _sentence(object_name, "Set {mode}", {
 				"mode": [translate(str(PROCESS_MODE_WORDS[mode])), "name"]})
 	return {}
+
+
+## The verb a Disabled / back-to-inherited write wears, from what the object is: a behaviour or any other
+## class of the project is switched off and on, a node that plays, counts or simulates is paused and
+## resumed, and anything else keeps the plain "Set disabled" / "Set enabled". "" when the object's class is
+## not known or the mode is one of the other three - those stay as they were. The words change; the line
+## the row writes does not.
+static func process_mode_verb(object_class: String, mode: String) -> String:
+	var known: String = object_class.strip_edges()
+	if known.is_empty() or (mode != "PROCESS_MODE_DISABLED" and mode != "PROCESS_MODE_INHERIT"):
+		return ""
+	var turning_off: bool = mode == "PROCESS_MODE_DISABLED"
+	if not ClassDB.class_exists(known):
+		return translate("Turn off") if turning_off else translate("Turn on")
+	if _class_is_any(known, PROCESS_PLAYBACK_BASES):
+		return translate("Pause") if turning_off else translate("Resume")
+	return ""
 
 
 ## A fraction as the percentage an event sheet shows (`0.5` -> `50%`). A value that is not a plain

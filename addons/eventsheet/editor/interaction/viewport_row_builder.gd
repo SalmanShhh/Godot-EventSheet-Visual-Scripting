@@ -20205,6 +20205,17 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"DictDeleteKey":
 			return EventSheetSentence.statement("%s.erase(%s)" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("key", ""))], context)
+		# Pause Node and Unpause Node write the very line a hand-written process_mode does, so they
+		# wear the same verb for the same object ("Turn off" a behaviour, "Pause" a timer). Claimed only
+		# when the grammar has a verb for the object; any other node keeps the row's own words.
+		"NodePause", "NodeResume":
+			var pause_mode: String = "Node.PROCESS_MODE_DISABLED" if action.ace_id == "NodePause" else "Node.PROCESS_MODE_INHERIT"
+			var pause_target: String = _ace_target(params_dict)
+			if EventSheetSentence.process_mode_verb(EventSheetSentence.object_class_of(
+					EventSheetSentence.object_of_reference(pause_target), context),
+					pause_mode.get_slice(".", 1)).is_empty():
+				return {}
+			return EventSheetSentence.statement("%s.process_mode = %s" % [pause_target, pause_mode], context)
 		"NodeSetProcessMode":
 			var mode_target: String = str(params_dict.get("target", "")).strip_edges()
 			return EventSheetSentence.statement("%sprocess_mode = %s" % [
