@@ -358,6 +358,8 @@ static func _search_finds_the_new_words_and_ranks_phrases_first() -> bool:
 	var ok: bool = true
 	for entry: Array in [
 		["SpawnNewCopy", ["instantiate", "spawn", "create object"]],
+		["CloneInto", ["clone object"]],
+		["DuplicateNode", ["clone object"]],
 		["SetRotationDeg", ["set rotation", "set angle", "angle"]],
 		["OverlapsBody", ["overlaps", "is overlapping"]],
 		["OnCollisionWithGroup", ["on body entered", "on collision with", "on collision"]],

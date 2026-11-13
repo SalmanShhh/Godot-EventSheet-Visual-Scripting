@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: searching Clone object finds the copy rows
+
+- Typing "Clone object" in the picker, the sheet's own spelling of Duplicate, found nothing. It now lands on Clone Into first and also finds Duplicate Node.
+
 ### Fixed: Add Sprite starts with a picture you can see
 
 - The Picture field of Add Sprite and Add Sprite (3D) started as `PlaceholderTexture2D.new()`, which is 1 by 1 and nearly invisible. It now starts as a 64 by 64 solid square made in code (`ImageTexture.create_from_image(Image.create_empty(64, 64, false, Image.FORMAT_RGB8))`), so the sprite shows the moment the row is dropped and still needs no file. A `GradientTexture2D.new()` was measured and is not used: with no gradient it draws Godot's magenta error square. No template or ace_id changed; only the field's starting text did.

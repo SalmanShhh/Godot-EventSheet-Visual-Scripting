@@ -1275,6 +1275,8 @@ const SEARCH_SYNONYMS := {
 	"for each": "pick",
 	"spawn": "instantiate",
 	"create object": "instantiate",
+	# The sheet's own spelling of a copy of a node already in the scene, which Godot calls Duplicate.
+	"clone object": "duplicate",
 	# The board words for making and keeping nodes at run time, which land on Godot's own rows. A prefab
 	# is a PackedScene: made with Keep As Prefab, made into a copy with Instantiate, written with Save
 	# Data Asset. Changing a node's behaviour is adding one and taking one away.
@@ -1467,6 +1469,7 @@ const PHRASE_FIRST := {
 	"queue free": "Core::QueueFree", "destroy": "Core::QueueFree",
 	"instantiate": "Core::SpawnNewCopy", "spawn": "Core::SpawnNewCopy", "create object": "Core::SpawnNewCopy",
 	"spawn a copy": "Core::SpawnNewCopy",
+	"clone object": "Core::CloneInto",
 	"set rotation": "Core::SetRotationDeg", "set angle": "Core::SetRotationDeg",
 	"overlaps": "Core::OverlapsBody", "is overlapping": "Core::OverlapsBody",
 	"on body entered": "Core::OnBodyEntered", "on collision with": "Core::OnCollisionWithGroup",
