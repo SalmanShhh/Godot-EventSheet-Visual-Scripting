@@ -1,5 +1,5 @@
 @tool
-class_name ViewportCornerLinks
+class_name EventSheetViewportCornerLinks
 extends RefCounted
 # THE TWO CORNER LINKS - adding, back where the adding happens.
 #

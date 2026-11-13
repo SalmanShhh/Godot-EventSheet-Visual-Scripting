@@ -1,5 +1,5 @@
 @tool
-class_name ViewportSelectionHelper
+class_name EventSheetViewportSelectionHelper
 extends RefCounted
 
 

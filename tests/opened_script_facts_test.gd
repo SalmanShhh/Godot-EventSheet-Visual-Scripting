@@ -168,7 +168,7 @@ static func _test_autoload_head() -> bool:
 		_texts(_row_with_uid(rows, "sheet_head_bar_")),
 		"◆ | TunedKnobs | Global (autoload)") and ok
 	ok = _check("and its name's hover says how it loads",
-		ViewportRowBuilder.script_facts_card(view._sheet).get_slice("
+		EventSheetViewportRowBuilder.script_facts_card(view._sheet).get_slice("
 ", 1).get_slice(" · ", 0),
 		"loaded before the first scene as Game") and ok
 	ok = _check("no autoload band and no Include bar are drawn",
@@ -289,14 +289,14 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
 
 
 ## The first line of one of the head bar's hover cards, "" when the bar has no such card.
 static func _card_line(row_data: EventRowData, card_id: String) -> String:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == card_id:
 			var lines: Array = Array((card as Dictionary).get("lines", []))
@@ -307,8 +307,8 @@ static func _card_line(row_data: EventRowData, card_id: String) -> String:
 static func _swatch(row_data: EventRowData) -> Variant:
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
-		var marks: Array = EventRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
+	for span: EventSheetSemanticSpan in row_data.spans:
+		var marks: Array = EventSheetRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
 		if not marks.is_empty():
 			return (marks[0] as Dictionary)["color"]
 	return null

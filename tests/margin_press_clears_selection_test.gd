@@ -38,7 +38,7 @@ static func run() -> bool:
 	var width: float = viewport._get_logical_canvas_width()
 	viewport.get_row_layout_for_test(0, width)
 	viewport.get_row_layout_for_test(1, width)
-	var metrics: ViewportRowMetrics = viewport._row_metrics_helper
+	var metrics: EventSheetViewportRowMetrics = viewport._row_metrics_helper
 	var first_middle: float = metrics.row_top(0) + metrics.row_height(0) * 0.5
 	var gap_low: float = metrics.row_top(0) + metrics.row_height(0) + 0.1
 	var below_last: float = metrics.total_height() + 40.0

@@ -433,7 +433,7 @@ static func _row_claim(row: Resource, sheet: EventSheetResource,
 		var raw: RawCodeRow = row as RawCodeRow
 		var code_lines: PackedStringArray = raw.code.split("
 ")
-		if ViewportRowBuilder.is_comment_only_block(code_lines):
+		if EventSheetViewportRowBuilder.is_comment_only_block(code_lines):
 			return {"claim": "note", "layer": LAYER_READING}
 		if sheet != null and sheet.events.has(raw) and EventSheetViewport.is_scaffolding_code(raw.code):
 			return {"claim": "class setup", "layer": LAYER_READING}

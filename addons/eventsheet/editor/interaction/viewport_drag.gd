@@ -1,5 +1,5 @@
 @tool
-class_name ViewportDragInteractions
+class_name EventSheetViewportDragInteractions
 extends RefCounted
 # The DRAG interactions of the event sheet's virtualized viewport, extracted from
 # event_sheet_viewport.gd to keep that file maintainable. Three gestures live here,
@@ -106,7 +106,7 @@ func apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
 		_viewport._selected_span_index = -1
 		selected_any = true
 		for span_index in range(row_data.spans.size()):
-			var span: SemanticSpan = row_data.spans[span_index]
+			var span: EventSheetSemanticSpan = row_data.spans[span_index]
 			if span == null or not span.rect.intersects(selection_rect):
 				continue
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
@@ -346,7 +346,7 @@ func complete_ace_drag() -> bool:
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
 ## cursor while an ACE/row drag has an active target (i.e. after actual mouse motion).
 func draw_drag_ghost(font: Font, font_size: int) -> void:
-	# A drag in motion carries the real row (ViewportDragMotion); the label is for a drag without one.
+	# A drag in motion carries the real row (EventSheetViewportDragMotion); the label is for a drag without one.
 	if _viewport._drag_ghost_label.is_empty() or _viewport._drag_motion.active:
 		return
 	var ace_dragging: bool = not _viewport._drag_ace_entries.is_empty() and _viewport._drag_ace_target_row_index >= 0

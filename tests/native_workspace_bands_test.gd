@@ -60,8 +60,8 @@ static func _test_the_bands_fold() -> bool:
 		["nor in Classic Sheet", [classic._title_strip.visible, classic._identity_banner.visible],
 			[false, false]],
 		["and neither puts a Conditions | Actions header above the sheet",
-			[native.find_child("SheetColumnHeader", true, false) == null,
-				classic.find_child("SheetColumnHeader", true, false) == null], [true, true]],
+			[native.find_child("EventSheetColumnHeader", true, false) == null,
+				classic.find_child("EventSheetColumnHeader", true, false) == null], [true, true]],
 	])
 	# A re-read of the sheet (every save and rename refreshes the identity band) keeps it folded.
 	native._refresh_title_strip()
@@ -83,12 +83,12 @@ static func _test_the_canvas_top_and_sides() -> bool:
 	var font_size: int = EventSheetPalette.resolve_font_size(classic._viewport._get_font_size(), -1)
 	var native_panel: StyleBox = native._scroll.get_theme_stylebox("panel")
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["Editor Native carries no corner links", ViewportCornerLinks.shown_on(native._viewport), false],
+		["Editor Native carries no corner links", EventSheetViewportCornerLinks.shown_on(native._viewport), false],
 		["and its rows start under 8 px of air, not under the links' band",
 			native._viewport.content_top_offset(), 8.0],
-		["Classic Sheet keeps the links", ViewportCornerLinks.shown_on(classic._viewport), true],
+		["Classic Sheet keeps the links", EventSheetViewportCornerLinks.shown_on(classic._viewport), true],
 		["and the band they own", classic._viewport.content_top_offset(),
-			ViewportCornerLinks.band_height(font_size)],
+			EventSheetViewportCornerLinks.band_height(font_size)],
 		["the folded scroll is padded 10 px at each side",
 			[native._scroll.has_theme_stylebox_override("panel"), native_panel.get_margin(SIDE_LEFT) >= 10.0,
 				native_panel.get_margin(SIDE_RIGHT) >= 10.0], [true, true, true]],
@@ -113,9 +113,9 @@ static func _test_the_identity_hover() -> bool:
 	var classic: EventSheetEditor = _editor(CLASSIC_THEME, EventSheetGDScriptImporter.new().import_external(SHOWCASE))
 	var classic_note: String = _name_hover(classic._viewport)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["the band's line, as a static", SheetIdentityBanner.identity_label(sheet),
+		["the band's line, as a static", EventSheetIdentityBanner.identity_label(sheet),
 			"Gate - Custom Node · extends Node2D"],
-		["its hover lines for a pack with a knob", SheetIdentityBanner.identity_hover_lines(
+		["its hover lines for a pack with a knob", EventSheetIdentityBanner.identity_hover_lines(
 			_pack_sheet(), "res://eventsheet_addons/demo_pack/demo_pack.gd"),
 			PackedStringArray(["Addon Pack v1.2", "Event Sheet · a script for the Node it's attached to", "@ 1 knob"])],
 		["Editor Native's head bar name card says what the folded band said: the kind, the file", native_note,
@@ -258,7 +258,7 @@ static func _footer_words(view: EventSheetViewport) -> PackedStringArray:
 		var row_data: EventRowData = view._row_at(index)
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) == "add_event":
 				words.append(span.text)
 	return words
@@ -278,7 +278,7 @@ static func _name_hover(view: EventSheetViewport) -> String:
 		var row_data: EventRowData = view._row_at(index)
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if not (span.metadata is Dictionary):
 				continue
 			var card: Variant = (span.metadata as Dictionary).get("head_card")

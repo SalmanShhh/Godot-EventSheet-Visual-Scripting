@@ -38,7 +38,7 @@ static func _objects_of(sheet: EventSheetResource) -> Array:
 		if row_data == null or not (row_data.source_resource is EventRow):
 			continue
 		view._layout_builder.get_or_build_row_layout(index, view.get_canvas_logical_width(), view._get_font(), view._get_font_size())
-		for span: SemanticSpan in view._row_at(index).spans:
+		for span: EventSheetSemanticSpan in view._row_at(index).spans:
 			if span.metadata is Dictionary and str(span.metadata.get("kind", "")) in ["condition", "action"] 					and not str(span.metadata.get("object_label", "")).is_empty():
 				objects.append([str(span.metadata.get("kind", "")), str(span.metadata.get("object_label", "")),
 					str(span.metadata.get("object_glyph", ""))])

@@ -89,7 +89,7 @@ static func run() -> bool:
 		captured["in_flow"] = in_flow
 	)
 	viewport._layout_builder.get_or_build_row_layout(event_index, viewport.get_canvas_logical_width(), viewport._get_font(), viewport._get_font_size())
-	var cell_center: Vector2 = (raw_spans[0] as SemanticSpan).rect.get_center()
+	var cell_center: Vector2 = (raw_spans[0] as EventSheetSemanticSpan).rect.get_center()
 	viewport._input_handlers.handle_mouse_button(_button(cell_center, true, false))
 	viewport._input_handlers.handle_mouse_button(_button(cell_center, false, false))
 	viewport._input_handlers.handle_mouse_button(_button(cell_center, true, true))

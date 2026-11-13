@@ -25,7 +25,7 @@ static func run() -> bool:
 	var speed_x: float = _width(TEXT.substr(0, 32), font, size)
 	var acceleration_x: float = speed_x + _width("speed", font, size) + _width(" at ", font, size)
 	var placed: Dictionary = {}
-	for overlay_run: Array in EventRowRenderer.emphasis_runs(TEXT, PARAM_RANGES, WORD_RANGES, font, size):
+	for overlay_run: Array in EventSheetRowRenderer.emphasis_runs(TEXT, PARAM_RANGES, WORD_RANGES, font, size):
 		placed[str(overlay_run[1])] = float(overlay_run[0])
 	return SUPPORT.pins(P, [
 		["the overlay re-draws the parameters' words, split where their colours change", placed.keys(),
@@ -33,7 +33,7 @@ static func run() -> bool:
 		["each lands where the base pass drew it", [placed.get("speed"), placed.get("acceleration")],
 			[speed_x, acceleration_x]],
 		["the base pass's walk is the one the overlay asks",
-			EventRowRenderer.base_pass_x(TEXT, 41, WORD_RANGES, font, size), acceleration_x],
+			EventSheetRowRenderer.base_pass_x(TEXT, 41, WORD_RANGES, font, size), acceleration_x],
 	])
 
 

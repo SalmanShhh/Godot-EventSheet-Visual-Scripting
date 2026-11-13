@@ -66,7 +66,7 @@ static func _read_rows(path: String) -> PackedStringArray:
 			continue
 		viewport._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text.strip_edges().is_empty() or str(span.metadata.get("kind", "")) == "add_action":
 				continue
 			var style: String = str(span.metadata.get("badge_style", ""))

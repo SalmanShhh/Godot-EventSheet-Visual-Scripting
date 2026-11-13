@@ -117,12 +117,12 @@ static func _paths_are_named() -> bool:
 ## wrote only the words would print `same` over a value that stopped being bold. Each is pinned on a
 ## span of its own, and the plain span beside them is pinned as carrying none of the three.
 static func _style_marks_are_written() -> bool:
-	var plain: SemanticSpan = SemanticSpan.new()
+	var plain: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	plain.text = "Set score to 1"
-	plain.type = SemanticSpan.SpanType.VALUE
-	var rich: SemanticSpan = SemanticSpan.new()
+	plain.type = EventSheetSemanticSpan.SpanType.VALUE
+	var rich: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	rich.text = "hp 5"
-	rich.type = SemanticSpan.SpanType.VALUE
+	rich.type = EventSheetSemanticSpan.SpanType.VALUE
 	var marked: Dictionary = {"bbcode_segments": [
 		{"text": "hp ", "color": null, "bold": false, "italic": false},
 		{"text": "5", "color": Color.RED, "bold": true, "italic": false},

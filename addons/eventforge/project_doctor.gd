@@ -1504,7 +1504,7 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 				if not unknown.is_empty():
 					_add(findings, "error", "unknown-variable", sheet_path, str(unknown.get("note", "")))
 					continue
-				var mismatch: Dictionary = ViewportRowBuilder.variable_mismatch_note(
+				var mismatch: Dictionary = EventSheetViewportRowBuilder.variable_mismatch_note(
 					EventSheetVariableOwners.find(entries, name_text), ace_id)
 				if not mismatch.is_empty():
 					_add(findings, "warning", "variable-type-mismatch", sheet_path, str(mismatch.get("note", "")))

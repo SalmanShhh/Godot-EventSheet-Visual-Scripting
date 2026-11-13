@@ -381,7 +381,7 @@ static func sheet_object_facts(sheet: EventSheetResource) -> Dictionary:
 	var source_path: String = str(sheet.get("external_source_path")).strip_edges()
 	if source_path.is_empty():
 		return {}
-	var scene: Dictionary = ViewportRowBuilder.scene_using_script(source_path)
+	var scene: Dictionary = EventSheetViewportRowBuilder.scene_using_script(source_path)
 	var facts: Dictionary = scene_facts(str(scene.get("scene_path", "")))
 	var families: PackedStringArray = PackedStringArray(facts.get("families", PackedStringArray()))
 	for coded: String in PackedStringArray(script_facts(source_path).get("families", PackedStringArray())):
@@ -409,7 +409,7 @@ static func script_path_for_entry(entry: Dictionary, sheet_source_path: String) 
 		return str(scene_facts(str(entry.get("path", ""))).get("root_script", ""))
 	if not (kind in ["node", "behaviour"]) or sheet_source_path.strip_edges().is_empty():
 		return ""
-	var scene_path: String = str(ViewportRowBuilder.scene_using_script(sheet_source_path).get("scene_path", ""))
+	var scene_path: String = str(EventSheetViewportRowBuilder.scene_using_script(sheet_source_path).get("scene_path", ""))
 	if scene_path.is_empty():
 		return ""
 	var label: String = str(entry.get("label", ""))
@@ -437,7 +437,7 @@ static func facts_for_entry(entry: Dictionary, sheet_source_path: String) -> Dic
 	if kind == "scene":
 		scene_path = str(entry.get("path", ""))
 	elif not sheet_source_path.strip_edges().is_empty():
-		scene_path = str(ViewportRowBuilder.scene_using_script(sheet_source_path).get("scene_path", ""))
+		scene_path = str(EventSheetViewportRowBuilder.scene_using_script(sheet_source_path).get("scene_path", ""))
 	var scene: Dictionary = scene_facts(scene_path)
 	if kind in ["script", "scene"]:
 		behaviors = scene.get("behaviors", [])
@@ -492,7 +492,7 @@ static func sheet_object_title(sheet: EventSheetResource, explicit_path: String)
 	elif not declared.is_empty():
 		name_text = declared
 	else:
-		name_text = str(ViewportRowBuilder.scene_using_script(source_path).get("root_name", ""))
+		name_text = str(EventSheetViewportRowBuilder.scene_using_script(source_path).get("root_name", ""))
 	if name_text.is_empty():
 		name_text = (source_path if not source_path.is_empty() else file_path).get_file().get_basename()
 	return {

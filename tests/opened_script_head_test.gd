@@ -175,21 +175,21 @@ static func _test_type_words() -> bool:
 
 	# The vocabulary itself, at the seam the verb chips share - the readings that already shipped must
 	# not have moved, and the collection words must be derived from the element type rather than listed.
-	ok = _check("text is still text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
-	ok = _check("a declared int is a whole number", ViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
-	ok = _check("a bare Array is still a list", ViewportRowBuilder.friendly_type_word("Array"), "list") and ok
-	ok = _check("a Node class is an object", ViewportRowBuilder.friendly_type_word("Node2D"), "object") and ok
+	ok = _check("text is still text", EventSheetViewportRowBuilder.friendly_type_word("String"), "text") and ok
+	ok = _check("a declared int is a whole number", EventSheetViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
+	ok = _check("a bare Array is still a list", EventSheetViewportRowBuilder.friendly_type_word("Array"), "list") and ok
+	ok = _check("a Node class is an object", EventSheetViewportRowBuilder.friendly_type_word("Node2D"), "object") and ok
 	ok = _check("PackedStringArray reads like Array[String]",
-		ViewportRowBuilder.friendly_type_word("PackedStringArray"), "list of text") and ok
+		EventSheetViewportRowBuilder.friendly_type_word("PackedStringArray"), "list of text") and ok
 	ok = _check("PackedVector2Array holds vectors",
-		ViewportRowBuilder.friendly_type_word("PackedVector2Array"), "list of vectors") and ok
-	ok = _check("a Callable is a function", ViewportRowBuilder.friendly_type_word("Callable"), "function") and ok
-	ok = _check("a Signal is a signal", ViewportRowBuilder.friendly_type_word("Signal"), "signal") and ok
+		EventSheetViewportRowBuilder.friendly_type_word("PackedVector2Array"), "list of vectors") and ok
+	ok = _check("a Callable is a function", EventSheetViewportRowBuilder.friendly_type_word("Callable"), "function") and ok
+	ok = _check("a Signal is a signal", EventSheetViewportRowBuilder.friendly_type_word("Signal"), "signal") and ok
 	ok = _check("an Array of objects holds objects",
-		ViewportRowBuilder.friendly_type_word("Array[Node2D]"), "list of objects") and ok
+		EventSheetViewportRowBuilder.friendly_type_word("Array[Node2D]"), "list of objects") and ok
 	# A Resource subclass keeps the author's own noun - "resource" would say strictly less.
 	ok = _check("a Resource subclass keeps its class name",
-		ViewportRowBuilder.friendly_type_word("EventSheetResource"), "EventSheetResource") and ok
+		EventSheetViewportRowBuilder.friendly_type_word("EventSheetResource"), "EventSheetResource") and ok
 	view.free()
 	return ok
 
@@ -257,7 +257,7 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
 
@@ -282,7 +282,7 @@ static func _span_kinds(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.metadata.get("kind", "")))
 	return " | ".join(parts)
 
@@ -301,7 +301,7 @@ static func _head_bar_titles(rows: Array) -> String:
 
 ## The card behind one word of a head bar, by its id - {} when the bar has no such word.
 static func _card_of(row_data: EventRowData, card_id: String) -> Dictionary:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == card_id:
 			return card

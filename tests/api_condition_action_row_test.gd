@@ -27,7 +27,7 @@ static func run() -> bool:
 		ok = _check("the discriminating text is in the CONDITION cell", _lane_text(row, "condition"), "State.IDLE") and ok
 		ok = _check("the first body line is in the ACTION cell", _lane_text(row, "action"), "velocity = Vector2.ZERO") and ok
 		var action_count: int = 0
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane")) == "action":
 				action_count += 1
 		ok = _check("both action lines render as action cells", action_count, 2) and ok
@@ -65,7 +65,7 @@ static func run() -> bool:
 ## identity (the slot name, the caller's index) lives there rather than in the drawn text.
 static func _meta_of_kind(row: EventRowData, kind: String, nth: int) -> Dictionary:
 	var seen: int = 0
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if str(metadata.get("kind", "")) == kind:
 			if seen == nth:
@@ -75,7 +75,7 @@ static func _meta_of_kind(row: EventRowData, kind: String, nth: int) -> Dictiona
 
 
 static func _lane_text(row: EventRowData, lane: String) -> String:
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane")) == lane:
 			return str(span.text)
 	return "<none>"

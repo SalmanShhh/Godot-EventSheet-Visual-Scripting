@@ -69,7 +69,7 @@ static func _test_signature() -> bool:
 	for change: Array in changes:
 		rows.append(["%s moves the signature" % change[0], int(change[1]) != base, true])
 	# A state row asks the running game at draw time: its token's seconds change with no rebuild.
-	var state_span: SemanticSpan = SemanticSpan.new()
+	var state_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	state_span.metadata = {"state_name": "CHASE"}
 	row_data.spans = [state_span]
 	EventSheetStateWatch.clear()

@@ -397,7 +397,7 @@ static func _render(sheet: EventSheetResource) -> Dictionary:
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
 		var cells: Dictionary = {}
 		var order: Array = []
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var key: String = "%s|%d" % [str(span.metadata.get("lane", "")),
 				int(span.metadata.get("line_index", 0))]
 			if not cells.has(key):

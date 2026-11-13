@@ -56,7 +56,7 @@ static func _routes_for(source_path: String, read_only: bool = false) -> Diction
 		if row == null:
 			continue
 		viewport._row_builder._ensure_event_spans(row)
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			match str(meta.get("kind", "")):
 				"verb_param_add":

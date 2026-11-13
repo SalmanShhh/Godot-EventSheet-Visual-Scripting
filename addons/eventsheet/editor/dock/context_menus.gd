@@ -619,13 +619,13 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 ## design) - any of the row's own spans carrying the identity.
 func _data_class_row_target(row_data: EventRowData) -> RawCodeRow:
 	if row_data != null and row_data.source_resource is RawCodeRow \
-			and ViewportRowBuilder.data_class_lifts((row_data.source_resource as RawCodeRow).code):
+			and EventSheetViewportRowBuilder.data_class_lifts((row_data.source_resource as RawCodeRow).code):
 		return row_data.source_resource as RawCodeRow
 	var span_raw: Variant = _dock._context_hit.get("span_metadata", {}).get("raw_row", null)
 	if span_raw is RawCodeRow:
 		return span_raw as RawCodeRow
 	if row_data != null and row_data.source_resource == null:
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var row_span_raw: Variant = (span.metadata as Dictionary).get("raw_row", null) if span.metadata is Dictionary else null
 			if row_span_raw is RawCodeRow:
 				return row_span_raw as RawCodeRow
@@ -639,7 +639,7 @@ func _data_class_field_index(row_data: EventRowData) -> int:
 	if hit_index >= 0:
 		return hit_index
 	if row_data != null and row_data.source_resource == null:
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and int((span.metadata as Dictionary).get("field_index", -1)) >= 0:
 				return int((span.metadata as Dictionary).get("field_index", -1))
 	return -1

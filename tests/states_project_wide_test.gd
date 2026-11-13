@@ -112,7 +112,7 @@ static func run() -> bool:
 		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.text == "is one of":
 				state_rows.append(row)
 			if span.text in ["weapon_state", "state", "weapon_phase"] and bool((span.metadata as Dictionary).get("variable_name_span", false)):
@@ -120,7 +120,7 @@ static func run() -> bool:
 	rows.append(["each machine is one row", state_rows.size(), 2])
 	rows.append(["the second machine's variable is not also drawn as a loose variable", names, PackedStringArray(["state", "weapon_state"])])
 	if state_rows.size() == 2:
-		var drawn: SemanticSpan = _span(state_rows[1], "DRAWN")
+		var drawn: EventSheetSemanticSpan = _span(state_rows[1], "DRAWN")
 		rows.append(["a state token names its state for the click", str((drawn.metadata as Dictionary).get("state_token", "")), "DRAWN"])
 		rows.append(["...and its machine", str((drawn.metadata as Dictionary).get("variable_name", "")), "weapon_state"])
 		rows.append(["only the primary machine's tokens can light up for the game", (drawn.metadata as Dictionary).has("state_name"), false])
@@ -172,7 +172,7 @@ static func run() -> bool:
 		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if bool((span.metadata as Dictionary).get("variable_type_span", false)):
 				var head: Variant = (span.metadata as Dictionary).get("head_card", {})
 				marks[str((head as Dictionary).get("title", span.text))] = bool((span.metadata as Dictionary).get("hover_card_mark", false))
@@ -262,7 +262,7 @@ static func _reserved_tokens(dock: EventSheetDock) -> PackedStringArray:
 		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.text.ends_with("99.9 s"):
 				found.append(span.text)
 	return found
@@ -348,8 +348,8 @@ static func _machine_variables(machines: Array[Dictionary]) -> Array:
 	return out
 
 
-static func _span(row: EventRowData, text: String) -> SemanticSpan:
-	for span: SemanticSpan in row.spans:
+static func _span(row: EventRowData, text: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.text == text:
 			return span
 	return null

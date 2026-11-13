@@ -19,7 +19,7 @@ func _init() -> void:
 	var style_viewport: EventSheetViewport = EventSheetViewport.new()
 	style_viewport.visible = false
 	root.add_child(style_viewport)
-	var banner: SheetIdentityBanner = SheetIdentityBanner.new()
+	var banner: EventSheetIdentityBanner = EventSheetIdentityBanner.new()
 	banner.setup(style_viewport)
 	banner.position = Vector2(10, 30)
 	banner.size = Vector2(880, 60)

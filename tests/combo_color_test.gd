@@ -121,7 +121,7 @@ static func run() -> bool:
 	viewport._row_builder._ensure_event_spans(event_row_data)
 	var swatch_found: bool = false
 	for span in event_row_data.spans:
-		var marks: Array = EventRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
+		var marks: Array = EventSheetRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
 		if not marks.is_empty():
 			swatch_found = ((marks[0] as Dictionary)["color"] as Color).is_equal_approx(Color(0.2, 0.6, 1, 1))
 	all_passed = _check("color params surface a square on the action text", swatch_found, true) and all_passed

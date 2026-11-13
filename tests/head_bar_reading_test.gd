@@ -154,7 +154,7 @@ static func _head_rows(path: String) -> Array:
 
 ## The card behind one word of a head bar, by its id - {} when the bar has no such word.
 static func _card_of(row_data: EventRowData, card_id: String) -> Dictionary:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == card_id:
 			return card
@@ -164,7 +164,7 @@ static func _card_of(row_data: EventRowData, card_id: String) -> Dictionary:
 ## One row's words, spans joined - what a reader of that line sees, without the colours.
 static func _words_of(row_data: EventRowData) -> String:
 	var words: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var text: String = span.text.strip_edges()
 		if not text.is_empty():
 			words.append(text)

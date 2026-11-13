@@ -1,5 +1,5 @@
 @tool
-class_name RowLayoutCache
+class_name EventSheetRowLayoutCache
 extends RefCounted
 
 var _entries: Dictionary = {}

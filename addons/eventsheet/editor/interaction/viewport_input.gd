@@ -1,5 +1,5 @@
 @tool
-class_name ViewportInputHandlers
+class_name EventSheetViewportInputHandlers
 extends RefCounted
 
 # The INPUT handling of the event sheet's virtualized viewport, extracted from
@@ -37,7 +37,7 @@ func init(viewport: Control) -> void:
 func _jump_to_function(function_name: String) -> bool:
 	if function_name.strip_edges().is_empty():
 		return false
-	var target: EventFunction = ViewportRowBuilder.find_function_by_name(
+	var target: EventFunction = EventSheetViewportRowBuilder.find_function_by_name(
 		_viewport._sheet, function_name)
 	if target == null:
 		return false
@@ -510,7 +510,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		if event.double_click:
 			# The state row is a machine, not an enum: its window is the States window, whichever word of
 			# the row was double-clicked, with that state picked when the word is one.
-			if row_data != null and ViewportRowBuilder._is_state_machine_row(row_data):
+			if row_data != null and EventSheetViewportRowBuilder._is_state_machine_row(row_data):
 				var machine_meta: Dictionary = hit.get("span_metadata", {}).duplicate(true)
 				machine_meta["state_machine"] = true
 				_viewport.variable_edit_requested.emit(row_data, machine_meta)

@@ -59,7 +59,7 @@ static func run() -> bool:
 	kind_row.provider_id = "Core"
 	kind_row.ace_id = "IsAKindOf"
 	kind_row.params = {"value": "body", "kind": "Enemy"}
-	var shown: Dictionary = ViewportRowBuilder.new().grammar_condition_sentence(kind_row)
+	var shown: Dictionary = EventSheetViewportRowBuilder.new().grammar_condition_sentence(kind_row)
 	ok = SUPPORT.pins("class_kinds_test", [
 		["the authored row reads on the value", shown.get("object", ""), "body"],
 		["the authored row says is an", (shown.get("segments", [{}])[0] as Dictionary).get("text", ""), "is an "],
@@ -318,17 +318,17 @@ static func run_inherited() -> bool:
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(slime)
 	view.familiar_words = true
-	var builder: ViewportRowBuilder = view._row_builder
+	var builder: EventSheetViewportRowBuilder = view._row_builder
 	builder.kinds_table_override = classes
 	var rows: Array[EventRowData] = builder._build_inherited_rows(slime)
 	var words: Array = []
 	for row_data: EventRowData in rows:
 		var line: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			line.append(span.text)
 		words.append(" ".join(line))
 	view.familiar_words = false
-	var godot_bar: String = (builder._build_inherited_rows(slime)[0].spans[1] as SemanticSpan).text
+	var godot_bar: String = (builder._build_inherited_rows(slime)[0].spans[1] as EventSheetSemanticSpan).text
 	view.inherited_folded = true
 	var folded_rows: Array[EventRowData] = builder._build_inherited_rows(slime)
 	view.free()
@@ -345,9 +345,9 @@ static func run_inherited() -> bool:
 		["Godot words say inherited", godot_bar, "Inherited from"],
 		["a sheet opens with the inherited group folded to its bar", starts_folded, true],
 		["a folded group is the one bar", folded_rows.size(), 1],
-		["the fold's bar counts what it holds", (folded_rows[0].spans[3] as SemanticSpan).text, "3 variables · 2 functions"],
-		["a variable row carries its own double-click", str((rows[2].spans[1] as SemanticSpan).metadata.get("double_head_action", "")), "inherited_start:speed"],
-		["a function row carries its own menu", str((rows[4].spans[1] as SemanticSpan).metadata.get("context_action", "")), "inherited_function:take_damage"],
+		["the fold's bar counts what it holds", (folded_rows[0].spans[3] as EventSheetSemanticSpan).text, "3 variables · 2 functions"],
+		["a variable row carries its own double-click", str((rows[2].spans[1] as EventSheetSemanticSpan).metadata.get("double_head_action", "")), "inherited_start:speed"],
+		["a function row carries its own menu", str((rows[4].spans[1] as EventSheetSemanticSpan).metadata.get("context_action", "")), "inherited_function:take_damage"],
 		["a value says what type it is", [kinds.type_of_value("120.0"), kinds.type_of_value("3"), kinds.type_of_value("\"hi\""), kinds.type_of_value("true"), kinds.type_of_value("Foo.new()")], ["float", "int", "String", "bool", ""]],
 		["a class is described by the lines above its name", kinds.description_of("## Hurts the player.\n@icon(\"x.svg\")\nclass_name Enemy\nextends Node\n"), "Hurts the player."],
 		["a class with no description has none", kinds.description_of("class_name Enemy\n"), ""],

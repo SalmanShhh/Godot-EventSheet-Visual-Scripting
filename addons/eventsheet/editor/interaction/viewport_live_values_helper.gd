@@ -1,5 +1,5 @@
 @tool
-class_name ViewportLiveValuesHelper
+class_name EventSheetViewportLiveValuesHelper
 extends RefCounted
 # The streamed-debug "= value" chips drawn next to variable / group rows during a debug run.
 # Extracted from event_sheet_viewport.gd to keep that file maintainable. This subsystem is stateful
@@ -58,7 +58,7 @@ func chip_for(row_data: EventRowData) -> String:
 	# carries no chip of it; the head band keeps the chip.
 	if is_states_band(row_data):
 		return EventSheetStateWatch.band_reading()
-	if ViewportRowBuilder._is_state_machine_row(row_data):
+	if EventSheetViewportRowBuilder._is_state_machine_row(row_data):
 		return ""
 	var variable_name: String = ""
 	if row_data.source_resource is LocalVariable:
@@ -114,7 +114,7 @@ func draw_chip(row_data: EventRowData, row_top: float, row_height: float, font: 
 static func is_states_band(row_data: EventRowData) -> bool:
 	if row_data == null:
 		return false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		if str((span.metadata as Dictionary).get("head_band", "")) == EventSheetHeadBands.BAND_STATES:
@@ -131,7 +131,7 @@ func draw_state_progress(row_data: EventRowData, row_top: float, row_height: flo
 		font_size: int) -> void:
 	if _live_values.is_empty() or row_data == null or not EventSheetStateWatch.is_live():
 		return
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata
@@ -158,7 +158,7 @@ func draw_state_progress(row_data: EventRowData, row_top: float, row_height: flo
 ## Where the row's own words end - the rightmost edge of every span that is not the code echo.
 func _sentence_right_edge(row_data: EventRowData) -> float:
 	var edge: float = 0.0
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null:
 			continue
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}

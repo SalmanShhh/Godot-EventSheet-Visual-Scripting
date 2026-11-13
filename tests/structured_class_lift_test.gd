@@ -30,43 +30,43 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── The recognizer, and its disjointness from the two readings that came before it ──
-	ok = _check("a class carrying an enum is recognised", ViewportRowBuilder.structured_class_name(RADIO), "Radio") and ok
-	ok = _check("the same class is NOT a pure-data class", ViewportRowBuilder.data_class_name(RADIO), "") and ok
-	ok = _check("the same class is NOT a methods class", ViewportRowBuilder.methods_class_name(RADIO), "") and ok
-	ok = _check("a class nested inside a class is recognised", ViewportRowBuilder.structured_class_name(NESTED), "Outer") and ok
+	ok = _check("a class carrying an enum is recognised", EventSheetViewportRowBuilder.structured_class_name(RADIO), "Radio") and ok
+	ok = _check("the same class is NOT a pure-data class", EventSheetViewportRowBuilder.data_class_name(RADIO), "") and ok
+	ok = _check("the same class is NOT a methods class", EventSheetViewportRowBuilder.methods_class_name(RADIO), "") and ok
+	ok = _check("a class nested inside a class is recognised", EventSheetViewportRowBuilder.structured_class_name(NESTED), "Outer") and ok
 	ok = _check("a class carrying a signal is recognised",
-		ViewportRowBuilder.structured_class_name("class Radio:\n\tsignal pinged\n\tvar band: int = 1"), "Radio") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Radio:\n\tsignal pinged\n\tvar band: int = 1"), "Radio") and ok
 	# Disjointness the other way: what the older readings own, this one refuses, so a class routes to
 	# exactly one of the three and the pins those two shipped with keep holding.
 	ok = _check("a field-only class stays with the data reading",
-		ViewportRowBuilder.structured_class_name("class Foo:\n\tvar x: int = 0"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Foo:\n\tvar x: int = 0"), "") and ok
 	ok = _check("a field+method class stays with the methods reading",
-		ViewportRowBuilder.structured_class_name("class Weapon:\n\tvar ammo: int = 6\n\tfunc fire() -> void:\n\t\tammo -= 1"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Weapon:\n\tvar ammo: int = 6\n\tfunc fire() -> void:\n\t\tammo -= 1"), "") and ok
 
 	# ── The refusals: what this reading cannot hold stays honest code ──
 	ok = _check("a bare statement in the body refuses",
-		ViewportRowBuilder.structured_class_name("class Bad:\n\tsignal ok\n\tx = 5"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Bad:\n\tsignal ok\n\tx = 5"), "") and ok
 	ok = _check("top-level code after the class refuses",
-		ViewportRowBuilder.structured_class_name("class Bad:\n\tsignal ok\nprint(1)"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Bad:\n\tsignal ok\nprint(1)"), "") and ok
 	ok = _check("a second top-level class refuses",
-		ViewportRowBuilder.structured_class_name("class A:\n\tsignal ok\nclass B:\n\tvar x: int = 0"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class A:\n\tsignal ok\nclass B:\n\tvar x: int = 0"), "") and ok
 	ok = _check("a multi-line enum the enum reading refuses keeps the class as code",
-		ViewportRowBuilder.structured_class_name("class Bad:\n\tenum E {\n    SPACES,\n\t}"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Bad:\n\tenum E {\n    SPACES,\n\t}"), "") and ok
 	ok = _check("an empty nested class refuses",
-		ViewportRowBuilder.structured_class_name("class Outer:\n\tclass Inner:\n\t\tpass"), "") and ok
+		EventSheetViewportRowBuilder.structured_class_name("class Outer:\n\tclass Inner:\n\t\tpass"), "") and ok
 
 	# ── The byte-gate: every member keeps its source lines, so the model re-emits exactly ──
-	var model: Dictionary = ViewportRowBuilder.parse_structured_class(RADIO)
+	var model: Dictionary = EventSheetViewportRowBuilder.parse_structured_class(RADIO)
 	ok = _check("the model names the class", str(model.get("class_name")), "Radio") and ok
-	ok = _check("emit reproduces the source byte-for-byte", ViewportRowBuilder.emit_structured_class(model), RADIO) and ok
-	ok = _check("the gate says so", ViewportRowBuilder.structured_class_lifts(RADIO), true) and ok
+	ok = _check("emit reproduces the source byte-for-byte", EventSheetViewportRowBuilder.emit_structured_class(model), RADIO) and ok
+	ok = _check("the gate says so", EventSheetViewportRowBuilder.structured_class_lifts(RADIO), true) and ok
 	ok = _check("a nested class re-emits byte-for-byte too",
-		ViewportRowBuilder.emit_structured_class(ViewportRowBuilder.parse_structured_class(NESTED)), NESTED) and ok
+		EventSheetViewportRowBuilder.emit_structured_class(EventSheetViewportRowBuilder.parse_structured_class(NESTED)), NESTED) and ok
 	var doc_led: String = "\n## What the radio is tuned to.\nclass Radio:\n\tsignal tuned\n\n\tvar band: int = 0"
 	ok = _check("a doc-comment prelude and a blank line inside round-trip",
-		ViewportRowBuilder.emit_structured_class(ViewportRowBuilder.parse_structured_class(doc_led)), doc_led) and ok
+		EventSheetViewportRowBuilder.emit_structured_class(EventSheetViewportRowBuilder.parse_structured_class(doc_led)), doc_led) and ok
 	ok = _check("a class three deep round-trips",
-		ViewportRowBuilder.structured_class_lifts("class A:\n\tclass B:\n\t\tclass C:\n\t\t\tenum E { X, Y }"), true) and ok
+		EventSheetViewportRowBuilder.structured_class_lifts("class A:\n\tclass B:\n\t\tclass C:\n\t\t\tenum E { X, Y }"), true) and ok
 
 	# ── The members, each read as the row it would be at top level ──
 	var members: Array = model.get("members", [])
@@ -77,7 +77,7 @@ static func run() -> bool:
 	ok = _check("the signal reads through the signal kind's own summary",
 		str((members[1] as Dictionary).get("reading")), "tuned(to: float)") and ok
 	ok = _check("what the class holds, counted by kind",
-		ViewportRowBuilder._class_member_cue(members), "1 field · 1 method · 1 enum · 1 signal") and ok
+		EventSheetViewportRowBuilder._class_member_cue(members), "1 field · 1 method · 1 enum · 1 signal") and ok
 
 	# ── Rendering over a synthetic opened sheet ──
 	var sheet: EventSheetResource = EventSheetResource.new()

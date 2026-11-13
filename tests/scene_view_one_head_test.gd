@@ -19,10 +19,10 @@ static func run() -> bool:
 	var grey: Color = view._get_event_style().head_bar_color
 	var bars: Array = []
 	for row_data: EventRowData in rows:
-		if row_data.fixed_height == ViewportRowBuilder.SHEET_HEAD_BAR_HEIGHT:
+		if row_data.fixed_height == EventSheetViewportRowBuilder.SHEET_HEAD_BAR_HEIGHT:
 			bars.append(_texts(row_data).slice(0, 2))
 	var ok: bool = SUPPORT.pins(P, [
-		["the scene opens on the head bar's height", rows[0].fixed_height, ViewportRowBuilder.SHEET_HEAD_BAR_HEIGHT],
+		["the scene opens on the head bar's height", rows[0].fixed_height, EventSheetViewportRowBuilder.SHEET_HEAD_BAR_HEIGHT],
 		["in the head bar's grey, not the accent", rows[0].custom_color, grey],
 		["naming the scene, its root and its scripts", _texts(rows[0]),
 			PackedStringArray(["◆", "showcase_carousel.tscn", "Scene · root", "Node2D", "9 scripts"])],
@@ -32,7 +32,7 @@ static func run() -> bool:
 		["with its behaviours as a count with a card", _card_id(rows[1], "34 behaviours"), "behaviours"],
 		["every script opens on one bar", bars.size(), 10],
 		["no Behaviors band among the rows", _uids_with(rows, "object_behaviors_"), 0],
-		["no band stack under a script's bar", _uids_with(rows, ViewportRowBuilder.HEAD_BAND_UID_PREFIX + "name"), 0],
+		["no band stack under a script's bar", _uids_with(rows, EventSheetViewportRowBuilder.HEAD_BAND_UID_PREFIX + "name"), 0],
 	])
 	view.free()
 	# A sheet that lives only in memory, in the editor's own view.
@@ -42,7 +42,7 @@ static func run() -> bool:
 	var unsaved_view: EventSheetViewport = _view(unsaved, true)
 	var head: EventRowData = unsaved_view._root_rows[0]
 	ok = SUPPORT.pins(P, [
-		["an unsaved sheet opens on the head bar", head.row_uid.begins_with(ViewportRowBuilder.SHEET_HEAD_BAR_UID_PREFIX), true],
+		["an unsaved sheet opens on the head bar", head.row_uid.begins_with(EventSheetViewportRowBuilder.SHEET_HEAD_BAR_UID_PREFIX), true],
 		["named Untitled", _texts(head)[1], "Untitled"],
 		["with no file doors on its card", _doors(head), PackedStringArray(["Edit description…"])],
 	]) and ok
@@ -50,7 +50,7 @@ static func run() -> bool:
 	# A figure in the Manual or a theme preview shows rows, not a file: no bar there.
 	var figure: EventSheetViewport = _view(unsaved, false)
 	ok = SUPPORT.pin_value(P, "a view that shows rows, not a file, keeps no bar",
-		figure._root_rows[0].row_uid.begins_with(ViewportRowBuilder.SHEET_HEAD_BAR_UID_PREFIX), false) and ok
+		figure._root_rows[0].row_uid.begins_with(EventSheetViewportRowBuilder.SHEET_HEAD_BAR_UID_PREFIX), false) and ok
 	figure.free()
 	return ok
 
@@ -68,13 +68,13 @@ static func _view(sheet: EventSheetResource, heads_unsaved: bool) -> EventSheetV
 
 static func _texts(row_data: EventRowData) -> PackedStringArray:
 	var texts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		texts.append(span.text)
 	return texts
 
 
 static func _card_id(row_data: EventRowData, text: String) -> String:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.text == text and span.metadata is Dictionary and (span.metadata as Dictionary).get("head_card") is Dictionary:
 			return str(((span.metadata as Dictionary)["head_card"] as Dictionary).get("id", ""))
 	return ""
@@ -82,7 +82,7 @@ static func _card_id(row_data: EventRowData, text: String) -> String:
 
 static func _doors(row_data: EventRowData) -> PackedStringArray:
 	var labels: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and (span.metadata as Dictionary).get("head_card") is Dictionary:
 			var card: Dictionary = (span.metadata as Dictionary)["head_card"]
 			if str(card.get("id", "")) == "name":

@@ -43,17 +43,17 @@ static func _round_trips() -> bool:
 ## ── the three spellings of a callable, and the one that is NOT this reading ──────────────────────
 static func _callable_shapes() -> bool:
 	var ok: bool = true
-	var plain: Dictionary = ViewportRowBuilder.connect_call_parts("\t$StartButton.pressed.connect(player.reset)")
+	var plain: Dictionary = EventSheetViewportRowBuilder.connect_call_parts("\t$StartButton.pressed.connect(player.reset)")
 	ok = _check("the emitting object is named", str(plain.get("object", "")), "StartButton") and ok
 	ok = _check("the signal reads as its trigger", str(plain.get("trigger", "")), "On Pressed") and ok
 	ok = _check("the called object is named", str(plain.get("target", "")), "player") and ok
 	ok = _check("the called function is named", str(plain.get("method", "")), "reset") and ok
 
-	var bound: Dictionary = ViewportRowBuilder.connect_call_parts("\t$WaveTimer.timeout.connect(hud.show_wave.bind(3))")
+	var bound: Dictionary = EventSheetViewportRowBuilder.connect_call_parts("\t$WaveTimer.timeout.connect(hud.show_wave.bind(3))")
 	ok = _check("a bound value rides along", ", ".join(bound.get("args", PackedStringArray())), "3") and ok
 	ok = _check("a bound call is not one shot", bool(bound.get("one_shot", true)), false) and ok
 
-	var made: Dictionary = ViewportRowBuilder.connect_call_parts(
+	var made: Dictionary = EventSheetViewportRowBuilder.connect_call_parts(
 		"\t$WaveTimer.timeout.connect(Callable(hud, \"show_wave\").bind(9), CONNECT_ONE_SHOT)")
 	ok = _check("the Callable spelling names the same function", str(made.get("method", "")), "show_wave") and ok
 	ok = _check("its bound value rides along too", ", ".join(made.get("args", PackedStringArray())), "9") and ok
@@ -62,10 +62,10 @@ static func _callable_shapes() -> bool:
 	# A connect handed a bare name is a handler declared in THIS file: it already reads as the
 	# trigger event it is, where the function is written, and must not be claimed twice.
 	ok = _check("a handler of this file is not claimed",
-		ViewportRowBuilder.connect_call_parts("\t$WaveTimer.timeout.connect(_on_wave_timer_timeout)").is_empty(), true) and ok
+		EventSheetViewportRowBuilder.connect_call_parts("\t$WaveTimer.timeout.connect(_on_wave_timer_timeout)").is_empty(), true) and ok
 	# A lambda is the other reading's business.
 	ok = _check("a lambda is not claimed",
-		ViewportRowBuilder.connect_call_parts("\t$WaveTimer.timeout.connect(func(): wave += 1)").is_empty(), true) and ok
+		EventSheetViewportRowBuilder.connect_call_parts("\t$WaveTimer.timeout.connect(func(): wave += 1)").is_empty(), true) and ok
 	return ok
 
 
@@ -154,7 +154,7 @@ static func _sweep_texts(view: EventSheetViewport, rows: Array, texts: PackedStr
 	for row_data: EventRowData in rows:
 		view._row_builder._ensure_event_spans(row_data)
 		var parts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			parts.append(span.text)
 		texts.append(" | ".join(parts))
 		_sweep_texts(view, row_data.children, texts)

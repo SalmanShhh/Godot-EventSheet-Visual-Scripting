@@ -162,7 +162,7 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 ## A declaration is three spans (chip, name, value) and reads back as the one line it draws as.
 static func _append_readings(readings: PackedStringArray, row_data: EventRowData) -> void:
 	var pending_declaration: String = ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var label: String = str(span.metadata.get("object_label", ""))
 		var text: String = span.text.strip_edges()
 		if not label.is_empty():

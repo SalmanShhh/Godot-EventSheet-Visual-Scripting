@@ -54,7 +54,7 @@ static func _collect_row_texts(view: EventSheetViewport, row_data: EventRowData,
 		return
 	view._row_builder._ensure_event_spans(row_data)
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	texts.append(" | ".join(parts))
 	for child: EventRowData in row_data.children:
@@ -73,7 +73,7 @@ static func _find_row(view: EventSheetViewport, row_data: EventRowData, needle: 
 	if row_data == null:
 		return null
 	view._row_builder._ensure_event_spans(row_data)
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.text.contains(needle):
 			return row_data
 	for child: EventRowData in row_data.children:
@@ -139,15 +139,15 @@ static func _disabled_comments() -> bool:
 	var note := CommentRow.new()
 	note.text = "hp = 0"
 	passed = _check("a code comment offers its line back",
-		ViewportRowBuilder.commented_out_code(note), "hp = 0") and passed
+		EventSheetViewportRowBuilder.commented_out_code(note), "hp = 0") and passed
 	var prose := CommentRow.new()
 	prose.text = "the player is hit here"
 	passed = _check("a note offers nothing to switch on",
-		ViewportRowBuilder.commented_out_code(prose), "") and passed
+		EventSheetViewportRowBuilder.commented_out_code(prose), "") and passed
 	var live := RawCodeRow.new()
 	live.code = "hp = 0"
 	passed = _check("a live statement is not a switched-off row",
-		ViewportRowBuilder.commented_out_code(live), "") and passed
+		EventSheetViewportRowBuilder.commented_out_code(live), "") and passed
 	view.free()
 	return passed
 
@@ -167,7 +167,7 @@ static func _every_x_seconds() -> bool:
 		_any_row_contains(texts, "(while running)"), true) and passed
 	# The loop reader on its own: only the exact repeating shape claims a body.
 	passed = _check("a plain helper is not a beat",
-		ViewportRowBuilder.await_loop_seconds("func helper() -> void:\n\thp += 1"), "") and passed
+		EventSheetViewportRowBuilder.await_loop_seconds("func helper() -> void:\n\thp += 1"), "") and passed
 	view.free()
 	return passed
 
@@ -189,7 +189,7 @@ static func _include_bar_and_super() -> bool:
 			head_row = candidate
 	var carried: Array = ["", ""]
 	if head_row != null:
-		for span: SemanticSpan in head_row.spans:
+		for span: EventSheetSemanticSpan in head_row.spans:
 			if span.metadata is Dictionary and (span.metadata as Dictionary).has("include_path"):
 				carried = [str((span.metadata as Dictionary)["include_path"]),
 					str((span.metadata as Dictionary).get("hover_note", ""))]
@@ -199,11 +199,11 @@ static func _include_bar_and_super() -> bool:
 	var by_class := EventSheetResource.new()
 	by_class.host_class = "OpenedScriptStructureBase"
 	passed = _check("extends <ProjectClass> resolves to its file",
-		ViewportRowBuilder.base_script_path(by_class), BASE_PATH) and passed
+		EventSheetViewportRowBuilder.base_script_path(by_class), BASE_PATH) and passed
 	var engine_base := EventSheetResource.new()
 	engine_base.host_class = "Node2D"
 	passed = _check("extends <EngineClass> is no include",
-		ViewportRowBuilder.base_script_path(engine_base), "") and passed
+		EventSheetViewportRowBuilder.base_script_path(engine_base), "") and passed
 	view.free()
 	return passed
 

@@ -57,7 +57,7 @@ static func run() -> bool:
 	var sample_roles: Array[String] = []
 	for entry: Variant in sample.functions:
 		if entry is EventFunction:
-			sample_roles.append(ViewportRowBuilder.define_role_for(entry as EventFunction))
+			sample_roles.append(EventSheetViewportRowBuilder.define_role_for(entry as EventFunction))
 	all_passed = _check("the sample previews an Action verb", sample_roles.has("action"), true) and all_passed
 	all_passed = _check("the sample previews a Condition verb", sample_roles.has("condition"), true) and all_passed
 	all_passed = _check("the sample previews an Expression verb", sample_roles.has("expression"), true) and all_passed

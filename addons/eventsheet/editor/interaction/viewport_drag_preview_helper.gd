@@ -1,5 +1,5 @@
 @tool
-class_name ViewportDragPreviewHelper
+class_name EventSheetViewportDragPreviewHelper
 extends RefCounted
 
 
@@ -27,7 +27,7 @@ static func build_ace_drag_preview_rect(
 	if ace_index >= 0:
 		var target_span_index: int = int(find_ace_span_index.call(row_data, ace_span_kind, ace_index))
 		if target_span_index >= 0 and target_span_index < row_data.spans.size():
-			var target_span: SemanticSpan = row_data.spans[target_span_index]
+			var target_span: EventSheetSemanticSpan = row_data.spans[target_span_index]
 			var preview_x: float = (
 				target_span.rect.end.x + (float(get_span_gap.call(target_span)) * 0.5)
 				if insert_mode == "after"
@@ -38,7 +38,7 @@ static func build_ace_drag_preview_rect(
 			preview_height = max(target_span.rect.size.y - 4.0, 10.0)
 			return Rect2(preview_x - 1.5, preview_y, 3.0, preview_height)
 	if not ace_span_indices.is_empty():
-		var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
+		var edge_span: EventSheetSemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
 		var edge_preview_x: float = clampf(
 			edge_span.rect.end.x + (float(get_span_gap.call(edge_span)) * 0.5),
 			lane_rect.position.x + 4.0,
@@ -53,7 +53,7 @@ static func build_ace_drag_preview_rect(
 	if lane == "condition":
 		var trigger_span_index: int = int(find_ace_span_index.call(row_data, "trigger", 0))
 		if trigger_span_index >= 0 and trigger_span_index < row_data.spans.size():
-			var trigger_span: SemanticSpan = row_data.spans[trigger_span_index]
+			var trigger_span: EventSheetSemanticSpan = row_data.spans[trigger_span_index]
 			var trigger_preview_x: float = clampf(
 				trigger_span.rect.end.x + (float(get_span_gap.call(trigger_span)) * 0.5),
 				lane_rect.position.x + 4.0,

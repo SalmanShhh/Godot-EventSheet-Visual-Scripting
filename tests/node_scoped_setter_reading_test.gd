@@ -51,7 +51,7 @@ static func _action(source: String) -> String:
 		var row: EventRowData = entry.get("row")
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if not (span.metadata is Dictionary):
 				continue
 			var metadata: Dictionary = span.metadata as Dictionary

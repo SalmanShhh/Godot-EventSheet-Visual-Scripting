@@ -55,7 +55,7 @@ static func run() -> bool:
 	helper.expose_as_ace = false
 	sheet.functions.append(helper)
 
-	var organs: Dictionary = _by_id(BehaviourAnatomyPanel.collect_anatomy(sheet))
+	var organs: Dictionary = _by_id(EventSheetBehaviourAnatomyPanel.collect_anatomy(sheet))
 	# The variables read by SCOPE, in the sentence their rows use, not split by an exported flag.
 	ok = _check("the object's variables read as their rows' sentences", _labels(organs["instance"]),
 		["Instance number cooldown_left = 0.0", "Instance number max_health = 100.0"]) and ok
@@ -80,7 +80,7 @@ static func run() -> bool:
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	dock._load_sheet_from_path(pack_path)
-	var pack_organs: Dictionary = _by_id(BehaviourAnatomyPanel.collect_anatomy(dock.get_current_sheet()))
+	var pack_organs: Dictionary = _by_id(EventSheetBehaviourAnatomyPanel.collect_anatomy(dock.get_current_sheet()))
 	ok = _check("pack triggers found", (pack_organs["triggers"] as Array).size() > 0, true) and ok
 	ok = _check("pack knobs found (tree variables → the object's own variables)",
 		(pack_organs["instance"] as Array).size() > 0, true) and ok
@@ -107,7 +107,7 @@ static func run() -> bool:
 	# the organs this sheet filled: a line reading "Triggers · 0" is a counter, not a fact about the
 	# behaviour, and a column of them is what made the rail a wall.
 	ok = _check("the census offers nine organs",
-		BehaviourAnatomyPanel.collect_anatomy(dock.get_current_sheet()).size(), 9) and ok
+		EventSheetBehaviourAnatomyPanel.collect_anatomy(dock.get_current_sheet()).size(), 9) and ok
 	ok = _check("no organ header counts to zero", empty_headers, []) and ok
 	ok = _check("the pack's filled organs are the ones drawn", drawn_organs,
 		["instance", "triggers", "actions", "conditions", "expressions"]) and ok

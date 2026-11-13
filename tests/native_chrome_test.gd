@@ -183,8 +183,8 @@ static func _test_the_selection_frame() -> bool:
 # ── Helpers ─────────────────────────────────────────────────────────────────────────────────────
 
 
-static func _span(text: String, metadata: Dictionary) -> SemanticSpan:
-	var span := SemanticSpan.new()
+static func _span(text: String, metadata: Dictionary) -> EventSheetSemanticSpan:
+	var span := EventSheetSemanticSpan.new()
 	span.text = text
 	span.metadata = metadata
 	return span
@@ -263,7 +263,7 @@ static func _comment_rows(theme_path: String) -> Dictionary:
 		var row_data: EventRowData = view._row_at(index)
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if row_data.source_resource == note:
 				if bool(metadata.get("comment_note_lead", false)):

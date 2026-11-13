@@ -49,7 +49,7 @@ static func run() -> bool:
 	var drawn_rows: int = 0
 	for index: int in view.get_flat_rows().size():
 		var row_data: EventRowData = view._row_at(index)
-		if row_data != null and ViewportRowBuilder._is_state_machine_row(row_data):
+		if row_data != null and EventSheetViewportRowBuilder._is_state_machine_row(row_data):
 			state_row = row_data
 			state_index = index
 		if row_data != null and row_data.source_resource == event:
@@ -111,7 +111,7 @@ static func _drop_mode_over(view: EventSheetViewport, carried_index: int, target
 static func _name_card_lines(state_row: EventRowData) -> PackedStringArray:
 	if state_row == null:
 		return PackedStringArray()
-	for span: SemanticSpan in state_row.spans:
+	for span: EventSheetSemanticSpan in state_row.spans:
 		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if bool(meta.get("variable_name_span", false)):
 			return (meta.get("head_card", {}) as Dictionary).get("lines", PackedStringArray())

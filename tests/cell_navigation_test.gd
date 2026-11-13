@@ -59,7 +59,7 @@ static func run() -> bool:
 	var cells: Array[int] = viewport.interactive_span_indices(event_row_data)
 	var kinds: Array = []
 	for span_index: int in cells:
-		kinds.append(str((event_row_data.spans[span_index] as SemanticSpan).metadata.get("kind", "")))
+		kinds.append(str((event_row_data.spans[span_index] as EventSheetSemanticSpan).metadata.get("kind", "")))
 	all_passed = _check("the walk finds all four cells in lane order",
 		str(kinds), str(["trigger", "condition", "action", "action"])) and all_passed
 

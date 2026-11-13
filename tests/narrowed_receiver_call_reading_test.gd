@@ -50,7 +50,7 @@ static func _call_reading(source: String, tag: String) -> String:
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text.to_lower().contains("damage") and str(span.metadata.get("lane", "")) == "action":
 				said = span.text
 	dock.free()

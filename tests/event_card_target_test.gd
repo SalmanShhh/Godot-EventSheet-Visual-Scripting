@@ -106,7 +106,7 @@ static func run() -> bool:
 	viewport._input_handlers.handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._row_metrics_helper.row_top(1) + viewport._row_metrics_helper.row_height(1) * 0.5), false))
 
 	# A press ON a cell still selects that cell alone - the difference the outline is drawn to show.
-	var cell: SemanticSpan = _first_condition_span(viewport)
+	var cell: EventSheetSemanticSpan = _first_condition_span(viewport)
 	all_passed = SUPPORT.check(PREFIX, "the event has a condition cell to press", cell != null, true)
 	if cell != null:
 		var cell_point: Vector2 = cell.rect.get_center()
@@ -168,11 +168,11 @@ static func _event_at(viewport: EventSheetViewport, point: Vector2) -> int:
 	return int(viewport.press_target_at(point).get("event_index", -1))
 
 
-static func _first_condition_span(viewport: EventSheetViewport) -> SemanticSpan:
+static func _first_condition_span(viewport: EventSheetViewport) -> EventSheetSemanticSpan:
 	var row_data: EventRowData = viewport._row_at(0)
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary

@@ -201,7 +201,7 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet
 	_source_path = str(sheet.get("external_source_path")).strip_edges() if sheet != null else ""
 	_entries = _with_autoload_identity(EventSheetViewportReadingRows.object_census(sheet), sheet)
-	var scene: Dictionary = ViewportRowBuilder.scene_using_script(_source_path) if not _source_path.is_empty() else {}
+	var scene: Dictionary = EventSheetViewportRowBuilder.scene_using_script(_source_path) if not _source_path.is_empty() else {}
 	_scene_name = str(scene.get("scene_path", "")).get_file()
 	EventSheetInputMapFacts.clear_cache()
 	_input_actions = EventSheetInputMapFacts.actions_named_by(sheet)
@@ -462,7 +462,7 @@ func _familiar_words() -> bool:
 func _rebuild_tree() -> void:
 	tree.clear()
 	var root: TreeItem = tree.create_item()
-	var scene_path: String = ViewportRowBuilder.scene_using_script(_source_path).get("scene_path", "") \
+	var scene_path: String = EventSheetViewportRowBuilder.scene_using_script(_source_path).get("scene_path", "") \
 		if not _source_path.is_empty() else ""
 	var missing: PackedStringArray = missing_labels(_entries, str(scene_path))
 	# Hoisted: the class map is a read of the whole sheet, and it is the same answer for every entry.

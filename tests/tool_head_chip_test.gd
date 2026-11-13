@@ -34,8 +34,8 @@ static func run() -> bool:
 	file.close()
 	var dark: Array = _head_rows(path, false)
 	var light: Array = _head_rows(path, true)
-	var chip: SemanticSpan = _span(dark[0], "Runs in the editor")
-	var light_chip: SemanticSpan = _span(light[0], "Runs in the editor")
+	var chip: EventSheetSemanticSpan = _span(dark[0], "Runs in the editor")
+	var light_chip: EventSheetSemanticSpan = _span(light[0], "Runs in the editor")
 	var second_row: String = _words_of(dark[1]) if dark.size() > 1 else ""
 	return SUPPORT.pins(P, [
 		["the head bar reads the chip beside what it extends", _words_of(dark[0]),
@@ -73,8 +73,8 @@ static func _head_rows(path: String, light: bool) -> Array:
 	return rows
 
 
-static func _span(row_data: EventRowData, text: String) -> SemanticSpan:
-	for span: SemanticSpan in row_data.spans:
+static func _span(row_data: EventRowData, text: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.text == text:
 			return span
 	return null
@@ -82,7 +82,7 @@ static func _span(row_data: EventRowData, text: String) -> SemanticSpan:
 
 static func _words_of(row_data: EventRowData) -> String:
 	var words: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var text: String = span.text.strip_edges()
 		if not text.is_empty():
 			words.append(text)

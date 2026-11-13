@@ -70,12 +70,12 @@ static func run() -> bool:
 	all_passed = _check("entries carry the jump target", header.get_first_child().get_metadata(0), sheet.events[0]) and all_passed
 	var numbered: EventRowData = EventRowData.new()
 	numbered.event_number = 12
-	var numbered_span: SemanticSpan = SemanticSpan.new()
+	var numbered_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	numbered_span.text = "System OnReady"
 	numbered.spans.append(numbered_span)
 	all_passed = _check("event rows show their margin number (panel matches gutter)", EventSheetBookmarksPanel.entry_label(numbered), "12 · System OnReady") and all_passed
 	var plain: EventRowData = EventRowData.new()
-	var plain_span: SemanticSpan = SemanticSpan.new()
+	var plain_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	plain_span.text = "Spawn the boss"
 	plain.spans.append(plain_span)
 	all_passed = _check("a row with no event number reads as its words (the mark is an editor icon, not an emoji)",
@@ -83,10 +83,10 @@ static func run() -> bool:
 	# An event with no condition yet leads with the canvas's "+ Add condition" offer, which is not its words.
 	var bare: EventRowData = EventRowData.new()
 	bare.event_number = 3
-	var offer: SemanticSpan = SemanticSpan.new()
+	var offer: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	offer.text = "+ Add condition"
 	offer.metadata = {"kind": "add_condition"}
-	var action_span: SemanticSpan = SemanticSpan.new()
+	var action_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	action_span.text = "Destroy"
 	bare.spans.append_array([offer, action_span])
 	all_passed = _check("a mark reads as the row's words, never the + Add condition offer",

@@ -85,7 +85,7 @@ static func _head_offers_add(view: EventSheetViewport, verb_name: String) -> boo
 		if row == null or not (row.source_resource is EventFunction) \
 				or(row.source_resource as EventFunction).function_name != verb_name:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if str((span.metadata as Dictionary).get("kind", "")) == "add_action":
 				return true
 	return false

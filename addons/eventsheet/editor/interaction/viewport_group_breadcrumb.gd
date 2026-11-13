@@ -17,7 +17,7 @@
 # scan. The derivations are static + pure, so the path logic is headless-testable without a
 # viewport.
 @tool
-class_name ViewportGroupBreadcrumb
+class_name EventSheetViewportGroupBreadcrumb
 extends RefCounted
 
 const STRIP_HEIGHT := 24.0
@@ -181,7 +181,7 @@ static func head_parts(head_row: EventRowData) -> Dictionary:
 	var parts := {"description": "", "counts": "", "switch": "", "enabled": true}
 	if head_row == null:
 		return parts
-	for span: SemanticSpan in head_row.spans:
+	for span: EventSheetSemanticSpan in head_row.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -311,7 +311,7 @@ static func header_title_of(row_data: EventRowData) -> String:
 	if not row_data.row_uid.begins_with("arrange_"):
 		return ""
 	for span: Variant in row_data.spans:
-		var typed: SemanticSpan = span as SemanticSpan
+		var typed: EventSheetSemanticSpan = span as EventSheetSemanticSpan
 		if typed != null and not str(typed.text).strip_edges().is_empty():
 			return str(typed.text).strip_edges()
 	return ""

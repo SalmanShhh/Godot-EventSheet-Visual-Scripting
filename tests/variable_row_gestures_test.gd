@@ -114,7 +114,7 @@ static func _dock_gestures() -> bool:
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
 	var end_line: EventRowData = EventRowData.new()
-	end_line.spans.append(SemanticSpan.new())
+	end_line.spans.append(EventSheetSemanticSpan.new())
 	end_line.spans[0].metadata = {"kind": "variable", "variable_name": "", "group_end_owner": "reload_time"}
 	var target: EventRowData = EventRowData.new()
 	target.source_resource = GESTURES.member(dock._current_sheet, "spread")
@@ -225,7 +225,7 @@ static func _declared_elsewhere() -> bool:
 	rows.append(["grouping it, from the menu or by a drop, leaves this sheet's own spread as it was",
 		_members(dock._current_sheet), before])
 	var end_line: EventRowData = EventRowData.new()
-	end_line.spans.append(SemanticSpan.new())
+	end_line.spans.append(EventSheetSemanticSpan.new())
 	end_line.spans[0].metadata = {"kind": "variable", "variable_name": "", "group_end_owner": "reload_time"}
 	elsewhere.source_resource = GESTURES.member(dock._current_sheet, "spread")
 	dock._on_row_drop_requested(end_line, elsewhere, "before")
@@ -289,7 +289,7 @@ static func _slot_buttons(dialog: EventSheetVariableDialog) -> Array:
 static func _member_row(sheet: EventSheetResource, var_name: String, group: String) -> EventRowData:
 	var row: EventRowData = EventRowData.new()
 	row.source_resource = GESTURES.member(sheet, var_name)
-	row.spans.append(SemanticSpan.new())
+	row.spans.append(EventSheetSemanticSpan.new())
 	row.spans[0].metadata = {"kind": "variable", "variable_scope": "tree", "variable_name": var_name, "variable_group": group}
 	return row
 

@@ -53,7 +53,7 @@ static func run() -> bool:
 	if comment_row_data != null:
 		# One span per LINE of the note, plus the echo of the line the row writes at its right edge.
 		var comment_lines: int = 0
-		for span: SemanticSpan in comment_row_data.spans:
+		for span: EventSheetSemanticSpan in comment_row_data.spans:
 			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("edit_kind", "")) == "comment_text":
 				comment_lines += 1
 		all_passed = _check("multiline comment spans per line", comment_lines, 2) and all_passed

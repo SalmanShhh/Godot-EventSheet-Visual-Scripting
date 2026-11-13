@@ -109,7 +109,7 @@ static func _reads_as_shared_by_every_object() -> bool:
 		if not (row.source_resource is LocalVariable):
 			continue
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			texts.append(span.text)
 		if (row.source_resource as LocalVariable).is_static:
 			static_texts = texts

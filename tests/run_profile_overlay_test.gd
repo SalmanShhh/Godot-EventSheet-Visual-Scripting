@@ -102,15 +102,15 @@ static func _run_gate() -> bool:
 	_cold()
 	_stream_run()
 	all_passed = _check("both lenses off draws nothing",
-		EventRowRenderer.hit_chip_uid(false, true, "aa"), "") and all_passed
+		EventSheetRowRenderer.hit_chip_uid(false, true, "aa"), "") and all_passed
 	all_passed = _check("a lens on reports the row",
-		EventRowRenderer.hit_chip_uid(true, true, "aa"), "aa") and all_passed
+		EventSheetRowRenderer.hit_chip_uid(true, true, "aa"), "aa") and all_passed
 	all_passed = _check("a group bar never gets a chip",
-		EventRowRenderer.hit_chip_uid(true, false, "aa"), "") and all_passed
+		EventSheetRowRenderer.hit_chip_uid(true, false, "aa"), "") and all_passed
 	_cold()
 	all_passed = _check("no run means no chip even with a lens on",
-		EventRowRenderer.hit_chip_uid(true, true, "aa"), "") and all_passed
-	var renderer: EventRowRenderer = EventRowRenderer.new()
+		EventSheetRowRenderer.hit_chip_uid(true, true, "aa"), "") and all_passed
+	var renderer: EventSheetRowRenderer = EventSheetRowRenderer.new()
 	all_passed = _check("the renderer ships with the costs lens off", renderer.show_costs, false) and all_passed
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	all_passed = _check("the viewport ships with it off too", viewport.show_costs, false) and all_passed

@@ -58,8 +58,8 @@ func handle(action: String) -> void:
 	# band whose reference is a scene path on its own, with no node inside it to select.
 	# An event number's card names the pattern the event was read as; its door opens the pattern's
 	# page in the Manual, the same page F1 on the selected event opens.
-	if action.begins_with(ViewportTooltipHelper.PATTERN_PAGE_ACTION):
-		load(PATTERN_MANUAL_PATH).open_page(action.trim_prefix(ViewportTooltipHelper.PATTERN_PAGE_ACTION))
+	if action.begins_with(EventSheetViewportTooltipHelper.PATTERN_PAGE_ACTION):
+		load(PATTERN_MANUAL_PATH).open_page(action.trim_prefix(EventSheetViewportTooltipHelper.PATTERN_PAGE_ACTION))
 		return
 	if action.begins_with("%s:" % EventSheetHeadBands.BAND_SPAWNS):
 		browse_to_scene(action.trim_prefix("%s:" % EventSheetHeadBands.BAND_SPAWNS))
@@ -110,9 +110,9 @@ func handle(action: String) -> void:
 		"show_in_filesystem":
 			var shown: String = str(_dock._current_sheet.external_source_path).strip_edges()
 			browse_to_scene(shown if not shown.is_empty() else _dock._current_sheet.resource_path)
-		ViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE:
+		EventSheetViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE:
 			# The description is the paragraph the file closes on, kept off the canvas: edit that note.
-			var claimed: CommentRow = ViewportRowBuilder.claimed_description_note(_dock._viewport._root_rows)
+			var claimed: CommentRow = EventSheetViewportRowBuilder.claimed_description_note(_dock._viewport._root_rows)
 			if claimed != null:
 				_dock._open_comment_dialog(claimed)
 		"file_settings":
@@ -747,7 +747,7 @@ func open_file_options() -> void:
 				browse_to_scene(str(_dock._current_sheet.external_source_path)))
 		_dock.add_child(_file_menu)
 	_file_menu.clear()
-	_file_menu.add_item(EventSheetL10n.translate("Global settings…") if ViewportRowBuilder.is_autoload(_dock._current_sheet)
+	_file_menu.add_item(EventSheetL10n.translate("Global settings…") if EventSheetViewportRowBuilder.is_autoload(_dock._current_sheet)
 		else EventSheetL10n.translate("Behaviour settings…"), 2)
 	_file_menu.add_item(EventSheetL10n.translate("Open in the script editor"), 0)
 	_file_menu.add_item(EventSheetL10n.translate("Show in FileSystem"), 1)

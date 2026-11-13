@@ -18,24 +18,24 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── The strict classifier (data_class_name) ──
-	ok = _check("the canonical AbilityData class is recognised", ViewportRowBuilder.data_class_name(ABILITY_DATA), "AbilityData") and ok
+	ok = _check("the canonical AbilityData class is recognised", EventSheetViewportRowBuilder.data_class_name(ABILITY_DATA), "AbilityData") and ok
 	ok = _check("a minimal one-field class is recognised",
-		ViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0"), "Foo") and ok
+		EventSheetViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0"), "Foo") and ok
 	ok = _check("an `extends` base is tolerated",
-		ViewportRowBuilder.data_class_name("class Bar extends RefCounted:\n\tvar y: int = 0"), "Bar") and ok
+		EventSheetViewportRowBuilder.data_class_name("class Bar extends RefCounted:\n\tvar y: int = 0"), "Bar") and ok
 	ok = _check("a method-bearing class is NOT a data class (stays a real block)",
-		ViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0\n\tfunc bar() -> void:\n\t\tpass"), "") and ok
+		EventSheetViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0\n\tfunc bar() -> void:\n\t\tpass"), "") and ok
 	ok = _check("a second/nested class breaks the match",
-		ViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0\nclass Bar:\n\tvar y: int = 0"), "") and ok
+		EventSheetViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0\nclass Bar:\n\tvar y: int = 0"), "") and ok
 	ok = _check("trailing top-level code breaks the match",
-		ViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0\nprint(1)"), "") and ok
+		EventSheetViewportRowBuilder.data_class_name("class Foo:\n\tvar x: int = 0\nprint(1)"), "") and ok
 	ok = _check("an empty class (no fields) is not lifted",
-		ViewportRowBuilder.data_class_name("class Foo:\n\tpass"), "") and ok
+		EventSheetViewportRowBuilder.data_class_name("class Foo:\n\tpass"), "") and ok
 	ok = _check("a plain function is not a data class",
-		ViewportRowBuilder.data_class_name("func foo() -> void:\n\tpass"), "") and ok
+		EventSheetViewportRowBuilder.data_class_name("func foo() -> void:\n\tpass"), "") and ok
 
 	# ── The structured model + byte-exact re-emit (the covenant gate) ──
-	var model: Dictionary = ViewportRowBuilder.parse_data_class(ABILITY_DATA)
+	var model: Dictionary = EventSheetViewportRowBuilder.parse_data_class(ABILITY_DATA)
 	ok = _check("the model names the class", str(model.get("class_name")), "AbilityData") and ok
 	ok = _check("the model has no extends base", str(model.get("extends")), "") and ok
 	var fields: Array = []
@@ -49,10 +49,10 @@ static func run() -> bool:
 	# The `{}`/`[]` defaults must survive the field split intact or the byte-gate fails.
 	ok = _check("a Dictionary field keeps its `{}` default", str((fields[6] as Dictionary).get("default")), "{}") and ok
 	ok = _check("an Array field keeps its `[]` default", str((fields[7] as Dictionary).get("default")), "[]") and ok
-	ok = _check("emit_data_class reproduces the source byte-for-byte", ViewportRowBuilder.emit_data_class(model), ABILITY_DATA) and ok
-	ok = _check("data_class_lifts gates AbilityData true", ViewportRowBuilder.data_class_lifts(ABILITY_DATA), true) and ok
+	ok = _check("emit_data_class reproduces the source byte-for-byte", EventSheetViewportRowBuilder.emit_data_class(model), ABILITY_DATA) and ok
+	ok = _check("data_class_lifts gates AbilityData true", EventSheetViewportRowBuilder.data_class_lifts(ABILITY_DATA), true) and ok
 	ok = _check("data_class_lifts rejects a method-bearing class",
-		ViewportRowBuilder.data_class_lifts("class Foo:\n\tvar x: int = 0\n\tfunc bar() -> void:\n\t\tpass"), false) and ok
+		EventSheetViewportRowBuilder.data_class_lifts("class Foo:\n\tvar x: int = 0\n\tfunc bar() -> void:\n\t\tpass"), false) and ok
 
 	# ── Rendering over the real opened `abilities` pack ──
 	var pack_path: String = "res://eventsheet_addons/abilities/abilities_behavior.gd"
@@ -118,7 +118,7 @@ static func _has_class_span(view: EventSheetViewport) -> bool:
 static func _has_class_span_in(row_data: EventRowData) -> bool:
 	if row_data == null:
 		return false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		# The RAW form is `class AbilityData:` (with the colon); the lifted header reads `class
 		# AbilityData` (no colon) in the condition cell, so it is not a raw block.
 		if str(span.text).begins_with("class AbilityData:"):

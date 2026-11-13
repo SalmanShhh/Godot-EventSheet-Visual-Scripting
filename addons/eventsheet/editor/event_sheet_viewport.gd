@@ -230,13 +230,13 @@ const MIN_COMMENT_WRAP_WIDTH := 80.0
 ## row's spans on the way in.
 const EAGER_SPAN_LIMIT := 100
 
-var _renderer: EventRowRenderer = EventRowRenderer.new()
-var _layout_cache: RowLayoutCache = RowLayoutCache.new()
-var _selection_helper: ViewportSelectionHelper = ViewportSelectionHelper.new()
-var _hit_test_helper: ViewportHitTestHelper = ViewportHitTestHelper.new()
-var _drag_preview_helper: ViewportDragPreviewHelper = ViewportDragPreviewHelper.new()
+var _renderer: EventSheetRowRenderer = EventSheetRowRenderer.new()
+var _layout_cache: EventSheetRowLayoutCache = EventSheetRowLayoutCache.new()
+var _selection_helper: EventSheetViewportSelectionHelper = EventSheetViewportSelectionHelper.new()
+var _hit_test_helper: EventSheetViewportHitTestHelper = EventSheetViewportHitTestHelper.new()
+var _drag_preview_helper: EventSheetViewportDragPreviewHelper = EventSheetViewportDragPreviewHelper.new()
 ## What the sheet looks like while something is carried: the ghost, the gap, the fold, the slide.
-var _drag_motion: ViewportDragMotion = ViewportDragMotion.new()
+var _drag_motion: EventSheetViewportDragMotion = EventSheetViewportDragMotion.new()
 var _drag_motion_was_moving: bool = false
 ## The row and cell the press that may become a drag landed on: {"row_index", "span_index"}.
 var _drag_press_hit: Dictionary = {}
@@ -249,13 +249,13 @@ var _pending_state_pick: Dictionary = {}
 # The ROW-BUILDER layer: owns "model → SemanticSpans" construction (span assembly, per-ACE
 # descriptors, non-event row builders). See interaction/viewport_row_builder.gd. The methods
 # below keep one-line delegates so internal STAY callers and tests reach it by the original names.
-var _row_builder: ViewportRowBuilder = ViewportRowBuilder.new()
+var _row_builder: EventSheetViewportRowBuilder = EventSheetViewportRowBuilder.new()
 ## Builds the words of the rows not yet drawn while the editor is idle (see viewport_word_filler.gd).
 var _word_filler: RefCounted = preload("res://addons/eventsheet/editor/interaction/viewport_word_filler.gd").new()
-var _folding: ViewportFolding = ViewportFolding.new()
-var _layout_builder: ViewportLayoutBuilder = ViewportLayoutBuilder.new()
-var _drag: ViewportDragInteractions = ViewportDragInteractions.new()
-var _input_handlers: ViewportInputHandlers = ViewportInputHandlers.new()  # mouse/key handling behind _gui_input (interaction/viewport_input.gd)  # box selection + row/ACE drag gestures (interaction/viewport_drag.gd)  # per-row geometry pass (interaction/viewport_layout_builder.gd)  # fold gestures + region fold persistence (interaction/viewport_folding.gd)
+var _folding: EventSheetViewportFolding = EventSheetViewportFolding.new()
+var _layout_builder: EventSheetViewportLayoutBuilder = EventSheetViewportLayoutBuilder.new()
+var _drag: EventSheetViewportDragInteractions = EventSheetViewportDragInteractions.new()
+var _input_handlers: EventSheetViewportInputHandlers = EventSheetViewportInputHandlers.new()  # mouse/key handling behind _gui_input (interaction/viewport_input.gd)  # box selection + row/ACE drag gestures (interaction/viewport_drag.gd)  # per-row geometry pass (interaction/viewport_layout_builder.gd)  # fold gestures + region fold persistence (interaction/viewport_folding.gd)
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _sheet: EventSheetResource = null
 var _editor_style: EventSheetEditorStyle = EventSheetEditorStyle.new()
@@ -459,7 +459,7 @@ var inherited_folded: bool = true
 ## needs it; View ▾ turns it off so a doubter can read the plain statement sentences underneath and
 ## compare. Span builds read it, so flipping it rebuilds via set_sheet.
 var patterns_lens: bool = true
-## The words naming what a drag carries, for a drag that has no motion drawn (ViewportDragMotion
+## The words naming what a drag carries, for a drag that has no motion drawn (EventSheetViewportDragMotion
 ## carries the real row once the press has lifted).
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -638,8 +638,8 @@ func group_memo_computes() -> Vector2i:
 ## handed over outright (the view takes a fresh one), because a row build empties both in place -
 ## share either and the next sheet to be read would empty the reading this one just put away.
 func capture_view_state() -> Dictionary:
-	var handed_over: RowLayoutCache = _layout_cache
-	_layout_cache = RowLayoutCache.new()
+	var handed_over: EventSheetRowLayoutCache = _layout_cache
+	_layout_cache = EventSheetRowLayoutCache.new()
 	return {
 		"sheet": _sheet,
 		"root_rows": _root_rows.duplicate(),
@@ -677,7 +677,7 @@ func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
 		return false
 	var kept_rows: Variant = state.get("root_rows")
 	var kept_flat: Variant = state.get("flat_rows")
-	var kept_cache: RowLayoutCache = state.get("layout_cache") as RowLayoutCache
+	var kept_cache: EventSheetRowLayoutCache = state.get("layout_cache") as EventSheetRowLayoutCache
 	if not (kept_rows is Array) or not (kept_flat is Array) or kept_cache == null:
 		return false
 	_sheet = sheet
@@ -1010,7 +1010,7 @@ func row_lane_divider_x(width: float, indent: int) -> float:
 func event_lane_origin_x(indent: int) -> float:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	if event_style != null and event_style.sub_event_strips:
-		return EventRowRenderer.nested_block_left_for(maxi(indent, 0), event_style.sub_event_indent)
+		return EventSheetRowRenderer.nested_block_left_for(maxi(indent, 0), event_style.sub_event_indent)
 	return EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
 		+ float(maxi(indent, 0) * indent_width()) + 18.0
 
@@ -1132,7 +1132,7 @@ func get_selected_row_data() -> EventRowData:
 	return _row_at(_selected_row_index)
 
 
-func get_selected_span() -> SemanticSpan:
+func get_selected_span() -> EventSheetSemanticSpan:
 	var row_data: EventRowData = get_selected_row_data()
 	if row_data == null:
 		return null
@@ -1143,7 +1143,7 @@ func get_selected_span() -> SemanticSpan:
 
 func get_selected_context() -> Dictionary:
 	var row_data: EventRowData = get_selected_row_data()
-	var span: SemanticSpan = get_selected_span()
+	var span: EventSheetSemanticSpan = get_selected_span()
 	return {
 		"row_index": _selected_row_index,
 		"span_index": _selected_span_index,
@@ -1194,7 +1194,7 @@ func get_selected_ace_entries() -> Array:
 		for span_index in selected_indices:
 			if span_index < 0 or span_index >= row_data.spans.size():
 				continue
-			var span: SemanticSpan = row_data.spans[span_index]
+			var span: EventSheetSemanticSpan = row_data.spans[span_index]
 			if span == null or not (span.metadata is Dictionary):
 				continue
 			var metadata: Dictionary = span.metadata as Dictionary
@@ -1218,7 +1218,7 @@ func get_selected_span_targets() -> Array:
 		for span_index in selected_indices:
 			if span_index < 0 or span_index >= row_data.spans.size():
 				continue
-			var span: SemanticSpan = row_data.spans[span_index]
+			var span: EventSheetSemanticSpan = row_data.spans[span_index]
 			if span == null or not (span.metadata is Dictionary):
 				continue
 			var metadata: Dictionary = span.metadata as Dictionary
@@ -1391,7 +1391,7 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 ## computation behind both readings of that edge - the point the column header's grabber sits on,
 ## and the point a drag is measured from - so the grabber can never sit somewhere the drag would
 ## not have started.
-func _object_column_boundary_of(span: SemanticSpan) -> Dictionary:
+func _object_column_boundary_of(span: EventSheetSemanticSpan) -> Dictionary:
 	if span == null or not (span.metadata is Dictionary):
 		return {}
 	var metadata: Dictionary = span.metadata as Dictionary
@@ -1408,9 +1408,9 @@ func _object_column_boundary_of(span: SemanticSpan) -> Dictionary:
 	if bool(metadata.get("chip", false)):
 		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		anchor_x += EventRowRenderer.object_icon_advance(_get_event_style())
+		anchor_x += EventSheetRowRenderer.object_icon_advance(_get_event_style())
 	var boundary_x: float = anchor_x
-	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, int(metadata.get("row_indent", 0))))
+	var column_width: float = EventSheetRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, int(metadata.get("row_indent", 0))))
 	# The layout stamps the aligned per-span column (shared separator x); grab where it is
 	# actually drawn, not where the raw style width would put it.
 	var aligned_column: Variant = metadata.get("object_column_px")
@@ -1440,7 +1440,7 @@ func object_column_boundary_for_lane(lane: String) -> Dictionary:
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 			continue
 		_layout_builder.get_or_build_row_layout(index, width, font, font_size)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var boundary: Dictionary = _object_column_boundary_of(span)
 			if not boundary.is_empty() and str(boundary.get("lane", "")) == lane:
 				return boundary
@@ -1536,7 +1536,7 @@ func event_boundary_grab_at(local_position: Vector2) -> Dictionary:
 	if boundary.is_empty():
 		return {}
 	var lane: String = str(boundary.get("lane", ""))
-	if EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, row_data.indent)) <= 0.0:
+	if EventSheetRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, row_data.indent)) <= 0.0:
 		return {}
 	return boundary
 
@@ -1676,7 +1676,7 @@ func _build_element_style_metadata(style: EventSheetElementStyle) -> Dictionary:
 	}
 
 
-func _get_span_gap(span: SemanticSpan) -> float:
+func _get_span_gap(span: EventSheetSemanticSpan) -> float:
 	if span == null or not (span.metadata is Dictionary):
 		return EventSheetPalette.SPAN_GAP
 	var metadata: Dictionary = span.metadata as Dictionary
@@ -1686,8 +1686,8 @@ func _get_span_gap(span: SemanticSpan) -> float:
 	var fallback_gap: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
 	# A typed name of the look that nests by lines ends on its bold name, whose measured width already
 	# holds the bold stroke: the value after it keeps the typed name's own gap from there.
-	if EventRowRenderer.is_typed_name_span(metadata) and _get_event_style().sub_event_strips:
-		fallback_gap = EventRowRenderer.TYPED_LOCAL_GAP - float(EventRowRenderer.BOLD_OUTLINE_SIZE)
+	if EventSheetRowRenderer.is_typed_name_span(metadata) and _get_event_style().sub_event_strips:
+		fallback_gap = EventSheetRowRenderer.TYPED_LOCAL_GAP - float(EventSheetRowRenderer.BOLD_OUTLINE_SIZE)
 	return max(float(metadata.get("gap_after", fallback_gap)), 0.0)
 
 
@@ -1844,7 +1844,7 @@ func interactive_span_indices(row_data: EventRowData) -> Array[int]:
 	if row_data == null:
 		return indices
 	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span != null and span.metadata is Dictionary and str(span.metadata.get("kind", "")) in ["trigger", "condition", "action"]:
 			indices.append(span_index)
 	return indices
@@ -1908,7 +1908,7 @@ var _slow_click: Dictionary = {"row": -1, "span": -1, "msec": 0}
 ## (multiline comments route to their dialog instead). now_msec is injectable for tests.
 ## Which highlighted value (if any) sits under logical x in a span: [text, occurrence]
 ## where occurrence counts earlier ranges with IDENTICAL text (disambiguates "0" vs "0").
-func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size: int) -> Array:
+func _value_text_at(span: EventSheetSemanticSpan, logical_x: float, font: Font, font_size: int) -> Array:
 	var ranges: Array = span.metadata.get("value_ranges", []) if span.metadata is Dictionary else []
 	if ranges.is_empty():
 		return []
@@ -1935,22 +1935,22 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 
 ## How far into a span's text `offset` lands once the squares that lead its colour values have taken their
 ## room: a value that starts at a square starts after it.
-func _span_gapped_prefix_width(span: SemanticSpan, offset: int, font: Font, draw_font_size: int) -> float:
+func _span_gapped_prefix_width(span: EventSheetSemanticSpan, offset: int, font: Font, draw_font_size: int) -> float:
 	var prefix: String = span.text.substr(0, offset)
-	var marks: Array = EventRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
+	var marks: Array = EventSheetRowRenderer.colour_square_marks(span.metadata) if span.metadata is Dictionary else []
 	if not marks.is_empty():
 		var leading: Array = []
 		for mark: Dictionary in marks:
 			if int(mark["at"]) <= offset:
 				leading.append(mark)
-		prefix = EventRowRenderer.text_with_colour_gaps(prefix, leading, EventRowRenderer.colour_gap_text(font, draw_font_size))
+		prefix = EventSheetRowRenderer.text_with_colour_gaps(prefix, leading, EventSheetRowRenderer.colour_gap_text(font, draw_font_size))
 	return font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 
 
 ## Where the span's TEXT begins, in logical coordinates - the renderer indents it past the object
 ## icon and object label prefixes (matching _draw_spans' advances exactly). Shared by the value
 ## hit-test and the Param Hop cursor so their geometry can never drift from the draw.
-func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> float:
+func _span_text_origin_x(span: EventSheetSemanticSpan, font: Font, font_size: int) -> float:
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	var origin_x: float = span.rect.position.x
 	# Chip spans draw their text padding_x inside the plate - the renderer starts at
@@ -1959,13 +1959,13 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 	if bool(metadata.get("chip", false)):
 		origin_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		origin_x += EventRowRenderer.object_icon_advance(_get_event_style())
+		origin_x += EventSheetRowRenderer.object_icon_advance(_get_event_style())
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		# Fixed object column (the event-sheet sub-lane) advances by the column width; flow mode by the
 		# label's own width - mirrors the renderer exactly.
 		var span_lane: String = str(metadata.get("lane", ""))
-		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane, int(metadata.get("row_indent", 0))))
+		var object_column_width: float = EventSheetRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane, int(metadata.get("row_indent", 0))))
 		if object_column_width > 0.0:
 			# The layout stamps the aligned per-span column (shared-separator rule); the
 			# hit-test origin must advance by the DRAWN column or value clicks drift.
@@ -1978,7 +1978,7 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 	return origin_x
 
 
-func _span_draw_font_size(span: SemanticSpan, font_size: int) -> int:
+func _span_draw_font_size(span: EventSheetSemanticSpan, font_size: int) -> int:
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	return EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 
@@ -2023,13 +2023,13 @@ func _param_value_entries(row_data: EventRowData) -> Array:
 	if row_data == null or not (row_data.source_resource is EventRow):
 		return entries
 	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		var kind: String = str(metadata.get("kind", ""))
 		if kind not in ["condition", "trigger", "action"]:
 			continue
 		var ranges: Array = metadata.get("value_ranges", [])
-		var colour_values: Array = EventRowRenderer.colour_square_marks(metadata)
+		var colour_values: Array = EventSheetRowRenderer.colour_square_marks(metadata)
 		if ranges.is_empty() and colour_values.is_empty():
 			continue
 		var lane: String = "action" if kind == "action" else "condition"
@@ -2124,8 +2124,8 @@ func _open_param_cursor_editor() -> void:
 	# parameters window instead), exactly as a click on the square does.
 	if int(entry.get("colour_index", -1)) >= 0:
 		var colour_row: EventRowData = _row_at(_selected_row_index)
-		var colour_span: SemanticSpan = colour_row.spans[int(entry["span_index"])]
-		var found: Dictionary = {"mark": EventRowRenderer.colour_square_marks(colour_span.metadata)[int(entry["colour_index"])],
+		var colour_span: EventSheetSemanticSpan = colour_row.spans[int(entry["span_index"])]
+		var found: Dictionary = {"mark": EventSheetRowRenderer.colour_square_marks(colour_span.metadata)[int(entry["colour_index"])],
 			"rect": ((colour_span.metadata.get("colour_square_rects", []) as Array)[int(entry["colour_index"])] as Rect2)
 				if (colour_span.metadata.get("colour_square_rects", []) as Array).size() > int(entry["colour_index"]) else Rect2(),
 			"index": int(entry["colour_index"])}
@@ -2166,7 +2166,7 @@ func _param_value_logical_rect(row_data: EventRowData, entry: Dictionary, font: 
 	var span_index: int = int(entry.get("span_index", -1))
 	if span_index < 0 or span_index >= row_data.spans.size():
 		return Rect2()
-	var span: SemanticSpan = row_data.spans[span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[span_index]
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	var ranges: Array = metadata.get("value_ranges", [])
 	var range_index: int = int(entry.get("range_index", -1))
@@ -2375,7 +2375,7 @@ func group_row_bands() -> Array:
 		if row_data.source_resource is EventGroup:
 			title = _group_name(row_data.source_resource as EventGroup)
 		else:
-			title = ViewportGroupBreadcrumb.header_title_of(row_data)
+			title = EventSheetViewportGroupBreadcrumb.header_title_of(row_data)
 		if title.is_empty():
 			continue
 		if not bands.is_empty():
@@ -2427,7 +2427,7 @@ func set_object_preview(object_label: String) -> void:
 static func row_previews_object(row_data: EventRowData, object_label: String) -> bool:
 	if row_data == null or object_label.is_empty():
 		return false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if not (span.metadata is Dictionary):
 			continue
 		if str((span.metadata as Dictionary).get("object_label", "")) == object_label:
@@ -2465,7 +2465,7 @@ func _search_row_tree(row_data: EventRowData, needle: String, into: Array[Resour
 	if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
 		_row_builder._ensure_event_spans(row_data)
 	var haystack: String = ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		haystack += span.text + " "
 	if row_data.source_resource is RawCodeRow:
 		haystack += (row_data.source_resource as RawCodeRow).code
@@ -2527,7 +2527,7 @@ func search_rows(query: String) -> Array[int]:
 		if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
 			_row_builder._ensure_event_spans(row_data)
 		var haystack: String = ""
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			haystack += span.text + " "
 		if row_data.source_resource is RawCodeRow:
 			haystack += (row_data.source_resource as RawCodeRow).code
@@ -2768,7 +2768,7 @@ func _draw() -> void:
 	# After the pinned parent strip, and under it: the strip owns the top edge whenever it is
 	# showing, so the links move down by its height rather than being drawn through it.
 	_corner_links.draw(font, font_size,
-		ViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
+		EventSheetViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
 	_drag.draw_drag_ghost(font, font_size)
 
 
@@ -2977,7 +2977,7 @@ func _draw_event_cards(visible_range: Vector2i) -> void:
 		_renderer.draw_event_card(self, drag_shifted_rect(event_card_border_rect(lead), lead, statement_last_index(lead)), event_style)
 
 
-## The selection runs the visible rows belong to (ViewportSelectionHelper.selection_runs), read
+## The selection runs the visible rows belong to (EventSheetViewportSelectionHelper.selection_runs), read
 ## before the rows are painted: each row of a run of two or more statements is stamped
 ## `in_selection_run`, so it takes the run's one fill and draws no frame of its own. A run that
 ## starts above the window or ends below it is followed out to its real ends, so its frame is the
@@ -2998,7 +2998,7 @@ func _stamp_selection_runs(visible_range: Vector2i) -> Array:
 	var last: int = visible_range.y
 	while last + 1 < _flat_rows.size() and _row_at(last + 1) != null and _row_at(last + 1).selected:
 		last += 1
-	var runs: Array = ViewportSelectionHelper.selection_runs(first, last, _row_at, statement_lead_index,
+	var runs: Array = EventSheetViewportSelectionHelper.selection_runs(first, last, _row_at, statement_lead_index,
 		func(index: int) -> bool: return not (_selected_span_indices.get(_row_at(index).row_uid, []) as Array).is_empty())
 	for run: Dictionary in runs:
 		if int(run["statements"]) < 2:
@@ -3060,7 +3060,7 @@ func _draw_row_in_motion(canvas: CanvasItem, index: int, layout: Dictionary, row
 	if shifts.is_empty() and hidden.is_empty() and absf(resize) < 0.01:
 		_renderer.draw_row(canvas, layout, row_data, font, font_size, _editor_style)
 	else:
-		var kept_spans: Array[SemanticSpan] = row_data.spans.duplicate()
+		var kept_spans: Array[EventSheetSemanticSpan] = row_data.spans.duplicate()
 		var moved_layout: Dictionary = layout.duplicate()
 		for key: String in ["row_rect", "condition_lane_rect", "action_lane_rect", "lane_divider_rect", "gutter_rect"]:
 			var band: Rect2 = moved_layout.get(key, Rect2())
@@ -3068,14 +3068,14 @@ func _draw_row_in_motion(canvas: CanvasItem, index: int, layout: Dictionary, row
 				band.size.y = maxf(band.size.y + resize, 0.0)
 				moved_layout[key] = band
 		for span_index: int in range(row_data.spans.size()):
-			var span: SemanticSpan = row_data.spans[span_index]
+			var span: EventSheetSemanticSpan = row_data.spans[span_index]
 			if span == null:
 				continue
 			if hidden.has(span_index):
-				row_data.spans[span_index] = SemanticSpan.new()
+				row_data.spans[span_index] = EventSheetSemanticSpan.new()
 				continue
 			if shifts.has(span_index):
-				var moved: SemanticSpan = SemanticSpan.new()
+				var moved: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 				moved.text = span.text
 				moved.type = span.type
 				moved.metadata = span.metadata
@@ -3098,7 +3098,7 @@ func _draw_row_in_motion(canvas: CanvasItem, index: int, layout: Dictionary, row
 			_drag_motion._lane_rect(index, str(_drag_motion._source_cell["lane"])).size.x,
 			_drag_motion.source_cell_bottom() - _drag_motion.source_cell_top() + 2.0)
 		var veil_cell: Color = _get_event_style().sheet_background_color
-		veil_cell.a = 1.0 - ViewportDragMotion.LIFTED_ALPHA
+		veil_cell.a = 1.0 - EventSheetViewportDragMotion.LIFTED_ALPHA
 		canvas.draw_rect(cell, veil_cell, true)
 		_draw_dashed_rect(cell, _get_reading_style().drag_line_color, canvas)
 	return true
@@ -3122,7 +3122,7 @@ func _draw_dashed_rect(rect: Rect2, color: Color, canvas: CanvasItem = null) -> 
 	var corners: PackedVector2Array = PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y),
 		rect.end, Vector2(rect.position.x, rect.end.y), rect.position])
 	for side: int in range(4):
-		target.draw_dashed_line(corners[side], corners[side + 1], color, 1.0, ViewportDragMotion.GAP_DASH)
+		target.draw_dashed_line(corners[side], corners[side + 1], color, 1.0, EventSheetViewportDragMotion.GAP_DASH)
 
 
 ## A rectangle over rows `first` to `last`, moved and stretched the way a drag in hand draws those
@@ -3267,7 +3267,7 @@ func reconsider_gap_nesting(at: Vector2) -> void:
 	place_drag_gap({"row_index": target})
 
 
-## What the drag in hand looks like right now (ViewportDragMotion.facts) - for the tests and harnesses.
+## What the drag in hand looks like right now (EventSheetViewportDragMotion.facts) - for the tests and harnesses.
 func drag_display_facts() -> Dictionary:
 	return _drag_motion.facts()
 
@@ -3292,7 +3292,7 @@ func selection_run_rect(run: Dictionary) -> Rect2:
 ## The selection runs the canvas would frame right now, over every row - for the tests and harnesses
 ## that check which frames a selection draws ({"first", "last", "has_event", "statements", "rect"}).
 func selection_run_frames() -> Array:
-	var runs: Array = ViewportSelectionHelper.selection_runs(0, _flat_rows.size() - 1, _row_at, statement_lead_index,
+	var runs: Array = EventSheetViewportSelectionHelper.selection_runs(0, _flat_rows.size() - 1, _row_at, statement_lead_index,
 		func(index: int) -> bool: return not (_selected_span_indices.get(_row_at(index).row_uid, []) as Array).is_empty())
 	var framed: Array = []
 	for run: Dictionary in runs:
@@ -3410,7 +3410,7 @@ func _draw_group_brackets(width: float) -> void:
 		if str(stroke["kind"]) == "dash":
 			draw_dashed_line(Vector2(rect.position.x + rect.size.x * 0.5, rect.position.y),
 				Vector2(rect.position.x + rect.size.x * 0.5, rect.end.y), stroke["color"] as Color,
-				rect.size.x, EventRowRenderer.REGION_DASH_LENGTH)
+				rect.size.x, EventSheetRowRenderer.REGION_DASH_LENGTH)
 		else:
 			draw_rect(rect, stroke["color"] as Color, true)
 
@@ -3422,7 +3422,7 @@ func variable_group_runs_cached() -> Array:
 	var key: Array = [_flat_generation, _rows_revision, _flat_rows.size()]
 	if _group_run_memo.get("key") != key:
 		_group_run_computes += 1
-		_group_run_memo = {"key": key, "runs": ViewportRowBuilder.variable_group_runs(_flat_rows)}
+		_group_run_memo = {"key": key, "runs": EventSheetViewportRowBuilder.variable_group_runs(_flat_rows)}
 	return _group_run_memo["runs"]
 
 
@@ -3475,7 +3475,7 @@ func _compute_group_bracket_strokes(width: float) -> Array:
 		if row_data.disabled:
 			strokes.append({"kind": "fill", "part": "backdrop", "rect": Rect2(left, top, width - left, height),
 				"color": reading_style.disabled_row_color})
-		var ink: Color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_RULE_ALPHA)
+		var ink: Color = Color(accent.r, accent.g, accent.b, EventSheetRowRenderer.REGION_RULE_ALPHA)
 		if row_data.row_type == EventRowData.RowType.REGION:
 			strokes.append({"kind": "dash", "part": "dash",
 				"rect": Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), "color": ink})
@@ -3545,8 +3545,8 @@ func _draw_region_drop_glow(width: float) -> void:
 		if accent.a <= 0.01:
 			accent = _get_event_style().behavior_accent_color
 		var glow := StyleBoxFlat.new()
-		glow.bg_color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_ROW_WASH_ALPHA)
-		glow.border_color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_RULE_ALPHA)
+		glow.bg_color = Color(accent.r, accent.g, accent.b, EventSheetRowRenderer.REGION_ROW_WASH_ALPHA)
+		glow.border_color = Color(accent.r, accent.g, accent.b, EventSheetRowRenderer.REGION_RULE_ALPHA)
 		glow.set_border_width_all(_get_event_style().region_line_width)
 		glow.set_corner_radius_all(_get_event_style().region_corner_radius)
 		var left: float = 3.0 + float(row_data.indent * indent_width())
@@ -3695,7 +3695,7 @@ func reflow_after_fold(changed: Array[EventRowData]) -> bool:
 ## Everything a rebuild does once the rows exist: flatten them (honouring folds and the lens),
 ## build the words of a small sheet, measure, number, restore the selection and hover flags, and
 ## ask for a draw. The one place both a full rebuild and a fold's reflow end up.
-## `kept_metrics` (see ViewportRowMetrics.rebuild) are the measurements a fold keeps; a full rebuild keeps none.
+## `kept_metrics` (see EventSheetViewportRowMetrics.rebuild) are the measurements a fold keeps; a full rebuild keeps none.
 func _reflow_flat_rows(kept_metrics: Dictionary = {}) -> void:
 	_group_breadcrumb.invalidate()
 	_flat_rows.clear()
@@ -3968,7 +3968,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 			event_start = scaffold_end
 	# A file whose head lines are not text of its own (a `.tres` sheet the compiler writes them for)
 	# still opens on the one head bar: it is the sheet's name, kind and counts, not a line of the file.
-	if event_start == 0 and (ViewportRowBuilder.opens_on_head_bar(sheet) or heads_unsaved_sheets):
+	if event_start == 0 and (EventSheetViewportRowBuilder.opens_on_head_bar(sheet) or heads_unsaved_sheets):
 		root_rows.append(_row_builder.build_sheet_head_bar_row(sheet))
 	# The declarations, under the head that names the file and above the events that use them:
 	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
@@ -3986,7 +3986,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 			continue
 		if inspector_rows and entry is RawCodeRow and entry_index + 1 < sheet.events.size() \
 				and _takes_doc_line(sheet.events[entry_index + 1]):
-			var doc: String = ViewportRowBuilder.doc_comment_only_prose((entry as RawCodeRow).code)
+			var doc: String = EventSheetViewportRowBuilder.doc_comment_only_prose((entry as RawCodeRow).code)
 			if not doc.is_empty():
 				pending_doc = doc
 				continue
@@ -4003,7 +4003,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		# in HERE too: the vocabulary reads where it actually lives in the file instead of being hoisted
 		# above everything. A missing verb keeps the anchor's muted "defined here" stub as the fallback.
 		if entry is FunctionAnchorRow:
-			var anchored: EventFunction = ViewportRowBuilder.find_function_by_name(
+			var anchored: EventFunction = EventSheetViewportRowBuilder.find_function_by_name(
 				sheet, (entry as FunctionAnchorRow).function_name
 			)
 			if anchored != null:
@@ -4019,7 +4019,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# BEFORE the fence pairing so a #region opened mid-file still walks a settled list.
 	# A behaviour, a global or any other file of a pack reads in its file's own order instead, under
 	# the title row an edited sheet has.
-	var file_order: bool = ViewportRowBuilder.reads_in_file_order(sheet)
+	var file_order: bool = EventSheetViewportRowBuilder.reads_in_file_order(sheet)
 	if not file_order:
 		root_rows = _row_builder.build_read_only_head_rows(root_rows, sheet)
 	# Pair #region/#endregion fences into foldable ranges (view layer only; the
@@ -4046,7 +4046,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# stays off the canvas, and the card's Edit description… edits it. Pure view - the note is still in
 	# sheet.events and the file.
 	root_rows.append_array(closing_notes)
-	var claimed_note: CommentRow = ViewportRowBuilder.claimed_description_note(root_rows)
+	var claimed_note: CommentRow = EventSheetViewportRowBuilder.claimed_description_note(root_rows)
 	if claimed_note != null:
 		root_rows.assign(root_rows.filter(func(note_row: EventRowData) -> bool:
 			return note_row.indent != 0 or note_row.source_resource != claimed_note))
@@ -4126,7 +4126,7 @@ func _build_inner_class_row(inner: InnerClassRow, indent: int) -> EventRowData:
 	var members: Array[EventRowData] = []
 	for entry: Variant in inner.body.events:
 		if entry is FunctionAnchorRow:
-			var anchored: EventFunction = ViewportRowBuilder.find_function_by_name(
+			var anchored: EventFunction = EventSheetViewportRowBuilder.find_function_by_name(
 				inner.body, (entry as FunctionAnchorRow).function_name)
 			if anchored != null:
 				members.append_array(_row_builder.build_verb_block_rows(anchored, 0))
@@ -4194,7 +4194,7 @@ func open_add_menu_for(row_index: int) -> void:
 	var row_data: EventRowData = _row_at(row_index)
 	var owner_resource: Resource = null
 	if _row_is_add_event_footer(row_data):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).get("add_event_owner") is Resource:
 				owner_resource = (span.metadata as Dictionary)["add_event_owner"] as Resource
 				break
@@ -4278,7 +4278,7 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	# the behaviour works on. The block stays in the sheet and is emitted as before, so the file still
 	# round-trips byte for byte; one that fails to compile keeps its row so the error has a place.
 	if entry is RawCodeRow and not _row_diagnostics.has(str(entry.get_instance_id())) \
-			and not ViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
+			and not EventSheetViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
 		return null
 	# A state machine is ONE row. The enum row stands for it, and the declarations that only serve it
 	# (the state variable, the previous state, the entered time, the state_changed signal) are not drawn:
@@ -4501,7 +4501,7 @@ func _build_action_line_reservations(
 		return reservations
 	var action_lane_padding: float = float(_get_event_style().action_lane_padding)
 	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -4553,20 +4553,20 @@ func get_host_context_label() -> String:
 		return " - host: %s" % _sheet.host_class
 	return ""
 
-# ── Row metrics (per-row top/height vertical layout; see ViewportRowMetrics) ──
-var _row_metrics_helper: ViewportRowMetrics = ViewportRowMetrics.new()
+# ── Row metrics (per-row top/height vertical layout; see EventSheetViewportRowMetrics) ──
+var _row_metrics_helper: EventSheetViewportRowMetrics = EventSheetViewportRowMetrics.new()
 # ── Sticky group breadcrumb (a draw pass pinned at the scroll offset; see its file) ──
-var _group_breadcrumb: ViewportGroupBreadcrumb = ViewportGroupBreadcrumb.new()
-var _corner_links: ViewportCornerLinks = ViewportCornerLinks.new()
+var _group_breadcrumb: EventSheetViewportGroupBreadcrumb = EventSheetViewportGroupBreadcrumb.new()
+var _corner_links: EventSheetViewportCornerLinks = EventSheetViewportCornerLinks.new()
 
-# ── Live values (rung 3): inline chips next to variable rows (see ViewportLiveValuesHelper) ──
-var _live_values_helper: ViewportLiveValuesHelper = ViewportLiveValuesHelper.new()
+# ── Live values (rung 3): inline chips next to variable rows (see EventSheetViewportLiveValuesHelper) ──
+var _live_values_helper: EventSheetViewportLiveValuesHelper = EventSheetViewportLiveValuesHelper.new()
 
-# ── Hover tooltips (ACE/function descriptions + GDScript codegen preview; see ViewportTooltipHelper) ──
-var _tooltip_helper: ViewportTooltipHelper = ViewportTooltipHelper.new()
+# ── Hover tooltips (ACE/function descriptions + GDScript codegen preview; see EventSheetViewportTooltipHelper) ──
+var _tooltip_helper: EventSheetViewportTooltipHelper = EventSheetViewportTooltipHelper.new()
 
-# ── Empty state (getting-started overlay drawn over a sheet with no authored rows; see ViewportEmptyStateHelper) ──
-var _empty_state_helper: ViewportEmptyStateHelper = ViewportEmptyStateHelper.new()
+# ── Empty state (getting-started overlay drawn over a sheet with no authored rows; see EventSheetViewportEmptyStateHelper) ──
+var _empty_state_helper: EventSheetViewportEmptyStateHelper = EventSheetViewportEmptyStateHelper.new()
 
 
 ## Streamed name->value frame (debug runs). Redraws value chips on variable rows. `instance` names
@@ -4727,9 +4727,9 @@ func _apply_zoom_delta(direction: int, anchor_position: Vector2) -> void:
 func content_top_offset() -> float:
 	if workspace_bands_folded():
 		return 0.0 if figure_mode else FOLDED_CANVAS_TOP_PADDING
-	if not ViewportCornerLinks.shown_on(self):
+	if not EventSheetViewportCornerLinks.shown_on(self):
 		return 0.0
-	return ViewportCornerLinks.band_height(EventSheetPalette.resolve_font_size(_get_font_size(), -1))
+	return EventSheetViewportCornerLinks.band_height(EventSheetPalette.resolve_font_size(_get_font_size(), -1))
 
 
 ## True when the sheet's theme folds the bands between the toolbar and the sheet away
@@ -5014,7 +5014,7 @@ func _compute_hover_matches(row_index: int, span_index: int) -> Dictionary:
 
 
 ## The local a span names: the name in a local line's object column, else the span's own words.
-static func _span_local_name(span: SemanticSpan) -> String:
+static func _span_local_name(span: EventSheetSemanticSpan) -> String:
 	if span != null and span.metadata is Dictionary:
 		var local_name: String = str((span.metadata as Dictionary).get("local_name", ""))
 		if not local_name.is_empty():
@@ -5041,7 +5041,7 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 		resolved_span_index = _find_first_editable_span(row_data)
 	if resolved_span_index < 0 or resolved_span_index >= row_data.spans.size():
 		return
-	var span: SemanticSpan = row_data.spans[resolved_span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[resolved_span_index]
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	if not bool(metadata.get("editable", false)):
 		return
@@ -5079,7 +5079,7 @@ func begin_edit_selected() -> bool:
 		resolved_span_index = _find_first_editable_span(row_data)
 	if resolved_span_index < 0 or resolved_span_index >= row_data.spans.size():
 		return false
-	var span: SemanticSpan = row_data.spans[resolved_span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[resolved_span_index]
 	var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
 	if not bool(metadata.get("editable", false)):
 		return false
@@ -5104,7 +5104,7 @@ func begin_variable_rename(row_index: int) -> bool:
 	if row_data == null:
 		return false
 	for index: int in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[index]
+		var span: EventSheetSemanticSpan = row_data.spans[index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -5123,7 +5123,7 @@ func begin_variable_rename(row_index: int) -> bool:
 
 func _find_first_editable_span(row_data: EventRowData) -> int:
 	for index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[index]
+		var span: EventSheetSemanticSpan = row_data.spans[index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -5139,7 +5139,7 @@ func _find_first_editable_span(row_data: EventRowData) -> int:
 func _span_is_editable(row_data: EventRowData, span_index: int) -> bool:
 	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
 		return false
-	var span: SemanticSpan = row_data.spans[span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[span_index]
 	if span == null or not (span.metadata is Dictionary):
 		return false
 	return bool((span.metadata as Dictionary).get("editable", false))
@@ -5150,7 +5150,7 @@ func _commit_edit() -> void:
 	if row_data == null or _editing_span_index < 0 or _editing_span_index >= row_data.spans.size():
 		_cancel_edit()
 		return
-	var span: SemanticSpan = row_data.spans[_editing_span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[_editing_span_index]
 	var previous_value: String = span.text
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	# A variable row that SHOWS a reading (a tool button's label, a colour's hex) edits the
@@ -5253,7 +5253,7 @@ func _update_inline_format_bar() -> void:
 	if row_data == null or _editing_span_index >= row_data.spans.size():
 		_inline_format_bar.visible = false
 		return
-	var span: SemanticSpan = row_data.spans[_editing_span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[_editing_span_index]
 	var font: Font = get_theme_default_font()
 	var prefix_width: float = 0.0
 	if font != null:
@@ -5267,7 +5267,7 @@ func _update_inline_format_bar() -> void:
 	_inline_format_bar.position = target
 
 
-func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String) -> void:
+func _apply_span_edit(row_data: EventRowData, span: EventSheetSemanticSpan, value: String) -> void:
 	if not (span.metadata is Dictionary):
 		return
 	var metadata: Dictionary = span.metadata as Dictionary
@@ -5323,7 +5323,7 @@ func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 		return ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary) or not bool((span.metadata as Dictionary).get("badge", false)):
 			continue
 		var mark: String = NativeRowMarks.kind_mark_for(span.metadata, span.text)
@@ -5392,7 +5392,7 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 		return false
 	var shown: LocalVariable = badge_row.source_resource as LocalVariable
 	# The state row acts for its enum; its marks are the state variable's.
-	if shown == null and ViewportRowBuilder._is_state_machine_row(badge_row):
+	if shown == null and EventSheetViewportRowBuilder._is_state_machine_row(badge_row):
 		shown = EventSheetStateFacts.machine_of_entry(_sheet as EventSheetResource, badge_row.source_resource).get("variable") as LocalVariable
 	var card: Dictionary = NativeVariableMarks.badge_card(badge, shown)
 	if card.is_empty():
@@ -5401,7 +5401,7 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 		_head_card = load(HEAD_CARD_PATH).new()
 		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
 		add_child(_head_card)
-	var span: SemanticSpan = NativeVariableMarks.badge_span(badge_row)
+	var span: EventSheetSemanticSpan = NativeVariableMarks.badge_span(badge_row)
 	var tiles: Array[Rect2] = NativeVariableMarks.tile_rects(float((span.metadata as Dictionary)["badge_tiles_x"]),
 		span.rect.get_center().y, NativeVariableMarks.row_badges(badge_row).size())
 	var tile: Rect2 = tiles[maxi(NativeVariableMarks.row_badges(badge_row).find(badge), 0)]
@@ -5477,7 +5477,7 @@ func remember_colour_switch(written_text: String, note: String) -> void:
 		_colour_switch_notes[written_text.strip_edges()] = note
 
 
-## The hover card behind an event's NUMBER (ViewportTooltipHelper.event_number_card): the event,
+## The hover card behind an event's NUMBER (EventSheetViewportTooltipHelper.event_number_card): the event,
 ## the pattern it was read as and the door to the pattern's page, floated over the canvas like the
 ## head bar's cards. True when the pointer is on the number of an event that has one, so the caller
 ## leaves the other cards alone. Only with the Patterns lens on, the same switch the help strip obeys.
@@ -5518,7 +5518,7 @@ func event_number_card_for(row_data: EventRowData) -> Dictionary:
 	var ran: String = EventSheetRunProfile.tooltip_for(event_uid, row_data.event_number)
 	if not ran.is_empty():
 		notes.append(ran)
-	return ViewportTooltipHelper.event_number_card(_sheet, event_uid, row_data.event_number, notes)
+	return EventSheetViewportTooltipHelper.event_number_card(_sheet, event_uid, row_data.event_number, notes)
 
 
 ## Closes the head bar's card, if one is open - a sheet change, or a test that opened one.
@@ -5538,7 +5538,7 @@ func elided_object_name_at(row_index: int, span_index: int, logical: Vector2) ->
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
 		return ""
-	var span: SemanticSpan = row_data.spans[span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[span_index]
 	if span == null or not span.metadata is Dictionary:
 		return ""
 	var label: String = str((span.metadata as Dictionary).get("object_label", ""))
@@ -5556,10 +5556,10 @@ func elided_object_name_at(row_index: int, span_index: int, logical: Vector2) ->
 	if bool(metadata.get("chip", false)):
 		column_start += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		column_start += EventRowRenderer.object_icon_advance(_get_event_style())
+		column_start += EventSheetRowRenderer.object_icon_advance(_get_event_style())
 	var limit: float = text_origin - column_start - 6.0
 	var draw_size: int = _span_draw_font_size(span, font_size)
-	if EventRowRenderer._elide(label, limit, font, draw_size) == label:
+	if EventSheetRowRenderer._elide(label, limit, font, draw_size) == label:
 		return ""
 	return label
 
@@ -5574,7 +5574,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	# A corner link says what it opens, and prints its key from the shortcut table.
 	var hovered_link: String = _corner_links.link_at_control_position(at_position)
 	if not hovered_link.is_empty():
-		return ViewportCornerLinks.tooltip_for(hovered_link)
+		return EventSheetViewportCornerLinks.tooltip_for(hovered_link)
 	var hit: Dictionary = _hit_test(_to_logical_position(at_position))
 	# A word with a hover card says everything on the card; a tooltip as well would say it twice.
 	var card_meta: Variant = hit.get("span_metadata", {})
@@ -5666,7 +5666,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 		var preview_payload: Dictionary = _inspector_preview_payload(hit, metadata)
 		if not preview_payload.is_empty():
 			_tooltip_helper.set_pending_inspector_preview(preview_payload)
-			return ViewportTooltipHelper.INSPECTOR_PREVIEW_SENTINEL
+			return EventSheetViewportTooltipHelper.INSPECTOR_PREVIEW_SENTINEL
 	# A published verb's Define row: the row shows the verb's shape, but a long name clips inside the
 	# condition lane and the per-parameter detail has nowhere to go, so the hover carries the full
 	# declaration - name, description, every parameter with its type / default / blurb, and the markers.
@@ -5679,7 +5679,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	if kind == "signal_row":
 		var signal_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if signal_row_data != null and signal_row_data.source_resource is SignalRow:
-			return ViewportTooltipHelper.signal_declaration_tooltip(signal_row_data.source_resource as SignalRow)
+			return EventSheetViewportTooltipHelper.signal_declaration_tooltip(signal_row_data.source_resource as SignalRow)
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if row_data != null and ace_owner(row_data.source_resource) != null:
@@ -5689,7 +5689,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# A pattern reading is a claim spanning several lines, so every row of the event
 			# that owns one carries the evidence for it right under the sentence: which pattern, and
 			# the exact source lines that were the grounds for saying so.
-			var evidence_line: String = ViewportTooltipHelper.pattern_evidence_line(
+			var evidence_line: String = EventSheetViewportTooltipHelper.pattern_evidence_line(
 				_sheet, ace_owner(row_data.source_resource).event_uid) if patterns_lens_enabled() else ""
 			if not evidence_line.is_empty():
 				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
@@ -5797,7 +5797,7 @@ func _glossary_tooltip(hit: Dictionary) -> String:
 	var span_index: int = int(hit.get("span_index", -1))
 	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
 		return ""
-	var span: SemanticSpan = row_data.spans[span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[span_index]
 	if span == null:
 		return ""
 	return EventSheetWords.glossary_hover(span.text)
@@ -5820,7 +5820,7 @@ func _mark_tooltip(hit: Dictionary) -> String:
 	var span_index: int = int(hit.get("span_index", -1))
 	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
 		return ""
-	var span: SemanticSpan = row_data.spans[span_index]
+	var span: EventSheetSemanticSpan = row_data.spans[span_index]
 	if span == null:
 		return ""
 	var help: String = ReadingDoors.doc_reference().mark_help(span.text)
@@ -5873,7 +5873,7 @@ func _inspector_preview_payload(hit: Dictionary, metadata: Dictionary) -> Dictio
 ## Static shim kept for callers that reach in by class name (e.g. tests/gdscript_pairing_test.gd
 ## calls EventSheetViewport.fill_codegen_template(...)). Forwards to the helper's pure implementation.
 static func fill_codegen_template(template: String, params: Dictionary) -> String:
-	return ViewportTooltipHelper.fill_codegen_template(template, params)
+	return EventSheetViewportTooltipHelper.fill_codegen_template(template, params)
 
 
 func _hit_test(position: Vector2) -> Dictionary:
@@ -5936,7 +5936,7 @@ func nested_block_left(row_index: int) -> float:
 		return 0.0
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		return 0.0
-	return EventRowRenderer.nested_block_left_for(row_data.indent, event_style.sub_event_indent)
+	return EventSheetRowRenderer.nested_block_left_for(row_data.indent, event_style.sub_event_indent)
 
 
 ## THE EVENT'S OWN RECTANGLE: the union of every row one event is drawn on, from the left edge of
@@ -5983,7 +5983,7 @@ func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
 		return false
 	var span_index: int = int(hit.get("span_index", -1))
 	if span_index >= 0 and span_index < row_data.spans.size():
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
 		var kind: String = str(metadata.get("kind", ""))
 		# A published verb's parameter cells ride the SAME edit path as condition/action cells: clicking
@@ -6002,7 +6002,7 @@ func _maybe_request_variable_edit(hit: Dictionary, row_index: int) -> bool:
 	var metadata: Dictionary = {}
 	var span_index: int = int(hit.get("span_index", -1))
 	if span_index >= 0 and span_index < row_data.spans.size():
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span != null and span.metadata is Dictionary:
 			metadata = (span.metadata as Dictionary).duplicate(true)
 	if str(metadata.get("kind", "")) != "variable":
@@ -6096,13 +6096,13 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
 	if ace_span_indices.is_empty():
 		return {"ace_index": -1, "insert_mode": "append"}
 	for span_index in ace_span_indices:
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null:
 			continue
 		var ace_index: int = int((span.metadata as Dictionary).get("ace_index", -1))
 		if position.x <= span.rect.get_center().x:
 			return {"ace_index": ace_index, "insert_mode": "before"}
-	var last_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
+	var last_span: EventSheetSemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
 	var last_ace_index: int = int((last_span.metadata as Dictionary).get("ace_index", -1))
 	return {"ace_index": last_ace_index, "insert_mode": "after"}
 
@@ -6189,13 +6189,13 @@ func _stranded_drag_name(target_event: EventRow) -> String:
 
 
 # Static forwarders: tests call these BY CLASS NAME (EventSheetViewport.wrapped_line_count / 
-# EventSheetViewport._row_index_at_y). They forward to the pure statics on ViewportRowMetrics.
+# EventSheetViewport._row_index_at_y). They forward to the pure statics on EventSheetViewportRowMetrics.
 static func wrapped_line_count(text: String, wrap_width: float, font: Font, font_size: int) -> int:
-	return ViewportRowMetrics.wrapped_line_count(text, wrap_width, font, font_size)
+	return EventSheetViewportRowMetrics.wrapped_line_count(text, wrap_width, font, font_size)
 
 
 static func _row_index_at_y(metrics: Array, y: float) -> int:
-	return ViewportRowMetrics._row_index_at_y(metrics, y)
+	return EventSheetViewportRowMetrics._row_index_at_y(metrics, y)
 
 
 func _get_selected_span_count() -> int:
@@ -6419,7 +6419,7 @@ func _get_lane_ace_span_indices(row_data: EventRowData, kind: String) -> Array[i
 	if row_data == null:
 		return span_indices
 	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -6490,7 +6490,7 @@ func _find_ace_span_index(row_data: EventRowData, kind: String, ace_index: int) 
 	if row_data == null:
 		return -1
 	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -6519,7 +6519,7 @@ func _inside_long_text(row_index: int) -> bool:
 		# Any other row may show its value twice (the value, then its code echo), so the quotes it
 		# writes are the most any one of its spans shows.
 		var most: int = 0
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			most = maxi(most, span.text.count("\"\"\"") if span != null else 0)
 		quotes += most
 	return quotes % 2 == 1
@@ -6572,13 +6572,13 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
 
 
 # Static forwarder: value-range extraction is a pure text → ranges helper that now lives on
-# ViewportRowBuilder. Kept here in case anything resolves it by the viewport's class name.
+# EventSheetViewportRowBuilder. Kept here in case anything resolves it by the viewport's class name.
 static func _value_ranges_for(text: String) -> Array:
-	return ViewportRowBuilder._value_ranges_for(text)
+	return EventSheetViewportRowBuilder._value_ranges_for(text)
 
 # Test-only bridge for the row builder's private _pending_display_bbcode one-shot flag. On the real
 # render path the flag never crosses this boundary - the writers (_format_*_descriptor) and the reader
-# (_make_span) all live in ViewportRowBuilder and run against its own private flag. bbcode_and_pill_test
+# (_make_span) all live in EventSheetViewportRowBuilder and run against its own private flag. bbcode_and_pill_test
 # pokes THIS field then calls the _make_span delegate below, which pushes it into the builder; so the
 # test needs no edit. Nothing internal reads this var.
 var _pending_display_bbcode: bool = false
@@ -6588,7 +6588,7 @@ var _pending_display_bbcode: bool = false
 var _pending_param_ranges: Dictionary = {}
 
 
-func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
+func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> EventSheetSemanticSpan:
 	_row_builder._pending_display_bbcode = _pending_display_bbcode
 	_pending_display_bbcode = false
 	if not _pending_param_ranges.is_empty():
@@ -6967,7 +6967,7 @@ static func _is_node_path_drag(data: Variant) -> bool:
 func variable_insert_text(row_data: EventRowData) -> String:
 	if row_data == null or _sheet == null:
 		return ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary

@@ -124,7 +124,7 @@ static func _walk(rows: Array, viewport: EventSheetViewport, found: Array) -> vo
 		var action_texts: PackedStringArray = PackedStringArray()
 		var ace_index: int = -1
 		var local_name: String = ""
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			parts.append(span.text)
 			if local_name.is_empty():

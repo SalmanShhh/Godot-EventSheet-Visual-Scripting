@@ -1,4 +1,4 @@
-# EventForge - the Publishes Manifest census. SheetIdentityBanner.manifest_for counts
+# EventForge - the Publishes Manifest census. EventSheetIdentityBanner.manifest_for counts
 # what a behaviour publishes - trigger signals, exposed functions by return type, exported knobs - from
 # both structured rows AND un-lifted `## @ace_*` RawCode. Pins the counts + that _build_manifest_segments
 # drops zero roles and pluralises.
@@ -24,7 +24,7 @@ static func run() -> bool:
 	sheet.functions.append(_fn(TYPE_FLOAT, true))       # exposed value → expression
 	sheet.functions.append(_fn(TYPE_NIL, false))        # un-exposed helper is not published
 	sheet.variables = {"speed": {"type": "float", "exported": true}, "hidden": {"exported": false}}
-	var m: Dictionary = SheetIdentityBanner.manifest_for(sheet)
+	var m: Dictionary = EventSheetIdentityBanner.manifest_for(sheet)
 	ok = _check("triggers", int(m["triggers"]), 2) and ok
 	ok = _check("actions", int(m["actions"]), 1) and ok
 	ok = _check("conditions", int(m["conditions"]), 1) and ok
@@ -36,22 +36,22 @@ static func run() -> bool:
 	var raw: RawCodeRow = RawCodeRow.new()
 	raw.code = "## @ace_action\nfunc a() -> void:\n\tpass\n## @ace_condition\nfunc b() -> bool:\n\treturn true\n## @ace_trigger\nsignal s"
 	raw_sheet.events.append(raw)
-	var rm: Dictionary = SheetIdentityBanner.manifest_for(raw_sheet)
+	var rm: Dictionary = EventSheetIdentityBanner.manifest_for(raw_sheet)
 	ok = _check("raw @ace_action counted", int(rm["actions"]), 1) and ok
 	ok = _check("raw @ace_condition counted", int(rm["conditions"]), 1) and ok
 	ok = _check("raw @ace_trigger counted", int(rm["triggers"]), 1) and ok
 
 	# Segments drop zero roles and pluralise.
-	var segments: Array = SheetIdentityBanner._build_manifest_segments({"triggers": 1, "actions": 0, "conditions": 0, "expressions": 0, "knobs": 3})
+	var segments: Array = EventSheetIdentityBanner._build_manifest_segments({"triggers": 1, "actions": 0, "conditions": 0, "expressions": 0, "knobs": 3})
 	ok = _check("only non-zero roles become segments", segments.size(), 2) and ok
 	ok = _check("singular trigger", str(segments[0]["text"]), "➜ 1 trigger") and ok
 	ok = _check("plural knobs", str(segments[1]["text"]), "@ 3 knobs") and ok
-	ok = _check("null sheet → all zero", int(SheetIdentityBanner.manifest_for(null)["triggers"]), 0) and ok
+	ok = _check("null sheet → all zero", int(EventSheetIdentityBanner.manifest_for(null)["triggers"]), 0) and ok
 
 	# Health chip: calm green when clean, amber flag count otherwise; save-time push only.
-	ok = _check("clean health chip text", str(SheetIdentityBanner.health_chip(0)["text"]), "✓ no issues") and ok
-	ok = _check("flagged health chip text", str(SheetIdentityBanner.health_chip(3)["text"]), "⚠ 3 flagged") and ok
-	var banner: SheetIdentityBanner = SheetIdentityBanner.new()
+	ok = _check("clean health chip text", str(EventSheetIdentityBanner.health_chip(0)["text"]), "✓ no issues") and ok
+	ok = _check("flagged health chip text", str(EventSheetIdentityBanner.health_chip(3)["text"]), "⚠ 3 flagged") and ok
+	var banner: EventSheetIdentityBanner = EventSheetIdentityBanner.new()
 	ok = _check("health starts unknown (no false green before a check)", banner._health_known, false) and ok
 	banner.set_health(2)
 	ok = _check("set_health records the count", banner._health_count, 2) and ok

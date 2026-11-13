@@ -56,10 +56,10 @@ static func _test_types() -> bool:
 
 
 static func _test_native_rows(viewport: EventSheetViewport, look: String) -> bool:
-	var target_value: SemanticSpan = _span_with(_row_named(viewport, "target"), "variable_value_span")
+	var target_value: EventSheetSemanticSpan = _span_with(_row_named(viewport, "target"), "variable_value_span")
 	var scene_row: EventRowData = _row_named(viewport, "bullet_scene")
-	var scene_value: SemanticSpan = _span_with(scene_row, "variable_value_span")
-	var stats_value: SemanticSpan = _span_with(_row_named(viewport, "stats"), "variable_value_span")
+	var scene_value: EventSheetSemanticSpan = _span_with(scene_row, "variable_value_span")
+	var stats_value: EventSheetSemanticSpan = _span_with(_row_named(viewport, "stats"), "variable_value_span")
 	var muted: Color = viewport._get_reading_style().muted_text_color
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		[look + ": an empty node slot reads null", _words(_row_named(viewport, "target")), ["Node2D", "target", "⚙", "=", "null"]],
@@ -150,7 +150,7 @@ static func _words(row: EventRowData) -> Array:
 	var words: Array = []
 	if row == null:
 		return words
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span != null:
 			words.append(span.text)
 	return words
@@ -161,16 +161,16 @@ static func _row_named(viewport: EventSheetViewport, variable_name: String) -> E
 		var row: EventRowData = viewport._row_at(index)
 		if row == null or not row.variable_row:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("variable_name", "")) == variable_name:
 				return row
 	return null
 
 
-static func _span_with(row: EventRowData, flag: String) -> SemanticSpan:
+static func _span_with(row: EventRowData, flag: String) -> EventSheetSemanticSpan:
 	if row == null:
-		return SemanticSpan.new()
-	for span: SemanticSpan in row.spans:
+		return EventSheetSemanticSpan.new()
+	for span: EventSheetSemanticSpan in row.spans:
 		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get(flag, false)):
 			return span
-	return SemanticSpan.new()
+	return EventSheetSemanticSpan.new()

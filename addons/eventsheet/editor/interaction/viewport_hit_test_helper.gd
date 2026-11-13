@@ -1,5 +1,5 @@
 @tool
-class_name ViewportHitTestHelper
+class_name EventSheetViewportHitTestHelper
 extends RefCounted
 
 
@@ -35,7 +35,7 @@ static func hit_test_row(
 	# into the dead space beside it.
 	for generous: bool in [false, true]:
 		for span_index in range(row_data.spans.size()):
-			var span: SemanticSpan = row_data.spans[span_index]
+			var span: EventSheetSemanticSpan = row_data.spans[span_index]
 			if span == null:
 				continue
 			var catchment: Rect2 = hit_rect(span.rect) if generous else span.rect
@@ -54,7 +54,7 @@ static func hit_test_row(
 					)
 				)
 				if condition_span_index >= 0:
-					var condition_span: SemanticSpan = row_data.spans[condition_span_index]
+					var condition_span: EventSheetSemanticSpan = row_data.spans[condition_span_index]
 					result["span_index"] = condition_span_index
 					result["lane"] = str(resolve_span_lane.call(condition_span))
 					result["span_metadata"] = (
@@ -76,7 +76,7 @@ static func hit_test_row(
 		if position.x >= lane_content_left:
 			var wanted_lane: String = str(result.get("lane", "condition"))
 			for line_span_index in range(row_data.spans.size()):
-				var line_span: SemanticSpan = row_data.spans[line_span_index]
+				var line_span: EventSheetSemanticSpan = row_data.spans[line_span_index]
 				if line_span == null or not line_span.hoverable:
 					continue
 				var line_meta: Dictionary = line_span.metadata if line_span.metadata is Dictionary else {}

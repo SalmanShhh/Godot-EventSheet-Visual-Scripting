@@ -24,7 +24,7 @@ static func run() -> bool:
 	for index: int in range(4):
 		var row_data: EventRowData = EventRowData.new()
 		row_data.row_type = EventRowData.RowType.EVENT
-		var span: SemanticSpan = SemanticSpan.new()
+		var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 		span.text = "Condition %d" % index
 		span.metadata = {"kind": "condition", "line_index": 0, "chip": true}
 		row_data.spans = [span]
@@ -32,7 +32,7 @@ static func run() -> bool:
 	viewport._flat_rows = rows
 	viewport._row_metrics_helper.rebuild()
 	var width: float = viewport._get_logical_canvas_width()
-	var builder: ViewportLayoutBuilder = viewport._layout_builder
+	var builder: EventSheetViewportLayoutBuilder = viewport._layout_builder
 
 	var ok: bool = true
 	var idle_key: String = builder.drag_signature_for_row(0)

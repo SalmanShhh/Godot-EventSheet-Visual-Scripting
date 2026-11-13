@@ -58,7 +58,7 @@ static func _test_head_spans() -> bool:
 		return false
 	passed = _check("the head reads in one line", head.line_count, 1) and passed
 	passed = _check("it leads with a folder mark",
-		_span_text(head, "badge_style", "glyph"), ViewportRowBuilder.GROUP_FOLDER_GLYPH) and passed
+		_span_text(head, "badge_style", "glyph"), EventSheetViewportRowBuilder.GROUP_FOLDER_GLYPH) and passed
 	passed = _check("the title is the group's name",
 		_span_text(head, "group_title", true), "Combat") and passed
 	passed = _check("the description sits on the same line",
@@ -68,7 +68,7 @@ static func _test_head_spans() -> bool:
 	passed = _check("the counts hug the right edge",
 		_span_flag(head, "group_counts", true, "align_right"), true) and passed
 	passed = _check("a switchable group that starts on wears the on ring with the switchable dot",
-		_span_text(head, "group_action", "enabled"), ViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH) and passed
+		_span_text(head, "group_action", "enabled"), EventSheetViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH) and passed
 	passed = _check("and no second mark beside it",
 		_span_with(head, "group_action", "toggleable") == null, true) and passed
 	passed = _check("the mark's hover still says whether it starts on",
@@ -89,12 +89,12 @@ static func _test_head_spans() -> bool:
 			shapes.append(_span_text(_row_for(probe_editor.get_viewport_control(), probe), "group_action", "enabled"))
 			probe_editor.free()
 	passed = _check("on and off read as two shapes, switchable or not", shapes, [
-		ViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH, ViewportRowBuilder.GROUP_SWITCHABLE_OFF_GLYPH,
-		ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH, ViewportRowBuilder.HEAD_SWITCH_OFF_GLYPH]) and passed
+		EventSheetViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH, EventSheetViewportRowBuilder.GROUP_SWITCHABLE_OFF_GLYPH,
+		EventSheetViewportRowBuilder.HEAD_SWITCH_ON_GLYPH, EventSheetViewportRowBuilder.HEAD_SWITCH_OFF_GLYPH]) and passed
 	# The head reads as its title, description, counts and switch - no line of code across it. The
 	# line the compiler declares the group on, character for character, is the counts' hover.
 	var code_on_head: Array = []
-	for span: SemanticSpan in head.spans:
+	for span: EventSheetSemanticSpan in head.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("code_echo", false)):
 			code_on_head.append(span.text)
 	passed = _check("the head draws no code echo", code_on_head, []) and passed
@@ -106,8 +106,8 @@ static func _test_head_spans() -> bool:
 		"## @ace_group(uid=\"combat\", name=\"Combat\", description=\"Damage, hits and death.\", toggleable=true)") and passed
 	# The right-anchored run lays out left to right without landing on top of itself.
 	viewport.get_row_layout_for_test(_index_for(viewport, group))
-	var counts_span: SemanticSpan = _span_with(head, "group_counts", true)
-	var switch_span: SemanticSpan = _span_with(head, "group_action", "enabled")
+	var counts_span: EventSheetSemanticSpan = _span_with(head, "group_counts", true)
+	var switch_span: EventSheetSemanticSpan = _span_with(head, "group_action", "enabled")
 	passed = _check("the switch draws to the right of the counts",
 		switch_span.rect.position.x >= counts_span.rect.end.x - 0.5, true) and passed
 	editor.free()
@@ -124,7 +124,7 @@ static func _test_head_spans() -> bool:
 	passed = _check("an off group leads its counts with off",
 		_span_text(off_head, "group_counts", true), "off · 1 event") and passed
 	passed = _check("and its switch reads off",
-		_span_text(off_head, "group_action", "enabled"), ViewportRowBuilder.HEAD_SWITCH_OFF_GLYPH) and passed
+		_span_text(off_head, "group_action", "enabled"), EventSheetViewportRowBuilder.HEAD_SWITCH_OFF_GLYPH) and passed
 	passed = _check("the whole head is faded", off_head.disabled, true) and passed
 	off_editor.free()
 	return passed
@@ -346,7 +346,7 @@ static func _test_pinned_head() -> bool:
 
 	# …and where each one lands on the strip: names laid out left to right past the separators, the
 	# elision arming nothing, and a click inside a name finding the row that name stands for.
-	var zones: Array[Dictionary] = ViewportGroupBreadcrumb.crumb_zones(
+	var zones: Array[Dictionary] = EventSheetViewportGroupBreadcrumb.crumb_zones(
 		crumbs, PackedInt32Array([2, 5, 9, 12]), 30.0,
 		PackedFloat32Array([10.0, 60.0, 50.0]), 8.0)
 	passed = _check("only the two names arm a zone", zones.size(), 2) and passed
@@ -355,11 +355,11 @@ static func _test_pinned_head() -> bool:
 	passed = _check("and the second past the first",
 		[float(zones[1].get("x", 0.0)), int(zones[1].get("index", -1))], [116.0, 9]) and passed
 	passed = _check("a click on a name scrolls to that head",
-		ViewportGroupBreadcrumb.crumb_at(zones, 60.0), 5) and passed
+		EventSheetViewportGroupBreadcrumb.crumb_at(zones, 60.0), 5) and passed
 	passed = _check("a click on the separator between them lands on neither",
-		ViewportGroupBreadcrumb.crumb_at(zones, 111.0), -1) and passed
+		EventSheetViewportGroupBreadcrumb.crumb_at(zones, 111.0), -1) and passed
 	passed = _check("and a click past the trail lands on nothing",
-		ViewportGroupBreadcrumb.crumb_at(zones, 400.0), -1) and passed
+		EventSheetViewportGroupBreadcrumb.crumb_at(zones, 400.0), -1) and passed
 
 	# The parts the pinned copy re-draws come off the head ROW, by metadata.
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -369,14 +369,14 @@ static func _test_pinned_head() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	var head: EventRowData = _row_for(editor.get_viewport_control(), group)
-	var parts: Dictionary = ViewportGroupBreadcrumb.head_parts(head)
+	var parts: Dictionary = EventSheetViewportGroupBreadcrumb.head_parts(head)
 	passed = _check("the pinned copy carries the description",
 		str(parts.get("description", "")), "Damage, hits and death.") and passed
 	passed = _check("and what the group holds", str(parts.get("counts", "")), "1 event") and passed
 	passed = _check("and the same switch glyph",
-		str(parts.get("switch", "")), ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH) and passed
+		str(parts.get("switch", "")), EventSheetViewportRowBuilder.HEAD_SWITCH_ON_GLYPH) and passed
 	passed = _check("a head with no row says nothing",
-		str((ViewportGroupBreadcrumb.head_parts(null) as Dictionary).get("counts", "")), "") and passed
+		str((EventSheetViewportGroupBreadcrumb.head_parts(null) as Dictionary).get("counts", "")), "") and passed
 	editor.free()
 	return passed
 
@@ -547,10 +547,10 @@ static func _row_for(viewport: EventSheetViewport, resource: Resource) -> EventR
 
 
 ## The first span whose metadata `key` equals `value`, or null.
-static func _span_with(row_data: EventRowData, key: String, value: Variant) -> SemanticSpan:
+static func _span_with(row_data: EventRowData, key: String, value: Variant) -> EventSheetSemanticSpan:
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		if (span.metadata as Dictionary).get(key) == value:
@@ -559,12 +559,12 @@ static func _span_with(row_data: EventRowData, key: String, value: Variant) -> S
 
 
 static func _span_text(row_data: EventRowData, key: String, value: Variant) -> String:
-	var span: SemanticSpan = _span_with(row_data, key, value)
+	var span: EventSheetSemanticSpan = _span_with(row_data, key, value)
 	return span.text if span != null else "<no span %s=%s>" % [key, str(value)]
 
 
 static func _span_flag(row_data: EventRowData, key: String, value: Variant, flag: String) -> bool:
-	var span: SemanticSpan = _span_with(row_data, key, value)
+	var span: EventSheetSemanticSpan = _span_with(row_data, key, value)
 	return bool((span.metadata as Dictionary).get(flag, false)) if span != null else false
 
 

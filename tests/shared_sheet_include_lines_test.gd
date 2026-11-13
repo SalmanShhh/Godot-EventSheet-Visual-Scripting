@@ -52,7 +52,7 @@ static func _the_lines() -> bool:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
 		var parts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			parts.append(span.text)
 			if row_data.row_uid.begins_with("include_line_") and span.metadata is Dictionary \
 					and bool((span.metadata as Dictionary).get("badge", false)):

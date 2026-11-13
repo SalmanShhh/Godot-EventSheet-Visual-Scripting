@@ -120,6 +120,6 @@ static func patterns_using(sheet: EventSheetResource, provider_id: String, ace_i
 			words = str((claim as Dictionary).get("words", ""))
 		if words.is_empty():
 			continue
-		found.append({"title": "%s %s" % [ViewportRowBuilder.PATTERN_CHIP_MARK, words],
+		found.append({"title": "%s %s" % [EventSheetViewportRowBuilder.PATTERN_CHIP_MARK, words],
 			"doc_id": doc_id_for(pattern)})
 	return found

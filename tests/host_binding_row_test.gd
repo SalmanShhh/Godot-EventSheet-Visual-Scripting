@@ -16,18 +16,18 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── The strict classifier ──
-	ok = _check("the canonical host binding is recognised", ViewportRowBuilder.host_binding_class(CANONICAL), "Node2D") and ok
+	ok = _check("the canonical host binding is recognised", EventSheetViewportRowBuilder.host_binding_class(CANONICAL), "Node2D") and ok
 	ok = _check("the binding that honours Acts on is recognised too",
-		ViewportRowBuilder.host_binding_class(CANONICAL.replace("host = get_parent()", "host = acts_on if acts_on != null else get_parent()")), "Node2D") and ok
-	ok = _check("a trailing blank is tolerated", ViewportRowBuilder.host_binding_class(CANONICAL + "\n"), "Node2D") and ok
+		EventSheetViewportRowBuilder.host_binding_class(CANONICAL.replace("host = get_parent()", "host = acts_on if acts_on != null else get_parent()")), "Node2D") and ok
+	ok = _check("a trailing blank is tolerated", EventSheetViewportRowBuilder.host_binding_class(CANONICAL + "\n"), "Node2D") and ok
 	ok = _check("the host class is extracted verbatim",
-		ViewportRowBuilder.host_binding_class(CANONICAL.replace("Node2D", "CharacterBody2D")), "CharacterBody2D") and ok
+		EventSheetViewportRowBuilder.host_binding_class(CANONICAL.replace("Node2D", "CharacterBody2D")), "CharacterBody2D") and ok
 	ok = _check("a hand-modified body is NOT a match (stays a real block)",
-		ViewportRowBuilder.host_binding_class(CANONICAL.replace("push_warning", "printerr")), "") and ok
+		EventSheetViewportRowBuilder.host_binding_class(CANONICAL.replace("push_warning", "printerr")), "") and ok
 	ok = _check("an extra statement breaks the match",
-		ViewportRowBuilder.host_binding_class(CANONICAL + "\n\tsetup()"), "") and ok
+		EventSheetViewportRowBuilder.host_binding_class(CANONICAL + "\n\tsetup()"), "") and ok
 	ok = _check("a different function is not a host binding",
-		ViewportRowBuilder.host_binding_class("func _ready() -> void:\n\tpass"), "") and ok
+		EventSheetViewportRowBuilder.host_binding_class("func _ready() -> void:\n\tpass"), "") and ok
 
 	# ── Reading over a real opened pack: the host is said once, read-only and editable alike ──
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
@@ -66,7 +66,7 @@ static func _binding_rows(view: EventSheetViewport) -> int:
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.source_resource is RawCodeRow \
-				and not ViewportRowBuilder.host_binding_class((row_data.source_resource as RawCodeRow).code).is_empty():
+				and not EventSheetViewportRowBuilder.host_binding_class((row_data.source_resource as RawCodeRow).code).is_empty():
 			found += 1
 	return found
 
@@ -88,7 +88,7 @@ static func _binding_blocks(sheet: EventSheetResource) -> int:
 
 static func _binding_block(sheet: EventSheetResource) -> RawCodeRow:
 	for entry: Variant in sheet.events:
-		if entry is RawCodeRow and not ViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
+		if entry is RawCodeRow and not EventSheetViewportRowBuilder.host_binding_class((entry as RawCodeRow).code).is_empty():
 			return entry as RawCodeRow
 	return null
 

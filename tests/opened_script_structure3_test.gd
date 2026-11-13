@@ -69,7 +69,7 @@ static func _picking_grammar() -> bool:
 	var ok: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
-	var builder: ViewportRowBuilder = viewport._row_builder
+	var builder: EventSheetViewportRowBuilder = viewport._row_builder
 	ok = _check("a group walk names the group",
 		builder._picking_source_note(PickFilter.CollectionKind.EXPRESSION,
 			"get_tree().get_nodes_in_group(\"enemies\")"), "(group \"enemies\")") and ok
@@ -89,9 +89,9 @@ static func _picking_grammar() -> bool:
 	# The object column names the thing, so the condition drops the loop's OWN possessive - and only
 	# that one: a condition about a different object still has to say which.
 	ok = _check("the picked object's possessive goes",
-		ViewportRowBuilder._strip_picked_possessive("enemy's hp < 10", "Enemy"), "hp < 10") and ok
+		EventSheetViewportRowBuilder._strip_picked_possessive("enemy's hp < 10", "Enemy"), "hp < 10") and ok
 	ok = _check("another object's possessive stays",
-		ViewportRowBuilder._strip_picked_possessive("player's hp < 10", "Enemy"), "player's hp < 10") and ok
+		EventSheetViewportRowBuilder._strip_picked_possessive("player's hp < 10", "Enemy"), "player's hp < 10") and ok
 
 	# A loop that filters, orders, caps or counts is doing work of its own, and a Repeat/While is not a
 	# collection of instances at all - none of those may be swallowed into one picking row.
@@ -144,16 +144,16 @@ static func _picking_grammar() -> bool:
 ## ── which matches read as a chain ────────────────────────────────────────────────────────────────
 static func _else_if_grammar() -> bool:
 	var ok: bool = true
-	ok = _check("a string pattern is plain", ViewportRowBuilder.is_plain_match_pattern("\"a\""), true) and ok
-	ok = _check("several values are plain", ViewportRowBuilder.is_plain_match_pattern("\"a\", \"b\""), true) and ok
-	ok = _check("an enum member is plain", ViewportRowBuilder.is_plain_match_pattern("State.PATROL"), true) and ok
-	ok = _check("a number is plain", ViewportRowBuilder.is_plain_match_pattern("-3"), true) and ok
-	ok = _check("the default is plain", ViewportRowBuilder.is_plain_match_pattern("_"), true) and ok
+	ok = _check("a string pattern is plain", EventSheetViewportRowBuilder.is_plain_match_pattern("\"a\""), true) and ok
+	ok = _check("several values are plain", EventSheetViewportRowBuilder.is_plain_match_pattern("\"a\", \"b\""), true) and ok
+	ok = _check("an enum member is plain", EventSheetViewportRowBuilder.is_plain_match_pattern("State.PATROL"), true) and ok
+	ok = _check("a number is plain", EventSheetViewportRowBuilder.is_plain_match_pattern("-3"), true) and ok
+	ok = _check("the default is plain", EventSheetViewportRowBuilder.is_plain_match_pattern("_"), true) and ok
 	# The shapes that say more than a chain can, and so keep the switch reading.
-	ok = _check("a binding is not plain", ViewportRowBuilder.is_plain_match_pattern("var found"), false) and ok
-	ok = _check("an array pattern is not plain", ViewportRowBuilder.is_plain_match_pattern("[a, b]"), false) and ok
-	ok = _check("a dictionary pattern is not plain", ViewportRowBuilder.is_plain_match_pattern("{\"k\": v}"), false) and ok
-	ok = _check("a call is not plain", ViewportRowBuilder.is_plain_match_pattern("pick()"), false) and ok
+	ok = _check("a binding is not plain", EventSheetViewportRowBuilder.is_plain_match_pattern("var found"), false) and ok
+	ok = _check("an array pattern is not plain", EventSheetViewportRowBuilder.is_plain_match_pattern("[a, b]"), false) and ok
+	ok = _check("a dictionary pattern is not plain", EventSheetViewportRowBuilder.is_plain_match_pattern("{\"k\": v}"), false) and ok
+	ok = _check("a call is not plain", EventSheetViewportRowBuilder.is_plain_match_pattern("pick()"), false) and ok
 	return ok
 
 
@@ -221,7 +221,7 @@ static func _read_rows(path: String) -> PackedStringArray:
 			continue
 		viewport._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text.strip_edges().is_empty():
 				continue
 			var object_label: String = str(span.metadata.get("object_label", ""))

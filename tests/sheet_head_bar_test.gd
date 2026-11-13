@@ -74,7 +74,7 @@ static func _matched(base: Color, font: Color) -> EventSheetEventStyle:
 static func _the_card() -> bool:
 	var rows: Array = _rows_of(CAROUSEL)
 	var card_words: Dictionary = {}
-	for span: SemanticSpan in (rows[0] as EventRowData).spans:
+	for span: EventSheetSemanticSpan in (rows[0] as EventRowData).spans:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == "behaviours":
 			card_words = card
@@ -166,7 +166,7 @@ static func _rows_of_sheet(sheet: EventSheetResource) -> Array:
 
 static func _words_of(row_data: EventRowData) -> String:
 	var words: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if not span.text.strip_edges().is_empty():
 			words.append(span.text.strip_edges())
 	return " ".join(words)

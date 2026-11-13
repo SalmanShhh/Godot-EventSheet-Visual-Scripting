@@ -1,5 +1,5 @@
 @tool
-class_name ViewportRowMetrics
+class_name EventSheetViewportRowMetrics
 extends RefCounted
 # The ROW-METRICS layer: per-row vertical layout (top/height) for the event sheet's virtualized
 # viewport. Extracted from event_sheet_viewport.gd to keep that file maintainable. This subsystem
@@ -298,13 +298,13 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 		if not EventSheetRegionFacts.is_closing_fence(row_data.source_resource):
 			return maxf(_viewport.row_height_floor(), _viewport._get_event_line_height(_viewport._get_font_size()))
 		var tick_font: int = EventSheetPalette.resolve_font_size(
-			_viewport._get_font_size(), ViewportRowBuilder.REGION_CLOSER_FONT_DELTA
+			_viewport._get_font_size(), EventSheetViewportRowBuilder.REGION_CLOSER_FONT_DELTA
 		)
 		return maxf(
-			_viewport.row_height_floor() * ViewportRowBuilder.REGION_CLOSER_HEIGHT_RATIO,
+			_viewport.row_height_floor() * EventSheetViewportRowBuilder.REGION_CLOSER_HEIGHT_RATIO,
 			_viewport._get_font().get_height(tick_font) + 2.0
 		)
-	if ViewportRowBuilder._is_spacing_row(row_data):
+	if EventSheetViewportRowBuilder._is_spacing_row(row_data):
 		# The blank lines the round trip keeps between two blocks are spacing, however many there are:
 		# they cost one block gap, never a tall empty row per line.
 		return _viewport.event_block_gap() * EventSheetPalette.row_density()
@@ -361,7 +361,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	# A theme that shows the add lines on hover gives them no room on an event at rest.
 	var resting_add_kinds: PackedStringArray = resting_add_line_kinds(row_data, event_style)
 	for span_index: int in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -428,7 +428,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 ## unless the theme shows the add lines on hover (add_lines_on_hover), and then the add line of
 ## every lane that already holds something, on an event neither hovered nor selected. An empty lane
 ## keeps its add line, because there the add line is the lane's only invitation. Mirrors the
-## renderer's own reveal rule (EventRowRenderer.add_door_revealed), so a line is given room exactly
+## renderer's own reveal rule (EventSheetRowRenderer.add_door_revealed), so a line is given room exactly
 ## when it is drawn. Static and pure, so the suite can pin it.
 static func resting_add_line_kinds(row_data: EventRowData, event_style: EventSheetEventStyle) -> PackedStringArray:
 	var kinds := PackedStringArray()
@@ -438,7 +438,7 @@ static func resting_add_line_kinds(row_data: EventRowData, event_style: EventShe
 		return kinds
 	var has_condition: bool = false
 	var has_action: bool = false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -451,10 +451,10 @@ static func resting_add_line_kinds(row_data: EventRowData, event_style: EventShe
 			has_action = true
 		elif kind == "trigger" or (kind == "condition" and not bool(metadata.get("placeholder", false))):
 			has_condition = true
-	if not EventRowRenderer.add_condition_door_revealed(false, false, has_condition, event_style):
+	if not EventSheetRowRenderer.add_condition_door_revealed(false, false, has_condition, event_style):
 		kinds.append("add_condition")
-	if not EventRowRenderer.add_door_revealed(false, false, has_action) \
-			and not EventRowRenderer.add_action_line_rests(event_style):
+	if not EventSheetRowRenderer.add_door_revealed(false, false, has_action) \
+			and not EventSheetRowRenderer.add_action_line_rests(event_style):
 		kinds.append("add_action")
 	return kinds
 
@@ -470,7 +470,7 @@ const STRIP_MARK_ADVANCE := 17.0
 ## How far a condition line's mark pushes the rest of the line right, in the look that nests by lines:
 ## STRIP_MARK_ADVANCE for a trigger's arrow, 0 for any other mark; -1.0 when this span is not such a
 ## mark (or the look is another), so the caller keeps the badge column rule it always had.
-static func strip_mark_advance(span: SemanticSpan, event_style: EventSheetEventStyle) -> float:
+static func strip_mark_advance(span: EventSheetSemanticSpan, event_style: EventSheetEventStyle) -> float:
 	if span == null or event_style == null or not event_style.sub_event_strips \
 			or not (span.metadata is Dictionary):
 		return -1.0
@@ -506,7 +506,7 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 	if row_data == null:
 		return 0.0
 	var total: float = 0.0
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -538,7 +538,7 @@ static func condition_right_limit(_row_data: EventRowData, _width: float, lane_d
 ## Visual lines one condition/action FILL cell needs at its cell rect width. Plain text wraps
 ## on TextServer breaks (wrapped_line_count); styled cells wrap on the shared greedy break
 ## points, so this count always equals the number of lines the renderer will actually draw.
-func _fill_cell_line_count(span: SemanticSpan, metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int, column_override: float = -1.0) -> int:
+func _fill_cell_line_count(span: EventSheetSemanticSpan, metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int, column_override: float = -1.0) -> int:
 	var wrap_width: float = _fill_text_wrap_width(metadata, cell_rect_width, font, font_size, column_override)
 	if (metadata.get("bbcode_segments", []) as Array).is_empty():
 		return wrapped_line_count(span.text, wrap_width, font, font_size)
@@ -556,11 +556,11 @@ func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: F
 	var trail: float = pad if is_chip else 2.0
 	var lead: float = pad
 	if metadata.get("object_icon") is Texture2D:
-		lead += EventRowRenderer.object_icon_advance(_viewport._get_event_style())
+		lead += EventSheetRowRenderer.object_icon_advance(_viewport._get_event_style())
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		var lane: String = str(metadata.get("lane", ""))
-		var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
+		var column: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
 		if column_override >= 0.0:
 			lead += column_override
 		elif column > 0.0:
@@ -584,13 +584,13 @@ func object_column_override(metadata: Dictionary, lane_origin_x: float, span_x: 
 	if str(metadata.get("object_label", "")).is_empty():
 		return -1.0
 	var lane: String = str(metadata.get("lane", ""))
-	var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
+	var column: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
 	if column <= 0.0:
 		return -1.0
 	var lead: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0
 	if metadata.get("object_icon") is Texture2D:
-		lead += EventRowRenderer.object_icon_advance(_viewport._get_event_style())
-	return maxf(lane_origin_x + EventRowRenderer.object_icon_advance(_viewport._get_event_style()) + column - (span_x + lead), 24.0)
+		lead += EventSheetRowRenderer.object_icon_advance(_viewport._get_event_style())
+	return maxf(lane_origin_x + EventSheetRowRenderer.object_icon_advance(_viewport._get_event_style()) + column - (span_x + lead), 24.0)
 
 
 ## Greedy word-wrap break points for STYLED (bbcode-segment) cells: character offsets where
@@ -639,7 +639,7 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 		# The note's own LINES decide its height. The paragraph mark a documentation row leads with
 		# and the echo of the line it writes both ride line 0, so counting them would reserve a band
 		# two rows tall for a one-line note.
-		if not ViewportLayoutBuilder._is_comment_text_span(span):
+		if not EventSheetViewportLayoutBuilder._is_comment_text_span(span):
 			continue
 		total_lines += _comment_span_line_count(span, wrap_width, font, font_size)
 	return float(maxi(total_lines, 1)) * line_height
@@ -673,7 +673,7 @@ func _comment_wrap_width(indent: int, width: float, right_edge: float = -1.0) ->
 
 ## How many visual lines one comment span occupies after wrapping. BBCode-styled lines are
 ## drawn as a single styled run (segment wrapping is not supported), so they stay one line.
-func _comment_span_line_count(span: SemanticSpan, wrap_width: float, font: Font, font_size: int) -> int:
+func _comment_span_line_count(span: EventSheetSemanticSpan, wrap_width: float, font: Font, font_size: int) -> int:
 	if span == null:
 		return 1
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
@@ -843,7 +843,7 @@ func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, fon
 	var condition_right: float = 0.0
 	var action_right: float = 0.0
 	var flat_right: float = 0.0
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -897,7 +897,7 @@ func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, fon
 ## how much it subtracts (at an arbitrarily wide cell) rather than re-deriving the arithmetic -
 ## a second copy of it would drift from the renderer, and a fill cell that is one pixel short
 ## wraps to two lines, which is visible as a whole extra row of height.
-func _fill_cell_natural_width(span: SemanticSpan, metadata: Dictionary, font: Font, font_size: int, lane_origin_x: float, span_x: float) -> float:
+func _fill_cell_natural_width(span: EventSheetSemanticSpan, metadata: Dictionary, font: Font, font_size: int, lane_origin_x: float, span_x: float) -> float:
 	const PROBE_CELL_WIDTH := 100000.0
 	var column: float = object_column_override(metadata, lane_origin_x, span_x)
 	var chrome: float = PROBE_CELL_WIDTH - _fill_text_wrap_width(metadata, PROBE_CELL_WIDTH, font, font_size, column)

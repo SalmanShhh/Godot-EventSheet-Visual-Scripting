@@ -146,8 +146,8 @@ static func _test_builder_stamps_paint_metadata() -> bool:
 	variable.name = "open_speed"
 	sheet.events.append(variable)
 	viewport._sheet = sheet
-	var action: SemanticSpan = viewport._make_span("Add open speed to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
-	var comment: SemanticSpan = viewport._make_span("open speed", SemanticSpan.SpanType.COMMENT, {"kind": "comment"})
+	var action: EventSheetSemanticSpan = viewport._make_span("Add open speed to score", EventSheetSemanticSpan.SpanType.ACTION, {"kind": "action"})
+	var comment: EventSheetSemanticSpan = viewport._make_span("open speed", EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "comment"})
 	var pieces: Array = viewport._row_builder.grammar_bbcode_segments([{"text": "speed", "tone": "name"}, {"text": " = 2", "tone": "value"}])
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["an action sentence carries where the variable is", action.metadata.get("variable_ranges", []), [[4, 10, "variable"]]],
@@ -166,15 +166,15 @@ static func _test_variable_added_in_place_colours_next_build() -> bool:
 	variable.name = "open_speed"
 	sheet.events.append(variable)
 	viewport._sheet = sheet
-	var before: SemanticSpan = viewport._make_span("Add jump height to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
+	var before: EventSheetSemanticSpan = viewport._make_span("Add jump height to score", EventSheetSemanticSpan.SpanType.ACTION, {"kind": "action"})
 	# The edit an undoable sheet edit makes: the same sheet object, one more variable, one renamed.
 	var added := LocalVariable.new()
 	added.name = "jump_height"
 	sheet.events.append(added)
 	variable.name = "close_speed"
 	viewport._row_builder.invalidate_lens_caches()
-	var after: SemanticSpan = viewport._make_span("Add jump height to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
-	var renamed: SemanticSpan = viewport._make_span("Add open speed to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
+	var after: EventSheetSemanticSpan = viewport._make_span("Add jump height to score", EventSheetSemanticSpan.SpanType.ACTION, {"kind": "action"})
+	var renamed: EventSheetSemanticSpan = viewport._make_span("Add open speed to score", EventSheetSemanticSpan.SpanType.ACTION, {"kind": "action"})
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["before the edit the new name is not a variable", before.metadata.get("variable_ranges", []), []],
 		["after the next build it colours", after.metadata.get("variable_ranges", []), [[4, 11, "variable"]]],

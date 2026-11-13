@@ -289,7 +289,7 @@ static func _local_row(event_row: EventRow, index: int) -> EventRowData:
 	row_data.source_resource = event_row
 	row_data.variable_row = true
 	row_data.row_uid = "variable_local_%s_%d" % [event_row.event_uid, index]
-	var span: SemanticSpan = SemanticSpan.new()
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.text = "x"
 	span.metadata = {"kind": "variable", "variable_scope": "local", "variable_index": index}
 	row_data.spans = [span]
@@ -300,7 +300,7 @@ static func _local_row(event_row: EventRow, index: int) -> EventRowData:
 ## resource of their own, which is exactly why a drop on one has to be recognised by its uid.
 static func _head_band_row() -> EventRowData:
 	var row_data: EventRowData = EventRowData.new()
-	row_data.row_uid = "%sname_1" % ViewportRowBuilder.HEAD_BAND_UID_PREFIX
+	row_data.row_uid = "%sname_1" % EventSheetViewportRowBuilder.HEAD_BAND_UID_PREFIX
 	return row_data
 
 

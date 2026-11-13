@@ -70,7 +70,7 @@ static func _test_summary() -> bool:
 ## The rail gains an EDITOR TOOLS organ, and it only appears with something in it.
 static func _test_anatomy_section() -> bool:
 	var passed: bool = true
-	var organs: Array = BehaviourAnatomyPanel.collect_anatomy(_plugin_sheet())
+	var organs: Array = EventSheetBehaviourAnatomyPanel.collect_anatomy(_plugin_sheet())
 	var editor_tools: Dictionary = {}
 	for organ: Variant in organs:
 		if str((organ as Dictionary).get("id", "")) == "editor_tools":
@@ -82,7 +82,7 @@ static func _test_anatomy_section() -> bool:
 		labels.append(str((entry as Dictionary).get("label", "")))
 	passed = _check("it lists what the plugin adds",
 		"|".join(labels), "Tools menu ▸ Snap Selection|dock: Waypoints|object type: Waypoint") and passed
-	var plain_organs: Array = BehaviourAnatomyPanel.collect_anatomy(EventSheetResource.new())
+	var plain_organs: Array = EventSheetBehaviourAnatomyPanel.collect_anatomy(EventSheetResource.new())
 	var plain_entries: int = -1
 	for organ: Variant in plain_organs:
 		if str((organ as Dictionary).get("id", "")) == "editor_tools":

@@ -9,7 +9,7 @@
 # bar and the bar's name card says what this band said. The class and its static readings
 # (identity_label, identity_hover_lines, manifest_for, health_chip) stay for anything that calls them.
 @tool
-class_name SheetIdentityBanner
+class_name EventSheetIdentityBanner
 extends Control
 
 signal edit_requested
@@ -186,7 +186,7 @@ static func identity_hover_lines(sheet: EventSheetResource, sheet_path: String) 
 
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
-	name = "SheetIdentityBanner"
+	name = "EventSheetIdentityBanner"
 	custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(BANNER_HEIGHT))
 	tooltip_text = "Click to edit the sheet type (name, icon, host class)."
 	visible = false

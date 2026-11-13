@@ -63,7 +63,7 @@ static func _first_variable_row(row: EventRowData) -> String:
 		return "<none>"
 	if row.row_uid.begins_with("variable_reading_"):
 		var parts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			parts.append(str(span.text))
 		return " | ".join(parts)
 	for child: EventRowData in row.children:

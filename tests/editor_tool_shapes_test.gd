@@ -338,7 +338,7 @@ static func _test_picker_pages() -> bool:
 		true) and all_passed
 	# The two rows that are about the PROJECT rather than about the editor wear the project's name.
 	all_passed = _check("writing a project setting reads as the Project, not the Editor",
-		"|".join(ViewportRowBuilder.PROJECT_ACE_IDS), "SetProjectSetting|SaveProjectSettings") and all_passed
+		"|".join(EventSheetViewportRowBuilder.PROJECT_ACE_IDS), "SetProjectSetting|SaveProjectSettings") and all_passed
 	# ── The rest of the pages. Every row that belonged to one named surface is filed on it, so
 	# the flat root keeps only the one-off chores. Pinned by VALUE per row: a row that quietly slid
 	# back onto the root would still pass a count.
@@ -407,7 +407,7 @@ static func _test_command_tool_rows() -> bool:
 	all_passed = _check("a command tool row is the Command tool's, not the Editor's",
 		EventSheetToolFiles.OBJECT_COMMAND_TOOL, "Command tool") and all_passed
 	all_passed = _check("the object cell reads the page it is keyed off",
-		ViewportRowBuilder.COMMAND_TOOL_PAGE, "Editor Tools: Command tool") and all_passed
+		EventSheetViewportRowBuilder.COMMAND_TOOL_PAGE, "Editor Tools: Command tool") and all_passed
 	# The skeleton itself: an EVENT with the On run trigger, not a hand-written `_init` function.
 	var skeleton: EventSheetResource = EventSheetStarterTemplates.build_starter(23)
 	var triggers: PackedStringArray = PackedStringArray()

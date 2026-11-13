@@ -372,7 +372,7 @@ func _commit_data_class_field_edit() -> void:
 ## no longer a lifting data class or field_index is not a field, so the caller leaves it untouched). An empty
 ## new_value drops the ` = default` entirely. Pure re-emit through the same model the block was built from.
 func _emit_data_class_default_edit(raw_row: Resource, field_index: int, new_value: String) -> String:
-	var model: Dictionary = ViewportRowBuilder.parse_data_class(str(raw_row.get("code")))
+	var model: Dictionary = EventSheetViewportRowBuilder.parse_data_class(str(raw_row.get("code")))
 	if model.is_empty():
 		return ""
 	var body: Array = model["body"]
@@ -383,7 +383,7 @@ func _emit_data_class_default_edit(raw_row: Resource, field_index: int, new_valu
 		return ""
 	entry["has_default"] = not new_value.is_empty()
 	entry["default"] = new_value
-	return ViewportRowBuilder.emit_data_class(model)
+	return EventSheetViewportRowBuilder.emit_data_class(model)
 
 
 ## The LocalVariable a sheet declares under this name, at any depth, or null. Name-addressed on

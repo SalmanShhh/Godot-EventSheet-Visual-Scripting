@@ -2041,7 +2041,7 @@ func row_preview_text() -> String:
 	if value_text.is_empty():
 		value_text = _default_placeholder_for(stored_type)
 	return "%s  %s = %s" % [EventSheetVariableSentence.chip_text(current_scope_word(),
-		ViewportRowBuilder.friendly_type_word(stored_type)), _shown_name(), value_text]
+		EventSheetViewportRowBuilder.friendly_type_word(stored_type)), _shown_name(), value_text]
 
 
 ## The declaration the compiler will write for these choices, built by THE COMPILER'S OWN EMITTER

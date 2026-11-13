@@ -32,7 +32,7 @@ static func run() -> bool:
 	# ── ONLY the default is editable; name and type are read-only (a rename/type change would break use
 	# sites elsewhere in the .gd). The row stays inert (null source) for select / drag / delete. ──
 	var cooldown_row: EventRowData = class_row.children[0]
-	var default_span: SemanticSpan = _span_with_part(cooldown_row, "default")
+	var default_span: EventSheetSemanticSpan = _span_with_part(cooldown_row, "default")
 	ok = _check("the default value is an editable span", default_span != null, true) and ok
 	ok = _check("the name / type parts are NOT editable (no rename/type-change footgun)",
 		_span_with_part(cooldown_row, "name") == null and _span_with_part(cooldown_row, "type") == null, true) and ok
@@ -130,15 +130,15 @@ static func run() -> bool:
 
 	# ---- structured Add/Remove Field (the add-action gesture, for data classes) ----
 	var base_code: String = "class Stats:\n\tvar hp: int = 10\n\tvar armor: float"
-	var grown: String = ViewportRowBuilder.data_class_add_field(base_code, "speed", "float", "4.5")
+	var grown: String = EventSheetViewportRowBuilder.data_class_add_field(base_code, "speed", "float", "4.5")
 	ok = _check("Add Field appends one canonical line", grown, base_code + "\n\tvar speed: float = 4.5") and ok
-	ok = _check("the grown class still lifts (stays editable)", ViewportRowBuilder.data_class_lifts(grown), true) and ok
-	ok = _check("a duplicate field name is refused", ViewportRowBuilder.data_class_add_field(base_code, "hp", "int", ""), "") and ok
-	ok = _check("a non-identifier name is refused", ViewportRowBuilder.data_class_add_field(base_code, "not a name", "int", ""), "") and ok
-	ok = _check("Remove Field round-trips the add exactly", ViewportRowBuilder.data_class_remove_field(grown, 2), base_code) and ok
+	ok = _check("the grown class still lifts (stays editable)", EventSheetViewportRowBuilder.data_class_lifts(grown), true) and ok
+	ok = _check("a duplicate field name is refused", EventSheetViewportRowBuilder.data_class_add_field(base_code, "hp", "int", ""), "") and ok
+	ok = _check("a non-identifier name is refused", EventSheetViewportRowBuilder.data_class_add_field(base_code, "not a name", "int", ""), "") and ok
+	ok = _check("Remove Field round-trips the add exactly", EventSheetViewportRowBuilder.data_class_remove_field(grown, 2), base_code) and ok
 	var with_comment: String = "class Notes:\n\t# keep me\n\tvar x: int"
 	ok = _check("removing a non-field body line is refused (comments survive)",
-		ViewportRowBuilder.data_class_remove_field(with_comment, 0), "") and ok
+		EventSheetViewportRowBuilder.data_class_remove_field(with_comment, 0), "") and ok
 
 	dock.free()
 	return ok
@@ -209,8 +209,8 @@ static func _data_class_row_in(row_data: EventRowData) -> EventRowData:
 	return null
 
 
-static func _span_with_part(row_data: EventRowData, part: String) -> SemanticSpan:
-	for span: SemanticSpan in row_data.spans:
+static func _span_with_part(row_data: EventRowData, part: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("part", "")) == part:
 			return span
 	return null
@@ -227,7 +227,7 @@ static func _reimport_field_default(sheet: EventSheetResource, field_name: Strin
 	var raw: Resource = _find_ability_data_raw(sheet)
 	if raw == null:
 		return "<no class>"
-	var model: Dictionary = ViewportRowBuilder.parse_data_class((raw as RawCodeRow).code)
+	var model: Dictionary = EventSheetViewportRowBuilder.parse_data_class((raw as RawCodeRow).code)
 	for entry: Dictionary in model.get("body", []):
 		if str(entry.get("kind")) == "field" and str(entry.get("name")) == field_name:
 			return str(entry.get("default"))

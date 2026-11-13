@@ -402,7 +402,7 @@ static func _render(sheet: EventSheetResource) -> PackedStringArray:
 	viewport.set_reading_mode(true)
 	var readings: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var label: String = str(span.metadata.get("object_label", ""))
 			var text: String = span.text.strip_edges()
 			readings.append("%s ▸ %s" % [label, text] if not label.is_empty() else text)

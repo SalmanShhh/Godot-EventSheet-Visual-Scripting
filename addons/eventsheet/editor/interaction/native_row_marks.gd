@@ -132,7 +132,7 @@ static func trigger_kind(row_data: EventRowData) -> String:
 static func trigger_kind_for_event(event_row: EventRow) -> String:
 	if event_row == null or event_row.else_mode != EventRow.ElseMode.NONE:
 		return ""
-	if ViewportRowBuilder.is_input_trigger_tick(event_row):
+	if EventSheetViewportRowBuilder.is_input_trigger_tick(event_row):
 		return TRIGGER_INPUT
 	return trigger_kind_for_id(event_row.trigger_id)
 

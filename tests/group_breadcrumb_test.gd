@@ -22,7 +22,7 @@ static func run() -> bool:
 		{"group": true, "indent": 0},
 		{"group": false, "indent": 1},
 	]
-	var map: PackedInt32Array = ViewportGroupBreadcrumb.enclosing_map(rows)
+	var map: PackedInt32Array = EventSheetViewportGroupBreadcrumb.enclosing_map(rows)
 	all_passed = _check("row inside one group maps to it", map[1], 0) and all_passed
 	all_passed = _check("a nested group maps to its PARENT, not itself", map[2], 0) and all_passed
 	all_passed = _check("row inside nested groups maps to the innermost", map[3], 2) and all_passed
@@ -31,13 +31,13 @@ static func run() -> bool:
 	all_passed = _check("a later top-level group starts fresh", map[9], 8) and all_passed
 
 	all_passed = _check("chain reads outermost first",
-		ViewportGroupBreadcrumb.chain_for(map, 3), PackedInt32Array([0, 2])) and all_passed
+		EventSheetViewportGroupBreadcrumb.chain_for(map, 3), PackedInt32Array([0, 2])) and all_passed
 	all_passed = _check("chain for a visible group bar shows only what scrolled away",
-		ViewportGroupBreadcrumb.chain_for(map, 2), PackedInt32Array([0])) and all_passed
+		EventSheetViewportGroupBreadcrumb.chain_for(map, 2), PackedInt32Array([0])) and all_passed
 	all_passed = _check("top level has no chain",
-		ViewportGroupBreadcrumb.chain_for(map, 7), PackedInt32Array()) and all_passed
+		EventSheetViewportGroupBreadcrumb.chain_for(map, 7), PackedInt32Array()) and all_passed
 	all_passed = _check("out-of-range index fails closed",
-		ViewportGroupBreadcrumb.chain_for(map, 99), PackedInt32Array()) and all_passed
+		EventSheetViewportGroupBreadcrumb.chain_for(map, 99), PackedInt32Array()) and all_passed
 	return all_passed
 
 

@@ -27,7 +27,7 @@ static func property_rows(event_function: EventFunction, sheet: EventSheetResour
 	var rows: Array[Dictionary] = []
 	if event_function == null:
 		return rows
-	var role: String = ViewportRowBuilder.define_role_for(event_function)
+	var role: String = EventSheetViewportRowBuilder.define_role_for(event_function)
 	rows.append({"label": EventSheetL10n.translate("Kind"), "value": EventSheetL10n.translate(role.capitalize()), "form": "badge"})
 	var category: String = event_function.ace_category.strip_edges()
 	rows.append({
@@ -39,7 +39,7 @@ static func property_rows(event_function: EventFunction, sheet: EventSheetResour
 	rows.append({"label": EventSheetL10n.translate("Gives back"), "value": gives_back(event_function), "form": "text"})
 	var description: String = event_function.description.strip_edges()
 	if description.is_empty():
-		description = ViewportRowBuilder.helper_doc_line(event_function)
+		description = EventSheetViewportRowBuilder.helper_doc_line(event_function)
 	rows.append({
 		"label": EventSheetL10n.translate("Description"),
 		"value": description if not description.is_empty() else EventSheetL10n.translate("none"),
@@ -67,8 +67,8 @@ static func input_summary(event_function: EventFunction) -> String:
 			continue
 		var ace_param: ACEParam = param as ACEParam
 		var line: String = "%s  %s" % [
-			ViewportRowBuilder.friendly_param_label(ace_param),
-			ViewportRowBuilder.friendly_type_word(ace_param.type_name)
+			EventSheetViewportRowBuilder.friendly_param_label(ace_param),
+			EventSheetViewportRowBuilder.friendly_type_word(ace_param.type_name)
 		]
 		var default_text: String = ace_param.gdscript_default.strip_edges()
 		if not default_text.is_empty():
@@ -87,7 +87,7 @@ static func input_summary(event_function: EventFunction) -> String:
 static func gives_back(event_function: EventFunction) -> String:
 	if event_function.return_type == TYPE_NIL and event_function.return_type_name.strip_edges().is_empty():
 		return EventSheetL10n.translate("nothing")
-	return ViewportRowBuilder.friendly_type_word(EventSheetCompiler._function_return_type_name(event_function))
+	return EventSheetViewportRowBuilder.friendly_type_word(EventSheetCompiler._function_return_type_name(event_function))
 
 
 ## Whether the verb is featured, and the icon the picker draws for it. An unpublished helper says so
@@ -157,8 +157,8 @@ static func build_panel(event_function: EventFunction, sheet: EventSheetResource
 	if event_function == null:
 		column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("This function is no longer on the sheet.")))
 		return EventSheetPopupUI.margined(column)
-	var role: String = ViewportRowBuilder.define_role_for(event_function)
-	var accent: Color = (ViewportRowBuilder.define_role_badge_colors(role) as Array)[1]
+	var role: String = EventSheetViewportRowBuilder.define_role_for(event_function)
+	var accent: Color = (EventSheetViewportRowBuilder.define_role_badge_colors(role) as Array)[1]
 	var title_row: HBoxContainer = HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 	title_row.add_child(EventSheetPopupUI.metadata_badge("ƒ", accent))
@@ -296,7 +296,7 @@ func open_for(event_function: Resource) -> void:
 func _find_verb(function_name: String) -> EventFunction:
 	if _dock == null or _dock._current_sheet == null:
 		return null
-	return ViewportRowBuilder.find_function_by_name(_dock._current_sheet, function_name)
+	return EventSheetViewportRowBuilder.find_function_by_name(_dock._current_sheet, function_name)
 
 
 func _run_and_close(action: Callable) -> void:

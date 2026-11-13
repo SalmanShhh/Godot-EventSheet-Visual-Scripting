@@ -58,7 +58,7 @@ func pump(budget_usec: int = FRAME_BUDGET_USEC) -> void:
 		_pending.clear()
 		return
 	var started: int = Time.get_ticks_usec()
-	var builder: ViewportRowBuilder = _viewport.get("_row_builder")
+	var builder: EventSheetViewportRowBuilder = _viewport.get("_row_builder")
 	while _cursor < _pending.size() and Time.get_ticks_usec() - started < budget_usec:
 		builder._ensure_event_spans(_pending[_cursor])
 		_cursor += 1

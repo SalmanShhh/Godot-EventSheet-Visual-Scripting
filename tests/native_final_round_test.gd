@@ -76,7 +76,7 @@ static func _rows_of(view: EventSheetViewport) -> Array[String]:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
 		var words: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			var label: String = str(metadata.get("object_label", ""))
 			words.append("%s%s" % [("[%s]" % label) if not label.is_empty() else "", span.text])
@@ -142,18 +142,18 @@ static func _test_function_head() -> bool:
 	var style: EventSheetEventStyle = view.get_event_style()
 	var typed: PackedStringArray = PackedStringArray()
 	var door_seen: bool = false
-	for span: SemanticSpan in head.spans:
+	for span: EventSheetSemanticSpan in head.spans:
 		var metadata: Dictionary = span.metadata as Dictionary
 		if str(metadata.get("kind", "")) == "verb_param":
 			typed.append("%s %s %s" % [str(metadata.get("typed_name", "")), span.text, str(metadata.get("object_label", ""))])
 		if str(metadata.get("kind", "")) == "verb_param_add":
 			door_seen = true
-	var resting: PackedStringArray = ViewportRowMetrics.resting_add_line_kinds(head, style)
+	var resting: PackedStringArray = EventSheetViewportRowMetrics.resting_add_line_kinds(head, style)
 	head.hovered = true
-	var pointed: PackedStringArray = ViewportRowMetrics.resting_add_line_kinds(head, style)
+	var pointed: PackedStringArray = EventSheetViewportRowMetrics.resting_add_line_kinds(head, style)
 	head.hovered = false
 	head.selected = true
-	var chosen: PackedStringArray = ViewportRowMetrics.resting_add_line_kinds(head, style)
+	var chosen: PackedStringArray = EventSheetViewportRowMetrics.resting_add_line_kinds(head, style)
 	head.selected = false
 	var layout: Dictionary = view.get_row_layout_for_test(_flat_index(view, head), 1200.0)
 	var classic_view: EventSheetViewport = _view_of(CLASSIC_THEME)
@@ -168,7 +168,7 @@ static func _test_function_head() -> bool:
 		["the trigger and the two parameters are the cell's three strips - the door is not one",
 			(layout.get("condition_line_bands", []) as Array).size(), 3],
 		["Classic Sheet keeps its resting add-parameter line",
-			ViewportRowMetrics.resting_add_line_kinds(classic_head, classic_view.get_event_style()).has("verb_param_add"), false],
+			EventSheetViewportRowMetrics.resting_add_line_kinds(classic_head, classic_view.get_event_style()).has("verb_param_add"), false],
 	])
 
 
@@ -199,7 +199,7 @@ static func _test_geometry() -> bool:
 			continue
 		var layout: Dictionary = view.get_row_layout_for_test(index, 1300.0)
 		var block: float = (layout.get("condition_lane_rect", Rect2()) as Rect2).position.x
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata as Dictionary
 			if bool(metadata.get("badge", false)):
 				out["arrow_%s" % row_data.row_uid] = span.rect.position.x - block
@@ -226,24 +226,24 @@ static func _test_geometry() -> bool:
 		["no mark slot is reserved on the look's own tokens",
 			[native_style.condition_badge_column_width, (load(NATIVE_THEME) as EventSheetEditorStyle).get_condition_style().horizontal_padding], [0, 0]],
 		["the arrow's advance is 17 and an inverted mark advances nothing",
-			[ViewportRowMetrics.STRIP_MARK_ADVANCE], [17.0]],
+			[EventSheetViewportRowMetrics.STRIP_MARK_ADVANCE], [17.0]],
 	])
 
 
 static func _test_typed_name_geometry() -> bool:
-	var local: Dictionary = EventRowRenderer.typed_name_geometry(null, 12, "local", "float", "x")
-	var parameter: Dictionary = EventRowRenderer.typed_name_geometry(null, 12, "parameter", "float", "x")
+	var local: Dictionary = EventSheetRowRenderer.typed_name_geometry(null, 12, "local", "float", "x")
+	var parameter: Dictionary = EventSheetRowRenderer.typed_name_geometry(null, 12, "parameter", "float", "x")
 	var view: EventSheetViewport = _view_of(NATIVE_THEME)
 	var local_marks: Array = []
 	for index: int in range(view.get_flat_rows().size()):
 		var row_data: EventRowData = view._row_at(index)
-		if row_data == null or not EventRowRenderer.is_local_variable_row(row_data):
+		if row_data == null or not EventSheetRowRenderer.is_local_variable_row(row_data):
 			continue
 		var layout: Dictionary = view.get_row_layout_for_test(index, 1200.0)
 		view._row_builder._ensure_event_spans(row_data)
 		if row_data.spans.is_empty():
 			continue
-		local_marks.append(row_data.spans[0].rect.position.x - EventRowRenderer.nested_block_left_for(row_data.indent, 18))
+		local_marks.append(row_data.spans[0].rect.position.x - EventSheetRowRenderer.nested_block_left_for(row_data.indent, 18))
 		if layout.is_empty():
 			local_marks.append(-1.0)
 	return SUPPORT.pins(TEST_NAME, [

@@ -30,9 +30,9 @@ static func run() -> bool:
 		viewport.get_lane_divider_x(2000.0) > viewport.get_lane_divider_x(1000.0), true) and all_passed
 
 	# Header binds to the viewport and reserves its band height.
-	var header: SheetColumnHeader = SheetColumnHeader.new()
+	var header: EventSheetColumnHeader = EventSheetColumnHeader.new()
 	header.setup(viewport)
-	all_passed = _check("header reserves its band height", header.custom_minimum_size.y, SheetColumnHeader.HEADER_HEIGHT) and all_passed
+	all_passed = _check("header reserves its band height", header.custom_minimum_size.y, EventSheetColumnHeader.HEADER_HEIGHT) and all_passed
 	# The band IS the handle for both column boundaries, so it takes the mouse. The rows are not
 	# under it, so nothing below loses a click by this.
 	all_passed = _check("header takes the mouse - it is where the boundaries are grabbed", header.mouse_filter, Control.MOUSE_FILTER_STOP) and all_passed

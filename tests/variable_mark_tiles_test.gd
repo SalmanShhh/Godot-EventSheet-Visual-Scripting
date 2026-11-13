@@ -214,7 +214,7 @@ static func _row_facts(path: String, variable_name: String, style: EventSheetEdi
 	var found: Dictionary = {"badges": PackedStringArray(), "note": "", "variable": null}
 	for row_data: EventRowData in view._root_rows:
 		var is_row: bool = false
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if bool(metadata.get("variable_name_span", false)) and span.text == variable_name:
 				is_row = true
@@ -222,7 +222,7 @@ static func _row_facts(path: String, variable_name: String, style: EventSheetEdi
 				found["variable"] = row_data.source_resource
 		if not is_row:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("variable_doc_note", false)):
 				found["note"] = span.text
 		break

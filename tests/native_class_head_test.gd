@@ -115,7 +115,7 @@ static func _test_scene_facts() -> bool:
 			Array(card.get("doors", [])),
 			[["Open in Script Editor", "open_script_editor"], ["Show in FileSystem", "show_in_filesystem"],
 				["Show the scene", "spawns:res://demo/showcase/platformer_shooter/platformer_shooter.tscn"],
-				["Edit description…", ViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE]]],
+				["Edit description…", EventSheetViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE]]],
 		["Classic Sheet keeps the spawns rows", classic_spawns.begins_with("spawns | shot.tscn | browse the scene | var "),
 			true],
 		["only a scene fact with nothing wrong moves to the hover",
@@ -131,7 +131,7 @@ static func _lead_texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("align_right", false)):
 			break
 		parts.append(span.text)
@@ -140,7 +140,7 @@ static func _lead_texts(row_data: EventRowData) -> String:
 
 ## The card behind the head bar's name, {} when there is no bar.
 static func _name_card(row_data: EventRowData) -> Dictionary:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
 			return card
@@ -166,7 +166,7 @@ static func _row_with_uid(view: EventSheetViewport, prefix: String) -> EventRowD
 
 
 static func _flag_of(row_data: EventRowData, prefix: String, key: String) -> Variant:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		if span.text.begins_with(prefix):
 			return (span.metadata as Dictionary).get(key)
 	return null
@@ -176,6 +176,6 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	return " | ".join(parts)

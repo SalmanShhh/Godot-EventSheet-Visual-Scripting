@@ -24,8 +24,8 @@ static func run() -> bool:
 		["the canvas ends on juice_tile's rows", _last_root_uid(view).begins_with("define_fn_juice_tile"), true],
 		["no span puts raw markup on the sheet", _raw_markup_spans(view), PackedStringArray()],
 		["Edit description… edits the claimed note", _door_action(card, "Edit description…"),
-			ViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE],
-		["the door finds that note on the built rows", ViewportRowBuilder.claimed_description_note(view._root_rows) == closing, true],
+			EventSheetViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE],
+		["the door finds that note on the built rows", EventSheetViewportRowBuilder.claimed_description_note(view._root_rows) == closing, true],
 		["the file still re-emits byte for byte", str(EventSheetCompiler.compile(sheet).get("output", "")),
 			FileAccess.get_file_as_string(CAROUSEL)],
 	])
@@ -43,7 +43,7 @@ static func run() -> bool:
 	ok = SUPPORT.pins(P, [
 		["a mid-file note keeps its row", _rows_drawing(marked_view, _first_note(marked)), 1],
 		["a marked-up note echoes no raw markup", _raw_markup_spans(marked_view), PackedStringArray()],
-		["the head card claims no mid-file note", ViewportRowBuilder.claimed_description_note(marked_view._root_rows) == null, true],
+		["the head card claims no mid-file note", EventSheetViewportRowBuilder.claimed_description_note(marked_view._root_rows) == null, true],
 	]) and ok
 	marked_view.free()
 	return ok
@@ -66,9 +66,9 @@ static func _view(sheet: EventSheetResource) -> EventSheetViewport:
 
 static func _name_card(view: EventSheetViewport) -> Dictionary:
 	for row_data: EventRowData in view._root_rows:
-		if not row_data.row_uid.begins_with(ViewportRowBuilder.SHEET_HEAD_BAR_UID_PREFIX):
+		if not row_data.row_uid.begins_with(EventSheetViewportRowBuilder.SHEET_HEAD_BAR_UID_PREFIX):
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and (span.metadata as Dictionary).get("head_card") is Dictionary:
 				var card: Dictionary = (span.metadata as Dictionary)["head_card"]
 				if str(card.get("id", "")) == "name":
@@ -112,7 +112,7 @@ static func _last_root_uid(view: EventSheetViewport) -> String:
 static func _raw_markup_spans(view: EventSheetViewport) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in view._root_rows:
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var drawn: String = span.text
 			if span.metadata is Dictionary and (span.metadata as Dictionary).has("bbcode_segments"):
 				drawn = ""

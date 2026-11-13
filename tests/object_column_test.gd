@@ -16,16 +16,16 @@ static func run() -> bool:
 	# The column is ALIGNED by default (the event-sheet look): every row's text starts at the same x, so
 	# the sheet scans as a table instead of each row starting wherever its own object name happens to
 	# end. Flow mode is still reachable by setting the token to 0.
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 96.0, "condition lane is aligned by default")
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "action") == 96.0, "action lane is aligned by default")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(event_style, "condition") == 96.0, "condition lane is aligned by default")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(event_style, "action") == 96.0, "action lane is aligned by default")
 	event_style.condition_object_column_width = 0
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 0.0, "0 still means flow mode")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(event_style, "condition") == 0.0, "0 still means flow mode")
 	event_style.condition_object_column_width = 120
 	event_style.action_object_column_width = 90
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 120.0, "condition column reads its token")
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "action") == 90.0, "action column reads its token")
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "keyword") == 0.0, "non-ACE lanes never column")
-	ok = _check(ok, EventRowRenderer.object_column_width_for(null, "condition") == 0.0, "null style is flow (headless safety)")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(event_style, "condition") == 120.0, "condition column reads its token")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(event_style, "action") == 90.0, "action column reads its token")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(event_style, "keyword") == 0.0, "non-ACE lanes never column")
+	ok = _check(ok, EventSheetRowRenderer.object_column_width_for(null, "condition") == 0.0, "null style is flow (headless safety)")
 
 	# ---- measure + text origin agree, fixed column vs flow ----
 	var viewport: EventSheetViewport = EventSheetViewport.new()
@@ -47,7 +47,7 @@ static func run() -> bool:
 	viewport.apply_editor_style(style)
 	var live_style: EventSheetEventStyle = viewport._get_event_style()
 
-	var span: SemanticSpan = _condition_span(viewport)
+	var span: EventSheetSemanticSpan = _condition_span(viewport)
 	ok = _check(ok, span != null, "a condition span with an object label exists")
 	if span == null:
 		return false
@@ -65,7 +65,7 @@ static func run() -> bool:
 	# The EFFECTIVE column, not the raw token: a column is bounded by the room its lane actually has,
 	# so a themed 150 on a narrow canvas resolves to less. Draw, measure and hit-test must all use this
 	# same bounded number - that agreement is what this test exists to protect.
-	var effective_column: float = EventRowRenderer.object_column_width_for(
+	var effective_column: float = EventSheetRowRenderer.object_column_width_for(
 		live_style, "condition", viewport.lane_width_for("condition"))
 	ok = _check(ok, effective_column <= 150.0 and effective_column > 0.0,
 		"the effective column is the token bounded by its lane (%.1f)" % effective_column)
@@ -98,7 +98,7 @@ static func run() -> bool:
 	if bool(metadata.get("chip", false)):
 		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
-		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
+		anchor_x += EventSheetRowRenderer.OBJECT_ICON_ADVANCE
 	# The DRAWN column is the aligned per-span width the layout stamped (the shared-separator
 	# rule), falling back to the style column when no stamp exists. Grab where it is drawn.
 	var drawn_column: float = float(metadata.get("object_column_px", effective_column))
@@ -131,12 +131,12 @@ static func run() -> bool:
 
 
 ## The first condition-lane span carrying an object label (the trigger chip qualifies).
-static func _condition_span(viewport: EventSheetViewport) -> SemanticSpan:
+static func _condition_span(viewport: EventSheetViewport) -> EventSheetSemanticSpan:
 	var row_data: EventRowData = viewport._row_at(0)
 	if row_data == null:
 		return null
 	viewport.get_row_layout_for_test(0, 900.0)
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary

@@ -24,10 +24,10 @@ static func run() -> bool:
 static func _test_hit_size() -> bool:
 	var ok: bool = true
 	ok = _check("a chip narrower than a target is caught in a target-sized rectangle",
-		ViewportHitTestHelper.hit_rect(Rect2(100.0, 50.0, 8.0, 12.0)),
+		EventSheetViewportHitTestHelper.hit_rect(Rect2(100.0, 50.0, 8.0, 12.0)),
 		Rect2(92.0, 47.0, 24.0, 18.0)) and ok
 	ok = _check("a chip already big enough is left exactly as it is",
-		ViewportHitTestHelper.hit_rect(Rect2(100.0, 50.0, 90.0, 22.0)),
+		EventSheetViewportHitTestHelper.hit_rect(Rect2(100.0, 50.0, 90.0, 22.0)),
 		Rect2(100.0, 50.0, 90.0, 22.0)) and ok
 	ok = _check("the floor is stated once and read from there",
 		EventSheetAccessibility.chip_hit_size(8.0, 12.0), Vector2(24.0, 18.0)) and ok

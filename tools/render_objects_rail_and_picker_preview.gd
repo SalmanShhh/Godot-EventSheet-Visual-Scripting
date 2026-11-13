@@ -205,7 +205,7 @@ func _print_rows() -> void:
 		if row_data == null:
 			continue
 		var cells: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			var object_label: String = str(metadata.get("object_label", ""))
 			cells.append(span.text if object_label.is_empty() else "%s ▸ %s" % [object_label, span.text])

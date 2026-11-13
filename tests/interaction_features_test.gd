@@ -102,7 +102,7 @@ static func run() -> bool:
 		caret_uid = (vp.get_flat_rows()[vp._selected_row_index].get("row") as EventRowData).row_uid
 	all_passed = _check("the caret re-derives from the selected uid after a rebuild", caret_uid, selected_uid) and all_passed
 	# Chip spans draw their text at rect.x + padding_x - the hit-test must mirror that.
-	var chip_span: SemanticSpan = SemanticSpan.new()
+	var chip_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	chip_span.text = "42"
 	chip_span.rect = Rect2(100.0, 0.0, 60.0, 20.0)
 	chip_span.metadata = {"chip": true, "padding_x": 8.0}

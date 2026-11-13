@@ -222,7 +222,7 @@ static func _full_rebuild_toggle(view: EventSheetViewport, uid: String) -> void:
 
 
 static func _full_rebuild_sweep(view: EventSheetViewport, folded: bool) -> void:
-	view._folding._set_folds_in(view._root_rows, ViewportFolding.SWEEP_GROUPS, folded, [] as Array[EventRowData])
+	view._folding._set_folds_in(view._root_rows, EventSheetViewportFolding.SWEEP_GROUPS, folded, [] as Array[EventRowData])
 	view._refresh_rows()
 
 
@@ -239,7 +239,7 @@ static func _shape(view: EventSheetViewport) -> PackedStringArray:
 			lines.append("null")
 			continue
 		var words := PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			words.append(span.text)
 		lines.append("%s|%d|%d|%s|%d|%d|%d|%s|%.2f|%s|%s" % [
 			row_data.row_uid, row_data.indent, row_data.row_type, str(row_data.folded), row_data.line_number,

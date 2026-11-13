@@ -117,7 +117,7 @@ func build_ui() -> void:
 
 	# The sheet's identity band, above the scrolling sheet (bound to the viewport once it exists).
 	# Kept outside the scroll so the scroll still has a single child.
-	_dock._identity_banner = SheetIdentityBanner.new()
+	_dock._identity_banner = EventSheetIdentityBanner.new()
 	root.add_child(_dock._identity_banner)
 	_dock._identity_banner.edit_requested.connect(_dock._open_sheet_type_dialog)
 
@@ -167,7 +167,7 @@ func build_ui() -> void:
 	_dock._functions_list.add_child(_dock._functions_menu)
 	# The Anatomy tab, offered for a behaviour pack: the active behaviour's organs
 	# (knobs/state/triggers/actions/conditions/expressions/uses) at a glance, click to jump.
-	_dock._anatomy_panel = BehaviourAnatomyPanel.new()
+	_dock._anatomy_panel = EventSheetBehaviourAnatomyPanel.new()
 	_dock._anatomy_panel.reveal_requested.connect(func(resource: Resource) -> void:
 		var view: EventSheetViewport = _dock._active_view()
 		if view != null:

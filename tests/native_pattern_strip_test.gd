@@ -104,7 +104,7 @@ static func _test_strip() -> bool:
 		var row: EventRowData = dock._viewport._row_at(index)
 		if row == null or not (row.source_resource is EventRow):
 			continue
-		if ViewportTooltipHelper.pattern_strip_line(sheet, (row.source_resource as EventRow).event_uid).is_empty():
+		if EventSheetViewportTooltipHelper.pattern_strip_line(sheet, (row.source_resource as EventRow).event_uid).is_empty():
 			continue
 		if row.attention_note.is_empty() and clean == null:
 			clean = row
@@ -129,7 +129,7 @@ static func _test_strip() -> bool:
 		var row: EventRowData = classic_dock._viewport._row_at(index)
 		if row == null or not (row.source_resource is EventRow) or not row.attention_note.is_empty():
 			continue
-		if ViewportTooltipHelper.pattern_strip_line(classic_sheet, (row.source_resource as EventRow).event_uid).is_empty():
+		if EventSheetViewportTooltipHelper.pattern_strip_line(classic_sheet, (row.source_resource as EventRow).event_uid).is_empty():
 			continue
 		classic_dock._update_row_help_strip(row)
 		classic_said = [classic_dock._row_help_label.visible, classic_dock._row_help_button.visible]
@@ -158,7 +158,7 @@ static func _test_number_card() -> bool:
 		var row: EventRowData = viewport._row_at(index)
 		if row == null or not (row.source_resource is EventRow) or row.event_number <= 0:
 			continue
-		var card: Dictionary = ViewportTooltipHelper.event_number_card(sheet,
+		var card: Dictionary = EventSheetViewportTooltipHelper.event_number_card(sheet,
 			(row.source_resource as EventRow).event_uid, row.event_number)
 		if not card.is_empty() and with_pattern.is_empty():
 			with_pattern = {"title": card["title"], "lines": Array(card["lines"]), "doors": card["doors"],
@@ -214,7 +214,7 @@ static func _pattern_chips(viewport: EventSheetViewport) -> Array:
 		if row == null or not (row.source_resource is EventRow):
 			continue
 		viewport._row_builder._ensure_event_spans(row)
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span != null and span.metadata is Dictionary \
 					and str((span.metadata as Dictionary).get("kind", "")) == "pattern_chip":
 				chips.append(span.text)

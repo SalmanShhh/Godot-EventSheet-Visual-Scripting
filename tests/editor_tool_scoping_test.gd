@@ -99,7 +99,7 @@ static func _reads(sheet: EventSheetResource) -> String:
 	var text: String = ""
 	for row_data: EventRowData in viewport._root_rows:
 		viewport._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			text += span.text + "\n"
 	viewport.free()
 	return text

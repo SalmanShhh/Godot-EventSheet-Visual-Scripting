@@ -371,7 +371,7 @@ func _ace_target_enabled(target: Dictionary) -> bool:
 
 ## The code behind an action that is really a commented-out statement, "" otherwise.
 static func commented_out_code(action_resource: Variant) -> String:
-	return ViewportRowBuilder.commented_out_code(action_resource)
+	return EventSheetViewportRowBuilder.commented_out_code(action_resource)
 
 
 ## The source line an action would compile to - what commenting it out has to write.

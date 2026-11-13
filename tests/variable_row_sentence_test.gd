@@ -83,7 +83,7 @@ static func _test_f2_renames_the_name_in_place() -> bool:
 	if row == null:
 		dock.free()
 		return false
-	var name_span: SemanticSpan = _span_flagged(row, "variable_name_span")
+	var name_span: EventSheetSemanticSpan = _span_flagged(row, "variable_name_span")
 	ok = _check("the name is a field, opened by its own gesture",
 		[bool((name_span.metadata as Dictionary).get("editable", false)),
 			str((name_span.metadata as Dictionary).get("edit_kind", "")),
@@ -159,8 +159,8 @@ static func _first_action_param(sheet: EventSheetResource, param_id: String) -> 
 
 
 ## The first span carrying `flag` in its metadata, or null.
-static func _span_flagged(row_data: EventRowData, flag: String) -> SemanticSpan:
-	for span: SemanticSpan in row_data.spans:
+static func _span_flagged(row_data: EventRowData, flag: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get(flag, false)):
 			return span
 	return null
@@ -365,7 +365,7 @@ static func _test_the_segments_rest_below_full_colour() -> bool:
 	ok = _check("the resting run is at the resting alpha",
 		is_equal_approx(keyword_alpha, colours[EventSheetCodeEcho.TOKEN_KEYWORD].a * EventSheetCodeEcho.REST_ALPHA),
 		true) and ok
-	var lit: Array = EventRowRenderer.opaque_segments(resting)
+	var lit: Array = EventSheetRowRenderer.opaque_segments(resting)
 	var lit_alpha: float = 0.0
 	for entry: Variant in lit:
 		if str((entry as Dictionary).get("text", "")) == "var":
@@ -525,7 +525,7 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
 
@@ -544,7 +544,7 @@ static func _scope_word(rows: Array, var_name: String) -> String:
 		var row_data: EventRowData = entry as EventRowData
 		if row_data == null or _name_of(row_data) != var_name:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if bool(metadata.get("variable_scope_span", false)):
 				return str(span.text)

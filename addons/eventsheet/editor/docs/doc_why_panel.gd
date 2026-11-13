@@ -303,7 +303,7 @@ static func label_for(condition: ACECondition) -> String:
 		text = descriptor.get_display_text()
 	if text.strip_edges().is_empty():
 		text = condition.ace_id
-	text = EventSheetBBCodeLite.strip(ViewportTooltipHelper.fill_codegen_template(text, params) if text.contains("{") else text)
+	text = EventSheetBBCodeLite.strip(EventSheetViewportTooltipHelper.fill_codegen_template(text, params) if text.contains("{") else text)
 	return ("Not: " + text) if condition.negated else text
 
 
@@ -318,7 +318,7 @@ static func expression_for(condition: ACECondition) -> String:
 		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 		if descriptor != null:
 			template = descriptor.codegen_template
-	var filled: String = ViewportTooltipHelper.fill_codegen_template(template, params)
+	var filled: String = EventSheetViewportTooltipHelper.fill_codegen_template(template, params)
 	if filled.strip_edges().is_empty():
 		return ""
 	return ("not (%s)" % filled) if condition.negated else filled

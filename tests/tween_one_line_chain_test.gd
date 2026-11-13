@@ -58,7 +58,7 @@ static func _actions(source: String) -> String:
 		if row == null:
 			continue
 		var parts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if not (span.metadata is Dictionary):
 				continue
 			if str((span.metadata as Dictionary).get("lane", "")) != "action":

@@ -73,7 +73,7 @@ static func _warnings_are_recorded_and_found() -> bool:
 	var first_record: bool = EventSheetCompileFindings.record(sheet, result)
 	var same_record: bool = EventSheetCompileFindings.record(sheet, result)
 	var found: Array[Dictionary] = EventSheetCompileFindings.findings(sheet)
-	var at_event: Array[Dictionary] = ViewportRowBuilder.findings_at_event(found, event_row)
+	var at_event: Array[Dictionary] = EventSheetViewportRowBuilder.findings_at_event(found, event_row)
 	var summary: String = EventSheetCompileFindings.summary(EventSheetCompileFindings.warnings_for(sheet))
 	var passed: bool = SUPPORT.pins(NAME, [
 		["the first record is a change", first_record, true],

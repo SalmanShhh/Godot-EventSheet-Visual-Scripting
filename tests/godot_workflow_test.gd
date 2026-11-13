@@ -506,7 +506,7 @@ static func run() -> bool:
 	var code_lines: int = 0
 	var comment_lines: int = 0
 	var comment_has_chip_chrome: bool = false
-	for span: SemanticSpan in block_row.spans:
+	for span: EventSheetSemanticSpan in block_row.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var span_meta: Dictionary = span.metadata
@@ -652,16 +652,16 @@ static func run() -> bool:
 
 	# ── Review fix: clicking any line of a multi-line block resolves to the block
 	# head + full union (selection/hover drew nothing when a non-head line was clicked).
-	var s0: SemanticSpan = SemanticSpan.new()
+	var s0: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	s0.rect = Rect2(0, 0, 100, 10)
 	s0.metadata = {"chip": true, "code_cell": true, "block_lines": 3, "block_line": 0}
-	var s1: SemanticSpan = SemanticSpan.new()
+	var s1: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	s1.rect = Rect2(0, 10, 100, 10)
 	s1.metadata = {"chip": true, "code_cell": true, "block_lines": 3, "block_line": 1}
-	var s2: SemanticSpan = SemanticSpan.new()
+	var s2: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	s2.rect = Rect2(0, 20, 100, 10)
 	s2.metadata = {"chip": true, "code_cell": true, "block_lines": 3, "block_line": 2}
-	var groups: Dictionary = EventRowRenderer.resolve_block_groups([s0, s1, s2])
+	var groups: Dictionary = EventSheetRowRenderer.resolve_block_groups([s0, s1, s2])
 	all_passed = _check("clicking the last block line resolves to the head",
 		int((groups["heads"] as Dictionary).get(2, -1)), 0) and all_passed
 	all_passed = _check("the block union covers every member line",

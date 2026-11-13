@@ -8,7 +8,7 @@ extends RefCounted
 # a second event at the same depth starts a second frame; neighbouring variable lines share a frame
 # and a gap splits them; a cell picked on its own keeps its own outline and is in no run at all.
 # Pinned as values:
-#   1. ViewportSelectionHelper.selection_runs over plain rows, case by case;
+#   1. EventSheetViewportSelectionHelper.selection_runs over plain rows, case by case;
 #   2. on the real BoomerLevel showcase: event 5 selected (its subtree with it) is one framed run,
 #      its rect is the rows' own band, and every row of it is stamped to take the run's fill;
 #   3. four neighbouring variables are one frame; taking the second out splits them, and the line
@@ -117,7 +117,7 @@ static func _rows(specs: Array) -> Array:
 ## own index when missing); `cells` lists the rows whose cell is the selection.
 static func _runs(rows: Array, leads: Array = [], cells: Array = []) -> Array:
 	var out: Array = []
-	var runs: Array = ViewportSelectionHelper.selection_runs(0, rows.size() - 1,
+	var runs: Array = EventSheetViewportSelectionHelper.selection_runs(0, rows.size() - 1,
 		func(index: int) -> EventRowData: return rows[index] as EventRowData,
 		func(index: int) -> int: return int(leads[index]) if index < leads.size() else index,
 		func(index: int) -> bool: return cells.has(index))
@@ -148,7 +148,7 @@ static func _variable_row(viewport: EventSheetViewport, variable_name: String) -
 		if row == null or not row.variable_row:
 			continue
 		viewport._row_builder._ensure_event_spans(row)
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span != null and span.text == variable_name:
 				return index
 	return -1

@@ -256,7 +256,7 @@ static func _test_the_words_ride() -> bool:
 	# actually handed. Pinned as the whole dictionary rather than key by key, so a key quietly added
 	# or renamed here has to be looked at rather than sailing through.
 	ok = _check("what a derived property row hands the hover and F1",
-		ViewportRowBuilder.derived_meta({"class": "Light2D", "property": UNCLAIMED_PROPERTY,
+		EventSheetViewportRowBuilder.derived_meta({"class": "Light2D", "property": UNCLAIMED_PROPERTY,
 			"doc": "How soft the shadow edge is.", "credit": "",
 			"doc_id": "engine:Light2D.%s" % UNCLAIMED_PROPERTY}),
 		{"derived_call": true, "derived_class": "Light2D", "derived_method": "",

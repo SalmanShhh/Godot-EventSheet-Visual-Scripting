@@ -372,7 +372,7 @@ static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: Stri
 	if row_data == null:
 		return -1
 	for index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[index]
+		var span: EventSheetSemanticSpan = row_data.spans[index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
@@ -384,7 +384,7 @@ static func _find_span_index_by_text(row_data: EventRowData, expected_text: Stri
 	if row_data == null:
 		return -1
 	for index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[index]
+		var span: EventSheetSemanticSpan = row_data.spans[index]
 		if span != null and span.text == expected_text:
 			return index
 	return -1

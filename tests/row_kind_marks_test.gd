@@ -138,7 +138,7 @@ static func _test_function_head_lines() -> bool:
 	var head_meta: Dictionary = {}
 	var param_lines: Array = []
 	if head != null:
-		for span: SemanticSpan in head.spans:
+		for span: EventSheetSemanticSpan in head.spans:
 			texts.append(span.text)
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if bool(metadata.get("function_name", false)):
@@ -163,16 +163,16 @@ static func _test_function_head_lines() -> bool:
 		["and so is the flag",
 			str(head_meta.get("hover_note", "")).contains("In Add Action: Listed in Add Action"), true],
 		["an untyped parameter still says what it is",
-			ViewportRowBuilder.function_param_type_words(_untyped_param()), "Variant"],
+			EventSheetViewportRowBuilder.function_param_type_words(_untyped_param()), "Variant"],
 	]) and ok
 	# A local variable is a line with the local icon: no "Local" word.
 	var local_spans: Array = []
 	dock._active_view()._row_builder.append_local_declaration_spans(local_spans,
 		{"type_word": "Node2D", "name": "t", "value": "Tiles's child index"}, {"lane": "action", "line_index": 0}, {})
 	var local_texts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in local_spans:
+	for span: EventSheetSemanticSpan in local_spans:
 		local_texts.append(span.text)
-	var local_meta: Dictionary = (local_spans[0] as SemanticSpan).metadata if not local_spans.is_empty() else {}
+	var local_meta: Dictionary = (local_spans[0] as EventSheetSemanticSpan).metadata if not local_spans.is_empty() else {}
 	ok = SUPPORT.pins(TEST_NAME, [
 		["a local reads as its type then its value", local_texts, PackedStringArray(["Node2D", "= Tiles's child index"])],
 		["its name stands in the object column", str(local_meta.get("object_label", "")), "t"],
@@ -231,7 +231,7 @@ func _physics_process(delta: float) -> void:
 		if row_data == null:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if str(metadata.get("lane", "")) == "action" and (span.text.begins_with("Return") or span.text.begins_with("Stop")):
 				lines[span.text] = [str(metadata.get("object_label", "")), str(metadata.get("object_glyph", ""))]
@@ -246,11 +246,11 @@ func _physics_process(delta: float) -> void:
 		["a function's return line reads under Function and leads with the function icon",
 			lines.get("Return left", []), ["Function", NativeRowMarks.OBJECT_GLYPH_FUNCTION]],
 		["a bare return in an event keeps its own reading and object", lines.get("Stop event", []), ["System", ""]],
-		["the Core Return action is a return", ViewportRowBuilder.is_function_return(return_ace), true],
-		["a return written as code is one", ViewportRowBuilder.is_function_return(raw_return), true],
-		["a statement that only starts with the letters is not", ViewportRowBuilder.is_function_return(raw_call), false],
-		["a return written with a value hands one back", ViewportRowBuilder.function_returns_value(raw_return), true],
-		["a bare return with a comment hands nothing back", ViewportRowBuilder.function_returns_value(_raw("return  # done")), false],
+		["the Core Return action is a return", EventSheetViewportRowBuilder.is_function_return(return_ace), true],
+		["a return written as code is one", EventSheetViewportRowBuilder.is_function_return(raw_return), true],
+		["a statement that only starts with the letters is not", EventSheetViewportRowBuilder.is_function_return(raw_call), false],
+		["a return written with a value hands one back", EventSheetViewportRowBuilder.function_returns_value(raw_return), true],
+		["a bare return with a comment hands nothing back", EventSheetViewportRowBuilder.function_returns_value(_raw("return  # done")), false],
 	])
 
 
@@ -278,7 +278,7 @@ static func _test_line_icons() -> bool:
 		if row_data == null:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if str(metadata.get("object_label", "")).strip_edges().is_empty() or bool(metadata.get("badge", false)):
 				continue
@@ -287,7 +287,7 @@ static func _test_line_icons() -> bool:
 			found[span.text] = [str(metadata.get("object_label", "")), metadata.get("object_icon"),
 				str(metadata.get("object_glyph", ""))]
 	var own_icon: Texture2D = load(ANCHOR_ICON) as Texture2D
-	var builder: ViewportRowBuilder = view._row_builder
+	var builder: EventSheetViewportRowBuilder = view._row_builder
 	var miss_before: bool = builder._line_icon_cache.has("NoSuchThing")
 	builder.line_object_icon("NoSuchThing")
 	var miss_kept: bool = builder._line_icon_cache.has("NoSuchThing")
@@ -305,10 +305,10 @@ static func _test_line_icons() -> bool:
 		["its value is a parameter line: icon, name, type as written", (found.get("String", []) as Array).slice(0, 1)
 			+ (found.get("String", []) as Array).slice(2, 3), ["cause", NativeRowMarks.OBJECT_GLYPH_PARAMETER]],
 		["a class with no icon of its own wears its nearest ancestor's",
-			ViewportRowBuilder.class_icon_with_ancestry("CharacterBody2D"), node2d_icon],
-		["a project class answers with its @icon", ViewportRowBuilder.class_icon_with_ancestry("AnchorBehavior"),
+			EventSheetViewportRowBuilder.class_icon_with_ancestry("CharacterBody2D"), node2d_icon],
+		["a project class answers with its @icon", EventSheetViewportRowBuilder.class_icon_with_ancestry("AnchorBehavior"),
 			load(ANCHOR_ICON)],
-		["an empty name has none", ViewportRowBuilder.class_icon_with_ancestry(""), null],
+		["an empty name has none", EventSheetViewportRowBuilder.class_icon_with_ancestry(""), null],
 		["a name no theme answers for is remembered once a theme exists", [miss_before, miss_kept], [false, true]],
 	])
 	dock.free()
@@ -380,8 +380,8 @@ static func _test_written_words() -> bool:
 		{"health": "Health"}, {}).get("pieces", [])
 	EventSheetL10n.set_locale(before_locale)
 	return SUPPORT.pins(TEST_NAME, [
-		["a local's line spells the type it was written with", (written[0] as SemanticSpan).text if not written.is_empty() else "", "int"],
-		["a local whose type is inferred keeps the sheet's word", (inferred[0] as SemanticSpan).text if not inferred.is_empty() else "",
+		["a local's line spells the type it was written with", (written[0] as EventSheetSemanticSpan).text if not written.is_empty() else "", "int"],
+		["a local whose type is inferred keeps the sheet's word", (inferred[0] as EventSheetSemanticSpan).text if not inferred.is_empty() else "",
 			"number"],
 		["the behaviour's colon is translated with its name", (french[0] as Array)[0] if not french.is_empty() else "", "Health : "],
 	])
@@ -403,7 +403,7 @@ static func _untyped_param() -> ACEParam:
 static func _badge_styles(spans: Array) -> PackedStringArray:
 	var styles: PackedStringArray = PackedStringArray()
 	for span: Variant in spans:
-		var metadata: Dictionary = (span as SemanticSpan).metadata if span is SemanticSpan and (span as SemanticSpan).metadata is Dictionary else {}
+		var metadata: Dictionary = (span as EventSheetSemanticSpan).metadata if span is EventSheetSemanticSpan and (span as EventSheetSemanticSpan).metadata is Dictionary else {}
 		if bool(metadata.get("badge", false)) and str(metadata.get("badge_style", "")) in ["trigger", "negated"]:
 			styles.append(str(metadata.get("badge_style", "")))
 	return styles

@@ -89,7 +89,7 @@ func _code_block() -> Label:
 ## Whether the build in front of us is the settled one: a row whose span the derived layer claimed.
 func _has_derived_rows() -> bool:
 	for row: EventRowData in _all_rows(_viewport._root_rows):
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if bool(span.metadata.get("derived_call", false)):
 				return true
 	return false

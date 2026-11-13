@@ -451,7 +451,7 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 			item.set_tooltip_text(0, EventSheetVariableOwners.sentence(entry) if fits
 				else "%s - this field wants %s." % [
 					EventSheetVariableOwners.sentence(entry),
-					ViewportRowBuilder.friendly_type_word(wanted)])
+					EventSheetViewportRowBuilder.friendly_type_word(wanted)])
 			item.set_metadata(0, str(entry.get("insert_text", name_str)))
 	# Member chaining (host.velocity) - only while searching, and only for class-backed variables.
 	if lowered.is_empty():

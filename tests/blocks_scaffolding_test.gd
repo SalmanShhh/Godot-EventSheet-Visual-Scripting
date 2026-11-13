@@ -142,7 +142,7 @@ static func _band_texts(rows: Array, band_kind: String) -> String:
 	for row: Variant in rows:
 		if row is EventRowData and (row as EventRowData).row_uid.begins_with("sheet_head_%s_" % band_kind):
 			var parts: PackedStringArray = PackedStringArray()
-			for span: SemanticSpan in (row as EventRowData).spans:
+			for span: EventSheetSemanticSpan in (row as EventRowData).spans:
 				parts.append(str(span.text))
 			return " | ".join(parts)
 	return ""

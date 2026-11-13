@@ -108,8 +108,8 @@ static func _test_native_rows() -> bool:
 		var row: EventRowData = viewport._row_at(index)
 		if row != null and row.source_resource is RawCodeRow:
 			raw_rows += 1
-	var speed_name: SemanticSpan = _span_with(_row_named(viewport, "open_speed"), "variable_name_span")
-	var glow_value: SemanticSpan = _span_with(_row_named(viewport, "glow_color"), "variable_value_span")
+	var speed_name: EventSheetSemanticSpan = _span_with(_row_named(viewport, "open_speed"), "variable_name_span")
+	var glow_value: EventSheetSemanticSpan = _span_with(_row_named(viewport, "glow_color"), "variable_value_span")
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["an exported variable: type, name, value, its tooltip as the note",
 			_words(_row_named(viewport, "open_speed")),
@@ -120,7 +120,7 @@ static func _test_native_rows() -> bool:
 		["an untyped var prints the type its value gives away", _words(_row_named(viewport, "hit_count")),
 			["int", "hit_count", "=", "5"]],
 		["a colour reads as it is written", _words(_row_named(viewport, "glow_color")), ["Color", "glow_color", "=", "Color(1, 0.702, 0.278)"]],
-		["and leads with its square", (EventRowRenderer.colour_square_marks(glow_value.metadata)[0] as Dictionary)["color"],
+		["and leads with its square", (EventSheetRowRenderer.colour_square_marks(glow_value.metadata)[0] as Dictionary)["color"],
 			Color(1.0, 0.702, 0.278)],
 		["typing into it edits the text the file holds", glow_value.metadata.get("edit_text"), "Color(1, 0.702, 0.278)"],
 		["a typed list keeps its GDScript type", _words(_row_named(viewport, "guards")).slice(0, 2),
@@ -260,7 +260,7 @@ static func _words(row: EventRowData) -> Array:
 	var words: Array = []
 	if row == null:
 		return words
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span != null:
 			words.append(span.text)
 	return words
@@ -271,16 +271,16 @@ static func _row_named(viewport: EventSheetViewport, variable_name: String) -> E
 		var row: EventRowData = viewport._row_at(index)
 		if row == null or not row.variable_row:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("variable_name", "")) == variable_name:
 				return row
 	return null
 
 
-static func _span_with(row: EventRowData, flag: String) -> SemanticSpan:
+static func _span_with(row: EventRowData, flag: String) -> EventSheetSemanticSpan:
 	if row == null:
 		return null
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get(flag, false)):
 			return span
 	return null

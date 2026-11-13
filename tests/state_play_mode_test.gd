@@ -270,21 +270,21 @@ static func _test_play_mode_never_edits() -> bool:
 static func _test_the_progress_is_read_off_the_row() -> bool:
 	var numeric: ACECondition = _condition("InStateForOver", {"state": "STAGGER", "seconds": "6"})
 	var ok: bool = _check("a plain wait travels on the cell as a number",
-		ViewportRowBuilder.state_progress_metadata(numeric),
-		{ViewportLiveValuesHelper.STATE_PROGRESS_META: 6.0})
+		EventSheetViewportRowBuilder.state_progress_metadata(numeric),
+		{EventSheetViewportLiveValuesHelper.STATE_PROGRESS_META: 6.0})
 	var computed: ACECondition = _condition("InStateForOver",
 		{"state": "STAGGER", "seconds": "stagger_time * 2"})
 	ok = _check("a computed wait shows no progress rather than an invented one",
-		ViewportRowBuilder.state_progress_metadata(computed), {}) and ok
+		EventSheetViewportRowBuilder.state_progress_metadata(computed), {}) and ok
 	var untimed: ACECondition = _condition("InState", {"state": "STAGGER"})
 	ok = _check("and no other row carries a progress at all",
-		ViewportRowBuilder.state_progress_metadata(untimed), {}) and ok
+		EventSheetViewportRowBuilder.state_progress_metadata(untimed), {}) and ok
 	# An INVERTED row is true UNTIL the hold passes, so a bar counting up to it would be progress
 	# towards the opposite of what the row does.
 	var inverted: ACECondition = _condition("InStateForOver", {"state": "STAGGER", "seconds": "6"})
 	inverted.negated = true
 	ok = _check("and an inverted timed row shows none either, rather than counting up to not firing",
-		ViewportRowBuilder.state_progress_metadata(inverted), {}) and ok
+		EventSheetViewportRowBuilder.state_progress_metadata(inverted), {}) and ok
 	# The reading is CLAMPED to the canvas, exactly as the "now" chip is: there is no horizontal
 	# scroll on a sheet, so a reading past the right edge is not one a reader can go and find.
 	var drawn: String = FileAccess.get_file_as_string(
@@ -325,11 +325,11 @@ static func _test_the_band_row_is_found_by_its_own_metadata() -> bool:
 	var other: EventRowData = _row_with_metadata({
 		"head_band": EventSheetHeadBands.BAND_MODES, "kind": "head_band_modes"})
 	var ok: bool = _check("the states band knows itself",
-		ViewportLiveValuesHelper.is_states_band(band), true)
+		EventSheetViewportLiveValuesHelper.is_states_band(band), true)
 	ok = _check("and no other band answers for it",
-		ViewportLiveValuesHelper.is_states_band(other), false) and ok
+		EventSheetViewportLiveValuesHelper.is_states_band(other), false) and ok
 	ok = _check("and neither does nothing at all",
-		ViewportLiveValuesHelper.is_states_band(null), false) and ok
+		EventSheetViewportLiveValuesHelper.is_states_band(null), false) and ok
 	return ok
 
 
@@ -401,7 +401,7 @@ static func _message_names(emitted: String) -> PackedStringArray:
 
 
 static func _row_with_metadata(metadata: Dictionary) -> EventRowData:
-	var span: SemanticSpan = SemanticSpan.new()
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.text = "states"
 	span.metadata = metadata
 	var row: EventRowData = EventRowData.new()

@@ -32,15 +32,15 @@ static func run() -> bool:
 	# very next question must answer the same thing again (a drop that broke the rebuild would
 	# silently blank every object label).
 	var probe_script: String = "res://demo/showcase/family_arena/enemy.gd"
-	var warm_answer: Dictionary = ViewportRowBuilder.scene_using_script(probe_script)
+	var warm_answer: Dictionary = EventSheetViewportRowBuilder.scene_using_script(probe_script)
 	all_passed = _check("the index is marked scanned once it has answered",
-		ViewportRowBuilder._script_scene_scanned, true) and all_passed
-	ViewportRowBuilder.clear_scene_script_index()
+		EventSheetViewportRowBuilder._script_scene_scanned, true) and all_passed
+	EventSheetViewportRowBuilder.clear_scene_script_index()
 	all_passed = _check("clear_scene_script_index() puts it back to unscanned",
-		ViewportRowBuilder._script_scene_scanned, false) and all_passed
+		EventSheetViewportRowBuilder._script_scene_scanned, false) and all_passed
 	all_passed = _check("clear_scene_script_index() empties the index",
-		ViewportRowBuilder._script_scene_cache.size(), 0) and all_passed
-	var rebuilt_answer: Dictionary = ViewportRowBuilder.scene_using_script(probe_script)
+		EventSheetViewportRowBuilder._script_scene_cache.size(), 0) and all_passed
+	var rebuilt_answer: Dictionary = EventSheetViewportRowBuilder.scene_using_script(probe_script)
 	all_passed = _check("the next question re-sweeps and answers the same",
 		str(rebuilt_answer), str(warm_answer)) and all_passed
 
@@ -172,7 +172,7 @@ static func run() -> bool:
 	var dock_source: String = _read(DOCK_PATH)
 	var filesystem_hook: String = _function_body(dock_source, "func _on_translations_maybe_changed()")
 	all_passed = _check("the filesystem hook drops the scene index",
-		filesystem_hook.contains("ViewportRowBuilder.clear_scene_script_index()"), true) and all_passed
+		filesystem_hook.contains("EventSheetViewportRowBuilder.clear_scene_script_index()"), true) and all_passed
 	all_passed = _check("the filesystem hook drops the Input Map read",
 		filesystem_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed
 	all_passed = _check("the filesystem hook drops what the scene said about its lights",

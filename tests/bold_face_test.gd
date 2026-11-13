@@ -13,16 +13,16 @@ const SUPPORT := preload("res://tests/support.gd")
 
 static func run() -> bool:
 	var regular: Font = ThemeDB.fallback_font
-	var bold: Font = EventRowRenderer.bold_font(regular)
+	var bold: Font = EventSheetRowRenderer.bold_font(regular)
 	var variation: FontVariation = bold as FontVariation
 	return SUPPORT.pins("bold_face_test", [
 		["the bold face is the row's own font, marked to be stroked",
 			[variation != null, variation.base_font == regular if variation != null else false,
-				bold.has_meta(EventRowRenderer.BOLD_FACE_META) if bold != null else false],
+				bold.has_meta(EventSheetRowRenderer.BOLD_FACE_META) if bold != null else false],
 			[true, true, true]],
 		["it measures exactly as the regular face, so nothing after it moves",
 			bold.get_string_size("Set group Boss active", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 14).x,
 			regular.get_string_size("Set group Boss active", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 14).x],
-		["one face per font for the session", EventRowRenderer.bold_font(regular) == bold, true],
-		["no font, no face", EventRowRenderer.bold_font(null), null],
+		["one face per font for the session", EventSheetRowRenderer.bold_font(regular) == bold, true],
+		["no font, no face", EventSheetRowRenderer.bold_font(null), null],
 	])

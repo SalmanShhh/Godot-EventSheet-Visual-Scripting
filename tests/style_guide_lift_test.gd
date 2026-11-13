@@ -416,8 +416,8 @@ static func _wall_count(items: Array) -> int:
 	for item: Variant in items:
 		if item is RawCodeRow:
 			var block_lines: PackedStringArray = (item as RawCodeRow).code.split("\n")
-			if block_lines.size() >= 2 and not ViewportRowBuilder.is_comment_only_block(block_lines) \
-					and not ViewportRowBuilder.is_single_statement((item as RawCodeRow).code):
+			if block_lines.size() >= 2 and not EventSheetViewportRowBuilder.is_comment_only_block(block_lines) \
+					and not EventSheetViewportRowBuilder.is_single_statement((item as RawCodeRow).code):
 				walls += 1
 		elif item is EventRow:
 			walls += _wall_count((item as EventRow).actions)

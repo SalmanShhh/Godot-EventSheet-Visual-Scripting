@@ -57,7 +57,7 @@ static func run() -> bool:
 	# Laying the row out is what writes each span's rect, so this must run before they are read.
 	viewport.get_row_layout_for_test(described_index)
 	var lowest_span_bottom: float = described_top
-	for span: SemanticSpan in described_row.spans:
+	for span: EventSheetSemanticSpan in described_row.spans:
 		if span != null:
 			lowest_span_bottom = maxf(lowest_span_bottom, span.rect.end.y)
 	all_passed = _check("every part of the head is drawn inside the head",
@@ -71,7 +71,7 @@ static func run() -> bool:
 
 ## The line_index of the head span carrying `edit_kind`, or -1 when the head has none.
 static func _line_index_of(row_data: EventRowData, edit_kind: String) -> int:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		if str((span.metadata as Dictionary).get("edit_kind", "")) == edit_kind:

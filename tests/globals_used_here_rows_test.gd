@@ -135,7 +135,7 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
 
@@ -149,7 +149,7 @@ static func _meta(row_data: EventRowData) -> Dictionary:
 static func _has_editable_span(row_data: EventRowData) -> bool:
 	if row_data == null:
 		return false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("editable", false)):
 			return true
 	return false

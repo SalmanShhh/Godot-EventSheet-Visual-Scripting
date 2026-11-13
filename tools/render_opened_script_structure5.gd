@@ -137,7 +137,7 @@ func _print_rows() -> void:
 			continue
 		_viewport._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if not span.text.strip_edges().is_empty():
 				texts.append(span.text)
 		var flag: String = ""

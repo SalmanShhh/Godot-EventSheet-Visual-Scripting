@@ -1,5 +1,5 @@
 @tool
-class_name ViewportDragMotion
+class_name EventSheetViewportDragMotion
 extends RefCounted
 # A DRAG YOU CAN SEE: what the sheet looks like while a row, an event or a cell is carried.
 #
@@ -128,7 +128,7 @@ func lift_cells(row_index: int, lane: String, span_indices: Array, count: int, a
 	var bottom: float = -INF
 	var line_left: float = INF
 	for span_index: Variant in span_indices:
-		var span: SemanticSpan = row_data.spans[int(span_index)]
+		var span: EventSheetSemanticSpan = row_data.spans[int(span_index)]
 		top = minf(top, span.rect.position.y)
 		bottom = maxf(bottom, span.rect.end.y)
 		line_left = minf(line_left, span.rect.position.x)
@@ -367,7 +367,7 @@ func row_plan(index: int) -> Dictionary:
 			continue
 		var height: float = _value(key)
 		for span_index: int in range(row_data.spans.size()):
-			var span: SemanticSpan = row_data.spans[span_index]
+			var span: EventSheetSemanticSpan = row_data.spans[span_index]
 			if span != null and _span_lane(span) == str(gap["lane"]) and span.rect.position.y >= float(gap["y"]) - 0.5:
 				(plan["span_shift"] as Dictionary)[span_index] = float((plan["span_shift"] as Dictionary).get(span_index, 0.0)) + height
 	if kind == "cells" and int(_source_cell.get("row", -1)) == index:
@@ -376,7 +376,7 @@ func row_plan(index: int) -> Dictionary:
 		if left_source:
 			plan["hidden"] = carried_spans.duplicate()
 			for span_index: int in range(row_data.spans.size()):
-				var span: SemanticSpan = row_data.spans[span_index]
+				var span: EventSheetSemanticSpan = row_data.spans[span_index]
 				if span != null and not carried_spans.has(span_index) and _span_lane(span) == str(_source_cell["lane"]) \
 						and span.rect.position.y >= source_cell_bottom() - 0.5:
 					(plan["span_shift"] as Dictionary)[span_index] = float((plan["span_shift"] as Dictionary).get(span_index, 0.0)) - fold
@@ -422,7 +422,7 @@ func gap_rects() -> Array:
 func _row_gap_left(indent: int) -> float:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	if event_style != null and event_style.sub_event_strips:
-		return EventRowRenderer.nested_block_left_for(maxi(indent, 0), int(_indent_width()))
+		return EventSheetRowRenderer.nested_block_left_for(maxi(indent, 0), int(_indent_width()))
 	return float(EventSheetPalette.GUTTER_WIDTH) + float(indent) * _indent_width()
 
 
@@ -617,7 +617,7 @@ func _draw_ghost_content() -> void:
 	var font: Font = _viewport._get_font()
 	var font_size: int = _viewport._get_font_size()
 	var width: float = _viewport._get_logical_canvas_width()
-	var renderer: EventRowRenderer = _viewport._renderer
+	var renderer: EventSheetRowRenderer = _viewport._renderer
 	if kind == "cells":
 		var row_index: int = int(_source_cell["row"])
 		var row_data: EventRowData = _viewport._row_at(row_index)
@@ -745,13 +745,13 @@ func _lane_bottom(row_index: int, lane: String) -> float:
 	var bottom: float = _lane_rect(row_index, lane).position.y
 	if row_data == null:
 		return bottom
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and _span_lane(span) == lane:
 			bottom = maxf(bottom, span.rect.end.y)
 	return bottom
 
 
-func _span_lane(span: SemanticSpan) -> String:
+func _span_lane(span: EventSheetSemanticSpan) -> String:
 	if not (span.metadata is Dictionary):
 		return ""
 	var lane: String = str((span.metadata as Dictionary).get("lane", ""))
@@ -767,5 +767,5 @@ func _indent_width() -> float:
 	return float(event_style.sub_event_indent) if event_style != null else 24.0
 
 
-func _metrics() -> ViewportRowMetrics:
+func _metrics() -> EventSheetViewportRowMetrics:
 	return _viewport._row_metrics_helper

@@ -143,7 +143,7 @@ static func collect_preview(sheet: EventSheetResource) -> Array:
 			if parameter is ACEParam:
 				parameter_names.append((parameter as ACEParam).get_param_name())
 		entries.append({
-			"kind": ViewportRowBuilder.define_role_for(event_function),
+			"kind": EventSheetViewportRowBuilder.define_role_for(event_function),
 			"name": display,
 			"category": event_function.ace_category.strip_edges(),
 			"featured": event_function.featured,
@@ -172,7 +172,7 @@ static func _collect_rows(rows: Array, entries: Array) -> void:
 			entries.append({"kind": "knob", "name": (row as LocalVariable).name.capitalize(),
 				"category": "get / set / add / subtract", "featured": false, "params": []})
 		elif row is RawCodeRow:
-			var shell: Dictionary = ViewportRowBuilder.define_shell_info((row as RawCodeRow).code)
+			var shell: Dictionary = EventSheetViewportRowBuilder.define_shell_info((row as RawCodeRow).code)
 			if not shell.is_empty():
 				entries.append({"kind": str(shell.get("kind", "action")), "name": str(shell.get("name", "")),
 					"category": str(shell.get("category", "")), "featured": false, "params": []})

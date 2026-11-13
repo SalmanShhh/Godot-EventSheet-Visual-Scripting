@@ -1668,7 +1668,7 @@ static func is_scene_root_script(sheet: EventSheetResource) -> bool:
 	var source_path: String = str(sheet.external_source_path).strip_edges()
 	if source_path.is_empty():
 		return false
-	return not ViewportRowBuilder.scene_using_script(source_path).is_empty()
+	return not EventSheetViewportRowBuilder.scene_using_script(source_path).is_empty()
 
 
 ## What the sheet's variable declarations say about their values, as three maps:
@@ -2695,7 +2695,7 @@ static func orbit_pivot_map(sheet: EventSheetResource) -> Dictionary:
 	var source_path: String = str(sheet.external_source_path).strip_edges()
 	if source_path.is_empty():
 		return pivots
-	var placement: Dictionary = ViewportRowBuilder.scene_using_script(source_path)
+	var placement: Dictionary = EventSheetViewportRowBuilder.scene_using_script(source_path)
 	var scene_path: String = str(placement.get("scene_path", ""))
 	if scene_path.is_empty():
 		return pivots

@@ -543,7 +543,7 @@ func _refresh() -> void:
 	_band.show_row(_owner_name(), reads_as(str(written["ace_id"]), written["params"], bool(written["negated"])))
 	# The owner's icon, as the row's object column draws it: System's gear, else the class it extends.
 	var sheet: EventSheetResource = _sheet()
-	_band.show_object_icon(_owner_name(), ViewportRowBuilder.class_icon_with_ancestry(sheet.host_class) if sheet != null else null)
+	_band.show_object_icon(_owner_name(), EventSheetViewportRowBuilder.class_icon_with_ancestry(sheet.host_class) if sheet != null else null)
 	_help_strip.set_reading("", in_code(str(written["ace_id"]), written["params"], bool(written["negated"])))
 
 

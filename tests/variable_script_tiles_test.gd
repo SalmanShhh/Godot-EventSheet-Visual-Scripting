@@ -91,7 +91,7 @@ static func _words(view: EventSheetViewport, variable_name: String) -> PackedStr
 		if row_data != null and row_data.source_resource is LocalVariable \
 				and (row_data.source_resource as LocalVariable).name == variable_name:
 			view._row_builder._ensure_event_spans(row_data)
-			for span: SemanticSpan in row_data.spans:
+			for span: EventSheetSemanticSpan in row_data.spans:
 				words.append(span.text.strip_edges())
 	return words
 

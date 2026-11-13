@@ -57,7 +57,7 @@ static func run() -> bool:
 	# nothing that function declares, and the note says so instead of being hidden by _process's local.
 	var elsewhere: String = CLEAN + "\n\nfunc spin() -> void:\n\tdirection = 2.0\n"
 	var declared: Dictionary = {}
-	ViewportRowBuilder._collect_code_declared_names(
+	EventSheetViewportRowBuilder._collect_code_declared_names(
 		"hits = 1  # for example, var nope\nvar real := \"for fake in words\"", declared)
 	return SUPPORT.pins(P, [
 		["a clean file with a class, a local and a parameter grows no note", _notes(CLEAN, "clean"), []],
@@ -88,7 +88,7 @@ static func _collect(rows: Array, into: Array) -> void:
 	for row: EventRowData in rows:
 		if row.row_uid.contains("variable_note_"):
 			var parts: PackedStringArray = PackedStringArray()
-			for span: SemanticSpan in row.spans:
+			for span: EventSheetSemanticSpan in row.spans:
 				var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 				if str(metadata.get("variable_note", "")) != "mark" and not span.text.strip_edges().is_empty():
 					parts.append(span.text.strip_edges())

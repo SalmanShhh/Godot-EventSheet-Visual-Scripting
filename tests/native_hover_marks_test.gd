@@ -32,21 +32,21 @@ static func run() -> bool:
 
 
 static func _test_hover_links() -> bool:
-	var renderer := EventRowRenderer.new()
+	var renderer := EventSheetRowRenderer.new()
 	var view := EventSheetViewport.new()
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["the condition lane's link", EventRowRenderer.hover_link_label("add_condition"), "Add condition"],
-		["the action lane's link", EventRowRenderer.hover_link_label("add_action"), "Add action"],
+		["the condition lane's link", EventSheetRowRenderer.hover_link_label("add_condition"), "Add condition"],
+		["the action lane's link", EventSheetRowRenderer.hover_link_label("add_action"), "Add action"],
 		["the renderer ships the hover links on", renderer.show_hover_add_links, true],
 		["and so does the canvas", view.show_hover_add_links, true],
 		["the View menu item has its own number", EventSheetMenuBar.HOVER_ADD_LINKS_VIEW_ID, 9819],
 		["a filled lane of an event at rest keeps its door hidden",
-			EventRowRenderer.add_door_revealed(false, false, true), false],
-		["the hovered event shows it", EventRowRenderer.add_door_revealed(true, false, true), true],
+			EventSheetRowRenderer.add_door_revealed(false, false, true), false],
+		["the hovered event shows it", EventSheetRowRenderer.add_door_revealed(true, false, true), true],
 		["so does the selected event, which a keyboard selection reaches with no pointer",
-			EventRowRenderer.add_door_revealed(false, true, true), true],
+			EventSheetRowRenderer.add_door_revealed(false, true, true), true],
 		["and an empty lane shows it at rest, so a new event is never a blank lane",
-			EventRowRenderer.add_door_revealed(false, false, false), true],
+			EventSheetRowRenderer.add_door_revealed(false, false, false), true],
 	])
 	view.free()
 	return ok
@@ -167,7 +167,7 @@ func two(x: int) -> void:
 		if row == null:
 			continue
 		last_number = maxi(last_number, row.event_number)
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			var card: Variant = (span.metadata as Dictionary).get("head_card", {})
 			if card is Dictionary and str((card as Dictionary).get("id", "")) == "events" and head_said.is_empty():
 				head_said = span.text
@@ -185,7 +185,7 @@ func _ready() -> void:
 		var row: EventRowData = (entry as Dictionary).get("row") as EventRowData
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			var card: Variant = (span.metadata as Dictionary).get("head_card", {})
 			if card is Dictionary and str((card as Dictionary).get("id", "")) == "events" and lone_said.is_empty():
 				lone_said = span.text
@@ -234,7 +234,7 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 		found["description_hover"] = ""
 		found["active_tick"] = false
 		found["ring"] = false
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata
 			texts.append(span.text)
 			# The folder mark (a badge that is not the switch) and any echo of the line are chrome;
@@ -254,7 +254,7 @@ static func _group_head(theme_path: String, toggleable: bool = false) -> Diction
 				found["description_elides"] = bool(metadata.get("elide", false))
 				found["description_hover"] = str(metadata.get("hover_note", ""))
 			if str(metadata.get("group_action", "")) == "enabled" and span.text in [
-					ViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH, ViewportRowBuilder.GROUP_SWITCHABLE_OFF_GLYPH]:
+					EventSheetViewportRowBuilder.GROUP_SWITCHABLE_ON_GLYPH, EventSheetViewportRowBuilder.GROUP_SWITCHABLE_OFF_GLYPH]:
 				found["ring"] = true
 			if str(metadata.get("group_action", "")) == "enabled":
 				found["active_tick"] = bool(metadata.get("group_active_tick", false))

@@ -66,14 +66,14 @@ static func run() -> bool:
 	# ---- the async chip: awaiting actions are detected by VALUE ----
 	var wait_action: ACEAction = ACEAction.new()
 	wait_action.codegen_template = "await get_tree().create_timer({seconds}).timeout"
-	all_passed = _check("a Wait template reads as awaiting", ViewportRowBuilder.action_awaits(wait_action), true) and all_passed
+	all_passed = _check("a Wait template reads as awaiting", EventSheetViewportRowBuilder.action_awaits(wait_action), true) and all_passed
 	var flagged_action: ACEAction = ACEAction.new()
 	flagged_action.codegen_template = "do_thing()"
 	flagged_action.is_awaited = true
-	all_passed = _check("an awaited call reads as awaiting", ViewportRowBuilder.action_awaits(flagged_action), true) and all_passed
+	all_passed = _check("an awaited call reads as awaiting", EventSheetViewportRowBuilder.action_awaits(flagged_action), true) and all_passed
 	var plain_action: ACEAction = ACEAction.new()
 	plain_action.codegen_template = "print({value})"
-	all_passed = _check("a plain action does not", ViewportRowBuilder.action_awaits(plain_action), false) and all_passed
+	all_passed = _check("a plain action does not", EventSheetViewportRowBuilder.action_awaits(plain_action), false) and all_passed
 
 	# ---- single-flight: Once At A Time gates re-entry via the new on_exit hook ----
 	var gated: EventSheetResource = EventSheetResource.new()

@@ -38,12 +38,12 @@ static func _the_title_names_the_object() -> bool:
 
 static func _the_band_reads_the_event() -> bool:
 	var row: EventRowData = EventRowData.new()
-	row.spans.append(_span("Condition", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "badge": true}))
-	row.spans.append(_span("Is on floor", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "object_label": "Player"}))
-	row.spans.append(_span("Is moving", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "object_label": "Player"}))
-	row.spans.append(_span("Every tick", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "object_label": "System"}))
-	row.spans.append(_span("+ Add condition", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "add_condition"}))
-	row.spans.append(_span("Jump", SemanticSpan.SpanType.ACTION, {"lane": "action", "object_label": "Player"}))
+	row.spans.append(_span("Condition", EventSheetSemanticSpan.SpanType.KEYWORD, {"lane": "condition", "badge": true}))
+	row.spans.append(_span("Is on floor", EventSheetSemanticSpan.SpanType.CONDITION, {"lane": "condition", "object_label": "Player"}))
+	row.spans.append(_span("Is moving", EventSheetSemanticSpan.SpanType.CONDITION, {"lane": "condition", "object_label": "Player"}))
+	row.spans.append(_span("Every tick", EventSheetSemanticSpan.SpanType.CONDITION, {"lane": "condition", "object_label": "System"}))
+	row.spans.append(_span("+ Add condition", EventSheetSemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "add_condition"}))
+	row.spans.append(_span("Jump", EventSheetSemanticSpan.SpanType.ACTION, {"lane": "action", "object_label": "Player"}))
 	return SUPPORT.pins(NAME, [
 		["the conditions, each object said once, no badge, no add target, no action",
 			ACEPickerDialog.landing_reading(row), "Player Is on floor - Is moving - System Every tick"],
@@ -171,8 +171,8 @@ static func _the_field_pickers_name_their_field() -> bool:
 	return SUPPORT.pins(NAME, rows)
 
 
-static func _span(text: String, type: SemanticSpan.SpanType, metadata: Dictionary) -> SemanticSpan:
-	var span: SemanticSpan = SemanticSpan.new()
+static func _span(text: String, type: EventSheetSemanticSpan.SpanType, metadata: Dictionary) -> EventSheetSemanticSpan:
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.text = text
 	span.type = type
 	span.metadata = metadata

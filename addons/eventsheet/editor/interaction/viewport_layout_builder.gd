@@ -1,5 +1,5 @@
 @tool
-class_name ViewportLayoutBuilder
+class_name EventSheetViewportLayoutBuilder
 extends RefCounted
 # The per-row LAYOUT pass of the event sheet's virtualized viewport, extracted from
 # event_sheet_viewport.gd to keep that file maintainable. One concern lives here: turning a
@@ -13,7 +13,7 @@ extends RefCounted
 # back-reference, so caching semantics are untouched: the layout cache and its key (row uid +
 # index + width + drag signature + style signature) stay on the viewport, selection/hover are
 # refreshed on every read because they are NOT part of the key, and span rects are written
-# onto the shared SemanticSpan objects exactly as before. The viewport keeps a one-line
+# onto the shared EventSheetSemanticSpan objects exactly as before. The viewport keeps a one-line
 # _get_or_build_row_layout delegate, so every call site (draw, hit-test, box selection,
 # param scope) needed no edits.
 
@@ -57,7 +57,7 @@ func _condition_line_bands(row_data: EventRowData, row_top: float, line_height: 
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		return bands
 	var lines: Dictionary = {}
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -82,7 +82,7 @@ func _condition_param_bands(row_data: EventRowData) -> Array:
 		return indices
 	var lines: Dictionary = {}
 	var params: Dictionary = {}
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -171,7 +171,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
 	# A look that nests by lines gives an event's number a column of its own, straight on the canvas.
 	if strips_look and row_data.row_type == EventRowData.RowType.EVENT:
-		gutter_rect.size.x = EventRowRenderer.NATIVE_NUMBER_COLUMN
+		gutter_rect.size.x = EventSheetRowRenderer.NATIVE_NUMBER_COLUMN
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width())
 	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,
 	# below, the title spans in the bar instead of pinning them to its top edge. Centre the WHOLE text
@@ -190,7 +190,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	if not fold_rect.size.is_zero_approx() and row_data.row_type == EventRowData.RowType.EVENT \
 			and event_style.sub_event_strips:
 		var slot_step: float = float(_viewport.indent_width())
-		fold_rect = Rect2(EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) - slot_step,
+		fold_rect = Rect2(EventSheetRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) - slot_step,
 			row_top, slot_step, minf(line_height, row_height))
 	# No row-type glyph: the old colored square here said nothing the row itself doesn't
 	# (tempo badges, chips and labels carry the type). The 18px advance stays so every
@@ -201,12 +201,12 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	elif strips_look and (row_data.row_type == EventRowData.RowType.GROUP or _is_block_foot_row(row_data)):
 		# A group bar and the foot that closes its block start inside their own slot, 10 px in, as
 		# the board sets them; a group's fold triangle is its first span.
-		x = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
+		x = EventSheetRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
 		if row_data.row_type == EventRowData.RowType.GROUP and not row_data.children.is_empty():
 			fold_rect = Rect2(x, row_top, GROUP_FOLD_SLOT, row_height)
-	elif strips_look and EventRowRenderer.is_local_variable_row(row_data):
+	elif strips_look and EventSheetRowRenderer.is_local_variable_row(row_data):
 		# A local stands on the sheet at its block's own left edge, its mark 10 px in as the board sets it.
-		x = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
+		x = EventSheetRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width()) + GROUP_TEXT_INSET
 	var condition_lane_rect := Rect2()
 	var action_lane_rect := Rect2()
 	var lane_divider_rect := Rect2()
@@ -271,7 +271,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var comment_line_counts: Array[int] = []
 	if is_comment_row:
 		var visual_top: int = 0
-		for comment_span: SemanticSpan in row_data.spans:
+		for comment_span: EventSheetSemanticSpan in row_data.spans:
 			# Only the TEXT spans are lines of the note. The paragraph mark and the echo of the line
 			# this row writes are chrome riding line 0 - counting them as lines stacked the note's
 			# own words one row lower and left the mark alone on a band of its own.
@@ -284,7 +284,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			comment_line_counts.append(span_lines)
 			visual_top += span_lines
 	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null:
 			continue
 		var span_lane: String = _viewport._row_builder._resolve_span_lane(span)
@@ -341,14 +341,14 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# this still matches the live style, so a token change between layout builds
 				# falls back to the base width instead of drawing/measuring a stale stamp.
 				var stamp_lane: String = str(metadata.get("lane", ""))
-				metadata["object_column_base"] = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane, int(metadata.get("row_indent", 0))))
+				metadata["object_column_base"] = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane, int(metadata.get("row_indent", 0))))
 			else:
 				metadata.erase("object_column_px")
 				metadata.erase("object_column_base")
 		var display_text: String = _viewport._editing_buffer if index == _viewport._editing_row_index and span_index == _viewport._editing_span_index else span.text
 		var span_width: float = _viewport._row_builder._measure_span_width(span, display_text, font, font_size)
 		if lane_divider_x > 0.0 and span_lane != "action":
-			var max_condition_right: float = ViewportRowMetrics.condition_right_limit(
+			var max_condition_right: float = EventSheetViewportRowMetrics.condition_right_limit(
 				row_data, width, lane_divider_x, float(event_style.condition_lane_padding)
 			)
 			if bool(metadata.get("badge", false)):
@@ -364,8 +364,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				)
 				span_width = max(min(badge_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
 				# The look that nests by lines gives a mark its own cell and no reserved slot.
-				if ViewportRowMetrics.strip_mark_advance(span, event_style) >= 0.0:
-					span_width = ViewportRowMetrics.STRIP_MARK_CELL - 2.0
+				if EventSheetViewportRowMetrics.strip_mark_advance(span, event_style) >= 0.0:
+					span_width = EventSheetViewportRowMetrics.STRIP_MARK_CELL - 2.0
 			elif str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
 				# Minus whatever the payload chips after this cell need: a trigger cell that took the
 				# whole lane left them drawn as a sliver against the divider.
@@ -459,7 +459,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				metadata.erase("segment_wrap_breaks")
 			else:
 				var styled_wrap_width: float = _viewport._row_metrics_helper._fill_text_wrap_width(metadata, span_width + 2.0, font, font_size, float(metadata.get("object_column_px", -1.0)))
-				metadata["segment_wrap_breaks"] = ViewportRowMetrics.wrap_break_points(span.text, styled_wrap_width, font, font_size)
+				metadata["segment_wrap_breaks"] = EventSheetViewportRowMetrics.wrap_break_points(span.text, styled_wrap_width, font, font_size)
 				metadata.erase("comment_wrap")
 		elif not is_comment_row:
 			metadata.erase("comment_wrap")
@@ -498,14 +498,14 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# at the same x as an unmarked line's (the twin of event_line_extents' badge step).
 				if not bool(metadata.get("badge_natural_width", false)) and condition_badge_column_width > 0.0:
 					condition_badge_next_x[condition_line_index] = span.rect.position.x + condition_badge_column_width + condition_badge_column_gap
-				var strip_advance: float = ViewportRowMetrics.strip_mark_advance(span, event_style)
+				var strip_advance: float = EventSheetViewportRowMetrics.strip_mark_advance(span, event_style)
 				if strip_advance >= 0.0:
 					condition_badge_next_x[condition_line_index] = span.rect.position.x + strip_advance
 			else:
 				condition_line_x[condition_line_index] = next_span_start_x
 	var drag_rect := Rect2()
 	# While the drag is in motion the place it lands is a dashed GAP the rows slide apart round
-	# (ViewportDragMotion), so the thin insert lines below are drawn only for the two drops a gap does
+	# (EventSheetViewportDragMotion), so the thin insert lines below are drawn only for the two drops a gap does
 	# not stand for: a variable folded into another's group, and a comment joining an action list.
 	var gap_drawn: bool = _viewport._drag_motion.active
 	if _viewport._drag_row_index >= 0 and _viewport._drag_target_index == index \
@@ -558,7 +558,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# A nested event's condition cell begins where its block does (the slot its trigger mark sits in),
 	# so the cell is one panel from its left edge instead of leaving a bare strip before its words.
 	if lane_divider_x > 0.0 and row_data.indent > 0 and event_style.sub_event_strips:
-		var block_left: float = EventRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width())
+		var block_left: float = EventSheetRowRenderer.nested_block_left_for(row_data.indent, _viewport.indent_width())
 		condition_lane_rect = Rect2(block_left, condition_lane_rect.position.y,
 			condition_lane_rect.end.x - block_left, condition_lane_rect.size.y)
 	var layout := {
@@ -617,7 +617,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 static func _is_block_foot_row(row_data: EventRowData) -> bool:
 	if row_data == null or row_data.spans.is_empty() or row_data.spans[0] == null:
 		return false
-	var first: SemanticSpan = row_data.spans[0]
+	var first: EventSheetSemanticSpan = row_data.spans[0]
 	return first.metadata is Dictionary and str((first.metadata as Dictionary).get("kind", "")) == "add_event"
 
 
@@ -625,7 +625,7 @@ static func _is_block_foot_row(row_data: EventRowData) -> bool:
 ## A comment row carries a paragraph mark when it is documentation and an echo of the line it writes;
 ## both ride line 0 at their measured width, while the text spans stack and fill the band. Asked in
 ## one place, because three separate branches of the layout have to agree about it.
-static func _is_comment_text_span(span: SemanticSpan) -> bool:
+static func _is_comment_text_span(span: EventSheetSemanticSpan) -> bool:
 	if span == null or not (span.metadata is Dictionary):
 		return false
 	return str((span.metadata as Dictionary).get("edit_kind", "")) == "comment_text"
@@ -637,7 +637,7 @@ static func _is_comment_text_span(span: SemanticSpan) -> bool:
 func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: float,
 		font: Font, font_size: int) -> float:
 	var run: float = 0.0
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -660,7 +660,7 @@ func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: f
 func _right_run_after(row_data: EventRowData, span_index: int, font: Font, font_size: int) -> float:
 	var tail: float = 0.0
 	for index: int in range(span_index + 1, row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[index]
+		var span: EventSheetSemanticSpan = row_data.spans[index]
 		if span == null or not (span.metadata is Dictionary) or not bool((span.metadata as Dictionary).get("align_right", false)):
 			continue
 		tail += _viewport._get_span_gap(span) + _viewport._row_builder._measure_span_width(span, span.text, font, font_size) + 2.0

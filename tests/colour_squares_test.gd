@@ -29,7 +29,7 @@ static func _event_marks(editor: EventSheetEditor, event: EventRow) -> Array:
 		if row == null or row.source_resource != event:
 			continue
 		viewport._row_builder._ensure_event_spans(row)
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.metadata is Dictionary and str(span.metadata.get("kind", "")) == "action":
 				found.append([span.text, span.metadata.get("colour_marks", [])])
 		found.append(["attention", row.attention_note])
@@ -50,7 +50,7 @@ static func _hand_written_lines_get_squares() -> bool:
 		if row == null or not (row.source_resource is EventRow):
 			continue
 		viewport._row_builder._ensure_event_spans(row)
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.metadata is Dictionary and str(span.metadata.get("kind", "")) in ["action", "condition"]:
 				var marks: Array = span.metadata.get("colour_marks", [])
 				found[span.text] = [(marks[0] as Dictionary).get("at", -1), (marks[0] as Dictionary).get("folded", false), (marks[0] as Dictionary).get("raw", "")] if not marks.is_empty() else []
@@ -128,7 +128,7 @@ static func run() -> bool:
 		var row: EventRowData = (entry as Dictionary).get("row")
 		if row == null or not row.variable_row:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.metadata is Dictionary and bool(span.metadata.get("variable_value_span", false)):
 				variable_marks = span.metadata.get("colour_marks", [])
 				variable_text = span.text

@@ -72,11 +72,11 @@ static func _test_the_row() -> bool:
 	var raw_actions: int = 0
 	var last_line: int = -1
 	for span: Variant in spans:
-		var metadata: Dictionary = (span as SemanticSpan).metadata
+		var metadata: Dictionary = (span as EventSheetSemanticSpan).metadata
 		last_line = maxi(last_line, int(metadata.get("line_index", 0)))
 		if str(metadata.get("lane", "")) != "action" or int(metadata.get("ace_index", -1)) != 0:
 			continue
-		action_text.append((span as SemanticSpan).text)
+		action_text.append((span as EventSheetSemanticSpan).text)
 		code_cells += 1 if bool(metadata.get("code_cell", false)) else 0
 		raw_actions += 1 if bool(metadata.get("raw_action", false)) else 0
 	ok = SUPPORT.check("inline_functions_test", "the statement is one action, its function a chip",

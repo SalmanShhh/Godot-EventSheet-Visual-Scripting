@@ -111,7 +111,7 @@ static func _value_words(found: Variant) -> String:
 ## The group a selected member sits in, as the Inspector reads the file: the walk's answer stamped
 ## on a member of an opened script, else the group its own attributes name.
 static func group_of_row(row_data: EventRowData, found: Variant) -> String:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and (span.metadata as Dictionary).has("variable_group"):
 			return str((span.metadata as Dictionary)["variable_group"])
 	return str(attributes_of(found).get("group", "")).strip_edges()
@@ -206,7 +206,7 @@ func run_link(link: String, row_data: EventRowData) -> void:
 ## on `look_id` when one is given.
 func open_window(row_data: EventRowData, part: String = "", look_id: String = "") -> void:
 	var metadata: Dictionary = {}
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and not str((span.metadata as Dictionary).get("variable_name", "")).is_empty():
 			metadata = span.metadata
 			break

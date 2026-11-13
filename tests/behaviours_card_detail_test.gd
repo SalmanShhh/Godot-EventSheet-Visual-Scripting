@@ -17,12 +17,12 @@ static func run() -> bool:
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)
 	var notes: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in view._root_rows[0].spans:
+	for span: EventSheetSemanticSpan in view._root_rows[0].spans:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == "behaviours":
 			notes = (card as Dictionary).get("notes", PackedStringArray())
 	view.free()
-	var built := ViewportRowBuilder.new()
+	var built := EventSheetViewportRowBuilder.new()
 	var ok: bool = SUPPORT.pins(P, [
 		["the card says each kind, its settings and the nodes wearing it", notes, PackedStringArray([
 			"Spring ×10 · on Carousel … Tile7", "Tween ×10 · on Carousel … Tile7", "Flash ×2 · on Carousel · Hero",

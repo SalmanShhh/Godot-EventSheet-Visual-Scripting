@@ -91,7 +91,7 @@ static func _open_and_read(path: String, source: String) -> PackedStringArray:
 	viewport.set_reading_mode(true)
 	var readings: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			readings.append(span.text.strip_edges())
 	viewport.free()
 	return readings

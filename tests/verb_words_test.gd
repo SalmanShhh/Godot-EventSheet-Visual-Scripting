@@ -270,7 +270,7 @@ static func _readings_of(sheet: EventSheetResource) -> PackedStringArray:
 	viewport.set_reading_mode(true)
 	var out: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var text: String = span.text.strip_edges()
 			if not text.is_empty():
 				out.append(text)

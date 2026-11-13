@@ -119,7 +119,7 @@ func _print_verb_rows() -> void:
 		if row_data == null or not (row_data.source_resource is EventFunction):
 			continue
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			texts.append(span.text)
 		print("  header: [%s]" % " | ".join(texts))
 		printed += 1
@@ -160,7 +160,7 @@ func _print_input_rows() -> void:
 			continue
 		_viewport._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			texts.append(span.text)
 		print("  branch: [%s]" % " | ".join(texts))
 

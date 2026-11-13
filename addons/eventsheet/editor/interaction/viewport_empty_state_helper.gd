@@ -1,5 +1,5 @@
 @tool
-class_name ViewportEmptyStateHelper
+class_name EventSheetViewportEmptyStateHelper
 extends RefCounted
 # The getting-started empty state drawn over a sheet with no authored rows: a centered heading,
 # one or two real CLICKABLE call-to-action buttons, and a de-emphasized tip. Extracted from

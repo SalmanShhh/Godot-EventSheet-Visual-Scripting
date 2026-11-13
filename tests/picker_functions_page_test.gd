@@ -216,7 +216,7 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	call_action.ace_id = picked.id
 	call_action.codegen_template = str(picked.metadata.get("codegen_template", ""))
 	call_action.params = {"function_name": str(picked.metadata.get(ACEPickerDialog.FUNCTION_META_KEY, "")), "args": "5"}
-	var host: EventFunction = ViewportRowBuilder.find_function_by_name(sheet, "reset_score")
+	var host: EventFunction = EventSheetViewportRowBuilder.find_function_by_name(sheet, "reset_score")
 	(host.events[0] as EventRow).actions.append(call_action)
 	var emitted: String = str(EventSheetCompiler.new().compile(sheet, ROUND_TRIP_PATH).get("output", ""))
 	passed = _check("the pick emits a plain call, nothing plugin-shaped",
@@ -226,7 +226,7 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	file.close()
 
 	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(ROUND_TRIP_PATH)
-	var reopened_host: EventFunction = ViewportRowBuilder.find_function_by_name(reopened, "reset_score")
+	var reopened_host: EventFunction = EventSheetViewportRowBuilder.find_function_by_name(reopened, "reset_score")
 	var lifted: ACEAction = null
 	for entry: Variant in (reopened_host.events[0] as EventRow).actions:
 		if entry is ACEAction and (entry as ACEAction).ace_id == "CallFunction":
@@ -241,7 +241,7 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 		"Core/CallFunction award_points(5)") and passed
 	# The reading the row draws from that lifted call - the object word, the verb, and one chip per
 	# argument named by the called function's OWN parameter.
-	var called: EventFunction = ViewportRowBuilder.find_function_by_name(reopened, "award_points")
+	var called: EventFunction = EventSheetViewportRowBuilder.find_function_by_name(reopened, "award_points")
 	var pieces: Array = EventSheetViewportReadingRows.call_reading_pieces(
 		EventSheetVerbProperties.display_name_of(called),
 		PackedStringArray(["5"]),

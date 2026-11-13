@@ -45,7 +45,7 @@ static func run() -> bool:
 	view._row_builder._ensure_event_spans(row_data)
 	var car_meta: Dictionary = {}
 	var core_meta: Dictionary = {}
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if str((span.metadata as Dictionary).get("kind", "")) == "action":
 			var ace_index: int = int((span.metadata as Dictionary).get("ace_index", -1))
 			if ace_index == 0:

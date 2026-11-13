@@ -192,7 +192,7 @@ static func _event_lines(viewport: EventSheetViewport) -> Dictionary:
 ## One lane's cells as "[object] words", in order, without the add lines.
 static func _lane_words(row: EventRowData, lane: String) -> Array:
 	var words: Array = []
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var meta: Dictionary = span.metadata

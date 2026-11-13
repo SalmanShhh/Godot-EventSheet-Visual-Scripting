@@ -189,7 +189,7 @@ static func is_generic_code(code: String) -> bool:
 	# A note is words, wherever it is written - among a literal's entries as much as anywhere.
 	if not code.contains("\n") and text.begins_with("#"):
 		return false
-	if ViewportRowBuilder.is_literal_part(code):
+	if EventSheetViewportRowBuilder.is_literal_part(code):
 		return true
 	if code.contains("\n"):
 		return false

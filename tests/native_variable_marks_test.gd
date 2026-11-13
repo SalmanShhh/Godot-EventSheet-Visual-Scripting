@@ -121,7 +121,7 @@ static func _test_readable_ink() -> bool:
 static func _test_tile_geometry() -> bool:
 	var row := EventRowData.new()
 	row.variable_row = true
-	var name_span := SemanticSpan.new()
+	var name_span := EventSheetSemanticSpan.new()
 	name_span.text = "open_speed"
 	name_span.rect = Rect2(100.0, 40.0, 80.0, 18.0)
 	name_span.metadata = {"variable_badges": PackedStringArray(["inspector", "range"]), "badge_tiles_x": 500.0}
@@ -164,12 +164,12 @@ static func _test_builder_stamps_facts_and_keeps_words() -> bool:
 	var speed_row: EventRowData = _row_named(viewport, "open_speed")
 	var locked_row: EventRowData = _row_named(viewport, "is_locked")
 	var offset_row: EventRowData = _row_named(viewport, "open_offset")
-	var speed_type: SemanticSpan = _span_with(speed_row, "variable_type_span")
-	var speed_name: SemanticSpan = _span_with(speed_row, "variable_name_span")
-	var speed_mark: SemanticSpan = _span_with(speed_row, "inspector_badge")
-	var speed_note: SemanticSpan = _span_with(speed_row, "variable_doc_note")
-	var locked_value: SemanticSpan = _span_with(locked_row, "variable_value_span")
-	var offset_value: SemanticSpan = _span_with(offset_row, "variable_value_span")
+	var speed_type: EventSheetSemanticSpan = _span_with(speed_row, "variable_type_span")
+	var speed_name: EventSheetSemanticSpan = _span_with(speed_row, "variable_name_span")
+	var speed_mark: EventSheetSemanticSpan = _span_with(speed_row, "inspector_badge")
+	var speed_note: EventSheetSemanticSpan = _span_with(speed_row, "variable_doc_note")
+	var locked_value: EventSheetSemanticSpan = _span_with(locked_row, "variable_value_span")
+	var offset_value: EventSheetSemanticSpan = _span_with(offset_row, "variable_value_span")
 	var font: Font = ThemeDB.fallback_font
 	var with_marks_mark: float = viewport._row_builder._measure_span_width(speed_mark, speed_mark.text, font, 14)
 	var with_marks_value: float = viewport._row_builder._measure_span_width(locked_value, locked_value.text, font, 14)
@@ -202,16 +202,16 @@ static func _row_named(viewport: EventSheetViewport, variable_name: String) -> E
 		var row: EventRowData = viewport._row_at(index)
 		if row == null or not row.variable_row:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("variable_name", "")) == variable_name:
 				return row
 	return null
 
 
-static func _span_with(row: EventRowData, flag: String) -> SemanticSpan:
+static func _span_with(row: EventRowData, flag: String) -> EventSheetSemanticSpan:
 	if row == null:
 		return null
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get(flag, false)):
 			return span
 	return null

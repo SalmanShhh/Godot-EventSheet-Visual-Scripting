@@ -1,5 +1,5 @@
 @tool
-class_name ViewportTooltipHelper
+class_name EventSheetViewportTooltipHelper
 extends RefCounted
 # The hover-tooltip content for condition/action/trigger rows: the plain-language ACE/function
 # description, the GDScript codegen preview the row compiles to, and the BBCode-aware custom
@@ -235,7 +235,7 @@ static func pattern_strip_line(sheet: EventSheetResource, event_uid: String) -> 
 			words = str((claim as Dictionary).get("words", ""))
 		if words.is_empty():
 			continue
-		var text: String = "%s %s" % [ViewportRowBuilder.PATTERN_CHIP_MARK, EventSheetL10n.translate(words)]
+		var text: String = "%s %s" % [EventSheetViewportRowBuilder.PATTERN_CHIP_MARK, EventSheetL10n.translate(words)]
 		var why: String = EventSheetPatternVocabulary.why(pattern)
 		if not why.is_empty():
 			text = "%s - %s" % [text, why]
@@ -273,7 +273,7 @@ static func event_number_card(sheet: EventSheetResource, event_uid: String, numb
 			"title": EventSheetL10n.translate("Event %d") % number,
 			"lines": PackedStringArray([
 				EventSheetL10n.translate("Every line of this event is ordinary Godot code the sheet reads as rows. Its shape matches a pattern the Manual explains."),
-				"%s %s" % [ViewportRowBuilder.PATTERN_CHIP_MARK,
+				"%s %s" % [EventSheetViewportRowBuilder.PATTERN_CHIP_MARK,
 					EventSheetL10n.translate("Reads as: %s") % EventSheetL10n.translate(words)]]),
 			"notes": notes,
 			"doors": [[EventSheetL10n.translate("Open in the Manual (F1)"), PATTERN_PAGE_ACTION + pattern]],

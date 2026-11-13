@@ -235,9 +235,9 @@ static func _test_chips_leave_the_condition_room() -> bool:
 	var dock: EventSheetDock = _open(PLAYER_PATH, PLAYER_SOURCE)
 	var row: EventRowData = EventRowData.new()
 	row.row_type = EventRowData.RowType.EVENT
-	var chip: SemanticSpan = SemanticSpan.new()
+	var chip: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	chip.text = "Making an object and putting it somewhere, said at length so it cannot fit"
-	chip.type = SemanticSpan.SpanType.CONDITION
+	chip.type = EventSheetSemanticSpan.SpanType.CONDITION
 	chip.metadata = {"kind": "pattern_chip", "lane": "condition", "chip": true, "line_index": 0}
 	row.spans = [chip]
 	var font: Font = ThemeDB.fallback_font
@@ -272,7 +272,7 @@ static func _lines(dock: EventSheetDock) -> PackedStringArray:
 	for row: EventRowData in _walk(dock._viewport._root_rows, dock._viewport):
 		var cells: PackedStringArray = PackedStringArray()
 		var mark: String = ""
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if str(metadata.get("badge_style", "")) == "negated":
 				mark = "[not] "
@@ -307,7 +307,7 @@ static func _notes(dock: EventSheetDock) -> PackedStringArray:
 	for row: EventRowData in _walk(dock._viewport._root_rows, dock._viewport):
 		if row.row_uid.begins_with("variable_note_"):
 			var words: PackedStringArray = PackedStringArray()
-			for span: SemanticSpan in row.spans:
+			for span: EventSheetSemanticSpan in row.spans:
 				words.append(span.text)
 			out.append(" ".join(words))
 	return out

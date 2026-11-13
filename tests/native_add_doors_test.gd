@@ -69,14 +69,14 @@ static func _row_with_uid(view: EventSheetViewport, uid: String) -> int:
 
 ## The metadata of the first span of `kind` on a row, {} when there is none.
 static func _span_of(row_data: EventRowData, kind: String) -> Dictionary:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) == kind:
 			return span.metadata as Dictionary
 	return {}
 
 
 static func _comment_line(row_data: EventRowData) -> int:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("edit_kind", "")) == "event_comment":
 			return int((span.metadata as Dictionary).get("line_index", -1))
 	return -1
@@ -117,7 +117,7 @@ static func _test_group_foot() -> bool:
 		var row_data: EventRowData = native_view._row_at(index)
 		if row_data != null and native_view._row_is_add_event_footer(row_data):
 			var words := PackedStringArray()
-			for span: SemanticSpan in row_data.spans:
+			for span: EventSheetSemanticSpan in row_data.spans:
 				words.append(span.text)
 			texts.append(" | ".join(words))
 	native_view.free()

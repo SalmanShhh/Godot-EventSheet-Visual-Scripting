@@ -82,7 +82,7 @@ static func _test_sheet_reading() -> bool:
 			continue
 		if row.source_resource is EventRow:
 			viewport._row_builder._ensure_event_spans(row)
-			for span: SemanticSpan in row.spans:
+			for span: EventSheetSemanticSpan in row.spans:
 				if str(span.metadata.get("kind", "")) == "match_head":
 					head_texts.append(span.text)
 				elif str(span.metadata.get("kind", "")) == "trigger":
@@ -92,7 +92,7 @@ static func _test_sheet_reading() -> bool:
 	var case_reading: Array = []
 	for case_row: EventRowData in case_rows:
 		var words: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in case_row.spans:
+		for span: EventSheetSemanticSpan in case_row.spans:
 			var object_label: String = str(span.metadata.get("object_label", "")) \
 				if str(span.metadata.get("kind", "")) == "match_case" else ""
 			words.append("%s:%s%s" % [str(span.metadata.get("kind", "")),

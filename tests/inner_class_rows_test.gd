@@ -102,7 +102,7 @@ func _ready() -> void:
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text.contains("to total"):
 				steps.append("%s | %s" % [str(span.metadata.get("object_label", "")), span.text])
 	dock.free()

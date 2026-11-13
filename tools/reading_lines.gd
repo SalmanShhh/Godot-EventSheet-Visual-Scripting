@@ -385,7 +385,7 @@ static func _cells_of_row(row_data: EventRowData) -> Array:
 	var cells: Array = []
 	var current: Reading = null
 	var current_key: String = "?none"
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		var lane: String = str(metadata.get("lane", ""))
 		if lane.is_empty():
@@ -436,7 +436,7 @@ static func _cell_resource(row_data: EventRowData, lane: String, kind: String,
 ## sees, and the text. The marks are the ones a refactor could drop without touching a word - a chip
 ## that stopped being a chip is a moved pixel and has to move a line here too, and so is a value that
 ## stopped being bold, an object that lost its class picture and a muted note that went missing.
-static func segment_text_of(span: SemanticSpan, metadata: Dictionary) -> String:
+static func segment_text_of(span: EventSheetSemanticSpan, metadata: Dictionary) -> String:
 	var marks: PackedStringArray = PackedStringArray([_span_type_name(span.type)])
 	if bool(metadata.get("chip", false)):
 		marks.append("chip")
@@ -495,8 +495,8 @@ static func _icon_name(icon: Variant) -> String:
 
 ## A span type as its own name, from the enum rather than from a list written down twice.
 static func _span_type_name(span_type: int) -> String:
-	for key: Variant in SemanticSpan.SpanType.keys():
-		if int(SemanticSpan.SpanType[key]) == span_type:
+	for key: Variant in EventSheetSemanticSpan.SpanType.keys():
+		if int(EventSheetSemanticSpan.SpanType[key]) == span_type:
 			return str(key).to_lower()
 	return str(span_type)
 
@@ -505,7 +505,7 @@ static func _span_type_name(span_type: int) -> String:
 
 
 ## Classifies every reading of one sheet, after all of its spans are built.
-static func _classify_all(builder: ViewportRowBuilder, readings: Array) -> void:
+static func _classify_all(builder: EventSheetViewportRowBuilder, readings: Array) -> void:
 	for entry: Variant in readings:
 		classify(builder, entry as Reading)
 
@@ -515,7 +515,7 @@ static func _classify_all(builder: ViewportRowBuilder, readings: Array) -> void:
 ## Every answer is asked of the shipped builder. The order is the order the builder asks in: the
 ## grammar first (and the derived upgrade over it), then the named branches, then what is left, which
 ## is the generic assembly by definition.
-static func classify(builder: ViewportRowBuilder, reading: Reading) -> void:
+static func classify(builder: EventSheetViewportRowBuilder, reading: Reading) -> void:
 	var resource: Resource = reading.resource
 	if resource is RawCodeRow:
 		_classify_raw(builder, reading, resource as RawCodeRow)
@@ -558,7 +558,7 @@ static func classify(builder: ViewportRowBuilder, reading: Reading) -> void:
 ## The evidence is the cell the canvas DREW, not a second guess at it: a cell whose words contain the
 ## row's own code is the code; a cell whose words do not is a reading, and the derived layer is then
 ## asked whether it was the one that shaped it.
-static func _classify_raw(builder: ViewportRowBuilder, reading: Reading, raw: RawCodeRow) -> void:
+static func _classify_raw(builder: EventSheetViewportRowBuilder, reading: Reading, raw: RawCodeRow) -> void:
 	var drawn: String = _collapsed(" ".join(reading.plain))
 	var code: String = _collapsed(raw.code)
 	# A comment row is code that stays code even though its words differ from its line: the card draws
@@ -589,7 +589,7 @@ static func _collapsed(text: String) -> String:
 
 
 ## An action cell's path.
-static func _classify_action(builder: ViewportRowBuilder, reading: Reading,
+static func _classify_action(builder: EventSheetViewportRowBuilder, reading: Reading,
 		action: ACEAction) -> void:
 	reading.ace_key = "%s::%s" % [action.provider_id, action.ace_id]
 	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
@@ -611,7 +611,7 @@ static func _classify_action(builder: ViewportRowBuilder, reading: Reading,
 
 
 ## A condition cell's path.
-static func _classify_condition(builder: ViewportRowBuilder, reading: Reading,
+static func _classify_condition(builder: EventSheetViewportRowBuilder, reading: Reading,
 		condition: ACECondition) -> void:
 	reading.ace_key = "%s::%s" % [condition.provider_id, condition.ace_id]
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
@@ -634,7 +634,7 @@ static func _classify_condition(builder: ViewportRowBuilder, reading: Reading,
 
 ## The grammar's own answer, and whether a derived reading rewrote it. Asked of the same upgrade the
 ## formatters run, so a cell the derived layer owns is never counted as the grammar's.
-static func _grammar_path(builder: ViewportRowBuilder, reading: Reading, grammar: Dictionary,
+static func _grammar_path(builder: EventSheetViewportRowBuilder, reading: Reading, grammar: Dictionary,
 		ace_id: String, router: String) -> void:
 	var upgraded: Dictionary = builder._upgraded_by_derived_property(grammar, true)
 	reading.derived_asked = true
@@ -645,14 +645,14 @@ static func _grammar_path(builder: ViewportRowBuilder, reading: Reading, grammar
 
 ## True when one of the two passes the formatters WRAP the base text in moved its words. Asked of the
 ## shipped functions themselves, so a pass that stops moving a word stops being counted the same day.
-static func _post_pass_moves(builder: ViewportRowBuilder, base: String) -> bool:
+static func _post_pass_moves(builder: EventSheetViewportRowBuilder, base: String) -> bool:
 	return builder._reading_sentence(builder._humanized_input_event_text(base)) != base
 
 
 ## What is left once the grammar and the two named predicates have declined: the registry-free
 ## fallbacks when the vocabulary has no descriptor at all, an owner lens that moved the object word,
 ## a post-pass that moved the words, or the generic assembly itself.
-static func _settled_path(builder: ViewportRowBuilder, reading: Reading, ace: Resource,
+static func _settled_path(builder: EventSheetViewportRowBuilder, reading: Reading, ace: Resource,
 		params: Dictionary) -> void:
 	if not _has_descriptor(builder, ace):
 		var stored: String = builder._stored_reading(ace, params)
@@ -678,14 +678,14 @@ static func _settled_path(builder: ViewportRowBuilder, reading: Reading, ace: Re
 ## word when the row's own shape named one, and the ordinary provider or node reading otherwise. An
 ## EMPTY pending word is not a different object - it is the generic one - so comparing the raw
 ## pending value against the generic reading would report every ordinary row as bespoke.
-static func _settled_object(builder: ViewportRowBuilder, reading: Reading) -> String:
+static func _settled_object(builder: EventSheetViewportRowBuilder, reading: Reading) -> String:
 	var pending: String = builder._pending_object_label
 	return pending if not pending.is_empty() else reading.generic_object
 
 
 ## True when the installed vocabulary still has something to draw this row from - the built
 ## definition the registry generated, or the static descriptor behind it.
-static func _has_descriptor(builder: ViewportRowBuilder, ace: Resource) -> bool:
+static func _has_descriptor(builder: EventSheetViewportRowBuilder, ace: Resource) -> bool:
 	var provider: String = str(ace.get("provider_id"))
 	var ace_id: String = str(ace.get("ace_id"))
 	if builder._viewport._find_definition(provider, ace_id) != null:
@@ -696,7 +696,7 @@ static func _has_descriptor(builder: ViewportRowBuilder, ace: Resource) -> bool:
 ## The generic assembly for one row: the descriptor's display template with the row's OWN values.
 ## The row's own values, never the lens-rewritten copy, because rewriting them is itself one of the
 ## branches the census is measuring.
-static func _generic_text(builder: ViewportRowBuilder, provider: String, ace_id: String,
+static func _generic_text(builder: EventSheetViewportRowBuilder, provider: String, ace_id: String,
 		params: Dictionary) -> String:
 	var definition: ACEDefinition = builder._viewport._find_definition(provider, ace_id)
 	var descriptor: ACEDescriptor = null

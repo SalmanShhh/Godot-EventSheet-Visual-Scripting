@@ -327,7 +327,7 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
 
@@ -343,7 +343,7 @@ static func _sweep(view: EventSheetViewport, rows: Array, out: PackedStringArray
 	for row_data: EventRowData in rows:
 		view._row_builder._ensure_event_spans(row_data)
 		var parts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var object_label: String = str(span.metadata.get("object_label", "")) if span.metadata is Dictionary else ""
 			parts.append("%s ▸ %s" % [object_label, span.text] if not object_label.is_empty() else str(span.text))
 		out.append(" | ".join(parts))
@@ -368,7 +368,7 @@ static func _first_containing(readings: PackedStringArray, wanted: String) -> St
 ## these shapes reads.
 ## The first muted line of the head bar's name card - what the file is beyond its first lines.
 static func _first_card_note(row_data: EventRowData) -> String:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
 			var notes: Array = Array((card as Dictionary).get("notes", []))

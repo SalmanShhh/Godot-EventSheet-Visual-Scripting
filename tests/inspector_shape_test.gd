@@ -326,7 +326,7 @@ static func _the_doors() -> bool:
 	var row: EventRowData = EventRowData.new()
 	row.variable_row = true
 	row.source_resource = GESTURES.member(sheet, "max_health")
-	var span: SemanticSpan = SemanticSpan.new()
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.metadata = {"kind": "variable", "variable_name": "max_health", "variable_scope": "tree"}
 	row.spans.append(span)
 	var script_path: String = "user://eventsheets_shape_link_enemy.gd"
@@ -351,7 +351,7 @@ static func _the_doors() -> bool:
 	var shield_row: EventRowData = EventRowData.new()
 	shield_row.variable_row = true
 	shield_row.source_resource = GESTURES.member(dock._current_sheet, "shield_amount")
-	var shield_span: SemanticSpan = SemanticSpan.new()
+	var shield_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	shield_span.metadata = {"kind": "variable", "variable_name": "shield_amount", "variable_scope": "tree"}
 	shield_row.spans.append(shield_span)
 	var shown_when: String = str(GESTURES.strip_for(shield_row, dock._current_sheet).get("text", ""))

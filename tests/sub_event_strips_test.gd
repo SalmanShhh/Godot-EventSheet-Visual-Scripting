@@ -62,9 +62,9 @@ static func _test_nested_block_starts_past_the_margin() -> bool:
 			lefts.append((layout.get("condition_lane_rect", Rect2()) as Rect2).position.x)
 			var drawn: Array = []
 			for level: int in range(row_data.indent):
-				drawn.append(EventRowRenderer.nesting_line_x(level, step))
+				drawn.append(EventSheetRowRenderer.nesting_line_x(level, step))
 			lines.append(drawn)
-		var origin: float = EventRowRenderer.NATIVE_NUMBER_COLUMN if native else EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
+		var origin: float = EventSheetRowRenderer.NATIVE_NUMBER_COLUMN if native else EventSheetPalette.ROW_HORIZONTAL_PADDING + float(EventSheetPalette.GUTTER_WIDTH)
 		var label: String = "Editor Native" if native else "Classic Sheet"
 		rows.append(["%s: three events are laid out, one per depth" % label, lefts.size(), 3])
 		if native:
@@ -91,24 +91,24 @@ static func _test_strip_fill_and_cut_names() -> bool:
 	style.condition_lane_color = Color("#404040")
 	style.sheet_background_color = Color("#202020")
 	var step: int = 18
-	var origin: float = EventRowRenderer.NATIVE_NUMBER_COLUMN
+	var origin: float = EventSheetRowRenderer.NATIVE_NUMBER_COLUMN
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["level 0 draws its line 8 px into the slot the first nested block's parent opens",
-			EventRowRenderer.nesting_line_x(0, step), origin + 8.0],
-		["each level moves its line one step right", EventRowRenderer.nesting_line_x(2, step) - EventRowRenderer.nesting_line_x(1, step), float(step)],
+			EventSheetRowRenderer.nesting_line_x(0, step), origin + 8.0],
+		["each level moves its line one step right", EventSheetRowRenderer.nesting_line_x(2, step) - EventSheetRowRenderer.nesting_line_x(1, step), float(step)],
 		["a nested block begins at its own slot, past every ancestor's line",
-			EventRowRenderer.nested_block_left_for(2, step), origin + 3.0 * float(step)],
+			EventSheetRowRenderer.nested_block_left_for(2, step), origin + 3.0 * float(step)],
 		["the line of a level is left of the block that level's arrow opens",
-			EventRowRenderer.nesting_line_x(1, step) < EventRowRenderer.nested_block_left_for(1, step), true],
+			EventSheetRowRenderer.nesting_line_x(1, step) < EventSheetRowRenderer.nested_block_left_for(1, step), true],
 		["the cell below the last condition is the lane drawn halfway to the sheet",
-			EventRowRenderer.condition_cell_rest(style).to_html(false), "303030"],
+			EventSheetRowRenderer.condition_cell_rest(style).to_html(false), "303030"],
 		["the add action line rests under every event in the Editor Native look and nowhere else",
-			[EventRowRenderer.add_action_line_rests(null), EventRowRenderer.add_action_line_rests(style)], [false, false]],
+			[EventSheetRowRenderer.add_action_line_rests(null), EventSheetRowRenderer.add_action_line_rests(style)], [false, false]],
 	])
 	style.sub_event_strips = true
 	ok = SUPPORT.check(TEST_NAME, "the add action line rests with the strips look",
-		EventRowRenderer.add_action_line_rests(style), true) and ok
-	var kinds_at_rest: PackedStringArray = ViewportRowMetrics.resting_add_line_kinds(_filled_event_row(), _hover_style(true))
+		EventSheetRowRenderer.add_action_line_rests(style), true) and ok
+	var kinds_at_rest: PackedStringArray = EventSheetViewportRowMetrics.resting_add_line_kinds(_filled_event_row(), _hover_style(true))
 	ok = SUPPORT.check(TEST_NAME, "only the add condition line waits for the hover under that look",
 		kinds_at_rest, PackedStringArray(["add_condition"])) and ok
 	var local := EventRowData.new()
@@ -123,9 +123,9 @@ static func _test_strip_fill_and_cut_names() -> bool:
 	local.inside_event = true
 	promoted.inside_event = true
 	ok = SUPPORT.pins(TEST_NAME, [
-		["a variable row inside an event is a local on the sheet", EventRowRenderer.is_local_variable_row(local), true],
-		["so is a declaration promoted out of its actions", EventRowRenderer.is_local_variable_row(promoted), true],
-		["a variable row at the sheet's level is not", EventRowRenderer.is_local_variable_row(global_row), false],
+		["a variable row inside an event is a local on the sheet", EventSheetRowRenderer.is_local_variable_row(local), true],
+		["so is a declaration promoted out of its actions", EventSheetRowRenderer.is_local_variable_row(promoted), true],
+		["a variable row at the sheet's level is not", EventSheetRowRenderer.is_local_variable_row(global_row), false],
 	]) and ok
 	var sheet := EventSheetResource.new()
 	var event := EventRow.new()
@@ -146,8 +146,8 @@ static func _test_strip_fill_and_cut_names() -> bool:
 		["and the strip is exactly one line high", (bands[0] as Vector2).y if not bands.is_empty() else -1.0,
 			view._get_event_line_height(view._get_font_size())],
 	]) and ok
-	var span: SemanticSpan = null
-	for candidate: SemanticSpan in row_data.spans:
+	var span: EventSheetSemanticSpan = null
+	for candidate: EventSheetSemanticSpan in row_data.spans:
 		if candidate != null and candidate.metadata is Dictionary and (candidate.metadata as Dictionary).has("object_label") \
 				and str((candidate.metadata as Dictionary).get("lane", "")) == "condition":
 			span = candidate
@@ -175,7 +175,7 @@ static func _test_strip_fill_and_cut_names() -> bool:
 ## A chip cell starts its column after its padding, so a name only a few pixels too wide for the
 ## column is drawn "CharacterBo…" - and the hover must read it whole too. Every length from short to
 ## long: the hover answers exactly when the renderer's own elide (column less 6 px) cuts the name.
-static func _test_cut_name_agrees_with_the_drawn_ellipsis(view: EventSheetViewport, row_data: EventRowData, span: SemanticSpan) -> bool:
+static func _test_cut_name_agrees_with_the_drawn_ellipsis(view: EventSheetViewport, row_data: EventRowData, span: EventSheetSemanticSpan) -> bool:
 	var metadata: Dictionary = span.metadata
 	metadata["chip"] = true
 	metadata["padding_x"] = 8.0
@@ -189,7 +189,7 @@ static func _test_cut_name_agrees_with_the_drawn_ellipsis(view: EventSheetViewpo
 	for letter: String in "CharacterBody2DWithAVeryLongTailIndeed".split(""):
 		name += letter
 		metadata["object_label"] = name
-		var drawn_cut: bool = EventRowRenderer._elide(name, column - 6.0, font, draw_size) != name
+		var drawn_cut: bool = EventSheetRowRenderer._elide(name, column - 6.0, font, draw_size) != name
 		var hover: String = view.elided_object_name_at(0, row_data.spans.find(span), inside)
 		if drawn_cut:
 			cut_seen += 1
@@ -206,7 +206,7 @@ static func _filled_event_row() -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.row_type = EventRowData.RowType.EVENT
 	for kind: String in ["condition", "action"]:
-		var span := SemanticSpan.new()
+		var span := EventSheetSemanticSpan.new()
 		span.metadata = {"kind": kind}
 		row_data.spans.append(span)
 	return row_data
@@ -280,8 +280,8 @@ static func _test_name_column_cap() -> bool:
 	var style := EventSheetEventStyle.new()
 	style.condition_object_column_width = 114
 	return SUPPORT.pins(TEST_NAME, [
-		["the name column keeps its width in a wide lane", EventRowRenderer.object_column_width_for(style, "condition", 600.0), 114.0],
-		["and gives way at half of a narrowed lane", EventRowRenderer.object_column_width_for(style, "condition", 150.0), 75.0],
+		["the name column keeps its width in a wide lane", EventSheetRowRenderer.object_column_width_for(style, "condition", 600.0), 114.0],
+		["and gives way at half of a narrowed lane", EventSheetRowRenderer.object_column_width_for(style, "condition", 150.0), 75.0],
 	]) and _test_row_lanes()
 
 

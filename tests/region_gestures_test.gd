@@ -385,7 +385,7 @@ static func _notes_in(prompt: ConfirmationDialog) -> PackedStringArray:
 
 
 static func _span_text(row_data: EventRowData, key: String, value: Variant) -> String:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).get(key) == value:
 			return span.text
 	return "<no span %s=%s>" % [key, str(value)]

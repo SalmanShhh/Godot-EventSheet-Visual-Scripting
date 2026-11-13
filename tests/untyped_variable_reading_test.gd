@@ -48,12 +48,12 @@ static func _read(inspector_style: bool) -> Dictionary:
 		if row == null:
 			continue
 		var owner_name: String = ""
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if bool((span.metadata as Dictionary).get("variable_name_span", false)):
 				owner_name = span.text
 		if owner_name.is_empty():
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if bool((span.metadata as Dictionary).get("variable_type_span", false)):
 				types[owner_name] = span.text
 			if span.text == "no starting value":

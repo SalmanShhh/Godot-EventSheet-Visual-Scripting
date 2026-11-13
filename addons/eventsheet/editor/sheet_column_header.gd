@@ -14,7 +14,7 @@
 # gesture nobody aimed. The drag STATE lives on the viewport (it is the surface that relayouts
 # under it); this band only says where the press landed and follows the pointer.
 @tool
-class_name SheetColumnHeader
+class_name EventSheetColumnHeader
 extends Control
 
 # 1x design values - scaled by EventSheetPalette.ui_scale() at use time, so the band and its
@@ -40,7 +40,7 @@ var _dragging: bool = false
 ## Binds the header to the viewport whose lane geometry it mirrors.
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
-	name = "SheetColumnHeader"
+	name = "EventSheetColumnHeader"
 	custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(HEADER_HEIGHT))
 	# The band takes the mouse because it is the handle: the rows below are unaffected, they are
 	# not under it. A press that lands on neither grabber is passed nowhere and does nothing.

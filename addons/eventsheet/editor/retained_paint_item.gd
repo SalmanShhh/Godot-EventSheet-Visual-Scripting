@@ -133,7 +133,7 @@ static func paint_signature(row_data: EventRowData, layout: Dictionary, frame_si
 ## What the row's state tokens say right now: "" for a member no running game is in.
 static func _live_state_reading(row_data: EventRowData) -> PackedStringArray:
 	var reading: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).has("state_name"):
 			reading.append(EventSheetStateWatch.token_text(str((span.metadata as Dictionary)["state_name"])))
 	return reading

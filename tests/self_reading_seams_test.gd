@@ -73,7 +73,7 @@ static func run() -> bool:
 	var added: EventFunction = verbs.get("add_one") as EventFunction
 	passed = SUPPORT.pins("self_reading_seams_test", [
 		["the looping verb keeps its iterator", looping.looping_iterator if looping != null else "", "entry"],
-		["and reads as the condition it is picked as", ViewportRowBuilder.define_role_for(looping) if looping != null else "", "condition"],
+		["and reads as the condition it is picked as", EventSheetViewportRowBuilder.define_role_for(looping) if looping != null else "", "condition"],
 		["a verb with no call line writes none back", full.no_codegen_annotation if full != null else false, true],
 		["a verb with a call line still writes it", added.no_codegen_annotation if added != null else true, false],
 		["a verb's own icon is kept when the class has none", added.ace_icon if added != null else "", "res://icon.svg"],

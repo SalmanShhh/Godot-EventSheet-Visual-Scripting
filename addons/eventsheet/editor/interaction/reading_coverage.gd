@@ -197,17 +197,17 @@ static func renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
 	if raw == null:
 		return false
 	var code_lines: PackedStringArray = raw.code.split("\n")
-	if ViewportRowBuilder.is_comment_only_block(code_lines) or ViewportRowBuilder.is_blank_block(code_lines):
+	if EventSheetViewportRowBuilder.is_comment_only_block(code_lines) or EventSheetViewportRowBuilder.is_blank_block(code_lines):
 		return false
 	# A single statement renders as an ordinary action row, and a literal entry as an action chip -
 	# neither is the code-block treatment, so neither counts here.
-	if ViewportRowBuilder.is_single_statement(raw.code) or ViewportRowBuilder.is_literal_part(raw.code):
+	if EventSheetViewportRowBuilder.is_single_statement(raw.code) or EventSheetViewportRowBuilder.is_literal_part(raw.code):
 		return false
-	if not ViewportRowBuilder.data_literal_info(raw.code).is_empty():
+	if not EventSheetViewportRowBuilder.data_literal_info(raw.code).is_empty():
 		return false
-	if not ViewportRowBuilder.function_body_info(raw.code).is_empty():
+	if not EventSheetViewportRowBuilder.function_body_info(raw.code).is_empty():
 		return false
-	if not ViewportRowBuilder.define_shell_info(raw.code).is_empty():
+	if not EventSheetViewportRowBuilder.define_shell_info(raw.code).is_empty():
 		return false
 	if top_level and EventSheetViewport.is_scaffolding_code(raw.code):
 		return false

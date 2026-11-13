@@ -376,7 +376,7 @@ static func _test_the_two_layers_look_different() -> bool:
 	# How far back it is drawn, pinned as a value: far enough to tell apart at a glance, not so far
 	# that a file of derived rows reads as greyed out.
 	ok = _check("the derived tone sits back from a curated one",
-		ViewportRowBuilder.DERIVED_TONE_BLEND, 0.4) and ok
+		EventSheetViewportRowBuilder.DERIVED_TONE_BLEND, 0.4) and ok
 	# THE SECOND MARK, and the one a reader uses when the tone is not enough: the muted word beside
 	# the object. On a derived row it is always a CLASS. The declaration lens would put a variable
 	# NAME there for a class the project itself declared - which is what a curated row looks like -
@@ -418,9 +418,9 @@ static func _test_curated_outranks_and_upgrades_in_place() -> bool:
 	# The row builder asks the sentence layer FIRST and only reaches the derived layer when it came
 	# back empty, so a line the curated layer claims can never be read the plainer way.
 	ok = _check("the builder reaches the derived layer only where the curated one is silent",
-		ViewportRowBuilder.statement_sentence(line, CONTEXT).is_empty(), false) and ok
+		EventSheetViewportRowBuilder.statement_sentence(line, CONTEXT).is_empty(), false) and ok
 	ok = _check("and it is silent on the line nothing curated claims",
-		ViewportRowBuilder.statement_sentence("beat.start(2.0)", CONTEXT).is_empty(), true) and ok
+		EventSheetViewportRowBuilder.statement_sentence("beat.start(2.0)", CONTEXT).is_empty(), true) and ok
 	return ok
 
 

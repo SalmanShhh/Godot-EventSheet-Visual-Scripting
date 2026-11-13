@@ -51,7 +51,7 @@ static func _words_of_event(view: EventSheetViewport, needle: String) -> String:
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 			continue
 		var words := PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var text: String = span.text.strip_edges()
 			if not text.is_empty() and text.length() > 1:
 				words.append(span.text)

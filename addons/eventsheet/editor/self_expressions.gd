@@ -91,7 +91,7 @@ static func property_entries(host_class: String, fragment_prefix: String = "") -
 static func behaviour_groups(sheet: EventSheetResource, robust: bool = false) -> Array:
 	var used: Dictionary = {}
 	if sheet != null:
-		for organ: Dictionary in BehaviourAnatomyPanel.collect_anatomy(sheet):
+		for organ: Dictionary in EventSheetBehaviourAnatomyPanel.collect_anatomy(sheet):
 			if str(organ.get("id")) != "uses":
 				continue
 			for entry: Dictionary in organ.get("entries", []):
@@ -402,7 +402,7 @@ static func function_entries(sheet: EventSheetResource) -> Array:
 		if not (entry is EventFunction):
 			continue
 		var event_function: EventFunction = entry as EventFunction
-		if ViewportRowBuilder.define_role_for(event_function) != "expression":
+		if EventSheetViewportRowBuilder.define_role_for(event_function) != "expression":
 			continue
 		var arg_names: PackedStringArray = PackedStringArray()
 		for parameter: Variant in event_function.params:

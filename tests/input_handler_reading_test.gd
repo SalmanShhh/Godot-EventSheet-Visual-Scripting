@@ -201,7 +201,7 @@ static func _readings(sheet: EventSheetResource, wanted: Dictionary) -> Array[Pa
 			continue
 		view._row_builder._ensure_event_spans(row_data)
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text.begins_with("+ Add ") or span.metadata is not Dictionary:
 				continue
 			if str((span.metadata as Dictionary).get("badge_style", "")) == "trigger":

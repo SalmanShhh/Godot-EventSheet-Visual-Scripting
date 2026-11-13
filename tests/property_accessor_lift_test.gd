@@ -243,14 +243,14 @@ static func _find_var(sheet: EventSheetResource, name: String) -> LocalVariable:
 
 
 static func _lane_text(row: EventRowData, lane: String) -> String:
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane")) == lane:
 			return str(span.text)
 	return "<none>"
 
 
 static func _span_text(row: EventRowData, kind: String) -> String:
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind")) == kind:
 			return str(span.text)
 	return "<none>"

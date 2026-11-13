@@ -1,5 +1,5 @@
 @tool
-class_name ViewportFolding
+class_name EventSheetViewportFolding
 extends RefCounted
 # The FOLDING subsystem of the event sheet's virtualized viewport, extracted from
 # event_sheet_viewport.gd to keep that file maintainable. This layer owns every fold
@@ -356,11 +356,11 @@ func summary_piece(row_data: EventRowData) -> String:
 	if not row_data.spans.is_empty() and row_data.spans[0].metadata is Dictionary \
 			and str((row_data.spans[0].metadata as Dictionary).get("kind", "")) == "data_class_field":
 		var tokens: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if not span.text.strip_edges().is_empty():
 				tokens.append(span.text.strip_edges())
 		return " ".join(tokens).replace(" :", ":")
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var text: String = span.text.strip_edges()
 		if text.is_empty():
 			continue

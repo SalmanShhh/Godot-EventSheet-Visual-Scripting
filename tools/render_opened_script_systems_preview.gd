@@ -55,7 +55,7 @@ func _show() -> void:
 		var row_data: EventRowData = (entry as Dictionary).get("row")
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text.strip_edges() == "Variables":
 				_view._fold_state[row_data.row_uid] = true
 	_view.set_sheet(sheet)
@@ -78,7 +78,7 @@ func _on_frame() -> void:
 		if row_data == null:
 			continue
 		var head: String = ""
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			head += span.text
 		if head.contains("On enter tree"):
 			top = _view._row_metrics_helper.row_top(index)
@@ -100,6 +100,6 @@ func _print_rows() -> void:
 		if row_data == null:
 			continue
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			texts.append(span.text)
 		print("  row: [%s]" % " | ".join(texts).substr(0, 200))

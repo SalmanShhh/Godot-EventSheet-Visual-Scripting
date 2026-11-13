@@ -146,7 +146,7 @@ static func _test_the_reading() -> bool:
 	# the draw stops at the first range that goes backwards - a lead inserted out of order would
 	# silently drop the number after it.
 	return _check("the lead is marked muted, in start order",
-		ViewportRowBuilder.merged_muted_leads([[26, 3, "number"]],
+		EventSheetViewportRowBuilder.merged_muted_leads([[26, 3, "number"]],
 			"Set effect.dissolve to 0.7", PackedStringArray(["effect."])),
 		[[4, 7, "muted"], [26, 3, "number"]]) and ok
 

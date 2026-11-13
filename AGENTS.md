@@ -205,7 +205,7 @@ from `tools/build_help_bundle.gd`).
   undo/redo wiring, and theme load/reload - through its `dock/*.gd` delegates.
 - `EventSheetViewport` owns hit-testing, stacked event layout, selection state, inline editing,
   drag/drop, zoom, and keyboard navigation.
-- `EventRowRenderer` paints event/group/comment rows from `EventRowData` plus theme resources.
+- `EventSheetRowRenderer` paints event/group/comment rows from `EventRowData` plus theme resources.
 - `ACEPickerDialog` and `ACEParamsDialog` are the main extension points for new
   event/condition/action flows; node-scoped ACEs gain a `{target.}` prefix and an "On node"
   parameter at ship time (`_make_node_scoped_targetable`) - assert the post-transform form.

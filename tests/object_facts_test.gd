@@ -175,11 +175,11 @@ static func _signal_notes() -> bool:
 		]), "← emitted in player.gd: Take Damage (+1 more)") and passed
 	# A trigger id is what the row holds; the signal behind it is what the note is about.
 	passed = _check("a custom signal trigger resolves to its signal",
-		ViewportRowBuilder.signal_name_of_trigger("signal:door_opened"), "door_opened") and passed
+		EventSheetViewportRowBuilder.signal_name_of_trigger("signal:door_opened"), "door_opened") and passed
 	passed = _check("a core signal trigger resolves back through the same table",
-		ViewportRowBuilder.signal_name_of_trigger("OnBodyEntered"), "body_entered") and passed
+		EventSheetViewportRowBuilder.signal_name_of_trigger("OnBodyEntered"), "body_entered") and passed
 	passed = _check("a lifecycle trigger is not a signal",
-		ViewportRowBuilder.signal_name_of_trigger("OnReady"), "") and passed
+		EventSheetViewportRowBuilder.signal_name_of_trigger("OnReady"), "") and passed
 	return passed
 
 

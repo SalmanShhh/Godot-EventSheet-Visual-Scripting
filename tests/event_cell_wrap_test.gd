@@ -1,6 +1,6 @@
 # Condition/action cells WRAP instead of clipping (the event-sheet rule): when a cell's text is
 # wider than its lane, the row grows by whole visual lines and the renderer wraps the text.
-# One shared walk (ViewportRowMetrics.event_line_extents) feeds BOTH the height metrics and the
+# One shared walk (EventSheetViewportRowMetrics.event_line_extents) feeds BOTH the height metrics and the
 # layout pass, so the reserved height and the drawn rects can never disagree. Pins:
 #   1. A long condition in a wide lane stays one visual line; in a narrow lane it wraps (>1),
 #      and the row total covers the taller lane.
@@ -23,15 +23,15 @@ static func run() -> bool:
 	viewport.set_ace_registry(EventSheetACERegistry.new())
 	var font: Font = ThemeDB.fallback_font
 	var font_size: int = viewport._get_font_size()
-	var metrics: ViewportRowMetrics = viewport._row_metrics_helper
+	var metrics: EventSheetViewportRowMetrics = viewport._row_metrics_helper
 
 	# A hand-built EVENT row: one long condition cell, one long action cell.
 	var row_data: EventRowData = EventRowData.new()
 	row_data.row_type = EventRowData.RowType.EVENT
-	var cond_span: SemanticSpan = SemanticSpan.new()
+	var cond_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	cond_span.text = LONG_TEXT
 	cond_span.metadata = {"kind": "condition", "line_index": 0, "chip": true}
-	var act_span: SemanticSpan = SemanticSpan.new()
+	var act_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	act_span.text = "Set the long_named_score_variable to long_named_score_variable + 100 points"
 	act_span.metadata = {"kind": "action", "lane": "action", "line_index": 0, "chip": true}
 	row_data.spans = [cond_span, act_span]
@@ -60,8 +60,8 @@ static func run() -> bool:
 
 	# 3b. The greedy break points themselves: one line when wide; when narrow, offsets are
 	# strictly increasing and slicing at them reassembles the original text losslessly.
-	ok = _check("break points: wide text is one line", ViewportRowMetrics.wrap_break_points(LONG_TEXT, 10000.0, font, font_size).size(), 1) and ok
-	var breaks: PackedInt32Array = ViewportRowMetrics.wrap_break_points(LONG_TEXT, 150.0, font, font_size)
+	ok = _check("break points: wide text is one line", EventSheetViewportRowMetrics.wrap_break_points(LONG_TEXT, 10000.0, font, font_size).size(), 1) and ok
+	var breaks: PackedInt32Array = EventSheetViewportRowMetrics.wrap_break_points(LONG_TEXT, 150.0, font, font_size)
 	ok = _check("break points: narrow text splits", breaks.size() > 1, true) and ok
 	var monotonic: bool = true
 	var rejoined: String = ""
@@ -72,7 +72,7 @@ static func run() -> bool:
 		rejoined += LONG_TEXT.substr(breaks[break_index], slice_end - breaks[break_index])
 	ok = _check("break points: strictly increasing", monotonic, true) and ok
 	ok = _check("break points: slices reassemble the text", rejoined, LONG_TEXT) and ok
-	ok = _check("break points: a giant word hard-splits instead of overflowing", ViewportRowMetrics.wrap_break_points("abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz", 60.0, font, font_size).size() > 1, true) and ok
+	ok = _check("break points: a giant word hard-splits instead of overflowing", EventSheetViewportRowMetrics.wrap_break_points("abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz", 60.0, font, font_size).size() > 1, true) and ok
 
 	# 3c. Cells break on WORDS, never inside one. "On Ready" at a width that fits "On" but not
 	# "On Ready" must wrap to two lines on the space - never render "On Read / y". The grapheme
@@ -80,9 +80,9 @@ static func run() -> bool:
 	var on_ready_width: float = font.get_string_size("On Ready", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 	var ready_width: float = font.get_string_size("Ready", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 	var squeeze: float = (on_ready_width + ready_width) * 0.5
-	ok = _check("a squeezed two-word cell breaks on the word", ViewportRowMetrics.break_flags_for("On Ready", squeeze, font, font_size), TextServer.BREAK_WORD_BOUND) and ok
-	ok = _check("and wraps to exactly two lines", ViewportRowMetrics.wrapped_line_count("On Ready", squeeze, font, font_size), 2) and ok
-	ok = _check("a single word wider than the cell may hard-split", ViewportRowMetrics.break_flags_for("Supercalifragilistic", 40.0, font, font_size), TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND) and ok
+	ok = _check("a squeezed two-word cell breaks on the word", EventSheetViewportRowMetrics.break_flags_for("On Ready", squeeze, font, font_size), TextServer.BREAK_WORD_BOUND) and ok
+	ok = _check("and wraps to exactly two lines", EventSheetViewportRowMetrics.wrapped_line_count("On Ready", squeeze, font, font_size), 2) and ok
+	ok = _check("a single word wider than the cell may hard-split", EventSheetViewportRowMetrics.break_flags_for("Supercalifragilistic", 40.0, font, font_size), TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND) and ok
 
 	# 4. The layout pass agrees with the metrics: the wrapped span carries comment_wrap and a
 	# rect spanning its visual lines. Feed the row through the REAL flat-row path at a narrow

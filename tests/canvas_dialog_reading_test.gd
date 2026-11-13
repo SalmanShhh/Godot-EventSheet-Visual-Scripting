@@ -238,7 +238,7 @@ static func _setup_run_rows() -> bool:
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
 		if row_data.row_uid.begins_with("local_declaration_") and not row_data.row_uid.contains("_setup"):
 			local_row = row_data
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if str(span.metadata.get("kind", "")) == "action" \
 					and span.text.contains("Wire On Confirmed"):
 				event_lines.append(span.text.strip_edges())
@@ -246,7 +246,7 @@ static func _setup_run_rows() -> bool:
 	if local_row != null:
 		var under: PackedStringArray = PackedStringArray()
 		for child: EventRowData in local_row.children:
-			for span: SemanticSpan in child.spans:
+			for span: EventSheetSemanticSpan in child.spans:
 				if str(span.metadata.get("kind", "")) == "action":
 					under.append(span.text.strip_edges())
 		ok = _check("the lines that shape the dialog hang under it", " | ".join(under),
@@ -302,7 +302,7 @@ static func _render(sheet: EventSheetResource) -> PackedStringArray:
 	viewport.set_reading_mode(true)
 	var readings: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var label: String = str(span.metadata.get("object_label", ""))
 			var text: String = span.text.strip_edges()
 			readings.append("%s ▸ %s" % [label, text] if not label.is_empty() else text)

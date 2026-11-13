@@ -73,18 +73,18 @@ static func _run_gate() -> bool:
 	EventSheetTraceHitCounts.reset()
 	EventSheetTraceHitCounts.note_fired(PackedStringArray(["aa", "aa", "aa"]))
 	# The View toggle OFF - the default a fresh install ships with - emits nothing at all.
-	all_passed = _check("lens off emits no chip", EventRowRenderer.hit_chip_uid(false, true, "aa"), "") and all_passed
+	all_passed = _check("lens off emits no chip", EventSheetRowRenderer.hit_chip_uid(false, true, "aa"), "") and all_passed
 	# On, but not an event row (a group / comment bar): still nothing, the gutter is theirs.
-	all_passed = _check("non-event rows never get a chip", EventRowRenderer.hit_chip_uid(true, false, "aa"), "") and all_passed
-	all_passed = _check("lens on reports the row", EventRowRenderer.hit_chip_uid(true, true, "aa"), "aa") and all_passed
-	all_passed = _check("chip text carries the count", EventRowRenderer.hit_chip_text("aa"), "x3") and all_passed
-	all_passed = _check("never-fired row reads x0", EventRowRenderer.hit_chip_text("zz"), "x0") and all_passed
+	all_passed = _check("non-event rows never get a chip", EventSheetRowRenderer.hit_chip_uid(true, false, "aa"), "") and all_passed
+	all_passed = _check("lens on reports the row", EventSheetRowRenderer.hit_chip_uid(true, true, "aa"), "aa") and all_passed
+	all_passed = _check("chip text carries the count", EventSheetRowRenderer.hit_chip_text("aa"), "x3") and all_passed
+	all_passed = _check("never-fired row reads x0", EventSheetRowRenderer.hit_chip_text("zz"), "x0") and all_passed
 	# No traced run: the lens is on and STILL nothing is drawn, because there is nothing to say.
 	EventSheetTraceHitCounts.reset()
 	all_passed = _check("no run means no chip even with the lens on",
-		EventRowRenderer.hit_chip_uid(true, true, "aa"), "") and all_passed
+		EventSheetRowRenderer.hit_chip_uid(true, true, "aa"), "") and all_passed
 	# The renderer a fresh viewport stamps: the flag ships false.
-	var renderer: EventRowRenderer = EventRowRenderer.new()
+	var renderer: EventSheetRowRenderer = EventSheetRowRenderer.new()
 	all_passed = _check("renderer ships with the lens off", renderer.show_hit_counts, false) and all_passed
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	all_passed = _check("viewport ships with the lens off", viewport.show_hit_counts, false) and all_passed

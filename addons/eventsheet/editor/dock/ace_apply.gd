@@ -1169,7 +1169,7 @@ func _move_local_variable(source_row: EventRowData, target_row: EventRowData) ->
 	if moved == null:
 		return false
 	var owner_event: EventRow = source_row.source_resource as EventRow
-	if str(target_row.row_uid).begins_with(ViewportRowBuilder.HEAD_BAND_UID_PREFIX):
+	if str(target_row.row_uid).begins_with(EventSheetViewportRowBuilder.HEAD_BAND_UID_PREFIX):
 		_dock._variables.promote_local_to_instance(owner_event, moved)
 		return true
 	# Every row of an event - its head, its own locals - is drawn from that event, so the drop target

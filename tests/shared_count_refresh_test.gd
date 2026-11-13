@@ -117,7 +117,7 @@ static func _card(viewport: EventSheetViewport) -> String:
 	while viewport.get_row_data(index) != null:
 		var row: EventRowData = viewport.get_row_data(index)
 		if row.source_resource is EventFunction:
-			for span: SemanticSpan in row.spans:
+			for span: EventSheetSemanticSpan in row.spans:
 				var metadata: Dictionary = span.metadata as Dictionary
 				if bool(metadata.get("function_name", false)):
 					return str(metadata.get("hover_note", ""))

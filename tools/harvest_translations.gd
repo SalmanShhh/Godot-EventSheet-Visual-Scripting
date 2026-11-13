@@ -747,7 +747,7 @@ static func _walk_drawn_tables(seen: Dictionary) -> void:
 		var advice: Dictionary = EventSheetScriptIntent.empty_sheet_advice(sheet)
 		for value: Variant in advice.values():
 			_remember(seen, str(value))
-		for spec: Dictionary in ViewportEmptyStateHelper.cta_specs(sheet):
+		for spec: Dictionary in EventSheetViewportEmptyStateHelper.cta_specs(sheet):
 			_remember(seen, str(spec.get("label", "")))
 	for affordance: String in ["+ Add action", "+ Add condition", "+ Add event…", "Every Tick", "Else", "Else If"]:
 		_remember(seen, affordance)

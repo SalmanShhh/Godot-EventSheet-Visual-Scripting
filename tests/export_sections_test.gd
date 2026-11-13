@@ -216,7 +216,7 @@ static func _member(view: EventSheetViewport, var_name: String) -> EventRowData:
 
 
 static func _span_meta(row_data: EventRowData, flag: String) -> Dictionary:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get(flag, false)):
 			return span.metadata
 	return {}
@@ -224,6 +224,6 @@ static func _span_meta(row_data: EventRowData, flag: String) -> Dictionary:
 
 static func _texts(row_data: EventRowData) -> String:
 	var parts := PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	return " | ".join(parts)

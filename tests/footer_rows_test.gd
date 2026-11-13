@@ -88,7 +88,7 @@ static func run() -> bool:
 	viewport._row_builder._ensure_event_spans(negated_row)
 	var marker_meta: Dictionary = {}
 	for span in negated_row.spans:
-		if span != null and span.text == ViewportRowBuilder.NEGATED_MARK and span.metadata is Dictionary:
+		if span != null and span.text == EventSheetViewportRowBuilder.NEGATED_MARK and span.metadata is Dictionary:
 			marker_meta = span.metadata
 	all_passed = _check("negated condition shows the `not` marker", not marker_meta.is_empty(), true) and all_passed
 	all_passed = _check("the marker is red", marker_meta.get("badge_fg", Color.BLACK), Color("#e05c5c")) and all_passed

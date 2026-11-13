@@ -107,15 +107,15 @@ static func run() -> bool:
 	var icon_viewport: EventSheetViewport = icon_editor.get_viewport_control()
 	var heal_icon: Texture2D = icon_viewport._row_builder._object_icon_for("DemoHealthAddon", "method:heal")
 	all_passed = _check("@ace_icon resolves for row cells", heal_icon != null, true) and all_passed
-	var icon_span: SemanticSpan = SemanticSpan.new()
+	var icon_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	icon_span.metadata = {"object_icon": heal_icon}
-	var plain_span: SemanticSpan = SemanticSpan.new()
+	var plain_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	plain_span.metadata = {}
 	var font: Font = ThemeDB.fallback_font
 	var with_icon: float = icon_viewport._row_builder._measure_span_width(icon_span, "Heal 5 HP", font, 13)
 	var without_icon: float = icon_viewport._row_builder._measure_span_width(plain_span, "Heal 5 HP", font, 13)
 	all_passed = _check("icon widens the measured span by the fixed advance",
-		is_equal_approx(with_icon - without_icon, EventRowRenderer.OBJECT_ICON_ADVANCE), true) and all_passed
+		is_equal_approx(with_icon - without_icon, EventSheetRowRenderer.OBJECT_ICON_ADVANCE), true) and all_passed
 	all_passed = _check("icon resolution is cached",
 		icon_viewport._row_builder._object_icon_for("DemoHealthAddon", "method:heal") == heal_icon, true) and all_passed
 

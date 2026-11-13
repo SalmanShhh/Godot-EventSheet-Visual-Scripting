@@ -61,20 +61,20 @@ static func _test_class_shapes() -> bool:
 	var data_class: String = "\n".join(PackedStringArray([
 		"class Stats:", "\tvar hp: int = 10", "\tvar name: String = \"x\""]))
 	var ok: bool = _check("a class of fields reads as a data class",
-		ViewportRowBuilder.data_class_lifts(data_class), true)
+		EventSheetViewportRowBuilder.data_class_lifts(data_class), true)
 	var methods_class: String = "\n".join(PackedStringArray([
 		"class Stats:", "\tvar hp: int = 10", "", "\tfunc bump() -> void:", "\t\thp += 1"]))
 	ok = _check("a class with methods reads as a class block",
-		ViewportRowBuilder.methods_class_lifts(methods_class), true) and ok
+		EventSheetViewportRowBuilder.methods_class_lifts(methods_class), true) and ok
 	# Disjoint by construction: exactly one recogniser claims a class, so a reading can never be two
 	# things at once.
 	ok = _check("and no class is both",
-		[ViewportRowBuilder.methods_class_name(data_class),
-			ViewportRowBuilder.data_class_name(methods_class)], ["", ""]) and ok
+		[EventSheetViewportRowBuilder.methods_class_name(data_class),
+			EventSheetViewportRowBuilder.data_class_name(methods_class)], ["", ""]) and ok
 	var nested: String = "\n".join(PackedStringArray([
 		"class Outer:", "\tclass Inner:", "\t\tvar hp: int = 1"]))
 	ok = _check("a class inside a class is held by neither reading",
-		[ViewportRowBuilder.data_class_name(nested), ViewportRowBuilder.methods_class_name(nested)],
+		[EventSheetViewportRowBuilder.data_class_name(nested), EventSheetViewportRowBuilder.methods_class_name(nested)],
 		["", ""]) and ok
 	ok = _check("and stays code that saves as itself",
 		EventSheets.round_trips(_file(PackedStringArray(nested.split("\n")))), true) and ok

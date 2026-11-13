@@ -1098,7 +1098,7 @@ static func run() -> bool:
     var drag_target_row_data: EventRowData = ace_drag_rows[1].get("row")
     dock_viewport.get_row_layout_for_test(1, 640.0)
     var first_target_condition_index: int = _find_span_index_by_kind(drag_target_row_data, "condition")
-    var first_target_condition_span: SemanticSpan = drag_target_row_data.spans[first_target_condition_index]
+    var first_target_condition_span: EventSheetSemanticSpan = drag_target_row_data.spans[first_target_condition_index]
     dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "condition", 0)]
     dock_viewport._drag.update_ace_drag_target(
         {
@@ -1127,7 +1127,7 @@ static func run() -> bool:
     drag_target_row_data = ace_drag_rows[1].get("row")
     dock_viewport.get_row_layout_for_test(1, 640.0)
     var first_target_action_index: int = _find_span_index_by_kind(drag_target_row_data, "action")
-    var first_target_action_span: SemanticSpan = drag_target_row_data.spans[first_target_action_index]
+    var first_target_action_span: EventSheetSemanticSpan = drag_target_row_data.spans[first_target_action_index]
     dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "action", 0)]
     dock_viewport._drag.update_ace_drag_target(
         {
@@ -1178,7 +1178,7 @@ static func run() -> bool:
     var invalid_trigger_row_data: EventRowData = invalid_trigger_rows[1].get("row")
     dock_viewport.get_row_layout_for_test(1, 640.0)
     var invalid_trigger_span_index: int = _find_span_index_by_kind(invalid_trigger_row_data, "trigger")
-    var invalid_trigger_span: SemanticSpan = invalid_trigger_row_data.spans[invalid_trigger_span_index]
+    var invalid_trigger_span: EventSheetSemanticSpan = invalid_trigger_row_data.spans[invalid_trigger_span_index]
     dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(invalid_trigger_rows[0].get("row"), "trigger", 0)]
     dock_viewport._drag.update_ace_drag_target(
         {
@@ -1714,7 +1714,7 @@ static func run() -> bool:
 ## (the paragraph mark a documentation row leads with, and the echo of the line the row writes).
 static func _comment_text_span_count(row_data: EventRowData) -> int:
     var lines: int = 0
-    for span: SemanticSpan in row_data.spans:
+    for span: EventSheetSemanticSpan in row_data.spans:
         if span == null or not (span.metadata is Dictionary):
             continue
         if str((span.metadata as Dictionary).get("edit_kind", "")) == "comment_text":
@@ -1723,7 +1723,7 @@ static func _comment_text_span_count(row_data: EventRowData) -> int:
 
 
 static func _row_contains_text(row_data: EventRowData, expected_text: String) -> bool:
-    for span: SemanticSpan in row_data.spans:
+    for span: EventSheetSemanticSpan in row_data.spans:
         if span != null and span.text == expected_text:
             return true
     return false
@@ -1758,7 +1758,7 @@ static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: Stri
     if row_data == null:
         return -1
     for index in range(row_data.spans.size()):
-        var span: SemanticSpan = row_data.spans[index]
+        var span: EventSheetSemanticSpan = row_data.spans[index]
         if span == null or not (span.metadata is Dictionary):
             continue
         if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
@@ -1770,7 +1770,7 @@ static func _find_last_span_index_by_kind(row_data: EventRowData, expected_kind:
     if row_data == null:
         return -1
     for index in range(row_data.spans.size() - 1, -1, -1):
-        var span: SemanticSpan = row_data.spans[index]
+        var span: EventSheetSemanticSpan = row_data.spans[index]
         if span == null or not (span.metadata is Dictionary):
             continue
         if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
@@ -1787,7 +1787,7 @@ static func _find_nth_span_index_by_kind(
         return -1
     var current_occurrence: int = 0
     for index in range(row_data.spans.size()):
-        var span: SemanticSpan = row_data.spans[index]
+        var span: EventSheetSemanticSpan = row_data.spans[index]
         if span == null or not (span.metadata is Dictionary):
             continue
         if str((span.metadata as Dictionary).get("kind", "")) != expected_kind:
@@ -1802,7 +1802,7 @@ static func _find_span_index_by_text(row_data: EventRowData, expected_text: Stri
     if row_data == null:
         return -1
     for index in range(row_data.spans.size()):
-        var span: SemanticSpan = row_data.spans[index]
+        var span: EventSheetSemanticSpan = row_data.spans[index]
         if span != null and span.text == expected_text:
             return index
     return -1
@@ -1812,7 +1812,7 @@ static func _find_last_span_index_by_text(row_data: EventRowData, expected_text:
     if row_data == null:
         return -1
     for index in range(row_data.spans.size() - 1, -1, -1):
-        var span: SemanticSpan = row_data.spans[index]
+        var span: EventSheetSemanticSpan = row_data.spans[index]
         if span != null and span.text == expected_text:
             return index
     return -1
@@ -1822,7 +1822,7 @@ static func _count_span_text(row_data: EventRowData, expected_text: String) -> i
     if row_data == null:
         return 0
     var total: int = 0
-    for span: SemanticSpan in row_data.spans:
+    for span: EventSheetSemanticSpan in row_data.spans:
         if span != null and span.text == expected_text:
             total += 1
     return total

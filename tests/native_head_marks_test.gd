@@ -77,8 +77,8 @@ static func _test_includers() -> bool:
 
 
 static func _host_cases() -> Array:
-	return [ViewportRowBuilder.host_is_node("CharacterBody2D"), ViewportRowBuilder.host_is_node(""),
-		ViewportRowBuilder.host_is_node("Resource"), ViewportRowBuilder.host_is_node("RefCounted")]
+	return [EventSheetViewportRowBuilder.host_is_node("CharacterBody2D"), EventSheetViewportRowBuilder.host_is_node(""),
+		EventSheetViewportRowBuilder.host_is_node("Resource"), EventSheetViewportRowBuilder.host_is_node("RefCounted")]
 
 
 static func _test_class_users() -> bool:
@@ -113,7 +113,7 @@ static func _test_class_head_of_a_shared_sheet() -> bool:
 	var view := _view_of(sheet)
 	var head: EventRowData = _row_with_uid(view, "sheet_head_bar_")
 	var notes: Array = []
-	for span: SemanticSpan in head.spans if head != null else []:
+	for span: EventSheetSemanticSpan in head.spans if head != null else []:
 		var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 		if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
 			notes = Array((card as Dictionary).get("notes", []))
@@ -166,7 +166,7 @@ static func _test_include_bar_shape() -> bool:
 
 ## The alpha the first segment of a row's code echo is drawn at, as a fraction of its colour's own.
 static func _echo_alpha(row_data: EventRowData) -> float:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		if bool((span.metadata as Dictionary).get("code_echo", false)):
 			var colour: Color = ((span.metadata as Dictionary)["bbcode_segments"] as Array)[0]["color"]
 			return snappedf(colour.a, 0.01)
@@ -250,7 +250,7 @@ static func _row_with_uid(view: EventSheetViewport, prefix: String) -> EventRowD
 
 ## One metadata value of the first span on `row_data` whose text starts with `prefix`.
 static func _flag_of(row_data: EventRowData, prefix: String, key: String) -> Variant:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		if span.text.begins_with(prefix):
 			return (span.metadata as Dictionary).get(key)
 	return null
@@ -260,7 +260,7 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	return " | ".join(parts)
 
@@ -270,7 +270,7 @@ static func _lead_texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("align_right", false)):
 			break
 		parts.append(span.text)

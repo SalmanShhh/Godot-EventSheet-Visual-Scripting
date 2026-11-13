@@ -63,7 +63,7 @@ static func run() -> bool:
 			group_row_index = index
 	# The head is ONE line: the description sits beside the name, not under it.
 	all_passed = _check("the head reads in one line", group_row.line_count, 1) and all_passed
-	var description_span: SemanticSpan = _span_with_edit_kind(group_row, "group_description")
+	var description_span: EventSheetSemanticSpan = _span_with_edit_kind(group_row, "group_description")
 	all_passed = _check("description span is inline-editable", description_span != null, true) and all_passed
 	editor._on_viewport_span_edit_requested(group_row, "group_description", group.description, "The core loop")
 	all_passed = _check("editing the description applies", group.description, "The core loop") and all_passed
@@ -172,8 +172,8 @@ static func run() -> bool:
 
 
 ## The span of a row carrying `edit_kind`, or null. Metadata, never position: rows gain spans.
-static func _span_with_edit_kind(row_data: EventRowData, edit_kind: String) -> SemanticSpan:
-	for span: SemanticSpan in row_data.spans:
+static func _span_with_edit_kind(row_data: EventRowData, edit_kind: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary \
 				and str((span.metadata as Dictionary).get("edit_kind", "")) == edit_kind:
 			return span

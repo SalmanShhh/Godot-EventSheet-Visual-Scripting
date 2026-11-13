@@ -50,7 +50,7 @@ static func _collect_cells(view: EventSheetViewport, row_data: EventRowData, cel
 	if row_data == null:
 		return
 	view._row_builder._ensure_event_spans(row_data)
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		cells.append("%s|%s" % [str(metadata.get("object_label", "")), span.text])
 	for child: EventRowData in row_data.children:

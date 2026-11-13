@@ -274,7 +274,7 @@ static func _trailing_identifier(text: String) -> String:
 ## The object one script drives, by the same rule the Include bar names it: the scene root that
 ## uses it, else the file name in the shape a reader writes it.
 static func object_label_of_script(script_path: String) -> String:
-	var scene: Dictionary = ViewportRowBuilder.scene_using_script(script_path)
+	var scene: Dictionary = EventSheetViewportRowBuilder.scene_using_script(script_path)
 	var root_name: String = str(scene.get("root_name", ""))
 	if not root_name.is_empty():
 		return root_name

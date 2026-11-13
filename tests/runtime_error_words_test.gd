@@ -9,8 +9,8 @@ class_name RuntimeErrorWordsTest
 extends RefCounted
 
 
-static func _span(text: String, metadata: Dictionary) -> SemanticSpan:
-	var span: SemanticSpan = SemanticSpan.new()
+static func _span(text: String, metadata: Dictionary) -> EventSheetSemanticSpan:
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.text = text
 	span.metadata = metadata
 	return span

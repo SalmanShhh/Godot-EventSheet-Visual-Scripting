@@ -95,7 +95,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 		var row: EventRowData = view._row_at(index)
 		if row == null or not (row.source_resource is EventRow) or row.event_number <= 0:
 			continue
-		var card: Dictionary = ViewportTooltipHelper.event_number_card(view._sheet,
+		var card: Dictionary = EventSheetViewportTooltipHelper.event_number_card(view._sheet,
 			(row.source_resource as EventRow).event_uid, row.event_number)
 		if not card.is_empty():
 			owner_card = card
@@ -115,7 +115,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 		_row_containing(_row_texts(plain), "Subtract delta from cooldown"),
 		"Subtract delta from cooldown") and ok
 	ok = _check("and its number has no card",
-		ViewportTooltipHelper.event_number_card(plain._sheet, "", 1), {}) and ok
+		EventSheetViewportTooltipHelper.event_number_card(plain._sheet, "", 1), {}) and ok
 	return ok
 
 
@@ -159,12 +159,12 @@ static func _test_the_hover_owes_its_evidence() -> bool:
 	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var owner: String = str((EventSheetPatternFacts.claims(sheet)[0] as Dictionary).get("row_uid", ""))
 	ok = _check("the hover says WHICH pattern and WHY, in the file's own lines",
-		ViewportTooltipHelper.pattern_evidence_line(sheet, owner),
+		EventSheetViewportTooltipHelper.pattern_evidence_line(sheet, owner),
 		"read as the Cooldown pattern because: cooldown -= delta") and ok
 	ok = _check("a row that owns no claim owes nothing",
-		ViewportTooltipHelper.pattern_evidence_line(sheet, "not-a-row"), "") and ok
+		EventSheetViewportTooltipHelper.pattern_evidence_line(sheet, "not-a-row"), "") and ok
 	ok = _check("the chip itself explains the pattern and offers the Manual",
-		ViewportTooltipHelper.pattern_chip_tooltip("countdown"),
+		EventSheetViewportTooltipHelper.pattern_chip_tooltip("countdown"),
 		"a number counted down every frame, with something that happens when it reaches zero\nOpen in the Manual") and ok
 	return ok
 
@@ -407,7 +407,7 @@ static func _row_texts(view: EventSheetViewport) -> PackedStringArray:
 static func _collect_row_texts(view: EventSheetViewport, row: EventRowData, texts: PackedStringArray) -> void:
 	view._row_builder._ensure_event_spans(row)
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		parts.append(str(span.text))
 	texts.append(" | ".join(parts))
 	for child: EventRowData in row.children:

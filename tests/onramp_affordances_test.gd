@@ -28,10 +28,10 @@ static func run() -> bool:
 	all_passed = _check("empty-sheet advice stays the add-first-event push", str(default_advice.get("heading", "")), "This event sheet is empty") and all_passed
 
 	# 2. CTA button specs: stable action ids in draw order.
-	var no_sheet_specs: Array[Dictionary] = ViewportEmptyStateHelper.cta_specs(null)
+	var no_sheet_specs: Array[Dictionary] = EventSheetViewportEmptyStateHelper.cta_specs(null)
 	all_passed = _check("no-sheet CTA count", no_sheet_specs.size(), 1) and all_passed
 	all_passed = _check("no-sheet CTA opens the starter menu", str(no_sheet_specs[0].get("action", "")), "template_menu") and all_passed
-	var empty_specs: Array[Dictionary] = ViewportEmptyStateHelper.cta_specs(EventSheetResource.new())
+	var empty_specs: Array[Dictionary] = EventSheetViewportEmptyStateHelper.cta_specs(EventSheetResource.new())
 	all_passed = _check("empty-sheet CTA count", empty_specs.size(), 2) and all_passed
 	all_passed = _check("empty-sheet primary CTA adds an event", str(empty_specs[0].get("action", "")), "add_event") and all_passed
 	all_passed = _check("empty-sheet secondary CTA opens templates", str(empty_specs[1].get("action", "")), "template_menu") and all_passed

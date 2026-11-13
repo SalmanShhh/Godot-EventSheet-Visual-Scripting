@@ -717,17 +717,17 @@ static func badge_reserve(count: int) -> float:
 
 ## The badges a row carries, read off the span the builder stamped them on.
 static func row_badges(row_data: EventRowData) -> PackedStringArray:
-	var span: SemanticSpan = badge_span(row_data)
+	var span: EventSheetSemanticSpan = badge_span(row_data)
 	if span == null:
 		return PackedStringArray()
 	return PackedStringArray((span.metadata as Dictionary).get("variable_badges", PackedStringArray()))
 
 
 ## The span a row's badges are stamped on (its name), or null.
-static func badge_span(row_data: EventRowData) -> SemanticSpan:
+static func badge_span(row_data: EventRowData) -> EventSheetSemanticSpan:
 	if row_data == null or not row_data.variable_row:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary \
 				and not PackedStringArray((span.metadata as Dictionary).get("variable_badges", PackedStringArray())).is_empty():
 			return span
@@ -752,7 +752,7 @@ static func tile_rect(start_x: float, centre_y: float, index: int) -> Rect2:
 
 ## The badge whose tile `point` is on, or "" - the one question the hover asks.
 static func badge_at(row_data: EventRowData, point: Vector2) -> String:
-	var span: SemanticSpan = badge_span(row_data)
+	var span: EventSheetSemanticSpan = badge_span(row_data)
 	if span == null or not ((span.metadata as Dictionary).get("badge_tiles_x") is float):
 		return ""
 	var badges: PackedStringArray = row_badges(row_data)

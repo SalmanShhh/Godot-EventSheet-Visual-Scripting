@@ -166,7 +166,7 @@ static func _pin_shipped(shipped: Dictionary) -> bool:
 		["and so does the Doctor",
 			EventSheetProjectDoctor.COROUTINE_ACE_IDS.has("ViewSaveStill"), true],
 		["and so does the canvas, which draws the hourglass",
-			ViewportRowBuilder.action_awaits(_still_row()), true],
+			EventSheetViewportRowBuilder.action_awaits(_still_row()), true],
 		["Mouse Position In View asks one view for its own pointer",
 			_template(shipped, "ViewMousePosition"), "{view}.get_mouse_position()"],
 		["Render 3D At writes the fraction and then how it is upscaled",

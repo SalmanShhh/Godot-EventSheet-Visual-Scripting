@@ -1,5 +1,5 @@
 @tool
-class_name SemanticSpan
+class_name EventSheetSemanticSpan
 extends RefCounted
 
 enum SpanType {

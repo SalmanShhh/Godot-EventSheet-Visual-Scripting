@@ -50,7 +50,7 @@ static func run() -> bool:
 	all_passed = _check("and so does the compiler",
 		EventSheetCompiler._COROUTINE_ACE_IDS.has("play_and_wait"), true) and all_passed
 	all_passed = _check("and the canvas draws the hourglass on it",
-		ViewportRowBuilder.action_awaits(_awaiting_action()), true) and all_passed
+		EventSheetViewportRowBuilder.action_awaits(_awaiting_action()), true) and all_passed
 
 	return all_passed
 

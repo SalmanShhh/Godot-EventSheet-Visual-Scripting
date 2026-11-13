@@ -37,8 +37,8 @@ static func run() -> bool:
 		["the fixture saves back byte for byte", SUPPORT.reemit(source, VERIFY_PATH), source],
 		["a typed literal over two lines with a trailing comment saves back byte for byte", SUPPORT.reemit(typed, VERIFY_PATH), typed],
 		["a single-line string with an escaped quote is unchanged", SUPPORT.reemit(single, VERIFY_PATH), single],
-		["the row's value text shows the break as the backslash-n escape", ViewportRowBuilder.string_break_as_escape(greeting_value), "\"hello\\nworld\""],
-		["a single-quoted literal reads the same way", ViewportRowBuilder.string_break_as_escape("'a\nb'"), "'a\\nb'"],
-		["a one-line string is left as it is", ViewportRowBuilder.string_break_as_escape("\"a\\nb\""), "\"a\\nb\""],
-		["a value that is not one quoted literal is left as it is", ViewportRowBuilder.string_break_as_escape("[\n1,\n2\n]"), "[\n1,\n2\n]"],
+		["the row's value text shows the break as the backslash-n escape", EventSheetViewportRowBuilder.string_break_as_escape(greeting_value), "\"hello\\nworld\""],
+		["a single-quoted literal reads the same way", EventSheetViewportRowBuilder.string_break_as_escape("'a\nb'"), "'a\\nb'"],
+		["a one-line string is left as it is", EventSheetViewportRowBuilder.string_break_as_escape("\"a\\nb\""), "\"a\\nb\""],
+		["a value that is not one quoted literal is left as it is", EventSheetViewportRowBuilder.string_break_as_escape("[\n1,\n2\n]"), "[\n1,\n2\n]"],
 	])

@@ -44,7 +44,7 @@ static func run() -> bool:
 	for row: EventRowData in rows:
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.text == "is one of":
 				state_row = row
 			if span.text == "speed":
@@ -52,7 +52,7 @@ static func run() -> bool:
 				drawn_names.append(span.text)
 		if row.row_type == EventRowData.RowType.EVENT and event_row == null and row.event_number > 0:
 			event_row = row
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span.text in ["previous_state", "state_entered_msec", "On State Changed"]:
 				drawn_names.append(span.text)
 
@@ -64,12 +64,12 @@ static func run() -> bool:
 	]
 	if state_row != null:
 		var words: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in state_row.spans:
+		for span: EventSheetSemanticSpan in state_row.spans:
 			if not span.text.strip_edges().is_empty() and not span.text.strip_edges() == "x":
 				words.append(span.text)
 		table.append(["the row reads type, name, is one of, the states as written, the default marked, then what it is for",
 			words.slice(words.find("State")), PackedStringArray(["State", "state", "is one of", "IDLE", "·", "RUN", "(default)", "·", "JUMP", "What the player is doing."])])
-		var run_span: SemanticSpan = _span(state_row, "RUN")
+		var run_span: EventSheetSemanticSpan = _span(state_row, "RUN")
 		table.append(["a state name has a dotted rule", bool((run_span.metadata as Dictionary).get("hover_card_mark", false)), true])
 		table.append(["...and a card with its name, that it is the default, and its sentence",
 			[(run_span.metadata["head_card"] as Dictionary).get("title"), (run_span.metadata["head_card"] as Dictionary).get("subtitle")],
@@ -77,12 +77,12 @@ static func run() -> bool:
 		var idle_card: Dictionary = _span(state_row, "IDLE").metadata["head_card"] as Dictionary
 		table.append(["a state's sentence is on its card", [idle_card.get("title"), idle_card.get("subtitle"), (idle_card.get("lines") as PackedStringArray)[0]],
 			["IDLE", null, "Standing still."]])
-		var type_span: SemanticSpan = _span(state_row, "State")
+		var type_span: EventSheetSemanticSpan = _span(state_row, "State")
 		table.append(["the type word carries the state glyph", (type_span.metadata as Dictionary).get("object_glyph"), "state"])
 		table.append(["...and a card saying it is an enum", ((type_span.metadata["head_card"] as Dictionary).get("lines") as PackedStringArray)[0].begins_with("An enum: one of a fixed set of named values, IDLE, RUN or JUMP."), true])
 		table.append(["a double-click on the row opens the States window, not the variable", bool((run_span.metadata as Dictionary).get("state_machine", false)), true])
 	if speed_row != null:
-		var float_span: SemanticSpan = _type_span(speed_row)
+		var float_span: EventSheetSemanticSpan = _type_span(speed_row)
 		table.append(["every variable's type has a dotted rule", float_span != null and bool((float_span.metadata as Dictionary).get("hover_card_mark", false)), true])
 		if float_span != null:
 			var card: Dictionary = float_span.metadata["head_card"] as Dictionary
@@ -90,9 +90,9 @@ static func run() -> bool:
 				["float", "Godot class reference: float"]])
 	if event_row != null:
 		viewport._row_builder._ensure_event_spans(event_row)
-		var condition: SemanticSpan = null
-		var action: SemanticSpan = null
-		for span: SemanticSpan in event_row.spans:
+		var condition: EventSheetSemanticSpan = null
+		var action: EventSheetSemanticSpan = null
+		for span: EventSheetSemanticSpan in event_row.spans:
 			if str(span.metadata.get("kind", "")) == "condition" and condition == null:
 				condition = span
 			if str(span.metadata.get("kind", "")) == "action" and action == null:
@@ -105,15 +105,15 @@ static func run() -> bool:
 	return SUPPORT.pins(P, table)
 
 
-static func _span(row: EventRowData, text: String) -> SemanticSpan:
-	for span: SemanticSpan in row.spans:
+static func _span(row: EventRowData, text: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.text == text:
 			return span
 	return null
 
 
-static func _type_span(row: EventRowData) -> SemanticSpan:
-	for span: SemanticSpan in row.spans:
+static func _type_span(row: EventRowData) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("variable_type_span", false)):
 			return span
 	return null

@@ -307,14 +307,14 @@ static func _function_chip_span() -> bool:
 	viewport.set_ace_registry(EventSheetACERegistry.new())
 	viewport.set_sheet(sheet)
 	viewport.set_reading_mode(true)
-	var chip: SemanticSpan = null
+	var chip: EventSheetSemanticSpan = null
 	var whole: String = ""
 	for row_data: EventRowData in _rows_of(viewport):
 		# The function's one untriggered step sits in the action lane of the function's own head.
 		if row_data.row_uid != "define_fn__wire_up":
 			continue
 		viewport._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if not str(span.metadata.get("kind", "")) in ["action", "function_ref"]:
 				continue
 			whole += span.text
@@ -330,7 +330,7 @@ static func _function_chip_span() -> bool:
 		whole.strip_edges(), "Set open_sheet to ƒ _open_sheet_in_workspace") and ok
 	# The seam the click lands on: the same lookup the Outline uses, answering with the function.
 	ok = _check("the name the chip carries finds the function it names",
-		ViewportRowBuilder.find_function_by_name(sheet, "_open_sheet_in_workspace"), handler) and ok
+		EventSheetViewportRowBuilder.find_function_by_name(sheet, "_open_sheet_in_workspace"), handler) and ok
 	viewport.free()
 	return ok
 
@@ -419,7 +419,7 @@ static func _walk(items: Array, tally: Dictionary) -> void:
 
 ## The sentence a statement reads as, segments joined - one VALUE to compare per check.
 static func _sentence_text(code: String, context: Dictionary) -> String:
-	var sentence: Dictionary = ViewportRowBuilder.statement_sentence(code, context)
+	var sentence: Dictionary = EventSheetViewportRowBuilder.statement_sentence(code, context)
 	if sentence.is_empty():
 		return ""
 	var text: String = ""

@@ -376,7 +376,7 @@ static func _condition_lane(view: EventSheetViewport, row_data: EventRowData) ->
 	view._row_builder._ensure_event_spans(row_data)
 	var lines: Dictionary = {}
 	var order: Array[int] = []
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if view._row_builder._resolve_span_lane(span) != "condition":
 			continue
 		var line_index: int = int(span.metadata.get("line_index", 0))
@@ -405,7 +405,7 @@ static func _condition_lane(view: EventSheetViewport, row_data: EventRowData) ->
 static func _action_lane(view: EventSheetViewport, row_data: EventRowData) -> String:
 	view._row_builder._ensure_event_spans(row_data)
 	var right: String = ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if view._row_builder._resolve_span_lane(span) != "condition":
 			right += span.text
 	return right.strip_edges()
@@ -440,7 +440,7 @@ static func _branchy_action_cells(view: EventSheetViewport) -> PackedStringArray
 static func _sweep_rows(view: EventSheetViewport, rows: Array, found: PackedStringArray) -> void:
 	for row_data: EventRowData in rows:
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if view._row_builder._resolve_span_lane(span) != "action":
 				continue
 			# A verbatim GDScript cell is the escape hatch: it is SHOWN as code, so it may hold
@@ -560,7 +560,7 @@ static func _scaffolding_report(view: EventSheetViewport, indices: Array[int]) -
 		var row_data: EventRowData = _row_at(view, index)
 		view._row_builder._ensure_event_spans(row_data)
 		var kinds: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var kind: String = str(span.metadata.get("kind", ""))
 			if kind in ["add_action", "add_condition"] and not kinds.has(kind):
 				kinds.append(kind)

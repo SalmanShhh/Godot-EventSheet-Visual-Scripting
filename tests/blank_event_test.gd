@@ -159,8 +159,8 @@ static func _action(template: String) -> ACEAction:
 
 
 ## True when any of a row's spans carries the given text - what a reader would see in its cells.
-static func _has_span_text(spans: Array[SemanticSpan], text: String) -> bool:
-	for span: SemanticSpan in spans:
+static func _has_span_text(spans: Array[EventSheetSemanticSpan], text: String) -> bool:
+	for span: EventSheetSemanticSpan in spans:
 		if span != null and span.text.contains(text):
 			return true
 	return false

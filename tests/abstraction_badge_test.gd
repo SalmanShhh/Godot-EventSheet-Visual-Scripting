@@ -18,11 +18,11 @@ static func run() -> bool:
 	# The classifier is pure: line count of the baked template, 0 when nothing is baked.
 	var multi: ACEAction = ACEAction.new()
 	multi.codegen_template = "var __t_{uid} := $Player\nif __t_{uid} != null:\n\t__t_{uid}.show()"
-	ok = _check("a three-line template counts 3", ViewportRowBuilder.compiled_line_count(multi), 3) and ok
+	ok = _check("a three-line template counts 3", EventSheetViewportRowBuilder.compiled_line_count(multi), 3) and ok
 	var single: ACEAction = ACEAction.new()
 	single.codegen_template = "queue_free()"
-	ok = _check("a one-line template counts 1", ViewportRowBuilder.compiled_line_count(single), 1) and ok
-	ok = _check("no baked template claims nothing", ViewportRowBuilder.compiled_line_count(ACEAction.new()), 0) and ok
+	ok = _check("a one-line template counts 1", EventSheetViewportRowBuilder.compiled_line_count(single), 1) and ok
+	ok = _check("no baked template claims nothing", EventSheetViewportRowBuilder.compiled_line_count(ACEAction.new()), 0) and ok
 
 	# Through a real view build: the action span carries the count for the renderer.
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -49,7 +49,7 @@ static func run() -> bool:
 		var row_data: EventRowData = viewport._row_at(row_index)
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if str(span.metadata.get("kind", "")) == "action" and span.metadata.has("compiled_lines"):
 				counts.append(int(span.metadata.get("compiled_lines")))
 	ok = _check("action spans carry the compression counts", counts, [3, 1]) and ok

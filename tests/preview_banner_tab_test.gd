@@ -59,7 +59,7 @@ static func _head_words(dock: EventSheetDock) -> String:
 		if row_data == null or not row_data.row_uid.begins_with("sheet_head_bar_"):
 			continue
 		var words: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if not span.text.strip_edges().is_empty():
 				words.append(span.text.strip_edges())
 		return " ".join(words)
@@ -72,7 +72,7 @@ static func _name_card(dock: EventSheetDock) -> Dictionary:
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 			if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
 				return card

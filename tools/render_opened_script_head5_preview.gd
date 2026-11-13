@@ -113,6 +113,6 @@ func _print_head_rows() -> void:
 		if row_data == null:
 			continue
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			texts.append(span.text)
 		print("  head: [%s]" % " | ".join(texts).substr(0, 160))

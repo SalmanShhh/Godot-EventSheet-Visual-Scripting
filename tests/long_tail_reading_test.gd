@@ -288,13 +288,13 @@ static func _grammar_values() -> bool:
 	# What a function's parameter chips say: the default a caller gets when it leaves the input
 	# out, the sheet's word for nothing, and the ellipsis that marks the input which swallows the rest.
 	ok = _check("a defaulted input says its default",
-		ViewportRowBuilder.verb_param_chip_text(_param("amount", "int", "10")), "amount = 10") and ok
+		EventSheetViewportRowBuilder.verb_param_chip_text(_param("amount", "int", "10")), "amount = 10") and ok
 	ok = _check("a null default reads as the sheet's word for nothing",
-		ViewportRowBuilder.verb_param_chip_text(_param("source", "Node", "null")), "source = empty") and ok
+		EventSheetViewportRowBuilder.verb_param_chip_text(_param("source", "Node", "null")), "source = empty") and ok
 	ok = _check("an input with no default says only its name",
-		ViewportRowBuilder.verb_param_chip_text(_param("v", "int", "")), "v") and ok
+		EventSheetViewportRowBuilder.verb_param_chip_text(_param("v", "int", "")), "v") and ok
 	ok = _check("a list named args wears the ellipsis",
-		ViewportRowBuilder.verb_param_chip_text(_param("args", "Array", "")), "args …") and ok
+		EventSheetViewportRowBuilder.verb_param_chip_text(_param("args", "Array", "")), "args …") and ok
 	return ok
 
 
@@ -343,7 +343,7 @@ static func _open_and_read() -> Dictionary:
 	viewport.set_reading_mode(true)
 	var readings: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var object_label: String = str(span.metadata.get("object_label", ""))
 			var text: String = span.text.strip_edges()
 			readings.append("%s ▸ %s" % [object_label, text] if not object_label.is_empty() else text)

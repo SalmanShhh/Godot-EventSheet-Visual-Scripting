@@ -208,7 +208,7 @@ static func run() -> bool:
 
 ## The text of the first span carrying `key` in its metadata, or a legible miss.
 static func _span_text(row_data: EventRowData, key: String) -> String:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).has(key):
 			return span.text
 	return "<no span %s>" % key

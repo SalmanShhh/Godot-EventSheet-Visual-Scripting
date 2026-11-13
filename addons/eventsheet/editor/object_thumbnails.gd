@@ -96,7 +96,7 @@ static func texture_path_for(entry: Dictionary, sheet_source_path: String) -> St
 		return str(EventSheetObjectFacts.scene_facts(str(entry.get("path", ""))).get("picture", ""))
 	if sheet_source_path.strip_edges().is_empty():
 		return ""
-	var scene_path: String = str(ViewportRowBuilder.scene_using_script(sheet_source_path).get("scene_path", ""))
+	var scene_path: String = str(EventSheetViewportRowBuilder.scene_using_script(sheet_source_path).get("scene_path", ""))
 	if scene_path.is_empty():
 		return ""
 	if kind == "script":

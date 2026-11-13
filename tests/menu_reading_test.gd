@@ -286,7 +286,7 @@ static func _open_and_read(path: String) -> PackedStringArray:
 	view.set_sheet(sheet)
 	var readings: PackedStringArray = PackedStringArray()
 	for row_data: EventRowData in _walk(view._root_rows, view):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var object_label: String = str(span.metadata.get("object_label", ""))
 			var text: String = span.text.strip_edges()
 			readings.append("%s ▸ %s" % [object_label, text] if not object_label.is_empty() else text)

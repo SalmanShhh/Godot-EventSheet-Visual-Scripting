@@ -89,7 +89,7 @@ static func _rows(sheet: EventSheetResource) -> bool:
 			table = row_data
 	var words: Array = []
 	if table != null:
-		for span: SemanticSpan in table.spans:
+		for span: EventSheetSemanticSpan in table.spans:
 			words.append(span.text)
 	var ok: bool = SUPPORT.pins(NAME, [
 		["a list reads as one variable row", words, ["Array[Vector2]", "spawn_points", "=", "3 entries"]],
@@ -111,7 +111,7 @@ static func _value_word(dock: EventSheetDock, variable_name: String) -> String:
 		if row_data == null or not (row_data.source_resource is LocalVariable) \
 				or (row_data.source_resource as LocalVariable).name != variable_name:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if bool((span.metadata as Dictionary).get("variable_value_span", false)):
 				return span.text
 	return ""

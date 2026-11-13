@@ -77,8 +77,8 @@ static func catalog(sheet: EventSheetResource) -> Array[Dictionary]:
 static func type_word_of(variable: LocalVariable) -> String:
 	if variable.inferred_type and (variable.type_name.strip_edges().is_empty() or variable.type_name == "Variant"):
 		var inferred: String = NativeVariableMarks.gdscript_type_word(variable.type_name, variable.default_value, true)
-		return ViewportRowBuilder.friendly_type_word("float" if inferred == "int" else inferred)
-	return ViewportRowBuilder.friendly_type_word(variable.type_name)
+		return EventSheetViewportRowBuilder.friendly_type_word("float" if inferred == "int" else inferred)
+	return EventSheetViewportRowBuilder.friendly_type_word(variable.type_name)
 
 
 ## One entry per variable the object carries, in the order the sheet declares them. Each:
@@ -120,7 +120,7 @@ static func member_rows(sheet: EventSheetResource) -> Array[Dictionary]:
 		rows.append({
 			"name": str(key),
 			"type_name": type_name,
-			"type_word": ViewportRowBuilder.friendly_type_word(type_name),
+			"type_word": EventSheetViewportRowBuilder.friendly_type_word(type_name),
 			"value": EventSheetVariableOwners.default_text(descriptor.get("default", null)),
 			"inspector": bool(descriptor.get("exported", descriptor.get("exposed", true))),
 			"description": str(descriptor_attributes.get("tooltip", "")),
@@ -226,7 +226,7 @@ static func global_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 		entries.append({
 			"name": name_text,
 			"type_name": type_name,
-			"type_word": ViewportRowBuilder.friendly_type_word(type_name),
+			"type_word": EventSheetViewportRowBuilder.friendly_type_word(type_name),
 			"value": value_text,
 			"scope": EventSheetVariableSentence.SCOPE_GLOBAL,
 			"owner": autoload_name,

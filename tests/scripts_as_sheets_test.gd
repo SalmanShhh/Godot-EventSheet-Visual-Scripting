@@ -30,11 +30,11 @@ static func run() -> bool:
 static func _a_behaviour_reads_in_file_order() -> bool:
 	var rows: Array = _rows_of(BEHAVIOUR)
 	var head: EventRowData = rows[0] if not rows.is_empty() else EventRowData.new()
-	var name_span: SemanticSpan = _span_saying(head, "SineBehavior")
+	var name_span: EventSheetSemanticSpan = _span_saying(head, "SineBehavior")
 	var card: Dictionary = (name_span.metadata.get("head_card", {}) as Dictionary) if name_span != null else {}
 	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(BEHAVIOUR)
 	return SUPPORT.pins(P, [
-		["a pack's behaviour is read in file order", ViewportRowBuilder.reads_in_file_order(sheet), true],
+		["a pack's behaviour is read in file order", EventSheetViewportRowBuilder.reads_in_file_order(sheet), true],
 		["it opens on its head bar: the name and that it is a behaviour", _words_of(head), "◆ SineBehavior Behaviour Runs in the editor"],
 		["one head bar, folding none of its lines away",
 			[_uids_starting(rows, "sheet_head_bar_"), head.children.size()], [1, 0]],
@@ -53,7 +53,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 			Array(card.get("doors", [])), [["Behaviour settings…", "file_settings"],
 				["Open in the script editor", "open_script_editor"], ["Show in FileSystem", "show_in_filesystem"]]],
 		["any other script still says Script",
-			ViewportRowBuilder.script_kind_word(EventSheetResource.new()), ""],
+			EventSheetViewportRowBuilder.script_kind_word(EventSheetResource.new()), ""],
 	])
 
 
@@ -66,11 +66,11 @@ static func _a_global_says_what_it_is() -> bool:
 		ProjectSettings.set_setting(GLOBAL_SETTING, null)
 	var head: EventRowData = rows[0] if not rows.is_empty() else EventRowData.new()
 	return SUPPORT.pins(P, [
-		["a global's kind word", ViewportRowBuilder.script_kind_word(sheet), "Global (autoload)"],
+		["a global's kind word", EventSheetViewportRowBuilder.script_kind_word(sheet), "Global (autoload)"],
 		["it opens on its head bar: the name and that it is a global", _words_of(head), "◆ EventBusPackAddon Global (autoload)"],
 		["its Autoload entry is said in the name's hover, not as a row", _uids_starting(rows, "sheet_head_autoload"), 0],
 		["the hover says how it loads",
-			ViewportRowBuilder.script_facts_card(sheet).get_slice("\n", 1).get_slice(" · ", 0),
+			EventSheetViewportRowBuilder.script_facts_card(sheet).get_slice("\n", 1).get_slice(" · ", 0),
 			"loaded before the first scene as EventBus"],
 	])
 
@@ -137,14 +137,14 @@ static func _rows_of(path: String) -> Array:
 
 static func _words_of(row_data: EventRowData) -> String:
 	var words: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if not span.text.strip_edges().is_empty():
 			words.append(span.text.strip_edges())
 	return " ".join(words)
 
 
-static func _span_saying(row_data: EventRowData, text: String) -> SemanticSpan:
-	for span: SemanticSpan in row_data.spans:
+static func _span_saying(row_data: EventRowData, text: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.text == text and span.metadata is Dictionary:
 			return span
 	return null

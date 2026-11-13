@@ -1,5 +1,5 @@
 @tool
-class_name BehaviourAnatomyPanel
+class_name EventSheetBehaviourAnatomyPanel
 extends VBoxContainer
 # The Behaviour Anatomy panel - a left-rail READ MODEL that shows the active sheet as an organism
 # with always-visible "organs": Properties (exported knobs) · State (internal vars) · Triggers ·
@@ -309,7 +309,7 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 			var label: String = event_function.ace_display_name.strip_edges()
 			if label.is_empty():
 				label = event_function.function_name.capitalize()
-			(organs[ViewportRowBuilder.define_role_for(event_function) + "s"] as Array).append(
+			(organs[EventSheetViewportRowBuilder.define_role_for(event_function) + "s"] as Array).append(
 				{"label": label, "resource": event_function})
 		# What this sheet adds to the editor itself. Derived by the one census every surface
 		# shares (the Include bar and the picker's pack card read the same list), so a pack that stops
@@ -370,7 +370,7 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 		return
 	if row is RawCodeRow:
 		# Opened packs keep UNLIFTABLE verbs as annotation shells - same classifier as the canvas.
-		var shell: Dictionary = ViewportRowBuilder.define_shell_info((row as RawCodeRow).code)
+		var shell: Dictionary = EventSheetViewportRowBuilder.define_shell_info((row as RawCodeRow).code)
 		if not shell.is_empty():
 			(organs[str(shell.get("kind")) + "s"] as Array).append(
 				{"label": str(shell.get("name")), "resource": row})

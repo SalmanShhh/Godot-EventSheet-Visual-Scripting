@@ -15,30 +15,30 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── The tracking helper (static + pure) ──
-	var simple: Dictionary = ViewportRowBuilder.substitute_display_tracking(
+	var simple: Dictionary = EventSheetViewportRowBuilder.substitute_display_tracking(
 		"Set layout scale to {value}", [["{value}", "lerp(LayoutScale, 1, 15 * dt)"]])
 	ok = _check("simple text substitutes", str(simple.get("text")), "Set layout scale to lerp(LayoutScale, 1, 15 * dt)") and ok
 	ok = _check("simple range lands on the value", simple.get("ranges"), [[20, 29]]) and ok
 
-	var repeated: Dictionary = ViewportRowBuilder.substitute_display_tracking(
+	var repeated: Dictionary = EventSheetViewportRowBuilder.substitute_display_tracking(
 		"{x} and {x} then {y}", [["{x}", "10"], ["{y}", "go"]])
 	ok = _check("repeated slot substitutes everywhere", str(repeated.get("text")), "10 and 10 then go") and ok
 	ok = _check("every occurrence gets its own range", repeated.get("ranges"), [[0, 2], [7, 2], [15, 2]]) and ok
 
 	# A later pass whose token sits BEFORE an existing range must shift that range.
-	var shifted: Dictionary = ViewportRowBuilder.substitute_display_tracking(
+	var shifted: Dictionary = EventSheetViewportRowBuilder.substitute_display_tracking(
 		"{b} after {a}", [["{a}", "12345"], ["{b}", "x"]])
 	ok = _check("later shorter substitution shifts the earlier range", str(shifted.get("text")), "x after 12345") and ok
 	ok = _check("shifted ranges stay exact", shifted.get("ranges"), [[0, 1], [8, 5]]) and ok
 
 	# The degenerate: a value that itself contains a later slot token - the later pass rewrites
 	# through the first range, which is DROPPED rather than mis-bolded.
-	var overlap: Dictionary = ViewportRowBuilder.substitute_display_tracking(
+	var overlap: Dictionary = EventSheetViewportRowBuilder.substitute_display_tracking(
 		"say {a}", [["{a}", "pre {b} post"], ["{b}", "X"]])
 	ok = _check("overlap text matches the replace chain", str(overlap.get("text")), "say pre X post") and ok
 	ok = _check("the rewritten-through range is dropped, the inner one kept", overlap.get("ranges"), [[8, 1]]) and ok
 
-	var empty_value: Dictionary = ViewportRowBuilder.substitute_display_tracking("go {a} now", [["{a}", ""]])
+	var empty_value: Dictionary = EventSheetViewportRowBuilder.substitute_display_tracking("go {a} now", [["{a}", ""]])
 	ok = _check("an empty value leaves no range", (empty_value.get("ranges") as Array).is_empty(), true) and ok
 	ok = _check("an empty value still substitutes", str(empty_value.get("text")), "go  now") and ok
 
@@ -61,14 +61,14 @@ static func run() -> bool:
 	sheet.events.append(event)
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
-	var play_span: SemanticSpan = _find_span(editor, "res://sfx/jump.ogg")
+	var play_span: EventSheetSemanticSpan = _find_span(editor, "res://sfx/jump.ogg")
 	ok = _check("a real action span carries param ranges", play_span != null and play_span.metadata.has("param_ranges"), true) and ok
 	if play_span != null and play_span.metadata.has("param_ranges"):
 		var first_range: Array = (play_span.metadata["param_ranges"] as Array)[0]
 		ok = _check("the range covers exactly the substituted value",
 			play_span.text.substr(int(first_range[0]), int(first_range[1])), "\"res://sfx/jump.ogg\"") and ok
 	# The Wait action wears the ⏳ prefix AFTER substitution - the attach must shift, not drop.
-	var wait_span: SemanticSpan = _find_span(editor, "⏳")
+	var wait_span: EventSheetSemanticSpan = _find_span(editor, "⏳")
 	ok = _check("a decorated (hourglass) span still carries shifted ranges",
 		wait_span != null and wait_span.metadata.has("param_ranges"), true) and ok
 	if wait_span != null and wait_span.metadata.has("param_ranges"):
@@ -80,13 +80,13 @@ static func run() -> bool:
 	var view: EventSheetViewport = editor._active_view()
 	view._pending_display_bbcode = true
 	view._pending_param_ranges = {"text": "[b]Destroy[/b] enemy", "ranges": [[0, 7]]}
-	var styled: SemanticSpan = view._make_span("[b]Destroy[/b] enemy", SemanticSpan.SpanType.VALUE, {"kind": "action"})
+	var styled: EventSheetSemanticSpan = view._make_span("[b]Destroy[/b] enemy", EventSheetSemanticSpan.SpanType.VALUE, {"kind": "action"})
 	ok = _check("author BBCode wins: no param ranges on a styled cell", styled.metadata.has("param_ranges"), false) and ok
 	ok = _check("author BBCode still styles", styled.metadata.has("bbcode_segments"), true) and ok
 
 	# ── Author-marked cells KEEP the typed value tints (ranges on the stripped text) ──
 	view._pending_display_bbcode = true
-	var tinted: SemanticSpan = view._make_span("[b]Heal[/b] 5 \"x\"", SemanticSpan.SpanType.VALUE, {"kind": "action"})
+	var tinted: EventSheetSemanticSpan = view._make_span("[b]Heal[/b] 5 \"x\"", EventSheetSemanticSpan.SpanType.VALUE, {"kind": "action"})
 	ok = _check("a marked cell strips for layout", tinted.text, "Heal 5 \"x\"") and ok
 	ok = _check("a marked cell still carries value ranges on the stripped text",
 		tinted.metadata.get("value_ranges"), [[5, 1, "number"], [7, 3, "string"]]) and ok
@@ -108,7 +108,7 @@ static func run() -> bool:
 	marked_definition.display_name = "Marked Demo"
 	marked_definition.metadata = {"display_template": "Marked [b]{value}[/b] demo"}
 	marked_definition.parameters = [{"id": "value"}]
-	var builder: ViewportRowBuilder = view._row_builder
+	var builder: EventSheetViewportRowBuilder = view._row_builder
 	var translated_out: String = builder._format_display_translated(marked_definition, null, {"value": "7"})
 	ok = _check("a locale that predates the markup gets its PLAIN sentence", translated_out, "XX 7 fin") and ok
 	ok = _check("the plain fallback never arms the styled branch", builder._pending_display_bbcode, false) and ok
@@ -129,13 +129,13 @@ static func run() -> bool:
 	return ok
 
 
-static func _find_span(editor: EventSheetEditor, needle: String) -> SemanticSpan:
+static func _find_span(editor: EventSheetEditor, needle: String) -> EventSheetSemanticSpan:
 	var view: EventSheetViewport = editor._active_view()
 	for flat: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = flat.get("row")
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if str(span.metadata.get("kind", "")) == "action" and span.text.contains(needle):
 				return span
 	return null

@@ -65,7 +65,7 @@ static func run() -> bool:
 ## the visible RIGHT one, which is the whole claim: two links, two corners, never one corner twice.
 static func _test_the_two_corners() -> bool:
 	var widths: Dictionary = {"add_event": ADD_EVENT_WIDTH, "add_menu": ADD_MENU_WIDTH}
-	var rects: Dictionary = ViewportCornerLinks.layout(widths, 0.0, 800.0, 0.0, LINK_SIZE)
+	var rects: Dictionary = EventSheetViewportCornerLinks.layout(widths, 0.0, 800.0, 0.0, LINK_SIZE)
 	var ok: bool = _check("the sheet carries exactly two corner links", rects.keys(),
 		["add_event", "add_menu"])
 	ok = _check("Add event sits in the top-left corner", rects["add_event"],
@@ -75,13 +75,13 @@ static func _test_the_two_corners() -> bool:
 	# Hit-tested like the getting-started buttons: a point inside a link's own rect names that link,
 	# and a point between them names neither, so a click on the sheet is still a click on the sheet.
 	ok = _check("a click on the left link names it",
-		ViewportCornerLinks.link_at_in(rects, Vector2(20.0, 12.0)), "add_event") and ok
+		EventSheetViewportCornerLinks.link_at_in(rects, Vector2(20.0, 12.0)), "add_event") and ok
 	ok = _check("a click on the right link names it",
-		ViewportCornerLinks.link_at_in(rects, Vector2(770.0, 12.0)), "add_menu") and ok
+		EventSheetViewportCornerLinks.link_at_in(rects, Vector2(770.0, 12.0)), "add_menu") and ok
 	ok = _check("a click between them names neither",
-		ViewportCornerLinks.link_at_in(rects, Vector2(400.0, 12.0)), "") and ok
+		EventSheetViewportCornerLinks.link_at_in(rects, Vector2(400.0, 12.0)), "") and ok
 	ok = _check("and a click below them names neither",
-		ViewportCornerLinks.link_at_in(rects, Vector2(20.0, 90.0)), "") and ok
+		EventSheetViewportCornerLinks.link_at_in(rects, Vector2(20.0, 90.0)), "") and ok
 	return ok
 
 
@@ -90,13 +90,13 @@ static func _test_the_two_corners() -> bool:
 ## scroll off the sheet the way a row does.
 static func _test_the_links_move_with_the_window() -> bool:
 	var widths: Dictionary = {"add_event": ADD_EVENT_WIDTH, "add_menu": ADD_MENU_WIDTH}
-	var narrow: Dictionary = ViewportCornerLinks.layout(widths, 0.0, 520.0, 0.0, LINK_SIZE)
+	var narrow: Dictionary = EventSheetViewportCornerLinks.layout(widths, 0.0, 520.0, 0.0, LINK_SIZE)
 	var ok: bool = _check("a resize leaves the left link exactly where it was",
 		narrow["add_event"], Rect2(12.0, 6.0, ADD_EVENT_WIDTH, 20.0))
 	ok = _check("and brings the right link in with the edge", narrow["add_menu"],
 		Rect2(520.0 - 12.0 - ADD_MENU_WIDTH, 6.0, ADD_MENU_WIDTH, 20.0)) and ok
 	# Scrolled 300 px down and 40 px across: both links ride the visible corners.
-	var scrolled: Dictionary = ViewportCornerLinks.layout(widths, 40.0, 40.0 + 520.0, 300.0, LINK_SIZE)
+	var scrolled: Dictionary = EventSheetViewportCornerLinks.layout(widths, 40.0, 40.0 + 520.0, 300.0, LINK_SIZE)
 	ok = _check("scrolled, the left link rides the window's left edge",
 		scrolled["add_event"], Rect2(52.0, 306.0, ADD_EVENT_WIDTH, 20.0)) and ok
 	ok = _check("and the right link rides its right edge", scrolled["add_menu"],
@@ -129,9 +129,9 @@ static func _test_what_each_link_opens() -> bool:
 	# than typed here - a rebind shows through without an edit.
 	var binding: String = EventSheetShortcuts.binding_for("add_event")
 	ok = _check("Add event says what it does and prints its key",
-		ViewportCornerLinks.tooltip_for("add_event").ends_with("(%s)" % binding), true) and ok
+		EventSheetViewportCornerLinks.tooltip_for("add_event").ends_with("(%s)" % binding), true) and ok
 	ok = _check("+ Add… names the menu it opens, with no key of its own",
-		ViewportCornerLinks.tooltip_for("add_menu"),
+		EventSheetViewportCornerLinks.tooltip_for("add_menu"),
 		"Everything you can add here - the same menu right-clicking empty space opens.") and ok
 	editor.free()
 	return ok
@@ -145,13 +145,13 @@ static func _test_what_each_link_opens() -> bool:
 ## the band is a click on no row.
 static func _test_the_links_own_their_band() -> bool:
 	var ok: bool = _check("the band is the words plus the air around them",
-		ViewportCornerLinks.band_height(LINK_SIZE), 6.0 * 2.0 + float(LINK_SIZE) + 8.0)
+		EventSheetViewportCornerLinks.band_height(LINK_SIZE), 6.0 * 2.0 + float(LINK_SIZE) + 8.0)
 	# The laid-out link sits INSIDE its own band rather than through the row beneath it.
 	var widths: Dictionary = {"add_event": ADD_EVENT_WIDTH, "add_menu": ADD_MENU_WIDTH}
-	var rects: Dictionary = ViewportCornerLinks.layout(widths, 0.0, 800.0, 0.0, LINK_SIZE)
+	var rects: Dictionary = EventSheetViewportCornerLinks.layout(widths, 0.0, 800.0, 0.0, LINK_SIZE)
 	var link: Rect2 = rects["add_event"]
 	ok = _check("and the words sit inside it",
-		link.position.y >= 0.0 and link.position.y + link.size.y <= ViewportCornerLinks.band_height(LINK_SIZE),
+		link.position.y >= 0.0 and link.position.y + link.size.y <= EventSheetViewportCornerLinks.band_height(LINK_SIZE),
 		true) and ok
 	var editor: EventSheetEditor = _editor_with_one_event()
 	var offset: float = editor._viewport.content_top_offset()
@@ -174,21 +174,21 @@ static func _test_the_links_own_their_band() -> bool:
 static func _test_a_sheet_being_read_offers_nothing() -> bool:
 	var editor: EventSheetEditor = _editor_with_one_event()
 	var ok: bool = _check("an editable sheet carries them",
-		ViewportCornerLinks.shown_on(editor._viewport), true)
+		EventSheetViewportCornerLinks.shown_on(editor._viewport), true)
 	editor._current_sheet.read_only = true
 	editor._viewport._row_metrics_helper.rebuild()
-	ok = _check("a read-only sheet does not", ViewportCornerLinks.shown_on(editor._viewport), false) and ok
+	ok = _check("a read-only sheet does not", EventSheetViewportCornerLinks.shown_on(editor._viewport), false) and ok
 	ok = _check("and owes them no band", editor._viewport.content_top_offset(), 0.0) and ok
 	ok = _check("so its first row starts at the top",
 		editor._viewport._row_metrics_helper.row_top(0), 0.0) and ok
 	editor._current_sheet.read_only = false
 	editor._viewport.reading_mode = true
 	ok = _check("reading mode does not either",
-		ViewportCornerLinks.shown_on(editor._viewport), false) and ok
+		EventSheetViewportCornerLinks.shown_on(editor._viewport), false) and ok
 	editor._viewport.reading_mode = false
 	editor._viewport.set_figure_mode(true)
 	ok = _check("and neither does an illustration",
-		ViewportCornerLinks.shown_on(editor._viewport), false) and ok
+		EventSheetViewportCornerLinks.shown_on(editor._viewport), false) and ok
 	editor.free()
 	return ok
 

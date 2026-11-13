@@ -263,20 +263,20 @@ static func _test_or_and_else() -> bool:
 	var laid_out: EventRowData = EventRowData.new()
 	laid_out.spans = [_placed_span(0, Rect2(40.0, 100.0, 120.0, 18.0)),
 		_placed_span(1, Rect2(40.0, 122.0, 120.0, 18.0))]
-	var geometry: Dictionary = EventRowRenderer.or_divider_geometry(laid_out, 1, Rect2(30.0, 96.0, 300.0, 44.0))
+	var geometry: Dictionary = EventSheetRowRenderer.or_divider_geometry(laid_out, 1, Rect2(30.0, 96.0, 300.0, 44.0))
 	passed = _check("the rule sits in the gap above the line",
-		float(geometry.get("y", 0.0)), 122.0 - EventRowRenderer.OR_DIVIDER_GAP) and passed
+		float(geometry.get("y", 0.0)), 122.0 - EventSheetRowRenderer.OR_DIVIDER_GAP) and passed
 	passed = _check("and spans the lane, inset at both ends",
 		[float(geometry.get("from_x", 0.0)), float(geometry.get("to_x", 0.0))],
-		[30.0 + EventRowRenderer.OR_DIVIDER_INSET, 330.0 - EventRowRenderer.OR_DIVIDER_INSET]) and passed
+		[30.0 + EventSheetRowRenderer.OR_DIVIDER_INSET, 330.0 - EventSheetRowRenderer.OR_DIVIDER_INSET]) and passed
 	passed = _check("a line with nothing on it is never ruled",
-		EventRowRenderer.or_divider_geometry(laid_out, 4, Rect2(30.0, 96.0, 300.0, 44.0)), {}) and passed
+		EventSheetRowRenderer.or_divider_geometry(laid_out, 4, Rect2(30.0, 96.0, 300.0, 44.0)), {}) and passed
 
 	# The Else row names the event its chain starts at.
 	passed = _check("an Else says what it follows",
-		ViewportRowBuilder.else_follows_text(_numbered_else_rows(9), 1, 0), "neither of 9") and passed
+		EventSheetViewportRowBuilder.else_follows_text(_numbered_else_rows(9), 1, 0), "neither of 9") and passed
 	passed = _check("an Else whose head is off the canvas says nothing",
-		ViewportRowBuilder.else_follows_text(_numbered_else_rows(0), 1, 0), "") and passed
+		EventSheetViewportRowBuilder.else_follows_text(_numbered_else_rows(0), 1, 0), "") and passed
 	return passed
 
 
@@ -318,7 +318,7 @@ static func _test_pick_sentence() -> bool:
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_sheet(sheet)
 	var row: EventRowData = _row_for(viewport, event)
-	var span: SemanticSpan = _span_with(row, "kind", "pick_filter")
+	var span: EventSheetSemanticSpan = _span_with(row, "kind", "pick_filter")
 	passed = _check("the authored pick row reads as a pick",
 		span.text if span != null else "<no pick span>", "Pick where hp < 10 · top 3") and passed
 	passed = _check("with the family in the object column",
@@ -440,8 +440,8 @@ static func _numbered_else_rows(head_number: int) -> Array:
 	return [{"row": head}, {"row": tail}]
 
 
-static func _placed_span(line_index: int, rect: Rect2) -> SemanticSpan:
-	var span: SemanticSpan = SemanticSpan.new()
+static func _placed_span(line_index: int, rect: Rect2) -> EventSheetSemanticSpan:
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.text = "hp ≤ 0"
 	span.rect = rect
 	span.metadata = {"lane": "condition", "line_index": line_index}
@@ -459,10 +459,10 @@ static func _row_for(viewport: EventSheetViewport, resource: Resource) -> EventR
 	return null
 
 
-static func _span_with(row_data: EventRowData, key: String, value: Variant) -> SemanticSpan:
+static func _span_with(row_data: EventRowData, key: String, value: Variant) -> EventSheetSemanticSpan:
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).get(key) == value:
 			return span
 	return null
@@ -511,7 +511,7 @@ static func _test_picker_filing() -> bool:
 ## The one condition cell's text on the sheet's first event.
 static func _condition_text(viewport: EventSheetViewport, sheet: EventSheetResource) -> String:
 	var row_data: EventRowData = _row_for(viewport, sheet.events[0])
-	var span: SemanticSpan = _span_with(row_data, "kind", "condition")
+	var span: EventSheetSemanticSpan = _span_with(row_data, "kind", "condition")
 	return span.text if span != null else "<no condition span>"
 
 
@@ -524,7 +524,7 @@ static func _all_span_text(row_data: EventRowData) -> String:
 	if row_data == null:
 		return "<no row>"
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null:
 			parts.append(str(span.text))
 	return " ".join(parts)

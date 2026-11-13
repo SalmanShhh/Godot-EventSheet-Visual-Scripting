@@ -126,7 +126,7 @@ static func run() -> bool:
 	var signal_texts: PackedStringArray = PackedStringArray()
 	var signal_labels: PackedStringArray = PackedStringArray()
 	if signal_row_data != null:
-		for span: SemanticSpan in signal_row_data.spans:
+		for span: EventSheetSemanticSpan in signal_row_data.spans:
 			signal_texts.append(span.text)
 			var span_meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			signal_labels.append(str(span_meta.get("object_label", "")))
@@ -140,7 +140,7 @@ static func run() -> bool:
 		Array(signal_texts).has("int") and Array(signal_labels).has("damage"), true) and all_passed
 	all_passed = _check("a plain signal publishes nothing", Array(signal_texts).has("internal"), true) and all_passed
 	all_passed = _check("the hover carries the real declaration",
-		ViewportTooltipHelper.signal_declaration_tooltip(hit), "signal hit(damage: int)") and all_passed
+		EventSheetViewportTooltipHelper.signal_declaration_tooltip(hit), "signal hit(damage: int)") and all_passed
 	viewport._row_builder._ensure_event_spans(match_event_row)
 	var match_span_found: bool = false
 	for span in match_event_row.spans:

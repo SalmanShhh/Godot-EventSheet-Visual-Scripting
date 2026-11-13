@@ -188,7 +188,7 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 ## True when the row carries a BADGE span whose text is `text` - the pill shape a variable row no
 ## longer wears for its Inspector section.
 static func _has_badge_text(row_data: EventRowData, text: String) -> bool:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if str(span.text) == text and bool(meta.get("badge", false)):
 			return true

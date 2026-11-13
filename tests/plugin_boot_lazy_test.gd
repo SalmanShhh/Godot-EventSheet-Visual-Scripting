@@ -158,7 +158,7 @@ const BOOT_HOOK: String = "func _setup_session("
 ## start, exactly the way the compiler crept back in through a drawer helper once already. They are
 ## listed separately from FORBIDDEN only so one list covers every boot file at once.
 const READING_SUBTREE := [
-	"EventSheetViewportReadingRows", "ViewportRowBuilder", "EventSheetSentence",
+	"EventSheetViewportReadingRows", "EventSheetViewportRowBuilder", "EventSheetSentence",
 	"EventSheetObjectFacts", "EventSheetSignalFanout", "EventSheetInputMapFacts",
 	"EventSheetEditorToolCensus", "EventSheetSettingFacts", "EventSheetLocalScope",
 	"EventSheetVariableSentence", "EventSheetReadingCoverage", "EventSheetObjectThumbnails",

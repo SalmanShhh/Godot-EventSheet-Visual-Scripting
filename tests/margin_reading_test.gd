@@ -63,7 +63,7 @@ static func _rows_of(view: EventSheetViewport) -> Array[String]:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
 		var words: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			var label: String = str(metadata.get("object_label", ""))
 			words.append("%s%s" % [("[%s]" % label) if not label.is_empty() else "", span.text])
@@ -89,7 +89,7 @@ static func _test_branch_doors_and_returns() -> bool:
 			break
 	var kinds: PackedStringArray = PackedStringArray()
 	if branch_row != null:
-		for span: SemanticSpan in branch_row.spans:
+		for span: EventSheetSemanticSpan in branch_row.spans:
 			kinds.append(str((span.metadata as Dictionary).get("kind", "")))
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["a branch row was found", branch_row != null, true],
@@ -114,7 +114,7 @@ static func _count_branch_doors(view: EventSheetViewport, door_kind: String) -> 
 		var row_data: EventRowData = view._row_at(index)
 		if row_data == null or not row_data.row_uid.contains("_branch_"):
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if str((span.metadata as Dictionary).get("kind", "")) == door_kind:
 				found += 1
 	return found
@@ -148,14 +148,14 @@ static func _test_empty_condition_cell() -> bool:
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.text == "Always" or span.text == "Every Tick":
 				placeholders += 1
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["no cell says Always or Every Tick", placeholders, 0],
 		["the add-condition door waits for the pointer on an empty cell",
-			EventRowRenderer.add_condition_door_revealed(false, false, false, view._get_event_style()), false],
-		["and appears under it", EventRowRenderer.add_condition_door_revealed(true, false, false, view._get_event_style()), true],
+			EventSheetRowRenderer.add_condition_door_revealed(false, false, false, view._get_event_style()), false],
+		["and appears under it", EventSheetRowRenderer.add_condition_door_revealed(true, false, false, view._get_event_style()), true],
 	])
 	view.free()
 	return ok

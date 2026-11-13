@@ -49,7 +49,7 @@ static func _collect_row_texts(view: EventSheetViewport, row_data: EventRowData,
 		return
 	view._row_builder._ensure_event_spans(row_data)
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	texts.append(" | ".join(parts))
 	for child: EventRowData in row_data.children:
@@ -94,7 +94,7 @@ static func _reading_rows() -> bool:
 
 	# The inverted condition shows the mark, and the sentence lost the word.
 	passed = _check("an inverted condition draws the mark",
-		_any_row_contains(texts, ViewportRowBuilder.NEGATED_MARK), true) and passed
+		_any_row_contains(texts, EventSheetViewportRowBuilder.NEGATED_MARK), true) and passed
 	passed = _check("an inverted condition's sentence drops the word not",
 		_any_row_contains(texts, "not is_on_floor"), false) and passed
 

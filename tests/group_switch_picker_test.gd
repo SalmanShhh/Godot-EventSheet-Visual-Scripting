@@ -293,7 +293,7 @@ static func _action_text(viewport: EventSheetViewport, event: EventRow) -> Strin
 		var row: EventRowData = entry.get("row") as EventRowData
 		if row == null or row.source_resource != event:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if span != null and span.text.begins_with("Set group"):
 				return span.text
 	return "<missing>"

@@ -54,20 +54,20 @@ static func run() -> bool:
 		EventSheetVariableSentence.is_resource_host("CharacterBody2D"), false) and ok
 
 	# ── The type words ──
-	ok = _check("a declared float is a number", ViewportRowBuilder.friendly_type_word("float"), "number") and ok
-	ok = _check("a declared int is a whole number", ViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
-	ok = _check("a String is text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
-	ok = _check("a bool is a boolean", ViewportRowBuilder.friendly_type_word("bool"), "boolean") and ok
-	ok = _check("a Vector2 is a vector", ViewportRowBuilder.friendly_type_word("Vector2"), "vector") and ok
-	ok = _check("a Color is a color", ViewportRowBuilder.friendly_type_word("Color"), "color") and ok
+	ok = _check("a declared float is a number", EventSheetViewportRowBuilder.friendly_type_word("float"), "number") and ok
+	ok = _check("a declared int is a whole number", EventSheetViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
+	ok = _check("a String is text", EventSheetViewportRowBuilder.friendly_type_word("String"), "text") and ok
+	ok = _check("a bool is a boolean", EventSheetViewportRowBuilder.friendly_type_word("bool"), "boolean") and ok
+	ok = _check("a Vector2 is a vector", EventSheetViewportRowBuilder.friendly_type_word("Vector2"), "vector") and ok
+	ok = _check("a Color is a color", EventSheetViewportRowBuilder.friendly_type_word("Color"), "color") and ok
 	ok = _check("a typed Array says what it holds",
-		ViewportRowBuilder.friendly_type_word("Array[String]"), "list of text") and ok
-	ok = _check("a Dictionary is a table", ViewportRowBuilder.friendly_type_word("Dictionary"), "table") and ok
-	ok = _check("a Node class is an object", ViewportRowBuilder.friendly_type_word("Node2D"), "object") and ok
-	ok = _check("a PackedScene is a scene", ViewportRowBuilder.friendly_type_word("PackedScene"), "scene") and ok
-	ok = _check("an undeclared type is any", ViewportRowBuilder.friendly_type_word("Variant"), "any") and ok
+		EventSheetViewportRowBuilder.friendly_type_word("Array[String]"), "list of text") and ok
+	ok = _check("a Dictionary is a table", EventSheetViewportRowBuilder.friendly_type_word("Dictionary"), "table") and ok
+	ok = _check("a Node class is an object", EventSheetViewportRowBuilder.friendly_type_word("Node2D"), "object") and ok
+	ok = _check("a PackedScene is a scene", EventSheetViewportRowBuilder.friendly_type_word("PackedScene"), "scene") and ok
+	ok = _check("an undeclared type is any", EventSheetViewportRowBuilder.friendly_type_word("Variant"), "any") and ok
 	ok = _check("a class the author wrote keeps its own name",
-		ViewportRowBuilder.friendly_type_word("StatSheet"), "StatSheet") and ok
+		EventSheetViewportRowBuilder.friendly_type_word("StatSheet"), "StatSheet") and ok
 
 	# ── Colours: always a swatch, and the word or the hex beside it ──
 	ok = _check("a colour anybody names reads as its word",

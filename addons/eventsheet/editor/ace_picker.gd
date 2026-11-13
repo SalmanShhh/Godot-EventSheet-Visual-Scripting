@@ -1170,8 +1170,8 @@ func _say_landing(mode: String, resource: Resource) -> void:
 static func landing_lead(row_data: EventRowData) -> Dictionary:
 	if row_data == null:
 		return {}
-	for span: SemanticSpan in row_data.spans:
-		if not (span.metadata is Dictionary) or span.type != SemanticSpan.SpanType.CONDITION:
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if not (span.metadata is Dictionary) or span.type != EventSheetSemanticSpan.SpanType.CONDITION:
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
 		if span.text.strip_edges().is_empty() or bool(metadata.get("badge", false)) \
@@ -1208,13 +1208,13 @@ static func landing_reading(row_data: EventRowData) -> String:
 		return ""
 	var conditions: PackedStringArray = PackedStringArray()
 	var last_object: String = ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
 		var text: String = span.text.strip_edges()
 		# The condition cells themselves: never a badge, a keyword or the "+ Add condition" target.
-		if text.is_empty() or span.type != SemanticSpan.SpanType.CONDITION or bool(metadata.get("badge", false)) \
+		if text.is_empty() or span.type != EventSheetSemanticSpan.SpanType.CONDITION or bool(metadata.get("badge", false)) \
 				or str(metadata.get("lane", "")) != "condition" or str(metadata.get("kind", "")).begins_with("add_"):
 			continue
 		var object_word: String = str(metadata.get("object_label", "")).strip_edges()

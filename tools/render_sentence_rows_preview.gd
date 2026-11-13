@@ -84,7 +84,7 @@ func _print_rows() -> void:
 		if row_data == null or row_data.spans.is_empty():
 			continue
 		var cells: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var label: String = str(span.metadata.get("object_label", ""))
 			cells.append(("%s ▸ %s" % [label, span.text]) if not label.is_empty() else span.text)
 		print("  %s" % " | ".join(cells))

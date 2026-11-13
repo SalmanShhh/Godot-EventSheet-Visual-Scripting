@@ -79,7 +79,7 @@ static func run() -> bool:
 
 	# ── Adjacency + bubble geometry ──
 	var flat: Array = view.get_flat_rows()
-	var runs: Array = ViewportRowBuilder.variable_group_runs(flat)
+	var runs: Array = EventSheetViewportRowBuilder.variable_group_runs(flat)
 	ok = _check("one bubble run wraps the folder", runs.size(), 1) and ok
 	if runs.size() == 1:
 		var run: Dictionary = runs[0]
@@ -227,7 +227,7 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(str(span.text))
 	return " | ".join(parts)
 

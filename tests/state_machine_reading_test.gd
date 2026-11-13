@@ -19,7 +19,7 @@ static func run() -> bool:
 	var ok: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
-	var builder: ViewportRowBuilder = viewport._row_builder
+	var builder: EventSheetViewportRowBuilder = viewport._row_builder
 
 	# 1. The state header view: plain "State: <name>" text, the ◆ diamond as a BADGE span in the
 	# trigger-icon column (never inline in the sentence).
@@ -37,7 +37,7 @@ static func run() -> bool:
 	header_row.conditions.append(in_state)
 	var header_texts: PackedStringArray = PackedStringArray()
 	var diamond_is_badge: bool = false
-	for span: SemanticSpan in builder._build_event_spans(header_row):
+	for span: EventSheetSemanticSpan in builder._build_event_spans(header_row):
 		header_texts.append(span.text)
 		if span.text == "◆" and bool((span.metadata as Dictionary).get("badge", false)):
 			diamond_is_badge = true
@@ -77,7 +77,7 @@ static func run() -> bool:
 	var row_data: EventRowData = builder._build_signal_row(signal_row, 0)
 	ok = _check("signal row leads with the glyph badge", row_data.spans[0].text, "➜") and ok
 	var has_word_pill: bool = false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.text == "Trigger" or span.text == "Signal":
 			has_word_pill = true
 	ok = _check("no Trigger/Signal word pill remains", has_word_pill, false) and ok
@@ -148,12 +148,12 @@ static func run() -> bool:
 	# "inverted" depending on where the condition came from.
 	var negated_transition: EventRowData = negated_rows[0].children[0]
 	var negated_texts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in negated_transition.spans:
+	for span: EventSheetSemanticSpan in negated_transition.spans:
 		negated_texts.append(span.text)
 	ok = _check("a negated guard draws the invert mark",
-		negated_texts.has(ViewportRowBuilder.NEGATED_MARK), true) and ok
+		negated_texts.has(EventSheetViewportRowBuilder.NEGATED_MARK), true) and ok
 	ok = _check("the invert mark is a badge span, not text",
-		bool((negated_transition.spans[negated_texts.find(ViewportRowBuilder.NEGATED_MARK)].metadata as Dictionary).get("badge", false)), true) and ok
+		bool((negated_transition.spans[negated_texts.find(EventSheetViewportRowBuilder.NEGATED_MARK)].metadata as Dictionary).get("badge", false)), true) and ok
 	ok = _check("a negated guard's sentence is the positive one",
 		negated_texts.has("can see player"), true) and ok
 	ok = _check("a negated guard never says the word Not",

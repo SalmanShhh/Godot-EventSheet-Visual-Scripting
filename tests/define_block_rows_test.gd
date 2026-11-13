@@ -74,10 +74,10 @@ static func run() -> bool:
 		["no PARAM word", _row_has_span_text(action_row, "PARAM"), false],
 		["the parameter line carries its index, so a click knows which one to open", _span_meta_of_kind(action_row, "verb_param", "param_index"), 0],
 		["the parameter explains itself on hover",
-			ViewportRowBuilder.function_param_note(action_row.source_resource.params[0]) if action_row != null else "",
+			EventSheetViewportRowBuilder.function_param_note(action_row.source_resource.params[0]) if action_row != null else "",
 			"amount (float). Inside this function, use it like any variable. Every call has to give it a value."],
-		["a parameter with a default says it", ViewportRowBuilder.function_param_line(_defaulted_param()), "int amount = 1"],
-		["a parameter with a default says it after its type", ViewportRowBuilder.function_param_type_words(_defaulted_param()), "int = 1"],
+		["a parameter with a default says it", EventSheetViewportRowBuilder.function_param_line(_defaulted_param()), "int amount = 1"],
+		["a parameter with a default says it after its type", EventSheetViewportRowBuilder.function_param_type_words(_defaulted_param()), "int = 1"],
 		["the whole head sits in the CONDITION lane", _lane_of_span_text(action_row, "float"), "condition"],
 		["no raw func signature leaks into the row", _row_has_span_text(action_row, "func take_damage"), false],
 		["no category chip on the row (the Properties bar holds it)", _row_has_span_text(action_row, "Health"), false],
@@ -85,18 +85,18 @@ static func run() -> bool:
 		["a verb row is never a drag handle", EventSheetViewport.is_event_drag_zone(action_row, -1), false],
 	]) and ok
 	# Role classification and the plain type words other surfaces still read with.
-	ok = _check("void → action", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_NIL, true, "", "")), "action") and ok
-	ok = _check("bool → condition", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_BOOL, true, "", "")), "condition") and ok
-	ok = _check("float → expression", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_FLOAT, true, "", "")), "expression") and ok
+	ok = _check("void → action", EventSheetViewportRowBuilder.define_role_for(_make_function("f", TYPE_NIL, true, "", "")), "action") and ok
+	ok = _check("bool → condition", EventSheetViewportRowBuilder.define_role_for(_make_function("f", TYPE_BOOL, true, "", "")), "condition") and ok
+	ok = _check("float → expression", EventSheetViewportRowBuilder.define_role_for(_make_function("f", TYPE_FLOAT, true, "", "")), "expression") and ok
 	ok = _check("params humanize the id (underscores open out)",
-		ViewportRowBuilder.friendly_param_labels(_two_param_function()), "from x, to x") and ok
-	ok = _check("String reads as text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
-	ok = _check("a declared int is a whole number", ViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
+		EventSheetViewportRowBuilder.friendly_param_labels(_two_param_function()), "from x, to x") and ok
+	ok = _check("String reads as text", EventSheetViewportRowBuilder.friendly_type_word("String"), "text") and ok
+	ok = _check("a declared int is a whole number", EventSheetViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
 	var templated: EventFunction = _make_function("draw_line", TYPE_NIL, true, "Draw Line", "")
 	templated.params[0].id = "from_x"
 	templated.display_template = "Line to {from_x}"
 	ok = _check("an authored template fills its slots with param labels",
-		ViewportRowBuilder.friendly_template_line(templated), "Line to from x") and ok
+		EventSheetViewportRowBuilder.friendly_template_line(templated), "Line to from x") and ok
 
 	# ── The description lives INSIDE the head, under the name, and is edited there ──
 	var described_sheet: EventSheetResource = EventSheetResource.new()
@@ -520,7 +520,7 @@ static func _description_editor() -> bool:
 static func _has_action_span(row_data: EventRowData) -> bool:
 	if row_data == null:
 		return false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane", "")) == "action" \
 				and str((span.metadata as Dictionary).get("kind", "")) != "add_action":
 			return true
@@ -647,7 +647,7 @@ static func _any_span_contains(rows: Array, needle: String) -> bool:
 		var row_data: EventRowData = entry
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if str(span.text).contains(needle):
 				return true
 	return false
@@ -734,7 +734,7 @@ static func _lane_of_span_text(row_data: EventRowData, needle: String) -> String
 static func _span_meta_of_kind(row_data: EventRowData, kind: String, key: String) -> Variant:
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if str(metadata.get("kind", "")) == kind:
 			return metadata.get(key, null)
@@ -776,7 +776,7 @@ static func _head_reads_as(viewport: EventSheetViewport, row_data: EventRowData)
 static func _row_has_span_text(row_data: EventRowData, needle: String) -> bool:
 	if row_data == null:
 		return false
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if str(span.text) == needle:
 			return true
 	return false
@@ -786,7 +786,7 @@ static func _row_has_span_text(row_data: EventRowData, needle: String) -> bool:
 static func _span_edit_kind(row_data: EventRowData, needle: String) -> String:
 	if row_data == null:
 		return ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if str(span.text) == needle and span.metadata is Dictionary:
 			return str((span.metadata as Dictionary).get("edit_kind", ""))
 	return ""

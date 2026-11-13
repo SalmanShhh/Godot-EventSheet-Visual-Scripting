@@ -353,14 +353,14 @@ var _scroll: ScrollContainer = null
 # reparents _scroll relative to its parent) stays inside it and never disturbs the panel.
 var _workspace_body: HSplitContainer = null
 var _content_host: VBoxContainer = null
-var _anatomy_panel: BehaviourAnatomyPanel = null  # the side panel's Anatomy tab, for a behaviour pack (behaviour_anatomy_panel.gd)
+var _anatomy_panel: EventSheetBehaviourAnatomyPanel = null  # the side panel's Anatomy tab, for a behaviour pack (behaviour_anatomy_panel.gd)
 var _picker_preview_panel: EventSheetPickerPreviewPanel = null  # the side panel's tab while the picker is open (picker_preview_panel.gd)
 var _functions_panel: EventSheetFunctionsPanel = null  # the side panel's Functions tab (functions_panel.gd)
 # The side panel itself: a thin rail that opens to tabs, open or closed and its tab remembered per
 # project (dock/rail_panels.gd).
 var _rail_panels: EventSheetRailPanels = EventSheetRailPanels.new()
 var _minimap: EventSheetMinimap = null  # the thin picture-of-the-sheet column at the canvas's right edge (dock/minimap.gd)
-var _identity_banner: SheetIdentityBanner = null
+var _identity_banner: EventSheetIdentityBanner = null
 var _preview_banner: PanelContainer = null
 var _preview_label: Label = null
 ## The "Opening <file>" strip shown while a .gd's ACE lift runs on a worker thread (dock/open_progress.gd).
@@ -1138,7 +1138,7 @@ func _on_translations_maybe_changed() -> void:
 	# The project-wide scene index (which .tscn a script is the ROOT of) is what names an object on a
 	# row, a sheet title and a thumbnail, and it was built ONCE per session: a scene saved, added or
 	# re-pointed mid-session went on reading as the object it used to be until a restart.
-	ViewportRowBuilder.clear_scene_script_index()
+	EventSheetViewportRowBuilder.clear_scene_script_index()
 	# A shared sheet's head names who includes it, and an included sheet's variables come off its
 	# file: both are file reads, dropped here so a saved includer shows on the next rebuild.
 	load("res://addons/eventsheet/editor/interaction/native_head_marks.gd").forget_includers()
@@ -3381,7 +3381,7 @@ func _open_data_class_add_field_for(row_data: EventRowData, metadata: Dictionary
 ## as one undo step. The transform refuses non-lifting classes and duplicate names.
 func _open_data_class_add_field() -> void:
 	var raw_row: RawCodeRow = _data_class_context_raw_row()
-	if raw_row == null or not ViewportRowBuilder.data_class_lifts(raw_row.code):
+	if raw_row == null or not EventSheetViewportRowBuilder.data_class_lifts(raw_row.code):
 		_set_status("Right-click a data-class block to add a field.", true)
 		return
 	if _data_class_field_dialog != null and is_instance_valid(_data_class_field_dialog):
@@ -3406,12 +3406,12 @@ func _open_data_class_add_field() -> void:
 	content.add_child(EventSheetPopupUI.form_row("Default", default_edit))
 	_data_class_field_dialog.add_child(EventSheetPopupUI.titled_card("New field on this data class", content))
 	_data_class_field_dialog.confirmed.connect(func() -> void:
-		var new_code: String = ViewportRowBuilder.data_class_add_field(raw_row.code, name_edit.text.strip_edges(), type_edit.text, default_edit.text.strip_edges())
+		var new_code: String = EventSheetViewportRowBuilder.data_class_add_field(raw_row.code, name_edit.text.strip_edges(), type_edit.text, default_edit.text.strip_edges())
 		if new_code.is_empty():
 			_set_status("Couldn't add the field - use a plain identifier name that isn't taken, and give a type.", true)
 			return
 		var changed: bool = _perform_undoable_sheet_edit("Add Field", func() -> bool:
-			var live_code: String = ViewportRowBuilder.data_class_add_field(raw_row.code, name_edit.text.strip_edges(), type_edit.text, default_edit.text.strip_edges())
+			var live_code: String = EventSheetViewportRowBuilder.data_class_add_field(raw_row.code, name_edit.text.strip_edges(), type_edit.text, default_edit.text.strip_edges())
 			if live_code.is_empty():
 				return false
 			raw_row.code = live_code
@@ -3432,7 +3432,7 @@ func _remove_data_class_field_from_context() -> void:
 		_set_status("Right-click a field row to remove it.", true)
 		return
 	var changed: bool = _perform_undoable_sheet_edit("Remove Field", func() -> bool:
-		var live_code: String = ViewportRowBuilder.data_class_remove_field(raw_row.code, field_index)
+		var live_code: String = EventSheetViewportRowBuilder.data_class_remove_field(raw_row.code, field_index)
 		if live_code.is_empty():
 			return false
 		raw_row.code = live_code
@@ -3851,7 +3851,7 @@ static func row_reading(row_data: EventRowData) -> String:
 		return ""
 	var conditions: PackedStringArray = PackedStringArray()
 	var actions: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var text: String = span.text.strip_edges()
 		if text.is_empty() or not (span.metadata is Dictionary):
 			continue
@@ -4975,7 +4975,7 @@ func _selected_row_doc_id() -> String:
 ## The page of the condition, action or trigger whose words the reader clicked in `row_data`, or ""
 ## when the clicked cell is not a verb's words (an object label, nothing clicked, another row).
 func _clicked_verb_doc_id(row_data: EventRowData) -> String:
-	var clicked: SemanticSpan = _viewport.get_selected_span() if _viewport != null else null
+	var clicked: EventSheetSemanticSpan = _viewport.get_selected_span() if _viewport != null else null
 	if clicked == null or not row_data.spans.has(clicked) or not (clicked.metadata is Dictionary):
 		return ""
 	var metadata: Dictionary = clicked.metadata as Dictionary
@@ -4993,11 +4993,11 @@ func _selection_span_metadata(row_data: EventRowData) -> Dictionary:
 	if row_data == null:
 		return {}
 	# The cell the reader clicked answers first: F1 on the third condition is help for that condition.
-	var clicked: SemanticSpan = _viewport.get_selected_span() if _viewport != null else null
+	var clicked: EventSheetSemanticSpan = _viewport.get_selected_span() if _viewport != null else null
 	if clicked != null and row_data.spans.has(clicked) and clicked.metadata is Dictionary \
 			and not (clicked.metadata as Dictionary).is_empty():
 		return clicked.metadata as Dictionary
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		# A span's metadata is a Variant and is routinely null, so it is asked what it IS before it
 		# is asked anything else.
 		if span == null or not (span.metadata is Dictionary):
@@ -6353,7 +6353,7 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 	var right: String = ""
 	var fix_kind: String = ""
 	var note_meta: Dictionary = {}
-	for span: SemanticSpan in note_row.spans:
+	for span: EventSheetSemanticSpan in note_row.spans:
 		if not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -6399,7 +6399,7 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetPerformanceFindings.FIX_OBJECT_POOL:
 			open_add_behavior_dialog(_sheet_object_label(), "object_pool")
 			return true
-		ViewportRowBuilder.FIX_PUT_BACK:
+		EventSheetViewportRowBuilder.FIX_PUT_BACK:
 			if not _optimiser.put_back(note_meta.get("variable_note_event", null) as EventRow):
 				_set_status(EventSheetL10n.translate("There is nothing recorded to put back on this row."), true)
 			else:
@@ -7301,7 +7301,7 @@ func _apply_variable_value_edit(row_data: EventRowData, new_value: String) -> vo
 	var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
 	var var_name: String = str(metadata.get("variable_name", "")).strip_edges()
 	var declared_type: String = ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var span_meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if bool(span_meta.get("variable_value_span", false)):
 			declared_type = str(span_meta.get("variable_type_name", ""))
@@ -7309,7 +7309,7 @@ func _apply_variable_value_edit(row_data: EventRowData, new_value: String) -> vo
 		return
 	if not EventSheetVariableSentence.value_fits(declared_type, new_value):
 		_set_status(EventSheetL10n.translate("%s is a %s - it cannot hold %s.") % [
-			var_name, ViewportRowBuilder.friendly_type_word(declared_type), new_value], true)
+			var_name, EventSheetViewportRowBuilder.friendly_type_word(declared_type), new_value], true)
 		return
 	var declaring: LocalVariable = row_data.source_resource as LocalVariable
 	var written: bool = _perform_undoable_sheet_edit("Edit Variable Value", func() -> bool:
@@ -7560,7 +7560,7 @@ static func selection_line_text(row_data: EventRowData) -> String:
 		return ""
 	var head: String = EventSheetL10n.translate("Event %d selected") % row_data.event_number
 	var words: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -7749,7 +7749,7 @@ func _pattern_hint(row_data: EventRowData) -> Dictionary:
 	if _viewport == null or row_data == null or not (row_data.source_resource is EventRow) \
 			or not _viewport.patterns_lens_enabled():
 		return {}
-	return ViewportTooltipHelper.pattern_strip_line(_current_sheet, (row_data.source_resource as EventRow).event_uid)
+	return EventSheetViewportTooltipHelper.pattern_strip_line(_current_sheet, (row_data.source_resource as EventRow).event_uid)
 
 
 func _pattern_hint_text(row_data: EventRowData) -> String:
@@ -7804,13 +7804,13 @@ func apply_selected_row_fix() -> void:
 	if str(finding.get("family", "")) == PATTERN_HINT_FAMILY:
 		load(PATTERN_MANUAL_PATH).open_page(str(finding.get("pattern", "")))
 		return
-	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
+	if str(finding.get("family", "")) == EventSheetViewportRowBuilder.FINDINGS_COLLISIONS:
 		apply_collision_fix(finding)
 		return
 	if str(finding.get("family", "")) == EventSheetRegionFacts.FINDING_FAMILY:
 		fix_region_fence(finding)
 		return
-	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
+	if str(finding.get("family", "")) == EventSheetViewportRowBuilder.FINDINGS_MISTAKES:
 		load(MISTAKE_FIXES_PATH).apply(self, finding, "fix")
 		return
 	if str(finding.get("fix", "")) == EventSheetMigrationFindings.FIX_SEE_REPLACEMENT:
@@ -7839,10 +7839,10 @@ func apply_selected_row_second_fix() -> void:
 	var finding: Dictionary = _row_help_finding
 	if _run_variable_link(1):
 		return
-	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
+	if str(finding.get("family", "")) == EventSheetViewportRowBuilder.FINDINGS_MISTAKES:
 		load(MISTAKE_FIXES_PATH).apply(self, finding, "second_fix")
 		return
-	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
+	if str(finding.get("family", "")) == EventSheetViewportRowBuilder.FINDINGS_COLLISIONS:
 		apply_collision_fix(finding, "second_fix")
 		return
 	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
@@ -7854,7 +7854,7 @@ func apply_selected_row_second_fix() -> void:
 func apply_selected_row_third_fix() -> void:
 	if _run_variable_link(2):
 		return
-	if str(_row_help_finding.get("family", "")) == ViewportRowBuilder.FINDINGS_MISTAKES:
+	if str(_row_help_finding.get("family", "")) == EventSheetViewportRowBuilder.FINDINGS_MISTAKES:
 		load(MISTAKE_FIXES_PATH).apply(self, _row_help_finding, "third_fix")
 
 

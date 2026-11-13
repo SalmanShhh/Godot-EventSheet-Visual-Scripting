@@ -43,7 +43,7 @@ var in_selection_run: bool = false
 ## fills the number margin the way the events round it do; a run of variables leaves the margin alone.
 var in_selection_branch: bool = false
 var hovered: bool = false
-var spans: Array[SemanticSpan] = []
+var spans: Array[EventSheetSemanticSpan] = []
 ## Number of stacked text lines this row occupies. Precomputed cheaply so row
 ## heights/metrics can be resolved for EVENT rows without building their (lazy) spans.
 var line_count: int = 1

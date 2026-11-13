@@ -346,9 +346,9 @@ static func _test_continued_statements() -> bool:
 		"Set title to \"Add behavior to \" & object_label") and ok
 	ok = SUPPORT.pins("own_code_shapes_test", [
 		["an indented statement is not a literal entry",
-			ViewportRowBuilder.is_literal_part("\tlabel.text = str(said[0])"), false],
-		["an indented entry still is", ViewportRowBuilder.is_literal_part("\t\"walk\", \"run\","), true],
-		["an indented note is not", ViewportRowBuilder.is_literal_part("\t# why"), false],
+			EventSheetViewportRowBuilder.is_literal_part("\tlabel.text = str(said[0])"), false],
+		["an indented entry still is", EventSheetViewportRowBuilder.is_literal_part("\t\"walk\", \"run\","), true],
+		["an indented note is not", EventSheetViewportRowBuilder.is_literal_part("\t# why"), false],
 		["an indented statement with words is not wordless",
 			EventSheetGenericRows.is_generic_code("\tlabel.text = str(said[0])"), false],
 		["an indented bare call is wordless, the same as at its own depth",

@@ -91,7 +91,7 @@ static func _cells(sheet: EventSheetResource, width: float = 1200.0) -> Array:
 		if row_data == null or not (row_data.source_resource is EventRow):
 			continue
 		view._layout_builder.get_or_build_row_layout(index, view.get_canvas_logical_width(), view._get_font(), view._get_font_size())
-		for span: SemanticSpan in view._row_at(index).spans:
+		for span: EventSheetSemanticSpan in view._row_at(index).spans:
 			if span.metadata is Dictionary and str(span.metadata.get("kind", "")) in ["condition", "action", "pick_filter"]:
 				var wrapped: bool = bool(span.metadata.get("comment_wrap", false)) \
 					or not (span.metadata.get("segment_wrap_breaks", PackedInt32Array()) as PackedInt32Array).is_empty()

@@ -140,7 +140,7 @@ static func _test_evidence_is_quotable() -> bool:
 		for claim: Variant in EventSheetPatternFacts.claims(sheet):
 			owners[str((claim as Dictionary).get("row_uid", ""))] = true
 		for owner: Variant in owners:
-			var told: String = ViewportTooltipHelper.pattern_evidence_line(sheet, str(owner))
+			var told: String = EventSheetViewportTooltipHelper.pattern_evidence_line(sheet, str(owner))
 			if told.is_empty():
 				continue
 			said += 1

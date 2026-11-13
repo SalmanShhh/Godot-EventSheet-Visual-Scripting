@@ -96,7 +96,7 @@ func _physics_tick_top() -> float:
 		var row_data: EventRowData = _pack_view._flat_rows[index].get("row")
 		if row_data == null:
 			continue
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span != null and span.text.contains("_physics_process"):
 				return maxf(_pack_view._row_metrics_helper.row_top(index) - 40.0, 0.0)
 	return 0.0
@@ -121,7 +121,7 @@ func _print_row(view: EventSheetViewport, row_data: EventRowData, printed: int, 
 	view._row_builder._ensure_event_spans(row_data)
 	if not row_data.spans.is_empty():
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var icon_mark: String = ""
 			if span.metadata is Dictionary and (span.metadata as Dictionary).get("object_icon") is Texture2D:
 				icon_mark = "[icon]"

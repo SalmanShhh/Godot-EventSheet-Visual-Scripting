@@ -32,7 +32,7 @@ static func _test_palette_at_the_default_editors() -> bool:
 			["light", light, ["ffffff", "f0f0f0", "f7f7f7", "cfcfcf", "e0e0e0", "124175", "c9c9c9"]]]:
 		var style: EventSheetEventStyle = pair[1]
 		rows.append(["%s: condition line, rest, action lane, divider, canvas, object name, group bar" % pair[0],
-			[style.condition_lane_color.to_html(false), EventRowRenderer.condition_cell_rest(style).to_html(false),
+			[style.condition_lane_color.to_html(false), EventSheetRowRenderer.condition_cell_rest(style).to_html(false),
 				style.action_lane_color.to_html(false), style.lane_divider_color.to_html(false),
 				style.sheet_background_color.to_html(false), style.object_label_color.to_html(false),
 				style.group_background_color.to_html(false)], pair[2]])
@@ -105,7 +105,7 @@ static func _test_geometry() -> bool:
 		["exactly 1 px between a parent and its child, whatever the gap between two events is", native["gaps"], [1.0, 1.0]],
 		["a 1 px lane divider", native["dividers"], [1.0, 1.0, 1.0]],
 		["nesting lines stand 8 px into their slot",
-			[EventRowRenderer.nesting_line_x(0, 18), EventRowRenderer.nesting_line_x(1, 18)], [42.0, 60.0]],
+			[EventSheetRowRenderer.nesting_line_x(0, 18), EventSheetRowRenderer.nesting_line_x(1, 18)], [42.0, 60.0]],
 	]
 	return SUPPORT.pins(TEST_NAME, rows)
 

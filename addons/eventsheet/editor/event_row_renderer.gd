@@ -1,5 +1,5 @@
 @tool
-class_name EventRowRenderer
+class_name EventSheetRowRenderer
 extends RefCounted
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
@@ -223,7 +223,7 @@ static func _elide(text: String, max_width: float, font: Font, font_size: int) -
 ## against a filled cell it can land within a few values of the fill. For the same reason a hairline
 ## colour that would vanish against the lane it sits on (several themes state it close to their
 ## divider) falls back to the column's own label colour, faint, which reads on either lane.
-static func _draw_object_column_separator(control: CanvasItem, span: SemanticSpan, boundary_x: float, event_style: EventSheetEventStyle) -> void:
+static func _draw_object_column_separator(control: CanvasItem, span: EventSheetSemanticSpan, boundary_x: float, event_style: EventSheetEventStyle) -> void:
 	if event_style == null or span == null or span.rect.size.y <= 4.0:
 		return
 	var span_lane: String = str((span.metadata as Dictionary).get("lane", "")) if span.metadata is Dictionary else ""
@@ -363,7 +363,7 @@ static func segments_with_colour_gaps(segments: Array, marks: Array, gap: String
 ## Paints the squares a span's colour marks stand for, into the gaps `text_with_colour_gaps` left, and
 ## stamps each square's rect (and the rect of the value beside it) back on the span for the click, the
 ## hover and the right-click to hit-test. `drawn_text` is the text WITH the gaps.
-func _draw_colour_squares(control: CanvasItem, span: SemanticSpan, marks: Array, drawn_text: String,
+func _draw_colour_squares(control: CanvasItem, span: EventSheetSemanticSpan, marks: Array, drawn_text: String,
 		gap_length: int, text_x: float, font: Font, draw_font_size: int, reading: EventSheetReadingStyle) -> void:
 	var rects: Array = []
 	var value_rects: Array = []
@@ -673,7 +673,7 @@ func _draw_collapsed_summary(control: CanvasItem, row_rect: Rect2, row_data: Eve
 	var first_line_top: float = row_data.spans[0].rect.position.y
 	var first_line_height: float = row_data.spans[0].rect.size.y
 	var text_end: float = row_data.spans[0].rect.end.x
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null:
 			continue
 		var line_index: int = int((span.metadata as Dictionary).get("line_index", 0)) if span.metadata is Dictionary else 0
@@ -755,7 +755,7 @@ func _draw_multiline_text(
 	var zoom: float = control.get_zoom_factor() if control.has_method("get_zoom_factor") else 1.0
 	# The same word-first break rule the height metrics measured with, so a cell never paints a
 	# mid-word split its reserved height did not account for (and never splits "Ready" in two).
-	var flags: int = ViewportRowMetrics.break_flags_for(text, max_width, font, font_size)
+	var flags: int = EventSheetViewportRowMetrics.break_flags_for(text, max_width, font, font_size)
 	if is_equal_approx(zoom, 1.0):
 		control.draw_multiline_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, -1, color, flags)
 		return
@@ -1161,7 +1161,7 @@ static func or_divider_geometry(row_data: EventRowData, line_index: int, lane_re
 	if row_data == null or lane_rect.size.x <= 0.0:
 		return {}
 	var top: float = -1.0
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata
@@ -1467,7 +1467,7 @@ static func is_typed_name_span(metadata: Dictionary) -> bool:
 
 ## Paints a typed name: its mark (a local's on a tile), the type in the muted code face and the name in
 ## bold, straight on whatever is behind the line - no cell, no object column.
-func _draw_typed_name(control: CanvasItem, span: SemanticSpan, metadata: Dictionary, font: Font, font_size: int,
+func _draw_typed_name(control: CanvasItem, span: EventSheetSemanticSpan, metadata: Dictionary, font: Font, font_size: int,
 		event_style: EventSheetEventStyle, reading: EventSheetReadingStyle) -> void:
 	var kind: String = str(metadata.get("typed_name", ""))
 	var type_text: String = span.text
@@ -1637,7 +1637,7 @@ func draw_cell_line(control: CanvasItem, row_data: EventRowData, lane: String, r
 	control.draw_rect(rect, lane_color, true)
 	var line: EventRowData = EventRowData.new()
 	line.row_type = EventRowData.RowType.EVENT
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var span_lane: String = str((span.metadata as Dictionary).get("lane", ""))
@@ -1805,7 +1805,7 @@ func _draw_tune_marks(
 ## of {"start", "length", "card"} over the span's drawn text.
 func _draw_word_cards(
 	control: CanvasItem,
-	span: SemanticSpan,
+	span: EventSheetSemanticSpan,
 	metadata: Dictionary,
 	baseline: Vector2,
 	text: String,
@@ -1870,7 +1870,7 @@ static func word_card_offsets(metadata: Dictionary, text: String, font: Font, fo
 ## re-measures, so what is underlined and what is clickable cannot drift apart.
 func _draw_comment_doors(
 	control: CanvasItem,
-	span: SemanticSpan,
+	span: EventSheetSemanticSpan,
 	metadata: Dictionary,
 	text_origin: Vector2,
 	line_height: float,
@@ -1964,7 +1964,7 @@ func _draw_spans(
 	# The spans stay in the layout model regardless (hit-testing + tests rely on them).
 	var row_has_action: bool = false
 	var row_has_condition: bool = false
-	for probe_span: SemanticSpan in row_data.spans:
+	for probe_span: EventSheetSemanticSpan in row_data.spans:
 		if probe_span == null or not (probe_span.metadata is Dictionary):
 			continue
 		var probe_meta: Dictionary = probe_span.metadata as Dictionary
@@ -1983,12 +1983,12 @@ func _draw_spans(
 	var strips_look: bool = event_style != null and event_style.sub_event_strips
 	var inverted_lines: Dictionary = {}
 	if strips_look:
-		for probe_span: SemanticSpan in row_data.spans:
+		for probe_span: EventSheetSemanticSpan in row_data.spans:
 			if probe_span != null and probe_span.metadata is Dictionary \
 					and NativeRowMarks.kind_mark_for(probe_span.metadata, probe_span.text) == NativeRowMarks.KIND_MARK_INVERTED:
 				inverted_lines[int((probe_span.metadata as Dictionary).get("line_index", -1))] = true
 	for span_index: int in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
+		var span: EventSheetSemanticSpan = row_data.spans[span_index]
 		if span == null:
 			continue
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
@@ -2049,7 +2049,7 @@ func _draw_spans(
 					# One draw per block - alpha would otherwise stack when several
 					# members are selected (rubber-band).
 					drawn_block_selection[head_for_block] = true
-					var selected_rect_span: SemanticSpan = SemanticSpan.new()
+					var selected_rect_span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 					selected_rect_span.rect = block_unions[span_index]
 					_draw_chip_selected_span(control, selected_rect_span, metadata, selection_fill, total_selected_spans > 1)
 			else:
@@ -2404,9 +2404,9 @@ func _draw_spans(
 			# sliced against whatever the layout put after it (a class head's includers against the
 			# head's own code echo, on a dock too narrow for both).
 			# So does a chip after a condition, which yields its room to the condition once it would take
-			# more than its share of the lane (ViewportRowMetrics.condition_trailing_width). A chip
+			# more than its share of the lane (EventSheetViewportRowMetrics.condition_trailing_width). A chip
 			# that fits is drawn whole: eliding text that fits changes nothing.
-			var yielded_chip: bool = ViewportRowMetrics.TRAILING_CHIP_KINDS.has(span_kind)
+			var yielded_chip: bool = EventSheetViewportRowMetrics.TRAILING_CHIP_KINDS.has(span_kind)
 			if (bool(metadata.get("elide", false)) or yielded_chip) and span_index != editing_span_index:
 				draw_text = elide_with_gap(draw_text, text_width, font, draw_font_size)
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
@@ -2440,7 +2440,7 @@ func _draw_spans(
 					door_breaks = stamped_breaks
 					door_baseline_y = wrapped_baseline_y
 			elif bool(metadata.get("comment_wrap", false)):
-				door_breaks = ViewportRowMetrics.wrap_break_points(draw_text, text_width, font, draw_font_size)
+				door_breaks = EventSheetViewportRowMetrics.wrap_break_points(draw_text, text_width, font, draw_font_size)
 				door_baseline_y = wrapped_baseline_y
 			_draw_comment_doors(control, span, metadata, Vector2(text_x, door_baseline_y),
 				door_line_h, door_breaks, text_width, font, draw_font_size, color)
@@ -2515,7 +2515,7 @@ func _draw_spans(
 ## word in its family's colour and the monospaced face it was measured in, a vector's X / Y fields in
 ## place of its text, and the `##` note in italics. Anything else falls through to the ordinary
 ## painter.
-func _draw_variable_word(control: CanvasItem, span: SemanticSpan, metadata: Dictionary, font: Font,
+func _draw_variable_word(control: CanvasItem, span: EventSheetSemanticSpan, metadata: Dictionary, font: Font,
 		font_size: int, event_style: EventSheetEventStyle, reading: EventSheetReadingStyle) -> bool:
 	var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 	var centre_y: float = span.rect.position.y + span.rect.size.y * ROW_VERTICAL_CENTER_RATIO
@@ -2574,7 +2574,7 @@ func _family_ink(event_style: EventSheetEventStyle, family: String) -> Color:
 
 
 ## The badge tiles a variable row earns, from where the layout put them, in the theme's badge pairs.
-func _draw_variable_badges(control: CanvasItem, span: SemanticSpan, metadata: Dictionary,
+func _draw_variable_badges(control: CanvasItem, span: EventSheetSemanticSpan, metadata: Dictionary,
 		event_style: EventSheetEventStyle) -> void:
 	var badges: PackedStringArray = PackedStringArray(metadata.get("variable_badges", PackedStringArray()))
 	var style: EventSheetEventStyle = event_style if event_style != null else _fallback_event_style()
@@ -2593,14 +2593,14 @@ func _draw_editing_note(control: CanvasItem, row_data: EventRowData, editing_spa
 		note: String, font: Font, font_size: int, reading: EventSheetReadingStyle) -> void:
 	if note.strip_edges().is_empty() or editing_span_index < 0 or editing_span_index >= row_data.spans.size():
 		return
-	var field: SemanticSpan = row_data.spans[editing_span_index]
+	var field: EventSheetSemanticSpan = row_data.spans[editing_span_index]
 	if field == null or field.rect.size.x <= 0.0:
 		return
 	# Past the whole left-flowing sentence and short of the right-anchored run: the note goes in the
 	# gap the row already has, so it never lands on top of the value or of the code echo.
 	var note_x: float = field.rect.end.x
 	var note_right: float = control.size.x - EventSheetPalette.ROW_HORIZONTAL_PADDING
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or span.rect.size.x <= 0.0 or not (span.metadata is Dictionary):
 			continue
 		if bool((span.metadata as Dictionary).get("align_right", false)):
@@ -2640,7 +2640,7 @@ func _draw_rounded_rect(control: CanvasItem, rect: Rect2, color: Color, top_left
 	box.draw(control.get_canvas_item(), rect)
 
 
-func _draw_chip_span(control: CanvasItem, span: SemanticSpan, metadata: Dictionary, cell_radius: int = 4) -> void:
+func _draw_chip_span(control: CanvasItem, span: EventSheetSemanticSpan, metadata: Dictionary, cell_radius: int = 4) -> void:
 	# Flat event-sheet/GDevelop-style cell with softly rounded corners (the radius is the
 	# theme's cell_corner_radius token; 0 = the classic square cell).
 	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
@@ -2697,7 +2697,7 @@ static func hover_link_label(span_kind: String) -> String:
 ## the pointer is on it. Painted in the span's rect and nowhere else, so the click that opens the
 ## picker lands exactly where the words are. A theme that leaves the link colour clear gets the
 ## span's own ink.
-func _draw_add_link(control: CanvasItem, span: SemanticSpan, span_kind: String, font: Font, font_size: int,
+func _draw_add_link(control: CanvasItem, span: EventSheetSemanticSpan, span_kind: String, font: Font, font_size: int,
 		metadata: Dictionary, event_style: EventSheetEventStyle, hovered: bool) -> void:
 	if font == null:
 		return
@@ -2751,7 +2751,7 @@ static func resolve_block_groups(spans: Array) -> Dictionary:
 	var heads: Dictionary = {}
 	var scan_index: int = 0
 	while scan_index < spans.size():
-		var head_span: SemanticSpan = spans[scan_index]
+		var head_span: EventSheetSemanticSpan = spans[scan_index]
 		var head_meta: Dictionary = head_span.metadata if head_span != null and head_span.metadata is Dictionary else {}
 		var block_total: int = int(head_meta.get("block_lines", 0))
 		if block_total > 1 and int(head_meta.get("block_line", -1)) == 0:
@@ -2789,7 +2789,7 @@ func _draw_cell_hover(control: CanvasItem, rect: Rect2, tint: Color) -> void:
 
 func _draw_chip_selected_span(
 	control: CanvasItem,
-	span: SemanticSpan,
+	span: EventSheetSemanticSpan,
 	metadata: Dictionary,
 	selection_fill: Color,
 	multi_select: bool
@@ -2898,7 +2898,7 @@ func _draw_variable_card(control: CanvasItem, row_rect: Rect2, event_style: Even
 	control.draw_style_box(box, card)
 
 
-func _draw_badge_span(control: CanvasItem, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary,
+func _draw_badge_span(control: CanvasItem, span: EventSheetSemanticSpan, font: Font, font_size: int, metadata: Dictionary,
 		event_style: EventSheetEventStyle = null) -> void:
 	var badge_rect: Rect2 = span.rect
 	var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
@@ -3178,36 +3178,36 @@ func _get_span_color(span_type: int, event_style: EventSheetEventStyle = null,
 		reading: EventSheetReadingStyle = null) -> Color:
 	if event_style != null and reading != null:
 		match span_type:
-			SemanticSpan.SpanType.OBJECT:
+			EventSheetSemanticSpan.SpanType.OBJECT:
 				return event_style.object_label_color
-			SemanticSpan.SpanType.ACTION:
+			EventSheetSemanticSpan.SpanType.ACTION:
 				return event_style.ace_action_accent_color
-			SemanticSpan.SpanType.VALUE:
+			EventSheetSemanticSpan.SpanType.VALUE:
 				return EventSheetEventStyle.stated_or(event_style.word_number_color, event_style.value_highlight_color)
-			SemanticSpan.SpanType.OPERATOR:
+			EventSheetSemanticSpan.SpanType.OPERATOR:
 				return reading.secondary_text_color
-			SemanticSpan.SpanType.KEYWORD:
+			EventSheetSemanticSpan.SpanType.KEYWORD:
 				return reading.muted_text_color
-			SemanticSpan.SpanType.COMMENT:
+			EventSheetSemanticSpan.SpanType.COMMENT:
 				return event_style.comment_text_color
 			_:
 				return reading.primary_text_color
 	match span_type:
-		SemanticSpan.SpanType.OBJECT:
+		EventSheetSemanticSpan.SpanType.OBJECT:
 			return COLOR_OBJECT
-		SemanticSpan.SpanType.CONDITION:
+		EventSheetSemanticSpan.SpanType.CONDITION:
 			return TEXT_PRIMARY
-		SemanticSpan.SpanType.ACTION:
+		EventSheetSemanticSpan.SpanType.ACTION:
 			return COLOR_ACTION
-		SemanticSpan.SpanType.VALUE:
+		EventSheetSemanticSpan.SpanType.VALUE:
 			return COLOR_VALUE
-		SemanticSpan.SpanType.OPERATOR:
+		EventSheetSemanticSpan.SpanType.OPERATOR:
 			return TEXT_SECONDARY
-		SemanticSpan.SpanType.KEYWORD:
+		EventSheetSemanticSpan.SpanType.KEYWORD:
 			return TEXT_MUTED
-		SemanticSpan.SpanType.EXPRESSION:
+		EventSheetSemanticSpan.SpanType.EXPRESSION:
 			return TEXT_PRIMARY
-		SemanticSpan.SpanType.COMMENT:
+		EventSheetSemanticSpan.SpanType.COMMENT:
 			return event_style.comment_text_color if event_style != null else EventSheetPalette.COLOR_COMMENT
 		_:
 			return TEXT_PRIMARY

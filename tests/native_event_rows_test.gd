@@ -95,17 +95,17 @@ static func _test_resting_add_lines() -> bool:
 	selected.selected = true
 	return SUPPORT.pins(TEST_NAME, [
 		["a filled event at rest gives both add lines no room",
-			ViewportRowMetrics.resting_add_line_kinds(full, native), PackedStringArray(["add_condition", "add_action"])],
-		["an empty lane keeps its add line", ViewportRowMetrics.resting_add_line_kinds(no_action, native),
+			EventSheetViewportRowMetrics.resting_add_line_kinds(full, native), PackedStringArray(["add_condition", "add_action"])],
+		["an empty lane keeps its add line", EventSheetViewportRowMetrics.resting_add_line_kinds(no_action, native),
 			PackedStringArray(["add_condition"])],
-		["a placeholder is not a condition", ViewportRowMetrics.resting_add_line_kinds(placeholder, native),
+		["a placeholder is not a condition", EventSheetViewportRowMetrics.resting_add_line_kinds(placeholder, native),
 			PackedStringArray(["add_action"])],
 		["hovered or selected, both lines are there",
-			[ViewportRowMetrics.resting_add_line_kinds(hovered, native),
-				ViewportRowMetrics.resting_add_line_kinds(selected, native)],
+			[EventSheetViewportRowMetrics.resting_add_line_kinds(hovered, native),
+				EventSheetViewportRowMetrics.resting_add_line_kinds(selected, native)],
 			[PackedStringArray(), PackedStringArray()]],
 		["any other theme reserves them always",
-			ViewportRowMetrics.resting_add_line_kinds(full, EventSheetEventStyle.new()), PackedStringArray()],
+			EventSheetViewportRowMetrics.resting_add_line_kinds(full, EventSheetEventStyle.new()), PackedStringArray()],
 	])
 
 
@@ -181,7 +181,7 @@ static func _event_row(kinds: Array, placeholder: bool = false) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.row_type = EventRowData.RowType.EVENT
 	for kind: String in kinds:
-		var span := SemanticSpan.new()
+		var span := EventSheetSemanticSpan.new()
 		span.text = kind
 		span.metadata = {"kind": kind, "placeholder": placeholder and kind == "condition"}
 		row_data.spans.append(span)
@@ -220,7 +220,7 @@ static func _event_with(view: EventSheetViewport, events: Array[int], text_part:
 
 
 static func _object_of(row_data: EventRowData, text_part: String) -> String:
-	for span: SemanticSpan in row_data.spans if row_data != null else []:
+	for span: EventSheetSemanticSpan in row_data.spans if row_data != null else []:
 		if span.text.contains(text_part):
 			return str((span.metadata as Dictionary).get("object_label", ""))
 	return ""
@@ -230,6 +230,6 @@ static func _texts(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	return " | ".join(parts)

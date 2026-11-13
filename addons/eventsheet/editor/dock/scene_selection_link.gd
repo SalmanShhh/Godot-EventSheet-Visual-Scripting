@@ -121,7 +121,7 @@ static func object_label_for_node(census: Array, node_name: String,
 static func object_label_for_row(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if not (span.metadata is Dictionary):
 			continue
 		var label: String = str((span.metadata as Dictionary).get("object_label", ""))

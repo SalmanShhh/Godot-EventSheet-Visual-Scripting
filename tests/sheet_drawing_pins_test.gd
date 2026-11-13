@@ -91,11 +91,11 @@ static func _test_word_cards() -> bool:
 	]}
 	var font: Font = ThemeDB.fallback_font
 	var span_meta: Dictionary = {"word_cards": [{"start": 3, "length": 4, "card": card_a}]}
-	var first: Array = EventRowRenderer.word_card_offsets(span_meta, "is IDLE", font, 12)
+	var first: Array = EventSheetRowRenderer.word_card_offsets(span_meta, "is IDLE", font, 12)
 	var kept: Variant = span_meta.get("word_card_measure")
-	var second: Array = EventRowRenderer.word_card_offsets(span_meta, "is IDLE", font, 12)
+	var second: Array = EventSheetRowRenderer.word_card_offsets(span_meta, "is IDLE", font, 12)
 	var still_kept: bool = is_same(span_meta.get("word_card_measure"), kept)
-	var remeasured: Array = EventRowRenderer.word_card_offsets(span_meta, "is RUN!", font, 12)
+	var remeasured: Array = EventSheetRowRenderer.word_card_offsets(span_meta, "is RUN!", font, 12)
 	EventSheetStateWatch.clear()
 	EventSheetStateWatch.note_frame({"state": "CHASE", "state_seconds": 1.0})
 	var live_once: PackedStringArray = EventSheetStateWatch.live_members()

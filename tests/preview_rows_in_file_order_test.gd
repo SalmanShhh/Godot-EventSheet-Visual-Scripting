@@ -67,7 +67,7 @@ static func _spacing_heights(view: EventSheetViewport) -> Array:
 	var flat: Array = view.get_flat_rows()
 	for index: int in flat.size():
 		var row_data: EventRowData = (flat[index] as Dictionary).get("row")
-		if row_data != null and ViewportRowBuilder._is_spacing_row(row_data) and row_data.indent == 0:
+		if row_data != null and EventSheetViewportRowBuilder._is_spacing_row(row_data) and row_data.indent == 0:
 			heights.append(view.get_row_height(index))
 	return heights
 
@@ -100,6 +100,6 @@ static func _member(view: EventSheetViewport, var_name: String) -> EventRowData:
 
 static func _texts(row_data: EventRowData) -> String:
 	var parts := PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		parts.append(span.text)
 	return " | ".join(parts)

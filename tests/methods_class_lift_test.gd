@@ -16,27 +16,27 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── The recognizer, and its disjointness from the pure-data view ──
-	ok = _check("a field+method class is recognised", ViewportRowBuilder.methods_class_name(WEAPON), "Weapon") and ok
-	ok = _check("the same class is NOT a pure-data class (disjoint)", ViewportRowBuilder.data_class_name(WEAPON), "") and ok
+	ok = _check("a field+method class is recognised", EventSheetViewportRowBuilder.methods_class_name(WEAPON), "Weapon") and ok
+	ok = _check("the same class is NOT a pure-data class (disjoint)", EventSheetViewportRowBuilder.data_class_name(WEAPON), "") and ok
 	ok = _check("a pure-data class is NOT a methods class (disjoint)",
-		ViewportRowBuilder.methods_class_name("class Foo:\n\tvar x: int = 0"), "") and ok
+		EventSheetViewportRowBuilder.methods_class_name("class Foo:\n\tvar x: int = 0"), "") and ok
 	ok = _check("an `extends` base is tolerated",
-		ViewportRowBuilder.methods_class_name("class Bar extends RefCounted:\n\tfunc go() -> void:\n\t\tpass"), "Bar") and ok
+		EventSheetViewportRowBuilder.methods_class_name("class Bar extends RefCounted:\n\tfunc go() -> void:\n\t\tpass"), "Bar") and ok
 	ok = _check("a nested class rejects",
-		ViewportRowBuilder.methods_class_name("class Foo:\n\tfunc a() -> void:\n\t\tpass\n\tclass Inner:\n\t\tvar x: int = 0"), "") and ok
+		EventSheetViewportRowBuilder.methods_class_name("class Foo:\n\tfunc a() -> void:\n\t\tpass\n\tclass Inner:\n\t\tvar x: int = 0"), "") and ok
 	ok = _check("trailing top-level code rejects",
-		ViewportRowBuilder.methods_class_name("class Foo:\n\tfunc a() -> void:\n\t\tpass\nprint(1)"), "") and ok
+		EventSheetViewportRowBuilder.methods_class_name("class Foo:\n\tfunc a() -> void:\n\t\tpass\nprint(1)"), "") and ok
 	ok = _check("a method-less (pass-only) class is not a methods class",
-		ViewportRowBuilder.methods_class_name("class Foo:\n\tpass"), "") and ok
+		EventSheetViewportRowBuilder.methods_class_name("class Foo:\n\tpass"), "") and ok
 
 	# ── The byte-gate: the model re-emits the whole class (methods as verbatim raw) byte-for-byte ──
-	var model: Dictionary = ViewportRowBuilder.parse_methods_class(WEAPON)
+	var model: Dictionary = EventSheetViewportRowBuilder.parse_methods_class(WEAPON)
 	ok = _check("the model names the class", str(model.get("class_name")), "Weapon") and ok
-	ok = _check("emit reproduces the source byte-for-byte", ViewportRowBuilder.emit_data_class(model), WEAPON) and ok
-	ok = _check("methods_class_lifts gates it true", ViewportRowBuilder.methods_class_lifts(WEAPON), true) and ok
+	ok = _check("emit reproduces the source byte-for-byte", EventSheetViewportRowBuilder.emit_data_class(model), WEAPON) and ok
+	ok = _check("methods_class_lifts gates it true", EventSheetViewportRowBuilder.methods_class_lifts(WEAPON), true) and ok
 	# Blank lines between methods and a `##` doc above a method survive verbatim.
 	var spaced: String = "class Kit:\n\tvar n: int = 0\n\t## does a thing\n\tfunc a() -> void:\n\t\tpass\n\n\tfunc b() -> void:\n\t\tpass"
-	ok = _check("blank lines + a doc comment round-trip", ViewportRowBuilder.methods_class_lifts(spaced), true) and ok
+	ok = _check("blank lines + a doc comment round-trip", EventSheetViewportRowBuilder.methods_class_lifts(spaced), true) and ok
 
 	# ── Rendering over a synthetic opened sheet ──
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -71,7 +71,7 @@ static func run() -> bool:
 
 	# ── Degrade: a class with a bare one-tab statement is not a clean class -> not lifted (stays a plain block) ──
 	ok = _check("a class with a stray one-tab statement does not lift",
-		ViewportRowBuilder.methods_class_lifts("class Foo:\n\tfunc a() -> void:\n\t\tpass\n\tx = 5"), false) and ok
+		EventSheetViewportRowBuilder.methods_class_lifts("class Foo:\n\tfunc a() -> void:\n\t\tpass\n\tx = 5"), false) and ok
 
 	dock.free()
 	return ok

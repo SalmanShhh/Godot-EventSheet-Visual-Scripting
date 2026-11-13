@@ -118,10 +118,10 @@ static func run() -> bool:
 	panel.free()
 
 	# Plain-word types: a Node class is one word to a reader, a list is a list.
-	ok = _check("a Node class reads as 'object'", ViewportRowBuilder.friendly_type_word("Sprite2D"), "object") and ok
-	ok = _check("an Array reads as 'list'", ViewportRowBuilder.friendly_type_word("Array"), "list") and ok
-	ok = _check("a Dictionary reads as 'table'", ViewportRowBuilder.friendly_type_word("Dictionary"), "table") and ok
-	ok = _check("an unknown class keeps its own name", ViewportRowBuilder.friendly_type_word("HealthPool"), "HealthPool") and ok
+	ok = _check("a Node class reads as 'object'", EventSheetViewportRowBuilder.friendly_type_word("Sprite2D"), "object") and ok
+	ok = _check("an Array reads as 'list'", EventSheetViewportRowBuilder.friendly_type_word("Array"), "list") and ok
+	ok = _check("a Dictionary reads as 'table'", EventSheetViewportRowBuilder.friendly_type_word("Dictionary"), "table") and ok
+	ok = _check("an unknown class keeps its own name", EventSheetViewportRowBuilder.friendly_type_word("HealthPool"), "HealthPool") and ok
 
 	# ── A REAL pack, opened the way a user opens one: the same reading, and no annotation prose ──
 	var pack_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -138,8 +138,8 @@ static func run() -> bool:
 	pack_dock.free()
 
 	# An `## @ace_*` line never becomes prose.
-	ok = _check("an @ace_ line is recognised as annotation", ViewportRowBuilder.is_ace_annotation_line("## @ace_hidden"), true) and ok
-	ok = _check("a real doc line is not", ViewportRowBuilder.is_ace_annotation_line("## Recomputes the totals."), false) and ok
+	ok = _check("an @ace_ line is recognised as annotation", EventSheetViewportRowBuilder.is_ace_annotation_line("## @ace_hidden"), true) and ok
+	ok = _check("a real doc line is not", EventSheetViewportRowBuilder.is_ace_annotation_line("## Recomputes the totals."), false) and ok
 
 	return ok
 
@@ -214,7 +214,7 @@ static func _span_texts(row_data: EventRowData) -> PackedStringArray:
 	var texts: PackedStringArray = PackedStringArray()
 	if row_data == null:
 		return texts
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		texts.append(str(span.text))
 	return texts
 
@@ -238,7 +238,7 @@ static func _row_has_text(row_data: EventRowData, needle: String) -> bool:
 static func _lane_of_text(row_data: EventRowData, needle: String) -> String:
 	if row_data == null:
 		return ""
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if str(span.text) == needle and span.metadata is Dictionary:
 			return str((span.metadata as Dictionary).get("lane", "condition"))
 	return ""
@@ -247,7 +247,7 @@ static func _lane_of_text(row_data: EventRowData, needle: String) -> String:
 static func _span_meta(row_data: EventRowData, text: String, key: String) -> Variant:
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if str(span.text) == text and span.metadata is Dictionary:
 			return (span.metadata as Dictionary).get(key)
 	return null
@@ -261,7 +261,7 @@ static func _any_span_contains(view: EventSheetViewport, needle: String) -> bool
 		if row_data == null:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if str(span.text).contains(needle):
 				return true
 	return false

@@ -19,7 +19,7 @@ static func run() -> bool:
 	# When the AUTHOR's display template carried markup (the one-shot flag is set), the cell renders
 	# styled, with the stripped text driving layout.
 	viewport._pending_display_bbcode = true
-	var styled: SemanticSpan = viewport._make_span("[b]Destroy[/b] [color=red]enemy[/color]", SemanticSpan.SpanType.VALUE, {"kind": "condition"})
+	var styled: EventSheetSemanticSpan = viewport._make_span("[b]Destroy[/b] [color=red]enemy[/color]", EventSheetSemanticSpan.SpanType.VALUE, {"kind": "condition"})
 	all_passed = _check("author-markup cell text is stripped for layout", styled.text, "Destroy enemy") and all_passed
 	all_passed = _check("author-markup cell sets styled segments",
 		styled.metadata.get("bbcode_segments") is Array and (styled.metadata["bbcode_segments"] as Array).size() >= 2, true) and all_passed
@@ -28,7 +28,7 @@ static func run() -> bool:
 	# clear), is drawn LITERALLY - never stripped or styled. This is the footgun the adversarial review caught
 	# (e.g. a "Set RichTextLabel text to [b]Hi[/b]" action whose text is the user's own BBCode).
 	viewport._pending_display_bbcode = false
-	var user_value: SemanticSpan = viewport._make_span("Set label to [b]Hi[/b]", SemanticSpan.SpanType.VALUE, {"kind": "action"})
+	var user_value: EventSheetSemanticSpan = viewport._make_span("Set label to [b]Hi[/b]", EventSheetSemanticSpan.SpanType.VALUE, {"kind": "action"})
 	all_passed = _check("a user value with literal BBCode is left intact (plain template)", user_value.text, "Set label to [b]Hi[/b]") and all_passed
 	all_passed = _check("a plain-template cell has no bbcode segments", user_value.metadata.has("bbcode_segments"), false) and all_passed
 
@@ -79,15 +79,15 @@ static func run() -> bool:
 	rich_sheet.events.append(rich_event)
 	var rich_editor: EventSheetEditor = EventSheetEditor.new()
 	rich_editor.setup(rich_sheet)
-	var rich_span: SemanticSpan = null
-	var plain_span: SemanticSpan = null
-	var foreign_span: SemanticSpan = null
+	var rich_span: EventSheetSemanticSpan = null
+	var plain_span: EventSheetSemanticSpan = null
+	var foreign_span: EventSheetSemanticSpan = null
 	for flat_entry: Dictionary in rich_editor.get_viewport_control().get_flat_rows():
 		var row_data: EventRowData = flat_entry.get("row")
 		if row_data == null:
 			continue
 		for span: Variant in row_data.spans:
-			var meta: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
+			var meta: Dictionary = (span as EventSheetSemanticSpan).metadata if (span as EventSheetSemanticSpan).metadata is Dictionary else {}
 			if str(meta.get("kind", "")) == "action":
 				match int(meta.get("ace_index", -1)):
 					0:
@@ -117,8 +117,8 @@ static func _has_scope_pill(rows: Array) -> bool:
 		if not (row is EventRowData):
 			continue
 		for span: Variant in (row as EventRowData).spans:
-			var meta: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
-			if str((span as SemanticSpan).text) in ["local", "global", "tree"] and bool(meta.get("badge", false)):
+			var meta: Dictionary = (span as EventSheetSemanticSpan).metadata if (span as EventSheetSemanticSpan).metadata is Dictionary else {}
+			if str((span as EventSheetSemanticSpan).text) in ["local", "global", "tree"] and bool(meta.get("badge", false)):
 				return true
 	return false
 

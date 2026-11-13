@@ -97,7 +97,7 @@ static func run() -> bool:
 	var keyword_object: String = ""
 	var trigger_span_count: int = 0
 	if elif_row != null:
-		for span: SemanticSpan in elif_row.spans:
+		for span: EventSheetSemanticSpan in elif_row.spans:
 			if span.metadata is Dictionary:
 				var span_kind: String = str((span.metadata as Dictionary).get("kind", ""))
 				if span_kind == "else_keyword":

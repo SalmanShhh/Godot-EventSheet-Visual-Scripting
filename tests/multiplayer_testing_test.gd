@@ -126,15 +126,15 @@ static func _test_what_each_instance_is_called() -> bool:
 static func _test_the_live_value_chips() -> bool:
 	var ok: bool = true
 	ok = _check("one running game says the value and nothing else",
-		ViewportLiveValuesHelper.chip_text({"": {"hp": 42}}, "hp"), "now 42") and ok
+		EventSheetViewportLiveValuesHelper.chip_text({"": {"hp": 42}}, "hp"), "now 42") and ok
 	ok = _check("two running games each get a chip headed by their tag",
-		ViewportLiveValuesHelper.chip_text({"host": {"hp": 100}, "client": {"hp": 90}}, "hp"),
+		EventSheetViewportLiveValuesHelper.chip_text({"host": {"hp": 100}, "client": {"hp": 90}}, "hp"),
 		"host · now 100   client · now 90") and ok
 	ok = _check("an instance whose frame does not carry the name says nothing",
-		ViewportLiveValuesHelper.chip_text({"host": {"hp": 100}, "client": {"score": 3}}, "hp"),
+		EventSheetViewportLiveValuesHelper.chip_text({"host": {"hp": 100}, "client": {"score": 3}}, "hp"),
 		"host · now 100") and ok
 	ok = _check("a name nothing streams has no chip",
-		ViewportLiveValuesHelper.chip_text({"": {"hp": 42}}, "armour"), "") and ok
+		EventSheetViewportLiveValuesHelper.chip_text({"": {"hp": 42}}, "armour"), "") and ok
 	return ok
 
 
@@ -156,7 +156,7 @@ static func _test_sent_but_not_a_message() -> bool:
 		_fix_of(found, EventSheetMultiplayerFindings.KIND_NOT_A_MESSAGE),
 		EventSheetMultiplayerFindings.FIX_MAKE_MESSAGE) and ok
 	ok = _check("the note hangs under the event that sends it",
-		ViewportRowBuilder.findings_at_event(found, sheet.events[0] as EventRow).size(), 1) and ok
+		EventSheetViewportRowBuilder.findings_at_event(found, sheet.events[0] as EventRow).size(), 1) and ok
 	# The same sheet with the annotation on it says nothing.
 	(sheet.functions[0] as EventFunction).annotation_lines = PackedStringArray(["@rpc(\"authority\", \"call_local\", \"reliable\")"])
 	ok = _check("once it is a message the finding is gone",

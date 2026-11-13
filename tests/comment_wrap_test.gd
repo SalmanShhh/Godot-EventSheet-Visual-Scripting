@@ -54,7 +54,7 @@ static func run() -> bool:
 	var long_row: EventRowData = viewport.get_flat_rows()[1].get("row")
 	var layout: Dictionary = viewport.get_row_layout_for_test(1)
 	var wrapped_flagged: bool = false
-	for span: SemanticSpan in long_row.spans:
+	for span: EventSheetSemanticSpan in long_row.spans:
 		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get("comment_wrap", false)):
 			wrapped_flagged = true
 			break
@@ -64,8 +64,8 @@ static func run() -> bool:
 	# ...and it wraps BESIDE the echo of the line it writes, never through it. The echo is the
 	# note's own words with a marker in front, so a note long enough to reach it used to be
 	# drawn straight over the top: two long texts on one line, neither of them readable.
-	var note_span: SemanticSpan = _span_of_kind(long_row, false)
-	var echo_span: SemanticSpan = _span_of_kind(long_row, true)
+	var note_span: EventSheetSemanticSpan = _span_of_kind(long_row, false)
+	var echo_span: EventSheetSemanticSpan = _span_of_kind(long_row, true)
 	all_passed = _check("the long note has both its words and its echo",
 		[note_span != null, echo_span != null], [true, true]) and all_passed
 	if note_span != null and echo_span != null:
@@ -80,8 +80,8 @@ static func run() -> bool:
 
 ## The row's own words, or the echo of the line it writes - told apart by the flag the layout
 ## lays each of them out under rather than by their position, which is the thing being pinned.
-static func _span_of_kind(row_data: EventRowData, wanted_echo: bool) -> SemanticSpan:
-	for span: SemanticSpan in row_data.spans:
+static func _span_of_kind(row_data: EventRowData, wanted_echo: bool) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary

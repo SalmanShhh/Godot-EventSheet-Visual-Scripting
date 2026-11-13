@@ -248,7 +248,7 @@ static func _walk(view: EventSheetViewport, rows: Array, into: PackedStringArray
 		var lines: Dictionary = {}
 		var order: Array[int] = []
 		var right: String = ""
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if view._row_builder._resolve_span_lane(span) != "condition":
 				right += span.text
 				continue
@@ -286,7 +286,7 @@ static func _sweep_span_kinds(view: EventSheetViewport, rows: Array, trigger_tex
 		view._row_builder._ensure_event_spans(row_data)
 		var kinds: PackedStringArray = PackedStringArray()
 		var matched: bool = false
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			kinds.append(str(span.metadata.get("kind", "")))
 			if span.text == trigger_text and str(span.metadata.get("kind", "")) == "trigger":
 				matched = true
@@ -326,7 +326,7 @@ static func _sweep_conditions(view: EventSheetViewport, rows: Array, found: Pack
 	for row_data: EventRowData in rows:
 		if row_data.row_type == EventRowData.RowType.EVENT:
 			view._row_builder._ensure_event_spans(row_data)
-			for span: SemanticSpan in row_data.spans:
+			for span: EventSheetSemanticSpan in row_data.spans:
 				if not (str(span.metadata.get("kind", "")) in ["condition", "trigger"]):
 					continue
 				if span.text.contains("(") or span.text.contains("func"):
@@ -351,7 +351,7 @@ static func _branchy_cells(readings: PackedStringArray) -> PackedStringArray:
 
 ## The reading of one await expression as flat text, or "" when the grammar refuses it.
 static func _await_reading(expression: String) -> String:
-	var reading: Dictionary = ViewportRowBuilder.await_reading(expression, false)
+	var reading: Dictionary = EventSheetViewportRowBuilder.await_reading(expression, false)
 	var text: String = ""
 	for entry: Variant in (reading.get("segments", []) as Array):
 		text += str((entry as Dictionary).get("text", ""))
@@ -360,7 +360,7 @@ static func _await_reading(expression: String) -> String:
 
 ## "object/trigger/args" for a connect statement the reader claims, "" when it refuses it.
 static func _connect_parts(code: String) -> String:
-	var parts: Dictionary = ViewportRowBuilder.connect_lambda_parts(code)
+	var parts: Dictionary = EventSheetViewportRowBuilder.connect_lambda_parts(code)
 	if parts.is_empty():
 		return ""
 	return "%s/%s/%s" % [

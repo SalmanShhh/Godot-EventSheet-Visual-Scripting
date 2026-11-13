@@ -51,7 +51,7 @@ static func run() -> bool:
 
 	var texts: Array = []
 	var match_action_texts: Array = []
-	for span: SemanticSpan in event_row_data.spans:
+	for span: EventSheetSemanticSpan in event_row_data.spans:
 		texts.append(str(span.text))
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)):
 			match_action_texts.append(str(span.text))
@@ -100,7 +100,7 @@ static func run() -> bool:
 	var raw_has_match_action: bool = false
 	var raw_shows_branch: bool = false
 	if raw_row_data != null:
-		for span: SemanticSpan in raw_row_data.spans:
+		for span: EventSheetSemanticSpan in raw_row_data.spans:
 			if str(span.text).contains("print(\"one\")"):
 				raw_shows_branch = true
 			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)):
@@ -112,15 +112,15 @@ static func run() -> bool:
 	return ok
 
 
-static func _lane_span(row: EventRowData, lane: String) -> SemanticSpan:
-	for span: SemanticSpan in row.spans:
+static func _lane_span(row: EventRowData, lane: String) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row.spans:
 		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane")) == lane:
 			return span
 	return null
 
 
 static func _lane_text(row: EventRowData, lane: String) -> String:
-	var span: SemanticSpan = _lane_span(row, lane)
+	var span: EventSheetSemanticSpan = _lane_span(row, lane)
 	return str(span.text) if span != null else "<none>"
 
 

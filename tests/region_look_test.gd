@@ -258,10 +258,10 @@ static func _row_height_of(viewport: EventSheetViewport, row_data: EventRowData)
 
 
 ## The first span whose metadata `key` equals `value`, or null.
-static func _span_with(row_data: EventRowData, key: String, value: Variant) -> SemanticSpan:
+static func _span_with(row_data: EventRowData, key: String, value: Variant) -> EventSheetSemanticSpan:
 	if row_data == null:
 		return null
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		if (span.metadata as Dictionary).get(key) == value:
@@ -270,17 +270,17 @@ static func _span_with(row_data: EventRowData, key: String, value: Variant) -> S
 
 
 static func _span_text(row_data: EventRowData, key: String, value: Variant) -> String:
-	var span: SemanticSpan = _span_with(row_data, key, value)
+	var span: EventSheetSemanticSpan = _span_with(row_data, key, value)
 	return span.text if span != null else "<no span %s=%s>" % [key, str(value)]
 
 
 static func _span_meta(row_data: EventRowData, key: String, value: Variant, read: String) -> String:
-	var span: SemanticSpan = _span_with(row_data, key, value)
+	var span: EventSheetSemanticSpan = _span_with(row_data, key, value)
 	return str((span.metadata as Dictionary).get(read, "")) if span != null else ""
 
 
 static func _span_flag(row_data: EventRowData, key: String, value: Variant, flag: String) -> bool:
-	var span: SemanticSpan = _span_with(row_data, key, value)
+	var span: EventSheetSemanticSpan = _span_with(row_data, key, value)
 	return bool((span.metadata as Dictionary).get(flag, false)) if span != null else false
 
 
@@ -289,7 +289,7 @@ static func _all_span_text(row_data: EventRowData) -> String:
 	if row_data == null:
 		return "<no row>"
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span != null and not str(span.text).strip_edges().is_empty():
 			parts.append(str(span.text))
 	return " ".join(parts)

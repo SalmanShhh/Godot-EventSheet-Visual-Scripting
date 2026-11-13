@@ -117,7 +117,7 @@ func _scroll_to(marker: String, view: EventSheetViewport) -> void:
 		# Spans are built lazily, so a row further down has none yet - and a marker search over rows
 		# that have not been built would always stop on whatever the first pass happened to fill.
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span != null and span.text.contains(marker):
 				scroll.scroll_vertical = int(maxf(view._row_metrics_helper.row_top(index) - 20.0, 0.0))
 				return
@@ -142,7 +142,7 @@ func _print_row(view: EventSheetViewport, row_data: EventRowData, printed: int, 
 	view._row_builder._ensure_event_spans(row_data)
 	if not row_data.spans.is_empty():
 		var texts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			texts.append(span.text)
 		print("  %s%s" % ["    ".repeat(depth), " | ".join(texts)])
 		printed += 1

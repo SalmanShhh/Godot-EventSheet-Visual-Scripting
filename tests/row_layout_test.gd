@@ -40,13 +40,13 @@ static func run() -> bool:
 		var overlapped: bool = false
 		var spans_with_width: int = 0
 		for s in range(row_data.spans.size()):
-			var span: SemanticSpan = row_data.spans[s]
+			var span: EventSheetSemanticSpan = row_data.spans[s]
 			if span == null:
 				continue
 			if span.rect.size.x > 0.0:
 				spans_with_width += 1
 			if s > 0:
-				var prev: SemanticSpan = row_data.spans[s - 1]
+				var prev: EventSheetSemanticSpan = row_data.spans[s - 1]
 				if prev != null and span.rect.position.x < prev.rect.end.x - 0.5:
 					overlapped = true
 		var kind: String = "variable" if row_data.row_type == EventRowData.RowType.SECTION else "group"

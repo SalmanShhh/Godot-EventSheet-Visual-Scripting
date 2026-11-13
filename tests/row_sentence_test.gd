@@ -1,4 +1,4 @@
-# EventForge - the row-as-sentence hover. ViewportRowBuilder.row_sentence reads a
+# EventForge - the row-as-sentence hover. EventSheetViewportRowBuilder.row_sentence reads a
 # whole event as one plain-English sentence, built ONLY from the descriptor strings the cells draw, with
 # raw-code actions summarised honestly as "then N lines of code". Pins the structure (trigger lead / if /
 # do / else / negation / truncation / raw count) without asserting exact ACE phrasing (that would be brittle).
@@ -14,7 +14,7 @@ static func run() -> bool:
 	var ok: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
-	var builder: ViewportRowBuilder = viewport._row_builder
+	var builder: EventSheetViewportRowBuilder = viewport._row_builder
 	builder.init(viewport)
 
 	# 1) trigger + condition + two actions → "When every physics tick - if … - do: …"

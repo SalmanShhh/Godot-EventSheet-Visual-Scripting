@@ -91,9 +91,9 @@ static func _lane_lines(row: EventRowData, lane: String) -> PackedStringArray:
 	var by_line: Dictionary = {}
 	var order: Array[int] = []
 	for span: Variant in row.spans:
-		if not (span is SemanticSpan):
+		if not (span is EventSheetSemanticSpan):
 			continue
-		var metadata: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
+		var metadata: Dictionary = (span as EventSheetSemanticSpan).metadata if (span as EventSheetSemanticSpan).metadata is Dictionary else {}
 		if not lane.is_empty() and str(metadata.get("lane", "")) != lane:
 			continue
 		if SKIPPED_SPAN_KINDS.has(str(metadata.get("kind", ""))):
@@ -117,7 +117,7 @@ static func _join_spans(spans: Array) -> String:
 	var pieces: PackedStringArray = PackedStringArray()
 	var object_label: String = ""
 	for span: Variant in spans:
-		var typed: SemanticSpan = span as SemanticSpan
+		var typed: EventSheetSemanticSpan = span as EventSheetSemanticSpan
 		var metadata: Dictionary = typed.metadata if typed.metadata is Dictionary else {}
 		var text: String = str(typed.text).strip_edges()
 		if bool(metadata.get("badge", false)):
@@ -130,7 +130,7 @@ static func _join_spans(spans: Array) -> String:
 			continue
 		if text.is_empty():
 			continue
-		if pieces.is_empty() and object_label.is_empty() and typed.type == SemanticSpan.SpanType.OBJECT:
+		if pieces.is_empty() and object_label.is_empty() and typed.type == EventSheetSemanticSpan.SpanType.OBJECT:
 			object_label = text
 			continue
 		pieces.append(text)

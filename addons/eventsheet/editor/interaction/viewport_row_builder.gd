@@ -1,5 +1,5 @@
 @tool
-class_name ViewportRowBuilder
+class_name EventSheetViewportRowBuilder
 extends RefCounted
 # The ROW-BUILDER layer: the "model → SemanticSpans" concern for the event sheet's virtualized
 # viewport. Extracted from event_sheet_viewport.gd to keep that file maintainable. This subsystem
@@ -425,9 +425,9 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 		return
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var accent: Color = _region_accent(block)
-	var spans: Array[SemanticSpan] = [_make_span(
+	var spans: Array[EventSheetSemanticSpan] = [_make_span(
 		EventSheetRegionFacts.FENCE_GLYPH,
-		SemanticSpan.SpanType.KEYWORD,
+		EventSheetSemanticSpan.SpanType.KEYWORD,
 		{
 			"kind": "custom_block_row",
 			"region_badge": true,
@@ -445,7 +445,7 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 	var title: String = str(words["title"])
 	spans.append(_make_span(
 		title,
-		SemanticSpan.SpanType.OBJECT,
+		EventSheetSemanticSpan.SpanType.OBJECT,
 		{
 			"kind": "custom_block_row",
 			"region_title": true,
@@ -465,7 +465,7 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 	# worth knowing before deciding whether to open it.
 	var note: String = str(words["note"])
 	if not note.is_empty():
-		spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT, {
+		spans.append(_make_span(note, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"kind": "custom_block_row",
 			"region_note": true,
 			"line_index": 0,
@@ -542,21 +542,21 @@ func _build_note_row(row_uid: String, indent: int, kind: String, message: String
 	base_meta["editable"] = false
 	base_meta["line_index"] = 0
 	row_data.spans = [
-		_make_span(NOTE_MARK, SemanticSpan.SpanType.KEYWORD, base_meta.merged({
+		_make_span(NOTE_MARK, EventSheetSemanticSpan.SpanType.KEYWORD, base_meta.merged({
 			"badge": true,
 			"badge_style": "scope",
 			kind: "mark",
 			"badge_bg": reading_style.lift_note_badge_background_color,
 			"badge_fg": ink
 		}, true)),
-		_make_span(message, SemanticSpan.SpanType.COMMENT, base_meta.merged({
+		_make_span(message, EventSheetSemanticSpan.SpanType.COMMENT, base_meta.merged({
 			kind: "message", "text_color": ink
 		}, true))
 	]
 	if fix.is_empty():
 		return row_data
 	var fix_meta: Dictionary = base_meta.merged(fix.get("meta", {}) as Dictionary, true)
-	row_data.spans.append(_make_span(str(fix.get("label", "")), SemanticSpan.SpanType.VALUE,
+	row_data.spans.append(_make_span(str(fix.get("label", "")), EventSheetSemanticSpan.SpanType.VALUE,
 		fix_meta.merged({
 			kind: "fix",
 			"align_right": true,
@@ -585,7 +585,7 @@ func apply_else_follows_labels(numbered_rows: Array) -> void:
 		# An Else whose words are not built yet has no span to write the note into, and an Else row
 		# is cheap: build this one's words rather than leave "neither of N" blank until it is scrolled to.
 		_ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("else_follows", false)):
 				span.text = else_follows_text(numbered_rows, index, row_data.indent)
 				break
@@ -781,7 +781,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		"head_band": kind,
 		"line_index": 0
 	}
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	if is_name_band:
 		# The editor's own icon for the class this sheet extends - the same texture the Add Node
 		# dialog draws.
@@ -800,7 +800,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		spans.append(_head_band_switch_span(band_meta, bool(band["switch_on"])))
 	var leader: String = str(band["leader"])
 	if not leader.is_empty():
-		spans.append(_make_span(leader, SemanticSpan.SpanType.KEYWORD, band_meta.merged({
+		spans.append(_make_span(leader, EventSheetSemanticSpan.SpanType.KEYWORD, band_meta.merged({
 			"text_color": reading_style.muted_text_color
 		}, true)))
 	var value_text: String = str(band["value"])
@@ -820,7 +820,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		if is_name_band and _viewport.workspace_bands_folded():
 			# The identity band above the sheet is folded away under this theme, so what it said -
 			# the kind of sheet, how it meets the project, what it publishes - is the name's hover.
-			var identity: PackedStringArray = SheetIdentityBanner.identity_hover_lines(sheet,
+			var identity: PackedStringArray = EventSheetIdentityBanner.identity_hover_lines(sheet,
 				str(sheet.external_source_path))
 			var said: String = str(value_meta.get("hover_note", ""))
 			if not said.is_empty():
@@ -846,7 +846,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			value_meta["edit_kind"] = "sheet_description"
 			value_meta["head_raw_row"] = description_source
 			value_meta["hover_note"] = EventSheetL10n.translate("Writes the ## block · Enter commits.")
-		spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta))
+		spans.append(_make_span(value_text, EventSheetSemanticSpan.SpanType.VALUE, value_meta))
 	# The band's own words that ACT: the prompt a half-made sheet answers ("name it") and the control
 	# that opens the gesture ("change…"). Both are the band's action, so both read the same way.
 	# A quiet class head prints no control word: the band's own words carry its gesture instead.
@@ -854,13 +854,13 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 	if not quiet_head:
 		words.append(str(band["control"]))
 	elif not str(band["control"]).is_empty() and not sheet.read_only:
-		for span: SemanticSpan in spans:
+		for span: EventSheetSemanticSpan in spans:
 			if span.metadata is Dictionary and not (span.metadata as Dictionary).has("head_action"):
 				(span.metadata as Dictionary)["head_action"] = band_action
 	for word: String in words:
 		if word.is_empty() or sheet.read_only:
 			continue
-		spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, band_meta.merged({
+		spans.append(_make_span(word, EventSheetSemanticSpan.SpanType.COMMENT, band_meta.merged({
 			"head_action": band_action,
 			"text_color": event_style.behavior_accent_color
 		}, true)))
@@ -885,7 +885,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 ## both: only the image and the gesture behind it differ. A band whose picture cannot be loaded
 ## still draws its badge, so the gesture stays reachable.
 func _head_band_icon_span(band_meta: Dictionary, action: String, art: Texture2D,
-		hover_note: String) -> SemanticSpan:
+		hover_note: String) -> EventSheetSemanticSpan:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var badge_meta: Dictionary = band_meta.merged({
 		"badge": true,
@@ -897,7 +897,7 @@ func _head_band_icon_span(band_meta: Dictionary, action: String, art: Texture2D,
 	}, true)
 	if art != null:
 		badge_meta["badge_icon"] = art
-	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)
+	return _make_span("▣", EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta)
 
 
 ## True when a script extending `host` is a node's script: `host` is Node or an engine class under
@@ -922,10 +922,10 @@ static func host_is_node(host: String) -> bool:
 ## The class head's own words after the name: the kind of file this is, what it extends (the extends
 ## band's words, control and gesture, drawn here instead of on a row of their own), and - for a
 ## shared sheet - the drawn share mark and the sheets that include it.
-func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> Array[SemanticSpan]:
+func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> Array[EventSheetSemanticSpan]:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	var name_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_NAME,
 		"head_band": EventSheetHeadBands.BAND_NAME, "line_index": 0}
 	# Only a node runs a script it is attached to: a Resource or RefCounted script is made and held
@@ -948,7 +948,7 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 	if not kind_word.is_empty():
 		kind_meta["text_color"] = reading_style.muted_text_color
 	spans.append(_make_span(kind_word if not kind_word.is_empty() else EventSheetL10n.translate("Script"),
-		SemanticSpan.SpanType.KEYWORD, kind_meta))
+		EventSheetSemanticSpan.SpanType.KEYWORD, kind_meta))
 	if not extends_band.is_empty():
 		var extends_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_EXTENDS,
 			"head_band": EventSheetHeadBands.BAND_EXTENDS, "line_index": 0}
@@ -956,7 +956,7 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 		if quiet_head and not sheet.read_only:
 			leader_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
 			leader_meta["hover_note"] = change_note
-		spans.append(_make_span("· %s" % str(extends_band["leader"]), SemanticSpan.SpanType.KEYWORD, leader_meta))
+		spans.append(_make_span("· %s" % str(extends_band["leader"]), EventSheetSemanticSpan.SpanType.KEYWORD, leader_meta))
 		# The quiet head says what it extends in the faint colour, all of it, as one aside.
 		var base_meta: Dictionary = extends_meta.merged({
 			"text_color": reading_style.muted_text_color if bool(extends_band["value_muted"]) or quiet_head \
@@ -971,11 +971,11 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 		elif quiet_head and not sheet.read_only:
 			base_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
 			base_meta["hover_note"] = change_note
-		spans.append(_make_span(str(extends_band["value"]), SemanticSpan.SpanType.VALUE, base_meta))
+		spans.append(_make_span(str(extends_band["value"]), EventSheetSemanticSpan.SpanType.VALUE, base_meta))
 		for word: String in [str(extends_band["prompt"]), "" if quiet_head else str(extends_band["control"])]:
 			if word.is_empty() or sheet.read_only:
 				continue
-			spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, extends_meta.merged({
+			spans.append(_make_span(word, EventSheetSemanticSpan.SpanType.COMMENT, extends_meta.merged({
 				"head_action": EventSheetHeadBands.BAND_EXTENDS,
 				"text_color": event_style.behavior_accent_color
 			}, true)))
@@ -984,7 +984,7 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 		return spans
 	# A shared sheet says so with a drawn mark on a small tile, and names who includes it. Both are
 	# facts about the project rather than lines of the file, read off the include index.
-	spans.append(_make_span("⇆", SemanticSpan.SpanType.KEYWORD, name_meta.merged({
+	spans.append(_make_span("⇆", EventSheetSemanticSpan.SpanType.KEYWORD, name_meta.merged({
 		"badge": true,
 		"badge_style": "glyph",
 		"badge_plate": true,
@@ -1009,7 +1009,7 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 			# The card's one aside, in italics like a variable's note.
 			includers_meta["italic_note"] = true
 		spans.append(_make_span(EventSheetL10n.translate("Included by %s") % ", ".join(includers),
-			SemanticSpan.SpanType.COMMENT, includers_meta))
+			EventSheetSemanticSpan.SpanType.COMMENT, includers_meta))
 	return spans
 
 
@@ -1021,8 +1021,8 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 ## `hovered_facts` are the scene's facts a quiet class head keeps off the canvas ("spawns shot.tscn"):
 ## said in this hover, one per line, and a click on the scene shows it in the FileSystem dock.
 func _class_head_scene_spans(sheet: EventSheetResource, band_meta: Dictionary,
-		hovered_facts: PackedStringArray = PackedStringArray()) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+		hovered_facts: PackedStringArray = PackedStringArray()) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var source_path: String = str(sheet.external_source_path)
 	if source_path.is_empty() or sheet.read_only:
 		return spans
@@ -1042,19 +1042,19 @@ func _class_head_scene_spans(sheet: EventSheetResource, band_meta: Dictionary,
 		# The scene's own gesture on a quiet head: show the file where it lives, the gesture the
 		# spawns rows it stands in for had.
 		scene_meta["head_action"] = "%s:%s" % [EventSheetHeadBands.BAND_SPAWNS, scene_path]
-	spans.append(_make_span(EventSheetL10n.translate("Scene"), SemanticSpan.SpanType.KEYWORD,
+	spans.append(_make_span(EventSheetL10n.translate("Scene"), EventSheetSemanticSpan.SpanType.KEYWORD,
 		scene_meta.merged({"text_color": reading_style.muted_text_color}, true)))
-	spans.append(_make_span(scene_path.get_file(), SemanticSpan.SpanType.COMMENT,
+	spans.append(_make_span(scene_path.get_file(), EventSheetSemanticSpan.SpanType.COMMENT,
 		scene_meta.merged({"text_color": reading_style.primary_text_color}, true)))
 	return spans
 
 
 ## The `@tool` band's switch: a mark, never a word. Clicking it writes or removes the line.
-func _head_band_switch_span(band_meta: Dictionary, switched_on: bool) -> SemanticSpan:
+func _head_band_switch_span(band_meta: Dictionary, switched_on: bool) -> EventSheetSemanticSpan:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	return _make_span(
 		HEAD_SWITCH_ON_GLYPH if switched_on else HEAD_SWITCH_OFF_GLYPH,
-		SemanticSpan.SpanType.KEYWORD,
+		EventSheetSemanticSpan.SpanType.KEYWORD,
 		band_meta.merged({
 			"badge": true,
 			"badge_style": "glyph",
@@ -1072,7 +1072,7 @@ func _head_band_switch_span(band_meta: Dictionary, switched_on: bool) -> Semanti
 ## echo a variable row carries, so one grammar covers every declaration on the canvas. A line the
 ## sheet does not have yet (an unticked `@tool`) echoes ghosted, so the control stays findable
 ## without claiming the file says something it does not.
-func _append_head_band_echo(spans: Array[SemanticSpan], band_meta: Dictionary,
+func _append_head_band_echo(spans: Array[EventSheetSemanticSpan], band_meta: Dictionary,
 		echo_line: String, ghosted: bool) -> void:
 	if echo_line.strip_edges().is_empty():
 		return
@@ -1091,12 +1091,12 @@ func _append_head_band_echo(spans: Array[SemanticSpan], band_meta: Dictionary,
 ## fence's - is built here, so none of them can drift into formatting a line by hand. The palette is
 ## resolved ONCE per sweep: asking Editor Settings for eight colours per row is exactly the
 ## build-loop lookup this viewport does not do.
-func _code_echo_span(echo_line: String, meta: Dictionary, alpha: float, align_right: bool) -> SemanticSpan:
+func _code_echo_span(echo_line: String, meta: Dictionary, alpha: float, align_right: bool) -> EventSheetSemanticSpan:
 	if _code_echo_palette.is_empty():
 		_code_echo_palette = EventSheetCodeEcho.palette(
 			_viewport._get_reading_style(), _viewport._get_event_style()
 		)
-	return _make_span(echo_line, SemanticSpan.SpanType.COMMENT, meta.merged({
+	return _make_span(echo_line, EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({
 		"editable": false,
 		"code_echo": true,
 		"align_right": align_right,
@@ -1114,7 +1114,7 @@ func _build_head_add_row(sheet: EventSheetResource, add_text: String) -> EventRo
 	row_data.row_uid = "%sadd_%d" % [HEAD_BAND_UID_PREFIX, sheet.get_instance_id()]
 	row_data.folded = false
 	row_data.spans = [
-		_make_span(add_text, SemanticSpan.SpanType.COMMENT, {
+		_make_span(add_text, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "head_band_add",
 			"head_band": "add",
@@ -1169,7 +1169,7 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 	row_data.spans = [
 		_make_span(
 			EventSheetL10n.translate(label),
-			SemanticSpan.SpanType.COMMENT,
+			EventSheetSemanticSpan.SpanType.COMMENT,
 			{
 				"kind": "add_event",
 				"editable": false,
@@ -1180,13 +1180,13 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 	]
 	# The look that nests by lines ends the block with a second door at the right: "+ Add to 'name'…",
 	# the menu of everything the block can gain, which is the block head's own menu.
-	if EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()) and not group_name.is_empty():
+	if EventSheetRowRenderer.add_menu_link_wanted(_viewport._get_event_style()) and not group_name.is_empty():
 		var muted: Color = _viewport._get_reading_style().muted_text_color
 		row_data.spans.append(
 			_make_span(
 				EventSheetL10n.translate("+ Add to \"%s\"…") % group_name,
 				# (the quotes follow the board: double, where the classic look's door says 'name')
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				{
 					"kind": "add_block_menu",
 					"editable": false,
@@ -1387,7 +1387,7 @@ func _read_members_in_place(rows: Array[EventRowData]) -> Array[EventRowData]:
 ## True for the row that stands for a whole state machine: its spans carry the mark `build_state_row`
 ## gives them, and a re-reading of "the variable" must leave it alone or the states would be lost.
 static func _is_state_machine_row(row_data: EventRowData) -> bool:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("state_machine", false)):
 			return true
 	return false
@@ -1478,7 +1478,7 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 	if editable:
 		icon_meta["head_action"] = EventSheetHeadBands.BAND_ICON
 		icon_meta["hover_note"] = EventSheetL10n.translate("The class icon. Click to pick another image.")
-	var spans: Array[SemanticSpan] = [_make_span("◆", SemanticSpan.SpanType.KEYWORD, icon_meta)]
+	var spans: Array[EventSheetSemanticSpan] = [_make_span("◆", EventSheetSemanticSpan.SpanType.KEYWORD, icon_meta)]
 	# The name as written - the class_name, or the file when it declares none - bold, and the door to
 	# everything the file says about itself.
 	var name_text: String = head_bar_name(sheet, facts)
@@ -1503,7 +1503,7 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 		# A click on the name opens the Class window, where the class is named and renamed everywhere.
 		# A bar that names a NODE of the scene is about the node, not the script, so it stays still.
 		name_meta["head_action"] = EventSheetHeadBands.BAND_NAME
-	spans.append(_make_span(name_text, SemanticSpan.SpanType.OBJECT, name_meta))
+	spans.append(_make_span(name_text, EventSheetSemanticSpan.SpanType.OBJECT, name_meta))
 	# What kind of script it is, and what it extends. A behaviour or a global says only which it is:
 	# what it works on is a fact of the card, not of the file's `extends` line.
 	var plain_kind: bool = script_kind_word(sheet).is_empty()
@@ -1524,7 +1524,7 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 		if _familiar_words_enabled():
 			extends_word = EventSheetL10n.translate("a kind of")
 		spans.append(_make_span("%s · %s" % [head_bar_kind_word(sheet), extends_word],
-			SemanticSpan.SpanType.KEYWORD, kind_meta))
+			EventSheetSemanticSpan.SpanType.KEYWORD, kind_meta))
 		var base_meta: Dictionary = meta.merged({"text_color": reading_style.primary_text_color}, true)
 		# A base that is another SCRIPT of this project opens as its own sheet.
 		var base_path: String = base_script_path(sheet)
@@ -1534,15 +1534,15 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 		elif editable:
 			base_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
 			base_meta["hover_note"] = EventSheetL10n.translate("Click to change what kind of script it is.")
-		spans.append(_make_span(extends_target, SemanticSpan.SpanType.VALUE, base_meta))
+		spans.append(_make_span(extends_target, EventSheetSemanticSpan.SpanType.VALUE, base_meta))
 	else:
-		spans.append(_make_span(head_bar_kind_word(sheet), SemanticSpan.SpanType.KEYWORD, kind_meta))
+		spans.append(_make_span(head_bar_kind_word(sheet), EventSheetSemanticSpan.SpanType.KEYWORD, kind_meta))
 	if not object_bar.is_empty():
 		# Which file the node runs, and how many nodes of the scene run it.
 		var receipt: String = "· %s" % str(object_bar.get("script_path", "")).get_file()
 		if int(object_bar.get("instances", 1)) > 1:
 			receipt += " (x%d)" % int(object_bar.get("instances", 1))
-		spans.append(_make_span(receipt, SemanticSpan.SpanType.COMMENT, meta.merged({
+		spans.append(_make_span(receipt, EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({
 			"text_color": reading_style.muted_text_color,
 			"include_path": str(object_bar.get("script_path", "")),
 			"hover_note": EventSheetL10n.translate("Open this script as its own sheet, where it is edited."),
@@ -1576,7 +1576,7 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 ## The head bar's "Runs in the editor" chip: a `@tool` script's one fact about when it runs, in the
 ## theme's violet pair - the one the range tile wears, which every theme derives for its dark and its
 ## light ground.
-func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> SemanticSpan:
+func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> EventSheetSemanticSpan:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var hover: String = "%s\n\n@tool" % EventSheetL10n.translate("Runs in the editor too.")
 	var chip_meta: Dictionary = meta.merged({
@@ -1590,7 +1590,7 @@ func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> SemanticSpan
 	if editable:
 		chip_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
 		chip_meta["hover_note"] = "%s\n%s" % [hover, EventSheetL10n.translate("Click to change what kind of script it is.")]
-	return _make_span(EventSheetL10n.translate("Runs in the editor"), SemanticSpan.SpanType.KEYWORD, chip_meta)
+	return _make_span(EventSheetL10n.translate("Runs in the editor"), EventSheetSemanticSpan.SpanType.KEYWORD, chip_meta)
 
 
 ## True for a sheet that opens on the head bar even with no head lines of its own to read: one saved
@@ -1652,7 +1652,7 @@ static func head_bar_kind_word(sheet: EventSheetResource) -> String:
 
 ## The counts at the right of the head bar - "4 variables · 2 events · 34 behaviours" - each one a
 ## door to its own hover card. A count of nothing is left out rather than said as a zero.
-func _head_count_spans(sheet: EventSheetResource, meta: Dictionary) -> Array[SemanticSpan]:
+func _head_count_spans(sheet: EventSheetResource, meta: Dictionary) -> Array[EventSheetSemanticSpan]:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var cards: Array[Dictionary] = []
 	var variables: Dictionary = head_variable_facts(sheet)
@@ -1671,10 +1671,10 @@ func _head_count_spans(sheet: EventSheetResource, meta: Dictionary) -> Array[Sem
 		cards.append({"text": EventSheetL10n.translate("1 behaviour") if behaviours.size() == 1 \
 			else EventSheetL10n.translate("%d behaviours") % behaviours.size(),
 			"card": _head_behaviours_card(behaviours)})
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	for index: int in range(cards.size()):
 		var card: Dictionary = cards[index]
-		spans.append(_make_span(str(card["text"]), SemanticSpan.SpanType.COMMENT, meta.merged({
+		spans.append(_make_span(str(card["text"]), EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({
 			"kind": "sheet_head_count",
 			"align_right": true,
 			"text_color": reading_style.muted_text_color,
@@ -1683,7 +1683,7 @@ func _head_count_spans(sheet: EventSheetResource, meta: Dictionary) -> Array[Sem
 		}, true)))
 		if index < cards.size() - 1:
 			var faint: Color = reading_style.muted_text_color
-			spans.append(_make_span("·", SemanticSpan.SpanType.COMMENT, meta.merged({
+			spans.append(_make_span("·", EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({
 				"kind": "sheet_head_count",
 				"align_right": true,
 				"text_color": Color(faint.r, faint.g, faint.b, faint.a * 0.6),
@@ -1874,7 +1874,7 @@ func head_identity_words(sheet: EventSheetResource) -> String:
 	if EventSheetScriptIntent.is_resource_host(base_class):
 		return EventSheetL10n.translate("data type")
 	var words: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in _tool_shape_spans(sheet):
+	for span: EventSheetSemanticSpan in _tool_shape_spans(sheet):
 		if not span.text.strip_edges().is_empty():
 			words.append(span.text.strip_edges())
 	if words.is_empty() and EventSheetEditorPluginWords.is_editor_plugin_class(base_class):
@@ -1931,7 +1931,7 @@ static func claimed_description_note(rows: Array[EventRowData]) -> CommentRow:
 	for row: EventRowData in rows:
 		if row == null or not row.row_uid.begins_with(SHEET_HEAD_BAR_UID_PREFIX):
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			var card: Variant = (span.metadata as Dictionary).get("head_card") if span.metadata is Dictionary else null
 			if card is Dictionary and str((card as Dictionary).get("id", "")) == "name":
 				return (card as Dictionary).get("description_row") as CommentRow
@@ -2118,17 +2118,17 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 	# What the class extends is read off the class head row, which carries the extends band's words.
 	var extends_word: String = _head_band_value_of(_head_band_row(detail, EventSheetHeadBands.BAND_NAME),
 		EventSheetHeadBands.BAND_EXTENDS)
-	var spans: Array[SemanticSpan] = [_head_band_icon_span(bar_meta, EventSheetHeadBands.BAND_NAME,
+	var spans: Array[EventSheetSemanticSpan] = [_head_band_icon_span(bar_meta, EventSheetHeadBands.BAND_NAME,
 		EventSheetACEIcons.editor_icon(extends_word) if not extends_word.is_empty() else null,
 		EventSheetL10n.translate("What this file is. ▸ opens the lines behind it."))]
 	var class_word: String = _head_band_value(_head_band_row(detail, EventSheetHeadBands.BAND_NAME))
 	if not class_word.is_empty():
-		spans.append(_make_span(class_word, SemanticSpan.SpanType.OBJECT, bar_meta.merged({
+		spans.append(_make_span(class_word, EventSheetSemanticSpan.SpanType.OBJECT, bar_meta.merged({
 			"text_color": _viewport._get_event_style().object_label_color
 		}, true)))
 	if not extends_word.is_empty():
 		spans.append(_make_span(str(EventSheetHeadBands.LEADERS[EventSheetHeadBands.BAND_EXTENDS]),
-			SemanticSpan.SpanType.KEYWORD, bar_meta.merged({
+			EventSheetSemanticSpan.SpanType.KEYWORD, bar_meta.merged({
 				"text_color": reading_style.muted_text_color
 			}, true)))
 		# The base class keeps its door: a base that is another SCRIPT of this project opens as its
@@ -2141,7 +2141,7 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 			base_meta["kind"] = "include_open"
 			base_meta["include_path"] = base_path
 			base_meta["hover_note"] = EventSheetL10n.translate("Open the base script as a sheet.")
-		spans.append(_make_span(extends_word, SemanticSpan.SpanType.VALUE, base_meta))
+		spans.append(_make_span(extends_word, EventSheetSemanticSpan.SpanType.VALUE, base_meta))
 	var muted_meta: Dictionary = bar_meta.merged({"text_color": reading_style.muted_text_color}, true)
 	# A file that reads whole says nothing about it: the only coverage word left is the count of
 	# blocks that did NOT arrive as events, below, which still walks them one per click.
@@ -2152,19 +2152,19 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 	if actions > 0:
 		spans.append(_make_span("· %s" % (EventSheetL10n.translate("1 input action") if actions == 1 \
 			else EventSheetL10n.translate("%d input actions") % actions),
-			SemanticSpan.SpanType.COMMENT, muted_meta.merged({"kind": "head_bar_input"}, true)))
+			EventSheetSemanticSpan.SpanType.COMMENT, muted_meta.merged({"kind": "head_bar_input"}, true)))
 	var variables: int = 0
 	for bar: EventRowData in knob_bars:
 		variables += bar.children.size()
 	if variables > 0:
 		spans.append(_make_span("· %s" % (EventSheetL10n.translate("1 variable") if variables == 1 \
 			else EventSheetL10n.translate("%d variables") % variables),
-			SemanticSpan.SpanType.COMMENT, muted_meta.merged({"kind": "head_bar_variables"}, true)))
+			EventSheetSemanticSpan.SpanType.COMMENT, muted_meta.merged({"kind": "head_bar_variables"}, true)))
 	var blocks: int = int(EventSheetReadingCoverage.measure(sheet).get("block_rows", 0))
 	if blocks > 0:
 		spans.append(_make_span("· %s" % (EventSheetL10n.translate("1 script block") if blocks == 1 \
 			else EventSheetL10n.translate("%d script blocks") % blocks),
-			SemanticSpan.SpanType.COMMENT, coverage_meta))
+			EventSheetSemanticSpan.SpanType.COMMENT, coverage_meta))
 	row_data.spans = spans
 	# THE QUIET SHEET, at the head: a control this file asks for that the project has not got used to
 	# put a warning mark and a sentence inside the Input bar. It is a finding, so the bar says nothing
@@ -2192,8 +2192,8 @@ func _head_band_row(rows: Array[EventRowData], band_kind: String) -> EventRowDat
 func _head_band_value(row_data: EventRowData) -> String:
 	if row_data == null:
 		return ""
-	for span: SemanticSpan in row_data.spans:
-		if span.type == SemanticSpan.SpanType.VALUE:
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if span.type == EventSheetSemanticSpan.SpanType.VALUE:
 			return span.text
 	return ""
 
@@ -2203,8 +2203,8 @@ func _head_band_value(row_data: EventRowData) -> String:
 func _head_band_value_of(row_data: EventRowData, band_kind: String) -> String:
 	if row_data == null:
 		return ""
-	for span: SemanticSpan in row_data.spans:
-		if span.type == SemanticSpan.SpanType.VALUE and span.metadata is Dictionary \
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if span.type == EventSheetSemanticSpan.SpanType.VALUE and span.metadata is Dictionary \
 				and str((span.metadata as Dictionary).get("head_band", "")) == band_kind:
 			return span.text
 	return ""
@@ -2240,7 +2240,7 @@ func _build_head_description_row(sheet: EventSheetResource, described: String) -
 	# rows sharing one key would let a fold state written for one be read back for the other.
 	row_data.row_uid = "head_description_row_%d" % sheet.get_instance_id()
 	row_data.spans = [
-		_make_span(described, SemanticSpan.SpanType.COMMENT, {
+		_make_span(described, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "head_description",
 			"line_index": 0,
@@ -2332,7 +2332,7 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	var identity_icon: Texture2D = EventSheetACEIcons.editor_icon(icon_class) if not icon_class.is_empty() else null
 	if identity_icon != null:
 		badge_meta["badge_icon"] = identity_icon
-	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
+	var spans: Array[EventSheetSemanticSpan] = [_make_span("⇥", EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta)]
 	spans.append_array(_script_include_spans(sheet))
 	# What every shape of the bar ends with, in one place: how much of the file read as events, the
 	# buttons a tool sheet is run from, and - only inside this plugin's own repo - the bar a file of
@@ -2348,8 +2348,8 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 ## otherwise run from the script editor's File > Run and a plugin from Project Settings, both of them
 ## a room away from the sheet; Run now / Reload / Output / Enable plugin close that loop. Every other
 ## kind of sheet gets nothing here - a Run now that cannot run is worse than no Run now at all.
-func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	# A file of the RUNNING editor gets its own bar instead of this one. Both would otherwise
 	# draw a Reload, and the two mean different things: one re-reads a tool you wrote, the other takes
 	# the editor you are looking at off and on again.
@@ -2357,7 +2357,7 @@ func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		return spans
 	var script_path: String = sheet.external_source_path if sheet != null else ""
 	for button: Dictionary in EventSheetEditorToolBar.buttons_for(sheet, script_path):
-		spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.KEYWORD, {
+		spans.append(_make_span(str(button["text"]), EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -2374,23 +2374,23 @@ func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 ##
 ## Drawn nowhere but in the editor's own repo, so an installed plugin's sheets look exactly as they
 ## always have. The muted chips are words rather than buttons; the rest are clicked.
-func _this_editor_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _this_editor_bar_spans(sheet: EventSheetResource) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	for button: Dictionary in EventSheetThisEditorBar.buttons_for(
 			sheet, EventSheetThisEditorBar.is_plugin_enabled()):
 		if bool(button.get("muted", false)):
-			spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.COMMENT, {
+			spans.append(_make_span(str(button["text"]), EventSheetSemanticSpan.SpanType.COMMENT, {
 				"editable": false, "kind": str(button["kind"]), "line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
 			continue
 		if bool(button.get("error", false)):
-			spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.VALUE, {
+			spans.append(_make_span(str(button["text"]), EventSheetSemanticSpan.SpanType.VALUE, {
 				"editable": false, "kind": str(button["kind"]), "line_index": 0,
 				"text_color": _viewport._get_reading_style().error_text_color
 			}))
 			continue
-		spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.KEYWORD, {
+		spans.append(_make_span(str(button["text"]), EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -2410,18 +2410,18 @@ func _this_editor_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 ## click walks the script blocks one at a time. A fully-lifted file drops the number and just says
 ## `reads as events`. The error line is the ENGINE's own count, in red, saying what it costs - a
 ## script that does not parse does not run, and that is worth more than any styling.
-func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _reading_coverage_spans(sheet: EventSheetResource) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var errors: String = EventSheetReadingCoverage.parse_error_text(sheet)
 	if not errors.is_empty():
-		spans.append(_make_span(errors, SemanticSpan.SpanType.VALUE, {
+		spans.append(_make_span(errors, EventSheetSemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "pack_include", "line_index": 0,
 			"text_color": _viewport._get_reading_style().error_text_color
 		}))
 	var coverage: String = EventSheetReadingCoverage.chip_text(sheet)
 	if coverage.is_empty():
 		return spans
-	spans.append(_make_span(coverage, SemanticSpan.SpanType.KEYWORD, {
+	spans.append(_make_span(coverage, EventSheetSemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
@@ -2525,9 +2525,9 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	var root_icon: Texture2D = EventSheetACEIcons.editor_icon(root_type) if not root_type.is_empty() else null
 	if root_icon != null:
 		icon_meta["badge_icon"] = root_icon
-	var spans: Array[SemanticSpan] = [_make_span("◆", SemanticSpan.SpanType.KEYWORD, icon_meta)]
+	var spans: Array[EventSheetSemanticSpan] = [_make_span("◆", EventSheetSemanticSpan.SpanType.KEYWORD, icon_meta)]
 	var scene_name: String = EventSheetSceneSheet.scene_path_of(sheet).get_file()
-	spans.append(_make_span(scene_name, SemanticSpan.SpanType.OBJECT, meta.merged({
+	spans.append(_make_span(scene_name, EventSheetSemanticSpan.SpanType.OBJECT, meta.merged({
 		"text_color": reading_style.primary_text_color,
 		"bbcode_segments": [{"text": scene_name, "color": reading_style.primary_text_color, "bold": true, "italic": false}],
 		"hover_note": EventSheetL10n.translate(
@@ -2535,8 +2535,8 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	}, true)))
 	if not root_type.is_empty():
 		spans.append(_make_span("%s · %s" % [EventSheetL10n.translate("Scene"), EventSheetL10n.translate("root")],
-			SemanticSpan.SpanType.KEYWORD, meta.merged({"text_color": reading_style.muted_text_color}, true)))
-		spans.append(_make_span(root_type, SemanticSpan.SpanType.VALUE,
+			EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({"text_color": reading_style.muted_text_color}, true)))
+		spans.append(_make_span(root_type, EventSheetSemanticSpan.SpanType.VALUE,
 			meta.merged({"text_color": reading_style.primary_text_color}, true)))
 	var nodes: PackedStringArray = PackedStringArray()
 	for entry: Variant in EventSheetSceneSheet.members_of(sheet):
@@ -2547,7 +2547,7 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	var scripts: int = EventSheetSceneSheet.members_of(sheet).size()
 	spans.append(_make_span(EventSheetL10n.translate("1 script") if scripts == 1
 		else EventSheetL10n.translate("{n} scripts").replace("{n}", str(scripts)),
-		SemanticSpan.SpanType.COMMENT, meta.merged({
+		EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({
 			"kind": "sheet_head_count",
 			"align_right": true,
 			"text_color": reading_style.muted_text_color,
@@ -2577,7 +2577,7 @@ static func is_addon_pack(sheet: EventSheetResource) -> bool:
 ## The NAME and the class are not here: `class_name` and `extends` are lines of the file, and the
 ## band stack above states each of them once, with its own control and its own echo. What is left is
 ## what no line of the file says.
-func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+func _script_include_spans(sheet: EventSheetResource) -> Array[EventSheetSemanticSpan]:
 	var source_path: String = str(sheet.external_source_path)
 	# Inside a scene view this bar is the OBJECT bar of the node carrying the script, so it says
 	# what the scene tree says ("HUD a CanvasLayer") and skips the scene receipt: the whole sheet is
@@ -2589,14 +2589,14 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		return _scene_object_bar_spans(object_bar, _viewport._get_event_style())
 	var base_class: String = sheet.host_class.strip_edges()
 	var scene: Dictionary = scene_using_script(source_path) if not source_path.is_empty() else {}
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	# A script with no `class_name` is known by the NODE that runs it: "SpawnerPad" is what its
 	# author calls this thing. That name is a fact of the SCENE rather than a line of the file, so it
 	# is this bar's to say; a file that declares a class is named by its name band instead.
 	var scene_name: String = str(scene.get("root_name", "")).strip_edges() \
 		if sheet.custom_class_name.strip_edges().is_empty() else ""
 	if not scene_name.is_empty():
-		spans.append(_make_span(scene_name, SemanticSpan.SpanType.OBJECT, {
+		spans.append(_make_span(scene_name, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "pack_include", "line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}))
@@ -2611,7 +2611,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	# What this file IS to the editor it is part of, said instead of the class it happens to extend: a
 	# behavior of the object it was made with, a store nothing is ever made of, or a page of the
 	# vocabulary. All three replace "a RefCounted", which is the least useful true thing about them.
-	var tool_shape: Array[SemanticSpan] = _tool_shape_spans(sheet)
+	var tool_shape: Array[EventSheetSemanticSpan] = _tool_shape_spans(sheet)
 	if not tool_shape.is_empty():
 		spans.append_array(tool_shape)
 		return _append_include_receipts(spans, source_path, {})
@@ -2621,7 +2621,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	# code that say one thing each, and reading them as three events would be reading three lies.
 	if EventSheetEditorPluginWords.is_editor_plugin_class(base_class):
 		spans.append(_make_span(" · ".join(_editor_plugin_head_facts(sheet, base_class)),
-			SemanticSpan.SpanType.COMMENT, {
+			EventSheetSemanticSpan.SpanType.COMMENT, {
 				"editable": false, "kind": "pack_include", "line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
@@ -2635,8 +2635,8 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 
 ## The muted receipts every shape of the bar ends with, as one span: which file this is, and the scene
 ## that runs it. One place, because "which file am I looking at" is the same question in all of them.
-func _append_include_receipts(spans: Array[SemanticSpan], source_path: String,
-		scene: Dictionary) -> Array[SemanticSpan]:
+func _append_include_receipts(spans: Array[EventSheetSemanticSpan], source_path: String,
+		scene: Dictionary) -> Array[EventSheetSemanticSpan]:
 	var receipts: PackedStringArray = PackedStringArray()
 	if not source_path.is_empty():
 		receipts.append("· %s" % source_path.get_file())
@@ -2644,7 +2644,7 @@ func _append_include_receipts(spans: Array[SemanticSpan], source_path: String,
 		receipts.append("· %s %s" % [EventSheetL10n.translate("scene"), str(scene.get("scene_path", "")).get_file()])
 	if receipts.is_empty():
 		return spans
-	spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
+	spans.append(_make_span(" ".join(receipts), EventSheetSemanticSpan.SpanType.COMMENT, {
 		"editable": false, "kind": "pack_include", "line_index": 0,
 		"text_color": _viewport._get_reading_style().muted_text_color
 	}))
@@ -2745,8 +2745,8 @@ func _function_body_entries(sheet: EventSheetResource, function_name: String) ->
 
 ## The Include-bar chips a tooling file states about itself, plus - for a test that
 ## opens one - the fixture it reads, which double-click opens beside it. Empty for every other file.
-func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var lines: PackedStringArray = EventSheetToolFiles.lines_of_sheet(sheet)
 	var kind: String = EventSheetToolFiles.kind_of(lines, source_path)
 	if kind.is_empty():
@@ -2759,7 +2759,7 @@ func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Ar
 		var built: String = EventSheetEditorToolBar.built_pack_path(sheet)
 		if not built.is_empty():
 			spans.append(_make_span("%s %s" % [EventSheetL10n.translate("builds"), built.get_base_dir().trim_prefix("res://")],
-				SemanticSpan.SpanType.COMMENT, {
+				EventSheetSemanticSpan.SpanType.COMMENT, {
 					"editable": false, "kind": "pack_include", "line_index": 0,
 					"text_color": _viewport._get_reading_style().muted_text_color
 				}))
@@ -2768,7 +2768,7 @@ func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Ar
 		if not fixture.is_empty():
 			# The fixture is an OBJECT this test opens, so it wears a chip and carries the path every
 			# other openable include carries - double-click opens it beside the test.
-			var fixture_span: SemanticSpan = _pack_include_chip(
+			var fixture_span: EventSheetSemanticSpan = _pack_include_chip(
 				"%s: %s" % [EventSheetL10n.translate("fixture"), fixture.get_file()])
 			fixture_span.metadata["include_path"] = fixture
 			fixture_span.metadata["kind"] = "scene_object_open"
@@ -2780,7 +2780,7 @@ func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Ar
 ## script lives in, and "(x3)" when the same script sits on more than one node of this scene. Every
 ## span carries the script path, so a double-click anywhere on the bar opens that file as its own
 ## sheet - which is where editing happens, because a scene view never writes anything.
-func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEventStyle) -> Array[SemanticSpan]:
+func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEventStyle) -> Array[EventSheetSemanticSpan]:
 	var script_path: String = str(object_bar.get("script_path", ""))
 	var open_meta: Dictionary = {
 		"editable": false,
@@ -2788,14 +2788,14 @@ func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEven
 		"include_path": script_path,
 		"line_index": 0
 	}
-	var spans: Array[SemanticSpan] = []
-	spans.append(_make_span(str(object_bar.get("node", "")), SemanticSpan.SpanType.OBJECT,
+	var spans: Array[EventSheetSemanticSpan] = []
+	spans.append(_make_span(str(object_bar.get("node", "")), EventSheetSemanticSpan.SpanType.OBJECT,
 		open_meta.duplicate().merged({"text_color": event_style.object_label_color}, true)))
 	var node_type: String = str(object_bar.get("type", ""))
 	if not node_type.is_empty():
-		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE,
+		spans.append(_make_span(EventSheetL10n.translate("a"), EventSheetSemanticSpan.SpanType.VALUE,
 			open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true)))
-		spans.append(_make_span(node_type, SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+		spans.append(_make_span(node_type, EventSheetSemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
 			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
@@ -2805,7 +2805,7 @@ func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEven
 	var instances: int = int(object_bar.get("instances", 1))
 	if instances > 1:
 		receipt += " (x%d)" % instances
-	spans.append(_make_span(receipt, SemanticSpan.SpanType.COMMENT,
+	spans.append(_make_span(receipt, EventSheetSemanticSpan.SpanType.COMMENT,
 		open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true)))
 	return spans
 
@@ -2858,15 +2858,15 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 		"include_path": base_path,
 		"line_index": 0
 	}
-	var spans: Array[SemanticSpan] = [
-		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true)),
-		_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span("⇥", EventSheetSemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true)),
+		_make_span(_include_word(), EventSheetSemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
 			"text_color": inks["tag"]
 		}, true)),
-		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+		_make_span(base_path.get_file(), EventSheetSemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"text_color": inks["name"]
 		}, true)),
-		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
+		_make_span(EventSheetL10n.translate("- open as a sheet"), EventSheetSemanticSpan.SpanType.COMMENT,
 			open_meta.duplicate().merged({"text_color": inks["note"]}, true))
 	]
 	row_data.spans = spans
@@ -2945,19 +2945,19 @@ func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) ->
 		else:
 			said = EventSheetL10n.translate("· shared sheet, as its base")
 			written = "extends %s" % str(include["class"])
-		row_data.spans = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true))]
-		row_data.spans.append(_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
+		row_data.spans = [_make_span("⇥", EventSheetSemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true))]
+		row_data.spans.append(_make_span(_include_word(), EventSheetSemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
 			"text_color": inks["tag"]}, true)))
-		row_data.spans.append(_make_span(str(include["class"]), SemanticSpan.SpanType.KEYWORD,
+		row_data.spans.append(_make_span(str(include["class"]), EventSheetSemanticSpan.SpanType.KEYWORD,
 			open_meta.duplicate().merged({"text_color": inks["name"]}, true)))
-		row_data.spans.append(_make_span(said, SemanticSpan.SpanType.COMMENT,
+		row_data.spans.append(_make_span(said, EventSheetSemanticSpan.SpanType.COMMENT,
 			open_meta.duplicate().merged({"text_color": inks["note"]}, true)))
 		# The line the include writes, at the right edge, coloured the way the script editor colours it.
 		# On a rounded bar it is drawn at full strength and each colour kept readable on the bar's fill:
 		# the bar is already a highlighted band, and the echo's resting fade over that fill left a
 		# keyword like `extends` all but invisible.
 		var on_bar: bool = row_data.outline_radius > 0.0
-		var echo: SemanticSpan = _code_echo_span(written, open_meta.merged({
+		var echo: EventSheetSemanticSpan = _code_echo_span(written, open_meta.merged({
 			"hover_note": EventSheetL10n.translate("The line this include writes into the script.")
 		}, true), 1.0 if on_bar else EventSheetCodeEcho.REST_ALPHA, true)
 		if on_bar:
@@ -3001,21 +3001,21 @@ func _build_included_variable_rows(sheet: EventSheetResource, include: Dictionar
 		var type_text: String = str(variable["type"])
 		var value_text: String = str(variable["value"])
 		if not type_text.is_empty():
-			row_data.spans.append(_make_span(type_text, SemanticSpan.SpanType.KEYWORD, meta.merged({
+			row_data.spans.append(_make_span(type_text, EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({
 				"variable_type_span": true,
 				"variable_type_family": NativeVariableMarks.type_family(type_text, value_text, true),
 				"text_color": reading_style.secondary_text_color
 			}, true)))
-		row_data.spans.append(_make_span(str(variable["name"]), SemanticSpan.SpanType.OBJECT, meta.merged({
+		row_data.spans.append(_make_span(str(variable["name"]), EventSheetSemanticSpan.SpanType.OBJECT, meta.merged({
 			"text_color": event_style.object_label_color
 		}, true)))
 		if not value_text.is_empty():
-			row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, meta.merged({"text_color": muted}, true)))
-			row_data.spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, meta.merged({
+			row_data.spans.append(_make_span("=", EventSheetSemanticSpan.SpanType.OPERATOR, meta.merged({"text_color": muted}, true)))
+			row_data.spans.append(_make_span(value_text, EventSheetSemanticSpan.SpanType.VALUE, meta.merged({
 				"text_color": event_style.value_highlight_color
 			}, true)))
 		row_data.spans.append(_make_span(EventSheetL10n.translate("from %s") % str(include["class"]),
-			SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
+			EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
 		rows.append(row_data)
 	return rows
 
@@ -3062,16 +3062,16 @@ func _build_inherited_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var open_meta: Dictionary = {"editable": false, "kind": "include_open", "include_path": str(have["path"]),
 		"line_index": 0, "hover_note": EventSheetL10n.translate("Open the parent's sheet, where these are changed.")}
 	bar.spans = [
-		_make_span("▶" if folded else "▼", SemanticSpan.SpanType.KEYWORD, fold_meta.merged({"text_color": inks["arrow"]}, true)),
-		_make_span(kinds.word("from", familiar), SemanticSpan.SpanType.VALUE, fold_meta.merged({"text_color": inks["tag"]}, true)),
-		_make_span(parent_text, SemanticSpan.SpanType.KEYWORD, open_meta.merged({"text_color": inks["name"]}, true)),
+		_make_span("▶" if folded else "▼", EventSheetSemanticSpan.SpanType.KEYWORD, fold_meta.merged({"text_color": inks["arrow"]}, true)),
+		_make_span(kinds.word("from", familiar), EventSheetSemanticSpan.SpanType.VALUE, fold_meta.merged({"text_color": inks["tag"]}, true)),
+		_make_span(parent_text, EventSheetSemanticSpan.SpanType.KEYWORD, open_meta.merged({"text_color": inks["name"]}, true)),
 	]
 	var counts: String = EventSheetL10n.counted("1 variable", "%d variables", variables.size()) + " · " + EventSheetL10n.counted("1 function", "%d functions", functions.size())
 	if folded:
-		bar.spans.append(_make_span(counts, SemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
+		bar.spans.append(_make_span(counts, EventSheetSemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
 	else:
 		bar.spans.append(_make_span(EventSheetL10n.translate("read here, changed on %s's sheet") % parent_text,
-			SemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
+			EventSheetSemanticSpan.SpanType.COMMENT, fold_meta.merged({"text_color": inks["note"]}, true)))
 	rows.append(bar)
 	if folded:
 		return rows
@@ -3090,20 +3090,20 @@ func _build_inherited_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 		var value_text: String = str(variable["value"])
 		var type_text: String = str(variable["type"]) if not str(variable["type"]).is_empty() else kinds.type_of_value(value_text)
 		if not type_text.is_empty():
-			row_data.spans.append(_make_span(type_text, SemanticSpan.SpanType.KEYWORD, meta.merged({
+			row_data.spans.append(_make_span(type_text, EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({
 				"variable_type_span": true,
 				"variable_type_family": NativeVariableMarks.type_family(type_text, value_text, true),
 				"text_color": reading_style.secondary_text_color}, true)))
-		row_data.spans.append(_make_span(str(variable["name"]), SemanticSpan.SpanType.OBJECT, meta.merged({
+		row_data.spans.append(_make_span(str(variable["name"]), EventSheetSemanticSpan.SpanType.OBJECT, meta.merged({
 			"text_color": event_style.object_label_color}, true)))
 		if not value_text.is_empty():
-			row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, meta.merged({"text_color": muted}, true)))
-			row_data.spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, meta.merged({
+			row_data.spans.append(_make_span("=", EventSheetSemanticSpan.SpanType.OPERATOR, meta.merged({"text_color": muted}, true)))
+			row_data.spans.append(_make_span(value_text, EventSheetSemanticSpan.SpanType.VALUE, meta.merged({
 				"text_color": event_style.value_highlight_color}, true)))
 		var started: String = str(variable.get("starts", ""))
 		if not started.is_empty():
 			row_data.spans.append(_make_span(kinds.starts_it_reading(own_text, started, familiar),
-				SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": event_style.value_highlight_color}, true)))
+				EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({"text_color": event_style.value_highlight_color}, true)))
 		rows.append(row_data)
 	for function: Dictionary in functions:
 		var row_data := EventRowData.new()
@@ -3120,13 +3120,13 @@ func _build_inherited_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 		for param: Variant in function.get("params", []):
 			var entry: Dictionary = param as Dictionary
 			params.append(str(entry["name"]) if str(entry.get("type", "")).is_empty() else "%s: %s" % [entry["name"], entry["type"]])
-		row_data.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, meta.merged({"text_color": tag}, true)))
-		row_data.spans.append(_make_span("%s(%s)" % [function["name"], ", ".join(params)], SemanticSpan.SpanType.OBJECT,
+		row_data.spans.append(_make_span("ƒ", EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({"text_color": tag}, true)))
+		row_data.spans.append(_make_span("%s(%s)" % [function["name"], ", ".join(params)], EventSheetSemanticSpan.SpanType.OBJECT,
 			meta.merged({"text_color": event_style.object_label_color}, true)))
 		var own: EventFunction = kinds.own_function(sheet, str(function["name"]))
 		if own != null:
 			row_data.spans.append(_make_span("%s %s" % [kinds.word("replaces", familiar), own_text],
-				SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
+				EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
 		rows.append(row_data)
 	return rows
 
@@ -3206,8 +3206,8 @@ func helper_call_reading(action_resource: Variant, event_row: EventRow) -> Dicti
 ##
 ## Each shape also CLAIMS itself, so the chip, the hover evidence and the Doctor read one registry
 ## rather than each re-deriving the same fact from the same file.
-func _tool_shape_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _tool_shape_spans(sheet: EventSheetResource) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	if sheet == null:
 		return spans
 	var facts: Dictionary = EventSheetEditorSourceFacts.facts(sheet)
@@ -3220,7 +3220,7 @@ func _tool_shape_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		var object_name: String = str(helper.get("object", ""))
 		var helper_file: String = str(helper.get("file", ""))
 		spans.append(_include_muted_span(EventSheetL10n.translate("helper of")))
-		spans.append(_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
+		spans.append(_make_span(object_name, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "pack_include", "line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}))
@@ -3250,17 +3250,17 @@ func _tool_shape_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 
 
 ## One muted word of an Include bar - the tone every receipt on that bar is written in.
-func _include_muted_span(text: String) -> SemanticSpan:
-	return _make_span(text, SemanticSpan.SpanType.COMMENT, {
+func _include_muted_span(text: String) -> EventSheetSemanticSpan:
+	return _make_span(text, EventSheetSemanticSpan.SpanType.COMMENT, {
 		"editable": false, "kind": "pack_include", "line_index": 0,
 		"text_color": _viewport._get_reading_style().muted_text_color
 	})
 
 
-func _pack_include_chip(text: String, chip_kind: String = "pack_include") -> SemanticSpan:
+func _pack_include_chip(text: String, chip_kind: String = "pack_include") -> EventSheetSemanticSpan:
 	# A plain word, muted, on the bar's one line. It used to be a filled pill, and a head made of
 	# pills read as a row of buttons on a sheet that draws none; a word says the same thing quietly.
-	return _make_span(text, SemanticSpan.SpanType.KEYWORD, {
+	return _make_span(text, EventSheetSemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"kind": chip_kind,
 		"line_index": 0,
@@ -3650,14 +3650,14 @@ func _build_object_fact_row(sheet: EventSheetResource, uid_suffix: String, title
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
 	row_data.row_uid = "%s_%d" % [uid_suffix, sheet.get_instance_id()]
-	var spans: Array[SemanticSpan] = [
-		_make_span(title, SemanticSpan.SpanType.OBJECT, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span(title, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "object_fact", "line_index": 0,
 			"text_color": event_style.object_label_color
 		})
 	]
 	if not detail.is_empty():
-		spans.append(_make_span(detail, SemanticSpan.SpanType.COMMENT, {
+		spans.append(_make_span(detail, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "object_fact", "line_index": 0,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
@@ -3802,14 +3802,14 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 		sheet.read_only or default_folded))
 	row_data.custom_color = event_style.head_bar_color
 	row_data.spans = [
-		_make_span(title, SemanticSpan.SpanType.OBJECT, {
+		_make_span(title, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"editable": false,
 			"kind": "pack_head_group",
 			"line_index": 0,
 			"object_icon": _folder_icon() if _viewport.show_object_icons else null,
 			"text_color": event_style.group_title_color
 		}),
-		_make_span(subtitle, SemanticSpan.SpanType.COMMENT, {
+		_make_span(subtitle, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "pack_head_group",
 			"line_index": 0,
@@ -3824,7 +3824,7 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 		var word: String = str(chips[chip_index]).replace(" ×", " ")
 		if chip_index < chips.size() - 1:
 			word += ","
-		var word_span: SemanticSpan = _make_span(word, SemanticSpan.SpanType.COMMENT, {
+		var word_span: EventSheetSemanticSpan = _make_span(word, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "head_group_chip",
 			"line_index": 0,
@@ -3945,7 +3945,7 @@ func build_caption_row(text: String, indent: int, row_uid: String, accent: Color
 	row_data.attached_below = true
 	row_data.custom_color = accent
 	row_data.spans = [
-		_make_span(text, SemanticSpan.SpanType.COMMENT, {
+		_make_span(text, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "caption",
 			"text_color": _viewport._get_event_style().comment_text_color
@@ -3967,7 +3967,7 @@ func append_field_cell(row_data: EventRowData, label: String, text: String, meta
 	# existing span per cell was quadratic work thrown away.
 	var next_line: int = 0
 	if not metadata.has("line_index"):
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			var existing: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if str(existing.get("lane", "condition")) == "condition":
 				next_line = maxi(next_line, int(existing.get("line_index", 0)) + 1)
@@ -3979,7 +3979,7 @@ func append_field_cell(row_data: EventRowData, label: String, text: String, meta
 		"object_label": label
 	}.merged(_viewport._build_element_style_metadata(_viewport._get_condition_style()), true)
 	cell_meta.merge(metadata, true)
-	row_data.spans.append(_make_span(text, SemanticSpan.SpanType.CONDITION, cell_meta))
+	row_data.spans.append(_make_span(text, EventSheetSemanticSpan.SpanType.CONDITION, cell_meta))
 	return row_data
 
 
@@ -4287,8 +4287,8 @@ static func _friendly_return_type(event_function: EventFunction) -> String:
 ## One chip on a Define row's ACTION lane (category, return, waits / static / internal / featured) - the
 ## same badge grammar the row's role badge uses, on the lane that reads as "and what do I get back?".
 func _define_chip(text: String, background: Color, foreground: Color, line_index: int,
-		kind: String = "define_function") -> SemanticSpan:
-	return _make_span(text, SemanticSpan.SpanType.KEYWORD, {
+		kind: String = "define_function") -> EventSheetSemanticSpan:
+	return _make_span(text, EventSheetSemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
@@ -4416,7 +4416,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		row_data.spans = _function_head_spans(event_function, role)
 	_append_verb_body_rows(row_data, event_function, indent)
 	var lines: int = 1
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		lines = maxi(lines, int((span.metadata as Dictionary).get("line_index", 0)) + 1)
 	row_data.line_count = lines
 	_merge_first_body_step_into_header(row_data)
@@ -4430,10 +4430,10 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 ## than none.
 func _append_head_add_doors(row_data: EventRowData, event_function: EventFunction) -> void:
 	if _scaffolding_suppressed() or not _function_body_editable(event_function) \
-			or not EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+			or not EventSheetRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
 		return
 	var action_lines: int = 0
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		var metadata: Dictionary = span.metadata as Dictionary
 		if str(metadata.get("kind", "")) == "add_action":
 			return
@@ -4443,7 +4443,7 @@ func _append_head_add_doors(row_data: EventRowData, event_function: EventFunctio
 
 
 ## The head of an editor callback or an animation-called function, or [] for every other function.
-func _callback_head_spans(event_function: EventFunction) -> Array[SemanticSpan]:
+func _callback_head_spans(event_function: EventFunction) -> Array[EventSheetSemanticSpan]:
 	var editor_callback: Dictionary = EventSheetEditorPluginWords.callback_for(
 		_editor_plugin_class(), event_function.function_name)
 	if not editor_callback.is_empty():
@@ -4461,7 +4461,7 @@ func _callback_head_spans(event_function: EventFunction) -> Array[SemanticSpan]:
 ## the Test or Command tool it runs); then one line per parameter (the parameter icon, its name in
 ## the object column, its type after it); then "+ Add parameter" on a sheet that can take one. What kind of function it is, what
 ## it returns and its flags are said by the name's hover card, never by a word chip on the row.
-func _function_head_spans(event_function: EventFunction, role: String) -> Array[SemanticSpan]:
+func _function_head_spans(event_function: EventFunction, role: String) -> Array[EventSheetSemanticSpan]:
 	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var editable: bool = _verb_metadata_editable()
 	var head: Dictionary = {"editable": false, "kind": "define_function", "lane": "condition", "line_index": 0}
@@ -4477,8 +4477,8 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 	if not _tool_file_entry_kind(event_function).is_empty():
 		arrival = EventSheetL10n.translate("On")
 		name_word = EventSheetL10n.translate("run")
-	var spans: Array[SemanticSpan] = []
-	spans.append(_make_span("%s %s" % [arrival, name_word], SemanticSpan.SpanType.CONDITION, head.merged({
+	var spans: Array[EventSheetSemanticSpan] = []
+	spans.append(_make_span("%s %s" % [arrival, name_word], EventSheetSemanticSpan.SpanType.CONDITION, head.merged({
 		"chip": true,
 		"function_name": true,
 		"function_kind": role,
@@ -4492,7 +4492,7 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 		var param: ACEParam = event_function.params[index]
 		if param == null:
 			continue
-		spans.append(_make_span(function_param_type_words(param), SemanticSpan.SpanType.VALUE, {
+		spans.append(_make_span(function_param_type_words(param), EventSheetSemanticSpan.SpanType.VALUE, {
 			"editable": false,
 			"kind": "verb_param",
 			"param_index": index,
@@ -4512,7 +4512,7 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 	if editable:
 		var add_color: Color = _viewport._get_condition_style().text_color
 		add_color.a *= 0.55
-		spans.append(_make_span(EventSheetL10n.translate("+ Add parameter"), SemanticSpan.SpanType.CONDITION, {
+		spans.append(_make_span(EventSheetL10n.translate("+ Add parameter"), EventSheetSemanticSpan.SpanType.CONDITION, {
 			"editable": false,
 			"kind": "verb_param_add",
 			"lane": "condition",
@@ -4579,7 +4579,7 @@ func refresh_function_cards(rows: Array) -> int:
 			continue
 		var event_function: EventFunction = row_data.source_resource as EventFunction
 		if event_function != null:
-			for span: SemanticSpan in row_data.spans:
+			for span: EventSheetSemanticSpan in row_data.spans:
 				var metadata: Dictionary = span.metadata as Dictionary
 				if bool(metadata.get("function_name", false)) and metadata.has("hover_note"):
 					metadata["hover_note"] = _function_head_card(event_function, str(metadata.get("function_kind", "")), editable)
@@ -4771,14 +4771,14 @@ static func called_by_words(function_name: String, own_script: String) -> String
 ## script editor's own colours. An annotation carrying an option Godot does not take reads as no
 ## words at all - the echo IS the annotation, and guessing at what it meant would be worse than the
 ## line - and `build_verb_block_rows` puts the amber note naming that option under the row.
-func _append_message_spans(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
+func _append_message_spans(spans: Array[EventSheetSemanticSpan], event_function: EventFunction) -> void:
 	var annotation: String = EventSheetMessageFacts.annotation_of(event_function)
 	if annotation.is_empty():
 		_append_visibility_filter_span(spans, event_function)
 		return
 	var mode_words: String = EventSheetMessageFacts.words(annotation)
 	if not mode_words.is_empty() and EventSheetMessageFacts.unknown_note(annotation).is_empty():
-		spans.append(_make_span(mode_words, SemanticSpan.SpanType.COMMENT, {
+		spans.append(_make_span(mode_words, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "define_function",
 			"message_words": true,
@@ -4807,11 +4807,11 @@ func _visibility_filter_entry(event_function: EventFunction) -> Dictionary:
 ## Which synchronizer asks this function whether a player may see it, at the right of its own
 ## row - the other half of the "visibility filter" word. Nothing is written into the `.gd` for it:
 ## the fact IS the row that names the function, so a filter nobody asks stops saying it is one.
-func _append_visibility_filter_span(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
+func _append_visibility_filter_span(spans: Array[EventSheetSemanticSpan], event_function: EventFunction) -> void:
 	var asked_by: String = str(_visibility_filter_entry(event_function).get("synchronizer", ""))
 	if asked_by.is_empty():
 		return
-	spans.append(_make_span(EventSheetL10n.translate("for %s") % asked_by, SemanticSpan.SpanType.COMMENT, {
+	spans.append(_make_span(EventSheetL10n.translate("for %s") % asked_by, EventSheetSemanticSpan.SpanType.COMMENT, {
 		"editable": false,
 		"kind": "define_function",
 		"role_words": true,
@@ -4834,11 +4834,11 @@ func _append_visibility_filter_span(spans: Array[SemanticSpan], event_function: 
 ## written for. The animation events borrow the whole shape - a badge, a sentence, the parameter
 ## chips - and differ only in whose event it is.
 func _build_editor_callback_spans(event_function: EventFunction, sentence: String,
-		object_word: String = "") -> Array[SemanticSpan]:
+		object_word: String = "") -> Array[EventSheetSemanticSpan]:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var chip_bg: Color = _verb_chip_colors()[0]
-	var spans: Array[SemanticSpan] = [
-		_make_span("➜", SemanticSpan.SpanType.KEYWORD, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span("➜", EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "trigger",
@@ -4872,12 +4872,12 @@ func _build_editor_callback_spans(event_function: EventFunction, sentence: Strin
 	}
 	if EventSheetBBCodeLite.has_markup(marked_up):
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(marked_up, name_color)
-	spans.append(_make_span(EventSheetBBCodeLite.strip(marked_up), SemanticSpan.SpanType.OBJECT, name_meta))
+	spans.append(_make_span(EventSheetBBCodeLite.strip(marked_up), EventSheetSemanticSpan.SpanType.OBJECT, name_meta))
 	if named_any:
 		return spans
 	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	for index: int in names.size():
-		spans.append(_make_span(names[index], SemanticSpan.SpanType.CONDITION, {
+		spans.append(_make_span(names[index], EventSheetSemanticSpan.SpanType.CONDITION, {
 			"editable": false,
 			"lane": "condition",
 			"kind": "verb_param",
@@ -4992,8 +4992,8 @@ func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
 	# The one row of a body whose words are needed at BUILD time rather than at draw time: they are
 	# about to move into the head, so they have to exist. Every other body row stays lazy.
 	_ensure_event_spans(first_step)
-	var moved: Array[SemanticSpan] = []
-	for span: SemanticSpan in first_step.spans:
+	var moved: Array[EventSheetSemanticSpan] = []
+	for span: EventSheetSemanticSpan in first_step.spans:
 		if span == null or not (span.metadata is Dictionary):
 			return
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -5040,11 +5040,11 @@ func _make_row_inert(row_data: EventRowData) -> void:
 		_ensure_event_spans(row_data)
 	# A row whose words were built eagerly (a branch of a pair) offers no door that opens nothing.
 	if row_data.ternary_view and not row_data.spans.is_empty():
-		var kept: Array[SemanticSpan] = _without_add_doors(row_data.spans)
+		var kept: Array[EventSheetSemanticSpan] = _without_add_doors(row_data.spans)
 		if kept.size() != row_data.spans.size():
 			row_data.spans = kept
 			var lines: int = 1
-			for span: SemanticSpan in kept:
+			for span: EventSheetSemanticSpan in kept:
 				lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
 			row_data.line_count = lines
 	row_data.source_resource = null
@@ -5101,7 +5101,7 @@ static func state_progress_metadata(condition: ACECondition) -> Dictionary:
 	var written: String = str(condition.params.get("seconds", "")).strip_edges()
 	if not written.is_valid_float():
 		return {}
-	return {ViewportLiveValuesHelper.STATE_PROGRESS_META: written.to_float()}
+	return {EventSheetViewportLiveValuesHelper.STATE_PROGRESS_META: written.to_float()}
 
 
 ## Where this machine's states are named inside one sentence of a row ("is RUN for over 2 s"): each is
@@ -5168,8 +5168,8 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 		if metadata is Dictionary and bool((metadata as Dictionary).get("variable_value_span", false)):
 			at = index
 			break
-	var states: Array[SemanticSpan] = [_make_span(EventSheetL10n.translate("is one of"),
-		SemanticSpan.SpanType.COMMENT, row_meta.merged({"text_color": reading_style.muted_text_color}, true))]
+	var states: Array[EventSheetSemanticSpan] = [_make_span(EventSheetL10n.translate("is one of"),
+		EventSheetSemanticSpan.SpanType.COMMENT, row_meta.merged({"text_color": reading_style.muted_text_color}, true))]
 	var members: PackedStringArray = EventSheetStateFacts.bare_members(sheet, machine)
 	for member_index: int in members.size():
 		var member: String = members[member_index]
@@ -5186,12 +5186,12 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 			# token by the renderer; the rows are laid out again when the live state changes.
 			if EventSheetStateWatch.is_live() and EventSheetStateWatch.live_members().has(member):
 				token_text = EventSheetStateWatch.token_reserve(member)
-		states.append(_make_span(token_text, SemanticSpan.SpanType.VALUE, token_meta))
+		states.append(_make_span(token_text, EventSheetSemanticSpan.SpanType.VALUE, token_meta))
 		if member == default_member:
-			states.append(_make_span(EventSheetL10n.translate("(default)"), SemanticSpan.SpanType.COMMENT,
+			states.append(_make_span(EventSheetL10n.translate("(default)"), EventSheetSemanticSpan.SpanType.COMMENT,
 				row_meta.merged({"text_color": reading_style.muted_text_color}, true)))
 		if member_index < members.size() - 1:
-			states.append(_make_span("·", SemanticSpan.SpanType.COMMENT, row_meta.merged({
+			states.append(_make_span("·", EventSheetSemanticSpan.SpanType.COMMENT, row_meta.merged({
 				"text_color": reading_style.muted_text_color}, true)))
 	if at >= 0:
 		# The "=" before the value goes with it.
@@ -5203,7 +5203,7 @@ func build_state_row(machine: Dictionary, indent: int) -> EventRowData:
 			row_data.spans.insert(at + added, states[added])
 	# Every span of the row knows it stands for a machine, so a double-click anywhere on it opens the
 	# States window rather than the variable's own dialog. The type word wears the state glyph.
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if span.metadata is Dictionary:
 			(span.metadata as Dictionary)["state_machine"] = true
 			if bool((span.metadata as Dictionary).get("variable_type_span", false)):
@@ -5253,26 +5253,26 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	for member: String in enum_row.members:
 		var eq: int = member.find("=")
 		names.append(member.substr(0, eq).strip_edges() if eq > 0 else member.strip_edges())
-	var spans: Array[SemanticSpan] = [
-		_make_span("≡", SemanticSpan.SpanType.KEYWORD, badge_meta),
-		_make_span(enum_row.enum_name, SemanticSpan.SpanType.VALUE, {"kind": "enum_row", "text_color": event_style.object_label_color})
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span("≡", EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(enum_row.enum_name, EventSheetSemanticSpan.SpanType.VALUE, {"kind": "enum_row", "text_color": event_style.object_label_color})
 	]
 	if row_data.folded:
 		# The sentence: up to five values spelled out, the rest counted - a long enum never
 		# walls the sheet at rest.
 		var spoken: int = mini(names.size(), 5)
-		spans.append(_make_span(EventSheetL10n.translate("is one of"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
+		spans.append(_make_span(EventSheetL10n.translate("is one of"), EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 		for name_index: int in range(spoken):
 			if name_index > 0 and name_index == spoken - 1 and names.size() <= spoken:
-				spans.append(_make_span(EventSheetL10n.translate("or"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
+				spans.append(_make_span(EventSheetL10n.translate("or"), EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 			# The comma rides INSIDE the value span - spans are auto-spaced, and "PATROL ," is
 			# exactly the boxed-fragment look the sentence exists to avoid.
 			var needs_comma: bool = name_index < spoken - 1 and not (name_index == spoken - 2 and names.size() <= spoken)
-			spans.append(_make_span(names[name_index] + ("," if needs_comma else ""), SemanticSpan.SpanType.VALUE, {"kind": "enum_row"}))
+			spans.append(_make_span(names[name_index] + ("," if needs_comma else ""), EventSheetSemanticSpan.SpanType.VALUE, {"kind": "enum_row"}))
 		if names.size() > spoken:
-			spans.append(_make_span("%s %d %s" % [EventSheetL10n.translate("and"), names.size() - spoken, EventSheetL10n.translate("more")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
+			spans.append(_make_span("%s %d %s" % [EventSheetL10n.translate("and"), names.size() - spoken, EventSheetL10n.translate("more")], EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 	else:
-		spans.append(_make_span("- %d %s" % [names.size(), EventSheetL10n.translate("values")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
+		spans.append(_make_span("- %d %s" % [names.size(), EventSheetL10n.translate("values")], EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 		var next_value: int = 0
 		var member_index: int = 0
 		for member: String in enum_row.members:
@@ -5290,8 +5290,8 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 			if member_index == 0:
 				entry_note += " · %s" % EventSheetL10n.translate("default")
 			entry.spans = [
-				_make_span(member_name, SemanticSpan.SpanType.VALUE, {"kind": "enum_value", "line_index": 0}),
-				_make_span(entry_note, SemanticSpan.SpanType.COMMENT, {"kind": "enum_value", "text_color": _viewport._get_reading_style().muted_text_color})
+				_make_span(member_name, EventSheetSemanticSpan.SpanType.VALUE, {"kind": "enum_value", "line_index": 0}),
+				_make_span(entry_note, EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "enum_value", "text_color": _viewport._get_reading_style().muted_text_color})
 			]
 			row_data.children.append(entry)
 			next_value += 1
@@ -5303,7 +5303,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 			add_row.row_type = EventRowData.RowType.SECTION
 			add_row.source_resource = enum_row
 			add_row.row_uid = "enum_add_%s" % str(enum_row.get_instance_id())
-			add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": _viewport._get_reading_style().muted_text_color})]
+			add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), EventSheetSemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": _viewport._get_reading_style().muted_text_color})]
 			row_data.children.append(add_row)
 	row_data.spans = spans
 	return row_data
@@ -5328,7 +5328,7 @@ func _build_moment_block_row(block: MomentBlockRow, indent: int) -> EventRowData
 	row_data.height_scale = 1.5
 	row_data.custom_color = Color(event_style.behavior_accent_color.r, event_style.behavior_accent_color.g, event_style.behavior_accent_color.b, 0.22)
 	row_data.spans = [
-		_make_span("Moment", SemanticSpan.SpanType.KEYWORD, {
+		_make_span("Moment", EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "trigger",
@@ -5337,10 +5337,10 @@ func _build_moment_block_row(block: MomentBlockRow, indent: int) -> EventRowData
 			"kind": "moment_row",
 			"line_index": 0
 		}),
-		_make_span(block.moment_name, SemanticSpan.SpanType.VALUE, {
+		_make_span(block.moment_name, EventSheetSemanticSpan.SpanType.VALUE, {
 			"kind": "moment_row", "text_color": event_style.object_label_color
 		}),
-		_make_span(_moment_head_note(block), SemanticSpan.SpanType.COMMENT, {
+		_make_span(_moment_head_note(block), EventSheetSemanticSpan.SpanType.COMMENT, {
 			"kind": "moment_row", "text_color": _viewport._get_reading_style().muted_text_color
 		})
 	]
@@ -5413,14 +5413,14 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			var span_text: String = str(span_descriptor.get("text", ""))
 			match str(span_descriptor.get("role", "value")):
 				"name":
-					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.OBJECT, {"kind": "custom_block_row"}))
+					row_data.spans.append(_make_span(span_text, EventSheetSemanticSpan.SpanType.OBJECT, {"kind": "custom_block_row"}))
 				"operator":
-					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.OPERATOR, {"kind": "custom_block_row"}))
+					row_data.spans.append(_make_span(span_text, EventSheetSemanticSpan.SpanType.OPERATOR, {"kind": "custom_block_row"}))
 				"type":
-					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.VALUE, {"kind": "custom_block_row"}))
+					row_data.spans.append(_make_span(span_text, EventSheetSemanticSpan.SpanType.VALUE, {"kind": "custom_block_row"}))
 				"badge":
 					var is_const_style: bool = str(span_descriptor.get("badge_style", "scope")) == "const"
-					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.KEYWORD, {
+					row_data.spans.append(_make_span(span_text, EventSheetSemanticSpan.SpanType.KEYWORD, {
 						"kind": "custom_block_row",
 						"badge": true,
 						"badge_style": "const" if is_const_style else "scope",
@@ -5428,7 +5428,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 						"badge_fg": _viewport._get_reading_style().constant_badge_foreground_color if is_const_style else _viewport._get_reading_style().inspector_chip_foreground_color
 					}))
 				_:
-					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.VALUE, {"kind": "custom_block_row", "text_color": event_style.object_label_color}))
+					row_data.spans.append(_make_span(span_text, EventSheetSemanticSpan.SpanType.VALUE, {"kind": "custom_block_row", "text_color": event_style.object_label_color}))
 	else:
 		var badge_text: String = kind.title if kind != null else "block"
 		var summary_text: String = kind.summary(block) if kind != null else block.kind_id
@@ -5438,12 +5438,12 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 		row_data.spans = [
 			_make_span(
 				badge_text,
-				SemanticSpan.SpanType.KEYWORD,
+				EventSheetSemanticSpan.SpanType.KEYWORD,
 				{"badge": true, "text_color": badge_color}
 			),
 			_make_span(
 				summary_text,
-				SemanticSpan.SpanType.VALUE,
+				EventSheetSemanticSpan.SpanType.VALUE,
 				{"kind": "custom_block_row", "text_color": event_style.object_label_color}
 			)
 		]
@@ -5451,7 +5451,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	if not problem.is_empty():
 		row_data.spans.append(_make_span(
 			"⚠ " + problem,
-			SemanticSpan.SpanType.VALUE,
+			EventSheetSemanticSpan.SpanType.VALUE,
 			{"kind": "custom_block_row", "text_color": _viewport._get_reading_style().error_text_color}
 		))
 	# A preload of a file the project does not have wears the quiet red state; the words are the strip's.
@@ -5477,12 +5477,12 @@ func _build_function_anchor_row(anchor: FunctionAnchorRow, indent: int) -> Event
 	row_data.spans = [
 		_make_span(
 			"ƒ",
-			SemanticSpan.SpanType.KEYWORD,
+			EventSheetSemanticSpan.SpanType.KEYWORD,
 			{"badge": true, "text_color": event_style.behavior_accent_color}
 		),
 		_make_span(
 			"%s()  - defined here" % anchor.function_name,
-			SemanticSpan.SpanType.VALUE,
+			EventSheetSemanticSpan.SpanType.VALUE,
 			{"kind": "function_anchor_row", "text_color": event_style.object_label_color}
 		)
 	]
@@ -5521,8 +5521,8 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	# fired-signal arrow for a published trigger, a dimmed one for an internal signal (the action
 	# lane already spells out "emits X" vs "internal"). A word in a box here reads as a pill, and
 	# pills lost that argument some time ago.
-	var spans: Array[SemanticSpan] = [
-		_make_span("➜", SemanticSpan.SpanType.KEYWORD, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span("➜", EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "trigger",
@@ -5534,7 +5534,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 		}),
 		# The signal is the script's own: its trigger line names the script and leads with its icon,
 		# as every other trigger line names what it happens to.
-		_make_span(title, SemanticSpan.SpanType.OBJECT, {
+		_make_span(title, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"kind": "signal_row",
 			"lane": "condition",
 			"line_index": 0,
@@ -5560,7 +5560,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 		# own rows emit it, named the way the sheet names them.
 		var fired_by: String = _pack_signal_sources(signal_row.signal_name)
 		if not fired_by.is_empty():
-			spans.append(_make_span(fired_by, SemanticSpan.SpanType.COMMENT, {
+			spans.append(_make_span(fired_by, EventSheetSemanticSpan.SpanType.COMMENT, {
 				"editable": false,
 				"kind": "signal_row",
 				"lane": "action",
@@ -5692,7 +5692,7 @@ func _reads_as_script_trigger() -> bool:
 ## An opened script's trigger row takes the OTHER shape: the payload rides beside the trigger as chips,
 ## one per value, exactly as a lifted signal handler's row draws them - so `➜ On Hit  body` reads the
 ## same whether the row came from the signal declaration or from the handler that answers it.
-func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRow, as_chips: bool = false) -> int:
+func _append_signal_param_spans(spans: Array[EventSheetSemanticSpan], signal_row: SignalRow, as_chips: bool = false) -> int:
 	var line: int = 0
 	var cell_host := EventRowData.new()
 	for index in range(signal_row.params.size()):
@@ -5726,9 +5726,9 @@ func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRo
 ## One payload chip beside a trigger cell - the value the event hands whoever answers it. THE shape,
 ## shared by the three rows that carry a payload (a lifted handler, a connected lambda, an opened
 ## script's signal declaration), so the same event reads identically wherever a reader meets it.
-func _trigger_payload_span(chip_text: String, param_index: int, line_index: int) -> SemanticSpan:
+func _trigger_payload_span(chip_text: String, param_index: int, line_index: int) -> EventSheetSemanticSpan:
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-	return _make_span(chip_text, SemanticSpan.SpanType.CONDITION, {
+	return _make_span(chip_text, EventSheetSemanticSpan.SpanType.CONDITION, {
 		"editable": false,
 		"lane": "condition",
 		"kind": "trigger_payload",
@@ -6828,13 +6828,13 @@ func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRo
 	var head: Dictionary = {"editable": false, "kind": "collection_decl", "line_index": 0}
 	var count: int = decl.entry_values.size()
 	row_data.spans = [
-		_make_span(("const %s" if decl.is_constant() else "%s") % decl.declared_type(), SemanticSpan.SpanType.VALUE,
+		_make_span(("const %s" if decl.is_constant() else "%s") % decl.declared_type(), EventSheetSemanticSpan.SpanType.VALUE,
 			head.merged({"text_color": reading_style.muted_text_color}, true)),
-		_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE,
+		_make_span(decl.variable_name(), EventSheetSemanticSpan.SpanType.VALUE,
 			head.merged({"text_color": reading_style.primary_text_color}, true)),
-		_make_span("=", SemanticSpan.SpanType.VALUE, head.merged({"text_color": reading_style.muted_text_color}, true)),
+		_make_span("=", EventSheetSemanticSpan.SpanType.VALUE, head.merged({"text_color": reading_style.muted_text_color}, true)),
 		_make_span(EventSheetL10n.translate("1 entry") if count == 1 else EventSheetL10n.translate("%d entries") % count,
-			SemanticSpan.SpanType.VALUE, head.merged({"text_color": decl_style.value_highlight_color}, true)),
+			EventSheetSemanticSpan.SpanType.VALUE, head.merged({"text_color": decl_style.value_highlight_color}, true)),
 	]
 	for entry_index: int in count:
 		var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
@@ -6847,7 +6847,7 @@ func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRo
 		entry_row.source_resource = decl
 		entry_row.row_uid = "%s/%d" % [row_data.row_uid, entry_index]
 		entry_row.spans = [_make_span(entry_value if entry_key.is_empty() else "%s = %s" % [entry_key, entry_value],
-			SemanticSpan.SpanType.VALUE, {
+			EventSheetSemanticSpan.SpanType.VALUE, {
 			"kind": "collection_decl",
 			"decl_entry_index": entry_index,
 			"editable": not decl.entry_spans_lines(entry_index),
@@ -6886,8 +6886,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"expression": _define_role_colors("expression"),
 		}
 		var kind: String = str(shell.get("kind"))
-		var shell_spans: Array[SemanticSpan] = [
-			_make_span(kind.capitalize(), SemanticSpan.SpanType.KEYWORD, {
+		var shell_spans: Array[EventSheetSemanticSpan] = [
+			_make_span(kind.capitalize(), EventSheetSemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
@@ -6896,7 +6896,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"kind": "raw_code",
 				"line_index": 0
 			}),
-			_make_span(str(shell.get("name")), SemanticSpan.SpanType.OBJECT, {
+			_make_span(str(shell.get("name")), EventSheetSemanticSpan.SpanType.OBJECT, {
 				"editable": false,
 				"kind": "raw_code",
 				"line_index": 0,
@@ -6904,7 +6904,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			})
 		]
 		if not str(shell.get("category")).is_empty():
-			shell_spans.append(_make_span(str(shell.get("category")), SemanticSpan.SpanType.KEYWORD, {
+			shell_spans.append(_make_span(str(shell.get("category")), EventSheetSemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
@@ -6913,7 +6913,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"kind": "raw_code",
 				"line_index": 0
 			}))
-		shell_spans.append(_make_span("publishes the func below · %d annotation lines" % int(shell.get("line_count")), SemanticSpan.SpanType.VALUE, {
+		shell_spans.append(_make_span("publishes the func below · %d annotation lines" % int(shell.get("line_count")), EventSheetSemanticSpan.SpanType.VALUE, {
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
@@ -6954,7 +6954,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		row_data.language_block = true
 		var literal_style: EventSheetEventStyle = _viewport._get_event_style()
 		row_data.spans = [
-			_make_span("{}" if str(literal_info.get("head")).ends_with("{") else "[]", SemanticSpan.SpanType.KEYWORD, {
+			_make_span("{}" if str(literal_info.get("head")).ends_with("{") else "[]", EventSheetSemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
@@ -6964,13 +6964,13 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"line_index": 0
 			}),
 			_make_span("%s %s" % [str(literal_info.get("head")), str(literal_info.get("close"))],
-				SemanticSpan.SpanType.OBJECT, {
+				EventSheetSemanticSpan.SpanType.OBJECT, {
 					"editable": false,
 					"kind": "raw_code",
 					"line_index": 0,
 					"text_color": _viewport._get_reading_style().primary_text_color
 				}),
-			_make_span("%d entries" % int(literal_info.get("entries", 0)), SemanticSpan.SpanType.COMMENT, {
+			_make_span("%d entries" % int(literal_info.get("entries", 0)), EventSheetSemanticSpan.SpanType.COMMENT, {
 				"editable": false,
 				"kind": "raw_code",
 				"line_index": 0,
@@ -6989,8 +6989,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		if not loop_seconds.is_empty():
 			row_data.spans = _await_loop_trigger_spans(loop_seconds)
 			return row_data
-		var function_spans: Array[SemanticSpan] = [
-			_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+		var function_spans: Array[EventSheetSemanticSpan] = [
+			_make_span("ƒ", EventSheetSemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
@@ -6999,7 +6999,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"kind": "raw_code",
 				"line_index": 0
 			}),
-			_make_span("%s(%s)" % [str(function_info.get("name")), str(function_info.get("params"))], SemanticSpan.SpanType.OBJECT, {
+			_make_span("%s(%s)" % [str(function_info.get("name")), str(function_info.get("params"))], EventSheetSemanticSpan.SpanType.OBJECT, {
 				"editable": false,
 				"kind": "raw_code",
 				"line_index": 0,
@@ -7007,7 +7007,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			})
 		]
 		if str(function_info.get("return_type")) != "void":
-			function_spans.append(_make_span("→ %s" % str(function_info.get("return_type")), SemanticSpan.SpanType.KEYWORD, {
+			function_spans.append(_make_span("→ %s" % str(function_info.get("return_type")), EventSheetSemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
@@ -7017,7 +7017,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"line_index": 0
 			}))
 		var body_line_count: int = int(function_info.get("body_lines"))
-		function_spans.append(_make_span("function · %d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], SemanticSpan.SpanType.VALUE, {
+		function_spans.append(_make_span("function · %d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], EventSheetSemanticSpan.SpanType.VALUE, {
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
@@ -7034,12 +7034,12 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# space, never an empty "GDScript" pill.
 	if is_comment_only_block(code_lines) or is_blank_block(code_lines):
 		var comment_style: EventSheetEventStyle = _viewport._get_event_style()
-		var note_spans: Array[SemanticSpan] = []
+		var note_spans: Array[EventSheetSemanticSpan] = []
 		for note_index in range(code_lines.size()):
 			var shown: String = strip_comment_prefix(code_lines[note_index])
 			note_spans.append(_make_span(
 				shown if not shown.is_empty() else " ",
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				_with_comment_markup({"editable": false, "kind": "raw_code", "line_index": note_index,
 					"text_color": comment_style.comment_text_color}, shown, comment_style.comment_text_color)
 			))
@@ -7049,12 +7049,12 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
 	var line_fg: Color = _viewport._get_reading_style().muted_text_color if is_scaffold else _viewport._get_reading_style().primary_text_color
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	# Scaffold blocks carry NO "GDScript" pill: they live under the Class setup dropdown, whose
 	# facts already say what they are - the pill was pure noise there (and a word in a box). The
 	# pill stays on REAL logic blocks only, where it marks the escape hatch.
 	if not is_scaffold:
-		spans.append(_make_span(EventSheetL10n.translate("Script block"), SemanticSpan.SpanType.KEYWORD, {
+		spans.append(_make_span(EventSheetL10n.translate("Script block"), EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -7067,7 +7067,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# template"). Surface it as an inline amber badge - the actionable "why this stayed code" cue - in
 	# addition to the hover tooltip, so a wall of blocks becomes a triage list at a glance.
 	if not raw_row.lift_note.strip_edges().is_empty():
-		spans.append(_make_span("⚠ code", SemanticSpan.SpanType.KEYWORD, {
+		spans.append(_make_span("⚠ code", EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -7085,7 +7085,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if _viewport.is_reading_mode() and code_lines.size() > 1:
 		spans.append(_make_span(
 			EventSheetViewportReadingRows.code_card_label(code_lines.size()),
-			SemanticSpan.SpanType.VALUE,
+			EventSheetSemanticSpan.SpanType.VALUE,
 			{"editable": false, "kind": "raw_code", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color}
 		))
 		row_data.spans = spans
@@ -7111,12 +7111,12 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 ## The exact GDScript of a raw block, one span per source line. Shared by the ordinary authoring
 ## render and by what a code card opens to, so "the code" is literally the same rows either
 ## way and the two can never drift into showing different text.
-func _raw_code_line_spans(code_lines: PackedStringArray, line_fg: Color) -> Array[SemanticSpan]:
-	var line_spans: Array[SemanticSpan] = []
+func _raw_code_line_spans(code_lines: PackedStringArray, line_fg: Color) -> Array[EventSheetSemanticSpan]:
+	var line_spans: Array[EventSheetSemanticSpan] = []
 	for line_index: int in range(code_lines.size()):
 		line_spans.append(_make_span(
 			code_lines[line_index] if not code_lines[line_index].is_empty() else " ",
-			SemanticSpan.SpanType.VALUE,
+			EventSheetSemanticSpan.SpanType.VALUE,
 			{
 				"editable": false,
 				"kind": "raw_code",
@@ -7175,8 +7175,8 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var header_text: String = "%s %s" % [EventSheetL10n.translate("Data type"), data_class_display_name]
 	if not base.is_empty():
 		header_text += " %s %s" % [EventSheetL10n.translate("based on"), base]
-	var header_spans: Array[SemanticSpan] = [
-		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
+	var header_spans: Array[EventSheetSemanticSpan] = [
+		_make_span(header_text, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"lane": "condition",
 			"editable": false,
 			"kind": "raw_code",
@@ -7187,7 +7187,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var cue: String = "%d field%s" % [member_count, "" if member_count == 1 else "s"]
 	if editable_count > 0:
 		cue += " · double-click a default to edit"
-	header_spans.append(_make_span(cue, SemanticSpan.SpanType.VALUE, {
+	header_spans.append(_make_span(cue, EventSheetSemanticSpan.SpanType.VALUE, {
 		"lane": "action",
 		"editable": false,
 		"kind": "raw_code",
@@ -7244,7 +7244,7 @@ func _build_data_class_add_field_row(raw_row: RawCodeRow, class_name_str: String
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
 	row_data.row_uid = "data_class_add_field_%s" % class_name_str
-	row_data.spans = [_make_span(EventSheetL10n.translate("+ Add field"), SemanticSpan.SpanType.COMMENT, {
+	row_data.spans = [_make_span(EventSheetL10n.translate("+ Add field"), EventSheetSemanticSpan.SpanType.COMMENT, {
 		"editable": false,
 		"kind": "data_class_add_field",
 		"raw_row": raw_row,
@@ -7277,7 +7277,7 @@ func _build_data_class_why_rows(sheet: EventSheetResource, display_name: String,
 		row_data.row_type = EventRowData.RowType.SECTION
 		row_data.source_resource = null
 		row_data.row_uid = "data_class_why_%s_%d" % [class_name_str, index]
-		row_data.spans = [_make_span(str(lines[index]["text"]), SemanticSpan.SpanType.COMMENT, {
+		row_data.spans = [_make_span(str(lines[index]["text"]), EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "data_class_why",
 			"line_index": 0,
@@ -7310,8 +7310,8 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 	# Condition cell: what the field IS (name : type).
 	# Every span carries raw_row + field_index, so a right-click ANYWHERE on the field row
 	# resolves the field for the context menu's Remove Field (not just on the default value).
-	var spans: Array[SemanticSpan] = [
-		_make_span(str(field.get("name")), SemanticSpan.SpanType.OBJECT, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span(str(field.get("name")), EventSheetSemanticSpan.SpanType.OBJECT, {
 			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
@@ -7320,8 +7320,8 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 			"line_index": 0,
 			"text_color": _viewport._get_event_style().class_name_color
 		}.merged(condition_style, true)),
-		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"lane": "condition", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(condition_style, true)),
-		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, {
+		_make_span(":", EventSheetSemanticSpan.SpanType.OPERATOR, {"lane": "condition", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(condition_style, true)),
+		_make_span(str(field.get("type")), EventSheetSemanticSpan.SpanType.VALUE, {
 			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
@@ -7333,8 +7333,8 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 	]
 	# Action cell: its default value (the editable part).
 	if bool(field.get("has_default", false)):
-		spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, {"lane": "action", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(action_style, true)))
-		spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, {
+		spans.append(_make_span("=", EventSheetSemanticSpan.SpanType.OPERATOR, {"lane": "action", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(action_style, true)))
+		spans.append(_make_span(str(field.get("default")), EventSheetSemanticSpan.SpanType.VALUE, {
 			"lane": "action",
 			"editable": false,
 			"kind": "data_class_field",
@@ -7365,7 +7365,7 @@ func _build_data_class_member_row(class_name_str: String, body_index: int, text:
 	row_data.language_block = true  # a member of a class block - carries the language stripe like its header
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	row_data.spans = [
-		_make_span(text.strip_edges(), SemanticSpan.SpanType.VALUE, {
+		_make_span(text.strip_edges(), EventSheetSemanticSpan.SpanType.VALUE, {
 			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
@@ -7412,8 +7412,8 @@ func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			method_count += 1
 		elif member_text.begins_with("\t@export") or member_text.begins_with("\tconst "):
 			field_count += 1  # a one-tab @export / const member also counts toward the field cue
-	var header_spans: Array[SemanticSpan] = [
-		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
+	var header_spans: Array[EventSheetSemanticSpan] = [
+		_make_span(header_text, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
 			"text_color": event_style.object_label_color
 		}.merged(condition_style, true))
@@ -7422,7 +7422,7 @@ func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if field_count > 0:
 		cue_parts.append("%d field%s" % [field_count, "" if field_count == 1 else "s"])
 	cue_parts.append("%d method%s" % [method_count, "" if method_count == 1 else "s"])
-	header_spans.append(_make_span(" · ".join(cue_parts), SemanticSpan.SpanType.VALUE, {
+	header_spans.append(_make_span(" · ".join(cue_parts), EventSheetSemanticSpan.SpanType.VALUE, {
 		"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
 		"text_color": event_style.value_highlight_color
 	}.merged(action_style, true)))
@@ -7492,14 +7492,14 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 			body_line_count += 1
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	var spans: Array[SemanticSpan] = [
-		_make_span(label, SemanticSpan.SpanType.OBJECT, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span(label, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}.merged(condition_style, true))
 	]
 	if body_line_count > 0:
-		spans.append(_make_span("%d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], SemanticSpan.SpanType.VALUE, {
+		spans.append(_make_span("%d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], EventSheetSemanticSpan.SpanType.VALUE, {
 			"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}.merged(action_style, true)))
@@ -7558,9 +7558,9 @@ func build_inner_class_head(inner: InnerClassRow, indent: int) -> EventRowData:
 		"object_glyph": NativeRowMarks.OBJECT_GLYPH_CLASS,
 		"object_icon": _glyph_icon_slot()
 	}, true)
-	var spans: Array[SemanticSpan] = [_make_span(display_name, SemanticSpan.SpanType.OBJECT, name_meta)]
+	var spans: Array[EventSheetSemanticSpan] = [_make_span(display_name, EventSheetSemanticSpan.SpanType.OBJECT, name_meta)]
 	if not base.is_empty():
-		spans.append(_make_span(EventSheetL10n.translate("extends %s") % base, SemanticSpan.SpanType.VALUE, head.merged({
+		spans.append(_make_span(EventSheetL10n.translate("extends %s") % base, EventSheetSemanticSpan.SpanType.VALUE, head.merged({
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}, true)))
 	row_data.spans = spans
@@ -7570,20 +7570,20 @@ func build_inner_class_head(inner: InnerClassRow, indent: int) -> EventRowData:
 ## The header of a class block: its declaration in the CONDITION cell, and what it holds - counted by
 ## kind - in the ACTION cell. Shared by the outer block and every class nested inside it, so a fold
 ## three deep reads the same way the one at the top does.
-func _build_class_header_spans(display_name: String, base: String, members: Array) -> Array[SemanticSpan]:
+func _build_class_header_spans(display_name: String, base: String, members: Array) -> Array[EventSheetSemanticSpan]:
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var header_text: String = "class %s" % display_name
 	if not base.is_empty():
 		header_text += " extends %s" % base
-	var spans: Array[SemanticSpan] = [
-		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span(header_text, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
 			"text_color": event_style.object_label_color
 		}.merged(condition_style, true))
 	]
-	spans.append(_make_span(_class_member_cue(members), SemanticSpan.SpanType.VALUE, {
+	spans.append(_make_span(_class_member_cue(members), EventSheetSemanticSpan.SpanType.VALUE, {
 		"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
 		"text_color": event_style.value_highlight_color
 	}.merged(action_style, true)))
@@ -7668,8 +7668,8 @@ func _build_class_reading_row(member: Dictionary, scope: String, index: int, ind
 	row_data.language_block = true
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	var spans: Array[SemanticSpan] = [
-		_make_span("%s %s" % [kind, str(member.get("reading"))], SemanticSpan.SpanType.OBJECT, {
+	var spans: Array[EventSheetSemanticSpan] = [
+		_make_span("%s %s" % [kind, str(member.get("reading"))], EventSheetSemanticSpan.SpanType.OBJECT, {
 			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}.merged(condition_style, true))
@@ -7677,7 +7677,7 @@ func _build_class_reading_row(member: Dictionary, scope: String, index: int, ind
 	var count: int = int(member.get("count", 0))
 	if kind == "enum" and count > 0:
 		spans.append(_make_span("%d %s" % [count, EventSheetL10n.translate("values")],
-			SemanticSpan.SpanType.VALUE, {
+			EventSheetSemanticSpan.SpanType.VALUE, {
 				"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}.merged(action_style, true)))
@@ -7720,20 +7720,20 @@ func _build_preload_object_row(object_name: String, res_path: String, indent: in
 		icon = EventSheetACEIcons.editor_icon(icon_class)
 	# No kind word in front: the scene's own icon and the name say what it is.
 	row_data.spans = [
-		_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
+		_make_span(object_name, EventSheetSemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": event_style.object_label_color
 		}),
-		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
+		_make_span("=", EventSheetSemanticSpan.SpanType.OPERATOR, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}),
-		_make_span(str(resolved.get("name", "")), SemanticSpan.SpanType.VALUE, {
+		_make_span(str(resolved.get("name", "")), EventSheetSemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": event_style.value_highlight_color,
 			"object_icon": icon
 		}),
-		_make_span("%s · %s" % [str(resolved.get("kind_word", "")), res_path.get_file()], SemanticSpan.SpanType.COMMENT, {
+		_make_span("%s · %s" % [str(resolved.get("kind_word", "")), res_path.get_file()], EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		})
@@ -8448,15 +8448,15 @@ func _build_named_accessor_row(variable: LocalVariable, object_name: String, kin
 ## The two cells that open a plain trigger row: the tempo badge, then `<Object> <sentence>` in a
 ## trigger cell on the row's first line. "trigger", not "condition": a trigger cell sizes to its words
 ## and leaves room for the payload chips beside it, exactly as a declared handler's trigger row does.
-func _plain_trigger_spans(sentence: String, object_name: String) -> Array[SemanticSpan]:
+func _plain_trigger_spans(sentence: String, object_name: String) -> Array[EventSheetSemanticSpan]:
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
 	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 	badge_meta["line_index"] = 0
 	badge_meta["badge_style"] = "trigger"
-	var spans: Array[SemanticSpan] = [_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta),
-		_make_span(sentence, SemanticSpan.SpanType.CONDITION, {
+	var spans: Array[EventSheetSemanticSpan] = [_make_span(badge_glyph, EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(sentence, EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "trigger",
 			"ace_index": -1,
@@ -8472,9 +8472,9 @@ func _plain_trigger_spans(sentence: String, object_name: String) -> Array[Semant
 
 
 ## A named accessor's function, in the RIGHT lane where a thing that runs belongs.
-func _accessor_function_span(function_name: String, object_name: String) -> SemanticSpan:
+func _accessor_function_span(function_name: String, object_name: String) -> EventSheetSemanticSpan:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	return _make_span(function_name, SemanticSpan.SpanType.ACTION, {
+	return _make_span(function_name, EventSheetSemanticSpan.SpanType.ACTION, {
 		"lane": "action",
 		"kind": "property_accessor_function",
 		"ace_index": 0,
@@ -8487,9 +8487,9 @@ func _accessor_function_span(function_name: String, object_name: String) -> Sema
 
 ## A getter's header, the one an expression function reads with: the ƒ scope badge, the property's
 ## name and the muted word `expression`.
-func _getter_head_spans(variable: LocalVariable, object_name: String) -> Array[SemanticSpan]:
+func _getter_head_spans(variable: LocalVariable, object_name: String) -> Array[EventSheetSemanticSpan]:
 	var badge_colors: Array = _define_role_colors("expression")
-	return [_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+	return [_make_span("ƒ", EventSheetSemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
@@ -8497,7 +8497,7 @@ func _getter_head_spans(variable: LocalVariable, object_name: String) -> Array[S
 		"badge_fg": badge_colors[1],
 		"lane": "condition",
 		"line_index": 0
-	}), _make_span(variable.name.replace("_", " "), SemanticSpan.SpanType.OBJECT, {
+	}), _make_span(variable.name.replace("_", " "), EventSheetSemanticSpan.SpanType.OBJECT, {
 		"editable": false,
 		"kind": "property_getter",
 		"lane": "condition",
@@ -8505,7 +8505,7 @@ func _getter_head_spans(variable: LocalVariable, object_name: String) -> Array[S
 		"chip": true,
 		"object_label": object_name,
 		"text_color": _define_role_name_color("expression")
-	}), _make_span(EventSheetL10n.translate("expression"), SemanticSpan.SpanType.COMMENT, {
+	}), _make_span(EventSheetL10n.translate("expression"), EventSheetSemanticSpan.SpanType.COMMENT, {
 		"editable": false,
 		"lane": "condition",
 		"line_index": 0,
@@ -8612,9 +8612,9 @@ func _append_property_body_rows(row: EventRowData, body: String, indent: int, ui
 ## offers to edit a row a reading does not have: the "Every Tick" placeholder and the "+ Add" cells.
 func _keep_reading_spans(row_data: EventRowData) -> void:
 	_ensure_event_spans(row_data)
-	var kept: Array[SemanticSpan] = []
+	var kept: Array[EventSheetSemanticSpan] = []
 	var lines: int = 1
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if bool(span.metadata.get("placeholder", false)) or str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
 			continue
 		kept.append(span)
@@ -8688,12 +8688,12 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# so the head is the only place a group takes vertical room. Headless the folder icon resolves
 	# null and the mark simply does not draw. Every look draws this same head.
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	spans.append(_group_folder_span(reading_style))
 	spans.append(
 		_make_span(
 			EventSheetGroupFacts.display_name(group),
-			SemanticSpan.SpanType.OBJECT,
+			EventSheetSemanticSpan.SpanType.OBJECT,
 			{
 				"editable": true,
 				"edit_kind": "group_name",
@@ -8707,7 +8707,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# says whether the fold is worth opening. A long one gives up its tail with an ellipsis rather than
 	# pushing the counts and the switch off the row, and reads whole on hover.
 	if not group.description.strip_edges().is_empty():
-		spans.append(_make_span(group.description, SemanticSpan.SpanType.COMMENT, {
+		spans.append(_make_span(group.description, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": true,
 			"edit_kind": "group_description",
 			"line_index": 0,
@@ -8722,7 +8722,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 		spans.append(
 			_make_span(
 				runs_on,
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				{
 					"line_index": 0,
 					"group_runs_on": true,
@@ -8738,7 +8738,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 		spans.append(
 			_make_span(
 				runs_in,
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				{
 					"line_index": 0,
 					"group_runs_in": true,
@@ -8765,7 +8765,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	if _viewport.add_event_footer_wanted(not group_children.is_empty(), true) and not _scaffolding_suppressed():
 		row_data.children.append(
 			_build_add_event_footer_row(group, indent + 1,
-				(EventSheetL10n.translate("Add event to \"%s\"") if EventRowRenderer.add_menu_link_wanted(event_style)
+				(EventSheetL10n.translate("Add event to \"%s\"") if EventSheetRowRenderer.add_menu_link_wanted(event_style)
 					else EventSheetL10n.translate("+ Add event to '%s'…")) % EventSheetGroupFacts.display_name(group),
 				EventSheetGroupFacts.display_name(group))
 		)
@@ -8785,7 +8785,7 @@ func _group_declaration_line(group: EventGroup) -> String:
 
 ## The folder mark a group head leads with: the file-manager idiom, in the badge column every other
 ## declaration row uses, so title text starts at the same x whatever the row is.
-func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
+func _group_folder_span(reading_style: EventSheetReadingStyle) -> EventSheetSemanticSpan:
 	var badge_meta: Dictionary = {
 		"badge": true,
 		"badge_style": "glyph",
@@ -8800,7 +8800,7 @@ func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
 	var folder: Texture2D = _folder_icon() if _viewport.show_object_icons else null
 	if folder != null:
 		badge_meta["badge_icon"] = folder
-	return _make_span(GROUP_FOLDER_GLYPH, SemanticSpan.SpanType.KEYWORD, badge_meta)
+	return _make_span(GROUP_FOLDER_GLYPH, EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta)
 
 
 ## What the head says at its right edge: what the group holds (plus, when it is folded, the objects
@@ -8808,13 +8808,13 @@ func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
 ## right-anchored, so they stay a column no matter how long the title and description are. A click on
 ## the mark switches the group on or off, and its hover says which it is.
 func _group_head_status_spans(group: EventGroup, folded: bool,
-		reading_style: EventSheetReadingStyle) -> Array[SemanticSpan]:
-	var status: Array[SemanticSpan] = []
+		reading_style: EventSheetReadingStyle) -> Array[EventSheetSemanticSpan]:
+	var status: Array[EventSheetSemanticSpan] = []
 	var counts: String = EventSheetGroupFacts.counts_text(
 		group, _group_object_labels(group) if folded else PackedStringArray()
 	)
 	if not counts.is_empty():
-		status.append(_make_span(counts, SemanticSpan.SpanType.COMMENT, {
+		status.append(_make_span(counts, EventSheetSemanticSpan.SpanType.COMMENT, {
 			"align_right": true,
 			"line_index": 0,
 			"group_counts": true,
@@ -8830,7 +8830,7 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 	if group.runtime_toggleable:
 		state_note = "%s\n%s" % [state_note,
 			EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")]
-	status.append(_make_span(mark, SemanticSpan.SpanType.KEYWORD, {
+	status.append(_make_span(mark, EventSheetSemanticSpan.SpanType.KEYWORD, {
 		"badge": true,
 		"badge_style": "glyph",
 		"badge_natural_width": true,
@@ -8955,12 +8955,12 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	var line_color: Color = event_style.comment_text_color
 	if not documentation:
 		line_color = Color(line_color, line_color.a * COMMENT_PRIVATE_ALPHA)
-	var comment_spans: Array[SemanticSpan] = []
+	var comment_spans: Array[EventSheetSemanticSpan] = []
 	# A theme that draws comments as notes (comment_notes) leads the row with the note's drag grip and
 	# speech bubble: one mark span the painter draws, holding the room so the words start past it.
 	var note_look: bool = event_style.comment_notes
 	if note_look:
-		comment_spans.append(_make_span("", SemanticSpan.SpanType.KEYWORD, {
+		comment_spans.append(_make_span("", EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"kind": "comment_row",
 			"badge": true,
 			"badge_style": "glyph",
@@ -8972,7 +8972,7 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 			"hover_note": EventSheetL10n.translate("Comment - drag the grip to move it into an event's actions or between events.")
 		}))
 	if documentation:
-		comment_spans.append(_make_span(COMMENT_PARAGRAPH_GLYPH, SemanticSpan.SpanType.KEYWORD, {
+		comment_spans.append(_make_span(COMMENT_PARAGRAPH_GLYPH, EventSheetSemanticSpan.SpanType.KEYWORD, {
 			"kind": "comment_row",
 			"badge": true,
 			"badge_style": "outline",
@@ -9002,7 +9002,7 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 		comment_spans.append(
 			_make_span(
 				comment_lines[line_index],
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				line_metadata
 			)
 		)
@@ -9184,7 +9184,7 @@ func _combo_of_match(match_row: MatchRow) -> Dictionary:
 
 ## A badge in the plain trigger colours wearing `glyph` (➜, or ◆ for a state) on `line_index`, with
 ## the condition lane's extra width when one is given and placed in that lane when `in_lane` is set.
-func _trigger_badge_span(glyph: String, line_index: int, extra_width: Variant, in_lane: bool) -> SemanticSpan:
+func _trigger_badge_span(glyph: String, line_index: int, extra_width: Variant, in_lane: bool) -> EventSheetSemanticSpan:
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 	badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
 	badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
@@ -9194,14 +9194,14 @@ func _trigger_badge_span(glyph: String, line_index: int, extra_width: Variant, i
 	badge_meta["badge_style"] = "trigger"
 	if in_lane:
 		badge_meta["lane"] = "condition"
-	return _make_span(glyph, SemanticSpan.SpanType.KEYWORD, badge_meta)
+	return _make_span(glyph, EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta)
 
 
 ## One arm of a combo match, in the condition lane as the TRIGGER it is: the move the inputs
 ## spell, with the window the player had to press them in as the muted note. The catch-all arm gets
 ## no spans at all, so a `_` keeps reading as the plain Else it is.
-func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var words: Dictionary = EventSheetSentence.combo_arm_words(pattern_text,
 		str(combo.get("separator", ",")), str(combo.get("window", "")))
 	if words.is_empty():
@@ -9217,9 +9217,9 @@ func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Arra
 		"line_index": 0,
 		"object_label": str(combo.get("object", ""))
 	}.merged(condition_style_meta, true)
-	spans.append(_make_span(str(words.get("text", "")), SemanticSpan.SpanType.CONDITION, arm_meta))
+	spans.append(_make_span(str(words.get("text", "")), EventSheetSemanticSpan.SpanType.CONDITION, arm_meta))
 	if not str(words.get("note", "")).is_empty():
-		spans.append(_make_span(" %s" % str(words.get("note", "")), SemanticSpan.SpanType.VALUE,
+		spans.append(_make_span(" %s" % str(words.get("note", "")), EventSheetSemanticSpan.SpanType.VALUE,
 			arm_meta.duplicate().merged({
 				"text_color": _viewport._get_reading_style().muted_text_color,
 				"object_label": "", "chip": false
@@ -9231,8 +9231,8 @@ func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Arra
 ## column, and `On <item> chosen` with the id resolved back to the words the user clicks. An id no
 ## item declared keeps the number and wears the warning colour - the branch is real, and nothing in
 ## the menu can ever reach it.
-func _menu_arm_condition_spans(menu: Dictionary, pattern_text: String) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+func _menu_arm_condition_spans(menu: Dictionary, pattern_text: String) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var words: Dictionary = EventSheetMenuFacts.arm_words(menu, pattern_text)
 	if words.is_empty():
 		return spans
@@ -9249,7 +9249,7 @@ func _menu_arm_condition_spans(menu: Dictionary, pattern_text: String) -> Array[
 	}.merged(condition_style_meta, true)
 	if not bool(words.get("known", false)):
 		arm_meta["text_color"] = EventSheetActiveTheme.chrome().object_bar_warning_color
-	spans.append(_make_span(str(words.get("text", "")), SemanticSpan.SpanType.CONDITION, arm_meta))
+	spans.append(_make_span(str(words.get("text", "")), EventSheetSemanticSpan.SpanType.CONDITION, arm_meta))
 	return spans
 
 
@@ -9320,7 +9320,7 @@ func _append_case_add_action(case_row: EventRowData, action_lines: int) -> void:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var add_color: Color = action_style.get("text_color", _viewport._get_action_style().text_color)
 	add_color.a *= 0.55
-	case_row.spans.append(_make_span(EventSheetL10n.translate("+ Add action"), SemanticSpan.SpanType.ACTION, {
+	case_row.spans.append(_make_span(EventSheetL10n.translate("+ Add action"), EventSheetSemanticSpan.SpanType.ACTION, {
 		"lane": "action",
 		"kind": "add_action",
 		"line_index": action_lines,
@@ -9340,8 +9340,8 @@ func _read_case_steps(case_row: EventRowData, step_code: Dictionary) -> void:
 	if step_code.is_empty():
 		return
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	var read_spans: Array[SemanticSpan] = []
-	for span: SemanticSpan in case_row.spans:
+	var read_spans: Array[EventSheetSemanticSpan] = []
+	for span: EventSheetSemanticSpan in case_row.spans:
 		var metadata: Dictionary = span.metadata
 		var line_index: int = int(metadata.get("line_index", -1))
 		if str(metadata.get("kind", "")) != "match_case" or str(metadata.get("lane", "")) != "action" \
@@ -9358,7 +9358,7 @@ func _read_case_steps(case_row: EventRowData, step_code: Dictionary) -> void:
 		# line reads anywhere else on the sheet ("PatrolBehavior | Set mode to WAITING"), not System's.
 		var own_owner: String = _assigned_member_owner(step.code)
 		for read_span: Variant in read:
-			var read_meta: Dictionary = (read_span as SemanticSpan).metadata
+			var read_meta: Dictionary = (read_span as EventSheetSemanticSpan).metadata
 			read_meta["kind"] = "match_case"
 			read_meta["editable"] = false
 			read_meta.erase("raw_action")
@@ -9366,9 +9366,9 @@ func _read_case_steps(case_row: EventRowData, step_code: Dictionary) -> void:
 			if not own_owner.is_empty() and str(read_meta.get("object_label", "")) == _object_label_for("Core", ""):
 				read_meta["object_label"] = own_owner
 				read_meta.erase("object_icon")
-				var dressed: Array[SemanticSpan] = [read_span as SemanticSpan]
+				var dressed: Array[EventSheetSemanticSpan] = [read_span as EventSheetSemanticSpan]
 				_dress_line_object_icons(dressed)
-			read_spans.append(read_span as SemanticSpan)
+			read_spans.append(read_span as EventSheetSemanticSpan)
 	case_row.spans = read_spans
 
 
@@ -9397,7 +9397,7 @@ func _assigned_member_owner(code: String) -> String:
 ## like any other, so it leads with System's icon in the object column; beside a trigger, the trigger's
 ## own object already leads the line.
 func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, style_meta: Dictionary,
-		own_line: bool = false) -> SemanticSpan:
+		own_line: bool = false) -> EventSheetSemanticSpan:
 	var metadata: Dictionary = {
 		"lane": "condition",
 		"kind": "match_head",
@@ -9408,10 +9408,10 @@ func _match_head_span(match_row: MatchRow, action_index: int, line_index: int, s
 	}
 	if own_line:
 		metadata["object_label"] = _object_label_for("Core", "")
-	var span: SemanticSpan = _make_span("%s %s" % [EventSheetL10n.translate("match"), match_row.match_expression.strip_edges()],
-		SemanticSpan.SpanType.CONDITION, metadata.merged(style_meta, true))
+	var span: EventSheetSemanticSpan = _make_span("%s %s" % [EventSheetL10n.translate("match"), match_row.match_expression.strip_edges()],
+		EventSheetSemanticSpan.SpanType.CONDITION, metadata.merged(style_meta, true))
 	if own_line:
-		var dressed: Array[SemanticSpan] = [span]
+		var dressed: Array[EventSheetSemanticSpan] = [span]
 		_dress_line_object_icons(dressed)
 	return span
 
@@ -9560,7 +9560,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_label = own_state_arm
 			elif state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
-			var chain_spans: Array[SemanticSpan] = []
+			var chain_spans: Array[EventSheetSemanticSpan] = []
 			if not menu.is_empty():
 				chain_spans = _menu_arm_condition_spans(menu, pattern_text)
 			if not combo.is_empty():
@@ -9580,7 +9580,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				# An Else-if's test sits on the SECOND condition line, under the Else chip, so the row is
 				# two lines tall however few actions it carries.
 				var chain_lines: int = 0
-				for chain_span: SemanticSpan in chain_spans:
+				for chain_span: EventSheetSemanticSpan in chain_spans:
 					chain_lines = maxi(chain_lines, int(chain_span.metadata.get("line_index", 0)) + 1)
 				case_row.line_count = maxi(case_row.line_count, chain_lines)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
@@ -10789,7 +10789,7 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 	}
 	# Only the SENTENCE carries the "stands for N lines" mark and the lines behind it; repeating them
 	# on the note would draw the same chip twice on one row.
-	spans.append(_make_span(str(limits.get("text", "")), SemanticSpan.SpanType.ACTION,
+	spans.append(_make_span(str(limits.get("text", "")), EventSheetSemanticSpan.SpanType.ACTION,
 		base.duplicate().merged({
 			"natural_width": true,
 			"compiled_lines": int(limits.get("line_count", 1)),
@@ -10802,7 +10802,7 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 	var flags_chip: Dictionary = limits.get("flags_chip", {})
 	if not flags_chip.is_empty() and _viewport._sheet != null and not _viewport._sheet.read_only:
 		spans.append(_make_span(" %s" % EventSheetL10n.translate("flags…"),
-			SemanticSpan.SpanType.KEYWORD, base.duplicate().merged({
+			EventSheetSemanticSpan.SpanType.KEYWORD, base.duplicate().merged({
 				"kind": "hierarchy_flags",
 				"natural_width": true,
 				"editable": false,
@@ -10814,7 +10814,7 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 	# sentence carries the whole of what happened has no note, and draws no empty span for one.
 	if str(limits.get("note", "")).is_empty():
 		return
-	spans.append(_make_span(" %s" % str(limits.get("note", "")), SemanticSpan.SpanType.VALUE,
+	spans.append(_make_span(" %s" % str(limits.get("note", "")), EventSheetSemanticSpan.SpanType.VALUE,
 		base.duplicate().merged({
 			"text_color": _viewport._get_reading_style().muted_text_color, "object_label": ""
 		}, true).merged(action_style_meta, false)))
@@ -11137,7 +11137,7 @@ func _match_reads_as_else_if(match_row: MatchRow) -> bool:
 		# A pattern that BINDS a name, destructures a list or picks a table apart says something a
 		# plain value cannot - and now has words of its own, so those arms join the chain too. Anything
 		# neither reading claims still keeps the pattern text it was written as.
-		if not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern) \
+		if not EventSheetViewportRowBuilder.is_plain_match_pattern(match_case.pattern) \
 				and EventSheetSentence.match_pattern_reading(subject, match_case.pattern, context).is_empty():
 			return false
 		# A `_` anywhere but last would mean the branches after it are dead; that is not a chain.
@@ -11153,17 +11153,17 @@ func _match_reads_as_else_if(match_row: MatchRow) -> bool:
 ## `branch` reads a Match window branch: "state is IDLE", the value named the way the window names it
 ## (a member of one of this sheet's enums without its enum's name).
 func _match_else_if_condition_spans(subject: String, pattern: String, chain_index: int,
-		branch: bool = false) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+		branch: bool = false) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var text: String = pattern.strip_edges()
 	# A pattern that says something a plain value cannot draws its own sentence and its own chips.
-	var pattern_reading: Dictionary = {} if ViewportRowBuilder.is_plain_match_pattern(text) \
+	var pattern_reading: Dictionary = {} if EventSheetViewportRowBuilder.is_plain_match_pattern(text) \
 		else EventSheetSentence.match_pattern_reading(subject, text, sentence_context())
 	if not pattern_reading.is_empty():
 		return _match_pattern_condition_spans(pattern_reading, chain_index, condition_style_meta)
 	if chain_index > 0 or text == "_":
-		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+		spans.append(_make_span(EventSheetL10n.translate("Else"), EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "else_keyword",
 			"chip": true,
@@ -11184,7 +11184,7 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	# block a hand-written `if a or b:` draws, tone lens and all.
 	var carrier := EventRowData.new()
 	_append_conjunct_condition_lines(carrier, " or ".join(tests), 1 if chain_index > 0 else 0, condition_style_meta)
-	for carried: SemanticSpan in carrier.spans:
+	for carried: EventSheetSemanticSpan in carrier.spans:
 		_say_equals_once(carried, " %s " % EventSheetL10n.translate("is") if branch else " = ")
 		spans.append(carried)
 	# One arm of the object's own machine reads as the Is row does everywhere else: the state variable
@@ -11194,7 +11194,7 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 		if not EventSheetStateFacts.bare_members(_viewport._sheet as EventSheetResource).has(member):
 			return spans
 		for index: int in spans.size():
-			var read: SemanticSpan = spans[index]
+			var read: EventSheetSemanticSpan = spans[index]
 			if str(read.metadata.get("kind", "")) != "condition":
 				continue
 			read.text = "%s %s" % [EventSheetL10n.translate("is"), member]
@@ -11230,13 +11230,13 @@ func _sheet_enum_member(value: String) -> String:
 ## arm's own sentence otherwise, and the names it binds as chips after it. The chips sit on the same
 ## line as the sentence, because what the pattern pulled out is part of what the pattern says.
 func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
-		condition_style_meta: Dictionary) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+		condition_style_meta: Dictionary) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	var sentence: String = str(reading.get("text", ""))
 	var is_else: bool = bool(reading.get("is_else", false))
 	var line_index: int = 0
 	if chain_index > 0 or is_else:
-		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+		spans.append(_make_span(EventSheetL10n.translate("Else"), EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "else_keyword",
 			"chip": true,
@@ -11248,7 +11248,7 @@ func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
 		# plain-value chain draws it.
 		line_index = 0 if is_else else 1
 	if not sentence.is_empty():
-		spans.append(_make_span(sentence, SemanticSpan.SpanType.CONDITION, {
+		spans.append(_make_span(sentence, EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "match_pattern",
 			"editable": false,
@@ -11256,7 +11256,7 @@ func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
 			"object_label": _object_label_for("Core", "")
 		}.merged(condition_style_meta, true)))
 	for chip_text: String in (reading.get("chips", PackedStringArray()) as PackedStringArray):
-		spans.append(_make_span(chip_text, SemanticSpan.SpanType.CONDITION, {
+		spans.append(_make_span(chip_text, EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "match_binding",
 			"editable": false,
@@ -11272,7 +11272,7 @@ func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
 ## written the way an event sheet writes it. A comparison the user really did type is left exactly as
 ## typed, elsewhere and on purpose. Only the operator the reading put between subject and value
 ## changes, never an " = " inside the value.
-func _say_equals_once(span: SemanticSpan, word: String = " = ") -> void:
+func _say_equals_once(span: EventSheetSemanticSpan, word: String = " = ") -> void:
 	span.text = span.text.replace(" == ", " = ")
 	var at: int = span.text.find(" = ")
 	if at >= 0:
@@ -11297,14 +11297,14 @@ func _say_equals_once(span: SemanticSpan, word: String = " = ") -> void:
 ## switch is a cost nothing else there needs to pay.
 func _friendly_statement_text(line: String, with_file_facts: bool = false) -> String:
 	var text: String = line.strip_edges()
-	var sentence: Dictionary = ViewportRowBuilder.statement_sentence(text,
+	var sentence: Dictionary = EventSheetViewportRowBuilder.statement_sentence(text,
 		sentence_context() if with_file_facts else {})
 	if not sentence.is_empty() and sentence.get("segments") is Array:
 		var spoken: String = ""
 		for segment: Variant in (sentence.get("segments") as Array):
 			spoken += str((segment as Dictionary).get("text", ""))
 		return spoken
-	var call: Dictionary = ViewportRowBuilder.call_parts(text)
+	var call: Dictionary = EventSheetViewportRowBuilder.call_parts(text)
 	if not call.is_empty():
 		var call_target: String = str(call.get("target", ""))
 		var lead: String = "" if call_target.is_empty() or call_target == "self" else "%s " % call_target
@@ -11334,7 +11334,7 @@ func _joined_call_args(call: Dictionary) -> String:
 func _friendly_guard_text(guard: String) -> String:
 	var text: String = str(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("text", ""))
 	var friendly: String = text
-	var call: Dictionary = ViewportRowBuilder.call_parts(text)
+	var call: Dictionary = EventSheetViewportRowBuilder.call_parts(text)
 	if not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self"):
 		var args_text: String = _joined_call_args(call)
 		friendly = str(call.get("verb", "")) if args_text.strip_edges().is_empty() else "%s ( %s )" % [str(call.get("verb", "")), args_text]
@@ -11394,7 +11394,7 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 	_append_conjunct_condition_lines(carrier,
 		str(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("text", guard)), 0, condition_style_meta)
 	# A test no object owns (a sum, a comparison of a computed value) is System's, as on an event.
-	for carried: SemanticSpan in carrier.spans:
+	for carried: EventSheetSemanticSpan in carrier.spans:
 		if str(carried.metadata.get("kind", "")) == "condition" \
 				and str(carried.metadata.get("object_label", "")).strip_edges().is_empty():
 			carried.metadata["object_label"] = _object_label_for("Core", "")
@@ -11417,7 +11417,7 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 func _name_stepped_objects(row: EventRowData, stepped_lines: Dictionary) -> void:
 	if stepped_lines.is_empty():
 		return
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if str(span.metadata.get("kind", "")) == "match_case" and str(span.metadata.get("lane", "")) == "action" \
 				and stepped_lines.has(int(span.metadata.get("line_index", -1))):
 			span.metadata["object_label"] = EventSheetStateFacts.STATE_VARIABLE
@@ -11462,7 +11462,7 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
 ## chain uses, so both readings of "one of these branches runs" look identical on the sheet.
 func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false,
-		condition_spans: Array[SemanticSpan] = []) -> EventRowData:
+		condition_spans: Array[EventSheetSemanticSpan] = []) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
@@ -11473,7 +11473,7 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	if not condition_spans.is_empty():
 		row.spans = condition_spans.duplicate()
 		for line_index: int in range(action_lines.size()):
-			row.spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
+			row.spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", EventSheetSemanticSpan.SpanType.ACTION, {
 				"lane": "action",
 				"kind": "match_case",
 				"editable": false,
@@ -11485,11 +11485,11 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	# that already stripped the negation pass plain text and nothing happens here.
 	var inversion: Dictionary = EventSheetViewportLenses.strip_leading_not(condition_text)
 	var shown_condition: String = str(inversion.get("text", condition_text))
-	var spans: Array[SemanticSpan] = []
+	var spans: Array[EventSheetSemanticSpan] = []
 	if negated or bool(inversion.get("negated", false)):
 		spans.append(_negated_badge_span(condition_style, 0))
 	spans.append_array([
-		_make_span(shown_condition if not shown_condition.is_empty() else " ", SemanticSpan.SpanType.CONDITION, {
+		_make_span(shown_condition if not shown_condition.is_empty() else " ", EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "match_case",
 			"editable": false,
@@ -11497,7 +11497,7 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 		}.merged(condition_style, true))
 	])
 	for line_index: int in range(action_lines.size()):
-		spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
+		spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", EventSheetSemanticSpan.SpanType.ACTION, {
 			"lane": "action",
 			"kind": "match_case",
 			"editable": false,
@@ -11666,7 +11666,7 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 	strip.spans = [
 		_make_span(
 			_folder_strip_label(group_name, members),
-			SemanticSpan.SpanType.KEYWORD,
+			EventSheetSemanticSpan.SpanType.KEYWORD,
 			{
 				"kind": "variable",
 				"editable": false,
@@ -11866,7 +11866,7 @@ func _section_row(stand_in: EventRowData, shape: String, kind: String, name: Str
 		"band":
 			row_data.variable_row = false
 			row_data.custom_color = Color(event_style.group_background_color, 1.0)
-			row_data.spans.append(_make_span(name, SemanticSpan.SpanType.KEYWORD, meta.merged({
+			row_data.spans.append(_make_span(name, EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({
 				"align_center": true,
 				"bbcode_segments": [{"text": name, "color": event_style.group_title_color, "bold": true}],
 				"hover_note": ExportSections.head_hover(kind, name, "", "", "")
@@ -11874,9 +11874,9 @@ func _section_row(stand_in: EventRowData, shape: String, kind: String, name: Str
 		"end":
 			row_data.variable_row = true
 			meta["variable_group"] = walk.group if kind == ExportSections.SUBGROUP else name
-			row_data.spans.append(_make_span(ExportSections.end_text(name), SemanticSpan.SpanType.COMMENT,
+			row_data.spans.append(_make_span(ExportSections.end_text(name), EventSheetSemanticSpan.SpanType.COMMENT,
 				meta.merged({"text_color": reading_style.muted_text_color, "align_right": true}, true)))
-			row_data.spans.append(_make_span(ExportSections.code_line(kind, ""), SemanticSpan.SpanType.COMMENT,
+			row_data.spans.append(_make_span(ExportSections.code_line(kind, ""), EventSheetSemanticSpan.SpanType.COMMENT,
 				meta.merged({"text_color": reading_style.muted_text_color, "align_right": true}, true)))
 		_:
 			row_data.variable_row = true
@@ -11887,11 +11887,11 @@ func _section_row(stand_in: EventRowData, shape: String, kind: String, name: Str
 				meta["variable_subgroup"] = name
 			meta["section_prefix"] = prefix
 			meta["section_parent"] = parent
-			row_data.spans.append(_make_span(name, SemanticSpan.SpanType.KEYWORD, meta.merged({
+			row_data.spans.append(_make_span(name, EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({
 				"bbcode_segments": [{"text": name, "color": event_style.group_title_color, "bold": true}]
 			}, true)))
 			if not prefix.is_empty():
-				row_data.spans.append(_make_span("%s*" % prefix, SemanticSpan.SpanType.KEYWORD, meta.merged({
+				row_data.spans.append(_make_span("%s*" % prefix, EventSheetSemanticSpan.SpanType.KEYWORD, meta.merged({
 					"text_color": event_style.tooltip_badge_foreground_color,
 					"hover_note": EventSheetL10n.translate("Only names starting %s join this group.") % prefix
 				}, true)))
@@ -11928,7 +11928,7 @@ func _stamp_section_member(row_data: EventRowData, walk: ExportSections) -> void
 		else walk.group_prefix
 	if not walk.subgroup.is_empty():
 		row_data.custom_color = _subgroup_tint()
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if not (span.metadata is Dictionary) or not (span.metadata as Dictionary).has("variable_name"):
 			continue
 		var meta: Dictionary = span.metadata
@@ -12747,10 +12747,10 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 			"ace_enabled": action.enabled,
 			"line_index": 0
 		}, {})
-		var typed_spans: Array[SemanticSpan] = []
+		var typed_spans: Array[EventSheetSemanticSpan] = []
 		for span: Variant in built:
-			if span is SemanticSpan:
-				typed_spans.append(span as SemanticSpan)
+			if span is EventSheetSemanticSpan:
+				typed_spans.append(span as EventSheetSemanticSpan)
 		row_data.spans = typed_spans
 		# What the event did to the Control it just made hangs under the row that made it.
 		_append_control_setup_rows(row_data, event_row, setup_runs.get(action_index, {}), indent + 1)
@@ -12921,7 +12921,7 @@ func _build_variable_row(
 		row_data.spans.append(
 			_make_span(
 				"x",
-				SemanticSpan.SpanType.KEYWORD,
+				EventSheetSemanticSpan.SpanType.KEYWORD,
 				variable_meta.merged({
 					"editable": false,
 					"badge": true,
@@ -12940,13 +12940,13 @@ func _build_variable_row(
 	if inspector_rows and not scope_word_key.is_empty():
 		hover_lines.append("%s - %s" % [EventSheetVariableSentence.scope_word(scope_word_key),
 			EventSheetVariableSentence.scope_note(scope_word_key)])
-	var name_span: SemanticSpan = null
+	var name_span: EventSheetSemanticSpan = null
 	if not code_only:
 		if not scope_word_key.is_empty() and not inspector_rows:
 			row_data.spans.append(
 				_make_span(
 					EventSheetVariableSentence.scope_word(scope_word_key),
-					SemanticSpan.SpanType.KEYWORD,
+					EventSheetSemanticSpan.SpanType.KEYWORD,
 					variable_meta.merged({
 						"editable": false,
 						"variable_scope_span": true,
@@ -12972,7 +12972,7 @@ func _build_variable_row(
 			row_data.spans.append(
 				_make_span(
 					type_word,
-					SemanticSpan.SpanType.KEYWORD,
+					EventSheetSemanticSpan.SpanType.KEYWORD,
 					variable_meta.merged({
 						"editable": false,
 						"variable_type_span": true,
@@ -12999,7 +12999,7 @@ func _build_variable_row(
 		# variable dialog, so the field belongs to the one key that means "rename this".
 		name_span = _make_span(
 			display_name,
-			SemanticSpan.SpanType.OBJECT,
+			EventSheetSemanticSpan.SpanType.OBJECT,
 			variable_meta.merged({
 				"editable": declared_in.is_empty(),
 				"edit_kind": "variable_rename",
@@ -13029,7 +13029,7 @@ func _build_variable_row(
 			row_data.spans.append(
 				_make_span(
 					INSPECTOR_BADGE_GLYPH,
-					SemanticSpan.SpanType.KEYWORD,
+					EventSheetSemanticSpan.SpanType.KEYWORD,
 					variable_meta.merged({
 						"editable": false,
 						"badge": true,
@@ -13050,7 +13050,7 @@ func _build_variable_row(
 			row_data.spans.append(
 				_make_span(
 					str(SYNC_BADGE_GLYPHS.get(str(sync_entry.get("mode", "")), "")),
-					SemanticSpan.SpanType.KEYWORD,
+					EventSheetSemanticSpan.SpanType.KEYWORD,
 					variable_meta.merged({
 						"editable": false,
 						"badge": true,
@@ -13078,7 +13078,7 @@ func _build_variable_row(
 		unassigned_slot = inspector_rows and NativeVariableMarks.starts_null(type_name, _sheet_enum_names())
 		hide_value = not unassigned_slot
 	if not hide_value:
-		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
+		row_data.spans.append(_make_span("=", EventSheetSemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
 	# An `any` variable with no value written starts on nothing, and says so in a quiet note where the
 	# value would be.
 	if hide_value and not unassigned_slot and type_word == "any" and source_variable != null \
@@ -13173,7 +13173,7 @@ func _build_variable_row(
 		value_text = EventSheetL10n.translate("1 entry") if entry_count == 1 else EventSheetL10n.translate("%d entries") % entry_count
 	if not hide_value:
 		row_data.spans.append(
-			_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
+			_make_span(value_text, EventSheetSemanticSpan.SpanType.VALUE, value_meta)
 		)
 	# The limits and the choices, muted, straight after the value - the same slot the Inspector puts
 	# them in, and ahead of the knob's own sentence so the fact reads before the prose.
@@ -13206,7 +13206,7 @@ func _build_variable_row(
 		_append_variable_note(notes_target, variable_meta, EventSheetL10n.translate("frozen"),
 			EventSheetL10n.translate("Named elsewhere: add to it, never rename one."))
 	if inspector_rows:
-		for note_span: SemanticSpan in notes_target.spans:
+		for note_span: EventSheetSemanticSpan in notes_target.spans:
 			hover_lines.append(note_span.text)
 		if name_span != null and not hover_lines.is_empty():
 			var name_meta: Dictionary = name_span.metadata as Dictionary
@@ -13243,7 +13243,7 @@ func _append_variable_note(row_data: EventRowData, variable_meta: Dictionary, no
 		hover_note: String = "", doc_note: bool = false) -> void:
 	if note.strip_edges().is_empty():
 		return
-	row_data.spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT, variable_meta.merged({
+	row_data.spans.append(_make_span(note, EventSheetSemanticSpan.SpanType.COMMENT, variable_meta.merged({
 		"editable": false,
 		"text_color": _viewport._get_reading_style().muted_text_color,
 		"hover_note": hover_note,
@@ -13794,7 +13794,7 @@ func super_call_reading(action_resource: Variant, event_row: EventRow) -> Dictio
 
 
 ## The action cell for a `super` call: `Include <file> ▸ run its On Ready` / `▸ Call Take Damage x`.
-func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, action_index: int,
+func _append_super_call_spans(spans: Array[EventSheetSemanticSpan], reading: Dictionary, action_index: int,
 		action_line_index: int, action_style_meta: Dictionary) -> void:
 	var base_meta: Dictionary = {
 		"lane": "action",
@@ -13806,9 +13806,9 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 		"natural_width": true,
 		"line_index": action_line_index
 	}
-	spans.append(_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE,
+	spans.append(_make_span(EventSheetL10n.translate("Include"), EventSheetSemanticSpan.SpanType.VALUE,
 		base_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true).merged(action_style_meta, false)))
-	spans.append(_make_span(str(reading.get("file", "")), SemanticSpan.SpanType.KEYWORD,
+	spans.append(_make_span(str(reading.get("file", "")), EventSheetSemanticSpan.SpanType.KEYWORD,
 		base_meta.duplicate().merged({
 			"text_color": _viewport._get_event_style().object_label_color
 		}, true).merged(action_style_meta, false)))
@@ -13821,7 +13821,7 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 	var args: String = str(reading.get("args", ""))
 	if not args.is_empty():
 		tail = "%s  %s" % [tail, args]
-	spans.append(_make_span(tail, SemanticSpan.SpanType.ACTION, base_meta.duplicate().merged({
+	spans.append(_make_span(tail, EventSheetSemanticSpan.SpanType.ACTION, base_meta.duplicate().merged({
 		"natural_width": false,
 		"text_color": _viewport._get_reading_style().primary_text_color
 	}, true).merged(action_style_meta, false)))
@@ -13851,7 +13851,7 @@ static func commented_out_code(action_resource: Variant) -> String:
 ## The action-lane cell for a switched-off row: the sentence the code reads as when a sentence claims
 ## it, the code itself otherwise, followed by the muted "disabled" note. `ace_enabled` false is what
 ## draws the strike-through, and the row wash comes from the disabled look the sheet already has.
-func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, action_index: int,
+func _append_disabled_code_spans(spans: Array[EventSheetSemanticSpan], code: String, action_index: int,
 		action_line_index: int, action_style_meta: Dictionary) -> void:
 	var disabled_meta: Dictionary = {
 		"lane": "action",
@@ -13865,7 +13865,7 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 	# The note leads the cell rather than trailing it: the sentence cell stretches to close the lane,
 	# so a word placed after it is pushed off the edge on a narrow canvas - and the one word that says
 	# this row does not run is the one word that must never be the one that gets cut.
-	spans.append(_make_span(EventSheetL10n.translate("disabled"), SemanticSpan.SpanType.COMMENT,
+	spans.append(_make_span(EventSheetL10n.translate("disabled"), EventSheetSemanticSpan.SpanType.COMMENT,
 		disabled_meta.duplicate().merged({
 			"natural_width": true,
 			# The NOTE is not the code: striking it through would say the word itself is switched off.
@@ -13878,13 +13878,13 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 	stand_in.code = code
 	stand_in.enabled = false
 	if not _append_sentence_spans(spans, stand_in, action_index, action_line_index, action_style_meta):
-		spans.append(_make_span(code, SemanticSpan.SpanType.VALUE,
+		spans.append(_make_span(code, EventSheetSemanticSpan.SpanType.VALUE,
 			disabled_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true).merged(action_style_meta, false)))
 
 
 ## The header spans of a function that IS an await beat: the repeating badge, the words, and the
 ## muted note saying the beat only runs while the loop does.
-func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
+func _await_loop_trigger_spans(seconds: String) -> Array[EventSheetSemanticSpan]:
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 	badge_meta["tempo"] = EventSheetTriggerResolver.TEMPO_EVERY_TICK
 	badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
@@ -13893,20 +13893,20 @@ func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 	badge_meta["kind"] = "raw_code"
 	badge_meta["line_index"] = 0
 	return [
-		_make_span("⟳", SemanticSpan.SpanType.KEYWORD, badge_meta),
-		_make_span(EventSheetL10n.translate("System"), SemanticSpan.SpanType.OBJECT, {
+		_make_span("⟳", EventSheetSemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(EventSheetL10n.translate("System"), EventSheetSemanticSpan.SpanType.OBJECT, {
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}),
-		_make_span(EventSheetL10n.translate("Every %s seconds") % seconds, SemanticSpan.SpanType.CONDITION, {
+		_make_span(EventSheetL10n.translate("Every %s seconds") % seconds, EventSheetSemanticSpan.SpanType.CONDITION, {
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
 			"text_color": _viewport._get_reading_style().primary_text_color
 		}),
-		_make_span(EventSheetL10n.translate("(while running)"), SemanticSpan.SpanType.COMMENT, {
+		_make_span(EventSheetL10n.translate("(while running)"), EventSheetSemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
@@ -13987,7 +13987,7 @@ static func signal_name_of_trigger(trigger_id: String) -> String:
 
 ## The muted `-> HUD, Level (2 listeners)` an emit wears. Nothing is appended when nothing in
 ## the project listens, because a note saying "nobody" on every internal signal is noise.
-func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, action_index: int,
+func _append_signal_fanout_span(spans: Array[EventSheetSemanticSpan], action: ACEAction, action_index: int,
 		line_index: int) -> void:
 	var signal_name: String = emitted_signal_name(action)
 	if signal_name.is_empty():
@@ -13995,7 +13995,7 @@ func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, a
 	var note: String = EventSheetSignalFanout.listeners_note(signal_name)
 	if note.is_empty():
 		return
-	spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT,
+	spans.append(_make_span(note, EventSheetSemanticSpan.SpanType.COMMENT,
 		_fanout_metadata("action", action_index, line_index, signal_name, true)))
 
 
@@ -14008,7 +14008,7 @@ func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, a
 ## The rule is the compiler's own (EventForgeRemovalGuard), asked here rather than re-derived, so
 ## the row can never claim a guard the file does not contain or miss one it does. Same line_index as
 ## the sentence, so the row does not grow a line and the lazy height measure stays exact.
-func _append_removal_guard_span(spans: Array[SemanticSpan], action: ACEAction, event_row: EventRow,
+func _append_removal_guard_span(spans: Array[EventSheetSemanticSpan], action: ACEAction, event_row: EventRow,
 		action_index: int, line_index: int) -> void:
 	if action == null or not EventForgeRemovalGuard.GUARDED_ACE_IDS.has(action.ace_id):
 		return
@@ -14033,7 +14033,7 @@ func _append_removal_guard_span(spans: Array[SemanticSpan], action: ACEAction, e
 
 
 ## The muted `<- emitted in player.gd: Take Damage` a handler wears.
-func _append_signal_source_span(spans: Array[SemanticSpan], event_row: EventRow, line_index: int) -> void:
+func _append_signal_source_span(spans: Array[EventSheetSemanticSpan], event_row: EventRow, line_index: int) -> void:
 	if event_row == null:
 		return
 	var signal_name: String = signal_name_of_trigger(event_row.trigger_id)
@@ -14042,7 +14042,7 @@ func _append_signal_source_span(spans: Array[SemanticSpan], event_row: EventRow,
 	var note: String = EventSheetSignalFanout.raised_note(signal_name)
 	if note.is_empty():
 		return
-	spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT,
+	spans.append(_make_span(note, EventSheetSemanticSpan.SpanType.COMMENT,
 		_fanout_metadata("condition", 0, line_index, signal_name, false)))
 
 
@@ -14537,8 +14537,8 @@ func _patterns_reading_on() -> bool:
 
 
 func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_from: int = 0,
-		slice_to: int = -1, hide_conditions: bool = false, slice_is_tail: bool = false) -> Array[SemanticSpan]:
-	var spans: Array[SemanticSpan] = []
+		slice_to: int = -1, hide_conditions: bool = false, slice_is_tail: bool = false) -> Array[EventSheetSemanticSpan]:
+	var spans: Array[EventSheetSemanticSpan] = []
 	if slice_from > 0 or slice_to >= 0 or hide_conditions:
 		return _slice_event_spans(_build_event_spans(event_row, in_verb_body), event_row,
 			slice_from, slice_to, hide_conditions, slice_is_tail)
@@ -14565,11 +14565,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		input_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		input_badge_meta["line_index"] = condition_line_index
 		input_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span(input_glyph, SemanticSpan.SpanType.KEYWORD, input_badge_meta))
+		spans.append(_make_span(input_glyph, EventSheetSemanticSpan.SpanType.KEYWORD, input_badge_meta))
 		spans.append(
 			_make_span(
 				str(input_reading.get("sentence", "")),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "trigger",
@@ -14591,7 +14591,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				else_text,
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "else_keyword",
@@ -14610,7 +14610,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			spans.append(
 				_make_span(
 					"",
-					SemanticSpan.SpanType.COMMENT,
+					EventSheetSemanticSpan.SpanType.COMMENT,
 					{
 						"lane": "condition",
 						"kind": "else_follows",
@@ -14629,11 +14629,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		trigger_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_badge_meta["line_index"] = condition_line_index
 		trigger_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span(trigger_glyph, SemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
+		spans.append(_make_span(trigger_glyph, EventSheetSemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
 		spans.append(
 			_make_span(
 				_format_condition_descriptor(event_row.trigger),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "trigger",
@@ -14662,7 +14662,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		poll_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		poll_badge_meta["line_index"] = condition_line_index
 		poll_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span("⌨", SemanticSpan.SpanType.KEYWORD, poll_badge_meta))
+		spans.append(_make_span("⌨", EventSheetSemanticSpan.SpanType.KEYWORD, poll_badge_meta))
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE \
 			and not _blank_tick_reading(event_row).is_empty():
 		# ────────────────────────────────────────────────────────────────────────────────────────
@@ -14683,7 +14683,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row), _familiar_words_enabled())
 			spans.append(_make_span(
 				"%s," % tick_words if match_beside else tick_words,
-				SemanticSpan.SpanType.CONDITION, {
+				EventSheetSemanticSpan.SpanType.CONDITION, {
 					"lane": "condition",
 					"kind": "trigger",
 					"ace_index": 0,
@@ -14717,7 +14717,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_id_badge_meta["line_index"] = condition_line_index
 		trigger_id_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
+		spans.append(_make_span(trigger_id_glyph, EventSheetSemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
 		var trigger_words: String = EventSheetViewportReadingRows.tick_trigger_words(
 			event_row.trigger_id,
 			_trigger_sentence(event_row),
@@ -14763,7 +14763,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# ── lens hook (tick triggers) ──────────────────────────────────────────────────
 				# The event-sheet words for the two ticks; every other trigger keeps its own name.
 				trigger_words,
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "trigger",
@@ -14815,7 +14815,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				_format_condition_descriptor(inline_trigger),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "condition",
@@ -14845,7 +14845,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	if folded_guard >= 0:
 		spans.append(_make_span(
 			_format_condition_descriptor(event_row.conditions[folded_guard]),
-			SemanticSpan.SpanType.COMMENT,
+			EventSheetSemanticSpan.SpanType.COMMENT,
 			{
 				"editable": false,
 				"lane": "condition",
@@ -14899,7 +14899,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			spans.append(
 				_make_span(
 					condition_text,
-					SemanticSpan.SpanType.CONDITION,
+					EventSheetSemanticSpan.SpanType.CONDITION,
 					{
 						"lane": "condition",
 						"kind": "condition",
@@ -14921,7 +14921,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				_format_with_node(event_row),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "with_node",
@@ -14985,7 +14985,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				loop_text if not loop_reading.is_empty() else _format_pick_filter(pick),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "pick_filter",
@@ -15028,7 +15028,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		always_placeholder_suppressed = true
 	# The look that nests by lines draws a condition-less event's condition cell EMPTY, in the rest tone:
 	# no "Always" word and no "Every Tick" word, because a cell that says nothing already says it runs.
-	if EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+	if EventSheetRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
 		always_placeholder_suppressed = true
 	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE and not always_placeholder_suppressed:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare
@@ -15039,7 +15039,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				EventSheetL10n.translate("Always" if in_verb_body else "Every frame"),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "condition",
@@ -15064,7 +15064,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				EventSheetL10n.translate("+ Add condition"),
-				SemanticSpan.SpanType.CONDITION,
+				EventSheetSemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "add_condition",
@@ -15228,7 +15228,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				continue
 			if (create_groups.get("leads", {}) as Dictionary).has(action_index):
 				var create: Dictionary = (create_groups["leads"] as Dictionary)[action_index]
-				spans.append(_make_span(str(create.get("text", "")), SemanticSpan.SpanType.ACTION, {
+				spans.append(_make_span(str(create.get("text", "")), EventSheetSemanticSpan.SpanType.ACTION, {
 					"lane": "action",
 					"kind": "action",
 					"ace_index": action_index,
@@ -15257,7 +15257,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# same muted note the lambda's line already keeps.
 				connect_parts = _connect_call_note(action_resource)
 			if not connect_parts.is_empty():
-				spans.append(_make_span(_connect_note_text(connect_parts), SemanticSpan.SpanType.VALUE, {
+				spans.append(_make_span(_connect_note_text(connect_parts), EventSheetSemanticSpan.SpanType.VALUE, {
 					"lane": "action",
 					"kind": "action",
 					"ace_index": action_index,
@@ -15323,7 +15323,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				spans.append(
 					_make_span(
 						action_words,
-						SemanticSpan.SpanType.ACTION,
+						EventSheetSemanticSpan.SpanType.ACTION,
 						{
 							"lane": "action",
 							"kind": "action",
@@ -15377,7 +15377,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					spans.append(
 						_make_span(
 							match_lines[match_line_index] if not match_lines[match_line_index].is_empty() else " ",
-							SemanticSpan.SpanType.VALUE,
+							EventSheetSemanticSpan.SpanType.VALUE,
 							{
 								"lane": "action",
 								"kind": "action",
@@ -15402,7 +15402,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				spans.append(
 					_make_span(
 						"%s · %d %s" % [EventSheetL10n.translate("timeline"), timeline_beats, EventSheetL10n.translate("steps")],
-						SemanticSpan.SpanType.VALUE,
+						EventSheetSemanticSpan.SpanType.VALUE,
 						{
 							"lane": "action",
 							"kind": "action",
@@ -15439,13 +15439,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"chip": true,
 					"line_index": action_line_index
 				}
-				spans.append(_make_span("Declare", SemanticSpan.SpanType.VALUE,
+				spans.append(_make_span("Declare", EventSheetSemanticSpan.SpanType.VALUE,
 					decl_head_meta.duplicate().merged({"natural_width": true}, true).merged(action_style_meta, false)))
-				spans.append(_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE,
+				spans.append(_make_span(decl.variable_name(), EventSheetSemanticSpan.SpanType.VALUE,
 					decl_head_meta.duplicate().merged({"natural_width": true, "text_color": _viewport._get_reading_style().primary_text_color}, true).merged(action_style_meta, false)))
 				spans.append(_make_span("%s - %d %s" % ["Dictionary" if decl.is_dictionary() else "Array",
 					decl.entry_values.size(), "entry" if decl.entry_values.size() == 1 else "entries"],
-					SemanticSpan.SpanType.VALUE,
+					EventSheetSemanticSpan.SpanType.VALUE,
 					decl_head_meta.duplicate().merged({"text_color": _viewport._get_event_style().comment_text_color}, true).merged(action_style_meta, false)))
 				action_line_index += 1
 				for entry_index: int in decl.entry_values.size():
@@ -15453,7 +15453,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					var entry_text: String = "        %s" % decl.entry_values[entry_index]
 					if not entry_key.is_empty():
 						entry_text = "        %s = %s" % [entry_key, decl.entry_values[entry_index]]
-					spans.append(_make_span(entry_text, SemanticSpan.SpanType.VALUE, {
+					spans.append(_make_span(entry_text, EventSheetSemanticSpan.SpanType.VALUE, {
 						"lane": "action",
 						"kind": "action",
 						"ace_index": action_index,
@@ -15513,7 +15513,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					spans.append(
 						_make_span(
 							inline_text if not inline_text.is_empty() else " ",
-							SemanticSpan.SpanType.VALUE,
+							EventSheetSemanticSpan.SpanType.VALUE,
 							{
 								"lane": "action",
 								"kind": "action",
@@ -15565,7 +15565,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					spans.append(
 						_make_span(
 						action_comment_drawn,
-							SemanticSpan.SpanType.COMMENT,
+							EventSheetSemanticSpan.SpanType.COMMENT,
 							action_comment_doors.merged({
 								"lane": "action",
 								"kind": "action",
@@ -15594,16 +15594,16 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# action lane, LEFT-aligned so it always stays visible. It used to be pinned to the lane's
 	# far-right edge, which scrolled off-screen unless the editor window was very wide.
 	var add_action_line_index: int = action_line_index
-	if not event_row.comment.is_empty() and EventRowRenderer.event_note_on_top(_viewport._get_event_style()):
+	if not event_row.comment.is_empty() and EventSheetRowRenderer.event_note_on_top(_viewport._get_event_style()):
 		# The note about an event's actions heads its action lane, above the first action, the way a
 		# comment above a block of code reads: every action line steps down one to make the room.
-		for lane_span: SemanticSpan in spans:
+		for lane_span: EventSheetSemanticSpan in spans:
 			if lane_span != null and lane_span.metadata is Dictionary and _resolve_span_lane(lane_span) == "action":
 				(lane_span.metadata as Dictionary)["line_index"] = int((lane_span.metadata as Dictionary).get("line_index", 0)) + 1
 		spans.append(
 			_make_span(
 				event_row.comment,
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				{
 					"editable": true,
 					"edit_kind": "event_comment",
@@ -15620,7 +15620,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				event_row.comment,
-				SemanticSpan.SpanType.COMMENT,
+				EventSheetSemanticSpan.SpanType.COMMENT,
 				{
 					"editable": true,
 					"edit_kind": "event_comment",
@@ -15638,7 +15638,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				EventSheetL10n.translate("+ Add action"),
-				SemanticSpan.SpanType.ACTION,
+				EventSheetSemanticSpan.SpanType.ACTION,
 				{
 					"lane": "action",
 					"kind": "add_action",
@@ -15651,11 +15651,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# The look that closes every event with its add line also puts "+ Add..." at the far right of that
 	# line: the menu of everything an event can gain (event, sub-event, comment, group), the same menu
 	# a right-click on the event opens.
-	if not _scaffolding_suppressed() and EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+	if not _scaffolding_suppressed() and EventSheetRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
 		spans.append(
 			_make_span(
 				EventSheetL10n.translate("+ Add…"),
-				SemanticSpan.SpanType.ACTION,
+				EventSheetSemanticSpan.SpanType.ACTION,
 				{
 					"lane": "action",
 					"kind": "add_menu",
@@ -15686,14 +15686,14 @@ const FUNCTION_RETURN_ACE_IDS: PackedStringArray = ["ReturnValue", "ReturnEarly"
 ## touched: a call to a function keeps its object, a bare `return` keeps its own unless the line is
 ## already the function's (it reads "Stop event" anywhere else), and inside an editor callback or an
 ## edit handed to the undo funnel a return reads as that question's answer and keeps its object too.
-func _dress_function_return_lines(spans: Array[SemanticSpan], event_row: EventRow) -> void:
+func _dress_function_return_lines(spans: Array[EventSheetSemanticSpan], event_row: EventRow) -> void:
 	if event_row == null or not _current_answer_shape().is_empty() or _answer_return_rows > 0:
 		return
 	var function_words: PackedStringArray = PackedStringArray([
 		EventSheetSentence.OBJECT_FUNCTIONS, EventSheetSentence.OBJECT_FUNCTION,
 		EventSheetL10n.translate(EventSheetSentence.OBJECT_FUNCTIONS),
 		EventSheetL10n.translate(EventSheetSentence.OBJECT_FUNCTION)])
-	for span: SemanticSpan in spans:
+	for span: EventSheetSemanticSpan in spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -15741,10 +15741,10 @@ static func is_function_return(action: Resource) -> bool:
 ## a check of `visible` on a Node2D wears the Node2D icon rather than its category's checkbox, and a
 ## line that had no icon at all (a pick filter, a state's case, an Else) gets one. Display only:
 ## nothing here touches a span's words.
-func _dress_line_object_icons(spans: Array[SemanticSpan]) -> void:
+func _dress_line_object_icons(spans: Array[EventSheetSemanticSpan]) -> void:
 	if not _viewport.show_object_icons:
 		return
-	for span: SemanticSpan in spans:
+	for span: EventSheetSemanticSpan in spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
@@ -15979,18 +15979,18 @@ func _count_event_lines(event_row: EventRow) -> int:
 		elif action_resource is CommentRow:
 			action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
 	var max_action_line: int = action_count - 1 if _scaffolding_suppressed() else action_count
-	if not event_row.comment.is_empty() and EventRowRenderer.event_note_on_top(_viewport._get_event_style()):
+	if not event_row.comment.is_empty() and EventSheetRowRenderer.event_note_on_top(_viewport._get_event_style()):
 		max_action_line = action_count if _scaffolding_suppressed() else action_count + 1
 	elif not event_row.comment.is_empty():
 		var comment_line: int = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX)
 		max_action_line = comment_line if _scaffolding_suppressed() else comment_line + 1
 	# A theme that shows the add lines on hover gives a filled lane's add line no room at rest
-	# (ViewportRowMetrics.resting_add_line_kinds is the same rule, read off the built spans).
+	# (EventSheetViewportRowMetrics.resting_add_line_kinds is the same rule, read off the built spans).
 	var resting_style: EventSheetEventStyle = _viewport._get_event_style()
 	if resting_style != null and resting_style.add_lines_on_hover and not _scaffolding_suppressed():
 		if condition_lines > 0:
 			max_condition_line = condition_lines - 1
-		if action_count > 0 and event_row.comment.is_empty() and not EventRowRenderer.add_action_line_rests(resting_style):
+		if action_count > 0 and event_row.comment.is_empty() and not EventSheetRowRenderer.add_action_line_rests(resting_style):
 			max_action_line = action_count - 1
 	return maxi(max_condition_line, max_action_line) + 1
 
@@ -16153,7 +16153,7 @@ func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int,
 	}
 	var type_word: String = friendly_type_word(str(parts.get("type_word", "")))
 	# The local that catches the answer reads as a local line: its icon, its name, its type.
-	spans.append(_make_span(type_word, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+	spans.append(_make_span(type_word, EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 			"natural_width": true,
 			"object_label": str(parts.get("name", "")),
 			"object_glyph": NativeRowMarks.OBJECT_GLYPH_LOCAL,
@@ -16161,13 +16161,13 @@ func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int,
 			"local_name": str(parts.get("name", "")),
 			"text_color": _viewport._get_event_style().object_label_color
 		}, true).merged(action_style_meta, false)))
-	spans.append(_make_span("= %s" % step_text, SemanticSpan.SpanType.VALUE,
+	spans.append(_make_span("= %s" % step_text, EventSheetSemanticSpan.SpanType.VALUE,
 		base_meta.duplicate().merged({
 			"natural_width": true,
 			"text_color": _viewport._get_event_style().value_highlight_color
 		}, true).merged(action_style_meta, false)))
 	spans.append(_make_span(EventSheetL10n.translate("↓ the steps below are the edit"),
-		SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+		EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}, true).merged(action_style_meta, false)))
 
@@ -16697,7 +16697,7 @@ func _build_connect_call_row(event_row: EventRow, parts: Dictionary, anchor: Str
 			"bold": str(piece[1]) == "name",
 			"italic": false
 		})
-	row_data.spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
+	row_data.spans.append(_make_span(sentence_text, EventSheetSemanticSpan.SpanType.VALUE, {
 		"lane": "action",
 		"kind": "action",
 		"ace_index": action_index,
@@ -16973,7 +16973,7 @@ static func _strip_picked_possessive(text: String, picked_object: String) -> Str
 ## The cell keeps its own condition text; what changes is that it now reads as a condition ON an
 ## object, which is exactly what the loop around it was saying.
 func _apply_picking_note(row_data: EventRowData) -> void:
-	for span: SemanticSpan in row_data.spans:
+	for span: EventSheetSemanticSpan in row_data.spans:
 		if str(span.metadata.get("lane", "")) != "condition" or int(span.metadata.get("line_index", 0)) != 0:
 			continue
 		if not str(span.metadata.get("kind", "")) in ["condition", "match_case"]:
@@ -17207,19 +17207,19 @@ func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dic
 func _append_branch_add_doors(branch_row: EventRowData, action_lines: int) -> void:
 	# Only the look that closes every event with its add line gives a branch one; the others keep a
 	# pair as the plain rows it always was.
-	if _scaffolding_suppressed() or not EventRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
+	if _scaffolding_suppressed() or not EventSheetRowRenderer.add_menu_link_wanted(_viewport._get_event_style()):
 		return
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var add_color: Color = action_style.get("text_color", _viewport._get_action_style().text_color)
 	add_color.a *= 0.55
-	branch_row.spans.append(_make_span(EventSheetL10n.translate("+ Add action"), SemanticSpan.SpanType.ACTION, {
+	branch_row.spans.append(_make_span(EventSheetL10n.translate("+ Add action"), EventSheetSemanticSpan.SpanType.ACTION, {
 		"lane": "action",
 		"kind": "add_action",
 		"line_index": action_lines,
 		"text_color": add_color,
 		"font_size_delta": action_style.get("font_size_delta", 0)
 	}))
-	branch_row.spans.append(_make_span(EventSheetL10n.translate("+ Add…"), SemanticSpan.SpanType.ACTION, {
+	branch_row.spans.append(_make_span(EventSheetL10n.translate("+ Add…"), EventSheetSemanticSpan.SpanType.ACTION, {
 		"lane": "action",
 		"kind": "add_menu",
 		"align_right": true,
@@ -17252,7 +17252,7 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 	branch_row.line_count = 1
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	if condition_text.strip_edges().is_empty():
-		branch_row.spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+		branch_row.spans.append(_make_span(EventSheetL10n.translate("Else"), EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "else_keyword",
 			"chip": true,
@@ -17266,7 +17266,7 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 	# reads Else / Else / Else down its left edge with the tests that narrow each one beside them.
 	var condition_line: int = 0
 	if else_if:
-		branch_row.spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+		branch_row.spans.append(_make_span(EventSheetL10n.translate("Else"), EventSheetSemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "else_keyword",
 			"chip": true,
@@ -17343,7 +17343,7 @@ func _append_one_condition_line(branch_row: EventRowData, condition_object: Stri
 	var spelled: Array = EventSheetViewportLenses.apply_to_pieces(
 		pieces, _viewport.humanize_names_enabled(), _export_knob_names())
 	var condition_cell: Dictionary = _tone_segments(spelled)
-	branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), SemanticSpan.SpanType.CONDITION, {
+	branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), EventSheetSemanticSpan.SpanType.CONDITION, {
 		"lane": "condition",
 		# "condition" is what makes the cell FILL its lane and wrap like every other condition cell
 		# (the layout gates both on this kind) - so a long branch test grows the row instead of
@@ -17385,7 +17385,7 @@ func _append_branch_action_spans(branch_row: EventRowData, row: EventRowData, ac
 		synthetic.code = str(arm.get("text", ""))
 		synthetic.enabled = true
 		if not _append_sentence_spans(spans, synthetic, action_index, 0, action_style_meta):
-			spans.append(_make_span(str(arm.get("text", "")).strip_edges(), SemanticSpan.SpanType.VALUE, {
+			spans.append(_make_span(str(arm.get("text", "")).strip_edges(), EventSheetSemanticSpan.SpanType.VALUE, {
 				"lane": "action",
 				"kind": "action",
 				"ace_index": action_index,
@@ -17393,10 +17393,10 @@ func _append_branch_action_spans(branch_row: EventRowData, row: EventRowData, ac
 				"code_cell": false,
 				"line_index": 0
 			}.merged(action_style_meta, false)))
-		for span: SemanticSpan in spans:
+		for span: EventSheetSemanticSpan in spans:
 			span.metadata["raw_action"] = source_action is RawCodeRow
 	_verb_kind_override = outer_kind
-	for span: SemanticSpan in spans:
+	for span: EventSheetSemanticSpan in spans:
 		span.metadata["line_index"] = 0
 		branch_row.spans.append(span)
 
@@ -17416,7 +17416,7 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 	if not declaration.is_empty() and bool(local_declaration_promotion(action).get("ternary", false)):
 		# The Local row ahead of the pair declares the variable; each arm only fills it in.
 		spans.append(_make_span("%s %s" % [EventSheetL10n.translate("Set to"), str(declaration.get("value", ""))],
-			SemanticSpan.SpanType.ACTION, {
+			EventSheetSemanticSpan.SpanType.ACTION, {
 				"lane": "action",
 				"kind": "action",
 				"ace_index": action_index,
@@ -17437,7 +17437,7 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 			"line_index": 0
 		}, action_style_meta)
 		return
-	spans.append(_make_span(_format_action_descriptor(branch_action), SemanticSpan.SpanType.ACTION, {
+	spans.append(_make_span(_format_action_descriptor(branch_action), EventSheetSemanticSpan.SpanType.ACTION, {
 		"lane": "action",
 		"kind": "action",
 		"ace_index": action_index,
@@ -17480,7 +17480,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 		slice_is_tail)
 	_verb_kind_override = outer_kind
 	var lines: int = 1
-	for span: SemanticSpan in slice_row.spans:
+	for span: EventSheetSemanticSpan in slice_row.spans:
 		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
 	slice_row.line_count = lines
 	return slice_row
@@ -17489,7 +17489,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 ## True when a slice draws nothing a reader would see - the case where keeping the row would put an
 ## empty two-lane strip above the branch rows.
 func _slice_row_is_blank(row: EventRowData, placeholder_is_blank: bool = false) -> bool:
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
 			continue
 		if placeholder_is_blank and bool(span.metadata.get("placeholder", false)):
@@ -17531,11 +17531,11 @@ func _tone_segments(pieces: Array) -> Dictionary:
 ## One slice of an event's finished spans. Filtering the WHOLE build - rather than teaching the
 ## span pass to skip actions - is what keeps a sliced row's cells identical to the unsliced ones, down
 ## to the style metadata; only which cells survive, and which line each lands on, changes here.
-func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_from: int,
-		slice_to: int, hide_conditions: bool, slice_is_tail: bool = false) -> Array[SemanticSpan]:
-	var kept: Array[SemanticSpan] = []
+func _slice_event_spans(spans: Array[EventSheetSemanticSpan], event_row: EventRow, slice_from: int,
+		slice_to: int, hide_conditions: bool, slice_is_tail: bool = false) -> Array[EventSheetSemanticSpan]:
+	var kept: Array[EventSheetSemanticSpan] = []
 	var used_lines: Array[int] = []
-	for span: SemanticSpan in spans:
+	for span: EventSheetSemanticSpan in spans:
 		var lane: String = _resolve_span_lane(span)
 		if lane == "condition":
 			if hide_conditions:
@@ -17556,12 +17556,12 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 			used_lines.append(line_index)
 		kept.append(span)
 	used_lines.sort()
-	var out: Array[SemanticSpan] = []
-	for span: SemanticSpan in kept:
+	var out: Array[EventSheetSemanticSpan] = []
+	for span: EventSheetSemanticSpan in kept:
 		if _resolve_span_lane(span) == "condition":
 			out.append(span)
 			continue
-		var moved := SemanticSpan.new()
+		var moved := EventSheetSemanticSpan.new()
 		moved.text = span.text
 		moved.type = span.type
 		moved.hoverable = span.hoverable
@@ -17577,9 +17577,9 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 ## spans are never empty (a "+ Add" span is always present), so is_empty() reliably
 ## means "not yet built".
 ## `spans` without the "+ Add action", "+ Add condition" and "+ Add..." doors: an inert body offers none.
-static func _without_add_doors(spans: Array[SemanticSpan]) -> Array[SemanticSpan]:
-	var kept: Array[SemanticSpan] = []
-	for span: SemanticSpan in spans:
+static func _without_add_doors(spans: Array[EventSheetSemanticSpan]) -> Array[EventSheetSemanticSpan]:
+	var kept: Array[EventSheetSemanticSpan] = []
+	for span: EventSheetSemanticSpan in spans:
 		if span != null and span.metadata is Dictionary \
 				and str((span.metadata as Dictionary).get("kind", "")) in ["add_action", "add_condition", "add_menu"]:
 			continue
@@ -17656,12 +17656,12 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 ## thing being named - because splitting mid-sentence would reorder the runs a cell was measured
 ## with. Every other span comes back exactly as it went in, including a sentence that merely mentions
 ## a function somewhere in the middle.
-func _split_function_reference_spans(spans: Array[SemanticSpan]) -> Array[SemanticSpan]:
+func _split_function_reference_spans(spans: Array[EventSheetSemanticSpan]) -> Array[EventSheetSemanticSpan]:
 	var context: Dictionary = sentence_context()
 	if (context.get("function_params", {}) as Dictionary).is_empty():
 		return spans
-	var split: Array[SemanticSpan] = []
-	for span: SemanticSpan in spans:
+	var split: Array[EventSheetSemanticSpan] = []
+	for span: EventSheetSemanticSpan in spans:
 		var at: int = span.text.rfind(EventSheetSentence.FUNCTION_MARK)
 		if at < 0 or str((span.metadata as Dictionary).get("kind", "")) == "function_ref":
 			split.append(span)
@@ -17683,12 +17683,12 @@ func _split_function_reference_spans(spans: Array[SemanticSpan]) -> Array[Semant
 			# Both halves size to their own text: a head span that still filled the whole cell would
 			# push the chip past the cell's right edge, where nothing is ever painted.
 			head_meta["natural_width"] = true
-			var head: SemanticSpan = _make_span(span.text.substr(0, at), span.type, head_meta)
+			var head: EventSheetSemanticSpan = _make_span(span.text.substr(0, at), span.type, head_meta)
 			head.metadata["bbcode_segments"] = _segments_slice(span, 0, at)
 			split.append(head)
 			chip_meta.erase("compiled_lines")
 			chip_meta.erase("create_object_indices")
-		var chip: SemanticSpan = _make_span(chip_text, span.type, chip_meta)
+		var chip: EventSheetSemanticSpan = _make_span(chip_text, span.type, chip_meta)
 		split.append(chip)
 	return split
 
@@ -17696,7 +17696,7 @@ func _split_function_reference_spans(spans: Array[SemanticSpan]) -> Array[Semant
 ## The styled runs of a span between two character offsets, so a split cell keeps the very pixels it
 ## had. A span with no runs of its own answers with none, and is painted in its span type's colour
 ## exactly as it was before.
-func _segments_slice(span: SemanticSpan, from: int, to: int) -> Array:
+func _segments_slice(span: EventSheetSemanticSpan, from: int, to: int) -> Array:
 	var segments: Array = (span.metadata as Dictionary).get("bbcode_segments", []) as Array
 	if segments.is_empty():
 		return []
@@ -17718,7 +17718,7 @@ func _segments_slice(span: SemanticSpan, from: int, to: int) -> Array:
 
 
 func _append_condition_prefix_spans(
-	spans: Array[SemanticSpan],
+	spans: Array[EventSheetSemanticSpan],
 	event_row: EventRow,
 	condition: ACECondition,
 	condition_index: int,
@@ -17754,7 +17754,7 @@ func _append_condition_prefix_spans(
 ## sheet teaches two symbols for one idea. It is a WORD rather than a glyph because this is the case
 ## with no opposite to show instead ("not begins with"), and a reader should not have to be taught a
 ## symbol to read the commonest thing a condition can say about itself.
-func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, condition_index: int = -1) -> SemanticSpan:
+func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, condition_index: int = -1) -> EventSheetSemanticSpan:
 	var negated_meta: Dictionary = _viewport.BADGE_NEGATED_METADATA.duplicate(true)
 	negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 	negated_meta["condition_index"] = condition_index
@@ -17762,10 +17762,10 @@ func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, cond
 	negated_meta["badge_style"] = "negated"
 	negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
 	negated_meta["badge_fg"] = _viewport._get_event_style().invert_marker_color
-	return _make_span(NEGATED_MARK, SemanticSpan.SpanType.KEYWORD, negated_meta)
+	return _make_span(NEGATED_MARK, EventSheetSemanticSpan.SpanType.KEYWORD, negated_meta)
 
 
-func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
+func _measure_span_width(span: EventSheetSemanticSpan, display_text: String, font: Font, font_size: int) -> float:
 	if span == null:
 		return 0.0
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
@@ -17789,15 +17789,15 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 			).x
 	# A parameter or a local of the look that nests by lines is a line of its own making: its mark, its
 	# type and its bold name, with no object column.
-	if _viewport._get_event_style().sub_event_strips and EventRowRenderer.is_typed_name_span(metadata):
-		return float(EventRowRenderer.typed_name_geometry(font, draw_font_size,
+	if _viewport._get_event_style().sub_event_strips and EventSheetRowRenderer.is_typed_name_span(metadata):
+		return float(EventSheetRowRenderer.typed_name_geometry(font, draw_font_size,
 			str(metadata.get("typed_name", "")), display_text, str(metadata.get("object_label", "")))["width"])
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		# Fixed object column (event-sheet sub-lane): the label occupies exactly the column width;
 		# flow mode occupies the label's own width. Must mirror the renderer's advance.
 		var measured_lane: String = str(metadata.get("lane", ""))
-		var object_column_width: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane, int(metadata.get("row_indent", 0))))
+		var object_column_width: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane, int(metadata.get("row_indent", 0))))
 		if object_column_width > 0.0:
 			# The layout stamps the aligned per-span column (the shared-separator rule); the
 			# measured advance must match the DRAWN advance or natural chips lose text room.
@@ -17808,7 +17808,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 		else:
 			span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	if metadata.get("object_icon") is Texture2D:
-		span_width += EventRowRenderer.object_icon_advance(_viewport._get_event_style())
+		span_width += EventSheetRowRenderer.object_icon_advance(_viewport._get_event_style())
 	# The native look's variable marks (View > Value Glyphs, View > Variable Badges): the type word
 	# measured in the face it paints in, the room a value glyph takes, and the Inspector mark that
 	# stands among the badge tiles instead of beside the name. One source of sizes, shared with the
@@ -17818,7 +17818,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 			span_width = NativeVariableMarks.type_word_width(display_text, font, draw_font_size)
 			# The state row's type word leads with the state glyph, in the room the painter gives it.
 			if metadata.get("object_icon") is Texture2D:
-				span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
+				span_width += EventSheetRowRenderer.OBJECT_ICON_ADVANCE
 		match str(metadata.get("value_glyph", "")):
 			NativeVariableMarks.GLYPH_VECTOR:
 				span_width = NativeVariableMarks.vector_width(
@@ -17828,7 +17828,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 	if _viewport.show_variable_badges and bool(metadata.get("inspector_badge", false)):
 		return 0.0
 	# The squares that lead a span's colour values stand in gaps of spaces, so the span owns that room too.
-	span_width += EventRowRenderer.colour_gap_width(metadata, font, draw_font_size)
+	span_width += EventSheetRowRenderer.colour_gap_width(metadata, font, draw_font_size)
 	if bool(metadata.get("badge", false)):
 		# A MARK badge states its box outright: its art is a drawn glyph, not text, so measuring the
 		# font would size the cue by whichever fallback glyph happened to exist.
@@ -19467,7 +19467,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	var sentence_segments: Array[Dictionary] = _sentence_tone_segments(pieces, indent)
 	for piece: Array in pieces:
 		sentence_text += str(piece[0])
-	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
+	spans.append(_make_span(sentence_text, EventSheetSemanticSpan.SpanType.VALUE, {
 		"lane": "action",
 		"kind": "action",
 		"ace_index": action_index,
@@ -19514,7 +19514,7 @@ func _append_inline_function_spans(spans: Array, raw: RawCodeRow, action_index: 
 	one_line.enabled = raw.enabled
 	if _append_sentence_spans(spans, one_line, action_index, line_index, action_style_meta):
 		return true
-	spans.append(_make_span(one_line.code, SemanticSpan.SpanType.VALUE, {
+	spans.append(_make_span(one_line.code, EventSheetSemanticSpan.SpanType.VALUE, {
 		"lane": "action",
 		"kind": "action",
 		"ace_index": action_index,
@@ -19623,7 +19623,7 @@ func _append_value_icon_sentence_spans(spans: Array, pieces: Array, indent: int,
 	var head_text: String = "    ".repeat(indent)
 	for piece: Array in head_pieces:
 		head_text += str(piece[0])
-	spans.append(_make_span(head_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+	spans.append(_make_span(head_text, EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 		"natural_width": true,
 		"object_label": object_label,
 		"object_note": object_note,
@@ -19637,14 +19637,14 @@ func _append_value_icon_sentence_spans(spans: Array, pieces: Array, indent: int,
 	# The LAST span of a row fills the cell; every earlier one is as wide as its own words.
 	if not tail_pieces.is_empty():
 		value_meta["natural_width"] = true
-	spans.append(_make_span(str((value_pieces[0] as Array)[0]), SemanticSpan.SpanType.VALUE,
+	spans.append(_make_span(str((value_pieces[0] as Array)[0]), EventSheetSemanticSpan.SpanType.VALUE,
 		value_meta.merged(action_style_meta, false)))
 	if tail_pieces.is_empty():
 		return true
 	var tail_text: String = ""
 	for piece: Array in tail_pieces:
 		tail_text += str(piece[0])
-	spans.append(_make_span(tail_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+	spans.append(_make_span(tail_text, EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 		"bbcode_segments": _sentence_tone_segments(tail_pieces, 0)
 	}, true).merged(action_style_meta, false)))
 	return true
@@ -19724,7 +19724,7 @@ func _append_literal_sentence_spans(spans: Array, pieces: Array, literal: Dictio
 	var head_text: String = "    ".repeat(indent)
 	for piece: Array in head_pieces:
 		head_text += str(piece[0])
-	spans.append(_make_span(head_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+	spans.append(_make_span(head_text, EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 		"natural_width": true,
 		"object_label": object_label,
 		"object_note": object_note,
@@ -19738,7 +19738,7 @@ func _append_literal_sentence_spans(spans: Array, pieces: Array, literal: Dictio
 	var tail_text: String = ""
 	for piece: Array in tail_pieces:
 		tail_text += str(piece[0])
-	spans.append(_make_span(tail_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+	spans.append(_make_span(tail_text, EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 		"bbcode_segments": _sentence_tone_segments(tail_pieces, 0)
 	}, true).merged(action_style_meta, false)))
 
@@ -19776,7 +19776,7 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 		var word: String = EventSheetL10n.translate("text") if text_run \
 			else EventSheetL10n.translate("table" if open_bracket == "{" else "list")
 		spans.append(_make_span(word,
-			SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+			EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
 				"natural_width": true,
 				"text_color": _viewport._get_event_style().object_label_color
 			}, true).merged(action_style_meta, false)))
@@ -19803,7 +19803,7 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 			# turn a quoted key into a bare one.
 			chip_meta["edit_text"] = EventSheetValueLiteralRows.chip_text(entry, false)
 		spans.append(_make_span(EventSheetValueLiteralRows.chip_text(entry, humanize),
-			SemanticSpan.SpanType.VALUE, chip_meta.merged(action_style_meta, false)))
+			EventSheetSemanticSpan.SpanType.VALUE, chip_meta.merged(action_style_meta, false)))
 	if not folded:
 		return
 	var more_meta: Dictionary = base_meta.duplicate()
@@ -19811,7 +19811,7 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 	if not close_cell:
 		more_meta["natural_width"] = true
 	spans.append(_make_span("… %s" % (EventSheetL10n.translate("%d more") % (entries.size() - shown)),
-		SemanticSpan.SpanType.VALUE, more_meta.merged(action_style_meta, false)))
+		EventSheetSemanticSpan.SpanType.VALUE, more_meta.merged(action_style_meta, false)))
 
 
 ## The lead row of a literal run whose flattened statement no sentence claimed: the head line
@@ -19826,7 +19826,7 @@ func _append_value_literal_spans(spans: Array, literal: Dictionary, action_index
 	var head_text: String = synthetic.code.strip_edges().replace(
 		EventSheetValueLiteralRows.LITERAL_TOKEN, "").strip_edges()
 	if not head_text.is_empty():
-		spans.append(_make_span(head_text, SemanticSpan.SpanType.VALUE, {
+		spans.append(_make_span(head_text, EventSheetSemanticSpan.SpanType.VALUE, {
 			"lane": "action",
 			"kind": "action",
 			"ace_index": action_index,
@@ -19862,7 +19862,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 		var indent_meta: Dictionary = base_meta.duplicate()
 		indent_meta["natural_width"] = true
 		indent_meta["editable"] = false
-		spans.append(_make_span(indent_text, SemanticSpan.SpanType.VALUE, indent_meta.merged(style_meta, false)))
+		spans.append(_make_span(indent_text, EventSheetSemanticSpan.SpanType.VALUE, indent_meta.merged(style_meta, false)))
 	var type_words: String = type_word
 	if bool(declaration.get("is_constant", false)):
 		type_words = EventSheetL10n.translate("constant %s") % type_word
@@ -19875,7 +19875,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	name_meta["object_icon"] = _glyph_icon_slot()
 	name_meta["local_name"] = str(declaration.get("name", ""))
 	name_meta["text_color"] = _viewport._get_event_style().object_label_color
-	spans.append(_make_span(type_words, SemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
+	spans.append(_make_span(type_words, EventSheetSemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
 	if not literal.is_empty():
 		# The declared value IS the literal, so there is nothing to print between the name and the
 		# entries: the chips are the starting value, one per line the file wrote it over.
@@ -19885,7 +19885,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	var value_meta: Dictionary = base_meta.duplicate()
 	value_meta["chip"] = true
 	value_meta["text_color"] = _viewport._get_event_style().value_highlight_color
-	spans.append(_make_span("= %s" % str(declaration.get("value", "")), SemanticSpan.SpanType.VALUE, value_meta.merged(style_meta, false)))
+	spans.append(_make_span("= %s" % str(declaration.get("value", "")), EventSheetSemanticSpan.SpanType.VALUE, value_meta.merged(style_meta, false)))
 	# A `var x = 1  # note` carries its note the same way every other row does - at the end, muted -
 	# rather than inside the value, where it read as part of the starting value.
 	var declaration_note: String = str(declaration.get("note", ""))
@@ -19896,7 +19896,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	note_meta["natural_width"] = true
 	note_meta["editable"] = false
 	note_meta["text_color"] = _viewport._get_reading_style().muted_text_color
-	spans.append(_make_span("💬 %s" % declaration_note, SemanticSpan.SpanType.COMMENT,
+	spans.append(_make_span("💬 %s" % declaration_note, EventSheetSemanticSpan.SpanType.COMMENT,
 		note_meta.merged(style_meta, false)))
 
 
@@ -21245,7 +21245,7 @@ func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
 		var variable: LocalVariable = entry as LocalVariable
 		if variable != null:
 			declared_name = variable.name
-			res_path = ViewportRowBuilder.preloaded_path(str(variable.default_value))
+			res_path = EventSheetViewportRowBuilder.preloaded_path(str(variable.default_value))
 		elif entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "preload":
 			# `const ENEMY_SCENE := preload("res://enemy.tscn")` lifts to a preload BLOCK rather than a
 			# variable, and a const is how most projects hold the thing they spawn.
@@ -21254,7 +21254,7 @@ func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
 			res_path = str(fields.get("path", ""))
 		if declared_name.is_empty() or res_path.is_empty():
 			continue
-		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
+		var resolved: Dictionary = EventSheetViewportRowBuilder.resolve_res_object(res_path)
 		if not resolved.is_empty():
 			# The file itself rides along, so a row that MAKES one of these can show what is
 			# inside it without resolving the name a second time.
@@ -21666,8 +21666,8 @@ func _entries_hold_line(entries: Array, wanted: String, depth: int) -> bool:
 	return false
 
 
-func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
-	var span := SemanticSpan.new()
+func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> EventSheetSemanticSpan:
+	var span := EventSheetSemanticSpan.new()
 	span.text = text
 	span.type = span_type
 	span.metadata = metadata.duplicate(true)
@@ -21896,7 +21896,7 @@ func _colours_in_reading(ace: Resource, text: String) -> Dictionary:
 func _stamp_colour_marks(spans: Array, colours: Dictionary) -> void:
 	if (colours["marks"] as Array).is_empty() or spans.is_empty():
 		return
-	var span: SemanticSpan = spans[spans.size() - 1] as SemanticSpan
+	var span: EventSheetSemanticSpan = spans[spans.size() - 1] as EventSheetSemanticSpan
 	if span != null and span.metadata is Dictionary and not span.metadata.has("colour_marks"):
 		span.metadata["colour_marks"] = colours["marks"]
 
@@ -22173,7 +22173,7 @@ func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
 	return {}
 
 
-func _resolve_span_lane(span: SemanticSpan) -> String:
+func _resolve_span_lane(span: EventSheetSemanticSpan) -> String:
 	if span == null or not (span.metadata is Dictionary):
 		return "condition"
 	return str((span.metadata as Dictionary).get("lane", "condition"))

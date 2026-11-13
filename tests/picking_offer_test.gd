@@ -74,7 +74,7 @@ static func _the_project_and_the_reading() -> bool:
 		if row_data == null:
 			continue
 		view._row_builder._ensure_event_spans(row_data)
-		for span: SemanticSpan in row_data.spans:
+		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) == "pick_filter" \
 					and span.text.contains("Enemy") and loop_text.is_empty():
 				loop_text = span.text

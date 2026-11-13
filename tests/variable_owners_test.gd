@@ -101,7 +101,7 @@ static func _test_a_walrus_variable_is_its_values_kind() -> bool:
 				str(EventSheetVariableOwners.find(catalog, "coins").get("type_word")),
 				str(EventSheetVariableOwners.find(catalog, "alive").get("type_word"))],
 			["number", "number", "boolean"]],
-		["so Add to on it grows no note", ViewportRowBuilder.variable_mismatch_note(
+		["so Add to on it grows no note", EventSheetViewportRowBuilder.variable_mismatch_note(
 			EventSheetVariableOwners.find(catalog, "run_time"), "AddVar"), {}],
 	])
 
@@ -116,14 +116,14 @@ static func _test_one_question_answers_whether_a_sheet_is_an_autoload() -> bool:
 	sheet.autoload_name = "Game"
 	ok = _check("a name with no kind is not a singleton", sheet.autoload_singleton_name(), "") and ok
 	ok = _check("…so the row does not read the file as an autoload",
-		ViewportRowBuilder.is_autoload(sheet), false) and ok
+		EventSheetViewportRowBuilder.is_autoload(sheet), false) and ok
 	ok = _check("…and the catalog scopes its variables the same way the row does",
 		_scope_of(sheet, "speed"), EventSheetVariableSentence.SCOPE_INSTANCE) and ok
 	sheet.autoload_mode = true
 	ok = _check("with the kind set, the name is the singleton",
 		sheet.autoload_singleton_name(), "Game") and ok
 	ok = _check("…the row reads the file as an autoload",
-		ViewportRowBuilder.is_autoload(sheet), true) and ok
+		EventSheetViewportRowBuilder.is_autoload(sheet), true) and ok
 	ok = _check("…and the catalog moves with it",
 		_scope_of(sheet, "speed"), EventSheetVariableSentence.SCOPE_GLOBAL) and ok
 	ok = _check("and the head band echoes the entry that granted the name",
@@ -189,7 +189,7 @@ static func _test_the_doctor_says_what_the_rows_say() -> bool:
 	ok = _check("the wrong kind is a warning, in the row's own words",
 		[str(findings[1].get("severity", "")), str(findings[1].get("check", "")), str(findings[1].get("message", ""))],
 		["warning", "variable-type-mismatch",
-			str(ViewportRowBuilder.variable_mismatch_note(
+			str(EventSheetViewportRowBuilder.variable_mismatch_note(
 				EventSheetVariableOwners.find(entries, "nickname"), "AddVar").get("note", ""))]) and ok
 	ok = _check("the unclosed fence is a warning, in the row's own words",
 		[str(findings[2].get("severity", "")), str(findings[2].get("check", "")), str(findings[2].get("message", ""))],
@@ -390,7 +390,7 @@ static func _test_picker_order_and_notes() -> bool:
 
 static func _test_anatomy_sections() -> bool:
 	var ok: bool = true
-	var organs: Array = BehaviourAnatomyPanel.collect_anatomy(_sheet())
+	var organs: Array = EventSheetBehaviourAnatomyPanel.collect_anatomy(_sheet())
 	var ids: PackedStringArray = PackedStringArray()
 	var titles: Dictionary = {}
 	var labels: Dictionary = {}
@@ -414,7 +414,7 @@ static func _test_anatomy_sections() -> bool:
 			"Instance text nickname = Ana"])) and ok
 	ok = _check("nine organ headers", ids.size(), 9) and ok
 	ok = _check("the heading with no owner still says its scope",
-		BehaviourAnatomyPanel.variable_organ_title("local", ""), "Locals in view") and ok
+		EventSheetBehaviourAnatomyPanel.variable_organ_title("local", ""), "Locals in view") and ok
 	return ok
 
 
@@ -559,7 +559,7 @@ static func _test_row_owner_and_notes() -> bool:
 		_note_rows(_row_with_uid(dock, "typo")).size(), 0) and ok
 
 	# The mismatch note is a reading only - the sheet never moved.
-	var mismatch: Dictionary = ViewportRowBuilder.variable_mismatch_note(
+	var mismatch: Dictionary = EventSheetViewportRowBuilder.variable_mismatch_note(
 		EventSheetVariableOwners.find(EventSheetVariableOwners.catalog(sheet), "hp"), "AddVar")
 	ok = _check("a number handed to Add to grows no note", mismatch.is_empty(), true) and ok
 	dock.free()
@@ -596,7 +596,7 @@ static func _live_action(dock: EventSheetDock, event_uid: String, slot: int) -> 
 ## does rather than by position: a fix that lands removes its own note, so the list renumbers.
 static func _note_with_fix(event_row: EventRowData, fix_kind: String) -> EventRowData:
 	for note: Variant in _note_rows(event_row):
-		for span: SemanticSpan in (note as EventRowData).spans:
+		for span: EventSheetSemanticSpan in (note as EventRowData).spans:
 			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 			if str(metadata.get("variable_note_fix", "")) == fix_kind:
 				return note as EventRowData
@@ -605,7 +605,7 @@ static func _note_with_fix(event_row: EventRowData, fix_kind: String) -> EventRo
 
 static func _note_text(row: EventRowData) -> String:
 	var parts: PackedStringArray = PackedStringArray()
-	for span: SemanticSpan in (row as EventRowData).spans:
+	for span: EventSheetSemanticSpan in (row as EventRowData).spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		if str(metadata.get("variable_note", "")) == "mark":
 			continue
@@ -614,7 +614,7 @@ static func _note_text(row: EventRowData) -> String:
 
 
 static func _object_label_of(row: EventRowData) -> String:
-	for span: SemanticSpan in row.spans:
+	for span: EventSheetSemanticSpan in row.spans:
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		var label: String = str(metadata.get("object_label", "")) if str(metadata.get("lane", "")) == "action" else ""
 		if not label.is_empty():

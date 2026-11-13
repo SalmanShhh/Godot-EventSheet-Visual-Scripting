@@ -18,7 +18,7 @@ static func _census() -> Array:
 
 static func _row_about(object_label: String) -> EventRowData:
 	var row_data: EventRowData = EventRowData.new()
-	var span: SemanticSpan = SemanticSpan.new()
+	var span: EventSheetSemanticSpan = EventSheetSemanticSpan.new()
 	span.text = object_label
 	span.metadata = {"lane": "action", "object_label": object_label}
 	row_data.spans.append(span)

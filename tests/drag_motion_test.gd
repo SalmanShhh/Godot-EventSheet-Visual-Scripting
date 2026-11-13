@@ -20,7 +20,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "drag_motion_test"
 ## Long enough for any slide to have finished.
-const SETTLE_MSEC: int = int(ViewportDragMotion.SLIDE_MSEC) + 60
+const SETTLE_MSEC: int = int(EventSheetViewportDragMotion.SLIDE_MSEC) + 60
 
 
 class NoopUndoManager:
@@ -55,7 +55,7 @@ static func _test_event_carried() -> bool:
 	var viewport: EventSheetViewport = setup["viewport"]
 	var first: int = int(setup["first"])
 	var third: int = int(setup["third"])
-	var motion: ViewportDragMotion = viewport._drag_motion
+	var motion: EventSheetViewportDragMotion = viewport._drag_motion
 	var row_height: float = viewport._row_metrics_helper.row_height(third)
 	var third_top: float = viewport._row_metrics_helper.row_top(third)
 	var first_top: float = viewport._row_metrics_helper.row_top(first)
@@ -126,7 +126,7 @@ static func _test_cell_carried() -> bool:
 	var viewport: EventSheetViewport = setup["viewport"]
 	var first: int = int(setup["first"])
 	var second: int = int(setup["second"])
-	var motion: ViewportDragMotion = viewport._drag_motion
+	var motion: EventSheetViewportDragMotion = viewport._drag_motion
 	EventSheetAccessibility.set_reduced_motion(true)
 	var source: EventRowData = viewport._row_at(first)
 	var carried: int = _span_of(source, "condition", 1)
@@ -197,7 +197,7 @@ static func _test_escape_and_reduced_motion() -> bool:
 	var viewport: EventSheetViewport = setup["viewport"]
 	var first: int = int(setup["first"])
 	var third: int = int(setup["third"])
-	var motion: ViewportDragMotion = viewport._drag_motion
+	var motion: EventSheetViewportDragMotion = viewport._drag_motion
 	var height: float = viewport._row_metrics_helper.row_height(third)
 	viewport._drag_row_index = third
 	viewport._drag_row_indices = [third] as Array[int]
@@ -311,7 +311,7 @@ static func _event(conditions: Array, actions: Array) -> EventRow:
 
 static func _span_of(row: EventRowData, kind: String, ace_index: int) -> int:
 	for index: int in range(row.spans.size()):
-		var span: SemanticSpan = row.spans[index]
+		var span: EventSheetSemanticSpan = row.spans[index]
 		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) == kind \
 				and int((span.metadata as Dictionary).get("ace_index", -1)) == ace_index:
 			return index

@@ -38,7 +38,7 @@ static func _condition_lane(source: String) -> String:
 		var row: EventRowData = entry.get("row")
 		if row == null:
 			continue
-		for span: SemanticSpan in row.spans:
+		for span: EventSheetSemanticSpan in row.spans:
 			if not (span.metadata is Dictionary):
 				continue
 			if str((span.metadata as Dictionary).get("lane")) != "condition":

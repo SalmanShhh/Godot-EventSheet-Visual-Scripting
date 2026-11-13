@@ -46,14 +46,14 @@ static func run() -> bool:
 	# ── Renderer: caption on the event, one child row per beat in condition/action grammar ──
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
-	var builder: ViewportRowBuilder = viewport._row_builder
+	var builder: EventSheetViewportRowBuilder = viewport._row_builder
 	var row_data: EventRowData = builder._build_event_row(event, 0)
 	ok = _check("one child row per beat", row_data.children.size(), 4) and ok
 	if row_data.children.size() == 4:
 		ok = _check("the beat's WHEN is the condition cell", row_data.children[1].spans[0].text, "at 1.0s") and ok
 		ok = _check("the beat's WHAT reads in plain words", row_data.children[0].spans[1].text.contains("Show Message"), true) and ok
 	var caption_found: bool = false
-	for span: SemanticSpan in builder._build_event_spans(event):
+	for span: EventSheetSemanticSpan in builder._build_event_spans(event):
 		if span.text.contains("timeline · 4"):
 			caption_found = true
 	ok = _check("the event lane carries the muted caption", caption_found, true) and ok

@@ -36,7 +36,7 @@ static func run() -> bool:
 	var row_data: EventRowData = viewport._row_at(index)
 	var span_index: int = -1
 	for s in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[s]
+		var span: EventSheetSemanticSpan = row_data.spans[s]
 		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) in ["condition", "trigger"]:
 			span_index = s
 			break

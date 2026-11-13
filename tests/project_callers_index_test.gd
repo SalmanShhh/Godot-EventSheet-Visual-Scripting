@@ -61,13 +61,13 @@ static func run() -> bool:
 
 	# ── What the head band says ─────────────────────────────────────────────────────────────
 	ok = _check("the band names the file that calls it",
-		ViewportRowBuilder.called_by_words("grant_xp", ""), "called by progress.gd") and ok
+		EventSheetViewportRowBuilder.called_by_words("grant_xp", ""), "called by progress.gd") and ok
 	ok = _check("and says nothing at all when nobody does",
-		ViewportRowBuilder.called_by_words("no_function_is_called_this", ""), "") and ok
+		EventSheetViewportRowBuilder.called_by_words("no_function_is_called_this", ""), "") and ok
 	ok = _check("nor when the question has no name",
-		ViewportRowBuilder.called_by_words("", ""), "") and ok
+		EventSheetViewportRowBuilder.called_by_words("", ""), "") and ok
 	# The band scale law: a few names, then a count. Never a hundred file names on one row.
-	var many: String = ViewportRowBuilder.called_by_words("take_damage", "")
+	var many: String = EventSheetViewportRowBuilder.called_by_words("take_damage", "")
 	ok = _check("a much-called function names three files and counts the rest",
 		many.count("·") >= 3 and many.contains("more"), true) and ok
 

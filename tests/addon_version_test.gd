@@ -67,7 +67,7 @@ static func run() -> bool:
 	all_passed = _check("all shipped packs are versioned (got unstamped: %s)" % str(unstamped), unstamped.is_empty(), true) and all_passed
 
 	# ---- the banner chip picks the version up ----
-	var banner: SheetIdentityBanner = SheetIdentityBanner.new()
+	var banner: EventSheetIdentityBanner = EventSheetIdentityBanner.new()
 	banner.update_from_sheet(sheet, "res://eventsheet_addons/versioned/versioned_behavior.gd")
 	all_passed = _check("the banner reads the pack version", banner._addon_version, "2.3.1") and all_passed
 	all_passed = _check("the banner knows it is a pack", banner._is_addon_pack, true) and all_passed
