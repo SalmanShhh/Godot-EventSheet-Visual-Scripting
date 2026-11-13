@@ -46,7 +46,11 @@ extends RefCounted
 ## its badge, and nothing else - so un-bolding a value, dropping a class icon or losing the muted word
 ## beside the object moved rendered pixels and moved no line of this text, and a gate read off it
 ## would have printed `same` over that change. The emphasis, the icon and the note are marks now.
-const FORMAT_VERSION: int = 2
+##
+## 3 added the picture an exported variable's mark is drawn with. Its words stay the same glyph, so
+## a change of picture (a slider where a gear was) would have moved rendered pixels and no line of
+## this text; the picture is a mark now, written only when it is not the plain one.
+const FORMAT_VERSION: int = 3
 
 ## The one line that is not a reading. Comment-led, so a diff can skip it without a special case.
 const HEADER: String = "# eventsheets reading dump %d" % FORMAT_VERSION
@@ -456,6 +460,9 @@ static func segment_text_of(span: EventSheetSemanticSpan, metadata: Dictionary) 
 	var note: String = str(metadata.get("object_note", ""))
 	if not note.is_empty():
 		marks.append("note=%s" % note)
+	var picture: String = str(metadata.get("inspector_picture", ""))
+	if not picture.is_empty():
+		marks.append("mark=%s" % picture)
 	if metadata.get("text_color") is Color:
 		marks.append("tint=#%s" % (metadata.get("text_color") as Color).to_html())
 	return "%s=%s" % ["+".join(marks), span.text]

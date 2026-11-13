@@ -54,7 +54,7 @@ static func _line_shape() -> bool:
 		["a line is five tab-separated fields", LINES.line_for(reading).split("\t").size(), 5],
 		["the line reads as written", LINES.line_for(reading),
 			"builtin::action::Core::SetVar\taction\tSystem\taction+chip+kind=action=Set score to 1\tgrammar:SetVar"],
-		["the header carries the format version", LINES.HEADER, "# eventsheets reading dump 2"],
+		["the header carries the format version", LINES.HEADER, "# eventsheets reading dump 3"],
 		["a text of this format is recognised", LINES.is_current_format(LINES.text([reading])), true],
 	])
 
@@ -134,6 +134,8 @@ static func _style_marks_are_written() -> bool:
 			"value+rich=-,b#ff0000ff+note=Node2D+tint=#0000ffff=hp 5"],
 		["an object picture is named by the file it came from",
 			LINES.segment_text_of(plain, {"object_icon": _icon()}), "value+icon=probe_icon.png=Set score to 1"],
+		["the picture of a variable's mark is a mark", LINES.segment_text_of(plain, {"inspector_picture": "slider"}), "value+mark=slider=Set score to 1"],
+		["a plain mark writes nothing", LINES.segment_text_of(plain, {"inspector_picture": ""}), "value=Set score to 1"],
 	])
 
 

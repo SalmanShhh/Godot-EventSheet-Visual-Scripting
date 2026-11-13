@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the reading dump can carry a variable's mark
+
+- `tools/reading_dump.gd` writes format 3: a span may carry `mark=<picture>`, the picture an exported variable's Inspector mark is drawn with, written only when it is not the plain one. No row carries one yet, so a dump of the shipped tree differs from format 2 in its header line only.
+
 ### Changed: the packs wear the new looks
 
 - Loot Table, Random Table, Skin Catalog (rarities) and Storylet Resource tables show each row's share, the odds bar and a roll button; the Loot Table's pity tag is a menu of the tags its rows carry. Advanced Random's seed and Drunken Walkers' start seed have a New seed button. Drawing Canvas width and height are one row with common sizes and a video memory line. Bound To, Wrap, Flock, Flock 3D, Stat Forge, Juice (zoom limits) and Drunken Walkers (grid size) put their paired numbers on one row, keeping their ranges. Pack variables keep their names and values; only comment lines and `@export_custom` hints changed.
