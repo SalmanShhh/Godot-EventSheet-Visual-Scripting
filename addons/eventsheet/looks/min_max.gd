@@ -6,9 +6,11 @@ extends EventSheetInspectorLook
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "Vector2"
+## Min
 ## The value at the left end of the slider.
 @warning_ignore("shadowed_global_identifier")
 @export var min: float = 0
+## Max
 ## The value at the right end of the slider.
 @warning_ignore("shadowed_global_identifier")
 @export var max: float = 100

@@ -1185,7 +1185,8 @@ func _rebuild_look_details() -> void:
 				edit.placeholder_text = EventSheetL10n.translate(str(field[4])) if field.size() > 4 else ""
 				edit.text_changed.connect(func(typed: String) -> void: _set_look_value(key, typed))
 				control = edit
-		_look_details.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field[1])), control))
+		_look_details.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field[1])), control,
+			EventSheetPopupUI.LABEL_MIN_WIDTH, str(field[5]) if field.size() > 5 else ""))
 	_refresh_look_note()
 
 

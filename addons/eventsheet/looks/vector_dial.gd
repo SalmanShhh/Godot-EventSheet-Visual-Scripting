@@ -6,6 +6,7 @@ extends EventSheetInspectorLook
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "Vector2"
+## Reach
 ## How far the arrow can reach: the length at the rim of the dial.
 @warning_ignore("shadowed_global_identifier")
 @export var max: float = 100

@@ -29,7 +29,6 @@ extends EventSheetInspectorLook
 @export_enum("none", "number") var tip: String = "none"
 ## Draw the empty stars as outlines.
 @export var outlined: bool = true
-## A note that rides the marker.
 @export var caption := "stars"
 
 var _row: HBoxContainer
@@ -78,7 +77,10 @@ static func _the_shipped_progress_bar_reads_from_its_file() -> bool:
 		["it asks min then max, in file order", [look["fields"][0][0], look["fields"][1][0]], ["min", "max"]],
 		["a number question is a number field", [look["fields"][0][2], look["fields"][1][2]], ["number", "number"]],
 		["its defaults are the ones the file gives", [look["fields"][0][3], look["fields"][1][3]], ["0", "100"]],
-		["a question's hover is its ## line", look["fields"][0][4], "The value at the empty end of the bar."],
+		["a question's label is its first ## line", [look["fields"][0][1], look["fields"][1][1]], ["Min", "Max"]],
+		["the lines after it are the hint", look["fields"][0][4], "The value at the empty end of the bar."],
+		["the hover says the name as written, then the hint", look["fields"][0][5], "min
+The value at the empty end of the bar."],
 		["the line it writes is generated from the file", look.get("writes"),
 			"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\")"],
 		["it is a shipped look", look.get("source"), "shipped"],
@@ -104,7 +106,8 @@ static func _a_look_written_in_a_project_reads_from_its_text() -> bool:
 		["an enum string offers its words", questions[1]["choices"], ["none", "number"]],
 		["a default is read as written", [questions[0]["default"], questions[1]["default"], questions[2]["default"], questions[3]["default"]],
 			["5", "none", true, "stars"]],
-		["a question's hover is its ## line", questions[0]["doc"], "How many stars the row shows."],
+		["a question's label is its ## line", questions[0]["label"], "How many stars the row shows."],
+		["a question with no ## line is labelled by its name as written", [questions[3]["label"], questions[3]["hover"]], ["caption", "caption"]],
 		["an inferred type is read from the default", questions[3]["type_name"], "String"],
 		["the line it writes carries every default in order", look.get("writes"),
 			"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:star_rating:5:none:true:stars\")"],

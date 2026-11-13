@@ -6,8 +6,10 @@ extends EventSheetInspectorLook
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "int"
+## Table
 ## The Array variable beside this one that holds the rows, e.g. drops.
 @export var table: String = ""
+## Name column
 ## The column of a row that names it.
 @export var name_column: String = "name"
 

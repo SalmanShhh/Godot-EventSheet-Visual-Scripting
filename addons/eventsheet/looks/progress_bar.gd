@@ -6,9 +6,11 @@ extends EventSheetInspectorLook
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "int,float"
+## Min
 ## The value at the empty end of the bar.
 @warning_ignore("shadowed_global_identifier")
 @export var min: float = 0
+## Max
 ## The value at the full end of the bar.
 @warning_ignore("shadowed_global_identifier")
 @export var max: float = 100

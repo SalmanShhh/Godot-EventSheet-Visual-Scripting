@@ -6,6 +6,7 @@ extends EventSheetInspectorLook
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "float"
+## Units
 ## px|world|screen, store=world
 @export var units: String = ""
 

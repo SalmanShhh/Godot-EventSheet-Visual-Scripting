@@ -13,8 +13,9 @@ extends RefCounted
 ##   id / name   the file's base name; also the word after `eventsheet:` in the marker
 ##   label / tip the first `##` line after `extends`, and the `##` lines that follow it
 ##   types       what `works_on` defaults to, split on commas ([] = any type)
-##   fields      the questions in the shape the Variable window takes: [key, label, kind, default, hint]
-##   questions   the same questions with their declared type: {key, type_name, kind, default, doc, choices}
+##   fields      the questions in the shape the Variable window takes: [key, label, kind, default, hint, hover]
+##               (the label is the question's first `##` line, or its name as written when it has none)
+##   questions   the same questions with their declared type: {key, label, type_name, kind, default, doc, hover, choices}
 ##   template    the optional `const MARKER_TEMPLATE` text, "" for the plain positional spelling
 ##   preview     the optional `const PREVIEW_SENTENCE` text the preview card says, "" for none
 ##   also_draws  the optional `const ALSO_DRAWS_ON` types: drawn when a marker asks, never offered in the window
@@ -203,8 +204,8 @@ static func read_look(path: String, source: String, origin: String = "project") 
 		pending_choices = []
 	var fields: Array = []
 	for question: Dictionary in questions:
-		fields.append([question["key"], question["key"], question["kind"], question["default"],
-			question["choices"] if str(question["kind"]) == "pick" else question["doc"]])
+		fields.append([question["key"], question["label"], question["kind"], question["default"],
+			question["choices"] if str(question["kind"]) == "pick" else question["doc"], question["hover"]])
 	var entry: Dictionary = {"id": look_name, "name": look_name, "label": label, "tip": " ".join(tip_words),
 		"types": types, "fields": fields, "questions": questions, "template": template, "also_draws": also_draws, "preview": preview, "script_path": path, "source": origin}
 	var defaults: Dictionary = {}
@@ -325,8 +326,20 @@ static func _question(declaration: Dictionary, doc: PackedStringArray, pending_c
 			default_text = _quoted_default(default_text)
 		_:
 			return {}
-	return {"key": str(declaration["name"]), "type_name": type_name, "kind": kind, "default": default_text if kind != "tick" else default_text == "true",
-		"doc": " ".join(doc), "choices": choices}
+	# The first `##` line is the label the window shows; the lines after it are the hint (the grey example
+	# in a text box). With no `##` line the label is the name as written. The hover always says the name.
+	var key: String = str(declaration["name"])
+	var label: String = key
+	var rest: PackedStringArray = PackedStringArray()
+	for doc_index: int in range(doc.size()):
+		if doc_index == 0 and not doc[0].is_empty():
+			label = doc[0]
+		elif not doc[doc_index].is_empty():
+			rest.append(doc[doc_index])
+	var hint: String = " ".join(rest)
+	return {"key": key, "type_name": type_name, "kind": kind, "default": default_text if kind != "tick" else default_text == "true",
+		"label": label, "doc": hint, "hover": key if hint.is_empty() else "%s
+%s" % [key, hint], "choices": choices}
 
 
 ## The text a value is written as inside the marker, or null when this value cannot ride a marker (it
