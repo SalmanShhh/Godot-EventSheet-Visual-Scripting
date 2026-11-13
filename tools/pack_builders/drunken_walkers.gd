@@ -41,7 +41,7 @@ static func build() -> bool:
 	# Property ORDER is part of the pack: these emit in the order they are declared here.
 	src.sheet.variables = {
 		"grid_width": {"type": "int", "default": 64, "exported": true,
-			"attributes": {"tooltip": "Grid width in cells. The grid is built at this size from the start, and this is the fallback Create Grid uses for a width of 0 or less.", "range": {"min": "1", "max": "2048", "step": "1"}}},
+			"attributes": {"tooltip": "Grid width in cells. The grid is built at this size from the start, and this is the fallback Create Grid uses for a width of 0 or less.", "side_by_side": true, "range": {"min": "1", "max": "2048", "step": "1"}}},
 		"grid_height": {"type": "int", "default": 64, "exported": true,
 			"attributes": {"tooltip": "Grid height in cells. The grid is built at this size from the start, and this is the fallback Create Grid uses for a height of 0 or less.", "range": {"min": "1", "max": "2048", "step": "1"}}},
 		"max_grid_size": {"type": "int", "default": 2048, "exported": true,
@@ -55,7 +55,7 @@ static func build() -> bool:
 		"empty_value": {"type": "int", "default": 0, "exported": true,
 			"attributes": {"tooltip": "The value a fresh grid is filled with. It is also what an out-of-bounds Cell Value reads, and the only value Outline Cells is allowed to overwrite."}},
 		"start_seed": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "Seed the generator starts on; empty picks one from the clock."}},
+			"attributes": {"tooltip": "Seed the generator starts on; empty picks one from the clock.", "look": "seed", "look_args": []}},
 		"random_source": {"type": "String", "default": "internal", "exported": true, "options": ["internal", "shared", "injected"],
 			"attributes": {"tooltip": "Where random numbers come from: internal, the shared Advanced Random autoload, or injected values."}},
 		"debug_mode": {"type": "bool", "default": false, "exported": true,

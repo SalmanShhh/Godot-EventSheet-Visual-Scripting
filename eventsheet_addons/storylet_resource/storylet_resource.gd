@@ -27,4 +27,4 @@ extends Resource
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:storylet=String,op=enum(gte=>= (at least)|gt=> (more than)|lte=<= (at most)|lt=< (less than)|eq== (equal to)|neq=!= (not equal to)|chance=Chance (0-100%)|recent=Drawn in the last N|not_recent=NOT drawn in the last N),key=String,value=String,value_is_key=bool") var requirements: Array = []
 ## One row per storylet: id, title, body, weight, cooldown seconds and max plays; -1 is unlimited.
 @export_group("Storylets")
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:id=String,title=String,body=String,weight=float,cooldown=float,max_plays=int") var storylets: Array = []
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:id=String,title=String,body=String,weight=float,cooldown=float,max_plays=int:weight=weight") var storylets: Array = []

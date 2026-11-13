@@ -39,6 +39,7 @@ static func build() -> bool:
 		"\t\tset_physics_process(value and _any_buff_timer_running())",
 		"## What happens when a computed total leaves the min/max range: clamp stops at the boundary, wrap loops around, none applies no limit.",
 		"@export_enum(\"clamp\", \"wrap\", \"none\") var overflow_mode: String = \"clamp\"",
+		"# @inspector_side_by_side",
 		"## The smallest allowed stat total (clamp/wrap modes).",
 		"@export var min_value: float = -99999.0",
 		"## The largest allowed stat total (clamp/wrap modes).",

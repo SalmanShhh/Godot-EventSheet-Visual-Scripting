@@ -7,7 +7,7 @@ extends Node
 
 ## Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).
 @export_group("Advanced Random")
-@export var seed_on_start: int = 0
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:seed") var seed_on_start: int = 0
 
 ## The random number generator behind every roll, seeded from the pack's seed.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()

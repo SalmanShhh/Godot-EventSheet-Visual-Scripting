@@ -16,6 +16,6 @@ static func build() -> bool:
 	sheet.class_description = "A weighted random table as a data asset. Fill the entries grid (value + weight) in the Inspector, save as a .tres, and draw from it with Advanced Random's Pick From Table."
 	sheet.variables = {
 		"entries": {"type": "Array", "default": [], "exported": true,
-			"attributes": {"tooltip": "One row per outcome: its value (any string - an item id, a name, a scene path) and weight (higher = commoner).", "drawer": "table", "table_columns": [{"name": "value", "type": "String"}, {"name": "weight", "type": "float"}]}}
+			"attributes": {"tooltip": "One row per outcome: its value (any string - an item id, a name, a scene path) and weight (higher = commoner).", "drawer": "table", "table_columns": [{"name": "value", "type": "String"}, {"name": "weight", "type": "float"}], "table_weight_column": "weight"}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/random_table_resource/random_table_resource")

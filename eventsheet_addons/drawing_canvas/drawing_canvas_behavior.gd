@@ -20,6 +20,9 @@ func _enter_tree() -> void:
 		push_warning("Drawing Canvas needs a Node2D: put it under one, or set Acts on.")
 
 # --- Designer knobs (tune in the Inspector) ---
+# @inspector_texture_size 256 512 1024 2048
+# @inspector_link canvas_width canvas_height
+# @inspector_side_by_side
 ## Canvas texture width in pixels.
 @export var canvas_width: int = 512
 ## Canvas texture height in pixels.

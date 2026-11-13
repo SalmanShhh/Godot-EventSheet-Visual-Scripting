@@ -201,6 +201,7 @@ signal moment_finished(moment_name: String, cut_short: bool)
 @export_range(0.1, 10.0, 0.1) var shake_decay: float = 1.4
 ## How fast the shake noise scrolls (the jitter rate).
 @export_range(1.0, 60.0, 1.0) var shake_frequency: float = 25.0
+# @inspector_side_by_side
 ## Clamp: the most zoomed-OUT the camera may go (smaller = further out).
 @export_range(0.05, 1.0, 0.05) var min_zoom: float = 0.2
 ## Clamp: the most zoomed-IN the camera may go.

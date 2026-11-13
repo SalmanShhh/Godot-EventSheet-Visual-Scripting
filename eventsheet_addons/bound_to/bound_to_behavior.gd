@@ -29,6 +29,7 @@ signal bound_hit(side: String)
 @export_enum("screen", "custom") var bound_space: String = "screen"
 ## On: the host's EDGES stay inside (origin + half-size). Off: only the origin is bound.
 @export var bound_by_edge: bool = true
+# @inspector_side_by_side
 ## Half the host's width in pixels (edge binding uses it; match your sprite).
 @export var half_width: float = 16.0
 ## Half the host's height in pixels (edge binding uses it; match your sprite).

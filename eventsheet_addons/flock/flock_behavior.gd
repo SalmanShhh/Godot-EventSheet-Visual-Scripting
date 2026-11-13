@@ -36,6 +36,7 @@ func _enter_tree() -> void:
 @export var alignment_weight: float = 1.0
 ## How strongly a member is drawn toward the middle of its neighbours.
 @export var cohesion_weight: float = 1.0
+# @inspector_side_by_side
 ## The slowest a member flies, in pixels per second. Above zero, a flock never stalls in mid-air.
 @export var min_speed: float = 60.0
 ## The fastest a member flies, in pixels per second.

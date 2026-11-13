@@ -22,7 +22,7 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["random", "noise", "procedural"])
 	sheet.variables = {
 		"seed_on_start": {"type": "int", "default": 0, "exported": true, "description": "Seed applied on _ready - 0 gives a fresh random seed each run; any other value makes runs reproducible.",
-			"attributes": {"tooltip": "Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).", "group": "Advanced Random"}},
+			"attributes": {"tooltip": "Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).", "group": "Advanced Random", "look": "seed", "look_args": []}},
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet - seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet - extend it by editing it."

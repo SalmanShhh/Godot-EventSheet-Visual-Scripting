@@ -29,6 +29,9 @@ static func build() -> bool:
 	var knobs: RawCodeRow = RawCodeRow.new()
 	knobs.code = "\n".join(PackedStringArray([
 		"# --- Designer knobs (tune in the Inspector) ---",
+		"# @inspector_texture_size 256 512 1024 2048",
+		"# @inspector_link canvas_width canvas_height",
+		"# @inspector_side_by_side",
 		"## Canvas texture width in pixels.",
 		"@export var canvas_width: int = 512",
 		"## Canvas texture height in pixels.",

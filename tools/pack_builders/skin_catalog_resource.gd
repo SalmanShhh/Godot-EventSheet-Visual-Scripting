@@ -16,7 +16,7 @@ static func build() -> bool:
 	sheet.class_description = "A cosmetics catalog as a data asset for the SkinVault pack. Fill the rarities and skins grids in the Inspector, save as a .tres, and load it with the SkinVault Load Catalog action or the Skin Catalog Loader behavior."
 	sheet.variables = {
 		"rarities": {"type": "Array", "default": [], "exported": true,
-			"attributes": {"tooltip": "One row per rarity: its name, a roll weight (higher = commoner), and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).", "drawer": "table", "table_columns": [{"name": "name", "type": "String"}, {"name": "weight", "type": "float"}, {"name": "tier", "type": "int"}]}},
+			"attributes": {"tooltip": "One row per rarity: its name, a roll weight (higher = commoner), and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).", "drawer": "table", "table_columns": [{"name": "name", "type": "String"}, {"name": "weight", "type": "float"}, {"name": "tier", "type": "int"}], "table_weight_column": "weight"}},
 		"skins": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"tooltip": "One row per skin: a unique id, a display name, its rarity (must match a rarity above), a cost (0 = not purchasable), and comma-separated tags.", "drawer": "table", "table_columns": [{"name": "id", "type": "String"}, {"name": "name", "type": "String"}, {"name": "rarity", "type": "String"}, {"name": "cost", "type": "float"}, {"name": "tags", "type": "String"}]}}
 	}

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the packs wear the new looks
+
+- Loot Table, Random Table, Skin Catalog (rarities) and Storylet Resource tables show each row's share, the odds bar and a roll button; the Loot Table's pity tag is a menu of the tags its rows carry. Advanced Random's seed and Drunken Walkers' start seed have a New seed button. Drawing Canvas width and height are one row with common sizes and a video memory line. Bound To, Wrap, Flock, Flock 3D, Stat Forge, Juice (zoom limits) and Drunken Walkers (grid size) put their paired numbers on one row, keeping their ranges. Pack variables keep their names and values; only comment lines and `@export_custom` hints changed.
+
 ### New: a width and a height on one row, with common sizes and what they cost
 
 - Two numbers marked `# @inspector_side_by_side` now keep the `@export_range` limits each declares (they used to lose them). When the pair is also linked (`# @inspector_link`), Godot's link icon sits inside the row instead of a button above it. A new line, `# @inspector_texture_size 256 512 1024 2048`, above the others says the pair is a texture's width and height: the label ends in "Size", an "x" sits between, a strip of the listed sizes sits under the row (one click sets both as one undo step) and one line says what the texture costs ("512 x 512 px, about 1024 KiB of video memory.", in Godot's own size words, worked out at 4 bytes a pixel). A file without the plugin has two ordinary number fields and three comments.

@@ -40,6 +40,7 @@ signal walkers_by_tag_complete(tag: String)
 ## @ace_name("On Generation Complete")
 signal generation_complete
 
+# @inspector_side_by_side
 ## Grid width in cells. The grid is built at this size from the start, and this is the fallback Create Grid uses for a width of 0 or less.
 @export_range(1, 2048, 1) var grid_width: int = 64
 ## Grid height in cells. The grid is built at this size from the start, and this is the fallback Create Grid uses for a height of 0 or less.
@@ -55,7 +56,7 @@ signal generation_complete
 ## The value a fresh grid is filled with. It is also what an out-of-bounds Cell Value reads, and the only value Outline Cells is allowed to overwrite.
 @export var empty_value: int = 0
 ## Seed the generator starts on; empty picks one from the clock.
-@export var start_seed: String = ""
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:seed") var start_seed: String = ""
 ## Where random numbers come from: internal, the shared Advanced Random autoload, or injected values.
 @export_enum("internal", "shared", "injected") var random_source: String = "internal"
 ## Warn about walker mistakes and empty maps; turn off for release.

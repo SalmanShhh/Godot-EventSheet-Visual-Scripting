@@ -87,6 +87,6 @@ static func build() -> bool:
 					{"name": "body", "type": "String"},
 					{"name": "weight", "type": "float"},
 					{"name": "cooldown", "type": "float"},
-					{"name": "max_plays", "type": "int"}]}}
+					{"name": "max_plays", "type": "int"}], "table_weight_column": "weight"}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/storylet_resource/storylet_resource")

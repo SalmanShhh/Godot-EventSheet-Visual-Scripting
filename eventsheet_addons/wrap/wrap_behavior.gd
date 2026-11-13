@@ -37,6 +37,7 @@ signal wrapped(side: String)
 @export var wrap_horizontal: bool = true
 ## Wrap across the top/bottom edges.
 @export var wrap_vertical: bool = true
+# @inspector_side_by_side
 ## Half the host's width in pixels - it must be FULLY off screen before wrapping.
 @export var half_width: float = 16.0
 ## Half the host's height in pixels - it must be FULLY off screen before wrapping.
