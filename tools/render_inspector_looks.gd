@@ -88,6 +88,20 @@ const PROBES: Array = [
 	["tabs", "# @inspector_tabs\n@export_group(\"Look\")\n@export var colour: Color = Color.WHITE\n@export_group(\"Feel\")\n@export var weight: float = 1.0\n"],
 ]
 
+## The shipped packs, photographed through their own scripts: [picture name, script path, values set
+## after it is built]. The path is the pack under eventsheet_addons (never the library copy, which
+## sits in an ignored folder the editor does not load).
+const PACK_PROBES: Array = [
+	["pack_loot_table", "res://eventsheet_addons/loot_table_resource/loot_table_resource.gd", {"entries": [{"item": "coin", "weight": 50.0, "tags": "common"}, {"item": "gem", "weight": 25.0, "tags": "rare"}, {"item": "sword", "weight": 5.0, "tags": "rare,weapon"}], "pity_tag": "rare"}],
+	["pack_random_table", "res://eventsheet_addons/random_table_resource/random_table_resource.gd", {"entries": [{"value": "north", "weight": 3.0}, {"value": "south", "weight": 1.0}]}],
+	["pack_advanced_random", "res://eventsheet_addons/advanced_random/advanced_random_addon.gd", {}],
+	["pack_drawing_canvas", "res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd", {}],
+	# The Feedback Player is a pack too; its fourth card is unfolded by index (the fourth entry).
+	["pack_feedback_player", "res://eventsheet_addons/juice/feedback_player.gd", {"steps": [
+		{"verb": "punch_scale", "seconds": 0.3}, {"verb": "hold", "seconds": 0.1},
+		{"verb": "shake", "seconds": 0.2}, {"verb": "loop_back", "seconds": 0.25, "loops": 2, "to_hold": true, "to_loop_start": true}]}, 3],
+]
+
 var _out: String = ""
 var _tag: String = "dark"
 var _only: PackedStringArray = PackedStringArray()
@@ -150,6 +164,25 @@ func _run() -> void:
 		if not _only.is_empty() and not _only.has(str(entry[0])):
 			continue
 		await _photograph(str(entry[0]), str(entry[1]))
+	for pack: Variant in PACK_PROBES:
+		var pack_entry: Array = pack as Array
+		if not _only.is_empty() and not _only.has(str(pack_entry[0])):
+			continue
+		var pack_script: GDScript = ResourceLoader.load(str(pack_entry[1]), "", ResourceLoader.CACHE_MODE_REPLACE) as GDScript
+		if pack_script == null:
+			print("[looks] %s: pack script did not load" % str(pack_entry[0]))
+			continue
+		var pack_subject: Object = pack_script.new()
+		for key: Variant in (pack_entry[2] as Dictionary):
+			var current: Variant = pack_subject.get(str(key))
+			if current is Array:
+				# A typed array refuses a plain one; assign converts the rows.
+				(current as Array).assign((pack_entry[2] as Dictionary)[key])
+			else:
+				pack_subject.set(str(key), (pack_entry[2] as Dictionary)[key])
+		await _photograph_subject(str(pack_entry[0]), pack_subject, int(pack_entry[3]) if pack_entry.size() > 3 else -1)
+		if pack_subject is Node:
+			(pack_subject as Node).free()
 	quit(0)
 
 
@@ -211,9 +244,19 @@ func _photograph(look_name: String, body: String) -> void:
 		print("[looks] %s: probe script did not load" % look_name)
 		return
 	var subject: Resource = script.new() as Resource
+	await _photograph_subject(look_name, subject)
+
+
+func _photograph_subject(look_name: String, subject: Object, unfold_card: int = -1) -> void:
 	EditorInterface.inspect_object(subject)
 	await _frames(24)
 	var inspector: EditorInspector = EditorInterface.get_inspector()
+	if unfold_card >= 0:
+		var lists: Array = inspector.find_children("*", "Control", true, false).filter(func(node: Node) -> bool: return node.get_script() != null and str(node.get_script().get_global_name()) == "EventSheetCardListDrawer")
+		for list: Variant in lists:
+			(list as Object).set("_unfolded", {unfold_card: true})
+			(list as Object).call("_rebuild")
+		await _frames(12)
 	var image: Image = root.get_texture().get_image()
 	var rect: Rect2 = inspector.get_global_rect()
 	var to_pixels: Transform2D = root.get_final_transform()

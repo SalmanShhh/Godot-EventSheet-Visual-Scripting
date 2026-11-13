@@ -454,5 +454,6 @@ class _DialPreview:
 	func _draw() -> void:
 		var center: Vector2 = size / 2.0
 		var radius: float = minf(size.x, size.y) / 2.0 - 2.0
-		draw_arc(center, radius, 0.0, TAU, 24, Color(1.0, 1.0, 1.0, 0.35), 1.5, true)
-		draw_line(center, center + Vector2.from_angle(-PI / 4.0) * radius, Color(0.45, 0.75, 0.95), 2.0, true)
+		# The inks come from the editor theme, so the dial reads on the light preset as well as the dark.
+		draw_arc(center, radius, 0.0, TAU, 24, EventSheetLookStyle.quiet(), 1.5, true)
+		draw_line(center, center + Vector2.from_angle(-PI / 4.0) * radius, EventSheetLookStyle.accent(), 2.0, true)

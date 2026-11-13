@@ -76,5 +76,8 @@ static func _pictures() -> bool:
 	colour_keys.sort()
 	var wanted: Array = EventSheetLookMinis.COLOUR_KEYS.duplicate()
 	wanted.sort()
+	var drawn: PackedStringArray = EventSheetLookMinis.drawn_ids()
+	rows.append(["Your own hint has a picture of its own", drawn.has("custom"), true])
+	rows.append(["Saved but hidden has a picture of its own", drawn.has("storage"), true])
 	rows.append(["the editor colour set carries every colour the painter takes", colour_keys, wanted])
 	return SUPPORT.pins("look_list_test", rows)

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the look list pictures and the preview card's dial
+
+- "Your own hint" and "Saved but hidden" in the Variable window's look list now draw a small picture of their own instead of a plain line. The dial in the small Inspector preview card takes its inks from the editor theme, so it reads on the light preset as well as the dark. The photo harness can photograph the shipped packs through their own scripts.
+
 ### Changed: Inspector notes and buttons sit under their field
 
 - A required note, a failed check, an info line and a field button (`# @inspector_required`, `# @inspector_validate`, `# @inspector_info`, `# @inspector_action`) now sit in the value column directly under the field they are about, in the editor's own font, with colour alone carrying the state. The outlined note box and the 9 px button above the field are gone. The comment lines in your scripts are unchanged. The required sentence now reads "Required. Assign a value."

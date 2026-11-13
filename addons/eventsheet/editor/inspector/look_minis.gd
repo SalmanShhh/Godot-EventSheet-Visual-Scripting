@@ -32,7 +32,7 @@ static func drawn_ids() -> PackedStringArray:
 	return PackedStringArray(["slider", "angle", "exp_slider", "no_handle", "progress_bar", "number_choices", "flags", "layers",
 		"easing", "unit", "file", "folder", "multiline", "placeholder", "choices", "suggestions", "toggle_row", "password",
 		"expression", "no_alpha", "swatch_row", "link", "vector_dial", "min_max", "corners", "node_path", "tool_button",
-		"texture_preview", "curve_editor", "table", "table_row"])
+		"texture_preview", "curve_editor", "table", "table_row", "custom", "storage"])
 
 
 ## Draws the picture of `look_id` inside `rect` on `canvas`, in the colours of `colours` (see COLOUR_KEYS).
@@ -167,5 +167,13 @@ static func draw_mini(canvas: CanvasItem, rect: Rect2, look_id: String, colours:
 			button.bg_color = rest
 			button.set_corner_radius_all(int(EventSheetLookStyle.px(3.0)))
 			canvas.draw_style_box(button, Rect2(inner.position.x + inner.size.x * 0.15, inner.position.y + inner.size.y * 0.1, inner.size.x * 0.7, inner.size.y * 0.8))
+		"custom":
+			# Your own hint: a field that holds a hint written by hand, three dots where the words go.
+			for index: int in 3:
+				canvas.draw_circle(Vector2(centre.x + (index - 1) * inner.size.y * 0.5, centre.y), inner.size.y * 0.14, ink)
+		"storage":
+			# Saved but hidden: the field is there and drawn faint, with a line struck through it.
+			canvas.draw_line(Vector2(inner.position.x, centre.y), Vector2(inner.end.x, centre.y), rest, line * 1.5)
+			canvas.draw_line(Vector2(inner.position.x + inner.size.x * 0.3, inner.end.y), Vector2(inner.end.x - inner.size.x * 0.3, inner.position.y), ink, line * 1.5, true)
 		_:
 			canvas.draw_line(Vector2(inner.position.x, centre.y), Vector2(inner.end.x, centre.y), rest, line * 1.5)
