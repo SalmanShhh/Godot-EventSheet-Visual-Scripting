@@ -10469,3 +10469,6 @@ Total weight %s,Peso totale %s
 and %d more,e altre %d
 Row %d,Riga %d
 Chances,Probabilità
+"Roll 1,000 times",Tira 1.000 volte
+"Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.",Sceglie 1.000 volte tra le righe in proporzione ai loro pesi e conta quante volte è uscita ciascuna.
+"Weights only. Rules the game adds, such as pity, are not counted.","Solo i pesi. Le regole aggiunte dal gioco, come il pity, non vengono contate."

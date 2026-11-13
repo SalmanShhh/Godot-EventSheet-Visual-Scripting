@@ -10469,3 +10469,6 @@ Total weight %s,가중치 합계 %s
 and %d more,외 %d개
 Row %d,%d번째 행
 Chances,확률
+"Roll 1,000 times","1,000번 굴리기"
+"Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","가중치에 비례해 행에서 1,000번 고르고 각 행이 몇 번 나왔는지 셉니다."
+"Weights only. Rules the game adds, such as pity, are not counted.",가중치만 계산합니다. 천장(pity)처럼 게임이 더하는 규칙은 반영되지 않습니다.

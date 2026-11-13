@@ -28,6 +28,7 @@ var _fold: Button
 var _panel: PanelContainer
 var _open_path: String = ""
 var _odds: Control = null
+var _roll: Control = null
 
 
 ## A table with no columns leaves the plain list, as without this plugin.
@@ -99,9 +100,20 @@ func _rows_above_field() -> Array[Control]:
 	return [_odds]
 
 
+## The roll button and its counts, under the table, for a weighted table.
+func _rows_under_field() -> Array[Control]:
+	if _weight_column().is_empty():
+		return []
+	_roll = load("res://addons/eventsheet/editor/inspector/roll_panel.gd").new()
+	return [_roll]
+
+
 func _show_odds(rows: Array) -> void:
+	var label_column: String = load("res://addons/eventsheet/editor/inspector/weight_math.gd").first_text_column(_columns())
 	if _odds != null:
-		_odds.call("set_rows", rows, _weight_column(), load("res://addons/eventsheet/editor/inspector/weight_math.gd").first_text_column(_columns()))
+		_odds.call("set_rows", rows, _weight_column(), label_column)
+	if _roll != null:
+		_roll.call("set_rows", rows, _weight_column(), label_column)
 
 
 func _on_table_changed(rows: Array) -> void:

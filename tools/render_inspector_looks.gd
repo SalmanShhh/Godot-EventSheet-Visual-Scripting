@@ -82,6 +82,13 @@ const PROBES: Array = [
 	["table_weighted", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,weight=float,tags=String:weight=weight\") var entries: Array = [{\"item\": \"coin\", \"weight\": 50.0, \"tags\": \"common\"}, {\"item\": \"gem\", \"weight\": 25.0, \"tags\": \"rare\"}, {\"item\": \"sword\", \"weight\": 5.0, \"tags\": \"rare,weapon\"}]
 @export var entries_plain: Array = []
 "],
+	["table_rolled", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,weight=float,tags=String:weight=weight\") var entries: Array = [{\"item\": \"coin\", \"weight\": 50.0, \"tags\": \"common\"}, {\"item\": \"gem\", \"weight\": 25.0, \"tags\": \"rare\"}, {\"item\": \"sword\", \"weight\": 5.0, \"tags\": \"rare,weapon\"}]
+"],
+	["table_tag", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,weight=float,tags=String\") var entries: Array = [{\"item\": \"coin\", \"weight\": 50.0, \"tags\": \"common\"}, {\"item\": \"gem\", \"weight\": 25.0, \"tags\": \"rare\"}]
+@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table_tag:entries:tags\") var pity_tag: String = \"rare\"
+@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table_tag:entries:tags\") var missing_tag: String = \"epic\"
+@export var pity_tag_plain: String = \"rare\"
+"],
 	["cards", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:cards:kind=kind,schema=feedback_steps,stripes=category\") var steps: Array[Dictionary] = [{\"kind\": \"shake\", \"category\": \"camera\"}, {\"kind\": \"flash\", \"category\": \"screen\"}]\n"],
 	["texture_preview", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\") var icon_picture: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n@export var icon_picture_plain: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n"],
 	["curve_editor", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var damage_falloff: Curve = null\n@export var damage_falloff_plain: Curve = null\n\n\nfunc _init() -> void:\n\tdamage_falloff = Curve.new()\n\tdamage_falloff.add_point(Vector2(0, 1))\n\tdamage_falloff.add_point(Vector2(1, 0))\n"],
@@ -254,6 +261,11 @@ func _photograph_subject(look_name: String, subject: Object, unfold_card: int = 
 	EditorInterface.inspect_object(subject)
 	await _frames(24)
 	var inspector: EditorInspector = EditorInterface.get_inspector()
+	if look_name.ends_with("_rolled"):
+		for button: Variant in inspector.find_children("*", "Button", true, false):
+			if (button as Button).text.begins_with("Roll"):
+				(button as Button).pressed.emit()
+		await _frames(8)
 	if unfold_card >= 0:
 		var lists: Array = inspector.find_children("*", "Control", true, false).filter(func(node: Node) -> bool: return node.get_script() != null and str(node.get_script().get_global_name()) == "EventSheetCardListDrawer")
 		for list: Variant in lists:

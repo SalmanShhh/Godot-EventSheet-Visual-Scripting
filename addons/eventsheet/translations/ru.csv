@@ -10469,3 +10469,6 @@ Total weight %s,Общий вес %s
 and %d more,и ещё %d
 Row %d,Строка %d
 Chances,Шансы
+"Roll 1,000 times",Бросить 1 000 раз
+"Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","Выбирает строки 1 000 раз пропорционально их весам и считает, сколько раз выпала каждая."
+"Weights only. Rules the game adds, such as pity, are not counted.","Только веса. Правила, которые добавляет игра, например гарант (pity), не учитываются."

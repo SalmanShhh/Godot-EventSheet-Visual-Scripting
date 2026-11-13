@@ -10469,3 +10469,6 @@ Total weight %s,合計の重み %s
 and %d more,ほか %d 件
 Row %d,%d 行目
 Chances,確率
+"Roll 1,000 times","1,000回ロール"
+"Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","各行の重みに比例して1,000回選び、それぞれが何回出たかを数えます。"
+"Weights only. Rules the game adds, such as pity, are not counted.",重みだけです。ピティのようにゲームが加えるルールは数えません。

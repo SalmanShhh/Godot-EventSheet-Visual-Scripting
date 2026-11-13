@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: roll a weighted table a thousand times
+
+- A weighted table gets a "Roll 1,000 times" button under it and, after a press, how often each row came up, with a line saying the count is from the weights alone ("Weights only. Rules the game adds, such as pity, are not counted."). The counts live in the Inspector row only, clear when the rows change, and are never stored. The button is off while no row has a weight.
+
 ### New: the odds of a weighted table as one bar
 
 - A weighted table draws a "Chances" row above it: one bar split by each row's share (the largest in the accent colour), and one line naming the biggest three ("coin 62.5%, gem 31.3%, sword 6.3% and 2 more"). A table where no row has a weight says so in amber. A look can now hand back rows above and under its field.
