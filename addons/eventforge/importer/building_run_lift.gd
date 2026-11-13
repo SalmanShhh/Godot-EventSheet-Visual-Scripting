@@ -55,10 +55,11 @@ static func lift_entries() -> Array[Dictionary]:
 	if not _entries.is_empty():
 		return _entries
 	var built: Array[Dictionary] = []
+	var not_a_follow: Callable = Callable(EventForgeBuildingRunLift, "not_a_follow_node")
 	built.append(_entry("building_new_node_named", "AddNewNodeInto", {"label": "x"}, ".new()", {
-		"type": "Marker2D", "label": "\"Spawn\"", "parent": "get_tree().current_scene", "name": "marker"}))
+		"type": "Marker2D", "label": "\"Spawn\"", "parent": "get_tree().current_scene", "name": "marker"}, not_a_follow))
 	built.append(_entry("building_new_node", "AddNewNodeInto", {"label": ""}, ".new()", {
-		"type": "Marker2D", "parent": "get_tree().current_scene", "name": "marker"}))
+		"type": "Marker2D", "parent": "get_tree().current_scene", "name": "marker"}, not_a_follow))
 	built.append(_entry("building_behaviour_only_one", "AddBehaviourInto", {"once": "yes"}, ".get_node_or_null(", {
 		"behaviour": "Timer", "target": "self", "name": "clock"}))
 	# Add Behaviour with Allow another has NO entry of its own: its three lines are, character for
@@ -94,7 +95,8 @@ static func lift_entries() -> Array[Dictionary]:
 ## One entry, from the row's template with its optional lines collapsed to one combination. `chosen`
 ## is what the collapse reads (a non-blank label keeps the name line, `once` picks a shape); `samples`
 ## are the values the harness fills the shape's slots with.
-static func _entry(id: String, ace_id: String, chosen: Dictionary, mark: String, samples: Dictionary) -> Dictionary:
+static func _entry(id: String, ace_id: String, chosen: Dictionary, mark: String, samples: Dictionary,
+		guard: Callable = Callable()) -> Dictionary:
 	var descriptor: ACEDescriptor = _descriptor(ace_id)
 	var template: String = descriptor.codegen_template if descriptor != null else ""
 	var shape: String = EventSheetActionCodegen.collapse_optional_segments(template, chosen).replace("{uid}", TOKEN)
@@ -111,7 +113,7 @@ static func _entry(id: String, ace_id: String, chosen: Dictionary, mark: String,
 	remaining.merge(chosen, true)
 	for slot: String in params:
 		remaining.erase(slot)
-	return {
+	var entry: Dictionary = {
 		"id": id,
 		"ace_id": ace_id,
 		EventForgeLiftTable.MARK_KEY: mark,
@@ -121,6 +123,16 @@ static func _entry(id: String, ace_id: String, chosen: Dictionary, mark: String,
 		"shape": shape.replace(TOKEN, "a1"),
 		"slots": slots,
 	}
+	if guard.is_valid():
+		entry["guard"] = guard
+	return entry
+
+
+## A node made and parented in one run is the Add New Node row - except the RemoteTransform that makes a
+## node follow another, which the sheet already reads as one Copy Place row beside its Add Child. Taking
+## the two lines would leave that reading short of the run it belongs to, so they are left to it.
+static func not_a_follow_node(captures: Dictionary) -> bool:
+	return not str(captures.get("type", "")).begins_with("RemoteTransform")
 
 
 ## One statement of a shape as a pattern. The slots become captures the way the spawn runs make them

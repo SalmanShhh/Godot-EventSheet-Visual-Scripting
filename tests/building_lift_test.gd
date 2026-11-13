@@ -124,6 +124,11 @@ static func _runs_that_keep_their_old_reading() -> bool:
 	passed = SUPPORT.pin_value(NAME, "a bare add_child is not claimed",
 		_opens_as(bare_add).has("AddNewNodeInto"), false) and passed
 	passed = _round_trips(bare_add, "bare add_child") and passed
+	var follower: String = _source("Node3D", PackedStringArray(["var __follow_hat := RemoteTransform3D.new()",
+		"%Head.add_child(__follow_hat)"]))
+	passed = SUPPORT.pin_value(NAME, "a RemoteTransform made and parented is left to the follow reading",
+		_opens_as(follower).has("AddNewNodeInto"), false) and passed
+	passed = _round_trips(follower, "follow node") and passed
 	var two_ids: String = _source("Node2D", PackedStringArray(["var __sprite_a1 := Sprite2D.new()",
 		"__sprite_b2.texture = load(\"res://icon.svg\")", "self.add_child(__sprite_a1)"]))
 	passed = SUPPORT.pin_value(NAME, "a run whose ids disagree is not claimed",

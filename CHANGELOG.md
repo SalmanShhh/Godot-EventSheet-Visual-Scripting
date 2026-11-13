@@ -11,6 +11,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ### Added: hand-written code that makes a node opens as the Building row
 
+- Add New Node starts with a name (NewNode), and clearing the field still leaves the node the name Godot gives it. A RemoteTransform made and parented in one run is left to the Copy Place reading it already has, so no existing reading changes for it.
 - A person's own lines now open as the row that writes them: a node made from a type and given a parent (named or not), a behaviour looked up and added when it is not there, a behaviour removed, a sprite, a circle, rectangle or capsule shape (and the 3D shapes), a timer, and a branch packed into a variable. Each is read as one run, the values are the ones the lines said, the editor's own baked ids are kept as the author's spelling, and saving the sheet untouched writes the same bytes back. A run short of the whole shape (a node made with an argument, a bare `add_child`, ids that disagree) keeps the ordinary rows it always read as. Add Behaviour with Allow another is three lines identical to Add New Node with the class's own name, so that run opens as Add New Node and writes the same bytes.
 
 ### Changed: a node that plays is paused, a behaviour is turned off

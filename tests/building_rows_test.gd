@@ -133,7 +133,7 @@ static func _every_shape_of_every_row_parses() -> bool:
 		passed = SUPPORT.pin_value(NAME, "%s parses with its defaults" % ace_id,
 			_parses(ace_id, _written(ace_id, {"prefab": "v"} if ace_id == "KeepAsPrefab" else {})), true) and passed
 	# The optional name line: both shapes.
-	var unnamed: String = _written("AddNewNodeInto")
+	var unnamed: String = _written("AddNewNodeInto", {"label": ""})
 	var named: String = _written("AddNewNodeInto", {"label": "\"Marker\""})
 	passed = SUPPORT.pin_value(NAME, "Add New Node with a blank name writes no name line",
 		unnamed, "var new_node := Node2D.new()\nget_tree().current_scene.add_child(new_node)") and passed
