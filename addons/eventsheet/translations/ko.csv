@@ -7733,6 +7733,7 @@ Texture preview,텍스처 미리 보기
 A bigger picture of the texture under the slot.,슬롯 아래에 텍스처를 더 크게 보여 줍니다.
 Curve preview,곡선 미리 보기
 A picture of the curve; its points are shaped in Godot's own curve editor.,곡선의 그림. 점은 Godot 자체의 곡선 편집기에서 다듬습니다.
+"A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.",슬롯에 있는 곡선의 그림을 그 아래에 그립니다(빈 슬롯은 아무것도 그리지 않습니다). 점은 Godot 자체의 곡선 편집기에서 다듬습니다.
 Editable table,편집 가능한 표
 "Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).","요소마다 셀 한 행. 열: 이름:타입 (String, int, float, bool, color, enum(a|b))."
 Columns,열

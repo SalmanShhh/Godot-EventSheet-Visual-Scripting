@@ -7733,6 +7733,7 @@ Texture preview,テクスチャのプレビュー
 A bigger picture of the texture under the slot.,スロットの下にテクスチャを大きく表示します。
 Curve preview,カーブのプレビュー
 A picture of the curve; its points are shaped in Godot's own curve editor.,カーブの絵です。点の形は Godot 自身のカーブエディターで整えます。
+"A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.",スロット内のカーブの絵を、その下に描きます（空のスロットには何も描きません）。点の形は Godot 自身のカーブエディターで整えます。
 Editable table,編集できる表
 "Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).",要素ごとにセルの 1 行になります。列: 名前:型 (String、int、float、bool、color、enum(a|b))。
 Columns,列

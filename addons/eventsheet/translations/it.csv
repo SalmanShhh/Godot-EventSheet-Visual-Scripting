@@ -7733,6 +7733,7 @@ Texture preview,Anteprima della texture
 A bigger picture of the texture under the slot.,Un'immagine più grande della texture sotto lo slot.
 Curve preview,Anteprima della curva
 A picture of the curve; its points are shaped in Godot's own curve editor.,Un'immagine della curva; i suoi punti si modellano nell'editor di curve di Godot.
+"A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.","Un'immagine della curva nello slot, disegnata sotto (uno slot vuoto non disegna nulla). I suoi punti si modellano nell'editor di curve di Godot."
 Editable table,Tabella modificabile
 "Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).","Ogni elemento è una riga di celle. Colonne: nome:tipo (String, int, float, bool, color, enum(a|b))."
 Columns,Colonne

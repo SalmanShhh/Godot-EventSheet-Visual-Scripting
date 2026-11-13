@@ -7733,6 +7733,7 @@ Texture preview,纹理预览
 A bigger picture of the texture under the slot.,在槽位下方显示更大的纹理图像。
 Curve preview,曲线预览
 A picture of the curve; its points are shaped in Godot's own curve editor.,曲线的图示；其各点在 Godot 自带的曲线编辑器中调整。
+"A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.",插槽中曲线的图示，绘制在其下方（空插槽不绘制任何内容）。其各点在 Godot 自带的曲线编辑器中调整。
 Editable table,可编辑表格
 "Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).",每个元素是一行单元格。列：名称:类型 (String、int、float、bool、color、enum(a|b))。
 Columns,列
