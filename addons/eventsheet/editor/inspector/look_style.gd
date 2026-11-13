@@ -314,3 +314,25 @@ static func number_field_min_width() -> float:
 static func text_room(sample: String) -> float:
 	var text_width: float = font().get_string_size(sample, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size()).x
 	return text_width + field_box().get_minimum_size().x
+
+
+## The editor's ink or its base colour, whichever reads better laid over `fill` (a swatch, a chosen cell).
+static func ink_over(fill: Color) -> Color:
+	var light: Color = ink()
+	var dark: Color = _colour(&"base_color", THEME_EDITOR, EventSheetActiveTheme.chrome().drawer_handle_border_color)
+	light.a = 1.0
+	dark.a = 1.0
+	return light if contrast_ratio(light, fill) >= contrast_ratio(dark, fill) else dark
+
+
+## The editor's own progress fill with its colour taken from the accent, so a bar reads as the
+## highlight of the editor rather than another grey.
+static func accent_fill() -> StyleBox:
+	var theme: Theme = editor_theme()
+	var flat: StyleBoxFlat = null
+	if theme != null and theme.has_stylebox(&"fill", &"ProgressBar"):
+		flat = theme.get_stylebox(&"fill", &"ProgressBar").duplicate() as StyleBoxFlat
+	if flat == null:
+		flat = StyleBoxFlat.new()
+	flat.bg_color = accent()
+	return flat

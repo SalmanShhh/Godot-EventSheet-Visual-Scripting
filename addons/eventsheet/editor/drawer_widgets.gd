@@ -276,7 +276,9 @@ class RequiredBadge:
 
 
 # ── Progress bar (int/float) ────────────────────────────────────────────────
-## A read-and-write bar: click/drag along it to set the value within [min, max].
+## A read-and-write bar: click/drag along it to set the value within [min, max]. Godot's own
+## ProgressBar draws the bar, so it has the height, corner and colours of the fields around it; the
+## reading over it says the value and the top of the range ("60 / 100").
 class DrawerProgressBar:
 	extends Control
 	signal value_changed(value: float)
@@ -284,36 +286,56 @@ class DrawerProgressBar:
 	var max_value: float = 100.0
 	var editable: bool = true
 	var _value: float = 0.0
+	var _bar: ProgressBar = null
+	var _reading: Label = null
 
 	func _init(p_min: float = 0.0, p_max: float = 100.0) -> void:
 		min_value = p_min
 		max_value = p_max
-		custom_minimum_size = Vector2(0.0, 18.0)
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		tooltip_text = EventSheetL10n.translate("Drag to set the value")
+		_bar = ProgressBar.new()
+		_bar.show_percentage = false
+		_bar.min_value = p_min
+		_bar.max_value = p_max
+		_bar.step = 0.0
+		_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_bar.add_theme_stylebox_override("fill", EventSheetLookStyle.accent_fill())
+		_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(_bar)
+		_reading = Label.new()
+		_reading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_reading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_reading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_reading.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_reading.add_theme_color_override("font_color", EventSheetLookStyle.ink())
+		add_child(_reading)
+		_show()
+
+	func _get_minimum_size() -> Vector2:
+		var bar_size: Vector2 = _bar.get_combined_minimum_size() if _bar != null else Vector2.ZERO
+		return Vector2(bar_size.x, maxf(bar_size.y, EventSheetLookStyle.field_height()))
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_THEME_CHANGED and _reading != null:
+			_bar.add_theme_stylebox_override("fill", EventSheetLookStyle.accent_fill())
+			_reading.add_theme_color_override("font_color", EventSheetLookStyle.ink())
+			update_minimum_size()
 
 	func set_value(v: float) -> void:
 		_value = clampf(v, min_value, max_value)
-		queue_redraw()
+		_show()
 
 	func get_value() -> float:
 		return _value
 
-	func _draw() -> void:
-		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-		var ink: Color = chrome.drawer_ink_color
-		var w: float = size.x
-		var h: float = size.y
-		draw_rect(Rect2(0.0, 0.0, w, h), chrome.drawer_well_color, true)
-		var span: float = maxf(0.0001, max_value - min_value)
-		var frac: float = clampf((_value - min_value) / span, 0.0, 1.0)
-		if frac > 0.0:
-			draw_rect(Rect2(0.0, 0.0, w * frac, h), chrome.drawer_accent_color, true)
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.12), false, 1.0)
-		var font: Font = ThemeDB.fallback_font
-		var rounded: float = roundf(_value)
-		var label: String = str(int(rounded)) if absf(_value - rounded) < 0.001 else str(snappedf(_value, 0.01))
-		draw_string(font, Vector2(6.0, h * 0.5 + 4.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(11), Color(ink.r, ink.g, ink.b, 0.9))
+	func _show() -> void:
+		_bar.value = _value
+		_reading.text = EventSheetL10n.translate("%s / %s") % [_number_text(_value), _number_text(max_value)]
+
+	static func _number_text(number: float) -> String:
+		var rounded: float = roundf(number)
+		return str(int(rounded)) if absf(number - rounded) < 0.001 else str(snappedf(number, 0.01))
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:
@@ -1713,48 +1735,104 @@ class DrawerVectorDial:
 
 
 # ── Colour swatch row ───────────────────────────────────────────────────────
-## A row of palette presets plus a full picker - click a swatch (or pick) to set the colour fast.
+## A row of palette presets plus a full picker - click a swatch (or pick) to set the colour fast. The
+## swatches fill the value column at the height of a field, wrapping to a second line when the column
+## is too narrow for them to stay clickable; the chosen one carries a tick.
 class DrawerSwatchRow:
-	extends HBoxContainer
+	extends GridContainer
 	signal value_changed(value: Color)
+	## The narrowest one swatch may be, at 1x.
+	const SWATCH_WIDTH: float = 16.0
 	var editable: bool = true
 	var _value: Color = Color.WHITE
 	var _picker: ColorPickerButton = null
+	var _swatches: Array[Button] = []
+	var _presets: Array[Color] = []
 
 	func _init() -> void:
-		add_theme_constant_override("separation", 3)
+		columns = EventSheetDrawerWidgets.SWATCH_PRESET_HTML.size() + 1
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		for preset_html: String in EventSheetDrawerWidgets.SWATCH_PRESET_HTML:
-			add_child(_make_swatch(Color.html(preset_html)))
+			var preset: Color = Color.html(preset_html)
+			_presets.append(preset)
+			var swatch: Button = _make_swatch(preset)
+			_swatches.append(swatch)
+			add_child(swatch)
 		_picker = ColorPickerButton.new()
-		_picker.custom_minimum_size = Vector2(38.0, 20.0)
+		_picker.custom_minimum_size = Vector2(0.0, EventSheetLookStyle.field_height())
+		for state: String in ["normal", "hover", "pressed"]:
+			_picker.add_theme_stylebox_override(state, _picker_box())
+		_picker.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_picker.color = _value
 		_picker.tooltip_text = EventSheetL10n.translate("Custom colour…")
 		_picker.color_changed.connect(_on_picked)
 		add_child(_picker)
+		custom_minimum_size.x = EventSheetLookStyle.px(SWATCH_WIDTH)
+		_show_tick()
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_RESIZED:
+			# As many to a line as keep each one a real click target; the rest wrap.
+			var fit: int = maxi(1, int(size.x / EventSheetLookStyle.px(SWATCH_WIDTH)))
+			columns = mini(fit, EventSheetDrawerWidgets.SWATCH_PRESET_HTML.size() + 1)
 
 	func set_value(v: Color) -> void:
 		_value = v
 		if _picker != null:
 			_picker.color = v
+		_show_tick()
 
 	func get_value() -> Color:
 		return _value
 
+	## The swatch whose preset is the colour now, or -1 when it is none of them (a picked colour).
+	func chosen_index() -> int:
+		for index: int in _presets.size():
+			if _presets[index].is_equal_approx(_value):
+				return index
+		return -1
+
+	## The box the custom-colour button wears: the editor's field box with a thin margin, so the colour it
+	## shows has room to be seen at a swatch's width.
+	func _picker_box() -> StyleBox:
+		var box: StyleBox = EventSheetLookStyle.field_box()
+		box.set_content_margin_all(EventSheetLookStyle.px(2.0))
+		return box
+
 	func _make_swatch(preset: Color) -> Button:
 		var b: Button = Button.new()
-		b.custom_minimum_size = Vector2(20.0, 20.0)
+		b.custom_minimum_size = Vector2(0.0, EventSheetLookStyle.field_height())
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.tooltip_text = "#" + preset.to_html(false)
-		var sb: StyleBoxFlat = StyleBoxFlat.new()
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var sb: StyleBoxFlat = EventSheetLookStyle.field_box() as StyleBoxFlat
+		if sb == null:
+			sb = StyleBoxFlat.new()
 		sb.bg_color = preset
-		sb.set_corner_radius_all(3)
-		sb.set_border_width_all(1)
-		var ink: Color = EventSheetActiveTheme.chrome().drawer_ink_color
-		sb.border_color = Color(ink.r, ink.g, ink.b, 0.25)
-		b.add_theme_stylebox_override("normal", sb)
-		b.add_theme_stylebox_override("hover", sb)
-		b.add_theme_stylebox_override("pressed", sb)
+		sb.content_margin_left = 0.0
+		sb.content_margin_right = 0.0
+		for state: String in ["normal", "hover", "pressed"]:
+			b.add_theme_stylebox_override(state, sb)
+		b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 		b.pressed.connect(func() -> void: _apply(preset))
 		return b
+
+	## Puts the tick on the chosen swatch: the editor's own check mark, in whichever of dark and light
+	## reads better on that swatch.
+	func _show_tick() -> void:
+		var chosen: int = chosen_index()
+		for index: int in _swatches.size():
+			var swatch: Button = _swatches[index]
+			swatch.icon = null
+			swatch.text = ""
+			if index != chosen:
+				continue
+			var tick: Color = EventSheetLookStyle.ink_over(_presets[index])
+			for item: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+				swatch.add_theme_color_override(item, tick)
+			swatch.text = "✓"
+			swatch.add_theme_font_override("font", EventSheetLookStyle.bold_font())
 
 	func _apply(c: Color) -> void:
 		if not editable:
@@ -1766,6 +1844,7 @@ class DrawerSwatchRow:
 		if not editable:
 			return
 		_value = c
+		_show_tick()
 		value_changed.emit(c)
 
 

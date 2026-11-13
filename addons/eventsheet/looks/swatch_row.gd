@@ -17,7 +17,6 @@ func _look_built() -> void:
 	_row = EventSheetAttributeDrawers.widgets().DrawerSwatchRow.new()
 	_row.connect("value_changed", _on_row_changed)
 	add_child(_row)
-	set_bottom_editor(_row)
 
 
 func _value_shown(value: Variant) -> void:
