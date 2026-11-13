@@ -10508,3 +10508,12 @@ Shown with the look %s.,Показывается видом %s.
 Look not installed: %s,Вид не установлен: %s
 "No look file of this name is in the project, so the Inspector shows the plain field.","В проекте нет файла вида с таким именем, поэтому Inspector показывает обычное поле."
 Keeps the marker the file wrote.,"Сохраняет маркер, который записал файл."
+Open as a sheet,Открыть как лист
+Copy into my project,Скопировать в мой проект
+Read this look's file as an event sheet. A look that ships with the plugin opens read-only; copy it into your project to change it.,"Читает файл этого вида как лист событий. Вид из комплекта плагина открывается только для чтения; скопируйте его в проект, чтобы изменить."
+Read and change this look's file as an event sheet.,Читает и изменяет файл этого вида как лист событий.
+"Copy this look's file into res://eventsheet_addons/looks/. Your copy is the one the Inspector uses, and it is yours to change.","Копирует файл этого вида в res://eventsheet_addons/looks/. Inspector использует вашу копию, и её можно менять."
+Only a look that ships with the plugin can be copied.,Скопировать можно только вид из комплекта плагина.
+"%s is already in your project, so nothing was copied.","%s уже есть в вашем проекте, поэтому ничего не скопировано."
+%s could not be written.,Не удалось записать %s.
+"Copied to %s. This copy is yours to change, and it is the one the Inspector uses.","Скопировано в %s. Эту копию можно менять, и Inspector использует именно её."

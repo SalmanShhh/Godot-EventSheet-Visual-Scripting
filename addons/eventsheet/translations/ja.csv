@@ -10508,3 +10508,12 @@ Shown with the look %s.,ルック %s で表示されます。
 Look not installed: %s,ルックが未インストール: %s
 "No look file of this name is in the project, so the Inspector shows the plain field.",この名前のルックファイルがプロジェクトにないため、Inspector には通常のフィールドが表示されます。
 Keeps the marker the file wrote.,ファイルが書いたマーカーをそのまま保ちます。
+Open as a sheet,シートとして開く
+Copy into my project,自分のプロジェクトにコピー
+Read this look's file as an event sheet. A look that ships with the plugin opens read-only; copy it into your project to change it.,このルックのファイルをイベントシートとして読みます。プラグイン付属のルックは読み取り専用で開きます。変更するにはプロジェクトにコピーしてください。
+Read and change this look's file as an event sheet.,このルックのファイルをイベントシートとして読み、変更します。
+"Copy this look's file into res://eventsheet_addons/looks/. Your copy is the one the Inspector uses, and it is yours to change.",このルックのファイルを res://eventsheet_addons/looks/ にコピーします。Inspector が使うのはそのコピーで、自由に変更できます。
+Only a look that ships with the plugin can be copied.,コピーできるのはプラグイン付属のルックだけです。
+"%s is already in your project, so nothing was copied.",%s はすでにプロジェクトにあるため、何もコピーしませんでした。
+%s could not be written.,%s を書き込めませんでした。
+"Copied to %s. This copy is yours to change, and it is the one the Inspector uses.",%s にコピーしました。このコピーは自由に変更でき、Inspector が使うのもこれです。

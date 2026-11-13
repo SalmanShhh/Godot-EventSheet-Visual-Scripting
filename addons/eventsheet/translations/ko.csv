@@ -10508,3 +10508,12 @@ Shown with the look %s.,%s 룩으로 표시됩니다.
 Look not installed: %s,설치되지 않은 룩: %s
 "No look file of this name is in the project, so the Inspector shows the plain field.",이 이름의 룩 파일이 프로젝트에 없어서 Inspector에는 일반 필드가 표시됩니다.
 Keeps the marker the file wrote.,파일이 쓴 마커를 그대로 유지합니다.
+Open as a sheet,시트로 열기
+Copy into my project,내 프로젝트로 복사
+Read this look's file as an event sheet. A look that ships with the plugin opens read-only; copy it into your project to change it.,"이 룩의 파일을 이벤트 시트로 읽습니다. 플러그인에 포함된 룩은 읽기 전용으로 열리며, 바꾸려면 프로젝트로 복사하세요."
+Read and change this look's file as an event sheet.,이 룩의 파일을 이벤트 시트로 읽고 바꿉니다.
+"Copy this look's file into res://eventsheet_addons/looks/. Your copy is the one the Inspector uses, and it is yours to change.",이 룩의 파일을 res://eventsheet_addons/looks/ 로 복사합니다. Inspector는 복사본을 사용하며 자유롭게 바꿀 수 있습니다.
+Only a look that ships with the plugin can be copied.,플러그인에 포함된 룩만 복사할 수 있습니다.
+"%s is already in your project, so nothing was copied.",%s 은(는) 이미 프로젝트에 있어서 아무것도 복사하지 않았습니다.
+%s could not be written.,%s 을(를) 쓸 수 없습니다.
+"Copied to %s. This copy is yours to change, and it is the one the Inspector uses.",%s 에 복사했습니다. 이 복사본은 바꿀 수 있고 Inspector가 사용합니다.

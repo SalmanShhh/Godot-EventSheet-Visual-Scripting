@@ -10508,3 +10508,12 @@ Shown with the look %s.,以外观 %s 显示。
 Look not installed: %s,未安装的外观：%s
 "No look file of this name is in the project, so the Inspector shows the plain field.",项目中没有这个名称的外观文件，因此 Inspector 显示普通字段。
 Keeps the marker the file wrote.,保留文件写入的标记。
+Open as a sheet,作为表单打开
+Copy into my project,复制到我的项目
+Read this look's file as an event sheet. A look that ships with the plugin opens read-only; copy it into your project to change it.,将此外观的文件作为事件表读取。插件自带的外观以只读方式打开；要修改请先复制到你的项目。
+Read and change this look's file as an event sheet.,将此外观的文件作为事件表读取并修改。
+"Copy this look's file into res://eventsheet_addons/looks/. Your copy is the one the Inspector uses, and it is yours to change.",将此外观的文件复制到 res://eventsheet_addons/looks/。Inspector 使用的是你的副本，可以随意修改。
+Only a look that ships with the plugin can be copied.,只能复制插件自带的外观。
+"%s is already in your project, so nothing was copied.",项目中已有 %s，因此没有复制任何内容。
+%s could not be written.,无法写入 %s。
+"Copied to %s. This copy is yours to change, and it is the one the Inspector uses.",已复制到 %s。这个副本可以随意修改，Inspector 使用的就是它。

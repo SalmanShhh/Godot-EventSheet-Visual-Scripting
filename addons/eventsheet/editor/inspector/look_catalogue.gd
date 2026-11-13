@@ -215,6 +215,27 @@ static func read_look(path: String, source: String, origin: String = "project") 
 	return entry
 
 
+## Copies a look that ships with the plugin into the project's looks folder, byte for byte. The project's
+## copy then wins by name, so it is the one the Inspector draws and the one to change. Nothing is ever
+## overwritten: a name already taken in the project says so and writes nothing. Returns
+## {ok, path, message}, the message being the sentence to show.
+static func copy_into_project(look_name: String, project_folder: String = PROJECT_FOLDER) -> Dictionary:
+	var shipped: String = "%s/%s.gd" % [SHIPPED_FOLDER, look_name]
+	if not look_name.is_valid_identifier() or not FileAccess.file_exists(shipped):
+		return {"ok": false, "path": "", "message": EventSheetL10n.translate("Only a look that ships with the plugin can be copied.")}
+	var target: String = "%s/%s.gd" % [project_folder, look_name]
+	if FileAccess.file_exists(target):
+		return {"ok": false, "path": target, "message": EventSheetL10n.translate("%s is already in your project, so nothing was copied.") % target}
+	DirAccess.make_dir_recursive_absolute(project_folder)
+	var written: FileAccess = FileAccess.open(target, FileAccess.WRITE)
+	if written == null:
+		return {"ok": false, "path": target, "message": EventSheetL10n.translate("%s could not be written.") % target}
+	written.store_string(FileAccess.get_file_as_string(shipped))
+	written.close()
+	forget()
+	return {"ok": true, "path": target, "message": EventSheetL10n.translate("Copied to %s. This copy is yours to change, and it is the one the Inspector uses.") % target}
+
+
 ## Whether a look is a node that already has a property of this name (`name`, `size`, `visible`...). Such
 ## a variable cannot be a question: setting it from the marker would set the node's own property.
 static func _is_engine_property(variable_name: String) -> bool:
@@ -338,8 +359,7 @@ static func _question(declaration: Dictionary, doc: PackedStringArray, pending_c
 			rest.append(doc[doc_index])
 	var hint: String = " ".join(rest)
 	return {"key": key, "type_name": type_name, "kind": kind, "default": default_text if kind != "tick" else default_text == "true",
-		"label": label, "doc": hint, "hover": key if hint.is_empty() else "%s
-%s" % [key, hint], "choices": choices}
+		"label": label, "doc": hint, "hover": key if hint.is_empty() else "%s\n%s" % [key, hint], "choices": choices}
 
 
 ## The text a value is written as inside the marker, or null when this value cannot ride a marker (it

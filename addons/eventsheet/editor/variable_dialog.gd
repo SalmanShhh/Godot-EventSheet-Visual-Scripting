@@ -28,6 +28,9 @@ signal variable_confirmed(name: String, type_name: String, default_value: Varian
 ## into" picker chose) rather than writing a member that only looks global.
 signal project_global_requested(name: String, type_name: String, value_text: String, target: Dictionary)
 
+## The person asked to read a look's file as an event sheet; the dock opens it in a tab.
+signal look_sheet_requested(path: String)
+
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 const ExportSections := preload("res://addons/eventsheet/editor/interaction/export_sections.gd")
 const VariableMarkTile := preload("res://addons/eventsheet/editor/variable_mark_tile.gd")
@@ -199,6 +202,9 @@ var _exported_check: CheckBox = null
 var _look_option: OptionButton = null
 var _look_details: VBoxContainer = null
 var _look_note: EventSheetPopupUI.StateNote = null
+var _look_doors: HBoxContainer = null
+var _look_open_button: Button = null
+var _look_copy_button: Button = null
 var _inspector_preview_card: EventSheetInspectorPreviewCard = null
 ## Where it sits: category, group, the group's name prefix, subgroup.
 var _sections_card: Control = null
@@ -547,6 +553,18 @@ func _build_inspector_card() -> PanelContainer:
 	box.add_child(_look_details)
 	_look_note = EventSheetPopupUI.StateNote.new(380.0)
 	box.add_child(_look_note)
+	# The doors of a look that is a file: read it as a sheet, or take a copy of a shipped one to change.
+	_look_doors = HBoxContainer.new()
+	_look_doors.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
+	_look_open_button = Button.new()
+	_look_open_button.text = EventSheetL10n.translate("Open as a sheet")
+	_look_open_button.pressed.connect(_open_look_as_sheet)
+	_look_doors.add_child(_look_open_button)
+	_look_copy_button = Button.new()
+	_look_copy_button.text = EventSheetL10n.translate("Copy into my project")
+	_look_copy_button.pressed.connect(_copy_look_into_project)
+	_look_doors.add_child(_look_copy_button)
+	box.add_child(_look_doors)
 	return EventSheetPopupUI.panel_section(box)
 
 
@@ -1188,6 +1206,46 @@ func _rebuild_look_details() -> void:
 		_look_details.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field[1])), control,
 			EventSheetPopupUI.LABEL_MIN_WIDTH, str(field[5]) if field.size() > 5 else ""))
 	_refresh_look_note()
+	_refresh_look_doors()
+
+
+## The two doors under the look's questions: shown for a look that is a file (not for Godot's own
+## annotations, which have no file). A shipped look offers both, a project look only the first.
+func _refresh_look_doors() -> void:
+	var file_look: Dictionary = _selected_file_look()
+	_look_doors.visible = not file_look.is_empty()
+	if file_look.is_empty():
+		return
+	var shipped: bool = str(file_look.get("source", "")) == "shipped"
+	_look_copy_button.visible = shipped
+	_look_open_button.tooltip_text = EventSheetL10n.translate("Read this look's file as an event sheet. A look that ships with the plugin opens read-only; copy it into your project to change it.") if shipped 		else EventSheetL10n.translate("Read and change this look's file as an event sheet.")
+	_look_copy_button.tooltip_text = EventSheetL10n.translate("Copy this look's file into res://eventsheet_addons/looks/. Your copy is the one the Inspector uses, and it is yours to change.")
+
+
+## The catalogue entry of the chosen look when it is a file, {} for Godot's own annotations and the plain field.
+func _selected_file_look() -> Dictionary:
+	var look: Dictionary = EventSheetInspectorLooks.by_id(_selected_look_id())
+	return look if not str(look.get("script_path", "")).is_empty() else {}
+
+
+func _open_look_as_sheet() -> void:
+	var path: String = str(_selected_file_look().get("script_path", ""))
+	if path.is_empty():
+		return
+	_close()
+	look_sheet_requested.emit(path)
+
+
+func _copy_look_into_project() -> void:
+	var look: Dictionary = _selected_file_look()
+	var result: Dictionary = load("res://addons/eventsheet/editor/inspector/look_catalogue.gd").copy_into_project(str(look.get("name", "")))
+	var copied: bool = bool(result.get("ok", false))
+	if copied:
+		var editor: Object = _editor()
+		if editor != null:
+			editor.get_resource_filesystem().scan()
+		_rebuild_look_details()
+	_look_note.say(str(result.get("message", "")), EventSheetPopupUI.TONE_OK if copied else EventSheetPopupUI.TONE_WARNING)
 
 
 ## A row among the events may leave its type out - but not an @onready lookup, which implies none,

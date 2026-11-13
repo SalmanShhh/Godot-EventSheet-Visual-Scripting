@@ -10508,3 +10508,12 @@ Shown with the look %s.,Affiché avec l'apparence %s.
 Look not installed: %s,Apparence non installée : %s
 "No look file of this name is in the project, so the Inspector shows the plain field.","Aucun fichier d'apparence de ce nom n'est dans le projet, donc l'Inspecteur montre le champ simple."
 Keeps the marker the file wrote.,Conserve le marqueur écrit par le fichier.
+Open as a sheet,Ouvrir comme feuille
+Copy into my project,Copier dans mon projet
+Read this look's file as an event sheet. A look that ships with the plugin opens read-only; copy it into your project to change it.,Lit le fichier de cette apparence comme une feuille d'événements. Une apparence livrée avec le plugin s'ouvre en lecture seule ; copiez-la dans votre projet pour la modifier.
+Read and change this look's file as an event sheet.,Lit et modifie le fichier de cette apparence comme une feuille d'événements.
+"Copy this look's file into res://eventsheet_addons/looks/. Your copy is the one the Inspector uses, and it is yours to change.","Copie le fichier de cette apparence dans res://eventsheet_addons/looks/. Votre copie est celle que l'Inspecteur utilise, et vous pouvez la modifier."
+Only a look that ships with the plugin can be copied.,Seule une apparence livrée avec le plugin peut être copiée.
+"%s is already in your project, so nothing was copied.","%s est déjà dans votre projet, rien n'a donc été copié."
+%s could not be written.,%s n'a pas pu être écrit.
+"Copied to %s. This copy is yours to change, and it is the one the Inspector uses.","Copié dans %s. Cette copie est à vous, et c'est celle que l'Inspecteur utilise."

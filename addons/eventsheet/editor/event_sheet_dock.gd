@@ -507,6 +507,8 @@ var _variable_dlg: RefCounted = null:
 				var view: EventSheetViewport = _active_view()
 				return view._get_event_style() if view != null else null
 			_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
+			# A look's file read as a sheet: the window steps aside and the file opens in a tab.
+			_variable_dlg.look_sheet_requested.connect(_on_look_sheet_requested)
 			# Scope ▸ Global writes into the autoload the dialog's "Write into" picker named, through the
 			# same writer the Add global variable dialog uses, rather than into this file.
 			_variable_dlg.project_global_requested.connect(_on_variable_dialog_global_requested)
@@ -2062,6 +2064,12 @@ func _load_sheet_from_path(path: String) -> void:
 ## Open as Event Sheet doors land here, so asking twice never makes a second tab of one file.
 func open_or_focus_sheet(path: String) -> void:
 	_navigate.open_or_focus(path)
+
+
+## The Variable window's "Open as a sheet" on an Inspector look (the window has closed itself): the look's file opens in a tab, the way
+## any script opens from the FileSystem (a look that ships with the plugin is a read-only preview).
+func _on_look_sheet_requested(path: String) -> void:
+	open_or_focus_sheet(path)
 
 
 ## Opens a freshly-created .gd editable (not the read-only preview a casual Open gives). The plugin's

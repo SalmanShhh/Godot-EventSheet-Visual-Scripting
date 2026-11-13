@@ -63,6 +63,7 @@ static func run() -> bool:
 	passed = _a_look_can_draw_a_type_it_does_not_offer() and passed
 	passed = _a_shipped_look_says_its_own_preview_sentence() and passed
 	passed = _a_same_length_edit_is_not_drawn_from_the_old_decor() and passed
+	passed = _a_shipped_look_is_copied_into_the_project_and_never_over_one() and passed
 	return passed
 
 
@@ -328,3 +329,27 @@ static func _a_shipped_look_says_its_own_preview_sentence() -> bool:
 	rows.append(["a look the project added and gave no sentence is named", EventSheetInspectorPreviewCard._widget_sentence({"look": "star_rating"}),
 		"Shown with the look star_rating."])
 	return SUPPORT.pins(NAME, rows)
+
+
+## "Copy into my project": the shipped file, byte for byte, into the project's looks folder; nothing is ever
+## overwritten, and a name that is not a shipped look copies nothing.
+static func _a_shipped_look_is_copied_into_the_project_and_never_over_one() -> bool:
+	var folder: String = "user://look_copy_test"
+	DirAccess.make_dir_recursive_absolute(folder)
+	DirAccess.remove_absolute("%s/vector_dial.gd" % folder)
+	var first: Dictionary = EventSheetInspectorLookCatalogue.copy_into_project("vector_dial", folder)
+	var copied: String = FileAccess.get_file_as_string("%s/vector_dial.gd" % folder)
+	var shipped: String = FileAccess.get_file_as_string("res://addons/eventsheet/looks/vector_dial.gd")
+	FileAccess.open("%s/vector_dial.gd" % folder, FileAccess.WRITE).store_string("mine")
+	var second: Dictionary = EventSheetInspectorLookCatalogue.copy_into_project("vector_dial", folder)
+	var kept: String = FileAccess.get_file_as_string("%s/vector_dial.gd" % folder)
+	var absent: Dictionary = EventSheetInspectorLookCatalogue.copy_into_project("no_such_look", folder)
+	DirAccess.remove_absolute("%s/vector_dial.gd" % folder)
+	return SUPPORT.pins(NAME, [
+		["the first copy is made", first.get("ok"), true],
+		["it is the shipped file, byte for byte", copied == shipped and not copied.is_empty(), true],
+		["a second copy over a file that is there is refused", second.get("ok"), false],
+		["and says which file it would have written over", str(second.get("message")).contains("vector_dial.gd"), true],
+		["the file that was there is untouched", kept, "mine"],
+		["a name that does not ship copies nothing", absent.get("ok"), false],
+	])

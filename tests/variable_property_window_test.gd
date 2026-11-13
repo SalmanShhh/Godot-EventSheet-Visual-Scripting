@@ -24,6 +24,7 @@ static func run() -> bool:
 	var ok: bool = _looks_per_type(dialog)
 	ok = _looks_compile(dialog) and ok
 	ok = _sections(dialog) and ok
+	ok = _look_doors(dialog) and ok
 	ok = _values_as_code(dialog) and ok
 	host.free()
 	ok = _fold_and_unfold_are_inverses() and ok
@@ -226,6 +227,25 @@ static func _row(dock: EventSheetDock, row_name: String) -> LocalVariable:
 		if entry is LocalVariable and (entry as LocalVariable).name == row_name:
 			return entry
 	return null
+
+
+## A look that is a file offers its doors; Godot's own annotations and the plain field do not. A look
+## that ships also offers a copy, and one the project owns does not.
+static func _look_doors(dialog: EventSheetVariableDialog) -> bool:
+	dialog.open_for_edit("global", {}, "value", "float", "", false, "Add", false, true)
+	dialog._select_look("")
+	dialog._rebuild_look_details()
+	var plain: bool = dialog._look_doors.visible
+	dialog._select_look("slider")
+	dialog._rebuild_look_details()
+	var annotation: bool = dialog._look_doors.visible
+	dialog._select_look("progress_bar")
+	dialog._rebuild_look_details()
+	return SUPPORT.pins(P + ": doors", [
+		["the plain field has none", plain, false],
+		["an annotation look has none", annotation, false],
+		["a shipped file look offers the sheet and the copy", [dialog._look_doors.visible, dialog._look_open_button.visible, dialog._look_copy_button.visible], [true, true, true]],
+	])
 
 
 static func _pick_look(dialog: EventSheetVariableDialog, look_id: String, values: Dictionary) -> void:
