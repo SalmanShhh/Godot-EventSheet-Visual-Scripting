@@ -10447,3 +10447,16 @@ Table (1 row),テーブル (1 行)
 Table (%d rows),テーブル (%d 行)
 (no texture),(テクスチャなし)
 Click to open the curve editor.,クリックしてカーブエディタを開きます。
+More for this list.,このリストの他の操作。
+Copy all,すべてコピー
+Copy every card to the clipboard.,すべてのカードをクリップボードにコピーします。
+Paste all,すべて貼り付け
+Replace the list with the cards on the clipboard.,リストをクリップボードのカードで置き換えます。
+Add card,カードを追加
+Cards (%d),カード (%d)
+Add a card. Type to search; the list is grouped the way its pack groups it.,カードを追加します。入力で検索できます。リストはパックの分け方でまとめられています。
+Drag to reorder.,ドラッグして並べ替えます。
+Open this card.,このカードを開きます。
+Untick to skip this card.,チェックを外すとこのカードをスキップします。
+Remove this card.,このカードを削除します。
+More for this card.,このカードの他の操作。

@@ -55,9 +55,10 @@ var _cards: Array = []
 ## Which cards are open, by index. Folding is a view, so it is deliberately not stored in the data.
 var _unfolded: Dictionary = {}
 var _list: VBoxContainer = null
-var _head_label: Label = null
+var _fold_button: Button = null
+var _more_button: MenuButton = null
+var _body: VBoxContainer = null
 var _add_button: Button = null
-var _quick_add_button: Button = null
 var _add_popup: PopupPanel = null
 var _add_filter: LineEdit = null
 var _add_tree: Tree = null
@@ -70,7 +71,6 @@ func _init(spec: Dictionary = {}) -> void:
 	for key: Variant in spec:
 		_spec[str(key)] = spec[key]
 	_schema = EventSheetCardSchemas.schema_for(_spec)
-	add_theme_constant_override("separation", 4)
 	_build_chrome()
 	_rebuild()
 
@@ -206,20 +206,9 @@ func set_card_stripe(index: int, color: Color) -> void:
 
 
 ## Repaint one card's stripe in place, without rebuilding the row it belongs to.
-func _restyle_card(index: int) -> void:
-	if _list == null or index < 0 or index >= _list.get_child_count() or index >= _cards.size():
-		return
-	var panel: Control = _list.get_child(index) as Control
-	if panel == null:
-		return
-	var style: StyleBoxFlat = panel.get_theme_stylebox("panel") as StyleBoxFlat
-	if style == null:
-		return
-	var card: Dictionary = _cards[index]
-	var entry: Dictionary = _entry_for(card)
-	var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, card)
-	var stripe: Color = EventSheetCardSchemas.stripe_color(_schema, EventSheetCardSchemas.card_category(_spec, entry, card))
-	style.border_color = stripe if enabled else Color(stripe.r, stripe.g, stripe.b, 0.35)
+func _restyle_card(_index: int) -> void:
+	# The stripe colour is kept in the data and not drawn, so there is nothing to repaint.
+	pass
 
 
 ## Whether a card may carry a colour of its own - the swatch beside its name is drawn only then.
@@ -250,31 +239,69 @@ func _entry_for(card: Dictionary) -> Dictionary:
 
 
 func _build_chrome() -> void:
+	# The head: one fold button saying how many cards the list holds, and one menu for the things
+	# that act on the whole list. The cards and the Add button sit under them while it is open.
 	var head: HBoxContainer = HBoxContainer.new()
-	head.add_theme_constant_override("separation", 6)
-	_head_label = Label.new()
-	_head_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	_head_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(_head_label)
-	head.add_child(_small_button("Copy all", "Copy every card to the clipboard.", _on_copy_all))
-	head.add_child(_small_button("Paste all", "Replace the list with the cards on the clipboard.", _on_paste_all))
+	_fold_button = Button.new()
+	_fold_button.toggle_mode = true
+	_fold_button.button_pressed = true
+	_fold_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_fold_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fold_button.toggled.connect(_on_fold_toggled)
+	head.add_child(_fold_button)
+	_more_button = MenuButton.new()
+	var dots: Texture2D = _editor_icon("GuiTabMenuHl")
+	if dots != null:
+		_more_button.icon = dots
+	else:
+		_more_button.text = "⋯"
+	_more_button.tooltip_text = EventSheetL10n.translate("More for this list.")
+	var more_popup: PopupMenu = _more_button.get_popup()
+	more_popup.add_item(EventSheetL10n.translate("Copy all"), 0)
+	more_popup.set_item_tooltip(0, EventSheetL10n.translate("Copy every card to the clipboard."))
+	more_popup.add_item(EventSheetL10n.translate("Paste all"), 1)
+	more_popup.set_item_tooltip(1, EventSheetL10n.translate("Replace the list with the cards on the clipboard."))
+	more_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 0:
+			_on_copy_all()
+		else:
+			_on_paste_all())
+	head.add_child(_more_button)
 	add_child(head)
+	_body = VBoxContainer.new()
+	add_child(_body)
 	_list = VBoxContainer.new()
-	_list.add_theme_constant_override("separation", 3)
-	add_child(_list)
-	var add_row: HBoxContainer = HBoxContainer.new()
-	add_row.add_theme_constant_override("separation", 4)
-	_quick_add_button = Button.new()
-	_quick_add_button.text = "+"
-	_quick_add_button.pressed.connect(add_first_kind)
-	add_row.add_child(_quick_add_button)
+	_body.add_child(_list)
 	_add_button = Button.new()
-	_add_button.text = "Add"
+	_add_button.text = EventSheetL10n.translate("Add card")
+	var add_picture: Texture2D = _editor_icon("Add")
+	if add_picture != null:
+		_add_button.icon = add_picture
+	else:
+		_add_button.text = "+ " + _add_button.text
 	_add_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_add_button.tooltip_text = "Add a card. Type to search; the list is grouped the way its pack groups it."
-	_add_button.pressed.connect(_on_add_pressed)
-	add_row.add_child(_add_button)
-	add_child(add_row)
+	_add_button.pressed.connect(_on_add_clicked)
+	_body.add_child(_add_button)
+
+
+## The fold button reads "Cards (N)" and carries the arrow that says whether the cards are showing.
+func _show_fold() -> void:
+	_fold_button.text = EventSheetL10n.translate("Cards (%d)") % _cards.size()
+	var arrow: Texture2D = _editor_icon("GuiTreeArrowDown" if _fold_button.button_pressed else "GuiTreeArrowRight")
+	_fold_button.icon = arrow
+
+
+func _on_fold_toggled(open: bool) -> void:
+	_body.visible = open
+	_show_fold()
+
+
+## A list that can only hold one kind of card adds it at once; a list of several kinds asks which.
+func _on_add_clicked() -> void:
+	if EventSheetCardSchemas.kinds_of(_schema).size() == 1:
+		add_first_kind()
+	else:
+		_on_add_pressed()
 
 
 ## The title of the schema's first kind - what the one-click add says it will add.
@@ -377,18 +404,14 @@ func _rebuild() -> void:
 	for stale: Node in _list.get_children():
 		_list.remove_child(stale)
 		stale.queue_free()
-	_head_label.text = "%d card%s" % [_cards.size(), "" if _cards.size() == 1 else "s"]
-	_head_label.modulate = Color(1.0, 1.0, 1.0, 0.7)
+	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
-	if _quick_add_button != null:
-		_quick_add_button.disabled = nothing_to_add
-		_quick_add_button.tooltip_text = "" if nothing_to_add else "Add one %s." % _first_kind_label()
+	_add_button.tooltip_text = "" if EventSheetCardSchemas.kinds_of(_schema).size() <= 1 else EventSheetL10n.translate("Add a card. Type to search; the list is grouped the way its pack groups it.")
 	if _cards.is_empty():
 		var empty: Label = Label.new()
 		empty.text = "Nothing here yet. Add one."
-		empty.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		empty.modulate = Color(1.0, 1.0, 1.0, 0.55)
+		empty.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		_list.add_child(empty)
 		return
 	for index: int in range(_cards.size()):
@@ -399,28 +422,29 @@ func _build_card(index: int) -> Control:
 	var card: Dictionary = _cards[index]
 	var entry: Dictionary = _entry_for(card)
 	var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, card)
-	var stripe: Color = EventSheetCardSchemas.stripe_color(_schema, EventSheetCardSchemas.card_category(_spec, entry, card))
 	var panel: _CardRow = _CardRow.new(self, index)
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(1, 1, 1, 0.04)
-	style.set_corner_radius_all(EventSheetPalette.scaled(4))
-	style.set_content_margin_all(EventSheetPalette.scaled(5))
-	style.border_width_left = EventSheetPalette.scaled(3)
-	style.border_color = stripe if enabled else Color(stripe.r, stripe.g, stripe.b, 0.35)
-	panel.add_theme_stylebox_override("panel", style)
 	var body: VBoxContainer = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 3)
 	panel.add_child(body)
 	body.add_child(_build_header(index, card, entry, enabled))
 	if bool(_unfolded.get(index, false)):
-		body.add_child(_build_body(index, card, entry))
+		var opened: MarginContainer = MarginContainer.new()
+		opened.add_theme_constant_override("margin_left", int(EventSheetLookStyle.px(8.0)))
+		opened.add_child(_build_body(index, card, entry))
+		body.add_child(opened)
 	return panel
 
 
+## One card's line: a grip, then a field-coloured line holding the fold arrow, the kind in bold and the
+## one grey sentence the schema computes for it, then a remove button. A right click on the line opens
+## the card's menu (Duplicate, Copy, Paste over, Move ...); the same menu is inside the opened card.
 func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: bool) -> Control:
 	var header: HBoxContainer = HBoxContainer.new()
-	header.add_theme_constant_override("separation", 4)
-	header.add_child(_glyph_control("TripleBar", "⋮⋮", "Drag to reorder."))
+	header.add_child(_glyph_control("TripleBar", "⋮⋮", EventSheetL10n.translate("Drag to reorder.")))
+	var line: PanelContainer = PanelContainer.new()
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_theme_stylebox_override("panel", EventSheetLookStyle.field_box())
+	var inside: HBoxContainer = HBoxContainer.new()
+	line.add_child(inside)
 	var open: bool = bool(_unfolded.get(index, false))
 	var fold: Button = Button.new()
 	fold.flat = true
@@ -429,31 +453,36 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 		fold.icon = arrow
 	else:
 		fold.text = "▾" if open else "▸"
-	fold.tooltip_text = "Open this card."
+	fold.tooltip_text = EventSheetL10n.translate("Open this card.")
 	fold.pressed.connect(func() -> void:
 		_unfolded[index] = not bool(_unfolded.get(index, false))
 		_rebuild())
-	header.add_child(fold)
+	inside.add_child(fold)
 	if not EventSheetCardSchemas.enabled_key(_schema).is_empty():
 		var box: CheckBox = CheckBox.new()
 		box.button_pressed = enabled
 		box.disabled = not editable
-		box.tooltip_text = "Untick to skip this card."
+		box.tooltip_text = EventSheetL10n.translate("Untick to skip this card.")
 		box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(index, pressed))
-		header.add_child(box)
+		inside.add_child(box)
 	var title: Label = Label.new()
 	title.text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.modulate = Color(1.0, 1.0, 1.0, 1.0 if enabled else 0.5)
-	header.add_child(title)
+	title.add_theme_font_override("font", EventSheetLookStyle.bold_font())
+	title.add_theme_color_override("font_color", EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet())
+	inside.add_child(title)
 	var badge_text: String = EventSheetCardSchemas.card_badge(entry, card)
-	if not badge_text.is_empty():
-		var badge: Label = Label.new()
-		badge.text = badge_text
-		badge.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-		badge.modulate = Color(1.0, 1.0, 1.0, 0.6)
-		header.add_child(badge)
-	header.add_child(_build_menu(index))
+	var badge: Label = Label.new()
+	badge.text = badge_text
+	badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	badge.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	badge.visible = not badge_text.is_empty()
+	inside.add_child(badge)
+	header.add_child(line)
+	var remove: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this card."))
+	remove.disabled = not editable
+	remove.pressed.connect(func() -> void: remove_card(index))
+	header.add_child(remove)
 	return header
 
 
@@ -486,22 +515,38 @@ func _glyph_control(icon_name: String, glyph: String, tooltip: String) -> Contro
 
 
 ## The card's menu. "Paste over" replaces this card with the clipboard's first; "Move to top" is the
-## reorder a long list actually asks for, and the drag handle is the rest.
+## reorder a long list actually asks for, and the drag handle is the rest. It is the button at the top
+## of an opened card, and the same entries open from a right click on the card's line.
 func _build_menu(index: int) -> Control:
 	var menu: MenuButton = MenuButton.new()
-	menu.flat = true
 	var dots: Texture2D = _editor_icon("GuiTabMenuHl")
 	if dots != null:
 		menu.icon = dots
 	else:
 		menu.text = "⋯"
-	menu.tooltip_text = "More for this card."
+	menu.tooltip_text = EventSheetL10n.translate("More for this card.")
 	menu.disabled = not editable
 	var popup: PopupMenu = menu.get_popup()
-	for item: String in ["Duplicate", "Copy", "Paste over", "Move to top", "Move up", "Move down", "Remove"]:
-		popup.add_item(item)
+	_fill_card_menu(popup)
 	popup.id_pressed.connect(func(id: int) -> void: _on_menu(index, id))
 	return menu
+
+
+func _fill_card_menu(popup: PopupMenu) -> void:
+	for item: String in ["Duplicate", "Copy", "Paste over", "Move to top", "Move up", "Move down", "Remove"]:
+		popup.add_item(item)
+
+
+## Opens the card's menu at a screen point, for a right click on its line.
+func open_card_menu(index: int, at: Vector2i) -> void:
+	if not editable or index < 0 or index >= _cards.size():
+		return
+	var popup: PopupMenu = PopupMenu.new()
+	_fill_card_menu(popup)
+	popup.id_pressed.connect(func(id: int) -> void: _on_menu(index, id))
+	popup.popup_hide.connect(popup.queue_free)
+	add_child(popup)
+	EventSheetWindowPlacement.popup_at(popup, at)
 
 
 func _on_menu(index: int, id: int) -> void:
@@ -526,7 +571,12 @@ func _on_menu(index: int, id: int) -> void:
 ## writing back. Per-card hooks are whatever the schema declared - a card with none shows none.
 func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 	var body: VBoxContainer = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 4)
+	var menu_row: HBoxContainer = HBoxContainer.new()
+	var menu_gap: Control = Control.new()
+	menu_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	menu_row.add_child(menu_gap)
+	menu_row.add_child(_build_menu(index))
+	body.add_child(menu_row)
 	var help: String = str(entry.get("help", "")).strip_edges()
 	if not help.is_empty():
 		var info: Label = Label.new()
@@ -607,14 +657,7 @@ func _build_label_row(index: int, card: Dictionary, entry: Dictionary) -> Contro
 	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_edit.text_changed.connect(func(text: String) -> void: set_card_label(index, text))
 	row.add_child(name_edit)
-	if stripe_editable():
-		var swatch: ColorPickerButton = ColorPickerButton.new()
-		swatch.custom_minimum_size = Vector2(EventSheetPalette.scaled(38), 0.0)
-		swatch.disabled = not editable
-		swatch.tooltip_text = "The colour of this card's stripe."
-		swatch.color = EventSheetCardSchemas.stripe_color(_schema, EventSheetCardSchemas.card_category(_spec, entry, card))
-		swatch.color_changed.connect(func(picked: Color) -> void: set_card_stripe(index, picked))
-		row.add_child(swatch)
+	# The colour a card carries stays in the data; it is not drawn, so its editor is not offered.
 	return row
 
 
@@ -904,6 +947,12 @@ class _CardRow:
 		_drawer = drawer
 		_index = index
 		mouse_default_cursor_shape = Control.CURSOR_MOVE
+		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT:
+			_drawer.open_card_menu(_index, Vector2i(get_screen_position() + (event as InputEventMouseButton).position))
+			accept_event()
 
 	func _get_drag_data(_position: Vector2) -> Variant:
 		if not _drawer.editable:

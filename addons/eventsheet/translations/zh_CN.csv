@@ -10447,3 +10447,16 @@ Table (1 row),表格（1 行）
 Table (%d rows),表格（%d 行）
 (no texture),（无纹理）
 Click to open the curve editor.,点击以打开曲线编辑器。
+More for this list.,此列表的更多操作。
+Copy all,全部复制
+Copy every card to the clipboard.,将所有卡片复制到剪贴板。
+Paste all,全部粘贴
+Replace the list with the cards on the clipboard.,用剪贴板中的卡片替换列表。
+Add card,添加卡片
+Cards (%d),卡片（%d）
+Add a card. Type to search; the list is grouped the way its pack groups it.,添加一张卡片。输入可搜索；列表按其包的分组方式排列。
+Drag to reorder.,拖动以重新排序。
+Open this card.,展开此卡片。
+Untick to skip this card.,取消勾选以跳过此卡片。
+Remove this card.,移除此卡片。
+More for this card.,此卡片的更多操作。

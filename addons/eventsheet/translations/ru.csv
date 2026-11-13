@@ -10447,3 +10447,16 @@ Table (1 row),Таблица (1 строка)
 Table (%d rows),Таблица (%d строк)
 (no texture),(нет текстуры)
 Click to open the curve editor.,"Нажмите, чтобы открыть редактор кривых."
+More for this list.,Ещё для этого списка.
+Copy all,Копировать все
+Copy every card to the clipboard.,Копировать все карточки в буфер обмена.
+Paste all,Вставить все
+Replace the list with the cards on the clipboard.,Заменить список карточками из буфера обмена.
+Add card,Добавить карточку
+Cards (%d),Карточки (%d)
+Add a card. Type to search; the list is grouped the way its pack groups it.,"Добавить карточку. Введите текст для поиска; список сгруппирован так, как в его пакете."
+Drag to reorder.,"Перетащите, чтобы изменить порядок."
+Open this card.,Открыть эту карточку.
+Untick to skip this card.,"Снимите флажок, чтобы пропустить эту карточку."
+Remove this card.,Удалить эту карточку.
+More for this card.,Ещё для этой карточки.

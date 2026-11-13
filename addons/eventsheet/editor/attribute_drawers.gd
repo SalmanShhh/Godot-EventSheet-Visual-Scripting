@@ -490,8 +490,13 @@ class CardListProperty:
 	func _init(spec: Dictionary) -> void:
 		_list = load(EventSheetAttributeDrawers.CARD_LIST_DRAWER_PATH).new(spec)
 		_list.connect("value_changed", _on_changed)
-		add_child(_list)
-		set_bottom_editor(_list)
+		# The list sits in a quiet panel in the value column's width, with no outline.
+		var panel: PanelContainer = PanelContainer.new()
+		panel.add_theme_stylebox_override("panel", load("res://addons/eventsheet/editor/inspector/look_style.gd").panel_box())
+		panel.add_child(_list)
+		add_child(panel)
+		set_bottom_editor(panel)
+		draw_background = false
 
 	func _on_changed(cards: Array) -> void:
 		emit_changed(get_edited_property(), cards)
