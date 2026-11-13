@@ -192,7 +192,9 @@ static func build() -> bool:
 		"# adding a file - nothing registers it, and the dropdown, the options page and the label all",
 		"# just list the folder.",
 		"## Folder that holds the quality preset resources.",
-		"const QUALITY_FOLDER: String = \"res://settings/quality\"",
+		"const QUALITY_FOLDER: String = \"res://eventsheet_settings/quality\"",
+		"## Where presets were written before they moved to their own folder; still listed.",
+		"const QUALITY_FOLDER_OLD: String = \"res://settings/quality\"",
 		"",
 		"# The word one preset file goes by: its own if it named itself, otherwise its file name",
 		"# capitalised, which is what \"low.tres\" would have been called anyway.",
@@ -236,17 +238,18 @@ static func build() -> bool:
 		])))
 
 	Lib.number(sheet, "quality_preset_paths", "Quality Preset Paths", "Settings",
-		"Every quality preset in res://settings/quality/, lightest first by each file's Rank. This is the list an options dropdown offers and the list \"one step lower\" walks - the folder, read live, so a preset added while the game was closed is simply there.",
+		"Every quality preset in res://eventsheet_settings/quality/, lightest first by each file's Rank. This is the list an options dropdown offers and the list \"one step lower\" walks - the folder, read live, so a preset added while the game was closed is simply there.",
 		[],
 		"\n".join(PackedStringArray([
 			"var found: Array = []",
-			"var folder: DirAccess = DirAccess.open(QUALITY_FOLDER)",
-			"if folder == null:",
-			"\treturn found",
-			"for file_name: String in folder.get_files():",
-			"\tvar plain: String = file_name.trim_suffix(\".remap\")",
-			"\tif plain.ends_with(\".tres\"):",
-			"\t\tfound.append(\"%s/%s\" % [QUALITY_FOLDER, plain])",
+			"for root: String in [QUALITY_FOLDER, QUALITY_FOLDER_OLD]:",
+			"\tvar folder: DirAccess = DirAccess.open(root)",
+			"\tif folder == null:",
+			"\t\tcontinue",
+			"\tfor file_name: String in folder.get_files():",
+			"\t\tvar plain: String = file_name.trim_suffix(\".remap\")",
+			"\t\tif plain.ends_with(\".tres\"):",
+			"\t\t\tfound.append(\"%s/%s\" % [root, plain])",
 			"found.sort_custom(func(left: String, right: String) -> bool:",
 			"\tvar first: Resource = load(left)",
 			"\tvar second: Resource = load(right)",
@@ -1254,7 +1257,7 @@ static func _optional_of(sheet: EventSheetResource, function_name: String, param
 
 
 ## Points named parameters of a published verb at the widget that fills them - the quality preset
-## field lists res://settings/quality/ rather than asking anyone to type a path, and a control name
+## field lists res://eventsheet_settings/quality/ rather than asking anyone to type a path, and a control name
 ## comes from the project's own Input Map.
 static func _set_hints(sheet: EventSheetResource, function_name: String, hints: Dictionary) -> void:
 	for parameter: ACEParam in _params_of(sheet, function_name):

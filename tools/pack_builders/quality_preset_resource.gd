@@ -10,7 +10,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## by hand would, and a save file carries the three values rather than the word.
 ##
 ## Everything follows from the file being the truth:
-##   - the choices are the .tres files in res://settings/quality/, so ADDING a preset is adding a
+##   - the choices are the .tres files in res://eventsheet_settings/quality/, so ADDING a preset is adding a
 ##     file and nothing else has to be told;
 ##   - a graphics option declared later grows a field in every preset file, because the fields ARE
 ##     the keys of `values` and the plugin fills in the ones a preset has not answered yet;
@@ -22,7 +22,7 @@ static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Resource"
 	sheet.custom_class_name = "QualityPreset"
-	sheet.class_description = "One graphics quality word as a file - the values it stands for, over settings that already exist. Drop it in res://settings/quality/ and it joins the Apply Quality dropdown, the options menu and the quality label without being registered anywhere."
+	sheet.class_description = "One graphics quality word as a file - the values it stands for, over settings that already exist. Drop it in res://eventsheet_settings/quality/ and it joins the Apply Quality dropdown, the options menu and the quality label without being registered anywhere."
 	sheet.variables = {
 		"preset_name": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "The word a player sees (\"Medium\"). Leave it blank and the file's own name is used.",

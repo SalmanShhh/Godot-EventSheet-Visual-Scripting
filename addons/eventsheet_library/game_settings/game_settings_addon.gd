@@ -64,7 +64,9 @@ var _last_announced: String = ""
 # adding a file - nothing registers it, and the dropdown, the options page and the label all
 # just list the folder.
 ## Folder that holds the quality preset resources.
-const QUALITY_FOLDER: String = "res://settings/quality"
+const QUALITY_FOLDER: String = "res://eventsheet_settings/quality"
+## Where presets were written before they moved to their own folder; still listed.
+const QUALITY_FOLDER_OLD: String = "res://settings/quality"
 
 # Setting name -> the controls showing it. Both directions run through Set Setting, which does
 # nothing when the value is already there - that is what stops a control and a setting echoing
@@ -365,18 +367,19 @@ func apply_quality_step(step: int) -> void:
 ## @ace_expression
 ## @ace_name("Quality Preset Paths")
 ## @ace_category("Settings")
-## @ace_description("Every quality preset in res://settings/quality/, lightest first by each file's Rank. This is the list an options dropdown offers and the list "one step lower" walks - the folder, read live, so a preset added while the game was closed is simply there.")
+## @ace_description("Every quality preset in res://eventsheet_settings/quality/, lightest first by each file's Rank. This is the list an options dropdown offers and the list "one step lower" walks - the folder, read live, so a preset added while the game was closed is simply there.")
 ## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
 ## @ace_codegen_template("Settings.quality_preset_paths()")
 func quality_preset_paths() -> Array:
 	var found: Array = []
-	var folder: DirAccess = DirAccess.open(QUALITY_FOLDER)
-	if folder == null:
-		return found
-	for file_name: String in folder.get_files():
-		var plain: String = file_name.trim_suffix(".remap")
-		if plain.ends_with(".tres"):
-			found.append("%s/%s" % [QUALITY_FOLDER, plain])
+	for root: String in [QUALITY_FOLDER, QUALITY_FOLDER_OLD]:
+		var folder: DirAccess = DirAccess.open(root)
+		if folder == null:
+			continue
+		for file_name: String in folder.get_files():
+			var plain: String = file_name.trim_suffix(".remap")
+			if plain.ends_with(".tres"):
+				found.append("%s/%s" % [root, plain])
 	found.sort_custom(func(left: String, right: String) -> bool:
 		var first: Resource = load(left)
 		var second: Resource = load(right)

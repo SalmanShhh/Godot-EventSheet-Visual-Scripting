@@ -237,7 +237,7 @@ static func _test_quality_is_a_folder() -> bool:
 		words.append(EventSheetQualityPresets.word_for(path))
 	var ok: bool = _check("the folder IS the list, lightest first", words,
 		PackedStringArray(["Low", "Medium", "High"]))
-	var medium: Dictionary = EventSheetQualityPresets.values_of("res://settings/quality/medium.tres")
+	var medium: Dictionary = EventSheetQualityPresets.values_of("res://eventsheet_settings/quality/medium.tres")
 	ok = _check("a preset is values over settings that already exist", medium,
 		{"msaa": 2, "resolution_scale": 1.0, "debanding": true, "shadow_size": 2048}) and ok
 	ok = _check("the values in force name their preset",
@@ -249,8 +249,26 @@ static func _test_quality_is_a_folder() -> bool:
 	# A preset file deleted (or never installed) cannot break a player's setup: the values still hold,
 	# and the label simply says Custom.
 	ok = _check("with no preset files at all, what a player has is still theirs",
-		EventSheetQualityPresets.word_in_force(medium, PackedStringArray(["res://settings/quality/gone.tres"])),
+		EventSheetQualityPresets.word_in_force(medium, PackedStringArray(["res://eventsheet_settings/quality/gone.tres"])),
 		"Custom") and ok
+	# New presets live under the plugin's own top-level name; the old bare settings/ folder is still read.
+	ok = _check("presets are written under eventsheet_settings/",
+		EventSheetQualityPresets.FOLDER, "res://eventsheet_settings/quality") and ok
+	var old_path: String = EventSheetQualityPresets.OLD_FOLDER + "/zz_old_location.tres"
+	DirAccess.make_dir_recursive_absolute(EventSheetQualityPresets.OLD_FOLDER)
+	var marker: FileAccess = FileAccess.open(old_path, FileAccess.WRITE)
+	marker.store_string("[gd_resource type=\"Resource\" format=3]
+
+[resource]
+")
+	marker.close()
+	var listed: bool = EventSheetQualityPresets.preset_paths().has(old_path)
+	DirAccess.remove_absolute(old_path)
+	DirAccess.remove_absolute(EventSheetQualityPresets.OLD_FOLDER)
+	DirAccess.remove_absolute("res://settings")
+	ok = _check("a preset in the old settings/quality folder is still listed", listed, true) and ok
+	ok = _check("and the emitted pack lists both folders",
+		FileAccess.get_file_as_string("res://eventsheet_addons/game_settings/game_settings_addon.gd").contains("QUALITY_FOLDER_OLD"), true) and ok
 	return ok
 
 
@@ -267,9 +285,9 @@ static func _test_quality_membership() -> bool:
 		EventSheetQualityPresets.fill_missing(preset, declared, {"motion_blur": false}),
 		{"msaa": 2, "resolution_scale": 1.0, "shadow_size": 2048, "motion_blur": false}) and ok
 	ok = _check("a new preset lands beside the one it copied",
-		EventSheetQualityPresets.next_free_path("res://settings/quality/high.tres",
-			PackedStringArray(["res://settings/quality/high.tres", "res://settings/quality/high_2.tres"])),
-		"res://settings/quality/high_3.tres") and ok
+		EventSheetQualityPresets.next_free_path("res://eventsheet_settings/quality/high.tres",
+			PackedStringArray(["res://eventsheet_settings/quality/high.tres", "res://eventsheet_settings/quality/high_2.tres"])),
+		"res://eventsheet_settings/quality/high_3.tres") and ok
 	return ok
 
 

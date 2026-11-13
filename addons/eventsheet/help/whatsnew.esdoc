@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: new quality presets go in eventsheet_settings/quality/
+
+- A bare top-level `settings/` folder is a name a project may already use for its own things, so new quality presets are written under `res://eventsheet_settings/quality/`. Presets already in `res://settings/quality/` are still read and listed, by the editor and by the Game Settings pack in a running game. Nothing is moved for you.
+
 ### Changed: the plugin speaks Godot's editor language; the separate Language picker is gone
 
 - The plugin's interface now follows Editor Settings > Interface > Editor > Editor Language, so there is one place to choose it. View > Language and the Welcome window's Editor language dropdown are removed. A language you chose before is respected as saved, the Editor Setting `eventsheets/interface/language_override` (empty by default) is the way to differ from the editor on purpose, and dropping a translation CSV into the folders still works. View > Preview In Language is unchanged: it previews the game's languages, not the editor's.

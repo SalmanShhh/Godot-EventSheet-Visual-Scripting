@@ -110,7 +110,7 @@ draw them:
 | Reset Settings To Defaults | - | Forgets every set or loaded value and re-applies them all. |
 | Load All Settings | - | Reads saved values for every declared setting out of `user://settings.cfg`. Applies nothing yet. |
 | Save All Settings | - | Writes every declared setting's current value into `user://settings.cfg`. |
-| Apply Quality | Preset | Writes every value one quality preset stands for, as ordinary Set Setting changes. Takes a preset file or a path to one; the field lists `res://settings/quality/`. |
+| Apply Quality | Preset | Writes every value one quality preset stands for, as ordinary Set Setting changes. Takes a preset file or a path to one; the field lists `res://eventsheet_settings/quality/`. |
 | Apply Quality One Step | Step | Moves to the preset one step lighter (-1) or heavier (+1) and applies it. Stops at the ends rather than wrapping. |
 | Bind To Setting | Control, Setting Name | Ties one control to one setting, both ways: it shows the value at once, moving it writes the setting, and anything else changing the setting moves it back. |
 | Menu Rows From Declarations | Container, Page | Fills a container with one labelled, bound row per setting declared for that page, focus neighbours wired. A control already there and NAMED after a setting is used instead of a generated one. |
@@ -154,7 +154,7 @@ draw them:
 | Setting Choices | Setting Name | A Choice setting's options as a list, in declared order. Empty for every other kind. |
 | Declared Setting Names | - | Every declared name, in declared order. |
 | Settings Report | - | Every setting as one readable line: name, kind, value in force, default. |
-| Quality Preset Paths | - | Every preset in `res://settings/quality/`, lightest first by each file's own Rank. |
+| Quality Preset Paths | - | Every preset in `res://eventsheet_settings/quality/`, lightest first by each file's own Rank. |
 | Quality Preset Names | - | The words those presets go by, in the same order - drop it straight into a dropdown. |
 | Quality Preset Path | - | The preset file whose values are all in force, or nothing when none matches. |
 | Quality Name | - | The word to show a player: the matching preset's, or "Custom". |
@@ -601,7 +601,7 @@ settings that already exist, which is why picking Medium is the same thing as nu
 resolution scale and debanding by hand, and why a save file carries those three values rather than
 the word.
 
-So each word is a FILE: a **Quality Preset** `.tres` in `res://settings/quality/`. The folder is the
+So each word is a FILE: a **Quality Preset** `.tres` in `res://eventsheet_settings/quality/`. The folder is the
 list. The Apply Quality field lists it, an options dropdown lists it, and adding a preset is adding a
 file - there is nothing to register anywhere. **New preset** in that field copies the one you had
 picked and opens it in the Inspector; on an empty folder it writes Low, Medium and High to start

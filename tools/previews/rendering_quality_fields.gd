@@ -6,7 +6,7 @@
 #   VISIBLE TO       the named-mask picker the collision layers already use, pointed at the project's
 #                    2D render layer names. The button reads its own selection back in words, which
 #                    is what stops anyone computing a bitmask.
-#   PRESET           the quality words, which are a FOLDER. The list is res://settings/quality/, so
+#   PRESET           the quality words, which are a FOLDER. The list is res://eventsheet_settings/quality/, so
 #                    the picture is literally the files this repository ships, and New preset makes
 #                    another one.
 @tool
@@ -33,12 +33,12 @@ static func build(host: Window) -> Control:
 	fields.add_child(EventSheetPopupUI.form_row("Visible to",
 		dialog._create_named_layer_field("layers", "2", "2d_render")))
 	fields.add_child(EventSheetPopupUI.form_row("Preset",
-		dialog._create_quality_preset_field("preset", "\"res://settings/quality/medium.tres\"")))
+		dialog._create_quality_preset_field("preset", "\"res://eventsheet_settings/quality/medium.tres\"")))
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()
 	strip.describe("Preset - a quality preset",
 		EventSheetParamFieldFactory.HINT_PARAGRAPHS["quality_preset"])
 	strip.set_reading("Settings - Apply quality Medium",
-		"apply_quality(\"res://settings/quality/medium.tres\")")
+		"apply_quality(\"res://eventsheet_settings/quality/medium.tres\")")
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	column.add_child(EventSheetPopupUI.panel_section(fields))
 	column.add_child(strip)

@@ -1609,7 +1609,7 @@ static func input_action_choices() -> Array:
 	return choices
 
 
-## The quality words, which are a FOLDER: every .tres in res://settings/quality/ is one choice,
+## The quality words, which are a FOLDER: every .tres in res://eventsheet_settings/quality/ is one choice,
 ## lightest first, and the field shows the word with the file it came from beside it. "New preset…"
 ## is the other half of the same idea - a preset is a file, so making one makes a file: it copies
 ## whatever is picked (or writes the starter Low/Medium/High into an empty folder) and opens it in

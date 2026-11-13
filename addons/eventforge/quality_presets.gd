@@ -2,7 +2,7 @@
 #
 # A graphics quality word (Low, Medium, High) is not a setting of its own: it is a set of values over
 # settings that already exist. So there is no registry here and no list to keep - the choices ARE the
-# .tres files in res://settings/quality/, and everything that offers them (the Apply Quality field,
+# .tres files in res://eventsheet_settings/quality/, and everything that offers them (the Apply Quality field,
 # the options page, the label a player reads) does the same thing: list the folder.
 #
 # What this file adds on top of listing is the three answers the folder cannot give on its own:
@@ -25,8 +25,13 @@
 class_name EventSheetQualityPresets
 extends RefCounted
 
-## Where the words live. One folder, named once, so the field, the menu and the game agree.
-const FOLDER: String = "res://settings/quality"
+## Where the words live. One folder, named once, so the field, the menu and the game agree. It sits
+## under the plugin's own top-level name: a bare `settings/` folder is a name a project may already
+## use for something else.
+const FOLDER: String = "res://eventsheet_settings/quality"
+
+## Where presets were written before they had a folder of their own. Still READ, never written.
+const OLD_FOLDER: String = "res://settings/quality"
 
 ## The pack that defines the resource. Reached by path, never by class name: the plugin must not
 ## depend on a pack being installed, and this is the one question whose answer is "it is not".
@@ -47,15 +52,16 @@ const STARTER_PRESETS: Array[Dictionary] = [
 ## never asked for a preset looks like.
 static func preset_paths() -> PackedStringArray:
 	var found: Array[Dictionary] = []
-	var folder: DirAccess = DirAccess.open(FOLDER)
-	if folder == null:
-		return PackedStringArray()
-	for file_name: String in folder.get_files():
-		var plain: String = file_name.trim_suffix(".remap")
-		if not plain.ends_with(".tres"):
+	for root: String in [FOLDER, OLD_FOLDER]:
+		var folder: DirAccess = DirAccess.open(root)
+		if folder == null:
 			continue
-		var path: String = "%s/%s" % [FOLDER, plain]
-		found.append({"path": path, "rank": rank_of(path)})
+		for file_name: String in folder.get_files():
+			var plain: String = file_name.trim_suffix(".remap")
+			if not plain.ends_with(".tres"):
+				continue
+			var path: String = "%s/%s" % [root, plain]
+			found.append({"path": path, "rank": rank_of(path)})
 	found.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
 		if int(left["rank"]) == int(right["rank"]):
 			return str(left["path"]) < str(right["path"])
