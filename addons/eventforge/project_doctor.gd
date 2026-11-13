@@ -389,7 +389,7 @@ static func strip_debug_flags(sheet: EventSheetResource) -> bool:
 
 
 ## Autoload sheets only run when project.godot points their singleton name at the
-## compiled script (the dock's Tools → Register Autoload does this in one click).
+## compiled script (Project > Project Settings > Globals > Autoload, or the New autoload form).
 static func check_autoload_registration(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
@@ -403,7 +403,7 @@ static func check_autoload_registration(sheet_paths: PackedStringArray, findings
 		var expected: String = output_path_for(sheet_path)
 		if not ProjectSettings.has_setting(key):
 			_add(findings, "warning", "autoload", sheet_path,
-				"Autoload sheet \"%s\" is not registered - Tools → Register Autoload." % sheet.autoload_name)
+				"Autoload sheet \"%s\" is not registered - add it in Project > Project Settings > Globals > Autoload." % sheet.autoload_name)
 		elif str(ProjectSettings.get_setting(key)).trim_prefix("*") != expected:
 			_add(findings, "warning", "autoload", sheet_path,
 				"Autoload \"%s\" points at %s, but this sheet compiles to %s." % [sheet.autoload_name, str(ProjectSettings.get_setting(key)).trim_prefix("*"), expected])

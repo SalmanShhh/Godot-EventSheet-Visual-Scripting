@@ -124,7 +124,7 @@ static func _choose(dropdown: OptionButton, value: String, description: String) 
 func _build_dialog() -> void:
 	if _dialog != null:
 		_dialog.queue_free()
-	var title: String = EventSheetL10n.translate("New global") if _global else EventSheetL10n.translate("New behaviour")
+	var title: String = EventSheetWords.new_global_title() if _global else EventSheetL10n.translate("New behaviour")
 	if not _editing.is_empty():
 		title = (EventSheetL10n.translate("%s · Global settings") if _global
 			else EventSheetL10n.translate("%s · Behaviour settings")) % str(_editing["name"])

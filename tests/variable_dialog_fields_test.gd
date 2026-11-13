@@ -86,7 +86,7 @@ static func run() -> bool:
 	dialog._apply_scope_key(EventSheetVariableSentence.SCOPE_GLOBAL)
 	ok = _check("Global reveals the write-into picker", dialog._global_target_row.visible, true) and ok
 	ok = _check("…and the picker always offers to make one",
-		dialog._global_target_option.get_item_text(dialog._global_target_option.item_count - 1), "New global sheet…") and ok
+		dialog._global_target_option.get_item_text(dialog._global_target_option.item_count - 1), "New autoload sheet…") and ok
 	ok = _check("a Global reads as a Global row", dialog.row_preview_text(), "Global whole number  hp = 100") and ok
 
 	# ── A clash is shown INLINE while you type, not on OK ──

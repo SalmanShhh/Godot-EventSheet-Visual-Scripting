@@ -167,8 +167,8 @@ static func _start_page_columns() -> bool:
 		["the Systems starter is offered", str((by_label.get("Entity System", {}) as Dictionary).get("tag", "")), "System"],
 		# The Behaviours and Project-wide shelves each open on the form that makes one of your own.
 		["the Behaviours shelf leads with New behaviour…", _first_on(templates, "Behaviours"), "New behaviour… · maker · behaviour"],
-		["the Project-wide shelf with New global…", _first_on(templates, "Project-wide (autoloads)"), "New global… · maker · global"],
-		["and the strip says which form opens", EventSheetStartPage.opens_line(by_label.get("New global…", {})), "The New global form."],
+		["the Project-wide shelf leads with New autoload…, Godot's word", _first_on(templates, "Project-wide (autoloads)"), "New autoload… · maker · global"],
+		["and the strip says which form opens", EventSheetStartPage.opens_line(by_label.get("New autoload…", {})), "The New autoload form."],
 		["a showcase sits in the same column, on its genre",
 			[str((templates[templates.size() - 1] as Dictionary).get("label", "")),
 				str((templates[templates.size() - 1] as Dictionary).get("tag", "")),

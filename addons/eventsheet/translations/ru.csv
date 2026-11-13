@@ -10411,3 +10411,7 @@ Once Ever,Только один раз
 Once ever,Только один раз
 Added %s to eventsheet_addons/ - this row calls it.,%s добавлен в eventsheet_addons/ - эта строка его вызывает.
 Set eventsheets/ai/api_key in Editor Settings first.,Сначала задайте eventsheets/ai/api_key в настройках редактора.
+New %s…,Создать: %s…
+New %s,Создать: %s
+New %s sheet…,Новый лист: %s…
+The %s form.,Форма «%s».

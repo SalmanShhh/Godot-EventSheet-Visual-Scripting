@@ -10411,3 +10411,7 @@ Once Ever,Una volta sola
 Once ever,Una volta sola
 Added %s to eventsheet_addons/ - this row calls it.,%s è stato aggiunto a eventsheet_addons/ - questa riga lo richiama.
 Set eventsheets/ai/api_key in Editor Settings first.,Imposta prima eventsheets/ai/api_key nelle Impostazioni dell'editor.
+New %s…,Nuovo: %s…
+New %s,Nuovo: %s
+New %s sheet…,Nuovo foglio di %s…
+The %s form.,Il modulo «%s».

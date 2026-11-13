@@ -298,6 +298,20 @@ static func word(key: String) -> String:
 	return word_for(key, familiar_words_enabled(), overrides())
 
 
+## The "New ..." names for the one always-on instance a project shares, in whichever word the Words
+## page says: Godot's own "autoload" by default, "global" for a reader from another editor.
+static func new_global_label() -> String:
+	return EventSheetL10n.translate("New %s…") % word("global_singleton").to_lower()
+
+
+static func new_global_title() -> String:
+	return EventSheetL10n.translate("New %s") % word("global_singleton").to_lower()
+
+
+static func new_global_sheet_label() -> String:
+	return EventSheetL10n.translate("New %s sheet…") % word("global_singleton").to_lower()
+
+
 ## The pure form, for tests and for callers that already hold the state (the viewport builds
 ## rows with familiar_words in its context and must not re-read the settings per row).
 ## `override_map` is the whole nested store: {"familiar": {key: word}, "plain": {key: word}}.

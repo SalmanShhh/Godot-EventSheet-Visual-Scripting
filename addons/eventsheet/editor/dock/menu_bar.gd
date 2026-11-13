@@ -304,7 +304,7 @@ func build(root: Node) -> void:
 	sheet_popup.add_item(EventSheetL10n.translate("Behaviour library…"), 26)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(26), EventSheetL10n.translate(
 		"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node."))
-	sheet_popup.add_item(EventSheetL10n.translate("New global…"), 22)
+	sheet_popup.add_item(EventSheetWords.new_global_label(), 22)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(22), EventSheetL10n.translate(
 		"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload."))
 	sheet_popup.add_item("New Editor Tool…", 12)
@@ -875,7 +875,6 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Event Trace (live highlight)", 15)
 	tools_popup.add_item("Bookmarks…", 2)
 	tools_popup.add_separator()
-	tools_popup.add_item("Register Autoload", 3)
 	tools_popup.add_item("Publish Preview…", 4)
 	tools_popup.add_item("Test Bench", 5)
 	tools_popup.add_separator()
@@ -914,7 +913,6 @@ func build(root: Node) -> void:
 			1: _dock._toggle_live_values()
 			15: _dock._toggle_event_trace()
 			2: _dock._open_bookmarks_panel()
-			3: _dock._register_autoload()
 			4: _dock._open_publish_preview()
 			5: _dock._open_test_bench()
 			6: _dock._open_project_find()

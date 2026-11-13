@@ -36,7 +36,7 @@ There is nothing to attach and nothing to place in a scene. Codex registers itse
 **`Codex`** autoload, the same shape as Save System and Music, so the director exists from the
 first frame and every sheet reaches it by name with no node path.
 
-1. Register the pack as the `Codex` autoload (Tools > Register Autoload, or Project Settings >
+1. Register the pack as the `Codex` autoload (Project Settings >
    Globals).
 2. Make a folder for your pages, `res://codex/` by default, and a **folder per set** inside it -
    `res://codex/enemies/`, `res://codex/recipes/`.

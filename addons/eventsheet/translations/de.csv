@@ -10411,3 +10411,7 @@ Once Ever,Einmal im Leben
 Once ever,Einmal im Leben
 Added %s to eventsheet_addons/ - this row calls it.,%s wurde zu eventsheet_addons/ hinzugefügt - diese Zeile ruft es auf.
 Set eventsheets/ai/api_key in Editor Settings first.,Trage zuerst eventsheets/ai/api_key in den Editor-Einstellungen ein.
+New %s…,Neu: %s…
+New %s,Neu: %s
+New %s sheet…,Neues %s-Sheet…
+The %s form.,Das Formular „%s“.

@@ -10411,3 +10411,7 @@ Once Ever,一度だけ
 Once ever,一度だけ
 Added %s to eventsheet_addons/ - this row calls it.,%s を eventsheet_addons/ に追加しました - この行が呼び出します。
 Set eventsheets/ai/api_key in Editor Settings first.,先にエディターの設定で eventsheets/ai/api_key を設定してください。
+New %s…,新規 %s…
+New %s,新規 %s
+New %s sheet…,%s シートを新規作成…
+The %s form.,「%s」フォーム。

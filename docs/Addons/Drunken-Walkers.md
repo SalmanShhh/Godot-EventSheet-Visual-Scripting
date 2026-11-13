@@ -33,7 +33,7 @@ There is nothing to attach and nothing to place in a scene. Drunken Walkers regi
 the **`DrunkenWalkers`** autoload - the same shape as every other generator here - so the
 generator exists from the first frame and every sheet reaches it by name, with no node path.
 
-1. Register the pack as the `DrunkenWalkers` autoload (Tools > Register Autoload, or Project
+1. Register the pack as the `DrunkenWalkers` autoload (Project
    Settings > Globals). One autoload means **one grid for the project**, which is what makes a
    seed the whole description of a run.
 2. Decide what your cell values mean and stick to it. A common convention is 0 empty rock,

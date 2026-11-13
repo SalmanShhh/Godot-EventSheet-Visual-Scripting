@@ -252,7 +252,7 @@ func _refresh_targets() -> void:
 	for entry: Dictionary in autoload_sheets():
 		_target_picker.add_item("%s  (%s)" % [str(entry.get("name", "")), str(entry.get("path", "")).get_file()])
 		_target_picker.set_item_metadata(_target_picker.item_count - 1, entry)
-	_target_picker.add_item(EventSheetL10n.translate("New global sheet…"))
+	_target_picker.add_item(EventSheetWords.new_global_sheet_label())
 	_target_picker.set_item_metadata(_target_picker.item_count - 1, {})
 	_target_picker.selected = 0
 
@@ -311,7 +311,7 @@ func add_global(raw_name: String, type_name: String, value_text: String, target:
 ##
 ## Nothing new is invented here: it builds the sheet the Autoload starter builds, saves it where a
 ## Godot project keeps its globals, and registers it through the SAME _register_autoload_entry() the
-## Tools ▸ Register Autoload menu item uses - so a sheet made this way is indistinguishable from one
+## compile-and-register path the dock owns - so a sheet made this way is indistinguishable from one
 ## made by hand, and the autoload stays the single truth about where a global lives.
 ##
 ## The name is chosen rather than asked for, because the dialog's question is "what global do you

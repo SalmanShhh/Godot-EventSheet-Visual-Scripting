@@ -4732,19 +4732,6 @@ func fix_region_fence(finding: Dictionary) -> bool:
 # ── Autoload (Singleton) sheets ───────────────────────────────────────────────────────
 
 
-## One click: compile the autoload sheet and register the generated script in
-## ProjectSettings. Guarded: needs the type, a name, a saved sheet, and a free slot.
-func _register_autoload() -> void:
-	if _current_sheet == null or not _current_sheet.autoload_mode:
-		_set_status("Set the sheet type to Autoload (Singleton) first (Sheet Type…).", true)
-		return
-	var problem: String = _register_autoload_entry(_current_sheet, _current_sheet_path)
-	if problem.is_empty():
-		_set_status("Registered autoload \"%s\" - every sheet (and script) can call it now." % _current_sheet.autoload_name)
-	else:
-		_set_status(problem, true)
-
-
 ## The testable core: compiles next to the sheet and writes the autoload entry.
 ## Returns "" on success or the user-facing problem.
 func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String) -> String:

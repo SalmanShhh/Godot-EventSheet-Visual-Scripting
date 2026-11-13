@@ -10411,3 +10411,7 @@ Once Ever,仅一次
 Once ever,仅一次
 Added %s to eventsheet_addons/ - this row calls it.,已将 %s 添加到 eventsheet_addons/ - 此行会调用它。
 Set eventsheets/ai/api_key in Editor Settings first.,请先在编辑器设置中设置 eventsheets/ai/api_key。
+New %s…,新建 %s…
+New %s,新建 %s
+New %s sheet…,新建 %s 表…
+The %s form.,“%s”表单。

@@ -39,7 +39,7 @@ the first frame and every sheet reaches it by name with no node path.
 1. Make a **Music** bus in Godot's Audio panel (Audio > Add Bus, rename it `Music`). The
    director plays out on it and Set Music Volume writes it, so an options-menu slider and this
    pack are moving the same fader.
-2. Register the pack as the `Music` autoload (Tools > Register Autoload, or Project Settings >
+2. Register the pack as the `Music` autoload (Project Settings >
    Globals).
 3. Make a folder for your songs, `res://music/` by default, and create a **MusicTrackResource**
    in it per song: New Resource > MusicTrackResource, drop the audio file into **Stream**, set

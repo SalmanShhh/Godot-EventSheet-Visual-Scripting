@@ -38,7 +38,7 @@ next prompt.
 There is nothing to attach. Prompts registers itself as the **`Prompts`** autoload, the same
 shape as Music and Scene Flow, so every sheet reaches it by name with no node path.
 
-1. Register the pack as the `Prompts` autoload (Tools > Register Autoload, or Project Settings >
+1. Register the pack as the `Prompts` autoload (Project Settings >
    Globals).
 2. Drag `plain_glyphs.tres` into the director's **Glyphs** slot to see something on the first
    run. It draws flat coloured circles on purpose - it is a starter to replace, not a set to

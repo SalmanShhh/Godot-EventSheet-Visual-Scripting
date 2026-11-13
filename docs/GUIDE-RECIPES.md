@@ -414,7 +414,7 @@ func _ready() -> void:
 ```
 
 **2. The score lives in one place - an autoload.** Don't declare `score` in five sheets. New Sheet →
-**Game State (Autoload)**, add `score`, register it (Tools → Register Autoload). If you *do* sprinkle it
+**Game State (Autoload)**, add `score`, register it (Project > Project Settings > Globals > Autoload). If you *do* sprinkle it
 around, the **Project Doctor** (Tools → Project Doctor…) flags it: *"Global 'score' is declared in 3
 sheets - promote it to an autoload (one source of truth)."*
 

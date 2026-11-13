@@ -2018,7 +2018,7 @@ func _refresh_global_targets() -> void:
 	for entry: Dictionary in EventSheetGlobalVariables.autoload_sheets():
 		_global_target_option.add_item("%s  (%s)" % [str(entry.get("name", "")), str(entry.get("path", "")).get_file()])
 		_global_target_option.set_item_metadata(_global_target_option.item_count - 1, entry)
-	_global_target_option.add_item(EventSheetL10n.translate("New global sheet…"))
+	_global_target_option.add_item(EventSheetWords.new_global_sheet_label())
 	_global_target_option.set_item_metadata(_global_target_option.item_count - 1, {})
 	_global_target_option.select(0)
 	for index: int in range(_global_target_option.item_count):

@@ -137,7 +137,7 @@ const SHELF_SHOWCASES: String = "Showcases"
 const MAKERS: Dictionary = {
 	"Behaviours": {"label": "New behaviour…", "tag": "Your own", "target": "behaviour",
 		"pitch": "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet."},
-	"Project-wide (autoloads)": {"label": "New global…", "tag": "Your own", "target": "global",
+	"Project-wide (autoloads)": {"label": "", "tag": "Your own", "target": "global",
 		"pitch": "Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals."},
 }
 
@@ -162,7 +162,10 @@ static func columns(showcases: PackedStringArray, recents: Array,
 		# The Behaviours and Project-wide shelves open on the form that makes one of your own.
 		var maker: Dictionary = MAKERS.get(str(starter["shelf"]), {})
 		if not maker.is_empty() and shelves(templates).find(str(starter["shelf"])) < 0:
-			templates.append(maker.merged({"kind": "maker", "shelf": str(starter["shelf"])}))
+			var made: Dictionary = maker.merged({"kind": "maker", "shelf": str(starter["shelf"])})
+			if str(made.get("target", "")) == "global":
+				made["label"] = EventSheetWords.new_global_label()
+			templates.append(made)
 		templates.append({"kind": "template", "label": str(starter["label"]).get_slice(" (", 0),
 			"tag": str(starter["kind"]), "pitch": str(starter["pitch"]), "shelf": str(starter["shelf"]),
 			"target": str(starter["id"]), "host": str(starter.get("host", "Node"))})
@@ -284,7 +287,7 @@ static func opens_line(entry: Dictionary) -> String:
 		"template":
 			return EventSheetL10n.translate("%s as a new unsaved sheet - Save As… keeps it.") % str(entry.get("label", ""))
 		"maker":
-			return EventSheetL10n.translate("The New global form.") if target == "global" \
+			return EventSheetL10n.translate("The %s form.") % EventSheetWords.new_global_title() if target == "global" \
 				else EventSheetL10n.translate("The New behaviour form.")
 		"editor_tool":
 			return EventSheetL10n.translate("The list of editor tool kinds, to pick which one to start from.")

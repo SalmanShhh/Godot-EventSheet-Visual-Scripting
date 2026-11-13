@@ -58,7 +58,7 @@ you play.
 
 ## Setup
 
-**Tools > Register Autoload** installs it once, under the name `DebugOverlay`. That is the whole
+Adding it under **Project > Project Settings > Globals > Autoload** installs it once, under the name `DebugOverlay`. That is the whole
 setup: the picker then grows a **Debug Overlay** section and its vocabulary drops into any sheet like any
 other pack's. There is no **Tools > Attach to Selected Node** step, because it is a singleton rather
 than a behavior.

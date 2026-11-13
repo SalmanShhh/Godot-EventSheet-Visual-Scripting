@@ -106,7 +106,7 @@ the whole SkinVault category showing up in the picker. There is nothing to attac
 
 1. Enable the EventSheets plugin and make sure the SkinVault pack is present under
    `eventsheet_addons/skin_vault/`.
-2. Register it as the autoload (the plugin's Register Autoload flow) so the `SkinVault` singleton exists at
+2. Register it as the autoload (Project > Project Settings > Globals > Autoload) so the `SkinVault` singleton exists at
    run time. From then on, every sheet can call SkinVault actions and read SkinVault expressions with no
    further wiring.
 3. Set the pity knobs on the SkinVault autoload in the Inspector if you want to change the defaults.

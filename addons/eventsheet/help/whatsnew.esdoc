@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Removed: Tools > Register Autoload; New autoload is named in Godot's word
+
+- Godot lists and manages autoloads in Project > Project Settings > Globals > Autoload, so the menu item that registered the open sheet's script is gone, and the Doctor and the guides send you there. The New global form stays, since it makes the script and registers it as before, and it is now called **New autoload...** in the menus, the form title and the start page. The Words page still offers \"Global\" for readers from another editor (the `global_singleton` word).
+
 ### Removed: the Preview scene and Preview project buttons
 
 - Godot already has Run Current Scene (F6) and Run Project (F5) in the bar at the top right, and the strip's two Preview buttons were the same runs under other words. They are gone from the play button's dropdown, its Main button choice, the expanded strip and the shortcut list; the guides say F5 and F6. The runs that carry sheet debugging stay: Run Scene, Debug scene, Run with profiler and Play as host + client. A project that had chosen a Preview run as its Main button falls back to Run Scene.
