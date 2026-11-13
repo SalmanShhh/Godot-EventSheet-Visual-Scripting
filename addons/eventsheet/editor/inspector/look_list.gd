@@ -11,7 +11,9 @@ extends ScrollContainer
 ## How many rows are showing before the list scrolls.
 const VISIBLE_ROWS: int = 5
 ## A row's height in lines of text.
-const ROW_LINES: float = 2.4
+const ROW_LINES: float = 3.0
+## How strongly the accent shows under the pointer, as an opacity.
+const HOVER_ALPHA: float = 0.25
 
 var _option: OptionButton = null
 var _column: VBoxContainer = null
@@ -31,7 +33,7 @@ func _init(option: OptionButton = null) -> void:
 
 
 func row_height() -> float:
-	return EventSheetLookStyle.font().get_height(EventSheetLookStyle.font_size()) * ROW_LINES + EventSheetLookStyle.px(4.0)
+	return EventSheetLookStyle.font().get_height(EventSheetLookStyle.font_size()) * ROW_LINES + EventSheetLookStyle.px(8.0)
 
 
 ## The heading a look sits under: "own" (Godot's), "ours" (shipped with the plugin) or "project".
@@ -47,6 +49,22 @@ static func group_of(look_id: String) -> String:
 	return "own"
 
 
+## What the list shows, one entry per option item in the order the rows appear: the item's index,
+## the look id, the heading it sits under, its name, its one sentence and whether it is the pick.
+## The rows are built from this and a test reads it without building a row.
+static func model(option: OptionButton) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for group: String in ["own", "ours", "project"]:
+		for index: int in range(option.item_count):
+			var look_id: String = str(option.get_item_metadata(index))
+			if group_of(look_id) != group:
+				continue
+			entries.append({"index": index, "id": look_id, "group": group, "title": option.get_item_text(index),
+				"sentence": option.get_item_tooltip(index).get_slice("
+", 0), "selected": index == option.selected})
+	return entries
+
+
 ## Rebuilds the rows from the option's items.
 func rebuild() -> void:
 	for old: Node in _column.get_children():
@@ -55,21 +73,32 @@ func rebuild() -> void:
 	_rows.clear()
 	var words: Dictionary = {"own": EventSheetL10n.translate("Godot's own"), "ours": EventSheetL10n.translate("EventSheets looks"),
 		"project": EventSheetL10n.translate("In your project")}
-	for group: String in ["own", "ours", "project"]:
-		var heading: Label = null
-		for index: int in range(_option.item_count):
-			if group_of(str(_option.get_item_metadata(index))) != group:
-				continue
-			if heading == null:
-				heading = Label.new()
-				heading.text = words[group]
-				heading.add_theme_font_override("font", EventSheetLookStyle.bold_font())
-				heading.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
-				_column.add_child(heading)
-			var row: Button = _make_row(index)
-			_column.add_child(row)
-			_rows.append(row)
+	var heading_group: String = ""
+	for entry: Dictionary in model(_option):
+		if str(entry["group"]) != heading_group:
+			heading_group = str(entry["group"])
+			var heading: Label = Label.new()
+			heading.text = words[heading_group]
+			heading.add_theme_font_override("font", EventSheetLookStyle.bold_font())
+			heading.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+			_column.add_child(heading)
+		var row: Button = _make_row(int(entry["index"]))
+		_column.add_child(row)
+		_rows.append(row)
 	sync_selection()
+
+
+## A fill with no outline: the editor's own box for the state with its border removed and its
+## colour taken from `fill`.
+static func fill_box(fill: Color) -> StyleBoxFlat:
+	var box: StyleBoxFlat = StyleBoxFlat.new()
+	var theme_box: StyleBoxFlat = EventSheetLookStyle.typed_box(&"normal", &"Button") as StyleBoxFlat
+	if theme_box != null:
+		box = theme_box.duplicate() as StyleBoxFlat
+	box.set_border_width_all(0)
+	box.bg_color = fill
+	box.set_content_margin_all(0.0)
+	return box
 
 
 func _make_row(index: int) -> Button:
@@ -82,16 +111,20 @@ func _make_row(index: int) -> Button:
 	row.set_meta("option_index", index)
 	row.tooltip_text = _option.get_item_tooltip(index)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var picked: StyleBox = EventSheetLookStyle.accent_box(EventSheetLookStyle.typed_box(&"pressed", &"Button") if EventSheetLookStyle.typed_box(&"pressed", &"Button") != null else EventSheetLookStyle.field_box())
+	var picked: StyleBoxFlat = fill_box(EventSheetLookStyle.accent())
 	for state: String in ["pressed", "hover_pressed"]:
 		row.add_theme_stylebox_override(state, picked)
+	var hovered: Color = EventSheetLookStyle.accent()
+	hovered.a = HOVER_ALPHA
+	row.add_theme_stylebox_override("hover", fill_box(hovered))
 	row.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	row.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	var inside: HBoxContainer = HBoxContainer.new()
 	inside.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	inside.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inside.offset_left = EventSheetLookStyle.px(4.0)
-	inside.offset_right = -EventSheetLookStyle.px(4.0)
+	inside.offset_left = EventSheetLookStyle.px(8.0)
+	inside.offset_right = -EventSheetLookStyle.px(8.0)
+	inside.add_theme_constant_override("separation", int(EventSheetLookStyle.px(10.0)))
 	var mini: Control = _MiniPicture.new(look_id)
 	mini.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	inside.add_child(mini)
@@ -99,13 +132,15 @@ func _make_row(index: int) -> Button:
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.alignment = BoxContainer.ALIGNMENT_CENTER
 	words.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	words.add_theme_constant_override("separation", 0)
 	var title: Label = Label.new()
 	title.text = _option.get_item_text(index)
 	title.add_theme_font_override("font", EventSheetLookStyle.bold_font())
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	words.add_child(title)
 	var sentence: Label = Label.new()
-	sentence.text = _option.get_item_tooltip(index).get_slice("\n", 0)
+	sentence.text = _option.get_item_tooltip(index).get_slice("
+", 0)
 	sentence.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sentence.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 	sentence.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -134,6 +169,18 @@ func sync_selection() -> void:
 	for row: Button in _rows:
 		row.set_pressed(int(row.get_meta("option_index")) == _option.selected)
 	_syncing = false
+	_show_selected.call_deferred()
+
+
+## Scrolls the list so the chosen look is in view, once the rows have their places.
+func _show_selected() -> void:
+	if not is_inside_tree():
+		return
+	await get_tree().process_frame
+	for row: Button in _rows:
+		if is_instance_valid(row) and row.button_pressed:
+			ensure_control_visible(row)
+			return
 
 
 ## The look ids in the order the rows show them, for a test to read.
@@ -151,8 +198,8 @@ class _MiniPicture:
 
 	func _init(look_id: String) -> void:
 		_look_id = look_id
-		custom_minimum_size = Vector2(EventSheetLookStyle.px(EventSheetLookStyle.MINI_WIDTH), EventSheetLookStyle.px(EventSheetLookStyle.MINI_HEIGHT))
+		custom_minimum_size = Vector2(EventSheetLookStyle.px(EventSheetLookMinis.WIDTH), EventSheetLookStyle.px(EventSheetLookMinis.HEIGHT))
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _draw() -> void:
-		EventSheetLookMinis.draw_mini(self, Rect2(Vector2.ZERO, size), _look_id)
+		EventSheetLookMinis.draw_mini(self, Rect2(Vector2.ZERO, size), _look_id, EventSheetLookMinis.theme_colours())

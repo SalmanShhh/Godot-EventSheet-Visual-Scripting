@@ -24,8 +24,6 @@ const CURVE_HEIGHT: float = 64.0
 const PICTURE_HEIGHT: float = 72.0
 const RANGE_FIELD_WIDTH: float = 44.0
 const LINE_WIDTH: float = 2.0
-const MINI_WIDTH: float = 44.0
-const MINI_HEIGHT: float = 22.0
 ## The height of a plain field when no editor theme can say.
 const FALLBACK_FIELD_HEIGHT: float = 22.0
 ## No colour asked for: a field made with this keeps its own label colour.

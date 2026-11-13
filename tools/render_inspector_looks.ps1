@@ -1,7 +1,7 @@
 # Photographs the Inspector looks in a REAL editor without touching the developer's own settings.
 #
 # The editor reads and writes its settings under %APPDATA%\Godot. This wrapper points APPDATA at a
-# separate folder for the child process only, seeds that folder with the theme and scale of the
+# separate folder for the child process only (-Script names another harness to run in that same sandbox), seeds that folder with the theme and scale of the
 # variant asked for, and runs tools/render_inspector_looks.gd, which refuses to run unless the
 # editor reports its config folder under that path.
 #
@@ -12,6 +12,7 @@ param(
 	[Parameter(Mandatory = $true)][string]$Out,
 	[string]$Only = "",
 	[int]$Width = 0,
+	[string]$Script = "tools/render_inspector_looks.gd",
 	[string]$Sandbox = (Join-Path ([System.IO.Path]::GetTempPath()) "eventforge_look_photos")
 )
 
@@ -38,7 +39,7 @@ try {
 	if ($env:LOOK_DEBUG) { $extra += "debug=1" }
 	if ($Only) { $extra += "only=$Only" }
 	if ($Width -gt 0) { $extra += "width=$Width" }
-	& $env:GODOT --editor --path . --script tools/render_inspector_looks.gd -- @extra
+	& $env:GODOT --editor --path . --script $Script -- @extra
 }
 finally {
 	$env:APPDATA = $realAppData

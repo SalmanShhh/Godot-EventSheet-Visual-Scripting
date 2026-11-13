@@ -159,6 +159,8 @@ const AXIS_COLORS: Array = [Color("#f07a7a"), Color("#8ee09a"), Color("#7cb8ff")
 
 ## The tallest the Variable window's cards get before they scroll, in px at 1x.
 const FORM_MAX_HEIGHT := 520.0
+## The share of the screen height the cards' scroll may take when that is more than FORM_MAX_HEIGHT.
+const FORM_SCREEN_SHARE := 0.68
 
 var _dialog: ConfirmationDialog = null
 var _help_strip: EventSheetPopupUI.HelpStrip = null
@@ -314,7 +316,10 @@ func _fit_form_height() -> void:
 	if _form_scroll == null or _form_scroll.get_child_count() == 0:
 		return
 	var cards: float = (_form_scroll.get_child(0) as Control).get_combined_minimum_size().y
-	_form_scroll.custom_minimum_size.y = minf(cards, EventSheetPalette.scaled_f(FORM_MAX_HEIGHT))
+	# The look list inside holds five rows; a window clamped to 520 px showed one and a half of them,
+	# so the cap follows the screen when the screen has room.
+	var room: float = float(DisplayServer.screen_get_usable_rect().size.y) * FORM_SCREEN_SHARE
+	_form_scroll.custom_minimum_size.y = minf(cards, maxf(EventSheetPalette.scaled_f(FORM_MAX_HEIGHT), room))
 
 
 func _build_variable_card() -> VBoxContainer:
