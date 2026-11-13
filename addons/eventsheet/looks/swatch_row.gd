@@ -7,6 +7,9 @@ extends EventSheetInspectorLook
 ## The kinds of property this look can be put on.
 @export var works_on: String = "Color"
 
+## The sentence the preview card says under a variable that wears this look.
+const PREVIEW_SENTENCE := "Shown as color swatches."
+
 var _row: Control
 
 

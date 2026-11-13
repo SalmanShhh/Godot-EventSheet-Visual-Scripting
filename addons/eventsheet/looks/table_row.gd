@@ -11,6 +11,9 @@ extends EventSheetInspectorLook
 ## The column of a row that names it.
 @export var name_column: String = "name"
 
+## The sentence the preview card says under a variable that wears this look.
+const PREVIEW_SENTENCE := "Picked from a dropdown of a table's rows."
+
 const DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/table_row_drawer.gd"
 
 var _dropdown: OptionButton = null

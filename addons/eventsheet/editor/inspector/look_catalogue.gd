@@ -16,6 +16,8 @@ extends RefCounted
 ##   fields      the questions in the shape the Variable window takes: [key, label, kind, default, hint]
 ##   questions   the same questions with their declared type: {key, type_name, kind, default, doc, choices}
 ##   template    the optional `const MARKER_TEMPLATE` text, "" for the plain positional spelling
+##   preview     the optional `const PREVIEW_SENTENCE` text the preview card says, "" for none
+##   also_draws  the optional `const ALSO_DRAWS_ON` types: drawn when a marker asks, never offered in the window
 ##   writes      an example of the line the look writes, filled with its defaults
 ##   source      "shipped" or "project" (a project file of the same name wins)
 ##
@@ -31,6 +33,11 @@ const LEGACY_WORDS: PackedStringArray = ["progress_bar", "min_max", "vector_dial
 ## The variable that says which types a look works on. It is a setting of the look, not a question.
 const WORKS_ON: String = "works_on"
 const TEMPLATE_CONSTANT: String = "MARKER_TEMPLATE"
+## The optional constant that names types a look DRAWS when a marker already asks for it, without offering
+## the look for them in the Variable window (a look for text that also reads an int a script already marked).
+const ALSO_DRAWS_CONSTANT: String = "ALSO_DRAWS_ON"
+## The optional constant holding the sentence the preview card says under a variable wearing the look.
+const PREVIEW_CONSTANT: String = "PREVIEW_SENTENCE"
 const VARIANT_TYPES: Dictionary = {"int": TYPE_INT, "float": TYPE_FLOAT, "bool": TYPE_BOOL, "String": TYPE_STRING,
 	"StringName": TYPE_STRING_NAME, "Color": TYPE_COLOR, "Vector2": TYPE_VECTOR2, "Vector2i": TYPE_VECTOR2I,
 	"Vector3": TYPE_VECTOR3, "Vector3i": TYPE_VECTOR3I, "Vector4": TYPE_VECTOR4, "Vector4i": TYPE_VECTOR4I,
@@ -151,6 +158,8 @@ static func read_look(path: String, source: String, origin: String = "project") 
 	var types: Array = []
 	var questions: Array[Dictionary] = []
 	var template: String = ""
+	var also_draws: Array = []
+	var preview: String = ""
 	var pending_doc: PackedStringArray = PackedStringArray()
 	var pending_choices: Array = []
 	for index: int in range(cursor, lines.size()):
@@ -159,6 +168,15 @@ static func read_look(path: String, source: String, origin: String = "project") 
 			pending_doc.append(_doc_text(line))
 			continue
 		if line.begins_with("@warning_ignore"):
+			continue
+		if line.begins_with("const %s" % PREVIEW_CONSTANT):
+			preview = _quoted_default(_default_of(line))
+			pending_doc = PackedStringArray()
+			continue
+		if line.begins_with("const %s" % ALSO_DRAWS_CONSTANT):
+			for type_word: String in _quoted_default(_default_of(line)).split(",", false):
+				also_draws.append(type_word.strip_edges())
+			pending_doc = PackedStringArray()
 			continue
 		if line.begins_with("const %s" % TEMPLATE_CONSTANT):
 			template = _quoted_default(_default_of(line))
@@ -188,7 +206,7 @@ static func read_look(path: String, source: String, origin: String = "project") 
 		fields.append([question["key"], question["key"], question["kind"], question["default"],
 			question["choices"] if str(question["kind"]) == "pick" else question["doc"]])
 	var entry: Dictionary = {"id": look_name, "name": look_name, "label": label, "tip": " ".join(tip_words),
-		"types": types, "fields": fields, "questions": questions, "template": template, "script_path": path, "source": origin}
+		"types": types, "fields": fields, "questions": questions, "template": template, "also_draws": also_draws, "preview": preview, "script_path": path, "source": origin}
 	var defaults: Dictionary = {}
 	for question: Dictionary in questions:
 		defaults[question["key"]] = question["default"]
@@ -439,7 +457,7 @@ static func accepts(look: Dictionary, type: int, object: Object = null, property
 	var types: Array = look["types"]
 	if types.is_empty():
 		return true
-	for type_name: Variant in types:
+	for type_name: Variant in types + (look.get("also_draws", []) as Array):
 		var word: String = str(type_name)
 		if VARIANT_TYPES.has(word):
 			if type == int(VARIANT_TYPES[word]) or (word == "String" and type == TYPE_STRING_NAME):
@@ -466,6 +484,7 @@ static func build(look: Dictionary, args: Array) -> Object:
 		# A question the marker left out keeps the default the file declares, as the type it asked for.
 		var value: Variant = values[key]
 		control.set(key, _typed(question, str(value)) if value is String and str(question["type_name"]) != "String" else value)
+	control.set("marker_args", args)
 	if control.has_method("_can_draw") and not bool(control.call("_can_draw")):
 		control.free()
 		return null

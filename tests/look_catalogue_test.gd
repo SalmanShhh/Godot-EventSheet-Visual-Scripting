@@ -61,6 +61,8 @@ static func run() -> bool:
 	passed = _the_window_lists_file_looks_where_the_table_keeps_their_place() and passed
 	passed = _a_shipped_look_keeps_its_questions() and passed
 	passed = _the_looks_moved_onto_files_read_as_the_table_did() and passed
+	passed = _a_look_can_draw_a_type_it_does_not_offer() and passed
+	passed = _a_shipped_look_says_its_own_preview_sentence() and passed
 	passed = _a_same_length_edit_is_not_drawn_from_the_old_decor() and passed
 	return passed
 
@@ -222,7 +224,7 @@ static func _the_window_lists_file_looks_where_the_table_keeps_their_place() -> 
 ## goes at the end with a default that reproduces the old marker. This list is committed here.
 static func _a_shipped_look_keeps_its_questions() -> bool:
 	var committed: Dictionary = {"progress_bar": ["min", "max"], "min_max": ["min", "max"], "vector_dial": ["max"],
-		"table_row": ["table", "name_column"], "swatch_row": [], "texture_preview": [], "curve_editor": [], "corners": []}
+		"table_row": ["table", "name_column"], "unit": ["units"], "toggle_row": ["choices"], "table": ["columns"], "swatch_row": [], "texture_preview": [], "curve_editor": [], "corners": []}
 	var rows: Array = []
 	for look: Dictionary in EventSheetInspectorLookCatalogue.entries():
 		if str(look["source"]) != "shipped":
@@ -290,4 +292,36 @@ static func _the_looks_moved_onto_files_read_as_the_table_did() -> bool:
 			keys.append(field[0])
 		var expected: Array = wanted[look_name]
 		rows.append(["%s reads as the table did" % look_name, [look.get("label"), look.get("tip"), look.get("types"), keys], expected])
+	return SUPPORT.pins(NAME, rows)
+
+
+## A look for text can still draw an int a script already marked, without the window offering it for ints.
+static func _a_look_can_draw_a_type_it_does_not_offer() -> bool:
+	var look: Dictionary = EventSheetInspectorLookCatalogue.read_look("res://eventsheet_addons/looks/word_row.gd",
+		"@tool\nextends EventSheetInspectorLook\n\n## Word row\n## Words in a row.\n\n@export var works_on: String = \"String\"\nconst ALSO_DRAWS_ON := \"int, float\"\n")
+	return SUPPORT.pins(NAME, [
+		["the window offers it for the types works_on names", look.get("types"), ["String"]],
+		["the extra types are read from the constant", look.get("also_draws"), ["int", "float"]],
+		["it is drawn on a String", EventSheetInspectorLookCatalogue.accepts(look, TYPE_STRING), true],
+		["it is drawn on an int a marker named", EventSheetInspectorLookCatalogue.accepts(look, TYPE_INT), true],
+		["it is not drawn on a colour", EventSheetInspectorLookCatalogue.accepts(look, TYPE_COLOR), false],
+	])
+
+
+## The preview card's sentence under each shipped look is the one its file states, and it is the sentence
+## the card always said.
+static func _a_shipped_look_says_its_own_preview_sentence() -> bool:
+	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray())
+	var pinned: Dictionary = {
+		"progress_bar": "Shown as a progress bar.", "vector_dial": "Shown as a direction dial.",
+		"min_max": "Shown as a min-max range slider.", "table": "Shown as an editable table.",
+		"table_row": "Picked from a dropdown of a table's rows.", "toggle_row": "Shown as toggle buttons.",
+		"unit": "Shown with a unit dropdown.", "corners": "Shown as four corners.", "swatch_row": "Shown as color swatches.",
+		"texture_preview": "Shown with a texture preview.", "curve_editor": "Shown with a curve preview."}
+	var rows: Array = []
+	for look_name: String in pinned:
+		rows.append(["%s: the file states the sentence" % look_name, EventSheetInspectorLookCatalogue.entry(look_name).get("preview"), pinned[look_name]])
+		rows.append(["%s: the card says it" % look_name, EventSheetInspectorPreviewCard._widget_sentence({"drawer": look_name}), pinned[look_name]])
+	rows.append(["a look the project added and gave no sentence is named", EventSheetInspectorPreviewCard._widget_sentence({"look": "star_rating"}),
+		"Shown with the look star_rating."])
 	return SUPPORT.pins(NAME, rows)

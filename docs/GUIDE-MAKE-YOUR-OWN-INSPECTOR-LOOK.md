@@ -96,6 +96,8 @@ Select a node that has that script. The Inspector draws five stars, three of the
 | `@export_enum("a", "b") var mode: String` | A question with a dropdown |
 | `@export var outlined: bool = true` | A question with a tick box |
 | `const MARKER_TEMPLATE := "kinds={kinds},store={store}"` | A look whose values must share one segment (`kinds=px|world,store=world`) |
+| `const PREVIEW_SENTENCE := "Shown as a star rating."` | The sentence the Designer's preview card says under a variable wearing the look. Without it the card says "Shown with the look star_rating." |
+| `const ALSO_DRAWS_ON := "int"` | Types the look draws when a script's marker already asks for it, without offering the look for them in the Variable window |
 
 A question's label is the variable's name as you wrote it. A value that holds a colon, a quote or a line break cannot ride a marker; the look then writes nothing and the variable stays a plain field. A name that is already one of Godot's own (`name`, `size`, `visible`) cannot be a question, because the look is a node.
 
@@ -105,6 +107,7 @@ You write these. You never override `_update_property`: the base needs it to kee
 
 | Function | Runs | Use it to |
 |---|---|---|
+| `_can_draw()` | Once, after the questions are answered and before anything is built | Say no when the values a marker carried make no sense (a table that is not a variable name). The Inspector then keeps Godot's plain field |
 | `_look_built()` | Once, when the control is first needed, with the questions already answered | Make the control, connect signals, `add_child` |
 | `_value_shown(value)` | On every refresh | Draw this value. Do not call `set_field_value` here |
 | `_value_changed_from_outside(value)` | Before `_value_shown`, when the value moved without this look (undo, a script, another editor) | Stop an animation or reset a drag |
@@ -117,10 +120,13 @@ And these are ready to call:
 | `field_value()` | The property's value right now |
 | `field_name()`, `field_type()`, `field_object()` | The property's name, its Variant type and the object it is on |
 | `is_field_read_only()` | True when the Inspector has the property locked |
+| `marker_args` | What the marker carried after the look's name, split on `:` exactly as written. For a marker with a grammar of its own (a list, then optional tails); most looks read their exported variables instead |
 
 ## 6. What a look writes into the script
 
 The marker is `eventsheet:<file name>`, then each answer after a colon: `eventsheet:progress_bar:0:100` for the shipped progress bar with a min of 0 and a max of 100. The script is plain GDScript: the marker is only a hint string, so it compiles, exports and runs without any plugin.
+
+The looks that ship are files too, in the plugin's own `looks` folder, and they are the best examples to read: `progress_bar.gd` (two numbers), `swatch_row.gd` (no questions at all, a widget wrapped as it is), `table_row.gd` (two names, and `_can_draw`), `unit.gd` (one question that holds a whole spec), `toggle_row.gd` (reads `marker_args` for its tails) and `table.gd` (a grid of cells). Each wraps a drawing widget the plugin already had, so the Inspector draws the same pixels as before the look became a file. The markers they write are the ones scripts already carry: a marker written before looks were files opens, saves back byte for byte and draws exactly as it did.
 
 Opening a script that carries a marker for a look the project does not have still works. The sheet keeps the marker, saving writes it back byte for byte, and the Variable window offers it as "Look not installed" rather than dropping it.
 

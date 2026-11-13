@@ -28,6 +28,9 @@ extends EditorProperty
 ##   `_value_changed_from_outside(value)`   the value moved without this look (undo, a script, another editor)
 ## and call `set_field_value(value)` when the person edits.
 
+## What the marker carried after the look's name, split on ":" exactly as written. A look reads its
+## questions from the variables it exports; this is only for a marker with a grammar of its own.
+var marker_args: Array = []
 var _built: bool = false
 var _last_set: Variant = null
 var _has_last_set: bool = false

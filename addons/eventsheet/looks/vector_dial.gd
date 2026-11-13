@@ -10,6 +10,9 @@ extends EventSheetInspectorLook
 @warning_ignore("shadowed_global_identifier")
 @export var max: float = 100
 
+## The sentence the preview card says under a variable that wears this look.
+const PREVIEW_SENTENCE := "Shown as a direction dial."
+
 var _dial: Control
 
 

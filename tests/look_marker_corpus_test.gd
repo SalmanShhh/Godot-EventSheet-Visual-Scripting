@@ -96,6 +96,9 @@ static func _the_other_shipped_looks_are_written_the_same_two_ways() -> bool:
 		{"word": "vector_dial", "type": "Vector2", "value": "Vector2(0, 0)", "args": func() -> Array: return [_number_text(generator)]},
 		{"word": "min_max", "type": "Vector2", "value": "Vector2(0, 0)", "args": func() -> Array: return [_number_text(generator), _number_text(generator)]},
 		{"word": "table_row", "type": "int", "value": "0", "args": func() -> Array: return [_name_text(generator), _name_text(generator)]},
+		{"word": "unit", "type": "float", "value": "0.0", "args": func() -> Array: return _unit_args(generator)},
+		{"word": "toggle_row", "type": "String", "value": "\"\"", "args": func() -> Array: return _toggle_args(generator)},
+		{"word": "table", "type": "Array", "value": "[]", "args": func() -> Array: return _table_args(generator)},
 	]
 	for look: Dictionary in looks:
 		var word: String = str(look["word"])
@@ -114,8 +117,21 @@ static func _the_other_shipped_looks_are_written_the_same_two_ways() -> bool:
 				"table_row":
 					legacy_attributes["table_row_table"] = args[0]
 					legacy_attributes["table_row_column"] = args[1]
+				"unit":
+					legacy_attributes["unit_kinds"] = args[0]
+					legacy_attributes["unit_store"] = args[1]
+				"toggle_row":
+					legacy_attributes["toggle_options"] = args[0]
+					legacy_attributes["toggle_segmented"] = args[1]
+					legacy_attributes["toggle_icons"] = args[2]
+				"table":
+					legacy_attributes["table_columns"] = args[0]
 			var legacy: String = EventSheetCompiler._drawer_export_prefix(legacy_attributes, str(look["type"]))
-			var generic: String = EventSheetCompiler._drawer_export_prefix({"look": word, "look_args": args}, str(look["type"]))
+			var generic: String = EventSheetCompiler._drawer_export_prefix({"look": word, "look_args": _file_arguments(word, args)}, str(look["type"]))
+			# An icon source holds colons of its own, which cannot ride the generic spelling: that look is
+			# written by its structured attributes alone, and only their round trip is proven.
+			if word == "toggle_row" and not str(args[2]).is_empty():
+				generic = legacy
 			if legacy != generic:
 				different.append([args, legacy, generic])
 				continue
@@ -204,3 +220,55 @@ static func _find(sheet: EventSheetResource, variable_name: String) -> LocalVari
 		if entry is LocalVariable and (entry as LocalVariable).name == variable_name:
 			return entry as LocalVariable
 	return null
+
+
+## The words a unit list or a choice list is drawn from.
+const WORDS: Array = ["px", "world", "screen", "s", "ms", "frames", "deg", "turn", "easy", "normal", "hard", "left", "right"]
+
+
+## Units and the one that is stored: [kinds, store].
+static func _unit_args(generator: RandomNumberGenerator) -> Array:
+	var kinds: Array = []
+	for count: int in range(generator.randi_range(1, 4)):
+		var word: String = str(WORDS[generator.randi_range(0, WORDS.size() - 1)])
+		if not kinds.has(word):
+			kinds.append(word)
+	return [kinds, kinds[generator.randi_range(0, kinds.size() - 1)]]
+
+
+## Choices, whether the buttons are equal width, and an icon source ("" for none).
+static func _toggle_args(generator: RandomNumberGenerator) -> Array:
+	var options: Array = []
+	for count: int in range(generator.randi_range(2, 4)):
+		var word: String = str(WORDS[generator.randi_range(0, WORDS.size() - 1)])
+		if not options.has(word):
+			options.append(word)
+	return [options, generator.randi_range(0, 1) == 1, "res://icons/%s.png" if generator.randi_range(0, 3) == 0 else ""]
+
+
+## Table columns: a list of {name, type}.
+static func _table_args(generator: RandomNumberGenerator) -> Array:
+	var types: Array = ["String", "int", "float", "bool"]
+	var columns: Array = []
+	for count: int in range(generator.randi_range(1, 4)):
+		columns.append({"name": "%s_%d" % [_name_text(generator), count], "type": types[generator.randi_range(0, types.size() - 1)]})
+	return [columns]
+
+
+## The arguments the generic spelling carries for a look whose structured attributes hold lists: the
+## same text the marker writes after the look's name, one value per colon.
+static func _file_arguments(word: String, args: Array) -> Array:
+	match word:
+		"unit":
+			return ["kinds=%s,store=%s" % ["|".join(PackedStringArray(args[0])), args[1]]]
+		"toggle_row":
+			var written: Array = [",".join(PackedStringArray(args[0]))]
+			if bool(args[1]):
+				written.append("segmented")
+			return written
+		"table":
+			var pairs: PackedStringArray = PackedStringArray()
+			for column: Dictionary in args[0]:
+				pairs.append("%s=%s" % [column["name"], column["type"]])
+			return [",".join(pairs)]
+	return args

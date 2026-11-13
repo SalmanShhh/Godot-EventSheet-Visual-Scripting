@@ -10,6 +10,9 @@ extends PanelContainer
 ## Combat > Defense."). The card is a picture for beginners; the "Ships as:"
 ## strip underneath stays the code truth for experts.
 
+## The catalogue of looks that are files, loaded by path: a look says its own sentence there.
+const LOOK_CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+
 var _rows: VBoxContainer = null
 var _sentence_label: Label = null
 var _caption: Label = null
@@ -198,28 +201,14 @@ static func _type_sentence(type_name: String) -> String:
 
 
 static func _widget_sentence(attributes: Dictionary) -> String:
+	# A look that is a file says its own sentence (its `PREVIEW_SENTENCE`); every look that ships does.
+	var word: String = str(attributes.get("drawer", attributes.get("look", "")))
+	if not word.is_empty():
+		var look: Dictionary = load(LOOK_CATALOGUE_PATH).entry(word)
+		if not look.is_empty() and not str(look.get("preview", "")).is_empty():
+			return EventSheetL10n.translate(str(look["preview"]))
 	match str(attributes.get("drawer", "")):
-		"progress_bar":
-			return EventSheetL10n.translate("Shown as a progress bar.")
-		"vector_dial":
-			return EventSheetL10n.translate("Shown as a direction dial.")
-		"min_max":
-			return EventSheetL10n.translate("Shown as a min-max range slider.")
-		"table":
-			return EventSheetL10n.translate("Shown as an editable table.")
-		"table_row":
-			return EventSheetL10n.translate("Picked from a dropdown of a table's rows.")
-		"toggle_row":
-			return EventSheetL10n.translate("Shown as toggle buttons.")
-		"unit":
-			return EventSheetL10n.translate("Shown with a unit dropdown.")
-		"corners":
-			return EventSheetL10n.translate("Shown as four corners.")
-		"swatch_row":
-			return EventSheetL10n.translate("Shown as color swatches.")
-		"texture_preview":
-			return EventSheetL10n.translate("Shown with a texture preview.")
-		"curve_preview", "curve_editor":
+		"curve_preview":
 			return EventSheetL10n.translate("Shown with a curve preview.")
 	# A look that is a file and has no sentence of its own here is named: "Shown with the look star_rating."
 	if not str(attributes.get("look", "")).is_empty():

@@ -182,7 +182,7 @@ static func _test_open_link() -> bool:
 	filed.resource_path = "res://goblin_probe.tres"
 	var inner: Resource = Resource.new()
 	inner.resource_path = "res://goblin_probe.tscn::Resource_1"
-	var file_of: Callable = EventSheetAttributeDrawers.TableProperty.file_of
+	var file_of: Callable = load("res://addons/eventsheet/looks/table.gd").file_of
 	var table: Control = EventSheetAttributeDrawers.widgets().DrawerTable.new(DROP_COLUMNS)
 	var link: LinkButton = table.get("_open_link")
 	var doorless: Array = [link.visible, (table.get("_pager") as Control).visible]

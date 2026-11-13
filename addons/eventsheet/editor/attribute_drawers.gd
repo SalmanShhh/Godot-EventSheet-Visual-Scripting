@@ -137,38 +137,6 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
-		"toggle_row":
-			# String stores the option TEXT; int stores its INDEX (an enum written as buttons).
-			if type != TYPE_STRING and type != TYPE_INT:
-				return false
-			var toggle_spec: Dictionary = parse_toggle_spec(drawer.get("args", []))
-			var toggle_options: PackedStringArray = toggle_spec.get("options", PackedStringArray())
-			if toggle_options.is_empty():
-				return false
-			add_property_editor(name, ToggleRowProperty.new(toggle_options, type == TYPE_INT,
-				str(toggle_spec.get("icons", "")), bool(toggle_spec.get("segmented", false))))
-			return true
-		"unit":
-			# The stored number never moves: the dropdown converts the VIEW, and the export says
-			# which unit the file (and therefore the running game) is written in.
-			if type != TYPE_FLOAT:
-				return false
-			var unit_args: Array = drawer.get("args", [])
-			var unit_spec: Dictionary = parse_unit_spec(str(unit_args[0]) if unit_args.size() > 0 else "")
-			var unit_ids: PackedStringArray = unit_spec.get("units", PackedStringArray())
-			if unit_ids.is_empty():
-				return false
-			add_property_editor(name, UnitFieldProperty.new(unit_ids, str(unit_spec.get("store", ""))))
-			return true
-		"table":
-			if type != TYPE_ARRAY:
-				return false
-			var args: Array = drawer.get("args", [])
-			var columns: Array = parse_table_columns(str(args[0]) if args.size() > 0 else "", args.slice(1))
-			if columns.is_empty():
-				return false
-			add_property_editor(name, TableProperty.new(columns, open_table))
-			return true
 		"cards":
 			# A list of Dictionaries, each of a kind: the reorderable card list. Both the untyped list
 			# and Array[Dictionary] reach here as TYPE_ARRAY, exactly as the table drawer does.
@@ -195,6 +163,9 @@ func _parse_look(object: Object, type: int, name: String, word: String, args: Ar
 	var control: Variant = catalogue.build(look, args)
 	if control == null:
 		return false
+	# The door the plugin handed in, for a look that offers to open a table's file (the table look).
+	if "open_table" in control:
+		control.set("open_table", open_table)
 	add_property_editor(name, control)
 	return true
 
@@ -468,117 +439,6 @@ static func side_by_side_fits(object: Object, first: String, second: String) -> 
 
 
 # ── EditorProperty wrappers (each embeds a reusable widget and forwards edits) ──
-
-
-
-
-## Fixed choices as one row of toggle buttons: the pressed button IS the value. A String property
-## stores the option text; an int property stores the option's INDEX, which is how a plain
-## @export_enum int already reads - so the same row of buttons serves both without a second drawer.
-class ToggleRowProperty:
-	extends EditorProperty
-	var _row: Control
-	var _options: PackedStringArray = PackedStringArray()
-	var _stores_index: bool = false
-
-	func _init(options: PackedStringArray, stores_index: bool = false, icon_source: String = "", segmented: bool = false) -> void:
-		_options = options
-		_stores_index = stores_index
-		_row = EventSheetAttributeDrawers.widgets().DrawerToggleRow.new(options, icon_source, segmented)
-		_row.connect("value_changed", _on_changed)
-		add_child(_row)
-		set_bottom_editor(_row)
-
-	func _on_changed(value: String) -> void:
-		if not _stores_index:
-			emit_changed(get_edited_property(), value)
-			return
-		var index: int = Array(_options).find(value)
-		if index >= 0:
-			emit_changed(get_edited_property(), index)
-
-	func _update_property() -> void:
-		var value: Variant = get_edited_object().get(get_edited_property())
-		if not _stores_index:
-			_row.call("set_value", str(value))
-			return
-		var index: int = int(value)
-		_row.call("set_value", _options[index] if index >= 0 and index < _options.size() else "")
-
-
-
-
-## A float with its unit: a spin box plus a unit dropdown at its edge. The dropdown converts what is
-## SHOWN; what is stored stays in the unit the export named, so flipping it never rewrites the scene
-## and never moves a number the running game reads.
-class UnitFieldProperty:
-	extends EditorProperty
-	var _field: Control
-
-	func _init(units: PackedStringArray, store_unit: String) -> void:
-		_field = EventSheetAttributeDrawers.widgets().DrawerUnitField.new(units, store_unit)
-		_field.connect("value_changed", _on_changed)
-		add_child(_field)
-		add_focusable(_field)
-
-	func _on_changed(value: float) -> void:
-		emit_changed(get_edited_property(), value)
-
-	func _update_property() -> void:
-		_field.call("set_value", float(get_edited_object().get(get_edited_property())))
-
-
-## Array-of-Dictionary table: a grid with typed cell editors, add / remove / move-up.
-class TableProperty:
-	extends EditorProperty
-	var _table: Control
-
-	var _open_door: Callable = Callable()
-	var _open_path: String = ""
-
-	func _init(columns: Array, open_door: Callable = Callable()) -> void:
-		_open_door = open_door
-		_table = EventSheetAttributeDrawers.widgets().DrawerTable.new(columns)
-		_table.connect("value_changed", _on_changed)
-		add_child(_table)
-		set_bottom_editor(_table)
-
-	func _on_changed(rows: Array) -> void:
-		emit_changed(get_edited_property(), rows)
-		# emit_changed writes `rows` onto the resource through the inspector's set(), which does NOT fire
-		# the resource's `changed` signal - so live-preview listeners (the DrawingPrefab preview panel, a
-		# DrawingPrefabStamp) never repaint on a table edit. Emit `changed` explicitly so they refresh
-		# from the just-written value; the _update_property echo it may provoke is a no-op (equal value).
-		var edited: Object = get_edited_object()
-		if edited is Resource:
-			(edited as Resource).emit_changed()
-
-	func _update_property() -> void:
-		# Guard by VALUE, not a one-shot flag: the echo from our own commit (and from the `changed`
-		# signal we fire for the live preview) carries a value equal to what the grid already shows, so
-		# we skip the rebuild and the cell being typed in keeps focus. Only an external change (undo,
-		# reselecting the asset) brings a different value that actually rebuilds the grid.
-		var value: Variant = get_edited_object().get(get_edited_property())
-		var incoming: Array = value if value is Array else []
-		_offer_open_link(get_edited_object())
-		if incoming == _table.call("get_value"):
-			return
-		_table.call("set_value", incoming)
-
-	## "Open as a table" under the grid, for a list kept in a file of its own: the file opens in the
-	## table view of the sheet editor. A list inside a scene or a sub-resource has no file to open.
-	func _offer_open_link(edited: Object) -> void:
-		var path: String = file_of(edited) if _open_door.is_valid() else ""
-		if path == _open_path:
-			return
-		_open_path = path
-		_table.set("open_table", _open_door.bind(path) if not path.is_empty() else Callable())
-		_table.call("_rebuild")
-
-	## The file an edited object is kept in, when it is a .tres or .res of its own; "" otherwise.
-	static func file_of(edited: Object) -> String:
-		var path: String = (edited as Resource).resource_path if edited is Resource else ""
-		return path if path.get_extension() in ["tres", "res"] and not path.contains("::") else ""
 
 
 ## A list of Dictionaries as a list of cards: drag to reorder, fold one open for its own fields.
