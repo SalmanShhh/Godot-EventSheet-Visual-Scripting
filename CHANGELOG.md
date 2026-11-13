@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a variable added to a sheet opened from a .gd was not saved
+
+- On a sheet opened from a `.gd` file, Save wrote the file's own rows and left out the sheet's variable table, where the Variable window keeps an Instance variable. The variable showed on the sheet and Save said it had saved, but it was missing from the file. The save now writes what the table holds beside the file's own variables (after the last one, or under the header lines when the file has none), skips a name a row already declares, and leaves an untouched file byte for byte as it was. Signals and enums were never affected (they are rows and were written). A constant stored in the table is written as a plain `var`, the same as in a sheet saved as `.tres`; that is unchanged and noted here.
+
 ### Added: an Inspector look is read and made as an event sheet
 
 - A sheet whose script extends `EventSheetInspectorLook` reads its three Inspector callbacks as triggers: `_look_built`, `_value_shown(value)` and `_value_changed_from_outside(value)` are "On look built", "On value shown" and "On value changed from outside", each with a hover saying when Godot's Inspector calls it. The rows are offered by the picker on such a sheet and on no other (a new closed-list reason, `outside_inspector_look`), and a file with the same function on any other class reads as an ordinary function. The emitted text is the plain function byte for byte, in both directions.

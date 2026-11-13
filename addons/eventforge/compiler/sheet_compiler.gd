@@ -1146,7 +1146,19 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	for anchored_comment: Variant in _comments_above_anchored_events(sheet.events, anchored_event_uids):
 		anchored_comments[anchored_comment] = true
 	var class_level_comments: Dictionary = _comments_over_class_rows(sheet.events)
-	var external_conditions: Array = _conditions_to_write(inspector_conditions({}, external_variables, result["warnings"]),
+	# The sheet's own variable table. The Variable window keeps an Instance variable there, and a
+	# sheet opened from a .gd has no other place for it than these rows, so what it holds is written
+	# beside the file's own variables. An opened file never fills the table itself (its variables are
+	# rows), so an untouched file is unchanged; a name a row already declares is not declared twice.
+	var table_variables: Dictionary = {}
+	for table_name: Variant in sheet.variables:
+		var already_declared: bool = false
+		for declared: Variant in external_variables:
+			if (declared as LocalVariable).name == str(table_name):
+				already_declared = true
+		if not already_declared:
+			table_variables[table_name] = sheet.variables[table_name]
+	var external_conditions: Array = _conditions_to_write(inspector_conditions(table_variables, external_variables, result["warnings"]),
 		_sheet_writes_function(external_raw_rows, sheet.functions, "_validate_property"), result["warnings"])
 	var external_controllers: Dictionary = inspector_condition_controllers(external_conditions)
 	_warn_conditions_need_tool(external_conditions, sheet.tool_mode, result["warnings"])
@@ -1155,6 +1167,18 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		if known_function is EventFunction:
 			external_function_names[(known_function as EventFunction).function_name] = true
 	_warn_unread_reactions(external_variables, external_function_names, external_raw_rows, result["warnings"])
+	var table_lines: PackedStringArray = _emit_variables(table_variables, result["warnings"], external_function_names, external_controllers)
+	# Where they land: straight after the file's last variable row, or - a file with none - after the
+	# header lines the file opens with (its class_name / extends / description), under a blank line.
+	var table_slot: Variant = null
+	if not table_lines.is_empty():
+		if not external_variables.is_empty():
+			table_slot = external_variables.back()
+		else:
+			for lead_entry: Variant in sheet.events:
+				if not lead_entry is RawCodeRow:
+					break
+				table_slot = lead_entry
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
 			# The declaration can be MULTI-LINE (a `## doc` comment above the `@export var` line).
@@ -1167,6 +1191,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 				lines.append(declaration_line)
 			source_map.append({"uid": str((entry as LocalVariable).get_instance_id()), "start": variable_start, "end": lines.size(), "kind": "variable"})
 			if entry == external_variables.back():
+				if table_slot == entry:
+					lines.append_array(table_lines)
 				lines.append_array(inspector_conditions_function(external_conditions))
 		elif entry is CollectionDeclRow:
 			# A top-level structured collection declaration (a const table, a var default set): the
@@ -1181,6 +1207,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			for code_line: String in (entry as RawCodeRow).code.split("\n"):
 				lines.append(code_line)
 			source_map.append({"uid": str((entry as RawCodeRow).get_instance_id()), "start": block_start, "end": lines.size(), "kind": "raw"})
+			if table_slot == entry:
+				if not lines.is_empty() and not lines[lines.size() - 1].strip_edges().is_empty():
+					lines.append("")
+				lines.append_array(table_lines)
+				lines.append("")
 		elif entry is InnerClassRow:
 			# A class written inside the file: its header and its body, one tab deeper, written by
 			# _write_inner_class_bodies before this compile. The body's own rows keep their map
