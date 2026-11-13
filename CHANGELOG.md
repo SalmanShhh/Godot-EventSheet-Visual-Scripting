@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: the Translation Studio no longer registers languages, and Language Variants is gone
+
+- The Translation Studio's "Turn on in the game" step and its "Players see it" line are gone, and so is the "Language Variants..." item on a row's menu. Godot does both: turn a finished language on in Project Settings > Localization > Translations, and map one asset per language in Localization > Remaps. The Studio still finds the text, fills the table, checks what is missing, tries a fake language and hands a CSV to a translator, and View > Preview In Language is unchanged.
+
 ### Fixed: a variable added to a sheet opened from a .gd was not saved
 
 - On a sheet opened from a `.gd` file, Save wrote the file's own rows and left out the sheet's variable table, where the Variable window keeps an Instance variable. The variable showed on the sheet and Save said it had saved, but it was missing from the file. The save now writes what the table holds beside the file's own variables (after the last one, or under the header lines when the file has none), skips a name a row already declares, and leaves an untouched file byte for byte as it was. Signals and enums were never affected (they are rows and were written). A constant stored in the table is written as a plain `var`, the same as in a sheet saved as `.tres`; that is unchanged and noted here.

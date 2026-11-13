@@ -37,7 +37,6 @@ const DEFAULT_EXPANSION := 0.4
 ## Godot's own project settings this reads and writes - the exact ones Project Settings edits.
 const TRANSLATIONS_SETTING := "internationalization/locale/translations"
 const TEST_LOCALE_SETTING := "internationalization/locale/test"
-const REMAPS_SETTING := "internationalization/locale/translation_remaps"
 const PSEUDO_EXPANSION_SETTING := "internationalization/pseudolocalization/expansion_ratio"
 
 ## The locale the sheet currently renders in. Empty = off, and off is the identity.
@@ -256,31 +255,6 @@ static func registered_translations() -> PackedStringArray:
 	return PackedStringArray(setting) if setting is PackedStringArray or setting is Array else PackedStringArray()
 
 
-## Registers every catalog in `folder` AND the folders under it under Localization - the step
-## everyone forgets after a translator sends a file back. A project with one catalog per folder
-## (i18n/dialogue/chapter_03.csv beside i18n/ui.csv) gets a .translation per file per language from
-## Godot's importer, each next to its CSV, so the walk goes down. Existing entries are kept and never
-## duplicated. `save` writes project.godot; pass false to compute the list without touching it.
-static func register_catalogs(folder: String, save: bool = true) -> Dictionary:
-	if DirAccess.open(folder) == null:
-		return {"ok": false, "message": "There is no folder at %s to register." % folder}
-	var registered: PackedStringArray = registered_translations()
-	var added: PackedStringArray = PackedStringArray()
-	for path: String in ReadingDoors.translation_scan().files_under(folder, ["translation", "po"]):
-		if registered.has(path):
-			continue
-		registered.append(path)
-		added.append(path)
-	ProjectSettings.set_setting(TRANSLATIONS_SETTING, registered)
-	if save:
-		ProjectSettings.save()
-	if added.is_empty():
-		return {"ok": true, "added": added, "registered": registered,
-			"message": "Nothing new in %s - every catalog there is already registered." % folder}
-	return {"ok": true, "added": added, "registered": registered,
-		"message": "Registered %d catalog(s) under Localization: %s." % [added.size(), ", ".join(added)]}
-
-
 ## Godot's own "run the game in this language" setting, which is what makes the next Play speak the
 ## previewed language with no debug key to press. This WRITES project.godot when `save` is on - it is
 ## a real project setting, the same one Project Settings > Localization > Locale > Test edits, and
@@ -304,75 +278,3 @@ static func set_test_locale(locale: String, save: bool = true) -> Dictionary:
 
 static func test_locale() -> String:
 	return str(ProjectSettings.get_setting(TEST_LOCALE_SETTING, ""))
-
-# ── Language variants of an asset (Godot's remap table) ──────────────────────
-
-
-## The project's remap table: base path -> PackedStringArray of "variant_path:locale" entries. The
-## setting Godot declares as a PackedStringArray default but stores as a Dictionary the moment
-## Project Settings > Localization > Remaps holds anything.
-static func remaps() -> Dictionary:
-	var setting: Variant = ProjectSettings.get_setting(REMAPS_SETTING, {})
-	return setting as Dictionary if setting is Dictionary else {}
-
-
-## The locales a base asset already has a variant for.
-static func remap_locales(base_path: String) -> PackedStringArray:
-	var locales: PackedStringArray = PackedStringArray()
-	var table: Dictionary = remaps()
-	if not table.has(base_path):
-		return locales
-	for entry: Variant in PackedStringArray(table[base_path]):
-		var text: String = str(entry)
-		var separator: int = text.rfind(":")
-		if separator > 0:
-			locales.append(text.substr(separator + 1))
-	return locales
-
-
-## Writes `pairs` (locale -> variant path) as the remap table entry for `base_path`, the exact shape
-## Project Settings > Localization > Remaps edits. An empty pairs dict removes the entry entirely.
-static func set_remap(base_path: String, pairs: Dictionary, save: bool = true) -> Dictionary:
-	if base_path.strip_edges().is_empty():
-		return {"ok": false, "message": "Name the asset the variants belong to."}
-	var table: Dictionary = remaps()
-	if pairs.is_empty():
-		table.erase(base_path)
-	else:
-		var entries: PackedStringArray = PackedStringArray()
-		var locales: Array = pairs.keys()
-		locales.sort()
-		for locale: Variant in locales:
-			entries.append("%s:%s" % [str(pairs[locale]), str(locale)])
-		table[base_path] = entries
-	ProjectSettings.set_setting(REMAPS_SETTING, table)
-	if save:
-		ProjectSettings.save()
-	if pairs.is_empty():
-		return {"ok": true, "message": "%s has no language variants any more." % base_path}
-	return {"ok": true, "message": "%s now swaps for %d language(s) - the engine returns the variant from load() with no rows changed." % [base_path, pairs.size()]}
-
-
-## The variant file that would sit beside `base_path` for `locale` ("art/sign.png" ->
-## "art/sign.ja.png"), and whether it is really there. The dialog ticks the ones that exist.
-static func variant_path(base_path: String, locale: String) -> String:
-	if base_path.strip_edges().is_empty() or locale.strip_edges().is_empty():
-		return ""
-	var extension: String = base_path.get_extension()
-	if extension.is_empty():
-		return "%s.%s" % [base_path, locale]
-	return "%s.%s.%s" % [base_path.get_basename(), locale, extension]
-
-
-## THE finding nobody can see by looking: a remapped asset reached through preload resolves when the
-## SCRIPT loads, so Set Language swaps the catalog and leaves the art in English. Returns the
-## offending script paths for a base asset.
-static func frozen_preloads(base_path: String, scripts: PackedStringArray) -> PackedStringArray:
-	var offenders: PackedStringArray = PackedStringArray()
-	if base_path.strip_edges().is_empty():
-		return offenders
-	var needle: String = "preload(\"%s\")" % base_path
-	for path: String in scripts:
-		if FileAccess.get_file_as_string(path).contains(needle):
-			offenders.append(path)
-	return offenders

@@ -75,6 +75,8 @@ Two common routes, both plain Godot:
 - **gettext (.po)**: hand the generated POT to translators; import the returned `.po`
   files the same way.
 
+The Translation Studio (Tools menu) finds the text and hands a CSV to a translator; turning a finished language on, and mapping one asset per language, are Godot's own: **Project Settings > Localization > Translations** and **Remaps**.
+
 That registration step is what makes `tr()` return translated text. The Project Doctor
 reminds you if sheets translate text while the project has no catalog registered yet.
 

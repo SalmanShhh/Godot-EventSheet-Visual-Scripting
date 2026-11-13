@@ -100,12 +100,6 @@ static func _run_folders() -> bool:
 	var imported: Dictionary = scan.import_catalog(RETURNED, FOLDER)
 	var after_strings: String = FileAccess.get_file_as_string(FOLDER + "/strings.csv")
 	var after_dialogue: String = FileAccess.get_file_as_string(FOLDER + "/dialogue/chapter_03.csv")
-	# Godot's importer puts each language's .translation beside its CSV; registering walks down.
-	_write(FOLDER + "/dialogue/chapter_03.fr.translation", "x")
-	_write(FOLDER + "/strings.fr.translation", "x")
-	var registered_before: PackedStringArray = EventSheetGameCatalog.registered_translations()
-	var registered: Dictionary = EventSheetGameCatalog.register_catalogs(FOLDER, false)
-	ProjectSettings.set_setting(EventSheetGameCatalog.TRANSLATIONS_SETTING, registered_before)
 	var pseudo: Dictionary = EventSheetGameCatalog.write_pseudo_column(FOLDER)
 	all_passed = SUPPORT.pins(NAME, [
 		["coverage over the folder counts every line", [int(french.get("total", 0)), int(french.get("covered", 0))], [3, 1]],
@@ -113,8 +107,6 @@ static func _run_folders() -> bool:
 			"keys,en,notes,fr\n\"Welcome, traveller.\",\"Welcome, traveller.\",\"inn.gd:6 - The innkeeper, a little tired.\",\"Bienvenue, voyageur.\"\n"],
 		["a key no catalog holds is reported", imported.get("unknown", PackedStringArray()), PackedStringArray(["Nobody says this"])],
 		["and the catalog nothing landed in is untouched", after_strings, before_strings],
-		["registering finds the .translation files in every folder", registered.get("added", PackedStringArray()),
-			PackedStringArray([FOLDER + "/dialogue/chapter_03.fr.translation", FOLDER + "/strings.fr.translation"])],
 		["the pseudo column is written into every catalog of the folder", int(pseudo.get("rows", 0)), 3],
 		["a batch of pseudo text is the one-at-a-time text", EventSheetGameCatalog.pseudolocalize_all(PackedStringArray(["Play", ""])),
 			PackedStringArray([EventSheetGameCatalog.pseudolocalize("Play"), ""])],

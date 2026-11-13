@@ -69,13 +69,12 @@ static func run() -> bool:
 	all_passed = _run_preview() and all_passed
 	all_passed = _run_grid_round_trip() and all_passed
 	all_passed = _run_key_rename() and all_passed
-	all_passed = _run_language_variants() and all_passed
 	all_passed = _run_key_column_sweep() and all_passed
 	_cleanup()
 	# One line on the way out, even when everything passed: a test that prints nothing at all is
 	# indistinguishable in the suite log from a test that never ran, which is exactly how broken work
 	# looks green here.
-	print("[%s] translation_editor_seams_test: 7 seams driven through their real paths" % ("PASS" if all_passed else "FAIL"))
+	print("[%s] translation_editor_seams_test: 6 seams driven through their real paths" % ("PASS" if all_passed else "FAIL"))
 	return all_passed
 
 
@@ -133,91 +132,6 @@ static func _key_grid_variable() -> LocalVariable:
 	variable.exported = true
 	variable.attributes = (EventSheets.resource_grid(["title: key", "price: float"]) as Dictionary).get("attributes", {})
 	return variable
-
-
-# ── 7. Language variants of an asset (Godot's own remap table) ───────────────
-
-
-static func _run_language_variants() -> bool:
-	var all_passed: bool = true
-	# What counts as "a row that names an asset": a FILE path, never a node path or a group name.
-	var row: EventRow = EventRow.new()
-	var action: ACEAction = ACEAction.new()
-	action.params = {"node": "$Sign", "property": "texture", "value": "load(\"res://art/sign.png\")",
-		"group": "res://enemies", "sound": "\"res://audio/theme.ogg\""}
-	row.actions = [action]
-	all_passed = _check("the row's own file paths are found, node paths and extensionless ones are not",
-		", ".join(EventSheetLanguageVariantsDialog.asset_paths_in(row)),
-		"res://art/sign.png, res://audio/theme.ogg") and all_passed
-	all_passed = _check("so the item is offered on that row",
-		EventSheetLanguageVariantsDialog.names_an_asset(row), true) and all_passed
-	var plain: ACEAction = ACEAction.new()
-	plain.params = {"value": "score + 1"}
-	all_passed = _check("and never on a row that names no file",
-		EventSheetLanguageVariantsDialog.names_an_asset(plain), false) and all_passed
-	all_passed = _check("the variant sits beside the original with the locale in its name",
-		EventSheetGameCatalog.variant_path("res://art/sign.png", "ja"), "res://art/sign.ja.png") and all_passed
-	all_passed = _check("a file with no extension still gets one",
-		EventSheetGameCatalog.variant_path("res://art/sign", "ja"), "res://art/sign.ja") and all_passed
-
-	# The remap table itself: Godot's own setting, in the exact shape Project Settings edits.
-	var before: Variant = ProjectSettings.get_setting(EventSheetGameCatalog.REMAPS_SETTING, {})
-	var wrote: Dictionary = EventSheetGameCatalog.set_remap("res://art/sign.png",
-		{"ja": "res://art/sign.ja.png", "fr": "res://art/sign.fr.png"}, false)
-	all_passed = _check("the table is written in the shape Project Settings > Remaps edits",
-		", ".join(PackedStringArray(EventSheetGameCatalog.remaps()["res://art/sign.png"])),
-		"res://art/sign.fr.png:fr, res://art/sign.ja.png:ja") and all_passed
-	all_passed = _check("and the locales read back", ", ".join(EventSheetGameCatalog.remap_locales("res://art/sign.png")),
-		"fr, ja") and all_passed
-	all_passed = _check("the outcome says the rows do not change", str(wrote.get("message", "")),
-		"res://art/sign.png now swaps for 2 language(s) - the engine returns the variant from load() with no rows changed.") and all_passed
-	EventSheetGameCatalog.set_remap("res://art/sign.png", {}, false)
-	all_passed = _check("an empty tick list removes the entry rather than leaving an empty one",
-		EventSheetGameCatalog.remaps().has("res://art/sign.png"), false) and all_passed
-
-	# THE finding nobody can see by looking: preload resolves at script load, so a live language
-	# switch never swaps it. The corpus is the EMITTED code, because that is where it lives.
-	DirAccess.make_dir_recursive_absolute(PROJECT_DIR)
-	var frozen_file: FileAccess = FileAccess.open(SCRIPT_PATH, FileAccess.WRITE)
-	frozen_file.store_string("extends Node\n\nconst SIGN := preload(\"res://art/sign.png\")\n")
-	frozen_file.close()
-	var late_file: FileAccess = FileAccess.open("%s/late.gd" % PROJECT_DIR, FileAccess.WRITE)
-	late_file.store_string("extends Node\n\nfunc _swap() -> void:\n\t$Sign.texture = load(\"res://art/sign.png\")\n")
-	late_file.close()
-	var scripts: PackedStringArray = EventSheetTranslationScan.files_under(PROJECT_DIR, ["gd"])
-	var frozen: PackedStringArray = EventSheetGameCatalog.frozen_preloads("res://art/sign.png", scripts)
-	all_passed = _check("the preload that would ignore the remap is named", ", ".join(frozen), SCRIPT_PATH) and all_passed
-	all_passed = _check("and the plain load beside it is not accused", frozen.size(), 1) and all_passed
-	DirAccess.remove_absolute("%s/late.gd" % PROJECT_DIR)
-
-	# The dialog: it reads the languages off the GAME's catalog, refuses to tick a variant that is
-	# not there, and writes exactly what was ticked.
-	EventSheetGridCSV.write_csv(CATALOG_PATH, [{"keys": "Play", "en": "Play", "fr": "Jouer", "ja": ""}],
-		[{"name": "keys", "type": "String"}, {"name": "en", "type": "String"},
-			{"name": "fr", "type": "String"}, {"name": "ja", "type": "String"}])
-	var editor: EventSheetEditor = EventSheetEditor.new()
-	editor.set_undo_redo_manager(RecordingUndoManager.new())
-	editor.setup(EventSheetResource.new())
-	editor._translation_studio._build_window()
-	editor._translation_studio.catalog_target = CATALOG_PATH
-	var dialog: EventSheetLanguageVariantsDialog = editor._language_variants_dialog
-	dialog.open(row)
-	all_passed = _check("the dialog offers the files the row names", dialog.base_path(), "res://art/sign.png") and all_passed
-	all_passed = _check("the languages offered are the GAME's, not the editor's own nine",
-		", ".join(dialog.offered_locales()).contains("fr"), true) and all_passed
-	all_passed = _check("a language whose variant file is not there yet cannot be ticked",
-		dialog._checks[0].disabled, true) and all_passed
-	all_passed = _check("and it says what to do about that",
-		dialog._checks[0].tooltip_text.begins_with("Put a file called sign."), true) and all_passed
-	dialog._checks[0].button_pressed = true
-	var applied: Dictionary = dialog.apply(false)
-	all_passed = _check("applying writes exactly the ticked pair",
-		EventSheetGameCatalog.remap_locales("res://art/sign.png").size(), 1) and all_passed
-	all_passed = _check("and reports it", str(applied.get("message", "")).contains("now swaps for 1 language(s)"), true) and all_passed
-	EventSheetGameCatalog.set_remap("res://art/sign.png", {}, false)
-	ProjectSettings.set_setting(EventSheetGameCatalog.REMAPS_SETTING, before)
-	editor.free()
-	return all_passed
 
 
 # ── 1. What the sweep finds ──────────────────────────────────────────────────
@@ -331,19 +245,16 @@ static func _run_studio() -> bool:
 		"✓ 2 cells were filled in from the translator's file. [eventforge_l10n_strings.csv]", "✓ Blank cells in that file left yours alone.",
 		"! 1 lines in that file are in no script, so they were not added: A key from another game."])) and all_passed
 
-	# ---- the language strip: a card per real language, how far along, and whether players can pick it ----
+	# ---- the language strip: a card per real language, how far along ----
 	var strip: PackedStringArray = PackedStringArray()
 	for card: Node in studio._languages.get_children():
 		strip.append((card as Control).tooltip_text.get_slice("\n", 0) if card is PanelContainer else (card as Button).text)
 	all_passed = _check("the strip has a card per language, then the way to add one", strip,
 		PackedStringArray(["English (en)", "French (fr)", "German (de)", "+ Add a language"])) and all_passed
-	var registered_before: PackedStringArray = EventSheetGameCatalog.registered_translations()
-	ProjectSettings.set_setting(EventSheetGameCatalog.TRANSLATIONS_SETTING, PackedStringArray(["res://i18n/strings.fr.translation"]))
 	var french_state: Dictionary = studio.language_state({"locale": "fr", "total": 8, "covered": 2})
 	all_passed = _check("a quarter-done language reads as under way, with its exact counts", [french_state["percent"], french_state["state"],
-		french_state["detail"], french_state["players"]], [25, "In progress", "2 of 8 lines. 6 missing.", "Players see it: yes"]) and all_passed
-	all_passed = _check("a language with no registered translation file is not one players can pick yet",
-		studio.language_state({"locale": "de", "total": 8, "covered": 7})["players"], "Players see it: not yet (turn it on in step 4)") and all_passed
+		french_state["detail"]], [25, "In progress", "2 of 8 lines. 6 missing."]) and all_passed
+	all_passed = _check("a language card carries no claim about what players see", french_state.has("players"), false) and all_passed
 	all_passed = _check("the source language is the source, and finished ones say so", [
 		studio.language_state({"locale": "en", "total": 8, "covered": 8})["state"],
 		studio.language_state({"locale": "ja", "total": 8, "covered": 8})["state"],
@@ -412,17 +323,16 @@ static func _run_studio() -> bool:
 		[studio.first_place("Play"), studio.first_place("Bandit camp").slice(1), studio.first_place("A line we deleted")],
 		[[PROJECT_DIR + "/menu_sheet.gd", 6], [0], []]) and all_passed
 
-	# ---- Turn on in the game: the step everyone forgets ----
-	# The table's own folder is what is turned on; this one holds no compiled catalog.
-	studio.catalog_target = PROJECT_DIR + "/strings.csv"
-	studio.run_register(false)
-	all_passed = _check("turning on a folder with no compiled catalog says so rather than looking busy",
-		_card_lines(studio, "ship"), PackedStringArray(["✓ Every translation file next to the table was already turned on.",
-			"! No language has a translation file yet. Godot makes one per column when it imports the table."])) and all_passed
-	all_passed = _check("a folder that is not there answers in words",
-		str(EventSheetGameCatalog.register_catalogs("user://eventforge_l10n_nowhere", false).get("message", "")),
-		"There is no folder at user://eventforge_l10n_nowhere to register.") and all_passed
-	ProjectSettings.set_setting(EventSheetGameCatalog.TRANSLATIONS_SETTING, registered_before)
+	# ---- Godot's own door: the window registers nothing ----
+	all_passed = _check("the window has no step that turns a language on", studio.has_method("run_register"), false) and all_passed
+	var offered: PackedStringArray = PackedStringArray()
+	var asset_row: EventRow = EventRow.new()
+	var asset_action: ACEAction = ACEAction.new()
+	asset_action.params = {"value": "load(\"res://art/sign.png\")"}
+	asset_row.actions = [asset_action]
+	for item: Dictionary in EventSheets.row_menu_items_for(asset_row):
+		offered.append(str(item.get("label", "")))
+	all_passed = _check("a row naming a file is offered no Language Variants item", offered.has("Language Variants…"), false) and all_passed
 	editor.free()
 	return all_passed
 

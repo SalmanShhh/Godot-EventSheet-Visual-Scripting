@@ -35,7 +35,6 @@ const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_impor
 const ACE_PICKER_PATH := "res://addons/eventsheet/editor/ace_picker.gd"
 const VARIABLE_OWNERS_PATH := "res://addons/eventsheet/editor/interaction/variable_owners.gd"
 const BLEND_MODE_FIELD_PATH := "res://addons/eventsheet/editor/blend_mode_field.gd"
-const LANGUAGE_VARIANTS_DIALOG_PATH := "res://addons/eventsheet/editor/dock/language_variants_dialog.gd"
 const COMPLETIONS_PATH := "res://addons/eventsheet/editor/autocomplete/completion_sources.gd"
 ## The one shape every quick question takes, loaded the first time a question is asked.
 ## The function editor Godot's Inspector shows, reached by path the moment a function is selected.
@@ -919,12 +918,6 @@ var _paste_special_dialog: RefCounted = null:  # row ▸ More ▸ Paste Special�
 			_paste_special_dialog = load("res://addons/eventsheet/editor/dock/paste_special_dialog.gd").new()
 			_paste_special_dialog.init(self)
 		return _paste_special_dialog
-var _language_variants_dialog: RefCounted = null:  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
-	get:
-		if _language_variants_dialog == null:
-			_language_variants_dialog = load("res://addons/eventsheet/editor/dock/language_variants_dialog.gd").new()
-			_language_variants_dialog.init(self)
-		return _language_variants_dialog
 var _translation_key_dialog: RefCounted = null:  # the offer after editing a globe-marked value: rename the key in every catalog (dock/translation_key_dialog.gd)
 	get:
 		if _translation_key_dialog == null:
@@ -1045,15 +1038,8 @@ func _init() -> void:
 	# Theme-manager MUST be wired before _ui_builder.build_ui() too: _ui_builder.build_ui() calls
 	# _theme_manager.build_theme_file_dialog() (via the dock delegate). init() only stores _dock.
 	_theme_manager.init(self)
-	# The row item rides the shipped extension seam rather than a new menu const: the context-menu
-	# builder already appends every registered item whose filter accepts the clicked row. The filter
-	# asks the dialog's file by path, so the dialog is only built when the item is clicked.
-	DOCK_REGISTRY.register_row_menu_item("Language Variants…",
-		func(resource: Resource) -> bool:
-			return bool(load(LANGUAGE_VARIANTS_DIALOG_PATH).names_an_asset(resource)),
-		func(resource: Resource) -> void:
-			_language_variants_dialog.open(resource))
-	# "What does this do?" rides the same seam: the reference panel is a caller of the public
+	# "What does this do?" rides the shipped row-menu extension seam: the context-menu builder appends every
+	# registered item whose filter accepts the clicked row. The reference panel is a caller of the public
 	# extension point, not a new hard-wired menu const, so the seam stays dogfooded. The filter
 	# keeps the entry off a comment or an empty group - a row that names no verb has nothing to
 	# explain, and an entry that opens a blank page is worse than no entry.

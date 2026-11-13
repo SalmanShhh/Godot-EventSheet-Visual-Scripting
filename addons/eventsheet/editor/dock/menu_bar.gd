@@ -911,7 +911,7 @@ func build(root: Node) -> void:
 	)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(24), "Every open sheet on one page - how big each is, how much of it is described, what the Doctor said about it - plus a search that reaches all of them and the page each sheet writes about itself.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(25), "The documentation chores in one window: rewrite the page each sheet writes about itself, check what the guides do not answer, export the Manual as a browsable site, write out a translator's missing keys. Nothing is published - drafts stay drafts.")
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file. Godot turns a finished language on, under Project Settings > Localization.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")

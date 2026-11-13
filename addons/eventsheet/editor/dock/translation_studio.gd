@@ -3,10 +3,10 @@ class_name EventSheetTranslationStudio
 extends RefCounted
 # Translation Studio (Tools menu), the window "Your game in other languages": the handoff to a
 # translator read top to bottom. A strip of language cards says how far along each language is and
-# whether players can pick it yet (its .translation registered under Localization); four numbered
-# steps find the text (a sweep of the scripts AND the .tres data assets Godot's POT route cannot
-# see, merged so a finished cell is never clobbered), fill each language, check what is missing (or
-# try a fake, longer, accented language) and turn the languages on. Each button reports in a result
+# how much of it is done; three numbered steps find the text (a sweep of the scripts AND the .tres
+# data assets Godot's POT route cannot see, merged so a finished cell is never clobbered), fill each
+# language, and check what is missing (or try a fake, longer, accented language). Turning a finished
+# language on is Godot's own door, Project Settings > Localization > Translations. Each button reports in a result
 # card under itself; the table (translation_table_view.gd, which draws only the rows on screen)
 # lists every line, and a clicked line opens in its own window. The work is
 # EventSheetTranslationScan / EventSheetGameCatalog on the grid codec: this is the form around it.
@@ -91,6 +91,9 @@ func _build_window() -> void:
 		EventSheetPopupUI.muted_text_color()))
 	_languages = HFlowContainer.new()
 	box.add_child(_languages)
+	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
+		"Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it."),
+		EventSheetPalette.scaled_f(560.0)))
 	_step(box, "1", EventSheetL10n.translate("Find the text in your game"),
 		EventSheetL10n.translate("Collects every piece of text players read (labels, dialogue, buttons) into the table."),
 		[["find", EventSheetL10n.translate("Find text"), EventSheetL10n.translate("Found the text in your game"), run_extract]])
@@ -103,9 +106,6 @@ func _build_window() -> void:
 		EventSheetL10n.translate("Shows how much of each language is done, and which text no longer appears in the game."),
 		[["check", EventSheetL10n.translate("Check"), EventSheetL10n.translate("Checked what is missing"), run_check],
 		["pseudo", EventSheetL10n.translate("Try a fake language"), EventSheetL10n.translate("Made a fake language to test with"), run_pseudo]])
-	_step(box, "4", EventSheetL10n.translate("Use it in the game"),
-		EventSheetL10n.translate("Tells Godot about the languages, so your events can switch the game into any of them."),
-		[["ship", EventSheetL10n.translate("Turn on in the game"), EventSheetL10n.translate("Turned it on in the game"), run_register]])
 	# The strip and the steps scroll in the top half; the table keeps the bottom half in view.
 	_steps_scroll = ScrollContainer.new()
 	_steps_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -141,8 +141,8 @@ func _step(box: VBoxContainer, number: String, title: String, words: String, but
 	column.add_child(head)
 	for spec: Array in buttons:
 		var button: Button = _button(str(spec[1]), spec[3] as Callable)
-		# The step that starts the work and the step that finishes it are the window's main buttons.
-		line.add_child(EventSheetPopupUI.main_button(button) if spec[0] in ["find", "ship"] else button)
+		# The step that starts the work is the window's main button.
+		line.add_child(EventSheetPopupUI.main_button(button) if spec[0] == "find" else button)
 		var card: EventSheetPopupUI.ResultCard = EventSheetPopupUI.ResultCard.new(str(spec[2]))
 		card.visible = false
 		column.add_child(card)
@@ -168,7 +168,7 @@ func show_filter(filter: String) -> void:
 
 
 ## What one language's card says, from its coverage entry: {name, percent, state, tone, detail,
-## players}. `tone` is a window-kit tone; empty reads in the accent, for a language under way.
+## }. `tone` is a window-kit tone; empty reads in the accent, for a language under way.
 func language_state(entry: Dictionary) -> Dictionary:
 	var locale: String = str(entry.get("locale", ""))
 	var total: int = int(entry.get("total", 0))
@@ -185,18 +185,7 @@ func language_state(entry: Dictionary) -> Dictionary:
 	elif percent > 0:
 		state = [EventSheetL10n.translate("In progress"), ""]
 	return {"name": TranslationServer.get_locale_name(locale), "percent": percent, "state": state[0], "tone": state[1],
-		"detail": EventSheetL10n.translate("%d of %d lines. %d missing.") % [covered, total, total - covered],
-		"players": EventSheetL10n.translate("Players see it: yes") if source or players_can_pick(locale)
-			else EventSheetL10n.translate("Players see it: not yet (turn it on in step 4)")}
-
-
-## True when the project registers a translation file for `locale`, which is what lets the game
-## switch into it.
-func players_can_pick(locale: String) -> bool:
-	for path: String in EventSheetGameCatalog.registered_translations():
-		if path.ends_with(".%s.translation" % locale) or path.get_file() == "%s.po" % locale:
-			return true
-	return false
+		"detail": EventSheetL10n.translate("%d of %d lines. %d missing.") % [covered, total, total - covered]}
 
 
 func _language_card(entry: Dictionary) -> Control:
@@ -222,7 +211,7 @@ func _language_card(entry: Dictionary) -> Control:
 	column.add_child(bar)
 	column.add_child(_label(str(said["state"]), EventSheetPopupUI.muted_text_color()))
 	var card: PanelContainer = EventSheetPopupUI.panel_section(column)
-	card.tooltip_text = "%s (%s)\n%s\n%s" % [said["name"], entry.get("locale", ""), said["detail"], said["players"]]
+	card.tooltip_text = "%s (%s)\n%s" % [said["name"], entry.get("locale", ""), said["detail"]]
 	return card
 
 
@@ -285,7 +274,7 @@ func run_add_language(locale: String) -> Dictionary:
 		return outcome
 	_show_result("add", _left_alone([_line(EventSheetL10n.translate("Every line got an empty %s column. Godot makes a translation file for it, next to the others.") % locale,
 			EventSheetPopupUI.TONE_OK, "%s.%s.translation" % [_first_catalog().get_basename(), locale]),
-		_line(EventSheetL10n.translate("It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4."), EventSheetPopupUI.TONE_WARNING)], outcome),
+		_line(EventSheetL10n.translate("It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations."), EventSheetPopupUI.TONE_WARNING)], outcome),
 		PackedStringArray([TranslationServer.get_locale_name(locale), EventSheetL10n.translate("1 new column")]))
 	return outcome
 
@@ -343,29 +332,6 @@ func run_pseudo() -> Dictionary:
 	_show_result("pseudo", _left_alone([_line(EventSheetL10n.translate("The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box."), EventSheetPopupUI.TONE_OK, catalog_path()),
 		_line(EventSheetL10n.translate("It is a test column: leave qps out of any language list your players see."), EventSheetPopupUI.TONE_WARNING)], outcome),
 		PackedStringArray([EventSheetL10n.translate("%d lines") % int(outcome.get("rows", 0)), EventSheetL10n.translate("+40% longer, accented")]))
-	return outcome
-
-
-## Step 4: registers every translation file next to the table under Localization. `persist` writes
-## project.godot; the suite drives the same button with it off, so a test never leaves a user://
-## catalog registered in the user's project file.
-func run_register(persist: bool = true) -> Dictionary:
-	var target: String = catalog_path()
-	var outcome: Dictionary = EventSheetGameCatalog.register_catalogs(target.get_base_dir()
-		if EventSheetTranslationScan.is_single_catalog(target) else target, persist)
-	if _failed("ship", outcome):
-		return outcome
-	var added: PackedStringArray = outcome.get("added", PackedStringArray())
-	var names: PackedStringArray = PackedStringArray()
-	for entry: Variant in EventSheetTranslationScan.coverage(target):
-		var locale: String = str((entry as Dictionary).get("locale", ""))
-		if _languages_of(PackedStringArray([locale])).has(locale) and players_can_pick(locale):
-			names.append(TranslationServer.get_locale_name(locale))
-	_show_result("ship", [_line(EventSheetL10n.translate("Every translation file next to the table was already turned on.")) if added.is_empty()
-			else _line(EventSheetL10n.translate("Added to Project Settings > Localization, so Godot loads them when the game starts."), EventSheetPopupUI.TONE_OK, "project.godot"),
-		_line(EventSheetL10n.translate("Players can pick: %s.") % ", ".join(names)) if not names.is_empty()
-			else _line(EventSheetL10n.translate("No language has a translation file yet. Godot makes one per column when it imports the table."), EventSheetPopupUI.TONE_WARNING)],
-		PackedStringArray([EventSheetL10n.translate("%d files") % added.size(), EventSheetL10n.translate("%d languages") % names.size(), "project.godot"]))
 	return outcome
 
 

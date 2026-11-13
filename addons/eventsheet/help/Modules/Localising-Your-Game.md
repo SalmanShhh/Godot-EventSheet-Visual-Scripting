@@ -62,7 +62,7 @@ per-language files, voice clips with captions that cannot out-run them, and data
 
 ## Setup
 
-Add your `.csv` (or `.po`) in **Project Settings > Localization > Translations**. Then the smallest
+Add your `.csv` (or `.po`) in **Project Settings > Localization > Translations**. That panel, and **Remaps** beside it for one asset per language, are where a language is turned on; the editor's Translation Studio only finds the text and writes the CSV. Then the smallest
 useful sheet is a language button and a refresh:
 
 ```
