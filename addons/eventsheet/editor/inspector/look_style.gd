@@ -394,3 +394,15 @@ static func join_toggle(button: Button, round_left: bool, round_right: bool) -> 
 	var on_accent: Color = ink_on_accent()
 	for item: StringName in [&"font_pressed_color", &"font_hover_pressed_color", &"icon_pressed_color", &"icon_hover_pressed_color"]:
 		button.add_theme_color_override(item, on_accent)
+
+
+## `content` inside a panel wearing the editor's field box with no margin of its own, so a control
+## that draws no box (a resource picker) sits in the same dark field as the rows around it.
+static func boxed(content: Control) -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	var box: StyleBox = field_box()
+	box.set_content_margin_all(0.0)
+	panel.add_theme_stylebox_override("panel", box)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(content)
+	return panel

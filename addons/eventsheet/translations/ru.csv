@@ -10445,3 +10445,5 @@ Move this row down,Переместить эту строку вниз
 Drag to move this row.,"Перетащите, чтобы переместить эту строку."
 Table (1 row),Таблица (1 строка)
 Table (%d rows),Таблица (%d строк)
+(no texture),(нет текстуры)
+Click to open the curve editor.,"Нажмите, чтобы открыть редактор кривых."

@@ -2054,16 +2054,43 @@ class DrawerSwatchRow:
 
 
 # ── Texture / sprite preview ────────────────────────────────────────────────
-## A read-friendly thumbnail of a Texture2D (or a texture path). Display-only: the EditorProperty wrapper
-## adds the actual picker above it; the dialog preview just shows a placeholder frame.
+## A read-friendly picture of a Texture2D (or a texture path): the picture centred on the checkerboard
+## Godot uses for transparency, large enough to judge, with its size in pixels under it. Display-only:
+## the picker sits above it in the Inspector, and the dialog preview just shows a placeholder frame.
 class DrawerTexturePreview:
+	extends VBoxContainer
+	var _texture: Texture2D = null
+	var _picture: TexturePicture = null
+	var _size_line: Label = null
+
+	func _init() -> void:
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_picture = TexturePicture.new()
+		add_child(_picture)
+		_size_line = Label.new()
+		_size_line.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		add_child(_size_line)
+		set_texture(null)
+
+	func set_texture(t: Texture2D) -> void:
+		_texture = t
+		_picture.set_texture(t)
+		_size_line.text = "" if t == null else "%d x %d px" % [t.get_width(), t.get_height()]
+		_size_line.visible = t != null
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_THEME_CHANGED and _size_line != null:
+			_size_line.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+
+
+## The framed picture of a texture preview: a checkerboard panel with the picture centred on it.
+class TexturePicture:
 	extends Control
 	var _texture: Texture2D = null
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(72.0, 72.0)
-		# Stay a compact, left-aligned thumbnail instead of stretching across the property row.
-		size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		custom_minimum_size = Vector2(0.0, EventSheetLookStyle.px(EventSheetLookStyle.PICTURE_HEIGHT))
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func set_texture(t: Texture2D) -> void:
@@ -2071,76 +2098,95 @@ class DrawerTexturePreview:
 		queue_redraw()
 
 	func _draw() -> void:
-		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-		var ink: Color = chrome.drawer_ink_color
-		var rect: Rect2 = Rect2(Vector2.ZERO, size)
-		# checkerboard so transparent textures read clearly
-		var cell: float = 8.0
-		var rows: int = int(ceil(size.y / cell))
-		var cols: int = int(ceil(size.x / cell))
-		for ry: int in range(rows):
-			for cx: int in range(cols):
-				var shade: Color = chrome.drawer_checker_dark_color if (ry + cx) % 2 == 0 \
-					else chrome.drawer_checker_light_color
-				draw_rect(Rect2(cx * cell, ry * cell, cell, cell), shade, true)
-		if _texture != null:
-			var tsize: Vector2 = _texture.get_size()
-			if tsize.x > 0.0 and tsize.y > 0.0:
-				var scale: float = minf(size.x / tsize.x, size.y / tsize.y)
-				var draw_size: Vector2 = tsize * scale
-				draw_texture_rect(_texture, Rect2((size - draw_size) * 0.5, draw_size), false)
+		var frame: Rect2 = Rect2(Vector2.ZERO, size)
+		var box: StyleBox = EventSheetLookStyle.field_box()
+		draw_style_box(box, frame)
+		var inner: Rect2 = frame.grow(-1.0)
+		var checker: Texture2D = EventSheetLookStyle.icon(&"Checkerboard")
+		if checker != null:
+			draw_texture_rect(checker, inner, true)
 		else:
-			var font: Font = ThemeDB.fallback_font
-			draw_string(font, Vector2(4.0, size.y * 0.5 + 4.0), "(no texture)", HORIZONTAL_ALIGNMENT_CENTER, size.x - 8.0, EventSheetPalette.scaled(10), Color(ink.r, ink.g, ink.b, 0.45))
-		draw_rect(rect, Color(ink.r, ink.g, ink.b, 0.18), false, 1.0)
+			var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+			var cell: float = EventSheetLookStyle.px(8.0)
+			for row: int in int(ceil(inner.size.y / cell)):
+				for column: int in int(ceil(inner.size.x / cell)):
+					var shade: Color = chrome.drawer_checker_dark_color if (row + column) % 2 == 0 else chrome.drawer_checker_light_color
+					var piece: Rect2 = Rect2(inner.position + Vector2(column, row) * cell, Vector2(cell, cell)).intersection(inner)
+					draw_rect(piece, shade, true)
+		if _texture != null:
+			var natural: Vector2 = _texture.get_size()
+			if natural.x > 0.0 and natural.y > 0.0:
+				var room: Rect2 = inner.grow(-EventSheetLookStyle.px(6.0))
+				var scale: float = minf(room.size.x / natural.x, room.size.y / natural.y)
+				var shown: Vector2 = natural * scale
+				draw_texture_rect(_texture, Rect2(room.position + (room.size - shown) * 0.5, shown), false)
+		else:
+			var font: Font = EventSheetLookStyle.font()
+			var font_size: int = EventSheetLookStyle.font_size()
+			var word: String = EventSheetL10n.translate("(no texture)")
+			draw_string(font, Vector2(0.0, (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5), word, HORIZONTAL_ALIGNMENT_CENTER, size.x, font_size, EventSheetLookStyle.quiet())
 
 
 # ── Curve preview ───────────────────────────────────────────────────────────
-## Renders a Curve's shape inline (read-friendly). Display-only: the EditorProperty wrapper adds the resource
-## picker. With no curve in the slot it says "empty" and draws nothing.
+## Renders a Curve's shape inline: a field-coloured panel with a half-way grid, the curve as a line in
+## the accent, and the 0 and 1 of its range marked. A click asks to open the curve in Godot's own curve
+## editor, exactly as a click on the slot does. With no curve in the slot it says "empty" and draws nothing.
 class DrawerCurvePreview:
 	extends Control
+	## A click on the picture: the look hands the curve to the Inspector so Godot's curve editor opens.
+	signal pressed
 	var _curve: Curve = null
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(0.0, 56.0)
+		custom_minimum_size = Vector2(0.0, EventSheetLookStyle.px(EventSheetLookStyle.CURVE_HEIGHT))
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func set_curve(c: Curve) -> void:
 		_curve = c
+		tooltip_text = EventSheetL10n.translate("Click to open the curve editor.") if c != null and mouse_filter == Control.MOUSE_FILTER_STOP else ""
 		queue_redraw()
 
+	## Lets a click on the picture raise `pressed`; a card keeps the picture a plain display.
+	func make_clickable() -> void:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		set_curve(_curve)
+
+	func _gui_input(event: InputEvent) -> void:
+		if _curve != null and event is InputEventMouseButton and (event as InputEventMouseButton).pressed \
+				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			pressed.emit()
+			accept_event()
+
 	func _draw() -> void:
-		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-		var ink: Color = chrome.drawer_ink_color
-		var w: float = size.x
-		var h: float = size.y
-		draw_rect(Rect2(0.0, 0.0, w, h), chrome.drawer_well_color, true)
+		var frame: Rect2 = Rect2(Vector2.ZERO, size)
+		draw_style_box(EventSheetLookStyle.field_box(), frame)
+		var quiet: Color = EventSheetLookStyle.quiet()
+		var font: Font = EventSheetLookStyle.font()
+		var font_size: int = EventSheetLookStyle.font_size()
 		# An empty slot draws nothing but the word "empty": a sample curve here would read as a curve
 		# that exists.
 		if _curve == null:
-			var font: Font = get_theme_default_font()
-			var font_size: int = get_theme_default_font_size()
-			var quiet: Color = Color(ink.r, ink.g, ink.b, 0.45)
 			var word: String = EventSheetL10n.translate("empty")
 			var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-			draw_string(font, Vector2((w - word_width) * 0.5, (h + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5), word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
-			draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.14), false, 1.0)
+			draw_string(font, Vector2((size.x - word_width) * 0.5, (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5), word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
 			return
-		# baseline + midline
-		draw_line(Vector2(0.0, h - 1.0), Vector2(w, h - 1.0), Color(ink.r, ink.g, ink.b, 0.12), 1.0)
-		draw_line(Vector2(0.0, h * 0.5), Vector2(w, h * 0.5), Color(ink.r, ink.g, ink.b, 0.06), 1.0)
-		var pad: float = 4.0
-		var inner_h: float = h - pad * 2.0
+		var rest: Color = EventSheetLookStyle.rest()
+		draw_line(Vector2(0.0, size.y * 0.5), Vector2(size.x, size.y * 0.5), rest, 1.0)
+		draw_line(Vector2(size.x * 0.5, 0.0), Vector2(size.x * 0.5, size.y), rest, 1.0)
+		var inset: float = EventSheetLookStyle.px(6.0)
+		var inner_w: float = maxf(1.0, size.x - inset * 2.0)
+		var inner_h: float = maxf(1.0, size.y - inset * 2.0)
 		var samples: int = 48
 		var points: PackedVector2Array = PackedVector2Array()
 		for i: int in range(samples + 1):
 			var t: float = float(i) / float(samples)
-			var y: float = pad + (1.0 - clampf(_curve.sample_baked(t), 0.0, 1.0)) * inner_h
-			points.append(Vector2(t * w, y))
-		if points.size() >= 2:
-			draw_polyline(points, chrome.drawer_accent_bright_color, 1.8, true)
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.14), false, 1.0)
+			var y: float = inset + (1.0 - clampf(_curve.sample_baked(t), 0.0, 1.0)) * inner_h
+			points.append(Vector2(inset + t * inner_w, y))
+		draw_polyline(points, EventSheetLookStyle.accent(), EventSheetLookStyle.px(EventSheetLookStyle.LINE_WIDTH), true)
+		draw_string(font, Vector2(EventSheetLookStyle.px(5.0), EventSheetLookStyle.px(3.0) + font.get_ascent(font_size)), "1", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
+		draw_string(font, Vector2(EventSheetLookStyle.px(5.0), size.y - EventSheetLookStyle.px(3.0) - font.get_descent(font_size)), "0", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
 
 
 ## A word picked from the list a function of the script gives: a described dropdown. The file stores

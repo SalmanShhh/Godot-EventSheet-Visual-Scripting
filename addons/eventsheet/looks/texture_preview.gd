@@ -15,15 +15,13 @@ var _picker: EditorResourcePicker
 
 
 func _look_built() -> void:
-	var box: VBoxContainer = VBoxContainer.new()
 	_picker = EditorResourcePicker.new()
 	_picker.base_type = "Texture2D"
+	_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_picker.resource_changed.connect(_on_resource_changed)
-	box.add_child(_picker)
 	_preview = EventSheetAttributeDrawers.widgets().DrawerTexturePreview.new()
-	box.add_child(_preview)
-	add_child(box)
-	set_bottom_editor(box)
+	add_under_field(EventSheetLookStyle.boxed(_picker), _preview)
+	add_focusable(_picker)
 
 
 func _value_shown(value: Variant) -> void:
