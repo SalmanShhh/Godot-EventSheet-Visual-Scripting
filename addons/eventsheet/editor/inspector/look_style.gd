@@ -406,3 +406,16 @@ static func boxed(content: Control) -> PanelContainer:
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_child(content)
 	return panel
+
+
+## The editor's base (background) colour.
+static func base_colour() -> Color:
+	return _colour(&"base_color", THEME_EDITOR, EventSheetActiveTheme.chrome().drawer_handle_border_color)
+
+
+## The fill colour of a field box (opaque), for judging whether a colour would vanish into it.
+static func field_fill() -> Color:
+	var flat: StyleBoxFlat = field_box() as StyleBoxFlat
+	var fill: Color = flat.bg_color if flat != null else base_colour()
+	fill.a = 1.0
+	return fill

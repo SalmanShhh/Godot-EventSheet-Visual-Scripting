@@ -312,6 +312,7 @@ class DrawerProgressBar:
 		_reading.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_reading.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		_reading.add_theme_color_override("font_color", EventSheetLookStyle.ink())
+		_outline_reading()
 		add_child(_reading)
 		_show()
 
@@ -323,7 +324,13 @@ class DrawerProgressBar:
 		if what == NOTIFICATION_THEME_CHANGED and _reading != null:
 			_bar.add_theme_stylebox_override("fill", EventSheetLookStyle.accent_fill())
 			_reading.add_theme_color_override("font_color", EventSheetLookStyle.ink())
+			_outline_reading()
 			update_minimum_size()
+
+	## The reading is outlined in the editor's base colour, so it stays legible over the fill and over the empty part alike.
+	func _outline_reading() -> void:
+		_reading.add_theme_color_override("font_outline_color", EventSheetLookStyle.base_colour())
+		_reading.add_theme_constant_override("outline_size", int(EventSheetLookStyle.px(3.0)))
 
 	func set_value(v: float) -> void:
 		_value = clampf(v, min_value, max_value)
@@ -413,7 +420,7 @@ class DrawerMinMaxSlider:
 			var text: String = MinMaxTrack.bound_label(edge)
 			if text.length() > widest.length():
 				widest = text
-		return EventSheetLookStyle.text_room(widest + ".00")
+		return EventSheetLookStyle.text_room(widest + ".0")
 
 	func set_value(v: Vector2) -> void:
 		var low: float = clampf(minf(v.x, v.y), min_value, max_value)
@@ -520,7 +527,7 @@ class MinMaxTrack:
 	## Emitted with the new pair while a handle is dragged.
 	signal dragged(value: Vector2)
 	## The narrowest the track may be, at 1x.
-	const MIN_WIDTH: float = 70.0
+	const MIN_WIDTH: float = 80.0
 	## The ends of the whole range are written this much smaller than the editor's text.
 	const END_TEXT_SCALE: float = 0.85
 	var min_value: float = 0.0
@@ -1108,6 +1115,10 @@ class DrawerCorners:
 		var link_home: Node = self if stacked else _lines[0]
 		if _link_button.get_parent() != link_home:
 			_link_button.reparent(link_home, false)
+		# Stacked, the link stays an icon-sized button at the top right, above the fields.
+		_link_button.size_flags_horizontal = Control.SIZE_SHRINK_END if stacked else Control.SIZE_FILL
+		if stacked:
+			move_child(_link_button, 0)
 
 
 	## True when all four corners hold the same number - the case the link is honest about.
@@ -1982,6 +1993,10 @@ class DrawerSwatchRow:
 			var fit: int = maxi(1, int(size.x / EventSheetLookStyle.px(SWATCH_WIDTH)))
 			columns = mini(fit, EventSheetDrawerWidgets.SWATCH_PRESET_HTML.size() + 1)
 
+	## The width at which every swatch stays a real click target on one line.
+	func width_for_one_line() -> float:
+		return EventSheetLookStyle.px(SWATCH_WIDTH) * float(EventSheetDrawerWidgets.SWATCH_PRESET_HTML.size() + 1)
+
 	func set_value(v: Color) -> void:
 		_value = v
 		if _picker != null:
@@ -2015,6 +2030,10 @@ class DrawerSwatchRow:
 		if sb == null:
 			sb = StyleBoxFlat.new()
 		sb.bg_color = preset
+		# A swatch close to the field colour gets a neutral hairline so it never vanishes into it.
+		if EventSheetLookStyle.contrast_ratio(Color(preset, 1.0), EventSheetLookStyle.field_fill()) < 1.6:
+			sb.set_border_width_all(1)
+			sb.border_color = EventSheetLookStyle.rest()
 		sb.content_margin_left = 0.0
 		sb.content_margin_right = 0.0
 		for state: String in ["normal", "hover", "pressed"]:
