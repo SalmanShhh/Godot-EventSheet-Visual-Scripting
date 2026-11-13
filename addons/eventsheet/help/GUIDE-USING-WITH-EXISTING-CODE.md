@@ -2685,11 +2685,10 @@ opens, so nothing about it is stored in your project.
 
 <img src="images/sheet-map.png" alt="The Sheet map window: globals, sheets and scenes as boxes in three columns, joined by call, signal, include and layout lines." width="720">
 
-**View ▸ History** lists every edit you have made to the open sheet, in the name the edit gave
-itself - "Add Group", "Extract to Function", "Move Variable Up" - with the event it landed on beside
-it, and "(undone)" on the steps waiting to be redone. Click one to undo or redo back to it. The
-marker follows the sheet itself, so Ctrl+Z from anywhere and a click in this list move the same
-place.
+Every edit you make to a sheet is an undo step on **Godot's own History dock**, in the name the
+edit gave itself - "Add Group", "Extract to Function", "Move Variable Up". Ctrl+Z walks them, and
+clicking a step in Godot's History dock (with its Global history ticked) goes back to it. The plugin
+keeps no list of its own.
 
 If you already know Godot and it is the WORDS that are new rather than the size, the two pages for
 that are **Manual ▸ Coming from GDScript** (the two dozen words that account for most of the

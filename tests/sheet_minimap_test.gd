@@ -1,27 +1,11 @@
-# Godot EventSheets - the minimap column, and the History panel's log.
+# Godot EventSheets - the minimap column.
 #
-# Both are pictures of something the editor already holds, so both are pinned the same way: build
-# the rows (or the edits) by hand, ask the pure part what it says about them, and compare VALUES.
+# It is a picture of something the editor already holds, so it is pinned by building the rows by
+# hand, asking the pure part what it says about them, and comparing VALUES.
 # Nothing here needs an editor, a canvas or a theme.
 @tool
 class_name SheetMinimapTest
 extends RefCounted
-
-
-## Stands in for the dock's undo and redo: each restores the snapshot the funnel would, which is all
-## the panel listens to.
-class TravelDock:
-	extends Control
-	var panel: EventSheetHistoryPanel = null
-	var _viewport: EventSheetViewport = null
-
-	func _on_undo_requested() -> void:
-		if panel.cursor > 0:
-			panel.note_restored(panel.entries[panel.cursor - 1].get("before"))
-
-	func _on_redo_requested() -> void:
-		if panel.cursor < panel.entries.size():
-			panel.note_restored(panel.entries[panel.cursor].get("after"))
 
 
 static func run() -> bool:
@@ -29,11 +13,6 @@ static func run() -> bool:
 	passed = _bar_kinds() and passed
 	passed = _bars_of_a_fixture_sheet() and passed
 	passed = _auto_show_rule() and passed
-	passed = _history_labels() and passed
-	passed = _history_touched_rows() and passed
-	passed = _history_cursor_follows_the_snapshots() and passed
-	passed = _history_travels_back_to_before_the_first_edit() and passed
-	passed = _history_lights_rows_on_click() and passed
 	return passed
 
 
@@ -100,122 +79,6 @@ static func _auto_show_rule() -> bool:
 		EventSheetDock.minimap_shown_for(0, 900), false) and passed
 	passed = _check("an explicit on holds on a short sheet",
 		EventSheetDock.minimap_shown_for(1, 3), true) and passed
-	return passed
-
-
-# ── The History list, in the words the edits gave themselves ──────────────────────────────────
-
-
-static func _history_labels() -> bool:
-	var passed: bool = true
-	passed = _check("an edit reads by its own name, the event it landed on in a column of its own",
-		[EventSheetHistoryPanel.entry_label("Add Group", false), EventSheetHistoryPanel.event_label(12)],
-		["Add Group", "event 12"]) and passed
-	passed = _check("an undone edit says so",
-		EventSheetHistoryPanel.entry_label("Extract to Function", true), "Extract to Function   (undone)") and passed
-	passed = _check("an edit with no event beside it leaves the Event column blank",
-		EventSheetHistoryPanel.event_label(0), "") and passed
-	passed = _check("the strip says what a click on a step does",
-		[EventSheetHistoryPanel.entry_sentence("Extract to Function", 9), EventSheetHistoryPanel.entry_sentence("Add Group", 0)],
-		["Extract to Function, event 9. Click undoes back to just after it; the rows it touched light up.",
-			"Add Group. Click undoes back to just after it; the rows it touched light up."]) and passed
-	return passed
-
-
-static func _history_touched_rows() -> bool:
-	var before: EventSheetResource = _sheet(["a", "b"])
-	var after: EventSheetResource = _sheet(["a", "b", "c"])
-	return _check("the rows an edit touched are the ones one side has and the other does not",
-		" ".join(EventSheetHistoryPanel.touched_uids(before, after)), "c")
-
-
-static func _history_cursor_follows_the_snapshots() -> bool:
-	var passed: bool = true
-	var panel: EventSheetHistoryPanel = EventSheetHistoryPanel.new(null)
-	var first_before: EventSheetResource = _sheet(["a"])
-	var first_after: EventSheetResource = _sheet(["a", "b"])
-	var second_after: EventSheetResource = _sheet(["a", "b", "c"])
-	panel.record("Add Blank Event", first_before, first_after, 1)
-	panel.record("Add Group", first_after, second_after, 2)
-	passed = _check("two edits, both applied", panel.cursor, 2) and passed
-	passed = _check("restoring the first step's own before undoes back past it",
-		[panel.note_restored(first_before), panel.cursor], [true, 0]) and passed
-	passed = _check("restoring the second step's after redoes forward to it",
-		[panel.note_restored(second_after), panel.cursor], [true, 2]) and passed
-	passed = _check("a snapshot from somewhere else moves nothing",
-		panel.note_restored(_sheet(["z"])), false) and passed
-	panel.cursor = 1
-	panel.record("Paste", first_after, second_after, 3)
-	passed = _check("an edit made after an undo drops what was waiting to be redone",
-		[panel.entries.size(), str(panel.entries[1].get("label", ""))], [2, "Paste"]) and passed
-	return passed
-
-
-## The list's first line is the sheet before any of its edits, so a click can undo ALL of them -
-## without it the furthest back a click reached was just after the first edit.
-static func _history_travels_back_to_before_the_first_edit() -> bool:
-	var passed: bool = true
-	var dock: TravelDock = TravelDock.new()
-	var panel: EventSheetHistoryPanel = EventSheetHistoryPanel.new(dock)
-	dock.panel = panel
-	panel.build()
-	var first_after: EventSheetResource = _sheet(["a", "b"])
-	panel.record("Add Blank Event", _sheet(["a"]), first_after, 1)
-	panel.record("Add Group", first_after, _sheet(["a", "b", "c"]), 2)
-	var first_line: TreeItem = panel.tree.get_root().get_first_child()
-	passed = _check("the list opens with the sheet as it was opened",
-		first_line.get_text(0), "• Opened this sheet") and passed
-	# What a click on the line does (the selection handler, without a Tree selection that the
-	# rebuild would free mid-signal in a headless run).
-	panel.travel_to(int(first_line.get_metadata(0)) + 1)
-	passed = _check("clicking it undoes every listed edit", panel.cursor, 0) and passed
-	dock.free()
-	return passed
-
-
-## A click on a step travels to it AND lights the rows it touched, until the window closes; the
-## pointer passing over the list lights nothing.
-static func _history_lights_rows_on_click() -> bool:
-	var passed: bool = true
-	var editor: EventSheetEditor = EventSheetEditor.new()
-	editor.setup(EventSheetResource.new())
-	var panel: EventSheetHistoryPanel = editor._ensure_history_panel()
-	panel.build()
-	panel.record("Add Group", _sheet(["a"]), _sheet(["a", "c"]), 1)
-	editor._current_sheet_path = "res://levels/player.gd"
-	panel.refresh()
-	passed = _check("the first line names the file the sheet was opened from, and the window the file it is the history of",
-		[panel.tree.get_root().get_first_child().get_text(0), panel.window.title],
-		["• Opened player.gd", "History of player.gd"]) and passed
-	passed = _check("the window is the kit's action window: Go Back to This Step and Close, a Step and an Event column",
-		[panel.window.get_ok_button().text, (panel.window as ConfirmationDialog).get_cancel_button().text,
-			panel.tree.get_column_title(0), panel.tree.get_column_title(1)],
-		["Go Back to This Step", "Close", "Step", "Event"]) and passed
-	panel.cursor = 0
-	panel.refresh()
-	passed = _check("the steps read in the theme's own text, an undone one in its muted text",
-		[panel.tree.get_root().get_first_child().get_custom_color(0), panel.tree.get_root().get_child(1).get_custom_color(0)],
-		[EventSheetPopupUI.text_color(), EventSheetPopupUI.muted_text_color()]) and passed
-	panel.cursor = 1
-	panel.refresh()
-	passed = _check("nothing is lit before a click", editor._viewport._row_highlight.keys(), []) and passed
-	panel.tree.get_root().get_first_child().get_next().select(0)
-	passed = _check("a click lights the row the step added and names the step on the strip",
-		[editor._viewport._row_highlight.keys(), panel._this_row.text],
-		[["c"], "Add Group, event 1. Click undoes back to just after it; the rows it touched light up."]) and passed
-	panel.window.visibility_changed.emit()
-	passed = _check("closing the window puts the light out", editor._viewport._row_highlight.keys(), []) and passed
-	# In split view the light lands in the pane the reader is working in, like the Outline's jumps.
-	editor._multi_view._toggle_split_view()
-	var split: EventSheetViewport = editor._multi_view._split_viewport
-	# The split is the pane the reader last worked in (a selection there makes it so).
-	editor._active_viewport_ref = split
-	panel.highlight_entry(0)
-	passed = _check("in split view the light lands in the active pane, not the left one",
-		[split._row_highlight.keys(), editor._viewport._row_highlight.keys()], [["c"], []]) and passed
-	panel.highlight_entry(-1)
-	editor._multi_view._toggle_split_view()
-	editor.free()
 	return passed
 
 

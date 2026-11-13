@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: the plugin's own History panel (Godot's History dock lists the edits)
+
+- Every sheet edit already went through Godot's own undo manager under its plain name ("Add Group", "Extract to Function"), so Godot's History dock lists each one (tick its Global history). The plugin's View > History window repeated that list, so it is gone, along with the "(undone)" markers and the lit-up rows it drew. Ctrl+Z and Ctrl+Y are unchanged.
+
 ### Changed: new quality presets go in eventsheet_settings/quality/
 
 - A bare top-level `settings/` folder is a name a project may already use for its own things, so new quality presets are written under `res://eventsheet_settings/quality/`. Presets already in `res://settings/quality/` are still read and listed, by the editor and by the Game Settings pack in a running game. Nothing is moved for you.

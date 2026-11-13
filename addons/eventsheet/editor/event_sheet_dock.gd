@@ -60,7 +60,6 @@ const EXTRACT_OPS_PATH := "res://addons/eventsheet/editor/dock/extract_ops.gd"
 const FIND_REFERENCES_PATH := "res://addons/eventsheet/editor/dock/find_references.gd"
 const GAME_CATALOG_PATH := "res://addons/eventsheet/editor/game_catalog.gd"
 const HEALTH_CARD_PATH := "res://addons/eventsheet/editor/sheet_health.gd"
-const HISTORY_PANEL_PATH := "res://addons/eventsheet/editor/dock/history_panel.gd"
 const INSPECTOR_DESIGNER_DIALOG_PATH := "res://addons/eventsheet/editor/inspector_designer_dialog.gd"
 const INSPECTOR_SHAPE_PATH := "res://addons/eventsheet/editor/inspector_shape.gd"
 const LIVE_VALUES_DEBUGGER_PATH := "res://addons/eventsheet/editor/live_values_debugger.gd"
@@ -5419,18 +5418,6 @@ func _open_outline_panel() -> void:
 	_ensure_outline_panel().open()
 
 
-# ── History panel - extracted to dock/history_panel.gd ───────────────────────────────
-var _history_panel: RefCounted = null
-
-
-func _ensure_history_panel() -> RefCounted:
-	if _history_panel == null:
-		_history_panel = load(HISTORY_PANEL_PATH).new(self)
-	return _history_panel
-
-
-func _open_history_panel() -> void:
-	_ensure_history_panel().open()
 
 
 # ── Sheet map - extracted to dock/sheet_map_panel.gd ─────────────────────────────────
@@ -8353,8 +8340,6 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 			return
 		_activate_tab(owner_index)
 		landed_elsewhere = true
-	# The History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
-	_ensure_history_panel().note_restored(snapshot)
 	# What a field completes with is held against the sheet OBJECT, and the line below replaces that
 	# object with a fresh duplicate - so the drop has to happen while the sheet those lists were
 	# built for is still the current one. Afterwards it drops nothing at all, and every superseded
@@ -8436,18 +8421,9 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable, file
 	# The toolbar's Undo/Redo icons follow the history, and this is the one place every edit passes
 	# through - so they are refreshed here rather than polled every frame.
 	_menu_bar.refresh_history_buttons()
-	# The same step, written into the History panel's log in the name the edit gave itself.
-	_ensure_history_panel().record(action_name, before, after, _selected_event_number())
+	# The step is on Godot's own EditorUndoRedoManager under the name the edit gave itself, so Godot's
+	# History dock lists it (Global history) and Ctrl+Z walks it; the plugin keeps no list of its own.
 	return true
-
-
-## The event number the edit was made on, 0 when nothing was selected. It is what turns a bare
-## "Add Group" in the History list into "Add Group   event 12".
-func _selected_event_number() -> int:
-	if _viewport == null:
-		return 0
-	var row_data: EventRowData = _viewport.get_row_data(_viewport.get_selected_row_index())
-	return row_data.event_number if row_data != null else 0
 
 
 ## Drops the WHOLE undo log. The host editor owns one stack for the dock, so there is no way to
@@ -8459,7 +8435,6 @@ func _selected_event_number() -> int:
 func _clear_undo_history() -> void:
 	_undo_redo_adapter.clear_history()
 	_menu_bar.refresh_history_buttons()
-	_ensure_history_panel().clear()
 
 
 func _resource_contains_descendant(source: Resource, candidate: Resource) -> bool:

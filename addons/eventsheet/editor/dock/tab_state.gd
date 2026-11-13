@@ -127,8 +127,6 @@ func capture_active() -> void:
 	kept["built_disk"] = disk_stamp(index)
 	tab["view"] = kept
 	tab["mtime"] = _dock._external_mtime
-	if _dock._history_panel != null:
-		tab["history"] = _dock._history_panel.capture_log()
 
 
 ## Drops the reading a tab is holding, so the next switch to it reads the sheet again. The one
@@ -157,8 +155,6 @@ func seat(index: int) -> String:
 	# The reload watcher compares against ONE baseline, so it is the active tab's - restored here
 	# so the dialog it opens is about the file that is now on screen.
 	_dock._external_mtime = int(tab.get("mtime", _dock._external_mtime))
-	if _dock._history_panel != null:
-		_dock._history_panel.adopt_log(tab.get("history", {}))
 	var kept: Dictionary = tab.get("view", {})
 	var disk_now: int = disk_stamp(index)
 	var verdict: String = "loaded"

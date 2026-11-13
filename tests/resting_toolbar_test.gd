@@ -275,7 +275,7 @@ static func _test_the_cascade() -> bool:
 	# window - Sheet display (the seventeen ticks on how rows are drawn), Collapse and expand (the five
 	# sweeps), Split views (three) and Zoom (three). Each hanger is one item on View.
 	ok = _check("View keeps its items, with the drawing, sweeps, split and zoom items in submenus",
-		counts["EventSheetViewMenu"], 37) and ok
+		counts["EventSheetViewMenu"], 35) and ok
 	var view_submenu_counts: Dictionary = {}
 	for name: String in ["EventSheetSheetDisplayMenu", "EventSheetCollapseMenu", "EventSheetSplitViewsMenu",
 			"EventSheetZoomMenu"]:
