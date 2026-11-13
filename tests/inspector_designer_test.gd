@@ -188,7 +188,7 @@ static func _speaks_the_editor_language() -> bool:
 	validate.free()
 	EventSheetL10n.set_locale(before_locale)
 	return SUPPORT.check("inspector_designer_test", "the Designer and the badges read German in German", said,
-		["Inspektor-Designer", "⚠ Erforderlich - einen Wert zuweisen", "⚠ wird beim Bearbeiten von einer Sheet-Funktion geprüft"])
+		["Inspektor-Designer", "▲ Erforderlich. Einen Wert zuweisen.", "▲ wird beim Bearbeiten von einer Sheet-Funktion geprüft"])
 
 
 static func _eq(label: String, actual: Variant, expected: Variant) -> bool:

@@ -8200,7 +8200,6 @@ Your behaviours,내 비헤이비어
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s은(는) 전역 개체입니다. 프로젝트 설정 > 전역 > 오토로드에서 켜는 것이지 개체에 추가하는 것이 아닙니다.
 Made for a %s - %s is a %s.,%s용입니다. %s은(는) %s입니다.
 Add behaviour %s,비헤이비어 %s 추가
-Required - assign a value,필수 - 값을 지정하세요
 Drag to set the value,드래그해서 값 설정
 Drag either handle to set the low / high end,두 핸들 중 하나를 드래그해서 아래 / 위 끝 설정
 validated by %s() while you edit,편집하는 동안 %s()(으)로 검사됨
@@ -10441,3 +10440,4 @@ Enter goes to the selected line · Up / Down moves · Esc closes,Enter로 선택
 COMMANDS,명령
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Ctrl+Shift+P로 Godot의 명령 팔레트를 여세요 - 모든 EventSheets 명령이 거기에 있습니다.
 "Type a function, signal or variable…","함수, 시그널 또는 변수를 입력…"
+Required. Assign a value.,필수입니다. 값을 지정하세요.

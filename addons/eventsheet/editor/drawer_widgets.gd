@@ -203,25 +203,37 @@ static func build_header_label(text: String, accent: String) -> Control:
 	return margin
 
 
-## A quiet, wrapping note panel - the place for "this resource is shared - edits affect every user".
+## A quiet, wrapping grey line - the place for "this resource is shared - edits affect every user".
+## No box and no outline: the words sit under their field in the editor's own font.
 static func build_info_panel(text: String) -> Control:
-	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = chrome.drawer_info_background_color
-	style.border_color = chrome.drawer_info_border_color
-	style.set_border_width_all(1)
-	style.border_width_left = 3
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(6)
-	var panel: PanelContainer = PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", style)
-	var label: Label = Label.new()
-	label.text = text
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	label.add_theme_color_override("font_color", chrome.drawer_info_text_color)
-	panel.add_child(label)
-	return panel
+	return EventSheetLookStyle.message_line(text, EventSheetLookStyle.Tone.NOTE)
+
+
+## A line for a row of the Inspector that holds only a note: an EditorProperty with no label, so its
+## content lands in the value column at the Inspector's own split, directly under the field it is about.
+## The row hides when its content hides (a required note vanishes once the value is set).
+class NoteRow:
+	extends EditorProperty
+	var _content: Control = null
+
+	func _init(content: Control = null) -> void:
+		_content = content
+		selectable = false
+		read_only = true
+		if _content != null:
+			add_child(_content)
+			_content.visibility_changed.connect(_follow_content)
+			_follow_content()
+
+	func _follow_content() -> void:
+		visible = _content == null or _content.visible
+
+	func _notification(what: int) -> void:
+		# The Inspector hands every editor its label after _init; this row keeps none.
+		if what == NOTIFICATION_READY:
+			label = ""
+			selectable = false
+			read_only = true
 
 
 ## The `# @inspector_required` badge: a warning row that WATCHES the property and shows only while
@@ -236,9 +248,9 @@ class RequiredBadge:
 	func _init(target: Object = null, property: String = "") -> void:
 		_target = target
 		_property = property
-		text = "⚠ " + EventSheetL10n.translate("Required - assign a value")
-		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		add_theme_color_override("font_color", EventSheetActiveTheme.chrome().drawer_required_color)
+		text = "▲ " + EventSheetL10n.translate("Required. Assign a value.")
+		autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_theme_color_override("font_color", EventSheetLookStyle.tone_colour(EventSheetLookStyle.Tone.ERROR))
 		_refresh()
 
 	func _process(delta: float) -> void:
@@ -419,11 +431,10 @@ class ValidateBadge:
 	func _init(target: Object = null, validate_function: String = "") -> void:
 		_target = target
 		_function = validate_function
-		text = "⚠ " + (EventSheetL10n.translate("validated by %s() while you edit") % _function if not _function.is_empty()
+		text = "▲ " + (EventSheetL10n.translate("validated by %s() while you edit") % _function if not _function.is_empty()
 			else EventSheetL10n.translate("validated by a sheet function while you edit"))
 		autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		add_theme_color_override("font_color", EventSheetActiveTheme.chrome().drawer_validate_color)
+		add_theme_color_override("font_color", EventSheetLookStyle.tone_colour(EventSheetLookStyle.Tone.WARNING))
 		_refresh()
 
 	func _process(delta: float) -> void:
@@ -443,7 +454,7 @@ class ValidateBadge:
 		var message: String = str(_target.call(_function))
 		visible = not message.strip_edges().is_empty()
 		if visible:
-			text = "⚠ %s" % message.strip_edges()
+			text = "▲ %s" % message.strip_edges()
 
 	func _can_run_validator() -> bool:
 		if not _target.has_method(_function):
@@ -465,8 +476,9 @@ class ActionButton:
 		_target = target
 		_function = action_function
 		text = label if not label.is_empty() else _function.capitalize()
-		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		theme_type_variation = "InspectorActionButton"
+		icon = EventSheetLookStyle.icon(&"Reload")
 		if _target == null:
 			return  # mock: enabled-looking, wired to nothing
 		if not _can_run():

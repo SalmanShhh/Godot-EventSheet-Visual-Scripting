@@ -58,16 +58,6 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	var header_text: String = str(attributes.get("header", ""))
 	if not header_text.is_empty():
 		_rows.add_child(EventSheetDrawerWidgets.build_header_label(header_text, str(attributes.get("header_color", ""))))
-	var info_text: String = str(attributes.get("info", ""))
-	if not info_text.is_empty():
-		_rows.add_child(EventSheetDrawerWidgets.build_info_panel(info_text))
-	if bool(attributes.get("required", false)):
-		# Mocked in its shown state (target-less) - the point is what the warning looks like.
-		_rows.add_child(EventSheetDrawerWidgets.RequiredBadge.new())
-	if not str(attributes.get("validate", "")).is_empty():
-		_rows.add_child(EventSheetDrawerWidgets.ValidateBadge.new(null, str(attributes.get("validate"))))
-	if not str(attributes.get("action", "")).is_empty():
-		_rows.add_child(EventSheetDrawerWidgets.ActionButton.new(null, str(attributes.get("action")), str(attributes.get("action_label", ""))))
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	# A category is the Inspector's heavy band, its name centred, above every group in it.
@@ -111,6 +101,17 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	if not link_partner.is_empty():
 		property_row.add_child(_ignored(EventSheetDrawerWidgets.LinkToggle.new(null, variable_name, link_partner)))
 	_rows.add_child(property_row)
+	# The words about the field sit under it, as the Inspector draws them.
+	var info_text: String = str(attributes.get("info", ""))
+	if not info_text.is_empty():
+		_rows.add_child(EventSheetDrawerWidgets.build_info_panel(info_text))
+	if bool(attributes.get("required", false)):
+		# Mocked in its shown state (target-less) - the point is what the warning looks like.
+		_rows.add_child(EventSheetDrawerWidgets.RequiredBadge.new())
+	if not str(attributes.get("validate", "")).is_empty():
+		_rows.add_child(EventSheetDrawerWidgets.ValidateBadge.new(null, str(attributes.get("validate"))))
+	if not str(attributes.get("action", "")).is_empty():
+		_rows.add_child(EventSheetDrawerWidgets.ActionButton.new(null, str(attributes.get("action")), str(attributes.get("action_label", ""))))
 
 
 ## The type, the widget, the bounds and the grouping in plain words, one short sentence per fact -

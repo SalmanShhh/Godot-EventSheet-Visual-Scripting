@@ -91,20 +91,31 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	# A field in a group whose tab is not the one picked is consumed with nothing drawn.
 	if _object != null and _object.get_script() != null and load(OBJECT_DECOR_PATH).hidden_by_tabs(_object, name):
 		return true
+	# The words about a field (a required note, a failed check, an info line, a button) sit UNDER the
+	# field, in the value column, so they read as belonging to it. They are collected while the decor
+	# is read and added after whatever draws the field itself - Godot's plain one or one of ours.
+	var under_field: Array[Control] = []
+	var handled: bool = _parse_field(_object, type, name, hint_string, under_field)
+	for note: Control in under_field:
+		add_property_editor(name, widgets().NoteRow.new(note), true)
+	return handled
+
+
+func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string: String, under_field: Array[Control]) -> bool:
 	var decor: Array = decor_for(_object, name)
-	# Decor first: `# @inspector_header` / `# @inspector_info` comments above the var render as a section
-	# label / info panel ABOVE the property, composing with any drawer (or the default field) below.
+	# Decor first: a `# @inspector_header` comment above the var renders as a section label ABOVE the
+	# property; the required / validate / info / action lines are collected to go under it.
 	for entry: Variant in decor:
 		var decor_entry: Dictionary = entry as Dictionary
 		match str(decor_entry.get("kind", "")):
 			"header":
 				add_custom_control(widgets().build_header_label(str(decor_entry.get("text", "")), str(decor_entry.get("color", ""))))
 			"required":
-				add_custom_control(widgets().RequiredBadge.new(_object, name))
+				under_field.append(widgets().RequiredBadge.new(_object, name))
 			"validate":
-				add_custom_control(widgets().ValidateBadge.new(_object, str(decor_entry.get("function", ""))))
+				under_field.append(widgets().ValidateBadge.new(_object, str(decor_entry.get("function", ""))))
 			"action":
-				add_custom_control(widgets().ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
+				under_field.append(widgets().ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
 			"link":
 				add_custom_control(widgets().LinkToggle.new(_object, str(decor_entry.get("first", "")), str(decor_entry.get("second", ""))))
 			"group_show_if":
@@ -116,7 +127,7 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				# Drawn as the field itself (below) or at the top of the Inspector (_parse_begin).
 				pass
 			_:
-				add_custom_control(widgets().build_info_panel(str(decor_entry.get("text", ""))))
+				under_field.append(widgets().build_info_panel(str(decor_entry.get("text", ""))))
 	for entry: Variant in decor:
 		var shape: Dictionary = entry as Dictionary
 		match str(shape.get("kind", "")):

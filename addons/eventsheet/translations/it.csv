@@ -8200,7 +8200,6 @@ Your behaviours,I tuoi comportamenti
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.","%s è un globale: si attiva in Impostazioni progetto > Globali > Autoload, non si aggiunge a un oggetto."
 Made for a %s - %s is a %s.,Fatto per un %s: %s è un %s.
 Add behaviour %s,Aggiungi comportamento %s
-Required - assign a value,Obbligatorio - assegna un valore
 Drag to set the value,Trascina per impostare il valore
 Drag either handle to set the low / high end,Trascina una delle due maniglie per impostare l'estremo basso / alto
 validated by %s() while you edit,convalidato da %s() mentre modifichi
@@ -10441,3 +10440,4 @@ Enter goes to the selected line · Up / Down moves · Esc closes,Invio va alla r
 COMMANDS,COMANDI
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Premi Ctrl+Maiusc+P per la tavolozza dei comandi di Godot - ogni comando EventSheets è elencato lì.
 "Type a function, signal or variable…","Digita una funzione, un segnale o una variabile…"
+Required. Assign a value.,Obbligatorio. Assegna un valore.

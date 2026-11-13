@@ -8200,7 +8200,6 @@ Your behaviours,你的行为
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s 是全局：它在 项目设置 > 全局 > 自动加载 中启用，而不是添加到对象上。
 Made for a %s - %s is a %s.,为 %s 而做 - %s 是 %s。
 Add behaviour %s,添加行为 %s
-Required - assign a value,必填 - 请赋一个值
 Drag to set the value,拖动以设置数值
 Drag either handle to set the low / high end,拖动任一手柄以设置下限 / 上限
 validated by %s() while you edit,编辑时由 %s() 校验
@@ -10441,3 +10440,4 @@ Enter goes to the selected line · Up / Down moves · Esc closes,回车转到所
 COMMANDS,命令
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,按 Ctrl+Shift+P 打开 Godot 的命令面板 - 所有 EventSheets 命令都列在那里。
 "Type a function, signal or variable…",输入函数、信号或变量…
+Required. Assign a value.,必填。请赋一个值。

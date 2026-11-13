@@ -71,6 +71,7 @@ const PROBES: Array = [
 	["min_max", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:min_max:0:60\") var spawn_gap: Vector2 = Vector2(10, 40)\n@export var spawn_gap_plain: Vector2 = Vector2(10, 40)\n"],
 	["toggle_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:toggle_row:easy,normal,hard\") var difficulty: String = \"normal\"\n@export var difficulty_plain: String = \"normal\"\n"],
 	["action_button", "# @inspector_action reroll Reroll\n@export var seed_value: int = 7\n\n\nfunc reroll() -> void:\n\tseed_value += 1\n"],
+	["checked_edited", "# @inspector_validate check_gap\n@export var gap: int = 5\n\n\nfunc _init() -> void:\n\tgap = 8\n\n\nfunc check_gap() -> String:\n\treturn \"Gap must be even.\"\n"],
 	["required", "# @inspector_required\n@export var target_name: String = \"\"\n"],
 	["note", "# @inspector_info Shared resource - edits affect every user.\n@export var shared_value: int = 3\n"],
 	["checked", "# @inspector_validate check_gap\n@export var gap: int = 5\n\n\nfunc check_gap() -> String:\n\treturn \"Gap must be even.\"\n"],

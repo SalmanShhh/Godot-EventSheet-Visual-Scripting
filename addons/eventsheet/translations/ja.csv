@@ -8200,7 +8200,6 @@ Your behaviours,自分のビヘイビア
 "%s is a global: it is turned on in Project Settings > Globals > Autoload, not added to an object.",%s はグローバルです。プロジェクト設定 > グローバル > 自動読み込み で有効にするもので、オブジェクトには追加しません。
 Made for a %s - %s is a %s.,%s 用です。%s は %s です。
 Add behaviour %s,ビヘイビア %s を追加
-Required - assign a value,必須 - 値を割り当ててください
 Drag to set the value,ドラッグして値を設定
 Drag either handle to set the low / high end,どちらかのハンドルをドラッグして下限 / 上限を設定
 validated by %s() while you edit,編集中に %s() で検証されます
@@ -10441,3 +10440,4 @@ Enter goes to the selected line · Up / Down moves · Esc closes,Enterで選ん�
 COMMANDS,コマンド
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Ctrl+Shift+P で Godot のコマンドパレットを開きます - EventSheets のコマンドはすべてそこに並びます。
 "Type a function, signal or variable…",関数、シグナル、変数を入力…
+Required. Assign a value.,必須です。値を割り当ててください。
