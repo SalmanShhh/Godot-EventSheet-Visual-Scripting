@@ -200,6 +200,8 @@ var _inspector_card: Control = null
 var _form_scroll: ScrollContainer = null
 var _exported_check: CheckBox = null
 var _look_option: OptionButton = null
+## The list the look is picked from; it writes its pick to _look_option, which stays out of sight.
+var _look_list: Control = null
 var _look_details: VBoxContainer = null
 var _look_note: EventSheetPopupUI.StateNote = null
 var _look_doors: HBoxContainer = null
@@ -548,6 +550,9 @@ func _build_inspector_card() -> PanelContainer:
 	var annotation_note: Label = _look_option.get_meta("code_note") as Label
 	annotation_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	annotation_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_look_option.visible = false
+	_look_list = load("res://addons/eventsheet/editor/inspector/look_list.gd").new(_look_option)
+	box.add_child(_look_list)
 	_look_details = VBoxContainer.new()
 	_look_details.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	box.add_child(_look_details)
@@ -1149,6 +1154,8 @@ func _refresh_looks() -> void:
 	for look: Dictionary in EventSheetInspectorLooks.for_type(type_name):
 		EventSheetPopupUI.add_described_item(_look_option, EventSheetInspectorLooks.label(look), EventSheetInspectorLooks.description(look),
 			str(look.get("id")))
+	if _look_list != null:
+		_look_list.call("rebuild")
 	_select_look(previous)
 	_rebuild_look_details()
 
@@ -1158,9 +1165,13 @@ func _select_look(look_id: String) -> void:
 		if str(_look_option.get_item_metadata(index)) == look_id:
 			_look_option.select(index)
 			EventSheetPopupUI.follow_description(_look_option)
+			if _look_list != null:
+				_look_list.call("sync_selection")
 			return
 	_look_option.select(0)
 	EventSheetPopupUI.follow_description(_look_option)
+	if _look_list != null:
+		_look_list.call("sync_selection")
 
 
 func _selected_look_id() -> String:
@@ -1205,6 +1216,12 @@ func _rebuild_look_details() -> void:
 				control = edit
 		_look_details.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field[1])), control,
 			EventSheetPopupUI.LABEL_MIN_WIDTH, str(field[5]) if field.size() > 5 else ""))
+		# What the question means, and how it is written in the file, in words under it.
+		var about: Label = Label.new()
+		about.text = (str(field[5]) + " " if field.size() > 5 and not str(field[5]).is_empty() else "") + EventSheetL10n.translate("Written as %s in the file.") % str(field[0])
+		about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		about.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		_look_details.add_child(about)
 	_refresh_look_note()
 	_refresh_look_doors()
 

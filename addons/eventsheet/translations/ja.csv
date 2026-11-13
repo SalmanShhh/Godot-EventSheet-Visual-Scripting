@@ -7459,7 +7459,7 @@ Only names starting %s join this group.,%s で始まる名前だけがこのグ�
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s は %s で始まらないため、Godot は %s の外に置きます。名前を変えるか、接頭辞をオフにしてください。
 automatic: %s tells it when it changes,自動: %s が変わると知らせます
 nothing to refresh,更新するものはありません
-Axis fields,軸ごとの欄
+Two number fields,2 つの数値欄
 Its own editor,型そのもののエディター
 Writes %s,%s を書き込みます
 "(saved, not shown)",(保存されますが表示されません)
@@ -7712,8 +7712,8 @@ A box meant for a math expression.,数式を書くための欄です。
 A colour swatch with no transparency slider.,透明度スライダーのない色見本です。
 Swatch row,色見本の列
 A row of colour swatches to pick from. Without this plugin it is a plain colour.,選べる色見本が並んだ列です。このプラグインがなければ普通の色になります。
-Linked axes,連動する軸
-Drag one axis and the others follow.,1 つの軸をドラッグすると他の軸も追従します。
+Linked fields,連動する欄
+The fields kept in the same ratio.,各欄は同じ比率に保たれます。
 Direction dial,方向ダイヤル
 Drag a handle round a circle to aim.,ハンドルを円に沿ってドラッグして向きを決めます。
 Min-max range,最小 - 最大の範囲
@@ -10460,3 +10460,6 @@ Open this card.,このカードを開きます。
 Untick to skip this card.,チェックを外すとこのカードをスキップします。
 Remove this card.,このカードを削除します。
 More for this card.,このカードの他の操作。
+Written as %s in the file.,ファイルでは %s と書かれます。
+EventSheets looks,EventSheets のルック
+In your project,プロジェクト内

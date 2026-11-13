@@ -7459,7 +7459,7 @@ Only names starting %s join this group.,"Nur Namen, die mit %s beginnen, gehöre
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.","%s beginnt nicht mit %s, daher lässt Godot es außerhalb von %s. Benennen Sie es um oder schalten Sie das Präfix aus."
 automatic: %s tells it when it changes,"automatisch: %s meldet es, wenn es sich ändert"
 nothing to refresh,nichts zu aktualisieren
-Axis fields,Achsenfelder
+Two number fields,Zwei Zahlenfelder
 Its own editor,Sein eigener Editor
 Writes %s,Schreibt %s
 "(saved, not shown)","(gespeichert, nicht angezeigt)"
@@ -7712,8 +7712,8 @@ A box meant for a math expression.,Ein Feld für einen mathematischen Ausdruck.
 A colour swatch with no transparency slider.,Ein Farbfeld ohne Transparenzregler.
 Swatch row,Farbfeldreihe
 A row of colour swatches to pick from. Without this plugin it is a plain colour.,Eine Reihe von Farbfeldern zur Auswahl. Ohne dieses Plugin ist es eine einfache Farbe.
-Linked axes,Verknüpfte Achsen
-Drag one axis and the others follow.,"Zieh eine Achse, und die anderen folgen."
+Linked fields,Verknüpfte Felder
+The fields kept in the same ratio.,Die Felder bleiben im gleichen Verhältnis.
 Direction dial,Richtungsscheibe
 Drag a handle round a circle to aim.,"Einen Griff um einen Kreis ziehen, um zu zielen."
 Min-max range,Min-Max-Bereich
@@ -10460,3 +10460,6 @@ Open this card.,Diese Karte öffnen.
 Untick to skip this card.,"Abwählen, um diese Karte zu überspringen."
 Remove this card.,Diese Karte entfernen.
 More for this card.,Mehr für diese Karte.
+Written as %s in the file.,Steht in der Datei als %s.
+EventSheets looks,EventSheets-Darstellungen
+In your project,In deinem Projekt

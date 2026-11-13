@@ -81,8 +81,8 @@ const LOOKS: Array[Dictionary] = [
 	{"id": "no_alpha", "label": "Solid colour, no alpha", "types": ["Color"], "writes": "@export_color_no_alpha",
 		"tip": "A colour swatch with no transparency slider.", "fields": []},
 	{"id": "swatch_row", "from_file": true},
-	{"id": "link", "label": "Linked axes", "types": VECTOR_TYPES, "writes": "@export_custom(PROPERTY_HINT_LINK, \"\")",
-		"tip": "Drag one axis and the others follow.", "fields": []},
+	{"id": "link", "label": "Linked fields", "types": VECTOR_TYPES, "writes": "@export_custom(PROPERTY_HINT_LINK, \"\")",
+		"tip": "The fields kept in the same ratio.", "fields": []},
 	{"id": "vector_dial", "from_file": true},
 	{"id": "min_max", "from_file": true},
 	{"id": "corners", "from_file": true},
@@ -171,7 +171,7 @@ static func _resolved(row: Dictionary) -> Dictionary:
 ## The no-look choice's name for a type ("Plain number"), in the editor's language.
 static func plain_label(type_name: String) -> String:
 	if VECTOR_TYPES.has(type_name):
-		return EventSheetL10n.translate("Axis fields")
+		return EventSheetL10n.translate("Two number fields")
 	if PLAIN_LABELS.has(type_name):
 		return EventSheetL10n.translate(str(PLAIN_LABELS[type_name]))
 	return EventSheetL10n.translate("Its own editor")

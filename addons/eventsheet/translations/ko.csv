@@ -7459,7 +7459,7 @@ Only names starting %s join this group.,%s(으)로 시작하는 이름만 이 �
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s은(는) %s(으)로 시작하지 않아 Godot이 %s 밖에 둡니다. 이름을 바꾸거나 접두사를 끄세요.
 automatic: %s tells it when it changes,자동: %s이(가) 바뀌면 알려 줍니다
 nothing to refresh,새로 고칠 것이 없습니다
-Axis fields,축별 입력란
+Two number fields,숫자 입력란 두 개
 Its own editor,자체 편집기
 Writes %s,%s 을(를) 씁니다
 "(saved, not shown)",(저장되지만 표시되지 않음)
@@ -7712,8 +7712,8 @@ A box meant for a math expression.,수식을 위한 상자.
 A colour swatch with no transparency slider.,투명도 슬라이더가 없는 색 견본.
 Swatch row,견본 줄
 A row of colour swatches to pick from. Without this plugin it is a plain colour.,고를 수 있는 색 견본 줄. 이 플러그인이 없으면 일반 색입니다.
-Linked axes,연결된 축
-Drag one axis and the others follow.,축 하나를 끌면 나머지도 따라갑니다.
+Linked fields,연동된 입력란
+The fields kept in the same ratio.,입력란이 같은 비율로 유지됩니다.
 Direction dial,방향 다이얼
 Drag a handle round a circle to aim.,핸들을 원 둘레로 끌어 방향을 정합니다.
 Min-max range,최소-최대 범위
@@ -10460,3 +10460,6 @@ Open this card.,이 카드를 엽니다.
 Untick to skip this card.,체크를 해제하면 이 카드를 건너뜁니다.
 Remove this card.,이 카드를 제거합니다.
 More for this card.,이 카드의 더 보기.
+Written as %s in the file.,파일에는 %s로 적힙니다.
+EventSheets looks,EventSheets 모양
+In your project,내 프로젝트

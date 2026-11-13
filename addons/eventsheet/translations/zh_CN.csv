@@ -7459,7 +7459,7 @@ Only names starting %s join this group.,只有以 %s 开头的名称会加入此
 "%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.",%s 不以 %s 开头，所以 Godot 会把它放在 %s 之外。请重命名，或关闭前缀。
 automatic: %s tells it when it changes,自动：%s 改变时会通知它
 nothing to refresh,无需刷新
-Axis fields,各轴字段
+Two number fields,两个数字字段
 Its own editor,其自身的编辑器
 Writes %s,写入 %s
 "(saved, not shown)",(已保存，不显示)
@@ -7712,8 +7712,8 @@ A box meant for a math expression.,用于数学表达式的框。
 A colour swatch with no transparency slider.,没有透明度滑块的色块。
 Swatch row,色块行
 A row of colour swatches to pick from. Without this plugin it is a plain colour.,一排可供选择的色块。没有此插件时就是普通颜色。
-Linked axes,关联轴
-Drag one axis and the others follow.,拖动一个轴，其他轴随之变化。
+Linked fields,联动字段
+The fields kept in the same ratio.,各字段保持相同比例。
 Direction dial,方向转盘
 Drag a handle round a circle to aim.,沿圆圈拖动手柄来指定方向。
 Min-max range,最小-最大范围
@@ -10460,3 +10460,6 @@ Open this card.,展开此卡片。
 Untick to skip this card.,取消勾选以跳过此卡片。
 Remove this card.,移除此卡片。
 More for this card.,此卡片的更多操作。
+Written as %s in the file.,在文件中写作 %s。
+EventSheets looks,EventSheets 外观
+In your project,在你的项目中
