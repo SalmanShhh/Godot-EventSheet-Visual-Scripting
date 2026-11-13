@@ -278,9 +278,9 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		return _ignored(_DialPreview.new())
 	if drawer_kind == "min_max":
 		var range_slider := EventSheetDrawerWidgets.DrawerMinMaxSlider.new(low, high)
-		range_slider.editable = false
+		range_slider.set_editable(false)
 		range_slider.set_value(value if value is Vector2 else Vector2(low, high))
-		range_slider.custom_minimum_size = Vector2(120.0, 18.0)
+		range_slider.custom_minimum_size = Vector2(120.0, 0.0)
 		return _ignored(range_slider)
 	if drawer_kind == "toggle_row":
 		var toggle_options: Array = attributes.get("toggle_options") if attributes.get("toggle_options") is Array else ["easy", "normal", "hard"]

@@ -29,6 +29,7 @@ const MINI_HEIGHT: float = 22.0
 ## The height of a plain field when no editor theme can say.
 const FALLBACK_FIELD_HEIGHT: float = 22.0
 ## No colour asked for: a field made with this keeps its own label colour.
+const SPIN_PADDING: float = 12.0
 const NO_COLOUR: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## How far a note under a field is dimmed when the editor carries no quiet colour.
 const FALLBACK_QUIET_ALPHA: float = 0.6
@@ -310,10 +311,13 @@ static func number_field_min_width() -> float:
 	return text_width + field_box().get_minimum_size().x
 
 
-## The narrowest a field may be and still show `sample` whole inside its box.
+## The narrowest a field may be and still show `sample` whole inside its box, with the room the
+## spin arrows take at the right.
 static func text_room(sample: String) -> float:
 	var text_width: float = font().get_string_size(sample, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size()).x
-	return text_width + field_box().get_minimum_size().x
+	var arrows: Texture2D = typed_icon(&"updown", &"SpinBox")
+	var arrows_width: float = float(arrows.get_width()) if arrows != null else 0.0
+	return text_width + arrows_width + field_box().get_minimum_size().x + px(SPIN_PADDING)
 
 
 ## The editor's ink or its base colour, whichever reads better laid over `fill` (a swatch, a chosen cell).
@@ -336,3 +340,57 @@ static func accent_fill() -> StyleBox:
 		flat = StyleBoxFlat.new()
 	flat.bg_color = accent()
 	return flat
+
+
+## One of the editor's styleboxes by item and theme type, or null when the editor has none of that name.
+static func typed_box(item: StringName, theme_type: StringName) -> StyleBox:
+	var theme: Theme = editor_theme()
+	if theme != null and theme.has_stylebox(item, theme_type):
+		return theme.get_stylebox(item, theme_type)
+	return null
+
+
+## One of the editor's icons by item and theme type (a slider's grabber), or null when it has none.
+static func typed_icon(item: StringName, theme_type: StringName) -> Texture2D:
+	var theme: Theme = editor_theme()
+	if theme != null and theme.has_icon(item, theme_type):
+		return theme.get_icon(item, theme_type)
+	return null
+
+
+## Makes `button` the side of a joined pair: its own styleboxes with the corners that touch the
+## neighbour squared off. A no-op outside the editor, where the button keeps whatever it has.
+static func join_button(button: Button, round_left: bool, round_right: bool) -> void:
+	var theme: Theme = editor_theme()
+	if theme == null:
+		return
+	for state: StringName in [&"normal", &"hover", &"pressed", &"disabled", &"hover_pressed"]:
+		if theme.has_stylebox(state, &"Button"):
+			button.add_theme_stylebox_override(state, joined_box(theme.get_stylebox(state, &"Button"), round_left, round_right))
+
+
+## The same for a number field: its box with the corners that touch the neighbour squared off.
+static func join_field(field: Control, round_left: bool, round_right: bool) -> void:
+	var theme: Theme = editor_theme()
+	if theme == null:
+		return
+	var local: Theme = Theme.new()
+	for item: StringName in [&"normal", &"read_only"]:
+		if theme.has_stylebox(item, &"LineEdit"):
+			local.set_stylebox(item, &"LineEdit", joined_box(theme.get_stylebox(item, &"LineEdit"), round_left, round_right))
+	field.theme = local
+
+
+## Makes `button` one member of a joined strip of toggle buttons: its corners joined to its
+## neighbours, and while pressed filled with the accent in the colour that reads on it.
+static func join_toggle(button: Button, round_left: bool, round_right: bool) -> void:
+	join_button(button, round_left, round_right)
+	var theme: Theme = editor_theme()
+	if theme == null or not theme.has_stylebox(&"pressed", &"Button"):
+		return
+	var filled: StyleBox = accent_box(joined_box(theme.get_stylebox(&"pressed", &"Button"), round_left, round_right))
+	for state: StringName in [&"pressed", &"hover_pressed"]:
+		button.add_theme_stylebox_override(state, filled)
+	var on_accent: Color = ink_on_accent()
+	for item: StringName in [&"font_pressed_color", &"font_hover_pressed_color", &"icon_pressed_color", &"icon_hover_pressed_color"]:
+		button.add_theme_color_override(item, on_accent)

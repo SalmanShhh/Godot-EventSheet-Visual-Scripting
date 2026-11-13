@@ -26,6 +26,7 @@ func _look_built() -> void:
 	_slider.connect("value_changed", _on_slider_changed)
 	add_child(_slider)
 	add_focusable(_slider)
+	draw_background = false
 
 
 func _value_shown(value: Variant) -> void:

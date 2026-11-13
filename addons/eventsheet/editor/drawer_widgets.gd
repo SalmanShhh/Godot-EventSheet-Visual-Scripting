@@ -331,7 +331,7 @@ class DrawerProgressBar:
 
 	func _show() -> void:
 		_bar.value = _value
-		_reading.text = EventSheetL10n.translate("%s / %s") % [_number_text(_value), _number_text(max_value)]
+		_reading.text = "%s / %s" % [_number_text(_value), _number_text(max_value)]
 
 	static func _number_text(number: float) -> String:
 		var rounded: float = roundf(number)
@@ -356,88 +356,273 @@ class DrawerProgressBar:
 
 
 # ── Vector2 min-max range slider ────────────────────────────────────────────
-## Two handles on one track: the Vector2's x is the low end, y the high end - one control for "a range",
-## not two disconnected number fields (spawn intervals, damage ranges, zoom bounds). Drag the nearer
-## handle; the pair can meet but never cross.
+## A range as two number fields with a track between them: the Vector2's x is the low end, y the high
+## end. Type in either field or drag either handle on the track; the pair can meet but never cross.
+## The track is grey, the picked span is filled, the handles sit on the ends of the fill, and the ends
+## of the whole range are written small under it. When the value column cannot hold the fields and the
+## track on one line, the fields go on a line of their own and the track under them.
 class DrawerMinMaxSlider:
-	extends Control
+	extends Container
 	signal value_changed(value: Vector2)
 	var min_value: float = 0.0
 	var max_value: float = 100.0
 	var editable: bool = true
 	var _value: Vector2 = Vector2.ZERO
-	var _dragging_high: bool = false
+	var _low: Range = null
+	var _high: Range = null
+	var _track: MinMaxTrack = null
+	## How many lines the parts sit on now: 1 (field, track, field), 2 (two fields, then the track)
+	## or 3 (one part to a line).
+	var _lines: int = 1
 
 	func _init(p_min: float = 0.0, p_max: float = 100.0) -> void:
 		min_value = p_min
 		max_value = p_max
 		_value = Vector2(p_min, p_max)
-		custom_minimum_size = Vector2(0.0, 18.0)
-		mouse_filter = Control.MOUSE_FILTER_STOP
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tooltip_text = EventSheetL10n.translate("Drag either handle to set the low / high end")
+		_low = _make_field()
+		_low.value_changed.connect(_on_low_typed)
+		add_child(_low)
+		_track = MinMaxTrack.new(p_min, p_max)
+		_track.tooltip_text = tooltip_text
+		_track.dragged.connect(_on_track_dragged)
+		add_child(_track)
+		_high = _make_field()
+		_high.value_changed.connect(_on_high_typed)
+		add_child(_high)
+		_show()
+
+	func _make_field() -> Range:
+		var field: Range = EventSheetLookStyle.number_field("", EventSheetLookStyle.NO_COLOUR, false)
+		EventSheetLookStyle.open_number_field(field, 0.01)
+		field.allow_greater = false
+		field.allow_lesser = false
+		field.min_value = min_value
+		field.max_value = max_value
+		field.custom_minimum_size.x = _field_width()
+		return field
+
+	## Room for the longest value the range can hold, whole.
+	func _field_width() -> float:
+		var widest: String = ""
+		for edge: float in [min_value, max_value]:
+			var text: String = MinMaxTrack.bound_label(edge)
+			if text.length() > widest.length():
+				widest = text
+		return EventSheetLookStyle.text_room(widest + ".00")
 
 	func set_value(v: Vector2) -> void:
 		var low: float = clampf(minf(v.x, v.y), min_value, max_value)
 		var high: float = clampf(maxf(v.x, v.y), min_value, max_value)
 		_value = Vector2(low, high)
-		queue_redraw()
+		_show()
 
 	func get_value() -> Vector2:
 		return _value
 
-	func _frac(v: float) -> float:
-		return clampf((v - min_value) / maxf(0.0001, max_value - min_value), 0.0, 1.0)
+	func set_editable(v: bool) -> void:
+		editable = v
+		EventSheetLookStyle.set_number_field_locked(_low, not v)
+		EventSheetLookStyle.set_number_field_locked(_high, not v)
+		_track.editable = v
+
+	func _show() -> void:
+		_low.set_value_no_signal(_value.x)
+		_high.set_value_no_signal(_value.y)
+		_track.set_value(_value)
+
+	func _on_low_typed(typed: float) -> void:
+		if not editable:
+			return
+		_value.x = clampf(typed, min_value, _value.y)
+		_commit()
+
+	func _on_high_typed(typed: float) -> void:
+		if not editable:
+			return
+		_value.y = clampf(typed, _value.x, max_value)
+		_commit()
+
+	func _on_track_dragged(next: Vector2) -> void:
+		if not editable:
+			return
+		_value = next
+		_commit()
+
+	func _commit() -> void:
+		_show()
+		value_changed.emit(_value)
+
+	func _gap() -> float:
+		return EventSheetLookStyle.px(4.0)
+
+	func _lines_for(width: float) -> int:
+		var field_width: float = _field_width()
+		if width <= 0.0 or width >= field_width * 2.0 + EventSheetLookStyle.px(MinMaxTrack.MIN_WIDTH) + _gap() * 2.0:
+			return 1
+		if width >= field_width * 2.0 + _gap():
+			return 2
+		return 3
+
+	func _get_minimum_size() -> Vector2:
+		if _track == null:
+			return Vector2.ZERO
+		var field_height: float = EventSheetLookStyle.field_height()
+		var track_height: float = _track.get_combined_minimum_size().y
+		var height: float = track_height
+		if _lines == 2:
+			height = field_height + _gap() + track_height
+		elif _lines == 3:
+			height = field_height * 2.0 + _gap() * 2.0 + track_height
+		return Vector2(_field_width(), height)
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_SORT_CHILDREN:
+			_arrange()
+		elif what == NOTIFICATION_THEME_CHANGED and _low != null:
+			_low.custom_minimum_size.x = _field_width()
+			_high.custom_minimum_size.x = _field_width()
+			update_minimum_size()
+
+	func _arrange() -> void:
+		var wanted: int = _lines_for(size.x)
+		if wanted != _lines:
+			_lines = wanted
+			update_minimum_size()
+		var field_height: float = EventSheetLookStyle.field_height()
+		var track_height: float = _track.get_combined_minimum_size().y
+		var field_width: float = _field_width()
+		var gap: float = _gap()
+		if _lines == 1:
+			fit_child_in_rect(_low, Rect2(0.0, 0.0, field_width, field_height))
+			fit_child_in_rect(_high, Rect2(size.x - field_width, 0.0, field_width, field_height))
+			fit_child_in_rect(_track, Rect2(field_width + gap, 0.0, size.x - field_width * 2.0 - gap * 2.0, track_height))
+		elif _lines == 2:
+			var half: float = (size.x - gap) * 0.5
+			fit_child_in_rect(_low, Rect2(0.0, 0.0, half, field_height))
+			fit_child_in_rect(_high, Rect2(half + gap, 0.0, half, field_height))
+			fit_child_in_rect(_track, Rect2(0.0, field_height + gap, size.x, track_height))
+		else:
+			fit_child_in_rect(_low, Rect2(0.0, 0.0, size.x, field_height))
+			fit_child_in_rect(_high, Rect2(0.0, field_height + gap, size.x, field_height))
+			fit_child_in_rect(_track, Rect2(0.0, field_height * 2.0 + gap * 2.0, size.x, track_height))
+
+
+## The drawn part of a min-max pair: a grey groove, the picked span filled, a handle on each end of the
+## fill, and the two ends of the whole range written small under it. The groove and the handles are
+## the editor's own slider pieces.
+class MinMaxTrack:
+	extends Control
+	## Emitted with the new pair while a handle is dragged.
+	signal dragged(value: Vector2)
+	## The narrowest the track may be, at 1x.
+	const MIN_WIDTH: float = 70.0
+	## The ends of the whole range are written this much smaller than the editor's text.
+	const END_TEXT_SCALE: float = 0.85
+	var min_value: float = 0.0
+	var max_value: float = 100.0
+	var editable: bool = true
+	var _value: Vector2 = Vector2.ZERO
+	var _dragging_high: bool = false
+	var _held: bool = false
+
+	func _init(p_min: float = 0.0, p_max: float = 100.0) -> void:
+		min_value = p_min
+		max_value = p_max
+		mouse_filter = Control.MOUSE_FILTER_STOP
+
+	static func bound_label(v: float) -> String:
+		return str(int(roundf(v))) if absf(v - roundf(v)) < 0.001 else str(snappedf(v, 0.01))
+
+	func set_value(v: Vector2) -> void:
+		_value = v
+		queue_redraw()
+
+	func _end_font_size() -> int:
+		return maxi(1, int(roundf(EventSheetLookStyle.font_size() * END_TEXT_SCALE)))
+
+	## The row the groove and handles sit on is as tall as a field; the ends are written under it.
+	func _get_minimum_size() -> Vector2:
+		var text_height: float = EventSheetLookStyle.font().get_height(_end_font_size())
+		return Vector2(EventSheetLookStyle.px(MIN_WIDTH), EventSheetLookStyle.field_height() + text_height)
+
+	func _handle_icon() -> Texture2D:
+		return EventSheetLookStyle.typed_icon(&"grabber_highlight" if _held else &"grabber", &"HSlider")
+
+	## How far in from each side the groove starts, so a handle at either end stays inside the track.
+	func _pad() -> float:
+		var picture: Texture2D = EventSheetLookStyle.typed_icon(&"grabber", &"HSlider")
+		return picture.get_width() * 0.5 if picture != null else EventSheetLookStyle.px(6.0)
+
+	func _x_of(v: float) -> float:
+		var pad: float = _pad()
+		var frac: float = clampf((v - min_value) / maxf(0.0001, max_value - min_value), 0.0, 1.0)
+		return pad + frac * maxf(0.0, size.x - pad * 2.0)
 
 	func _draw() -> void:
-		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-		var ink: Color = chrome.drawer_ink_color
-		var label_color: Color = Color(ink.r, ink.g, ink.b, 0.75)
-		var w: float = size.x
-		var h: float = size.y
-		var track_y: float = h * 0.5
-		draw_rect(Rect2(0.0, track_y - 2.0, w, 4.0), chrome.drawer_well_color, true)
-		var x_low: float = _frac(_value.x) * w
-		var x_high: float = _frac(_value.y) * w
-		draw_rect(Rect2(x_low, track_y - 2.0, maxf(0.0, x_high - x_low), 4.0), chrome.drawer_accent_color, true)
+		var centre_y: float = EventSheetLookStyle.field_height() * 0.5
+		var pad: float = _pad()
+		var groove: StyleBox = EventSheetLookStyle.typed_box(&"slider", &"HSlider")
+		var fill: StyleBox = EventSheetLookStyle.typed_box(&"grabber_area", &"HSlider")
+		var groove_height: float = groove.get_minimum_size().y if groove != null else EventSheetLookStyle.px(4.0)
+		groove_height = maxf(groove_height, EventSheetLookStyle.px(4.0))
+		var whole: Rect2 = Rect2(pad, centre_y - groove_height * 0.5, maxf(0.0, size.x - pad * 2.0), groove_height)
+		var x_low: float = _x_of(_value.x)
+		var x_high: float = _x_of(_value.y)
+		var span: Rect2 = Rect2(x_low, whole.position.y, maxf(0.0, x_high - x_low), groove_height)
+		if groove != null:
+			draw_style_box(groove, whole)
+		else:
+			draw_rect(whole, EventSheetLookStyle.rest())
+		if fill != null:
+			draw_style_box(fill, span)
+		else:
+			draw_rect(span, EventSheetLookStyle.accent())
+		var handle: Texture2D = _handle_icon()
 		for x: float in [x_low, x_high]:
-			draw_circle(Vector2(x, track_y), 5.0, chrome.drawer_handle_color)
-			draw_circle(Vector2(x, track_y), 5.0, chrome.drawer_handle_border_color, false, 1.0)
-		# Value labels ride WITH their handles (clamped to the widget), so they read as the pair's
-		# current values - at the edges they would read as the track's fixed bounds instead.
-		var font: Font = ThemeDB.fallback_font
-		var low_label: String = _bound_label(_value.x)
-		var low_width: float = font.get_string_size(low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10)).x
-		draw_string(font, Vector2(clampf(x_low - low_width * 0.5, 0.0, w - low_width), track_y - 7.0), low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), label_color)
-		var high_label: String = _bound_label(_value.y)
-		var high_width: float = font.get_string_size(high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10)).x
-		if absf(x_high - x_low) > (low_width + high_width) * 0.5 + 4.0:
-			draw_string(font, Vector2(clampf(x_high - high_width * 0.5, 0.0, w - high_width), track_y - 7.0), high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), label_color)
-
-	static func _bound_label(v: float) -> String:
-		return str(int(roundf(v))) if absf(v - roundf(v)) < 0.001 else str(snappedf(v, 0.01))
+			if handle != null:
+				draw_texture(handle, Vector2(x, centre_y) - handle.get_size() * 0.5)
+			else:
+				draw_circle(Vector2(x, centre_y), EventSheetLookStyle.px(6.0), EventSheetLookStyle.ink())
+		var font: Font = EventSheetLookStyle.font()
+		var font_size: int = _end_font_size()
+		var baseline: float = EventSheetLookStyle.field_height() + font.get_ascent(font_size)
+		var quiet: Color = EventSheetLookStyle.quiet()
+		draw_string(font, Vector2(pad, baseline), bound_label(min_value), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
+		var high_text: String = bound_label(max_value)
+		var high_width: float = font.get_string_size(high_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		draw_string(font, Vector2(size.x - pad - high_width, baseline), high_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:
 			return
-		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
-			var x: float = (event as InputEventMouseButton).position.x
-			# Grab whichever handle is nearer; ties (overlapping pair) take the high one so a collapsed
-			# range can always be re-opened by dragging right.
-			_dragging_high = absf(x - _frac(_value.y) * size.x) <= absf(x - _frac(_value.x) * size.x)
-			_drag_to(x)
+		if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			_held = (event as InputEventMouseButton).pressed
+			queue_redraw()
+			if _held:
+				var x: float = (event as InputEventMouseButton).position.x
+				# Grab whichever handle is nearer; ties (overlapping pair) take the high one so a collapsed
+				# range can always be re-opened by dragging right.
+				_dragging_high = absf(x - _x_of(_value.y)) <= absf(x - _x_of(_value.x))
+				_drag_to(x)
 			accept_event()
-		elif event is InputEventMouseMotion and ((event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		elif event is InputEventMouseMotion and _held and ((event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
 			_drag_to((event as InputEventMouseMotion).position.x)
 			accept_event()
 
 	func _drag_to(x: float) -> void:
-		var v: float = min_value + clampf(x / maxf(1.0, size.x), 0.0, 1.0) * (max_value - min_value)
+		var pad: float = _pad()
+		var frac: float = clampf((x - pad) / maxf(1.0, size.x - pad * 2.0), 0.0, 1.0)
+		var v: float = min_value + frac * (max_value - min_value)
+		var next: Vector2 = _value
 		if _dragging_high:
-			_value.y = clampf(v, _value.x, max_value)
+			next.y = clampf(v, _value.x, max_value)
 		else:
-			_value.x = clampf(v, min_value, _value.y)
+			next.x = clampf(v, min_value, _value.y)
+		_value = next
 		queue_redraw()
-		value_changed.emit(_value)
+		dragged.emit(next)
 
 
 ## The `# @inspector_validate <function>` badge: calls the edited object's validator (a function
@@ -736,10 +921,10 @@ class DrawerToggleRow:
 
 
 # ── A number and its unit ────────────────────────────────────────────
-## A float shown as a spin box with a unit dropdown at its right edge. THE CONTRACT: the value this
-## widget holds and reports is always in the STORED unit the export named; the dropdown only changes
-## which unit it is READ in. Switching from world units to pixels re-reads 2.0 as 2.0 px and emits
-## nothing, so the file on disk - and the number the running game uses - never moves.
+## A float shown as a number field with a unit dropdown joined to its right edge. THE CONTRACT: the
+## value this widget holds and reports is always in the STORED unit the export named; the dropdown only
+## changes which unit it is READ in. Switching from world units to pixels re-reads 2.0 as 2.0 px and
+## emits nothing, so the file on disk - and the number the running game uses - never moves.
 class DrawerUnitField:
 	extends HBoxContainer
 	## Emitted with the value in the STORED unit, never in the shown one.
@@ -750,7 +935,7 @@ class DrawerUnitField:
 	var _store_unit: String = ""
 	var _view_unit: String = ""
 	var _stored: float = 0.0
-	var _spin: SpinBox = null
+	var _spin: Range = null
 	var _unit_option: OptionButton = null
 
 
@@ -758,12 +943,11 @@ class DrawerUnitField:
 		_units = units
 		_store_unit = store_unit if units.has(store_unit) else (units[0] if not units.is_empty() else "")
 		_view_unit = _store_unit
-		add_theme_constant_override("separation", 2)
-		_spin = SpinBox.new()
-		_spin.step = 0.001
-		_spin.allow_greater = true
-		_spin.allow_lesser = true
-		_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		add_theme_constant_override("separation", 0)
+		_spin = EventSheetLookStyle.number_field("", EventSheetLookStyle.NO_COLOUR, false)
+		EventSheetLookStyle.open_number_field(_spin)
+		_spin.custom_minimum_size.x = EventSheetLookStyle.text_room("-1000.000")
+		EventSheetLookStyle.join_field(_spin, true, false)
 		_spin.value_changed.connect(_on_spin_changed)
 		add_child(_spin)
 		_unit_option = OptionButton.new()
@@ -775,6 +959,7 @@ class DrawerUnitField:
 		if _unit_option.item_count > 0:
 			_unit_option.select(max(Array(_units).find(_view_unit), 0))
 			_unit_option.item_selected.connect(_on_unit_selected)
+			EventSheetLookStyle.join_button(_unit_option, false, true)
 			add_child(_unit_option)
 
 
@@ -789,7 +974,7 @@ class DrawerUnitField:
 		return _stored
 
 
-	## The number as the spin box currently SHOWS it - the stored value read in the view unit.
+	## The number as the field currently SHOWS it - the stored value read in the view unit.
 	func get_shown_value() -> float:
 		return _spin.value
 
@@ -812,7 +997,7 @@ class DrawerUnitField:
 
 	func set_editable(v: bool) -> void:
 		editable = v
-		_spin.editable = v
+		EventSheetLookStyle.set_number_field_locked(_spin, not v)
 		_unit_option.disabled = not v
 
 
@@ -1501,7 +1686,7 @@ class DrawerTable:
 		menu.id_pressed.connect(func(id: int) -> void: move_row(row_index, row_index - 1 if id == 0 else row_index + 1))
 		menu.popup_hide.connect(menu.queue_free)
 		grip.add_child(menu)
-		menu.popup(Rect2i(Vector2i(grip.get_screen_position() + (event as InputEventMouseButton).position), Vector2i.ZERO))
+		EventSheetWindowPlacement.popup_at(menu, Vector2i(grip.get_screen_position() + (event as InputEventMouseButton).position))
 
 	## Moves the row at `from` so it sits at `to`, the other rows closing up or making room.
 	func move_row(from: int, to: int) -> void:
