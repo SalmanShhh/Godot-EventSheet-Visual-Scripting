@@ -50,12 +50,12 @@ static func _test_the_descriptors_say_what_they_emit() -> bool:
 		str(by_id.get("SpawnNewCopyDeferred", ACEDescriptor.new()).display_text).contains("added on the next idle moment"), true) and passed
 	passed = _check("Make A Copy is the one statement that mints the name",
 		str(by_id.get("MakeNewCopy", ACEDescriptor.new()).codegen_template), "var {name} = {scene}.instantiate()") and passed
-	# The default placement IS where the spawner is, and the default parent IS the spawning node -
+	# The default placement IS where the spawner is, and the default parent IS the running scene -
 	# the two answers the sentence claims when nobody has touched the fields.
 	passed = _check("the row opens placing the copy where the spawner is",
 		_default_of(by_id.get("SpawnNewCopy", null), "at"), "global_position") and passed
-	passed = _check("the row opens adding the copy under the spawning node",
-		_default_of(by_id.get("SpawnNewCopy", null), "parent"), "self") and passed
+	passed = _check("the row opens adding the copy under the running scene",
+		_default_of(by_id.get("SpawnNewCopy", null), "parent"), "get_tree().current_scene") and passed
 	# Every placement word, as the exact expression it writes.
 	passed = _check("place of a node", str(by_id.get("PlaceAtNode", ACEDescriptor.new()).codegen_template),
 		"{node}.global_position") and passed

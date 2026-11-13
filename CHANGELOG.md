@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a new copy is added under the running scene, and what a row makes is an object for the rows after it
+
+- The Under field of a new Instantiate row (and its 3D, crowd, formation, launched and free-spot spellings) now starts as the running scene, `get_tree().current_scene`, instead of the node that spawned the copy: a bullet added under its shooter turns, scales and is freed with it. A row already in a sheet keeps whatever it stored, and no template changed, so nothing already written compiles differently.
+- The name an Instantiate, Make A Copy, Add New Node or Add Behaviour row leaves behind is now an object in the Add action picker for the rows after it, typed by what it made: the type of Add New Node, the behaviour of Add Behaviour, the class of the root of the scene file an Instantiate names. One table (made_names.gd) now feeds both these objects and the name chips, which also gains the 3D Instantiate that was missing from the chips.
+
 ### Added: Building, the rows for making nodes while the game runs
 
 - A new Building page in the picker: Add New Node (any node type, optionally named, added under the running scene and kept in a variable), Add Behaviour (a script node added as a child and named after its class, with Only one or Allow another), Remove Behaviour, Add Sprite, Add Circle, Rectangle and Capsule Shape (and Sphere, Box and Capsule in 3D), Add Timer, Add To Group (Saved With Scene) and Keep As Prefab. Each one writes the plain Godot lines a person would type (`Type.new()`, `add_child`, `get_node_or_null`, `PackedScene.pack`) and needs nothing from the plugin at run time.

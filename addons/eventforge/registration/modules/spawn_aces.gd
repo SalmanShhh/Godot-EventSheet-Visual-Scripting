@@ -197,7 +197,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Three statements, in the order Godot wants them: instance, parent, place. Placement comes
 	# AFTER add_child deliberately - global_position only means anything once the node is in a tree,
 	# and a row that set it first would quietly land the copy in the wrong place under a moved parent.
-	descriptors.append(F.act("SpawnNewCopy", "Instantiate", "var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}", CATEGORY, "Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]", "Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_at_param()).param_built(_parent_param()).featured())
+	descriptors.append(F.act("SpawnNewCopy", "Instantiate", "var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}", CATEGORY, "Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]", "Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is. Under starts as the running scene; set it to self to keep the copy under this node.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_at_param()).param_built(_parent_param()).featured())
 	# The deferred spelling. Godot blocks add_child while the physics server is flushing, which is
 	# every body/area callback - so this is the row a collision handler wants. Placement moves BEFORE
 	# the parenting here, because the copy is not in a tree yet when the line runs and global_position
@@ -227,7 +227,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# twin still places BEFORE it parents, because a copy that is not in a tree yet has nothing for a
 	# global position to be global to. The only differences are the host the picker files them under
 	# and the shape of the value the At field holds.
-	descriptors.append(F.act("SpawnNewCopy3D", "Instantiate (3D)", "var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}", CATEGORY, "Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]", "Makes one copy of a scene, adds it under a parent and puts it where you say, in three dimensions. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_built(_at_param_3d()).param_built(_parent_param()).featured())
+	descriptors.append(F.act("SpawnNewCopy3D", "Instantiate (3D)", "var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}", CATEGORY, "Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]", "Makes one copy of a scene, adds it under a parent and puts it where you say, in three dimensions. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is. Under starts as the running scene; set it to self to keep the copy under this node.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_built(_at_param_3d()).param_built(_parent_param()).featured())
 	descriptors.append(F.act("SpawnNewCopyDeferred3D", "Instantiate Safely (3D)", "var {name} = {scene}.instantiate()\n{name}.position = {at}\n{parent}.call_deferred(\"add_child\", {name})", CATEGORY, "Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_built(_at_param_3d()).param_built(_parent_param()).deprecated("Places the copy relative to its parent while Instantiate (3D) places it in the level. Use the world twin.", "Core::SpawnNewCopyDeferredWorld3D"))
 
 	# ── Where it lands, in three dimensions ────────────────────────────────────────────
@@ -530,11 +530,13 @@ static func _at_param_3d() -> ACEParam:
 		"expression", [], PLACEMENT_STARTERS_3D)
 
 
-## The node the copy is added under. Stated on the row even when it is this one, because a copy that
-## quietly ends up somewhere else is the hardest kind of spawn to find later.
+## The node the copy is added under. Stated on the row even when it is the default, because a copy that
+## quietly ends up somewhere else is the hardest kind of spawn to find later. The default is the
+## running scene: a copy of a scene is a thing in the level, and under the node that spawned it a
+## bullet would turn, scale and be freed with its shooter.
 static func _parent_param() -> ACEParam:
-	return F.make_param("parent", "String", "self", "Under",
-		"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.",
+	return F.make_param("parent", "String", "get_tree().current_scene", "Under",
+		"The node the copy is added under. It starts as the running scene; set it to self to add the copy under this node, or name a layer to keep spawns together.",
 		"expression")
 
 

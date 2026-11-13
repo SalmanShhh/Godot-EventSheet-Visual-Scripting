@@ -31,6 +31,8 @@ const TYPED_LOCAL_ACES: Dictionary = {"SetLocalVarTyped": ["name", "var_type"]}
 const VALUE_TYPES: PackedStringArray = ["", "Variant", "int", "float", "bool", "String", "StringName", "NodePath", "Vector2", "Vector2i",
 	"Vector3", "Vector3i", "Vector4", "Vector4i", "Color", "Rect2", "Rect2i", "Transform2D", "Transform3D", "Basis", "Quaternion",
 	"Plane", "AABB", "Projection", "RID", "Callable", "Signal", "Array", "Dictionary", "Object", "void"]
+## The rows that make a node and name it, and where their type comes from (see made_names.gd).
+const MADE_NAMES := preload("res://addons/eventsheet/editor/interaction/made_names.gd")
 const FINDING_KIND := "no-pick-here"
 const FIX_PICK_FROM_GROUP := "pick_from_a_group"
 const FIX_PICK_FROM_LIST := "pick_from_a_list"
@@ -123,6 +125,25 @@ static func values_offered(sheet: EventSheetResource, target: Resource) -> Array
 	return offered
 
 
+## The type of the node a row that makes one leaves behind, "" when it cannot be told. A row that is given a
+## type says it (Add New Node, Add Behaviour); a copy of a scene is the class of the scene's root, read off the
+## file when the Scene field names one. A scene held in a constant or built at run time stays untyped, which
+## still offers the name and says nothing about its class. Loaded by path so a first open of a sheet never
+## loads the scene readers for a sheet that spawns nothing.
+static func type_made_by(ace_id: String, params: Dictionary) -> String:
+	if MADE_NAMES.TYPE_PARAMS.has(ace_id):
+		var given: String = str(params.get(MADE_NAMES.TYPE_PARAMS[ace_id], "")).strip_edges()
+		return given if given.is_valid_identifier() else ""
+	var scene: String = str(params.get(MADE_NAMES.SCENE_PARAM, "")).strip_edges()
+	if scene.is_empty():
+		return ""
+	var path: String = str(load("res://addons/eventsheet/editor/interaction/object_facts.gd").call("scene_path_in", scene))
+	if path.is_empty():
+		return ""
+	var nodes: Array = load("res://addons/eventforge/importer/scene_connections.gd").call("nodes_of_scene", path)
+	return str((nodes[0] as Dictionary).get("type", "")) if not nodes.is_empty() else ""
+
+
 ## The picks one event makes by itself: [{"name", "type"}]. A For each names its item and takes the
 ## element type of the list it walks; a pop or pick row names the item it took; a typed local names itself. The
 ## amber "nothing is picked here" check leaves the locals a line declares out (`with_declared_locals`): a name a function
@@ -159,6 +180,11 @@ static func own_picks(sheet: EventSheetResource, event_row: EventRow, with_decla
 			var taken_type: String = list_expression_element(sheet, str(params.get(names[1], "")))
 			if taken.is_valid_identifier() and (taken_type.is_empty() or is_instance_type(taken_type)):
 				picks.append({"name": taken, "type": taken_type})
+		elif MADE_NAMES.NAME_PARAMS.has(action.ace_id):
+			var made: String = str(params.get(MADE_NAMES.NAME_PARAMS[action.ace_id], "")).strip_edges()
+			var made_type: String = type_made_by(action.ace_id, params)
+			if made.is_valid_identifier() and (made_type.is_empty() or is_instance_type(made_type)):
+				picks.append({"name": made, "type": made_type})
 		elif with_declared_locals and TYPED_LOCAL_ACES.has(action.ace_id):
 			var declared: Array = TYPED_LOCAL_ACES[action.ace_id]
 			var local_name: String = str(params.get(declared[0], "")).strip_edges()

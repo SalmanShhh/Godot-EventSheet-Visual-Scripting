@@ -54,8 +54,8 @@ static func _test_the_twins_emit_the_same_three_lines_on_a_3d_host() -> bool:
 		str(by_id.get("SpawnNewCopy", ACEDescriptor.new()).node_type), "Node2D") and passed
 	passed = _check("the row opens placing the copy where the spawner is",
 		_default_of(by_id.get("SpawnNewCopy3D", null), "at"), "global_position") and passed
-	passed = _check("the row opens adding the copy under the spawning node",
-		_default_of(by_id.get("SpawnNewCopy3D", null), "parent"), "self") and passed
+	passed = _check("the row opens adding the copy under the running scene",
+		_default_of(by_id.get("SpawnNewCopy3D", null), "parent"), "get_tree().current_scene") and passed
 	# The 3D field offers 3D starters. A Vector2 in a Node3D row's At field is the one mistake this
 	# list exists to stop, so the question is asked of the whole list rather than of one position in
 	# it: the 3D literal is there, and nothing two-dimensional is.

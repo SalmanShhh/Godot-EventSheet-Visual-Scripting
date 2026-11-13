@@ -173,6 +173,6 @@ static func _at_param() -> ACEParam:
 
 ## The node the copy is added under, stated on the row even when it is this one.
 static func _parent_param() -> ACEParam:
-	return F.make_param("parent", "String", "self", "Under",
-		"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.",
+	return F.make_param("parent", "String", "get_tree().current_scene", "Under",
+		"The node the copy is added under. It starts as the running scene; set it to self to add the copy under this node, or name a layer to keep spawns together.",
 		"expression")

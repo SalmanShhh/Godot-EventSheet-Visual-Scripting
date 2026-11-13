@@ -1476,34 +1476,12 @@ static func _parameter_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	return entries
 
 
-## The rows that name a new copy, and the parameter each one names it in. A spawn row declares a
-## real local variable, so the name it was given is a name the rows after it can say - and this is
-## the list that offers it. Kept as data rather than as an `if` chain so a spawn row added later is
-## offered the moment it says which parameter carries its name.
-const SPAWN_NAME_PARAMS: Dictionary = {
-	"SpawnNewCopy": "name",
-	"SpawnNewCopyDeferred": "name",
-	"SpawnNewCopyDeferredWorld": "name",
-	"SpawnNewCopyDeferredWorld3D": "name",
-	"MakeNewCopy": "name",
-	"SpawnIntoCrowd": "name",
-	"SpawnIntoCrowdOldestFirst": "name",
-	"SpawnIntoCrowdUnlessFull": "name",
-	# The launched twin, which declares its local exactly as its frozen neighbour does. Its formation
-	# sibling is deliberately NOT here: the name a formation gives a copy lives INSIDE the loop the
-	# row writes, so it is gone by the time the next row runs and offering it would be offering a
-	# name that cannot be said. The whole formation is addressed by its crowd instead.
-	"SpawnFacingAndMoving": "name",
-	"SpawnFacingAndMoving3D": "name",
-	# A copy of the node's own scene declares its local exactly as the safe spawn it is written from.
-	"SpawnCopyOfSelf": "name",
-	"SpawnCopyOfSelf3D": "name",
-	# And the free-spot spawn, which binds its name ABOVE the branch precisely so the rows underneath
-	# can say it. The name is simply nothing when the arena was full, which is the question Is Still
-	# Here answers - so the name is worth offering and worth guarding, not worth hiding.
-	"SpawnInFreeSpot": "name",
-	"SpawnInFreeSpot3D": "name",
-}
+## The rows that name a new copy, and the parameter each one names it in: one table, read here for the
+## chips a following row picks its object from and by the pick scope for the object column, so a row
+## added to it is offered by both the moment it says which parameter carries its name. See
+## made_names.gd for the rows and for why a formation is not among them.
+const MADE_NAMES := preload("res://addons/eventsheet/editor/interaction/made_names.gd")
+const SPAWN_NAME_PARAMS: Dictionary = MADE_NAMES.NAME_PARAMS
 
 
 ## Every name a spawn row in this sheet gave a new copy, said with the scene it is a copy of. The

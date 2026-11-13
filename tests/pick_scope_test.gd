@@ -42,6 +42,47 @@ static func _sheet() -> Array:
 
 
 static func run() -> bool:
+	var passed: bool = _the_rows_that_make_a_node_name_it()
+	return _the_picked_rows() and passed
+
+
+## A row that makes a node leaves a name behind, and the name is an object for the rows after it: a node made
+## from a type is that type, a behaviour is its class, and a copy of a scene file is the class of the scene's
+## root. A scene held in a constant is a name with no class, still offered.
+static func _the_rows_that_make_a_node_name_it() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	event.actions.append(_made("AddNewNodeInto", {"type": "Marker2D", "name": "marker", "parent": "self", "label": ""}))
+	event.actions.append(_made("AddBehaviourInto", {"behaviour": "Timer", "name": "clock", "target": "self", "once": "yes"}))
+	event.actions.append(_made("SpawnNewCopy", {"scene": "load(\"res://tests/fixtures/collision_scene_enemy.tscn\")",
+		"name": "foe", "at": "global_position", "parent": "self"}))
+	event.actions.append(_made("SpawnNewCopy3D", {"scene": "Enemy3D", "name": "boss", "at": "global_position", "parent": "self"}))
+	event.actions.append(_made("AddNewNodeInto", {"type": "Marker2D", "name": "not a name", "parent": "self", "label": ""}))
+	sheet.events.append(event)
+	var picks: Array[Dictionary] = EventSheetPickScope.own_picks(sheet, event)
+	return SUPPORT.pins(NAME, [
+		["Add New Node leaves its name, typed as the type it made", picks[0], {"name": "marker", "type": "Marker2D"}],
+		["Add Behaviour leaves its name, typed as the behaviour", picks[1], {"name": "clock", "type": "Timer"}],
+		["a copy of a scene file is typed as the root of that scene", picks[2], {"name": "foe", "type": "CharacterBody2D"}],
+		["a copy of a scene held in a constant is a name with no type", picks[3], {"name": "boss", "type": ""}],
+		["a name that is not an identifier is not offered", picks.size(), 4],
+		["the type a row is given is read from its type field", EventSheetPickScope.type_made_by("AddNewNodeInto", {"type": "Timer"}), "Timer"],
+		["a type that is not a name is no type", EventSheetPickScope.type_made_by("AddNewNodeInto", {"type": "get_class()"}), ""],
+	])
+
+
+static func _made(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	return action
+
+
+static func _the_picked_rows() -> bool:
 	var built: Array = _sheet()
 	var sheet: EventSheetResource = built[0]
 	var picker: EventRow = built[1]
