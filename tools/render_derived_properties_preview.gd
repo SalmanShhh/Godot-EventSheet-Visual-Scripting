@@ -26,10 +26,10 @@ func _physics_process(_delta: float) -> void:
 """
 
 ## The body of the staged function, drawn verbatim above the rows it becomes.
-const SHOWN_CODE: String = """	if torch.shadow_filter_smooth > 1.0:
-		torch.energy = 1.2
-		torch.shadow_filter_smooth = 0.5
-		torch.shadow_color = torch.color"""
+const SHOWN_CODE: String = "	if torch.shadow_filter_smooth > 1.0:
+" 	+ "		torch.energy = 1.2
+" 	+ "		torch.shadow_filter_smooth = 0.5
+" 	+ "		torch.shadow_color = torch.color"
 
 var _frames: int = 0
 var _viewport: EventSheetViewport = null
