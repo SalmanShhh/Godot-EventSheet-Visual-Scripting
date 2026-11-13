@@ -35,8 +35,8 @@ static func run() -> bool:
 	powered_event.actions.append(_action("print(level)"))
 	authored.events.append(powered_event)
 
-	var source: String = str(SheetCompiler.compile(authored, "user://eventsheets_signal_lift_src.gd").get("output", ""))
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var source: String = str(EventSheetCompiler.compile(authored, "user://eventsheets_signal_lift_src.gd").get("output", ""))
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var lifted: Array[EventRow] = []
 	var function_blocks: int = 0
 	for row in imported.events:
@@ -57,7 +57,7 @@ static func run() -> bool:
 			all_passed = _check("custom signal source node recovered", event.trigger_source_path, "Generator") and all_passed
 			all_passed = _check("custom signal args recovered", event.trigger_args, "level: int") and all_passed
 	imported.external_source_path = "user://eventsheets_signal_lift_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_signal_lift_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_signal_lift_rt.gd").get("output", ""))
 	all_passed = _check("signal lift round-trips byte-identically", roundtrip == source, true) and all_passed
 
 	# Connects-only _ready (no OnReady event): still lifts, still byte-identical.
@@ -68,8 +68,8 @@ static func run() -> bool:
 	lone.trigger_id = "OnBodyEntered"
 	lone.actions.append(_action("queue_free()"))
 	only_signal.events.append(lone)
-	var lone_source: String = str(SheetCompiler.compile(only_signal, "user://eventsheets_signal_lone_src.gd").get("output", ""))
-	var lone_imported: EventSheetResource = GDScriptImporter.new().import_external_source(lone_source)
+	var lone_source: String = str(EventSheetCompiler.compile(only_signal, "user://eventsheets_signal_lone_src.gd").get("output", ""))
+	var lone_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(lone_source)
 	var lone_events: int = 0
 	var lone_ready_events: int = 0
 	for row in lone_imported.events:
@@ -80,19 +80,19 @@ static func run() -> bool:
 	all_passed = _check("connects-only _ready lifts the handler", lone_events, 1) and all_passed
 	all_passed = _check("no phantom OnReady event from connects", lone_ready_events, 0) and all_passed
 	lone_imported.external_source_path = "user://eventsheets_signal_lone_rt.gd"
-	var lone_roundtrip: String = str(SheetCompiler.compile(lone_imported, "user://eventsheets_signal_lone_rt.gd").get("output", ""))
+	var lone_roundtrip: String = str(EventSheetCompiler.compile(lone_imported, "user://eventsheets_signal_lone_rt.gd").get("output", ""))
 	all_passed = _check("connects-only round-trip byte-identical", lone_roundtrip == lone_source, true) and all_passed
 
 	# A handler with no connect entry (scene-wired) keeps the file as blocks - lossless.
 	var unwired: String = "extends Node\n\nfunc _on_mystery(body: Node) -> void:\n\tprint(body)\n"
-	var unwired_imported: EventSheetResource = GDScriptImporter.new().import_external_source(unwired)
+	var unwired_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(unwired)
 	var unwired_lifted: bool = false
 	for row in unwired_imported.events:
 		if row is EventRow:
 			unwired_lifted = true
 	all_passed = _check("unwired handlers stay verbatim blocks", unwired_lifted, false) and all_passed
 	unwired_imported.external_source_path = "user://eventsheets_signal_unwired.gd"
-	var unwired_roundtrip: String = str(SheetCompiler.compile(unwired_imported, "user://eventsheets_signal_unwired.gd").get("output", ""))
+	var unwired_roundtrip: String = str(EventSheetCompiler.compile(unwired_imported, "user://eventsheets_signal_unwired.gd").get("output", ""))
 	all_passed = _check("unwired file still byte-identical", unwired_roundtrip == unwired, true) and all_passed
 
 	# Exit triggers (On Body / Area Exited): codegen via the new resolver arms + round-trip via the lifter.
@@ -108,12 +108,12 @@ static func run() -> bool:
 	area_exit.trigger_id = "OnAreaExited"
 	area_exit.actions.append(_action("print(\"area left\")"))
 	exits.events.append(area_exit)
-	var exit_source: String = str(SheetCompiler.compile(exits, "user://eventsheets_exits_src.gd").get("output", ""))
+	var exit_source: String = str(EventSheetCompiler.compile(exits, "user://eventsheets_exits_src.gd").get("output", ""))
 	all_passed = _check("On Body Exited connects body_exited + names the handler",
 		exit_source.contains("body_exited.connect(_on_body_exited)") and exit_source.contains("func _on_body_exited(_body: Node) -> void:"), true) and all_passed
 	all_passed = _check("On Area Exited connects area_exited + names the handler",
 		exit_source.contains("area_exited.connect(_on_area_exited)") and exit_source.contains("func _on_area_exited(area: Area2D) -> void:"), true) and all_passed
-	var exit_imported: EventSheetResource = GDScriptImporter.new().import_external_source(exit_source)
+	var exit_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(exit_source)
 	var exit_ids: Array[String] = []
 	for row in exit_imported.events:
 		if row is EventRow:
@@ -121,7 +121,7 @@ static func run() -> bool:
 	all_passed = _check("On Body / Area Exited reverse to their trigger ids",
 		exit_ids.has("OnBodyExited") and exit_ids.has("OnAreaExited"), true) and all_passed
 	exit_imported.external_source_path = "user://eventsheets_exits_rt.gd"
-	var exit_roundtrip: String = str(SheetCompiler.compile(exit_imported, "user://eventsheets_exits_rt.gd").get("output", ""))
+	var exit_roundtrip: String = str(EventSheetCompiler.compile(exit_imported, "user://eventsheets_exits_rt.gd").get("output", ""))
 	all_passed = _check("exit triggers round-trip byte-identically", exit_roundtrip == exit_source, true) and all_passed
 
 	all_passed = _run_handler_above_ready() and all_passed
@@ -155,7 +155,7 @@ static func _run_handler_above_ready() -> bool:
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(source)
 	file.close()
-	var opened: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var ready_rows: int = 0
 	for row: Variant in opened.events:
 		if row is EventRow and (row as EventRow).trigger_id == "OnReady":

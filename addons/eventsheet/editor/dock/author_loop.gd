@@ -188,10 +188,10 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 		return {"ok": false, "message": "Select a node in the Scene dock first."}
 	if sheet.resource_path.is_empty():
 		return {"ok": false, "message": "Save the sheet first - the behavior attaches by its compiled script."}
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, "")
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, "")
 	if not bool(compile_result.get("success", false)):
 		return {"ok": false, "message": "The sheet doesn't compile: %s" % str(compile_result.get("errors"))}
-	var script_path: String = SheetCompiler._resolve_output_path(sheet, "")
+	var script_path: String = EventSheetCompiler._resolve_output_path(sheet, "")
 	var behavior: Node = Node.new()
 	behavior.name = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else script_path.get_file().get_basename().to_pascal_case()
 	behavior.set_script(load(script_path))
@@ -224,7 +224,7 @@ func open_test_bench() -> void:
 func build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
 	var host_class: String = sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node2D"
 	var bench_script_path: String = scene_path.get_basename() + ".gd"
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, bench_script_path)
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, bench_script_path)
 	if not bool(compile_result.get("success", false)):
 		return "Test Bench: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
 	var host: Node = ClassDB.instantiate(host_class)

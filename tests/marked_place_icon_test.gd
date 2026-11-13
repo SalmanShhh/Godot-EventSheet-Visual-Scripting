@@ -13,7 +13,7 @@ extends RefCounted
 #   2. the words did not move: naming the class is an extra fact on the reading, not a new sentence;
 #   3. the promise it rests on - an icon is DISPLAY, so the file still saves byte-identically.
 
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 const SOURCE_PATH := "user://eventforge_marked_place_icon.gd"
 
@@ -96,8 +96,8 @@ static func _round_trip() -> bool:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 

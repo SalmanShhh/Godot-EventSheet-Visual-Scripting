@@ -42,7 +42,7 @@ static func _expose_directive(return_type: int) -> String:
 	fn.expose_as_ace = true
 	fn.return_type = return_type
 	var lines: PackedStringArray = PackedStringArray()
-	SheetCompiler._emit_expose_annotations(fn, sheet, lines)
+	EventSheetCompiler._emit_expose_annotations(fn, sheet, lines)
 	return lines[0] if lines.size() > 0 else ""
 
 

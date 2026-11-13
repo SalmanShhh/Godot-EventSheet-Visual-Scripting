@@ -54,9 +54,9 @@ static func _case(label: String, body: String, expected_children: int) -> bool:
 	raw.code = body
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://il_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://il_source.gd").get("output", ""))
 
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	# The outer block is the first event that carries a condition or a loop and has children.
 	var outer: EventRow = _first_block_with_children(imported.events)
 	ok = _check("%s: the outer block structured (did not stay a raw cell)" % label, outer != null, true) and ok
@@ -64,7 +64,7 @@ static func _case(label: String, body: String, expected_children: int) -> bool:
 		ok = _check("%s: outer block has the expected sub-event count" % label, outer.sub_events.size(), expected_children) and ok
 
 	imported.external_source_path = "user://il_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://il_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://il_rt.gd").get("output", ""))
 	ok = _check("%s: round-trips byte-identically" % label, roundtrip == source, true) and ok
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])

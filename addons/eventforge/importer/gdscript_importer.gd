@@ -8,7 +8,7 @@
 # verify-lift (anything that doesn't reproduce exactly stays a verbatim RawCodeRow - the lossless rule
 # always wins).
 @tool
-class_name GDScriptImporter
+class_name EventSheetGDScriptImporter
 extends RefCounted
 
 ## The lift that takes a generated `_validate_property` back onto its variables. Loaded by path, and
@@ -101,7 +101,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 	_source_writes_validate_property = source.contains("func _validate_property(")
 	# The Save choice block is cut off the tail first and read back onto the variables below.
 	var save_cut: Dictionary = {}
-	if _cut_save_block and source.contains(SheetCompiler.SaveChoices.DOC):
+	if _cut_save_block and source.contains(EventSheetCompiler.SaveChoices.DOC):
 		save_cut = load(SAVE_CHOICE_LIFT_PATH).cut(source)
 	var lines: PackedStringArray = str(save_cut.get("prefix", source)).split("\n")
 	# A trailing "\n" yields one empty trailing element; the compiler re-appends the final
@@ -197,7 +197,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			if not attached.is_empty():
 				lifted.leading_lines = attached
 				written_declaration = "\n".join(attached) + "\n" + line
-				if SheetCompiler._emit_tree_variable_line(lifted) != written_declaration:
+				if EventSheetCompiler._emit_tree_variable_line(lifted) != written_declaration:
 					lifted.leading_lines = PackedStringArray()
 					pending.append_array(attached)
 					written_declaration = line
@@ -229,7 +229,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 				var attached_signal: PackedStringArray = _take_attached_annotations(pending)
 				if not attached_signal.is_empty():
 					lifted_signal.leading_lines = attached_signal
-					if "\n".join(SheetCompiler._emit_signal_annotations(lifted_signal)) != "\n".join(attached_signal):
+					if "\n".join(EventSheetCompiler._emit_signal_annotations(lifted_signal)) != "\n".join(attached_signal):
 						lifted_signal.leading_lines = PackedStringArray()
 						pending.append_array(attached_signal)
 			_flush_pending(pending, sheet)
@@ -377,7 +377,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		return whole
 	# A generated _validate_property goes back onto the variables it came from (byte-gated inside), before
 	# the statement lift below would read it as an ordinary function.
-	if source.contains("\n" + SheetCompiler.INSPECTOR_CONDITIONS_DOC + "\n"):
+	if source.contains("\n" + EventSheetCompiler.INSPECTOR_CONDITIONS_DOC + "\n"):
 		load(INSPECTOR_CONDITION_LIFT_PATH).lift(sheet, source)
 	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
@@ -435,9 +435,9 @@ func _try_lift_property(lines: PackedStringArray, index: int) -> Dictionary:
 	lifted.setter_name = str(accessors.get("setter_name", ""))
 	lifted.getter_name = str(accessors.get("getter_name", ""))
 	if accessors.has("layout"):
-		lifted.set_meta(SheetCompiler.ACCESSOR_LAYOUT_META, accessors["layout"])
+		lifted.set_meta(EventSheetCompiler.ACCESSOR_LAYOUT_META, accessors["layout"])
 	# Byte-gate: the re-emitted property (declaration + accessors) must reproduce the collected block exactly.
-	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(block):
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != "\n".join(block):
 		return {}
 	return {"var": lifted, "consumed": scan - index}
 
@@ -477,12 +477,12 @@ func _parse_property_accessors(block: PackedStringArray) -> Dictionary:
 			saw_setter = true
 			setter_param = line.substr(5, inline_setter - 5)
 			setter_lines.append(line.substr(inline_setter + 3))
-			layout.append("set" + SheetCompiler.INLINE_ACCESSOR)
+			layout.append("set" + EventSheetCompiler.INLINE_ACCESSOR)
 		elif line.begins_with("\tget: ") and not saw_getter and not line.substr(6).strip_edges().is_empty():
 			mode = ""
 			saw_getter = true
 			getter_lines.append(line.substr(6))
-			layout.append("get" + SheetCompiler.INLINE_ACCESSOR)
+			layout.append("get" + EventSheetCompiler.INLINE_ACCESSOR)
 		elif (line.begins_with("\t\t") or line.strip_edges().is_empty()) and not mode.is_empty():
 			var body: String = line.substr(2) if line.begins_with("\t\t") else line  # dedent two tabs
 			if mode == "set":
@@ -629,10 +629,10 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 				inferred.export_hint = walrus_hint
 				inferred.onready = onready_prefixed
 				inferred.is_static = static_prefixed
-				if SheetCompiler._emit_tree_variable_line(inferred) == line:
+				if EventSheetCompiler._emit_tree_variable_line(inferred) == line:
 					return inferred
 				return null
-	var parsed: Dictionary = VariableParser.new().parse(declaration)
+	var parsed: Dictionary = EventSheetVariableParser.new().parse(declaration)
 	if parsed.size() != 1:
 		return null
 	var variable_name: String = str(parsed.keys()[0])
@@ -690,7 +690,7 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 	# other hint family is, because the generic hinted emission (`var bake: Variant = _bake`) could
 	# never pass that gate and the whole declaration used to stay a verbatim block.
 	_extract_tool_button(lifted)
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		# A typed default the parser turned into a real VALUE (`Vector2(24, 16)` becomes a Vector2)
 		# re-emits in canonical form (`Vector2(24.0, 16.0)`) - the same value, different bytes, so the
 		# whole declaration used to stay a code block. Fall back to keeping the SOURCE text as a bare
@@ -713,7 +713,7 @@ func _try_lift_variable(line: String, collection_as_text: bool = false) -> Local
 		# the file keeps writing none.
 		if lifted.is_constant and lifted.untyped:
 			lifted.type_name = inferred_expression_type(str(lifted.default_value))
-		if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 			return null
 	_extract_drawer_from_hint(lifted, line)
 	_extract_color_no_alpha(lifted, line)
@@ -787,8 +787,8 @@ func _try_lift_decorated_variable(line: String) -> LocalVariable:
 	lifted.spaced_colon = spaced
 	if not noted.is_empty():
 		lifted.trailing_comment = str(noted["note"])
-		lifted.trailing_marker = "" if str(noted["marker"]) == SheetCompiler.ACTION_NOTE_MARKER else str(noted["marker"])
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.trailing_marker = "" if str(noted["marker"]) == EventSheetCompiler.ACTION_NOTE_MARKER else str(noted["marker"])
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		return null
 	return lifted
 
@@ -852,7 +852,7 @@ func _try_lift_written_variable(lines: PackedStringArray, index: int) -> Diction
 		lifted.default_value = text.substr(equals + 3)
 		lifted.expression_default = true
 	lifted.written_value = EventForgeValueLines.layout_of(joined, str(lifted.default_value))
-	if lifted.written_value.is_empty() or SheetCompiler._emit_tree_variable_line(lifted) != str(joined["written"]):
+	if lifted.written_value.is_empty() or EventSheetCompiler._emit_tree_variable_line(lifted) != str(joined["written"]):
 		return {}
 	return {"var": lifted, "consumed": run.size(), "written": str(joined["written"])}
 
@@ -902,7 +902,7 @@ func _lift_multiline_string_variable(lines: PackedStringArray, index: int, open_
 		return {}
 	if not (lifted.default_value is String):
 		return {}
-	if SheetCompiler._emit_tree_variable_line(lifted) != text:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != text:
 		return {}
 	return {"var": lifted, "consumed": run.size(), "written": text}
 
@@ -948,7 +948,7 @@ func _extract_color_no_alpha(lifted: LocalVariable, line: String) -> void:
 	attrs["no_alpha"] = true
 	lifted.attributes = attrs
 	lifted.export_hint = ""
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
@@ -963,7 +963,7 @@ func _extract_exp_easing(lifted: LocalVariable, line: String) -> void:
 	attrs["exp_easing"] = true
 	lifted.attributes = attrs
 	lifted.export_hint = ""
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
@@ -996,7 +996,7 @@ func _extract_placeholder(lifted: LocalVariable, line: String) -> void:
 	attrs["placeholder"] = text
 	lifted.attributes = attrs
 	lifted.export_hint = ""
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
@@ -1094,18 +1094,18 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 				var lifted_type: String = pair.substr(eq + 1)
 				# A fixed-choice column recovers into the same {type:"enum", options:[...]} shape the
 				# editor + emitter use, so the marker re-emits byte-for-byte and the dropdown survives.
-				var enum_options: Array = SheetCompiler.table_enum_options(lifted_type)
+				var enum_options: Array = EventSheetCompiler.table_enum_options(lifted_type)
 				if not enum_options.is_empty():
 					columns.append({"name": pair.substr(0, eq), "type": "enum", "options": enum_options})
 				else:
 					columns.append({"name": pair.substr(0, eq), "type": lifted_type})
 		# Each column's own Default and Description ride the parts after the columns.
-		if columns.is_empty() or not SheetCompiler.read_table_column_notes(columns, Array(parts.slice(3))):
+		if columns.is_empty() or not EventSheetCompiler.read_table_column_notes(columns, Array(parts.slice(3))):
 			return
 		attrs["table_columns"] = columns
 	lifted.attributes = attrs
 	lifted.export_hint = ""
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
@@ -1366,7 +1366,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	for index: int in range(pending.size() - meta_count, pending.size()):
 		absorbed.append(pending[index])
 	absorbed.append(var_line)
-	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
 		lifted.attributes = saved_attrs  # reverted - keep whatever was already recovered (e.g. the drawer)
 		return
 	for _removed: int in range(meta_count):
@@ -1382,7 +1382,7 @@ func _absorb_static_local_marker(lifted: LocalVariable, pending: PackedStringArr
 	if pending.is_empty():
 		return false
 	var marker_line: String = pending[pending.size() - 1]
-	var prefix: String = SheetCompiler.STATIC_LOCAL_MARKER % ""
+	var prefix: String = EventSheetCompiler.STATIC_LOCAL_MARKER % ""
 	if not marker_line.begins_with(prefix):
 		return false
 	var row_name: String = marker_line.substr(prefix.length()).strip_edges()
@@ -1391,7 +1391,7 @@ func _absorb_static_local_marker(lifted: LocalVariable, pending: PackedStringArr
 	var saved_name: String = lifted.name
 	lifted.name = row_name
 	lifted.static_local = true
-	if SheetCompiler._emit_tree_variable_line(lifted) != "%s\n%s" % [marker_line, var_line]:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != "%s\n%s" % [marker_line, var_line]:
 		lifted.name = saved_name
 		lifted.static_local = false
 		return false
@@ -1470,7 +1470,7 @@ func _extract_structured_hint(lifted: LocalVariable, line: String) -> void:
 	attrs.merge(candidate, true)
 	lifted.attributes = attrs
 	lifted.export_hint = ""
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
@@ -1498,7 +1498,7 @@ func _extract_custom_hint(lifted: LocalVariable, line: String) -> void:
 	attrs["custom_hint"] = {"hint": inside.substr(0, first_comma), "text": text, "usage": tail.trim_prefix(", ")}
 	lifted.attributes = attrs
 	lifted.export_hint = ""
-	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
@@ -1710,8 +1710,8 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 	for index: int in range(run_start, pending.size()):
 		absorbed.append(pending[index])
 	absorbed.append(signal_line)
-	var expected: PackedStringArray = SheetCompiler._emit_signal_annotations(lifted)
-	expected.append(SheetCompiler._emit_signal_line(lifted))
+	var expected: PackedStringArray = EventSheetCompiler._emit_signal_annotations(lifted)
+	expected.append(EventSheetCompiler._emit_signal_line(lifted))
 	if "\n".join(expected) != "\n".join(absorbed):
 		# The block wasn't in canonical form (reordered / extra directives) - revert to a plain signal so
 		# the annotations stay verbatim in their block and the round-trip is never risked.
@@ -1880,8 +1880,8 @@ func _literal_close_index(pending: PackedStringArray, start: int) -> int:
 func import_source(source: String) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = _parse_host_class(source)
-	sheet.variables = VariableParser.new().parse(source)
-	for function_data: Variant in FunctionParser.new().parse(source):
+	sheet.variables = EventSheetVariableParser.new().parse(source)
+	for function_data: Variant in EventSheetFunctionParser.new().parse(source):
 		if not (function_data is Dictionary):
 			continue
 		sheet.functions.append(_build_function(function_data as Dictionary))

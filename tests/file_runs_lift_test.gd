@@ -116,9 +116,9 @@ static func _run_write() -> bool:
 	var flipped: ACEAction = _flipped(lifted, EventForgeTableACEs.HEADERS_PLAIN)
 	ok = SUPPORT.pins(NAME, [
 		["answering the other way stops writing a header line",
-			ActionCodegen.generate_action(flipped).contains("keys())"), false],
+			EventSheetActionCodegen.generate_action(flipped).contains("keys())"), false],
 		["and writes every entry as plain cells instead",
-			ActionCodegen.generate_action(flipped).contains("for __row_"), true]
+			EventSheetActionCodegen.generate_action(flipped).contains("for __row_"), true]
 	]) and ok
 	return ok
 
@@ -237,7 +237,7 @@ static func _sheet_with(actions: Array) -> String:
 	for action: Variant in actions:
 		row.actions.append(action)
 	sheet.events.append(row)
-	return str(SheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
 
 
 ## The actions of the one event a reopened file holds. Empty when the file came back with no event at
@@ -293,7 +293,7 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 
 ## One shipped template filled with these values, through the compiler's own substitution.
 static func _emitted(ace_id: String, params: Dictionary) -> String:
-	return ActionCodegen._apply_template(_template(ace_id), params)
+	return EventSheetActionCodegen._apply_template(_template(ace_id), params)
 
 
 ## One shipped template, off the descriptor that ships it.

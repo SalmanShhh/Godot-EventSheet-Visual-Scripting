@@ -212,7 +212,7 @@ static func _test_authoring() -> bool:
 	var passed: bool = true
 	var path: String = "user://w6_menu_authored.gd"
 	var sheet: EventSheetResource = _authored_sheet()
-	var first: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+	var first: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 	passed = _check("the Add item row writes the line the reading reads",
 		first.contains("\tview_menu.add_item(\"Minimap\", 0)"), true) and passed
 	passed = _check("every item of one menu shares one handler",
@@ -222,9 +222,9 @@ static func _test_authoring() -> bool:
 	passed = _check("the menu is wired through the variable it lives in",
 		first.contains("\tview_menu.id_pressed.connect(_on_view_menu_id_pressed)"), true) and passed
 	_write(path, first)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	passed = _check("the authored menu re-opens as exactly what it was written from",
-		str(SheetCompiler.compile(reopened, path).get("output", "")), first) and passed
+		str(EventSheetCompiler.compile(reopened, path).get("output", "")), first) and passed
 	var rows: PackedStringArray = _open_and_read(path)
 	passed = _check("and the authored file reads back as the menu it is",
 		_has(rows, "View menu ▸ On Minimap chosen"), true) and passed
@@ -236,9 +236,9 @@ static func _test_round_trip() -> bool:
 	var passed: bool = true
 	for pair: Array in [[LAMBDA_PATH, LAMBDA_SOURCE], [NAMED_PATH, NAMED_SOURCE]]:
 		_write(str(pair[0]), str(pair[1]))
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(str(pair[0]))
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(pair[0]))
 		passed = _check("%s saves every byte back" % str(pair[0]).get_file(),
-			str(SheetCompiler.compile(sheet, str(pair[0])).get("output", "")), str(pair[1])) and passed
+			str(EventSheetCompiler.compile(sheet, str(pair[0])).get("output", "")), str(pair[1])) and passed
 	return passed
 
 
@@ -280,7 +280,7 @@ static func _add_item_action(menu: String, label: String, id: String) -> ACEActi
 ## Every row's reading in an opened file, as "object ▸ sentence" plus the bare span texts, so a bar's
 ## note and a trigger's sentence are both findable.
 static func _open_and_read(path: String) -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var view := EventSheetViewport.new()
 	view.reading_mode = true
 	view.set_sheet(sheet)

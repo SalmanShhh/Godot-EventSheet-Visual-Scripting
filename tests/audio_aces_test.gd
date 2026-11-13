@@ -51,7 +51,7 @@ static func run() -> bool:
 	rate.codegen_template = str(by_id["SetLastSoundRate"].codegen_template).replace("{uid}", "t2")
 	rate.params = {"rate": "randf_range(0.9, 1.1)"}
 	event.actions.append(rate)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_audio.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_audio.gd").get("output", ""))
 	all_passed = _check("one-shot emits the self-freeing player",
 		output.contains("\tvar __sfx_t1 = AudioStreamPlayer.new()") and output.contains("\t__sfx_t1.finished.connect(__sfx_t1.queue_free)") and output.contains("\t__sfx_t1.play()"), true) and all_passed
 	all_passed = _check("one-shot records itself as the last sound",

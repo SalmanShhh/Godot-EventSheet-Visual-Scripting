@@ -179,7 +179,7 @@ static func run() -> bool:
 ## hover, Adopt behavior, the Doctor - reads these rather than looking at the file again.
 static func _claims() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	# A claim belongs to ONE event, so a file with several events of the same pattern makes several
@@ -310,7 +310,7 @@ static func _open_and_read() -> PackedStringArray:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -342,6 +342,6 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 ## The promise every reading here rests on: each one is a lens over a value the row already holds,
 ## so opening the file and saving it untouched puts back every byte.
 static func _round_trip() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)

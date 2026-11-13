@@ -120,7 +120,7 @@ static var _note_box_cache: Dictionary = {}
 
 
 ## The trigger kind of an event row, or "" when it draws no trigger icon. Classified the way the
-## tempo badge is (TriggerResolver.tempo_class_for), with the physics tick told apart from the
+## tempo badge is (EventSheetTriggerResolver.tempo_class_for), with the physics tick told apart from the
 ## process tick and an engine notification told apart from a signal.
 static func trigger_kind(row_data: EventRowData) -> String:
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
@@ -141,14 +141,14 @@ static func trigger_kind_for_event(event_row: EventRow) -> String:
 static func trigger_kind_for_id(trigger_id: String) -> String:
 	if trigger_id.is_empty():
 		return ""
-	match TriggerResolver.tempo_class_for(trigger_id):
-		TriggerResolver.TEMPO_ONCE:
+	match EventSheetTriggerResolver.tempo_class_for(trigger_id):
+		EventSheetTriggerResolver.TEMPO_ONCE:
 			return TRIGGER_READY
-		TriggerResolver.TEMPO_INPUT:
+		EventSheetTriggerResolver.TEMPO_INPUT:
 			return TRIGGER_INPUT
-		TriggerResolver.TEMPO_EVERY_TICK:
+		EventSheetTriggerResolver.TEMPO_EVERY_TICK:
 			return TRIGGER_PHYSICS if PHYSICS_TRIGGER_IDS.has(trigger_id) else TRIGGER_TICK
-	if trigger_id.begins_with(TriggerResolver.NOTIFICATION_PREFIX):
+	if trigger_id.begins_with(EventSheetTriggerResolver.NOTIFICATION_PREFIX):
 		return TRIGGER_OTHER
 	return TRIGGER_SIGNAL
 
@@ -250,7 +250,7 @@ static func kind_mark_for(metadata: Dictionary, glyph: String) -> String:
 		"negated":
 			return KIND_MARK_INVERTED
 		"trigger":
-			if str(metadata.get("tempo", "")) == TriggerResolver.TEMPO_EVERY_TICK or UNMARKED_BADGE_GLYPHS.has(glyph) \
+			if str(metadata.get("tempo", "")) == EventSheetTriggerResolver.TEMPO_EVERY_TICK or UNMARKED_BADGE_GLYPHS.has(glyph) \
 					or UNMARKED_BADGE_KINDS.has(str(metadata.get("kind", ""))):
 				return ""
 			return KIND_MARK_TRIGGER

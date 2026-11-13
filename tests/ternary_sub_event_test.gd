@@ -129,7 +129,7 @@ static func _fixture_rows() -> bool:
 static func _shipped_packs() -> bool:
 	var ok: bool = true
 	for path: String in [FPS_PACK, HEALTH_PACK]:
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		if sheet == null:
 			ok = _check("the pack opens: %s" % path.get_file(), false, true) and ok
 			continue
@@ -585,7 +585,7 @@ static func _event_codes(dock: EventSheetDock) -> String:
 
 
 static func _compiled(dock: EventSheetDock) -> String:
-	return str(SheetCompiler.new().compile(dock._current_sheet).get("output", ""))
+	return str(EventSheetCompiler.new().compile(dock._current_sheet).get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -226,7 +226,7 @@ static func say_text(problem: String, lost: PackedStringArray, current: Dictiona
 func _used_text() -> String:
 	if not _compiled_ready:
 		_compiled_ready = true
-		_compiled = str(SheetCompiler.compile(_dock._current_sheet, "").get("output", ""))
+		_compiled = str(EventSheetCompiler.compile(_dock._current_sheet, "").get("output", ""))
 	return _compiled
 
 

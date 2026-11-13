@@ -79,8 +79,8 @@ static func _save_as_gd_keeps_a_comment_over_its_event() -> bool:
 		if sheet.events[index] is EventRow:
 			second = index
 	sheet.events.insert(second, _comment("Then the second."))
-	var own: String = str(SheetCompiler.compile(sheet, SAVED_AT, true, true).get("output", ""))
-	var published: String = str(SheetCompiler.compile(sheet, SAVED_AT, true).get("output", ""))
+	var own: String = str(EventSheetCompiler.compile(sheet, SAVED_AT, true, true).get("output", ""))
+	var published: String = str(EventSheetCompiler.compile(sheet, SAVED_AT, true).get("output", ""))
 	return SUPPORT.pins(NAME, [
 		["Save As .gd writes the comment above its event", own.contains("\t# Then the second.\n\tif speed > 1.0:"), true],
 		["and the .gd reopens with the comment row above that event",
@@ -375,7 +375,7 @@ static func _plain_var_keeps_every_description_line() -> bool:
 		["a plain var's ## lines are its description, every line", coins.attributes.get("tooltip", "") if coins != null else null,
 			"Coins picked up this run.\nKept on a plain var too."],
 		["the file saves byte for byte", SUPPORT.reemit(source, SAVED_AT), source],
-		["a description typed on a plain var is written as its ## lines", SheetCompiler._emit_tree_variable_line(authored),
+		["a description typed on a plain var is written as its ## lines", EventSheetCompiler._emit_tree_variable_line(authored),
 			"## Lives left.\n## The last one is the hardest.\nvar lives: int = 3"],
 	])
 

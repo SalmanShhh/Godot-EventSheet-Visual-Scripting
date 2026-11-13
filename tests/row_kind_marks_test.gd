@@ -49,15 +49,15 @@ static func run() -> bool:
 static func _test_mark_rule() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["a one-off trigger wears the arrow",
-			NativeRowMarks.kind_mark_for({"badge_style": "trigger", "tempo": TriggerResolver.TEMPO_ONCE}, "▶"),
+			NativeRowMarks.kind_mark_for({"badge_style": "trigger", "tempo": EventSheetTriggerResolver.TEMPO_ONCE}, "▶"),
 			NativeRowMarks.KIND_MARK_TRIGGER],
 		["an input trigger wears the arrow",
-			NativeRowMarks.kind_mark_for({"badge_style": "trigger", "tempo": TriggerResolver.TEMPO_INPUT}, "⌨"),
+			NativeRowMarks.kind_mark_for({"badge_style": "trigger", "tempo": EventSheetTriggerResolver.TEMPO_INPUT}, "⌨"),
 			NativeRowMarks.KIND_MARK_TRIGGER],
 		["a signal trigger wears the arrow", NativeRowMarks.kind_mark_for({"badge_style": "trigger"}, "➜"),
 			NativeRowMarks.KIND_MARK_TRIGGER],
 		["a per-frame event is not a trigger: no mark",
-			NativeRowMarks.kind_mark_for({"badge_style": "trigger", "tempo": TriggerResolver.TEMPO_EVERY_TICK}, "⟳"), ""],
+			NativeRowMarks.kind_mark_for({"badge_style": "trigger", "tempo": EventSheetTriggerResolver.TEMPO_EVERY_TICK}, "⟳"), ""],
 		["a repeating timer is not a trigger either", NativeRowMarks.kind_mark_for({"badge_style": "trigger"}, "⟳"), ""],
 		["a state's case is a plain check", NativeRowMarks.kind_mark_for({"badge_style": "trigger"}, "◆"), ""],
 		["an inverted condition wears the cross", NativeRowMarks.kind_mark_for({"badge_style": "negated"}, "not"),

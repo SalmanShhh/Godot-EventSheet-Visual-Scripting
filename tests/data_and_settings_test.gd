@@ -244,7 +244,7 @@ static func _test_spawn_trigger_compiles() -> bool:
 	action.codegen_template = "show_boss_bar(node)"
 	event.actions.append(action)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_spawn_trigger.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_spawn_trigger.gd").get("output", ""))
 	ok = _pin(ok, output.contains("func _on_scene_spawned(_spawn_name: String, node: Node) -> void:"), true,
 		"the handler is emitted with the signal's own arguments as its parameters")
 	ok = _pin(ok, output.contains("scene_spawned.connect(_on_scene_spawned)"), true,
@@ -400,7 +400,7 @@ static func _test_live_data_trigger_compiles() -> bool:
 	action.codegen_template = _substitute(reload.codegen_template, {"path": "path"})
 	event.actions.append(action)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_live_data_trigger.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_live_data_trigger.gd").get("output", ""))
 	ok = _pin(ok, output.contains("func _on_data_file_changed(path: String) -> void:"), true,
 		"the handler takes the changed path as its own parameter")
 	ok = _pin(ok, output.contains("data_file_changed.connect(_on_data_file_changed)"), true,

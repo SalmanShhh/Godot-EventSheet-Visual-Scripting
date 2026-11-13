@@ -30,7 +30,7 @@ static func run() -> bool:
 	conditional.debug_break = true
 	conditional.debug_break_condition = "health <= 0"
 	sheet.events.append(conditional)
-	var output: String = str(SheetCompiler.compile(sheet, "user://_paused_row_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://_paused_row_out.gd").get("output", ""))
 	var announce: String = "EngineDebugger.send_message(\"eventsheets:paused_row\", [\"%s\"])" % event.event_uid
 	ok = _check("the announce line is emitted with the row's uid", output.contains(announce), true) and ok
 	ok = _check("the announce comes BEFORE the breakpoint",
@@ -42,7 +42,7 @@ static func run() -> bool:
 
 	# ── A clean sheet (no emit flag) carries none of it ──
 	sheet.emit_breakpoints = false
-	var clean: String = str(SheetCompiler.compile(sheet, "user://_paused_row_out.gd").get("output", ""))
+	var clean: String = str(EventSheetCompiler.compile(sheet, "user://_paused_row_out.gd").get("output", ""))
 	ok = _check("no emit flag → no announce, no breakpoint", clean.contains("paused_row") or clean.contains("breakpoint"), false) and ok
 
 	# ── The bridge's payload parse (static - EditorDebuggerPlugin can't be instantiated headless) ──

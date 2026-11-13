@@ -17,7 +17,7 @@ static func run() -> bool:
 
 	# ── A trailing @rpc helper lifts with its annotation captured, and round-trips ──
 	var rpc_src: String = "@tool\nextends Node\n\n\n@rpc(\"any_peer\", \"call_local\", \"reliable\")\nfunc take_damage(amount: int) -> void:\n\thealth -= amount\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(rpc_src)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(rpc_src)
 	var fn: EventFunction = _first_function(imported)
 	ok = _check("the @rpc function lifted to an EventFunction", fn != null, true) and ok
 	if fn != null:
@@ -28,7 +28,7 @@ static func run() -> bool:
 
 	# ── Stacked annotations keep source order ──
 	var stacked_src: String = "@tool\nextends Node\n\n\n@rpc(\"any_peer\")\n@warning_ignore(\"unused_parameter\")\nfunc ping(id: int) -> void:\n\treturn\n"
-	var stacked_imported: EventSheetResource = GDScriptImporter.new().import_external_source(stacked_src)
+	var stacked_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(stacked_src)
 	var stacked_fn: EventFunction = _first_function(stacked_imported)
 	ok = _check("a stacked-annotation function lifted", stacked_fn != null, true) and ok
 	if stacked_fn != null:
@@ -53,20 +53,20 @@ static func run() -> bool:
 	body_event.actions.append(ret)
 	afn.events = [body_event]
 	authored.functions = [afn]
-	var comp: String = str(SheetCompiler.compile(authored, "user://fa_authored.gd").get("output", ""))
+	var comp: String = str(EventSheetCompiler.compile(authored, "user://fa_authored.gd").get("output", ""))
 	# The `@rpc` line emits AFTER the `## @ace` block and BEFORE the `func` header (the GDScript convention).
 	ok = _check("the emitted order is `## @ace` then `@rpc` then `func`",
 		comp.contains("## @ace") and comp.find("@rpc(\"any_peer\")") < comp.find("func fire(") and comp.find("## @ace") < comp.find("@rpc(\"any_peer\")"), true) and ok
 	# Re-opening that canonical output and re-emitting reproduces it byte-for-byte (the covenant on the
 	# combined `## @ace` + `@rpc` shape).
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(comp)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(comp)
 	reimported.external_source_path = "user://fa_authored_rt.gd"
 	ok = _check("the authored exposed+@rpc function round-trips byte-identically",
-		str(SheetCompiler.compile(reimported, "user://fa_authored_rt.gd").get("output", "")) == comp, true) and ok
+		str(EventSheetCompiler.compile(reimported, "user://fa_authored_rt.gd").get("output", "")) == comp, true) and ok
 
 	# ── Regression: a plain function with no annotation lifts with an empty annotation_lines ──
 	var plain_src: String = "@tool\nextends Node\n\n\nfunc plain() -> void:\n\treturn\n"
-	var plain_imported: EventSheetResource = GDScriptImporter.new().import_external_source(plain_src)
+	var plain_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(plain_src)
 	var plain_fn: EventFunction = _first_function(plain_imported)
 	ok = _check("a plain function still lifts", plain_fn != null, true) and ok
 	if plain_fn != null:
@@ -77,9 +77,9 @@ static func run() -> bool:
 
 
 static func _roundtrips(label: String, src: String) -> bool:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(src)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(src)
 	imported.external_source_path = "user://fa_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://fa_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://fa_rt.gd").get("output", ""))
 	if rt != src:
 		print("  --- src ---\n%s\n  --- rt ---\n%s" % [src, rt])
 	return _check("%s: round-trips byte-identically" % label, rt == src, true)

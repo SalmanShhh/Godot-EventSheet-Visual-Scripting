@@ -40,10 +40,10 @@ static func run() -> bool:
 		verb.expose_as_ace = true
 		verb.ace_display_name = str(spec[2])
 		authored.functions.append(verb)
-	var source: String = str(SheetCompiler.compile(authored, "user://_per_fn_lift_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://_per_fn_lift_source.gd").get("output", ""))
 	ok = _check("the forward-compiled source holds all three funcs",
 		source.contains("func gnarly") and source.contains("func ping") and source.contains("func answer"), true) and ok
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	ok = _check("the clean trailing verbs lift as real functions", sheet.functions.size(), 2) and ok
 	var names: Array = []
 	for entry: Variant in sheet.functions:
@@ -58,7 +58,7 @@ static func run() -> bool:
 			hairy_stays = true
 	ok = _check("the hairy function stays raw (in place)", hairy_stays, true) and ok
 	sheet.external_source_path = "user://_per_fn_lift_verify.gd"
-	var output: String = str(SheetCompiler.compile(sheet, "user://_per_fn_lift_verify.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://_per_fn_lift_verify.gd").get("output", ""))
 	ok = _check("the partial lift round-trips byte-identically", output == source, true) and ok
 
 	# ── Census floor across real packs: the re-anchoring must keep these packs lifting.
@@ -77,7 +77,7 @@ static func run() -> bool:
 	}
 	for pack: Variant in floors:
 		var path: String = "res://eventsheet_addons/%s/%s_behavior.gd" % [pack, pack]
-		var pack_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+		var pack_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 			FileAccess.get_file_as_string(path))
 		ok = _check("%s lifts at least %d functions" % [pack, int(floors[pack])],
 			pack_sheet.functions.size() >= int(floors[pack]), true) and ok

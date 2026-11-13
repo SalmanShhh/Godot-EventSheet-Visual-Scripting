@@ -16,7 +16,7 @@ const SPECS: Array[Dictionary] = [
 
 var _index: int = 0
 var _frames: int = 0
-var _dlg: VariableDialog = null
+var _dlg: EventSheetVariableDialog = null
 
 
 func _init() -> void:
@@ -27,7 +27,7 @@ func _init() -> void:
 	bg.color = Color("#202024")
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(bg)
-	_dlg = VariableDialog.new()
+	_dlg = EventSheetVariableDialog.new()
 	_dlg.init_dialog(root)
 	_dlg.set_sheet_provider(func() -> Variant: return null)
 	process_frame.connect(_on_frame)

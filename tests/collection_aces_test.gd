@@ -57,7 +57,7 @@ static func run() -> bool:
 	append_score.params = {"var_name": "scores", "value": "10"}
 	event.actions.append(append_score)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_coll_aces.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_coll_aces.gd").get("output", ""))
 	all_passed = _check("dictionary condition compiles", output.contains("if inventory.has(\"sword\"):"), true) and all_passed
 	all_passed = _check("dictionary action compiles", output.contains("inventory[\"sword\"] = 1"), true) and all_passed
 	all_passed = _check("array action compiles", output.contains("scores.append(10)"), true) and all_passed

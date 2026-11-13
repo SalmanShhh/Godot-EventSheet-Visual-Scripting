@@ -145,7 +145,7 @@ func _staged_sheet(figure: Dictionary) -> EventSheetResource:
 	if handle != null:
 		handle.store_string(str(figure["source"]))
 		handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(str(figure["path"]))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(figure["path"]))
 	if sheet == null:
 		return null
 	var style := EventSheetEditorStyle.new()

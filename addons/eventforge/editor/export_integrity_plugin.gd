@@ -24,7 +24,7 @@ func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String,
 ## Static + headless-safe so tests (and CI) can run the exact export-time pass.
 static func recompile_all_sheets(root: String = "res://") -> Dictionary:
 	# The templates helper and THE COMPILER load by path, not by class name: this export plugin
-	# registers at editor boot, and naming SheetCompiler would compile its whole subtree right
+	# registers at editor boot, and naming EventSheetCompiler would compile its whole subtree right
 	# there. An export run absorbs the one-time load instead (it compiles sheets anyway).
 	var templates: Script = load("res://addons/eventforge/sheet_templates.gd")
 	var compiler: Script = load("res://addons/eventforge/compiler/sheet_compiler.gd")

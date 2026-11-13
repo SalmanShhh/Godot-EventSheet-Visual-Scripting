@@ -675,11 +675,11 @@ func _on_sheet_type_confirmed() -> void:
 		_sheet_type_icon_edit.text,
 		_sheet_type_host_edit.text,
 		_sheet_type_tool_check.button_pressed,
-		VariableDialog.parse_options(_sheet_type_tags_edit.text)
+		EventSheetVariableDialog.parse_options(_sheet_type_tags_edit.text)
 	,
-		VariableDialog.parse_options(_sheet_type_includes_edit.text),
-		VariableDialog.parse_options(_sheet_type_uses_edit.text),
-		VariableDialog.parse_options(_sheet_type_requires_edit.text),
+		EventSheetVariableDialog.parse_options(_sheet_type_includes_edit.text),
+		EventSheetVariableDialog.parse_options(_sheet_type_uses_edit.text),
+		EventSheetVariableDialog.parse_options(_sheet_type_requires_edit.text),
 		_sheet_type_autoload_edit.text,
 		_sheet_type_description_edit.text,
 		_sheet_type_family_check.button_pressed

@@ -83,7 +83,7 @@ static func _condition_source(expression: String) -> String:
 
 ## True when the body became rows rather than a verbatim `func …` wall.
 static func _structured(source: String) -> bool:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var has_structure: bool = false
 	if not imported.functions.is_empty():
 		has_structure = true
@@ -96,9 +96,9 @@ static func _structured(source: String) -> bool:
 
 
 static func _recompile(source: String) -> String:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://controls_lift_rt.gd"
-	return str(SheetCompiler.compile(imported, "user://controls_lift_rt.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(imported, "user://controls_lift_rt.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

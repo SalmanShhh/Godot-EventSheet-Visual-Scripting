@@ -70,7 +70,7 @@ static func run() -> bool:
 	ok = _check("the helper's comment is preserved in its body", comment_preserved, true) and ok
 
 	# Still compiles, and the function survives in the output.
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://fd_lift.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://fd_lift.gd")
 	ok = _check("the sheet compiles", bool(result.get("success", false)), true) and ok
 	ok = _check("output declares the function", str(result.get("output", "")).contains("func is_moving() -> bool:"), true) and ok
 

@@ -87,7 +87,7 @@ static func input_summary(event_function: EventFunction) -> String:
 static func gives_back(event_function: EventFunction) -> String:
 	if event_function.return_type == TYPE_NIL and event_function.return_type_name.strip_edges().is_empty():
 		return EventSheetL10n.translate("nothing")
-	return ViewportRowBuilder.friendly_type_word(SheetCompiler._function_return_type_name(event_function))
+	return ViewportRowBuilder.friendly_type_word(EventSheetCompiler._function_return_type_name(event_function))
 
 
 ## Whether the verb is featured, and the icon the picker draws for it. An unpublished helper says so

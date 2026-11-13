@@ -11,7 +11,7 @@ const SOURCE := "extends Node2D\n\n@export_range(0, 100) var speed: float = 5.0\
 
 static func run() -> bool:
 	var ok: bool = true
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var hints: Dictionary = {}
 	var ranges: Dictionary = {}
 	var raw_blocks: int = 0
@@ -32,7 +32,7 @@ static func run() -> bool:
 	ok = _check("no hinted export stayed a raw block", raw_blocks, 0) and ok
 
 	imported.external_source_path = "user://hint_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://hint_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://hint_rt.gd").get("output", ""))
 	ok = _check("hinted exports round-trip byte-identically", rt == SOURCE, true) and ok
 	if rt != SOURCE:
 		print("    SRC<%s>\n    RT <%s>" % [SOURCE, rt])

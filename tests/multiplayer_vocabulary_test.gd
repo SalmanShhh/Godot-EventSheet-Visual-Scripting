@@ -14,7 +14,7 @@ extends RefCounted
 #   and a sheet with it round-trips through the .gd byte for byte, guard and all.
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const FieldFactory := preload("res://addons/eventsheet/editor/ace_dialog/param_field_factory.gd")
 
 
@@ -118,9 +118,9 @@ static func _test_the_two_new_triggers() -> bool:
 		var probe: EventRow = EventRow.new()
 		probe.trigger_provider_id = "Core"
 		probe.trigger_id = str(pinned[0])
-		var signature: Dictionary = TriggerResolver.resolve_trigger(probe)
+		var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(probe)
 		ok = _check("%s connects on the multiplayer object" % str(pinned[0]),
-			str(signature.get("source_path", "")), TriggerResolver.MULTIPLAYER_SOURCE) and ok
+			str(signature.get("source_path", "")), EventSheetTriggerResolver.MULTIPLAYER_SOURCE) and ok
 		ok = _check("%s takes the peer id alone" % str(pinned[0]), str(signature.get("args", "")), "id: int") and ok
 	# A hand-written connect to either signal opens as that trigger.
 	ok = _check("a hand-written authenticating connect reads as the trigger",
@@ -235,12 +235,12 @@ static func _test_runs_on_compiles_to_the_guard() -> bool:
 	# The whole contract, first half: a sheet that says nothing about who runs it compiles to
 	# EXACTLY what it compiled to before this existed.
 	var plain: EventSheetResource = _sheet(_group("Scoring", ""))
-	var plain_output: String = str(SheetCompiler.compile(plain).get("output", ""))
+	var plain_output: String = str(EventSheetCompiler.compile(plain).get("output", ""))
 	ok = _check("a single-player group emits no guard", plain_output.contains("multiplayer"), false) and ok
 	ok = _check("...and no runs_on in its header", plain_output.contains("runs_on"), false) and ok
 
 	var hosted: EventSheetResource = _sheet(_group("Scoring", EventGroup.RUNS_ON_HOST))
-	var hosted_output: String = str(SheetCompiler.compile(hosted).get("output", ""))
+	var hosted_output: String = str(EventSheetCompiler.compile(hosted).get("output", ""))
 	ok = _check("a host group says so in its header", hosted_output.contains("runs_on=\"host\""), true) and ok
 	ok = _check("...and guards its event with the host test",
 		hosted_output.contains("if multiplayer.is_server() and is_on_floor():"), true) and ok
@@ -249,7 +249,7 @@ static func _test_runs_on_compiles_to_the_guard() -> bool:
 	var inner: EventGroup = _group("Movement", EventGroup.RUNS_ON_OWNER)
 	var outer: EventGroup = _group("Scoring", EventGroup.RUNS_ON_HOST)
 	outer.events.append(inner)
-	var nested_output: String = str(SheetCompiler.compile(_sheet(outer)).get("output", ""))
+	var nested_output: String = str(EventSheetCompiler.compile(_sheet(outer)).get("output", ""))
 	ok = _check("the inner group's rows ask the inner question",
 		nested_output.contains("if is_multiplayer_authority() and is_on_floor():"), true) and ok
 	ok = _check("...and the outer group's rows still ask the outer one",
@@ -258,7 +258,7 @@ static func _test_runs_on_compiles_to_the_guard() -> bool:
 	# Both guards on one group: the switch gates first, then who runs it.
 	var switched: EventGroup = _group("Scoring", EventGroup.RUNS_ON_HOST)
 	switched.runtime_toggleable = true
-	var switched_output: String = str(SheetCompiler.compile(_sheet(switched)).get("output", ""))
+	var switched_output: String = str(EventSheetCompiler.compile(_sheet(switched)).get("output", ""))
 	ok = _check("a switchable host group asks both, switch first",
 		switched_output.contains("if __group_scoring_active and multiplayer.is_server() and is_on_floor():"), true) and ok
 	return ok
@@ -267,8 +267,8 @@ static func _test_runs_on_compiles_to_the_guard() -> bool:
 static func _test_runs_on_round_trips() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = _sheet(_group("Scoring", EventGroup.RUNS_ON_HOST))
-	var output: String = str(SheetCompiler.compile(sheet, "user://_runs_on_rt.gd").get("output", ""))
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(output)
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://_runs_on_rt.gd").get("output", ""))
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(output)
 	var opened_group: EventGroup = null
 	for row: Variant in reopened.events:
 		if row is EventGroup:
@@ -282,7 +282,7 @@ static func _test_runs_on_round_trips() -> bool:
 		ok = _check("...and the guard is off the row it guarded", opened_row.conditions.size(), 1) and ok
 		ok = _check("...leaving the row's own condition alone", opened_row.conditions[0].ace_id, "IsOnFloor") and ok
 	reopened.external_source_path = "user://_runs_on_rt.gd"
-	var resaved: String = str(SheetCompiler.compile(reopened, "user://_runs_on_rt.gd").get("output", ""))
+	var resaved: String = str(EventSheetCompiler.compile(reopened, "user://_runs_on_rt.gd").get("output", ""))
 	ok = _check("re-saving it reproduces the file byte for byte", resaved == output, true) and ok
 	return ok
 
@@ -305,7 +305,7 @@ static func _test_runs_on_folds_the_conditions_it_replaces() -> bool:
 	ok = _check("...and the condition it kept is its own",
 		(group.child_rows()[1] as EventRow).conditions[0].ace_id, "IsOnFloor") and ok
 	# The same sheet still compiles to one test, not two.
-	var output: String = str(SheetCompiler.compile(_sheet(group)).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(_sheet(group)).get("output", ""))
 	ok = _check("so the emitted line asks it once",
 		output.count("multiplayer.is_server() and multiplayer.is_server()"), 0) and ok
 	return _test_an_or_row_is_left_alone() and ok
@@ -329,7 +329,7 @@ static func _test_an_or_row_is_left_alone() -> bool:
 	var ok: bool = _check("both halves of an or row are still there", kept.size(), 2)
 	ok = _check("...in the order they were asked in",
 		PackedStringArray([kept[0].ace_id, kept[1].ace_id]), PackedStringArray(["IsHost", "IsOnFloor"])) and ok
-	var output: String = str(SheetCompiler.compile(_sheet(group)).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(_sheet(group)).get("output", ""))
 	ok = _check("so the row still asks for either of them",
 		output.contains("multiplayer.is_server() or is_on_floor()"), true) and ok
 	return ok

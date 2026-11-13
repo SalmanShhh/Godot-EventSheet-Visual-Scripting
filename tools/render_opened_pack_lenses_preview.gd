@@ -55,7 +55,7 @@ func _add_pane(parent: Control, source_path: String, modern_base: Color) -> Scro
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	view.set_ace_registry(EventSheetACERegistry.new())
 	scroll.add_child(view)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(source_path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(source_path)
 	# The dock opens a .gd as a read-only preview; the importer leaves the flag alone, so the
 	# harness sets what the dock would set.
 	sheet.read_only = true

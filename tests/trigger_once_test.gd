@@ -52,7 +52,7 @@ static func _test_custom_edge_gate_via_fluent_api() -> bool:
 			(entry as EventRow).conditions.clear()
 			(entry as EventRow).conditions.append(gate)
 			(entry as EventRow).conditions.append(_expression_condition("flag"))
-	var output: String = str(SheetCompiler.compile(sheet, "user://custom_gate.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://custom_gate.gd").get("output", ""))
 	ok = _check("a custom pack edge gate in the first cell is hoisted last",
 		output.contains("if flag and __once_gate_g():"), true) and ok
 	# And it behaves at runtime: fires once on the rising edge, re-arms after a false tick.
@@ -79,12 +79,12 @@ static func _test_position_independent_emission() -> bool:
 	var ok: bool = true
 	# Trigger Once in the FIRST cell of an AND row.
 	var first_sheet: EventSheetResource = _build_sheet(true, 0)
-	var first_output: String = str(SheetCompiler.compile(first_sheet, "user://trigger_once_first.gd").get("output", ""))
+	var first_output: String = str(EventSheetCompiler.compile(first_sheet, "user://trigger_once_first.gd").get("output", ""))
 	ok = _check("first-cell Trigger Once still emits LAST in the and-chain",
 		first_output.contains("if flag and __trigger_once_x():"), true) and ok
 	# Trigger Once in the MIDDLE of an OR row: [flag, TO, other] with OR mode.
 	var or_sheet: EventSheetResource = _build_sheet(true, 1, true)
-	var or_output: String = str(SheetCompiler.compile(or_sheet, "user://trigger_once_or.gd").get("output", ""))
+	var or_output: String = str(EventSheetCompiler.compile(or_sheet, "user://trigger_once_or.gd").get("output", ""))
 	ok = _check("mid-cell Trigger Once in an OR row gates the parenthesized OR result",
 		or_output.contains("if (flag or other) and __trigger_once_x():"), true) and ok
 	return ok
@@ -117,7 +117,7 @@ static func _test_source_map_stays_aligned() -> bool:
 	for entry: Variant in sheet.events:
 		if entry is EventRow:
 			event_uid = str((entry as EventRow).get_instance_id())
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://trigger_once_map.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://trigger_once_map.gd")
 	var output_lines: PackedStringArray = str(result.get("output", "")).split("\n")
 	var mapped_start: int = -1
 	var mapped_end: int = -1
@@ -189,7 +189,7 @@ static func _trigger_once_condition(uid: String = "x") -> ACECondition:
 
 
 static func _test_emits_helper_and_prelude() -> bool:
-	var output: String = str(SheetCompiler.compile(_build_sheet(true), "user://trigger_once_emit.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(_build_sheet(true), "user://trigger_once_emit.gd").get("output", ""))
 	var ok: bool = _check("state var is emitted", output.contains("var __once_x: int = 1"), true)
 	ok = _check("helper function is emitted", output.contains("func __trigger_once_x() -> bool:"), true) and ok
 	ok = _check("helper zeroes its counter and edge-tests", output.contains("__once_x = 0") and output.contains("return ticks_since_last > 1"), true) and ok
@@ -239,7 +239,7 @@ static func _test_negated_warns() -> bool:
 			for condition: Variant in (row as EventRow).conditions:
 				if condition is ACECondition and (condition as ACECondition).ace_id == "TriggerOnce":
 					(condition as ACECondition).negated = true
-	var warnings: Array = SheetCompiler.compile(sheet, "user://trigger_once_negated.gd").get("warnings", [])
+	var warnings: Array = EventSheetCompiler.compile(sheet, "user://trigger_once_negated.gd").get("warnings", [])
 	var warned: bool = false
 	for warning: Variant in warnings:
 		if str(warning).contains("can not be inverted"):
@@ -248,7 +248,7 @@ static func _test_negated_warns() -> bool:
 
 
 static func _instantiate(sheet: EventSheetResource) -> Node:
-	return _instantiate_source(str(SheetCompiler.compile(sheet, "user://trigger_once_run.gd").get("output", "")))
+	return _instantiate_source(str(EventSheetCompiler.compile(sheet, "user://trigger_once_run.gd").get("output", "")))
 
 
 static func _instantiate_source(source: String) -> Node:

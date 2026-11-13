@@ -596,11 +596,11 @@ static func run() -> bool:
 
 
 static func _check_sheet(label: String, path: String, required: Array) -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var ok: bool = _check("%s opens as a sheet" % label, sheet is EventSheetResource, true)
 	if sheet == null:
 		return false
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://%s_showcase_test.gd" % label)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://%s_showcase_test.gd" % label)
 	ok = _check("%s compiles to GDScript" % label, bool(result.get("success", false)), true) and ok
 	var output: String = str(result.get("output", ""))
 	# The .gd IS the showcase sheet now (no .tres): opening it and recompiling must reproduce it exactly

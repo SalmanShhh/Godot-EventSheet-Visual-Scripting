@@ -90,7 +90,7 @@ static func _compiles(by_id: Dictionary) -> bool:
 	event.actions.append(_set_var("agg_min", _expr(by_id, "MinInGroup")))
 	event.actions.append(_set_var("agg_max", _expr(by_id, "MaxInGroup")))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://__group_aggregates_compiled.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://__group_aggregates_compiled.gd").get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	return script.reload() == OK

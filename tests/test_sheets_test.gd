@@ -65,7 +65,7 @@ static func _test_the_kind_compiles_to_a_startable_script() -> bool:
 ## Opening the emitted .gd again has to say "this is a test" - otherwise the sheet and the runner
 ## disagree about the same file. The marker is metadata only, so re-emitting is byte-unaffected.
 static func _test_the_kind_round_trips_and_reads_as_a_test() -> bool:
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var reopened: EventSheetResource = importer.import_external_source(_compile(_passing_sheet()))
 	var ok: bool = _check("re-opening the emitted script recovers the test kind", reopened.test_mode, true)
 	var plain: EventSheetResource = importer.import_external_source(_compile(_plain_sheet()))
@@ -245,7 +245,7 @@ static func _test_the_emitted_test_sheet_reopens_byte_identically() -> bool:
 	var path: String = FIXTURE_DIR + "/round_trip_test.gd"
 	var first: String = _compile(_passing_sheet())
 	_write(path, first)
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var reopened: EventSheetResource = importer.import_external(path)
 	var ok: bool = _check("the reopened sheet is still a test", reopened.test_mode, true)
 	ok = _check("re-emitting it is byte-identical", _compile(reopened), first) and ok
@@ -458,7 +458,7 @@ static func _compile(sheet: EventSheetResource) -> String:
 	# at the project root. A test sheet written there would be a real, discoverable test sheet sitting in
 	# the project, which the runner would then find and run on every headless invocation. So the write is
 	# aimed at a temporary path and removed again.
-	var source: String = str(SheetCompiler.compile(sheet, TEMP_COMPILE_PATH).get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(sheet, TEMP_COMPILE_PATH).get("output", ""))
 	DirAccess.remove_absolute(TEMP_COMPILE_PATH)
 	return source
 

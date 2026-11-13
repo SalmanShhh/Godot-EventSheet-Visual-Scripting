@@ -37,7 +37,7 @@ static func _locator_finds_the_tab_and_the_map() -> bool:
 	var made: Array = _sheet_with_event("alpha")
 	var sheet: EventSheetResource = made[0]
 	sheet.take_over_path("user://silent_holes_runtime_c.tres")
-	var written: Dictionary = SheetCompiler.compile(sheet, "")
+	var written: Dictionary = EventSheetCompiler.compile(sheet, "")
 	var output_path: String = EventSheetRuntimeErrorLocator.output_path_of(sheet)
 	var other: Array = _sheet_with_event("beta")
 	var other_sheet: EventSheetResource = other[0]
@@ -83,7 +83,7 @@ static func _an_error_in_another_tab_finds_its_row_and_jumps_there() -> bool:
 	dock._open_sheet_in_tab(second_sheet, "")
 	dock._activate_tab(0)
 	var line: int = EventSheetLineRowMapper.range_for_resource(
-		SheetCompiler.echo(second_sheet).get("source_map", []), second_event).x
+		EventSheetCompiler.echo(second_sheet).get("source_map", []), second_event).x
 	var side_panel_open: bool = dock._side_panel != null and dock._side_panel.visible
 	var report: Dictionary = dock.report_runtime_error(
 		"Invalid call. Nonexistent function 'silent_two' in base 'Node'.", "res://game/second_script.gd", line)

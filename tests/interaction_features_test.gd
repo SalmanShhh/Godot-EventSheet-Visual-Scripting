@@ -25,19 +25,19 @@ static func run() -> bool:
 	event.conditions.append(_compare_condition("b"))
 	sheet.events.append(event)
 
-	var and_out: String = str(SheetCompiler.compile(sheet, "user://__if_and.gd").get("output", ""))
+	var and_out: String = str(EventSheetCompiler.compile(sheet, "user://__if_and.gd").get("output", ""))
 	all_passed = _check("AND block joins conditions with `and`", and_out.contains("a > 0 and b > 0"), true) and all_passed
 	event.condition_mode = EventRow.ConditionMode.OR
-	var or_out: String = str(SheetCompiler.compile(sheet, "user://__if_or.gd").get("output", ""))
+	var or_out: String = str(EventSheetCompiler.compile(sheet, "user://__if_or.gd").get("output", ""))
 	all_passed = _check("OR block joins conditions with `or`", or_out.contains("a > 0 or b > 0"), true) and all_passed
 
 	# ── Condition inversion → `not (…)`, reversible ──
 	event.condition_mode = EventRow.ConditionMode.AND
 	event.conditions[0].negated = true
-	var inv_out: String = str(SheetCompiler.compile(sheet, "user://__if_inv.gd").get("output", ""))
+	var inv_out: String = str(EventSheetCompiler.compile(sheet, "user://__if_inv.gd").get("output", ""))
 	all_passed = _check("inverted condition compiles to `not (`", inv_out.contains("not (a > 0)"), true) and all_passed
 	event.conditions[0].negated = false
-	var uninv_out: String = str(SheetCompiler.compile(sheet, "user://__if_uninv.gd").get("output", ""))
+	var uninv_out: String = str(EventSheetCompiler.compile(sheet, "user://__if_uninv.gd").get("output", ""))
 	all_passed = _check("un-inverting removes the `not`", uninv_out.contains("not ("), false) and all_passed
 
 	# ── The condition menu disables Invert for a TRIGGER, enables it for a condition ──

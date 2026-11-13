@@ -29,7 +29,7 @@ const COVERAGE_SOURCE := """extends Node
 
 static func run() -> bool:
 	var all_passed: bool = true
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external_source(COVERAGE_SOURCE)
 	sheet.external_source_path = "user://export_coverage.gd"
 
@@ -76,7 +76,7 @@ static func run() -> bool:
 
 	# ── Byte-identical round-trip through the compiler ──
 	all_passed = _check("the whole file round-trips byte-identically",
-		str(SheetCompiler.compile(sheet, "user://export_coverage.gd").get("output", "")), COVERAGE_SOURCE) and all_passed
+		str(EventSheetCompiler.compile(sheet, "user://export_coverage.gd").get("output", "")), COVERAGE_SOURCE) and all_passed
 
 	# ── Near-misses stay verbatim hints (degradation, never corruption) ──
 	var hostile: EventSheetResource = importer.import_external_source("extends Node\n\n@export_range(0, 10, 1, \"exp\", \"or_greater\") var odd_order: float = 1.0\n")
@@ -88,7 +88,7 @@ static func run() -> bool:
 		odd != null and odd.export_hint == "@export_range(0, 10, 1, \"exp\", \"or_greater\")", true) and all_passed
 	hostile.external_source_path = "user://export_hostile.gd"
 	all_passed = _check("and still round-trips byte-identically",
-		str(SheetCompiler.compile(hostile, "user://export_hostile.gd").get("output", "")).contains("@export_range(0, 10, 1, \"exp\", \"or_greater\") var odd_order: float = 1.0"), true) and all_passed
+		str(EventSheetCompiler.compile(hostile, "user://export_hostile.gd").get("output", "")).contains("@export_range(0, 10, 1, \"exp\", \"or_greater\") var odd_order: float = 1.0"), true) and all_passed
 
 	# ── A range that leaves its step to Godot opens as a range and saves without one ──
 	var short_source: String = "extends Node\n\n@export_range(1, 3) var max_jumps: int = 2\n"
@@ -117,8 +117,8 @@ static func run() -> bool:
 		"attributes": {"range": {"min": "0", "max": "4", "step": "", "or_greater": true}}}}
 	all_passed = SUPPORT.pins("full_export_coverage_test", [
 		["@export_range(1, 3) opens as a range with its step unwritten", short_range, {"min": "1", "max": "3", "step": ""}],
-		["and saves back byte-identically", str(SheetCompiler.compile(short_sheet, "user://export_short_range.gd").get("output", "")), short_source],
-		["an unwritten step before a modifier is written as Godot's default", str(SheetCompiler.compile(stepped, "user://export_stepped.gd").get("output", "")).contains("@export_range(0, 4, 1, \"or_greater\") var zoom: float = 1.0"), true],
+		["and saves back byte-identically", str(EventSheetCompiler.compile(short_sheet, "user://export_short_range.gd").get("output", "")), short_source],
+		["an unwritten step before a modifier is written as Godot's default", str(EventSheetCompiler.compile(stepped, "user://export_stepped.gd").get("output", "")).contains("@export_range(0, 4, 1, \"or_greater\") var zoom: float = 1.0"), true],
 		# Every numeric reader asks for the step through one door, so none moves a slider by 0.
 		["a reader asks the unwritten step and gets Godot's default", LocalVariable.range_step(short_range), "1"],
 		["a written step reads as written", LocalVariable.range_step({"min": "0", "max": "1", "step": "0.05"}), "0.05"],
@@ -132,7 +132,7 @@ static func run() -> bool:
 		"boost": {"type": "float", "default": 1.0, "exported": true, "attributes": {"range": {"min": "0", "max": "10", "step": "0.1", "or_greater": true, "suffix": "x"}}},
 		"team_layers": {"type": "int", "default": 0, "exported": true, "attributes": {"layers": "3d_physics"}},
 	}
-	var authored_output: String = str(SheetCompiler.compile(authored, "user://export_authored.gd").get("output", ""))
+	var authored_output: String = str(EventSheetCompiler.compile(authored, "user://export_authored.gd").get("output", ""))
 	all_passed = _check("dict path emits the range tail canonically",
 		authored_output.contains("@export_range(0, 10, 0.1, \"or_greater\", \"suffix:x\") var boost: float = 1.0"), true) and all_passed
 	all_passed = _check("dict path emits layer masks",
@@ -165,7 +165,7 @@ static func run() -> bool:
 	all_passed = _check("suggestion dropdown lifts structured (choices intact)",
 		(weapon_kind.attributes.get("suggestions", []) as Array) == ["sword", "bow", "staff"] if weapon_kind != null else false, true) and all_passed
 	all_passed = _check("the tail file round-trips byte-identically",
-		str(SheetCompiler.compile(tail_sheet, "user://export_tail.gd").get("output", "")), tail_source) and all_passed
+		str(EventSheetCompiler.compile(tail_sheet, "user://export_tail.gd").get("output", "")), tail_source) and all_passed
 
 	# ── The dialog's look parsing (pure): labels with and without explicit values ──
 	var parsed_labels: Array = EventSheetInspectorLooks.parse_labels("Fire:1, Ice, Poison:4")

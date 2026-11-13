@@ -31,13 +31,13 @@ static func run() -> bool:
 	fn.params = [p]
 	fn.events = [_return_row("clampf(v, 0.0, 1.0)")]
 	sheet.functions = [fn]
-	var emitted: String = SheetCompiler.emit_function_block_text(fn, sheet)
+	var emitted: String = EventSheetCompiler.emit_function_block_text(fn, sheet)
 	ok = _check("doc emits as ## lines above the func, blank -> bare ##",
 		emitted.begins_with("## Clamps [code]v[/code] to 0-1.\n##\n## Handy for [b]bars[/b].\nfunc clamp01("), true) and ok
 
 	# ── Round-trip: a documented plain helper lifts with its doc and re-emits byte-identically ──
 	var src: String = "@tool\nextends Node\n\n\n## Clamps the value.\n## BBCode [i]works[/i].\nfunc clamp01(v: float) -> float:\n\treturn clampf(v, 0.0, 1.0)\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(src)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(src)
 	var lifted: EventFunction = _first_function(imported)
 	ok = _check("the documented helper lifted", lifted != null, true) and ok
 	if lifted != null:
@@ -49,7 +49,7 @@ static func run() -> bool:
 		"@tool\nextends Node\n\n\n## Broadcasts damage.\n@rpc(\"any_peer\")\nfunc take_damage(amount: int) -> void:\n\thealth -= amount\n") and ok
 
 	# ── A plain (undocumented) function has an empty doc comment ──
-	var plain: EventSheetResource = GDScriptImporter.new().import_external_source("@tool\nextends Node\n\n\nfunc plain() -> void:\n\treturn\n")
+	var plain: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("@tool\nextends Node\n\n\nfunc plain() -> void:\n\treturn\n")
 	var plain_fn: EventFunction = _first_function(plain)
 	ok = _check("a plain function has no doc comment", plain_fn != null and plain_fn.doc_comment.is_empty(), true) and ok
 
@@ -67,9 +67,9 @@ static func _return_row(value: String) -> EventRow:
 
 
 static func _roundtrips(label: String, src: String) -> bool:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(src)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(src)
 	imported.external_source_path = "user://doc_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://doc_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://doc_rt.gd").get("output", ""))
 	if rt != src:
 		print("  --- src ---\n%s\n  --- rt ---\n%s" % [src, rt])
 	return _check("%s: round-trips byte-identically" % label, rt == src, true)

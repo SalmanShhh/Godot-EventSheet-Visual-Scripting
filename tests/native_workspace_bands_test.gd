@@ -108,9 +108,9 @@ static func _test_the_identity_hover() -> bool:
 	var sheet: EventSheetResource = _sheet_with_events(1)
 	sheet.custom_class_name = "Gate"
 	sheet.host_class = "Node2D"
-	var native: EventSheetEditor = _editor(NATIVE_THEME, GDScriptImporter.new().import_external(SHOWCASE))
+	var native: EventSheetEditor = _editor(NATIVE_THEME, EventSheetGDScriptImporter.new().import_external(SHOWCASE))
 	var native_note: String = _name_hover(native._viewport)
-	var classic: EventSheetEditor = _editor(CLASSIC_THEME, GDScriptImporter.new().import_external(SHOWCASE))
+	var classic: EventSheetEditor = _editor(CLASSIC_THEME, EventSheetGDScriptImporter.new().import_external(SHOWCASE))
 	var classic_note: String = _name_hover(classic._viewport)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["the band's line, as a static", SheetIdentityBanner.identity_label(sheet),

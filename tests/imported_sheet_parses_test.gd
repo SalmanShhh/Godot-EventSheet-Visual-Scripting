@@ -91,12 +91,12 @@ static func _missing_parameter() -> bool:
 	var imported: Dictionary = _import([_block([], [_action("Player", "set-position", {})])], objects)
 	passed = _check("a row whose slot the export did not carry is switched off",
 		_reasons(imported), "The export carried no \"X\" for this row.") and passed
-	var emitted: String = str(SheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
+	var emitted: String = str(EventSheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
 	passed = _check("nothing half-written reaches the file", emitted.contains("Vector2(, )"), false) and passed
 	passed = _check("the file loads", _parses(emitted), true) and passed
 
 	var filled: Dictionary = _import([_block([], [_action("Player", "set-position", {"X": "10", "Y": "20"})])], objects)
-	var filled_text: String = str(SheetCompiler.compile(filled["sheet"] as EventSheetResource, "", true)["output"])
+	var filled_text: String = str(EventSheetCompiler.compile(filled["sheet"] as EventSheetResource, "", true)["output"])
 	passed = _check("a row whose slots the export DID carry is written in full",
 		filled_text.contains("$Player.global_position = Vector2(10, 20)"), true) and passed
 	return passed
@@ -158,7 +158,7 @@ static func _import(events: Array, objects: Dictionary = {}) -> Dictionary:
 
 
 static func _emit(events: Array, objects: Dictionary = {}) -> String:
-	return str(SheetCompiler.compile(_import(events, objects)["sheet"] as EventSheetResource, "", true)["output"])
+	return str(EventSheetCompiler.compile(_import(events, objects)["sheet"] as EventSheetResource, "", true)["output"])
 
 
 static func _block(conditions: Array, actions: Array) -> Dictionary:

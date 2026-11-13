@@ -162,7 +162,7 @@ static func build() -> bool:
 ##
 ## A quoted value spelled this way DOES NOT SURVIVE the annotation round trip, and it does not have
 ## to today: the emitter writes a `default:` segment only for a parameter that also carries help
-## (`SheetCompiler._param_annotation_lines` returns early on an empty description), and no parameter
+## (`EventSheetCompiler._param_annotation_lines` returns early on an empty description), and no parameter
 ## in this file declares any, so none of these values reaches the shipped pack at all. The day one of
 ## them gains its help sentence the default starts shipping, both annotation readers strip one
 ## surrounding pair of quotes off it, and the row writes a bare word no game declares.

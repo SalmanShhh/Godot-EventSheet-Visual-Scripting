@@ -19,7 +19,7 @@ static func build(host: Window) -> Control:
 	# The layer name is the project's, and this repository does not name its render layers - so the
 	# picture names one the way a game would, for the length of the shot.
 	ProjectSettings.set_setting("layer_names/2d_render/layer_2", "minimap")
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

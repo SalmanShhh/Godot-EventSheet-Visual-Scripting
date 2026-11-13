@@ -174,7 +174,7 @@ static func _test_a_scene_made_of_scenes() -> bool:
 		EventSheetSceneCollisionFacts.occupied_bits(
 			EventForgePhysicsLayers.DIMENSION_2D, LEVEL_SCENES), 14) and ok
 	# The whole point of the reading: a mask that is right is not accused.
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(LEVEL)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(LEVEL)
 	ok = _check("a trigger watching the layer its instanced enemies really sit on says nothing",
 		_kinds(EventSheetCollisionFindings.findings(sheet, LEVEL, LEVEL_SCENES)),
 		PackedStringArray()) and ok
@@ -260,11 +260,11 @@ static func _test_nothing_can_reach_it() -> bool:
 	ok = _check("and the rows are what says so, read once for the whole sheet",
 		EventSheetCollisionFindings.writes_its_own_layers(
 			EventSheetCollisionFindings.all_lines(
-				GDScriptImporter.new().import_external(SWITCHER))), true) and ok
+				EventSheetGDScriptImporter.new().import_external(SWITCHER))), true) and ok
 	ok = _check("while a sheet that never mentions them is judged by the scene",
 		EventSheetCollisionFindings.writes_its_own_layers(
 			EventSheetCollisionFindings.all_lines(
-				GDScriptImporter.new().import_external(GATE))), false) and ok
+				EventSheetGDScriptImporter.new().import_external(GATE))), false) and ok
 	# WRITES ONLY. A sheet that merely ASKS about its mask has changed nothing, and standing down for
 	# it would turn the check off on a sheet that still has the bug.
 	ok = _check("the four writes stand the rule down, and the question does not",
@@ -283,7 +283,7 @@ static func _test_nothing_can_reach_it() -> bool:
 ## earn the same finding - a safety net that switches off when the reader picks the newer row is
 ## worse than no net at all, because it is silent on exactly the sheets most likely to have the bug.
 static func _test_the_filtered_sentence_is_watched_too() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(GUARDED)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(GUARDED)
 	var events: Array[Dictionary] = EventSheetCollisionFindings.touch_events(sheet)
 	var ok: bool = _check("a filtered trigger is a touch trigger", events.size(), 1)
 	if events.is_empty():
@@ -320,7 +320,7 @@ static func _test_monitoring_is_off() -> bool:
 	# The sentence says EVERY row waiting on one here is unreachable, so every one of them wears the
 	# amber state. Anchored at the first alone, a reader scanning the sheet saw one flagged row among
 	# several equally dead ones - and it is still ONE finding, so the Doctor files one line.
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(HUSHED)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(HUSHED)
 	var rows: Array[Dictionary] = EventSheetCollisionFindings.touch_events(sheet)
 	var said: Array = []
 	for entry: Dictionary in rows:
@@ -429,7 +429,7 @@ static func _test_the_sheet_stays_quiet() -> bool:
 	# ONE import, because the two halves have to be about the same rows: a second import makes a
 	# second set of EventRow objects, and a finding anchored at one of them is not anchored at the
 	# other however identical the two sheets read.
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(GATE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(GATE)
 	var found: Array[Dictionary] = EventSheetCollisionFindings.findings(sheet, GATE, SCENES)
 	var event_row: EventRow = _first_event(sheet)
 	var ok: bool = _check("the finding is anchored at the row it is about",
@@ -533,7 +533,7 @@ static func _test_the_report() -> bool:
 
 
 static func _findings(script_path: String) -> Array[Dictionary]:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(script_path)
 	return EventSheetCollisionFindings.findings(sheet, script_path, SCENES)
 
 

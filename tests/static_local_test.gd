@@ -52,7 +52,7 @@ static func _test_emission() -> bool:
 static func _test_roundtrip_is_byte_exact() -> bool:
 	var ok: bool = true
 	var source: String = _compiled(_sheet_with_static_local())
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	opened.external_source_path = "user://eventforge_static_local_open.gd"
 	var lifted: LocalVariable = null
 	for row: Variant in opened.events:
@@ -62,7 +62,7 @@ static func _test_roundtrip_is_byte_exact() -> bool:
 	if lifted != null:
 		ok = _check("…under the row's own name, not the member's", lifted.name, "hits_taken") and ok
 	ok = _check("re-saving the opened file reproduces it byte for byte",
-		str(SheetCompiler.compile(opened, "user://eventforge_static_local_save.gd").get("output", "")), source) and ok
+		str(EventSheetCompiler.compile(opened, "user://eventforge_static_local_save.gd").get("output", "")), source) and ok
 	return ok
 
 
@@ -75,7 +75,7 @@ static func _test_duplicate_names_warn_once() -> bool:
 	second.event_uid = "ev2"
 	second.local_variables.append(_static_local("hits_taken", "int", 0))
 	sheet.events.append(second)
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_static_local_dup.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_static_local_dup.gd")
 	var output: String = str(result.get("output", ""))
 	ok = _check("the member is declared exactly once", output.count("var _hits_taken := 0"), 1) and ok
 	var warnings: Array = result.get("warnings", [])
@@ -121,13 +121,13 @@ static func _test_a_function_bodys_static_local_is_declared() -> bool:
 static func _test_a_null_default_spells_its_type() -> bool:
 	var ok: bool = true
 	ok = _check("a null default declares its type rather than inferring it",
-		SheetCompiler.static_local_declaration(_static_local("ramp", "Curve", null)),
+		EventSheetCompiler.static_local_declaration(_static_local("ramp", "Curve", null)),
 		"var _ramp: Curve = null") and ok
 	ok = _check("…and one with no type to name falls back to Variant",
-		SheetCompiler.static_local_declaration(_static_local("thing", "", null)),
+		EventSheetCompiler.static_local_declaration(_static_local("thing", "", null)),
 		"var _thing: Variant = null") and ok
 	ok = _check("a value that can be inferred is still written the short way",
-		SheetCompiler.static_local_declaration(_static_local("hits", "int", 0)), "var _hits := 0") and ok
+		EventSheetCompiler.static_local_declaration(_static_local("hits", "int", 0)), "var _hits := 0") and ok
 	return ok
 
 
@@ -148,7 +148,7 @@ static func _test_row_reads_and_echoes_the_member() -> bool:
 	ok = _check("the echo is the member the declaration became",
 		EventSheetCodeEcho.line_for(static_local), "var _hits_taken := 0") and ok
 	ok = _check("a float default keeps its fraction, or := would infer int",
-		SheetCompiler.static_local_declaration(_static_local("cooldown", "float", 0.0)), "var _cooldown := 0.0") and ok
+		EventSheetCompiler.static_local_declaration(_static_local("cooldown", "float", 0.0)), "var _cooldown := 0.0") and ok
 	return ok
 
 
@@ -157,7 +157,7 @@ static func _test_row_reads_and_echoes_the_member() -> bool:
 static func _test_dialog_offers_the_tick_for_locals_only() -> bool:
 	var ok: bool = true
 	var captured: Dictionary = {}
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var parent: Node = Node.new()
 	dialog.init_dialog(parent)
 	dialog.set_sheet_provider(func() -> Variant: return null)
@@ -312,7 +312,7 @@ static func _event_row(event_row: EventRow) -> EventRowData:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://eventforge_static_local_probe.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_static_local_probe.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -22,7 +22,7 @@ static func run() -> bool:
 	difficulty.exported = true
 	difficulty.options = PackedStringArray(["easy", "normal", "hard"])
 	sheet.events.append(difficulty)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_combo.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_combo.gd").get("output", ""))
 	all_passed = _check("combo variables emit @export_enum",
 		output.contains("@export_enum(\"easy\", \"normal\", \"hard\") var difficulty: String = \"normal\""), true) and all_passed
 	var generated: GDScript = GDScript.new()
@@ -31,7 +31,7 @@ static func run() -> bool:
 
 	# Verify-lift: the @export_enum line round-trips into a variable row with options.
 	var external_source: String = "extends Node\n\n@export_enum(\"easy\", \"normal\", \"hard\") var difficulty: String = \"normal\"\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	var lifted: LocalVariable = null
 	for row in imported.events:
 		if row is LocalVariable:
@@ -39,7 +39,7 @@ static func run() -> bool:
 	all_passed = _check("combo declarations lift with options",
 		lifted != null and lifted.options == PackedStringArray(["easy", "normal", "hard"]) and lifted.exported, true) and all_passed
 	imported.external_source_path = "user://eventsheets_combo_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_combo_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_combo_rt.gd").get("output", ""))
 	all_passed = _check("combo round-trip is byte-identical", roundtrip == external_source, true) and all_passed
 
 	# The shipped Sine pack showcases the combo (movement dropdown in the Inspector).
@@ -97,7 +97,7 @@ static func run() -> bool:
 		dialog._extract_value(dialog._fields["tint"]), "Color(1, 0, 0, 1)") and all_passed
 	color_field.free()
 	all_passed = _check("combo defaults must be an option",
-		VariableDialog.parse_options("easy, normal , hard").size(), 3) and all_passed
+		EventSheetVariableDialog.parse_options("easy, normal , hard").size(), 3) and all_passed
 
 	# Swatch metadata: a Color param surfaces on the rendered span.
 	var event: EventRow = EventRow.new()

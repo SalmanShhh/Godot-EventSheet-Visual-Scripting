@@ -501,7 +501,7 @@ static func _test_the_pickers_derived_section() -> bool:
 	# And the shelf itself, off a real sheet placed in a real scene: one Call Method entry per
 	# method the node's own script declares, with everything a reader would have had to type in by
 	# hand already answered.
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(ROOM)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(ROOM)
 	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
 	registry.refresh_from_sources([] as Array[Object], true)
 	var offered: Array[ACEDefinition] = ACEPickerDialog.scene_method_definitions(sheet, registry)

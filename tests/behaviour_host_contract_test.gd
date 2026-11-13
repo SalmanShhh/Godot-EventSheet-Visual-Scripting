@@ -35,4 +35,4 @@ static func _compile(body: String) -> String:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = body
 	sheet.events.append(block)
-	return str(SheetCompiler.compile(sheet, "user://contract_probe.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://contract_probe.gd").get("output", ""))

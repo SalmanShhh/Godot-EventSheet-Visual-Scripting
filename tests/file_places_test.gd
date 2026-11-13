@@ -691,8 +691,8 @@ static func _round_trip(source: String) -> String:
 		return ""
 	handle.store_string(source)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-	var written: String = "" if sheet == null else str(SheetCompiler.compile(sheet, path).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+	var written: String = "" if sheet == null else str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 	DirAccess.remove_absolute(path)
 	return written
 
@@ -762,7 +762,7 @@ static func _emit(template: String, params: Dictionary) -> String:
 	action.ace_id = "probe"
 	action.codegen_template = template
 	action.params = params
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)
 
 
 ## What one emitted expression really answers, by running it. The guard is a ternary in a file, and a

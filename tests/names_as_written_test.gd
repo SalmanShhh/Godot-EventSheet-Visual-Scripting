@@ -17,7 +17,7 @@ static func run() -> bool:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

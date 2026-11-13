@@ -1053,7 +1053,7 @@ static func older_style_remembered(sheet: EventSheetResource) -> Dictionary:
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).function_name == OLDER_STYLE[0]:
 			var read: RegEx = RegEx.create_from_string("(\\w+) = __remember_cfg\\.get_value\\(\"([^\"]*)\", \"(\\w+)\"")
-			for hit: RegExMatch in read.search_all(SheetCompiler.emit_function_block_text(entry, sheet)):
+			for hit: RegExMatch in read.search_all(EventSheetCompiler.emit_function_block_text(entry, sheet)):
 				found[hit.get_string(1)] = [hit.get_string(2), hit.get_string(3)]
 	return found
 

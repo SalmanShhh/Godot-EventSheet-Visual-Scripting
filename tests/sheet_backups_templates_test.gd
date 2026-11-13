@@ -109,7 +109,7 @@ static func run() -> bool:
 	gd_v2_file.store_string("extends Node2D\n")
 	gd_v2_file.close()
 	var gd_editor: EventSheetEditor = EventSheetEditor.new()
-	var backed: EventSheetResource = GDScriptImporter.new().import_external(gd_path)
+	var backed: EventSheetResource = EventSheetGDScriptImporter.new().import_external(gd_path)
 	backed.read_only = false
 	gd_editor.setup(backed)
 	gd_editor.set_undo_redo_manager(NoopUndoManager.new())
@@ -128,9 +128,9 @@ static func run() -> bool:
 	var atomic_path: String = "user://atomic_write_probe.gd"
 	var atomic_sheet: EventSheetResource = EventSheetResource.new()
 	atomic_sheet.host_class = "Node"
-	SheetCompiler.compile(atomic_sheet, atomic_path)
+	EventSheetCompiler.compile(atomic_sheet, atomic_path)
 	atomic_sheet.host_class = "Node2D"
-	SheetCompiler.compile(atomic_sheet, atomic_path)
+	EventSheetCompiler.compile(atomic_sheet, atomic_path)
 	all_passed = _check("an atomic overwrite lands the NEW content",
 		FileAccess.get_file_as_string(atomic_path).contains("extends Node2D"), true) and all_passed
 	all_passed = _check("no temp file is left behind",

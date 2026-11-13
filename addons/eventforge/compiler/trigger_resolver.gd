@@ -5,7 +5,7 @@
 # triggers from reflection providers use the "signal:<name>" id convention, with their
 # argument signature baked onto the event as `trigger_args` at apply time.
 @tool
-class_name TriggerResolver
+class_name EventSheetTriggerResolver
 extends RefCounted
 
 ## The four group-filtered touch triggers, read through the one file every reader of them shares.

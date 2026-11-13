@@ -18,10 +18,10 @@ static func run() -> bool:
 	var all_passed: bool = true
 
 	# 1. The idiom itself: {target.} emits "<value>." only when set.
-	all_passed = _check("blank target (absent) drops the prefix", ActionCodegen._apply_template("{target.}play()", {}), "play()") and all_passed
-	all_passed = _check("blank target (empty) drops the prefix", ActionCodegen._apply_template("{target.}play()", {"target": ""}), "play()") and all_passed
-	all_passed = _check("set target prefixes the call", ActionCodegen._apply_template("{target.}play()", {"target": "$Enemy"}), "$Enemy.play()") and all_passed
-	all_passed = _check("self target prefixes too", ActionCodegen._apply_template("{target.}volume_db = {db}", {"target": "self", "db": "-6.0"}), "self.volume_db = -6.0") and all_passed
+	all_passed = _check("blank target (absent) drops the prefix", EventSheetActionCodegen._apply_template("{target.}play()", {}), "play()") and all_passed
+	all_passed = _check("blank target (empty) drops the prefix", EventSheetActionCodegen._apply_template("{target.}play()", {"target": ""}), "play()") and all_passed
+	all_passed = _check("set target prefixes the call", EventSheetActionCodegen._apply_template("{target.}play()", {"target": "$Enemy"}), "$Enemy.play()") and all_passed
+	all_passed = _check("self target prefixes too", EventSheetActionCodegen._apply_template("{target.}volume_db = {db}", {"target": "self", "db": "-6.0"}), "self.volume_db = -6.0") and all_passed
 
 	# 2. The post-pass added an optional target to a real node-scoped ACE, and the template now leads
 	#    with {target.} so a blank value vanishes.
@@ -72,14 +72,14 @@ static func _compile_modulate_source(target: String) -> String:
 	action.params = {"color": "Color.RED"} if target.is_empty() else {"color": "Color.RED", "target": target}
 	event.actions.append(action)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://__target_idiom_compiled.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://__target_idiom_compiled.gd").get("output", ""))
 
 
 ## Author → compile → import → assert the action lifts back to SetModulate with the right target, then
 ## recompile and confirm the byte-identical round-trip (the lifter's two-form {target.} expansion).
 static func _roundtrip(target: String, running: bool) -> bool:
 	var source: String = _compile_modulate_source(target)
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var lifted: ACEAction = null
 	for row: Variant in imported.events:
 		if row is EventRow:
@@ -92,7 +92,7 @@ static func _roundtrip(target: String, running: bool) -> bool:
 		var lifted_target: String = str(lifted.params.get("target", ""))
 		running = _check("[%s] target round-trips" % label, lifted_target, target) and running
 	imported.external_source_path = "user://__target_idiom_roundtrip.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://__target_idiom_roundtrip.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://__target_idiom_roundtrip.gd").get("output", ""))
 	running = _check("[%s] lifted sheet recompiles byte-identically" % label, roundtrip == source, true) and running
 	return running
 

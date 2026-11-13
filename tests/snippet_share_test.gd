@@ -84,7 +84,7 @@ static func run() -> bool:
 		var pasted_action: ACEAction = pasted_event.actions[0] as ACEAction
 		all_passed = _check("params survive the round-trip", pasted_action != null and int(pasted_action.params.get("amount", 0)) == 5, true) and all_passed
 		all_passed = _check("baked codegen template survives (compiles without the addon)",
-			ActionCodegen.generate_action(pasted_action) if pasted_action != null else "", "health += 5") and all_passed
+			EventSheetActionCodegen.generate_action(pasted_action) if pasted_action != null else "", "health += 5") and all_passed
 		all_passed = _check("in-flow GDScript survives",
 			pasted_event.actions.size() == 2 and pasted_event.actions[1] is RawCodeRow and (pasted_event.actions[1] as RawCodeRow).code == "print(health)", true) and all_passed
 	all_passed = _check("missing referenced variable was auto-created",

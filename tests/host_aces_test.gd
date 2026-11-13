@@ -53,7 +53,7 @@ static func run() -> bool:
 	act.code = "host.set_process(false)"
 	event.actions.append(act)
 	sheet.events.append(event)
-	var source: String = str(SheetCompiler.compile(sheet, "user://host_probe.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(sheet, "user://host_probe.gd").get("output", ""))
 	ok = _check("Host Is Valid emits is_instance_valid(host)", source.contains("if is_instance_valid(host):"), true) and ok
 
 	return ok

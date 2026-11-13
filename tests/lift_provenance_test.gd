@@ -172,7 +172,7 @@ static func _test_the_row_the_line_became() -> bool:
 
 
 ## A READ-ONLY TOOL HAS TO BE READ-ONLY, and this is the one place it could stop being one.
-## `SheetCompiler.compile` writes its output to the path it is given whenever that differs from what
+## `EventSheetCompiler.compile` writes its output to the path it is given whenever that differs from what
 ## is already there, so a claim that re-emitted a file back over its own path would rewrite the file
 ## somebody asked it about - and would do it in exactly the case where the answer is "this does not
 ## reproduce itself". The claim compiles to the shared round-trip probe path under `user://`

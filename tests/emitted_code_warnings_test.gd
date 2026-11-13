@@ -86,7 +86,7 @@ static func _write_starters() -> PackedStringArray:
 		var sheet: EventSheetResource = load(STARTERS_PATH).build_starter(starter_id)
 		if sheet == null or (sheet.events.is_empty() and sheet.functions.is_empty() and sheet.variables.is_empty()):
 			continue
-		var source: String = _without_class_name(str(SheetCompiler.echo(sheet, true).get("output", "")))
+		var source: String = _without_class_name(str(EventSheetCompiler.echo(sheet, true).get("output", "")))
 		if source.is_empty() or _needs_a_pack(source):
 			continue
 		var path: String = STARTER_DIR.path_join("starter_%02d.gd" % starter_id)

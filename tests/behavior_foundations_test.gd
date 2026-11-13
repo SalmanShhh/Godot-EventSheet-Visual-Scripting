@@ -40,7 +40,7 @@ static func run() -> bool:
 	tick_event.trigger_id = "OnProcess"
 	tick_event.actions.append(_action("host.move_and_slide()"))
 	behavior_sheet.events.append(tick_event)
-	var behavior_output: String = str(SheetCompiler.compile(behavior_sheet, "user://eventforge_behavior.gd").get("output", ""))
+	var behavior_output: String = str(EventSheetCompiler.compile(behavior_sheet, "user://eventforge_behavior.gd").get("output", ""))
 	all_passed = _check("behavior compiles as a Node component", behavior_output.contains("extends Node"), true) and all_passed
 	all_passed = _check("typed host accessor emitted", behavior_output.contains("var host: CharacterBody2D = null"), true) and all_passed
 	all_passed = _check("host binds in _enter_tree", behavior_output.contains("host = acts_on if acts_on != null else get_parent() as CharacterBody2D"), true) and all_passed
@@ -65,7 +65,7 @@ static func run() -> bool:
 	body_event.trigger_id = "OnBodyEntered"
 	body_event.actions.append(_action("take_damage()"))
 	sheet.events.append(body_event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_signals.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_signals.gd").get("output", ""))
 	all_passed = _check("self-signal connection emitted in _ready",
 		output.contains("\tbody_entered.connect(_on_body_entered)"), true) and all_passed
 	all_passed = _check("connections run before OnReady logic",
@@ -81,7 +81,7 @@ static func run() -> bool:
 	invalid_event.trigger_id = "OnBodyEntered"
 	invalid_event.actions.append(_action("take_damage()"))
 	invalid_sheet.events.append(invalid_event)
-	var invalid_result: Dictionary = SheetCompiler.compile(invalid_sheet, "user://eventforge_invalid_signal.gd")
+	var invalid_result: Dictionary = EventSheetCompiler.compile(invalid_sheet, "user://eventforge_invalid_signal.gd")
 	all_passed = _check("missing host signal skips the connection",
 		str(invalid_result.get("output", "")).contains(".connect("), false) and all_passed
 	all_passed = _check("missing host signal records a warning",
@@ -97,7 +97,7 @@ static func run() -> bool:
 	landed_event.trigger_args = "impact: float"
 	landed_event.actions.append(_action("shake_camera()"))
 	custom_sheet.events.append(landed_event)
-	var custom_output: String = str(SheetCompiler.compile(custom_sheet, "user://eventforge_custom_signal.gd").get("output", ""))
+	var custom_output: String = str(EventSheetCompiler.compile(custom_sheet, "user://eventforge_custom_signal.gd").get("output", ""))
 	all_passed = _check("_ready synthesized for connections",
 		custom_output.contains("func _ready() -> void:\n\tget_node(\"Platform\").landed.connect(_on_platform_landed)"), true) and all_passed
 	all_passed = _check("source-aware handler with baked args",
@@ -123,7 +123,7 @@ static func run() -> bool:
 	var created: EventRow = dock_sheet.events[dock_sheet.events.size() - 1] as EventRow
 	all_passed = _check("apply bakes trigger id", created != null and created.trigger_id == "signal:healed", true) and all_passed
 	all_passed = _check("apply bakes trigger args", created != null and created.trigger_args == "amount: int", true) and all_passed
-	var baked_output: String = str(SheetCompiler.compile(dock_sheet, "user://eventforge_baked_trigger.gd").get("output", ""))
+	var baked_output: String = str(EventSheetCompiler.compile(dock_sheet, "user://eventforge_baked_trigger.gd").get("output", ""))
 	all_passed = _check("picker-created custom trigger compiles + connects",
 		baked_output.contains("healed.connect(_on_healed)") and baked_output.contains("func _on_healed(_amount: int) -> void:"), true) and all_passed
 	editor.free()

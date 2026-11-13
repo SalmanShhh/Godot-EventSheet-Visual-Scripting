@@ -24,7 +24,7 @@ static func run() -> bool:
 
 ## Opens the fixture as the dock does: a read-only preview, which is reading mode.
 static func _open(reading: bool) -> EventSheetViewport:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	sheet.read_only = reading
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
@@ -143,8 +143,8 @@ static func _editing_rows() -> bool:
 ## The contract under every lens above: display-only means the bytes never move.
 static func _round_trip_is_byte_identical() -> bool:
 	var source: String = FileAccess.get_file_as_string(FIXTURE_PATH)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
-	var compiled: Dictionary = SheetCompiler.new().compile(sheet)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
+	var compiled: Dictionary = EventSheetCompiler.new().compile(sheet)
 	return _check("the fixture re-emits byte for byte", str(compiled.get("output", "")), source)
 
 

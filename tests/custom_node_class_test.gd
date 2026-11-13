@@ -18,7 +18,7 @@ static func run() -> bool:
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "PatrollingGuard"
 	sheet.custom_class_icon = "res://addons/eventsheet/icons/eventsheet.svg"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_custom_node.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_custom_node.gd").get("output", ""))
 	all_passed = _check("class_name emitted", output.contains("class_name PatrollingGuard"), true) and all_passed
 	all_passed = _check("icon annotation emitted", output.contains("@icon(\"res://addons/eventsheet/icons/eventsheet.svg\")"), true) and all_passed
 	all_passed = _check("declaration order is @icon, class_name, extends",
@@ -27,12 +27,12 @@ static func run() -> bool:
 	# Icon without a class name is meaningless and must not emit (invalid placement).
 	var icon_only: EventSheetResource = EventSheetResource.new()
 	icon_only.custom_class_icon = "res://addons/eventsheet/icons/eventsheet.svg"
-	var icon_only_output: String = str(SheetCompiler.compile(icon_only, "user://eventforge_icon_only.gd").get("output", ""))
+	var icon_only_output: String = str(EventSheetCompiler.compile(icon_only, "user://eventforge_icon_only.gd").get("output", ""))
 	all_passed = _check("icon alone does not emit", icon_only_output.contains("@icon"), false) and all_passed
 
 	# Default sheets are byte-unaffected (golden demo output stays stable).
 	var plain: EventSheetResource = EventSheetResource.new()
-	var plain_output: String = str(SheetCompiler.compile(plain, "user://eventforge_plain_node.gd").get("output", ""))
+	var plain_output: String = str(EventSheetCompiler.compile(plain, "user://eventforge_plain_node.gd").get("output", ""))
 	all_passed = _check("sheets without a name emit no class_name", plain_output.contains("class_name"), false) and all_passed
 
 	# Icon resolution for the picker: explicit res:// textures load even headless; editor

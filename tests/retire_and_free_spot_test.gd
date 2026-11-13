@@ -853,7 +853,7 @@ static func _template_of(ace_id: String) -> String:
 
 
 static func _emitted(ace_id: String, values: Dictionary) -> String:
-	return ActionCodegen.generate_action(_action(ace_id, values))
+	return EventSheetActionCodegen.generate_action(_action(ace_id, values))
 
 
 static func _compiled(ace_id: String, values: Dictionary, host: String) -> String:

@@ -27,7 +27,7 @@ static func run() -> bool:
 	onready_var.onready = true
 	onready_var.default_value = "$Sprite2D"
 	ok = _check("@onready var emits the deferred form with a verbatim node ref",
-		SheetCompiler._emit_tree_variable_line(onready_var), "@onready var sprite: Sprite2D = $Sprite2D") and ok
+		EventSheetCompiler._emit_tree_variable_line(onready_var), "@onready var sprite: Sprite2D = $Sprite2D") and ok
 
 	return ok
 
@@ -38,7 +38,7 @@ static func _action(ace_id: String, params: Dictionary, expected: String) -> boo
 	a.ace_id = ace_id
 	a.enabled = true
 	a.params = params
-	return _check(ace_id, ActionCodegen.generate_action(a, "", ""), expected)
+	return _check(ace_id, EventSheetActionCodegen.generate_action(a, "", ""), expected)
 
 
 static func _condition(ace_id: String, params: Dictionary, expected: String) -> bool:
@@ -47,7 +47,7 @@ static func _condition(ace_id: String, params: Dictionary, expected: String) -> 
 	c.ace_id = ace_id
 	c.enabled = true
 	c.params = params
-	return _check(ace_id, ConditionCodegen.generate_condition(c, ""), expected)
+	return _check(ace_id, EventSheetConditionCodegen.generate_condition(c, ""), expected)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

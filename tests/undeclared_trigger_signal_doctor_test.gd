@@ -96,7 +96,7 @@ static func _compile(declare: bool) -> String:
 	action.codegen_template = "last_reason = reason"
 	row.actions.append(action)
 	sheet.events.append(row)
-	return str(SheetCompiler.compile(sheet, "user://undeclared_trigger_signal.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://undeclared_trigger_signal.gd").get("output", ""))
 
 
 static func _parses(source: String) -> bool:

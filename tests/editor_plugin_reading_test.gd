@@ -250,7 +250,7 @@ static func _round_trips_byte_for_byte() -> bool:
 	var ok: bool = true
 	for pair: Array in [[PLUGIN_PATH, PLUGIN_SOURCE], [INSPECTOR_PATH, INSPECTOR_SOURCE]]:
 		var sheet: EventSheetResource = _import(str(pair[0]), str(pair[1]))
-		var output: String = str(SheetCompiler.compile(sheet, str(pair[0])).get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(sheet, str(pair[0])).get("output", ""))
 		ok = _check("opening %s and saving it reproduces every byte" % str(pair[0]).get_file(),
 			output, str(pair[1])) and ok
 	return ok
@@ -260,7 +260,7 @@ static func _import(path: String, source: String) -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	return GDScriptImporter.new().import_external(path)
+	return EventSheetGDScriptImporter.new().import_external(path)
 
 
 ## The readings of one sheet, straight off the canvas's own spans.

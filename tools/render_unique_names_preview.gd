@@ -61,7 +61,7 @@ func _code_block() -> Label:
 
 ## The HUD opened the way a reader's own script is opened, in the editor's own ink.
 func _hud_sheet() -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(HUD_SCRIPT)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(HUD_SCRIPT)
 	if sheet == null:
 		return null
 	var style := EventSheetEditorStyle.new()
@@ -105,4 +105,4 @@ class _PreviewHost:
 	extends Node
 
 	func get_current_sheet() -> EventSheetResource:
-		return GDScriptImporter.new().import_external(HUD_SCRIPT)
+		return EventSheetGDScriptImporter.new().import_external(HUD_SCRIPT)

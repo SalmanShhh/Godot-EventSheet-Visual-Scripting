@@ -117,7 +117,7 @@ static func _test_the_sheet_reading() -> bool:
 		["a badge's hover ends with the code that earns it",
 			NativeVariableMarks.badge_tooltip(NativeVariableMarks.BADGE_RANGE, _member(view, "walk_speed").source_resource),
 			"Kept between limits in the Inspector (@export_range).\n@export_range(0, 600)"],
-		["the file still re-emits byte for byte", str(SheetCompiler.compile(view._sheet).get("output", "")), SOURCE],
+		["the file still re-emits byte for byte", str(EventSheetCompiler.compile(view._sheet).get("output", "")), SOURCE],
 	])
 	view.free()
 	return ok
@@ -135,26 +135,26 @@ static func _test_writing_the_type() -> bool:
 	var typed_offer: Array = [dock._variable_dlg._write_type_check.visible, dock._variable_dlg._write_type_check.button_pressed]
 	_edit(dock, "recoil")
 	dock._variable_dlg._on_confirmed()
-	var untouched: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
+	var untouched: String = str(EventSheetCompiler.compile(dock._current_sheet).get("output", ""))
 	_edit(dock, "damage")
 	var offer: String = dock._variable_dlg._write_type_check.text if dock._variable_dlg._write_type_check.visible else ""
 	dock._variable_dlg._write_type_check.button_pressed = true
 	dock._variable_dlg._on_confirmed()
-	var written: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
+	var written: String = str(EventSheetCompiler.compile(dock._current_sheet).get("output", ""))
 	# An inferred member's new words must still infer its type: a typo is refused, the file untouched.
 	_edit(dock, "bullet_count")
 	dock._variable_dlg._set_value_words("abc")
 	dock._variable_dlg._on_confirmed()
-	var typo: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
+	var typo: String = str(EventSheetCompiler.compile(dock._current_sheet).get("output", ""))
 	_edit(dock, "bullet_count")
 	dock._variable_dlg._set_value_words("7")
 	dock._variable_dlg._on_confirmed()
-	var retyped: String = str(SheetCompiler.compile(dock._current_sheet).get("output", ""))
+	var retyped: String = str(EventSheetCompiler.compile(dock._current_sheet).get("output", ""))
 	var ok: bool = SUPPORT.pins("export_sections_test", [
 		["a typo in an inferred value is refused, not written", typo, written],
 		["...and words of the same type are written as they stand", retyped,
 			written.replace("@export var bullet_count := 3", "@export var bullet_count := 7")],
-		["the refusal says why", VariableDialog.inferred_value_refusal("int", "abc"),
+		["the refusal says why", EventSheetVariableDialog.inferred_value_refusal("int", "abc"),
 			"abc does not read as type int, and a := line takes its type from its value. Change the value, or tick Write the type in code."],
 		["a written type is offered the tick, already ticked", typed_offer, [true, true]],
 		["an untouched save keeps the file's own words", untouched, SOURCE],
@@ -171,7 +171,7 @@ static func _open() -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.editor_style = (load("res://addons/eventsheet/themes/editor_native_theme.tres") as EventSheetEditorStyle).duplicate(true)
 	return sheet
 

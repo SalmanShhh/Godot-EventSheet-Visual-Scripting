@@ -88,7 +88,7 @@ static func _run_rows() -> bool:
 	sheet.events.append(_row("OnProcess", [_condition("WasInState", {"state": "STAGGER"})], []))
 	sheet.events.append(_row("OnProcess",
 		[_condition("InStateForOver", {"state": "STAGGER", "seconds": "0.4"})], []))
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("Is in is the comparison it stands for",
 		built.contains("if state == State.PATROL:"), true) and all_passed
 	all_passed = _check("Go to is one plain assignment",
@@ -114,7 +114,7 @@ static func _run_moment() -> bool:
 		[_action("alarm_on = true")], {"state": "CHASE"}))
 	sheet.events.append(_row(EventSheetStateFacts.LEAVING_TRIGGER_ID, [],
 		[_action("alarm_on = false")], {"state": "CHASE"}))
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("both rows share one handler",
 		built.count("func _on_state_changed("), 1) and all_passed
 	all_passed = _check("which takes both halves of the change",
@@ -138,9 +138,9 @@ static func _run_round_trip() -> bool:
 	var sheet: EventSheetResource = _states_sheet()
 	sheet.events.append(_row("OnProcess", [_condition("InState", {"state": "PATROL"})],
 		[_action_ace("GoToState", {"state": "CHASE"})]))
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	_write(built)
-	var opened: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = _check("the file opens as a sheet", opened != null, true) and all_passed
 	if opened == null:
 		return all_passed
@@ -148,7 +148,7 @@ static func _run_round_trip() -> bool:
 		EventSheetStateFacts.names(opened),
 		PackedStringArray(["PATROL", "CHASE", "STAGGER"])) and all_passed
 	all_passed = _check("re-emitting reproduces the file byte for byte",
-		str(SheetCompiler.compile(opened, OUT_PATH).get("output", "")), built) and all_passed
+		str(EventSheetCompiler.compile(opened, OUT_PATH).get("output", "")), built) and all_passed
 	all_passed = _check("and the Go to line came back as the row it is",
 		_holds_ace(opened.events, "GoToState"), true) and all_passed
 
@@ -170,7 +170,7 @@ static func _run_round_trip() -> bool:
 		"",
 	]))
 	_write(by_hand)
-	var hand_sheet: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	var hand_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = _check("a hand-written machine opens with its states read",
 		EventSheetStateFacts.names(hand_sheet), PackedStringArray(["PATROL", "CHASE"])) and all_passed
 	all_passed = _check("and starting where it says",
@@ -178,7 +178,7 @@ static func _run_round_trip() -> bool:
 	all_passed = _check("the state test came back as the Is in row",
 		_holds_ace(hand_sheet.events, "InState"), true) and all_passed
 	all_passed = _check("and saving it writes their own bytes back",
-		str(SheetCompiler.compile(hand_sheet, OUT_PATH).get("output", "")), by_hand) and all_passed
+		str(EventSheetCompiler.compile(hand_sheet, OUT_PATH).get("output", "")), by_hand) and all_passed
 	return all_passed
 
 
@@ -228,7 +228,7 @@ static func _run_dialog() -> bool:
 	all_passed = _check("a second write adds no second copy of anything",
 		sheet.events.size(), before) and all_passed
 	all_passed = _check("and what it wrote compiles",
-		_parses(str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))), true) and all_passed
+		_parses(str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))), true) and all_passed
 
 	# A state a row still names cannot be removed or renamed out from under it: the dialog names it
 	# and the enum keeps it. One nothing names goes as asked.
@@ -396,7 +396,7 @@ static func _run_change_inside_a_change() -> bool:
 		{"state": "CHASE"}))
 	sheet.events.append(_row(EventSheetStateFacts.ENTERING_TRIGGER_ID, [],
 		[_action("trail.append(\"entering Stagger\")")], {"state": "STAGGER"}))
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("the machine compiles", _parses(built), true) and all_passed
 	_write(built)
 	var script: GDScript = ResourceLoader.load(OUT_PATH, "GDScript", ResourceLoader.CACHE_MODE_IGNORE)
@@ -429,7 +429,7 @@ static func _run_starting_hold() -> bool:
 	all_passed = _check("the dialog declares the clock as the clock, not as zero",
 		EventSheetStateFacts.variable_row(sheet, EventSheetStateFacts.SINCE_VARIABLE).default_value,
 		EventSheetStateFacts.SINCE_INITIAL) and all_passed
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("and the file says so",
 		built.contains("var state_entered_msec: int = Time.get_ticks_msec()"), true) and all_passed
 	_write(built)

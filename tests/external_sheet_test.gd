@@ -39,12 +39,12 @@ func reset(to_full: bool = true) -> void:
 
 static func run() -> bool:
 	var all_passed: bool = true
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external_source(SAMPLE_SOURCE)
 	sheet.external_source_path = "user://external_sample.gd"
 
 	# Golden round-trip: untouched sheet reproduces the file byte-identically.
-	var output: String = str(SheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
 	all_passed = _check("untouched round-trip is byte-identical", output == SAMPLE_SOURCE, true) and all_passed
 	all_passed = _check("host class parsed for lint/completion", sheet.host_class, "CharacterBody2D") and all_passed
 	all_passed = _check("no generated header on external files", output.contains("AUTO-GENERATED"), false) and all_passed
@@ -75,7 +75,7 @@ static func run() -> bool:
 	for entry in sheet.events:
 		if entry is LocalVariable and (entry as LocalVariable).name == "hp":
 			(entry as LocalVariable).default_value = 150
-	var edited_output: String = str(SheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
+	var edited_output: String = str(EventSheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
 	all_passed = _check("edited variable updates its line", edited_output.contains("var hp: int = 150"), true) and all_passed
 	all_passed = _check("everything else is untouched by the edit",
 		edited_output.replace("var hp: int = 150", "var hp: int = 100") == SAMPLE_SOURCE, true) and all_passed
@@ -91,7 +91,7 @@ static func run() -> bool:
 	action.ace_id = "QueueFree"
 	event.actions.append(action)
 	sheet.events.append(event)
-	var with_event: String = str(SheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
+	var with_event: String = str(EventSheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
 	all_passed = _check("added event compiles as a trigger function",
 		with_event.contains("func _process(") and with_event.contains("queue_free()"), true) and all_passed
 	all_passed = _check("prelude stays a prefix when an event is added",

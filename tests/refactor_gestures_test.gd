@@ -625,7 +625,7 @@ static func _row_data_for(resource: Resource) -> EventRowData:
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, COMPILE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, COMPILE_PATH).get("output", ""))
 
 
 static func _line_with(lines: PackedStringArray, needle: String) -> int:

@@ -45,7 +45,7 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(FakeNoopUndo.new())
 	var on_signal_def: ACEDefinition = editor._find_definition("Core", "OnSignal")
 	editor._ace_apply._apply_ace_definition(on_signal_def, {"signal_name": "player_died", "args": "score: int"}, {"mode": "new_condition_event", "insert_into": authored_sheet})
-	var authored_out: String = str(SheetCompiler.compile(authored_sheet, "user://on_signal_authored.gd").get("output", ""))
+	var authored_out: String = str(EventSheetCompiler.compile(authored_sheet, "user://on_signal_authored.gd").get("output", ""))
 	all_passed = _check("a picker-authored On Signal connects the USER'S signal", authored_out.contains("player_died.connect("), true) and all_passed
 	all_passed = _check("the dummy fallback signal never appears", authored_out.contains("eventforge_signal"), false) and all_passed
 	all_passed = _check("the authored args reach the handler", authored_out.contains("(score: int)"), true) and all_passed
@@ -96,7 +96,7 @@ static func _compile_on_signal(source: String, signal_name: String, args: String
 	act.code = body
 	event.actions.append(act)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://on_signal_args.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://on_signal_args.gd").get("output", ""))
 
 
 static func _parses(source: String) -> bool:

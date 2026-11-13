@@ -500,7 +500,7 @@ static func inferred_type_name(variable: LocalVariable) -> String:
 
 
 ## Recursively collect every LocalVariable row (top-level, inside groups, and nested in
-## sub-events). Mirrors SheetCompiler._collect_tree_variables so the census stays read-only.
+## sub-events). Mirrors EventSheetCompiler._collect_tree_variables so the census stays read-only.
 static func collect_tree_variables_into(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
 		if entry is LocalVariable:

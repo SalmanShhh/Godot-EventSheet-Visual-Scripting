@@ -30,7 +30,7 @@ static func run() -> bool:
 	]))
 	event.actions.append(raw)
 	sheet.events.append(event)
-	var before: String = str(SheetCompiler.compile(sheet, "user://eb_before.gd").get("output", ""))
+	var before: String = str(EventSheetCompiler.compile(sheet, "user://eb_before.gd").get("output", ""))
 
 	var lifted_count: int = EventSheetACELifter.lift_event_bodies(sheet)
 	ok = _check("one event body lifted", lifted_count, 1) and ok
@@ -55,7 +55,7 @@ static func run() -> bool:
 	ok = _check("the `else` becomes an ELSE row", has_else, true) and ok
 
 	# The gate already enforces this, but assert the invariant directly.
-	var after: String = str(SheetCompiler.compile(sheet, "user://eb_after.gd").get("output", ""))
+	var after: String = str(EventSheetCompiler.compile(sheet, "user://eb_after.gd").get("output", ""))
 	ok = _check("event-body lift round-trips byte-identically", after == before, true) and ok
 	if after != before:
 		print("  --- before ---\n%s\n  --- after ---\n%s" % [before, after])

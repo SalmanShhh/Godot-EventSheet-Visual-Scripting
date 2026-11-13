@@ -33,7 +33,7 @@ static func run() -> bool:
 	fn.return_type = TYPE_FLOAT
 	sheet.functions.append(fn)
 
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://_line_row_mapper_out.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://_line_row_mapper_out.gd")
 	var source_map: Array = result.get("source_map", [])
 	var lines: PackedStringArray = str(result.get("output", "")).split("\n")
 	ok = _check("compile produced a source map", source_map.size() > 0, true) and ok
@@ -104,7 +104,7 @@ static func run() -> bool:
 	for row: Variant in dock.get_current_sheet().events:
 		if row is EventRow:
 			provider_event = row
-	var provider_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://_line_row_mapper_out2.gd")
+	var provider_result: Dictionary = EventSheetCompiler.compile(dock.get_current_sheet(), "user://_line_row_mapper_out2.gd")
 	dock.free()
 	var provider_lines: PackedStringArray = str(provider_result.get("output", "")).split("\n")
 	ok = _check("the provider declaration WAS inserted (the shift case is real)",

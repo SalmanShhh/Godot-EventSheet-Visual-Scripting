@@ -8,7 +8,7 @@ extends RefCounted
 # byte-exact (lifted or, worst case, verbatim - the lossless rule holds either way).
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
 static func run() -> bool:
@@ -27,9 +27,9 @@ static func run() -> bool:
 	all_passed = _check("close-requested emits its handler", close_req.contains("func _on_close_requested()"), true) and all_passed
 
 	# Lossless round-trip (the byte rule holds whether the trigger lifts back or stays verbatim).
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(post_tick)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(post_tick)
 	reopened.external_source_path = "user://_global_trigger_rt.gd"
-	var recompiled: String = str(SheetCompiler.compile(reopened, "user://_global_trigger_rt.gd").get("output", ""))
+	var recompiled: String = str(EventSheetCompiler.compile(reopened, "user://_global_trigger_rt.gd").get("output", ""))
 	all_passed = _check("post-tick round-trips byte-identical (drift=0)", recompiled == post_tick, true) and all_passed
 
 	return all_passed
@@ -49,7 +49,7 @@ static func _compile_trigger(trigger_id: String) -> String:
 	act.params = {"value": "\"hi\""}
 	row.actions.append(act)
 	sheet.events.append(row)
-	return str(SheetCompiler.compile(sheet).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet).get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

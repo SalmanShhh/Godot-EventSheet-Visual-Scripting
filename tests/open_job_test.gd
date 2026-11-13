@@ -72,9 +72,9 @@ static func _check_matches_synchronous(path: String) -> bool:
 	all_passed = _check("%s: the job produced a sheet" % label, threaded != null, true) and all_passed
 	if threaded == null:
 		return false
-	var synchronous: EventSheetResource = GDScriptImporter.new().import_external(path)
-	var threaded_output: String = str(SheetCompiler.compile(threaded, "user://open_job_threaded.gd").get("output", ""))
-	var synchronous_output: String = str(SheetCompiler.compile(synchronous, "user://open_job_sync.gd").get("output", ""))
+	var synchronous: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+	var threaded_output: String = str(EventSheetCompiler.compile(threaded, "user://open_job_threaded.gd").get("output", ""))
+	var synchronous_output: String = str(EventSheetCompiler.compile(synchronous, "user://open_job_sync.gd").get("output", ""))
 	all_passed = _check("%s: threaded open compiles byte-identically to the synchronous one" % label, threaded_output, synchronous_output) and all_passed
 	all_passed = _check("%s: threaded open lifts the same function count" % label, threaded.functions.size(), synchronous.functions.size()) and all_passed
 	all_passed = _check("%s: threaded open still round-trips to the source bytes" % label, threaded_output, FileAccess.get_file_as_string(path)) and all_passed
@@ -101,14 +101,14 @@ static func _check_progress_completes() -> bool:
 static func _check_cancel_keeps_raw_sheet() -> bool:
 	var all_passed: bool = true
 	var source: String = FileAccess.get_file_as_string(FPS_PACK)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FPS_PACK, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FPS_PACK, false)
 	EventSheetACELifter.reset_progress()
 	EventSheetACELifter.cancel_requested = true
 	var lifted: bool = EventSheetACELifter.attempt_lift(sheet, source)
 	EventSheetACELifter.cancel_requested = false
 	all_passed = _check("a cancelled lift reports failure", lifted, false) and all_passed
 	all_passed = _check("a cancelled lift leaves no lifted functions", sheet.functions.size(), 0) and all_passed
-	var output: String = str(SheetCompiler.compile(sheet, "user://open_job_cancelled.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://open_job_cancelled.gd").get("output", ""))
 	all_passed = _check("a cancelled open still reproduces the source byte-for-byte", output, source) and all_passed
 	return all_passed
 
@@ -122,20 +122,20 @@ static func _check_no_deadlock_under_concurrent_compiles() -> bool:
 	var fixture_source: String = FileAccess.get_file_as_string(FIXTURE_PATH)
 	# An external sheet WITH anchored functions: the mid-file anchor pass calls
 	# emit_function_block_text per candidate, so this compile path exercises both locked entries.
-	var main_sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var main_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	var job: EventSheetOpenJob = EventSheetOpenJob.new()
 	job.start(FPS_PACK)
 	var main_compiles: int = 0
 	var main_stayed_correct: bool = true
 	while not job.is_done():
-		var output: String = str(SheetCompiler.compile(main_sheet, "user://open_job_contention.gd").get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(main_sheet, "user://open_job_contention.gd").get("output", ""))
 		if output != fixture_source:
 			main_stayed_correct = false
 		main_compiles += 1
 	var threaded: EventSheetResource = job.finish()
 	all_passed = _check("the main thread kept compiling while the worker lifted", main_compiles > 0, true) and all_passed
 	all_passed = _check("every concurrent main-thread compile stayed correct", main_stayed_correct, true) and all_passed
-	var threaded_output: String = str(SheetCompiler.compile(threaded, "user://open_job_contention_worker.gd").get("output", ""))
+	var threaded_output: String = str(EventSheetCompiler.compile(threaded, "user://open_job_contention_worker.gd").get("output", ""))
 	all_passed = _check("the worker's sheet is correct despite the contention", threaded_output, FileAccess.get_file_as_string(FPS_PACK)) and all_passed
 	return all_passed
 

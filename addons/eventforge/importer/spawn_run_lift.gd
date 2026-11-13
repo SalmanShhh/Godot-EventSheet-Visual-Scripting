@@ -270,7 +270,7 @@ static func _add_self_copy(into: Array[Dictionary]) -> void:
 ## `defaults` so the row a lift hands back is the whole row rather than the part the line said.
 static func _entry(id: String, ace_id: String, template: String, chosen: Dictionary,
 		defaults: Dictionary, samples: Dictionary, mark: String) -> Dictionary:
-	var shape: String = ActionCodegen.collapse_optional_segments(template, chosen)
+	var shape: String = EventSheetActionCodegen.collapse_optional_segments(template, chosen)
 	var statements: Array[Dictionary] = []
 	for line: String in shape.split("\n"):
 		var bare: String = line.lstrip("\t")

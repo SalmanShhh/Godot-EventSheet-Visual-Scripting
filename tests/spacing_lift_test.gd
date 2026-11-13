@@ -57,12 +57,12 @@ static func run() -> bool:
 
 ## The number of lifted sheet functions the import produced (0 means the helpers stayed raw blocks).
 static func _functions(source: String) -> int:
-	return GDScriptImporter.new().import_external_source(source).functions.size()
+	return EventSheetGDScriptImporter.new().import_external_source(source).functions.size()
 
 
 ## The number of top-level EventRow rows the import produced (0 means the file reverted to raw blocks).
 static func _event_rows(source: String) -> int:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var count: int = 0
 	for row: Variant in imported.events:
 		if row is EventRow:
@@ -72,9 +72,9 @@ static func _event_rows(source: String) -> int:
 
 ## Import the source, recompile through the external path, and report whether it reproduced byte-for-byte.
 static func _roundtrip(source: String) -> bool:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://spacing_rt.gd"
-	var output: String = str(SheetCompiler.compile(imported, "user://spacing_rt.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(imported, "user://spacing_rt.gd").get("output", ""))
 	return output == source
 
 

@@ -211,7 +211,7 @@ static func _test_the_comment_and_the_line_it_writes_are_untouched() -> bool:
 	ok = SUPPORT.pin_value("comment_doors", "and the comment's text is the string it was",
 		note.text, before) and ok
 	sheet.external_source_path = "user://comment_doors_rt.gd"
-	var emitted: String = str(SheetCompiler.compile(sheet, "user://comment_doors_rt.gd").get("output", ""))
+	var emitted: String = str(EventSheetCompiler.compile(sheet, "user://comment_doors_rt.gd").get("output", ""))
 	ok = SUPPORT.pin_value("comment_doors", "the emitted line is the plain comment it always was",
 		emitted.contains("# PATROL until %HealthBar drops, then begin_chase"), true) and ok
 	EventSheetCompletions.scene_root_override = null

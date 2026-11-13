@@ -163,7 +163,7 @@ func note() -> void:
 
 static func run() -> bool:
 	var all_passed: bool = true
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 
 	# ── Style-guide spacing: documented functions lift, and the file still round-trips ──
 	var doc_sheet: EventSheetResource = importer.import_external_source(DOC_GAP_SOURCE)
@@ -171,7 +171,7 @@ static func run() -> bool:
 	all_passed = _check("two-blank-line documented functions lift", _function_names(doc_sheet),
 		["doubled", "halved"]) and all_passed
 	all_passed = _check("the doc gap file reproduces byte-identically",
-		str(SheetCompiler.compile(doc_sheet, "user://style_lift_doc.gd").get("output", "")),
+		str(EventSheetCompiler.compile(doc_sheet, "user://style_lift_doc.gd").get("output", "")),
 		DOC_GAP_SOURCE) and all_passed
 	# The point of the fix is that structure REPLACES blocks, not that it joins them.
 	all_passed = _check("its function bodies are no longer verbatim blocks",
@@ -187,7 +187,7 @@ static func run() -> bool:
 	all_passed = _check("single-blank documented functions still lift", _function_names(single_sheet),
 		["doubled", "halved"]) and all_passed
 	all_passed = _check("the single-gap file reproduces byte-identically",
-		str(SheetCompiler.compile(single_sheet, "user://style_lift_single.gd").get("output", "")),
+		str(EventSheetCompiler.compile(single_sheet, "user://style_lift_single.gd").get("output", "")),
 		SINGLE_GAP_SOURCE) and all_passed
 
 	# ── Undocumented two-blank spacing (the blank-row path) is untouched ──
@@ -196,7 +196,7 @@ static func run() -> bool:
 	all_passed = _check("undocumented two-blank functions lift", _function_names(plain_sheet),
 		["doubled", "halved"]) and all_passed
 	all_passed = _check("the plain gap file reproduces byte-identically",
-		str(SheetCompiler.compile(plain_sheet, "user://style_lift_plain.gd").get("output", "")),
+		str(EventSheetCompiler.compile(plain_sheet, "user://style_lift_plain.gd").get("output", "")),
 		PLAIN_GAP_SOURCE) and all_passed
 
 	# ── A typed-collection return no longer blocks the header match ──
@@ -207,7 +207,7 @@ static func run() -> bool:
 	all_passed = _check("the typed return rides verbatim on the function",
 		_return_type_name_of(typed_sheet, "all_rows"), "Array[Dictionary]") and all_passed
 	all_passed = _check("the typed-return file reproduces byte-identically",
-		str(SheetCompiler.compile(typed_sheet, "user://style_lift_typed.gd").get("output", "")),
+		str(EventSheetCompiler.compile(typed_sheet, "user://style_lift_typed.gd").get("output", "")),
 		TYPED_RETURN_SOURCE) and all_passed
 
 	# ── An explicit `: Variant` annotation is not the same as no annotation ──
@@ -218,7 +218,7 @@ static func run() -> bool:
 	all_passed = _check("the annotated param keeps its type, the bare one stays bare",
 		_param_types_of(variant_sheet, "collect"), ["Variant", "Dictionary", ""]) and all_passed
 	all_passed = _check("the Variant-param file reproduces byte-identically",
-		str(SheetCompiler.compile(variant_sheet, "user://style_lift_variant.gd").get("output", "")),
+		str(EventSheetCompiler.compile(variant_sheet, "user://style_lift_variant.gd").get("output", "")),
 		VARIANT_PARAM_SOURCE) and all_passed
 
 	# ── A `#` note above a function must not relocate to the end of the file ──
@@ -227,7 +227,7 @@ static func run() -> bool:
 	all_passed = _check("both functions lift despite the note between them",
 		_function_names(note_sheet), ["first", "second"]) and all_passed
 	all_passed = _check("the mid-file note file reproduces byte-identically",
-		str(SheetCompiler.compile(note_sheet, "user://style_lift_note.gd").get("output", "")),
+		str(EventSheetCompiler.compile(note_sheet, "user://style_lift_note.gd").get("output", "")),
 		MIDFILE_NOTE_SOURCE) and all_passed
 
 	# ...while a genuinely trailing note still uses the deferred path it was written for.
@@ -236,7 +236,7 @@ static func run() -> bool:
 	all_passed = _check("a trailing note still lifts its function",
 		_function_names(trailing_sheet), ["only"]) and all_passed
 	all_passed = _check("the trailing note file reproduces byte-identically",
-		str(SheetCompiler.compile(trailing_sheet, "user://style_lift_trailing.gd").get("output", "")),
+		str(EventSheetCompiler.compile(trailing_sheet, "user://style_lift_trailing.gd").get("output", "")),
 		TRAILING_NOTE_SOURCE) and all_passed
 
 	# -- A body note becomes a real comment row, not a code block that looks like one --
@@ -247,7 +247,7 @@ static func run() -> bool:
 	all_passed = _check("its text drops the comment marker",
 		_first_comment_text(note_body), "Bank the streak before the reset below.") and all_passed
 	all_passed = _check("the body-note file reproduces byte-identically",
-		str(SheetCompiler.compile(note_body, "user://style_lift_body_note.gd").get("output", "")),
+		str(EventSheetCompiler.compile(note_body, "user://style_lift_body_note.gd").get("output", "")),
 		BODY_NOTE_SOURCE) and all_passed
 	# The marker rides on the row, so a `#no space` note is claimed as a comment too and re-emits
 	# exactly as written instead of gaining a space.
@@ -258,7 +258,7 @@ static func run() -> bool:
 	all_passed = _check("the marker rides on the row so it re-emits as written",
 		_first_comment_marker(odd_note), "#") and all_passed
 	all_passed = _check("the odd-note file still reproduces byte-identically",
-		str(SheetCompiler.compile(odd_note, "user://style_lift_odd_note.gd").get("output", "")),
+		str(EventSheetCompiler.compile(odd_note, "user://style_lift_odd_note.gd").get("output", "")),
 		ODD_NOTE_SOURCE) and all_passed
 
 	# -- The body of an UNLIFTED loop header splits into statements too --
@@ -275,7 +275,7 @@ static func run() -> bool:
 			orphan_walls += _wall_count((orphan_fn as EventFunction).events)
 	all_passed = _check("an unlifted loop's body leaves no multi-statement wall", orphan_walls, 0) and all_passed
 	all_passed = _check("the orphan-body file reproduces byte-identically",
-		str(SheetCompiler.compile(orphan_sheet, "user://style_lift_orphan.gd").get("output", "")), orphan_source) and all_passed
+		str(EventSheetCompiler.compile(orphan_sheet, "user://style_lift_orphan.gd").get("output", "")), orphan_source) and all_passed
 
 	# -- A body literal lifts as ONE structured Declare action, and still round-trips --
 	var body_sheet: EventSheetResource = importer.import_external_source(BODY_LITERAL_SOURCE)
@@ -287,7 +287,7 @@ static func run() -> bool:
 		[Array(body_decl.entry_keys), Array(body_decl.entry_values)] if body_decl != null else [],
 		[["\"calm\"", "\"busy\""], ["3", "8"]]) and all_passed
 	all_passed = _check("the body-literal file reproduces byte-identically",
-		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")),
+		str(EventSheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")),
 		BODY_LITERAL_SOURCE) and all_passed
 	# Option 3: the inline value edit (indexes ride in edit_kind). The emitted line must change
 	# and the file must stay parseable - the round-trip contract only covers UNTOUCHED files.
@@ -299,7 +299,7 @@ static func run() -> bool:
 	all_passed = _check("the inline line edit rewrites one entry",
 		EventSheetViewport._apply_decl_entry_edit(body_event, "decl_entry_line:%d:0" % decl_action_index, "\"calm\" = 12"), true) and all_passed
 	all_passed = _check("the edited entry emits its new value",
-		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("		\"calm\": 12,"), true) and all_passed
+		str(EventSheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("		\"calm\": 12,"), true) and all_passed
 	all_passed = _check("a blank inline line is refused",
 		EventSheetViewport._apply_decl_entry_edit(body_event, "decl_entry_line:%d:0" % decl_action_index, "   "), false) and all_passed
 	all_passed = _check("a dictionary line with no separator is refused",
@@ -308,7 +308,7 @@ static func run() -> bool:
 	all_passed = _check("Add Entry appends a keyed entry",
 		EventSheetQuickPromptDialogs.set_collection_entry(body_decl, -1, "\"swarm\"", "20"), true) and all_passed
 	all_passed = _check("the added entry emits",
-		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("		\"swarm\": 20,"), true) and all_passed
+		str(EventSheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("		\"swarm\": 20,"), true) and all_passed
 	all_passed = _check("a dictionary entry with no key is refused",
 		EventSheetQuickPromptDialogs.set_collection_entry(body_decl, -1, "", "9"), false) and all_passed
 	all_passed = _check("a blank value is refused by the dialog path too",
@@ -317,7 +317,7 @@ static func run() -> bool:
 	body_decl.entry_keys.remove_at(2)
 	body_decl.entry_values.remove_at(2)
 	all_passed = _check("a removed entry no longer emits",
-		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("swarm"), false) and all_passed
+		str(EventSheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("swarm"), false) and all_passed
 	# A NON-canonical literal - a MIDDLE entry without its comma - must refuse the structured
 	# lift and fall back to per-line rows: claiming it would re-emit a comma the file never had.
 	# (A bare FINAL entry is ordinary style and lifts; that case is pinned above.)
@@ -326,7 +326,7 @@ static func run() -> bool:
 	all_passed = _check("a literal without trailing commas stays per-line rows",
 		_first_decl(loose) == null, true) and all_passed
 	all_passed = _check("...and still reproduces byte-identically",
-		str(SheetCompiler.compile(loose, "user://style_lift_loose.gd").get("output", "")).contains("var odd := {"), true) and all_passed
+		str(EventSheetCompiler.compile(loose, "user://style_lift_loose.gd").get("output", "")).contains("var odd := {"), true) and all_passed
 
 	# -- A FILE-SCOPE const table gets the same Declare treatment --
 	var top_source: String = "extends Node\n\nconst RULES := {\n\t\"a\": 1,\n\t\"b\": 2,\n}\n"
@@ -339,7 +339,7 @@ static func run() -> bool:
 	all_passed = _check("a top-level const table lifts to a Declare row", top_decl != null, true) and all_passed
 	all_passed = _check("it knows it is a constant", top_decl.is_constant() if top_decl != null else false, true) and all_passed
 	all_passed = _check("the top-level file reproduces byte-identically",
-		str(SheetCompiler.compile(top_sheet, "user://style_lift_top.gd").get("output", "")), top_source) and all_passed
+		str(EventSheetCompiler.compile(top_sheet, "user://style_lift_top.gd").get("output", "")), top_source) and all_passed
 	# The -1 edit form: the row's own resource IS the declaration (no enclosing event to index).
 	all_passed = _check("a top-level entry edits through the -1 form",
 		EventSheetViewport._apply_decl_entry_edit(top_decl, "decl_entry_line:-1:1", "\"b\" = 5"), true) and all_passed
@@ -355,14 +355,14 @@ static func run() -> bool:
 	all_passed = _check("a bare final entry still lifts", bare_decl != null, true) and all_passed
 	all_passed = _check("...and records its style", bare_decl.last_entry_bare if bare_decl != null else false, true) and all_passed
 	all_passed = _check("...and reproduces byte-identically",
-		str(SheetCompiler.compile(bare_sheet, "user://style_lift_bare.gd").get("output", "")), bare_source) and all_passed
+		str(EventSheetCompiler.compile(bare_sheet, "user://style_lift_bare.gd").get("output", "")), bare_source) and all_passed
 	all_passed = _check("the top-level edit emits",
-		str(SheetCompiler.compile(top_sheet, "user://style_lift_top.gd").get("output", "")).contains("\t\"b\": 5,"), true) and all_passed
+		str(EventSheetCompiler.compile(top_sheet, "user://style_lift_top.gd").get("output", "")).contains("\t\"b\": 5,"), true) and all_passed
 
 	# ── Prose about the provider convention must not be compiled as a call site ──
 	var prose_sheet: EventSheetResource = importer.import_external_source(PROVIDER_PROSE_SOURCE)
 	prose_sheet.external_source_path = "user://style_lift_prose.gd"
-	var prose_output: String = str(SheetCompiler.compile(prose_sheet, "user://style_lift_prose.gd").get("output", ""))
+	var prose_output: String = str(EventSheetCompiler.compile(prose_sheet, "user://style_lift_prose.gd").get("output", ""))
 	all_passed = _check("a comment mentioning a provider member injects no declaration",
 		prose_output.contains("var __eventsheet_provider_Score := Score.new()"), false) and all_passed
 	all_passed = _check("the provider-prose file reproduces byte-identically",

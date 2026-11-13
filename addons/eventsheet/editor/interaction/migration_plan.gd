@@ -62,7 +62,7 @@ const WHY_NEEDS_PICKING := "needs-picking"
 const WHY_UNPROVABLE := "unprovable"
 const WHY_FILE_REFUSES := "file-refuses"
 
-## Where a candidate rewrite is compiled, and it is NEVER the sheet's own file: `SheetCompiler.compile`
+## Where a candidate rewrite is compiled, and it is NEVER the sheet's own file: `EventSheetCompiler.compile`
 ## writes its output to the path it is given, so asking a question about a sheet under that sheet's
 ## real path would save the trial answer over somebody's work.
 const COMPILE_PROBE_PATH: String = "user://eventforge_migration_gate.gd"

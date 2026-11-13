@@ -245,11 +245,11 @@ static func _vocabulary() -> bool:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnNoiseHeard"
-	var signature: Dictionary = TriggerResolver.resolve_trigger(event)
+	var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(event)
 	ok = _check("On Noise Heard resolves to its handler", str(signature.get("function_name", "")), "hear") and ok
 	ok = _check("which receives where the noise came from", str(signature.get("args", "")), "at: Variant") and ok
-	ok = _check("its tempo badge says it reacts", TriggerResolver.tempo_class_for("OnNoiseHeard"),
-		TriggerResolver.TEMPO_SIGNAL) and ok
+	ok = _check("its tempo badge says it reacts", EventSheetTriggerResolver.tempo_class_for("OnNoiseHeard"),
+		EventSheetTriggerResolver.TEMPO_SIGNAL) and ok
 	ok = _check("and the lifter reads that header back",
 		str(EventSheetACELifter.LIFECYCLE_TRIGGERS.get("func hear(at: Variant) -> void:", "")),
 		"OnNoiseHeard") and ok
@@ -324,7 +324,7 @@ static func _round_trip() -> bool:
 	phase_event.actions.append(_action("SetVar", {"var_name": "phase", "value": "2"}))
 	sheet.events.append(phase_event)
 
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://__game_shapes.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://__game_shapes.gd").get("output", ""))
 	ok = _check("the meter rows emit the clamped pair",
 		compiled.contains("\tsuspicion = minf(suspicion + 40.0 * delta, 100.0)"), true) and ok
 	ok = _check("and the drain beside it",
@@ -342,7 +342,7 @@ static func _round_trip() -> bool:
 		file.close()
 	ok = _check("the compiled sheet parses", load(compiled_path) != null, true) and ok
 
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(compiled)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(compiled)
 	var reopened_ids: PackedStringArray = PackedStringArray()
 	for entry: Variant in reopened.events:
 		if not (entry is EventRow):
@@ -361,7 +361,7 @@ static func _round_trip() -> bool:
 		_sorted_unique(reopened_ids), "CompareVar, DrainMeter, FillMeter, SetVar") and ok
 	# NOTHING IS LOST, which is the promise that actually matters for the shapes that reopen as their
 	# lines: saving the reopened sheet writes every one of them back, spelling and all.
-	var re_emitted: String = str(SheetCompiler.compile(
+	var re_emitted: String = str(EventSheetCompiler.compile(
 		reopened, "user://__game_shapes.gd").get("output", ""))
 	var lost: PackedStringArray = PackedStringArray()
 	for line: String in ["suspicion = minf(suspicion + 40.0 * delta, 100.0)",
@@ -443,7 +443,7 @@ static func _starters() -> bool:
 		var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(int(entry[0]))
 		ok = _check("starter %d is the %s sheet" % [int(entry[0]), str(entry[1])],
 			sheet.custom_class_name, str(entry[1])) and ok
-		var compiled: String = str(SheetCompiler.compile(
+		var compiled: String = str(EventSheetCompiler.compile(
 			sheet, "user://__starter_%d.gd" % int(entry[0])).get("output", ""))
 		var script: GDScript = GDScript.new()
 		script.source_code = compiled

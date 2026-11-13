@@ -362,7 +362,7 @@ static func _authored_rows() -> bool:
 		action.provider_id = "Core"
 		action.ace_id = str(row[0])
 		action.params = row[1]
-		var emitted: String = ActionCodegen.generate_action(action).strip_edges()
+		var emitted: String = EventSheetActionCodegen.generate_action(action).strip_edges()
 		ok = _check("%s emits its line" % str(row[0]), emitted, str(row[2])) and ok
 		ok = _check("...and the reading claims it",
 			str(EventSheetSentence.statement(emitted, context).get("pattern", "")),
@@ -374,7 +374,7 @@ static func _authored_rows() -> bool:
 	loop.ace_id = "ForEachChildOf"
 	loop.params = {"target": "leader"}
 	ok = _check("For Each Child walks the node's children",
-		ConditionCodegen.generate_condition(loop).strip_edges(), "leader.get_children()") and ok
+		EventSheetConditionCodegen.generate_condition(loop).strip_edges(), "leader.get_children()") and ok
 	return ok
 
 
@@ -393,7 +393,7 @@ static func _child_triggers() -> bool:
 		action.params = {"var_name": "joined", "value": "1"}
 		event_row.actions = [action]
 		sheet.events = [event_row]
-		var output: String = str(SheetCompiler.compile(sheet, "user://x_trigger.gd").get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(sheet, "user://x_trigger.gd").get("output", ""))
 		ok = _check("%s connects %s" % [str(pair[0]), str(pair[1])],
 			output.contains("%s.connect(_on_%s)" % [str(pair[1]), str(pair[1])]), true) and ok
 		ok = _check("...and hands the row the node that moved",
@@ -432,7 +432,7 @@ static func _open_and_read() -> PackedStringArray:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -465,6 +465,6 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 ## saving it untouched puts back every byte - including the four plumbing lines the flagged Add child
 ## row above stands for.
 static func _round_trip() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)

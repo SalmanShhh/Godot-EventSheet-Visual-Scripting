@@ -57,7 +57,7 @@ static func run() -> bool:
 	event.sub_events.append(nested)
 	sheet.events.append(event)
 
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventsheets_pick.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventsheets_pick.gd")
 	var output: String = str(result.get("output", ""))
 	all_passed = _check("conditions gate the loop",
 		output.find("\tif is_on_floor():") < output.find("for enemy in"), true) and all_passed
@@ -84,7 +84,7 @@ static func run() -> bool:
 	child_pick.order_by_expression = "item.name"
 	child_event.pick_filters.append(child_pick)
 	child_sheet.events.append(child_event)
-	var child_result: Dictionary = SheetCompiler.compile(child_sheet, "user://eventsheets_pick_children.gd")
+	var child_result: Dictionary = EventSheetCompiler.compile(child_sheet, "user://eventsheets_pick_children.gd")
 	var child_output: String = str(child_result.get("output", ""))
 	all_passed = _check("children collection compiles (ordered copy)",
 		child_output.contains("var __pick_sorted_0: Array = Array(get_children())") and child_output.contains("for item in __pick_sorted_0:"), true) and all_passed
@@ -94,7 +94,7 @@ static func run() -> bool:
 
 	# Disabled filters are skipped entirely.
 	child_pick.enabled = false
-	var disabled_output: String = str(SheetCompiler.compile(child_sheet, "user://eventsheets_pick_off.gd").get("output", ""))
+	var disabled_output: String = str(EventSheetCompiler.compile(child_sheet, "user://eventsheets_pick_off.gd").get("output", ""))
 	all_passed = _check("disabled filters skip", disabled_output.contains("for item in"), false) and all_passed
 	child_pick.enabled = true
 

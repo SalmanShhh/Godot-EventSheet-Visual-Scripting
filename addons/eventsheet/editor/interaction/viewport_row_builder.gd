@@ -3183,7 +3183,7 @@ func helper_call_reading(action_resource: Variant, event_row: EventRow) -> Dicti
 	if action_resource is RawCodeRow:
 		code = (action_resource as RawCodeRow).code.strip_edges()
 	elif action_resource is ACEAction:
-		code = ActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
+		code = EventSheetActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
 	if code.is_empty() or code.contains("\n"):
 		return {}
 	for include: Dictionary in includes:
@@ -10680,7 +10680,7 @@ func _group_line_text(action_resource: Variant) -> String:
 	var action: ACEAction = action_resource as ACEAction
 	if action == null or not action.enabled:
 		return ""
-	var compiled: String = ActionCodegen.generate_action(action)
+	var compiled: String = EventSheetActionCodegen.generate_action(action)
 	return compiled.strip_edges() if not compiled.contains("\n") else ""
 
 
@@ -12176,7 +12176,7 @@ func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionar
 			# The values a trigger hands its handler (`body: Node2D`, an input event's `event`).
 			_collect_parameter_names(event_row.trigger_args.split(","), names)
 			if not event_row.trigger_id.is_empty():
-				_collect_parameter_names(str(TriggerResolver.resolve_trigger(event_row).get("args", "")).split(","), names)
+				_collect_parameter_names(str(EventSheetTriggerResolver.resolve_trigger(event_row).get("args", "")).split(","), names)
 			_collect_local_names(event_row.sub_events, names, walked)
 			continue
 		if entry is EventFunction:
@@ -13555,18 +13555,18 @@ static func is_input_trigger_tick(event_row: EventRow) -> bool:
 
 
 func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, trigger_id: String) -> String:
-	var tempo: String = TriggerResolver.tempo_class_for(trigger_id)
+	var tempo: String = EventSheetTriggerResolver.tempo_class_for(trigger_id)
 	meta["tempo"] = tempo
 	match tempo:
-		TriggerResolver.TEMPO_EVERY_TICK:
+		EventSheetTriggerResolver.TEMPO_EVERY_TICK:
 			meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
 			meta["badge_fg"] = _viewport._get_reading_style().tempo_every_tick_foreground_color
 			return "⟳"
-		TriggerResolver.TEMPO_INPUT:
+		EventSheetTriggerResolver.TEMPO_INPUT:
 			meta["badge_bg"] = _viewport._get_reading_style().tempo_input_background_color
 			meta["badge_fg"] = _viewport._get_reading_style().tempo_input_foreground_color
 			return "⌨"
-		TriggerResolver.TEMPO_ONCE:
+		EventSheetTriggerResolver.TEMPO_ONCE:
 			meta["badge_bg"] = _viewport._get_reading_style().tempo_once_background_color
 			meta["badge_fg"] = _viewport._get_reading_style().tempo_once_foreground_color
 			return "▶"
@@ -13655,7 +13655,7 @@ func _collect_statement_text(rows: Array, into: PackedStringArray) -> void:
 		if row is RawCodeRow:
 			into.append_array((row as RawCodeRow).code.split("\n"))
 		elif row is ACEAction:
-			var generated: String = ActionCodegen.generate_action(row as ACEAction)
+			var generated: String = EventSheetActionCodegen.generate_action(row as ACEAction)
 			if not generated.is_empty():
 				into.append_array(generated.split("\n"))
 		elif row is EventGroup:
@@ -13763,7 +13763,7 @@ func super_call_reading(action_resource: Variant, event_row: EventRow) -> Dictio
 	if action_resource is RawCodeRow:
 		code = (action_resource as RawCodeRow).code.strip_edges()
 	elif action_resource is ACEAction:
-		code = ActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
+		code = EventSheetActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
 	if code.is_empty() or code.contains("\n") or not code.begins_with("super"):
 		return {}
 	# Compiled once and shared: this runs for every action of every row the canvas paints.
@@ -13886,7 +13886,7 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 ## muted note saying the beat only runs while the loop does.
 func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-	badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
+	badge_meta["tempo"] = EventSheetTriggerResolver.TEMPO_EVERY_TICK
 	badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
 	badge_meta["badge_fg"] = _viewport._get_reading_style().tempo_every_tick_foreground_color
 	badge_meta["badge_style"] = "trigger"
@@ -14081,7 +14081,7 @@ func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 		# with, so a row picked from the list shows the same chips a lifted one does instead of
 		# leaving the reader to open the code. Signal-backed triggers only: a lifecycle argument
 		# like `delta` is the engine talking to the function, not news the event hands anybody.
-		var signature: Dictionary = TriggerResolver.resolve_trigger(event_row)
+		var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(event_row)
 		if str(signature.get("signal_name", "")).is_empty():
 			return chips
 		args = str(signature.get("args", "")).strip_edges()
@@ -14456,7 +14456,7 @@ func _blank_tick_reading(event_row: EventRow) -> Dictionary:
 		return {}
 	var header: String = str(event_row.get_meta("__source_trigger_header", ""))
 	if header.is_empty():
-		var signature: Dictionary = TriggerResolver.resolve_trigger(event_row)
+		var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(event_row)
 		header = "func %s(%s) -> %s:" % [
 			str(signature.get("function_name", "_process")), str(signature.get("args", "")),
 			str(signature.get("return_type", "void"))]
@@ -14656,7 +14656,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# tempo, so the row still reads as the trigger it is. Nothing is added or removed here: this
 		# is the SAME event row with one span fewer, so the file cannot move.
 		var poll_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		poll_badge_meta["tempo"] = TriggerResolver.TEMPO_INPUT
+		poll_badge_meta["tempo"] = EventSheetTriggerResolver.TEMPO_INPUT
 		poll_badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_input_background_color
 		poll_badge_meta["badge_fg"] = _viewport._get_reading_style().tempo_input_foreground_color
 		poll_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
@@ -14711,7 +14711,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var timer_reading: Dictionary = _repeating_timer_reading(event_row)
 		if not timer_reading.is_empty():
 			trigger_id_glyph = "⟳"
-			trigger_id_badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
+			trigger_id_badge_meta["tempo"] = EventSheetTriggerResolver.TEMPO_EVERY_TICK
 			trigger_id_badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
 			trigger_id_badge_meta["badge_fg"] = _viewport._get_reading_style().tempo_every_tick_foreground_color
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
@@ -17888,7 +17888,7 @@ func _ticks_in_the_editor(event_row: EventRow) -> bool:
 	# The GAME ticks only. An Editor trigger already says it belongs to the editor in its own name, so
 	# a chip there would repeat the row rather than add to it. A BLANK event counts: it runs every
 	# tick, which is exactly the tempo this chip is about.
-	return INPUT_TRIGGER_TICKS.has(TriggerResolver.effective_trigger_id(event_row))
+	return INPUT_TRIGGER_TICKS.has(EventSheetTriggerResolver.effective_trigger_id(event_row))
 
 
 ## The pick sentence for a filter that narrows a family, or {} when this loop walks everything
@@ -18631,7 +18631,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# is also evidence of the LIGHTING pattern, exactly as the hand-written line it was read from
 	# was - the row it opens as changed, what it is evidence of did not.
 	if not _lighting_host_class(action.provider_id, action.ace_id).is_empty():
-		_note_pattern(LIGHTING_PATTERN, ActionCodegen.generate_action(action))
+		_note_pattern(LIGHTING_PATTERN, EventSheetActionCodegen.generate_action(action))
 	# And for an effect row, which asks the same question about a different family: the node wearing
 	# the material is the object, so "Aura > Set effect.glow to 2" rather than the very general class
 	# these rows are hosted on. No pattern is noted - an effect is a thing a game has, not a shape a
@@ -18654,7 +18654,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		# IS a pattern to be evidence for, which is the rare case.
 		var claimed_pattern: String = str(grammar.get("pattern", ""))
 		if not claimed_pattern.is_empty():
-			_note_pattern(claimed_pattern, ActionCodegen.generate_action(read_action))
+			_note_pattern(claimed_pattern, EventSheetActionCodegen.generate_action(read_action))
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
 		# A write to the behaviour's own variable reads under the behaviour, where the sentence layer
@@ -20037,7 +20037,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	# dictionary lookups and nothing else.
 	if not (context.get("skate", {}) as Dictionary).is_empty() \
 			or not (context.get("grind", {}) as Dictionary).is_empty():
-		var board_line: String = ActionCodegen.generate_action(action)
+		var board_line: String = EventSheetActionCodegen.generate_action(action)
 		if not board_line.is_empty() and not board_line.contains("\n"):
 			var board: Dictionary = EventSheetSentence.skate_statement(board_line.strip_edges(), context)
 			if not board.is_empty():
@@ -20050,7 +20050,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	# same half-word after it. A row that compiles to more than one line is left alone - its own
 	# display template is the only thing that can say what a multi-line row does.
 	if Array(GRAMMAR_READ_ACE_IDS).has(action.ace_id):
-		var compiled: String = ActionCodegen.generate_action(action)
+		var compiled: String = EventSheetActionCodegen.generate_action(action)
 		if not compiled.is_empty() and not compiled.contains("\n"):
 			var read_as_typed: Dictionary = EventSheetSentence.statement(compiled.strip_edges(), context)
 			if not read_as_typed.is_empty():
@@ -21955,7 +21955,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 				EventSheetL10n.translate(definition.display_name))
 		# A sentence may carry an optional piece, `{?width}, width {width}{/width}`, kept only while
 		# the field holds a value - the same marks a template's code uses.
-		template = ActionCodegen.collapse_optional_segments(template, params_dict)
+		template = EventSheetActionCodegen.collapse_optional_segments(template, params_dict)
 		var replacements: Array = []
 		for index: int in range(definition.parameters.size()):
 			var parameter: Variant = definition.parameters[index]
@@ -22006,7 +22006,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		descriptor.provider_id, descriptor.ace_id, _resolve_template(descriptor.get_display_text()))
 	if descriptor_template.is_empty():
 		return descriptor.ace_id
-	descriptor_template = ActionCodegen.collapse_optional_segments(descriptor_template, params_dict)
+	descriptor_template = EventSheetActionCodegen.collapse_optional_segments(descriptor_template, params_dict)
 	var descriptor_replacements: Array = []
 	for i: int in range(descriptor.params.size()):
 		var param: ACEParam = descriptor.params[i]

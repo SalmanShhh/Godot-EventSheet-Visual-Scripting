@@ -38,15 +38,15 @@ static func run() -> bool:
 ## ── the contract that outranks every reading ─────────────────────────────────────────────────────
 static func _round_trips() -> bool:
 	var source: String = FileAccess.get_file_as_string(FIXTURE_PATH)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, FIXTURE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, FIXTURE_PATH).get("output", ""))
 	return _check("the fixture comes back byte-identical", output, source)
 
 
 ## ── one trigger id per callback, in the file's own order ─────────────────────────────────────────
 static func _trigger_ids() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	var ids: PackedStringArray = PackedStringArray()
 	for item: Variant in sheet.events:
 		if item is EventRow:
@@ -59,7 +59,7 @@ static func _trigger_ids() -> bool:
 	var keys: Dictionary = {}
 	for item: Variant in sheet.events:
 		if item is EventRow and (item as EventRow).trigger_id.begins_with("OnNotification:"):
-			keys[TriggerResolver.get_trigger_key(item as EventRow)] = true
+			keys[EventSheetTriggerResolver.get_trigger_key(item as EventRow)] = true
 	ok = _check("all three notifications group into one handler", keys.size(), 1) and ok
 	return ok
 
@@ -101,15 +101,15 @@ static func _resolver_shapes() -> bool:
 	ok = _check("a notification id emits the notification callback",
 		_function_name_for("OnNotification:NOTIFICATION_APPLICATION_PAUSED"), "_notification") and ok
 	ok = _check("the notification constant comes back off the id",
-		TriggerResolver.notification_constant_for("OnNotification:NOTIFICATION_WM_CLOSE_REQUEST"), "NOTIFICATION_WM_CLOSE_REQUEST") and ok
-	ok = _check("an ordinary id names no notification", TriggerResolver.notification_constant_for("OnReady"), "") and ok
+		EventSheetTriggerResolver.notification_constant_for("OnNotification:NOTIFICATION_WM_CLOSE_REQUEST"), "NOTIFICATION_WM_CLOSE_REQUEST") and ok
+	ok = _check("an ordinary id names no notification", EventSheetTriggerResolver.notification_constant_for("OnReady"), "") and ok
 	return ok
 
 
 static func _function_name_for(trigger_id: String) -> String:
 	var event: EventRow = EventRow.new()
 	event.trigger_id = trigger_id
-	return str(TriggerResolver.resolve_trigger(event).get("function_name", ""))
+	return str(EventSheetTriggerResolver.resolve_trigger(event).get("function_name", ""))
 
 
 ## Imports a source string as an opened script. The importer reads from DISK, so the source is
@@ -120,7 +120,7 @@ static func _sheet_from_source(source: String, path: String) -> EventSheetResour
 		return EventSheetResource.new()
 	file.store_string(source)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	return sheet
 

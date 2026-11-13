@@ -41,7 +41,7 @@ static func run() -> bool:
 	sheet.variables = {"phase": {"type": "int", "default": 0}}
 	sheet.events.append(event)
 
-	var output: String = str(SheetCompiler.compile(sheet, "user://switch_case_test_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://switch_case_test_out.gd").get("output", ""))
 
 	# The whole match block, contiguous, at _process's one-tab body indent.
 	var expected: String = "\tmatch phase:\n\t\t0:\n\t\t\tphase = 1\n\t\t_:\n\t\t\tpass\n"
@@ -61,7 +61,7 @@ static func run() -> bool:
 	raw_sheet.host_class = "Node2D"
 	raw_sheet.variables = {"mode": {"type": "int", "default": 0}}
 	raw_sheet.events.append(raw_event)
-	var raw_output: String = str(SheetCompiler.compile(raw_sheet, "user://switch_case_raw_out.gd").get("output", ""))
+	var raw_output: String = str(EventSheetCompiler.compile(raw_sheet, "user://switch_case_raw_out.gd").get("output", ""))
 	ok = _check("a cases-less MatchRow still emits its branches_text verbatim",
 		raw_output.contains("\tmatch mode:\n\t\t1:\n\t\t\tprint(\"one\")\n\t\t_:\n\t\t\tpass\n"), true) and ok
 	ok = _check("the raw-text match output is valid GDScript", _compiles(raw_output), true) and ok

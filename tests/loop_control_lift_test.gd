@@ -53,9 +53,9 @@ static func _case(label: String, body: String, present: Array, forbidden: Array)
 	raw.code = body
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://lc_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://lc_source.gd").get("output", ""))
 
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var ids: Array = _collect_action_ace_ids(imported.events)
 	for want: String in present:
 		ok = _check("%s: '%s' lifted as an action" % [label, want], ids.has(want), true) and ok
@@ -63,7 +63,7 @@ static func _case(label: String, body: String, present: Array, forbidden: Array)
 		ok = _check("%s: '%s' did NOT lift" % [label, nope], ids.has(nope), false) and ok
 
 	imported.external_source_path = "user://lc_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://lc_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://lc_rt.gd").get("output", ""))
 	ok = _check("%s: round-trips byte-identically" % label, roundtrip == source, true) and ok
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])

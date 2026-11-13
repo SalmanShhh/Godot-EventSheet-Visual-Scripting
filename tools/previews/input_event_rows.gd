@@ -66,7 +66,7 @@ static func _after_sheet() -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	return GDScriptImporter.new().import_external(SOURCE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 
 
 ## The same four questions as the catch-all held them. Built rather than imported, because the

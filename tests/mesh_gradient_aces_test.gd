@@ -44,10 +44,10 @@ static func run() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
 	sheet.variables = {"ramp": {"type": "Gradient", "default": null, "exported": true}, "falloff": {"type": "Curve", "default": null, "exported": true}}
-	var output: String = str(SheetCompiler.compile(sheet, "user://mesh_grad.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://mesh_grad.gd").get("output", ""))
 	all_passed = _check("Gradient variable exports as a native resource", output.contains("@export var ramp: Gradient = null"), true) and all_passed
 	all_passed = _check("Curve variable exports as a native resource", output.contains("@export var falloff: Curve = null"), true) and all_passed
-	all_passed = _check("Gradient is an authorable variable type", VariableDialog.type_ids().has("Gradient"), true) and all_passed
+	all_passed = _check("Gradient is an authorable variable type", EventSheetVariableDialog.type_ids().has("Gradient"), true) and all_passed
 
 	return all_passed
 

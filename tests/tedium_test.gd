@@ -322,7 +322,7 @@ static func run() -> bool:
 		image_row != null and image_row.kind_id == "preload" and str(image_row.fields.get("path", "")) == "res://hero.png", true) and all_passed
 	# The whole sheet must actually COMPILE after these drops (the bug was non-compiling output).
 	all_passed = _check("the sheet with dropped rows compiles",
-		bool(SheetCompiler.compile(restored_editor._current_sheet, "user://drop_compile.gd").get("success", false)), true) and all_passed
+		bool(EventSheetCompiler.compile(restored_editor._current_sheet, "user://drop_compile.gd").get("success", false)), true) and all_passed
 	# Empty-space drops start a fresh On Ready event instead of bouncing with a hint.
 	var events_before: int = restored_editor._current_sheet.events.size()
 	restored_editor._apply_asset_drop(null, PackedStringArray(["res://x.tscn"]))
@@ -354,7 +354,7 @@ static func run() -> bool:
 	all_passed = _check("a same-named different-path resource gets a suffixed const",
 		dup_name_row != null and str(dup_name_row.fields.get("name", "")) == "LootTable_2", true) and all_passed
 	all_passed = _check("the sheet still compiles after the collision-suffixed preloads",
-		bool(SheetCompiler.compile(restored_editor._current_sheet, "user://drop_dedup.gd").get("success", false)), true) and all_passed
+		bool(EventSheetCompiler.compile(restored_editor._current_sheet, "user://drop_dedup.gd").get("success", false)), true) and all_passed
 	# The extension seam itself: registering a handler makes a new extension droppable
 	# and its row lands top-level like any declaration.
 	EventSheets.register_asset_drop_handler(PackedStringArray(["txt"]), _drop_note_row, "Reference the note")

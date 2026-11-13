@@ -10,7 +10,7 @@
 #   - Contains Any Of / All Of / None Of. One row instead of an Or block of Text Contains.
 #
 # What is pinned, and why each pin exists:
-#   - the EMITTED line for all nine, compiled through the real SheetCompiler, plus the proof that
+#   - the EMITTED line for all nine, compiled through the real EventSheetCompiler, plus the proof that
 #     the whole emitted script actually parses in its host;
 #   - the RUNTIME behaviour of every shipped template, including the branches the descriptions
 #     promise: the fallback on a typo, 0 surviving as a real value, an empty needle list, a
@@ -98,11 +98,11 @@ static func _test_registry_shape() -> bool:
 	return ok
 
 
-## One sheet carrying all nine verbs, compiled by the real SheetCompiler. Pins the exact emitted
+## One sheet carrying all nine verbs, compiled by the real EventSheetCompiler. Pins the exact emitted
 ## line for each, then instantiates the result - so a template that produced plausible-looking but
 ## unparseable GDScript cannot pass on the substrings alone.
 static func _test_emitted_lines() -> bool:
-	var output: String = str(SheetCompiler.compile(_build_sheet(), "user://types_vocabulary_emit.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(_build_sheet(), "user://types_vocabulary_emit.gd").get("output", ""))
 	var ok: bool = _check("the checked float condition emits is_valid_float on a str()-wrapped read",
 		output.contains("if str(amount_text).strip_edges().is_valid_float():"), true)
 	ok = _check("the checked int condition emits is_valid_int",
@@ -330,7 +330,7 @@ static func _expression(ace_id: String, values: Dictionary) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	if descriptor == null:
 		return ""
-	return ActionCodegen._apply_template(str(descriptor.codegen_template), values)
+	return EventSheetActionCodegen._apply_template(str(descriptor.codegen_template), values)
 
 
 ## A script whose bodies ARE the shipped templates, so the runtime checks below exercise the real

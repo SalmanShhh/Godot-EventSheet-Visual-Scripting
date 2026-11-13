@@ -173,7 +173,7 @@ func _save_as_test_sheet() -> void:
 
 func _write_test_sheet(path: String) -> void:
 	var sheet: EventSheetResource = recorder.to_test_sheet(path.get_file().get_basename())
-	var result: Dictionary = SheetCompiler.compile(sheet, path)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, path)
 	if not bool(result.get("success", false)):
 		_dock._set_status(EventSheetL10n.translate("The take would not compile: %s") % str(result.get("errors", "")), true)
 		return

@@ -84,7 +84,7 @@ static func run() -> bool:
 	authored.expose_as_ace = true
 	var sheet: EventSheetResource = EventSheetResource.new()
 	passed = SUPPORT.check("self_reading_seams_test", "an authored verb still writes its action line and call line",
-		SheetCompiler.emit_function_block_text(authored, sheet).split("\n").slice(0, 2),
+		EventSheetCompiler.emit_function_block_text(authored, sheet).split("\n").slice(0, 2),
 		PackedStringArray(["## @ace_action", "## @ace_codegen_template(\"go()\")"])) and passed
 	# And the wordless-row share counts a function as one row whichever pass lifted it: lifting the
 	# same function at the file's end instead of anchoring it in place must not move the number.

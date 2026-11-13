@@ -316,7 +316,7 @@ static func _reading_node(descriptor: ACEDescriptor) -> Node:
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _instantiate(source: String) -> Node:

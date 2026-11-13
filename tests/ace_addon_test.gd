@@ -70,8 +70,8 @@ static func run() -> bool:
 		# Baked codegen: the created action compiles via its template (no descriptor needed).
 		var action: ACEAction = editor._ace_apply._create_action_from_definition(heal_definition, {"amount": "25"})
 		all_passed = _check("codegen template baked onto the action", action.codegen_template, "health += {amount}") and all_passed
-		all_passed = _check("addon action compiles through ActionCodegen",
-			ActionCodegen.generate_action(action), "health += 25") and all_passed
+		all_passed = _check("addon action compiles through EventSheetActionCodegen",
+			EventSheetActionCodegen.generate_action(action), "health += 25") and all_passed
 
 	# Conditions compile + negate through the baked template too.
 	var hurt_definition: ACEDefinition = null
@@ -81,10 +81,10 @@ static func run() -> bool:
 	all_passed = _check("addon condition registered", hurt_definition != null, true) and all_passed
 	if hurt_definition != null:
 		var condition: ACECondition = editor._ace_apply._create_condition_from_definition(hurt_definition, {"threshold": "10"})
-		all_passed = _check("addon condition compiles", ConditionCodegen.generate_condition(condition), "health < 10") and all_passed
+		all_passed = _check("addon condition compiles", EventSheetConditionCodegen.generate_condition(condition), "health < 10") and all_passed
 		condition.negated = true
 		all_passed = _check("negation wraps the baked template",
-			ConditionCodegen.generate_condition(condition), "not (health < 10)") and all_passed
+			EventSheetConditionCodegen.generate_condition(condition), "not (health < 10)") and all_passed
 	editor.free()
 
 	return all_passed

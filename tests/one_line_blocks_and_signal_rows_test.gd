@@ -85,7 +85,7 @@ static func run() -> bool:
 		return _check("the fixture opens as a sheet", false, true)
 	# THE contract, first and loudest: opening this file and saving it untouched reproduces it.
 	ok = _check("the fixture round-trips byte for byte",
-		str(SheetCompiler.new().compile(sheet).get("output", "")), FIXTURE_SOURCE) and ok
+		str(EventSheetCompiler.new().compile(sheet).get("output", "")), FIXTURE_SOURCE) and ok
 	sheet.read_only = true
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -204,7 +204,7 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 static func _shipped_packs() -> bool:
 	var ok: bool = true
 	for path: String in [FPS_PACK, HEALTH_PACK]:
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		if sheet == null:
 			ok = _check("the pack opens: %s" % path.get_file(), false, true) and ok
 			continue
@@ -231,7 +231,7 @@ static func _open_fixture() -> EventSheetResource:
 		return null
 	file.store_string(FIXTURE_SOURCE)
 	file.close()
-	return GDScriptImporter.new().import_external(FIXTURE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 
 
 ## Every visible row as "condition lane | action lane". The condition lane joins its stacked cells

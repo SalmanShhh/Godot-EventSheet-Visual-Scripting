@@ -44,9 +44,9 @@ static func _case(label: String, body: String, expected_conds: int, expect_or: b
 	raw.code = body
 	ev.actions.append(raw)
 	sheet.events.append(ev)
-	var source: String = str(SheetCompiler.compile(sheet, "user://or_cond.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(sheet, "user://or_cond.gd").get("output", ""))
 
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var conditioned: EventRow = _first_conditioned(imported.events)
 	ok = _check("%s: found the conditioned row" % label, conditioned != null, true) and ok
 	if conditioned == null:
@@ -62,7 +62,7 @@ static func _case(label: String, body: String, expected_conds: int, expect_or: b
 
 	# The covenant: whatever structure the lift chose, re-emitting reproduces the source byte-for-byte.
 	imported.external_source_path = "user://or_cond_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://or_cond_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://or_cond_rt.gd").get("output", ""))
 	ok = _check("%s: round-trips byte-identically" % label, rt == source, true) and ok
 	if rt != source:
 		print("    SRC<%s>\n    RT <%s>" % [source, rt])

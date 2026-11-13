@@ -45,7 +45,7 @@ static func run() -> bool:
 	body.code = "pass"
 	add_score.events.append(body)
 	sheet.functions.append(add_score)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_singleton.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_singleton.gd").get("output", ""))
 	all_passed = _check("autoload sheets extend Node", output.contains("extends Node"), true) and all_passed
 	all_passed = _check("exposed ACEs call through the singleton name",
 		output.contains("## @ace_codegen_template(\"GameState.add_score({amount})\")"), true) and all_passed
@@ -74,7 +74,7 @@ static func run() -> bool:
 		template_editor.set_undo_redo_manager(NoopUndoManager.new())
 		template_editor._starter._new_sheet_from_template(template_id)
 		var template_sheet: EventSheetResource = template_editor._current_sheet
-		var template_output: String = str(SheetCompiler.compile(template_sheet, "user://eventsheets_tpl_%d.gd" % template_id).get("output", ""))
+		var template_output: String = str(EventSheetCompiler.compile(template_sheet, "user://eventsheets_tpl_%d.gd" % template_id).get("output", ""))
 		var template_script: GDScript = GDScript.new()
 		template_script.source_code = template_output
 		all_passed = _check("singleton template %d is an autoload that compiles + parses" % template_id,
@@ -94,7 +94,7 @@ static func run() -> bool:
 	pause_action.codegen_template = "print(\"paused\")"
 	bus_event.actions.append(pause_action)
 	consumer.events.append(bus_event)
-	var bus_output: String = str(SheetCompiler.compile(consumer, "user://eventsheets_bus.gd").get("output", ""))
+	var bus_output: String = str(EventSheetCompiler.compile(consumer, "user://eventsheets_bus.gd").get("output", ""))
 	all_passed = _check("bus triggers connect by singleton name",
 		bus_output.contains("	TestBus.game_paused.connect(_on_test_bus_game_paused)"), true) and all_passed
 	all_passed = _check("bus handlers token on the bus name",

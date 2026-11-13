@@ -50,7 +50,7 @@ static func build(host: Window) -> Control:
 ## is the room its canvas gets: a sheet with two rows in it needs more than a sheet with one, and a
 ## canvas given too little simply clips - which would make the picture argue against itself.
 static func _sheet_card(title: String, script_path: String, height: float = 190.0) -> Control:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(script_path)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

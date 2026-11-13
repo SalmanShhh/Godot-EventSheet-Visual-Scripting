@@ -54,7 +54,7 @@ static func _message_for(sheet: EventSheetResource, name: String) -> String:
 	var path: String = "user://%s.tres" % name
 	ResourceSaver.save(sheet, path)
 	var output_path: String = EventSheetProjectDoctor.output_path_for(path)
-	SheetCompiler.compile(sheet, output_path)
+	EventSheetCompiler.compile(sheet, output_path)
 	var findings: Array[Dictionary] = []
 	EventSheetProjectDoctor.check_editor_tool_undo(PackedStringArray([path]), findings)
 	var message: String = ""

@@ -65,7 +65,7 @@ static func _every_action_after_a_collapsed_ternary_is_drawn() -> bool:
 		"		speed = 1 if fast else 2",
 		"",
 	]))
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		source, true, "res://ternary_orders_fixture.gd")
 	if sheet == null:
 		return SUPPORT.check(P, "the ternary-orders fixture opens as a sheet", false, true)
@@ -122,7 +122,7 @@ static func _a_shell_says_why() -> bool:
 
 ## One file's events that own no cell, opened the way the editor opens a `.gd`.
 static func _missing_of(path: String) -> Array:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	if sheet == null:
 		push_error("%s: %s does not open as a sheet" % [P, path])
 		return []
@@ -131,7 +131,7 @@ static func _missing_of(path: String) -> Array:
 
 ## How many events one file holds at all - the guard against a green run over an empty sheet.
 static func _event_count(path: String) -> int:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	return 0 if sheet == null else LINES.event_rows_of(sheet).size()
 
 

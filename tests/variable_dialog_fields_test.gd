@@ -25,7 +25,7 @@ static func run() -> bool:
 	sheet.custom_class_name = "Player"
 	sheet.host_class = "CharacterBody2D"
 	sheet.variables = {"taken": {"type": "int", "default": 0}}
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> EventSheetResource: return sheet)
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
@@ -68,7 +68,7 @@ static func run() -> bool:
 		["bool · True or false", "int · Whole number", "float · Number with decimals"]) and ok
 	ok = _check("int stores a real Godot type", dialog._selected_stored_type(), "int") and ok
 	ok = _check("Text says what it holds",
-		VariableDialog.type_description("String"), "Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.") and ok
+		EventSheetVariableDialog.type_description("String"), "Text: names, messages, file paths. File and folder pickers, big text boxes and dropdowns are its looks.") and ok
 	ok = _check("the chosen type shows its own name",
 		dialog._type_option.get_item_text(dialog._type_option.selected), "int · Whole number") and ok
 
@@ -160,7 +160,7 @@ static func run() -> bool:
 ## Whether a confirm files the variable as an Inspector property when the dialog is EDITING one that
 ## already is (opened with `scope`, exported ticked) and OK is pressed with nothing changed.
 static func _confirmed_export(host: Node, scope: String) -> bool:
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> Variant: return null)
 	var seen: Dictionary = {}
@@ -174,7 +174,7 @@ static func _confirmed_export(host: Node, scope: String) -> bool:
 ## The storage a confirm files its answer under when the dialog is opened on `opened_scope`. A fresh
 ## dialog each time, because a used one deliberately reopens on the scope the last variable had.
 static func _confirmed_scope(host: Node, opened_scope: String) -> String:
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> Variant: return null)
 	var seen: Dictionary = {}
@@ -189,7 +189,7 @@ static func _confirmed_scope(host: Node, opened_scope: String) -> String:
 ## ONE strip, and nothing beside a field. Every verdict the dialog reaches - a literal that
 ## will not parse, a Constant the type cannot have, a locked type - is said THERE, in the strip's
 ## own red or amber, and taken back from there when it is answered.
-static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> bool:
+static func _test_the_strip_is_the_only_explanation(dialog: EventSheetVariableDialog) -> bool:
 	var ok: bool = _check("the form draws no hint label of its own",
 		_loose_labels(dialog), PackedStringArray(["owner line"]))
 	dialog.open_for_edit("global", {}, "loot", "Array", "[1, 2, 3]", false, "Add variable")
@@ -206,7 +206,7 @@ static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> b
 	ok = _check("fixing it puts the field's own description back",
 		dialog._help_strip.tone, EventSheetPopupUI.HelpStrip.TONE_NORMAL) and ok
 	ok = _check("which is the one the table carries",
-		dialog._help_strip.body_label.text, VariableDialog.field_help("Initial value")) and ok
+		dialog._help_strip.body_label.text, EventSheetVariableDialog.field_help("Initial value")) and ok
 	dialog.open_for_edit("global", {}, "anything", "Variant", "", false, "Add variable")
 	ok = _check("a type that cannot be frozen greys the Constant tick",
 		dialog._const_check.disabled, true) and ok
@@ -224,7 +224,7 @@ static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> b
 ## What the form draws loose between its rows: the owner line under the title (the inline name clash
 ## is a state note, not a label). Anything else is a note beside a field - the very thing the one strip replaced - and it
 ## comes back named by its text, so a regression says which label came back.
-static func _loose_labels(dialog: VariableDialog) -> PackedStringArray:
+static func _loose_labels(dialog: EventSheetVariableDialog) -> PackedStringArray:
 	var known: Dictionary = {dialog._owner_label: "owner line"}
 	var found: PackedStringArray = PackedStringArray()
 	for child: Node in (dialog._owner_label.get_parent() as Node).get_children():
@@ -235,7 +235,7 @@ static func _loose_labels(dialog: VariableDialog) -> PackedStringArray:
 
 ## The scope keys the dropdown offers, in order.
 ## What the Flags row is made of - nothing but checkboxes, which is the whole claim.
-static func _flag_row_classes(dialog: VariableDialog) -> Array:
+static func _flag_row_classes(dialog: EventSheetVariableDialog) -> Array:
 	var classes: Array = []
 	for child: Node in dialog._static_check.get_parent().get_children():
 		classes.append(child.get_class())
@@ -243,7 +243,7 @@ static func _flag_row_classes(dialog: VariableDialog) -> Array:
 
 
 ## The flags actually on screen right now, in the order they read.
-static func _visible_flags(dialog: VariableDialog) -> Array:
+static func _visible_flags(dialog: EventSheetVariableDialog) -> Array:
 	var shown: Array = []
 	for child: Node in dialog._static_check.get_parent().get_children():
 		if child is CheckBox and (child as CheckBox).visible:
@@ -251,7 +251,7 @@ static func _visible_flags(dialog: VariableDialog) -> Array:
 	return shown
 
 
-static func _scope_keys(dialog: VariableDialog) -> Array:
+static func _scope_keys(dialog: EventSheetVariableDialog) -> Array:
 	var keys: Array = []
 	for index: int in range(dialog._scope_option.item_count):
 		keys.append(str(dialog._scope_option.get_item_metadata(index)))
@@ -259,7 +259,7 @@ static func _scope_keys(dialog: VariableDialog) -> Array:
 
 
 ## The first `count` type labels.
-static func _type_labels(dialog: VariableDialog, count: int) -> Array:
+static func _type_labels(dialog: EventSheetVariableDialog, count: int) -> Array:
 	var labels: Array = []
 	for index: int in range(dialog._type_option.item_count):
 		if not dialog._type_option.is_item_separator(index) and labels.size() < count:
@@ -268,20 +268,20 @@ static func _type_labels(dialog: VariableDialog, count: int) -> Array:
 
 
 ## The window title after opening on an existing variable.
-static func _edit_title(dialog: VariableDialog, _sheet: EventSheetResource) -> String:
+static func _edit_title(dialog: EventSheetVariableDialog, _sheet: EventSheetResource) -> String:
 	dialog.open_for_edit("global", {"editing": true, "original_name": "hp"}, "hp", "int", "100", false, "Edit Variable")
 	return dialog._dialog.title
 
 
 ## Whether the variable a dialog opened ON is reported as clashing with itself.
-static func _clash_while_editing(dialog: VariableDialog, _sheet: EventSheetResource) -> bool:
+static func _clash_while_editing(dialog: EventSheetVariableDialog, _sheet: EventSheetResource) -> bool:
 	dialog.open_for_edit("global", {"editing": true, "original_name": "taken"}, "taken", "int", "0", false, "Edit Variable")
 	return dialog.name_clashes("taken")
 
 
 ## A member variable (`var health = 10` in the file) opens with its resource: keeping its name is not a
 ## clash, while another member's name still is. [own name, other member's name].
-static func _member_clash_while_editing(dialog: VariableDialog, sheet: EventSheetResource) -> Array:
+static func _member_clash_while_editing(dialog: EventSheetVariableDialog, sheet: EventSheetResource) -> Array:
 	var health: LocalVariable = LocalVariable.new()
 	health.name = "health"
 	var speed: LocalVariable = LocalVariable.new()

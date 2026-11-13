@@ -74,7 +74,7 @@ static func run() -> bool:
 	# ---- budgeted loops warn and skip the counter ----
 	var budgeted: EventSheetResource = _loop_sheet(PickFilter.CollectionKind.EXPRESSION, "enemies", "loop_index")
 	(_first_pick(budgeted) as PickFilter).frame_spread_count = 5
-	var budgeted_result: Dictionary = SheetCompiler.compile(budgeted, "user://loop_index_budgeted.gd")
+	var budgeted_result: Dictionary = EventSheetCompiler.compile(budgeted, "user://loop_index_budgeted.gd")
 	var budgeted_warnings: String = str(budgeted_result.get("warnings", []))
 	ok = _check(ok, str(budgeted_result.get("output", "")).find("var loop_index") == -1, "a budgeted loop emits no counter")
 	ok = _check(ok, budgeted_warnings.contains("Loop index ignored"), "a budgeted loop warns that the index is ignored")
@@ -109,7 +109,7 @@ static func _loop_sheet(kind: int, collection: String, index_name: String) -> Ev
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://loop_index_test.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://loop_index_test.gd").get("output", ""))
 
 
 static func _first_pick(sheet: EventSheetResource) -> PickFilter:

@@ -34,7 +34,7 @@ static func run() -> bool:
 	disabled_block.code = "var should_not_appear := true"
 	disabled_block.enabled = false
 	sheet.events.append(disabled_block)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_raw_blocks.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_raw_blocks.gd").get("output", ""))
 	all_passed = _check("top-level GDScript block compiles verbatim",
 		output.contains("func heal(amount: int) -> void:") and output.contains("\thealth += amount"), true) and all_passed
 	all_passed = _check("group-nested GDScript block compiles",
@@ -46,7 +46,7 @@ static func run() -> bool:
 	var raw_only_block: RawCodeRow = RawCodeRow.new()
 	raw_only_block.code = "signal healed(amount: int)"
 	raw_only_sheet.events.append(raw_only_block)
-	var raw_only_output: String = str(SheetCompiler.compile(raw_only_sheet, "user://eventforge_raw_only.gd").get("output", ""))
+	var raw_only_output: String = str(EventSheetCompiler.compile(raw_only_sheet, "user://eventforge_raw_only.gd").get("output", ""))
 	all_passed = _check("no TODO placeholder for raw blocks",
 		not raw_only_output.contains("# TODO: row type not yet implemented") and raw_only_output.contains("signal healed(amount: int)"), true) and all_passed
 

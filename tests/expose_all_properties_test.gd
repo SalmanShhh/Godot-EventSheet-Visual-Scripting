@@ -64,7 +64,7 @@ static func run() -> bool:
 	action.params = {"target": "$Enemy/AutoACESample", "value": "42"}
 	event.actions.append(action)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://expose_all_properties_test.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://expose_all_properties_test.gd").get("output", ""))
 	ok = _check("the applied Set compiles to the retargeted assignment",
 		output.contains("$Enemy/AutoACESample.health = 42"), true) and ok
 

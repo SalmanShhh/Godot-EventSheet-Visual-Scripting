@@ -29,7 +29,7 @@ static func run() -> bool:
 	await_action.is_awaited = true
 	await_event.actions.append(await_action)
 	await_sheet.events.append(await_event)
-	var await_out: String = str(SheetCompiler.compile(await_sheet, "user://eventsheets_await.gd").get("output", ""))
+	var await_out: String = str(EventSheetCompiler.compile(await_sheet, "user://eventsheets_await.gd").get("output", ""))
 	all_passed = _check("awaited multi-line: await goes on the trailing call, not the var line",
 		await_out.contains("await add_child(__spawn_t)") and not await_out.contains("await var "), true) and all_passed
 	var await_script: GDScript = GDScript.new()
@@ -52,7 +52,7 @@ static func run() -> bool:
 	ghost_action.codegen_template = "fire_missile()"
 	ghost_event.actions.append(ghost_action)
 	ghost_sheet.events.append(ghost_event)
-	var ghost_result: Dictionary = SheetCompiler.compile(ghost_sheet, "user://eventsheets_ghost.gd")
+	var ghost_result: Dictionary = EventSheetCompiler.compile(ghost_sheet, "user://eventsheets_ghost.gd")
 	var ghost_out: String = str(ghost_result.get("output", ""))
 	all_passed = _check("unresolvable condition fails CLOSED (if false), not open",
 		ghost_out.contains("if false:") and ghost_out.contains("fire_missile()"), true) and all_passed
@@ -80,7 +80,7 @@ static func run() -> bool:
 	neg_action.codegen_template = "spawn()"
 	neg_event.actions.append(neg_action)
 	neg_sheet.events.append(neg_event)
-	var neg_result: Dictionary = SheetCompiler.compile(neg_sheet, "user://eventsheets_neg.gd")
+	var neg_result: Dictionary = EventSheetCompiler.compile(neg_sheet, "user://eventsheets_neg.gd")
 	var neg_out: String = str(neg_result.get("output", ""))
 	all_passed = _check("negated stateful is NOT inverted (no `if not (`)",
 		neg_out.contains("if __every_t >= maxf(1.0, 0.001):") and not neg_out.contains("if not ("), true) and all_passed

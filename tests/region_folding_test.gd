@@ -25,7 +25,7 @@ static func run() -> bool:
 		_region("", true),
 		_comment("outside the region")
 	])
-	var compiled_before: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var compiled_before: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	var rows: Array = viewport._build_rows_from_sheet(sheet)
 	var openers: Array = _region_rows_in(rows)
 	ok = _check("one region row at top level (the opener)", openers.size(), 1) and ok
@@ -42,7 +42,7 @@ static func run() -> bool:
 
 	# ── Pairing is view-only: the model compiles byte-identically after building ──
 	ok = _check("row building never touches the model bytes",
-		str(SheetCompiler.compile(sheet).get("output", "")) == compiled_before, true) and ok
+		str(EventSheetCompiler.compile(sheet).get("output", "")) == compiled_before, true) and ok
 
 	# ── Folding: the seeded fold state hides the range in the flat list ──
 	if opener != null:
@@ -71,13 +71,13 @@ static func run() -> bool:
 	styled_block.fields["color"] = "#ff8844"
 	styled_block.fields["description"] = "Damage and healing"
 	var styled_sheet: EventSheetResource = _sheet_with([styled_block, _comment("inside"), _region("", true)])
-	var styled_source: String = str(SheetCompiler.compile(styled_sheet).get("output", ""))
+	var styled_source: String = str(EventSheetCompiler.compile(styled_sheet).get("output", ""))
 	ok = _check("styled opener emits the marker + fence pair",
 		styled_source.contains("## @ace_region(#ff8844, \"Damage and healing\")\n#region Combat"), true) and ok
 	# Opened as a .gd (the external path), a styled fence lifts as ONE region row and
 	# the untouched sheet reproduces the file byte-identically - the lossless covenant.
 	var external_source: String = "extends Node\n\n## @ace_region(#ff8844, \"Damage and healing\")\n#region Combat\n# inside\n#endregion\n"
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	reimported.external_source_path = "user://styled_region.gd"
 	var relifted: Array = _region_blocks_in(reimported)
 	ok = _check("styled fence lifts back as ONE region row", relifted.size(), 2) and ok
@@ -86,10 +86,10 @@ static func run() -> bool:
 		ok = _check("color survives the round-trip", str(opener_block.fields.get("color", "")), "#ff8844") and ok
 		ok = _check("description survives the round-trip", str(opener_block.fields.get("description", "")), "Damage and healing") and ok
 	ok = _check("styled round-trip is byte-identical",
-		str(SheetCompiler.compile(reimported, "user://styled_region.gd").get("output", "")) == external_source, true) and ok
+		str(EventSheetCompiler.compile(reimported, "user://styled_region.gd").get("output", "")) == external_source, true) and ok
 
 	# A hand-written marker in a non-canonical shape fails the byte gate and stays raw.
-	var near_miss: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var near_miss: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\n## @ace_region(\"desc first\", #ffffff)\n#region Odd\n#endregion\n")
 	ok = _check("non-canonical markers never lift as styled regions",
 		_region_blocks_with_color(near_miss).is_empty(), true) and ok

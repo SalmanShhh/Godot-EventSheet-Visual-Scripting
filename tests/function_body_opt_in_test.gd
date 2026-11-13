@@ -109,7 +109,7 @@ static func run() -> bool:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 	var path: String = sheet.external_source_path
-	var output_baseline: String = str(SheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
+	var output_baseline: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
 
 	# ── Default: BOTH function bodies are live on a script of the user's own ──
 	ok = _check("alpha body is live by default (opened script)", _body_live(view, "alpha"), true) and ok
@@ -123,7 +123,7 @@ static func run() -> bool:
 	ok = _check("alpha body stays live (sibling not locked)", _body_live(view, "alpha"), true) and ok
 
 	# ── The lock is editor state only: flipping it changed NO bytes (the sheet re-emits identically) ──
-	var output_opted: String = str(SheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
+	var output_opted: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
 	ok = _check("locking a function does NOT change the emitted bytes", output_opted == output_baseline, true) and ok
 
 	# ── Edit alpha's now-live body (delete its row through the undo funnel) - the per-function byte-break ──
@@ -137,7 +137,7 @@ static func run() -> bool:
 		return true
 	)
 	ok = _check("the funnel edited alpha's body", edited, true) and ok
-	var output_after: String = str(SheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
+	var output_after: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), path).get("output", ""))
 	ok = _check("alpha's body changed (its line is gone)", output_after.contains("return 1"), false) and ok
 
 	# ── THE SIBLING GUARANTEE (full-file, not a substring): editing alpha changes ONLY alpha's body line -

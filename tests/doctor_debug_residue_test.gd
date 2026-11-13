@@ -18,13 +18,13 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.variables = {"hp": {"type": "int", "default": 100}}
 	sheet.emit_live_values = true
-	var with_residue: String = str(SheetCompiler.compile(sheet, "user://_residue_a.gd").get("output", ""))
+	var with_residue: String = str(EventSheetCompiler.compile(sheet, "user://_residue_a.gd").get("output", ""))
 	ok = _check("live-values residue compiles into the script", with_residue.contains("__live_values_timer"), true) and ok
 
 	# 2) strip_debug_flags clears the toggles and returns true (something was on).
 	ok = _check("strip reports it cleared a flag", EventSheetProjectDoctor.strip_debug_flags(sheet), true) and ok
 	ok = _check("emit_live_values is now off", sheet.emit_live_values, false) and ok
-	var stripped: String = str(SheetCompiler.compile(sheet, "user://_residue_b.gd").get("output", ""))
+	var stripped: String = str(EventSheetCompiler.compile(sheet, "user://_residue_b.gd").get("output", ""))
 	ok = _check("residue is gone after strip", stripped.contains("__live_values_timer"), false) and ok
 
 	# 3) A breakpoint on a debug-break row also compiles in, and strip clears every flag at once.
@@ -39,7 +39,7 @@ static func run() -> bool:
 	event.actions.append(raw)
 	sheet2.events.append(event)
 	sheet2.emit_breakpoints = true
-	var brk: String = str(SheetCompiler.compile(sheet2, "user://_residue_c.gd").get("output", ""))
+	var brk: String = str(EventSheetCompiler.compile(sheet2, "user://_residue_c.gd").get("output", ""))
 	ok = _check("breakpoint residue compiles in", brk.contains("\tbreakpoint"), true) and ok
 
 	# 4) A clean sheet is a no-op for strip.

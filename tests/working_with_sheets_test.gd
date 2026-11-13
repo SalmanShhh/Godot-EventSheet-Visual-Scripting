@@ -444,7 +444,7 @@ static func _conflicted_source() -> String:
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	var result: Dictionary = SheetCompiler.compile(sheet, COMPILE_PATH)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, COMPILE_PATH)
 	DirAccess.remove_absolute(COMPILE_PATH)
 	return str(result.get("output", ""))
 

@@ -59,12 +59,12 @@ static func _test_every_shape_round_trips() -> bool:
 		var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(template_id)
 		hosts.append(sheet.host_class)
 		var path: String = "user://w17_shape_%d.gd" % template_id
-		var first: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+		var first: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 		handle.store_string(first)
 		handle.close()
-		var reopened: EventSheetResource = GDScriptImporter.new().import_external(path)
-		var second: String = str(SheetCompiler.compile(reopened, path).get("output", ""))
+		var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var second: String = str(EventSheetCompiler.compile(reopened, path).get("output", ""))
 		all_passed = _check("the %s skeleton re-opens as exactly what it was written from" % str(shape["label"]),
 			second, first) and all_passed
 	all_passed = _check("each shape ships as the class the editor calls",
@@ -235,15 +235,15 @@ static func _test_editor_signal_triggers() -> bool:
 		one_sheet.tool_mode = true
 		one_sheet.events.append(event)
 		var path: String = "user://w18_%s.gd" % str(pair[0])
-		var first: String = str(SheetCompiler.compile(one_sheet, path).get("output", ""))
+		var first: String = str(EventSheetCompiler.compile(one_sheet, path).get("output", ""))
 		all_passed = _check("%s connects on the editor's own object" % str(pair[0]),
 			first.contains(str(pair[1])), true) and all_passed
 		var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 		handle.store_string(first)
 		handle.close()
-		var reopened: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		all_passed = _check("%s re-opens as itself, byte for byte" % str(pair[0]),
-			str(SheetCompiler.compile(reopened, path).get("output", "")), first) and all_passed
+			str(EventSheetCompiler.compile(reopened, path).get("output", "")), first) and all_passed
 		var lifted: PackedStringArray = PackedStringArray()
 		for entry: Variant in reopened.events:
 			if entry is EventRow and not (entry as EventRow).trigger_id.is_empty():
@@ -399,9 +399,9 @@ static func _test_command_tool_rows() -> bool:
 	run_event.trigger_provider_id = "Core"
 	run_event.trigger_id = "OnCommandToolRun"
 	all_passed = _check("On run is the SceneTree script's whole run",
-		str(TriggerResolver.resolve_trigger(run_event).get("function_name", "")), "_init") and all_passed
+		str(EventSheetTriggerResolver.resolve_trigger(run_event).get("function_name", "")), "_init") and all_passed
 	all_passed = _check("and it runs once, like every other lifetime callback",
-		TriggerResolver.tempo_class_for("OnCommandToolRun"), TriggerResolver.TEMPO_ONCE) and all_passed
+		EventSheetTriggerResolver.tempo_class_for("OnCommandToolRun"), EventSheetTriggerResolver.TEMPO_ONCE) and all_passed
 	# The object cell: a command tool is not the editor - nothing of the editor is even open - so its
 	# rows wear the same object a hand-written tools/*.gd already reads under.
 	all_passed = _check("a command tool row is the Command tool's, not the Editor's",
@@ -418,7 +418,7 @@ static func _test_command_tool_rows() -> bool:
 		"|".join(triggers), "OnCommandToolRun") and all_passed
 	all_passed = _check("and carries no hand-written callback beside it",
 		skeleton.functions.size(), 0) and all_passed
-	var compiled: String = str(SheetCompiler.compile(skeleton, "user://w10_command_tool.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(skeleton, "user://w10_command_tool.gd").get("output", ""))
 	all_passed = _check("so the file it compiles to opens as a command tool",
 		EventSheetToolFiles.kind_of(compiled.split("\n")), EventSheetToolFiles.KIND_COMMAND_TOOL) and all_passed
 	all_passed = _check("with the run as a plain _init and no annotation on it",

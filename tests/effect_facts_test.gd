@@ -163,7 +163,7 @@ static func _test_the_bands() -> bool:
 static func _test_the_findings() -> bool:
 	_fresh()
 	EventSheetProjectShareIndex.build_now()
-	var goblin: EventSheetResource = GDScriptImporter.new().import_external(GOBLIN)
+	var goblin: EventSheetResource = EventSheetGDScriptImporter.new().import_external(GOBLIN)
 	var said: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in EventSheetEffectFindings.findings(goblin):
 		said.append("%s | %s | %s" % [str(finding["kind"]), str(finding["subject"]),
@@ -186,7 +186,7 @@ static func _test_the_findings() -> bool:
 	# The other three, each on the sheet that has it. The boss names a dial its shader does not
 	# declare and a global Project Settings has never heard of; the row aimed at a node wearing
 	# nothing at all is the third.
-	var boss: EventSheetResource = GDScriptImporter.new().import_external(BOSS)
+	var boss: EventSheetResource = EventSheetGDScriptImporter.new().import_external(BOSS)
 	ok = _check("the boss's own two", _kinds(EventSheetEffectFindings.findings(boss)),
 		PackedStringArray(["effect-dial-the-shader-does-not-declare",
 			"shader-global-the-project-does-not-declare"])) and ok

@@ -7,7 +7,7 @@ class_name SignalRowLiftTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
 static func run() -> bool:
@@ -44,7 +44,7 @@ static func run() -> bool:
 	ok = _check("typed signal params recovered", hit != null and hit.params.size() == 1 and hit.params[0] == "damage: int", true) and ok
 
 	# The recompiled output still declares both signals with their @ace_trigger annotations.
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://sr_decl.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://sr_decl.gd").get("output", ""))
 	ok = _check("output keeps signal jumped", compiled.contains("signal jumped"), true) and ok
 	ok = _check("output keeps signal hit(damage: int)", compiled.contains("signal hit(damage: int)"), true) and ok
 	ok = _check("output keeps the @ace_trigger annotation", compiled.contains("## @ace_trigger"), true) and ok
@@ -59,14 +59,14 @@ static func run() -> bool:
 	raw.code = "jumped.emit()"
 	event.actions.append(raw)
 	sheet2.events.append(event)
-	var before: String = str(SheetCompiler.compile(sheet2, "user://sr_emit_before.gd").get("output", ""))
+	var before: String = str(EventSheetCompiler.compile(sheet2, "user://sr_emit_before.gd").get("output", ""))
 	EventSheetACELifter.lift_event_bodies(sheet2)
 	var emit_found: bool = false
 	for row: Variant in sheet2.events:
 		if row is EventRow and (row as EventRow).trigger_id == "OnProcess":
 			emit_found = _has_emit_signal(row as EventRow)
 	ok = _check("zero-arg signal.emit() lifts to Emit Signal", emit_found, true) and ok
-	var after: String = str(SheetCompiler.compile(sheet2, "user://sr_emit_after.gd").get("output", ""))
+	var after: String = str(EventSheetCompiler.compile(sheet2, "user://sr_emit_after.gd").get("output", ""))
 	ok = _check("emit lift round-trips byte-identically", after == before, true) and ok
 
 	# 3) Review fix: comma splits are TOP-LEVEL only. The naive split(", ") fragmented a typed
@@ -85,7 +85,7 @@ static func run() -> bool:
 	if typed_signal != null and typed_signal.params.size() == 2:
 		ok = _check("the Dictionary[String, int] param stays one piece", typed_signal.params[0], "totals: Dictionary[String, int]") and ok
 	var fn_src: String = "extends Node\n\n## @ace_hidden\nfunc tally(totals: Dictionary[String, int], label: String) -> int:\n\treturn 7\n"
-	var fn_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(fn_src)
+	var fn_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(fn_src)
 	var tally_fn: EventFunction = null
 	for lifted_function: EventFunction in fn_sheet.functions:
 		if lifted_function.function_name == "tally":
@@ -94,7 +94,7 @@ static func run() -> bool:
 	if tally_fn != null and tally_fn.params.size() == 2:
 		ok = _check("the collection arg keeps its full type", tally_fn.params[0].type_name, "Dictionary[String, int]") and ok
 	fn_sheet.external_source_path = "user://sr_typed_fn.gd"
-	ok = _check("typed-collection function round-trips byte-identically", str(SheetCompiler.compile(fn_sheet, "user://sr_typed_fn.gd").get("output", "")) == fn_src, true) and ok
+	ok = _check("typed-collection function round-trips byte-identically", str(EventSheetCompiler.compile(fn_sheet, "user://sr_typed_fn.gd").get("output", "")) == fn_src, true) and ok
 
 	ok = _test_trigger_prose_travels_with_the_signal() and ok
 	return ok
@@ -131,7 +131,7 @@ static func _test_trigger_prose_travels_with_the_signal() -> bool:
 	ok = _check("the pack lifter carries the prose onto the row", lifted_row != null and lifted_row.description ==
 		"Fires when the autosave clock comes round, INSTEAD of saving.\nThe conditions on this event decide whether now is a good moment.", true) and ok
 	ok = _check("and leaves no orphaned block behind it", _has_raw_code(pack_sheet), false) and ok
-	var emitted: String = str(SheetCompiler.compile(pack_sheet, "user://sr_prose_pack.gd").get("output", ""))
+	var emitted: String = str(EventSheetCompiler.compile(pack_sheet, "user://sr_prose_pack.gd").get("output", ""))
 	ok = _check("the emitted signal keeps its prose directly above the annotations",
 		emitted.contains("## Fires when the autosave clock comes round, INSTEAD of saving.\n## The conditions on this event decide whether now is a good moment.\n## @ace_trigger"), true) and ok
 
@@ -151,7 +151,7 @@ static func _test_trigger_prose_travels_with_the_signal() -> bool:
 	# 3. The OPEN-A-.gd path (the importer): same absorption, and the byte gate still holds - the
 	# prose re-emits exactly where it came from.
 	var file_source: String = "extends Node\n\n%s\n" % source
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(file_source)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(file_source)
 	var opened_row: SignalRow = null
 	for row: Variant in opened.events:
 		if row is SignalRow:
@@ -159,7 +159,7 @@ static func _test_trigger_prose_travels_with_the_signal() -> bool:
 	ok = _check("opening a .gd absorbs the prose too", opened_row != null and not opened_row.description.is_empty(), true) and ok
 	opened.external_source_path = "user://sr_prose_open.gd"
 	ok = _check("and the file round-trips byte-identically",
-		str(SheetCompiler.compile(opened, "user://sr_prose_open.gd").get("output", "")) == file_source, true) and ok
+		str(EventSheetCompiler.compile(opened, "user://sr_prose_open.gd").get("output", "")) == file_source, true) and ok
 
 	# 4. A plain signal with no prose emits exactly what it always did - no leading blank doc line.
 	var bare: SignalRow = SignalRow.new()
@@ -167,7 +167,7 @@ static func _test_trigger_prose_travels_with_the_signal() -> bool:
 	bare.trigger = true
 	bare.ace_name = "On Jumped"
 	ok = _check("a trigger with no prose emits the annotation block alone",
-		Array(SheetCompiler._emit_signal_annotations(bare)), ["## @ace_trigger", "## @ace_name(\"On Jumped\")"]) and ok
+		Array(EventSheetCompiler._emit_signal_annotations(bare)), ["## @ace_trigger", "## @ace_name(\"On Jumped\")"]) and ok
 	return ok
 
 

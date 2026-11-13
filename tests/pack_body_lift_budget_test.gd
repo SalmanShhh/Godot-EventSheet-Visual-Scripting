@@ -45,7 +45,7 @@ static func _pin_halving_gate() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "GateProbe"
-	var before: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var before: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	var calls: Dictionary = {"in": 0, "out": 0, "bad_in": 0}
 	var swaps: Array[Callable] = []
 	for index: int in range(16):
@@ -57,7 +57,7 @@ static func _pin_halving_gate() -> bool:
 			swaps.append(func(lift: bool) -> void:
 				calls["in" if lift else "out"] = int(calls["in" if lift else "out"]) + 1)
 	var kept: int = EventSheetACELifter._adopt_byte_identical(sheet, swaps)
-	var after: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var after: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	var ok: bool = true
 	ok = SUPPORT.check(PIN, "the fifteen harmless swaps are kept", kept, 15) and ok
 	ok = SUPPORT.check(PIN, "the sheet compiles to what it did", after == before, true) and ok

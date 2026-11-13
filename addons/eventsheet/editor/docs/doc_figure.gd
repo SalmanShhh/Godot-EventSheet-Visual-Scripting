@@ -181,7 +181,7 @@ func show_sheet(sheet: EventSheetResource) -> bool:
 func _fill_gdscript_hover() -> void:
 	if _sheet == null or not _gdscript_hover.is_empty():
 		return
-	var result: Dictionary = SheetCompiler.echo(_sheet)
+	var result: Dictionary = EventSheetCompiler.echo(_sheet)
 	_gdscript_hover = str(result.get("output", "")).strip_edges()
 	if _gdscript_hover.is_empty():
 		return
@@ -266,7 +266,7 @@ static func sheet_for_definition(definition: ACEDefinition) -> EventSheetResourc
 		return null
 	var sheet := EventSheetResource.new()
 	var event := EventRow.new()
-	var params: Dictionary = ParamDefaultResolver.new().resolve_all(definition, {})
+	var params: Dictionary = EventSheetParamDefaultResolver.new().resolve_all(definition, {})
 	_fill_empty_slots(definition, params)
 	match definition.ace_type:
 		ACEDefinition.ACEType.TRIGGER:

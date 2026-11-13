@@ -386,7 +386,7 @@ static func _test_the_bytes_survive() -> bool:
 		EventSheetConflictGuard.blocks_file(CONFLICTED_PATH), true) and ok
 	# Everything the open path does to such a file, in order: read it, find the markers, import the
 	# raw rows, block the sheet. None of it is allowed to touch the file.
-	var raw: EventSheetResource = GDScriptImporter.new().import_external(CONFLICTED_PATH, false)
+	var raw: EventSheetResource = EventSheetGDScriptImporter.new().import_external(CONFLICTED_PATH, false)
 	ok = _check("it still comes up as something to look at", raw != null, true) and ok
 	if raw != null:
 		EventSheetConflictGuard.block(raw,
@@ -450,7 +450,7 @@ static func _test_the_endings_note() -> bool:
 static func _test_sheets_are_written_with_unix_endings() -> bool:
 	var sheet: EventSheetResource = _sheet_with_two_rows_sharing_a_token()
 	sheet.host_class = "Node"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_endings_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_endings_probe.gd").get("output", ""))
 	var ok: bool = _check("the sheet compiles to something", output.length() > 20, true)
 	return _check("and not one carriage return is in it", output.contains("\r"), false) and ok
 

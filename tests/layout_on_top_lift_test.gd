@@ -154,7 +154,7 @@ static func _test_boundary() -> bool:
 static func _test_roundtrip() -> bool:
 	var sheet: EventSheetResource = _open(FIXTURE)
 	sheet.external_source_path = "user://_layout_on_top_roundtrip.gd"
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	return _check("%s comes back byte for byte" % FIXTURE, output, _source(FIXTURE))
 
 
@@ -172,7 +172,7 @@ static func _test_authored_emission() -> bool:
 	event.actions.append(_authored_action("RemoveLayoutOnTop", {"layout_name": "\"PauseMenu\""}, "b2"))
 	sheet.events.append(event)
 	sheet.external_source_path = "user://_layout_on_top_authored.gd"
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	var ok: bool = _check("the picked add writes the canonical lines",
 		output.contains("\tvar __layout_a1: Node = get_tree().root.get_node_or_null(\"PauseMenu\")\n\tif __layout_a1 == null:\n\t\t__layout_a1 = (load(\"res://pause_menu.tscn\") as PackedScene).instantiate()\n\t\t__layout_a1.name = \"PauseMenu\"\n\t\tget_tree().root.add_child(__layout_a1)"), true)
 	ok = _check("the picked removal writes its guard",
@@ -180,7 +180,7 @@ static func _test_authored_emission() -> bool:
 	# And what the ADD wrote opens again as the row that wrote it, which is the other half of the
 	# promise the three hand-written statements already keep. The removal is deliberately not
 	# claimed - it is an `if` block, and an `if` block already has a reading of its own.
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		output, true, sheet.external_source_path)
 	ok = _check("and the file it wrote re-opens with the add as the row that wrote it",
 		_event_row_ids(reopened)[0] if not _event_row_ids(reopened).is_empty() else "(nothing)",
@@ -206,7 +206,7 @@ static func _source(file_name: String) -> String:
 
 static func _open(file_name: String) -> EventSheetResource:
 	var path: String = FIXTURE_DIR + file_name
-	return GDScriptImporter.new().import_external_source(_source(file_name), true, path)
+	return EventSheetGDScriptImporter.new().import_external_source(_source(file_name), true, path)
 
 
 ## A row the SHEET authored. `uid` bakes the per-row id of a template that declares locals, which is

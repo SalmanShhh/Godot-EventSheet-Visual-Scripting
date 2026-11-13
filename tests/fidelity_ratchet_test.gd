@@ -17,7 +17,7 @@ const MAX_RAW_BLOCKS := 1
 
 static func run() -> bool:
 	var ok: bool = true
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var c: Dictionary = {"vars": 0, "picks": 0, "conds": 0, "acts": 0, "raw": 0}
 	_count(imported.events, c)
 	for fn: Variant in imported.functions:
@@ -32,7 +32,7 @@ static func run() -> bool:
 	ok = _check("raw blocks at or below the ratchet (%d)" % MAX_RAW_BLOCKS, c["raw"] <= MAX_RAW_BLOCKS, true) and ok
 
 	imported.external_source_path = "user://ratchet_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://ratchet_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://ratchet_rt.gd").get("output", ""))
 	ok = _check("representative script round-trips byte-identically", rt == SOURCE, true) and ok
 	if rt != SOURCE:
 		print("    SRC<%s>\n    RT <%s>" % [SOURCE, rt])

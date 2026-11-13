@@ -108,7 +108,7 @@ static func _test_class_users() -> bool:
 
 static func _test_class_head_of_a_shared_sheet() -> bool:
 	NativeHeadMarks.forget_includers()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHARED_BASE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SHARED_BASE)
 	sheet.read_only = false
 	var view := _view_of(sheet)
 	var head: EventRowData = _row_with_uid(view, "sheet_head_bar_")
@@ -133,7 +133,7 @@ static func _test_class_head_of_a_shared_sheet() -> bool:
 
 
 static func _test_included_variables_toggle() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(INCLUDER)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(INCLUDER)
 	var view := _view_of(sheet)
 	var shown: bool = _row_with_uid(view, "include_variable_FixtureDamageRules_damage_taken") != null
 	view.show_included_variables = false
@@ -214,7 +214,7 @@ static func _class_block(read_only: bool) -> EventRowData:
 
 
 static func _include_bar(theme_path: String, clear_include: bool = false) -> EventRowData:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(INCLUDER)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(INCLUDER)
 	sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
 	if clear_include:
 		for token_name: String in ["include_border_color", "include_fill_color", "include_tag_color",

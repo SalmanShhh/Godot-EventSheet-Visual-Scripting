@@ -94,7 +94,7 @@ func _action(ace_id: String, params: Dictionary, uid: String) -> ACEAction:
 
 func _compiled_text(sheet: EventSheetResource) -> String:
 	sheet.external_source_path = "user://_undoable_preview.gd"
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	sheet.external_source_path = ""
 	return output.strip_edges()
 

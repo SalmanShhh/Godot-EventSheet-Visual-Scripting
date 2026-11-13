@@ -83,7 +83,7 @@ func handle_message(message: Dictionary) -> Variant:
 			return _result(message, {
 				"protocolVersion": PROTOCOL_VERSION,
 				"capabilities": {"tools": {}},
-				"serverInfo": {"name": "godot-eventsheets", "version": SheetCompiler.VERSION}
+				"serverInfo": {"name": "godot-eventsheets", "version": EventSheetCompiler.VERSION}
 			})
 		"ping":
 			return _result(message, {})
@@ -230,7 +230,7 @@ func _row_lines(sheet: EventSheetResource) -> Dictionary:
 	var lines: Dictionary = {}
 	if sheet.external_source_path.is_empty():
 		return lines
-	for entry: Variant in SheetCompiler.echo(sheet).get("source_map", []):
+	for entry: Variant in EventSheetCompiler.echo(sheet).get("source_map", []):
 		if entry is Dictionary:
 			var key: String = str((entry as Dictionary).get("uid", ""))
 			if not lines.has(key):
@@ -332,7 +332,7 @@ func _serialize_ace(ace: Resource) -> Dictionary:
 ## from list_aces - an AI assistant told "only approved addons" is policy-BOUND, not
 ## policy-advised. Core builtins always list.
 func _policy_allows_definition(definition: ACEDefinition) -> bool:
-	var include_sources: String = str(SheetCompiler._addon_policy("include_sources", "anywhere"))
+	var include_sources: String = str(EventSheetCompiler._addon_policy("include_sources", "anywhere"))
 	if not include_sources.begins_with("tagged:"):
 		return true
 	if definition.provider_id == "Core":
@@ -387,7 +387,7 @@ func _tool_compile_sheet(arguments: Dictionary) -> Dictionary:
 	var sheet: EventSheetResource = _load_sheet(path) if write_output else _sheet_for_reading(path)
 	if sheet == null:
 		return {"error": "Not an event sheet: %s" % path}
-	var result: Dictionary = SheetCompiler.compile(sheet, "") if write_output else SheetCompiler.echo(sheet)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "") if write_output else EventSheetCompiler.echo(sheet)
 	return {
 		"success": bool(result.get("success", false)),
 		"errors": result.get("errors", []),
@@ -424,13 +424,13 @@ func _tool_explain(arguments: Dictionary) -> Dictionary:
 	if number < 1 or number > file_lines.size():
 		return {"error": "%s has no line %d (it has %d)." % [path, number, file_lines.size()]}
 	var answer: Dictionary = {"path": path, "line": number, "text": file_lines[number - 1]}
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true, path)
 	if sheet == null:
 		answer["row"] = null
 		answer["reason"] = "this file does not open as a sheet"
 		return answer
 	sheet.external_source_path = path
-	var emitted: Dictionary = SheetCompiler.echo(sheet)
+	var emitted: Dictionary = EventSheetCompiler.echo(sheet)
 	if str(emitted.get("output", "")) != source:
 		answer["row"] = null
 		answer["reason"] = "this file does not save back byte for byte, so no line number maps"
@@ -757,11 +757,11 @@ static func round_trip_refusal(path: String) -> String:
 	if path.get_extension() != "gd" or not FileAccess.file_exists(path):
 		return ""
 	var source: String = FileAccess.get_file_as_string(path)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true, path)
 	if sheet == null:
 		return "%s does not open as a sheet." % path
 	sheet.external_source_path = path
-	if str(SheetCompiler.echo(sheet).get("output", "")) != source:
+	if str(EventSheetCompiler.echo(sheet).get("output", "")) != source:
 		return "%s does not save back byte for byte as a sheet, so editing it here could change lines the edit never touched. Nothing was written." % path
 	return ""
 
@@ -774,22 +774,22 @@ func _mutate_script(path: String, change: Callable) -> Dictionary:
 		refused = round_trip_refusal(path)
 	if not refused.is_empty():
 		return {"error": refused}
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(path), true, path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(path), true, path)
 	if sheet == null:
 		return {"error": "%s does not open as a sheet." % path}
 	sheet.external_source_path = path
 	var outcome: Dictionary = change.call(sheet)
 	if outcome.has("error"):
 		return outcome
-	var emitted: Dictionary = SheetCompiler.echo(sheet)
+	var emitted: Dictionary = EventSheetCompiler.echo(sheet)
 	if not bool(emitted.get("success", false)):
 		return {"error": "The edited sheet does not compile, so nothing was written: %s" % "; ".join(PackedStringArray(emitted.get("errors", [])))}
 	var written: String = str(emitted.get("output", ""))
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(written, true, path)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(written, true, path)
 	if reopened == null:
 		return {"error": "The edited file would not open as a sheet again, so nothing was written."}
 	reopened.external_source_path = path
-	if str(SheetCompiler.echo(reopened).get("output", "")) != written:
+	if str(EventSheetCompiler.echo(reopened).get("output", "")) != written:
 		return {"error": "The edited file would not save back byte for byte, so nothing was written."}
 	EventSheetBackups.backup_sheet(path)
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
@@ -806,7 +806,7 @@ func _load_sheet(path: String) -> EventSheetResource:
 	if path.is_empty() or not FileAccess.file_exists(path):
 		return null
 	if path.ends_with(".gd"):
-		return GDScriptImporter.new().import_external(path)
+		return EventSheetGDScriptImporter.new().import_external(path)
 	# CACHE_MODE_IGNORE: the server is long-lived - a cached resource would silently
 	# serve stale sheets after the user edits them in the editor.
 	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource

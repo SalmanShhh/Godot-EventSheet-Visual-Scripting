@@ -12,7 +12,7 @@ extends RefCounted
 #
 # The dialog owns no rules: the whole preview comes from EventSheetVariableRetype.plan and the
 # commit from .apply, so what is shown and what happens are the same scan. The type list is the
-# variable dialog's own (VariableDialog.add_type_items), so retyping offers exactly the types
+# variable dialog's own (EventSheetVariableDialog.add_type_items), so retyping offers exactly the types
 # creating offered, each with the sentence that says what it holds.
 #
 # Headless-safe by construction: everything except the popup itself runs without a tree, and
@@ -62,7 +62,7 @@ func _build_dialog() -> void:
 	var content: VBoxContainer = parts["box"]
 	content.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Changes the variable's type AND every row that sets or compares it, in one step you can undo. Values it cannot convert on its own are listed below rather than guessed at.")))
 	_type_option = EventSheetPopupUI.described_option()
-	VariableDialog.add_type_items(_type_option)
+	EventSheetVariableDialog.add_type_items(_type_option)
 	_type_option.item_selected.connect(func(_index: int) -> void: refresh_preview())
 	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Make it a…"),
 		EventSheetPopupUI.form_row(EventSheetL10n.translate("New type"), _type_option)))

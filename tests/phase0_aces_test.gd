@@ -62,14 +62,14 @@ static func run() -> bool:
 	act.params = {"m": "enemy.name"}
 	event.actions.append(act)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_phase0_pf.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_phase0_pf.gd").get("output", ""))
 	all_passed = _check("filter condition scoped to the iterator", output.contains("enemy.is_on_floor()"), true) and all_passed
 	all_passed = _check("global filter condition stays unscoped", output.contains("score > 0"), true) and all_passed
 	all_passed = _check("filter conditions emit a guard + continue",
 		output.contains("if not (") and output.contains("\tcontinue"), true) and all_passed
 	all_passed = _check("AND joins the filter conditions", output.contains(") and ("), true) and all_passed
 	pick.filter_mode = 1  # OR
-	output = str(SheetCompiler.compile(sheet, "user://eventsheets_phase0_pf.gd").get("output", ""))
+	output = str(EventSheetCompiler.compile(sheet, "user://eventsheets_phase0_pf.gd").get("output", ""))
 	all_passed = _check("OR joins the filter conditions", output.contains(") or ("), true) and all_passed
 
 	# The compiled output must parse (parity / reload gate).

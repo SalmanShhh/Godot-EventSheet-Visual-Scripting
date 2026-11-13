@@ -222,7 +222,7 @@ static func _strictness() -> bool:
 static func _facts() -> bool:
 	var ok: bool = true
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	var facts: Dictionary = EventSheetViewportReadingRows.reading_gap_facts(sheet)
 	ok = _check("the file's physics material is known by name",
 		(facts.get("physics_materials", {}) as Dictionary).has("mat"), true) and ok
@@ -258,8 +258,8 @@ static func _opened_file() -> bool:
 ## so opening the file and saving it untouched puts back every byte.
 static func _round_trip() -> bool:
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 
@@ -342,7 +342,7 @@ static func _joined_segments(reading: Dictionary) -> String:
 ## row names an object, the bare text otherwise.
 static func _open_and_read() -> PackedStringArray:
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

@@ -216,7 +216,7 @@ static func _test_the_round_trip() -> bool:
 			var parameter_id: String = str(parameter.get("id", ""))
 			if parameter_id != "target":
 				values[parameter_id] = "true"
-		emitted.append(ActionCodegen.generate_action(
+		emitted.append(EventSheetActionCodegen.generate_action(
 			_action_of(definition, values)).strip_edges())
 	emitted.sort()
 	var ok: bool = _check("a fresh row on a %name emits that same %Name line back", emitted,
@@ -228,7 +228,7 @@ static func _test_the_round_trip() -> bool:
 		if definition.id == "property:set:flip_h":
 			bare = definition
 	ok = _check("clearing the node writes the row on this node instead",
-		ActionCodegen.generate_action(_action_of(bare, {"target": "", "value": "true"})).strip_edges(),
+		EventSheetActionCodegen.generate_action(_action_of(bare, {"target": "", "value": "true"})).strip_edges(),
 		"flip_h = true") and ok
 	# And the standing contract, on a real file whose rows all sit on `%names`: opening it and saving
 	# it untouched reproduces it byte for byte. The reading is a VIEW over unchanged rows, so this is

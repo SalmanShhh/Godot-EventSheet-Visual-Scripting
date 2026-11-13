@@ -66,7 +66,7 @@ static func report_for_scene(scene_path: String, text: String, behaviours: Dicti
 			if actual.is_empty() or fits(actual, host_type):
 				continue
 			findings.append(_found(scene_path, node, "%s acts on a %s; it needs %s." % [
-				label, actual, SheetCompiler.host_phrase(host_type)], ""))
+				label, actual, EventSheetCompiler.host_phrase(host_type)], ""))
 			continue
 		var parent: Dictionary = by_path.get(str(node["parent"]), {}) as Dictionary
 		actual = str(parent.get("type", ""))
@@ -74,7 +74,7 @@ static func report_for_scene(scene_path: String, text: String, behaviours: Dicti
 			continue
 		var nearest: String = nearest_host(nodes, node, host_type)
 		findings.append(_found(scene_path, node, "%s is under a %s; it needs %s: put it under one, or set Acts on." % [
-			label, actual, SheetCompiler.host_phrase(host_type)], nearest))
+			label, actual, EventSheetCompiler.host_phrase(host_type)], nearest))
 	return findings
 
 
@@ -101,7 +101,7 @@ static func behaviour_info(script_path: String, cache: Dictionary = {}) -> Dicti
 		var named: RegExMatch = RegEx.create_from_string("(?m)^class_name ([A-Za-z_][A-Za-z0-9_]*)$").search(source)
 		if declared != null:
 			var class_label: String = named.get_string(1) if named != null else script_path.get_file().get_basename().to_pascal_case()
-			info = {"host": declared.get_string(1), "label": SheetCompiler.spaced_class_name(class_label)}
+			info = {"host": declared.get_string(1), "label": EventSheetCompiler.spaced_class_name(class_label)}
 	cache[script_path] = info
 	return info
 

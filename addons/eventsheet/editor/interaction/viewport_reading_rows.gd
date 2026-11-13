@@ -1178,9 +1178,9 @@ static func _lifted_row_line(resource: Resource, derive_unknown_rows: bool = fal
 static func _emitted_row_line(resource: Resource) -> String:
 	var emitted: String = ""
 	if resource is ACECondition:
-		emitted = ConditionCodegen.generate_condition(resource as ACECondition)
+		emitted = EventSheetConditionCodegen.generate_condition(resource as ACECondition)
 	elif resource is ACEAction:
-		emitted = ActionCodegen.generate_action(resource as ACEAction)
+		emitted = EventSheetActionCodegen.generate_action(resource as ACEAction)
 	else:
 		return ""
 	if emitted.contains("\n") or emitted.strip_edges().is_empty():

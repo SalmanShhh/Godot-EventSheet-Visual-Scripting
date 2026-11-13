@@ -509,4 +509,4 @@ static func _test_window() -> bool:
 ## The compiler's spelling of a function's return, without naming the preload in a test.
 class CompilerSpellingsProbe:
 	static func return_name(event_function: EventFunction) -> String:
-		return SheetCompiler._function_return_type_name(event_function) if event_function != null else ""
+		return EventSheetCompiler._function_return_type_name(event_function) if event_function != null else ""

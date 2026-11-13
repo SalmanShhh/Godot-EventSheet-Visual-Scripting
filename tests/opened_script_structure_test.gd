@@ -31,7 +31,7 @@ static func run() -> bool:
 
 ## Opens the fixture the way the dock opens a .gd: a read-only preview, which is reading mode.
 static func _open() -> EventSheetViewport:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	sheet.read_only = true
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
@@ -216,7 +216,7 @@ static func _region_authoring_round_trip() -> bool:
 	var writer: FileAccess = FileAccess.open(authored_path, FileAccess.WRITE)
 	writer.store_string(source)
 	writer.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(authored_path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(authored_path)
 	var opener := CustomBlockRow.new()
 	opener.kind_id = "region"
 	opener.fields = {"label": "Setup", "is_end": false}
@@ -225,14 +225,14 @@ static func _region_authoring_round_trip() -> bool:
 	closer.fields = {"label": "", "is_end": true}
 	sheet.events.insert(0, opener)
 	sheet.events.insert(sheet.events.size(), closer)
-	var written: String = str(SheetCompiler.new().compile(sheet, authored_path).get("output", ""))
+	var written: String = str(EventSheetCompiler.new().compile(sheet, authored_path).get("output", ""))
 	var passed: bool = true
 	passed = _check("a group on a .gd sheet writes the opening fence",
 		written.contains("#region Setup"), true) and passed
 	passed = _check("a group on a .gd sheet writes the closing fence",
 		written.contains("#endregion"), true) and passed
 	# Reopened, the fences are the same bar again - which is what "the group survived" means.
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(authored_path)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(authored_path)
 	reopened.read_only = true
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
@@ -247,8 +247,8 @@ static func _region_authoring_round_trip() -> bool:
 ## The contract under every reading above: display-only means the bytes never move.
 static func _round_trip_is_byte_identical() -> bool:
 	var source: String = FileAccess.get_file_as_string(FIXTURE_PATH)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
-	var compiled: Dictionary = SheetCompiler.new().compile(sheet)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
+	var compiled: Dictionary = EventSheetCompiler.new().compile(sheet)
 	return _check("the fixture re-emits byte for byte", str(compiled.get("output", "")), source)
 
 

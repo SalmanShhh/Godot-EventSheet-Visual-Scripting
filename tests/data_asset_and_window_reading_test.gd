@@ -220,7 +220,7 @@ static func _claims() -> bool:
 
 ## {pattern: every evidence line claimed for it} for one opened file.
 static func _claims_of(path: String) -> Dictionary:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	var found: Dictionary = {}
@@ -237,8 +237,8 @@ static func _claims_of(path: String) -> Dictionary:
 ## holds, so opening the file and saving it untouched puts back every byte.
 static func _round_trip(path: String, source: String) -> bool:
 	_write(path, source)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-	var output: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+	var output: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 	return _check("%s saves every byte back" % path.get_file(), output, source)
 
 
@@ -257,7 +257,7 @@ static func _sentence_of(code: String) -> String:
 
 ## Every row's reading in an opened file, as "object ▸ sentence".
 static func _open_and_read(path: String) -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var viewport := EventSheetViewport.new()
 	viewport.set_sheet(sheet)
 	var readings: PackedStringArray = PackedStringArray()

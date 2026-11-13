@@ -74,8 +74,8 @@ static func _lift_body_actions(body: String) -> Array:
 	raw.code = body
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://lc_src.gd").get("output", ""))
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var source: String = str(EventSheetCompiler.compile(authored, "user://lc_src.gd").get("output", ""))
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	return _collect_actions(imported.events)
 
 
@@ -89,10 +89,10 @@ static func _roundtrips(body: String) -> bool:
 	raw.code = body
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://lc_src.gd").get("output", ""))
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var source: String = str(EventSheetCompiler.compile(authored, "user://lc_src.gd").get("output", ""))
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://lc_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://lc_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://lc_rt.gd").get("output", ""))
 	if rt != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, rt])
 	return _check("round-trips byte-identically (%s...)" % body.substr(0, 16), rt == source, true)

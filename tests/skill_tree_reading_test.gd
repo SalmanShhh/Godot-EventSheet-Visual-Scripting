@@ -93,7 +93,7 @@ static func _test_pattern_claim() -> bool:
 		EventSheetPatternFacts.PATTERN_IDS.has("skill_tree"), true) and passed
 	passed = _check("the offered pack has a name a reader would recognise",
 		EventSheetPatternVocabulary.pack_label("upgrades"), "Upgrades") and passed
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	var words: String = ""
@@ -112,8 +112,8 @@ static func _test_pattern_claim() -> bool:
 
 ## Display only: opening the fixture and writing it back must not move a byte.
 static func _test_round_trip() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
-	var reopened: String = str(SheetCompiler.compile(sheet, FIXTURE).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
+	var reopened: String = str(EventSheetCompiler.compile(sheet, FIXTURE).get("output", ""))
 	return _check("the hand-written tree re-emits byte for byte",
 		reopened == FileAccess.get_file_as_string(FIXTURE), true)
 
@@ -250,7 +250,7 @@ static func _test_starter() -> bool:
 			function_names.append((entry as EventFunction).function_name)
 	passed = _check("it lays out, refreshes, hovers and draws", ", ".join(function_names),
 		"lay_out, refresh_states, show_grants, _draw") and passed
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://skill_tree_screen_probe.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://skill_tree_screen_probe.gd")
 	passed = _check("the starter compiles", bool(compiled.get("success", false)), true) and passed
 	var output: String = str(compiled.get("output", ""))
 	passed = _check("a click is one Unlock row", output.contains("Upgrades.unlock_skill("), true) and passed

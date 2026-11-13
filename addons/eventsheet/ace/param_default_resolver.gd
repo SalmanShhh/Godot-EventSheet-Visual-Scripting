@@ -1,11 +1,11 @@
-# EventSheet - ParamDefaultResolver
+# EventSheet - EventSheetParamDefaultResolver
 # Resolves the effective value for an ACE parameter using this priority chain:
 #   1. Per-row override (supplied by the caller at the top of the chain)
 #   2. Editor override from EditorParamStore
 #   3. ACE default from the parameter metadata
 #   4. Type zero-value fallback
 @tool
-class_name ParamDefaultResolver
+class_name EventSheetParamDefaultResolver
 extends RefCounted
 
 var _param_store: EditorParamStore = null

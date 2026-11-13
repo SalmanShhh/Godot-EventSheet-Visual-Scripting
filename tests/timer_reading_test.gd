@@ -44,7 +44,7 @@ static func run() -> bool:
 		EventSheetSentence.timer_expression("spawn_timer.time_left"), "") and ok
 
 	# ── The mode map is read off the file's own lines, and only from literal shapes ──
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\nfunc _ready() -> void:\n\t$Timer.one_shot = true\n\t$Loop.one_shot = false\n\t$Maybe.one_shot = wants_once\n")
 	var modes: Dictionary = EventSheetViewportReadingRows.timer_mode_map(sheet)
 	ok = _check("a literal true is once", modes.get("Timer", null), true) and ok

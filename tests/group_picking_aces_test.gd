@@ -46,7 +46,7 @@ static func run() -> bool:
 	row.actions.append(_action("SetVar", {"var_name": "lucky", "value": _filled(by_id, "RandomInGroup")}))
 	row.actions.append(_action("SetVar", {"var_name": "weakest", "value": _filled(by_id, "SmallestInGroup")}))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://group_picking_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://group_picking_probe.gd").get("output", ""))
 	all_passed = _check("random pick emits the guarded pick_random()",
 		output.contains("get_tree().get_nodes_in_group(\"enemies\").pick_random() if not get_tree().get_nodes_in_group(\"enemies\").is_empty() else null"), true) and all_passed
 	all_passed = _check("smallest pick emits the get()-comparing reduce",
@@ -54,10 +54,10 @@ static func run() -> bool:
 	all_passed = _check("the compiled probe is valid GDScript", _parses(output), true) and all_passed
 
 	# --- State machine pack: the recorded previous state, the arrival stamp, and Time in state ---
-	var pack_sheet: EventSheetResource = GDScriptImporter.new().import_external(STATE_MACHINE_PACK + ".gd")
+	var pack_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(STATE_MACHINE_PACK + ".gd")
 	all_passed = _check("state machine pack imports as a behavior", pack_sheet != null and pack_sheet.behavior_mode, true) and all_passed
 	if pack_sheet != null:
-		var pack_output: String = str(SheetCompiler.compile(pack_sheet, "user://state_machine_probe.gd").get("output", ""))
+		var pack_output: String = str(EventSheetCompiler.compile(pack_sheet, "user://state_machine_probe.gd").get("output", ""))
 		all_passed = _check("previous_state is declared", pack_output.contains("var previous_state: String = \"\""), true) and all_passed
 		all_passed = _check("the arrival stamp is declared", pack_output.contains("var _state_entered_ticks: int = 0"), true) and all_passed
 		all_passed = _check("Go to state records where it came from", pack_output.contains("previous_state = previous"), true) and all_passed

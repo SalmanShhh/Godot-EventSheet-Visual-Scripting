@@ -147,13 +147,13 @@ static func _authoring_spellings() -> bool:
 		variable.default_value = 3
 		variable.attributes = row[1]
 		variable.untyped = bool(row[3])
-		pins.append(["%s compiles from a row" % row[0], SheetCompiler._emit_tree_variable_line(variable), row[4]])
+		pins.append(["%s compiles from a row" % row[0], EventSheetCompiler._emit_tree_variable_line(variable), row[4]])
 		# The dictionary path writes no type-less spelling (a Properties-table variable always has its
 		# type column), so only the attribute-driven rows are asked of it.
 		if not bool(row[3]):
 			var descriptor: Dictionary = {"type": row[2], "default": 3, "exported": true, "attributes": row[1]}
 			pins.append(["%s compiles from the Properties table" % row[0],
-				"\n".join(SheetCompiler._emit_variables({"bullet_count": descriptor})), row[4]])
+				"\n".join(EventSheetCompiler._emit_variables({"bullet_count": descriptor})), row[4]])
 	return SUPPORT.pins(TEST_NAME, pins)
 
 

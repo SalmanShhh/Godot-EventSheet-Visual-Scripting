@@ -153,7 +153,7 @@ static func health_by_role(entries_by_role: Dictionary, per_role_limit: int = 6)
 			if opened >= per_role_limit:
 				break
 			var path: String = str((entry_value as Dictionary).get("path", ""))
-			var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+			var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 			if sheet == null:
 				continue
 			opened += 1

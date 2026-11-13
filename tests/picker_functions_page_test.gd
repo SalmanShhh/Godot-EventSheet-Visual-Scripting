@@ -39,7 +39,7 @@ class StubDock:
 
 static func run() -> bool:
 	var passed: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
 	registry.refresh_from_sources([], true)
 
@@ -80,7 +80,7 @@ static func _test_the_page(sheet: EventSheetResource) -> bool:
 ## A script a user writes by hand publishes nothing, so every function it has is a helper: they are
 ## the section itself, each under the function mark, not folded behind a Helpers head.
 static func _test_a_hand_written_script() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	for entry: Variant in sheet.functions:
 		(entry as EventFunction).expose_as_ace = false
 	var stub := StubDock.new()
@@ -202,7 +202,7 @@ static func _test_chips(sheet: EventSheetResource, registry: EventSheetACERegist
 ## same Core/CallFunction aimed at the same function, reading "Functions · Call Award Points". The
 ## call is dropped inside a helper's body so the round trip runs through the fixture's OWN file.
 static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	var picked: ACEDefinition = null
 	for definition: ACEDefinition in ACEPickerDialog.function_call_definitions(sheet, registry):
 		if str(definition.metadata.get(ACEPickerDialog.FUNCTION_META_KEY, "")) == "award_points":
@@ -218,14 +218,14 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	call_action.params = {"function_name": str(picked.metadata.get(ACEPickerDialog.FUNCTION_META_KEY, "")), "args": "5"}
 	var host: EventFunction = ViewportRowBuilder.find_function_by_name(sheet, "reset_score")
 	(host.events[0] as EventRow).actions.append(call_action)
-	var emitted: String = str(SheetCompiler.new().compile(sheet, ROUND_TRIP_PATH).get("output", ""))
+	var emitted: String = str(EventSheetCompiler.new().compile(sheet, ROUND_TRIP_PATH).get("output", ""))
 	passed = _check("the pick emits a plain call, nothing plugin-shaped",
 		emitted.contains("\taward_points(5)\n"), true) and passed
 	var file: FileAccess = FileAccess.open(ROUND_TRIP_PATH, FileAccess.WRITE)
 	file.store_string(emitted)
 	file.close()
 
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(ROUND_TRIP_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(ROUND_TRIP_PATH)
 	var reopened_host: EventFunction = ViewportRowBuilder.find_function_by_name(reopened, "reset_score")
 	var lifted: ACEAction = null
 	for entry: Variant in (reopened_host.events[0] as EventRow).actions:

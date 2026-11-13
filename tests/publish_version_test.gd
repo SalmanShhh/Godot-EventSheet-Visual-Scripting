@@ -67,7 +67,7 @@ static func run() -> bool:
 
 	# The pickup a user actually sees: importing the republished source reads the NEW version
 	# (the banner's Addon Pack chip renders sheet.addon_version).
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(rewritten)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(rewritten)
 	all_passed = _check("the reimported sheet carries the new addon_version",
 		imported.addon_version, "1.3.0") and all_passed
 	return all_passed

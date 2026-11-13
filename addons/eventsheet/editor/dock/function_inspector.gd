@@ -153,7 +153,7 @@ static func category_sentence(word: String) -> String:
 ## The return word a function shows in the Returns dropdown: "Nothing" for `-> void`, otherwise the
 ## type exactly as the file writes it.
 static func return_word(event_function: EventFunction) -> String:
-	var spelled: String = SheetCompiler._function_return_type_name(event_function)
+	var spelled: String = EventSheetCompiler._function_return_type_name(event_function)
 	return "Nothing" if spelled == "void" else spelled
 
 
@@ -629,7 +629,7 @@ static func _is_shared_descriptor(descriptor: Variant) -> bool:
 
 ## The code the function's body compiles to, without its `func` line, comments or string literals.
 static func emitted_body(event_function: EventFunction, sheet: EventSheetResource) -> String:
-	var lines: PackedStringArray = SheetCompiler.emit_function_block_text(event_function, sheet).split("\n")
+	var lines: PackedStringArray = EventSheetCompiler.emit_function_block_text(event_function, sheet).split("\n")
 	var start: int = 0
 	for index: int in range(lines.size()):
 		if RegEx.create_from_string("^(static\\s+)?func\\s").search(lines[index]) != null:
@@ -790,7 +790,7 @@ static func _waits(row: Resource) -> bool:
 	if row is ACEAction:
 		var action: ACEAction = row as ACEAction
 		return action.is_awaited or action.await_call or action.codegen_template.contains("await ") \
-			or SheetCompiler._COROUTINE_ACE_IDS.has(action.ace_id)
+			or EventSheetCompiler._COROUTINE_ACE_IDS.has(action.ace_id)
 	return row is RawCodeRow and (row as RawCodeRow).code.contains("await ")
 
 

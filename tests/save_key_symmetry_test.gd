@@ -51,7 +51,7 @@ static func _run_against_compiler_output() -> bool:
 	boot.actions.append(_save_system_action("SaveNumber", "SaveSystem.save_number({key}, {value})", {"key": _quoted("coins"), "value": "coins"}))
 	sheet.events.append(boot)
 
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://save_key_symmetry_out.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://save_key_symmetry_out.gd")
 	all_passed = _check("the fixture sheet compiles", bool(result.get("success", false)), true) and all_passed
 	var output: String = str(result.get("output", ""))
 
@@ -69,7 +69,7 @@ static func _run_against_compiler_output() -> bool:
 	# A sheet with no save vocabulary at all contributes nothing (the early-out path).
 	var plain: EventSheetResource = EventSheetResource.new()
 	plain.variables = {"score": {"type": "int", "default": 0, "exported": true}}
-	var plain_usage: Dictionary = EventSheetProjectDoctor.save_key_usage(str(SheetCompiler.compile(plain, "user://save_key_symmetry_plain.gd").get("output", "")))
+	var plain_usage: Dictionary = EventSheetProjectDoctor.save_key_usage(str(EventSheetCompiler.compile(plain, "user://save_key_symmetry_plain.gd").get("output", "")))
 	all_passed = _check("a sheet with no saves yields no keys", (plain_usage["loaded"] as PackedStringArray).size() + (plain_usage["saved"] as PackedStringArray).size(), 0) and all_passed
 
 	return all_passed

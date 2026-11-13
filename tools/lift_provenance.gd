@@ -143,7 +143,7 @@ const NOT_LOSSLESS: String = "this file does not re-emit byte for byte, so no li
 const NOT_A_SHEET: String = "this file does not open as a sheet"
 
 ## The path the re-emission is compiled to while the round trip is checked. NEVER the file's own:
-## `SheetCompiler.compile` writes its output to the path it is given whenever that differs from
+## `EventSheetCompiler.compile` writes its output to the path it is given whenever that differs from
 ## what is on disk, so compiling a file back over itself would let a read-only tool rewrite the very
 ## file somebody asked it about - and it would do it exactly in the case the answer is "this does
 ## not reproduce itself". It is the probe path the public round-trip seam already uses, which also
@@ -202,12 +202,12 @@ class RowClaim extends RefCounted:
 ## project (an Autoload, a class name, the host class of `self`). It is never compiled to: the round
 ## trip goes to PROBE_PATH, so nothing here can write to the file it is asked about.
 static func row_claim(source: String, number: int, script_path: String = "") -> RowClaim:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true,
 		script_path)
 	if sheet == null:
 		return RowClaim.new(Row.UNREADABLE, NOT_A_SHEET)
 	sheet.external_source_path = PROBE_PATH
-	var emitted: Dictionary = SheetCompiler.compile(sheet, PROBE_PATH)
+	var emitted: Dictionary = EventSheetCompiler.compile(sheet, PROBE_PATH)
 	if str(emitted.get("output", "")) != source:
 		return RowClaim.new(Row.NOT_REPRODUCIBLE, NOT_LOSSLESS)
 	var row: Resource = EventSheetLineRowMapper.resource_for_line(
@@ -272,12 +272,12 @@ static func claims(source: String, number: int, script_path: String = "") -> Arr
 ## Gated on the round trip exactly as `row_claim` is, and for the same reason: without it, line N of
 ## the re-emission is not line N of the file.
 static func shaped_by(source: String, number: int, script_path: String = "") -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true,
 		script_path)
 	if sheet == null:
 		return NOT_A_SHEET
 	sheet.external_source_path = PROBE_PATH
-	var emitted: Dictionary = SheetCompiler.compile(sheet, PROBE_PATH)
+	var emitted: Dictionary = EventSheetCompiler.compile(sheet, PROBE_PATH)
 	if str(emitted.get("output", "")) != source:
 		return NOT_LOSSLESS
 	var row: Resource = EventSheetLineRowMapper.resource_for_line(
@@ -483,7 +483,7 @@ static func _index_answer(statement: String, term: String) -> Answer:
 static func _derived_answers(source: String, statement: String,
 		script_path: String) -> Array[Answer]:
 	var found: Array[Answer] = []
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true,
 		script_path)
 	if sheet == null:
 		return found

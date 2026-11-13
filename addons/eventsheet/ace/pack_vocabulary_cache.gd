@@ -367,7 +367,7 @@ static func _code_stamp() -> String:
 	var sorted: Array = files.keys()
 	sorted.sort()
 	var stat_memo: Dictionary = {}
-	var parts: PackedStringArray = PackedStringArray([str(FORMAT), SheetCompiler.VERSION,
+	var parts: PackedStringArray = PackedStringArray([str(FORMAT), EventSheetCompiler.VERSION,
 		str(Engine.get_version_info().get("hash", "")), str(Engine.get_version_info().get("string", ""))])
 	for file_path: Variant in sorted:
 		parts.append("%s|%s" % [file_path, _file_stamp(str(file_path), stat_memo)])

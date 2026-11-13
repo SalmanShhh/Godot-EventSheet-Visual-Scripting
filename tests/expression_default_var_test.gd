@@ -23,31 +23,31 @@ static func run() -> bool:
 	expr_var.default_value = "Vector2.ZERO"
 	expr_var.expression_default = true
 	ok = _check("a flagged expression default emits verbatim (unquoted)",
-		SheetCompiler._emit_tree_variable_line(expr_var), "var _base: Vector2 = Vector2.ZERO") and ok
+		EventSheetCompiler._emit_tree_variable_line(expr_var), "var _base: Vector2 = Vector2.ZERO") and ok
 	var string_var: LocalVariable = LocalVariable.new()
 	string_var.name = "label"
 	string_var.type_name = "String"
 	string_var.default_value = "hello"  # a genuine String literal - must stay quoted
 	ok = _check("an unflagged String default stays quoted",
-		SheetCompiler._emit_tree_variable_line(string_var), "var label: String = \"hello\"") and ok
+		EventSheetCompiler._emit_tree_variable_line(string_var), "var label: String = \"hello\"") and ok
 
 	# ── Importer detection: an unquoted-expression source default is flagged; a quoted one isn't ──
-	var lifted_expr: LocalVariable = GDScriptImporter.new()._try_lift_variable("var _base: Vector2 = Vector2.ZERO")
+	var lifted_expr: LocalVariable = EventSheetGDScriptImporter.new()._try_lift_variable("var _base: Vector2 = Vector2.ZERO")
 	ok = _check("an unquoted Vector2.ZERO default lifts (not a raw block)", lifted_expr != null, true) and ok
 	ok = _check("…and is flagged as an expression default",
 		lifted_expr != null and lifted_expr.expression_default, true) and ok
 	ok = _check("the value is kept as the bare expression",
 		str(lifted_expr.default_value) if lifted_expr != null else "", "Vector2.ZERO") and ok
-	var lifted_string: LocalVariable = GDScriptImporter.new()._try_lift_variable("var greeting: String = \"hi\"")
+	var lifted_string: LocalVariable = EventSheetGDScriptImporter.new()._try_lift_variable("var greeting: String = \"hi\"")
 	ok = _check("a quoted String default is NOT flagged as an expression",
 		lifted_string != null and not lifted_string.expression_default, true) and ok
 	ok = _check("engine-constant defaults lift too (Color.RED)",
-		GDScriptImporter.new()._try_lift_variable("var tint: Color = Color.RED") != null, true) and ok
+		EventSheetGDScriptImporter.new()._try_lift_variable("var tint: Color = Color.RED") != null, true) and ok
 
 	# ── Over a REAL pack (juice): its private Vector2 state vars now lift, none stay raw ──
 	var pack_path: String = "res://eventsheet_addons/juice/juice_behavior.gd"
 	var source: String = FileAccess.get_file_as_string(pack_path)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var raw_var_blocks: int = 0
 	var expr_defaults: int = 0
 	for row: Variant in sheet.events:

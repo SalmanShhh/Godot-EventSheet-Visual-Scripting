@@ -117,20 +117,20 @@ static func _test_doc_urls() -> bool:
 	var all_passed: bool = true
 	# Derived, never literal: the expectation is built from the same constant the code reads, so
 	# this test keeps passing across a version bump and still fails if the SHAPE changes.
-	var pinned: String = "%s/blob/v%s/docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]
+	var pinned: String = "%s/blob/v%s/docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md" % [EventSheets.DOCS_REPO_URL, EventSheetCompiler.VERSION]
 	all_passed = _check("a guide path becomes a tag-pinned blob URL",
 		EventSheets.doc_url("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"), pinned) and all_passed
 	all_passed = _check("the pinned version is the compiler's VERSION",
-		EventSheets.docs_version(), SheetCompiler.VERSION) and all_passed
+		EventSheets.docs_version(), EventSheetCompiler.VERSION) and all_passed
 	all_passed = _check("an anchor rides on the end",
 		EventSheets.doc_url("docs/GUIDE-RECIPES.md", "health-and-damage"),
-		"%s/blob/v%s/docs/GUIDE-RECIPES.md#health-and-damage" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]) and all_passed
+		"%s/blob/v%s/docs/GUIDE-RECIPES.md#health-and-damage" % [EventSheets.DOCS_REPO_URL, EventSheetCompiler.VERSION]) and all_passed
 	all_passed = _check("a leading # on the anchor is not doubled",
 		EventSheets.doc_url("docs/GUIDE-RECIPES.md", "#health-and-damage"),
-		"%s/blob/v%s/docs/GUIDE-RECIPES.md#health-and-damage" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]) and all_passed
+		"%s/blob/v%s/docs/GUIDE-RECIPES.md#health-and-damage" % [EventSheets.DOCS_REPO_URL, EventSheetCompiler.VERSION]) and all_passed
 	all_passed = _check("a res:// path is normalised to repo-relative",
 		EventSheets.doc_url("res://docs/GUIDE-UNINSTALL.md"),
-		"%s/blob/v%s/docs/GUIDE-UNINSTALL.md" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]) and all_passed
+		"%s/blob/v%s/docs/GUIDE-UNINSTALL.md" % [EventSheets.DOCS_REPO_URL, EventSheetCompiler.VERSION]) and all_passed
 	all_passed = _check("an absolute URL passes through unchanged",
 		EventSheets.doc_url("https://example.com/my-pack/guide"), "https://example.com/my-pack/guide") and all_passed
 	all_passed = _check("an empty path yields no URL", EventSheets.doc_url(""), "") and all_passed

@@ -519,7 +519,7 @@ static func _sheet_with(row: Resource) -> EventSheetResource:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
 
 
 static func _write(path: String, text: String) -> Error:

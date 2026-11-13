@@ -38,12 +38,12 @@ static func run() -> bool:
 	event.actions.append(act)
 	sheet.events.append(event)
 	sheet.host_class = "Node2D"
-	var off_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_lv_off.gd").get("output", ""))
+	var off_output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_lv_off.gd").get("output", ""))
 	all_passed = _check("normal compiles carry no stream", off_output.contains("live_values"), false) and all_passed
 
 	# On + existing _process trigger: the send block injects BEFORE user logic.
 	sheet.emit_live_values = true
-	var on_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_lv_on.gd").get("output", ""))
+	var on_output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_lv_on.gd").get("output", ""))
 	all_passed = _check("debug compiles declare the throttle member",
 		on_output.contains("var __live_values_timer: float = 0.0"), true) and all_passed
 	all_passed = _check("send block injects into the existing _process",
@@ -59,7 +59,7 @@ static func run() -> bool:
 	var idle: EventSheetResource = EventSheetResource.new()
 	idle.emit_live_values = true
 	idle.variables = {"score": {"type": "int", "default": 0, "exported": true}}
-	var idle_output: String = str(SheetCompiler.compile(idle, "user://eventsheets_lv_idle.gd").get("output", ""))
+	var idle_output: String = str(EventSheetCompiler.compile(idle, "user://eventsheets_lv_idle.gd").get("output", ""))
 	all_passed = _check("sheets without a process trigger get a standalone one",
 		idle_output.contains("func _process(delta: float) -> void:") and idle_output.contains("[\"score\", score]"), true) and all_passed
 	var idle_script: GDScript = GDScript.new()
@@ -69,7 +69,7 @@ static func run() -> bool:
 	# No variables: honest warning, no broken emission.
 	var empty: EventSheetResource = EventSheetResource.new()
 	empty.emit_live_values = true
-	var empty_result: Dictionary = SheetCompiler.compile(empty, "user://eventsheets_lv_empty.gd")
+	var empty_result: Dictionary = EventSheetCompiler.compile(empty, "user://eventsheets_lv_empty.gd")
 	all_passed = _check("no variables warns instead of emitting",
 		str(empty_result.get("warnings")).contains("no variables") and not str(empty_result.get("output", "")).contains("live_values"), true) and all_passed
 
@@ -114,7 +114,7 @@ static func run() -> bool:
 	# (EditorDebuggerPlugin isn't instantiable headless - send_set_value's no-session
 	# guard is exercised by the editor smoke instead.)
 	# Debug compiles register the receiver + handler; normal compiles never do.
-	var rx_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_lv_rx.gd").get("output", ""))
+	var rx_output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_lv_rx.gd").get("output", ""))
 	all_passed = _check("debug compiles register the edit-back receiver",
 		rx_output.contains("EngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
 		and rx_output.contains("func _eventsheets_debug_set(message: String, data: Array) -> bool:"), true) and all_passed
@@ -187,7 +187,7 @@ static func run() -> bool:
 	trace_action.codegen_template = "hp += 1"
 	trace_event.actions.append(trace_action)
 	trace_sheet.events.append(trace_event)
-	var trace_output: String = str(SheetCompiler.compile(trace_sheet, "user://eventsheets_trace.gd").get("output", ""))
+	var trace_output: String = str(EventSheetCompiler.compile(trace_sheet, "user://eventsheets_trace.gd").get("output", ""))
 	all_passed = _check("event trace declares the fired buffer", trace_output.contains("var __eventsheets_fired: PackedStringArray"), true) and all_passed
 	all_passed = _check("event trace appends the firing event uid", trace_output.contains("__eventsheets_fired.append(\"evt_trace_1\")"), true) and all_passed
 	all_passed = _check("event trace streams + clears the buffer", trace_output.contains("eventsheets:fired_events") and trace_output.contains("__eventsheets_fired.clear()"), true) and all_passed
@@ -201,7 +201,7 @@ static func run() -> bool:
 	trace_script.source_code = trace_output
 	all_passed = _check("event-trace output parses", trace_script.reload(true) == OK, true) and all_passed
 	trace_sheet.emit_event_trace = false
-	var untraced: String = str(SheetCompiler.compile(trace_sheet, "user://eventsheets_notrace.gd").get("output", ""))
+	var untraced: String = str(EventSheetCompiler.compile(trace_sheet, "user://eventsheets_notrace.gd").get("output", ""))
 	all_passed = _check("event trace off leaves no instrumentation", untraced.contains("__eventsheets_fired"), false) and all_passed
 	all_passed = _check("and no timings either", untraced.contains("__eventsheets_timed") or untraced.contains("__eventsheets_frames"), false) and all_passed
 	all_passed = _check("parse_fired turns the payload into uids", Array(EventSheetLiveValuesDebugger.parse_fired(["a", "b"])), ["a", "b"]) and all_passed
@@ -221,7 +221,7 @@ static func run() -> bool:
 	to_action.codegen_template = "rotation += delta"
 	to_event.actions.append(to_action)
 	trace_only.events.append(to_event)
-	var to_output: String = str(SheetCompiler.compile(trace_only, "user://eventsheets_traceonly.gd").get("output", ""))
+	var to_output: String = str(EventSheetCompiler.compile(trace_only, "user://eventsheets_traceonly.gd").get("output", ""))
 	all_passed = _check("trace-only declares the fired buffer + timer",
 		to_output.contains("var __eventsheets_fired: PackedStringArray") and to_output.contains("var __live_values_timer"), true) and all_passed
 	all_passed = _check("trace-only appends the firing uid", to_output.contains("__eventsheets_fired.append(\"evt_only_1\")"), true) and all_passed
@@ -244,7 +244,7 @@ static func run() -> bool:
 	ti_action.codegen_template = "pass"
 	ti_event.actions.append(ti_action)
 	trace_idle.events.append(ti_event)
-	var ti_output: String = str(SheetCompiler.compile(trace_idle, "user://eventsheets_traceidle.gd").get("output", ""))
+	var ti_output: String = str(EventSheetCompiler.compile(trace_idle, "user://eventsheets_traceidle.gd").get("output", ""))
 	all_passed = _check("trace-only without a process trigger synthesizes one _process",
 		ti_output.contains("func _process(delta: float) -> void:") and ti_output.contains("eventsheets:fired_events") and ti_output.count("func _process") == 1, true) and all_passed
 	var ti_script: GDScript = GDScript.new()

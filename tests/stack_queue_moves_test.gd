@@ -64,7 +64,7 @@ static func _test_moves_and_swap() -> bool:
 static func _test_other_objects_arrays() -> bool:
 	var ok: bool = true
 	EventSheetScriptMembers.clear_cache()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_SCENE_SCRIPT)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_SCENE_SCRIPT)
 	var expressions: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in EventSheetScriptMembers.other_arrays(sheet):
 		expressions.append(str(entry["expression"]))

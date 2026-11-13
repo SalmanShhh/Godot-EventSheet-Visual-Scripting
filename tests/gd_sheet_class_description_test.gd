@@ -10,7 +10,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "gd_sheet_class_description_test"
 const FILE_PATH := "user://gd_sheet_class_description_test.gd"
 const RESAVE_PATH := "user://gd_sheet_class_description_test_resave.gd"
@@ -69,15 +69,15 @@ static func run() -> bool:
 ## saves over the file and opens it again: {saved, parse, description, resaved}.
 static func _cycle(source: String, description: Variant) -> Dictionary:
 	_write(FILE_PATH, source)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	if description != null:
 		sheet.class_description = str(description)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "parse": _parse_error(saved), "description": reopened.class_description,
 		"resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 

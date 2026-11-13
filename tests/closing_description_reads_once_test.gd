@@ -26,7 +26,7 @@ static func run() -> bool:
 		["Edit description… edits the claimed note", _door_action(card, "Edit description…"),
 			ViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE],
 		["the door finds that note on the built rows", ViewportRowBuilder.claimed_description_note(view._root_rows) == closing, true],
-		["the file still re-emits byte for byte", str(SheetCompiler.compile(sheet).get("output", "")),
+		["the file still re-emits byte for byte", str(EventSheetCompiler.compile(sheet).get("output", "")),
 			FileAccess.get_file_as_string(CAROUSEL)],
 	])
 	view.free()
@@ -50,7 +50,7 @@ static func run() -> bool:
 
 
 static func _open(path: String) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	sheet.editor_style = style

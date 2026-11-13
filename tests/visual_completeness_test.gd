@@ -67,7 +67,7 @@ static func run() -> bool:
 	all_passed = _check("comment removed from the sheet rows", sheet.events.has(comment), false) and all_passed
 
 	# Action-cell comments compile to comment lines inside the body.
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_action_comment.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_action_comment.gd").get("output", ""))
 	all_passed = _check("action-cell comment compiles",
 		output.contains("\t# first line") and output.contains("\t# second line"), true) and all_passed
 
@@ -94,7 +94,7 @@ static func run() -> bool:
 		sheet.events.find(comment), sheet.events.find(event) + 1) and all_passed
 
 	# Top-level comments now compile to real comment lines (no TODO placeholder).
-	var top_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_top_comment.gd").get("output", ""))
+	var top_output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_top_comment.gd").get("output", ""))
 	all_passed = _check("top-level comments compile to text", top_output.contains("# first line"), true) and all_passed
 	all_passed = _check("no TODO placeholder for comments",
 		top_output.contains("# TODO: row type not yet implemented"), false) and all_passed

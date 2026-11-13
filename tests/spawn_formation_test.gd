@@ -256,7 +256,7 @@ static func _run_the_ring() -> Node2D:
 ## One row's emitted statements, through the compiler's own emitter - the same call the compiler
 ## makes, so a test can never read a line the file would not get.
 static func _emitted(ace_id: String, values: Dictionary) -> String:
-	return ActionCodegen.generate_action(_action(ace_id, values))
+	return EventSheetActionCodegen.generate_action(_action(ace_id, values))
 
 
 ## The whole file one row compiles to, in a ready handler on a Node2D.

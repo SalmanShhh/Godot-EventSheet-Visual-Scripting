@@ -56,7 +56,7 @@ func _add_pane(parent: Control, modern_base: Color, fixture_path: String, weight
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	view.set_ace_registry(EventSheetACERegistry.new())
 	scroll.add_child(view)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(fixture_path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(fixture_path)
 	sheet.read_only = true
 	var style := EventSheetEditorStyle.new()
 	style.ensure_defaults()

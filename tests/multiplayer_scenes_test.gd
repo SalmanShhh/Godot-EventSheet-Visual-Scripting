@@ -17,7 +17,7 @@ class_name MultiplayerScenesTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const FieldFactory := preload("res://addons/eventsheet/editor/ace_dialog/param_field_factory.gd")
 
 const FIXTURE: String = "res://tests/fixtures/multiplayer_scene_verbs.gd"
@@ -168,7 +168,7 @@ static func _test_what_a_spawn_row_writes() -> bool:
 ## and reopening it would show a script block where a Spawn row was.
 static func _test_what_a_written_spawn_reads_back_as() -> bool:
 	var written: String = _compile(_authored_spawn_sheet())
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(written, true, FIXTURE)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(written, true, FIXTURE)
 	var spawn: ACEAction = _function_action(reopened, "welcome", 0)
 	var ok: bool = _check("the emitted run opens as the row that wrote it", _row_of(spawn), "SpawnReplicatedScene")
 	ok = _check("with every answer it was given", _params_of(spawn), {
@@ -189,7 +189,7 @@ static func _test_what_a_written_spawn_reads_back_as() -> bool:
 ## byte, and every row it reads as is pinned by value.
 static func _test_the_fixture_reads_as_rows() -> bool:
 	var source: String = FileAccess.get_file_as_string(FIXTURE)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true, FIXTURE)
 	sheet.external_source_path = "user://_multiplayer_scenes_fixture.gd"
 	var ok: bool = _check("the fixture comes back byte for byte", _compile(sheet) == source, true)
 	sheet.external_source_path = FIXTURE
@@ -288,7 +288,7 @@ static func _test_the_spawn_list_seam() -> bool:
 
 
 static func _test_the_visibility_filter_mark() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		FileAccess.get_file_as_string(FIXTURE), true, FIXTURE)
 	var ok: bool = _check("the function a synchronizer asks is read off the row that asks it",
 		EventSheetSceneVerbs.visibility_filters_in(sheet), [{"name": "can_see", "synchronizer": "PlayerSync"}])
@@ -379,7 +379,7 @@ static func _authored_spawn_sheet() -> EventSheetResource:
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://_multiplayer_scenes.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://_multiplayer_scenes.gd").get("output", ""))
 
 
 static func _authored_action(ace_id: String, params: Dictionary) -> ACEAction:

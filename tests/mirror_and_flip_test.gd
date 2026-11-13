@@ -242,8 +242,8 @@ static func _test_round_trip() -> bool:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 

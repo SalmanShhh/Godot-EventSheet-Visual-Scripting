@@ -36,11 +36,11 @@ static func run() -> bool:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnProjectExport"
-	var signature: Dictionary = TriggerResolver.resolve_trigger(event)
+	var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(event)
 	ok = _check("On Project Export resolves to its handler", str(signature.get("function_name")), "_on_project_export") and ok
 	ok = _check("the handler receives the export flags", str(signature.get("args")), "is_debug: bool, features: PackedStringArray") and ok
 	ok = _check("it is not signal-backed (nothing to connect)", str(signature.get("signal_name")), "") and ok
-	ok = _check("its tempo badge says it runs once", TriggerResolver.tempo_class_for("OnProjectExport"), TriggerResolver.TEMPO_ONCE) and ok
+	ok = _check("its tempo badge says it runs once", EventSheetTriggerResolver.tempo_class_for("OnProjectExport"), EventSheetTriggerResolver.TEMPO_ONCE) and ok
 
 	# ── 2. The vocabulary ──
 	var descriptors: Dictionary = {}
@@ -88,7 +88,7 @@ static func run() -> bool:
 	# ── 4. The handler lifts back out of a GDScript-backed sheet ──
 	ok = _check("the lifter recognises the handler header",
 		str(EventSheetACELifter.LIFECYCLE_TRIGGERS.get(HANDLER_HEADER, "")), "OnProjectExport") and ok
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(compiled)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(compiled)
 	var reopened_event: EventRow = _first_event(reopened)
 	ok = _check("the compiled tool reopens as one event", reopened_event != null, true) and ok
 	if reopened_event != null:
@@ -303,7 +303,7 @@ static func _compile_bake_sheet() -> Dictionary:
 	write_stamp.params = {"path": "\"res://build_stamp.cfg\"", "version": "\"1.0.0\"", "uid": "9"}
 	event.actions.append(write_stamp)
 	sheet.events.append(event)
-	return SheetCompiler.compile(sheet, "")
+	return EventSheetCompiler.compile(sheet, "")
 
 
 ## Runs emitted statements for real: written to a script file and loaded, so what runs is exactly

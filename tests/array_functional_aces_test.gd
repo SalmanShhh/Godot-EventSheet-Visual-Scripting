@@ -1,6 +1,6 @@
 # EventForge - higher-order + typed-array ACE module ("Variables: Array").
 # Proves the 9 descriptors are discovered with the right shapes, and that their ACTUAL shipped codegen
-# templates (substituted through the real ActionCodegen) produce GDScript that behaves correctly:
+# templates (substituted through the real EventSheetActionCodegen) produce GDScript that behaves correctly:
 # filter / map / reduce / any / all over the element `x`, and typed-array is_typed / assign / element type.
 @tool
 class_name ArrayFunctionalAcesTest
@@ -38,18 +38,18 @@ static func run() -> bool:
 		and by_id["ArrayAssign"].ace_type == ACEDescriptor.ACEType.ACTION, true) and ok
 
 	# --- Runtime: the SHIPPED templates, substituted through the real codegen, behave correctly ---
-	var filter_line: String = ActionCodegen._apply_template(str(by_id["ArrayFilter"].codegen_template), {"var_name": "arr", "predicate": "x > 0", "element": "x"})
-	var map_line: String = ActionCodegen._apply_template(str(by_id["ArrayMap"].codegen_template), {"var_name": "arr", "expression": "x * 2", "element": "x"})
-	var reduce_line: String = ActionCodegen._apply_template(str(by_id["ArrayReduce"].codegen_template), {"var_name": "arr", "expression": "acc + x", "seed": "0", "element": "x", "accumulator": "acc"})
-	var any_line: String = ActionCodegen._apply_template(str(by_id["ArrayAny"].codegen_template), {"var_name": "arr", "predicate": "x > 0", "element": "x"})
-	var all_line: String = ActionCodegen._apply_template(str(by_id["ArrayAll"].codegen_template), {"var_name": "arr", "predicate": "x > 0", "element": "x"})
+	var filter_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayFilter"].codegen_template), {"var_name": "arr", "predicate": "x > 0", "element": "x"})
+	var map_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayMap"].codegen_template), {"var_name": "arr", "expression": "x * 2", "element": "x"})
+	var reduce_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayReduce"].codegen_template), {"var_name": "arr", "expression": "acc + x", "seed": "0", "element": "x", "accumulator": "acc"})
+	var any_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayAny"].codegen_template), {"var_name": "arr", "predicate": "x > 0", "element": "x"})
+	var all_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayAll"].codegen_template), {"var_name": "arr", "predicate": "x > 0", "element": "x"})
 	# The escape hatch: renaming the element keeps a same-named sheet variable reachable in the body.
-	var renamed_line: String = ActionCodegen._apply_template(str(by_id["ArrayFilter"].codegen_template), {"var_name": "arr", "predicate": "item > x", "element": "item"})
+	var renamed_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayFilter"].codegen_template), {"var_name": "arr", "predicate": "item > x", "element": "item"})
 	ok = _check("renaming the element emits that name, leaving `x` free for the sheet variable",
 		renamed_line, "arr.filter(func(item): return item > x)") and ok
-	var assign_line: String = ActionCodegen._apply_template(str(by_id["ArrayAssign"].codegen_template), {"var_name": "typed", "source": "src"})
-	var is_typed_line: String = ActionCodegen._apply_template(str(by_id["ArrayIsTyped"].codegen_template), {"var_name": "typed"})
-	var typed_builtin_line: String = ActionCodegen._apply_template(str(by_id["ArrayTypedBuiltin"].codegen_template), {"var_name": "typed"})
+	var assign_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayAssign"].codegen_template), {"var_name": "typed", "source": "src"})
+	var is_typed_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayIsTyped"].codegen_template), {"var_name": "typed"})
+	var typed_builtin_line: String = EventSheetActionCodegen._apply_template(str(by_id["ArrayTypedBuiltin"].codegen_template), {"var_name": "typed"})
 
 	ok = _check("filter substitutes to plain GDScript", filter_line, "arr.filter(func(x): return x > 0)") and ok
 

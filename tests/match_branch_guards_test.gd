@@ -14,8 +14,8 @@ const MEMBER_STEPS: String = "res://tests/fixtures/match_member_steps.gd"
 
 static func run() -> bool:
 	var source: String = FileAccess.get_file_as_string(PATH)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PATH)
-	var output: String = str(SheetCompiler.compile(sheet, PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, PATH).get("output", ""))
 	var rows: PackedStringArray = _read_rows(PATH)
 	return SUPPORT.pins(NAME, [
 		["the file still comes back byte for byte", output, source],
@@ -35,7 +35,7 @@ static func _member_steps() -> bool:
 	var rows: PackedStringArray = _read_rows(MEMBER_STEPS)
 	return SUPPORT.pins(NAME, [
 		["the file still comes back byte for byte",
-			str(SheetCompiler.compile(GDScriptImporter.new().import_external(MEMBER_STEPS), MEMBER_STEPS).get("output", "")),
+			str(EventSheetCompiler.compile(EventSheetGDScriptImporter.new().import_external(MEMBER_STEPS), MEMBER_STEPS).get("output", "")),
 			FileAccess.get_file_as_string(MEMBER_STEPS)],
 		["a guarded branch's steps on the object's own variables name the object",
 			_row_containing(rows, "wait_left ≤ 0"),
@@ -47,7 +47,7 @@ static func _member_steps() -> bool:
 ## Every row of an opened file as "i<indent> [<object>> <text> | ...]", the object column included,
 ## with the marks a line leads with (the trigger arrow, the red cross) spelled as words.
 static func _read_rows(path: String) -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())

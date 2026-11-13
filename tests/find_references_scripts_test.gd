@@ -83,7 +83,7 @@ static func _test_source_lines_are_stamped() -> bool:
 	# points at the row's own code rather than at line 1 (the `extends` header).
 	var line: int = int((references[0] as Dictionary).get("line", 0))
 	passed = _check("stamping gives the reference a line", line > 1, true) and passed
-	var compiled: String = str(SheetCompiler.compile(sheet, "").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "").get("output", ""))
 	var lines: PackedStringArray = compiled.split("\n")
 	passed = _check("and the line really holds the symbol",
 		line <= lines.size() and lines[line - 1].contains("shield_charge"), true) and passed

@@ -166,7 +166,7 @@ const COLOR_GROUP_CHIP_FG = Color(0.76, 0.86, 1.0, 1.0)
 # ── Trigger tempo badges ──────────────────────────────────────────────────────
 # How OFTEN an event runs, as a filled badge on the trigger row. SIGNAL keeps the shipped green arrow
 # (from the event style) so the common case is byte-identical; the other three tempo classes get their
-# own hot/cool/quiet fills here. Classified by TriggerResolver.tempo_class_for(trigger_id).
+# own hot/cool/quiet fills here. Classified by EventSheetTriggerResolver.tempo_class_for(trigger_id).
 const COLOR_TEMPO_EVERY_TICK_BG = Color("#b5651d")  # ⟳ hot amber-orange - the per-frame hot path
 const COLOR_TEMPO_EVERY_TICK_FG = Color("#ffeccc")
 const COLOR_TEMPO_INPUT_BG = Color("#2f6bb0")       # ⌨ object blue - an input event

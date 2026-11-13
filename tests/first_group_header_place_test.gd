@@ -13,7 +13,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "first_group_header_place_test"
 const FILE_PATH := "user://first_group_header_place_test.gd"
 
@@ -31,8 +31,8 @@ static func run() -> bool:
 	native_group.rename("Wave")
 	native_group.events.append(_raw_event("print(1)"))
 	native_sheet.events.append(native_group)
-	var native_out: String = str(SheetCompiler.compile(native_sheet, FILE_PATH).get("output", ""))
-	var native_back: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var native_out: String = str(EventSheetCompiler.compile(native_sheet, FILE_PATH).get("output", ""))
+	var native_back: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	return SUPPORT.pins(TEST_NAME, [
 		["a plain file: the header sits on its own line under the opening",
 			_head(str(plain.get("saved", "")), 6),
@@ -57,7 +57,7 @@ static func run() -> bool:
 ## saves over the file and opens it again: {saved, parse, description, group: [name, rows]}.
 static func _add_group(source: String, switchable: bool) -> Dictionary:
 	_write(FILE_PATH, source)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var first: EventRow = null
 	for entry: Variant in sheet.events:
 		if entry is EventRow:
@@ -72,9 +72,9 @@ static func _add_group(source: String, switchable: bool) -> Dictionary:
 	sheet.events.remove_at(at)
 	group.events.append(first)
 	sheet.events.insert(at, group)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var found: Array = []
 	for group_found: EventGroup in EventSheetGroupFacts.collect(reopened.events):
 		found = [group_found.display_name(), group_found.child_rows().size()]

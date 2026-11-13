@@ -238,17 +238,17 @@ static func _test_lift() -> bool:
 	var all_passed: bool = true
 	for path: String in [ROWS, HANDBUILT]:
 		var source: String = FileAccess.get_file_as_string(path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-		var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var reopened: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		all_passed = _check("%s comes back byte for byte" % path.get_file(), reopened, source) and all_passed
 
-	var rows: EventSheetResource = GDScriptImporter.new().import_external(ROWS)
+	var rows: EventSheetResource = EventSheetGDScriptImporter.new().import_external(ROWS)
 	all_passed = _check("a sheet's four Second View calls all open as rows",
 		_actions_of(rows).size(), 4) and all_passed
 	all_passed = _check("and every one of them is a line naming the autoload, which is what its verb's template claims",
 		_lines_naming_the_autoload(ROWS), 4) and all_passed
 
-	var handbuilt: EventSheetResource = GDScriptImporter.new().import_external(HANDBUILT)
+	var handbuilt: EventSheetResource = EventSheetGDScriptImporter.new().import_external(HANDBUILT)
 	all_passed = _check("the hand-built viewport opens as rows too, so nothing about it is lost",
 		_actions_of(handbuilt).size() > 0, true) and all_passed
 	all_passed = _check("but not one of its lines names the autoload, so no template of this pack can reach it",

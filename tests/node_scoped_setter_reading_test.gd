@@ -42,7 +42,7 @@ static func run() -> bool:
 
 ## The sheet's first action row as `<object> | <words>`.
 static func _action(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
@@ -66,9 +66,9 @@ static func _action(source: String) -> String:
 
 
 static func _roundtrip(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://eventforge_node_scoped_setter.gd"
-	return str(SheetCompiler.compile(sheet, "user://eventforge_node_scoped_setter.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_node_scoped_setter.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

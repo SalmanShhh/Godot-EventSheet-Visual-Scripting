@@ -3,7 +3,7 @@
 #
 # Two proofs per verb, because an emission pin alone would not catch a template that compiles and
 # then does the wrong thing:
-#   1. EMITTED: the row is compiled through SheetCompiler and the exact line is pinned.
+#   1. EMITTED: the row is compiled through EventSheetCompiler and the exact line is pinned.
 #   2. REAL: the SHIPPED template (fetched from the registry, never re-typed here) is substituted
 #      into a GDScript, reload()ed and RUN, including the failure branches each verb promises -
 #      a share code that does not decode, a paste that is not a code at all, a Restore with nothing
@@ -546,7 +546,7 @@ static func _raw(statement: String) -> ACEAction:
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _instantiate(source: String, node: Node) -> Node:

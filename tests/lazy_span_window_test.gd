@@ -25,7 +25,7 @@ static func run() -> bool:
 	var passed: bool = true
 	passed = SUPPORT.check(P, "the eager limit is small enough for the shipped packs to be lazy",
 		EventSheetViewport.EAGER_SPAN_LIMIT <= 100, true) and passed
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SAMPLE_PACK, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SAMPLE_PACK, false)
 	if sheet == null:
 		return SUPPORT.check(P, "the sample pack imports", false, true)
 	EventSheetACELifter.attempt_lift(sheet, FileAccess.get_file_as_string(SAMPLE_PACK))

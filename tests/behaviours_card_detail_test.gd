@@ -9,7 +9,7 @@ const CAROUSEL := "res://demo/showcase/carousel/showcase_carousel.gd"
 
 
 static func run() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(CAROUSEL)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(CAROUSEL)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	sheet.editor_style = style

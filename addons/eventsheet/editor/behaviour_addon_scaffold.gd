@@ -78,7 +78,7 @@ static func global_sheet(description: String) -> EventSheetResource:
 
 ## The file a sheet becomes, exactly as the sheet writes it on save.
 static func source_of(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.echo(sheet, true).get("output", ""))
+	return str(EventSheetCompiler.echo(sheet, true).get("output", ""))
 
 
 ## `variables` added to a new sheet, in their order - what "From a script I wrote" carries over.
@@ -94,7 +94,7 @@ static func carried_variables(script_path: String, exported_only: bool) -> Array
 	var carried: Array[LocalVariable] = []
 	if not FileAccess.file_exists(script_path):
 		return carried
-	var opened: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(script_path)
 	for entry: Variant in opened.events if opened != null else []:
 		var variable: LocalVariable = entry as LocalVariable
 		if variable != null and not variable.is_constant and (variable.exported or not exported_only):

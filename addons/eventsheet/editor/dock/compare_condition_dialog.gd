@@ -16,7 +16,7 @@ extends RefCounted
 #
 # Everything testable is static: `writes()` is the mapping table, `reads_as()` and `in_code()` are
 # what the help strip shows, and none of them needs a Window. The strip's IN CODE line is produced by
-# handing a throwaway ACECondition to ConditionCodegen, so the dialog can never promise a line the
+# handing a throwaway ACECondition to EventSheetConditionCodegen, so the dialog can never promise a line the
 # compiler would not write - including the inverted-comparison flip.
 
 ## Emitted when the dialog is confirmed. `ace_id` is one of the existing condition ids; the dock
@@ -266,7 +266,7 @@ static func in_code(ace_id: String, params: Dictionary, negated: bool) -> String
 	condition.ace_id = ace_id
 	condition.params = params
 	condition.negated = negated
-	var expression: String = ConditionCodegen.generate_condition(condition)
+	var expression: String = EventSheetConditionCodegen.generate_condition(condition)
 	return "" if expression.strip_edges().is_empty() else "if %s:" % expression
 
 

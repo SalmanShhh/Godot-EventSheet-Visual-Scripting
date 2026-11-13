@@ -163,7 +163,7 @@ static func run() -> bool:
     demo_rows = dock_viewport.get_flat_rows()
     # The events must COMPILE so the Generated GDScript panel matches the sheet: rows whose templates
     # emit nothing would leave the panel disagreeing with the events on screen.
-    var demo_gd: String = str(SheetCompiler.compile(dock._current_sheet, "user://_demo_editor_verify.gd").get("output", ""))
+    var demo_gd: String = str(EventSheetCompiler.compile(dock._current_sheet, "user://_demo_editor_verify.gd").get("output", ""))
     all_passed = _check("an On Process event compiles to a _process function", demo_gd.contains("func _process(_delta: float) -> void:"), true) and all_passed
     all_passed = _check("the generated GDScript matches its rows", demo_gd.contains("score += 1") and demo_gd.contains("health -= 1"), true) and all_passed
     all_passed = _check("rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
@@ -453,7 +453,7 @@ static func run() -> bool:
     for compile_condition: ACECondition in compile_event.conditions:
         compile_condition.enabled = true
     (compile_event.actions[0] as ACEAction).enabled = true
-    var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
+    var compile_result: Dictionary = EventSheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
     all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
 
     var trigger_condition_sheet := EventSheetResource.new()

@@ -96,7 +96,7 @@ static func run() -> bool:
 	row.actions.append(_action(shipped, "PullGroupToward", {"group": "\"coins\"", "radius": "96.0", "speed": "400.0"}, "g1"))
 	row.actions.append(_action(shipped, "OrbitAround", {"center": "get_parent()", "radius": "40.0", "degrees_per_second": "90.0"}, "o1"))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://third_wave_spatial_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://third_wave_spatial_probe.gd").get("output", ""))
 	all_passed = _check("the push emits the normalized impulse, blank target dropped",
 		output.contains("set_meta(&\"__ef_push\", (global_position - get_parent().global_position).normalized() * maxf(300.0, 0.0))"), true) and all_passed
 	all_passed = _check("applying pushes emits its baked impulse local",

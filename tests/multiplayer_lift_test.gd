@@ -96,7 +96,7 @@ static func _test_authored_emission() -> bool:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnPlayerJoined"
-	event.trigger_source_path = TriggerResolver.MULTIPLAYER_SOURCE
+	event.trigger_source_path = EventSheetTriggerResolver.MULTIPLAYER_SOURCE
 	# Both rows in ONE handler, which is what a lobby screen is: a Host button and a Join button
 	# answering in the same place. The `{uid}` slot is baked at apply time, the way the dock bakes it.
 	event.actions.append(_authored_action("HostGame",
@@ -106,7 +106,7 @@ static func _test_authored_emission() -> bool:
 	event.actions.append(_authored_action("LeaveGame", {}))
 	event.actions.append(_authored_action("Spawn", {"target": "$Spawner", "data": "id"}))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://_multiplayer_authored.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://_multiplayer_authored.gd").get("output", ""))
 	var ok: bool = true
 	ok = _check("the trigger connects on multiplayer, in _ready", output.contains(
 		"\tmultiplayer.peer_connected.connect(_on_player_joined)"), true) and ok
@@ -142,7 +142,7 @@ static func _test_two_connection_rows_parse() -> bool:
 		{"address": "\"127.0.0.1\"", "port": "7777", "peer_kind": "ENetMultiplayerPeer"}, "b2"))
 	sheet.events.append(event)
 	var compiled := GDScript.new()
-	compiled.source_code = str(SheetCompiler.compile(sheet, "user://_multiplayer_two_peers.gd").get("output", ""))
+	compiled.source_code = str(EventSheetCompiler.compile(sheet, "user://_multiplayer_two_peers.gd").get("output", ""))
 	return _check("a lobby that hosts and joins in one handler parses", compiled.reload(), OK)
 
 
@@ -171,7 +171,7 @@ static func _test_network_autoload() -> bool:
 	var joined: EventRow = _event_with_trigger(sheet, "OnPlayerJoined")
 	ok = _check("the peer_connected handler reads as On player joined", joined != null, true) and ok
 	if joined != null:
-		ok = _check("wired on the multiplayer object", joined.trigger_source_path, TriggerResolver.MULTIPLAYER_SOURCE) and ok
+		ok = _check("wired on the multiplayer object", joined.trigger_source_path, EventSheetTriggerResolver.MULTIPLAYER_SOURCE) and ok
 		ok = _check("its whole-body guard reads as Is host", _condition_ids(joined), PackedStringArray(["IsHost"])) and ok
 		ok = _check("and the spawner call reads as Spawn", _row_of(joined.actions[0]), "Spawn") and ok
 		ok = _check("naming the spawner and what it is sent", _params_of(joined.actions[0]),
@@ -307,13 +307,13 @@ static func _source(file_name: String) -> String:
 
 static func _open(file_name: String) -> EventSheetResource:
 	var path: String = FIXTURE_DIR + file_name
-	return GDScriptImporter.new().import_external_source(_source(file_name), true, path)
+	return EventSheetGDScriptImporter.new().import_external_source(_source(file_name), true, path)
 
 
 static func _roundtrips(file_name: String, sheet: EventSheetResource) -> bool:
 	var saved: String = sheet.external_source_path
 	sheet.external_source_path = "user://_multiplayer_roundtrip.gd"
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	sheet.external_source_path = saved
 	return _check("%s comes back byte for byte" % file_name, output == _source(file_name), true)
 

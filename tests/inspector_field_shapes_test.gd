@@ -63,9 +63,9 @@ static func _enemy_stats(tool_sheet: bool = true) -> EventSheetResource:
 
 
 static func _shapes_compile() -> bool:
-	var result: Dictionary = SheetCompiler.compile(_enemy_stats(), "user://eventsheets_field_shapes.gd")
+	var result: Dictionary = EventSheetCompiler.compile(_enemy_stats(), "user://eventsheets_field_shapes.gd")
 	var output: String = str(result.get("output", ""))
-	var plain: Dictionary = SheetCompiler.compile(_enemy_stats(false), "user://eventsheets_field_shapes_plain.gd")
+	var plain: Dictionary = EventSheetCompiler.compile(_enemy_stats(false), "user://eventsheets_field_shapes_plain.gd")
 	return SUPPORT.pins(P, [
 		["tabs ride above the first group line",
 			output.contains("# @inspector_tabs\n@export_group(\"Stats\")\n@export var max_health: int = 100\n"), true],

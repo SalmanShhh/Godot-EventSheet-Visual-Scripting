@@ -353,7 +353,7 @@ static func _memory_pins() -> bool:
 ## biggest pack has a budget: about three times what it measured warm on the reference machine.
 static func _budget_pins() -> bool:
 	var pack: String = "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(pack)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(pack)
 	if sheet == null:
 		return SUPPORT.check(TEST_NAME, "the pathfinding pack opens", false, true)
 	EventSheetMistakeFindings.findings(sheet, pack)

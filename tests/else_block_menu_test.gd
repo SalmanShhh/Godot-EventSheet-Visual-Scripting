@@ -65,9 +65,9 @@ static func run() -> bool:
 	ok = _check("the sibling stays Add 'Else If'", _item_text(dock, dock.ROW_MENU_MAKE_ELIF), "Add 'Else If'") and ok
 
 	# ── The compiled output is a real else: chain, and it reads back with the Else badge ──
-	var source: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://else_menu.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), "user://else_menu.gd").get("output", ""))
 	ok = _check("the sheet compiles an else: chain", source.contains("\telse:"), true) and ok
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var lifted_else: bool = false
 	for row: Variant in _all_event_rows(reimported.events):
 		if (row as EventRow).else_mode == EventRow.ElseMode.ELSE:
@@ -75,7 +75,7 @@ static func run() -> bool:
 	ok = _check("the else round-trips back as an Else row", lifted_else, true) and ok
 	reimported.external_source_path = "user://else_menu_rt.gd"
 	ok = _check("the menu-made else round-trips byte-identically",
-		str(SheetCompiler.compile(reimported, "user://else_menu_rt.gd").get("output", "")) == source, true) and ok
+		str(EventSheetCompiler.compile(reimported, "user://else_menu_rt.gd").get("output", "")) == source, true) and ok
 
 	# ── Clicking Make Else again clears it (the toggle) ──
 	dock._row_edit_ops._set_context_else_mode(EventRow.ElseMode.ELSE)

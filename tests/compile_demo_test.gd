@@ -16,7 +16,7 @@ static func run() -> bool:
 	var sheet: EventSheetResource = load(SHEET_PATH) as EventSheetResource
 	assert(sheet != null, "Failed to load demo sheet")
 
-	var result: Dictionary = SheetCompiler.compile(sheet, TEST_OUTPUT_PATH)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, TEST_OUTPUT_PATH)
 	assert(bool(result.get("success", false)), "Compiler failed: %s" % str(result.get("errors", [])))
 
 	var expected: String = FileAccess.get_file_as_string(GOLDEN_PATH)

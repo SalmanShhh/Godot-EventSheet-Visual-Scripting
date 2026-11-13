@@ -40,7 +40,7 @@ static func _the_source_says_what_it_includes() -> bool:
 
 
 static func _the_lines() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(INCLUDER)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(INCLUDER)
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)

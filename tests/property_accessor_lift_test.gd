@@ -28,7 +28,7 @@ static func run() -> bool:
 	prop.setter_body = "health = clampi(value, 0, max_health)\nhealth_changed.emit(health)"
 	prop.getter_body = "return health"
 	ok = _check("a full property emits declaration + set + get",
-		SheetCompiler._emit_tree_variable_line(prop),
+		EventSheetCompiler._emit_tree_variable_line(prop),
 		"var health: int = 100:\n\tset(value):\n\t\thealth = clampi(value, 0, max_health)\n\t\thealth_changed.emit(health)\n\tget:\n\t\treturn health") and ok
 	ok = _check("has_property_accessors is true", prop.has_property_accessors(), true) and ok
 
@@ -49,7 +49,7 @@ static func run() -> bool:
 		"extends Node\n\nvar mode: int = 0:\n\tset(new_mode):\n\t\tmode = new_mode\n", true, false) and ok
 
 	# ── Rendering: a property reads as a language block with accessor children ──
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\nvar health: int = 100:\n\tset(value):\n\t\thealth = clampi(value, 0, 100)\n\tget:\n\t\treturn health\n")
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -87,7 +87,7 @@ static func run() -> bool:
 	# a getter that reads as a trigger under one spelling and an expression under the other would show
 	# a reader the same idea in two grammatical categories in one opened file. A `set` fires when the
 	# value is written, which is an event; a `get` gives a value back, which is an expression.
-	var named_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var named_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\nvar health: int = 100:\n\tset = _set_health,\n\tget = _get_health\n\n\n"
 		+ "func _set_health(value: int) -> void:\n\thealth = value\n\n\n"
 		+ "func _get_health() -> int:\n\treturn health\n")
@@ -116,7 +116,7 @@ static func run() -> bool:
 	# ── The head's Instance variables folder shows the SAME accessor events ──
 	# A script whose head groups its variables renders them by another path, and a reader who opens
 	# the folder to find out what `hp` IS must find its On hp set there too.
-	var head_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var head_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"class_name HeadProbe\nextends Node\n\n@export var speed: float = 200.0\n\n"
 		+ "var hp: int = 100:\n\tset(value):\n\t\thp = clampi(value, 0, 100)\n\tget:\n\t\treturn hp\n")
 	# The head folders are the READ-ONLY preview's shape - that is where a pack's variables live.
@@ -144,23 +144,23 @@ static func run() -> bool:
 	head_dock.free()
 
 	# ── A body the reading cannot lift keeps the verbatim accessor block it always had ──
-	var odd_body: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var odd_body: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\nvar tint: Color = Color.WHITE:\n\tset(value):\n\t\ttint = value\n\t\tmaterial.set_shader_parameter(&\"tint\", value)\n")
 	ok = _check("an unliftable accessor body still imports", _find_var(odd_body, "tint") != null, true) and ok
 	odd_body.external_source_path = "user://prop_odd_body.gd"
 	ok = _check("an unliftable accessor body still round-trips byte-identically",
-		str(SheetCompiler.compile(odd_body, "user://prop_odd_body.gd").get("output", "")),
+		str(EventSheetCompiler.compile(odd_body, "user://prop_odd_body.gd").get("output", "")),
 		"extends Node\n\nvar tint: Color = Color.WHITE:\n\tset(value):\n\t\ttint = value\n\t\tmaterial.set_shader_parameter(&\"tint\", value)\n") and ok
 
 	# ── A getter written before its setter lifts with both bodies, and writes back in that order. ──
 	var odd: String = "extends Node\n\nvar v: int = 0:\n\tget:\n\t\treturn v\n\tset(value):\n\t\tv = value\n"
-	var odd_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(odd)
+	var odd_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(odd)
 	var odd_var: LocalVariable = _find_var(odd_sheet, "v")
 	ok = _check("a getter-before-setter property lifts with both of its bodies",
 		[odd_var.getter_body, odd_var.setter_body] if odd_var != null else [], ["return v", "v = value"]) and ok
 	odd_sheet.external_source_path = "user://prop_odd.gd"
 	ok = _check("the non-canonical property still round-trips byte-identically",
-		str(SheetCompiler.compile(odd_sheet, "user://prop_odd.gd").get("output", "")) == odd, true) and ok
+		str(EventSheetCompiler.compile(odd_sheet, "user://prop_odd.gd").get("output", "")) == odd, true) and ok
 
 	# ── Authoring: the dialog carries the accessor bodies in its attributes payload; the receiver copies
 	# them onto the variable's first-class fields (and a blank body clears the accessor). ──
@@ -170,13 +170,13 @@ static func run() -> bool:
 	ok = _check("the receiver applies a setter body", authored.setter_body, "hp = value") and ok
 	ok = _check("the receiver applies a getter body", authored.getter_body, "return hp") and ok
 	ok = _check("the authored property emits with accessors",
-		SheetCompiler._emit_tree_variable_line(authored).contains("set(value):") and SheetCompiler._emit_tree_variable_line(authored).contains("get:"), true) and ok
+		EventSheetCompiler._emit_tree_variable_line(authored).contains("set(value):") and EventSheetCompiler._emit_tree_variable_line(authored).contains("get:"), true) and ok
 	EventSheetVariablesManager._apply_property_accessors(authored, {})
 	ok = _check("clearing the bodies removes the accessors", authored.has_property_accessors(), false) and ok
 
 	# ── authoring: "Add setter" / "Add getter" on the variable row's menu write exactly the
 	# GDScript the reading takes back apart. ──
-	var plain: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node\n\nvar score: int = 0\n")
+	var plain: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node\n\nvar score: int = 0\n")
 	var author_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	author_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	author_dock.setup(plain)
@@ -187,7 +187,7 @@ static func run() -> bool:
 	author_dock._variables._add_context_variable_accessor("getter")
 	var written: LocalVariable = _find_var(author_dock._current_sheet, "score")
 	ok = _check("Add setter / Add getter write the accessor blocks",
-		SheetCompiler._emit_tree_variable_line(written) if written != null else "<none>",
+		EventSheetCompiler._emit_tree_variable_line(written) if written != null else "<none>",
 		"var score: int = 0:\n\tset(value):\n\t\tscore = value\n\tget:\n\t\treturn score") and ok
 	author_dock.free()
 
@@ -197,7 +197,7 @@ static func run() -> bool:
 
 static func _roundtrips(label: String, src: String, want_set: bool, want_get: bool) -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(src)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(src)
 	var prop_name: String = _first_prop_name(src)
 	var lifted: LocalVariable = _find_var(sheet, prop_name)
 	ok = _check("%s: the property lifted to a variable" % label, lifted != null, true) and ok
@@ -205,7 +205,7 @@ static func _roundtrips(label: String, src: String, want_set: bool, want_get: bo
 		ok = _check("%s: setter presence" % label, not lifted.setter_body.strip_edges().is_empty(), want_set) and ok
 		ok = _check("%s: getter presence" % label, not lifted.getter_body.strip_edges().is_empty(), want_get) and ok
 	sheet.external_source_path = "user://prop_rt.gd"
-	var rt: String = str(SheetCompiler.compile(sheet, "user://prop_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(sheet, "user://prop_rt.gd").get("output", ""))
 	ok = _check("%s: round-trips byte-identically" % label, rt == src, true) and ok
 	if rt != src:
 		print("  --- src ---\n%s\n  --- rt ---\n%s" % [src, rt])
@@ -261,7 +261,7 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 
 
 static func _setter_reads_as_written() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node
 
 var brush_size: int = 1:

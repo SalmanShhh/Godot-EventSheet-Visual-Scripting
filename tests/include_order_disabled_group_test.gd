@@ -36,7 +36,7 @@ static func run() -> bool:
 	root_event.actions.append(root_action)
 	root.events.append(root_event)
 
-	var out: String = str(SheetCompiler.compile(root).get("output", ""))
+	var out: String = str(EventSheetCompiler.compile(root).get("output", ""))
 	var lib_pos: int = out.find("library_first()")
 	var root_pos: int = out.find("root_second()")
 	all_passed = _check("both events compile into the same handler", lib_pos != -1 and root_pos != -1, true) and all_passed
@@ -62,7 +62,7 @@ static func run() -> bool:
 	group.events = [hidden_a, hidden_b]
 	sheet.events = [group]
 
-	var disabled_out: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var disabled_out: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	all_passed = _check("disabled group leaves a breadcrumb",
 		disabled_out.contains("(disabled group \"Combat\" — 2 rows omitted)"), true) and all_passed
 	all_passed = _check("a disabled group's events are NOT emitted (still excluded)",

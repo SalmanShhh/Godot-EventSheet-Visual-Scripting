@@ -124,7 +124,7 @@ static func _the_scene_door() -> bool:
 ## node the scene gives no material at all (nothing to clash with). A check that only ever saw the
 ## first would be a check nobody could trust to stay quiet.
 static func _the_quiet_finding() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(
 		"res://tests/fixtures/blend_scene_glow.gd")
 	var found: Array[Dictionary] = EventSheetEffectFindings.findings(sheet)
 	var kinds: PackedStringArray = PackedStringArray()

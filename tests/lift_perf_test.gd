@@ -70,7 +70,7 @@ static func run() -> bool:
 	if not FileAccess.file_exists(SAMPLE_PACK):
 		return _check("sample pack exists: %s" % SAMPLE_PACK.get_file(), false, true) and all_passed
 	var source: String = FileAccess.get_file_as_string(SAMPLE_PACK)
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external(SAMPLE_PACK, false)
 	all_passed = _check("sample pack imports", sheet == null, false) and all_passed
 	if sheet == null:

@@ -20,7 +20,7 @@ static func run() -> bool:
 		["the lift keeps the paragraph as a note row", _note_count(sheet), 1],
 		["the paragraph reads under the function it closes under", _tail_kinds(view, 2),
 			["define_fn_juice_tile", "comment"]],
-		["the file still re-emits byte for byte", str(SheetCompiler.compile(sheet).get("output", "")), SOURCE],
+		["the file still re-emits byte for byte", str(EventSheetCompiler.compile(sheet).get("output", "")), SOURCE],
 	])
 	view.free()
 	return ok
@@ -31,7 +31,7 @@ static func _open() -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

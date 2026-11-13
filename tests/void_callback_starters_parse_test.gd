@@ -18,7 +18,7 @@ static func run() -> bool:
 	var rows: Array = []
 	for starter_id: int in VOID_CALLBACK_STARTERS:
 		var sheet: EventSheetResource = load(STARTERS_PATH).build_starter(starter_id)
-		var output: String = str(SheetCompiler.echo(sheet, true).get("output", ""))
+		var output: String = str(EventSheetCompiler.echo(sheet, true).get("output", ""))
 		rows.append(["starter %d writes no value out of a void callback" % starter_id, output.contains("\treturn null"), false])
 		rows.append(["starter %d's script parses" % starter_id, _parses(output), OK])
 	return SUPPORT.pins(P, rows)

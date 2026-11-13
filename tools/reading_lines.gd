@@ -977,7 +977,7 @@ static func folder_readings(folders: PackedStringArray, unreadable: PackedString
 	for folder: String in folders:
 		var root: String = folder if folder.ends_with("/") else folder + "/"
 		for path: String in scripts_under(root):
-			var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+			var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 			if sheet == null:
 				unreadable.append(path)
 				continue

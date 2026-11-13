@@ -98,7 +98,7 @@ static func _run_key_column_sweep() -> bool:
 	all_passed = _check("so the export form offers exactly the declared column",
 		", ".join(EventSheetGridCSVDialog.key_columns(columns)), "title") and all_passed
 	all_passed = _check("the compiler emits the declaration rather than flattening it",
-		SheetCompiler._emit_tree_variable_line(_key_grid_variable()).contains("eventsheet:table:title=key,price=float"), true) and all_passed
+		EventSheetCompiler._emit_tree_variable_line(_key_grid_variable()).contains("eventsheet:table:title=key,price=float"), true) and all_passed
 
 	# End to end: a .tres whose grid declares a key column, swept off disk. Every declared cell is a
 	# key; the price column is not, and the id column is not, because neither is words.

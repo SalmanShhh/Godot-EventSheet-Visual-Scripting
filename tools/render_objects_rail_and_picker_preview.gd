@@ -51,7 +51,7 @@ func _init() -> void:
 
 ## The fixture as the dock opens it: a read-only preview, themed the way the editor themes a sheet.
 func _open_fixture(path: String = FIXTURE_PATH) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var style := EventSheetEditorStyle.new()
 	style.ensure_defaults()

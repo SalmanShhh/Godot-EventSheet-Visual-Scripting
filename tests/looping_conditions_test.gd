@@ -63,7 +63,7 @@ static func run() -> bool:
 	action.codegen_template = "print(buff_id)"
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://looping_compile_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://looping_compile_probe.gd").get("output", ""))
 	all_passed = _check("the loop compiles as a plain for", output.contains("for buff_id in each_buff():"), true) and all_passed
 	all_passed = _check("the action runs inside the loop body", output.contains("\t\tprint(buff_id)"), true) and all_passed
 	if FileAccess.file_exists("user://looping_compile_probe.gd"):

@@ -356,9 +356,9 @@ static func _every_effect_has_a_shader() -> bool:
 ## about, and a check that could not stay quiet would be a check nobody leaves on.
 static func _the_quiet_finding() -> bool:
 	var unsaid: Array[Dictionary] = EventSheetEffectFindings.findings(
-		GDScriptImporter.new().import_external("res://tests/fixtures/post_stack_hud.gd"))
+		EventSheetGDScriptImporter.new().import_external("res://tests/fixtures/post_stack_hud.gd"))
 	var settled: Array[Dictionary] = EventSheetEffectFindings.findings(
-		GDScriptImporter.new().import_external("res://tests/fixtures/post_stack_hud_ordered.gd"))
+		EventSheetGDScriptImporter.new().import_external("res://tests/fixtures/post_stack_hud_ordered.gd"))
 	var kinds: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in unsaid:
 		kinds.append(str(finding["kind"]))

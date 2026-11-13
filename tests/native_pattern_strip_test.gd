@@ -181,7 +181,7 @@ static func _test_number_card() -> bool:
 ## showcase adds its copies from the physics step, which Godot allows and the Doctor does not flag;
 ## the moved row is the one mistake the strip must say first.
 static func _shooter(theme_path: String, help_strip: bool = true, collision_spawn: bool = false) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHOWCASE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SHOWCASE)
 	if collision_spawn:
 		for block: Resource in sheet.events:
 			var event_row: EventRow = block as EventRow

@@ -81,7 +81,7 @@ static func _compile_loop(uid: String, count: int, budget_ms: float, order_by: S
 	act.params = {"val": "num"}
 	event.actions.append(act)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://es_budgeted_%s.gd" % uid).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://es_budgeted_%s.gd" % uid).get("output", ""))
 
 
 # True if compiling a budgeted loop under `trigger` produces the one-shot-trigger footgun warning.
@@ -105,7 +105,7 @@ static func _warns_one_shot(trigger: String) -> bool:
 	act.params = {"v": "n"}
 	event.actions.append(act)
 	sheet.events.append(event)
-	var warnings: Array = SheetCompiler.compile(sheet, "user://es_warn_%s.gd" % trigger).get("warnings", []) as Array
+	var warnings: Array = EventSheetCompiler.compile(sheet, "user://es_warn_%s.gd" % trigger).get("warnings", []) as Array
 	for w: Variant in warnings:
 		if str(w).contains("one-shot trigger"):
 			return true

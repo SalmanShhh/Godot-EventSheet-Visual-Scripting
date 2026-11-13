@@ -143,7 +143,7 @@ static func _run_registration() -> bool:
 ## The drop: the connection the compiler writes, and the handler it writes it to.
 static func _run_drop() -> bool:
 	var ok: bool = true
-	var signature: Dictionary = TriggerResolver.resolve_trigger(_trigger_row("OnFilesDropped"))
+	var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(_trigger_row("OnFilesDropped"))
 	ok = _check("the drop is signal-backed", str(signature.get("signal_name", "")), "files_dropped") and ok
 	ok = _check("on the window itself", str(signature.get("source_path", "")), "@window") and ok
 	ok = _check("and its handler takes the list the window sends",
@@ -305,7 +305,7 @@ static func _run_lift() -> bool:
 	var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
 	file.store_string(HAND_WRITTEN)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
 	EventSheetACELifter.reset_progress()
 	var lifted: bool = EventSheetACELifter.attempt_lift(sheet, HAND_WRITTEN)
 	ok = _check("the file opens as events", lifted, true) and ok
@@ -319,7 +319,7 @@ static func _run_lift() -> bool:
 	ok = _check("the chosen-file handler opens as its own event",
 		trigger_ids.has("OnFileChosen"), true) and ok
 	ok = _check("and so does the cancelled one", trigger_ids.has("OnAskCancelled"), true) and ok
-	var output: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
 	ok = _check("and saving it again reproduces the file byte for byte", output, HAND_WRITTEN) and ok
 	DirAccess.remove_absolute(PROBE_SCRIPT)
 	return ok
@@ -476,7 +476,7 @@ static func _trigger_row(trigger_id: String) -> EventRow:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	var output: String = str(SheetCompiler.compile(sheet, "user://user_content_compile_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://user_content_compile_probe.gd").get("output", ""))
 	if FileAccess.file_exists("user://user_content_compile_probe.gd"):
 		DirAccess.remove_absolute("user://user_content_compile_probe.gd")
 	return output
@@ -503,7 +503,7 @@ static func _emitted(ace_id: String, params: Dictionary) -> String:
 	var by_id: Dictionary = _by_id()
 	if not by_id.has(ace_id):
 		return ""
-	return ActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
 
 
 static func _by_id() -> Dictionary:
@@ -554,13 +554,13 @@ static func _file_with(statements: PackedStringArray) -> String:
 ## A file holding one Ask row's emitted branch, with the uid the dock would have baked onto it.
 static func _ask_source(ace_id: String, uid: String, filters: String) -> String:
 	var template: String = str(_by_id()[ace_id].codegen_template).replace("{uid}", uid)
-	return _file_with(ActionCodegen._apply_template(template, {"filters": filters}).split("\n"))
+	return _file_with(EventSheetActionCodegen._apply_template(template, {"filters": filters}).split("\n"))
 
 
 ## The actions of the one event a reopened file holds. Empty when the file came back with no event
 ## at all, which every pin above then reads as a mismatch rather than as a crash.
 static func _actions_of(source: String) -> Array:
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	if reopened == null:
 		return []
 	var held: Array = []
@@ -591,11 +591,11 @@ static func _param(actions: Array, key: String) -> String:
 ## A file opened as a sheet and written again from it. Equal to what went in is the lossless
 ## contract, and the only reason a lift is allowed to fire at all.
 static func _reemitted(source: String) -> String:
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	if reopened == null:
 		return ""
 	reopened.external_source_path = LIFT_PROBE
-	var output: String = str(SheetCompiler.compile(reopened, LIFT_PROBE).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(reopened, LIFT_PROBE).get("output", ""))
 	if FileAccess.file_exists(LIFT_PROBE):
 		DirAccess.remove_absolute(LIFT_PROBE)
 	return output

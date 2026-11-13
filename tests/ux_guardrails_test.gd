@@ -117,14 +117,14 @@ static func run() -> bool:
 		str(act.params.get("target")) == "health + 5" and str(act.params.get("label")) == "health display", true) and all_passed
 	all_passed = _check("templates rename outside placeholders",
 		act.codegen_template, "setup({target}, health)") and all_passed
-	var rename_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_rename.gd").get("output", ""))
+	var rename_output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_rename.gd").get("output", ""))
 	all_passed = _check("codegen still references the new name",
 		rename_output.contains("setup(health + 5, health)"), true) and all_passed
 	# This assert exposed that GROUP EVENTS never compiled at all - locked in now.
 	all_passed = _check("group events compile inline", rename_output.contains("func _ready()"), true) and all_passed
 	group.enabled = false
 	all_passed = _check("disabled groups drop their children (event-sheet semantics)",
-		str(SheetCompiler.compile(sheet, "user://eventsheets_rename_off.gd").get("output", "")).contains("setup("), false) and all_passed
+		str(EventSheetCompiler.compile(sheet, "user://eventsheets_rename_off.gd").get("output", "")).contains("setup("), false) and all_passed
 	group.enabled = true
 
 	# ── Commit guardrails ────────────────────────────────────────────────────

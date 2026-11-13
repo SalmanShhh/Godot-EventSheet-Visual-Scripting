@@ -189,7 +189,7 @@ static func _event_row(kinds: Array, placeholder: bool = false) -> EventRowData:
 
 
 static func _view_of(path: String, theme_path: String) -> EventSheetViewport:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = false
 	sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
 	var view := EventSheetViewport.new()

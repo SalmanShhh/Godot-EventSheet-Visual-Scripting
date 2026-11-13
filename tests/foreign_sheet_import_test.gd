@@ -45,7 +45,7 @@ static func run() -> bool:
 	# res://event_sheet_generated.gd, which the runner sweeps after EVERY test - so under the parallel
 	# runner another shard's sweep lands between this write and its read, and the compile reports a
 	# failure nothing here caused. One file per process, exactly as _roundtrip below already does.
-	var compiled: Dictionary = SheetCompiler.compile(sheet, _own_output_path(), true)
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, _own_output_path(), true)
 	all_passed = _check("the imported sheet compiles", compiled["success"], true) and all_passed
 	var output: String = str(compiled["output"])
 	all_passed = _check("the variable the rows name is declared", output.contains("var score: float = 0.0"), true) and all_passed
@@ -83,13 +83,13 @@ static func _own_output_path() -> String:
 ## the editor will keep saving.
 static func _roundtrip(sheet: EventSheetResource) -> bool:
 	var path: String = "user://foreign_import_roundtrip_%d.gd" % OS.get_process_id()
-	var first: Dictionary = SheetCompiler.compile(sheet, path, true)
+	var first: Dictionary = EventSheetCompiler.compile(sheet, path, true)
 	if not bool(first["success"]):
 		return _check("the imported sheet writes a .gd", str(first["errors"]), "[]")
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	if reopened == null:
 		return _check("the written .gd re-opens as a sheet", "null", "a sheet")
-	var again: Dictionary = SheetCompiler.compile(reopened, _own_output_path(), true)
+	var again: Dictionary = EventSheetCompiler.compile(reopened, _own_output_path(), true)
 	var written: String = FileAccess.get_file_as_string(path)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	return _check("the written .gd re-opens and re-emits byte-identically", str(again["output"]) == written, true)

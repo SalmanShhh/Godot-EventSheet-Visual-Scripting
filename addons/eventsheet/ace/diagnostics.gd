@@ -48,7 +48,7 @@ static func _lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dic
 ## Whether the script the sheet compiles to parses, read without its class_name line (a second
 ## script claiming a class the project already has is an error of its own).
 static func _whole_sheet_compiles(sheet: EventSheetResource) -> bool:
-	var output: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var output: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	if output.strip_edges().is_empty():
 		return false
 	var probe: GDScript = GDScript.new()
@@ -90,7 +90,7 @@ static func _check_pick_filters(event: EventRow, sheet: EventSheetResource, diag
 		if not (filter_entry is PickFilter) or not (filter_entry as PickFilter).enabled:
 			continue
 		var pick: PickFilter = filter_entry
-		var collection: String = SheetCompiler._pick_collection_expression(pick)
+		var collection: String = EventSheetCompiler._pick_collection_expression(pick)
 		if not collection.strip_edges().is_empty():
 			var verdict: Dictionary = _lint(collection, true, sheet)
 			if not bool(verdict.get("ok", true)):

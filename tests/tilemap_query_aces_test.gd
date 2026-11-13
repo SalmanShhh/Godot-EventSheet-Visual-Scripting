@@ -28,7 +28,7 @@ class_name TilemapQueryACEsTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const SheetCompiler := preload("res://addons/eventforge/compiler/sheet_compiler.gd")
+const EventSheetCompiler := preload("res://addons/eventforge/compiler/sheet_compiler.gd")
 
 const NAME := "tilemap_query_aces_test"
 
@@ -517,12 +517,12 @@ static func _param_hint(ace_id: String, param_id: String) -> String:
 
 ## The eleven helper names, asked of the compiler rather than spelled again here.
 static func _helper_names() -> Array[String]:
-	return [SheetCompiler.TILE_DATA_HELPER, SheetCompiler.TILE_SOLID_HELPER,
-		SheetCompiler.TILE_RAY_HELPER, SheetCompiler.TILE_DATA_CELLS_HELPER,
-		SheetCompiler.TILE_CELLS_AROUND_HELPER, SheetCompiler.TILE_ERASE_CIRCLE_HELPER,
-		SheetCompiler.TILE_FILL_RECT_HELPER, SheetCompiler.TILE_FLOOD_FILL_HELPER,
-		SheetCompiler.TILE_SAVE_HELPER, SheetCompiler.TILE_LOAD_HELPER,
-		SheetCompiler.GRIDMAP_FILL_BOX_HELPER]
+	return [EventSheetCompiler.TILE_DATA_HELPER, EventSheetCompiler.TILE_SOLID_HELPER,
+		EventSheetCompiler.TILE_RAY_HELPER, EventSheetCompiler.TILE_DATA_CELLS_HELPER,
+		EventSheetCompiler.TILE_CELLS_AROUND_HELPER, EventSheetCompiler.TILE_ERASE_CIRCLE_HELPER,
+		EventSheetCompiler.TILE_FILL_RECT_HELPER, EventSheetCompiler.TILE_FLOOD_FILL_HELPER,
+		EventSheetCompiler.TILE_SAVE_HELPER, EventSheetCompiler.TILE_LOAD_HELPER,
+		EventSheetCompiler.GRIDMAP_FILL_BOX_HELPER]
 
 
 ## A script holding every helper definition and nothing else, in the host asked for, so the answers
@@ -534,7 +534,7 @@ static func _helper_host(host_class: String) -> GDScript:
 	var names: Array[String] = _helper_names()
 	for index: int in names.size():
 		lines.append("\t%s(%s)" % [names[index], HELPER_CALL_ARGUMENTS[index]])
-	SheetCompiler._append_level_query_helpers(lines)
+	EventSheetCompiler._append_level_query_helpers(lines)
 	var script: GDScript = GDScript.new()
 	script.source_code = "\n".join(lines) + "\n"
 	script.reload()

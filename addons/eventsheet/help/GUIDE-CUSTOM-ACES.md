@@ -933,7 +933,7 @@ action.codegen_template = str(by_id["WriteTextFile"].codegen_template).replace("
 action.params = { "path": "\"user://test.txt\"", "text": "\"hello\"" }
 event.actions.append(action)
 sheet.events.append(event)
-var output := str(SheetCompiler.compile(sheet, "user://__test.gd").get("output", ""))
+var output := str(EventSheetCompiler.compile(sheet, "user://__test.gd").get("output", ""))
 
 # 3. Parse, then run.
 var script := GDScript.new()

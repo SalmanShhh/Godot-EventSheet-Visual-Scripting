@@ -352,7 +352,7 @@ static func _run_guard() -> bool:
 	group.runs_in = "Playing"
 	group.events.append(_row("OnProcess", [], [_action("velocity.x = 100.0")]))
 	sheet.events.append(group)
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("the group's rows run behind the mode test",
 		built.contains("\tif mode == Mode.PLAYING:"), true) and all_passed
 	all_passed = _check("and the header says which mode, so opening the file finds it again",
@@ -371,7 +371,7 @@ static func _run_moment() -> bool:
 		[_action("hud_shown = false")], {"mode": "CUTSCENE"}))
 	sheet.events.append(_row(EventSheetModeFacts.LEAVING_TRIGGER_ID, [],
 		[_action("hud_shown = true")], {"mode": "CUTSCENE"}))
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("both rows share one handler",
 		built.count("func _on_mode_changed("), 1) and all_passed
 	all_passed = _check("which takes both halves of the change",
@@ -392,9 +392,9 @@ static func _run_moment() -> bool:
 	var file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
 	file.store_string(built)
 	file.close()
-	var opened: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = _check("a sheet with mode triggers opens and saves byte for byte",
-		str(SheetCompiler.compile(opened, OUT_PATH).get("output", "")), built) and all_passed
+		str(EventSheetCompiler.compile(opened, OUT_PATH).get("output", "")), built) and all_passed
 	return all_passed
 
 
@@ -415,7 +415,7 @@ static func _run_mode_row_before_ready() -> bool:
 	var file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
 	file.store_string(built)
 	file.close()
-	var opened: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = SUPPORT.check("game_state_test", "a mode row above On created opens", opened != null, true) and all_passed
 	if opened == null:
 		return all_passed
@@ -457,7 +457,7 @@ static func _run_round_trip() -> bool:
 	group.events.append(_row("OnProcess", [], [_action("velocity.x = 100.0")]))
 	sheet.events.append(group)
 	sheet.events.append(_row("OnReady", [], [_go_to_mode("PLAYING")]))
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("Go to mode is one plain assignment",
 		built.contains("\tmode = Mode.PLAYING"), true) and all_passed
 	all_passed = _check("and the variable itself is what announces the change",
@@ -466,7 +466,7 @@ static func _run_round_trip() -> bool:
 	var file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
 	file.store_string(built)
 	file.close()
-	var opened: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = _check("the file opens as a sheet", opened != null, true) and all_passed
 	if opened == null:
 		return all_passed
@@ -475,7 +475,7 @@ static func _run_round_trip() -> bool:
 		PackedStringArray(["Playing", "Paused", "Cutscene", "Menu"])) and all_passed
 	all_passed = _check("and the group remembers which mode it runs in",
 		_runs_in_of(opened.events), "Playing") and all_passed
-	var again: String = str(SheetCompiler.compile(opened, OUT_PATH).get("output", ""))
+	var again: String = str(EventSheetCompiler.compile(opened, OUT_PATH).get("output", ""))
 	all_passed = _check("re-emitting reproduces the file byte for byte", again, built) and all_passed
 	all_passed = _check("and the Go to mode line came back as the row it is",
 		_first_ace_id(opened.events, "GoToMode"), true) and all_passed
@@ -500,7 +500,7 @@ static func _run_round_trip() -> bool:
 	var hand_file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
 	hand_file.store_string(by_hand)
 	hand_file.close()
-	var hand_sheet: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	var hand_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OUT_PATH)
 	all_passed = _check("a hand-written spine opens with its modes read",
 		EventSheetModeFacts.names(hand_sheet), PackedStringArray(["Playing", "Paused"])) and all_passed
 	all_passed = _check("and starting where it says",
@@ -508,7 +508,7 @@ static func _run_round_trip() -> bool:
 	all_passed = _check("the mode test came back as the In mode row",
 		_first_ace_id(hand_sheet.events, "InMode"), true) and all_passed
 	all_passed = _check("and saving it writes their own bytes back",
-		str(SheetCompiler.compile(hand_sheet, OUT_PATH).get("output", "")), by_hand) and all_passed
+		str(EventSheetCompiler.compile(hand_sheet, OUT_PATH).get("output", "")), by_hand) and all_passed
 	return all_passed
 
 

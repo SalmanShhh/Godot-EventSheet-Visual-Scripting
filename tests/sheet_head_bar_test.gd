@@ -147,7 +147,7 @@ static func _a_saved_sheet_opens_on_the_bar() -> bool:
 
 
 static func _rows_of(path: String) -> Array:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	return _rows_of_sheet(sheet)
 

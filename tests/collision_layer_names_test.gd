@@ -225,7 +225,7 @@ static func _emit(ace_id: String, params: Dictionary) -> String:
 	action.ace_id = ace_id
 	action.params = params.duplicate()
 	action.codegen_template = _shipped_template(ace_id)
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)
 
 
 static func _shipped_template(ace_id: String) -> String:
@@ -274,14 +274,14 @@ static func _lifted_ace_ids(path: String, source: String) -> PackedStringArray:
 static func _round_trips(path: String, source: String) -> bool:
 	var sheet: EventSheetResource = _open(path, source)
 	sheet.external_source_path = path
-	return str(SheetCompiler.compile(sheet, path).get("output", "")) == source
+	return str(EventSheetCompiler.compile(sheet, path).get("output", "")) == source
 
 
 static func _open(path: String, source: String) -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	return GDScriptImporter.new().import_external(path)
+	return EventSheetGDScriptImporter.new().import_external(path)
 
 
 # ── the notes ────────────────────────────────────────────────────────────────────

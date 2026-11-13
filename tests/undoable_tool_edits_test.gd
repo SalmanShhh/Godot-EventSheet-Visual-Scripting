@@ -168,7 +168,7 @@ static func _test_the_refusal_on_a_game_sheet() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = _tool_sheet()
 	sheet.tool_mode = false
-	var result: Dictionary = SheetCompiler.compile(sheet)
+	var result: Dictionary = EventSheetCompiler.compile(sheet)
 	var output: String = str(result.get("output", ""))
 	ok = _check("a game sheet opens no gesture", output.contains(UndoableEdits.CREATE_PREFIX), false) and ok
 	ok = _check("a game sheet emits no undo half", output.contains("add_undo_property"), false) and ok
@@ -192,12 +192,12 @@ static func _test_a_wait_inside_the_gesture_is_said_out_loud() -> bool:
 	var waiting: ACEAction = event.actions[1] as ACEAction
 	waiting.is_awaited = true
 	var said: String = "\n".join(PackedStringArray(
-		SheetCompiler.compile(sheet).get("warnings", []) as Array))
+		EventSheetCompiler.compile(sheet).get("warnings", []) as Array))
 	ok = _check("the warning names the event's own gesture",
 		said.contains(UndoableEdits.waits_inside_warning(GESTURE)), true) and ok
 	waiting.is_awaited = false
 	ok = _check("and a sheet with no wait between them says nothing",
-		"\n".join(PackedStringArray(SheetCompiler.compile(sheet).get("warnings", []) as Array)).contains(
+		"\n".join(PackedStringArray(EventSheetCompiler.compile(sheet).get("warnings", []) as Array)).contains(
 			"WAITS"), false) and ok
 	# A wait BEFORE the first undoable row is outside the gesture and is nobody's problem.
 	ok = _check("a wait outside the span is not inside it",
@@ -443,12 +443,12 @@ static func _event(uid: String, rows: Array) -> EventRow:
 ## in-memory compile regenerates the prelude that an opened file already carries as its own rows, so
 ## comparing the two would compare a file against a file with two preludes.
 static func _compile(sheet: EventSheetResource, path: String = "user://eventforge_undoable_src.gd") -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 ## The same file, opened and written again - the byte question every lift has to answer.
 static func _reopened(source: String) -> String:
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	if opened == null:
 		return ""
 	opened.external_source_path = "user://eventforge_undoable_roundtrip.gd"
@@ -457,7 +457,7 @@ static func _reopened(source: String) -> String:
 
 ## The same file, opened - for the questions that are about the ROWS rather than the bytes.
 static func _reopen(source: String) -> EventSheetResource:
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	if opened != null:
 		opened.external_source_path = "user://eventforge_undoable_roundtrip.gd"
 	return opened

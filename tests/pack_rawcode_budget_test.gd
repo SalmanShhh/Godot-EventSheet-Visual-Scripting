@@ -23,7 +23,7 @@ static func run() -> bool:
 	var ok: bool = true
 	for path: String in BUDGETS:
 		var budget: int = int(BUDGETS[path])
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		if sheet == null:
 			ok = _check("%s loads" % path.get_file(), false, true) and ok
 			continue

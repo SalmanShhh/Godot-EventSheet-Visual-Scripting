@@ -93,7 +93,7 @@ static func run() -> bool:
 			missing.append(path)
 			continue
 		var source: String = FileAccess.get_file_as_string(path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		if sheet == null:
 			drifted.append(path)
 			continue
@@ -106,7 +106,7 @@ static func run() -> bool:
 		for function_entry: Variant in sheet.functions:
 			if function_entry is EventFunction:
 				block_lines += _block_line_count((function_entry as EventFunction).events, false)
-		var emitted: String = str(SheetCompiler.compile(sheet,
+		var emitted: String = str(EventSheetCompiler.compile(sheet,
 			"user://_handwritten_lift_gate.gd").get("output", ""))
 		if emitted != source:
 			drifted.append(path)

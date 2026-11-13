@@ -36,7 +36,7 @@ func _init() -> void:
 	_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_viewport.set_ace_registry(EventSheetACERegistry.new())
 	_scroll.add_child(_viewport)
-	_sheet = GDScriptImporter.new().import_external(PACK_PATH)
+	_sheet = EventSheetGDScriptImporter.new().import_external(PACK_PATH)
 	# The dock opens a .gd as a read-only preview; the importer leaves the flag alone, so the
 	# harness sets what the dock would set.
 	_sheet.read_only = true

@@ -11,7 +11,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "off_group_kept_in_gd_test"
 const FILE_PATH := "user://off_group_kept_in_gd_test.gd"
 const RESAVE_PATH := "user://off_group_kept_in_gd_test_resave.gd"
@@ -44,11 +44,11 @@ static func run() -> bool:
 	]) and all_passed
 	# On again: the file is the one the sheet wrote before it was ever turned off.
 	_write(FILE_PATH, saved)
-	var back_on_sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var back_on_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var back_on_group: EventGroup = _group(back_on_sheet, "Wave One")
 	if back_on_group != null:
 		back_on_group.enabled = true
-	SheetCompiler.compile(back_on_sheet, FILE_PATH)
+	EventSheetCompiler.compile(back_on_sheet, FILE_PATH)
 	all_passed = SUPPORT.pins(TEST_NAME, [
 		["on again: the file is back to what it was", FileAccess.get_file_as_string(FILE_PATH), base],
 	]) and all_passed
@@ -69,11 +69,11 @@ static func run() -> bool:
 	# Save As .gd from a sheet that never had a file: the new file is the sheet, so it keeps the rows.
 	var fresh: EventSheetResource = _base_sheet()
 	_group(fresh, "Wave One").enabled = false
-	SheetCompiler.compile(fresh, SAVE_AS_PATH, true)
+	EventSheetCompiler.compile(fresh, SAVE_AS_PATH, true)
 	var save_as: String = FileAccess.get_file_as_string(SAVE_AS_PATH)
-	var save_as_reopened: EventSheetResource = GDScriptImporter.new().import_external(SAVE_AS_PATH)
+	var save_as_reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SAVE_AS_PATH)
 	# And a .tres sheet's generated companion still leaves the group out of the game, as before.
-	var companion: String = str(SheetCompiler.echo(fresh).get("output", ""))
+	var companion: String = str(EventSheetCompiler.echo(fresh).get("output", ""))
 	all_passed = SUPPORT.pins(TEST_NAME, [
 		["save as .gd: the rows are in the file", save_as.contains("\tif false:\n\t\tscore += 1"), true],
 		["save as .gd: the file parses", _parse_error(save_as), ""],
@@ -90,12 +90,12 @@ static func run() -> bool:
 	var wave: EventGroup = _group(stateful, "Wave One")
 	wave.events.append(_every_event())
 	wave.enabled = false
-	SheetCompiler.compile(stateful, SAVE_AS_PATH, true)
+	EventSheetCompiler.compile(stateful, SAVE_AS_PATH, true)
 	var stateful_saved: String = FileAccess.get_file_as_string(SAVE_AS_PATH)
-	var stateful_reopened: EventSheetResource = GDScriptImporter.new().import_external(SAVE_AS_PATH)
+	var stateful_reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SAVE_AS_PATH)
 	_write(RESAVE_PATH, stateful_saved)
 	stateful_reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(stateful_reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(stateful_reopened, RESAVE_PATH)
 	all_passed = SUPPORT.pins(TEST_NAME, [
 		["stateful: the bookkeeping is behind the group's false guard",
 			stateful_saved.contains("\t# @group:wave_one\n\tif false:\n\t\t__every_t1 += get_process_delta_time()\n\t# @group:wave_one\n\tif false and __every_t1 >= maxf(2.0, 0.001):\n"), true],
@@ -149,24 +149,24 @@ static func _base_sheet() -> EventSheetResource:
 
 
 static func _base_file() -> String:
-	return str(SheetCompiler.compile(_base_sheet(), FILE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(_base_sheet(), FILE_PATH).get("output", ""))
 
 
 ## Writes `base` to the file, opens it, applies `edits` ([group, field, value]), saves the sheet over
 ## the file and opens the file again: {saved, reopened, resaved}.
 static func _cycle(base: String, edits: Array) -> Dictionary:
 	_write(FILE_PATH, base)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	for edit: Array in edits:
 		var group: EventGroup = _group(sheet, str(edit[0]))
 		if group != null:
 			group.set(str(edit[1]), edit[2])
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "reopened": reopened, "resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 
 

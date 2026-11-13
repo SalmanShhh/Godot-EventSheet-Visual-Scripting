@@ -168,7 +168,7 @@ static func _gd_sheet_pins() -> bool:
 	sheet.events.append(event)
 	var path: String = "user://editor_error_feed_gd_sheet.gd"
 	sheet.external_source_path = path
-	var echoed: Dictionary = SheetCompiler.echo(sheet)
+	var echoed: Dictionary = EventSheetCompiler.echo(sheet)
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(str(echoed.get("output", "")))
 	file.close()

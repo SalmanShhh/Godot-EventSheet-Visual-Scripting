@@ -28,7 +28,7 @@ static func run() -> bool:
 	ok = _check("steps stay time-sorted", timeline.steps.size(), 4) and ok
 	event.actions.append(timeline)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://timeline_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://timeline_out.gd").get("output", ""))
 	ok = _check("first beat runs immediately (no await before 0.0)", output.contains("show_message(\"Ready...\")"), true) and ok
 	ok = _check("the 1.0s gap awaits", output.contains("await get_tree().create_timer(1.0).timeout"), true) and ok
 	ok = _check("equal times do not await between each other", output.count("await get_tree().create_timer"), 2) and ok
@@ -37,7 +37,7 @@ static func run() -> bool:
 	var flash_at: int = output.find("flash_screen()")
 	var round_at: int = output.find("start_round()")
 	ok = _check("schedule order is preserved", go_at >= 0 and go_at < flash_at and flash_at < round_at, true) and ok
-	var second: String = str(SheetCompiler.compile(sheet, "user://timeline_out.gd").get("output", ""))
+	var second: String = str(EventSheetCompiler.compile(sheet, "user://timeline_out.gd").get("output", ""))
 	ok = _check("emission is deterministic", second == output, true) and ok
 
 	# A malformed step list refuses cleanly.

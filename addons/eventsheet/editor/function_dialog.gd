@@ -312,7 +312,7 @@ func open_for_edit(event_function: EventFunction) -> void:
 		if builtin_index >= 0:
 			_value_type_option.select(builtin_index)
 		else:
-			_add_custom_value_type(SheetCompiler._function_return_type_name(event_function))
+			_add_custom_value_type(EventSheetCompiler._function_return_type_name(event_function))
 		_select_usable(2)
 	for param: ACEParam in event_function.params:
 		_carried_params.append({
@@ -544,8 +544,8 @@ static func format_signature(function_name: String, return_type: int, params: Ar
 		event_function.params.append(param)
 	return "func %s(%s) -> %s" % [
 		function_name,
-		SheetCompiler._emit_function_params(event_function),
-		SheetCompiler._function_return_type_name(event_function),
+		EventSheetCompiler._emit_function_params(event_function),
+		EventSheetCompiler._function_return_type_name(event_function),
 	]
 
 

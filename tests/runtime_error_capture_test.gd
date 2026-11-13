@@ -31,7 +31,7 @@ static func run() -> bool:
 	vanish.ace_id = "QueueFree"
 	event.actions.append(vanish)
 	sheet.events.append(event)
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://_runtime_error_capture_out.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://_runtime_error_capture_out.gd")
 	var output: String = str(compiled.get("output", ""))
 	var source_map: Array = compiled.get("source_map", [])
 	ok = _check("the reporter class is emitted",
@@ -58,20 +58,20 @@ static func run() -> bool:
 	# ── Every sheet-debug switch arms it on its own; a clean compile carries none of it ──
 	sheet.emit_breakpoints = false
 	sheet.emit_event_trace = true
-	var trace_output: String = str(SheetCompiler.compile(sheet,
+	var trace_output: String = str(EventSheetCompiler.compile(sheet,
 		"user://_runtime_error_capture_out.gd").get("output", ""))
 	ok = _check("the event-trace switch arms the reporter",
 		trace_output.contains("OS.add_logger(__EventSheetsErrorReporter.new())"), true) and ok
 	sheet.emit_event_trace = false
 	sheet.emit_live_values = true
 	sheet.variables = {"score": 0}
-	var live_output: String = str(SheetCompiler.compile(sheet,
+	var live_output: String = str(EventSheetCompiler.compile(sheet,
 		"user://_runtime_error_capture_out.gd").get("output", ""))
 	ok = _check("the live-values switch arms the reporter",
 		live_output.contains("OS.add_logger(__EventSheetsErrorReporter.new())"), true) and ok
 	sheet.emit_live_values = false
 	sheet.variables = {}
-	var clean: String = str(SheetCompiler.compile(sheet,
+	var clean: String = str(EventSheetCompiler.compile(sheet,
 		"user://_runtime_error_capture_out.gd").get("output", ""))
 	ok = _check("a clean compile carries no reporter, no logger, no announce",
 		clean.contains("__EventSheetsErrorReporter") or clean.contains("OS.add_logger")

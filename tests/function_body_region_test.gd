@@ -13,14 +13,14 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "function_body_region_test"
 const FILE_PATH := "user://function_body_region_test.gd"
 const RESAVE_PATH := "user://function_body_region_test_resave.gd"
 
 
 static func run() -> bool:
-	var base: String = str(SheetCompiler.compile(_base_sheet(), FILE_PATH).get("output", ""))
+	var base: String = str(EventSheetCompiler.compile(_base_sheet(), FILE_PATH).get("output", ""))
 	var untouched: Dictionary = _cycle(base, Callable())
 	var plain: Dictionary = _cycle(base, func(sheet: EventSheetResource) -> void: _surround(_function(sheet).events, 0, 0, "Setup", false))
 	var styled: Dictionary = _cycle(base, func(sheet: EventSheetResource) -> void: _surround(_function(sheet).events, 1, 1, "Report", true))
@@ -29,7 +29,7 @@ static func run() -> bool:
 	var removed: Dictionary = _cycle(str(plain.get("saved", "")), func(sheet: EventSheetResource) -> void: _remove_fences(_function(sheet).events))
 	var tres_sheet: EventSheetResource = _base_sheet()
 	_surround(_function(tres_sheet).events, 0, 0, "Setup", false)
-	var sheet_native: String = str(SheetCompiler.echo(tres_sheet).get("output", ""))
+	var sheet_native: String = str(EventSheetCompiler.echo(tres_sheet).get("output", ""))
 	return SUPPORT.pins(TEST_NAME, [
 		["the base file parses", _parse_error(base), ""],
 		["opened and saved untouched it is byte for byte the same", str(untouched.get("saved", "")), base],
@@ -83,15 +83,15 @@ static func _base_sheet() -> EventSheetResource:
 ## over the file and opens the file again: {saved, reopened, resaved}.
 static func _cycle(base: String, edit: Callable) -> Dictionary:
 	_write(FILE_PATH, base)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	if edit.is_valid():
 		edit.call(sheet)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "reopened": reopened, "resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 
 
@@ -126,12 +126,12 @@ func tally() -> void:
 	#endregion
 "
 	_write(FILE_PATH, source)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var tally: EventFunction = null
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).function_name == "tally":
 			tally = entry as EventFunction
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	return [_shape_rows(tally.events) if tally != null else [], FileAccess.get_file_as_string(FILE_PATH) == source]
 
 
@@ -139,7 +139,7 @@ func tally() -> void:
 static func _handler_comment_rows() -> Array:
 	var source: String = "extends Node2D\n\nvar score: int = 0\n\n\nfunc _process(delta: float) -> void:\n\t#region Loop\n\tscore += 1\n\t#endregion\n"
 	_write(FILE_PATH, source)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var words: Array = []
 	for row: Variant in sheet.events:
 		if row is EventRow:
@@ -152,12 +152,12 @@ static func _handler_comment_rows() -> Array:
 static func _blank_above_fence() -> Array:
 	var source: String = "extends Node2D\n\nvar score: int = 0\n\n\nfunc tally() -> void:\n\tscore += 1\n\n\t#region Later\n\tprint(score)\n\t#endregion\n"
 	_write(FILE_PATH, source)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var tally: EventFunction = null
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).function_name == "tally":
 			tally = entry as EventFunction
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	return [_shape_rows(tally.events) if tally != null else [], FileAccess.get_file_as_string(FILE_PATH) == source]
 
 

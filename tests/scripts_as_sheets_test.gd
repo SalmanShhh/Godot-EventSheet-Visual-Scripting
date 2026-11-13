@@ -32,7 +32,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 	var head: EventRowData = rows[0] if not rows.is_empty() else EventRowData.new()
 	var name_span: SemanticSpan = _span_saying(head, "SineBehavior")
 	var card: Dictionary = (name_span.metadata.get("head_card", {}) as Dictionary) if name_span != null else {}
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(BEHAVIOUR)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(BEHAVIOUR)
 	return SUPPORT.pins(P, [
 		["a pack's behaviour is read in file order", ViewportRowBuilder.reads_in_file_order(sheet), true],
 		["it opens on its head bar: the name and that it is a behaviour", _words_of(head), "◆ SineBehavior Behaviour Runs in the editor"],
@@ -60,7 +60,7 @@ static func _a_behaviour_reads_in_file_order() -> bool:
 static func _a_global_says_what_it_is() -> bool:
 	var had: bool = ProjectSettings.has_setting(GLOBAL_SETTING)
 	ProjectSettings.set_setting(GLOBAL_SETTING, "*" + GLOBAL)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(GLOBAL)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(GLOBAL)
 	var rows: Array = _rows_of(GLOBAL)
 	if not had:
 		ProjectSettings.set_setting(GLOBAL_SETTING, null)
@@ -95,7 +95,7 @@ static func _the_view_switch() -> bool:
 	# code panel and the rows shown, hidden or side by side.
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(BEHAVIOUR)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(BEHAVIOUR)
 	sheet.read_only = true
 	dock.setup(sheet)
 	dock._refresh_title_strip()
@@ -120,7 +120,7 @@ static func _the_view_switch() -> bool:
 
 ## One file opened the way opening it opens it: read-only, through the shipped row builder.
 static func _rows_of(path: String) -> Array:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	if sheet == null:
 		return []
 	sheet.read_only = true

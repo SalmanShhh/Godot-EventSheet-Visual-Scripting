@@ -22,7 +22,7 @@ static func run() -> bool:
 	all_passed = _check("starter declares its required host class", sheet.host_class, "Area2D") and all_passed
 	all_passed = _check("value is an exported designer knob", bool((sheet.variables.get("value", {}) as Dictionary).get("exported", false)), true) and all_passed
 
-	var output: String = str(SheetCompiler.compile(sheet, "user://__behavior_starter.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://__behavior_starter.gd").get("output", ""))
 	all_passed = _check("compiles to an attachable Node (the component idiom)", output.contains("extends Node"), true) and all_passed
 	all_passed = _check("exposes the typed host accessor (its parent)", output.contains("var host: Area2D"), true) and all_passed
 	all_passed = _check("REACTS to the host's signal", output.contains("host.body_entered.connect"), true) and all_passed

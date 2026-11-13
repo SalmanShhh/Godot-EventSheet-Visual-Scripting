@@ -331,7 +331,7 @@ static func _grammar_values() -> bool:
 ## be what tells them apart.
 static func _orbit_pivot_needs_the_scene() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PIVOT_SCRIPT_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PIVOT_SCRIPT_PATH)
 	var pivots: Dictionary = EventSheetViewportReadingRows.orbit_pivot_map(sheet)
 	ok = _check("the scene says which node is a camera pivot",
 		bool(pivots.get("pivot", false)), true) and ok
@@ -376,7 +376,7 @@ static func _open_and_read() -> Dictionary:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	return _render(sheet)
 
 
@@ -452,8 +452,8 @@ static func _pattern_claims(patterns: Dictionary) -> bool:
 ## Gate four: every reading here is a lens over a value the row already holds, so opening the file
 ## and saving it untouched puts back every byte.
 static func _round_trip() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 
@@ -505,7 +505,7 @@ static func _picked_matches_typed() -> bool:
 		action.provider_id = "Core"
 		action.ace_id = ace_id
 		action.params = params[ace_id]
-		var line: String = ActionCodegen.generate_action(action) if ace_id != "AnimationStateIs" \
+		var line: String = EventSheetActionCodegen.generate_action(action) if ace_id != "AnimationStateIs" \
 			else _condition_code(ace_id, params[ace_id])
 		ok = _check("%s emits the line its reading recognises" % ace_id, line.strip_edges(),
 			str(emitted[ace_id])) and ok
@@ -536,7 +536,7 @@ static func _condition_code(ace_id: String, params: Dictionary) -> String:
 	condition.provider_id = "Core"
 	condition.ace_id = ace_id
 	condition.params = params
-	return ConditionCodegen.generate_condition(condition)
+	return EventSheetConditionCodegen.generate_condition(condition)
 
 
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:

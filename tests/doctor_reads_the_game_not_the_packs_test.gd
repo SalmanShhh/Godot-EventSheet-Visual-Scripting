@@ -90,7 +90,7 @@ static func _the_readers_own_folder_under_the_packs_is_theirs() -> bool:
 	EventSheetProjectDoctor._project_scripts_walked = true
 	EventSheetProjectDoctor._source_cache[USER_GLOBAL] = "extends Node\n\n\nfunc _process(_delta: float) -> void:\n\tfor enemy: Node in get_tree().get_nodes_in_group(\"enemies\"):\n\t\tenemy.set_process(false)\n"
 	EventSheetProjectDoctor._source_cache[PACK_SCRIPT] = FileAccess.get_file_as_string(PACK_SCRIPT)
-	EventSheetProjectDoctor._sheet_cache[USER_GLOBAL] = GDScriptImporter.new().import_external_source(
+	EventSheetProjectDoctor._sheet_cache[USER_GLOBAL] = EventSheetGDScriptImporter.new().import_external_source(
 		str(EventSheetProjectDoctor._source_cache[USER_GLOBAL]), true, USER_GLOBAL)
 	ok = SUPPORT.check(TEST_NAME, "Performance sweeps the reader's own global",
 		Array(EventSheetPerformanceDoctor.sweep().get("busy", PackedStringArray())), [USER_GLOBAL]) and ok

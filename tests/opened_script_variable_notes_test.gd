@@ -77,7 +77,7 @@ static func _notes(source: String, tag: String) -> Array:
 	handle.close()
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock.setup(GDScriptImporter.new().import_external(path))
+	dock.setup(EventSheetGDScriptImporter.new().import_external(path))
 	var found: Array = []
 	_collect(dock._viewport._root_rows, found)
 	dock.free()

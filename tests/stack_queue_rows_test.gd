@@ -104,9 +104,9 @@ static func _test_the_fallback() -> bool:
 	# The expression twins: Back and Front, or a fallback. The old rows are untouched.
 	ok = SUPPORT.check(NAME, "First Item is the row it always was", _descriptor("ArrayFront").codegen_template, "{var_name}.front()") and ok
 	ok = SUPPORT.check(NAME, "Last Item is the row it always was", _descriptor("ArrayBack").codegen_template, "{var_name}.back()") and ok
-	var front: String = ActionCodegen._apply_template(_descriptor("ArrayFrontOr").codegen_template, {"var_name": "jobs", "fallback": "null"})
+	var front: String = EventSheetActionCodegen._apply_template(_descriptor("ArrayFrontOr").codegen_template, {"var_name": "jobs", "fallback": "null"})
 	ok = SUPPORT.check(NAME, "First Item (or a fallback) guards the read", front, "(jobs.front() if not jobs.is_empty() else null)") and ok
-	var back: String = ActionCodegen._apply_template(_descriptor("ArrayBackOr").codegen_template, {"var_name": "undo_stack", "fallback": "Vector2i.ZERO"})
+	var back: String = EventSheetActionCodegen._apply_template(_descriptor("ArrayBackOr").codegen_template, {"var_name": "undo_stack", "fallback": "Vector2i.ZERO"})
 	ok = SUPPORT.check(NAME, "Last Item (or a fallback) guards the read", back, "(undo_stack.back() if not undo_stack.is_empty() else Vector2i.ZERO)") and ok
 	return ok
 

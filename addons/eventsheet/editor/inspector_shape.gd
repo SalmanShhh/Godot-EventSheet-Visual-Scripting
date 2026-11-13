@@ -439,7 +439,7 @@ static func code(sheet: EventSheetResource, var_name: String, category: String, 
 			lines.append(_emitted(controller, switch, attributes_of_member(controller), true, false))
 	lines.append(_emitted(found, var_name, after, false, category == "look"))
 	if category == "show" and not switch.is_empty():
-		lines.append_array(SheetCompiler.inspector_conditions_function([{"name": var_name, "predicate": switch, "known": true,
+		lines.append_array(EventSheetCompiler.inspector_conditions_function([{"name": var_name, "predicate": switch, "known": true,
 			"kind": "lock_unless" if after.has("lock_unless") else "show_if"}]))
 	return "\n".join(lines)
 
@@ -544,13 +544,13 @@ static func _emitted(found: Variant, var_name: String, attributes: Dictionary, r
 		copy.options = combo
 		if drop_hint:
 			copy.export_hint = ""
-		return SheetCompiler._emit_tree_variable_line(copy, refresh)
+		return EventSheetCompiler._emit_tree_variable_line(copy, refresh)
 	var descriptor: Dictionary = (found as Dictionary).duplicate(true)
 	descriptor["attributes"] = clean
 	descriptor.erase("options")
 	if not combo.is_empty():
 		descriptor["options"] = Array(combo)
-	return "\n".join(SheetCompiler._emit_variables({var_name: descriptor}, [], {}, {var_name: true} if refresh else {}))
+	return "\n".join(EventSheetCompiler._emit_variables({var_name: descriptor}, [], {}, {var_name: true} if refresh else {}))
 
 
 static func _attributes_with_options(found: Variant) -> Dictionary:

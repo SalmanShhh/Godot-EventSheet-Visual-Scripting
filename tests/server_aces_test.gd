@@ -46,7 +46,7 @@ static func run() -> bool:
 	event.actions.append(_action(by_id, "PhysicsSetGravityVector3D", {"direction": "Vector3.UP"}))
 	event.actions.append(_action(by_id, "SetVar", {"var_name": "bodies", "value": str(by_id["PhysicsActiveObjects2D"].codegen_template)}))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://server_aces.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://server_aces.gd").get("output", ""))
 	all_passed = _check("buses resolve by NAME at the call",
 		output.contains("AudioServer.set_bus_mute(AudioServer.get_bus_index(\"Music\"), true)"), true) and all_passed
 	all_passed = _check("the effect toggle compiles bus + slot + state",

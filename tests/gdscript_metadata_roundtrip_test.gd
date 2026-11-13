@@ -17,7 +17,7 @@ const PROBE_AUTOLOAD := "autoload/__EventSheetProbeAutoload"
 
 static func run() -> bool:
 	var all_passed: bool = true
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 
 	# addon_tags are recovered from the ## @ace_tags annotation.
 	var sheet: EventSheetResource = importer.import_external_source(TAGGED_SOURCE)
@@ -29,7 +29,7 @@ static func run() -> bool:
 
 	# Byte-identity is preserved: the @ace_tags line stays verbatim, never double-emitted.
 	sheet.external_source_path = PROBE_PATH
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, PROBE_PATH)
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, PROBE_PATH)
 	all_passed = _check("tagged source round-trips byte-identically",
 		str(compile_result.get("output", "")), TAGGED_SOURCE) and all_passed
 	_remove_probe_file()
@@ -45,20 +45,20 @@ static func run() -> bool:
 
 	# The autoload matcher resolves res:// directly (uid:// is resolved via ResourceUID at runtime).
 	all_passed = _check("autoload matcher: exact res:// path matches",
-		GDScriptImporter._autoload_target_matches("res://game_state.gd", "res://game_state.gd"), true) and all_passed
+		EventSheetGDScriptImporter._autoload_target_matches("res://game_state.gd", "res://game_state.gd"), true) and all_passed
 	all_passed = _check("autoload matcher: a different path does not match",
-		GDScriptImporter._autoload_target_matches("res://other.gd", "res://game_state.gd"), false) and all_passed
+		EventSheetGDScriptImporter._autoload_target_matches("res://other.gd", "res://game_state.gd"), false) and all_passed
 
 	# Autoload identity is recovered from the project's [autoload] registration (the source of truth).
 	var had_setting: bool = ProjectSettings.has_setting(PROBE_AUTOLOAD)
 	ProjectSettings.set_setting(PROBE_AUTOLOAD, "*" + PROBE_PATH)
 	var autoload_sheet: EventSheetResource = EventSheetResource.new()
-	GDScriptImporter._recover_autoload_identity(autoload_sheet, PROBE_PATH)
+	EventSheetGDScriptImporter._recover_autoload_identity(autoload_sheet, PROBE_PATH)
 	all_passed = _check("autoload_mode recovered from registration", autoload_sheet.autoload_mode, true) and all_passed
 	all_passed = _check("autoload_name recovered from registration", autoload_sheet.autoload_name, "__EventSheetProbeAutoload") and all_passed
 	# An unregistered .gd is a plain sheet, not an autoload.
 	var plain_sheet: EventSheetResource = EventSheetResource.new()
-	GDScriptImporter._recover_autoload_identity(plain_sheet, "res://__never_registered.gd")
+	EventSheetGDScriptImporter._recover_autoload_identity(plain_sheet, "res://__never_registered.gd")
 	all_passed = _check("unregistered .gd is not an autoload", plain_sheet.autoload_mode, false) and all_passed
 	if not had_setting:
 		ProjectSettings.set_setting(PROBE_AUTOLOAD, null)

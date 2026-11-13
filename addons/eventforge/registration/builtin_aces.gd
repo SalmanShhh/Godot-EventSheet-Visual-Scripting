@@ -35,7 +35,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 					descriptors.append(entry)
 	# Cross-node: give every host-only node-scoped ACE an optional "On node" target so it can act on
 	# another node, not just the host. Covenant-safe - a blank target compiles to the original host
-	# call, byte-for-byte (see _make_node_scoped_targetable + the {target.} idiom in ActionCodegen).
+	# call, byte-for-byte (see _make_node_scoped_targetable + the {target.} idiom in EventSheetActionCodegen).
 	for descriptor: ACEDescriptor in descriptors:
 		_make_node_scoped_targetable(descriptor)
 	return descriptors

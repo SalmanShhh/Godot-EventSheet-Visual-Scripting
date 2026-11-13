@@ -1,12 +1,12 @@
 # EventForge - Action code generation
 # Emits GDScript statements for ACE actions.
 @tool
-class_name ActionCodegen
+class_name EventSheetActionCodegen
 extends RefCounted
 
 
 ## Generates one action statement from an ACE action. target_default is an enclosing "With node X:"
-## scope (see SheetCompiler): when set, it fills the action's "On node" target if the author left it on
+## scope (see EventSheetCompiler): when set, it fills the action's "On node" target if the author left it on
 ## the host, so a scoped action inlines to that node.
 static func generate_action(action: ACEAction, target_default: String = "", host_default: String = "") -> String:
 	if action == null or not action.enabled:
@@ -41,12 +41,12 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 ## The two slots a row never fills itself, because the answer is already written in the file: the
 ## value a variable's declaration starts it on. Reset Variable writes `{var_name} = {starting_value}`
 ## and Reset Variables writes `{every_starting_value}`, and the compiler fills both from the sheet it
-## is compiling (SheetCompiler.declared_starting_values), so the starting value is typed once - on
+## is compiling (EventSheetCompiler.declared_starting_values), so the starting value is typed once - on
 ## the declaration - and a change to it changes what the reset writes.
 const STARTING_VALUE_SLOT: String = "starting_value"
 const EVERY_STARTING_VALUE_SLOT: String = "every_starting_value"
 
-## What the sheet being compiled declares, as SheetCompiler.declared_starting_values answers it:
+## What the sheet being compiled declares, as EventSheetCompiler.declared_starting_values answers it:
 ## {variable name: {"value": the code its declaration starts it on, "every": whether Reset
 ## Variables puts it back}}. Set at the start of every compile and cleared at the end; empty outside
 ## one, which is what a code echo with no sheet behind it sees.

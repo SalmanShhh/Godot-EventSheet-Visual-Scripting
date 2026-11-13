@@ -90,7 +90,7 @@ static func run() -> Dictionary:
 	# Where this audit's time goes is one number: how many scripts it opens as sheets. Read here and
 	# again at the end so the report can say whether every one of them was opened ONCE - see the
 	# `sheets_opened` / `importer_calls` pair below.
-	var importer_calls_before: int = GDScriptImporter.external_imports
+	var importer_calls_before: int = EventSheetGDScriptImporter.external_imports
 	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
 	#
@@ -289,7 +289,7 @@ static func run() -> Dictionary:
 	# this audit's performance story; a difference is a section that went round the sharing. The
 	# suite pins them as equal, and that pin costs no wall clock and so cannot flap on a slow runner.
 	var sheets_opened: int = _sheet_cache.size()
-	var importer_calls: int = GDScriptImporter.external_imports - importer_calls_before
+	var importer_calls: int = EventSheetGDScriptImporter.external_imports - importer_calls_before
 	_source_cache.clear()
 	_sheet_cache.clear()
 	_margin_cache.clear()
@@ -320,7 +320,7 @@ static func output_path_for(sheet_path: String) -> String:
 	var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 	if sheet == null:
 		return sheet_path.get_basename() + "_generated.gd"
-	return SheetCompiler._resolve_output_path(sheet, "")
+	return EventSheetCompiler._resolve_output_path(sheet, "")
 
 
 ## Every committed output must be exactly what its sheet compiles to today - the same
@@ -335,7 +335,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			_add(findings, "warning", "stale-output", sheet_path,
 				"No generated script yet - saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
 			continue
-		var result: Dictionary = SheetCompiler.compile(sheet, TEMP_PATH)
+		var result: Dictionary = EventSheetCompiler.compile(sheet, TEMP_PATH)
 		if not bool(result.get("success", false)):
 			_add(findings, "error", "compile", sheet_path,
 				"Sheet no longer compiles: %s" % str(result.get("errors")))
@@ -2475,7 +2475,7 @@ static func _list_files_with_extension(extension: String) -> PackedStringArray:
 ## green and breaks at game runtime.
 ##
 ## Renaming a provider's function changes the verb's identity, so every row that used it is orphaned.
-## Nothing catches that today: ActionCodegen prefers the template BAKED onto the row at apply time
+## Nothing catches that today: EventSheetActionCodegen prefers the template BAKED onto the row at apply time
 ## over any registry lookup, so the sheet still emits `$Player/WeaponKit.fire(...)` with zero errors
 ## and zero warnings, and Godot only complains when the player pulls the trigger.
 ##
@@ -2989,7 +2989,7 @@ static func source_of(path: String) -> String:
 static func sheet_of(path: String) -> EventSheetResource:
 	if _sheet_cache.has(path):
 		return _sheet_cache[path] as EventSheetResource
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	if _run_in_progress and path.begins_with("res://"):
 		_sheet_cache[path] = sheet
 	return sheet

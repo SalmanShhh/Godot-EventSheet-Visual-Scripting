@@ -50,8 +50,8 @@ static func run() -> bool:
 	note.text = "trailing note"
 	authored.events.append(note)
 
-	var source: String = str(SheetCompiler.compile(authored, "user://eventsheets_fn_lift_src.gd").get("output", ""))
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var source: String = str(EventSheetCompiler.compile(authored, "user://eventsheets_fn_lift_src.gd").get("output", ""))
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var function_blocks: int = 0
 	var lifted_comment: CommentRow = null
 	for row in imported.events:
@@ -79,14 +79,14 @@ static func run() -> bool:
 	all_passed = _check("trailing comment lifts as a comment row",
 		lifted_comment != null and lifted_comment.text == "trailing note", true) and all_passed
 	imported.external_source_path = "user://eventsheets_fn_lift_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_fn_lift_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_fn_lift_rt.gd").get("output", ""))
 	all_passed = _check("function lift round-trips byte-identically", roundtrip == source, true) and all_passed
 
 	# End-to-end on the shipped behavior pack: behavior-mode annotation regeneration
 	# ($PlatformerMovement.jump() templates) must verify too. Its byte round trip is
 	# pack_open_lift_test's, which re-emits every shipped pack file; the rows it lifts to are here.
 	var pack_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd")
-	var pack: EventSheetResource = GDScriptImporter.new().import_external_source(pack_source)
+	var pack: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(pack_source)
 	var pack_function_blocks: Array[String] = []
 	for row in pack.events:
 		if row is RawCodeRow and (row as RawCodeRow).code.begins_with("func "):
@@ -114,14 +114,14 @@ static func run() -> bool:
 	# Phase 1: an unannotated hand-written function reverse-lifts to an un-exposed sheet function
 	# (lifted_unannotated suppresses the @ace_hidden emission), still byte-identical.
 	var handwritten: String = "extends Node\n\nfunc helper() -> void:\n\tprint(\"hi\")\n"
-	var handwritten_imported: EventSheetResource = GDScriptImporter.new().import_external_source(handwritten)
+	var handwritten_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(handwritten)
 	all_passed = _check("unannotated function lifts to one un-exposed sheet function",
 		handwritten_imported.functions.size() == 1
 		and (handwritten_imported.functions[0] as EventFunction).function_name == "helper"
 		and not (handwritten_imported.functions[0] as EventFunction).expose_as_ace
 		and (handwritten_imported.functions[0] as EventFunction).lifted_unannotated, true) and all_passed
 	handwritten_imported.external_source_path = "user://eventsheets_hand_rt.gd"
-	var handwritten_roundtrip: String = str(SheetCompiler.compile(handwritten_imported, "user://eventsheets_hand_rt.gd").get("output", ""))
+	var handwritten_roundtrip: String = str(EventSheetCompiler.compile(handwritten_imported, "user://eventsheets_hand_rt.gd").get("output", ""))
 	all_passed = _check("handwritten file stays byte-identical", handwritten_roundtrip == handwritten, true) and all_passed
 
 	return all_passed

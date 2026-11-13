@@ -77,7 +77,7 @@ static func _test_markdown() -> bool:
 ## Markdown export. The row's own words win, so the listing says exactly what the canvas says - the
 ## sentence, without the GDScript echo drawn beside it.
 static func _test_declaration_row_punctuation() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(
 		"res://tests/fixtures/opened_scene_level.gd")
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_sheet(sheet)

@@ -621,7 +621,7 @@ static func _emit_action(ace_id: String, params: Dictionary) -> String:
 	action.ace_id = ace_id
 	action.enabled = true
 	action.params = params
-	return ActionCodegen.generate_action(action, "", "")
+	return EventSheetActionCodegen.generate_action(action, "", "")
 
 
 ## A CONDITION's emitted boolean expression, through the real compiler path.
@@ -631,13 +631,13 @@ static func _emit_condition(ace_id: String, params: Dictionary) -> String:
 	condition.ace_id = ace_id
 	condition.enabled = true
 	condition.params = params
-	return ConditionCodegen.generate_condition(condition, "")
+	return EventSheetConditionCodegen.generate_condition(condition, "")
 
 
 ## An EXPRESSION's emitted text. Expressions have no row of their own - the ƒx picker substitutes
 ## the shipped template into a field - so this is that substitution, on the SHIPPED descriptor.
 static func _emit_expression(ace_id: String, params: Dictionary) -> String:
-	return ActionCodegen._apply_template(_shipped(ace_id).codegen_template, params)
+	return EventSheetActionCodegen._apply_template(_shipped(ace_id).codegen_template, params)
 
 
 # -- Running the emitted code for real --

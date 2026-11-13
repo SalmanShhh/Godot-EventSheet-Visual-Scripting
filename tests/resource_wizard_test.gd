@@ -65,7 +65,7 @@ static func run() -> bool:
 	grid_variable.default_value = []
 	grid_variable.exported = true
 	grid_variable.attributes = (descriptor.get("attributes", {}) as Dictionary)
-	var emitted_line: String = SheetCompiler._emit_tree_variable_line(grid_variable)
+	var emitted_line: String = EventSheetCompiler._emit_tree_variable_line(grid_variable)
 	ok = _check(ok, emitted_line.contains("kind=enum(coin|gem|key)"),
 		"an API-built dropdown reaches the emitted marker (got %s)" % emitted_line)
 	ok = _check(ok, not emitted_line.contains("kind=String"), "and is not coerced to a plain column")
@@ -103,7 +103,7 @@ static func run() -> bool:
 
 	# ---- the covenant: the wizard's output compiles and round-trips byte-exactly ----
 	EventSheetNewResourceWizard._check_rows(sheet, validator_name)
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://wizard_roundtrip.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://wizard_roundtrip.gd")
 	ok = _check(ok, bool(compiled.get("success", false)), "the wizard sheet compiles")
 	var source: String = str(compiled.get("output", ""))
 	ok = _check(ok, source.contains("class_name LootDropTable") and source.contains("extends Resource"), "output is a named Resource script")
@@ -232,7 +232,7 @@ static func _column_notes() -> bool:
 	for entry: Variant in SUPPORT.reopen(source).events:
 		if entry is LocalVariable and (entry as LocalVariable).name == "loot_drops":
 			reopened_columns = (entry as LocalVariable).attributes.get("table_columns")
-	var hint: Dictionary = EventSheetAttributeDrawers.parse_drawer_hint(SheetCompiler._drawer_export_prefix(
+	var hint: Dictionary = EventSheetAttributeDrawers.parse_drawer_hint(EventSheetCompiler._drawer_export_prefix(
 		sheet.variables["loot_drops"]["attributes"], "Array").get_slice("\"", 1))
 	var drawer_columns: Array = EventSheetAttributeDrawers.parse_table_columns(str(hint["args"][0]), (hint["args"] as Array).slice(1))
 	var table: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new(drawer_columns)
@@ -261,7 +261,7 @@ static func _column_notes() -> bool:
 			["icon", "The picture shown in the inventory."]]],
 		["a texture cell is the picture beside its path", texture_cell, ["TextureRect", "LineEdit", "res://icon.svg"]],
 		["a grid with no notes is declared exactly as before",
-			SheetCompiler._drawer_export_prefix(EventSheets.resource_grid(["item", "count: int"])["attributes"], "Array"),
+			EventSheetCompiler._drawer_export_prefix(EventSheets.resource_grid(["item", "count: int"])["attributes"], "Array"),
 			"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int\") "],
 		["a description written by hand that does not name every column stays as written",
 			EventSheetAttributeDrawers.parse_table_columns("a=int,b=int", ["about=only one"]), [{"name": "a", "type": "int"}, {"name": "b", "type": "int"}]],

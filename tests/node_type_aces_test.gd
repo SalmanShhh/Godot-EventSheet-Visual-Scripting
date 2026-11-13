@@ -48,7 +48,7 @@ static func run() -> bool:
 		action.params = {"target": "$Player", "type": "\"Area2D\""}
 		event.actions.append(action)
 		sheet.events.append(event)
-		var output: String = str(SheetCompiler.compile(sheet, "user://node_type_aces.gd").get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(sheet, "user://node_type_aces.gd").get("output", ""))
 		all_passed = _check("resolves to a typed find_children call (target + type substituted)",
 			output.contains("$Player.find_children(\"*\", \"Area2D\", true, false)"), true) and all_passed
 
@@ -72,7 +72,7 @@ static func run() -> bool:
 		anim_action.params = {"target": "$Player", "anim": "\"walk\""}
 		anim_event.actions.append(anim_action)
 		anim_sheet.events.append(anim_event)
-		var anim_out: String = str(SheetCompiler.compile(anim_sheet, "user://anim_in_object.gd").get("output", ""))
+		var anim_out: String = str(EventSheetCompiler.compile(anim_sheet, "user://anim_in_object.gd").get("output", ""))
 		all_passed = _check("Play Animation (in object) auto-resolves the AnimationPlayer, guards null, and plays",
 			anim_out.contains("find_children(\"*\", \"AnimationPlayer\", true, false).pop_front() as AnimationPlayer") \
 			and anim_out.contains("if __ap_t0:") and anim_out.contains("__ap_t0.play(&\"walk\")"), true) and all_passed
@@ -97,7 +97,7 @@ static func run() -> bool:
 		r_action.params = {"target": "self", "anim": "\"run\""}
 		r_event.actions.append(r_action)
 		r_sheet.events.append(r_event)
-		var r_out: String = str(SheetCompiler.compile(r_sheet, "user://restart_anim.gd").get("output", ""))
+		var r_out: String = str(EventSheetCompiler.compile(r_sheet, "user://restart_anim.gd").get("output", ""))
 		all_passed = _check("Restart Animation (in object) stops then plays under a null guard",
 			r_out.contains("if __ap_r1:") and r_out.contains("__ap_r1.stop()") and r_out.contains("__ap_r1.play(&\"run\")"), true) and all_passed
 		var r_script: GDScript = GDScript.new()

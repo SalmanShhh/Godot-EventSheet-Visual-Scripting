@@ -32,7 +32,7 @@ static func _run_compare() -> bool:
 	dock.setup(sheet)
 
 	# The OTHER side is a real .gd on disk: this sheet's own compiled output, written once.
-	SheetCompiler.compile(sheet, SIDE_PATH)
+	EventSheetCompiler.compile(sheet, SIDE_PATH)
 	var dialog: EventSheetCompareDialog = EventSheetCompareDialog.new()
 	dialog.init(dock)
 	var same: Dictionary = dialog.compare_with(SIDE_PATH)
@@ -356,7 +356,7 @@ static func _print_action(text: String) -> ACEAction:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://eventforge_compare_test_probe.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_compare_test_probe.gd").get("output", ""))
 
 
 static func _labels_of(entries: Array, kind: String) -> PackedStringArray:

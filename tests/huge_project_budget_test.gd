@@ -321,7 +321,7 @@ static func _pin_opening_the_big_script(project: Dictionary, editor: EventSheetE
 	var source: String = FileAccess.get_file_as_string(path)
 	EventSheetOpenJob.warm_registries()
 	var start_usec: int = Time.get_ticks_usec()
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external(path, false)
 	EventSheetACELifter.attempt_lift(sheet, source)
 	editor.setup(sheet)

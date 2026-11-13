@@ -1,6 +1,6 @@
 # Godot EventSheets - Live Values debugger bridge (debugging rung 2)
 # Captures the throttled "eventsheets:live_values" messages that debug-compiled sheets
-# send from _process (see SheetCompiler - emit_live_values), and forwards them to the
+# send from _process (see EventSheetCompiler - emit_live_values), and forwards them to the
 # editor as a name->value dictionary. Registered by the plugin entry point.
 @tool
 class_name EventSheetLiveValuesDebugger

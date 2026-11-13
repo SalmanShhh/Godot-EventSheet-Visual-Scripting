@@ -287,7 +287,7 @@ static func _first_value_default(registry: EventSheetACERegistry, ace_id: String
 ## reading of a value the file still holds as a colour.
 static func _test_the_rows_read_as_percentages() -> bool:
 	return _check("the crypt's lit lines read as sentences about its own nodes",
-		_readings(GDScriptImporter.new().import_external(CRYPT)), [
+		_readings(EventSheetGDScriptImporter.new().import_external(CRYPT)), [
 			"Level ▸ Set darkness to 70%, tinted #4d4d5c",
 			"level ▸ Set darkness to 92%, tinted #111522",
 			"Level ▸ Fade darkness to 90% over 10 s",

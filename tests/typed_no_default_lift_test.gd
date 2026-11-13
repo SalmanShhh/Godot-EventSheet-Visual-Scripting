@@ -84,10 +84,10 @@ static func run() -> bool:
 	var written_null: LocalVariable = flagged.duplicate() as LocalVariable
 	written_null.no_default = false
 	ok = SUPPORT.pins(TEST_NAME, [
-		["an empty slot writes no value", SheetCompiler._emit_tree_variable_line(flagged),
+		["an empty slot writes no value", EventSheetCompiler._emit_tree_variable_line(flagged),
 			"@export var creak_sound: AudioStream"],
-		["a given value is written", SheetCompiler._emit_tree_variable_line(given), "var hp: int = 3"],
-		["an unflagged empty default still says null", SheetCompiler._emit_tree_variable_line(written_null),
+		["a given value is written", EventSheetCompiler._emit_tree_variable_line(given), "var hp: int = 3"],
+		["an unflagged empty default still says null", EventSheetCompiler._emit_tree_variable_line(written_null),
 			"@export var creak_sound: AudioStream = null"],
 	]) and ok
 

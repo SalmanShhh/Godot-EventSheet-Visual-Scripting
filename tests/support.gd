@@ -77,7 +77,7 @@ static func pins(label_prefix: String, rows: Array) -> bool:
 ## `output_path` is the path the sheet is being saved to, and the compiler needs it for anything
 ## whose emission depends on where the file lands; leave it empty for a sheet with no home yet.
 static func compile_output(sheet: EventSheetResource, output_path: String = "") -> String:
-	return str(SheetCompiler.compile(sheet, output_path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, output_path).get("output", ""))
 
 
 ## Opens generated GDScript back as a sheet, the way the editor opens a `.gd` file.
@@ -85,7 +85,7 @@ static func compile_output(sheet: EventSheetResource, output_path: String = "") 
 ## `lift` false imports without lifting statements into ACE rows, which is how a test pins the
 ## verbatim fallback. `script_path` is the path the source came from, for the readings that need it.
 static func reopen(source: String, lift: bool = true, script_path: String = "") -> EventSheetResource:
-	return GDScriptImporter.new().import_external_source(source, lift, script_path)
+	return EventSheetGDScriptImporter.new().import_external_source(source, lift, script_path)
 
 
 ## Reopens generated GDScript and re-emits it from the reopened sheet, returning the second text.

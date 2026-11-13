@@ -611,7 +611,7 @@ func _sheet_enums() -> Array:
 	if sheet == null:
 		return out
 	var rows: Array = []
-	SheetCompiler._collect_enum_rows(sheet.events, rows)
+	EventSheetCompiler._collect_enum_rows(sheet.events, rows)
 	for row: Variant in rows:
 		if row is EnumRow and (row as EnumRow).enabled:
 			out.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})

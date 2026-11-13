@@ -165,7 +165,7 @@ static func _emit(template: String, params: Dictionary) -> String:
 	action.provider_id = "Core"
 	action.codegen_template = template
 	action.params = params.duplicate()
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)
 
 
 static func _source(file_name: String) -> String:
@@ -174,13 +174,13 @@ static func _source(file_name: String) -> String:
 
 static func _open(file_name: String) -> EventSheetResource:
 	var path: String = FIXTURE_DIR + file_name
-	return GDScriptImporter.new().import_external_source(_source(file_name), true, path)
+	return EventSheetGDScriptImporter.new().import_external_source(_source(file_name), true, path)
 
 
 static func _roundtrips(file_name: String, sheet: EventSheetResource) -> bool:
 	var saved: String = sheet.external_source_path
 	sheet.external_source_path = "user://_effect_roundtrip.gd"
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	sheet.external_source_path = saved
 	if output == _source(file_name):
 		return _check("%s comes back byte for byte" % file_name, true, true)

@@ -709,7 +709,7 @@ func _save_sheet_to_path(path: String) -> void:
 
 ## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the
 ## GDScript-backed source of truth, so the file IS the sheet and future edits round-trip through it.
-## SheetCompiler.compile already picks the right path - full header for a structured sheet, order-
+## EventSheetCompiler.compile already picks the right path - full header for a structured sheet, order-
 ## preserving for an already-backed one. The reopened sheet is editable (not the read-only preview a
 ## casual Open gives), since the user just authored it. Returns whether it saved.
 func _save_sheet_as_gdscript(path: String) -> bool:

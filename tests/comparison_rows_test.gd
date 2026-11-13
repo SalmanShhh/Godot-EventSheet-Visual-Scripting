@@ -197,7 +197,7 @@ static func _test_flip() -> bool:
 	baked.codegen_template = "is_hurt()"
 	baked.negated = true
 	passed = _check("a condition with no opposite still wraps",
-		ConditionCodegen.generate_condition(baked), "not (is_hurt())") and passed
+		EventSheetConditionCodegen.generate_condition(baked), "not (is_hurt())") and passed
 
 	# The row says the same thing the file does, and drops the denial mark with it.
 	var viewport: EventSheetViewport = EventSheetViewport.new()
@@ -224,10 +224,10 @@ static func _test_flip() -> bool:
 	# The covenant, both ways round: whatever each spelling lifted to re-emits that spelling exactly.
 	for body: String in ["if hp > 0:\n\tprint(\"alive\")", "if not (hp <= 0):\n\tprint(\"alive\")"]:
 		var source: String = _source_around(body)
-		var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+		var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 		imported.external_source_path = "user://__compare_rt.gd"
 		passed = _check("`%s` round-trips byte-identically" % body.get_slice("\n", 0),
-			str(SheetCompiler.compile(imported, "user://__compare_rt.gd").get("output", "")), source) and passed
+			str(EventSheetCompiler.compile(imported, "user://__compare_rt.gd").get("output", "")), source) and passed
 	return passed
 
 
@@ -358,7 +358,7 @@ static func _comparison(variable: String, operator: String, value: String, negat
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://__comparison_rows.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://__comparison_rows.gd").get("output", ""))
 
 
 ## A whole file with `body` as its one raw block, which is what the lift is handed.
@@ -372,11 +372,11 @@ static func _source_around(body: String) -> String:
 	raw.code = body
 	event.actions.append(raw)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://__compare_src.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://__compare_src.gd").get("output", ""))
 
 
 static func _lifted_condition_row(body: String) -> EventRow:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(_source_around(body))
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(_source_around(body))
 	return _first_conditioned(imported.events)
 
 
@@ -397,7 +397,7 @@ static func _lifted_expression(event: EventRow) -> String:
 	var condition: ACECondition = event.conditions[0]
 	condition = condition.duplicate()
 	condition.negated = false
-	return ConditionCodegen.generate_condition(condition)
+	return EventSheetConditionCodegen.generate_condition(condition)
 
 
 static func _lifted_negated(event: EventRow) -> bool:

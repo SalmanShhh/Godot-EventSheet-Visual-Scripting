@@ -207,7 +207,7 @@ static func _test_the_derived_layer_names_something() -> bool:
 	var paths: PackedStringArray = PackedStringArray(DERIVED_FLOOR.keys())
 	paths.sort()
 	for path: String in paths:
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		var measure: Dictionary = EventSheetGenericRows.derived_measure(sheet)
 		var named: int = int(measure.get("derived", 0))
 		said.append("%s %d/%d" % [path.get_file(), named, int(measure.get("statements", 0))])
@@ -326,11 +326,11 @@ static func _test_corpus() -> bool:
 	var wordless: PackedStringArray = PackedStringArray()
 	for path: String in sample:
 		var source: String = FileAccess.get_file_as_string(path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		if sheet == null:
 			unreadable.append(path)
 			continue
-		var emitted: String = str(SheetCompiler.compile(sheet,
+		var emitted: String = str(EventSheetCompiler.compile(sheet,
 			"user://_plugin_reads_itself.gd").get("output", ""))
 		if emitted != source and not path in KNOWN_DRIFT:
 			drifted.append(path)

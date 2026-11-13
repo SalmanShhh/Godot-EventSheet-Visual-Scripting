@@ -86,7 +86,7 @@ static func fetch(path: String, source: String) -> EventSheetResource:
 	sheet.external_source_path = path
 	load(IMPORTER_PATH)._recover_autoload_identity(sheet, path)
 	# The binding check: the remembered sheet must write the file back exactly.
-	if str(SheetCompiler.echo(sheet, true).get("output", "")) != source:
+	if str(EventSheetCompiler.echo(sheet, true).get("output", "")) != source:
 		_discard(path, key, entry_path, true)
 		return null
 	hits += 1
@@ -218,7 +218,7 @@ static func clear() -> void:
 ## The key a remembered sheet must carry to be used for `source`, the text of the file at `path`.
 static func key_for(source: String, code_stamp: String = "", path: String = "") -> String:
 	var stamp: String = code_stamp if not code_stamp.is_empty() else code_stamp_now()
-	return "%d|%s|%s|%d|%s|%s" % [FORMAT, source.md5_text(), SheetCompiler.VERSION, ACERegistry.descriptor_count(),
+	return "%d|%s|%s|%d|%s|%s" % [FORMAT, source.md5_text(), EventSheetCompiler.VERSION, ACERegistry.descriptor_count(),
 		scene_stamp(path), stamp]
 
 

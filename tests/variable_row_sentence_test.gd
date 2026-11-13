@@ -234,7 +234,7 @@ static func _test_the_order_reaches_the_file() -> bool:
 ## The variables an emitted sheet declares, in file order.
 static func _declared_names(sheet: EventSheetResource) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
-	var output: String = str(SheetCompiler.compile(sheet, "user://variable_row_order.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://variable_row_order.gd").get("output", ""))
 	for line: String in output.split("
 "):
 		var bare: String = line.strip_edges()
@@ -260,7 +260,7 @@ static func _test_show_in_inspector_writes_the_flag() -> bool:
 	ok = _check("the flag is written into the sheet",
 		bool((dock.get_current_sheet().variables["hp"] as Dictionary).get("exported", false)), true) and ok
 	ok = _check("and the row now emits an @export line",
-		str(SheetCompiler.compile(dock.get_current_sheet(), "user://variable_row_export.gd").get("output", "")).contains("@export var hp"),
+		str(EventSheetCompiler.compile(dock.get_current_sheet(), "user://variable_row_export.gd").get("output", "")).contains("@export var hp"),
 		true) and ok
 	ok = _check("the menu tick follows the write", manager.context_variable_exported(), true) and ok
 	dock._on_undo_requested()
@@ -342,7 +342,7 @@ static func _test_a_sheet_variables_echo_is_a_line_of_the_compiled_file() -> boo
 		"seed_value": "@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) var seed_value: int = 1",
 		"hp": "@export_range(0, 100, 1) var hp: int = 100:",
 	}
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_variable_echo.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_variable_echo.gd").get("output", ""))
 	for var_name: String in expected:
 		var echoed: String = EventSheetCodeEcho.line_for_descriptor(var_name, sheet.variables[var_name])
 		ok = _check("the echo on %s is the declaration the compiler spells" % var_name,

@@ -156,7 +156,7 @@ Details that decide the choice:
 - **`register_simple_ace`** appends to a static list that joins every registry refresh
   (`EventSheetACERegistry.refresh_from_sources` calls `EventSheets.simple_aces()`). Nothing is
   written to disk, so it lives exactly as long as the editor session that registered it.
-- **A published sheet function emits its own annotations.** `SheetCompiler._emit_expose_annotations`
+- **A published sheet function emits its own annotations.** `EventSheetCompiler._emit_expose_annotations`
   writes `@ace_action` / `@ace_condition` / `@ace_expression` (chosen by return type), plus
   name, category, description, display template, param options/hints, icon, and
   `@ace_codegen_template("$Class.fn({args})")`. A compiled pack IS a provider script, which
@@ -260,7 +260,7 @@ re-reflects them, so "the stub works when pasted" is a gate, not a hope.
 | `@ace_hidden` | Hide from the picker. |
 | `@ace_featured` | Bold, floated to the top of its category. |
 | `@ace_deprecated("why", "successor_ace_id")` | Keeps compiling in existing sheets, hidden from the picker, flagged on hover. |
-| `@ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` | The FORWARDING ADDRESS - where the newer spelling lives, what this row's parameters are called over there, and a value for each parameter the old row never had. It is NOT deprecation: the verb keeps its id, its template and its place in the picker. The compiler emits this line (`SheetCompiler._emit_expose_annotations`) and the importer reads it back. |
+| `@ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` | The FORWARDING ADDRESS - where the newer spelling lives, what this row's parameters are called over there, and a value for each parameter the old row never had. It is NOT deprecation: the verb keeps its id, its template and its place in the picker. The compiler emits this line (`EventSheetCompiler._emit_expose_annotations`) and the importer reads it back. |
 | `@ace_lift_example("…[[slot\|node: $X]]…")` | One spelling this verb is written as BY HAND, marked up. Read by the importer (`addons/eventforge/importer/pack_spellings.gd`), never by the generator: it changes how an opened file READS, never what a row emits. |
 | `@ace_icon(path)` | Picker icon. |
 
@@ -305,7 +305,7 @@ Verified by round-tripping real annotations through the analyzer:
 - **Option labels have no escape.** `options: a=Alpha|b=Beta`, and a key containing `=` ships
   quoted (`"<="=at most`), but a label containing a comma has no one-line form. The compiler's
   own emitter degrades such a label to its bare key rather than emitting a spec that parses
-  into garbage (`SheetCompiler._param_option_text`); do the same.
+  into garbage (`EventSheetCompiler._param_option_text`); do the same.
 - **`hint: comparison`** expands to the canonical six operators, each labeled in English, and
   seeds `==` so the row reads as a sentence on drop.
 - **Param LABELS come from the id.** No annotation sets a parameter's display name, so
@@ -437,7 +437,7 @@ condition is evaluated, and nothing at authoring time will tell you.
 
 Put `await` in the template. `Wait` is literally
 `await get_tree().create_timer({seconds}).timeout`. The compiler notices
-(`SheetCompiler._subtree_awaits` matches an `await ` in the template, a row marked awaited,
+(`EventSheetCompiler._subtree_awaits` matches an `await ` in the template, a row marked awaited,
 or one of `_COROUTINE_ACE_IDS`) and splits an awaiting event into its own coroutine, called
 fire-and-forget so sibling events never freeze behind it. For a multi-statement action only
 the LAST emitted line is awaited. Budget-style awaits belong in one-shot triggers, never in a
@@ -494,7 +494,7 @@ neither `bool` nor `void` classifies as an expression with no annotation at all.
 
 Do not invent a save file. Marking a sheet VARIABLE "Remember Between Runs" makes the
 compiler append a persistence trio at the tail of the file
-(`SheetCompiler._append_remembered_persistence`): an `@onready` boot member calling
+(`EventSheetCompiler._append_remembered_persistence`): an `@onready` boot member calling
 `_ef_recall_remembered()`, which loads `user://remembered.cfg` (section = the sheet's custom
 class name, else `vars`) and connects `tree_exiting` to `_ef_store_remembered()`. It is
 name-addressed: a sheet that already carries a `_ef_recall_remembered` function gets no

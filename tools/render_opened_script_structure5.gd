@@ -82,7 +82,7 @@ func _init() -> void:
 	_viewport.set_ace_registry(EventSheetACERegistry.new())
 	_scroll.add_child(_viewport)
 	_write(FIXTURE_PATH, FIXTURE_SOURCE)
-	_sheet = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	_sheet = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	# The dock opens a .gd as a read-only preview; the importer leaves the flag alone.
 	_sheet.read_only = true
 	var style := EventSheetEditorStyle.new()
@@ -100,7 +100,7 @@ func _init() -> void:
 	# End to end: the real check, the real source map, the real row join.
 	_errors = EventSheetParseErrors.check_file(FIXTURE_PATH)
 	EventSheetParseErrors.store_on_sheet(_sheet, _errors)
-	var source_map: Array = SheetCompiler.compile(_sheet, FIXTURE_PATH).get("source_map", [])
+	var source_map: Array = EventSheetCompiler.compile(_sheet, FIXTURE_PATH).get("source_map", [])
 	_viewport.set_row_diagnostics(EventSheetParseErrors.row_diagnostics(_errors, source_map))
 	_viewport.set_sheet(_sheet)
 	root.gui_disable_input = true
@@ -120,7 +120,7 @@ func _on_frame() -> void:
 	var image: Image = _shot.get_texture().get_image()
 	image.save_png("res://docs/images/opened-script-structure5.png")
 	print("[preview] opened script structure %dx%d" % [image.get_width(), image.get_height()])
-	print("[preview] round-trips: %s" % str(str(SheetCompiler.compile(_sheet, FIXTURE_PATH).get("output", "")) == FIXTURE_SOURCE))
+	print("[preview] round-trips: %s" % str(str(EventSheetCompiler.compile(_sheet, FIXTURE_PATH).get("output", "")) == FIXTURE_SOURCE))
 	print("[preview] parse errors the engine reported: %d" % _errors.size())
 	for error_entry: Variant in _errors:
 		print("    line %d: %s" % [int((error_entry as Dictionary).get("line", 0)), str((error_entry as Dictionary).get("message", ""))])

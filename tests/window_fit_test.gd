@@ -99,5 +99,5 @@ static func _run_dock_dialogs() -> bool:
 		["Variable: a long value opens it no wider than an empty one", variable_long_width, variable_short_width],
 		["Variable: the window asks for no height of its own", variable_height_floor, 0],
 		["Variable: the cards are shown whole up to the most they get before scrolling", scroll_height,
-			minf(form_height, EventSheetPalette.scaled_f(VariableDialog.FORM_MAX_HEIGHT))],
+			minf(form_height, EventSheetPalette.scaled_f(EventSheetVariableDialog.FORM_MAX_HEIGHT))],
 	])

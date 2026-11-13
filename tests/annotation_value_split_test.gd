@@ -129,7 +129,7 @@ static func run() -> bool:
 	# gap, and the "or leave it empty" entry the list offered silently stopped existing.
 	var empty_first: Array = ["", "audio", "camera"]
 	ok = _check("an empty option is written as a quoted empty word",
-		SheetCompiler._param_option_text(""), "\"\"") and ok
+		EventSheetCompiler._param_option_text(""), "\"\"") and ok
 	ok = _check("the option list keeps its empty entry through a round trip",
 		_option_keys(_emit_options(empty_first)), empty_first) and ok
 	ok = _check("a plain option list is written exactly as it was",
@@ -456,7 +456,7 @@ static func _emit_param_line(starting_value: String, spelling: String) -> String
 	ace_param.default_value = starting_value
 	ace_param.default_spelling = spelling
 	ace_param.description = "Help, with a comma."
-	var written: PackedStringArray = SheetCompiler._param_annotation_lines(ace_param)
+	var written: PackedStringArray = EventSheetCompiler._param_annotation_lines(ace_param)
 	return written[0] if written.size() > 0 else "<nothing written>"
 
 
@@ -490,7 +490,7 @@ static func _reemit(line: String, param_id: String) -> String:
 	ace_param.default_value = (fields.get("param_defaults", {}) as Dictionary).get(param_id, "")
 	ace_param.default_spelling = str((fields.get("param_default_spellings", {}) as Dictionary).get(param_id, ""))
 	ace_param.description = str((fields.get("param_descriptions", {}) as Dictionary).get(param_id, ""))
-	var written: PackedStringArray = SheetCompiler._param_annotation_lines(ace_param)
+	var written: PackedStringArray = EventSheetCompiler._param_annotation_lines(ace_param)
 	return written[0] if written.size() > 0 else "<nothing written>"
 
 
@@ -498,7 +498,7 @@ static func _reemit(line: String, param_id: String) -> String:
 static func _emit_options(options: Array) -> String:
 	var texts: PackedStringArray = PackedStringArray()
 	for option_value: Variant in options:
-		texts.append(SheetCompiler._param_option_text(option_value))
+		texts.append(EventSheetCompiler._param_option_text(option_value))
 	return "|".join(texts)
 
 

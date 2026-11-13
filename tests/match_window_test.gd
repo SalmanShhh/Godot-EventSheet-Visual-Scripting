@@ -68,7 +68,7 @@ static func _test_choices() -> bool:
 
 
 static func _test_sheet_reading() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -120,7 +120,7 @@ static func _test_sheet_reading() -> bool:
 	action.codegen_template = "print({message})"
 	action.params = {"message": "\"run\""}
 	EventSheetStructRowDialogs.append_case_action(match_row.cases[1], action)
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://match_window_out.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://match_window_out.gd").get("output", ""))
 	ok = SUPPORT.check(NAME, "the action compiles inside its branch, in place of pass",
 		compiled.contains("\t\tState.RUN:\n\t\t\tprint(\"run\")\n\t\t_:"), true) and ok
 	# Every edit swaps in a snapshot copy of the match; the branch answers kept are one sweep's only.
@@ -135,7 +135,7 @@ static func _test_sheet_reading() -> bool:
 
 
 static func _test_window() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)

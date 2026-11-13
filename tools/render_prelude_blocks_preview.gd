@@ -51,7 +51,7 @@ func _init() -> void:
 	var sample: FileAccess = FileAccess.open("user://prelude_blocks_sample.gd", FileAccess.WRITE)
 	sample.store_string(SAMPLE)
 	sample.close()
-	_sheet = GDScriptImporter.new().import_external("user://prelude_blocks_sample.gd")
+	_sheet = EventSheetGDScriptImporter.new().import_external("user://prelude_blocks_sample.gd")
 	var modern_style := EventSheetEditorStyle.new()
 	modern_style.ensure_defaults()
 	EventSheetGodotTheme.apply(modern_style, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), Color("#569eff"), Color("#ced0d2"))

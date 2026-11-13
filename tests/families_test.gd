@@ -24,7 +24,7 @@ static func run() -> bool:
 	family.custom_class_name = "Enemy"
 	family.is_family = true
 	family.variables = {"health": {"type": "int", "default": 100, "exported": true}}
-	var family_out: String = str(SheetCompiler.compile(family, "user://__family_enemy.gd").get("output", ""))
+	var family_out: String = str(EventSheetCompiler.compile(family, "user://__family_enemy.gd").get("output", ""))
 	all_passed = _check("family sheet emits `## @ace_family(Enemy)`",
 		family_out.contains("## @ace_family(Enemy)"), true) and all_passed
 	all_passed = _check("family group derives from the class name",
@@ -33,7 +33,7 @@ static func run() -> bool:
 		family_out.contains("add_to_group"), false) and all_passed
 
 	# ── Round-trip: re-importing the compiled .gd recovers the family flag ──
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(family_out)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(family_out)
 	all_passed = _check("re-importing the .gd recovers is_family", reimported.is_family, true) and all_passed
 	# Byte gate: an opened .gd recompiles to itself EXACTLY - pins the @ace_family marker's PLACEMENT
 	# (not just its presence), so it can't drift or double-emit. Must go through the real opened-file path:
@@ -43,8 +43,8 @@ static func run() -> bool:
 	var rt_file: FileAccess = FileAccess.open(rt_path, FileAccess.WRITE)
 	rt_file.store_string(family_out)
 	rt_file.close()
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(rt_path)
-	var recompiled: String = str(SheetCompiler.compile(reopened, "user://__family_rt2.gd").get("output", ""))
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(rt_path)
+	var recompiled: String = str(EventSheetCompiler.compile(reopened, "user://__family_rt2.gd").get("output", ""))
 	all_passed = _check("the family .gd recompiles byte-identically (opened-file round-trip)", recompiled == family_out, true) and all_passed
 	all_passed = _check("a non-family sheet stays non-family after round-trip",
 		not _roundtrip_is_family("Plain", false), true) and all_passed
@@ -62,7 +62,7 @@ static func run() -> bool:
 	event.pick_filters.append(pick)
 	event.actions.append(_raw_action("enemy.modulate = Color.RED"))
 	game.events.append(event)
-	var game_out: String = str(SheetCompiler.compile(game, "user://__family_game.gd").get("output", ""))
+	var game_out: String = str(EventSheetCompiler.compile(game, "user://__family_game.gd").get("output", ""))
 	all_passed = _check("family-scoped event compiles to a group loop",
 		game_out.contains("for enemy in get_tree().get_nodes_in_group(\"family_enemy\"):"), true) and all_passed
 	all_passed = _check("the per-instance action runs inside the loop body",
@@ -72,7 +72,7 @@ static func run() -> bool:
 	var unnamed: EventSheetResource = EventSheetResource.new()
 	unnamed.host_class = "Node2D"
 	unnamed.is_family = true  # but no custom_class_name
-	var unnamed_result: Dictionary = SheetCompiler.compile(unnamed, "user://__family_unnamed.gd")
+	var unnamed_result: Dictionary = EventSheetCompiler.compile(unnamed, "user://__family_unnamed.gd")
 	var warned: bool = false
 	for warning: String in unnamed_result.get("warnings", []):
 		if warning.contains("Family") and warning.contains("class name"):
@@ -88,8 +88,8 @@ static func _roundtrip_is_family(class_id: String, flag: bool) -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = class_id
 	sheet.is_family = flag
-	var out: String = str(SheetCompiler.compile(sheet, "user://__family_rt.gd").get("output", ""))
-	return GDScriptImporter.new().import_external_source(out).is_family
+	var out: String = str(EventSheetCompiler.compile(sheet, "user://__family_rt.gd").get("output", ""))
+	return EventSheetGDScriptImporter.new().import_external_source(out).is_family
 
 
 ## A self-contained per-instance action: the codegen_template carries the whole statement (no params),

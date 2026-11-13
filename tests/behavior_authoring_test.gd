@@ -50,7 +50,7 @@ static func run() -> bool:
 	sheet.functions.append(hidden)
 
 	var output_path: String = "user://eventforge_behavior_authoring.gd"
-	var output: String = str(SheetCompiler.compile(sheet, output_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, output_path).get("output", ""))
 	all_passed = _check("exposed function carries @ace_action", output.contains("## @ace_action"), true) and all_passed
 	all_passed = _check("display name annotation emitted", output.contains("## @ace_name(\"Dash\")"), true) and all_passed
 	all_passed = _check("category annotation emitted", output.contains("## @ace_category(\"Movement\")"), true) and all_passed
@@ -78,7 +78,7 @@ static func run() -> bool:
 	heal.function_name = "heal"
 	heal.expose_as_ace = true
 	node_sheet.functions.append(heal)
-	var node_output: String = str(SheetCompiler.compile(node_sheet, "user://eventforge_node_authoring.gd").get("output", ""))
+	var node_output: String = str(EventSheetCompiler.compile(node_sheet, "user://eventforge_node_authoring.gd").get("output", ""))
 	all_passed = _check("custom-node templates call self methods",
 		node_output.contains("## @ace_codegen_template(\"heal()\")"), true) and all_passed
 

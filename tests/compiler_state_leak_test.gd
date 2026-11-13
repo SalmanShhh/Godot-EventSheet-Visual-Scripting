@@ -224,23 +224,23 @@ static func _emission_runners() -> Array[Dictionary]:
 	return [
 		{
 			"name": "a compiled sheet", "entry_point": "compile",
-			"emit": func() -> String: return str(SheetCompiler.compile(plain, "").get("output", ""))
+			"emit": func() -> String: return str(EventSheetCompiler.compile(plain, "").get("output", ""))
 		},
 		{
 			"name": "an opened .gd saved back", "entry_point": "compile",
-			"emit": func() -> String: return str(SheetCompiler.compile(opened, "").get("output", ""))
+			"emit": func() -> String: return str(EventSheetCompiler.compile(opened, "").get("output", ""))
 		},
 		{
 			"name": "a sheet read without writing", "entry_point": "echo",
-			"emit": func() -> String: return str(SheetCompiler.echo(opened).get("output", ""))
+			"emit": func() -> String: return str(EventSheetCompiler.echo(opened).get("output", ""))
 		},
 		{
 			"name": "the lift's function-block gate", "entry_point": "emit_function_block_text",
-			"emit": func() -> String: return SheetCompiler.emit_function_block_text(mover, plain)
+			"emit": func() -> String: return EventSheetCompiler.emit_function_block_text(mover, plain)
 		},
 		{
 			"name": "the lift's anchored-handler gate", "entry_point": "emit_anchored_trigger_text",
-			"emit": func() -> String: return SheetCompiler.emit_anchored_trigger_text(mover.events)
+			"emit": func() -> String: return EventSheetCompiler.emit_anchored_trigger_text(mover.events)
 		}
 	]
 
@@ -278,7 +278,7 @@ static func _poison_for(type_id: int) -> Variant:
 ## The value every working-state static holds after a clean compile - snapshotted rather than assumed, so
 ## the sweep restores what it found instead of what it thinks the defaults are.
 static func _defaults() -> Dictionary:
-	SheetCompiler.compile(_plain_sheet(), "")
+	EventSheetCompiler.compile(_plain_sheet(), "")
 	var snapshot: Dictionary = {}
 	for entry: Dictionary in _working_statics():
 		snapshot["%s/%s" % [str(entry["script_name"]), str(entry["name"])]] = (entry["script"] as Object).get(str(entry["name"]))
@@ -346,7 +346,7 @@ static func _compile_a_behaviour_sheet() -> void:
 	behavior.custom_class_name = "StateLeakBehaviourProbe"
 	behavior.functions = [_probe_function()]
 	behavior.external_source_path = UNNAMED_OUTPUT
-	SheetCompiler.compile(behavior, "")
+	EventSheetCompiler.compile(behavior, "")
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

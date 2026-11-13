@@ -374,7 +374,7 @@ static func _test_round_trip_is_byte_identical() -> bool:
 ## back rows that are shared with every other import of the same file: an Adopt test that rewrote
 ## them in place would silently rewrite the fixture for every test after it.
 static func _sheet(path: String) -> EventSheetResource:
-	var sheet: EventSheetResource = (GDScriptImporter.new().import_external(path)).duplicate(true)
+	var sheet: EventSheetResource = (EventSheetGDScriptImporter.new().import_external(path)).duplicate(true)
 	sheet.read_only = true
 	return sheet
 
@@ -473,7 +473,7 @@ static func _finding_severity(findings: Array[Dictionary], check_id: String) -> 
 ## to the sheet's own file, so emitting a sheet this test has deliberately rewritten would rewrite
 ## the fixture under every test after it.
 static func _emitted(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, TEMP_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, TEMP_PATH).get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -42,9 +42,9 @@ static func run() -> bool:
 
 	# Round-trip: the generated .gd re-imports and recompiles byte-for-byte (Option A: the block
 	# expands to individual targeted ACEs, which re-emit identically).
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://__with_node_roundtrip.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://__with_node_roundtrip.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://__with_node_roundtrip.gd").get("output", ""))
 	all_passed = _check("scoped output re-imports + recompiles byte-identically", roundtrip == source, true) and all_passed
 
 	return all_passed
@@ -76,7 +76,7 @@ static func _compile_scope_sheet() -> String:
 
 	on_ready.sub_events.append(scope)
 	sheet.events.append(on_ready)
-	return str(SheetCompiler.compile(sheet, "user://__with_node_compiled.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://__with_node_compiled.gd").get("output", ""))
 
 
 ## A Core action with empty codegen_template, so the compiler resolves the registered (post-processed)

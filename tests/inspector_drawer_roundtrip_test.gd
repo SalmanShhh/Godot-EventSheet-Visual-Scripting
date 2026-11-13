@@ -62,13 +62,13 @@ static func run() -> bool:
 	all_passed = _roundtrip("curve_editor", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var falloff: Curve = null", "falloff", "curve_editor") and all_passed
 
 	# progress_bar recovers its bounds into the range dict the emitter reads.
-	var pb_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:200\") var hp: int = 50\n")
+	var pb_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:200\") var hp: int = 50\n")
 	var pb: LocalVariable = _find(pb_sheet, "hp")
 	all_passed = _eq("progress_bar recovers its bounds into range",
 		(pb.attributes as Dictionary).get("range") if pb != null else null, {"min": "0", "max": "200"}) and all_passed
 
 	# A read-only @export_custom (empty hint string) must NOT be mistaken for a drawer.
-	var ro_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) var locked: int = 3\n")
+	var ro_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) var locked: int = 3\n")
 	var ro: LocalVariable = _find(ro_sheet, "locked")
 	all_passed = _eq("read-only export_custom is not absorbed as a drawer",
 		ro != null and (ro.attributes as Dictionary).has("drawer"), false) and all_passed
@@ -87,13 +87,13 @@ static func run() -> bool:
 
 	# min_max recovers its bounds into the range dict the emitter reads, and re-emits byte-identically.
 	var mm_line: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:min_max:0:60\") var spawn_gap: Vector2 = Vector2(10.0, 40.0)"
-	var mm_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + mm_line + "\n")
+	var mm_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + mm_line + "\n")
 	var mm: LocalVariable = _find(mm_sheet, "spawn_gap")
 	all_passed = _eq("min_max recovers its bounds into range",
 		(mm.attributes as Dictionary).get("range") if mm != null else null, {"min": "0", "max": "60"}) and all_passed
 	if mm != null:
 		all_passed = _eq("a min_max var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(mm), mm_line) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(mm), mm_line) and all_passed
 
 	# --- Dialog: each drawer is an Inspector look of exactly the types that can host it. ---
 	for hosted: Array in [["int", "progress_bar"], ["float", "progress_bar"], ["Vector2", "vector_dial"], ["Vector2", "min_max"],
@@ -108,11 +108,11 @@ static func run() -> bool:
 	# value. This drives EventSheetVariableOwners.default_text → _parse_default (the real edit cycle). Before the fix the
 	# display used str() - "(5.0, -3.0)" - which _parse_default silently zeroed the first component on edit.
 	all_passed = _eq("a Vector2 default survives a display→edit cycle",
-		VariableDialog._parse_default("Vector2", EventSheetVariableOwners.default_text(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
+		EventSheetVariableDialog._parse_default("Vector2", EventSheetVariableOwners.default_text(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
 	all_passed = _eq("a Color default survives a display→edit cycle",
-		VariableDialog._parse_default("Color", EventSheetVariableOwners.default_text(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
+		EventSheetVariableDialog._parse_default("Color", EventSheetVariableOwners.default_text(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
 	all_passed = _eq("a resource (null) default displays empty and parses back to null",
-		VariableDialog._parse_default("Texture2D", EventSheetVariableOwners.default_text(null)), null) and all_passed
+		EventSheetVariableDialog._parse_default("Texture2D", EventSheetVariableOwners.default_text(null)), null) and all_passed
 
 	# texture_preview is Texture2D-only (matches the dialog picker) - a String never gets the marker.
 	all_passed = _eq("texture_preview on a String emits no marker",
@@ -121,7 +121,7 @@ static func run() -> bool:
 	# A drawer + @export_group + @export_subgroup + tooltip on the SAME variable must ALL round-trip - the
 	# group absorb must MERGE with (not overwrite) the drawer the hint-extraction already recovered.
 	var combo_line: String = "## Aim it.\n@export_group(\"Aim\")\n@export_subgroup(\"Tuning\")\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:120\") var aim: Vector2 = Vector2(0.0, 0.0)"
-	var combo_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + combo_line + "\n")
+	var combo_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + combo_line + "\n")
 	var combo_var: LocalVariable = _find(combo_sheet, "aim")
 	all_passed = _eq("a drawer+group+subgroup+tooltip var lifts (not a block)", combo_var != null, true) and all_passed
 	if combo_var != null:
@@ -131,7 +131,7 @@ static func run() -> bool:
 		all_passed = _eq("the combined var keeps its subgroup", str(ca.get("subgroup", "")), "Tuning") and all_passed
 		all_passed = _eq("the combined var keeps its tooltip", str(ca.get("tooltip", "")), "Aim it.") and all_passed
 		all_passed = _eq("the combined var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(combo_var), combo_line) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(combo_var), combo_line) and all_passed
 
 	# --- Inspector decor (# @inspector_header / # @inspector_info): plain-comment markers the editor
 	# renders as a section label / info panel. Emission order is header, info, tooltip, groups; the
@@ -144,8 +144,8 @@ static func run() -> bool:
 	decor_var.attributes = {"header": "Combat", "header_color": "#e06666", "info": "Shared resource - edits affect every user.", "tooltip": "Flat reduction.", "group": "Stats"}
 	var decor_expected: String = "# @inspector_header Combat #e06666\n# @inspector_info Shared resource - edits affect every user.\n## Flat reduction.\n@export_group(\"Stats\")\n@export var armour: int = 10"
 	all_passed = _eq("decor emits header, info, tooltip, group in canonical order",
-		SheetCompiler._emit_tree_variable_line(decor_var), decor_expected) and all_passed
-	var decor_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + decor_expected + "\n")
+		EventSheetCompiler._emit_tree_variable_line(decor_var), decor_expected) and all_passed
+	var decor_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + decor_expected + "\n")
 	var decor_lifted: LocalVariable = _find(decor_sheet, "armour")
 	all_passed = _eq("a decorated var lifts (not a block)", decor_lifted != null, true) and all_passed
 	if decor_lifted != null:
@@ -154,7 +154,7 @@ static func run() -> bool:
 		all_passed = _eq("the lift recovers the header accent", str(da.get("header_color", "")), "#e06666") and all_passed
 		all_passed = _eq("the lift recovers the info note", str(da.get("info", "")), "Shared resource - edits affect every user.") and all_passed
 		all_passed = _eq("the decorated var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(decor_lifted), decor_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(decor_lifted), decor_expected) and all_passed
 	var headerless_var: LocalVariable = LocalVariable.new()
 	headerless_var.name = "hp"
 	headerless_var.type_name = "int"
@@ -162,7 +162,7 @@ static func run() -> bool:
 	headerless_var.exported = true
 	headerless_var.attributes = {"header": "Vitals"}
 	all_passed = _eq("a header without an accent emits no trailing hex",
-		SheetCompiler._emit_tree_variable_line(headerless_var), "# @inspector_header Vitals\n@export var hp: int = 5") and all_passed
+		EventSheetCompiler._emit_tree_variable_line(headerless_var), "# @inspector_header Vitals\n@export var hp: int = 5") and all_passed
 
 	# The editor-side decor map: property name -> decor entries, parsed straight from script source
 	# (tooltips and @export_* lines may sit between the decor and its var; a blank line orphans it).
@@ -183,14 +183,14 @@ static func run() -> bool:
 	required_var.attributes = {"required": true, "info": "Every enemy needs a face."}
 	var required_expected: String = "# @inspector_info Every enemy needs a face.\n# @inspector_required\n@export var portrait: Texture2D = null"
 	all_passed = _eq("required emits its marker after info, before the export",
-		SheetCompiler._emit_tree_variable_line(required_var), required_expected) and all_passed
-	var required_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + required_expected + "\n")
+		EventSheetCompiler._emit_tree_variable_line(required_var), required_expected) and all_passed
+	var required_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + required_expected + "\n")
 	var required_lifted: LocalVariable = _find(required_sheet, "portrait")
 	all_passed = _eq("the lift recovers required as a bool",
 		(required_lifted.attributes as Dictionary).get("required") if required_lifted != null else null, true) and all_passed
 	if required_lifted != null:
 		all_passed = _eq("a required var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(required_lifted), required_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(required_lifted), required_expected) and all_passed
 	all_passed = _eq("the decor map carries the required kind",
 		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_required\n@export var icon: Texture2D = null\n").get("icon"),
 		[{"kind": "required"}]) and all_passed
@@ -210,19 +210,19 @@ static func run() -> bool:
 	table_var.attributes = {"drawer": "table", "table_columns": [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}]}
 	var table_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int,rare=bool\") var loot: Array = []"
 	all_passed = _eq("table emits its marker (columns as name=type pairs)",
-		SheetCompiler._emit_tree_variable_line(table_var), table_expected) and all_passed
+		EventSheetCompiler._emit_tree_variable_line(table_var), table_expected) and all_passed
 	all_passed = _eq("table on a non-Array emits no marker",
 		_emit_for("int", 0, {"drawer": "table", "table_columns": [{"name": "hp", "type": "int"}]}).contains("eventsheet:"), false) and all_passed
 	all_passed = _eq("table without columns emits no marker",
 		_emit_for("Array", [], {"drawer": "table"}).contains("eventsheet:"), false) and all_passed
-	var table_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + table_expected + "\n")
+	var table_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + table_expected + "\n")
 	var table_lifted: LocalVariable = _find(table_sheet, "loot")
 	all_passed = _eq("the lift recovers the table columns",
 		(table_lifted.attributes as Dictionary).get("table_columns") if table_lifted != null else null,
 		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}]) and all_passed
 	if table_lifted != null:
 		all_passed = _eq("a table var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(table_lifted), table_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(table_lifted), table_expected) and all_passed
 	all_passed = _eq("the editor-side column parse matches (unknown types fall back to String)",
 		EventSheetAttributeDrawers.parse_table_columns("item=String,count=int,odd=Vector2,=int"),
 		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "odd", "type": "String"}]) and all_passed
@@ -239,10 +239,10 @@ static func run() -> bool:
 	typed_table_var.attributes = {"drawer": "table", "table_columns": [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]}
 	var typed_table_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int\") var loot: Array[Dictionary] = []"
 	all_passed = _eq("a typed row list emits the table marker",
-		SheetCompiler._emit_tree_variable_line(typed_table_var), typed_table_expected) and all_passed
+		EventSheetCompiler._emit_tree_variable_line(typed_table_var), typed_table_expected) and all_passed
 	all_passed = _eq("table on a list typed to a NON-row element emits no marker",
 		_emit_for("Array[int]", [], {"drawer": "table", "table_columns": [{"name": "hp", "type": "int"}]}).contains("eventsheet:"), false) and all_passed
-	var typed_table_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + typed_table_expected + "\n")
+	var typed_table_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + typed_table_expected + "\n")
 	var typed_table_lifted: LocalVariable = _find(typed_table_sheet, "loot")
 	all_passed = _eq("the lift keeps the typed row list's element type",
 		typed_table_lifted.type_name if typed_table_lifted != null else "", "Array[Dictionary]") and all_passed
@@ -251,7 +251,7 @@ static func run() -> bool:
 		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]) and all_passed
 	if typed_table_lifted != null:
 		all_passed = _eq("a typed table var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(typed_table_lifted), typed_table_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(typed_table_lifted), typed_table_expected) and all_passed
 	all_passed = _eq("Array[Dictionary] offers the table look", _look_ids_for("Array[Dictionary]").has("table"), true) and all_passed
 	all_passed = _eq("a scalar typed list offers no table", _look_ids_for("Array[int]").has("table"), false) and all_passed
 
@@ -265,7 +265,7 @@ static func run() -> bool:
 	grouped_typed.exported = true
 	grouped_typed.attributes = {"group": "Scoring", "subgroup": "Totals"}
 	all_passed = _eq("a typed list carries its Inspector group and subgroup",
-		SheetCompiler._tree_variable_group_prefix(grouped_typed),
+		EventSheetCompiler._tree_variable_group_prefix(grouped_typed),
 		"@export_group(\"Scoring\")\n@export_subgroup(\"Totals\")\n") and all_passed
 	var table_grid: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([{"name": "hp", "type": "int"}])
 	table_grid.set_value([{"hp": 5}, {"hp": 9}])
@@ -284,14 +284,14 @@ static func run() -> bool:
 	# convention covers both. An unlabeled option is its own label, which is what every option
 	# written before labels existed is.
 	all_passed = _eq("the enum codec decodes an option list",
-		SheetCompiler.table_enum_options("enum(circle|ring|rect)"),
+		EventSheetCompiler.table_enum_options("enum(circle|ring|rect)"),
 		[{"key": "circle", "label": "circle"}, {"key": "ring", "label": "ring"}, {"key": "rect", "label": "rect"}]) and all_passed
 	all_passed = _eq("the enum codec ignores a non-enum token",
-		SheetCompiler.table_enum_options("String"), []) and all_passed
+		EventSheetCompiler.table_enum_options("String"), []) and all_passed
 	all_passed = _eq("the enum codec ignores a malformed token (no closing paren)",
-		SheetCompiler.table_enum_options("enum(circle|ring"), []) and all_passed
+		EventSheetCompiler.table_enum_options("enum(circle|ring"), []) and all_passed
 	all_passed = _eq("the enum codec re-encodes an option list",
-		SheetCompiler.table_enum_type(["circle", "ring", "rect"]), "enum(circle|ring|rect)") and all_passed
+		EventSheetCompiler.table_enum_type(["circle", "ring", "rect"]), "enum(circle|ring|rect)") and all_passed
 
 	# ── Labeled options: the cell READS English and STORES a token ──
 	# The separator is `=`, and the reason it is safe is that a bare `=` has ALWAYS been rejected
@@ -300,17 +300,17 @@ static func run() -> bool:
 	# which matters, because "~" is legal in an option today and the marker rides inside a
 	# double-quoted GDScript literal that the importer reads by scanning to the NEXT quote.
 	all_passed = _eq("a labeled option decodes into key and label",
-		SheetCompiler.table_enum_options("enum(gte=>= (at least)|lt=< (less than))"),
+		EventSheetCompiler.table_enum_options("enum(gte=>= (at least)|lt=< (less than))"),
 		[{"key": "gte", "label": ">= (at least)"}, {"key": "lt", "label": "< (less than)"}]) and all_passed
 	all_passed = _eq("and re-encodes to exactly what it came from",
-		SheetCompiler.table_enum_type([{"key": "gte", "label": ">= (at least)"}, {"key": "lt", "label": "< (less than)"}]),
+		EventSheetCompiler.table_enum_type([{"key": "gte", "label": ">= (at least)"}, {"key": "lt", "label": "< (less than)"}]),
 		"enum(gte=>= (at least)|lt=< (less than))") and all_passed
 	# THE byte-compatibility guarantee: a label that merely repeats its key emits BARE, so every one
 	# of the 76 shipped packs re-emits identically and the drift gate stays at zero.
 	all_passed = _eq("a label that repeats its key emits bare",
-		SheetCompiler.table_enum_type([{"key": "circle", "label": "circle"}]), "enum(circle)") and all_passed
+		EventSheetCompiler.table_enum_type([{"key": "circle", "label": "circle"}]), "enum(circle)") and all_passed
 	all_passed = _eq("decode then encode is the identity for an unlabeled token",
-		SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(gte|gt|lte|lt|eq|neq)")),
+		EventSheetCompiler.table_enum_type(EventSheetCompiler.table_enum_options("enum(gte|gt|lte|lt|eq|neq)")),
 		"enum(gte|gt|lte|lt|eq|neq)") and all_passed
 	# A label may hold `=` and parentheses (only the FINAL `)` is consumed by the wrapper strip), but
 	# never `,` `|` `:` or `"` - each of those breaks a specific split, so such an option degrades to
@@ -318,28 +318,28 @@ static func run() -> bool:
 	# The four characters a label cannot carry literally are escaped, so a label is never truncated
 	# and never degrades. Each escape exists for a split the marker depends on.
 	all_passed = _eq("a comma in a label cannot split the column list",
-		SheetCompiler.table_enum_type([{"key": "gte", "label": "at least, or more"}]),
+		EventSheetCompiler.table_enum_type([{"key": "gte", "label": "at least, or more"}]),
 		"enum(gte=at least~2C or more)") and all_passed
 	all_passed = _eq("and comes back whole",
-		SheetCompiler.table_enum_options("enum(gte=at least~2C or more)"),
+		EventSheetCompiler.table_enum_options("enum(gte=at least~2C or more)"),
 		[{"key": "gte", "label": "at least, or more"}]) and all_passed
 	all_passed = _eq("a quote can never reach the GDScript literal it lives in",
-		SheetCompiler.table_enum_type([{"key": "gte", "label": "say \"hi\""}]),
+		EventSheetCompiler.table_enum_type([{"key": "gte", "label": "say \"hi\""}]),
 		"enum(gte=say ~22hi~22)") and all_passed
 	all_passed = _eq("a pipe cannot split the option list",
-		SheetCompiler.table_enum_type([{"key": "a", "label": "x|y"}]), "enum(a=x~7Cy)") and all_passed
+		EventSheetCompiler.table_enum_type([{"key": "a", "label": "x|y"}]), "enum(a=x~7Cy)") and all_passed
 	all_passed = _eq("a colon cannot split the marker segments",
-		SheetCompiler.table_enum_type([{"key": "a", "label": "x:y"}]), "enum(a=x~3Ay)") and all_passed
+		EventSheetCompiler.table_enum_type([{"key": "a", "label": "x:y"}]), "enum(a=x~3Ay)") and all_passed
 	# The tilde is NEVER escaped, which is what keeps the sequence list closed and the codec
 	# idempotent: if the lead-in were escapable, two spellings would collapse to one value and the
 	# importer's byte gate would turn a working grid into a verbatim block on the next open.
 	all_passed = _eq("a bare tilde stays literal text",
-		SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(a=fast~ish)")),
+		EventSheetCompiler.table_enum_type(EventSheetCompiler.table_enum_options("enum(a=fast~ish)")),
 		"enum(a=fast~ish)") and all_passed
 	for tricky: String in ["at least, or more", "say \"hi\"", "x|y", "x:y", "~ish", ">= (at least)"]:
 		all_passed = _eq("`%s` survives a full round-trip" % tricky,
-			SheetCompiler.table_enum_label(SheetCompiler.table_enum_options(
-				SheetCompiler.table_enum_type([{"key": "k", "label": tricky}]))[0]), tricky) and all_passed
+			EventSheetCompiler.table_enum_label(EventSheetCompiler.table_enum_options(
+				EventSheetCompiler.table_enum_type([{"key": "k", "label": tricky}]))[0]), tricky) and all_passed
 	# ── A comparison operator has to survive as a plain STORED VALUE ──
 	# `=` is the pair separator, so a naive split ate every operator that contains one: declaring
 	# enum(==|!=|<|<=|>|>=) kept only `<` and `>`, and the UHTN Plan Resource shipped exactly that
@@ -347,28 +347,28 @@ static func run() -> bool:
 	# and falls through to being the bare key it looks like.
 	for operator: String in ["==", "!=", "<", "<=", ">", ">="]:
 		all_passed = _eq("`%s` survives as a stored value" % operator,
-			SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(%s)" % operator)),
+			EventSheetCompiler.table_enum_type(EventSheetCompiler.table_enum_options("enum(%s)" % operator)),
 			"enum(%s)" % operator) and all_passed
 	all_passed = _eq("the whole operator set round-trips",
-		SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(==|!=|<|<=|>|>=)")),
+		EventSheetCompiler.table_enum_type(EventSheetCompiler.table_enum_options("enum(==|!=|<|<=|>|>=)")),
 		"enum(==|!=|<|<=|>|>=)") and all_passed
 	# The self-check that makes the grammar safe rather than merely clever: an entry is written only
 	# if reading it back yields the key it started from. `a=b` would come back as the PAIR {a, b},
 	# so it is refused instead of being written as something that means something else on the way in.
 	all_passed = _eq("a key that would read back as a pair is refused",
-		SheetCompiler.table_enum_type([{"key": "a=b", "label": "a=b"}]), "") and all_passed
+		EventSheetCompiler.table_enum_type([{"key": "a=b", "label": "a=b"}]), "") and all_passed
 	# A key carrying `=` keeps its value and loses the wording, rather than losing the choice.
 	all_passed = _eq("an operator key cannot also be labeled",
-		SheetCompiler.table_enum_type([{"key": ">=", "label": "at least"}]), "enum(>=)") and all_passed
+		EventSheetCompiler.table_enum_type([{"key": ">=", "label": "at least"}]), "enum(>=)") and all_passed
 
 	# The reader helpers an extension uses, and the reason the drawer needs them: display and data
 	# used to be the SAME string, so a label would have been persisted into the designer's .tres.
 	all_passed = _eq("the key is what gets stored",
-		SheetCompiler.table_enum_key({"key": "gte", "label": ">= (at least)"}), "gte") and all_passed
+		EventSheetCompiler.table_enum_key({"key": "gte", "label": ">= (at least)"}), "gte") and all_passed
 	all_passed = _eq("the label is what gets shown",
-		SheetCompiler.table_enum_label({"key": "gte", "label": ">= (at least)"}), ">= (at least)") and all_passed
+		EventSheetCompiler.table_enum_label({"key": "gte", "label": ">= (at least)"}), ">= (at least)") and all_passed
 	all_passed = _eq("a plain string still reads as both",
-		SheetCompiler.table_enum_key("circle"), "circle") and all_passed
+		EventSheetCompiler.table_enum_key("circle"), "circle") and all_passed
 	# A fresh row seeds the first option's KEY, never its label - nothing re-validates a stored cell.
 	all_passed = _eq("a new row seeds the key, not the label",
 		EventSheetDrawerWidgets.DrawerTable._default_for(
@@ -381,8 +381,8 @@ static func run() -> bool:
 	enum_var.attributes = {"drawer": "table", "table_columns": [{"name": "kind", "type": "enum", "options": ["circle", "ring", "rect"]}, {"name": "x", "type": "float"}]}
 	var enum_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:kind=enum(circle|ring|rect),x=float\") var steps: Array = []"
 	all_passed = _eq("an enum column emits its option list in the marker",
-		SheetCompiler._emit_tree_variable_line(enum_var), enum_expected) and all_passed
-	var enum_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + enum_expected + "\n")
+		EventSheetCompiler._emit_tree_variable_line(enum_var), enum_expected) and all_passed
+	var enum_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + enum_expected + "\n")
 	var enum_lifted: LocalVariable = _find(enum_sheet, "steps")
 	all_passed = _eq("the lift recovers the enum column as {type:enum, options}",
 		(enum_lifted.attributes as Dictionary).get("table_columns") if enum_lifted != null else null,
@@ -391,7 +391,7 @@ static func run() -> bool:
 			{"name": "x", "type": "float"}]) and all_passed
 	if enum_lifted != null:
 		all_passed = _eq("an enum column re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(enum_lifted), enum_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(enum_lifted), enum_expected) and all_passed
 	all_passed = _eq("the editor parse recovers an enum column (options captured)",
 		EventSheetAttributeDrawers.parse_table_columns("kind=enum(circle|ring),x=float"),
 		[{"name": "kind", "type": "enum", "options": [
@@ -412,15 +412,15 @@ static func run() -> bool:
 	color_var.attributes = {"drawer": "table", "table_columns": [{"name": "tint", "type": "color"}, {"name": "x", "type": "float"}]}
 	var color_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:tint=color,x=float\") var steps: Array = []"
 	all_passed = _eq("a color column emits its bare type token",
-		SheetCompiler._emit_tree_variable_line(color_var), color_expected) and all_passed
-	var color_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + color_expected + "\n")
+		EventSheetCompiler._emit_tree_variable_line(color_var), color_expected) and all_passed
+	var color_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + color_expected + "\n")
 	var color_lifted: LocalVariable = _find(color_sheet, "steps")
 	all_passed = _eq("the lift recovers the color column verbatim",
 		(color_lifted.attributes as Dictionary).get("table_columns") if color_lifted != null else null,
 		[{"name": "tint", "type": "color"}, {"name": "x", "type": "float"}]) and all_passed
 	if color_lifted != null:
 		all_passed = _eq("a color column re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(color_lifted), color_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(color_lifted), color_expected) and all_passed
 	all_passed = _eq("the editor parse keeps a color column",
 		EventSheetAttributeDrawers.parse_table_columns("tint=color,x=float"),
 		[{"name": "tint", "type": "color"}, {"name": "x", "type": "float"}]) and all_passed
@@ -433,13 +433,13 @@ static func run() -> bool:
 	# the expression-default emission previously quoted the suffix and the extraction verify failed,
 	# stranding the drawer as a verbatim hint (found by the Inspector Designer over EnemyStats).
 	var clamped_source: String = "extends Resource\n\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:200\") var hp: int = 120:\n\tset(value):\n\t\thp = clampi(value, 0, 200)\n"
-	var clamped_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(clamped_source)
+	var clamped_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(clamped_source)
 	var clamped_var: LocalVariable = _find(clamped_sheet, "hp")
 	all_passed = _eq("a clamped var keeps its drawer through the lift",
 		str((clamped_var.attributes as Dictionary).get("drawer", "")) if clamped_var != null else "missing", "progress_bar") and all_passed
 	clamped_sheet.external_source_path = "user://clamped_drawer_roundtrip.gd"
 	all_passed = _eq("the clamped drawer file round-trips byte-identically",
-		str(SheetCompiler.compile(clamped_sheet, "user://clamped_drawer_roundtrip.gd").get("output", "")), clamped_source) and all_passed
+		str(EventSheetCompiler.compile(clamped_sheet, "user://clamped_drawer_roundtrip.gd").get("output", "")), clamped_source) and all_passed
 
 	# --- The toggle-button row: a String's fixed choices as one row of toggle buttons; the choices
 	# ride the marker INSTEAD of @export_enum and round-trip into editable toggle_options.
@@ -454,13 +454,13 @@ static func run() -> bool:
 		_emit_for("Vector2", Vector2(0, 0), {"drawer": "toggle_row", "toggle_options": ["a"]}).contains("eventsheet:"), false) and all_passed
 	all_passed = _eq("toggle_row without choices emits no marker",
 		_emit_for("String", "", {"drawer": "toggle_row"}).contains("eventsheet:"), false) and all_passed
-	var toggle_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + toggle_expected + "\n")
+	var toggle_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + toggle_expected + "\n")
 	var toggle_lifted: LocalVariable = _find(toggle_sheet, "difficulty")
 	all_passed = _eq("the lift recovers the toggle choices",
 		(toggle_lifted.attributes as Dictionary).get("toggle_options") if toggle_lifted != null else null, ["easy", "normal", "hard"]) and all_passed
 	if toggle_lifted != null:
 		all_passed = _eq("a toggle_row var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(toggle_lifted), toggle_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(toggle_lifted), toggle_expected) and all_passed
 	var toggle_widget: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["easy", "normal", "hard"]))
 	toggle_widget.set_value("hard")
 	all_passed = _eq("the toggle row stores the pressed value", toggle_widget.get_value(), "hard") and all_passed
@@ -479,16 +479,16 @@ static func run() -> bool:
 	validate_var.attributes = {"required": true, "validate": "check_spawn_gap"}
 	var validate_expected: String = "# @inspector_required\n# @inspector_validate check_spawn_gap\n@export var spawn_gap: Vector2 = Vector2(8.0, 20.0)"
 	all_passed = _eq("validate emits its marker after required",
-		SheetCompiler._emit_tree_variable_line(validate_var), validate_expected) and all_passed
+		EventSheetCompiler._emit_tree_variable_line(validate_var), validate_expected) and all_passed
 	all_passed = _eq("a non-identifier validator emits nothing",
 		_emit_for("int", 1, {"validate": "not a function()"}).contains("@inspector_validate"), false) and all_passed
-	var validate_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + validate_expected + "\n")
+	var validate_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + validate_expected + "\n")
 	var validate_lifted: LocalVariable = _find(validate_sheet, "spawn_gap")
 	all_passed = _eq("the lift recovers the validator name",
 		str((validate_lifted.attributes as Dictionary).get("validate", "")) if validate_lifted != null else "missing", "check_spawn_gap") and all_passed
 	if validate_lifted != null:
 		all_passed = _eq("a validated var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(validate_lifted), validate_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(validate_lifted), validate_expected) and all_passed
 	all_passed = _eq("the decor map carries the validator",
 		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_validate check_hp\n@export var hp: int = 1\n").get("hp"),
 		[{"kind": "validate", "function": "check_hp"}]) and all_passed
@@ -503,19 +503,19 @@ static func run() -> bool:
 	action_var.attributes = {"action": "reroll_stats", "action_label": "Reroll"}
 	var action_expected: String = "# @inspector_action reroll_stats Reroll\n@export var stats_seed: int = 0"
 	all_passed = _eq("the field button emits its marker (function + label)",
-		SheetCompiler._emit_tree_variable_line(action_var), action_expected) and all_passed
+		EventSheetCompiler._emit_tree_variable_line(action_var), action_expected) and all_passed
 	all_passed = _eq("a label-less field button emits just the function",
 		_emit_for("int", 0, {"action": "reroll_stats"}), "# @inspector_action reroll_stats\n@export var v: int = 0") and all_passed
 	all_passed = _eq("a non-identifier action emits nothing",
 		_emit_for("int", 0, {"action": "do it()"}).contains("@inspector_action"), false) and all_passed
-	var action_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + action_expected + "\n")
+	var action_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + action_expected + "\n")
 	var action_lifted: LocalVariable = _find(action_sheet, "stats_seed")
 	all_passed = _eq("the lift recovers the action function + label",
 		[str((action_lifted.attributes as Dictionary).get("action", "")), str((action_lifted.attributes as Dictionary).get("action_label", ""))] if action_lifted != null else [],
 		["reroll_stats", "Reroll"]) and all_passed
 	if action_lifted != null:
 		all_passed = _eq("a field-button var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(action_lifted), action_expected) and all_passed
+			EventSheetCompiler._emit_tree_variable_line(action_lifted), action_expected) and all_passed
 	all_passed = _eq("the decor map carries the action (with label)",
 		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_action reroll_stats Reroll\n@export var s: int = 0\n").get("s"),
 		[{"kind": "action", "function": "reroll_stats", "label": "Reroll"}]) and all_passed
@@ -523,7 +523,7 @@ static func run() -> bool:
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()
 	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}
-	var dict_output: String = str(SheetCompiler.compile(dict_sheet, "user://decor_dict.gd").get("output", ""))
+	var dict_output: String = str(EventSheetCompiler.compile(dict_sheet, "user://decor_dict.gd").get("output", ""))
 	all_passed = _eq("dict-path variables emit the same decor lines",
 		dict_output.contains("# @inspector_header Motion\n# @inspector_info Tiles per second.\n@export var speed: int = 5"), true) and all_passed
 
@@ -665,7 +665,7 @@ static func _unit_drawer() -> bool:
 	passed = _eq("unit without a unit list emits no marker",
 		_emit_for("float", 1.0, {"drawer": "unit"}).contains("eventsheet:"), false) and passed
 	passed = _roundtrip("unit", unit_expected, "thickness", "unit") and passed
-	var unit_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + unit_expected + "\n")
+	var unit_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + unit_expected + "\n")
 	var unit_lifted: LocalVariable = _find(unit_sheet, "thickness")
 	passed = _eq("the lift recovers the unit list",
 		(unit_lifted.attributes as Dictionary).get("unit_kinds") if unit_lifted != null else null, ["px", "world", "screen"]) and passed
@@ -673,7 +673,7 @@ static func _unit_drawer() -> bool:
 		str((unit_lifted.attributes as Dictionary).get("unit_store", "")) if unit_lifted != null else "", "world") and passed
 	if unit_lifted != null:
 		passed = _eq("a unit var re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(unit_lifted), unit_expected) and passed
+			EventSheetCompiler._emit_tree_variable_line(unit_lifted), unit_expected) and passed
 
 	# The look, its one field, and the round trip through the dialog's grammar.
 	passed = _eq("float offers the unit look", _look_ids_for("float").has("unit"), true) and passed
@@ -720,7 +720,7 @@ static func _toggle_icons() -> bool:
 	passed = _eq("a plain option list parses with no tails",
 		EventSheetAttributeDrawers.parse_toggle_spec(["easy,normal,hard"]),
 		{"options": PackedStringArray(["easy", "normal", "hard"]), "segmented": false, "icons": ""}) and passed
-	var icon_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + icon_marker + "\n")
+	var icon_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + icon_marker + "\n")
 	var icon_lifted: LocalVariable = _find(icon_sheet, "caps")
 	passed = _eq("the lift recovers the icon source",
 		str((icon_lifted.attributes as Dictionary).get("toggle_icons", "")) if icon_lifted != null else "",
@@ -729,7 +729,7 @@ static func _toggle_icons() -> bool:
 		bool((icon_lifted.attributes as Dictionary).get("toggle_segmented", false)) if icon_lifted != null else false, true) and passed
 	if icon_lifted != null:
 		passed = _eq("an icon toggle_row re-emits byte-identically",
-			SheetCompiler._emit_tree_variable_line(icon_lifted), icon_marker) and passed
+			EventSheetCompiler._emit_tree_variable_line(icon_lifted), icon_marker) and passed
 
 	# Provider lookup: a pack that can only DRAW its options registers a renderer by name.
 	var drawn: PlaceholderTexture2D = PlaceholderTexture2D.new()
@@ -797,7 +797,7 @@ static func _rounded(value: float) -> float:
 
 
 static func _vector_dial_range_persists() -> bool:
-	var dlg: VariableDialog = VariableDialog.new()
+	var dlg: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var parent: Node = Node.new()
 	dlg.init_dialog(parent)
 	dlg.set_sheet_provider(func() -> Variant: return null)
@@ -822,7 +822,7 @@ static func _emit_for(type_name: String, default_value: Variant, attributes: Dic
 	lv.default_value = default_value
 	lv.exported = true
 	lv.attributes = attributes
-	return SheetCompiler._emit_tree_variable_line(lv)
+	return EventSheetCompiler._emit_tree_variable_line(lv)
 
 
 static func _emit_for_named(var_name: String, type_name: String, default_value: Variant, attributes: Dictionary) -> String:
@@ -832,7 +832,7 @@ static func _emit_for_named(var_name: String, type_name: String, default_value: 
 	lv.default_value = default_value
 	lv.exported = true
 	lv.attributes = attributes
-	return SheetCompiler._emit_tree_variable_line(lv)
+	return EventSheetCompiler._emit_tree_variable_line(lv)
 
 
 static func _emit_unexported(type_name: String, default_value: Variant, attributes: Dictionary) -> String:
@@ -842,7 +842,7 @@ static func _emit_unexported(type_name: String, default_value: Variant, attribut
 	lv.default_value = default_value
 	lv.exported = false
 	lv.attributes = attributes
-	return SheetCompiler._emit_tree_variable_line(lv)
+	return EventSheetCompiler._emit_tree_variable_line(lv)
 
 
 static func _find(sheet: EventSheetResource, var_name: String) -> LocalVariable:
@@ -853,7 +853,7 @@ static func _find(sheet: EventSheetResource, var_name: String) -> LocalVariable:
 
 
 static func _roundtrip(label: String, var_line: String, var_name: String, expected_drawer: String) -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
 	var lv: LocalVariable = _find(sheet, var_name)
 	var has_block: bool = false
 	for entry: Variant in sheet.events:
@@ -864,13 +864,13 @@ static func _roundtrip(label: String, var_line: String, var_name: String, expect
 
 
 static func _type_roundtrip(label: String, var_line: String, var_name: String) -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
 	var lv: LocalVariable = _find(sheet, var_name)
 	var has_block: bool = false
 	for entry: Variant in sheet.events:
 		if entry is RawCodeRow and (entry as RawCodeRow).code.contains("var " + var_name):
 			has_block = true
-	var ok: bool = lv != null and not has_block and SheetCompiler._emit_tree_variable_line(lv) == var_line
+	var ok: bool = lv != null and not has_block and EventSheetCompiler._emit_tree_variable_line(lv) == var_line
 	return _eq("a %s variable round-trips byte-exact (no block)" % label, ok, true)
 
 

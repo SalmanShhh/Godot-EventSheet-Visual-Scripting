@@ -38,7 +38,7 @@ static func run() -> bool:
 	var file: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	file.store_string(SOURCE)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	ok = _check("beginner file imports", sheet != null, true) and ok
 
 	# Inferred `:=` variables lift as first-class rows with the walrus spelling recorded.
@@ -63,7 +63,7 @@ static func run() -> bool:
 	ok = _check("all three states become cases", lifted_match.cases.size() if lifted_match != null else -1, 3) and ok
 
 	# The whole point: reopening and saving the beginner file changes nothing.
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://beginner_style_lift_out.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://beginner_style_lift_out.gd")
 	ok = _check("round-trip is byte-identical", str(compiled.get("output", "")) == SOURCE, true) and ok
 
 	return ok

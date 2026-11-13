@@ -145,7 +145,7 @@ static func _test_open_docs_refuses_unknown() -> bool:
 	all_passed = _check("an unknown pack fails loud", EventSheets.open_docs("addon:no_such_pack_here"), false) and all_passed
 	all_passed = _check("the pack route would open the pinned guide URL",
 		EventSheets.doc_url(str(EventSheetDocExplain.resolve("addon:quest").get("target", ""))),
-		"%s/blob/v%s/docs/Addons/Quest.md" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]) and all_passed
+		"%s/blob/v%s/docs/Addons/Quest.md" % [EventSheets.DOCS_REPO_URL, EventSheetCompiler.VERSION]) and all_passed
 
 	# THE CASE A RENAMED PACK ACTUALLY PRODUCES: an id that is perfectly well FORMED and names a
 	# verb the registry does not offer. resolve() cannot answer it (a verb's existence needs the

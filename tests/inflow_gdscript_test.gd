@@ -42,7 +42,7 @@ static func run() -> bool:
 	inline_block.code = "velocity.x = 0.0\nmove_and_slide()"
 	event.actions.append(inline_block)
 	sheet.events.append(event)
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_inflow.gd")
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_inflow.gd")
 	var output: String = str(compile_result.get("output", ""))
 	all_passed = _check("in-flow block compiles inside the condition body",
 		output.contains("\t\tvelocity.x = 0.0") and output.contains("\t\tmove_and_slide()"), true) and all_passed
@@ -56,7 +56,7 @@ static func run() -> bool:
 	disabled_block.code = "print(\"skip me\")"
 	disabled_block.enabled = false
 	event.actions.append(disabled_block)
-	var output_with_disabled: String = str(SheetCompiler.compile(sheet, "user://eventforge_inflow.gd").get("output", ""))
+	var output_with_disabled: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_inflow.gd").get("output", ""))
 	all_passed = _check("disabled in-flow block is skipped", not output_with_disabled.contains("skip me"), true) and all_passed
 	event.actions.remove_at(1)
 

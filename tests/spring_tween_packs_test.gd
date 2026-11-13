@@ -59,7 +59,7 @@ static func run() -> bool:
 	# The .gd IS the sheet now (no .tres). Autoload identity (autoload_mode/name) is project-level - it
 	# lives in ProjectSettings [autoload], not the file - so a bundled, un-installed pack carries it via
 	# its baked "SaveSystem.<call>" ACE templates (asserted below), not a sheet flag.
-	var save_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/save_system/save_system_addon.gd")
+	var save_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://eventsheet_addons/save_system/save_system_addon.gd")
 	all_passed = _check("save pack imports as a sheet (class SaveSystemAddon)",
 		save_sheet != null and save_sheet.custom_class_name == "SaveSystemAddon", true) and all_passed
 	var save_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/save_system/save_system_addon.gd")
@@ -116,7 +116,7 @@ static func run() -> bool:
 	save_instance.free()
 
 	# Release showcase (the release ritual): loads, parses, scene instantiates.
-	var showcase_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://demo/showcase/carousel/showcase_carousel.gd")
+	var showcase_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://demo/showcase/carousel/showcase_carousel.gd")
 	all_passed = _check("release showcase ships clean GDScript (Live Values off)",
 		showcase_sheet != null and not showcase_sheet.emit_live_values, true) and all_passed
 	all_passed = _check("showcase script loads",

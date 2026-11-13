@@ -461,7 +461,7 @@ static func _filled(ace_id: String) -> String:
 		var values: Dictionary = {"uid": "0"}
 		for parameter: ACEParam in descriptor.params:
 			values[str(parameter.id)] = str(parameter.default_value)
-		return ActionCodegen._apply_template(descriptor.codegen_template, values)
+		return EventSheetActionCodegen._apply_template(descriptor.codegen_template, values)
 	return ""
 
 
@@ -560,7 +560,7 @@ static func _host_source() -> String:
 			var argument: String = str(ARGUMENTS.get(str(parameter.id), str(parameter.id)))
 			values[str(parameter.id)] = argument
 			arguments.append("%s: %s" % [argument, _argument_type(str(parameter.id))])
-		var body: String = ActionCodegen._apply_template(descriptor.codegen_template, values)
+		var body: String = EventSheetActionCodegen._apply_template(descriptor.codegen_template, values)
 		var returns: bool = descriptor.ace_type != ACEDescriptor.ACEType.ACTION
 		lines.append("")
 		lines.append("func %s(%s) -> Variant:" % [_method_name(descriptor.ace_id), ", ".join(arguments)])

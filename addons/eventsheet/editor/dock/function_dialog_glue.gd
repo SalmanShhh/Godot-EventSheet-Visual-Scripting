@@ -377,7 +377,7 @@ static func _function_fingerprint(function_name: String, return_type: int, retur
 	type_probe.return_type = return_type
 	type_probe.return_type_name = return_type_name
 	var parts: PackedStringArray = PackedStringArray([
-		function_name, SheetCompiler._function_return_type_name(type_probe), description, str(exposed), display_name, category, doc_comment, tool_button_label])
+		function_name, EventSheetCompiler._function_return_type_name(type_probe), description, str(exposed), display_name, category, doc_comment, tool_button_label])
 	for param: ACEParam in params:
 		parts.append("%s|%s|%s|%s" % [param.id, param.type_name, param.gdscript_default, param.description])
 	return "\n".join(parts)

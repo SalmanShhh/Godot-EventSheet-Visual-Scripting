@@ -19,7 +19,7 @@ static func build(host: Window) -> Control:
 	# The caller facts come off the project index, and a band says nothing while it is still
 	# counting - so a picture of one has to wait for it, exactly as the editor's own rebuild does.
 	EventSheetProjectShareIndex.build_now()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

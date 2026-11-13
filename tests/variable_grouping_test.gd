@@ -92,7 +92,7 @@ static func run() -> bool:
 				str((row_data.spans[0].metadata as Dictionary).get("variable_group", "")), "Movement") and ok
 
 	# ── The compiled output still groups via @export_group (the shipped round-trip) ──
-	var output: String = str(SheetCompiler.compile(live, "user://_var_grouping_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(live, "user://_var_grouping_out.gd").get("output", ""))
 	ok = _check("the folder ships as @export_group", output.contains("@export_group(\"Movement\")"), true) and ok
 
 	# ── One level deeper, same gesture: dropping a variable onto
@@ -109,7 +109,7 @@ static func run() -> bool:
 	dock._variable_grouping.commit_rename()
 	ok = _check("naming renames the subgroup for every member",
 		str(((dock._current_sheet.variables.get("jump_power", {}) as Dictionary).get("attributes", {}) as Dictionary).get("subgroup", "")), "Tuning") and ok
-	var nested_output: String = str(SheetCompiler.compile(dock._current_sheet, "user://_var_subgroup_out.gd").get("output", ""))
+	var nested_output: String = str(EventSheetCompiler.compile(dock._current_sheet, "user://_var_subgroup_out.gd").get("output", ""))
 	ok = _check("the nest ships as @export_subgroup under the group",
 		nested_output.contains("@export_group(\"Movement\")") and nested_output.contains("@export_subgroup(\"Tuning\")"), true) and ok
 
@@ -166,7 +166,7 @@ static func _test_folders_in_an_opened_file() -> bool:
 		+ "var hidden := 1
 ")
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var style := EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	sheet.editor_style = style
@@ -197,7 +197,7 @@ static func _test_folders_in_an_opened_file() -> bool:
 	ok = _check("the ungrouped member stays out of every folder",
 		_parent_strip_of(view, "hidden"), "") and ok
 	ok = _check("and the file still re-emits byte for byte - the strip is a reading",
-		str(SheetCompiler.compile(sheet).get("output", "")), FileAccess.get_file_as_string(path)) and ok
+		str(EventSheetCompiler.compile(sheet).get("output", "")), FileAccess.get_file_as_string(path)) and ok
 	view.free()
 	return ok
 

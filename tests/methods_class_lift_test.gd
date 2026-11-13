@@ -66,7 +66,7 @@ static func run() -> bool:
 		ok = _check("the block keeps its RawCodeRow (double-click opens code)", class_row.source_resource is RawCodeRow, true) and ok
 
 	# ── Covenant: a pure view - the raw code is untouched, so it re-emits byte-identically ──
-	var reemitted: String = str(SheetCompiler.compile(sheet, "user://mc_rt.gd").get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(sheet, "user://mc_rt.gd").get("output", ""))
 	ok = _check("the sheet re-emits the class verbatim (drift-safe)", reemitted.contains(WEAPON), true) and ok
 
 	# ── Degrade: a class with a bare one-tab statement is not a clean class -> not lifted (stays a plain block) ──

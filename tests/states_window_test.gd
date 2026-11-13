@@ -65,7 +65,7 @@ static func run() -> bool:
 	var enum_row: EnumRow = EventSheetStateFacts.enum_row(sheet)
 	rows.append(["the description is the enum's", enum_row.description, "What the player is doing."])
 	rows.append(["the state's note is the member's", enum_row.note_for("IDLE"), "Standing still."])
-	var written: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var written: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	rows.append(["the compiler writes the ## lines in place", written.contains("## What the player is doing.\nenum State {\n\t## Standing still.\n\tIDLE,"), true])
 	rows.append(["the code preview is the same text", EventSheetStatesDialog.code_for(noted).begins_with("## What the player is doing.\nenum State {\n\t## Standing still.\n\tIDLE,"), true])
 

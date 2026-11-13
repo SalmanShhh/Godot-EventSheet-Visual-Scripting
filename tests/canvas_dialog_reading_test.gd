@@ -225,7 +225,7 @@ static func _setup_run_rows() -> bool:
 	var handle: FileAccess = FileAccess.open(SETUP_PATH, FileAccess.WRITE)
 	handle.store_string(SETUP_SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SETUP_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SETUP_PATH)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	sheet.editor_style = style
@@ -256,8 +256,8 @@ static func _setup_run_rows() -> bool:
 	ok = _check("the wired-up signal keeps its own row, once", " | ".join(event_lines),
 		"Wire On Confirmed to _keep_every_tick   uid = uid") and ok
 	viewport.free()
-	var output: String = str(SheetCompiler.compile(
-		GDScriptImporter.new().import_external(SETUP_PATH), SETUP_PATH).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(
+		EventSheetGDScriptImporter.new().import_external(SETUP_PATH), SETUP_PATH).get("output", ""))
 	ok = _check("and the regrouped file still saves every byte back", output, SETUP_SOURCE) and ok
 	return ok
 
@@ -265,15 +265,15 @@ static func _setup_run_rows() -> bool:
 static func _round_trip() -> bool:
 	_write_source()
 	var ok: bool = true
-	var output: String = str(SheetCompiler.compile(
-		GDScriptImporter.new().import_external(SOURCE_PATH), SOURCE_PATH).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(
+		EventSheetGDScriptImporter.new().import_external(SOURCE_PATH), SOURCE_PATH).get("output", ""))
 	ok = _check("the opened file saves every byte back", output, SOURCE) and ok
 	var handle: FileAccess = FileAccess.open(FIXTURE_PATH, FileAccess.READ)
 	var fixture_source: String = handle.get_as_text() if handle != null else ""
 	if handle != null:
 		handle.close()
-	var fixture_output: String = str(SheetCompiler.compile(
-		GDScriptImporter.new().import_external(FIXTURE_PATH), FIXTURE_PATH).get("output", ""))
+	var fixture_output: String = str(EventSheetCompiler.compile(
+		EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH), FIXTURE_PATH).get("output", ""))
 	ok = _check("the figure's fixture saves every byte back", fixture_output, fixture_source) and ok
 	return ok
 
@@ -287,7 +287,7 @@ static func _write_source() -> void:
 
 static func _import() -> EventSheetResource:
 	_write_source()
-	return GDScriptImporter.new().import_external(SOURCE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 
 
 ## The readings of one sheet, straight off the canvas's own spans.

@@ -1,6 +1,6 @@
 # EventForge - dev tool: regenerate the demo golden output after intentional codegen
 # changes (run headless: godot --headless --script tools/regenerate_demo_golden.gd).
-# compile_demo_test compares SheetCompiler output against tests/fixtures/compiler_golden_sheet_generated.gd;
+# compile_demo_test compares EventSheetCompiler output against tests/fixtures/compiler_golden_sheet_generated.gd;
 # regenerating keeps the golden honest when emission changes on purpose (CHANGELOG it!).
 @tool
 extends SceneTree
@@ -12,6 +12,6 @@ func _init() -> void:
 		push_error("demo sheet not found")
 		quit(1)
 		return
-	var result: Dictionary = SheetCompiler.compile(sheet, "res://tests/fixtures/compiler_golden_sheet_generated.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "res://tests/fixtures/compiler_golden_sheet_generated.gd")
 	print("[regenerate_demo_golden] success=%s warnings=%s" % [result.get("success"), result.get("warnings")])
 	quit(0)

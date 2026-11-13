@@ -18,7 +18,7 @@ static func run() -> bool:
 	sheet.host_class = "Node"
 	sheet.emit_live_values = true
 	sheet.variables = {"score": {"type": "int", "default": 0, "exported": false}}
-	var output: String = str(SheetCompiler.compile(sheet, "user://dbg_props_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://dbg_props_probe.gd").get("output", ""))
 	ok = _check(ok, output.contains("if __live_child.has_method(\"debugger_properties\")"), "the compiled frame scans children for the seam")
 	ok = _check(ok, output.contains("__live_frame.append(str(__live_child.name) + \".\" + str(__live_key))"), "child keys stream namespaced ChildName.key")
 	ok = _check(ok, output.contains("EngineDebugger.send_message(\"eventsheets:live_values\", __live_frame)"), "the frame sends over the existing channel")

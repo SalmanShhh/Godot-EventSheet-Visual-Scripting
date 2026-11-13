@@ -199,21 +199,21 @@ static func _test_round_trip() -> bool:
 	var ok: bool = true
 	for path: String in [PLAYER_PATH, PAD_PATH]:
 		var source: String = FileAccess.open(path, FileAccess.READ).get_as_text()
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		sheet.read_only = true
 		var view := EventSheetViewport.new()
 		view.set_ace_registry(EventSheetACERegistry.new())
 		view.set_sheet(sheet)
 		view.set_reading_mode(true)
 		view.get_flat_rows()
-		var reemitted: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+		var reemitted: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		ok = _check("%s still re-emits byte-identically" % path.get_file(), reemitted == source, true) and ok
 		view.free()
 	return ok
 
 
 static func _open(path: String) -> EventSheetViewport:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var style := EventSheetEditorStyle.new()
 	style.ensure_defaults()

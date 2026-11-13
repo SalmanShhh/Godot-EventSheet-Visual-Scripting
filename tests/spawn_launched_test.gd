@@ -215,7 +215,7 @@ static func _values(changed: Dictionary) -> Dictionary:
 
 
 static func _emitted(ace_id: String, values: Dictionary) -> String:
-	return ActionCodegen.generate_action(_action(ace_id, values))
+	return EventSheetActionCodegen.generate_action(_action(ace_id, values))
 
 
 static func _last_line(emitted: String) -> String:

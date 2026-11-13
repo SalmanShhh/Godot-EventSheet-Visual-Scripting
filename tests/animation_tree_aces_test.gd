@@ -300,7 +300,7 @@ static func _run_root_motion() -> bool:
 ## would compile perfectly and fail at run time.
 static func _run_state_moments() -> bool:
 	var rows: Array = []
-	var entered: Dictionary = TriggerResolver.resolve_trigger(_trigger_row("OnAnimationStateEntered", "Anim"))
+	var entered: Dictionary = EventSheetTriggerResolver.resolve_trigger(_trigger_row("OnAnimationStateEntered", "Anim"))
 	rows.append(["entering a state hangs off the playback's own signal",
 		str(entered.get("signal_name", "")), "state_started"])
 	rows.append(["the state's name rides along", str(entered.get("args", "")), "state: StringName"])
@@ -308,12 +308,12 @@ static func _run_state_moments() -> bool:
 		str(entered.get("function_name", "")), "_on_anim_state_entered"])
 	rows.append(["and the source reaches through the tree to the playback object",
 		str(entered.get("source_path", "")), "member:get_node(\"Anim\").get(\"parameters/playback\")"])
-	var self_hosted: Dictionary = TriggerResolver.resolve_trigger(_trigger_row("OnAnimationStateLeft", ""))
+	var self_hosted: Dictionary = EventSheetTriggerResolver.resolve_trigger(_trigger_row("OnAnimationStateLeft", ""))
 	rows.append(["a sheet that IS the tree reaches its own playback",
 		str(self_hosted.get("source_path", "")), "member:get(\"parameters/playback\")"])
 	rows.append(["leaving a state is the machine's other signal",
 		str(self_hosted.get("signal_name", "")), "state_finished"])
-	var marker: Dictionary = TriggerResolver.resolve_trigger(_trigger_row("OnAnimationReachedMarker", ""))
+	var marker: Dictionary = EventSheetTriggerResolver.resolve_trigger(_trigger_row("OnAnimationReachedMarker", ""))
 	rows.append(["a marker moment rides the mixer's own step",
 		str(marker.get("signal_name", "")), "mixer_updated"])
 	# The whole compiled file: the connect line, and that the file parses at all.
@@ -498,7 +498,7 @@ static func _run_doctor() -> bool:
 static func _run_lift() -> bool:
 	var rows: Array = []
 	_write(SCRIPT_PROBE, HAND_WRITTEN)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SCRIPT_PROBE, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SCRIPT_PROBE, false)
 	EventSheetACELifter.reset_progress()
 	rows.append(["the file opens as events", EventSheetACELifter.attempt_lift(sheet, HAND_WRITTEN), true])
 	var found: ACEAction = _find_action(sheet, "TravelToState")
@@ -507,7 +507,7 @@ static func _run_lift() -> bool:
 		rows.append(["with the state it was written with", str(found.params.get("state", "")), "&\"Swing\""])
 		rows.append(["and the tree it was written on", str(found.params.get("target", "")), "$Anim"])
 	rows.append(["and saving it again reproduces the file byte for byte",
-		str(SheetCompiler.compile(sheet, SCRIPT_PROBE).get("output", "")), HAND_WRITTEN])
+		str(EventSheetCompiler.compile(sheet, SCRIPT_PROBE).get("output", "")), HAND_WRITTEN])
 	# DELIBERATELY NOT CLAIMED: a bare `global_position` read is the line the shipped place rows
 	# already speak for, so the 2D bone expression authors only.
 	rows.append(["the 2D bone reading is kept out of the reverse index",
@@ -583,7 +583,7 @@ static func _find_action(sheet: EventSheetResource, ace_id: String) -> ACEAction
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	var output: String = str(SheetCompiler.compile(sheet, COMPILE_PROBE).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, COMPILE_PROBE).get("output", ""))
 	if FileAccess.file_exists(COMPILE_PROBE):
 		DirAccess.remove_absolute(COMPILE_PROBE)
 	return output
@@ -615,7 +615,7 @@ static func _emitted(module_path: String, ace_id: String, params: Dictionary) ->
 	var shipped: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	if shipped == null:
 		return ""
-	return ActionCodegen._apply_template(str(shipped.codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(shipped.codegen_template), params)
 
 
 static func _by_id(module_path: String) -> Dictionary:

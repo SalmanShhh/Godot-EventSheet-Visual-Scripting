@@ -37,7 +37,7 @@ static func run() -> bool:
 	parent.sub_events.append(child)
 	sheet.events.append(parent)
 
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_subevents.gd")
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_subevents.gd")
 	var output: String = str(compile_result.get("output", ""))
 	all_passed = _check("parent condition at depth 1", output.contains("\tif is_on_floor():"), true) and all_passed
 	all_passed = _check("parent action at depth 2", output.contains("\t\tqueue_free()"), true) and all_passed
@@ -73,7 +73,7 @@ static func run() -> bool:
 	chain_sheet.events.append(if_event)
 	chain_sheet.events.append(elif_event)
 	chain_sheet.events.append(else_event)
-	var chain_output: String = str(SheetCompiler.compile(chain_sheet, "user://eventforge_chain.gd").get("output", ""))
+	var chain_output: String = str(EventSheetCompiler.compile(chain_sheet, "user://eventforge_chain.gd").get("output", ""))
 	all_passed = _check("if/elif/else chain emits in order",
 		chain_output.contains("\tif health > 50:\n\t\tsprint()\n\telif health > 10:\n\t\twalk()\n\telse:\n\t\tcrawl()"), true) and all_passed
 
@@ -85,7 +85,7 @@ static func run() -> bool:
 	orphan_else.else_mode = EventRow.ElseMode.ELSE
 	orphan_else.actions.append(_action("setup()"))
 	orphan_sheet.events.append(orphan_else)
-	var orphan_result: Dictionary = SheetCompiler.compile(orphan_sheet, "user://eventforge_orphan_else.gd")
+	var orphan_result: Dictionary = EventSheetCompiler.compile(orphan_sheet, "user://eventforge_orphan_else.gd")
 	all_passed = _check("orphan else degrades to standalone actions",
 		str(orphan_result.get("output", "")).contains("\tsetup()"), true) and all_passed
 	all_passed = _check("orphan else records a warning",
@@ -98,7 +98,7 @@ static func run() -> bool:
 	hollow.trigger_id = "OnReady"
 	hollow.conditions.append(_condition_with_template("health > 0"))
 	hollow_sheet.events.append(hollow)
-	var hollow_output: String = str(SheetCompiler.compile(hollow_sheet, "user://eventforge_hollow.gd").get("output", ""))
+	var hollow_output: String = str(EventSheetCompiler.compile(hollow_sheet, "user://eventforge_hollow.gd").get("output", ""))
 	all_passed = _check("condition-only event emits pass", hollow_output.contains("\tif health > 0:\n\t\tpass"), true) and all_passed
 
 	return all_passed

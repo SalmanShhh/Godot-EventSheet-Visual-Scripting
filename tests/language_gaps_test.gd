@@ -45,12 +45,12 @@ static func run() -> bool:
 	hit.params = {"m": "enemy.name"}
 	event.actions.append(hit)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_lang.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_lang.gd").get("output", ""))
 	all_passed = _check("ordered picking sorts a copy",
 		output.contains(".sort_custom(func(__pick_a, __pick_b): return (__pick_a.global_position.distance_to(global_position)) < (__pick_b.global_position.distance_to(global_position)))"), true) and all_passed
 	all_passed = _check("pick nearest caps at one", output.contains("if __pick_count_0 > 1:"), true) and all_passed
 	nearest.order_descending = true
-	output = str(SheetCompiler.compile(sheet, "user://eventsheets_lang.gd").get("output", ""))
+	output = str(EventSheetCompiler.compile(sheet, "user://eventsheets_lang.gd").get("output", ""))
 	all_passed = _check("descending flips the comparator", output.contains(") > (__pick_b"), true) and all_passed
 
 	# Repeat / While kinds.
@@ -74,7 +74,7 @@ static func run() -> bool:
 	var loop_sheet: EventSheetResource = EventSheetResource.new()
 	loop_sheet.variables = {"queue": {"type": "Array", "default": [], "exported": false}}
 	loop_sheet.events.append(loop_event)
-	var loop_output: String = str(SheetCompiler.compile(loop_sheet, "user://eventsheets_loops.gd").get("output", ""))
+	var loop_output: String = str(EventSheetCompiler.compile(loop_sheet, "user://eventsheets_loops.gd").get("output", ""))
 	all_passed = _check("Repeat compiles to range", loop_output.contains("for i in range(5):"), true) and all_passed
 	all_passed = _check("While compiles to while", loop_output.contains("while queue.size() > 0:"), true) and all_passed
 	var loop_script: GDScript = GDScript.new()
@@ -95,21 +95,21 @@ static func run() -> bool:
 	var fn_sheet: EventSheetResource = EventSheetResource.new()
 	fn.events.append(ret_event)
 	fn_sheet.functions.append(fn)
-	var fn_output: String = str(SheetCompiler.compile(fn_sheet, "user://eventsheets_fn_ret.gd").get("output", ""))
+	var fn_output: String = str(EventSheetCompiler.compile(fn_sheet, "user://eventsheets_fn_ret.gd").get("output", ""))
 	all_passed = _check("function return types emit", fn_output.contains("func pick_damage() -> int:"), true) and all_passed
 	var fn_script: GDScript = GDScript.new()
 	fn_script.source_code = fn_output
 	all_passed = _check("typed function parses", fn_script.reload(true) == OK, true) and all_passed
 	# Lift round-trip with a return type.
 	var ext: String = "extends Node\n\n## @ace_hidden\nfunc pick_damage() -> int:\n\treturn 7\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(ext)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(ext)
 	var lifted_fn: EventFunction = null
 	for f in imported.functions:
 		lifted_fn = f
 	all_passed = _check("typed functions lift", lifted_fn != null and lifted_fn.return_type == TYPE_INT, true) and all_passed
 	imported.external_source_path = "user://eventsheets_fn_rt.gd"
 	all_passed = _check("typed function round-trips",
-		str(SheetCompiler.compile(imported, "user://eventsheets_fn_rt.gd").get("output", "")) == ext, true) and all_passed
+		str(EventSheetCompiler.compile(imported, "user://eventsheets_fn_rt.gd").get("output", "")) == ext, true) and all_passed
 
 	# Group locals.
 	var group: EventGroup = EventGroup.new()
@@ -121,7 +121,7 @@ static func run() -> bool:
 	group.local_variables.append(combo)
 	var gl_sheet: EventSheetResource = EventSheetResource.new()
 	gl_sheet.events.append(group)
-	var gl_output: String = str(SheetCompiler.compile(gl_sheet, "user://eventsheets_gl.gd").get("output", ""))
+	var gl_output: String = str(EventSheetCompiler.compile(gl_sheet, "user://eventsheets_gl.gd").get("output", ""))
 	all_passed = _check("group locals emit under their header",
 		gl_output.contains("# Combat — group locals") and gl_output.contains("var combo_count: int = 0"), true) and all_passed
 
@@ -137,10 +137,10 @@ static func run() -> bool:
 	bp_event.actions.append(bp_act)
 	var bp_sheet: EventSheetResource = EventSheetResource.new()
 	bp_sheet.events.append(bp_event)
-	var off_output: String = str(SheetCompiler.compile(bp_sheet, "user://eventsheets_bp_off.gd").get("output", ""))
+	var off_output: String = str(EventSheetCompiler.compile(bp_sheet, "user://eventsheets_bp_off.gd").get("output", ""))
 	all_passed = _check("breakpoints stay out of normal compiles", off_output.contains("breakpoint"), false) and all_passed
 	bp_sheet.emit_breakpoints = true
-	var on_output: String = str(SheetCompiler.compile(bp_sheet, "user://eventsheets_bp_on.gd").get("output", ""))
+	var on_output: String = str(EventSheetCompiler.compile(bp_sheet, "user://eventsheets_bp_on.gd").get("output", ""))
 	all_passed = _check("debug compiles emit breakpoint first",
 		on_output.contains("\tbreakpoint") and on_output.find("breakpoint") < on_output.find("queue_free()"), true) and all_passed
 
@@ -176,7 +176,7 @@ static func run() -> bool:
 	rt_group.events.append(rt_event)
 	rt_sheet.events.append(rt_group)
 	rt_sheet.host_class = "Node2D"
-	var rt_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup.gd").get("output", ""))
+	var rt_output: String = str(EventSheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup.gd").get("output", ""))
 	all_passed = _check("runtime groups declare their flag member",
 		rt_output.contains("var __group_combat_active: bool = true"), true) and all_passed
 	all_passed = _check("contained events guard on the flag",
@@ -185,14 +185,14 @@ static func run() -> bool:
 	rt_script.source_code = rt_output
 	all_passed = _check("runtime-group output parses", rt_script.reload(true) == OK, true) and all_passed
 	rt_group.runtime_toggleable = false
-	var plain_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup2.gd").get("output", ""))
+	var plain_output: String = str(EventSheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup2.gd").get("output", ""))
 	all_passed = _check("non-toggleable groups stay zero-cost",
 		plain_output.contains("__group_combat_active"), false) and all_passed
 	# Review fix: a hostile group name must still produce a LEGAL guard identifier - the raw
 	# to_snake_case kept "!" and friends, emitting `var __group_wave_1!_active` (a parse error).
 	rt_group.runtime_toggleable = true
 	rt_group.group_name = "Wave 1!"
-	var hostile_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup3.gd").get("output", ""))
+	var hostile_output: String = str(EventSheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup3.gd").get("output", ""))
 	all_passed = _check("hostile group names sanitize into the guard identifier",
 		hostile_output.contains("var __group_wave_1_active: bool = true") and hostile_output.contains("if __group_wave_1_active:"), true) and all_passed
 	var hostile_script: GDScript = GDScript.new()
@@ -219,7 +219,7 @@ static func run() -> bool:
 	or_b.codegen_template = "is_on_wall()"
 	rt_event.conditions.append(or_a)
 	rt_event.conditions.append(or_b)
-	var or_guard_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtor.gd").get("output", ""))
+	var or_guard_output: String = str(EventSheetCompiler.compile(rt_sheet, "user://eventsheets_rtor.gd").get("output", ""))
 	all_passed = _check("OR events AND-wrap the runtime guard",
 		or_guard_output.contains("if __group_combat_active and (is_on_floor() or is_on_wall()):"), true) and all_passed
 

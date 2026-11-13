@@ -88,7 +88,7 @@ static func run() -> bool:
 	row.actions.append(_action(shipped, "WrapInsideScreen", {}, "w1"))
 	row.actions.append(_action(shipped, "BobUpAndDown", {"height": "6.0", "period": "2.0"}, "b1"))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://spatial_pattern_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://spatial_pattern_probe.gd").get("output", ""))
 	all_passed = _check("the proximity check emits the distance_to comparison, blank target dropped",
 		output.contains("if global_position.distance_to(get_parent().global_position) <= maxf(64.0, 0.0):"), true) and all_passed
 	all_passed = _check("turning emits rotate_toward with the angle to the target",

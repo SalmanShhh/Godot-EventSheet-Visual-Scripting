@@ -42,7 +42,7 @@ static func run() -> bool:
 	var use_site: RawCodeRow = RawCodeRow.new()
 	use_site.code = "func bump() -> void:\n\t__eventsheet_provider_Score.add(1)"
 	needs_declaration.events.append(use_site)
-	var generated: String = str(SheetCompiler.compile(needs_declaration, "user://_drift_regression_gen.gd").get("output", ""))
+	var generated: String = str(EventSheetCompiler.compile(needs_declaration, "user://_drift_regression_gen.gd").get("output", ""))
 	ok = _check("an undeclared provider member still gets its declaration injected, exactly once",
 		generated.count("var __eventsheet_provider_Score := Score.new()"), 1) and ok
 
@@ -60,9 +60,9 @@ static func run() -> bool:
 
 ## Import the source as an opened external file, recompile untouched, and return the emitted text.
 static func _recompile(source: String) -> String:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://_drift_regression_rt.gd"
-	return str(SheetCompiler.compile(imported, "user://_drift_regression_rt.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(imported, "user://_drift_regression_rt.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

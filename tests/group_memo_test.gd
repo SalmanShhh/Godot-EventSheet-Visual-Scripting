@@ -19,7 +19,7 @@ const SAMPLE_PACK: String = "res://eventsheet_addons/fps_controller/fps_controll
 
 static func run() -> bool:
 	var passed: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SAMPLE_PACK, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SAMPLE_PACK, false)
 	if sheet == null:
 		return SUPPORT.check(P, "the sample pack imports", false, true)
 	EventSheetACELifter.attempt_lift(sheet, FileAccess.get_file_as_string(SAMPLE_PACK))

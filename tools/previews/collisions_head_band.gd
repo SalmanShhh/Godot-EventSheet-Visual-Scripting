@@ -29,7 +29,7 @@ static func build(host: Window) -> Control:
 	for entry: Array in LAYER_SETTINGS:
 		ProjectSettings.set_setting(str(entry[0]), str(entry[1]))
 	EventSheetSceneCollisionFacts.clear_cache()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

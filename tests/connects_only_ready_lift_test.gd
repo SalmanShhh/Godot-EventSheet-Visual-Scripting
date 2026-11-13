@@ -47,7 +47,7 @@ static func run() -> bool:
 	# ── The reported shape: prelude var, two-blank style gaps, connects-only `_ready`, a named
 	# menu handler dispatching on a top-level `match id:`, and an unrelated `_draw`. ──
 	var source: String = "\n".join(MENU_DISPATCH_LINES)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var raw_funcs: Array = _raw_function_headers(sheet)
 	ok = _check("no function stays a raw script block", raw_funcs, []) and ok
 	var events: Array = _event_rows(sheet)
@@ -64,7 +64,7 @@ static func run() -> bool:
 				"0:\n\tprint(\"open\")\n1:\n\tprint(\"save\")\n_:\n\tpush_error(\"unknown menu id\")") and ok
 		ok = _check("the unrelated _draw lifts too", (events[1] as EventRow).trigger_id, "OnDraw") and ok
 	sheet.external_source_path = "user://_connects_only_ready_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(sheet, "user://_connects_only_ready_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(sheet, "user://_connects_only_ready_rt.gd").get("output", ""))
 	ok = _check("the full lift round-trips byte-identically", roundtrip == source, true) and ok
 
 	# ── One genuinely unliftable function (a header wrapped over two lines, which is not a header
@@ -81,7 +81,7 @@ static func run() -> bool:
 		"",
 	])
 	var hairy_source: String = "\n".join(hairy_lines)
-	var hairy_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(hairy_source)
+	var hairy_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(hairy_source)
 	var hairy_raw: Array = _raw_function_headers(hairy_sheet)
 	ok = _check("only the refusing function (and the raw _ready holding its connect) stay raw",
 		hairy_raw, ["func _ready() -> void:", "func gnarly("]) and ok
@@ -93,7 +93,7 @@ static func run() -> bool:
 			and (hairy_events[0] as EventRow).actions[0] is MatchRow, true) and ok
 		ok = _check("_draw kept its trigger", (hairy_events[1] as EventRow).trigger_id, "OnDraw") and ok
 	hairy_sheet.external_source_path = "user://_connects_only_ready_hairy_rt.gd"
-	var hairy_roundtrip: String = str(SheetCompiler.compile(hairy_sheet, "user://_connects_only_ready_hairy_rt.gd").get("output", ""))
+	var hairy_roundtrip: String = str(EventSheetCompiler.compile(hairy_sheet, "user://_connects_only_ready_hairy_rt.gd").get("output", ""))
 	ok = _check("the partial lift round-trips byte-identically", hairy_roundtrip == hairy_source, true) and ok
 
 	return ok

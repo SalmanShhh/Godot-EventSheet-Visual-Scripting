@@ -265,7 +265,7 @@ static func _opened_rows() -> bool:
 ## Writes the source, opens it as a sheet, and returns every cell reading as "object ▸ text".
 static func _open_and_read() -> PackedStringArray:
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -372,7 +372,7 @@ static func _refusals() -> bool:
 static func _claims() -> bool:
 	var ok: bool = true
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
@@ -397,8 +397,8 @@ static func _claims() -> bool:
 ## already holds, so opening the file and saving it untouched puts back every byte.
 static func _round_trip() -> bool:
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 

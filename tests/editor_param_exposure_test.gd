@@ -1,5 +1,5 @@
 # EventSheet - Editor parameter exposure tests
-# Covers EditorParamStore, ACEDefinition exposure fields, ParamDefaultResolver,
+# Covers EditorParamStore, ACEDefinition exposure fields, EventSheetParamDefaultResolver,
 # and ACEGenerator exposure inference.
 @tool
 class_name EditorParamExposureTest
@@ -165,13 +165,13 @@ static func _test_ace_definition_exposure_fields() -> bool:
 
 	return passed
 
-# ── ParamDefaultResolver ──────────────────────────────────────────────────────
+# ── EventSheetParamDefaultResolver ──────────────────────────────────────────────────────
 
 
 static func _test_param_default_resolver() -> bool:
 	var passed: bool = true
 	var store := EditorParamStore.new()
-	var resolver := ParamDefaultResolver.new()
+	var resolver := EventSheetParamDefaultResolver.new()
 	resolver.set_param_store(store)
 
 	var param_meta := {
@@ -241,7 +241,7 @@ static func _test_ace_generator_exposure_inference() -> bool:
 
 	# Falsy param default (0) must be preserved - not skipped - by the resolver
 	var store2 := EditorParamStore.new()
-	var resolver2 := ParamDefaultResolver.new()
+	var resolver2 := EventSheetParamDefaultResolver.new()
 	resolver2.set_param_store(store2)
 	var zero_meta := {"id": "count", "type": TYPE_INT, "default_value": 0}
 	var resolved_zero: Variant = resolver2.resolve("P", "A", "count", zero_meta, null)
@@ -275,7 +275,7 @@ static func _test_exposed_node_scope_and_undo() -> bool:
 	var registry := EventSheetACERegistry.new()
 	registry.refresh_from_sources([sample], false)
 	var store := EditorParamStore.new()
-	var resolver := ParamDefaultResolver.new()
+	var resolver := EventSheetParamDefaultResolver.new()
 	resolver.set_param_store(store)
 	var sheet := EventSheetResource.new()
 	var row := EventRow.new()

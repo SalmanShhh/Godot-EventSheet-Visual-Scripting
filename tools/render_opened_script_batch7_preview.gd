@@ -32,7 +32,7 @@ func _init() -> void:
 
 
 func _show() -> void:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style := EventSheetEditorStyle.new()
 	style.ensure_defaults()

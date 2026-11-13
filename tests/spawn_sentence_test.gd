@@ -137,7 +137,7 @@ static func _test_spawn_code_opens_as_rows_keeping_the_name() -> bool:
 	# so Make A Copy is an authoring word and stays out of the reverse index. What has to hold either
 	# way is this: the author's name for the copy survives the open, the add lands on the shipped Add
 	# Child row, and the file re-emits byte for byte.
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var minted: ACEAction = null
 	var added: ACEAction = null
 	for row: Variant in imported.events:
@@ -186,7 +186,7 @@ static func _test_the_placement_words_are_one_expression_each() -> bool:
 		var source: String = _compile(sheet, "user://eventforge_spawn_place.gd")
 		passed = _check("the placement expression is emitted as written",
 			source.contains("\tb.global_position = %s" % placement), true) and passed
-		var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+		var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 		imported.external_source_path = "user://eventforge_spawn_place_back.gd"
 		passed = _check("a spawn placed by %s re-emits byte for byte" % placement.get_slice("(", 0),
 			_compile(imported, "user://eventforge_spawn_place_back.gd") == source, true) and passed
@@ -287,7 +287,7 @@ static func _compiled_with(ace_id: String, params: Dictionary, path: String) -> 
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

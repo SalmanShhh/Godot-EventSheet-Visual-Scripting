@@ -69,7 +69,7 @@ static func run() -> bool:
 	roll.params = {"value": "[0.0, PI, TAU].pick_random()"}
 	event.actions.append(roll)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_native.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_native.gd").get("output", ""))
 	all_passed = _check("tween compiles",
 		output.contains("create_tween().tween_property(self, \"position\", Vector2(100, 0), 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)"), true) and all_passed
 	all_passed = _check("spawn compiles", output.contains("add_child(load(\"res://enemy.tscn\").instantiate())"), true) and all_passed

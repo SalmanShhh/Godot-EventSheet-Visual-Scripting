@@ -124,7 +124,7 @@ static func row_lines(sheet: EventSheetResource, old_name: String,
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function != null and event_function.function_name == old_name:
-			var head: String = SheetCompiler._function_header_line(event_function)
+			var head: String = EventSheetCompiler._function_header_line(event_function)
 			lines.append("%s → %s" % [head, EventSheetRefactor.rename_in_code(head, old_name, new_name)])
 	for reference: Dictionary in EventSheetFindReferences.find_in_sheet(sheet, old_name):
 		var before: String = str(reference.get("preview", "")).strip_edges()

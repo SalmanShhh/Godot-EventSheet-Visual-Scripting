@@ -41,7 +41,7 @@ static func run() -> bool:
 	ok = _check("an external sheet's saved file is its own .gd", EventSheetSheetDiff.saved_path_for(sheet), pack_path) and ok
 
 	var disk_before: String = FileAccess.get_file_as_string(pack_path)
-	var untouched: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_diff_test.gd")
+	var untouched: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_diff_test.gd")
 	var clean_summary: Dictionary = EventSheetSheetDiff.summarize(
 		str(untouched.get("output", "")), untouched.get("source_map", []), disk_before)
 	ok = _check("an untouched open diffs as identical (drift=0 in diff form)", bool(clean_summary.get("identical")), true) and ok
@@ -59,7 +59,7 @@ static func run() -> bool:
 		dock.free()
 		return ok
 	edited.code = edited.code.replace("if host == null:", "if host == null and is_inside_tree():")
-	var after: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_diff_test.gd")
+	var after: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_diff_test.gd")
 	var summary: Dictionary = EventSheetSheetDiff.summarize(
 		str(after.get("output", "")), after.get("source_map", []), disk_before)
 	ok = _check("the edit is seen", bool(summary.get("identical")), false) and ok
@@ -109,9 +109,9 @@ static func run() -> bool:
 	event.actions.append(action)
 	authored_sheet.events.append(event)
 	authored.setup(authored_sheet)
-	var baseline: String = str(SheetCompiler.compile(authored_sheet, "user://eventforge_diff_authored.gd").get("output", ""))
+	var baseline: String = str(EventSheetCompiler.compile(authored_sheet, "user://eventforge_diff_authored.gd").get("output", ""))
 	action.params = {"text": "\"after\""}
-	var changed: Dictionary = SheetCompiler.compile(authored_sheet, "user://eventforge_diff_authored.gd")
+	var changed: Dictionary = EventSheetCompiler.compile(authored_sheet, "user://eventforge_diff_authored.gd")
 	var authored_summary: Dictionary = EventSheetSheetDiff.summarize(
 		str(changed.get("output", "")), changed.get("source_map", []), baseline)
 	var authored_rows: Array = authored_summary.get("rows", [])

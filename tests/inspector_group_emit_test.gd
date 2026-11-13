@@ -26,7 +26,7 @@ static func run() -> bool:
 		"delta_look": {"type": "float", "default": 4.0, "exported": true, "attributes": {"group": "Look"}},
 		"plain": {"type": "float", "default": 5.0, "exported": true},
 	}
-	var out: String = str(SheetCompiler.compile(sheet, "user://grp.gd").get("output", ""))
+	var out: String = str(EventSheetCompiler.compile(sheet, "user://grp.gd").get("output", ""))
 	ok = _check("each group header appears exactly once", _count(out, "@export_group(\"Movement\")") == 1 and _count(out, "@export_group(\"Look\")") == 1, true) and ok
 	# The two Movement vars sit together under the one header (no other @export between them).
 	var movement_block: String = out.substr(out.find("@export_group(\"Movement\")"))
@@ -43,7 +43,7 @@ static func run() -> bool:
 		"a": {"type": "int", "default": 1, "exported": true, "attributes": {"group": "Combat", "subgroup": "Melee"}},
 		"b": {"type": "int", "default": 2, "exported": true, "attributes": {"group": "Combat", "subgroup": "Melee"}},
 	}
-	var nested_out: String = str(SheetCompiler.compile(nested, "user://grp2.gd").get("output", ""))
+	var nested_out: String = str(EventSheetCompiler.compile(nested, "user://grp2.gd").get("output", ""))
 	ok = _check("group + subgroup each emit once, group before subgroup",
 		_count(nested_out, "@export_group(\"Combat\")") == 1 and _count(nested_out, "@export_subgroup(\"Melee\")") == 1
 		and nested_out.find("@export_group(\"Combat\")") < nested_out.find("@export_subgroup(\"Melee\")"), true) and ok
@@ -57,7 +57,7 @@ static func run() -> bool:
 		"alpha": {"type": "int", "default": 2, "exported": true},
 		"mike": {"type": "int", "default": 3, "exported": true},
 	}
-	var flat_out: String = str(SheetCompiler.compile(flat, "user://grp3.gd").get("output", ""))
+	var flat_out: String = str(EventSheetCompiler.compile(flat, "user://grp3.gd").get("output", ""))
 	ok = _check("ungrouped vars emit in author order",
 		_exported_names(flat_out), PackedStringArray(["zulu", "alpha", "mike"])) and ok
 	ok = _check("no group header appears when nothing is grouped", flat_out.contains("@export_group"), false) and ok
@@ -70,7 +70,7 @@ static func run() -> bool:
 		"zulu": {"type": "int", "default": 1, "exported": true},
 	}
 	ok = _check("and a name-ordered sheet emits in name order",
-		_exported_names(str(SheetCompiler.compile(sorted_flat, "user://grp4.gd").get("output", ""))),
+		_exported_names(str(EventSheetCompiler.compile(sorted_flat, "user://grp4.gd").get("output", ""))),
 		PackedStringArray(["alpha", "mike", "zulu"])) and ok
 
 	return ok

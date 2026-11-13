@@ -363,8 +363,8 @@ static func _test_round_trip() -> bool:
 
 static func _round_trips(path: String) -> bool:
 	var source: String = FileAccess.get_file_as_string(path)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-	var output: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+	var output: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 	return _check("%s saves every byte back" % path.get_file(), output, source)
 
 
@@ -376,7 +376,7 @@ static func _lines_of(path: String) -> PackedStringArray:
 
 
 static func _open(path: String) -> EventSheetResource:
-	return GDScriptImporter.new().import_external(path)
+	return EventSheetGDScriptImporter.new().import_external(path)
 
 
 ## One statement as "object ▸ sentence", the way a row draws it.
@@ -411,7 +411,7 @@ static func _button_words(path: String) -> String:
 ## Every row's reading in an opened file, as "object ▸ sentence" plus the bare span texts, so a head
 ## chip and a row sentence are both findable.
 static func _open_and_read(path: String) -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var view := EventSheetViewport.new()
 	# Reading mode is where a verb reads as the trigger it is (`Test  On run`) rather than as its
 	# Define row - the same mode the whole reading campaign is about.

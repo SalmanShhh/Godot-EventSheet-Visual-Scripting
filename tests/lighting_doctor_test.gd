@@ -121,14 +121,14 @@ static func _test_a_world_that_is_not_there() -> bool:
 		PackedStringArray([EventSheetLightingFindings.KIND_SHARED_ENVIRONMENT])) and ok
 	return _check("and a sheet that says nothing about the environment earns neither",
 		_kinds(EventSheetLightingFindings.findings(
-			GDScriptImporter.new().import_external(ROOM))), PackedStringArray()) and ok
+			EventSheetGDScriptImporter.new().import_external(ROOM))), PackedStringArray()) and ok
 
 
 ## An environment written at run time through a `.tres` other scenes load. An environment resource is
 ## a FILE: writing fog into it writes it for every scene holding the same file, so the change follows
 ## the player out of the room. The one finding of the five with a single step to take.
 static func _test_a_shared_environment() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(CRYPT)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(CRYPT)
 	var found: Array[Dictionary] = EventSheetLightingFindings.findings(sheet)
 	var ok: bool = _check("the crypt writes an environment the swamp also loads",
 		_kinds(found), PackedStringArray([EventSheetLightingFindings.KIND_SHARED_ENVIRONMENT]))
@@ -160,7 +160,7 @@ static func _test_a_shared_environment() -> bool:
 ## THE FIX, by what it writes. A copy taken every frame is not a fix and a copy taken after the rows
 ## that write through it is not one either, so the row goes at the top of the sheet, on ready.
 static func _test_the_one_click_fix() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(CRYPT)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(CRYPT)
 	var ok: bool = _check("the fix writes the shipped row, aimed at the node the finding named",
 		_row_facts(EventSheetLightingFindings.own_environment_action("$World")),
 		PackedStringArray(["Core", "WorldOwnEnvironment", "$World",
@@ -178,7 +178,7 @@ static func _test_the_one_click_fix() -> bool:
 	# The proof a fix works: the finding is gone, and the emitted code takes the copy before the first
 	# row that writes through it.
 	ok = _check("the finding is gone", EventSheetLightingFindings.findings(sheet).size(), 0) and ok
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://lighting_doctor_fix.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://lighting_doctor_fix.gd").get("output", ""))
 	ok = _check("and the copy is taken before anything writes through it",
 		compiled.contains("func _ready() -> void:\n\t$World.environment = $World.environment.duplicate()\n\t$Level.color"),
 		true) and ok
@@ -188,7 +188,7 @@ static func _test_the_one_click_fix() -> bool:
 	# in memory is not the artefact - the FILE is - so the line has to read back as the row that wrote
 	# it. Otherwise the finding returns on the next open, the reader clicks the fix again, and the
 	# scene takes the copy twice every _ready.
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(compiled, true, CRYPT)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(compiled, true, CRYPT)
 	ok = _check("the file it wrote still holds the row when it is opened again",
 		EventSheetLightingFindings.writes_its_own_environment(reopened), true) and ok
 	ok = _check("so the reader is not told to fix it a second time",
@@ -242,7 +242,7 @@ static func _test_the_section() -> bool:
 ## changes in the sheet - no note row, no icon, no inline sentence. The words and the one door wait
 ## in the row's own stamp, which is what the help strip reads once the row is selected.
 static func _test_the_quiet_state_on_the_row() -> bool:
-	var stamped: Array[Dictionary] = _attention_stamps(GDScriptImporter.new().import_external(CRYPT))
+	var stamped: Array[Dictionary] = _attention_stamps(EventSheetGDScriptImporter.new().import_external(CRYPT))
 	var ok: bool = _check("the crypt's shared environment puts the event that writes it into the amber state",
 		stamped.size(), 1)
 	if stamped.is_empty():
@@ -258,7 +258,7 @@ static func _test_the_quiet_state_on_the_row() -> bool:
 		str((carried[0] as Dictionary).get("family", "")) if not carried.is_empty() else "",
 		"lighting") and ok
 	return _check("and no note row is hung under the event",
-		_note_messages(GDScriptImporter.new().import_external(CRYPT)).size(), 0) and ok
+		_note_messages(EventSheetGDScriptImporter.new().import_external(CRYPT)).size(), 0) and ok
 
 
 # ── the walk ────────────────────────────────────────────────────────────────────

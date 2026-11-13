@@ -52,7 +52,7 @@ static func run() -> bool:
 	all_passed = _check("the kind emits the canonical enum line",
 		enum_kind.emit_lines(enum_probe), PackedStringArray(["enum Mode { IDLE, RUN }"])) and all_passed
 	all_passed = _check("compiler enum emission goes through the kind (same bytes)",
-		SheetCompiler._emit_enum_line(enum_probe), "enum Mode { IDLE, RUN }") and all_passed
+		EventSheetCompiler._emit_enum_line(enum_probe), "enum Mode { IDLE, RUN }") and all_passed
 	var enum_claim: Dictionary = enum_kind.lift(PackedStringArray(["enum Mode { IDLE, RUN }"]), 0)
 	all_passed = _check("the kind lifts back to a real EnumRow resource",
 		enum_claim.get("resource") is EnumRow and (enum_claim.get("resource") as EnumRow).enum_name == "Mode", true) and all_passed
@@ -72,7 +72,7 @@ static func run() -> bool:
 	# ── pack-defined kinds register zero-config from eventsheet_addons/ ──────
 	var note_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("demo.note")
 	all_passed = _check("pack-defined kind auto-registers from eventsheet_addons/", note_kind != null, true) and all_passed
-	var note_importer: GDScriptImporter = GDScriptImporter.new()
+	var note_importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var note_sheet: EventSheetResource = note_importer.import_external_source("extends Node\n\n## NOTE: tune this after the jam\n")
 	var note_row: CustomBlockRow = null
 	for entry: Variant in note_sheet.events:
@@ -81,10 +81,10 @@ static func run() -> bool:
 	all_passed = _check("pack kind lifts its line", note_row != null and note_row.kind_id == "demo.note", true) and all_passed
 	note_sheet.external_source_path = "user://note_sample.gd"
 	all_passed = _check("pack kind round-trips byte-identically",
-		str(SheetCompiler.compile(note_sheet, "user://note_sample.gd").get("output", "")), "extends Node\n\n## NOTE: tune this after the jam\n") and all_passed
+		str(EventSheetCompiler.compile(note_sheet, "user://note_sample.gd").get("output", "")), "extends Node\n\n## NOTE: tune this after the jam\n") and all_passed
 
 	# ── Import: the preload + both region fences lift to CustomBlockRows ──
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external_source(BLOCK_SOURCE)
 	sheet.external_source_path = "user://custom_block_sample.gd"
 	var lifted_kinds: Array = []
@@ -94,7 +94,7 @@ static func run() -> bool:
 	all_passed = _check("preload + both region fences lift", lifted_kinds, ["preload", "region", "region"]) and all_passed
 
 	# ── Round-trip: an untouched sheet reproduces the file byte-identically ──
-	var output: String = str(SheetCompiler.compile(sheet, "user://custom_block_sample.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://custom_block_sample.gd").get("output", ""))
 	all_passed = _check("byte-identical round-trip with custom blocks", output, BLOCK_SOURCE) and all_passed
 
 	# ── The verify-gate: near-miss lines stay verbatim GDScript, never a lossy claim ──
@@ -146,7 +146,7 @@ static func run() -> bool:
 		and str(dynamic_row.fields.get("name", "")) == "boss_music", true) and all_passed
 	dynamic_sheet.external_source_path = "user://dynamic_load_sample.gd"
 	all_passed = _check("the dynamic form round-trips byte-identically",
-		str(SheetCompiler.compile(dynamic_sheet, "user://dynamic_load_sample.gd").get("output", "")), dynamic_src) and all_passed
+		str(EventSheetCompiler.compile(dynamic_sheet, "user://dynamic_load_sample.gd").get("output", "")), dynamic_src) and all_passed
 	# Flipping the mode dropdown re-emits the other shape - static <-> dynamic is one edit.
 	var flipped: CustomBlockRow = CustomBlockRow.new()
 	flipped.kind_id = "preload"
@@ -253,7 +253,7 @@ static func run() -> bool:
 	all_passed = _check("an ungated kind cannot rewrite the file it claimed",
 		EventSheets.round_trips(rogue_source), true) and all_passed
 	# And the claim is refused rather than silently half-applied: the line survives as source.
-	var rogue_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(rogue_source)
+	var rogue_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(rogue_source)
 	var rogue_claimed: bool = false
 	for row: Variant in rogue_sheet.events:
 		if row is CustomBlockRow and (row as CustomBlockRow).kind_id == "test.rogue":

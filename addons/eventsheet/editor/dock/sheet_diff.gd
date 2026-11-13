@@ -92,7 +92,7 @@ static func saved_path_for(sheet: EventSheetResource) -> String:
 		return sheet.external_source_path
 	if sheet.resource_path.is_empty():
 		return ""
-	return SheetCompiler._resolve_output_path(sheet, "")
+	return EventSheetCompiler._resolve_output_path(sheet, "")
 
 
 ## Sheet ▸ What Changed…: compute + show. The current sheet compiles to a TEMPORARY path (a diff must
@@ -104,7 +104,7 @@ func open(host: Node = null) -> void:
 	if saved_path.is_empty() or not FileAccess.file_exists(saved_path):
 		_dock._set_status(EventSheetL10n.translate("What Changed: this sheet has no saved file yet - everything is new."))
 		return
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_diff_preview.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_diff_preview.gd")
 	var summary: Dictionary = summarize(
 		str(result.get("output", "")),
 		result.get("source_map", []),
@@ -186,7 +186,7 @@ static func load_side(path: String) -> Dictionary:
 		return {"error": "There is no file at %s." % path}
 	var sheet: EventSheetResource = null
 	if path.get_extension() == "gd":
-		sheet = GDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(path))
+		sheet = EventSheetGDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(path))
 		if sheet != null:
 			# The lifted sheet must know it CAME FROM that file, or it recompiles down the authored
 			# path and grows a second generated banner - which would then read as a difference the
@@ -197,7 +197,7 @@ static func load_side(path: String) -> Dictionary:
 		sheet = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 	if sheet == null:
 		return {"error": "%s could not be read as an event sheet." % path.get_file()}
-	var compiled: Dictionary = SheetCompiler.compile(sheet, COMPARE_TEMP_PATH)
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, COMPARE_TEMP_PATH)
 	return {
 		"sheet": sheet,
 		"output": str(compiled.get("output", "")),

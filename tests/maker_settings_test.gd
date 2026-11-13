@@ -178,7 +178,7 @@ static func _the_doors() -> bool:
 static func _dock_on(path: String) -> EventSheetDock:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock.setup(GDScriptImporter.new().import_external(path))
+	dock.setup(EventSheetGDScriptImporter.new().import_external(path))
 	dock._current_sheet_path = path
 	return dock
 

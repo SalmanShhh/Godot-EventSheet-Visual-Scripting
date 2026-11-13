@@ -1,7 +1,7 @@
 # EventForge - the Doctor's orphaned-verb check.
 #
 # Renaming a provider's function changes the verb's identity and orphans every row that used it, and
-# NOTHING caught that: ActionCodegen prefers the template baked onto the row at apply time over any
+# NOTHING caught that: EventSheetActionCodegen prefers the template baked onto the row at apply time over any
 # registry lookup, so the sheet still emits the old call, compiles with zero errors and zero
 # warnings, and Godot only complains when the player pulls the trigger. This is the safety net.
 #

@@ -105,14 +105,14 @@ static func _imported_row_reads_world() -> bool:
 		{"eventType": "block", "conditions": [], "children": [], "actions": [
 			{"objectClass": "Player", "id": "set-position", "parameters": {"X": "10", "Y": "20"}}]}]},
 		{"Player": {"kind": "Sprite", "node": "$Player"}})
-	var emitted: String = str(SheetCompiler.compile(
+	var emitted: String = str(EventSheetCompiler.compile(
 		imported["sheet"] as EventSheetResource, "", true)["output"])
 	var set_y: Dictionary = EventSheetForeignImporter.import_sheet({"name": "Fixture", "events": [
 		{"eventType": "block", "conditions": [], "children": [], "actions": [
 			{"objectClass": "Player", "id": "set-y", "parameters": {"Y": "20"}},
 			{"objectClass": "Player", "id": "set-x", "parameters": {"X": "7"}}]}]},
 		{"Player": {"kind": "Sprite", "node": "$Player"}})
-	var emitted_axes: String = str(SheetCompiler.compile(
+	var emitted_axes: String = str(EventSheetCompiler.compile(
 		set_y["sheet"] as EventSheetResource, "", true)["output"])
 	var line: String = "$Player.global_position = Vector2(10, 20)"
 	var axis_line: String = "$Player.%s = 20" % str(EventSheetForeignACEMap.OBJECT_PROPERTIES["Y"])
@@ -152,7 +152,7 @@ static func _imported_axis_emission(row_id: String, parameter: String, value: St
 		{"eventType": "block", "conditions": [], "children": [], "actions": [
 			{"objectClass": "Player", "id": row_id, "parameters": {parameter: value}}]}]},
 		{"Player": {"kind": "Sprite", "node": "$Player"}})
-	var emitted: String = str(SheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
+	var emitted: String = str(EventSheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
 	for line: String in emitted.split("\n"):
 		if line.strip_edges().begins_with("$Player."):
 			return line.strip_edges()
@@ -166,7 +166,7 @@ static func _imported_step_emission() -> String:
 		{"eventType": "block", "conditions": [], "children": [], "actions": [
 			{"objectClass": "Player", "id": "move-at-angle", "parameters": {"Angle": "90", "Distance": "10"}}]}]},
 		{"Player": {"kind": "Sprite", "node": "$Player"}})
-	var emitted: String = str(SheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
+	var emitted: String = str(EventSheetCompiler.compile(imported["sheet"] as EventSheetResource, "", true)["output"])
 	for line: String in emitted.split("\n"):
 		if line.strip_edges().begins_with("$Player."):
 			return line.strip_edges()

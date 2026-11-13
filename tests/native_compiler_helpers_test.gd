@@ -138,7 +138,7 @@ static func _test_round_trip() -> bool:
 
 
 static func _shooter() -> EventSheetResource:
-	return GDScriptImporter.new().import_external(SHOWCASE)
+	return EventSheetGDScriptImporter.new().import_external(SHOWCASE)
 
 
 static func _viewport_for(sheet: EventSheetResource, theme_path: String) -> EventSheetViewport:

@@ -142,7 +142,7 @@ static func _compiled_tool() -> String:
 		{"target": "$Sign", "property": "rotation", "value": "1.5"})
 	_add_row(event, "AddNodeUndoable", {"node": "Node2D.new()", "parent": "$Sign"})
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, COMPILED_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, COMPILED_PATH).get("output", ""))
 
 
 ## One row, with its `{uid}` baked the way the dock bakes it at apply time - a row built in memory

@@ -374,7 +374,7 @@ static func _run_handlers() -> bool:
 		body.code = "pass"
 		row.actions.append(body)
 		sheet.events.append(row)
-	var compiled: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
 	ok = _check("progress is answered by the function the loop calls",
 		compiled.contains("func _on_unpack_progress(_entries: int, _bytes: int, _total: int) -> void:"), true) and ok
 	ok = _check("refusal too",
@@ -412,7 +412,7 @@ static func _run_handlers() -> bool:
 	unpacking.actions.append(_action("ReturnValue", {"value": "true"}))
 	installer.events.append(unpacking)
 	answering.functions.append(installer)
-	var answering_output: String = str(SheetCompiler.compile(answering, PROBE_SCRIPT).get("output", ""))
+	var answering_output: String = str(EventSheetCompiler.compile(answering, PROBE_SCRIPT).get("output", ""))
 	ok = _check("the unpack sits in a function that answers with a value",
 		answering_output.contains("func install_pack() -> bool:"), true) and ok
 	var parsed: GDScript = GDScript.new()
@@ -444,7 +444,7 @@ static func _run_lift() -> bool:
 		return _check("the probe script could be written", PROBE_SCRIPT, "(unwritable)")
 	file.store_string(source)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
 	EventSheetACELifter.reset_progress()
 	var lifted: bool = EventSheetACELifter.attempt_lift(sheet, source)
 	ok = _check("the file opens as events", lifted, true) and ok
@@ -459,7 +459,7 @@ static func _run_lift() -> bool:
 		ok = _check("the three answers open as their own events: %s" % answer,
 			trigger_ids.has(answer), true) and ok
 	ok = _check("and saving it again reproduces the file byte for byte",
-		str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
+		str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
 	DirAccess.remove_absolute(PROBE_SCRIPT)
 	ok = _run_lift_refusals() and ok
 	return ok
@@ -497,7 +497,7 @@ static func _run_lift_refusals() -> bool:
 			return _check("the probe script could be written", PROBE_SCRIPT, "(unwritable)")
 		file.store_string(source)
 		file.close()
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
 		EventSheetACELifter.reset_progress()
 		EventSheetACELifter.attempt_lift(sheet, source)
 		var triggers: Array[String] = []
@@ -508,7 +508,7 @@ static func _run_lift_refusals() -> bool:
 		ok = _check("%s is a plain function, not an answer" % header, triggers,
 			([] as Array[String])) and ok
 		ok = _check("and the file holding it comes back byte for byte",
-			str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
+			str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
 		DirAccess.remove_absolute(PROBE_SCRIPT)
 	return ok
 
@@ -846,7 +846,7 @@ static func _emitted(ace_id: String, params: Dictionary) -> String:
 	var by_id: Dictionary = _by_id()
 	if not by_id.has(ace_id):
 		return ""
-	return ActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
 
 
 static func _by_id() -> Dictionary:

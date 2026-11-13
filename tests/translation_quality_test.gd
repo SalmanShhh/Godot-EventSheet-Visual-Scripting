@@ -260,7 +260,7 @@ static func _test_export_gate_compiles() -> bool:
 	complain.params = {"message": "\"fr is not finished\""}
 	event.actions.append(complain)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://translation_quality_gate.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://translation_quality_gate.gd").get("output", ""))
 	var ok: bool = true
 	ok = _check("the gate rides the shipped export trigger",
 		output.contains("func _on_project_export(_is_debug: bool, features: PackedStringArray) -> void:"), true) and ok
@@ -300,7 +300,7 @@ static func _test_unmarked_on_emitted_code() -> bool:
 	pattern_action.params = {"pattern": "\"You have {coins} coins\"", "values": "{\"coins\": 0}"}
 	pattern_event.actions.append(pattern_action)
 	pattern_sheet.events.append(pattern_event)
-	var pattern_output: String = str(SheetCompiler.compile(pattern_sheet, "user://translation_quality_pattern.gd").get("output", ""))
+	var pattern_output: String = str(EventSheetCompiler.compile(pattern_sheet, "user://translation_quality_pattern.gd").get("output", ""))
 	ok = _check("Set Text (translated pattern) emits its tr() line",
 		pattern_output.contains("text = tr(\"You have {coins} coins\")"), true) and ok
 	ok = _check("a translated pattern is never accused",
@@ -398,7 +398,7 @@ static func _test_unmarked_accusations() -> bool:
 static func _test_stale_on_emitted_code() -> bool:
 	var ok: bool = true
 	var stale_sheet: EventSheetResource = _hud_sheet()
-	var stale_output: String = str(SheetCompiler.compile(stale_sheet, "user://translation_quality_stale.gd").get("output", ""))
+	var stale_output: String = str(EventSheetCompiler.compile(stale_sheet, "user://translation_quality_stale.gd").get("output", ""))
 	# Set Text ships as `text = str({value})`, so the emitted line really is a tr() nested inside a
 	# str() - which is exactly the shape a substring scan for "tr(" cannot tell from `str(` itself.
 	ok = _check("the HUD sheet emits its tr() text assignment inside _ready",
@@ -421,7 +421,7 @@ static func _test_stale_on_emitted_code() -> bool:
 	refill.params = {"value": "tr(\"WALLET\")"}
 	refresh.actions.append(refill)
 	fixed_sheet.events.append(refresh)
-	var fixed_output: String = str(SheetCompiler.compile(fixed_sheet, "user://translation_quality_fixed.gd").get("output", ""))
+	var fixed_output: String = str(EventSheetCompiler.compile(fixed_sheet, "user://translation_quality_fixed.gd").get("output", ""))
 	ok = _check("the fix compiles to the translation-changed notification",
 		fixed_output.contains("if what == NOTIFICATION_TRANSLATION_CHANGED:"), true) and ok
 	ok = _check("and the check never accuses its own fix",
@@ -610,7 +610,7 @@ static func _compile_label_text(value: String, file_name: String) -> String:
 	action.params = {"value": value}
 	event.actions.append(action)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://%s.gd" % file_name).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://%s.gd" % file_name).get("output", ""))
 
 
 ## One or more statement lines wrapped as a real script body, so the scanner sees the indentation and
@@ -660,7 +660,7 @@ static func _baked(ace_id: String, separator: String) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	if descriptor == null:
 		return "null"
-	return ActionCodegen._apply_template(str(descriptor.codegen_template),
+	return EventSheetActionCodegen._apply_template(str(descriptor.codegen_template),
 		{"locale": "locale", "path": "path", "separator": separator})
 
 

@@ -99,7 +99,7 @@ static func _test_the_emitted_calls() -> bool:
 		action.params = {"path": "$Route", "camera": "$Other", "seconds": "4.0", "ease": "ease_in",
 			"look_at": "$Player"}
 		all_passed = _check("a picked ease emits a word, not an identifier",
-			ActionCodegen.generate_action(action), str(pinned[2])) and all_passed
+			EventSheetActionCodegen.generate_action(action), str(pinned[2])) and all_passed
 	return all_passed
 
 

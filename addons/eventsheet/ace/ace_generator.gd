@@ -608,7 +608,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 			if gdscript_default is String and not normalized_options.is_empty():
 				default_text = str(gdscript_default)
 			else:
-				default_text = SheetCompiler._to_code_literal(gdscript_default)
+				default_text = EventSheetCompiler._to_code_literal(gdscript_default)
 		# A DROPDOWN WITH NO DEFAULT OPENS ON ITS FIRST WORD, and now HOLDS that word too. The params
 		# dialog adds one item per option and calls `select` only on an exact key match, so an
 		# OptionButton whose default matched nothing showed item 0 - while the row it wrote stored

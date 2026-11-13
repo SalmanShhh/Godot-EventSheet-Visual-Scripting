@@ -223,7 +223,7 @@ static func _test_round_trip() -> bool:
 	for path: String in [SETTINGS_PATH, COVERAGE_PATH]:
 		var source: String = FileAccess.get_file_as_string(path)
 		var view: EventSheetViewport = _open(path)
-		var reemitted: String = str(SheetCompiler.compile(view._sheet, path).get("output", ""))
+		var reemitted: String = str(EventSheetCompiler.compile(view._sheet, path).get("output", ""))
 		ok = _check("%s still re-emits byte-identically" % path.get_file(), reemitted == source, true) and ok
 		view.free()
 	return ok
@@ -233,7 +233,7 @@ static func _test_round_trip() -> bool:
 
 
 static func _sheet(path: String, as_autoload: bool = false) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	if as_autoload:
 		# The importer reads this off ProjectSettings; the fixture is not registered as an autoload

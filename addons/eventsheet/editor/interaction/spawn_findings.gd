@@ -195,7 +195,7 @@ static func emitted_lines(entry: Variant) -> String:
 		if descriptor == null:
 			return ""
 		template = descriptor.codegen_template
-	return ActionCodegen.collapse_optional_segments(template, _params_of(ace))
+	return EventSheetActionCodegen.collapse_optional_segments(template, _params_of(ace))
 
 
 ## True when a line parents a node WITHOUT deferring it. Anchored on the call rather than on the

@@ -59,12 +59,12 @@ static func run() -> bool:
 	var file: FileAccess = FileAccess.open(PROBE_PATH, FileAccess.WRITE)
 	file.store_string(behaviour)
 	file.close()
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(PROBE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_PATH)
 	ok = SUPPORT.pins("behaviour_addon_scaffold_test", [
 		["reopens as a behaviour", reopened.behavior_mode, true],
 		["working on what it was made for", reopened.host_class, "CharacterBody2D"],
 		["marked as yours", Array(reopened.addon_tags), ["custom"]],
-		["saves back byte for byte", str(SheetCompiler.compile(reopened, "").get("output")), behaviour],
+		["saves back byte for byte", str(EventSheetCompiler.compile(reopened, "").get("output")), behaviour],
 	]) and ok
 	DirAccess.remove_absolute(PROBE_PATH)
 

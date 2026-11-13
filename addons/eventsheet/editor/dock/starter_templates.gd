@@ -1053,7 +1053,7 @@ static func _build_keycard_door_starter() -> EventSheetResource:
 	# why the shipped row's template is filled in here and handed over as one. Same substitution the
 	# compiler runs, so this and a dropped Open Door row are the same bytes.
 	var open_body: RawCodeRow = RawCodeRow.new()
-	open_body.code = ActionCodegen._apply_template(_shipped_template("OpenDoor", "keycard_door"),
+	open_body.code = EventSheetActionCodegen._apply_template(_shipped_template("OpenDoor", "keycard_door"),
 		{"door": "self", "opened": "door_open",
 			"slide": "Vector3(0.0, slide_height, 0.0)", "seconds": "slide_seconds"})
 	open_door.events.append(open_body)

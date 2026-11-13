@@ -63,7 +63,7 @@ static func run() -> bool:
 		and (created.events[0] as EventRow).conditions[0].ace_id == "ExpressionIsTrue"
 	ok = _check("a guard row with Expression Is True was added", guarded, true) and ok
 
-	var output: String = str(SheetCompiler.compile(sheet, "user://fd_test.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://fd_test.gd").get("output", ""))
 	ok = _check("the default param compiles", output.contains("func act(amount: int = 5) -> void:"), true) and ok
 	ok = _check("the guard compiles to an if", output.contains("\tif host.enabled:"), true) and ok
 	ok = _test_param_names_are_checked(dock) and ok

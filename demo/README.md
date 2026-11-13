@@ -190,7 +190,7 @@ Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](
 
 ```gdscript
 var sheet: EventSheetResource = EventSheets.open_gd_as_sheet("res://demo/showcase/carousel/showcase_carousel.gd")
-var result: Dictionary = SheetCompiler.compile(sheet, "res://demo/showcase/carousel/showcase_carousel.gd")
+var result: Dictionary = EventSheetCompiler.compile(sheet, "res://demo/showcase/carousel/showcase_carousel.gd")
 print(result.get("warnings"))
 ```
 

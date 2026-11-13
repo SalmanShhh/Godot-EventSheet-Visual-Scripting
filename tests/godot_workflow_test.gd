@@ -32,7 +32,7 @@ static func run() -> bool:
 	node.name = "Boss Fight"
 	var created: Dictionary = EventSheetWorkflow.create_sheet_for_node(node, "user://")
 	# The attached sheet is a plain .gd (the default format), so it lifts back to an EventSheetResource.
-	var created_sheet: EventSheetResource = GDScriptImporter.new().import_external(str(created.get("sheet_path")))
+	var created_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(created.get("sheet_path")))
 	all_passed = _check("attach creates a host-matched .gd sheet beside the scene",
 		bool(created.get("ok")) and str(created.get("sheet_path")) == "user://boss_fight_sheet.gd"
 		and created_sheet != null and created_sheet.host_class == "Node2D", true) and all_passed
@@ -58,9 +58,9 @@ static func run() -> bool:
 		bool(made.get("ok")) and FileAccess.file_exists(str(made.get("sheet_path"))), true) and all_passed
 	all_passed = _check("Create New returns the .gd path (the default format, no .tres)",
 		str(made.get("sheet_path")), "user://event_sheet.gd") and all_passed
-	var made_sheet: EventSheetResource = GDScriptImporter.new().import_external(str(made.get("sheet_path")))
+	var made_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(made.get("sheet_path")))
 	all_passed = _check("the created .gd lifts back to a sheet that compiles",
-		made_sheet != null and bool(SheetCompiler.compile(made_sheet, "").get("success")), true) and all_passed
+		made_sheet != null and bool(EventSheetCompiler.compile(made_sheet, "").get("success")), true) and all_passed
 	# event_sheet.gd now exists, so a same-named create must suffix.
 	var made_again: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
 	all_passed = _check("a second Create New suffixes instead of overwriting",
@@ -78,7 +78,7 @@ static func run() -> bool:
 	all_passed = _check("a blank name falls back to event_sheet.gd",
 		str(blank_named.get("sheet_path")), "user://event_sheet.gd") and all_passed
 	var loot: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(9), "user://", "Loot Table")
-	var loot_sheet: EventSheetResource = GDScriptImporter.new().import_external(str(loot.get("sheet_path")))
+	var loot_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(loot.get("sheet_path")))
 	all_passed = _check("the given name snake_cases into the filename and keeps the starter's shape",
 		str(loot.get("sheet_path")) == "user://loot_table.gd"
 		and loot_sheet != null and loot_sheet.host_class == "Resource", true) and all_passed
@@ -182,8 +182,8 @@ static func run() -> bool:
 	ResourceSaver.save(paired_sheet, "user://paired.tres")
 	var paired_loaded: EventSheetResource = ResourceLoader.load("user://paired.tres", "", ResourceLoader.CACHE_MODE_IGNORE)
 	paired_loaded.take_over_path("user://paired.tres")
-	SheetCompiler.compile(paired_loaded, "")
-	var paired_gd: String = SheetCompiler._resolve_output_path(paired_loaded, "")
+	EventSheetCompiler.compile(paired_loaded, "")
+	var paired_gd: String = EventSheetCompiler._resolve_output_path(paired_loaded, "")
 	all_passed = _check("the Source header pairs generated scripts to their sheet",
 		EventSheetProjectDoctor.sheet_for_script(paired_gd), "user://paired.tres") and all_passed
 	all_passed = _check("a behaviour pack .gd pairs to itself (the .gd IS the sheet, no .tres)",
@@ -285,7 +285,7 @@ static func run() -> bool:
 	goto_sheet.events.append(goto_event)
 	goto_editor.setup(goto_sheet)
 	goto_editor.set_undo_redo_manager(NoopUndoManager.new())
-	var preview: Dictionary = SheetCompiler.compile(goto_sheet, "user://goto_probe.gd")
+	var preview: Dictionary = EventSheetCompiler.compile(goto_sheet, "user://goto_probe.gd")
 	var event_line: int = 0
 	for entry: Variant in (preview.get("source_map", []) as Array):
 		if entry is Dictionary and str((entry as Dictionary).get("kind")) == "event":
@@ -358,9 +358,9 @@ static func run() -> bool:
 	spin_raw.code = "rotation = 0.0"
 	airborne_event.actions.append(spin_raw)
 	rt_sheet.events.append(airborne_event)
-	var rt_compile: Dictionary = SheetCompiler.compile(rt_sheet, "user://lift_roundtrip.gd")
+	var rt_compile: Dictionary = EventSheetCompiler.compile(rt_sheet, "user://lift_roundtrip.gd")
 	all_passed = _check("the branching fixture compiles", bool(rt_compile.get("success")), true) and all_passed
-	var lifted: EventSheetResource = GDScriptImporter.new().import_external("user://lift_roundtrip.gd")
+	var lifted: EventSheetResource = EventSheetGDScriptImporter.new().import_external("user://lift_roundtrip.gd")
 	var lifted_events: Array = []
 	for row: Variant in lifted.events:
 		if row is EventRow:
@@ -376,7 +376,7 @@ static func run() -> bool:
 		and (lifted_first.sub_events[0] as EventRow).conditions.size() == 1
 		and ((lifted_first.sub_events[0] as EventRow).conditions[0] as ACECondition).ace_id == "IsActionJustPressed"
 		and (lifted_first.sub_events[1] as EventRow).else_mode == EventRow.ElseMode.ELSE, true) and all_passed
-	var rt_back: Dictionary = SheetCompiler.compile(lifted, "user://lift_roundtrip_back.gd")
+	var rt_back: Dictionary = EventSheetCompiler.compile(lifted, "user://lift_roundtrip_back.gd")
 	all_passed = _check("the lifted structure reproduces the source byte-for-byte",
 		str(rt_back.get("output")), FileAccess.get_file_as_string("user://lift_roundtrip.gd")) and all_passed
 
@@ -414,7 +414,7 @@ static func run() -> bool:
 	var run_target_file: FileAccess = FileAccess.open("user://run_target.gd", FileAccess.WRITE)
 	run_target_file.store_string("extends Node\n\n\nfunc _ready() -> void:\n\tpass\n")
 	run_target_file.close()
-	var external_sheet: EventSheetResource = GDScriptImporter.new().import_external("user://run_target.gd")
+	var external_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("user://run_target.gd")
 	var run_editor_2: EventSheetEditor = EventSheetEditor.new()
 	run_editor_2.setup(external_sheet)
 	run_editor_2.set_undo_redo_manager(NoopUndoManager.new())
@@ -540,7 +540,7 @@ static func run() -> bool:
 	vector_host.free()
 
 	# ── Variable dialog: the sections wait for the Inspector, sheet enums are types ──────
-	var variable_dialog: VariableDialog = VariableDialog.new()
+	var variable_dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var variable_host: Node = Node.new()
 	variable_dialog.init_dialog(variable_host)
 	variable_dialog.set_enum_provider(func() -> Array:
@@ -669,7 +669,7 @@ static func run() -> bool:
 
 	# ── Review fix: a numeric-only attribute left over after switching type is inert
 	# (it's hidden), not a can't-fix error about an invisible field.
-	var leftover_dialog: VariableDialog = VariableDialog.new()
+	var leftover_dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var leftover_host: Node = Node.new()
 	leftover_dialog.init_dialog(leftover_host)
 	leftover_dialog.open_for_edit("global", {"attributes": {"range": {"min": "0", "max": "100", "step": "1"}, "clamp": true}},
@@ -769,7 +769,7 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 
 
 ## The look ids the dialog's Inspector look dropdown offers right now.
-static func _look_option_ids(dialog: VariableDialog) -> Array:
+static func _look_option_ids(dialog: EventSheetVariableDialog) -> Array:
 	var ids: Array = []
 	for index: int in range(dialog._look_option.item_count):
 		ids.append(str(dialog._look_option.get_item_metadata(index)))

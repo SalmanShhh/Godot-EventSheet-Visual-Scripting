@@ -35,7 +35,7 @@ static func run() -> bool:
 
 	# ── The mechanism: one head, one remembered fact, the same bytes back ──
 	var source: String = "extends Node\n\n\nfunc hurt(amount):\n\thealth -= amount\n"
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var lifted: EventFunction = _first_function(sheet)
 	ok = _check("an untyped head lifts to a function", lifted != null, true) and ok
 	if lifted != null:
@@ -43,27 +43,27 @@ static func run() -> bool:
 		ok = _check("its one parameter arrives bare", _param_ids(lifted), ["amount"]) and ok
 		ok = _check("the missing return annotation is remembered", lifted.no_return_annotation, true) and ok
 		ok = _check("and the head re-emits without an arrow",
-			SheetCompiler.emit_function_block_text(lifted, sheet).contains("func hurt(amount):"), true) and ok
+			EventSheetCompiler.emit_function_block_text(lifted, sheet).contains("func hurt(amount):"), true) and ok
 	sheet.external_source_path = "user://_untyped_head_rt.gd"
 	ok = _check("the file round-trips byte-identically",
-		str(SheetCompiler.compile(sheet, "user://_untyped_head_rt.gd").get("output", "")), source) and ok
+		str(EventSheetCompiler.compile(sheet, "user://_untyped_head_rt.gd").get("output", "")), source) and ok
 
 	# ── A function AUTHORED on a sheet is untouched: no flag, so the typed head it always had ──
 	var authored: EventFunction = EventFunction.new()
 	authored.function_name = "hurt"
 	ok = _check("an authored function still writes a typed head",
-		SheetCompiler.emit_function_block_text(authored, EventSheetResource.new()).contains("func hurt() -> void:"),
+		EventSheetCompiler.emit_function_block_text(authored, EventSheetResource.new()).contains("func hurt() -> void:"),
 		true) and ok
 
 	# ── Typed and untyped heads side by side in one file, both lifting, both re-emitted as typed ──
 	var mixed: String = "extends Node\n\n\nfunc typed(a: int) -> int:\n\treturn a\n\n\nfunc untyped(a):\n\treturn a\n"
-	var mixed_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(mixed)
+	var mixed_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(mixed)
 	ok = _check("both heads lift", _function_names(mixed_sheet), ["typed", "untyped"]) and ok
 	ok = _check("and only the untyped one carries the flag",
 		_annotation_flags(mixed_sheet), [false, true]) and ok
 	mixed_sheet.external_source_path = "user://_untyped_mixed_rt.gd"
 	ok = _check("the mixed file round-trips byte-identically",
-		str(SheetCompiler.compile(mixed_sheet, "user://_untyped_mixed_rt.gd").get("output", "")), mixed) and ok
+		str(EventSheetCompiler.compile(mixed_sheet, "user://_untyped_mixed_rt.gd").get("output", "")), mixed) and ok
 
 	# ── A call to a function THIS file declares is that call, whatever else is spelled the same ──
 	# `restart()` beside a `func restart():` means the author's own function. The vocabulary has a
@@ -71,12 +71,12 @@ static func run() -> bool:
 	# used to win, so the row read "Restart particles" about a menu button. The line emitted is
 	# identical either way; only the sentence was wrong.
 	var own: String = "extends Node\n\n\nfunc _ready():\n\trestart()\n\n\nfunc restart():\n\tpass\n"
-	var own_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(own)
+	var own_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(own)
 	ok = _check("a call to the file's own function reads as that call",
 		_first_action_id(own_sheet), "CallFunction") and ok
 	own_sheet.external_source_path = "user://_own_call_rt.gd"
 	ok = _check("and the file still round-trips byte-identically",
-		str(SheetCompiler.compile(own_sheet, "user://_own_call_rt.gd").get("output", "")), own) and ok
+		str(EventSheetCompiler.compile(own_sheet, "user://_own_call_rt.gd").get("output", "")), own) and ok
 
 	# ── The corpus: what a real beginner-shaped project opens as, byte-gated file by file ──
 	var drifted: PackedStringArray = PackedStringArray()
@@ -84,7 +84,7 @@ static func run() -> bool:
 	for file_name: Variant in CORPUS_FUNCTIONS:
 		var path: String = "%s/%s.gd" % [CORPUS_DIR, str(file_name)]
 		var file_source: String = FileAccess.get_file_as_string(path)
-		var opened: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		if opened == null:
 			drifted.append(path)
 			continue
@@ -93,7 +93,7 @@ static func run() -> bool:
 		for item: Variant in opened.events:
 			if item is RawCodeRow and (item as RawCodeRow).code.begins_with("func "):
 				raw_functions.append("%s: %s" % [str(file_name), (item as RawCodeRow).code.split("\n")[0]])
-		if str(SheetCompiler.compile(opened, "user://_untyped_corpus_rt.gd").get("output", "")) != file_source:
+		if str(EventSheetCompiler.compile(opened, "user://_untyped_corpus_rt.gd").get("output", "")) != file_source:
 			drifted.append(path)
 	ok = _check("every corpus file round-trips byte-identically", drifted, PackedStringArray()) and ok
 	ok = _check("and not one function is left sitting as code", raw_functions, PackedStringArray()) and ok

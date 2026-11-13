@@ -42,7 +42,7 @@ static func lift(sheet: EventSheetResource, source: String) -> bool:
 		return false
 	var doc_row: RawCodeRow = sheet.events[function_index - 1] as RawCodeRow
 	var doc_lines: PackedStringArray = doc_row.code.split("\n")
-	if doc_lines.size() < 2 or doc_lines[doc_lines.size() - 1] != SheetCompiler.INSPECTOR_CONDITIONS_DOC or doc_lines[doc_lines.size() - 2] != "":
+	if doc_lines.size() < 2 or doc_lines[doc_lines.size() - 1] != EventSheetCompiler.INSPECTOR_CONDITIONS_DOC or doc_lines[doc_lines.size() - 2] != "":
 		return false
 	var conditions: Array = _read_conditions((sheet.events[function_index] as RawCodeRow).code)
 	var variables: Dictionary = {}
@@ -67,7 +67,7 @@ static func lift(sheet: EventSheetResource, source: String) -> bool:
 		doc_row.code = "\n".join(doc_lines.slice(0, doc_lines.size() - 2))
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = VERIFY_PATH
-	var output: String = str(SheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
 	sheet.external_source_path = saved_path
 	if output == source:
 		return true

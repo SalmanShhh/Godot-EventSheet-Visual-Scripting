@@ -48,7 +48,7 @@ static func run() -> bool:
 	slow.params = {"scale": "0.5"}
 	event.actions.append(slow)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_system.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_system.gd").get("output", ""))
 	all_passed = _check("is-between compiles", output.contains("if (0 <= score and score <= 100):"), true) and all_passed
 	all_passed = _check("zeropad compiles", output.contains("label_text = (\"%0*d\" % [5, score])"), true) and all_passed
 	all_passed = _check("time scale compiles", output.contains("Engine.time_scale = 0.5"), true) and all_passed

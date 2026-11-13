@@ -5,9 +5,9 @@
 # fix CASE without destroying word shape, and two that translate a pattern BEFORE filling its slots.
 #
 # Every verb is pinned twice, because either pin alone is a lie:
-#   1. EMISSION - the row is compiled through the real SheetCompiler and the emitted GDScript line is
+#   1. EMISSION - the row is compiled through the real EventSheetCompiler and the emitted GDScript line is
 #      asserted exactly (for the Label-scoped action, in its POST node-scope form, `{target.}` and all).
-#   2. RUNTIME - the SHIPPED template is substituted through the real ActionCodegen, built into a
+#   2. RUNTIME - the SHIPPED template is substituted through the real EventSheetActionCodegen, built into a
 #      script, reload()ed and RUN, including the edge cases each verb's description promises: empty
 #      text, a budget with no space in it, a negative duration, text wider than its column, and the
 #      translation catalog actually being hit (plus the wrong order explicitly NOT hitting it).
@@ -64,7 +64,7 @@ static func _test_registry_shape() -> bool:
 
 
 ## Ten expression rows, each dropped at its shipped DEFAULTS into a Set Variable action and compiled
-## through the real SheetCompiler. What is asserted is the emitted GDScript line, verbatim.
+## through the real EventSheetCompiler. What is asserted is the emitted GDScript line, verbatim.
 static func _test_emitted_expressions() -> bool:
 	var expected: Dictionary = {
 		# Both fitting verbs carry a final `if budget > 0 else <hard cut>` arm: a width too narrow to
@@ -345,7 +345,7 @@ static func _baked(ace_id: String, overrides: Dictionary) -> String:
 		values[parameter.id] = str(parameter.default_value)
 	for key: Variant in overrides:
 		values[str(key)] = str(overrides[key])
-	return ActionCodegen._apply_template(str(descriptor.codegen_template), values)
+	return EventSheetActionCodegen._apply_template(str(descriptor.codegen_template), values)
 
 
 ## An action row carrying the REAL descriptor's template with every param at its shipped default.
@@ -363,7 +363,7 @@ static func _set_var_action(variable_name: String, expression: String) -> ACEAct
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = "SetVar"
-	action.codegen_template = ActionCodegen._apply_template(str(descriptor.codegen_template),
+	action.codegen_template = EventSheetActionCodegen._apply_template(str(descriptor.codegen_template),
 		{"var_name": variable_name, "value": expression})
 	return action
 
@@ -377,7 +377,7 @@ static func _variable(variable_name: String, type_name: String, default_value: V
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _reload_source(source: String) -> GDScript:

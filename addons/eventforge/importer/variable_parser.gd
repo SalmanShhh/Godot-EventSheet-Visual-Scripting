@@ -5,7 +5,7 @@
 # `@export_group`/`@export_subgroup` lines that precede a variable are recovered separately, by the
 # importer's `_absorb_tree_variable_group()` (which folds them onto the lifted variable's attributes).
 @tool
-class_name VariableParser
+class_name EventSheetVariableParser
 extends RefCounted
 
 

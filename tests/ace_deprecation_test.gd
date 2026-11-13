@@ -51,7 +51,7 @@ static func run() -> bool:
 		var row: EventRow = EventRow.new()
 		row.actions.append(action)
 		var warnings: Array = []
-		SheetCompiler._collect_deprecated_aces([row], warnings, {})
+		EventSheetCompiler._collect_deprecated_aces([row], warnings, {})
 		all_passed = _check("compiler warns once for a used deprecated ACE", warnings.size(), 1) and all_passed
 		if warnings.size() == 1:
 			all_passed = _check("the warning names the ACE + its replacement",

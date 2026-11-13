@@ -379,11 +379,11 @@ static func parse_columns(detail: String) -> Array:
 		var column_type: String = pair.substr(colon + 1).strip_edges() if colon > 0 else "String"
 		if column_name.is_empty():
 			continue
-		var enum_options: Array = SheetCompiler.table_enum_options(column_type)
+		var enum_options: Array = EventSheetCompiler.table_enum_options(column_type)
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 		else:
-			columns.append({"name": column_name, "type": column_type if column_type in SheetCompiler.TABLE_CELL_TYPES else "String"})
+			columns.append({"name": column_name, "type": column_type if column_type in EventSheetCompiler.TABLE_CELL_TYPES else "String"})
 	return columns
 
 
@@ -393,7 +393,7 @@ static func carry_column_notes(columns: Array, before: Variant) -> void:
 	for previous: Variant in (before if before is Array else []):
 		for column: Variant in columns:
 			if previous is Dictionary and column is Dictionary and str(column.get("name", "")) == str(previous.get("name", "")):
-				for note: String in SheetCompiler.TABLE_COLUMN_NOTES:
+				for note: String in EventSheetCompiler.TABLE_COLUMN_NOTES:
 					if (previous as Dictionary).has(note):
 						column[note] = previous[note]
 
@@ -405,7 +405,7 @@ static func columns_text(columns: Variant) -> String:
 		if column is Dictionary:
 			var column_type: String = str((column as Dictionary).get("type", "String"))
 			if column_type == "enum":
-				column_type = SheetCompiler.table_enum_type((column as Dictionary).get("options", []))
+				column_type = EventSheetCompiler.table_enum_type((column as Dictionary).get("options", []))
 			parts.append("%s:%s" % [str((column as Dictionary).get("name", "")), column_type])
 	return ", ".join(parts)
 

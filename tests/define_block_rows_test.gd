@@ -210,7 +210,7 @@ static func run() -> bool:
 	var described_verb: EventFunction = _first_described_function(opened)
 	ok = _check("an opened pack surfaces the descriptions its author wrote, in the properties panel",
 		described_verb != null and not _panel_description(described_verb, opened).is_empty(), true) and ok
-	var reemitted: String = str(SheetCompiler.compile(opened, pack_path).get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(opened, pack_path).get("output", ""))
 	ok = _check("round-trip stays byte-identical with the view built (drift=0)", reemitted == source, true) and ok
 
 	# ── Phase 1: a verb's BODY renders as foldable child rows, and every body row is INERT (source_resource
@@ -257,7 +257,7 @@ static func run() -> bool:
 		if not header_row.children.is_empty():
 			pack_view._fold_state[header_row.row_uid] = false
 	pack_view.set_sheet(opened)
-	var reemitted_expanded: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
+	var reemitted_expanded: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
 	ok = _check("expanding every function body is still read-only (byte-identical)", reemitted_expanded == source, true) and ok
 	dock.free()
 
@@ -298,7 +298,7 @@ static func run() -> bool:
 	# lands in event_function.events - proven by re-fetching the verb BY NAME after the funnel commit (the
 	# commit snapshot-duplicates the sheet, so the pre-edit reference is stale) and re-compiling: the body's
 	# code vanishes from the output. This is exactly the mechanism delete / insert / drag rely on.
-	var output_before: String = str(SheetCompiler.compile(authored_dock.get_current_sheet(), "").get("output", ""))
+	var output_before: String = str(EventSheetCompiler.compile(authored_dock.get_current_sheet(), "").get("output", ""))
 	ok = _check("the authored verb body compiles into the function (print present)",
 		output_before.contains("print(\"ouch\")"), true) and ok
 	var edit_ok: bool = authored_dock._perform_undoable_sheet_edit("Delete Verb Body Row", func() -> bool:
@@ -312,7 +312,7 @@ static func run() -> bool:
 	var refetched_fn: EventFunction = _find_function_by_name(authored_dock.get_current_sheet(), "on_hit")
 	ok = _check("re-fetched by name after the commit, the verb body lost the deleted row",
 		refetched_fn != null and refetched_fn.events.is_empty(), true) and ok
-	var output_after: String = str(SheetCompiler.compile(authored_dock.get_current_sheet(), "").get("output", ""))
+	var output_after: String = str(EventSheetCompiler.compile(authored_dock.get_current_sheet(), "").get("output", ""))
 	ok = _check("the deleted body row is gone from the recompiled output (round-trips)",
 		output_after.contains("print(\"ouch\")"), false) and ok
 	authored_dock.free()
@@ -432,7 +432,7 @@ static func _branching_steps_beside_the_head() -> bool:
 	dock.setup(sheet)
 	var head: EventRowData = _find_row_by_uid_prefix(dock._active_view(), "define_fn_pick")
 	var first: EventRowData = head.children[0] if head != null and not head.children.is_empty() else null
-	var pack: EventSheetResource = GDScriptImporter.new().import_external(
+	var pack: EventSheetResource = EventSheetGDScriptImporter.new().import_external(
 		"res://eventsheet_addons/advanced_random/advanced_random_addon.gd")
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())

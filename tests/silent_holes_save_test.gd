@@ -48,12 +48,12 @@ static func _compiler_attributes_warnings_to_rows() -> bool:
 	var made: Array = _ghost_sheet()
 	var sheet: EventSheetResource = made[0]
 	var event_row: EventRow = made[1]
-	var result: Dictionary = SheetCompiler.echo(sheet)
+	var result: Dictionary = EventSheetCompiler.echo(sheet)
 	var rows: Array = result.get("warning_rows", [])
 	var first: Dictionary = rows[0] if not rows.is_empty() else {}
 	var warnings: Array = result.get("warnings", [])
 	# A second compile is the same: the attribution is bookkeeping and leaves the output alone.
-	var again: Dictionary = SheetCompiler.echo(sheet)
+	var again: Dictionary = EventSheetCompiler.echo(sheet)
 	return SUPPORT.pins(NAME, [
 		["the warning is still in the list the compiler always returned", str(warnings).contains("could not be resolved"), true],
 		["and one row carries it", rows.size(), 1],
@@ -69,7 +69,7 @@ static func _warnings_are_recorded_and_found() -> bool:
 	var sheet: EventSheetResource = made[0]
 	var event_row: EventRow = made[1]
 	sheet.external_source_path = "res://tests/silent_holes_ghost_sheet.gd"
-	var result: Dictionary = SheetCompiler.echo(sheet)
+	var result: Dictionary = EventSheetCompiler.echo(sheet)
 	var first_record: bool = EventSheetCompileFindings.record(sheet, result)
 	var same_record: bool = EventSheetCompileFindings.record(sheet, result)
 	var found: Array[Dictionary] = EventSheetCompileFindings.findings(sheet)
@@ -102,7 +102,7 @@ static func _doctor_lists_them() -> bool:
 	var made: Array = _ghost_sheet()
 	var sheet: EventSheetResource = made[0]
 	sheet.external_source_path = "res://tests/silent_holes_ghost_sheet.gd"
-	EventSheetCompileFindings.record(sheet, SheetCompiler.echo(sheet))
+	EventSheetCompileFindings.record(sheet, EventSheetCompiler.echo(sheet))
 	var findings: Array[Dictionary] = []
 	EventSheetCompilerWarningsDoctor.check(PackedStringArray(), findings)
 	var passed: bool = SUPPORT.pins(NAME, [

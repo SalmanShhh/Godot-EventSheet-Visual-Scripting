@@ -27,7 +27,7 @@ func _init() -> void:
 	_viewport.set_ace_registry(EventSheetACERegistry.new())
 	scroll.add_child(_viewport)
 
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/abilities/abilities_behavior.gd")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://eventsheet_addons/abilities/abilities_behavior.gd")
 	var modern_style := EventSheetEditorStyle.new()
 	modern_style.ensure_defaults()
 	EventSheetGodotTheme.apply(modern_style, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), Color("#569eff"), Color("#ced0d2"))

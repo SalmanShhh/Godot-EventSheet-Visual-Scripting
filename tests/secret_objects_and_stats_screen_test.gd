@@ -59,7 +59,7 @@ static func _stats_screen_starter() -> bool:
 		float((sheet.variables.get("par_seconds", {}) as Dictionary).get("default", -1.0)), 180.0) and ok
 	ok = _check("the secrets total is the designer's knob",
 		int((sheet.variables.get("secrets_total", {}) as Dictionary).get("default", -1)), 3) and ok
-	var built: String = str(SheetCompiler.compile(sheet, "user://x25_stats_screen.gd").get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, "user://x25_stats_screen.gd").get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = built
 	ok = _check("the stats screen starter compiles to GDScript that parses", script.reload(), OK) and ok
@@ -118,7 +118,7 @@ static func _ammo_table() -> bool:
 			{"weapon": "launcher", "rounds": 8}
 		]) and ok
 	ok = _check("and it is still the designer's to retune", bool(ammo.get("exported", false)), true) and ok
-	var built: String = str(SheetCompiler.compile(arsenal, "user://x25_arsenal.gd").get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(arsenal, "user://x25_arsenal.gd").get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = built
 	ok = _check("the arsenal starter still compiles to GDScript that parses", script.reload(), OK) and ok

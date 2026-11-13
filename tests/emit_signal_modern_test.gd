@@ -38,7 +38,7 @@ static func run() -> bool:
 	event.actions.append(_emit(template, "self", "exploded", ""))
 	event.actions.append(_emit(template, "$Boss", "phase_changed", "2"))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_emit_modern.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_emit_modern.gd").get("output", ""))
 
 	all_passed = _check("empty args compile to a clean .emit()", output.contains("self.exploded.emit()"), true) and all_passed
 	all_passed = _check("args pass through .emit(args)", output.contains("$Boss.phase_changed.emit(2)"), true) and all_passed
@@ -71,7 +71,7 @@ static func run() -> bool:
 		core_event.trigger_id = "OnReady"
 		core_event.actions.append(core_action)
 		core_sheet.events.append(core_event)
-		var core_out: String = str(SheetCompiler.compile(core_sheet, "user://eventsheets_emit_core.gd").get("output", ""))
+		var core_out: String = str(EventSheetCompiler.compile(core_sheet, "user://eventsheets_emit_core.gd").get("output", ""))
 		all_passed = _check("Core EmitSignal compiles to signal.emit(args)", core_out.contains("damage_taken.emit(10)"), true) and all_passed
 		var core_body: String = core_out.substr(maxi(core_out.find("extends "), 0))
 		for banned: String in CodegenParityTest.BANNED_PATTERNS:

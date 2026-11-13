@@ -19,12 +19,12 @@ static func run() -> bool:
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "TestBehaviour"
 	sheet.class_description = "A test behaviour.\nDoes two things."
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://cd_a.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://cd_a.gd").get("output", ""))
 	ok = _check("description emits as a doc block after extends",
 		compiled.contains("extends Node\n## A test behaviour.\n## Does two things.\n"), true) and ok
 
 	# Importer recovers it verbatim.
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(compiled)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(compiled)
 	ok = _check("description round-trips through the importer", imported.class_description, "A test behaviour.\nDoes two things.") and ok
 
 	# A sheet with NO description must not falsely recover the host-member doc comment.
@@ -32,14 +32,14 @@ static func run() -> bool:
 	bare.behavior_mode = true
 	bare.host_class = "CharacterBody2D"
 	bare.custom_class_name = "NoDesc"
-	var bare_compiled: String = str(SheetCompiler.compile(bare, "user://cd_b.gd").get("output", ""))
+	var bare_compiled: String = str(EventSheetCompiler.compile(bare, "user://cd_b.gd").get("output", ""))
 	ok = _check("no description emits no doc block", bare_compiled.contains("extends Node\n\n"), true) and ok
-	var bare_imported: EventSheetResource = GDScriptImporter.new().import_external_source(bare_compiled)
+	var bare_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(bare_compiled)
 	ok = _check("absent description stays empty", bare_imported.class_description, "") and ok
 
 	# A `##` block under extends that runs straight into a member is that member's doc comment, the
 	# way Godot reads it, so a typed description never rewrites a function's doc line.
-	var member_doc: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var member_doc: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n## Called each frame.\nfunc _process(_delta: float) -> void:\n\tpass\n")
 	ok = _check("a function's doc comment under extends is not the description", member_doc.class_description, "") and ok
 
@@ -48,7 +48,7 @@ static func run() -> bool:
 	plain.host_class = "Node2D"
 	plain.custom_class_name = "PlainNode"
 	plain.class_description = "One liner."
-	var plain_compiled: String = str(SheetCompiler.compile(plain, "user://cd_c.gd").get("output", ""))
+	var plain_compiled: String = str(EventSheetCompiler.compile(plain, "user://cd_c.gd").get("output", ""))
 	ok = _check("typed-host sheet emits the description",
 		plain_compiled.contains("extends Node2D\n## One liner.\n"), true) and ok
 

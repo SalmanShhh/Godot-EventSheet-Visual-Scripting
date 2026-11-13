@@ -47,7 +47,7 @@ static func run() -> bool:
 	event.actions.append(_action("JsonLoadFile", by_id, {"var_name": "loaded", "path": "\"%s\"" % TEST_FILE}))
 	event.actions.append(_action("JsonParseToVar", by_id, {"var_name": "parsed", "text": "\"[1, 2, 3]\""}))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://__json_aces_compiled.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://__json_aces_compiled.gd").get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	var reload_ok: bool = script.reload() == OK

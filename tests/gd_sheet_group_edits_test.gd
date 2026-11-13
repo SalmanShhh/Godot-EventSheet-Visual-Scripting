@@ -13,7 +13,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "gd_sheet_group_edits_test"
 const FILE_PATH := "user://gd_sheet_group_edits_test.gd"
 const RESAVE_PATH := "user://gd_sheet_group_edits_test_resave.gd"
@@ -138,22 +138,22 @@ static func _base_file() -> String:
 	calm.runtime_toggleable = true
 	calm.events.append(_raw_event("score = 0"))
 	sheet.events.append(calm)
-	return str(SheetCompiler.compile(sheet, FILE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, FILE_PATH).get("output", ""))
 
 
 ## Writes `base` to the file, opens it, applies `edits`, saves the sheet over the file and opens the
 ## file again: {saved, reopened, resaved}.
 static func _cycle(base: String, edits: Array) -> Dictionary:
 	_write(FILE_PATH, base)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	for edit: Array in edits:
 		_apply(sheet, edit)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "reopened": reopened, "resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 
 

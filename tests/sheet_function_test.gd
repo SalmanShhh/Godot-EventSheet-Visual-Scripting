@@ -31,7 +31,7 @@ static func run() -> bool:
 	event_function.events.append(body_event)
 	sheet.functions.append(event_function)
 
-	var result: Dictionary = SheetCompiler.compile(sheet, OUTPUT_PATH)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, OUTPUT_PATH)
 	var output: String = str(result.get("output", ""))
 	all_passed = _check("compile succeeds", bool(result.get("success", false)), true) and all_passed
 	all_passed = _check("function signature emitted (typed param)",
@@ -43,7 +43,7 @@ static func run() -> bool:
 	empty_function.function_name = "noop"
 	var sheet2: EventSheetResource = EventSheetResource.new()
 	sheet2.functions.append(empty_function)
-	var output2: String = str(SheetCompiler.compile(sheet2, OUTPUT_PATH).get("output", ""))
+	var output2: String = str(EventSheetCompiler.compile(sheet2, OUTPUT_PATH).get("output", ""))
 	all_passed = _check("empty function emits signature", output2.contains("func noop() -> void:"), true) and all_passed
 	all_passed = _check("empty function body is pass", output2.contains("\tpass"), true) and all_passed
 
@@ -53,14 +53,14 @@ static func run() -> bool:
 	call_action.ace_id = "CallFunction"
 	call_action.params = {"function_name": "do_thing", "args": "5"}
 	all_passed = _check("call function action emits a call",
-		ActionCodegen.generate_action(call_action), "do_thing(5)") and all_passed
+		EventSheetActionCodegen.generate_action(call_action), "do_thing(5)") and all_passed
 
 	var call_no_args: ACEAction = ACEAction.new()
 	call_no_args.provider_id = "Core"
 	call_no_args.ace_id = "CallFunction"
 	call_no_args.params = {"function_name": "reset", "args": ""}
 	all_passed = _check("call with no args emits empty parens",
-		ActionCodegen.generate_action(call_no_args), "reset()") and all_passed
+		EventSheetActionCodegen.generate_action(call_no_args), "reset()") and all_passed
 
 	return all_passed
 

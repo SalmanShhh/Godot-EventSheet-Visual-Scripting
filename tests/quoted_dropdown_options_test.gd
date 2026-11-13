@@ -298,7 +298,7 @@ static func _test_a_numbered_dropdown_answers_with_the_number() -> bool:
 	var value: String = str(parameter.get("default_value", ""))
 	all_passed = _check("distance_from_home metric opens on its first number", value, "0") and all_passed
 	return _check("the number reaches the call bare",
-		ActionCodegen._apply_template("$HomeLeashBehavior.distance_from_home({metric})",
+		EventSheetActionCodegen._apply_template("$HomeLeashBehavior.distance_from_home({metric})",
 			{"metric": value}),
 		"$HomeLeashBehavior.distance_from_home(0)") and all_passed
 
@@ -376,7 +376,7 @@ static func _test_the_emitted_calls() -> bool:
 		action.codegen_template = str(pinned[1])
 		action.params = _picked(pinned)
 		all_passed = _check("a picked option emits a word: %s" % str(pinned[2]),
-			ActionCodegen.generate_action(action), str(pinned[2])) and all_passed
+			EventSheetActionCodegen.generate_action(action), str(pinned[2])) and all_passed
 	for pinned: Array in CONDITIONS:
 		var condition: ACECondition = ACECondition.new()
 		condition.provider_id = "Pinned"
@@ -384,7 +384,7 @@ static func _test_the_emitted_calls() -> bool:
 		condition.codegen_template = str(pinned[1])
 		condition.params = _picked(pinned)
 		all_passed = _check("a picked option asks with a word: %s" % str(pinned[2]),
-			ConditionCodegen.generate_condition(condition), str(pinned[2])) and all_passed
+			EventSheetConditionCodegen.generate_condition(condition), str(pinned[2])) and all_passed
 	return all_passed
 
 

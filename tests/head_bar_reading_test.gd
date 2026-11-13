@@ -136,7 +136,7 @@ static func _variables_leave_the_bookkeeping_out() -> bool:
 ## row builder. Returns the ROOT rows; the caller frees nothing, because the viewport is freed here
 ## and the rows outlive it.
 static func _head_rows(path: String) -> Array:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	if sheet == null:
 		return []
 	sheet.read_only = true

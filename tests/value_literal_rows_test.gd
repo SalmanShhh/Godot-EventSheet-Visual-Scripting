@@ -52,10 +52,10 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── the run is recognised, and the rows it consumes vanish into the lead ───────
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(LITERAL_SOURCE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(LITERAL_SOURCE)
 	sheet.external_source_path = "user://w12_literal.gd"
 	ok = _check("the opened file reproduces byte-identically",
-		str(SheetCompiler.compile(sheet, "user://w12_literal.gd").get("output", "")), LITERAL_SOURCE) and ok
+		str(EventSheetCompiler.compile(sheet, "user://w12_literal.gd").get("output", "")), LITERAL_SOURCE) and ok
 
 	# A CANONICAL literal is held as structure (one CollectionDeclRow), and the reading it gives the
 	# view is the very one the run of lines gave: same statement, same hole, same entries.
@@ -130,7 +130,7 @@ static func run() -> bool:
 		"table: a = 1 · b = 2 · c = 3 · d = 4") and ok
 
 	# ── authoring: a chip edit rewrites ITS entry, and the file still round-trips ──────
-	var edit_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(LITERAL_SOURCE)
+	var edit_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(LITERAL_SOURCE)
 	edit_sheet.external_source_path = "user://w12_edited.gd"
 	var edit_event: EventRow = _event_of(edit_sheet, "snapshot")
 	# The field opens on the FILE's own spelling (edit_text), never on the reading - so what comes
@@ -142,7 +142,7 @@ static func run() -> bool:
 	ok = _check("editing a structured chip is accepted", EventSheetViewport._apply_decl_entry_edit(
 		edit_event, "decl_entry_line:0:1", "\"span_index\" = 7"), true) and ok
 	ok = _check("the edited file still compiles to exactly what the rows say",
-		str(SheetCompiler.compile(edit_sheet, "user://w12_edited.gd").get("output", "")),
+		str(EventSheetCompiler.compile(edit_sheet, "user://w12_edited.gd").get("output", "")),
 		LITERAL_SOURCE.replace("\t\t\"span_index\": span_index,", "\t\t\"span_index\": 7,")) and ok
 	# A run of lines edits through the row its entry came from.
 	var run_event: EventRow = EventRow.new()
@@ -256,16 +256,16 @@ static func _test_code_on_purpose() -> bool:
 	])
 	var source: String = "extends Node\n\n\nfunc build() -> void:\n\tvar block := RawCodeRow.new()\n\t%s\n" \
 		% "\n\t".join(text_lines)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://code_on_purpose.gd"
 	ok = SUPPORT.check("value_literal_rows_test", "a file holding a joined text still opens and saves back exactly",
-		str(SheetCompiler.compile(sheet, "user://code_on_purpose.gd").get("output", "")), source) and ok
+		str(EventSheetCompiler.compile(sheet, "user://code_on_purpose.gd").get("output", "")), source) and ok
 	var measured: Dictionary = EventSheetGenericRows.measure(sheet)
 	ok = SUPPORT.check("value_literal_rows_test", "and none of its lines is a row that says nothing",
 		int(measured.get("generic", -1)), 0) and ok
 	# A line in the middle of a triple-quoted text is a block of its own on the canvas, and its hover
 	# says why too: the rows above it opened a text that has not closed yet.
-	var long_text: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var long_text: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\nconst GREETING := \"\"\"Hello there.\nKept between triple quotes.\n\"\"\"\n\nvar after := 1\n")
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
@@ -390,7 +390,7 @@ static func _raw_rows(lines: PackedStringArray) -> Array:
 
 ## How many literal runs one of the plugin's own files holds, and how many bare lines they take.
 static func _measure(path: String) -> Dictionary:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var tally: Dictionary = {"runs": 0, "claimed": 0}
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction:

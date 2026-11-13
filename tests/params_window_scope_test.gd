@@ -36,7 +36,7 @@ static func run() -> bool:
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(SOURCE)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var names: PackedStringArray = EventSheetGDScriptLint.scope_names_of(sheet)
 	# A field of a line inside hurt() knows hurt's names, not _physics_process's local.
 	var hurt_event: EventRow = null

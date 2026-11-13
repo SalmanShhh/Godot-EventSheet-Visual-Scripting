@@ -53,7 +53,7 @@ static func run() -> bool:
 	view._row_diagnostics = {}
 
 	# ── Covenant: pure view - the pack still round-trips byte-identically ──
-	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
 	ok = _check("the pack re-emits byte for byte", reemitted == source, true) and ok
 
 	dock.free()

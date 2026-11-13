@@ -44,7 +44,7 @@ static func _call_reading(source: String, tag: String) -> String:
 	handle.close()
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock.setup(GDScriptImporter.new().import_external(path))
+	dock.setup(EventSheetGDScriptImporter.new().import_external(path))
 	var said: String = ""
 	for entry: Dictionary in dock._active_view().get_flat_rows():
 		var row_data: EventRowData = entry.get("row")

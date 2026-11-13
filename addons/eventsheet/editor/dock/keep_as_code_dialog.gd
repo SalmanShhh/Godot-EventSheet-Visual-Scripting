@@ -23,7 +23,7 @@
 class_name EventSheetKeepAsCodeDialog
 extends RefCounted
 
-## Where the byte gate compiles, and it is NEVER the sheet's own file. `SheetCompiler.compile()`
+## Where the byte gate compiles, and it is NEVER the sheet's own file. `EventSheetCompiler.compile()`
 ## writes its output to the path it is given, so asking it a question about a sheet with that
 ## sheet's real path would save the trial answer over somebody's work. Both sides compile under this
 ## one temporary name, outside the project, which also makes the class name identical on both sides
@@ -138,7 +138,7 @@ func _rewrite_is_byte_exact() -> bool:
 	if sheet == null:
 		return false
 	var path: String = COMPILE_PROBE_PATH
-	var before: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+	var before: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 	if before.is_empty():
 		return false
 	# On a COPY, so the sheet the reader is looking at is not touched by a question about it.
@@ -152,7 +152,7 @@ func _rewrite_is_byte_exact() -> bool:
 			"line": str(_finding.get("line", ""))
 		}, ""):
 		return false
-	return str(SheetCompiler.compile(trial, path).get("output", "")) == before
+	return str(EventSheetCompiler.compile(trial, path).get("output", "")) == before
 
 
 ## The same row, in whichever sheet is asked - the live one inside the funnel, or the deep duplicate

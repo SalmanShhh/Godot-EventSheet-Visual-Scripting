@@ -62,7 +62,7 @@ static func _the_loop_it_writes() -> bool:
 
 
 static func _the_project_and_the_reading() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external("res://demo/showcase/family_arena/family_arena.gd")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://demo/showcase/family_arena/family_arena.gd")
 	sheet.read_only = true
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())

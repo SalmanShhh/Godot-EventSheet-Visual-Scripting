@@ -12,7 +12,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "off_cell_kept_in_gd_test"
 const FILE_PATH := "user://off_cell_kept_in_gd_test.gd"
 const RESAVE_PATH := "user://off_cell_kept_in_gd_test_resave.gd"
@@ -68,11 +68,11 @@ static func run() -> bool:
 	all_passed = _check_stateful_condition() and all_passed
 	# A .tres sheet's generated companion still leaves a cell that is off out.
 	_write(FILE_PATH, SOURCE)
-	var companion_sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var companion_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_switch_off(_event(companion_sheet, 0), "action", 0)
 	_switch_off(_event(companion_sheet, 2), "condition", 0)
 	companion_sheet.external_source_path = ""
-	var companion: String = str(SheetCompiler.echo(companion_sheet).get("output", ""))
+	var companion: String = str(EventSheetCompiler.echo(companion_sheet).get("output", ""))
 	return SUPPORT.pins(TEST_NAME, [
 		["a .tres companion still leaves cells that are off out",
 			[companion.contains("# @off"), companion.contains("true or")], [false, false]],
@@ -85,25 +85,25 @@ static func run() -> bool:
 ## loop it was.
 static func _check_block_action() -> bool:
 	_write(FILE_PATH, SOURCE)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var block: ACEAction = ACEAction.new()
 	block.provider_id = "Core"
 	block.ace_id = "FreeChildren"
 	block.codegen_template = "for child in get_children():\n\tchild.queue_free()"
 	block.enabled = false
 	_event(sheet, 0).actions.append(block)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var read_back: Variant = _event(reopened, 0).actions.back() if _event(reopened, 0) != null else null
 	var read_as: Array = [read_back is RawCodeRow, read_back.get("enabled"), read_back.get("code")] if read_back != null else []
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	var resaved: String = FileAccess.get_file_as_string(RESAVE_PATH)
 	if read_back is RawCodeRow:
 		(read_back as RawCodeRow).enabled = true
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	var back_on: String = FileAccess.get_file_as_string(RESAVE_PATH)
 	return SUPPORT.pins(TEST_NAME, [
 		["a block action: the save keeps its lines where they never run",
@@ -120,7 +120,7 @@ static func _check_block_action() -> bool:
 ## so the save leaves it out - and says so, naming it, rather than dropping it without a word.
 static func _check_stateful_condition() -> bool:
 	_write(FILE_PATH, SOURCE)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var every: ACECondition = ACECondition.new()
 	every.provider_id = "Core"
 	every.ace_id = "EveryXSeconds"
@@ -131,7 +131,7 @@ static func _check_stateful_condition() -> bool:
 	every.params = {"seconds": "2.0"}
 	every.enabled = false
 	_event(sheet, 0).conditions.append(every)
-	var result: Dictionary = SheetCompiler.compile(sheet, FILE_PATH)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, FILE_PATH)
 	var naming: Array = []
 	for warning: Variant in result.get("warnings", []):
 		if str(warning).begins_with("Condition Core/EveryXSeconds is off"):
@@ -146,15 +146,15 @@ static func _check_stateful_condition() -> bool:
 ## opens it again: {saved, reopened, resaved}. An empty `kind` edits nothing.
 static func _cycle(nth: int, kind: String, which: int) -> Dictionary:
 	_write(FILE_PATH, SOURCE)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	if not kind.is_empty():
 		_switch_off(_event(sheet, nth), kind, which)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "reopened": reopened, "resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 
 

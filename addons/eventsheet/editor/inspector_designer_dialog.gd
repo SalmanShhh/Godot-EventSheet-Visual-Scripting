@@ -111,7 +111,7 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	if sheet == null:
 		return entries
-	for var_name: Variant in SheetCompiler.variable_emit_order(sheet.variables):
+	for var_name: Variant in EventSheetCompiler.variable_emit_order(sheet.variables):
 		var descriptor: Variant = sheet.variables.get(var_name)
 		if not (descriptor is Dictionary) or not bool((descriptor as Dictionary).get("exported", true)):
 			continue

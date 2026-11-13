@@ -231,7 +231,7 @@ static func _test_the_input_event_questions() -> bool:
 ## comes back byte for byte - including the comma, which belongs to the first line only when a second
 ## line follows it.
 static func _test_the_named_property() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(NAMED_PROPERTY,
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(NAMED_PROPERTY,
 		true, NAMED_PROPERTY_PATH)
 	var found: Dictionary = {}
 	for entry: Variant in sheet.events:
@@ -319,7 +319,7 @@ static func _test_the_property_refusals() -> bool:
 		"\tset = _set_health,\n\tget = _get_health": true
 	}, func(block: String) -> bool:
 		var source: String = "extends Node\n\nvar health: int = 100:\n%s\n" % block
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true,
 			REFUSAL_PATH)
 		for entry: Variant in sheet.events:
 			if entry is LocalVariable and (entry as LocalVariable).has_named_accessors():

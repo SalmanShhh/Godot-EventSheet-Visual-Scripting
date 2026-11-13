@@ -322,7 +322,7 @@ static func _test_the_helper_lands_once() -> bool:
 		{"path": "\"user://built_ship.tscn\""}))
 	sheet.events.append(again)
 	sheet.external_source_path = COMPILE_OUTPUTS[0]
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	var ok: bool = _check("the question compiles to the call it names",
 		output.contains("if %s(\"user://built_level.tscn\"):" % EventForgeSceneTrust.HELPER_NAME),
 		true)
@@ -338,10 +338,10 @@ static func _test_the_helper_lands_once() -> bool:
 		_parses("extends Node\n%s" % output), true) and ok
 	# Reopening an emitted file and saving it again must not add a second definition: the one that is
 	# already there reads back as an ordinary function and is re-emitted where it sits.
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		output, true, COMPILE_OUTPUTS[0])
 	reopened.external_source_path = COMPILE_OUTPUTS[0]
-	var again_out: String = str(SheetCompiler.compile(
+	var again_out: String = str(EventSheetCompiler.compile(
 		reopened, reopened.external_source_path).get("output", ""))
 	ok = _check("a file that already defines it gains no second copy",
 		_times(again_out, EventForgeSceneTrust.helper_head()), 1) and ok
@@ -394,7 +394,7 @@ static func _test_the_lift() -> bool:
 		_function_row_ids(sheet, "pack_it_only").has("SaveBranchAsSceneFile"), false) and ok
 
 	sheet.external_source_path = COMPILE_OUTPUTS[3]
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	ok = _check("%s comes back byte for byte" % FIXTURE, output, _source(FIXTURE)) and ok
 	ok = _test_the_lift_refuses() and ok
 	return ok
@@ -765,7 +765,7 @@ static func _compiled_without_the_question() -> String:
 		{"branch": "self", "path": "\"user://built_level.tscn\""}, "c3"))
 	sheet.events.append(event)
 	sheet.external_source_path = COMPILE_OUTPUTS[1]
-	return str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 
 
 static func _times(text: String, needle: String) -> int:
@@ -789,21 +789,21 @@ static func _source(file_name: String) -> String:
 
 static func _open(file_name: String) -> EventSheetResource:
 	var path: String = FIXTURE_DIR + file_name
-	return GDScriptImporter.new().import_external_source(_source(file_name), true, path)
+	return EventSheetGDScriptImporter.new().import_external_source(_source(file_name), true, path)
 
 
 ## A source string opened as a sheet. Used where the thing under test is a SPELLING rather than a
 ## file - a stray space survives a string literal and does not survive every editor a fixture passes
 ## through, so the runs that must not be claimed are written here rather than committed as files.
 static func _opened(source: String) -> EventSheetResource:
-	return GDScriptImporter.new().import_external_source(source, true, COMPILE_OUTPUTS[2])
+	return EventSheetGDScriptImporter.new().import_external_source(source, true, COMPILE_OUTPUTS[2])
 
 
 ## The same sheet written back out. The byte comparison is the point: a run this family refuses is
 ## still every byte the author typed, because a refusal leaves the statements exactly as they are.
 static func _reemitted(sheet: EventSheetResource) -> String:
 	sheet.external_source_path = COMPILE_OUTPUTS[2]
-	return str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 
 
 ## A row the SHEET authored. `uid` bakes the per-row id of a template that declares locals, which is

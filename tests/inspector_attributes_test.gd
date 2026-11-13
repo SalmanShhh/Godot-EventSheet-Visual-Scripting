@@ -35,7 +35,7 @@ static func run() -> bool:
 		"difficulty": {"type": "String", "default": "easy", "exported": true, "options": ["easy", "hard"],
 			"attributes": {"tooltip": "Pick one"}}
 	}
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_attrs.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_attrs.gd").get("output", ""))
 	all_passed = _check("range merges into the export annotation",
 		output.contains("@export_range(0, 200, 1) var max_health: int = 100"), true) and all_passed
 	var tooltip_at: int = output.find("## Max health")
@@ -63,7 +63,7 @@ static func run() -> bool:
 	var stored: Dictionary = dock_sheet.variables.get("speed", {})
 	all_passed = _check("dock stores the attributes",
 		(stored.get("attributes", {}) as Dictionary).get("tooltip", ""), "Units/sec") and all_passed
-	var stored_output: String = str(SheetCompiler.compile(dock_sheet, "user://eventsheets_attrs2.gd").get("output", ""))
+	var stored_output: String = str(EventSheetCompiler.compile(dock_sheet, "user://eventsheets_attrs2.gd").get("output", ""))
 	all_passed = _check("stored attributes compile",
 		stored_output.contains("@export_range(0, 10, 0.5) var speed: float = 5.0"), true) and all_passed
 	editor.free()
@@ -71,13 +71,13 @@ static func run() -> bool:
 	# Lossless rule: an external .gd with attribute lines round-trips byte-identically
 	# (the prefix lines ride as raw rows; nothing rewrites them).
 	var ext: String = "extends Node\n\n## Max health\n@export_group(\"Combat\")\n@export_range(0, 200, 1) var max_health: int = 100\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(ext)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(ext)
 	imported.external_source_path = "user://eventsheets_attrs_ext.gd"
 	all_passed = _check("external attribute lines round-trip byte-identically",
-		str(SheetCompiler.compile(imported, "user://eventsheets_attrs_ext.gd").get("output", "")) == ext, true) and all_passed
+		str(EventSheetCompiler.compile(imported, "user://eventsheets_attrs_ext.gd").get("output", "")) == ext, true) and all_passed
 
 	# Edit prefill: reopening a variable restores its attribute fields (incl. range).
-	var prefill_dialog: VariableDialog = VariableDialog.new()
+	var prefill_dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var prefill_host: Node = Node.new()
 	prefill_dialog.init_dialog(prefill_host)
 	prefill_dialog.open_for_edit("global", {"attributes": {"tooltip": "Hi", "group": "Combat", "range": {"min": "0", "max": "9", "step": "1"}, "multiline": false}}, "hp", "int", 5)
@@ -89,7 +89,7 @@ static func run() -> bool:
 
 	# Data/state steering: a NEW variable defaults to internal state (NOT exported), so it doesn't leak
 	# onto the Inspector; the Inspector-attribute disclosure is gated on the "Designer-tweakable" toggle.
-	var split_dialog: VariableDialog = VariableDialog.new()
+	var split_dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var split_host: Node = Node.new()
 	split_dialog.init_dialog(split_host)
 	split_dialog.open("global")
@@ -118,7 +118,7 @@ static func run() -> bool:
 		"drag": {"type": "float", "default": 0.1, "exported": true, "attributes": {"lock_unless": "use_gravity"}},
 		"version_label": {"type": "String", "default": "1.0", "exported": true, "attributes": {"read_only": true}}
 	}
-	var t2_output: String = str(SheetCompiler.compile(t2, "user://eventsheets_t2.gd").get("output", ""))
+	var t2_output: String = str(EventSheetCompiler.compile(t2, "user://eventsheets_t2.gd").get("output", ""))
 	all_passed = _check("clamp + on_changed emit the canonical setter",
 		t2_output.contains("@export_range(0, 200, 1) var hp: int = 100:")
 		and t2_output.contains("		hp = clampi(value, 0, 200)")
@@ -152,7 +152,7 @@ static func run() -> bool:
 	typo.variables = {"hp": {"type": "int", "default": 1, "exported": true, "attributes": {"on_changed": "_no_such_fn"}}}
 	typo.functions.append(notify_fn)
 	all_passed = _check("unknown on_changed target warns",
-		str(SheetCompiler.compile(typo, "user://eventsheets_t2typo.gd").get("warnings")).contains("_no_such_fn"), true) and all_passed
+		str(EventSheetCompiler.compile(typo, "user://eventsheets_t2typo.gd").get("warnings")).contains("_no_such_fn"), true) and all_passed
 
 	# Hook-collision guard: a raw block also defining _validate_property warns.
 	var collide: EventSheetResource = EventSheetResource.new()
@@ -162,7 +162,7 @@ static func run() -> bool:
 	pass"
 	collide.events.append(hook_block)
 	all_passed = _check("duplicate _validate_property raw block warns",
-		str(SheetCompiler.compile(collide, "user://eventsheets_t2dup.gd").get("warnings")).contains("_validate_property"), true) and all_passed
+		str(EventSheetCompiler.compile(collide, "user://eventsheets_t2dup.gd").get("warnings")).contains("_validate_property"), true) and all_passed
 
 	# Tool buttons: labeled sheet functions export a clickable Callable.
 	var button_sheet: EventSheetResource = EventSheetResource.new()
@@ -174,7 +174,7 @@ static func run() -> bool:
 	button_body.code = "print(\"recalc\")"
 	button_fn.events.append(button_body)
 	button_sheet.functions.append(button_fn)
-	var button_result: Dictionary = SheetCompiler.compile(button_sheet, "user://eventsheets_btn.gd")
+	var button_result: Dictionary = EventSheetCompiler.compile(button_sheet, "user://eventsheets_btn.gd")
 	var button_output: String = str(button_result.get("output", ""))
 	all_passed = _check("tool buttons emit the Callable export",
 		button_output.contains("@export_tool_button(\"Recalculate\") var _btn_recalculate: Callable = recalculate"), true) and all_passed
@@ -184,7 +184,7 @@ static func run() -> bool:
 	all_passed = _check("tool sheets don't warn", str(button_result.get("warnings")).contains("@tool"), false) and all_passed
 	button_sheet.tool_mode = false
 	all_passed = _check("non-tool sheets warn about tool buttons",
-		str(SheetCompiler.compile(button_sheet, "user://eventsheets_btn2.gd").get("warnings")).contains("@tool sheet"), true) and all_passed
+		str(EventSheetCompiler.compile(button_sheet, "user://eventsheets_btn2.gd").get("warnings")).contains("@tool sheet"), true) and all_passed
 
 	# ── Tier 3: drawers ──
 	var drawer_sheet: EventSheetResource = EventSheetResource.new()
@@ -192,7 +192,7 @@ static func run() -> bool:
 		"hp": {"type": "int", "default": 100, "exported": true,
 			"attributes": {"drawer": "progress_bar", "range": {"min": "0", "max": "200", "step": "1"}}}
 	}
-	var drawer_output: String = str(SheetCompiler.compile(drawer_sheet, "user://eventsheets_t3.gd").get("output", ""))
+	var drawer_output: String = str(EventSheetCompiler.compile(drawer_sheet, "user://eventsheets_t3.gd").get("output", ""))
 	all_passed = _check("drawer markers ride @export_custom",
 		drawer_output.contains("@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:200\") var hp: int = 100"), true) and all_passed
 	var drawer_script: GDScript = GDScript.new()
@@ -208,7 +208,7 @@ static func run() -> bool:
 	all_passed = _check("non-marker hints stay untouched",
 		EventSheetAttributeDrawers.parse_drawer_hint("0,200,1"), {}) and all_passed
 	drawer_sheet.variables["hp"]["attributes"]["read_only"] = true
-	var locked_output: String = str(SheetCompiler.compile(drawer_sheet, "user://eventsheets_t3b.gd").get("output", ""))
+	var locked_output: String = str(EventSheetCompiler.compile(drawer_sheet, "user://eventsheets_t3b.gd").get("output", ""))
 	all_passed = _check("read-only outranks the drawer",
 		locked_output.contains("PROPERTY_USAGE_READ_ONLY") and not locked_output.contains("eventsheet:progress_bar"), true) and all_passed
 
@@ -221,7 +221,7 @@ static func run() -> bool:
 	pass"
 	clash.events.append(clash_block)
 	all_passed = _check("generated/_process raw-block collisions warn",
-		str(SheetCompiler.compile(clash, "user://eventsheets_t3c.gd").get("warnings")).contains("_process"), true) and all_passed
+		str(EventSheetCompiler.compile(clash, "user://eventsheets_t3c.gd").get("warnings")).contains("_process"), true) and all_passed
 
 	return all_passed
 

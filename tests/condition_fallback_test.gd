@@ -29,9 +29,9 @@ static func _case(label: String, body: String, expected_conds: int, expect_negat
 	raw.code = body
 	ev.actions.append(raw)
 	sheet.events.append(ev)
-	var source: String = str(SheetCompiler.compile(sheet, "user://cf.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(sheet, "user://cf.gd").get("output", ""))
 
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var conds: Array = _conds(imported.events)
 	ok = _check("%s: condition count" % label, conds.size(), expected_conds) and ok
 	if expect_negated:
@@ -41,7 +41,7 @@ static func _case(label: String, body: String, expected_conds: int, expect_negat
 		ok = _check("%s: negation preserved" % label, any_neg, true) and ok
 
 	imported.external_source_path = "user://cf_rt.gd"
-	var rt: String = str(SheetCompiler.compile(imported, "user://cf_rt.gd").get("output", ""))
+	var rt: String = str(EventSheetCompiler.compile(imported, "user://cf_rt.gd").get("output", ""))
 	ok = _check("%s: round-trips byte-identically" % label, rt == source, true) and ok
 	if rt != source:
 		print("    SRC<%s>\n    RT <%s>" % [source, rt])

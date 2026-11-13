@@ -50,7 +50,7 @@ static func run() -> bool:
 	var exported_sheet: EventSheetResource = ResourceLoader.load("user://eventsheets_export_pack/exported_spinner.tres", "", ResourceLoader.CACHE_MODE_IGNORE)
 	# Export publishes banner-less (the .gd IS the pack, same as the bundled builders), so the
 	# no-drift recompile compares banner-less too.
-	var redrift: String = str(SheetCompiler.compile(exported_sheet, "user://eventsheets_export_drift.gd", true).get("output", ""))
+	var redrift: String = str(EventSheetCompiler.compile(exported_sheet, "user://eventsheets_export_drift.gd", true).get("output", ""))
 	all_passed = _check("exported pack obeys the no-drift rule", redrift == exported_script, true) and all_passed
 	# Guardrail: non-behavior sheets refuse.
 	var plain: EventSheetResource = EventSheetResource.new()

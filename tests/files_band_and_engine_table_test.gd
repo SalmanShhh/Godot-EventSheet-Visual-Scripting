@@ -223,7 +223,7 @@ static func _run_loop() -> bool:
 	action.codegen_template = "print(line)"
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://files_band_loop_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://files_band_loop_probe.gd").get("output", ""))
 	ok = _check("it compiles as a for over the file's lines",
 		output.contains("for line in " + collection + ":"), true) and ok
 	if FileAccess.file_exists("user://files_band_loop_probe.gd"):
@@ -402,7 +402,7 @@ static func _compiled_read(expression: String) -> String:
 	row.trigger_id = "OnReady"
 	row.actions.append(_action("SetVar", {"var_name": "items", "value": expression}))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://files_band_compile_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://files_band_compile_probe.gd").get("output", ""))
 	if FileAccess.file_exists("user://files_band_compile_probe.gd"):
 		DirAccess.remove_absolute("user://files_band_compile_probe.gd")
 	return output
@@ -485,7 +485,7 @@ static func _emitted(ace_id: String, params: Dictionary) -> String:
 	var by_id: Dictionary = _by_id()
 	if not by_id.has(ace_id):
 		return ""
-	return ActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
 
 
 static func _by_id() -> Dictionary:

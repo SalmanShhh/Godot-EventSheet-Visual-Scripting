@@ -43,7 +43,7 @@ static func run() -> bool:
 	var live_enum: EnumRow = _find_enum(dock.get_current_sheet())
 	ok = _check("members rebuilt from the fields, in order, with the explicit value",
 		live_enum != null and live_enum.members == PackedStringArray(["IDLE", "RUN", "HURT = 4"]), true) and ok
-	var compiled: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://enum_field_test_out.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), "user://enum_field_test_out.gd").get("output", ""))
 	ok = _check("the enum compiles to its canonical single-line form",
 		compiled.contains("enum State { IDLE, RUN, HURT = 4 }"), true) and ok
 

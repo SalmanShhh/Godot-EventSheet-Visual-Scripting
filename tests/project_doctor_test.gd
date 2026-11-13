@@ -207,7 +207,7 @@ static func run() -> bool:
 	EventSheetProjectDoctor.check_generated_outputs(PackedStringArray([sheet_path]), findings)
 	all_passed = _check("never-compiled sheet warns",
 		_has(findings, "warning", "stale-output"), true) and all_passed
-	SheetCompiler.compile(load(sheet_path), "")
+	EventSheetCompiler.compile(load(sheet_path), "")
 	findings = []
 	EventSheetProjectDoctor.check_generated_outputs(PackedStringArray([sheet_path]), findings)
 	all_passed = _check("freshly compiled sheet is clean", findings.is_empty(), true) and all_passed

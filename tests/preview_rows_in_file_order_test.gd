@@ -33,7 +33,7 @@ static func run() -> bool:
 		["the `##` line the lift kept on its own stays in its member's strip", held,
 			PackedStringArray(["Cells painted per click", _texts(_member(view, "brush_size")).get_slice(" | ", 0),
 				_texts(_member(view, "brush_tile")).get_slice(" | ", 0)])],
-		["the file still re-emits byte for byte", str(SheetCompiler.compile(sheet).get("output", "")), SOURCE],
+		["the file still re-emits byte for byte", str(EventSheetCompiler.compile(sheet).get("output", "")), SOURCE],
 	])
 	view.free()
 	return ok
@@ -44,7 +44,7 @@ static func _open() -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

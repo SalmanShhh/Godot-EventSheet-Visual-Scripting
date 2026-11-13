@@ -80,7 +80,7 @@ static func run() -> bool:
 	ok = _check("a real edit unlocks the preview (deliberate edit intent)", dock.get_current_sheet().read_only, false) and ok
 
 	# ── The edited state round-trips: re-import the emitted file, the field shows 5.0 ──
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(after_default)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(after_default)
 	ok = _check("the edited default round-trips (re-import shows 5.0)",
 		_reimport_field_default(reimported, "cooldown"), "5.0") and ok
 
@@ -150,11 +150,11 @@ static func _drive_field_edit(dock: EventSheetDock, raw_row: Resource, field_ind
 	dock._inline_params._commit_data_class_field_edit()
 
 
-# Compile to a THROWAWAY user:// path, never the real pack: SheetCompiler.compile writes its output to the
+# Compile to a THROWAWAY user:// path, never the real pack: EventSheetCompiler.compile writes its output to the
 # path argument (falling back to sheet.external_source_path when empty), so compiling an EDITED sheet to the
 # pack would overwrite the committed .gd on disk. The returned "output" text is what we assert on.
 static func _compile(dock: EventSheetDock) -> String:
-	return str(SheetCompiler.compile(dock.get_current_sheet(), "user://dc_edit_test_out.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(dock.get_current_sheet(), "user://dc_edit_test_out.gd").get("output", ""))
 
 
 ## True when `after` differs from `before` in EXACTLY one line, and that line went from old_line to new_line.

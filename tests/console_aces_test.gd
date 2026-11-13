@@ -11,7 +11,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const ConsoleACEs := preload("res://addons/eventforge/registration/modules/console_aces.gd")
 const Adapter := preload("res://addons/eventsheet/ace/ace_adapter.gd")
 const ActionCodegenLib := preload("res://addons/eventforge/compiler/action_codegen.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
 static func run() -> bool:
@@ -56,21 +56,21 @@ static func run() -> bool:
 	# --- The bare "Log" verb round-trips AS ITSELF via the marker (not as Push Warning) ---
 	var sheet: EventSheetResource = _sheet_with_action("ConsoleLog", "{level}({message})  # @ace:Core.ConsoleLog",
 		{"level": "push_warning", "message": "\"low hp\""})
-	var output: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	all_passed = _check("Log emits the marked line", output.contains("push_warning(\"low hp\")  # @ace:Core.ConsoleLog"), true) and all_passed
 
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(output)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(output)
 	var lifted: ACEAction = _find_action(reopened.events, "ConsoleLog")
 	all_passed = _check("the marked line lifts back to Log (not Push Warning)", lifted != null, true) and all_passed
 	if lifted != null:
 		all_passed = _check("the As level is recovered", str(lifted.params.get("level", "")), "push_warning") and all_passed
 	reopened.external_source_path = "user://_consolelog_rt.gd"
-	var recompiled: String = str(SheetCompiler.compile(reopened, "user://_consolelog_rt.gd").get("output", ""))
+	var recompiled: String = str(EventSheetCompiler.compile(reopened, "user://_consolelog_rt.gd").get("output", ""))
 	all_passed = _check("Log re-save is byte-identical (drift=0)", recompiled == output, true) and all_passed
 
 	# --- Disambiguation: a PLAIN push_warning (no marker) still lifts to the specific Push Warning ---
 	var plain: EventSheetResource = _sheet_with_action("PushWarning", "push_warning({message})", {"message": "\"plain\""})
-	var plain_reopened: EventSheetResource = GDScriptImporter.new().import_external_source(str(SheetCompiler.compile(plain).get("output", "")))
+	var plain_reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(str(EventSheetCompiler.compile(plain).get("output", "")))
 	all_passed = _check("a plain push_warning lifts to Push Warning", _find_action(plain_reopened.events, "PushWarning") != null, true) and all_passed
 	all_passed = _check("a plain push_warning does NOT become Log", _find_action(plain_reopened.events, "ConsoleLog") == null, true) and all_passed
 

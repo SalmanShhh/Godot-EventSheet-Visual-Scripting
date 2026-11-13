@@ -297,7 +297,7 @@ func set_kind(index: int, type: String) -> void:
 ## Sets a column's own Default ("default") or Description ("about"); an empty one is no note at all.
 ## Saved in the grid's declaration, so the Inspector's table has them too.
 func set_column_note(index: int, note: String, text: String) -> void:
-	if index < 0 or index >= columns.size() or not note in SheetCompiler.TABLE_COLUMN_NOTES:
+	if index < 0 or index >= columns.size() or not note in EventSheetCompiler.TABLE_COLUMN_NOTES:
 		return
 	# Kept as typed, so the field never jumps under the cursor; the declaration trims it when written.
 	if text.strip_edges().is_empty():
@@ -638,7 +638,7 @@ func write_files(folder: String) -> Dictionary:
 		sheet.tool_mode = true
 		_check_rows(sheet, EventSheets.attach_validator(sheet, grid))
 	# Written the way Save As writes a .gd: the file IS the sheet, so it carries no generated banner.
-	if not bool(SheetCompiler.compile(sheet, gd_path, true).get("success", false)) or not FileAccess.file_exists(gd_path):
+	if not bool(EventSheetCompiler.compile(sheet, gd_path, true).get("success", false)) or not FileAccess.file_exists(gd_path):
 		return {"ok": false, "message": EventSheetL10n.translate("Could not write %s.") % gd_path.get_file()}
 	var script: Script = load(gd_path) as Script
 	var data: Resource = script.new() as Resource if script != null and script.can_instantiate() else null

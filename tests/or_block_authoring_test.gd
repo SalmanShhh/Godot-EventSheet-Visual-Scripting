@@ -21,20 +21,20 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── The rewrite: an opened .gd whose `and` becomes `or`, and nothing else moves ──
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	opened.external_source_path = "user://or_block_authoring.gd"
-	var before: String = str(SheetCompiler.compile(opened, "user://or_block_authoring.gd").get("output", ""))
+	var before: String = str(EventSheetCompiler.compile(opened, "user://or_block_authoring.gd").get("output", ""))
 	ok = _check("the source round-trips before the rewrite", before, SOURCE) and ok
 	var joined: EventRow = _first_event_with_two_conditions(opened.events)
 	ok = _check("the opened file has one event joining two conditions", joined != null, true) and ok
 	if joined != null:
 		ok = _check("`and` reads as an AND block", joined.condition_mode, EventRow.ConditionMode.AND) and ok
 		joined.condition_mode = EventRow.ConditionMode.OR
-		var after: String = str(SheetCompiler.compile(opened, "user://or_block_authoring.gd").get("output", ""))
+		var after: String = str(EventSheetCompiler.compile(opened, "user://or_block_authoring.gd").get("output", ""))
 		ok = _check("Make 'Or' block rewrites just the joiner", after, SOURCE.replace(" and ", " or ")) and ok
 		joined.condition_mode = EventRow.ConditionMode.AND
 		ok = _check("Make 'And' block puts the file back byte-for-byte",
-			str(SheetCompiler.compile(opened, "user://or_block_authoring.gd").get("output", "")), SOURCE) and ok
+			str(EventSheetCompiler.compile(opened, "user://or_block_authoring.gd").get("output", "")), SOURCE) and ok
 
 	# ── The menu: the sheet's own words, and the live Or/And relabel ──
 	var sheet: EventSheetResource = EventSheetResource.new()

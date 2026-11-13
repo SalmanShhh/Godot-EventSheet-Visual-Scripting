@@ -16,7 +16,7 @@
 # CONTRACTS: parity (plain GDScript, no runtime indirection), lossless round-trips,
 # bake-at-apply (templates), policy-gates-never-bytes (composition).
 @tool
-class_name SheetCompiler
+class_name EventSheetCompiler
 extends RefCounted
 
 ## The four group-filtered touch triggers. Loaded by path rather than by class name so the
@@ -277,8 +277,8 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_removal_guard_facts = EventForgeRemovalGuard.facts(sheet)
 	# What each variable's declaration starts it on, for the Reset rows - read once here for the same
 	# reason: a walk of the whole sheet whose answer cannot change during a compile.
-	ActionCodegen.starting_values = declared_starting_values(sheet)
-	ActionCodegen.unresolved_starting_values = PackedStringArray()
+	EventSheetActionCodegen.starting_values = declared_starting_values(sheet)
+	EventSheetActionCodegen.unresolved_starting_values = PackedStringArray()
 
 
 ## Compiles an event sheet resource to a GDScript output file.
@@ -319,10 +319,10 @@ static func _compile_locked(sheet: EventSheetResource, output_path: String, omit
 	_warning_claimed = {}
 	_inner_class_lines = outer_inner_class_lines
 	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
-	for unresolved: String in ActionCodegen.unresolved_starting_values:
+	for unresolved: String in EventSheetActionCodegen.unresolved_starting_values:
 		(locked_result["warnings"] as Array).append("Reset Variable: %s is not declared on this sheet, so there is no starting value to put back - the row writes nothing." % unresolved)
-	ActionCodegen.starting_values = {}
-	ActionCodegen.unresolved_starting_values = PackedStringArray()
+	EventSheetActionCodegen.starting_values = {}
+	EventSheetActionCodegen.unresolved_starting_values = PackedStringArray()
 	_writes_output = true
 	_compile_mutex.unlock()
 	return locked_result
@@ -1471,7 +1471,7 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 	if event_rows.is_empty():
 		return
 	var lead: EventRow = event_rows[0] as EventRow
-	var signature: Dictionary = TriggerResolver.resolve_trigger(lead)
+	var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(lead)
 	var function_name: String = str(signature.get("function_name", ""))
 	if function_name.is_empty():
 		(result["warnings"] as Array[String]).append("Unsupported anchored trigger %s" % lead.trigger_id)
@@ -1494,8 +1494,8 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 	# And the retirement's own first line, for the same reason: `tree_exiting` is raised every time
 	# the node leaves the tree - a reparent, a pool handing it out again - and only sometimes because
 	# it is being retired. The guard is what makes the handler mean what the row says.
-	for retire_line: String in TriggerResolver.retire_guard_lines(lead,
-			TriggerResolver.effective_trigger_id(lead),
+	for retire_line: String in EventSheetTriggerResolver.retire_guard_lines(lead,
+			EventSheetTriggerResolver.effective_trigger_id(lead),
 			str(signature.get("source_path", ""))):
 		lines.append(retire_line)
 	if _emit_notification_match(event_rows, lines, source_map, result["warnings"]):
@@ -1520,7 +1520,7 @@ static func _emit_menu_match(events: Array, lines: PackedStringArray, source_map
 	for event_entry: Variant in events:
 		if not (event_entry is EventRow):
 			return false
-		var item_id: String = TriggerResolver.menu_item_id_of(event_entry as EventRow)
+		var item_id: String = EventSheetTriggerResolver.menu_item_id_of(event_entry as EventRow)
 		if item_id.is_empty():
 			return false
 		ids.append(item_id)
@@ -1545,7 +1545,7 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 	for event_entry: Variant in events:
 		if not (event_entry is EventRow):
 			return false
-		var constant: String = TriggerResolver.notification_constant_for((event_entry as EventRow).trigger_id)
+		var constant: String = EventSheetTriggerResolver.notification_constant_for((event_entry as EventRow).trigger_id)
 		if constant.is_empty():
 			return false
 		constants.append(constant)
@@ -2332,12 +2332,12 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if not (entry is EventRow):
 			continue
 		var event_row: EventRow = entry as EventRow
-		# A blank trigger is not "no event": it is the every-tick event (TriggerResolver reads it
+		# A blank trigger is not "no event": it is the every-tick event (EventSheetTriggerResolver reads it
 		# that way), so a blank top-level event groups into `_process` with the explicit ones.
 		# An event that is off stays in a sheet that is its own .gd (see _keeps_off_rows).
 		if not event_row.enabled and not _keeps_off_rows:
 			continue
-		var key: String = TriggerResolver.get_trigger_key(event_row)
+		var key: String = EventSheetTriggerResolver.get_trigger_key(event_row)
 		# An event lifted from a connect LAMBDA is its own wiring, body and all - two lambdas on the
 		# same signal are two statements in `_ready` and must never be folded into one handler. Its
 		# own token in the key is what keeps them apart.
@@ -2357,7 +2357,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		var events: Array = grouped.get(key, [])
 		if events.is_empty():
 			continue
-		var signature: Dictionary = TriggerResolver.resolve_trigger(events[0])
+		var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(events[0])
 		signatures[key] = signature
 		# A lambda-wired event IS its connect line: the wiring and the handler are one statement, so
 		# the whole group goes into `_ready` and no separate handler function is written for it.
@@ -2406,16 +2406,16 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		elif source_path == "@window":
 			# Root-window signals (close_requested) - the On Close Requested trigger connects here.
 			source_prefix = "get_window()."
-		elif source_path == TriggerResolver.MULTIPLAYER_SOURCE:
+		elif source_path == EventSheetTriggerResolver.MULTIPLAYER_SOURCE:
 			# The scene tree's own MultiplayerAPI (peer_connected, server_disconnected, …) - the
 			# seven connection triggers connect here. `multiplayer` is a property of every node, which
 			# is why the line needs no lookup at all and reads exactly as a hand-written one does.
 			source_prefix = "multiplayer."
-		elif source_path.begins_with(TriggerResolver.MEMBER_SOURCE_PREFIX):
+		elif source_path.begins_with(EventSheetTriggerResolver.MEMBER_SOURCE_PREFIX):
 			# A menu is a variable of this script, not a node looked up by path: the line that
 			# wires it is `sheet_popup.id_pressed.connect(...)`, which is what every hand-written
 			# menu already says.
-			source_prefix = "%s." % source_path.trim_prefix(TriggerResolver.MEMBER_SOURCE_PREFIX)
+			source_prefix = "%s." % source_path.trim_prefix(EventSheetTriggerResolver.MEMBER_SOURCE_PREFIX)
 		elif source_path.begins_with("autoload:"):
 			# Bus triggers: autoloads are global - connect by name, no node paths.
 			source_prefix = "%s." % source_path.trim_prefix("autoload:")
@@ -2506,8 +2506,8 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		# And the retirement's own first line, emitted as visible code for the same reasons: it IS
 		# the code, and `tree_exiting` alone does not mean what On Retired says - a pool hands a node
 		# out again by putting it back in the tree, so the bare signal fires on every spawn too.
-		for retire_line: String in TriggerResolver.retire_guard_lines(events[0] as EventRow,
-				TriggerResolver.effective_trigger_id(events[0] as EventRow),
+		for retire_line: String in EventSheetTriggerResolver.retire_guard_lines(events[0] as EventRow,
+				EventSheetTriggerResolver.effective_trigger_id(events[0] as EventRow),
 				str(signature.get("source_path", ""))):
 			lines.append(retire_line)
 			had_body = true
@@ -2757,7 +2757,7 @@ static func _emit_event_body(
 					# Said out loud: the file is the sheet's only copy, and this condition is not in it.
 					warnings.append("Condition %s/%s is off and keeps state of its own (Every X Seconds, Trigger Once...) - a .gd sheet has no way to hold it switched off, so it was left out of the file. Delete it, or switch it back on, to silence this." % [condition.provider_id, condition.ace_id])
 				continue
-			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
+			var condition_line: String = EventSheetConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
 				if _condition_evaluates_last(condition):
 					tail_condition_texts.append(condition_line)
@@ -2942,7 +2942,7 @@ static func _emit_event_body(
 				_emit_off_action(action_item as ACEAction, effective_node_target, body_indent, lines, source_map)
 				continue
 			if action_item is ACEAction:
-				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target, _behavior_host_default)
+				var action_line: String = EventSheetActionCodegen.generate_action(action_item, effective_node_target, _behavior_host_default)
 				if action_line.is_empty():
 					continue
 				_emit_leading_body_blanks(action_item, lines)
@@ -3161,7 +3161,7 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 	for item: Variant in events:
 		if item is ACEAction:
 			var action: ACEAction = item as ACEAction
-			var action_line: String = ActionCodegen.generate_action(action, node_target, _behavior_host_default)
+			var action_line: String = EventSheetActionCodegen.generate_action(action, node_target, _behavior_host_default)
 			if action_line.is_empty():
 				continue
 			out.append_array(action.note_above_lines(indent))
@@ -3209,7 +3209,7 @@ static func _off_condition_term(condition: ACECondition, says_true: bool) -> Str
 		return ""
 	var switched_on: ACECondition = condition.duplicate() as ACECondition
 	switched_on.enabled = true
-	var code: String = ConditionCodegen.generate_condition(switched_on, _behavior_host_default)
+	var code: String = EventSheetConditionCodegen.generate_condition(switched_on, _behavior_host_default)
 	if code.is_empty():
 		return ""
 	return ("(%s or %s)" if says_true else "(%s and %s)") % ["true" if says_true else "false", code]
@@ -3320,7 +3320,7 @@ static func _emit_off_comment(comment: CommentRow, indent: String, lines: Packed
 static func _emit_off_action(action: ACEAction, node_target: String, indent: String, lines: PackedStringArray, source_map: Array) -> void:
 	var switched_on: ACEAction = action.duplicate() as ACEAction
 	switched_on.enabled = true
-	var code: String = ActionCodegen.generate_action(switched_on, node_target, _behavior_host_default)
+	var code: String = EventSheetActionCodegen.generate_action(switched_on, node_target, _behavior_host_default)
 	if code.is_empty():
 		return
 	var code_lines: PackedStringArray = code.split("\n")
@@ -3510,7 +3510,7 @@ static func _compile_filter_conditions(pick: PickFilter, iterator: String) -> St
 		if base.strip_edges().is_empty():
 			continue
 		# An inverted comparison flips its operator instead of wearing a `not (...)`, exactly as it
-		# does in an event header (ConditionCodegen). "" whenever the condition is not the plain
+		# does in an event header (EventSheetConditionCodegen). "" whenever the condition is not the plain
 		# `{a} {op} {b}` shape, which is what keeps every other inverted filter term wrapped.
 		var flipped: String = _flipped_condition_expr(cond) if cond.negated else ""
 		var inverted: bool = cond.negated and flipped.is_empty()
@@ -3527,7 +3527,7 @@ static func _compile_filter_conditions(pick: PickFilter, iterator: String) -> St
 
 
 ## The condition's boolean template with params applied, WITHOUT negation (so a node scope
-## can be inserted before the `not`). Mirrors ConditionCodegen.generate_condition lookup.
+## can be inserted before the `not`). Mirrors EventSheetConditionCodegen.generate_condition lookup.
 static func _condition_base_expr(condition: ACECondition) -> String:
 	var template: String = condition.codegen_template.strip_edges()
 	if template.is_empty():
@@ -3536,7 +3536,7 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 			return ""
 		template = descriptor.codegen_template
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
-	return ActionCodegen._apply_template(template, params)
+	return EventSheetActionCodegen._apply_template(template, params)
 
 
 ## The same expression with the comparison operator flipped to its opposite, or "" when the condition
@@ -3553,7 +3553,7 @@ static func _flipped_condition_expr(condition: ACECondition) -> String:
 		template = descriptor.codegen_template
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	var flipped: Dictionary = EventForgeACEFactory.flipped_comparison_params(template, params)
-	return "" if flipped.is_empty() else ActionCodegen._apply_template(template, flipped)
+	return "" if flipped.is_empty() else EventSheetActionCodegen._apply_template(template, flipped)
 
 
 ## The GDScript a condition compiles to, negation aside - the editor's readers use it to recognize

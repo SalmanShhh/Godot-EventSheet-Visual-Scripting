@@ -30,7 +30,7 @@ static func _test_the_record() -> bool:
 	ok = _check("and it lives under the project's own settings, not in any file of the sheet",
 		EventForgeVocabularyRecord.SETTING, "eventsheets/project/vocabulary_version") and ok
 	ok = _check("the version it records is the compiler's own",
-		EventForgeVocabularyRecord.current(), SheetCompiler.VERSION) and ok
+		EventForgeVocabularyRecord.current(), EventSheetCompiler.VERSION) and ok
 	# THE LAW, pinned: a headless run has not edited anything, so it writes nothing. Every test in
 	# this suite compiles sheets, and none of them may leave a project.godot behind.
 	ok = _check("a run with no editor writes no record", EventForgeVocabularyRecord.stamp(), false) and ok

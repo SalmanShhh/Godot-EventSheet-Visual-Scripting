@@ -176,7 +176,7 @@ func compare_with(other_path: String) -> Dictionary:
 	if other_side.has("error"):
 		return _report_error(str(other_side.get("error")))
 	_other_sheet = other_side.get("sheet") as EventSheetResource
-	var here_compiled: Dictionary = SheetCompiler.compile(_dock._current_sheet, EventSheetSheetDiff.COMPARE_HERE_PATH)
+	var here_compiled: Dictionary = EventSheetCompiler.compile(_dock._current_sheet, EventSheetSheetDiff.COMPARE_HERE_PATH)
 	var result: Dictionary = EventSheetSheetDiff.compare_sides(
 		str(here_compiled.get("output", "")), here_compiled.get("source_map", []),
 		str(other_side.get("output", "")), other_side.get("source_map", []))

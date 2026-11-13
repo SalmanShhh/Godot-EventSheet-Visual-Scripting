@@ -4,7 +4,7 @@
 # Three things are proved for every verb, because two of them are what a shipped-and-wrong ACE
 # passes anyway:
 #   1. the SHIPPED codegen template is pinned (a rename or a re-word breaks someone's sheet);
-#   2. that same template, substituted through the real ActionCodegen, is compiled and RUN, so the
+#   2. that same template, substituted through the real EventSheetActionCodegen, is compiled and RUN, so the
 #      behaviour the blurb promises is executed rather than described (the ring trim, the empty
 #      trail, the sustained-drop gate, the CSV file that actually lands on disk);
 #   3. the compiler emits it into a real sheet unchanged, stateful member and all.
@@ -380,7 +380,7 @@ static func _test_compiled_into_a_sheet(by_id: Dictionary) -> bool:
 	event.actions.append(action)
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_debug_and_time.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_debug_and_time.gd").get("output", ""))
 
 	all_passed = _check("the stateful drop-clock is declared at class level",
 		output.contains("var __fpslow_row0: float = -1.0"), true) and all_passed
@@ -566,7 +566,7 @@ static func _load_overlay() -> Node:
 static func _line(by_id: Dictionary, ace_id: String, params: Dictionary) -> String:
 	var filled: Dictionary = params.duplicate()
 	filled["uid"] = "probe"
-	return ActionCodegen._apply_template(str((by_id[ace_id] as ACEDescriptor).codegen_template), filled)
+	return EventSheetActionCodegen._apply_template(str((by_id[ace_id] as ACEDescriptor).codegen_template), filled)
 
 
 ## The same, laid out as an indented function body (an action template may be several lines).

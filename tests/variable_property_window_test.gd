@@ -18,7 +18,7 @@ const P := "variable_property_window_test"
 
 static func run() -> bool:
 	var host: Node = Node.new()
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> Variant: return null)
 	var ok: bool = _looks_per_type(dialog)
@@ -34,7 +34,7 @@ static func run() -> bool:
 	return ok
 
 
-static func _looks_per_type(dialog: VariableDialog) -> bool:
+static func _looks_per_type(dialog: EventSheetVariableDialog) -> bool:
 	var rows: Array = []
 	for expected: Array in [
 		["int", ["", "slider", "no_handle", "progress_bar", "number_choices", "flags", "layers", "table_row", "custom", "storage"]],
@@ -52,7 +52,7 @@ static func _looks_per_type(dialog: VariableDialog) -> bool:
 	return SUPPORT.pins(P, rows)
 
 
-static func _looks_compile(dialog: VariableDialog) -> bool:
+static func _looks_compile(dialog: EventSheetVariableDialog) -> bool:
 	var rows: Array = []
 	dialog.open_for_edit("global", {}, "bullet_speed", "float", "10.0", false, "Add", false, true)
 	_pick_look(dialog, "slider", {"min": "0", "max": "40", "step": "0.5", "unit": "tiles/s"})
@@ -79,7 +79,7 @@ static func _looks_compile(dialog: VariableDialog) -> bool:
 	return SUPPORT.pins(P, rows)
 
 
-static func _sections(dialog: VariableDialog) -> bool:
+static func _sections(dialog: EventSheetVariableDialog) -> bool:
 	var rows: Array = []
 	dialog.open_for_edit("global", {"attributes": {"tooltip": "Tiles per second", "doc_after_group": true}}, "bullet_speed",
 		"float", "10.0", false, "Add", false, true)
@@ -124,7 +124,7 @@ static func _sections(dialog: VariableDialog) -> bool:
 	return SUPPORT.pins(P, rows)
 
 
-static func _values_as_code(dialog: VariableDialog) -> bool:
+static func _values_as_code(dialog: EventSheetVariableDialog) -> bool:
 	var rows: Array = []
 	dialog.open_for_edit("tree", {}, "bullet_anim", "StringName", "&\"fly\"", false, "Add", false, true)
 	rows.append(["a StringName shows its words without the quotes", dialog._default_edit.text, "fly"])
@@ -211,7 +211,7 @@ static func _tree_rows_keep_what_the_window_sends() -> bool:
 	var rows: Array = [["the look and the written type reach the line", output.contains("@export_range(0, 10, 1) var damage: int = 3\n"), true]]
 	var lines_row: LocalVariable = _row(dock, "lines")
 	var host: Node = Node.new()
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.open_for_edit("tree", {"editing": true, "export_hint": lines_row.export_hint}, "lines", "String", "", false, "Edit", false, true)
 	rows.append(["a Big text box the file wrote opens on its look", dialog._selected_look_id(), "multiline"])
@@ -228,7 +228,7 @@ static func _row(dock: EventSheetDock, row_name: String) -> LocalVariable:
 	return null
 
 
-static func _pick_look(dialog: VariableDialog, look_id: String, values: Dictionary) -> void:
+static func _pick_look(dialog: EventSheetVariableDialog, look_id: String, values: Dictionary) -> void:
 	for key: Variant in values:
 		dialog._look_values["%s|%s" % [look_id, key]] = values[key]
 	dialog._select_look(look_id)
@@ -236,7 +236,7 @@ static func _pick_look(dialog: VariableDialog, look_id: String, values: Dictiona
 	dialog._refresh_reading()
 
 
-static func _confirm(dialog: VariableDialog) -> Dictionary:
+static func _confirm(dialog: EventSheetVariableDialog) -> Dictionary:
 	var seen: Dictionary = {}
 	var listener: Callable = func(_n: String, type_name: String, default_value: Variant, _s: String, context: Dictionary, _c: bool,
 			_e: bool, options: PackedStringArray, attributes: Dictionary, _r: bool, _st: bool) -> void:
@@ -247,14 +247,14 @@ static func _confirm(dialog: VariableDialog) -> Dictionary:
 	return seen
 
 
-static func _look_ids(dialog: VariableDialog) -> Array:
+static func _look_ids(dialog: EventSheetVariableDialog) -> Array:
 	var ids: Array = []
 	for index: int in range(dialog._look_option.item_count):
 		ids.append(str(dialog._look_option.get_item_metadata(index)))
 	return ids
 
 
-static func _bare_looks(dialog: VariableDialog) -> Array:
+static func _bare_looks(dialog: EventSheetVariableDialog) -> Array:
 	var bare: Array = []
 	for index: int in range(dialog._look_option.item_count):
 		if not dialog._look_option.get_item_tooltip(index).contains("\nWrites "):
@@ -267,12 +267,12 @@ static func _bare_looks(dialog: VariableDialog) -> Array:
 ## This is the gate it cannot be: every word a table shows has a row in every bundled language.
 static func _tables_are_translated() -> bool:
 	var words: PackedStringArray = PackedStringArray()
-	for entry: Array in VariableDialog.TYPES:
+	for entry: Array in EventSheetVariableDialog.TYPES:
 		words.append_array([str(entry[0]), str(entry[2]), str(entry[3])])
-	for field: Variant in VariableDialog.FIELD_HELP:
-		words.append_array([str(field), str(VariableDialog.FIELD_HELP[field])])
-	for scope: Variant in VariableDialog.SCOPE_FACTS:
-		words.append_array([str(VariableDialog.SCOPE_FACTS[scope]["short"]), str(VariableDialog.SCOPE_FACTS[scope]["long"])])
+	for field: Variant in EventSheetVariableDialog.FIELD_HELP:
+		words.append_array([str(field), str(EventSheetVariableDialog.FIELD_HELP[field])])
+	for scope: Variant in EventSheetVariableDialog.SCOPE_FACTS:
+		words.append_array([str(EventSheetVariableDialog.SCOPE_FACTS[scope]["short"]), str(EventSheetVariableDialog.SCOPE_FACTS[scope]["long"])])
 	for look: Dictionary in EventSheetInspectorLooks.LOOKS:
 		words.append_array([str(look["label"]), str(look["tip"])])
 		for field: Array in look.get("fields", []):
@@ -295,7 +295,7 @@ static func _window_speaks_the_editor_language() -> bool:
 	var before: String = EventSheetL10n.get_locale()
 	EventSheetL10n.set_locale("de")
 	var host: Node = Node.new()
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> Variant: return null)
 	dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Add", false, true)
@@ -306,7 +306,7 @@ static func _window_speaks_the_editor_language() -> bool:
 			"Ein Winkel: in Radiant gespeichert, in Grad angezeigt und eingegeben.
 Schreibt @export_range(0, 360, 0.1, \"radians_as_degrees\")"],
 		["the type, kept as code beside its words", dialog._type_option.get_item_text(dialog._type_option.selected), "float · Zahl mit Nachkommastellen"],
-		["a field's help", VariableDialog.field_help("Subgroup"), "Ein Ordner innerhalb der Gruppe (@export_subgroup)."],
+		["a field's help", EventSheetVariableDialog.field_help("Subgroup"), "Ein Ordner innerhalb der Gruppe (@export_subgroup)."],
 		["the window's own words", [dialog._dialog.title, dialog._changes_fold.title], ["Variable hinzufügen", "Wenn sie sich ändert"]],
 	]
 	host.free()

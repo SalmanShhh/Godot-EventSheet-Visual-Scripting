@@ -17,7 +17,7 @@ const P := "rebuild_claims_test"
 
 static func run() -> bool:
 	BehaviorShapeReadingTest._write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(BehaviorShapeReadingTest.SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(BehaviorShapeReadingTest.SOURCE_PATH)
 	var view: EventSheetViewport = EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.size = Vector2(1900.0, 1100.0)

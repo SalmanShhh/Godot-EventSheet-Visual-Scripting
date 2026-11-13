@@ -72,19 +72,19 @@ static func _place(sheet: EventSheetResource, before_rows: Array, holders: Array
 	if every.is_empty():
 		return
 	sheet.events = _claimed(before_rows, holders, every)
-	var after_text: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var after_text: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	if after_text == source:
 		return
 	# The file as written is what the rows wrote before the claims, nearly always; only when the sheet
 	# writes something else is the before written out to compare against.
 	sheet.events = before_rows
-	var before_text: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var before_text: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	var kept: Array = every
 	if after_text != before_text:
 		kept = []
 		for claim: Array in every:
 			sheet.events = _claimed(before_rows, holders, kept + [claim])
-			if str(SheetCompiler.echo(sheet).get("output", "")) == before_text:
+			if str(EventSheetCompiler.echo(sheet).get("output", "")) == before_text:
 				kept.append(claim)
 	sheet.events = _claimed(before_rows, holders, kept)
 
@@ -149,7 +149,7 @@ static func _read_class(lines: PackedStringArray) -> InnerClassRow:
 	var row: InnerClassRow = InnerClassRow.new()
 	row.header = lines[0]
 	row.body = body_sheet
-	if SheetCompiler.inner_class_lines(row) != lines:
+	if EventSheetCompiler.inner_class_lines(row) != lines:
 		return null
 	return row
 
@@ -160,7 +160,7 @@ static func _open_body(body_source: String) -> EventSheetResource:
 	var phase: String = EventSheetACELifter.progress_phase
 	var total: int = EventSheetACELifter.progress_functions_total
 	var done: int = EventSheetACELifter.progress_functions_done
-	var body_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(body_source, true, "")
+	var body_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(body_source, true, "")
 	EventSheetACELifter.progress_phase = phase
 	EventSheetACELifter.progress_functions_total = total
 	EventSheetACELifter.progress_functions_done = done

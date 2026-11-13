@@ -63,7 +63,7 @@ static func run() -> bool:
 		EventSheetDock.extract_actions_to_function(sheet, event, [], "x") == null, true) and all_passed
 
 	# The result compiles: the function definition (with both statements) + a call to it, and it parses.
-	var output: String = str(SheetCompiler.compile(sheet, "user://extract_fn.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://extract_fn.gd").get("output", ""))
 	all_passed = _check("function definition emitted", output.contains("func apply_physics("), true) and all_passed
 	all_passed = _check("structured action emitted inside the function", output.contains("queue_free()"), true) and all_passed
 	all_passed = _check("GDScript action emitted inside the function", output.contains("get_child_count()"), true) and all_passed
@@ -81,7 +81,7 @@ static func run() -> bool:
 	var kw_fn: EventFunction = EventSheetDock.extract_actions_to_function(kw_sheet, kw_event, kw_event.actions.duplicate(), "func")
 	all_passed = _check("a reserved keyword name is not used verbatim", kw_fn != null and kw_fn.function_name != "func", true) and all_passed
 	var kw_script: GDScript = GDScript.new()
-	kw_script.source_code = str(SheetCompiler.compile(kw_sheet, "user://extract_kw.gd").get("output", ""))
+	kw_script.source_code = str(EventSheetCompiler.compile(kw_sheet, "user://extract_kw.gd").get("output", ""))
 	all_passed = _check("a keyword-named extract still parses", kw_script.reload() == OK, true) and all_passed
 
 	# ── Guard: a host/native method name (queue_free on a Node2D) must NOT be overridden ──
@@ -133,7 +133,7 @@ static func run() -> bool:
 		and (cp_fn.params[0] as ACEParam).type_name == "float", true) and all_passed
 	all_passed = _check("the call passes the live value",
 		str((cp_event.actions[1] as ACEAction).params.get("args", "")), "speed") and all_passed
-	var cp_output: String = str(SheetCompiler.compile(cp_sheet, "user://extract_captured.gd").get("output", ""))
+	var cp_output: String = str(EventSheetCompiler.compile(cp_sheet, "user://extract_captured.gd").get("output", ""))
 	var cp_parse: GDScript = GDScript.new()
 	cp_parse.source_code = cp_output
 	all_passed = _check("the parameterized extraction compiles to parseable GDScript", cp_parse.reload() == OK, true) and all_passed

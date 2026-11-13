@@ -111,7 +111,7 @@ func _action(ace_id: String, params: Dictionary) -> ACEAction:
 ## res://event_sheet_generated.gd at the project root, and a test sheet left there is a real
 ## discoverable test the headless runner would pick up on every later run.
 func _compile(sheet: EventSheetResource) -> String:
-	var source: String = str(SheetCompiler.compile(sheet, FIXTURE_DIR + "/_temp_compile.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(sheet, FIXTURE_DIR + "/_temp_compile.gd").get("output", ""))
 	DirAccess.remove_absolute(FIXTURE_DIR + "/_temp_compile.gd")
 	return source
 

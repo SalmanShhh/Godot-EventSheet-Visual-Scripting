@@ -155,8 +155,8 @@ const PATH_READERS := [
 ## The names none of those files may hold in code. The API keeps its DOT, as in the boot lint: the
 ## files print "EventSheets" in messages, and a call is what compiles.
 const HEAVY_NAMES := [
-	"EventSheets.", "SheetCompiler", "GDScriptImporter", "EventSheetProjectDoctor",
-	"ACEPickerDialog", "ACEParamsDialog", "VariableDialog", "EventSheetDocWindow",
+	"EventSheets.", "EventSheetCompiler", "EventSheetGDScriptImporter", "EventSheetProjectDoctor",
+	"ACEPickerDialog", "ACEParamsDialog", "EventSheetVariableDialog", "EventSheetDocWindow",
 	"EventSheetDocExplain", "EventSheetMCPServer", "EventSheetDocChores", "EventSheetThemeEditor",
 	"EventSheetSheetTypeDialog", "EventSheetWelcomeWindow", "EventSheetStarterTemplates",
 	"EventSheetSaveStudio", "EventSheetTranslationStudio", "EventSheetProjectDoctorPanel",

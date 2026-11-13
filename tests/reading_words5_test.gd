@@ -265,7 +265,7 @@ static func _opened_files_read() -> bool:
 
 
 static func _import(path: String) -> EventSheetResource:
-	return GDScriptImporter.new().import_external(path)
+	return EventSheetGDScriptImporter.new().import_external(path)
 
 
 ## The readings of one sheet, straight off the canvas's own spans.
@@ -306,7 +306,7 @@ static func _round_trip() -> bool:
 		var source: String = handle.get_as_text() if handle != null else ""
 		if handle != null:
 			handle.close()
-		var output: String = str(SheetCompiler.compile(_import(path), path).get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(_import(path), path).get("output", ""))
 		ok = _check("%s saves every byte back" % path.get_file(), output, source) and ok
 	return ok
 

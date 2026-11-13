@@ -30,7 +30,7 @@ static func run() -> bool:
 		"signal died(amount: int)",
 	])) + "\n"
 
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external_source(source)
 
 	# The two trigger signals folded onto their SignalRows; nothing stranded a `## @ace_trigger` block.
@@ -48,7 +48,7 @@ static func run() -> bool:
 	# External round-trip: re-emitting the sheet reproduces the source byte-for-byte (the annotations
 	# come back inline above each trigger signal - the whole point of the folding being byte-safe).
 	sheet.external_source_path = "user://_signal_open_absorb_verify.gd"
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://_signal_open_absorb_verify.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://_signal_open_absorb_verify.gd").get("output", ""))
 	ok = _check("external round-trip is byte-identical", compiled, source) and ok
 
 	# Non-canonical / orphan blocks are NEVER absorbed (byte-safety): a `## @ace_name` with no
@@ -59,11 +59,11 @@ static func run() -> bool:
 		"## @ace_name(\"Orphan\")",
 		"signal orphan",
 	])) + "\n"
-	var orphan_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(orphan_source)
+	var orphan_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(orphan_source)
 	var orphan: SignalRow = _find_signal(orphan_sheet, "orphan")
 	ok = _check("orphan @ace_name (no @ace_trigger) is NOT absorbed", orphan != null and not orphan.trigger, true) and ok
 	orphan_sheet.external_source_path = "user://_signal_orphan_verify.gd"
-	var orphan_compiled: String = str(SheetCompiler.compile(orphan_sheet, "user://_signal_orphan_verify.gd").get("output", ""))
+	var orphan_compiled: String = str(EventSheetCompiler.compile(orphan_sheet, "user://_signal_orphan_verify.gd").get("output", ""))
 	ok = _check("orphan block round-trips verbatim", orphan_compiled, orphan_source) and ok
 
 	return ok

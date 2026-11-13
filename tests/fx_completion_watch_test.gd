@@ -69,7 +69,7 @@ static func run() -> bool:
 	all_passed = _check("outside edits are detected", editor._external_watcher.sheet_changed_on_disk(), true) and all_passed
 	editor._external_watcher.reload_external_sheet()
 	all_passed = _check("reload re-imports the new content",
-		str(SheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 2"), true) and all_passed
+		str(EventSheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 2"), true) and all_passed
 	all_passed = _check("reload resets the change flag", editor._external_watcher.sheet_changed_on_disk(), false) and all_passed
 
 	# The reload question only offers to drop edits when there ARE edits to drop: on a clean tab
@@ -119,7 +119,7 @@ static func run() -> bool:
 	all_passed = _check("the unsaved version is kept in Sheet Backups before the disk one loads", [note,
 		FileAccess.get_file_as_string(kept[0]).contains("var hp: int = 2") if not kept.is_empty() else "no backup",
 		FileAccess.file_exists(EventSheetExternalWatcher.UNSAVED_COPY),
-		str(SheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 3")],
+		str(EventSheetCompiler.compile(editor._current_sheet, "user://eventsheets_watch_rt.gd").get("output", "")).contains("var hp: int = 3")],
 		["Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back.",
 		true, false, true]) and all_passed
 	# When the version in the editor cannot be kept (here a file sits where its backup folder goes),

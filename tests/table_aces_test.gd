@@ -1,7 +1,7 @@
 # EventForge - Tables + the text/folder looping conditions (table_aces.gd).
 #
 # Two halves, both proven the same way: the EMITTED code is pinned (the template is a compatibility
-# covenant, so the exact substrings a sheet compiles to are asserted through SheetCompiler), and the
+# covenant, so the exact substrings a sheet compiles to are asserted through EventSheetCompiler), and the
 # BEHAVIOUR is proven at runtime (the emitted expression is built into a real GDScript, reloaded and
 # called, so the values a game would see are the values checked here).
 #
@@ -99,7 +99,7 @@ static func _run_emission() -> bool:
 	action.params = {"var_name": "items", "value": emitted}
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://table_aces_compile_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://table_aces_compile_probe.gd").get("output", ""))
 	ok = _check("the whole expression compiles into the assignment verbatim",
 		output.contains("items = " + emitted), true) and ok
 	if FileAccess.file_exists("user://table_aces_compile_probe.gd"):
@@ -255,7 +255,7 @@ static func _run_looping_seam() -> bool:
 	action.codegen_template = "print(line)"
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://table_aces_loop_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://table_aces_loop_probe.gd").get("output", ""))
 	ok = _check("the looping condition compiles as a for over the collection",
 		output.contains("for line in " + collection + ":"), true) and ok
 	ok = _check("the event's action runs inside that loop", output.contains("\t\tprint(line)"), true) and ok
@@ -306,7 +306,7 @@ static func _run_looping_apply_routes(definition: ACEDefinition) -> bool:
 	action.ace_id = "Print"
 	action.codegen_template = "print(line)"
 	row.actions.append(action)
-	var compiled_output: String = str(SheetCompiler.compile(sheet, "user://table_aces_route_probe.gd").get("output", ""))
+	var compiled_output: String = str(EventSheetCompiler.compile(sheet, "user://table_aces_route_probe.gd").get("output", ""))
 	var compiled: GDScript = GDScript.new()
 	compiled.source_code = compiled_output.replace("blob", "\"a\\nb\"")
 	ok = _check("and the sheet it produces really parses", compiled.reload(true), OK) and ok
@@ -381,7 +381,7 @@ static func _emitted(ace_id: String, params: Dictionary) -> String:
 	var by_id: Dictionary = _by_id()
 	if not by_id.has(ace_id):
 		return ""
-	return ActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
 
 
 ## Runs an emitted expression for real: builds it into a GDScript, reloads it, and returns what it

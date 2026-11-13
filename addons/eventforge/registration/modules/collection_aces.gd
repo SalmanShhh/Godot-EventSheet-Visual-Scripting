@@ -187,7 +187,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	#     compiler declares beside the class when a row reads it, and its starting value is the one
 	#     Dictionary every script that asks shares, kept on the Engine singleton - so a pause menu sheet
 	#     and an inventory sheet count into the same set without an autoload. See
-	#     SheetCompiler._keep_pause_requests for the two lines it writes.
+	#     EventSheetCompiler._keep_pause_requests for the two lines it writes.
 	#   EACH REQUEST IS ITS OWN STATEMENT, two lines rather than one with a semicolon, and the pair
 	#     opens again as this row (EventForgePauseRequestLift) rather than as a Set Paused, because the
 	#     second line alone would be read as the plain switch and lose who asked.

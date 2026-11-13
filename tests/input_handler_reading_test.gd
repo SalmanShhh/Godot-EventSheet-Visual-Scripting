@@ -61,7 +61,7 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# ── A: the FPS pack's three lifecycle handlers anchor in place, and the file still round-trips ──
-	var fps: EventSheetResource = GDScriptImporter.new().import_external(FPS_PACK)
+	var fps: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FPS_PACK)
 	ok = _check("every lifecycle handler of the FPS pack opens as events, in place",
 		_anchor_triggers(fps), PackedStringArray(["OnReady", "OnPhysicsProcess", "OnUnhandledInput"])) and ok
 	ok = _check("the anchored _unhandled_input holds one event per branch",
@@ -72,7 +72,7 @@ static func run() -> bool:
 	# check is that anchoring the lifecycle handlers cost the pack nothing.
 	ok = _check("the anchors did not cost the pack a verb", _exposed_verbs(fps), EXPOSED_VERBS) and ok
 	ok = _check("the opened FPS pack recompiles byte-identically",
-		str(SheetCompiler.compile(fps, FPS_PACK).get("output", "")), FileAccess.get_file_as_string(FPS_PACK)) and ok
+		str(EventSheetCompiler.compile(fps, FPS_PACK).get("output", "")), FileAccess.get_file_as_string(FPS_PACK)) and ok
 
 	# ── B: the FPS pack's `_unhandled_input` reads as two event-sheet trigger rows ─
 	var fps_rows: Array[PackedStringArray] = _handler_readings(fps, "OnUnhandledInput")
@@ -88,9 +88,9 @@ static func run() -> bool:
 	var handwritten_file: FileAccess = FileAccess.open(handwritten_path, FileAccess.WRITE)
 	handwritten_file.store_string(HANDWRITTEN)
 	handwritten_file.close()
-	var hand: EventSheetResource = GDScriptImporter.new().import_external(handwritten_path)
+	var hand: EventSheetResource = EventSheetGDScriptImporter.new().import_external(handwritten_path)
 	ok = _check("the hand-written file recompiles byte-identically",
-		str(SheetCompiler.compile(hand, handwritten_path).get("output", "")), HANDWRITTEN) and ok
+		str(EventSheetCompiler.compile(hand, handwritten_path).get("output", "")), HANDWRITTEN) and ok
 	var hand_rows: Array[PackedStringArray] = _event_readings(hand)
 	ok = _check("a mouse-button branch names the button and the edge",
 		hand_rows[0] if hand_rows.size() > 0 else PackedStringArray(),
@@ -136,8 +136,8 @@ static func _authored_round_trip(ace_id: String, params: Dictionary, path: Strin
 	var fire: EventFunction = EventFunction.new()
 	fire.function_name = "fire"
 	sheet.functions.append(fire)
-	SheetCompiler.compile(sheet, path)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(path)
+	EventSheetCompiler.compile(sheet, path)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var readings: Array[PackedStringArray] = _event_readings(reopened)
 	return readings[0] if not readings.is_empty() else PackedStringArray()
 

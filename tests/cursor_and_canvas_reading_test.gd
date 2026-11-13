@@ -277,7 +277,7 @@ static func _open_and_read(path: String, source: String) -> Dictionary:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -315,8 +315,8 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 static func _round_trip() -> bool:
 	var ok: bool = true
 	for entry: Array in [[X2_PATH, X2_SOURCE], [X20_PATH, X20_SOURCE], [X30_PATH, X30_SOURCE]]:
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(str(entry[0]))
-		var output: String = str(SheetCompiler.compile(sheet, str(entry[0])).get("output", ""))
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(entry[0]))
+		var output: String = str(EventSheetCompiler.compile(sheet, str(entry[0])).get("output", ""))
 		ok = _check("opening %s and saving it reproduces every byte" % str(entry[0]),
 			output, str(entry[1])) and ok
 	return ok
@@ -352,12 +352,12 @@ static func _authoring() -> bool:
 	# One helper, however many of the words the file uses - and the SAME one whichever wrote it.
 	var emitted: String = _compile_with(["MouseFloorPoint", "MouseFloorSlope"])
 	ok = _check("the shared helper is written into the file exactly once",
-		emitted.count("func %s(" % SheetCompiler.AIMED_CURSOR_HELPER), 1) and ok
+		emitted.count("func %s(" % EventSheetCompiler.AIMED_CURSOR_HELPER), 1) and ok
 	ok = _check("a file that asks only for the slope gains the very same helper",
 		_helper_body(_compile_with(["MouseFloorSlope"])),
 		_helper_body(_compile_with(["MouseFloorPoint"]))) and ok
 	ok = _check("a file that asks for none of them gains no helper at all",
-		_compile_with([]).contains("func %s(" % SheetCompiler.AIMED_CURSOR_HELPER), false) and ok
+		_compile_with([]).contains("func %s(" % EventSheetCompiler.AIMED_CURSOR_HELPER), false) and ok
 	ok = _flat_twins() and ok
 	return ok
 
@@ -378,14 +378,14 @@ static func _flat_twins() -> bool:
 		_descriptor("TileUnderCursor").display_text, "the tile under the cursor") and ok
 	var both: String = _compile_with(["ObjectUnderCursor2D", "TileUnderCursor"])
 	ok = _check("the point query's helper is written into the file exactly once",
-		both.count("func %s(" % SheetCompiler.POINT_CURSOR_HELPER), 1) and ok
+		both.count("func %s(" % EventSheetCompiler.POINT_CURSOR_HELPER), 1) and ok
 	ok = _check("the tile lookup's helper is written into the file exactly once",
-		both.count("func %s(" % SheetCompiler.TILE_CURSOR_HELPER), 1) and ok
+		both.count("func %s(" % EventSheetCompiler.TILE_CURSOR_HELPER), 1) and ok
 	var only_tile: String = _compile_with(["TileUnderCursor"])
 	ok = _check("a file that asks only for the tile gains no point query",
-		only_tile.contains("func %s(" % SheetCompiler.POINT_CURSOR_HELPER), false) and ok
+		only_tile.contains("func %s(" % EventSheetCompiler.POINT_CURSOR_HELPER), false) and ok
 	ok = _check("a file that asks for neither gains neither",
-		_compile_with([]).contains("func %s(" % SheetCompiler.TILE_CURSOR_HELPER), false) and ok
+		_compile_with([]).contains("func %s(" % EventSheetCompiler.TILE_CURSOR_HELPER), false) and ok
 	# The same lossless promise the 3D helper carries: an emitted file reopens and re-saves byte for
 	# byte, which is only true while the helper is skipped on a file that already defines it.
 	ok = _check("an emitted file that gained both helpers still saves every byte back",
@@ -427,13 +427,13 @@ static func _compile_with(ace_ids: Array) -> String:
 		}
 		event_row.actions.append(action)
 	sheet.events.append(event_row)
-	return str(SheetCompiler.compile(sheet, "user://eventforge_aim_helper_emitted.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_aim_helper_emitted.gd").get("output", ""))
 
 
 ## Just the helper's own lines out of an emitted file, so two files can be compared on the ONE thing
 ## this gate is about rather than on the rows around it.
 static func _helper_body(emitted: String) -> String:
-	var head: String = "func %s(" % SheetCompiler.AIMED_CURSOR_HELPER
+	var head: String = "func %s(" % EventSheetCompiler.AIMED_CURSOR_HELPER
 	var body: PackedStringArray = PackedStringArray()
 	var inside: bool = false
 	for line: String in emitted.split("\n"):

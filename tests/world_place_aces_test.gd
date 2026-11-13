@@ -259,4 +259,4 @@ static func _compiled(ace_id: String, params: Dictionary, host: String = "Node2D
 	action.params = params.duplicate()
 	event.actions.append(action)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://world_place_aces_test.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://world_place_aces_test.gd").get("output", ""))

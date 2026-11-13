@@ -114,7 +114,7 @@ static func _compiled_water_sheet() -> String:
 	drag.code = "velocity *= 0.9"
 	swimming.actions.append(drag)
 	sheet.events.append(swimming)
-	return str(SheetCompiler.compile(sheet, "user://water_volume_mark.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://water_volume_mark.gd").get("output", ""))
 
 
 ## One census entry, in the shape the object popup is handed.

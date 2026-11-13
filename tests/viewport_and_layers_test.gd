@@ -162,7 +162,7 @@ static func _pin_shipped(shipped: Dictionary) -> bool:
 		# because a row in two of them and not the third compiles a coroutine the Doctor cannot see,
 		# or one the canvas draws no hourglass on.
 		["the compiler knows Save A Still suspends the event",
-			SheetCompiler._COROUTINE_ACE_IDS.has("ViewSaveStill"), true],
+			EventSheetCompiler._COROUTINE_ACE_IDS.has("ViewSaveStill"), true],
 		["and so does the Doctor",
 			EventSheetProjectDoctor.COROUTINE_ACE_IDS.has("ViewSaveStill"), true],
 		["and so does the canvas, which draws the hourglass",

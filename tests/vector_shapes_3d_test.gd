@@ -230,7 +230,7 @@ static func _pin_the_shapes() -> bool:
 ## a call to the sheet's own script. The check reads the SHIPPED annotations rather than a re-opened
 ## sheet, because the annotation is what a project installing this pack actually gets.
 static func _pin_the_rows() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK_DIR + "vector_shape_3d.gd")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PACK_DIR + "vector_shape_3d.gd")
 	var names: PackedStringArray = PackedStringArray()
 	for entry: Resource in sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).expose_as_ace:
@@ -285,7 +285,7 @@ static func _pin_the_shipped_scripts() -> bool:
 		var path: String = PACK_DIR + file_name
 		var shipped: String = FileAccess.get_file_as_string(path)
 		rows.append(["%s parses" % file_name, load(path) != null, true])
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		var reemitted: String = SUPPORT.compile_output(sheet, "user://vector_shapes_3d_%s" % file_name)
 		rows.append(["%s re-emits itself" % file_name, reemitted == shipped, true])
 		if file_name != "vector_shape_3d.gd":

@@ -60,7 +60,7 @@ static func run() -> bool:
 	react.params = {"message": "damage"}
 	listener.actions.append(react)
 	sheet.events.append(listener)
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventsheets_sig.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventsheets_sig.gd")
 	var output: String = str(result.get("output", ""))
 	all_passed = _check("canonical signal line emits", output.contains("signal hit(damage: int)"), true) and all_passed
 	all_passed = _check("signals emit after enums, before variables",
@@ -75,7 +75,7 @@ static func run() -> bool:
 
 	# Verify-lift: canonical signal declarations re-open as rows.
 	var external_source: String = "extends Node\n\nsignal plain\n\nsignal typed(damage: int, source: Node)\n\nsignal  weird_spacing\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	var lifted_names: Array[String] = []
 	var weird_stays: bool = false
 	for row in imported.events:
@@ -86,7 +86,7 @@ static func run() -> bool:
 	all_passed = _check("canonical signals lift", lifted_names.has("plain") and lifted_names.has("typed"), true) and all_passed
 	all_passed = _check("non-canonical signals stay blocks", weird_stays, true) and all_passed
 	imported.external_source_path = "user://eventsheets_sig_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_sig_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_sig_rt.gd").get("output", ""))
 	all_passed = _check("signal round-trip is byte-identical", roundtrip == external_source, true) and all_passed
 
 	# Pickers + lint see SignalRows.

@@ -200,7 +200,7 @@ static func _test_the_guard_stands_down_when_the_sheet_already_asked() -> bool:
 
 	# THE ROUND TRIP that stand-down exists for: a file guarded by hand opens as the guarded row and
 	# saves back as its own bytes. A second guard added on the way out would change them.
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.variables = asked.variables.duplicate(true)
 	imported.external_source_path = "user://eventforge_remove_asked_back.gd"
 	passed = _check("a hand-written guard re-emits byte for byte",
@@ -298,7 +298,7 @@ static func _test_the_hand_written_chains_lift() -> bool:
 		action.params = matched.get("params", {})
 		action.codegen_template = str(matched.get("template", ""))
 		passed = _check("\"%s\" writes its own bytes back" % spelling,
-			ActionCodegen.generate_action(action), spelling) and passed
+			EventSheetActionCodegen.generate_action(action), spelling) and passed
 	# A tween that fades one node and frees another is somebody else's line and keeps its own reading.
 	passed = _check("a chain that frees something other than what it faded is not this row",
 		EventForgeRemovalLift.match_line(
@@ -370,7 +370,7 @@ static func _compiled_with(ace_id: String, params: Dictionary, path: String) -> 
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 ## True when emitted GDScript actually loads. A pin on the text says a line is present; this says the

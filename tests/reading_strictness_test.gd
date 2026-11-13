@@ -108,9 +108,9 @@ static func _test_near_misses() -> bool:
 		var writer: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 		writer.store_string(source)
 		writer.close()
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		ok = _check("%s re-emits byte-identically" % case_name,
-			str(SheetCompiler.compile(sheet, path).get("output", "")), source) and ok
+			str(EventSheetCompiler.compile(sheet, path).get("output", "")), source) and ok
 		var view: EventSheetViewport = _open(sheet)
 		var _rows: Array = view.get_flat_rows()
 		var claimed: PackedStringArray = PackedStringArray()
@@ -130,7 +130,7 @@ static func _test_evidence_is_quotable() -> bool:
 	var offenders: PackedStringArray = PackedStringArray()
 	var said: int = 0
 	for path: String in EVIDENCE_FIXTURES:
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		EventSheetPatternFacts.clear(sheet)
 		EventSheetViewportReadingRows.claim_patterns(sheet)
 		EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)

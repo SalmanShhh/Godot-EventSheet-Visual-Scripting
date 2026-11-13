@@ -123,7 +123,7 @@ static func write_sheet_file(sheet: EventSheetResource, directory: String, base_
 	# NOT a regenerated companion, so it must not carry the "regenerated on every compile"
 	# banner. A non-empty output path is used verbatim (it bypasses the generated-name
 	# resolver), and compile() writes the bytes itself - the core never touches FileAccess.
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, sheet_path, true)
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, sheet_path, true)
 	if not bool(compile_result.get("success", false)):
 		return {"ok": false, "message": "The new sheet didn't compile: %s" % str(compile_result.get("errors")), "sheet_path": sheet_path}
 	if sheet_path.get_file() != wanted_file:

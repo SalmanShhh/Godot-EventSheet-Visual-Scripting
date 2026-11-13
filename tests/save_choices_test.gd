@@ -231,12 +231,12 @@ static func _only_health() -> EventSheetResource:
 static func _refuses_what_it_cannot_write() -> bool:
 	var resource_host: EventSheetResource = _only_health()
 	resource_host.host_class = "Resource"
-	var resource_result: Dictionary = SheetCompiler.compile(resource_host, "user://save_choices_resource.gd")
+	var resource_result: Dictionary = EventSheetCompiler.compile(resource_host, "user://save_choices_resource.gd")
 	var owned: EventSheetResource = _only_health()
 	var own_save: EventFunction = EventFunction.new()
 	own_save.function_name = "save_state"
 	owned.functions.append(own_save)
-	var owned_result: Dictionary = SheetCompiler.compile(owned, "user://save_choices_owned.gd")
+	var owned_result: Dictionary = EventSheetCompiler.compile(owned, "user://save_choices_owned.gd")
 	return SUPPORT.pins(PREFIX, [
 		["a Resource host gets no block", str(resource_result.get("output", "")).contains(SaveChoices.DOC), false],
 		["a Resource host is told why", str(resource_result.get("warnings", [])).contains("needs a Node host"), true],
@@ -255,7 +255,7 @@ static func _keeps_remembering_beside_an_own_pair() -> bool:
 	var own_save: EventFunction = EventFunction.new()
 	own_save.function_name = "save_state"
 	sheet.functions.append(own_save)
-	var output: String = str(SheetCompiler.compile(sheet, "user://save_choices_own_pair.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://save_choices_own_pair.gd").get("output", ""))
 	var block: String = output.substr(maxi(output.find(SaveChoices.DOC), 0))
 	var own: String = HAND_WRITTEN + "\n\nfunc save_state() -> Dictionary:\n\treturn {\"health\": health}\n\n\nfunc load_state(state: Dictionary) -> void:\n\thealth = int(state.get(\"health\", health))\n"
 	var opened: EventSheetResource = SUPPORT.reopen(own, false)
@@ -266,7 +266,7 @@ static func _keeps_remembering_beside_an_own_pair() -> bool:
 			(entry as LocalVariable).attributes = attributes
 	opened.external_source_path = "user://save_choices_own_pair_player.gd"
 	var written: String = SUPPORT.compile_output(opened, "user://save_choices_own_pair_player.gd")
-	var warned: String = str(SheetCompiler.compile(opened, "user://save_choices_own_pair_player.gd").get("warnings", []))
+	var warned: String = str(EventSheetCompiler.compile(opened, "user://save_choices_own_pair_player.gd").get("warnings", []))
 	var read_back: Dictionary = {}
 	for entry: Variant in SUPPORT.reopen(written).events:
 		if entry is LocalVariable and not SaveChoices.choice_of((entry as LocalVariable).attributes).is_empty():

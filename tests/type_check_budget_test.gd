@@ -24,7 +24,7 @@ const SWEEP_WARM_BUDGET_MS: float = 60.0
 
 
 static func run() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PACK_PATH)
 	if sheet == null:
 		return SUPPORT.check(NAME, "the pack opens as a sheet", false, true)
 	var variable_name: String = ""

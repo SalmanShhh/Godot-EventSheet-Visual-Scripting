@@ -24,7 +24,7 @@ static func run() -> bool:
 
 ## Opens the fixture as the dock does: a read-only preview, which is reading mode.
 static func _open() -> EventSheetViewport:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 	sheet.read_only = true
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
@@ -34,7 +34,7 @@ static func _open() -> EventSheetViewport:
 
 
 static func _sheet() -> EventSheetResource:
-	return GDScriptImporter.new().import_external(FIXTURE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(FIXTURE_PATH)
 
 
 ## Every row's cells as "object|text" pairs, one entry per span - the same reading the render
@@ -170,7 +170,7 @@ static func _object_lookup_rows() -> bool:
 static func _round_trip_is_byte_identical() -> bool:
 	var original: String = FileAccess.get_file_as_string(FIXTURE_PATH)
 	var sheet: EventSheetResource = _sheet()
-	var emitted: String = str(SheetCompiler.new().compile(sheet).get("output", ""))
+	var emitted: String = str(EventSheetCompiler.new().compile(sheet).get("output", ""))
 	return _check("the fixture re-emits byte for byte", emitted, original)
 
 

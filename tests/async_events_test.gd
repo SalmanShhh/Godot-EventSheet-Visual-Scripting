@@ -20,7 +20,7 @@ static func run() -> bool:
 
 	# ---- unpick-on-free: an awaiting pick loop guards each iteration ----
 	var awaiting_sheet: EventSheetResource = _loop_sheet(true)
-	var awaiting_output: String = str(SheetCompiler.compile(awaiting_sheet, "user://async_guard_probe.gd").get("output", ""))
+	var awaiting_output: String = str(EventSheetCompiler.compile(awaiting_sheet, "user://async_guard_probe.gd").get("output", ""))
 	all_passed = _check("an awaiting loop guards freed iterators",
 		awaiting_output.contains("\t\tif child is Object and not is_instance_valid(child): continue"), true) and all_passed
 	all_passed = _check("the guard sits before the awaiting action",
@@ -31,7 +31,7 @@ static func run() -> bool:
 
 	# ---- the guard is generated, not stored: byte-exact round-trip both ways ----
 	all_passed = _check("the awaiting loop round-trips byte-exact", EventSheets.round_trips(awaiting_output), true) and all_passed
-	var lifted: EventSheetResource = GDScriptImporter.new().import_external_source(awaiting_output)
+	var lifted: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(awaiting_output)
 	var relifted_guards: int = 0
 	for entry: Variant in lifted.events:
 		if entry is EventRow:
@@ -42,7 +42,7 @@ static func run() -> bool:
 
 	# ---- no await, no guard: non-suspending loops stay exactly as before ----
 	var plain_sheet: EventSheetResource = _loop_sheet(false)
-	var plain_output: String = str(SheetCompiler.compile(plain_sheet, "user://async_plain_probe.gd").get("output", ""))
+	var plain_output: String = str(EventSheetCompiler.compile(plain_sheet, "user://async_plain_probe.gd").get("output", ""))
 	all_passed = _check("a non-awaiting loop stays guard-free", plain_output.contains("is_instance_valid"), false) and all_passed
 
 	# ---- a `while` has no loop variable, so an awaiting one is NEVER guarded ----
@@ -96,7 +96,7 @@ static func run() -> bool:
 	gated_wait.params = {"seconds": "2.0"}
 	gated_row.actions.append(gated_wait)
 	gated.events.append(gated_row)
-	var gated_output: String = str(SheetCompiler.compile(gated, "user://async_sf_probe.gd").get("output", ""))
+	var gated_output: String = str(EventSheetCompiler.compile(gated, "user://async_sf_probe.gd").get("output", ""))
 	all_passed = _check("the busy latch declares as a member", gated_output.contains("var __busy_ab12: bool = false"), true) and all_passed
 	all_passed = _check("the gate guards the event", gated_output.contains("\tif not __busy_ab12:"), true) and all_passed
 	all_passed = _check("entry marks busy first", gated_output.contains("\t\t__busy_ab12 = true\n\t\tawait "), true) and all_passed
@@ -148,7 +148,7 @@ static func run() -> bool:
 	sibling_print.params = {"value": "\"every frame\""}
 	sibling.actions.append(sibling_print)
 	shared.events.append(sibling)
-	var split_output: String = str(SheetCompiler.compile(shared, "user://async_split_probe.gd").get("output", ""))
+	var split_output: String = str(EventSheetCompiler.compile(shared, "user://async_split_probe.gd").get("output", ""))
 	all_passed = _check("the awaiting event becomes a fire-and-forget call",
 		split_output.contains("\t_event_aa11_async(delta)"), true) and all_passed
 	all_passed = _check("its coroutine splits out below the dispatcher",
@@ -160,7 +160,7 @@ static func run() -> bool:
 	all_passed = _check("the split output parses", split_parsed.reload(true) == OK, true) and all_passed
 	all_passed = _check("the split shape round-trips byte-exact", EventSheets.round_trips(split_output), true) and all_passed
 	# The lift is STRUCTURAL: both events come back under On Process, the split uid intact.
-	var split_lifted: EventSheetResource = GDScriptImporter.new().import_external_source(split_output)
+	var split_lifted: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(split_output)
 	var split_uids: Array = []
 	for entry: Variant in split_lifted.events:
 		if entry is EventRow and (entry as EventRow).trigger_id == "OnProcess":
@@ -175,7 +175,7 @@ static func run() -> bool:
 	lone_row.trigger_id = "OnProcess"
 	lone_row.actions.append(waiter_wait)
 	lone.events.append(lone_row)
-	var lone_output: String = str(SheetCompiler.compile(lone, "user://async_lone_probe.gd").get("output", ""))
+	var lone_output: String = str(EventSheetCompiler.compile(lone, "user://async_lone_probe.gd").get("output", ""))
 	all_passed = _check("a lone awaiting event stays inline", lone_output.contains("_async(delta)"), false) and all_passed
 
 	return all_passed

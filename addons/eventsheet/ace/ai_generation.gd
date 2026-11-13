@@ -43,7 +43,7 @@ static func generate_rows(description: String, sheet: EventSheetResource, gdscri
 	var text: String = _strip_fences(gdscript_text)
 	if text.strip_edges().is_empty():
 		return {"rows": [], "error": "the model returned nothing"}
-	var converted: EventSheetResource = GDScriptImporter.new().import_external_source(text)
+	var converted: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(text)
 	var rows: Array = []
 	for row: Variant in converted.events:
 		# Drop the synthetic `extends …` prelude the importer adds for bare snippets.

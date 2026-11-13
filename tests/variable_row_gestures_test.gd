@@ -152,7 +152,7 @@ static func _ghost_sentence() -> bool:
 	]:
 		rows.append(["the sentence \"%s\"" % case[0], RECIPES.variable_offer_for(str(case[0])), case[1]])
 	var made: LocalVariable = RECIPES.variable_for(RECIPES.variable_offer_for("_baked is text, saved but hidden"))
-	rows.append(["saved but hidden compiles to @export_storage", SheetCompiler._emit_tree_variable_line(made), "@export_storage var _baked: String = \"\""])
+	rows.append(["saved but hidden compiles to @export_storage", EventSheetCompiler._emit_tree_variable_line(made), "@export_storage var _baked: String = \"\""])
 	rows.append(["the Ghost Row says what it adds",
 		RECIPES.variable_label_for(RECIPES.variable_offer_for("max_jumps is a whole number from 1 to 3, in the Inspector")),
 		"⊕  int max_jumps · in the Inspector · a slider from 1 to 3"])
@@ -161,7 +161,7 @@ static func _ghost_sentence() -> bool:
 
 static func _window() -> bool:
 	var host: Node = Node.new()
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> Variant: return null)
 	var rows: Array = []
@@ -281,7 +281,7 @@ static func _narrow_dock() -> bool:
 	])
 
 
-static func _slot_buttons(dialog: VariableDialog) -> Array:
+static func _slot_buttons(dialog: EventSheetVariableDialog) -> Array:
 	return dialog._slot_buttons.get_children().map(func(button: Node) -> bool: return (button as Control).visible)
 
 
@@ -298,11 +298,11 @@ static func _opened(source: String) -> EventSheetResource:
 	var file: FileAccess = FileAccess.open(PROBE, FileAccess.WRITE)
 	file.store_string(source)
 	file.close()
-	return GDScriptImporter.new().import_external(PROBE)
+	return EventSheetGDScriptImporter.new().import_external(PROBE)
 
 
 static func _emitted(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, PROBE).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, PROBE).get("output", ""))
 
 
 ## The member lines of the file a sheet writes, from the first annotation on.

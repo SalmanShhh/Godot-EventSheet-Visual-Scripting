@@ -200,9 +200,9 @@ static func verb_gone_message(pack: String, reading: String, line: String) -> St
 ## to fall back on: a different and louder state than a row that has outlived its words.
 static func emitted_line(entry: Resource, scope: String = "", host: String = "") -> String:
 	if entry is ACEAction:
-		return ActionCodegen.generate_action(entry as ACEAction, scope, host).strip_edges()
+		return EventSheetActionCodegen.generate_action(entry as ACEAction, scope, host).strip_edges()
 	if entry is ACECondition:
-		return ConditionCodegen.generate_condition(entry as ACECondition, host).strip_edges()
+		return EventSheetConditionCodegen.generate_condition(entry as ACECondition, host).strip_edges()
 	return ""
 
 

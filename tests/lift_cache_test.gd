@@ -59,7 +59,7 @@ static func run() -> bool:
 	passed = SUPPORT.check(P, "the second open of an unchanged file never lifts", EventSheetACELifter.lift_attempts, before) and passed
 	passed = SUPPORT.check(P, "the second open was served from the entry", cache.hits, hits_before + 1) and passed
 	passed = SUPPORT.check(P, "the remembered sheet re-emits the source byte for byte",
-		str(SheetCompiler.echo(second, true).get("output", "")), FIXTURE_SOURCE) and passed
+		str(EventSheetCompiler.echo(second, true).get("output", "")), FIXTURE_SOURCE) and passed
 	passed = SUPPORT.check(P, "and says what a fresh lift said (functions)", second.functions.size(), first.functions.size()) and passed
 	passed = SUPPORT.check(P, "and knows its file", second.external_source_path, FIXTURE) and passed
 	# A fresh lift has no resource path; a loaded entry had the entry's own. Every reader that asks
@@ -87,12 +87,12 @@ static func run() -> bool:
 	var third: EventSheetResource = _open(FIXTURE)
 	passed = SUPPORT.check(P, "one changed byte forces a fresh lift", EventSheetACELifter.lift_attempts > before, true) and passed
 	passed = SUPPORT.check(P, "and the new text is what re-emits",
-		str(SheetCompiler.echo(third, true).get("output", "")), changed) and passed
+		str(EventSheetCompiler.echo(third, true).get("output", "")), changed) and passed
 
 	# 3. A bumped compiler version, an edited lifter script, a different vocabulary: each is part of
 	# the key, so an entry written under another one is a miss.
 	var key: String = cache.key_for(changed)
-	passed = SUPPORT.check(P, "the key carries the compiler version", key.contains("|%s|" % SheetCompiler.VERSION), true) and passed
+	passed = SUPPORT.check(P, "the key carries the compiler version", key.contains("|%s|" % EventSheetCompiler.VERSION), true) and passed
 	passed = SUPPORT.check(P, "the key carries the vocabulary size", key.contains("|%d|" % ACERegistry.descriptor_count()), true) and passed
 	passed = SUPPORT.check(P, "the key carries the code stamp", key.ends_with("|" + cache.code_stamp_now()), true) and passed
 	var stamped: PackedStringArray = PackedStringArray()
@@ -105,7 +105,7 @@ static func run() -> bool:
 	passed = SUPPORT.check(P, "a different set of files is a different stamp",
 		cache.stamp_of(PackedStringArray([SAMPLE_PACK])) == cache.stamp_of(PackedStringArray([SAMPLE_PACK, FIXTURE])), false) and passed
 	var swaps: Dictionary = {
-		"a bumped compiler version": ["|%s|" % SheetCompiler.VERSION, "|0.0.0-other|"],
+		"a bumped compiler version": ["|%s|" % EventSheetCompiler.VERSION, "|0.0.0-other|"],
 		"a different vocabulary": ["|%d|" % ACERegistry.descriptor_count(), "|%d|" % (ACERegistry.descriptor_count() + 1)],
 		"an edited lifter": ["|" + cache.code_stamp_now(), "|edited"],
 	}
@@ -120,7 +120,7 @@ static func run() -> bool:
 	before = EventSheetACELifter.lift_attempts
 	var after_corrupt: EventSheetResource = _open(FIXTURE)
 	passed = SUPPORT.check(P, "a corrupt entry is ignored and the file lifted", EventSheetACELifter.lift_attempts > before, true) and passed
-	passed = SUPPORT.check(P, "and the sheet is right", str(SheetCompiler.echo(after_corrupt, true).get("output", "")), changed) and passed
+	passed = SUPPORT.check(P, "and the sheet is right", str(EventSheetCompiler.echo(after_corrupt, true).get("output", "")), changed) and passed
 	var foreign: Resource = Resource.new()
 	ResourceSaver.save(foreign, cache.entry_path_for(FIXTURE))
 	before = EventSheetACELifter.lift_attempts
@@ -135,7 +135,7 @@ static func run() -> bool:
 	# 5. THE BINDING CHECK: an entry with the right key that does not re-emit the source is thrown
 	# away, and the file is lifted fresh.
 	var impostor_source: String = FIXTURE_SOURCE.replace("120.0", "999.0")
-	var impostor: EventSheetResource = GDScriptImporter.new().import_external_source(impostor_source, true, FIXTURE)
+	var impostor: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(impostor_source, true, FIXTURE)
 	impostor.set_meta(cache.META_KEY, cache.key_for(changed))
 	ResourceSaver.save(impostor, cache.entry_path_for(FIXTURE))
 	before = EventSheetACELifter.lift_attempts
@@ -144,7 +144,7 @@ static func run() -> bool:
 	passed = SUPPORT.check(P, "a remembered sheet that does not re-emit the source is discarded", cache.discarded, discarded_before + 1) and passed
 	passed = SUPPORT.check(P, "and the file is lifted fresh", EventSheetACELifter.lift_attempts > before, true) and passed
 	passed = SUPPORT.check(P, "and the answer is the file's own text",
-		str(SheetCompiler.echo(rescued, true).get("output", "")), changed) and passed
+		str(EventSheetCompiler.echo(rescued, true).get("output", "")), changed) and passed
 
 	# 6. Off means off.
 	cache.clear()

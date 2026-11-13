@@ -48,7 +48,7 @@ static func run() -> bool:
 	event.actions.append(_action(by_id, "RenderingSetScaling3DScale", {"scale": "0.75"}))
 	event.actions.append(_action(by_id, "SetVar", {"var_name": "hud_calls", "value": str(by_id["RenderingDrawCallsInFrame"].codegen_template)}))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://rendering_aces.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://rendering_aces.gd").get("output", ""))
 	all_passed = _check("MSAA compiles the chosen constant verbatim",
 		output.contains("RenderingServer.viewport_set_msaa_3d(get_viewport().get_viewport_rid(), RenderingServer.VIEWPORT_MSAA_4X)"), true) and all_passed
 	all_passed = _check("global shader parameter compiles name + value",

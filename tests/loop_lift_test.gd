@@ -24,10 +24,10 @@ static func run() -> bool:
 	raw.code = "for enemy in get_tree().get_nodes_in_group(\"enemies\"):\n\tenemy.queue_free()\nfor i in range(3):\n\tspawn()\nwhile health > 0:\n\thealth -= 1"
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://loop_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://loop_source.gd").get("output", ""))
 
 	# Open the OUTPUT as a sheet: each loop header should become a PickFilter loop row.
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var kinds: Array = _collect_pick_kinds(imported.events)
 	ok = _check("for-in lifts to an EXPRESSION loop row", kinds.has(PickFilter.CollectionKind.EXPRESSION), true) and ok
 	ok = _check("range() lifts to a REPEAT loop row", kinds.has(PickFilter.CollectionKind.REPEAT), true) and ok
@@ -36,7 +36,7 @@ static func run() -> bool:
 
 	# The contract: recompiling reproduces the source byte-for-byte.
 	imported.external_source_path = "user://loop_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://loop_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://loop_rt.gd").get("output", ""))
 	ok = _check("loop lift round-trips byte-identically", roundtrip == source, true) and ok
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
@@ -53,13 +53,13 @@ static func run() -> bool:
 	nraw.code = "for x in a:\n\tif c:\n\t\twhile d:\n\t\t\tbar()"
 	nevent.actions.append(nraw)
 	nested.events.append(nevent)
-	var nsource: String = str(SheetCompiler.compile(nested, "user://nest_source.gd").get("output", ""))
-	var nimported: EventSheetResource = GDScriptImporter.new().import_external_source(nsource)
+	var nsource: String = str(EventSheetCompiler.compile(nested, "user://nest_source.gd").get("output", ""))
+	var nimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(nsource)
 	var nkinds: Array = _collect_pick_kinds(nimported.events)
 	ok = _check("nested: outer for lifts to an EXPRESSION row", nkinds.has(PickFilter.CollectionKind.EXPRESSION), true) and ok
 	ok = _check("nested: inner while lifts (through the if)", nkinds.has(PickFilter.CollectionKind.WHILE), true) and ok
 	nimported.external_source_path = "user://nest_rt.gd"
-	var nroundtrip: String = str(SheetCompiler.compile(nimported, "user://nest_rt.gd").get("output", ""))
+	var nroundtrip: String = str(EventSheetCompiler.compile(nimported, "user://nest_rt.gd").get("output", ""))
 	ok = _check("nested control flow round-trips byte-identically", nroundtrip == nsource, true) and ok
 	if nroundtrip != nsource:
 		print("  --- nsource ---\n%s\n  --- nroundtrip ---\n%s" % [nsource, nroundtrip])

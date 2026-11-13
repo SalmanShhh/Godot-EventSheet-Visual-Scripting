@@ -380,7 +380,7 @@ static func _action_source_line(action_resource: Variant) -> String:
 		var code: String = (action_resource as RawCodeRow).code
 		return code if not code.contains("\n") else ""
 	if action_resource is ACEAction:
-		var generated: String = ActionCodegen.generate_action(action_resource as ACEAction)
+		var generated: String = EventSheetActionCodegen.generate_action(action_resource as ACEAction)
 		return generated if not generated.contains("\n") else ""
 	return ""
 

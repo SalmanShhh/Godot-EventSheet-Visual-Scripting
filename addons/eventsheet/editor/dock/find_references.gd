@@ -90,7 +90,7 @@ static func _find_in_unopened_scripts(symbol: String, seen: Dictionary) -> Array
 	var regex: RegEx = RegEx.create_from_string("\\b%s\\b" % _escape(wanted))
 	if regex == null:
 		return found
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	for path: String in project_scripts():
 		if seen.has(path):
 			continue
@@ -180,7 +180,7 @@ static func open_sheets_of(dock: Control) -> Dictionary:
 static func stamp_source_lines(sheet: EventSheetResource, references: Array) -> void:
 	if sheet == null or references.is_empty():
 		return
-	var source_map: Array = SheetCompiler.echo(sheet).get("source_map", []) as Array
+	var source_map: Array = EventSheetCompiler.echo(sheet).get("source_map", []) as Array
 	if source_map.is_empty():
 		return
 	for reference: Dictionary in references:

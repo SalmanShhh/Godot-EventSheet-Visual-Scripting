@@ -132,18 +132,18 @@ static func _triggers_resolve_to_the_editor_callbacks() -> bool:
 		var event: EventRow = EventRow.new()
 		event.trigger_provider_id = "Core"
 		event.trigger_id = str(pair[0])
-		var resolved: Dictionary = TriggerResolver.resolve_trigger(event)
+		var resolved: Dictionary = EventSheetTriggerResolver.resolve_trigger(event)
 		ok = _check("%s compiles to %s" % [pair[0], pair[1]], str(resolved.get("function_name", "")), str(pair[1])) and ok
 	var input_event: EventRow = EventRow.new()
 	input_event.trigger_provider_id = "Core"
 	input_event.trigger_id = "On2DViewportInput"
 	ok = _check("the viewport-input hook answers a bool",
-		str(TriggerResolver.resolve_trigger(input_event).get("return_type", "")), "bool") and ok
+		str(EventSheetTriggerResolver.resolve_trigger(input_event).get("return_type", "")), "bool") and ok
 	var enabled_event: EventRow = EventRow.new()
 	enabled_event.trigger_provider_id = "Core"
 	enabled_event.trigger_id = "OnPluginEnabled"
 	ok = _check("every other callback still answers nothing",
-		str(TriggerResolver.resolve_trigger(enabled_event).get("return_type", "")), "void") and ok
+		str(EventSheetTriggerResolver.resolve_trigger(enabled_event).get("return_type", "")), "void") and ok
 	return ok
 
 
@@ -152,7 +152,7 @@ static func _round_trips_byte_for_byte() -> bool:
 	var ok: bool = true
 	for pair: Array in [[PLUGIN_PATH, PLUGIN_SOURCE], [SCRIPT_PATH, SCRIPT_SOURCE]]:
 		var sheet: EventSheetResource = _import(str(pair[0]), str(pair[1]))
-		var output: String = str(SheetCompiler.compile(sheet, str(pair[0])).get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(sheet, str(pair[0])).get("output", ""))
 		ok = _check("opening %s and saving it reproduces every byte" % str(pair[0]).get_file(),
 			output, str(pair[1])) and ok
 	return ok
@@ -162,7 +162,7 @@ static func _import(path: String, source: String) -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	return GDScriptImporter.new().import_external(path)
+	return EventSheetGDScriptImporter.new().import_external(path)
 
 
 ## The plain text of a sentence reading, its segments joined the way the canvas draws them.

@@ -17,7 +17,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 
 	var source: String = "extends Node2D\n\n@export_group(\"Combat\")\n@export_subgroup(\"Melee\")\n@export var attack: int = 10\n"
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 
 	var lifted: LocalVariable = null
 	var has_group_block: bool = false
@@ -36,7 +36,7 @@ static func run() -> bool:
 			str((lifted.attributes as Dictionary).get("subgroup", "")), "Melee") and all_passed
 		# Byte-stability: re-emitting the variable reproduces the exact source lines (the verify-lift guarantee).
 		all_passed = _check("re-emits the group lines exactly (lossless round-trip)",
-			SheetCompiler._emit_tree_variable_line(lifted),
+			EventSheetCompiler._emit_tree_variable_line(lifted),
 			"@export_group(\"Combat\")\n@export_subgroup(\"Melee\")\n@export var attack: int = 10") and all_passed
 		# And the reopened grouped tree variable still carries its Inspector section. The per-row chip is
 		# gone (the folder strip over the run names it once), so the fact rides in the row metadata -
@@ -52,7 +52,7 @@ static func run() -> bool:
 		viewport.free()
 
 	# A plain (ungrouped) var is unaffected: lifts clean, no attributes, single-line emission.
-	var plain_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n@export var speed: float = 5.0\n")
+	var plain_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n@export var speed: float = 5.0\n")
 	var plain: LocalVariable = null
 	for entry: Variant in plain_sheet.events:
 		if entry is LocalVariable and (entry as LocalVariable).name == "speed":
@@ -61,11 +61,11 @@ static func run() -> bool:
 	if plain != null:
 		all_passed = _check("an ungrouped var carries no group attributes", (plain.attributes as Dictionary).is_empty(), true) and all_passed
 		all_passed = _check("an ungrouped var emits a single line",
-			SheetCompiler._emit_tree_variable_line(plain), "@export var speed: float = 5.0") and all_passed
+			EventSheetCompiler._emit_tree_variable_line(plain), "@export var speed: float = 5.0") and all_passed
 
 	# Tooltip round-trip: a `## doc` immediately before a var is recovered as the tooltip (Godot's doc
 	# convention), not stranded as a block - and it combines with grouping in canonical order.
-	var tip_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## Player health.\n@export_group(\"Combat\")\n@export var hp: int = 100\n")
+	var tip_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n## Player health.\n@export_group(\"Combat\")\n@export var hp: int = 100\n")
 	var hp: LocalVariable = null
 	var tip_block: bool = false
 	for entry: Variant in tip_sheet.events:
@@ -78,7 +78,7 @@ static func run() -> bool:
 	all_passed = _check("no stray tooltip comment block remains", tip_block, false) and all_passed
 	if hp != null:
 		all_passed = _check("tooltip re-emits before the group (canonical order)",
-			SheetCompiler._emit_tree_variable_line(hp),
+			EventSheetCompiler._emit_tree_variable_line(hp),
 			"## Player health.\n@export_group(\"Combat\")\n@export var hp: int = 100") and all_passed
 
 	# Godot's OWN convention writes the section line first and the `##` doc directly above the variable
@@ -86,7 +86,7 @@ static func run() -> bool:
 	# formed for a hand-written script at all - so both orders lift, and each re-emits the one it came
 	# from. (The whole-file round-trip below is what makes "re-emits the order it came from" real.)
 	var godot_order: String = "extends Node2D\n\n@export_group(\"Combat\")\n## Player health.\n@export var hp: int = 100\n@export_subgroup(\"Melee\")\n## Damage per swing.\n@export var dmg: int = 5\n"
-	var godot_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(godot_order)
+	var godot_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(godot_order)
 	var godot_hp: LocalVariable = null
 	var godot_dmg: LocalVariable = null
 	var godot_block: bool = false
@@ -106,7 +106,7 @@ static func run() -> bool:
 	all_passed = _check("no @export_ line is left behind as a block", godot_block, false) and all_passed
 	if godot_hp != null:
 		all_passed = _check("and it re-emits in the order the file wrote it",
-			SheetCompiler._emit_tree_variable_line(godot_hp),
+			EventSheetCompiler._emit_tree_variable_line(godot_hp),
 			"@export_group(\"Combat\")\n## Player health.\n@export var hp: int = 100") and all_passed
 	# The same file opened the way the dock opens one, so the round-trip measured is the whole file's.
 	var godot_file: String = "@tool\nclass_name VariableGroupOrderFixture\nextends Node2D\n\n@export_group(\"Combat\")\n## Player health.\n@export var hp: int = 100\n@export_subgroup(\"Melee\")\n## Damage per swing.\n@export var dmg: int = 5\n"
@@ -115,13 +115,13 @@ static func run() -> bool:
 	if writer != null:
 		writer.store_string(godot_file)
 		writer.close()
-		var opened: EventSheetResource = GDScriptImporter.new().import_external(fixture_path)
+		var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(fixture_path)
 		all_passed = _check("the whole file round-trips byte for byte in Godot's order",
-			str(SheetCompiler.new().compile(opened).get("output", "")) if opened != null else "did not open",
+			str(EventSheetCompiler.new().compile(opened).get("output", "")) if opened != null else "did not open",
 			godot_file) and all_passed
 
 	# A `## @ace_*` annotation immediately before a var is NOT mistaken for a tooltip.
-	var anno_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## @ace_tags(combat)\n@export var dmg: int = 5\n")
+	var anno_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n## @ace_tags(combat)\n@export var dmg: int = 5\n")
 	var dmg: LocalVariable = null
 	for entry: Variant in anno_sheet.events:
 		if entry is LocalVariable and (entry as LocalVariable).name == "dmg":
@@ -149,12 +149,12 @@ static func run() -> bool:
 	described.exported = true
 	described.description = "Absorbs damage before health."
 	all_passed = _check("a described exported var emits its description as a ## doc comment",
-		SheetCompiler._emit_tree_variable_line(described),
+		EventSheetCompiler._emit_tree_variable_line(described),
 		"## Absorbs damage before health.\n@export var shield: int = 50") and all_passed
 	# An explicit tooltip attribute wins over the description field (the override path).
 	described.attributes = {"tooltip": "Shield points."}
 	all_passed = _check("an explicit tooltip wins over the description field",
-		SheetCompiler._emit_tree_variable_line(described),
+		EventSheetCompiler._emit_tree_variable_line(described),
 		"## Shield points.\n@export var shield: int = 50") and all_passed
 	# A described NON-exported var keeps its description as its `##` lines too: it reads in the script
 	# and comes back on its row, though the Inspector never shows a private var.
@@ -165,11 +165,11 @@ static func run() -> bool:
 	priv.exported = false
 	priv.description = "internal counter"
 	all_passed = _check("a described private var writes its description as its ## line",
-		SheetCompiler._emit_tree_variable_line(priv), "## internal counter
+		EventSheetCompiler._emit_tree_variable_line(priv), "## internal counter
 var _ticks: int = 0") and all_passed
 	# Round-trip: the description-emitted `## ` reopens as the variable's tooltip (byte-identical re-emit,
 	# so the lossless .gd contract holds). Pin the value, never a `bool and String` chain (it crashes).
-	var desc_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## Absorbs damage before health.\n@export var shield: int = 50\n")
+	var desc_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n## Absorbs damage before health.\n@export var shield: int = 50\n")
 	var reopened: LocalVariable = null
 	for entry: Variant in desc_sheet.events:
 		if entry is LocalVariable and (entry as LocalVariable).name == "shield":

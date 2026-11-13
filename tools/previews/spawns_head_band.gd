@@ -53,7 +53,7 @@ static func build(host: Window) -> Control:
 	if file != null:
 		file.store_string(SOURCE)
 		file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

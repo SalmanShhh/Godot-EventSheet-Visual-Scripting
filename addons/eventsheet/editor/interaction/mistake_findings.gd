@@ -345,7 +345,7 @@ static func _walk_event(event_row: EventRow, function_name: String, function_par
 		parameters = function_params.duplicate()
 		var written: String = event_row.trigger_args
 		if written.strip_edges().is_empty() and not event_row.trigger_id.is_empty():
-			written = str(TriggerResolver.resolve_trigger(event_row).get("args", ""))
+			written = str(EventSheetTriggerResolver.resolve_trigger(event_row).get("args", ""))
 		for piece: String in split_top_level(written):
 			parameters.append(piece.get_slice("=", 0).get_slice(":", 0).strip_edges())
 	var event_info: Dictionary = {
@@ -457,9 +457,9 @@ static func emitted_line(entry: Variant) -> String:
 	if entry is RawCodeRow:
 		return (entry as RawCodeRow).code
 	if entry is ACEAction:
-		return ActionCodegen.generate_action(entry as ACEAction)
+		return EventSheetActionCodegen.generate_action(entry as ACEAction)
 	if entry is ACECondition:
-		return ConditionCodegen.generate_condition(entry as ACECondition)
+		return EventSheetConditionCodegen.generate_condition(entry as ACECondition)
 	return ""
 
 

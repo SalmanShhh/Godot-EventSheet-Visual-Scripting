@@ -131,7 +131,7 @@ const ORIGIN_HAND: String = "hand"
 const REFUSAL_KEY: String = "error"
 
 ## A shape's slots, as the emitter itself reads them - the plain `{name}`, the optional prefix
-## `{name.}` and the optional comma `{,name}`. Compiled from the same three shapes ActionCodegen
+## `{name.}` and the optional comma `{,name}`. Compiled from the same three shapes EventSheetActionCodegen
 ## compiles, so a slot the emitter would fill and the validator would not see cannot exist.
 const SLOT_PATTERN: String = "\\{(?:,?)\\s*(?<name>[A-Za-z_][A-Za-z0-9_]*)(?:\\.?)\\}"
 
@@ -269,7 +269,7 @@ static func validate(entries: Array) -> PackedStringArray:
 ## through the real emitter. This is the fixture every entry is tested against, and it is generated
 ## rather than written down precisely so that an entry cannot exist untested.
 static func fixture_line(entry: Dictionary) -> String:
-	return ActionCodegen._apply_template(str(entry.get("shape", "")),
+	return EventSheetActionCodegen._apply_template(str(entry.get("shape", "")),
 		entry.get("slots", {}) as Dictionary)
 
 
@@ -325,7 +325,7 @@ static func emit_row(template: String, params: Dictionary, provider: String, ace
 	action.ace_id = ace_id
 	action.codegen_template = template
 	action.params = params.duplicate()
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)
 
 
 ## The parameter names an entry pulls out of a line: its captures, plus any value the ROW carries
@@ -471,7 +471,7 @@ static func _marked(entry: Dictionary, text: String) -> bool:
 static func _run_template(entry: Dictionary, hits: Array[RegExMatch], texts: PackedStringArray,
 		indents: PackedInt32Array, params: Dictionary) -> String:
 	var shape: String = str(entry.get("shape", ""))
-	if ActionCodegen._apply_template(shape, params) == _run_text(texts, indents):
+	if EventSheetActionCodegen._apply_template(shape, params) == _run_text(texts, indents):
 		return shape
 	var written: PackedStringArray = PackedStringArray()
 	var names: PackedStringArray = param_names(entry)
@@ -523,7 +523,7 @@ static func shape_answers(shape: String, name: String) -> bool:
 ## write a line the author never asked for.
 static func _template_of(entry: Dictionary, hit: RegExMatch, text: String, params: Dictionary) -> String:
 	var shape: String = str(entry.get("shape", ""))
-	if ActionCodegen._apply_template(shape, params) == text:
+	if EventSheetActionCodegen._apply_template(shape, params) == text:
 		return shape
 	return _spliced(shape, hit, text, param_names(entry))
 

@@ -287,7 +287,7 @@ static func _test_the_handwritten_landing_opens_as_the_row_it_is() -> bool:
 		var spelling: String = str((entry as Array)[0])
 		var wanted: String = str((entry as Array)[1])
 		var source: String = _landing_source(spelling)
-		var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+		var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 		var event: EventRow = _event_with_conditions(imported)
 		passed = _check("`%s` opens as one row" % spelling, event != null, true) and passed
 		if event == null:
@@ -327,7 +327,7 @@ static func _test_the_handwritten_landing_re_emits_byte_for_byte() -> bool:
 	var passed: bool = true
 	for spelling: String in ["is_on_floor() and not was_on_floor", "on_floor and not was_on_floor"]:
 		var source: String = _landing_source(spelling)
-		var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+		var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 		imported.external_source_path = "user://eventforge_edge_trip.gd"
 		passed = _check("`%s` re-emits byte for byte" % spelling,
 			_compile(imported, "user://eventforge_edge_trip.gd"), source) and passed
@@ -460,7 +460,7 @@ static func _line_beginning(output: String, prefix: String) -> String:
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

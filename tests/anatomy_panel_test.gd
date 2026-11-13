@@ -87,7 +87,7 @@ static func run() -> bool:
 	ok = _check("pack actions found via annotation shells", (pack_organs["actions"] as Array).size() > 10, true) and ok
 	ok = _check("pack expressions found", (pack_organs["expressions"] as Array).size() > 5, true) and ok
 	ok = _check("Take Damage is an Action entry", _labels(pack_organs["actions"]).has("Take Damage"), true) and ok
-	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
 	ok = _check("the census never writes (drift stays 0)", reemitted == source, true) and ok
 
 	# ── The panel + dock wiring (v2: custom-drawn rows, not a Tree) ──

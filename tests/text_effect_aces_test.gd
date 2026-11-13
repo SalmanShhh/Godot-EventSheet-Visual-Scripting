@@ -274,7 +274,7 @@ static func _run_reveal() -> bool:
 		pause, "var __pauses_b2: Dictionary = $Sign.get_meta(&\"reveal_pauses\", {})\n__pauses_b2[int(12)] = float(0.4)\n$Sign.set_meta(&\"reveal_pauses\", __pauses_b2)"])
 	# The trigger resolves to the function both rows call, and a sheet holding the reveal and the
 	# event has to parse: an emitted call into a function nobody declared is the failure this catches.
-	var signature: Dictionary = TriggerResolver.resolve_trigger(_trigger_row("OnRevealFinished"))
+	var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(_trigger_row("OnRevealFinished"))
 	rows.append(["the finish compiles to the function the reveal calls",
 		str(signature.get("function_name", "")), "_on_reveal_finished"])
 	rows.append(["with nothing handed to it", str(signature.get("args", "")), ""])
@@ -326,7 +326,7 @@ static func _run_lift() -> bool:
 	var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
 	file.store_string(HAND_WRITTEN)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
 	EventSheetACELifter.reset_progress()
 	rows.append(["the file opens as events", EventSheetACELifter.attempt_lift(sheet, HAND_WRITTEN), true])
 	var found: ACEAction = _find_action(sheet, "SetTextWithEffect")
@@ -336,7 +336,7 @@ static func _run_lift() -> bool:
 		rows.append(["the strength it was written at", str(found.params.get("strength", "")), "1.0"])
 		rows.append(["the words it was written around", str(found.params.get("text", "")), "\"Starfall\""])
 		rows.append(["and the label it was written on", str(found.params.get("target", "")), "$Title"])
-	var output: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
 	rows.append(["and saving it again reproduces the file byte for byte", output, HAND_WRITTEN])
 	# THE REVEAL IS DELIBERATELY NOT CLAIMED, and this is where that is held. A hand-written smooth
 	# tween of the ratio is a different line from the row's tween of one callback per character, so a
@@ -349,23 +349,23 @@ static func _run_lift() -> bool:
 	file = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
 	file.store_string(BARE_TAG)
 	file.close()
-	var bare: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	var bare: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
 	EventSheetACELifter.reset_progress()
 	EventSheetACELifter.attempt_lift(bare, BARE_TAG)
 	rows.append(["and the bare tag is saved back byte for byte",
-		str(SheetCompiler.compile(bare, PROBE_SCRIPT).get("output", "")), BARE_TAG])
+		str(EventSheetCompiler.compile(bare, PROBE_SCRIPT).get("output", "")), BARE_TAG])
 	rows.append(["a hand-written ratio tween is claimed by no tag entry",
 		load(LIFT_PATH).match_line("create_tween().tween_property($Sign, \"visible_ratio\", 1.0, 0.5)"), {}])
 	file = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
 	file.store_string(RATIO_TWEEN)
 	file.close()
-	var by_hand: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	var by_hand: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
 	EventSheetACELifter.reset_progress()
 	EventSheetACELifter.attempt_lift(by_hand, RATIO_TWEEN)
 	rows.append(["and it does not open as the reveal row",
 		_find_action(by_hand, "RevealText") == null, true])
 	rows.append(["the tween a person wrote is saved back byte for byte",
-		str(SheetCompiler.compile(by_hand, PROBE_SCRIPT).get("output", "")), RATIO_TWEEN])
+		str(EventSheetCompiler.compile(by_hand, PROBE_SCRIPT).get("output", "")), RATIO_TWEEN])
 	DirAccess.remove_absolute(PROBE_SCRIPT)
 	return SUPPORT.pins("text_effect_aces_test", rows)
 
@@ -461,7 +461,7 @@ static func _find_action(sheet: EventSheetResource, ace_id: String) -> ACEAction
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	var output: String = str(SheetCompiler.compile(sheet, COMPILE_PROBE).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, COMPILE_PROBE).get("output", ""))
 	if FileAccess.file_exists(COMPILE_PROBE):
 		DirAccess.remove_absolute(COMPILE_PROBE)
 	return output
@@ -487,7 +487,7 @@ static func _emitted(ace_id: String, params: Dictionary) -> String:
 	var by_id: Dictionary = _by_id()
 	if not by_id.has(ace_id):
 		return ""
-	return ActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
 
 
 static func _by_id() -> Dictionary:

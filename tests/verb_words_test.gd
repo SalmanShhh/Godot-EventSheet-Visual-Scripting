@@ -246,7 +246,7 @@ static func _spawn_row_reading() -> String:
 ## The hand-written source, opened as a sheet and read row by row.
 static func _lifted_readings() -> PackedStringArray:
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	return _readings_of(sheet)
 
@@ -289,7 +289,7 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 
 static func _round_trip_output() -> String:
 	_write_source()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	return SUPPORT.compile_output(sheet, SOURCE_PATH)
 
 

@@ -106,7 +106,7 @@ static func _marker_pins() -> bool:
 		_emit_for("Array[Dictionary]", [], {"drawer": "cards", "cards_schema": "s", "cards_kind_key": "a=b"}).contains(
 			"kind=kind,schema=s"), true) and ok
 
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + line + "\n")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source("extends Node2D\n\n" + line + "\n")
 	var lifted: LocalVariable = _find(sheet, "v")
 	var attributes: Dictionary = lifted.attributes as Dictionary if lifted != null else {}
 	ok = _eq("the lift recovers the drawer", str(attributes.get("drawer", "")), "cards") and ok
@@ -114,7 +114,7 @@ static func _marker_pins() -> bool:
 	ok = _eq("the lift recovers the key names",
 		"%s|%s" % [str(attributes.get("cards_kind_key", "")), str(attributes.get("cards_stripe_key", ""))], "kind|category") and ok
 	ok = _eq("the marker re-emits byte for byte",
-		SheetCompiler._emit_tree_variable_line(lifted) if lifted != null else "", line) and ok
+		EventSheetCompiler._emit_tree_variable_line(lifted) if lifted != null else "", line) and ok
 	return ok
 
 
@@ -436,7 +436,7 @@ static func _emit_for(type_name: String, default_value: Variant, attributes: Dic
 	local.default_value = default_value
 	local.exported = true
 	local.attributes = attributes
-	return SheetCompiler._emit_tree_variable_line(local)
+	return EventSheetCompiler._emit_tree_variable_line(local)
 
 
 static func _find(sheet: EventSheetResource, var_name: String) -> LocalVariable:

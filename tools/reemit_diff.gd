@@ -7,8 +7,8 @@ extends SceneTree
 func _init() -> void:
 	for path: String in OS.get_cmdline_user_args():
 		var source: String = FileAccess.get_file_as_string(path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-		var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var reopened: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		var was: PackedStringArray = source.split("\n")
 		var now: PackedStringArray = reopened.split("\n")
 		print("%s: %d lines -> %d lines" % [path, was.size(), now.size()])

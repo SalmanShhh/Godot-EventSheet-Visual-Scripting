@@ -7,7 +7,7 @@
 # So nothing here is written per entry. The harness walks EVERY family table in the importer folder,
 # and for each entry it:
 #   1. GENERATES the fixture line, by filling the entry's own canonical `shape` with its own sample
-#      `slots` through the real emitter (ActionCodegen), not a copy of it;
+#      `slots` through the real emitter (EventSheetActionCodegen), not a copy of it;
 #   2. asks the engine what that line means, and pins the row, the values and the stored spelling;
 #   3. re-emits the row through the same emitter and asserts the bytes are the line it started from.
 # An entry with no shape, no samples, or a param that is not a capture fails validation before any of
@@ -382,7 +382,7 @@ static func _emit(template: String, params: Dictionary) -> String:
 	action.provider_id = "Core"
 	action.codegen_template = template
 	action.params = params.duplicate()
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

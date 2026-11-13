@@ -19,9 +19,9 @@ static func run() -> bool:
 
 	for pack_path: String in _all_pack_scripts():
 		var source: String = FileAccess.get_file_as_string(pack_path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 		sheet.external_source_path = pack_path
-		var result: Dictionary = SheetCompiler.compile(sheet, "user://_ext_map_test.gd")
+		var result: Dictionary = EventSheetCompiler.compile(sheet, "user://_ext_map_test.gd")
 		var output: String = str(result.get("output", ""))
 		# The realign must not disturb the byte-exact round-trip.
 		if output != source:
@@ -54,9 +54,9 @@ static func run() -> bool:
 	# End-to-end on health: heal now lifts as a REAL EventFunction, and its mapped range must cover
 	# its whole emission - the annotation block through the final body line.
 	var health: String = FileAccess.get_file_as_string("res://eventsheet_addons/health/health_behavior.gd")
-	var health_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(health)
+	var health_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(health)
 	health_sheet.external_source_path = "res://eventsheet_addons/health/health_behavior.gd"
-	var health_result: Dictionary = SheetCompiler.compile(health_sheet, "user://_ext_map_test.gd")
+	var health_result: Dictionary = EventSheetCompiler.compile(health_sheet, "user://_ext_map_test.gd")
 	var health_lines: PackedStringArray = str(health_result.get("output", "")).split("\n")
 	var heal_fn: EventFunction = null
 	for entry: Variant in health_sheet.functions:

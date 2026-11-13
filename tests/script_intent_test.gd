@@ -75,13 +75,13 @@ static func run() -> bool:
 
 	# ── The two new starters compile to their intended script shapes ──
 	var loot: EventSheetResource = EventSheetStarterTemplates._build_custom_resource_starter()
-	var loot_output: String = str(SheetCompiler.compile(loot, "user://intent_loot.gd").get("output", ""))
+	var loot_output: String = str(EventSheetCompiler.compile(loot, "user://intent_loot.gd").get("output", ""))
 	all_passed = _check("resource starter compiles to a named Resource class",
 		loot_output.contains("class_name LootTable") and loot_output.contains("extends Resource"), true) and all_passed
 	all_passed = _check("resource starter ships a callable function",
 		loot_output.contains("func roll() -> String:"), true) and all_passed
 	var chore: EventSheetResource = EventSheetStarterTemplates._build_editor_tool_starter()
-	var chore_output: String = str(SheetCompiler.compile(chore, "user://intent_tool.gd").get("output", ""))
+	var chore_output: String = str(EventSheetCompiler.compile(chore, "user://intent_tool.gd").get("output", ""))
 	all_passed = _check("editor tool starter compiles to an @tool EditorScript",
 		chore_output.contains("@tool") and chore_output.contains("extends EditorScript"), true) and all_passed
 	all_passed = _check("editor tool starter wires On Editor Run",
@@ -90,7 +90,7 @@ static func run() -> bool:
 	# The Entity System (ECS-lite) starter compiles to an autoload that runs over a group each frame.
 	var system: EventSheetResource = EventSheetStarterTemplates._build_system_starter()
 	all_passed = _check("system starter is an autoload", system.autoload_mode and system.autoload_name == "EnemySystem", true) and all_passed
-	var system_output: String = str(SheetCompiler.compile(system, "user://intent_system.gd").get("output", ""))
+	var system_output: String = str(EventSheetCompiler.compile(system, "user://intent_system.gd").get("output", ""))
 	all_passed = _check("system starter iterates a group each frame",
 		system_output.contains("func _process(delta") and system_output.contains("get_nodes_in_group(\"enemy\")"), true) and all_passed
 	all_passed = _check("build_starter maps the system id to the system starter",

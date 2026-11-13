@@ -43,7 +43,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 const CAT := "Notifications"
 
 ## The prefix a notification trigger's id carries, spelled once here rather than typed four times.
-## It is TriggerResolver's own constant, read through the file that owns the id shape.
+## It is EventSheetTriggerResolver's own constant, read through the file that owns the id shape.
 const PREFIX := "OnNotification:"
 
 ## The four, as {constant: [display name, hover description]}. Keyed by the engine's own constant

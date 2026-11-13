@@ -59,12 +59,12 @@ static func run() -> bool:
 
 	for base_path in PACKS:
 		var pack_name: String = base_path.get_file()
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(base_path + ".gd")
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(base_path + ".gd")
 		all_passed = _check("%s sheet loads as a behavior" % pack_name, sheet != null and sheet.behavior_mode, true) and all_passed
 		if sheet == null:
 			continue
 		# No-drift golden: the committed script is exactly what the sheet compiles to.
-		var recompiled: String = str(SheetCompiler.compile(sheet, "user://%s_drift.gd" % pack_name).get("output", ""))
+		var recompiled: String = str(EventSheetCompiler.compile(sheet, "user://%s_drift.gd" % pack_name).get("output", ""))
 		var committed: String = FileAccess.get_file_as_string(base_path + ".gd")
 		all_passed = _check("%s script matches its sheet (no drift)" % pack_name, recompiled == committed, true) and all_passed
 		# GDScript interop: the compiled behavior is a real, instantiable class.
@@ -126,7 +126,7 @@ static func run() -> bool:
 	editor.free()
 
 	# The movement block lints against the behavior context (host accessor + sheet vars).
-	var platformer_sheet: EventSheetResource = GDScriptImporter.new().import_external(PACKS[0] + ".gd")
+	var platformer_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PACKS[0] + ".gd")
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint(
 		"host.velocity.x = Input.get_axis(\"ui_left\", \"ui_right\") * move_speed", true, platformer_sheet)
 	all_passed = _check("pack code lints in behavior context", bool(lint_result.get("ok", false)), true) and all_passed

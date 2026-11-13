@@ -25,12 +25,12 @@ static func run() -> bool:
 	var unsaved: RawCodeRow = RawCodeRow.new()
 	unsaved.code = "var not_saved_yet: int = 0"
 	sheet.events.append(unsaved)
-	var echoed: Dictionary = SheetCompiler.echo(sheet)
+	var echoed: Dictionary = EventSheetCompiler.echo(sheet)
 	# A sheet kept as a resource, whose compile writes a generated script beside it.
 	var kept: EventSheetResource = EventSheetResource.new()
 	kept.take_over_path(TRES)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(GENERATED))
-	var kept_echo: Dictionary = SheetCompiler.echo(kept)
+	var kept_echo: Dictionary = EventSheetCompiler.echo(kept)
 	var rows: Array = [
 		["the echo holds the unsaved edit", str(echoed.get("output", "")).contains("not_saved_yet"), true],
 		["and it compiled", bool(echoed.get("success", false)), true],
@@ -39,7 +39,7 @@ static func run() -> bool:
 		["and leaves no generated script beside it", FileAccess.file_exists(GENERATED), false],
 	]
 	# compile() still writes, as Save needs it to.
-	SheetCompiler.compile(sheet)
+	EventSheetCompiler.compile(sheet)
 	rows.append(["compile() still saves to the sheet's file", FileAccess.get_file_as_string(SOURCE).contains("not_saved_yet"), true])
 	for path: String in [SOURCE, GENERATED]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

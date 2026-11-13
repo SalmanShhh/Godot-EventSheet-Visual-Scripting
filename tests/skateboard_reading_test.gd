@@ -233,8 +233,8 @@ static func _round_trip() -> bool:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 
@@ -381,9 +381,9 @@ static func _showcases() -> bool:
 		ok = _check("%s snaps to the rail through the row, with its distance" % path.get_file(),
 			source.contains("is_near_rail($Rail,"), true) and ok
 		# The sheet is a lens over this file, so it has to reopen as itself.
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		ok = _check("%s reopens and recompiles byte-identically" % path.get_file(),
-			str(SheetCompiler.compile(sheet, path).get("output", "")), source) and ok
+			str(EventSheetCompiler.compile(sheet, path).get("output", "")), source) and ok
 	# The measured physics, from the non-headless harness that ran these scenes (deleted after use).
 	# Written down because a number nobody recorded is a number nobody can notice changing:
 	#   2D  the board lands on the slope at frame 22 and its x speed goes 0.00 -> 93.61 over the

@@ -44,7 +44,7 @@ static func run() -> bool:
 ## The condition lane of the sheet's first trigger row, as `<object> | <words>` - object first,
 ## because half of what each of these readings says is WHOSE news it is.
 static func _condition_lane(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
@@ -75,9 +75,9 @@ static func _condition_lane(source: String) -> String:
 
 ## What the sheet writes back out for a file it just read.
 static func _roundtrip(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://eventforge_input_object_reading.gd"
-	return str(SheetCompiler.compile(sheet, "user://eventforge_input_object_reading.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_input_object_reading.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

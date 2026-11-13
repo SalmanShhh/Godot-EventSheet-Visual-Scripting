@@ -164,7 +164,7 @@ static func _putting_variables_back() -> bool:
 	# The declarations a file holds, and the two Reset rows under one event.
 	var typed: String = "extends Node\n\n@export var speed: float = 3.0\nvar health: int = 100\nvar label_text := \"ready\"\nvar lives: int\nconst MAX_LIVES: int = 3\n\n\nfunc _ready() -> void:\n\tprint(\"go\")\n"
 	var sheet: EventSheetResource = SUPPORT.reopen(typed)
-	var starting: Dictionary = SheetCompiler.declared_starting_values(sheet)
+	var starting: Dictionary = EventSheetCompiler.declared_starting_values(sheet)
 	rows.append(["what each declaration starts on", starting, {
 		"speed": {"value": "3.0", "every": false},
 		"health": {"value": "100", "every": true},
@@ -177,13 +177,13 @@ static func _putting_variables_back() -> bool:
 		event.actions.append(_action("ResetVariables", {}))
 		event.actions.append(_action("ResetVariable", {"var_name": "mana"}))
 	sheet.external_source_path = "user://borrowed_reset.gd"
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://borrowed_reset.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://borrowed_reset.gd")
 	var output: String = str(result.get("output", ""))
 	rows.append(["each Reset writes the declared value", output,
 		"extends Node\n\n@export var speed: float = 3.0\nvar health: int = 100\nvar label_text := \"ready\"\nvar lives: int\nconst MAX_LIVES: int = 3\n\n\nfunc _ready() -> void:\n\tprint(\"go\")\n\thealth = 100\n\tspeed = 3.0\n\thealth = 100\n\tlabel_text = \"ready\"\n\tlives = 0\n"])
 	rows.append(["a variable the sheet does not declare writes nothing, and says so",
 		(result.get("warnings", []) as Array).has("Reset Variable: mana is not declared on this sheet, so there is no starting value to put back - the row writes nothing."), true])
-	rows.append(["the working state is cleared after the compile", ActionCodegen.starting_values, {}])
+	rows.append(["the working state is cleared after the compile", EventSheetActionCodegen.starting_values, {}])
 	var parsed: GDScript = GDScript.new()
 	parsed.source_code = output
 	rows.append(["the file parses", parsed.reload(), OK])
@@ -238,7 +238,7 @@ static func _the_distance_travelled() -> bool:
 	var unread: String = _compiled([_action("PrintLog", {"message": "distance_travelled"})], "CharacterBody2D", "OnProcess")
 	rows.append(["a longer name is not a read of it", unread.contains("var _travelled"), false])
 	var plain: EventSheetResource = _sheet([read], "Node2D", "OnProcess")
-	var plain_result: Dictionary = SheetCompiler.compile(plain, "user://borrowed_travelled_plain.gd", true)
+	var plain_result: Dictionary = EventSheetCompiler.compile(plain, "user://borrowed_travelled_plain.gd", true)
 	rows.append(["a host with no velocity is told so",
 		(plain_result.get("warnings", []) as Array).has("Distance Travelled: a Node2D has no velocity of its own, so the total stays at 0 - put this sheet on a CharacterBody or a RigidBody."), true])
 	rows.append(["and its file still parses", str(plain_result.get("output", "")).contains("var _travelled: float = 0.0"), true])
@@ -290,7 +290,7 @@ static func _filled(ace_id: String, values: Dictionary) -> String:
 	for parameter: ACEParam in descriptor.params:
 		filled[str(parameter.id)] = str(parameter.default_value)
 	filled.merge(values, true)
-	return ActionCodegen._apply_template(descriptor.codegen_template, filled)
+	return EventSheetActionCodegen._apply_template(descriptor.codegen_template, filled)
 
 
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
@@ -323,7 +323,7 @@ static func _sheet(actions: Array, host_class: String = "Node", trigger_id: Stri
 ## One sheet holding the actions under a trigger, compiled without the generated banner - the file a
 ## reader saves as their own `.gd`, which is the one that is opened again.
 static func _compiled(actions: Array, host_class: String = "Node", trigger_id: String = "OnReady") -> String:
-	var result: Dictionary = SheetCompiler.compile(_sheet(actions, host_class, trigger_id), "user://borrowed_new_rows.gd", true)
+	var result: Dictionary = EventSheetCompiler.compile(_sheet(actions, host_class, trigger_id), "user://borrowed_new_rows.gd", true)
 	return str(result.get("output", ""))
 
 

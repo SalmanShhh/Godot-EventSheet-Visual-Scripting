@@ -80,7 +80,7 @@ static func sweep() -> Dictionary:
 	var handles_trouble: bool = false
 	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
 		var text: String = EventSheetProjectDoctor.source_of(script_path)
-		if text.contains(SheetCompiler.TROUBLE_SIGNAL):
+		if text.contains(EventSheetCompiler.TROUBLE_SIGNAL):
 			handles_trouble = true
 		if _mentions(text, PER_FRAME_LINES) and _mentions(text, SHAPES):
 			busy.append(script_path)

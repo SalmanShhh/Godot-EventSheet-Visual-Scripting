@@ -137,7 +137,7 @@ static func _import_member(script_path: String, scene_path: String, node_name: S
 		node_type: String, instances: int = 1) -> EventSheetResource:
 	var previous_scope: String = EventSheetSceneConnections.scene_scope
 	EventSheetSceneConnections.scene_scope = scene_path
-	var member: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var member: EventSheetResource = EventSheetGDScriptImporter.new().import_external(script_path)
 	EventSheetSceneConnections.scene_scope = previous_scope
 	if member == null:
 		return null

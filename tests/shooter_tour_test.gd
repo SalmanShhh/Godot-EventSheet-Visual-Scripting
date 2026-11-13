@@ -12,7 +12,7 @@ const SUPPORT := preload("res://tests/support.gd")
 
 
 static func run() -> bool:
-	var finished: EventSheetResource = GDScriptImporter.new().import_external(
+	var finished: EventSheetResource = EventSheetGDScriptImporter.new().import_external(
 		"res://demo/showcase/top_down_shooter/top_down_shooter.gd")
 	var empty: EventSheetResource = EventSheetResource.new()
 	empty.host_class = "Node2D"

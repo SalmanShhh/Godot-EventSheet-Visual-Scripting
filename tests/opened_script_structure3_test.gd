@@ -33,8 +33,8 @@ static func _round_trips() -> bool:
 	var ok: bool = true
 	for path: String in [ARENA_PATH, MENU_PATH]:
 		var source: String = FileAccess.get_file_as_string(path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-		var output: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var output: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		ok = _check("%s comes back byte-identical" % path.get_file(), output, source) and ok
 	return ok
 
@@ -53,7 +53,7 @@ static func _scene_connections() -> bool:
 	ok = _check("a script no scene root uses gets nothing",
 		EventSheetSceneConnections.for_script("res://tests/fixtures/opened_script_head_pad.gd").is_empty(), true) and ok
 
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(MENU_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(MENU_PATH)
 	var triggers: Dictionary = {}
 	for item: Variant in sheet.events:
 		if item is EventRow:
@@ -200,7 +200,7 @@ static func _rows() -> bool:
 ## Every row of an opened file as "i<indent> [<object>> <text> | ...]" - what a reader sees, in the
 ## order they see it, with the object column included because half of these readings ARE the object.
 static func _read_rows(path: String) -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())

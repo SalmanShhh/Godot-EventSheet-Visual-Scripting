@@ -33,7 +33,7 @@ static func run() -> bool:
 	var file: FileAccess = FileAccess.open(SHEET_PATH, FileAccess.WRITE)
 	file.store_string("extends Node2D\n\n@onready var hero: Node2D = $Player\n")
 	file.close()
-	var hero_sheet: EventSheetResource = GDScriptImporter.new().import_external(SHEET_PATH)
+	var hero_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SHEET_PATH)
 	DirAccess.remove_absolute(SHEET_PATH)
 
 	var viewport: EventSheetViewport = EventSheetViewport.new()

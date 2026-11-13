@@ -24,7 +24,7 @@ extends RefCounted
 #     `_clear_undo_history`,
 #   • the RAW-CODE dialog (`_raw_code_target` / `_raw_code_edit` / `_raw_code_dialog` - a separate
 #     concern that lives on the dock), `_side_panel` / `_code_edit`, and `_provider_list`.
-# Globals (EditorInterface, EventSheetLiftReport, GDScriptImporter, …) are unchanged.
+# Globals (EditorInterface, EventSheetLiftReport, EventSheetGDScriptImporter, …) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
 # reached from outside this helper - the in-file `.connect(...)` sites, the tests, and the sibling

@@ -31,7 +31,7 @@ static func run() -> bool:
 	sheet.tool_mode = true
 	sheet.custom_class_name = "GizmoNode"
 	sheet.host_class = "Node2D"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_tool.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_tool.gd").get("output", ""))
 	all_passed = _check("@tool emits before class_name",
 		output.find("@tool") < output.find("class_name GizmoNode") and output.contains("@tool"), true) and all_passed
 	var generated: GDScript = GDScript.new()
@@ -52,7 +52,7 @@ static func run() -> bool:
 	act.params = {"message": "\"tool ran\""}
 	run_event.actions.append(act)
 	tool_sheet.events.append(run_event)
-	var tool_output: String = str(SheetCompiler.compile(tool_sheet, "user://eventsheets_editor_tool.gd").get("output", ""))
+	var tool_output: String = str(EventSheetCompiler.compile(tool_sheet, "user://eventsheets_editor_tool.gd").get("output", ""))
 	all_passed = _check("On Editor Run compiles to _run()",
 		tool_output.contains("func _run() -> void:") and tool_output.contains("print(\"tool ran\")"), true) and all_passed
 	var tool_script: GDScript = GDScript.new()
@@ -68,7 +68,7 @@ static func run() -> bool:
 
 	# Verify-lift: generated tools re-open as events; tool_mode recovers.
 	var external_source: String = "@tool\nextends EditorScript\n\nfunc _run() -> void:\n\tprint(\"hello\")\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	var lifted: EventRow = null
 	for row in imported.events:
 		if row is EventRow:
@@ -76,7 +76,7 @@ static func run() -> bool:
 	all_passed = _check("_run lifts to On Editor Run", lifted != null and lifted.trigger_id == "OnEditorRun", true) and all_passed
 	all_passed = _check("tool_mode recovers on re-open", imported.tool_mode, true) and all_passed
 	imported.external_source_path = "user://eventsheets_tool_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_tool_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_tool_rt.gd").get("output", ""))
 	all_passed = _check("tool round-trip is byte-identical", roundtrip == external_source, true) and all_passed
 
 	# Dialog: the Editor Tool preset applies host + tool_mode undoably.

@@ -18,7 +18,7 @@ const FIXTURE: String = "res://tests/fixtures/interop_corpus/room.gd"
 
 static func build(host: Window) -> Control:
 	EventSheetCompletions.clear_cache()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	var fields: VBoxContainer = EventSheetPopupUI.form_box()
 	var target: LineEdit = LineEdit.new()
 	target.text = "$Hero"

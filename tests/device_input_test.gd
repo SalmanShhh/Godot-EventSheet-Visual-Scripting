@@ -58,7 +58,7 @@ static func run() -> bool:
 	event.actions.append(act)
 	sheet.events.append(event)
 	sheet.host_class = "Node2D"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_devices.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_devices.gd").get("output", ""))
 	all_passed = _check("key event condition compiles",
 		output.contains("event.physical_keycode == KEY_F8"), true) and all_passed
 	var generated: GDScript = GDScript.new()
@@ -66,7 +66,7 @@ static func run() -> bool:
 	all_passed = _check("device output parses", generated.reload(true) == OK, true) and all_passed
 
 	# Dialog-width hygiene: the one help strip wraps its paragraph instead of widening the window.
-	var vd: VariableDialog = VariableDialog.new()
+	var vd: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var host: Node = Node.new()
 	vd.init_dialog(host)
 	all_passed = _check("the help strip wraps its paragraph",

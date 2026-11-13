@@ -77,7 +77,7 @@ static func columns_from_attributes(attributes: Dictionary) -> Array:
 		if column_name.is_empty():
 			continue
 		var column_type: String = str((entry as Dictionary).get("type", "String")).strip_edges()
-		var options: Array = SheetCompiler.table_enum_options(column_type)
+		var options: Array = EventSheetCompiler.table_enum_options(column_type)
 		if not options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": options})
 			continue

@@ -3,9 +3,9 @@
 # Eight pure expressions that have to be right in three separate ways, so each is checked three ways:
 #   1. SHAPE - registered exactly once (an ace_id or a display name that collides with a shipped verb
 #      would silently shadow it), in the category the picker puts it in, as an EXPRESSION, described.
-#   2. EMISSION - a real sheet compiled through SheetCompiler puts the SHIPPED template in the file
+#   2. EMISSION - a real sheet compiled through EventSheetCompiler puts the SHIPPED template in the file
 #      verbatim, and the compiled file parses, instantiates and runs, filling typed sheet variables.
-#   3. BEHAVIOUR - each template is substituted through the real ActionCodegen into a function of its
+#   3. BEHAVIOUR - each template is substituted through the real EventSheetActionCodegen into a function of its
 #      own and driven with real inputs, INCLUDING every edge the descriptions promise: a marker that
 #      is not there, an empty line, a quoted phrase, an unterminated quote, JSON that parses, JSON
 #      that does not, a table with nothing wrong, a missing column, a null record, and a 0 that must
@@ -311,7 +311,7 @@ static func _expr(ace_id: String, args: Dictionary) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	if descriptor == null:
 		return "\"%s IS NOT REGISTERED\"" % ace_id
-	return ActionCodegen._apply_template(str(descriptor.codegen_template), args)
+	return EventSheetActionCodegen._apply_template(str(descriptor.codegen_template), args)
 
 
 ## A Set Variable row carrying the REAL Set Variable template, baked exactly as the dock bakes it.
@@ -320,7 +320,7 @@ static func _set_var(variable_name: String, value_expression: String) -> ACEActi
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = "SetVar"
-	action.codegen_template = ActionCodegen._apply_template(str(descriptor.codegen_template),
+	action.codegen_template = EventSheetActionCodegen._apply_template(str(descriptor.codegen_template),
 		{"var_name": variable_name, "value": value_expression})
 	return action
 
@@ -334,7 +334,7 @@ static func _variable(variable_name: String, type_name: String, default_value: V
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _instantiate(source: String) -> Node:

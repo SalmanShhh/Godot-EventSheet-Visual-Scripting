@@ -1106,7 +1106,7 @@ static func _scope_facts(sheet: EventSheetResource, within: Resource) -> Array[D
 		if event_row == null:
 			continue
 		if index == 0 or event_row.trigger_id != "":
-			for parameter: String in str(TriggerResolver.resolve_trigger(event_row).get("args", "")).split(","):
+			for parameter: String in str(EventSheetTriggerResolver.resolve_trigger(event_row).get("args", "")).split(","):
 				var piece: String = parameter.strip_edges()
 				if piece.is_empty():
 					continue

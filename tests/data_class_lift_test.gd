@@ -89,7 +89,7 @@ static func run() -> bool:
 		class_row != null and class_row.source_resource is RawCodeRow, true) and ok
 
 	# ── Covenant: pure view - the pack still round-trips byte-identically ──
-	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
 	ok = _check("drift stays 0 with the data class collapsed", reemitted == source, true) and ok
 
 	dock.free()

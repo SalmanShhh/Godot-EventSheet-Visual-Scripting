@@ -153,7 +153,7 @@ static func run() -> bool:
 	var root: EventSheetResource = EventSheetResource.new()
 	root.includes = ["user://eventsheets_include_lib.tres"]
 	root.variables = {"own_var": {"type": "int", "default": 1, "exported": false}}
-	var compile_result: Dictionary = SheetCompiler.compile(root, "user://eventsheets_include_out.gd")
+	var compile_result: Dictionary = EventSheetCompiler.compile(root, "user://eventsheets_include_out.gd")
 	var output: String = str(compile_result.get("output", ""))
 	all_passed = _check("included variable emits", output.contains("@export var shared_score: int = 0"), true) and all_passed
 	all_passed = _check("own variable still emits", output.contains("var own_var: int = 1"), true) and all_passed
@@ -163,7 +163,7 @@ static func run() -> bool:
 
 	# Collisions: root wins, with a warning.
 	root.variables["shared_score"] = {"type": "int", "default": 99, "exported": false}
-	var collision_result: Dictionary = SheetCompiler.compile(root, "user://eventsheets_include_coll.gd")
+	var collision_result: Dictionary = EventSheetCompiler.compile(root, "user://eventsheets_include_coll.gd")
 	all_passed = _check("root wins variable collisions",
 		str(collision_result.get("output", "")).contains("var shared_score: int = 99"), true) and all_passed
 	all_passed = _check("collision warns", str(collision_result.get("warnings", [])).contains("root wins"), true) and all_passed
@@ -174,14 +174,14 @@ static func run() -> bool:
 	var cycle_save: Error = ResourceSaver.save(cyclic, "user://eventsheets_include_cycle.tres")
 	all_passed = _check("cyclic sheet saves", cycle_save, OK) and all_passed
 	var loaded_cycle: EventSheetResource = load("user://eventsheets_include_cycle.tres")
-	var cycle_result: Dictionary = SheetCompiler.compile(loaded_cycle, "user://eventsheets_include_cycle_out.gd")
+	var cycle_result: Dictionary = EventSheetCompiler.compile(loaded_cycle, "user://eventsheets_include_cycle_out.gd")
 	all_passed = _check("include cycles terminate with a warning",
 		str(cycle_result.get("warnings", [])).contains("cycle"), true) and all_passed
 
 	# Missing include: warning, not failure.
 	var missing: EventSheetResource = EventSheetResource.new()
 	missing.includes = ["user://does_not_exist.tres"]
-	var missing_result: Dictionary = SheetCompiler.compile(missing, "user://eventsheets_include_missing.gd")
+	var missing_result: Dictionary = EventSheetCompiler.compile(missing, "user://eventsheets_include_missing.gd")
 	all_passed = _check("missing includes warn but compile",
 		bool(missing_result.get("success", false)) and str(missing_result.get("warnings", [])).contains("not found"), true) and all_passed
 

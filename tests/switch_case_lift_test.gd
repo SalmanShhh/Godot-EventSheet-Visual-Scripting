@@ -16,7 +16,7 @@ static func run() -> bool:
 
 	# ── A simple match: two branches, one statement each ──
 	var source_a: String = _author("match state:\n\tState.IDLE:\n\t\tpass\n\t_:\n\t\tqueue_free()")
-	var imported_a: EventSheetResource = GDScriptImporter.new().import_external_source(source_a)
+	var imported_a: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source_a)
 	var mr_a: MatchRow = _first_match(imported_a)
 	ok = _check("the match lifts to a MatchRow", mr_a != null, true) and ok
 	if mr_a != null:
@@ -29,7 +29,7 @@ static func run() -> bool:
 
 	# ── A NESTED case body (an if inside a branch): the dedent must keep the inner tab ──
 	var source_b: String = _author("match state:\n\t1:\n\t\tif health > 0:\n\t\t\ttake_damage()\n\t_:\n\t\tpass")
-	var imported_b: EventSheetResource = GDScriptImporter.new().import_external_source(source_b)
+	var imported_b: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source_b)
 	var mr_b: MatchRow = _first_match(imported_b)
 	ok = _check("the nested match lifts to structured cases", mr_b != null and mr_b.cases.size() == 2, true) and ok
 	if mr_b != null and mr_b.cases.size() == 2:
@@ -50,12 +50,12 @@ static func _author(match_code: String) -> String:
 	raw.code = match_code
 	event.actions.append(raw)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://switch_lift_src.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://switch_lift_src.gd").get("output", ""))
 
 
 static func _roundtrip(sheet: EventSheetResource) -> String:
 	sheet.external_source_path = "user://switch_lift_rt.gd"
-	return str(SheetCompiler.compile(sheet, "user://switch_lift_rt.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://switch_lift_rt.gd").get("output", ""))
 
 
 static func _first_match(sheet: EventSheetResource) -> MatchRow:

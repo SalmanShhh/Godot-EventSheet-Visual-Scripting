@@ -99,7 +99,7 @@ static func _run_emission() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TroubleProbe"
-	var quiet: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var quiet: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("a sheet that never asks emits no signal",
 		quiet.contains("something_went_wrong"), false) and all_passed
 	all_passed = _check("and no logger", quiet.contains("Logger"), false) and all_passed
@@ -110,7 +110,7 @@ static func _run_emission() -> bool:
 	(row.actions[0] as ACEAction).params = {"report": "report"}
 	(row.actions[0] as ACEAction).codegen_template = "print({report})"
 	sheet.events.append(row)
-	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("the channel is declared",
 		built.contains("signal something_went_wrong(report: String)"), true) and all_passed
 	all_passed = _check("the handler takes the report",
@@ -140,7 +140,7 @@ static func _run_emission() -> bool:
 	# A second compile of the QUIET sheet must be quiet again: the flag is per-compile temporary state, and a
 	# flag left standing is how one file's compile changes what an unrelated file opens as.
 	sheet.events.clear()
-	var quiet_again: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	var quiet_again: String = str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 	all_passed = _check("the flag does not survive into the next compile",
 		quiet_again.contains("something_went_wrong"), false) and all_passed
 	return all_passed

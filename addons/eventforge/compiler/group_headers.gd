@@ -17,7 +17,7 @@
 # line than the live one does the live one's line replace it. So every untouched header - including
 # one spelled by hand - stays exactly as it was written.
 #
-# Which line belongs to which group: the uid the lift read it from (SheetCompiler.SOURCE_GROUP_SLUG_META
+# Which line belongs to which group: the uid the lift read it from (EventSheetCompiler.SOURCE_GROUP_SLUG_META
 # on the group), else the uid the group would be written with now. A header whose group was opened
 # and has since been deleted is removed (the uids that were opened are SOURCE_GROUP_SLUGS_META on the
 # sheet); one that never belonged to an opened group (an empty group, say) is left alone.
@@ -94,13 +94,13 @@ static func flag_of_fields(fields: Dictionary) -> String:
 
 ## The member a switchable group named `group_name` is switched by - the compiler's own spelling.
 static func flag_name(group_name: String) -> String:
-	return "__group_%s_active" % SheetCompiler.guard_token(group_name)
+	return "__group_%s_active" % EventSheetCompiler.guard_token(group_name)
 
 
 ## The one header line `group` writes under `slug`, nested under `parent_slug`.
 static func line_for(group: EventGroup, slug: String, parent_slug: String) -> String:
 	var written: PackedStringArray = PackedStringArray()
-	SheetCompiler._emit_group_declarations(written, [{"slug": slug, "parent": parent_slug, "group": group}])
+	EventSheetCompiler._emit_group_declarations(written, [{"slug": slug, "parent": parent_slug, "group": group}])
 	return written[0] if not written.is_empty() else ""
 
 
@@ -130,7 +130,7 @@ static func keep_in_step(lines: PackedStringArray, sheet: EventSheetResource, de
 	var owner_of: Array = []
 	var claimed: Dictionary = {}
 	for decl: Dictionary in decls:
-		var source_slug: String = str((decl["group"] as EventGroup).get_meta(SheetCompiler.SOURCE_GROUP_SLUG_META, ""))
+		var source_slug: String = str((decl["group"] as EventGroup).get_meta(EventSheetCompiler.SOURCE_GROUP_SLUG_META, ""))
 		if not source_slug.is_empty() and declared_at.has(source_slug) and not claimed.has(source_slug):
 			claimed[source_slug] = true
 			owner_of.append(source_slug)
@@ -164,7 +164,7 @@ static func keep_in_step(lines: PackedStringArray, sheet: EventSheetResource, de
 				flags_before[flag_before] = true
 		if group.runtime_toggleable:
 			flags_now[flag_name(group.group_name)] = true
-	var opened: PackedStringArray = sheet.get_meta(SheetCompiler.SOURCE_GROUP_SLUGS_META, PackedStringArray()) \
+	var opened: PackedStringArray = sheet.get_meta(EventSheetCompiler.SOURCE_GROUP_SLUGS_META, PackedStringArray()) \
 			if sheet != null else PackedStringArray()
 	for uid: String in declared_at:
 		if not claimed.has(uid) and opened.has(uid):

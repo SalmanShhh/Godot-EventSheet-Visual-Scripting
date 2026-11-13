@@ -8,7 +8,7 @@ extends RefCounted
 # rather than corrupting - these assertions pin the happy path.
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
 static func run() -> bool:
@@ -27,14 +27,14 @@ static func run() -> bool:
 	outer.events = [_event(false), child]
 	sheet.events.append(outer)
 
-	var output: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	all_passed = _check("emits the @ace_group declaration", output.contains("## @ace_group(uid=\"juice\""), true) and all_passed
 	all_passed = _check("emits the nested child declaration",
 		output.contains("parent=\"juice\"") and output.contains("collapsed=true"), true) and all_passed
 	all_passed = _check("emits the per-row # @group marker", output.contains("# @group:juice"), true) and all_passed
 
 	# Opening the .gd back reconstructs the groups (import_external_source lifts internally).
-	var sheet2: EventSheetResource = GDScriptImporter.new().import_external_source(output)
+	var sheet2: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(output)
 	var top_group: EventGroup = null
 	for ev: Variant in sheet2.events:
 		if ev is EventGroup:
@@ -52,7 +52,7 @@ static func run() -> bool:
 
 	# Re-saving the imported sheet (external path) reproduces the .gd byte-for-byte (stable markers).
 	sheet2.external_source_path = "user://_group_rt_verify.gd"
-	var recompiled: String = str(SheetCompiler.compile(sheet2, "user://_group_rt_verify.gd").get("output", ""))
+	var recompiled: String = str(EventSheetCompiler.compile(sheet2, "user://_group_rt_verify.gd").get("output", ""))
 	all_passed = _check("re-save is byte-identical (drift=0)", recompiled == output, true) and all_passed
 
 	# Review fix: the # @group marker precedes ANY grouped event's first line, but the lift only
@@ -67,8 +67,8 @@ static func run() -> bool:
 	scoring.group_name = "Scoring"
 	scoring.events = [_raw_event("score_total += 1"), _raw_event("for item in hit_list:\n\tprint(item)")]
 	mixed.events.append(scoring)
-	var mixed_out: String = str(SheetCompiler.compile(mixed, "user://_group_rt_mixed.gd").get("output", ""))
-	var mixed_in: EventSheetResource = GDScriptImporter.new().import_external_source(mixed_out)
+	var mixed_out: String = str(EventSheetCompiler.compile(mixed, "user://_group_rt_mixed.gd").get("output", ""))
+	var mixed_in: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(mixed_out)
 	var scoring_in: EventGroup = null
 	var loose_rows: int = 0
 	for row: Variant in mixed_in.events:
@@ -81,7 +81,7 @@ static func run() -> bool:
 		all_passed = _check("BOTH the action-only and the loop event stay grouped", scoring_in.events.size(), 2) and all_passed
 	all_passed = _check("the ungrouped lead event stays OUTSIDE the group", loose_rows, 1) and all_passed
 	mixed_in.external_source_path = "user://_group_rt_mixed_verify.gd"
-	var mixed_rt: String = str(SheetCompiler.compile(mixed_in, "user://_group_rt_mixed_verify.gd").get("output", ""))
+	var mixed_rt: String = str(EventSheetCompiler.compile(mixed_in, "user://_group_rt_mixed_verify.gd").get("output", ""))
 	all_passed = _check("mixed-kind grouped sheet re-saves byte-identically", mixed_rt == mixed_out, true) and all_passed
 
 	all_passed = _test_shown_colour() and all_passed
@@ -103,8 +103,8 @@ static func _test_off_switchable() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "CharacterBody2D"
 	sheet.events.append(boss)
-	var out: String = str(SheetCompiler.compile(sheet, "user://_group_rt_off.gd").get("output", ""))
-	var back: EventGroup = _first_group(GDScriptImporter.new().import_external_source(out))
+	var out: String = str(EventSheetCompiler.compile(sheet, "user://_group_rt_off.gd").get("output", ""))
+	var back: EventGroup = _first_group(EventSheetGDScriptImporter.new().import_external_source(out))
 	var plain_off: EventGroup = EventGroup.new()
 	plain_off.group_name = "Quiet"
 	plain_off.enabled = false
@@ -113,7 +113,7 @@ static func _test_off_switchable() -> bool:
 	on_switch.group_name = "Loud"
 	on_switch.runtime_toggleable = true
 	on_switch.events = [_event(false)]
-	var lines: Dictionary = SheetCompiler.group_declaration_lines([boss, plain_off, on_switch])
+	var lines: Dictionary = EventSheetCompiler.group_declaration_lines([boss, plain_off, on_switch])
 	return SUPPORT.pins("group_roundtrip_test", [
 		["an off, switchable group writes enabled=false in its header", str(lines.get(boss, "")),
 			"## @ace_group(uid=\"boss_phase\", name=\"Boss Phase\", toggleable=true, enabled=false)"],
@@ -139,17 +139,17 @@ static func _test_shown_colour() -> bool:
 	var shown_sheet: EventSheetResource = EventSheetResource.new()
 	shown_sheet.host_class = "CharacterBody2D"
 	shown_sheet.events.append(shown)
-	var shown_out: String = str(SheetCompiler.compile(shown_sheet).get("output", ""))
-	var shown_back: EventGroup = _first_group(GDScriptImporter.new().import_external_source(shown_out))
+	var shown_out: String = str(EventSheetCompiler.compile(shown_sheet).get("output", ""))
+	var shown_back: EventGroup = _first_group(EventSheetGDScriptImporter.new().import_external_source(shown_out))
 	var tagged_source: String = shown_out.replace("color=\"#D9534F\"", "color=\"orange\"")
-	var tagged_back: EventGroup = _first_group(GDScriptImporter.new().import_external_source(tagged_source))
+	var tagged_back: EventGroup = _first_group(EventSheetGDScriptImporter.new().import_external_source(tagged_source))
 	var see_through: EventGroup = EventGroup.new()
 	see_through.custom_color = Color(1.0, 0.0, 0.0, 0.5)
 	var lower: EventGroup = EventGroup.new()
 	lower.read_header_color("#d9534f")
 	return SUPPORT.pins("group_roundtrip_test", [
 		["the header carries the colour the group shows, not its tag",
-			str(SheetCompiler.group_declaration_lines(shown_sheet.events).get(shown, "")),
+			str(EventSheetCompiler.group_declaration_lines(shown_sheet.events).get(shown, "")),
 			"## @ace_group(uid=\"combat\", name=\"Combat\", color=\"#D9534F\")"],
 		["reopening the .gd brings that colour back", shown_back.custom_color if shown_back != null else null,
 			Color("#D9534F")],
@@ -174,9 +174,9 @@ static func _first_group(sheet: EventSheetResource) -> EventGroup:
 static func _resaved(group: EventGroup, source: String) -> String:
 	if group == null:
 		return ""
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://_group_rt_colour_verify.gd"
-	return str(SheetCompiler.compile(sheet, "user://_group_rt_colour_verify.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://_group_rt_colour_verify.gd").get("output", ""))
 
 
 ## An action-only OnProcess event carrying one raw statement (or block) - no conditions, so its

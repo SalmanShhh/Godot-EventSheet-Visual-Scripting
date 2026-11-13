@@ -83,19 +83,19 @@ static func run() -> bool:
 static func _promptless_open_is_byte_identical() -> bool:
 	var ok: bool = true
 	ok = _check("a window row saved before prompts existed still writes its two lines",
-		ActionCodegen.generate_action(_action("OpenInputWindow",
+		EventSheetActionCodegen.generate_action(_action("OpenInputWindow",
 			{"open_flag": "window_open", "deadline": "window_until", "seconds": "0.5"})),
 		PROMPTLESS_OPEN) and ok
 	ok = _check("and so does one that answers the prompt with nothing",
-		ActionCodegen.generate_action(_action("OpenInputWindow",
+		EventSheetActionCodegen.generate_action(_action("OpenInputWindow",
 			{"open_flag": "window_open", "deadline": "window_until", "seconds": "0.5",
 			"prompt": ""})),
 		PROMPTLESS_OPEN) and ok
 	ok = _check("a close saved before prompts existed still writes its one line",
-		ActionCodegen.generate_action(_action("CloseInputWindow", {"open_flag": "window_open"})),
+		EventSheetActionCodegen.generate_action(_action("CloseInputWindow", {"open_flag": "window_open"})),
 		PROMPTLESS_CLOSE) and ok
 	ok = _check("and so does one that answers the prompt with nothing",
-		ActionCodegen.generate_action(_action("CloseInputWindow",
+		EventSheetActionCodegen.generate_action(_action("CloseInputWindow",
 			{"open_flag": "window_open", "prompt": ""})),
 		PROMPTLESS_CLOSE) and ok
 	return ok
@@ -163,13 +163,13 @@ static func _the_field_never_shows_code() -> bool:
 ## prompt line is the last of each, which is what keeps the promise in gate one available.
 static func _prompt_carrying_forms() -> bool:
 	var ok: bool = true
-	var open_code: String = ActionCodegen.generate_action(_action("OpenInputWindow",
+	var open_code: String = EventSheetActionCodegen.generate_action(_action("OpenInputWindow",
 		{"open_flag": "window_open", "deadline": "window_until", "seconds": "0.5",
 		"prompt": ACEParamsDialog.input_prompt_show_tail(LABEL, ACTION)}))
 	ok = _check("an opened window with a prompt writes three lines",
 		open_code, "%s\n%s" % [PROMPTLESS_OPEN, PROMPT_SHOW_LINE]) and ok
 	ok = _check("three lines and no more", open_code.split("\n").size(), 3) and ok
-	var close_code: String = ActionCodegen.generate_action(_action("CloseInputWindow",
+	var close_code: String = EventSheetActionCodegen.generate_action(_action("CloseInputWindow",
 		{"open_flag": "window_open",
 		"prompt": ACEParamsDialog.input_prompt_clear_tail(LABEL)}))
 	ok = _check("a closed window with a prompt writes two lines",
@@ -188,7 +188,7 @@ static func _the_grammar_reads_what_was_emitted() -> bool:
 		"input_window": {"flag": "window_open", "deadline": "window_until",
 			"action": ACTION, "perfect": ""}
 	}
-	var open_lines: PackedStringArray = ActionCodegen.generate_action(_action("OpenInputWindow",
+	var open_lines: PackedStringArray = EventSheetActionCodegen.generate_action(_action("OpenInputWindow",
 		{"open_flag": "window_open", "deadline": "window_until", "seconds": "seconds",
 		"prompt": ACEParamsDialog.input_prompt_show_tail(LABEL, ACTION)})).split("\n")
 	var opened: Dictionary = EventSheetSentence.input_window_parts(open_lines[0], open_lines[1],
@@ -208,7 +208,7 @@ static func _the_grammar_reads_what_was_emitted() -> bool:
 	ok = _check("a line the window did not write is not read as its prompt",
 		str(EventSheetSentence.input_window_parts(open_lines[0], open_lines[1], context,
 			"hp = 100").get("prompt", "")), "") and ok
-	var close_lines: PackedStringArray = ActionCodegen.generate_action(_action("CloseInputWindow",
+	var close_lines: PackedStringArray = EventSheetActionCodegen.generate_action(_action("CloseInputWindow",
 		{"open_flag": "window_open",
 		"prompt": ACEParamsDialog.input_prompt_clear_tail(LABEL)})).split("\n")
 	var closed: Dictionary = EventSheetSentence.input_window_close_parts(close_lines[0],
@@ -265,15 +265,15 @@ static func _the_whole_path() -> bool:
 		readings.has("System ▸ Close input window"), true) and ok
 	ok = _check("the prompt line is not left standing beside them",
 		readings.has("Player ▸ Set $PromptLabel text to \"\""), false) and ok
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	ok = _check("opening the file and saving it reproduces every byte",
-		str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", "")), SOURCE) and ok
+		str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", "")), SOURCE) and ok
 	return ok
 
 
 ## Every cell reading in the opened file, as "object ▸ text".
 static func _readings() -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

@@ -73,7 +73,7 @@ static func _sheet(path: String, source: String) -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	return GDScriptImporter.new().import_external(path)
+	return EventSheetGDScriptImporter.new().import_external(path)
 
 
 ## One sheet as a read-only canvas of a fixed height - a canvas asks its container for every pixel it

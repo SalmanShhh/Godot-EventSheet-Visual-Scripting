@@ -54,7 +54,7 @@ static func run() -> bool:
 
 
 static func _head_rows(path: String, light: bool) -> Array:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	if sheet == null:
 		return [EventRowData.new()]
 	sheet.read_only = true

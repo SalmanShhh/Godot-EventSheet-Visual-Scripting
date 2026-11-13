@@ -15,7 +15,7 @@ const PACK: String = "res://eventsheet_addons/light_flicker/light_flicker_behavi
 
 
 static func build(host: Window) -> Control:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PACK)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

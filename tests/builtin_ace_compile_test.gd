@@ -2,7 +2,7 @@
 #
 # "Do all the built-in ACEs actually produce valid GDScript?" This test answers it directly:
 # it walks EVERY built-in descriptor, fills each param with a realistic value of its type,
-# runs the real ActionCodegen._apply_template substitution, wraps the result in its declared
+# runs the real EventSheetActionCodegen._apply_template substitution, wraps the result in its declared
 # host class (node_type), and reload()s it as GDScript. A template that doesn't parse - a typo,
 # an unbalanced paren, a method that doesn't exist on its host - fails here, not in a game.
 #
@@ -321,7 +321,7 @@ static func _fill_params(d: ACEDescriptor) -> Dictionary:
 ## of any type, `item` for a For-Each iterator, `event` for an input event, `delta` for the
 ## per-frame delta, `sig` for a signal. They are untyped so any member access parses.
 static func _wrap(d: ACEDescriptor, params: Dictionary) -> String:
-	var line: String = ActionCodegen._apply_template(d.codegen_template, params)
+	var line: String = EventSheetActionCodegen._apply_template(d.codegen_template, params)
 	var host: String = d.node_type if not str(d.node_type).strip_edges().is_empty() else "Node"
 	var body_lines: Array[String] = []
 	match d.ace_type:

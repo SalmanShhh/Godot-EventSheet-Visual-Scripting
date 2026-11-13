@@ -156,7 +156,7 @@ static func _test_a_3d_spawn_round_trips_byte_for_byte() -> bool:
 		var source: String = _compile(sheet, "user://eventforge_spawn3d_place.gd")
 		passed = _check("the placement expression is emitted as written",
 			source.contains("\tfoe.global_position = %s" % placement), true) and passed
-		var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+		var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 		imported.external_source_path = "user://eventforge_spawn3d_place_back.gd"
 		passed = _check("a 3D spawn placed by %s re-emits byte for byte" % placement.get_slice("(", 0),
 			_compile(imported, "user://eventforge_spawn3d_place_back.gd") == source, true) and passed
@@ -229,7 +229,7 @@ static func _compiled_with(ace_id: String, params: Dictionary, path: String) -> 
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

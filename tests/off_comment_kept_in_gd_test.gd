@@ -10,7 +10,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "off_comment_kept_in_gd_test"
 const FILE_PATH := "user://off_comment_kept_in_gd_test.gd"
 const RESAVE_PATH := "user://off_comment_kept_in_gd_test_resave.gd"
@@ -37,11 +37,11 @@ static func run() -> bool:
 	var event_saved: String = str(in_event.get("saved", ""))
 	# On again, the file is the one it was.
 	_write(FILE_PATH, top_saved)
-	var back_on: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var back_on: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var back_on_comment: CommentRow = _top_comment(back_on, false)
 	if back_on_comment != null:
 		back_on_comment.enabled = true
-	SheetCompiler.compile(back_on, FILE_PATH)
+	EventSheetCompiler.compile(back_on, FILE_PATH)
 	var on_again: String = FileAccess.get_file_as_string(FILE_PATH)
 	return SUPPORT.pins(TEST_NAME, [
 		["opened and saved untouched it is byte for byte the same", str(untouched.get("saved", "")), SOURCE],
@@ -61,15 +61,15 @@ static func run() -> bool:
 ## opens it again: {saved, reopened, resaved}.
 static func _cycle(edit: Callable) -> Dictionary:
 	_write(FILE_PATH, SOURCE)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	if edit.is_valid():
 		edit.call(sheet)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "reopened": reopened, "resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 
 

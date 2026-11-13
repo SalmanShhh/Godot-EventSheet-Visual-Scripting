@@ -13,7 +13,7 @@ const SUPPORT := preload("res://tests/support.gd")
 
 static func run() -> bool:
 	var host: Node = Node.new()
-	var dlg: VariableDialog = VariableDialog.new()
+	var dlg: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dlg.init_dialog(host)
 	var rows: Array = []
 	for type_name: String in ["int", "float", "String", "bool", "Vector3i", "StringName"]:

@@ -22,7 +22,7 @@ static func run() -> bool:
 	sheet.addon_version = "2.3.1"
 	sheet.addon_author = "Jam Author"
 	sheet.addon_help_url = "https://example.com/help"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_version_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_version_probe.gd").get("output", ""))
 	all_passed = _check("version emits unquoted", output.contains("## @ace_version(2.3.1)"), true) and all_passed
 	all_passed = _check("author emits quoted", output.contains("## @ace_author(\"Jam Author\")"), true) and all_passed
 	all_passed = _check("help emits quoted", output.contains("## @ace_help(\"https://example.com/help\")"), true) and all_passed
@@ -33,7 +33,7 @@ static func run() -> bool:
 	all_passed = _check("the emitted script parses", generated.reload(true) == OK, true) and all_passed
 
 	# ---- round-trip: the importer recovers all three exactly ----
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(output)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(output)
 	all_passed = _check("version recovers", imported.addon_version, "2.3.1") and all_passed
 	all_passed = _check("author recovers", imported.addon_author, "Jam Author") and all_passed
 	all_passed = _check("help recovers", imported.addon_help_url, "https://example.com/help") and all_passed
@@ -43,7 +43,7 @@ static func run() -> bool:
 	bare.behavior_mode = true
 	bare.host_class = "Node"
 	bare.custom_class_name = "PlainBehavior"
-	var bare_output: String = str(SheetCompiler.compile(bare, "user://eventsheets_version_bare.gd").get("output", ""))
+	var bare_output: String = str(EventSheetCompiler.compile(bare, "user://eventsheets_version_bare.gd").get("output", ""))
 	all_passed = _check("empty identity emits nothing", bare_output.contains("@ace_version") or bare_output.contains("@ace_author") or bare_output.contains("@ace_help"), false) and all_passed
 
 	# ---- typo-gate: the three tokens are whitelisted ----

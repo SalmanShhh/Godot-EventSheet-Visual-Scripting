@@ -61,7 +61,7 @@ static func run() -> bool:
 	event.actions.append(act)
 	var compile_sheet: EventSheetResource = EventSheetResource.new()
 	compile_sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(compile_sheet, "user://eventsheets_stateful.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(compile_sheet, "user://eventsheets_stateful.gd").get("output", ""))
 	all_passed = _check("member declared at class level",
 		output.contains(condition.member_declaration), true) and all_passed
 	all_passed = _check("prelude accumulates before the if",
@@ -86,7 +86,7 @@ static func run() -> bool:
 	spawn_event.actions.append(spawn)
 	var spawn_sheet: EventSheetResource = EventSheetResource.new()
 	spawn_sheet.events.append(spawn_event)
-	var spawn_output: String = str(SheetCompiler.compile(spawn_sheet, "user://eventsheets_spawnat.gd").get("output", ""))
+	var spawn_output: String = str(EventSheetCompiler.compile(spawn_sheet, "user://eventsheets_spawnat.gd").get("output", ""))
 	all_passed = _check("multi-line template emits each line indented",
 		spawn_output.contains("\tvar __spawn_a1 = load(\"res://demo/showcase/carousel/showcase_carousel.tscn\").instantiate()") and spawn_output.contains("\t__spawn_a1.position = Vector2(10, 20)") and spawn_output.contains("\tadd_child(__spawn_a1)"), true) and all_passed
 	var spawn_script: GDScript = GDScript.new()
@@ -97,7 +97,7 @@ static func run() -> bool:
 	# leave no orphan members; OR-mode stateful events warn.
 	var external_source: String = "extends Node
 "
-	var external_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var external_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	external_sheet.external_source_path = "user://eventsheets_stateful_ext.gd"
 	var ext_event: EventRow = EventRow.new()
 	ext_event.trigger_provider_id = "Core"
@@ -118,7 +118,7 @@ static func run() -> bool:
 	ext_action.params = {"message": "\"ext\""}
 	ext_event.actions.append(ext_action)
 	external_sheet.events.append(ext_event)
-	var ext_output: String = str(SheetCompiler.compile(external_sheet, "user://eventsheets_stateful_ext.gd").get("output", ""))
+	var ext_output: String = str(EventSheetCompiler.compile(external_sheet, "user://eventsheets_stateful_ext.gd").get("output", ""))
 	all_passed = _check("external sheets declare the baked member",
 		ext_output.contains("var __every_ext1: float = 0.0"), true) and all_passed
 	var ext_script: GDScript = GDScript.new()
@@ -126,7 +126,7 @@ static func run() -> bool:
 	all_passed = _check("external stateful output parses", ext_script.reload(true) == OK, true) and all_passed
 
 	condition.enabled = false
-	var disabled_output: String = str(SheetCompiler.compile(compile_sheet, "user://eventsheets_stateful_off.gd").get("output", ""))
+	var disabled_output: String = str(EventSheetCompiler.compile(compile_sheet, "user://eventsheets_stateful_off.gd").get("output", ""))
 	all_passed = _check("disabled stateful conditions leave no orphan member",
 		disabled_output.contains(condition.member_declaration), false) and all_passed
 	condition.enabled = true
@@ -137,7 +137,7 @@ static func run() -> bool:
 	extra.ace_id = "Always"
 	extra.codegen_template = "true"
 	event.conditions.append(extra)
-	var or_warnings: Array = SheetCompiler.compile(compile_sheet, "user://eventsheets_stateful_or.gd").get("warnings", [])
+	var or_warnings: Array = EventSheetCompiler.compile(compile_sheet, "user://eventsheets_stateful_or.gd").get("warnings", [])
 	all_passed = _check("OR-mode stateful events warn",
 		str(or_warnings).contains("rebase"), true) and all_passed
 

@@ -88,7 +88,7 @@ static func run() -> bool:
 		ACERegistry.find_descriptor("Core", "OnPhysicsProcess") != null, true) and all_passed
 
 	# Step 2 - the next script opened as a sheet still converts into editor rows.
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SUBJECT_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SUBJECT_PATH)
 	all_passed = _check("the subject opens as a sheet", sheet != null, true) and all_passed
 	all_passed = _check("its physics tick reads as three trigger events, not one code block",
 		_trigger_ids(sheet), "OnPhysicsProcess, OnPhysicsProcess, OnPhysicsProcess") and all_passed

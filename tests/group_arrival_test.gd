@@ -115,7 +115,7 @@ static func _test_any_group_gets_no_gate() -> bool:
 
 static func _test_hand_written_code_opens_as_the_trigger() -> bool:
 	var source: String = _compiled("OnNodeJoinsGroup", "\"minimap\"", "user://eventforge_group_lift.gd")
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var lifted: EventRow = null
 	for row: Variant in imported.events:
 		if row is EventRow and (row as EventRow).trigger_id == "OnNodeJoinsGroup":
@@ -206,7 +206,7 @@ static func _compiled(trigger_id: String, group_value: String, path: String) -> 
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

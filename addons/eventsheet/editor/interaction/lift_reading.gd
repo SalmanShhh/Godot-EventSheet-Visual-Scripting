@@ -52,7 +52,7 @@ const LAYER_QUIET: String = "quiet"
 ## just be code.
 const STAYS_CODE: String = "stays code"
 
-## WHERE A READING'S BYTES GO, and the reason this is not the file being read. `SheetCompiler.compile`
+## WHERE A READING'S BYTES GO, and the reason this is not the file being read. `EventSheetCompiler.compile`
 ## does not only hand its output back: it WRITES it, to the output path it was given or, failing that,
 ## to the sheet's own source path. A reading that let it default would therefore save every buffer it
 ## measured back over the file it came from - which is invisible while a file round-trips
@@ -74,7 +74,7 @@ const THROWAWAY_PATH: String = "user://buffer.gd"
 ## line where it is not. `lines` carries one entry per source line, in file order:
 ##   {"number", "text", "claim", "layer", "entry_id", "family"}
 static func read(source: String, script_path: String = "", draft_entries: Array = []) -> Dictionary:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, script_path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true, script_path)
 	var reading: Dictionary = {
 		"sheet": sheet,
 		"emitted": "",
@@ -375,7 +375,7 @@ static func _collect_row_lines(items: Array, found: Dictionary, derived_facts: D
 			var derived: String = _derived_claim(action, derived_facts)
 			var name: String = derived if not derived.is_empty() \
 				else _descriptor_name(action.provider_id, action.ace_id, "action")
-			for line: String in ActionCodegen.generate_action(action).split("
+			for line: String in EventSheetActionCodegen.generate_action(action).split("
 "):
 				_register_row_line(found, line, name)
 		elif item is EventRow:
@@ -385,7 +385,7 @@ static func _collect_row_lines(items: Array, found: Dictionary, derived_facts: D
 					continue
 				var term: ACECondition = condition as ACECondition
 				var name: String = _descriptor_name(term.provider_id, term.ace_id, "condition")
-				var expression: String = ConditionCodegen.generate_condition(term)
+				var expression: String = EventSheetConditionCodegen.generate_condition(term)
 				_register_row_line(found, expression, name)
 				_register_row_line(found, "if %s:" % expression, name)
 				_register_row_line(found, "elif %s:" % expression, name)

@@ -29,7 +29,7 @@ static func run() -> bool:
 	# prelude. Only `##` was accepted, so that one line made the whole prelude read as real content
 	# and every such file opened showing a GDScript block instead of the collapsed strip.
 	all_passed = _check("a plain # file header above the prelude is scaffolding",
-		EventSheetViewport.is_scaffolding_code("# EventForge - Variable parser\n#\n# Parses declarations.\n@tool\nclass_name VariableParser\nextends RefCounted"), true) and all_passed
+		EventSheetViewport.is_scaffolding_code("# EventForge - Variable parser\n#\n# Parses declarations.\n@tool\nclass_name EventSheetVariableParser\nextends RefCounted"), true) and all_passed
 	all_passed = _check("a lone # note is scaffolding",
 		EventSheetViewport.is_scaffolding_code("# just a note"), true) and all_passed
 	# The other line a prelude really opens with: the import. Every pack recipe in this repo begins

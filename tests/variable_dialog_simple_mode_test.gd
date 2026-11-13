@@ -16,7 +16,7 @@ static func run() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(EventSheetResource.new())
-	var dialog: VariableDialog = dock._variable_dlg
+	var dialog: EventSheetVariableDialog = dock._variable_dlg
 	ok = _check("dock wires the provider", dialog.simple_mode_provider.is_valid(), true) and ok
 
 	# Exported variable, expert mode: "When it changes" is offered.

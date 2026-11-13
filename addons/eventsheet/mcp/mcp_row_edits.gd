@@ -145,7 +145,7 @@ static func rows_from_text(text: String) -> Array:
 	var rows: Array = []
 	if EventSheetSnippet.is_snippet_text(text):
 		return EventSheetSnippet.deserialize(text).get("rows", []) as Array
-	var converted: EventSheetResource = GDScriptImporter.new().import_external_source(text)
+	var converted: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(text)
 	if converted == null:
 		return rows
 	for row: Variant in converted.events:

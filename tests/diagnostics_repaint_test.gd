@@ -24,7 +24,7 @@ const REPEAT_DIAGNOSTICS_BUDGET_MS: float = 600.0
 
 static func run() -> bool:
 	var passed: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SAMPLE_PACK, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SAMPLE_PACK, false)
 	passed = SUPPORT.check(P, "the sample pack imports", sheet == null, false) and passed
 	if sheet == null:
 		return false

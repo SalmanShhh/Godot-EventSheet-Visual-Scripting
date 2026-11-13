@@ -183,7 +183,7 @@ static func _test_rename_edits_the_identifier() -> bool:
 
 
 static func _test_hidden_member_still_compiles() -> bool:
-	var output: String = str(SheetCompiler.new().compile(_sheet()).get("output", ""))
+	var output: String = str(EventSheetCompiler.new().compile(_sheet()).get("output", ""))
 	return SUPPORT.pins(TEST_NAME, [
 		["the hidden member is still declared", output.contains("var __every_tick: float = 0.0"), true],
 		["the ## line above a plain var is still written", output.contains("## How far open the gate is"), true],

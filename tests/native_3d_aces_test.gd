@@ -57,7 +57,7 @@ static func run() -> bool:
 	slide.codegen_template = "move_and_slide()"
 	event.actions.append(slide)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_3d.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_3d.gd").get("output", ""))
 	all_passed = _check("3D event compiles",
 		output.contains("if is_on_floor():") and output.contains("move_and_slide()"), true) and all_passed
 	var generated: GDScript = GDScript.new()

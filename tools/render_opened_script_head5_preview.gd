@@ -42,7 +42,7 @@ func _init() -> void:
 ## One opened script, with every head bar unfolded - a preview folds them closed, and the point of
 ## this image is the words inside them.
 func _show(stage: Dictionary) -> void:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(str(stage["path"]))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(stage["path"]))
 	sheet.read_only = true
 	if bool(stage["autoload"]):
 		sheet.autoload_mode = true

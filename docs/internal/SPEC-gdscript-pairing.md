@@ -38,7 +38,7 @@ the sheet is a bridge to GDScript, not a wall beside it.
 
 ### Provenance panel (sheet → code source map)
 
-`SheetCompiler.compile` returns a `source_map`: `{uid, start, end, kind}` entries with
+`EventSheetCompiler.compile` returns a `source_map`: `{uid, start, end, kind}` entries with
 1-based inclusive line ranges into the output, where `uid` is the source resource's
 instance id and `kind` ∈ `event | raw | variable | function`. The dock's **GDScript**
 toolbar toggle opens a read-only side panel (HSplitContainer, built lazily) showing the
@@ -60,7 +60,7 @@ combo - Construct-style autocomplete the behavior toggles purely from its own co
 text is always allowed, the ▾/Down-arrow popup filters the suggestions by what's typed).
 Codegen templates are **baked onto created
 conditions/actions** (`ACECondition`/`ACEAction.codegen_template`) and honored by
-`ConditionCodegen`/`ActionCodegen`, so addon ACEs genuinely compile (previously custom
+`EventSheetConditionCodegen`/`EventSheetActionCodegen`, so addon ACEs genuinely compile (previously custom
 ACEs had no codegen path). See `res://eventsheet_addons/demo_health_addon.gd` - the
 shipped sample addon doubles as the documentation-by-example.
 
@@ -353,13 +353,13 @@ shorter than 4 characters are not expanded.
 
 ### GDScript-backed sheets (open any .gd as a sheet, Tier 1)
 
-Any GDScript file opens as a sheet via the Open dialog (`GDScriptImporter.import_external`)
+Any GDScript file opens as a sheet via the Open dialog (`EventSheetGDScriptImporter.import_external`)
 under **the lossless rule**: every line lands in exactly one ordered row. Declarations lift
 to first-class variable rows **only** when canonical re-emission reproduces the source line
 byte-for-byte (verify-lift); each top-level function becomes its own GDScript block row;
 everything else is preserved verbatim. The `.gd` stays the single source of truth
 (`EventSheetResource.external_source_path`): Save compiles back order-preservingly with no
-generated header and no synthesized `extends` (`SheetCompiler._compile_external`), so an
+generated header and no synthesized `extends` (`EventSheetCompiler._compile_external`), so an
 **untouched file round-trips byte-identically** - the golden contract in
 `tests/external_sheet_test.gd`. Added events append as standard trigger functions; Save As
 `.tres` converts to a normal sheet. Provenance, lint, and completion all work on external
@@ -397,7 +397,7 @@ yet round-trip back into per-include sheets.
 
 ### Importer round-trip (structural)
 
-`GDScriptImporter` parses generated or handwritten GDScript back into a sheet: `extends`
+`EventSheetGDScriptImporter` parses generated or handwritten GDScript back into a sheet: `extends`
 → host class, top-level `var`/`@export var` → variables (typed defaults), `func`
 signatures → `EventFunction`s with bodies preserved as `RawCodeRow`. Compiling the
 imported sheet reproduces the structure. ACE-level body parsing SHIPPED: the lifter

@@ -47,7 +47,7 @@ static func run() -> bool:
 		action.params = params
 		event.actions.append(action)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://overlap_query_test.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://overlap_query_test.gd").get("output", ""))
 	ok = _check("the compiled sheet queries all three shapes",
 		output.contains("intersect_point") and output.count("intersect_shape") == 2, true) and ok
 	var parse: GDScript = GDScript.new()

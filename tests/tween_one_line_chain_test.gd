@@ -48,7 +48,7 @@ static func run() -> bool:
 ## Every action-lane row of the sheet, joined with " | " - the "+ Add action" affordance dropped,
 ## since it is the canvas talking rather than the file.
 static func _actions(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
@@ -73,9 +73,9 @@ static func _actions(source: String) -> String:
 
 
 static func _roundtrip(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://eventforge_tween_one_line_chain.gd"
-	return str(SheetCompiler.compile(sheet, "user://eventforge_tween_one_line_chain.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_tween_one_line_chain.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

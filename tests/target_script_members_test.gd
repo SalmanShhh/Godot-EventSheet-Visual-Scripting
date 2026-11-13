@@ -43,7 +43,7 @@ static func run() -> bool:
 		PackedStringArray()) and ok
 
 	# ── Which script a row's target names ───────────────────────────────────────────────────
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(ROOM)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(ROOM)
 	ok = _check("`self` is the sheet's own script",
 		str(EventSheetScriptMembers.target_of(sheet, "self").get("script_path", "")), ROOM) and ok
 	ok = _check("a $node of the scene is the script that node wears",

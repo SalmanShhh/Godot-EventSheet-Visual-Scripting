@@ -254,7 +254,7 @@ func _ace_template(ace_id: String, uid: String = "") -> String:
 ## bytes. Function bodies take raw code rather than rows (a function is a body, not an event lane),
 ## and `_compile`'s reverse lift turns the result back into rows where it re-emits byte for byte.
 func _ace_line(ace_id: String, uid: String, params: Dictionary) -> String:
-	return ActionCodegen._apply_template(_ace_template(ace_id, uid), params)
+	return EventSheetActionCodegen._apply_template(_ace_template(ace_id, uid), params)
 
 
 func _condition(provider: String, ace_id: String, template: String, params: Dictionary,
@@ -330,7 +330,7 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 	# fresh checkout (or a brand-new showcase) regenerates without manual mkdir.
 	DirAccess.make_dir_recursive_absolute(gd_path.get_base_dir())
 	_written[gd_path] = true
-	var result: Dictionary = SheetCompiler.compile(sheet, gd_path, true)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, gd_path, true)
 	var success: bool = bool(result.get("success", false))
 	print("[build_examples] %s compile=%s warnings=%s errors=%s" % [
 		gd_path.get_file(), str(success), str(result.get("warnings", [])), str(result.get("errors", []))])

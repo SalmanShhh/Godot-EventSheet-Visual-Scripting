@@ -96,7 +96,7 @@ func _condition(ace_id: String, params: Dictionary) -> ACECondition:
 
 ## One verb's shipped template with these values baked in - what the row would hold after the picker.
 func _template(ace_id: String, params: Dictionary) -> String:
-	return ActionCodegen._apply_template(_descriptor_template(ace_id), params)
+	return EventSheetActionCodegen._apply_template(_descriptor_template(ace_id), params)
 
 
 func _descriptor_template(ace_id: String) -> String:

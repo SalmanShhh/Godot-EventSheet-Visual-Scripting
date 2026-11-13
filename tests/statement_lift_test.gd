@@ -28,10 +28,10 @@ static func run() -> bool:
 	raw.code = "$Hud.custom_value = 7\n$Hud.refresh_now(true)"
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://sb_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://sb_source.gd").get("output", ""))
 
 	# Open the OUTPUT as a sheet: the two statements should lift to rows, not stay a code cell.
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var ace_ids: Array = []
 	var inflow_blocks: int = 0
 	for row: Variant in imported.events:
@@ -47,7 +47,7 @@ static func run() -> bool:
 
 	# The contract: recompiling reproduces the source byte-for-byte.
 	imported.external_source_path = "user://sb_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://sb_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://sb_rt.gd").get("output", ""))
 	ok = _check("statement lift round-trips byte-identically", roundtrip == source, true) and ok
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
@@ -64,8 +64,8 @@ static func run() -> bool:
 	raw2.code = "$Hud.custom_value += 7\n$Hud.custom_value -= 2\n$Hud.zoom_factor *= 3\n$Hud.zoom_factor /= 4\ncombo_index %= 5"
 	event2.actions.append(raw2)
 	authored2.events.append(event2)
-	var source2: String = str(SheetCompiler.compile(authored2, "user://sb_source2.gd").get("output", ""))
-	var imported2: EventSheetResource = GDScriptImporter.new().import_external_source(source2)
+	var source2: String = str(EventSheetCompiler.compile(authored2, "user://sb_source2.gd").get("output", ""))
+	var imported2: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source2)
 	var ace_ids2: Array = []
 	var inflow2: int = 0
 	for row2: Variant in imported2.events:
@@ -82,7 +82,7 @@ static func run() -> bool:
 	ok = _check("bare %= lifts to ModuloVar", ace_ids2.has("ModuloVar"), true) and ok
 	ok = _check("no in-flow code cell remains (compound)", inflow2, 0) and ok
 	imported2.external_source_path = "user://sb_rt2.gd"
-	var roundtrip2: String = str(SheetCompiler.compile(imported2, "user://sb_rt2.gd").get("output", ""))
+	var roundtrip2: String = str(EventSheetCompiler.compile(imported2, "user://sb_rt2.gd").get("output", ""))
 	ok = _check("compound-assign lift round-trips byte-identically", roundtrip2 == source2, true) and ok
 	if roundtrip2 != source2:
 		print("  --- source2 ---\n%s\n  --- roundtrip2 ---\n%s" % [source2, roundtrip2])
@@ -99,8 +99,8 @@ static func run() -> bool:
 	raw3.code = "velocity += Vector2(1, 0)"
 	event3.actions.append(raw3)
 	authored3.events.append(event3)
-	var source3: String = str(SheetCompiler.compile(authored3, "user://sb_source3.gd").get("output", ""))
-	var imported3: EventSheetResource = GDScriptImporter.new().import_external_source(source3)
+	var source3: String = str(EventSheetCompiler.compile(authored3, "user://sb_source3.gd").get("output", ""))
+	var imported3: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source3)
 	var ace_ids3: Array = []
 	for row3: Variant in imported3.events:
 		if row3 is EventRow:
@@ -122,8 +122,8 @@ static func run() -> bool:
 	raw4.code = "$Label.text = \"score += 1\"\nmsg = \"combo += 1\""
 	event4.actions.append(raw4)
 	authored4.events.append(event4)
-	var source4: String = str(SheetCompiler.compile(authored4, "user://sb_source4.gd").get("output", ""))
-	var imported4: EventSheetResource = GDScriptImporter.new().import_external_source(source4)
+	var source4: String = str(EventSheetCompiler.compile(authored4, "user://sb_source4.gd").get("output", ""))
+	var imported4: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source4)
 	var ace_ids4: Array = []
 	for row4: Variant in imported4.events:
 		if row4 is EventRow:
@@ -133,7 +133,7 @@ static func run() -> bool:
 	ok = _check("in-string += does not shadow Set Property", ace_ids4.has("SetProperty") and not ace_ids4.has("AddToProperty"), true) and ok
 	ok = _check("in-string += does not shadow Set Variable", ace_ids4.has("SetVar") and not ace_ids4.has("AddVar"), true) and ok
 	imported4.external_source_path = "user://sb_rt4.gd"
-	var roundtrip4: String = str(SheetCompiler.compile(imported4, "user://sb_rt4.gd").get("output", ""))
+	var roundtrip4: String = str(EventSheetCompiler.compile(imported4, "user://sb_rt4.gd").get("output", ""))
 	ok = _check("shadow-guard case round-trips byte-identically", roundtrip4 == source4, true) and ok
 
 	# Local declarations: the three `var` forms each lift to their own row, distinctly. The inferred `:=`
@@ -148,8 +148,8 @@ static func run() -> bool:
 	raw5.code = "var heading := position * 2.0\nvar plain = 5\nvar typed: int = 7"
 	event5.actions.append(raw5)
 	authored5.events.append(event5)
-	var source5: String = str(SheetCompiler.compile(authored5, "user://sb_source5.gd").get("output", ""))
-	var imported5: EventSheetResource = GDScriptImporter.new().import_external_source(source5)
+	var source5: String = str(EventSheetCompiler.compile(authored5, "user://sb_source5.gd").get("output", ""))
+	var imported5: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source5)
 	var ace_ids5: Array = []
 	var inflow5: int = 0
 	for row5: Variant in imported5.events:
@@ -164,7 +164,7 @@ static func run() -> bool:
 	ok = _check("typed : T = still lifts to SetLocalVarTyped", ace_ids5.has("SetLocalVarTyped"), true) and ok
 	ok = _check("no in-flow block remains (all three var forms lift)", inflow5, 0) and ok
 	imported5.external_source_path = "user://sb_rt5.gd"
-	var roundtrip5: String = str(SheetCompiler.compile(imported5, "user://sb_rt5.gd").get("output", ""))
+	var roundtrip5: String = str(EventSheetCompiler.compile(imported5, "user://sb_rt5.gd").get("output", ""))
 	ok = _check("inferred-local lift round-trips byte-identically", roundtrip5 == source5, true) and ok
 
 	# ── A comment run whose markers differ. A paragraph of `# ` notes broken by the bare `#` that
@@ -173,7 +173,7 @@ static func run() -> bool:
 	# The run splits at the change instead, each part keeping its own marker, so the bytes are the
 	# same and the notes are rows. ──
 	var noted: String = "extends Node\n\n\nfunc explain():\n\t# the first paragraph\n\t#\n\t# the second one\n\tpass\n"
-	var noted_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(noted)
+	var noted_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(noted)
 	var noted_function: EventFunction = null
 	for entry: Variant in noted_sheet.functions:
 		if entry is EventFunction:
@@ -189,7 +189,7 @@ static func run() -> bool:
 		["the first paragraph", "", "the second one"]) and ok
 	noted_sheet.external_source_path = "user://sb_noted.gd"
 	ok = _check("and the broken run round-trips byte-identically",
-		str(SheetCompiler.compile(noted_sheet, "user://sb_noted.gd").get("output", "")), noted) and ok
+		str(EventSheetCompiler.compile(noted_sheet, "user://sb_noted.gd").get("output", "")), noted) and ok
 
 	return ok
 

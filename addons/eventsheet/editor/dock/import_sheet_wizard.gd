@@ -339,7 +339,7 @@ func _on_save_path_chosen(path: String) -> void:
 func save_as(path: String) -> String:
 	if _imported.is_empty():
 		return "Nothing has been imported yet."
-	var compiled: Dictionary = SheetCompiler.compile(_imported["sheet"] as EventSheetResource, path, true)
+	var compiled: Dictionary = EventSheetCompiler.compile(_imported["sheet"] as EventSheetResource, path, true)
 	if not bool(compiled["success"]):
 		return "That sheet did not compile: %s" % ", ".join(compiled["errors"] as Array)
 	if _dialog != null:

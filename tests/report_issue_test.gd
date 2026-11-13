@@ -15,7 +15,7 @@ static func run() -> bool:
 	var body: String = EventSheetDock.issue_report_body()
 
 	# 1. The three facts a maintainer needs to reproduce anything.
-	all_passed = _check("names the plugin build", body.contains("- EventSheets: %s" % SheetCompiler.VERSION), true) and all_passed
+	all_passed = _check("names the plugin build", body.contains("- EventSheets: %s" % EventSheetCompiler.VERSION), true) and all_passed
 	all_passed = _check("names the Godot build",
 		body.contains("- Godot: %s" % str(Engine.get_version_info().get("string", "unknown"))), true) and all_passed
 	all_passed = _check("names the platform", body.contains("- Platform: %s" % OS.get_name()), true) and all_passed

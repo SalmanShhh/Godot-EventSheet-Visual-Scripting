@@ -24,7 +24,7 @@ static func run() -> bool:
 	sheet.functions.append(_fn("aim_point", TYPE_VECTOR2))
 	sheet.functions.append(_fn("anything", TYPE_MAX))
 
-	var output: String = str(SheetCompiler.compile(sheet, "user://_stub_test_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://_stub_test_out.gd").get("output", ""))
 	ok = _check("void keeps pass", output.contains("func do_thing() -> void:\n\tpass"), true) and ok
 	ok = _check("bool returns false", output.contains("func is_dead() -> bool:\n\treturn false"), true) and ok
 	ok = _check("int returns 0", output.contains("func count_hits() -> int:\n\treturn 0"), true) and ok

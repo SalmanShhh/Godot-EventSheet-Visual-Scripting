@@ -817,7 +817,7 @@ static func _emit(ace_id: String, params: Dictionary) -> String:
 	var descriptor: ACEDescriptor = _shipped().get(ace_id, null)
 	if descriptor == null:
 		return "<no such ACE: %s>" % ace_id
-	return ActionCodegen._apply_template(descriptor.codegen_template, params)
+	return EventSheetActionCodegen._apply_template(descriptor.codegen_template, params)
 
 
 ## Compiles a throwaway host around emitted code and runs it, returning the live instance so a test

@@ -91,7 +91,7 @@ static func _group_show_if() -> bool:
 	# refresh setter) reopens with the scope recovered as an editable attribute rather than a stray
 	# comment block, and re-emits byte for byte. A comment with no function behind it stays the comment
 	# it is, or saving would write a function the file never had.
-	var written: String = "extends Node\n\n@export var dashed: bool = false:\n\tset(value):\n\t\tdashed = value\n\t\tnotify_property_list_changed()\n# @inspector_show_if dashed\n@export_group(\"Dashes\")\n@export var dash_count: int = 16\n\n%s\nfunc _validate_property(property: Dictionary) -> void:\n\tif str(property.name) == \"dash_count\" and not bool(dashed):\n\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR\n" % SheetCompiler.INSPECTOR_CONDITIONS_DOC
+	var written: String = "extends Node\n\n@export var dashed: bool = false:\n\tset(value):\n\t\tdashed = value\n\t\tnotify_property_list_changed()\n# @inspector_show_if dashed\n@export_group(\"Dashes\")\n@export var dash_count: int = 16\n\n%s\nfunc _validate_property(property: Dictionary) -> void:\n\tif str(property.name) == \"dash_count\" and not bool(dashed):\n\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR\n" % EventSheetCompiler.INSPECTOR_CONDITIONS_DOC
 	var lifted: EventSheetResource = SUPPORT.reopen(written)
 	var lifted_count: LocalVariable = _find(lifted, "dash_count")
 	ok = SUPPORT.pins(P, [
@@ -288,7 +288,7 @@ static func _emit_for(type_name: String, default_value: Variant, attributes: Dic
 	local_var.default_value = default_value
 	local_var.exported = true
 	local_var.attributes = attributes
-	return SheetCompiler._emit_tree_variable_line(local_var)
+	return EventSheetCompiler._emit_tree_variable_line(local_var)
 
 
 static func _find(sheet: EventSheetResource, var_name: String) -> LocalVariable:

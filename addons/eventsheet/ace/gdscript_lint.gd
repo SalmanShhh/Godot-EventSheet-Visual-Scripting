@@ -142,7 +142,7 @@ static func _collect_scope_names(entries: Variant, names: Dictionary, walked: Di
 			for parameter: String in event_row.trigger_args.split(","):
 				_add_scope_name(parameter, names)
 			if not event_row.trigger_id.is_empty():
-				for parameter: String in str(TriggerResolver.resolve_trigger(event_row).get("args", "")).split(","):
+				for parameter: String in str(EventSheetTriggerResolver.resolve_trigger(event_row).get("args", "")).split(","):
 					_add_scope_name(parameter, names)
 			_collect_scope_names(event_row.sub_events, names, walked)
 			continue
@@ -261,11 +261,11 @@ static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetRes
 	else:
 		lines.append("extends %s" % host_class)
 	for enum_row in _sheet_enums(sheet):
-		lines.append(SheetCompiler._emit_enum_line(enum_row))
+		lines.append(EventSheetCompiler._emit_enum_line(enum_row))
 	if sheet != null:
 		for entry in sheet.events:
 			if entry is SignalRow and (entry as SignalRow).enabled:
-				lines.append(SheetCompiler._emit_signal_line(entry))
+				lines.append(EventSheetCompiler._emit_signal_line(entry))
 	if typed:
 		lines.append_array(typed_variable_lines(sheet))
 		lines.append_array(typed_function_lines(sheet))
@@ -646,7 +646,7 @@ static func typed_function_lines(sheet: EventSheetResource) -> PackedStringArray
 			continue
 		seen[event_function.function_name] = true
 		if _function_is_spellable(event_function, enum_names, classes):
-			lines.append(SheetCompiler._function_header_line(event_function))
+			lines.append(EventSheetCompiler._function_header_line(event_function))
 			lines.append(_stub_body(event_function, enum_names))
 		else:
 			lines.append("func %s(_a = null, _b = null, _c = null, _d = null, _e = null, _f = null, _g = null, _h = null) -> Variant: return null" % event_function.function_name)
@@ -660,7 +660,7 @@ static func typed_function_lines(sheet: EventSheetResource) -> PackedStringArray
 static func _stub_body(event_function: EventFunction, enum_names: PackedStringArray) -> String:
 	if event_function.no_return_annotation:
 		return "\tpass"
-	var type_name: String = SheetCompiler._function_return_type_name(event_function).strip_edges()
+	var type_name: String = EventSheetCompiler._function_return_type_name(event_function).strip_edges()
 	if type_name == "void":
 		return "\tpass"
 	if type_name.begins_with("Array["):

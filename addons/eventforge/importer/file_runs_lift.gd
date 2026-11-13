@@ -161,7 +161,7 @@ static func _read_row(head: String, value: String, consumed: int, run: String) -
 static func _read_shape(answer: String) -> String:
 	var key: String = "read:%s" % answer
 	if not _shapes.has(key):
-		_shapes[key] = "%s = %s" % [HEAD_MARK, ActionCodegen._apply_template(
+		_shapes[key] = "%s = %s" % [HEAD_MARK, EventSheetActionCodegen._apply_template(
 			TableACEs.file_table_expression(),
 			{"path": PATH_MARK, "separator": SEPARATOR_MARK, "headers": answer})]
 	return str(_shapes[key])
@@ -196,7 +196,7 @@ static func _match_write(lines: PackedStringArray, index: int, depth: int) -> Di
 static func _write_shape(answer: String) -> String:
 	var key: String = "write:%s" % answer
 	if not _shapes.has(key):
-		_shapes[key] = ActionCodegen._apply_template(TableACEs.write_table_template(),
+		_shapes[key] = EventSheetActionCodegen._apply_template(TableACEs.write_table_template(),
 			{"uid": UID_MARK, "path": PATH_MARK, "table": TABLE_MARK,
 				"separator": SEPARATOR_MARK, "headers": answer})
 	return str(_shapes[key])
@@ -245,7 +245,7 @@ static func _append_shape(head: String, call: String) -> String:
 		var template: String = _append_template()
 		if template.is_empty():
 			return ""
-		_shapes[key] = ActionCodegen._apply_template(template,
+		_shapes[key] = EventSheetActionCodegen._apply_template(template,
 			{"path": PATH_MARK, "text": TEXT_MARK}).replace(APPEND_HEAD, head).replace(
 			APPEND_LOCAL, LOCAL_MARK).replace(".store_string(", ".%s(" % call)
 	return str(_shapes[key])

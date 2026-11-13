@@ -126,7 +126,7 @@ static func _open_and_read() -> PackedStringArray:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	return _render(GDScriptImporter.new().import_external(SOURCE_PATH))
+	return _render(EventSheetGDScriptImporter.new().import_external(SOURCE_PATH))
 
 
 ## The readings of one sheet, straight off the canvas's own spans.
@@ -181,8 +181,8 @@ static func _append_readings(readings: PackedStringArray, row_data: EventRowData
 	
 
 static func _round_trip() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 
@@ -228,17 +228,17 @@ static func _local_variable_round_trip() -> bool:
 	sheet.events.append(event_row)
 	ok = _check("authored local reads as a declaration row",
 		_render(sheet).has("remaining ▸ float") and _render(sheet).has("= 1"), true) and ok
-	var compiled: String = str(SheetCompiler.compile(sheet, "user://eventforge_local_var.gd").get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_local_var.gd").get("output", ""))
 	ok = _check("authored local compiles to the plain var line",
 		compiled.contains("\tvar remaining: float = 1.0"), true) and ok
 	var handle: FileAccess = FileAccess.open("user://eventforge_local_var.gd", FileAccess.WRITE)
 	handle.store_string(compiled)
 	handle.close()
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external("user://eventforge_local_var.gd")
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external("user://eventforge_local_var.gd")
 	ok = _check("reopening gives the same declaration row back",
 		_render(reopened).has("remaining ▸ float") and _render(reopened).has("= 1"), true) and ok
 	ok = _check("and reopening it saves byte-identically",
-		str(SheetCompiler.compile(reopened, "user://eventforge_local_var.gd").get("output", "")), compiled) and ok
+		str(EventSheetCompiler.compile(reopened, "user://eventforge_local_var.gd").get("output", "")), compiled) and ok
 	return ok
 
 

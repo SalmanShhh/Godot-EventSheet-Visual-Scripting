@@ -21,7 +21,7 @@ extends RefCounted
 #     right after the copy/paste block on the dock (they stay put),
 #   • `_insert_row_below_selection` (a dock delegate into ace_apply), `_assign_fresh_event_uids`,
 #     `_resource_contains_descendant`, `_get_selected_rows_from_context`.
-# Globals (EventSheetSnippet, GDScriptImporter, DisplayServer) are unchanged.
+# Globals (EventSheetSnippet, EventSheetGDScriptImporter, DisplayServer) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
 # reached from outside this helper - menu_bar (`_dock._on_copy_requested` / `_dock._on_paste_requested`),
@@ -151,7 +151,7 @@ func _append_resource_text(resource_entry: Resource, lines: PackedStringArray, d
 		# real pasteable GDScript that re-imports losslessly - a plain `var` would drop onready/const/@export.
 		# A declaration can be more than one line (a doc comment above it, a Static local's marker), so each
 		# line takes the indent - one indented head over a flush tail would paste as broken code.
-		for declaration_line: String in SheetCompiler._emit_tree_variable_line(resource_entry as LocalVariable).split("\n"):
+		for declaration_line: String in EventSheetCompiler._emit_tree_variable_line(resource_entry as LocalVariable).split("\n"):
 			lines.append(indent + declaration_line)
 	else:
 		lines.append(indent + resource_entry.get_class())
@@ -412,7 +412,7 @@ func _paste_gdscript_text(text: String) -> bool:
 		return false
 	if not _dock._ensure_sheet_for_editing():
 		return false
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(text)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(text)
 	if imported.events.is_empty():
 		return false
 	var rows: Array = imported.events.duplicate()

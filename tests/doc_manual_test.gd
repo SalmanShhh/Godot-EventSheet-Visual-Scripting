@@ -348,7 +348,7 @@ static func _test_footer_and_marks() -> bool:
 		EventSheetDocDock.manual_footer_text("1.2.3"),
 		"Manual v1.2.3 · shipped with the plugin · offline") and all_passed
 	all_passed = _check("and it is the installed version it names",
-		EventSheetDocDock.manual_footer_text(EventSheets.docs_version()).contains(SheetCompiler.VERSION),
+		EventSheetDocDock.manual_footer_text(EventSheets.docs_version()).contains(EventSheetCompiler.VERSION),
 		true) and all_passed
 	all_passed = _check("a mark explains itself",
 		EventSheetDocReference.mark_help("⟳").begins_with("Runs every frame"), true) and all_passed

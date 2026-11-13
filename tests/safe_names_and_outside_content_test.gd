@@ -123,7 +123,7 @@ static func _runs_on_disk() -> bool:
 	event.actions.append(_action("WriteTextFile", by_id, {
 		"path": free_path, "text": "\"the second one\""}, "w1"))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, COMPILE_OUTPUTS[0]).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, COMPILE_OUTPUTS[0]).get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	var reloaded: bool = script.reload() == OK
@@ -200,7 +200,7 @@ static func _round_trips() -> bool:
 
 	# The action is also READ back as the row it means, with the author's own word in its slot - the
 	# statement forms lift through the reverse index with no table entry of their own.
-	var lifted: Dictionary = _first_action(GDScriptImporter.new().import_external_source(
+	var lifted: Dictionary = _first_action(EventSheetGDScriptImporter.new().import_external_source(
 		str(sources["showing the file"])))
 	ok = _check("the hand-written desktop call reads back as the row it means",
 		str(lifted.get("ace_id", "")), "ShowInFileManager") and ok
@@ -431,9 +431,9 @@ static func _action(ace_id: String, by_id: Dictionary, params: Dictionary, uid: 
 
 ## Open a source as a sheet and emit it again untouched.
 static func _recompile(source: String) -> String:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = COMPILE_OUTPUTS[1]
-	return str(SheetCompiler.compile(imported, COMPILE_OUTPUTS[1]).get("output", ""))
+	return str(EventSheetCompiler.compile(imported, COMPILE_OUTPUTS[1]).get("output", ""))
 
 
 static func _joined(lines: PackedStringArray) -> String:

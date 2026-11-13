@@ -3,9 +3,9 @@
 # Fifteen verbs across four jobs: a folder of .tres as content, independent copies (the shared-asset
 # trap), pouring values between objects, and migrating a record written by an older build. Each verb
 # is proven TWICE:
-#   1. EMISSION - a real row is compiled through SheetCompiler and the exact emitted GDScript pinned,
+#   1. EMISSION - a real row is compiled through EventSheetCompiler and the exact emitted GDScript pinned,
 #      so a template edit that changes what users ship fails here.
-#   2. RUNTIME - the SHIPPED template (substituted through the real ActionCodegen, never a re-typed
+#   2. RUNTIME - the SHIPPED template (substituted through the real EventSheetActionCodegen, never a re-typed
 #      copy) is assembled into a GDScript, reload()ed, and driven for the behaviour the picker help
 #      promises, including the edge cases: a missing folder, a missing file, a non-resource, a name
 #      the other object does not have, a name NEITHER has, a freed object, a field left at 0, a
@@ -651,7 +651,7 @@ static func _fill(ace_id: String, values: Dictionary, uid: String = "t") -> Stri
 	var params: Dictionary = {"uid": uid}
 	for parameter: ACEParam in descriptor.params:
 		params[parameter.id] = str(values.get(parameter.id, parameter.default_value))
-	return ActionCodegen._apply_template(str(descriptor.codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(descriptor.codegen_template), params)
 
 
 static func _action(ace_id: String, values: Dictionary, uid: String = "t") -> ACEAction:
@@ -684,7 +684,7 @@ static func _row() -> EventRow:
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 ## Indents every line of a (possibly multi-line) statement block, so an action template drops into a

@@ -77,7 +77,7 @@ func _staged_sheet() -> EventSheetResource:
 	if handle != null:
 		handle.store_string(STAGED_SOURCE)
 		handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(STAGED_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(STAGED_PATH)
 	if sheet == null:
 		return null
 	var style := EventSheetEditorStyle.new()
@@ -127,5 +127,5 @@ class _PreviewHost:
 	extends Node
 
 	func get_current_sheet() -> EventSheetResource:
-		return GDScriptImporter.new().import_external(
+		return EventSheetGDScriptImporter.new().import_external(
 			"res://tests/fixtures/interop_corpus/room.gd")

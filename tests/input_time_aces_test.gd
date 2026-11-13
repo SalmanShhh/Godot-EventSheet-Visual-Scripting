@@ -63,7 +63,7 @@ static func run() -> bool:
 	quit_action.codegen_template = "queue_free()"
 	input_event.actions.append(quit_action)
 	sheet.events.append(input_event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_input.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_input.gd").get("output", ""))
 	all_passed = _check("input condition compiles with a StringName literal (hidden optimization)",
 		output.contains("if Input.is_action_just_pressed(&\"ui_accept\"):"), true) and all_passed
 	all_passed = _check("wait compiles to await", output.contains("await get_tree().create_timer(0.5).timeout"), true) and all_passed
@@ -75,14 +75,14 @@ static func run() -> bool:
 
 	# Verify-lift: an _input trigger function round-trips back into an event.
 	var external_source: String = "extends Node\n\nfunc _input(event: InputEvent) -> void:\n\tqueue_free()\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	var lifted: EventRow = null
 	for row in imported.events:
 		if row is EventRow:
 			lifted = row
 	all_passed = _check("_input lifts to an OnInput event", lifted != null and lifted.trigger_id == "OnInput", true) and all_passed
 	imported.external_source_path = "user://eventsheets_input_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_input_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_input_rt.gd").get("output", ""))
 	all_passed = _check("_input round-trips byte-identically", roundtrip == external_source, true) and all_passed
 
 	return all_passed

@@ -594,17 +594,17 @@ assert(EventSheetBlockRegistry.get_kind("team.todo") != null)
 
 # 2. Round-trip: emit -> import -> byte-identical recompile.
 var source := "extends Node\n\n# TODO(sam): fix the jump arc\n"
-var sheet := GDScriptImporter.new().import_external_source(source)
+var sheet := EventSheetGDScriptImporter.new().import_external_source(source)
 sheet.external_source_path = "user://todo_test.gd"
 var lifted_kinds: Array = []
 for entry in sheet.events:
 	if entry is CustomBlockRow:
 		lifted_kinds.append(entry.kind_id)
 assert(lifted_kinds == ["team.todo"])
-assert(str(SheetCompiler.compile(sheet, "user://todo_test.gd").get("output", "")) == source)
+assert(str(EventSheetCompiler.compile(sheet, "user://todo_test.gd").get("output", "")) == source)
 
 # 3. The near-miss stays raw (the byte gate working).
-var hostile := GDScriptImporter.new().import_external_source("extends Node\n\n# todo: lowercase\n")
+var hostile := EventSheetGDScriptImporter.new().import_external_source("extends Node\n\n# todo: lowercase\n")
 for entry in hostile.events:
 	assert(not (entry is CustomBlockRow))
 ```

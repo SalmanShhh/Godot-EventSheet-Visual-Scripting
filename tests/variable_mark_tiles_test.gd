@@ -85,7 +85,7 @@ static func _window_pins() -> Array:
 		if entry is LocalVariable:
 			members[(entry as LocalVariable).name] = entry
 	var host: Node = Node.new()
-	var dialog: VariableDialog = VARIABLE_DIALOG.new()
+	var dialog: EventSheetVariableDialog = VARIABLE_DIALOG.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> EventSheetResource: return sheet)
 	var light: EventSheetEventStyle = EventSheetEditorThemeDeriver.native_style(Color("#e6e6e6")).get_event_style()
@@ -99,10 +99,10 @@ static func _window_pins() -> Array:
 		dialog._prefix_edit.placeholder_text, dialog._subgroup_edit.placeholder_text]
 	dialog._select_look("slider")
 	dialog._refresh_reading()
-	var slider_tile: String = str(dialog.option_badges().get(VariableDialog.LOOK_OPTION, ""))
+	var slider_tile: String = str(dialog.option_badges().get(EventSheetVariableDialog.LOOK_OPTION, ""))
 	dialog._select_look("storage")
 	dialog._refresh_reading()
-	var storage_tile: String = str(dialog.option_badges().get(VariableDialog.LOOK_OPTION, ""))
+	var storage_tile: String = str(dialog.option_badges().get(EventSheetVariableDialog.LOOK_OPTION, ""))
 	var eye_tile: Control = dialog._mark_tiles["Editable in the Inspector"]
 	var eye_inks: Array = eye_tile.call("inks")
 	var eye_card_title: String = str((eye_tile.call("card") as Dictionary).get("title", ""))
@@ -117,7 +117,7 @@ static func _window_pins() -> Array:
 	var dark: EventSheetEventStyle = EventSheetEditorThemeDeriver.native_style(
 		EventSheetEditorThemeDeriver.NATIVE_DARK_REFERENCE_BASE).get_event_style()
 	return [
-		["each option and the tile it carries", VariableDialog.OPTION_BADGES, {
+		["each option and the tile it carries", EventSheetVariableDialog.OPTION_BADGES, {
 			"Editable in the Inspector": "inspector", "Description": "tooltip", "On ready": "on_ready",
 			"Show if": "show_if", "Setter body": "on_change"}],
 		["the window opens with every option's tile, and a plain look puts none on the row", opened, {
@@ -137,7 +137,7 @@ static func _window_pins() -> Array:
 		["a member after the group's end sits in none", after_end, ""],
 		["an empty section field says none, never a made-up name", placeholders, ["none", "none", "none", "none"]],
 		["the walk names the sections a member sits in",
-			VariableDialog.inherited_sections(sheet.events, members.get("bullet_count") as LocalVariable),
+			EventSheetVariableDialog.inherited_sections(sheet.events, members.get("bullet_count") as LocalVariable),
 			{"category": "", "group": "Bullet", "group_prefix": "bullet", "subgroup": ""}],
 		["the three new tiles' cards", [NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_ON_CHANGE).get("title"),
 			NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_ON_READY).get("title"),
@@ -155,7 +155,7 @@ static func _window_pins() -> Array:
 
 
 ## Opens the window on `member` the way a double-click on its row does.
-static func _open_member(dialog: VariableDialog, member: LocalVariable) -> void:
+static func _open_member(dialog: EventSheetVariableDialog, member: LocalVariable) -> void:
 	if member == null:
 		return
 	dialog.open_for_edit("tree", {"editing": true, "variable_resource": member,
@@ -206,7 +206,7 @@ static func _is_grey(colour: Color) -> bool:
 
 
 static func _row_facts(path: String, variable_name: String, style: EventSheetEditorStyle) -> Dictionary:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.editor_style = style
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())

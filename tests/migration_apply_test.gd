@@ -157,7 +157,7 @@ static func _sheet(rows: Array) -> EventSheetResource:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
 
 
 # ── 1. asking costs the file nothing ──────────────────────────────────────────────

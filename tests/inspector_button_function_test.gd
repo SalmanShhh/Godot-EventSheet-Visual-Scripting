@@ -36,7 +36,7 @@ static func run() -> bool:
 	body.code = "print(\"baked\")"
 	button_function.events.append(body)
 	sheet.functions.append(button_function)
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://btn_fn_test.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://btn_fn_test.gd")
 	ok = _check(ok, bool(compiled.get("success", false)), "the button sheet compiles")
 	var source: String = str(compiled.get("output", ""))
 	ok = _check(ok, source.contains("@export_tool_button(\"Re-bake\") var _btn_rebake: Callable = rebake"), "output wires the Inspector button to the function")

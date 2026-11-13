@@ -1,7 +1,7 @@
 # EventForge - behaviour-building physics + input + typed-local vocabulary.
 # Pins the codegen templates of the new Movement ACEs, that they
 # host-target inside a behaviour (and stay bare on a normal sheet), plus the input-axis consumer
-# and the typed local. Compiles each ACE through ActionCodegen, which is what the sheet compiler
+# and the typed local. Compiles each ACE through EventSheetActionCodegen, which is what the sheet compiler
 # calls - so a wrong template or a missing param surfaces here before it reaches generated code.
 @tool
 class_name PhysicsAcesTest
@@ -54,7 +54,7 @@ static func _emit(ace_id: String, params: Dictionary, host: String, expected: St
 	action.ace_id = ace_id
 	action.enabled = true
 	action.params = params
-	return _check(ace_id, ActionCodegen.generate_action(action, "", host), expected)
+	return _check(ace_id, EventSheetActionCodegen.generate_action(action, "", host), expected)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

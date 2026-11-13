@@ -36,9 +36,9 @@ static func run() -> bool:
 		child_source.contains("func _on_child_entered_tree(_node: Node) -> void:"), true) and all_passed
 
 	# Round-trip: the generated connection lifts back to the NAMED trigger and recompiles byte-identically.
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://__tree_trigger_roundtrip.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://__tree_trigger_roundtrip.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://__tree_trigger_roundtrip.gd").get("output", ""))
 	all_passed = _check("tree-trigger output round-trips byte-identically", roundtrip == source, true) and all_passed
 	var lifted_trigger: String = ""
 	for row: Variant in imported.events:
@@ -62,7 +62,7 @@ static func _compile_tree_trigger(trigger_id: String, source_path: String) -> St
 	body.code = "print(\"entered\")"
 	event.actions.append(body)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet, "user://__tree_trigger.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://__tree_trigger.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

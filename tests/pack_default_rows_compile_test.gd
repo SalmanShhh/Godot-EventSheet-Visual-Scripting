@@ -4,7 +4,7 @@
 # it walks `EventForgeBuiltinACEs` only - so the packs under `eventsheet_addons/`, which are
 # where a dropdown of words and a hand-written call template actually live, were never asked. This
 # file asks it of them, through the same seam the live picker uses: the addon scanner's script list,
-# `EventSheetACEGenerator.generate_from_object`, the real `ActionCodegen._apply_template`, and
+# `EventSheetACEGenerator.generate_from_object`, the real `EventSheetActionCodegen._apply_template`, and
 # `GDScript.reload()` on the result wrapped in a host class.
 #
 # THE VALUES A ROW OPENS ON, not values a test invented. A pack parameter's starting value is the
@@ -32,7 +32,7 @@
 # that opens on the bare word `enemies` and emits `Codex.discover(enemies, slime)` - an undefined
 # identifier the game does not parse. Five builders hold such a default today and none of them
 # reaches an emitted pack, because the emitter drops a default whose parameter carries no help
-# (`SheetCompiler._param_annotation_lines` returns early on an empty description). The day one of
+# (`EventSheetCompiler._param_annotation_lines` returns early on an empty description). The day one of
 # those parameters gains its help sentence the default starts shipping, and this gate is what turns
 # red instead of the game.
 #
@@ -185,7 +185,7 @@ static func run() -> bool:
 			checked += 1
 			var params: Dictionary = fill["params"]
 			for base: String in _undeclared_singletons(
-					ActionCodegen._apply_template(template, params), HOST_CLASS):
+					EventSheetActionCodegen._apply_template(template, params), HOST_CLASS):
 				declared_bases["%s\t%s" % [base, definition.provider_id]] = true
 			var failure: String = _compile_failure(definition, template, params)
 			if KNOWN_FAILING.has(key):
@@ -203,7 +203,7 @@ static func run() -> bool:
 			for variant: Dictionary in _option_variants(definition, params):
 				options_checked += 1
 				for base: String in _undeclared_singletons(
-						ActionCodegen._apply_template(template, variant["params"]), HOST_CLASS):
+						EventSheetActionCodegen._apply_template(template, variant["params"]), HOST_CLASS):
 					declared_bases["%s	%s" % [base, definition.provider_id]] = true
 				var option_failure: String = _compile_failure(definition, template, variant["params"])
 				if not option_failure.is_empty():
@@ -505,7 +505,7 @@ const HOST_CLASS: String = "Node"
 ## pack's own BUILDER declares, which is a different file from the template being tested, so a typo
 ## in one is caught by the other.
 static func _wrap(definition: ACEDefinition, template: String, params: Dictionary) -> String:
-	var line: String = ActionCodegen._apply_template(template, params)
+	var line: String = EventSheetActionCodegen._apply_template(template, params)
 	var host: String = HOST_CLASS
 	var body_lines: Array[String] = []
 	match definition.ace_type:

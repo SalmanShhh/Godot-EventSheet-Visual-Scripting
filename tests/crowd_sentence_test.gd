@@ -207,7 +207,7 @@ static func _test_the_cap_holds_when_one_frame_spawns_several() -> bool:
 		"scene": "scene", "name": "made", "crowd": "\"foes\"", "cap": "12",
 		"at": "Vector2.ZERO", "parent": "self"
 	})
-	var emitted: String = ActionCodegen.generate_action(action)
+	var emitted: String = EventSheetActionCodegen.generate_action(action)
 	var host: Object = _running_host(emitted)
 	if host == null:
 		return _check("the emitted crowd lines can be run at all", false, true)
@@ -443,7 +443,7 @@ static func _test_a_crowd_spawn_re_emits_byte_for_byte() -> bool:
 	}))
 	sheet.events.append(event)
 	var source: String = _compile(sheet, "user://eventforge_crowd_trip.gd")
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://eventforge_crowd_trip_back.gd"
 	return _check("opened crowd code re-emits byte for byte",
 		_compile(imported, "user://eventforge_crowd_trip_back.gd") == source, true)
@@ -492,7 +492,7 @@ static func _compiled_with(ace_id: String, params: Dictionary, path: String) -> 
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

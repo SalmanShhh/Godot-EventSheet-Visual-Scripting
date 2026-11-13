@@ -125,7 +125,7 @@ static func run() -> bool:
 "
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	opened.external_source_path = "user://_raw_shell_source.gd"
 	dock.setup(opened)
 	# The plain `_warmup` helper anchors in place now (custom returns lift via FunctionAnchorRow);
@@ -155,7 +155,7 @@ static func run() -> bool:
 	ok = _check("the category rides as a chip", has_chip, true) and ok
 
 	# ── Covenant: view-only - the sheet still round-trips byte-identically ──
-	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://_raw_shell_source.gd").get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), "user://_raw_shell_source.gd").get("output", ""))
 	ok = _check("drift stays 0 with shells rendered", reemitted == source, true) and ok
 	dock.free()
 
@@ -193,9 +193,9 @@ static func run() -> bool:
 	# ── #4 covenant: a genuine irreducible code block, opened from a .gd, stays an explicit RawCodeRow and
 	# recompiles byte-for-byte - the "GDScript block survives the round-trip" guarantee. ──
 	var code_source: String = "\n".join(PackedStringArray(["extends Node", "", "", "func _ready() -> void:", "	flags |= 2"])) + "\n"
-	var code_imported: EventSheetResource = GDScriptImporter.new().import_external_source(code_source)
+	var code_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(code_source)
 	code_imported.external_source_path = "user://_code_block_rt.gd"
-	var code_reemit: String = str(SheetCompiler.compile(code_imported, "user://_code_block_rt.gd").get("output", ""))
+	var code_reemit: String = str(EventSheetCompiler.compile(code_imported, "user://_code_block_rt.gd").get("output", ""))
 	ok = _check("a genuine code block round-trips byte-identically", code_reemit == code_source, true) and ok
 
 	# -- statement_sentence + call_parts: a single lifted statement READS as a step --

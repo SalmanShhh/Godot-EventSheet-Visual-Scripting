@@ -20,7 +20,7 @@ static func build(host: Window) -> Control:
 	# what the Doctor does, and gets the same answer.
 	EventSheetProjectShareIndex.clear_cache()
 	EventSheetProjectShareIndex.build_now()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

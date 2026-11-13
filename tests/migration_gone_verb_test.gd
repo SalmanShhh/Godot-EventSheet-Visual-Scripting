@@ -69,7 +69,7 @@ static func _test_the_sheet_is_never_written_to() -> bool:
 	# that reproduces itself.
 	var wrote: Error = _write(PROBE_PATH, before)
 	ok = _check("the probe is written", wrote, OK) and ok
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(PROBE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_PATH)
 	ok = _check("the file opens as a sheet", reopened != null, true) and ok
 	if reopened != null:
 		ok = _check("and saving it untouched reproduces it byte for byte",
@@ -505,7 +505,7 @@ static func _sheet_with(row: Resource) -> EventSheetResource:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
 
 
 static func _write(path: String, text: String) -> Error:

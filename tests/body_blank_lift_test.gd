@@ -82,7 +82,7 @@ static func run() -> bool:
 ## True when the import produced a STRUCTURED function (at least one lifted event or sheet function) with no
 ## `func …` verbatim wall left among the top-level rows - i.e. the body became rows, not a code cell.
 static func _structured(source: String) -> bool:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var has_structure: bool = false
 	if not imported.functions.is_empty():
 		has_structure = true
@@ -96,12 +96,12 @@ static func _structured(source: String) -> bool:
 
 ## Number of lifted sheet functions (0 means helpers stayed raw blocks).
 static func _functions(source: String) -> int:
-	return GDScriptImporter.new().import_external_source(source).functions.size()
+	return EventSheetGDScriptImporter.new().import_external_source(source).functions.size()
 
 
 ## Number of top-level EventRow rows (0 means the file reverted to raw blocks).
 static func _event_rows(source: String) -> int:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var count: int = 0
 	for row: Variant in imported.events:
 		if row is EventRow:
@@ -111,9 +111,9 @@ static func _event_rows(source: String) -> int:
 
 ## Import the source, recompile through the external path, and return the emitted text.
 static func _recompile(source: String) -> String:
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://body_blank_rt.gd"
-	return str(SheetCompiler.compile(imported, "user://body_blank_rt.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(imported, "user://body_blank_rt.gd").get("output", ""))
 
 
 ## Whether the import + recompile reproduced the source byte-for-byte.

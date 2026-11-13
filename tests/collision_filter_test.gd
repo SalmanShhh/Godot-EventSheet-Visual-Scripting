@@ -213,7 +213,7 @@ static func _test_the_lift() -> bool:
 			[event.trigger_id if event != null else "", FILTERS.group_of(event)],
 			["OnOverlapWithGroup", "\"enemies\""]) and ok
 		ok = _check("%s writes the file back byte-for-byte" % str(spelling[0]),
-			str(SheetCompiler.compile(opened, LIFT_PATH).get("output", "")), str(spelling[1])) and ok
+			str(EventSheetCompiler.compile(opened, LIFT_PATH).get("output", "")), str(spelling[1])) and ok
 	return ok
 
 
@@ -224,7 +224,7 @@ static func _test_the_refusal() -> bool:
 	var ok: bool = _check("a guard that asks more than the group is not claimed as a filter",
 		FILTERS.is_filtered(claimed), false)
 	ok = _check("and the file still comes back byte-for-byte",
-		str(SheetCompiler.compile(opened, LIFT_PATH).get("output", "")), SOURCE_WIDER_GUARD) and ok
+		str(EventSheetCompiler.compile(opened, LIFT_PATH).get("output", "")), SOURCE_WIDER_GUARD) and ok
 	return ok
 
 
@@ -294,7 +294,7 @@ static func _sheet(events: Array) -> EventSheetResource:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet).get("output", ""))
 
 
 ## The lines of one function in emitted output, without its header.
@@ -333,7 +333,7 @@ static func _opened(source: String) -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(LIFT_PATH, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	return GDScriptImporter.new().import_external(LIFT_PATH)
+	return EventSheetGDScriptImporter.new().import_external(LIFT_PATH)
 
 
 static func _first_event(sheet: EventSheetResource) -> EventRow:

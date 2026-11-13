@@ -67,17 +67,17 @@ static func _what_the_file_says() -> bool:
 	var parsed: GDScript = GDScript.new()
 	parsed.source_code = output
 	rows.append(["it parses", parsed.reload(), OK])
-	var twice: String = str(SheetCompiler.compile(_sheet([_action("AskToPause", {}), _action("AskToPause", {"reason": "\"menu\""})]),
+	var twice: String = str(EventSheetCompiler.compile(_sheet([_action("AskToPause", {}), _action("AskToPause", {"reason": "\"menu\""})]),
 		"user://pause_requests_twice.gd", true).get("output", ""))
 	rows.append(["two rows still declare the set once", [twice.count("static var _pause_requests"), twice.count("static func __eventsheets_pause_requests(")], [1, 1]])
-	var plain: String = str(SheetCompiler.compile(_sheet([_action("PauseGame", {})]), "user://pause_requests_plain.gd", true).get("output", ""))
+	var plain: String = str(EventSheetCompiler.compile(_sheet([_action("PauseGame", {})]), "user://pause_requests_plain.gd", true).get("output", ""))
 	rows.append(["a file that only pauses gains nothing", plain.contains("_pause_requests"), false])
 	var verbatim: RawCodeRow = RawCodeRow.new()
 	verbatim.code = "print(_pause_requests)"
 	var kept: EventSheetResource = _sheet([])
 	kept.events.append(verbatim)
 	rows.append(["a read inside a verbatim block is not a row asking",
-		str(SheetCompiler.compile(kept, "user://pause_requests_verbatim.gd", true).get("output", "")).contains("static var _pause_requests"), false])
+		str(EventSheetCompiler.compile(kept, "user://pause_requests_verbatim.gd", true).get("output", "")).contains("static var _pause_requests"), false])
 	return SUPPORT.pins(P, rows)
 
 
@@ -237,7 +237,7 @@ static func _filled(ace_id: String, values: Dictionary) -> String:
 	for parameter: ACEParam in descriptor.params:
 		filled[str(parameter.id)] = str(parameter.default_value)
 	filled.merge(values, true)
-	return ActionCodegen._apply_template(descriptor.codegen_template, filled)
+	return EventSheetActionCodegen._apply_template(descriptor.codegen_template, filled)
 
 
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
@@ -279,7 +279,7 @@ static func _compiled() -> String:
 	inner.conditions.append(question)
 	inner.actions.append(_action("PrintLog", {"message": "\"still\""}))
 	(sheet.events[0] as EventRow).sub_events.append(inner)
-	return str(SheetCompiler.compile(sheet, "user://pause_requests.gd", true).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://pause_requests.gd", true).get("output", ""))
 
 
 ## A script that asks, stops and asks the question through the rows' own lines, with the set declared

@@ -104,7 +104,7 @@ static func _door_contract() -> bool:
 	var door_event: EventRow = EventRow.new()
 	door_event.trigger_provider_id = "Core"
 	door_event.trigger_id = "OnLockedDoorTried"
-	var resolved: Dictionary = TriggerResolver.resolve_trigger(door_event)
+	var resolved: Dictionary = EventSheetTriggerResolver.resolve_trigger(door_event)
 	ok = _check("and compiles to the function Try Door calls",
 		str(resolved.get("function_name", "")), "locked_door_tried") and ok
 	ok = _check("with the key that was wanted as its argument",
@@ -147,7 +147,7 @@ static func _keycard_door_starter() -> bool:
 		str((sheet.variables.get("needs_key", {}) as Dictionary).get("default", "")), "red_key") and ok
 	ok = _check("and how far it slides",
 		float((sheet.variables.get("slide_height", {}) as Dictionary).get("default", -1.0)), 3.2) and ok
-	var built: String = str(SheetCompiler.compile(sheet, "user://y16_keycard_door.gd").get("output", ""))
+	var built: String = str(EventSheetCompiler.compile(sheet, "user://y16_keycard_door.gd").get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = built
 	ok = _check("the keycard door starter compiles to GDScript that parses", script.reload(), OK) and ok
@@ -300,7 +300,7 @@ static func _enemies_and_pickups() -> bool:
 	var alert_event: EventRow = EventRow.new()
 	alert_event.trigger_provider_id = "Core"
 	alert_event.trigger_id = "OnAlerted"
-	var resolved: Dictionary = TriggerResolver.resolve_trigger(alert_event)
+	var resolved: Dictionary = EventSheetTriggerResolver.resolve_trigger(alert_event)
 	ok = _check("On Alerted compiles to the function the alert calls",
 		str(resolved.get("function_name", "")), "alerted") and ok
 	ok = _check("with who to go for as its argument",

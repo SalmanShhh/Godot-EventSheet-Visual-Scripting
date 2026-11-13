@@ -99,7 +99,7 @@ static func _test_the_canonical_shape() -> bool:
 static func _test_authored_then_reopened_is_identity() -> bool:
 	var ok: bool = true
 	var source: String = _emit(_authored_sheet())
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	ok = _check("reopening our own output gives the rows back", _reading_of(reopened.events),
 		PackedStringArray([
 			"OnProcess: InState PATROL -> GoToState CHASE",
@@ -109,7 +109,7 @@ static func _test_authored_then_reopened_is_identity() -> bool:
 			"OnEnteringState CHASE -> GoToState PATROL"
 		])) and ok
 	reopened.external_source_path = "user://object_state_identity.gd"
-	var again: String = str(SheetCompiler.compile(reopened, "user://object_state_identity.gd").get("output", ""))
+	var again: String = str(EventSheetCompiler.compile(reopened, "user://object_state_identity.gd").get("output", ""))
 	ok = _check("and saving it again moves no byte", again, source) and ok
 	return ok
 
@@ -126,7 +126,7 @@ static func _test_the_hand_written_machines() -> bool:
 		if not FileAccess.file_exists(path):
 			continue
 		var source: String = FileAccess.get_file_as_string(path)
-		if _emit(GDScriptImporter.new().import_external(path)) != source:
+		if _emit(EventSheetGDScriptImporter.new().import_external(path)) != source:
 			drifted.append(path.get_file())
 	ok = _check("every hand-written machine round-trips byte-identically",
 		drifted, PackedStringArray()) and ok
@@ -134,7 +134,7 @@ static func _test_the_hand_written_machines() -> bool:
 	# The announced machine is the canonical shape spelled by hand, so every row of it comes back -
 	# including the timed question (which the condition splitter would otherwise hand back as two
 	# half-rows) and the `self.` spelling of going to a state.
-	var announced: EventSheetResource = GDScriptImporter.new().import_external(ANNOUNCED)
+	var announced: EventSheetResource = EventSheetGDScriptImporter.new().import_external(ANNOUNCED)
 	ok = _check("a hand-written canonical machine opens as the state rows", _reading_of(announced.events),
 		PackedStringArray([
 			"OnProcess: InState IDLE -> GoToState ALERT",
@@ -146,7 +146,7 @@ static func _test_the_hand_written_machines() -> bool:
 
 	# The woven one is not the canonical shape, and the honest answer is the one it gets: no state
 	# triggers, no state conditions, and its bytes untouched (asserted above with the other two).
-	var woven: EventSheetResource = GDScriptImporter.new().import_external(WOVEN)
+	var woven: EventSheetResource = EventSheetGDScriptImporter.new().import_external(WOVEN)
 	ok = _check("a non-canonical machine claims no state trigger",
 		_triggers_of(woven.events), PackedStringArray(["OnProcess"])) and ok
 	ok = _test_a_compound_wait_is_not_one_row() and ok
@@ -186,7 +186,7 @@ static func _test_a_compound_wait_is_not_one_row() -> bool:
 		"\t\tstate = State.PATROL",
 		"",
 	]))
-	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	# Three questions, not one: the state, the wait, and the third term the file really asks. What
 	# matters is that no row claims "2.0 and hp > 0" as a number of seconds.
 	var waits: PackedStringArray = PackedStringArray()
@@ -201,7 +201,7 @@ static func _test_a_compound_wait_is_not_one_row() -> bool:
 		waits, PackedStringArray()) and ok
 	opened.external_source_path = "user://object_state_compound.gd"
 	ok = _check("and the line rides back out exactly as it was written",
-		str(SheetCompiler.compile(opened, "user://object_state_compound.gd").get("output", "")),
+		str(EventSheetCompiler.compile(opened, "user://object_state_compound.gd").get("output", "")),
 		source) and ok
 	return ok
 
@@ -209,7 +209,7 @@ static func _test_a_compound_wait_is_not_one_row() -> bool:
 # ── The reading a match arm gets ────────────────────────────────────────────────────────────────
 static func _test_the_readings() -> bool:
 	var ok: bool = true
-	var patrol: EventSheetResource = GDScriptImporter.new().import_external(PATROL)
+	var patrol: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PATROL)
 	var machine: MatchRow = _first_match(patrol.events)
 	ok = _check("the tutorial machine opens as a match on the state variable",
 		machine != null and EventSheetStateFacts.is_state_subject(machine.match_expression), true) and ok
@@ -262,11 +262,11 @@ func _on_state_changed(from_state: int, to_state: int) -> void:
 	if from_state == State.BUSY:
 		set_process(false)
 """
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var ok: bool = _check("an entering-before-leaving handler is not adopted",
 		_triggers_of(sheet.events), PackedStringArray(["signal:state_changed", "signal:state_changed"]))
 	sheet.external_source_path = "user://object_state_order.gd"
-	var again: String = str(SheetCompiler.compile(sheet, "user://object_state_order.gd").get("output", ""))
+	var again: String = str(EventSheetCompiler.compile(sheet, "user://object_state_order.gd").get("output", ""))
 	ok = _check("and it keeps its bytes", again, source) and ok
 	return ok
 
@@ -328,7 +328,7 @@ static func _ace(ace_id: String, params: Dictionary, is_condition: bool) -> Reso
 
 
 static func _emit(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://object_state_shape.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://object_state_shape.gd").get("output", ""))
 
 
 ## The same output with the compiler's own three-line "regenerated on every compile" header taken

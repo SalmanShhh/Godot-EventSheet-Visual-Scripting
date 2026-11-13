@@ -32,7 +32,7 @@ static func run() -> bool:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	var rows: Array = _rows(sheet)
 
 	# ── The declaration rows, at the top of the event that owns them ──
@@ -56,7 +56,7 @@ static func run() -> bool:
 
 	# ── The file never moves ──
 	ok = _check("reading it this way changes no byte",
-		str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", "")), SOURCE) and ok
+		str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", "")), SOURCE) and ok
 	ok = _authored_rows() and ok
 	return ok
 

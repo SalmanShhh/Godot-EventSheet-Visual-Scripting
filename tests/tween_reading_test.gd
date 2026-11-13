@@ -72,7 +72,7 @@ static func run() -> bool:
 		_statement("await anim.finished", context), "System ▸ ⏳ Wait for signal anim On Finished") and ok
 
 	# ── The chain map is read off the file's own lines, in file order ──
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\nfunc _ready() -> void:\n\tvar t = create_tween()\n"
 		+ "\tt.tween_property(self, \"position\", Vector2.ZERO, 0.5)\n"
 		+ "\tt.tween_property(self, \"modulate:a\", 0.0, 0.3)\n"

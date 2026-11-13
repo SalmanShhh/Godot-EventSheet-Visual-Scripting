@@ -208,18 +208,18 @@ static func _live_grounding_checks() -> bool:
 	action.params = {"var_name": "hp", "amount": "1"}
 	row.actions.append(action)
 	sheet.events.append(row)
-	var debug_output: String = str(SheetCompiler.compile(sheet, "user://live_ground.gd").get("output", ""))
+	var debug_output: String = str(EventSheetCompiler.compile(sheet, "user://live_ground.gd").get("output", ""))
 	all_passed = _check("debug compile answers query_children", debug_output.contains("query_children"), true) and all_passed
 	all_passed = _check("debug compile carries the reporter", debug_output.contains("__eventsheets_report_children"), true) and all_passed
 	all_passed = _check("the reply rides the eventsheets channel", debug_output.contains("eventsheets:children_report"), true) and all_passed
 	# The lossless contract: the debug machinery round-trips byte-identically as content.
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(debug_output)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(debug_output)
 	reimported.external_source_path = "user://live_ground.gd"
-	var recompiled: String = str(SheetCompiler.compile(reimported, "user://live_ground.gd").get("output", ""))
+	var recompiled: String = str(EventSheetCompiler.compile(reimported, "user://live_ground.gd").get("output", ""))
 	all_passed = _check("live-grounding machinery round-trips byte-identically", recompiled == debug_output, true) and all_passed
 	# The covenant: a NORMAL compile carries none of it.
 	sheet.emit_live_values = false
-	var clean_output: String = str(SheetCompiler.compile(sheet, "user://live_ground.gd").get("output", ""))
+	var clean_output: String = str(EventSheetCompiler.compile(sheet, "user://live_ground.gd").get("output", ""))
 	all_passed = _check("normal compile has no live-grounding artifacts", clean_output.contains("query_children") or clean_output.contains("children_report"), false) and all_passed
 	# The report parser (flat triples after the header; a truncated tail drops, never errors).
 	var report: Dictionary = EventSheetLiveValuesDebugger.parse_children_report([

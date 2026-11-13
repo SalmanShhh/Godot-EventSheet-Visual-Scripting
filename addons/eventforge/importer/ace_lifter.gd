@@ -194,7 +194,7 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 ## The two tree callbacks that mean something DIFFERENT on an EditorPlugin: `_enter_tree` is not
 ## "on created" there, it is the moment the plugin was switched on. Keyed on the trigger the header
 ## table already resolved, so the rename is a display-level re-pin and the emitted function is the
-## same one either way (see TriggerResolver).
+## same one either way (see EventSheetTriggerResolver).
 const PLUGIN_LIFECYCLE_TRIGGERS: Dictionary = {
 	"OnEnterTree": "OnPluginEnabled",
 	"OnExitTree": "OnPluginDisabled"
@@ -838,12 +838,12 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# fills, which this per-function probe does not have.
 						if bool(lift.get("ok", false)) and not gate_exempt \
 								and not (lift.get("events", []) as Array).is_empty() \
-								and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
+								and _strip_group_markers(EventSheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
 									_group_guards_for(lift.get("events", [])), sheet.tool_mode)) != _strip_group_markers(row.code):
 							# Once more with the comments left in the events, before the handler stays raw.
 							_comment_rows_ride = false
 							lift = _lift_function(row.code.split("\n"), claimable, true)
-							if bool(lift.get("ok", false)) and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
+							if bool(lift.get("ok", false)) and _strip_group_markers(EventSheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
 									_group_guards_for(lift.get("events", [])), sheet.tool_mode)) != _strip_group_markers(row.code):
 								lift = {"ok": false}
 						_comment_rows_ride = true
@@ -908,7 +908,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# Per-function gate: the lifted function must re-emit header + body exactly, or it
 						# stays raw and the run re-anchors after it (a bad body used to revert the file).
 						if bool(function_lift.get("ok", false)):
-							var emitted_block: String = SheetCompiler.emit_function_block_text(function_lift.get("function"), sheet, true)
+							var emitted_block: String = EventSheetCompiler.emit_function_block_text(function_lift.get("function"), sheet, true)
 							if emitted_block != expected_block:
 								# A verb that fails this gate opens as a verbatim block, and the reader
 								# is owed the reason when the reason is one line of its own annotations.
@@ -1011,7 +1011,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 		var rebuilt_slugs: PackedStringArray = PackedStringArray()
 		_rebuilt_group_slugs(lifted_events, rebuilt_slugs)
 		if not rebuilt_slugs.is_empty():
-			sheet.set_meta(SheetCompiler.SOURCE_GROUP_SLUGS_META, rebuilt_slugs)
+			sheet.set_meta(EventSheetCompiler.SOURCE_GROUP_SLUGS_META, rebuilt_slugs)
 		for event: Variant in lifted_events:
 			sheet.events.append(event)
 		for comment: Variant in lifted_comments:
@@ -1019,7 +1019,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 		for function: Variant in lifted_functions:
 			sheet.functions.append(function)
 		if trailing_blanks > 0:
-			sheet.set_meta(SheetCompiler.TRAILING_BLANKS_META, trailing_blanks)
+			sheet.set_meta(EventSheetCompiler.TRAILING_BLANKS_META, trailing_blanks)
 
 	# MID-FILE helper functions: the trailing run above can only lift functions at the file's
 	# end (they emit in the trailing functions section). A helper stranded between raw blocks
@@ -1122,8 +1122,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					var annotated_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), tail_annotations, true, tail_gd_lines, tail_doc)
 					if bool(annotated_lift.get("ok", false)):
 						var candidate: EventFunction = annotated_lift.get("function")
-						if candidate != null and SheetCompiler._find_function_by_name(sheet, candidate.function_name) == null:
-							var emitted_annotated: String = SheetCompiler.emit_function_block_text(candidate, sheet, true)
+						if candidate != null and EventSheetCompiler._find_function_by_name(sheet, candidate.function_name) == null:
+							var emitted_annotated: String = EventSheetCompiler.emit_function_block_text(candidate, sheet, true)
 							if emitted_annotated == tail_text + "\n" + mid_row.code:
 								mid_function = candidate
 								strip_tail = true
@@ -1144,10 +1144,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					mid_index += 1
 					continue
 				mid_function = mid_lift.get("function")
-				if mid_function == null or SheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
+				if mid_function == null or EventSheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
 					mid_index += 1
 					continue
-				if SheetCompiler.emit_function_block_text(mid_function, sheet, true) != mid_row.code:
+				if EventSheetCompiler.emit_function_block_text(mid_function, sheet, true) != mid_row.code:
 					mid_index += 1
 					continue
 			var anchor: FunctionAnchorRow = FunctionAnchorRow.new()
@@ -1173,7 +1173,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	progress_phase = "verifying"
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = "user://eventforge_lift_verify.gd"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
 	sheet.external_source_path = saved_path
 	# Group markers (## @ace_group declarations + # @group:<slug> row tags) are cosmetic comments with
 	# zero runtime weight - the groups dissolve into the flat trigger sections at compile, so a sheet
@@ -1292,7 +1292,7 @@ static func _adopt_state_change_triggers(sheet: EventSheetResource, source: Stri
 		return
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = "user://eventforge_lift_verify.gd"
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
 	sheet.external_source_path = saved_path
 	if _strip_group_markers(output) != _strip_group_markers(source):
 		EventForgeStateLift.restore(adopted)
@@ -1305,8 +1305,8 @@ static func _adopt_state_change_triggers(sheet: EventSheetResource, source: Stri
 static func _revert_lift(sheet: EventSheetResource, backup: Array[Resource], functions_backup: Array[Resource], boundary: RawCodeRow, boundary_code: String, peeled_rows: Array) -> void:
 	sheet.events = backup
 	sheet.functions = functions_backup
-	sheet.remove_meta(SheetCompiler.TRAILING_BLANKS_META)
-	sheet.remove_meta(SheetCompiler.SOURCE_GROUP_SLUGS_META)
+	sheet.remove_meta(EventSheetCompiler.TRAILING_BLANKS_META)
+	sheet.remove_meta(EventSheetCompiler.SOURCE_GROUP_SLUGS_META)
 	if boundary != null:
 		boundary.code = boundary_code
 	for peeled: Array in peeled_rows:
@@ -1334,7 +1334,7 @@ static func _stamp_leading_blanks(lift_events: Array, lift_functions: Array, cou
 ## re-emitted the file one line short.
 static func _gap_bearing_event(lift_events: Array) -> Resource:
 	for event: Variant in lift_events:
-		if event is EventRow and not (event as EventRow).has_meta(SheetCompiler.LAMBDA_CONNECT_ID_META):
+		if event is EventRow and not (event as EventRow).has_meta(EventSheetCompiler.LAMBDA_CONNECT_ID_META):
 			return event as Resource
 	return null
 
@@ -1419,7 +1419,7 @@ static func _recover_group_declarations(source: String) -> Dictionary:
 	if decl_regex.compile("(?m)^## @ace_group\\((.*)\\)\\s*$") != OK:
 		return registry
 	for decl_match: RegExMatch in decl_regex.search_all(source):
-		var fields: Dictionary = SheetCompiler.GroupHeaders.parse_fields(decl_match.get_string(1))
+		var fields: Dictionary = EventSheetCompiler.GroupHeaders.parse_fields(decl_match.get_string(1))
 		var slug: String = str(fields.get("uid", ""))
 		if not slug.is_empty():
 			registry[slug] = fields
@@ -1442,9 +1442,9 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 		var fields: Dictionary = registry[slug]
 		# Read through the one reading of a header the compiler also asks, so "does this header still
 		# say what its group says" can never read a field differently from opening the file.
-		var group: EventGroup = SheetCompiler.GroupHeaders.group_from_fields(fields)
+		var group: EventGroup = EventSheetCompiler.GroupHeaders.group_from_fields(fields)
 		# The uid this group's header line was read from: a renamed group still finds its own line.
-		group.set_meta(SheetCompiler.SOURCE_GROUP_SLUG_META, slug)
+		group.set_meta(EventSheetCompiler.SOURCE_GROUP_SLUG_META, slug)
 		groups[slug] = group
 		parent_of[slug] = str(fields.get("parent", ""))
 	var output: Array = []
@@ -1482,7 +1482,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 static func _rebuilt_group_slugs(rows: Array, into: PackedStringArray) -> void:
 	for row: Variant in rows:
 		if row is EventGroup:
-			var source_slug: String = str((row as EventGroup).get_meta(SheetCompiler.SOURCE_GROUP_SLUG_META, ""))
+			var source_slug: String = str((row as EventGroup).get_meta(EventSheetCompiler.SOURCE_GROUP_SLUG_META, ""))
 			if not source_slug.is_empty():
 				into.append(source_slug)
 			_rebuilt_group_slugs((row as EventGroup).events, into)
@@ -1567,9 +1567,9 @@ static func lift_function_bodies(sheet: EventSheetResource) -> int:
 				fn.events = []
 		# A body whose own block already reads differently once lifted cannot leave the file as it
 		# was, so it is put back here, at the price of one function's emission instead of the file's.
-		var block_before: String = SheetCompiler.emit_function_block_text(fn, sheet)
+		var block_before: String = EventSheetCompiler.emit_function_block_text(fn, sheet)
 		swap.call(true)
-		var block_after: String = SheetCompiler.emit_function_block_text(fn, sheet)
+		var block_after: String = EventSheetCompiler.emit_function_block_text(fn, sheet)
 		swap.call(false)
 		if block_after == block_before:
 			swaps.append(swap)
@@ -1604,7 +1604,7 @@ static func _lift_verbatim_body(code: String, reverse_entries: Array) -> Array:
 static func _adopt_byte_identical(sheet: EventSheetResource, swaps: Array[Callable]) -> int:
 	if swaps.is_empty():
 		return 0
-	var baseline: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var baseline: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	return _adopt_run(sheet, swaps, 0, swaps.size(), baseline)
 
 
@@ -1612,7 +1612,7 @@ static func _adopt_byte_identical(sheet: EventSheetResource, swaps: Array[Callab
 static func _adopt_run(sheet: EventSheetResource, swaps: Array[Callable], from: int, to: int, baseline: String) -> int:
 	for index: int in range(from, to):
 		swaps[index].call(true)
-	if str(SheetCompiler.echo(sheet).get("output", "")) == baseline:
+	if str(EventSheetCompiler.echo(sheet).get("output", "")) == baseline:
 		return to - from
 	for index: int in range(from, to):
 		swaps[index].call(false)
@@ -1652,7 +1652,7 @@ static func lift_event_bodies(sheet: EventSheetResource) -> int:
 		var code: String = (row.actions[0] as RawCodeRow).code
 		if code.strip_edges().is_empty():
 			continue
-		var before: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		var before: String = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 		# Parse the body under a throwaway depth-1 header, exactly like the function-body path.
 		var lines: PackedStringArray = PackedStringArray(["func _ready() -> void:"])
 		for line: String in code.split("\n"):
@@ -1667,7 +1667,7 @@ static func lift_event_bodies(sheet: EventSheetResource) -> int:
 		var backup_subs: Array[Resource] = row.sub_events.duplicate()
 		row.actions = []
 		row.sub_events = _to_resource_array(lifted)
-		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		var after: String = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 		if after == before:
 			converted += 1
 		else:
@@ -1691,7 +1691,7 @@ static func lift_signal_declarations(sheet: EventSheetResource, byte_gated: bool
 	var verify_path: String = "user://_eventforge_signal_verify.gd"
 	var before: String = ""
 	if byte_gated:
-		before = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		before = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 	var new_events: Array[Resource] = []
 	var lifted_total: int = 0
 	for item: Variant in sheet.events:
@@ -1707,7 +1707,7 @@ static func lift_signal_declarations(sheet: EventSheetResource, byte_gated: bool
 	var backup: Array[Resource] = sheet.events.duplicate()
 	sheet.events = new_events
 	if byte_gated:
-		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		var after: String = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 		if after != before:
 			sheet.events = backup  # reorder/spacing changed - keep the verbatim block (round-trip safe)
 			return 0
@@ -1823,7 +1823,7 @@ static func lift_function_declarations(sheet: EventSheetResource, byte_gated: bo
 	var verify_path: String = "user://_eventforge_function_verify.gd"
 	var before: String = ""
 	if byte_gated:
-		before = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		before = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 	var new_events: Array[Resource] = []
 	var harvested: Array = []
 	for item: Variant in sheet.events:
@@ -1849,7 +1849,7 @@ static func lift_function_declarations(sheet: EventSheetResource, byte_gated: bo
 			(produced as EventFunction).ace_icon = ""
 		sheet.functions.append(produced as Resource)
 	if byte_gated:
-		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		var after: String = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 		if after != before:
 			sheet.events = backup_events
 			sheet.functions = backup_functions
@@ -2483,7 +2483,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 		event_function.events.append(event)
 	return {"ok": true, "function": event_function}
 
-## Core signal names ↔ trigger ids, mirroring TriggerResolver's signal-backed table.
+## Core signal names ↔ trigger ids, mirroring EventSheetTriggerResolver's signal-backed table.
 const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"body_entered": "OnBodyEntered",
 	"area_entered": "OnAreaEntered",
@@ -2776,7 +2776,7 @@ static func _anchored_handler_try(mid_row: RawCodeRow, connections: Dictionary, 
 		has_event = has_event or handler_event is EventRow
 	if not has_event:
 		return []
-	if SheetCompiler.emit_anchored_trigger_text(handler_events, {}, tool_sheet) != mid_row.code:
+	if EventSheetCompiler.emit_anchored_trigger_text(handler_events, {}, tool_sheet) != mid_row.code:
 		return []
 	return handler_events
 
@@ -2878,7 +2878,7 @@ static func _lift_notification_function(function_lines: PackedStringArray) -> Di
 ##
 ## Each arm is its notification's trigger, exactly as a `match` case is, and may hold several rows
 ## (a branch inside an arm is a row of its own). Every event carries the number of the arm it came
-## from in SheetCompiler.NOTIFICATION_CHAIN_META, which is what tells emission to write this chain back rather than
+## from in EventSheetCompiler.NOTIFICATION_CHAIN_META, which is what tells emission to write this chain back rather than
 ## a `match`. An arm that tests anything besides `what` (`elif what == X and is_inside_tree():`) keeps
 ## the whole handler a code block, and the per-function byte gate decides the rest.
 static func _lift_notification_chain(function_lines: PackedStringArray) -> Dictionary:
@@ -2905,7 +2905,7 @@ static func _lift_notification_chain(function_lines: PackedStringArray) -> Dicti
 		for arm_row: Variant in arm_rows:
 			if not (arm_row is EventRow):
 				return {"ok": false}
-			(arm_row as EventRow).set_meta(SheetCompiler.NOTIFICATION_CHAIN_META, arm_number)
+			(arm_row as EventRow).set_meta(EventSheetCompiler.NOTIFICATION_CHAIN_META, arm_number)
 		events.append_array(arm_rows)
 		arm_number += 1
 		index = next_index
@@ -3066,7 +3066,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# back, exactly as an editor signal's does - `multiplayer` is a property, not a node, so
 			# a leftover path would have emission reach for get_node("multiplayer").
 			trigger_id = str(EventForgeMultiplayerLift.SIGNAL_TRIGGERS[signal_name])
-			trigger_source = TriggerResolver.MULTIPLAYER_SOURCE
+			trigger_source = EventSheetTriggerResolver.MULTIPLAYER_SOURCE
 		elif _own_signal_trigger(header_match.get_string(1), signal_name) != "":
 			# A retirement, or a spawn that found no room. Both are ordinary connects on the node the
 			# line names, so nothing is moved: only the trigger id changes, from the reading the bare
@@ -3085,9 +3085,9 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	# written into somebody's file would revert the whole of it to code blocks.
 	var retire_guard: PackedStringArray = PackedStringArray()
 	var read_a_retire_guard: bool = false
-	if trigger_id == TriggerResolver.RETIRE_TRIGGER_ID:
+	if trigger_id == EventSheetTriggerResolver.RETIRE_TRIGGER_ID:
 		read_a_retire_guard = true
-		var retire_guard_next: int = TriggerResolver.retire_guard_end(function_lines, index)
+		var retire_guard_next: int = EventSheetTriggerResolver.retire_guard_end(function_lines, index)
 		for guard_index: int in range(index, retire_guard_next):
 			retire_guard.append(function_lines[guard_index])
 		index = retire_guard_next
@@ -3131,7 +3131,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		# What the source spelled, kept on every event of the handler so the section emitter finds it
 		# on whichever event leads the group - exactly as the group filter's own guard is kept.
 		for event: Variant in events:
-			(event as EventRow).set_meta(TriggerResolver.SOURCE_RETIRE_GUARD_META, retire_guard)
+			(event as EventRow).set_meta(EventSheetTriggerResolver.SOURCE_RETIRE_GUARD_META, retire_guard)
 	if not filter_group.is_empty():
 		for event: Variant in events:
 			(event as EventRow).trigger_params[CollisionFilters.GROUP_PARAM] = filter_group
@@ -3145,7 +3145,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		for event: Variant in events:
 			(event as EventRow).set_meta("__source_trigger_header", source_header)
 			if spelled_again:
-				(event as EventRow).set_meta(SheetCompiler.UNUSED_PARAMS_SPELLED_META, true)
+				(event as EventRow).set_meta(EventSheetCompiler.UNUSED_PARAMS_SPELLED_META, true)
 	if not connect_line.is_empty():
 		# The handler carries the exact connect line that wired it, so the regenerated ready
 		# handler reproduces the author's spelling rather than the canonical get_node() one.
@@ -3282,11 +3282,11 @@ static func _lift_connect_lambda(function_lines: PackedStringArray, index: int, 
 	var lead: EventRow = events[0] as EventRow
 	if _is_plain_collector(lead) and lead.actions.is_empty():
 		return {"ok": false}
-	lead.set_meta(SheetCompiler.LAMBDA_CONNECT_META, EventForgeConnectLambdaLift.spelling_of(parts))
+	lead.set_meta(EventSheetCompiler.LAMBDA_CONNECT_META, EventForgeConnectLambdaLift.spelling_of(parts))
 	for event: Variant in events:
 		if not (event is EventRow):
 			return {"ok": false}
-		(event as EventRow).set_meta(SheetCompiler.LAMBDA_CONNECT_ID_META, lead.event_uid)
+		(event as EventRow).set_meta(EventSheetCompiler.LAMBDA_CONNECT_ID_META, lead.event_uid)
 	return {"ok": true, "events": events, "next": int(parts.get("next", index + 1))}
 
 
@@ -3300,14 +3300,14 @@ static func _lift_connect_lambda_in_place(lines: PackedStringArray, index: int, 
 		return {"ok": false}
 	var events: Array = lifted.get("events", []) as Array
 	var lead: EventRow = events[0] as EventRow
-	var spelling: Dictionary = lead.get_meta(SheetCompiler.LAMBDA_CONNECT_META, {}) as Dictionary
+	var spelling: Dictionary = lead.get_meta(EventSheetCompiler.LAMBDA_CONNECT_META, {}) as Dictionary
 	var wired: EventRow = lead
 	if not _is_plain_collector(lead):
 		wired = _make_event(lead.trigger_id, lead.trigger_provider_id, lead.trigger_args, lead.trigger_source_path)
 	for event: Variant in events:
 		var row: EventRow = event as EventRow
-		row.remove_meta(SheetCompiler.LAMBDA_CONNECT_META)
-		row.remove_meta(SheetCompiler.LAMBDA_CONNECT_ID_META)
+		row.remove_meta(EventSheetCompiler.LAMBDA_CONNECT_META)
+		row.remove_meta(EventSheetCompiler.LAMBDA_CONNECT_ID_META)
 		if row == wired:
 			continue
 		# Under the trigger, a row is a sub-event like any other: the trigger is the wired event's.
@@ -3316,7 +3316,7 @@ static func _lift_connect_lambda_in_place(lines: PackedStringArray, index: int, 
 		row.trigger_args = ""
 		row.trigger_source_path = ""
 		wired.sub_events.append(row)
-	wired.set_meta(SheetCompiler.LAMBDA_IN_PLACE_META, spelling)
+	wired.set_meta(EventSheetCompiler.LAMBDA_IN_PLACE_META, spelling)
 	return {"ok": true, "event": wired, "next": int(lifted.get("next", index + 1))}
 
 
@@ -3391,7 +3391,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = rest.substr(9)  # 9 == len("# @group:")
 			index += 1
 			continue
-		if rest == SheetCompiler.OFF_ROW_MARKER and not pending_off and _heads_off_block(lines, index + 1, depth):
+		if rest == EventSheetCompiler.OFF_ROW_MARKER and not pending_off and _heads_off_block(lines, index + 1, depth):
 			pending_off = true
 			index += 1
 			continue
@@ -3527,7 +3527,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 					rows.append(current)
 				# The marker the block was read under goes back with it, so no line is lost.
 				if pending_off:
-					pending_raw.append(SheetCompiler.OFF_ROW_MARKER)
+					pending_raw.append(EventSheetCompiler.OFF_ROW_MARKER)
 					pending_off = false
 				pending_raw.append(rest)
 				index += 1
@@ -3968,9 +3968,9 @@ static func _note_group_guards(source: String) -> void:
 			# group on the way up is off and cannot be switched, whose constant false guard holds
 			# everything inside it (the compiler passes it down unchanged).
 			if not bool(declared.get("toggleable", false)) and not bool(declared.get("enabled", true)):
-				found["switch"] = SheetCompiler.OFF_GROUP_GUARD
+				found["switch"] = EventSheetCompiler.OFF_GROUP_GUARD
 			elif str(found["switch"]).is_empty() and bool(declared.get("toggleable", false)):
-				found["switch"] = "__group_%s_active" % SheetCompiler.guard_token(str(declared.get("name", walk)))
+				found["switch"] = "__group_%s_active" % EventSheetCompiler.guard_token(str(declared.get("name", walk)))
 			if str(found["runs_on"]).is_empty():
 				found["runs_on"] = EventGroup.runs_on_guard(str(declared.get("runs_on", "")))
 			if str(found["runs_in"]).is_empty():
@@ -4030,7 +4030,7 @@ static func _without_group_guard(expression: String, slug: String) -> String:
 ## and must come back as an action.
 static func _off_actions_at(lines: PackedStringArray, index: int, depth: int, reverse_entries: Array, in_loop: bool) -> Dictionary:
 	var indent: String = "\t".repeat(depth)
-	var prefix: String = indent + SheetCompiler.OFF_CELL_PREFIX
+	var prefix: String = indent + EventSheetCompiler.OFF_CELL_PREFIX
 	var statements: PackedStringArray = PackedStringArray()
 	var cursor: int = index
 	while cursor < lines.size() and lines[cursor].begins_with(prefix):
@@ -4079,7 +4079,7 @@ static func _off_actions_at(lines: PackedStringArray, index: int, depth: int, re
 static func _take_off_note(note: CommentRow) -> void:
 	if note == null or not note.source_marker.is_empty():
 		return
-	var prefix: String = SheetCompiler.OFF_CELL_PREFIX.trim_prefix("# ")
+	var prefix: String = EventSheetCompiler.OFF_CELL_PREFIX.trim_prefix("# ")
 	var kept: PackedStringArray = PackedStringArray()
 	for note_line: String in note.text.split("\n"):
 		if not note_line.begins_with(prefix):
@@ -4109,7 +4109,7 @@ static func _heads_off_block(lines: PackedStringArray, index: int, depth: int) -
 	if index >= lines.size() or not lines[index].begins_with(indent):
 		return false
 	var head: String = lines[index].substr(depth)
-	var guard: String = SheetCompiler.OFF_GROUP_GUARD
+	var guard: String = EventSheetCompiler.OFF_GROUP_GUARD
 	for keyword: String in ["if ", "elif "]:
 		if head == keyword + guard + ":" or head.begins_with(keyword + guard + " and "):
 			return head.ends_with(":")
@@ -4121,7 +4121,7 @@ static func _heads_off_block(lines: PackedStringArray, index: int, depth: int) -
 ## behind a guard. The group's guard stays when no group is named (an `elif` row), exactly as the
 ## compiler wrote it.
 static func _without_off_guard(expression: String, slug: String) -> String:
-	var guard: String = SheetCompiler.OFF_GROUP_GUARD
+	var guard: String = EventSheetCompiler.OFF_GROUP_GUARD
 	var group_guard: String = str(_group_runs_on.get(slug, "")) if not slug.is_empty() else ""
 	if not group_guard.is_empty() and (expression == guard + " and " + group_guard or expression.begins_with(guard + " and " + group_guard + " and ")):
 		guard += " and " + group_guard
@@ -4284,7 +4284,7 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 ## A connect lambda read in place is not one either: it is an event of its own, trigger and all.
 static func _is_plain_collector(event: EventRow) -> bool:
 	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() \
-		and event.else_mode == EventRow.ElseMode.NONE and not event.has_meta(SheetCompiler.LAMBDA_IN_PLACE_META)
+		and event.else_mode == EventRow.ElseMode.NONE and not event.has_meta(EventSheetCompiler.LAMBDA_IN_PLACE_META)
 
 
 ## The sibling-isolation inverse: a lifted per-frame handler may contain fire-and-forget
@@ -4388,7 +4388,7 @@ static func _lift_async_func_event(func_code: String, handler_header: String, co
 static func _consume_pick_validity_guard(loop_event: EventRow) -> void:
 	if loop_event.pick_filters.is_empty() or loop_event.actions.is_empty():
 		return
-	if not SheetCompiler._subtree_awaits(loop_event):
+	if not EventSheetCompiler._subtree_awaits(loop_event):
 		return
 	var iterator: String = (loop_event.pick_filters[0] as PickFilter).iterator_name
 	var guard: String = "if %s is Object and not is_instance_valid(%s): continue" % [iterator, iterator]
@@ -4542,7 +4542,7 @@ static var _own_function_names: Dictionary = {}
 ## either way - only the words move - which is exactly why the words are worth getting right.
 ## THE COMPILER'S OWN CONSTANT, not a second copy of the spelling. The prefix is the emitter's, and
 ## the day it changes there must be nothing here to change with it.
-const SHARED_HELPER_PREFIX := SheetCompiler.SHARED_HELPER_PREFIX
+const SHARED_HELPER_PREFIX := EventSheetCompiler.SHARED_HELPER_PREFIX
 
 
 ## Notes the file's own function headers. Every `func name(` at the top level of the source, whether
@@ -4885,17 +4885,17 @@ static func _took_written_statement(event: EventRow, lines: PackedStringArray, s
 			var layout: Dictionary = EventForgeValueLines.layout_of(joined, str(action.params[param_id]))
 			if not layout.is_empty():
 				action.written_params[param_id] = layout
-	if action.written_params.is_empty() or ActionCodegen.generate_action(action) != str(joined["written"]):
+	if action.written_params.is_empty() or EventSheetActionCodegen.generate_action(action) != str(joined["written"]):
 		# The parts of a call that stand on separate parameters are joined by text the verb's template owns (the
 		# commas between its arguments), so the lines cannot be kept value by value. They are kept for the whole
 		# statement instead: written back while the row still says what it said, once it reads as the very
 		# statement that was joined.
 		action.written_params.clear()
-		var read_as: String = ActionCodegen.generate_action(action)
+		var read_as: String = EventSheetActionCodegen.generate_action(action)
 		if read_as != str(joined["text"]):
 			return false
 		action.written_params[EventForgeValueLines.STATEMENT] = {"one_line": read_as, "written": str(joined["written"])}
-		if ActionCodegen.generate_action(action) != str(joined["written"]):
+		if EventSheetActionCodegen.generate_action(action) != str(joined["written"]):
 			return false
 	_flush_raw(event, pending_raw, blank_box)
 	_stamp_body_blanks(action, blank_box)
@@ -4927,7 +4927,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 			var noted_action: ACEAction = event.actions.back() as ACEAction
 			noted_action.comment = str(noted["note"])
 			# The spacing before the `#` is kept as written; the ordinary one is not stored at all.
-			noted_action.comment_marker = "" if noted["marker"] == SheetCompiler.ACTION_NOTE_MARKER else str(noted["marker"])
+			noted_action.comment_marker = "" if noted["marker"] == EventSheetCompiler.ACTION_NOTE_MARKER else str(noted["marker"])
 		else:
 			pending_raw.append(line)
 		return

@@ -4345,7 +4345,7 @@ static func with_chain_defaults(definition: ACEDefinition, values: Dictionary) -
 	for parameter: Variant in definition.parameters:
 		if parameter is Dictionary:
 			defaults[str((parameter as Dictionary).get("id", ""))] = str((parameter as Dictionary).get("default_value", ""))
-	return ActionCodegen.settle_optional_commas(template, values, defaults)
+	return EventSheetActionCodegen.settle_optional_commas(template, values, defaults)
 
 
 ## The line the compiler will write for this row, with the values as typed - produced BY the
@@ -4359,28 +4359,28 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary, startin
 	# the open sheet's declarations rather than the template with its slot still in it.
 	var reset_template: String = str(definition.metadata.get("codegen_template", ""))
 	if definition.ace_type == ACEDefinition.ACEType.ACTION and (
-			reset_template.contains("{%s}" % ActionCodegen.STARTING_VALUE_SLOT)
-			or reset_template.contains("{%s}" % ActionCodegen.EVERY_STARTING_VALUE_SLOT)):
+			reset_template.contains("{%s}" % EventSheetActionCodegen.STARTING_VALUE_SLOT)
+			or reset_template.contains("{%s}" % EventSheetActionCodegen.EVERY_STARTING_VALUE_SLOT)):
 		var reset: ACEAction = ACEAction.new()
 		reset.provider_id = definition.provider_id
 		reset.ace_id = definition.id
 		reset.params = values.duplicate()
 		reset.codegen_template = reset_template
-		return ActionCodegen.starting_value_line(reset, starting)
+		return EventSheetActionCodegen.starting_value_line(reset, starting)
 	match definition.ace_type:
 		ACEDefinition.ACEType.CONDITION:
 			var condition: ACECondition = ACECondition.new()
 			condition.provider_id = definition.provider_id
 			condition.ace_id = definition.id
 			condition.params = values.duplicate()
-			var expression: String = ConditionCodegen.generate_condition(condition).replace("{uid}", PREVIEW_UID)
+			var expression: String = EventSheetConditionCodegen.generate_condition(condition).replace("{uid}", PREVIEW_UID)
 			return "" if expression.strip_edges().is_empty() else "if %s:" % expression
 		ACEDefinition.ACEType.ACTION:
 			var action: ACEAction = ACEAction.new()
 			action.provider_id = definition.provider_id
 			action.ace_id = definition.id
 			action.params = values.duplicate()
-			return ActionCodegen.generate_action(action).strip_edges().replace("{uid}", PREVIEW_UID)
+			return EventSheetActionCodegen.generate_action(action).strip_edges().replace("{uid}", PREVIEW_UID)
 	# An expression (and a trigger's parameters) has no statement of its own - the template with
 	# the values in it IS what the row contributes to whatever line encloses it.
 	var template: String = str(definition.metadata.get("codegen_template", ""))
@@ -4390,7 +4390,7 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary, startin
 	# dropped in - exactly as the compiler does it. Without this the echo showed the template's own
 	# `{?key=word}` marks, which is the one thing an echo must never do: it would be reading out a
 	# line the file will not hold.
-	template = ActionCodegen.collapse_optional_segments(template, values)
+	template = EventSheetActionCodegen.collapse_optional_segments(template, values)
 	for key: Variant in values.keys():
 		template = template.replace("{%s}" % str(key), str(values[key]))
 	return template
@@ -4447,7 +4447,7 @@ func _refresh_live_reading() -> void:
 		return
 	var values: Dictionary = _current_values()
 	if _help_strip != null:
-		var starting: Dictionary = SheetCompiler.declared_starting_values(_lint_sheet())
+		var starting: Dictionary = EventSheetCompiler.declared_starting_values(_lint_sheet())
 		_help_strip.set_reading(reset_reading(_definition, values, starting),
 			row_code_line(_definition, values, starting))
 	for caption: Callable in _choice_captions:

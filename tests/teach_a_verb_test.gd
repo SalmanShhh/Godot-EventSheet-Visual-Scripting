@@ -32,7 +32,7 @@ static func run() -> bool:
 	amount_param.type_name = "int"
 	verb.params = [amount_param]
 	sheet.functions.append(verb)
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, SHEET_PATH)
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, SHEET_PATH)
 	ok = _check("the teaching sheet compiles", bool(compile_result.get("success", false)), true) and ok
 
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock

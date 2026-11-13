@@ -27,7 +27,7 @@ const SOURCE_LINES: Array = [
 static func run() -> bool:
 	var all_passed: bool = true
 	var source: String = "\n".join(PackedStringArray(SOURCE_LINES))
-	var sheet: EventSheetResource = GDScriptImporter.new().import_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_source(source)
 
 	var health: Dictionary = sheet.variables.get("health", {}) as Dictionary
 	var speed: Dictionary = sheet.variables.get("speed", {}) as Dictionary

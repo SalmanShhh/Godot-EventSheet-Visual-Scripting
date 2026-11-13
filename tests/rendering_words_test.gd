@@ -116,7 +116,7 @@ static func _test_the_notifier_row_compiles() -> bool:
 	acted.codegen_template = "visibility_layer = 2"
 	row.actions.append(acted)
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_on_screen.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_on_screen.gd").get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	return _check("a sheet asking whether a node is on screen compiles", script.reload(), OK) and ok
@@ -153,7 +153,7 @@ static func _test_hand_written_lines_read_as_the_words() -> bool:
 ## Every cell reading of the opened fixture - "object ▸ text" where the row names an object, the bare
 ## text otherwise.
 static func _open_and_read() -> PackedStringArray:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -193,10 +193,10 @@ static func _has_reading(readings: PackedStringArray, needle: String) -> bool:
 ## with every byte where the author left it.
 static func _test_the_file_saves_back() -> bool:
 	var source: String = FileAccess.get_file_as_string(SOURCE_PATH)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	# Compiled to user://, never back over the fixture: compile(sheet, "") writes to the sheet's own
 	# external source path, and a probe that rewrote the repository would be testing itself.
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_rendering_words.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_rendering_words.gd").get("output", ""))
 	return _check("the drawing-order file saves back byte for byte", output, source)
 
 

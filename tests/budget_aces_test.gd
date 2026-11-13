@@ -45,7 +45,7 @@ static func run() -> bool:
 	over.params = {"ms": "8.0"}
 	event.actions.append(over)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_budget.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_budget.gd").get("output", ""))
 	all_passed = _check("Begin Frame Budget emits the fence with the param", output.contains("var __ace_budget_end := Time.get_ticks_usec() + int(8.0 * 1000.0)"), true) and all_passed
 	all_passed = _check("Await If Over Budget emits the guarded await", output.contains("if Time.get_ticks_usec() >= __ace_budget_end:") and output.contains("await get_tree().process_frame"), true) and all_passed
 	var generated: GDScript = GDScript.new()

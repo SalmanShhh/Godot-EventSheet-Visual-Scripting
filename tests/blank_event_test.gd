@@ -21,7 +21,7 @@ static func run() -> bool:
 	var blank: EventRow = EventRow.new()
 	blank.actions.append(_action("label.text = str(hp)"))
 	sheet.events.append(blank)
-	var blank_result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_blank_event.gd")
+	var blank_result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_blank_event.gd")
 	var blank_output: String = str(blank_result.get("output", ""))
 	all_passed = _check("a blank top-level event emits the every-tick handler",
 		blank_output.contains("func _process(_delta: float) -> void:\n\tlabel.text = str(hp)"), true) and all_passed
@@ -39,7 +39,7 @@ static func run() -> bool:
 	conditioned.conditions.append(_condition_with_template("hp > 0"))
 	conditioned.actions.append(_action("tick()"))
 	conditioned_sheet.events.append(conditioned)
-	var conditioned_output: String = str(SheetCompiler.compile(
+	var conditioned_output: String = str(EventSheetCompiler.compile(
 		conditioned_sheet, "user://eventforge_blank_event_conditioned.gd").get("output", ""))
 	all_passed = _check("a trigger-less event with a condition checks it every tick",
 		conditioned_output.contains("func _process(_delta: float) -> void:\n\tif hp > 0:\n\t\ttick()"), true) and all_passed
@@ -54,7 +54,7 @@ static func run() -> bool:
 	blank_tick.actions.append(_action("second()"))
 	shared_sheet.events.append(explicit_tick)
 	shared_sheet.events.append(blank_tick)
-	var shared_output: String = str(SheetCompiler.compile(
+	var shared_output: String = str(EventSheetCompiler.compile(
 		shared_sheet, "user://eventforge_blank_event_shared.gd").get("output", ""))
 	all_passed = _check("blank and explicit every-tick events share one handler, in order",
 		shared_output.contains("func _process(_delta: float) -> void:\n\tfirst()\n\tsecond()"), true) and all_passed
@@ -75,7 +75,7 @@ static func run() -> bool:
 	blank_sub.actions.append(_action("flash.play()"))
 	parent.sub_events.append(blank_sub)
 	nested_sheet.events.append(parent)
-	var nested_output: String = str(SheetCompiler.compile(
+	var nested_output: String = str(EventSheetCompiler.compile(
 		nested_sheet, "user://eventforge_blank_subevent.gd").get("output", ""))
 	all_passed = _check("a blank sub-event follows its parent's block as plain statements",
 		nested_output.contains("\tif shielded:\n\t\tamount /= 2\n\thp -= amount\n\tflash.play()"), true) and all_passed
@@ -83,12 +83,12 @@ static func run() -> bool:
 	# The resolver's own reading of blank, pinned by value.
 	var probe: EventRow = EventRow.new()
 	all_passed = _check("the resolver reads a blank trigger as the every-tick one",
-		TriggerResolver.effective_trigger_id(probe), "OnProcess") and all_passed
+		EventSheetTriggerResolver.effective_trigger_id(probe), "OnProcess") and all_passed
 	all_passed = _check("a blank event resolves to the _process handler",
-		str(TriggerResolver.resolve_trigger(probe).get("function_name", "")), "_process") and all_passed
+		str(EventSheetTriggerResolver.resolve_trigger(probe).get("function_name", "")), "_process") and all_passed
 	probe.trigger_id = "OnReady"
 	all_passed = _check("an event that picked a trigger keeps it",
-		TriggerResolver.effective_trigger_id(probe), "OnReady") and all_passed
+		EventSheetTriggerResolver.effective_trigger_id(probe), "OnReady") and all_passed
 
 	# The READING of blank, pinned by value: an empty lane for the every-frame tick, one muted note
 	# for the physics tick, and the full Every tick words back the moment a condition shows up.

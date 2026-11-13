@@ -24,7 +24,7 @@ static func run() -> bool:
 	row.actions.append(_baked_act("ForgetOnce", {"key": "\"hint_dash\""}, "f1"))
 	row.actions.append(_baked_act("StartRampClock", {}, "r1"))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://wave4_vocab_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://wave4_vocab_out.gd").get("output", ""))
 	ok = _check("metric 3 emits the grid-steps index", output.contains("][3]) <= maxf(64.0, 0.0)"), true) and ok
 	ok = _check("once-ever helper emits with the baked uid", output.contains("func __once_ever_o1(key: String) -> bool:"), true) and ok
 	ok = _check("once-ever stores in the Remember file", output.contains("__save.set_value(\"OnceEver\", key, true)"), true) and ok

@@ -289,29 +289,29 @@ tracks/0/keys = {"times": PackedFloat32Array(0.35), "transitions": PackedFloat32
 		EventSheetAnimationTrackFacts.event_words("_on_hit_frame"), "hit frame") and ok
 	# The picker's side of the same contract: the words the author types become that very function.
 	ok = _check("the authored event writes the function the track has to call",
-		TriggerResolver.animation_event_handler_name("hit frame"), "_on_hit_frame") and ok
+		EventSheetTriggerResolver.animation_event_handler_name("hit frame"), "_on_hit_frame") and ok
 	ok = _check("punctuation in the words cannot produce a name that does not parse",
-		TriggerResolver.animation_event_handler_name("hit-frame (left)"), "_on_hit_frame_left") and ok
+		EventSheetTriggerResolver.animation_event_handler_name("hit-frame (left)"), "_on_hit_frame_left") and ok
 	var named: EventRow = EventRow.new()
 	named.trigger_provider_id = "Core"
 	named.trigger_id = "OnAnimationEvent"
 	named.trigger_params = {"event_name": "hit frame"}
 	ok = _check("the animation event compiles to that function and connects nothing",
-		TriggerResolver.resolve_trigger(named).get("function_name", ""), "_on_hit_frame") and ok
+		EventSheetTriggerResolver.resolve_trigger(named).get("function_name", ""), "_on_hit_frame") and ok
 	ok = _check("and no signal is wired up for it - the animation IS the caller",
-		str(TriggerResolver.resolve_trigger(named).get("signal_name", "")), "") and ok
+		str(EventSheetTriggerResolver.resolve_trigger(named).get("signal_name", "")), "") and ok
 	var other: EventRow = EventRow.new()
 	other.trigger_provider_id = "Core"
 	other.trigger_id = "OnAnimationEvent"
 	other.trigger_params = {"event_name": "footstep"}
 	ok = _check("two differently named events are two different functions",
-		TriggerResolver.get_trigger_key(named) == TriggerResolver.get_trigger_key(other), false) and ok
+		EventSheetTriggerResolver.get_trigger_key(named) == EventSheetTriggerResolver.get_trigger_key(other), false) and ok
 	# The 2D half: the sprite's own signal, with the clip-and-frame question left as a condition.
 	var frame_event: EventRow = EventRow.new()
 	frame_event.trigger_provider_id = "Core"
 	frame_event.trigger_id = "OnAnimationFrame"
 	ok = _check("the sprite frame event listens to the sprite's own signal",
-		str(TriggerResolver.resolve_trigger(frame_event).get("signal_name", "")), "frame_changed") and ok
+		str(EventSheetTriggerResolver.resolve_trigger(frame_event).get("signal_name", "")), "frame_changed") and ok
 	return ok
 
 
@@ -384,7 +384,7 @@ static func _authored_events_compile() -> bool:
 	stepped.code = "print(\"track\")"
 	called.actions.append(stepped)
 	sheet.events.append(called)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_animation_events.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_animation_events.gd").get("output", ""))
 	ok = _check("the frame event connects the sprite's own signal",
 		output.contains("get_node(\"AnimatedSprite2D\").frame_changed.connect(_on_animatedsprite2d_frame_changed)"), true) and ok
 	ok = _check("and asks the clip-and-frame question inside the handler",
@@ -405,7 +405,7 @@ static func _open_and_read() -> Dictionary:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -441,8 +441,8 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 ## Gate four: every reading here is a lens over a value the row already holds, so opening the file
 ## and saving it untouched puts back every byte.
 static func _round_trip() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 

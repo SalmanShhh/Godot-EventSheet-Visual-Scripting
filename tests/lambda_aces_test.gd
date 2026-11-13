@@ -36,12 +36,12 @@ static func run() -> bool:
 	set_action.params = {"name": "doubler", "value": "(func(x): return x * 2)"}
 	event.actions.append(set_action)
 	sheet.events.append(event)
-	var source: String = str(SheetCompiler.compile(sheet, "user://lambda_src.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(sheet, "user://lambda_src.gd").get("output", ""))
 	ok = _check("the lambda emits verbatim inside the declaration",
 		source.contains("var doubler = (func(x): return x * 2)"), true) and ok
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	imported.external_source_path = "user://lambda_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://lambda_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://lambda_rt.gd").get("output", ""))
 	ok = _check("a lambda-in-a-param round-trips byte-identically", roundtrip == source, true) and ok
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])

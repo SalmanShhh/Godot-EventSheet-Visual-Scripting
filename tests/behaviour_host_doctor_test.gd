@@ -56,9 +56,9 @@ static func run() -> bool:
 
 	ok = _move_pins(cache) and ok
 	ok = SUPPORT.pins(TEST_NAME, [
-		["class names read as words", [SheetCompiler.spaced_class_name("PlatformerMovement"), SheetCompiler.spaced_class_name("FPSController"), SheetCompiler.spaced_class_name("Camera3DRig")], ["Platformer Movement", "FPS Controller", "Camera3D Rig"]],
-		["the run-time sentence is the same words", SheetCompiler.host_warning_sentence("PlatformerMovement", "CharacterBody2D"), "Platformer Movement needs a CharacterBody2D: put it under one, or set Acts on."],
-		["an Area host reads with 'an'", SheetCompiler.host_phrase("Area2D"), "an Area2D"],
+		["class names read as words", [EventSheetCompiler.spaced_class_name("PlatformerMovement"), EventSheetCompiler.spaced_class_name("FPSController"), EventSheetCompiler.spaced_class_name("Camera3DRig")], ["Platformer Movement", "FPS Controller", "Camera3D Rig"]],
+		["the run-time sentence is the same words", EventSheetCompiler.host_warning_sentence("PlatformerMovement", "CharacterBody2D"), "Platformer Movement needs a CharacterBody2D: put it under one, or set Acts on."],
+		["an Area host reads with 'an'", EventSheetCompiler.host_phrase("Area2D"), "an Area2D"],
 	]) and ok
 	return ok
 

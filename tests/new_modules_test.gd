@@ -96,7 +96,7 @@ static func run() -> bool:
 	dev_action.params = {"target": "self", "group": "\"enemies\""}
 	dev_event.actions.append(dev_action)
 	dev_sheet.events.append(dev_event)
-	var dev_output: String = str(SheetCompiler.compile(dev_sheet, "user://eventsheets_dev.gd").get("output", ""))
+	var dev_output: String = str(EventSheetCompiler.compile(dev_sheet, "user://eventsheets_dev.gd").get("output", ""))
 	all_passed = _check("Add To Group compiles to the native call", dev_output.contains("self.add_to_group(\"enemies\")"), true) and all_passed
 	# Additional math idioms register under Math & Random.
 	for math: Array in [["Snapped", "Math & Random"], ["AngleDifference", "Math & Random"], ["IsEqualApprox", "Math & Random"], ["RotateTowardAngle", "Math & Random"], ["LerpAngle", "Math & Random"], ["SmoothLerp", "Math & Random"], ["Atan2", "Math & Random"]]:
@@ -141,7 +141,7 @@ static func run() -> bool:
 	emit_action.params = {"target": "self", "signal": "died", "args": ""}
 	emit_event.actions.append(emit_action)
 	emit_sheet.events.append(emit_event)
-	var emit_output: String = str(SheetCompiler.compile(emit_sheet, "user://eventsheets_emit.gd").get("output", ""))
+	var emit_output: String = str(EventSheetCompiler.compile(emit_sheet, "user://eventsheets_emit.gd").get("output", ""))
 	all_passed = _check("Emit Signal On emits the modern .emit() form with clean empty args", emit_output.contains("self.died.emit()"), true) and all_passed
 	var hc_script: GDScript = GDScript.new()
 	hc_script.source_code = "extends Label\nsignal died\nfunc _t() -> void:\n\tposition += Vector2(0, 0)\n\ttext = \"Score: %d\" % [0]\n\tprint(self.died.is_connected(_t))\n"
@@ -168,7 +168,7 @@ static func run() -> bool:
 	spawn_action.params = {"path": "\"res://enemy.tscn\"", "position": "Vector2(8, 0)", "rotation": "180.0", "group": "\"targets\""}
 	spawn_event.actions.append(spawn_action)
 	spawn_sheet.events.append(spawn_event)
-	var spawn_output: String = str(SheetCompiler.compile(spawn_sheet, "user://eventsheets_spawn.gd").get("output", ""))
+	var spawn_output: String = str(EventSheetCompiler.compile(spawn_sheet, "user://eventsheets_spawn.gd").get("output", ""))
 	all_passed = _check("Instantiate Scene (Full) wires rotation + group", spawn_output.contains(".rotation_degrees = 180.0") and spawn_output.contains(".add_to_group(\"targets\")"), true) and all_passed
 	var spawn_script: GDScript = GDScript.new()
 	spawn_script.source_code = spawn_output
@@ -203,7 +203,7 @@ static func run() -> bool:
 	grab.codegen_template = "grab_focus()"
 	pressed_event.actions.append(grab)
 	sheet.events.append(pressed_event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_ui_test.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_ui_test.gd").get("output", ""))
 	all_passed = _check("On Pressed connects the pressed signal", output.contains(".pressed.connect("), true) and all_passed
 	all_passed = _check("On Pressed emits a handler", output.contains("_startbutton_pressed"), true) and all_passed
 	all_passed = _check("On Pressed action lands in the handler", output.contains("grab_focus()"), true) and all_passed
@@ -222,7 +222,7 @@ static func run() -> bool:
 	var toggled_sheet: EventSheetResource = EventSheetResource.new()
 	toggled_sheet.host_class = "Control"
 	toggled_sheet.events.append(toggled_event)
-	var toggled_output: String = str(SheetCompiler.compile(toggled_sheet, "user://eventsheets_ui_toggled.gd").get("output", ""))
+	var toggled_output: String = str(EventSheetCompiler.compile(toggled_sheet, "user://eventsheets_ui_toggled.gd").get("output", ""))
 	all_passed = _check("On Toggled connects the toggled signal", toggled_output.contains(".toggled.connect("), true) and all_passed
 	all_passed = _check("On Toggled handler takes toggled_on: bool", toggled_output.contains("toggled_on: bool"), true) and all_passed
 

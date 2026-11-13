@@ -63,7 +63,7 @@ static func run() -> bool:
 		var second_action: ACEAction = editor._ace_apply._create_action_from_definition(announce_definition, {"amount": 9})
 		event.actions.append(second_action)
 		sheet.events.append(event)
-		var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_instance_backed.gd").get("output", ""))
+		var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_instance_backed.gd").get("output", ""))
 		all_passed = _check("direct call emitted",
 			output.contains("\t__eventsheet_provider_DemoHealthAddon.announce_heal(7)"), true) and all_passed
 		all_passed = _check("provider member declared exactly once",

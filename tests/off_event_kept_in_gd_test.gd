@@ -11,7 +11,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const TEST_NAME := "off_event_kept_in_gd_test"
 const FILE_PATH := "user://off_event_kept_in_gd_test.gd"
 const RESAVE_PATH := "user://off_event_kept_in_gd_test_resave.gd"
@@ -89,17 +89,17 @@ static func run() -> bool:
 	# On again, the file is the one it was.
 	var off_once: Dictionary = _cycle(func(sheet: EventSheetResource) -> void: _top(sheet, "OnProcess", 0).enabled = false)
 	_write(FILE_PATH, str(off_once.get("saved", "")))
-	var back_on: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var back_on: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	var back_on_event: EventRow = _top(back_on, "OnProcess", 0)
 	if back_on_event != null:
 		back_on_event.enabled = true
-	SheetCompiler.compile(back_on, FILE_PATH)
+	EventSheetCompiler.compile(back_on, FILE_PATH)
 	# A .tres sheet's generated companion still leaves an event that is off out of the game.
 	_write(FILE_PATH, SOURCE)
-	var tres_like: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var tres_like: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_top(tres_like, "OnProcess", 0).enabled = false
 	tres_like.external_source_path = ""
-	var companion: String = str(SheetCompiler.echo(tres_like).get("output", ""))
+	var companion: String = str(EventSheetCompiler.echo(tres_like).get("output", ""))
 	return SUPPORT.pins(TEST_NAME, [
 		["on again: the file is back to what it was", FileAccess.get_file_as_string(FILE_PATH), SOURCE],
 		["a .tres companion still leaves an event that is off out", [companion.contains("score = 0"), companion.contains("# @off")], [false, false]],
@@ -165,22 +165,22 @@ static func _check_stateful() -> bool:
 ## opens it again: {saved, reopened, resaved}.
 static func _cycle(edit: Callable) -> Dictionary:
 	_write(FILE_PATH, SOURCE)
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	if edit.is_valid():
 		edit.call(sheet)
-	SheetCompiler.compile(sheet, FILE_PATH)
+	EventSheetCompiler.compile(sheet, FILE_PATH)
 	var saved: String = FileAccess.get_file_as_string(FILE_PATH)
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external(FILE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 	_write(RESAVE_PATH, saved)
 	reopened.external_source_path = RESAVE_PATH
-	SheetCompiler.compile(reopened, RESAVE_PATH)
+	EventSheetCompiler.compile(reopened, RESAVE_PATH)
 	return {"saved": saved, "reopened": reopened, "resaved": FileAccess.get_file_as_string(RESAVE_PATH)}
 
 
 ## SOURCE opened fresh, untouched.
 static func _opened() -> EventSheetResource:
 	_write(FILE_PATH, SOURCE)
-	return GDScriptImporter.new().import_external(FILE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(FILE_PATH)
 
 
 ## An event's conditions and actions as the code they write, so two readings of one event compare.
@@ -189,9 +189,9 @@ static func _words(event: EventRow) -> Array:
 		return []
 	var words: Array = [event.condition_mode]
 	for condition: ACECondition in event.conditions:
-		words.append(ConditionCodegen.generate_condition(condition, ""))
+		words.append(EventSheetConditionCodegen.generate_condition(condition, ""))
 	for action: Variant in event.actions:
-		words.append(ActionCodegen.generate_action(action, "", "") if action is ACEAction else str((action as RawCodeRow).code) if action is RawCodeRow else action.get_class())
+		words.append(EventSheetActionCodegen.generate_action(action, "", "") if action is ACEAction else str((action as RawCodeRow).code) if action is RawCodeRow else action.get_class())
 	return words
 
 
@@ -224,7 +224,7 @@ static func _in_function(sheet: EventSheetResource) -> EventRow:
 		return null
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).function_name == "tally":
-			for row: Variant in SheetCompiler._function_body_rows(entry as EventFunction):
+			for row: Variant in EventSheetCompiler._function_body_rows(entry as EventFunction):
 				if row is EventRow and not (row as EventRow).conditions.is_empty():
 					return row as EventRow
 	return null

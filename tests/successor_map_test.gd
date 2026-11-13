@@ -10,7 +10,7 @@
 #   1. BUILDS a row on the old spelling, filling each of its parameters with the value the verb
 #      itself starts on, or a sample where the verb asks the author to say;
 #   2. applies the rewrite the map describes, resolved to the end of its chain;
-#   3. emits the successor row through the REAL emitter (ActionCodegen / ConditionCodegen), compiles
+#   3. emits the successor row through the REAL emitter (EventSheetActionCodegen / EventSheetConditionCodegen), compiles
 #      it inside a one-row sheet through the real compiler, pins that the two agree, and PUTS THE
 #      COMPILED FILE THROUGH GODOT'S OWN PARSER - the step the migrate dialog runs before it commits,
 #      and the one a harness that stopped at "the text contains the line" cannot see;
@@ -214,7 +214,7 @@ static func _test_a_hand_written_line_reads_as_the_current_verb() -> bool:
 		return _check("the probe file can be written", false, true)
 	file.store_string(source)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var ok: bool = _check("the probe file opens as a sheet", sheet != null, true)
 	if sheet == null:
 		return false
@@ -233,7 +233,7 @@ static func _test_a_hand_written_line_reads_as_the_current_verb() -> bool:
 	# would be a worse bug than the one this test is about.
 	sheet.external_source_path = path
 	ok = _check("and re-emits byte for byte",
-		str(SheetCompiler.compile(sheet, path).get("output", "")), source) and ok
+		str(EventSheetCompiler.compile(sheet, path).get("output", "")), source) and ok
 	DirAccess.remove_absolute(path)
 	# AND THE RULE ITSELF, asked where the alphabet cannot answer it. The four pins above hold today
 	# for a reason nobody chose: `audio_aces.gd` sorts before `collection_aces.gd`, so the current
@@ -517,19 +517,19 @@ static func _emit(template: String, params: Dictionary, ace_type: int) -> String
 		condition.provider_id = "Core"
 		condition.codegen_template = template
 		condition.params = params.duplicate()
-		return ConditionCodegen.generate_condition(condition)
+		return EventSheetConditionCodegen.generate_condition(condition)
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.codegen_template = template
 	action.params = params.duplicate()
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)
 
 
 ## Whether a one-row sheet holding the rewritten row compiles, whether the GDScript it wrote really
 ## does carry the emitted line, AND WHETHER THAT GDSCRIPT PARSES. This is the byte gate the migrate
 ## dialog runs before it commits, asked here of every address the vocabulary ships.
 ##
-## The parse is the step that matters and the step that was missing: `SheetCompiler.compile` builds
+## The parse is the step that matters and the step that was missing: `EventSheetCompiler.compile` builds
 ## text and never asks the engine to read it, so a rewrite that lands a quoted literal in a slot
 ## spelled as a name writes a file nothing loads and a `contains()` check calls it a pass. The
 ## migrate dialog refuses such a row (`why=file-refuses`); a harness that could not see it let the
@@ -571,7 +571,7 @@ static func _compiles_to(successor_key: String, successor: Dictionary, params: D
 		if named.is_valid_ascii_identifier() and not ClassDB.class_exists(named) and named != "null" \
 				and named != "true" and named != "false":
 			sheet.variables[named] = {"type": "float", "default": 0.0, "exported": false}
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://_successor_map_fixture.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://_successor_map_fixture.gd")
 	if not bool(compiled.get("success", false)):
 		print("  [why] %s did not compile: %s" % [successor_key, str(compiled.get("errors", []))])
 		return false

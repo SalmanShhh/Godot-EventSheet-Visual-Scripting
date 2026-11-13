@@ -387,7 +387,7 @@ static func _import() -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	return GDScriptImporter.new().import_external(SOURCE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 
 
 ## The readings of one sheet, straight off the canvas's own spans.
@@ -423,7 +423,7 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 ## A reading may never cost a byte: opening the file and saving it untouched reproduces it exactly.
 static func _round_trip() -> bool:
 	var sheet: EventSheetResource = _import()
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 

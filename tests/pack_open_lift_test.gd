@@ -1,6 +1,6 @@
 # Godot EventSheets - every shipped pack opens as a sheet WITH its verbs.
 #
-# Opening a pack .gd the way the dock does (GDScriptImporter.import_external) must lift its
+# Opening a pack .gd the way the dock does (EventSheetGDScriptImporter.import_external) must lift its
 # published verbs into EventFunctions (the two-lane verb rows) rather than leaving them as
 # annotation-shell code blocks - and the reopened sheet must compile back to the exact bytes.
 # Measured 2026-08-17 before the fix: 38 of 91 packs opened with ZERO verbs (the FPS Controller,
@@ -63,7 +63,7 @@ static func run() -> bool:
 					declared += 1
 				elif line.begins_with("func ") or line.begins_with("static func "):
 					has_functions = true
-			var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+			var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 			packs += 1
 			var exposed: int = 0
 			for function: Variant in sheet.functions:
@@ -79,7 +79,7 @@ static func run() -> bool:
 				all_passed = _check("%s publishes no verbs (loader / preset)" % file_name, declared, 0) and all_passed
 			else:
 				all_passed = _check("%s lifts at least one function" % file_name, sheet.functions.size() > 0, true) and all_passed
-			var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+			var reopened: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
 	# Did the walk see the fleet? Asked of the BUILDERS rather than of a number somebody typed: a
 	# pack folder is compiler output, so every folder here has a builder that writes it, and a
@@ -109,7 +109,7 @@ static func run() -> bool:
 	all_passed = _check("fleet-wide declared verbs are at least the 1713 measured",
 		total_verbs >= 1713, true) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
-	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
+	var fps: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
 	for function: Variant in fps.functions:
 		if function is EventFunction and (function as EventFunction).expose_as_ace:

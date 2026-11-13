@@ -16,7 +16,7 @@ func _init() -> void:
 					if lines[ahead].begins_with("func ") or lines[ahead].begins_with("static func "):
 						declared.append(lines[ahead].split("(")[0].split(" ")[-1])
 						break
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		var lifted: PackedStringArray = PackedStringArray()
 		for function: Variant in sheet.functions:
 			if function is EventFunction:

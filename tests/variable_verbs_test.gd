@@ -44,7 +44,7 @@ static func run() -> bool:
 		_condition_text("not muted", context), "muted is false") and ok
 
 	# ── the dialog previews the exact row it will write, in the shape ───────
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var host: Node = Node.new()
 	dialog.init_dialog(host)
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
@@ -71,7 +71,7 @@ static func run() -> bool:
 
 
 ## The word the Scope dropdown is showing, "" when it shows nothing.
-static func _chosen_scope(dialog: VariableDialog) -> String:
+static func _chosen_scope(dialog: EventSheetVariableDialog) -> String:
 	var option: OptionButton = dialog._scope_option
 	return option.get_item_text(option.selected) if option != null and option.selected >= 0 else ""
 

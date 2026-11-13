@@ -492,7 +492,7 @@ static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
 ## Compiles a sheet to plain GDScript. Returns the compiler's result Dictionary:
 ## "output" (the source text), "success", "errors", "warnings", "source_map".
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
-	return SheetCompiler.compile(sheet, output_path)
+	return EventSheetCompiler.compile(sheet, output_path)
 
 
 ## ALL the GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip, grouping
@@ -500,7 +500,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 ## whenever the declaration needs one (a doc comment above it, a Static local's marker). For the ONE
 ## line out of that which declares the variable - the line a row echoes - ask `row_code_line()`.
 static func variable_code(variable: LocalVariable) -> String:
-	return SheetCompiler._emit_tree_variable_line(variable)
+	return EventSheetCompiler._emit_tree_variable_line(variable)
 
 
 ## ONE line of the emitted file - the line a ROW stands for, which is what the sheet echoes at that
@@ -536,7 +536,7 @@ static func row_code_line(row: Resource, sheet: EventSheetResource = null) -> St
 ## colour and the two flags, exactly as they are emitted and read back. Derived in one walk, so a
 ## caller with many heads to draw asks once.
 static func group_declaration_lines(sheet: EventSheetResource) -> Dictionary:
-	return SheetCompiler.group_declaration_lines(sheet.events) if sheet != null else {}
+	return EventSheetCompiler.group_declaration_lines(sheet.events) if sheet != null else {}
 
 
 ## Every variable a sheet can name, and who owns each - the ONE list the rows, the picker, the
@@ -670,7 +670,7 @@ static func resource_grid(columns: Array, options: Dictionary = {}) -> Dictionar
 				# wrapper were part of the first choice, yielding enum(enum(a|b)). Round-tripping
 				# it through the codec validates and canonicalises it, and keeps any `key=Label`
 				# choice labeled rather than flattening it.
-				var formed: String = SheetCompiler.table_enum_type(SheetCompiler.table_enum_options(kind))
+				var formed: String = EventSheetCompiler.table_enum_type(EventSheetCompiler.table_enum_options(kind))
 				column_type = formed if not formed.is_empty() else "String"
 			elif kind.contains("|"):
 				# Plain choices become a dropdown column; spaces around the | are forgiven, and a
@@ -735,7 +735,7 @@ static func attach_validator(sheet: EventSheetResource, variable_name: String) -
 ## Opens GDScript source as an editable sheet (the lossless external path: everything
 ## liftable lifts, everything else stays verbatim - never corrupted).
 static func open_gd_as_sheet(source: String) -> EventSheetResource:
-	return GDScriptImporter.new().import_external_source(source)
+	return EventSheetGDScriptImporter.new().import_external_source(source)
 
 
 ## Publishes a behaviour sheet as an ADDON PACK .gd at base_path + ".gd" - the ONE pack
@@ -763,7 +763,7 @@ static func publish_pack(sheet: EventSheetResource, base_path: String, icon_path
 	EventSheetACELifter.lift_function_declarations(sheet, false)
 	stabilize_row_uids(sheet)
 	DirAccess.make_dir_recursive_absolute(base_path.get_base_dir())
-	return SheetCompiler.compile(sheet, base_path + ".gd", true)
+	return EventSheetCompiler.compile(sheet, base_path + ".gd", true)
 
 
 ## Stamps deterministic row uids derived from each row's structural path, so an unchanged
@@ -2343,7 +2343,7 @@ static var _pack_help_by_dir: Dictionary = {}
 ## The version every doc link is pinned to - the same constant the release ritual bumps, so a
 ## shipped build always points at its own tag.
 static func docs_version() -> String:
-	return SheetCompiler.VERSION
+	return EventSheetCompiler.VERSION
 
 
 ## The absolute URL of a repo-relative documentation path, pinned to the released tag.

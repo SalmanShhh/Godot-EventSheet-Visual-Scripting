@@ -249,7 +249,7 @@ static func _filled(ace_id: String, values: Dictionary) -> String:
 	for parameter: ACEParam in descriptor.params:
 		filled[str(parameter.id)] = str(parameter.default_value)
 	filled.merge(values, true)
-	return ActionCodegen._apply_template(descriptor.codegen_template, filled)
+	return EventSheetActionCodegen._apply_template(descriptor.codegen_template, filled)
 
 
 ## Runs one expression in a throwaway script and returns its value.
@@ -369,7 +369,7 @@ static func _compiled_loop(ace_id: String, params: Dictionary) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	var pick: PickFilter = PickFilter.new()
 	pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
-	pick.collection_value = ActionCodegen._apply_template(descriptor.codegen_template, params)
+	pick.collection_value = EventSheetActionCodegen._apply_template(descriptor.codegen_template, params)
 	pick.iterator_name = descriptor.looping_iterator
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"

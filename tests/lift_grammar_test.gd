@@ -328,4 +328,4 @@ static func _emit(template: String, params: Dictionary) -> String:
 	action.provider_id = "Core"
 	action.codegen_template = template
 	action.params = params.duplicate()
-	return ActionCodegen.generate_action(action)
+	return EventSheetActionCodegen.generate_action(action)

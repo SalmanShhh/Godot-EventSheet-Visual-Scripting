@@ -202,7 +202,7 @@ static func _test_inline_function_names() -> bool:
 ## A shipped pack opened as a sheet: its trigger, its own verbs and a line that changes one of its
 ## own variables all read under the one word the picker offers it by.
 static func _test_pack_reads_under_one_name() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/health/health_behavior.gd")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://eventsheet_addons/health/health_behavior.gd")
 	sheet.read_only = true
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -256,7 +256,7 @@ static func _open(path: String, source: String) -> EventSheetDock:
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())

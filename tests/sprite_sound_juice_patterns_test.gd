@@ -150,7 +150,7 @@ static func _picked_writes_the_read_shape() -> bool:
 	event_row.actions.append(_action("SetMasterVolume", {"level": "0.5"}))
 	event_row.actions.append(_action("ShowDialogCentred", {"target": "game_over"}))
 	sheet.events.append(event_row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_sprite_sound_juice_written.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_sprite_sound_juice_written.gd").get("output", ""))
 	for expected: String in [
 		"camera.offset = Vector2(randf_range(-4.0, 4.0), randf_range(-4.0, 4.0))",
 		"music.volume_db = linear_to_db(0.5)",
@@ -218,7 +218,7 @@ static func _patterns_claimed() -> bool:
 ## Gate 3 - reading is display only, so the file still saves byte for byte.
 static func _round_trip() -> bool:
 	var sheet: EventSheetResource = _import()
-	var output: String = str(SheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, SOURCE_PATH).get("output", ""))
 	return _check("opening the file and saving it reproduces every byte", output, SOURCE)
 
 
@@ -226,7 +226,7 @@ static func _import() -> EventSheetResource:
 	var handle: FileAccess = FileAccess.open(SOURCE_PATH, FileAccess.WRITE)
 	handle.store_string(SOURCE)
 	handle.close()
-	return GDScriptImporter.new().import_external(SOURCE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(SOURCE_PATH)
 
 
 ## The readings of one sheet, straight off the canvas's own spans.

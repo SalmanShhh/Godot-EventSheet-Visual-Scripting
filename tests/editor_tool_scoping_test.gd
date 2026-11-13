@@ -79,7 +79,7 @@ static func _checks_for(body: String, name: String) -> PackedStringArray:
 	var path: String = "user://%s.tres" % name
 	ResourceSaver.save(sheet, path)
 	var output_path: String = EventSheetProjectDoctor.output_path_for(path)
-	SheetCompiler.compile(sheet, output_path)
+	EventSheetCompiler.compile(sheet, output_path)
 	var findings: Array[Dictionary] = []
 	EventSheetProjectDoctor.check_editor_tool_safety(PackedStringArray([path]), findings)
 	var ids: PackedStringArray = PackedStringArray()

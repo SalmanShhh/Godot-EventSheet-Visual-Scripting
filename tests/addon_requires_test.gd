@@ -20,7 +20,7 @@ static func run() -> bool:
 	sheet.custom_class_name = "NeedyBehavior"
 	sheet.custom_class_icon = "res://icon.svg"
 	sheet.addon_requires = PackedStringArray(["autoload:AdvancedRandom", "StatSheetResource"])
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_requires_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_requires_probe.gd").get("output", ""))
 	all_passed = _check("the declaration emits as one annotation line",
 		output.contains("## @ace_requires(autoload:AdvancedRandom, StatSheetResource)"), true) and all_passed
 	all_passed = _check("it sits above @icon", output.find("@ace_requires") < output.find("@icon("), true) and all_passed
@@ -30,7 +30,7 @@ static func run() -> bool:
 	all_passed = _check("the emitted script parses", generated.reload(true) == OK, true) and all_passed
 
 	# ---- round-trip: the importer recovers the exact list (split inverts the join) ----
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(output)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(output)
 	all_passed = _check("the importer recovers the declaration",
 		imported.addon_requires, PackedStringArray(["autoload:AdvancedRandom", "StatSheetResource"])) and all_passed
 
@@ -39,7 +39,7 @@ static func run() -> bool:
 	bare_sheet.behavior_mode = true
 	bare_sheet.host_class = "Node"
 	bare_sheet.custom_class_name = "PlainBehavior"
-	var bare_output: String = str(SheetCompiler.compile(bare_sheet, "user://eventsheets_requires_bare.gd").get("output", ""))
+	var bare_output: String = str(EventSheetCompiler.compile(bare_sheet, "user://eventsheets_requires_bare.gd").get("output", ""))
 	all_passed = _check("an empty declaration emits nothing", bare_output.contains("@ace_requires"), false) and all_passed
 
 	# ---- typo-gate: the token is whitelisted, so scanning a declaring pack never warns ----

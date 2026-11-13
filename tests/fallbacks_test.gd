@@ -2,8 +2,8 @@
 # Set Part Of ("Variables" and "Variables: Vector").
 #
 # Two halves, because a descriptor that merely PARSES proves nothing about what a row does:
-#   1. Emission - the shipped templates go through the real ActionCodegen substitution, land in a
-#      real sheet row, and the whole sheet is run through SheetCompiler; the emitted lines are
+#   1. Emission - the shipped templates go through the real EventSheetActionCodegen substitution, land in a
+#      real sheet row, and the whole sheet is run through EventSheetCompiler; the emitted lines are
 #      pinned character-for-character (they are a compatibility promise once shipped) and the
 #      generated GDScript is reload()ed to prove it parses.
 #   2. Runtime - those same substituted templates are assembled into a script that is loaded and
@@ -173,7 +173,7 @@ static func run() -> bool:
 	write.params = {"var_name": "heading", "part": "\"y\"", "value": "0.0"}
 	event.actions.append(write)
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_fallbacks.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_fallbacks.gd").get("output", ""))
 
 	ok = _check("Number Or emits the typeof guard around the read",
 		output.contains("var bet = (save.get(\"score\") if typeof(save.get(\"score\")) in [TYPE_INT, TYPE_FLOAT] else 0)"), true) and ok
@@ -323,7 +323,7 @@ static func run() -> bool:
 
 ## The shipped template, substituted through the REAL codegen (never a hand-built string).
 static func _fill(descriptor: ACEDescriptor, params: Dictionary) -> String:
-	return ActionCodegen._apply_template(str(descriptor.codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(descriptor.codegen_template), params)
 
 
 ## Appends a Set Local Variable row, the row a user drops an expression verb into.

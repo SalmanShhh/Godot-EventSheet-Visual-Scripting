@@ -94,7 +94,7 @@ static func _opened() -> EventSheetResource:
 		return null
 	file.store_string(PLAYER_SOURCE)
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SCRIPT_PATH, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SCRIPT_PATH, false)
 	if sheet != null:
 		EventSheetACELifter.attempt_lift(sheet, PLAYER_SOURCE)
 	return sheet
@@ -110,7 +110,7 @@ static func _states_set_in_a_function_are_reached(sheet: EventSheetResource) -> 
 			return finding.get("kind") == EventSheetStateFacts.KIND_STATE_UNREACHABLE).size(), 0) and ok
 	# The same file before its functions are lifted: the bodies are still script blocks, and a
 	# `state = State.RUN` line in one reaches RUN all the same.
-	var raw: EventSheetResource = GDScriptImporter.new().import_external(SCRIPT_PATH, false)
+	var raw: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SCRIPT_PATH, false)
 	var raw_entered: Array = Array(EventSheetStateFacts.entered_states(raw))
 	raw_entered.sort()
 	ok = _check("and a script block that says state = State.RUN reaches RUN too",

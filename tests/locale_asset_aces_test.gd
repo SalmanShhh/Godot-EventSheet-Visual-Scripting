@@ -195,7 +195,7 @@ static func _run_emission() -> bool:
 		"caption": "null", "target": ""}
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://locale_asset_compile_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://locale_asset_compile_probe.gd").get("output", ""))
 	ok = _check("the whole action compiles into the sheet", output.contains("var __voice_path_"), true) and ok
 	ok = _check("and the emitted script parses", _parses(output), true) and ok
 	if FileAccess.file_exists("user://locale_asset_compile_probe.gd"):
@@ -528,7 +528,7 @@ static func _emitted(ace_id: String, params: Dictionary) -> String:
 	var by_id: Dictionary = _by_id()
 	if not by_id.has(ace_id):
 		return ""
-	return ActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
+	return EventSheetActionCodegen._apply_template(str(by_id[ace_id].codegen_template), params)
 
 
 ## Runs an emitted expression for real: builds it into a GDScript, reloads it, and returns what it

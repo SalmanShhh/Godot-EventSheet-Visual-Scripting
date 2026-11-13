@@ -36,8 +36,8 @@ static func run() -> bool:
 	event_function.params.append(param)
 	var compiler_line: String = "func %s(%s) -> %s" % [
 		event_function.function_name,
-		SheetCompiler._emit_function_params(event_function),
-		SheetCompiler._function_return_type_name(event_function),
+		EventSheetCompiler._emit_function_params(event_function),
+		EventSheetCompiler._function_return_type_name(event_function),
 	]
 	ok = _check("matches the compiler formatters exactly",
 		EventSheetFunctionDialog.format_signature("knock_back", TYPE_VECTOR2, [{"id": "force", "type_name": "float"}]),

@@ -51,10 +51,10 @@ static func _test_row_look_code() -> bool:
 	return SUPPORT.pins(NAME, [
 		["the look folds into the two names the marker carries", row_var.attributes,
 			{"drawer": "table_row", "table_row_table": "drops", "table_row_column": "name"}],
-		["it emits the marker on the int, the number as its value", SheetCompiler._emit_tree_variable_line(row_var), ROW_LINE],
-		["a String cannot carry it", SheetCompiler._drawer_export_prefix(row_var.attributes, "String"), ""],
+		["it emits the marker on the int, the number as its value", EventSheetCompiler._emit_tree_variable_line(row_var), ROW_LINE],
+		["a String cannot carry it", EventSheetCompiler._drawer_export_prefix(row_var.attributes, "String"), ""],
 		["a table name that is not a name writes nothing",
-			SheetCompiler._drawer_export_prefix({"drawer": "table_row", "table_row_table": "my drops", "table_row_column": "name"}, "int"), ""],
+			EventSheetCompiler._drawer_export_prefix({"drawer": "table_row", "table_row_table": "my drops", "table_row_column": "name"}, "int"), ""],
 		["the file reopens on the same look", lifted.attributes if lifted != null else null,
 			{"drawer": "table_row", "table_row_table": "drops", "table_row_column": "name"}],
 		["and unfolds into the look's own fields", EventSheetInspectorLooks.unfold(lifted.attributes if lifted != null else {}),

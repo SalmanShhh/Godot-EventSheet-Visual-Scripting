@@ -53,7 +53,7 @@ static func _test_runs() -> bool:
 
 
 static func _test_branch_on_showcase() -> bool:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHOWCASE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SHOWCASE)
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
 	viewport.set_sheet(sheet)

@@ -291,11 +291,11 @@ static func _networking_row(row: Variant) -> bool:
 	if row is ACEAction:
 		var action: ACEAction = row as ACEAction
 		return _multiplayer_vocabulary(action.provider_id, action.ace_id) \
-			or EventForgeMultiplayerLift.is_networking_line(ActionCodegen.generate_action(action))
+			or EventForgeMultiplayerLift.is_networking_line(EventSheetActionCodegen.generate_action(action))
 	if row is ACECondition:
 		var condition: ACECondition = row as ACECondition
 		return _multiplayer_vocabulary(condition.provider_id, condition.ace_id) \
-			or EventForgeMultiplayerLift.is_networking_line(ConditionCodegen.generate_condition(condition))
+			or EventForgeMultiplayerLift.is_networking_line(EventSheetConditionCodegen.generate_condition(condition))
 	return false
 
 

@@ -77,8 +77,8 @@ static func _sheet_storage() -> bool:
 static func _rows_are_flagged() -> bool:
 	var ok: bool = true
 	var path: String = "res://tests/fixtures/opened_script_structure5.gd"
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-	var result: Dictionary = SheetCompiler.compile(sheet, path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, path)
 	var source_map: Array = result.get("source_map", [])
 	# The fixture re-emits byte-identically, so a line of the output IS that line of the file. Line 12
 	# is the first `draw_line(...)` inside `_draw`.

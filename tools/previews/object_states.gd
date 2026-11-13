@@ -33,9 +33,9 @@ static func build(host: Window) -> Control:
 		{"state": "CHASE"}))
 
 	var file: FileAccess = FileAccess.open(OBJECT_PATH, FileAccess.WRITE)
-	file.store_string(str(SheetCompiler.compile(authored, OBJECT_PATH).get("output", "")))
+	file.store_string(str(EventSheetCompiler.compile(authored, OBJECT_PATH).get("output", "")))
 	file.close()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(OBJECT_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(OBJECT_PATH)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	sheet.editor_style = style

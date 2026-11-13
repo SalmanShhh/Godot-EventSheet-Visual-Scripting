@@ -428,8 +428,8 @@ static func _opened(source: String) -> EventSheetResource:
 	var file: FileAccess = FileAccess.open(PROBE, FileAccess.WRITE)
 	file.store_string(source)
 	file.close()
-	return GDScriptImporter.new().import_external(PROBE)
+	return EventSheetGDScriptImporter.new().import_external(PROBE)
 
 
 static func _emitted(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, PROBE).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, PROBE).get("output", ""))

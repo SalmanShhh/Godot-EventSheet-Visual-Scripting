@@ -52,7 +52,7 @@ static func _code_panel(source: String) -> Control:
 
 ## And the same file opened, through the importer any reader's open goes through.
 static func _sheet_panel() -> Control:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SAMPLE_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SAMPLE_PATH)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	# Narrower question lane than the default: this picture is about the ANSWERS as much as the

@@ -16,7 +16,7 @@ const FIXTURE: String = "res://tests/fixtures/animation_scene_hero.gd"
 
 static func build(host: Window) -> Control:
 	EventSheetSceneAnimations.clear_cache()
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(FIXTURE)
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()

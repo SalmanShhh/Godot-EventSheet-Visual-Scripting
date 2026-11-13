@@ -20,8 +20,8 @@ static func run() -> bool:
 	custom.function_name = "nearest_enemy"
 	custom.return_type = TYPE_NIL          # would be "void"…
 	custom.return_type_name = "Node2D"     # …but the name overrides it
-	ok = _check("the return-type name wins over return_type", SheetCompiler._function_return_type_name(custom), "Node2D") and ok
-	ok = _check("a bodiless custom-return function stubs `return null`", SheetCompiler._empty_function_stub(custom), "\treturn null") and ok
+	ok = _check("the return-type name wins over return_type", EventSheetCompiler._function_return_type_name(custom), "Node2D") and ok
+	ok = _check("a bodiless custom-return function stubs `return null`", EventSheetCompiler._empty_function_stub(custom), "\treturn null") and ok
 	ok = _check("the Ships-as signature honours it",
 		EventSheetFunctionDialog.format_signature("nearest_enemy", TYPE_NIL, []).ends_with("-> void"), true) and ok
 
@@ -29,7 +29,7 @@ static func run() -> bool:
 	var normal: EventFunction = EventFunction.new()
 	normal.function_name = "is_dead"
 	normal.return_type = TYPE_BOOL
-	ok = _check("an empty name keeps the Variant.Type behaviour", SheetCompiler._function_return_type_name(normal), "bool") and ok
+	ok = _check("an empty name keeps the Variant.Type behaviour", EventSheetCompiler._function_return_type_name(normal), "bool") and ok
 
 	# ── A sheet with a custom-return verb round-trips through the external path ──
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -42,13 +42,13 @@ static func run() -> bool:
 	verb.expose_as_ace = true
 	verb.ace_display_name = "Make Pool"
 	sheet.functions.append(verb)
-	var output: String = str(SheetCompiler.compile(sheet, "user://_rtn_test.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://_rtn_test.gd").get("output", ""))
 	ok = _check("the emitted signature carries the custom return", output.contains("func make_pool() -> HealthPool:"), true) and ok
 	ok = _check("its empty body is `return null`", output.contains("func make_pool() -> HealthPool:\n\treturn null"), true) and ok
 	# Re-import → re-emit must be byte-identical (the round-trip the covenant guarantees).
-	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(output)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(output)
 	reopened.external_source_path = "user://_rtn_test.gd"
-	var reemitted: String = str(SheetCompiler.compile(reopened, "user://_rtn_test.gd").get("output", ""))
+	var reemitted: String = str(EventSheetCompiler.compile(reopened, "user://_rtn_test.gd").get("output", ""))
 	ok = _check("a custom-return verb round-trips byte-identically", reemitted == output, true) and ok
 
 	# ── The whole generated script parses (custom class names don't break the load) ──
@@ -101,7 +101,7 @@ static func _check_dialog_preserves_custom_return() -> bool:
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
 	var glue: EventSheetFunctionDialogGlue = dock._function_dialog_glue
-	var output_before: String = str(SheetCompiler.compile(dock.get_current_sheet(), "").get("output", ""))
+	var output_before: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), "").get("output", ""))
 
 	# The custom class opens as an Expression whose value type IS that class, with the compiler-true signature.
 	glue._open_function_dialog_for(_live_fn(dock, "make_pool"))
@@ -132,7 +132,7 @@ static func _check_dialog_preserves_custom_return() -> bool:
 
 	# The covenant proxy the review demanded: after both accidental open-and-OKs, the whole sheet re-emits
 	# byte-for-byte - no spurious `## @ace_hidden`, no flattened `-> float`, nothing dirtied.
-	var output_after: String = str(SheetCompiler.compile(dock.get_current_sheet(), "").get("output", ""))
+	var output_after: String = str(EventSheetCompiler.compile(dock.get_current_sheet(), "").get("output", ""))
 	ok = _check("open-and-OK on lifted not-carded returns re-emits the sheet byte-identically", output_after == output_before, true) and ok
 
 	# Switching to a builtin card IS a real edit: the custom type is intentionally dropped, the new one wins.
@@ -143,7 +143,7 @@ static func _check_dialog_preserves_custom_return() -> bool:
 	ok = _check("switching to a builtin card clears the custom return type",
 		after_change.return_type_name if after_change != null else "x", "") and ok
 	ok = _check("the verb now emits the builtin type",
-		SheetCompiler._function_return_type_name(after_change) if after_change != null else "", "void") and ok
+		EventSheetCompiler._function_return_type_name(after_change) if after_change != null else "", "void") and ok
 	ok = _check("a real type change clears lifted_unannotated",
 		after_change.lifted_unannotated if after_change != null else true, false) and ok
 

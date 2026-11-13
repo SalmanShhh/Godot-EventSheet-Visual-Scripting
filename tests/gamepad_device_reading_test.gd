@@ -29,7 +29,7 @@ static func run() -> bool:
 
 ## The text of the first condition-lane span on the sheet's first input event row.
 static func _condition_lane(source: String) -> String:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)

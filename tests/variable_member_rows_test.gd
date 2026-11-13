@@ -39,7 +39,7 @@ static func run() -> bool:
 	# The value the table shows must be the value the write path reads back - the pair is what makes
 	# retyping and revaluing from the table land the same line the dialog would have written.
 	ok = _check("the shown value parses back to the value it came from",
-		VariableDialog._parse_default("float",
+		EventSheetVariableDialog._parse_default("float",
 			str(rows[0].get("value", ""))), 200.0) and ok
 
 	# ── A Resource script's members are Fields, an autoload's are Globals ──

@@ -48,7 +48,7 @@ static func run() -> bool:
 	all_passed = _check("the Doctor knows the awaiting Feedback Player row",
 		EventSheetProjectDoctor.COROUTINE_ACE_IDS.has("play_and_wait"), true) and all_passed
 	all_passed = _check("and so does the compiler",
-		SheetCompiler._COROUTINE_ACE_IDS.has("play_and_wait"), true) and all_passed
+		EventSheetCompiler._COROUTINE_ACE_IDS.has("play_and_wait"), true) and all_passed
 	all_passed = _check("and the canvas draws the hourglass on it",
 		ViewportRowBuilder.action_awaits(_awaiting_action()), true) and all_passed
 

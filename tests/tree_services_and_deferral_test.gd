@@ -47,7 +47,7 @@ static func _test_emission() -> bool:
 	row.actions.append(_baked_act("CallLater", {"seconds": "0.15", "do": "queue_free()"}, "c1"))
 	row.actions.append(_baked_act("SetPropertyDeferred", {"target": "self", "property": "\"visible\"", "value": "true"}, "p1"))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://tree_services_out.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://tree_services_out.gd").get("output", ""))
 
 	ok = _check("Register As Service reads the shelf off the tree",
 		output.contains("var __svc_s1: Dictionary = get_tree().get_meta(&\"__ef_services\", {})"), true) and ok

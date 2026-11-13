@@ -83,7 +83,7 @@ static func run() -> bool:
 	set_prop.params = {"target": "self", "property": "modulate", "value": "Color.WHITE"}
 	event.actions.append(set_prop)
 	sheet.events.append(event)
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://helper_aces_test.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://helper_aces_test.gd")
 	passed = _check("helper event compiles", bool(result.get("success", false)), true) and passed
 	var output: String = str(result.get("output", ""))
 	passed = _check("compiled output uses the direct property assignment",

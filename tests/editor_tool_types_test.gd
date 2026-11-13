@@ -84,7 +84,7 @@ static func _test_starters() -> bool:
 ## back out of a compiled file - the whole reason it is a function rather than a signal connection.
 static func _test_import_trigger() -> bool:
 	var passed: bool = true
-	var signature: Dictionary = TriggerResolver.resolve_trigger(_import_event())
+	var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(_import_event())
 	passed = _check("On File Imported compiles to the hook function",
 		str(signature.get("function_name", "")), "_on_files_imported") and passed
 	passed = _check("On File Imported is handed the imported paths",
@@ -94,7 +94,7 @@ static func _test_import_trigger() -> bool:
 
 	var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(13)
 	var output_path: String = "user://eventsheets_import_tool_probe.gd"
-	var compiled: Dictionary = SheetCompiler.compile(sheet, output_path)
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, output_path)
 	passed = _check("the Import Tool starter compiles", bool(compiled.get("success", false)), true) and passed
 	var output: String = FileAccess.get_file_as_string(output_path)
 	passed = _check("the compiled tool declares the hook the editor calls",
@@ -182,7 +182,7 @@ static func _outside_layout_message(body: String, name: String) -> String:
 	var path: String = "user://%s.tres" % name
 	ResourceSaver.save(sheet, path)
 	var output_path: String = EventSheetProjectDoctor.output_path_for(path)
-	SheetCompiler.compile(sheet, output_path)
+	EventSheetCompiler.compile(sheet, output_path)
 	var findings: Array[Dictionary] = []
 	EventSheetProjectDoctor.check_editor_tool_safety(PackedStringArray([path]), findings)
 	var message: String = ""

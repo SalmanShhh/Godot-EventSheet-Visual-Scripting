@@ -20,7 +20,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const FORBIDDEN := {
 	"res://addons/eventforge/plugin.gd": [
 		"EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetStarterTemplates",
-		"EventSheetNewSheetDialog", "ACEParamInspectorPlugin", "SheetCompiler", "EditorParamStore",
+		"EventSheetNewSheetDialog", "ACEParamInspectorPlugin", "EventSheetCompiler", "EditorParamStore",
 		# The documentation surface. Naming any of these at boot would pull the guide corpus, the
 		# Markdown parser and (through the browser) the whole viewport and registry subtree into
 		# every editor start, for a window most sessions never open.
@@ -61,26 +61,26 @@ const FORBIDDEN := {
 		"EventSheetProjectDoctor",
 	],
 	"res://addons/eventforge/editor/export_integrity_plugin.gd": [
-		"SheetCompiler", "EventSheetTemplates",
+		"EventSheetCompiler", "EventSheetTemplates",
 	],
 	# The export bake step registers at editor boot like the integrity hook, so it stays on plain
 	# engine classes (DirAccess / FileAccess / Script) and never names a plugin class.
 	"res://addons/eventforge/editor/export_tools_plugin.gd": [
-		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectFind", "EventSheetTemplates",
+		"EventSheetCompiler", "EventSheetWorkflow", "EventSheetProjectFind", "EventSheetTemplates",
 	],
 	# The Inspector drawer plugin is registered in _enter_tree and add_inspector_plugin takes an
 	# INSTANCE, so both of these load at every editor start - which makes them boot files, and the
 	# reason the compiler crept back onto the boot path once already: drawer_widgets named
-	# SheetCompiler for three table-enum schema helpers, and that one name carried the compiler's
+	# EventSheetCompiler for three table-enum schema helpers, and that one name carried the compiler's
 	# whole subtree into every session. They reach it by path through a cached accessor instead.
 	# The plugin itself reaches the widgets by path too: most objects carry no drawer and no decor,
 	# and naming the widgets compiled them and their translations into every editor start.
 	"res://addons/eventsheet/editor/attribute_drawers.gd": [
-		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+		"EventSheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
 		"EventSheetDrawerWidgets", "EventSheetL10n",
 	],
 	"res://addons/eventsheet/editor/drawer_widgets.gd": [
-		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+		"EventSheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
 	],
 	# The Live Values bridge is constructed eagerly in _enter_tree (the transport has to be live
 	# before the workspace opens), and the editor then sets up the debugger tab that already exists -
@@ -94,7 +94,7 @@ const FORBIDDEN := {
 	# The import hook is attached in _enter_tree like the export ones, so it is a boot file too. It
 	# deliberately carries no class_name and names no plugin class; without a row here, nothing said so.
 	"res://addons/eventforge/editor/import_tools_plugin.gd": [
-		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+		"EventSheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
 	],
 	# The state trail is emptied at the start of every Run. It once named the state watch and the fact
 	# scanner, which between them reach the compiler, the registry and the whole editor half of the
@@ -133,8 +133,8 @@ const FIRST_OPEN_FILES := [
 ## reason PUBLIC_API_TOKEN gives; the Manual's classes are spelled out whole, because their shared
 ## prefix is also the start of every `EventSheetDock...` helper the workspace rightly names.
 const FIRST_OPEN_FORBIDDEN := [
-	"EventSheets.", "SheetCompiler", "GDScriptImporter", "EventSheetACELifter",
-	"EventSheetProjectDoctor", "ACEPickerDialog", "ACEParamsDialog", "VariableDialog",
+	"EventSheets.", "EventSheetCompiler", "EventSheetGDScriptImporter", "EventSheetACELifter",
+	"EventSheetProjectDoctor", "ACEPickerDialog", "ACEParamsDialog", "EventSheetVariableDialog",
 	"EventSheetDocBrowser", "EventSheetDocPageView", "EventSheetDocLibrary", "EventSheetDocMarkdown",
 	"EventSheetDocWindow", "EventSheetDocSearch", "EventSheetDocAceReference", "EventSheetDocFigures",
 	"EventSheetDocExplain", "EventSheetDocPanel", "EventSheetDocReference", "EventSheetDocGlossary",

@@ -25,7 +25,7 @@ static func run() -> bool:
 ## reference like `@onready var hp: ProgressBar = $HP` is authorable from the dialog - not just Variant.
 static func _test_dialog_onready_typed_freetext() -> bool:
 	var captured: Dictionary = {}
-	var dlg: VariableDialog = VariableDialog.new()
+	var dlg: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var parent: Node = Node.new()
 	dlg.init_dialog(parent)
 	dlg.set_sheet_provider(func() -> Variant: return null)
@@ -73,7 +73,7 @@ static func _test_copy_as_text_preserves_onready() -> bool:
 static func _test_dialog_onready_type_safety() -> bool:
 	var ok: bool = true
 	var new_captured: Dictionary = {}
-	var dlg_new: VariableDialog = VariableDialog.new()
+	var dlg_new: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var parent_new: Node = Node.new()
 	dlg_new.init_dialog(parent_new)
 	dlg_new.set_sheet_provider(func() -> Variant: return null)
@@ -101,7 +101,7 @@ static func _test_dialog_onready_type_safety() -> bool:
 	existing.type_name = "Sprite2D"
 	existing.onready = true
 	existing.default_value = "$Sprite2D"
-	var dlg_edit: VariableDialog = VariableDialog.new()
+	var dlg_edit: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var parent_edit: Node = Node.new()
 	dlg_edit.init_dialog(parent_edit)
 	dlg_edit.set_sheet_provider(func() -> Variant: return null)
@@ -116,7 +116,7 @@ static func _test_dialog_onready_type_safety() -> bool:
 	# Guard: ticking @onready with a BLANK expression must NOT commit (it would emit `@onready var x = `,
 	# a syntax error). The confirm should refuse and the signal never fires.
 	var blank_committed: Array = [false]
-	var dlg_blank: VariableDialog = VariableDialog.new()
+	var dlg_blank: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	var parent_blank: Node = Node.new()
 	dlg_blank.init_dialog(parent_blank)
 	dlg_blank.set_sheet_provider(func() -> Variant: return null)
@@ -142,7 +142,7 @@ static func _test_compiler_emits_onready() -> bool:
 	variable.onready = true
 	variable.default_value = "$Player"
 	return _check("compiler emits @onready var with a verbatim expression default",
-		SheetCompiler._emit_tree_variable_line(variable), "@onready var player: Node2D = $Player")
+		EventSheetCompiler._emit_tree_variable_line(variable), "@onready var player: Node2D = $Player")
 
 
 ## #2 lift + round-trip: compile two onready vars to canonical GDScript, reopen it, and confirm BOTH come
@@ -163,7 +163,7 @@ static func _test_importer_lifts_onready_roundtrip() -> bool:
 	hp_ref.default_value = "get_node(\"UI/HP\")"
 	sheet.events.append(sprite_ref)
 	sheet.events.append(hp_ref)
-	var canonical: String = str(SheetCompiler.compile(sheet, "user://onready_first.gd").get("output", ""))
+	var canonical: String = str(EventSheetCompiler.compile(sheet, "user://onready_first.gd").get("output", ""))
 	ok = _check("compiled .gd carries both @onready lines",
 		canonical.contains("@onready var sprite: Sprite2D = $Sprite2D") and canonical.contains("@onready var hp_bar: Node = get_node(\"UI/HP\")"), true) and ok
 	# Reopen the canonical .gd as a sheet.
@@ -171,14 +171,14 @@ static func _test_importer_lifts_onready_roundtrip() -> bool:
 	var writer: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	writer.store_string(canonical)
 	writer.close()
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var onready_names: Array = []
 	for row: Variant in reimported.events:
 		if row is LocalVariable and (row as LocalVariable).onready:
 			onready_names.append(str((row as LocalVariable).name))
 	# If the lift ever fails, the vars fall back to a verbatim RawCodeRow and this array is empty.
 	ok = _check("both @onready vars reopen as editable onready rows", onready_names, ["sprite", "hp_bar"]) and ok
-	var recompiled: String = str(SheetCompiler.compile(reimported, "user://onready_second.gd").get("output", ""))
+	var recompiled: String = str(EventSheetCompiler.compile(reimported, "user://onready_second.gd").get("output", ""))
 	ok = _check("onready .gd round-trips byte-identically", recompiled, canonical) and ok
 	return ok
 
@@ -192,12 +192,12 @@ static func _test_plain_var_still_lifts_not_onready() -> bool:
 	score.type_name = "int"
 	score.default_value = 0
 	sheet.events.append(score)
-	var canonical: String = str(SheetCompiler.compile(sheet, "user://plain_var_first.gd").get("output", ""))
+	var canonical: String = str(EventSheetCompiler.compile(sheet, "user://plain_var_first.gd").get("output", ""))
 	var path: String = "user://plain_var_roundtrip.gd"
 	var writer: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	writer.store_string(canonical)
 	writer.close()
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	var found: LocalVariable = null
 	for row: Variant in reimported.events:
 		if row is LocalVariable and str((row as LocalVariable).name) == "score":

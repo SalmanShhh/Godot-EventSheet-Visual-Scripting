@@ -1,7 +1,7 @@
 # EventForge - Condition code generation
 # Emits GDScript boolean expressions for ACE conditions.
 @tool
-class_name ConditionCodegen
+class_name EventSheetConditionCodegen
 extends RefCounted
 
 
@@ -25,7 +25,7 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 	if not host_default.strip_edges().is_empty() and (template.contains("{host.}") or template.contains("{host}")) and not params.has("host"):
 		params = params.duplicate()
 		params["host"] = host_default
-	var output: String = ActionCodegen._apply_template(template, params)
+	var output: String = EventSheetActionCodegen._apply_template(template, params)
 	# Stateful conditions (Every X Seconds, Trigger Once) have no meaningful inverse: their state must
 	# advance exactly when the term passes, so a `not (...)` header would fire it in the wrong branch
 	# (the compiler also warns). Keyed on the member - Trigger Once has no on-true rebase, but every
@@ -39,6 +39,6 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 		var flipped: Dictionary = {} if condition.negation_wrapped \
 			else EventForgeACEFactory.flipped_comparison_params(template, params)
 		if not flipped.is_empty():
-			return ActionCodegen._apply_template(template, flipped)
+			return EventSheetActionCodegen._apply_template(template, flipped)
 		return "not (%s)" % output
 	return output

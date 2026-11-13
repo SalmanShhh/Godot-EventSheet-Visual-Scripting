@@ -48,7 +48,7 @@ static func run() -> bool:
 	event.actions.append(_action("WriteTextFile", by_id, {"path": "\"%s/a.txt\"" % TEST_DIR, "text": "\"hello\""}, "w1"))
 	event.actions.append(_action("AppendTextFile", by_id, {"path": "\"%s/a.txt\"" % TEST_DIR, "text": "\" world\""}, "w2"))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, COMPILE_OUTPUT).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, COMPILE_OUTPUT).get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	var reload_ok: bool = script.reload() == OK

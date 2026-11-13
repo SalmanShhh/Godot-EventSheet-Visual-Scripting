@@ -62,7 +62,7 @@ static func _painter() -> EventSheetResource:
 
 
 static func _row_variables_compile() -> bool:
-	var result: Dictionary = SheetCompiler.compile(_painter(), "user://eventsheets_tool_vars.gd")
+	var result: Dictionary = EventSheetCompiler.compile(_painter(), "user://eventsheets_tool_vars.gd")
 	var output: String = str(result.get("output", ""))
 	return SUPPORT.pins(P, [
 		["a variable a Show if reads refreshes the Inspector from its setter",
@@ -76,7 +76,7 @@ static func _row_variables_compile() -> bool:
 		["Saved but hidden is @export_storage",
 			output.contains("@export_storage var _baked_cells: Array[Vector2i] = []\n"), true],
 		["one _validate_property, straight after the last variable",
-			output.contains("@export_storage var _baked_cells: Array[Vector2i] = []\n\n%s\nfunc _validate_property(property: Dictionary) -> void:\n\tif str(property.name) == \"noise_seed\" and not bool(use_noise):\n\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR\n\tif str(property.name) == \"custom_scale\" and not bool(mode_custom):\n\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY\n" % SheetCompiler.INSPECTOR_CONDITIONS_DOC), true],
+			output.contains("@export_storage var _baked_cells: Array[Vector2i] = []\n\n%s\nfunc _validate_property(property: Dictionary) -> void:\n\tif str(property.name) == \"noise_seed\" and not bool(use_noise):\n\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR\n\tif str(property.name) == \"custom_scale\" and not bool(mode_custom):\n\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY\n" % EventSheetCompiler.INSPECTOR_CONDITIONS_DOC), true],
 		["nothing to warn about", result.get("warnings"), []],
 	])
 
@@ -127,7 +127,7 @@ static func _own_function_wins() -> bool:
 	var own: RawCodeRow = RawCodeRow.new()
 	own.code = "func _validate_property(property: Dictionary) -> void:\n\tpass"
 	sheet.events.append(own)
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventsheets_tool_vars_own.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventsheets_tool_vars_own.gd")
 	var output: String = str(result.get("output", ""))
 	return SUPPORT.pins(P, [
 		["the sheet's own _validate_property is the only one", output.count("func _validate_property("), 1],

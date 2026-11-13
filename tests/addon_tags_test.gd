@@ -51,7 +51,7 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TaggedBehavior"
 	sheet.addon_tags = PackedStringArray(["movement", "jam"])
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_tagged.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_tagged.gd").get("output", ""))
 	all_passed = _check("sheet tags emit as the annotation",
 		output.contains("## @ace_tags(movement, jam)") and output.find("@ace_tags") < output.find("class_name TaggedBehavior"), true) and all_passed
 	var generated: GDScript = GDScript.new()

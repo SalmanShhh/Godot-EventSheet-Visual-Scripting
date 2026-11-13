@@ -73,7 +73,7 @@ static func run() -> bool:
 ## Imports a source, then turns every lifted generic call back into a code row - which is exactly what
 ## a hand-typed GDScript block, or a call the lifter could not attribute, looks like in a real sheet.
 static func _raw_sheet(source: String) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://raw_call_namer_test.gd"
 	for row: Variant in sheet.events:
 		if not (row is EventRow):
@@ -84,13 +84,13 @@ static func _raw_sheet(source: String) -> EventSheetResource:
 			if not (action is ACEAction) or str((action as ACEAction).ace_id) != "CallMethod":
 				continue
 			var raw: RawCodeRow = RawCodeRow.new()
-			raw.code = ActionCodegen.generate_action(action as ACEAction, "", "")
+			raw.code = EventSheetActionCodegen.generate_action(action as ACEAction, "", "")
 			event.actions[index] = raw
 	return sheet
 
 
 static func _recompile(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://raw_call_namer_test.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://raw_call_namer_test.gd").get("output", ""))
 
 
 static func _last_action(sheet: EventSheetResource) -> Resource:

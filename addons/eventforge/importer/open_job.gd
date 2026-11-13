@@ -10,7 +10,7 @@
 # become a parse error.
 #
 # THREAD SAFETY, in three parts:
-#   1. SheetCompiler holds a mutex over compile() and emit_function_block_text() - the lift's
+#   1. EventSheetCompiler holds a mutex over compile() and emit_function_block_text() - the lift's
 #      byte-verify recompiles from this thread while compile-on-save/Project Doctor may compile
 #      from the main one, and they share per-compile working-state statics plus a temporary
 #      output file.
@@ -50,7 +50,7 @@ static func warm_registries() -> void:
 	EventSheetBlockRegistry.all_kinds()
 	# The codegen template regex, compiled lazily on first substitution: the verify compile would
 	# otherwise build it on the worker thread.
-	ActionCodegen._apply_template("{warm}", {"warm": ""})
+	EventSheetActionCodegen._apply_template("{warm}", {"warm": ""})
 
 
 ## Starts the import. Returns false when the file is missing or a job is already running.
@@ -92,7 +92,7 @@ func _run() -> void:
 		EventSheetParseErrors.store_on_sheet(remembered, EventSheetParseErrors.check_file(_path))
 		_sheet = remembered
 		return
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 	var raw_sheet: EventSheetResource = importer.import_external(_path, false)
 	if raw_sheet == null:
 		_sheet = null

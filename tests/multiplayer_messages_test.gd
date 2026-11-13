@@ -16,7 +16,7 @@ extends RefCounted
 #   from holds only functions that are actually marked.
 
 const SUPPORT := preload("res://tests/support.gd")
-const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+const EventSheetGDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 ## A hand-written source with one message and one plain helper - the shape a project that already
 ## uses `@rpc` opens as.
@@ -177,7 +177,7 @@ static func _test_the_dialog_writes_the_annotation() -> bool:
 
 static func _test_an_unchanged_answer_changes_no_bytes() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var before: String = _compiled(sheet, "user://_message_rt_a.gd")
 	var message: EventFunction = _function(sheet, "take_damage")
 	if message == null:
@@ -199,7 +199,7 @@ static func _test_an_unchanged_answer_changes_no_bytes() -> bool:
 
 static func _test_a_changed_answer_writes_the_new_line() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var message: EventFunction = _function(sheet, "take_damage")
 	if message == null:
 		return _check("the message opens as a function", false, true)
@@ -213,7 +213,7 @@ static func _test_a_changed_answer_writes_the_new_line() -> bool:
 	# And the changed file still opens as the same message, now reading the new words: the write and
 	# the read are the same table, so a value that survives one has to survive the other.
 	var reopened: EventFunction = _function(
-		GDScriptImporter.new().import_external_source(written), "take_damage")
+		EventSheetGDScriptImporter.new().import_external_source(written), "take_damage")
 	ok = _check("the changed message opens again", reopened != null, true) and ok
 	if reopened != null:
 		ok = _check("...reading the answer that was picked", EventSheetMessageFacts.words(
@@ -227,7 +227,7 @@ static func _test_a_changed_answer_writes_the_new_line() -> bool:
 
 static func _test_only_marked_functions_are_messages() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(SOURCE)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(SOURCE)
 	var listed: Array[Dictionary] = EventSheetMessageFacts.messages_in(sheet)
 	ok = _check("only the marked function is a message", listed.size(), 1) and ok
 	if listed.is_empty():
@@ -315,7 +315,7 @@ static func _test_what_the_two_dialogs_read_as() -> bool:
 
 
 static func _compiled(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _function(sheet: EventSheetResource, function_name: String) -> EventFunction:

@@ -37,7 +37,7 @@ static func recorded() -> String:
 ## The vocabulary version running right now - the compiler's own, because the compiler is what turns
 ## the vocabulary into code and its version is the one already stamped on everything else.
 static func current() -> String:
-	return SheetCompiler.VERSION
+	return EventSheetCompiler.VERSION
 
 
 ## Writes the record, and returns whether it actually wrote. Called when a sheet is SAVED from the

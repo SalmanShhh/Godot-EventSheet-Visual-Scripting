@@ -56,7 +56,7 @@ func _on_frame() -> void:
 		print("[preview] scene sheet %dx%d" % [img.get_width(), img.get_height()])
 		_stage = 1
 		_frames = 0
-		var one: EventSheetResource = GDScriptImporter.new().import_external("res://tests/fixtures/opened_scene_level.gd")
+		var one: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://tests/fixtures/opened_scene_level.gd")
 		one.read_only = true
 		_apply_sheet(one)
 		return

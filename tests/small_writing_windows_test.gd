@@ -66,8 +66,8 @@ static func _test_signal() -> bool:
 	trigger_rows._on_signal_dialog_confirmed()
 	var written: SignalRow = trigger_dock._current_sheet.events[0] as SignalRow
 	var written_line: String = "
-".join(SheetCompiler._emit_signal_annotations(written)) + "
-" + SheetCompiler._emit_signal_line(written)
+".join(EventSheetCompiler._emit_signal_annotations(written)) + "
+" + EventSheetCompiler._emit_signal_line(written)
 	trigger_rows.open_signal_dialog(written)
 	var tick_reopened: bool = trigger_rows._signal_trigger_check.button_pressed
 	trigger_rows._signal_dialog.hide()

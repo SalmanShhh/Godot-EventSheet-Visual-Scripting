@@ -84,7 +84,7 @@ static func run() -> bool:
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://eventforge_tree_var.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://eventforge_tree_var.gd").get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

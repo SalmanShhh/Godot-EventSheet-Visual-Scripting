@@ -283,7 +283,7 @@ static func fold_runs_on_conditions(group: EventGroup, guard: String) -> void:
 			continue
 		var kept: Array[ACECondition] = []
 		for condition: ACECondition in (row as EventRow).conditions:
-			if condition == null or ConditionCodegen.generate_condition(condition) != guard:
+			if condition == null or EventSheetConditionCodegen.generate_condition(condition) != guard:
 				kept.append(condition)
 		(row as EventRow).conditions = kept
 
@@ -349,7 +349,7 @@ static func group_switch_truth(group_name: String, enabled: bool, switchable: bo
 	if not switchable:
 		return {"code": "", "warning": ""}
 	return {"code": "var __group_%s_active: bool = %s" % [
-		token if not token.is_empty() else SheetCompiler.guard_token(group_name),
+		token if not token.is_empty() else EventSheetCompiler.guard_token(group_name),
 		"true" if enabled else "false"], "warning": ""}
 
 
@@ -358,7 +358,7 @@ static func group_switch_truth(group_name: String, enabled: bool, switchable: bo
 func _group_switch_token(name_text: String) -> String:
 	if _group_edit_target != null and name_text == _group_edit_target.display_name():
 		return EventSheetGroupFacts.guard_token(_group_edit_target)
-	return SheetCompiler.guard_token(name_text)
+	return EventSheetCompiler.guard_token(name_text)
 
 
 ## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.

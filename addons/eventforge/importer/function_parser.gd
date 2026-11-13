@@ -2,7 +2,7 @@
 # Parses top-level `func name(params) -> ret:` blocks from GDScript source, capturing each
 # function's name, typed params, return type, and verbatim (indented) body text.
 @tool
-class_name FunctionParser
+class_name EventSheetFunctionParser
 extends RefCounted
 
 

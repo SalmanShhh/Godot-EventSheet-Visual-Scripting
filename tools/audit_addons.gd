@@ -111,8 +111,8 @@ func _successor_count(catalog: Dictionary) -> int:
 ## script: import it as a sheet, recompile, and confirm the output matches the file on disk.
 ## Compiles to a throwaway user:// path so the real pack is never rewritten by the audit.
 func _audit_script(label: String, script_path: String, verify_path: String) -> Dictionary:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
-	var output: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(script_path)
+	var output: String = str(EventSheetCompiler.compile(sheet, verify_path).get("output", ""))
 	var shipped: String = FileAccess.get_file_as_string(script_path)
 	var verdict: Dictionary = {"drift": output != shipped, "parse_fail": not script_compiles(script_path)}
 	if bool(verdict["drift"]):

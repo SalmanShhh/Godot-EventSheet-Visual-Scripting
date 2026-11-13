@@ -22,9 +22,9 @@ static func run() -> bool:
 	raw.code = "match state:\n\tState.IDLE:\n\t\tpass\n\t_:\n\t\tqueue_free()"
 	event.actions.append(raw)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://match_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://match_source.gd").get("output", ""))
 
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	# That it lifts at all, and that it round-trips byte for byte, is switch_case_lift_test's on this
 	# same input; what is pinned here is the verbatim branch text the MatchRow carries.
 	var match_rows: Array = _collect_match_rows(imported.events)

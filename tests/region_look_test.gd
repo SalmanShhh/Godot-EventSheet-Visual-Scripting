@@ -122,7 +122,7 @@ static func _test_look_is_reusable() -> bool:
 	passed = _check("and wears the tint its style() asks for, the same hook a flat row tints with",
 		row.custom_color if row != null else Color(), Color("#33cc88")) and passed
 	passed = _check("which is the line the compile really writes",
-		str(SheetCompiler.compile(sheet).get("output", "")).contains("# --- Movement ---"), true) and passed
+		str(EventSheetCompiler.compile(sheet).get("output", "")).contains("# --- Movement ---"), true) and passed
 	passed = _check("and the API answers the same line for that row",
 		EventSheets.row_code_line(block), "# --- Movement ---") and passed
 	viewport.free()
@@ -162,10 +162,10 @@ static func _test_pairing_unchanged() -> bool:
 static func _test_refactors() -> bool:
 	var passed: bool = true
 	var source: String = "extends Node\n\n#region Combat\n# hurt rules\n#endregion\n"
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	sheet.external_source_path = "user://region_refactor.gd"
 	passed = _check("the fixture round-trips before anything is refactored",
-		str(SheetCompiler.compile(sheet, "user://region_refactor.gd").get("output", "")), source) and passed
+		str(EventSheetCompiler.compile(sheet, "user://region_refactor.gd").get("output", "")), source) and passed
 
 	var opener: CustomBlockRow = _first_opening_fence(sheet)
 	var group: EventGroup = EventSheetRefactor.region_to_group(sheet.events, opener)
@@ -179,7 +179,7 @@ static func _test_refactors() -> bool:
 	passed = _check("group to region writes the pair",
 		EventSheetRefactor.group_to_region(sheet.events, group), true) and passed
 	passed = _check("the round trip is byte-identical",
-		str(SheetCompiler.compile(sheet, "user://region_refactor.gd").get("output", "")), source) and passed
+		str(EventSheetCompiler.compile(sheet, "user://region_refactor.gd").get("output", "")), source) and passed
 
 	# The editor asks before a group that carries what a region cannot is turned; the refactor
 	# itself only refuses a group that is not in the container it was handed.

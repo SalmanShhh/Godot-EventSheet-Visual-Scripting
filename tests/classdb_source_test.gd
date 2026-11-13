@@ -81,7 +81,7 @@ static func run() -> bool:
 	action.codegen_template = str(arrange.metadata.get("codegen_template", "")) if arrange != null else ""
 	event.actions.append(action)
 	sheet.events.append(event)
-	var compiled: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	ok = _check("the reflected action compiles to the plain call", compiled.contains("arrange_nodes()"), true) and ok
 	ok = _check("no plugin reference rides along", compiled.contains("EventSheetClassDBSource"), false) and ok
 

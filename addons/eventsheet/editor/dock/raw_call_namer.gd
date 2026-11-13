@@ -154,7 +154,7 @@ static func _named_action_for(raw: RawCodeRow, types: Dictionary, extra_definiti
 		return null
 	# THE BYTE GATE. Same call the compiler makes for one action; anything but a character-
 	# for-character reproduction of the line the user already has means we got it wrong.
-	if ActionCodegen.generate_action(action, "", "") != raw.code:
+	if EventSheetActionCodegen.generate_action(action, "", "") != raw.code:
 		return null
 	counters["skipped"] = int(counters["skipped"]) - 1
 	counters["named"] = int(counters["named"]) + 1

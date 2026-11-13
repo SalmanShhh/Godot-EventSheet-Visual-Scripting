@@ -383,7 +383,7 @@ static func _template_of(ace_id: String) -> String:
 
 
 static func _emit(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, "user://state_play_mode.gd").get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, "user://state_play_mode.gd").get("output", ""))
 
 
 ## Every debugger message name a compiled sheet sends, sorted and de-duplicated. Sorted because a

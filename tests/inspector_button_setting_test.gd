@@ -81,7 +81,7 @@ static func _added_button() -> String:
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
 	dock._variable_gestures.add_inspector_button("Bake", "", "", "")
-	var emitted: String = str(SheetCompiler.compile(dock._current_sheet, PROBE_PATH).get("output", ""))
+	var emitted: String = str(EventSheetCompiler.compile(dock._current_sheet, PROBE_PATH).get("output", ""))
 	var functions: int = dock._current_sheet.functions.size()
 	dock.free()
 	if functions != 1:
@@ -96,11 +96,11 @@ static func _imported(source: String) -> EventSheetResource:
 	var file: FileAccess = FileAccess.open(PROBE_PATH, FileAccess.WRITE)
 	file.store_string(source)
 	file.close()
-	return GDScriptImporter.new().import_external(PROBE_PATH)
+	return EventSheetGDScriptImporter.new().import_external(PROBE_PATH)
 
 
 static func _roundtrip(source: String) -> String:
-	return str(SheetCompiler.compile(_imported(source), PROBE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(_imported(source), PROBE_PATH).get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

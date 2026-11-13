@@ -49,7 +49,7 @@ static func run() -> bool:
 	event_function.function_name = "reload"
 	sheet.functions.append(event_function)
 
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_provenance.gd")
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventforge_provenance.gd")
 	var output_lines: PackedStringArray = str(compile_result.get("output", "")).split("\n")
 	var source_map: Array = compile_result.get("source_map", [])
 	all_passed = _check("compile returns a source map", not source_map.is_empty(), true) and all_passed

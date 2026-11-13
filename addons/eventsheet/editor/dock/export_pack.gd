@@ -16,7 +16,7 @@ extends RefCounted
 #   • `_generate_pack_readme` - a thin dock delegate to EventSheetAuthorLoop.generate_pack_readme
 #     that a test (singleton_sheets_test) also calls by name, so it stays on the dock,
 #   • `is_inside_tree()` - the dock's own tree membership (this helper is a detached RefCounted).
-# Globals (EventSheetIdentifierRules, DirAccess, EventSheetResource, ResourceSaver, SheetCompiler,
+# Globals (EventSheetIdentifierRules, DirAccess, EventSheetResource, ResourceSaver, EventSheetCompiler,
 # FileAccess, ResourceLoader, Engine, EditorInterface) are unchanged.
 #
 # The dock keeps a thin one-line delegate for `_export_addon_pack` (original name + signature) -
@@ -71,7 +71,7 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 	# Lane A composition: packs travel complete - bundle included sheets unless the
 	# project policy says reference-only.
 	var bundled_count: int = 0
-	if str(SheetCompiler._addon_policy("export_bundling", "bundle")) == "bundle":
+	if str(EventSheetCompiler._addon_policy("export_bundling", "bundle")) == "bundle":
 		for include_path: String in pack_sheet.includes:
 			if ResourceLoader.exists(include_path):
 				var bundle_target: String = "%s/%s" % [base_dir, include_path.get_file()]

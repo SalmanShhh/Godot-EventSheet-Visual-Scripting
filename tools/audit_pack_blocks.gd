@@ -27,14 +27,14 @@ func _init() -> void:
 		if source.strip_edges().is_empty():
 			continue
 		# Lens A
-		var sheet_a: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet_a: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		var raws_a: Array = []
 		_collect_raw(sheet_a.events, "events", raws_a)
 		for fn_v: Variant in sheet_a.functions:
 			if fn_v is EventFunction:
 				_collect_raw(_fn_body(fn_v), "func %s" % (fn_v as EventFunction).function_name, raws_a)
 		# Lens B - same import, then the full pack-build lift chain (byte-gated so nothing risks the file).
-		var sheet_b: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var sheet_b: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		EventSheetACELifter.lift_function_declarations(sheet_b, true)
 		EventSheetACELifter.lift_function_bodies(sheet_b)
 		EventSheetACELifter.lift_event_bodies(sheet_b)
@@ -45,7 +45,7 @@ func _init() -> void:
 			if fn_v2 is EventFunction:
 				_collect_raw(_fn_body(fn_v2), "func %s" % (fn_v2 as EventFunction).function_name, raws_b)
 		# Byte-verify Lens B still round-trips (the full chain must never corrupt).
-		var out_b: String = str(SheetCompiler.compile(sheet_b, "user://_audit_b.gd").get("output", ""))
+		var out_b: String = str(EventSheetCompiler.compile(sheet_b, "user://_audit_b.gd").get("output", ""))
 		var exact_b: bool = out_b == source
 		if not exact_b:
 			drift.append(path)

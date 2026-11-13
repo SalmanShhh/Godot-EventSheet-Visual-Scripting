@@ -52,7 +52,7 @@ static func run() -> bool:
 	print_action.params = {"value": "tr(\"Spawned\")"}
 	event.actions.append(print_action)
 	sheet.events.append(event)
-	var compiled: String = str(SheetCompiler.compile(sheet).get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
 	ok = _check("the compiled script calls tr() at the usage site",
 		compiled.contains("print(tr(\"Spawned\"))"), true) and ok
 
@@ -73,7 +73,7 @@ static func run() -> bool:
 	locale_event.actions.append(set_locale)
 	locale_sheet.events.append(locale_event)
 	ok = _check("Set Language emits TranslationServer.set_locale",
-		str(SheetCompiler.compile(locale_sheet).get("output", "")).contains("TranslationServer.set_locale(\"es\")"), true) and ok
+		str(EventSheetCompiler.compile(locale_sheet).get("output", "")).contains("TranslationServer.set_locale(\"es\")"), true) and ok
 
 	# On Language Changed: the _notification virtual + the auto-added gate condition.
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -91,7 +91,7 @@ static func run() -> bool:
 	notify_event.actions.append(notify_print)
 	var notify_sheet: EventSheetResource = EventSheetResource.new()
 	notify_sheet.events.append(notify_event)
-	var notify_compiled: String = str(SheetCompiler.compile(notify_sheet).get("output", ""))
+	var notify_compiled: String = str(EventSheetCompiler.compile(notify_sheet).get("output", ""))
 	ok = _check("the trigger compiles to the _notification virtual",
 		notify_compiled.contains("func _notification(what: int)"), true) and ok
 	ok = _check("the gate guards the notification",
@@ -115,10 +115,10 @@ static func run() -> bool:
 
 	# ── Byte round-trip: a tr() call in an opened .gd survives untouched ──
 	var external_source: String = "extends Node\n\nfunc _ready() -> void:\n\tprint(tr(\"Spawned\"))\n"
-	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	reimported.external_source_path = "user://tr_roundtrip.gd"
 	ok = _check("a tr() call round-trips byte-identically",
-		str(SheetCompiler.compile(reimported, "user://tr_roundtrip.gd").get("output", "")) == external_source, true) and ok
+		str(EventSheetCompiler.compile(reimported, "user://tr_roundtrip.gd").get("output", "")) == external_source, true) and ok
 
 	return ok
 

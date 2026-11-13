@@ -179,7 +179,7 @@ func _on_frame() -> void:
 		var sample: FileAccess = FileAccess.open("user://code_patterns_handwritten.gd", FileAccess.WRITE)
 		sample.store_string(HANDWRITTEN_MACHINE)
 		sample.close()
-		_apply_sheet(GDScriptImporter.new().import_external("user://code_patterns_handwritten.gd"))
+		_apply_sheet(EventSheetGDScriptImporter.new().import_external("user://code_patterns_handwritten.gd"))
 		return
 	img.save_png("res://docs/images/code-patterns-lifted-machine.png")
 	print("[preview] lifted machine %dx%d" % [img.get_width(), img.get_height()])

@@ -55,7 +55,7 @@ static func run() -> bool:
 	all_passed = _check("the source .gd still declares extends", on_disk.contains("extends CharacterBody2D"), true) and all_passed
 
 	# The .gd is now the byte-exact source of truth: recompiling reproduces it.
-	var recompiled: Dictionary = SheetCompiler.compile(dock._current_sheet, PROBE_PATH)
+	var recompiled: Dictionary = EventSheetCompiler.compile(dock._current_sheet, PROBE_PATH)
 	all_passed = _check("re-compile reproduces the .gd byte-for-byte", str(recompiled.get("output", "")), on_disk) and all_passed
 
 	_remove_probe()

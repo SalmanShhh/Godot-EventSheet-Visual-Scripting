@@ -14,7 +14,7 @@ const TEST_NAME := "variable_empty_slot_preview_test"
 
 static func run() -> bool:
 	var host: Node = Node.new()
-	var dialog: VariableDialog = VariableDialog.new()
+	var dialog: EventSheetVariableDialog = EventSheetVariableDialog.new()
 	dialog.init_dialog(host)
 	dialog.set_sheet_provider(func() -> Variant: return null)
 	var lines: Dictionary = {}

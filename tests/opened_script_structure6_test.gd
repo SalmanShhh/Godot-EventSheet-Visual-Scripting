@@ -34,8 +34,8 @@ static func _round_trips() -> bool:
 	var ok: bool = true
 	for path: String in [LEVEL_PATH, PLAYER_PATH, HUD_PATH]:
 		var source: String = FileAccess.get_file_as_string(path)
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-		var output: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var output: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		ok = _check("%s comes back byte-identical" % path.get_file(), output, source) and ok
 	return ok
 
@@ -131,7 +131,7 @@ static func _scene_file_untouched() -> bool:
 
 ## Opens a file the way the dock opens a .gd: a read-only preview, which is reading mode.
 static func _open(path: String) -> EventSheetViewport:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	sheet.read_only = true
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())

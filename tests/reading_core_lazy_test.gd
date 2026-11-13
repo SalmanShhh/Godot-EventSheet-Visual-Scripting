@@ -85,10 +85,10 @@ static func run() -> bool:
 	rows.append(["the role dot is one cached texture", ACEPickerDialog.kind_dot(ACEDefinition.ACEType.CONDITION),
 		EventSheetACEIcons.kind_dot(ACEDefinition.ACEType.CONDITION)])
 	rows.append(["no editor theme headless, so no icon", EventSheetACEIcons.editor_icon("Node"), null])
-	rows.append(["the helper prefix is the compiler's", SheetCompiler.SHARED_HELPER_PREFIX,
+	rows.append(["the helper prefix is the compiler's", EventSheetCompiler.SHARED_HELPER_PREFIX,
 		CompilerSpellings.SHARED_HELPER_PREFIX])
 	rows.append(["the helper prefix, spelled", CompilerSpellings.SHARED_HELPER_PREFIX, "__eventsheets_"])
-	rows.append(["the travelled member is the compiler's", SheetCompiler.TRAVELLED_MEMBER,
+	rows.append(["the travelled member is the compiler's", EventSheetCompiler.TRAVELLED_MEMBER,
 		CompilerSpellings.TRAVELLED_MEMBER])
 	rows.append(["the travelled member, spelled", CompilerSpellings.TRAVELLED_MEMBER, "_travelled"])
 	var typed: EventFunction = EventFunction.new()
@@ -99,7 +99,7 @@ static func run() -> bool:
 	variant.return_type = TYPE_MAX
 	for probe: Array in [[EventFunction.new(), "void"], [typed, "int"], [named, "Node2D"], [variant, "Variant"]]:
 		rows.append(["the compiler spells a return type as the leaf does (%s)" % probe[1],
-			SheetCompiler._function_return_type_name(probe[0]), CompilerSpellings.function_return_type_name(probe[0])])
+			EventSheetCompiler._function_return_type_name(probe[0]), CompilerSpellings.function_return_type_name(probe[0])])
 		rows.append(["and that spelling is %s" % probe[1], CompilerSpellings.function_return_type_name(probe[0]), probe[1]])
 
 	# 3. The doors.
@@ -120,10 +120,10 @@ static func run() -> bool:
 	rows.append(["a lifter static answers through the door", ReadingDoors.lifter()._is_balanced_expression("(a)"),
 		EventSheetACELifter._is_balanced_expression("(a)")])
 	rows.append(["a compiler static answers through the door", ReadingDoors.compiler().guard_token("Enemy AI"),
-		SheetCompiler.guard_token("Enemy AI")])
+		EventSheetCompiler.guard_token("Enemy AI")])
 	rows.append(["the variable dialog's default parse through the door",
 		ReadingDoors.variable_dialog()._parse_default("Vector2", "Vector2(1, 2)"),
-		VariableDialog._parse_default("Vector2", "Vector2(1, 2)")])
+		EventSheetVariableDialog._parse_default("Vector2", "Vector2(1, 2)")])
 	rows.append(["the Doctor's shadowing rule through the door",
 		ReadingDoors.doctor().shadowed_member_class(null, "position"),
 		EventSheetProjectDoctor.shadowed_member_class(null, "position")])

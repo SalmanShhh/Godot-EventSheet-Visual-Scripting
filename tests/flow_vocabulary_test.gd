@@ -689,7 +689,7 @@ static func _expression_value(node: Node, ace_id: String, values: Dictionary) ->
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
-	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 
 
 static func _host(source: String) -> Node:

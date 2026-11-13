@@ -12,7 +12,7 @@
 # Connect to variable_confirmed to receive the result; a Global lands through
 # project_global_requested instead, because a global belongs to an autoload rather than to this file.
 @tool
-class_name VariableDialog
+class_name EventSheetVariableDialog
 extends RefCounted
 
 ## Emitted when the user confirms variable creation or editing.
@@ -493,7 +493,7 @@ func _build_value_box() -> HBoxContainer:
 	_color_button = ColorPickerButton.new()
 	_color_button.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(60.0), 0.0)
 	_color_button.color_changed.connect(func(picked: Color) -> void:
-		_set_value_words(SheetCompiler._to_code_literal(picked)))
+		_set_value_words(EventSheetCompiler._to_code_literal(picked)))
 	box.add_child(_color_button)
 	_axis_box = HBoxContainer.new()
 	box.add_child(_axis_box)
@@ -1324,7 +1324,7 @@ func open_for_edit(
 	is_static: bool = false
 ) -> void:
 	if _dialog == null:
-		push_error("VariableDialog.open() called before init_dialog().")
+		push_error("EventSheetVariableDialog.open() called before init_dialog().")
 		return
 	_is_static = is_static and not is_constant
 	# The dropdown speaks the sheet's reading words; `_scope` is where the variable is STORED, and an
@@ -2060,7 +2060,7 @@ func code_block_text(attributes: Dictionary) -> String:
 	var preview: LocalVariable = _preview_variable(attributes)
 	if not preview.exported or _writes_project_global:
 		return code_line_text()
-	return SheetCompiler._emit_tree_variable_line(preview)
+	return EventSheetCompiler._emit_tree_variable_line(preview)
 
 
 func _preview_variable(attributes: Dictionary) -> LocalVariable:

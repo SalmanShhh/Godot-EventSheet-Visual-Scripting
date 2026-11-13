@@ -40,7 +40,7 @@ if true:
 
 static func run() -> bool:
 	var all_passed: bool = true
-	var importer: GDScriptImporter = GDScriptImporter.new()
+	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
 
 	# ── The mid-file helper lifts, anchored in place ──
 	var sheet: EventSheetResource = importer.import_external_source(MID_SOURCE)
@@ -59,7 +59,7 @@ static func run() -> bool:
 		lifted != null and lifted.params.size() == 1 and lifted.params[0].type_name == "float", true) and all_passed
 
 	# ── Round-trip: emission places the function back at its slot, byte-identically ──
-	var output: String = str(SheetCompiler.compile(sheet, "user://mid_fn_sample.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://mid_fn_sample.gd").get("output", ""))
 	all_passed = _check("anchored sheet reproduces the file byte-identically", output, MID_SOURCE) and all_passed
 
 	# ── The per-anchor byte gate: unreproducible spacing stays raw, file still lifts ──
@@ -71,7 +71,7 @@ static func run() -> bool:
 			near_miss_anchors += 1
 	all_passed = _check("unreproducible helper stays raw (per-anchor gate)", near_miss_anchors, 0) and all_passed
 	all_passed = _check("near-miss file still round-trips verbatim",
-		str(SheetCompiler.compile(near_miss, "user://mid_fn_near_miss.gd").get("output", "")), NEAR_MISS_SOURCE) and all_passed
+		str(EventSheetCompiler.compile(near_miss, "user://mid_fn_near_miss.gd").get("output", "")), NEAR_MISS_SOURCE) and all_passed
 
 	# ── Custom-return helpers (the audit's last blocked class) anchor too ──
 	var custom_sheet: EventSheetResource = importer.import_external_source("extends Node\n\nvar pools: Dictionary = {}\n\nfunc _get_pool(type: String) -> HealthPool:\n\tif not pools.has(type):\n\t\tpools[type] = HealthPool.new()\n\treturn pools[type]\n\nif true:\n\tpass\n")
@@ -88,7 +88,7 @@ static func run() -> bool:
 	all_passed = _check("its custom return type rides return_type_name",
 		custom_fn != null and custom_fn.return_type_name == "HealthPool", true) and all_passed
 	all_passed = _check("custom-return anchor round-trips byte-identically",
-		str(SheetCompiler.compile(custom_sheet, "user://mid_fn_custom.gd").get("output", "")).contains("func _get_pool(type: String) -> HealthPool:"), true) and all_passed
+		str(EventSheetCompiler.compile(custom_sheet, "user://mid_fn_custom.gd").get("output", "")).contains("func _get_pool(type: String) -> HealthPool:"), true) and all_passed
 
 	# ── The anchor renders as a muted marker row ──
 	var view: EventSheetViewport = EventSheetViewport.new()

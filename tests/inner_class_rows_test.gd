@@ -38,7 +38,7 @@ static func run() -> bool:
 		["the file saves back byte for byte", SUPPORT.compile_output(sheet, PATH), SOURCE],
 	]) and ok
 	# The map says which lines are the class, and keeps the body's own rows on the lines under it.
-	var source_map: Array = SheetCompiler.echo(sheet).get("source_map", [])
+	var source_map: Array = EventSheetCompiler.echo(sheet).get("source_map", [])
 	ok = _check("the map holds the class's lines", _span_of(source_map, "inner_class"), [6, 11]) and ok
 	ok = _check("and the body's variable rows below its header", _starts_of(source_map, "variable").slice(1), [7, 8]) and ok
 
@@ -140,7 +140,7 @@ class Even:
 	raw.code = code
 	sheet.events.append(raw)
 	sheet.external_source_path = InnerClassRow.BODY_PATH
-	var source: String = str(SheetCompiler.echo(sheet).get("output", ""))
+	var source: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	var before_rows: Array = sheet.events.duplicate()
 	var holders: Array[Dictionary] = LIFT._holders(before_rows, RegEx.create_from_string(LIFT.HEADER_PATTERN))
 	var read: Array = []
@@ -153,7 +153,7 @@ class Even:
 	LIFT._place(sheet, before_rows, holders, source)
 	return SUPPORT.pins(NAME, [
 		["only the class that moved a byte stays code", _top_kinds(sheet), ["code", "class Even", "code: class Odd:"]],
-		["and the file still writes what it read", str(SheetCompiler.echo(sheet).get("output", "")), source],
+		["and the file still writes what it read", str(EventSheetCompiler.echo(sheet).get("output", "")), source],
 	]) and ok
 
 

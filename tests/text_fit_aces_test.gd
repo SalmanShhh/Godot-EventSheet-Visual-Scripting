@@ -299,7 +299,7 @@ static func _test_direction_sheet_compiles() -> bool:
 	ready_row.actions.append(_action("MirrorLayoutForLanguage", {"target": ""}))
 	ready_row.actions.append(_action("MirrorLayoutForLanguage", {"target": "$Panel"}))
 	sheet.events.append(ready_row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://text_fit_direction.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://text_fit_direction.gd").get("output", ""))
 	var ok: bool = _check("a blank target mirrors the sheet's own control",
 		output.contains("\tlayout_direction = Control.LAYOUT_DIRECTION_APPLICATION_LOCALE"), true)
 	ok = _check("a chosen target mirrors that node instead",
@@ -492,7 +492,7 @@ static func _test_fit_sheet_compiles_and_runs() -> bool:
 	row.conditions.append(_condition("TextOverflows", {"target": ""}))
 	row.actions.append(_action("FitTextToLabel", {"target": "", "suffix": "\"...\""}, "r1"))
 	sheet.events.append(row)
-	var output: String = str(SheetCompiler.compile(sheet, "user://text_fit_overflow.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://text_fit_overflow.gd").get("output", ""))
 	var ok: bool = _check("the overflow test lands in the condition",
 		output.contains("if get_theme_font(&\"font\").get_string_size(atr(str(text)), HORIZONTAL_ALIGNMENT_LEFT, -1.0, get_theme_font_size(&\"font_size\")).x > size.x:"), true)
 	ok = _check("the fit action's locals carry the row id",
@@ -540,7 +540,7 @@ static func _width(text: String) -> float:
 ## The SHIPPED template with its params filled, through the compiler's own substitution pass (so the
 ## optional {target.} prefix behaves exactly as it does in emitted code).
 static func _apply(ace_id: String, params: Dictionary) -> String:
-	return ActionCodegen._apply_template(_template(ace_id), params)
+	return EventSheetActionCodegen._apply_template(_template(ace_id), params)
 
 
 static func _template(ace_id: String) -> String:

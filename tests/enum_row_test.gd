@@ -41,7 +41,7 @@ static func run() -> bool:
 	current.type_name = "State"
 	current.default_value = 0
 	sheet.events.append(current)
-	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventsheets_enum.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://eventsheets_enum.gd")
 	var output: String = str(result.get("output", ""))
 	all_passed = _check("canonical enum line emits", output.contains("enum State { IDLE, RUN, HURT = 4 }"), true) and all_passed
 	all_passed = _check("disabled enums skip", output.contains("Unused"), false) and all_passed
@@ -72,7 +72,7 @@ static func run() -> bool:
 
 	# Verify-lift: generated enums re-open as EnumRows; non-canonical forms stay blocks.
 	var external_source: String = "extends Node\n\nenum Mode { A, B = 7 }\n\nenum Spaced {  X }\n"
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(external_source)
 	var lifted_enum: EnumRow = null
 	var raw_blocks: int = 0
 	for row in imported.events:
@@ -83,7 +83,7 @@ static func run() -> bool:
 	all_passed = _check("canonical enum lifts", lifted_enum != null and lifted_enum.enum_name == "Mode" and lifted_enum.members[1] == "B = 7", true) and all_passed
 	all_passed = _check("non-canonical enum stays a block", raw_blocks, 1) and all_passed
 	imported.external_source_path = "user://eventsheets_enum_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventsheets_enum_rt.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventsheets_enum_rt.gd").get("output", ""))
 	all_passed = _check("external enum round-trip is byte-identical", roundtrip == external_source, true) and all_passed
 
 	# Snippets: enums travel.

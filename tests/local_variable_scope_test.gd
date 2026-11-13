@@ -16,7 +16,7 @@ const SUPPORT := preload("res://tests/support.gd")
 
 static func run() -> bool:
 	var ok: bool = true
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		"extends Node\n\n\nfunc _ready() -> void:\n\tvar dealt = 0\n\tif alive:\n\t\tdealt += 1\n\n\n"
 		+ "func other() -> void:\n\tvar spare = 2\n\tprint(spare)\n")
 

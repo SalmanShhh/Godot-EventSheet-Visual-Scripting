@@ -322,7 +322,7 @@ static func run() -> bool:
 ## `add_requirement`, `add_choice_requirement` and `add_requirement_key` all offer the shared
 ## operator list with `=` as its equality spelling, because that is the token `_req_ok` matches. The
 ## list ships as one `## @ace_param_options(op ...)` line whose keys are quoted exactly when they
-## contain the `=` that divides a key from its label, which is `SheetCompiler._param_option_text`'s
+## contain the `=` that divides a key from its label, which is `EventSheetCompiler._param_option_text`'s
 ## own rule, so the line is what a rebuild writes and re-quoting it by hand would drift the pack.
 ##
 ## THE TWO READERS DO NOT AGREE ABOUT THAT LINE, and both readings are pinned here because the
@@ -351,7 +351,7 @@ static func _pin_comparison_dropdown() -> bool:
 		offered, ["=", "!=", "<", "<=", ">", ">="]) and passed
 
 	var lifted: Array = []
-	var lifted_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+	var lifted_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
 		FileAccess.get_file_as_string(PACK))
 	for event_function: EventFunction in lifted_sheet.functions:
 		if event_function.function_name != "add_requirement":
@@ -371,7 +371,7 @@ static func _pin_comparison_dropdown() -> bool:
 		"=": true, "!=": false, "<": false, "<=": true, ">": false, ">=": true
 	}
 	for operator: String in expected_answers.keys():
-		var line: String = ActionCodegen._apply_template(
+		var line: String = EventSheetActionCodegen._apply_template(
 			"Storylets.add_requirement({id}, {quality_key}, \"{op}\", {value})",
 			{"id": "\"rescue\"", "quality_key": "\"courage\"", "op": operator, "value": "3", "uid": "0"})
 		var script: GDScript = GDScript.new()

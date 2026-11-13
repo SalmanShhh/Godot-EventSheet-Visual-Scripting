@@ -69,7 +69,7 @@ static func run() -> bool:
 	var references: Array = [{"row": row}]
 	EventSheetFindReferences.stamp_source_lines(edited, references)
 	rows.append(["finding where a row is leaves the file on disk as it was", [FileAccess.get_file_as_string(OUT_PATH),
-		str(SheetCompiler.echo(edited).get("output", "")).contains("var hp: int = 5")], [on_disk, true]])
+		str(EventSheetCompiler.echo(edited).get("output", "")).contains("var hp: int = 5")], [on_disk, true]])
 	DirAccess.remove_absolute(OUT_PATH)
 	var hand_written: String = "\n".join(PackedStringArray(["extends Node", "",
 		"@export var tint = Color.WHITE", "var rng = RandomNumberGenerator.new()", "@export var damage = 3",
@@ -102,13 +102,13 @@ static func _after_window_ok(source: String) -> String:
 
 
 static func _open(source: String) -> EventSheetResource:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, OUT_PATH)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source, true, OUT_PATH)
 	sheet.external_source_path = OUT_PATH
 	return sheet
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 
 
 static func _variable_defaults(sheet: EventSheetResource) -> Dictionary:

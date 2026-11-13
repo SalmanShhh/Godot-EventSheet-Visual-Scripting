@@ -632,7 +632,7 @@ func _expression_template(definition: ACEDefinition) -> String:
 	# ternary; the same read without one is the plain call) carries optional segments, which are
 	# collapsed against the defaults through the compiler's own reading of them - so what this
 	# inserts and what the compiler would emit for the same values cannot drift apart.
-	template = ActionCodegen.collapse_optional_segments(template, _default_params(definition))
+	template = EventSheetActionCodegen.collapse_optional_segments(template, _default_params(definition))
 	# Substitute default parameter values into the codegen template placeholders.
 	for index in range(definition.parameters.size()):
 		var parameter: Variant = definition.parameters[index]

@@ -40,9 +40,9 @@ static func run() -> bool:
 	irreducible_line.code = "flags |= 2"
 	event.actions.append(irreducible_line)
 	authored.events.append(event)
-	var source: String = str(SheetCompiler.compile(authored, "user://eventforge_lift_source.gd").get("output", ""))
+	var source: String = str(EventSheetCompiler.compile(authored, "user://eventforge_lift_source.gd").get("output", ""))
 
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	var imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(source)
 	var lifted_event: EventRow = null
 	var function_blocks: int = 0
 	for row in imported.events:
@@ -69,7 +69,7 @@ static func run() -> bool:
 
 	# The contract: the lifted sheet recompiles byte-identically.
 	imported.external_source_path = "user://eventforge_lift_roundtrip.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://eventforge_lift_roundtrip.gd").get("output", ""))
+	var roundtrip: String = str(EventSheetCompiler.compile(imported, "user://eventforge_lift_roundtrip.gd").get("output", ""))
 	all_passed = _check("lifted sheet round-trips byte-identically", roundtrip == source, true) and all_passed
 
 	# Params survive the reverse match as strings and re-emit identically.
@@ -83,8 +83,8 @@ static func run() -> bool:
 	set_velocity.params = {"vel": "Vector2(120, -30)"}
 	param_event.actions.append(set_velocity)
 	param_sheet.events.append(param_event)
-	var param_source: String = str(SheetCompiler.compile(param_sheet, "user://eventforge_lift_params.gd").get("output", ""))
-	var param_imported: EventSheetResource = GDScriptImporter.new().import_external_source(param_source)
+	var param_source: String = str(EventSheetCompiler.compile(param_sheet, "user://eventforge_lift_params.gd").get("output", ""))
+	var param_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(param_source)
 	var reversed_action: ACEAction = null
 	for row in param_imported.events:
 		if row is EventRow and not (row as EventRow).actions.is_empty():
@@ -96,19 +96,19 @@ static func run() -> bool:
 	all_passed = _check("specific ACE wins over the generic SetVar catch-all",
 		reversed_action != null and reversed_action.ace_id == "SetVelocity2D", true) and all_passed
 	param_imported.external_source_path = "user://eventforge_lift_params_rt.gd"
-	var param_roundtrip: String = str(SheetCompiler.compile(param_imported, "user://eventforge_lift_params_rt.gd").get("output", ""))
+	var param_roundtrip: String = str(EventSheetCompiler.compile(param_imported, "user://eventforge_lift_params_rt.gd").get("output", ""))
 	all_passed = _check("captured params re-emit identically", param_roundtrip == param_source, true) and all_passed
 
 	# Non-trigger functions never lift, and the file still round-trips byte-identically.
 	var helper_source: String = "extends Node\n\nfunc helper() -> void:\n\tprint(\"hi\")\n"
-	var helper_imported: EventSheetResource = GDScriptImporter.new().import_external_source(helper_source)
+	var helper_imported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(helper_source)
 	var helper_lifted: bool = false
 	for row in helper_imported.events:
 		if row is EventRow:
 			helper_lifted = true
 	all_passed = _check("non-trigger functions stay verbatim blocks", helper_lifted, false) and all_passed
 	helper_imported.external_source_path = "user://eventforge_lift_helper.gd"
-	var helper_roundtrip: String = str(SheetCompiler.compile(helper_imported, "user://eventforge_lift_helper.gd").get("output", ""))
+	var helper_roundtrip: String = str(EventSheetCompiler.compile(helper_imported, "user://eventforge_lift_helper.gd").get("output", ""))
 	all_passed = _check("unlifted files keep the byte-identical contract", helper_roundtrip == helper_source, true) and all_passed
 
 	return all_passed

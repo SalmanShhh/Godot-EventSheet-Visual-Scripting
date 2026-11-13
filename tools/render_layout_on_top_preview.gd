@@ -111,7 +111,7 @@ func _action(ace_id: String, params: Dictionary, uid: String = "") -> ACEAction:
 
 func _compiled_text(sheet: EventSheetResource) -> String:
 	sheet.external_source_path = "user://_layout_on_top_preview.gd"
-	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	sheet.external_source_path = ""
 	# The body alone: a sheet with no source file of its own emits no header, and the leading blank
 	# it separates functions with is not worth a line of a picture this tight.

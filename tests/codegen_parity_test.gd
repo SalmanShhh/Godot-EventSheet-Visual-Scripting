@@ -70,7 +70,7 @@ static func run() -> bool:
 	event_function.function_name = "reload"
 	sheet.functions.append(event_function)
 
-	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_parity.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_parity.gd").get("output", ""))
 	all_passed = _check("representative sheet compiled", not output.strip_edges().is_empty(), true) and all_passed
 
 	# No runtime indirection or plugin references anywhere in the output. The header comment
