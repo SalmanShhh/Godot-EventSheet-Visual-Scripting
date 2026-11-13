@@ -11045,11 +11045,14 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 		var icon_class: String = str(resolved.get("icon_class", ""))
 		if not icon_class.is_empty() and not alias.is_empty():
 			_lens_class_map[alias] = icon_class
-	# Copying a node that is ALREADY in the scene is Clone object; Create object is for making one
-	# out of a scene file. Two different things a reader means, so two different words - and the
-	# clone says what it made and where it put it, which is the whole of what the two lines did.
+	# Copying a node that is ALREADY in the scene is a Duplicate; Instantiate is for making one
+	# out of a scene file. Two different things a reader means, so two different words - Godot's
+	# own by default, and the sheet's own (Create object, Clone object) when the Words page has the
+	# second vocabulary on. The clone says what it made and where it put it, which is the whole of
+	# what the two lines did.
 	if copy:
-		var clone_text: String = "%s %s" % [EventSheetL10n.translate("Clone object"), shown]
+		var clone_text: String = "%s %s" % [EventSheetL10n.translate(
+			EventSheetWords.verb_row_words("reading:clone_object:copy", "Duplicate")), shown]
 		var asides: PackedStringArray = PackedStringArray()
 		if not alias.is_empty():
 			asides.append("→ %s" % alias)
@@ -11059,7 +11062,8 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 			asides.append("%s %s" % [EventSheetL10n.translate("at"),
 				_reading_sentence(EventSheetSentence.expression_text(position_text))])
 		return clone_text if asides.is_empty() else "%s (%s)" % [clone_text, ", ".join(asides)]
-	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
+	var text: String = "%s %s" % [EventSheetL10n.translate(
+		EventSheetWords.verb_name_words_of("Core", "SpawnNewCopy", "Instantiate")), shown]
 	# The node the object was added to IS the layer an event sheet makes things on, so the row
 	# says which one. A plant on the script's own node adds nothing a reader does not already have.
 	if not layer.is_empty() and layer != "here":

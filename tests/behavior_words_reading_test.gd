@@ -175,7 +175,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Function ▸ Return eventforge_behavior_words_reading has line of sight to t (within sight_range)",
 	# The instantiate, the layer it went onto, where it was put and the property set on the way
 	# in are ONE row; the Local row that holds the new object stays where the event declares it.
-	"System ▸ Create object enemy_scene on layer FX at spawn_point.global_position (as e)   rotation = angle",
+	"System ▸ Instantiate enemy_scene on layer FX at spawn_point.global_position (as e)   rotation = angle",
 	# A loop over what an area is touching
 	"System ▸ For each a overlapping Area2D"
 ])

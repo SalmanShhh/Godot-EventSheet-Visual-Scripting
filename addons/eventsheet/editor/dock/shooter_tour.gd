@@ -32,7 +32,7 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "A bullet appears at the player",
-			"body": "Create object is Instantiate Scene At here: a scene is the object type, and the copy lands where you say.",
+			"body": "Instantiate Scene At makes a copy of a scene: the scene is the object type, and the copy lands where you say.",
 			"task": "Under the click, add Instantiate Scene At with the bullet scene and the position $Player.position.",
 			"check": func(sheet: EventSheetResource) -> bool:
 				return _writes(sheet, ["MOUSE_BUTTON_LEFT", "instantiate()"]),

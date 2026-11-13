@@ -68,7 +68,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"= Boss in the scene",
 	"= HealthBar (unique name)",
 	"= enemy's path",
-	"System ▸ Clone object enemy (→ copy, next to it)",
+	"System ▸ Duplicate enemy (→ copy, next to it)",
 	# The patterns, as the Else-if chain reading built
 	"System ▸ event is a list of 3 starting \"move\"",
 	"System ▸ event is a table with type = \"hit\"",

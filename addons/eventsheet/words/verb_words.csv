@@ -40,6 +40,7 @@ Core::OnOverlapEndedWithGroup3D,On Overlap Ended With Group (3D),"a group member
 reading:pick_filter:GROUP,family,a loop over a family,,group,family
 reading:set_process:off,Set disabled,the process switch turned off,,Set process disabled,Set disabled
 reading:set_process:on,Set enabled,the process switch turned on,,Set process enabled,Set enabled
+reading:clone_object:copy,Clone object,a copy of a node already in the scene,,Duplicate,Clone object
 Core::OnPhysicsProcess,Every physics tick,every physics step (_physics_process),On Physics Process,Run on physics process,Every physics tick
 Core::OnEnterTree,On created,a node joining the scene tree (_enter_tree),On Enter Tree,Run on enter tree,On created
 Core::OnExitTree,On destroyed,a node leaving the scene tree (_exit_tree),On Exit Tree,Run on exit tree,On destroyed

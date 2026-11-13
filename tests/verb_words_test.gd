@@ -81,7 +81,7 @@ static func _keys_name_shipped_things() -> bool:
 
 ## Every reading key the editor could honestly carry an alias for, derived from the reading layer's
 ## own tables rather than listed again here: the process switches the grammar words, and the
-## collection kinds a pick filter loops over.
+## collection kinds a pick filter loops over, and the one clone reading the row builder composes.
 static func _reading_keys() -> Array[String]:
 	var out: Array[String] = []
 	for method: String in EventSheetSentence.PROCESS_SWITCH_WORDS:
@@ -89,6 +89,7 @@ static func _reading_keys() -> Array[String]:
 		out.append("reading:%s:off" % method)
 	for kind: String in PickFilter.CollectionKind.keys():
 		out.append("reading:pick_filter:%s" % kind)
+	out.append("reading:clone_object:copy")
 	out.sort()
 	return out
 

@@ -191,9 +191,9 @@ static func _rows() -> bool:
 	# Re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
 	# a chip rather than following it as an action of its own. It is the function's own first step,
 	# so it reads beside the function's head.
-	ok = _check("the spawn trio reads as one Create object",
-		_row_containing(rows, "Create object"),
-		"i0 [On function spawn_wave | System> Create object Enemy at spawn_point (as enemy)   speed = 40 | System> Add 1 to spawned]") and ok
+	ok = _check("the spawn trio reads as one Instantiate",
+		_row_containing(rows, "Instantiate"),
+		"i0 [On function spawn_wave | System> Instantiate Enemy at spawn_point (as enemy)   speed = 40 | System> Add 1 to spawned]") and ok
 	return ok
 
 
