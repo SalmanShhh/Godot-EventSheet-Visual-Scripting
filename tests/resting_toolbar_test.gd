@@ -285,12 +285,10 @@ static func _test_the_cascade() -> bool:
 		"EventSheetSheetDisplayMenu": 17, "EventSheetCollapseMenu": 5, "EventSheetSplitViewsMenu": 3,
 		"EventSheetZoomMenu": 3}) and ok
 	# The Addon manager left Tools: a pack is a folder, seen in the FileSystem dock.
-	ok = _check("Tools keeps its items, plus Words…, less the Addon manager, the sampler preview and Register Autoload", counts["EventSheetToolsMenu"], 39) and ok
-	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
+	ok = _check("Tools keeps its items, plus Words…, less the Addon manager, the sampler preview, Register Autoload and Keyboard Shortcuts", counts["EventSheetToolsMenu"], 38) and ok
+	# Words… moved menus rather than leaving: it is on Tools now.
 	ok = _check("Words… is on Tools, at its own id",
 		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok
-	ok = _check("and it sits beside Keyboard Shortcuts",
-		tools.get_item_index(63) - tools.get_item_index(16), 1) and ok
 	# Nothing named Settings is left on the strip, and the Menu is the only command MenuButton on it -
 	# Add was the last one beside it, and it cascades from inside the Menu now. Sentences is the one
 	# other: a second door onto the variable-row dial and Words, shown by the Text labels layout and

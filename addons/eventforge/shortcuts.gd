@@ -1,17 +1,22 @@
 # Godot EventSheets - rebindable authoring shortcuts
 #
-# Godot devs expect editor keys to be rebindable. The Editor-Settings shortcut dialog isn't exposed
-# to GDScript plugins, so this is the plugin's own remap layer: every authoring/editing shortcut
-# reads its binding from a PER-USER file (user://eventforge_shortcuts.cfg) - local to each developer,
-# never committed to git - with DEFAULTS as the fallback. Bindings are "Ctrl+S" / "Q" / "Ctrl+Shift+S"
-# (modifiers + one key name). Matching is EXACT on modifiers, so a chord never shadows its plain form
-# (Ctrl+Shift+C ≠ Ctrl+C ≠ C). Structural keys (Tab nesting, Delete, Enter/F2 inline edit, Escape)
-# stay fixed - they're grammar, not preference. Tools ▸ Keyboard Shortcuts is the editor for these.
+# Every authoring/editing shortcut is registered with Godot's own Editor Settings > Shortcuts
+# (EditorSettings.add_shortcut), so it is listed and rebound there, with the editor's own conflict
+# marks, and the editor saves the change with the rest of the user's editor settings. DEFAULTS is
+# the key a shortcut is registered with the first time; after that the editor's copy is the truth.
+# Outside the editor (compile, headless tests) there is no Editor Settings, so bindings read from
+# DEFAULTS and an in-memory override. Bindings are "Ctrl+S" / "Q" / "Ctrl+Shift+S" (modifiers + one
+# key name). Matching is EXACT on modifiers, so a chord never shadows its plain form (Ctrl+Shift+C
+# is not Ctrl+C is not C). Structural keys (Tab nesting, Delete, Enter/F2 inline edit, Escape) stay
+# fixed - they are grammar, not preference.
 @tool
 class_name EventSheetShortcuts
 extends RefCounted
 
-const OVERRIDES_FILE := "user://eventforge_shortcuts.cfg"
+## The file earlier versions kept custom bindings in. Read once by migrate_legacy_file, then retired.
+const LEGACY_FILE := "user://eventforge_shortcuts.cfg"
+## The Editor Settings path prefix; the dialog groups shortcuts by what comes before the first slash.
+const PATH_PREFIX := "eventsheets/"
 
 const DEFAULTS: Dictionary = {
 	"add_comment": "Q",
@@ -68,7 +73,7 @@ const DEFAULTS: Dictionary = {
 	"copy_as_text": "Ctrl+Shift+C",
 }
 
-## Friendly labels for the Keyboard Shortcuts editor (the action ids are internal).
+## Friendly labels Editor Settings > Shortcuts shows (the action ids are internal).
 const LABELS: Dictionary = {
 	"add_event": "Add event",
 	"add_condition": "Add condition",
@@ -120,139 +125,124 @@ const ORDER: Array = [
 static func label_for(action: String) -> String:
 	return str(LABELS.get(action, action.capitalize()))
 
-# ── Presets ─────────────────────────────────────────────────────────────────────────────
-#
-# Muscle memory is the cheapest thing to honour. The keys are already MOSTLY the same as the ones an
-# author coming from another event-sheet editor has in their fingers - E / S / C / A / G / Q / V / B
-# all match already - so a preset is a small table of the handful that DIFFER, applied through the
-# same per-user override store the Keyboard Shortcuts dialog writes. Nothing is locked: every key in
-# a preset stays rebindable afterwards, and "Reset all to defaults" comes back here.
-#
-# The preset ids are the shipped identity of a preset and are frozen; the tables may grow.
-
-const PRESET_DEFAULT: String = "eventsheets"
-const PRESET_ANOTHER_EDITOR: String = "another_editor"
-
-## preset id -> {action: binding}. The default preset is empty: it IS the DEFAULTS table.
-const PRESETS: Dictionary = {
-	PRESET_DEFAULT: {},
-	PRESET_ANOTHER_EDITOR: {
-		"invert_condition": "X",
-		"toggle_collapse": "Ctrl+E",
-		# Ctrl+E is collapse/expand in the other editor, so the Ctrl alternate for "add event" steps
-		# aside. E still adds an event, which is the key that matters.
-		"add_event_chord": "",
-	},
-}
-
-## What the Preset ▾ offers, in menu order.
-const PRESET_ORDER: Array = [PRESET_DEFAULT, PRESET_ANOTHER_EDITOR]
-
-const PRESET_LABELS: Dictionary = {
-	PRESET_DEFAULT: "Godot EventSheets",
-	PRESET_ANOTHER_EDITOR: "Another event-sheet editor",
-}
-
-
-static func preset_label_for(preset_id: String) -> String:
-	return str(PRESET_LABELS.get(preset_id, preset_id))
-
-
-## The bindings a preset asks for. Empty for the default preset - which is the point: the default is
-## whatever DEFAULTS says, so a preset never has to be kept in step with it.
-static func preset_bindings(preset_id: String) -> Dictionary:
-	var table: Variant = PRESETS.get(preset_id, {})
-	return (table as Dictionary).duplicate() if table is Dictionary else {}
-
-
-## Applies a preset: the default one clears every override, any other one resets first and then
-## writes only what it changes, so a preset can never leave a stale key from the one before it.
-static func apply_preset(preset_id: String) -> void:
-	if not PRESETS.has(preset_id):
-		return
-	reset_all()
-	var bindings: Dictionary = preset_bindings(preset_id)
-	for action: Variant in bindings:
-		set_binding(str(action), str(bindings[action]))
-
-
-## Which preset the live bindings match - the one whose every entry is in force, or the default when
-## none does. Derived rather than trusted, so a hand-rebound key honestly reads as "Godot EventSheets"
-## again the moment it stops matching.
-static func active_preset() -> String:
-	for preset_id: Variant in PRESET_ORDER:
-		var bindings: Dictionary = preset_bindings(str(preset_id))
-		if bindings.is_empty():
-			continue
-		var matched: bool = true
-		for action: Variant in bindings:
-			if binding_for(str(action)) != str(bindings[action]):
-				matched = false
-				break
-		if matched:
-			return str(preset_id)
-	return PRESET_DEFAULT
-
-# Per-user overrides cached in memory - the key handler probes ~18 actions per keystroke, so binding
-# lookups must never touch disk. Loaded once; writes update the cache and the file together.
+# The bindings an in-memory override holds (outside the editor, where there is no Editor Settings).
 static var _overrides: Dictionary = {}
-static var _overrides_loaded: bool = false
 
 
-static func _load_overrides() -> void:
-	if _overrides_loaded:
-		return
-	_overrides_loaded = true
-	# Outside the editor (compile / headless tests) there's no UI to remap from, so skip the file -
-	# matching falls back to DEFAULTS and the test suite stays side-effect-free.
-	if not Engine.is_editor_hint():
-		return
+## The Editor Settings path an action is registered under.
+static func shortcut_path(action: String) -> String:
+	return PATH_PREFIX + action
+
+
+## The editor's settings object when there is an editor, else null.
+static func _editor_settings() -> Object:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	return (Engine.get_singleton("EditorInterface") as Object).call("get_editor_settings")
+
+
+## The binding the editor holds for an action as "Ctrl+S", "" when the user cleared it, or null when
+## the editor has no shortcut of that name (not registered yet, or no editor at all).
+static func _editor_binding(action: String) -> Variant:
+	var settings: Object = _editor_settings()
+	if settings == null or not bool(settings.call("has_setting", "interface/editor/editor_language")):
+		return null
+	var path: String = shortcut_path(action)
+	if not bool(settings.call("has_shortcut", path)):
+		return null
+	var shortcut: Shortcut = settings.call("get_shortcut", path) as Shortcut
+	if shortcut == null or shortcut.events.is_empty():
+		return ""
+	return format_event(shortcut.events[0] as InputEventKey)
+
+
+## A key event for a binding string, or null for "" / an unknown key.
+static func event_for(binding: String) -> InputEventKey:
+	var parsed: Dictionary = parse(binding)
+	if int(parsed.get("keycode")) == KEY_NONE:
+		return null
+	var event: InputEventKey = InputEventKey.new()
+	event.keycode = int(parsed.get("keycode")) as Key
+	event.ctrl_pressed = bool(parsed.get("ctrl"))
+	event.shift_pressed = bool(parsed.get("shift"))
+	event.alt_pressed = bool(parsed.get("alt"))
+	return event
+
+
+## Registers every action in ORDER with Editor Settings > Shortcuts, once per editor start. A shortcut
+## the editor already holds (the user rebound it in an earlier session: the editor loads those before
+## a plugin starts) is left exactly as it is. Before the first registration the retired per-user file
+## is carried over. Returns how many shortcuts it added.
+static func register_with_editor() -> int:
+	var settings: Object = _editor_settings()
+	if settings == null:
+		return 0
+	var legacy: Dictionary = _read_legacy_file()
+	var added: int = 0
+	for action: String in ORDER:
+		var path: String = shortcut_path(action)
+		if bool(settings.call("has_shortcut", path)):
+			continue
+		var binding: String = str(legacy.get(action, DEFAULTS.get(action, "")))
+		var shortcut: Shortcut = Shortcut.new()
+		shortcut.resource_name = label_for(action)
+		var event: InputEventKey = event_for(binding)
+		if event != null:
+			shortcut.events = [event]
+		settings.call("add_shortcut", path, shortcut)
+		added += 1
+	if not legacy.is_empty() and FileAccess.file_exists(LEGACY_FILE):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(LEGACY_FILE))
+		print("[Godot EventSheets] Moved your custom shortcuts into Editor Settings > Shortcuts; rebind them there from now on.")
+	return added
+
+
+## The custom bindings the retired file held, {action: binding}. Empty when there is none.
+static func _read_legacy_file() -> Dictionary:
+	var out: Dictionary = {}
 	var config: ConfigFile = ConfigFile.new()
-	if config.load(OVERRIDES_FILE) != OK or not config.has_section("shortcuts"):
-		return
+	if config.load(LEGACY_FILE) != OK or not config.has_section("shortcuts"):
+		return out
 	for action: String in config.get_section_keys("shortcuts"):
-		_overrides[action] = str(config.get_value("shortcuts", action, ""))
-
-
-static func _save_overrides() -> void:
-	if not Engine.is_editor_hint():
-		return
-	var config: ConfigFile = ConfigFile.new()
-	for action: Variant in _overrides:
-		config.set_value("shortcuts", str(action), str(_overrides[action]))
-	if config.save(OVERRIDES_FILE) != OK:
-		push_warning("EventSheets: couldn't save shortcut overrides to %s - the change lasts only this session." % OVERRIDES_FILE)
+		out[action] = str(config.get_value("shortcuts", action, ""))
+	return out
 
 
 static func binding_for(action: String) -> String:
-	_load_overrides()
+	var held: Variant = _editor_binding(action)
+	if held != null:
+		return str(held)
 	if _overrides.has(action):
 		return str(_overrides[action])
 	return str(DEFAULTS.get(action, ""))
 
 
-## Persist a new binding ("Ctrl+S") for an action. An empty binding is an explicit "no key" - the
-## action stays reachable from its menu and from any alternate binding, and it is NOT the same as
-## resetting (reset() puts the DEFAULTS key back). Recording an empty override rather than erasing it
-## is what lets a preset take a key away from one action to give it to another.
+## Sets a binding ("Ctrl+S"; "" is an explicit "no key"). In the editor it changes the registered
+## Editor Settings shortcut; outside it, an in-memory override. Used by tests and by code that
+## applies a binding on the user's behalf.
 static func set_binding(action: String, binding: String) -> void:
-	_load_overrides()
+	var settings: Object = _editor_settings()
+	if settings != null and bool(settings.call("has_shortcut", shortcut_path(action))):
+		var shortcut: Shortcut = settings.call("get_shortcut", shortcut_path(action)) as Shortcut
+		var event: InputEventKey = event_for(binding)
+		shortcut.events = [event] if event != null else []
+		return
 	_overrides[action] = binding.strip_edges()
-	_save_overrides()
 
 
-## Restore one action to its DEFAULTS binding (clears the per-user override).
+## Restore one action to its DEFAULTS binding.
 static func reset(action: String) -> void:
-	_load_overrides()
 	_overrides.erase(action)
-	_save_overrides()
+	var settings: Object = _editor_settings()
+	if settings != null and bool(settings.call("has_shortcut", shortcut_path(action))):
+		set_binding(action, str(DEFAULTS.get(action, "")))
 
 
 ## Restore every action to its DEFAULTS binding.
 static func reset_all() -> void:
-	_load_overrides()
 	_overrides.clear()
-	_save_overrides()
+	for action: String in ORDER:
+		reset(action)
 
 
 ## "Ctrl+Shift+S" → {keycode, ctrl, shift, alt}. "Cmd"/"Meta" count as Ctrl (the dock treats them as
@@ -307,51 +297,6 @@ static func conflicting_action(action: String, binding: String) -> String:
 			return str(other)
 	return ""
 
-
-## The structural keys no one can rebind, spelled as chords parse() reads, each with what it does.
-## A rebindable action put on one of these would fight it, so the editor flags that clash too.
-const FIXED_CHORDS: Dictionary = {
-	"Enter": "Edit the selected row",
-	"F2": "Edit the selected row",
-	"Tab": "Nest / un-nest the event",
-	"Shift+Tab": "Nest / un-nest the event",
-	"Alt+Up": "Move the row up / down",
-	"Alt+Down": "Move the row up / down",
-	"Left": "Collapse / expand a group",
-	"Right": "Collapse / expand a group",
-	"Up": "Select previous / next row",
-	"Down": "Select previous / next row",
-	"Shift+Up": "Extend the row selection",
-	"Shift+Down": "Extend the row selection",
-	"Delete": "Delete the selection",
-	"Backspace": "Delete the selection",
-	"Ctrl+F": "Find & Replace",
-	"F3": "Find next / previous",
-	"Shift+F3": "Find next / previous",
-	"Ctrl+P": "Command Palette",
-	"Ctrl+G": "Go to event",
-	"F9": "Toggle breakpoint",
-	"Ctrl+B": "Toggle breakpoint",
-	"Ctrl+M": "Toggle bookmark",
-	"Ctrl+Y": "Redo",
-	"Ctrl+Equal": "Zoom in / out (also Ctrl + mouse wheel)",
-	"Ctrl+Minus": "Zoom in / out (also Ctrl + mouse wheel)",
-	"Ctrl+0": "Reset zoom to 100%",
-	"Escape": "Close a popup / cancel an edit",
-}
-
-
-## The fixed key `binding` lands on, as its description ("" when it lands on none).
-static func conflicting_fixed_key(binding: String) -> String:
-	if binding.strip_edges().is_empty():
-		return ""
-	var target: Dictionary = parse(binding)
-	if int(target.get("keycode")) == KEY_NONE:
-		return ""
-	for chord: Variant in FIXED_CHORDS:
-		if parse(str(chord)) == target:
-			return str(FIXED_CHORDS[chord])
-	return ""
 
 # Parse memo: the key handler probes up to ~18 actions per keystroke; bindings only change when the
 # binding string does, so cache by (action, binding text).

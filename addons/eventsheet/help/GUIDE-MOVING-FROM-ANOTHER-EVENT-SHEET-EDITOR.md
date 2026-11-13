@@ -382,7 +382,7 @@ i18n (Godot translations).
   The whole Add menu lives inside the **☰ Menu** beside Sheet, Edit, View and Tools, and it teaches
   the keys: Event (E), Condition (C), Action (A), Group (G), Comment (Q), Global Variable (V) and
   Function (F) each print their key beside them, read from your own bindings - rebind one in
-  *Tools ▸ Keyboard Shortcuts* and the menu says the new key.
+  *Editor Settings ▸ Shortcuts* and the menu says the new key.
 
   ![The Menu open on Add, with E, C, A, G, Q, V and F printed beside their items](images/add-cascade-keys.png)
 - **One play button, for the runs that carry sheet debugging.** The face runs the way you chose; the
@@ -404,10 +404,9 @@ i18n (Godot translations).
   Godot scene. `🐞 Debug scene` sits in the play button's dropdown: it arms Event Trace, Live Values and
   breakpoints first, which only a sheet can do. **Menu ▸ Sheet ▸ Start page** is the start page you expect - templates by genre,
   what you had open last, and the tutorials.
-- **Your keys, in one pick.** **Tools ▸ Keyboard Shortcuts ▸ Preset ▾ ▸ Another event-sheet editor**
-  rebinds only the handful that differ - X inverts, Ctrl+E collapses and expands - and
-  leaves E / S / C / A / G / Q / V / B exactly where your fingers already put them. Everything stays
-  rebindable, and *Reset all to defaults* comes back.
+- **Your keys are Godot's to rebind.** Every sheet shortcut is listed in Godot's own **Editor Settings ▸ Shortcuts**
+  (search for the action's name), so a key that differs from the one your fingers know - X to invert, Ctrl+E to
+  collapse and expand - is rebound there like any other editor key. E / S / C / A / G / Q / V / B already match.
 
 - **Typing `Self.` still answers "what does my object know about itself"**: type `self` in any
   ƒx field (or open the ƒx Expressions dictionary) and a pinned **Self** section lists your
@@ -573,7 +572,7 @@ i18n (Godot translations).
   sentence, node/object references draw *italic* in the rows that take one ("add
   *$Enemy* to **"enemies"**"), and numbers, strings and booleans keep their tints -
   automatic for every built-in row and behavior pack, no authoring required.
-- **Your C3 keyboard grammar works verbatim** (rebindable via Tools > Keyboard Shortcuts):
+- **Your C3 keyboard grammar works verbatim** (rebindable in Editor Settings > Shortcuts):
 
   | Key | Action |
   |---|---|

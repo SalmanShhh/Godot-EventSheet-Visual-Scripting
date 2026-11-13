@@ -38,15 +38,9 @@ static func run() -> bool:
 	all_passed = _check("hint_label is muted", hint.modulate.a < 1.0, true) and all_passed
 	hint.free()
 
-	# Keyboard Shortcuts editor (Tools ▸ Keyboard Shortcuts): the rebindable action list + the
-	# read-only fixed-keys reference are both populated.
+	# The shortcut labels Editor Settings > Shortcuts shows resolve.
 	all_passed = _check("rebindable shortcut list is populated", EventSheetShortcuts.ORDER.size() >= 4, true) and all_passed
 	all_passed = _check("rebindable action labels resolve", EventSheetShortcuts.label_for("add_event"), "Add event") and all_passed
-	var flat: String = ""
-	for pair: Array in EventSheetDock.FIXED_KEYS:
-		flat += str(pair[0]) + " | " + str(pair[1]) + "\n"
-	all_passed = _check("fixed-keys reference lists the Command Palette", flat.contains("Ctrl + P") and flat.contains("Command Palette"), true) and all_passed
-	all_passed = _check("fixed-keys reference lists Find & Replace", flat.contains("Ctrl + F"), true) and all_passed
 
 	all_passed = _test_reference_primitives() and all_passed
 	return all_passed

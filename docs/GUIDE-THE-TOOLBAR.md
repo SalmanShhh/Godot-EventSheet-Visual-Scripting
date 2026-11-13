@@ -48,7 +48,7 @@ its colour from whatever editor theme you are running. On a build with no icon t
 `↶` and `↷` instead.
 
 Every key printed on the strip and in its menus is read from **your** bindings, not typed into the
-editor's source. Rebind one in *Menu > Tools > Keyboard Shortcuts* and the tooltip and the menu item
+editor's source. Rebind one in *Editor Settings > Shortcuts* and the tooltip and the menu item
 say the new key with nothing else to change. The keys quoted on this page are the shipped defaults.
 
 The row measures **603 px** at its narrowest inside a running editor, which is the whole point of it
@@ -226,7 +226,7 @@ the door inside the sheet that reaches the same thing without a menu at all.
 | **Edit** (menu) | Menu > Edit | `Ctrl+C` / `Ctrl+V` / `Ctrl+Z` / `Ctrl+Shift+Z` | Right-click a selection |
 | **View** (menu) | Menu > View |  |  |
 | **Tools** (menu) | Menu > Tools |  |  |
-| **Settings** (menu) | Retired. Its one item, **Words...**, is Menu > Tools > Words..., beside Keyboard Shortcuts |  |  |
+| **Settings** (menu) | Retired. Its one item, **Words...**, is Menu > Tools > Words... |  |  |
 | **Simple Mode** (pill) | Menu > View > Simple Mode, and the Welcome window |  |  |
 | **GDScript** (panel toggle) | The expanded strip, and Menu > View > GDScript Panel: one toggle, two doors |  |  |
 | **Theme picker** (dropdown) | Menu > View > Sheet theme, a submenu built from the very same preset list with this sheet's theme ticked |  |  |

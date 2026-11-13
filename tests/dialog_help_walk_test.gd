@@ -53,7 +53,7 @@ const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.n
 ## row being written, so their strips name the picked line and the keys, not a reading. Deliberate,
 ## and therefore written down rather than quietly passing.
 const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_palette.gd", "debugger_window.gd",
-	"repeated_rows.gd", "event_sheet_shortcuts_dialog.gd", "words_settings_dialog.gd", "ask_window.gd",
+	"repeated_rows.gd", "words_settings_dialog.gd", "ask_window.gd",
 	"ai_generate_window.gd", "theme_editor_dialog.gd", "bookmarks_panel.gd", "sheet_map_panel.gd"]
 
 ## The result windows, whose strip describes the PICKED line of a list (a hit, a use, a run) rather
@@ -121,7 +121,6 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/struct_row_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/variable_retype_dialog.gd",
 		"res://addons/eventsheet/editor/dock/welcome_window.gd",
-		"res://addons/eventsheet/editor/event_sheet_shortcuts_dialog.gd",
 		"res://addons/eventsheet/editor/function_dialog.gd",
 		"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
 		"res://addons/eventsheet/editor/mod_template_dialog.gd",

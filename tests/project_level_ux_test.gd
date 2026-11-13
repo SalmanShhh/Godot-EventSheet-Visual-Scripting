@@ -18,7 +18,6 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _visibility_rules() and all_passed
 	all_passed = _toolbar_and_preview_buttons() and all_passed
-	all_passed = _shortcut_preset() and all_passed
 	all_passed = _start_page_columns() and all_passed
 	all_passed = _start_page_lists_every_showcase() and all_passed
 	return all_passed
@@ -71,41 +70,6 @@ static func _toolbar_and_preview_buttons() -> bool:
 		EventSheetRunControls.label_for("debug_layout", true), "🐞 Debug scene") and all_passed
 	all_passed = _check("the sheet binds no key for Godot's own run-scene and run-project",
 		EventSheetShortcuts.DEFAULTS.has("preview_layout") or EventSheetShortcuts.DEFAULTS.has("preview_project"), false) and all_passed
-	return all_passed
-
-
-static func _shortcut_preset() -> bool:
-	var all_passed: bool = true
-	all_passed = _check("the picker offers two presets",
-		" ".join(PackedStringArray(EventSheetShortcuts.PRESET_ORDER)),
-		"eventsheets another_editor") and all_passed
-	all_passed = _check("and names the second one without naming a product",
-		EventSheetShortcuts.preset_label_for("another_editor"),
-		"Another event-sheet editor") and all_passed
-	all_passed = _check("with nothing applied the default preset is the live one",
-		EventSheetShortcuts.active_preset(), "eventsheets") and all_passed
-	EventSheetShortcuts.apply_preset("another_editor")
-	# The preset rebinds ONLY what differs: E / S / C / A / G / Q / V / B already match, so they are
-	# not in the table at all and must come through untouched.
-	all_passed = _check("invert moves to the key the other editor uses",
-		EventSheetShortcuts.binding_for("invert_condition"), "X") and all_passed
-	all_passed = _check("collapse / expand lands on Ctrl+E",
-		EventSheetShortcuts.binding_for("toggle_collapse"), "Ctrl+E") and all_passed
-	all_passed = _check("so the Ctrl alternate for add-event steps aside",
-		EventSheetShortcuts.binding_for("add_event_chord"), "") and all_passed
-	all_passed = _check("adding an event is still E - the preset never touched it",
-		EventSheetShortcuts.binding_for("add_event"), "E") and all_passed
-	all_passed = _check("and the picker now reads back the preset that is in force",
-		EventSheetShortcuts.active_preset(), "another_editor") and all_passed
-	# Everything stays rebindable: one key changed by hand and the dialog stops claiming the preset.
-	EventSheetShortcuts.set_binding("invert_condition", "Ctrl+Alt+I")
-	all_passed = _check("a hand-rebound key drops the picker back to the default preset",
-		EventSheetShortcuts.active_preset(), "eventsheets") and all_passed
-	EventSheetShortcuts.apply_preset("eventsheets")
-	all_passed = _check("the default preset puts every key back",
-		EventSheetShortcuts.binding_for("invert_condition"), "I") and all_passed
-	all_passed = _check("including the Ctrl alternate the other preset had cleared",
-		EventSheetShortcuts.binding_for("add_event_chord"), "Ctrl+E") and all_passed
 	return all_passed
 
 

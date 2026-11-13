@@ -87,12 +87,6 @@ static func run() -> bool:
 	all_passed = _check("a row the margin does not number says nothing",
 		EventSheetDock.row_address_text(EventRowData.new(), sheet), "") and all_passed
 
-	# ---- Ctrl+G is listed where the Keyboard Shortcuts dialog reads its fixed keys ----
-	var go_to_event_listed: bool = false
-	for entry: Variant in EventSheetDock.FIXED_KEYS:
-		if (entry as Array)[0] == "Ctrl + G":
-			go_to_event_listed = str((entry as Array)[1]) == "Go to event"
-	all_passed = _check("Ctrl+G is a documented fixed key", go_to_event_listed, true) and all_passed
 
 	return all_passed
 

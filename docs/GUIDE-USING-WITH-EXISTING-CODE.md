@@ -2593,9 +2593,7 @@ Three smaller surfaces are worth knowing on day one:
   While a game runs the face reads `■ Stop`. Which one the button's face does is yours to pick,
   under *Main button* at the foot of that dropdown.
 - **View ▸ Add toolbar** - the eight Add gestures as buttons above the canvas, each naming its key on
-  hover, on by default in Simple mode. And **Keyboard Shortcuts ▸ Preset ▾** offers *Another
-  event-sheet editor*, which rebinds only the handful of keys that differ (invert to X, collapse and
-  expand to Ctrl+E, preview to F4) and leaves everything rebindable underneath.
+  hover, on by default in Simple mode. Its keys, like every other sheet key, are listed and rebound in Godot's own **Editor Settings ▸ Shortcuts**.
 
 ![The Add toolbar above the canvas: + Event, + Sub-event, + Condition, + Action, + Group, + Comment, + Variable, + Function, then a separator and the three Preview buttons](images/beginner-toolbar.png)
 

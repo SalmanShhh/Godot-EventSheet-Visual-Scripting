@@ -81,7 +81,7 @@ You do not have to leave the sheet to run a tool. A tool sheet's Include bar car
 
 | Button | What it does |
 | --- | --- |
-| **▶ Run now** | Compiles the sheet and calls `_run()` - the same entry point File > Run uses. The shortcut is **Ctrl+Shift+X**, rebindable under Tools ▸ Keyboard Shortcuts. |
+| **▶ Run now** | Compiles the sheet and calls `_run()` - the same entry point File > Run uses. The shortcut is **Ctrl+Shift+X**, rebindable under Editor Settings ▸ Shortcuts. |
 | **↻ Reload** | Re-reads the compiled script from disk. For a plugin that is already switched on, it also re-registers the plugin, so a change takes effect without toggling it off and on in Project Settings. |
 | **Output ▾** | The editor's Output panel, filtered to what this tool printed on its last Run now. It counts the lines, so the button itself tells you whether anything happened. |
 | **Enable plugin** | Only on an Editor Plugin sheet: writes the `plugin.cfg` Godot needs beside the compiled script and switches the plugin on. Pressing it twice does nothing the second time. |

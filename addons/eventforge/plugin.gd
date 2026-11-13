@@ -551,6 +551,8 @@ func _enter_tree() -> void:
 	var ask_script: GDScript = load("res://addons/eventsheet/ace/ask.gd")
 	ask_script.register_editor_keys()
 	(load("res://addons/eventsheet/editor/l10n.gd") as GDScript).register_override_setting()
+	# The authoring shortcuts live in Editor Settings > Shortcuts, rebound there like Godot's own.
+	(load("res://addons/eventforge/shortcuts.gd") as GDScript).register_with_editor()
 	var moved_keys: PackedStringArray = ask_script.move_project_keys_to_editor()
 	if not moved_keys.is_empty():
 		settings_changed = true

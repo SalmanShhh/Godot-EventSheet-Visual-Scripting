@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: sheet shortcuts are rebound in Godot's Editor Settings > Shortcuts
+
+- The authoring keys (add event, add condition, collapse and the rest) are now registered with Godot's own Editor Settings > Shortcuts, where you search and rebind them like any editor key, and the editor saves the change. The plugin's own Tools > Keyboard Shortcuts window and its `eventforge_shortcuts.cfg` file are gone; keys you had changed are carried into Editor Settings once, and the Output says so. The "Another event-sheet editor" preset went with the window - rebind X, Ctrl+E and the rest there by hand.
+
 ### Removed: the plugin's own History panel (Godot's History dock lists the edits)
 
 - Every sheet edit already went through Godot's own undo manager under its plain name ("Add Group", "Extract to Function"), so Godot's History dock lists each one (tick its Global history). The plugin's View > History window repeated that list, so it is gone, along with the "(undone)" markers and the lit-up rows it drew. Ctrl+Z and Ctrl+Y are unchanged.

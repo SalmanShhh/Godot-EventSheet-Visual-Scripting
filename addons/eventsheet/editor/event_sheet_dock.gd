@@ -631,12 +631,6 @@ var _sheet_type: RefCounted = null:  # Sheet ▸ Sheet Type… dialog shell (doc
 			_sheet_type.init(self)
 		return _sheet_type
 var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs restore across restarts (event_sheet_session_store.gd)
-var _shortcuts: RefCounted = null:  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
-	get:
-		if _shortcuts == null:
-			_shortcuts = load("res://addons/eventsheet/editor/event_sheet_shortcuts_dialog.gd").new()
-			_shortcuts.init(self)
-		return _shortcuts
 var _docs: RefCounted = null:  # Tools ▸ Documentation… / F1 / "What does this do?" (docs/doc_window.gd)
 	get:
 		if _docs == null:
@@ -4896,31 +4890,7 @@ func _run_diagnostics_action() -> void:
 	else:
 		_set_status("No issues found - every ƒx expression and script block compiles.")
 
-## Fixed structural keys (not rebindable - they're grammar, not preference): shown read-only in the
-## Keyboard Shortcuts editor as [keys, action], for reference. The rebindable authoring keys come
-## live from EventSheetShortcuts so the editor always shows the user's actual bindings.
-const FIXED_KEYS: Array = [
-	["Enter / F2", "Edit the selected row"],
-	["Tab / Shift+Tab", "Nest / un-nest the event"],
-	["Alt + Up / Down", "Move the row up / down"],
-	["Left / Right", "Collapse / expand a group"],
-	["Up / Down", "Select previous / next row"],
-	["Shift + Up / Down", "Extend the row selection"],
-	["Delete / Backspace", "Delete the selection"],
-	["Ctrl + F", "Find & Replace"],
-	["F3 / Shift+F3", "Find next / previous"],
-	["Ctrl + P", "Command Palette"],
-	["Ctrl + G", "Go to event"],
-	["F9 / Ctrl+B", "Toggle breakpoint"],
-	["Ctrl + M", "Toggle bookmark"],
-	["Ctrl + Y", "Redo"],
-	["Ctrl + +  /  Ctrl + -", "Zoom in / out (also Ctrl + mouse wheel)"],
-	["Ctrl + 0", "Reset zoom to 100%"],
-	["Esc", "Close a popup / cancel an edit"],
-]
 
-
-# ── Keyboard Shortcuts editor (Tools menu; FIXED_KEYS above stays here) → event_sheet_shortcuts_dialog.gd ──
 ## Tools ▸ Manual…, F1, and EventSheets.open_docs all land here. With no id, whatever the reader
 ## has SELECTED answers - a condition or action row with its entry, an object label with the
 ## object's reference page, a group with the Manual's page on groups, a behavior's Include bar

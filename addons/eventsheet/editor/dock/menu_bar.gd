@@ -872,8 +872,7 @@ func build(root: Node) -> void:
 	tools_popup.add_separator()
 	tools_popup.add_item("Welcome…", 13)
 	tools_popup.add_item("Start the Tour…", 17)
-	tools_popup.add_item("Keyboard Shortcuts", 16)
-	# Words is the reader's own vocabulary choice, and it sits beside Keyboard Shortcuts because both
+	# Words is the reader's own vocabulary choice, and it sits beside Welcome because both
 	# are "how the editor answers to me". It is the whole of what the retired Settings menu carried;
 	# id 63 is the next number the Tools menu has never used, because an id belongs to its menu and a
 	# moved item cannot bring its old number into a menu that already spent it.
@@ -902,7 +901,6 @@ func build(root: Node) -> void:
 			26: _dock.open_lift_workbench()
 			13: _dock.show_welcome()
 			17: _dock.start_tour()
-			16: _dock._shortcuts.open()
 			22: _dock.open_manual_where_left()
 			20: _dock._report_issue()
 			21: _dock._translation_studio.open()

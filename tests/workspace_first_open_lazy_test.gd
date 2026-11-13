@@ -53,7 +53,6 @@ const CLICK_ONLY := [
 	"res://addons/eventsheet/editor/dock/moment_file_door.gd",
 	"res://addons/eventsheet/editor/dock/refactor_menu.gd",
 	"res://addons/eventsheet/editor/dock/compare_dialog.gd",
-	"res://addons/eventsheet/editor/event_sheet_shortcuts_dialog.gd",
 	"res://addons/eventsheet/editor/words_settings_dialog.gd",
 	"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
 	"res://addons/eventsheet/editor/theme_editor_dialog.gd",
