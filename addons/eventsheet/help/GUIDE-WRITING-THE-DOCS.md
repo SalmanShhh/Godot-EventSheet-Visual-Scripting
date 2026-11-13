@@ -136,11 +136,12 @@ literal runs of the verb's own codegen line, because `.gd` is the default sheet 
 every script in a project would cost seconds at the moment you pressed a key. A verb your project
 has never used says so plainly - the absence is the answer, and it is worth knowing.
 
-![Searching the Manual for "wait": the results list tags every row - glossary, System reference, engine reference, guide, behavior reference - and the glossary page is open beside it at the word wait, with the search term highlighted](images/manual-search.png)
+![Searching the Manual for "wait": the results list tags every row - condition, action, glossary, System reference, trigger - beside the documentation index, with no row for a Godot class](images/manual-search.png)
 
 **One search box** covers all of it - conditions, actions, expressions, guides, System reference,
-behavior reference, the engine's class reference and the glossary - and tags every result with
-which of those it is. A vocabulary result also says how many events of the open sheet already use it;
+behavior reference and the glossary - and tags every result with which of those it is. For any Godot
+class or method, press F1 or use the Help menu > Search Help (the Script editor's class reference): the
+Manual covers EventSheets only. A vocabulary result also says how many events of the open sheet already use it;
 Enter opens it, Ctrl+Enter adds it to the sheet at the caret. A search that finds **nothing** says
 *Looking for layout? Here it is called Scene* first, when the word is one the glossary knows, so a
 reader never concludes a feature is missing because it is spelled differently here.
@@ -209,22 +210,18 @@ Spanish rows.
 
 ### One search over everything
 
-![One search over the whole Manual: guides, System and behavior reference and the glossary in one tagged list, with the Engine group at its foot](images/doc-search-engine-group.png)
-
 There is one search box, and it searches everything the reader can reach: your guides, the
 generated System and Behavior reference, the tutorials, the dictionary, a pack's own `guide.md`, the
-project's own notes, and the engine's class reference. Every result row is **tagged** with what it
-is - *guide*, *action*, *System reference*, *engine reference* - so one list can hold all of it
+project's own notes. Every result row is **tagged** with what it
+is - *guide*, *action*, *System reference*, *behavior reference* - so one list can hold all of it
 without the reader having to know which half their word lived in.
 
-Two rules decide the order, and knowing them is what makes a guide findable:
+One rule decides the order, and knowing it is what makes a guide findable:
 
 - **Where the hit landed outranks how it matched.** A page *titled* after the word beats a page with
   a matching *heading*, which beats a page that merely mentions it in prose. So the words you put in
   a title and in headings are the words your page can be found by - a heading of "Slots, formats and
   when to write" is findable; "Some notes" is not.
-- **The plugin's own answers come before the engine's.** An exact hit on a Godot class name still
-  sorts under a guide that talks about the same thing in the sheet's own words.
 
 The index is **baked into the shipped bundle** at build time (`search.esdoc`), so a keystroke
 searches a table that is already in memory rather than reading four megabytes of Markdown on the
@@ -237,59 +234,22 @@ ask for the page, which opens the tracker with their search already in the title
 tells a reader their question was wrong; it is far likelier that the corpus is missing a page, and
 that row is how you find out which one.
 
-### The engine's own reference, harvested - and the words it does not come with
+### The engine's own reference is Godot's Help
 
-Half of what a reader wants explained is not this plugin's vocabulary at all - it is
-`global_position`, `queue_free`, `body_entered`. That reference already exists and is already correct
-for the exact build in front of them, so none of it is written here: the running binary prints its
-own class reference (`--doctool`), once, in the background, cached under `user://` keyed by the
-engine's version string. Upgrade Godot and the key changes, so the next harvest is the new engine's
-text; never upgrade and it never runs again.
+A Godot class or method is not a Manual page: press **F1** on a row that names one, or use **Help >
+Search Help** in the Script editor, and Godot's own class reference opens at it. An `engine:` link
+(`engine:Node2D`, `engine:Node2D.position`) does the same thing: it opens that topic in Godot's Help.
 
-**What the harvest contains is the shape and not the words.** `--doctool` reports what ClassDB knows
-- every class, every property with its type, every method with its return type, every signal - and
-writes an empty description for each of them. The prose is compiled into the editor binary as
-compressed data that only the editor's own help panel reads, and nothing in a script can ask for it:
-`EditorHelp`, `DocTools` and `DocData` are not registered with ClassDB in any build, and the one
-in-process route to the merged data (the language server's `textDocument/nativeSymbol`) answers
-nothing until a real LSP client has connected over a socket.
-
-So a class is in one of two states, and the reader is told which:
-
-- **With the words.** F1 draws the class here, with its description, a described column beside every
-  member, and the credit its licence requires.
-- **Without them.** F1 draws the same class, says in a sentence that Godot's own description is not
-  on this machine, lists the members it really does know with no column it would have to leave
-  blank, and offers the two places the words do exist: Godot's own class reference inside the editor
-  (which has them compiled in, opened at the member), and that class's page on
-  `docs.godotengine.org` for the running major.minor. There is deliberately no third state - a page
-  of headings over blank cells reads as a broken reader rather than as text nobody has fetched.
-
-**Fetching the words** is one explicit action and the only thing in this plugin that opens a
-connection: *Fetch the engine's reference text* in Docs housekeeping, or `docs-engine-text` on the
-command line. It reads the class reference for this exact version of Godot from the engine's own
-repository at the matching tag, over the harvest, once per version, and every read after that is a
-local file read. It never runs on its own, it is not ticked by default, and what it still has to do
-is derived from the cache itself, so an interrupted fetch continues where it stopped.
-
-An exported static site publishes only the classes whose text is actually here. The in-editor page
-for a class without it works because it can hand the reader to the editor's own help and offer to
-fetch; an exported page can do neither, so a thousand published pages of names with no descriptions
-would be a site that simply looks broken.
-
-It shows up in three places, and in all three it is the same text:
-
-- **F1 on a row whose echo names an engine property** opens the engine's own page for it, at that
-  member.
-- **Pickers describe built-in methods and signals** with the engine's own sentence, in the same slot
-  a script's `##` lines fill for the members you wrote. Before the text is on the machine they show
-  the member with no description rather than an empty quotation.
-- **Search gains an Engine group**, ranked below the plugin's own answers as above.
-
-The engine reference is published under CC BY 4.0, so every surface that shows it shows the line
-*Godot Engine documentation, used under CC BY 4.0.* with it, and an exported static site carries the
-same line onto any page that quotes it. That is a licence term, not decoration - if you add a
-surface that shows engine text, it shows the credit.
+What the plugin still keeps is the one-sentence hover. A derived row, a picker entry and a completion
+show Godot's own sentence for a built-in member in place, and that sentence is not reachable from a
+script (the prose is compiled into the editor binary), so *Fetch the engine's reference text* in Docs
+housekeeping, or `docs-engine-text` on the command line, reads the class reference for this exact
+version of Godot from the engine's own repository once and keeps it on this machine. It is the only
+thing in this plugin that opens a connection, it never runs on its own, and what it still has to do is
+derived from the cache itself, so an interrupted fetch continues where it stopped. The hover then shows
+the line *Godot Engine documentation, used under CC BY 4.0.* with the sentence, because that is a
+licence term; before the text is on the machine the row shows the member with no description rather
+than an empty quotation.
 
 ### The door swings back
 
@@ -672,7 +632,7 @@ includes both steps.
 ![The Docs Housekeeping dialog: a checkbox per chore, each with a sentence saying what it would cost to do by hand, a Run button, a button that writes a CI workflow, and the report panel underneath](images/docs-housekeeping.png)
 
 Six chores keep documentation from rotting, and every one of them is something a person can do by
-hand: rewrite the page each sheet writes about itself, harvest the engine's own class reference,
+hand: rewrite the page each sheet writes about itself, harvest the engine's own class reference for the hover,
 draft the descriptions nothing has written yet, check coverage and drift, export the Manual as a
 site, write out a translator's missing keys. They are tedious rather than hard, which is exactly the
 kind of work that gets forgotten.
@@ -744,8 +704,8 @@ nothing. A figure with no picture exports as the code card it is a picture of - 
 export works headlessly, on a build machine, on the first run.
 
 `--locale=<code>` exports a translated site: a page the language has no copy of is exported in
-English and marked as untranslated on the page. And wherever the harvested engine reference appears,
-the CC BY credit for the Godot Engine documentation appears with it.
+English and marked as untranslated on the page. The site carries this plugin's pages only: for a Godot
+class, Godot's own Help is the place.
 
 ## Documenting a third-party pack
 

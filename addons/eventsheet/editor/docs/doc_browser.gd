@@ -72,9 +72,8 @@ const READING_MAX_WIDTH := 720.0
 ## Named here because this is the one place that name means something.
 const ACTION_TRANSLATIONS := "open_translations"
 
-## The engine's own class reference. Drawn here as a page once this machine has harvested the
-## running engine's reference, and handed to the editor's own help until then - so the door works
-## before any harvest has finished rather than only after one.
+## An `engine:` link: a Godot class or member. It is Godot's own Help that answers, never a page drawn
+## here, so the link opens the Script editor's class reference at that topic.
 const ENGINE_SCHEME := "engine:"
 
 ## The Add to project button a library behaviour's page carries; its argument is the pack folder.
@@ -856,7 +855,9 @@ func _route(doc_id: String, anchor: String) -> bool:
 		return _open_engine_help(doc_id.strip_edges().substr(
 			EventSheetDocEngineReference.HELP_SCHEME.length()))
 	if doc_id.strip_edges().begins_with(ENGINE_SCHEME):
-		return _open_engine_page(doc_id.strip_edges().substr(ENGINE_SCHEME.length()))
+		var split: Dictionary = EventSheetDocEngineReference.split_doc_id(doc_id.strip_edges())
+		return _open_engine_help(EventSheetDocEngineReference.editor_help_topic(
+			str(split.get("class", "")), str(split.get("member", ""))))
 	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
 	if str(route.get("scheme", "")) == "reference":
 		return _show_reference(doc_id, str(route.get("reference_kind", "")),
@@ -912,35 +913,9 @@ func _open_sheets() -> Array[EventSheetResource]:
 	return ([] if sheet == null else [sheet]) as Array[EventSheetResource]
 
 
-## The editor's own class reference, one hop out of the Manual. Reported honestly: a build whose
-## script editor cannot be asked answers false rather than pretending it opened something.
-## The engine's own class reference. Drawn HERE - as a page like any other, with the credit its
-## licence requires - when this machine has harvested the running engine's reference; handed to the
-## editor's own help when it has not, which is what makes the door work on the very first click,
-## before any harvest has finished. Either way the reader pressed one thing and got the answer.
-func _open_engine_page(target: String) -> bool:
-	var split: Dictionary = EventSheetDocEngineReference.split_doc_id(target)
-	var class_id: String = str(split.get("class", ""))
-	var member: String = str(split.get("member", ""))
-	var blocks: Array[Dictionary] = EventSheetDocEngineReference.blocks_for(class_id, member)
-	if blocks.is_empty():
-		EventSheetDocEngineReference.begin_harvest()
-		return _open_engine_help(EventSheetDocEngineReference.editor_help_topic(class_id, member))
-	if not _query.is_empty():
-		blocks = EventSheetDocSearch.highlight_blocks(blocks, _query)
-	var doc_id: String = EventSheetDocEngineReference.doc_id(class_id, member)
-	if not _page.show_blocks(blocks, doc_id):
-		return _open_engine_help(EventSheetDocEngineReference.editor_help_topic(class_id, member))
-	_current_id = doc_id
-	_panel.visible = false
-	_page.visible = true
-	_build_mini_nav()
-	return true
-
-
 ## The editor's own class reference, opened at a topic. THE ONLY READER ON THE MACHINE THAT HAS THE
 ## ENGINE'S PROSE: the descriptions are compiled into the editor binary and no script can read them,
-## so every door out of a class page with no text leads here. `topic` is the editor's own spelling
+## so an `engine:` or `engine-help:` link leads here. `topic` is the editor's own spelling
 ## ("class_name:Node2D", "class_property:Node2D:position"), built by the reference module so the
 ## page's link and this call cannot disagree.
 ##

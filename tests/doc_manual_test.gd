@@ -317,8 +317,11 @@ static func _test_search_tags() -> bool:
 		EventSheetDocSearch.kind_label("reference"), "System reference") and all_passed
 	all_passed = _check("a pack page is behavior reference",
 		EventSheetDocSearch.kind_label("behavior"), "behavior reference") and all_passed
-	all_passed = _check("a Godot class is engine reference",
-		EventSheetDocSearch.kind_label("engine"), "engine reference") and all_passed
+	all_passed = _check("a Godot class has no kind of its own in the Manual's search",
+		EventSheetDocSearch.KIND_ORDER.has("engine"), false) and all_passed
+	all_passed = _check("so a search for a class name offers no engine row",
+		EventSheetDocSearch.search_all("Node2D", null, 40).filter(func(row: Dictionary) -> bool:
+			return str(row.get("kind", "")) == "engine").size(), 0) and all_passed
 	all_passed = _check("and the words from another editor are the glossary",
 		EventSheetDocSearch.kind_label("glossary"), "glossary") and all_passed
 	all_passed = _check("a kind this build does not know is tagged with nothing",

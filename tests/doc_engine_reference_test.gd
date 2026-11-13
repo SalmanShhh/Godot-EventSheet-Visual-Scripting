@@ -143,80 +143,28 @@ static func run() -> bool:
 	return all_passed
 
 
-## THE TWO STATES A HARVESTED CLASS CAN BE IN, and the third one that must never be drawn.
+## What a harvested class says about one member, and nothing before the text is fetched.
 ##
 ## `--doctool` writes the SHAPE of the reference and none of its words: every class, every property
 ## with its type, and an EMPTY description for each. The prose is compiled into the editor binary,
 ## where no script can read it, so a machine that has only harvested has names and types and nothing
-## else. That is a real state and it lasts until somebody fetches the text, so it is drawn as a page
-## that SAYS SO and offers the two places the words do exist.
-##
-## What used to be drawn instead was a page of headings over a column of blank cells, which reads as
-## a broken reader rather than as text nobody has fetched. Both fixtures below are checked for that
-## shape, and finding it is a failure whichever state the page is in.
+## else - until somebody fetches the text.
 static func _test_prose_or_none() -> bool:
 	var all_passed: bool = true
 	var real: Dictionary = EventSheetDocEngineReference.parse_xml(NODE2D_XML)
 	var skeleton: Dictionary = EventSheetDocEngineReference.parse_xml(NODE2D_SKELETON_XML)
-
-	all_passed = _check("a class with the engine's words in it says so",
-		EventSheetDocEngineReference.doc_has_prose(real), true) and all_passed
-	all_passed = _check("a class the harvest wrote the shape of says it has no words",
-		EventSheetDocEngineReference.doc_has_prose(skeleton), false) and all_passed
-	# THE ONE THE WHOLE FEATURE IS FOR: a reader pressing F1 on `position` gets a sentence.
 	all_passed = _check("the engine's own sentence for Node2D.position is read whole",
 		EventSheetDocEngineReference.member_text_of(real, "position"),
 		"Position, relative to the node's parent. See also [member global_position].") and all_passed
 	all_passed = _check("and the same member has no text at all before it is fetched",
 		EventSheetDocEngineReference.member_text_of(skeleton, "position"), "") and all_passed
-
-	# The page with the words: the description column is there, and so is the licence line.
-	var page: Array[Dictionary] = EventSheetDocEngineReference.blocks_from_doc(real, "position", "4.7")
-	all_passed = _check("a page with text describes its members in a column",
-		_headers(page), "Name, Type, What it is") and all_passed
-	all_passed = _check("a page with text carries the credit its licence requires",
-		str(page[page.size() - 1].get("bbcode", "")),
-		"[i]%s[/i]" % EventSheetDocEngineReference.CREDIT_LINE) and all_passed
-
-	# The page without them: it says so, it drops the column it could only leave blank, and it
-	# credits nobody, because it quotes nothing.
-	var bare: Array[Dictionary] = EventSheetDocEngineReference.blocks_from_doc(skeleton, "position", "4.7")
-	all_passed = _check("a page with no text still leads with the class",
-		str(bare[0].get("text", "")), "Node2D") and all_passed
-	all_passed = _check("a page with no text says whose words are missing",
-		_paragraph_containing(bare, "is not on this machine"),
-		"Godot's own description of Node2D.position is not on this machine.") and all_passed
-	all_passed = _check("and lists its members without a column it would leave blank",
-		_headers(bare), "Name, Type") and all_passed
-	all_passed = _check("a page that quotes nothing credits nobody",
-		_bbcodes(bare).contains(EventSheetDocEngineReference.CREDIT_LINE), false) and all_passed
-
-	# THE STATE THAT MUST NOT EXIST, asserted against both pages rather than only against the one it
-	# used to appear on: a described column with nothing in it.
-	all_passed = _check("the page with text has no blank description cell",
-		_blank_description_cells(page), 0) and all_passed
-	all_passed = _check("the page without text cannot have one either",
-		_blank_description_cells(bare), 0) and all_passed
 	return all_passed
 
 
-## The two doors a page with no text offers, and the third thing it tells the reader to do. All
-## three are derived rather than looked up, so a class nobody anticipated still has them.
+## The door out to Godot's own Help: the topic strings its class reference answers to, derived rather
+## than looked up, so a class nobody anticipated still has one.
 static func _test_the_doors_out() -> bool:
 	var all_passed: bool = true
-	all_passed = _check("every 4.7.x reads the same page set on the documentation site",
-		EventSheetDocEngineReference.docs_version_for({"major": 4, "minor": 7, "patch": 2}),
-		"4.7") and all_passed
-	all_passed = _check("a class links to its own page online",
-		EventSheetDocEngineReference.online_url_for("4.7", "Node2D", "", ""),
-		"https://docs.godotengine.org/en/4.7/classes/class_node2d.html") and all_passed
-	all_passed = _check("a property links to its own anchor on that page",
-		EventSheetDocEngineReference.online_url_for("4.7", "Node2D", "position", "property"),
-		"https://docs.godotengine.org/en/4.7/classes/class_node2d.html#class-node2d-property-position") and all_passed
-	all_passed = _check("a method's anchor spells its underscores the way the site does",
-		EventSheetDocEngineReference.online_url_for("4.7", "Node2D", "apply_scale", "method"),
-		"https://docs.godotengine.org/en/4.7/classes/class_node2d.html#class-node2d-method-apply-scale") and all_passed
-
 	# The editor's own class reference is the ONLY reader on the machine with the engine's prose in
 	# it, so its topic spelling is pinned here rather than trusted to a call site.
 	all_passed = _check("the editor's help is asked for a class by name",
@@ -225,9 +173,6 @@ static func _test_the_doors_out() -> bool:
 	all_passed = _check("and for a property at the property",
 		EventSheetDocEngineReference.editor_help_topic_for("Node2D", "position", "property"),
 		"class_property:Node2D:position") and all_passed
-	all_passed = _check("the link that opens it is a doc id the reader routes",
-		EventSheetDocEngineReference.help_doc_id_for("Node2D", "position", "property"),
-		"engine-help:class_property:Node2D:position") and all_passed
 	# The member kind is read off the class rather than guessed from the name, because the anchor and
 	# the help topic both spell the kind out and a wrong one lands on the right page in the wrong place.
 	var doc: Dictionary = EventSheetDocEngineReference.parse_xml(NODE2D_XML)
@@ -239,11 +184,10 @@ static func _test_the_doors_out() -> bool:
 	return all_passed
 
 
-## THE LICENCE TERM ON EVERY SURFACE, not just on the Manual page. The engine's prose reaches a
-## reader in three more places than the class page: a member's detail line in the picker, in the
-## parameters dialog and in the expression completions (all three build that line in one function),
-## and a search result's hover. Each of those quotes CC BY text, so each carries the credit - and a
-## line built from the project's OWN `##` comments must not, because nothing was quoted.
+## THE LICENCE TERM ON EVERY SURFACE. The engine's prose reaches a reader in a member's detail line in
+## the picker, in the parameters dialog and in the expression completions (all three build that line
+## in one function). Each of those quotes CC BY text, so each carries the credit - and a line built
+## from the project's OWN `##` comments must not, because nothing was quoted.
 static func _test_the_credit_rides_with_the_text() -> bool:
 	var all_passed: bool = true
 	var credit: String = EventSheetDocEngineReference.CREDIT_LINE
@@ -368,12 +312,6 @@ static func _test_scan() -> bool:
 	all_passed = _check("a folder with no harvest in it scans to nothing",
 		EventSheetDocEngineReference.scan_files("%s/nowhere" % FIXTURE_ROOT).size(), 0) and all_passed
 
-	# THE LICENCE TERM, not decoration: this text is CC BY, so an exporter credits it too.
-	all_passed = _check("an exporter is handed the same one line",
-		EventSheetDocEngineReference.export_credit(),
-		EventSheetDocEngineReference.CREDIT_LINE) and all_passed
-	all_passed = _check("a class no harvest carries builds no page",
-		EventSheetDocEngineReference.blocks_for("NoSuchClassAnywhere").is_empty(), true) and all_passed
 	return all_passed
 
 
@@ -399,53 +337,6 @@ static func _test_doc_ids() -> bool:
 
 ## The headers of the first member table on a page, which is where "does this page claim to describe
 ## its members" is answered.
-static func _headers(blocks: Array[Dictionary]) -> String:
-	for block: Dictionary in blocks:
-		if str(block.get("kind", "")) == "table":
-			return ", ".join(PackedStringArray(block.get("headers", []) as Array))
-	return ""
-
-
-## How many member rows on a page sit under a "What it is" header with nothing under it. THE
-## EMPTY-STUB COUNT: it is zero on a page with the engine's text because the text is there, and zero
-## on a page without it because the column is not there. Any other number is the state this whole
-## change exists to remove.
-static func _blank_description_cells(blocks: Array[Dictionary]) -> int:
-	var blanks: int = 0
-	for block: Dictionary in blocks:
-		if str(block.get("kind", "")) != "table":
-			continue
-		var headers: Array = block.get("headers", []) as Array
-		var column: int = headers.find("What it is")
-		if column < 0:
-			continue
-		for row: Variant in (block.get("rows", []) as Array):
-			var cells: Array = row as Array
-			if column >= cells.size() or str(cells[column]).strip_edges().is_empty():
-				blanks += 1
-	return blanks
-
-
-## Every paragraph on a page as one string, for asking whether something is anywhere on it.
-static func _bbcodes(blocks: Array[Dictionary]) -> String:
-	var found: PackedStringArray = PackedStringArray()
-	for block: Dictionary in blocks:
-		found.append(str(block.get("bbcode", "")))
-	return "\n".join(found)
-
-
-## The sentence a paragraph opens with, when the page has a paragraph carrying `needle`. Returned
-## without its markup so the assertion reads as the words a person sees.
-static func _paragraph_containing(blocks: Array[Dictionary], needle: String) -> String:
-	for block: Dictionary in blocks:
-		var text: String = str(block.get("bbcode", ""))
-		if str(block.get("kind", "")) == "paragraph" and text.contains(needle):
-			var closed: int = text.find("[/i]")
-			return EventSheetDocEngineReference.plain(text.substr(0, closed)) if closed > 0 \
-				else EventSheetDocEngineReference.plain(text)
-	return ""
-
-
 static func _names(entries: Array) -> String:
 	var names: PackedStringArray = PackedStringArray()
 	for entry: Variant in entries:

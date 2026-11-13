@@ -36,7 +36,7 @@ func _init() -> void:
 			"locale":
 				options["locale"] = value
 			"engine":
-				options["engine"] = true
+				print("site: the engine's reference is Godot's own Help (F1), so it is not exported")
 	var report: Dictionary = EventSheetDocSiteExport.export_site(out_dir, options)
 	if not str(report.get("error", "")).is_empty():
 		print("site: %s" % str(report["error"]))

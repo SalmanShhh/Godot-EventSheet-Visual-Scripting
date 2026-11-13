@@ -1,49 +1,35 @@
-# EventSheet - EventSheetDocEngineReference: the engine's own class reference, in this reader.
+# EventSheet - EventSheetDocEngineReference: the words Godot's class reference has for one member, kept
+# on this machine so a hover can say them in place.
 #
-# A sheet is plain GDScript, so half of what a reader wants explained is not this plugin's
-# vocabulary at all - it is `global_position`, `queue_free`, `body_entered`. That text already
-# exists and is already correct for the exact build in front of the reader: the running binary can
-# print its own class reference. So nothing here is written by hand and nothing is downloaded.
+# A sheet is plain GDScript, so half of what a reader wants explained is not this plugin's vocabulary at
+# all - it is `global_position`, `queue_free`, `body_entered`. The Manual does not draw a page for a Godot
+# class: that is Godot's own Help (F1, or an `engine:` link, which opens the Script editor's class
+# reference). What this file keeps is the one thing a sheet shows IN PLACE that Help cannot: the one-line
+# sentence under a derived row, a picker entry or a completion, which `member_description` answers.
 #
 # THE HARVEST. `<the running binary> --headless --doctool <dir>` writes the class reference as XML,
 # one file per class, into `<dir>/doc/classes` (plus a folder per built-in module). It is started in
-# the BACKGROUND on first need and its output is cached under user:// keyed by the engine's own
-# version string, so it runs once per engine per machine and never again - a reader who upgrades
-# Godot gets a fresh harvest because the key changed, and a reader who does not never pays for one.
+# the BACKGROUND on request and its output is cached under user:// keyed by the engine's own version
+# string, so it runs once per engine per machine and never again.
 #
 # WHAT THE HARVEST ACTUALLY CONTAINS, which is less than it looks. `--doctool` writes ClassDB
 # REFLECTION: every class, every property with its type, every method with its return type, every
-# signal - and a `<description>` element that is EMPTY for all of them. The prose a reader wants is
-# compiled into the editor binary as compressed data that only the editor's own help panel reads;
-# `--doctool` run against a project has nothing to merge it from, so it writes the shape without the
-# words. That text is not reachable from a script either: EditorHelp, DocTools and DocData are not
-# registered with ClassDB in any build, and the one in-process route to the merged data - the
-# language server's `textDocument/nativeSymbol` - answers nothing until `GDScriptWorkspace` has been
-# initialized, which happens only when a real LSP client connects over a socket.
+# signal - and a `<description>` element that is EMPTY for all of them. The prose is compiled into the
+# editor binary as compressed data that only the editor's own help panel reads, and it is not
+# reachable from a script. So a harvest has STRUCTURE and no PROSE.
 #
-# So a harvest has STRUCTURE and no PROSE, and this file treats those as two different states rather
-# than one. `has_prose` is the question every surface asks before it quotes anything, and a class
-# with none is drawn as a page that SAYS the reference text is not on this machine, offers the door
-# to the editor's own help and the link to the class's page online, and lists the members it really
-# does know without an empty column beside them. What must never happen is the third state: a page
-# of headings and blank cells, which reads as a broken reader rather than as a missing download.
-#
-# WHERE THE WORDS COME FROM WHEN A READER WANTS THEM HERE: `EventSheetDocEngineFetch`, one explicit
-# action, fetching the matching tag's own doc XML over the harvest. Nothing here ever reaches the
-# network on its own.
+# WHERE THE WORDS COME FROM: `EventSheetDocEngineFetch`, one explicit action, fetching the matching
+# tag's own doc XML over the harvest. Nothing here ever reaches the network on its own.
 #
 # WHY user:// AND NOT THE BUNDLE. The shipped bundle has to be byte-identical across machines (the
-# suite gates it), and this text belongs to whichever engine build happens to be running. Baking it
-# would make the bundle depend on the harvester's Godot version, which is exactly the drift the
-# gate exists to catch. The reader's cache is per-engine; the bundle stays one file for everybody.
+# suite gates it), and this text belongs to whichever engine build happens to be running.
 #
 # PARSED ONCE. The directory is walked once per session into a sorted class-name -> file map, and a
-# class's XML is parsed on demand - the reference is tens of megabytes and a reader opens one class
-# at a time. Only the names and brief lines needed for searching are held.
+# class's XML is parsed on demand - the reference is tens of megabytes and a reader opens one class at
+# a time.
 #
 # LICENSING. The Godot class reference is published under CC BY 4.0. Every surface that shows text
-# from here shows CREDIT_LINE with it, and an exporter that carries this text into a static site
-# carries export_credit() into the same page. That is not decoration - it is the licence term.
+# from here shows CREDIT_LINE with it. That is not decoration - it is the licence term.
 @tool
 class_name EventSheetDocEngineReference
 extends RefCounted
@@ -64,7 +50,6 @@ const CREDIT_LINE := "Godot Engine documentation, used under CC BY 4.0."
 ## Where a class's page lives on the engine's own documentation site. The one link this plugin
 ## builds to somewhere it cannot read: it is offered, never followed, and it is derived rather than
 ## looked up so a class nobody anticipated still has a working door.
-const ONLINE_ROOT := "https://docs.godotengine.org/en"
 
 ## The doc-id scheme an engine page answers to. "engine:Node2D" is a class; "engine:Node2D.position"
 ## is that class opened at one of its members.
@@ -248,14 +233,6 @@ static func _walk(directory: String, names: PackedStringArray, paths: Dictionary
 	sub_directories.sort()
 	for sub: String in sub_directories:
 		_walk(directory.path_join(sub), names, paths)
-
-
-## Every class this harvest carries, sorted. Empty before the first harvest finishes.
-static func class_names() -> PackedStringArray:
-	var names: PackedStringArray = PackedStringArray()
-	for name: Variant in files():
-		names.append(str(name))
-	return names
 
 
 ## One class, parsed:
@@ -457,42 +434,6 @@ static func member_description(class_id: String, member: String) -> String:
 	return plain(inherited_member_text(class_id, member))
 
 
-## Whether a PARSED class carries any of the engine's own words - its brief, its description, or the
-## text of any one member. Pure over the parsed shape, so the suite pins the decision rather than
-## whatever a machine has on disk.
-##
-## This is the question that separates a reference from a skeleton. `--doctool` writes both under the
-## same file name and the same XML shape, and every surface that quotes engine text has to know which
-## one it is holding before it draws a page, exports a site or credits a licence.
-static func doc_has_prose(doc: Dictionary) -> bool:
-	if doc.is_empty():
-		return false
-	for key: String in ["brief", "description"]:
-		if not str(doc.get(key, "")).strip_edges().is_empty():
-			return true
-	for key: String in ["members", "methods", "signals"]:
-		for entry: Variant in (doc.get(key, []) as Array):
-			if not str((entry as Dictionary).get("text", "")).strip_edges().is_empty():
-				return true
-	return false
-
-
-## The same question about a class this machine has on disk.
-static func has_prose(class_id: String) -> bool:
-	return doc_has_prose(class_doc(class_id))
-
-
-## The documentation site's version segment for a version info dictionary - "4.7" for every 4.7.x,
-## because the site publishes one page set per minor release. Pure over the dictionary so the suite
-## pins the folding rather than the engine that ran it.
-static func docs_version_for(info: Dictionary) -> String:
-	return "%d.%d" % [int(info.get("major", 0)), int(info.get("minor", 0))]
-
-
-static func docs_version() -> String:
-	return docs_version_for(Engine.get_version_info())
-
-
 ## Which kind of member this is - "property", "method" or "signal" - or "" when this machine's
 ## harvest does not carry the class. The online page anchors one kind at a time, so a link built
 ## without this would land on the right page at the wrong place.
@@ -511,20 +452,6 @@ static func member_kind_of(doc: Dictionary, member: String) -> String:
 			if str((entry as Dictionary).get("name", "")) == wanted:
 				return str(pair[1])
 	return ""
-
-
-## The URL itself, given everything it is built from. Pure - the suite pins the spelling of a link
-## a reader will click without depending on a harvest or on the engine that ran the test.
-static func online_url_for(version: String, class_id: String, member: String, kind: String) -> String:
-	var wanted: String = class_id.strip_edges()
-	if wanted.is_empty():
-		return ""
-	var page: String = "%s/%s/classes/class_%s.html" % [ONLINE_ROOT, version, wanted.to_lower()]
-	if kind.is_empty():
-		return page
-	# The site's own anchor spelling: every underscore in the member's name is a dash there.
-	return "%s#class-%s-%s-%s" % [page, wanted.to_lower(), kind,
-		member.strip_edges().trim_prefix(".").to_lower().replace("_", "-")]
 
 
 ## The topic string the editor's own help answers to, opened at a member when the kind is known.
@@ -560,99 +487,3 @@ static func split_doc_id(id: String) -> Dictionary:
 	if dot < 0:
 		return {"class": rest, "member": ""}
 	return {"class": rest.substr(0, dot), "member": rest.substr(dot + 1)}
-
-
-## One class as a Manual page: its name, what it inherits, its own prose, and a table per member
-## kind - then the credit the licence requires. Empty when the harvest has nothing at all, which is
-## what makes the caller fall back to the editor's own help instead of drawing a blank page.
-##
-## A class this machine knows the SHAPE of but not the WORDS of is a page too, and a different one:
-## it says so in a sentence, points at the two places the words do exist, and lists the members
-## without a column it would have to leave blank. There is deliberately no third shape - a page of
-## headings over empty cells was what this used to draw, and it reads as a broken reader rather than
-## as text nobody has fetched.
-##
-## `member` is only ever used to aim the doors: the page is the class's, opened at the member.
-static func blocks_for(class_id: String, member: String = "") -> Array[Dictionary]:
-	return blocks_from_doc(class_doc(class_id), member, docs_version())
-
-
-## The page itself, built from a class already parsed. Pure over the doc and the site version, so
-## the suite pins BOTH shapes - the one with the engine's words and the one that says it has none -
-## against a fixture rather than against whatever the machine running it has on disk.
-static func blocks_from_doc(doc: Dictionary, member: String, version: String) -> Array[Dictionary]:
-	if doc.is_empty():
-		return []
-	var class_id: String = str(doc.get("name", ""))
-	var name: String = class_id
-	var prose: bool = doc_has_prose(doc)
-	var blocks: Array[Dictionary] = [
-		{"kind": "heading", "level": 1, "text": name, "bbcode": name,
-			"slug": EventSheetDocMarkdown.slug(name)},
-	]
-	var inherits: String = str(doc.get("inherits", ""))
-	if not inherits.is_empty():
-		blocks.append({"kind": "paragraph", "bbcode": "[i]Inherits [url=%s]%s[/url][/i]" % [
-			doc_id(inherits), inherits]})
-	if prose:
-		for key: String in ["brief", "description"]:
-			var text: String = str(doc.get(key, ""))
-			if not text.is_empty():
-				blocks.append({"kind": "paragraph", "bbcode": text})
-	else:
-		blocks.append({"kind": "paragraph",
-			"bbcode": missing_text_bbcode(name, member, member_kind_of(doc, member), version)})
-	for section: Array in [["members", "Properties"], ["methods", "Methods"], ["signals", "Signals"]]:
-		var rows: Array = doc.get(str(section[0]), []) as Array
-		if rows.is_empty():
-			continue
-		var title: String = str(section[1])
-		blocks.append({"kind": "heading", "level": 2, "text": title, "bbcode": title,
-			"slug": EventSheetDocMarkdown.slug(title)})
-		# The description column exists only when there are descriptions to put in it.
-		blocks.append({"kind": "table",
-			"headers": ["Name", "Type", "What it is"] if prose else ["Name", "Type"],
-			"rows": _member_rows(rows, prose)})
-	# THE CREDIT RIDES WITH THE TEXT, and only with it: a page that quotes none of the engine's prose
-	# quotes nothing the licence covers, and a credit under a page that shows no text is a claim that
-	# text is there.
-	if prose:
-		blocks.append({"kind": "paragraph", "bbcode": "[i]%s[/i]" % CREDIT_LINE})
-	return blocks
-
-
-## The sentence a class with no prose shows instead of blank cells, with both doors in it: the
-## editor's own class reference, which has the words compiled into it, and the class's page on the
-## documentation site. Written as one function so the reader, the site export and the suite all
-## quote the same wording.
-static func missing_text_bbcode(class_id: String, member: String, kind: String, version: String) -> String:
-	var subject: String = class_id if member.strip_edges().is_empty() \
-		else "%s.%s" % [class_id, member.strip_edges().trim_prefix(".")]
-	return "[i]Godot's own description of %s is not on this machine.[/i] " % subject \
-		+ "The engine keeps its class reference text inside the editor rather than in a file it can " \
-		+ "be asked to write, so the names and types below are everything it could tell this reader " \
-		+ "offline. Read the description in [url=%s]Godot's own class reference[/url], " % help_doc_id_for(class_id, member, kind) \
-		+ "open [url=%s]the page on docs.godotengine.org[/url], " % online_url_for(version, class_id, member, kind) \
-		+ "or fetch the reference text once from Docs housekeeping and it stays here."
-
-
-static func help_doc_id_for(class_id: String, member: String, kind: String) -> String:
-	var topic: String = editor_help_topic_for(class_id, member, kind)
-	return "" if topic.is_empty() else "%s%s" % [HELP_SCHEME, topic]
-
-
-static func _member_rows(entries: Array, with_text: bool) -> Array:
-	var rows: Array = []
-	for entry: Variant in entries:
-		var member: Dictionary = entry as Dictionary
-		var row: Array = [str(member.get("name", "")), str(member.get("type", ""))]
-		if with_text:
-			row.append(str(member.get("text", "")))
-		rows.append(row)
-	return rows
-
-
-## The credit a static export carries onto any page that shows engine text. One line, so the export
-## slice has one thing to place and no licence reading to do.
-static func export_credit() -> String:
-	return CREDIT_LINE

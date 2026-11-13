@@ -90,8 +90,8 @@ that already existed.
 **A built-in member reads out of the engine's own class reference.** The reference is harvested from
 the engine itself rather than retyped, cached against the version it came from, and shown with the
 credit its licence asks for. Hover a derived row and you get the member's own paragraph with the
-exact line of code underneath it, where it always was. `F1` on a built-in member opens its page in
-the Manual, beside these guides.
+exact line of code underneath it, where it always was. `F1` on a built-in member opens it in
+Godot's own Help (the Manual covers EventSheets only).
 
 **A member of your own script reads out of your own file.** The `##` lines above a `func` or a `var`
 are its description, exactly as Godot itself treats them - so the sentence a teammate wrote above

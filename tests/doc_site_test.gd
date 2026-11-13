@@ -7,8 +7,8 @@
 # twice into two folders and compares every byte.
 #
 # Everything else here pins the translation from a parsed page to HTML: the closed BBCode tag set,
-# the links that survive the trip and the ones that must not, the figure jobs, and the credit that
-# rides with engine text.
+# the links that survive the trip and the ones that must not, the figure jobs, and that no page about
+# a Godot class is published (that is Godot's own Help).
 @tool
 class_name DocSiteTest
 extends RefCounted
@@ -26,7 +26,7 @@ static func run() -> bool:
 	all_passed = _test_page_files() and all_passed
 	all_passed = _test_blocks() and all_passed
 	all_passed = _test_figure_jobs() and all_passed
-	all_passed = _test_engine_credit() and all_passed
+	all_passed = _test_no_engine_pages() and all_passed
 	all_passed = _test_search_data() and all_passed
 	all_passed = _test_same_bytes_twice() and all_passed
 	_clear(WORK_ROOT)
@@ -91,7 +91,7 @@ static func _test_page_files() -> bool:
 	# times. The language is the one the export was asked for, never the one the editor is set to -
 	# the same command on two machines has to write the same bytes.
 	var page: Dictionary = {"id": "Fixture", "title": "Fixture", "source": "# Fixture\n",
-		"blocks": [], "engine": false, "untranslated": false}
+		"blocks": [], "untranslated": false}
 	passed = _check("a page exported in French says so",
 		EventSheetDocSiteExport.page_html(page, {"depth": 1, "locale": "fr"}).contains(
 			"<html lang=\"fr\">"), true) and passed
@@ -142,18 +142,18 @@ static func _test_figure_jobs() -> bool:
 	return passed
 
 
-## Engine text carries its attribution wherever it goes. Pinned on a page built the way the exporter
-## builds one, rather than on a harvest that may not be on this machine.
-static func _test_engine_credit() -> bool:
-	var page: Dictionary = {"id": "Engine/Timer", "title": "Timer", "engine": true,
-		"source": "# Timer\n\nCounts down.\n", "blocks": []}
-	var html: String = EventSheetDocSiteExport.page_html(page, {"engine_credit": true, "depth": 1})
-	var passed: bool = _check("the page carries the engine's own credit",
-		html.count(EventSheetDocEngineReference.CREDIT_LINE) >= 1, true)
+## The site carries this plugin's pages only: a Godot class is Godot's own Help, so no page is
+## gathered for one and no engine credit is written into a footer.
+static func _test_no_engine_pages() -> bool:
+	var pages: Array[Dictionary] = EventSheetDocSiteExport.gather_pages({"engine": true})
+	var engine_ids: int = 0
+	for page: Dictionary in pages:
+		if str(page.get("id", "")).begins_with("Engine/"):
+			engine_ids += 1
 	var plain: String = EventSheetDocSiteExport.page_html(
 		{"id": "GUIDE-RECIPES", "title": "R", "source": "# R\n", "blocks": []}, {"depth": 1})
-	passed = _check("a page with no engine text and no engine pages beside it does not",
-		plain.contains(EventSheetDocEngineReference.CREDIT_LINE), false) and passed
+	var passed: bool = _check("asking for the engine's pages gathers none", engine_ids, 0)
+	passed = _check("and a page carries no engine credit", plain.contains(EventSheetDocEngineReference.CREDIT_LINE), false) and passed
 	return passed
 
 
@@ -188,9 +188,6 @@ static func _test_search_data() -> bool:
 ## them share a file name in different folders - which is also the case that used to write one page
 ## twice under one id and lose the other.
 ##
-## Not in the law: the harvested engine pages, which exist only where somebody has run a harvest, so
-## a test that included them would be exercising the law on some machines and not on others. What
-## makes THEIR order safe is pinned where the harvest is read - the scan sorts, and its test says so.
 static func _test_same_bytes_twice() -> bool:
 	_clear(WORK_ROOT)
 	var ids: PackedStringArray = PackedStringArray()

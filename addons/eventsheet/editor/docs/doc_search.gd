@@ -374,7 +374,7 @@ static func _result(page: Dictionary, heading: Dictionary, score: int, order: in
 # usually asking something narrower and more useful - "what is the thing called" - and the answer
 # is as often a condition, an action or a word from another editor's vocabulary as it is a page.
 # So one box searches all of it and TAGS what it found, in the Manual's own words: condition,
-# action, expression, guide, System reference, behavior reference, engine reference, glossary.
+# action, expression, guide, System reference, behavior reference, glossary.
 #
 # Each row carries everything a caller needs to act without asking anything else - the doc id to
 # open, and (for a verb) the definition, so the result can draw the example rows inline and add
@@ -386,20 +386,17 @@ static func _result(page: Dictionary, heading: Dictionary, score: int, order: in
 ## word rather than answering with one.
 const KIND_ORDER: Array[String] = [
 	"trigger", "condition", "action", "expression", "guide", "reference", "behavior",
-	"glossary", "engine", "ask",
+	"glossary", "ask",
 ]
 
-## The kinds that sort BELOW every answer this plugin has of its own, whatever they scored. The
-## engine's class reference is a real answer and often an exact one - a reader who types "Node2D"
-## gets a perfect prefix match on the class - but it is one hop further out than the sheet's own
-## words, so a guide about the thing wins over the class the thing is built on. The offer to ask for
-## a page that does not exist yet sorts under everything, because it is the answer of last resort.
-const DEMOTED_KINDS: Array[String] = ["engine", "ask"]
+## The kinds that sort BELOW every answer this plugin has of its own, whatever they scored. The offer
+## to ask for a page that does not exist yet sorts under everything, because it is the answer of last
+## resort. (A Godot class is Godot's own Help, F1, so the Manual does not search the engine.)
+const DEMOTED_KINDS: Array[String] = ["ask"]
 
 ## How many rows at the foot of a full list are kept for the demoted kinds. Without it, ranking them
 ## below the plugin's own answers and then cutting the list to a screenful means they are never seen
-## at all: a corpus this size answers a common word with a dozen guides before the engine's class
-## for it gets a look in.
+## at all.
 const DEMOTED_RESERVE := 3
 
 ## The row a query with no answers gets: an offer to ask for the page, filed through the same
@@ -421,12 +418,11 @@ const NEAREST_SIMILARITY := 0.35
 const KIND_LABELS := {
 	"trigger": "trigger", "condition": "condition", "action": "action", "expression": "expression",
 	"guide": "guide", "reference": "System reference", "behavior": "behavior reference",
-	"engine": "engine reference", "glossary": "glossary", "ask": "ask for this page",
+	"glossary": "glossary", "ask": "ask for this page",
 }
 
-## How many engine classes and glossary terms one query may offer. Both lists are long and neither
-## is what the reader is usually after; a couple of rows is a pointer, ten is a wall.
-const MAX_ENGINE_HITS := 4
+## How many glossary terms one query may offer. The list is long and is not what the reader is usually
+## after; a couple of rows is a pointer, ten is a wall.
 const MAX_GLOSSARY_HITS := 4
 ## The same budget for the behavior index: a pointer, never a wall.
 const MAX_BEHAVIOR_INDEX_HITS := 4
@@ -444,14 +440,12 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 	results.append_array(_vocabulary_hits(wanted, sheet))
 	results.append_array(_page_hits(query))
 	results.append_array(_reference_hits(wanted))
-	results.append_array(_engine_hits(wanted))
 	results.append_array(_glossary_hits(wanted))
 	results.append_array(_godot_word_hits(query))
 	results.append_array(_behavior_index_hits(wanted))
 	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		# The demoted kinds sort below everything this plugin can answer itself, whatever they
-		# scored: an exact hit on an engine class name is still one hop further out than a guide
-		# that talks about the same thing in the sheet's own words.
+		# scored.
 		var demoted_a: bool = DEMOTED_KINDS.has(str(a["kind"]))
 		var demoted_b: bool = DEMOTED_KINDS.has(str(b["kind"]))
 		if demoted_a != demoted_b:
@@ -475,7 +469,7 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 ## The list cut to `limit`, with room KEPT for the demoted kinds. Ranking them below the plugin's
 ## own answers is right; dropping them off the end of the list is not, and a corpus this size makes
 ## that the normal outcome - "timer" alone answers with fourteen guides and pack references before
-## the engine's Timer class gets a look in. So the last few rows belong to the demoted kinds
+## anything else gets a look in. So the last few rows belong to the demoted kinds
 ## whenever there are any, and it is the weakest of the plugin's own answers that goes instead.
 static func _trimmed(results: Array[Dictionary], limit: int) -> Array[Dictionary]:
 	if limit <= 0 or results.size() <= limit:
@@ -641,40 +635,6 @@ static func _reference_row(kind: String, title: String, home: String, doc_id: St
 		"kind": kind, "title": title, "subtitle": home, "doc_id": doc_id, "anchor": "",
 		"definition": null, "used": 0, "score": score,
 	}
-
-
-## The engine's own class reference, one hop further out. Class NAMES only: a reader who types
-## "create_timer" is helped by being pointed at SceneTree, and walking every method of every class
-## on a keystroke is not a search box, it is a stall.
-static func _engine_hits(wanted: String) -> Array[Dictionary]:
-	var hits: Array[Dictionary] = []
-	if wanted.length() < 3:
-		return hits
-	for class_id: String in ClassDB.get_class_list():
-		var score: int = match_score(class_id.to_lower(), wanted)
-		# Substring and better only: a subsequence match against a thousand class names offers
-		# rows that share nothing with the query but their letters.
-		if score < 0 or score > 1:
-			continue
-		# The engine's OWN one-line description when this machine has harvested it, and the plain
-		# label when it has not. The harvest is started here rather than waited on: a reader who
-		# searches for a class gets the row now and its text the next time they ask.
-		var brief: String = str(EventSheetDocEngineReference.class_doc(class_id).get("brief", ""))
-		hits.append({
-			"kind": "engine", "title": class_id,
-			"subtitle": brief if not brief.is_empty() else "Godot class reference",
-			"doc_id": EventSheetDocEngineReference.doc_id(class_id), "anchor": "",
-			"definition": null, "used": 0, "score": score,
-			# THE CREDIT RIDES WITH THE TEXT. `brief` is the engine's own sentence, published under
-			# CC BY 4.0, and attribution is a term of that licence rather than a courtesy. A row
-			# showing the plain fallback label quotes nothing, so it carries no credit either.
-			"credit": EventSheetDocEngineReference.CREDIT_LINE if not brief.is_empty() else "",
-		})
-		if hits.size() >= MAX_ENGINE_HITS:
-			break
-	if not hits.is_empty():
-		EventSheetDocEngineReference.begin_harvest()
-	return hits
 
 
 ## The words another event-sheet editor spells differently.

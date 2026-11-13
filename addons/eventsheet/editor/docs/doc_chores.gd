@@ -374,10 +374,6 @@ static func _run_site(options: Dictionary) -> Dictionary:
 	var settings: Dictionary = {
 		"locale": str(options.get("locale", EventSheetDocLocale.BASE_LOCALE)),
 		"sheets": collected_sheets(options),
-		# The engine's reference is thousands of pages and is off unless somebody asks for it: a
-		# machine that happens to have harvested should not quietly export a site forty times the
-		# size of the one the reader was expecting.
-		"engine": bool(options.get("engine", false)),
 	}
 	if options.has("figures_dir"):
 		settings["figures_dir"] = str(options["figures_dir"])

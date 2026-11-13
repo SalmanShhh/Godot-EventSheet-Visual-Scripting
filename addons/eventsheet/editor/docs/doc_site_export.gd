@@ -26,9 +26,8 @@
 # no cached image degrades to the code card the reader would otherwise have seen. That degradation
 # is deliberate: an export must work headlessly and on a machine that cannot open a window.
 #
-# ENGINE TEXT CARRIES ITS CREDIT. Any page built from the harvested engine reference is written with
-# the CC BY attribution the engine's documentation is offered under, on the page itself and in the
-# site footer. This is not optional and is not a setting.
+# THE ENGINE'S REFERENCE IS NOT HERE. A page about a Godot class is Godot's own Help (F1 in the editor),
+# so a site carries this plugin's pages only.
 @tool
 class_name EventSheetDocSiteExport
 extends RefCounted
@@ -51,11 +50,9 @@ const ID_SEPARATOR := "__"
 ## them the same way.
 const DICTIONARY_ID := "Reference/Dictionary"
 const MANUAL_PREFIX := "Manual/"
-const ENGINE_PREFIX := "Engine/"
 
 ## The section titles the derived pages are filed under in the contents.
 const MANUAL_GROUP := "This project, page by page"
-const ENGINE_GROUP := "The engine's own reference"
 const REFERENCE_GROUP := "Reference"
 
 ## The site's own footer line. Deliberately says what the folder IS, because a reader who found one
@@ -76,7 +73,7 @@ const UNTRANSLATED_CLASS := "untranslated"
 
 
 ## Everything the site is built from, in the order a reader meets it. Each entry is
-## {id, title, group, source, blocks, engine}: `source` is Markdown for a page that has some, and
+## {id, title, group, source, blocks}: `source` is Markdown for a page that has some, and
 ## `blocks` are pre-parsed blocks for a page that is derived from data rather than from a file.
 ##
 ## `options` (all optional):
@@ -84,7 +81,6 @@ const UNTRANSLATED_CLASS := "untranslated"
 ##               English and marked
 ##   sheets      {path: EventSheetResource} - the project's own sheets, each of which gets the page
 ##               it writes about itself
-##   engine      true to include the harvested engine reference (refused when nothing is harvested)
 ##   page_ids    an explicit id list, for a test that pins the shape against fixtures
 static func gather_pages(options: Dictionary = {}) -> Array[Dictionary]:
 	var locale_code: String = str(options.get("locale", EventSheetDocLocale.BASE_LOCALE)).strip_edges()
@@ -103,12 +99,10 @@ static func gather_pages(options: Dictionary = {}) -> Array[Dictionary]:
 				"group": title,
 				"source": source,
 				"blocks": [],
-				"engine": false,
 				"untranslated": EventSheetDocLocale.is_untranslated(shown, locale_code),
 			})
 	pages.append_array(_dictionary_pages())
 	pages.append_array(_manual_pages(options.get("sheets", {}) as Dictionary))
-	pages.append_array(_engine_pages(options))
 	return pages
 
 
@@ -135,7 +129,6 @@ static func _dictionary_pages() -> Array[Dictionary]:
 		"group": REFERENCE_GROUP,
 		"source": source,
 		"blocks": [],
-		"engine": false,
 		"untranslated": false,
 	}]
 
@@ -155,40 +148,7 @@ static func _manual_pages(sheets: Dictionary) -> Array[Dictionary]:
 			"group": MANUAL_GROUP,
 			"source": source,
 			"blocks": [],
-			"engine": false,
-			"untranslated": false,
-		})
-	return pages
-
-
-## The harvested engine classes, when the caller asked for them AND a harvest for this engine is on
-## disk. Every one of these pages carries the CC BY credit; see _page_html.
-static func _engine_pages(options: Dictionary) -> Array[Dictionary]:
-	if not bool(options.get("engine", false)):
-		return []
-	if not EventSheetDocEngineReference.is_harvested():
-		return []
-	var pages: Array[Dictionary] = []
-	for class_id: String in EventSheetDocEngineReference.class_names():
-		# ONLY CLASSES WHOSE TEXT THIS MACHINE ACTUALLY HAS. A harvest carries the shape of every
-		# class and the words of none until somebody fetches them, and a class with no words is drawn
-		# in the reader as a page that says so and offers the editor's own help - neither of which
-		# means anything in an exported site, where there is no editor to hand it to and no way for a
-		# reader to fetch anything. A thousand published pages of names with no descriptions is a site
-		# that looks broken, so they are simply not published.
-		if not EventSheetDocEngineReference.has_prose(class_id):
-			continue
-		var blocks: Array[Dictionary] = EventSheetDocEngineReference.blocks_for(class_id)
-		if blocks.is_empty():
-			continue
-		pages.append({
-			"id": "%s%s" % [ENGINE_PREFIX, class_id],
-			"title": class_id,
-			"group": ENGINE_GROUP,
-			"source": "",
-			"blocks": blocks,
-			"engine": true,
-			"untranslated": false,
+				"untranslated": false,
 		})
 	return pages
 
@@ -473,11 +433,8 @@ static func page_html(page: Dictionary, page_context: Dictionary = {}) -> String
 		inner.append("<p class=\"%s\">%s</p>" % [UNTRANSLATED_CLASS,
 			escape_html(EventSheetDocLocale.note_text())])
 	inner.append(blocks_html(_blocks_of(page), context))
-	if bool(page.get("engine", false)):
-		inner.append("<p class=\"credit\">%s</p>" % escape_html(
-			EventSheetDocEngineReference.CREDIT_LINE))
 	return _document(title, "\n".join(inner), int(context.get("depth", 0)),
-		bool(context.get("engine_credit", false)), false, str(context.get("locale", "")))
+		false, str(context.get("locale", "")))
 
 
 ## The contents page: every group, every page in it, and the search box. The whole site is reachable
@@ -502,7 +459,7 @@ static func index_html(pages: Array[Dictionary], context: Dictionary = {}) -> St
 	if open_list:
 		lines.append("</ul>")
 	return _document(str(context.get("site_title", "Manual")), "\n".join(lines), 0,
-		bool(context.get("engine_credit", false)), true, str(context.get("locale", "")))
+		true, str(context.get("locale", "")))
 
 
 ## The file name a page id is written to.
@@ -510,7 +467,7 @@ static func page_file(page_id: String) -> String:
 	return "%s.html" % page_id.replace("/", ID_SEPARATOR).replace(":", ID_SEPARATOR)
 
 
-static func _document(title: String, body: String, depth: int, engine_credit: bool,
+static func _document(title: String, body: String, depth: int,
 		with_search: bool = false, locale_code: String = "") -> String:
 	var prefix: String = "../" if depth > 0 else ""
 	var lines: PackedStringArray = PackedStringArray()
@@ -534,9 +491,6 @@ static func _document(title: String, body: String, depth: int, engine_credit: bo
 	lines.append("</main>")
 	lines.append("<footer>")
 	lines.append("<p>%s</p>" % escape_html(FOOTER_LINE))
-	if engine_credit:
-		lines.append("<p class=\"credit\">%s</p>" % escape_html(
-			EventSheetDocEngineReference.CREDIT_LINE))
 	lines.append("</footer>")
 	if with_search:
 		lines.append("<script src=\"%s\"></script>" % SEARCH_DATA_FILE)
@@ -691,7 +645,7 @@ const SEARCH_JS := """(function () {
 
 
 ## Exports the whole site into `out_dir`, and answers what it wrote:
-##   {pages, figures, undrawn, files, jobs_path, engine}
+##   {pages, figures, undrawn, files, jobs_path}
 ##
 ## `options` are gather_pages's, plus:
 ##   figures_dir   where drawn figures are cached (default: the shared cache below)
@@ -703,7 +657,7 @@ const SEARCH_JS := """(function () {
 static func export_site(out_dir: String, options: Dictionary = {}) -> Dictionary:
 	var root: String = out_dir.strip_edges().trim_suffix("/")
 	var report: Dictionary = {"pages": 0, "figures": 0, "undrawn": 0, "files": PackedStringArray(),
-		"jobs_path": "", "engine": false, "error": ""}
+		"jobs_path": "", "error": ""}
 	if root.is_empty():
 		report["error"] = "no export folder was named"
 		return report
@@ -714,11 +668,6 @@ static func export_site(out_dir: String, options: Dictionary = {}) -> Dictionary
 	var cache: String = str(options.get("figures_dir", figures_cache_dir())).trim_suffix("/")
 	var jobs: Array[Dictionary] = figure_jobs(pages)
 	var drawn: Dictionary = drawn_figures(jobs, cache)
-	var engine_credit: bool = false
-	for page: Dictionary in pages:
-		if bool(page.get("engine", false)):
-			engine_credit = true
-			break
 	DirAccess.make_dir_recursive_absolute(root)
 	DirAccess.make_dir_recursive_absolute("%s/%s" % [root, PAGES_DIR])
 	DirAccess.make_dir_recursive_absolute("%s/%s" % [root, FIGURES_DIR])
@@ -728,12 +677,12 @@ static func export_site(out_dir: String, options: Dictionary = {}) -> Dictionary
 	for page: Dictionary in pages:
 		exported[str(page.get("id", ""))] = true
 	var site_locale: String = str(options.get("locale", EventSheetDocLocale.BASE_LOCALE)).strip_edges()
-	var context: Dictionary = {"figures": drawn, "depth": 1, "engine_credit": engine_credit,
+	var context: Dictionary = {"figures": drawn, "depth": 1,
 		"exported": exported, "locale": site_locale}
 	_write(root, STYLE_FILE, SITE_CSS, written)
 	_write(root, SEARCH_SCRIPT_FILE, SEARCH_JS, written)
 	_write(root, SEARCH_DATA_FILE, search_data_js(pages), written)
-	_write(root, INDEX_FILE, index_html(pages, {"engine_credit": engine_credit, "locale": site_locale,
+	_write(root, INDEX_FILE, index_html(pages, {"locale": site_locale,
 		"site_title": str(options.get("site_title", "The EventSheets Manual"))}), written)
 	for page: Dictionary in pages:
 		_write(root, "%s/%s" % [PAGES_DIR, page_file(str(page.get("id", "")))],
@@ -752,7 +701,6 @@ static func export_site(out_dir: String, options: Dictionary = {}) -> Dictionary
 	report["undrawn"] = jobs.size() - drawn.size()
 	report["files"] = written
 	report["jobs_path"] = jobs_path
-	report["engine"] = engine_credit
 	return report
 
 
