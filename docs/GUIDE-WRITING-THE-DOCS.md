@@ -30,7 +30,7 @@ Every guide is a Markdown file under `docs/`. The same file is read in three pla
 it once:
 
 - **On GitHub**, at full fidelity - images, tables, everything.
-- **Inside the Godot editor, in the Manual** - Tools > Manual..., F1, the `?` prefix in the
+- **Inside the Godot editor, in the Manual** - Menu > Manual..., F1, the `?` prefix in the
   command palette, or the Manual dock. The editor draws the Markdown natively: headings on
   a real typographic scale, tables, code blocks, links that stay in the editor. Images are not
   drawn (they show as an alt-text card with a "See this picture online" button), so write alt text
@@ -771,7 +771,7 @@ reader.
    `All tests passed.`; a crashed test prints no `[FAIL]` at all. The docs tests that matter here
    are `doc_library_test` (bundle drift, links, anchors), `doc_figures_test` (every figure
    compiles), `module_guides_test` and the addon guide-path sweep (naming, shape, indexing).
-4. Open the page in the editor once - Tools > Manual... - and look at it. A table with a
+4. Open the page in the editor once - Menu > Manual... - and look at it. A table with a
    pipe in a cell, a nested fence, or a heading that should have been a figure caption shows up
    there and nowhere else.
 5. If you changed a UI screenshot's subject, re-render it from its harness.

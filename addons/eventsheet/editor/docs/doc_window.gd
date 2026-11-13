@@ -1,4 +1,4 @@
-# EventSheet - EventSheetDocWindow: the Manual, as a window (Tools > Manual..., F1).
+# EventSheet - EventSheetDocWindow: the Manual, as a window (Menu > Manual..., F1).
 #
 # The home of the reference surface. A window rather than a tooltip because PERSISTENCE is the
 # point: a hover vanishes the moment the reader moves the mouse to the row they are building,

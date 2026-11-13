@@ -2,7 +2,7 @@
 
 Every guide and reference for Godot EventSheets, grouped by what you are trying to do. New here? Start with the [recipes](GUIDE-RECIPES.md). Looking for a bundled behavior pack? See the [addon guides index](Addons/README.md).
 
-Every page below also ships inside the editor: open **Tools > Manual**, or press **F1** with anything selected to land on the page for it. This index is the authoritative list - a suite check fails if a guide is missing from it.
+Every page below also ships inside the editor: open **Menu > Manual**, or press **F1** with anything selected to land on the page for it. This index is the authoritative list - a suite check fails if a guide is missing from it.
 
 ## Learn by doing
 

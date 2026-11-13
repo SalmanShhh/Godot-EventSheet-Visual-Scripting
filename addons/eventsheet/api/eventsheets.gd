@@ -2618,7 +2618,7 @@ static func user_docs_dir() -> String:
 	return EventSheetDocLibrary.user_docs_dir()
 
 
-## Opens the Manual on `doc_id`. THE one entry point - Tools ▸ Manual…,
+## Opens the Manual on `doc_id`. THE one entry point - Menu ▸ Manual…,
 ## F1, the row menu's "What does this do?" and any third-party caller all come through here.
 ##
 ## The id scheme, frozen with this method:

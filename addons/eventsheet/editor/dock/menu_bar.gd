@@ -878,7 +878,6 @@ func build(root: Node) -> void:
 	# moved item cannot bring its old number into a menu that already spent it.
 	tools_popup.add_item("Words…", 63)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(63), "Every word the sheet lets you choose, on one page, with a live preview of an event in them.")
-	tools_popup.add_item("Manual…", 22)
 	tools_popup.add_item("Report an Issue…", 20)
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
@@ -901,7 +900,6 @@ func build(root: Node) -> void:
 			26: _dock.open_lift_workbench()
 			13: _dock.show_welcome()
 			17: _dock.start_tour()
-			22: _dock.open_manual_where_left()
 			20: _dock._report_issue()
 			21: _dock._translation_studio.open()
 			14: _dock._run_diagnostics_action()
@@ -909,26 +907,20 @@ func build(root: Node) -> void:
 	)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(24), "Every open sheet on one page - how big each is, how much of it is described, what the Doctor said about it - plus a search that reaches all of them and the page each sheet writes about itself.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(25), "The documentation chores in one window: rewrite the page each sheet writes about itself, check what the guides do not answer, export the Manual as a browsable site, write out a translator's missing keys. Nothing is published - drafts stay drafts.")
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the tutorials, the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected; Ctrl+F1 reopens the page you were reading.")
-	# The dot: a reader who has not opened What's new since the plugin's version changed gets a mark
-	# on the Manual entry, and it comes off the moment they read it. Re-asked every time the menu
-	# opens, so reading the page while the menu is closed still clears it.
-	tools_popup.about_to_popup.connect(func() -> void: mark_unread(tools_popup, 22, "Manual…"))
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
 	# The one gesture on this menu with a key of its own, printed from the table like every other.
 	EventSheetContextMenus.hint_key(tools_popup, 6, EventSheetShortcuts.binding_for("project_search"))
-	# The Menu's foot: the two doors a reader looks for by name rather than by group. Both open the
-	# same Manual the Tools entry does - this is a second door onto one page, never a second page.
+	# The Menu's foot: the two doors a reader looks for by name rather than by group. The Manual
+	# has this one door only; Tools no longer carries a second copy of it.
 	menu_popup.add_separator()
 	menu_popup.add_item("Manual…", MENU_MANUAL_ID)
+	menu_popup.set_item_tooltip(menu_popup.get_item_index(MENU_MANUAL_ID), "The Manual: the tutorials, the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected; Ctrl+F1 reopens the page you were reading.")
 	menu_popup.add_item("What's new…", MENU_WHATS_NEW_ID)
-	# THE SAME DOT ON THE SAME DOOR. Tools ▸ Manual… wears a mark when the reader has not opened
-	# What's new since the plugin's version changed, and this is the door a reader looks for by name
-	# rather than by group - so it was the one Manual entry that never said there was something
-	# unread. Re-asked every time the Menu opens, so reading the page clears it either way.
+	# THE DOT: the Manual wears a mark when the reader has not opened What's new since the plugin's
+	# version changed, and it comes off the moment they read it. Re-asked every time the Menu opens.
 	menu_popup.about_to_popup.connect(func() -> void: mark_unread(menu_popup, 4, "Manual…"))
 	menu_popup.id_pressed.connect(func(id: int) -> void:
 		if id == MENU_MANUAL_ID:

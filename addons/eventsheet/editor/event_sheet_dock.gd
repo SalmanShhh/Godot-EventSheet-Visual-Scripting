@@ -4896,7 +4896,7 @@ func _run_diagnostics_action() -> void:
 		_set_status("No issues found - every ƒx expression and script block compiles.")
 
 
-## Tools ▸ Manual…, F1, and EventSheets.open_docs all land here. With no id, whatever the reader
+## Menu ▸ Manual…, F1, and EventSheets.open_docs all land here. With no id, whatever the reader
 ## has SELECTED answers - a condition or action row with its entry, an object label with the
 ## object's reference page, a group with the Manual's page on groups, a behavior's Include bar
 ## with that behavior's reference - which is what makes F1 "help for this", not "open the manual".
@@ -4941,7 +4941,7 @@ func last_read_doc_id() -> String:
 	return "" if history == null else str(history.call("current"))
 
 
-## Menu > Manual... and Tools > Manual...: the Manual window on the page the reader was reading last,
+## Menu > Manual...: the Manual window on the page the reader was reading last,
 ## or its home when they have not opened it yet. F1 is the door that explains the selection.
 func open_manual_where_left() -> void:
 	_docs.open(last_read_doc_id())

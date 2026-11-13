@@ -366,8 +366,8 @@ static func _test_footer_and_marks() -> bool:
 static func _test_the_word_manual() -> bool:
 	var all_passed: bool = true
 	var menu_code: String = _read("res://addons/eventsheet/editor/dock/menu_bar.gd")
-	all_passed = _check("Tools opens the Manual",
-		menu_code.contains("\"Manual…\", 22"), true) and all_passed
+	all_passed = _check("the Menu opens the Manual",
+		menu_code.contains("\"Manual…\", MENU_MANUAL_ID"), true) and all_passed
 	var dock_code: String = _read("res://addons/eventsheet/editor/docs/doc_dock.gd")
 	all_passed = _check("the dock is titled Manual",
 		dock_code.contains("title = \"Manual\""), true) and all_passed

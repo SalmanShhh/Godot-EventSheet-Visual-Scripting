@@ -63,7 +63,7 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "Row snippets live here (Save Selection as Snippet… / Insert Snippet…)."},
 	{"name": "eventsheets/project/docs_dir", "default": "res://eventsheet_docs", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_DIR,
-		"doc": "Your project's own .md guides live here and join the Manual's tree (Tools ▸ Manual…)."},
+		"doc": "Your project's own .md guides live here and join the Manual's tree (Menu ▸ Manual…)."},
 	# Ask (View ▸ Ask…): plain words in, PROPOSED rows out. Off by default, and off means nothing
 	# leaves this machine. Turning it on needs an endpoint of your choosing as well - an "on" with
 	# nowhere to ask stays off. Nothing is ever sent without pressing Ask, and nothing is ever
