@@ -856,20 +856,18 @@ class ChoicesField:
 
 
 # ── String toggle-button row ─────────────────────────────────────────────────
-## A String's fixed choices as one row of toggle buttons - every option visible at a glance,
-## one click to switch (a dropdown hides the alternatives behind a click). The pressed button
-## IS the value; a value outside the set leaves nothing pressed (never clobbered).
+## A String's fixed choices as one joined strip of toggle buttons - every option visible at a glance,
+## one click to switch (a dropdown hides the alternatives behind a click). The pressed button IS the
+## value, filled with the editor's accent; a value outside the set leaves nothing pressed (never
+## clobbered). An option with a picture keeps its word beside it, so a picture that is missing can
+## never leave a blank square. The strip wraps to a second line rather than cut a word short.
 class DrawerToggleRow:
-	extends HBoxContainer
+	extends HFlowContainer
 	signal value_changed(value: String)
 
-	## The picture on an icon button, in editor pixels before the HiDPI scale.
-	const ICON_SIZE: int = 24
-	## The segmented variant is for a HANDFUL of word options; past that the equal-width strip stops
-	## being readable and the row falls back to ordinary buttons.
-	const SEGMENTED_MIN: int = 2
-	const SEGMENTED_MAX: int = 5
-
+	## What the marker's `segmented` tail used to ask for: equal-width buttons. The strip is always
+	## joined now, so the tail only decides whether the buttons share one width.
+	var equal_widths: bool = false
 	var editable: bool = true
 	var _options: PackedStringArray = PackedStringArray()
 	var _value: String = ""
@@ -877,41 +875,60 @@ class DrawerToggleRow:
 
 	func _init(options: PackedStringArray = PackedStringArray(), icon_source: String = "", segmented: bool = false) -> void:
 		_options = options
-		# Segmented = equal-width word buttons joined into one strip, so it reads as a single control.
-		var strip: bool = segmented and _options.size() >= SEGMENTED_MIN and _options.size() <= SEGMENTED_MAX
-		add_theme_constant_override("separation", 0 if strip else 2)
-		for option: String in _options:
+		equal_widths = segmented
+		add_theme_constant_override("h_separation", 0)
+		add_theme_constant_override("v_separation", 0)
+		var picture_size: int = maxi(1, int(EventSheetLookStyle.field_height() * 0.75))
+		for index: int in _options.size():
+			var option: String = _options[index]
 			var button: Button = Button.new()
 			button.text = option
 			button.toggle_mode = true
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			if strip:
-				button.clip_text = true
+			button.custom_minimum_size.y = EventSheetLookStyle.field_height()
 			# Asked for at the size the button SHOWS it at: a provider draws its picture to order, and
-			# a 24 px one stretched into a scaled button is a blurred picture on a HiDPI screen.
-			var icon: Texture2D = EventSheetDrawerWidgets.toggle_icon_for(icon_source, option, EventSheetPalette.scaled(ICON_SIZE))
+			# a picture stretched into a scaled button is a blurred picture on a HiDPI screen.
+			var icon: Texture2D = EventSheetDrawerWidgets.toggle_icon_for(icon_source, option, picture_size)
 			if icon != null:
-				# The picture IS the choice; the word stays as the tooltip so hovering (and a screen
-				# reader) still says which option this is.
 				button.icon = icon
 				button.tooltip_text = option
-				button.text = ""
-				button.expand_icon = true
-				button.custom_minimum_size = Vector2(EventSheetPalette.scaled(ICON_SIZE + 8), EventSheetPalette.scaled(ICON_SIZE + 8))
+			var sides: Array[bool] = EventSheetLookStyle.strip_sides(index, _options.size())
+			EventSheetLookStyle.join_toggle(button, sides[0], sides[1])
+			# The chosen word is written bold, which is wider; reserve that room so no word is ever cut.
+			var bold_extra: float = EventSheetLookStyle.bold_font().get_string_size(option, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetLookStyle.font_size()).x - EventSheetLookStyle.font().get_string_size(option, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetLookStyle.font_size()).x
+			button.custom_minimum_size.x = button.get_combined_minimum_size().x + maxf(0.0, bold_extra)
 			button.pressed.connect(_on_option_pressed.bind(option))
 			add_child(button)
 			_buttons.append(button)
+		if equal_widths:
+			var widest: float = 0.0
+			for button: Button in _buttons:
+				widest = maxf(widest, button.get_combined_minimum_size().x)
+			for button: Button in _buttons:
+				button.custom_minimum_size.x = widest
 
 	func set_value(v: String) -> void:
 		_value = v
-		# Compare against the OPTION, not the button's text: an icon button carries the word in its
-		# tooltip and shows no text at all, so a text comparison would never light one up.
+		# Compare against the OPTION, not the button's text: a button with a picture may carry more than
+		# its word, so a text comparison would be the wrong question.
 		for index: int in range(_buttons.size()):
-			_buttons[index].set_pressed_no_signal(index < _options.size() and _options[index] == _value)
+			var chosen: bool = index < _options.size() and _options[index] == _value
+			_buttons[index].set_pressed_no_signal(chosen)
 			_buttons[index].disabled = not editable
+			if chosen:
+				_buttons[index].add_theme_font_override("font", EventSheetLookStyle.bold_font())
+			else:
+				_buttons[index].remove_theme_font_override("font")
 
 	func get_value() -> String:
 		return _value
+
+	## The widest the strip needs to show every word whole on one line.
+	func width_for_one_line() -> float:
+		var total: float = 0.0
+		for button: Button in _buttons:
+			total += button.get_combined_minimum_size().x
+		return total
 
 	func _on_option_pressed(option: String) -> void:
 		if not editable:

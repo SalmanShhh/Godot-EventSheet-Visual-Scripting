@@ -772,11 +772,11 @@ static func _toggle_icons() -> bool:
 	passed = _eq("unregistering removes the renderer",
 		EventSheets.toggle_icon_provider_for("test:cap").is_valid(), false) and passed
 
-	# The row itself: the picture replaces the word, and the word becomes the tooltip.
+	# The row itself: the picture sits beside the word, and the word is the tooltip too.
 	EventSheets.register_toggle_icon_provider("test:cap", func(_option: String, _size: int) -> Texture2D: return drawn)
 	var icon_row: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["None", "Square", "Round"]), "test:cap")
 	var first: Button = icon_row.get_child(0) as Button
-	passed = _eq("an icon button shows no text", first.text, "") and passed
+	passed = _eq("an icon button keeps its word beside the picture", first.text, "None") and passed
 	passed = _eq("an icon button says its option in the tooltip", first.tooltip_text, "None") and passed
 	icon_row.set_value("Round")
 	passed = _eq("the pressed icon button is the one whose OPTION matches",
@@ -785,15 +785,15 @@ static func _toggle_icons() -> bool:
 	icon_row.free()
 	EventSheets.unregister_toggle_icon_provider("test:cap")
 
-	# Segmented: a handful of word options joined into one strip; past that, ordinary buttons.
+	# Always one joined strip: the buttons touch, whatever the marker says about segments.
 	var strip: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["Flat", "Billboard", "Volumetric"]), "", true)
 	passed = _eq("a segmented row joins its buttons into one strip",
-		strip.get_theme_constant("separation"), 0) and passed
+		strip.get_theme_constant("h_separation"), 0) and passed
 	passed = _eq("a segmented row keeps its words", (strip.get_child(0) as Button).text, "Flat") and passed
 	strip.free()
 	var too_many: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["a", "b", "c", "d", "e", "f"]), "", true)
-	passed = _eq("past a handful of options the segmented strip falls back to ordinary buttons",
-		too_many.get_theme_constant("separation"), 2) and passed
+	passed = _eq("a long strip is joined too, and wraps rather than cut a word",
+		too_many.get_theme_constant("h_separation"), 0) and passed
 	too_many.free()
 	return passed
 

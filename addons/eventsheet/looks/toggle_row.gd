@@ -18,6 +18,9 @@ const PREVIEW_SENTENCE := "Shown as toggle buttons."
 
 var _row: Control
 var _options: PackedStringArray = PackedStringArray()
+## The full-width line under the label, used when the strip does not fit beside it.
+var _under: MarginContainer
+var _beside: bool = true
 
 
 ## The marker's own grammar (a list, then the optional tails `segmented` and `icons=<source>`) is read by
@@ -31,8 +34,29 @@ func _look_built() -> void:
 	_options = spec.get("options", PackedStringArray())
 	_row = EventSheetAttributeDrawers.widgets().DrawerToggleRow.new(_options, str(spec.get("icons", "")), bool(spec.get("segmented", false)))
 	_row.connect("value_changed", _on_row_changed)
+	_under = MarginContainer.new()
+	_under.visible = false
+	add_child(_under)
+	set_bottom_editor(_under)
 	add_child(_row)
-	set_bottom_editor(_row)
+	draw_background = false
+	draw.connect(_place_row, CONNECT_DEFERRED)
+
+
+## The strip sits beside the label while every word fits whole in the value column; when they do not,
+## it goes on its own line under the label at the full width.
+func _place_row() -> void:
+	var value_width: float = size.x * (1.0 - get_name_split_ratio())
+	var fits: bool = _row.call("width_for_one_line") <= value_width
+	if fits == _beside:
+		return
+	_beside = fits
+	_row.get_parent().remove_child(_row)
+	if fits:
+		add_child(_row)
+	else:
+		_under.add_child(_row)
+	_under.visible = not fits
 
 
 func _value_shown(value: Variant) -> void:
