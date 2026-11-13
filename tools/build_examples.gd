@@ -1412,7 +1412,7 @@ if position.y > 560.0:
 	arena.host_class = "Node2D"
 	arena.custom_class_name = "FamilyArena"
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and may damage each through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse."
+	about.text = "[b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and damages every one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse."
 	arena.events.append(about)
 	arena.variables = {
 		"spawn_count": {"type": "int", "default": 18, "exported": true,
@@ -1427,7 +1427,7 @@ for __i: int in range(spawn_count):
 	__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + floorf(__i / float(__cols)) * 80.0)
 	add_child(__e)"))
 	arena.events.append(spawn)
-	# Every 0.5s: the family-wide strike. A typed For each walks every Enemy; each has a chance to be hit.
+	# Every 0.5s: the family-wide strike. A typed For each walks every Enemy; every one is hit.
 	var strike: EventRow = EventRow.new()
 	strike.trigger_provider_id = "Core"; strike.trigger_id = "OnProcess"
 	strike.conditions.append(_every("strike_fam", "0.5"))
@@ -1436,7 +1436,6 @@ for __i: int in range(spawn_count):
 	pf.collection_kind = PickFilter.CollectionKind.GROUP
 	pf.collection_value = "family_enemy"
 	pf.iterator_name = "enemy: Enemy"
-	pf.predicate_expression = "randf() < 0.15"
 	strike.pick_filters.append(pf)
 	strike.actions.append(_raw("enemy.take_damage(1)"))
 	arena.events.append(strike)

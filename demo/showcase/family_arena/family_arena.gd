@@ -18,12 +18,10 @@ func _process(delta: float) -> void:
 	if __every_strike_fam >= maxf(0.5, 0.001):
 		__every_strike_fam = fmod(__every_strike_fam, maxf(0.5, 0.001))
 		for enemy: Enemy in get_tree().get_nodes_in_group("family_enemy"):
-			if not (randf() < 0.15):
-				continue
 			enemy.take_damage(1)
 	__every_hud_fam += delta
 	if __every_hud_fam >= maxf(0.5, 0.001):
 		__every_hud_fam = fmod(__every_hud_fam, maxf(0.5, 0.001))
 		$Info.text = "%d Enemies · each one falls on its own" % [get_tree().get_node_count_in_group("family_enemy")]
 
-# [b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and may damage each through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse.
+# [b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and damages every one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse.

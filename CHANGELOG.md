@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the Family Arena strike hits every member
+
+- The Family Arena showcase's group strike now damages every Enemy in the group each time it fires (it used to give each a 15% chance), so the showcase shows groups plainly.
+
 ### Changed: the sheet reads in Godot's own words by default
 
 - A trigger now says the Godot callback it runs on: On ready (on any node, the scene's root included), On enter tree, On exit tree, On process and On physics process, where it used to say On start of layout, On created, On destroyed, Every tick and Every physics tick. The scene rows say scene: Change scene, Reload scene, Add scene on top, Is outside screen. The Inspector is the Inspector on both sides of the Words page.
