@@ -195,10 +195,15 @@ static func _target_param(label: String, words: String) -> ACEParam:
 
 
 ## The picture a sprite shows. A file field: the row writes the load the way a reader would have.
-## It starts as Godot's own placeholder texture rather than a file, because a file the project may
-## not have turns the row amber the moment it is dropped.
+## It starts as a 64 by 64 solid square made in code rather than a file, because a file the project
+## may not have turns the row amber the moment it is dropped. A PlaceholderTexture2D would be 1 by 1
+## and a GradientTexture2D with no gradient draws Godot's magenta error square, so neither reads as
+## a deliberate stand-in.
+const PLACEHOLDER_PICTURE := "ImageTexture.create_from_image(Image.create_empty(64, 64, false, Image.FORMAT_RGB8))"
+
+
 static func _texture_param() -> ACEParam:
-	return F.make_param("texture", "String", "PlaceholderTexture2D.new()", "Picture", "The image the sprite shows.", "texture_path")
+	return F.make_param("texture", "String", PLACEHOLDER_PICTURE, "Picture", "The image the sprite shows.", "texture_path")
 
 
 # ── A tool sheet's own housekeeping ──

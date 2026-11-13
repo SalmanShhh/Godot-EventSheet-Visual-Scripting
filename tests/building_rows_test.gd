@@ -27,6 +27,7 @@ const ROWS: Dictionary = {
 static func run() -> bool:
 	var passed: bool = true
 	passed = _the_rows_are_in_one_category() and passed
+	passed = _a_dropped_sprite_has_a_picture_you_can_see() and passed
 	passed = _the_lines_the_rows_write() and passed
 	passed = _every_shape_of_every_row_parses() and passed
 	passed = _the_type_fields_open_godots_create_node_window() and passed
@@ -49,6 +50,27 @@ static func _template(ace_id: String) -> String:
 		return "(missing)"
 	var tool_segment: RegEx = RegEx.create_from_string("\\{\\?tool=yes\\}[\\s\\S]*?\\{/tool\\}")
 	return tool_segment.sub(descriptor.codegen_template, "", true)
+
+
+## The Picture a sprite row starts with is made in code, needs no file, and is big enough to see: a
+## PlaceholderTexture2D is 1 by 1.
+static func _a_dropped_sprite_has_a_picture_you_can_see() -> bool:
+	var passed: bool = true
+	for ace_id: String in ["AddSpriteTo", "AddSprite3DTo"]:
+		var picture: Variant = null
+		for param: ACEParam in _descriptor(ace_id).params:
+			if param.id == "texture":
+				var script: GDScript = GDScript.new()
+				script.source_code = "static func made() -> Variant:
+	return %s
+" % str(param.default_value)
+				if script.reload() == OK:
+					picture = script.call("made")
+		passed = SUPPORT.pin_value(NAME, "%s starts with a texture" % ace_id, picture is Texture2D, true) and passed
+		if picture is Texture2D:
+			passed = SUPPORT.pin_value(NAME, "%s starts 64 by 64" % ace_id,
+				Vector2i((picture as Texture2D).get_width(), (picture as Texture2D).get_height()), Vector2i(64, 64)) and passed
+	return passed
 
 
 static func _the_rows_are_in_one_category() -> bool:
