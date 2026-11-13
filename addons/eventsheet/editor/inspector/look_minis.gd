@@ -32,7 +32,7 @@ static func drawn_ids() -> PackedStringArray:
 	return PackedStringArray(["slider", "angle", "exp_slider", "no_handle", "progress_bar", "number_choices", "flags", "layers",
 		"easing", "unit", "file", "folder", "multiline", "placeholder", "choices", "suggestions", "toggle_row", "password",
 		"expression", "no_alpha", "swatch_row", "link", "vector_dial", "min_max", "corners", "node_path", "tool_button",
-		"texture_preview", "curve_editor", "table", "table_row", "table_tag", "seed", "custom", "storage"])
+		"texture_preview", "curve_editor", "table", "table_row", "table_tag", "seed", "cards", "custom", "storage"])
 
 
 ## Draws the picture of `look_id` inside `rect` on `canvas`, in the colours of `colours` (see COLOUR_KEYS).
@@ -173,6 +173,14 @@ static func draw_mini(canvas: CanvasItem, rect: Rect2, look_id: String, colours:
 			canvas.draw_colored_polygon(PackedVector2Array([tag.position, Vector2(tag.end.x - tag.size.y * 0.3, tag.position.y), Vector2(tag.end.x, centre.y),
 				Vector2(tag.end.x - tag.size.y * 0.3, tag.end.y), Vector2(tag.position.x, tag.end.y)]), accent)
 			canvas.draw_line(Vector2(tag.end.x + pad * 0.8, centre.y), Vector2(inner.end.x, centre.y), rest, line * 1.5)
+		"cards":
+			# Stacked cards: three bars one above the other, the top one picked out.
+			for index: int in 3:
+				var bar: Rect2 = Rect2(inner.position.x, inner.position.y + inner.size.y * (0.04 + 0.34 * index), inner.size.x, inner.size.y * 0.26)
+				var card_box: StyleBoxFlat = StyleBoxFlat.new()
+				card_box.bg_color = accent if index == 0 else rest
+				card_box.set_corner_radius_all(int(EventSheetLookStyle.px(2.0)))
+				canvas.draw_style_box(card_box, bar)
 		"seed":
 			# A die: a rounded square with three pips.
 			var die: float = inner.size.y * 0.9

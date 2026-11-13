@@ -13003,6 +13003,11 @@ func _build_variable_row(
 					}, true)
 				)
 			)
+		# The picture the Inspector mark is drawn with, asked once: the look the variable wears, or a
+		# Color's own colour. "" is today's plain mark.
+		var inspector_mark: Dictionary = {}
+		if bool(options.get("exported", false)):
+			inspector_mark = NativeVariableMarks.inspector_mark(source_variable, type_name, default_value)
 		# The name is what a reader came for, so it is the one bold word on the row - and its hover
 		# keeps the declaration grammar (`hp : int`) for anyone who wants it.
 		#
@@ -13020,6 +13025,7 @@ func _build_variable_row(
 				"variable_name_span": true,
 				# The badge tiles drawn at the row's right (View > Variable Badges).
 				"variable_badges": variable_badges,
+				"inspector_mark": inspector_mark,
 				"bbcode_segments": [{
 					"text": display_name,
 					"color": _viewport._get_event_style().object_label_color,
@@ -13050,6 +13056,8 @@ func _build_variable_row(
 						"badge_natural_width": true,
 						"badge_fixed_width": KIND_BADGE_WIDTH,
 						"inspector_badge": true,
+						"inspector_mark": inspector_mark,
+						"inspector_picture": str(inspector_mark.get("picture", "")),
 						"badge_bg": Color(0.0, 0.0, 0.0, 0.0),
 						"badge_fg": reading_style.inspector_chip_foreground_color,
 						"hover_note": EventSheetL10n.translate("Editable in the Inspector")

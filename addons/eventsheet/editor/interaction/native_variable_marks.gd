@@ -482,6 +482,62 @@ static func color_hex(colour: Color) -> String:
 	return "#%s" % (colour.to_html(false) if is_equal_approx(colour.a, 1.0) else colour.to_html(true)).to_upper()
 
 
+## The Inspector look files and the pictures of the looks, loaded by path the first time an exported
+## row asks which picture its mark wears, so a sheet with no exported variable never compiles them.
+const LOOKS_PATH: String = "res://addons/eventsheet/editor/inspector_looks.gd"
+const MINIS_PATH: String = "res://addons/eventsheet/editor/inspector/look_minis.gd"
+
+## What an `@export_...` line says about the picture, for a variable that carries the line as text
+## and no structured attribute (an opened script's own variable): [prefix, look id], first match wins.
+const HINT_LOOKS: Array = [
+	["@export_range(", "slider"], ["@export_enum(", "choices"], ["@export_flags_", "layers"], ["@export_flags(", "flags"],
+	["@export_file", "file"], ["@export_dir", "folder"], ["@export_multiline", "multiline"],
+	["@export_placeholder", "placeholder"], ["@export_exp_easing", "easing"], ["@export_node_path", "node_path"],
+	["@export_tool_button", "tool_button"],
+]
+
+
+## The picture an exported variable's Inspector mark is drawn with: {picture, look_id, missing, colour}.
+## `picture` is "" for the plain mark (today's), else the id of the picture to draw; `look_id` is the look
+## the variable wears ("" for none); `missing` is true for a look word whose file is not installed (drawn
+## as an amber "?"); `colour` is the variable's own colour for a Color (its mark is that colour), else null.
+## Asks the same table the Variable window reads, so the row and the window cannot disagree.
+static func inspector_mark(variable: LocalVariable, type_name: String, default_value: Variant) -> Dictionary:
+	var plain: Dictionary = {"picture": "", "look_id": "", "missing": false, "colour": null}
+	if variable == null or is_storage(variable):
+		return plain
+	var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
+	var hint: String = variable.export_hint.strip_edges()
+	var is_colour: bool = type_name == "Color"
+	if attributes.is_empty() and hint.is_empty() and not is_colour:
+		return plain
+	var look_id: String = ""
+	var looks: GDScript = null
+	if not attributes.is_empty():
+		looks = load(LOOKS_PATH)
+		look_id = str(looks.unfold(attributes, variable.options if "options" in variable else PackedStringArray())[0])
+		if look_id.is_empty() and str(attributes.get("drawer", "")) == "cards":
+			look_id = "cards"
+		if look_id.is_empty() and not str(attributes.get("choices_function", "")).is_empty():
+			look_id = "choices"
+	if look_id.is_empty():
+		for entry: Variant in HINT_LOOKS:
+			if hint.begins_with(str((entry as Array)[0])):
+				look_id = str((entry as Array)[1])
+				break
+	if is_colour and (look_id.is_empty() or look_id == "no_alpha" or hint.begins_with("@export_color_no_alpha")):
+		var own: Variant = color_of(default_value)
+		if own != null:
+			return {"picture": "colour", "look_id": look_id, "missing": false, "colour": own}
+		return plain
+	if look_id.is_empty() or look_id == "custom" or look_id == "storage":
+		return plain
+	var drawn: PackedStringArray = (load(MINIS_PATH) as GDScript).drawn_ids()
+	if looks != null and not str(attributes.get("look", "")).is_empty() and looks.by_id(look_id).is_empty():
+		return {"picture": "missing", "look_id": look_id, "missing": true, "colour": null}
+	return {"picture": look_id if drawn.has(look_id) else "look", "look_id": look_id, "missing": false, "colour": null}
+
+
 ## True for a member the compiler writes for its own bookkeeping, never one an author declared.
 static func is_compiler_variable(variable_name: String) -> bool:
 	return variable_name.begins_with(COMPILER_VARIABLE_PREFIX)

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: a variable row knows which picture the Inspector will draw
+
+- An exported variable row now works out the picture of its Inspector mark from the same look table the Variable window reads (a slider for a range, a table grid, a menu arrow, a Color's own colour, an amber "?" for a look whose file is not installed), and stamps it on the row. Nothing is drawn differently yet; the reading dump shows it as `mark=<picture>`.
+
 ### Changed: the reading dump can carry a variable's mark
 
 - `tools/reading_dump.gd` writes format 3: a span may carry `mark=<picture>`, the picture an exported variable's Inspector mark is drawn with, written only when it is not the plain one. No row carries one yet, so a dump of the shipped tree differs from format 2 in its header line only.

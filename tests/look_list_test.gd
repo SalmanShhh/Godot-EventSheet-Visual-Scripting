@@ -68,7 +68,7 @@ static func _fill() -> bool:
 static func _pictures() -> bool:
 	var rows: Array = []
 	for look_id: String in EventSheetLookMinis.drawn_ids():
-		var known: bool = look_id in ["table", "table_row"] or not EventSheetInspectorLooks.by_id(look_id).is_empty()
+		var known: bool = look_id in ["table", "table_row", "cards"] or not EventSheetInspectorLooks.by_id(look_id).is_empty()
 		rows.append(["the picture of %s belongs to a look that exists" % look_id, known, true])
 	var colour_keys: Array = []
 	for key: String in EventSheetLookMinis.theme_colours().keys():
