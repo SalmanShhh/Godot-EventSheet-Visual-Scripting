@@ -12294,8 +12294,11 @@
 "slug": "2-core-concepts",
 "text": "2. Core Concepts"
 }, {
-"slug": "3-getting-started-a-star-rating-in-one-file",
-"text": "3. Getting Started: a star rating in one file"
+"slug": "3-make-a-look-from-the-sheet-alone",
+"text": "3. Make a look from the sheet alone"
+}, {
+"slug": "4-getting-started-a-star-rating-in-one-file",
+"text": "4. Getting Started: a star rating in one file"
 }, {
 "slug": "star-rating",
 "text": "Star rating"
@@ -12309,27 +12312,27 @@
 "slug": "how-many-stars-the-row-shows",
 "text": "How many stars the row shows."
 }, {
-"slug": "4-what-the-editor-reads-from-the-file",
-"text": "4. What the editor reads from the file"
+"slug": "5-what-the-editor-reads-from-the-file",
+"text": "5. What the editor reads from the file"
 }, {
-"slug": "5-the-functions-you-can-write",
-"text": "5. The functions you can write"
+"slug": "6-the-functions-you-can-write",
+"text": "6. The functions you can write"
 }, {
-"slug": "6-what-a-look-writes-into-the-script",
-"text": "6. What a look writes into the script"
+"slug": "7-what-a-look-writes-into-the-script",
+"text": "7. What a look writes into the script"
 }, {
-"slug": "7-opening-a-look-as-an-event-sheet",
-"text": "7. Opening a look as an event sheet"
+"slug": "8-opening-a-look-as-an-event-sheet",
+"text": "8. Opening a look as an event sheet"
 }, {
-"slug": "8-use-cases",
-"text": "8. Use Cases"
+"slug": "9-use-cases",
+"text": "9. Use Cases"
 }, {
-"slug": "9-tips-and-common-mistakes",
-"text": "9. Tips and Common Mistakes"
+"slug": "10-tips-and-common-mistakes",
+"text": "10. Tips and Common Mistakes"
 }],
 "id": "GUIDE-MAKE-YOUR-OWN-INSPECTOR-LOOK",
 "title": "Make Your Own Inspector Look",
-"words": " 0 1 10 100 11 12 13 14 15 2 3 4 5 6 7 8 9 _can_draw _look_built _pick _set_read_only _stars _update_property _value_changed_from_outside _value_shown a above add add_child add_focusable after all allowed already also_draws_on amber an and animation another answer answered any anything append are argument array arrows as asked asks at b back badge bar base battery be became because become becomes before beside best bind bool box break build building built button by byte call can cannot card carried carries carry case cases cells change changed changes charge chart check choice class class_name classes click code colon coloured common compiles concepts connect const contents control cooldown copies copy core count countdown create curve custom data default defaults deserves designer dial did difficulty do documents does dots drag draw drawing drawn draws dropdown dropping duplicate each edit editor editorproperty edits else emit_changed empty end engine entries event eventsheet eventsheet_addons eventsheetinspectorlook every everything exactly examples excels except export export_custom export_enum exported exports extends facing field field_name field_object field_type field_value file files filled fills first five flat float folder for four fourth from func function functions game gd gdscript gets getting give gives godot grammar green grid grow had has have hboxcontainer health heart heat held here hint holds hover how icon icons identifier identity if in index inspector installed instead int into is is_field_read_only it its keep keeps keys kinds knob label larger last layer learning leave level like line lines list lists lives loading lock locked look looking looks made make many marker marker_args marker_template markers max meaning means meant min mistakes mode most moved must name names needed needs never new next no node not nothing now number numbers object of off offering offers old on once one ones only open opening opens optional or order ordinary other otherwise out outlined over override own owns pick pill pixels place plain plugin plumbing point pressed preview preview_sentence progress progress_bar project property property_hint_none purpose put px question questions quote range rather rating read reads ready red redraws refresh registered related replaces reproduces reputation res reselecting reset resource rest review ride right ring row rows run running runs s same save saved saves saving say says scenarios score script scripts seconds segment select selected sense sentence set set_bottom_editor set_field_value sets share shared shares sheet ship shipped short shorter show shown shows sibling signals size slider slot small so spec split stable star star_rating stars started starting starts stays step still stop store string strip such swatch_row table table_row tails taken team teammate text texture texture2d than that the their them then there thermometer these they thin this three thumbnail tick ticks tied time tips to toggle_row told too tool true two type typed types under undo unit untouched use used valid value values var variable variables variant version visible void volume wants way wear wearing wears were what when where which who whole whose widget window wins with without word works works_on world would wrapped wraps write writes written wrote you your yours "
+"words": " 0 1 10 100 11 12 13 14 15 2 3 4 5 6 7 8 9 _can_draw _look_built _pick _set_read_only _stars _update_property _value_changed_from_outside _value_shown a above action add add_child add_focusable addon after all allowed alone already also also_draws_on always amber an and animation another answer answered any anything append are argument array arrows as asked asks at b back badge bar base battery be became because become becomes before below beside best bind bool both box break build building built button by byte call called calls can cannot card carried carries carry case cases cells change changed changes charge chart check choice choose class class_name classes click code colon coloured commas common compiles concepts connect const contents control cooldown copies copy core count countdown create curve custom data default defaults deserves designer dial dialog did difficulty direction do documents does doors dots drag draw drawing drawn draws dropdown dropping duplicate each edit editor editorproperty edits else elsewhere emit_changed empty end engine entries event events eventsheet eventsheet_addons eventsheetinspectorlook eventsheets every everything exactly example examples excels except exists export export_custom export_enum exported exports expression extends facing false field field_name field_object field_type field_value file files filled fills first five flat float focus folder for four fourth from func function functions game gd gdscript gets getting give gives go godot grammar green grey greyed grid grow had hand has have hboxcontainer health heart heart_row heat held here hint holds hover how icon icons identifier identity if images in index inspector installed instead int into is is_field_read_only it its just keep keeps kept keys kind kinds knob knows label labelled lands larger last layer learning leave level like line lines list listed lists live lives loading lock locked look looking looks made make makes many marker marker_args marker_template markers max meaning means meant menu min mistakes mode most moved moving must my my_addon name names needed needs never new next no nobody node not nothing now number numbers object of off offered offering offers old on once one ones only open opened opening opens optional or order ordinary other otherwise out outlined outside over override overwrites own owns pick picker pill pixels place plain plugin plumbing png point pressed preview preview_sentence progress progress_bar project property property_hint_none purpose put puts px question questions quote range rather rating reach read reads ready red redraws refresh refreshes register_inspector_look registered related replaces reproduces reputation res reselecting reset resource rest returns review ride right ring road roads row rows run running runs s same save saved saves saving say says scenarios score script scripts seconds see segment select selected sense sentence separated set set_bottom_editor set_field_value sets share shared shares sheet shelf ship shipped ships short shorter show shown shows sibling signals sit size slider slot small snake_case so something spec split stable star star_rating stars start started starting starts stay stays step still stop store string strip such swatch_row table table_row tails take taken team teammate text texture texture2d than that the their them then there thermometer these they thin third this those three thumbnail tick ticks tied time tips to toggle_row told too tool true two type typed types under undo unit untouched use used uses valid value values var variable variables variant version visible void volume wants way wear wearing wears were what when where which who whole whose widget will window wins with without word words working works works_on world would wrapped wraps write writes written wrong you your yours "
 }, {
 "headings": [{
 "slug": "table-of-contents",

@@ -4,17 +4,20 @@ A **look** is how one property is drawn in Godot's Inspector in the place of its
 
 A look is a script that extends `EventSheetInspectorLook`, which is a thin layer over Godot's own `EditorProperty`. Everything `EditorProperty` gives you (`add_focusable`, `set_bottom_editor`, `emit_changed`, `_set_read_only`) is still yours. The point of the base class is only to make the common case short.
 
+You do not have to write that file by hand. A look is a plain script, so it is also an event sheet: **New inspector look** starts one, and the rows you add are the same code the Inspector runs. Both roads are below, and they end in the same file.
+
 ## Table of Contents
 
 1. [Scenarios Where This Excels](#1-scenarios-where-this-excels)
 2. [Core Concepts](#2-core-concepts)
-3. [Getting Started: a star rating in one file](#3-getting-started-a-star-rating-in-one-file)
-4. [What the editor reads from the file](#4-what-the-editor-reads-from-the-file)
-5. [The functions you can write](#5-the-functions-you-can-write)
-6. [What a look writes into the script](#6-what-a-look-writes-into-the-script)
-7. [Opening a look as an event sheet](#7-opening-a-look-as-an-event-sheet)
-8. [Use Cases](#8-use-cases)
-9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
+3. [Make a look from the sheet alone](#3-make-a-look-from-the-sheet-alone)
+4. [Getting Started: a star rating in one file](#4-getting-started-a-star-rating-in-one-file)
+5. [What the editor reads from the file](#5-what-the-editor-reads-from-the-file)
+6. [The functions you can write](#6-the-functions-you-can-write)
+7. [What a look writes into the script](#7-what-a-look-writes-into-the-script)
+8. [Opening a look as an event sheet](#8-opening-a-look-as-an-event-sheet)
+9. [Use Cases](#9-use-cases)
+10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
 
 ---
 
@@ -36,7 +39,45 @@ A look is a script that extends `EventSheetInspectorLook`, which is a thin layer
 
 **Your questions become the marker.** Each exported variable of the look (except `works_on`) is one question the Variable window asks, and one value in the marker, in file order.
 
-## 3. Getting Started: a star rating in one file
+## 3. Make a look from the sheet alone
+
+This road needs no editor code. You will make a look called `heart_row`, give a variable that look, and see Godot's Inspector draw it.
+
+**1. Start the look.** Open the **Sheet** menu and choose **New inspector look...**
+
+![The Sheet menu with New inspector look listed above New Data Table](images/look-sheet-1-menu.png)
+
+**2. Name it and say what it works on.** Type the name (words become `snake_case`, so `Heart row` is `heart_row`) and the kinds of property it can be put on, separated by commas (`int, float`). Leave **Works on** empty for any kind. Create is greyed, with a sentence under the name, when something is wrong: a name already taken, a type nobody knows.
+
+![The New inspector look window with the name heart_row and Works on int, float](images/look-sheet-2-dialog.png)
+
+**3. It opens as a sheet.** Create writes `res://eventsheet_addons/looks/heart_row.gd` and opens it. A small working look is already there: **On Look Built** makes a label, **On Value Shown** puts the value in it. Those two events are the two functions the Inspector calls on a look. A third, **On Value Changed From Outside**, is for undo or a script moving the value, and you add it the way you add any event.
+
+![The new look opened as a sheet, with On Look Built and On Value Shown](images/look-sheet-3-opened.png)
+
+**4. Add a row.** Select an event and choose **Add action**. The picker has an **Inspector Look** shelf, and only on this sheet: **Set the field's value** (write a new value, one undo step), **Make this control the one focus lands on**, and the expression **the field's value**. Everything else in the picker works as it always does.
+
+![The picker on the Inspector Look shelf with Make Control Take Focus selected](images/look-sheet-4-picker.png)
+
+**5. Save.** The sheet writes the file.
+
+**6. Give a variable the look.** Open the sheet of a script, add an `int` variable, and set **Inspector look** to **Heart row**. A look that asks questions shows them here, one field each, labelled by the first `##` line above the question's variable in the look's file.
+
+![The Variable window with Inspector look set to Heart row](images/look-sheet-5-variable.png)
+
+**7. See it.** Save the script, select a node that has it, and Godot's own Inspector draws the property with your look.
+
+![Godot's Inspector drawing the property with the Heart row look](images/look-sheet-6-inspector.png)
+
+**8. It is plain GDScript.** Open `heart_row.gd` in Godot's script editor and it is the ordinary code you would have typed:
+
+![The same file in Godot's script editor](images/look-sheet-7-text.png)
+
+![The Variable window under the shipped Direction dial look: its Reach question, Open as a sheet and Copy into my project](images/look-sheet-8-doors.png)
+
+Two doors sit in the Variable window under a look that is a file. **Open as a sheet** reads its file as a sheet (a look that ships with the plugin opens read-only). **Copy into my project** copies a shipped look's file into `res://eventsheet_addons/looks/`, where your copy is the one the Inspector uses and is yours to change; it never overwrites a file that is already there.
+
+## 4. Getting Started: a star rating in one file
 
 Create `res://eventsheet_addons/looks/star_rating.gd`:
 
@@ -84,7 +125,7 @@ Now open the Variable window on an int variable. **Inspector look** lists **Star
 
 Select a node that has that script. The Inspector draws five stars, three of them filled. Click the fourth and the property becomes 4, as one undo step.
 
-## 4. What the editor reads from the file
+## 5. What the editor reads from the file
 
 | In the file | Used as |
 |---|---|
@@ -92,16 +133,17 @@ Select a node that has that script. The Inspector draws five stars, three of the
 | The `##` lines after it | The look's hover |
 | `@export var works_on: String = "int,float"` | The types it can be put on. Empty means any type. A class name (`Texture2D`, `Curve`) works for a resource slot |
 | Every other `@export var` | A question, asked in file order, written into the marker in that order |
-| The `##` line above a question | The question's hover |
+| The first `##` line above a question | The question's label in the Variable window. With no `##` line the label is the name as written |
+| The `##` lines after it | The question's hint (the grey example in a text box), and its hover beside the name |
 | `@export_enum("a", "b") var mode: String` | A question with a dropdown |
 | `@export var outlined: bool = true` | A question with a tick box |
 | `const MARKER_TEMPLATE := "kinds={kinds},store={store}"` | A look whose values must share one segment (`kinds=px|world,store=world`) |
 | `const PREVIEW_SENTENCE := "Shown as a star rating."` | The sentence the Designer's preview card says under a variable wearing the look. Without it the card says "Shown with the look star_rating." |
 | `const ALSO_DRAWS_ON := "int"` | Types the look draws when a script's marker already asks for it, without offering the look for them in the Variable window |
 
-A question's label is the variable's name as you wrote it. A value that holds a colon, a quote or a line break cannot ride a marker; the look then writes nothing and the variable stays a plain field. A name that is already one of Godot's own (`name`, `size`, `visible`) cannot be a question, because the look is a node.
+A value that holds a colon, a quote or a line break cannot ride a marker; the look then writes nothing and the variable stays a plain field. A name that is already one of Godot's own (`name`, `size`, `visible`) cannot be a question, because the look is a node.
 
-## 5. The functions you can write
+## 6. The functions you can write
 
 You write these. You never override `_update_property`: the base needs it to keep the value in step.
 
@@ -122,7 +164,7 @@ And these are ready to call:
 | `is_field_read_only()` | True when the Inspector has the property locked |
 | `marker_args` | What the marker carried after the look's name, split on `:` exactly as written. For a marker with a grammar of its own (a list, then optional tails); most looks read their exported variables instead |
 
-## 6. What a look writes into the script
+## 7. What a look writes into the script
 
 The marker is `eventsheet:<file name>`, then each answer after a colon: `eventsheet:progress_bar:0:100` for the shipped progress bar with a min of 0 and a max of 100. The script is plain GDScript: the marker is only a hint string, so it compiles, exports and runs without any plugin.
 
@@ -132,11 +174,29 @@ Opening a script that carries a marker for a look the project does not have stil
 
 **Save and show.** A choice made in the Inspector Designer is saved to the script at once and Godot is told the file changed, so the selected node's Inspector redraws with the new look without reselecting it.
 
-## 7. Opening a look as an event sheet
+## 8. Opening a look as an event sheet
 
 A look is a plain script, so it opens as an event sheet like any other: its exported variables are variable rows, and each function is an event. Saving untouched writes the file back byte for byte. Edit the rows, save, and the look changes.
 
-## 8. Use Cases
+On a sheet whose script extends `EventSheetInspectorLook`, the three functions the Inspector calls read in the Inspector's own words, and the picker offers the rows that go with them:
+
+| Function in the file | Reads as | Called when |
+|---|---|---|
+| `func _look_built() -> void:` | On look built | Godot's Inspector first needs the look for a property |
+| `func _value_shown(value: Variant) -> void:` | On value shown | The Inspector refreshes the property: first drawn, after an edit, after undo |
+| `func _value_changed_from_outside(value: Variant) -> void:` | On value changed from outside | The value moved without this look moving it, just before On value shown |
+
+| Call in the file | Reads as |
+|---|---|
+| `set_field_value(value)` | Set the field's value to value |
+| `add_focusable(control)` | Make control the one focus lands on |
+| `field_value()` | the field's value |
+
+The same function names in a script that is not a look stay ordinary functions. The rows are on the **Inspector Look** shelf of the picker, and only a look sheet is offered them.
+
+**Kept elsewhere.** A look file does not have to live in `res://eventsheet_addons/looks/`. Code that keeps its looks elsewhere (an addon, a shared folder) can add one with `EventSheets.register_inspector_look("res://my_addon/looks/star_rating.gd")`. It returns `true` when the file exists, is a `.gd` file and reads as a look, and `false` otherwise. The Variable window lists it after the project's own looks, and a file of the same name in the project's looks folder still wins.
+
+## 9. Use Cases
 
 1. A star rating for a review score.
 2. A progress bar for health, loading or reputation.
@@ -162,7 +222,7 @@ Other use cases:
 - **A look that edits a list.** `works_on` is `Array` and the control is a small editor for its entries.
 - **A look for a project's own type.** A look for one custom resource class, shared by every script that holds it.
 
-## 9. Tips and Common Mistakes
+## 10. Tips and Common Mistakes
 
 - **No `@tool`, no control.** The look is drawn in the editor, so the file needs `@tool`. Without it Godot cannot build the control.
 - **A new look does not show.** Check the file is in `res://eventsheet_addons/looks/`, it has `extends EventSheetInspectorLook`, and its name is a valid identifier.

@@ -4,6 +4,16 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: an Inspector look is read and made as an event sheet
+
+- A sheet whose script extends `EventSheetInspectorLook` reads its three Inspector callbacks as triggers: `_look_built`, `_value_shown(value)` and `_value_changed_from_outside(value)` are "On look built", "On value shown" and "On value changed from outside", each with a hover saying when Godot's Inspector calls it. The rows are offered by the picker on such a sheet and on no other (a new closed-list reason, `outside_inspector_look`), and a file with the same function on any other class reads as an ordinary function. The emitted text is the plain function byte for byte, in both directions.
+- Three more rows on the same "Inspector Look" shelf: the action "Set the field's value" (`set_field_value(value)`), the action "Make this control the one focus lands on" (`add_focusable(control)`) and the expression "the field's value" (`field_value()`). Their ace_ids are `OnLookBuilt`, `OnValueShown`, `OnValueChangedFromOutside`, `SetFieldValue`, `AddFocusable` and `FieldValue`; like every shipped id they never change.
+- A look's question is labelled by its first `##` line in the Variable window, and the hover says the name as written; with no `##` line the label is the name. The shipped looks carry the labels they had before (Min, Max, Reach, Units, Choices, Columns, Table, Name column). Stored keys did not change.
+- The Variable window's look list offers "Open as a sheet" on a look that is a file, and "Copy into my project" on a shipped one. The copy is the shipped file byte for byte in `res://eventsheet_addons/looks/`, where the project's file wins by name; nothing is ever overwritten and the window says so.
+- Sheet > "New inspector look..." asks a name and what the look works on, writes a small working look (a plain field that shows the value) into `res://eventsheet_addons/looks/` and opens it as a sheet. The written file passes the style gate, opens as rows and saves back byte for byte.
+- `EventSheets.register_inspector_look(path) -> bool` adds a look kept anywhere else. It returns true when the file exists, is a `.gd` and reads as a look; the catalogue lists it after the project's own, and a project file of the same name still wins.
+- A module guide for the six rows (`docs/Modules/Inspector-Look.md`) and the whole path from "New inspector look" to the Inspector in the make-your-own-look guide.
+
 ### Added: an Inspector look is one script file
 
 - A look is now a script that extends `EventSheetInspectorLook`, a thin layer over Godot's `EditorProperty`. Drop one in `res://eventsheet_addons/looks/` and it is a look: nothing is registered. The Variable window and the Inspector Designer list it, ask its questions, and write its marker; the Inspector draws it. The look's name, hover, the types it works on, its questions and the line it writes are all read from the file's text, so nothing is run to list it. A file in the project with a shipped look's name replaces it. Make your own with the new guide "Make Your Own Inspector Look".
