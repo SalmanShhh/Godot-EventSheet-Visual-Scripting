@@ -175,6 +175,7 @@ static func _collect_descriptor(descriptor: ACEDescriptor, seen: Dictionary, str
 ## a floor on a PERCENTAGE would not notice a new sentence added to a covered verb - which is the
 ## regression that actually happens. This is that gate.
 const FULLY_KEYED_ACES: Array[String] = [
+	"OnEnterTree", "OnExitTree", "OnPhysicsProcess", "OnProcess",
 	# The positioning wave: the world-space twins, the place readers, the Control rows and the verbs
 	# whose reading now says which space they work in.
 	"GlideToward", "WrapAroundLayoutX", "WrapAroundLayoutY", "BoundToLayout", "MouseMoveCursorTo",

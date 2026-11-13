@@ -35,7 +35,7 @@ signal help_requested(definition: ACEDefinition)
 ## group of words. The picker stays open; the host opens the page.
 signal section_help_requested(doc_id: String)
 
-## Emitted when the reader takes the Add event dialog's first entry, "(none - runs every tick)".
+## Emitted when the reader takes the Add event dialog's first entry, "(none - runs every frame)".
 ## A blank event is a real event with no condition of its own, so there is no definition to hand over -
 ## only the context the dialog was opened with, which says where the new event goes.
 signal blank_event_selected(context: Dictionary)
@@ -291,7 +291,7 @@ var _recent_list: Tree = null
 var _favorite_button: Button = null
 var _add_button: Button = null
 var _selected_definition: ACEDefinition = null
-## True while the highlighted entry is the Add event dialog's "(none - runs every tick)" row,
+## True while the highlighted entry is the Add event dialog's "(none - runs every frame)" row,
 ## which carries no definition of its own. Add / Enter commit a blank event while it is set.
 var _blank_event_highlighted: bool = false
 
@@ -1271,6 +1271,8 @@ const SEARCH_SYNONYMS := {
 	"angle": "rotation",
 	"opacity": "modulate",
 	"on created": "enter tree",
+	"pick": "for each",
+	"for each": "pick",
 	"spawn": "instantiate",
 	"create object": "instantiate",
 	"destroy": "queue_free",
@@ -1429,6 +1431,64 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 				if not extra.has(mapped):
 					extra.append(mapped)
 	return extra
+
+
+## The row a WHOLE typed phrase names, "<provider>::<ace id>", for the phrases a reader brings from
+## another event-sheet editor or types as Godot's own name. A whole-phrase hit outranks every row that
+## only shares a word with the query: without it "go to layout" listed Change scene behind every row
+## that merely held "to". Data, so the pin in the vocabulary test and the ranking read one table.
+const PHRASE_FIRST := {
+	"on ready": "Core::OnReady", "on start of layout": "Core::OnReady", "start of scene": "Core::OnReady",
+	"on process": "Core::OnProcess", "every tick": "Core::OnProcess", "every frame": "Core::OnProcess",
+	"on physics process": "Core::OnPhysicsProcess", "every physics tick": "Core::OnPhysicsProcess",
+	"on enter tree": "Core::OnEnterTree", "on created": "Core::OnEnterTree",
+	"on exit tree": "Core::OnExitTree", "on destroyed": "Core::OnExitTree", "on end of layout": "Core::OnExitTree",
+	"change scene": "Core::ChangeScene", "go to layout": "Core::ChangeScene", "goto layout": "Core::ChangeScene",
+	"reload scene": "Core::ReloadScene", "restart layout": "Core::ReloadScene",
+	"queue free": "Core::QueueFree", "destroy": "Core::QueueFree",
+	"instantiate": "Core::SpawnNewCopy", "spawn": "Core::SpawnNewCopy", "create object": "Core::SpawnNewCopy",
+	"spawn a copy": "Core::SpawnNewCopy",
+	"set rotation": "Core::SetRotationDeg", "set angle": "Core::SetRotationDeg",
+	"overlaps": "Core::OverlapsBody", "is overlapping": "Core::OverlapsBody",
+	"on body entered": "Core::OnBodyEntered", "on collision with": "Core::OnCollisionWithGroup",
+	"on collision": "Core::OnCollisionWithGroup",
+	"pick": "Core::PickWhere",
+}
+
+
+## The "<provider>::<ace id>" keys a whole typed phrase names, best first: the table above, then any
+## verb whose alias word is exactly the phrase. Empty for anything that is not a whole phrase.
+static func phrase_first_keys(query: String) -> Array[String]:
+	var found: Array[String] = []
+	var typed: String = query.to_lower().strip_edges()
+	if typed.length() < 3:
+		return found
+	if PHRASE_FIRST.has(typed):
+		found.append(str(PHRASE_FIRST[typed]))
+	for alias_key: String in EventSheetWords.verb_alias_keys():
+		if alias_key.split("::").size() == 2 and EventSheetWords.verb_alias_word(alias_key).to_lower() == typed 				and not found.has(alias_key):
+			found.append(alias_key)
+	return found
+
+
+## `definitions` with the rows a whole typed phrase names moved to the front, in that order. The
+## rest keep their order.
+static func with_phrase_hits_first(definitions: Array[ACEDefinition], query: String) -> Array[ACEDefinition]:
+	var keys: Array[String] = phrase_first_keys(query)
+	if keys.is_empty():
+		return definitions
+	var first: Array[ACEDefinition] = []
+	for key: String in keys:
+		for definition: ACEDefinition in definitions:
+			if "%s::%s" % [definition.provider_id, definition.id] == key and not first.has(definition):
+				first.append(definition)
+	if first.is_empty():
+		return definitions
+	var ordered: Array[ACEDefinition] = first.duplicate()
+	for definition: ACEDefinition in definitions:
+		if not first.has(definition):
+			ordered.append(definition)
+	return ordered
 
 
 ## The verbs a typed query names by the OTHER editor's name for them, as {ace id: the phrase that
@@ -2315,10 +2375,10 @@ func _refresh_tree() -> void:
 	var blank_item: TreeItem = null
 	if _blank_event_offered(mode, signals_only, query):
 		blank_item = _tree.create_item(root)
-		blank_item.set_text(0, EventSheetL10n.translate("(none - runs every tick)"))
+		blank_item.set_text(0, EventSheetL10n.translate("(none - runs every frame)"))
 		blank_item.set_metadata(0, {"blank_event": true})
 		blank_item.set_tooltip_text(0, EventSheetL10n.translate(
-			"An event with no condition of its own runs every tick."))
+			"An event with no condition of its own runs every frame."))
 
 	var group_nodes: Dictionary = {}
 	# Pre-declare node-type sections for event creation so they appear in a stable order.
@@ -2488,6 +2548,7 @@ func _refresh_tree() -> void:
 		definitions = __featured
 		definitions.append_array(__rest)
 	definitions = ordered_variable_verbs(definitions)
+	definitions = with_phrase_hits_first(definitions, query)
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
@@ -2694,8 +2755,8 @@ func _on_blank_event_highlighted() -> void:
 	if _add_button != null:
 		_add_button.disabled = false
 		_add_button.text = EventSheetL10n.translate(_add_default_label)
-	_say(EventSheetL10n.translate("(none - runs every tick)"),
-		EventSheetL10n.translate("An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down."))
+	_say(EventSheetL10n.translate("(none - runs every frame)"),
+		EventSheetL10n.translate("An event with no condition of its own runs every frame. Add its actions with A, or add a condition later to narrow it down."))
 
 
 ## Commits the blank first entry: a new event with no condition, where the dialog was opened.
@@ -2944,7 +3005,7 @@ func _item_label(definition: ACEDefinition) -> String:
 	# that ships a translation CSV gets localised picker rows for free. Ids never translate.
 	var display_name: String = EventSheetL10n.translate(definition.display_name)
 	# BOTH names on a verb the words seam renamed, with the chosen vocabulary leading ("Create
-	# object · Spawn A Copy"). The shipped name never disappears from the picker, so the reader who
+	# object · Instantiate"). The shipped name never disappears from the picker, so the reader who
 	# turned the second vocabulary on still learns which Godot verb they are placing.
 	display_name = EventSheetWords.picker_name_of(definition.provider_id, definition.id, display_name)
 	# The GDScript beside the name, on the rows a code search found: the proof that the sheet's
@@ -3443,6 +3504,10 @@ func _best_match_item() -> TreeItem:
 				# happens to hold the word "object" in its name.
 				if str(_foreign_phrase_by_id.get(str((child_meta as ACEDefinition).id), "")).to_lower() == query.to_lower():
 					score = maxi(score, FOREIGN_PHRASE_SCORE)
+				if phrase_first_keys(query).has("%s::%s" % [(child_meta as ACEDefinition).provider_id, (child_meta as ACEDefinition).id]):
+					# One point above the importer's own phrase table, so the row this editor names for
+					# the phrase wins a tie with a row the importer maps the same phrase to.
+					score = maxi(score, FOREIGN_PHRASE_SCORE + 1)
 				if score > best_score:
 					best_score = score
 					best = child

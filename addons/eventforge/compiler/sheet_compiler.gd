@@ -2960,7 +2960,7 @@ static func _emit_event_body(
 				if not removal_guard.is_empty():
 					lines.append(EventForgeRemovalGuard.guard_line(removal_guard, body_indent))
 					statement_indent = body_indent + "\t"
-				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action
+				# Multi-statement templates (Instantiate Scene At…) emit one line each; an awaited action
 				# awaits only its LAST statement (the actual call) - prefixing `await` onto the joined
 				# multi-line string would land it on a `var … =` declaration line (a parse error).
 				var action_lines: PackedStringArray = action_line.split("\n")

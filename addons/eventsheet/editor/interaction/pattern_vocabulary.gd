@@ -30,7 +30,7 @@ const FIXTURE_DIR := "res://tests/fixtures/patterns"
 const ENTRIES: Dictionary = {
 	"countdown": {
 		"words": "Cooldown",
-		"why": "a number counted down every tick, with something that happens when it reaches zero",
+		"why": "a number counted down every frame, with something that happens when it reaches zero",
 		"adoptable": "core_cooldown",
 		"rank": 1
 	},
@@ -60,7 +60,7 @@ const ENTRIES: Dictionary = {
 	},
 	"movement": {
 		"words": "Movement",
-		"why": "gravity, acceleration, a speed limit and a move, every tick",
+		"why": "gravity, acceleration, a speed limit and a move, every frame",
 		"adoptable": "platformer",
 		"rank": 6
 	},
@@ -132,7 +132,7 @@ const ENTRIES: Dictionary = {
 	},
 	"blank_event": {
 		"words": "On process",
-		"why": "an event with no condition of its own, so it runs every tick",
+		"why": "an event with no condition of its own, so it runs every frame",
 		"adoptable": "",
 		"rank": 18
 	},

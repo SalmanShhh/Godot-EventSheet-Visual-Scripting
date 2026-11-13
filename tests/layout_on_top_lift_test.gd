@@ -11,7 +11,7 @@
 #   2. THE RUN LIFTS. The three statements a layout-on-top has always been written as read back as
 #      one row, in both the `=`/`load` and the `:=`/`preload` spelling, with the author's own
 #      spelling baked onto the row - which is what re-emits the file byte for byte.
-#   3. THE BOUNDARY IN BOTH DIRECTIONS. The bare one-liner still reads as Spawn Scene Instance, and
+#   3. THE BOUNDARY IN BOTH DIRECTIONS. The bare one-liner still reads as Instantiate Scene File, and
 #      the same three statements ending in a plain `add_child` are NOT claimed - a copy added under
 #      this node dies with this node, which is right for an enemy and wrong for a menu.
 #   4. BYTE-EXACT ROUND TRIP of the whole fixture, which is the contract everything above rides on.
@@ -108,7 +108,7 @@ static func _test_descriptors() -> bool:
 
 	# The row that keeps its own reading. Pinned here so a future pass cannot quietly redirect the
 	# bare spelling to the new row: an enemy added under the node that spawned it is not a menu.
-	ok = _check("Spawn Scene Instance still adds under this node", ACERegistry.find_descriptor(
+	ok = _check("Instantiate Scene File still adds under this node", ACERegistry.find_descriptor(
 		"Core", "SpawnScene").codegen_template, "add_child(load({path}).instantiate())") and ok
 	return ok
 

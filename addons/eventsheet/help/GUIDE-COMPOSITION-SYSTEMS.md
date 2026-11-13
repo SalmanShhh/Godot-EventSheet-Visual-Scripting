@@ -42,7 +42,7 @@ Put every enemy in an `"enemies"` group (in the editor's Node dock, or from a sh
 Group**). Now "all enemies" is a single query:
 
 ```
-System: Entities In Group  "enemies"   -> an array of every enemy node
+System: Members Of Group  "enemies"   -> an array of every enemy node
 ```
 
 You loop that array with **For Each** to do something to every entity. Nothing is registered, nothing is
@@ -72,7 +72,7 @@ each member. The **Entity System (Autoload)** starter in the New... menu scaffol
 
 ```
 On Process
-  -> For Each entity in (Entities In Group "enemies")
+  -> For Each entity in (Members Of Group "enemies")
        -> ... move / damage / update the entity ...
 ```
 
@@ -91,19 +91,19 @@ plain `get_tree().get_nodes_in_group(...)` and `is_in_group(...)` - no plugin de
 
 | Name | Kind | What it gives you |
 |---|---|---|
-| **Entities In Group** | expression | every node in a group, as an array (loop with For Each) |
-| **Any Entity In Group** | condition | true if at least one entity of that type exists |
-| **Entities In Both Groups** | expression | every node in BOTH groups (an archetype) |
+| **Members Of Group** | expression | every node in a group, as an array (loop with For Each) |
+| **Any Member Of Group** | condition | true if at least one entity of that type exists |
+| **Members Of Both Groups** | expression | every node in BOTH groups (an archetype) |
 | **Count In Both Groups** | expression | how many are in both groups |
 | **First In Both Groups** | expression | the first entity in both groups, or nothing |
 | **Is In Both Groups** | condition | test one entity for two tags at once |
-| **Run On Tagged Entities** | action | call a method on every entity in a group that also has a tag - a whole system in one row |
+| **Run On Tagged Nodes** | action | call a method on every entity in a group that also has a tag - a whole system in one row |
 
-**Run On Tagged Entities** is the shortcut when your per-entity step is a single method call. This one
+**Run On Tagged Nodes** is the shortcut when your per-entity step is a single method call. This one
 row:
 
 ```
-System: Run On Tagged Entities   group "enemies"   also in "stunned"   method "recover"
+System: Run On Tagged Nodes   group "enemies"   also in "stunned"   method "recover"
 ```
 
 compiles to the loop you would otherwise write by hand:
@@ -145,10 +145,10 @@ per enemy (which breaks the moment a node moves), the listener names a *group*. 
 ## 6. Archetypes: entities in two groups at once
 
 The query at the heart of composition is "everything that has these components" - an **archetype**. With
-tags-as-groups that is "in group A and group B". **Entities In Both Groups** is that intersection:
+tags-as-groups that is "in group A and group B". **Members Of Both Groups** is that intersection:
 
 ```
-For Each entity in (Entities In Both Groups "enemies" and "poisoned")
+For Each entity in (Members Of Both Groups "enemies" and "poisoned")
   -> entity.take_damage(poison_dps * delta)
 ```
 
@@ -180,7 +180,7 @@ On area entered by a poison cloud
 
 ```
 On Process
-  -> For Each e in (Entities In Both Groups "enemies" and "poisoned")
+  -> For Each e in (Members Of Both Groups "enemies" and "poisoned")
        -> e.health -= e.poison_dps * delta
        -> (optional) count down a timer, then Remove e From Group "poisoned"
 ```
@@ -201,7 +201,7 @@ build a bullet-hell with 50,000 particles on. Keep it fast:
 - **Tick slow things slowly.** A poison tick does not need 60 Hz. Run costly systems on an **On Timer**
   (say 4-10 times a second) instead of **On Process**. Spread heavy per-entity work across frames with the
   Time Slicer pack if a single frame's batch is too big.
-- **Query once per frame, not once per entity.** Call **Entities In Group** once and loop the result;
+- **Query once per frame, not once per entity.** Call **Members Of Group** once and loop the result;
   do not re-query inside the loop.
 - **Prefer one combined system over many overlapping scans.** If three systems all iterate `"enemies"`,
   consider one system that does all three things per entity - one scan instead of three.

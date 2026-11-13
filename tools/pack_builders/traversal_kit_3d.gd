@@ -489,7 +489,7 @@ static func _append_water(sheet: EventSheetResource) -> void:
 			"return host.global_position.y >= _surface_y"
 		])))
 	Lib.append_function(sheet, "swim", "Swim", "Traversal 3D",
-		"Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every tick while in water.",
+		"Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every frame while in water.",
 		[["gravity_percent", "float"], ["drag", "float"]], "\n".join(PackedStringArray([
 			"if host == null:",
 			"\treturn",
@@ -500,7 +500,7 @@ static func _append_water(sheet: EventSheetResource) -> void:
 	_default(sheet, "gravity_percent", "20.0")
 	_default(sheet, "drag", "10.0")
 	Lib.append_function(sheet, "float_in_water", "Float", "Traversal 3D",
-		"Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every tick together with Swim.",
+		"Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every frame together with Swim.",
 		[["buoyancy", "float"]], "\n".join(PackedStringArray([
 			"if host == null or not _in_water:",
 			"\treturn",

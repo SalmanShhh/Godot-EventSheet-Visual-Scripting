@@ -47,11 +47,11 @@ static func run() -> bool:
 		"Player ▸ Tween size to big in 0.2 seconds (at the same time)") and ok
 	ok = _check("a tween on ANOTHER object names that object",
 		_statement("t.tween_property($Hud/Label, \"rotation\", 0.0, 1.0)", context),
-		"Label ▸ Tween angle to 0 in 1 seconds") and ok
+		"Label ▸ Tween rotation to 0 in 1 seconds") and ok
 
 	# ── The rest of the chain ──
 	ok = _check("a callback is what it does", _statement("t.tween_callback(queue_free)", context),
-		"Player ▸ Tween then Destroy") and ok
+		"Player ▸ Tween then Queue free") and ok
 	ok = _check("loops repeat", _statement("t.set_loops(3)", context), "Player ▸ Tween repeat 3 times") and ok
 	ok = _check("parallel is its own step", _statement("t.set_parallel()", context),
 		"Player ▸ Tween the next steps at the same time") and ok

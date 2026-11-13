@@ -46,7 +46,7 @@ const BEHAVIORS: Array[Dictionary] = [
 	{
 		"key": "bullet",
 		"name": "Bullet",
-		"here": "The Bullet pack: a speed, an angle of motion, acceleration and gravity, moved every tick.",
+		"here": "The Bullet pack: a speed, an angle of motion, acceleration and gravity, moved every frame.",
 		"pack": "bullet",
 		"reading": "A tick that advances a position along a stored direction reads as Set speed / Set angle of motion / Move, with Distance travelled as an expression.",
 	},

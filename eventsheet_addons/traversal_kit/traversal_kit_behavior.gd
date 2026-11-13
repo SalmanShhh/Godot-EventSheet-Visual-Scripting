@@ -420,7 +420,7 @@ func is_above_the_surface() -> bool:
 ## @ace_featured
 ## @ace_name("Swim")
 ## @ace_category("Traversal")
-## @ace_description("Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every tick while in water.")
+## @ace_description("Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every frame while in water.")
 ## @ace_display_template("[b]Swim[/b] (gravity [b]{gravity_percent}[/b]%, drag [b]{drag}[/b]%)")
 ## @ace_icon("res://eventsheet_addons/traversal_kit/icon.svg")
 ## @ace_codegen_template("$TraversalKit.swim({gravity_percent}, {drag})")

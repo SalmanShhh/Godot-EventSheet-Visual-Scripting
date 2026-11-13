@@ -26,17 +26,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `__eventsheets_tile_under` | [Tile Under Cursor](ace:Core/TileUnderCursor) | Mouse | Vocabulary |
 | `__just_landed_` | [Just Landed](ace:Core/JustLanded) | Collisions | Vocabulary |
 | `__just_left_the_ground_` | [Just Left The Ground](ace:Core/JustLeftTheGround) | Collisions | Vocabulary |
-| `_index` | [Spawn In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
-| `_launch` | [Spawn A Copy, Facing And Moving](ace:Core/SpawnFacingAndMoving) | Spawn | Vocabulary |
+| `_index` | [Instantiate In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
+| `_launch` | [Instantiate, Facing And Moving](ace:Core/SpawnFacingAndMoving) | Spawn | Vocabulary |
 | `_on_ask_cancelled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `_on_file_chosen` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `_on_reveal_finished` | [Skip Reveal](ace:Core/SkipReveal) | Text | Vocabulary |
 | `_on_unpack_finished` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_progress` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_refused` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
-| `_place` | [Spawn In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
-| `_scene` | [Spawn A Copy In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
-| `_spot` | [Spawn A Copy In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
+| `_place` | [Instantiate In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
+| `_scene` | [Instantiate In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
+| `_spot` | [Instantiate In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
 | `a` | [Set Opacity](ace:Core/SetOpacity) | General Actions | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
@@ -312,7 +312,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `find_prev_valid_focus` | [Focus Previous](ace:Core/FocusPrevious) | UI | Vocabulary |
 | `find_world_2d` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `find_world_3d` | [Set Physics Active (3D)](ace:Core/PhysicsSetSpaceActive3D) | Physics Server | Vocabulary |
-| `finished` | [Fade Out Then Destroy](ace:Core/FadeOutAndDestroy) | Destroy | Vocabulary |
+| `finished` | [Fade Out Then Queue Free](ace:Core/FadeOutAndDestroy) | Queue Free | Vocabulary |
 | `flip_h` | [Set Mirrored](ace:Core/SetFlipH) | General Actions | Vocabulary |
 | `flip_v` | [Set Flipped](ace:Core/SetFlipV) | Animation | Vocabulary |
 | `float` | [To Decimal](ace:Core/ToDecimal) | Math & Random | Vocabulary |
@@ -453,7 +453,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_node` | [Get Node](ace:Core/GetNode) | Helpers | Vocabulary |
 | `get_node_count_in_group` | [How Many Alive](ace:Core/CrowdCount) | Crowd | Vocabulary |
 | `get_node_or_null` | [Get Node Or Null](ace:Core/GetNodeOrNull) | Nodes | Vocabulary |
-| `get_nodes_in_group` | [Entities In Group](ace:Core/NodesInGroup) | Systems | Vocabulary |
+| `get_nodes_in_group` | [Members Of Group](ace:Core/NodesInGroup) | Systems | Vocabulary |
 | `get_normal` | [Last Slide Normal](ace:Core/GetLastSlideNormal) | Collisions | Vocabulary |
 | `get_object` | [Wait For All Of](ace:Core/WaitForAllOf) | Time | Vocabulary |
 | `get_output_latency` | [Audio Output Latency](ace:Core/AudioOutputLatency) | Audio Server | Vocabulary |
@@ -587,7 +587,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `inspect_object` | [Inspect In Editor](ace:Core/InspectInEditor) | Editor Tools | Vocabulary |
 | `install_effect` | [Install Text Effect](ace:Core/InstallTextEffect) | Text | Vocabulary |
 | `instance_from_id` | [Pick By UID](ace:Core/PickByUid) | Nodes: Picking | Vocabulary |
-| `instantiate` | [Make A Copy](ace:Core/MakeNewCopy) | Spawn | Vocabulary |
+| `instantiate` | [Instantiate](ace:Core/SpawnNewCopy) | Spawn | Vocabulary |
 | `int` | [Is Even](ace:Core/IsEven) | Compare: Numbers | Vocabulary |
 | `intersect_point` | [Query Bodies At Point (2D)](ace:Core/QueryBodiesAtPoint2D) | Overlap 2D | Vocabulary |
 | `intersect_ray` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |
@@ -746,8 +746,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `or` | [Is Nothing](ace:Core/IsNothing) | Compare: Types | Vocabulary |
 | `origin` | [Canvas X (2D)](ace:Core/CanvasX2D) | Canvas | Vocabulary |
 | `outer_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
-| `overlaps_area` | [Is Overlapping Area](ace:Core/OverlapsArea) | Collisions | Vocabulary |
-| `overlaps_body` | [Is Overlapping Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |
+| `overlaps_area` | [Overlaps Area](ace:Core/OverlapsArea) | Collisions | Vocabulary |
+| `overlaps_body` | [Overlaps Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |
 | `own_world_3d` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `owner` | [Get Scene Owner](ace:Core/GetOwner) | Nodes | Vocabulary |
 | `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools: Files & folders | Vocabulary |
@@ -861,7 +861,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `rest_length` | [Set Spring Rest Length](ace:Core/SetDampedSpringLength) | Joints | Vocabulary |
 | `restart` | [Restart / Burst](ace:Core/RestartParticles) | Particles | Vocabulary |
 | `restore` | [Restore Bus](ace:Core/AudioRestoreBus) | Audio Server | Vocabulary |
-| `retire` | [Retire](ace:Core/Retire) | Destroy | Vocabulary |
+| `retire` | [Retire](ace:Core/Retire) | Queue Free | Vocabulary |
 | `return` | [Translated Column Of Table](ace:Core/TranslatedColumn) | Translation | Vocabulary |
 | `reverse` | [Reverse Array](ace:Core/ArrayReverse) | Variables: Array | Vocabulary |
 | `right` | [Right](ace:Core/TextRight) | Text | Vocabulary |
@@ -992,7 +992,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `space_set_active` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `spawn` | [Spawn](ace:Core/Spawn) | Multiplayer | Vocabulary |
 | `spawn_path` | [Spawn A Scene](ace:Core/SpawnReplicatedScene) | Multiplayer | Vocabulary |
-| `speed` | [Spawn A Copy, Facing And Moving](ace:Core/SpawnFacingAndMoving) | Spawn | Vocabulary |
+| `speed` | [Instantiate, Facing And Moving](ace:Core/SpawnFacingAndMoving) | Spawn | Vocabulary |
 | `speed_scale` | [Set Animation Speed](ace:Core/SetAnimationSpeed) | Animation | Vocabulary |
 | `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
 | `spot_angle` | [Set Cone Angle](ace:Core/LightSetConeAngle) | Lighting | Vocabulary |
@@ -1029,7 +1029,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
 | `target_node` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
-| `test_move` | [Is Overlapping At Offset](ace:Core/IsOverlappingAtOffset) | Collisions | Vocabulary |
+| `test_move` | [Overlaps At Offset](ace:Core/IsOverlappingAtOffset) | Collisions | Vocabulary |
 | `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |
 | `texture` | [Set Image](ace:Core/SetSpriteTexture) | Animation | Vocabulary |
 | `texture_scale` | [Set Reach](ace:Core/LightSetReach) | Lighting | Vocabulary |

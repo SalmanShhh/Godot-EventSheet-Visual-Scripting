@@ -1,7 +1,7 @@
 # Godot EventSheets - blank events mean what they mean in an event sheet.
 #
 # A blank SUB-EVENT follows its parent in order: plain statements after the parent's block, never
-# `if true:`. A blank TOP-LEVEL event runs every tick: it compiles exactly as an every-tick event
+# `if true:`. A blank TOP-LEVEL event runs every frame: it compiles exactly as an every-tick event
 # would, so its actions land in `_process(delta)` and its conditions (if it grew any) are checked
 # there. Nothing is stored on the row - blank stays blank on disk - so this pins the COMPILER's
 # reading of "blank", plus the fact that a blank event no longer records a "skipping" warning.
@@ -114,11 +114,11 @@ static func run() -> bool:
 	var nested_viewport: EventSheetViewport = EventSheetViewport.new()
 	nested_viewport._sheet = nested_sheet
 	all_passed = _check("a blank sub-event says nothing in the condition lane",
-		_has_span_text(nested_viewport._row_builder._build_event_spans(blank_sub), "Every Tick"), false) and all_passed
+		_has_span_text(nested_viewport._row_builder._build_event_spans(blank_sub), "Every frame"), false) and all_passed
 	all_passed = _check("the sub-event with a condition keeps its own words",
-		_has_span_text(nested_viewport._row_builder._build_event_spans(guarded), "Every Tick"), false) and all_passed
+		_has_span_text(nested_viewport._row_builder._build_event_spans(guarded), "Every frame"), false) and all_passed
 	all_passed = _check("a row the sheet does not hold under anything keeps the placeholder",
-		_has_span_text(nested_viewport._row_builder._build_event_spans(EventRow.new()), "Every Tick"), true) and all_passed
+		_has_span_text(nested_viewport._row_builder._build_event_spans(EventRow.new()), "Every frame"), true) and all_passed
 	all_passed = _check("and the hover says which blank rule this one is",
 		EventSheetViewportReadingRows.BLANK_SUB_EVENT_HOVER, "follows its parent, in order") and all_passed
 	nested_viewport.free()

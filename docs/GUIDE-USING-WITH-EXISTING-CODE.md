@@ -694,7 +694,7 @@ That is the order this section is in.
 - **The hierarchy reads as the two words it has always had.** `item.reparent($Hand)` reads `Hand ▸
   Add child item` with *keeping its place* said quietly beside it, because who gained the child and
   what happened to its place are the two things a reader wants. `reparent(p, false)` says *snapping
-  to it*; a reparent onto the layout root reads `Remove from parent`; and the two-line
+  to it*; a reparent onto the scene root reads `Remove from parent`; and the two-line
   `get_parent().remove_child(x)` + `p.add_child(x)` spelling is the same ONE row, with both lines on
   the hover. A reparent with a RemoteTransform and a `top_level` beneath it folds into one Add child
   row wearing the follow-flags the plumbing actually set. `for c in x.get_children():` reads `For
@@ -729,7 +729,7 @@ that lets a reader treat the chips as the truth rather than as a summary.
 Three hierarchy footguns are Doctor notes rather than rules - each advisory, each with a one-click
 chip naming the single edit to make. A walk over a node's children that **moves** one of them while
 it walks (Godot's child list is live, so the loop silently skips the next child - walk a copy, or
-use the For Each Child row, which snapshots for you). A **reparent of self inside start of layout**,
+use the For Each Child row, which snapshots for you). A **reparent of self inside ready**,
 which Godot refuses outright because the old parent is still adding its children. And a variable
 **keeping hold of a child whose parent this file frees** - a child goes when its parent goes, so the
 next line that touches it crashes. The `demo/showcase/hierarchy_playground/` room has one of every
@@ -1098,15 +1098,15 @@ to the function it names, the same jump the Outline panel makes.
   seconds have passed since last shot`, and `last_shot = Time.get_ticks_msec()` reads `Set last shot
   to now`; the wall-clock spelling adds `(clock time)`, because that number keeps counting while the
   game is closed. Nobody has to know what a tick is or do the division.
-- **Platform words, and the layout bounds.** On a CharacterBody, `is_on_floor()` / `is_on_wall()` /
+- **Platform words, and the scene bounds.** On a CharacterBody, `is_on_floor()` / `is_on_wall()` /
   `is_on_ceiling()` read `Is on floor` / `Is by wall` / `Is touching ceiling`, and `velocity.y` /
   `velocity.x` against zero read `Is jumping` / `Is falling` / `Is moving` - the vertical words follow
   the AXIS rather than the sign, so a 3D body reads correctly too, and a plain node's vertical speed
   keeps its comparison (a projectile is not jumping). `position.x < 0 or position.x >` the viewport's
-  width reads `Is outside layout (left or right)`, a single edge says which side, and
-  `get_viewport_rect().has_point(p)` reads `Is on-screen` - its negation reads `Is outside layout`.
+  width reads `Is outside screen (left or right)`, a single edge says which side, and
+  `get_viewport_rect().has_point(p)` reads `Is on-screen` - its negation reads `Is outside screen`.
   `get_viewport_rect().size.x` / `.y` read as `ViewportWidth` / `ViewportHeight`.
-- **Layout, pause and time-scale words, always on.**
+- **Scene, pause and time-scale words, always on.**
   `get_tree().change_scene_to_file("res://levels/level_2.tscn")` reads `System ▸ Change scene Level 2`
   with the file path on hover, `reload_current_scene()` reads `Reload scene`, `get_tree().paused`
   reads `Pause the game` / `Unpause`, `Engine.time_scale = 0.5` reads `Set time scale to 0.5`, and
@@ -1200,17 +1200,17 @@ to the function it names, the same jump the Outline panel makes.
   band a picked row would have.
 
 - **The two removal chains people write by hand are one row each.**
-  `get_tree().create_timer(2.0).timeout.connect(queue_free)` reads `Destroy After Seconds`, in both
+  `get_tree().create_timer(2.0).timeout.connect(queue_free)` reads `Queue Free After Seconds`, in both
   spellings - the bare one on a node removing itself, and `connect($Enemy.queue_free)` on a node
   removing another. `$Ghost.create_tween().tween_property($Ghost, "modulate:a", 0.0,
-  0.5).finished.connect($Ghost.queue_free)` reads `Fade Out Then Destroy`, and only when all three
+  0.5).finished.connect($Ghost.queue_free)` reads `Fade Out Then Queue Free`, and only when all three
   mentions name the same object: a tween started on one node that fades a second and frees a third is
   somebody else's line and keeps the reading it had. A fade whose object is left implicit stays the
   plain statement it was, because the row could not reproduce that spelling byte for byte. `0` and
   `0.0` are both matched as the fade's target and each saves back as itself.
 
 - **A guard you wrote by hand stays your guard.** `if is_instance_valid(boss): boss.queue_free()`
-  opens as a Destroy Now row inside the question you asked, and saves back byte for byte - the
+  opens as a Queue Free Now row inside the question you asked, and saves back byte for byte - the
   compiler writes nothing extra, because the sheet has already asked. That is the same rule read from
   the other side: a removal whose object is a variable typed as a node compiles inside
   `is_instance_valid`, and the row echoes the exact line the file holds at its right edge. `self`,
@@ -1404,8 +1404,7 @@ to the function it names, the same jump the Outline panel makes.
   class at the top level.
 
 - **The scene tree in one word each.** `find_child("HUD")` is `the child named HUD`,
-  `get_tree().current_scene` is `the layout`, `get_tree().current_scene.get_node("Boss")` is `Boss in
-  the layout`, `%HealthBar` is `HealthBar` with a muted `unique name` beside it, and
+  `get_tree().current_scene` is `the scene`, `get_tree().current_scene.get_node("Boss")` is `Boss in the scene`, `%HealthBar` is `HealthBar` with a muted `unique name` beside it, and
   `enemy.get_path()` is `enemy's path`. Copying a node already in the scene and planting the copy -
   `var copy = enemy.duplicate()` then `get_parent().add_child(copy)` - is one row, `Clone object enemy
   (→ copy, next to it)`; Create object stays what it is, which is making one out of a scene file. Both
@@ -1447,7 +1446,7 @@ to the function it names, the same jump the Outline panel makes.
   byte for byte. The guarded removal beside it - `get_node_or_null` on the root, an `if`, a
   `queue_free` - is **Remove Scene On Top**, and the same lookup asked as a question is **Layout Is
   On Top**. Two neighbouring shapes are deliberately *not* claimed and read exactly as they always
-  did: the bare `add_child(load(…).instantiate())` one-liner stays **Spawn Scene Instance**, and the
+  did: the bare `add_child(load(…).instantiate())` one-liner stays **Instantiate Scene File**, and the
   same three statements ending in a plain `add_child` on *this* node stay the code they are, because
   adding a copy under yourself is a different thing to do than adding one under the tree root.
 
@@ -1604,7 +1603,7 @@ read once when the rows are built, and the events that turn out to BE a known pa
   out`, `x is running`), object pools (`Create object … [pooled]`, `Return to pool`), wait sequences
   (a `sequence · N s` chip on the function's header), saving and loading (**Local Storage**: `Set
   item player/score to score`, `Local Storage.Item("player/score")`, `Save`, `Load`, `save file is
-  missing`), existence and relations (`t exists`, `Forget target`, `Remove from layout`), and the
+  missing`), existence and relations (`t exists`, `Forget target`, `Remove from scene`), and the
   list and table reads (`the first 3 of items`, `the sum of price over items`, `Sort items by price`,
   `items contains sword`, `stats "hp" (or 100 when missing)`).
 
@@ -1627,8 +1626,8 @@ behavior's vocabulary and their event claims the pack that could replace them:
 - **Move To** - `position.move_toward(destination, speed * delta)` reads `Move toward destination at
   speed`, the flag beside it reads `Start moving` / `Is moving` / `Stop`, and the distance check
   reads `Has arrived`.
-- **The one-liners** - `Rotate clockwise at k (degrees per second)`, `Wrap around layout
-  horizontally`, `Bound to layout (inside …)`, `Pin to anchor (position · offset …)` and `Fade out
+- **The one-liners** - `Rotate clockwise at k (degrees per second)`, `Wrap around scene
+  horizontally`, `Bound to scene (inside …)`, `Pin to anchor (position · offset …)` and `Fade out
   over 1 seconds (then destroy)`.
 
 The same gating applies: an acceleration only reads as a bullet's in a file that ALSO writes the
@@ -1693,7 +1692,7 @@ each file runs, it just does something its author did not mean.
 
 ![A projectile script read as an event sheet: Set speed to speed accelerating by accel, Set angle of motion to angle, Set gravity to gravity and Move under one tick event, with Distance travelled greater than range px as the condition that destroys it](images/opened-script-behaviors.png)
 
-![The same file further down: Move toward destination at speed, Has arrived and Stop for the glide, then Rotate clockwise, Wrap around layout horizontally, Bound to layout, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy](images/opened-script-behaviors-one-liners.png)
+![The same file further down: Move toward destination at speed, Has arrived and Stop for the glide, then Rotate clockwise, Wrap around scene horizontally, Bound to scene, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy](images/opened-script-behaviors-one-liners.png)
 
 #### Data assets, and the window
 
@@ -1827,11 +1826,11 @@ events around it.
 - **The Godot systems a script is built from.** Four shapes that only mean something across several
   lines read as the rows an event sheet already has for them, and every one of them is also
   writable in the same words, so a written and a picked block are the same bytes.
-  - **Loading a layout in the background.** `ResourceLoader.load_threaded_request(path)` reads
-    **System ▸ Load layout Level 2 in the background**, `st == ResourceLoader.THREAD_LOAD_LOADED`
-    reads **System ▸ layout Level 2 has finished loading**, the progress array read by index reads
+  - **Loading a scene in the background.** `ResourceLoader.load_threaded_request(path)` reads
+    **System ▸ Load scene Level 2 in the background**, `st == ResourceLoader.THREAD_LOAD_LOADED`
+    reads **System ▸ scene Level 2 has finished loading**, the progress array read by index reads
     **System.LoadingProgress**, and `change_scene_to_packed(load_threaded_get(path))` reads
-    **System ▸ Change scene Level 2**. The layout is named the way the file is named, whether the
+    **System ▸ Change scene Level 2**. The scene is named the way the file is named, whether the
     path is written in the call or held in a variable the file declared from a literal.
   - **Movement math, on a `CharacterBody2D` or `CharacterBody3D` only.** `velocity.y += gravity *
     delta` reads **Apply gravity**, `move_toward` on one axis reads **Accelerate x toward … at …
@@ -2047,7 +2046,7 @@ events around it.
 
   ![A rigid body opened as an event sheet: the mass, gravity scale, friction and elasticity set under On enter tree, the pushes and the spin under On hit, and a blocking wait marked as one](images/opened-script-physics.png)
 
-  ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
+  ![A controller script read as an event sheet: a scene loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
 
 ### The objects of an opened file - what they are, and where you find them
 
@@ -2145,7 +2144,7 @@ is instantiated to answer a question.
   says *Spawn a copy of*, *is overlapping in family* where it says *is touching*, *Set disabled*
   where a hand-written `set_process(false)` reads *Set On process deactivated*, and a loop
   over a group reads `For each item in family "enemies"`. The picker carries both names at once -
-  *Create object · Spawn A Copy* - so the Godot verb never disappears from the place you pick it,
+  *Create object · Instantiate* - so the Godot verb never disappears from the place you pick it,
   and its search answers to either name whichever vocabulary is switched on. An alias is display
   text and nothing else: the verb's id, its template, the generated GDScript and every stored byte
   are untouched, the shipped wording is always the "off" side, and the generated-code panel and the
@@ -2199,10 +2198,10 @@ nothing says so* - is read in the help strip under the selected bar and in the D
 
 ### A whole scene, read in one place
 
-An event sheet belongs to a layout; a Godot scene has several scripts. Right-click a `.tscn` in the
+An event sheet belongs to a scene; a Godot scene has several scripts. Right-click a `.tscn` in the
 FileSystem and choose **Open as Event Sheet** (it is also in Sheet ▸ Open…, and you can drag a `.tscn`
 onto the empty space of a reading, where a dropped scene has nothing else it could mean) to read the
-whole layout at once: the scene's own bar
+whole scene at once: the scene's own bar
 (`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene uses, in tree order, each under
 its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`, with `(x3)` when the same script sits on three
 nodes) and the rows that script reads as beneath it. Signals the Godot editor wired in the scene file
@@ -2366,7 +2365,7 @@ for, spelled out in Godot's own vocabulary. The reading names them, and the file
   is `Solid ▸ On layer World (layer 1)` - with the layer's name from your own Project Settings when you
   gave it one. Neither is a pack, because neither is anything to attach.
 - **`test_move(transform, Vector2(0, 1))` is the ground check.** It reads as
-  `Is overlapping at offset (0, 1) (a solid)` - the same words the new **Is Overlapping At Offset**
+  `Is overlapping at offset (0, 1) (a solid)` - the same words the new **Overlaps At Offset**
   condition writes - and a loop over `get_overlapping_areas()` reads as `For each a overlapping Area2D`.
 - **A weighted draw, a seed and the noise belong to Advanced Random.**
   `["coin", "gem", "nothing"][rng.rand_weighted([70, 20, 10])]` reads as
@@ -2588,10 +2587,10 @@ Three smaller surfaces are worth knowing on day one:
 
 - **Menu ▸ Sheet ▸ Start page** - templates by genre with a one-line pitch, what you had open last, and the
   tutorials, on one page. It opens by itself when nothing is open; a checkbox turns that half off.
-- **Preview on the sheet** - `▶ Preview layout` (F6), `▶▶ Preview project` (F5) and `🐞 Debug layout`
+- **Preview on the sheet** - `▶ Preview scene` (F6), `▶▶ Preview project` (F5) and `🐞 Debug scene`
   all sit in the play button's dropdown at the head of the strip, beside Run Scene, Run with
   profiler and Play as host + client. While a game runs the first two become `■ Stop` and
-  `↻ Restart`; Debug layout arms Event Trace, Live Values and breakpoints first. Which one the
+  `↻ Restart`; Debug scene arms Event Trace, Live Values and breakpoints first. Which one the
   button's face does is yours to pick, under *Main button* at the foot of that dropdown.
 - **View ▸ Add toolbar** - the eight Add gestures as buttons above the canvas, each naming its key on
   hover, on by default in Simple mode. And **Keyboard Shortcuts ▸ Preset ▾** offers *Another
@@ -2679,7 +2678,7 @@ bands you can hover to read the name of. Click anywhere in the column to jump th
 
 **View ▸ Sheet Map** answers "what talks to what". Nodes are the project's sheets, scenes and
 globals; lines are the four ways one reaches another - a call into a global, a signal one raises and
-another listens for, an include (`extends` or `preload`), and a layout change. Click a node to open
+another listens for, an include (`extends` or `preload`), and a scene change. Click a node to open
 that sheet; click a line to run the Find that explains it. Drag the boxes into an arrangement that
 suits your project - it is remembered - and note that the graph itself is derived every time it
 opens, so nothing about it is stored in your project.

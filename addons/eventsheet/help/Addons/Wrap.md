@@ -223,7 +223,7 @@ On Ready -> Player1 | Wrap: Set Custom Wrap Bounds  0, 0, 576, 648
 
 ## Already written it by hand? It reads as this pack
 
-`position.x = wrapf(position.x, 0, screen.x)` reads **Wrap - Wrap around layout horizontally**, and
+`position.x = wrapf(position.x, 0, screen.x)` reads **Wrap - Wrap around scene horizontally**, and
 the `.y` twin reads *vertically*. `wrapi`, `wrap`, `fmod` and `fposmod` are the same sentence.
 
 The event wears the pattern chip, whose Adopt behavior offers this pack. Prefer the one line? The

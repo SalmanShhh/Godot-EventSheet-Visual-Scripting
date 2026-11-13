@@ -107,7 +107,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Stop loop",
 	"System ▸ Next",
 	# Any other call reads Object ▸ Verb, never verb ( args )
-	"child ▸ Destroy"
+	"child ▸ Queue free"
 ])
 
 ## The grammar's own values, with the context an opened CharacterBody2D script produces.
@@ -165,9 +165,9 @@ static func _grammar_values() -> bool:
 		# The script's object, never `self`
 		["position.x = 100", "Player ▸ Set X to 100"],
 		["self.position.y = 100", "Player ▸ Set Y to 100"],
-		["rotation += 1", "Player ▸ Add 1 to angle (radians)"],
+		["rotation += 1", "Player ▸ Add 1 to rotation (radians)"],
 		["score += 1", "System ▸ Add 1 to score"],
-		["self.queue_free()", "Player ▸ Destroy"],
+		["self.queue_free()", "Player ▸ Queue free"],
 		# Delta reads as delta
 		["velocity.x = speed * delta", "Player ▸ Set velocity.x to speed * delta"],
 		["delta_time = 1", "System ▸ Set delta_time to 1"],
@@ -216,7 +216,7 @@ static func _grammar_values() -> bool:
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		["rotation > 1.5", "Player ▸ angle (radians) > 1.5"],
+		["rotation > 1.5", "Player ▸ rotation (radians) > 1.5"],
 		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["visible", "Player ▸ visible is true"],
 		["crouching", "System ▸ crouching is true"],
@@ -236,7 +236,7 @@ static func _call_readings() -> bool:
 		["$Path/To/Label.set_text(str(score))", PackedStringArray(["text"]), "Label ▸ Set text to score"],
 		["print(\"ready\")", PackedStringArray(), "System ▸ Print   \"ready\""],
 		["self.take_damage(3)", PackedStringArray(), "Player ▸ Take damage   3"],
-		["enemy.queue_free()", PackedStringArray(), "enemy ▸ Destroy"]
+		["enemy.queue_free()", PackedStringArray(), "enemy ▸ Queue free"]
 	]:
 		var code: String = str(entry[0])
 		var reading: Dictionary = EventSheetSentence.statement(code, CONTEXT)

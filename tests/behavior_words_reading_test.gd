@@ -10,7 +10,7 @@ extends RefCounted
 #        Anchor behavior's "Anchor to <corner>"
 #   A collision shape switched off is the Solid going away, a one-way shape is the Jump-thru,
 #        and a collision layer is the layer the Solid is on
-#   `test_move(transform, offset)` is "Is overlapping at offset", the platformer's own question
+#   `test_move(transform, offset)` is "Overlaps at offset", the platformer's own question
 #   A weighted draw, a seed and the noise are the Advanced Random object's rows
 #   The system clock's calls and fields are the Date object's expressions
 #
@@ -130,10 +130,10 @@ static var CONDITION_READINGS: Dictionary = {
 	"dragging": "Player ▸ Drag & Drop ▸ Is dragging",
 	"not dragging": "Player ▸ Drag & Drop ▸ Is not dragging",
 	# The platformer's "is there ground just below me"
-	"test_move(transform, Vector2(0, 1))": "Player ▸ Is overlapping at offset (0, 1) (a solid)",
-	"move_and_collide(Vector2(0, 1), true)": "Player ▸ Is overlapping at offset (0, 1) (a solid)",
+	"test_move(transform, Vector2(0, 1))": "Player ▸ Overlaps at offset (0, 1) (a solid)",
+	"move_and_collide(Vector2(0, 1), true)": "Player ▸ Overlaps at offset (0, 1) (a solid)",
 	# The overlap questions that already read, kept honest beside the new one
-	"hurtbox.overlaps_body(other)": "hurtbox ▸ Is overlapping other"
+	"hurtbox.overlaps_body(other)": "hurtbox ▸ Overlaps other"
 }
 
 ## The values whose whole-expression reading this parcel settles.
@@ -168,7 +168,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"eventforge_behavior_words_reading ▸ Solid ▸ Set disabled",
 	# Re-pin: the named-layer verbs lift, so sitting on a layer is now the Be On Layer row.
 	"System ▸ Be on layer 1",
-	"eventforge_behavior_words_reading ▸ Is overlapping at offset (0, 1) (a solid)",
+	"eventforge_behavior_words_reading ▸ Overlaps at offset (0, 1) (a solid)",
 	"Advanced Random ▸ Set seed to \"level-1\"",
 	"Advanced Random ▸ Set noise type to Perlin",
 	"System ▸ Set drop to choose weighted(\"coin\" 70, \"gem\" 20, \"nothing\" 10)",

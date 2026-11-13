@@ -166,7 +166,7 @@ static func diff_lines(finding: Dictionary, sheet: EventSheetResource = null) ->
 			return PackedStringArray([now, now.replace("get_node(\"%s\")" % path, name).replace("$%s" % path, name)])
 		EventSheetPerformanceFindings.FIX_EVERY_N:
 			return PackedStringArray([
-				EventSheetL10n.translate("every tick"),
+				EventSheetL10n.translate("every frame"),
 				"__every_… >= maxf(%s, 0.001)" % EventSheetPerformanceFindings.RECHECK_SECONDS])
 	return PackedStringArray([now, now])
 

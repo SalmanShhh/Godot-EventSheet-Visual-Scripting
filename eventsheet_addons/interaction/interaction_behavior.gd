@@ -37,7 +37,7 @@ var _focus: Node = null
 ## @ace_featured
 ## @ace_name("Focus Nearest Interactable")
 ## @ace_category("Interaction")
-## @ace_description("Focuses the nearest node in the given group that is within reach (in pixels), or nothing at all when none are. Run this under a per-frame trigger (On Every Tick) - it re-picks every tick, but On Focus Changed only fires when the focused node actually changes, including when it becomes nothing.")
+## @ace_description("Focuses the nearest node in the given group that is within reach (in pixels), or nothing at all when none are. Run this under a per-frame trigger (On Process) - it re-picks every frame, but On Focus Changed only fires when the focused node actually changes, including when it becomes nothing.")
 ## @ace_display_template("Focus nearest [b]{group_name}[/b] within [b]{within}[/b] px")
 ## @ace_icon("res://eventsheet_addons/interaction/icon.svg")
 ## @ace_codegen_template("$InteractionBehavior.focus_nearest({group_name}, {within})")
@@ -104,4 +104,4 @@ func _set_focus(new_focus: Node) -> void:
 	_focus = new_focus
 	on_focus_changed.emit(_focus)
 
-# Interaction behavior: attach to the PLAYER. Run Focus Nearest Interactable under a per-frame trigger (On Every Tick) with your interactables' group name and a reach in pixels; it keeps the nearest one in focus and fires On Focus Changed whenever that changes - including with null when you walk out of range. Highlight the focused node with the Juice pack's Start Blinking and show the prompt with a HUD Kit label. Interact With Focus calls interact() on the focused node if it has one, and always fires On Interacted.
+# Interaction behavior: attach to the PLAYER. Run Focus Nearest Interactable under a per-frame trigger (On Process) with your interactables' group name and a reach in pixels; it keeps the nearest one in focus and fires On Focus Changed whenever that changes - including with null when you walk out of range. Highlight the focused node with the Juice pack's Start Blinking and show the prompt with a HUD Kit label. Interact With Focus calls interact() on the focused node if it has one, and always fires On Interacted.

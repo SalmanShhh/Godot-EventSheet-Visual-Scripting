@@ -20,8 +20,8 @@
 # hands back IS the spelling that re-emits the file byte for byte.
 #
 # THE BOUNDARY WITH SPAWN SCENE INSTANCE, which is the whole point of being strict here. The bare
-# one-liner `add_child(load("res://enemy.tscn").instantiate())` is Spawn Scene Instance and stays
-# Spawn Scene Instance: it adds a copy under THIS node, so the copy belongs to the layout that
+# one-liner `add_child(load("res://enemy.tscn").instantiate())` is Instantiate Scene File and stays
+# Instantiate Scene File: it adds a copy under THIS node, so the copy belongs to the layout that
 # spawned it and dies with it. That is the right reading for an enemy and the wrong one for a menu.
 # What makes the run below a different row is that it adds under the TREE ROOT, which is what lets
 # the thing added outlive the layout beneath it. So: no name line, or an add_child onto anything

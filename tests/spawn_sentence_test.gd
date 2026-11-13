@@ -40,10 +40,10 @@ static func run() -> bool:
 static func _test_the_descriptors_say_what_they_emit() -> bool:
 	var passed: bool = true
 	var by_id: Dictionary = _descriptors()
-	passed = _check("Spawn A Copy emits instance, parent, place - in that order",
+	passed = _check("Instantiate emits instance, parent, place - in that order",
 		str(by_id.get("SpawnNewCopy", ACEDescriptor.new()).codegen_template),
 		"var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}") and passed
-	passed = _check("Spawn A Copy Safely defers the parenting and says so in its sentence",
+	passed = _check("Instantiate Safely defers the parenting and says so in its sentence",
 		str(by_id.get("SpawnNewCopyDeferred", ACEDescriptor.new()).codegen_template),
 		"var {name} = {scene}.instantiate()\n{name}.position = {at}\n{parent}.call_deferred(\"add_child\", {name})") and passed
 	passed = _check("the deferral is stated on the row rather than done quietly",

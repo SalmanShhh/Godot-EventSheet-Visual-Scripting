@@ -1,6 +1,6 @@
 # Godot EventSheets - Stateful conditions + multi-statement actions (System batch 2)
 # Every X Seconds owns a per-instance member (prelude accumulates, on_true rebases);
-# Spawn Scene At is a multi-line template with a baked-uid local. Both keep the parity
+# Instantiate Scene At is a multi-line template with a baked-uid local. Both keep the parity
 # contract: plain members, plain statements, zero indirection.
 @tool
 class_name StatefulAcesTest
@@ -74,7 +74,7 @@ static func run() -> bool:
 	generated.source_code = output
 	all_passed = _check("stateful output parses", generated.reload(true) == OK, true) and all_passed
 
-	# Multi-statement action: Spawn Scene At emits three lines with one baked local.
+	# Multi-statement action: Instantiate Scene At emits three lines with one baked local.
 	var spawn: ACEAction = ACEAction.new()
 	spawn.provider_id = "Core"
 	spawn.ace_id = "SpawnSceneAt"

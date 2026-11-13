@@ -317,7 +317,7 @@ func _on_bullet_fired() -> void:
 ```
 On Process
   Condition: Every X Seconds  3.0
-    -> Spawn Scene At  "res://enemy.tscn", spawn_point.position
+    -> Instantiate Scene At  "res://enemy.tscn", spawn_point.position
 ```
 
 **4. A cadence that does not sound like a machine.** Every X To Y Seconds re-rolls its wait each time
@@ -793,7 +793,7 @@ On Ready
 
 On Countdown Finished  countdown_name
   Condition: Compare Two Values  countdown_name = "wave_two"
-    -> Spawn Scene At  "res://wave_two.tscn", spawn_point.position
+    -> Instantiate Scene At  "res://wave_two.tscn", spawn_point.position
 ```
 
 **37. One event for every cooldown that finishes.** The trigger carries the name, so a HUD sheet can

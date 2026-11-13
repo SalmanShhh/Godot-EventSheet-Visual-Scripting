@@ -1,4 +1,4 @@
-# Godot EventSheets - the Spawn A Copy dialog, with the placement list open (preview module).
+# Godot EventSheets - the Instantiate dialog, with the placement list open (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The fields and their labels are read off the SHIPPED descriptor rather than retyped here, so the

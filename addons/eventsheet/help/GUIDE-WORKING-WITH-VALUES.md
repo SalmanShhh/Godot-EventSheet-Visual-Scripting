@@ -433,7 +433,7 @@ at a plain Node is harmless. The group is added as a PERSISTENT group, which mat
 sounds: a non-persistent group is dropped when a node is packed into a scene, and every group check
 then silently never fires.
 
-Starting from a `.tscn` file instead? That is **Spawn Scene (Full)**, which already does position,
+Starting from a `.tscn` file instead? That is **Instantiate Scene (Full)**, which already does position,
 rotation and an optional group in one row. Reusing nodes rather than making new ones? That is the
 Object Pool pack.
 

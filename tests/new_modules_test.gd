@@ -146,7 +146,7 @@ static func run() -> bool:
 	var hc_script: GDScript = GDScript.new()
 	hc_script.source_code = "extends Label\nsignal died\nfunc _t() -> void:\n\tposition += Vector2(0, 0)\n\ttext = \"Score: %d\" % [0]\n\tprint(self.died.is_connected(_t))\n"
 	all_passed = _check("Move By / Set Text / Is Connected templates parse", hc_script.reload() == OK, true) and all_passed
-	# Spawn Scene (Full): the {uid} local, the multi-line template, and the optional-group guard
+	# Instantiate Scene (Full): the {uid} local, the multi-line template, and the optional-group guard
 	# compile, and the whole emitted script parses.
 	var spawn_sheet: EventSheetResource = EventSheetResource.new()
 	spawn_sheet.host_class = "Node2D"
@@ -169,10 +169,10 @@ static func run() -> bool:
 	spawn_event.actions.append(spawn_action)
 	spawn_sheet.events.append(spawn_event)
 	var spawn_output: String = str(SheetCompiler.compile(spawn_sheet, "user://eventsheets_spawn.gd").get("output", ""))
-	all_passed = _check("Spawn Scene (Full) wires rotation + group", spawn_output.contains(".rotation_degrees = 180.0") and spawn_output.contains(".add_to_group(\"targets\")"), true) and all_passed
+	all_passed = _check("Instantiate Scene (Full) wires rotation + group", spawn_output.contains(".rotation_degrees = 180.0") and spawn_output.contains(".add_to_group(\"targets\")"), true) and all_passed
 	var spawn_script: GDScript = GDScript.new()
 	spawn_script.source_code = spawn_output
-	all_passed = _check("Spawn Scene (Full) output parses", spawn_script.reload() == OK, true) and all_passed
+	all_passed = _check("Instantiate Scene (Full) output parses", spawn_script.reload() == OK, true) and all_passed
 	# Utility ACEs (project toolkit): registry + sub-category, and the multi-line / formatting parse.
 	for util: Array in [["SaveSetting", "Utility: Settings"], ["LoadSettingInto", "Utility: Settings"], ["SetWindowTitle", "Utility: Window"], ["GetPerfMonitor", "Utility: Debug"], ["FormatTime", "Utility: Time"], ["ReparentNode", "Utility: Nodes"]]:
 		var util_id: String = str(util[0])

@@ -2484,7 +2484,7 @@ var _preview_player: AudioStreamPlayer = null
 
 
 ## Scene params: a path field plus a Browse… button (editor file dialog filtered to
-## scenes); the chosen path inserts quoted, ready for load()/Spawn Scene At.
+## scenes); the chosen path inserts quoted, ready for load()/Instantiate Scene At.
 func _create_scene_path_field(key: String, default_value: Variant) -> Control:
 	var base: Dictionary = _build_path_field_base(key, default_value)
 	var container: HBoxContainer = base["container"]

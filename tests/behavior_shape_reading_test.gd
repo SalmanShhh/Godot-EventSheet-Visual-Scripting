@@ -360,7 +360,7 @@ static func _refusals() -> bool:
 	var context: Dictionary = _context()
 	ok = _check("a spin that is not scaled by the frame time is not a Rotate",
 		_joined_segments(EventSheetSentence.statement("rotation_degrees += 90", context)),
-		"Coin ▸ Add 90 to angle") and ok
+		"Coin ▸ Add 90 to rotation") and ok
 	ok = _check("a tween to half opacity is not a fade out",
 		_joined_segments(EventSheetSentence.statement(
 			"tw.tween_property(self, \"modulate:a\", 0.5, 1.0)", context)).contains("Fade"),

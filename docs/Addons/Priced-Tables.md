@@ -333,7 +333,7 @@ balance in that name; what reputation means is your game's business.
 **16. A shop with no economy pack at all.**
 
 ```
-On Start of Layout
+On Ready
   -> Vendor: Set Local Wallet  100
 ```
 

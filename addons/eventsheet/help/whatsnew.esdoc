@@ -13,6 +13,13 @@ What changed in the build you have installed (v0.20.0), in the words the release
 - The Welcome answers no longer switch anyone to the other editors' words: all three set Godot words. The answer for people coming from another editor keeps the Classic theme and opens the migration guide, which says where the Familiar words are.
 - Wording only: ace ids, templates, emitted GDScript and stored sheets are untouched. Guides, the tutorial, the tour, the Doctor and the nine translations read in the new words, and the README pictures are retaken.
 
+### Changed: the nouns and verbs read in Godot's words too
+
+- Removing a node says Queue free (Queue Free Now, Queue Free After Seconds, Fade Out Then Queue Free), making a copy of a scene says Instantiate (Instantiate, Instantiate Safely, In A Formation, Myself, In A Free Spot, Into The Crowd and the scene rows), a rotation says rotation, an overlap test says Overlaps, and the group triggers say On Body Entered, In Group and On Body Exited, In Group. A row written as code (`queue_free()`, `look_at(p)`, `overlaps_body(b)`) reads the same way. Group and node are the words everywhere; the group lists say Members and Nodes where they said Entities and Instances.
+- The other editors' words are the Familiar preset on Settings > Words (Destroy, Spawn a copy of, angle, Is overlapping, On collision with) and the event-sheet-editor words preset for the verb rows. Typing either word in the picker finds the row, and an exact phrase such as go to layout, destroy or spawn now ranks its row first instead of behind every row that shares a word with it.
+- Hovering a word says what the other editors call it, or what Godot calls it, and the Godot call or property it writes (\"Godot writes this as modulate.a\" on Opacity).
+- A blank event, the process switches and the pack descriptions say every frame, On Process or process where they said every tick; the guides say scene where they meant a scene. Wording only: ace ids, templates, emitted code and stored sheets are untouched. The translations follow in all eight languages.
+
 ### New: the everyday object rows, under the names people look for them by
 
 - Set Opacity and Opacity (shown as a percentage, written as Godot's 0 to 1 `modulate.a`), Set Scale, Set Size (a Control's size), Set Sprite Size (the scale that gives a size in pixels), Width, Height, Left, Right, Top and Bottom for a sprite, Instance Id, Marker Position (a Marker2D child), Is Outside The Level Bounds and Is Outside The Camera Limits. Each writes the plain Godot line and its description names the property.

@@ -83,7 +83,7 @@ extends RefCounted
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 ## The one category these rows group under in the picker.
-const CATEGORY: String = "Destroy"
+const CATEGORY: String = "Queue Free"
 
 ## The property a fade walks, and the value it walks it to. A sub-property path rather than a whole
 ## Color, so a sprite that is already tinted fades from ITS colour instead of snapping to white on
@@ -111,20 +111,20 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Now ────────────────────────────────────────────────────────────────────────────
 	# The plain call. The frozen Free Node row writes the same line and stays the reading of it;
 	# this is the authoring sentence, and the row the guard rule below knows how to protect.
-	descriptors.append(F.act("DestroyNow", "Destroy Now", "{object}.queue_free()", CATEGORY, "destroy [i]{object}[/i] now", "Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.").param_built(_object_param()).featured())
+	descriptors.append(F.act("DestroyNow", "Queue Free Now", "{object}.queue_free()", CATEGORY, "queue free [i]{object}[/i] now", "Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.").param_built(_object_param()).featured())
 
 	# ── In a while ─────────────────────────────────────────────────────────────────────
 	# A one-shot SceneTree timer with the node's own queue_free hung off it. Godot drops a signal
 	# connection when the object at the far end of it is freed, which is exactly why this spelling
 	# needs no bookkeeping: something else destroying the thing first simply takes the connection with
 	# it, and the timer fires into nothing.
-	descriptors.append(F.act("DestroyAfterSeconds", "Destroy After Seconds", "get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)", CATEGORY, "destroy [i]{object}[/i] after {seconds}s", "Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.").param_built(_object_param()).param_built(_after_param()).featured())
+	descriptors.append(F.act("DestroyAfterSeconds", "Queue Free After Seconds", "get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)", CATEGORY, "queue free [i]{object}[/i] after {seconds}s", "Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.").param_built(_object_param()).param_built(_after_param()).featured())
 
 	# ── Fade first ─────────────────────────────────────────────────────────────────────
 	# Tween, await, destroy - and the guard in the template, because that await is a real gap. The
 	# row's own sentence says the wait, and its own lines say the check; nothing about the deferral
 	# is hidden behind the row.
-	descriptors.append(F.act("FadeOutAndDestroy", "Fade Out Then Destroy", "await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY + "if is_instance_valid({object}):\n\t{object}.queue_free()", CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then destroy it", "Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly.").param_built(_object_param()).param_built(_over_param()))
+	descriptors.append(F.act("FadeOutAndDestroy", "Fade Out Then Queue Free", "await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY + "if is_instance_valid({object}):\n\t{object}.queue_free()", CATEGORY, "queue free [i]{object}[/i] after fading it out over {seconds}s", "Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly.").param_built(_object_param()).param_built(_over_param()))
 
 	# ── The question ───────────────────────────────────────────────────────────────────
 	# The sentence beside the frozen Object Still Exists. Same call, same answer; a sheet that reads
@@ -133,8 +133,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# ── The same three, without throwing the thing away ────────────────────────────────
 	# One call each, and the call decides for itself: a node a pool stamped goes back to that pool,
-	# and everything else is freed exactly as Destroy Now frees it.
-	descriptors.append(F.act("Retire", "Retire", "%s({object})" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] now", "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Like Destroy Now, the object is still there for the rest of this event: a destroy lands at the end of the frame and a handing back lands on the next idle moment, which is what makes this row safe inside a collision handler. Safe to run twice - something already on its way out, or already back in its pool, is left alone.").param_built(_retired_object_param()).featured())
+	# and everything else is freed exactly as Queue Free Now frees it.
+	descriptors.append(F.act("Retire", "Retire", "%s({object})" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] now", "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Queue Free Now does. Like Queue Free Now, the object is still there for the rest of this event: a destroy lands at the end of the frame and a handing back lands on the next idle moment, which is what makes this row safe inside a collision handler. Safe to run twice - something already on its way out, or already back in its pool, is left alone.").param_built(_retired_object_param()).featured())
 	# The timer form. Same one-shot scene-tree timer the destroy twin uses, with the retiring call
 	# bound to the object instead of the object's own queue_free hung off it - so it still books
 	# nothing, blocks nothing and needs no bookkeeping.

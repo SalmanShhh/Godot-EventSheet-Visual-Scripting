@@ -35,7 +35,7 @@ static func _test_curated_classes() -> bool:
 		_labels("CharacterBody2D"), "On ready, On physics process, On hit, On died")
 	passed = _check("a button starts with the one event it has", _labels("Button"), "On clicked") and passed
 	passed = _check("a timer starts with its timeout", _labels("Timer"), "On timer") and passed
-	passed = _check("an area starts with the collision", _labels("Area2D"), "On collision with") and passed
+	passed = _check("an area starts with the collision", _labels("Area2D"), "On body entered") and passed
 	return passed
 
 

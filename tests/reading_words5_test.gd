@@ -41,9 +41,9 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 	# The question a @tool script asks about itself
 	"System ▸ is in the editor",
 	# The tick switches and the process mode
-	"opened_script_words5_root ▸ Set Every physics tick deactivated",
-	"opened_script_words5_root ▸ Set Every tick activated",
-	"opened_script_words5_root ▸ Set input deactivated",
+	"opened_script_words5_root ▸ Set physics process disabled",
+	"opened_script_words5_root ▸ Set process enabled",
+	"opened_script_words5_root ▸ Set input disabled",
 	"opened_script_words5_root ▸ Set disabled",
 	# The wait, then the step that follows it
 	"System ▸ ⏳ Wait 2 seconds then Call explode",
@@ -108,11 +108,11 @@ static func _statement_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
 		# Switching a tick on and off is the sheet's own activation, said about a tick
-		["set_physics_process(false)", "Player ▸ Set Every physics tick deactivated"],
-		["set_process(true)", "Player ▸ Set Every tick activated"],
-		["set_process_input(false)", "Player ▸ Set input deactivated"],
-		["set_process_unhandled_input(true)", "Player ▸ Set unhandled input activated"],
-		["$Hurtbox.set_physics_process(false)", "Hurtbox ▸ Set Every physics tick deactivated"],
+		["set_physics_process(false)", "Player ▸ Set physics process disabled"],
+		["set_process(true)", "Player ▸ Set process enabled"],
+		["set_process_input(false)", "Player ▸ Set input disabled"],
+		["set_process_unhandled_input(true)", "Player ▸ Set unhandled input enabled"],
+		["$Hurtbox.set_physics_process(false)", "Hurtbox ▸ Set physics process disabled"],
 		# The process mode, in both of Godot's spellings
 		["process_mode = PROCESS_MODE_DISABLED", "Player ▸ Set disabled"],
 		["process_mode = PROCESS_MODE_INHERIT", "Player ▸ Set enabled"],
@@ -127,7 +127,7 @@ static func _statement_values() -> bool:
 		["get_tree().create_timer(1.0).timeout.connect(func(): hp = 0)",
 			"System ▸ ⏳ Wait 1 seconds then Set hp to 0"],
 		["get_tree().create_timer(0.15).timeout.connect(func(): queue_free(), CONNECT_ONE_SHOT)",
-			"System ▸ ⏳ Wait 0.15 seconds then Player  Destroy"],
+			"System ▸ ⏳ Wait 0.15 seconds then Player  Queue free"],
 		# The drawing verbs
 		["draw_line(Vector2(0, 0), Vector2(100, 0), Color.RED)",
 			"Player ▸ Draw line (0, 0) to (100, 0), red"],
@@ -332,9 +332,9 @@ static func _picked_matches_typed() -> bool:
 		# A sheet that is nobody's scene root reads its _ready as its object being created
 		"System ▸ On ready",
 		"System ▸ is in the editor",
-		"Player ▸ Set Every physics tick deactivated",
-		"Player ▸ Set Every tick activated",
-		"Player ▸ Set input deactivated",
+		"Player ▸ Set physics process disabled",
+		"Player ▸ Set process enabled",
+		"Player ▸ Set input disabled",
 		"Player ▸ Set disabled",
 		"System ▸ ⏳ Wait 2 seconds then Call explode"
 	]:

@@ -100,7 +100,7 @@ static func run() -> bool:
 		PackedStringArray(["Keyboard|On Space released", "eventsheets_handwritten_input_test|stop_firing"])) and ok
 	ok = _check("a hand-written signal handler reads as its source node, with its payload as a chip",
 		hand_rows[2] if hand_rows.size() > 2 else PackedStringArray(),
-		PackedStringArray(["Hurtbox|On collision with", "|body", "System|Print body.name"])) and ok
+		PackedStringArray(["Hurtbox|On body entered", "|body", "System|Print body.name"])) and ok
 
 	# ── D: an AUTHORED Keyboard/Mouse trigger reads back as the same row after save + reopen ──
 	ok = _check("an authored Keyboard trigger reopens as the same row",

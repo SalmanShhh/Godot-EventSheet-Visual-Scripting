@@ -104,7 +104,7 @@ static func build() -> bool:
 		"return distance_from_home(metric) > distance")
 	_param_options(sheet, "metric", _METRICS)
 
-	# Return Home takes ONE step per call, so it belongs under a per-frame trigger (On Every Tick).
+	# Return Home takes ONE step per call, so it belongs under a per-frame trigger (On Process).
 	# delta is an explicit parameter rather than a get_process_delta_time() call: that keeps the step
 	# honest under a physics tick, a slow-motion tick, or a hand-stepped test.
 	Lib.append_function(sheet, "return_home", "Return Home", "Home & Leash",

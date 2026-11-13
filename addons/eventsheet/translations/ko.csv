@@ -10279,3 +10279,88 @@ Run on enter tree,트리 진입 시 (_enter_tree)
 Run on exit tree,트리 이탈 시 (_exit_tree)
 "Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","프레임 속도와 무관하게 정직하게 감쇠하는 넉백(지수 형태) - 매 프레임 아래에 한 줄을 둡니다. 밀림은 레벨의 방향으로 계산되지만 부모 안의 위치에 더해지므로, 회전하거나 크기가 바뀐 부모 아래에서는 틀립니다. 월드 쌍둥이인 ApplyPushesWorld를 사용하세요."
 "Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","프레임 속도와 무관하게 정직하게 감쇠하는 넉백(지수 형태) - 매 프레임 아래에 한 줄을 둡니다. 밀림은 레벨의 방향으로 계산되어 노드의 레벨 내 위치에 더해지므로, 회전하거나 크기가 바뀐 부모 아래에서도 올바릅니다."
+(none - runs every frame),(없음 - 매 프레임 실행)
+An event with no condition of its own runs every frame.,자체 조건이 없는 이벤트는 매 프레임 실행됩니다.
+Other event-sheet editors call this %s.,다른 이벤트 시트 편집기에서는 %s(이)라고 부릅니다.
+Godot calls this %s.,Godot에서는 %s(이)라고 부릅니다.
+Godot writes this as %s.,Godot에서는 %s(으)로 쓰입니다.
+every frame,매 프레임
+Every frame,매 프레임
+Runs every frame,매 프레임 실행
+Instantiate,인스턴스화
+Instantiate (3D),인스턴스화 (3D)
+Instantiate Safely,안전하게 인스턴스화
+Instantiate Safely (3D),안전하게 인스턴스화 (3D)
+Instantiate In A Formation,대형으로 인스턴스화
+Instantiate In A Formation (3D),대형으로 인스턴스화 (3D)
+"Instantiate, Facing And Moving",인스턴스화 (방향과 이동 포함)
+"Instantiate, Facing And Moving (3D)","인스턴스화 (방향과 이동 포함, 3D)"
+Instantiate Myself,자기 자신을 인스턴스화
+Instantiate Myself (3D),자기 자신을 인스턴스화 (3D)
+Instantiate In A Free Spot,빈 자리에 인스턴스화
+Instantiate In A Free Spot (3D),빈 자리에 인스턴스화 (3D)
+Instantiate Into The Crowd,군중에 인스턴스화
+"Instantiate, The First Makes Room",인스턴스화 (첫 번째가 자리를 비움)
+Instantiate Unless The Crowd Is Full,군중이 가득 차지 않았다면 인스턴스화
+Instantiate Scene In The World,월드에 장면 인스턴스화
+Instantiate Scene As,이름을 붙여 장면 인스턴스화
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]",[b]{scene}[/b]을(를) [b]{name}[/b](으)로 {at}에 인스턴스화 ([i]{parent}[/i] 아래)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment","[b]{scene}[/b]을(를) [b]{name}[/b](으)로 {at}에 인스턴스화 ([i]{parent}[/i] 아래, 다음 유휴 시점에 추가)"
+Instantiate [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b],[b]{scene}[/b]의 복사본 [b]{count}[/b]개를 [b]{formation}[/b] 대형으로 인스턴스화
+"Instantiate [b]{scene}[/b] as [b]{name}[/b], facing [b]{facing}[/b], moving at [b]{speed}[/b]","[b]{scene}[/b]을(를) [b]{name}[/b](으)로, 방향 [b]{facing}[/b], 속도 [b]{speed}[/b]로 인스턴스화"
+"Instantiate [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment","[b]자기 자신[/b]을 [b]{name}[/b](으)로 {at}에 인스턴스화 ([i]{parent}[/i] 아래, 다음 유휴 시점에 추가)"
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]",[b]{scene}[/b]을(를) [b]{name}[/b](으)로 [i]{inside}[/i]의 빈 자리에 인스턴스화 ([i]{parent}[/i] 아래)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]","[b]{scene}[/b]을(를) [b]{name}[/b](으)로 {at}에 인스턴스화 ([i]{parent}[/i] 아래, 군중 [b]{crowd}[/b]에)"
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room","[b]{scene}[/b]을(를) [b]{name}[/b](으)로 {at}에 인스턴스화 ([i]{parent}[/i] 아래, [b]{crowd}[/b]에 최대 [b]{cap}[/b]개 - 첫 번째가 자리를 비움)"
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip instantiating when full","[b]{scene}[/b]을(를) [b]{name}[/b](으)로 {at}에 인스턴스화 ([i]{parent}[/i] 아래, [b]{crowd}[/b]에 최대 [b]{cap}[/b]개 - 가득 차면 건너뜀)"
+Instantiate {path} in the level at {position},{path}을(를) 레벨의 {position}에 인스턴스화
+"Instantiate [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent",[b]{path}[/b]을(를) [b]{spawn_name}[/b](으)로 [i]{values}[/i]와 함께 인스턴스화 (부모 기준으로 배치)
+"A name for this spawn, so later rows can say The Instantiated Node ""boss"".","이 인스턴스의 이름입니다. 이후 행에서 인스턴스화된 노드 ""boss""라고 말할 수 있습니다."
+The Instantiated Node,인스턴스화된 노드
+the instantiated node [b]{spawn_name}[/b],인스턴스화된 노드 [b]{spawn_name}[/b]
+The name an Instantiate Scene As row used.,장면 인스턴스화(이름 지정) 행이 사용한 이름입니다.
+Instantiated Node Is Alive,인스턴스화된 노드가 살아 있음
+the instantiated node [b]{spawn_name}[/b] is alive,인스턴스화된 노드 [b]{spawn_name}[/b]이(가) 살아 있음
+The name the Instantiate Scene As row gave this spawn.,장면 인스턴스화(이름 지정) 행이 이 인스턴스에 준 이름입니다.
+Queue Free Now,지금 queue_free
+Queue Free,Queue free
+queue free [i]{object}[/i] now,[i]{object}[/i]을(를) 지금 queue free
+Queue Free After Seconds,몇 초 후 queue_free
+queue free [i]{object}[/i] after {seconds}s,{seconds}초 후 [i]{object}[/i]을(를) queue free
+Fade Out Then Queue Free,페이드 아웃 후 queue_free
+queue free [i]{object}[/i] after fading it out over {seconds}s,{seconds}초 동안 [i]{object}[/i]을(를) 페이드 아웃한 뒤 queue free
+"On Body Entered, In Group",바디 진입 시 (그룹 내)
+"On body entered, in group {group}",바디 진입 시 (그룹 {group} 내)
+"On Body Exited, In Group",바디 퇴장 시 (그룹 내)
+"On body exited, in group {group}",바디 퇴장 시 (그룹 {group} 내)
+"On Body Entered, In Group (3D)","바디 진입 시 (그룹 내, 3D)"
+"On Body Exited, In Group (3D)","바디 퇴장 시 (그룹 내, 3D)"
+Overlaps Group,그룹과 겹침
+Overlaps Group (3D),그룹과 겹침 (3D)
+overlaps {group},{group}와(과) 겹침
+"Runs once when this node is ready (the _ready callback): it and all its children are in the scene, ideal for setup and initial values.",이 노드가 준비되었을 때 한 번 실행됩니다 (_ready 콜백). 노드와 모든 자식이 씬에 있으므로 설정과 초기값에 적합합니다.
+"Runs every rendered frame (the _process callback), perfect for continuous movement, timers, or polling input.","렌더링되는 매 프레임 실행됩니다 (_process 콜백). 지속적인 이동, 타이머, 입력 폴링에 적합합니다."
+"Runs every fixed physics step (the _physics_process callback), the right place for physics-based movement and forces.",고정된 물리 단계마다 실행됩니다 (_physics_process 콜백). 물리 기반 이동과 힘을 다루기에 알맞은 곳입니다.
+"Runs the moment this node is added to the scene tree (the _enter_tree callback) - before its children exist, which is what makes it earlier than On Ready.",이 노드가 씬 트리에 추가되는 순간 실행됩니다 (_enter_tree 콜백). 자식이 아직 없는 시점이므로 On Ready보다 먼저 실행됩니다.
+"Runs when this node leaves the scene tree (the _exit_tree callback) - the place to let go of what it was holding, save its state, or tell others it is gone.","이 노드가 씬 트리를 떠날 때 실행됩니다 (_exit_tree 콜백). 붙잡고 있던 것을 놓거나, 상태를 저장하거나, 다른 노드에 사라졌음을 알리는 곳입니다."
+"An event with no condition of its own runs every frame. Add its actions with A, or add a condition later to narrow it down.","자체 조건이 없는 이벤트는 매 프레임 실행됩니다. A로 액션을 추가하거나, 나중에 조건을 추가해 범위를 좁히세요."
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick, Destroy, Angle); the other verbs stay Godot's.","다른 이벤트 시트 편집기가 명사와 콜백에 쓰는 용어 (Family, Layout, On start of layout, Every tick, Destroy, Angle)입니다. 나머지 동사는 Godot의 것을 그대로 씁니다."
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Instantiate. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.","명사와 동사를 모두 시트의 용어로 표시합니다. Godot에서 Instantiate라고 하는 곳을 행에서는 Create object라고 읽습니다. 선택기에는 Godot 표기가 옆에 함께 남고, 코드 패널과 툴팁은 바뀌지 않습니다."
+"Spawns one copy the way Instantiate does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.","「인스턴스화」과 똑같이 사본을 하나 만든 다음, 무언가를 향해 돌리고 그 방향으로 속도를 줍니다 - 총구를 떠나는 탄, 바퀴에서 튀는 불꽃, 달려드는 적. 속도가 어디에 기록되는지는 씬이 무엇인지에 달렸습니다. CharacterBody면 velocity, RigidBody면 linear_velocity, Bullet 비헤이비어를 착용한 씬이면 그 비헤이비어 자신의 속도입니다. 대화상자가 씬 파일을 읽어 어느 것을 찾았는지 알려 줍니다."
+"Spawns one copy the way Instantiate (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.","「인스턴스화 (3D)」과 똑같이 사본을 하나 만든 다음, 무언가를 향해 돌리고 그 방향으로 속도를 줍니다. 3차원에서 앞은 사본 자신의 -Z이며, 이는 Godot이 다른 모든 곳에서 앞이라고 부르는 것이므로 「노드 쪽으로」는 그냥 look_at입니다. 속도가 어디에 기록되는지는 씬이 무엇인지에 달렸습니다. CharacterBody면 velocity, RigidBody면 linear_velocity, Bullet 비헤이비어를 착용한 씬이면 그 비헤이비어 자신의 속도입니다."
+"Gives a point inside a shape you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of - where to put the next crate, the next mine, the next enemy in a room that is filling up. Clear is asked as a real physics test, with the spawned scene's OWN collision shape put at the point, so a wall is a wall whatever drew it; a group whose members carry no shape at all is answered by distance instead. A full arena answers NOTHING, and Instantiate In A Free Spot is the row that knows what to do about that.","직접 그린 도형 안에서, 지정한 그룹의 어떤 것도 서 있지 않고 같은 씬의 다른 사본도 간격 안에 없는 점을 줍니다 - 차오르는 방에서 다음 상자, 다음 지뢰, 다음 적을 어디에 둘지. 비었는지는 진짜 물리 검사로 묻습니다. 생성할 씬 자신의 충돌 도형을 그 점에 두고 보므로, 벽은 누가 그렸든 벽입니다. 도형을 전혀 지니지 않은 구성원의 그룹은 대신 거리로 답합니다. 꽉 찬 아레나는 아무것도 답하지 않으며, 그때 무엇을 할지 아는 행이 「빈 자리에 인스턴스화」입니다."
+"Runs when an Instantiate In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.","「빈 자리에 인스턴스화」 행이 사본을 놓을 자리를 찾지 못했을 때 실행되며, 놓지 못한 씬을 넘겨 줍니다. 이 시그널은 이 시트가 스스로 선언하는 것입니다. spawn_skipped(scene)이라고 적은 시그널 블록을 더하면 양쪽 모두 평범한 Godot입니다. 그래서 꽉 찬 아레나가 게임이 대답할 수 있는 일이 됩니다 - 웨이브를 멈추거나, 방이 가득 찼다고 알리거나, 자리를 만들거나."
+"Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Queue Free Now does. Like Queue Free Now, the object is still there for the rest of this event: a destroy lands at the end of the frame and a handing back lands on the next idle moment, which is what makes this row safe inside a collision handler. Safe to run twice - something already on its way out, or already back in its pool, is left alone.","오브젝트를 물립니다. 풀에서 나온 것이면 그 풀로 돌려보내고, 아니면 파괴합니다. 둘 중 무엇이 일어나는지는 오브젝트 자신에게서 읽으므로, 시트가 복사본의 출처를 기억할 필요가 없습니다. 풀이 없는 게임에서는 지금 queue_free 와 똑같이 동작합니다. 지금 queue_free 와 마찬가지로 오브젝트는 이 이벤트가 끝날 때까지 아직 그 자리에 있습니다. 파괴는 프레임의 끝에, 반납은 다음 유휴 순간에 이루어지며, 그것이 이 행을 충돌 핸들러 안에서 안전하게 만듭니다. 두 번 실행해도 안전합니다. 이미 나가는 중이거나 이미 풀로 돌아간 것은 그대로 둡니다."
+"Spawns a copy the way Instantiate does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.","""인스턴스화""과 같은 방식으로 사본을 만들고, 씬 이름을 딴 그룹에 넣습니다. 그래서 아래 행들이 개수를 세고, 상한을 두고, 마지막 하나가 사라질 때를 알 수 있습니다. 그룹 가입에는 Godot의 영속 그룹 플래그를 쓰므로, 그 가지가 나중에 씬 파일로 다시 묶여도 그룹이 남습니다."
+"The same spawn as Instantiate, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","인스턴스화과 같은 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 안의 위치이므로, 부모가 누구든 그곳에 놓입니다."
+"The same 3D spawn as Instantiate (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","인스턴스화 (3D)과 같은 3D 생성이지만 지금 바로가 아니라 다음 유휴 시점에 추가합니다. 충돌 또는 바디 핸들러 안에서 사용하세요: 거기서 추가된 2D 물리 바디나 영역은 물리 서버가 바쁜 동안 Godot가 오류를 출력하게 하며(노드는 추가되고 동작합니다), 이 행은 그것이 끝나기를 기다리므로 아무것도 출력되지 않습니다. 위치는 복사본을 추가한 직후에 설정되는 레벨 안의 위치이므로, 부모가 누구든 그곳에 놓입니다."
+Loads a scene and drops a copy into the current scene at a place in the level. Instantiate Scene At adds the copy under this node and measures its place from this node instead.,장면을 불러와 복사본을 현재 장면의 레벨 내 위치에 놓습니다. 장면을 위치에 인스턴스화은 복사본을 이 노드 아래에 추가하고 위치를 이 노드 기준으로 잽니다.
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Instantiated Node. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","씬을 이름 붙여 생성하고, 트리에 들어가기 전에 값 레코드를 설정한 뒤, 그 이름으로 기억해 두어 이후의 모든 행이 인스턴스화된 노드 이라고 말할 수 있게 합니다. 시트가 scene_spawned(spawn_name, node) 시그널을 선언했다면 둘 다 실어서 발생시키므로, 다른 이벤트가 마지막에 무엇이 생성되었는지 묻지 않고도 새 노드에 반응할 수 있습니다."
+"The node an Instantiate Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.","이름을 붙여 장면 인스턴스화 행이 이 이름으로 만든 노드이며, 생성된 적이 없거나 그 뒤 해제되었다면 아무것도 아님입니다 - 그래서 죽은 보스를 찾는 행은 크래시 대신 아무것도 얻지 못합니다."
+"Runs when an Instantiate Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","이름을 붙여 장면 인스턴스화 행이 무언가를 생성하면 실행됩니다. 이름과 새 노드가 행에 spawn_name 과 node 로 도착하므로, 반응 쪽에서 마지막에 무엇이 생성되었는지 묻지 않고도 노드를 설정하거나 알릴 수 있습니다 - 한 루프가 한 프레임에 여섯 개를 생성해도 정확합니다. scene_spawned(spawn_name: String, node: Node) 에 대한 시그널 행이 필요합니다 - 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 절대 실행되지 않습니다. 프로젝트 Doctor 가 그 점을 알려 줍니다."
+Instantiate Scene At,장면을 위치에 인스턴스화
+Instantiate Scene File,장면 파일 인스턴스화
+Instantiate Scene (Full),장면 인스턴스화 (전체)
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.",장면을 불러와 사본을 이 노드의 자식으로 추가합니다. 위치는 이 노드를 기준으로 측정되므로 사본이 노드와 함께 움직입니다. 대신 레벨에 직접 두려면 '월드에 장면 인스턴스화'를 사용하세요.
+"Instantiate {path} at {position}, as a child of this node",{path}을(를) {position}에 인스턴스화 (이 노드의 자식으로)
+"Instantiate {path} (rot {rotation}, group {group}), as a child of this node","{path}을(를) 인스턴스화 (회전 {rotation}, 그룹 {group}, 이 노드의 자식으로)"

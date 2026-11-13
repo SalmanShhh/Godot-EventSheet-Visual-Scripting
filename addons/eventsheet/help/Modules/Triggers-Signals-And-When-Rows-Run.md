@@ -137,7 +137,7 @@ Four things are worth knowing before you reach for them, and none of them is hid
   `add_to_group("minimap")` produced one announced join, zero matches, and `is_in_group` true
   afterwards. Groups written in a scene file ARE set before the node enters the tree, so those the
   guard sees. Add the group before the node enters the tree, or on the row that spawns it - which is
-  what Spawn A Copy Into The Crowd does - and the two agree.
+  what Instantiate Into The Crowd does - and the two agree.
 - **Every member leaves during teardown.** `node_removed` fires for every descendant of a branch
   being freed, and on quit for the whole tree, with the departing nodes still listed in their groups
   (which is what lets the gate answer at all). Measured: freeing a branch of 1001 nodes announced
@@ -416,7 +416,7 @@ On Process
   Condition: Once At A Time
     -> Play Sound
     -> Wait  0.5
-    -> Spawn Scene At   "res://enemy.tscn", Vector2(0, 0)
+    -> Instantiate Scene At   "res://enemy.tscn", Vector2(0, 0)
 ```
 
 A run that awaits counts as still going until the last await completes, so a per-frame trigger with a

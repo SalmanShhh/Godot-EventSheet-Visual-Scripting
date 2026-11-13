@@ -331,7 +331,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"lift_note_badge_foreground_color": "The words on the ⚠ code badge.",
 	"or_badge_background_color": "The hairline ruled beside the \"or\" between two OR'd conditions (mixed with the word's own ink so it stays visible).",
 	"or_badge_foreground_color": "The word \"or\" on that divider.",
-	"tempo_every_tick_background_color": "The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.",
+	"tempo_every_tick_background_color": "The ⟳ badge on an event that runs every frame - a tween beat, a repeating timer.",
 	"tempo_every_tick_foreground_color": "The glyph on the every-tick badge.",
 	"tempo_input_background_color": "The ⌨ badge on an event a key or a button starts.",
 	"tempo_input_foreground_color": "The glyph on the input badge.",

@@ -167,18 +167,18 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 		_reading_at(rows, "➜Timer On Timeout"),
 		"➜Timer On Timeout | Subtract 1 from seconds_left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
-		_reading_at(rows, "➜host On collision with"),
-		"➜host On collision withbody | Add 1 to seconds_left") and ok
+		_reading_at(rows, "➜host On body entered"),
+		"➜host On body enteredbody | Add 1 to seconds_left") and ok
 	# The payload used to be crammed INSIDE the trigger cell ("On Hit   body"), because a chip after a
 	# trigger cell drew as a sliver. It is now the same span a declared handler's trigger row draws,
 	# so one event reads one way whether it was wired with a func or with a lambda.
 	ok = _check("and that chip is the shared trigger-payload span, not words inside the cell",
-		_span_kinds(view, "On collision with"), "|trigger|trigger_payload|action") and ok
+		_span_kinds(view, "On body entered"), "|trigger|trigger_payload|action") and ok
 	# Re-pinned this one: `$Timer.stop()` is the Timer behavior's own `Stop timer "Timer"` now,
 	# where it used to fall through to the generic Object ▸ Verb reading and say only "Stop".
 	ok = _check("and the branch in its body is a row under the same trigger",
 		_reading_at(rows, "Stop timer"),
-		"➜host On collision withbody > OneLineBlocksFixture seconds_left ≤ 0 | Stop timer \"Timer\"") and ok
+		"➜host On body enteredbody > OneLineBlocksFixture seconds_left ≤ 0 | Stop timer \"Timer\"") and ok
 	# A lambda written after other setup is the same event, read where it sits: under the setup
 	# before it, so it is written back there and the file keeps its order.
 	ok = _check("a connect after other setup is the event, read in place",

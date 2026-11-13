@@ -146,7 +146,7 @@ behavior: its trauma decays, its camera effects compose, and it tells you when a
 
 **A camera that shakes with the engine.** Shake by a small amount every tick while the vehicle's speed is above a threshold, using the speed itself as the amount.
 
-**A death that stops the world.** Hitstop for 0.4 seconds on the player's death before the game-over layout loads, so the last frame registers.
+**A death that stops the world.** Hitstop for 0.4 seconds on the player's death before the game-over scene loads, so the last frame registers.
 
 ## Tips and common mistakes
 

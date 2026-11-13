@@ -147,7 +147,7 @@ static func run() -> bool:
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("a loaded sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
     # An every-tick event with NO condition of its own reads as a BLANK event: the empty
-    # condition lane already means "runs every tick", so there are no trigger words and no tempo
+    # condition lane already means "runs every frame", so there are no trigger words and no tempo
     # badge to draw. Give the same event a condition and the full Every tick reading is back, tempo
     # badge included - which is the second half of this pin.
     all_passed = _check("a conditionless every-tick row reads blank", _rows_contain_text(demo_rows, "⟳"), false) and all_passed
@@ -229,7 +229,7 @@ static func run() -> bool:
     all_passed = _check("group row no longer renders the redundant 'Group' badge text", _row_contains_text(group_row, "Group"), false) and all_passed
     all_passed = _check("group row shows its title", _row_contains_text(group_row, "Rules"), true) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
-    all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Destroy"), true) and all_passed
+    all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
     var layout: Dictionary = dock_viewport.get_row_layout_for_test(3, 640.0)
     var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())

@@ -80,7 +80,7 @@ func _on_frame() -> void:
 		var head: String = ""
 		for span: SemanticSpan in row_data.spans:
 			head += span.text
-		if head.contains("On created"):
+		if head.contains("On enter tree"):
 			top = _view._row_metrics_helper.row_top(index)
 			break
 	var start: int = clampi(int(top * scale) - 6, 0, image.get_height() - 1)

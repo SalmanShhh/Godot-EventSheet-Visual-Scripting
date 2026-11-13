@@ -265,7 +265,7 @@ static func _runtime_block() -> RawCodeRow:
 ## one is a void effect in the action lane except Overlay Is Visible, which is a question.
 static func _append_verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "watch_value", "Watch Value", "Debug Overlay",
-		"Shows name = value in the on-screen list, refreshed every time you set it. Call it from an Every Frame row and it reads like a live watch window over the running game. Debug builds only.",
+		"Shows name = value in the on-screen list, refreshed every time you set it. Call it from an On Process row and it reads like a live watch window over the running game. Debug builds only.",
 		[["watch_name", "String"], ["value", "Variant"]],
 		"\n".join(PackedStringArray([
 			"if not _ensure_surface():",

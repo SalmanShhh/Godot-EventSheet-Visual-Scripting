@@ -264,7 +264,7 @@ The edge-triggered pair means each drift is one clean start-to-finish window to 
 Turn While Stopped lets the car steer at a standstill, so it can rotate on the spot like a tank or a nimble kart.
 
 ```
-On Start of layout
+On Ready
   -> Car | CarBehavior: Set Turn While Stopped  true
 ```
 

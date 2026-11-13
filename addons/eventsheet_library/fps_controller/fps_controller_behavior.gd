@@ -616,7 +616,7 @@ func is_firing() -> bool:
 ## @ace_action
 ## @ace_name("Bob With Movement")
 ## @ace_category("FPS Controller")
-## @ace_description("Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every tick on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.")
+## @ace_description("Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every frame on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.")
 ## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
 ## @ace_codegen_template("$FPSController.bob_with_movement({weapon})")
 func bob_with_movement(weapon: Node3D) -> void:
@@ -632,7 +632,7 @@ func bob_with_movement(weapon: Node3D) -> void:
 ## @ace_action
 ## @ace_name("Sway With Mouse")
 ## @ace_category("FPS Controller")
-## @ace_description("Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every tick on the node you want swaying.")
+## @ace_description("Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every frame on the node you want swaying.")
 ## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
 ## @ace_codegen_template("$FPSController.sway_with_mouse({weapon})")
 func sway_with_mouse(weapon: Node3D) -> void:

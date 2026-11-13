@@ -133,7 +133,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set half to 50%",
 	"eventforge_reading_words6 ▸ Set X to 300",
 	"eventforge_reading_words6 ▸ Set Y to 1,000,000",
-	"eventforge_reading_words6 ▸ Set angle (radians) to π/2",
+	"eventforge_reading_words6 ▸ Set rotation (radians) to π/2",
 	"System ▸ Set velocity X to 1000",
 	# The poll reads as the trigger it is, under the device the project bound it to
 	"Keyboard ▸ On \"jump\" pressed",

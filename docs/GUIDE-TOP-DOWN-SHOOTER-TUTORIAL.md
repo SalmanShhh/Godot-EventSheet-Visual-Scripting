@@ -43,10 +43,10 @@ Event: On Input
   Condition: On Mouse Button Pressed (event) -> MOUSE_BUTTON_LEFT
 ```
 
-**3. A bullet appears at the player.** Create object is Spawn Scene At: the scene is the object type.
+**3. A bullet appears at the player.** Create object is Instantiate Scene At: the scene is the object type.
 
 ```
-  Action: System -> Spawn Scene At "bullet.tscn" at Player.position
+  Action: System -> Instantiate Scene At "bullet.tscn" at Player.position
 ```
 
 ```gdscript
@@ -62,7 +62,7 @@ func _input(event: InputEvent) -> void:
 ```
 Event: (every tick)
   Condition: Every 1.2 seconds
-  Action: System -> Spawn Scene At "monster.tscn" at a random point on the top or bottom edge
+  Action: System -> Instantiate Scene At "monster.tscn" at a random point on the top or bottom edge
 ```
 
 **5. Keep a score.** A sheet variable belongs to the object the sheet is on - here, the game.
@@ -87,7 +87,7 @@ Event: (every tick)
 **7. Boom, and a point.** The actions under the For each run once per monster it picked.
 
 ```
-  Action: System -> Spawn Scene At "explosion.tscn" at shooter_monster.position
+  Action: System -> Instantiate Scene At "explosion.tscn" at shooter_monster.position
   Action: System -> Add 1 to score
   Action: shooter_monster -> Free Node
 ```

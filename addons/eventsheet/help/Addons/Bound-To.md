@@ -238,7 +238,7 @@ On Tutorial Done -> Player | Bound To: Set Bound Space  "screen"
 
 ## Already written it by hand? It reads as this pack
 
-`position = position.clamp(Vector2.ZERO, screen)` reads **Bound To - Bound to layout (inside (0, 0) -
+`position = position.clamp(Vector2.ZERO, screen)` reads **Bound To - Bound to scene (inside (0, 0) -
 screen)** the moment the file is opened as a sheet.
 
 The event wears the pattern chip, whose Adopt behavior offers this pack - which adds the parts one

@@ -32,15 +32,15 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "A bullet appears at the player",
-			"body": "Create object is Spawn Scene At here: a scene is the object type, and the copy lands where you say.",
-			"task": "Under the click, add Spawn Scene At with the bullet scene and the position $Player.position.",
+			"body": "Create object is Instantiate Scene At here: a scene is the object type, and the copy lands where you say.",
+			"task": "Under the click, add Instantiate Scene At with the bullet scene and the position $Player.position.",
 			"check": func(sheet: EventSheetResource) -> bool:
 				return _writes(sheet, ["MOUSE_BUTTON_LEFT", "instantiate()"]),
 		},
 		{
 			"title": "Monsters keep coming",
 			"body": "Every X seconds is a condition with its own clock, so the event below it runs once per interval.",
-			"task": "Add an event with Every X Seconds (1.2) and Spawn Scene At for the monster scene, at a random point on an edge.",
+			"task": "Add an event with Every X Seconds (1.2) and Instantiate Scene At for the monster scene, at a random point on an edge.",
 			"check": func(sheet: EventSheetResource) -> bool: return _writes(sheet, ["__every_", "instantiate()"]),
 		},
 		{
@@ -59,12 +59,12 @@ static func steps() -> Array[Dictionary]:
 		{
 			"title": "Boom, and a point",
 			"body": "The actions under the For each run once for each monster it picked, with that monster as the one being talked about.",
-			"task": "Under it add Spawn Scene At for the explosion at the monster's position, Add 1 to score, and Free Node on the monster.",
+			"task": "Under it add Instantiate Scene At for the explosion at the monster's position, Add 1 to score, and Free Node on the monster.",
 			"check": func(sheet: EventSheetResource) -> bool: return _writes(sheet, ["score += 1", "queue_free()"]),
 		},
 		{
 			"title": "Show the score",
-			"body": "The HUD is a Label; its text is set every tick from the variable.",
+			"body": "The HUD is a Label; its text is set every frame from the variable.",
 			"task": "Add Set Text (formatted) on $Hud with \"Score %d\" and score.",
 			"check": func(sheet: EventSheetResource) -> bool: return _writes(sheet, [".text =", "score"]),
 		},

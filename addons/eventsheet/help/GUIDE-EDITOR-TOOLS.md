@@ -414,8 +414,8 @@ Object, then what it does, one step per row - the same shape as `Player ▸ Set 
 
 Beside the undo check above, three notes name the mistakes every first editor tool makes. All three are **info**: each is legal Godot and each is occasionally exactly what you meant.
 
-- **Reaching outside the open layout.** A tool that looks for nodes through `get_tree()` is searching the *editor's* tree, not the scene you have open. Walk `Editor.OpenLayout` instead, or the tool finds nothing - or the wrong thing.
-- **Destroying while editing.** A Destroy in a tool deletes from the layout you have open. Without an undo step around it, the only way back is closing the scene without saving.
+- **Reaching outside the open scene.** A tool that looks for nodes through `get_tree()` is searching the *editor's* tree, not the scene you have open. Walk `Editor.OpenLayout` instead, or the tool finds nothing - or the wrong thing.
+- **Destroying while editing.** A Destroy in a tool deletes from the scene you have open. Without an undo step around it, the only way back is closing the scene without saving.
 - **Ticking in the editor with no way off.** A `@tool` sheet with a per-frame event is running right now, while you edit. The sheet says so with an "in the editor too" chip on the row; the Doctor suggests the standard guard - an exported **preview in editor** toggle plus a Stop event when the sheet is in the editor and the toggle is off - so you can switch it off.
 
 ---

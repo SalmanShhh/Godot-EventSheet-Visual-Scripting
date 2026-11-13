@@ -184,7 +184,7 @@ func pin_rope(target: Node3D, max_length: float) -> void:
 ## @ace_action
 ## @ace_name("Pin To Bar")
 ## @ace_category("Pin 3D")
-## @ace_description("Holds the host at exactly the given distance from an object, every tick, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.")
+## @ace_description("Holds the host at exactly the given distance from an object, every frame, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.")
 ## @ace_display_template("Pin to [i]{target}[/i] on a bar of [b]{length}[/b]")
 ## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
 ## @ace_codegen_template("$Pin3DBehavior.pin_bar({target}, {length})")

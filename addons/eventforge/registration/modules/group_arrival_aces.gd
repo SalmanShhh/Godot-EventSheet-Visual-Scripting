@@ -48,7 +48,7 @@
 # `_ready` calls `add_to_group("minimap")` gave one announced join, zero matches, and `is_in_group`
 # true afterwards. Groups written in a scene file ARE set when the node enters the tree, so those the
 # guard sees. Add the group before the node enters the tree (or on the row that spawns it, which is
-# what Spawn A Copy Into The Crowd does) and the two agree.
+# what Instantiate Into The Crowd does) and the two agree.
 #
 # AND SO IS TEARDOWN, which is the other half of the same surprise. `node_removed` fires for every
 # descendant of a branch being freed, and on quit for the whole tree, with the departing nodes still

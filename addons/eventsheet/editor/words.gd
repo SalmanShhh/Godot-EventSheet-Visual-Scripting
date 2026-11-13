@@ -57,6 +57,11 @@ const PRESET_SHEET := "sheet"
 const PRESET_CUSTOM := "custom"
 const PRESETS: Array[String] = [PRESET_GODOT, PRESET_FAMILIAR, PRESET_SHEET, PRESET_CUSTOM]
 
+## Where the choices live when there is no editor (a headless run, a test): the session, so the two
+## presets can be switched and read back without an editor settings file. Empty in the editor, which
+## keeps its own store; `forget_session()` empties it.
+static var _session_store: Dictionary = {}
+
 ## The alias table, parsed once per session from the CSVs. Empty until `verb_aliases()` fills it.
 static var _verb_aliases: Dictionary = {}
 static var _verb_aliases_loaded: bool = false
@@ -75,8 +80,14 @@ const WORDS := {
 	"behavior": ["an attached pack", "Behavior", "Behavior", []],
 	"group": ["a Godot group", "Family (group)", "Group", []],
 	"collection": ["Array / Dictionary", "list / table", "list / table", []],
-	"destroy": ["queue_free", "Destroy", "Destroy", []],
+	"destroy": ["queue_free()", "Destroy", "Queue free", []],
+	"instantiate": ["PackedScene.instantiate()", "Spawn a copy of", "Instantiate", []],
+	"angle": ["rotation_degrees", "angle", "rotation", []],
+	"overlaps": ["overlaps_body()", "Is overlapping", "Overlaps", []],
+	"body_entered": ["body_entered", "On collision with", "On body entered", []],
+	"body_exited": ["body_exited", "On stopped overlapping", "On body exited", []],
 	"manual": ["the reader", "Manual", "Manual", []],
+	"opacity": ["modulate.a", "Opacity", "Opacity", []],
 	# The editor-building nouns. Until now Familiar Words covered the GAME words (layout, object
 	# type, family) and a tool sheet mixed two vocabularies on one screen: half of it in the sheet's
 	# words, half in Godot's class names. These are the twenty-four a first tool meets, each with
@@ -119,7 +130,7 @@ const WORDS := {
 ## Display order on the Words page - the order the page is read in, not the dictionary's.
 const KEY_ORDER: Array[String] = [
 	"inheritance_set", "layout", "every_tick", "behavior",
-	"group", "collection", "destroy", "manual",
+	"group", "collection", "opacity", "destroy", "instantiate", "angle", "overlaps", "body_entered", "body_exited", "manual",
 	# The editor-building words, in the page's own order (the plugin itself first, then its
 	# surfaces, then the shapes it can take, then the three code idioms a reader meets in tool code).
 	"editor_plugin", "editor_object", "editor_dock", "inspector", "scene_dock", "filesystem_dock",
@@ -223,15 +234,32 @@ static func glossary_hover_for(shown_text: String, familiar: bool, override_map:
 		var line: String = ""
 		if wanted == godot:
 			if sheet_side == godot:
-				return ""
-			line = EventSheetL10n.translate("%s - this sheet calls it %s.") % [wanted, sheet_side]
+				# A word both vocabularies share still says which Godot call or property it writes
+				# when what it names is one ("Opacity" is modulate.a), and says nothing otherwise.
+				return _writes_line(key)
+			line = EventSheetL10n.translate("Other event-sheet editors call this %s.") % sheet_side
 		else:
-			line = EventSheetL10n.translate("%s - Godot calls this %s.") % [wanted, godot]
+			line = EventSheetL10n.translate("Godot calls this %s.") % godot
 		var what: String = names_what(key).strip_edges()
 		if what.is_empty():
 			return line
+		if _is_code_name(what):
+			return "%s\n%s" % [line, _writes_line(key)]
 		return "%s\n%s." % [line, what.substr(0, 1).to_upper() + what.substr(1)]
 	return ""
+
+
+## True when a key names a Godot call or property (one token, no spaces) rather than a phrase.
+static func _is_code_name(what: String) -> bool:
+	return not what.is_empty() and not what.contains(" ")
+
+
+## "Godot writes this as modulate.a." for a key that names a call or property, else "".
+static func _writes_line(key: String) -> String:
+	var what: String = names_what(key).strip_edges()
+	if not _is_code_name(what):
+		return ""
+	return EventSheetL10n.translate("Godot writes this as %s.") % what
 
 
 ## The sheet's word for a Godot term, or "" when the sheet has no word of its own for it.
@@ -511,6 +539,13 @@ static func set_verb_words_enabled(on: bool) -> void:
 	_store_metadata(VERB_WORDS_KEY, on)
 
 
+## Empties the headless session store and the remembered verb switch, so a test that switched a
+## preset leaves the defaults behind it.
+static func forget_session() -> void:
+	_session_store = {}
+	_verb_words_state = -1
+
+
 ## Drops the remembered switch so the next reader asks the settings again. For a writer that went
 ## round this file - an editor-settings import, a second editor window.
 static func forget_verb_words_state() -> void:
@@ -564,7 +599,7 @@ static func preset_label(name: String) -> String:
 
 static func _project_metadata(key: String, fallback: Variant) -> Variant:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return fallback
+		return _session_store.get(key, fallback)
 	var settings: Object = EditorInterface.get_editor_settings()
 	if settings == null:
 		return fallback
@@ -573,6 +608,7 @@ static func _project_metadata(key: String, fallback: Variant) -> Variant:
 
 static func _store_metadata(key: String, value: Variant) -> void:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		_session_store[key] = value
 		return
 	var settings: Object = EditorInterface.get_editor_settings()
 	if settings == null:

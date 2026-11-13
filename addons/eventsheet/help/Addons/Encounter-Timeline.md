@@ -335,7 +335,7 @@ count-the-enemies check, area-of-effect sweep and minimap marker finds them with
 **15. Reuse nodes on a long encounter.**
 
 ```
-On Start of Layout
+On Ready
   -> ObjectPool: Create Pool  "res://enemies/grunt.tscn", "res://enemies/grunt.tscn", 8
 ```
 
@@ -345,7 +345,7 @@ the first wave never hitches.
 **16. A pool per arena, not one for the game.**
 
 ```
-On Start of Layout
+On Ready
   -> Arena: Use Object Pool Node  ArenaPool
 ```
 

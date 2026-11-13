@@ -86,8 +86,8 @@ static func _idiom_tables_answer_too() -> bool:
 		EventSheetCodeSearch.idiom_words("is_on_floor"), "Is on floor") and passed
 	passed = _check("is_on_wall too",
 		EventSheetCodeSearch.idiom_words("is_on_wall"), "Is by wall") and passed
-	passed = _check("rotation_degrees is the angle",
-		EventSheetCodeSearch.idiom_words("rotation_degrees"), "angle") and passed
+	passed = _check("rotation_degrees is the rotation",
+		EventSheetCodeSearch.idiom_words("rotation_degrees"), "rotation") and passed
 	passed = _check("a call no table names answers nothing",
 		EventSheetCodeSearch.idiom_words("not_a_real_call"), "") and passed
 	return passed

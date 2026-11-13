@@ -10279,3 +10279,88 @@ Run on enter tree,进入树时（_enter_tree）
 Run on exit tree,退出树时（_exit_tree）
 "Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","诚实衰减的击退(指数形式,与帧率无关) - 放在“每帧”下的一行。推力按关卡的方向计算,却加到父节点内的位置上,在旋转或缩放的父节点下会出错;请使用世界版本 ApplyPushesWorld。"
 "Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","诚实衰减的击退(指数形式,与帧率无关) - 放在“每帧”下的一行。推力按关卡的方向计算,并加到节点在关卡中的位置上,因此在旋转或缩放的父节点下也正确。"
+(none - runs every frame),(无 - 每帧运行)
+An event with no condition of its own runs every frame.,没有自身条件的事件每帧都会运行。
+Other event-sheet editors call this %s.,其他事件表编辑器称之为 %s。
+Godot calls this %s.,Godot 称之为 %s。
+Godot writes this as %s.,Godot 中写作 %s。
+every frame,每帧
+Every frame,每帧
+Runs every frame,每帧运行
+Instantiate,实例化
+Instantiate (3D),实例化 (3D)
+Instantiate Safely,安全实例化
+Instantiate Safely (3D),安全实例化 (3D)
+Instantiate In A Formation,按阵型实例化
+Instantiate In A Formation (3D),按阵型实例化 (3D)
+"Instantiate, Facing And Moving",实例化（带朝向和移动）
+"Instantiate, Facing And Moving (3D)",实例化（带朝向和移动，3D）
+Instantiate Myself,实例化自身
+Instantiate Myself (3D),实例化自身 (3D)
+Instantiate In A Free Spot,在空位实例化
+Instantiate In A Free Spot (3D),在空位实例化 (3D)
+Instantiate Into The Crowd,实例化到人群中
+"Instantiate, The First Makes Room",实例化（最早的让位）
+Instantiate Unless The Crowd Is Full,人群未满时实例化
+Instantiate Scene In The World,在世界中实例化场景
+Instantiate Scene As,以名称实例化场景
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]",在 {at} 将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，位于 [i]{parent}[/i] 之下
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",在 {at} 将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，位于 [i]{parent}[/i] 之下，在下一个空闲时刻添加
+Instantiate [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b],按 [b]{formation}[/b] 阵型实例化 [b]{count}[/b] 个 [b]{scene}[/b] 副本
+"Instantiate [b]{scene}[/b] as [b]{name}[/b], facing [b]{facing}[/b], moving at [b]{speed}[/b]",将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，朝向 [b]{facing}[/b]，速度 [b]{speed}[/b]
+"Instantiate [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",在 {at} 将 [b]自身[/b] 实例化为 [b]{name}[/b]，位于 [i]{parent}[/i] 之下，在下一个空闲时刻添加
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]",将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，位于 [i]{inside}[/i] 的空位，在 [i]{parent}[/i] 之下
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]",在 {at} 将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，位于 [i]{parent}[/i] 之下，加入人群 [b]{crowd}[/b]
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room",在 {at} 将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，位于 [i]{parent}[/i] 之下，[b]{crowd}[/b] 中最多 [b]{cap}[/b] 个存活 - 最早的让位
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip instantiating when full",在 {at} 将 [b]{scene}[/b] 实例化为 [b]{name}[/b]，位于 [i]{parent}[/i] 之下，[b]{crowd}[/b] 中最多 [b]{cap}[/b] 个存活 - 满员时跳过
+Instantiate {path} in the level at {position},在关卡中的 {position} 实例化 {path}
+"Instantiate [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent",将 [b]{path}[/b] 实例化为 [b]{spawn_name}[/b]，带有 [i]{values}[/i]，相对其父节点放置
+"A name for this spawn, so later rows can say The Instantiated Node ""boss"".","此实例的名称，之后的行可以引用「已实例化的节点」""boss""。"
+The Instantiated Node,已实例化的节点
+the instantiated node [b]{spawn_name}[/b],已实例化的节点 [b]{spawn_name}[/b]
+The name an Instantiate Scene As row used.,「以名称实例化场景」行所用的名称。
+Instantiated Node Is Alive,已实例化的节点仍存活
+the instantiated node [b]{spawn_name}[/b] is alive,已实例化的节点 [b]{spawn_name}[/b] 仍存活
+The name the Instantiate Scene As row gave this spawn.,「以名称实例化场景」行为此实例指定的名称。
+Queue Free Now,立即 queue_free
+Queue Free,Queue free
+queue free [i]{object}[/i] now,立即 queue free [i]{object}[/i]
+Queue Free After Seconds,数秒后 queue_free
+queue free [i]{object}[/i] after {seconds}s,{seconds} 秒后 queue free [i]{object}[/i]
+Fade Out Then Queue Free,淡出后 queue_free
+queue free [i]{object}[/i] after fading it out over {seconds}s,用 {seconds} 秒淡出 [i]{object}[/i] 之后 queue free
+"On Body Entered, In Group",物体进入时（在组内）
+"On body entered, in group {group}",物体进入时（在组 {group} 内）
+"On Body Exited, In Group",物体离开时（在组内）
+"On body exited, in group {group}",物体离开时（在组 {group} 内）
+"On Body Entered, In Group (3D)",物体进入时（在组内，3D）
+"On Body Exited, In Group (3D)",物体离开时（在组内，3D）
+Overlaps Group,与组重叠
+Overlaps Group (3D),与组重叠 (3D)
+overlaps {group},与 {group} 重叠
+"Runs once when this node is ready (the _ready callback): it and all its children are in the scene, ideal for setup and initial values.",当此节点就绪时运行一次（_ready 回调）：它及其所有子节点都已在场景中，适合做初始化和设置初始值。
+"Runs every rendered frame (the _process callback), perfect for continuous movement, timers, or polling input.",每个渲染帧运行一次（_process 回调），适合持续移动、计时器或轮询输入。
+"Runs every fixed physics step (the _physics_process callback), the right place for physics-based movement and forces.",每个固定物理步长运行一次（_physics_process 回调），是处理基于物理的移动和力的合适位置。
+"Runs the moment this node is added to the scene tree (the _enter_tree callback) - before its children exist, which is what makes it earlier than On Ready.",在此节点被添加到场景树的瞬间运行（_enter_tree 回调），此时子节点尚不存在，因此早于 On Ready。
+"Runs when this node leaves the scene tree (the _exit_tree callback) - the place to let go of what it was holding, save its state, or tell others it is gone.",当此节点离开场景树时运行（_exit_tree 回调），适合释放其持有的资源、保存状态或通知其他节点它已消失。
+"An event with no condition of its own runs every frame. Add its actions with A, or add a condition later to narrow it down.",没有自身条件的事件每帧都会运行。用 A 添加它的动作，或稍后添加条件来缩小范围。
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick, Destroy, Angle); the other verbs stay Godot's.",其他事件表编辑器用于名词和回调的词汇（Family、Layout、On start of layout、Every tick、Destroy、Angle）；其余动词仍使用 Godot 的。
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Instantiate. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.",名词和动词都使用事件表的说法，Godot 说 Instantiate 的地方，行里读作 Create object。选择器中仍并列显示 Godot 的写法，代码面板和提示永远不变。
+"Spawns one copy the way Instantiate does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.",像「实例化」那样实例化，然后把它转向某处，并沿着这个朝向给它一个速度 - 出膛的子弹、轮子甩出的火花、冲过来的敌人。速度写到哪里取决于场景是什么：CharacterBody 写 velocity，RigidBody 写 linear_velocity，穿戴了 Bullet 行为的场景则写该行为自己的速度。对话框会读取场景文件并告诉你它找到的是哪一种。
+"Spawns one copy the way Instantiate (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.",像「实例化 (3D)」那样实例化，然后把它转向某处，并沿着这个朝向给它一个速度。三维里的「前」是副本自己的 -Z，这也是 Godot 在别处所说的前方，所以「朝向某个节点」就是一句普通的 look_at。速度写到哪里取决于场景是什么：CharacterBody 写 velocity，RigidBody 写 linear_velocity，穿戴了 Bullet 行为的场景则写该行为自己的速度。
+"Gives a point inside a shape you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of - where to put the next crate, the next mine, the next enemy in a room that is filling up. Clear is asked as a real physics test, with the spawned scene's OWN collision shape put at the point, so a wall is a wall whatever drew it; a group whose members carry no shape at all is answered by distance instead. A full arena answers NOTHING, and Instantiate In A Free Spot is the row that knows what to do about that.",在你画的形状里给出一个点：指定的那些组里没有任何东西站在那儿，同一场景的其他副本也都不在这个间距之内 - 也就是在越来越满的房间里，下一个箱子、下一颗地雷、下一个敌人该放哪儿。「空着」是用真正的物理检测来问的，把要生成的那个场景自己的碰撞形状放到该点去试，所以墙就是墙，无论是谁画的；成员完全没有碰撞形状的组，则改用距离来回答。挤满的竞技场什么也不给，而知道该拿这种情况怎么办的，是「在空位实例化」这一行。
+"Runs when an Instantiate In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.",当一行「在空位实例化」找不到地方放副本时运行，并把它没能放下的那个场景交给你。这个信号由本表自己声明 - 加一个写着 spawn_skipped(scene) 的信号块，两边就都是普通的 Godot - 于是「场地满了」变成游戏可以回应的事：结束这一波、提示房间已满，或者腾出空间。
+"Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Queue Free Now does. Like Queue Free Now, the object is still there for the rest of this event: a destroy lands at the end of the frame and a handing back lands on the next idle moment, which is what makes this row safe inside a collision handler. Safe to run twice - something already on its way out, or already back in its pool, is left alone.",让对象退役：来自对象池的交还给做出它的那个池，不是的就销毁。究竟是哪一种，是从对象本身读出来的，所以事件表永远不必记住一个副本是从哪来的；而在没有对象池的游戏里，这一行的表现和 立即 queue_free 完全一样。和 立即 queue_free 一样，对象在本事件余下的部分里依然存在：销毁落在帧的末尾，交还落在下一个空闲时刻，这正是让这一行在碰撞处理器里也安全的原因。执行两次也安全：已经在离场途中、或者已经回到池里的东西会被原样放过。
+"Spawns a copy the way Instantiate does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.","像""实例化""那样实例化，并把它放进以场景命名的分组里，这样下面的行就能数它们、给它们设上限，并在最后一个消失时收到通知。加入分组时使用了 Godot 的持久分组标志，正是它让这个分组在该分支被重新打包回场景文件后依然存在。"
+"The same spawn as Instantiate, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","与 实例化 相同的生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置是关卡中的位置,在添加副本后立即设置,因此无论父节点是谁,副本都会落在那里。"
+"The same 3D spawn as Instantiate (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.","与 实例化 (3D) 相同的 3D 生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置是关卡中的位置,在添加副本后立即设置,因此无论父节点是谁,副本都会落在那里。"
+Loads a scene and drops a copy into the current scene at a place in the level. Instantiate Scene At adds the copy under this node and measures its place from this node instead.,"加载场景并把副本放入当前场景中关卡里的某个位置。“在指定位置实例化场景”则把副本添加到此节点之下,并从此节点开始测量位置。"
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Instantiated Node. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","以一个名字生成场景，在它进入树之前把一组值设到它身上，并以那个名字记住它，于是之后每一行都能说“已实例化的节点”。如果事件表声明了 scene_spawned(spawn_name, node) 信号，这会带上两者一起触发它，于是另一个事件无需追问“最后生成的是什么”就能对新节点做出反应。"
+"The node an Instantiate Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.",某一行“以名称实例化场景”以这个名字造出的节点，从未生成过或此后已被释放时则为“什么也没有” - 于是伸手去够一个已死 boss 的行拿到的是空，而不是崩溃。
+"Runs when an Instantiate Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","当一行“以名称实例化场景”生成了东西时运行。名字和新节点会以 spawn_name 和 node 的形式送到这一行上，于是反应无需追问最后生成的是什么就能配置或宣告这个节点 - 即使一个循环在一帧里生成了六个东西也依然正确。需要一行 scene_spawned(spawn_name: String, node: Node) 的信号行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。"
+Instantiate Scene At,在指定位置实例化场景
+Instantiate Scene File,实例化场景文件
+Instantiate Scene (Full),实例化场景（完整）
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.",加载场景并将副本作为此节点的子节点添加。位置相对于此节点测量，因此副本会随它移动；若要直接放入关卡，请改用「在世界中实例化场景」。
+"Instantiate {path} at {position}, as a child of this node",在 {position} 实例化 {path}，作为此节点的子节点
+"Instantiate {path} (rot {rotation}, group {group}), as a child of this node",实例化 {path}（旋转 {rotation}，组 {group}），作为此节点的子节点

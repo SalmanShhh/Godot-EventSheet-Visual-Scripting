@@ -40,16 +40,16 @@ family stops being confusing.
 
 - **Changing scene replaces everything.** Change Scene swaps the whole current scene for another file.
   Nothing survives except autoloads. Reload Scene reloads exactly what is running now.
-- **A spawn is a load plus an instantiate plus an add.** Spawn Scene Instance is the one-line form.
-  Spawn Scene At also positions it. Spawn Scene (Full) also rotates it and optionally puts it in a
+- **A spawn is a load plus an instantiate plus an add.** Instantiate Scene File is the one-line form.
+  Instantiate Scene At also positions it. Instantiate Scene (Full) also rotates it and optionally puts it in a
   group. All three add the copy as a child of the node the row runs on.
-- **A layout on top is not a spawn and not a scene change.** Add Scene On Top puts a pause menu, an
-  inventory or a dialogue box OVER the running game: it loads the layout, gives the copy the name you
+- **A scene on top is not a spawn and not a scene change.** Add Scene On Top puts a pause menu, an
+  inventory or a dialogue box OVER the running game: it loads the scene, gives the copy the name you
   type, and adds it under the tree root. Under the root rather than under this node, because that is
-  what lets the menu outlive a change of layout beneath it - the same reason the Scene Flow pack
+  what lets the menu outlive a change of scene beneath it - the same reason the Scene Flow pack
   parents its fade overlay there. Remove Scene On Top takes it off again by that name, and Layout Is
   On Top asks whether it is still there. The three are the pair to Pause The Game, and the name is
-  the node's own name under the root, not a second registry - naming a layout by a short word instead
+  the node's own name under the root, not a second registry - naming a scene by a short word instead
   of a path is what the Named Scenes pack is for.
 - **Pausing the game is one flag.** Set Game Paused writes `get_tree().paused`. What that means for
   any given node is decided by that node's own process mode.
@@ -77,29 +77,29 @@ family stops being confusing.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Change Scene | Switches the game to a different layout (a scene file) | `get_tree().change_scene_to_file({path})` |
-| Reload Scene | Restarts the current layout from the beginning | `get_tree().reload_current_scene()` |
+| Change Scene | Switches the game to a different scene (a scene file) | `get_tree().change_scene_to_file({path})` |
+| Reload Scene | Restarts the current scene from the beginning | `get_tree().reload_current_scene()` |
 | Pause The Game | Freezes the whole game | `get_tree().paused = true` |
 | Unpause | Lets the game run again | `get_tree().paused = false` |
 | Quit Game | Closes the game and exits to desktop | `get_tree().quit()` |
 | Handle Quit Myself | Stops the window's X from quitting instantly | `get_tree().set_auto_accept_quit({mode})` |
-| Spawn Scene Instance | Loads a scene file and adds an instance as a child | `add_child(load({path}).instantiate())` |
-| Add Scene On Top | Puts a layout over the running game under a name you choose | three lines: load and instance, name it, `get_tree().root.add_child(…)` |
-| Remove Scene On Top | Takes that layout back off by name (a name nothing is under does nothing) | a guarded `get_tree().root.get_node_or_null({layout_name})` and `queue_free()` |
-| Scene Is On Top | True while a layout added on top is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
-| Spawn Scene At | Loads a scene and drops a copy at a position | three lines, see below |
-| Spawn Scene (Full) | Spawn with position, rotation and an optional group | five lines, see below |
-| Spawn Scene As | Spawn under a NAME, with a record of values set on the way in and a chosen parent | eight lines, see below |
-| The Spawned | The node a Spawn Scene As row made under this name, or nothing when it was never spawned or has been freed | `get_meta(&"__ef_spawn_" + <name>)`, behind a `has_meta` and `is_instance_valid` guard |
-| Spawn Is Alive | True while the node spawned under this name still exists | the same guarded read, as a condition |
-| On Scene Spawned | Runs when a Spawn Scene As row spawns something, handing you the name and the node | connects to the sheet's own `scene_spawned(spawn_name, node)` signal |
+| Instantiate Scene File | Loads a scene file and adds an instance as a child | `add_child(load({path}).instantiate())` |
+| Add Scene On Top | Puts a scene over the running game under a name you choose | three lines: load and instance, name it, `get_tree().root.add_child(…)` |
+| Remove Scene On Top | Takes that scene back off by name (a name nothing is under does nothing) | a guarded `get_tree().root.get_node_or_null({layout_name})` and `queue_free()` |
+| Scene Is On Top | True while a scene added on top is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
+| Instantiate Scene At | Loads a scene and drops a copy at a position | three lines, see below |
+| Instantiate Scene (Full) | Spawn with position, rotation and an optional group | five lines, see below |
+| Instantiate Scene As | Spawn under a NAME, with a record of values set on the way in and a chosen parent | eight lines, see below |
+| The Instantiated Node | The node a Instantiate Scene As row made under this name, or nothing when it was never spawned or has been freed | `get_meta(&"__ef_spawn_" + <name>)`, behind a `has_meta` and `is_instance_valid` guard |
+| Instantiated Node Is Alive | True while the node spawned under this name still exists | the same guarded read, as a condition |
+| On Scene Spawned | Runs when a Instantiate Scene As row spawns something, handing you the name and the node | connects to the sheet's own `scene_spawned(spawn_name, node)` signal |
 | Set Game Paused | Pauses or resumes the whole game | `get_tree().paused = {paused}` |
 | Is Game Paused | True when the game is currently paused | `get_tree().paused` |
 
 The pause pair, and the GDScript it compiles to. One event puts the menu up and freezes the game;
-its twin, told apart only by the layout-on-top question, takes it down and lets the game run again.
+its twin, told apart only by the scene-on-top question, takes it down and lets the game run again.
 
-![The pause pair as two events - cancel pressed with no menu up adds the layout and pauses, cancel pressed with it up removes the layout and unpauses - above the plain GDScript both compile to](../images/layout-on-top-pause-pair.png)
+![The pause pair as two events - cancel pressed with no menu up adds the scene and pauses, cancel pressed with it up removes the scene and unpauses - above the plain GDScript both compile to](../images/layout-on-top-pause-pair.png)
 
 ### The game's own mode
 
@@ -129,9 +129,9 @@ leave, and a mode nothing uses at all.
 Intercept in a ready handler and the window's close button waits for your own close handler, which
 then calls Quit Game explicitly.
 
-**Spawn Scene As** is the one you can talk to afterwards. The other three build into a hidden local,
+**Instantiate Scene As** is the one you can talk to afterwards. The other three build into a hidden local,
 so the row after them cannot reach what was just made; this one remembers the node in the host's
-metadata under the name you typed, which is why **The Spawned "boss"** works from any later row and
+metadata under the name you typed, which is why **The Instantiated Node "boss"** works from any later row and
 any later event on the same sheet. It also emits `scene_spawned(spawn_name, node)` when the sheet
 declares that signal - add a **Signal** row reading `scene_spawned(spawn_name: String, node: Node)`
 and put the reaction under **On Scene Spawned**, where the name and the node arrive as the row's own
@@ -139,7 +139,7 @@ payload. That is deliberately not a "last spawned" value: a loop spawning six th
 would overwrite one of those six times, while a signal fires six times with the right node each time.
 A reaction that only cares about one name puts a condition under the trigger comparing `spawn_name`,
 the same way every other payload-carrying trigger is narrowed. Reading a name that was never spawned
-is not an error and never crashes: **The Spawned** hands back nothing, and **Spawn Is Alive** is false.
+is not an error and never crashes: **The Instantiated Node** hands back nothing, and **Instantiated Node Is Alive** is false.
 
 ```gdscript
 var __spawn_figure = load("res://enemies/warden.tscn").instantiate()
@@ -154,7 +154,7 @@ if has_signal(&"scene_spawned"):
 	emit_signal(&"scene_spawned", "boss", __spawn_figure)
 ```
 
-**Spawn Scene At** and **Spawn Scene (Full)** bake a per-row unique local so two spawn rows in the
+**Instantiate Scene At** and **Instantiate Scene (Full)** bake a per-row unique local so two spawn rows in the
 same handler cannot collide:
 
 ```gdscript
@@ -193,10 +193,10 @@ parent), Pausable (stops when the game pauses), When Paused (runs ONLY while pau
 the game pause), Disabled (never runs).
 
 This is the table Add Scene On Top depends on. A pause menu added over a paused game is paused with
-it unless the menu layout's OWN root node is set to Always or When Paused - set that on the layout's
+it unless the menu scene's OWN root node is set to Always or When Paused - set that on the scene's
 root in the scene, or with Keep Node Running While Paused on the way in. The row does not write it
 for you: it emits the three lines it names and nothing else, and the parameters dialog says this on
-the help strip while the Layout field has focus, which is the moment it matters.
+the help strip while the Scene field has focus, which is the moment it matters.
 
 ### One callback at a time
 
@@ -260,7 +260,7 @@ func _on_spawn_timer_timeout() -> void:
 	add_child(__spawn_wave)
 ```
 
-**4. Spawn with a rotation and a tag, in one row.** Spawn Scene (Full) puts the copy straight into the
+**4. Spawn with a rotation and a tag, in one row.** Instantiate Scene (Full) puts the copy straight into the
 group your other events already query.
 
 ```gdscript
@@ -436,9 +436,9 @@ talk about it.
 
 ```
 On boss fight started
-  -> Spawn Scene As  "res://enemies/warden.tscn" as "boss" at Vector2(400, 200) with {"max_health": 200, "tier": 3}
-  -> Set Property  ( The Spawned "boss" ), "target", ( player )
-  -> Add To Group  ( The Spawned "boss" ), "bosses"
+  -> Instantiate Scene As  "res://enemies/warden.tscn" as "boss" at Vector2(400, 200) with {"max_health": 200, "tier": 3}
+  -> Set Property  ( The Instantiated Node "boss" ), "target", ( player )
+  -> Add To Group  ( The Instantiated Node "boss" ), "bosses"
 ```
 
 **24. Set values BEFORE the first frame.** The with-record is applied while the node is still out of
@@ -447,7 +447,7 @@ step.
 
 ```
 On weapon fired
-  -> Spawn Scene As  "res://weapons/bolt.tscn" as "bolt" with {"damage": 12, "owner_faction": "player"}
+  -> Instantiate Scene As  "res://weapons/bolt.tscn" as "bolt" with {"damage": 12, "owner_faction": "player"}
 ```
 
 **25. Choose the parent.** Spawning into a container keeps the scene tree tidy and makes "delete
@@ -455,7 +455,7 @@ every enemy" one row later.
 
 ```
 On wave started
-  -> Spawn Scene As  "res://enemies/slime.tscn" as "slime" into ( Get Node "Enemies" )
+  -> Instantiate Scene As  "res://enemies/slime.tscn" as "slime" into ( Get Node "Enemies" )
 ```
 
 **26. React to the spawn somewhere else.** Declare the signal once, and the HUD's own sheet can show
@@ -478,12 +478,12 @@ func _on_scene_spawned(spawn_name: String, node: Node) -> void:
 		print("boss bar for ", node.name)
 ```
 
-**27. Guard a row that talks to a spawn.** Things die; Spawn Is Alive is how a row asks first.
+**27. Guard a row that talks to a spawn.** Things die; Instantiated Node Is Alive is how a row asks first.
 
 ```
 On On Process
-  Condition: Spawn Is Alive  "boss"
-    -> Set Property  ( The Spawned "boss" ), "target", ( player )
+  Condition: Instantiated Node Is Alive  "boss"
+    -> Set Property  ( The Instantiated Node "boss" ), "target", ( player )
 ```
 
 **28. Spawn a whole catalogue in one loop.** Each entry names its own spawn, so the configure row
@@ -491,8 +491,8 @@ right after it addresses the right node.
 
 ```
 Condition: For Each  ( Resources In Folder "res://data/enemies" )
-  -> Spawn Scene As  ( item.scene ) as ( item.id )
-  -> Apply Preset To Node  ( item ), ( The Spawned ( item.id ) )
+  -> Instantiate Scene As  ( item.scene ) as ( item.id )
+  -> Apply Preset To Node  ( item ), ( The Instantiated Node ( item.id ) )
 ```
 
 **29. Instance a UI row and fill it in.** The most common reason a UI sheet drops into GDScript is
@@ -501,8 +501,8 @@ that it cannot reach the row it just created.
 ```
 On inventory opened
   Condition: For Each  ( inventory )
-    -> Spawn Scene As  "res://ui/item_row.tscn" as ( item.id ) into ( Get Node "List" )
-    -> Set Property  ( The Spawned ( item.id ) ), "text", ( item.name )
+    -> Instantiate Scene As  "res://ui/item_row.tscn" as ( item.id ) into ( Get Node "List" )
+    -> Set Property  ( The Instantiated Node ( item.id ) ), "text", ( item.name )
 ```
 
 **30. Free a node from inside the collision that killed it.** Freeing during the physics step is the

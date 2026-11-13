@@ -185,10 +185,10 @@ static func _test_settings_persistence() -> bool:
 static func _test_spawn_templates() -> bool:
 	var ok: bool = true
 	var spawn: ACEDescriptor = _descriptor(EventForgeSystemACEs.get_descriptors(), "SpawnSceneAs")
-	ok = _pin(ok, spawn != null, true, "Spawn Scene As ships")
+	ok = _pin(ok, spawn != null, true, "Instantiate Scene As ships")
 	if spawn == null:
 		return false
-	ok = _pin(ok, spawn.display_name, "Spawn Scene As", "its display name")
+	ok = _pin(ok, spawn.display_name, "Instantiate Scene As", "its display name")
 	ok = _pin(ok, spawn.ace_type, ACEDescriptor.ACEType.ACTION, "a spawn is an action")
 	ok = _pin(ok, spawn.codegen_template.contains("set_meta(&\"__ef_spawn_\" + str({spawn_name}).to_utf8_buffer().hex_encode(), __spawn_{uid})"),
 		true, "the name is the address: the node is remembered under it")
@@ -197,17 +197,17 @@ static func _test_spawn_templates() -> bool:
 	ok = _pin(ok, spawn.codegen_template.contains("__spawn_{uid}.set(__field_{uid}, __values_{uid}[__field_{uid}])"),
 		true, "the with-record is applied field by field")
 	var the_spawned: ACEDescriptor = _descriptor(EventForgeSystemACEs.get_descriptors(), "TheSpawned")
-	ok = _pin(ok, the_spawned.ace_type, ACEDescriptor.ACEType.EXPRESSION, "The Spawned is an expression")
-	ok = _pin(ok, the_spawned.display_name, "The Spawned", "its display name")
+	ok = _pin(ok, the_spawned.ace_type, ACEDescriptor.ACEType.EXPRESSION, "The Instantiated Node is an expression")
+	ok = _pin(ok, the_spawned.display_name, "The Instantiated Node", "its display name")
 	var alive: ACEDescriptor = _descriptor(EventForgeSystemACEs.get_descriptors(), "SpawnIsAlive")
-	ok = _pin(ok, alive.ace_type, ACEDescriptor.ACEType.CONDITION, "Spawn Is Alive is a condition")
+	ok = _pin(ok, alive.ace_type, ACEDescriptor.ACEType.CONDITION, "Instantiated Node Is Alive is a condition")
 	ok = _pin(ok, alive.codegen_template, "(has_meta(&\"__ef_spawn_\" + str({spawn_name}).to_utf8_buffer().hex_encode()) and is_instance_valid(get_meta(&\"__ef_spawn_\" + str({spawn_name}).to_utf8_buffer().hex_encode())))",
 		"and it reads the same metadata the spawn wrote")
 	# The read is guarded by has_meta and NEVER by get_meta's default argument: Object.get_meta
 	# treats a null default as "no default given" and pushes an engine error, which would fire on
 	# every row asking about a name that was never spawned - the exact case these two answer.
 	ok = _pin(ok, the_spawned.codegen_template.contains("has_meta("), true,
-		"The Spawned asks has_meta before reading")
+		"The Instantiated Node asks has_meta before reading")
 	ok = _pin(ok, the_spawned.codegen_template.contains(", null)"), false,
 		"and never leans on get_meta's null default, which would print an error each time")
 
@@ -306,20 +306,20 @@ static func _test_spawn_runtime() -> bool:
 	ok = _pin(ok, watcher.last_name, "boss", "the trigger carries the name the row typed")
 	ok = _pin(ok, watcher.last_node is Node2D, true, "and the NODE itself, not a lookup key")
 	ok = _pin(ok, host.call("the_spawned") == watcher.last_node, true,
-		"The Spawned answers the very same node the trigger carried")
+		"The Instantiated Node answers the very same node the trigger carried")
 	ok = _pin(ok, (host.call("the_spawned") as Node2D).position, Vector2(10, 20), "it was placed")
 	ok = _pin(ok, (host.call("the_spawned") as Node2D).visible, false,
 		"and the with-record was applied on the way in")
 	ok = _pin(ok, (host.call("the_spawned") as Node).get_parent() == host, true,
 		"with no parent given it lands under the sheet's own node")
-	ok = _pin(ok, host.call("is_alive"), true, "Spawn Is Alive reads true while it exists")
+	ok = _pin(ok, host.call("is_alive"), true, "Instantiated Node Is Alive reads true while it exists")
 
 	# The edge case: a freed spawn reads as nothing, never as a dangling object.
 	var spawned: Node = host.call("the_spawned")
 	host.remove_child(spawned)
 	spawned.free()
 	ok = _pin(ok, host.call("is_alive"), false, "a freed spawn is not alive")
-	ok = _pin(ok, host.call("the_spawned"), null, "and The Spawned gives nothing rather than a dead node")
+	ok = _pin(ok, host.call("the_spawned"), null, "and The Instantiated Node gives nothing rather than a dead node")
 
 	# Six spawns in one frame, the case a "last spawned node" expression would get wrong five times.
 	watcher.calls = 0

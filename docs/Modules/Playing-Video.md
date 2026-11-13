@@ -64,15 +64,15 @@ wires any other node signal - so "play the intro, then open the menu" is two eve
 ## Use cases
 
 **1. A boot logo.** On ready, **Set Video** the logo and **Play**. Wire the player's
-finished signal to an event that goes to the title layout.
+finished signal to an event that goes to the title scene.
 
 **2. A skippable intro.** The same shape, plus an event on any key pressed that does **Stop** and
-goes to the next layout - so the skip and the natural end both land in one place.
+goes to the next scene - so the skip and the natural end both land in one place.
 
 **3. A cutscene between levels.** Play the film on a full-screen player over the paused game, and let
 the finished signal load the next level.
 
-**4. An animated menu background.** Play a short loop on start of layout and wire finished back to
+**4. An animated menu background.** Play a short loop on ready and wire finished back to
 **Play**, so it starts again the moment it ends.
 
 **5. Pause when the game pauses.** In the pause event, **Pause Video**; in the resume event, pause it
@@ -85,7 +85,7 @@ it when the page closes so it is not still running behind the next one.
 time and never again.
 
 **8. A "now loading" film.** Play a short loop while a background load runs, and stop it when the
-loaded layout is ready.
+loaded scene is ready.
 
 **9. Mute the film when the game is muted.** Route the player through the music bus, so the options
 screen's volume rows reach it like everything else.
@@ -137,5 +137,5 @@ reads as these rows, which is the quickest way to see what it plays and when.
 - **Is playing is false while paused.** If a skip prompt vanishes when the player pauses, that is why.
 - **The web export may refuse it.** Browsers are stricter about video decoding; test a web build
   before a film becomes load-bearing.
-- **Stop it before you change layouts.** A player left running while the scene changes can keep its
+- **Stop it before you change scenes.** A player left running while the scene changes can keep its
   sound going for a moment, which reads as a bug and is one row to fix.

@@ -113,7 +113,7 @@ static func run() -> bool:
 		ACEParamsDialog.drop_data_to_expression(drop_payload), "\"res://level.tscn\"") and all_passed
 	hint_dialog.animation_scene_root_override = null
 	# Descriptor hints flipped (UX-only; templates untouched).
-	all_passed = _check("Spawn Scene At browses scenes",
+	all_passed = _check("Instantiate Scene At browses scenes",
 		str((by_id["SpawnSceneAt"].params[0] as ACEParam).hint), "scene_path") and all_passed
 	all_passed = _check("Play Animation offers the animation dropdown",
 		str((by_id["PlayAnimation"].params[0] as ACEParam).hint), "animation_reference") and all_passed

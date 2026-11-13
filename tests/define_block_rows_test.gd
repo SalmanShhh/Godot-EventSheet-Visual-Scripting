@@ -178,7 +178,7 @@ static func run() -> bool:
 	if sheet_event_row != null:
 		tick_view._row_builder._ensure_event_spans(sheet_event_row)
 	# On the SHEET the same row reads BLANK: an event with no condition of its own already
-	# says it runs every tick by saying nothing, so the placeholder would talk over the reading.
+	# says it runs every frame by saying nothing, so the placeholder would talk over the reading.
 	ok = _check("the SHEET's own condition-less event reads blank, not 'Every Tick'",
 		_row_has_span_text(sheet_event_row, "Every Tick"), false) and ok
 	tick_dock.free()

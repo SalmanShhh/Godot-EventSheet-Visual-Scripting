@@ -95,7 +95,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"ReadingNounsPlayer ▸ Set opacity to 50%",
 	"ReadingNounsPlayer ▸ Set size to 200%",
 	# Angles, distances and directions
-	"ReadingNounsPlayer ▸ Set angle to 90",
+	"ReadingNounsPlayer ▸ Set rotation to 90",
 	"System ▸ Set reading to distance to boss",
 	# Re-pinned these two: a velocity's length IS the speed, and a normalized vector is the unit
 	# vector of the one it came from - both said as an event sheet says them rather than as the method
@@ -119,7 +119,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# The collision family and the platform words
 	"ReadingNounsPlayer ▸ Is by wall",
 	"ReadingNounsPlayer ▸ Is jumping",
-	"hud ▸ Is overlapping boss",
+	"hud ▸ Overlaps boss",
 	"enemies (group) ▸ count == 0",
 	"boss ▸ hp > 0"
 ])
@@ -255,9 +255,9 @@ static func _verb_values() -> bool:
 static func _measurement_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		["rotation_degrees = 90", "Player ▸ Set angle to 90"],
-		["rotation = 1.5", "Player ▸ Set angle (radians) to 1.5"],
-		["look_at(boss.global_position)", "Player ▸ Set angle toward boss.global_position"],
+		["rotation_degrees = 90", "Player ▸ Set rotation to 90"],
+		["rotation = 1.5", "Player ▸ Set rotation (radians) to 1.5"],
+		["look_at(boss.global_position)", "Player ▸ Set rotation toward boss.global_position"],
 		["reading = global_position.distance_to(boss)", "System ▸ Set reading to distance to boss"],
 		["reading = a.distance_to(b)", "System ▸ Set reading to distance from a to b"],
 		["reading = position.angle_to_point(p)", "System ▸ Set reading to angle to p"],
@@ -292,9 +292,9 @@ static func _condition_values() -> bool:
 		["is_on_ceiling()", "Player ▸ Is touching ceiling"],
 		["velocity.y < 0", "Player ▸ Is jumping"],
 		["velocity.y > 0", "Player ▸ Is falling"],
-		["hud.overlaps_body(boss)", "hud ▸ Is overlapping boss"],
-		["hud.overlaps_area(boss)", "hud ▸ Is overlapping boss"],
-		["hud.has_overlapping_bodies()", "hud ▸ Is overlapping something"],
+		["hud.overlaps_body(boss)", "hud ▸ Overlaps boss"],
+		["hud.overlaps_area(boss)", "hud ▸ Overlaps boss"],
+		["hud.has_overlapping_bodies()", "hud ▸ Overlaps something"],
 		["items.is_empty()", "items' count = 0"],
 		["get_tree().get_nodes_in_group(\"enemies\").size() == 0", "enemies (group) ▸ count == 0"],
 		["get_child_count() > 5", "Player ▸ child count > 5"],
@@ -444,7 +444,7 @@ static func _picked_matches_typed() -> bool:
 		"sfx ▸ Play sound",
 		"sprite ▸ Set mirrored",
 		"ReadingNounsPlayer ▸ Set invisible",
-		"ReadingNounsPlayer ▸ Set angle to 90",
+		"ReadingNounsPlayer ▸ Set rotation to 90",
 		"Boss ▸ Subtract 10 from hp"
 	]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok

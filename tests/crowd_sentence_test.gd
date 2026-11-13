@@ -111,7 +111,7 @@ static func _test_the_descriptors_say_what_they_emit() -> bool:
 	passed = _check("the make-room row says its policy on the row",
 		str(_descriptor(by_id, "SpawnIntoCrowdOldestFirst").display_text).ends_with("the first in the crowd makes room"), true) and passed
 	passed = _check("the skip row says its policy on the row",
-		str(_descriptor(by_id, "SpawnIntoCrowdUnlessFull").display_text).ends_with("skip spawning when full"), true) and passed
+		str(_descriptor(by_id, "SpawnIntoCrowdUnlessFull").display_text).ends_with("skip instantiating when full"), true) and passed
 	# The gate is spelled once. The dock bakes the module's own constant onto the condition it adds,
 	# so a descriptor that drifted from it would compile a different line than the row shows.
 	var module: GDScript = load(CROWD_MODULE_PATH)

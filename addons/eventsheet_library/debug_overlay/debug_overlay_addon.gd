@@ -60,7 +60,7 @@ func _ready() -> void:
 ## @ace_featured
 ## @ace_name("Watch Value")
 ## @ace_category("Debug Overlay")
-## @ace_description("Shows name = value in the on-screen list, refreshed every time you set it. Call it from an Every Frame row and it reads like a live watch window over the running game. Debug builds only.")
+## @ace_description("Shows name = value in the on-screen list, refreshed every time you set it. Call it from an On Process row and it reads like a live watch window over the running game. Debug builds only.")
 ## @ace_display_template("Watch [b]{watch_name}[/b] = [b]{value}[/b]")
 ## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
 ## @ace_codegen_template("DebugOverlay.watch_value({watch_name}, {value})")

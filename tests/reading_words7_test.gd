@@ -82,7 +82,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ 0.5 seconds have passed since last_shot",
 	"System ▸ Set last_shot to now",
 	# One condition per question
-	"eventforge_reading_words7 ▸ angle is within 10° of target_angle",
+	"eventforge_reading_words7 ▸ rotation is within 10° of target_angle",
 	"eventforge_reading_words7 ▸ is within 100 of (0, 0)",
 	"eventforge_reading_words7 ▸ is inside area 0, 0 - 640 × 360",
 	"eventforge_reading_words7 ▸ speed is about 0 (not moving)",
@@ -120,7 +120,7 @@ static var CONDITION_READINGS: Dictionary = {
 	"width >= x and x >= 0": "System ▸ x is between 0 and width",
 	# Angles, in degrees, with the radians the file holds one hover away
 	"abs(angle_difference(rotation, target_angle)) < deg_to_rad(10)":
-		"Player ▸ angle is within 10° of target_angle",
+		"Player ▸ rotation is within 10° of target_angle",
 	"wrapf(a, 0, TAU) > deg_to_rad(30) and wrapf(a, 0, TAU) < deg_to_rad(60)":
 		"System ▸ a is between angles 30° and 60°",
 	"fmod(a, TAU) > deg_to_rad(30) and fmod(a, TAU) < deg_to_rad(60)":

@@ -613,7 +613,7 @@ Because the key is the trigger's own captured value, one handler covers every qu
 Almost every Local Storage row already had a home here; these fill the last gaps. Set item is **Save Value**, Get item is **Load Value**, Item exists is **Has Save Key**, Get all key names is **List Save Keys**, and ErrorMessage is **Last Save Problem**. Remove item is **Remove Save Key**, Clear storage is **Clear Slot Keys**, "on item set" and "on item missing" are **On Key Saved** and **On Save Key Missing**, and the browser round trip that made C3's version asynchronous simply does not exist here - this store is a file read, answered on the spot.
 
 ```
-On Start of Layout
+On Ready
   -> SaveSystem: Check Save Key  "profile_name"
 
 On Save Key Missing

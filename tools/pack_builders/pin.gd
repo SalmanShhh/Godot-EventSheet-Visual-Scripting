@@ -308,7 +308,7 @@ static func build() -> bool:
 		"_begin_pin(target, \"rope\")\npin_length = maxf(max_length, 0.0)",
 		"Pin to [i]{target}[/i] on a rope of [b]{max_length}[/b]")
 	Lib.append_function(sheet, "pin_bar", "Pin To Bar", "Pin",
-		"Holds the host at exactly the given distance from an object, every tick, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.",
+		"Holds the host at exactly the given distance from an object, every frame, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.",
 		[["target", "Node2D"], ["length", "float"]],
 		"_begin_pin(target, \"bar\")\npin_length = maxf(length, 0.0)",
 		"Pin to [i]{target}[/i] on a bar of [b]{length}[/b]")

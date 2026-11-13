@@ -66,7 +66,7 @@ Nothing to install per project beyond the pack. Once the Phase Cycle pack is in 
 Start the cycle once, then listen:
 
 ```
-On Start of Layout   (your game manager sheet, once)
+On Ready   (your game manager sheet, once)
   -> Phases: Cycle Phases  "day,night", 60
 
 On Phase Changed
@@ -144,7 +144,7 @@ Each example calls the `Phases` autoload. Start the cycle once; everything else 
 The whole system is one start row and one trigger.
 
 ```
-On Start of Layout
+On Ready
   -> Phases: Cycle Phases  "day,night", 120
 
 On Phase Changed
@@ -182,7 +182,7 @@ At the end of the day the progress hits 1, the phase rolls, and the sun starts o
 Two phases give a whole game loop its rhythm.
 
 ```
-On Start of Layout
+On Ready
   -> Phases: Cycle Phases  "build,fight", 30
 
 On Phase Changed
@@ -212,7 +212,7 @@ The bar empties through each phase and refills at every roll with no reset logic
 Four phases and one multiplier lookup.
 
 ```
-On Start of Layout
+On Ready
   -> Phases: Cycle Phases  "spring,summer,autumn,winter", 300
 
 On Every Tick
@@ -229,7 +229,7 @@ Winter stops the farm without anyone tracking a calendar.
 Repeat a name to give it more time. No extra feature needed.
 
 ```
-On Start of Layout
+On Ready
   -> Phases: Cycle Phases  "day,day,day,night", 30
 ```
 
@@ -334,7 +334,7 @@ The player learns the rhythm and starts timing upgrades to it.
 Four phases plus Phase Progress give you smooth movement and hard states together.
 
 ```
-On Start of Layout
+On Ready
   -> Phases: Cycle Phases  "low,rising,high,falling", 45
 
 On Every Tick
@@ -351,7 +351,7 @@ The `low` and `high` phases are the flat stretches where the player can act; the
 Named phases make the sequence readable at a glance.
 
 ```
-On Start of Layout
+On Ready
   -> Phases: Cycle Phases  "clear,cloudy,rain,storm,cloudy", 90
 
 On Phase Changed

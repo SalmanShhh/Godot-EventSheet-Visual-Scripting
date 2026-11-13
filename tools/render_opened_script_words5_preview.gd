@@ -1,9 +1,9 @@
 # EventForge - render harness (dev tool) for batch five's reading words.
 # Opens the two words5 fixtures read-only in three stacked panes and screenshots them as one image: the
-# top pane is the script the SCENE ITSELF carries (its _ready reads On start of layout, and under it
+# top pane is the script the SCENE ITSELF carries (its _ready reads On ready, and under it
 # the tick switches, the process mode, the wait-then and the named chips), the middle pane is that same
 # file with its folds opened, on the drawing verbs inside `_draw`, and the bottom pane is the script
-# sitting on a CHILD node of that same scene (whose _ready reads that object's On created).
+# sitting on a CHILD node of that same scene (whose _ready reads that object's On enter tree).
 # Writes docs/images/opened-script-words5.png and prints what every row READS, so one run proves both
 # the look (the image) and the words (the printed spans).
 # Run NON-headless (headless runs cannot render):
@@ -72,14 +72,14 @@ func _on_frame() -> void:
 	if _frames < 12 or _shot_taken:
 		return
 	_shot_taken = true
-	_scroll_to("On start of layout", _root_view)
+	_scroll_to("On ready", _root_view)
 	# The drawing verbs live inside `_draw`, which reading mode folds closed - so this pane is the
 	# same file with its folds opened, which is what a reader sees a click later.
 	_open_folds(_draw_view)
 	await process_frame
 	await process_frame
 	_scroll_to("Draw line", _draw_view)
-	_scroll_to("On created", _part_view)
+	_scroll_to("On enter tree", _part_view)
 	await process_frame
 	await process_frame
 	var image: Image = root.get_texture().get_image()

@@ -19,7 +19,7 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "Interaction behavior: attach to the PLAYER. Run Focus Nearest Interactable under a per-frame trigger (On Every Tick) with your interactables' group name and a reach in pixels; it keeps the nearest one in focus and fires On Focus Changed whenever that changes - including with null when you walk out of range. Highlight the focused node with the Juice pack's Start Blinking and show the prompt with a HUD Kit label. Interact With Focus calls interact() on the focused node if it has one, and always fires On Interacted."
+	about.text = "Interaction behavior: attach to the PLAYER. Run Focus Nearest Interactable under a per-frame trigger (On Process) with your interactables' group name and a reach in pixels; it keeps the nearest one in focus and fires On Focus Changed whenever that changes - including with null when you walk out of range. Highlight the focused node with the Juice pack's Start Blinking and show the prompt with a HUD Kit label. Interact With Focus calls interact() on the focused node if it has one, and always fires On Interacted."
 	sheet.events.append(about)
 
 	var focus_changed: SignalRow = SignalRow.new()
@@ -40,7 +40,7 @@ static func build() -> bool:
 
 	# Class-level state plus the one internal that owns every focus change. Routing every write
 	# through _set_focus is what makes On Focus Changed an EDGE (once per real change) rather than
-	# a per-frame firehose - Focus Nearest Interactable runs every tick and mostly re-picks the
+	# a per-frame firehose - Focus Nearest Interactable runs every frame and mostly re-picks the
 	# same node.
 	var state: RawCodeRow = RawCodeRow.new()
 	state.code = "\n".join(PackedStringArray([
@@ -59,7 +59,7 @@ static func build() -> bool:
 	sheet.events.append(state)
 
 	Lib.append_function(sheet, "focus_nearest", "Focus Nearest Interactable", "Interaction",
-		"Focuses the nearest node in the given group that is within reach (in pixels), or nothing at all when none are. Run this under a per-frame trigger (On Every Tick) - it re-picks every tick, but On Focus Changed only fires when the focused node actually changes, including when it becomes nothing.",
+		"Focuses the nearest node in the given group that is within reach (in pixels), or nothing at all when none are. Run this under a per-frame trigger (On Process) - it re-picks every frame, but On Focus Changed only fires when the focused node actually changes, including when it becomes nothing.",
 		[["group_name", "String"], ["within", "float"]],
 		"\n".join(PackedStringArray([
 			"if host == null or not is_inside_tree():",

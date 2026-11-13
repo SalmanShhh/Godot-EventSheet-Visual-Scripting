@@ -114,10 +114,10 @@ static func _off_side_is_the_shipped_wording() -> bool:
 	var switch_word: String = str(EventSheetSentence.PROCESS_SWITCH_WORDS["set_process"])
 	rows.append(["the every-tick switch turned on is the sentence the grammar writes",
 		EventSheetWords.verb_shipped_row("reading:set_process:on"),
-		"Set %s activated" % switch_word])
+		"Set %s enabled" % switch_word])
 	rows.append(["and turned off is the other one",
 		EventSheetWords.verb_shipped_row("reading:set_process:off"),
-		"Set %s deactivated" % switch_word])
+		"Set %s disabled" % switch_word])
 	rows.append(["a family loop's shipped word is the one the row builder writes",
 		EventSheetWords.verb_shipped_row("reading:pick_filter:GROUP"), "group"])
 	return SUPPORT.pins("verb_words_test", rows)
@@ -131,8 +131,8 @@ static func _a_row_reads_both_ways() -> bool:
 	EventSheetWords.set_verb_words_enabled(true)
 	var aliased: String = _spawn_row_reading()
 	EventSheetWords.set_verb_words_enabled(false)
-	var shipped_head: String = "Spawn a copy of"
-	var alias_head: String = "Create object"
+	var shipped_head: String = "Instantiate"
+	var alias_head: String = "Spawn a copy of"
 	var all_passed: bool = true
 	all_passed = _check("the row opens on the shipped words with the second vocabulary off",
 		shipped.substr(0, shipped_head.length()), shipped_head) and all_passed
@@ -154,24 +154,24 @@ static func _a_lifted_row_reads_both_ways() -> bool:
 	var switch_word: String = str(EventSheetSentence.PROCESS_SWITCH_WORDS["set_process"])
 	var all_passed: bool = true
 	all_passed = _check("the every-tick switch reads as the sheet's own sentence with it off",
-		_holding(shipped, "Set %s" % switch_word), "Set %s deactivated" % switch_word) and all_passed
+		_holding(shipped, "Set %s" % switch_word), "Set %s disabled" % switch_word) and all_passed
 	all_passed = _check("and as the two words the other editor uses with it on",
 		_holding(aliased, "Set disabled"), "Set disabled") and all_passed
 	all_passed = _check("a switch the table does not name is untouched either way",
-		_holding(aliased, "Set Every physics tick"), "Set Every physics tick activated") and all_passed
+		_holding(aliased, "Set physics process"), "Set physics process enabled") and all_passed
 	return all_passed
 
 
 ## 5. The picker's search finds a verb by its alias, whichever vocabulary is switched on - and does
 ## not start guessing before there is a word to guess from.
 static func _the_picker_answers_to_either_name() -> bool:
-	var one: Array[String] = ["Core::SpawnNewCopy"]
-	var touching: Array[String] = ["Core::IsTouchingGroup"]
+	var one: Array[String] = ["Core::SpawnNewCopy", "Core::SpawnNewCopy3D"]
+	var touching: Array[String] = ["Core::IsOverlappingAtOffset", "Core::IsTouchingGroup", "Core::OverlapsArea", "Core::OverlapsBody"]
 	var none: Array[String] = []
 	var all_passed: bool = true
 	all_passed = _check("the other editor's word for a new instance finds the verb that makes one",
 		ACEPickerDialog.alias_query_keys("create object"), one) and all_passed
-	all_passed = _check("and its word for touching finds the touching condition",
+	all_passed = _check("and its word for overlapping finds the overlap conditions",
 		ACEPickerDialog.alias_query_keys("overlapping"), touching) and all_passed
 	all_passed = _check("two letters is somebody still typing, not a search",
 		ACEPickerDialog.alias_query_keys("cr"), none) and all_passed
@@ -238,7 +238,7 @@ static func _spawn_sheet() -> EventSheetResource:
 ## That row's cell as the canvas draws it.
 static func _spawn_row_reading() -> String:
 	for text: String in _readings_of(_spawn_sheet()):
-		if text.contains("Spawn a copy of") or text.contains("Create object"):
+		if text.contains("Instantiate") or text.contains("Spawn a copy of"):
 			return text
 	return ""
 

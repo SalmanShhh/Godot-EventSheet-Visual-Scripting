@@ -36,8 +36,8 @@ Two words carry the whole table. **Detect** means the node notices something and
 
 | What you want | The node | What comes alive with it |
 |---|---|---|
-| Detect only. A pickup, a checkpoint, a damage field, a pressure plate, a trigger volume. Nothing is stopped. | **Area2D** / **Area3D** | **On overlap with `<Group>`** and **On overlap ended with `<Group>`**, the standing question **is touching `<Group>`**, the two edge triggers **On first overlap** / **On last overlap ended** with **is the first one in** / **was the last one out**, and the overlap list verbs (**Is Overlapping Body**, **Has Overlapping Bodies**, **Overlapping Bodies**). An Area is also the only family with a monitoring switch, and it is off in more scenes than anybody expects. |
-| Block, and your rows drive it. The player, an enemy that walks, anything moved one step at a time by the sheet. | **CharacterBody2D** / **CharacterBody3D** | **On landed** and **On left the ground** with **just landed** / **just left the ground**, the floor family (**Is By Wall**, **Is Touching Ceiling**, **Is Jumping**, **Is Falling**, **Is Moving**, **Wall Normal**, **Floor Normal**), the slide results (**Slide Collision Count**, **Last Slide Collider**, **Last Slide Normal**) and the never-made move **Is Overlapping At Offset**. What it hit comes back from its own move rather than from a signal. |
+| Detect only. A pickup, a checkpoint, a damage field, a pressure plate, a trigger volume. Nothing is stopped. | **Area2D** / **Area3D** | **On overlap with `<Group>`** and **On overlap ended with `<Group>`**, the standing question **is touching `<Group>`**, the two edge triggers **On first overlap** / **On last overlap ended** with **is the first one in** / **was the last one out**, and the overlap list verbs (**Overlaps Body**, **Has Overlapping Bodies**, **Overlapping Bodies**). An Area is also the only family with a monitoring switch, and it is off in more scenes than anybody expects. |
+| Block, and your rows drive it. The player, an enemy that walks, anything moved one step at a time by the sheet. | **CharacterBody2D** / **CharacterBody3D** | **On landed** and **On left the ground** with **just landed** / **just left the ground**, the floor family (**Is By Wall**, **Is Touching Ceiling**, **Is Jumping**, **Is Falling**, **Is Moving**, **Wall Normal**, **Floor Normal**), the slide results (**Slide Collision Count**, **Last Slide Collider**, **Last Slide Normal**) and the never-made move **Overlaps At Offset**. What it hit comes back from its own move rather than from a signal. |
 | Block, and physics throws it. A crate, a barrel, a ragdoll, a ball. | **RigidBody2D** / **RigidBody3D** | **On collision with `<Group>`** and **On stopped colliding with `<Group>`**. Godot reports the hit only while **Contact Monitor** is on and **Max Contacts Reported** is above zero, which is a scene setting and not a row. |
 | Block, and it stands still. Ground, walls, platforms, the level. | **StaticBody2D** / **StaticBody3D** | The layer verbs, and nothing else worth writing here: a static body never moves, so the news of a touch nearly always belongs on whatever ran into it. Write the row on the mover. |
 
@@ -253,16 +253,16 @@ module guide; what matters here is when each one is the right reach.
 - **The slide results.** **Slide Collision Count**, **Last Slide Collider** and **Last Slide Normal**
   name what the body ran into on its last move. This is the damage-on-contact answer for a character
   body, which has no `body_entered` of its own to filter.
-- **The overlap questions.** **Is Overlapping Body**, **Has Overlapping Bodies** and **Overlapping
+- **The overlap questions.** **Overlaps Body**, **Has Overlapping Bodies** and **Overlapping
   Bodies** are about right now, so they are conditions you can ask any frame - and the list form
   hands you every target inside a blast at once, to loop with a pick filter.
-- **The ground check that never moves anything.** **Is Overlapping At Offset** asks where the body
+- **The ground check that never moves anything.** **Overlaps At Offset** asks where the body
   *would* end up one pixel down (`test_move(transform, Vector2(0, 1))`) and nothing moves either way.
 - **Turning a shape off.** **Enable Collision Shape** / **Disable Collision Shape** are deferred, so
   they are safe from inside a collision callback - and that deferral means the change lands at the
   end of the frame rather than on the next line.
 
-One row that belongs beside all of these: **Spawn A Copy Safely** writes `call_deferred("add_child",
+One row that belongs beside all of these: **Instantiate Safely** writes `call_deferred("add_child",
 …)`, because a 2D physics body or area added from a collision handler makes Godot print "Can't change
 this state while flushing queries" (the node is still added and works). A plain node, or any 3D node,
 prints nothing there.
@@ -339,7 +339,7 @@ inbox, and the help strip under the row once the row is selected.
 - **Adding a child inside a collision handler wants the deferred spelling.** A 2D physics body or area
   added there makes Godot print "Can't change this state while flushing queries" - the node is still
   added and works, but the error names a line nobody was looking at. A plain node or a 3D node prints
-  nothing, and `_physics_process` is fine. **Spawn A Copy Safely** is the row that admits the deferral
+  nothing, and `_physics_process` is fine. **Instantiate Safely** is the row that admits the deferral
   in its own sentence.
 - **A layer renamed in Project Settings renames every row about it, and moves no file.** That is the
   right way round, and its one consequence is that a layer which stops being named stops being

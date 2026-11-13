@@ -15038,7 +15038,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# "Every Tick" would be a plain lie about when those steps happen.
 		spans.append(
 			_make_span(
-				EventSheetL10n.translate("Always" if in_verb_body else "Every Tick"),
+				EventSheetL10n.translate("Always" if in_verb_body else "Every frame"),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -18753,7 +18753,7 @@ func _sentence_head(event_row: EventRow) -> String:
 	# A blank top-level event, and an every-frame handler carrying no condition of its own, are
 	# the same event: the empty condition lane says it runs every tick, and the hover says so in words.
 	if not _blank_tick_reading(event_row).is_empty():
-		return EventSheetL10n.translate("Runs every tick")
+		return EventSheetL10n.translate("Runs every frame")
 	var trigger_text: String = _sentence_trigger(event_row)
 	return "When %s" % trigger_text if not trigger_text.is_empty() else ""
 

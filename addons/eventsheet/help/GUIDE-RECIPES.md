@@ -93,7 +93,7 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 1. Global **Variable** `score : int = 0`.
 2. Give coins an `Area2D` in the `"coins"` group.
-3. Event: trigger **On Area Entered** (or condition **Is Overlapping Body**) → actions: *Add to
+3. Event: trigger **On Area Entered** (or condition **Overlaps Body**) → actions: *Add to
    variable* `score` by `1`, then *Queue Free* the coin.
 4. Show it: a `Label` + an event *On Process* → **Set Property** `text` = `"Score: %d" % score`.
 
@@ -330,8 +330,8 @@ The picker has a row for most things you'd otherwise hand-write. A few that come
   Label / RichTextLabel in one row (no GDScript block).
 - **Hit flashes & fades** - the **Color** category composes: `Lerp Color`, `Lighten` / `Darken`,
   `Color With Alpha`, `Color From HSV`. Feed the result straight into `Set Color Tint` (modulate).
-- **Spawning** - `Spawn Scene (Full)` instances a scene and sets position + rotation + an optional
-  group tag in one action; `Spawn Scene At` when you only need a position.
+- **Spawning** - `Instantiate Scene (Full)` instances a scene and sets position + rotation + an optional
+  group tag in one action; `Instantiate Scene At` when you only need a position.
 - **Timing without a Timer node** - `Call After Delay` / `Tween Callback` fire a method after N
   seconds without suspending the event; `Wait` (await) when you *do* want to suspend it.
 - **Scene-tree queries** - `Get Parent`, `Find Child`, `Has Node`, `Get Child Count`, plus node

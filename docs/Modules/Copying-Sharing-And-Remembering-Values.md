@@ -377,7 +377,7 @@ Forgetting a name that was never remembered is harmless.
 - **A cloned node carries everything the original had**, including its script's current values and
   whatever the original was in the middle of. Clone from a clean template node when that matters.
 - **Use Spawn Scene when you are starting from a `.tscn`.** Clone Into is for a node already alive in
-  the world; Spawn Scene (Full) is the file-on-disk equivalent, with the same position, rotation and
+  the world; Instantiate Scene (Full) is the file-on-disk equivalent, with the same position, rotation and
   group idea.
 - **Remembered values live on the NODE, keyed by name.** Two sheets on the same node share the name;
   two different enemies each have their own. Typos are silent - `"hat"` and `"Hat"` are two different

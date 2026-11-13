@@ -5481,7 +5481,7 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# and the emitted bytes are identical either way, so nothing is lost by leaving the reading to the
 	# sentence that already covers those lines.
 	"ViewSetSize", "LayerOffset",
-	# The two destroy sentences that stand BESIDE a frozen row writing the identical line: Destroy Now
+	# The two destroy sentences that stand BESIDE a frozen row writing the identical line: Queue Free Now
 	# writes `{object}.queue_free()`, which is Free Node's own template, and Is Still Here writes
 	# `is_instance_valid({object})`, which is Object Still Exists's. Two rows with one template would
 	# split every one of those lines between them by registry order alone; the shipped rows keep the

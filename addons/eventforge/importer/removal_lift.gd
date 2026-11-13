@@ -20,7 +20,7 @@
 # entry asks for the receiver to be written; a fade whose object is left implicit stays the plain
 # statement it already was, which is the honest outcome for a spelling the row cannot reproduce.
 #
-# THE AUTHORED SPELLING IS THE AWAIT. Fade Out Then Destroy writes the tween, waits for it and then
+# THE AUTHORED SPELLING IS THE AWAIT. Fade Out Then Queue Free writes the tween, waits for it and then
 # destroys - three lines, with the guard the wait needs written into them. The connect spelling above
 # is the one-line form people write by hand, and it lifts to the same row carrying its own template,
 # exactly as every other lifted spelling does.

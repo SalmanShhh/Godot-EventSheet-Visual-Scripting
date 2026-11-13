@@ -436,20 +436,20 @@ static func _test_glossary_hover() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("the sheet's word hovers as Godot's",
 		EventSheetWords.glossary_hover_for("View handle", true, {}),
-		"View handle - Godot calls this Gizmo.\nSomething drawn over the 2D or 3D view.") and all_passed
+		"Godot calls this Gizmo.\nSomething drawn over the 2D or 3D view.") and all_passed
 	all_passed = _check("and Godot's hovers as the sheet's",
 		EventSheetWords.glossary_hover_for("Gizmo", false, {}),
-		"Gizmo - this sheet calls it View handle.\nSomething drawn over the 2D or 3D view.") and all_passed
+		"Other event-sheet editors call this View handle.\nSomething drawn over the 2D or 3D view.") and all_passed
 	all_passed = _check("a command tool says what a SceneTree script is",
 		EventSheetWords.glossary_hover_for("Command tool", true, {}),
-		"Command tool - Godot calls this SceneTree script.\nA script run from the command line.") and all_passed
+		"Godot calls this SceneTree script.\nA script run from the command line.") and all_passed
 	all_passed = _check("a word spelled the same in both vocabularies says nothing",
 		EventSheetWords.glossary_hover_for("Tools menu", true, {}), "") and all_passed
 	all_passed = _check("and a word that is not one of ours says nothing either",
 		EventSheetWords.glossary_hover_for("velocity", true, {}), "") and all_passed
 	all_passed = _check("a word the reader typed themselves still names Godot's",
 		EventSheetWords.glossary_hover_for("Side bar", true, {"familiar": {"inspector": "Side bar"}}),
-		"Side bar - Godot calls this Inspector.\nThe properties panel and its add-ons.") and all_passed
+		"Godot calls this Inspector.\nThe properties panel and its add-ons.") and all_passed
 	var covered: int = 0
 	for key: String in EventSheetWords.EDITOR_KEYS:
 		if not EventSheetWords.glossary_hover_for(EventSheetWords.familiar_default(key), true, {}).is_empty():

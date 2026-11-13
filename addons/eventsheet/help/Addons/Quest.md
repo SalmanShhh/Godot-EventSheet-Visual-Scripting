@@ -68,7 +68,7 @@ fill it in, and save it as (for example) `res://quests/gem_hunt.tres`.
 Now start it and count progress:
 
 ```
-On Start of Layout
+On Ready
   -> Quests: Start Quest  gem_hunt.tres
 
 On gem picked up
@@ -148,7 +148,7 @@ in your project as `.tres` files: register or start them as usual on startup, th
 to lay the player's progress back on top.
 
 ```
-On Start of Layout
+On Ready
   -> Quests: Register Quest  gem_hunt.tres
   -> Quests: Register Quest  hand_in.tres
   -> Quests: Load Quests
@@ -190,7 +190,7 @@ Completed as it fills.
 **5. A questline that runs itself.**
 
 ```
-On Start of Layout
+On Ready
   -> Quests: Register Quest  hand_in.tres
   -> Quests: Start Quest  gem_hunt.tres
 ```

@@ -422,7 +422,7 @@ func is_above_the_surface() -> bool:
 ## @ace_featured
 ## @ace_name("Swim")
 ## @ace_category("Traversal 3D")
-## @ace_description("Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every tick while in water.")
+## @ace_description("Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every frame while in water.")
 ## @ace_display_template("[b]Swim[/b] (gravity [b]{gravity_percent}[/b]%, drag [b]{drag}[/b]%)")
 ## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
 ## @ace_codegen_template("$TraversalKit3D.swim({gravity_percent}, {drag})")
@@ -436,7 +436,7 @@ func swim(gravity_percent: float, drag: float) -> void:
 ## @ace_action
 ## @ace_name("Float")
 ## @ace_category("Traversal 3D")
-## @ace_description("Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every tick together with Swim.")
+## @ace_description("Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every frame together with Swim.")
 ## @ace_display_template("[b]Float[/b] with buoyancy [b]{buoyancy}[/b]")
 ## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
 ## @ace_codegen_template("$TraversalKit3D.float_in_water({buoyancy})")

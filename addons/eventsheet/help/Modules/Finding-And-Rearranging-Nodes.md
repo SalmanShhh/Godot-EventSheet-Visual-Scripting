@@ -102,7 +102,7 @@ node is packed into a scene and every later group check then silently never fire
 
 ### The hierarchy: moving a node that is already there
 
-Add Child above builds a NEW node under this one. These move a node that is already in the layout,
+Add Child above builds a NEW node under this one. These move a node that is already in the scene,
 and each says the one thing that decides where it lands: does it keep the place it has in the world,
 or snap to its new parent? An event sheet reads all of them back in the same words - `Hand ▸ Add
 child item keeping its place` - whether the row was dropped from the picker or the line was typed by
@@ -110,8 +110,8 @@ hand.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Add Child (existing node) | Moves a node already in the layout under a new parent | `{child}.reparent({parent}{, keep})` |
-| Remove From Parent | Puts a node back at the top of the layout, keeping its place | `{child}.reparent(get_tree().current_scene)` |
+| Add Child (existing node) | Moves a node already in the scene under a new parent | `{child}.reparent({parent}{, keep})` |
+| Remove From Parent | Puts a node back at the top of the scene, keeping its place | `{child}.reparent(get_tree().current_scene)` |
 | Set Ignore Parent's Movement | The child stops following its parent while staying a child | `{target}.top_level = {ignore}` |
 | Copy Place To | Points a RemoteTransform at the node it should drive | `{follower}.remote_path = NodePath({path})` |
 | Stop Copying Place | Clears a RemoteTransform's target | `{follower}.remote_path = NodePath("")` |

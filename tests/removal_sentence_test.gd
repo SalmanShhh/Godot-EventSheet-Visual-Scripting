@@ -45,12 +45,12 @@ static func run() -> bool:
 static func _test_the_descriptors_say_what_they_emit() -> bool:
 	var passed: bool = true
 	var by_id: Dictionary = _descriptors()
-	passed = _check("Destroy Now is the plain call",
+	passed = _check("Queue Free Now is the plain call",
 		str(by_id.get("DestroyNow", ACEDescriptor.new()).codegen_template), "{object}.queue_free()") and passed
-	passed = _check("Destroy After Seconds hangs the free off a scene-tree timer",
+	passed = _check("Queue Free After Seconds hangs the free off a scene-tree timer",
 		str(by_id.get("DestroyAfterSeconds", ACEDescriptor.new()).codegen_template),
 		"get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)") and passed
-	passed = _check("Fade Out Then Destroy tweens, waits, and asks again before it destroys",
+	passed = _check("Fade Out Then Queue Free tweens, waits, and asks again before it destroys",
 		str(by_id.get("FadeOutAndDestroy", ACEDescriptor.new()).codegen_template),
 		"await {object}.create_tween().tween_property({object}, \"modulate:a\", 0.0, {seconds}).finished\n"
 		+ "if is_instance_valid({object}):\n\t{object}.queue_free()") and passed
@@ -61,14 +61,14 @@ static func _test_the_descriptors_say_what_they_emit() -> bool:
 	passed = _check("the timer row opens on two seconds", _default_of(by_id.get("DestroyAfterSeconds", null), "seconds"), "2.0") and passed
 	passed = _check("the fade row opens on half a second", _default_of(by_id.get("FadeOutAndDestroy", null), "seconds"), "0.5") and passed
 	# The thing people get wrong about queue_free is WHEN, so the row has to say it.
-	passed = _check("Destroy Now teaches that the deletion lands at the end of the frame",
+	passed = _check("Queue Free Now teaches that the deletion lands at the end of the frame",
 		str(by_id.get("DestroyNow", ACEDescriptor.new()).description).contains("END of this frame"), true) and passed
 	# On Destroyed is the shipped trigger and is pointed AT rather than duplicated here.
 	passed = _check("the question points at the shipped trigger for a node's own destruction",
 		str(by_id.get("IsStillHere", ACEDescriptor.new()).description).contains("On Exit Tree"), true) and passed
 	# The two sentences that stand beside a frozen row writing the identical line author only; the
 	# shipped rows keep the reading of those lines.
-	passed = _check("Destroy Now leaves the reading of a queue_free line to the shipped row",
+	passed = _check("Queue Free Now leaves the reading of a queue_free line to the shipped row",
 		EventSheetACELifter.REVERSE_LIFT_EXCLUDED_ACE_IDS.has("DestroyNow"), true) and passed
 	passed = _check("Is Still Here leaves the reading of an is_instance_valid line to the shipped row",
 		EventSheetACELifter.REVERSE_LIFT_EXCLUDED_ACE_IDS.has("IsStillHere"), true) and passed
@@ -80,15 +80,15 @@ static func _test_the_descriptors_say_what_they_emit() -> bool:
 
 static func _test_the_rows_write_their_lines() -> bool:
 	var passed: bool = true
-	passed = _check("Destroy Now writes the call on the object it names",
+	passed = _check("Queue Free Now writes the call on the object it names",
 		_compiled_with("DestroyNow", {"object": "$Enemy"}, "user://eventforge_remove_now.gd")
 			.contains("\t$Enemy.queue_free()"), true) and passed
-	passed = _check("Destroy After Seconds writes the timer, the signal and the free",
+	passed = _check("Queue Free After Seconds writes the timer, the signal and the free",
 		_compiled_with("DestroyAfterSeconds", {"object": "$Enemy", "seconds": "2.0"}, "user://eventforge_remove_later.gd")
 			.contains("\tget_tree().create_timer(2.0).timeout.connect($Enemy.queue_free)"), true) and passed
 	var faded: String = _compiled_with("FadeOutAndDestroy", {"object": "$Ghost", "seconds": "0.5"},
 		"user://eventforge_remove_faded.gd")
-	passed = _check("Fade Out Then Destroy waits for its own tween",
+	passed = _check("Fade Out Then Queue Free waits for its own tween",
 		faded.contains("\tawait $Ghost.create_tween().tween_property($Ghost, \"modulate:a\", 0.0, 0.5).finished"), true) and passed
 	passed = _check("and asks again after the wait, in the sheet's own lines",
 		faded.contains("\tif is_instance_valid($Ghost):\n\t\t$Ghost.queue_free()"), true) and passed

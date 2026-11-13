@@ -1,13 +1,45 @@
 keys,word,names,shipped,shipped_row,row
 Core::IsInGroup,Is in family,belonging to a family,Is In Group,,
-Core::IsTouchingGroup,Is overlapping in family,touching anything in a family,Is Touching Group,is touching,is overlapping in family
+Core::IsTouchingGroup,Is overlapping in family,touching anything in a family,Overlaps Group,overlaps,is overlapping in family
 Core::OnProcess,Every tick,every drawn frame (_process),On Process,Run on process,Every tick
 Core::QueueFree,Destroy,removing this object,Queue Free,Queue free,Destroy
-Core::SetRotationDeg,Set angle,the way an object faces,Set Rotation (Degrees),,
-Core::SpawnNewCopy,Create object,a new copy of a scene,Spawn A Copy,Spawn a copy of,Create object
+Core::DestroyNow,Destroy Now,removing an object this frame,Queue Free Now,queue free,destroy
+Core::DestroyAfterSeconds,Destroy After Seconds,removing an object after a wait,Queue Free After Seconds,queue free,destroy
+Core::FadeOutAndDestroy,Fade Out Then Destroy,fading an object out and removing it,Fade Out Then Queue Free,queue free,destroy
+Core::SetRotationDeg,Set angle,the way an object faces,Set Rotation (Degrees),Set rotation to,Set angle to
+Core::SetRotationDeg3D,Set angle (3D),the way a 3D object faces,"Set Rotation (3D, Degrees)",Set rotation to,Set angle to
+Core::SpawnNewCopy,Create object,a new copy of a scene,Instantiate,Instantiate,Spawn a copy of
+Core::SpawnNewCopy3D,Create object (3D),a new copy of a scene in 3D,Instantiate (3D),Instantiate,Spawn a copy of
+Core::SpawnNewCopyDeferred,Spawn A Copy Safely,"a new copy of a scene, added when it is safe",Instantiate Safely,Instantiate,Spawn a copy of
+Core::SpawnNewCopyDeferred3D,Spawn A Copy Safely (3D),"a new copy of a scene, added when it is safe, in 3D",Instantiate Safely (3D),Instantiate,Spawn a copy of
+Core::SpawnFormation,Spawn In A Formation,"a ring, arc, line or grid of new copies",Instantiate In A Formation,Instantiate,Spawn
+Core::SpawnFormation3D,Spawn In A Formation (3D),"a ring, arc, line or grid of new copies in 3D",Instantiate In A Formation (3D),Instantiate,Spawn
+Core::SpawnFacingAndMoving,"Spawn A Copy, Facing And Moving",a new copy that sets off at once,"Instantiate, Facing And Moving",Instantiate,Spawn a copy of
+Core::SpawnFacingAndMoving3D,"Spawn A Copy, Facing And Moving (3D)","a new copy that sets off at once, in 3D","Instantiate, Facing And Moving (3D)",Instantiate,Spawn a copy of
+Core::SpawnCopyOfSelf,Spawn A Copy Of Myself,one more copy of this scene,Instantiate Myself,Instantiate,Spawn a copy of
+Core::SpawnCopyOfSelf3D,Spawn A Copy Of Myself (3D),"one more copy of this scene, in 3D",Instantiate Myself (3D),Instantiate,Spawn a copy of
+Core::SpawnInFreeSpot,Spawn A Copy In A Free Spot,a new copy somewhere nothing stands,Instantiate In A Free Spot,Instantiate,Spawn a copy of
+Core::SpawnInFreeSpot3D,Spawn A Copy In A Free Spot (3D),"a new copy somewhere nothing stands, in 3D",Instantiate In A Free Spot (3D),Instantiate,Spawn a copy of
+Core::SpawnSceneAt,Spawn Scene At,a scene file placed at a point,Instantiate Scene At,Instantiate,Spawn
+Core::SpawnSceneInWorld,Spawn Scene In The World,a scene file placed in the world,Instantiate Scene In The World,Instantiate,Spawn
+Core::SpawnScene,Spawn Scene Instance,a scene file added as a child,Instantiate Scene File,Instantiate,Spawn
+Core::SpawnIntoCrowd,Spawn A Copy Into The Crowd,a new copy counted in a crowd,Instantiate Into The Crowd,Instantiate,Spawn a copy of
+Core::SpawnIntoCrowdOldestFirst,"Spawn A Copy, The First Makes Room",a new copy that retires the oldest,"Instantiate, The First Makes Room",Instantiate,Spawn a copy of
+Core::SpawnIntoCrowdUnlessFull,Spawn A Copy Unless The Crowd Is Full,a new copy only while there is room,Instantiate Unless The Crowd Is Full,Instantiate,Spawn a copy of
+Core::OverlapsBody,Is Overlapping Body,an area overlapping a body,Overlaps Body,overlaps,is overlapping
+Core::OverlapsArea,Is Overlapping Area,an area overlapping another area,Overlaps Area,overlaps,is overlapping
+Core::IsOverlappingAtOffset,Is Overlapping At Offset,a body that would hit something if it moved,Overlaps At Offset,overlaps,is overlapping
+Core::OnCollisionWithGroup,On Collision With Group,a group member hitting this body,"On Body Entered, In Group","On body entered, in group",On collision with
+Core::OnCollisionWithGroup3D,On Collision With Group (3D),"a group member hitting this body, in 3D","On Body Entered, In Group (3D)","On body entered, in group",On collision with
+Core::OnStoppedCollidingWithGroup,On Stopped Colliding With Group,a group member leaving this body,"On Body Exited, In Group","On body exited, in group",On stopped colliding with
+Core::OnStoppedCollidingWithGroup3D,On Stopped Colliding With Group (3D),"a group member leaving this body, in 3D","On Body Exited, In Group (3D)","On body exited, in group",On stopped colliding with
+Core::OnOverlapWithGroup,On Overlap With Group,a group member entering this area,"On Body Entered, In Group","On body entered, in group",On overlap with
+Core::OnOverlapWithGroup3D,On Overlap With Group (3D),"a group member entering this area, in 3D","On Body Entered, In Group (3D)","On body entered, in group",On overlap with
+Core::OnOverlapEndedWithGroup,On Overlap Ended With Group,a group member leaving this area,"On Body Exited, In Group","On body exited, in group",On overlap ended with
+Core::OnOverlapEndedWithGroup3D,On Overlap Ended With Group (3D),"a group member leaving this area, in 3D","On Body Exited, In Group (3D)","On body exited, in group",On overlap ended with
 reading:pick_filter:GROUP,family,a loop over a family,,group,family
-reading:set_process:off,Set disabled,the every-tick switch turned off,,Set Every tick deactivated,Set disabled
-reading:set_process:on,Set enabled,the every-tick switch turned on,,Set Every tick activated,Set enabled
+reading:set_process:off,Set disabled,the process switch turned off,,Set process disabled,Set disabled
+reading:set_process:on,Set enabled,the process switch turned on,,Set process enabled,Set enabled
 Core::OnPhysicsProcess,Every physics tick,every physics step (_physics_process),On Physics Process,Run on physics process,Every physics tick
 Core::OnEnterTree,On created,a node joining the scene tree (_enter_tree),On Enter Tree,Run on enter tree,On created
 Core::OnExitTree,On destroyed,a node leaving the scene tree (_exit_tree),On Exit Tree,Run on exit tree,On destroyed

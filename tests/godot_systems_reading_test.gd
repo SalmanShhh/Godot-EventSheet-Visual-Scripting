@@ -9,7 +9,7 @@ extends RefCounted
 #        loading, and the progress the status array carries
 #   The movement math a hand-rolled character body is built from, in the movement behaviors'
 #        own words: Apply gravity, Accelerate toward, Limit speed, Move, the collision switches,
-#        Set angle toward, Rotate toward
+#        Set rotation toward, Rotate toward
 #   The high-level multiplayer messages: Send X to everyone / to the host / to a peer, Is host,
 #        Owns this object, MyID
 #   A navigation agent: Find path to, Move along path, Has arrived
@@ -149,7 +149,7 @@ static var STATEMENT_READINGS: Dictionary = {
 	"move_and_slide()": "Player ▸ Move (and slide along what it hits)",
 	"set_collision_mask_value(2, false)": "Player ▸ Disable collisions with 2",
 	"add_collision_exception_with(platform)": "Player ▸ Ignore collisions with platform",
-	"look_at(player.global_position)": "Player ▸ Set angle toward player.global_position",
+	"look_at(player.global_position)": "Player ▸ Set rotation toward player.global_position",
 	"rotation = lerp_angle(rotation, target_angle, 5 * delta)":
 		"Player ▸ Rotate toward target_angle at 5 (per second)",
 	"take_damage.rpc(10)": "Player ▸ Send Take Damage to everyone   amount = 10",

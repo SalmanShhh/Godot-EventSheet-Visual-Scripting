@@ -7,8 +7,8 @@ bullet, a menu panel you drop in ten times.
 
 The sheet keeps those two apart on purpose, and it does it in the words:
 
-- The place you travel to is a **Layout**. Change Scene, Reload Scene, Add Scene On Top.
-- The file holding nodes keeps the word **Scene**. Spawn Scene Instance, Save Node As Scene, Scene
+- The place you travel to is a **Scene**. Change Scene, Reload Scene, Add Scene On Top.
+- The file holding nodes keeps the word **Scene**. Instantiate Scene File, Save Node As Scene, Scene
   File Is Data-Only.
 
 Everything on this page is Godot's own scene tree said in sentences: owners, process modes,
@@ -19,8 +19,8 @@ Godot programmer would have written by hand, and a project that already wrote it
 ## Table of Contents
 
 1. [Name the one node you mean](#name-the-one-node-you-mean)
-2. [A layout on top of the running game](#a-layout-on-top-of-the-running-game)
-3. [The gap between two layouts](#the-gap-between-two-layouts)
+2. [A scene on top of the running game](#a-scene-on-top-of-the-running-game)
+3. [The gap between two scenes](#the-gap-between-two-scenes)
 4. [Saying where, in three dimensions](#saying-where-in-three-dimensions)
 5. [Hearing a node arrive](#hearing-a-node-arrive)
 6. [Saving what the player built](#saving-what-the-player-built)
@@ -105,21 +105,21 @@ safety net for the paths you have not marked yet, not a reason to stop marking t
 Naming a whole **scene** by a short word instead of a path is a different job, and the Named Scenes
 pack owns it. This is about one node inside one scene.
 
-## A layout on top of the running game
+## A scene on top of the running game
 
-A pause menu is not a new layout and it is not a spawned enemy. The game underneath has to keep
+A pause menu is not a new scene and it is not a spawned enemy. The game underneath has to keep
 existing - its nodes, its variables, its half-finished tween - while something sits over it.
 
 Three rows say exactly that:
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Add Scene On Top | Puts a layout over the running game under a name you choose | the name asked about first, then load and instance, name it, `get_tree().root.add_child(…)` |
+| Add Scene On Top | Puts a scene over the running game under a name you choose | the name asked about first, then load and instance, name it, `get_tree().root.add_child(…)` |
 | Remove Scene On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `remove_child` and `queue_free()` |
 | Scene Is On Top | True while it is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
 
 **Under the tree root, not under this node.** That is the one design decision in the row, and it is
-the reason a menu survives the layout beneath it changing. A copy added under the node that spawned
+the reason a menu survives the scene beneath it changing. A copy added under the node that spawned
 it dies with that node, which is exactly right for an enemy and exactly wrong for an inventory. It
 is also why the Scene Flow pack parents its fade overlay to the same root.
 
@@ -127,7 +127,7 @@ is also why the Scene Flow pack parents its fade overlay to the same root.
 is what answers, which is why the three rows have to agree on the spelling and why a close row is
 safe to run twice.
 
-**One name, one layout.** `add_child` will not take a name a sibling already has - it renames the
+**One name, one scene.** `add_child` will not take a name a sibling already has - it renames the
 newcomer to something like `@Node@2` - so a second add under one name would leave a copy that
 neither of the other two rows could ever find or remove, sitting under the tree root for the rest of
 the run. Add Scene On Top therefore asks the name first and loads nothing when it is already up.
@@ -153,7 +153,7 @@ func _unhandled_input(event: InputEvent) -> void:
 Its twin is the same event with the question inverted: cancel pressed *while* `Scene Is On Top`
 answers true runs Remove Scene On Top and unpauses. Two events, told apart by one condition.
 
-![Two events side by side: cancel pressed with no menu up adds the layout and pauses the game, cancel pressed with it up removes the layout and unpauses, with the plain GDScript both compile to underneath](images/layout-on-top-pause-pair.png)
+![Two events side by side: cancel pressed with no menu up adds the scene and pauses the game, cancel pressed with it up removes the scene and unpauses, with the plain GDScript both compile to underneath](images/layout-on-top-pause-pair.png)
 
 **Pause The Game is the row this pairs with, and the process-mode table is the one thing to know
 before you use it.** `Set Game Paused` writes `get_tree().paused`, and what that means for any node
@@ -167,17 +167,17 @@ is decided by that node's own **Process Mode**:
 | Always | Ignore the pause entirely |
 | Disabled | Never run |
 
-A pause menu added over a paused game is paused with it unless the menu layout's **own root node**
-is set to Always or When Paused. Set that on the layout's root in the scene, or with **Keep Node
+A pause menu added over a paused game is paused with it unless the menu scene's **own root node**
+is set to Always or When Paused. Set that on the scene's root in the scene, or with **Keep Node
 Running While Paused** on the way in. The row does not write it for you - it emits the three lines
-it names and nothing else - and the parameters dialog says so on the help strip while the Layout
+it names and nothing else - and the parameters dialog says so on the help strip while the Scene
 field has focus, which is the moment it matters.
 
 The neighbours, so nothing is mistaken for anything else: **Change Scene** replaces what is running.
-**Spawn Scene Instance** adds a copy under *this* node with a bare `add_child`, which is the right
+**Instantiate Scene File** adds a copy under *this* node with a bare `add_child`, which is the right
 reading for a spawned enemy. These three leave the game running underneath and outlive it.
 
-## The gap between two layouts
+## The gap between two scenes
 
 **Change Scene** is `get_tree().change_scene_to_file`, and that call reads the next scene off the
 disk on the main thread. For a menu or a small room nobody notices. For a level of any size the game
@@ -247,8 +247,8 @@ Spawning is the same sentence in 3D as in 2D - instance, parent, place, in that 
 rows are the 2D pair with a Node3D host and Vector3 answers to "where". There is no second spawning
 idea to learn:
 
-- **Spawn A Copy (3D)** - instance, parent, place.
-- **Spawn A Copy Safely (3D)** - the same spawn added on the next idle moment, for a collision
+- **Instantiate (3D)** - instance, parent, place.
+- **Instantiate Safely (3D)** - the same spawn added on the next idle moment, for a collision
   handler. It places *before* it parents, because a copy that is not in a tree yet has nothing for a
   global position to be global to.
 
@@ -337,7 +337,7 @@ has focus:
 - **A group written in a scene file is set before the node enters the tree**, so the guard sees it. A
   group a script adds *after* `add_child` is not there yet when the join is announced, and that node
   is simply not matched. Add the group before the node enters the tree, or on the row that spawns it
-  (which is what Spawn A Copy Into The Crowd does), and the two agree.
+  (which is what Instantiate Into The Crowd does), and the two agree.
 - **Any group is a stated choice**, not a blank. Choosing it leaves the guard off entirely, so the
   event answers every node entering or leaving the world - the firehose a debug overlay or an editor
   tool wants.
@@ -457,7 +457,7 @@ question>` both run the body on exactly the files the question refused, so neith
 - the row still wears the amber state and the Doctor still reports it. Inverting the condition row
 in the sheet reads the same way, for the same reason.
 
-![Two events above the GDScript they compile to: a save key press running Save branch Level as scene file into the user folder, and a load key press whose scene-file-is-data-only condition guards an Add layout on top row, with the owner walk, the pack and the guarded load visible in the code panel below](images/scenes-save-branch.png)
+![Two events above the GDScript they compile to: a save key press running Save branch Level as scene file into the user folder, and a load key press whose scene-file-is-data-only condition guards an Add scene on top row, with the owner walk, the pack and the guarded load visible in the code panel below](images/scenes-save-branch.png)
 
 **The Doctor is where the words are.** A row that builds a scene from a path written in the line and
 not under `res://`, with no such question anywhere around it, is reported in Doctor ▸ Files. It is a
@@ -582,7 +582,7 @@ Drawing Canvas pack's job. This one is a live picture of the world you are alrea
 - **A menu added under this node dies with this node.** Add Scene On Top parents under the tree root
   for exactly that reason. If your pause menu vanishes when the level changes, that is the bug.
 - **A pause menu paused with the game is a Process Mode, not a bug in the row.** Set the *menu
-  layout's own root node* to Always or When Paused.
+  scene's own root node* to Always or When Paused.
 - **A packed scene saves what its root OWNS.** Nodes added while the game runs own nothing, so a
   plain pack writes a scene holding one node and reports success. Save Branch As Scene File does the
   owner walk first, in lines you can read - and hands the borrowed ownership back afterwards, which

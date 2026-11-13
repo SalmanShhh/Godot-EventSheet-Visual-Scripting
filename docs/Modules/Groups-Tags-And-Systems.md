@@ -26,8 +26,8 @@ trigger over polling".
 - **Counting a wave** - Count Nodes In Group is the "are they all dead yet" check.
 - **Team health bars** - Sum In Group and Average In Group across a squad, with no loop.
 - **Broadcast commands** - Call Method On Group tells every enemy to reset at once.
-- **Damage over time** - Run On Tagged Entities ticks only the burning ones.
-- **Archetype queries** - Entities In Both Groups is "alive AND poisoned" in one expression.
+- **Damage over time** - Run On Tagged Nodes ticks only the burning ones.
+- **Archetype queries** - Members Of Both Groups is "alive AND poisoned" in one expression.
 - **Decoupled level scripting** - a lever that calls `open` on the `gates` group without knowing a
   single node path.
 - **Difficulty and mode switches** - Set Group Active turns a whole section of the sheet on or off.
@@ -49,10 +49,10 @@ trigger over polling".
 - **A broadcast can carry a value.** Call Method On Group calls a bare method on every member. Call
   Method On Group (with value) passes arguments along, which is what turns a broadcast into a real
   message ("take 10 damage") instead of just a ping.
-- **A system is a group plus a method.** Run On Tagged Entities loops one group, keeps only the
+- **A system is a group plus a method.** Run On Tagged Nodes loops one group, keeps only the
   members that are ALSO in a second group, checks that they have the method, and calls it. That is a
   complete system in one action row.
-- **An archetype is an intersection.** Entities In Both Groups, Count In Both Groups, First In Both
+- **An archetype is an intersection.** Members Of Both Groups, Count In Both Groups, First In Both
   Groups and Is In Both Groups answer "has both tags", which is the composition equivalent of "has
   both components".
 - **Set Group Active is about SHEET groups, not scene-tree groups.** It flips the runtime-toggle flag
@@ -94,9 +94,9 @@ Each takes a Group and a `Property` - a bare numeric member such as `health`.
 |------|--------------|----------|
 | Call Method On Group | Calls a method on every node in the group | `get_tree().call_group({group}, {method})` |
 | Call Method On Group (with value) | The same, carrying one or more values | `get_tree().call_group({group}, {method}{, args})` |
-| Run On Tagged Entities | Calls a method on every group member that also has a tag | see below |
+| Run On Tagged Nodes | Calls a method on every group member that also has a tag | see below |
 
-**Run On Tagged Entities** takes a Group (the entity type), an `Also In` tag and a Method:
+**Run On Tagged Nodes** takes a Group (the entity type), an `Also In` tag and a Method:
 
 ```gdscript
 for __entity_figure: Node in get_tree().get_nodes_in_group("enemies"):
@@ -108,9 +108,9 @@ for __entity_figure: Node in get_tree().get_nodes_in_group("enemies"):
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Entities In Group | Every node in a group, as an array | `get_tree().get_nodes_in_group({group})` |
-| Any Entity In Group | True when at least one node is in the group | `not get_tree().get_nodes_in_group({group}).is_empty()` |
-| Entities In Both Groups | Every node in BOTH groups, as an array | `get_tree().get_nodes_in_group({group_a}).filter(func(__entity: Node) -> bool: return __entity.is_in_group({group_b}))` |
+| Members Of Group | Every node in a group, as an array | `get_tree().get_nodes_in_group({group})` |
+| Any Member Of Group | True when at least one node is in the group | `not get_tree().get_nodes_in_group({group}).is_empty()` |
+| Members Of Both Groups | Every node in BOTH groups, as an array | `get_tree().get_nodes_in_group({group_a}).filter(func(__entity: Node) -> bool: return __entity.is_in_group({group_b}))` |
 | Count In Both Groups | How many nodes are in both groups | the same filter, plus `.size()` |
 | First In Both Groups | The first node in both groups, or nothing | the same filter, plus `.front()` |
 | Is In Both Groups | True when one entity belongs to both groups | `({node}.is_in_group({group_a}) and {node}.is_in_group({group_b}))` |
@@ -258,7 +258,7 @@ func _on_cure_used(target: Node) -> void:
 		target.remove_from_group("poisoned")
 ```
 
-**18. Do nothing until there is something to do.** Any Entity In Group is cheaper to read than a
+**18. Do nothing until there is something to do.** Any Member Of Group is cheaper to read than a
 count comparison and says what it means.
 
 ```gdscript
@@ -267,7 +267,7 @@ func _process(delta: float) -> void:
 		_play_combat_music()
 ```
 
-**19. Run a system over an entity type.** Entities In Group hands the array to a For Each row.
+**19. Run a system over an entity type.** Members Of Group hands the array to a For Each row.
 
 ```gdscript
 func _physics_process(delta: float) -> void:
@@ -298,7 +298,7 @@ func _process(delta: float) -> void:
 
 **Crowd chatter budget.** Highest In Group over a `chatter_priority` property picks the one NPC allowed to speak this second, so a busy market never overlaps ten voice lines.
 
-**Mode-specific rules.** Tag every hazard `hardcore` at load time on the highest difficulty and leave it off otherwise, then a single Run On Tagged Entities row applies the extra behaviour with no branching sheet.
+**Mode-specific rules.** Tag every hazard `hardcore` at load time on the highest difficulty and leave it off otherwise, then a single Run On Tagged Nodes row applies the extra behaviour with no branching sheet.
 
 **Team scoring.** Sum In Group over each team's group, once per round end, replaces a pair of score variables that always drift apart from what is actually on the field.
 
@@ -325,7 +325,7 @@ func _process(delta: float) -> void:
   yourself and check.
 - **Leave the Value blank for a no-argument call.** Call Method On Group (with value) drops the comma
   cleanly when the Value parameter is empty, so you do not need to switch back to the plain action.
-- **Run On Tagged Entities checks `has_method` for you.** That is deliberate: a mixed group will not
+- **Run On Tagged Nodes checks `has_method` for you.** That is deliberate: a mixed group will not
   crash. It also means a typo in the Method name fails completely silently, so verify the spelling
   when a system quietly does nothing.
 - **This is composition, not an ECS.** Every one of these rows walks a node array. It is fast enough

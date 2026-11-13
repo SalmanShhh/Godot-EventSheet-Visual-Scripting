@@ -192,7 +192,7 @@ static func idiom_words(query: String) -> String:
 	if EventSheetSentence.BODY_STATE_WORDS.has(wanted):
 		return str(EventSheetSentence.BODY_STATE_WORDS[wanted])
 	if EventSheetSentence.MEMBER_WORDS.has(wanted):
-		return str(EventSheetSentence.MEMBER_WORDS[wanted])
+		return "rotation"
 	if EventSheetSentence.PROCESS_SWITCH_WORDS.has(wanted):
 		return plain_words(str(EventSheetSentence.PROCESS_SWITCH_WORDS[wanted]))
 	if EventSheetSentence.EXPRESSION_IDIOMS.has(wanted):

@@ -30,9 +30,11 @@ static func run() -> bool:
 	all_passed = _check("a Godot group reads as Family (group) with Familiar Words on",
 		EventSheetWords.familiar_default("group"), "Family (group)") and all_passed
 	all_passed = _check("a word with one honest name reads the same either way",
-		EventSheetWords.familiar_default("destroy"), EventSheetWords.plain_default("destroy")) and all_passed
-	all_passed = _check("queue_free reads as Destroy",
+		EventSheetWords.familiar_default("opacity"), EventSheetWords.plain_default("opacity")) and all_passed
+	all_passed = _check("queue_free reads as Destroy in the Familiar preset",
 		EventSheetWords.word_for("destroy", true, {}), "Destroy") and all_passed
+	all_passed = _check("and as Queue free in Godot's",
+		EventSheetWords.word_for("destroy", false, {}), "Queue free") and all_passed
 	all_passed = _check("_process reads as On process by default",
 		EventSheetWords.word_for("every_tick", false, {}), "On process") and all_passed
 	all_passed = _check("and as Every tick in the Familiar preset",
@@ -70,20 +72,21 @@ static func run() -> bool:
 	all_passed = _check("an unknown key hands back the key rather than an empty label",
 		EventSheetWords.word_for("not_a_word", true, {}), "not_a_word") and all_passed
 
-	# The page's own order and labels - what a reader sees down the left column. The eight GAME words
+	# The page's own order and labels - what a reader sees down the left column. The fourteen GAME words
 	# lead, unchanged; the editor-building wave appended its twenty-four words after them, which is the
 	# order the page fixes (the plugin, then its surfaces, then its shapes, then the code idioms).
 	var game_words: Array[String] = ["inheritance_set", "layout", "every_tick", "behavior",
-		"group", "collection", "destroy", "manual"]
+		"group", "collection", "opacity", "destroy", "instantiate", "angle", "overlaps", "body_entered",
+		"body_exited", "manual"]
 	var expected_keys: Array[String] = game_words.duplicate()
 	expected_keys.append_array(EventSheetWords.EDITOR_KEYS)
 	expected_keys.append_array(["scene_ready", "scene_exit", "node_enter", "node_exit", "every_physics_tick"])
 	all_passed = _check("the page lists every word in the approved order",
 		EventSheetWords.keys(), expected_keys) and all_passed
 	all_passed = _check("the game words still lead it",
-		EventSheetWords.keys().slice(0, 8), game_words) and all_passed
+		EventSheetWords.keys().slice(0, 14), game_words) and all_passed
 	all_passed = _check("and the editor words follow, starting with the plugin itself",
-		EventSheetWords.keys()[8], "editor_plugin") and all_passed
+		EventSheetWords.keys()[14], "editor_plugin") and all_passed
 	all_passed = _check("each row says what it names",
 		EventSheetWords.names_what("group"), "a Godot group") and all_passed
 	all_passed = _check("the state's store name is the one already written to disk",

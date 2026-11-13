@@ -184,7 +184,7 @@ static func _grammar_values() -> bool:
 	flat["self_class"] = "Node2D"
 	ok = _check("a 2D object's look_at keeps its own words",
 		_joined_segments(EventSheetSentence.statement("look_at(target.global_position)", flat)),
-		"Player ▸ Set angle toward target.global_position") and ok
+		"Player ▸ Set rotation toward target.global_position") and ok
 	ok = _check("and a 2D object's move line stays the arithmetic it is",
 		_joined_segments(EventSheetSentence.statement(
 			"position += -transform.basis.z * speed * delta", flat)),

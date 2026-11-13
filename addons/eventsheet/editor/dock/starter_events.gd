@@ -45,7 +45,7 @@ const STARTER_WORDS: Dictionary = {
 	"signal:pressed": "On clicked",
 	"signal:toggled": "On toggled",
 	"signal:timeout": "On timer",
-	"signal:body_entered": "On collision with",
+	"signal:body_entered": "On body entered",
 	"signal:hit": "On hit",
 	"signal:died": "On died",
 }

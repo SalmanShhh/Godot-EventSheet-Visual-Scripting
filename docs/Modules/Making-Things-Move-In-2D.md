@@ -181,9 +181,9 @@ picker.
 | Bounce Off Solids | Reflects the velocity off a surface **Normal**, so the shot ricochets. | `{host.}velocity = {host.}velocity.bounce({normal})` |
 | Move Toward Position | Glides this frame's share of the way toward a **Destination**. | `{host.}position = {host.}position.move_toward({destination}, {speed} * {delta_t})` |
 | Rotate Clockwise | Spins the object at **Degrees per second**. | `{host.}rotation_degrees += {degrees_per_second} * {delta_t}` |
-| Wrap Around Scene Horizontally | Off one side of the layout and back in the other. | `{host.}position.x = wrapf({host.}position.x, {low}, {high})` |
+| Wrap Around Scene Horizontally | Off one side of the scene and back in the other. | `{host.}position.x = wrapf({host.}position.x, {low}, {high})` |
 | Wrap Around Scene Vertically | The same, top to bottom. | `{host.}position.y = wrapf({host.}position.y, {low}, {high})` |
-| Bound To Scene | Holds the object inside the layout's edges. | `{host.}position = {host.}position.clamp({low}, {high})` |
+| Bound To Scene | Holds the object inside the scene's edges. | `{host.}position = {host.}position.clamp({low}, {high})` |
 | Pin To | Puts the object at another **Object**'s place, plus an **Offset**. | `{host.}global_position = {anchor}.global_position + {offset}` |
 | Pin Angle To | Turns the object to match another **Object**'s angle. | `{host.}rotation = {anchor}.rotation` |
 

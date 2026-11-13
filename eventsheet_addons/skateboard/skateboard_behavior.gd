@@ -594,4 +594,4 @@ func _judge_landing() -> void:
 	else:
 		bail()
 
-# Skateboard movement: attach under a CharacterBody2D. Push to gain speed and keep it, Roll With The Slope every tick so ramps and halfpipes work, Ollie to leave the ground, Spin or Flip in the air, and let the landing decide between On Landed Clean and On Bailed. Grinds snap to any Path2D.
+# Skateboard movement: attach under a CharacterBody2D. Push to gain speed and keep it, Roll With The Slope every frame so ramps and halfpipes work, Ollie to leave the ground, Spin or Flip in the air, and let the landing decide between On Landed Clean and On Bailed. Grinds snap to any Path2D.

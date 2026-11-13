@@ -77,13 +77,13 @@ static func _test_native_rows() -> bool:
 		]],
 		["the line that adds it is the Spawn", rows.get("fire_plant", []), ["[System] Spawn shot.tscn"]],
 		["and so is each arm of the angle", rows.get("fire_arms", []),
-			["[shot.tscn] Set angle to 0", "[shot.tscn] Set angle to 180"]],
+			["[shot.tscn] Set rotation to 0", "[shot.tscn] Set rotation to 180"]],
 		["its sub-event names the parent's copy", rows.get("shots_group", []), ["[shot.tscn] Add to group \"shots\""]],
 		["the clock's upkeep folds away beside the clamp", rows.get("clamp", []),
 			["[System] Keep $Player.position.x between 40.0 and 1112.0"]],
 		["and its wrap beside the spawn", rows.get("timer", []), [
 			"[target.tscn] Set position to (1240, random number 120 to 540)",
-			"[target.tscn] Set angle to 180",
+			"[target.tscn] Set rotation to 180",
 			"[System] Spawn target.tscn",
 		]],
 		["the second spawn's sub-event names its own scene", rows.get("targets_group", []),
@@ -210,10 +210,10 @@ static func _test_loop_names() -> bool:
 		"⟳ | [System] On physics process | [shots] For each shots",
 		"[targets] For each targets",
 		"[System] shots still exists | [System] targets still exists | [shots] is within 42 of targets.global_position"
-			+ " || [shots] Destroy | [targets] Destroy | [System] Add 1 to score | [System] Stop loop",
+			+ " || [shots] Queue free | [targets] Queue free | [System] Add 1 to score | [System] Stop loop",
 		"⟳ | [System] On physics process | [shots/targets] For each shots/targets",
 		"[System] shots/targets.global_position.x < -60 | [System] shots/targets.global_position.x > 1300"
-			+ " || [shots/targets] Destroy",
+			+ " || [shots/targets] Queue free",
 	]
 	var starter: EventSheetViewport = _viewport_for(_shooter(), NATIVE_THEME)
 	var native_loops: Array = _loop_lines(starter)
@@ -258,18 +258,18 @@ static func _test_loop_names() -> bool:
 			"⟳ | [System] On physics process | [System] For each __shot in get_tree().get_nodes_in_group(\"shots\")",
 			"[System] For each __target in get_tree().get_nodes_in_group(\"targets\")",
 			"[System] __shot still exists | [System] __target still exists | [__shot] is within 42 of __target.global_position"
-				+ " || [__shot] Destroy | [__target] Destroy | [System] Add 1 to score | [System] Stop loop",
+				+ " || [__shot] Queue free | [__target] Queue free | [System] Add 1 to score | [System] Stop loop",
 			"⟳ | [System] On physics process | [System] For each __node in get_tree().get_nodes_in_group(\"shots\")"
 				+ " + get_tree().get_nodes_in_group(\"targets\")",
-			"[System] __node.global_position.x < -60 | [System] __node.global_position.x > 1300 || [__node] Destroy",
+			"[System] __node.global_position.x < -60 | [System] __node.global_position.x > 1300 || [__node] Queue free",
 		]],
 		["a loop name the author wrote reads exactly as written", authored_loops, [
 			"⟳ | [System] On physics process | [System] For each shot in get_tree().get_nodes_in_group(\"shots\")",
-			"[System] shot.global_position.x < -60 || [shot] Destroy",
+			"[System] shot.global_position.x < -60 || [shot] Queue free",
 		]],
 		["a walk over a family's group reads as the family", family_loops, [
 			"⟳ | [System] On physics process | [Enemy] For each Enemy",
-			"[System] Enemy.global_position.x < -60 || [Enemy] Destroy",
+			"[System] Enemy.global_position.x < -60 || [Enemy] Queue free",
 		]],
 	])
 

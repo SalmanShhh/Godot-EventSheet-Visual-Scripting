@@ -252,7 +252,7 @@ right one back with **Send … to one peer**. The other players never see the co
 **14. A shared timer.** The host owns the clock and sends the remaining seconds to everyone once a
 second. Every peer counting down on its own drifts apart within a minute.
 
-**15. Debug who is who.** Print **Multiplayer.MyID** and **Is host** on start of layout. Half the
+**15. Debug who is who.** Print **Multiplayer.MyID** and **Is host** on ready. Half the
 confusion in a first networked build is not knowing which window you are looking at.
 
 **16. Doors and switches.** The interaction is sent to the host, the host opens the door, and the

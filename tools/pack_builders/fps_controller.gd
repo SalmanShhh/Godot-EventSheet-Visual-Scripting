@@ -664,7 +664,7 @@ static func build() -> bool:
 	# and a sway are things that are TRUE every frame, not events, and putting them in the tick is
 	# what lets a reader see the whole of what their hands are doing in two lines of the sheet.
 	Lib.append_function(sheet, "bob_with_movement", "Bob With Movement", "FPS Controller",
-		"Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every tick on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.",
+		"Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every frame on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.",
 		[["weapon", "Node3D"]],
 		"\n".join(PackedStringArray([
 			"if weapon == null:",
@@ -677,7 +677,7 @@ static func build() -> bool:
 			"weapon.position.y = _bob_base_y + sin(_bob_time * TAU / maxf(bob_period, 0.001)) * bob_amount * pace"
 		])))
 	Lib.append_function(sheet, "sway_with_mouse", "Sway With Mouse", "FPS Controller",
-		"Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every tick on the node you want swaying.",
+		"Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every frame on the node you want swaying.",
 		[["weapon", "Node3D"]],
 		"\n".join(PackedStringArray([
 			"if weapon == null:",

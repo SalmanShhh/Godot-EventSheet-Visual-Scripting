@@ -139,7 +139,7 @@ static func _test_the_rows() -> bool:
 	ok = _check("the filter is a group FIELD and the hit is a payload beside it",
 		fields, [["group", "group_reference"], ["body", ""]]) and ok
 	ok = _check("the row reads as one sentence with the group in it",
-		trigger.get_display_text(), "On overlap with {group}") and ok
+		trigger.get_display_text(), "On body entered, in group {group}") and ok
 	return ok
 
 

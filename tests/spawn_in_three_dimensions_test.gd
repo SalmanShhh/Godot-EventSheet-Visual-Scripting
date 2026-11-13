@@ -45,7 +45,7 @@ static func run() -> bool:
 static func _test_the_twins_emit_the_same_three_lines_on_a_3d_host() -> bool:
 	var by_id: Dictionary = _descriptors()
 	var passed: bool = true
-	passed = _check("Spawn A Copy (3D) emits instance, parent, place - in that order",
+	passed = _check("Instantiate (3D) emits instance, parent, place - in that order",
 		str(by_id.get("SpawnNewCopy3D", ACEDescriptor.new()).codegen_template),
 		"var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}") and passed
 	passed = _check("the 3D spawn is filed under Node3D",
@@ -74,7 +74,7 @@ static func _test_the_twins_emit_the_same_three_lines_on_a_3d_host() -> bool:
 static func _test_the_deferred_twin_places_before_it_parents() -> bool:
 	var by_id: Dictionary = _descriptors()
 	var passed: bool = true
-	passed = _check("Spawn A Copy Safely (3D) defers the parenting",
+	passed = _check("Instantiate Safely (3D) defers the parenting",
 		str(by_id.get("SpawnNewCopyDeferred3D", ACEDescriptor.new()).codegen_template),
 		"var {name} = {scene}.instantiate()\n{name}.position = {at}\n{parent}.call_deferred(\"add_child\", {name})") and passed
 	passed = _check("and says so in its sentence rather than deferring quietly",

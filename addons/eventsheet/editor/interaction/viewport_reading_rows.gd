@@ -2078,7 +2078,7 @@ static func tick_trigger_words(trigger_id: String, display_text: String,
 const BLANK_TICK_TRIGGER_IDS: PackedStringArray = ["OnProcess", "OnPhysicsProcess"]
 
 ## What the margin hover and the Explain panel say about a blank top-level event.
-const BLANK_EVENT_HOVER: String = "runs every tick"
+const BLANK_EVENT_HOVER: String = "runs every frame"
 
 ## And about a blank SUB-event, which means the other half of the same rule: it simply follows
 ## the event above it, in order. Nothing is skipped and nothing is decided - which is exactly why the
@@ -2250,9 +2250,9 @@ static func input_signal_trigger_reading(trigger_id: String, object_label: Strin
 static func collision_trigger_words(trigger_id: String) -> String:
 	match trigger_id:
 		"OnBodyEntered", "OnAreaEntered", "body_entered", "area_entered":
-			return EventSheetL10n.translate("On collision with")
+			return EventSheetL10n.translate(EventSheetWords.word("body_entered"))
 		"OnBodyExited", "OnAreaExited", "body_exited", "area_exited":
-			return EventSheetL10n.translate("On stopped overlapping")
+			return EventSheetL10n.translate(EventSheetWords.word("body_exited"))
 	return ""
 
 

@@ -328,7 +328,7 @@ owns it says which pattern it is, with the exact lines that made the sheet think
   `Local Storage.Item("player/score") (or 0)`, `Save`, `Load`, `has item player/score`, and
   `cfg.load(path) != OK` reads `save file is missing`. The path is on hover.
 - **Existence.** `is_instance_valid(t)` is `t exists`, `target = null` is `Forget target`, and
-  `get_parent().remove_child(self)` is `Remove from layout (kept alive, not destroyed)` - which is
+  `get_parent().remove_child(self)` is `Remove from scene (kept alive, not destroyed)` - which is
   the answer to the first question anyone has about a removed object.
 - **Lists and tables.** `stats.get("hp", 100)` is `stats "hp" (or 100 when missing)`,
   `items.slice(0, 3)` is `the first 3 of items`, a one-line `sort_custom` is
@@ -366,20 +366,20 @@ event that owns one is marked as the pattern it is.
 
 ## A loading screen that shows progress
 
-Godot can load the next layout on another thread while the current one keeps running. Written by
+Godot can load the next scene on another thread while the current one keeps running. Written by
 hand that is four `ResourceLoader` calls, a status enum and an array passed by reference; as rows it
 is three sentences and one expression, and each of them writes exactly the line the reading
 recognises - so a loading screen you type and one you pick are the same bytes.
 
-1. On ready: **System ▸ Load layout `"res://levels/level_2.tscn"` in the background**.
+1. On ready: **System ▸ Load scene `"res://levels/level_2.tscn"` in the background**.
 2. On process, feed the bar: **ProgressBar ▸ Set value to `System.LoadingProgress * 100`**. The
    expression answers 0 to 1, so multiply by 100 for a percentage.
-3. Add a condition **System ▸ layout `"res://levels/level_2.tscn"` has finished loading**, and under
+3. Add a condition **System ▸ scene `"res://levels/level_2.tscn"` has finished loading**, and under
    it **System ▸ Change scene `"res://levels/level_2.tscn"`**. That switch reuses what was already
    loaded, so there is no second load and no pause.
 
 Use the same path in all three rows - that is what ties them together. Open the file afterwards and
-it reads back as those three sentences, with the layout named the way the file is named.
+it reads back as those three sentences, with the scene named the way the file is named.
 
 ## Movement, multiplayer and paths in one vocabulary
 
@@ -446,7 +446,7 @@ pack say the same thing:
   destination at speed**, the flag beside it reads **Start moving** / **Is moving** / **Stop**, and
   the distance check reads **Has arrived**.
 - **Five one-liners name themselves.** **Rotate clockwise at k (degrees per second)**, **Wrap around
-  layout horizontally**, **Bound to layout (inside …)**, **Pin to anchor (position · offset …)** and
+  layout horizontally**, **Bound to scene (inside …)**, **Pin to anchor (position · offset …)** and
   **Fade out over 1 seconds (then destroy)**.
 
 Each of these claims its pattern on the event that owns it, with the exact source lines as the

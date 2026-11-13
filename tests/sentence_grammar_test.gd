@@ -66,8 +66,8 @@ static func _statements() -> bool:
 		"host ▸ Set velocity.x to direction * speed") and ok
 	ok = _check("member add", _read("host.velocity += push"), "host ▸ Add push to velocity") and ok
 	ok = _check("deferred destroy", _read("host.call_deferred(\"queue_free\")"),
-		"host ▸ Destroy (at end of frame)") and ok
-	ok = _check("destroy", _read("queue_free()"), "System ▸ Destroy") and ok
+		"host ▸ Queue free (at end of frame)") and ok
+	ok = _check("destroy", _read("queue_free()"), "System ▸ Queue free") and ok
 	ok = _check("signal with published name", _read("jumped.emit()"), "FPSController ▸ Signal On Jumped") and ok
 	ok = _check("signal humanized", _read("wall_jumped.emit()"), "FPSController ▸ Signal On Wall Jumped") and ok
 	ok = _check("signal already prefixed", _read("on_damaged.emit()"), "FPSController ▸ Signal On Damaged") and ok

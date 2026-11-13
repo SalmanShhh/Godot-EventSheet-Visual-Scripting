@@ -265,7 +265,7 @@ static func _condition_values() -> bool:
 		["has_node(\"Sprite2D\")", "Player ▸ has child Sprite2D"],
 		["$Hurtbox.has_node(\"Shape\")", "Hurtbox ▸ has child Shape"],
 		# The two comparison glyphs, wherever a comparison is shown
-		["rotation >= 1.5", "Player ▸ angle (radians) ≥ 1.5"],
+		["rotation >= 1.5", "Player ▸ rotation (radians) ≥ 1.5"],
 		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["hp >= 10", " ▸ hp ≥ 10"],
 		# The storage and file questions

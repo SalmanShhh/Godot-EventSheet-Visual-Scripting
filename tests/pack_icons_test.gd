@@ -45,7 +45,7 @@ const VERIFIED_SECTION_ICONS: Dictionary = {
 	"Compare: Vectors": "GuiChecked",
 	"Crowd": "Node2D",
 	"Debug": "NodeWarning",
-	"Destroy": "Remove",
+	"Queue Free": "Remove",
 	"Display": "Window",
 	"Drawing": "CanvasItem",
 	"Drawing: Godot calls": "CanvasItem",

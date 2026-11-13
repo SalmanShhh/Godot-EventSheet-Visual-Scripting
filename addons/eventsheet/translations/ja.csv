@@ -10279,3 +10279,88 @@ Run on enter tree,ツリーに入った時 (_enter_tree)
 Run on exit tree,ツリーから出る時 (_exit_tree)
 "Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.",正直に減衰するノックバック(指数形式、フレームレートに依存しません) - 毎フレームの下に1行置きます。押し出しはレベルの方向で計算されますが親内の位置に加算されるため、回転や拡大縮小された親の下では誤りになります。ワールド版の ApplyPushesWorld を使ってください。
 "Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.",正直に減衰するノックバック(指数形式、フレームレートに依存しません) - 毎フレームの下に1行置きます。押し出しはレベルの方向で計算され、ノードのレベル内の位置に加算されるため、回転や拡大縮小された親の下でも正しく動きます。
+(none - runs every frame),(なし - 毎フレーム実行)
+An event with no condition of its own runs every frame.,自分の条件を持たないイベントは毎フレーム実行されます。
+Other event-sheet editors call this %s.,他のイベントシート エディターでは %s と呼ばれます。
+Godot calls this %s.,Godot では %s と呼ばれます。
+Godot writes this as %s.,Godot では %s と書かれます。
+every frame,毎フレーム
+Every frame,毎フレーム
+Runs every frame,毎フレーム実行
+Instantiate,インスタンス化
+Instantiate (3D),インスタンス化 (3D)
+Instantiate Safely,安全にインスタンス化
+Instantiate Safely (3D),安全にインスタンス化 (3D)
+Instantiate In A Formation,隊形でインスタンス化
+Instantiate In A Formation (3D),隊形でインスタンス化 (3D)
+"Instantiate, Facing And Moving",インスタンス化 (向きと移動つき)
+"Instantiate, Facing And Moving (3D)",インスタンス化 (向きと移動つき、3D)
+Instantiate Myself,自分自身をインスタンス化
+Instantiate Myself (3D),自分自身をインスタンス化 (3D)
+Instantiate In A Free Spot,空いた場所にインスタンス化
+Instantiate In A Free Spot (3D),空いた場所にインスタンス化 (3D)
+Instantiate Into The Crowd,群衆にインスタンス化
+"Instantiate, The First Makes Room",インスタンス化 (最初の1つが場所を空ける)
+Instantiate Unless The Crowd Is Full,群衆が満員でなければインスタンス化
+Instantiate Scene In The World,ワールドにシーンをインスタンス化
+Instantiate Scene As,名前を付けてシーンをインスタンス化
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]",[b]{scene}[/b] を [b]{name}[/b] として {at} にインスタンス化 ([i]{parent}[/i] の下)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",[b]{scene}[/b] を [b]{name}[/b] として {at} にインスタンス化 ([i]{parent}[/i] の下、次のアイドル時に追加)
+Instantiate [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b],[b]{scene}[/b] の複製を [b]{count}[/b] 個、[b]{formation}[/b] の隊形でインスタンス化
+"Instantiate [b]{scene}[/b] as [b]{name}[/b], facing [b]{facing}[/b], moving at [b]{speed}[/b]",[b]{scene}[/b] を [b]{name}[/b] として、向き [b]{facing}[/b]、速度 [b]{speed}[/b] でインスタンス化
+"Instantiate [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",[b]自分自身[/b] を [b]{name}[/b] として {at} にインスタンス化 ([i]{parent}[/i] の下、次のアイドル時に追加)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]",[b]{scene}[/b] を [b]{name}[/b] として [i]{inside}[/i] の空いた場所にインスタンス化 ([i]{parent}[/i] の下)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]",[b]{scene}[/b] を [b]{name}[/b] として {at} にインスタンス化 ([i]{parent}[/i] の下、群衆 [b]{crowd}[/b] へ)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room",[b]{scene}[/b] を [b]{name}[/b] として {at} にインスタンス化 ([i]{parent}[/i] の下、[b]{crowd}[/b] に最大 [b]{cap}[/b] 体 - 最初の1体が場所を空ける)
+"Instantiate [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip instantiating when full",[b]{scene}[/b] を [b]{name}[/b] として {at} にインスタンス化 ([i]{parent}[/i] の下、[b]{crowd}[/b] に最大 [b]{cap}[/b] 体 - 満員ならスキップ)
+Instantiate {path} in the level at {position},{path} をレベルの {position} にインスタンス化
+"Instantiate [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i], placed from its parent",[b]{path}[/b] を [b]{spawn_name}[/b] として [i]{values}[/i] 付きでインスタンス化 (親から配置)
+"A name for this spawn, so later rows can say The Instantiated Node ""boss"".","この生成物の名前。後の行で「インスタンス化したノード」""boss"" と言えるようになります。"
+The Instantiated Node,インスタンス化したノード
+the instantiated node [b]{spawn_name}[/b],インスタンス化したノード [b]{spawn_name}[/b]
+The name an Instantiate Scene As row used.,「名前を付けてシーンをインスタンス化」行が使った名前。
+Instantiated Node Is Alive,インスタンス化したノードが生存中
+the instantiated node [b]{spawn_name}[/b] is alive,インスタンス化したノード [b]{spawn_name}[/b] が生存中
+The name the Instantiate Scene As row gave this spawn.,「名前を付けてシーンをインスタンス化」行がこの生成物に付けた名前。
+Queue Free Now,今すぐ queue_free
+Queue Free,Queue free
+queue free [i]{object}[/i] now,[i]{object}[/i] を今すぐ queue free
+Queue Free After Seconds,数秒後に queue_free
+queue free [i]{object}[/i] after {seconds}s,{seconds} 秒後に [i]{object}[/i] を queue free
+Fade Out Then Queue Free,フェードアウトしてから queue_free
+queue free [i]{object}[/i] after fading it out over {seconds}s,{seconds} 秒かけて [i]{object}[/i] をフェードアウトした後に queue free
+"On Body Entered, In Group",ボディ進入時 (グループ内)
+"On body entered, in group {group}",ボディ進入時 (グループ {group} 内)
+"On Body Exited, In Group",ボディ退出時 (グループ内)
+"On body exited, in group {group}",ボディ退出時 (グループ {group} 内)
+"On Body Entered, In Group (3D)",ボディ進入時 (グループ内、3D)
+"On Body Exited, In Group (3D)",ボディ退出時 (グループ内、3D)
+Overlaps Group,グループと重なる
+Overlaps Group (3D),グループと重なる (3D)
+overlaps {group},{group} と重なる
+"Runs once when this node is ready (the _ready callback): it and all its children are in the scene, ideal for setup and initial values.",このノードの準備ができたときに一度だけ実行されます (_ready コールバック)。ノードとすべての子がシーン内にあるので、セットアップや初期値の設定に最適です。
+"Runs every rendered frame (the _process callback), perfect for continuous movement, timers, or polling input.",描画されるフレームごとに実行されます (_process コールバック)。継続的な移動、タイマー、入力のポーリングに最適です。
+"Runs every fixed physics step (the _physics_process callback), the right place for physics-based movement and forces.",固定の物理ステップごとに実行されます (_physics_process コールバック)。物理ベースの移動や力の処理に適した場所です。
+"Runs the moment this node is added to the scene tree (the _enter_tree callback) - before its children exist, which is what makes it earlier than On Ready.",このノードがシーンツリーに追加された瞬間に実行されます (_enter_tree コールバック)。子がまだ存在しない時点なので、On Ready より先に実行されます。
+"Runs when this node leaves the scene tree (the _exit_tree callback) - the place to let go of what it was holding, save its state, or tell others it is gone.",このノードがシーンツリーから外れるときに実行されます (_exit_tree コールバック)。保持していたものの解放、状態の保存、他への通知を行う場所です。
+"An event with no condition of its own runs every frame. Add its actions with A, or add a condition later to narrow it down.",自分の条件を持たないイベントは毎フレーム実行されます。A でアクションを追加するか、後で条件を追加して絞り込みます。
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick, Destroy, Angle); the other verbs stay Godot's.",他のイベントシート エディターが名詞とコールバックに使う言葉 (Family、Layout、On start of layout、Every tick、Destroy、Angle) です。その他の動詞は Godot のままです。
+"The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Instantiate. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.",名詞と動詞の両方をシートの言葉にします。Godot が Instantiate と言うところを、行は Create object と読みます。ピッカーには Godot の表記も並んで表示され、コードパネルとツールチップは変わりません。
+"Spawns one copy the way Instantiate does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.",「インスタンス化」と同じようにコピーを 1 つ作り、それを何かの方へ向けて、その向きに沿った速さを与えます - 銃口を離れる弾、車輪から飛ぶ火花、突っ込んでくる敵。速さがどこに書かれるかはシーン次第です。CharacterBody なら velocity、RigidBody なら linear_velocity、Bullet ビヘイビアを着けたシーンならそのビヘイビア自身の速さ。ダイアログがシーンファイルを読み、どれが見つかったかを伝えます。
+"Spawns one copy the way Instantiate (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.",「インスタンス化 (3D)」と同じようにコピーを 1 つ作り、それを何かの方へ向けて、その向きに沿った速さを与えます。三次元での前はコピー自身の -Z で、これは Godot がほかのどこでも前と呼んでいるものなので、「ノードの方へ」はそのまま look_at です。速さがどこに書かれるかはシーン次第です。CharacterBody なら velocity、RigidBody なら linear_velocity、Bullet ビヘイビアを着けたシーンならそのビヘイビア自身の速さ。
+"Gives a point inside a shape you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of - where to put the next crate, the next mine, the next enemy in a room that is filling up. Clear is asked as a real physics test, with the spawned scene's OWN collision shape put at the point, so a wall is a wall whatever drew it; a group whose members carry no shape at all is answered by distance instead. A full arena answers NOTHING, and Instantiate In A Free Spot is the row that knows what to do about that.",自分で描いた形の中で、指定したグループのものが誰も立っておらず、同じシーンのほかのコピーも間隔より近くにない点を返します - 埋まりつつある部屋で次の木箱、次の地雷、次の敵をどこに置くか。空いているかどうかは本物の物理テストで問われ、生成するシーン自身のコリジョンシェイプをその点に置いて調べるので、壁は誰が描いた壁でも壁です。シェイプをまったく持たないメンバーのグループには、代わりに距離で答えます。満杯のアリーナは「何も」返さず、その場合にどうするかを知っているのが「空いた場所にインスタンス化」の行です。
+"Runs when an Instantiate In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.",「空いた場所にインスタンス化」の行がコピーを置く場所を見つけられなかったときに走り、置けなかったシーンを渡します。このシグナルはこのシートが自分で宣言するものです。spawn_skipped(scene) というシグナルブロックを足せば、どちらの側もふつうの Godot です。こうして満杯のアリーナは、ゲームが答えられるものになります - ウェーブを止める、部屋が満杯だと伝える、場所を空ける。
+"Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Queue Free Now does. Like Queue Free Now, the object is still there for the rest of this event: a destroy lands at the end of the frame and a handing back lands on the next idle moment, which is what makes this row safe inside a collision handler. Safe to run twice - something already on its way out, or already back in its pool, is left alone.",オブジェクトを退役させます。プールから出てきたものならそのプールへ返し、そうでなければ破棄します。どちらになるかはオブジェクト自身から読み取られるので、シートがコピーの出どころを覚えておく必要はありません。プールを使わないゲームでは 今すぐ queue_free とまったく同じ振る舞いになります。今すぐ queue_free と同じく、オブジェクトはこのイベントの残りの間はまだそこにあります。破棄はフレームの終わりに、プールへの返却は次のアイドルの瞬間に行われ、それがこの行を衝突ハンドラの中で安全にしています。二度実行しても安全です。すでに出ていく途中のもの、すでにプールへ戻っているものは、そのままにされます。
+"Spawns a copy the way Instantiate does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.",「インスタンス化」と同じようにインスタンス化し、シーンの名前を付けたグループに入れます。これで下の行がその数を数え、上限を設け、最後の一体がいなくなったことを知ることができます。グループへの参加には Godot の永続グループのフラグを使うため、その枝がシーンファイルに再びパックされてもグループは残ります。
+"The same spawn as Instantiate, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",インスタンス化 と同じ生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はレベル内の位置で、コピーを追加した直後に設定されるため、親が誰であってもそこに配置されます。
+"The same 3D spawn as Instantiate (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.",インスタンス化 (3D) と同じ 3D の生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はレベル内の位置で、コピーを追加した直後に設定されるため、親が誰であってもそこに配置されます。
+Loads a scene and drops a copy into the current scene at a place in the level. Instantiate Scene At adds the copy under this node and measures its place from this node instead.,シーンを読み込み、そのコピーを現在のシーンのレベル内の位置に置きます。「指定位置にシーンをインスタンス化」はコピーをこのノードの下に追加し、位置をこのノードから測ります。
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Instantiated Node. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","シーンを名前付きで生成し、ツリーに入る前に値のレコードを設定し、その名前で覚えておくので、後のどの行も インスタンス化したノード と言えます。シートが scene_spawned(spawn_name, node) シグナルを宣言していれば、両方を添えて発信するので、最後に何が生成されたか尋ねることなく別のイベントが新しいノードに反応できます。"
+"The node an Instantiate Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.",名前を付けてシーンをインスタンス化 の行がこの名前で作ったノード。一度も生成されていない場合や、その後に解放された場合は「何も無い」を返します - 死んだボスに手を伸ばした行は、クラッシュではなく何も得られません。
+"Runs when an Instantiate Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","名前を付けてシーンをインスタンス化 の行が何かを生成したときに実行されます。名前と新しいノードは行に spawn_name と node として届くので、最後に何が生成されたか尋ねることなく、反応側がノードを設定したり知らせたりできます - 1 つのループが 1 フレームに 6 つ生成しても正しく動きます。scene_spawned(spawn_name: String, node: Node) のシグナル行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。"
+Instantiate Scene At,指定位置にシーンをインスタンス化
+Instantiate Scene File,シーンファイルをインスタンス化
+Instantiate Scene (Full),シーンをインスタンス化 (フル)
+"Loads a scene and adds a copy as a child of this node. The position is measured from this node, so the copy moves with it; Instantiate Scene In The World places it in the level instead.",シーンを読み込み、そのコピーをこのノードの子として追加します。位置はこのノードを基準に測られるので、コピーはノードと一緒に動きます。レベルに直接置きたい場合は「ワールドにシーンをインスタンス化」を使います。
+"Instantiate {path} at {position}, as a child of this node",{path} を {position} にインスタンス化 (このノードの子として)
+"Instantiate {path} (rot {rotation}, group {group}), as a child of this node",{path} をインスタンス化 (回転 {rotation}、グループ {group}、このノードの子として)

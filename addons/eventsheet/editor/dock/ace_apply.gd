@@ -648,7 +648,7 @@ func add_blank_event(context: Dictionary) -> void:
 			_insert_row_below_selection(blank_event)
 		return true)
 	if changed:
-		_dock._mark_dirty("Added an event that runs every tick.")
+		_dock._mark_dirty("Added an event that runs every frame.")
 
 
 ## Bakes a trigger definition's identity + argument signature onto the event row, so the

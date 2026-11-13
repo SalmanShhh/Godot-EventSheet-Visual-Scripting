@@ -494,7 +494,7 @@ three data-shaped doors instead.
 `ResourceLoader.load()` are the obvious pair; `ResourceLoader.load_threaded_request()` asks and
 `ResourceLoader.load_threaded_get()` hands the built object over, so both halves are watched rather
 than only the one that starts it. `change_scene_to_file()` is the third shape and the easiest to miss:
-travelling to a layout attaches that scene's script exactly as loading it does, whatever the receiver
+travelling to a scene attaches that scene's script exactly as loading it does, whatever the receiver
 in front of the dot was written as. And `ProjectSettings.load_resource_pack()` is the widest of the
 six, which is why it carries a sentence of its own in the finding rather than sharing the loaders'.
 

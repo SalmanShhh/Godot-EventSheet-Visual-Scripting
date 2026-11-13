@@ -18,22 +18,22 @@ nothing is remembered anywhere.
 
 Three rows make the sentence, and four expressions answer "where":
 
-- **Spawn A Copy** - the whole thing: instance, parent, place.
-- **Spawn A Copy Safely** - the same spawn added on the next idle moment, for a collision handler.
+- **Instantiate** - the whole thing: instance, parent, place.
+- **Instantiate Safely** - the same spawn added on the next idle moment, for a collision handler.
 - **Make A Copy** - the name-minting statement on its own, for a copy that needs setting up first.
 - **Place Of**, **Random Place Along Path**, **Random Place Inside Shape**, **Random Place Off Screen
   Edge** - one expression each, usable in any field that takes a position.
 
-The older **Spawn Scene**, **Spawn Scene At** and **Spawn Scene (Full)** rows take a scene PATH as
+The older **Spawn Scene**, **Instantiate Scene At** and **Instantiate Scene (Full)** rows take a scene PATH as
 text and are unchanged. They are still the answer when the path is built at runtime; these rows are
 for the scene the sheet already declares.
 
 Four more rows take a copy back out of the world again, because the other half of spawning is
 destroying, and the mistakes live there:
 
-- **Destroy Now** - `queue_free()`, said plainly, with the end-of-frame timing on the row.
-- **Destroy After Seconds** - a scene-tree timer with the free hung off it.
-- **Fade Out Then Destroy** - a tween, a wait, and the destroy after it.
+- **Queue Free Now** - `queue_free()`, said plainly, with the end-of-frame timing on the row.
+- **Queue Free After Seconds** - a scene-tree timer with the free hung off it.
+- **Fade Out Then Queue Free** - a tween, a wait, and the destroy after it.
 - **Is Still Here** - the question, for a name the sheet held on to.
 
 A node that wants to hear about its OWN destruction uses the shipped **On Exit Tree** trigger, which
@@ -42,9 +42,9 @@ where it is.
 
 Six more say the copies in the plural, because a game that spawns one thing soon spawns twenty:
 
-- **Spawn A Copy Into The Crowd** - the same spawn, with the copy joined to a group named after the
+- **Instantiate Into The Crowd** - the same spawn, with the copy joined to a group named after the
   scene.
-- **Spawn A Copy, The First Makes Room** and **Spawn A Copy Unless The Crowd Is Full** - the cap,
+- **Instantiate, The First Makes Room** and **Instantiate Unless The Crowd Is Full** - the cap,
   with what happens at the cap written into the row's own sentence.
 - **How Many Alive** - the group's size, in any field that takes a number.
 - **On The Last One Destroyed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
@@ -52,14 +52,14 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 
 Sixteen more say the wave, the aim and the way back out, and they have a chapter of their own below:
 
-- **Spawn In A Formation** and its 3D twin - several copies at once, in a ring, an arc, a line, a
+- **Instantiate In A Formation** and its 3D twin - several copies at once, in a ring, an arc, a line, a
   grid, or scattered inside a shape you drew.
-- **Spawn A Copy, Facing And Moving** and its 3D twin - one copy turned to face something and given
+- **Instantiate, Facing And Moving** and its 3D twin - one copy turned to face something and given
   a speed along that facing.
-- **Spawn A Copy Of Myself** and its 3D twin - one more copy of the scene this node came from, with
+- **Instantiate Myself** and its 3D twin - one more copy of the scene this node came from, with
   nothing in the row naming the file.
 - **Free Spot In** and its 3D twin - the placement expression that only ever answers with somewhere
-  nothing is standing. **Spawn A Copy In A Free Spot** and its 3D twin spend it, and **On Spawn
+  nothing is standing. **Instantiate In A Free Spot** and its 3D twin spend it, and **On Spawn
   Skipped** is what a full arena raises.
 - **Retire**, **Retire After Seconds**, **Fade Out Then Retire** and its 3D twin, and **On
   Retired** - the removal that hands a pooled copy back to its pool and destroys everything else.
@@ -109,11 +109,11 @@ Sixteen more say the wave, the aim and the way back out, and they have a chapter
   says `under self`. That is deliberate: a copy that quietly ends up somewhere else is the hardest
   kind of spawn to find later, so the row always states where it went.
 - **Placement happens after parenting, and the row shows that.** `global_position` only means
-  anything once a node is in a tree. Spawn A Copy therefore adds the copy first and places it second.
-- **The safe row reverses that, and says why.** Spawn A Copy Safely sets `position` (relative to the
+  anything once a node is in a tree. Instantiate therefore adds the copy first and places it second.
+- **The safe row reverses that, and says why.** Instantiate Safely sets `position` (relative to the
   parent) BEFORE handing the copy over, because the copy is not in a tree yet when that line runs.
 - **Godot refuses `add_child` while the physics server is flushing.** That is most of what a body or
-  area callback is. Inside one, use Spawn A Copy Safely - it writes
+  area callback is. Inside one, use Instantiate Safely - it writes
   `call_deferred("add_child", …)` and the row reads `added on the next idle moment`, so the deferral
   is visible rather than done behind your back.
 - **The Scene field takes an expression, not a file picker.** A sheet that declares
@@ -271,8 +271,8 @@ A 3D game spawns for exactly the same reasons and in exactly the same order, so 
 2D pair with a Node3D host and Vector3 answers to "where". They are not a second spawning idea, and
 there is nothing new to learn about them:
 
-- **Spawn A Copy (3D)** - instance, parent, place, in that order.
-- **Spawn A Copy Safely (3D)** - the same spawn added on the next idle moment, placing before it
+- **Instantiate (3D)** - instance, parent, place, in that order.
+- **Instantiate Safely (3D)** - the same spawn added on the next idle moment, placing before it
   parents for the same reason its 2D twin does.
 - **Place Of (3D)**, **Random Place Inside Box**, **Random Place Inside Sphere**, **Random Place
   Around (3D)** - one expression each, usable in any field that takes a Vector3.
@@ -337,7 +337,7 @@ the group as it leaves the tree.
 "At most twelve alive" is two different games depending on what happens at twelve, so there is a row
 per answer and each says which it is in its own sentence.
 
-**Spawn A Copy, The First Makes Room** destroys members to make room and then spawns, so the new copy
+**Instantiate, The First Makes Room** destroys members to make room and then spawns, so the new copy
 always appears:
 
 ```
@@ -365,7 +365,7 @@ in. Under a parent that spawns by adding children that is the earliest one still
 `move_child`, or with copies spread over two parents, it is the tree's order rather than the spawn's.
 This is what a bullet, a footstep or a skid mark wants.
 
-**Spawn A Copy Unless The Crowd Is Full** does nothing at all when the crowd is full:
+**Instantiate Unless The Crowd Is Full** does nothing at all when the crowd is full:
 
 ```
 var new_enemy: Node = null
@@ -496,7 +496,7 @@ not of learning a second way to spawn:
 
 - The **Spawn** expression hands out a ready copy - reusing a free one, or making a new one when the
   pool has none - so it goes in the field a Make A Copy row would have filled.
-- The **Despawn** action hands the copy back instead of freeing it, so it replaces the Destroy Now
+- The **Despawn** action hands the copy back instead of freeing it, so it replaces the Queue Free Now
   row. Everything between the two is unchanged: the same property rows, the same crowd row, the same
   placement expression.
 
@@ -530,14 +530,14 @@ Everything above is one copy at a time, put where you say and destroyed when you
 Five more sentences answer the questions that arrive next, and every one of them ships in both
 dimensions:
 
-- **Spawn In A Formation** and **Spawn In A Formation (3D)** - several copies at once, arranged in a
+- **Instantiate In A Formation** and **Instantiate In A Formation (3D)** - several copies at once, arranged in a
   shape you pick, every one of them joined to a crowd on the way in.
-- **Spawn A Copy, Facing And Moving** and **Spawn A Copy, Facing And Moving (3D)** - one copy turned
+- **Instantiate, Facing And Moving** and **Instantiate, Facing And Moving (3D)** - one copy turned
   to face something and given a speed along that facing.
-- **Spawn A Copy Of Myself** and **Spawn A Copy Of Myself (3D)** - one more copy of the scene this
+- **Instantiate Myself** and **Instantiate Myself (3D)** - one more copy of the scene this
   node was built from, with nothing in the row naming the file.
 - **Free Spot In** and **Free Spot In (3D)** - the placement expression that only ever answers with
-  somewhere nothing is standing. **Spawn A Copy In A Free Spot** and its 3D twin are the rows that
+  somewhere nothing is standing. **Instantiate In A Free Spot** and its 3D twin are the rows that
   spend it, and **On Spawn Skipped** is the trigger a full arena raises.
 - **Retire**, **Retire After Seconds**, **Fade Out Then Retire**, **Fade Out Then Retire (3D)** and
   **On Retired** - the destroy verbs' other answer: back to the pool it came out of, or destroyed
@@ -556,7 +556,7 @@ of them touches an editor, a sheet, or any class the plugin declares.
 ### A whole formation in one row
 
 A wave arranged in a shape is a loop, an index and one piece of arithmetic, and the arithmetic is
-where it goes wrong. Spawn In A Formation is that loop with the arithmetic picked from a dropdown:
+where it goes wrong. Instantiate In A Formation is that loop with the arithmetic picked from a dropdown:
 a **ring**, an **arc**, a **line**, a **grid**, or **scattered inside a shape** you drew (a box, in
 three dimensions). The shape word changes exactly one expression - where copy number `i` lands - and
 everything else about the row is the same for all five.
@@ -609,13 +609,13 @@ the whole formation at once, rather than the formation row having to hand anythi
 **And the scene is read once, above the loop.** `var enemy_scene = Enemy` is a lookup saved per copy,
 and it is also the line that lets the run be recognised as one sentence when the file is opened
 again. Inside a collision or body handler, pick the next idle moment in the Added field: the last
-two lines then place before they parent, exactly as Spawn A Copy Safely does and for the same
+two lines then place before they parent, exactly as Instantiate Safely does and for the same
 reason.
 
 ### A copy that leaves already facing and already moving
 
 The frozen spawn sentence puts a copy somewhere. A bullet, a spark off a wheel or an enemy charging
-in needs two more facts: which way it is turned, and how fast it is going that way. Spawn A Copy,
+in needs two more facts: which way it is turned, and how fast it is going that way. Instantiate,
 Facing And Moving is those two on the same row, because they are one decision - the launch is
 computed from the facing the line above just set.
 
@@ -674,7 +674,7 @@ bolted to the wall.
 
 A boss that splits into two smaller bosses, a slime that halves, a crystal that shatters into
 crystals: all of them want one more copy of the very scene they are. Written by hand that means the
-scene preloading its own file, which is a name to keep in step with a filename. Spawn A Copy Of
+scene preloading its own file, which is a name to keep in step with a filename. Instantiate Of
 Myself names nothing at all - the node already knows which file it was built from.
 
 ```
@@ -734,7 +734,7 @@ collision shape at all cannot be asked that question, so those members are answe
 they can be, by distance - which is what makes a bare Marker2D dropped to say "not here" work.
 
 **And it answers nothing when there is nothing to answer.** After the last try it gives `null`,
-which is a real answer rather than a failure: a full arena has no free spot in it. **Spawn A Copy In
+which is a real answer rather than a failure: a full arena has no free spot in it. **Instantiate In
 A Free Spot** is the row that knows what to do about that, and what it does is spawn nothing and say
 so.
 
@@ -839,7 +839,7 @@ func _on_retired() -> void:
 **Nothing has to be configured and nothing has to be remembered.** A pool already stamps every copy
 it hands out with the pool's own name, so the decision is read off the node at run time: a stamped
 node whose pool is still in the tree goes back to it, and anything else is freed. A project with no
-pools in it behaves exactly as Destroy Now does, which is what makes Retire safe to reach for before
+pools in it behaves exactly as Queue Free Now does, which is what makes Retire safe to reach for before
 you know whether you will pool.
 
 **Four rows and a trigger, matching the destroy verbs one for one.** Retire is now, Retire After
@@ -906,13 +906,13 @@ self.get_node(self.spawn_path).add_child(__spawn_1, true)
 Which one to reach for is decided by who has to see the copy, and nothing else:
 
 - **Only this machine has to see it** - a muzzle flash, a shell casing, a hit spark, a floating
-  damage number. Spawn A Copy. Sending it would be bandwidth spent on something nobody checks.
+  damage number. Instantiate. Sending it would be bandwidth spent on something nobody checks.
 - **Everybody has to agree it exists** - a player, an enemy, a pickup, a projectile that can hit
   somebody. Spawn A Scene, run on the host, with the scene in that spawner's own list.
 
 The rest of this page still applies to both. A networked copy is an ordinary node once it lands, so
 it can join a crowd, be counted by How Many Alive, and be the last one whose destruction opens the
-door. The one row not to mix in is Destroy Now on a copy the spawner owns: **Despawn** is the
+door. The one row not to mix in is Queue Free Now on a copy the spawner owns: **Despawn** is the
 removal that travels, and freeing the copy on one peer alone leaves the others holding it.
 
 ## What the sheet says it spawns
@@ -962,7 +962,7 @@ flushing its queries, which is most of what a collision callback is, makes Godot
 that names a line nobody was looking at (the node is still added). Any parenting inside a body
 callback or an area callback earns the note; `_physics_process` does not, because the tick runs
 outside the flush and Godot adds a node there without a word. One click respells it: a verbatim line becomes `call_deferred("add_child", …)` in
-place, and a Spawn A Copy row is swapped for Spawn A Copy Safely, which takes the same parameters.
+place, and a Instantiate row is swapped for Instantiate Safely, which takes the same parameters.
 The status line shows the line before and the line after, and the whole thing is one undo step.
 
 **A reference that may already be gone.** A node kept in a variable outlives the frame that put it
@@ -983,7 +983,7 @@ a timer or a tween on it are in the wrong order: the destroy is marked at once, 
 booked against something on its way out. "Move the destroy last" puts it after everything that reads
 it; destroying after a delay instead is the other way, and the note says so.
 
-**A copy of a scene the node never came from.** Spawn A Copy Of Myself loads the file this node was
+**A copy of a scene the node never came from.** Instantiate Myself loads the file this node was
 built from, and a node built in code rather than instanced from a `.tscn` was built from no file at
 all. The row is then a load of nothing: no copy appears, and Godot says nothing about it, because
 loading an empty path is not an error. It is reported as information rather than as a repair,
@@ -994,41 +994,41 @@ that, or spawn a scene the row names outright.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Spawn A Copy | Makes a copy of a scene, adds it under a parent and places it. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
-| Spawn A Copy Safely | The same spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
+| Instantiate | Makes a copy of a scene, adds it under a parent and places it. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
+| Instantiate Safely | The same spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
 | Make A Copy | Makes a copy and names it, without adding it to the tree. | `var {name} = {scene}.instantiate()` |
 | Place Of | Gives a node's own place in the world. | `{node}.global_position` |
 | Random Place Along Path | Gives a random point along a Path2D's curve. | `{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
 | Random Place Inside Shape | Gives a random point inside a collision shape. | `{shape}.to_global(…)` |
 | Random Place Off Screen Edge | Gives a random point just outside a screen edge. | `(get_viewport().get_canvas_transform().affine_inverse() * …)` |
-| Spawn A Copy (3D) | The same three statements, on a Node3D host. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
-| Spawn A Copy Safely (3D) | The same 3D spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
+| Instantiate (3D) | The same three statements, on a Node3D host. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
+| Instantiate Safely (3D) | The same 3D spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
 | Place Of (3D) | Gives a node's own place in the world, as a Vector3. | `{node}.global_position` |
 | Random Place Inside Box | Gives a random point inside a BoxShape3D or a CSG box. | `({box} as Node3D).to_global(…)` |
 | Random Place Inside Sphere | Gives a random point spread evenly through a sphere. | `({ball} as Node3D).to_global(… * pow(randf(), 1.0 / 3.0))` |
 | Random Place Around (3D) | Gives a random point on a ring around a node. | `{node}.global_position + Vector3.FORWARD.rotated(Vector3.UP, randf() * TAU) * {radius}` |
-| Destroy Now | Destroys the object at the end of this frame. | `{object}.queue_free()` |
-| Destroy After Seconds | Destroys the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
-| Fade Out Then Destroy | Fades the object out, waits, then destroys it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
+| Queue Free Now | Destroys the object at the end of this frame. | `{object}.queue_free()` |
+| Queue Free After Seconds | Destroys the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
+| Fade Out Then Queue Free | Fades the object out, waits, then destroys it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
 | Is Still Here | True while the object has not been destroyed. | `is_instance_valid({object})` |
-| Spawn A Copy Into The Crowd | The spawn, with the copy joined to a group named after the scene. | `var {name} = {scene}.instantiate()`, `{name}.add_to_group({crowd}, true)`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
-| Spawn A Copy, The First Makes Room | Makes room by destroying members from the front, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `while crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}.pop_front().queue_free()`, … |
-| Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `var {name}: Node = null`, `if crowd_{name}.size() < {cap}:`, … |
+| Instantiate Into The Crowd | The spawn, with the copy joined to a group named after the scene. | `var {name} = {scene}.instantiate()`, `{name}.add_to_group({crowd}, true)`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
+| Instantiate, The First Makes Room | Makes room by destroying members from the front, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `while crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}.pop_front().queue_free()`, … |
+| Instantiate Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `var {name}: Node = null`, `if crowd_{name}.size() < {cap}:`, … |
 | How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
 | On The Last One Destroyed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
 | Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
 | On Node Joins Group | Runs as a node belonging to a group enters the world. | `get_tree().node_added.connect(_on_node_joined_group)` |
 | On Node Leaves Group | Runs as a node belonging to a group leaves the world. | `get_tree().node_removed.connect(_on_node_left_group)` |
-| Spawn In A Formation | Spawns several copies at once, arranged in the shape you pick. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, `var {name} = {name}_scene.instantiate()`, `{name}.add_to_group({crowd}, true)`, `var {name}_place = …`, … |
-| Spawn In A Formation (3D) | The same loop with the five shapes measured in three dimensions. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, …, `var {name}_place = …`, … |
-| Spawn A Copy, Facing And Moving | Spawns a copy, turns it to face something, launches it along that facing. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}`, `{name}.rotation = …`, `var {name}_launch = Vector2.from_angle({name}.rotation) * {speed}`, … |
-| Spawn A Copy, Facing And Moving (3D) | The same, with forward being the copy's own -Z. | `var {name} = {scene}.instantiate()`, …, `{name}.look_at({toward}.global_position)`, `var {name}_launch = -{name}.global_transform.basis.z * {speed}`, … |
-| Spawn A Copy Of Myself | Makes one more copy of the scene this node was built from. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
-| Spawn A Copy Of Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
+| Instantiate In A Formation | Spawns several copies at once, arranged in the shape you pick. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, `var {name} = {name}_scene.instantiate()`, `{name}.add_to_group({crowd}, true)`, `var {name}_place = …`, … |
+| Instantiate In A Formation (3D) | The same loop with the five shapes measured in three dimensions. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, …, `var {name}_place = …`, … |
+| Instantiate, Facing And Moving | Spawns a copy, turns it to face something, launches it along that facing. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}`, `{name}.rotation = …`, `var {name}_launch = Vector2.from_angle({name}.rotation) * {speed}`, … |
+| Instantiate, Facing And Moving (3D) | The same, with forward being the copy's own -Z. | `var {name} = {scene}.instantiate()`, …, `{name}.look_at({toward}.global_position)`, `var {name}_launch = -{name}.global_transform.basis.z * {speed}`, … |
+| Instantiate Myself | Makes one more copy of the scene this node was built from. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
+| Instantiate Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
 | Free Spot In | Gives a point inside a shape that nothing is standing in, or nothing. | `EventForgeFreeSpot.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
 | Free Spot In (3D) | The same question in three dimensions, in metres. | `EventForgeFreeSpot.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
-| Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_scene = {scene}`, `var {name}_spot = EventForgeFreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {name}_scene)`, `else:`, … |
-| Spawn A Copy In A Free Spot (3D) | The same row in three dimensions. | `var {name}_scene = {scene}`, `var {name}_spot = EventForgeFreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
+| Instantiate In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_scene = {scene}`, `var {name}_spot = EventForgeFreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {name}_scene)`, `else:`, … |
+| Instantiate In A Free Spot (3D) | The same row in three dimensions. | `var {name}_scene = {scene}`, `var {name}_spot = EventForgeFreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
 | On Spawn Skipped | Runs when a free-spot spawn found nowhere to put the copy. | `spawn_skipped.connect(_on_spawn_skipped)` |
 | Retire | Hands the object back to its pool, or destroys it when it came from none. | `EventForgePooledNodes.retire({object})` |
 | Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(EventForgePooledNodes.retire.bind({object}))` |
@@ -1056,7 +1056,7 @@ health, another for the tier, another for its tint. All of them read as sentence
 **4. A bullet that knows who fired it.** Spawn the shot, then set `new_shot.shooter` to `self` and
 `new_shot.direction` to the facing. Two rows, no signal, no lookup.
 
-**5. A spawn from a collision.** In an On Body Entered event, use Spawn A Copy Safely. The immediate
+**5. A spawn from a collision.** In an On Body Entered event, use Instantiate Safely. The immediate
 row would hit Godot's "parent node is busy" error; the safe row waits for the physics step to finish
 and says so on the row.
 
@@ -1097,30 +1097,30 @@ the spawner is - a muzzle flash, a shield, a shadow that belongs on the spot.
 **17. A trail of copies.** Spawn a fading mark every few frames at `global_position`, under a Marks
 layer node so the trail is easy to clear later.
 
-**18. A bullet that cleans itself up.** One Destroy After Seconds row on `self` in the bullet's own
+**18. A bullet that cleans itself up.** One Queue Free After Seconds row on `self` in the bullet's own
 On Ready event. No lifetime counter, no per-frame check, and nothing left behind if it hits first.
 
-**19. A corpse that fades.** Fade Out Then Destroy on `self` in the death event, over half a second.
+**19. A corpse that fades.** Fade Out Then Queue Free on `self` in the death event, over half a second.
 The event waits for the fade, so anything after it runs once the body is gone.
 
 **20. Destroying a copy from a later event.** Spawn the boss in one event and store nothing; say its
-name in a Destroy Now row in another and the guard appears on the row, because that name has had a
+name in a Queue Free Now row in another and the guard appears on the row, because that name has had a
 frame to stop meaning anything.
 
 **21. Clearing a stored reference.** A sheet variable typed `Node2D` holding the current target: a
-Destroy Now row on it compiles inside the guard, and a Set Variable row to `null` beside it keeps the
+Queue Free Now row on it compiles inside the guard, and a Set Variable row to `null` beside it keeps the
 variable honest afterwards.
 
-**22. A wave you can hear finish.** Spawn the wave with Spawn A Copy Into The Crowd, then one On The
+**22. A wave you can hear finish.** Spawn the wave with Instantiate Into The Crowd, then one On The
 Last One Destroyed event on the same crowd opens the door, pays the reward and starts the next wave.
 Nothing counts the enemies down; the trigger is the last one leaving.
 
-**23. A skid-mark trail that never grows.** Spawn A Copy, The First Makes Room with a cap of 20 into
+**23. A skid-mark trail that never grows.** Instantiate, The First Makes Room with a cap of 20 into
 a `marks` crowd. The twenty-first mark destroys the first, so the trail is always the last twenty and
 the tree never fills - including on a frame that lays down several marks at once, because the row
 skips the marks already on their way out rather than destroying one of them twice.
 
-**24. A spawner that respects a limit.** Spawn A Copy Unless The Crowd Is Full with a cap of 12. A
+**24. A spawner that respects a limit.** Instantiate Unless The Crowd Is Full with a cap of 12. A
 timer that fires every second simply does nothing while twelve are alive, and starts again when one
 dies - no counter to keep and no flag to clear.
 
@@ -1133,7 +1133,7 @@ spawn a tougher kind while the crowd is thin.
 **27. A crate you can clear.** Tag every breakable into a `crates` crowd as it spawns, and let On The
 Last One Destroyed on that crowd drop the key.
 
-**28. A ring of enemies around a totem.** Spawn In A Formation with the ring shape, a count of six
+**28. A ring of enemies around a totem.** Instantiate In A Formation with the ring shape, a count of six
 and the totem in Around. One row, and the row underneath addresses all six with For Each In Group.
 
 **29. A firing arc.** The same row with the arc shape, a start angle and a sweep of 120. The first
@@ -1142,16 +1142,16 @@ copy sits on the start angle and the last on the far end, which is what "from he
 **30. An inventory grid that fills itself.** The grid shape with Across set to the number of columns
 and Size set to the spacing. Adding a row of slots is changing one number.
 
-**31. A shot that leaves the barrel aimed.** Spawn A Copy, Facing And Moving with the mouse facing
+**31. A shot that leaves the barrel aimed.** Instantiate, Facing And Moving with the mouse facing
 and the muzzle in At. The copy is turned and launched in the same row, in the right order.
 
 **32. A shot from a moving ship.** The same row with Plus This Node's Speed ticked, so a shot fired
 forwards leaves the ship faster and one fired backwards leaves it slower.
 
-**33. A slime that halves.** Spawn A Copy Of Myself in the hit event, under a condition on the
+**33. A slime that halves.** Instantiate Myself in the hit event, under a condition on the
 slime's own size, with a property row after it setting the copy's size. No file is named anywhere.
 
-**34. A room that fills until it is full.** Spawn A Copy In A Free Spot on a timer, with the room's
+**34. A room that fills until it is full.** Instantiate In A Free Spot on a timer, with the room's
 Area2D in Inside and the walls in Clear Of, and an On Spawn Skipped event that stops the timer.
 
 **35. A minefield with no two mines on one tile.** The same row with a gap of 48, so every mine is
@@ -1180,10 +1180,10 @@ way it left, with rows that clear its target and drop it from a list.
 - **A name is only in scope inside its own event.** `new_enemy` is a local variable. A row in the
   next event that says it will not compile - which is the honest answer. Store what you need in a
   sheet variable, or put the follow-up rows in the same event.
-- **Do not reuse one name twice in one event.** Two Spawn A Copy rows both called `new_enemy` declare
+- **Do not reuse one name twice in one event.** Two Instantiate rows both called `new_enemy` declare
   the same variable twice and the file will not compile. Give the second one its own name.
 - **`add_child` inside a physics callback fails.** If Godot logs "parent node is busy setting up
-  children", the fix is Spawn A Copy Safely, not a retry.
+  children", the fix is Instantiate Safely, not a retry.
 - **The safe row's At is relative to the parent.** It sets `position`, not `global_position`, because
   the copy is not in a tree yet. Under a parent at the origin the two are the same; under a moved
   parent they are not.
@@ -1207,7 +1207,7 @@ way it left, with rows that clear its target and drop it from a list.
 - **Spawning every tick fills the tree fast.** Put a cooldown, a counter or a Once At A Time condition
   above the row - a spawn is cheap, ten thousand of them are not.
 - **Free what you spawn.** Nothing here tracks copies. A wave that never ends is a wave nobody
-  freed; a Destroy Now row on the copy's own death trigger is usually the whole answer.
+  freed; a Queue Free Now row on the copy's own death trigger is usually the whole answer.
 - **A destroyed node is still there for the rest of the frame.** `queue_free()` queues; it does not
   delete. A row after the destroy that reads the object still works, and a check that expects it to
   be gone in the same frame does not.
@@ -1219,7 +1219,7 @@ way it left, with rows that clear its target and drop it from a list.
   that answer `is_queued_for_deletion()`, or let the guard do it by naming a stored reference rather
   than a path.
 - **The fade row makes the event wait.** Everything after it in that event runs after the fade. If
-  you want the event to carry straight on, use Destroy After Seconds instead.
+  you want the event to carry straight on, use Queue Free After Seconds instead.
 - **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
   CanvasItem. A plain Node has no transparency to walk. The 3D fade needs a `GeometryInstance3D` for
   the same reason: `transparency` belongs to what is drawn, not to the body it hangs under.
@@ -1239,7 +1239,7 @@ way it left, with rows that clear its target and drop it from a list.
   its group until the end of the frame it was destroyed in, so the count can read one higher than the
   cap for the rest of that frame. That is queue_free, not a miscount - and it is exactly why the cap
   rows skip those members instead of counting or freeing them a second time.
-- **The skipped spawn leaves the name holding nothing.** Rows after Spawn A Copy Unless The Crowd Is
+- **The skipped spawn leaves the name holding nothing.** Rows after Instantiate Unless The Crowd Is
   Full run either way, so ask Is Still Here before touching the name if the crowd can be full.
 - **On The Last One Destroyed never fires for a crowd that was already empty.** It answers a member
   leaving, so a crowd nothing ever joined has no last member to destroy.
@@ -1268,7 +1268,7 @@ way it left, with rows that clear its target and drop it from a list.
   connection when the object at the far end is freed, and a pooled object is never freed - so Retire
   After Seconds, and any delay booked against a copy that can go back to its pool early, can fire in
   the middle of that copy's next life.
-- **Do not free a pooled copy.** Destroy Now on a node that came out of a pool takes it out of the
+- **Do not free a pooled copy.** Queue Free Now on a node that came out of a pool takes it out of the
   pool's own accounting, and the pool then hands out a freed node. Despawn is its removal, and
   Retire is the row that picks between the two for you.
 - **A formation of one lands on its start.** Every shape divides by the count, and the arc and the
@@ -1283,12 +1283,12 @@ way it left, with rows that clear its target and drop it from a list.
   at the origin.
 - **Plus This Node's Speed reads THIS node's velocity.** Only a body that moves has one. Leave it
   off on a turret bolted to a wall, or the emitted line names a property that is not there.
-- **Spawn A Copy Of Myself in an On Ready event doubles for ever.** It is a scene that spawns itself
+- **Instantiate Myself in an On Ready event doubles for ever.** It is a scene that spawns itself
   the instant it is created, which is a hang rather than an error. Put it under a condition.
 - **A node built in code has no scene file to copy.** `scene_file_path` is empty on anything that
   was never instanced from a `.tscn`, so the row loads nothing and no copy appears. Save the branch
   as a scene and instance that.
-- **A free spot can answer nothing, and that is the point.** Rows after Spawn A Copy In A Free Spot
+- **A free spot can answer nothing, and that is the point.** Rows after Instantiate In A Free Spot
   run either way, so ask Is Still Here before touching the name, or answer On Spawn Skipped.
 - **On Spawn Skipped needs the signal declared.** Add a signal block saying `spawn_skipped(scene)`
   at the head of the sheet. Without it the emitted guard simply finds no signal and the row spawns
@@ -1300,7 +1300,7 @@ way it left, with rows that clear its target and drop it from a list.
 - **A gap of nothing asks nothing.** Set Gap to 0 and the only question left is whether the copy's
   own shape overlaps a member of the named groups. That is right for a scene with a shape, and
   leaves a shapeless scene with no test at all.
-- **Retire and Destroy Now are the same thing in a project with no pools.** Reach for Retire early:
+- **Retire and Queue Free Now are the same thing in a project with no pools.** Reach for Retire early:
   it costs nothing, and it is what saves the sheet being rewritten the day a profiler asks for a
   pool.
 - **On Retired fires for both endings, and for neither of the other exits.** It is the node's own
@@ -1308,5 +1308,5 @@ way it left, with rows that clear its target and drop it from a list.
   when the node is merely moved somewhere else, nor when a pool hands the same copy out again -
   both of those leave the tree too, and the guard at the head of the handler is what tells them
   apart.
-- **Do not Destroy Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
+- **Do not Queue Free Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
   other one. Despawn is the removal that travels.

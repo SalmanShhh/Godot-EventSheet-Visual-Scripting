@@ -477,7 +477,7 @@ static func _append_water(sheet: EventSheetResource) -> void:
 			"return host.global_position.y <= _surface_y"
 		])))
 	Lib.append_function(sheet, "swim", "Swim", "Traversal",
-		"Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every tick while in water.",
+		"Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every frame while in water.",
 		[["gravity_percent", "float"], ["drag", "float"]], "\n".join(PackedStringArray([
 			"if host == null:",
 			"\treturn",

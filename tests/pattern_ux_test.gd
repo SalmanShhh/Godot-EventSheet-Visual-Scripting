@@ -139,7 +139,7 @@ static func _test_the_coverage_chip_counts_them() -> bool:
 		EventSheetReadingCoverage.chip_text(view._sheet),
 		"reads as events · 1 pattern · 1 adoptable ▸") and ok
 	# The Every-tick claim on the same event is NOT counted and wears no chip: a marker beside a row
-	# whose own margin already says it runs every tick is the same fact twice.
+	# whose own margin already says it runs every frame is the same fact twice.
 	ok = _check("a pattern the sheet does not mark is not counted either",
 		EventSheetPatternVocabulary.is_marked("blank_event"), false) and ok
 	# A file with no claims must not grow "0 patterns": a number with nothing in it is worse than
@@ -165,7 +165,7 @@ static func _test_the_hover_owes_its_evidence() -> bool:
 		ViewportTooltipHelper.pattern_evidence_line(sheet, "not-a-row"), "") and ok
 	ok = _check("the chip itself explains the pattern and offers the Manual",
 		ViewportTooltipHelper.pattern_chip_tooltip("countdown"),
-		"a number counted down every tick, with something that happens when it reaches zero\nOpen in the Manual") and ok
+		"a number counted down every frame, with something that happens when it reaches zero\nOpen in the Manual") and ok
 	return ok
 
 
@@ -305,7 +305,7 @@ static func _test_the_manual_page() -> bool:
 		str(blocks[0].get("text", "")) if not blocks.is_empty() else "", "Cooldown") and ok
 	ok = _check("then the one line that says what it is",
 		str(blocks[1].get("bbcode", "")) if blocks.size() > 1 else "",
-		"a number counted down every tick, with something that happens when it reaches zero") and ok
+		"a number counted down every frame, with something that happens when it reaches zero") and ok
 	# THE TWO COLUMNS, and the whole point of them: the right one is the same text as the left,
 	# handed to the renderer as a figure - so the page cannot show a shape the sheet does not read.
 	var columns: Array = blocks[2].get("columns", []) as Array if blocks.size() > 2 else []

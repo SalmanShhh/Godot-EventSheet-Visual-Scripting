@@ -1,7 +1,7 @@
 # Pack builder - skateboard (one pack per file; run via tools/build_sample_behaviors.gd).
 #
 # Skating is a DIFFERENT movement model from running, which is why it is its own pack rather
-# than a corner of the platformer one. A platformer accelerates toward a top speed every tick
+# than a corner of the platformer one. A platformer accelerates toward a top speed every frame
 # and stops the moment you let go; a board keeps whatever it has, gains from the slope it is
 # on, and only loses to friction. Everything else in the pack hangs off that: a push is a
 # one-shot nudge toward the top speed, a halfpipe works because gravity is projected along the
@@ -77,7 +77,7 @@ static func build() -> bool:
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "Skateboard movement: attach under a CharacterBody2D. Push to gain speed and keep it, Roll With The Slope every tick so ramps and halfpipes work, Ollie to leave the ground, Spin or Flip in the air, and let the landing decide between On Landed Clean and On Bailed. Grinds snap to any Path2D."
+	about.text = "Skateboard movement: attach under a CharacterBody2D. Push to gain speed and keep it, Roll With The Slope every frame so ramps and halfpipes work, Ollie to leave the ground, Spin or Flip in the air, and let the landing decide between On Landed Clean and On Bailed. Grinds snap to any Path2D."
 	sheet.events.append(about)
 
 	sheet.events.append(_declarations())

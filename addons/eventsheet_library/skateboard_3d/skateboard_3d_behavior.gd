@@ -665,4 +665,4 @@ func _judge_landing() -> void:
 	else:
 		bail()
 
-# Skateboard 3D movement: attach under a CharacterBody3D. Push to gain speed and keep it, Roll With The Slope and Align The Board To The Surface every tick so bowls and quarterpipes work, Ollie to leave the ground, Spin or Flip in the air, and let the landing decide between On Landed Clean and On Bailed. Grinds snap to any Path3D.
+# Skateboard 3D movement: attach under a CharacterBody3D. Push to gain speed and keep it, Roll With The Slope and Align The Board To The Surface every frame so bowls and quarterpipes work, Ollie to leave the ground, Spin or Flip in the air, and let the landing decide between On Landed Clean and On Bailed. Grinds snap to any Path3D.

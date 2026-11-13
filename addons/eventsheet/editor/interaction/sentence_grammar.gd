@@ -120,10 +120,10 @@ const OWN_POSITION_NAMES: PackedStringArray = ["position", "global_position"]
 
 ## An event sheet switches a whole group of events on and off; Godot switches an object's
 ## callbacks. The two are the same gesture, so the switch reads in the sheet's own activation words -
-## the WHAT of each switch, with "activated" / "deactivated" after it.
+## the WHAT of each switch, with "enabled" / "disabled" after it.
 const PROCESS_SWITCH_WORDS: Dictionary = {
-	"set_process": "Every tick",
-	"set_physics_process": "Every physics tick",
+	"set_process": "process",
+	"set_physics_process": "physics process",
 	"set_process_input": "input",
 	"set_process_unhandled_input": "unhandled input",
 	"set_process_unhandled_key_input": "unhandled key input"
@@ -136,8 +136,8 @@ const PROCESS_SWITCH_WORDS: Dictionary = {
 ## as a callback being switched. The three input switches keep their activation words: an input
 ## callback is not a tick, and no pack repeats them the way it repeats these two.
 const PACK_TICK_WORDS: Dictionary = {
-	"set_process": ["Start ticking", "Stop ticking"],
-	"set_physics_process": ["Start physics ticking", "Stop physics ticking"]
+	"set_process": ["Start processing", "Stop processing"],
+	"set_physics_process": ["Start physics processing", "Stop physics processing"]
 }
 
 ## `process_mode` in the sheet's words. An event sheet says whether a thing runs, always runs, or
@@ -150,11 +150,12 @@ const PROCESS_MODE_WORDS: Dictionary = {
 	"PROCESS_MODE_WHEN_PAUSED": "active only when paused"
 }
 
-## Members whose event-sheet word differs from Godot's. The Godot spelling stays one hover
-## away, so the two vocabularies remain learnable side by side.
+## Members whose sheet word is the Words page's "angle" noun: the two rotation properties, which
+## read "rotation" by default and "angle" in the Familiar preset. The Godot spelling stays one hover
+## away, so the two vocabularies remain learnable side by side. The value is the unit.
 const MEMBER_WORDS: Dictionary = {
-	"rotation_degrees": "angle",
-	"rotation": "angle (radians)"
+	"rotation_degrees": "degrees",
+	"rotation": "radians"
 }
 
 ## Godot call shapes that have one settled event-sheet sentence. Curated on purpose: an entry is added
@@ -2604,7 +2605,7 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if method == "queue_free" and args.is_empty():
 		if target.is_empty() or target == "self":
 			object_name = script_object(context)
-		return _sentence(object_name, "Destroy", {})
+		return _sentence(object_name, _destroy_words(), {})
 	# A group is the nearest thing Godot has to an event-sheet family, so joining one says so.
 	if method == "add_to_group" and args.size() >= 1:
 		if target.is_empty() or target == "self":
@@ -2617,7 +2618,7 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	# `call_deferred("queue_free")` is the same destroy, one frame later - and the delay is the whole
 	# reason a user reached for it, so the reading says so.
 	if method == "call_deferred" and args.size() == 1 and unquote(args[0]) == "queue_free":
-		return _sentence(object_name, "Destroy (at end of frame)", {})
+		return _sentence(object_name, "%s (at end of frame)" % _destroy_words(), {})
 	if method == "emit":
 		return signal_sentence(target, ", ".join(args), context)
 	# ────────────────────────────────────────────────────────────────────────────────────────────
@@ -3311,7 +3312,7 @@ static func _zoom_percent(value: String) -> String:
 ##   sprite.play("run")   AnimatedSprite2D ▸ Set animation to "run" (play)
 ##   sfx.play()           Audio ▸ Play
 ##   hide()               Player ▸ Set invisible
-##   look_at(p)           Turret ▸ Set angle toward p
+##   look_at(p)           Turret ▸ Set rotation toward p
 ##   enemy.set("hp", 3)   enemy ▸ Set hp to 3
 ##
 ## The animation / audio split is decided by the object's CLASS, because `play` means two different
@@ -3336,7 +3337,7 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 				return _sentence(object_name, "Set visible", {})
 		"look_at":
 			if arguments.size() >= 1:
-				return _sentence(object_name, "Set angle toward {target}", {
+				return _sentence(object_name, "Set %s toward {target}" % _angle_words(), {
 					"target": [expression_text(arguments[0], context), "value"]})
 		"set":
 			if arguments.size() == 2 and _is_string_literal(arguments[0]) and is_identifier(unquote(arguments[0])):
@@ -3557,7 +3558,7 @@ static func theme_lookup_words(text: String) -> String:
 	return _fill(translate("Theme.Colour({name})"), {"name": args[0].strip_edges()})
 
 
-## `set_physics_process(false)` -> "Set Every physics tick deactivated". Only the two literals
+## `set_physics_process(false)` -> "Set physics process disabled". Only the two literals
 ## are claimed: `set_process(enabled)` switches to whatever that variable holds, and no sentence can
 ## say which of the two states a row is in without reading the value.
 static func _process_switch_call(object_name: String, method: String,
@@ -3575,7 +3576,7 @@ static func _process_switch_call(object_name: String, method: String,
 		var tick_words: Array = PACK_TICK_WORDS[method] as Array
 		return _sentence(object_name, str(tick_words[0] if state == "true" else tick_words[1]), {})
 	var what: String = translate(str(PROCESS_SWITCH_WORDS[method]))
-	var state_word: String = translate("activated") if state == "true" else translate("deactivated")
+	var state_word: String = translate("enabled") if state == "true" else translate("disabled")
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The same switch in the vocabulary the reader chose: another event-sheet editor says the two
 	# words "Set enabled" / "Set disabled" for exactly this. Display only, and the swap fires only
@@ -3925,6 +3926,8 @@ static func _tween_modifier_argument(modifiers: String, name: String) -> String:
 ## `rotation` is the angle. Anything the table does not name keeps its own spelling.
 static func tween_property_word(path: String) -> String:
 	var bare: String = path.strip_edges()
+	if bare == "rotation" or bare == "rotation_degrees":
+		return _angle_words()
 	return translate(str(TWEEN_PROPERTY_WORDS[bare])) if TWEEN_PROPERTY_WORDS.has(bare) else bare
 
 
@@ -4590,9 +4593,9 @@ static func _overlap_condition(text: String, context: Dictionary) -> Dictionary:
 	var arguments: PackedStringArray = call.get("args", PackedStringArray())
 	var object_name: String = _receiver_object(str(call.get("target", "")), context)
 	if (method == "overlaps_body" or method == "overlaps_area") and arguments.size() == 1:
-		return _sentence(object_name, "Is overlapping {other}", {"other": [expression_text(arguments[0], context), "value"]})
+		return _sentence(object_name, "%s {other}" % _overlaps_words(), {"other": [expression_text(arguments[0], context), "value"]})
 	if method in ["has_overlapping_bodies", "has_overlapping_areas"] and arguments.is_empty():
-		return _sentence(object_name, "Is overlapping something", {})
+		return _sentence(object_name, "%s something" % _overlaps_words(), {})
 	return {}
 
 
@@ -5306,7 +5309,34 @@ static func _autoload_names() -> Dictionary:
 ## the member IS the node's place; on someone else's `position.x` it would drop a segment a reader
 ## needs.
 static func _member_word(chain: String) -> String:
-	return translate(str(MEMBER_WORDS[chain])) if MEMBER_WORDS.has(chain) else chain
+	return _rotation_member_words(chain) if MEMBER_WORDS.has(chain) else chain
+
+
+## The rotation noun for a member: plain "rotation" for the degrees property a sheet writes, and
+## "rotation (radians)" for the radians one - "angle" and "angle (radians)" in the Familiar preset.
+static func _rotation_member_words(chain: String) -> String:
+	var noun: String = _angle_words()
+	if chain == "rotation":
+		return "%s (%s)" % [noun, translate("radians")]
+	return noun
+
+
+## The sheet's noun for a rotation, from the Words table: "rotation" by default, "angle" in the
+## Familiar preset.
+static func _angle_words() -> String:
+	return translate(EventSheetWords.word("angle"))
+
+
+## The sheet's word for removing a node, from the Words table: "Queue free" by default, "Destroy" in
+## the Familiar preset.
+static func _destroy_words() -> String:
+	return translate(EventSheetWords.word("destroy"))
+
+
+## The sheet's word for an overlap test, from the Words table: "Overlaps" by default, "Is overlapping"
+## in the Familiar preset.
+static func _overlaps_words() -> String:
+	return translate(EventSheetWords.word("overlaps"))
 
 
 ## True when `name` is a property the ENGINE reports on the object this script is - the set is
@@ -5325,7 +5355,7 @@ static func engine_member_name(chain: String) -> String:
 	# An event-sheet object has an ANGLE. `rotation` is the same angle in radians, and saying so is
 	# the one Godot fact worth keeping - the two numbers are not interchangeable.
 	if MEMBER_WORDS.has(chain):
-		return translate(str(MEMBER_WORDS[chain]))
+		return _rotation_member_words(chain)
 	return chain
 
 
@@ -6593,7 +6623,7 @@ static func _angle_subject_words(subject: String, context: Dictionary) -> Array:
 	var words: Array = _subject_words(subject, context)
 	var bare: String = subject.strip_edges().trim_prefix("self.")
 	if bare == "rotation" or bare == "rotation_degrees" or bare.ends_with(".rotation") or bare.ends_with(".rotation_degrees"):
-		words[1] = translate("angle")
+		words[1] = _angle_words()
 		words[2] = "name"
 	return words
 
@@ -10605,7 +10635,7 @@ static func hierarchy_assignment(object_name: String, member: String, assigned: 
 	if REMOTE_TRANSFORM_FLAGS.has(member) and (value == "true" or value == "false"):
 		return _patterned(_sentence(object_name, "Copy {what} on" if value == "true"
 			else "Copy {what} off",
-			{"what": [translate(str(REMOTE_TRANSFORM_FLAGS[member])), "name"]}), "hierarchy")
+			{"what": [_angle_words() if member == "update_rotation" else translate(str(REMOTE_TRANSFORM_FLAGS[member])), "name"]}), "hierarchy")
 	return {}
 
 
@@ -12269,8 +12299,10 @@ static func _overlap_offset_condition(text: String, context: Dictionary) -> Dict
 	if offset.is_empty():
 		return {}
 	var object_name: String = _receiver_object(str(call.get("target", "")), context)
-	var template: String = "Is not overlapping at offset {offset} (a solid)" \
-		if text.strip_edges().begins_with("not ") else "Is overlapping at offset {offset} (a solid)"
+	var template: String = "%s at offset {offset} (a solid)" % _overlaps_words()
+	if text.strip_edges().begins_with("not "):
+		template = "Is not overlapping at offset {offset} (a solid)" \
+			if EventSheetWords.familiar_words_enabled() else "Does not overlap at offset {offset} (a solid)"
 	return _sentence(object_name, template, {"offset": [expression_text(offset, context), "value"]})
 
 

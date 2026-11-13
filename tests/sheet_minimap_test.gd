@@ -44,7 +44,7 @@ static func _bar_kinds() -> bool:
 	var passed: bool = true
 	passed = _check("a signal-backed event is a trigger bar",
 		EventSheetMinimap.row_kind(_event_row("on_body_entered", 1)), "trigger") and passed
-	passed = _check("an event with no conditions runs every tick",
+	passed = _check("an event with no conditions runs every frame",
 		EventSheetMinimap.row_kind(_event_row("", 0)), "tick") and passed
 	passed = _check("an event with conditions is a plain event",
 		EventSheetMinimap.row_kind(_event_row("", 2)), "event") and passed
