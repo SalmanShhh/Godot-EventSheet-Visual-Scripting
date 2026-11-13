@@ -43,7 +43,7 @@ Event: On Input
   Condition: On Mouse Button Pressed (event) -> MOUSE_BUTTON_LEFT
 ```
 
-**3. A bullet appears at the player.** Create object is Instantiate Scene At: the scene is the object type.
+**3. A bullet appears at the player.** Instantiate makes a copy of a scene: the scene is the object type.
 
 ```
   Action: System -> Instantiate Scene At "bullet.tscn" at Player.position

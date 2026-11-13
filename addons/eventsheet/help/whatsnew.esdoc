@@ -6,6 +6,22 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: the no-collision-shape help strip fits beside its two doors
+
+- The sentence about a node with no collision shape lost its tail behind \"Add a shape\" and \"Show me in the scene\". It now says what is wrong and that the row never fires, and leaves the two options to the two doors.
+
+### Fixed: the Manual has one door
+
+- Manual... was in the Menu and again at the end of Tools. It stays at the foot of the Menu, where the unread mark is, and leaves Tools. F1 and Ctrl+F1 are unchanged.
+
+### Changed: a spawn row reads with Godot's word
+
+- A row that instantiates a scene and adds it now reads \"Instantiate\" and the row that copies a node already in the scene reads \"Duplicate\", the words Godot uses. \"Create object\" and \"Clone object\" are the sheet's own spelling of the same two rows, shown when the Words page has the sheet's verbs on, and still find them in the picker search. No ace_id, template or saved byte changed.
+
+### Fixed: Add Sprite starts with a picture that exists in any project
+
+- The Picture field of Add Sprite and Add Sprite (3D) started as a `load` of `res://icon.svg`, which turned the row amber in a project without that file. It starts as `PlaceholderTexture2D.new()`; choosing a file still writes the `load` of that file.
+
 ### Added: Building rows in a tool sheet own what they build, and a rebuild clears the last result
 
 - Dropped into a Tool sheet, an Add New Node, Add Behaviour, Add Sprite, Add Shape or Add Timer row also gives the new node the scene being edited as its owner (`get_tree().edited_scene_root`, only under `Engine.is_editor_hint()`) so it is saved with the scene, and marks it so it can be found again. A new node goes under the scene being edited by default. In a game sheet the same rows write exactly what they wrote before. This is not an editor undo step.

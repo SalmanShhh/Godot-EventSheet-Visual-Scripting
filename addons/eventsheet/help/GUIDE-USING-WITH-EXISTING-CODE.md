@@ -1406,8 +1406,8 @@ to the function it names, the same jump the Outline panel makes.
 - **The scene tree in one word each.** `find_child("HUD")` is `the child named HUD`,
   `get_tree().current_scene` is `the scene`, `get_tree().current_scene.get_node("Boss")` is `Boss in the scene`, `%HealthBar` is `HealthBar` with a muted `unique name` beside it, and
   `enemy.get_path()` is `enemy's path`. Copying a node already in the scene and planting the copy -
-  `var copy = enemy.duplicate()` then `get_parent().add_child(copy)` - is one row, `Clone object enemy
-  (→ copy, next to it)`; Create object stays what it is, which is making one out of a scene file. Both
+  `var copy = enemy.duplicate()` then `get_parent().add_child(copy)` - is one row, `Duplicate enemy
+  (→ copy, next to it)`; Instantiate stays what it is, which is making one out of a scene file. Both
   spellings of the plant count, the picked Add Child row and the plain call a hand-written script
   writes, and the row says whether the copy went next to the node or inside it.
 
@@ -1600,7 +1600,7 @@ read once when the rows are built, and the events that turn out to BE a known pa
 - **A shipped behavior is offered where one exists.** A hand-rolled object pool names the Object Pool
   behavior in its claim, so the sheet can offer to swap the hand-written shape for the pack.
 - **What reads as a pattern today:** countdowns (`Count down x`, `Start x for N seconds`, `x has run
-  out`, `x is running`), object pools (`Create object … [pooled]`, `Return to pool`), wait sequences
+  out`, `x is running`), object pools (`Instantiate … [pooled]`, `Return to pool`), wait sequences
   (a `sequence · N s` chip on the function's header), saving and loading (**Local Storage**: `Set
   item player/score to score`, `Local Storage.Item("player/score")`, `Save`, `Load`, `save file is
   missing`), existence and relations (`t exists`, `Forget target`, `Remove from scene`), and the
@@ -2141,7 +2141,7 @@ is instantiated to answer a question.
   changes nothing. Because the row follows the switches rather than remembering a choice of its own,
   flipping Familiar Words from the View menu shows up here as the vocabulary it actually produced.
 - **The third preset renames a handful of VERBS.** With it on a row says *Create object* where Godot
-  says *Spawn a copy of*, *is overlapping in family* where it says *is touching*, *Set disabled*
+  says *Instantiate* (and *Clone object* where it says *Duplicate*), *is overlapping in family* where it says *is touching*, *Set disabled*
   where a hand-written `set_process(false)` reads *Set On process deactivated*, and a loop
   over a group reads `For each item in family "enemies"`. The picker carries both names at once -
   *Create object · Instantiate* - so the Godot verb never disappears from the place you pick it,
@@ -2379,7 +2379,7 @@ for, spelled out in Godot's own vocabulary. The reading names them, and the file
 - **A spawn is one row, layer and all.** The `instantiate()` local stays where the event declares it,
   and everything the file then does to the new object - the node it is added to, where it is put, the
   properties set on the way in - collapses into
-  `Create object Enemy on layer FX at spawn (as e)   rotation = angle`, whatever order those lines were
+  `Instantiate Enemy on layer FX at spawn (as e)   rotation = angle`, whatever order those lines were
   written in.
 
 <img src="images/opened-script-behaviors.png" alt="A hand-written CharacterBody2D script opened as a sheet: the head lists sight_range, the ray, the drag flag and its grab offset; a tick event reads Drag and Drop is dragging then Follow the cursor keeping the grab offset; a second reads Is overlapping at offset (0, 1) (a solid); and the functions read Return CharacterBody2D has line of sight to t within Sight Range, Start dragging, Drop, Jump-thru Set enabled, Solid Set disabled, Solid On layer 1, Set noise type to Perlin, Set seed to level-1 and Set drop to choose weighted." width="760">

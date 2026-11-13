@@ -317,9 +317,9 @@ owns it says which pattern it is, with the exact lines that made the sheet think
   the row keeps saying so. `max(0.0, x - delta)` and `move_toward(x, 0, delta)` read the same with
   `(never below 0)` on the end.
 - **An object pool.** `var b = pool.pop_back() if not pool.is_empty() else BULLET.instantiate()`
-  followed by `add_child(b)` is one `System ▸ Create object Bullet [pooled]` row; `pool.push_back(b)`
+  followed by `add_child(b)` is one `System ▸ Instantiate Bullet [pooled]` row; `pool.push_back(b)`
   is `b ▸ Return to pool`. Pooling is how the object is got hold of, not a different thing to do
-  with it, which is why the row is the ordinary Create object row with a chip.
+  with it, which is why the row is the ordinary Instantiate row with a chip.
 - **A sequence.** A function whose rows alternate `await get_tree().create_timer(N).timeout` and
   actions wears a `sequence · 3 s` chip on its header, with the total of its waits. A wait on
   something whose length nobody knows (an animation, a signal) adds `+ a wait` rather than a wrong

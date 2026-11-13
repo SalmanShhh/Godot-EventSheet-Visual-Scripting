@@ -42,7 +42,7 @@ as, and where to go to see the two side by side.
 | `add_to_group("x")` | Add To Group (Add to family with Familiar Words on) | Groups |
 | `is_in_group("x")` | Is In Group | Groups |
 | `get_tree().change_scene_to_file(...)` | Change Scene | Scene |
-| `instantiate()` + `add_child(...)` | Create object | Nodes |
+| `instantiate()` + `add_child(...)` | Instantiate | Nodes |
 | `is_on_floor()` | Is On Floor | General Conditions |
 | `is_on_wall()` | Is By Wall | Collisions |
 | `rotation_degrees` | angle | Object properties |
