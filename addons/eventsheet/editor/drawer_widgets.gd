@@ -1068,9 +1068,13 @@ class DrawerCorners:
 	var _link_button: Button = null
 	var _spacer: Control = null
 	var _lines: Array[BoxContainer] = []
+	var _head: HBoxContainer = null
 
 
 	func _init() -> void:
+		_head = HBoxContainer.new()
+		_head.visible = false
+		add_child(_head)
 		var corner_words: Dictionary = {0: EventSheetL10n.translate("Top-left"), 1: EventSheetL10n.translate("Top-right"), 3: EventSheetL10n.translate("Bottom-left"),
 			2: EventSheetL10n.translate("Bottom-right")}
 		for line_index: int in 2:
@@ -1105,20 +1109,37 @@ class DrawerCorners:
 
 
 	## Two fields to a line while the value column has room for two whole fields and the link; one
-	## to a line when it does not, so no number is ever cut short.
+	## to a line when it does not, so no number is ever cut short. The link is an icon-sized button
+	## at the end of the first line of fields at every width: beside the second field when two sit
+	## to a line, beside the first when they stack.
 	func _arrange() -> void:
 		var room_needed: float = EventSheetLookStyle.number_field_min_width() * 2.0 + _link_button.get_combined_minimum_size().x + EventSheetLookStyle.px(6.0)
 		var stacked: bool = size.x > 0.0 and size.x < room_needed
 		for line: BoxContainer in _lines:
 			line.vertical = stacked
 		_spacer.visible = not stacked
-		var link_home: Node = self if stacked else _lines[0]
+		var first: Range = _fields[0]
+		var first_home: Node = _head if stacked else _lines[0]
+		var link_home: Node = _head if stacked else _lines[0]
+		_head.visible = stacked
+		if first.get_parent() != first_home:
+			first.reparent(first_home, false)
+			first_home.move_child(first, 0)
 		if _link_button.get_parent() != link_home:
 			_link_button.reparent(link_home, false)
-		# Stacked, the link stays an icon-sized button at the top right, above the fields.
 		_link_button.size_flags_horizontal = Control.SIZE_SHRINK_END if stacked else Control.SIZE_FILL
 		if stacked:
-			move_child(_link_button, 0)
+			first.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+
+	## Where the first field and the link sit while the fields stack: one line of its own.
+	func head_holds_link() -> bool:
+		return _link_button.get_parent() == _head
+
+
+	## Whether the link button is on the same line as the first field.
+	func link_beside_first_field() -> bool:
+		return _link_button.get_parent() == _fields[0].get_parent()
 
 
 	## True when all four corners hold the same number - the case the link is honest about.
