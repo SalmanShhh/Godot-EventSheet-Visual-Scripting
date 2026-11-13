@@ -239,8 +239,10 @@ class NoteRow:
 		if what == NOTIFICATION_READY:
 			label = _row_label
 			selectable = false
-			# A row with words in its label column reads like Godot's own rows; read-only would dim them.
-			read_only = _row_label.is_empty()
+			# Read-only keeps the revert arrow of the property this row sits beside off it, and says what
+			# the row is: something worked out, not a field to type in. Its label reads dimmed, as Godot's
+			# own read-only rows do.
+			read_only = true
 
 
 ## The `# @inspector_required` badge: a warning row that WATCHES the property and shows only while

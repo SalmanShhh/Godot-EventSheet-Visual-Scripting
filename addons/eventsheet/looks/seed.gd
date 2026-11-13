@@ -74,6 +74,9 @@ func _rows_under_field() -> Array[Control]:
 
 
 func _value_shown(value: Variant) -> void:
+	# The edited object can already be gone while the Inspector rebuilds; there is nothing to show then.
+	if value == null:
+		return
 	if _number != null:
 		_number.set_value_no_signal(float(int(value)))
 		EventSheetLookStyle.set_number_field_locked(_number, is_field_read_only())

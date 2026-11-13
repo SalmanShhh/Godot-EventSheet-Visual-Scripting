@@ -280,6 +280,40 @@ func _photograph_subject(look_name: String, subject: Object, unfold_card: int = 
 	EditorInterface.inspect_object(subject)
 	await _frames(24)
 	var inspector: EditorInspector = EditorInterface.get_inspector()
+	if look_name.begins_with("pack_"):
+		# A pack's own exports sit in a closed group; open every section so the fields show.
+		# The section is not exposed to scripts, so its header is clicked like a person would.
+		for section: Variant in inspector.find_children("*", "Container", true, false):
+			if (section as Node).get_class() == "EditorInspectorSection" and (section as Control).is_visible_in_tree():
+				var header: Vector2 = (section as Control).get_global_rect().position + Vector2(24.0, 8.0) * EditorInterface.get_editor_scale()
+				# The editor remembers which sections were open, so click until the section is the taller
+				# of its two states (a second run would otherwise fold what the first opened).
+				var folded_height: float = (section as Control).size.y
+				for _attempt: int in 2:
+					for pressed: bool in [true, false]:
+						var click: InputEventMouseButton = InputEventMouseButton.new()
+						click.button_index = MOUSE_BUTTON_LEFT
+						click.pressed = pressed
+						click.position = header
+						click.global_position = header
+						root.push_input(click)
+						await _frames(2)
+					await _frames(4)
+					if (section as Control).size.y > folded_height + 4.0 or _attempt == 1:
+						break
+					folded_height = (section as Control).size.y
+					continue
+				if (section as Control).size.y < folded_height - 4.0:
+					# The click folded an open section: open it again.
+					for pressed: bool in [true, false]:
+						var again: InputEventMouseButton = InputEventMouseButton.new()
+						again.button_index = MOUSE_BUTTON_LEFT
+						again.pressed = pressed
+						again.position = header
+						again.global_position = header
+						root.push_input(again)
+						await _frames(2)
+		await _frames(10)
 	if look_name.ends_with("_rolled"):
 		for button: Variant in inspector.find_children("*", "Button", true, false):
 			if (button as Button).text.begins_with("Roll"):
