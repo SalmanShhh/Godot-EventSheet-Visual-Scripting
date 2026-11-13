@@ -1663,6 +1663,27 @@ static func card_schema_from_aces(aces: Array, fallback_category: String = "") -
 	return load("res://addons/eventsheet/editor/inspector/card_schemas.gd").call("from_aces", aces, fallback_category)
 
 
+## Adds one Inspector look that lives outside the two folders the editor reads: a script that extends
+## EventSheetInspectorLook, kept wherever your project or your addon keeps it. Its name is its file name,
+## exactly as for a look in `res://eventsheet_addons/looks/`, and the Variable window lists it with the others.
+## A look file of the same name in the project's own looks folder still wins.
+##
+## Returns true when the file was accepted: it exists, it is a .gd file, and it reads as a look. Returns
+## false and adds nothing otherwise. Asking again for a path already added is true and adds nothing.
+##
+## Nothing here reaches generated game code - a look is Inspector chrome, and without the editor plugin
+## the property is a plain field.
+static func register_inspector_look(path: String) -> bool:
+	if path.get_extension() != "gd" or not FileAccess.file_exists(path):
+		return false
+	var catalogue: Script = load("res://addons/eventsheet/editor/inspector/look_catalogue.gd")
+	if (catalogue.call("read_look", path, FileAccess.get_file_as_string(path), "registered") as Dictionary).is_empty():
+		return false
+	EXTENSION_REGISTRIES.register_inspector_look_path(path)
+	catalogue.call("forget")
+	return true
+
+
 ## Pictures for a toggle-buttons Inspector drawer, drawn by the pack that owns the options.
 ##
 ## A drawer's marker can name an icon SOURCE. A path pattern holding "%s" needs nothing registered

@@ -65,6 +65,7 @@ static func run() -> bool:
 	passed = _a_same_length_edit_is_not_drawn_from_the_old_decor() and passed
 	passed = _a_shipped_look_is_copied_into_the_project_and_never_over_one() and passed
 	passed = _a_new_look_is_a_small_working_file() and passed
+	passed = _a_look_kept_elsewhere_can_be_registered() and passed
 	return passed
 
 
@@ -389,4 +390,35 @@ static func _a_new_look_is_a_small_working_file() -> bool:
 		["a type nobody knows is refused", EventSheetInspectorLookCatalogue.new_look_problem("ok_look", "Banana", folder).is_empty(), false],
 		["no name is refused", EventSheetInspectorLookCatalogue.new_look_problem("  ", "", folder).is_empty(), false],
 		["a name already in the folder is refused and nothing is written over it", [again.get("ok"), FileAccess.file_exists("%s/my_look.gd" % folder)], [false, false]],
+	])
+
+
+## `EventSheets.register_inspector_look(path)`: a look file kept anywhere is listed after the project's own,
+## a path that is not a look is refused, and a project file of the same name still wins.
+static func _a_look_kept_elsewhere_can_be_registered() -> bool:
+	var registry: Script = load("res://addons/eventsheet/api/extension_registries.gd")
+	registry.call("clear_inspector_look_paths")
+	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray())
+	FileAccess.open("user://reg_star.gd", FileAccess.WRITE).store_string(STAR_RATING)
+	FileAccess.open("user://not_a_look.gd", FileAccess.WRITE).store_string("extends Node
+")
+	var accepted: bool = EventSheets.register_inspector_look("user://reg_star.gd")
+	var again: bool = EventSheets.register_inspector_look("user://reg_star.gd")
+	var refused_text: bool = EventSheets.register_inspector_look("user://not_a_look.gd")
+	var refused_missing: bool = EventSheets.register_inspector_look("user://nothing_here.gd")
+	var refused_kind: bool = EventSheets.register_inspector_look("user://reg_star.txt")
+	var listed: Dictionary = EventSheetInspectorLookCatalogue.entry("reg_star")
+	var kept: int = (registry.call("inspector_look_paths") as PackedStringArray).size()
+	registry.call("clear_inspector_look_paths")
+	EventSheetInspectorLookCatalogue.forget()
+	DirAccess.remove_absolute("user://reg_star.gd")
+	DirAccess.remove_absolute("user://not_a_look.gd")
+	return SUPPORT.pins(NAME, [
+		["a look file is accepted", accepted, true],
+		["asking again is true and adds nothing", [again, kept], [true, 1]],
+		["a script that is not a look is refused", refused_text, false],
+		["a file that is not there is refused", refused_missing, false],
+		["a file that is not a .gd is refused", refused_kind, false],
+		["the catalogue lists it as registered, by its file name", [listed.get("name"), listed.get("source")], ["reg_star", "registered"]],
+		["and its questions are read from its text", (listed.get("questions", []) as Array).size(), 4],
 	])

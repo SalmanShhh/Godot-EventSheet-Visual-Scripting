@@ -28,6 +28,9 @@ static var _param_editors: Dictionary = {}
 static var _param_help: Dictionary = {}
 ## Card schemas: schema name -> Callable() -> Dictionary, asked when an Inspector draws the list.
 static var _card_schemas: Dictionary = {}
+## Inspector look files kept outside the two looks folders: the paths `EventSheets.register_inspector_look`
+## accepted, in the order they were registered. The look catalogue lists them after the project's own.
+static var _inspector_look_paths: PackedStringArray = PackedStringArray()
 ## Commit validators: hint -> Callable, asked when the parameters dialog commits a field of that kind.
 static var _param_commit_validators: Dictionary = {}
 static var _builtin_validators_registered: bool = false
@@ -77,6 +80,20 @@ static func unregister_param_help(hint: String) -> void:
 
 static func param_help_for(hint: String) -> String:
 	return str(_param_help.get(hint, ""))
+
+
+static func register_inspector_look_path(path: String) -> void:
+	if not _inspector_look_paths.has(path):
+		_inspector_look_paths.append(path)
+
+
+static func inspector_look_paths() -> PackedStringArray:
+	return _inspector_look_paths
+
+
+## Forgets every registered look path: the suite's way of leaving the process as it found it.
+static func clear_inspector_look_paths() -> void:
+	_inspector_look_paths = PackedStringArray()
 
 
 static func register_card_schema(schema_name: String, provider: Callable) -> void:

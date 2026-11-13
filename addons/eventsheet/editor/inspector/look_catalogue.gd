@@ -20,7 +20,8 @@ extends RefCounted
 ##   preview     the optional `const PREVIEW_SENTENCE` text the preview card says, "" for none
 ##   also_draws  the optional `const ALSO_DRAWS_ON` types: drawn when a marker asks, never offered in the window
 ##   writes      an example of the line the look writes, filled with its defaults
-##   source      "shipped" or "project" (a project file of the same name wins)
+##   source      "shipped", "project" (a project file of the same name wins) or "registered" (a path
+##               `EventSheets.register_inspector_look` accepted, listed after the project's own)
 ##
 ## The marker a look writes is `eventsheet:<name>[:<value>[:<value>...]]`, one value per question in file
 ## order, or the template with each `{key}` replaced when the file names one.
@@ -70,6 +71,18 @@ static func entries() -> Array[Dictionary]:
 			if not by_name.has(look_name):
 				order.append(look_name)
 			by_name[look_name] = entry
+	# Looks a script registered from anywhere else come last. A file in the project's own looks folder of the
+	# same name still wins, so a project can always replace what an addon brought.
+	for path: String in _registered_paths():
+		var registered: Dictionary = read_look(path, FileAccess.get_file_as_string(path), "registered")
+		if registered.is_empty():
+			continue
+		var registered_name: String = str(registered["name"])
+		if by_name.has(registered_name) and str(by_name[registered_name]["source"]) == "project":
+			continue
+		if not by_name.has(registered_name):
+			order.append(registered_name)
+		by_name[registered_name] = registered
 	var built: Array[Dictionary] = []
 	for look_name: String in order:
 		built.append(by_name[look_name])
@@ -113,7 +126,17 @@ static func _listing_key() -> String:
 	for folder: String in folders():
 		for file_name: String in _sorted_files(folder):
 			parts.append("%s/%s@%d" % [folder, file_name, FileAccess.get_modified_time("%s/%s" % [folder, file_name])])
+	for path: String in _registered_paths():
+		parts.append("%s@%d" % [path, FileAccess.get_modified_time(path)])
 	return "|".join(parts)
+
+
+## The paths `EventSheets.register_inspector_look` accepted. Read through the registry file by path, so
+## the catalogue never names the public API.
+static func _registered_paths() -> PackedStringArray:
+	if not _folders_for_tests.is_empty():
+		return PackedStringArray()
+	return load("res://addons/eventsheet/api/extension_registries.gd").call("inspector_look_paths")
 
 
 static func _sorted_files(folder: String) -> PackedStringArray:
