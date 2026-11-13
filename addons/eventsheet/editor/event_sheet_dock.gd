@@ -1764,11 +1764,40 @@ func open_designer_for(path: String) -> void:
 ## written through the undo funnel: every line it rewrites and the @tool it turns on or off are ONE step.
 func _designer_shape_field(var_name: String, category: String, option_id: String, answers: Dictionary) -> bool:
 	var shape: GDScript = load(INSPECTOR_SHAPE_PATH)
+	var written: bool
 	if category == "groups":
-		return _perform_undoable_sheet_edit(EventSheetL10n.translate("Change how the groups show"), func() -> bool:
+		written = _perform_undoable_sheet_edit(EventSheetL10n.translate("Change how the groups show"), func() -> bool:
 			return shape.write_group_style(_current_sheet, option_id))
-	return _perform_undoable_sheet_edit(EventSheetL10n.translate("Shape %s in the Inspector") % var_name, func() -> bool:
-		return shape.write(_current_sheet, var_name, category, option_id, answers))
+	else:
+		written = _perform_undoable_sheet_edit(EventSheetL10n.translate("Shape %s in the Inspector") % var_name, func() -> bool:
+			return shape.write(_current_sheet, var_name, category, option_id, answers))
+	if written:
+		_save_and_show_in_inspector()
+	return written
+
+
+## "Save and show": a choice made in the Designer is written to the script the way Save writes it, with
+## every guard Save has (a file held by merge markers, a read-only preview, the editor's own source), and
+## Godot is told the file changed. One `update_file` is all the engine needs: it reloads the script and
+## redraws the Inspector of the selected node at once, with no re-inspect. The parsed decor lines are
+## forgotten too, so a same-length edit (a colour, `0:200` to `0:300`) is not drawn from the old map.
+func _save_and_show_in_inspector() -> void:
+	# A sheet with no file yet would open the Save As window; that is a door of its own, not this one.
+	if _current_sheet == null or not _dirty or _current_sheet.read_only:
+		return
+	var has_home: bool = not _current_sheet.external_source_path.is_empty()
+	has_home = has_home or not _current_sheet_path.is_empty() or not _current_sheet.resource_path.is_empty()
+	if not has_home:
+		return
+	_sheet_io._on_save_requested()
+	if _dirty:
+		return
+	EventSheetAttributeDrawers.forget_decor()
+	var written: String = _current_sheet.external_source_path
+	if written.is_empty():
+		written = load(SHEET_COMPILER_PATH)._resolve_output_path(_current_sheet, "")
+	if Engine.is_editor_hint() and not written.is_empty() and FileAccess.file_exists(written):
+		EditorInterface.get_resource_filesystem().update_file(written)
 
 
 ## Designer ✎: route the entry into the SAME context-edit path the viewport uses, resolved LIVE
@@ -1797,13 +1826,15 @@ func _designer_edit_variable(entry: Dictionary) -> void:
 func _refresh_inspector_designer_after_edit(_n: Variant = null, _t: Variant = null, _d: Variant = null, _s: Variant = null, _c: Variant = null, _k: Variant = null, _e: Variant = null, _o: Variant = null, _a: Variant = null, _r: Variant = null) -> void:
 	if _inspector_designer_dialog != null and _inspector_designer_dialog.visible:
 		_inspector_designer_dialog.call_deferred("refresh")
+		call_deferred("_save_and_show_in_inspector")
 
 
 ## Designer ▲: move the tree variable above the exported tree variable before it, past any the
 ## Inspector does not show - one undo step. Sheet-level (dict) variables emit in the order they were added and nothing here reorders that dictionary, so only tree variables move.
 func _designer_move_variable_up(var_name: String) -> void:
-	_perform_undoable_sheet_edit("Move Variable Up", func() -> bool:
-		return load(INSPECTOR_DESIGNER_DIALOG_PATH).move_up_among_exported(_current_sheet.events, var_name))
+	if _perform_undoable_sheet_edit("Move Variable Up", func() -> bool:
+			return load(INSPECTOR_DESIGNER_DIALOG_PATH).move_up_among_exported(_current_sheet.events, var_name)):
+		_save_and_show_in_inspector()
 
 
 
