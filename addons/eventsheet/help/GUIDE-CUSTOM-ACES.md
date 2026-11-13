@@ -539,6 +539,8 @@ When you want exact control over the generated code, the category, and the widge
 editing the plugin, register descriptors through an autoload called **EventForgeBridge**. The editor
 asks that autoload for `get_all_descriptors()` and folds the result into the vocabulary.
 
+The plugin itself adds no autoload. From code, `EventForgeBridgeRuntime.new().register_provider(provider, descriptors)` registers descriptors with no autoload at all (the registry is static, shared by every instance); the autoload below is the alternative for a project that wants its descriptors listed in one script of its own.
+
 ### Set up the bridge
 
 Add an autoload named exactly `EventForgeBridge` (Project Settings, Autoload) pointing at a `Node`

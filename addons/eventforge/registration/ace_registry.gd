@@ -78,12 +78,10 @@ static func get_all_descriptors() -> Array[ACEDescriptor]:
 	_ensure_builtin_cache()
 	var output: Array[ACEDescriptor] = _builtin_cache.duplicate()
 
-	var bridge: Node = _get_bridge()
-	if bridge != null and bridge.has_method("get_all_descriptors"):
-		for entry: Variant in bridge.call("get_all_descriptors"):
-			var normalized_runtime: ACEDescriptor = _normalize_descriptor(entry)
-			if normalized_runtime != null:
-				output.append(normalized_runtime)
+	for entry: Variant in _runtime_entries():
+		var normalized_runtime: ACEDescriptor = _normalize_descriptor(entry)
+		if normalized_runtime != null:
+			output.append(normalized_runtime)
 
 	return output
 
@@ -96,11 +94,9 @@ static func get_all_descriptors() -> Array[ACEDescriptor]:
 static func descriptor_count() -> int:
 	_ensure_builtin_cache()
 	var total: int = _builtin_cache.size()
-	var bridge: Node = _get_bridge()
-	if bridge != null and bridge.has_method("get_all_descriptors"):
-		for entry: Variant in bridge.call("get_all_descriptors"):
-			if _normalize_descriptor(entry) != null:
-				total += 1
+	for entry: Variant in _runtime_entries():
+		if _normalize_descriptor(entry) != null:
+			total += 1
 	return total
 
 
@@ -111,12 +107,10 @@ static func find_descriptor(provider_id: String, ace_id: String) -> ACEDescripto
 	if builtin != null:
 		return builtin
 
-	var bridge: Node = _get_bridge()
-	if bridge != null and bridge.has_method("get_all_descriptors"):
-		for entry: Variant in bridge.call("get_all_descriptors"):
-			var descriptor: ACEDescriptor = _normalize_descriptor(entry)
-			if descriptor != null and descriptor.provider_id == provider_id and descriptor.ace_id == ace_id:
-				return descriptor
+	for entry: Variant in _runtime_entries():
+		var descriptor: ACEDescriptor = _normalize_descriptor(entry)
+		if descriptor != null and descriptor.provider_id == provider_id and descriptor.ace_id == ace_id:
+			return descriptor
 	return null
 
 
@@ -125,7 +119,19 @@ static func normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	return _normalize_descriptor(entry)
 
 
-## Fetches the EventForgeBridge autoload if available.
+## Descriptors registered from code (EventForgeBridgeRuntime's shared registry, no autoload needed)
+## followed by the ones a project's OWN autoload named EventForgeBridge returns, as a project that
+## followed the custom-descriptors guide has. The plugin's own old autoload is skipped, so a project
+## still holding that line is not read twice.
+static func _runtime_entries() -> Array:
+	var entries: Array = EventForgeBridgeRuntime.shared_descriptors()
+	var bridge: Node = _get_bridge()
+	if bridge != null and bridge.has_method("get_all_descriptors") and not (bridge is EventForgeBridgeRuntime):
+		entries.append_array(bridge.call("get_all_descriptors"))
+	return entries
+
+
+## Fetches the project's own EventForgeBridge autoload if it has one.
 static func _get_bridge() -> Node:
 	# Scene-tree lookups belong to the main thread, and descriptor queries now also run from the
 	# async-open worker (the lifter rebuilds its reverse index there). So the LOOKUP is main-thread

@@ -23,7 +23,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	$Sprite2D.rotation += 0.1
 	$Health.take_damage(1)
-	EventForgeBridge.score += 1
+	ScoreBoard.score += 1
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.queue_free()
 

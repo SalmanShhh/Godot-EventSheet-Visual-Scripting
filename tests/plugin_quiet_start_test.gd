@@ -2,8 +2,8 @@
 #
 # Four things used to print on an ordinary project:
 #   - quitting the editor: the bridge autoload was taken out in _exit_tree, which also runs while the
-#     editor tears its tree down, and removing the autoload node then hit a parent busy freeing its
-#     children ("Parent node is busy adding/removing children"). It now goes in _disable_plugin;
+#     editor tears its tree down ("Parent node is busy adding/removing children"). There is no bridge
+#     autoload now: nothing is added, and an old one is removed on enable and on start;
 #   - a project without the drawing-prefab pack: the thumbnail generator named the pack's class, so
 #     the file failed to compile and the plugin's start-up stopped half way ("Could not find type");
 #   - the very first boot: the workspace icon was loaded before the import had reached it;
@@ -26,10 +26,9 @@ static func run() -> bool:
 	import_file.load(TEMPLATE_IMPORT)
 	return SUPPORT.pins(P, [
 		["_exit_tree no longer takes the autoload out", _body_of(source, "_exit_tree").contains("remove_autoload_singleton"), false],
-		["switching the plugin off does", _body_of(source, "_disable_plugin").contains("remove_autoload_singleton(BRIDGE_NAME)"), true],
-		["switching it on puts it in", _body_of(source, "_enable_plugin").contains("add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)"), true],
-		["a start only adds it when project.godot lacks it",
-			_body_of(source, "_enter_tree").contains("if not ProjectSettings.has_setting(\"autoload/%s\" % BRIDGE_NAME):"), true],
+		["switching it on takes the old autoload out", _body_of(source, "_enable_plugin").contains("_remove_old_bridge_autoload()"), true],
+		["a start takes it out too", _body_of(source, "_enter_tree").contains("_remove_old_bridge_autoload()"), true],
+		["nothing adds an autoload to the project", source.contains("add_autoload_singleton(BRIDGE_NAME"), false],
 		["the icon is asked for only once it is imported",
 			_body_of(source, "_get_plugin_icon").contains("ResourceLoader.exists(PLUGIN_ICON_PATH)"), true],
 		["the thumbnail generator compiles on its own", (load(GENERATOR_PATH) as GDScript).can_instantiate(), true],

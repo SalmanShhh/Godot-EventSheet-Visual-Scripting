@@ -4,6 +4,8 @@
 class_name EventForgePlugin
 extends EditorPlugin
 
+## The autoload older versions wrote into project.godot. Nothing adds it any more; a project that
+## still has it loses it once (see _remove_old_bridge_autoload).
 const BRIDGE_NAME: String = "EventForgeBridge"
 const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.gd"
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
@@ -505,24 +507,41 @@ static func _find_showcase_scene() -> String:
 	return newest
 
 
-## The bridge autoload belongs to the project, so it is written into project.godot when the plugin is
-## switched on and taken out when it is switched off - not on every editor start and quit. _exit_tree
-## also runs while the editor is closing, with the tree half torn down, and taking the autoload out
-## then reached for a root that was busy freeing its children and printed an error on every quit.
+## Older versions wrote an `EventForgeBridge` autoload into project.godot and shipped it with the
+## game. The provider registry is a plain static class now, so nothing adds the line, and a project
+## that has it loses it, once, with a line in the Output saying so.
 func _enable_plugin() -> void:
-	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+	_remove_old_bridge_autoload()
 
 
-func _disable_plugin() -> void:
+## True when `value` (an `autoload/<name>` setting: "*res://path.gd" or "*uid://...") is the script
+## the plugin's old bridge autoload pointed at - never the autoload a project made for itself under
+## the same name.
+static func is_old_bridge_autoload(value: String) -> bool:
+	var target: String = value.trim_prefix("*")
+	if target.begins_with("uid://"):
+		var id: int = ResourceUID.text_to_id(target)
+		if not ResourceUID.has_id(id):
+			return false
+		target = ResourceUID.get_id_path(id)
+	return target == BRIDGE_PATH
+
+
+## Takes the old bridge autoload out of project.godot when it is there and still points at the
+## plugin's script. Returns whether it did.
+func _remove_old_bridge_autoload() -> bool:
+	var setting: String = "autoload/%s" % BRIDGE_NAME
+	if not ProjectSettings.has_setting(setting) or not is_old_bridge_autoload(str(ProjectSettings.get_setting(setting))):
+		return false
 	remove_autoload_singleton(BRIDGE_NAME)
+	print("[Godot EventSheets] Removed the old EventForgeBridge autoload from project.godot - the provider registry no longer needs one.")
+	return true
 
 
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
-	# A project that was already using the plugin before the autoload moved to _enable_plugin, or whose
-	# project.godot lost the line, gets it back here. One that has it is left exactly as it is.
-	if not ProjectSettings.has_setting("autoload/%s" % BRIDGE_NAME):
-		add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+	# A project that enabled the plugin before the bridge stopped being an autoload loses the line once.
+	_remove_old_bridge_autoload()
 	# Every eventsheets/* setting becomes visible + documented in Project Settings
 	# (value-neutral: defaults match the in-code fallbacks).
 	# A project that ticked a setting under its old key gets the choice saved under the new key once.

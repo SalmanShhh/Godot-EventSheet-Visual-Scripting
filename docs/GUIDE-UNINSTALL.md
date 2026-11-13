@@ -26,11 +26,13 @@ A CI test (`tests/clean_removal_test.gd`) enforces the zero-runtime-dependency c
    It recompiles every sheet, fails loudly on any drift, and reports exactly what to keep.
    Do not proceed until it reports **safe**.
 2. **Disable the plugin** (Project → Project Settings → Plugins → Godot EventSheets → off),
-   or just delete the addon folders - `_exit_tree` cleanly removes the autoload, the
-   inspector/export/debugger plugins, the context menus, and the main-screen editor.
+   or just delete the addon folders - `_exit_tree` cleanly removes the
+   inspector/export/debugger plugins, the context menus, and the main-screen editor. The plugin adds
+   nothing to your Autoload list.
 3. **Delete** `addons/eventforge/` and `addons/eventsheet/`.
-4. **Remove the `EventForgeBridge` autoload** if it is still listed (Project Settings →
-   Autoload). It is editor-only - nothing in a shipped game needs it.
+4. **Remove the `EventForgeBridge` autoload** only if a project from an older version of the plugin
+   still lists it (Project Settings → Globals → Autoload). Current versions do not add it, and take
+   the old line out the first time the plugin starts, saying so in the Output.
 5. Done. Your game runs on the generated scripts alone.
 
 ---
@@ -41,10 +43,10 @@ A CI test (`tests/clean_removal_test.gd`) enforces the zero-runtime-dependency c
 |---|---|
 | `*_generated.gd` - the compiled scripts your scenes attach | `addons/eventforge/` |
 | `eventsheet_addons/**/*.gd` - behavior packs, and the runtime classes the emitted code calls (`free_spot.gd`, `pooled_nodes.gd`, `world_look.gd`), are plain `class_name` classes the game uses | `addons/eventsheet/` |
-| Your **autoload-sheet singletons** (they point at compiled `.gd`, not at the plugin) | The **`EventForgeBridge`** autoload (editor-only vocabulary) |
+| Your **autoload-sheet singletons** (they point at compiled `.gd`, not at the plugin) | Nothing in your Autoload list: the plugin adds no autoload (an old `EventForgeBridge` line is removed on first start) |
 | Generated scenes (`.tscn`) and resources | The legacy `.tres` sheet sources, if any (optional - default `.gd` sheets stay editable as plain code; a `.tres` is only needed to re-edit those specific sheets) |
 
-The one subtlety: an **autoload sheet** registers a singleton pointing at its *compiled* `.gd`. That singleton stays - deleting it would break your game. Only the plugin's own `EventForgeBridge` autoload is removed.
+The one subtlety: an **autoload sheet** registers a singleton pointing at its *compiled* `.gd`. That singleton stays - deleting it would break your game. The plugin has no autoload of its own to remove.
 
 ---
 
@@ -66,7 +68,7 @@ Drop `addons/eventforge/` + `addons/eventsheet/` back in and re-enable the plugi
 ## 5. Tips and Common Mistakes
 
 - **Run Project Doctor first, every time.** It recompiles every sheet and fails loudly on drift. Do not delete anything until it reports **safe**.
-- **Do not delete your autoload-sheet singletons.** They point at compiled `.gd` files, not at the plugin; removing them breaks the game. The only autoload that goes is `EventForgeBridge`, which is editor-only.
+- **Do not delete your autoload-sheet singletons.** They point at compiled `.gd` files, not at the plugin; removing them breaks the game. The plugin itself adds no autoload.
 - **Behavior packs stay, and so does the runtime the rows call.** Everything under `eventsheet_addons/` is plain `class_name` GDScript the game uses at runtime; it is not part of the plugin. That includes the three files a spawn, a retire or a world-look row names by class - `free_spot.gd`, `pooled_nodes.gd` and `world_look.gd` - which is exactly why those rows keep working after the plugin is gone.
 - **Legacy `.tres` sources are optional to keep.** Default `.gd` sheets stay editable as plain code; a `.tres` is only needed if you want to re-edit those specific sheets after re-installing.
 - **Removal is reversible.** The code was always the source of truth, so re-installing the plugin recovers full sheet editing with nothing lost.

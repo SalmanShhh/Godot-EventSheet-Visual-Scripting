@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: enabling the plugin no longer adds an autoload to your project
+
+- The plugin used to write an `EventForgeBridge` autoload into project.godot, and the game exported it although nothing in a shipped game needs it. The provider registry is now a plain class: code-registered providers and blocks reach the editor with no autoload, and every `EventSheets.*` method works as before. A project that has the old line loses it the first time the plugin starts, and the Output says so (an autoload you made yourself under that name is left alone). A script of yours that named the old singleton should call `EventForgeBridgeRuntime` instead. The uninstall guide is updated.
+
 ### Fixed: a project made from addons/ alone runs the rows that call a runtime script
 
 - A free-spot spawn, a retire, a bus mix, a world-look, a haptic or a sequencer row calls a small script that used to live only in this repository's `eventsheet_addons/`, so a project that copied the three addons folders met a parse error the first time such a row ran. The plugin now carries those scripts inside its library and copies the one a row needs into `eventsheet_addons/` the moment the row is applied. The Doctor names any script that calls one the project lacks and offers "Add it to the project". The README no longer asks you to copy them by hand.

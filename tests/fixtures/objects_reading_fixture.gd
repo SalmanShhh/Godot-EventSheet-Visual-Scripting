@@ -15,9 +15,9 @@ const BULLET_SCENE := preload("res://tests/fixtures/head_bullet.tscn")
 
 
 func _physics_process(_delta: float) -> void:
-	EventForgeBridge.score += 1
-	if EventForgeBridge.score > 100:
-		EventForgeBridge.reset()
+	ScoreBoard.score += 1
+	if ScoreBoard.score > 100:
+		ScoreBoard.reset()
 	$Health.take_damage(3)
 	$FPSController.do_jump()
 	$Sprite2D.play("run")

@@ -112,7 +112,7 @@ const AUTOLOAD_CALL: String = """extends Node
 
 
 func _ready() -> void:
-	EventForgeBridge.unregister_provider("demo")
+	ScoreBoard.unregister_provider("demo")
 """
 
 const AUTOLOAD_CALL_LINE: int = 5
@@ -273,7 +273,7 @@ static func _test_an_autoload_receiver_is_named() -> bool:
 	return _check("an autoload names its member and the file the UID stands for",
 		_claims_of(AUTOLOAD_CALL, AUTOLOAD_CALL_LINE, ""), [
 			"  4. index    Core::CallMethod",
-			"  5. call     res://addons/eventforge/runtime/eventforge_bridge.gd"
+			"  5. call     res://tests/fixtures/scoreboard_autoload.gd"
 			+ "  unregister_provider (receiver: autoload)"
 		])
 

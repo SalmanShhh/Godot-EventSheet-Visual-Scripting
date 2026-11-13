@@ -1,12 +1,17 @@
-# EventForge - Runtime bridge autoload
-# Runtime-safe provider registry for ACE descriptors.
+# EventForge - the provider registry for ACE descriptors registered from code.
+#
+# This used to be an autoload the plugin wrote into every project it was enabled in. It is a plain
+# class now: the storage is static, so `EventForgeBridgeRuntime.new().register_provider(...)` and
+# the static functions below reach the editor's vocabulary with nothing in project.godot. A script
+# of yours that named the old `EventForgeBridge` singleton no longer finds one; call these instead.
 @tool
 class_name EventForgeBridgeRuntime
 extends Node
 
 signal providers_changed
 
-var _providers: Dictionary = {}
+## Descriptors by provider id, shared by every instance (and by none needing an autoload).
+static var _providers: Dictionary = {}
 
 
 ## Registers a provider and its descriptors.
@@ -36,6 +41,11 @@ func unregister_provider(provider_id: String) -> void:
 
 ## Returns all descriptors currently registered by all providers.
 func get_all_descriptors() -> Array:
+	return shared_descriptors()
+
+
+## The same list without an instance: what the editor's registry folds into the vocabulary.
+static func shared_descriptors() -> Array:
 	var output: Array = []
 	for provider_id: Variant in _providers.keys():
 		var entries: Array = _providers.get(provider_id, [])

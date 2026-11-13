@@ -72,20 +72,20 @@ static func _autoloads_read_as_globals() -> bool:
 	var passed: bool = true
 	var cells: PackedStringArray = _row_cells(_open())
 	passed = _check("an autoload's step names the autoload and the bare member",
-		_has_cell(cells, "EventForgeBridge (global)|Add 1 to score"), true) and passed
+		_has_cell(cells, "ScoreBoard (global)|Add 1 to score"), true) and passed
 	passed = _check("an autoload's test names the autoload and the bare member",
-		_has_cell(cells, "EventForgeBridge (global)|score > 100"), true) and passed
+		_has_cell(cells, "ScoreBoard (global)|score > 100"), true) and passed
 	passed = _check("a call on an autoload names the autoload",
-		_has_cell(cells, "EventForgeBridge (global)|Reset"), true) and passed
+		_has_cell(cells, "ScoreBoard (global)|Reset"), true) and passed
 	passed = _check("the owner is no longer buried in the sentence as a possessive",
-		_has_cell(cells, "System|event forge bridge's score > 100"), false) and passed
+		_has_cell(cells, "System|score board's score > 100"), false) and passed
 	# The note is a reading, never a name: the census still knows the object as the singleton.
 	passed = _check("the singleton's own name carries no note",
-		EventSheetViewportReadingRows.global_object_label("EventForgeBridge",
-			{"EventForgeBridge": "res://x.gd"}), "EventForgeBridge (global)") and passed
+		EventSheetViewportReadingRows.global_object_label("ScoreBoard",
+			{"ScoreBoard": "res://x.gd"}), "ScoreBoard (global)") and passed
 	passed = _check("a name that is not an autoload is returned untouched",
 		EventSheetViewportReadingRows.global_object_label("Player",
-			{"EventForgeBridge": "res://x.gd"}), "Player") and passed
+			{"ScoreBoard": "res://x.gd"}), "Player") and passed
 	return passed
 
 
@@ -122,7 +122,7 @@ static func _census_lists_every_object() -> bool:
 		kinds.append(str(entry.get("kind", "")))
 	passed = _check("the rail lists every object the file uses, the script's own first",
 		", ".join(labels),
-		"ObjectsReadingFixture, hp_bar, Sprite2D, Health, FPSController, EventForgeBridge, enemies, HeadBullet") and passed
+		"ObjectsReadingFixture, hp_bar, Sprite2D, Health, FPSController, ScoreBoard, enemies, HeadBullet") and passed
 	passed = _check("each object is listed under the kind it is",
 		", ".join(kinds),
 		"script, node, node, behaviour, behaviour, autoload, group, scene") and passed
@@ -137,7 +137,7 @@ static func _census_lists_every_object() -> bool:
 	passed = _check("a behaviour says which pack it is",
 		str(notes.get("Health", "")), "$Health · Health · 1 row") and passed
 	passed = _check("an autoload says it is one",
-		str(notes.get("EventForgeBridge", "")), "autoload (global) · 2 rows") and passed
+		str(notes.get("ScoreBoard", "")), "autoload (global) · 2 rows") and passed
 	passed = _check("a group says it is one", str(notes.get("enemies", "")), "group · 1 row") and passed
 	passed = _check("a preloaded scene is an object too",
 		str(notes.get("HeadBullet", "")), "scene · 1 row") and passed
@@ -154,9 +154,9 @@ static func _object_lookup_rows() -> bool:
 	var health: Dictionary = EventSheetObjectLookup.find_entry(sheet, "Health")
 	# An autoload is found by the name it READS under too - the "(global)" note is a reading, and a
 	# label wearing it must still find its object.
-	var global_entry: Dictionary = EventSheetObjectLookup.find_entry(sheet, "EventForgeBridge (global)")
+	var global_entry: Dictionary = EventSheetObjectLookup.find_entry(sheet, "ScoreBoard (global)")
 	passed = _check("an object label wearing its global note still finds its object",
-		str(global_entry.get("label", "")), "EventForgeBridge") and passed
+		str(global_entry.get("label", "")), "ScoreBoard") and passed
 	passed = _check("an object the file no longer uses answers with nothing",
 		EventSheetObjectLookup.find_entry(sheet, "NotHere").is_empty(), true) and passed
 	# The count is the list's right-hand column, so the line does not repeat it.

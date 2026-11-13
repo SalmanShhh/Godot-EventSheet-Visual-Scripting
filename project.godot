@@ -16,7 +16,7 @@ config/features=PackedStringArray("4.7")
 
 [autoload]
 
-EventForgeBridge="*uid://duh4jgpamtcwn"
+ScoreBoard="*uid://b6fub34ylex87"
 
 [editor]
 
