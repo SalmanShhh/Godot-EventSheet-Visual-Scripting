@@ -189,17 +189,20 @@ static func toggle_icon_for(source: String, option: String, icon_size: int = 24)
 	return drawn as Texture2D
 
 
-## An accent-coloured section label with breathing room above, so the section reads as a visual break.
-static func build_header_label(text: String, accent: String) -> Control:
+## A section heading drawn the way Godot draws a subgroup: a quiet panel with the name in the bold
+## label colour, with a little room above so the section reads as a break. The colour a heading line
+## carries stays in the file and is not drawn, so the heading looks like every other.
+static func build_header_label(text: String, _accent: String) -> Control:
 	var label: Label = Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(13))
-	label.add_theme_color_override("font_color", Color(accent) if not accent.is_empty()
-		else EventSheetActiveTheme.chrome().drawer_header_text_color)
+	label.add_theme_font_override("font", EventSheetLookStyle.bold_font())
+	label.add_theme_color_override("font_color", EventSheetLookStyle.ink())
+	var panel: PanelContainer = PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", EventSheetLookStyle.panel_box())
+	panel.add_child(label)
 	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 2)
-	margin.add_child(label)
+	margin.add_theme_constant_override("margin_top", int(EventSheetLookStyle.px(6.0)))
+	margin.add_child(panel)
 	return margin
 
 
@@ -576,7 +579,7 @@ class MinMaxTrack:
 		else:
 			draw_rect(whole, EventSheetLookStyle.rest())
 		if fill != null:
-			draw_style_box(fill, span)
+			draw_style_box(EventSheetLookStyle.accent_box(fill), span)
 		else:
 			draw_rect(span, EventSheetLookStyle.accent())
 		var handle: Texture2D = _handle_icon()
@@ -2161,47 +2164,64 @@ class ChoicesProperty:
 
 
 ## Two numbers on one line - min and max, width and height - each with its own name, as the pair
-## reads in the file. Each edit is written to its own property, so undo takes back the one that moved.
+## reads in the file. One label sits on the left, as for any other property, and each field carries its
+## own name inside it. Each edit is written to its own property, so undo takes back the one that moved.
 class SideBySideProperty:
 	extends EditorProperty
 	var _names: PackedStringArray = PackedStringArray()
-	var _spins: Array[EditorSpinSlider] = []
+	var _shared_label: String = ""
+	var _spins: Array[Range] = []
 
 	func _init(first: String, second: String) -> void:
-		draw_label = false
 		_names = PackedStringArray([first, second])
-		var row: HBoxContainer = HBoxContainer.new()
-		for property_name: String in _names:
-			var caption: Label = Label.new()
-			caption.text = property_name
-			caption.clip_text = true
-			caption.tooltip_text = property_name
-			caption.mouse_filter = Control.MOUSE_FILTER_PASS
-			caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			caption.size_flags_stretch_ratio = 0.8
-			row.add_child(caption)
-			var spin: EditorSpinSlider = EditorSpinSlider.new()
-			spin.allow_greater = true
-			spin.allow_lesser = true
-			spin.hide_slider = true
-			spin.min_value = -1000000.0
-			spin.max_value = 1000000.0
-			spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var parts: Dictionary = name_parts(first, second)
+		_shared_label = str(parts["label"])
+		var inner: Array = parts["inner"]
+		var row: HFlowContainer = HFlowContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		for index: int in _names.size():
+			var property_name: String = _names[index]
+			var spin: Range = EventSheetLookStyle.number_field(str(inner[index]), EventSheetLookStyle.quiet(), false)
+			spin.custom_minimum_size.x = EventSheetLookStyle.text_room("%s -1000.0" % str(inner[index]))
+			EventSheetLookStyle.open_number_field(spin, 0.001)
+			spin.tooltip_text = property_name
 			spin.value_changed.connect(_on_changed.bind(property_name))
 			row.add_child(spin)
 			add_focusable(spin)
 			_spins.append(spin)
 		add_child(row)
+		draw_background = false
+
+	## The label the pair shares and the words each field carries inside it. `margin_left` and
+	## `margin_right` are "Margin" with "left" and "right" inside; names with nothing in common keep
+	## the first name as the label and their full names inside the fields.
+	static func name_parts(first: String, second: String) -> Dictionary:
+		var common: int = 0
+		while common < first.length() and common < second.length() and first[common] == second[common]:
+			common += 1
+		var prefix_end: int = first.substr(0, common).rfind("_") + 1
+		if prefix_end > 0 and prefix_end < first.length() and prefix_end < second.length():
+			return {"label": first.substr(0, prefix_end - 1).capitalize(), "inner": [first.substr(prefix_end), second.substr(prefix_end)]}
+		var tail: int = 0
+		while tail < first.length() and tail < second.length() and first[first.length() - 1 - tail] == second[second.length() - 1 - tail]:
+			tail += 1
+		var tail_text: String = first.substr(first.length() - tail)
+		var suffix_start: int = tail_text.find("_")
+		if suffix_start >= 0 and suffix_start + 1 < tail_text.length() and first.length() - tail + suffix_start > 0 and second.length() - tail + suffix_start > 0:
+			var cut: int = tail - suffix_start
+			return {"label": tail_text.substr(suffix_start + 1).capitalize(),
+				"inner": [first.substr(0, first.length() - cut), second.substr(0, second.length() - cut)]}
+		return {"label": first.capitalize(), "inner": [first, second]}
 
 	func _on_changed(value: float, property_name: String) -> void:
 		var is_int: bool = typeof(get_edited_object().get(property_name)) == TYPE_INT
 		emit_changed(property_name, int(round(value)) if is_int else value)
 
 	func _notification(what: int) -> void:
-		# The Inspector hands every editor its own label after _init; here the two names are the label.
+		# The Inspector hands every editor its own label after _init; here it is the pair's shared one.
 		if what == NOTIFICATION_READY:
-			draw_label = false
-			label = ""
+			draw_label = true
+			label = _shared_label
 
 	func _update_property() -> void:
 		for index: int in _names.size():
@@ -2210,4 +2230,4 @@ class SideBySideProperty:
 			_spins[index].step = 1.0 if is_int else 0.001
 			_spins[index].rounded = is_int
 			_spins[index].set_value_no_signal(float(value))
-			_spins[index].read_only = read_only
+			EventSheetLookStyle.set_number_field_locked(_spins[index], read_only)

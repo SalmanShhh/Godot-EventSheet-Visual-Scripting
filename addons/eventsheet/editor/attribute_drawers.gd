@@ -61,6 +61,8 @@ const DRAWER_WIDGETS_PATH: String = "res://addons/eventsheet/editor/drawer_widge
 ## The door the plugin hands in: opens a .tres in the sheet editor's table view (Callable(path)).
 ## Unset, the table look draws no "Open as a table" link.
 var open_table: Callable = Callable()
+## Whether the tab strip has been drawn for the object being read now.
+var _tabs_drawn: bool = false
 
 
 ## The drawer widgets module, compiled the first time a drawer or a decor line is drawn.
@@ -79,12 +81,38 @@ func _parse_begin(object: Object) -> void:
 	var object_decor: GDScript = load(OBJECT_DECOR_PATH)
 	if object_decor.wants_preview(object):
 		add_custom_control(load(PREVIEW_PANEL_PATH).new(object))
-	# `# @inspector_tabs`: one tab per @export_group. Picking a tab rebuilds the Inspector, and the
-	# fields of the other groups are left out of it below.
-	if object_decor.wants_tabs(object):
-		var groups: PackedStringArray = object_decor.tab_groups(object)
-		if not groups.is_empty():
-			add_custom_control(widgets().GroupTabs.new(object, groups, object_decor.chosen_tab(object)))
+	# `# @inspector_tabs` is drawn under the script's own heading, in _parse_category.
+	_tabs_drawn = false
+
+
+## The tab strip of `# @inspector_tabs`: one tab per @export_group. It sits directly under the heading
+## of the object's own script (Godot names that heading by the script's class name, or by its file name
+## when it has none), so it reads as part of that script's fields. Picking a tab rebuilds the
+## Inspector, and the fields of the other groups are left out of it below.
+func _parse_category(object: Object, category: String) -> void:
+	if _tabs_drawn or object == null or object.get_script() == null:
+		return
+	var script: Script = object.get_script() as Script
+	if script == null or (category != script.get_global_name() and category != script.resource_path.get_file()):
+		return
+	_draw_tabs(object)
+
+
+## An object whose script heading could not be matched still gets its tabs, at the end, rather than none.
+func _parse_end(object: Object) -> void:
+	if not _tabs_drawn and object != null:
+		_draw_tabs(object)
+
+
+func _draw_tabs(object: Object) -> void:
+	var object_decor: GDScript = load(OBJECT_DECOR_PATH)
+	if not object_decor.wants_tabs(object):
+		return
+	var groups: PackedStringArray = object_decor.tab_groups(object)
+	if groups.is_empty():
+		return
+	_tabs_drawn = true
+	add_custom_control(widgets().GroupTabs.new(object, groups, object_decor.chosen_tab(object)))
 
 
 func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, hint_string: String, _usage_flags: int, _wide: bool) -> bool:
