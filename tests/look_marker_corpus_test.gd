@@ -22,6 +22,7 @@ const ROUNDS: int = 200
 static func run() -> bool:
 	var passed: bool = true
 	passed = _progress_bar_is_written_the_same_two_ways() and passed
+	passed = _the_other_shipped_looks_are_written_the_same_two_ways() and passed
 	passed = _a_look_the_project_added_round_trips() and passed
 	passed = _a_value_that_cannot_ride_a_marker_writes_nothing() and passed
 	passed = _a_marker_naming_an_absent_look_survives_the_round_trip() and passed
@@ -79,6 +80,67 @@ static func _progress_bar_is_written_the_same_two_ways() -> bool:
 		["200 generated bounds: a legacy word stays on its legacy attributes", moved_to_generic, []],
 		["200 generated bounds: reopened, the line is written again byte for byte", not_stable, []],
 	])
+
+
+## The shipped looks beyond the progress bar, each with the structured attributes it always had and the
+## generic pair, over a generated corpus of arguments. A look with no arguments has one spelling to prove.
+static func _the_other_shipped_looks_are_written_the_same_two_ways() -> bool:
+	var generator: RandomNumberGenerator = RandomNumberGenerator.new()
+	generator.seed = SEED + 2
+	var rows: Array = []
+	var looks: Array = [
+		{"word": "swatch_row", "type": "Color", "value": "Color(1, 1, 1, 1)", "args": func() -> Array: return []},
+		{"word": "texture_preview", "type": "Texture2D", "value": "null", "args": func() -> Array: return []},
+		{"word": "curve_editor", "type": "Curve", "value": "null", "args": func() -> Array: return []},
+		{"word": "corners", "type": "Vector4", "value": "Vector4(0, 0, 0, 0)", "args": func() -> Array: return []},
+		{"word": "vector_dial", "type": "Vector2", "value": "Vector2(0, 0)", "args": func() -> Array: return [_number_text(generator)]},
+		{"word": "min_max", "type": "Vector2", "value": "Vector2(0, 0)", "args": func() -> Array: return [_number_text(generator), _number_text(generator)]},
+		{"word": "table_row", "type": "int", "value": "0", "args": func() -> Array: return [_name_text(generator), _name_text(generator)]},
+	]
+	for look: Dictionary in looks:
+		var word: String = str(look["word"])
+		var different: Array = []
+		var not_reopened: Array = []
+		var moved_to_generic: Array = []
+		var not_stable: Array = []
+		for round: int in range(ROUNDS):
+			var args: Array = (look["args"] as Callable).call()
+			var legacy_attributes: Dictionary = {"drawer": word}
+			match word:
+				"vector_dial":
+					legacy_attributes["range"] = {"min": "0", "max": args[0], "step": "1"}
+				"min_max":
+					legacy_attributes["range"] = {"min": args[0], "max": args[1], "step": "1"}
+				"table_row":
+					legacy_attributes["table_row_table"] = args[0]
+					legacy_attributes["table_row_column"] = args[1]
+			var legacy: String = EventSheetCompiler._drawer_export_prefix(legacy_attributes, str(look["type"]))
+			var generic: String = EventSheetCompiler._drawer_export_prefix({"look": word, "look_args": args}, str(look["type"]))
+			if legacy != generic:
+				different.append([args, legacy, generic])
+				continue
+			var line: String = "%svar thing: %s = %s" % [legacy, look["type"], look["value"]]
+			var source: String = "extends Node2D\n\n%s\n" % line
+			var variable: LocalVariable = _find(SUPPORT.reopen(source), "thing")
+			if variable == null:
+				not_reopened.append(args)
+				continue
+			var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
+			if str(attributes.get("drawer", "")) != word or attributes.has("look"):
+				moved_to_generic.append(args)
+			if EventSheetCompiler._emit_tree_variable_line(variable) != line or SUPPORT.reemit(source, "user://look_marker_corpus_test.gd") != source:
+				not_stable.append(args)
+		rows.append(["%s: the two spellings write the same line" % word, different, []])
+		rows.append(["%s: every line reopens as a variable" % word, not_reopened, []])
+		rows.append(["%s: a legacy word stays on its legacy attributes" % word, moved_to_generic, []])
+		rows.append(["%s: reopened, the line is written again byte for byte" % word, not_stable, []])
+	return SUPPORT.pins(NAME, rows)
+
+
+## A name a person might give a table or a column: lower case, with digits and underscores.
+static func _name_text(generator: RandomNumberGenerator) -> String:
+	var words: Array = ["drops", "loot", "name", "title", "row_2", "item_names", "x1", "enemies"]
+	return str(words[generator.randi_range(0, words.size() - 1)])
 
 
 static func _a_look_the_project_added_round_trips() -> bool:

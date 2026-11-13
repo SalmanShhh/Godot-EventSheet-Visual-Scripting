@@ -454,13 +454,19 @@ static func accepts(look: Dictionary, type: int, object: Object = null, property
 
 
 ## A look's drawing control, built and told what the marker said. The caller adds it to the Inspector.
-## Null when the file cannot be loaded as a look.
+## Null when the file cannot be loaded as a look, or when the look says the marker's values cannot be drawn.
 static func build(look: Dictionary, args: Array) -> Object:
 	var script: Variant = load(str(look["script_path"]))
 	if not (script is GDScript) or not (script as GDScript).can_instantiate():
 		return null
 	var control: Object = (script as GDScript).new()
 	var values: Dictionary = marker_values(look, args)
-	for key: Variant in values:
-		control.set(str(key), values[key])
+	for question: Dictionary in look["questions"]:
+		var key: String = str(question["key"])
+		# A question the marker left out keeps the default the file declares, as the type it asked for.
+		var value: Variant = values[key]
+		control.set(key, _typed(question, str(value)) if value is String and str(question["type_name"]) != "String" else value)
+	if control.has_method("_can_draw") and not bool(control.call("_can_draw")):
+		control.free()
+		return null
 	return control

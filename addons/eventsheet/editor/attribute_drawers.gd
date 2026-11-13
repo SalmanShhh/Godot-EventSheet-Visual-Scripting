@@ -8,10 +8,10 @@
 #
 # Drawers + marker forms:
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float (a look that is a file: addons/eventsheet/looks/progress_bar.gd)
-#   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
+#   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end; a look file)
 #   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
 #   table_row      eventsheet:table_row:<array>:<column> int (the number of a row of the table property
-#                  <array>, picked from a dropdown of its rows by their <column> cell)
+#                  <array>, picked from a dropdown of its rows by their <column> cell; a look file)
 #   cards          eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>
 #                  Array (of Dictionary cards, each of a KIND, edited as a reorderable list of cards -
 #                  the schema registered under <n> says what each kind is called and which fields it has)
@@ -19,11 +19,11 @@
 #                  optional tails, in this order: ":segmented" for equal-width word buttons, ":icons=<source>"
 #                  for a picture per option - a path pattern holding %s, or a registered provider's name)
 #   unit           eventsheet:unit:kinds=<a>|<b>,store=<a> float (a spin box with a unit dropdown at its edge)
-#   corners        eventsheet:corners                    Vector4 (one number, or four boxes clockwise from top-left)
-#   vector_dial    eventsheet:vector_dial:<max>          Vector2
-#   swatch_row     eventsheet:swatch_row                 Color
-#   texture_preview eventsheet:texture_preview           Texture2D / String (path)
-#   curve_editor   eventsheet:curve_editor               Curve
+#   corners        eventsheet:corners                    Vector4 (one number, or four boxes clockwise from top-left; a look file)
+#   vector_dial    eventsheet:vector_dial:<max>          Vector2 (a look file)
+#   swatch_row     eventsheet:swatch_row                 Color (a look file)
+#   texture_preview eventsheet:texture_preview           Texture2D (a look file)
+#   curve_editor   eventsheet:curve_editor               Curve (a look file)
 #
 # A marker word that none of these handles is looked up in the catalogue of look FILES, so a project adds a
 # look by adding one script to `res://eventsheet_addons/looks/`; nothing is registered.
@@ -51,8 +51,6 @@ const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/pre
 ## never asks for cards must not pay for them at every editor start.
 const CARD_LIST_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/card_list_drawer.gd"
 const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card_schemas.gd"
-## The row-picking drawer, loaded BY PATH for the same reason.
-const TABLE_ROW_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/table_row_drawer.gd"
 ## The catalogue of looks that are files (the progress bar, and any look the project adds), loaded BY
 ## PATH for the same reason: it is read the first time a marker names a look it does not know by heart.
 const LOOK_CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
@@ -139,11 +137,6 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
-		"min_max":
-			if type != TYPE_VECTOR2:
-				return false
-			add_property_editor(name, MinMaxSliderProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
-			return true
 		"toggle_row":
 			# String stores the option TEXT; int stores its INDEX (an enum written as buttons).
 			if type != TYPE_STRING and type != TYPE_INT:
@@ -167,13 +160,6 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				return false
 			add_property_editor(name, UnitFieldProperty.new(unit_ids, str(unit_spec.get("store", ""))))
 			return true
-		"corners":
-			# Four corners clockwise from the top-left. One number until they differ, then four
-			# labelled boxes - the same shape margins and padding take.
-			if type != TYPE_VECTOR4:
-				return false
-			add_property_editor(name, CornersProperty.new())
-			return true
 		"table":
 			if type != TYPE_ARRAY:
 				return false
@@ -183,14 +169,6 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				return false
 			add_property_editor(name, TableProperty.new(columns, open_table))
 			return true
-		"table_row":
-			# An int naming a row of the table property beside it, picked by the row's name. The
-			# file keeps the number, so the game reads `table[number]` as it always would.
-			var row_args: Array = drawer.get("args", [])
-			if type != TYPE_INT or row_args.size() != 2 or not str(row_args[0]).is_valid_identifier():
-				return false
-			add_property_editor(name, load(TABLE_ROW_DRAWER_PATH).new(str(row_args[0]), str(row_args[1])))
-			return true
 		"cards":
 			# A list of Dictionaries, each of a kind: the reorderable card list. Both the untyped list
 			# and Array[Dictionary] reach here as TYPE_ARRAY, exactly as the table drawer does.
@@ -199,30 +177,6 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			var cards_args: Array = drawer.get("args", [])
 			var cards_spec: Dictionary = load(CARD_SCHEMAS_PATH).call("parse_cards_spec", str(cards_args[0]) if cards_args.size() > 0 else "")
 			add_property_editor(name, CardListProperty.new(cards_spec))
-			return true
-		"vector_dial":
-			if type != TYPE_VECTOR2:
-				return false
-			var args: Array = drawer.get("args", [])
-			var dial_max: float = str(args[0]).to_float() if args.size() > 0 else 100.0
-			add_property_editor(name, VectorDialProperty.new(dial_max))
-			return true
-		"swatch_row":
-			if type != TYPE_COLOR:
-				return false
-			add_property_editor(name, SwatchRowProperty.new())
-			return true
-		"texture_preview":
-			# Resource-class guard: a generated sheet only ever pairs this marker with a Texture2D (the compiler
-			# type-gates it), but a hand-edited marker on another resource would otherwise attach a wrong picker.
-			if type != TYPE_OBJECT or not _value_is_kind(_object, name, "Texture2D"):
-				return false
-			add_property_editor(name, TexturePreviewProperty.new())
-			return true
-		"curve_editor":
-			if type != TYPE_OBJECT or not _value_is_kind(_object, name, "Curve"):
-				return false
-			add_property_editor(name, CurveEditorProperty.new())
 			return true
 	# Every other word is a look that is a file: the progress bar and any look the project added. The
 	# catalogue is loaded here, and only here, so an object with no marker pays nothing for it.
@@ -513,37 +467,9 @@ static func side_by_side_fits(object: Object, first: String, second: String) -> 
 	return shown == 2
 
 
-## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker
-## with the right resource type (the compiler type-gates emission), but a hand-edited marker could mismatch -
-## e.g. a curve_editor on a Texture2D var. A null value (the default) is allowed (can't tell yet, and the
-## picker is harmless); a present value of the wrong class fails, so we degrade to a plain field.
-static func _value_is_kind(object: Object, name: String, type_class: String) -> bool:
-	if object == null:
-		return true
-	var value: Variant = object.get(name)
-	if value == null:
-		return true
-	return value is Object and (value as Object).is_class(type_class)
-
 # ── EditorProperty wrappers (each embeds a reusable widget and forwards edits) ──
 
 
-## Vector2 min-max range: drag either handle to set the low (x) / high (y) end.
-class MinMaxSliderProperty:
-	extends EditorProperty
-	var _slider: Control
-
-	func _init(min_value: float, max_value: float) -> void:
-		_slider = EventSheetAttributeDrawers.widgets().DrawerMinMaxSlider.new(min_value, max_value)
-		_slider.connect("value_changed", _on_changed)
-		add_child(_slider)
-		add_focusable(_slider)
-
-	func _on_changed(v: Vector2) -> void:
-		emit_changed(get_edited_property(), v)
-
-	func _update_property() -> void:
-		_slider.call("set_value", get_edited_object().get(get_edited_property()))
 
 
 ## Fixed choices as one row of toggle buttons: the pressed button IS the value. A String property
@@ -580,23 +506,6 @@ class ToggleRowProperty:
 		_row.call("set_value", _options[index] if index >= 0 and index < _options.size() else "")
 
 
-## Four corners in one property: one number while they agree, four labelled boxes when they do not.
-class CornersProperty:
-	extends EditorProperty
-	var _corners: Control
-
-	func _init() -> void:
-		_corners = EventSheetAttributeDrawers.widgets().DrawerCorners.new()
-		_corners.connect("value_changed", _on_changed)
-		add_child(_corners)
-		set_bottom_editor(_corners)
-
-	func _on_changed(value: Vector4) -> void:
-		emit_changed(get_edited_property(), value)
-
-	func _update_property() -> void:
-		var value: Variant = get_edited_object().get(get_edited_property())
-		_corners.call("set_value", value if value is Vector4 else Vector4.ZERO)
 
 
 ## A float with its unit: a spin box plus a unit dropdown at its edge. The dropdown converts what is
@@ -701,93 +610,3 @@ class CardListProperty:
 		if incoming == _list.call("get_value"):
 			return
 		_list.call("set_value", incoming)
-
-
-## Vector2 dial: drag the handle to set direction + magnitude.
-class VectorDialProperty:
-	extends EditorProperty
-	var _dial: Control
-
-	func _init(max_magnitude: float) -> void:
-		_dial = EventSheetAttributeDrawers.widgets().DrawerVectorDial.new(max_magnitude)
-		_dial.connect("value_changed", _on_changed)
-		add_child(_dial)
-		set_bottom_editor(_dial)
-
-	func _on_changed(v: Vector2) -> void:
-		emit_changed(get_edited_property(), v)
-
-	func _update_property() -> void:
-		_dial.call("set_value", get_edited_object().get(get_edited_property()))
-
-
-## Colour swatch row: click a preset (or the picker) to set the colour.
-class SwatchRowProperty:
-	extends EditorProperty
-	var _row: Control
-
-	func _init() -> void:
-		_row = EventSheetAttributeDrawers.widgets().DrawerSwatchRow.new()
-		_row.connect("value_changed", _on_changed)
-		add_child(_row)
-		set_bottom_editor(_row)
-
-	func _on_changed(c: Color) -> void:
-		emit_changed(get_edited_property(), c)
-
-	func _update_property() -> void:
-		_row.call("set_value", get_edited_object().get(get_edited_property()))
-
-
-## Texture preview: a Texture2D resource picker above a live thumbnail.
-class TexturePreviewProperty:
-	extends EditorProperty
-	var _preview: Control
-	var _picker: EditorResourcePicker
-
-	func _init() -> void:
-		var box: VBoxContainer = VBoxContainer.new()
-		_picker = EditorResourcePicker.new()
-		_picker.base_type = "Texture2D"
-		_picker.resource_changed.connect(_on_resource_changed)
-		box.add_child(_picker)
-		_preview = EventSheetAttributeDrawers.widgets().DrawerTexturePreview.new()
-		box.add_child(_preview)
-		add_child(box)
-		set_bottom_editor(box)
-
-	func _on_resource_changed(resource: Resource) -> void:
-		_preview.call("set_texture", resource as Texture2D)
-		emit_changed(get_edited_property(), resource)
-
-	func _update_property() -> void:
-		var value: Variant = get_edited_object().get(get_edited_property())
-		_picker.edited_resource = value as Resource
-		_preview.call("set_texture", value as Texture2D)
-
-
-## Curve editor: a Curve resource picker above a live inline render of the curve's shape.
-class CurveEditorProperty:
-	extends EditorProperty
-	var _preview: Control
-	var _picker: EditorResourcePicker
-
-	func _init() -> void:
-		var box: VBoxContainer = VBoxContainer.new()
-		_picker = EditorResourcePicker.new()
-		_picker.base_type = "Curve"
-		_picker.resource_changed.connect(_on_resource_changed)
-		box.add_child(_picker)
-		_preview = EventSheetAttributeDrawers.widgets().DrawerCurvePreview.new()
-		box.add_child(_preview)
-		add_child(box)
-		set_bottom_editor(box)
-
-	func _on_resource_changed(resource: Resource) -> void:
-		_preview.call("set_curve", resource as Curve)
-		emit_changed(get_edited_property(), resource)
-
-	func _update_property() -> void:
-		var value: Variant = get_edited_object().get(get_edited_property())
-		_picker.edited_resource = value as Resource
-		_preview.call("set_curve", value as Curve)

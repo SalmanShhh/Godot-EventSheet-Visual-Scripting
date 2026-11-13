@@ -22,6 +22,7 @@ extends EditorProperty
 ## the marker is only a hint string, and without this plugin the property is a plain field.
 ##
 ## Override these, not `_update_property` (the base needs that one to keep the value in step):
+##   `_can_draw()`                          say no when the marker's values make no sense (the plain field stays)
 ##   `_look_built()`                        build the control, once, with the questions already answered
 ##   `_value_shown(value)`                  show this value; called on every refresh
 ##   `_value_changed_from_outside(value)`   the value moved without this look (undo, a script, another editor)
@@ -58,6 +59,12 @@ func _update_property() -> void:
 		_last_set = value
 		_value_changed_from_outside(value)
 	_value_shown(value)
+
+
+## Whether the values the marker carried can be drawn. Asked once, after the questions are answered and
+## before anything is built; a look that says no leaves Godot's plain field, as without this plugin.
+func _can_draw() -> bool:
+	return true
 
 
 ## The control is built here: add children, connect signals. Runs once.

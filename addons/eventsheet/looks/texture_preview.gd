@@ -1,0 +1,33 @@
+@tool
+extends EventSheetInspectorLook
+
+## Texture preview
+## A bigger picture of the texture under the slot.
+
+## The kinds of property this look can be put on.
+@export var works_on: String = "Texture2D"
+
+var _preview: Control
+var _picker: EditorResourcePicker
+
+
+func _look_built() -> void:
+	var box: VBoxContainer = VBoxContainer.new()
+	_picker = EditorResourcePicker.new()
+	_picker.base_type = "Texture2D"
+	_picker.resource_changed.connect(_on_resource_changed)
+	box.add_child(_picker)
+	_preview = EventSheetAttributeDrawers.widgets().DrawerTexturePreview.new()
+	box.add_child(_preview)
+	add_child(box)
+	set_bottom_editor(box)
+
+
+func _value_shown(value: Variant) -> void:
+	_picker.edited_resource = value as Resource
+	_preview.call("set_texture", value as Texture2D)
+
+
+func _on_resource_changed(resource: Resource) -> void:
+	_preview.call("set_texture", resource as Texture2D)
+	set_field_value(resource)

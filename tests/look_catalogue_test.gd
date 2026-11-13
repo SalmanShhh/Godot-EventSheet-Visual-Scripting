@@ -60,6 +60,7 @@ static func run() -> bool:
 	passed = _a_project_file_beats_a_shipped_one_of_the_same_name() and passed
 	passed = _the_window_lists_file_looks_where_the_table_keeps_their_place() and passed
 	passed = _a_shipped_look_keeps_its_questions() and passed
+	passed = _the_looks_moved_onto_files_read_as_the_table_did() and passed
 	passed = _a_same_length_edit_is_not_drawn_from_the_old_decor() and passed
 	return passed
 
@@ -220,7 +221,8 @@ static func _the_window_lists_file_looks_where_the_table_keeps_their_place() -> 
 ## A shipped look is a promise: its questions keep their names and their order, and one added later
 ## goes at the end with a default that reproduces the old marker. This list is committed here.
 static func _a_shipped_look_keeps_its_questions() -> bool:
-	var committed: Dictionary = {"progress_bar": ["min", "max"]}
+	var committed: Dictionary = {"progress_bar": ["min", "max"], "min_max": ["min", "max"], "vector_dial": ["max"],
+		"table_row": ["table", "name_column"], "swatch_row": [], "texture_preview": [], "curve_editor": [], "corners": []}
 	var rows: Array = []
 	for look: Dictionary in EventSheetInspectorLookCatalogue.entries():
 		if str(look["source"]) != "shipped":
@@ -265,3 +267,27 @@ static func _write(path: String, text: String) -> void:
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(text)
 	file.close()
+
+
+## The looks that moved from the table onto files keep what the window showed: the same name and hover,
+## the same types, and the questions the old fold and unfold read by key.
+static func _the_looks_moved_onto_files_read_as_the_table_did() -> bool:
+	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray())
+	var wanted: Dictionary = {
+		"swatch_row": ["Swatch row", "A row of colour swatches to pick from. Without this plugin it is a plain colour.", ["Color"], []],
+		"texture_preview": ["Texture preview", "A bigger picture of the texture under the slot.", ["Texture2D"], []],
+		"curve_editor": ["Curve preview", "A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.", ["Curve"], []],
+		"corners": ["Four corners", "One number for all four corners, with a button that opens a box per corner.", ["Vector4"], []],
+		"vector_dial": ["Direction dial", "The vector as an arrow on a dial. Without this plugin it is X and Y fields.", ["Vector2"], ["max"]],
+		"min_max": ["Min-max range", "Two handles on one slider: x is the low end, y the high end.", ["Vector2"], ["min", "max"]],
+		"table_row": ["Pick a row of a data table", "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.", ["int"], ["table", "name_column"]],
+	}
+	var rows: Array = []
+	for look_name: String in wanted:
+		var look: Dictionary = EventSheetInspectorLooks.by_id(look_name)
+		var keys: Array = []
+		for field: Array in look.get("fields", []):
+			keys.append(field[0])
+		var expected: Array = wanted[look_name]
+		rows.append(["%s reads as the table did" % look_name, [look.get("label"), look.get("tip"), look.get("types"), keys], expected])
+	return SUPPORT.pins(NAME, rows)

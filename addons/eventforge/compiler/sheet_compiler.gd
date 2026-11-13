@@ -5784,8 +5784,7 @@ static func _look_export_prefix(attributes: Dictionary) -> String:
 	var args: Variant = attributes.get("look_args")
 	for arg: Variant in (args if args is Array else []):
 		var text: String = str(arg)
-		if text.contains("\"") or text.contains(":") or text.contains("
-") or text.contains("\\"):
+		if text.contains("\"") or text.contains(":") or text.contains("\n") or text.contains("\\"):
 			return ""
 		marker += ":" + text
 	return "@export_custom(PROPERTY_HINT_NONE, \"%s\") " % marker
