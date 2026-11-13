@@ -86,7 +86,7 @@ static func row_name(row: Variant, label_column: String, index: int) -> String:
 		var text: String = str((row as Dictionary).get(label_column, "")).strip_edges()
 		if not text.is_empty():
 			return text
-	return "Row %d" % (index + 1)
+	return EventSheetL10n.translate("Row %d") % (index + 1)
 
 
 ## The first column of `columns` (Dictionaries with "name" and "type") that holds text, or "" when none does.

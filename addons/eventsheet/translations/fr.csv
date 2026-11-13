@@ -10465,3 +10465,7 @@ EventSheets looks,Apparences EventSheets
 In your project,Dans ton projet
 share,part
 Total weight %s,Poids total %s
+"No row has a weight above 0, so nothing can be picked.","Aucune ligne n'a un poids supérieur à 0, donc rien ne peut être tiré."
+and %d more,et %d de plus
+Row %d,Ligne %d
+Chances,Probabilités

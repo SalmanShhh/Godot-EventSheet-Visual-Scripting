@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: the odds of a weighted table as one bar
+
+- A weighted table draws a "Chances" row above it: one bar split by each row's share (the largest in the accent colour), and one line naming the biggest three ("coin 62.5%, gem 31.3%, sword 6.3% and 2 more"). A table where no row has a weight says so in amber. A look can now hand back rows above and under its field.
+
 ### New: a weighted table shows each row's share
 
 - A table whose marker ends `:weight=<column>` (a number column) draws one more column, "share": a bar and the percent each row holds of the whole, and "Total weight N" beside Add row. The shares follow every edit to a weight. A narrow Inspector hides the bars first and keeps the percent whole. A table without the part draws as before.

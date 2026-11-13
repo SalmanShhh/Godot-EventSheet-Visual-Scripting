@@ -10465,3 +10465,7 @@ EventSheets looks,Виды EventSheets
 In your project,В вашем проекте
 share,доля
 Total weight %s,Общий вес %s
+"No row has a weight above 0, so nothing can be picked.","Ни у одной строки нет веса больше 0, поэтому выбрать нечего."
+and %d more,и ещё %d
+Row %d,Строка %d
+Chances,Шансы

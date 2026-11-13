@@ -80,6 +80,19 @@ func _value_shown(_value: Variant) -> void:
 	pass
 
 
+## Rows the Inspector draws ABOVE this look's field, each in the value column. A row may carry the
+## words for its label column as the meta `row_label`; with none it has no label. Asked once, right
+## after the look is built and before it is shown, so keep a reference to anything that must follow
+## the value.
+func _rows_above_field() -> Array[Control]:
+	return []
+
+
+## Rows the Inspector draws directly UNDER this look's field, in the value column, as a note is.
+func _rows_under_field() -> Array[Control]:
+	return []
+
+
 ## The value moved without this look having set it. Runs before `_value_shown`.
 func _value_changed_from_outside(_value: Variant) -> void:
 	pass

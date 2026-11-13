@@ -10465,3 +10465,7 @@ EventSheets looks,EventSheets のルック
 In your project,プロジェクト内
 share,割合
 Total weight %s,合計の重み %s
+"No row has a weight above 0, so nothing can be picked.",重みが0を超える行がないため、何も選べません。
+and %d more,ほか %d 件
+Row %d,%d 行目
+Chances,確率

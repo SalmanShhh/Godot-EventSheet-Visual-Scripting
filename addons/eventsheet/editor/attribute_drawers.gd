@@ -205,7 +205,13 @@ func _parse_look(object: Object, type: int, name: String, word: String, args: Ar
 	# The door the plugin handed in, for a look that offers to open a table's file (the table look).
 	if "open_table" in control:
 		control.set("open_table", open_table)
+	# A look may hand back rows above its field (a labelled one, like Godot's own rows) and rows under it.
+	for row: Variant in control.call("_rows_above_field"):
+		var row_label: String = str((row as Control).get_meta("row_label", ""))
+		add_property_editor(name, widgets().NoteRow.new(row as Control, row_label), false, row_label)
 	add_property_editor(name, control)
+	for row: Variant in control.call("_rows_under_field"):
+		add_property_editor(name, widgets().NoteRow.new(row as Control), true)
 	return true
 
 

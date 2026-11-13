@@ -218,9 +218,12 @@ static func build_info_panel(text: String) -> Control:
 class NoteRow:
 	extends EditorProperty
 	var _content: Control = null
+	## The words in the label column; empty for a note that sits under its field with none.
+	var _row_label: String = ""
 
-	func _init(content: Control = null) -> void:
+	func _init(content: Control = null, row_label: String = "") -> void:
 		_content = content
+		_row_label = row_label
 		selectable = false
 		read_only = true
 		if _content != null:
@@ -234,9 +237,10 @@ class NoteRow:
 	func _notification(what: int) -> void:
 		# The Inspector hands every editor its label after _init; this row keeps none.
 		if what == NOTIFICATION_READY:
-			label = ""
+			label = _row_label
 			selectable = false
-			read_only = true
+			# A row with words in its label column reads like Godot's own rows; read-only would dim them.
+			read_only = _row_label.is_empty()
 
 
 ## The `# @inspector_required` badge: a warning row that WATCHES the property and shows only while

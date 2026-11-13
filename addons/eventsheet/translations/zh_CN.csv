@@ -10465,3 +10465,7 @@ EventSheets looks,EventSheets 外观
 In your project,在你的项目中
 share,占比
 Total weight %s,权重合计 %s
+"No row has a weight above 0, so nothing can be picked.",没有任何一行的权重大于 0，所以无法抽取。
+and %d more,以及另外 %d 项
+Row %d,第 %d 行
+Chances,概率

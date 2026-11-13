@@ -10465,3 +10465,7 @@ EventSheets looks,EventSheets 모양
 In your project,내 프로젝트
 share,비율
 Total weight %s,가중치 합계 %s
+"No row has a weight above 0, so nothing can be picked.",가중치가 0보다 큰 행이 없어서 아무것도 고를 수 없습니다.
+and %d more,외 %d개
+Row %d,%d번째 행
+Chances,확률

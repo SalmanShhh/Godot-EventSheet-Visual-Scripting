@@ -27,6 +27,7 @@ var _table: Control
 var _fold: Button
 var _panel: PanelContainer
 var _open_path: String = ""
+var _odds: Control = null
 
 
 ## A table with no columns leaves the plain list, as without this plugin.
@@ -59,6 +60,7 @@ func _value_shown(value: Variant) -> void:
 	# rebuild and the cell being typed in keeps focus. Only an external change (undo, reselecting the
 	# asset) brings a different value that actually rebuilds the grid.
 	var incoming: Array = value if value is Array else []
+	_show_odds(incoming)
 	_offer_open_link(field_object())
 	_show_fold(incoming.size())
 	if incoming == _table.call("get_value"):
@@ -88,7 +90,22 @@ func _fold_key() -> String:
 	return "%d:%s" % [edited.get_instance_id() if edited != null else 0, field_name()]
 
 
+## The odds of a weighted table, as one labelled row above the field: a bar and a line of words.
+func _rows_above_field() -> Array[Control]:
+	if _weight_column().is_empty():
+		return []
+	_odds = load("res://addons/eventsheet/editor/inspector/odds_bar.gd").new()
+	_odds.set_meta("row_label", EventSheetL10n.translate("Chances"))
+	return [_odds]
+
+
+func _show_odds(rows: Array) -> void:
+	if _odds != null:
+		_odds.call("set_rows", rows, _weight_column(), load("res://addons/eventsheet/editor/inspector/weight_math.gd").first_text_column(_columns()))
+
+
 func _on_table_changed(rows: Array) -> void:
+	_show_odds(rows)
 	set_field_value(rows)
 	_show_fold(rows.size())
 	# Writing the value onto the resource through the inspector does NOT fire the resource's `changed`

@@ -10465,3 +10465,7 @@ EventSheets looks,EventSheets-Darstellungen
 In your project,In deinem Projekt
 share,Anteil
 Total weight %s,Gesamtgewicht %s
+"No row has a weight above 0, so nothing can be picked.","Keine Zeile hat ein Gewicht über 0, also kann nichts gewählt werden."
+and %d more,und %d weitere
+Row %d,Zeile %d
+Chances,Chancen
