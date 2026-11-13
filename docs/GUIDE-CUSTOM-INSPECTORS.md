@@ -157,15 +157,44 @@ A choice can also carry a **label**, written `key=Label`: the dropdown READS the
 
 A column can carry a **Default** of its own - what a new row starts with in it, in the New Data Table window and on the Inspector's Add Row - and a **Description**, which the column's header says on hover. Both ride the marker after the columns, as `:default=` and `:about=` with one value per column and a `|` between them (an empty value is a column without one), escaped the way a choice label is. A marker without them is exactly what it was.
 
+A table can name a **weight column**: a number column each row's chance is worked out from. The marker then ends `:weight=<column>`, and the table draws one more column, "share" (a bar and the percent each row holds of the whole), with "Total weight" beside Add row; above the table a **Chances** row shows the odds as one bar with the biggest rows named, and under it a **Roll 1,000 times** button counts how often each row comes up. The counts are from the weights alone ("Weights only. Rules the game adds, such as pity, are not counted."), live in the Inspector row only and clear when the rows change; nothing is stored. A table where no row has a weight above 0 says so in amber. A project without this plugin reads the marker as a plain list, and a plugin that does not know the part keeps the line as written.
+
 **Emits** (the column schema rides the marker; each row is a plain Dictionary):
 ```gdscript
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,count=int,rare=bool") var loot: Array = []
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:name=String,amount=int,icon=texture:default=|1|:about=|How many to give.|The picture shown in the inventory.") var drops: Array = []
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,weight=float,tags=String:weight=weight") var entries: Array = []
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:kind=enum(circle|ring|rect),size=float") var steps: Array = []
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:op=enum(gte=>= (at least)|lt=< (less than)),value=float") var rules: Array = []
 ```
 
 **Use case.** A `loot` table designers fill row by row, a `waves` list (enemy, count, delay), or dialogue lines (speaker, text, portrait path) - all without touching Godot's generic array editor. Use an `enum(...)` column wherever a cell should only ever hold one of a fixed set of words (a shape kind, a rarity, an easing mode), so designers pick from a list instead of risking a typo.
+
+### Tag from a table's rows (String)
+
+**What it does.** A text field joined to a menu of the tags a table's rows already carry (one comma separated column), so a pity tag or a filter is picked rather than retyped. Typing a new one still works; when no row carries the tag in the field, an amber line says so. The menu is filled when it opens, so it is never stale.
+
+**How to use it.** Choose **Inspector look: Tag from a table's rows** on a `String` variable, then name the **Table** (the `Array` variable beside it) and the **Tags column** (default `tags`).
+
+**Emits:**
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table_tag:entries:tags") var pity_tag: String = ""
+```
+
+**Use case.** The loot table's pity tag, a spawner's group filter, any text that must match something a table already lists.
+
+### Seed with a New seed button (int or String)
+
+**What it does.** A number field (or a text field, for a seed kept as text) with a **New seed** button that writes a fresh positive seed as one undo step. Under the field a quiet line says "0: different every run." (or "Empty: ...") while the value means that. Use it only on a seed where 0 or empty really means a new one every run.
+
+**How to use it.** Choose **Inspector look: Seed with a New seed button** on an `int` or `String` variable.
+
+**Emits:**
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:seed") var seed_on_start: int = 0
+```
+
+**Use case.** Advanced Random's `seed_on_start` and Drunken Walkers' `start_seed`: roll a seed until a map looks right, then keep it.
 
 ### Card list (Array of Dictionaries, each of a kind)
 
@@ -532,6 +561,20 @@ Two neighbouring numbers that should stay in proportion - a dash count and its s
 ```
 
 The line names **both** fields, this one first, so a reader of the file sees the relation without opening the editor. Editor-only decor: it emits no code, nothing is written while the button is not pressed, and a project without the plugin simply has two ordinary numbers. A leader sitting at zero has no ratio to read, so the pair keeps a ratio of one rather than sending the follower to infinity.
+
+### A width and a height on one row, with common sizes
+
+Two neighbouring numbers marked `# @inspector_side_by_side` share one line, and each keeps the `@export_range` limits it declares. When the pair is also linked (`# @inspector_link`), Godot's link icon sits at the end of the row. A third line, `# @inspector_texture_size 256 512 1024 2048`, says the pair is a texture's width and height: the label ends in "Size", an "x" sits between the fields, a strip of the listed sizes sits under the row (one click sets both numbers as one undo step), and one line says what the texture costs, in Godot's own size words ("512 x 512 px, about 1024 KiB of video memory."), worked out at 4 bytes a pixel.
+
+```gdscript
+# @inspector_texture_size 256 512 1024 2048
+# @inspector_link canvas_width canvas_height
+# @inspector_side_by_side
+@export var canvas_width: int = 512
+@export var canvas_height: int = 512
+```
+
+Editor-only decor like the others: a project without the plugin has two ordinary number fields and three comments. The texture size line is read first, above the rest of the block.
 
 ## 6. The Behaviours (Tier-2 setters)
 

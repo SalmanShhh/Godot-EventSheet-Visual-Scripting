@@ -154,6 +154,8 @@ You write these. You never override `_update_property`: the base needs it to kee
 | `_value_shown(value)` | On every refresh | Draw this value. Do not call `set_field_value` here |
 | `_value_changed_from_outside(value)` | Before `_value_shown`, when the value moved without this look (undo, a script, another editor) | Stop an animation or reset a drag |
 
+Two more let a look put whole rows beside its field, each in the value column: `_rows_above_field()` returns the controls drawn above it (a control may carry the meta `row_label` to give its row a label, as Godot's own rows have) and `_rows_under_field()` the ones drawn directly under it, as a note is. Both are asked once, right after the look is built, so keep a reference to anything that must follow the value. The weighted table's odds bar and roll button, and the tag look's amber line, are made this way.
+
 And these are ready to call:
 
 | Call | What it does |

@@ -6,6 +6,54 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### New: the mark says which look, and a click opens the look list
+
+- Hovering the Inspector mark of a variable that wears a look opens a card that names the look, says its sentence (the limits for a slider), quotes the whole declaration line and ends \"Click the mark to change the look.\"; a look whose file is missing says \"Look not installed\" and names the file. With tiles off, the glyph at the end of the row opens the same card. A single click on the mark opens the Variable window on its look list; no control enters the row, and a variable shown from another script is changed there.
+
+### Changed: an exported variable's mark is the picture of its look
+
+- The mark at the right of an exported variable row (and its tile, with View > Variable Badges on) is drawn as the small picture of the look the variable wears, in the row's own ink: a slider, a table grid, a menu arrow, a die for a seed, a Color's own colour. A look whose file is not installed is an amber \"?\" with no border. With tiles on, the separate range tile folds into the slider mark, so a ranged variable shows one mark, not two. A plain `@export` keeps today's mark.
+
+### New: a variable row knows which picture the Inspector will draw
+
+- An exported variable row now works out the picture of its Inspector mark from the same look table the Variable window reads (a slider for a range, a table grid, a menu arrow, a Color's own colour, an amber \"?\" for a look whose file is not installed), and stamps it on the row. Nothing is drawn differently yet; the reading dump shows it as `mark=<picture>`.
+
+### Changed: the reading dump can carry a variable's mark
+
+- `tools/reading_dump.gd` writes format 3: a span may carry `mark=<picture>`, the picture an exported variable's Inspector mark is drawn with, written only when it is not the plain one. No row carries one yet, so a dump of the shipped tree differs from format 2 in its header line only.
+
+### Changed: the packs wear the new looks
+
+- Loot Table, Random Table, Skin Catalog (rarities) and Storylet Resource tables show each row's share, the odds bar and a roll button; the Loot Table's pity tag is a menu of the tags its rows carry. Advanced Random's seed and Drunken Walkers' start seed have a New seed button. Drawing Canvas width and height are one row with common sizes and a video memory line. Bound To, Wrap, Flock, Flock 3D, Stat Forge, Juice (zoom limits) and Drunken Walkers (grid size) put their paired numbers on one row, keeping their ranges. Pack variables keep their names and values; only comment lines and `@export_custom` hints changed.
+
+### New: a width and a height on one row, with common sizes and what they cost
+
+- Two numbers marked `# @inspector_side_by_side` now keep the `@export_range` limits each declares (they used to lose them). When the pair is also linked (`# @inspector_link`), Godot's link icon sits inside the row instead of a button above it. A new line, `# @inspector_texture_size 256 512 1024 2048`, above the others says the pair is a texture's width and height: the label ends in \"Size\", an \"x\" sits between, a strip of the listed sizes sits under the row (one click sets both as one undo step) and one line says what the texture costs (\"512 x 512 px, about 1024 KiB of video memory.\", in Godot's own size words, worked out at 4 bytes a pixel). A file without the plugin has two ordinary number fields and three comments.
+
+### New: a seed you can re-roll
+
+- A new look, \"Seed with a New seed button\" (`eventsheet:seed`), for a number or text variable where 0 (or empty) means a new seed every run: the number field with a \"New seed\" button that writes a fresh positive seed as one undo step, and a quiet line under it while the value is 0 or empty. The button drops under the field in a narrow Inspector.
+
+### New: a tag picked from a table's rows
+
+- A new look, \"Tag from a table's rows\" (`eventsheet:table_tag:<table>:<column>`), for a text variable beside a table: a field joined to a menu of the tags the rows already carry (comma separated in one column), typing a new one still allowed, and an amber line when no row carries the tag in the field. The menu is filled when it opens, so it is never stale. Without the plugin the variable is a plain text field and the file is byte-exact.
+
+### New: roll a weighted table a thousand times
+
+- A weighted table gets a \"Roll 1,000 times\" button under it and, after a press, how often each row came up, with a line saying the count is from the weights alone (\"Weights only. Rules the game adds, such as pity, are not counted.\"). The counts live in the Inspector row only, clear when the rows change, and are never stored. The button is off while no row has a weight.
+
+### New: the odds of a weighted table as one bar
+
+- A weighted table draws a \"Chances\" row above it: one bar split by each row's share (the largest in the accent colour), and one line naming the biggest three (\"coin 62.5%, gem 31.3%, sword 6.3% and 2 more\"). A table where no row has a weight says so in amber. A look can now hand back rows above and under its field.
+
+### New: a weighted table shows each row's share
+
+- A table whose marker ends `:weight=<column>` (a number column) draws one more column, \"share\": a bar and the percent each row holds of the whole, and \"Total weight N\" beside Add row. The shares follow every edit to a weight. A narrow Inspector hides the bars first and keeps the percent whole. A table without the part draws as before.
+
+### Fixed: the look list pictures and the preview card's dial
+
+- \"Your own hint\" and \"Saved but hidden\" in the Variable window's look list now draw a small picture of their own instead of a plain line. The dial in the small Inspector preview card takes its inks from the editor theme, so it reads on the light preset as well as the dark. The photo harness can photograph the shipped packs through their own scripts.
+
 ### Changed: Inspector notes and buttons sit under their field
 
 - A required note, a failed check, an info line and a field button (`# @inspector_required`, `# @inspector_validate`, `# @inspector_info`, `# @inspector_action`) now sit in the value column directly under the field they are about, in the editor's own font, with colour alone carrying the state. The outlined note box and the 9 px button above the field are gone. The comment lines in your scripts are unchanged. The required sentence now reads \"Required. Assign a value.\"
@@ -20,6 +68,8 @@ What changed in the build you have installed (v0.20.0), in the words the release
 - The look list in the Variable window shows about five rows without scrolling and opens scrolled to the chosen look. The chosen row is a plain fill with no outline, and each look has its own small picture (dial, bar, table grid, swatches, strip, slider, menu, curve, picture), all drawn by one painter that takes its colours as arguments. The window's card area grows with the screen so the list is not cut.
 - Corner radii: at a narrow Inspector the link button stays icon-sized at the end of the first line of fields instead of sitting alone above them.
 - Inspector Look shelf: five more rows for look sheets (a themed panel, a message line, a number field, a joined strip, and \"put this under the first row\"), hidden outside look sheets like the first six. The toggle strip is built by the same `joined_strip` builder.
+- The sums behind a weighted table (each row's share, the odds as one line, a seeded roll) are one pure file, `weight_math.gd`; nothing is stored.
+- A table marker can end with `:weight=<column>` naming its number column of weights (new, written only when set, and the Variable window asks for it as \"Weight column\"). A build without the part leaves the line as written; the file re-saves byte for byte.
 - Markers in user scripts, ace_ids and the stored values are unchanged.
 
 ### Removed: the Manual no longer draws pages for Godot classes

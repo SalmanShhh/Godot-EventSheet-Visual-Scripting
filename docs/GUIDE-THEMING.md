@@ -40,7 +40,7 @@ Current additions on top of the model below:
 Until recently a theme stopped at the row shells and the chips in them. Everything the
 "an opened script reads like an event sheet" work added - the chips on an Include bar, the
 coverage chip, the badge that says how often an event runs, the Script block and ⚠ code
-badges, the Inspector mark on a variable, the guide lines, the stripe down a broken row,
+badges, the Inspector mark on a variable (drawn as the picture of its look, in the row's own ink), the guide lines, the stripe down a broken row,
 the bubble that refuses a drop, the Object bar, the status strip, the Manual's pages - was
 painted from fixed constants. A pale preset kept the plugin's own dark marks on white
 paper, and the Theme Editor could not show them at all.

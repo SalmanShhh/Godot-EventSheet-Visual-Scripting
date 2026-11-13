@@ -53,7 +53,7 @@ The spans, left to right:
 | scope word | Global, Instance, Local, Constant, Static, Field or Shared, in the theme's lilac |
 | type word | number, whole number, text, boolean, vector, color, list, table, object, scene, any |
 | name | bold |
-| sliders mark | only when the value is editable in the Inspector. Hover: "Editable in the Inspector" |
+| Inspector mark | only when the value is editable in the Inspector: a gear for a plain `@export`, else the small picture of the look it wears (a slider, a table grid, a menu arrow, a die for a seed, a Color's own colour, an amber "?" when the look's file is not installed). Hover names the look and the declaration line; a click opens the Variable window on the look list |
 | `=` and the value | the value edits in place |
 | description | muted, on the same line; it ellipsises first when the row is tight |
 | code echo | the exact declaration the compiler writes, at the right edge |
@@ -71,7 +71,7 @@ Two things a reader coming from the older look should know:
 
 - **Scope and type are words, not pills.** The `const` and `static` badges folded INTO the scope
   word: a `const` reads "Constant", a `static var` reads "Static". The only boxes a variable row
-  wears now are the `x` kind badge and the sliders mark.
+  wears now are the `x` kind badge and the Inspector mark.
 - **`name : Type = value` is gone from the canvas.** That spelling survives where it belongs - on
   the name's hover, and in the code panel under the rows.
 
