@@ -27,6 +27,10 @@ if ($Variant -eq "scaled") {
 }
 Set-Content -Path (Join-Path $config "Godot\editor_settings-4.7.tres") -Value $lines -Encoding utf8
 
+# The editor keeps the dock layout, and so the Inspector width, in the project cache; a run at the
+# default width starts with none saved, so an earlier narrow or wide run cannot leak into it.
+if ($Width -le 0) { Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path (Get-Location) ".godot/editor/editor_layout.cfg") }
+
 $realAppData = $env:APPDATA
 $env:APPDATA = $config
 try {

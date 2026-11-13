@@ -149,7 +149,7 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 ### Editable table (Array)
 
-**What it does.** Turns an `Array` of `Dictionary` rows into an **editable grid**: one row per element, one typed cell per column (text, number, checkbox), with add / remove / move-up controls. The single most painful data-editing surface in Godot - loot tables, wave definitions, dialogue lines - becomes a spreadsheet.
+**What it does.** Turns an `Array` of `Dictionary` rows into an **editable grid**: one row per element, one typed cell per column (text, number, checkbox), behind one fold button ("Table (N rows)"), with each row moved by dragging its grip (or from the grip's right-click menu), and add and remove buttons that use the editor's own icons. The single most painful data-editing surface in Godot - loot tables, wave definitions, dialogue lines - becomes a spreadsheet.
 
 **How to use it.** On an `Array` variable choose **Inspector look: Editable table**, then define the columns in the look's **Columns** field as `name:type` pairs (`item:String, count:int, rare:bool`; types: String, int, float, bool, `color` for a swatch cell that stores `"#rrggbb"`, and `texture` for a picture cell that stores its `res://` path - type it or drag the picture in from the FileSystem dock, and the game reads it with `load()`). A column typed `enum(a|b|c)` renders as a **dropdown** limited to those choices - e.g. `kind:enum(circle|ring|rect)` - instead of a free-text field; the stored value stays the plain String, so nothing downstream changes.
 
@@ -169,7 +169,7 @@ A column can carry a **Default** of its own - what a new row starts with in it, 
 
 ### Card list (Array of Dictionaries, each of a kind)
 
-**What it does.** The other shape a list of dictionaries takes: not a grid of identical rows, but **a list of cards, each of a different kind, each with its own fields**. A drawing prefab's shapes, a list of feedback steps, a list of spawn rules. Each card shows a stripe coloured by its category, a drag handle to reorder it, a fold arrow, an enable box, its label, a badge the schema computes, and a menu (duplicate, copy, paste over, move to top, remove). Unfolding one shows what that kind is for, then its own fields drawn with the **real drawers** (unit, toggles, swatch, curve, texture), then whatever the running game is writing back, greyed. Underneath the list sits an **Add** dropdown you can type into.
+**What it does.** The other shape a list of dictionaries takes: not a grid of identical rows, but **a list of cards, each of a different kind, each with its own fields**. A drawing prefab's shapes, a list of feedback steps, a list of spawn rules. Each card is a drag handle, then a line with a fold arrow, an enable box, the kind in bold and one grey sentence the schema computes, then a remove button; a right click on the line (and a button inside the opened card) opens the menu (duplicate, copy, paste over, move to top, move up, move down, remove). The list folds behind one button, "Cards (N)". Unfolding one shows what that kind is for, then its own fields drawn with the **real drawers** (unit, toggles, swatch, curve, texture), then whatever the running game is writing back, greyed. Underneath the list sits one **Add card** button (a list that can only hold one kind adds it at once; otherwise a dropdown you can type into opens).
 
 Use the table drawer when every row has the same columns; use the card list when the entries have different shapes and a designer reads them one at a time.
 
@@ -229,7 +229,7 @@ That last line is the whole editor code a pack needs: `card_schema_from_aces` **
 
 Three details of that schema are worth copying when you derive one of your own. Its `enabled_key` is `"active"`, and **an absent key means enabled**, so a step written in a shared `.tres` before the node existed is a ticked card and switching a card back on erases the key rather than writing a `true` the file never had. Every derived kind seeds all four of the keys a shared file holds, whether its own word reads them or not, so **a card added here and a step written in a file are the same dictionary** and neither has to be converted into the other. And beside the derivation sit two small tables that are **override lists, not the vocabulary**: which family a word's stripe is coloured by, and the one derived title that would collide with a hand-written word's, where the pack's screen-effect `hold` is titled "Hold Effect" so the Add dropdown never offers two cards called Hold. A word in neither table still gets a card, under its own name.
 
-**A card can carry its own name and its own colour** when the schema leaves room for them: a `label_key` lets a designer rename one card in a long list, and a colour written as `"#rrggbb"` at the stripe key overrides the hue derived from its category. Where the stripe key IS the key holding the kind (which is how the Drawing Prefab colours its shapes) the swatch is not offered, because a colour written there would overwrite what the card is. The stripe colour of an ordinary category is derived from the word's own letters, so a pack that invents a category gets a stable colour with nothing to register. **Copy all** and **Paste all** under the list move the whole list between resources through the system clipboard; a paste that is not a copied card list is refused rather than emptying the list.
+**A card can carry its own name and its own colour** when the schema leaves room for them: a `label_key` lets a designer rename one card in a long list, and a colour written as `"#rrggbb"` at the stripe key stays in the data. The Inspector does not draw it any more, so its editor is not offered either. Where the stripe key IS the key holding the kind (which is how the Drawing Prefab colours its shapes) the swatch is not offered, because a colour written there would overwrite what the card is. The stripe colour of an ordinary category is derived from the word's own letters, so a pack that invents a category gets a stable colour with nothing to register. **Copy all** and **Paste all** under the list move the whole list between resources through the system clipboard; a paste that is not a copied card list is refused rather than emptying the list.
 
 **Three rules a card list obeys, because it is somebody's saved file.** Loading never writes (defaults are seeded when a card is **added**, never when one is read, so a file saved before the schema grew a field round-trips byte for byte); an edit keeps the stored **type** (a number written as a float stays a float, a colour written as `"#rrggbb"` stays a String); and an **absent** enable key means enabled, so switching a card back on erases the key rather than writing a `true` the file never had.
 
@@ -274,7 +274,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 ### Direction dial (Vector2)
 
-**What it does.** A round dial with a draggable handle. The handle's angle sets the direction and its distance from the centre sets the magnitude, so one gesture sets both components.
+**What it does.** The vector's x and y number fields, with a round dial under them. The handle's angle sets the direction and its distance from the centre sets the magnitude, so one gesture sets both components; type in the fields for an exact value. The edge of the dial is labelled with the reach.
 
 **How to use it.** Choose **Inspector look: Direction dial**. The dial's reach (the magnitude at the rim) is the look's **Reach** field (for example `150`).
 
@@ -287,7 +287,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 ### Four corners (Vector4)
 
-**What it does.** Four numbers that are usually one number. A `Vector4` read **clockwise from the top-left** (`x` top-left, `y` top-right, `z` bottom-right, `w` bottom-left) shows as **one box** while all four agree, with a button that opens four labelled boxes when they should not. A file whose four corners already differ opens with the four boxes showing, because a single box would be lying about three of them.
+**What it does.** Four numbers that are usually one number. A `Vector4` read **clockwise from the top-left** (`x` top-left, `y` top-right, `z` bottom-right, `w` bottom-left) shows as **four number fields**, two to a line, each marked with its corner, and a link button that keeps the four the same while it is down. A file whose four corners already differ opens with the link up, because a down link would be lying about three of them.
 
 **How to use it.** On a `Vector4` variable pick the **Four corners** look. The same shape is what margins and padding are, which is why the marker says "corners" and nothing about what for.
 
@@ -313,7 +313,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 ### Texture preview (Texture2D)
 
-**What it does.** Shows a thumbnail of the assigned texture right in the Inspector instead of just a resource slot, so you can confirm the art at a glance.
+**What it does.** Shows a larger picture of the assigned texture under the slot, centred on the checkerboard Godot uses for transparency, with its size in pixels under it, so you can confirm the art at a glance.
 
 **How to use it.** Choose **Inspector look: Texture preview** on a `Texture2D` variable.
 
