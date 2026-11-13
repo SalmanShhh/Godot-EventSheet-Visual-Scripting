@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: a weighted table shows each row's share
+
+- A table whose marker ends `:weight=<column>` (a number column) draws one more column, "share": a bar and the percent each row holds of the whole, and "Total weight N" beside Add row. The shares follow every edit to a weight. A narrow Inspector hides the bars first and keeps the percent whole. A table without the part draws as before.
+
 ### Fixed: the look list pictures and the preview card's dial
 
 - "Your own hint" and "Saved but hidden" in the Variable window's look list now draw a small picture of their own instead of a plain line. The dial in the small Inspector preview card takes its inks from the editor theme, so it reads on the light preset as well as the dark. The photo harness can photograph the shipped packs through their own scripts.

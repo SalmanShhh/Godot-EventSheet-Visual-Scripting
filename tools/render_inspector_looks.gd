@@ -79,6 +79,9 @@ const PROBES: Array = [
 	["note", "# @inspector_info Shared resource - edits affect every user.\n@export var shared_value: int = 3\n"],
 	["checked", "# @inspector_validate check_gap\n@export var gap: int = 5\n\n\nfunc check_gap() -> String:\n\treturn \"Gap must be even.\"\n"],
 	["table", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int,rare=bool\") var loot: Array = [{\"item\": \"coin\", \"count\": 3, \"rare\": false}, {\"item\": \"gem\", \"count\": 1, \"rare\": true}]\n@export var loot_plain: Array = []\n"],
+	["table_weighted", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,weight=float,tags=String:weight=weight\") var entries: Array = [{\"item\": \"coin\", \"weight\": 50.0, \"tags\": \"common\"}, {\"item\": \"gem\", \"weight\": 25.0, \"tags\": \"rare\"}, {\"item\": \"sword\", \"weight\": 5.0, \"tags\": \"rare,weapon\"}]
+@export var entries_plain: Array = []
+"],
 	["cards", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:cards:kind=kind,schema=feedback_steps,stripes=category\") var steps: Array[Dictionary] = [{\"kind\": \"shake\", \"category\": \"camera\"}, {\"kind\": \"flash\", \"category\": \"screen\"}]\n"],
 	["texture_preview", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\") var icon_picture: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n@export var icon_picture_plain: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n"],
 	["curve_editor", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var damage_falloff: Curve = null\n@export var damage_falloff_plain: Curve = null\n\n\nfunc _init() -> void:\n\tdamage_falloff = Curve.new()\n\tdamage_falloff.add_point(Vector2(0, 1))\n\tdamage_falloff.add_point(Vector2(1, 0))\n"],

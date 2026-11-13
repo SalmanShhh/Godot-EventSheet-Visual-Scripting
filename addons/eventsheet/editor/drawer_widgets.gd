@@ -1416,11 +1416,18 @@ class DrawerTable:
 	const PAGE_SIZE: int = 8
 	## The sort key of the leading "#" column: the order the file keeps.
 	const STORED_ORDER: String = "#"
+	## One row's share: a bar and its percent.
+	const SHARE_CELL: GDScript = preload("res://addons/eventsheet/editor/inspector/share_cell.gd")
 	var editable: bool = true
+	## The number column each row's share is worked out from; "" draws no share column.
+	var weight_column: String = ""
 	var _columns: Array = []
 	var _value: Array = []
 	var _grid: GridContainer = null
 	var _add_button: Button = null
+	var _total_label: Label = null
+	## The share cell of each drawn row, as [cell, stored index], repainted when a weight changes.
+	var _share_cells: Array = []
 	var _search: LineEdit = null
 	var _pager: HBoxContainer = null
 	var _page_label: Label = null
@@ -1474,12 +1481,19 @@ class DrawerTable:
 		_open_link.pressed.connect(func() -> void: open_table.call())
 		_pager.add_child(_open_link)
 		add_child(_pager)
+		var add_line: HBoxContainer = HBoxContainer.new()
 		_add_button = Button.new()
 		var add_picture: Texture2D = EventSheetLookStyle.icon(&"Add")
 		_add_button.text = EventSheetL10n.translate("Add row") if add_picture != null else "+ " + EventSheetL10n.translate("Add row")
 		_add_button.icon = add_picture
+		_add_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_add_button.pressed.connect(_on_add_row)
-		add_child(_add_button)
+		add_line.add_child(_add_button)
+		_total_label = Label.new()
+		_total_label.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		_total_label.visible = false
+		add_line.add_child(_total_label)
+		add_child(add_line)
 		# Any cell edit can fill or empty a cell, so the count under the grid follows every change.
 		value_changed.connect(func(_rows: Array) -> void: _refresh_missing())
 		_rebuild()
@@ -1493,6 +1507,11 @@ class DrawerTable:
 
 	func get_value() -> Array:
 		return _value.duplicate(true)
+
+	## Turns the share column on for `column` (a number column), or off with "".
+	func set_weight_column(column: String) -> void:
+		weight_column = column if is_number_column(_columns, column) else ""
+		_rebuild()
 
 	## Keeps only the rows with `text` in any cell, back on the first page.
 	func search(text: String) -> void:
@@ -1645,13 +1664,20 @@ class DrawerTable:
 			_grid.remove_child(stale)
 			stale.queue_free()
 		_cell_marks.clear()
+		_share_cells.clear()
 		_add_button.disabled = not editable
+		_grid.columns = _columns.size() + (3 if not weight_column.is_empty() else 2)  # grip + cells + (share) + remove
 		_grid.add_child(_header(STORED_ORDER, EventSheetL10n.translate("Back to the order the file keeps")))
 		for column: Dictionary in _columns:
 			# The column's name exactly as the code writes it; its Description, when it has one, on hover.
 			var about: String = str(column.get("about", ""))
 			_grid.add_child(_header(str(column.get("name")),
 				about if not about.is_empty() else EventSheetL10n.translate("Sort by %s") % str(column.get("name"))))
+		if not weight_column.is_empty():
+			var share_head: Label = Label.new()
+			share_head.text = EventSheetL10n.translate("share")
+			share_head.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+			_grid.add_child(share_head)
 		_grid.add_child(Control.new())
 		var view: Dictionary = _view()
 		_page = int(view.get("page", 0))
@@ -1663,6 +1689,10 @@ class DrawerTable:
 				var cell: Control = _make_cell(row, column)
 				_cell_marks.append([cell, row, column, row_index])
 				_grid.add_child(cell)
+			if not weight_column.is_empty():
+				var share_cell: Control = SHARE_CELL.new()
+				_share_cells.append([share_cell, row_index])
+				_grid.add_child(share_cell)
 			var remove_button: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this row"))
 			remove_button.disabled = not editable
 			remove_button.pressed.connect(_on_remove.bind(row_index))
@@ -1763,8 +1793,29 @@ class DrawerTable:
 		_missing_label.text = "" if missing == 0 else (EventSheetL10n.translate("1 row has an empty cell") if missing == 1
 			else EventSheetL10n.translate("%d rows have an empty cell") % missing)
 		_missing_label.visible = missing > 0
+		_refresh_shares()
 		# The bar under the grid shows while it has anything to say: the pages, the count or the link.
 		_pager.visible = _page_label.visible or _missing_label.visible or _open_link.visible
+
+	## Repaints every drawn row's share and the total, from the weights as they stand now.
+	func _refresh_shares() -> void:
+		var weighted: bool = not weight_column.is_empty()
+		_total_label.visible = weighted
+		if not weighted:
+			return
+		var math: GDScript = load("res://addons/eventsheet/editor/inspector/weight_math.gd")
+		var shares: PackedFloat64Array = math.shares(_value, weight_column)
+		for entry: Variant in _share_cells:
+			var pair: Array = entry
+			if is_instance_valid(pair[0]) and int(pair[1]) < shares.size():
+				(pair[0] as Control).call("set_share", shares[int(pair[1])])
+		_total_label.text = total_text(float(math.total(_value, weight_column)))
+
+	## "Total weight 80" for the sum of the weights, whole when it is whole.
+	static func total_text(total: float) -> String:
+		var rounded: float = roundf(total)
+		var number: String = str(int(rounded)) if absf(total - rounded) < 0.001 else str(snappedf(total, 0.01))
+		return EventSheetL10n.translate("Total weight %s") % number
 
 	## The field a cell is typed or picked in: the cell itself, or the text box inside a picture cell.
 	static func _cell_field(cell: Control) -> Control:

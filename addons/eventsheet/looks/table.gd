@@ -43,6 +43,7 @@ func _look_built() -> void:
 	add_child(_fold)
 	add_focusable(_fold)
 	_table = EventSheetAttributeDrawers.widgets().DrawerTable.new(_columns())
+	_table.call("set_weight_column", _weight_column())
 	_table.connect("value_changed", _on_table_changed)
 	_panel = PanelContainer.new()
 	_panel.add_theme_stylebox_override("panel", EventSheetLookStyle.panel_box())
@@ -97,6 +98,13 @@ func _on_table_changed(rows: Array) -> void:
 	var edited: Object = field_object()
 	if edited is Resource:
 		(edited as Resource).emit_changed()
+
+
+## The column each row's share is worked out from: the marker's trailing `weight=` part, or this
+## look's own question when it was put on a variable by hand.
+func _weight_column() -> String:
+	var named: String = EventSheetAttributeDrawers.table_weight_column(_columns(), marker_args.slice(1))
+	return named if not named.is_empty() else weight_column.strip_edges()
 
 
 func _columns() -> Array:
