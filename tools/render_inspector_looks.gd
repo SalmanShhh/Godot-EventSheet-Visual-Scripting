@@ -88,6 +88,8 @@ const PROBES: Array = [
 var _out: String = ""
 var _tag: String = "dark"
 var _only: PackedStringArray = PackedStringArray()
+var _width: int = 0
+var _width_tag: String = ""
 
 
 func _init() -> void:
@@ -96,6 +98,9 @@ func _init() -> void:
 			_out = arg.substr(4)
 		elif arg.begins_with("tag="):
 			_tag = arg.substr(4)
+		elif arg.begins_with("width="):
+			_width = int(arg.substr(6))
+			_width_tag = "-w%d" % _width
 		elif arg.begins_with("only="):
 			_only = arg.substr(5).split(",", false)
 	_run()
@@ -133,6 +138,9 @@ func _run() -> void:
 		quit(0)
 		return
 	DirAccess.make_dir_recursive_absolute(_out)
+	if _width > 0:
+		_set_inspector_width(float(_width))
+		await _frames(10)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(PROBE_FOLDER))
 	for probe: Variant in PROBES:
 		var entry: Array = probe as Array
@@ -201,6 +209,7 @@ func _photograph(look_name: String, body: String) -> void:
 	var rect: Rect2 = inspector.get_global_rect()
 	var to_pixels: Transform2D = root.get_final_transform()
 	var content_height: float = _content_height(inspector)
+	print("[looks] inspector width now %.0f" % inspector.size.x)
 	if OS.get_cmdline_user_args().has("debug=1"):
 		image.save_png("%s/%s-full-%s.png" % [_out, _tag, look_name])
 		print("[looks] inspector rect=%s root=%s image=%s visible=%s" % [rect, root.size, image.get_size(), inspector.is_visible_in_tree()])
@@ -209,7 +218,7 @@ func _photograph(look_name: String, body: String) -> void:
 	var crop: Rect2i = Rect2i(Vector2i(top_left), Vector2i(bottom_right - top_left))
 	crop = crop.intersection(Rect2i(Vector2i.ZERO, image.get_size()))
 	image = image.get_region(crop)
-	var target: String = "%s/%s-%s.png" % [_out, _tag, look_name]
+	var target: String = "%s/%s%s-%s.png" % [_out, _tag, _width_tag, look_name]
 	image.save_png(target)
 	print("[looks] wrote %s %dx%d (content %.0f px)" % [target.get_file(), image.get_width(), image.get_height(), content_height])
 
@@ -235,3 +244,26 @@ func _content_height(inspector: EditorInspector) -> float:
 	if categories.size() > 1:
 		return float(categories[1])
 	return deepest
+
+
+## Moves the split beside the Inspector dock until the Inspector is about `target` wide (in the
+## editor's own units), so a look can be photographed narrow and wide as well as at the default.
+func _set_inspector_width(target: float) -> void:
+	var inspector: Control = EditorInterface.get_inspector()
+	var split: SplitContainer = null
+	var node: Node = inspector.get_parent()
+	while node != null:
+		if node is SplitContainer and not (node as SplitContainer).vertical:
+			split = node as SplitContainer
+			break
+		node = node.get_parent()
+	if split == null:
+		print("[looks] no split found beside the Inspector; width stays")
+		return
+	var offsets: PackedInt32Array = split.split_offsets
+	print("[looks] split offsets %s (%s)" % [offsets, split.name])
+	if offsets.is_empty():
+		return
+	offsets[offsets.size() - 1] += int(inspector.size.x - target)
+	split.split_offsets = offsets
+	print("[looks] asked for width %.0f, Inspector was %.0f" % [target, inspector.size.x])

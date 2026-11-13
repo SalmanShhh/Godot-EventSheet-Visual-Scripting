@@ -11,6 +11,7 @@ param(
 	[ValidateSet("dark", "light", "scaled")][string]$Variant = "dark",
 	[Parameter(Mandatory = $true)][string]$Out,
 	[string]$Only = "",
+	[int]$Width = 0,
 	[string]$Sandbox = (Join-Path ([System.IO.Path]::GetTempPath()) "eventforge_look_photos")
 )
 
@@ -32,6 +33,7 @@ try {
 	$extra = @("out=$Out", "tag=$Variant", "config=$config")
 	if ($env:LOOK_DEBUG) { $extra += "debug=1" }
 	if ($Only) { $extra += "only=$Only" }
+	if ($Width -gt 0) { $extra += "width=$Width" }
 	& $env:GODOT --editor --path . --script tools/render_inspector_looks.gd -- @extra
 }
 finally {

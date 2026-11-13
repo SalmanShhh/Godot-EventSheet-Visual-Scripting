@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Inspector notes and buttons sit under their field
+
+- A required note, a failed check, an info line and a field button (`# @inspector_required`, `# @inspector_validate`, `# @inspector_info`, `# @inspector_action`) now sit in the value column directly under the field they are about, in the editor's own font, with colour alone carrying the state. The outlined note box and the 9 px button above the field are gone. The comment lines in your scripts are unchanged. The required sentence now reads "Required. Assign a value."
+- New: `tools/render_inspector_looks.ps1` photographs every look in Godot's real Inspector in dark, light and a scaled editor and at a narrow and a wide Inspector, against a separate editor config folder so the developer's own settings are never touched. New: one style file the looks read the editor theme through.
+
 ### Removed: the Manual no longer draws pages for Godot classes
 
 - A Godot class or method is Godot's own Help now: press F1 on a row that names one, or use Help > Search Help in the Script editor, and the class reference opens at it. An `engine:` link (`engine:Node2D`, `engine:Node2D.position`) opens that topic in Godot's Help instead of a page drawn in the Manual. The Manual's search no longer has an "engine reference" group, and an exported site no longer carries engine pages or their credit line (`tools/export_docs_site.gd` prints a notice for the old `engine` option and carries on). What stays is the one-sentence hover: a derived row, a picker entry and a completion still show Godot's own sentence for a built-in member, read from the cache that Docs housekeeping's harvest and fetch chores (and the `docs-harvest` and `docs-engine-text` commands) fill, with its CC BY credit.
