@@ -114,3 +114,29 @@ func field_object() -> Object:
 ## True when the Inspector has this property locked.
 func is_field_read_only() -> bool:
 	return _read_only
+
+
+## The rules a look follows to read like Godot's own fields, so a look written on a sheet gets them
+## without reaching into the style file itself.
+func themed_panel() -> PanelContainer:
+	return EventSheetLookStyle.themed_panel()
+
+
+## A wrapping line of words in the editor's own font: `tone` is NOTE, WARNING or ERROR.
+func message_line(text: String, tone: EventSheetLookStyle.Tone = EventSheetLookStyle.Tone.NOTE) -> Label:
+	return EventSheetLookStyle.message_line(text, tone)
+
+
+## A number field that is Godot's own spin slider with a label inside it.
+func number_field(field_label: String = "") -> Range:
+	return EventSheetLookStyle.number_field(field_label)
+
+
+## The height of one Inspector field, from the editor theme.
+func field_height() -> float:
+	return EventSheetLookStyle.field_height()
+
+
+## A 1x-authored size through the editor scale.
+func px(amount: float) -> float:
+	return EventSheetLookStyle.px(amount)
