@@ -48,8 +48,10 @@ static func run() -> bool:
 	var passed: bool = true
 	passed = _the_three_callbacks_read_as_triggers() and passed
 	passed = _the_file_comes_back_byte_for_byte() and passed
+	passed = _the_look_s_own_calls_lift_to_rows() and passed
 	passed = _the_same_header_elsewhere_is_an_ordinary_function() and passed
 	passed = _the_rows_are_offered_on_a_look_sheet_only() and passed
+	passed = _each_row_compiles_in_a_look_host() and passed
 	return passed
 
 
@@ -72,8 +74,21 @@ static func _the_three_callbacks_read_as_triggers() -> bool:
 		if descriptor.category == "Inspector Look":
 			words[descriptor.ace_id] = descriptor.display_text
 	rows.append(["each trigger has its sentence", words, {
-		"OnLookBuilt": "On look built", "OnValueShown": "On value shown", "OnValueChangedFromOutside": "On value changed from outside"}])
+		"OnLookBuilt": "On look built", "OnValueShown": "On value shown", "OnValueChangedFromOutside": "On value changed from outside",
+		"SetFieldValue": "Set the field's value to {value}", "AddFocusable": "Make {control} the one focus lands on", "FieldValue": "the field's value"}])
 	return SUPPORT.pins(NAME, rows)
+
+
+static func _the_look_s_own_calls_lift_to_rows() -> bool:
+	var sheet: EventSheetResource = SUPPORT.reopen(LOOK, true, "res://eventsheet_addons/looks/plain_field.gd")
+	var ids: Array = []
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				ids.append(str(action.ace_id))
+	return SUPPORT.pins(NAME, [
+		["the focus call and the write call are rows, not code", [ids.has("AddFocusable"), ids.has("SetFieldValue")], [true, true]],
+	])
 
 
 static func _the_file_comes_back_byte_for_byte() -> bool:
@@ -110,9 +125,31 @@ static func _the_rows_are_offered_on_a_look_sheet_only() -> bool:
 		elif definition.id == "SetVar":
 			plain = EventSheetPickerGates.hidden_reason(definition, {EventSheetPickerGates.IN_LOOK_SHEET: false})
 	return SUPPORT.pins(NAME + ": picker", [
-		["three rows are on the shelf", shelf, 3],
-		["every one is offered on a look sheet", offered_on_look.size(), 3],
+		["six rows are on the shelf", shelf, 6],
+		["every one is offered on a look sheet", offered_on_look.size(), 6],
 		["none is offered on any other", offered_elsewhere, []],
 		["its reason is a named one", EventSheetPickerGates.HIDDEN_OUTSIDE_LOOK, "outside_inspector_look"],
 		["an ordinary row is not touched", plain, ""],
 	])
+
+
+## Each of the three non-trigger rows, filled with its defaults, compiled inside a look host.
+static func _each_row_compiles_in_a_look_host() -> bool:
+	var rows: Array = []
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if descriptor.category != "Inspector Look" or descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
+			continue
+		var line: String = descriptor.codegen_template
+		for param: ACEParam in descriptor.params:
+			line = line.replace("{%s}" % param.id, str(param.default_value))
+		var body: String = "return %s" % line if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION else line
+		var script: GDScript = GDScript.new()
+		script.source_code = "@tool
+extends EventSheetInspectorLook
+
+
+func probe():
+	%s
+" % body
+		rows.append(["%s compiles in a look" % descriptor.ace_id, script.reload(), OK])
+	return SUPPORT.pins(NAME + ": compile", rows)

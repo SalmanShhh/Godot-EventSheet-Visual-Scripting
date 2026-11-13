@@ -3,7 +3,8 @@
 # A look is a script that extends EventSheetInspectorLook, a thin layer over Godot's EditorProperty. The
 # Inspector calls three functions on it, and this module makes each one a trigger: the control is built
 # (`_look_built`), a value is to be shown (`_value_shown`), and the value moved without the look
-# (`_value_changed_from_outside`).
+# (`_value_changed_from_outside`). Two actions and one expression are the look's own calls: write a new
+# value, make a control the one keyboard focus lands on, read the value now.
 #
 # Every row compiles to the plain function or call it names, so a look written by hand opens as these
 # rows and saves back byte for byte. The picker offers them on a sheet whose script extends
@@ -27,4 +28,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"Runs every time the Inspector refreshes the property: when it is first drawn, after the person edits it, after undo. The value to show arrives as `value`. Put it into the controls here, and never write a value back from here."))
 	descriptors.append(F.trig("OnValueChangedFromOutside", "On Value Changed From Outside", "_value_changed_from_outside", CAT, "On value changed from outside",
 		"Runs when the value moved without this look moving it: undo, a script, another editor. It runs just before On Value Shown, with the new value as `value`."))
+	descriptors.append(F.act("SetFieldValue", "Set Field Value", "set_field_value({value})", CAT, "Set the field's value to {value}",
+		"Writes a new value to the property this look draws. The Inspector keeps undo, so this is one undo step. Use it when the person changes something in your controls.")
+		.param("value", "field_value()", "Value", "The new value for the property.", "expression"))
+	descriptors.append(F.act("AddFocusable", "Make Control Take Focus", "add_focusable({control})", CAT, "Make {control} the one focus lands on",
+		"Tells the Inspector that this control is where the keyboard focus goes when the person tabs to the property, or clicks its name.")
+		.param("control", "self", "Control", "The control that takes the focus.", "expression"))
+	descriptors.append(F.expr("FieldValue", "The Field's Value", "field_value()", CAT, "the field's value",
+		"The value of the property this look draws, right now."))
 	return descriptors
