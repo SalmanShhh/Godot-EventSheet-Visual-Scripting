@@ -64,6 +64,7 @@ static func run() -> bool:
 	passed = _a_shipped_look_says_its_own_preview_sentence() and passed
 	passed = _a_same_length_edit_is_not_drawn_from_the_old_decor() and passed
 	passed = _a_shipped_look_is_copied_into_the_project_and_never_over_one() and passed
+	passed = _a_new_look_is_a_small_working_file() and passed
 	return passed
 
 
@@ -352,4 +353,40 @@ static func _a_shipped_look_is_copied_into_the_project_and_never_over_one() -> b
 		["and says which file it would have written over", str(second.get("message")).contains("vector_dial.gd"), true],
 		["the file that was there is untouched", kept, "mine"],
 		["a name that does not ship copies nothing", absent.get("ok"), false],
+	])
+
+
+## "New inspector look": the file written is a look the catalogue reads, it opens as a sheet and saves back
+## byte for byte, it is in the shape the style gate holds scripts to, and nothing is overwritten.
+static func _a_new_look_is_a_small_working_file() -> bool:
+	var folder: String = "user://new_look_test"
+	DirAccess.make_dir_recursive_absolute(folder)
+	DirAccess.remove_absolute("%s/my_look.gd" % folder)
+	var made: Dictionary = EventSheetInspectorLookCatalogue.create_look("My Look", "int, float", folder)
+	var text: String = FileAccess.get_file_as_string("%s/my_look.gd" % folder)
+	var look: Dictionary = EventSheetInspectorLookCatalogue.read_look("res://eventsheet_addons/looks/my_look.gd", text)
+	var again: Dictionary = EventSheetInspectorLookCatalogue.create_look("my_look", "", folder)
+	var sheet: EventSheetResource = SUPPORT.reopen(text, true, "res://eventsheet_addons/looks/my_look.gd")
+	var triggers: Array = []
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			triggers.append((entry as EventRow).trigger_id)
+	var two_blank_above_functions: bool = true
+	var lines: PackedStringArray = text.split("
+")
+	for index: int in range(lines.size()):
+		if lines[index].begins_with("func ") and not (lines[index - 1].is_empty() and lines[index - 2].is_empty()):
+			two_blank_above_functions = false
+	DirAccess.remove_absolute("%s/my_look.gd" % folder)
+	return SUPPORT.pins(NAME, [
+		["it is written", [made.get("ok"), made.get("path")], [true, "%s/my_look.gd" % folder]],
+		["the catalogue reads its name, hover and types", [look.get("name"), look.get("label"), look.get("types")], ["my_look", "My Look", ["int", "float"]]],
+		["it opens as a sheet with the callbacks as triggers", triggers, ["OnLookBuilt", "OnValueShown"]],
+		["it saves back byte for byte", SUPPORT.reemit(text, "user://new_look_test_again.gd") == text, true],
+		["two blank lines above each function, tabs, no class_name", [two_blank_above_functions, text.contains("
+	_label"), text.contains("class_name")], [true, true, false]],
+		["a name that is not an identifier is refused", EventSheetInspectorLookCatalogue.new_look_problem("2 fast!", "", folder).is_empty(), false],
+		["a type nobody knows is refused", EventSheetInspectorLookCatalogue.new_look_problem("ok_look", "Banana", folder).is_empty(), false],
+		["no name is refused", EventSheetInspectorLookCatalogue.new_look_problem("  ", "", folder).is_empty(), false],
+		["a name already in the folder is refused and nothing is written over it", [again.get("ok"), FileAccess.file_exists("%s/my_look.gd" % folder)], [false, false]],
 	])

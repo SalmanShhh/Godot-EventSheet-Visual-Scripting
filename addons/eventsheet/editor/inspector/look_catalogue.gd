@@ -236,6 +236,76 @@ static func copy_into_project(look_name: String, project_folder: String = PROJEC
 	return {"ok": true, "path": target, "message": EventSheetL10n.translate("Copied to %s. This copy is yours to change, and it is the one the Inspector uses.") % target}
 
 
+## The name a typed look name becomes: words in snake_case, the way the file will be called.
+static func look_file_name(typed: String) -> String:
+	return typed.strip_edges().to_snake_case()
+
+
+## What stops a new look of this name and these types, as the sentence to show, or "" when nothing does.
+## `types` is the list the look works on as typed ("int, float"; empty means any type).
+static func new_look_problem(typed_name: String, types: String, folder: String = PROJECT_FOLDER) -> String:
+	var look_name: String = look_file_name(typed_name)
+	if look_name.is_empty():
+		return EventSheetL10n.translate("Name the look to make it.")
+	if not look_name.is_valid_identifier() or look_name == "none":
+		return EventSheetL10n.translate("\"%s\" cannot be a look name.") % typed_name.strip_edges()
+	if FileAccess.file_exists("%s/%s.gd" % [folder, look_name]):
+		return EventSheetL10n.translate("%s.gd is already in the looks folder.") % look_name
+	for word: String in types.split(",", false):
+		if not _known_type(word.strip_edges()):
+			return EventSheetL10n.translate("\"%s\" is not a type or a class.") % word.strip_edges()
+	return ""
+
+
+static func _known_type(word: String) -> bool:
+	if VARIANT_TYPES.has(word) or ClassDB.class_exists(word):
+		return true
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(info.get("class", "")) == word:
+			return true
+	return false
+
+
+## The text of a new look: the smallest one that works, a plain field that shows the value. Its name and
+## hover are the first `##` lines, `works_on` is the list of types, and the three functions are the ones
+## Godot's Inspector calls. It is written in the shape the compiler writes, so it opens as a sheet and
+## saves back byte for byte.
+static func new_look_source(typed_name: String, types: String) -> String:
+	var look_name: String = look_file_name(typed_name)
+	var works_on: PackedStringArray = PackedStringArray()
+	for word: String in types.split(",", false):
+		works_on.append(word.strip_edges())
+	var lines: PackedStringArray = PackedStringArray([
+		"@tool", "extends EventSheetInspectorLook", "",
+		"## %s" % look_name.capitalize(),
+		"## Shows the value as text. Change what it draws, and it is drawn in the Inspector.", "",
+		"## The kinds of property this look can be put on.",
+		"@export var works_on: String = \"%s\"" % ",".join(works_on), "",
+		"var _label: Label", "", "",
+		"func _look_built() -> void:",
+		"\t_label = Label.new()",
+		"\tadd_child(_label)", "", "",
+		"func _value_shown(value: Variant) -> void:",
+		"\t_label.text = str(value)", ""])
+	return "\n".join(lines)
+
+
+## Writes a new look into the project's looks folder and returns {ok, path, message}. Nothing is overwritten.
+static func create_look(typed_name: String, types: String, folder: String = PROJECT_FOLDER) -> Dictionary:
+	var problem: String = new_look_problem(typed_name, types, folder)
+	if not problem.is_empty():
+		return {"ok": false, "path": "", "message": problem}
+	var path: String = "%s/%s.gd" % [folder, look_file_name(typed_name)]
+	DirAccess.make_dir_recursive_absolute(folder)
+	var written: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if written == null:
+		return {"ok": false, "path": path, "message": EventSheetL10n.translate("%s could not be written.") % path}
+	written.store_string(new_look_source(typed_name, types))
+	written.close()
+	forget()
+	return {"ok": true, "path": path, "message": ""}
+
+
 ## Whether a look is a node that already has a property of this name (`name`, `size`, `visible`...). Such
 ## a variable cannot be a question: setting it from the marker would set the node's own property.
 static func _is_engine_property(variable_name: String) -> bool:

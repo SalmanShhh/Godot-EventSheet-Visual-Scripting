@@ -10517,3 +10517,13 @@ Only a look that ships with the plugin can be copied.,Seule une apparence livré
 "%s is already in your project, so nothing was copied.","%s est déjà dans votre projet, rien n'a donc été copié."
 %s could not be written.,%s n'a pas pu être écrit.
 "Copied to %s. This copy is yours to change, and it is the one the Inspector uses.","Copié dans %s. Cette copie est à vous, et c'est celle que l'Inspecteur utilise."
+New inspector look…,Nouvelle apparence de l'Inspecteur…
+"Make a look of your own: a small script that draws one property in Godot's Inspector. It starts as a plain field that shows the value, and opens as a sheet.",Créez votre propre apparence : un petit script qui dessine une propriété dans l'Inspecteur de Godot. Il commence comme un champ simple qui montre la valeur et s'ouvre comme feuille.
+"int, float, Vector2 - or nothing for any type","int, float, Vector2 - ou rien pour tout type"
+New inspector look,Nouvelle apparence de l'Inspecteur
+"The file name, and the word the look is known by. Words become snake_case.",Le nom du fichier et le mot sous lequel l'apparence est connue. Les mots passent en snake_case.
+"The kinds of property this look can be put on, separated by commas. Leave it empty for any kind.","Les types de propriété sur lesquels cette apparence peut se poser, séparés par des virgules. Laissez vide pour tout type."
+Name the look to make it.,Nommez l'apparence pour la créer.
+"""%s"" cannot be a look name.","""%s"" ne peut pas être un nom d'apparence."
+%s.gd is already in the looks folder.,%s.gd est déjà dans le dossier des apparences.
+"""%s"" is not a type or a class.","""%s"" n'est ni un type ni une classe."

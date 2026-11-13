@@ -10517,3 +10517,13 @@ Only a look that ships with the plugin can be copied.,Nur ein mit dem Plugin gel
 "%s is already in your project, so nothing was copied.","%s ist bereits in deinem Projekt, deshalb wurde nichts kopiert."
 %s could not be written.,%s konnte nicht geschrieben werden.
 "Copied to %s. This copy is yours to change, and it is the one the Inspector uses.","Nach %s kopiert. Diese Kopie kannst du ändern, und der Inspektor verwendet sie."
+New inspector look…,Neuen Inspektor-Look…
+"Make a look of your own: a small script that draws one property in Godot's Inspector. It starts as a plain field that shows the value, and opens as a sheet.","Erstelle einen eigenen Look: ein kleines Skript, das eine Eigenschaft im Inspektor von Godot zeichnet. Er beginnt als einfaches Feld, das den Wert zeigt, und öffnet sich als Ereignisblatt."
+"int, float, Vector2 - or nothing for any type","int, float, Vector2 - oder nichts für jeden Typ"
+New inspector look,Neuer Inspektor-Look
+"The file name, and the word the look is known by. Words become snake_case.","Der Dateiname und das Wort, unter dem der Look bekannt ist. Wörter werden zu snake_case."
+"The kinds of property this look can be put on, separated by commas. Leave it empty for any kind.","Die Arten von Eigenschaften, auf die dieser Look passt, durch Kommas getrennt. Leer lassen für jede Art."
+Name the look to make it.,"Gib dem Look einen Namen, um ihn zu erstellen."
+"""%s"" cannot be a look name.","""%s"" kann kein Look-Name sein."
+%s.gd is already in the looks folder.,%s.gd ist bereits im Look-Ordner.
+"""%s"" is not a type or a class.","""%s"" ist weder ein Typ noch eine Klasse."

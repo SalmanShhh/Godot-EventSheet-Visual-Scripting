@@ -312,6 +312,9 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(12),
 		"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores."
 	)
+	sheet_popup.add_item(EventSheetL10n.translate("New inspector look…"), 27)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(27), EventSheetL10n.translate(
+		"Make a look of your own: a small script that draws one property in Godot's Inspector. It starts as a plain field that shows the value, and opens as a sheet."))
 	sheet_popup.add_item("New Data Table…", 13)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(13),
@@ -363,6 +366,7 @@ func build(root: Node) -> void:
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
 			13: _dock._new_resource_wizard.open()
+			27: _dock.open_new_inspector_look()
 			18: _dock._import_sheet_wizard.open()
 			16: _dock._sheet_io._save_sheet_as_text_requested()
 			19: _dock._shared_sheets.open_new_shared_sheet()

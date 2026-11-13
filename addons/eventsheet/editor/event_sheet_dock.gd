@@ -535,6 +535,7 @@ var _new_addon_panel: RefCounted = null:  # Sheet ▸ New behaviour… / New glo
 			_new_addon_panel = load("res://addons/eventsheet/editor/dock/new_addon_panel.gd").new()
 			_new_addon_panel.init(self)
 		return _new_addon_panel
+var _new_look_dialog: RefCounted = null  # Sheet ▸ New inspector look… (dock/new_look_dialog.gd)
 var _new_resource_wizard: RefCounted = null:  # Sheet ▸ New Data Table… (dock/new_resource_wizard.gd)
 	get:
 		if _new_resource_wizard == null:
@@ -8571,6 +8572,15 @@ func _rename_create_button() -> void:
 func _sheet_object_label() -> String:
 	return str(EventSheetObjectFacts.sheet_object_title(_current_sheet,
 		str(_current_sheet.external_source_path) if _current_sheet != null else "").get("name", ""))
+
+
+## Sheet ▸ New inspector look…: asks a name and the types, writes the look, opens it as a sheet.
+func open_new_inspector_look() -> void:
+	if _new_look_dialog == null:
+		_new_look_dialog = load("res://addons/eventsheet/editor/dock/new_look_dialog.gd").new()
+		_new_look_dialog.init_dialog(self)
+		_new_look_dialog.created.connect(open_new_sheet)
+	_new_look_dialog.open()
 
 
 ## Sheet ▸ Behaviour library…: the behaviours the plugin carries that the project does not hold yet,

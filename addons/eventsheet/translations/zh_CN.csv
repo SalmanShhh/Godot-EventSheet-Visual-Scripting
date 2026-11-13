@@ -10517,3 +10517,13 @@ Only a look that ships with the plugin can be copied.,只能复制插件自带�
 "%s is already in your project, so nothing was copied.",项目中已有 %s，因此没有复制任何内容。
 %s could not be written.,无法写入 %s。
 "Copied to %s. This copy is yours to change, and it is the one the Inspector uses.",已复制到 %s。这个副本可以随意修改，Inspector 使用的就是它。
+New inspector look…,新建 Inspector 外观…
+"Make a look of your own: a small script that draws one property in Godot's Inspector. It starts as a plain field that shows the value, and opens as a sheet.",创建你自己的外观：一个在 Godot 的 Inspector 中绘制单个属性的小脚本。它从只显示值的普通字段开始，并作为事件表打开。
+"int, float, Vector2 - or nothing for any type","int, float, Vector2 - 留空表示任何类型"
+New inspector look,新建 Inspector 外观
+"The file name, and the word the look is known by. Words become snake_case.",文件名，也是该外观的名称。单词会转为 snake_case。
+"The kinds of property this look can be put on, separated by commas. Leave it empty for any kind.",此外观可用于的属性类型，以逗号分隔。留空表示任何类型。
+Name the look to make it.,请为外观命名后再创建。
+"""%s"" cannot be a look name.","""%s"" 不能作为外观名称。"
+%s.gd is already in the looks folder.,外观文件夹中已有 %s.gd。
+"""%s"" is not a type or a class.","""%s"" 既不是类型也不是类。"
