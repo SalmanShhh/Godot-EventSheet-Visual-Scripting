@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a project made from addons/ alone runs the rows that call a runtime script
+
+- A free-spot spawn, a retire, a bus mix, a world-look, a haptic or a sequencer row calls a small script that used to live only in this repository's `eventsheet_addons/`, so a project that copied the three addons folders met a parse error the first time such a row ran. The plugin now carries those scripts inside its library and copies the one a row needs into `eventsheet_addons/` the moment the row is applied. The Doctor names any script that calls one the project lacks and offers "Add it to the project". The README no longer asks you to copy them by hand.
+
 ### Added: a collision row about a node with no shape says so
 
 - A row that asks about another node (its On node, or the body or area it names) where that node has no collision shape now goes amber, like the check on the sheet's own node did. The help strip says which node and why, and offers Add a shape (a rectangle or box shape under the node, owned by the scene, one undo step) and Show me in the scene. The Doctor files it as collisions-target-no-shape with the same two doors. Nothing is said when the node cannot be found in the one scene that runs the sheet.

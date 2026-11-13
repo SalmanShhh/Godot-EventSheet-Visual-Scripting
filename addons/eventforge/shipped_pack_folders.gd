@@ -151,3 +151,16 @@ const FOLDERS: Array[String] = [
 	"weapon_kit",
 	"wrap",
 ]
+
+## The loose runtime scripts at the top of eventsheet_addons/ that built-in rows call by class name:
+## not packs, carried in the library's _runtime/ folder and copied into a project when a row needs one.
+const HELPER_FILES: Array[String] = [
+	"bus_mix.gd",
+	"free_spot.gd",
+	"haptic_pattern.gd",
+	"haptics.gd",
+	"pooled_nodes.gd",
+	"sequence.gd",
+	"sequencer.gd",
+	"world_look.gd",
+]

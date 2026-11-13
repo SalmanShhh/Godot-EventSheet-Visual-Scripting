@@ -413,9 +413,26 @@ static func _duplicated_if_container(value: Variant) -> Variant:
 	return value
 
 
+## A row whose code calls one of the loose runtime scripts (a free-spot spawn, a retire, a bus mix)
+## brings that script into the project the moment the row is applied, the way a pack's
+## `@ace_requires` brings its helpers: a project made from addons/ alone holds none of them, and the
+## emitted call would name a class that does not exist. Outside the editor (a test) nothing is copied
+## unless the project folder is writable, and a script the project already has is never touched.
+func _bring_runtime_helpers(definition: ACEDefinition, params: Dictionary) -> void:
+	var helpers: GDScript = load("res://addons/eventforge/runtime_helpers.gd")
+	var text: String = var_to_str(definition.metadata) + var_to_str(params)
+	var copied: PackedStringArray = helpers.ensure_for_text(text)
+	if copied.is_empty():
+		return
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_resource_filesystem().scan()
+	_dock._set_status(EventSheetL10n.translate("Added %s to eventsheet_addons/ - this row calls it.") % ", ".join(copied), false)
+
+
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
 	if definition == null:
 		return
+	_bring_runtime_helpers(definition, params)
 	var mode: String = str(context.get("mode", "new_event"))
 	var selected_resource: Resource = context.get("selected_resource", null)
 	var message := {"text": ""}

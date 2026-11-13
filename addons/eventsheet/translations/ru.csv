@@ -10409,3 +10409,4 @@ is outside the camera limits,находится за пределами каме
 Once Ever,Только один раз
 "True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.","Истинно в первый раз, когда выполняются остальные условия события, и больше никогда для этого объекта. «Сработать один раз», напротив, срабатывает снова каждый раз, когда условие становится ложным, а затем истинным. Хранит в скрипте одну логическую переменную."
 Once ever,Только один раз
+Added %s to eventsheet_addons/ - this row calls it.,%s добавлен в eventsheet_addons/ - эта строка его вызывает.

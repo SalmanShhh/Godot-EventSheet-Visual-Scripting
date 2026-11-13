@@ -84,6 +84,9 @@ func _init() -> void:
 	# every project that adds it from the library still broken.
 	var library_drift: PackedStringArray = LIBRARY_BUILD.drift(LIBRARY_BUILD.SOURCE_ROOT,
 		LIBRARY_BUILD.LIBRARY.LIBRARY_ROOT, PackedStringArray(LIBRARY_BUILD.SHIPPED.FOLDERS), false)
+	library_drift.append_array(LIBRARY_BUILD.helper_drift(LIBRARY_BUILD.SOURCE_ROOT,
+		LIBRARY_BUILD.LIBRARY.LIBRARY_ROOT.path_join(LIBRARY_BUILD.LIBRARY.HELPERS_FOLDER),
+		PackedStringArray(LIBRARY_BUILD.SHIPPED.HELPER_FILES), false))
 	for path: String in library_drift:
 		print("LIBRARY DRIFT: %s (run tools/build_library.gd)" % path)
 	print("library drifted=%d" % library_drift.size())

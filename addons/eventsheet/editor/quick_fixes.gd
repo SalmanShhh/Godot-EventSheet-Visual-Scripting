@@ -71,6 +71,10 @@ const OFFERED := {
 		{"id": "move_behaviour_under", "label": "Move it under %to"},
 		{"id": "show_in_scene", "label": "Show in scene"},
 	],
+	# A call to a runtime script the project does not hold: the door copies it in from the library.
+	"runtime-helper": [
+		{"id": "add_runtime_helper", "label": "Add it to the project"},
+	],
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
@@ -348,6 +352,8 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 				if (moved_editor.call("get_open_scenes") as PackedStringArray).has(str(finding.get("path", ""))):
 					moved_editor.call("reload_scene_from_path", str(finding.get("path", "")))
 			return moved
+		"add_runtime_helper":
+			return load("res://addons/eventforge/runtime_helper_doctor.gd").add_to_project(finding)
 		"show_in_scene":
 			if not Engine.has_singleton("EditorInterface"):
 				return {"ok": false, "message": "Open %s in the editor to see the node." % str(finding.get("path", ""))}

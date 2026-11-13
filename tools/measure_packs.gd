@@ -241,7 +241,25 @@ static func manifest_source(folders: PackedStringArray) -> String:
 	for folder: String in folders:
 		lines.append("\t\"%s\"," % folder)
 	lines.append("]")
+	lines.append("")
+	lines.append("## The loose runtime scripts at the top of eventsheet_addons/ that built-in rows call by class name:")
+	lines.append("## not packs, carried in the library's _runtime/ folder and copied into a project when a row needs one.")
+	lines.append("const HELPER_FILES: Array[String] = [")
+	for helper: String in helper_files():
+		lines.append("\t\"%s\"," % helper)
+	lines.append("]")
 	return "\n".join(lines) + "\n"
+
+
+## The loose scripts at the top of `res://eventsheet_addons/`, sorted: every `.gd` there except the
+## `demo_*` files, which are samples and not something a row calls.
+static func helper_files() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at("res://eventsheet_addons"):
+		if file_name.get_extension() == "gd" and not file_name.begins_with("demo_"):
+			out.append(file_name)
+	out.sort()
+	return out
 
 
 ## True when the shipped-folders file on disk is exactly `manifest_source(folders)`.

@@ -10409,3 +10409,4 @@ is outside the camera limits,カメラの制限の外にある
 Once Ever,一度だけ
 "True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.",イベントの他の条件が初めて成り立ったときだけ真になり、このオブジェクトでは二度と真になりません。一方「一度だけ実行」は、条件が偽になって再び真になるたびにもう一度発動します。スクリプトに真偽値の変数を一つ持ちます。
 Once ever,一度だけ
+Added %s to eventsheet_addons/ - this row calls it.,%s を eventsheet_addons/ に追加しました - この行が呼び出します。

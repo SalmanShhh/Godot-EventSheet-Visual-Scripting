@@ -25,11 +25,14 @@ extends SceneTree
 const SHIPPED := preload("res://addons/eventforge/shipped_pack_folders.gd")
 const LIBRARY := preload("res://addons/eventsheet/ace/pack_library.gd")
 const SOURCE_ROOT := "res://eventsheet_addons"
+const HELPER_DIR := "res://addons/eventsheet_library/_runtime"
 
 
 func _init() -> void:
 	var check_only: bool = OS.get_cmdline_user_args().has("--check")
 	var drifted: PackedStringArray = drift(SOURCE_ROOT, LIBRARY.LIBRARY_ROOT, PackedStringArray(SHIPPED.FOLDERS), not check_only)
+	drifted.append_array(helper_drift(SOURCE_ROOT, LIBRARY.LIBRARY_ROOT.path_join(LIBRARY.HELPERS_FOLDER),
+		PackedStringArray(SHIPPED.HELPER_FILES), not check_only))
 	for path: String in drifted:
 		print("LIBRARY DRIFT: %s" % path)
 	if check_only:
@@ -56,7 +59,7 @@ static func drift(source_root: String, library_root: String, pack_folders: Packe
 		_compare_tree(source_root.path_join(folder), library_root.path_join(folder), folder, write, out)
 	if DirAccess.dir_exists_absolute(library_root):
 		for stray: String in DirAccess.get_directories_at(library_root):
-			if not pack_folders.has(stray):
+			if not pack_folders.has(stray) and stray != LIBRARY.HELPERS_FOLDER:
 				out.append(stray + "/")
 				if write:
 					_remove_tree(library_root.path_join(stray))
@@ -66,6 +69,33 @@ static func drift(source_root: String, library_root: String, pack_folders: Packe
 				if write:
 					DirAccess.remove_absolute(library_root.path_join(stray_file))
 	out.sort()
+	return out
+
+
+## Every path where the library's runtime-helper folder differs from the loose scripts it mirrors
+## (each file and its `.uid`), as drift() reports them, prefixed with the folder name.
+static func helper_drift(source_root: String, helper_dir: String, files: PackedStringArray, write: bool) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if write:
+		DirAccess.make_dir_recursive_absolute(helper_dir)
+	var wanted: Dictionary = {}
+	for file_name: String in files:
+		for each: String in [file_name, file_name + ".uid"]:
+			wanted[each] = true
+			var from_path: String = source_root.path_join(each)
+			var to_path: String = helper_dir.path_join(each)
+			if not FileAccess.file_exists(from_path):
+				continue
+			if FileAccess.file_exists(to_path) and FileAccess.get_file_as_bytes(to_path) == FileAccess.get_file_as_bytes(from_path):
+				continue
+			out.append(LIBRARY.HELPERS_FOLDER.path_join(each))
+			if write:
+				DirAccess.copy_absolute(from_path, to_path)
+	for extra: String in DirAccess.get_files_at(helper_dir):
+		if not wanted.has(extra):
+			out.append(LIBRARY.HELPERS_FOLDER.path_join(extra))
+			if write:
+				DirAccess.remove_absolute(helper_dir.path_join(extra))
 	return out
 
 

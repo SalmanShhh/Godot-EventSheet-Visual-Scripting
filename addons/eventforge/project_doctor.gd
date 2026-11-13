@@ -262,6 +262,9 @@ static func run() -> Dictionary:
 	# scene files as text. The behaviour only logs one line at run time and does nothing, so the
 	# report says it before the game runs. Same seam, same reason.
 	EventSheetBehaviourHostDoctor.ensure_registered()
+	# The Runtime scripts section: a script calling one of the loose runtime scripts (free spot,
+	# retire, bus mix...) the project does not hold, with the door that copies it in.
+	EventSheetRuntimeHelperDoctor.ensure_registered()
 	# The Compiler section: the warnings the compiler returned the last time a sheet was written in this
 	# editor. They were only ever read by the MCP server; here they are in the inbox with the file in
 	# front, beside the amber the same sentence puts on the event it belongs to.

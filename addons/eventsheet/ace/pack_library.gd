@@ -24,6 +24,10 @@ const LIBRARY_ROOT := "res://addons/eventsheet_library"
 const PROJECT_ROOT := "res://eventsheet_addons"
 ## The file that makes Godot skip a folder: no import, no class registration, no export.
 const IGNORE_FILE := ".gdignore"
+## The library folder holding the loose runtime scripts a few built-in rows call (free spot, retire
+## and the rest). It is not a pack and is never listed as one; a row that needs a script copies it
+## into the project (addons/eventforge/runtime_helpers.gd).
+const HELPERS_FOLDER := "_runtime"
 ## Files a folder copy leaves behind: Godot writes them itself on import, for this machine only.
 const GENERATED_EXTENSIONS: PackedStringArray = ["import", "translation"]
 ## The fewest behaviours a kit lists. A tag fewer packs share is a detail of one pack, not a kind of
@@ -47,7 +51,7 @@ static func folders(root: String = LIBRARY_ROOT) -> PackedStringArray:
 	if not DirAccess.dir_exists_absolute(root):
 		return out
 	for entry: String in DirAccess.get_directories_at(root):
-		if not entry.begins_with("."):
+		if not entry.begins_with(".") and entry != HELPERS_FOLDER:
 			out.append(entry)
 	out.sort()
 	return out

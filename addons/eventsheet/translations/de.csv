@@ -10409,3 +10409,4 @@ is outside the camera limits,ist außerhalb der Kameragrenzen
 Once Ever,Einmal im Leben
 "True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.","Wahr, wenn die anderen Bedingungen des Ereignisses das erste Mal zutreffen, und danach nie wieder für dieses Objekt. Einmal auslösen dagegen feuert erneut, sobald die Bedingung falsch und dann wieder wahr wird. Es hält eine Wahr-oder-falsch-Variable im Skript."
 Once ever,Einmal im Leben
+Added %s to eventsheet_addons/ - this row calls it.,%s wurde zu eventsheet_addons/ hinzugefügt - diese Zeile ruft es auf.
