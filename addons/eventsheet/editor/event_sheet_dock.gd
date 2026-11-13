@@ -1800,7 +1800,7 @@ func _refresh_inspector_designer_after_edit(_n: Variant = null, _t: Variant = nu
 
 
 ## Designer ▲: move the tree variable above the exported tree variable before it, past any the
-## Inspector does not show - one undo step. Sheet-level (dict) variables emit alphabetically, so only tree variables reorder.
+## Inspector does not show - one undo step. Sheet-level (dict) variables emit in the order they were added and nothing here reorders that dictionary, so only tree variables move.
 func _designer_move_variable_up(var_name: String) -> void:
 	_perform_undoable_sheet_edit("Move Variable Up", func() -> bool:
 		return load(INSPECTOR_DESIGNER_DIALOG_PATH).move_up_among_exported(_current_sheet.events, var_name))
