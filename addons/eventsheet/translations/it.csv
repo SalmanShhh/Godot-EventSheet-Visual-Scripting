@@ -10479,3 +10479,10 @@ Empty: different every run.,Vuoto: diverso a ogni avvio.
 0: different every run.,0: diverso a ogni avvio.
 New seed,Nuovo seed
 Writes a fresh seed into the field.,Scrive un nuovo seed nel campo.
+%s Size,Dimensione di %s
+Set both to %d.,Imposta entrambi a %d.
+"%d x %d px, about %s of video memory.","%d x %d px, circa %s di memoria video."
+Tag from a table's rows,Tag dalle righe di una tabella
+A menu of the tags a table's rows already use. You can still type a new one.,Un menu dei tag che le righe di una tabella usano già. Puoi comunque scriverne uno nuovo.
+Seed with a New seed button,Seed con pulsante Nuovo seed
+A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,Un campo numerico e un pulsante che scrive un nuovo seed. Per un seed in cui 0 significa uno nuovo a ogni avvio.

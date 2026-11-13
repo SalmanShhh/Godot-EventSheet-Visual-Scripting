@@ -10479,3 +10479,10 @@ Empty: different every run.,留空：每次运行都不同。
 0: different every run.,0：每次运行都不同。
 New seed,新种子
 Writes a fresh seed into the field.,把一个新种子写入该字段。
+%s Size,%s尺寸
+Set both to %d.,两者都设为 %d。
+"%d x %d px, about %s of video memory.",%d x %d 像素，约占 %s 显存。
+Tag from a table's rows,从表格行中选择标签
+A menu of the tags a table's rows already use. You can still type a new one.,列出表格各行已使用标签的菜单。仍可手动输入新标签。
+Seed with a New seed button,带“新种子”按钮的种子
+A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,一个数字字段和一个写入新种子的按钮。适用于 0 表示每次运行都换新种子的种子。

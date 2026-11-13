@@ -10479,3 +10479,10 @@ Empty: different every run.,空: 実行ごとに変わります。
 0: different every run.,0: 実行ごとに変わります。
 New seed,新しいシード
 Writes a fresh seed into the field.,新しいシードをフィールドに書き込みます。
+%s Size,%sのサイズ
+Set both to %d.,両方を %d にします。
+"%d x %d px, about %s of video memory.",%d x %d px、ビデオメモリ約 %s。
+Tag from a table's rows,表の行から選ぶタグ
+A menu of the tags a table's rows already use. You can still type a new one.,表の行がすでに使っているタグのメニュー。新しいタグを直接入力することもできます。
+Seed with a New seed button,「新しいシード」ボタン付きシード
+A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,数値欄と、新しいシードを書き込むボタン。0 が「実行ごとに新しいシード」を意味するシード向けです。

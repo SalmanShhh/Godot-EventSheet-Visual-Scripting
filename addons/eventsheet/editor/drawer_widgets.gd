@@ -1246,7 +1246,8 @@ class LinkToggle:
 	var undo_redo: Object = null
 
 
-	func _init(target: Object = null, first_property: String = "", second_property: String = "") -> void:
+	## `inline` draws only the button, as Godot's own link icon, for a pair that already shares one row.
+	func _init(target: Object = null, first_property: String = "", second_property: String = "", inline: bool = false) -> void:
 		_target = target
 		_first = first_property
 		_second = second_property
@@ -1258,6 +1259,11 @@ class LinkToggle:
 		_button.tooltip_text = EventSheetL10n.translate("Keep %s and %s in the ratio they have now.") % [_first, _second]
 		_button.toggled.connect(_on_toggled)
 		add_child(_button)
+		if inline:
+			_button.flat = true
+			_restyle_inline(false)
+			_button.toggled.connect(_restyle_inline)
+			return
 		var caption: Label = Label.new()
 		caption.text = EventSheetL10n.translate("linked to %s") % _second
 		caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
@@ -1349,6 +1355,16 @@ class LinkToggle:
 	## True while the two numbers are tied.
 	func is_linked() -> bool:
 		return _button.button_pressed
+
+
+	## The inline button shows the editor's linked or unlinked icon.
+	func _restyle_inline(linked: bool) -> void:
+		var picture: Texture2D = EventSheetLookStyle.icon(&"Instance" if linked else &"Unlinked")
+		if picture != null:
+			_button.icon = picture
+			_button.text = ""
+		else:
+			_button.text = "∞" if linked else "∘"
 
 
 	func _on_toggled(pressed: bool) -> void:
@@ -2310,17 +2326,36 @@ class ChoicesProperty:
 ## own name inside it. Each edit is written to its own property, so undo takes back the one that moved.
 class SideBySideProperty:
 	extends EditorProperty
+	const SIZE_NOTES: GDScript = preload("res://addons/eventsheet/editor/inspector/size_notes.gd")
 	var _names: PackedStringArray = PackedStringArray()
 	var _shared_label: String = ""
 	var _spins: Array[Range] = []
+	var _row: HFlowContainer = null
+	var _linked: bool = false
+	var _link: Control = null
+	var _notes: Control = null
+	var _notes_margin: MarginContainer = null
+	## True for a pair that is a texture's width and height: the label ends in "Size" and an "x" sits between.
+	var _texture: bool = false
 
-	func _init(first: String, second: String) -> void:
+	## `linked` puts the ratio button inside the row; `texture` and `sizes` put the common sizes and the
+	## cost under it.
+	func _init(first: String, second: String, linked: bool = false, texture: bool = false, sizes: PackedInt32Array = PackedInt32Array()) -> void:
 		_names = PackedStringArray([first, second])
+		_linked = linked
+		_texture = texture
 		var parts: Dictionary = name_parts(first, second)
-		_shared_label = str(parts["label"])
+		_shared_label = (EventSheetL10n.translate("%s Size") % str(parts["label"])) if texture else str(parts["label"])
 		var inner: Array = parts["inner"]
 		var row: HFlowContainer = HFlowContainer.new()
+		_row = row
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if texture:
+			_notes = SIZE_NOTES.new(sizes)
+			_notes.connect("size_picked", _on_size_picked)
+			_notes_margin = MarginContainer.new()
+			_notes_margin.add_theme_constant_override("margin_top", int(EventSheetLookStyle.px(3.0)))
+			_notes_margin.add_child(_notes)
 		for index: int in _names.size():
 			var property_name: String = _names[index]
 			var spin: Range = EventSheetLookStyle.number_field(str(inner[index]), EventSheetLookStyle.quiet(), false)
@@ -2331,8 +2366,77 @@ class SideBySideProperty:
 			row.add_child(spin)
 			add_focusable(spin)
 			_spins.append(spin)
+			if texture and index == 0:
+				var times: Label = Label.new()
+				times.text = "x"
+				times.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+				row.add_child(times)
 		add_child(row)
 		draw_background = false
+		if _notes_margin != null:
+			add_child(_notes_margin)
+			set_bottom_editor(_notes_margin)
+			sort_children.connect(_align_notes)
+			draw.connect(_align_notes)
+
+	## The range an @export_range property declares, as {min, max, step, or_greater, or_less}, or {} for a
+	## property with none. Read from the object's own property list, so a pair never loses its clamp.
+	static func range_of(object: Object, property: String) -> Dictionary:
+		if object == null:
+			return {}
+		for info: Dictionary in object.get_property_list():
+			if str(info.get("name", "")) != property or int(info.get("hint", PROPERTY_HINT_NONE)) != PROPERTY_HINT_RANGE:
+				continue
+			return range_spec(str(info.get("hint_string", "")))
+		return {}
+
+	## "1,2048,1,or_greater" -> {min: 1.0, max: 2048.0, step: 1.0, or_greater: true, or_less: false}.
+	static func range_spec(hint_string: String) -> Dictionary:
+		var parts: PackedStringArray = hint_string.split(",")
+		var spec: Dictionary = {"min": 0.0, "max": 100.0, "step": 0.0, "or_greater": false, "or_less": false}
+		if parts.size() > 0 and parts[0].strip_edges().is_valid_float():
+			spec["min"] = parts[0].strip_edges().to_float()
+		if parts.size() > 1 and parts[1].strip_edges().is_valid_float():
+			spec["max"] = parts[1].strip_edges().to_float()
+		if parts.size() > 2 and parts[2].strip_edges().is_valid_float():
+			spec["step"] = parts[2].strip_edges().to_float()
+		for flag: String in parts:
+			spec["or_greater"] = bool(spec["or_greater"]) or flag.strip_edges() == "or_greater"
+			spec["or_less"] = bool(spec["or_less"]) or flag.strip_edges() == "or_less"
+		return spec
+
+	## Gives a spin the limits its property declares. A spin with none stays open, as an unranged number is.
+	static func apply_range(spin: Range, spec: Dictionary, is_int: bool) -> void:
+		if spec.is_empty():
+			return
+		spin.min_value = float(spec["min"])
+		spin.max_value = float(spec["max"])
+		spin.allow_greater = bool(spec["or_greater"])
+		spin.allow_lesser = bool(spec["or_less"])
+		spin.step = float(spec["step"]) if float(spec["step"]) > 0.0 else (1.0 if is_int else 0.001)
+
+	func _align_notes() -> void:
+		# The sizes and the cost start where the fields do: the label column's width in from the left.
+		var left: int = EventSheetInspectorLook.under_field_margin(size.x, _row.size.x)
+		if _notes_margin.get_theme_constant("margin_left") != left:
+			_notes_margin.add_theme_constant_override("margin_left", left)
+
+	## One click on a size writes both numbers as one undo step.
+	func _on_size_picked(picked: int) -> void:
+		var object: Object = get_edited_object()
+		if object == null:
+			return
+		var manager: Object = EventSheetDrawerWidgets.editor_undo_redo()
+		if manager == null:
+			for property_name: String in _names:
+				object.set(property_name, picked)
+			_update_property()
+			return
+		manager.call("create_action", EventSheetL10n.translate("Set both to %d.") % picked)
+		for property_name: String in _names:
+			manager.call("add_do_property", object, property_name, picked)
+			manager.call("add_undo_property", object, property_name, object.get(property_name))
+		manager.call("commit_action")
 
 	## The label the pair shares and the words each field carries inside it. `margin_left` and
 	## `margin_right` are "Margin" with "left" and "right" inside; names with nothing in common keep
@@ -2366,10 +2470,18 @@ class SideBySideProperty:
 			label = _shared_label
 
 	func _update_property() -> void:
+		if _linked and _link == null:
+			_link = LinkToggle.new(get_edited_object(), _names[0], _names[1], true)
+			_row.add_child(_link)
+			add_focusable(_link.get_child(0))
 		for index: int in _names.size():
 			var value: Variant = get_edited_object().get(_names[index])
 			var is_int: bool = typeof(value) == TYPE_INT
+			var declared: Dictionary = range_of(get_edited_object(), _names[index])
 			_spins[index].step = 1.0 if is_int else 0.001
 			_spins[index].rounded = is_int
+			apply_range(_spins[index], declared, is_int)
 			_spins[index].set_value_no_signal(float(value))
 			EventSheetLookStyle.set_number_field_locked(_spins[index], read_only)
+		if _notes != null:
+			_notes.call("show_pair", int(get_edited_object().get(_names[0])), int(get_edited_object().get(_names[1])))

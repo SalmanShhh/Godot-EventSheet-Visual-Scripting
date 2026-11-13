@@ -38,10 +38,10 @@ static func run() -> bool:
 static func _looks_per_type(dialog: EventSheetVariableDialog) -> bool:
 	var rows: Array = []
 	for expected: Array in [
-		["int", ["", "slider", "no_handle", "progress_bar", "number_choices", "flags", "layers", "table_row", "custom", "storage"]],
+		["int", ["", "slider", "no_handle", "progress_bar", "number_choices", "flags", "layers", "table_row", "seed", "custom", "storage"]],
 		["float", ["", "slider", "angle", "exp_slider", "no_handle", "progress_bar", "easing", "unit", "custom", "storage"]],
 		["String", ["", "file", "folder", "multiline", "placeholder", "choices", "suggestions", "toggle_row", "password",
-			"expression", "custom", "storage"]],
+			"expression", "table_tag", "seed", "custom", "storage"]],
 		["Vector3", ["", "link", "custom", "storage"]],
 		["Callable", ["", "tool_button", "custom", "storage"]],
 	]:

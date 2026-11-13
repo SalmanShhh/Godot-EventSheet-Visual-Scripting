@@ -131,6 +131,8 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 
 func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string: String, under_field: Array[Control]) -> bool:
 	var decor: Array = decor_for(_object, name)
+	# A pair that shares one line also holds its link button and its sizes inside that one row.
+	var pair: Dictionary = _pair_shape(_object, name, decor)
 	# Decor first: a `# @inspector_header` comment above the var renders as a section label ABOVE the
 	# property; the required / validate / info / action lines are collected to go under it.
 	for entry: Variant in decor:
@@ -145,13 +147,14 @@ func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string
 			"action":
 				under_field.append(widgets().ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
 			"link":
-				add_custom_control(widgets().LinkToggle.new(_object, str(decor_entry.get("first", "")), str(decor_entry.get("second", ""))))
+				if not bool(pair.get("linked", false)):
+					add_custom_control(widgets().LinkToggle.new(_object, str(decor_entry.get("first", "")), str(decor_entry.get("second", ""))))
 			"group_show_if":
 				# Nothing to draw: hiding the group is the ordinary _validate_property the compiler
 				# emits once per member, exactly as the per-field Show If compiles. The entry is here
 				# so the Designer (and anything else reading the map) can say WHY a group hides.
 				pass
-			"tabs", "choices", "side_by_side", "side_by_side_second":
+			"tabs", "choices", "side_by_side", "side_by_side_second", "texture_size":
 				# Drawn as the field itself (below) or at the top of the Inspector (_parse_begin).
 				pass
 			_:
@@ -168,7 +171,8 @@ func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string
 			"side_by_side":
 				var second: String = str(shape.get("second", ""))
 				if side_by_side_fits(_object, name, second):
-					add_property_editor_for_multiple_properties("", PackedStringArray([name, second]), widgets().SideBySideProperty.new(name, second))
+					add_property_editor_for_multiple_properties("", PackedStringArray([name, second]), widgets().SideBySideProperty.new(name, second,
+						bool(pair.get("linked", false)), bool(pair.get("texture", false)), pair.get("sizes", PackedInt32Array())))
 					return true
 			"side_by_side_second":
 				if side_by_side_fits(_object, str(shape.get("first", "")), name):
@@ -350,6 +354,12 @@ static func build_decor_map(source: String) -> Dictionary:
 			var link_names: PackedStringArray = line.substr(18).strip_edges().split(" ", false)
 			if link_names.size() == 2:
 				pending.append({"kind": "link", "first": link_names[0], "second": link_names[1]})
+		elif line == "# @inspector_texture_size" or line.begins_with("# @inspector_texture_size "):
+			var size_list: PackedInt32Array = PackedInt32Array()
+			for size_word: String in line.substr(25).strip_edges().split(" ", false):
+				if size_word.is_valid_int() and size_word.to_int() > 0:
+					size_list.append(size_word.to_int())
+			pending.append({"kind": "texture_size", "sizes": size_list})
 		elif line == "# @inspector_tabs":
 			pending.append({"kind": "tabs"})
 		elif line.begins_with("# @inspector_choices "):
@@ -477,6 +487,31 @@ static func parse_table_columns(spec: String, notes: Array = []) -> Array:
 	if not notes.is_empty():
 		widgets().sheet_compiler().read_table_column_notes(columns, widgets().sheet_compiler().peel_table_weight(notes)["parts"])
 	return columns
+
+
+## What the decor of a field that opens a side-by-side pair says about the pair: {linked, texture, sizes}.
+## `linked` is true when the pair is also linked (the ratio button then sits inside the row), and
+## `texture` when it is a texture's width and height, with `sizes` the common sizes to offer.
+static func _pair_shape(object: Object, name: String, decor: Array) -> Dictionary:
+	var second: String = ""
+	var linked: bool = false
+	var link_second: String = ""
+	var texture: bool = false
+	var sizes: PackedInt32Array = PackedInt32Array()
+	for entry: Variant in decor:
+		var shape: Dictionary = entry as Dictionary
+		match str(shape.get("kind", "")):
+			"side_by_side":
+				second = str(shape.get("second", ""))
+			"link":
+				linked = str(shape.get("first", "")) == name
+				link_second = str(shape.get("second", ""))
+			"texture_size":
+				texture = true
+				sizes = shape.get("sizes", PackedInt32Array())
+	if second.is_empty() or not side_by_side_fits(object, name, second):
+		return {}
+	return {"linked": linked and link_second == second, "texture": texture, "sizes": sizes}
 
 
 ## True when `first` and `second` can share one line: both numbers the Inspector shows. Anything

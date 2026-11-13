@@ -94,6 +94,20 @@ const PROBES: Array = [
 @export_custom(PROPERTY_HINT_NONE, \"eventsheet:seed\") var start_seed: String = \"\"
 @export var seed_plain: int = 0
 "],
+	["size_pair", "# @inspector_texture_size 256 512 1024 2048
+# @inspector_link canvas_width canvas_height
+# @inspector_side_by_side
+@export var canvas_width: int = 512
+@export var canvas_height: int = 512
+# @inspector_link half_width half_height
+# @inspector_side_by_side
+@export var half_width: float = 16.0
+@export var half_height: float = 16.0
+# @inspector_side_by_side
+@export_range(1, 2048, 1) var grid_width: int = 64
+@export_range(1, 2048, 1) var grid_height: int = 36
+@export var canvas_plain: int = 5
+"],
 	["cards", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:cards:kind=kind,schema=feedback_steps,stripes=category\") var steps: Array[Dictionary] = [{\"kind\": \"shake\", \"category\": \"camera\"}, {\"kind\": \"flash\", \"category\": \"screen\"}]\n"],
 	["texture_preview", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\") var icon_picture: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n@export var icon_picture_plain: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n"],
 	["curve_editor", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var damage_falloff: Curve = null\n@export var damage_falloff_plain: Curve = null\n\n\nfunc _init() -> void:\n\tdamage_falloff = Curve.new()\n\tdamage_falloff.add_point(Vector2(0, 1))\n\tdamage_falloff.add_point(Vector2(1, 0))\n"],

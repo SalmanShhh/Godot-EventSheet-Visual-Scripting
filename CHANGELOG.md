@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: a width and a height on one row, with common sizes and what they cost
+
+- Two numbers marked `# @inspector_side_by_side` now keep the `@export_range` limits each declares (they used to lose them). When the pair is also linked (`# @inspector_link`), Godot's link icon sits inside the row instead of a button above it. A new line, `# @inspector_texture_size 256 512 1024 2048`, above the others says the pair is a texture's width and height: the label ends in "Size", an "x" sits between, a strip of the listed sizes sits under the row (one click sets both as one undo step) and one line says what the texture costs ("512 x 512 px, about 1024 KiB of video memory.", in Godot's own size words, worked out at 4 bytes a pixel). A file without the plugin has two ordinary number fields and three comments.
+
 ### New: a seed you can re-roll
 
 - A new look, "Seed with a New seed button" (`eventsheet:seed`), for a number or text variable where 0 (or empty) means a new seed every run: the number field with a "New seed" button that writes a fresh positive seed as one undo step, and a quiet line under it while the value is 0 or empty. The button drops under the field in a narrow Inspector.

@@ -10479,3 +10479,10 @@ Empty: different every run.,Vide : différent à chaque exécution.
 0: different every run.,0 : différent à chaque exécution.
 New seed,Nouvelle graine
 Writes a fresh seed into the field.,Écrit une nouvelle graine dans le champ.
+%s Size,Taille de %s
+Set both to %d.,Mettre les deux à %d.
+"%d x %d px, about %s of video memory.","%d x %d px, environ %s de mémoire vidéo."
+Tag from a table's rows,Étiquette des lignes d'un tableau
+A menu of the tags a table's rows already use. You can still type a new one.,Un menu des étiquettes que les lignes d'un tableau utilisent déjà. Vous pouvez toujours en saisir une nouvelle.
+Seed with a New seed button,Graine avec bouton Nouvelle graine
+A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,Un champ numérique et un bouton qui écrit une nouvelle graine. Pour une graine où 0 signifie une nouvelle à chaque exécution.

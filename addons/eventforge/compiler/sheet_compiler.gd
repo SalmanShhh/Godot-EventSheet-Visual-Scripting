@@ -5943,9 +5943,15 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 ## from the script source and renders a header label / info panel above the property; without the
 ## plugin (or in an exported game) they are inert comments - the parity covenant is untouched.
 ## The order is frozen and read back bottom-up by the importer: tabs, header, info, required,
-## validate, action, link, choices, side by side. A new line extends it at an end, never in between.
+## validate, action, link, choices, side by side. A new line extends it at an end, never in between;
+## the texture size line is at the top end, above tabs.
 static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "") -> PackedStringArray:
 	var decor: PackedStringArray = PackedStringArray()
+	# Texture size: this field and the one beside it are a texture's width and height in pixels. The
+	# optional words after it are the common sizes the Inspector offers as one click each.
+	if attributes.has("texture_size"):
+		var sizes: String = str(attributes.get("texture_size", "")).strip_edges()
+		decor.append("# @inspector_texture_size %s" % sizes if not sizes.is_empty() else "# @inspector_texture_size")
 	# Tabs: every @export_group of the object becomes a tab. It belongs to the whole object, so it
 	# heads the block; without the plugin the groups stay the headings Godot draws.
 	if bool(attributes.get("tabs", false)):

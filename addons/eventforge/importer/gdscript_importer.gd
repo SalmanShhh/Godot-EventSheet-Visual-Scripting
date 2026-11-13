@@ -1318,13 +1318,27 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		if not header_value.is_empty():
 			meta_count += 1
 			cursor -= 1
-	# Tabs heads the decor block, so it is the last line read.
+	# Tabs is read after the header; only the texture size line sits above it.
 	var tabs_value: bool = false
 	if cursor >= 0 and pending[cursor] == "# @inspector_tabs":
 		tabs_value = true
 		meta_count += 1
 		cursor -= 1
+	# The texture size line sits above tabs, at the top end of the block, so it is read after it.
+	var texture_size_value: Variant = null
+	if cursor >= 0 and (pending[cursor] == "# @inspector_texture_size" or pending[cursor].begins_with("# @inspector_texture_size ")):
+		var size_words: String = pending[cursor].substr(25).strip_edges()
+		var size_parts: PackedStringArray = size_words.split(" ", false)
+		var sizes_whole: bool = true
+		for size_part: String in size_parts:
+			sizes_whole = sizes_whole and size_part.is_valid_int()
+		if sizes_whole:
+			texture_size_value = " ".join(size_parts)
+			meta_count += 1
+			cursor -= 1
 	var candidate: Dictionary = {}
+	if texture_size_value != null:
+		candidate["texture_size"] = texture_size_value
 	if tabs_value:
 		candidate["tabs"] = true
 	if side_by_side_value:

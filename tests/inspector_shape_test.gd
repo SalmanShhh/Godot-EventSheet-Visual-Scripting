@@ -118,7 +118,7 @@ static func _a_choice_says_what_else_it_moves() -> bool:
 	var after_look: String = SHAPE.chosen("check", _entry(sheet, "max_health"))
 	var rows: Array = [
 		["with limits kept, the looks that hold no limits say they take the check with them", warned,
-			["default", "number_choices", "flags", "layers", "table_row", "custom", "storage"]],
+			["default", "number_choices", "flags", "layers", "table_row", "seed", "custom", "storage"]],
 		["...and with no check chosen no look says so", unlimited, []],
 		["the plain number, chosen first, takes the check as it said", after_look, "none"],
 		["...so No check after it has nothing left to take", SHAPE.write(sheet, "max_health", "check", "none"), false],

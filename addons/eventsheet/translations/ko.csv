@@ -10479,3 +10479,10 @@ Empty: different every run.,비어 있음: 실행할 때마다 다릅니다.
 0: different every run.,0: 실행할 때마다 다릅니다.
 New seed,새 시드
 Writes a fresh seed into the field.,새 시드를 필드에 씁니다.
+%s Size,%s 크기
+Set both to %d.,둘 다 %d(으)로 설정합니다.
+"%d x %d px, about %s of video memory.","%d x %d px, 비디오 메모리 약 %s."
+Tag from a table's rows,표의 행에서 고르는 태그
+A menu of the tags a table's rows already use. You can still type a new one.,표의 행이 이미 사용하는 태그 메뉴입니다. 새 태그를 직접 입력할 수도 있습니다.
+Seed with a New seed button,새 시드 버튼이 있는 시드
+A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,숫자 필드와 새 시드를 써 넣는 버튼입니다. 0이 실행할 때마다 새 시드를 뜻하는 시드에 사용합니다.
