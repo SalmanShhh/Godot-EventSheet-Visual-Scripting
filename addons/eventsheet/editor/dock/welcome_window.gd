@@ -51,7 +51,6 @@ var _dock: Control = null
 var _welcome_window: ConfirmationDialog = null
 var _simple_check: CheckBox = null
 var _native_check: CheckBox = null
-var _language_picker: OptionButton = null
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _sets_value: Label = null
 ## The answer buttons by choice, and the answer chosen but not yet applied ("" for none).
@@ -165,7 +164,6 @@ func show() -> void:
 	# Rescan the translation folders on every open, so "drop a CSV in, open the Welcome" is the
 	# whole flow for a new language - no registration step, no restart.
 	EventSheetL10n.rescan()
-	_refresh_language_picker()
 	_fit_kits_to_editor()
 	# Opened at its content's own size and centred on it - without that, the first open centred on a
 	# pre-layout (too-small) size and the content then expanded down-and-right, off-centre.
@@ -267,13 +265,6 @@ func _build() -> void:
 	_native_check.toggled.connect(func(on: bool) -> void:
 		ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true if on else null))
 	prefs_box.add_child(_native_check)
-	# Editor language: English by default; every locale a drop-in translation file provides is
-	# offered automatically (see editor/l10n.gd for the file format + folders). Switching applies
-	# live to auto-translated Controls; some already-drawn text refreshes on the next open/redraw.
-	_language_picker = OptionButton.new()
-	_language_picker.tooltip_text = "Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here."
-	_language_picker.item_selected.connect(_on_language_selected)
-	prefs_box.add_child(EventSheetPopupUI.form_row("Editor language", _language_picker))
 	# Extension preferences (EventSheets.register_preference): each builder returns one Control
 	# row - extensions get a settings home without inventing their own dialog.
 	for preference_builder: Callable in load(EVENTSHEETS_API_PATH).preference_builders():
@@ -516,26 +507,3 @@ func _remembered_choice() -> String:
 	return str(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "came_from", ""))
 
 
-## Fills the language picker from the discovered locales (English first, then one entry per
-## locale a translation file provided) and selects the active one.
-func _refresh_language_picker() -> void:
-	_language_picker.clear()
-	var locales: PackedStringArray = EventSheetL10n.available_locales()
-	var active: String = EventSheetL10n.get_locale()
-	for index: int in range(locales.size()):
-		_language_picker.add_item(EventSheetL10n.locale_display_name(locales[index]), index)
-		if locales[index] == active:
-			_language_picker.select(index)
-
-
-## Applies the picked language live: auto-translated Controls retranslate on the propagated
-## notification; canvas-drawn text follows on its next redraw.
-func _on_language_selected(index: int) -> void:
-	var locales: PackedStringArray = EventSheetL10n.available_locales()
-	if index < 0 or index >= locales.size():
-		return
-	EventSheetL10n.set_locale(locales[index])
-	_dock.propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
-	if _dock.get_viewport_control() != null:
-		_dock.get_viewport_control().queue_redraw()
-	_dock._set_status("Editor language: %s" % EventSheetL10n.locale_display_name(locales[index]))

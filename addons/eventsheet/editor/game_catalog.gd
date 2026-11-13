@@ -11,7 +11,7 @@
 #      clip (the expansion), text that was never marked (it stays plain ASCII on a page of accents),
 #      and sentences built by concatenation (the brackets show the seams mid-sentence).
 #
-# THIS IS NOT THE EDITOR'S OWN LANGUAGE. View > Language switches the PLUGIN's interface through
+# THIS IS NOT THE EDITOR'S OWN LANGUAGE. The plugin's interface follows Godot's editor language through
 # EventSheetL10n and its "eventsheets" TranslationDomain; reusing that domain here would let a
 # French editor start rewriting the user's rows. These catalogs are the user's game files, kept
 # entirely separate, and this class never touches the plugin domain.

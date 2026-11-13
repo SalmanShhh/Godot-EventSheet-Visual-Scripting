@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the plugin speaks Godot's editor language; the separate Language picker is gone
+
+- The plugin's interface now follows Editor Settings > Interface > Editor > Editor Language, so there is one place to choose it. View > Language and the Welcome window's Editor language dropdown are removed. A language you chose before is respected as saved, the Editor Setting `eventsheets/interface/language_override` (empty by default) is the way to differ from the editor on purpose, and dropping a translation CSV into the folders still works. View > Preview In Language is unchanged: it previews the game's languages, not the editor's.
+
 ### Removed: Tools > Register Autoload; New autoload is named in Godot's word
 
 - Godot lists and manages autoloads in Project > Project Settings > Globals > Autoload, so the menu item that registered the open sheet's script is gone, and the Doctor and the guides send you there. The New global form stays, since it makes the script and registers it as before, and it is now called **New autoload...** in the menus, the form title and the start page. The Words page still offers "Global" for readers from another editor (the `global_singleton` word).

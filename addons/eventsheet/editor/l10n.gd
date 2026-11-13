@@ -9,12 +9,15 @@ extends RefCounted
 # root is assigned to it, so EVERY Control string under the dock - button text, menu items,
 # tooltips, dialog titles - resolves through atr() automatically. Translators never touch code:
 # drop a CSV into one of the translation folders (English source text in the first column, one
-# column per locale) and that locale appears in the Language picker. English is the default and
+# column per locale) and that locale is used whenever Godot's editor language matches it. English is the default and
 # the permanent fallback - an untranslated string always shows its English source.
 #
-# The plugin's language is chosen INDEPENDENTLY of the editor's: whichever locale the user picks,
-# its messages are loaded into a Translation stamped with the EDITOR's current locale, so domain
-# lookups always hit. Custom-drawn text (canvas draw_string sites: empty states, banners, add
+# The plugin's language FOLLOWS Godot's own editor language (Editor Settings > Interface > Editor >
+# Editor Language), so there is one place to choose it. Two things override that, for the rare reader
+# who wants the plugin in another language than the editor: a choice an earlier version saved (or
+# EventSheets.set_editor_language saves), and the Editor Setting eventsheets/interface/language_override.
+# Whatever locale is in force, its messages are loaded into a Translation stamped with the EDITOR's
+# current locale, so domain lookups always hit. Custom-drawn text (canvas draw_string sites: empty states, banners, add
 # affordances) can't auto-translate, so those few sites call EventSheetL10n.translate() explicitly.
 #
 # Drop-in translation files, scanned from BOTH folders (addon-bundled + project-local so user
@@ -22,7 +25,7 @@ extends RefCounted
 #   res://addons/eventsheet/translations/*.csv   and   res://eventsheet_translations/*.csv
 #   CSV shape (Godot's own convention):  keys,fr,es\n  Save,Enregistrer,Guardar
 #   Ready-made Translation resources (*.translation / *.tres) are picked up too.
-# The chosen language persists per-user per-project (user:// - never committed, like recents).
+# An explicit choice persists per-user per-project (user:// - never committed, like recents).
 
 const DOMAIN := "eventsheets"
 const SCAN_DIRS: Array[String] = [
@@ -30,6 +33,9 @@ const SCAN_DIRS: Array[String] = [
 	"res://eventsheet_translations",
 ]
 const LANGUAGE_FILE := "user://eventforge_editor_language.cfg"
+## The per-user Editor Setting that overrides the editor's language for this plugin only. Empty (the
+## default) means follow Godot's editor language.
+const OVERRIDE_SETTING := "eventsheets/interface/language_override"
 
 ## locale code -> {english_source: translated} - merged across every discovered file.
 static var _catalogs: Dictionary = {}
@@ -282,12 +288,75 @@ static func _preference_key() -> String:
 static func _load_language_preference() -> void:
 	if not Engine.is_editor_hint():
 		return
+	# 1. A choice this project's user made explicitly (even "en") is respected as it was saved.
 	var config: ConfigFile = ConfigFile.new()
-	if config.load(LANGUAGE_FILE) != OK:
+	if config.load(LANGUAGE_FILE) == OK and config.has_section_key("language", _preference_key()):
+		var stored: String = str(config.get_value("language", _preference_key(), "en"))
+		if stored == "en" or _catalogs.has(stored):
+			_locale = stored
+			return
+	# 2. The override setting, when one is typed.
+	var settings: Object = _editor_settings()
+	if settings != null and bool(settings.call("has_setting", OVERRIDE_SETTING)):
+		var override: String = str(settings.call("get_setting", OVERRIDE_SETTING)).strip_edges()
+		if not override.is_empty() and (override == "en" or _catalogs.has(override)):
+			_locale = override
+			return
+	# 3. Otherwise the plugin speaks the language Godot's editor does.
+	_locale = locale_for_editor_language(editor_language(), PackedStringArray(_catalogs.keys()))
+
+
+## Godot's own editor language code ("de", "zh_CN", "pt_BR"), or "en" outside the editor.
+static func editor_language() -> String:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return "en"
+	var code: String = str((Engine.get_singleton("EditorInterface") as Object).call("get_editor_language"))
+	return code if not code.is_empty() else "en"
+
+
+## Which of `available` locales speaks `code`: the same code, else a locale of the same base language
+## ("de_AT" gets "de"), else "en". Pure, so a test pins the matching without an editor behind it.
+static func locale_for_editor_language(code: String, available: PackedStringArray) -> String:
+	var wanted: String = code.strip_edges().replace("-", "_")
+	if wanted.is_empty() or wanted == "en" or wanted.begins_with("en_"):
+		return "en"
+	if available.has(wanted):
+		return wanted
+	var base: String = wanted.get_slice("_", 0)
+	if available.has(base):
+		return base
+	var sorted: PackedStringArray = available.duplicate()
+	sorted.sort()
+	for candidate: String in sorted:
+		if candidate.get_slice("_", 0) == base:
+			return candidate
+	return "en"
+
+
+## The editor's settings object, or null outside the editor.
+static func _editor_settings() -> Object:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	return (Engine.get_singleton("EditorInterface") as Object).call("get_editor_settings")
+
+
+## Declares the override in Editor Settings so it can be typed there. Called when the plugin starts.
+static func register_override_setting() -> void:
+	var settings: Object = _editor_settings()
+	if settings == null:
 		return
-	var stored: String = str(config.get_value("language", _preference_key(), "en"))
-	if stored == "en" or _catalogs.has(stored):
-		_locale = stored
+	if not bool(settings.call("has_setting", OVERRIDE_SETTING)):
+		settings.call("set_setting", OVERRIDE_SETTING, "")
+	settings.call("set_initial_value", OVERRIDE_SETTING, "", false)
+	settings.call("add_property_info", {"name": OVERRIDE_SETTING, "type": TYPE_STRING})
+
+
+## Puts the language in force back into the domain without choosing it: what a registered translation
+## file needs, and unlike set_locale it saves nothing, so a plugin that follows the editor's language
+## stays following it.
+static func reapply() -> void:
+	ensure_loaded()
+	_apply_domain()
 
 
 static func _save_language_preference() -> void:

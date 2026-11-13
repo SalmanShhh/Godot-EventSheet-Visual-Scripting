@@ -1074,7 +1074,7 @@ static func register_translation_file(path: String) -> bool:
 	EventSheetL10n.ensure_loaded()
 	if not EventSheetL10n.load_translation_file(path):
 		return false
-	EventSheetL10n.set_locale(EventSheetL10n.get_locale())
+	EventSheetL10n.reapply()
 	return true
 
 

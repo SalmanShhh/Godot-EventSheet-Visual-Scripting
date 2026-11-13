@@ -24,11 +24,13 @@ your sheets show players) is a different feature - see GUIDE-TRANSLATING-YOUR-GA
      (`fr`, `es`, `pt_BR`, `ja`, ...). One file can carry many languages.
    - A cell you leave empty simply keeps its English text - translate at your own pace.
 
-2. **Pick the language.** Open Tools → Welcome… - the Preferences card has an
-   **Editor language** dropdown, and every language your files provide is already in it
-   (the list refreshes each time the Welcome opens). English (default) is always first.
+2. **Pick the language.** There is nothing to pick in the plugin: it follows Godot's own
+   **Editor Settings > Interface > Editor > Editor Language**, so when that is a language your
+   files provide, the plugin speaks it (a regional code such as `de_AT` finds the `de` column).
+   If you want the plugin in another language than the editor, type its code into the Editor
+   Setting `eventsheets/interface/language_override` (or call `EventSheets.set_editor_language`).
 
-3. **There is no step 3.** The choice applies live and is remembered per user, per project -
+3. **There is no step 3.** An explicit choice is remembered per user, per project -
    it never touches your project files or version control.
 
 ## Getting the full list of English strings
@@ -64,8 +66,8 @@ quietly showing English in every language. If you keep your own locale file in `
 
 Two conveniences make drop-ins painless: translations **hot-reload** - drop, edit, or delete a
 CSV and the catalogs re-read on the editor's next filesystem scan, with open UI re-translating
-live (no restart) - and the language switch lives in **View > Language**, right beside the
-Theme entries (the Welcome screen's picker stays too).
+live (no restart) - and the language follows Godot's editor language, so there is no switch of the
+plugin's own to look for.
 
 ## Translating an addon pack
 
