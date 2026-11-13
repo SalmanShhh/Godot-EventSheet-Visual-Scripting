@@ -126,7 +126,9 @@ static func run() -> Dictionary:
 	check_untranslated_project(sheet_paths, findings)
 	check_unmarked_player_text(sheet_paths, findings)
 	check_stale_translated_labels(sheet_paths, findings)
-	check_required_fields(sheet_paths, findings)
+	# Required fields read every sheet in BOTH formats: a `.gd` sheet is its own output and is the
+	# default format, so the `.tres`-only list above would skip most real projects.
+	check_required_fields(EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_all_project_sheets()), findings)
 	check_missing_save_support(sheet_paths, findings)
 	check_save_key_symmetry(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
@@ -444,14 +446,7 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 ## empty default ships. Warnings name the exact file + property. demo/showcase is exempt (its
 ## deliberately unset portrait IS the required-badge demo), as are the packs themselves.
 static func check_required_fields(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	var watched: Dictionary = {}
-	for sheet_path: String in sheet_paths:
-		var output_path: String = output_path_for(sheet_path)
-		if not FileAccess.file_exists(output_path):
-			continue
-		var empty_required: PackedStringArray = required_empty_defaults(source_of(output_path))
-		if not empty_required.is_empty():
-			watched[output_path] = empty_required
+	var watched: Dictionary = required_defaults_of_sheets(sheet_paths)
 	if watched.is_empty():
 		return
 	for container_ext: String in ["tscn", "tres"]:
@@ -461,6 +456,21 @@ static func check_required_fields(sheet_paths: PackedStringArray, findings: Arra
 			for missing: Dictionary in required_gaps_in_container(source_of(container_path), watched):
 				_add(findings, "warning", "required-field", container_path,
 					"%s leaves the required \"%s\" (%s) unset - assign it in the Inspector." % [container_path.get_file(), str(missing.get("property")), str(missing.get("script")).get_file()])
+
+
+## {output script path: its Required variables with an empty default} for the sheets given, which may
+## be `.gd` sheets (their own output) or `.tres` sheets (their generated companion). Nothing here
+## reads a scene, so it is the half of the audit a test can drive with files of its own.
+static func required_defaults_of_sheets(sheet_paths: PackedStringArray) -> Dictionary:
+	var watched: Dictionary = {}
+	for sheet_path: String in sheet_paths:
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue
+		var empty_required: PackedStringArray = required_empty_defaults(source_of(output_path))
+		if not empty_required.is_empty():
+			watched[output_path] = empty_required
+	return watched
 
 
 ## The script's Required variables whose declared default is empty (null / "") - the ones a

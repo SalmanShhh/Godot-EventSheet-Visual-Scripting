@@ -72,6 +72,22 @@ static func run() -> bool:
 		EventSheetProjectDoctor.required_gaps_in_container(resource_text, watched),
 		[{"script": "res://things/watched_thing.gd", "property": "title"}]) and all_passed
 
+	# ── A `.gd` sheet, the default format, is read too (the walk used to stop at `.tres`). ──
+	var gd_path: String = "user://required_fields_gd_sheet_probe.gd"
+	var gd_file: FileAccess = FileAccess.open(gd_path, FileAccess.WRITE)
+	gd_file.store_string("extends Resource
+
+# @inspector_required
+@export var portrait: Texture2D = null
+")
+	gd_file.close()
+	all_passed = _eq("a .gd sheet's Required variable goes under watch",
+		EventSheetProjectDoctor.required_defaults_of_sheets(PackedStringArray([gd_path])),
+		{gd_path: PackedStringArray(["portrait"])}) and all_passed
+	DirAccess.remove_absolute(gd_path)
+	all_passed = _eq("and the Doctor's walk for this check lists .gd sheets, not only .tres",
+		EventSheetProjectFind.list_all_project_sheets().has("res://tests/required_fields_doctor_test.gd"), true) and all_passed
+
 	return all_passed
 
 
