@@ -430,7 +430,7 @@ i18n (Godot translations).
   ![The picker's object-cards front page: System first, then every pack and autoload as its own card with its icon](images/object-first-add.png)
 - **Event numbers live in the margin**, flat and sequential through groups and sub-events,
   computed from the sheet - collapsing or filtering never renumbers, so "check event 34" in a
-  forum reply stays meaningful. Jump to one with the command palette's *Go to Event Number*.
+  forum reply stays meaningful. Jump to one with **Go to event** (Ctrl+G) or Godot's Command Palette (Ctrl+Shift+P).
 
   ![The margin counting 1 to 5 straight through a sub-event, so nesting never renumbers anything](images/event-numbers.png)
 - **The bookmarks bar is C3's**: Ctrl+M marks a row, F4 / Shift+F4 cycle, and Tools >

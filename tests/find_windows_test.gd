@@ -28,24 +28,31 @@ static func _palette_tabs() -> bool:
 	palette._command_palette_search.text = "add"
 	palette._choose_command_palette_mode(1)
 	var typed_sheets: String = palette._command_palette_search.text
-	palette._choose_command_palette_mode(2)
+	palette._choose_command_palette_mode(0)
 	var typed_symbols: String = palette._command_palette_search.text
-	palette._choose_command_palette_mode(4)
+	palette._choose_command_palette_mode(3)
 	var waiting: Array = [palette._command_palette_search.text, palette._command_palette_tabs.current_tab,
 		palette._command_palette_list.item_count]
 	palette._refresh_command_palette("Error at res://player.gd:42")
 	var pasted_tab: int = palette._command_palette_tabs.current_tab
+	var tabs: PackedStringArray = PackedStringArray()
+	for index: int in range(palette._command_palette_tabs.tab_count):
+		tabs.append(palette._command_palette_tabs.get_tab_title(index))
 	var ok: bool = SUPPORT.pins(NAME, [
-		["a plain query is the Commands tab", palette.mode_of("add event"), 0],
+		["a plain query is the Symbols tab", palette.mode_of("speed"), 0],
+		["@ is the Symbols tab too", palette.mode_of("@speed"), 0],
 		["# is the Sheets tab", palette.mode_of("#player"), 1],
-		["@ is the Symbols tab", palette.mode_of("@speed"), 2],
-		["? is the Docs tab", palette.mode_of("?tween"), 3],
-		["a pasted error line is its own tab", palette.mode_of("E 0:00 res://player.gd:42 - boom"), 4],
+		["? is the Docs tab", palette.mode_of("?tween"), 2],
+		["a pasted error line is its own tab", palette.mode_of("E 0:00 res://player.gd:42 - boom"), 3],
+		["the tabs are the four ways to go somewhere", tabs, PackedStringArray(["@ Symbols", "# Sheets", "? Docs", "Error line"])],
 		["clicking Sheets types its prefix before the words", typed_sheets, "#add"],
 		["clicking Symbols swaps the prefix, keeping the words", typed_symbols, "@add"],
-		["the Error line tab empties the field and waits for the paste", waiting, ["", 4, 0]],
-		["a paste lands on the Error line tab", pasted_tab, 4],
-		["the window runs with Run", palette._command_palette_window.ok_button_text, "Run"],
+		["the Error line tab empties the field and waits for the paste", waiting, ["", 3, 0]],
+		["a paste lands on the Error line tab", pasted_tab, 3],
+		["the window goes with Go", palette._command_palette_window.ok_button_text, "Go"],
+		["and names Godot's Command Palette for commands",
+			palette._command_palette_window.find_children("*", "Label", true, false).any(func(label: Node) -> bool:
+				return (label as Label).text.contains("Ctrl+Shift+P")), true],
 	])
 	editor.free()
 	return ok

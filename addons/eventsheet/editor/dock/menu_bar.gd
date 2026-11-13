@@ -12,6 +12,7 @@ extends RefCounted
 
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
+const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 const COMPARE_DIALOG_PATH := "res://addons/eventsheet/editor/dock/compare_dialog.gd"
 const LOOSE_ENDS_PANEL_PATH := "res://addons/eventsheet/editor/dock/loose_ends_panel.gd"
 const MCP_SERVER_PATH := "res://addons/eventsheet/mcp/mcp_server.gd"
@@ -518,6 +519,10 @@ func build(root: Node) -> void:
 	for kind_index: int in range(registered_kinds.size()):
 		# Kind TITLES localise (a pack can ship a CSV for its block names); kind_ids never do.
 		add_popup.add_item("%s…" % EventSheetL10n.translate(registered_kinds[kind_index].title), 100 + kind_index)
+		# And one command on Godot's own Command Palette, so a block kind is reachable from there too.
+		var palette_kind_id: String = registered_kinds[kind_index].kind_id
+		DOCK_REGISTRY.register_palette_command("Add %s…" % registered_kinds[kind_index].title,
+			func() -> void: _dock._open_custom_block_add(palette_kind_id))
 	add_popup.id_pressed.connect(func(id: int) -> void:
 		if id >= 100:
 			var kinds_now: Array[EventSheetBlockKind] = EventSheetBlockRegistry.addable_kinds()

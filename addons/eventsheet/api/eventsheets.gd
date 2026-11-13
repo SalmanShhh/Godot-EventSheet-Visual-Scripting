@@ -371,9 +371,10 @@ static func build_caption_row(text: String, indent: int = 0, row_uid: String = "
 	return view._row_builder.build_caption_row(text, indent, uid, accent)
 
 
-## Adds an entry to the Command Palette (Ctrl+P). `action` runs when picked. Re-register
-## under the same title to replace; unregister_palette_command removes it. Works before
-## the dock opens - entries appear once a palette exists.
+## Adds an entry to Godot's own Command Palette (Ctrl+Shift+P), under "EventSheets" unless the
+## category says otherwise. `action` runs when picked. Re-register under the same title to replace;
+## unregister_palette_command removes it. The entry is also kept in palette_commands(). Works before
+## the dock opens.
 static func register_palette_command(title: String, action: Callable, category: String = "") -> void:
 	# An optional category prefixes the display title ("My Pack: Reroll Loot") so extension
 	# commands group together in the palette's fuzzy filter.
@@ -384,7 +385,7 @@ static func unregister_palette_command(title: String) -> void:
 	DOCK_REGISTRY.unregister_palette_command(title)
 
 
-## The registered extension commands, in registration order (read by the palette).
+## The registered commands, in registration order: every one of them is on Godot's Command Palette.
 static func palette_commands() -> Array[Dictionary]:
 	return DOCK_REGISTRY.palette_commands()
 

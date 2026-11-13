@@ -10529,3 +10529,9 @@ Name the look to make it.,ルックを作るには名前を付けてください
 """%s"" is not a type or a class.","""%s"" は型でもクラスでもありません。"
 Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,完成した言語は、プロジェクト設定 > ローカライズ > 翻訳 でオンにします。GodotはCSVをインポートするときに翻訳ファイルを作成します。
 It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,テキストを入力するまで0%と表示されます。Godotが翻訳ファイルを作成するので、プロジェクト設定 > ローカライズ > 翻訳 に追加してください。
+Go to,移動
+Enter goes to the selected line · Up / Down moves · Esc closes,Enterで選んだ行へ移動 · 上下キーで選択 · Escで閉じる
+# opens any sheet · ? searches the docs · paste res://player.gd:42 to land on that row,# で任意のシートを開く · ? でドキュメントを検索 · res://player.gd:42 を貼り付けるとその行へ移動
+COMMANDS,コマンド
+Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Ctrl+Shift+P で Godot のコマンドパレットを開きます - EventSheets のコマンドはすべてそこに並びます。
+"Type a function, signal or variable…",関数、シグナル、変数を入力…

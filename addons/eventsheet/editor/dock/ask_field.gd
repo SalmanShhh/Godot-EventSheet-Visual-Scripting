@@ -162,7 +162,7 @@ func _open_declaration(answer: Dictionary) -> void:
 		wanted = machine.get("variable") if not machine.is_empty() else EventSheetStateFacts.enum_row(sheet)
 	else:
 		var name: String = str(answer.get("symbol", ""))
-		for entry: Variant in EventSheetCommandPalette.collect_symbols(sheet):
+		for entry: Variant in load("res://addons/eventsheet/editor/dock/command_palette.gd").collect_symbols(sheet):
 			if str((entry as Dictionary).get("name", "")) == name:
 				wanted = (entry as Dictionary).get("resource") as Resource
 				break

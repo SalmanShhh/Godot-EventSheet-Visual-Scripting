@@ -325,7 +325,8 @@ func unhandled_key_input(event: InputEvent) -> void:
 	# Fixed alternates + structural keys (grammar, not preference - never rebindable):
 	# Ctrl+Y redo, Ctrl+± zoom, Tab nesting, Delete, Enter/F2 inline edit.
 	if key_event.ctrl_pressed or key_event.meta_pressed:
-		if key_event.keycode == KEY_P:
+		# Ctrl+P is the Go to window; Ctrl+Shift+P is Godot's own Command Palette, so it is left alone.
+		if key_event.keycode == KEY_P and not key_event.shift_pressed:
 			_dock._open_command_palette()
 			_dock.accept_event()
 		elif key_event.keycode == KEY_G:

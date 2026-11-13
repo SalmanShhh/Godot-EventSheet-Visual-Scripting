@@ -994,6 +994,7 @@ func _init() -> void:
 	# dialog's private hint table: a parameter whose words nobody can picture is exactly the case
 	# that seam exists for, and using it here is what keeps it working.
 	load(BLEND_MODE_FIELD_PATH).ensure_registered()
+	_register_godot_palette_commands()
 	DOCK_REGISTRY.register_palette_command("Collapse All Regions", func() -> void: _viewport.set_region_folds(true))
 	DOCK_REGISTRY.register_palette_command("Expand All Regions", func() -> void: _viewport.set_region_folds(false))
 	# The global "don't offer tips" switch for the once-per-session rescue offers (the profiler on
@@ -2688,19 +2689,45 @@ static func margin_press_clears_selection(event: InputEvent) -> bool:
 	return not (press.ctrl_pressed or press.shift_pressed or press.meta_pressed or press.alt_pressed)
 
 
-# ── Command palette (Ctrl+P): list + fuzzy filter + popup shell → dock/command_palette.gd ──
-# Thin delegates preserve the original names/signatures so the shortcut caller and tests don't change.
-# filter_commands is static-by-class-name (tests call EventSheetDock.filter_commands); it forwards to the helper's static.
-static func filter_commands(commands: Array, query: String) -> Array:  # event_sheet_editor_test (static, by class name)
-	return load(COMMAND_PALETTE_PATH).filter_commands(commands, query)
-
-
-func _command_palette_commands() -> Array[Dictionary]:  # event_sheet_editor_test
-	return _command_palette._command_palette_commands()
-
-
+# ── Go to window (Ctrl+P): symbols, sheets, docs and error lines → dock/command_palette.gd ──
+# A thin delegate keeps the shortcut caller's name. The commands themselves are Godot's own Command
+# Palette (Ctrl+Shift+P): _register_godot_palette_commands puts the plugin's there.
 func _open_command_palette() -> void:  # Ctrl+P shortcut (_gui_input)
 	_command_palette._open_command_palette()
+
+
+## Puts every command the plugin has on Godot's own Command Palette, through the registry that
+## EventSheets.register_palette_command writes (which forwards each entry there). Run once, as the dock
+## is built, so the entries are there before the first sheet opens.
+func _register_godot_palette_commands() -> void:
+	# Each is a lambda made here, so it belongs to this dock and the registry takes it back when the
+	# dock goes, and each reaches its helper when it runs rather than when it is registered.
+	var commands: Array[Dictionary] = [
+		{"title": "New Sheet…", "run": func() -> void: _open_template_menu()},
+		{"title": "Open Sheet…", "run": func() -> void: _on_open_requested()},
+		{"title": "Save Sheet", "run": func() -> void: _sheet_io._on_save_requested()},
+		{"title": "Save Sheet As…", "run": func() -> void: _sheet_io._on_save_as_requested()},
+		{"title": "Export Generated GDScript…", "run": func() -> void: _sheet_io._export_gdscript_requested()},
+		{"title": "Run Scene", "run": func() -> void: _run_from_sheet()},
+		{"title": "Add Event", "run": func() -> void: _add_rows.on_add_event_requested()},
+		{"title": "Add Condition", "run": func() -> void: _add_rows.on_add_condition_requested()},
+		{"title": "Add Action", "run": func() -> void: _add_rows.on_add_action_requested()},
+		{"title": "Add Global Variable…", "run": func() -> void: _on_add_global_variable_requested()},
+		{"title": "Add Function…", "run": func() -> void: _open_function_dialog()},
+		{"title": "Go to event… (Ctrl+G)", "run": func() -> void: _open_go_to_event_dialog()},
+		{"title": "Outline (groups / regions / functions)…", "run": func() -> void: _open_outline_panel()},
+		{"title": "Toggle GDScript Panel", "run": func() -> void: _code_panel_glue.toggle_code_panel()},
+		{"title": "What Changed Since Save…", "run": func() -> void: _sheet_diff.open()},
+		{"title": "Toggle Simple Mode", "run": func() -> void: set_simple_mode(not _simple_mode)},
+		{"title": "Zoom In", "run": func() -> void: _on_zoom_in_requested()},
+		{"title": "Zoom Out", "run": func() -> void: _on_zoom_out_requested()},
+		{"title": "Sheet Type…", "run": func() -> void: _open_sheet_type_dialog()},
+		{"title": "Export Addon Pack…", "run": func() -> void: _export_pack._export_addon_pack()},
+		{"title": "Open Welcome", "run": func() -> void: show_welcome()},
+		{"title": "Start the Tour", "run": func() -> void: start_tour()},
+	]
+	for command: Dictionary in commands:
+		DOCK_REGISTRY.register_palette_command(str(command["title"]), command["run"])
 
 
 ## True when beginner-friendly Simple mode is active (advanced/code menu entries hidden).

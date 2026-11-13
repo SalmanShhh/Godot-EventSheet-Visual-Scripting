@@ -19,7 +19,7 @@ a keep radius so walking back over a border reloads nothing.
    node). Chunks are added as ITS children.
 2. Set **Cell Size** to the size of one chunk in pixels. Every chunk scene is authored around its
    own origin, and the grid puts it in the world.
-3. Make a folder of chunk scenes named `chunk_X_Y.tscn` - by hand, or by pressing **Ctrl+P** and
+3. Make a folder of chunk scenes named `chunk_X_Y.tscn` - by hand, or by pressing **Ctrl+Shift+P** (Godot's Command Palette) and
    running **Split Scene Into Chunks** on the big scene you have already built.
 4. On the world's ready event, stream around your player.
 
@@ -72,7 +72,7 @@ name is one keystroke, or a node drag.
 
 ## The two editor tools
 
-Press **Ctrl+P** for the command palette:
+Press **Ctrl+Shift+P** for Godot's Command Palette, where both are listed under EventSheets:
 
 - **Split Scene Into Chunks** reads one scene, moves each direct child of its root into the cell
   that child's own position falls in, re-bases it to that cell's origin, and writes the folder.
@@ -223,7 +223,7 @@ On Autosave Due
 
 ### 16. Turn the map you already built into a streamed one
 
-You do not have to start over. Press **Ctrl+P**, run **Split Scene Into Chunks** on the scene you
+You do not have to start over. Press **Ctrl+Shift+P**, run **Split Scene Into Chunks** on the scene you
 have, point the Streamer at the folder it wrote, and delete the children from the original.
 
 ### Other use cases

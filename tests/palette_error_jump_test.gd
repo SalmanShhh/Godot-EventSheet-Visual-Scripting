@@ -58,10 +58,11 @@ static func run() -> bool:
 	ok = _check("the selected row is the one that emitted the line (take_damage's Define block)",
 		selected is EventFunction and (selected as EventFunction).function_name == "take_damage", true) and ok
 
-	# ── Commands still fuzz when there's no location ──
+	# ── A query with no location lists no commands: those are Godot's own Command Palette's ──
 	dock._command_palette._refresh_command_palette("add event")
-	ok = _check("plain queries still fuzzy-match commands",
-		str((dock._command_palette._command_palette_matches[0] as Dictionary).get("title", "")), "Add Event") and ok
+	ok = _check("a plain query lists symbols of the sheet, never commands",
+		dock._command_palette._command_palette_matches.filter(func(match: Dictionary) -> bool:
+			return str(match.get("title", "")) == "Add Event").size(), 0) and ok
 
 	dock.free()
 	return ok

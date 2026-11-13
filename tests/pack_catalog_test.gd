@@ -179,7 +179,7 @@ static func _test_no_door_names_a_pack_manager() -> bool:
 	var tooltips: PackedStringArray = PackedStringArray()
 	_collect_menu_items(editor, items, tooltips)
 	var palette: PackedStringArray = PackedStringArray()
-	for command: Dictionary in editor._command_palette_commands():
+	for command: Dictionary in EventSheets.palette_commands():
 		palette.append(str(command.get("title", "")))
 	var named: PackedStringArray = PackedStringArray()
 	for text: String in items + palette:

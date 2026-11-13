@@ -231,9 +231,9 @@ static func run() -> bool:
 	all_passed = _check("a bridge-registered kind resolves like any other",
 		EventSheetBlockRegistry.get_kind("test.bridge_kind") == bridge_kind, true) and all_passed
 
-	# ── every registered kind is reachable from the command palette ──────
+	# ── every registered kind is reachable from Godot's Command Palette ──────
 	var palette_titles: Array = []
-	for command: Dictionary in dock._command_palette_commands():
+	for command: Dictionary in EventSheets.palette_commands():
 		palette_titles.append(str(command.get("title", "")))
 	all_passed = _check("palette lists built-in kinds", palette_titles.has("Add Preload Resource…") and palette_titles.has("Add Region…"), true) and all_passed
 	all_passed = _check("palette lists pack-defined kinds", palette_titles.has("Add Note…"), true) and all_passed

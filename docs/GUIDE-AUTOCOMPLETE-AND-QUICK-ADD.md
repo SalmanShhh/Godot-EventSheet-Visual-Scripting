@@ -107,7 +107,7 @@ dialog. It is only faster than the mouse.
 
 A name crossing your mind is not always a row you want to add. `chase` is as often *where is Chase*
 as it is *put a Chase row here* - and answering that used to mean remembering which window knows:
-the Command Palette for a function, Find in Project for a row, the Project Doctor for a finding, the
+the Ctrl+P window for a function, Find in Project for a row, the Project Doctor for a finding, the
 sheet head for a state. So the **Quick add or find** field in the toolbar answers as well as adds.
 
 Type two characters or more and a list opens under it. Every line says **what kind of thing it is**

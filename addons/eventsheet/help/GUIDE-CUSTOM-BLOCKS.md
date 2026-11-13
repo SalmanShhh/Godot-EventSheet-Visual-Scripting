@@ -96,7 +96,7 @@ func summary(block: CustomBlockRow) -> String:
 
 That is the entire integration. Immediately:
 
-- **Add ▾ → Note…** and **Ctrl+P → "Add Note…"** create one through a dialog built from the schema.
+- **Add ▾ → Note…** and **Godot's Command Palette (Ctrl+Shift+P) → "Add Note…"** create one through a dialog built from the schema.
 - Opening any `.gd` with a `## NOTE: tune this` line shows a highlighted **Note** row instead of prelude text.
 - Double-clicking the row edits it; saving writes the exact same line back.
 
@@ -208,7 +208,7 @@ Reach for a resource kind only when you genuinely need a dedicated Resource clas
 ## 7. The UX Your Kind Gets for Free
 
 - **Add ▾ menu**: every `addable()` kind is listed under its category; choosing it opens the schema dialog with defaults filled in.
-- **Command palette**: Ctrl+P lists "Add <Title>…" for every addable kind, including ones registered after startup.
+- **Command palette**: Godot's Command Palette (Ctrl+Shift+P) lists "Add <Title>…" for every addable kind present when the Add menu was built; the Add menu itself always lists them all.
 - **The schema dialog**: one field control per schema entry: a `LineEdit` per String (Enter applies), a `CheckBox` per bool, a `SpinBox` per int/float, an `OptionButton` for a String field carrying `options`, a Browse button beside a `resource_path` String, and a tint checkbox plus colour picker per `TYPE_COLOR`. Add mode inserts below the selection; edit mode (double-click the row) prefills and rewrites. Both apply through the undo system, so Ctrl+Z works.
 - **The row**: a kind badge (your `title`) plus your `summary()` text, rendered by the same virtualized viewport as everything else. Disabled state and selection behave like built-in rows.
 - **A custom editor when you outgrow the schema**: override `edit(dock, block)`, open anything you like, and return `true`. The registry dispatches every block edit, so your dialog is reached exactly the way the built-in enum dialog is.

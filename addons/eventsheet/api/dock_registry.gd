@@ -28,9 +28,15 @@ const WELCOMED_METADATA: Array[String] = ["eventsheets", "welcomed"]
 ## The live workspace, announced by the workspace itself while it is built. Weak by contract: every
 ## reader checks validity, so a closed workspace never leaves the API pointing at a freed node.
 static var _dock: Control = null
-## Palette entries registered from code: Array of {"title": String, "run": Callable}. The Command
-## Palette appends these after the built-in commands on every open.
+## Palette entries registered from code: Array of {"title": String, "run": Callable}. Each one is
+## also put on Godot's own Command Palette (Ctrl+Shift+P) as it is registered.
 static var _palette_commands: Array[Dictionary] = []
+## Where an entry goes to reach Godot's own Command Palette: called as forwarder.call(adding, display
+## title, key, action). Empty in the editor, where the registry talks to the palette itself; the suite
+## sets it so a test needs no editor.
+static var forwarder: Callable = Callable()
+## The keys this registry has put on Godot's Command Palette, so it removes only what it added.
+static var _on_godot_palette: Dictionary = {}
 ## Row context-menu items: [{label, filter: Callable(resource)->bool, action: Callable(resource)}].
 static var _row_menu_items: Array[Dictionary] = []
 ## Lifecycle listeners: event name -> Array[Callable]. The workspace fires these from its own open,
@@ -56,18 +62,59 @@ static func dock_alive() -> bool:
 
 
 ## An optional category prefixes the display title ("My Pack: Reroll Loot") so extension commands
-## group together in the palette's fuzzy filter. Re-registering a title replaces it.
+## group together in Godot's Command Palette. Re-registering a title replaces it.
 static func register_palette_command(title: String, action: Callable, category: String = "") -> void:
 	if not category.is_empty():
 		title = "%s: %s" % [category, title]
 	unregister_palette_command(title)
 	_palette_commands.append({"title": title, "run": action})
+	_forward(true, title, action)
 
 
 static func unregister_palette_command(title: String) -> void:
 	for index: int in range(_palette_commands.size() - 1, -1, -1):
 		if str(_palette_commands[index].get("title", "")) == title:
 			_palette_commands.remove_at(index)
+			_forward(false, title, Callable())
+
+
+## The key an entry has in Godot's palette: "eventsheets/" and the title in lower-case words joined
+## by underscores, so Godot files every entry under one "Eventsheets" heading.
+static func godot_palette_key(title: String) -> String:
+	var slug: String = ""
+	for character: String in title.to_lower():
+		slug += character if (character >= "a" and character <= "z") or (character >= "0" and character <= "9") else "_"
+	while slug.contains("__"):
+		slug = slug.replace("__", "_")
+	return "eventsheets/" + slug.trim_prefix("_").trim_suffix("_")
+
+
+## The words Godot's palette shows for an entry: the plugin's name in front of a title with no
+## category of its own, so a reader typing "EventSheets" finds every one.
+static func godot_palette_title(title: String) -> String:
+	return title if title.contains(": ") else "EventSheets: " + title
+
+
+## Adds or takes back one entry on Godot's own Command Palette. Outside the editor there is none, and
+## a palette that is not built yet is skipped without a word: the entry stays in the registry.
+static func _forward(adding: bool, title: String, action: Callable) -> void:
+	var key: String = godot_palette_key(title)
+	if forwarder.is_valid():
+		forwarder.call(adding, godot_palette_title(title), key, action)
+		return
+	if not Engine.is_editor_hint():
+		return
+	var palette: Object = EditorInterface.get_command_palette()
+	if palette == null:
+		return
+	# Godot reports an error for a key that is not there (to remove) or already there (to add), so this
+	# keeps its own list of what it put on the palette.
+	if _on_godot_palette.has(key):
+		palette.call("remove_command", key)
+		_on_godot_palette.erase(key)
+	if adding:
+		palette.call("add_command", godot_palette_title(title), key, action)
+		_on_godot_palette[key] = true
 
 
 ## The registered extension commands, in registration order.
@@ -128,7 +175,10 @@ static func forget(dock: Control) -> void:
 	if _dock == dock:
 		_dock = null
 	for index: int in range(_palette_commands.size() - 1, -1, -1):
-		if (_palette_commands[index].get("run", Callable()) as Callable).get_object() == dock:
+		# A command made by one of the dock's own helpers (the menu bar's) belongs to it all the same.
+		var owner: Object = (_palette_commands[index].get("run", Callable()) as Callable).get_object()
+		if owner == dock or (owner != null and owner.get("_dock") == dock):
+			_forward(false, str(_palette_commands[index].get("title", "")), Callable())
 			_palette_commands.remove_at(index)
 	for index: int in range(_row_menu_items.size() - 1, -1, -1):
 		var entry: Dictionary = _row_menu_items[index]

@@ -26,7 +26,7 @@ There are several ways to open the ACE Studio to author a brand-new function:
 
 - The **Add** menu in the event sheet dock has a **"Function..."** entry.
 - There is an **add-function button** in the sheet itself.
-- It is reachable from the **Command Palette** (Ctrl+P).
+- It is reachable from Godot's **Command Palette** (Ctrl+Shift+P), where every EventSheets command is listed.
 - **Right-click empty canvas ▸ New Function** offers a submenu: **Function** (a plain, unpublished helper), or **Action** / **Condition** / **Expression** - the last three open the dialog with that kind's card already picked and **Publish to the picker** already ticked, so "I want a new Action" is one gesture.
 
 They all open the same **"New Function"** dialog, ready for a new function.

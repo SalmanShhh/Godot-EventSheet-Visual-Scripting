@@ -1694,17 +1694,15 @@ static func run() -> bool:
             true
         ) and all_passed
 
-    # Command palette (Ctrl+P): the command list + fuzzy filter are pure and testable.
-    var palette_cmds: Array[Dictionary] = dock._command_palette_commands()
-    all_passed = _check("command palette exposes commands", palette_cmds.size() > 0, true) and all_passed
-    all_passed = _check("empty query returns every command", EventSheetDock.filter_commands(palette_cmds, "").size(), palette_cmds.size()) and all_passed
-    var add_event_matches: Array = EventSheetDock.filter_commands(palette_cmds, "add event")
-    all_passed = _check("substring query ranks the matching command first",
-        add_event_matches.size() > 0 and str((add_event_matches[0] as Dictionary).get("title", "")).contains("Add Event"), true) and all_passed
-    var fuzzy_matches: Array = EventSheetDock.filter_commands(palette_cmds, "expgd")
-    all_passed = _check("subsequence query matches across words",
-        fuzzy_matches.size() > 0 and str((fuzzy_matches[0] as Dictionary).get("title", "")).contains("Export"), true) and all_passed
-    all_passed = _check("no-match query returns nothing", EventSheetDock.filter_commands(palette_cmds, "zzqxnomatch").size(), 0) and all_passed
+    # The plugin's commands are Godot's own Command Palette's: each one is registered on the seam that
+    # forwards it there, and the Ctrl+P window no longer lists commands.
+    var registered_titles: PackedStringArray = PackedStringArray()
+    for command: Dictionary in EventSheets.palette_commands():
+        registered_titles.append(str(command.get("title", "")))
+    all_passed = _check("the plugin's commands are registered for Godot's Command Palette",
+        registered_titles.has("Add Event") and registered_titles.has("Export Generated GDScript…") and registered_titles.has("Save Sheet"), true) and all_passed
+    all_passed = _check("the Go to window has four tabs and no command list",
+        [EventSheetCommandPalette.MODE_PREFIXES.size(), EventSheetCommandPalette.new().has_method("godot_commands")], [4, false]) and all_passed
 
     editor.free()
     return all_passed

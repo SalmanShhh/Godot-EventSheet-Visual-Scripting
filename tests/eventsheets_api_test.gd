@@ -299,7 +299,7 @@ static func run() -> bool:
 	var ran: Array = []
 	EventSheets.register_palette_command("API Test Command", func() -> void: ran.append(true))
 	var titles: Array = []
-	for command: Dictionary in dock._command_palette_commands():
+	for command: Dictionary in EventSheets.palette_commands():
 		titles.append(str(command.get("title", "")))
 	ok = _check("a registered command reaches the palette", titles.has("API Test Command"), true) and ok
 	ok = _check("the collapse commands dogfood the same seam", titles.has("Collapse All Regions") and titles.has("Expand Everything"), true) and ok

@@ -3,18 +3,18 @@ class_name EventSheetCommandPalette
 extends RefCounted
 
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
-# The Command Palette (Ctrl+P): keyboard-first access to every dock action - the affordance power
-# users reach for first. The command list + fuzzy filter are pure/testable (filter_commands is static
-# so tests can score titles without a live window); the popup is the GUI shell built lazily. Every
-# command targets a dock method that STAYS on the dock - this helper only owns the list, the filter,
-# and the window shell, reaching the dock's actions + add_child through the `_dock` back-reference,
-# the same pattern as the other dock/ helpers. Extracted from event_sheet_dock.gd to keep that file
-# maintainable; the dock keeps thin delegates so its shortcut caller and the tests don't change.
+# The Go to window (Ctrl+P): a function, signal or variable in this sheet, any sheet in the project, a
+# page of the Manual, or the row behind a pasted error line. Commands are Godot's own Command Palette
+# (Ctrl+Shift+P): every EventSheets command is registered there through EventSheets.register_palette_
+# command, which forwards to it. This file owns the fuzzy filter every mode shares and the window
+# shell, reaching the dock's actions + add_child through the `_dock` back-reference, the same pattern
+# as the other dock/ helpers.
 
-## The palette's modes in tab order, each with the prefix that types it. The error-line mode has no
-## prefix: a pasted "res://file.gd:42" is recognised wherever it sits in the text.
-const MODE_PREFIXES: PackedStringArray = ["", "#", "@", "?", ""]
-const MODE_ERROR := 4
+## The window's modes in tab order, each with the prefix that types it. Symbols is the default, so it
+## needs none; the error-line mode has no prefix either: a pasted "res://file.gd:42" is recognised
+## wherever it sits in the text.
+const MODE_PREFIXES: PackedStringArray = ["@", "#", "?", ""]
+const MODE_ERROR := 3
 
 var _dock: Control = null
 var _command_palette_window: ConfirmationDialog = null
@@ -28,52 +28,7 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Every command the palette can run: {title, run}. Kept in one place so the palette,
-## (future) menus, and tests share the same source of truth.
-func _command_palette_commands() -> Array[Dictionary]:
-	var commands: Array[Dictionary] = [
-		{"title": "New Sheet…", "run": _dock._open_template_menu},
-		{"title": "Open Sheet…", "run": _dock._on_open_requested},
-		{"title": "Save Sheet", "run": _dock._sheet_io._on_save_requested},
-		{"title": "Save Sheet As…", "run": _dock._sheet_io._on_save_as_requested},
-		{"title": "Export Generated GDScript…", "run": _dock._sheet_io._export_gdscript_requested},
-		{"title": "Run Scene", "run": _dock._run_from_sheet},
-		{"title": "Add Event", "run": _dock._add_rows.on_add_event_requested},
-		{"title": "Add Condition", "run": _dock._add_rows.on_add_condition_requested},
-		{"title": "Add Action", "run": _dock._add_rows.on_add_action_requested},
-		{"title": "Add Global Variable…", "run": _dock._on_add_global_variable_requested},
-		{"title": "Add Function…", "run": _dock._open_function_dialog},
-		{"title": "Go to event… (Ctrl+G)", "run": _dock._open_go_to_event_dialog},
-		{"title": "Outline (groups / regions / functions)…", "run": _dock._open_outline_panel},
-		{"title": "Toggle GDScript Panel", "run": _dock._code_panel_glue.toggle_code_panel},
-		{"title": "What Changed Since Save…", "run": func() -> void: _dock._sheet_diff.open()},
-		{"title": "Toggle Simple Mode", "run": func() -> void: _dock.set_simple_mode(not _dock._simple_mode)},
-		{"title": "Zoom In", "run": _dock._on_zoom_in_requested},
-		{"title": "Zoom Out", "run": _dock._on_zoom_out_requested},
-		{"title": "Sheet Type…", "run": _dock._open_sheet_type_dialog},
-		{"title": "Export Addon Pack…", "run": _dock._export_pack._export_addon_pack},
-		{"title": "Open Welcome", "run": _dock.show_welcome},
-		{"title": "Start the Tour", "run": _dock.start_tour},
-	]
-	# One "Add <kind>…" command per registered Custom Block kind (preloads, region markers,
-	# pack-defined kinds), so custom blocks are reachable from Ctrl+P like everything else.
-	# Built per open, so kinds registered after startup (a freshly dropped pack) appear.
-	for kind: EventSheetBlockKind in EventSheetBlockRegistry.addable_kinds():
-		var kind_id: String = kind.kind_id
-		commands.append({"title": "Add %s…" % kind.title, "run": func() -> void: _dock._open_custom_block_add(kind_id)})
-	# Extension commands registered through the public API (EventSheets.register_palette_
-	# command) - the plugin's own region fold commands arrive this way, dogfooding the seam.
-	commands.append_array(ReadingDoors.api().palette_commands())
-	return commands
-
-
-## Pure fuzzy filter (testable): returns the commands whose title matches `query` as a
-## prefix > substring > subsequence, best first. Empty query returns everything in order.
-static func filter_commands(commands: Array, query: String) -> Array:
-	return _fuzzy(commands, query, "title")
-
-
-## THE fuzzy order every palette mode shares: the entries whose `key` matches `query` as a prefix >
+## THE fuzzy order every mode shares: the entries whose `key` matches `query` as a prefix >
 ## substring > subsequence, best first and otherwise in the order given. Empty query = all.
 static func _fuzzy(entries: Array, query: String, key: String) -> Array:
 	var q: String = query.strip_edges().to_lower()
@@ -111,7 +66,7 @@ static func _command_match_score(title: String, q: String) -> int:
 
 ## Pure fuzzy filter over project sheet PATHS for the `#` mode: returns [{title, path}]
 ## whose file name matches `query` (the leading `#` already stripped) as prefix > substring > subsequence,
-## best first; empty query = all, name-sorted. Static → testable without a window, like filter_commands.
+## best first; empty query = all, name-sorted. Static → testable without a window.
 static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Array:
 	var entries: Array = []
 	for path: String in sheet_paths:
@@ -120,7 +75,7 @@ static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Arra
 	return _fuzzy(entries, query, "title")
 
 
-## The `#` mode's palette entries: every matching project sheet as a {title, run} that opens it - in
+## The `#` mode's entries: every matching project sheet as a {title, run} that opens it - in
 ## both formats, since a `.gd` is a sheet too (and the default kind).
 func _sheet_matches(query: String) -> Array:
 	var matches: Array = []
@@ -166,7 +121,7 @@ static func filter_symbols(symbols: Array, query: String) -> Array:
 	return _fuzzy(symbols, query, "name")
 
 
-## The `@` mode's palette entries: matching symbols in the active sheet as {title, run} that reveal them.
+## The Symbols mode's entries: matching symbols in the active sheet as {title, run} that reveal them.
 func _symbol_matches(query: String) -> Array:
 	var matches: Array = []
 	for symbol: Variant in filter_symbols(collect_symbols(_dock._current_sheet), query):
@@ -208,12 +163,17 @@ func _open_command_palette() -> void:
 static func mode_of(query: String) -> int:
 	if not parse_error_location(query).is_empty():
 		return MODE_ERROR
-	return maxi(MODE_PREFIXES.find(query.left(1), 1), 0) if not query.is_empty() else 0
+	match query.left(1):
+		"#":
+			return 1
+		"?":
+			return 2
+	return 0
 
 
 func _build_command_palette_window() -> void:
-	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Run a command"),
-		EventSheetL10n.translate("Run"), EventSheetL10n.translate("Cancel"), Vector2i(520, 420), _dock)
+	var parts: Dictionary = EventSheetPopupUI.action_window(EventSheetL10n.translate("Go to"),
+		EventSheetL10n.translate("Go"), EventSheetL10n.translate("Cancel"), Vector2i(520, 420), _dock)
 	_command_palette_window = parts["window"]
 	_command_palette_window.confirmed.connect(_run_selected_command)
 	var box: VBoxContainer = parts["box"]
@@ -222,10 +182,10 @@ func _build_command_palette_window() -> void:
 	_command_palette_search.text_changed.connect(_refresh_command_palette)
 	_command_palette_search.gui_input.connect(_on_command_palette_search_input)
 	box.add_child(_command_palette_search)
-	# The four prefix modes and the pasted error line, as tabs: clicking one types its prefix.
+	# The three prefix modes and the pasted error line, as tabs: clicking one types its prefix.
 	_command_palette_tabs = TabBar.new()
-	for title: String in [EventSheetL10n.translate("Commands"), EventSheetL10n.translate("# Sheets"),
-			EventSheetL10n.translate("@ Symbols"), EventSheetL10n.translate("? Docs"), EventSheetL10n.translate("Error line")]:
+	for title: String in [EventSheetL10n.translate("@ Symbols"), EventSheetL10n.translate("# Sheets"),
+			EventSheetL10n.translate("? Docs"), EventSheetL10n.translate("Error line")]:
 		_command_palette_tabs.add_tab(title)
 	_command_palette_tabs.tab_clicked.connect(_choose_command_palette_mode)
 	box.add_child(_command_palette_tabs)
@@ -235,9 +195,11 @@ func _build_command_palette_window() -> void:
 	box.add_child(_command_palette_list)
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()
 	strip.set_line(strip.add_line(EventSheetL10n.translate("KEYS")),
-		EventSheetL10n.translate("Enter runs the selected command · Up / Down moves · Esc closes"))
+		EventSheetL10n.translate("Enter goes to the selected line · Up / Down moves · Esc closes"))
 	strip.set_line(strip.add_line(EventSheetL10n.translate("MODES")),
-		EventSheetL10n.translate("# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row"))
+		EventSheetL10n.translate("# opens any sheet · ? searches the docs · paste res://player.gd:42 to land on that row"))
+	strip.set_line(strip.add_line(EventSheetL10n.translate("COMMANDS")),
+		EventSheetL10n.translate("Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there."))
 	box.add_child(strip)
 
 
@@ -246,7 +208,7 @@ func _build_command_palette_window() -> void:
 func _choose_command_palette_mode(tab: int) -> void:
 	var query: String = _command_palette_search.text
 	var mode: int = mode_of(query)
-	var words: String = "" if MODE_ERROR in [mode, tab] else (query.substr(1) if mode > 0 else query)
+	var words: String = "" if MODE_ERROR in [mode, tab] else (query.substr(1) if query.left(1) in ["@", "#", "?"] else query)
 	_command_palette_search.text = MODE_PREFIXES[tab] + words
 	_command_palette_search.caret_column = _command_palette_search.text.length()
 	_refresh_command_palette(_command_palette_search.text, tab)
@@ -289,11 +251,11 @@ func _error_jump_matches(location: Dictionary) -> Array:
 
 
 ## `chosen` is the tab just clicked: the Error line tab with nothing pasted yet lists nothing and
-## waits for the paste rather than falling back to the commands.
+## waits for the paste rather than falling back to the symbols.
 func _refresh_command_palette(query: String, chosen: int = -1) -> void:
-	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE sheet
-	# (function / signal / variable), `?` searches the documentation, a pasted error/stack line
-	# jumps to the row that emitted it; anything else fuzzy-runs a command.
+	# Prefix modes: `#` opens any project sheet, `?` searches the documentation, a pasted error/stack
+	# line jumps to the row that emitted it; anything else (with or without `@`) jumps to a symbol in
+	# the ACTIVE sheet (function / signal / variable).
 	var error_location: Dictionary = parse_error_location(query)
 	var waiting_for_paste: bool = chosen == MODE_ERROR and error_location.is_empty()
 	if waiting_for_paste:
@@ -302,16 +264,14 @@ func _refresh_command_palette(query: String, chosen: int = -1) -> void:
 		_command_palette_matches = _error_jump_matches(error_location)
 	elif query.begins_with("#"):
 		_command_palette_matches = _sheet_matches(query.substr(1))
-	elif query.begins_with("@"):
-		_command_palette_matches = _symbol_matches(query.substr(1))
 	elif query.begins_with("?"):
 		_command_palette_matches = _doc_matches(query.substr(1))
 	else:
-		_command_palette_matches = filter_commands(_command_palette_commands(), query)
+		_command_palette_matches = _symbol_matches(query.substr(1) if query.begins_with("@") else query)
 	if _command_palette_list == null:
 		return
 	_command_palette_tabs.current_tab = MODE_ERROR if waiting_for_paste else mode_of(query)
-	_command_palette_search.placeholder_text = EventSheetL10n.translate("Paste an error line, such as res://player.gd:42") 		if waiting_for_paste else EventSheetL10n.translate("Type a command…")
+	_command_palette_search.placeholder_text = EventSheetL10n.translate("Paste an error line, such as res://player.gd:42") 		if waiting_for_paste else EventSheetL10n.translate("Type a function, signal or variable…")
 	_command_palette_list.clear()
 	for cmd: Dictionary in _command_palette_matches:
 		_command_palette_list.add_item(str(cmd.get("title", "")))
@@ -344,7 +304,7 @@ func _move_command_palette_selection(delta: int) -> void:
 	_command_palette_list.ensure_current_is_visible()
 
 
-## Enter and the Run button: the selected command, or the first one when nothing is selected.
+## Enter and the Go button: the selected line, or the first one when nothing is selected.
 func _run_selected_command() -> void:
 	var sel: PackedInt32Array = _command_palette_list.get_selected_items()
 	_run_command_palette_index(sel[0] if sel.size() > 0 else 0)

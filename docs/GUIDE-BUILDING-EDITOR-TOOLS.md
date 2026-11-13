@@ -172,7 +172,7 @@ extends EditorPlugin
 
 
 func _enter_tree() -> void:
-	# 1. A one-click command in the Command Palette (Ctrl+P).
+	# 1. A one-click command in Godot's Command Palette (Ctrl+Shift+P).
 	EventSheets.register_palette_command("Insert Debug Marker", func() -> void:
 		EventSheets.edit("Insert Debug Marker", func(sheet: EventSheetResource) -> void:
 			var note: CommentRow = CommentRow.new()
@@ -206,7 +206,7 @@ func _exit_tree() -> void:
 
 A few things to notice:
 
-- **`register_palette_command(title, action)`** puts your tool in the Command Palette (Ctrl+P) next to the built-ins. Re-registering the same title replaces it, so a plugin reload never duplicates entries.
+- **`register_palette_command(title, action)`** puts your tool in Godot's own Command Palette (Ctrl+Shift+P), listed under EventSheets next to the plugin's commands. Re-registering the same title replaces it, so a plugin reload never duplicates entries.
 - **`edit(label, mutation)`** is THE way to change the open sheet. Your callable receives the live `EventSheetResource`; the whole change lands as one undo step named `label`, and the API refreshes the rows and marks the sheet dirty for you. One rule: never cache a row across `edit()` calls (the commit replaces resources with snapshot duplicates), so always re-fetch from `current_sheet()`.
 - **`register_doctor_check(check_id, check)`** ships a health check that runs in the Doctor panel, the headless CLI, CI, and MCP. Your check receives every sheet path plus a shared `findings` array and appends findings shaped `{"severity", "check", "path", "message"}`. The Doctor covenant applies: never write inside `res://` from a check.
 - **`simple_block_kind(config)` + `register_block_kind(kind)`** add a new NON-ACE row type with no subclassing. `emit` is the template it compiles to (one output line per line of the string, `{field}` placeholders); `summary` is the one-line viewport display.

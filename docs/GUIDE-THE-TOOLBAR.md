@@ -81,7 +81,7 @@ Three things about the cascade are worth knowing:
 - **They are the same menus.** Sheet, Add, Edit, View and Tools used to be five separate buttons on
   the strip. Each one hangs under the Menu now carrying the same name, the same items in the same
   order, the same ids and the same handlers - held item by item by the suite rather than claimed
-  here - so the command palette, the keyboard dispatch and every test that addresses an item by
+  here - so Godot's Command Palette, the keyboard dispatch and every test that addresses an item by
   number still finds it.
 - **The ones that rebuild themselves still do.** Language, Sheet theme, Arrange by, Saved Views,
   Workspaces and Export refill every time they open, so a theme dropped into the themes folder or a
@@ -152,7 +152,7 @@ them:
 | 12 | **Menu > Add > Pattern...** | The Manual's Common Game Patterns page, each pattern drawn as its real rows with an Insert that lands them here |
 | 13 | **The beginner Add toolbar** | Simple mode's own strip: eight buttons, Event through Function, each with its key on hover |
 | 14 | **The expanded strip's four Add buttons** | Add Event, Add Condition, Add Action, Add Code |
-| 15 | **The command palette** | Add Event / Condition / Action / Global Variable / Function, among everything else |
+| 15 | **Godot's Command Palette** (Ctrl+Shift+P) | Add Event / Condition / Action / Global Variable / Function, among everything else. Ctrl+P is a Go to window for a symbol, a sheet, a Manual page or a pasted error line |
 | 16 | **Paste, and Duplicate** | `Ctrl+V` on copied rows, and duplicating a selection |
 | 17 | **Drag onto the canvas** | An object from the Objects list starts an event on it; an Input Map action starts an On pressed event |
 

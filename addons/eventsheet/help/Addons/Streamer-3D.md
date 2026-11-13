@@ -20,7 +20,7 @@ loaded, on a thread, and frees the ones behind. **Stream Height** decides whethe
 2. Set **Cell Size** to the size of one chunk in metres. Every chunk scene is authored around its
    own origin, and the grid puts it in the world.
 3. Leave **Stream Height** off unless your world is genuinely stacked - see the warning below.
-4. Make a folder of chunk scenes named `chunk_X_Y_Z.tscn` - by hand, or by pressing **Ctrl+P** and
+4. Make a folder of chunk scenes named `chunk_X_Y_Z.tscn` - by hand, or by pressing **Ctrl+Shift+P** (Godot's Command Palette) and
    running **Split Scene Into Chunks** on the big scene you have already built.
 
 ```
@@ -83,7 +83,7 @@ name is one keystroke, or a node drag.
 
 ## The two editor tools
 
-Press **Ctrl+P** for the command palette:
+Press **Ctrl+Shift+P** for Godot's Command Palette, where both are listed under EventSheets:
 
 - **Split Scene Into Chunks** reads one scene, moves each direct child of its root into the cell
   that child's own position falls in, re-bases it to that cell's origin, and writes the folder.
@@ -217,7 +217,7 @@ On Autosave Due
 
 ### 16. Turn the terrain you already built into a streamed one
 
-Press **Ctrl+P**, run **Split Scene Into Chunks** on the scene you have, point the Streamer at the
+Press **Ctrl+Shift+P**, run **Split Scene Into Chunks** on the scene you have, point the Streamer at the
 folder it wrote, and delete the children from the original.
 
 ### Other use cases

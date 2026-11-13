@@ -22,7 +22,7 @@ This guide walks through each tab in order, shows the matching code API for peop
 There are two ways to open the window.
 
 - In the event sheet dock, open the **Tools** menu and choose **Save Studio...**.
-- Press **Ctrl+P** to open the Command Palette, type **Save Studio**, and run the matching command.
+- Press **Ctrl+Shift+P** to open Godot's Command Palette, type **Save Studio**, and run the matching command.
 
 Either route opens the same window. It does not need the game to be running, and it does not modify your project just by being open. The three tabs across the top are **What gets saved**, **Format Preview**, and **Save Slots**. Right-clicking a variable on the sheet and choosing **Save Choice...** opens the same window on the first tab.
 

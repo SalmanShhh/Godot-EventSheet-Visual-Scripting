@@ -337,7 +337,7 @@ read a diff of it. Nothing here has to be exported from anything.
 ## Splitting a scene you already built, and putting it back
 
 Almost nobody starts with chunks. You build a level, it gets big, and then you want it streamed.
-**Ctrl+P ▸ Split Scene Into Chunks** does that conversion:
+**Ctrl+Shift+P ▸ Split Scene Into Chunks** (Godot's Command Palette) does that conversion:
 
 1. Every **direct child** of the scene's root moves into the cell its own position falls in.
 2. Each child is re-based to that cell's origin, so a chunk scene is authored around `(0, 0)` and the
@@ -349,7 +349,7 @@ position at all - is **named in the receipt** rather than guessed at. And **a ti
 because splitting one would mean rewriting its tile data, which is a different and much less
 reversible operation than moving nodes.
 
-**Ctrl+P ▸ Merge Chunks** is the way back: it reads a chunk folder and writes one scene with
+**Ctrl+Shift+P ▸ Merge Chunks** is the way back: it reads a chunk folder and writes one scene with
 everything put where the grid said it was. A split is never a one-way door onto somebody's level, and
 the round trip is what the suite pins.
 
@@ -424,7 +424,7 @@ a path to Resources In Folder, a SkinVault catalog or a loot table; `Mod Content
 Data Folder Problems questions over those folders, plus the one only a mods folder raises - a file
 two mods both bring.
 
-**Command palette ▸ Export Mod Template** writes the folder your modders copy: a filled-in
+Godot's Command Palette (**Ctrl+Shift+P**) ▸ **Export Mod Template** writes the folder your modders copy: a filled-in
 `mod.json`, an optional `mod.tres` beside it, an empty content folder, and a README saying what each
 field means. Point it somewhere that is **not** your mods folder - it is the example, not a mod - and
 it refuses a folder that already holds a manifest rather than writing over somebody's work.

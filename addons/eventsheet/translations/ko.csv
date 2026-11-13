@@ -10529,3 +10529,9 @@ Name the look to make it.,룩을 만들려면 이름을 지어 주세요.
 """%s"" is not a type or a class.","""%s"" 은(는) 타입도 클래스도 아닙니다."
 Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,완성된 언어는 프로젝트 설정 > 현지화 > 번역에서 켭니다. Godot는 CSV를 가져올 때 번역 파일을 만듭니다.
 It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,텍스트를 채우기 전까지 0%로 표시됩니다. Godot가 번역 파일을 만들면 프로젝트 설정 > 현지화 > 번역에 추가하세요.
+Go to,이동
+Enter goes to the selected line · Up / Down moves · Esc closes,Enter로 선택한 줄로 이동 · 위/아래로 이동 · Esc로 닫기
+# opens any sheet · ? searches the docs · paste res://player.gd:42 to land on that row,# 로 모든 시트 열기 · ? 로 문서 검색 · res://player.gd:42 를 붙여넣으면 그 행으로 이동
+COMMANDS,명령
+Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Ctrl+Shift+P로 Godot의 명령 팔레트를 여세요 - 모든 EventSheets 명령이 거기에 있습니다.
+"Type a function, signal or variable…","함수, 시그널 또는 변수를 입력…"

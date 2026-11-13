@@ -188,7 +188,7 @@ where the one loaded last wins.
 
 ## Export Mod Template
 
-Command palette ▸ **Export Mod Template** writes the folder your modders copy: a `mod.json` with its
+Godot's Command Palette (**Ctrl+Shift+P**) ▸ **Export Mod Template** writes the folder your modders copy: a `mod.json` with its
 five fields filled in, an optional `mod.tres` beside it, an empty content folder, and a README saying
 what each field means and what a mod carrying code costs the player who runs it. Point it somewhere
 that is not your mods folder - it is the example, not a mod - and it refuses a folder that already

@@ -10529,3 +10529,9 @@ Name the look to make it.,Ponle nombre al aspecto para crearlo.
 """%s"" is not a type or a class.","""%s"" no es un tipo ni una clase."
 Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,Activa un idioma terminado en Configuración del proyecto > Localización > Traducciones. Godot crea el archivo de traducción a partir del CSV al importarlo.
 It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,Aparece como 0 % hasta que se rellena el texto. Godot crea el archivo de traducción; añádelo en Configuración del proyecto > Localización > Traducciones.
+Go to,Ir a
+Enter goes to the selected line · Up / Down moves · Esc closes,Intro va a la línea elegida · Arriba / Abajo mueve · Esc cierra
+# opens any sheet · ? searches the docs · paste res://player.gd:42 to land on that row,# abre cualquier hoja · ? busca en la documentación · pega res://player.gd:42 para llegar a esa fila
+COMMANDS,COMANDOS
+Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Pulsa Ctrl+Mayús+P para la paleta de comandos de Godot: todos los comandos de EventSheets están ahí.
+"Type a function, signal or variable…","Escribe una función, señal o variable…"

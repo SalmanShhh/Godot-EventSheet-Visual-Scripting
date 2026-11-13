@@ -84,7 +84,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 
 ## Feature tour
 
-- **The editor** - two-lane event rows, groups, regions, comments, drag and drop, full undo; Find and Replace, find all references, a command palette, themes that follow Godot's light and dark editor.
+- **The editor** - two-lane event rows, groups, regions, comments, drag and drop, full undo; Find and Replace, find all references, a Go to window (Ctrl+P) with every command on Godot's own Command Palette, themes that follow Godot's light and dark editor.
 - **The language** - events, sub-events, Else, loops and picking, typed functions, enums, signals, `match`, `await`, and a Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - handlers as triggers, input branches as events, signal wiring as triggers; every reading is gated by saving back the same bytes.
 - **2,302 native ACEs** (108 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
