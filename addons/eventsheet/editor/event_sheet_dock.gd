@@ -29,6 +29,8 @@ const PROJECT_FILES_PATH := "res://addons/eventforge/project_files.gd"
 const MISTAKE_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/mistake_findings.gd"
 const MISTAKE_FIXES_PATH := "res://addons/eventsheet/editor/dock/mistake_fixes.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+## The Inspector drawer plugin, reached by path: naming its class here would compile it into the first open.
+const ATTRIBUTE_DRAWERS_PATH := "res://addons/eventsheet/editor/attribute_drawers.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const ACE_PICKER_PATH := "res://addons/eventsheet/editor/ace_picker.gd"
 const VARIABLE_OWNERS_PATH := "res://addons/eventsheet/editor/interaction/variable_owners.gd"
@@ -1792,7 +1794,7 @@ func _save_and_show_in_inspector() -> void:
 	_sheet_io._on_save_requested()
 	if _dirty:
 		return
-	EventSheetAttributeDrawers.forget_decor()
+	load(ATTRIBUTE_DRAWERS_PATH).forget_decor()
 	var written: String = _current_sheet.external_source_path
 	if written.is_empty():
 		written = load(SHEET_COMPILER_PATH)._resolve_output_path(_current_sheet, "")
