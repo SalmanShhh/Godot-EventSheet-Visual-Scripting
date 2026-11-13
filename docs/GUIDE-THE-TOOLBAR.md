@@ -36,7 +36,7 @@ In reading order, left to right:
 | 2 | **Save** | An icon over the same save the key and Sheet > Save run. Compile-on-save keeps the generated script fresh | `Ctrl+S` |
 | 3 | **Undo** | An icon over the dock's undo funnel. It greys out when the history is empty | `Ctrl+Z` |
 | 4 | **Redo** | The same, the other way | `Ctrl+Shift+Z` |
-| 5 | **The play button** | A face that performs the run this project chose, beside a narrow arrow holding all six ways to play | see below |
+| 5 | **The play button** | A face that performs the run this project chose, beside a narrow arrow holding the four ways to play | see below |
 | 6 | **Quick add or find** | Type a whole row (`heal 5`, `boss fla 0.4`) and press Enter, or read the answers underneath: the states, rows, variables, functions, signals, modes and Doctor findings that match what you typed |  |
 | 7 | **The chevron** | Expands the strip to every button it has, and back |  |
 
@@ -94,9 +94,9 @@ Three things about the cascade are worth knowing:
 
 Godot has no split-button control, so the play button is what Godot's own editor is in the same
 situation: two adjacent controls in one frame. The **face** performs one run. The narrow arrow
-beside it opens all six.
+beside it opens the four.
 
-![The play button's dropdown open on all six ways to play, with Godot's own F6 and F5 under their own heading and Main button at the foot](images/play-button-dropdown.png)
+![The play button's dropdown open on the ways to play, with Main button at the foot](images/play-button-dropdown.png)
 
 | Run | What it does | Key |
 |-----|--------------|-----|
@@ -104,12 +104,11 @@ beside it opens all six.
 | **Debug scene** | The same run with the sheet's own debugger armed: Event Trace lights rows as they fire, Live Values streams the variables, breakpointed rows pause the game | unbound by default |
 | **Run with profiler** | The same run with the costs lens on. Play, stop, and every row wears what one fire of it cost |  |
 | **Play as host + client** | Two tagged copies of the game at once, for testing a networked one. It writes Godot's own Run Multiple Instances setting and says so |  |
-| **Preview scene** | Godot's own F6, under the name an event-sheet author reaches for | `F6` |
-| **Preview project** | Godot's own F5, the whole game from its start | `F5` |
 
-The last two are relabels and nothing else: same key, same behaviour, familiar name.
+Plain run-the-scene and run-the-project are not here: they are Godot's own Run Current Scene (`F6`)
+and Run Project (`F5`) in the bar at the top right of the editor.
 
-**Main button**, at the foot of the dropdown, is the same six as radio ticks. Picking one is what
+**Main button**, at the foot of the dropdown, is the same four as radio ticks. Picking one is what
 the face does from then on, and the choice is remembered for this project, so a game you open next
 week still opens wearing it. A project that never chose gets **Run Scene**.
 
@@ -174,7 +173,7 @@ always had them:
 ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
 
 Menu, Save, Undo, Redo, the play button, then Run Scene, Debug scene, Run with profiler, Play as
-host + client, Preview scene, Preview project, then Add Event, Add Condition, Add Action, Add Code,
+host + client, then Add Event, Add Condition, Add Action, Add Code,
 then the GDScript panel toggle, Quick add, and the chevron pointing back the other way.
 
 The chevron and **Menu > View > Full toolbar** are one choice shown twice: use either and the other
@@ -217,8 +216,6 @@ the door inside the sheet that reaches the same thing without a menu at all.
 | **Save** | Still on the strip, as an icon | `Ctrl+S` |  |
 | **Run Scene** | The play button's face (the default choice), its dropdown, and the expanded strip |  |  |
 | **Play as host + client** | The play button's dropdown, and the expanded strip |  |  |
-| **Preview scene** | The play button's dropdown, under *Godot's own*, and the expanded strip | `F6` |  |
-| **Preview project** | The same, and the expanded strip | `F5` |  |
 | **Debug scene** | The same, and the expanded strip | unbound |  |
 | **Run with profiler** | The same, and the expanded strip; the lens itself is Menu > Tools > Run With Profiler |  |  |
 | **Add Event** | Menu > Add > Event, and the expanded strip | `E` | The **Add event** corner link, the trailing "+ Add event..." row, double-click on empty space, the Ghost Row |

@@ -433,10 +433,8 @@ static func _test_the_icon_faces() -> bool:
 	# The one arrow Godot ships without a twin is DERIVED from the twin rather than hand-drawn, so
 	# both arrows keep the editor's own stroke weight and its own recoloured palette.
 	ok = _check("Undo is mirrored from Redo", str(EventSheetEditorIcons.MIRRORED.get("Undo", "")), "Redo") and ok
-	# Preview project asked for "MainScene", which is not an icon name in this editor, so it arrived
-	# iconless on the face, in the dropdown and on the expanded strip.
-	ok = _check("Preview project asks for the icon Godot's own run bar wears",
-		EventSheetRunControls.icon_for("preview_project"), "MainPlay") and ok
+	ok = _check("Debug scene asks for the icon Godot's own debug button wears",
+		EventSheetRunControls.icon_for("debug_layout"), "Debug") and ok
 	var strip_sources: String = ""
 	for path: String in ["res://addons/eventsheet/editor/dock/menu_bar.gd",
 			"res://addons/eventsheet/editor/dock/run_controls.gd",

@@ -38,10 +38,7 @@ const DEFAULTS: Dictionary = {
 	# Collapse / expand the selected block. Unbound by default - Left / Right already do it and are
 	# grammar - but it exists so the "another event-sheet editor" preset can put it on Ctrl+E.
 	"toggle_collapse": "",
-	# The three Preview gestures. Godot's own run keys, so the sheet's buttons and the editor's
-	# play bar never disagree about what F5 means.
-	"preview_layout": "F6",
-	"preview_project": "F5",
+	# Run scene and Run project are Godot's own F6 and F5; only the sheet's debug run is ours.
 	"debug_layout": "",
 	"project_search": "Ctrl+Shift+F",
 	# Run an editor tool from its own sheet. Ctrl+Shift+X because X is the "execute" chord every
@@ -84,8 +81,6 @@ const LABELS: Dictionary = {
 	"add_variable": "Add global variable",
 	"add_function": "Add function",
 	"toggle_collapse": "Collapse / expand the selected block",
-	"preview_layout": "Preview scene (run this sheet's scene)",
-	"preview_project": "Preview project (run the main scene)",
 	"debug_layout": "Debug scene (run with the sheet's debugger armed)",
 	"invert_condition": "Invert selected condition",
 	"project_search": "Search all sheets",
@@ -114,7 +109,7 @@ const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
 	"add_blank_subevent", "add_sub_condition", "add_variable", "add_function", "invert_condition",
 	"replace_ace", "toggle_collapse",
-	"preview_layout", "preview_project", "debug_layout",
+	"debug_layout",
 	"project_search", "run_editor_tool", "history_back", "history_forward",
 	"duplicate", "copy", "copy_as_text", "paste", "undo", "redo", "save", "save_as", "open",
 	"apply_to_running_game",
@@ -147,8 +142,6 @@ const PRESETS: Dictionary = {
 		# Ctrl+E is collapse/expand in the other editor, so the Ctrl alternate for "add event" steps
 		# aside. E still adds an event, which is the key that matters.
 		"add_event_chord": "",
-		"preview_layout": "F4",
-		"preview_project": "F5",
 	},
 }
 

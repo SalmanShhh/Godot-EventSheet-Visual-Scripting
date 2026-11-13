@@ -2,25 +2,24 @@
 class_name EventSheetRunControls
 extends RefCounted
 
-# THE WAYS TO PLAY. One table, six entries, and every control that offers a run reads it - the play
-# button's face and dropdown at the head of the strip, and the same six as plain buttons on the
+# THE WAYS TO PLAY. One table, four entries, and every control that offers a run reads it - the play
+# button's face and dropdown at the head of the strip, and the same four as plain buttons on the
 # expanded strip:
 #
 #   ▶  Run Scene              save, then play the scene this sheet's script is on
-#   🐞 Debug layout           the same run with Event Trace, Live Values and breakpoints armed
+#   🐞 Debug scene            the same run with Event Trace, Live Values and breakpoints armed
 #   ⏱ Run with profiler      the same run with the costs lens on, the numbers kept after it stops
 #   ▶  Play as host + client  two tagged copies of the game at once, for testing a networked one
-#   ▶  Preview layout         Godot's own F6, under the name an event-sheet author reaches for
-#   ▶▶ Preview project        Godot's own F5, the whole game from its start
 #
-# The last two are RELABELS and nothing else: same key, same behaviour, familiar name. The first
-# four are the sheet's own gestures. Every one of them hands the run to EditorInterface, and while a
-# game is running the ones that would start another read Stop or Restart instead, so no control on
-# the strip is ever lying about what it will do.
+# These are the sheet's own gestures, the ones carrying sheet debugging. Plain "run this scene" and
+# "run the project" are Godot's own Run Current Scene (F6) and Run Project (F5) in its top-right bar,
+# and this strip does not repeat them. Every run hands itself to EditorInterface, and while a game is
+# running the ones that would start another read Stop instead, so no control on the strip is ever
+# lying about what it will do.
 
 ## The ways to play, in the order the play button's dropdown lists them, as
 ## [id, resting label, tooltip, editor icon, shortcut action]. Static so a test pins the set without
-## a dock behind it, and so every strip that offers a run offers the same six under the same words.
+## a dock behind it, and so every strip that offers a run offers the same four under the same words.
 ##
 ## The tooltip cell is empty for a run whose tooltip has to report a live editor setting; ask
 ## `tooltip_for`, which knows the one module that writes it.
@@ -34,30 +33,14 @@ const BUTTONS: Array = [
 		"Run this scene with the trace armed and the costs lens on. Play for a while, stop, and every row wears what one fire of it cost - kept until you clear it, and still there when you open the editor tomorrow.",
 		"Timer", ""],
 	["host_client", "Play as host + client", "", "Instance", ""],
-	["preview_layout", "▶ Preview scene",
-		"Run the scene this sheet's script is on (F6). The sheet keeps running beside it.",
-		"PlayScene", "preview_layout"],
-	# MainPlay, not MainScene: the editor ships no icon called MainScene (probed against the running
-	# 4.7 editor theme), so this entry arrived iconless on the face, in the dropdown and on the
-	# expanded strip. MainPlay is the icon Godot's own run bar wears for exactly this run.
-	["preview_project", "▶▶ Preview project",
-		"Run the project's main scene (F5) - the whole game from its start, not just this scene.",
-		"MainPlay", "preview_project"],
 ]
 
-## The two entries that are pure relabels of Godot's own keys. The play button's dropdown puts them
-## under their own heading, below the four the sheet owns: same key, same run, familiar name.
-const GODOT_OWN: PackedStringArray = ["preview_layout", "preview_project"]
-
 ## What a button says instead while a game is running. A run that would start a second copy stops
-## the first one; Preview project restarts it, because "the whole game from its start" is what that
-## button means at any moment. Debug layout and the profiler keep their names: pressing either while
-## a game runs re-arms and plays again, which is what their names already say.
+## the first one. Debug scene and the profiler keep their names: pressing either while a game runs
+## re-arms and plays again, which is what their names already say.
 const RUNNING_LABELS: Dictionary = {
 	"run_scene": "■ Stop",
 	"host_client": "■ Stop",
-	"preview_layout": "■ Stop",
-	"preview_project": "↻ Restart",
 }
 
 ## Where the play button's chosen face is remembered: the editor's per-project metadata, section
@@ -93,7 +76,7 @@ func init(dock: Control) -> void:
 ## Registers a button so the strip can relabel it when the game starts and stops. Several controls
 ## carry the same run (the play button's face and the expanded strip's own button), so each id keeps
 ## EVERY adopter - a single slot per id let the second one steal the first one's relabel, and the
-## toolbar's Preview button never became Stop. Freed buttons are pruned on the way in.
+## toolbar's Run button never became Stop. Freed buttons are pruned on the way in.
 func adopt(button_id: String, button: Button) -> void:
 	var adopters: Array = []
 	for known: Variant in _buttons.get(button_id, []):
@@ -167,7 +150,7 @@ static func tooltip_for(run_id: String) -> String:
 	return ""
 
 
-## The chosen main run, resolved from whatever is on record. Anything that is not one of the six
+## The chosen main run, resolved from whatever is on record. Anything that is not one of the four
 ## means nobody has chosen, and nobody choosing means Run Scene. Pure, so the suite pins the whole
 ## tri-state without an editor behind it.
 static func main_run_from(stored: Variant) -> String:
@@ -184,7 +167,7 @@ func main_run_id() -> String:
 	return _main_run
 
 
-## Choose the face's run and remember it for this project. An id that is not one of the six is
+## Choose the face's run and remember it for this project. An id that is not one of the four is
 ## refused rather than stored, so a later table never has to clean up after this one.
 func set_main_run(run_id: String) -> void:
 	if not has_run(run_id):
@@ -269,17 +252,6 @@ func activate(button_id: String) -> void:
 				_stop()
 			elif _dock != null and _dock.has_method("_play_as_host_and_client"):
 				_dock.call("_play_as_host_and_client")
-		"preview_layout":
-			if running:
-				_stop()
-			else:
-				_play_current()
-		"preview_project":
-			if running:
-				_stop()
-				_play_main()
-			else:
-				_play_main()
 		"debug_layout":
 			_arm_debugger()
 			if running:
@@ -310,19 +282,20 @@ func _arm_debugger() -> void:
 func _play_current() -> void:
 	var editor_interface: Object = EventSheetEditorSettings.interface()
 	if editor_interface == null or not editor_interface.has_method("play_current_scene"):
-		_dock._set_status("Preview needs the Godot editor - there is nothing to run from here.", true)
+		_dock._set_status("Running needs the Godot editor - there is nothing to run from here.", true)
 		return
 	_dock._sheet_io._on_save_requested()
 	editor_interface.call("play_current_scene")
 
 
-func _play_main() -> void:
-	var editor_interface: Object = EventSheetEditorSettings.interface()
-	if editor_interface == null or not editor_interface.has_method("play_main_scene"):
-		_dock._set_status("Preview needs the Godot editor - there is nothing to run from here.", true)
-		return
-	_dock._sheet_io._on_save_requested()
-	editor_interface.call("play_main_scene")
+## Saves, then plays the scene this sheet's script is on, or stops the game when one is running.
+## The profiler's run uses it: the trace is armed first, and the play itself is Godot's own.
+func run_current_scene() -> void:
+	if is_playing():
+		_stop()
+	else:
+		_play_current()
+	refresh()
 
 
 func _stop() -> void:
@@ -333,7 +306,7 @@ func _stop() -> void:
 
 ## What the project chose, read the way every other per-project editor choice here is read: with a
 ## NON-null sentinel default, because a missing key read with a null default prints an editor ERROR
-## on a fresh project. "" is that sentinel, and it is not one of the six, so it reads as no choice.
+## on a fresh project. "" is that sentinel, and it is not one of the four, so it reads as no choice.
 func _stored_main_run() -> Variant:
 	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:

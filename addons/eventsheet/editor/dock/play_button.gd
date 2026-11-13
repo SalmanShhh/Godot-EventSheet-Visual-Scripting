@@ -15,8 +15,9 @@ extends RefCounted
 # the run controls exactly like every other run button on the strip - one source of truth for what a
 # run is called right now.
 #
-# The dropdown lists all six: the four the sheet owns, then Godot's own F6 and F5 under their own
-# heading, then "Main button" - the same six again, ticked - so the choice is made where it is read.
+# The dropdown lists the four runs, then "Main button" - the same four again, ticked - so the choice
+# is made where it is read. Godot's own Run Current Scene and Run Project are its own buttons, top
+# right, and are not repeated here.
 # Every key printed here comes from the ONE shortcut table, so a rebind shows through without an
 # edit in this file, and every entry hands its run to EventSheetRunControls. There is no second way
 # to start a game in here.
@@ -100,22 +101,13 @@ func face() -> Button:
 	return _face
 
 
-## The dropdown's menu button, whose popup carries the six runs and the Main button submenu.
+## The dropdown's menu button, whose popup carries the four runs and the Main button submenu.
 func menu() -> MenuButton:
 	return _menu
 
 
 func _build_dropdown(popup: PopupMenu) -> void:
-	var headed: bool = false
 	for index: int in EventSheetRunControls.BUTTONS.size():
-		var run_id: String = str((EventSheetRunControls.BUTTONS[index] as Array)[0])
-		if not headed and EventSheetRunControls.GODOT_OWN.has(run_id):
-			# The two below are Godot's F6 and F5 under the names an event-sheet author reaches for,
-			# and nothing else - so they read quieter than the four the sheet owns. A titled
-			# separator is how Godot's own menus draw a heading: dimmed, unclickable, no custom
-			# chrome anywhere.
-			popup.add_separator(EventSheetL10n.translate("Godot's own"))
-			headed = true
 		_add_run_item(popup, index, index, false)
 	popup.add_separator()
 	_choices = PopupMenu.new()
@@ -132,7 +124,7 @@ func _build_dropdown(popup: PopupMenu) -> void:
 
 ## One entry, in either popup: the run's own words, its key printed from the shortcut table, its
 ## editor icon where the running theme carries one, and its tooltip. The Main button submenu shows
-## the same six as radio ticks, which is why the two lists cannot drift apart.
+## the same four as radio ticks, which is why the two lists cannot drift apart.
 func _add_run_item(popup: PopupMenu, index: int, id: int, as_choice: bool) -> void:
 	var record: Array = EventSheetRunControls.BUTTONS[index]
 	var run_id: String = str(record[0])

@@ -59,26 +59,18 @@ static func _toolbar_and_preview_buttons() -> bool:
 		preview_ids.append(str((entry as Array)[0]))
 	# UPDATED WITH THE PLAY BUTTON: the table used to hold the four Preview gestures the sheet's own
 	# strip offered, and Run Scene and Play as host + client were two hand-written toolbar buttons
-	# beside it. There is one table now, six entries, and it is read by the play button's face, the
+	# beside it. There is one table now, four entries, and it is read by the play button's face, the
 	# play button's dropdown and the expanded strip's buttons alike - so the order below IS the order
 	# the dropdown lists, four the sheet owns and then Godot's own two.
-	all_passed = _check("the six ways to play, in the order the play button lists them",
+	all_passed = _check("the four ways to play, in the order the play button lists them",
 		" ".join(preview_ids),
-		"run_scene debug_layout run_profiler host_client preview_layout preview_project") and all_passed
-	all_passed = _check("and the last two are marked as Godot's own keys under familiar names",
-		" ".join(EventSheetRunControls.GODOT_OWN), "preview_layout preview_project") and all_passed
+		"run_scene debug_layout run_profiler host_client") and all_passed
 	all_passed = _check("the profiler run keeps its name while a game is running - it is not a stop button",
 		EventSheetRunControls.label_for("run_profiler", true), "⏱ Run with profiler") and all_passed
-	all_passed = _check("Preview scene says what it does while nothing is running",
-		EventSheetRunControls.label_for("preview_layout", false), "▶ Preview scene") and all_passed
-	all_passed = _check("Preview project becomes Restart",
-		EventSheetRunControls.label_for("preview_project", true), "↻ Restart") and all_passed
 	all_passed = _check("Debug scene keeps its name - it is not a stop button",
 		EventSheetRunControls.label_for("debug_layout", true), "🐞 Debug scene") and all_passed
-	all_passed = _check("Preview scene is on Godot's own run-this-scene key",
-		EventSheetShortcuts.binding_for("preview_layout"), "F6") and all_passed
-	all_passed = _check("Preview project is on Godot's run-the-game key",
-		EventSheetShortcuts.binding_for("preview_project"), "F5") and all_passed
+	all_passed = _check("the sheet binds no key for Godot's own run-scene and run-project",
+		EventSheetShortcuts.DEFAULTS.has("preview_layout") or EventSheetShortcuts.DEFAULTS.has("preview_project"), false) and all_passed
 	return all_passed
 
 
@@ -101,8 +93,6 @@ static func _shortcut_preset() -> bool:
 		EventSheetShortcuts.binding_for("toggle_collapse"), "Ctrl+E") and all_passed
 	all_passed = _check("so the Ctrl alternate for add-event steps aside",
 		EventSheetShortcuts.binding_for("add_event_chord"), "") and all_passed
-	all_passed = _check("preview moves to F4",
-		EventSheetShortcuts.binding_for("preview_layout"), "F4") and all_passed
 	all_passed = _check("adding an event is still E - the preset never touched it",
 		EventSheetShortcuts.binding_for("add_event"), "E") and all_passed
 	all_passed = _check("and the picker now reads back the preset that is in force",

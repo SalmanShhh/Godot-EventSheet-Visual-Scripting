@@ -48,35 +48,28 @@ static func _test_the_dropdown() -> bool:
 	var entries: PackedStringArray = PackedStringArray()
 	for index: int in popup.item_count:
 		entries.append(popup.get_item_text(index))
-	ok = _check("the dropdown lists the six ways to play, then the choice", entries,
+	ok = _check("the dropdown lists the four ways to play, then the choice", entries,
 		PackedStringArray([
 			_t("Run Scene"),
 			_t("🐞 Debug scene"),
 			_t("⏱ Run with profiler"),
 			_t("Play as host + client"),
-			_t("Godot's own"),
-			_with_key("▶ Preview scene", "preview_layout"),
-			_with_key("▶▶ Preview project", "preview_project"),
 			"",
 			_t("Main button"),
 		])) and ok
-	# The two under the heading are separated from the four above them, and the heading itself is a
-	# separator - Godot's own way of drawing a muted, unclickable line of words in a menu.
-	ok = _check("Godot's own two sit under a separator", popup.is_item_separator(4), true) and ok
-	ok = _check("and the choice is fenced off by another", popup.is_item_separator(7), true) and ok
-	# Main button is the same six again, ticked, so the two lists cannot drift apart.
+	# Godot's own Run Current Scene and Run Project are not repeated here.
+	ok = _check("the choice is fenced off by a separator", popup.is_item_separator(4), true) and ok
+	# Main button is the same four again, ticked, so the two lists cannot drift apart.
 	var choices: PopupMenu = popup.find_child("EventSheetPlayMainChoice", true, false) as PopupMenu
 	var choice_labels: PackedStringArray = PackedStringArray()
 	for index: int in choices.item_count:
 		choice_labels.append(choices.get_item_text(index))
-	ok = _check("Main button offers the same six", choice_labels,
+	ok = _check("Main button offers the same four", choice_labels,
 		PackedStringArray([
 			_t("Run Scene"),
 			_t("🐞 Debug scene"),
 			_t("⏱ Run with profiler"),
 			_t("Play as host + client"),
-			_with_key("▶ Preview scene", "preview_layout"),
-			_with_key("▶▶ Preview project", "preview_project"),
 		])) and ok
 	ok = _check("with Run Scene ticked in a project that never chose",
 		choices.is_item_checked(0), true) and ok
@@ -97,7 +90,7 @@ static func _test_the_chosen_face() -> bool:
 	ok = _check("and neither is a value of the wrong type",
 		EventSheetRunControls.main_run_from(null), "run_scene") and ok
 	# The instance half: choosing writes the choice and reads it straight back, and an id that is
-	# not one of the six is refused rather than stored.
+	# not one of the four is refused rather than stored.
 	var controls: EventSheetRunControls = EventSheetRunControls.new()
 	ok = _check("a fresh dock's face is Run Scene", controls.main_run_id(), "run_scene") and ok
 	controls.set_main_run("host_client")
@@ -109,12 +102,15 @@ static func _test_the_chosen_face() -> bool:
 	var editor: EventSheetEditor = _editor()
 	var play: EventSheetPlayButton = editor._menu_bar.play_button()
 	editor._run_controls.set_main_run("preview_project")
+	ok = _check("a run the table no longer carries (the old Preview project) is refused",
+		editor._run_controls.main_run_id(), "run_scene") and ok
+	editor._run_controls.set_main_run("debug_layout")
 	play.apply_choice()
 	ok = _check("the face wears the chosen run's words", play.face().text,
-		_t("▶▶ Preview project")) and ok
+		_t("🐞 Debug scene")) and ok
 	var choices: PopupMenu = play.menu().get_popup().find_child(
 		"EventSheetPlayMainChoice", true, false) as PopupMenu
-	ok = _check("and the tick moved with it", choices.is_item_checked(5), true) and ok
+	ok = _check("and the tick moved with it", choices.is_item_checked(1), true) and ok
 	ok = _check("the run it left is unticked", choices.is_item_checked(0), false) and ok
 	editor.free()
 	return ok
@@ -134,8 +130,8 @@ static func _test_the_face_says_stop() -> bool:
 		EventSheetRunControls.label_for("run_scene", true), "■ Stop") and ok
 	ok = _check("host + client stops the game it started too",
 		EventSheetRunControls.label_for("host_client", true), "■ Stop") and ok
-	ok = _check("Preview project restarts instead",
-		EventSheetRunControls.label_for("preview_project", true), "↻ Restart") and ok
+	ok = _check("there is no Preview run: Godot's own F5 and F6 are not repeated",
+		EventSheetRunControls.has_run("preview_project") or EventSheetRunControls.has_run("preview_layout"), false) and ok
 	# Re-choosing moves the face between adopters. A face left in its old run's list would be
 	# relabelled by a run it no longer performs, so it leaves before it joins.
 	controls.release(face)
@@ -162,19 +158,19 @@ static func _test_the_watch_keeps_the_face_honest() -> bool:
 	var face: Button = Button.new()
 	var expanded: Button = Button.new()
 	controls.adopt("run_scene", face)
-	controls.adopt("preview_project", expanded)
+	controls.adopt("host_client", expanded)
 	controls.refresh()
 	var ok: bool = _check("a tick that finds nothing running changes nothing",
 		controls.poll_step(false), false)
 	ok = _check("a game started outside the sheet is noticed", controls.poll_step(true), true) and ok
 	ok = _check("and the face says Stop without anyone pressing it", face.text, _t("■ Stop")) and ok
-	ok = _check("every adopted button hears the same news", expanded.text, _t("↻ Restart")) and ok
+	ok = _check("every adopted button hears the same news", expanded.text, _t("■ Stop")) and ok
 	ok = _check("a second tick while it still runs relabels nothing",
 		controls.poll_step(true), false) and ok
 	ok = _check("and a game closed from its own window puts the words back",
 		controls.poll_step(false), true) and ok
 	ok = _check("the face is itself again", face.text, _t("Run Scene")) and ok
-	ok = _check("and so is the one beside it", expanded.text, _t("▶▶ Preview project")) and ok
+	ok = _check("and so is the one beside it", expanded.text, _t("Play as host + client")) and ok
 	# The watch itself: one timer, on the DOCK rather than among the strip's pinned children, and a
 	# second build never leaves two of them ticking.
 	var host: Node = Node.new()

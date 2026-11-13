@@ -17,19 +17,19 @@ static func run() -> bool:
 	var controls: EventSheetRunControls = EventSheetRunControls.new()
 	var first: Button = Button.new()
 	var second: Button = Button.new()
-	controls.adopt("preview_layout", first)
-	controls.adopt("preview_layout", second)
+	controls.adopt("run_scene", first)
+	controls.adopt("run_scene", second)
 	controls.refresh()
-	var resting: String = EventSheetL10n.translate(EventSheetRunControls.label_for("preview_layout", false))
+	var resting: String = EventSheetL10n.translate(EventSheetRunControls.label_for("run_scene", false))
 	ok = _check("the first adopter is relabelled, not stolen from", first.text, resting) and ok
 	ok = _check("the second adopter is relabelled too", second.text, resting) and ok
-	ok = _check("the running label is the stop word", EventSheetRunControls.label_for("preview_layout", true), "■ Stop") and ok
-	controls.adopt("preview_layout", second)
+	ok = _check("the running label is the stop word", EventSheetRunControls.label_for("run_scene", true), "■ Stop") and ok
+	controls.adopt("run_scene", second)
 	controls.refresh()
 	ok = _check("re-adopting does not double the entry", second.text, resting) and ok
 	first.free()
 	var third: Button = Button.new()
-	controls.adopt("preview_layout", third)
+	controls.adopt("run_scene", third)
 	controls.refresh()
 	ok = _check("a freed adopter is pruned and the newcomer is relabelled", third.text, resting) and ok
 	ok = _check("the survivor still wears its label after the prune", second.text, resting) and ok

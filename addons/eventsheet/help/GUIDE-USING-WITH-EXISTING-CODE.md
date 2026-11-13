@@ -2587,11 +2587,11 @@ Three smaller surfaces are worth knowing on day one:
 
 - **Menu ▸ Sheet ▸ Start page** - templates by genre with a one-line pitch, what you had open last, and the
   tutorials, on one page. It opens by itself when nothing is open; a checkbox turns that half off.
-- **Preview on the sheet** - `▶ Preview scene` (F6), `▶▶ Preview project` (F5) and `🐞 Debug scene`
-  all sit in the play button's dropdown at the head of the strip, beside Run Scene, Run with
-  profiler and Play as host + client. While a game runs the first two become `■ Stop` and
-  `↻ Restart`; Debug scene arms Event Trace, Live Values and breakpoints first. Which one the
-  button's face does is yours to pick, under *Main button* at the foot of that dropdown.
+- **Running** - F6 runs the scene and F5 runs the project, in Godot's own bar. The play button's
+  dropdown at the head of the strip holds the runs that carry sheet debugging: Run Scene, `🐞 Debug scene`
+  (arms Event Trace, Live Values and breakpoints first), Run with profiler and Play as host + client.
+  While a game runs the face reads `■ Stop`. Which one the button's face does is yours to pick,
+  under *Main button* at the foot of that dropdown.
 - **View ▸ Add toolbar** - the eight Add gestures as buttons above the canvas, each naming its key on
   hover, on by default in Simple mode. And **Keyboard Shortcuts ▸ Preset ▾** offers *Another
   event-sheet editor*, which rebinds only the handful of keys that differ (invert to X, collapse and

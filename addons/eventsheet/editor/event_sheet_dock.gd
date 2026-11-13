@@ -687,7 +687,7 @@ var _variable_grouping: RefCounted = null:  # drag-onto-variable folders + renam
 			_variable_grouping.init(self)
 		return _variable_grouping
 var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + the one cascading Menu (Sheet/Add/Edit/View/Tools) + quick-add (dock/menu_bar.gd)
-var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
+var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Run Scene / Debug scene / profiler / host + client, routed to the editor's own run commands (dock/run_controls.gd)
 var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # The eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
 var _optimiser: RefCounted = null:  # the performance findings' fixes, as ordinary undoable row edits (dock/optimiser.gd)
 	get:
@@ -4114,7 +4114,7 @@ func _run_with_profiler() -> void:
 		if view != null:
 			view.show_costs = true
 	_set_status("Run with profiler: play for a while, then stop - the gutter shows what each row cost.")
-	_run_controls.activate("preview_layout")
+	_run_controls.run_current_scene()
 
 
 ## The optimiser's window, built the first time it is asked for and kept, like every other dialog.

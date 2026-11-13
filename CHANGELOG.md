@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Removed: the Preview scene and Preview project buttons
+
+- Godot already has Run Current Scene (F6) and Run Project (F5) in the bar at the top right, and the strip's two Preview buttons were the same runs under other words. They are gone from the play button's dropdown, its Main button choice, the expanded strip and the shortcut list; the guides say F5 and F6. The runs that carry sheet debugging stay: Run Scene, Debug scene, Run with profiler and Play as host + client. A project that had chosen a Preview run as its Main button falls back to Run Scene.
+
 ### Fixed: an Ask key is no longer saved into your project
 
 - The key for View > Ask (and the older in-editor generator) was a project setting, so a typed key landed in project.godot and was committed with the repository. It now lives in Editor Settings (per user, shown as a password field) as `eventsheets/ask/api_key`, with the `EVENTSHEETS_ASK_API_KEY` environment variable as the fallback (`EVENTSHEETS_AI_API_KEY` for the generator). A key an earlier version saved into the project is moved to Editor Settings and cleared from project.godot the first time the plugin starts, and the Output says so once.

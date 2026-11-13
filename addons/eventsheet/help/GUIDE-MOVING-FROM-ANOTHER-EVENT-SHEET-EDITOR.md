@@ -360,7 +360,7 @@ i18n (Godot translations).
   ![The editor strip at rest - Menu, Save, Undo, Redo, the play button, Quick add and the chevron - with the Menu open on its Sheet, Edit, View and Tools submenus](images/resting-toolbar-menu.png)
 
   Press the chevron (or tick **View ▸ Full toolbar**) and every button the strip has comes back, in
-  the order it always had them: Run Scene, the preview buttons, Add Event / Condition / Action /
+  the order it always had them: Run Scene, Debug scene, Add Event / Condition / Action /
   Code and the GDScript toggle. The choice is remembered for the
   project, and nothing was taken away - a button you cannot see still answers to its key.
 
@@ -385,27 +385,27 @@ i18n (Godot translations).
   *Tools ▸ Keyboard Shortcuts* and the menu says the new key.
 
   ![The Menu open on Add, with E, C, A, G, Q, V and F printed beside their items](images/add-cascade-keys.png)
-- **One play button, and it holds every way to run.** The face runs the way you chose; the arrow
-  beside it opens all six. The four the sheet owns come first - Run Scene (the scene this sheet's
-  script is on), Debug scene, Run with profiler, Play as host + client - and under *Godot's own*
-  sit Preview scene and Preview project, which are Godot's F6 and F5 under the names you already
-  use. *Main button* at the foot says which one the face does, ticked, and the choice is remembered
-  for the project.
+- **One play button, for the runs that carry sheet debugging.** The face runs the way you chose; the
+  arrow beside it opens all four: Run Scene (the scene this sheet's script is on), Debug scene,
+  Run with profiler, Play as host + client. Plain "run the scene" and "run the project" are Godot's
+  own Run Current Scene (F6) and Run Project (F5), in the bar at the top right of the editor - the
+  sheet does not repeat them. *Main button* at the foot says which of the four the face does,
+  ticked, and the choice is remembered for the project.
 
-  ![The play button's dropdown open on all six ways to play, with Godot's own F6 and F5 under their own heading and Main button at the foot](images/play-button-dropdown.png)
+  ![The play button's dropdown open on the ways to play with Main button at the foot](images/play-button-dropdown.png)
 
-  While a game is running the face reads **Stop** (Preview project reads *Restart*), so the button
+  While a game is running the face reads **Stop**, so the button
   never claims it will do something it will not. Every run is still a plain button on the expanded
   strip, relabelled the same way.
 
   ![The same play button while a game runs, its face reading Stop](images/play-button-stop.png)
 - **Your project's files are in Godot's FileSystem dock.** The plugin adds no second project list; Quick Open (Ctrl+Shift+O) jumps to a file by name.
-- **Preview is on the sheet.** `▶ Preview scene`, `▶▶ Preview project` and `🐞 Debug scene` sit in
-  the play button's dropdown; the keys underneath are Godot's F6 and F5, and while the game runs the
-  first two say `■ Stop` and `↻ Restart`. **Menu ▸ Sheet ▸ Start page** is the start page you expect - templates by genre,
+- **Running is Godot's.** Press F6 to run the scene and F5 to run the project, the way you do for any
+  Godot scene. `🐞 Debug scene` sits in the play button's dropdown: it arms Event Trace, Live Values and
+  breakpoints first, which only a sheet can do. **Menu ▸ Sheet ▸ Start page** is the start page you expect - templates by genre,
   what you had open last, and the tutorials.
 - **Your keys, in one pick.** **Tools ▸ Keyboard Shortcuts ▸ Preset ▾ ▸ Another event-sheet editor**
-  rebinds only the handful that differ - X inverts, Ctrl+E collapses and expands, F4 previews - and
+  rebinds only the handful that differ - X inverts, Ctrl+E collapses and expands - and
   leaves E / S / C / A / G / Q / V / B exactly where your fingers already put them. Everything stays
   rebindable, and *Reset all to defaults* comes back.
 

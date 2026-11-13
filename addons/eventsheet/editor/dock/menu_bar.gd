@@ -407,11 +407,10 @@ func build(root: Node) -> void:
 	_toolbar.add_child(play_slot)
 	_play_slot = play_slot
 	_play_button.build(play_slot, _dock)
-	# And the same six ways to play, as the plain buttons they have always been, for the expanded
+	# And the same four ways to play, as the plain buttons they have always been, for the expanded
 	# strip. They are one table with the play button's dropdown - the same words, the same order and
 	# the same handlers - and every one of them is adopted by the run controls, so a running game
-	# relabels each of them wherever it is shown. The keys stay Godot's for the two that are
-	# Godot's own (F6 / F5).
+	# relabels each of them wherever it is shown.
 	for run_entry: Variant in EventSheetRunControls.BUTTONS:
 		var run: Array = run_entry
 		var run_id: String = str(run[0])

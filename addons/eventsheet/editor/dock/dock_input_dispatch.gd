@@ -303,10 +303,8 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["add_sub_condition", true, _dock._on_add_sub_condition_key],
 		["add_variable", true, _dock._on_add_project_global_requested],
 		["add_function", true, _dock._open_function_dialog],
-		# Preview layout / project / debug. Godot's own run keys by default, so the sheet's
-		# buttons and the editor's play bar always mean the same thing.
-		["preview_layout", false, func() -> void: _dock._run_controls.activate("preview_layout")],
-		["preview_project", false, func() -> void: _dock._run_controls.activate("preview_project")],
+		# Debug scene. Godot's own F5 and F6 run the project and the scene; this one arms the sheet's
+		# debugger first.
 		["debug_layout", false, func() -> void: _dock._run_controls.activate("debug_layout")],
 		# Unbound by default (Left / Right already collapse and expand, and those are grammar);
 		# it exists so the "Another event-sheet editor" preset can put collapse/expand on Ctrl+E.
