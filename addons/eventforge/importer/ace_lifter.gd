@@ -110,6 +110,10 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# is spawned already facing somewhere and already moving, and the copy of the node's own scene.
 	# Asked last of the run families because all three open on shapes the others have already refused.
 	preload("res://addons/eventforge/importer/spawn_run_lift.gd"),
+	# The Building runs: a node made from a type and given a parent, a behaviour added or taken away,
+	# a sprite, a collision shape or a timer made and added, a branch packed into a variable. Asked
+	# after the spawn runs, whose statements open on an `instantiate()` these never contain.
+	preload("res://addons/eventforge/importer/building_run_lift.gd"),
 ]
 
 ## The spawn runs again, named on its own because the file is told which dimension it is reading

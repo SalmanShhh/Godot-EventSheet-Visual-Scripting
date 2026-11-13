@@ -51,6 +51,9 @@ Finding And Rearranging Nodes. This page is for the nodes that have no scene fil
 - **`add_to_group(name)` is forgotten by a pack.** A group added without the second argument is not
   saved with the scene. Add To Group (Saved With Scene) writes `add_to_group(name, true)`, the form a
   packed copy keeps.
+- **Your own lines open as these rows.** A hand-written run that makes a node, names it and adds it, or
+  a timer, a sprite or a shape made and added, opens as the matching row and saves back byte for byte.
+  A run short of the whole shape stays the ordinary rows it always was.
 - **The type field is Godot's own Create New Node window.** Pick a node type or one of your script
   classes from the list, or type the name. A script class goes in by its `class_name`.
 - **A script class whose `_init` wants arguments is not made by these rows.** `Type.new()` passes
