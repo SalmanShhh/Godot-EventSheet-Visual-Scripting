@@ -5,13 +5,13 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (34,851 CI-gated assertions across 1013 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (34,851 CI-gated assertions across 1020 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-hero-light.png">
-  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on start, move while the right action is held, and subtract 10 health when an enemy body enters the hitbox - the Scene dock on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
+  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on ready, move while the right action is held, and subtract 10 health when an enemy body enters the hitbox - the Scene dock on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
 </picture>
 
 It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* `boomer_level.gd`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
@@ -57,10 +57,10 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/` into your Godot **4.5+** project (tested through **4.7 stable**). The library holds the 140 behavior packs in a folder Godot never imports (it carries a `.gdignore`), so none of them reach Create Node, the picker or your exported game until you add one: the Welcome asks what you are making and copies the packs you pick into `eventsheet_addons/`, and any object's Behaviours list > **+ Add behaviour…** adds more later. Some built-in rows call one of the single scripts at the top of this repository's `eventsheet_addons/` (`free_spot.gd`, `pooled_nodes.gd`, `haptics.gd` and the rest); copy those files into your `eventsheet_addons/` too. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/` into your Godot **4.5+** project (tested through **4.7 stable**). The library holds the 140 behavior packs in a folder Godot never imports (it carries a `.gdignore`), so none of them reach the picker or your exported game until you add one: the Welcome asks what you are making and copies the packs you pick into `eventsheet_addons/`, and Godot's own **Create Node** window and the Behaviour library add more later. Some built-in rows call one of the single scripts at the top of this repository's `eventsheet_addons/` (`free_spot.gd`, `pooled_nodes.gd`, `haptics.gd` and the rest); copy those files into your `eventsheet_addons/` too. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
-4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
+4. **New… → Platformer Starter**, add events (live search also understands other editors' words like *"every tick"*), and Run.
 
 Everything else is in the **[documentation index](docs/README.md)** and inside the editor (**Tools > Manual**, or F1 on anything selected) - including the [migration guide for Construct users](docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md), [common game patterns](docs/GUIDE-COMMON-GAME-PATTERNS.md), and [using EventSheets with your existing code](docs/GUIDE-USING-WITH-EXISTING-CODE.md).
 
@@ -71,7 +71,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **You ship GDScript, not a black box.** Delete the plugin and your game still runs, at the speed of hand-written code. Both are test-enforced.
 - **Your existing scripts open as sheets.** Any `.gd` opens as rows and saves back byte for byte, so you can adopt it one file at a time and leave at any time.
 - **It teaches Godot while you use it.** Every row shows the GDScript it writes, expressions are GDScript, and mistakes are explained on the row with a fix beside them.
-- **Familiar if you come from Construct 3.** The grammar, the picker, behaviours as components and picking work the way you expect, on Godot's own nodes, signals and groups.
+- **Familiar if you come from another event-sheet editor.** The grammar, the picker, behaviours as components and picking work the way you expect, on Godot's own nodes, signals and groups. The sheet speaks Godot's words by default; the other editors' words are one opt-in away.
 - **Debug it like any script.** Real breakpoints, paused-at-row, Live Values and an Event Trace.
 - **It stays fast.** A custom-drawn sheet keeps 10,000+ rows fluid.
 
@@ -87,7 +87,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **The editor** - two-lane event rows, groups, regions, comments, drag and drop, full undo; Find and Replace, find all references, a command palette, themes that follow Godot's light and dark editor.
 - **The language** - events, sub-events, Else, loops and picking, typed functions, enums, signals, `match`, `await`, and a Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - handlers as triggers, input branches as events, signal wiring as triggers; every reading is gated by saving back the same bytes.
-- **2,249 native ACEs** (108 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
+- **2,302 native ACEs** (108 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
 - **140 behavior packs**, all authored as event sheets: movement, AI, combat, narrative, drawing, lighting, shaders. See [docs/Addons/](docs/Addons/README.md).
 - **Your own code is vocabulary** - the picker lists your classes and autoloads as actions, conditions and expressions with zero setup.
 - **Mistakes caught as you type** - type checking with Godot's own analyzer, autocomplete that follows the code, and checks for the errors Godot only reports when the game runs.
@@ -106,21 +106,18 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 
 ### In the works for the next release
 
-**Already on `main`** (52 commits since the tag, CI green, each in the [CHANGELOG](CHANGELOG.md)):
+**Already on `main`** (81 commits since the tag, CI green, each in the [CHANGELOG](CHANGELOG.md)):
 
-- **More of your code opens as rows.** Statements written over several lines, `#` notes, constants and top-of-script variables. Measured on the 459 scripts of Godot's official demos, all saving back byte for byte.
-- **Stacks, queues and lists of instances.** Pop back / Pop front into a name, Move between lists, drain loops, keep the last N, and picking that lasts for its event and sub-events, the way it does in other event-sheet tools.
-- **Godot's own drawing calls** as actions under On Draw.
-- **Your own functions edit like events**, with no lock; shipped packs ask once before their first edit.
-- **Plainer words and windows**: Godot's own callback names (On ready, On process, On physics process), `delta` as `delta`, and no coloured outlines.
-
-**Being built now:** behaviours as better Godot citizens - a warning when a behaviour sits under the wrong kind of node, an optional "Acts on" field, and a stated list of what each behaviour changes on its parent. Behaviours stay plain scripts you can copy into any project.
+- **Godot's words by default.** On ready, On process, scene, group, Queue free, Instantiate; the other editors' words are an opt-in Familiar preset and still work as search.
+- **Behaviours are added through Godot's own Create Node window** and a Behaviour library, and the ones you tune by eye have a Preview button that never changes your saved scene.
+- **The everyday object rows**, a correct on-screen check, and Godot groups in place of marks.
+- **Fewer panels.** The plugin panels that repeated Godot's own docks are gone, and a Doctor check warns when a behaviour sits under the wrong kind of node (with an optional "Acts on").
+- **More of your code opens as rows**, plus stacks, queues and lists of instances, Godot's own drawing calls as actions, and your own functions editing like events.
 
 **Designed, next in line:**
 
-- **Preview in the editor** - a Preview button on the behaviours you tune by eye (Sine, Rotate, Orbit, Flash...), which never changes your saved scene.
-- **The everyday object rows** - one correct "Is on screen", named rows for opacity and size, and a hint when a collision row targets something with no collision shape.
 - **Building at run time** - spawn and keep hold of what you made, add nodes and behaviours, turn behaviours on and off, and build prefabs from parts.
+- **Custom inspectors made and improved as event sheets.**
 
 **Measured** on our test machine: enabling the plugin takes **310 to 450 ms**; the first sheet tab of a session **17 to 22 s** (about 30 s at `v0.18.0`).
 
