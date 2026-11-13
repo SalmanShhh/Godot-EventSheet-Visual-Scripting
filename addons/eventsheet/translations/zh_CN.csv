@@ -10527,5 +10527,5 @@ Name the look to make it.,请为外观命名后再创建。
 """%s"" cannot be a look name.","""%s"" 不能作为外观名称。"
 %s.gd is already in the looks folder.,外观文件夹中已有 %s.gd。
 """%s"" is not a type or a class.","""%s"" 既不是类型也不是类。"
-Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,
-It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,
+Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,在“项目设置 > 本地化 > 翻译”中启用已完成的语言。Godot 在导入 CSV 时会生成翻译文件。
+It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,在填入文本之前显示为 0%。Godot 会生成翻译文件；请将其添加到“项目设置 > 本地化 > 翻译”。
