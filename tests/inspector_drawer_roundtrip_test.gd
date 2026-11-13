@@ -550,7 +550,7 @@ static func run() -> bool:
 	# spelling must not come back.
 	var marker_words: Array = []
 	var stale_spellings: Array = []
-	for look: Dictionary in EventSheetInspectorLooks.LOOKS:
+	for look: Dictionary in EventSheetInspectorLooks.all():
 		var writes: String = str(look.get("writes", ""))
 		if writes.contains("es_drawer:"):
 			stale_spellings.append(str(look.get("id", "")))

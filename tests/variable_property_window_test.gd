@@ -273,9 +273,12 @@ static func _tables_are_translated() -> bool:
 		words.append_array([str(field), str(EventSheetVariableDialog.FIELD_HELP[field])])
 	for scope: Variant in EventSheetVariableDialog.SCOPE_FACTS:
 		words.append_array([str(EventSheetVariableDialog.SCOPE_FACTS[scope]["short"]), str(EventSheetVariableDialog.SCOPE_FACTS[scope]["long"])])
-	for look: Dictionary in EventSheetInspectorLooks.LOOKS:
+	for look: Dictionary in EventSheetInspectorLooks.all():
 		words.append_array([str(look["label"]), str(look["tip"])])
 		for field: Array in look.get("fields", []):
+			# A question of a look that is a file is a variable name, shown as written and never translated.
+			if look.has("script_path"):
+				continue
 			words.append(str(field[1]))
 			if str(field[2]) == "tick":
 				words.append(str(field[4]))

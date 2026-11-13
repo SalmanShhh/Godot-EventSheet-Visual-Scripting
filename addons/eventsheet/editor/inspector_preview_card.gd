@@ -221,6 +221,9 @@ static func _widget_sentence(attributes: Dictionary) -> String:
 			return EventSheetL10n.translate("Shown with a texture preview.")
 		"curve_preview", "curve_editor":
 			return EventSheetL10n.translate("Shown with a curve preview.")
+	# A look that is a file and has no sentence of its own here is named: "Shown with the look star_rating."
+	if not str(attributes.get("look", "")).is_empty():
+		return EventSheetL10n.translate("Shown with the look %s.") % str(attributes.get("look"))
 	if attributes.get("file") is Dictionary:
 		if str((attributes.get("file") as Dictionary).get("mode", "")) == "dir":
 			return EventSheetL10n.translate("Picked with a folder picker.")

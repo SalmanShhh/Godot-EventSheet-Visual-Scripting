@@ -18,6 +18,10 @@ const INSPECTOR_CONDITION_LIFT_PATH := "res://addons/eventforge/importer/inspect
 ## The lift that reads the block a variable's Save choice writes back into the choices. Loaded by path
 ## for the same reason, and only for a file carrying that block's doc line.
 const SAVE_CHOICE_LIFT_PATH := "res://addons/eventforge/importer/save_choice_lift.gd"
+## The marker words the compiler writes from structured attributes of their own (`drawer` and the keys
+## beside it). Any other `eventsheet:` word is a look that is a file, kept as `look` and `look_args`.
+const LEGACY_MARKER_WORDS: PackedStringArray = ["progress_bar", "min_max", "vector_dial", "toggle_row", "unit", "corners",
+	"swatch_row", "texture_preview", "curve_editor", "table", "table_row", "cards"]
 
 ## Whether the file being read writes its own `_validate_property`. A group show-if comment is read as
 ## the variable's option only then: with no function behind it the compile would write one the file
@@ -1020,6 +1024,13 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	attrs["drawer"] = parts[1]
+	# A word the compiler has no arm of its own for is a look that is a FILE: its name and its values in
+	# order, kept as the two attributes any such look has. A look whose file is not installed is carried
+	# the same way, so the marker survives a round trip and the Inspector draws a plain field.
+	if not LEGACY_MARKER_WORDS.has(str(parts[1])):
+		attrs.erase("drawer")
+		attrs["look"] = parts[1]
+		attrs["look_args"] = Array(parts.slice(2))
 	# progress_bar / min_max carry min:max, vector_dial carries a single max magnitude - recovered into the
 	# same `range` dict the emitter reads, so the marker re-emits byte-for-byte.
 	if (parts[1] == "progress_bar" or parts[1] == "min_max") and parts.size() >= 4:

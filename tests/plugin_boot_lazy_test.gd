@@ -77,7 +77,7 @@ const FORBIDDEN := {
 	# and naming the widgets compiled them and their translations into every editor start.
 	"res://addons/eventsheet/editor/attribute_drawers.gd": [
 		"EventSheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
-		"EventSheetDrawerWidgets", "EventSheetL10n",
+		"EventSheetDrawerWidgets", "EventSheetL10n", "EventSheetInspectorLook", "EventSheetInspectorLookCatalogue",
 	],
 	"res://addons/eventsheet/editor/drawer_widgets.gd": [
 		"EventSheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",

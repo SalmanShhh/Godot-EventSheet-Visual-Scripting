@@ -12,6 +12,10 @@ extends RefCounted
 ##   fields  its details, each [key, label, kind, default, hint]; kind is "number", "text",
 ##           "pick" (hint = the choices) or "tick" (hint = the words beside the box)
 ##
+## A row of the table that is just {"id", "from_file": true} is a look whose everything else is read from
+## its own script file (see EventSheetInspectorLookCatalogue); the row only keeps its place in the list.
+## A look in the project's looks folder that the table does not name is listed after the table's rows.
+##
 ## The table is English on purpose: each label, tip and detail word is the key its translation is filed
 ## under, and label() / description() / plain_label() hand it out in the editor's language.
 ##
@@ -26,6 +30,7 @@ const SLIDER_EXTRAS: Array = [["unit", "Unit", "text", "", "px, s, %, tiles/s"],
 	["or_less", "Below min", "tick", false, "allow typing below the min (or_less)"]]
 const LAYER_KINDS: Array = ["2d_physics", "2d_render", "2d_navigation", "3d_physics", "3d_render", "3d_navigation", "avoidance"]
 const REACH: Array = ["project", "anywhere on disk"]
+const CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
 const VECTOR_TYPES: Array = ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]
 
 const LOOKS: Array[Dictionary] = [
@@ -39,9 +44,7 @@ const LOOKS: Array[Dictionary] = [
 		"tip": "A slider with fine control near the low end: zoom, volume, scale.", "fields": MIN_MAX_STEP},
 	{"id": "no_handle", "label": "Slider, no handle", "types": ["int", "float"], "writes": "@export_range(0, 100, 1, \"hide_slider\")",
 		"tip": "A number box kept between a min and a max, with no slider drawn.", "fields": MIN_MAX_STEP},
-	{"id": "progress_bar", "label": "Progress bar", "types": ["int", "float"], "writes": "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar…\")",
-		"tip": "A filled bar between a min and a max. Without this plugin it is a plain number.",
-		"fields": [["min", "Min", "number", "0"], ["max", "Max", "number", "100"]]},
+	{"id": "progress_bar", "from_file": true},
 	{"id": "number_choices", "label": "Dropdown of numbers", "types": ["int"], "writes": "@export_enum(\"Slow:30\", \"Fast:60\")",
 		"tip": "A dropdown where each word stands for a number.",
 		"fields": [["choices", "Choices", "text", "", "Slow:30, Fast:60"]]},
@@ -122,10 +125,21 @@ const PLAIN_LABELS: Dictionary = {"int": "Plain number", "float": "Plain number"
 	"bool": "Checkbox", "Color": "Colour with alpha", "NodePath": "Node path", "Callable": "A function value"}
 
 
-## The looks a variable of `type_name` can wear, in the table's order.
+## The looks a variable of `type_name` can wear, in the table's order, then the project's own.
 static func for_type(type_name: String) -> Array[Dictionary]:
 	var output: Array[Dictionary] = []
-	for look: Dictionary in LOOKS:
+	var named: Dictionary = {}
+	for row: Dictionary in LOOKS:
+		named[str(row.get("id"))] = true
+		var look: Dictionary = _resolved(row)
+		if look.is_empty():
+			continue
+		var types: Array = look.get("types", [])
+		if types.is_empty() or types.has(type_name):
+			output.append(look)
+	for look: Dictionary in _catalogue().entries():
+		if named.has(str(look["id"])):
+			continue
 		var types: Array = look.get("types", [])
 		if types.is_empty() or types.has(type_name):
 			output.append(look)
@@ -135,8 +149,39 @@ static func for_type(type_name: String) -> Array[Dictionary]:
 static func by_id(look_id: String) -> Dictionary:
 	for look: Dictionary in LOOKS:
 		if str(look.get("id")) == look_id:
-			return look
-	return {}
+			return _resolved(look)
+	return _file_look(look_id)
+
+
+## Every look there is, the table's and the files', in the order the window lists them.
+static func all() -> Array[Dictionary]:
+	var output: Array[Dictionary] = []
+	var named: Dictionary = {}
+	for row: Dictionary in LOOKS:
+		named[str(row.get("id"))] = true
+		var look: Dictionary = _resolved(row)
+		if not look.is_empty():
+			output.append(look)
+	for look: Dictionary in _catalogue().entries():
+		if not named.has(str(look["id"])):
+			output.append(look)
+	return output
+
+
+## The catalogue of looks that are files. Loaded by path, so naming this table costs nothing at boot.
+static func _catalogue() -> Variant:
+	return load(CATALOGUE_PATH)
+
+
+## The file look of that name, {} when none is installed.
+static func _file_look(look_id: String) -> Dictionary:
+	return _catalogue().entry(look_id)
+
+
+## A table row as the window uses it: a `from_file` row is the file's own entry ({} when the file is
+## not installed), any other row is itself.
+static func _resolved(row: Dictionary) -> Dictionary:
+	return _file_look(str(row.get("id"))) if bool(row.get("from_file", false)) else row
 
 
 ## The no-look choice's name for a type ("Plain number"), in the editor's language.
@@ -232,6 +277,11 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 		"custom":
 			return {"custom_hint": {"hint": _or(text.call("hint"), "PROPERTY_HINT_NONE"), "text": str(values.get("text", "")),
 				"usage": text.call("usage")}}
+	# A look that is a file and has no structured attributes of its own: its name and its values, in
+	# the order the file asks its questions.
+	var file_look: Dictionary = _file_look(look_id)
+	if not file_look.is_empty():
+		return {"look": look_id, "look_args": _catalogue().look_args(file_look, values)}
 	return {}
 
 
@@ -240,6 +290,11 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 static func unfold(attributes: Dictionary, options: PackedStringArray = PackedStringArray()) -> Array:
 	if bool(attributes.get("storage", false)):
 		return ["storage", {}]
+	var look_word: String = str(attributes.get("look", ""))
+	if not look_word.is_empty():
+		var file_look: Dictionary = _file_look(look_word)
+		var look_args: Array = attributes.get("look_args") if attributes.get("look_args") is Array else []
+		return [look_word, _catalogue().marker_values(file_look, look_args) if not file_look.is_empty() else {}]
 	var preset: String = str(attributes.get("custom_preset", ""))
 	if preset in ["password", "expression", "link"]:
 		return [preset, {}]
@@ -312,7 +367,7 @@ static func look_keys() -> PackedStringArray:
 	return PackedStringArray(["range", "drawer", "enum_values", "flags", "layers", "exp_easing", "exp_easing_flags",
 		"unit_kinds", "unit_store", "file", "multiline", "no_alpha", "storage", "placeholder", "suggestions",
 		"toggle_options", "custom_preset", "table_columns", "table_row_table", "table_row_column", "node_path_types", "tool_button",
-		"custom_hint"])
+		"custom_hint", "look", "look_args"])
 
 
 ## "Fire:1, Ice" -> [{label, value}] (the value stays text; empty = automatic).

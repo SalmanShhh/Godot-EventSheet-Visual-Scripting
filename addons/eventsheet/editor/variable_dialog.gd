@@ -1121,6 +1121,14 @@ func _refresh_looks() -> void:
 	if not _export_hint.is_empty():
 		EventSheetPopupUI.add_described_item(_look_option, EventSheetL10n.translate("As written"),
 			"%s\n%s" % [EventSheetL10n.translate("Keeps the annotation the file wrote."), EventSheetL10n.translate("Writes %s") % _export_hint], "written")
+	# A look this project does not have installed keeps its marker: the window offers it as it is, so
+	# saving the variable untouched writes the same line back.
+	var absent: String = str(_opened_attributes.get("look", ""))
+	if not absent.is_empty() and EventSheetInspectorLooks.by_id(absent).is_empty():
+		EventSheetPopupUI.add_described_item(_look_option, EventSheetL10n.translate("Look not installed: %s") % absent,
+			"%s
+%s" % [EventSheetL10n.translate("No look file of this name is in the project, so the Inspector shows the plain field."),
+			EventSheetL10n.translate("Keeps the marker the file wrote.")], absent)
 	for look: Dictionary in EventSheetInspectorLooks.for_type(type_name):
 		EventSheetPopupUI.add_described_item(_look_option, EventSheetInspectorLooks.label(look), EventSheetInspectorLooks.description(look),
 			str(look.get("id")))

@@ -5627,7 +5627,7 @@ static func _valid_enum_label(label: String) -> bool:
 static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> String:
 	var drawer: String = str(attributes.get("drawer", "")).strip_edges()
 	if drawer.is_empty():
-		return ""
+		return _look_export_prefix(attributes)
 	var bounds: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
 	var marker: String = ""
 	match drawer:
@@ -5768,6 +5768,26 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			marker = "eventsheet:curve_editor"
 		_:
 			return ""
+	return "@export_custom(PROPERTY_HINT_NONE, \"%s\") " % marker
+
+
+## The marker of a look that is a FILE, written from the two attributes any such look has: `look` (the
+## file's name, which is the marker word) and `look_args` (one text per question, in file order). The
+## compiler never reads the file, so nothing here knows what the look draws or which types it works on:
+## the editor decides that when it draws the property. A value holding a quote, a colon or a line break
+## cannot ride the marker, so the look writes nothing and the variable stays a plain field.
+static func _look_export_prefix(attributes: Dictionary) -> String:
+	var word: String = str(attributes.get("look", "")).strip_edges()
+	if word.is_empty() or not word.is_valid_identifier():
+		return ""
+	var marker: String = "eventsheet:%s" % word
+	var args: Variant = attributes.get("look_args")
+	for arg: Variant in (args if args is Array else []):
+		var text: String = str(arg)
+		if text.contains("\"") or text.contains(":") or text.contains("
+") or text.contains("\\"):
+			return ""
+		marker += ":" + text
 	return "@export_custom(PROPERTY_HINT_NONE, \"%s\") " % marker
 
 

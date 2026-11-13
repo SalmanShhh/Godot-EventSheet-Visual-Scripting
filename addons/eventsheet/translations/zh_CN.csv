@@ -10504,3 +10504,7 @@ The node whose children are looked at. In a tool this is the scene being edited.
 "Frees the nodes this sheet built earlier under a node, the ones it marked when it added them (another sheet's are left alone), so a rebuild starts from nothing instead of adding a second copy. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.",释放此表之前在某个节点下构建的、添加时已被标记的节点（其他表构建的不会被动），这样重新构建会从零开始，而不是再多加一份副本。只检查直接子节点，并且在编辑器中 Ctrl+Z 无法撤销这一步。
 "Frees the nodes this sheet built earlier under a node, the ones it marked when it added them (another sheet's are left alone), so a rebuild starts from nothing instead of adding a second copy. Each is taken out of the tree at once, so the name it had is free again. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.",释放此表之前在某个节点下构建的、添加时已被标记的节点（其他表构建的不会被动），这样重新构建会从零开始，而不是再多加一份副本。每个节点都会立即从树中移出，所以它原来的名称又可以使用了。只检查直接子节点，并且在编辑器中 Ctrl+Z 无法撤销这一步。
 "%s has no collision shape, so nothing can overlap it and this row is never true.",%s 没有碰撞形状，因此没有东西能与它重叠，这一行永远不会为真。
+Shown with the look %s.,以外观 %s 显示。
+Look not installed: %s,未安装的外观：%s
+"No look file of this name is in the project, so the Inspector shows the plain field.",项目中没有这个名称的外观文件，因此 Inspector 显示普通字段。
+Keeps the marker the file wrote.,保留文件写入的标记。

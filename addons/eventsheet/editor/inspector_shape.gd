@@ -35,7 +35,8 @@ const DEFAULTS: Dictionary = {"look": "default", "layout": "group", "show": "alw
 ## sheet opened again later keeps its @tool: leaving a line is safer than taking one the reader wants.
 const TOOL_META: StringName = &"__inspector_shape_tool"
 
-## The looks that are a marker only this plugin reads; every other look is Godot's own annotation.
+## The looks that are a marker only this plugin reads; every other look is Godot's own annotation. A look
+## that is a file (it has a `script_path`) is a marker too, whatever this list says.
 const MARKER_LOOKS: PackedStringArray = ["progress_bar", "unit", "toggle_row", "swatch_row", "vector_dial",
 	"min_max", "corners", "texture_preview", "curve_editor", "table", "table_row"]
 ## Types a "Must be filled in" can watch: a number or a tick box is never empty.
@@ -101,7 +102,7 @@ static func options(category: String, field: Dictionary, fields: Array = []) -> 
 			for look: Dictionary in EventSheetInspectorLooks.for_type(type_name):
 				var look_id: String = str(look.get("id"))
 				var plain: String = EventSheetL10n.translate("Shows as a plain field, and the game runs the same: the marker is something only the plugin reads.") \
-					if MARKER_LOOKS.has(look_id) else EventSheetL10n.translate("The same: this is Godot's own annotation, so it works with or without the plugin.")
+					if MARKER_LOOKS.has(look_id) or look.has("script_path") else EventSheetL10n.translate("The same: this is Godot's own annotation, so it works with or without the plugin.")
 				var option: Dictionary = _option(look_id, EventSheetInspectorLooks.label(look), EventSheetL10n.translate(str(look.get("tip", ""))), plain)
 				option["asks"] = _translated(look.get("fields", []))
 				option["ready"] = _stands_on_defaults(look_id, type_name)

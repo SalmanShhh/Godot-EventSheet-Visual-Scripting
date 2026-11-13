@@ -8,6 +8,8 @@ class_name EventSheetAddonScanner
 extends RefCounted
 
 const ADDON_DIRS: Array[String] = ["res://eventsheet_addons/"]
+## Where a project keeps its own Inspector looks. It is a folder of editor scripts, not of packs.
+const LOOKS_FOLDER: String = "res://eventsheet_addons/looks"
 
 
 ## All .gd scripts under the addon directories (recursive), sorted for determinism.
@@ -78,7 +80,9 @@ static func _collect_scripts(dir_path: String, into: Array[String]) -> void:
 	while not entry.is_empty():
 		var full_path: String = dir_path.path_join(entry)
 		if dir.current_is_dir():
-			if not entry.begins_with("."):
+			# The project's own Inspector looks live in `eventsheet_addons/looks/`. They extend an editor
+			# class and provide no vocabulary, so every reader of this list is spared them.
+			if not entry.begins_with(".") and full_path != LOOKS_FOLDER:
 				_collect_scripts(full_path, into)
 		elif entry.get_extension() == "gd":
 			into.append(full_path)

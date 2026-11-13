@@ -7,7 +7,7 @@
 # Variable dialog's live preview); here we only map a marker+type to the right EditorProperty and forward edits.
 #
 # Drawers + marker forms:
-#   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
+#   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float (a look that is a file: addons/eventsheet/looks/progress_bar.gd)
 #   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
 #   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
 #   table_row      eventsheet:table_row:<array>:<column> int (the number of a row of the table property
@@ -24,6 +24,9 @@
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
 #   curve_editor   eventsheet:curve_editor               Curve
+#
+# A marker word that none of these handles is looked up in the catalogue of look FILES, so a project adds a
+# look by adding one script to `res://eventsheet_addons/looks/`; nothing is registered.
 #
 # Decor that belongs to the OBJECT rather than to one property is parsed beside this file:
 # `# @inspector_preview` asks for the preview card at the top, and
@@ -50,6 +53,9 @@ const CARD_LIST_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/
 const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card_schemas.gd"
 ## The row-picking drawer, loaded BY PATH for the same reason.
 const TABLE_ROW_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/table_row_drawer.gd"
+## The catalogue of looks that are files (the progress bar, and any look the project adds), loaded BY
+## PATH for the same reason: it is read the first time a marker names a look it does not know by heart.
+const LOOK_CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
 ## The widgets themselves, loaded BY PATH for the same reason: most objects an Inspector shows carry
 ## no drawer and no decor, and the widgets (with their translations) are the larger half of this file's
 ## weight at boot. Reached through `widgets()`; the property wrappers below hold them as plain Controls.
@@ -133,11 +139,6 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
-		"progress_bar":
-			if type != TYPE_INT and type != TYPE_FLOAT:
-				return false
-			add_property_editor(name, ProgressBarProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
-			return true
 		"min_max":
 			if type != TYPE_VECTOR2:
 				return false
@@ -223,7 +224,25 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				return false
 			add_property_editor(name, CurveEditorProperty.new())
 			return true
+	# Every other word is a look that is a file: the progress bar and any look the project added. The
+	# catalogue is loaded here, and only here, so an object with no marker pays nothing for it.
+	if not kind.is_empty():
+		return _parse_look(_object, type, name, kind, drawer.get("args", []))
 	return false
+
+
+## A look from a file draws the property when the file is installed and works on this type; any other
+## marker word leaves the plain field, exactly as without the plugin.
+func _parse_look(object: Object, type: int, name: String, word: String, args: Array) -> bool:
+	var catalogue: Variant = load(LOOK_CATALOGUE_PATH)
+	var look: Dictionary = catalogue.entry(word)
+	if look.is_empty() or not catalogue.accepts(look, type, object, name):
+		return false
+	var control: Variant = catalogue.build(look, args)
+	if control == null:
+		return false
+	add_property_editor(name, control)
+	return true
 
 
 ## "eventsheet:progress_bar:0:200" -> {drawer:"progress_bar", args:["0","200"], min:0.0, max:200.0}.
@@ -298,6 +317,12 @@ static func parse_toggle_spec(args: Array) -> Dictionary:
 # Decor maps parsed per script, cached by source length (cosmetic-only, so a same-length edit missing
 # the cache costs nothing worse than one stale render until the next real edit).
 static var _decor_cache: Dictionary = {}
+
+
+## Forgets every parsed decor map, so the next draw reads each script's source again. A same-length
+## edit (a colour, `0:200` to `0:300`) would otherwise draw from the old map until the length changed.
+static func forget_decor() -> void:
+	_decor_cache.clear()
 
 
 ## The decor entries for one property, parsed from the object's script source. Decor comments are plain
@@ -501,25 +526,6 @@ static func _value_is_kind(object: Object, name: String, type_class: String) -> 
 	return value is Object and (value as Object).is_class(type_class)
 
 # ── EditorProperty wrappers (each embeds a reusable widget and forwards edits) ──
-
-
-## Numeric progress bar: drag to set; emits an int back for int properties, a float for floats.
-class ProgressBarProperty:
-	extends EditorProperty
-	var _bar: Control
-
-	func _init(min_value: float, max_value: float) -> void:
-		_bar = EventSheetAttributeDrawers.widgets().DrawerProgressBar.new(min_value, max_value)
-		_bar.connect("value_changed", _on_changed)
-		add_child(_bar)
-		add_focusable(_bar)
-
-	func _on_changed(v: float) -> void:
-		var is_int: bool = typeof(get_edited_object().get(get_edited_property())) == TYPE_INT
-		emit_changed(get_edited_property(), int(round(v)) if is_int else v)
-
-	func _update_property() -> void:
-		_bar.call("set_value", float(get_edited_object().get(get_edited_property())))
 
 
 ## Vector2 min-max range: drag either handle to set the low (x) / high (y) end.
