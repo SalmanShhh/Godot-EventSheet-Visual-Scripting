@@ -544,6 +544,25 @@ static func run() -> bool:
 	all_passed = _unit_drawer() and all_passed
 	all_passed = _toggle_icons() and all_passed
 
+	# --- The line a look's hover says it writes is the marker the compiler really writes. ---
+	# Every marker look on the table names its drawer in the hover as `eventsheet:<word>`; the
+	# word must be the one the compiler and the drawer plugin read, and the retired `es_drawer:`
+	# spelling must not come back.
+	var marker_words: Array = []
+	var stale_spellings: Array = []
+	for look: Dictionary in EventSheetInspectorLooks.LOOKS:
+		var writes: String = str(look.get("writes", ""))
+		if writes.contains("es_drawer:"):
+			stale_spellings.append(str(look.get("id", "")))
+		var at: int = writes.find("\"eventsheet:")
+		if at == -1:
+			continue
+		var word: String = writes.substr(at + "\"eventsheet:".length()).split(":")[0].split("\"")[0].trim_suffix("…")
+		marker_words.append([str(look.get("id", "")), word])
+	all_passed = _eq("no look's hover still says es_drawer:", stale_spellings, []) and all_passed
+	for pair: Array in marker_words:
+		all_passed = _eq("the hover of %s names its own marker word" % pair[0], pair[1], pair[0]) and all_passed
+
 	return all_passed
 
 
