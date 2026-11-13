@@ -33,6 +33,7 @@ const VERIFIED_SECTION_ICONS: Dictionary = {
 	"Blend Modes": "CanvasItem",
 	"Boss": "GuiRadioUnchecked",
 	"Browser": "ExternalLink",
+	"Building": "Add",
 	"Bullet": "CharacterBody2D",
 	"Camera": "Camera3D",
 	"Canvas": "Node2D",

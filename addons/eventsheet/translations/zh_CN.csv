@@ -10415,3 +10415,75 @@ New %s…,新建 %s…
 New %s,新建 %s
 New %s sheet…,新建 %s 表…
 The %s form.,“%s”表单。
+"A node type, or a script class",节点类型或脚本类
+Choose a node type,选择节点类型
+Add New Node,添加新节点
+"Makes a node of any type, adds it under a parent and keeps it in a variable, so the next rows in this event can set it up. Leave Under as the running scene to add it to the level, or name any node. A script class with its own _init arguments is not made by this row.",创建任意类型的节点，将其添加到父节点之下，并保存在变量中，这样此事件的后续行就能对它进行设置。把“父节点”保持为正在运行的场景即可加入关卡，也可以指定任意节点。带有自定义 _init 参数的脚本类无法用这一行创建。
+Building,构建
+"Add a new [b]{type}[/b] named [b]{label}[/b] under [i]{parent}[/i], into [b]{name}[/b]",在 [i]{parent}[/i] 下添加名为 [b]{label}[/b] 的新 [b]{type}[/b]，放入 [b]{name}[/b]
+"What to make: any node type Godot knows, or a script class of your own that has a class_name.",要创建的内容：Godot 已知的任意节点类型，或带有 class_name 的自定义脚本类。
+The node's name in the scene tree. Leave it blank to keep the name Godot gives it.,节点在场景树中的名称。留空则保留 Godot 给它的名称。
+The node it is added under. The default is the running scene.,添加到哪个父节点之下。默认是正在运行的场景。
+The variable the new node is kept in. Following rows in this event can use this name.,保存新节点的变量。此事件的后续行可以使用这个名称。
+Add Behaviour,添加行为
+"Gives a node a behaviour: a script node added as its child, named after its class so the Inspector and get_node find it. With Only one, a node that already has the behaviour keeps it and the row uses that one; with Allow another, it always adds a new one. The behaviour's own script decides what it does and what it needs from its parent.",为节点添加一个行为：把一个脚本节点作为子节点加入，并以其类名命名，这样检查器和 get_node 都能找到它。选“只要一个”时，已有该行为的节点会保留它，这一行使用现有的那个；选“允许再加一个”时则总是新增。行为做什么、需要父节点提供什么，由行为自己的脚本决定。
+"Add behaviour [b]{behaviour}[/b] to [i]{target}[/i], into [b]{name}[/b]",为 [i]{target}[/i] 添加行为 [b]{behaviour}[/b]，放入 [b]{name}[/b]
+"The behaviour to add: pick it from the list of node types, or type the class_name of a script.",要添加的行为：从节点类型列表中选择，或输入脚本的 class_name。
+The node that gets the behaviour. Leave it as self for this node.,获得该行为的节点。保持为 self 即此节点。
+Only one keeps the behaviour a node already has. Allow another adds a new one every time.,“只要一个”会保留节点已有的行为。“允许再加一个”则每次都新增一个。
+only one,只要一个
+allow another,允许再加一个
+Remove Behaviour,移除行为
+"Takes a behaviour off a node, and does nothing when it is not there. It is detached first and freed after, so a check made in the same frame already says it is gone.",把行为从节点上移除，如果不存在则什么也不做。它会先被分离再释放，所以同一帧内的检查已经会得到“不存在”。
+Remove behaviour [b]{behaviour}[/b] from [i]{target}[/i],从 [i]{target}[/i] 移除行为 [b]{behaviour}[/b]
+"The behaviour to remove: pick it from the list of node types, or type the class_name of a script.",要移除的行为：从节点类型列表中选择，或输入脚本的 class_name。
+The node to take the behaviour off. Leave it as self for this node.,要移除行为的节点。保持为 self 即此节点。
+Add Sprite,添加精灵
+Adds a Sprite2D showing a picture to a node.,为节点添加一个显示图片的 Sprite2D。
+Add a sprite showing [b]{texture}[/b] to [i]{target}[/i],为 [i]{target}[/i] 添加显示 [b]{texture}[/b] 的精灵
+The image the sprite shows.,精灵显示的图片。
+The node the sprite is added to. Leave it as self for this node.,添加精灵的节点。保持为 self 即此节点。
+Add Sprite (3D),添加精灵 (3D)
+Adds a Sprite3D showing a picture to a node.,为节点添加一个显示图片的 Sprite3D。
+Add Circle Shape,添加圆形形状
+"Adds a CollisionShape2D holding a circle to a node. The node should be a physics body or an area, which is what a shape belongs to.",为节点添加一个包含圆形的 CollisionShape2D。该节点应为物理体或区域，形状属于它们。
+Add a circle shape of radius [b]{radius}[/b] to [i]{target}[/i],为 [i]{target}[/i] 添加半径为 [b]{radius}[/b] 的圆形形状
+"How far the circle reaches from its centre, in pixels.",圆形从中心向外延伸的距离，单位为像素。
+The body or area the shape is added to. Leave it as self for this node.,添加形状的物理体或区域。保持为 self 即此节点。
+Add Rectangle Shape,添加矩形形状
+"Adds a CollisionShape2D holding a rectangle to a node. The node should be a physics body or an area, which is what a shape belongs to.",为节点添加一个包含矩形的 CollisionShape2D。该节点应为物理体或区域，形状属于它们。
+Add a rectangle shape of size [b]{size}[/b] to [i]{target}[/i],为 [i]{target}[/i] 添加大小为 [b]{size}[/b] 的矩形形状
+"The width and height of the rectangle, in pixels.",矩形的宽度和高度，单位为像素。
+Add Capsule Shape,添加胶囊形状
+"Adds a CollisionShape2D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.",为节点添加一个包含胶囊的 CollisionShape2D，这是角色常用的形状。该节点应为物理体或区域，形状属于它们。
+Add a capsule shape of radius [b]{radius}[/b] and height [b]{height}[/b] to [i]{target}[/i],为 [i]{target}[/i] 添加半径为 [b]{radius}[/b]、高度为 [b]{height}[/b] 的胶囊形状
+"The height of the capsule from end to end, in pixels.",胶囊两端之间的高度，单位为像素。
+Add Sphere Shape (3D),添加球形形状 (3D)
+"Adds a CollisionShape3D holding a sphere to a node. The node should be a physics body or an area, which is what a shape belongs to.",为节点添加一个包含球体的 CollisionShape3D。该节点应为物理体或区域，形状属于它们。
+Add a sphere shape of radius [b]{radius}[/b] to [i]{target}[/i],为 [i]{target}[/i] 添加半径为 [b]{radius}[/b] 的球形形状
+"How far the sphere reaches from its centre, in metres.",球体从中心向外延伸的距离，单位为米。
+Add Box Shape (3D),添加盒形形状 (3D)
+"Adds a CollisionShape3D holding a box to a node. The node should be a physics body or an area, which is what a shape belongs to.",为节点添加一个包含盒体的 CollisionShape3D。该节点应为物理体或区域，形状属于它们。
+Add a box shape of size [b]{size}[/b] to [i]{target}[/i],为 [i]{target}[/i] 添加大小为 [b]{size}[/b] 的盒形形状
+"The width, height and depth of the box, in metres.",盒体的宽度、高度和深度，单位为米。
+Add Capsule Shape (3D),添加胶囊形状 (3D)
+"Adds a CollisionShape3D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.",为节点添加一个包含胶囊的 CollisionShape3D，这是角色常用的形状。该节点应为物理体或区域，形状属于它们。
+"The height of the capsule from end to end, in metres.",胶囊两端之间的高度，单位为米。
+Add Timer,添加计时器
+"Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.",添加一个 Timer，它一进入场景就开始计时，每次到时都会调用一个函数，周而复始。输入此表中某个函数的名称即可调用它；初始值什么也不做。
+"Add a timer to [i]{target}[/i], every [b]{seconds}[/b] seconds, calling [b]{callable}[/b]",为 [i]{target}[/i] 添加计时器，每 [b]{seconds}[/b] 秒调用 [b]{callable}[/b]
+How many seconds pass between calls.,两次调用之间间隔的秒数。
+Calling,调用
+"What to call each time the timer runs out: the name of a function, or a function written inline.",每次计时结束时要调用的内容：函数名称，或直接写出的函数。
+The node the timer is added to. Leave it as self for this node.,添加计时器的节点。保持为 self 即此节点。
+Add To Group (Saved With Scene),加入分组（随场景保存）
+Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.,把节点加入分组，并且在节点被打包成场景或预制件时仍会保留。普通的“加入分组”会在打包后的副本中丢失。
+"Add [i]{target}[/i] to [b]{group}[/b], kept when the scene is saved",将 [i]{target}[/i] 加入 [b]{group}[/b]，保存场景时保留
+The node to put in the group.,要加入分组的节点。
+The group name.,分组名称。
+Keep As Prefab,保存为预制件
+"Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.",把节点及其下的所有内容打包成保存在变量中的 PackedScene，之后可以再次实例化，或用“保存数据资源”保存。属于其他场景的节点仍作为实例保留。分支所在的分组只有在以“随场景保存”方式添加时才会保留。
+Keep [i]{node}[/i] as a prefab in [b]{prefab}[/b],将 [i]{node}[/i] 作为预制件保存到 [b]{prefab}[/b]
+The node to pack. It becomes the root of the prefab.,要打包的节点。它将成为预制件的根节点。
+Prefab,预制件
+The variable that holds the PackedScene. Declare it as a PackedScene in this sheet.,保存 PackedScene 的变量。请在此表中把它声明为 PackedScene。

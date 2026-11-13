@@ -67,6 +67,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 
 - [Finding And Rearranging Nodes](Finding-And-Rearranging-Nodes.md) - spawn, reparent, reorder, rename and free nodes, and pick the ones you need by child, name pattern or group.
 - [Scenes, Pausing And Turning Nodes Off](Scenes-Pausing-And-Turning-Nodes-Off.md) - change what is on screen, pause the whole game, and the difference between hidden, disabled and paused.
+- [Building Nodes While The Game Runs](Building-Nodes-While-The-Game-Runs.md) - a node of any type, a behaviour, a sprite, a collision shape and a timer made in code, a group a packed copy keeps, and a built branch kept as a prefab.
 - [Spawning Copies Of Scenes](Spawning-Copies-Of-Scenes.md) - the spawn sentence, the name it leaves behind for the rows after it, the four expressions that answer where a copy lands, destroying without leaving ghosts, the crowd and its cap, a table of kinds, routing through a pool, and the same sentences over the network.
 - [Groups, Tags And Systems](Groups-Tags-And-Systems.md) - a group as a tag, as a set to count and total, and as a system you run one method over.
 - [Ownership](Ownership.md) - who made this: the one metadata key every row reads, the chain from bullet to turret to player, and the friendly-fire guard built out of it.

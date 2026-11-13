@@ -10415,3 +10415,75 @@ New %s…,Nouveau : %s…
 New %s,Nouveau : %s
 New %s sheet…,Nouvelle feuille de %s…
 The %s form.,Le formulaire « %s ».
+"A node type, or a script class",Un type de nœud ou une classe de script
+Choose a node type,Choisir un type de nœud
+Add New Node,Ajouter un nouveau nœud
+"Makes a node of any type, adds it under a parent and keeps it in a variable, so the next rows in this event can set it up. Leave Under as the running scene to add it to the level, or name any node. A script class with its own _init arguments is not made by this row.","Crée un nœud de n'importe quel type, l'ajoute sous un parent et le garde dans une variable, pour que les lignes suivantes de cet événement puissent le configurer. Laissez Sous sur la scène en cours pour l'ajouter au niveau, ou nommez n'importe quel nœud. Une classe de script avec ses propres arguments _init n'est pas créée par cette ligne."
+Building,Construction
+"Add a new [b]{type}[/b] named [b]{label}[/b] under [i]{parent}[/i], into [b]{name}[/b]","Ajouter un nouveau [b]{type}[/b] nommé [b]{label}[/b] sous [i]{parent}[/i], dans [b]{name}[/b]"
+"What to make: any node type Godot knows, or a script class of your own that has a class_name.","Ce qu'il faut créer : n'importe quel type de nœud connu de Godot, ou une classe de script à vous qui a un class_name."
+The node's name in the scene tree. Leave it blank to keep the name Godot gives it.,Le nom du nœud dans l'arbre de scène. Laissez vide pour garder le nom que Godot lui donne.
+The node it is added under. The default is the running scene.,"Le nœud sous lequel il est ajouté. Par défaut, la scène en cours."
+The variable the new node is kept in. Following rows in this event can use this name.,La variable qui garde le nouveau nœud. Les lignes suivantes de cet événement peuvent utiliser ce nom.
+Add Behaviour,Ajouter un comportement
+"Gives a node a behaviour: a script node added as its child, named after its class so the Inspector and get_node find it. With Only one, a node that already has the behaviour keeps it and the row uses that one; with Allow another, it always adds a new one. The behaviour's own script decides what it does and what it needs from its parent.","Donne un comportement à un nœud : un nœud de script ajouté comme enfant, nommé d'après sa classe pour que l'inspecteur et get_node le trouvent. Avec Un seul, un nœud qui a déjà le comportement le garde et la ligne utilise celui-là ; avec En autoriser un autre, elle en ajoute toujours un nouveau. Le script du comportement décide de ce qu'il fait et de ce qu'il attend de son parent."
+"Add behaviour [b]{behaviour}[/b] to [i]{target}[/i], into [b]{name}[/b]","Ajouter le comportement [b]{behaviour}[/b] à [i]{target}[/i], dans [b]{name}[/b]"
+"The behaviour to add: pick it from the list of node types, or type the class_name of a script.",Le comportement à ajouter : choisissez-le dans la liste des types de nœud ou saisissez le class_name d'un script.
+The node that gets the behaviour. Leave it as self for this node.,Le nœud qui reçoit le comportement. Laissez self pour ce nœud.
+Only one keeps the behaviour a node already has. Allow another adds a new one every time.,Un seul garde le comportement qu'un nœud a déjà. En autoriser un autre en ajoute un nouveau à chaque fois.
+only one,un seul
+allow another,en autoriser un autre
+Remove Behaviour,Retirer un comportement
+"Takes a behaviour off a node, and does nothing when it is not there. It is detached first and freed after, so a check made in the same frame already says it is gone.","Retire un comportement d'un nœud, et ne fait rien s'il n'y est pas. Il est détaché d'abord puis libéré, donc une vérification faite dans la même image dit déjà qu'il a disparu."
+Remove behaviour [b]{behaviour}[/b] from [i]{target}[/i],Retirer le comportement [b]{behaviour}[/b] de [i]{target}[/i]
+"The behaviour to remove: pick it from the list of node types, or type the class_name of a script.",Le comportement à retirer : choisissez-le dans la liste des types de nœud ou saisissez le class_name d'un script.
+The node to take the behaviour off. Leave it as self for this node.,Le nœud auquel retirer le comportement. Laissez self pour ce nœud.
+Add Sprite,Ajouter un sprite
+Adds a Sprite2D showing a picture to a node.,Ajoute à un nœud un Sprite2D qui affiche une image.
+Add a sprite showing [b]{texture}[/b] to [i]{target}[/i],Ajouter à [i]{target}[/i] un sprite montrant [b]{texture}[/b]
+The image the sprite shows.,L'image que montre le sprite.
+The node the sprite is added to. Leave it as self for this node.,Le nœud auquel le sprite est ajouté. Laissez self pour ce nœud.
+Add Sprite (3D),Ajouter un sprite (3D)
+Adds a Sprite3D showing a picture to a node.,Ajoute à un nœud un Sprite3D qui affiche une image.
+Add Circle Shape,Ajouter une forme circulaire
+"Adds a CollisionShape2D holding a circle to a node. The node should be a physics body or an area, which is what a shape belongs to.","Ajoute à un nœud une CollisionShape2D contenant un cercle. Le nœud devrait être un corps physique ou une zone, car c'est là qu'une forme a sa place."
+Add a circle shape of radius [b]{radius}[/b] to [i]{target}[/i],Ajouter à [i]{target}[/i] une forme circulaire de rayon [b]{radius}[/b]
+"How far the circle reaches from its centre, in pixels.","La distance du cercle à son centre, en pixels."
+The body or area the shape is added to. Leave it as self for this node.,Le corps ou la zone auquel la forme est ajoutée. Laissez self pour ce nœud.
+Add Rectangle Shape,Ajouter une forme rectangulaire
+"Adds a CollisionShape2D holding a rectangle to a node. The node should be a physics body or an area, which is what a shape belongs to.","Ajoute à un nœud une CollisionShape2D contenant un rectangle. Le nœud devrait être un corps physique ou une zone, car c'est là qu'une forme a sa place."
+Add a rectangle shape of size [b]{size}[/b] to [i]{target}[/i],Ajouter à [i]{target}[/i] une forme rectangulaire de taille [b]{size}[/b]
+"The width and height of the rectangle, in pixels.","La largeur et la hauteur du rectangle, en pixels."
+Add Capsule Shape,Ajouter une forme de capsule
+"Adds a CollisionShape2D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.","Ajoute à un nœud une CollisionShape2D contenant une capsule, la forme habituelle d'un personnage. Le nœud devrait être un corps physique ou une zone, car c'est là qu'une forme a sa place."
+Add a capsule shape of radius [b]{radius}[/b] and height [b]{height}[/b] to [i]{target}[/i],Ajouter à [i]{target}[/i] une forme de capsule de rayon [b]{radius}[/b] et de hauteur [b]{height}[/b]
+"The height of the capsule from end to end, in pixels.","La hauteur de la capsule d'un bout à l'autre, en pixels."
+Add Sphere Shape (3D),Ajouter une forme de sphère (3D)
+"Adds a CollisionShape3D holding a sphere to a node. The node should be a physics body or an area, which is what a shape belongs to.","Ajoute à un nœud une CollisionShape3D contenant une sphère. Le nœud devrait être un corps physique ou une zone, car c'est là qu'une forme a sa place."
+Add a sphere shape of radius [b]{radius}[/b] to [i]{target}[/i],Ajouter à [i]{target}[/i] une forme de sphère de rayon [b]{radius}[/b]
+"How far the sphere reaches from its centre, in metres.","La distance de la sphère à son centre, en mètres."
+Add Box Shape (3D),Ajouter une forme de boîte (3D)
+"Adds a CollisionShape3D holding a box to a node. The node should be a physics body or an area, which is what a shape belongs to.","Ajoute à un nœud une CollisionShape3D contenant une boîte. Le nœud devrait être un corps physique ou une zone, car c'est là qu'une forme a sa place."
+Add a box shape of size [b]{size}[/b] to [i]{target}[/i],Ajouter à [i]{target}[/i] une forme de boîte de taille [b]{size}[/b]
+"The width, height and depth of the box, in metres.","La largeur, la hauteur et la profondeur de la boîte, en mètres."
+Add Capsule Shape (3D),Ajouter une forme de capsule (3D)
+"Adds a CollisionShape3D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.","Ajoute à un nœud une CollisionShape3D contenant une capsule, la forme habituelle d'un personnage. Le nœud devrait être un corps physique ou une zone, car c'est là qu'une forme a sa place."
+"The height of the capsule from end to end, in metres.","La hauteur de la capsule d'un bout à l'autre, en mètres."
+Add Timer,Ajouter un minuteur
+"Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.","Ajoute un Timer qui démarre dès qu'il est dans la scène et appelle une fonction chaque fois qu'il arrive à zéro, encore et encore. Saisissez le nom d'une fonction de cette feuille pour l'appeler ; la valeur de départ ne fait rien."
+"Add a timer to [i]{target}[/i], every [b]{seconds}[/b] seconds, calling [b]{callable}[/b]","Ajouter un minuteur à [i]{target}[/i], toutes les [b]{seconds}[/b] secondes, appelant [b]{callable}[/b]"
+How many seconds pass between calls.,Combien de secondes s'écoulent entre deux appels.
+Calling,Appelle
+"What to call each time the timer runs out: the name of a function, or a function written inline.","Ce qu'il faut appeler à chaque fois que le minuteur arrive à zéro : le nom d'une fonction, ou une fonction écrite sur place."
+The node the timer is added to. Leave it as self for this node.,Le nœud auquel le minuteur est ajouté. Laissez self pour ce nœud.
+Add To Group (Saved With Scene),Ajouter au groupe (enregistré avec la scène)
+Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.,Met un nœud dans un groupe de façon à ce que cela soit conservé quand le nœud est empaqueté dans une scène ou un prefab. Un simple Ajouter au groupe est oublié par une copie empaquetée.
+"Add [i]{target}[/i] to [b]{group}[/b], kept when the scene is saved","Ajouter [i]{target}[/i] à [b]{group}[/b], conservé quand la scène est enregistrée"
+The node to put in the group.,Le nœud à mettre dans le groupe.
+The group name.,Le nom du groupe.
+Keep As Prefab,Garder comme prefab
+"Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.","Empaquette un nœud et tout ce qu'il contient dans une PackedScene gardée dans une variable, pour pouvoir l'instancier de nouveau plus tard ou l'enregistrer avec Enregistrer une ressource de données. Les nœuds qui appartiennent à une autre scène restent des instances. Les groupes de la branche ne sont conservés que s'ils ont été ajoutés enregistrés avec la scène."
+Keep [i]{node}[/i] as a prefab in [b]{prefab}[/b],Garder [i]{node}[/i] comme prefab dans [b]{prefab}[/b]
+The node to pack. It becomes the root of the prefab.,Le nœud à empaqueter. Il devient la racine du prefab.
+Prefab,Préfabriqué
+The variable that holds the PackedScene. Declare it as a PackedScene in this sheet.,La variable qui contient la PackedScene. Déclarez-la comme PackedScene dans cette feuille.

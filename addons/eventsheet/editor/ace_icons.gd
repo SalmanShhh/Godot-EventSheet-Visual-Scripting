@@ -60,6 +60,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	# The one entry the five "Compare: …" sub-categories all inherit. Nothing derivable here: the name
 	# is not a class and the verbs are host-agnostic, which is exactly what this table is still for.
 	"Compare": "GuiChecked",
+	# Making nodes while the game runs: not a class, so nothing derives it. The editor's own add mark is
+	# what the rows are about, the same one its Add Child Node button wears.
+	"Building": "Add",
 	"Debug": "NodeWarning",
 	"Display": "Window",
 	"Drawing": "CanvasItem",

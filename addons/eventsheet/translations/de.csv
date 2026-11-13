@@ -10415,3 +10415,75 @@ New %s…,Neu: %s…
 New %s,Neu: %s
 New %s sheet…,Neues %s-Sheet…
 The %s form.,Das Formular „%s“.
+"A node type, or a script class",Ein Node-Typ oder eine Skriptklasse
+Choose a node type,Node-Typ wählen
+Add New Node,Neuen Node hinzufügen
+"Makes a node of any type, adds it under a parent and keeps it in a variable, so the next rows in this event can set it up. Leave Under as the running scene to add it to the level, or name any node. A script class with its own _init arguments is not made by this row.","Erzeugt einen Node beliebigen Typs, fügt ihn unter einem übergeordneten Node hinzu und speichert ihn in einer Variablen, damit die nächsten Zeilen dieses Ereignisses ihn einrichten können. Lass „Unter“ auf der laufenden Szene, um ihn dem Level hinzuzufügen, oder nenne einen beliebigen Node. Eine Skriptklasse mit eigenen _init-Argumenten wird von dieser Zeile nicht erzeugt."
+Building,Bauen
+"Add a new [b]{type}[/b] named [b]{label}[/b] under [i]{parent}[/i], into [b]{name}[/b]","Neuen [b]{type}[/b] namens [b]{label}[/b] unter [i]{parent}[/i] hinzufügen, in [b]{name}[/b]"
+"What to make: any node type Godot knows, or a script class of your own that has a class_name.","Was erzeugt werden soll: ein beliebiger Node-Typ, den Godot kennt, oder eine eigene Skriptklasse mit class_name."
+The node's name in the scene tree. Leave it blank to keep the name Godot gives it.,"Der Name des Nodes im Szenenbaum. Leer lassen, um den Namen zu behalten, den Godot vergibt."
+The node it is added under. The default is the running scene.,"Der Node, unter dem er hinzugefügt wird. Standard ist die laufende Szene."
+The variable the new node is kept in. Following rows in this event can use this name.,"Die Variable, in der der neue Node gespeichert wird. Die folgenden Zeilen dieses Ereignisses können diesen Namen verwenden."
+Add Behaviour,Verhalten hinzufügen
+"Gives a node a behaviour: a script node added as its child, named after its class so the Inspector and get_node find it. With Only one, a node that already has the behaviour keeps it and the row uses that one; with Allow another, it always adds a new one. The behaviour's own script decides what it does and what it needs from its parent.","Gibt einem Node ein Verhalten: einen Skript-Node als Kind, nach seiner Klasse benannt, damit Inspektor und get_node ihn finden. Mit „nur eins“ behält ein Node, der das Verhalten schon hat, es, und die Zeile nutzt dieses; mit „weiteres erlauben“ wird immer ein neues hinzugefügt. Das Skript des Verhaltens entscheidet, was es tut und was es vom übergeordneten Node braucht."
+"Add behaviour [b]{behaviour}[/b] to [i]{target}[/i], into [b]{name}[/b]","Verhalten [b]{behaviour}[/b] zu [i]{target}[/i] hinzufügen, in [b]{name}[/b]"
+"The behaviour to add: pick it from the list of node types, or type the class_name of a script.",Das hinzuzufügende Verhalten: aus der Liste der Node-Typen wählen oder den class_name eines Skripts eintippen.
+The node that gets the behaviour. Leave it as self for this node.,"Der Node, der das Verhalten bekommt. Bei self bleibt es dieser Node."
+Only one keeps the behaviour a node already has. Allow another adds a new one every time.,"„Nur eins“ behält das Verhalten, das ein Node schon hat. „Weiteres erlauben“ fügt jedes Mal ein neues hinzu."
+only one,nur eins
+allow another,weiteres erlauben
+Remove Behaviour,Verhalten entfernen
+"Takes a behaviour off a node, and does nothing when it is not there. It is detached first and freed after, so a check made in the same frame already says it is gone.","Nimmt ein Verhalten von einem Node weg und tut nichts, wenn es nicht da ist. Es wird zuerst abgetrennt und danach freigegeben, sodass eine Prüfung im selben Frame schon sagt, dass es weg ist."
+Remove behaviour [b]{behaviour}[/b] from [i]{target}[/i],Verhalten [b]{behaviour}[/b] von [i]{target}[/i] entfernen
+"The behaviour to remove: pick it from the list of node types, or type the class_name of a script.",Das zu entfernende Verhalten: aus der Liste der Node-Typen wählen oder den class_name eines Skripts eintippen.
+The node to take the behaviour off. Leave it as self for this node.,"Der Node, von dem das Verhalten genommen wird. Bei self bleibt es dieser Node."
+Add Sprite,Sprite hinzufügen
+Adds a Sprite2D showing a picture to a node.,"Fügt einem Node ein Sprite2D hinzu, das ein Bild zeigt."
+Add a sprite showing [b]{texture}[/b] to [i]{target}[/i],Ein Sprite mit [b]{texture}[/b] zu [i]{target}[/i] hinzufügen
+The image the sprite shows.,"Das Bild, das das Sprite zeigt."
+The node the sprite is added to. Leave it as self for this node.,"Der Node, dem das Sprite hinzugefügt wird. Bei self bleibt es dieser Node."
+Add Sprite (3D),Sprite hinzufügen (3D)
+Adds a Sprite3D showing a picture to a node.,"Fügt einem Node ein Sprite3D hinzu, das ein Bild zeigt."
+Add Circle Shape,Kreisform hinzufügen
+"Adds a CollisionShape2D holding a circle to a node. The node should be a physics body or an area, which is what a shape belongs to.","Fügt einem Node eine CollisionShape2D mit einem Kreis hinzu. Der Node sollte ein Physikkörper oder eine Area sein, denn dorthin gehört eine Form."
+Add a circle shape of radius [b]{radius}[/b] to [i]{target}[/i],Eine Kreisform mit Radius [b]{radius}[/b] zu [i]{target}[/i] hinzufügen
+"How far the circle reaches from its centre, in pixels.","Wie weit der Kreis von seinem Mittelpunkt reicht, in Pixeln."
+The body or area the shape is added to. Leave it as self for this node.,"Der Körper oder die Area, dem die Form hinzugefügt wird. Bei self bleibt es dieser Node."
+Add Rectangle Shape,Rechteckform hinzufügen
+"Adds a CollisionShape2D holding a rectangle to a node. The node should be a physics body or an area, which is what a shape belongs to.","Fügt einem Node eine CollisionShape2D mit einem Rechteck hinzu. Der Node sollte ein Physikkörper oder eine Area sein, denn dorthin gehört eine Form."
+Add a rectangle shape of size [b]{size}[/b] to [i]{target}[/i],Eine Rechteckform der Größe [b]{size}[/b] zu [i]{target}[/i] hinzufügen
+"The width and height of the rectangle, in pixels.","Breite und Höhe des Rechtecks, in Pixeln."
+Add Capsule Shape,Kapselform hinzufügen
+"Adds a CollisionShape2D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.","Fügt einem Node eine CollisionShape2D mit einer Kapsel hinzu, der üblichen Form für eine Figur. Der Node sollte ein Physikkörper oder eine Area sein, denn dorthin gehört eine Form."
+Add a capsule shape of radius [b]{radius}[/b] and height [b]{height}[/b] to [i]{target}[/i],Eine Kapselform mit Radius [b]{radius}[/b] und Höhe [b]{height}[/b] zu [i]{target}[/i] hinzufügen
+"The height of the capsule from end to end, in pixels.","Die Höhe der Kapsel von Ende zu Ende, in Pixeln."
+Add Sphere Shape (3D),Kugelform hinzufügen (3D)
+"Adds a CollisionShape3D holding a sphere to a node. The node should be a physics body or an area, which is what a shape belongs to.","Fügt einem Node eine CollisionShape3D mit einer Kugel hinzu. Der Node sollte ein Physikkörper oder eine Area sein, denn dorthin gehört eine Form."
+Add a sphere shape of radius [b]{radius}[/b] to [i]{target}[/i],Eine Kugelform mit Radius [b]{radius}[/b] zu [i]{target}[/i] hinzufügen
+"How far the sphere reaches from its centre, in metres.","Wie weit die Kugel von ihrem Mittelpunkt reicht, in Metern."
+Add Box Shape (3D),Quaderform hinzufügen (3D)
+"Adds a CollisionShape3D holding a box to a node. The node should be a physics body or an area, which is what a shape belongs to.","Fügt einem Node eine CollisionShape3D mit einem Quader hinzu. Der Node sollte ein Physikkörper oder eine Area sein, denn dorthin gehört eine Form."
+Add a box shape of size [b]{size}[/b] to [i]{target}[/i],Eine Quaderform der Größe [b]{size}[/b] zu [i]{target}[/i] hinzufügen
+"The width, height and depth of the box, in metres.","Breite, Höhe und Tiefe des Quaders, in Metern."
+Add Capsule Shape (3D),Kapselform hinzufügen (3D)
+"Adds a CollisionShape3D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.","Fügt einem Node eine CollisionShape3D mit einer Kapsel hinzu, der üblichen Form für eine Figur. Der Node sollte ein Physikkörper oder eine Area sein, denn dorthin gehört eine Form."
+"The height of the capsule from end to end, in metres.","Die Höhe der Kapsel von Ende zu Ende, in Metern."
+Add Timer,Timer hinzufügen
+"Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.","Fügt einen Timer hinzu, der startet, sobald er in der Szene ist, und jedes Mal, wenn er abläuft, eine Funktion aufruft, immer wieder. Tippe den Namen einer Funktion dieses Blatts ein, um sie aufzurufen; der Startwert tut nichts."
+"Add a timer to [i]{target}[/i], every [b]{seconds}[/b] seconds, calling [b]{callable}[/b]","Einen Timer zu [i]{target}[/i] hinzufügen, alle [b]{seconds}[/b] Sekunden, ruft [b]{callable}[/b] auf"
+How many seconds pass between calls.,Wie viele Sekunden zwischen den Aufrufen vergehen.
+Calling,Ruft auf
+"What to call each time the timer runs out: the name of a function, or a function written inline.","Was jedes Mal aufgerufen wird, wenn der Timer abläuft: der Name einer Funktion oder eine direkt geschriebene Funktion."
+The node the timer is added to. Leave it as self for this node.,"Der Node, dem der Timer hinzugefügt wird. Bei self bleibt es dieser Node."
+Add To Group (Saved With Scene),Zu Gruppe hinzufügen (mit Szene gespeichert)
+Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.,"Legt einen Node so in eine Gruppe, dass die Zugehörigkeit erhalten bleibt, wenn der Node in eine Szene oder ein Prefab gepackt wird. Ein einfaches „Zu Gruppe hinzufügen“ geht in einer gepackten Kopie verloren."
+"Add [i]{target}[/i] to [b]{group}[/b], kept when the scene is saved","[i]{target}[/i] zu [b]{group}[/b] hinzufügen, bleibt beim Speichern der Szene erhalten"
+The node to put in the group.,"Der Node, der in die Gruppe kommt."
+The group name.,Der Name der Gruppe.
+Keep As Prefab,Als Prefab behalten
+"Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.","Packt einen Node und alles darunter in eine PackedScene in einer Variablen, damit er später erneut instanziiert oder mit „Daten-Asset speichern“ gespeichert werden kann. Nodes, die zu einer anderen Szene gehören, bleiben Instanzen. Gruppen des Zweigs bleiben nur erhalten, wenn sie mit der Szene gespeichert hinzugefügt wurden."
+Keep [i]{node}[/i] as a prefab in [b]{prefab}[/b],[i]{node}[/i] als Prefab in [b]{prefab}[/b] behalten
+The node to pack. It becomes the root of the prefab.,Der zu packende Node. Er wird zur Wurzel des Prefabs.
+Prefab,Prefab-Vorlage
+The variable that holds the PackedScene. Declare it as a PackedScene in this sheet.,"Die Variable, die die PackedScene hält. Deklariere sie in diesem Blatt als PackedScene."

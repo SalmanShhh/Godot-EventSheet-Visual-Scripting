@@ -478,6 +478,19 @@ static func _scene_files() -> Array[ACEDescriptor]:
 	return descriptors
 
 
+## The lines that lend a branch's ownerless nodes the branch root as their owner, ending with the
+## list of nodes lent so a row can give the ownership back once its pack is done. `branch_slot` is
+## the placeholder (or expression) that names the branch root. Public so the rows that pack a
+## branch into a variable say the very same walk this one does.
+static func owner_walk_head(branch_slot: String) -> String:
+	return "var __branch_{uid}: Node = %s\n" % branch_slot \
+		+ "var __adopted_{uid}: Array[Node] = []\n" \
+		+ "for __part_{uid}: Node in __branch_{uid}.find_children(\"*\", \"\", true, false):\n" \
+		+ "\tif __part_{uid}.owner == null:\n" \
+		+ "\t\t__part_{uid}.owner = __branch_{uid}\n" \
+		+ "\t\t__adopted_{uid}.append(__part_{uid})\n"
+
+
 ## The save row's emitted lines. The owner walk, the pack, and the write, each of which can be read.
 ##
 ## THE WALK IS FIRST AND IT IS THE POINT. `PackedScene.pack` writes out the root plus every node the
@@ -501,12 +514,7 @@ static func _scene_files() -> Array[ACEDescriptor]:
 ## folder that is not there, a full disk or a read-only path. Either one leaves no file and, without
 ## these two lines, no word about it anywhere.
 static func _save_branch_template() -> String:
-	return "var __branch_{uid}: Node = {branch}\n" \
-		+ "var __adopted_{uid}: Array[Node] = []\n" \
-		+ "for __part_{uid}: Node in __branch_{uid}.find_children(\"*\", \"\", true, false):\n" \
-		+ "\tif __part_{uid}.owner == null:\n" \
-		+ "\t\t__part_{uid}.owner = __branch_{uid}\n" \
-		+ "\t\t__adopted_{uid}.append(__part_{uid})\n" \
+	return owner_walk_head("{branch}") \
 		+ "var __scene_{uid} := PackedScene.new()\n" \
 		+ "var __packed_{uid} := __scene_{uid}.pack(__branch_{uid})\n" \
 		+ "for __lent_{uid}: Node in __adopted_{uid}:\n" \

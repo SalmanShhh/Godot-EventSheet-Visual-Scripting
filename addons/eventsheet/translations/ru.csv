@@ -10415,3 +10415,75 @@ New %s…,Создать: %s…
 New %s,Создать: %s
 New %s sheet…,Новый лист: %s…
 The %s form.,Форма «%s».
+"A node type, or a script class",Тип узла или класс скрипта
+Choose a node type,Выбрать тип узла
+Add New Node,Добавить новый узел
+"Makes a node of any type, adds it under a parent and keeps it in a variable, so the next rows in this event can set it up. Leave Under as the running scene to add it to the level, or name any node. A script class with its own _init arguments is not made by this row.","Создаёт узел любого типа, добавляет его под родителя и хранит в переменной, чтобы следующие строки этого события могли его настроить. Оставьте «Под» равным запущенной сцене, чтобы добавить узел в уровень, или укажите любой узел. Класс скрипта со своими аргументами _init этой строкой не создаётся."
+Building,Построение
+"Add a new [b]{type}[/b] named [b]{label}[/b] under [i]{parent}[/i], into [b]{name}[/b]","Добавить новый [b]{type}[/b] с именем [b]{label}[/b] под [i]{parent}[/i], в [b]{name}[/b]"
+"What to make: any node type Godot knows, or a script class of your own that has a class_name.","Что создать: любой тип узла, известный Godot, или ваш класс скрипта с class_name."
+The node's name in the scene tree. Leave it blank to keep the name Godot gives it.,"Имя узла в дереве сцены. Оставьте пустым, чтобы сохранить имя, которое даёт Godot."
+The node it is added under. The default is the running scene.,"Узел, под который добавляется новый. По умолчанию это запущенная сцена."
+The variable the new node is kept in. Following rows in this event can use this name.,"Переменная, в которой хранится новый узел. Следующие строки этого события могут использовать это имя."
+Add Behaviour,Добавить поведение
+"Gives a node a behaviour: a script node added as its child, named after its class so the Inspector and get_node find it. With Only one, a node that already has the behaviour keeps it and the row uses that one; with Allow another, it always adds a new one. The behaviour's own script decides what it does and what it needs from its parent.","Даёт узлу поведение: узел-скрипт добавляется как дочерний и получает имя своего класса, чтобы его нашли инспектор и get_node. При «только одно» узел, у которого поведение уже есть, оставляет его, и строка использует его; при «разрешить ещё одно» всегда добавляется новое. Что поведение делает и что ему нужно от родителя, решает его собственный скрипт."
+"Add behaviour [b]{behaviour}[/b] to [i]{target}[/i], into [b]{name}[/b]","Добавить поведение [b]{behaviour}[/b] узлу [i]{target}[/i], в [b]{name}[/b]"
+"The behaviour to add: pick it from the list of node types, or type the class_name of a script.",Какое поведение добавить: выберите из списка типов узлов или введите class_name скрипта.
+The node that gets the behaviour. Leave it as self for this node.,"Узел, который получает поведение. Оставьте self для этого узла."
+Only one keeps the behaviour a node already has. Allow another adds a new one every time.,"«Только одно» сохраняет поведение, которое у узла уже есть. «Разрешить ещё одно» каждый раз добавляет новое."
+only one,только одно
+allow another,разрешить ещё одно
+Remove Behaviour,Убрать поведение
+"Takes a behaviour off a node, and does nothing when it is not there. It is detached first and freed after, so a check made in the same frame already says it is gone.","Убирает поведение с узла и ничего не делает, если его там нет. Сначала оно отсоединяется, а затем освобождается, поэтому проверка в том же кадре уже скажет, что его нет."
+Remove behaviour [b]{behaviour}[/b] from [i]{target}[/i],Убрать поведение [b]{behaviour}[/b] с [i]{target}[/i]
+"The behaviour to remove: pick it from the list of node types, or type the class_name of a script.",Какое поведение убрать: выберите из списка типов узлов или введите class_name скрипта.
+The node to take the behaviour off. Leave it as self for this node.,"Узел, с которого убирают поведение. Оставьте self для этого узла."
+Add Sprite,Добавить спрайт
+Adds a Sprite2D showing a picture to a node.,Добавляет узлу Sprite2D с картинкой.
+Add a sprite showing [b]{texture}[/b] to [i]{target}[/i],Добавить [i]{target}[/i] спрайт с [b]{texture}[/b]
+The image the sprite shows.,"Картинка, которую показывает спрайт."
+The node the sprite is added to. Leave it as self for this node.,"Узел, к которому добавляется спрайт. Оставьте self для этого узла."
+Add Sprite (3D),Добавить спрайт (3D)
+Adds a Sprite3D showing a picture to a node.,Добавляет узлу Sprite3D с картинкой.
+Add Circle Shape,Добавить круглую форму
+"Adds a CollisionShape2D holding a circle to a node. The node should be a physics body or an area, which is what a shape belongs to.",Добавляет узлу CollisionShape2D с кругом. Узел должен быть физическим телом или областью: именно им принадлежит форма.
+Add a circle shape of radius [b]{radius}[/b] to [i]{target}[/i],Добавить [i]{target}[/i] круглую форму радиусом [b]{radius}[/b]
+"How far the circle reaches from its centre, in pixels.","Расстояние от центра круга до края, в пикселях."
+The body or area the shape is added to. Leave it as self for this node.,"Тело или область, к которой добавляется форма. Оставьте self для этого узла."
+Add Rectangle Shape,Добавить прямоугольную форму
+"Adds a CollisionShape2D holding a rectangle to a node. The node should be a physics body or an area, which is what a shape belongs to.",Добавляет узлу CollisionShape2D с прямоугольником. Узел должен быть физическим телом или областью: именно им принадлежит форма.
+Add a rectangle shape of size [b]{size}[/b] to [i]{target}[/i],Добавить [i]{target}[/i] прямоугольную форму размером [b]{size}[/b]
+"The width and height of the rectangle, in pixels.","Ширина и высота прямоугольника, в пикселях."
+Add Capsule Shape,Добавить форму капсулы
+"Adds a CollisionShape2D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.","Добавляет узлу CollisionShape2D с капсулой, обычной формой для персонажа. Узел должен быть физическим телом или областью: именно им принадлежит форма."
+Add a capsule shape of radius [b]{radius}[/b] and height [b]{height}[/b] to [i]{target}[/i],Добавить [i]{target}[/i] форму капсулы радиусом [b]{radius}[/b] и высотой [b]{height}[/b]
+"The height of the capsule from end to end, in pixels.","Высота капсулы от края до края, в пикселях."
+Add Sphere Shape (3D),Добавить форму сферы (3D)
+"Adds a CollisionShape3D holding a sphere to a node. The node should be a physics body or an area, which is what a shape belongs to.",Добавляет узлу CollisionShape3D со сферой. Узел должен быть физическим телом или областью: именно им принадлежит форма.
+Add a sphere shape of radius [b]{radius}[/b] to [i]{target}[/i],Добавить [i]{target}[/i] форму сферы радиусом [b]{radius}[/b]
+"How far the sphere reaches from its centre, in metres.","Расстояние от центра сферы до поверхности, в метрах."
+Add Box Shape (3D),Добавить форму коробки (3D)
+"Adds a CollisionShape3D holding a box to a node. The node should be a physics body or an area, which is what a shape belongs to.",Добавляет узлу CollisionShape3D с коробкой. Узел должен быть физическим телом или областью: именно им принадлежит форма.
+Add a box shape of size [b]{size}[/b] to [i]{target}[/i],Добавить [i]{target}[/i] форму коробки размером [b]{size}[/b]
+"The width, height and depth of the box, in metres.","Ширина, высота и глубина коробки, в метрах."
+Add Capsule Shape (3D),Добавить форму капсулы (3D)
+"Adds a CollisionShape3D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.","Добавляет узлу CollisionShape3D с капсулой, обычной формой для персонажа. Узел должен быть физическим телом или областью: именно им принадлежит форма."
+"The height of the capsule from end to end, in metres.","Высота капсулы от края до края, в метрах."
+Add Timer,Добавить таймер
+"Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.","Добавляет Timer, который запускается, как только попадает в сцену, и каждый раз по истечении времени вызывает функцию, снова и снова. Введите имя одной из функций этого листа, чтобы вызвать её; значение по умолчанию ничего не делает."
+"Add a timer to [i]{target}[/i], every [b]{seconds}[/b] seconds, calling [b]{callable}[/b]",Добавить [i]{target}[/i] таймер: каждые [b]{seconds}[/b] с вызывать [b]{callable}[/b]
+How many seconds pass between calls.,Сколько секунд проходит между вызовами.
+Calling,Вызывает
+"What to call each time the timer runs out: the name of a function, or a function written inline.","Что вызывать при каждом срабатывании таймера: имя функции или функция, записанная на месте."
+The node the timer is added to. Leave it as self for this node.,"Узел, к которому добавляется таймер. Оставьте self для этого узла."
+Add To Group (Saved With Scene),Добавить в группу (сохраняется со сценой)
+Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.,"Помещает узел в группу так, что членство сохраняется, когда узел упаковывается в сцену или префаб. Обычное «Добавить в группу» упакованная копия забывает."
+"Add [i]{target}[/i] to [b]{group}[/b], kept when the scene is saved","Добавить [i]{target}[/i] в [b]{group}[/b], сохраняется при сохранении сцены"
+The node to put in the group.,"Узел, который помещают в группу."
+The group name.,Имя группы.
+Keep As Prefab,Сохранить как префаб
+"Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.","Упаковывает узел и всё под ним в PackedScene, которая хранится в переменной, чтобы позже снова создать её экземпляр или сохранить через «Сохранить ресурс данных». Узлы, принадлежащие другой сцене, остаются экземплярами. Группы ветви сохраняются, только если были добавлены с сохранением вместе со сценой."
+Keep [i]{node}[/i] as a prefab in [b]{prefab}[/b],Сохранить [i]{node}[/i] как префаб в [b]{prefab}[/b]
+The node to pack. It becomes the root of the prefab.,"Узел, который упаковывают. Он становится корнем префаба."
+Prefab,Префаб
+The variable that holds the PackedScene. Declare it as a PackedScene in this sheet.,"Переменная, в которой хранится PackedScene. Объявите её в этом листе как PackedScene."

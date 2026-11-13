@@ -180,6 +180,9 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# The world-space twins of the verbs that wrote the wrong place, Set World Position, the X / Y / Z
 	# readers and the Control place rows. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/world_place_aces.gd",
+	# Making nodes while the game runs: a node of any type, a behaviour, the parts a body is made of,
+	# and keeping a branch as a prefab. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/building_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files

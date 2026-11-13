@@ -2122,6 +2122,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"dev": "Debugging-And-Printing",
 	"device": "Reading-Keyboard-Mouse-And-Gamepad",
 	"drawing": "Particles-And-Drawing-On-Screen",
+	# The rows that make nodes while the game runs: the module file and the picker category are both
+	# "building", which would read as a page about construction, so the page says what it is about.
+	"building": "Building-Nodes-While-The-Game-Runs",
 	# Godot's own draw_* calls under On Draw are the same subject said in the engine's words, so they
 	# share the Drawing page rather than opening one of their own.
 	"canvas_item_draw": "Particles-And-Drawing-On-Screen",

@@ -10415,3 +10415,75 @@ New %s…,新規 %s…
 New %s,新規 %s
 New %s sheet…,%s シートを新規作成…
 The %s form.,「%s」フォーム。
+"A node type, or a script class",ノードの型、またはスクリプトクラス
+Choose a node type,ノードの型を選ぶ
+Add New Node,新しいノードを追加
+"Makes a node of any type, adds it under a parent and keeps it in a variable, so the next rows in this event can set it up. Leave Under as the running scene to add it to the level, or name any node. A script class with its own _init arguments is not made by this row.",任意の型のノードを作り、親の下に追加し、変数に保持します。このイベントの次の行で設定できます。「親」を実行中のシーンのままにするとレベルに追加され、好きなノードを指定することもできます。独自の _init 引数を持つスクリプトクラスは、この行では作れません。
+Building,構築
+"Add a new [b]{type}[/b] named [b]{label}[/b] under [i]{parent}[/i], into [b]{name}[/b]",新しい [b]{type}[/b] を [b]{label}[/b] という名前で [i]{parent}[/i] の下に追加し、[b]{name}[/b] に入れる
+"What to make: any node type Godot knows, or a script class of your own that has a class_name.",作るもの。Godot が知っている任意のノードの型、または class_name を持つ自作のスクリプトクラス。
+The node's name in the scene tree. Leave it blank to keep the name Godot gives it.,シーンツリーでのノードの名前。空欄なら Godot が付ける名前のままになります。
+The node it is added under. The default is the running scene.,追加先の親ノード。既定は実行中のシーンです。
+The variable the new node is kept in. Following rows in this event can use this name.,新しいノードを保持する変数。このイベントの次の行でこの名前を使えます。
+Add Behaviour,ビヘイビアを追加
+"Gives a node a behaviour: a script node added as its child, named after its class so the Inspector and get_node find it. With Only one, a node that already has the behaviour keeps it and the row uses that one; with Allow another, it always adds a new one. The behaviour's own script decides what it does and what it needs from its parent.",ノードにビヘイビアを与えます。クラス名を付けたスクリプトノードを子として追加するので、インスペクターや get_node で見つかります。「1つだけ」では、すでに持っているノードはそれを保ち、この行はそれを使います。「別のも許可」では常に新しく追加します。何をするか、親に何を求めるかはビヘイビア自身のスクリプトが決めます。
+"Add behaviour [b]{behaviour}[/b] to [i]{target}[/i], into [b]{name}[/b]",ビヘイビア [b]{behaviour}[/b] を [i]{target}[/i] に追加し、[b]{name}[/b] に入れる
+"The behaviour to add: pick it from the list of node types, or type the class_name of a script.",追加するビヘイビア。ノードの型の一覧から選ぶか、スクリプトの class_name を入力します。
+The node that gets the behaviour. Leave it as self for this node.,ビヘイビアを受け取るノード。self のままならこのノードです。
+Only one keeps the behaviour a node already has. Allow another adds a new one every time.,「1つだけ」は、ノードがすでに持つビヘイビアを保ちます。「別のも許可」は毎回新しく追加します。
+only one,1つだけ
+allow another,別のも許可
+Remove Behaviour,ビヘイビアを削除
+"Takes a behaviour off a node, and does nothing when it is not there. It is detached first and freed after, so a check made in the same frame already says it is gone.",ノードからビヘイビアを外します。無ければ何もしません。先に切り離してから解放するので、同じフレーム内の確認でもすでに無いと答えます。
+Remove behaviour [b]{behaviour}[/b] from [i]{target}[/i],[i]{target}[/i] からビヘイビア [b]{behaviour}[/b] を削除
+"The behaviour to remove: pick it from the list of node types, or type the class_name of a script.",削除するビヘイビア。ノードの型の一覧から選ぶか、スクリプトの class_name を入力します。
+The node to take the behaviour off. Leave it as self for this node.,ビヘイビアを外すノード。self のままならこのノードです。
+Add Sprite,スプライトを追加
+Adds a Sprite2D showing a picture to a node.,画像を表示する Sprite2D をノードに追加します。
+Add a sprite showing [b]{texture}[/b] to [i]{target}[/i],[b]{texture}[/b] を表示するスプライトを [i]{target}[/i] に追加
+The image the sprite shows.,スプライトが表示する画像。
+The node the sprite is added to. Leave it as self for this node.,スプライトを追加するノード。self のままならこのノードです。
+Add Sprite (3D),スプライトを追加 (3D)
+Adds a Sprite3D showing a picture to a node.,画像を表示する Sprite3D をノードに追加します。
+Add Circle Shape,円のシェイプを追加
+"Adds a CollisionShape2D holding a circle to a node. The node should be a physics body or an area, which is what a shape belongs to.",円を持つ CollisionShape2D をノードに追加します。ノードは物理ボディかエリアにしてください。シェイプはそこに属するものです。
+Add a circle shape of radius [b]{radius}[/b] to [i]{target}[/i],半径 [b]{radius}[/b] の円のシェイプを [i]{target}[/i] に追加
+"How far the circle reaches from its centre, in pixels.",円の中心からの距離（ピクセル）。
+The body or area the shape is added to. Leave it as self for this node.,シェイプを追加するボディまたはエリア。self のままならこのノードです。
+Add Rectangle Shape,長方形のシェイプを追加
+"Adds a CollisionShape2D holding a rectangle to a node. The node should be a physics body or an area, which is what a shape belongs to.",長方形を持つ CollisionShape2D をノードに追加します。ノードは物理ボディかエリアにしてください。シェイプはそこに属するものです。
+Add a rectangle shape of size [b]{size}[/b] to [i]{target}[/i],サイズ [b]{size}[/b] の長方形のシェイプを [i]{target}[/i] に追加
+"The width and height of the rectangle, in pixels.",長方形の幅と高さ（ピクセル）。
+Add Capsule Shape,カプセルのシェイプを追加
+"Adds a CollisionShape2D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.",カプセルを持つ CollisionShape2D をノードに追加します。キャラクターによく使う形です。ノードは物理ボディかエリアにしてください。シェイプはそこに属するものです。
+Add a capsule shape of radius [b]{radius}[/b] and height [b]{height}[/b] to [i]{target}[/i],半径 [b]{radius}[/b]、高さ [b]{height}[/b] のカプセルのシェイプを [i]{target}[/i] に追加
+"The height of the capsule from end to end, in pixels.",カプセルの端から端までの高さ（ピクセル）。
+Add Sphere Shape (3D),球のシェイプを追加 (3D)
+"Adds a CollisionShape3D holding a sphere to a node. The node should be a physics body or an area, which is what a shape belongs to.",球を持つ CollisionShape3D をノードに追加します。ノードは物理ボディかエリアにしてください。シェイプはそこに属するものです。
+Add a sphere shape of radius [b]{radius}[/b] to [i]{target}[/i],半径 [b]{radius}[/b] の球のシェイプを [i]{target}[/i] に追加
+"How far the sphere reaches from its centre, in metres.",球の中心からの距離（メートル）。
+Add Box Shape (3D),ボックスのシェイプを追加 (3D)
+"Adds a CollisionShape3D holding a box to a node. The node should be a physics body or an area, which is what a shape belongs to.",ボックスを持つ CollisionShape3D をノードに追加します。ノードは物理ボディかエリアにしてください。シェイプはそこに属するものです。
+Add a box shape of size [b]{size}[/b] to [i]{target}[/i],サイズ [b]{size}[/b] のボックスのシェイプを [i]{target}[/i] に追加
+"The width, height and depth of the box, in metres.",ボックスの幅・高さ・奥行き（メートル）。
+Add Capsule Shape (3D),カプセルのシェイプを追加 (3D)
+"Adds a CollisionShape3D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.",カプセルを持つ CollisionShape3D をノードに追加します。キャラクターによく使う形です。ノードは物理ボディかエリアにしてください。シェイプはそこに属するものです。
+"The height of the capsule from end to end, in metres.",カプセルの端から端までの高さ（メートル）。
+Add Timer,タイマーを追加
+"Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.",シーンに入ると同時に始まり、時間が切れるたびに関数を何度も呼び出す Timer を追加します。このシートの関数名を入力するとそれが呼ばれます。初期値は何もしません。
+"Add a timer to [i]{target}[/i], every [b]{seconds}[/b] seconds, calling [b]{callable}[/b]",[b]{seconds}[/b] 秒ごとに [b]{callable}[/b] を呼ぶタイマーを [i]{target}[/i] に追加
+How many seconds pass between calls.,呼び出しの間隔（秒）。
+Calling,呼び出し先
+"What to call each time the timer runs out: the name of a function, or a function written inline.",タイマーが切れるたびに呼ぶもの。関数名、またはその場で書いた関数。
+The node the timer is added to. Leave it as self for this node.,タイマーを追加するノード。self のままならこのノードです。
+Add To Group (Saved With Scene),グループに追加（シーンと一緒に保存）
+Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.,ノードをシーンやプレハブにパックしても残る形でグループに入れます。通常の「グループに追加」は、パックされたコピーでは忘れられます。
+"Add [i]{target}[/i] to [b]{group}[/b], kept when the scene is saved",[i]{target}[/i] を [b]{group}[/b] に追加（シーン保存時も保持）
+The node to put in the group.,グループに入れるノード。
+The group name.,グループ名。
+Keep As Prefab,プレハブとして保持
+"Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.",ノードとその下のすべてを、変数に入れた PackedScene にまとめます。あとで再びインスタンス化したり、データアセットの保存で保存したりできます。別のシーンに属するノードはインスタンスのままです。ブランチのグループは、シーンと一緒に保存する形で追加したものだけが残ります。
+Keep [i]{node}[/i] as a prefab in [b]{prefab}[/b],[i]{node}[/i] をプレハブとして [b]{prefab}[/b] に保持
+The node to pack. It becomes the root of the prefab.,パックするノード。プレハブのルートになります。
+Prefab,プレハブ
+The variable that holds the PackedScene. Declare it as a PackedScene in this sheet.,PackedScene を保持する変数。このシートで PackedScene として宣言してください。

@@ -119,6 +119,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `auto_exposure_speed` | [Turn Auto Exposure On](ace:Core/CamAutoExposureOn) | Camera | Vocabulary |
 | `auto_translate_mode` | [Keep This Text Untranslated](ace:Core/KeepTextUntranslated) | Translation | Vocabulary |
 | `autoscroll` | [Drift](ace:Core/ParallaxDrift) | Layers | Vocabulary |
+| `autostart` | [Add Timer](ace:Core/AddTimerTo) | Building | Vocabulary |
 | `autowrap_mode` | [Set Word Wrap On](ace:Core/SetWordWrapOn) | Text | Vocabulary |
 | `back` | [Pick Top](ace:Core/PickTop) | Nodes: Picking | Vocabulary |
 | `background_color` | [Set Backdrop](ace:Core/EnvSetBackdrop) | Environment | Vocabulary |
@@ -751,7 +752,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `own_world_3d` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `owner` | [Get Scene Owner](ace:Core/GetOwner) | Nodes | Vocabulary |
 | `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools: Files & folders | Vocabulary |
-| `packed` | [Save Branch As Scene File](ace:Core/SaveBranchAsSceneFile) | Files | Vocabulary |
+| `packed` | [Keep As Prefab](ace:Core/KeepAsPrefab) | Building | Vocabulary |
 | `pad_zeros` | [Pad Number](ace:Core/StringPadZeros) | Variables: String | Vocabulary |
 | `panorama` | [Use Panorama Sky](ace:Core/SkyUsePanorama) | Environment | Vocabulary |
 | `parse` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
@@ -961,7 +962,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
 | `set_visible_characters` | [Reveal Text](ace:Core/RevealText) | Text | Vocabulary |
 | `shadow_enabled` | [Turn Shadows On](ace:Core/LightShadowsOn) | Lighting | Vocabulary |
-| `shape` | [Random Place Inside Box](ace:Core/PlaceInsideBox3D) | Spawn | Vocabulary |
+| `shape` | [Add Circle Shape](ace:Core/AddCircleShapeTo) | Building | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
 | `shell_show_in_file_manager` | [Show In The File Manager](ace:Core/ShowInFileManager) | Files | Vocabulary |
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
@@ -1082,7 +1083,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `validate_filename` | [Safe File Name](ace:Core/SafeFileName) | Files | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
 | `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |
-| `var` | [Write Text File (in a folder)](ace:Core/WriteTextFileInFolder) | Files | Vocabulary |
+| `var` | [Add Behaviour](ace:Core/AddBehaviourInto) | Building | Vocabulary |
 | `var_to_str` | [To Text](ace:Core/Stringify) | Debug | Vocabulary |
 | `variant_to_base64` | [Share Code For](ace:Core/ShareCodeFor) | Utility: Window | Vocabulary |
 | `velocity` | [Get Velocity](ace:Core/GetVelocity2D) | General Expressions | Vocabulary |
@@ -1107,6 +1108,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `volumetric_fog_density` | [Volumetric Thickness](ace:Core/EnvVolumetricThickness) | Environment | Vocabulary |
 | `volumetric_fog_enabled` | [Is Volumetric Fog On](ace:Core/EnvIsVolumetricFog) | Environment | Vocabulary |
 | `volumetric_fog_length` | [Volumetric Reach](ace:Core/EnvVolumetricReach) | Environment | Vocabulary |
+| `wait_time` | [Add Timer](ace:Core/AddTimerTo) | Building | Vocabulary |
 | `warp_mouse` | [Move Cursor To](ace:Core/MouseMoveCursorTo) | Mouse | Vocabulary |
 | `wash` | [Wash Bus](ace:Core/AudioWashBus) | Audio Server | Vocabulary |
 | `weekday` | [Date: Weekday](ace:Core/DateWeekday) | Time | Vocabulary |

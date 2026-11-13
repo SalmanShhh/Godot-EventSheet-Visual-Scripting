@@ -6,6 +6,13 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: Building, the rows for making nodes while the game runs
+
+- A new Building page in the picker: Add New Node (any node type, optionally named, added under the running scene and kept in a variable), Add Behaviour (a script node added as a child and named after its class, with Only one or Allow another), Remove Behaviour, Add Sprite, Add Circle, Rectangle and Capsule Shape (and Sphere, Box and Capsule in 3D), Add Timer, Add To Group (Saved With Scene) and Keep As Prefab. Each one writes the plain Godot lines a person would type (`Type.new()`, `add_child`, `get_node_or_null`, `PackedScene.pack`) and needs nothing from the plugin at run time.
+- The type field on Add New Node, Add Behaviour and Remove Behaviour completes class names as you type and has a Choose button that opens Godot's own Create New Node window; a script class goes in by its class_name.
+- Keep As Prefab lends ownership to the nodes it packs and gives it back (the same walk Save Branch As Scene File uses, now one shared piece of code), so it can run twice on the same branch; its description says a plain Add To Group is not kept by a pack and points at the saved-with-scene row.
+- Search finds the page under the other ways of saying it: add node, new node, create node, add behavior, attach behavior, give behavior, remove behavior and prefab.
+
 ### Changed: sheet shortcuts are rebound in Godot's Editor Settings > Shortcuts
 
 - The authoring keys (add event, add condition, collapse and the rest) are now registered with Godot's own Editor Settings > Shortcuts, where you search and rebind them like any editor key, and the editor saves the change. The plugin's own Tools > Keyboard Shortcuts window and its `eventforge_shortcuts.cfg` file are gone; keys you had changed are carried into Editor Settings once, and the Output says so. The \"Another event-sheet editor\" preset went with the window - rebind X, Ctrl+E and the rest there by hand.

@@ -3795,6 +3795,25 @@ Weapons in 3D: hitscan, explosions, an arsenal and the secrets counter.
 - **Current Weapon** (`weapons: String, index: String`) - The weapon that is out right now - the name to look ammo up by and to show on the HUD.
 - **Secrets Found** (`found: String`) - How many secrets the player has found - the left-hand number of the end-of-level screen.
 
+### Building (`res://addons/eventforge/registration/modules/building_aces.gd`)
+Building (making nodes while the game runs, and keeping what was made)
+
+#### Actions
+- **Add New Node** (`type: String, label: String, parent: String, name: String`) - Makes a node of any type, adds it under a parent and keeps it in a variable, so the next rows in this event can set it up. Leave Under as the running scene to add it to the level, or name any node. A script class with its own _init arguments is not made by this row.
+- **Add Behaviour** (`behaviour: String, target: String, once: String, name: String`) - Gives a node a behaviour: a script node added as its child, named after its class so the Inspector and get_node find it. With Only one, a node that already has the behaviour keeps it and the row uses that one; with Allow another, it always adds a new one. The behaviour's own script decides what it does and what it needs from its parent.
+- **Remove Behaviour** (`behaviour: String, target: String`) - Takes a behaviour off a node, and does nothing when it is not there. It is detached first and freed after, so a check made in the same frame already says it is gone.
+- **Add Sprite** (`texture: String, target: String`) - Adds a Sprite2D showing a picture to a node.
+- **Add Sprite (3D)** (`texture: String, target: String`) - Adds a Sprite3D showing a picture to a node.
+- **Add Circle Shape** (`radius: String, target: String`) - Adds a CollisionShape2D holding a circle to a node. The node should be a physics body or an area, which is what a shape belongs to.
+- **Add Rectangle Shape** (`size: String, target: String`) - Adds a CollisionShape2D holding a rectangle to a node. The node should be a physics body or an area, which is what a shape belongs to.
+- **Add Capsule Shape** (`radius: String, height: String, target: String`) - Adds a CollisionShape2D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.
+- **Add Sphere Shape (3D)** (`radius: String, target: String`) - Adds a CollisionShape3D holding a sphere to a node. The node should be a physics body or an area, which is what a shape belongs to.
+- **Add Box Shape (3D)** (`size: String, target: String`) - Adds a CollisionShape3D holding a box to a node. The node should be a physics body or an area, which is what a shape belongs to.
+- **Add Capsule Shape (3D)** (`radius: String, height: String, target: String`) - Adds a CollisionShape3D holding a capsule to a node, the usual shape for a character. The node should be a physics body or an area, which is what a shape belongs to.
+- **Add Timer** (`seconds: String, callable: String, target: String`) - Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.
+- **Add To Group (Saved With Scene)** (`target: String, group: String`) - Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.
+- **Keep As Prefab** (`node: Node, prefab: String`) - Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.
+
 ### Camera 2d (`res://addons/eventforge/registration/modules/camera_2d_aces.gd`)
 the rest of the Camera2D shelf (drift, snap, turns, the view, the limits).
 

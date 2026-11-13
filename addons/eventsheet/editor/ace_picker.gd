@@ -1453,6 +1453,15 @@ const PHRASE_FIRST := {
 	"on body entered": "Core::OnBodyEntered", "on collision with": "Core::OnCollisionWithGroup",
 	"on collision": "Core::OnCollisionWithGroup",
 	"pick": "Core::PickWhere",
+	# Making a node from a type, and the behaviour rows: Godot's own words for it are the row names,
+	# these are the other ways a reader says the same thing.
+	"add node": "Core::AddNewNodeInto", "new node": "Core::AddNewNodeInto", "create node": "Core::AddNewNodeInto",
+	"add object": "Core::AddNewNodeInto",
+	"add behaviour": "Core::AddBehaviourInto", "add behavior": "Core::AddBehaviourInto",
+	"give behavior": "Core::AddBehaviourInto", "attach behavior": "Core::AddBehaviourInto",
+	"remove behaviour": "Core::RemoveBehaviour", "remove behavior": "Core::RemoveBehaviour",
+	"detach behavior": "Core::RemoveBehaviour",
+	"prefab": "Core::KeepAsPrefab", "make prefab": "Core::KeepAsPrefab",
 }
 
 

@@ -781,6 +781,10 @@ func _ensure_hint_factories() -> void:
 			# `.exr` panorama can be picked at all - which the resource browse, filtered to
 			# `*.tres` and `*.res`, cannot offer.
 			"texture_path": _create_texture_path_field,
+			# The type a row makes a node of. Godot already has the window for choosing one - the
+			# Create New Node window, with every node type, every script class and its icon - so this
+			# field opens that rather than listing types of its own.
+			"node_type": _create_node_type_field,
 			"animation_reference": _create_animation_field,
 			"marker_reference": _create_marker_field,
 			# The three fields a blend tree names for itself. A state and a blend node are strings in
@@ -2290,6 +2294,70 @@ func _dial_spin_box(value: String, uniform: Dictionary) -> SpinBox:
 ## widget the shader dials use, with `blank_literal` the one difference: a shader dial with no
 ## picture ships nothing (the dial is simply not set), while a row writing `x = {value}` needs a
 ## value to write, and for a picture that value is `null`.
+## The type a row makes a node of: the class name in a box that completes while it is typed, and a
+## Choose button that opens Godot's own Create New Node window. The box is the value, so a name can
+## always be typed; the window is there for the reader who would rather look at the list. Outside the
+## editor there is no such window, and the field is the box alone.
+func _create_node_type_field(key: String, default_value: Variant) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var type_edit: LineEdit = LineEdit.new()
+	type_edit.text = str(default_value)
+	type_edit.placeholder_text = EventSheetL10n.translate("A node type, or a script class")
+	type_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(type_edit)
+	_attach_completions(type_edit, EventSheetCompletions.FIELD_CLASS)
+	_fields[key] = type_edit
+	row.add_child(type_edit)
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var choose: Button = Button.new()
+		choose.text = EventSheetL10n.translate("Choose…")
+		choose.icon = editor_icon_named("Node")
+		choose.pressed.connect(_open_create_node_window.bind(type_edit))
+		row.add_child(choose)
+	return row
+
+
+## Godot's Create New Node window, started on what the box holds. What it hands back is a built-in
+## type's name, or the path of a script; a script goes into the box as its class_name, because the row
+## writes the type into code (`Type.new()`) and a path is not a type.
+func _open_create_node_window(type_edit: LineEdit) -> void:
+	var editor: Object = Engine.get_singleton("EditorInterface")
+	# Two exclusive windows cannot share one parent, and this dialog is exclusive: Godot refuses the
+	# second and the Create New Node window comes up unable to take a click. So this dialog steps
+	# aside for as long as the other is open and takes its exclusivity back when that closes.
+	var window: Window = _dialog as Window
+	var was_exclusive: bool = window != null and window.exclusive
+	if was_exclusive:
+		window.exclusive = false
+	editor.popup_create_dialog(func(chosen: Variant) -> void: _on_node_type_chosen(type_edit, str(chosen)),
+		&"Node", type_edit.text.strip_edges(), EventSheetL10n.translate("Choose a node type"), [])
+	if not was_exclusive or not window.is_inside_tree():
+		return
+	for create_window: Node in window.get_tree().root.find_children("*", "CreateDialog", true, false):
+		var create: Window = create_window as Window
+		if create != null and create.visible:
+			create.visibility_changed.connect(func() -> void:
+				if not create.visible and is_instance_valid(window):
+					window.set_deferred("exclusive", true), CONNECT_ONE_SHOT)
+
+
+func _on_node_type_chosen(type_edit: LineEdit, chosen: String) -> void:
+	var picked: String = node_type_from_pick(chosen)
+	if is_instance_valid(type_edit) and not picked.is_empty():
+		type_edit.text = picked
+
+
+## The type name a Create New Node pick stands for: a built-in type is itself, a script is its
+## class_name. A script with no class_name has no name to write, so the box keeps what it held.
+static func node_type_from_pick(chosen: String) -> String:
+	if not chosen.begins_with("res://"):
+		return chosen
+	var script: Script = load(chosen) as Script
+	return str(script.get_global_name()) if script != null else ""
+
+
 func _create_texture_path_field(key: String, default_value: Variant) -> Control:
 	return _create_dial_texture_field(key, str(default_value), "null")
 
