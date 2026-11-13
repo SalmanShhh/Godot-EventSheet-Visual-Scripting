@@ -10475,3 +10475,7 @@ Chances,Chancen
 The tags the rows already use.,"Die Tags, die die Zeilen schon verwenden."
 No row has the tag %s.,Keine Zeile hat den Tag %s.
 No row has a tag yet.,Noch keine Zeile hat einen Tag.
+Empty: different every run.,Leer: bei jedem Start anders.
+0: different every run.,0: bei jedem Start anders.
+New seed,Neuer Seed
+Writes a fresh seed into the field.,Schreibt einen frischen Seed in das Feld.

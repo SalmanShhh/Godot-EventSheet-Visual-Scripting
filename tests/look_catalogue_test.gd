@@ -230,7 +230,7 @@ static func _the_window_lists_file_looks_where_the_table_keeps_their_place() -> 
 ## goes at the end with a default that reproduces the old marker. This list is committed here.
 static func _a_shipped_look_keeps_its_questions() -> bool:
 	var committed: Dictionary = {"progress_bar": ["min", "max"], "min_max": ["min", "max"], "vector_dial": ["max"],
-		"table_row": ["table", "name_column"], "table_tag": ["table", "tags_column"], "unit": ["units"], "toggle_row": ["choices"], "table": ["columns"], "swatch_row": [], "texture_preview": [], "curve_editor": [], "corners": []}
+		"table_row": ["table", "name_column"], "table_tag": ["table", "tags_column"], "seed": [], "unit": ["units"], "toggle_row": ["choices"], "table": ["columns"], "swatch_row": [], "texture_preview": [], "curve_editor": [], "corners": []}
 	var rows: Array = []
 	for look: Dictionary in EventSheetInspectorLookCatalogue.entries():
 		if str(look["source"]) != "shipped":

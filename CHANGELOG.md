@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: a seed you can re-roll
+
+- A new look, "Seed with a New seed button" (`eventsheet:seed`), for a number or text variable where 0 (or empty) means a new seed every run: the number field with a "New seed" button that writes a fresh positive seed as one undo step, and a quiet line under it while the value is 0 or empty. The button drops under the field in a narrow Inspector.
+
 ### New: a tag picked from a table's rows
 
 - A new look, "Tag from a table's rows" (`eventsheet:table_tag:<table>:<column>`), for a text variable beside a table: a field joined to a menu of the tags the rows already carry (comma separated in one column), typing a new one still allowed, and an amber line when no row carries the tag in the field. The menu is filled when it opens, so it is never stale. Without the plugin the variable is a plain text field and the file is byte-exact.

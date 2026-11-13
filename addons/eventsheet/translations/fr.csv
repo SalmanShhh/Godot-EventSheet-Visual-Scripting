@@ -10475,3 +10475,7 @@ Chances,Probabilités
 The tags the rows already use.,Les étiquettes que les lignes utilisent déjà.
 No row has the tag %s.,Aucune ligne n'a l'étiquette %s.
 No row has a tag yet.,Aucune ligne n'a encore d'étiquette.
+Empty: different every run.,Vide : différent à chaque exécution.
+0: different every run.,0 : différent à chaque exécution.
+New seed,Nouvelle graine
+Writes a fresh seed into the field.,Écrit une nouvelle graine dans le champ.

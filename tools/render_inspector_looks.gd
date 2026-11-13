@@ -89,6 +89,11 @@ const PROBES: Array = [
 @export_custom(PROPERTY_HINT_NONE, \"eventsheet:table_tag:entries:tags\") var missing_tag: String = \"epic\"
 @export var pity_tag_plain: String = \"rare\"
 "],
+	["seed", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:seed\") var seed_on_start: int = 0
+@export_custom(PROPERTY_HINT_NONE, \"eventsheet:seed\") var seed_set: int = 123456
+@export_custom(PROPERTY_HINT_NONE, \"eventsheet:seed\") var start_seed: String = \"\"
+@export var seed_plain: int = 0
+"],
 	["cards", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:cards:kind=kind,schema=feedback_steps,stripes=category\") var steps: Array[Dictionary] = [{\"kind\": \"shake\", \"category\": \"camera\"}, {\"kind\": \"flash\", \"category\": \"screen\"}]\n"],
 	["texture_preview", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\") var icon_picture: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n@export var icon_picture_plain: Texture2D = preload(\"res://addons/eventsheet/icons/eventsheet.svg\")\n"],
 	["curve_editor", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var damage_falloff: Curve = null\n@export var damage_falloff_plain: Curve = null\n\n\nfunc _init() -> void:\n\tdamage_falloff = Curve.new()\n\tdamage_falloff.add_point(Vector2(0, 1))\n\tdamage_falloff.add_point(Vector2(1, 0))\n"],

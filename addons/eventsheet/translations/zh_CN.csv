@@ -10475,3 +10475,7 @@ Chances,概率
 The tags the rows already use.,各行已经用过的标签。
 No row has the tag %s.,没有任何一行带有标签 %s。
 No row has a tag yet.,还没有任何一行带标签。
+Empty: different every run.,留空：每次运行都不同。
+0: different every run.,0：每次运行都不同。
+New seed,新种子
+Writes a fresh seed into the field.,把一个新种子写入该字段。

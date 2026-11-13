@@ -10475,3 +10475,7 @@ Chances,Probabilità
 The tags the rows already use.,I tag che le righe usano già.
 No row has the tag %s.,Nessuna riga ha il tag %s.
 No row has a tag yet.,Nessuna riga ha ancora un tag.
+Empty: different every run.,Vuoto: diverso a ogni avvio.
+0: different every run.,0: diverso a ogni avvio.
+New seed,Nuovo seed
+Writes a fresh seed into the field.,Scrive un nuovo seed nel campo.

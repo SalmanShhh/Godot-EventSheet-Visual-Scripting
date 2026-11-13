@@ -10475,3 +10475,7 @@ Chances,Шансы
 The tags the rows already use.,"Теги, которые уже есть в строках."
 No row has the tag %s.,Ни у одной строки нет тега %s.
 No row has a tag yet.,Пока ни у одной строки нет тегов.
+Empty: different every run.,Пусто: при каждом запуске иначе.
+0: different every run.,0: при каждом запуске иначе.
+New seed,Новое зерно
+Writes a fresh seed into the field.,Записывает в поле новое зерно.

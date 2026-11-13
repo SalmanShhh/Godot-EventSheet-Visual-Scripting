@@ -10475,3 +10475,7 @@ Chances,Probabilidades
 The tags the rows already use.,Las etiquetas que ya usan las filas.
 No row has the tag %s.,Ninguna fila tiene la etiqueta %s.
 No row has a tag yet.,Ninguna fila tiene etiqueta todavía.
+Empty: different every run.,Vacío: distinto en cada partida.
+0: different every run.,0: distinto en cada partida.
+New seed,Nueva semilla
+Writes a fresh seed into the field.,Escribe una semilla nueva en el campo.

@@ -10475,3 +10475,7 @@ Chances,確率
 The tags the rows already use.,行がすでに使っているタグ。
 No row has the tag %s.,タグ %s を持つ行はありません。
 No row has a tag yet.,まだタグを持つ行はありません。
+Empty: different every run.,空: 実行ごとに変わります。
+0: different every run.,0: 実行ごとに変わります。
+New seed,新しいシード
+Writes a fresh seed into the field.,新しいシードをフィールドに書き込みます。
