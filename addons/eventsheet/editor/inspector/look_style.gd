@@ -17,7 +17,7 @@ extends RefCounted
 enum Tone { NOTE, WARNING, ERROR }
 
 ## Sizes Godot's theme has no item for, at 1x. Read them only through px().
-const DIAL_HEIGHT: float = 84.0
+const DIAL_HEIGHT: float = 100.0
 const DIAL_RING: float = 68.0
 const DIAL_HANDLE: float = 10.0
 const CURVE_HEIGHT: float = 64.0
@@ -219,19 +219,23 @@ static func accent_box(box: StyleBox) -> StyleBox:
 ## A number field. Godot's own spin slider with a label inside it when running in the editor, and a
 ## SpinBox everywhere else (the headless suite never builds an EditorSpinSlider). Both are Ranges,
 ## so value_changed, set_value_no_signal and step are common to the two.
-static func number_field(label: String = "", label_color: Color = Color(0.0, 0.0, 0.0, 0.0)) -> Range:
+static func number_field(label: String = "", label_color: Color = Color(0.0, 0.0, 0.0, 0.0), keep_room: bool = true) -> Range:
 	if Engine.is_editor_hint() and ClassDB.can_instantiate("EditorSpinSlider"):
 		var slider: Range = ClassDB.instantiate("EditorSpinSlider") as Range
-		slider.set("flat", true)
+		slider.set("flat", false)
 		slider.set("hide_slider", true)
 		slider.set("label", label)
 		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if keep_room:
+			slider.custom_minimum_size.x = number_field_min_width()
 		if label_color.a > 0.0:
 			slider.add_theme_color_override("label_color", label_color)
 		return slider
 	var spin: SpinBox = SpinBox.new()
 	spin.prefix = label
 	spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if keep_room:
+		spin.custom_minimum_size.x = number_field_min_width()
 	return spin
 
 
@@ -280,3 +284,20 @@ static func icon_button(icon_name: StringName, fallback_glyph: String, tooltip: 
 	else:
 		button.text = fallback_glyph
 	return button
+
+
+## Makes a field from number_field take any number the way Godot's own vector fields do: no range
+## limits, a fine step, no slider.
+static func open_number_field(field: Range, step: float = 0.001) -> void:
+	field.min_value = -1000000.0
+	field.max_value = 1000000.0
+	field.step = step
+	field.allow_greater = true
+	field.allow_lesser = true
+
+
+## The narrowest a number field may be and still show its mark and a value like -1000.00 whole.
+static func number_field_min_width() -> float:
+	var font_used: Font = font()
+	var text_width: float = font_used.get_string_size("x -1000.00", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size()).x
+	return text_width + field_box().get_minimum_size().x

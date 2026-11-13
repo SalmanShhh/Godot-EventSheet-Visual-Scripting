@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,연결된 축
 Drag one axis and the others follow.,축 하나를 끌면 나머지도 따라갑니다.
 Direction dial,방향 다이얼
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,벡터를 다이얼 위의 화살표로 보여 줍니다. 이 플러그인이 없으면 X와 Y 입력란입니다.
+Drag a handle round a circle to aim.,핸들을 원 둘레로 끌어 방향을 정합니다.
 Min-max range,최소-최대 범위
 "Two handles on one slider: x is the low end, y the high end.","슬라이더 하나에 손잡이 둘: x가 아래 끝, y가 위 끝."
 Four corners,네 모서리
-"One number for all four corners, with a button that opens a box per corner.","네 모서리 모두에 숫자 하나를 쓰고, 버튼으로 모서리마다 입력란을 엽니다."
+"Four numbers, one per corner, with a button that keeps them the same.","모서리마다 숫자 하나, 총 네 개이며 버튼으로 같은 값을 유지합니다."
 "Node path, filtered",필터된 노드 경로
 "Pick a scene node, limited to the classes you list.",나열한 클래스로 제한해 씬 노드를 고릅니다.
 Only these types,이 타입만
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,편집하는 동안 %s()(으)로 검사됨
 validated by a sheet function while you edit,편집하는 동안 시트 함수로 검사됨
 Needs a @tool sheet with a %s() function to run in the editor.,에디터에서 실행하려면 %s() 함수가 있는 @tool 시트가 필요합니다.
 Calls %s() on this object.,이 오브젝트에서 %s()을(를) 호출합니다.
-All four corners at once.,네 모서리를 한 번에.
-Set each corner on its own.,모서리를 하나씩 설정합니다.
+Keep the four corners the same.,네 모서리를 같은 값으로 유지합니다.
 Top-left,왼쪽 위
 Top-right,오른쪽 위
 Bottom-left,왼쪽 아래
@@ -10441,3 +10440,4 @@ COMMANDS,명령
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Ctrl+Shift+P로 Godot의 명령 팔레트를 여세요 - 모든 EventSheets 명령이 거기에 있습니다.
 "Type a function, signal or variable…","함수, 시그널 또는 변수를 입력…"
 Required. Assign a value.,필수입니다. 값을 지정하세요.
+reach %s,범위 %s

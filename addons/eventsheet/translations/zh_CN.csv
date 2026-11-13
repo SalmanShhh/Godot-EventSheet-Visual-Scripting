@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,关联轴
 Drag one axis and the others follow.,拖动一个轴，其他轴随之变化。
 Direction dial,方向转盘
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,把向量显示为转盘上的箭头。没有此插件时就是 X 和 Y 字段。
+Drag a handle round a circle to aim.,沿圆圈拖动手柄来指定方向。
 Min-max range,最小-最大范围
 "Two handles on one slider: x is the low end, y the high end.",一个滑块上的两个手柄：x 为下限，y 为上限。
 Four corners,四个角
-"One number for all four corners, with a button that opens a box per corner.",四个角共用一个数字，另有按钮可为每个角打开单独的框。
+"Four numbers, one per corner, with a button that keeps them the same.",四个数字，每个角一个，并有一个按钮让它们保持相同。
 "Node path, filtered",筛选后的节点路径
 "Pick a scene node, limited to the classes you list.",选择场景节点，仅限你列出的类。
 Only these types,仅限这些类型
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,编辑时由 %s() 校验
 validated by a sheet function while you edit,编辑时由事件表函数校验
 Needs a @tool sheet with a %s() function to run in the editor.,需要一个带有 %s() 函数的 @tool 事件表才能在编辑器中运行。
 Calls %s() on this object.,在此对象上调用 %s()。
-All four corners at once.,四个角一起设置。
-Set each corner on its own.,分别设置每个角。
+Keep the four corners the same.,让四个角保持相同。
 Top-left,左上
 Top-right,右上
 Bottom-left,左下
@@ -10441,3 +10440,4 @@ COMMANDS,命令
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,按 Ctrl+Shift+P 打开 Godot 的命令面板 - 所有 EventSheets 命令都列在那里。
 "Type a function, signal or variable…",输入函数、信号或变量…
 Required. Assign a value.,必填。请赋一个值。
+reach %s,范围 %s

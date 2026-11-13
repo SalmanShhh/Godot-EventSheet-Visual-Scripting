@@ -285,8 +285,8 @@ static func _the_looks_moved_onto_files_read_as_the_table_did() -> bool:
 		"swatch_row": ["Swatch row", "A row of colour swatches to pick from. Without this plugin it is a plain colour.", ["Color"], []],
 		"texture_preview": ["Texture preview", "A bigger picture of the texture under the slot.", ["Texture2D"], []],
 		"curve_editor": ["Curve preview", "A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.", ["Curve"], []],
-		"corners": ["Four corners", "One number for all four corners, with a button that opens a box per corner.", ["Vector4"], []],
-		"vector_dial": ["Direction dial", "The vector as an arrow on a dial. Without this plugin it is X and Y fields.", ["Vector2"], ["max"]],
+		"corners": ["Four corners", "Four numbers, one per corner, with a button that keeps them the same.", ["Vector4"], []],
+		"vector_dial": ["Direction dial", "Drag a handle round a circle to aim.", ["Vector2"], ["max"]],
 		"min_max": ["Min-max range", "Two handles on one slider: x is the low end, y the high end.", ["Vector2"], ["min", "max"]],
 		"table_row": ["Pick a row of a data table", "A dropdown of the rows of a data table, shown by their name column. The file still stores the row's number.", ["int"], ["table", "name_column"]],
 	}

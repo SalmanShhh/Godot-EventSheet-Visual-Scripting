@@ -241,18 +241,18 @@ static func _corners_drawer() -> bool:
 			EventSheetInspectorLooks.by_id("corners").get("types", []), ["Vector4"]]
 	])
 
-	# Read and write: one number is four corners; four different corners open the four boxes and
+	# Read and write: one number is four corners; four different corners come up unlinked and
 	# every one of them keeps its own value.
 	var widget: EventSheetDrawerWidgets.DrawerCorners = EventSheetDrawerWidgets.DrawerCorners.new()
 	widget.set_value(EventSheetDrawerWidgets.DrawerCorners.uniform(8.0))
 	var uniform_value: Vector4 = widget.get_value()
-	var uniform_folded: bool = widget.is_expanded()
+	var uniform_linked: bool = widget.is_linked()
 	widget.set_value(Vector4(1.0, 2.0, 3.0, 4.0))
 	ok = SUPPORT.pins(P, [
 		["one number is all four corners", uniform_value, Vector4(8.0, 8.0, 8.0, 8.0)],
-		["one number needs no boxes", uniform_folded, false],
+		["one number starts linked", uniform_linked, true],
 		["four corners are kept as four", widget.get_value(), Vector4(1.0, 2.0, 3.0, 4.0)],
-		["corners that differ open the boxes by themselves", widget.is_expanded(), true],
+		["corners that differ come up unlinked", widget.is_linked(), false],
 		["clockwise from the top-left",
 			EventSheetDrawerWidgets.DrawerCorners.CORNER_CELLS,
 			[["Top-left", 0], ["Top-right", 1], ["Bottom-left", 3], ["Bottom-right", 2]]],

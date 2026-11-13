@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,連動する軸
 Drag one axis and the others follow.,1 つの軸をドラッグすると他の軸も追従します。
 Direction dial,方向ダイヤル
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,ベクトルをダイヤル上の矢印で表します。このプラグインがなければ X と Y の欄になります。
+Drag a handle round a circle to aim.,ハンドルを円に沿ってドラッグして向きを決めます。
 Min-max range,最小 - 最大の範囲
 "Two handles on one slider: x is the low end, y the high end.",1 本のスライダーに 2 つのつまみ: x が下限、y が上限です。
 Four corners,4 つの角
-"One number for all four corners, with a button that opens a box per corner.",4 つの角すべてに 1 つの数を使い、ボタンで角ごとの欄を開けます。
+"Four numbers, one per corner, with a button that keeps them the same.",角ごとに 1 つ、計 4 つの数値。ボタンで 4 つを同じ値に保ちます。
 "Node path, filtered",絞り込んだノードパス
 "Pick a scene node, limited to the classes you list.",挙げたクラスに限定して、シーンのノードを選びます。
 Only these types,これらの型のみ
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,編集中に %s() で検証されます
 validated by a sheet function while you edit,編集中にシートの関数で検証されます
 Needs a @tool sheet with a %s() function to run in the editor.,エディタで実行するには %s() 関数を持つ @tool シートが必要です。
 Calls %s() on this object.,このオブジェクトの %s() を呼び出します。
-All four corners at once.,4 つの角をまとめて。
-Set each corner on its own.,角を 1 つずつ設定します。
+Keep the four corners the same.,4 つの角を同じ値に保ちます。
 Top-left,左上
 Top-right,右上
 Bottom-left,左下
@@ -10441,3 +10440,4 @@ COMMANDS,コマンド
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Ctrl+Shift+P で Godot のコマンドパレットを開きます - EventSheets のコマンドはすべてそこに並びます。
 "Type a function, signal or variable…",関数、シグナル、変数を入力…
 Required. Assign a value.,必須です。値を割り当ててください。
+reach %s,到達 %s

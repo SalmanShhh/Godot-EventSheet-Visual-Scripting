@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,Assi collegati
 Drag one axis and the others follow.,Trascina un asse e gli altri seguono.
 Direction dial,Quadrante di direzione
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,Il vettore come una freccia su un quadrante. Senza questo plugin sono campi X e Y.
+Drag a handle round a circle to aim.,Trascina una maniglia attorno a un cerchio per mirare.
 Min-max range,Intervallo min-max
 "Two handles on one slider: x is the low end, y the high end.","Due maniglie su un cursore: x è l'estremo basso, y quello alto."
 Four corners,Quattro angoli
-"One number for all four corners, with a button that opens a box per corner.","Un numero per tutti e quattro gli angoli, con un pulsante che apre una casella per angolo."
+"Four numbers, one per corner, with a button that keeps them the same.","Quattro numeri, uno per angolo, con un pulsante che li mantiene uguali."
 "Node path, filtered","Percorso di nodo, filtrato"
 "Pick a scene node, limited to the classes you list.","Scegli un nodo della scena, limitato alle classi che elenchi."
 Only these types,Solo questi tipi
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,convalidato da %s() mentre modifichi
 validated by a sheet function while you edit,convalidato da una funzione del foglio mentre modifichi
 Needs a @tool sheet with a %s() function to run in the editor.,Serve un foglio @tool con una funzione %s() per eseguire nell'editor.
 Calls %s() on this object.,Chiama %s() su questo oggetto.
-All four corners at once.,Tutti e quattro gli angoli insieme.
-Set each corner on its own.,Imposta ogni angolo separatamente.
+Keep the four corners the same.,Mantieni uguali i quattro angoli.
 Top-left,In alto a sinistra
 Top-right,In alto a destra
 Bottom-left,In basso a sinistra
@@ -10441,3 +10440,4 @@ COMMANDS,COMANDI
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Premi Ctrl+Maiusc+P per la tavolozza dei comandi di Godot - ogni comando EventSheets è elencato lì.
 "Type a function, signal or variable…","Digita una funzione, un segnale o una variabile…"
 Required. Assign a value.,Obbligatorio. Assegna un valore.
+reach %s,portata %s

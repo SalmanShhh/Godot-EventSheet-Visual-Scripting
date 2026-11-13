@@ -42,6 +42,9 @@ const THEME_PROBE: Array = [
 	["color", "property_color_y", "Editor"], ["color", "property_color_z", "Editor"],
 	["color", "property_color_w", "Editor"], ["color", "font_pressed_color", "Button"],
 	["color", "font_hover_pressed_color", "Button"],
+	["color", "dark_color_1", "Editor"], ["color", "dark_color_2", "Editor"], ["color", "dark_color_3", "Editor"],
+	["color", "property_color", "Editor"], ["color", "bottom_editor", "EditorProperty"], ["stylebox", "bottom_editor", "EditorProperty"],
+	["stylebox", "child_bg", "EditorProperty"], ["color", "warning_color", "EditorProperty"],
 	["font", "font", "Label"], ["font", "bold", "EditorFonts"], ["font", "main", "EditorFonts"],
 	["font_size", "font_size", "Label"], ["font_size", "bold_size", "EditorFonts"],
 	["icon", "grabber", "HSlider"], ["icon", "grabber_highlight", "HSlider"],
@@ -190,6 +193,12 @@ func _probe_theme() -> void:
 	for control_type: String in ["Button", "LineEdit", "HSlider", "ProgressBar"]:
 		print("[theme] default_font_size %s=%s" % [control_type, editor_theme.get_font_size("font_size", control_type) if editor_theme.has_font_size("font_size", control_type) else "n/a"])
 	print("[theme] default_base_scale=%s" % editor_theme.default_base_scale)
+	var prop_names: Array = []
+	for info: Dictionary in ClassDB.class_get_property_list("EditorProperty", true):
+		prop_names.append(info["name"])
+	print("[theme] EditorProperty props=%s methods=%s" % [prop_names, ClassDB.class_get_method_list("EditorProperty", true).map(func(m: Dictionary) -> String: return m["name"])])
+	for kind_name: String in ["EditorProperty", "EditorInspectorSection", "EditorInspector"]:
+		print("[theme] %s styleboxes=%s colors=%s constants=%s" % [kind_name, editor_theme.get_stylebox_list(kind_name), editor_theme.get_color_list(kind_name), editor_theme.get_constant_list(kind_name)])
 
 
 func _photograph(look_name: String, body: String) -> void:

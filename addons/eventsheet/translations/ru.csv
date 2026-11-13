@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,Связанные оси
 Drag one axis and the others follow.,"Тяните одну ось, и остальные следуют за ней."
 Direction dial,Диск направления
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,Вектор как стрелка на диске. Без этого плагина - поля X и Y.
+Drag a handle round a circle to aim.,"Перетащите маркер по кругу, чтобы задать направление."
 Min-max range,Диапазон мин.-макс.
 "Two handles on one slider: x is the low end, y the high end.","Две ручки на одном ползунке: x - нижний край, y - верхний."
 Four corners,Четыре угла
-"One number for all four corners, with a button that opens a box per corner.","Одно число для всех четырёх углов и кнопка, открывающая поле для каждого угла."
+"Four numbers, one per corner, with a button that keeps them the same.","Четыре числа, по одному на угол, с кнопкой, которая держит их одинаковыми."
 "Node path, filtered","Путь к узлу, с фильтром"
 "Pick a scene node, limited to the classes you list.","Выбор узла сцены, ограниченный перечисленными классами."
 Only these types,Только эти типы
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,проверяется %s() во время п�
 validated by a sheet function while you edit,проверяется функцией листа во время правки
 Needs a @tool sheet with a %s() function to run in the editor.,"Чтобы работать в редакторе, нужен лист @tool с функцией %s()."
 Calls %s() on this object.,Вызывает %s() у этого объекта.
-All four corners at once.,Все четыре угла сразу.
-Set each corner on its own.,Задать каждый угол отдельно.
+Keep the four corners the same.,Держать все четыре угла одинаковыми.
 Top-left,Слева сверху
 Top-right,Справа сверху
 Bottom-left,Слева снизу
@@ -10441,3 +10440,4 @@ COMMANDS,КОМАНДЫ
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,"Нажмите Ctrl+Shift+P, чтобы открыть палитру команд Godot - там перечислены все команды EventSheets."
 "Type a function, signal or variable…","Введите функцию, сигнал или переменную…"
 Required. Assign a value.,Обязательно. Задайте значение.
+reach %s,предел %s

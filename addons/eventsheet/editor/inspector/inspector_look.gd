@@ -140,3 +140,25 @@ func field_height() -> float:
 ## A 1x-authored size through the editor scale.
 func px(amount: float) -> float:
 	return EventSheetLookStyle.px(amount)
+
+
+## Puts a wide part (a dial, a picture, a table) under the first row, in the value column, with the
+## name staying level with the first row. `first_row` is the row of fields the name belongs to and
+## `under` is the part below it; this adds both, so neither is added by the caller.
+func add_under_field(first_row: Control, under: Control) -> void:
+	add_child(first_row)
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", int(px(3.0)))
+	margin.add_child(under)
+	add_child(margin)
+	set_bottom_editor(margin)
+	draw_background = false
+	var align: Callable = _align_under_field.bind(first_row, margin)
+	sort_children.connect(align)
+	draw.connect(align)
+
+
+func _align_under_field(first: Control, margin: MarginContainer) -> void:
+	var left: int = int(maxf(0.0, size.x - first.size.x)) if first.size.x > 0.0 else 0
+	if margin.get_theme_constant("margin_left") != left:
+		margin.add_theme_constant_override("margin_left", left)

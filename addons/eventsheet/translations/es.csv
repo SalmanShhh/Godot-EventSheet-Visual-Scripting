@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,Ejes vinculados
 Drag one axis and the others follow.,Arrastra un eje y los demás lo siguen.
 Direction dial,Dial de dirección
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,El vector como una flecha en un dial. Sin este plugin son campos X e Y.
+Drag a handle round a circle to aim.,Arrastra un tirador alrededor de un círculo para apuntar.
 Min-max range,Rango mín.-máx.
 "Two handles on one slider: x is the low end, y the high end.","Dos tiradores en un deslizador: x es el extremo bajo, y el alto."
 Four corners,Cuatro esquinas
-"One number for all four corners, with a button that opens a box per corner.","Un número para las cuatro esquinas, con un botón que abre un campo por esquina."
+"Four numbers, one per corner, with a button that keeps them the same.","Cuatro números, uno por esquina, con un botón que los mantiene iguales."
 "Node path, filtered","Ruta de nodo, filtrada"
 "Pick a scene node, limited to the classes you list.","Elige un nodo de la escena, limitado a las clases que indiques."
 Only these types,Solo estos tipos
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,validado por %s() mientras editas
 validated by a sheet function while you edit,validado por una función de la hoja mientras editas
 Needs a @tool sheet with a %s() function to run in the editor.,Necesita una hoja @tool con una función %s() para ejecutarse en el editor.
 Calls %s() on this object.,Llama a %s() en este objeto.
-All four corners at once.,Las cuatro esquinas a la vez.
-Set each corner on its own.,Fija cada esquina por separado.
+Keep the four corners the same.,Mantener iguales las cuatro esquinas.
 Top-left,Arriba a la izquierda
 Top-right,Arriba a la derecha
 Bottom-left,Abajo a la izquierda
@@ -10441,3 +10440,4 @@ COMMANDS,COMANDOS
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Pulsa Ctrl+Mayús+P para la paleta de comandos de Godot: todos los comandos de EventSheets están ahí.
 "Type a function, signal or variable…","Escribe una función, señal o variable…"
 Required. Assign a value.,Obligatorio. Asigna un valor.
+reach %s,alcance %s

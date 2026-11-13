@@ -812,72 +812,78 @@ class DrawerUnitField:
 		_refresh_shown()
 
 
-# ── Four corners in one number ───────────────────────────────
+# ── Four corners ─────────────────────────────────────────────
 ## A Vector4 read as four corners, clockwise from the top-left: x top-left, y top-right,
-## z bottom-right, w bottom-left. Most of the time the four are one number, so that is what the
-## widget shows - a single box, with a button that opens the four labelled boxes when they are not.
-## The same shape is what margins and padding are, which is why the marker says "corners" and
-## nothing about what for.
+## z bottom-right, w bottom-left. Four number fields, two to a line, each marked with the corner it
+## sets, and a link button that keeps the four the same while it is down. The same shape is what
+## margins and padding are, which is why the marker says "corners" and nothing about what for.
 class DrawerCorners:
 	extends VBoxContainer
 	signal value_changed(value: Vector4)
 
-	## The corner each box holds, in the order the boxes are laid out on screen (reading order),
+	## The corner each field holds, in the order the fields are laid out on screen (reading order),
 	## paired with the component index, so the clockwise storage order is never guessed at.
 	const CORNER_CELLS: Array = [["Top-left", 0], ["Top-right", 1], ["Bottom-left", 3], ["Bottom-right", 2]]
+	## The mark in front of each field, by component: the corner it sets.
+	const CORNER_MARKS: Dictionary = {0: "◜", 1: "◝", 3: "◟", 2: "◞"}
 
 	var editable: bool = true
 	var _value: Vector4 = Vector4.ZERO
-	var _uniform_spin: SpinBox = null
-	var _expand_button: Button = null
-	var _corner_grid: GridContainer = null
-	var _corner_spins: Array[SpinBox] = []
+	var _linked: bool = true
+	var _fields: Array[Range] = []
+	var _link_button: Button = null
+	var _spacer: Control = null
+	var _lines: Array[BoxContainer] = []
 
 
 	func _init() -> void:
-		add_theme_constant_override("separation", 3)
-		var top_row: HBoxContainer = HBoxContainer.new()
-		top_row.add_theme_constant_override("separation", 2)
-		_uniform_spin = SpinBox.new()
-		_uniform_spin.step = 0.001
-		_uniform_spin.allow_greater = true
-		_uniform_spin.allow_lesser = true
-		_uniform_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_uniform_spin.tooltip_text = EventSheetL10n.translate("All four corners at once.")
-		_uniform_spin.value_changed.connect(_on_uniform_changed)
-		top_row.add_child(_uniform_spin)
-		_expand_button = Button.new()
-		_expand_button.text = "⊞"
-		_expand_button.toggle_mode = true
-		_expand_button.tooltip_text = EventSheetL10n.translate("Set each corner on its own.")
-		_expand_button.toggled.connect(_on_expand_toggled)
-		top_row.add_child(_expand_button)
-		add_child(top_row)
-		_corner_grid = GridContainer.new()
-		_corner_grid.columns = 2
-		_corner_grid.visible = false
 		var corner_words: Dictionary = {0: EventSheetL10n.translate("Top-left"), 1: EventSheetL10n.translate("Top-right"), 3: EventSheetL10n.translate("Bottom-left"),
 			2: EventSheetL10n.translate("Bottom-right")}
-		for cell: Array in CORNER_CELLS:
-			var cell_box: VBoxContainer = VBoxContainer.new()
-			cell_box.add_theme_constant_override("separation", 0)
-			var cell_label: Label = Label.new()
-			cell_label.text = str(corner_words.get(cell[1], cell[0]))
-			cell_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-			cell_label.modulate.a = 0.65
-			cell_box.add_child(cell_label)
-			var cell_spin: SpinBox = SpinBox.new()
-			cell_spin.step = 0.001
-			cell_spin.allow_greater = true
-			cell_spin.allow_lesser = true
-			cell_spin.value_changed.connect(_on_corner_changed.bind(int(cell[1])))
-			cell_box.add_child(cell_spin)
-			_corner_grid.add_child(cell_box)
-			_corner_spins.append(cell_spin)
-		add_child(_corner_grid)
+		for line_index: int in 2:
+			var line: BoxContainer = BoxContainer.new()
+			line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			for cell_index: int in 2:
+				var cell: Array = CORNER_CELLS[line_index * 2 + cell_index]
+				var field: Range = EventSheetLookStyle.number_field(str(CORNER_MARKS[int(cell[1])]), EventSheetLookStyle.ink(), false)
+				EventSheetLookStyle.open_number_field(field)
+				field.tooltip_text = str(corner_words.get(cell[1], cell[0]))
+				field.value_changed.connect(_on_corner_changed.bind(int(cell[1])))
+				line.add_child(field)
+				_fields.append(field)
+			_lines.append(line)
+			add_child(line)
+		_link_button = EventSheetLookStyle.icon_button(&"Instance", "∞", EventSheetL10n.translate("Keep the four corners the same."))
+		_link_button.flat = false
+		_link_button.toggle_mode = true
+		_link_button.button_pressed = true
+		_link_button.toggled.connect(_on_link_toggled)
+		_lines[0].add_child(_link_button)
+		_spacer = Control.new()
+		_spacer.custom_minimum_size = _link_button.get_combined_minimum_size()
+		_lines[1].add_child(_spacer)
+		custom_minimum_size.x = EventSheetLookStyle.number_field_min_width()
+		_restyle_link()
 
 
-	## True when all four corners hold the same number - the case the single box is honest about.
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_RESIZED or what == NOTIFICATION_THEME_CHANGED:
+			_arrange()
+
+
+	## Two fields to a line while the value column has room for two whole fields and the link; one
+	## to a line when it does not, so no number is ever cut short.
+	func _arrange() -> void:
+		var room_needed: float = EventSheetLookStyle.number_field_min_width() * 2.0 + _link_button.get_combined_minimum_size().x + EventSheetLookStyle.px(6.0)
+		var stacked: bool = size.x > 0.0 and size.x < room_needed
+		for line: BoxContainer in _lines:
+			line.vertical = stacked
+		_spacer.visible = not stacked
+		var link_home: Node = self if stacked else _lines[0]
+		if _link_button.get_parent() != link_home:
+			_link_button.reparent(link_home, false)
+
+
+	## True when all four corners hold the same number - the case the link is honest about.
 	static func is_uniform(value: Vector4) -> bool:
 		return is_equal_approx(value.x, value.y) and is_equal_approx(value.y, value.z) and is_equal_approx(value.z, value.w)
 
@@ -889,53 +895,57 @@ class DrawerCorners:
 
 	func set_value(v: Vector4) -> void:
 		_value = v
-		# Four different corners open the four boxes by themselves: a single box showing one of them
-		# would be a quiet lie about the other three.
-		if not is_uniform(_value):
-			_expand_button.set_pressed_no_signal(true)
-			_corner_grid.visible = true
-		_refresh_boxes()
+		# Four different corners come up unlinked by themselves: a link that says the four are the
+		# same while they are not would be a quiet lie.
+		if not is_uniform(_value) and _linked:
+			_linked = false
+			_link_button.set_pressed_no_signal(false)
+			_restyle_link()
+		_refresh_fields()
 
 
 	func get_value() -> Vector4:
 		return _value
 
 
-	## True while the four per-corner boxes are open.
-	func is_expanded() -> bool:
-		return _corner_grid.visible
+	## True while the link is down: an edit to one corner writes all four.
+	func is_linked() -> bool:
+		return _linked
 
 
 	func set_editable(v: bool) -> void:
 		editable = v
-		_uniform_spin.editable = v
-		_expand_button.disabled = not v
-		for spin: SpinBox in _corner_spins:
-			spin.editable = v
+		_link_button.disabled = not v
+		for field: Range in _fields:
+			EventSheetLookStyle.set_number_field_locked(field, not v)
 
 
-	func _refresh_boxes() -> void:
-		_uniform_spin.set_value_no_signal(_value.x)
+	func _refresh_fields() -> void:
 		for index: int in range(CORNER_CELLS.size()):
-			_corner_spins[index].set_value_no_signal(_value[int(CORNER_CELLS[index][1])])
+			_fields[index].set_value_no_signal(_value[int(CORNER_CELLS[index][1])])
 
 
-	func _on_expand_toggled(pressed: bool) -> void:
-		_corner_grid.visible = pressed
-		if not pressed:
-			# Folding back to one number means one number: the top-left wins, which is the corner the
-			# single box was showing all along.
+	func _restyle_link() -> void:
+		var picture: Texture2D = EventSheetLookStyle.icon(&"Instance" if _linked else &"Unlinked")
+		if picture != null:
+			_link_button.icon = picture
+		else:
+			_link_button.text = "∞" if _linked else "∘"
+
+
+	func _on_link_toggled(pressed: bool) -> void:
+		_linked = pressed
+		_restyle_link()
+		if pressed:
+			# Linking means one number: the top-left wins, which is the corner read first.
 			_commit(uniform(_value.x))
-
-
-	func _on_uniform_changed(number: float) -> void:
-		if not editable:
-			return
-		_commit(uniform(number))
 
 
 	func _on_corner_changed(number: float, component: int) -> void:
 		if not editable:
+			return
+		if _linked:
+			_commit(uniform(number))
 			return
 		var next: Vector4 = _value
 		next[component] = number
@@ -946,7 +956,7 @@ class DrawerCorners:
 		if next.is_equal_approx(_value):
 			return
 		_value = next
-		_refresh_boxes()
+		_refresh_fields()
 		value_changed.emit(_value)
 
 
@@ -1611,9 +1621,15 @@ class DrawerVectorDial:
 
 	func _init(p_max: float = 100.0) -> void:
 		max_magnitude = maxf(0.0001, p_max)
-		custom_minimum_size = Vector2(124.0, 124.0)
+		custom_minimum_size = Vector2(0.0, EventSheetLookStyle.px(EventSheetLookStyle.DIAL_HEIGHT))
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		tooltip_text = EventSheetL10n.translate("Drag the handle to set direction + magnitude")
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_THEME_CHANGED:
+			custom_minimum_size = Vector2(0.0, EventSheetLookStyle.px(EventSheetLookStyle.DIAL_HEIGHT))
+			queue_redraw()
 
 	func set_value(v: Vector2) -> void:
 		_value = v
@@ -1622,30 +1638,34 @@ class DrawerVectorDial:
 	func get_value() -> Vector2:
 		return _value
 
-	func _center() -> Vector2:
-		return size * 0.5
-
 	func _radius() -> float:
-		return maxf(8.0, minf(size.x, size.y) * 0.5 - 12.0)
+		return minf(EventSheetLookStyle.px(EventSheetLookStyle.DIAL_RING) * 0.5, maxf(8.0, size.y * 0.5 - EventSheetLookStyle.px(8.0)))
+
+	## The middle of the ring: it sits a little below the top edge, and the reach label sits under it.
+	func _center() -> Vector2:
+		return Vector2(size.x * 0.5, EventSheetLookStyle.px(8.0) + _radius())
 
 	func _draw() -> void:
-		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-		var ink: Color = chrome.drawer_ink_color
+		draw_style_box(EventSheetLookStyle.field_box(), Rect2(Vector2.ZERO, size))
+		var quiet: Color = EventSheetLookStyle.quiet()
+		var accent: Color = EventSheetLookStyle.accent()
 		var c: Vector2 = _center()
 		var r: float = _radius()
-		draw_arc(c, r, 0.0, TAU, 48, Color(ink.r, ink.g, ink.b, 0.22), 1.5, true)
-		draw_arc(c, r * 0.5, 0.0, TAU, 32, Color(ink.r, ink.g, ink.b, 0.08), 1.0, true)
-		draw_line(c - Vector2(r, 0.0), c + Vector2(r, 0.0), Color(ink.r, ink.g, ink.b, 0.10), 1.0)
-		draw_line(c - Vector2(0.0, r), c + Vector2(0.0, r), Color(ink.r, ink.g, ink.b, 0.10), 1.0)
+		draw_arc(c, r, 0.0, TAU, 48, quiet, 1.0, true)
 		var disp: Vector2 = (_value / max_magnitude) * r
 		if disp.length() > r:
 			disp = disp.normalized() * r
 		var handle: Vector2 = c + disp
-		draw_line(c, handle, chrome.drawer_accent_color, 2.0, true)
-		draw_circle(handle, 5.5, chrome.drawer_accent_bright_color)
-		draw_circle(c, 2.5, Color(ink.r, ink.g, ink.b, 0.5))
-		var font: Font = ThemeDB.fallback_font
-		draw_string(font, Vector2(4.0, size.y - 5.0), "(%s, %s)" % [snappedf(_value.x, 0.1), snappedf(_value.y, 0.1)], HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(ink.r, ink.g, ink.b, 0.7))
+		draw_line(c, handle, accent, EventSheetLookStyle.px(EventSheetLookStyle.LINE_WIDTH), true)
+		draw_circle(handle, EventSheetLookStyle.px(EventSheetLookStyle.DIAL_HANDLE) * 0.5, accent)
+		var font: Font = EventSheetLookStyle.font()
+		var font_size: int = EventSheetLookStyle.font_size()
+		var label: String = EventSheetL10n.translate("reach %s") % _reach_text()
+		var baseline: float = size.y - EventSheetLookStyle.px(3.0) - font.get_descent(font_size)
+		draw_string(font, Vector2(0.0, baseline), label, HORIZONTAL_ALIGNMENT_CENTER, size.x, font_size, quiet)
+
+	func _reach_text() -> String:
+		return str(int(max_magnitude)) if is_equal_approx(max_magnitude, roundf(max_magnitude)) else str(snappedf(max_magnitude, 0.01))
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:

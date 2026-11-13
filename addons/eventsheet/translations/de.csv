@@ -7715,11 +7715,11 @@ A row of colour swatches to pick from. Without this plugin it is a plain colour.
 Linked axes,Verknüpfte Achsen
 Drag one axis and the others follow.,"Zieh eine Achse, und die anderen folgen."
 Direction dial,Richtungsscheibe
-The vector as an arrow on a dial. Without this plugin it is X and Y fields.,Der Vektor als Pfeil auf einer Scheibe. Ohne dieses Plugin sind es X- und Y-Felder.
+Drag a handle round a circle to aim.,"Einen Griff um einen Kreis ziehen, um zu zielen."
 Min-max range,Min-Max-Bereich
 "Two handles on one slider: x is the low end, y the high end.","Zwei Griffe auf einem Schieberegler: x ist das untere Ende, y das obere."
 Four corners,Vier Ecken
-"One number for all four corners, with a button that opens a box per corner.","Eine Zahl für alle vier Ecken, mit einem Knopf, der ein Feld pro Ecke öffnet."
+"Four numbers, one per corner, with a button that keeps them the same.","Vier Zahlen, eine pro Ecke, mit einer Taste, die sie gleich hält."
 "Node path, filtered","Node-Pfad, gefiltert"
 "Pick a scene node, limited to the classes you list.","Einen Szenen-Node wählen, beschränkt auf die Klassen, die du aufführst."
 Only these types,Nur diese Typen
@@ -8206,8 +8206,7 @@ validated by %s() while you edit,wird beim Bearbeiten von %s() geprüft
 validated by a sheet function while you edit,wird beim Bearbeiten von einer Sheet-Funktion geprüft
 Needs a @tool sheet with a %s() function to run in the editor.,"Braucht ein @tool-Blatt mit einer Funktion %s(), um im Editor zu laufen."
 Calls %s() on this object.,Ruft %s() auf diesem Objekt auf.
-All four corners at once.,Alle vier Ecken auf einmal.
-Set each corner on its own.,Jede Ecke einzeln setzen.
+Keep the four corners the same.,Die vier Ecken gleich halten.
 Top-left,Oben links
 Top-right,Oben rechts
 Bottom-left,Unten links
@@ -10441,3 +10440,4 @@ COMMANDS,BEFEHLE
 Press Ctrl+Shift+P for Godot's Command Palette - every EventSheets command is listed there.,Drücke Strg+Umschalt+P für Godots Befehlspalette - jeder EventSheets-Befehl steht dort.
 "Type a function, signal or variable…","Funktion, Signal oder Variable eingeben…"
 Required. Assign a value.,Erforderlich. Einen Wert zuweisen.
+reach %s,Reichweite %s

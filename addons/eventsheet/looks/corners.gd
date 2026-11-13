@@ -2,7 +2,7 @@
 extends EventSheetInspectorLook
 
 ## Four corners
-## One number for all four corners, with a button that opens a box per corner.
+## Four numbers, one per corner, with a button that keeps them the same.
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "Vector4"
@@ -17,7 +17,7 @@ func _look_built() -> void:
 	_corners = EventSheetAttributeDrawers.widgets().DrawerCorners.new()
 	_corners.connect("value_changed", _on_corners_changed)
 	add_child(_corners)
-	set_bottom_editor(_corners)
+	draw_background = false
 
 
 func _value_shown(value: Variant) -> void:
