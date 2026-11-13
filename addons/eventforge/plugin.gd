@@ -545,7 +545,16 @@ func _enter_tree() -> void:
 	# Every eventsheets/* setting becomes visible + documented in Project Settings
 	# (value-neutral: defaults match the in-code fallbacks).
 	# A project that ticked a setting under its old key gets the choice saved under the new key once.
-	if EventSheetSettings.register_all():
+	var settings_changed: bool = EventSheetSettings.register_all()
+	# A key an earlier version saved into project.godot moves to the editor's settings (per user,
+	# never committed). Loaded by path: the boot path names no class the first open does not need.
+	var ask_script: GDScript = load("res://addons/eventsheet/ace/ask.gd")
+	ask_script.register_editor_keys()
+	var moved_keys: PackedStringArray = ask_script.move_project_keys_to_editor()
+	if not moved_keys.is_empty():
+		settings_changed = true
+		print("[Godot EventSheets] Moved %s out of project.godot into Editor Settings, so the key is not committed with the project." % ", ".join(moved_keys))
+	if settings_changed:
 		ProjectSettings.save()
 	# The hover Project Settings shows for the settings that are documented.
 	_settings_hover_plugin = load(SETTINGS_HOVER_PATH).new()

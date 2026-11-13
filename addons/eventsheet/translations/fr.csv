@@ -10410,3 +10410,4 @@ Once Ever,Une seule fois
 "True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.","Vrai la première fois que les autres conditions de l'événement sont remplies, et plus jamais pour cet objet. Déclencher une fois, en revanche, se redéclenche chaque fois que la condition passe à faux puis à vrai. Elle garde une variable vrai-ou-faux dans le script."
 Once ever,Une seule fois
 Added %s to eventsheet_addons/ - this row calls it.,%s a été ajouté à eventsheet_addons/ - cette ligne l'appelle.
+Set eventsheets/ai/api_key in Editor Settings first.,Renseignez d'abord eventsheets/ai/api_key dans les Paramètres de l'éditeur.

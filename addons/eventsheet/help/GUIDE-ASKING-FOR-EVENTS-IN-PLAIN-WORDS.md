@@ -61,7 +61,8 @@ Everything lives in **Project Settings ▸ EventSheets ▸ Ask**:
 | `mode` | `off` (the default), `your own key`, or `a local model`. |
 | `endpoint` | An HTTP endpoint that speaks the common chat format. Yours to choose - a hosted one, or one running on this machine. |
 | `model` | The model name that endpoint expects. |
-| `api_key` | Your own key for that endpoint, when it wants one. A local endpoint usually does not. |
+
+Your own key for that endpoint (a local endpoint usually needs none) is not a project setting, because project.godot is committed with the project: it goes in **Editor Settings** as `eventsheets/ask/api_key`, per user, or in the `EVENTSHEETS_ASK_API_KEY` environment variable. A key an older version saved into the project is moved there the first time the plugin starts.
 
 Pressing **Ask** makes one HTTP POST to that endpoint, carrying the request described above and
 your key as a bearer header when you gave one. That call is the only socket this plugin ever opens,

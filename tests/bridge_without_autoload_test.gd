@@ -18,10 +18,7 @@ static func run() -> bool:
 	var descriptor: Dictionary = {"provider_id": "BridgeTestProvider", "ace_id": "BridgeTestAction", "display_name": "Bridge Test Action",
 		"ace_type": "action", "category": "Tests", "codegen_template": "pass"}
 	var holder_script: GDScript = GDScript.new()
-	holder_script.source_code = "extends RefCounted
-func get_provider_id() -> String:
-	return \"BridgeTestProvider\"
-"
+	holder_script.source_code = "extends RefCounted\nfunc get_provider_id() -> String:\n\treturn \"BridgeTestProvider\"\n"
 	holder_script.reload()
 	var holder: RefCounted = holder_script.new()
 	EventForgeBridgeRuntime.new().register_provider(holder, [descriptor])

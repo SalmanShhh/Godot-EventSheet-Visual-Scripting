@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: an Ask key is no longer saved into your project
+
+- The key for View > Ask (and the older in-editor generator) was a project setting, so a typed key landed in project.godot and was committed with the repository. It now lives in Editor Settings (per user, shown as a password field) as `eventsheets/ask/api_key`, with the `EVENTSHEETS_ASK_API_KEY` environment variable as the fallback (`EVENTSHEETS_AI_API_KEY` for the generator). A key an earlier version saved into the project is moved to Editor Settings and cleared from project.godot the first time the plugin starts, and the Output says so once.
+
 ### Changed: enabling the plugin no longer adds an autoload to your project
 
 - The plugin used to write an `EventForgeBridge` autoload into project.godot, and the game exported it although nothing in a shipped game needs it. The provider registry is now a plain class: code-registered providers and blocks reach the editor with no autoload, and every `EventSheets.*` method works as before. A project that has the old line loses it the first time the plugin starts, and the Output says so (an autoload you made yourself under that name is left alone). A script of yours that named the old singleton should call `EventForgeBridgeRuntime` instead. The uninstall guide is updated.

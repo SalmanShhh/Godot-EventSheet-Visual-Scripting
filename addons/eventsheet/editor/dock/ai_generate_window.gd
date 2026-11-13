@@ -68,7 +68,7 @@ func _blocked_reason() -> String:
 	if EventSheetAsk.mode() == EventSheetAsk.MODE_OFF:
 		return EventSheetL10n.translate("Ask is off, so nothing will be sent. Turn it on in Project Settings ▸ EventSheets ▸ Ask to generate in-editor - or use the MCP server.")
 	if not EventSheetAIGeneration.is_live_configured():
-		return EventSheetL10n.translate("Set eventsheets/ai/api_key in Project Settings first.")
+		return EventSheetL10n.translate("Set eventsheets/ai/api_key in Editor Settings first.")
 	# One request at a time: a second click while the first is out would append its rows twice.
 	if _request_in_flight:
 		return EventSheetL10n.translate("Still generating from your description…")
@@ -111,7 +111,7 @@ func _apply_ai_gdscript(gdscript_text: String) -> int:
 
 
 func _ai_request_live(description: String) -> void:
-	var key: String = str(ProjectSettings.get_setting("eventsheets/ai/api_key", "")).strip_edges()
+	var key: String = EventSheetAIGeneration.live_key()
 	var endpoint: String = str(ProjectSettings.get_setting("eventsheets/ai/endpoint", "https://api.anthropic.com/v1/messages"))
 	var model: String = str(ProjectSettings.get_setting("eventsheets/ai/model", "claude-opus-4-8"))
 	var prompt: String = EventSheetAIGeneration.build_prompt(description, _dock._current_sheet)

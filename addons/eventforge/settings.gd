@@ -75,8 +75,8 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "An HTTP endpoint that speaks the common chat format. Yours to choose - a hosted one, or one running on this machine."},
 	{"name": "eventsheets/ask/model", "default": "", "type": TYPE_STRING,
 		"doc": "The model name that endpoint expects."},
-	{"name": "eventsheets/ask/api_key", "default": "", "type": TYPE_STRING,
-		"doc": "Your own key for that endpoint, when it wants one. A local endpoint usually does not."},
+	# The key is NOT a project setting: project.godot is committed. It lives in Editor Settings
+	# (eventsheets/ask/api_key) with EVENTSHEETS_ASK_API_KEY as the fallback.
 	# Which folders the Project Doctor's audit is about. Empty means "all of them", which is what the
 	# audit did before this setting existed - a project that declares nothing sees no change at all.
 	{"name": "eventsheets/doctor/skipped_folders", "default": DEFAULT_SKIPPED_FOLDERS, "type": TYPE_PACKED_STRING_ARRAY,

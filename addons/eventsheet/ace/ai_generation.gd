@@ -58,7 +58,12 @@ static func generate_rows(description: String, sheet: EventSheetResource, gdscri
 ## True when an in-editor LLM call is configured (an API key project setting). When false, the
 ## editor points the user at Project Settings or the MCP server instead of failing silently.
 static func is_live_configured() -> bool:
-	return not str(ProjectSettings.get_setting("eventsheets/ai/api_key", "")).strip_edges().is_empty()
+	return not live_key().is_empty()
+
+
+## The generator's key: the editor's settings, else EVENTSHEETS_AI_API_KEY - never the project.
+static func live_key() -> String:
+	return EventSheetAsk.secret(EventSheetAsk.AI_SETTING_KEY, EventSheetAsk.AI_ENV_KEY)
 
 
 ## Resolves a description to GDScript: the injected provider if set, else "" (caller does the

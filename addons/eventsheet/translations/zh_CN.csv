@@ -10410,3 +10410,4 @@ Once Ever,仅一次
 "True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.",其他条件第一次成立时为真，此后对该对象再也不会为真。相比之下，“触发一次”会在条件变假再变真时再次触发。它会在脚本中保留一个真/假变量。
 Once ever,仅一次
 Added %s to eventsheet_addons/ - this row calls it.,已将 %s 添加到 eventsheet_addons/ - 此行会调用它。
+Set eventsheets/ai/api_key in Editor Settings first.,请先在编辑器设置中设置 eventsheets/ai/api_key。

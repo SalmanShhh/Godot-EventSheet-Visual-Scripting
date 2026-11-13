@@ -155,9 +155,9 @@ static func _test_the_windows() -> bool:
 		[ask_window._mode_note.tone, ask_window._window.title, ask_window._add_button.text],
 		[EventSheetPopupUI.TONE_WARNING, "Ask for events", "Add these events"]) and ok
 
-	var previous_key: Variant = ProjectSettings.get_setting("eventsheets/ai/api_key", null)
+	var previous_key: String = OS.get_environment(EventSheetAsk.AI_ENV_KEY)
 	var previous_ai_endpoint: Variant = ProjectSettings.get_setting("eventsheets/ai/endpoint", null)
-	ProjectSettings.set_setting("eventsheets/ai/api_key", "test-key")
+	OS.set_environment(EventSheetAsk.AI_ENV_KEY, "test-key")
 	ProjectSettings.set_setting("eventsheets/ai/endpoint", "http://127.0.0.1:9/none")
 	EventSheetAIGeneration.response_provider = Callable()
 	var generate: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()
@@ -171,12 +171,12 @@ static func _test_the_windows() -> bool:
 			generate._ai_window.get_ok_button().disabled],
 		[0, true, true]) and ok
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_LOCAL)
-	ProjectSettings.set_setting("eventsheets/ai/api_key", "")
+	OS.set_environment(EventSheetAsk.AI_ENV_KEY, "")
 	generate._refresh_gate()
 	ok = _check("with no key, the window names the setting to fill",
 		[generate._note.text, generate._ai_window.get_ok_button().disabled],
-		["Set eventsheets/ai/api_key in Project Settings first.", true]) and ok
-	ProjectSettings.set_setting("eventsheets/ai/api_key", "test-key")
+		["Set eventsheets/ai/api_key in Editor Settings first.", true]) and ok
+	OS.set_environment(EventSheetAsk.AI_ENV_KEY, "test-key")
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_LOCAL)
 	# Out of the tree an HTTPRequest cannot start, which is exactly the failed start to pin.
 	generate._ai_generate_clicked()
@@ -189,7 +189,7 @@ static func _test_the_windows() -> bool:
 	ok = _check("a second click while a request is out sends nothing",
 		[dock.find_children("*", "HTTPRequest", true, false).size(), generate._note.text],
 		[0, "Still generating from your description…"]) and ok
-	ProjectSettings.set_setting("eventsheets/ai/api_key", previous_key)
+	OS.set_environment(EventSheetAsk.AI_ENV_KEY, previous_key)
 	ProjectSettings.set_setting("eventsheets/ai/endpoint", previous_ai_endpoint)
 	dock.free()
 	return ok
