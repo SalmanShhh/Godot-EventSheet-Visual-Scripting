@@ -268,6 +268,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `duration` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `ease` | [Ease](ace:Core/EaseValue) | Helpers | Vocabulary |
 | `echo` | [On Key Pressed (event)](ace:Core/KeyEventPressed) | Keyboard | Vocabulary |
+| `edited_scene_root` | [Add New Node](ace:Core/AddNewNodeInto) | Building | Vocabulary |
 | `else` | [As Duration](ace:Core/AsDuration) | Text | Vocabulary |
 | `emission_enabled` | [Set Glow](ace:Core/MaterialSetGlow) | Material | Vocabulary |
 | `emission_energy_multiplier` | [Glow](ace:Core/MaterialGlow) | Material | Vocabulary |
@@ -485,6 +486,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_root_motion_position` | [Apply Root Motion](ace:Core/ApplyRootMotion3D) | Animation | Vocabulary |
 | `get_root_motion_rotation` | [Apply Root Motion](ace:Core/ApplyRootMotion3D) | Animation | Vocabulary |
 | `get_screen_center_position` | [View Rectangle](ace:Core/CameraViewRect) | Camera | Vocabulary |
+| `get_script` | [Remove What This Sheet Built](ace:Core/RemoveBuiltNodes) | Building | Vocabulary |
 | `get_script_editor` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `get_section_keys` | [Load Bindings](ace:Core/InputLoadBindings) | Keyboard | Vocabulary |
 | `get_selected_id` | .SelectedIndex | Object | Object expressions |
@@ -962,7 +964,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
 | `set_visible_characters` | [Reveal Text](ace:Core/RevealText) | Text | Vocabulary |
 | `shadow_enabled` | [Turn Shadows On](ace:Core/LightShadowsOn) | Lighting | Vocabulary |
-| `shape` | [Add Circle Shape](ace:Core/AddCircleShapeTo) | Building | Vocabulary |
+| `shape` | [Random Place Inside Box](ace:Core/PlaceInsideBox3D) | Spawn | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
 | `shell_show_in_file_manager` | [Show In The File Manager](ace:Core/ShowInFileManager) | Files | Vocabulary |
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
@@ -1083,7 +1085,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `validate_filename` | [Safe File Name](ace:Core/SafeFileName) | Files | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
 | `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |
-| `var` | [Add Behaviour](ace:Core/AddBehaviourInto) | Building | Vocabulary |
+| `var` | [Write Text File (in a folder)](ace:Core/WriteTextFileInFolder) | Files | Vocabulary |
 | `var_to_str` | [To Text](ace:Core/Stringify) | Debug | Vocabulary |
 | `variant_to_base64` | [Share Code For](ace:Core/ShareCodeFor) | Utility: Window | Vocabulary |
 | `velocity` | [Get Velocity](ace:Core/GetVelocity2D) | General Expressions | Vocabulary |

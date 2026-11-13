@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: Building rows in a tool sheet own what they build, and a rebuild clears the last result
+
+- Dropped into a Tool sheet, an Add New Node, Add Behaviour, Add Sprite, Add Shape or Add Timer row also gives the new node the scene being edited as its owner (`get_tree().edited_scene_root`, only under `Engine.is_editor_hint()`) so it is saved with the scene, and marks it so it can be found again. A new node goes under the scene being edited by default. In a game sheet the same rows write exactly what they wrote before. This is not an editor undo step.
+- A new row, Remove What This Sheet Built, frees the marked direct children of a node. A tool event that builds without clearing first wears the quiet amber state, the help strip and the Doctor's Tool edits section say a rebuild adds another copy, and Clear what it built first puts the clearing row at the top of the event in one undo step.
+
 ### Added: hand-written code that makes a node opens as the Building row
 
 - A person's own lines now open as the row that writes them: a node made from a type and given a parent (named or not), a behaviour looked up and added when it is not there, a behaviour removed, a sprite, a circle, rectangle or capsule shape (and the 3D shapes), a timer, and a branch packed into a variable. Each is read as one run, the values are the ones the lines said, the editor's own baked ids are kept as the author's spelling, and saving the sheet untouched writes the same bytes back. A run short of the whole shape (a node made with an argument, a bare `add_child`, ids that disagree) keeps the ordinary rows it always read as. Add Behaviour with Allow another is three lines identical to Add New Node with the class's own name, so that run opens as Add New Node and writes the same bytes.
@@ -11,7 +16,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 ### Changed: a node that plays is paused, a behaviour is turned off
 
 - A process-mode write now reads by what the object is: a behaviour or any class of the project is turned off and on, a Timer, an AnimationPlayer, an AnimationTree or a rigid body is paused and resumed, and anything else keeps "Set disabled" and "Set enabled". The line written is exactly the same; a picked Pause Node or Unpause Node row and a hand-written `process_mode` line read alike. Measured in a running game: Disabled stops a node's code, timers, animations, physics and bound tweens, a sound keeps playing and signals still arrive, which the two rows' descriptions and the Scenes, Pausing And Turning Nodes Off guide now say.
-- Search finds the existing rows under the board words: turn off, turn on, disable or enable behavior (Pause Node, Unpause Node), has behavior (Has Child Of Type), change behavior, spawn from a prefab (Instantiate) and save a prefab (Save Data Asset).
+- Search finds the existing rows under the board words: turn off, turn on, disable or enable behavior (Pause Node, Unpause Node, beside the rows that are already called Turn Off), has behavior (Has Child Of Type), change behavior, spawn from a prefab (Instantiate) and save a prefab (Save Data Asset). The picker's code preview shows a Building row as a game sheet writes it, without the lines a tool sheet adds.
 
 ### Changed: a new copy is added under the running scene, and what a row makes is an object for the rows after it
 

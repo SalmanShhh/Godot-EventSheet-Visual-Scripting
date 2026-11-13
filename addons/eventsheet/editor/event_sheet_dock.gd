@@ -46,6 +46,11 @@ const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
 const BEHAVIOUR_LIBRARY_WINDOW_PATH := "res://addons/eventsheet/editor/behaviour_library_window.gd"
 const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
 const PACK_CATALOG_PATH := "res://addons/eventsheet/ace/pack_catalog.gd"
+## The rebuild finding is named by path and by the id its door dispatches on: this file is on the first-open
+## path, and naming the class would compile the check into it.
+const REBUILD_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/rebuild_findings.gd"
+const REBUILD_FIX_CLEAR_FIRST := "clear_what_it_built_first"
+
 const PACK_LIBRARY_PATH := "res://addons/eventsheet/ace/pack_library.gd"
 const AUTHOR_LOOP_PATH := "res://addons/eventsheet/editor/dock/author_loop.gd"
 const BOOKMARKS_PANEL_PATH := "res://addons/eventsheet/editor/dock/bookmarks_panel.gd"
@@ -6440,6 +6445,9 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetUndoableFindings.FIX_MAKE_IT_UNDOABLE:
 			_make_the_edit_undoable(note_meta)
 			return true
+		REBUILD_FIX_CLEAR_FIRST:
+			_clear_what_it_built_first(note_meta)
+			return true
 		EventSheetEffectFindings.FIX_PICK_DIAL:
 			_repick_effect_dial(note_meta)
 			return true
@@ -6521,6 +6529,23 @@ func _make_the_edit_undoable(note_meta: Dictionary) -> void:
 		_set_status(EventSheetL10n.translate("This row already goes through the editor's undo history."))
 		return
 	_set_status(EventSheetSpawnFindings.respell_receipt(was, twin))
+
+
+## "Clear what it built first". A tool sheet event that builds nodes in the open scene adds another copy every
+## time it runs; this puts the row that removes what the last run built at the top of the event, under the
+## node the building row builds under. One undo step through the funnel every other mutation takes, and the
+## status line says what was added.
+func _clear_what_it_built_first(note_meta: Dictionary) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	if _current_sheet == null or event_row == null:
+		return
+	var finding: Dictionary = {"event": event_row, "to": str(note_meta.get("variable_note_to", ""))}
+	var uid: String = _fresh_uid_token()
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Clear what it built first"),
+			func() -> bool: return load(REBUILD_FINDINGS_PATH).clear_first(finding, uid)):
+		_set_status(EventSheetL10n.translate("This event already clears what it built."))
+		return
+	_set_status(EventSheetL10n.translate("Added Remove What This Sheet Built at the top of the event, so a rebuild starts from nothing."))
 
 
 ## The one line of a block that parents a node - what the receipt above shows on each side of the

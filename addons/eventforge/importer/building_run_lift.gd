@@ -28,8 +28,9 @@
 class_name EventForgeBuildingRunLift
 extends RefCounted
 
-## The module the shapes come from, by path so the importer never waits on the editor's class cache.
-const BUILDING := preload("res://addons/eventforge/registration/modules/building_aces.gd")
+## The module the shapes come from, by path so the importer never waits on the editor's class cache, and
+## read only when the entries are first built, so a first open of a sheet does not compile the module.
+const BUILDING_PATH := "res://addons/eventforge/registration/modules/building_aces.gd"
 const SPAWN_LIFT := preload("res://addons/eventforge/importer/spawn_run_lift.gd")
 
 ## The id a shape is written with. A token no template or sample contains, replaced in each pattern
@@ -137,7 +138,8 @@ static func _pattern(line: String) -> String:
 
 
 static func _descriptor(ace_id: String) -> ACEDescriptor:
-	for descriptor: ACEDescriptor in BUILDING.get_descriptors():
+	var building: GDScript = load(BUILDING_PATH)
+	for descriptor: ACEDescriptor in building.get_descriptors():
 		if descriptor.ace_id == ace_id:
 			return descriptor
 	return null

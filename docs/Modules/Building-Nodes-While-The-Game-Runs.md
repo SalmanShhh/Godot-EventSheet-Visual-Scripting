@@ -51,6 +51,14 @@ Finding And Rearranging Nodes. This page is for the nodes that have no scene fil
 - **`add_to_group(name)` is forgotten by a pack.** A group added without the second argument is not
   saved with the scene. Add To Group (Saved With Scene) writes `add_to_group(name, true)`, the form a
   packed copy keeps.
+- **In a tool sheet, what you build is saved with the scene.** Drop a row into a Tool sheet and it also
+  makes the new node owned by the scene being edited (`get_tree().edited_scene_root`, only under
+  `Engine.is_editor_hint()`) and marks it, so it is saved with the scene and a rebuild can find it. The
+  Under field starts as the scene being edited, because a tool has no running scene. In a game sheet the
+  same row writes none of that. This is not an undo step: Ctrl+Z does not take back what a tool built.
+- **A rebuild button needs to clear first.** A tool that builds when a button is pressed adds another copy
+  every press. Remove What This Sheet Built at the top of the event removes what the last press made; the
+  event wears the quiet amber state until it is there, and its Clear what it built first button adds it.
 - **Your own lines open as these rows.** A hand-written run that makes a node, names it and adds it, or
   a timer, a sprite or a shape made and added, opens as the matching row and saves back byte for byte.
   A run short of the whole shape stays the ordinary rows it always was.
@@ -93,6 +101,12 @@ never collide.
 |------|--------------|----------|
 | Add To Group (Saved With Scene) | Puts a node in a group that a packed copy keeps | `add_to_group({group}, true)` |
 | Keep As Prefab | Packs a node and everything under it into a PackedScene variable | an owner walk, `PackedScene.pack`, the ownership given back |
+
+### In a tool sheet
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Remove What This Sheet Built | Frees the direct children of a node that a tool sheet marked when it built them | a loop over `get_children()` freeing each child that has the `built_by_sheet` mark |
 
 ### Rows that already exist for the rest
 
@@ -142,6 +156,8 @@ never collide.
 **17. A named marker.** Add New Node of type Marker2D named "Spawn" under the level, so a later row can find it with `get_node("Spawn")`.
 
 **18. A helper node that is not in the scene.** Add New Node of type Node under `self` into `helper`, set it up with Set Property rows, and free it with Free Node when done.
+
+**19. A fence a tool builds into the scene.** In a Tool sheet, on a button, Remove What This Sheet Built under the edited scene, then Add New Node of type Node2D named "Fence" and a Rectangle Shape on it. Each press leaves exactly one fence, saved with the scene.
 
 ### Other use cases
 

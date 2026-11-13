@@ -144,6 +144,9 @@ const FINDINGS_COLLISIONS := "collisions"
 const FINDINGS_LAYERS := "layers"
 const FINDINGS_SCENE_TRUST := "scene_trust"
 const FINDINGS_TOOL_EDITS := "tool_edits"
+const FINDINGS_REBUILD := "rebuild"
+## The rebuild check is named by path: this file is on the boot path, and a class name would compile it into the first open.
+const REBUILD_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/rebuild_findings.gd"
 const FINDINGS_MIGRATION := "migration"
 const FINDINGS_RENAME := "rename"
 const FINDINGS_FEEDBACK := "feedback"
@@ -12355,6 +12358,12 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# at all unless this is a tool sheet that works on the scene the editor has open.
 				_sheet_findings_cache[family] = EventSheetUndoableFindings.findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
+			FINDINGS_REBUILD:
+				# A tool sheet that builds nodes in the open scene and clears nothing before it: every
+				# run adds another copy. Only asked of a tool sheet, and answered with nothing at all
+				# for every other sheet.
+				_sheet_findings_cache[family] = load(REBUILD_FINDINGS_PATH).findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "")
 			FINDINGS_SCENE_TRUST:
 				# The Doctor's Files section, asked of the rows of this one sheet rather than of the
 				# project's files - same wording, same gates, per event. The file path is only the
@@ -12438,7 +12447,7 @@ static func findings_at_event(found: Array[Dictionary], event_row: EventRow) -> 
 func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 	var about: Array[Dictionary] = []
 	for family: String in [FINDINGS_MULTIPLAYER, FINDINGS_LIGHTING, FINDINGS_EFFECTS, FINDINGS_SPAWNING,
-			FINDINGS_PERFORMANCE, FINDINGS_COLLISIONS, FINDINGS_LAYERS, FINDINGS_TOOL_EDITS,
+			FINDINGS_PERFORMANCE, FINDINGS_COLLISIONS, FINDINGS_LAYERS, FINDINGS_TOOL_EDITS, FINDINGS_REBUILD,
 			FINDINGS_SCENE_TRUST, FINDINGS_MIGRATION, FINDINGS_RENAME, FINDINGS_FEEDBACK,
 			FINDINGS_COMPILER, FINDINGS_MISTAKES]:
 		var found: Array[Dictionary] = []
@@ -20211,8 +20220,8 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"NodePause", "NodeResume":
 			var pause_mode: String = "Node.PROCESS_MODE_DISABLED" if action.ace_id == "NodePause" else "Node.PROCESS_MODE_INHERIT"
 			var pause_target: String = _ace_target(params_dict)
-			if EventSheetSentence.process_mode_verb(EventSheetSentence.object_class_of(
-					EventSheetSentence.object_of_reference(pause_target), context),
+			var pause_object: String = "" if pause_target == "self" else EventSheetSentence.object_of_reference(pause_target)
+			if EventSheetSentence.process_mode_verb(EventSheetSentence.object_class_of(pause_object, context),
 					pause_mode.get_slice(".", 1)).is_empty():
 				return {}
 			return EventSheetSentence.statement("%s.process_mode = %s" % [pause_target, pause_mode], context)

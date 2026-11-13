@@ -1282,6 +1282,14 @@ const SEARCH_SYNONYMS := {
 	"save a prefab": "save data asset",
 	"has behavior": "child of type",
 	"has behaviour": "child of type",
+	# Several rows are called Turn Off (a light, a glow), so the phrase keeps them and also reaches the one
+	# that switches a node or a behaviour off.
+	"turn off": "pause node",
+	"turn on": "unpause node",
+	"disable behavior": "pause node",
+	"disable behaviour": "pause node",
+	"enable behavior": "unpause node",
+	"enable behaviour": "unpause node",
 	"change behavior": "behaviour",
 	"change behaviour": "behaviour",
 	"switch behavior": "behaviour",
@@ -1473,8 +1481,7 @@ const PHRASE_FIRST := {
 	"remove behaviour": "Core::RemoveBehaviour", "remove behavior": "Core::RemoveBehaviour",
 	"detach behavior": "Core::RemoveBehaviour",
 	"prefab": "Core::KeepAsPrefab", "make prefab": "Core::KeepAsPrefab",
-	# Switching a node or a behaviour off and on is Pause Node and Unpause Node: the process mode.
-	"turn off": "Core::NodePause", "turn on": "Core::NodeResume",
+	# Switching a behaviour off and on is Pause Node and Unpause Node: the process mode.
 	"disable behavior": "Core::NodePause", "disable behaviour": "Core::NodePause",
 	"enable behavior": "Core::NodeResume", "enable behaviour": "Core::NodeResume",
 }
@@ -3869,9 +3876,19 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 		# Instance-backed reflected methods bake their owned-instance call at APPLY time -
 		# preview the same call so the IN CODE line is never blank for a working ACE.
 		template = definition.instance_backed_template()
-	_help_strip.set_reading("", template)
+	_help_strip.set_reading("", without_tool_lines(template))
 	_help_strip.set_line(_also_called, also_called_line(EventSheetL10n.translate(definition.display_name),
 		str(_foreign_phrase_by_id.get(str(definition.id), ""))))
+
+
+## A template as the IN CODE line shows it: the lines a Building row adds only when it is dropped into a Tool
+## sheet (the owner and the mark, and the readable name) are left out, because what the reader is about to
+## drop into a game sheet does not write them. The dock adds them when the sheet is a tool.
+static func without_tool_lines(template: String) -> String:
+	if not template.contains("{?tool="):
+		return template
+	var tool_lines: RegEx = RegEx.create_from_string("\\{\\?tool=yes\\}[\\s\\S]*?\\{/tool\\}")
+	return tool_lines.sub(template, "", true)
 
 
 ## The strip says something that is not a verb: a section, a recipe, a note after a right-click.

@@ -33,10 +33,12 @@ const SUPPORT := preload("res://tests/support.gd")
 ##   {target.}  the optional receiver prefix a node-scoped row wears (the dot lives inside the
 ##              braces so clearing the field emits the bare member operation);
 ##   {host.}    the same idea for a behaviour's host object;
+##   {?tool=yes}  the segment a Building row keeps when it is dropped into a tool sheet, kept by the dock at
+##              apply time rather than by a field the reader fills;
 ##   {n}        the loop iterator a looping condition binds;
 ##   {starting_value} / {every_starting_value}  the value a variable's declaration starts it on,
 ##              which the compiler reads off the sheet's own declarations for the Reset rows.
-const EXEMPT_SLOTS: Array[String] = ["uid", "target.", "host.", "n", "0", "1", "2", "3",
+const EXEMPT_SLOTS: Array[String] = ["uid", "tool", "target.", "host.", "n", "0", "1", "2", "3",
 	"starting_value", "every_starting_value"]
 
 ## Parameters a row CARRIES rather than writes: they steer the editor rather than the emitted line,

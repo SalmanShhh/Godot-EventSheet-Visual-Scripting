@@ -3813,6 +3813,7 @@ Building (making nodes while the game runs, and keeping what was made)
 - **Add Timer** (`seconds: String, callable: String, target: String`) - Adds a Timer that starts as soon as it is in the scene and calls a function every time it runs out, again and again. Type the name of one of this sheet's functions to call it; the starting value does nothing.
 - **Add To Group (Saved With Scene)** (`target: String, group: String`) - Puts a node in a group in a way that is kept when the node is packed into a scene or a prefab. A plain Add To Group is forgotten by a packed copy.
 - **Keep As Prefab** (`node: Node, prefab: String`) - Packs a node and everything under it into a PackedScene held in a variable, so it can be instantiated again later or saved with Save Data Asset. Nodes that belong to another scene stay instances. Groups the branch is in are kept only when they were added saved with the scene.
+- **Remove What This Sheet Built** (`parent: String`) - Frees the nodes this sheet built earlier under a node, the ones it marked when it added them (another sheet's are left alone), so a rebuild starts from nothing instead of adding a second copy. Each is taken out of the tree at once, so the name it had is free again. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.
 
 ### Camera 2d (`res://addons/eventforge/registration/modules/camera_2d_aces.gd`)
 the rest of the Camera2D shelf (drift, snap, turns, the view, the limits).

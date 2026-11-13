@@ -12,6 +12,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const NAME: String = "building_rows_test"
 const FILE_ACES := preload("res://addons/eventforge/registration/modules/file_aces.gd")
+const BUILDING := preload("res://addons/eventforge/registration/modules/building_aces.gd")
 
 ## Every row the module ships, with the host class it is offered on.
 const ROWS: Dictionary = {
@@ -19,7 +20,7 @@ const ROWS: Dictionary = {
 	"AddSpriteTo": "Node2D", "AddSprite3DTo": "Node3D",
 	"AddCircleShapeTo": "Node2D", "AddRectangleShapeTo": "Node2D", "AddCapsuleShapeTo": "Node2D",
 	"AddSphereShapeTo": "Node3D", "AddBoxShapeTo": "Node3D", "AddCapsuleShape3DTo": "Node3D",
-	"AddTimerTo": "Node", "AddToGroupSaved": "Node", "KeepAsPrefab": "Node",
+	"AddTimerTo": "Node", "AddToGroupSaved": "Node", "KeepAsPrefab": "Node", "RemoveBuiltNodes": "Node",
 }
 
 
@@ -32,6 +33,8 @@ static func run() -> bool:
 	passed = _keep_as_prefab_says_the_same_walk_as_the_file_row() and passed
 	passed = _a_row_in_a_sheet_writes_its_lines_in_order() and passed
 	passed = _the_saved_group_is_a_different_line_from_the_plain_one() and passed
+	passed = _a_tool_sheet_owns_what_it_builds() and passed
+	passed = _the_dock_keeps_the_tool_lines_only_in_a_tool_sheet() and passed
 	return passed
 
 
@@ -39,9 +42,13 @@ static func _descriptor(ace_id: String) -> ACEDescriptor:
 	return ACERegistry.find_descriptor("Core", ace_id)
 
 
+## The row's template as a GAME sheet writes it: the optional lines a tool sheet adds are not part of it.
 static func _template(ace_id: String) -> String:
 	var descriptor: ACEDescriptor = _descriptor(ace_id)
-	return descriptor.codegen_template if descriptor != null else "(missing)"
+	if descriptor == null:
+		return "(missing)"
+	var tool_segment: RegEx = RegEx.create_from_string("\\{\\?tool=yes\\}[\\s\\S]*?\\{/tool\\}")
+	return tool_segment.sub(descriptor.codegen_template, "", true)
 
 
 static func _the_rows_are_in_one_category() -> bool:
@@ -232,3 +239,78 @@ static func _the_saved_group_is_a_different_line_from_the_plain_one() -> bool:
 		["the saved row writes the persistent flag", _template("AddToGroupSaved"), "{target}.add_to_group({group}, true)"],
 		["the two rows are not the same template", _template("AddToGroup") != _template("AddToGroupSaved"), true],
 	])
+
+
+## A tool sheet's rows own what they build: the node is given the scene being edited as its owner, so it
+## is saved with the scene, and a mark, so a rebuild can find it. A game sheet's row writes none of it.
+static func _a_tool_sheet_owns_what_it_builds() -> bool:
+	var passed: bool = true
+	var raw: String = _descriptor("AddNewNodeInto").codegen_template
+	passed = SUPPORT.pin_value(NAME, "the tool lines are an optional segment of the row",
+		raw.contains("{?tool=yes}\nif Engine.is_editor_hint():\n\t{name}.owner = get_tree().edited_scene_root\n\t{name}.set_meta(&\"built_by_sheet\", get_script().resource_path){/tool}"), true) and passed
+	passed = SUPPORT.pin_value(NAME, "a game sheet's row collapses them away",
+		_written("AddNewNodeInto").contains("owner"), false) and passed
+	passed = SUPPORT.pin_value(NAME, "the picker shows the row without the tool lines",
+		ACEPickerDialog.without_tool_lines(raw), _template("AddNewNodeInto")) and passed
+	var baked: String = BUILDING.tool_form(raw)
+	passed = SUPPORT.pin_value(NAME, "a tool sheet keeps them as part of the row", baked.contains("{?tool") or baked.contains("{/tool}"), false) and passed
+	var lines: String = EventSheetActionCodegen._apply_template(baked.replace("{uid}", "t1"),
+		{"type": "Node2D", "label": "", "parent": "get_tree().edited_scene_root", "name": "fence"})
+	passed = SUPPORT.pin_value(NAME, "and writes the owner and the mark after the node is in the tree", lines,
+		"var fence := Node2D.new()\nget_tree().edited_scene_root.add_child(fence, true)\nif Engine.is_editor_hint():\n\tfence.owner = get_tree().edited_scene_root\n\tfence.set_meta(&\"built_by_sheet\", get_script().resource_path)") and passed
+	passed = SUPPORT.pin_value(NAME, "that parses as GDScript", _parses("AddNewNodeInto", lines), true) and passed
+	for ace_id: String in ["AddBehaviourInto", "AddSpriteTo", "AddSprite3DTo", "AddCircleShapeTo", "AddRectangleShapeTo",
+			"AddCapsuleShapeTo", "AddSphereShapeTo", "AddBoxShapeTo", "AddCapsuleShape3DTo", "AddTimerTo"]:
+		var row: String = _descriptor(ace_id).codegen_template
+		passed = SUPPORT.pin_value(NAME, "%s has the tool segment, closed" % ace_id,
+			row.contains("{?tool=yes}") and row.contains("{/tool}"), true) and passed
+		var tool_lines: String = _written_tool(ace_id)
+		passed = SUPPORT.pin_value(NAME, "%s in a tool sheet parses and owns what it built" % ace_id,
+			tool_lines.contains(".owner = get_tree().edited_scene_root") and tool_lines.contains("set_meta(&\"built_by_sheet\", get_script().resource_path)")
+			and _parses(ace_id, tool_lines), true) and passed
+	var swapped: Dictionary = BUILDING.tool_params({"parent": "get_tree().current_scene", "name": "n"})
+	passed = SUPPORT.pin_value(NAME, "a tool sheet builds in the scene being edited by default", swapped["parent"], "get_tree().edited_scene_root") and passed
+	passed = SUPPORT.pin_value(NAME, "a parent the reader chose is left alone",
+		BUILDING.tool_params({"parent": "$Level"})["parent"], "$Level") and passed
+	passed = SUPPORT.pins(NAME, [
+		["Remove What This Sheet Built finds the marked children",
+			_template("RemoveBuiltNodes"),
+			"for __built_{uid}: Node in {parent}.get_children():\n\tif __built_{uid}.has_meta(&\"built_by_sheet\") and __built_{uid}.get_meta(&\"built_by_sheet\") == get_script().resource_path:\n\t\t{parent}.remove_child(__built_{uid})\n\t\t__built_{uid}.queue_free()"],
+	]) and passed
+	return passed
+
+
+static func _written_tool(ace_id: String) -> String:
+	var descriptor: ACEDescriptor = _descriptor(ace_id)
+	var params: Dictionary = {"uid": "0"}
+	for param: ACEParam in descriptor.params:
+		params[param.id] = str(param.default_value)
+	return EventSheetActionCodegen._apply_template(BUILDING.tool_form(descriptor.codegen_template), params)
+
+
+## The dock keeps the tool lines in a row dropped into a TOOL sheet, and leaves a game sheet's row alone.
+static func _the_dock_keeps_the_tool_lines_only_in_a_tool_sheet() -> bool:
+	var passed: bool = true
+	for in_a_tool: bool in [false, true]:
+		var editor: EventSheetEditor = EventSheetEditor.new()
+		var sheet: EventSheetResource = EventSheetResource.new()
+		sheet.tool_mode = in_a_tool
+		editor.setup(sheet)
+		var params: Dictionary = {"type": "Node2D", "label": "", "parent": "get_tree().current_scene", "name": "fence"}
+		var action: ACEAction = editor._ace_apply._create_action_from_definition(
+			editor._find_definition("Core", "AddNewNodeInto"), params)
+		var label: String = "a tool sheet" if in_a_tool else "a game sheet"
+		passed = SUPPORT.pin_value(NAME, "%s: the owner lines are %s" % [label, "the row's own text" if in_a_tool else "still an optional segment"],
+			action.codegen_template.contains("{?tool=yes}"), not in_a_tool) and passed
+		var written: String = EventSheetActionCodegen.generate_action(action, "Node2D")
+		passed = SUPPORT.pin_value(NAME, "%s: the row %s the owner" % [label, "writes" if in_a_tool else "does not write"],
+			written.contains(".owner = get_tree().edited_scene_root"), in_a_tool) and passed
+		passed = SUPPORT.pin_value(NAME, "%s: the parent starts as %s" % [label, "the edited scene" if in_a_tool else "the running scene"],
+			str(action.params.get("parent", "")), "get_tree().edited_scene_root" if in_a_tool else "get_tree().current_scene") and passed
+		var part: ACEAction = editor._ace_apply._create_action_from_definition(
+			editor._find_definition("Core", "AddSpriteTo"), {"texture": "load(\"res://icon.svg\")", "target": "self"})
+		passed = SUPPORT.pin_value(NAME, "%s: a part row is baked the same way" % label,
+			part.codegen_template.contains(".set_meta(&\"built_by_sheet\", get_script().resource_path)") and not part.codegen_template.contains("{?tool"),
+			in_a_tool) and passed
+		editor.free()
+	return passed

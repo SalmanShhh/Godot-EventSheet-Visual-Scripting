@@ -10491,3 +10491,14 @@ The variable that holds the PackedScene. Declare it as a PackedScene in this she
 "The node the copy is added under. It starts as the running scene; set it to self to add the copy under this node, or name a layer to keep spawns together.",副本被添加在哪个节点下。一开始是正在运行的场景；改成 self 就会放在本节点下，也可以指定一个图层把生成物集中在一起。
 "Makes one copy of a scene, adds it under a parent and puts it where you say, in three dimensions. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is. Under starts as the running scene; set it to self to keep the copy under this node.",复制一份场景，把它添加到指定的父节点下，并在三维空间中放到你说的位置。副本会得到你选的名字，本事件中后面的每一行都可以说出这个名字 - 它是生成代码里真正的变量，而不是一次查找。把位置保持为 global_position 就会在本节点处生成。父节点一开始是正在运行的场景，改成 self 就会把副本放在本节点下。
 Resume,继续
+Clear what it built first,先清除它构建的内容
+This event already clears what it built.,此事件已经会清除它构建的内容。
+"Added Remove What This Sheet Built at the top of the event, so a rebuild starts from nothing.",已在事件顶部添加“移除此表构建的内容”，这样重新构建会从零开始。
+"%s builds nodes in the scene the editor has open, and nothing in this event or an earlier one for the same trigger removes what the last run built, so every run adds another copy.",%s 会在编辑器打开的场景中构建节点，而此事件或同一触发器的更早事件中没有任何内容会移除上次运行构建的节点，所以每次运行都会多出一份副本。
+Remove What This Sheet Built clears what an earlier run built; Clear what it built first puts it at the top of this event.,“移除此表构建的内容”会清除之前运行构建的内容；“先清除它构建的内容”会把它放到此事件的顶部。
+Remove What This Sheet Built,移除此表构建的内容
+"Frees the nodes a tool sheet built earlier under a node, the ones it marked when it added them, so a rebuild starts from nothing instead of adding a second copy. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.",释放工具表之前在某个节点下构建的、添加时已被标记的节点，这样重新构建会从零开始，而不是再多加一份副本。只检查直接子节点，并且在编辑器中 Ctrl+Z 无法撤销这一步。
+Remove the nodes this sheet built under [i]{parent}[/i],移除此表在 [i]{parent}[/i] 下构建的节点
+The node whose children are looked at. In a tool this is the scene being edited.,要检查其子节点的节点。在工具中这是正在编辑的场景。
+"Frees the nodes this sheet built earlier under a node, the ones it marked when it added them (another sheet's are left alone), so a rebuild starts from nothing instead of adding a second copy. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.",释放此表之前在某个节点下构建的、添加时已被标记的节点（其他表构建的不会被动），这样重新构建会从零开始，而不是再多加一份副本。只检查直接子节点，并且在编辑器中 Ctrl+Z 无法撤销这一步。
+"Frees the nodes this sheet built earlier under a node, the ones it marked when it added them (another sheet's are left alone), so a rebuild starts from nothing instead of adding a second copy. Each is taken out of the tree at once, so the name it had is free again. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.",释放此表之前在某个节点下构建的、添加时已被标记的节点（其他表构建的不会被动），这样重新构建会从零开始，而不是再多加一份副本。每个节点都会立即从树中移出，所以它原来的名称又可以使用了。只检查直接子节点，并且在编辑器中 Ctrl+Z 无法撤销这一步。

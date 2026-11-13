@@ -179,7 +179,7 @@ const FULLY_KEYED_ACES: Array[String] = [
 	# Making nodes while the game runs: the Building page.
 	"AddBehaviourInto", "AddBoxShapeTo", "AddCapsuleShape3DTo", "AddCapsuleShapeTo", "AddCircleShapeTo",
 	"AddNewNodeInto", "AddRectangleShapeTo", "AddSphereShapeTo", "AddSprite3DTo", "AddSpriteTo", "AddTimerTo",
-	"AddToGroupSaved", "KeepAsPrefab", "RemoveBehaviour",
+	"AddToGroupSaved", "KeepAsPrefab", "RemoveBehaviour", "RemoveBuiltNodes",
 	# The everyday object rows: opacity, sprite size and edges, instance id, marker position, the
 	# outside-the-level checks and Once Ever.
 	"InstanceId", "IsOutsideCameraLimits", "IsOutsideLevelBounds", "MarkerPosition", "OnceEver", "Opacity",

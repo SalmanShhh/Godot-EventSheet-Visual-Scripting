@@ -28,6 +28,8 @@ extends EventSheetDoctorSection
 ## the wording: the quick-fix chips and the tests address a finding by its check id.
 const CHECK_ID := "tool-edits"
 const CHECK_NOT_UNDOABLE := EventSheetUndoableFindings.KIND_NOT_UNDOABLE
+## The second thing a tool sheet can get wrong about the scene: building without clearing the last run.
+const CHECK_REBUILD := EventSheetRebuildFindings.KIND_REBUILD
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
@@ -52,7 +54,8 @@ static func scene_editing_tools() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
-		if source.contains("@tool") and EventForgeUndoableEdits.touches_open_scene(source):
+		if source.contains("@tool") and (EventForgeUndoableEdits.touches_open_scene(source)
+				or source.contains(EventSheetRebuildFindings.BUILT_MARK)):
 			found.append(script_path)
 	return found
 
@@ -82,6 +85,9 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			worst_count = mine.size()
 			worst_path = script_path
 		findings.append_array(script_findings(script_path, mine))
+		for rebuild: Dictionary in EventSheetRebuildFindings.findings(sheet, script_path):
+			findings.append(_finding("warning", CHECK_REBUILD, script_path,
+				str(rebuild.get("message", "")), str(rebuild.get("subject", ""))))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		"Tool edits: %d tool sheet(s) change the scene the editor has open, and %d of them do it as steps the editor can take back." % [
 			measured, undoable_tools], ""))

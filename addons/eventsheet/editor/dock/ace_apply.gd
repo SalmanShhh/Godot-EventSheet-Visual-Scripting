@@ -38,6 +38,9 @@ const GROUP_ARRIVAL_ACES := preload("res://addons/eventforge/registration/module
 ## The eight EDGE triggers and the gate each one puts under itself, read through the one file every
 ## reader of them shares.
 const COLLISION_EDGES := preload("res://addons/eventforge/registration/collision_edges.gd")
+## The Building module, by path: it is read only when a row is dropped into a tool sheet, and the first open of a
+## sheet must not compile it (and the Files module it shares a walk with) for nothing.
+const BUILDING_ACES_PATH := "res://addons/eventforge/registration/modules/building_aces.gd"
 ## The class facts "Also run the parent's version" is answered from, reached by path and only when that row
 ## is picked, so nothing about classes loads with the dock.
 const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
@@ -950,6 +953,15 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	# Multi-statement action templates declare locals - bake a fresh uid per instance.
 	if action.codegen_template.contains("{uid}"):
 		action.codegen_template = action.codegen_template.replace("{uid}", _dock._fresh_uid_token())
+	# A Building row dropped into a TOOL sheet owns what it builds: the lines that give the node the scene
+	# being edited as its owner, and the mark a rebuild finds it by, become part of the row, and a node it
+	# builds goes under that scene by default. In a game sheet the row is untouched and writes only what
+	# it always did.
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet != null and sheet.tool_mode and action.codegen_template.contains("{?tool=yes}"):
+		var building: GDScript = load(BUILDING_ACES_PATH)
+		action.codegen_template = building.tool_form(action.codegen_template)
+		action.params = building.tool_params(action.params)
 	return action
 
 
