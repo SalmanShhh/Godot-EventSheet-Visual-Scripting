@@ -109,7 +109,6 @@ Keyboard Shortcuts,Горячие клавиши
 Rename Everywhere…,Переименовать везде…
 Change Type Everywhere…,Изменить тип везде…
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,"Переключить эмиссию точек останова: листы, скомпилированные в режиме отладки, останавливаются на строках с точками останова."
-Toggle Live Values: running sheets stream their variables here (editable).,Переключить живые значения: работающие листы передают сюда свои переменные (можно редактировать).
 + Add action,+ Добавить действие
 + Add condition,+ Добавить условие
 + Add parameter,+ Добавить параметр
@@ -3085,8 +3084,6 @@ Debugger…,Отладчик…
 Inspect,Осмотр
 Watch,Наблюдение
 Breakpoints,Точки останова
-Instance values,Значения экземпляра
-Per fire,За одно срабатывание
 Share of run,Доля прогона
 Fires,Срабатываний
 Import event sheet…,Импорт листа событий…
@@ -8124,64 +8121,21 @@ Pick…,Выбрать…
 "Your own icon, written as @icon at the top of the file.","Ваш собственный значок, записанный как @icon в начале файла."
 "Until you pick one, the class uses its type's own editor icon - nothing extra is written.","Пока вы не выберете значок, класс использует значок своего типа - ничего лишнего не пишется."
 Character,Персонаж
-"A body you move with code: players and enemies that walk, jump and collide.","Тело, которое вы двигаете кодом: игроки и враги, которые ходят, прыгают и сталкиваются."
 Sprite,Спрайт
-A picture on screen.,Картинка на экране.
-"Detects what enters or leaves it: pickups, triggers, hit boxes.","Замечает, что входит или выходит: подбираемые предметы, триггеры, хитбоксы."
-Physics body,Физическое тело
-"Moved by physics: crates, balls, debris.","Двигается физикой: ящики, мячи, обломки."
 2D node,2D-узел
-"A plain 2D object with a position, for anything else.","Простой 2D-объект с позицией, для всего остального."
-Character 3D,Персонаж 3D
-A 3D body you move with code.,"3D-тело, которое вы двигаете кодом."
 Mesh,Меш
-A 3D model in the world.,3D-модель в мире.
-Area 3D,Область 3D
-Detects what enters or leaves a 3D space.,"Замечает, что входит в 3D-пространство или выходит из него."
-Camera 3D,Камера 3D
-A 3D camera.,3D-камера.
 3D node,3D-узел
-A plain 3D object with a position.,Простой 3D-объект с позицией.
-User interface,Интерфейс
 UI element,Элемент интерфейса
-A box on the screen for menus and HUD.,Прямоугольник на экране для меню и HUD.
-A clickable button.,"Кнопка, на которую можно нажать."
-Text on the screen.,Текст на экране.
 HUD layer,Слой HUD
-"Draws its children on top of the game, like a HUD.","Рисует свои дочерние узлы поверх игры, как HUD."
-A background box for a menu.,Фоновый прямоугольник для меню.
-Data and project,Данные и проект
-Data file,Файл данных
-"A .tres data asset: stats, waves, loot tables.","Ресурс данных .tres: характеристики, волны, таблицы добычи."
-Logic only,Только логика
-"No position, just logic: a manager or controller.","Без позиции, только логика: менеджер или контроллер."
 Editor tool,Инструмент редактора
-A script that runs inside the editor.,"Скрипт, который работает в редакторе."
-A 2D light.,2D-свет.
-"Everything a %s can do, and what you add to it.","Всё, что умеет %s, и то, что вы добавите."
-Name it to insert it.,"Дайте имя, чтобы вставить."
-%s is already in this folder.,%s уже есть в этой папке.
 Insert new object,Вставить новый объект
-Search object types…,Искать типы объектов…
 Grid,Сетка
-"Icons, grouped by kind","Значки, сгруппированные по видам"
-"The class tree, the way Godot's Create New Node lists it","Дерево классов, как его показывает «Создать новый узел» в Godot"
-Name when inserted,Имя при вставке
-"The class name, exactly as code will write it. The file is named after it.","Имя класса - ровно так, как его запишет код. Файл назван по нему."
-Runs in the editor - a tool: its code runs while you edit (@tool),"Работает в редакторе - инструмент: его код работает, пока вы редактируете (@tool)"
-Other classes,Другие классы
-Nothing is made of this one itself: pick one of the classes under it.,Из самого этого класса ничего не создаётся: выберите один из классов под ним.
-Creates %s in %s and opens it.,Создаёт %s в %s и открывает его.
-"Inserted %s - a %s, in %s.","Вставлен %s - %s, в %s."
-New Class…,Новый класс…
-"Insert a new object: pick what it is, name it, and its script opens here.","Вставьте новый объект: выберите, что это, дайте имя, и его скрипт откроется здесь."
 New global,Новый глобальный объект
 New behaviour,Новое поведение
 New behaviour…,Новое поведение…
 New global…,Новый глобальный объект…
 Properties and actions…,Свойства и действия…
 "Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","Создать своё поведение: дочерний узел, который добавляет объекту свойства, действия, условия и триггеры."
-"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","Создать свой глобальный объект: скрипт или сцену, которые Godot загружает до первой сцены и держит всю игру; он указан в Настройки проекта > Глобальные > Автозагрузка."
 "What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","Что предлагает это поведение или глобальный объект: свойства или значения, а также действия, условия, триггеры и выражения, которые показывает выбор в каждом листе."
 "Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","Только код и значения: очки, жизни, сообщения между сценами, сохранение. Обычный выбор - Godot добавляет его как простой Node."
 "Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","Нужны свои узлы: проигрыватели музыки, затемнение, меню паузы или HUD, который остаётся при смене уровней. Godot загружает всю сцену."
@@ -8206,31 +8160,23 @@ Listed with the save and load actions.,Показан вместе с дейст
 Listed with menus and screens.,Показан вместе с меню и экранами.
 Listed with %s.,Показан рядом с %s.
 Empty,Пусто
-A global with no values or events yet. You add each one next.,Глобальный объект пока без значений и событий. Вы добавите их дальше.
 A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,"Поведение пока без свойств и событий. Вы добавите их дальше. Выберите это, если ничего из поставляемого не похоже на то, что нужно."
 Copy of %s,Копия %s
 %s Your copy gets its own name and folder; the shipped one stays as it is.,%s Копия получает своё имя и папку; поставляемый остаётся как есть.
 From a script I wrote,Из моего скрипта
-Its variables become this global's values. The script itself is not changed.,Его переменные становятся значениями этого глобального объекта. Сам скрипт не меняется.
-From an autoload I already have,Из уже имеющейся автозагрузки
-Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,"Открывает как лист глобальный объект, который уже указан в Настройки проекта > Глобальные. Ничего не перемещается и не переименовывается."
 Its exported variables become this behaviour's properties. The script itself is not changed.,Его экспортированные переменные становятся свойствами этого поведения. Сам скрипт не меняется.
 From the selected node,Из выбранного узла
 "Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.","Берёт скрипт узла, выбранного в панели Сцена, так же как Из моего скрипта."
 Choose another…,Выбрать другой…
 "Default: the %s icon, following Works on","По умолчанию: значок %s, следует за Работает с"
-Opens %s as a sheet.,Открывает %s как лист.
-"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.","Создаёт %s, включает его в Настройки проекта > Глобальные > Автозагрузка и открывает как лист."
 Makes %s and opens it as a sheet.,Создаёт %s и открывает его как лист.
 """%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" не может быть здесь именем - используйте буквы, цифры и подчёркивания, начинайте с буквы и не берите имя уже существующего класса."
 Project Settings > Globals already has an autoload called %s - pick another name.,В Настройки проекта > Глобальные уже есть автозагрузка %s - выберите другое имя.
 %s already exists - pick another name.,%s уже существует - выберите другое имя.
-Opened the global %s as a sheet - nothing was moved or renamed.,Глобальный объект %s открыт как лист - ничего не перемещено и не переименовано.
 Choose the script to start from.,"Выберите скрипт, с которого начать."
 Select a node that has a script in the Scene dock first.,Сначала выберите в панели Сцена узел со скриптом.
 Couldn't write %s - check folder permissions.,Не удалось записать %s - проверьте права на папку.
 Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,Поведение %s создано в %s. Добавьте его объекту из списка Добавить поведение.
-Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,Глобальный объект %s создан и включён в Настройки проекта > Глобальные > Автозагрузка. Ctrl+Z снова выключает его; файл остаётся.
 Turn on global %s,Включить глобальный объект %s
 Turn off global %s,Выключить глобальный объект %s
 Global values,Глобальные значения
@@ -8517,41 +8463,24 @@ Event Trace on,Трассировка событий вкл.
 Event Trace off,Трассировка событий выкл.
 Paused at %s,Пауза на %s
 Debug %s while it runs,Отладка %s во время работы
-"Dim rows: this sheet names them, but the run has reported nothing for them yet.","Тусклые строки: этот лист их называет, но запуск о них ещё ничего не сообщил."
 Sent,Отправлено
 no report,нет отчёта
 1 value,1 значение
 %d values,значений: %d
 This sheet's variables,Переменные этого листа
-Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,"Дважды щёлкните значение, чтобы изменить его в запущенной игре. Собственные значения поведения показаны, но не редактируются."
-This value,Это значение
 Expressions over the streamed values. Double-click a row to remove it.,"Выражения над передаваемыми значениями. Дважды щёлкните строку, чтобы удалить её."
-"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Время на срабатывание, самые загруженные первыми. Последнее событие кадра считается, но не замеряется, поэтому показывает ""-""."
-Double-click a row to go to that event.,"Дважды щёлкните строку, чтобы перейти к этому событию."
-More ▸ Set Breakpoint Condition… pauses only when you say so.,Ещё ▸ Задать условие точки останова… ставит на паузу только когда вы скажете.
 Live Values,Живые значения
-Waiting for a running game…,Ожидание запущенной игры…
-Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Выражения над передаваемыми значениями выше. Вкладка Watch отладчика показывает тот же список.
-Double-click a value to edit it live.,"Дважды щёлкните значение, чтобы изменить его на лету."
-Edit %s's values while it runs,Правка значений %s во время работы
-Streaming · every 0.25 s,"Передача · каждые 0,25 с"
-Streaming from %s · every 0.25 s,"Передача из %s · каждые 0,25 с"
 How it got here: %s,Как сюда попало: %s
 cannot read,не читается
 %s is not a streamed value.,%s не является передаваемым значением.
-%s = %s   # into the running game; the sheet is not changed,%s = %s   # в запущенную игру; лист не меняется
-Run a command,Выполнить команду
 Commands,Команды
 # Sheets,# Листы
 @ Symbols,@ Символы
 ? Docs,? Документация
 Error line,Строка ошибки
 KEYS,КЛАВИШИ
-Enter runs the selected command · Up / Down moves · Esc closes,Enter выполняет выбранную команду · Вверх / Вниз перемещает · Esc закрывает
 MODES,РЕЖИМЫ
-# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,"# открывает любой лист · @ переходит к символу здесь · ? ищет в документации · вставьте res://player.gd:42, чтобы попасть на эту строку"
 "Paste an error line, such as res://player.gd:42","Вставьте строку ошибки, например res://player.gd:42"
-Type a command…,Введите команду…
 Find References,Найти ссылки
 Go to Row,Перейти к строке
 Find symbol,Найти символ
@@ -8651,8 +8580,6 @@ Add an entry?,Добавить запись?
 Row Comment,Комментарий к строке
 Why this condition/action exists…,Зачем нужно это условие/действие…
 "Enemy2, Enemy3","Enemy2, Enemy3"
-Live edit needs a streaming debug session (run the game with Live Values on).,Для правки на лету нужен сеанс отладки с потоком значений (запустите игру с включёнными Живыми значениями).
-Live edit: %s = %s sent to the running game.,Правка на лету: %s = %s отправлено в запущенную игру.
 STORED,ХРАНИТСЯ
 SENDS TO,ОТПРАВЛЯЕТ В
 "per user, on this machine - not in the project","для каждого пользователя, на этом компьютере - не в проекте"
@@ -8898,17 +8825,11 @@ Check what is missing,"Проверить, чего не хватает"
 Checked what is missing,"Проверено, чего не хватает"
 Try a fake language,Попробовать фальшивый язык
 Made a fake language to test with,Создан фальшивый язык для проверки
-Use it in the game,Использовать в игре
-"Tells Godot about the languages, so your events can switch the game into any of them.","Сообщает Godot о языках, чтобы события могли переключить игру на любой из них."
-Turn on in the game,Включить в игре
-Turned it on in the game,Включено в игре
 Not started,Не начат
 Source,Исходный
 Nearly done,Почти готов
 In progress,В работе
 %d of %d lines. %d missing.,%d из %d строк. Не хватает %d.
-Players see it: yes,Игроки видят его: да
-Players see it: not yet (turn it on in step 4),Игроки видят его: пока нет (включи на шаге 4)
 Search languages…,Искать язык…
 "Each language is one more column in the table, and one more translation file Godot makes from it.","Каждый язык - это ещё один столбец в таблице и ещё один файл перевода, который Godot из него делает."
 "%d new lines were added, each with the file and line it came from, for the translator.","Добавлено новых строк: %d, у каждой - файл и строка, откуда она взята, для переводчика."
@@ -8917,7 +8838,6 @@ Search languages…,Искать язык…
 %d lines,Строк: %d
 %d new,Новых: %d
 "Every line got an empty %s column. Godot makes a translation file for it, next to the others.",У каждой строки появился пустой столбец %s. Godot сделает для него файл перевода рядом с остальными.
-It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,"Пока текст не заполнен, он показан как 0%. Игроки смогут выбрать его только после включения на шаге 4."
 1 new column,1 новый столбец
 %d cells were filled in from the translator's file.,Из файла переводчика заполнено ячеек: %d.
 Blank cells in that file left yours alone.,Пустые ячейки того файла твои не тронули.
@@ -8931,11 +8851,6 @@ Every line in the table is still said somewhere.,Каждая строка та�
 "The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.","Таблица показывает фальшивый столбец. Сыграй в игру на нём через Set Language (qps): текст, оставшийся обычным английским, не был отмечен для перевода, а всё обрезанное требует поля пошире."
 It is a test column: leave qps out of any language list your players see.,"Это проверочный столбец: не показывай qps в списках языков, которые видят игроки."
 "+40% longer, accented","на 40% длиннее, с диакритикой"
-Every translation file next to the table was already turned on.,Все файлы перевода рядом с таблицей уже были включены.
-"Added to Project Settings > Localization, so Godot loads them when the game starts.","Добавлено в Настройки проекта > Локализация, чтобы Godot загружал их при запуске игры."
-Players can pick: %s.,Игроки могут выбрать: %s.
-No language has a translation file yet. Godot makes one per column when it imports the table.,"Ни у одного языка ещё нет файла перевода. Godot делает по одному на столбец, когда импортирует таблицу."
-%d languages,Языков: %d
 ◀ Previous line,◀ Предыдущая строка
 Next line ▶,Следующая строка ▶
 Line %s  #%d,Строка %s  #%d
@@ -9007,7 +8922,6 @@ The New behaviour form.,Форма «Новое поведение».
 "Click the name for its settings, to open it in the script editor or to show it in the FileSystem.","Нажмите на имя, чтобы открыть его настройки, открыть его в редакторе скриптов или показать в Файловой системе."
 Your own,Своё
 "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.","Создать своё поведение: имя, с чем оно работает, где указано, - и открыть его как лист."
-"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","Создать свой глобальный объект: имя, скрипт или сцена, - и включить его в Настройках проекта > Globals."
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,Переименование меняет имя класса и каждое использование за один шаг отмены; места перечисляются до любой записи. Файл сохраняет своё имя.
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,Переименование меняет его имя в Настройках проекта > Globals и каждое использование; места перечисляются до любой записи. Файл сохраняет своё имя.
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Щелчок показывает его свойства, двойной щелчок добавляет. То, что сделано для другого вида объектов, затенено, причина видна при наведении."
@@ -9318,10 +9232,7 @@ Disabled rows,Выключенные строки
 Breakpoints left on,Оставленные точки останова
 Functions nothing calls,"Функции, которые никто не вызывает"
 Rows the checker flags,"Строки, отмеченные проверкой"
-"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","Игра не запущена. Включите Инструменты ▸ Живые значения и запустите - каждый объект, о котором говорит лист, появится здесь со своими экземплярами, и их значения можно править на лету."
-"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","Пока нет трассированного запуска. Включите Инструменты ▸ Трассировка событий и запустите - каждое сработавшее событие замеряется здесь, самые занятые первыми."
 "No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","Ни один запуск ещё не сообщил о состоянии. Объявите состояния в шапке листа, включите Инструменты ▸ Живые значения и запустите - каждая смена состояния будет записана здесь предложением. Включите также Инструменты ▸ Трассировка событий, и каждое назовёт строку, которая его вызвала."
-No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,"Точек останова нет. Выберите строку и нажмите F9, чтобы игра там остановилась; Ещё ▸ Задать условие точки останова… останавливает только когда вы скажете."
 "What this object's state machine has done, oldest first. Double-click a line to go to the row it names.","Что делала машина состояний этого объекта, сначала самое раннее. Двойной щелчок по строке переходит к упомянутой строке листа."
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","Каждый момент отсчитывается по кадрам отчётов игры, поэтому точность - четверть секунды, не больше. Игра сообщает одно состояние на каждую запущенную копию, не говоря, какой узел его прислал, поэтому здесь описан ОДИН запущенный объект: если одновременно живут несколько объектов с состояниями, их отчёты здесь перемешиваются."
 Nothing to point at in this trail.,В этом следе нечего отметить.
@@ -9602,9 +9513,6 @@ Set when the scene is ready,"Задаётся, когда сцена готов�
 Shown only if,Показывается только если
 The Inspector hides it unless another setting is on.,"Инспектор скрывает его, пока не включена другая настройка."
 %s:,%s:
-"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.","Живые значения включены для этого листа и попадают в игру через сохранённый файл: сохраните лист (Ctrl+S), затем запустите, и каждый объект, о котором он говорит, появится здесь со своими экземплярами."
-"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.","Игра запущена, но этот лист ничего не прислал. Живые значения попадают в игру через сохранённый файл: сохраните лист (Ctrl+S) и запустите снова."
-"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.","Этот лист открыт как предпросмотр только для чтения, поэтому игра выполняет файл в прежнем виде. Нажмите «Изменить события», сохраните лист (Ctrl+S) и запустите снова - его значения появятся здесь."
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,Показан под своим именем в выборе и в списке «Добавить поведение». Обычный выбор.
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.","%s - это %s, а не узел: лист читает его из файла, поэтому он никогда не добавляется к объекту."
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d класс(ов) пакетов не использует ни один лист, сцена или автозагрузка - это нормально, если вы вызываете их из написанного вручную GDScript: %s."
@@ -10412,10 +10320,8 @@ Once Ever,Только один раз
 Once ever,Только один раз
 Added %s to eventsheet_addons/ - this row calls it.,%s добавлен в eventsheet_addons/ - эта строка его вызывает.
 Set eventsheets/ai/api_key in Editor Settings first.,Сначала задайте eventsheets/ai/api_key в настройках редактора.
-New %s…,Создать: %s…
 New %s,Создать: %s
 New %s sheet…,Новый лист: %s…
-The %s form.,Форма «%s».
 "A node type, or a script class",Тип узла или класс скрипта
 Choose a node type,Выбрать тип узла
 Add New Node,Добавить новый узел

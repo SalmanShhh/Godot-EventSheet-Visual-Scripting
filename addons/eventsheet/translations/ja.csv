@@ -109,7 +109,6 @@ Keyboard Shortcuts,キーボードショートカット
 Rename Everywhere…,すべての場所で名前を変更…
 Change Type Everywhere…,すべての場所で型を変更…
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,ブレークポイント出力を切り替えます: デバッグコンパイルされたシートはブレークポイントのある行で一時停止します。
-Toggle Live Values: running sheets stream their variables here (editable).,ライブ値を切り替えます: 実行中のシートの変数がここにストリーム表示されます (編集可能)。
 + Add action,+ アクションを追加
 + Add condition,+ 条件を追加
 + Add parameter,+ パラメータを追加
@@ -3085,8 +3084,6 @@ Debugger…,デバッガ…
 Inspect,インスペクト
 Watch,ウォッチ
 Breakpoints,ブレークポイント
-Instance values,インスタンスの値
-Per fire,1 回あたり
 Share of run,実行全体に占める割合
 Fires,発火回数
 Import event sheet…,イベントシートをインポート…
@@ -8124,64 +8121,21 @@ Pick…,選ぶ…
 "Your own icon, written as @icon at the top of the file.",自分のアイコン。ファイルの先頭に @icon として書かれます。
 "Until you pick one, the class uses its type's own editor icon - nothing extra is written.",選ぶまでは、クラスは型のエディターアイコンを使います - 余計なものは書かれません。
 Character,キャラクター
-"A body you move with code: players and enemies that walk, jump and collide.",コードで動かす物体: 歩き、跳び、ぶつかるプレイヤーや敵。
 Sprite,スプライト
-A picture on screen.,画面上の画像。
-"Detects what enters or leaves it: pickups, triggers, hit boxes.",出入りするものを検出: 拾えるアイテム、トリガー、当たり判定。
-Physics body,物理ボディ
-"Moved by physics: crates, balls, debris.",物理で動く: 木箱、ボール、破片。
 2D node,2D ノード
-"A plain 2D object with a position, for anything else.",位置を持つシンプルな 2D オブジェクト。その他すべてに。
-Character 3D,キャラクター 3D
-A 3D body you move with code.,コードで動かす 3D の物体。
 Mesh,メッシュ
-A 3D model in the world.,ワールド内の 3D モデル。
-Area 3D,エリア 3D
-Detects what enters or leaves a 3D space.,3D 空間への出入りを検出します。
-Camera 3D,カメラ 3D
-A 3D camera.,3D カメラ。
 3D node,3D ノード
-A plain 3D object with a position.,位置を持つシンプルな 3D オブジェクト。
-User interface,ユーザーインターフェース
 UI element,UI 要素
-A box on the screen for menus and HUD.,メニューや HUD のための画面上の枠。
-A clickable button.,クリックできるボタン。
-Text on the screen.,画面上のテキスト。
 HUD layer,HUD レイヤー
-"Draws its children on top of the game, like a HUD.",子をゲームの上に描きます。HUD のように。
-A background box for a menu.,メニューの背景の枠。
-Data and project,データとプロジェクト
-Data file,データファイル
-"A .tres data asset: stats, waves, loot tables.",.tres のデータアセット: ステータス、ウェーブ、ドロップ表。
-Logic only,ロジックのみ
-"No position, just logic: a manager or controller.",位置なし、ロジックだけ: マネージャーやコントローラー。
 Editor tool,エディターツール
-A script that runs inside the editor.,エディター内で動くスクリプト。
-A 2D light.,2D ライト。
-"Everything a %s can do, and what you add to it.",%s にできることすべてと、あなたが追加するもの。
-Name it to insert it.,挿入するには名前を付けてください。
-%s is already in this folder.,%s はすでにこのフォルダーにあります。
 Insert new object,新しいオブジェクトを挿入
-Search object types…,オブジェクトタイプを検索…
 Grid,グリッド
-"Icons, grouped by kind",種類ごとにまとめたアイコン
-"The class tree, the way Godot's Create New Node lists it",Godot の新規ノード作成と同じ並びのクラスツリー
-Name when inserted,挿入時の名前
-"The class name, exactly as code will write it. The file is named after it.",コードに書かれるそのままのクラス名。ファイル名もこれに基づきます。
-Runs in the editor - a tool: its code runs while you edit (@tool),エディターで実行 - ツール: 編集中にコードが動きます (@tool)
-Other classes,その他のクラス
-Nothing is made of this one itself: pick one of the classes under it.,このクラス自体からは何も作れません: その下のクラスを選んでください。
-Creates %s in %s and opens it.,%s を %s に作成して開きます。
-"Inserted %s - a %s, in %s.",%s を挿入しました - %s、%s 内。
-New Class…,新しいクラス…
-"Insert a new object: pick what it is, name it, and its script opens here.",新しいオブジェクトを挿入: 種類を選び、名前を付けると、スクリプトがここで開きます。
 New global,新しいグローバル
 New behaviour,新しいビヘイビア
 New behaviour…,新しいビヘイビア…
 New global…,新しいグローバル…
 Properties and actions…,プロパティとアクション…
 "Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.",自分のビヘイビアを作ります。追加先のオブジェクトにプロパティ、アクション、条件、トリガーを加える子ノードです。
-"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.",自分のグローバルを作ります。Godot が最初のシーンより前に読み込み、ゲーム全体を通して保持するスクリプトまたはシーンで、プロジェクト設定 > グローバル > 自動読み込み に登録されます。
 "What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.",このビヘイビアまたはグローバルが提供するもの：プロパティや値と、各シートのピッカーに並ぶアクション、条件、トリガー、式です。
 "Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.",コードと値だけ：スコア、残機、シーン間のメッセージ、セーブなど。いつもの選択で、Godot は普通の Node として追加します。
 "Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.",自分のノードが必要なもの：音楽プレイヤー、フェード用オーバーレイ、ポーズメニュー、レベルが変わっても残る HUD など。Godot はシーン全体を読み込みます。
@@ -8206,31 +8160,23 @@ Listed with the save and load actions.,セーブとロードのアクション�
 Listed with menus and screens.,メニューと画面と一緒に並びます。
 Listed with %s.,%s と一緒に並びます。
 Empty,空
-A global with no values or events yet. You add each one next.,値もイベントもまだないグローバル。次にひとつずつ追加します。
 A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,プロパティもイベントもまだないビヘイビア。次にひとつずつ追加します。付属のものに近いものがないときに選びます。
 Copy of %s,%s のコピー
 %s Your copy gets its own name and folder; the shipped one stays as it is.,%s コピーには独自の名前とフォルダが付き、付属のものはそのまま残ります。
 From a script I wrote,自分で書いたスクリプトから
-Its variables become this global's values. The script itself is not changed.,その変数がこのグローバルの値になります。スクリプト自体は変更されません。
-From an autoload I already have,既存の自動読み込みから
-Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,プロジェクト設定 > グローバル にすでにあるグローバルをシートとして開きます。移動や名前の変更は何もしません。
 Its exported variables become this behaviour's properties. The script itself is not changed.,エクスポートされた変数がこのビヘイビアのプロパティになります。スクリプト自体は変更されません。
 From the selected node,選択中のノードから
 "Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.",シーンドックで選択中のノードのスクリプトを、「自分で書いたスクリプトから」と同じように使います。
 Choose another…,別のものを選ぶ…
 "Default: the %s icon, following Works on",既定：%s のアイコン（対象に合わせます）
-Opens %s as a sheet.,%s をシートとして開きます。
-"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.",%s を作り、プロジェクト設定 > グローバル > 自動読み込み で有効にして、シートとして開きます。
 Makes %s and opens it as a sheet.,%s を作り、シートとして開きます。
 """%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" はここでは名前にできません。英字・数字・アンダースコアを使い、英字で始め、既存のクラス名は避けてください。"
 Project Settings > Globals already has an autoload called %s - pick another name.,プロジェクト設定 > グローバル にはすでに %s という自動読み込みがあります。別の名前を選んでください。
 %s already exists - pick another name.,%s はすでにあります。別の名前を選んでください。
-Opened the global %s as a sheet - nothing was moved or renamed.,グローバル %s をシートとして開きました。移動や名前の変更はしていません。
 Choose the script to start from.,元にするスクリプトを選んでください。
 Select a node that has a script in the Scene dock first.,先にシーンドックでスクリプトを持つノードを選択してください。
 Couldn't write %s - check folder permissions.,%s を書き込めませんでした。フォルダの権限を確認してください。
 Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,ビヘイビア %s を %s に作りました。「ビヘイビアを追加」リストからオブジェクトに追加してください。
-Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,グローバル %s を作り、プロジェクト設定 > グローバル > 自動読み込み で有効にしました。Ctrl+Z で再び無効になりますが、ファイルは残ります。
 Turn on global %s,グローバル %s を有効にする
 Turn off global %s,グローバル %s を無効にする
 Global values,グローバルの値
@@ -8517,41 +8463,24 @@ Event Trace on,イベントトレース オン
 Event Trace off,イベントトレース オフ
 Paused at %s,%s で一時停止中
 Debug %s while it runs,実行中の %s をデバッグ
-"Dim rows: this sheet names them, but the run has reported nothing for them yet.",淡色の行: このシートが名前を挙げていますが、実行はまだ何も報告していません。
 Sent,送信済み
 no report,報告なし
 1 value,1 個の値
 %d values,%d 個の値
 This sheet's variables,このシートの変数
-Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,値をダブルクリックすると実行中のゲームで変更できます。ビヘイビア自身の値は表示されますが編集できません。
-This value,この値
 Expressions over the streamed values. Double-click a row to remove it.,ストリームされた値に対する式。行をダブルクリックすると削除します。
-"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","発火ごとの時間、多い順。フレームの最後のイベントは数えられますが計測されないため ""-"" と表示されます。"
-Double-click a row to go to that event.,行をダブルクリックするとそのイベントへ移動します。
-More ▸ Set Breakpoint Condition… pauses only when you say so.,その他 ▸ ブレークポイント条件を設定… で、指定したときだけ一時停止します。
 Live Values,ライブ値
-Waiting for a running game…,実行中のゲームを待っています…
-Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,上のストリーム値に対する式。デバッガーの Watch タブにも同じ一覧が表示されます。
-Double-click a value to edit it live.,値をダブルクリックするとライブで編集できます。
-Edit %s's values while it runs,実行中の %s の値を編集
-Streaming · every 0.25 s,ストリーム中 · 0.25 秒ごと
-Streaming from %s · every 0.25 s,%s からストリーム中 · 0.25 秒ごと
 How it got here: %s,ここまでの経緯: %s
 cannot read,読み取れません
 %s is not a streamed value.,%s はストリームされた値ではありません。
-%s = %s   # into the running game; the sheet is not changed,%s = %s   # 実行中のゲームへ。シートは変更されません
-Run a command,コマンドを実行
 Commands,コマンド
 # Sheets,# シート
 @ Symbols,@ シンボル
 ? Docs,? ドキュメント
 Error line,エラー行
 KEYS,キー
-Enter runs the selected command · Up / Down moves · Esc closes,Enter で選択中のコマンドを実行 · 上 / 下 で移動 · Esc で閉じる
 MODES,モード
-# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# で任意のシートを開く · @ でこのシートのシンボルへ移動 · ? でドキュメントを検索 · res://player.gd:42 を貼り付けるとその行へ移動
 "Paste an error line, such as res://player.gd:42",エラー行を貼り付け (例: res://player.gd:42)
-Type a command…,コマンドを入力…
 Find References,参照を検索
 Go to Row,行へ移動
 Find symbol,シンボルを検索
@@ -8651,8 +8580,6 @@ Add an entry?,項目を追加しますか?
 Row Comment,行コメント
 Why this condition/action exists…,この条件/アクションがある理由…
 "Enemy2, Enemy3","Enemy2, Enemy3"
-Live edit needs a streaming debug session (run the game with Live Values on).,ライブ編集にはストリーミング中のデバッグセッションが必要です (ライブ値をオンにしてゲームを実行してください)。
-Live edit: %s = %s sent to the running game.,ライブ編集: %s = %s を実行中のゲームに送信しました。
 STORED,保存先
 SENDS TO,送信先
 "per user, on this machine - not in the project",ユーザーごとにこのマシンに保存 - プロジェクトには含まれません
@@ -8898,17 +8825,11 @@ Check what is missing,足りないものを確認
 Checked what is missing,足りないものを確認しました
 Try a fake language,テスト用の言語を試す
 Made a fake language to test with,テスト用の言語を作りました
-Use it in the game,ゲームで使う
-"Tells Godot about the languages, so your events can switch the game into any of them.",言語を Godot に知らせ、イベントからゲームをどの言語にも切り替えられるようにします。
-Turn on in the game,ゲームで有効にする
-Turned it on in the game,ゲームで有効にしました
 Not started,未着手
 Source,原文
 Nearly done,ほぼ完了
 In progress,進行中
 %d of %d lines. %d missing.,%d / %d 行。残り %d 行。
-Players see it: yes,プレイヤーに表示：はい
-Players see it: not yet (turn it on in step 4),プレイヤーに表示：まだ（手順 4 で有効にする）
 Search languages…,言語を検索…
 "Each language is one more column in the table, and one more translation file Godot makes from it.",言語を 1 つ足すと、表に列が 1 つ増え、Godot がそこから作る翻訳ファイルも 1 つ増えます。
 "%d new lines were added, each with the file and line it came from, for the translator.",新しい行を %d 行追加しました。翻訳者のために、どのファイルの何行目かも添えています。
@@ -8917,7 +8838,6 @@ Search languages…,言語を検索…
 %d lines,%d 行
 %d new,新規 %d
 "Every line got an empty %s column. Godot makes a translation file for it, next to the others.",すべての行に空の %s 列を追加しました。Godot はほかと並べてその翻訳ファイルを作ります。
-It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,テキストを埋めるまで 0% と表示されます。手順 4 で有効にするまで、プレイヤーは選べません。
 1 new column,新しい列 1 つ
 %d cells were filled in from the translator's file.,翻訳者のファイルから %d 個のセルを埋めました。
 Blank cells in that file left yours alone.,そのファイルの空のセルは、あなたのセルに手を付けていません。
@@ -8931,11 +8851,6 @@ Every line in the table is still said somewhere.,表のすべての行が、ま�
 "The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.",表にテスト用の列を表示しています。Set Language (qps) でその言語にしてゲームを遊んでください。普通の英語のまま残るテキストは翻訳対象に指定されておらず、切れて見えるものは枠を広げる必要があります。
 It is a test column: leave qps out of any language list your players see.,これはテスト用の列です。プレイヤーが見る言語一覧には qps を入れないでください。
 "+40% longer, accented",+40% 長く、アクセント付き
-Every translation file next to the table was already turned on.,表の隣にある翻訳ファイルはすべて有効になっていました。
-"Added to Project Settings > Localization, so Godot loads them when the game starts.",プロジェクト設定 > ローカライズ に追加しました。ゲーム開始時に Godot が読み込みます。
-Players can pick: %s.,プレイヤーが選べる言語：%s。
-No language has a translation file yet. Godot makes one per column when it imports the table.,まだ翻訳ファイルのある言語はありません。Godot は表を取り込むときに列ごとに 1 つ作ります。
-%d languages,%d 言語
 ◀ Previous line,◀ 前の行
 Next line ▶,次の行 ▶
 Line %s  #%d,行 %s  #%d
@@ -9007,7 +8922,6 @@ The New behaviour form.,「新しいビヘイビア」フォームです。
 "Click the name for its settings, to open it in the script editor or to show it in the FileSystem.",名前をクリックすると、設定を開く、スクリプトエディターで開く、ファイルシステムで表示する、を選べます。
 Your own,自分用
 "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.",自分のビヘイビアを作ります: 名前、対象、一覧での場所を決めて、シートとして開きます。
-"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.",自分のグローバルを作ります: 名前、スクリプトかシーンかを決めて、プロジェクト設定 > Globals で有効にします。
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,名前を変えると、クラス名とすべての使用箇所が 1 回の元に戻す単位で変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,名前を変えると、プロジェクト設定 > Globals での名前とすべての使用箇所が変わります。書き込む前に場所が一覧されます。ファイル名はそのままです。
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",クリックでプロパティを表示、ダブルクリックで追加します。別の種類のオブジェクト用のものは灰色になり、理由はマウスを重ねると表示されます。
@@ -9318,10 +9232,7 @@ Disabled rows,オフの行
 Breakpoints left on,残ったブレークポイント
 Functions nothing calls,どこからも呼ばれない関数
 Rows the checker flags,チェッカーが指摘した行
-"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.",実行中のゲームはありません。ツール ▸ ライブ値 をオンにして実行すると、このシートが扱うオブジェクトがインスタンスごとにここに並び、値をその場で編集できます。
-"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.",まだトレースした実行がありません。ツール ▸ イベントトレース をオンにして実行すると、発火したイベントがここで計測され、多い順に並びます。
 "No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.",まだどの実行も状態を報告していません。シートのヘッドで状態を宣言し、ツール ▸ ライブ値 をオンにして実行すると、状態の変化がすべてここに文で書かれます。ツール ▸ イベントトレース もオンにすると、それぞれが変化させた行を名指しします。
-No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,ブレークポイントはありません。行を選んで F9 を押すと実行中のゲームがそこで止まります。その他 ▸ ブレークポイント条件を設定… なら指定したときだけ止まります。
 "What this object's state machine has done, oldest first. Double-click a line to go to the row it names.",このオブジェクトのステートマシンがしたこと（古い順）。行をダブルクリックすると、その行が示すシートの行へ移動します。
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.",各時刻はゲームの報告フレームで数えるので、精度は 0.25 秒までです。ゲームは実行中のコピーごとに状態を1つ報告しますが、どのノードが送ったかは言いません。そのためこれは1つの実行中オブジェクトを表します: 状態を持つオブジェクトが同時に複数あると、報告はここで混ざります。
 Nothing to point at in this trail.,この履歴に指摘することはありません。
@@ -9602,9 +9513,6 @@ Set when the scene is ready,シーンの準備ができたときに設定
 Shown only if,条件付きで表示
 The Inspector hides it unless another setting is on.,別の設定がオンになるまで、インスペクターには表示されません。
 %s:,%s：
-"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.",このシートではライブ値がオンです。ライブ値は保存されたファイルを通じてゲームに届きます。シートを保存 (Ctrl+S) してから実行すると、このシートが扱うオブジェクトがインスタンスごとにここに並びます。
-"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.",ゲームは実行中ですが、このシートからの報告がありません。ライブ値は保存されたファイルを通じてゲームに届きます。シートを保存 (Ctrl+S) してから、もう一度実行してください。
-"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",このシートは読み取り専用のプレビューなので、ゲームは元のままのファイルを実行しています。イベントを編集 を押してシートを保存 (Ctrl+S) し、もう一度実行すると、値がここに届きます。
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,ピッカーと「ビヘイビアを追加」の一覧に自分の名前で並びます。いつもの選択です。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s は %s でノードではありません。シートはそのファイルから読み込むので、オブジェクトに追加されることはありません。
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 個のパッククラスはどのシート、シーン、オートロードからも参照されていません - 手書きの GDScript から呼ぶなら問題ありません: %s。"
@@ -10412,10 +10320,8 @@ Once Ever,一度だけ
 Once ever,一度だけ
 Added %s to eventsheet_addons/ - this row calls it.,%s を eventsheet_addons/ に追加しました - この行が呼び出します。
 Set eventsheets/ai/api_key in Editor Settings first.,先にエディターの設定で eventsheets/ai/api_key を設定してください。
-New %s…,新規 %s…
 New %s,新規 %s
 New %s sheet…,%s シートを新規作成…
-The %s form.,「%s」フォーム。
 "A node type, or a script class",ノードの型、またはスクリプトクラス
 Choose a node type,ノードの型を選ぶ
 Add New Node,新しいノードを追加

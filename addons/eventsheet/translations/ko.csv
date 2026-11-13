@@ -109,7 +109,6 @@ Keyboard Shortcuts,키보드 단축키
 Rename Everywhere…,모든 곳에서 이름 바꾸기…
 Change Type Everywhere…,모든 곳에서 형식 바꾸기…
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,중단점 출력을 켜고 끕니다: 디버그로 컴파일된 시트는 중단점이 있는 행에서 일시 정지합니다.
-Toggle Live Values: running sheets stream their variables here (editable).,실시간 값을 켜고 끕니다: 실행 중인 시트의 변수가 여기로 스트리밍됩니다 (편집 가능).
 + Add action,+ 액션 추가
 + Add condition,+ 조건 추가
 + Add parameter,+ 매개변수 추가
@@ -3085,8 +3084,6 @@ Debugger…,디버거…
 Inspect,살펴보기
 Watch,감시
 Breakpoints,중단점
-Instance values,인스턴스 값
-Per fire,발생당
 Share of run,실행 중 비중
 Fires,발생 횟수
 Import event sheet…,이벤트 시트 가져오기…
@@ -8124,64 +8121,21 @@ Pick…,고르기…
 "Your own icon, written as @icon at the top of the file.","직접 고른 아이콘으로, 파일 맨 위에 @icon으로 적힙니다."
 "Until you pick one, the class uses its type's own editor icon - nothing extra is written.",하나를 고르기 전까지 클래스는 그 유형의 에디터 아이콘을 씁니다 - 따로 적히는 것은 없습니다.
 Character,캐릭터
-"A body you move with code: players and enemies that walk, jump and collide.","코드로 움직이는 몸체: 걷고, 뛰고, 부딪히는 플레이어와 적."
 Sprite,스프라이트
-A picture on screen.,화면 위의 그림.
-"Detects what enters or leaves it: pickups, triggers, hit boxes.","들어오고 나가는 것을 감지합니다: 줍는 아이템, 트리거, 히트박스."
-Physics body,물리 몸체
-"Moved by physics: crates, balls, debris.","물리로 움직입니다: 상자, 공, 파편."
 2D node,2D 노드
-"A plain 2D object with a position, for anything else.","위치가 있는 단순한 2D 오브젝트로, 그 밖의 모든 것에 씁니다."
-Character 3D,캐릭터 3D
-A 3D body you move with code.,코드로 움직이는 3D 몸체.
 Mesh,메시
-A 3D model in the world.,월드 안의 3D 모델.
-Area 3D,영역 3D
-Detects what enters or leaves a 3D space.,3D 공간에 들어오고 나가는 것을 감지합니다.
-Camera 3D,카메라 3D
-A 3D camera.,3D 카메라.
 3D node,3D 노드
-A plain 3D object with a position.,위치가 있는 단순한 3D 오브젝트.
-User interface,사용자 인터페이스
 UI element,UI 요소
-A box on the screen for menus and HUD.,메뉴와 HUD를 위한 화면 위 상자.
-A clickable button.,클릭할 수 있는 버튼.
-Text on the screen.,화면 위의 텍스트.
 HUD layer,HUD 레이어
-"Draws its children on top of the game, like a HUD.",자식을 게임 위에 그립니다. HUD처럼.
-A background box for a menu.,메뉴의 배경 상자.
-Data and project,데이터와 프로젝트
-Data file,데이터 파일
-"A .tres data asset: stats, waves, loot tables.",".tres 데이터 애셋: 능력치, 웨이브, 전리품 표."
-Logic only,로직만
-"No position, just logic: a manager or controller.",위치 없이 로직만: 매니저나 컨트롤러.
 Editor tool,에디터 도구
-A script that runs inside the editor.,에디터 안에서 동작하는 스크립트.
-A 2D light.,2D 조명.
-"Everything a %s can do, and what you add to it.","%s이(가) 할 수 있는 모든 것, 그리고 직접 더하는 것."
-Name it to insert it.,삽입하려면 이름을 지으세요.
-%s is already in this folder.,%s이(가) 이미 이 폴더에 있습니다.
 Insert new object,새 오브젝트 삽입
-Search object types…,오브젝트 유형 검색…
 Grid,격자
-"Icons, grouped by kind",종류별로 묶은 아이콘
-"The class tree, the way Godot's Create New Node lists it",Godot의 새 노드 만들기와 같은 방식의 클래스 트리
-Name when inserted,삽입할 때 이름
-"The class name, exactly as code will write it. The file is named after it.",코드에 적힐 그대로의 클래스 이름. 파일 이름도 이것을 따릅니다.
-Runs in the editor - a tool: its code runs while you edit (@tool),에디터에서 실행 - 도구: 편집하는 동안 코드가 동작합니다 (@tool)
-Other classes,다른 클래스
-Nothing is made of this one itself: pick one of the classes under it.,이 클래스 자체로는 아무것도 만들 수 없습니다: 그 아래 클래스 중 하나를 고르세요.
-Creates %s in %s and opens it.,%s을(를) %s에 만들고 엽니다.
-"Inserted %s - a %s, in %s.","%s 삽입 완료 - %s, %s 안."
-New Class…,새 클래스…
-"Insert a new object: pick what it is, name it, and its script opens here.",새 오브젝트 삽입: 무엇인지 고르고 이름을 지으면 스크립트가 여기서 열립니다.
 New global,새 전역 개체
 New behaviour,새 비헤이비어
 New behaviour…,새 비헤이비어…
 New global…,새 전역 개체…
 Properties and actions…,속성과 액션…
 "Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","나만의 비헤이비어를 만듭니다. 추가된 개체에 속성, 액션, 조건, 트리거를 더하는 자식 노드입니다."
-"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","나만의 전역 개체를 만듭니다. Godot가 첫 씬보다 먼저 불러와 게임 내내 유지하는 스크립트나 씬으로, 프로젝트 설정 > 전역 > 오토로드에 등록됩니다."
 "What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","이 비헤이비어나 전역 개체가 제공하는 것: 속성이나 값, 그리고 모든 시트의 선택기에 나오는 액션, 조건, 트리거, 표현식입니다."
 "Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","코드와 값만: 점수, 목숨, 씬 사이 메시지, 저장. 보통의 선택이며 Godot가 일반 Node로 추가합니다."
 "Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","자체 노드가 필요한 경우: 음악 플레이어, 페이드 오버레이, 일시정지 메뉴, 레벨이 바뀌어도 남는 HUD. Godot가 씬 전체를 불러옵니다."
@@ -8206,31 +8160,23 @@ Listed with the save and load actions.,저장과 불러오기 액션과 함께 �
 Listed with menus and screens.,메뉴와 화면과 함께 나옵니다.
 Listed with %s.,%s와(과) 함께 나옵니다.
 Empty,빈 상태
-A global with no values or events yet. You add each one next.,아직 값이나 이벤트가 없는 전역 개체. 다음에 하나씩 추가합니다.
 A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,아직 속성이나 이벤트가 없는 비헤이비어. 다음에 하나씩 추가합니다. 포함된 것 중 원하는 것과 비슷한 게 없을 때 고르세요.
 Copy of %s,%s 사본
 %s Your copy gets its own name and folder; the shipped one stays as it is.,"%s 사본은 자기 이름과 폴더를 갖고, 포함된 원본은 그대로 남습니다."
 From a script I wrote,내가 쓴 스크립트에서
-Its variables become this global's values. The script itself is not changed.,그 변수들이 이 전역 개체의 값이 됩니다. 스크립트 자체는 바뀌지 않습니다.
-From an autoload I already have,이미 있는 오토로드에서
-Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,프로젝트 설정 > 전역에 이미 있는 전역 개체를 시트로 엽니다. 아무것도 옮기거나 이름을 바꾸지 않습니다.
 Its exported variables become this behaviour's properties. The script itself is not changed.,내보낸 변수들이 이 비헤이비어의 속성이 됩니다. 스크립트 자체는 바뀌지 않습니다.
 From the selected node,선택한 노드에서
 "Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.",씬 독에서 선택한 노드의 스크립트를 '내가 쓴 스크립트에서'와 같은 방식으로 씁니다.
 Choose another…,다른 것 선택…
 "Default: the %s icon, following Works on","기본값: %s 아이콘, 적용 대상을 따릅니다"
-Opens %s as a sheet.,%s을(를) 시트로 엽니다.
-"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.",%s을(를) 만들고 프로젝트 설정 > 전역 > 오토로드에서 켠 다음 시트로 엽니다.
 Makes %s and opens it as a sheet.,%s을(를) 만들고 시트로 엽니다.
 """%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s""은(는) 여기서 이름이 될 수 없습니다. 글자, 숫자, 밑줄을 쓰고 글자로 시작하며 이미 있는 클래스 이름은 피하세요."
 Project Settings > Globals already has an autoload called %s - pick another name.,프로젝트 설정 > 전역에 이미 %s 오토로드가 있습니다. 다른 이름을 고르세요.
 %s already exists - pick another name.,%s이(가) 이미 있습니다. 다른 이름을 고르세요.
-Opened the global %s as a sheet - nothing was moved or renamed.,전역 개체 %s을(를) 시트로 열었습니다. 아무것도 옮기거나 이름을 바꾸지 않았습니다.
 Choose the script to start from.,시작할 스크립트를 고르세요.
 Select a node that has a script in the Scene dock first.,먼저 씬 독에서 스크립트가 있는 노드를 선택하세요.
 Couldn't write %s - check folder permissions.,%s을(를) 쓰지 못했습니다. 폴더 권한을 확인하세요.
 Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,비헤이비어 %s을(를) %s에 만들었습니다. 비헤이비어 추가 목록에서 개체에 추가하세요.
-Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,전역 개체 %s을(를) 만들고 프로젝트 설정 > 전역 > 오토로드에서 켰습니다. Ctrl+Z로 다시 끌 수 있으며 파일은 남습니다.
 Turn on global %s,전역 개체 %s 켜기
 Turn off global %s,전역 개체 %s 끄기
 Global values,전역 값
@@ -8517,41 +8463,24 @@ Event Trace on,이벤트 추적 켜짐
 Event Trace off,이벤트 추적 꺼짐
 Paused at %s,%s에서 일시 정지됨
 Debug %s while it runs,실행 중인 %s 디버그
-"Dim rows: this sheet names them, but the run has reported nothing for them yet.","흐린 행: 이 시트가 이름을 부르지만, 실행이 아직 아무것도 보고하지 않았습니다."
 Sent,보냄
 no report,보고 없음
 1 value,값 1개
 %d values,값 %d개
 This sheet's variables,이 시트의 변수
-Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,값을 더블클릭하면 실행 중인 게임에서 변경합니다. 비헤이비어 자체의 값은 표시되지만 편집할 수 없습니다.
-This value,이 값
 Expressions over the streamed values. Double-click a row to remove it.,스트리밍된 값에 대한 식입니다. 행을 더블클릭하면 제거합니다.
-"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","발동당 시간, 가장 바쁜 것부터. 프레임의 마지막 이벤트는 세지만 측정하지 않으므로 ""-""로 표시됩니다."
-Double-click a row to go to that event.,행을 더블클릭하면 해당 이벤트로 이동합니다.
-More ▸ Set Breakpoint Condition… pauses only when you say so.,더 보기 ▸ 중단점 조건 설정…은 원할 때만 일시 정지합니다.
 Live Values,실시간 값
-Waiting for a running game…,실행 중인 게임을 기다리는 중…
-Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,위의 스트리밍된 값에 대한 식입니다. 디버거의 Watch 탭에도 같은 목록이 표시됩니다.
-Double-click a value to edit it live.,값을 더블클릭하면 실시간으로 편집합니다.
-Edit %s's values while it runs,실행 중인 %s의 값 편집
-Streaming · every 0.25 s,스트리밍 중 · 0.25초마다
-Streaming from %s · every 0.25 s,%s에서 스트리밍 중 · 0.25초마다
 How it got here: %s,여기까지 온 경로: %s
 cannot read,읽을 수 없음
 %s is not a streamed value.,%s은(는) 스트리밍된 값이 아닙니다.
-%s = %s   # into the running game; the sheet is not changed,%s = %s   # 실행 중인 게임으로; 시트는 변경되지 않음
-Run a command,명령 실행
 Commands,명령
 # Sheets,# 시트
 @ Symbols,@ 심볼
 ? Docs,? 문서
 Error line,오류 줄
 KEYS,키
-Enter runs the selected command · Up / Down moves · Esc closes,Enter: 선택한 명령 실행 · 위 / 아래: 이동 · Esc: 닫기
 MODES,모드
-# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# 아무 시트나 열기 · @ 이 시트의 심볼로 이동 · ? 문서 검색 · res://player.gd:42 를 붙여 넣으면 그 행으로 이동
 "Paste an error line, such as res://player.gd:42",오류 줄을 붙여 넣으세요 (예: res://player.gd:42)
-Type a command…,명령을 입력하세요…
 Find References,참조 찾기
 Go to Row,행으로 이동
 Find symbol,심볼 찾기
@@ -8651,8 +8580,6 @@ Add an entry?,항목을 추가할까요?
 Row Comment,행 주석
 Why this condition/action exists…,이 조건/액션이 있는 이유…
 "Enemy2, Enemy3","Enemy2, Enemy3"
-Live edit needs a streaming debug session (run the game with Live Values on).,실시간 편집에는 스트리밍 중인 디버그 세션이 필요합니다 (실시간 값을 켜고 게임을 실행하세요).
-Live edit: %s = %s sent to the running game.,실시간 편집: %s = %s 값을 실행 중인 게임에 보냈습니다.
 STORED,저장 위치
 SENDS TO,보내는 곳
 "per user, on this machine - not in the project",사용자별로 이 컴퓨터에 저장 - 프로젝트에는 들어가지 않습니다
@@ -8898,17 +8825,11 @@ Check what is missing,빠진 것 확인
 Checked what is missing,빠진 것을 확인했습니다
 Try a fake language,가짜 언어로 시험하기
 Made a fake language to test with,시험용 가짜 언어를 만들었습니다
-Use it in the game,게임에서 사용하기
-"Tells Godot about the languages, so your events can switch the game into any of them.","Godot에 언어를 알려, 이벤트가 게임을 어느 언어로든 바꿀 수 있게 합니다."
-Turn on in the game,게임에서 켜기
-Turned it on in the game,게임에서 켰습니다
 Not started,시작 전
 Source,원문
 Nearly done,거의 완료
 In progress,진행 중
 %d of %d lines. %d missing.,%d / %d줄. %d줄 없음.
-Players see it: yes,플레이어에게 보임: 예
-Players see it: not yet (turn it on in step 4),플레이어에게 보임: 아직 아님 (4단계에서 켜기)
 Search languages…,언어 검색…
 "Each language is one more column in the table, and one more translation file Godot makes from it.","언어마다 표에 열이 하나 늘고, Godot가 그것으로 만드는 번역 파일도 하나 늘어납니다."
 "%d new lines were added, each with the file and line it came from, for the translator.",새 줄 %d개를 추가했습니다. 번역가를 위해 각 줄이 나온 파일과 줄 번호를 함께 적었습니다.
@@ -8917,7 +8838,6 @@ Search languages…,언어 검색…
 %d lines,%d줄
 %d new,새 줄 %d
 "Every line got an empty %s column. Godot makes a translation file for it, next to the others.",모든 줄에 빈 %s 열이 생겼습니다. Godot가 다른 파일 옆에 그 번역 파일을 만듭니다.
-It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,텍스트를 채울 때까지 0%로 표시됩니다. 4단계에서 켜기 전에는 플레이어가 고를 수 없습니다.
 1 new column,새 열 1개
 %d cells were filled in from the translator's file.,번역가의 파일로 셀 %d개를 채웠습니다.
 Blank cells in that file left yours alone.,그 파일의 빈 셀은 기존 셀을 건드리지 않았습니다.
@@ -8931,11 +8851,6 @@ Every line in the table is still said somewhere.,표의 모든 줄이 아직 어
 "The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.","표에 가짜 열이 보입니다. Set Language (qps)로 게임을 해 보세요. 그대로 영어로 남은 텍스트는 번역 대상으로 표시되지 않은 것이고, 잘린 것은 상자를 더 넓혀야 합니다."
 It is a test column: leave qps out of any language list your players see.,시험용 열입니다. 플레이어가 보는 언어 목록에는 qps를 넣지 마세요.
 "+40% longer, accented","+40% 더 길게, 악센트 포함"
-Every translation file next to the table was already turned on.,표 옆의 번역 파일은 모두 이미 켜져 있었습니다.
-"Added to Project Settings > Localization, so Godot loads them when the game starts.",프로젝트 설정 > 현지화에 추가했으므로 게임이 시작될 때 Godot가 불러옵니다.
-Players can pick: %s.,플레이어가 고를 수 있는 언어: %s.
-No language has a translation file yet. Godot makes one per column when it imports the table.,아직 번역 파일이 있는 언어가 없습니다. Godot가 표를 가져올 때 열마다 하나씩 만듭니다.
-%d languages,언어 %d개
 ◀ Previous line,◀ 이전 줄
 Next line ▶,다음 줄 ▶
 Line %s  #%d,줄 %s  #%d
@@ -9007,7 +8922,6 @@ The New behaviour form.,새 비헤이비어 양식입니다.
 "Click the name for its settings, to open it in the script editor or to show it in the FileSystem.","이름을 클릭하면 설정을 열거나, 스크립트 편집기에서 열거나, 파일시스템에서 보여 줄 수 있습니다."
 Your own,나만의 것
 "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.","나만의 비헤이비어를 만듭니다: 이름, 적용 대상, 나열될 곳을 정하고 시트로 엽니다."
-"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","나만의 전역 개체를 만듭니다: 이름, 스크립트 또는 씬을 정하고 프로젝트 설정 > Globals에서 켭니다."
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 클래스 이름과 모든 사용처가 한 번의 되돌리기 단위로 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 프로젝트 설정 > Globals의 이름과 모든 사용처가 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","클릭하면 속성을 보여 주고, 더블 클릭하면 추가합니다. 다른 종류의 오브젝트용은 회색으로 표시되며, 마우스를 올리면 이유가 나옵니다."
@@ -9318,10 +9232,7 @@ Disabled rows,꺼진 행
 Breakpoints left on,켜 둔 중단점
 Functions nothing calls,아무도 호출하지 않는 함수
 Rows the checker flags,검사기가 표시한 행
-"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","실행 중인 게임이 없습니다. 도구 ▸ 실시간 값을 켜고 실행하면, 이 시트가 다루는 모든 오브젝트가 인스턴스와 함께 여기 나타나고 값을 실시간으로 편집할 수 있습니다."
-"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","아직 추적한 실행이 없습니다. 도구 ▸ 이벤트 추적을 켜고 실행하면, 발생한 모든 이벤트의 시간이 여기서 측정되고 가장 바쁜 것부터 나옵니다."
 "No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","아직 상태를 보고한 실행이 없습니다. 시트 머리에서 상태를 선언하고, 도구 ▸ 실시간 값을 켜고 실행하면, 상태가 바뀔 때마다 여기에 문장으로 적힙니다. 도구 ▸ 이벤트 추적도 켜면 각 변화가 그것을 일으킨 행을 알려 줍니다."
-No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,중단점이 없습니다. 행을 고르고 F9를 누르면 실행 중인 게임이 거기서 멈춥니다. 더 보기 ▸ 중단점 조건 설정…은 정한 때에만 멈춥니다.
 "What this object's state machine has done, oldest first. Double-click a line to go to the row it names.",이 오브젝트의 상태 머신이 한 일입니다(오래된 것부터). 줄을 더블클릭하면 그 줄이 가리키는 행으로 이동합니다.
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","각 순간은 게임의 보고 프레임으로 세므로 정밀도는 0.25초까지입니다. 게임은 실행 중인 사본마다 상태 하나를 보고하지만 어느 노드가 보냈는지는 말하지 않으므로, 이것은 실행 중인 오브젝트 하나를 설명합니다. 상태를 가진 오브젝트가 동시에 여럿 있으면 보고가 여기서 섞입니다."
 Nothing to point at in this trail.,이 기록에서 짚을 것이 없습니다.
@@ -9602,9 +9513,6 @@ Set when the scene is ready,씬이 준비되면 설정됨
 Shown only if,조건부로 표시
 The Inspector hides it unless another setting is on.,다른 설정이 켜지기 전까지 인스펙터에서 숨겨집니다.
 %s:,%s:
-"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.","이 시트는 실시간 값이 켜져 있으며, 실시간 값은 저장된 파일을 통해 게임에 전달됩니다. 시트를 저장(Ctrl+S)한 뒤 실행하면 이 시트가 다루는 모든 오브젝트가 인스턴스와 함께 여기 나타납니다."
-"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.",게임이 실행 중이지만 이 시트에서 보고가 없습니다. 실시간 값은 저장된 파일을 통해 게임에 전달됩니다. 시트를 저장(Ctrl+S)한 뒤 다시 실행하세요.
-"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",이 시트는 읽기 전용 미리보기이므로 게임은 원래 파일을 그대로 실행합니다. 이벤트 편집을 누르고 시트를 저장(Ctrl+S)한 뒤 다시 실행하면 값이 여기 표시됩니다.
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,선택기와 비헤이비어 추가 목록에 자기 이름으로 나옵니다. 보통의 선택입니다.
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 은(는) 노드가 아닌 %s 입니다. 시트가 파일에서 읽으므로 오브젝트에 추가되지 않습니다.
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d개의 팩 클래스를 참조하는 시트, 씬, 오토로드가 없습니다 - 직접 작성한 GDScript에서 호출한다면 괜찮습니다: %s."
@@ -10412,10 +10320,8 @@ Once Ever,한 번만
 Once ever,한 번만
 Added %s to eventsheet_addons/ - this row calls it.,%s을(를) eventsheet_addons/에 추가했습니다 - 이 행이 호출합니다.
 Set eventsheets/ai/api_key in Editor Settings first.,먼저 에디터 설정에서 eventsheets/ai/api_key를 설정하세요.
-New %s…,새 %s…
 New %s,새 %s
 New %s sheet…,새 %s 시트…
-The %s form.,“%s” 양식.
 "A node type, or a script class",노드 타입 또는 스크립트 클래스
 Choose a node type,노드 타입 선택
 Add New Node,새 노드 추가

@@ -109,7 +109,6 @@ Keyboard Shortcuts,键盘快捷键
 Rename Everywhere…,全局重命名…
 Change Type Everywhere…,全局更改类型…
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,切换断点输出：以调试模式编译的事件表会在带断点的行暂停。
-Toggle Live Values: running sheets stream their variables here (editable).,切换实时值：运行中的事件表会将其变量实时显示在此处（可编辑）。
 + Add action,+ 添加动作
 + Add condition,+ 添加条件
 + Add parameter,+ 添加参数
@@ -3085,8 +3084,6 @@ Debugger…,调试器…
 Inspect,查看
 Watch,监视
 Breakpoints,断点
-Instance values,实例的值
-Per fire,每次触发
 Share of run,占本次运行的比例
 Fires,触发次数
 Import event sheet…,导入事件表…
@@ -8124,64 +8121,21 @@ Pick…,选择…
 "Your own icon, written as @icon at the top of the file.","你自己的图标,以 @icon 写在文件顶部。"
 "Until you pick one, the class uses its type's own editor icon - nothing extra is written.","在你选择之前,该类使用其类型自己的编辑器图标 - 不会额外写入任何内容。"
 Character,角色
-"A body you move with code: players and enemies that walk, jump and collide.",用代码移动的物体:会走、会跳、会碰撞的玩家和敌人。
 Sprite,精灵
-A picture on screen.,屏幕上的一张图片。
-"Detects what enters or leaves it: pickups, triggers, hit boxes.",检测进入或离开的东西:拾取物、触发器、受击框。
-Physics body,物理体
-"Moved by physics: crates, balls, debris.",由物理驱动:箱子、球、碎片。
 2D node,2D 节点
-"A plain 2D object with a position, for anything else.","带位置的普通 2D 对象,用于其他一切。"
-Character 3D,3D 角色
-A 3D body you move with code.,用代码移动的 3D 物体。
 Mesh,网格
-A 3D model in the world.,世界中的一个 3D 模型。
-Area 3D,3D 区域
-Detects what enters or leaves a 3D space.,检测进入或离开 3D 空间的东西。
-Camera 3D,3D 摄像机
-A 3D camera.,一个 3D 摄像机。
 3D node,3D 节点
-A plain 3D object with a position.,带位置的普通 3D 对象。
-User interface,用户界面
 UI element,UI 元素
-A box on the screen for menus and HUD.,屏幕上用于菜单和 HUD 的方框。
-A clickable button.,可点击的按钮。
-Text on the screen.,屏幕上的文字。
 HUD layer,HUD 层
-"Draws its children on top of the game, like a HUD.","把子节点画在游戏上方,像 HUD 一样。"
-A background box for a menu.,菜单的背景框。
-Data and project,数据与项目
-Data file,数据文件
-"A .tres data asset: stats, waves, loot tables.",.tres 数据资源:属性、波次、掉落表。
-Logic only,仅逻辑
-"No position, just logic: a manager or controller.","没有位置,只有逻辑:管理器或控制器。"
 Editor tool,编辑器工具
-A script that runs inside the editor.,在编辑器中运行的脚本。
-A 2D light.,一盏 2D 灯光。
-"Everything a %s can do, and what you add to it.","%s 能做的一切,以及你添加的内容。"
-Name it to insert it.,命名后才能插入。
-%s is already in this folder.,%s 已在此文件夹中。
 Insert new object,插入新对象
-Search object types…,搜索对象类型…
 Grid,网格视图
-"Icons, grouped by kind",按种类分组的图标
-"The class tree, the way Godot's Create New Node lists it","类树,与 Godot 的“新建节点”列出的方式相同"
-Name when inserted,插入时的名称
-"The class name, exactly as code will write it. The file is named after it.","类名,与代码中写出的完全一致。文件以它命名。"
-Runs in the editor - a tool: its code runs while you edit (@tool),在编辑器中运行 - 工具:编辑时其代码也会运行 (@tool)
-Other classes,其他类
-Nothing is made of this one itself: pick one of the classes under it.,不能直接用这个类创建任何东西:请选择它下面的某个类。
-Creates %s in %s and opens it.,创建 %s(位于 %s)并打开它。
-"Inserted %s - a %s, in %s.","已插入 %s - 一个 %s,位于 %s。"
-New Class…,新建类…
-"Insert a new object: pick what it is, name it, and its script opens here.","插入新对象:选择它是什么、给它命名,它的脚本就会在这里打开。"
 New global,新建全局
 New behaviour,新建行为
 New behaviour…,新建行为…
 New global…,新建全局…
 Properties and actions…,属性与动作…
 "Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.",创建你自己的行为：一个子节点，为它所添加到的对象增加属性、动作、条件和触发器。
-"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.",创建你自己的全局：一个由 Godot 在第一个场景之前加载并在整个游戏中保留的脚本或场景，列在 项目设置 > 全局 > 自动加载 中。
 "What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.",这个行为或全局提供的内容：它的属性或值，以及每张表的选择器列出的动作、条件、触发器和表达式。
 "Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.",只有代码和数值：分数、生命、场景之间的消息、存档。通常的选择 - Godot 把它作为普通 Node 添加。
 "Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.",需要自己的节点：音乐播放器、淡入淡出遮罩、暂停菜单或在关卡切换时保留的 HUD。Godot 会加载整个场景。
@@ -8206,31 +8160,23 @@ Listed with the save and load actions.,与保存和读取动作列在一起。
 Listed with menus and screens.,与菜单和界面列在一起。
 Listed with %s.,与 %s 列在一起。
 Empty,空白
-A global with no values or events yet. You add each one next.,还没有任何值或事件的全局。接下来逐个添加。
 A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,还没有任何属性或事件的行为。接下来逐个添加。当自带的东西都不接近你想要的时选它。
 Copy of %s,%s 的副本
 %s Your copy gets its own name and folder; the shipped one stays as it is.,%s 你的副本有自己的名字和文件夹；自带的那份保持不变。
 From a script I wrote,来自我写的脚本
-Its variables become this global's values. The script itself is not changed.,它的变量成为这个全局的值。脚本本身不会改变。
-From an autoload I already have,来自已有的自动加载
-Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,把项目已在 项目设置 > 全局 中列出的全局作为表打开。不会移动或重命名任何东西。
 Its exported variables become this behaviour's properties. The script itself is not changed.,它导出的变量成为这个行为的属性。脚本本身不会改变。
 From the selected node,来自选中的节点
 "Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.",使用场景面板中选中节点上的脚本，方式与“来自我写的脚本”相同。
 Choose another…,选择其他…
 "Default: the %s icon, following Works on",默认：%s 图标，跟随“作用于”
-Opens %s as a sheet.,把 %s 作为表打开。
-"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.",创建 %s，在 项目设置 > 全局 > 自动加载 中启用它，并作为表打开。
 Makes %s and opens it as a sheet.,创建 %s 并作为表打开。
 """%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.",“%s”不能用作这里的名称 - 请使用字母、数字和下划线，以字母开头，并且不要使用已存在的类名。
 Project Settings > Globals already has an autoload called %s - pick another name.,项目设置 > 全局 中已有名为 %s 的自动加载 - 请换一个名字。
 %s already exists - pick another name.,%s 已存在 - 请换一个名字。
-Opened the global %s as a sheet - nothing was moved or renamed.,已把全局 %s 作为表打开 - 没有移动或重命名任何东西。
 Choose the script to start from.,选择作为起点的脚本。
 Select a node that has a script in the Scene dock first.,请先在场景面板中选择一个带脚本的节点。
 Couldn't write %s - check folder permissions.,无法写入 %s - 请检查文件夹权限。
 Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,已创建行为 %s，位于 %s。请从“添加行为”列表把它添加到对象上。
-Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,已创建全局 %s，并在 项目设置 > 全局 > 自动加载 中启用。Ctrl+Z 会再次停用它；文件会保留。
 Turn on global %s,启用全局 %s
 Turn off global %s,停用全局 %s
 Global values,全局值
@@ -8517,41 +8463,24 @@ Event Trace on,事件跟踪 开
 Event Trace off,事件跟踪 关
 Paused at %s,已暂停于 %s
 Debug %s while it runs,在运行时调试 %s
-"Dim rows: this sheet names them, but the run has reported nothing for them yet.",暗淡的行：此表提到了它们，但运行尚未报告任何内容。
 Sent,已发送
 no report,无报告
 1 value,1 个值
 %d values,%d 个值
 This sheet's variables,此表的变量
-Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,双击一个值即可在运行中的游戏里修改它。行为自身的值会显示，但不可编辑。
-This value,此值
 Expressions over the streamed values. Double-click a row to remove it.,基于流式值的表达式。双击一行即可移除。
-"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","每次触发的耗时，最繁忙的在前。一帧的最后一个事件会计数但不计时，因此显示 ""-""。"
-Double-click a row to go to that event.,双击一行即可跳到该事件。
-More ▸ Set Breakpoint Condition… pauses only when you say so.,更多 ▸ 设置断点条件… 只在你指定时暂停。
 Live Values,实时值
-Waiting for a running game…,正在等待运行中的游戏…
-Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,基于上方流式值的表达式。调试器的 Watch 标签页显示同一列表。
-Double-click a value to edit it live.,双击一个值即可实时编辑。
-Edit %s's values while it runs,在运行时编辑 %s 的值
-Streaming · every 0.25 s,流式传输中 · 每 0.25 秒
-Streaming from %s · every 0.25 s,正在从 %s 流式传输 · 每 0.25 秒
 How it got here: %s,如何到达这里：%s
 cannot read,无法读取
 %s is not a streamed value.,%s 不是流式值。
-%s = %s   # into the running game; the sheet is not changed,%s = %s   # 发送到运行中的游戏；表不会改变
-Run a command,运行命令
 Commands,命令
 # Sheets,# 工作表
 @ Symbols,@ 符号
 ? Docs,? 文档
 Error line,错误行
 KEYS,按键
-Enter runs the selected command · Up / Down moves · Esc closes,Enter 运行所选命令 · 上 / 下 移动 · Esc 关闭
 MODES,模式
-# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,# 打开任意工作表 · @ 跳到此处的符号 · ? 搜索文档 · 粘贴 res://player.gd:42 跳到该行
 "Paste an error line, such as res://player.gd:42",粘贴一行错误，例如 res://player.gd:42
-Type a command…,输入命令…
 Find References,查找引用
 Go to Row,转到行
 Find symbol,查找符号
@@ -8651,8 +8580,6 @@ Add an entry?,添加条目？
 Row Comment,行注释
 Why this condition/action exists…,为什么需要这个条件/动作…
 "Enemy2, Enemy3","Enemy2, Enemy3"
-Live edit needs a streaming debug session (run the game with Live Values on).,实时编辑需要一个正在推送数据的调试会话 (请在开启实时数值的情况下运行游戏)。
-Live edit: %s = %s sent to the running game.,实时编辑: 已将 %s = %s 发送到正在运行的游戏。
 STORED,保存位置
 SENDS TO,发送到
 "per user, on this machine - not in the project",按用户保存在本机 - 不在项目中
@@ -8898,17 +8825,11 @@ Check what is missing,检查缺少的内容
 Checked what is missing,已检查缺少的内容
 Try a fake language,试用假语言
 Made a fake language to test with,已生成用于测试的假语言
-Use it in the game,在游戏中使用
-"Tells Godot about the languages, so your events can switch the game into any of them.",把这些语言告诉 Godot，让你的事件可以把游戏切换到其中任意一种。
-Turn on in the game,在游戏中启用
-Turned it on in the game,已在游戏中启用
 Not started,未开始
 Source,源语言
 Nearly done,接近完成
 In progress,进行中
 %d of %d lines. %d missing.,%d / %d 行。缺少 %d 行。
-Players see it: yes,玩家可见：是
-Players see it: not yet (turn it on in step 4),玩家可见：尚未（在第 4 步启用）
 Search languages…,搜索语言…
 "Each language is one more column in the table, and one more translation file Godot makes from it.",每种语言就是表格中多出的一列，也是 Godot 据此多生成的一个翻译文件。
 "%d new lines were added, each with the file and line it came from, for the translator.",已添加 %d 行新文本，每行都附上来源文件和行号，方便译者。
@@ -8917,7 +8838,6 @@ Search languages…,搜索语言…
 %d lines,%d 行
 %d new,新增 %d
 "Every line got an empty %s column. Godot makes a translation file for it, next to the others.",每一行都多了一个空的 %s 列。Godot 会在其他文件旁边为它生成一个翻译文件。
-It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,在填入文本之前它显示为 0%。在第 4 步启用之前，玩家无法选择它。
 1 new column,新增 1 列
 %d cells were filled in from the translator's file.,已用译者的文件填写了 %d 个单元格。
 Blank cells in that file left yours alone.,该文件中的空单元格没有改动你的内容。
@@ -8931,11 +8851,6 @@ Every line in the table is still said somewhere.,表格中的每一行仍在某�
 "The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.",表格显示的是假语言列。用 Set Language (qps) 切换后玩一遍游戏：仍是普通英文的文本从未标记为待翻译，被截断的内容需要更宽的框。
 It is a test column: leave qps out of any language list your players see.,这是测试列：不要把 qps 放进玩家能看到的语言列表。
 "+40% longer, accented",长 40%，带重音符号
-Every translation file next to the table was already turned on.,表格旁的所有翻译文件都已启用。
-"Added to Project Settings > Localization, so Godot loads them when the game starts.",已添加到 项目设置 > 本地化，Godot 会在游戏启动时加载它们。
-Players can pick: %s.,玩家可以选择：%s。
-No language has a translation file yet. Godot makes one per column when it imports the table.,还没有任何语言拥有翻译文件。Godot 导入表格时会为每一列生成一个。
-%d languages,%d 种语言
 ◀ Previous line,◀ 上一行
 Next line ▶,下一行 ▶
 Line %s  #%d,行 %s  #%d
@@ -9007,7 +8922,6 @@ The New behaviour form.,新建行为表单。
 "Click the name for its settings, to open it in the script editor or to show it in the FileSystem.",点击名称可打开它的设置、在脚本编辑器中打开它，或在文件系统中显示它。
 Your own,你自己的
 "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.",做一个你自己的行为：名称、作用对象、列在哪里，然后作为表打开。
-"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.",做一个你自己的全局：名称、脚本或场景，然后在 项目设置 > Globals 中启用。
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,重命名会在一次撤销步骤中更改类名和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,重命名会更改它在 项目设置 > Globals 中的名称和每处用法；写入任何内容之前会先列出这些位置。文件保留原名。
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.",单击查看其属性，双击直接添加。为其他种类对象制作的会变灰，悬停可看原因。
@@ -9318,10 +9232,7 @@ Disabled rows,已关闭的行
 Breakpoints left on,未关闭的断点
 Functions nothing calls,无人调用的函数
 Rows the checker flags,检查器标记的行
-"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.",没有正在运行的游戏。打开 工具 ▸ 实时值 后运行 - 此事件表涉及的每个对象都会连同其实例显示在这里，你可以实时编辑它们的值。
-"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.",还没有追踪过的运行。打开 工具 ▸ 事件追踪 后运行 - 每个触发的事件都会在这里计时，最忙的排在前面。
 "No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.",还没有运行报告过状态。在事件表头部声明状态，打开 工具 ▸ 实时值 后运行 - 每次状态变化都会在这里写成一句话。再打开 工具 ▸ 事件追踪，每条都会指出造成它的那一行。
-No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,没有断点。选中一行并按 F9，运行中的游戏就会在那里暂停；更多 ▸ 设置断点条件… 只在你指定时暂停。
 "What this object's state machine has done, oldest first. Double-click a line to go to the row it names.",此对象的状态机做过的事，按时间从早到晚。双击某条可跳到它提到的行。
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.",每个时刻按游戏的报告帧计数，因此精确到四分之一秒，不会更细。游戏为每个运行中的副本报告一个状态，但不说明是哪个节点发送的，所以这里描述的是“一个”运行中的对象：若同时存在多个有状态的对象，它们的报告会在这里交错。
 Nothing to point at in this trail.,这段轨迹中没有需要指出的。
@@ -9602,9 +9513,6 @@ Set when the scene is ready,在场景就绪时设置
 Shown only if,仅在条件满足时显示
 The Inspector hides it unless another setting is on.,除非另一项设置已开启，否则检查器会隐藏它。
 %s:,%s：
-"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.",此事件表已打开实时值，实时值通过已保存的文件到达游戏：保存事件表（Ctrl+S）后运行，它涉及的每个对象都会连同其实例显示在这里。
-"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.",游戏正在运行，但此事件表没有上报。实时值通过已保存的文件到达游戏：保存事件表（Ctrl+S）后重新运行。
-"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.",此事件表是只读预览，所以游戏运行的是原来的文件。点击 编辑事件，保存事件表（Ctrl+S）后重新运行，它的值就会显示在这里。
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,以自己的名字列在选择器和“添加行为”列表中。通常的选择。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 是 %s，不是节点：表格从它的文件中读取它，所以它永远不会被添加到对象上。
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 个包类没有被任何表、场景或自动加载引用 - 如果你在手写的 GDScript 中调用它们则无妨：%s。"
@@ -10412,10 +10320,8 @@ Once Ever,仅一次
 Once ever,仅一次
 Added %s to eventsheet_addons/ - this row calls it.,已将 %s 添加到 eventsheet_addons/ - 此行会调用它。
 Set eventsheets/ai/api_key in Editor Settings first.,请先在编辑器设置中设置 eventsheets/ai/api_key。
-New %s…,新建 %s…
 New %s,新建 %s
 New %s sheet…,新建 %s 表…
-The %s form.,“%s”表单。
 "A node type, or a script class",节点类型或脚本类
 Choose a node type,选择节点类型
 Add New Node,添加新节点

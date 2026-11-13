@@ -109,7 +109,6 @@ Keyboard Shortcuts,Tastenkürzel
 Rename Everywhere…,Überall umbenennen…
 Change Type Everywhere…,Typ überall ändern…
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,Schaltet die Haltepunkt-Ausgabe um: im Debug kompilierte Blätter halten an markierten Zeilen an.
-Toggle Live Values: running sheets stream their variables here (editable).,Schaltet Live-Werte um: laufende Blätter übertragen ihre Variablen hierher (bearbeitbar).
 + Add action,+ Aktion hinzufügen
 + Add condition,+ Bedingung hinzufügen
 + Add parameter,+ Parameter hinzufügen
@@ -3085,8 +3084,6 @@ Debugger…,Debugger…
 Inspect,Untersuchen
 Watch,Beobachten
 Breakpoints,Haltepunkte
-Instance values,Instanzwerte
-Per fire,Pro Auslösung
 Share of run,Anteil am Lauf
 Fires,Auslösungen
 Import event sheet…,Ereignisblatt importieren…
@@ -8124,64 +8121,21 @@ Pick…,Wählen…
 "Your own icon, written as @icon at the top of the file.","Dein eigenes Symbol, als @icon oben in die Datei geschrieben."
 "Until you pick one, the class uses its type's own editor icon - nothing extra is written.","Bis du eines wählst, nutzt die Klasse das Editor-Symbol ihres Typs - es wird nichts zusätzlich geschrieben."
 Character,Figur
-"A body you move with code: players and enemies that walk, jump and collide.","Ein Körper, den du per Code bewegst: Spieler und Gegner, die laufen, springen und kollidieren."
 Sprite,Sprite
-A picture on screen.,Ein Bild auf dem Bildschirm.
-"Detects what enters or leaves it: pickups, triggers, hit boxes.","Erkennt, was hinein- oder hinausgeht: Sammelobjekte, Auslöser, Trefferzonen."
-Physics body,Physik-Körper
-"Moved by physics: crates, balls, debris.","Von der Physik bewegt: Kisten, Bälle, Trümmer."
 2D node,2D-Node
-"A plain 2D object with a position, for anything else.","Ein einfaches 2D-Objekt mit Position, für alles andere."
-Character 3D,Figur 3D
-A 3D body you move with code.,"Ein 3D-Körper, den du per Code bewegst."
 Mesh,Mesh
-A 3D model in the world.,Ein 3D-Modell in der Welt.
-Area 3D,Bereich 3D
-Detects what enters or leaves a 3D space.,"Erkennt, was einen 3D-Raum betritt oder verlässt."
-Camera 3D,Kamera 3D
-A 3D camera.,Eine 3D-Kamera.
 3D node,3D-Node
-A plain 3D object with a position.,Ein einfaches 3D-Objekt mit Position.
-User interface,Benutzeroberfläche
 UI element,UI-Element
-A box on the screen for menus and HUD.,Ein Kasten auf dem Bildschirm für Menüs und HUD.
-A clickable button.,Eine anklickbare Schaltfläche.
-Text on the screen.,Text auf dem Bildschirm.
 HUD layer,HUD-Ebene
-"Draws its children on top of the game, like a HUD.","Zeichnet seine Kinder über dem Spiel, wie ein HUD."
-A background box for a menu.,Ein Hintergrundkasten für ein Menü.
-Data and project,Daten und Projekt
-Data file,Datendatei
-"A .tres data asset: stats, waves, loot tables.","Ein .tres-Datenasset: Werte, Wellen, Beutetabellen."
-Logic only,Nur Logik
-"No position, just logic: a manager or controller.","Keine Position, nur Logik: ein Manager oder Controller."
 Editor tool,Editor-Werkzeug
-A script that runs inside the editor.,"Ein Skript, das im Editor läuft."
-A 2D light.,Ein 2D-Licht.
-"Everything a %s can do, and what you add to it.","Alles, was ein %s kann, und was du hinzufügst."
-Name it to insert it.,"Gib ihm einen Namen, um es einzufügen."
-%s is already in this folder.,%s ist bereits in diesem Ordner.
 Insert new object,Neues Objekt einfügen
-Search object types…,Objekttypen suchen…
 Grid,Raster
-"Icons, grouped by kind","Symbole, nach Art gruppiert"
-"The class tree, the way Godot's Create New Node lists it","Der Klassenbaum, so wie Godots Neuen Node erstellen ihn auflistet"
-Name when inserted,Name beim Einfügen
-"The class name, exactly as code will write it. The file is named after it.","Der Klassenname, genau so, wie der Code ihn schreibt. Die Datei wird danach benannt."
-Runs in the editor - a tool: its code runs while you edit (@tool),"Läuft im Editor - ein Werkzeug: sein Code läuft, während du bearbeitest (@tool)"
-Other classes,Andere Klassen
-Nothing is made of this one itself: pick one of the classes under it.,Von dieser selbst wird nichts erstellt: wähle eine der Klassen darunter.
-Creates %s in %s and opens it.,Erstellt %s in %s und öffnet es.
-"Inserted %s - a %s, in %s.","%s eingefügt - ein %s, in %s."
-New Class…,Neue Klasse…
-"Insert a new object: pick what it is, name it, and its script opens here.","Ein neues Objekt einfügen: wähle, was es ist, benenne es, und sein Skript öffnet sich hier."
 New global,Neues globales Objekt
 New behaviour,Neues Verhalten
 New behaviour…,Neues Verhalten…
 New global…,Neues globales Objekt…
 Properties and actions…,Eigenschaften und Aktionen…
 "Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to.","Ein eigenes Verhalten erstellen: ein Kindknoten, der dem Objekt, dem er hinzugefügt wird, Eigenschaften, Aktionen, Bedingungen und Auslöser gibt."
-"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload.","Ein eigenes globales Objekt erstellen: ein Skript oder eine Szene, die Godot vor der ersten Szene lädt und das ganze Spiel über behält, eingetragen unter Projekteinstellungen > Globale > Autoload."
 "What this behaviour or global offers: its properties or values, and the actions, conditions, triggers and expressions every sheet's picker lists.","Was dieses Verhalten oder globale Objekt anbietet: seine Eigenschaften oder Werte und die Aktionen, Bedingungen, Auslöser und Ausdrücke, die der Picker jedes Sheets auflistet."
 "Just code and values: score, lives, messages between scenes, saving. The usual choice - Godot adds it as a plain Node.","Nur Code und Werte: Punkte, Leben, Nachrichten zwischen Szenen, Speichern. Die übliche Wahl - Godot fügt es als einfachen Node hinzu."
 "Needs nodes of its own: music players, a fade overlay, a pause menu or a HUD that stays while levels change. Godot loads the whole scene.","Braucht eigene Nodes: Musikplayer, eine Überblendung, ein Pausenmenü oder ein HUD, das beim Levelwechsel bleibt. Godot lädt die ganze Szene."
@@ -8206,31 +8160,23 @@ Listed with the save and load actions.,Bei den Speicher- und Ladeaktionen aufgef
 Listed with menus and screens.,Bei Menüs und Bildschirmen aufgeführt.
 Listed with %s.,Aufgeführt bei %s.
 Empty,Leer
-A global with no values or events yet. You add each one next.,Ein globales Objekt noch ohne Werte oder Events. Du fügst jedes als Nächstes hinzu.
 A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want.,"Ein Verhalten noch ohne Eigenschaften oder Events. Du fügst jedes als Nächstes hinzu. Wähle das, wenn nichts Mitgeliefertes nah an dem ist, was du willst."
 Copy of %s,Kopie von %s
 %s Your copy gets its own name and folder; the shipped one stays as it is.,"%s Deine Kopie bekommt ihren eigenen Namen und Ordner; das mitgelieferte bleibt, wie es ist."
 From a script I wrote,Aus einem eigenen Skript
-Its variables become this global's values. The script itself is not changed.,Seine Variablen werden die Werte dieses globalen Objekts. Das Skript selbst wird nicht verändert.
-From an autoload I already have,Aus einem vorhandenen Autoload
-Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed.,"Öffnet ein globales Objekt, das dein Projekt schon in Projekteinstellungen > Globale führt, als Sheet. Nichts wird verschoben oder umbenannt."
 Its exported variables become this behaviour's properties. The script itself is not changed.,Seine exportierten Variablen werden die Eigenschaften dieses Verhaltens. Das Skript selbst wird nicht verändert.
 From the selected node,Vom ausgewählten Node
 "Uses the script on the node selected in the Scene dock, the same way as From a script I wrote.","Nimmt das Skript des im Szene-Dock ausgewählten Nodes, genauso wie Aus einem eigenen Skript."
 Choose another…,Anderes wählen…
 "Default: the %s icon, following Works on","Standard: das %s-Symbol, folgt Wirkt auf"
-Opens %s as a sheet.,Öffnet %s als Sheet.
-"Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.","Erstellt %s, schaltet es unter Projekteinstellungen > Globale > Autoload ein und öffnet es als Sheet."
 Makes %s and opens it as a sheet.,Erstellt %s und öffnet es als Sheet.
 """%s"" can't be a name here - use letters, digits and underscores, starting with a letter, and not the name of a class that already exists.","""%s"" kann hier kein Name sein - nutze Buchstaben, Ziffern und Unterstriche, beginne mit einem Buchstaben und nimm nicht den Namen einer vorhandenen Klasse."
 Project Settings > Globals already has an autoload called %s - pick another name.,Projekteinstellungen > Globale hat schon ein Autoload namens %s - wähle einen anderen Namen.
 %s already exists - pick another name.,%s gibt es schon - wähle einen anderen Namen.
-Opened the global %s as a sheet - nothing was moved or renamed.,Das globale Objekt %s wurde als Sheet geöffnet - nichts wurde verschoben oder umbenannt.
 Choose the script to start from.,"Wähle das Skript, mit dem du beginnst."
 Select a node that has a script in the Scene dock first.,"Wähle zuerst im Szene-Dock einen Node, der ein Skript hat."
 Couldn't write %s - check folder permissions.,%s konnte nicht geschrieben werden - prüfe die Ordnerrechte.
 Made the behaviour %s at %s. Add it to an object from the Add behaviour list.,Verhalten %s unter %s erstellt. Füge es einem Objekt über die Liste Verhalten hinzufügen hinzu.
-Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.,Globales Objekt %s erstellt und unter Projekteinstellungen > Globale > Autoload eingeschaltet. Strg+Z schaltet es wieder aus; die Datei bleibt.
 Turn on global %s,Globales Objekt %s einschalten
 Turn off global %s,Globales Objekt %s ausschalten
 Global values,Globale Werte
@@ -8517,41 +8463,24 @@ Event Trace on,Ereignis-Trace an
 Event Trace off,Ereignis-Trace aus
 Paused at %s,Angehalten bei %s
 Debug %s while it runs,%s während der Ausführung debuggen
-"Dim rows: this sheet names them, but the run has reported nothing for them yet.","Gedimmte Zeilen: Dieses Blatt nennt sie, aber der Lauf hat noch nichts für sie gemeldet."
 Sent,Gesendet
 no report,keine Meldung
 1 value,1 Wert
 %d values,%d Werte
 This sheet's variables,Variablen dieses Blatts
-Double-click a value to change it in the running game. A behavior's own values are shown but not editable.,"Doppelklicke einen Wert, um ihn im laufenden Spiel zu ändern. Die eigenen Werte eines Verhaltens werden angezeigt, sind aber nicht bearbeitbar."
-This value,Dieser Wert
 Expressions over the streamed values. Double-click a row to remove it.,"Ausdrücke über die gestreamten Werte. Doppelklicke eine Zeile, um sie zu entfernen."
-"Time per fire, busiest first. The last event of a frame is counted but not timed, so it reads ""-"".","Zeit pro Auslösung, die meistbeschäftigten zuerst. Das letzte Ereignis eines Frames wird gezählt, aber nicht gemessen, daher steht dort ""-""."
-Double-click a row to go to that event.,"Doppelklicke eine Zeile, um zu diesem Ereignis zu gehen."
-More ▸ Set Breakpoint Condition… pauses only when you say so.,"Mehr ▸ Haltepunktbedingung festlegen… hält nur an, wenn du es sagst."
 Live Values,Live-Werte
-Waiting for a running game…,Warte auf ein laufendes Spiel…
-Expressions over the streamed values above. The Debugger's Watch tab shows the same list.,Ausdrücke über die gestreamten Werte oben. Der Watch-Tab des Debuggers zeigt dieselbe Liste.
-Double-click a value to edit it live.,"Doppelklicke einen Wert, um ihn live zu bearbeiten."
-Edit %s's values while it runs,Werte von %s während der Ausführung bearbeiten
-Streaming · every 0.25 s,"Streamt · alle 0,25 s"
-Streaming from %s · every 0.25 s,"Streamt von %s · alle 0,25 s"
 How it got here: %s,Wie es hierher kam: %s
 cannot read,nicht lesbar
 %s is not a streamed value.,%s ist kein gestreamter Wert.
-%s = %s   # into the running game; the sheet is not changed,%s = %s   # ins laufende Spiel; das Blatt bleibt unverändert
-Run a command,Befehl ausführen
 Commands,Befehle
 # Sheets,# Blätter
 @ Symbols,@ Symbole
 ? Docs,? Doku
 Error line,Fehlerzeile
 KEYS,TASTEN
-Enter runs the selected command · Up / Down moves · Esc closes,Enter führt den gewählten Befehl aus · Auf / Ab bewegt · Esc schließt
 MODES,MODI
-# opens any sheet · @ jumps to a symbol here · ? searches the docs · paste res://player.gd:42 to land on that row,"# öffnet ein beliebiges Blatt · @ springt zu einem Symbol hier · ? durchsucht die Doku · res://player.gd:42 einfügen, um auf dieser Zeile zu landen"
 "Paste an error line, such as res://player.gd:42","Fehlerzeile einfügen, etwa res://player.gd:42"
-Type a command…,Befehl eingeben…
 Find References,Verwendungen finden
 Go to Row,Zur Zeile
 Find symbol,Symbol finden
@@ -8651,8 +8580,6 @@ Add an entry?,Einen Eintrag hinzufügen?
 Row Comment,Zeilenkommentar
 Why this condition/action exists…,Warum es diese Bedingung/Aktion gibt…
 "Enemy2, Enemy3","Enemy2, Enemy3"
-Live edit needs a streaming debug session (run the game with Live Values on).,Live-Bearbeitung braucht eine streamende Debug-Sitzung (starte das Spiel mit eingeschalteten Live-Werten).
-Live edit: %s = %s sent to the running game.,Live-Bearbeitung: %s = %s an das laufende Spiel gesendet.
 STORED,GESPEICHERT
 SENDS TO,SENDET AN
 "per user, on this machine - not in the project","pro Benutzer, auf diesem Rechner - nicht im Projekt"
@@ -8898,17 +8825,11 @@ Check what is missing,"Prüfen, was fehlt"
 Checked what is missing,"Geprüft, was fehlt"
 Try a fake language,Eine Testsprache ausprobieren
 Made a fake language to test with,Testsprache erstellt
-Use it in the game,Im Spiel verwenden
-"Tells Godot about the languages, so your events can switch the game into any of them.","Teilt Godot die Sprachen mit, damit deine Events das Spiel in jede davon umschalten können."
-Turn on in the game,Im Spiel einschalten
-Turned it on in the game,Im Spiel eingeschaltet
 Not started,Nicht begonnen
 Source,Quelle
 Nearly done,Fast fertig
 In progress,In Arbeit
 %d of %d lines. %d missing.,%d von %d Zeilen. %d fehlen.
-Players see it: yes,Spieler sehen sie: ja
-Players see it: not yet (turn it on in step 4),Spieler sehen sie: noch nicht (in Schritt 4 einschalten)
 Search languages…,Sprachen suchen…
 "Each language is one more column in the table, and one more translation file Godot makes from it.","Jede Sprache ist eine Spalte mehr in der Tabelle und eine Übersetzungsdatei mehr, die Godot daraus macht."
 "%d new lines were added, each with the file and line it came from, for the translator.","%d neue Zeilen wurden hinzugefügt, jede mit Datei und Zeile ihrer Herkunft, für den Übersetzer."
@@ -8917,7 +8838,6 @@ Search languages…,Sprachen suchen…
 %d lines,%d Zeilen
 %d new,%d neu
 "Every line got an empty %s column. Godot makes a translation file for it, next to the others.","Jede Zeile hat eine leere Spalte %s bekommen. Godot macht dafür eine Übersetzungsdatei, neben den anderen."
-It shows as 0% until text is filled in. Players cannot pick it until it is turned on in step 4.,"Sie steht auf 0 %, bis Text eingetragen ist. Spieler können sie erst wählen, wenn sie in Schritt 4 eingeschaltet ist."
 1 new column,1 neue Spalte
 %d cells were filled in from the translator's file.,%d Zellen wurden aus der Datei des Übersetzers ausgefüllt.
 Blank cells in that file left yours alone.,Leere Zellen in dieser Datei haben deine nicht angetastet.
@@ -8931,11 +8851,6 @@ Every line in the table is still said somewhere.,Jede Zeile der Tabelle wird noc
 "The table shows the fake column. Play the game in it with Set Language (qps): text still in plain English was never marked for translation, and anything cut off needs a wider box.","Die Tabelle zeigt die Testspalte. Spiel das Spiel darin mit Set Language (qps): Text, der noch in normalem Englisch steht, wurde nie zum Übersetzen markiert, und alles Abgeschnittene braucht ein breiteres Feld."
 It is a test column: leave qps out of any language list your players see.,"Es ist eine Testspalte: Lass qps aus jeder Sprachliste weg, die deine Spieler sehen."
 "+40% longer, accented","+40 % länger, mit Akzenten"
-Every translation file next to the table was already turned on.,Jede Übersetzungsdatei neben der Tabelle war schon eingeschaltet.
-"Added to Project Settings > Localization, so Godot loads them when the game starts.","Unter Projekteinstellungen > Lokalisierung hinzugefügt, damit Godot sie beim Spielstart lädt."
-Players can pick: %s.,Spieler können wählen: %s.
-No language has a translation file yet. Godot makes one per column when it imports the table.,"Noch keine Sprache hat eine Übersetzungsdatei. Godot macht eine pro Spalte, wenn es die Tabelle importiert."
-%d languages,%d Sprachen
 ◀ Previous line,◀ Vorherige Zeile
 Next line ▶,Nächste Zeile ▶
 Line %s  #%d,Zeile %s  #%d
@@ -9007,7 +8922,6 @@ The New behaviour form.,Das Formular „Neues Verhalten“.
 "Click the name for its settings, to open it in the script editor or to show it in the FileSystem.","Klicke auf den Namen für seine Einstellungen, um es im Skripteditor zu öffnen oder im Dateisystem zu zeigen."
 Your own,Dein eigenes
 "Make a behaviour of your own: its name, what it works on, where it is listed, then open it as a sheet.","Ein eigenes Verhalten anlegen: sein Name, worauf es wirkt, wo es aufgeführt ist - dann als Blatt öffnen."
-"Make a global of your own: its name, script or scene, then turn it on in Project Settings > Globals.","Ein eigenes globales Objekt anlegen: sein Name, Skript oder Szene - dann in Projekteinstellungen > Globals einschalten."
 Renaming changes its class name and every use in one undo step; the places are listed before anything is written. The file keeps its name.,"Umbenennen ändert den Klassennamen und jede Verwendung in einem Rückgängig-Schritt; die Stellen werden aufgelistet, bevor etwas geschrieben wird. Die Datei behält ihren Namen."
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,"Umbenennen ändert seinen Namen in Projekteinstellungen > Globals und jede Verwendung; die Stellen werden aufgelistet, bevor etwas geschrieben wird. Die Datei behält ihren Namen."
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","Ein Klick zeigt seine Eigenschaften, ein Doppelklick fügt es hinzu. Was für eine andere Art Objekt gemacht ist, ist ausgegraut; der Grund steht im Hinweis."
@@ -9318,10 +9232,7 @@ Disabled rows,Ausgeschaltete Zeilen
 Breakpoints left on,Aktive Haltepunkte
 Functions nothing calls,"Funktionen, die nichts aufruft"
 Rows the checker flags,"Zeilen, die die Prüfung markiert"
-"No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.","Kein laufendes Spiel. Schalte Werkzeuge ▸ Live-Werte ein und starte dann - jedes Objekt, von dem dieses Blatt spricht, erscheint hier mit seinen Instanzen, und du kannst ihre Werte live bearbeiten."
-"No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.","Noch kein verfolgter Lauf. Schalte Werkzeuge ▸ Ereignisspur ein und starte dann - jedes ausgelöste Ereignis wird hier gemessen, das geschäftigste zuerst."
 "No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.","Noch hat kein Lauf einen Zustand gemeldet. Lege Zustände im Blattkopf fest, schalte Werkzeuge ▸ Live-Werte ein und starte dann - jeder Zustandswechsel wird hier als Satz geschrieben. Schalte auch Werkzeuge ▸ Ereignisspur ein, dann nennt jeder die Zeile, die ihn ausgelöst hat."
-No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.,"Keine Haltepunkte. Wähle eine Zeile und drücke F9, um das laufende Spiel dort anzuhalten; Mehr ▸ Haltepunkt-Bedingung festlegen… hält nur an, wenn du es sagst."
 "What this object's state machine has done, oldest first. Double-click a line to go to the row it names.","Was der Zustandsautomat dieses Objekts getan hat, das Älteste zuerst. Doppelklicke eine Zeile, um zur genannten Zeile zu gehen."
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","Jeder Moment wird an den Berichtsframes des Spiels gezählt, ist also auf eine Viertelsekunde genau und nicht feiner. Das Spiel meldet einen Zustand pro laufender Kopie, ohne zu sagen, welcher Node ihn sendet, daher beschreibt dies EIN laufendes Objekt: Leben mehrere Objekte mit Zuständen gleichzeitig, mischen sich ihre Berichte hier."
 Nothing to point at in this trail.,In dieser Spur gibt es nichts hervorzuheben.
@@ -9602,9 +9513,6 @@ Set when the scene is ready,"Gesetzt, wenn die Szene bereit ist"
 Shown only if,"Nur angezeigt, wenn"
 The Inspector hides it unless another setting is on.,"Der Inspektor blendet es aus, solange keine andere Einstellung aktiv ist."
 %s:,%s:
-"Live Values is on for this sheet, and it reaches the game through the saved file: save the sheet (Ctrl+S), then run, and every object it talks about appears here with its instances.","Live-Werte ist für dieses Blatt an und erreicht das Spiel über die gespeicherte Datei: Speichere das Blatt (Strg+S) und starte dann - jedes Objekt, von dem es spricht, erscheint hier mit seinen Instanzen."
-"The game is running, but this sheet has not reported. Live Values reaches the game through the saved file: save the sheet (Ctrl+S), then run again.","Das Spiel läuft, aber dieses Blatt hat nichts gemeldet. Live-Werte erreicht das Spiel über die gespeicherte Datei: Speichere das Blatt (Strg+S) und starte erneut."
-"This sheet is a read-only preview, so the game runs the file as it was. Press Edit Events, save the sheet (Ctrl+S), then run again, and its values report here.","Dieses Blatt ist eine schreibgeschützte Vorschau, also läuft im Spiel die Datei, wie sie war. Drücke Ereignisse bearbeiten, speichere das Blatt (Strg+S) und starte erneut, dann melden sich seine Werte hier."
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,Unter seinem eigenen Namen im Picker und in der Liste Verhalten hinzufügen aufgeführt. Die übliche Wahl.
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.","%s ist ein %s, kein Node: Ein Blatt liest es aus seiner Datei, darum wird es nie einem Objekt hinzugefügt."
 "%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d Pack-Klasse(n) werden von keinem Blatt, keiner Szene und keinem Autoload verwendet - in Ordnung, wenn du sie aus handgeschriebenem GDScript aufrufst: %s."
@@ -10412,10 +10320,8 @@ Once Ever,Einmal im Leben
 Once ever,Einmal im Leben
 Added %s to eventsheet_addons/ - this row calls it.,%s wurde zu eventsheet_addons/ hinzugefügt - diese Zeile ruft es auf.
 Set eventsheets/ai/api_key in Editor Settings first.,Trage zuerst eventsheets/ai/api_key in den Editor-Einstellungen ein.
-New %s…,Neu: %s…
 New %s,Neu: %s
 New %s sheet…,Neues %s-Sheet…
-The %s form.,Das Formular „%s“.
 "A node type, or a script class",Ein Node-Typ oder eine Skriptklasse
 Choose a node type,Node-Typ wählen
 Add New Node,Neuen Node hinzufügen
