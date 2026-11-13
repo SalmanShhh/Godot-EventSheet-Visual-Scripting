@@ -5178,6 +5178,21 @@ THE INPUT EVENT ITSELF: the questions a handler asks the event it was handed.
 #### Expressions
 - **Event Action Strength** (`action: String`) - How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.
 
+### Inspector Look (`res://addons/eventforge/registration/modules/inspector_look_aces.gd`)
+the Inspector look (what a script that draws one property in Godot's Inspector does).
+
+#### Triggers
+- **On Look Built** - Runs once, when Godot's Inspector first needs this look and builds it for a property. Make the controls here: add them as children, connect their signals. The questions you asked in the Variable window are already answered by now.
+- **On Value Shown** - Runs every time the Inspector refreshes the property: when it is first drawn, after the person edits it, after undo. The value to show arrives as `value`. Put it into the controls here, and never write a value back from here.
+- **On Value Changed From Outside** - Runs when the value moved without this look moving it: undo, a script, another editor. It runs just before On Value Shown, with the new value as `value`.
+
+#### Actions
+- **Set Field Value** (`value: String`) - Writes a new value to the property this look draws. The Inspector keeps undo, so this is one undo step. Use it when the person changes something in your controls.
+- **Make Control Take Focus** (`control: String`) - Tells the Inspector that this control is where the keyboard focus goes when the person tabs to the property, or clicks its name.
+
+#### Expressions
+- **The Field's Value** - The value of the property this look draws, right now.
+
 ### Json (`res://addons/eventforge/registration/modules/json_aces.gd`)
 JSON (serialize, parse, validate, and save / load JSON files).
 

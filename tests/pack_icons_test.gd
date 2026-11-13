@@ -84,6 +84,7 @@ const VERIFIED_SECTION_ICONS: Dictionary = {
 	"Input": "Keyboard",
 	"Input Event": "Keyboard",
 	"InputMap": "InputEventAction",
+	"Inspector Look": "EditorProperty",
 	"JSON": "TextFile",
 	"Joints": "PinJoint2D",
 	"Juice": "Node2D",
