@@ -354,7 +354,7 @@ static func _test_a_named_node_has_no_shape() -> bool:
 		return false
 	ok = _check("its sentence says which node and what to do",
 		str(found[0].get("message", "")),
-		"Coin has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.") and ok
+		"Coin has no collision shape, so nothing can overlap it and this row is never true.") and ok
 	ok = _check("its two doors are add a shape, then show me",
 		[str(found[0].get("fix", "")), str(found[0].get("second_fix", ""))],
 		[EventSheetCollisionFindings.FIX_ADD_SHAPE, EventSheetCollisionFindings.FIX_SHOW_IN_SCENE]) and ok

@@ -267,7 +267,7 @@ static func _targets_without_a_shape(sheet: EventSheetResource, script_path: Str
 			continue
 		var anchors: Array[EventRow] = [row["event"] as EventRow]
 		var finding: Dictionary = _finding(KIND_TARGET_NO_SHAPE, "warning", anchors, subject,
-			EventSheetL10n.translate("%s has no collision shape, so nothing can overlap it and a row asking about it is never true. Add a shape under it, or show it in the scene.") % subject,
+			EventSheetL10n.translate("%s has no collision shape, so nothing can overlap it and this row is never true.") % subject,
 			FIX_ADD_SHAPE, EventSheetL10n.translate("Add a shape"), collidable)
 		finding["second_fix"] = FIX_SHOW_IN_SCENE
 		finding["second_fix_label"] = EventSheetL10n.translate("Show me in the scene")
