@@ -1749,7 +1749,7 @@ class DrawerTexturePreview:
 
 # ── Curve preview ───────────────────────────────────────────────────────────
 ## Renders a Curve's shape inline (read-friendly). Display-only: the EditorProperty wrapper adds the resource
-## picker; the dialog preview shows a sample ease curve so the user sees what the drawer does.
+## picker. With no curve in the slot it says "empty" and draws nothing.
 class DrawerCurvePreview:
 	extends Control
 	var _curve: Curve = null
@@ -1768,6 +1768,17 @@ class DrawerCurvePreview:
 		var w: float = size.x
 		var h: float = size.y
 		draw_rect(Rect2(0.0, 0.0, w, h), chrome.drawer_well_color, true)
+		# An empty slot draws nothing but the word "empty": a sample curve here would read as a curve
+		# that exists.
+		if _curve == null:
+			var font: Font = get_theme_default_font()
+			var font_size: int = get_theme_default_font_size()
+			var quiet: Color = Color(ink.r, ink.g, ink.b, 0.45)
+			var word: String = EventSheetL10n.translate("empty")
+			var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+			draw_string(font, Vector2((w - word_width) * 0.5, (h + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5), word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, quiet)
+			draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.14), false, 1.0)
+			return
 		# baseline + midline
 		draw_line(Vector2(0.0, h - 1.0), Vector2(w, h - 1.0), Color(ink.r, ink.g, ink.b, 0.12), 1.0)
 		draw_line(Vector2(0.0, h * 0.5), Vector2(w, h * 0.5), Color(ink.r, ink.g, ink.b, 0.06), 1.0)
@@ -1777,16 +1788,11 @@ class DrawerCurvePreview:
 		var points: PackedVector2Array = PackedVector2Array()
 		for i: int in range(samples + 1):
 			var t: float = float(i) / float(samples)
-			var sampled: float = _curve.sample_baked(t) if _curve != null else _ease_sample(t)
-			var y: float = pad + (1.0 - clampf(sampled, 0.0, 1.0)) * inner_h
+			var y: float = pad + (1.0 - clampf(_curve.sample_baked(t), 0.0, 1.0)) * inner_h
 			points.append(Vector2(t * w, y))
 		if points.size() >= 2:
 			draw_polyline(points, chrome.drawer_accent_bright_color, 1.8, true)
 		draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.14), false, 1.0)
-
-	## A pleasant default ease (smoothstep) for the dialog preview when there's no real Curve yet.
-	func _ease_sample(t: float) -> float:
-		return t * t * (3.0 - 2.0 * t)
 
 
 ## A word picked from the list a function of the script gives: a described dropdown. The file stores

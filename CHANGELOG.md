@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: an empty curve slot draws nothing
+
+- The Curve preview look drew a sample S-curve under an empty slot, which read as if a curve existed. An empty slot now shows the quiet word "empty", and the look's hover says the picture is of the curve in the slot.
+
 ### Fixed: the Inspector look hovers name the marker the compiler writes, and the Doctor reads .gd sheets for Required
 
 - Ten look hovers in the Look list said `es_drawer:` where the written marker is `eventsheet:`; a test now holds every hover to its own marker word.

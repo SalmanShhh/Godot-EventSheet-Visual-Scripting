@@ -102,7 +102,7 @@ const LOOKS: Array[Dictionary] = [
 	{"id": "texture_preview", "label": "Texture preview", "types": ["Texture2D"], "writes": "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\")",
 		"tip": "A bigger picture of the texture under the slot.", "fields": []},
 	{"id": "curve_editor", "label": "Curve preview", "types": ["Curve"], "writes": "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\")",
-		"tip": "A picture of the curve; its points are shaped in Godot's own curve editor.", "fields": []},
+		"tip": "A picture of the curve in the slot, drawn under it (an empty slot draws nothing). Its points are shaped in Godot's own curve editor.", "fields": []},
 	{"id": "table", "label": "Editable table", "types": ["Array", "Array[Dictionary]"], "writes": "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table…\")",
 		"tip": "Every element a row of cells. Columns: name:type (String, int, float, bool, color, enum(a|b)).",
 		"fields": [["columns", "Columns", "text", "", "item:String, count:int"]]},
