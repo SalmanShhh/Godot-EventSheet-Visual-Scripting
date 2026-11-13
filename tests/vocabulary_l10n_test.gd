@@ -176,6 +176,10 @@ static func _collect_descriptor(descriptor: ACEDescriptor, seen: Dictionary, str
 ## regression that actually happens. This is that gate.
 const FULLY_KEYED_ACES: Array[String] = [
 	"OnEnterTree", "OnExitTree", "OnPhysicsProcess", "OnProcess",
+	# The everyday object rows: opacity, sprite size and edges, instance id, marker position, the
+	# outside-the-level checks and Once Ever.
+	"InstanceId", "IsOutsideCameraLimits", "IsOutsideLevelBounds", "MarkerPosition", "OnceEver", "Opacity",
+	"SetOpacity", "SetSpriteSize", "SpriteBottom", "SpriteHeight", "SpriteLeft", "SpriteRight", "SpriteTop", "SpriteWidth",
 	# The positioning wave: the world-space twins, the place readers, the Control rows and the verbs
 	# whose reading now says which space they work in.
 	"GlideToward", "WrapAroundLayoutX", "WrapAroundLayoutY", "BoundToLayout", "MouseMoveCursorTo",
