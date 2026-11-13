@@ -906,7 +906,7 @@ func build(root: Node) -> void:
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file. Godot turns a finished language on, under Project Settings > Localization.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: a running sheet streams its variables - they show beside the variable rows, and in the Debugger's Watch and Trail. Godot's own Debugger > Remote lists every object's variables.")
 	# The one gesture on this menu with a key of its own, printed from the table like every other.
 	EventSheetContextMenus.hint_key(tools_popup, 6, EventSheetShortcuts.binding_for("project_search"))
 	# The Menu's foot: the two doors a reader looks for by name rather than by group. The Manual
@@ -1254,15 +1254,14 @@ func build(root: Node) -> void:
 		if id == 9805:
 			_dock._toggle_follow_scene_selection(view_popup))
 	# ── Debugger (appended block - keep together) ──────────────────────────────────────────────
-	# One window over four seams that already shipped: Inspect (the Live Values stream, per object),
-	# Watch (the same watch list this dock already keeps), Profile (the Event Trace timings) and
-	# Breakpoints (the F9 rows). It sits on View rather than on Tools because it SHOWS rather than
-	# switches - the three Tools toggles that arm the streams stay exactly where they were. Id 9806
+	# One window over two seams that already shipped: Watch (the same watch list this dock already
+	# keeps) and Trail (the state machine's past). It sits on View rather than on Tools because it
+	# SHOWS rather than switches - the three Tools toggles that arm the streams stay exactly where they were. Id 9806
 	# is the next number the View menu has never used; 9802 is the Saved Views submenu, and sharing
 	# it wrote this tooltip onto Saved Views.
 	view_popup.add_item("Debugger…", 9806)
 	view_popup.set_item_tooltip(view_popup.get_item_index(9806),
-		"One window with four tabs: Inspect (every object's live values, editable), Watch, Profile (time per event) and Breakpoints. Needs a debug run - Tools ▸ Live Values and Tools ▸ Event Trace arm the streams it reads.")
+		"Watch expressions over the sheet's variables, and the Trail of what its state machine has done. Needs a debug run - Tools ▸ Live Values and Tools ▸ Event Trace arm the streams it reads. A running object's variables are in Godot's own Debugger > Remote.")
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9806:
 			_dock.open_debugger())

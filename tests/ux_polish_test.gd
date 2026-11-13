@@ -64,7 +64,6 @@ static func run() -> bool:
 	# Bookmarks panel lists marked rows (popup-free refresh).
 	viewport._select_row(1, -1)
 	viewport.toggle_bookmark_selected()
-	editor._ensure_live_values_window()  # unrelated windows coexist
 	editor._ensure_bookmarks_panel().build()
 	editor._refresh_bookmarks_list()
 	var listed: bool = false

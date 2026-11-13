@@ -23,7 +23,7 @@ A one-page Rosetta Stone. If you come from **Construct 3**, read the left column
 | Function | `func` | **Function** | A reusable event block; can be published as an ACE. |
 | Wait / Wait for signal | `await` | **Wait / Wait For Signal** | Compiles to `await`. |
 | System expressions (`int()`, `random()`…) | GDScript / `@GlobalScope` | **System / Math ACEs** | Plus a **Helpers** set (Set/Get Property, Call Method, Run GDScript) for anything not covered. |
-| Debugger | Remote debugger | **Breakpoints + Live Values** | F9 breakpoints (now **conditional**), editable Live Values, and **Tools ▸ Check Sheet for Errors**. |
+| Debugger | Remote debugger | **Breakpoints + Live Values** | F9 breakpoints (now **conditional**), Live Values beside the variable rows, the **Watch** and **Trail** tabs, and **Tools ▸ Check Sheet for Errors**. Values of a running object are Godot's own Debugger > Remote. |
 
 ## EventSheets-Only Terms
 

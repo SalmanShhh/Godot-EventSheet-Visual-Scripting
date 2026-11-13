@@ -171,7 +171,7 @@ static func _run_dock_paths() -> bool:
 	var row: EventRow = EventRow.new()
 	row.conditions.append(_condition("score >= 100"))
 	var panel: EventSheetLiveValuesPanel = dock._ensure_live_values_panel()
-	panel._refresh_watches({"score": 142})
+	panel._last_values = {"score": 142}
 	all_passed = _check("a streamed frame reads as live",
 		bool(EventSheetWhyPanel.build_report(row, panel._last_values, not panel._last_values.is_empty()).get("streaming", false)), true) and all_passed
 	dock._on_debug_session_ended()

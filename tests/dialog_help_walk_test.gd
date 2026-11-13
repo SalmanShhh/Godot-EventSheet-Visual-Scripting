@@ -52,7 +52,7 @@ const DIALOG_CALLS: Array[String] = ["ConfirmationDialog.new()", "AcceptDialog.n
 ## (IN FILE). Bookmarks, History and the Sheet map name a mark, a step and a box: none of them is a
 ## row being written, so their strips name the picked line and the keys, not a reading. Deliberate,
 ## and therefore written down rather than quietly passing.
-const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_palette.gd", "debugger_window.gd",
+const NO_READING_BY_DESIGN: Array[String] = ["sheet_type_dialog.gd", "command_palette.gd",
 	"repeated_rows.gd", "words_settings_dialog.gd", "ask_window.gd",
 	"ai_generate_window.gd", "theme_editor_dialog.gd", "bookmarks_panel.gd", "sheet_map_panel.gd"]
 
@@ -99,7 +99,6 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/command_palette.gd",
 		"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
-		"res://addons/eventsheet/editor/dock/debugger_window.gd",
 		"res://addons/eventsheet/editor/dock/find_references_panel.gd",
 		"res://addons/eventsheet/editor/dock/import_sheet_wizard.gd",
 		"res://addons/eventsheet/editor/dock/include_manager.gd",

@@ -79,38 +79,18 @@ static func run() -> bool:
 	all_passed = _check("odd payloads drop the trailing name",
 		EventSheetLiveValuesDebugger.parse_payload(["hp", 95, "orphan"]), {"hp": 95}) and all_passed
 
-	# Dock window updates from a frame.
+	# The dock takes a frame without opening a window of its own: the frame reaches the panes and the watches.
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	editor.update_live_values({"hp": 42, "ammo": 7})
-	var first_row: TreeItem = editor._live_values_tree.get_root().get_first_child()
-	all_passed = _check("Live Values tree renders the frame sorted",
-		first_row.get_text(0) == "ammo" and first_row.get_text(1) == "7" and first_row.get_next().get_text(0) == "hp", true) and all_passed
-	all_passed = _check("values are editable in place", first_row.is_editable(1), true) and all_passed
+	all_passed = _check("a streamed frame is held for the watches",
+		editor._ensure_live_values_panel()._last_values, {"hp": 42, "ammo": 7}) and all_passed
+	all_passed = _check("and Live Values has no window of its own", editor._ensure_live_values_panel().has_method("ensure_window"), false) and all_passed
 	# Edit-back channel: typed parsing + the no-session guard.
 	all_passed = _check("edited text parses to typed values",
 		[EventSheetLiveValuesDebugger.parse_edited_value("3.5"), EventSheetLiveValuesDebugger.parse_edited_value("true"), EventSheetLiveValuesDebugger.parse_edited_value("hello")],
 		[3.5, true, "hello"]) and all_passed
-	# Nested values: containers expand into read-only subtrees; scalars stay editable.
-	editor.update_live_values({"stats": {"hp": 9, "mp": 3}, "tags": ["a", "b"], "score": 5})
-	var score_row: TreeItem = null
-	var stats_row: TreeItem = null
-	var tags_row: TreeItem = null
-	var walk: TreeItem = editor._live_values_tree.get_root().get_first_child()
-	while walk != null:
-		match walk.get_text(0):
-			"score": score_row = walk
-			"stats": stats_row = walk
-			"tags": tags_row = walk
-		walk = walk.get_next()
-	all_passed = _check("dictionaries expand into subtrees",
-		stats_row.get_child_count() == 2 and stats_row.get_first_child().get_text(0) == "hp" and stats_row.get_first_child().get_text(1) == "9", true) and all_passed
-	all_passed = _check("arrays expand with indices",
-		tags_row.get_child_count() == 2 and tags_row.get_first_child().get_text(0) == "[0]", true) and all_passed
-	all_passed = _check("containers are read-only, scalars stay editable",
-		not stats_row.is_editable(1) and not stats_row.get_first_child().is_editable(1) and score_row.is_editable(1), true) and all_passed
-
 	# (EditorDebuggerPlugin isn't instantiable headless - send_set_value's no-session
 	# guard is exercised by the editor smoke instead.)
 	# Debug compiles register the receiver + handler; normal compiles never do.

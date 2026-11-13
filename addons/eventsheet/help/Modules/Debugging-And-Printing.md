@@ -691,6 +691,10 @@ More use cases:
 
 ## Editing the game while it runs
 
+A running object's variables are Godot's own to look at and change: **Debugger > Remote** (the Scene
+dock's Remote tab) while the game runs, or **Stack Variables** when it is paused. The sheet's Debugger
+window (**View ▸ Debugger**) keeps only the two things Godot has no equal for: **Watch** and **Trail**.
+
 Changing a number and seeing it in the running game is the jam loop, and the engine has always been
 able to reload a script into a live game. What was missing was a sheet that asks it to.
 

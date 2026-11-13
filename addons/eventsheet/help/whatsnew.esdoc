@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Removed: the Debugger window keeps Watch and Trail, and the Live Values window is gone
+
+- View > Debugger no longer has the Inspect, Profile and Breakpoints tabs, and Tools > Live Values opens no window of its own any more. Godot does these: look at and edit a running object's variables in Debugger > Remote (the Scene dock's Remote tab) or Stack Variables when paused, see the breakpoints you set with F9 in Debugger > Breakpoints, and read the time per event on the rows themselves after Tools > Run With Profiler. Watch and Trail stay (Godot has no expression watch and no state trail), and the Trail tab now carries the \"How it got here\" mode line the Live Values window used to show. Live Values still streams: the values show beside the variable rows, and feed Watch, Trail, the Why didn't this fire? panel, Live Edit and the replay recorder. Row breakpoints (F9) are unchanged and still compile to Godot's own `breakpoint`.
+
 ### Removed: Sheet > New Class and the New global form are gone
 
 - Sheet > \"New Class...\" is gone. Godot makes a script class with FileSystem > right-click > Create New > Script (Inherits, Class Name); the file opens here as a sheet. Sheet > \"New autoload...\" and the Start page's Project-wide maker row are gone too: add a global in Project > Project Settings > Globals (Autoload tab), then open its script here. What stays: \"New behaviour...\", and the settings form of a behaviour or a global that exists (rename across every sheet, change script or scene, picker heading, icon), reached from the picker's global settings link and the sheet head. The three pack pages that said to start from \"Copy of ...\" in the New global form (Event Bus, Named Scenes, Second View) now say to add the script under Globals.

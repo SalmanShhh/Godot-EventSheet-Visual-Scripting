@@ -200,14 +200,12 @@ static func _window_backdrop() -> bool:
 		["Esc closes it through its own close request", _escape_closes(made["window"]), 1],
 	]
 	host.free()
-	# The two debugger windows are built by hand rather than by panel_window, and paint the same body.
+	# The Debugger window is built by hand rather than by panel_window, and paints the same body.
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.setup(EventSheetResource.new())
 	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
 	debugger.ensure_window()
-	var live: EventSheetLiveValuesPanel = EventSheetLiveValuesPanel.new(dock)
-	live.ensure_window()
-	for pair: Array in [["the Debugger", debugger.window], ["Live Values", live.window]]:
+	for pair: Array in [["the Debugger", debugger.window]]:
 		var painted: Node = (pair[1] as Window).get_child(0)
 		var paint: StyleBox = (painted as Control).get_theme_stylebox("panel") if painted is PanelContainer else null
 		rows.append(["%s paints its body opaque" % pair[0],

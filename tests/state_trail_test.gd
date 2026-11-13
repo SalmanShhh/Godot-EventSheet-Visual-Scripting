@@ -426,9 +426,9 @@ static func _test_it_reads_down_and_draws_nothing() -> bool:
 			reaches.append(word)
 	ok = _check("and it cannot reach a sheet at all", reaches, PackedStringArray()) and ok
 	# The tab is where the words live, so the empty state and the hint are the tab's own.
-	ok = _check("the Trail tab sits beside the Profile tab, which reads the same run",
+	ok = _check("the Trail tab sits beside the Watch tab",
 		",".join(EventSheetDebuggerWindow.TAB_TITLES),
-		"Inspect,Watch,Profile,Trail,Breakpoints") and ok
+		"Watch,Trail") and ok
 	ok = _check("and says what to switch on before a run has reported anything",
 		str(EventSheetDebuggerWindow.EMPTY_STATES.get("Trail", "")).is_empty(), false) and ok
 	return ok

@@ -25,19 +25,6 @@ static func run() -> bool:
 	if FileAccess.file_exists("user://dbg_props_probe.gd"):
 		DirAccess.remove_absolute("user://dbg_props_probe.gd")
 
-	# ---- the panel's display plan: flat variables first, dotted keys grouped + sorted ----
-	var plan: Dictionary = EventSheetLiveValuesPanel.build_display_plan({
-		"score": 7, "Sine.phase": 0.5, "hp": 3, "Sine.active": true, "UHTNPlanner.current_task": "patrol",
-	})
-	ok = _check(ok, plan.get("plain") == ["hp", "score"], "sheet variables stay flat and sorted (got %s)" % str(plan.get("plain")))
-	var sections: Dictionary = plan.get("sections", {})
-	ok = _check(ok, sections.keys() == ["Sine", "UHTNPlanner"], "one section per behavior, sorted (got %s)" % str(sections.keys()))
-	ok = _check(ok, sections.get("Sine") == ["Sine.active", "Sine.phase"], "section keys sort (got %s)" % str(sections.get("Sine")))
-	var plan_repeat: Dictionary = EventSheetLiveValuesPanel.build_display_plan({
-		"Sine.phase": 0.9, "score": 8, "hp": 2, "Sine.active": false, "UHTNPlanner.current_task": "chase",
-	})
-	ok = _check(ok, str(plan.get("signature")) == str(plan_repeat.get("signature")), "the signature keys on the key SET, not values (no rebuild churn)")
-
 	# ---- dotted keys never poison watches ----
 	var watch: Dictionary = EventSheetLiveValuesPanel.evaluate_watch("score + hp", {"score": 7, "hp": 3, "Sine.phase": 0.5})
 	ok = _check(ok, bool(watch.get("ok", false)) and int(watch.get("value", -1)) == 10, "a watch still evaluates with dotted keys streaming (got %s)" % str(watch))

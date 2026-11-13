@@ -181,7 +181,7 @@ the mouse shown. Those are Godot's own documented pause pattern, and they are wr
 - pausing the tree is what stops gameplay nodes hearing input, and a node that must keep hearing it
 says so with its own `process_mode`.
 
-While the game runs, **Live Values** shows the mode, the stack and the trail - `Menu › Playing ›
+While the game runs, the **Trail** tab of **View ▸ Debugger** shows the mode and the trail - `Menu › Playing ›
 Cutscene`, the how-did-we-get-here answer - and **Why didn't this fire?** gains the line it could not
 say before: *it runs in Playing; the game was in Cutscene*. **Doctor** finds the two mode bugs at
 authoring time: a mode rows can reach and never leave, and a mode nothing uses at all.
@@ -233,7 +233,7 @@ Ten more spellings of everyday game code, shipped the same way:
 ![The second wave live: a Timeline with its beats as condition/action rows, Every 2 to 5 seconds, smooth damping, aiming, wrap, bob, toggle and a distance check](images/pattern-verbs.png)
 
 - **Move Toward (smooth)** (Variables) - the frame-rate-INDEPENDENT damping (`1 - exp(-k*dt)`)
-  compiled for you; works on numbers, vectors and colors. Drag the speed under Live Values to
+  compiled for you; works on numbers, vectors and colors. Change the speed in Godot's own Debugger > Remote to
   feel it.
 - **Toggle** (Variables) - `paused = not paused` in one word.
 - **As Clock Time** (Text expression) - 90 seconds reads "01:30".

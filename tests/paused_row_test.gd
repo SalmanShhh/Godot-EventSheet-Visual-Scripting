@@ -73,7 +73,7 @@ static func run() -> bool:
 	listed.set_metadata(0, conditional.event_uid)
 	listed.select(0)
 	debugger._jump_to_selected(table)
-	ok = _check("a Profile double-click goes to the event",
+	ok = _check("a Trail double-click goes to the event",
 		dock._active_view().get_selected_context().get("source_resource", null), conditional) and ok
 	ok = _check("and leaves the paused row where the game paused", dock._paused_row_uid, event.event_uid) and ok
 	table.free()

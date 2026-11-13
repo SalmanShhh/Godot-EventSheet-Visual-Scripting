@@ -3556,10 +3556,6 @@ func _ensure_live_values_panel() -> RefCounted:
 		_live_values_panel = load(LIVE_VALUES_PANEL_PATH).new(self)
 	return _live_values_panel
 
-# Forwarding properties: tests (and the plugin) reach these through the dock.
-var _live_values_tree: Tree:
-	get: return _ensure_live_values_panel().tree
-
 
 func set_live_values_debugger(debugger: EditorDebuggerPlugin) -> void:
 	_ensure_live_values_panel().debugger = debugger
@@ -3619,9 +3615,8 @@ func _ensure_debugger_window() -> RefCounted:
 	return _debugger_window
 
 
-## View ▸ Debugger, and the sheet's Debug-layout gesture. `tab` names which tab to land on, so
-## arming the debugger and running can open straight onto Profile while the menu opens it where the
-## reader left it.
+## View ▸ Debugger. `tab` names which tab to land on ("Watch" or "Trail"); the menu opens it where
+## the reader left it.
 func open_debugger(tab: String = "") -> void:
 	_ensure_debugger_window().open(tab)
 
@@ -3680,10 +3675,6 @@ var _run_tips_checked: bool = false
 
 func _toggle_live_values() -> void:
 	_ensure_live_values_panel().toggle()
-
-
-func _ensure_live_values_window() -> void:
-	_ensure_live_values_panel().ensure_window()
 
 
 ## Lays the open sheet's rows out again when its state row's live room changed. Only a sheet that has a

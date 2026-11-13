@@ -103,18 +103,19 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ![The event trace pulse at three intensities: just fired, mid-fade, and almost gone](images/live-pulse.png)
 
-![The Debugger window's Inspect tab: the objects this sheet talks about on the left with their reported values, and the picked instance's variables on the right, editable, with its behaviors' own values under them](images/debugger-inspect.png)
+**One window, two tabs.** **View ▸ Debugger** opens what Godot's own Debugger does not have:
+**Watch** (any expression over the sheet's variables, such as `health <= 0` or `score + lives`,
+evaluated every frame, in the same list the *Why didn't this fire?* panel adds to) and **Trail**
+(what this object's state machine has just done, as sentences, with how the game got to the mode it
+is in above them). Both are views over a stream you arm from Tools, and an empty tab says which one
+to turn on rather than showing a table of zeroes.
 
-**One window, four tabs.** **View ▸ Debugger** opens everything below in one place, with the four
-names you are probably looking for: **Inspect** (every object this sheet talks about, its running
-instances, and that instance's variables - editable straight into the running game - beside its
-behaviors' own values), **Watch** (the same watch list the Live Values window keeps, not a second
-one), **Profile** (time per event, busiest first) and **Breakpoints** (the F9 rows, with
-enable / disable / jump, and where the run is paused right now). Every tab is a view over a stream
-you arm from Tools, and an empty tab says which one to turn on rather than showing a table of
-zeroes.
+Look at a running object's variables in Godot's own **Debugger > Remote** (the Scene dock's Remote
+tab), or **Stack Variables** when paused; the breakpoints you set with F9 are listed in Godot's
+**Debugger > Breakpoints**; and the time per event is drawn on the rows themselves after **Tools ▸
+Run With Profiler**. The values also show beside the variable rows while Live Values streams.
 
-A word about the Profile numbers, because a profiler that lies is worse than none: a fire is timed
+A word about the profiler's numbers, because a profiler that lies is worse than none: a fire is timed
 by how long it ran before the *next* event started in the same frame - its **self time**, so a
 parent event is charged only for the part before its first sub-event. The last event of a frame has
 no successor in that frame, so it is **counted but not timed** and reads `-` rather than `0.00`.
@@ -127,10 +128,11 @@ When something misbehaves, you have five tools - no `print()` required.
 - **Breakpoints.** Click the gutter (or F9) to pause the Godot debugger on a row in a debug run.
   Need it to stop only sometimes? **More ▸ Set Breakpoint Condition…** (e.g. `health <= 0`) - it
   pauses only on the frame that matters.
-- **Live Values + Watch.** Tools ▸ Live Values streams the sheet's variables while it runs (and
-  you can *edit* them live to test branches). The **Watch** box in that window evaluates any
-  expression over those variables each frame - e.g. `health <= 0` or `score + lives` - so you can
-  see a condition flip in real time without adding a label.
+- **Live Values + Watch.** Tools ▸ Live Values streams the sheet's variables while it runs; they
+  show beside the variable rows, and Godot's own **Debugger > Remote** lists and edits any object's
+  variables. The **Watch** tab of **View ▸ Debugger** evaluates any expression over those variables
+  each frame - e.g. `health <= 0` or `score + lives` - so you can see a condition flip in real time
+  without adding a label.
 ![The runtime-error strip under a sheet: a dot, the failure re-said as the row said it, and Jump to event, Explain and Godot's words beside it](images/friendly-runtime-error.png)
 
 - **Errors in the sheet's words.** When the running game hits a runtime error on a line one of

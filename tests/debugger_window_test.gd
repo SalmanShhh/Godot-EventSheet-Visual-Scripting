@@ -1,8 +1,8 @@
-# Godot EventSheets - the Debugger window (Inspect / Watch / Profile / Trail / Breakpoints).
-# One window over five seams that already shipped. Pins the parts that can be pinned without a
-# debug run: the tab names and their empty states, the Inspect tab's object rows over a census and
-# a streamed frame, the Profile numbers over a FIXTURE trace window (the self-time model, the frame
-# ruler, the unmeasurable last fire of a frame), and the Breakpoints rows and their sentences.
+# Godot EventSheets - the Debugger window (Watch / Trail).
+# One window over two seams that already shipped. Pins the parts that can be pinned without a debug
+# run: the tab names and their empty states, the run band, the sentences the paused row is named by,
+# the watch table, and the bridge's timings message. The per-event timing model is pinned in
+# trace_timings_test.gd.
 @tool
 class_name DebuggerWindowTest
 extends RefCounted
@@ -32,36 +32,12 @@ static func run() -> bool:
 	# ── The tabs, by name, and what each says before a run ──
 	ok = _check("the tabs are the names a reader arrives with",
 		",".join(EventSheetDebuggerWindow.TAB_TITLES),
-		"Inspect,Watch,Profile,Trail,Breakpoints") and ok
+		"Watch,Trail") and ok
 	var missing_states: PackedStringArray = PackedStringArray()
 	for title: String in EventSheetDebuggerWindow.TAB_TITLES:
 		if str(EventSheetDebuggerWindow.EMPTY_STATES.get(title, "")).is_empty():
 			missing_states.append(title)
 	ok = _check("every tab says what to do when it is empty", ",".join(missing_states), "") and ok
-
-	# ── Inspect: the objects, and which of them the run is reporting on ──
-	var census: Array = [
-		{"label": "Enemy", "kind": "node"},
-		{"label": "Sine", "kind": "behaviour"},
-	]
-	var values: Dictionary = {"hp": 4, "Sine.phase": 1.5, "Sine.amplitude": 20}
-	var rows: Array[Dictionary] = EventSheetDebuggerWindow.object_rows(census, values)
-	ok = SUPPORT.pins("debugger_window_test", [
-		["the sheet's own variables lead, then one row per object the sheet talks about",
-			rows.map(func(row: Dictionary) -> String: return "%s=%s" % [row["label"], row["key"]]),
-			["This sheet's variables=", "Enemy=Enemy", "Sine=Sine"]],
-		["the sheet's row carries its own values", ",".join(rows[0]["live"] as PackedStringArray), "hp"],
-		["and says how many", rows[0]["detail"], "1 value"],
-		["in the plural past one", EventSheetDebuggerWindow.object_rows([], {"a": 1, "b": 2})[0]["detail"],
-			"2 values"],
-		["an object the run reports on carries its values, in order",
-			",".join(rows[2]["live"] as PackedStringArray), "Sine.amplitude,Sine.phase"],
-		["and counts them", rows[2]["detail"], "(2)"],
-		["an object the run says nothing about promises nothing",
-			[(rows[1]["live"] as PackedStringArray).size(), rows[1]["detail"]], [0, "no report"]],
-		["with no run the sheet's own row says so too",
-			EventSheetDebuggerWindow.object_rows([], {})[0]["detail"], "no report"],
-	]) and ok
 
 	# ── The run band over every tab ──
 	ok = SUPPORT.pins("debugger_window_test", [
@@ -73,54 +49,6 @@ static func run() -> bool:
 			EventSheetDebuggerWindow.run_band("player.gd", false, true, false, ""),
 			PackedStringArray(["player.gd", "no run reporting · Live Values on · Event Trace off", ""])],
 	]) and ok
-
-	# ── Profile: the self-time model over a fixture window ──
-	# Two frames. Frame 1 fires a, b, c; frame 2 fires a, b. Stamps are microseconds.
-	#   a: 1000 -> 1200 = 200          b: 1200 -> 1500 = 300      c: last of frame 1, unmeasured
-	#   a: 20000 -> 20100 = 100        b: last of frame 2, closed by the flush at 20400 = 300
-	EventSheetTraceTimings.reset()
-	EventSheetTraceHitCounts.reset()
-	var uids: PackedStringArray = PackedStringArray(["a", "b", "c", "a", "b"])
-	EventSheetTraceHitCounts.note_fired(uids)
-	EventSheetTraceTimings.note_window(uids,
-		PackedInt64Array([1000, 1200, 1500, 20000, 20100]),
-		PackedInt32Array([0, 3]), 20400)
-	ok = _check("a fire is charged the time up to the next fire in its frame",
-		EventSheetTraceTimings.usec_for("a"), 300) and ok
-	ok = _check("and a fire closed by the flush is charged to the flush",
-		EventSheetTraceTimings.usec_for("b"), 600) and ok
-	ok = _check("the last fire of a frame that has already ended is not guessed at",
-		EventSheetTraceTimings.usec_for("c"), 0) and ok
-	ok = _check("only the measurable fires are averaged over",
-		EventSheetTraceTimings.measured_calls_for("a"), 2) and ok
-	ok = _check("the per-fire time is the average of those",
-		EventSheetTraceTimings.ms_per_call("a"), 0.15) and ok
-	ok = _check("an event with no measurable fire reads as unknown, never as zero",
-		EventSheetTraceTimings.ms_per_call("c"), -1.0) and ok
-	ok = _check("the run's traced span is first stamp to flush",
-		EventSheetTraceTimings.run_span_usec(), 19400) and ok
-	ok = _check("the frame ruler counted both frames", EventSheetTraceTimings.frames(), 2) and ok
-
-	var profile: Array[Dictionary] = EventSheetTraceTimings.rows({"a": 4, "b": 7})
-	ok = _check("the profile is busiest first",
-		str(profile[0].get("uid", "")), "b") and ok
-	ok = _check("and speaks in the sheet's event numbers",
-		EventSheetTraceTimings.row_text(profile[0]),
-		"event 7 · 0.30 ms · 3% of the run · 2 fires") and ok
-	ok = _check("an event that fired but was never measurable is left out of the profile",
-		profile.size(), 2) and ok
-	EventSheetTraceTimings.reset()
-	EventSheetTraceHitCounts.reset()
-	ok = _check("resetting forgets the run", EventSheetTraceTimings.has_run(), false) and ok
-
-	# A window with no stamps at all (an older debug compile) degrades rather than erroring.
-	EventSheetTraceTimings.note_window(PackedStringArray(["a"]), PackedInt64Array(),
-		PackedInt32Array(), 0)
-	ok = _check("a window with no times still counts as a run",
-		EventSheetTraceTimings.has_run(), true) and ok
-	ok = _check("and reports no time rather than a wrong one",
-		EventSheetTraceTimings.usec_for("a"), 0) and ok
-	EventSheetTraceTimings.reset()
 
 	# ── Breakpoints: the list, and what each row says ──
 	var flat: Array = [_flat("a", 3, true), _flat("b", 4, false),
@@ -134,9 +62,8 @@ static func run() -> bool:
 		"event 12 - when health <= 0") and ok
 	ok = _check("a sheet with no breakpoints lists none",
 		EventSheetDebuggerWindow.breakpoint_rows([]).size(), 0) and ok
-	ok = _test_unticking_keeps_the_breakpoint_inactive() and ok
-	ok = _test_inspect_columns() and ok
-	ok = _test_watch_table_and_value_rows() and ok
+	ok = _test_the_window_is_two_tabs_with_the_mode_line() and ok
+	ok = _test_watch_table() and ok
 
 	# ── The bridge parses the timings message it will really be handed ──
 	var window: Dictionary = EventSheetLiveValuesDebugger.parse_event_times(
@@ -150,100 +77,43 @@ static func run() -> bool:
 	return ok
 
 
-## Unticking a breakpoint in the list keeps it listed but inactive (the hint above the list says
-## so), and the change goes through the undo funnel: the sheet is replaced by a snapshot, so the
-## event is fetched again by uid after each step.
-## The Inspect tab before a run: the Objects list keeps a column for each row's count ("no
-## report"), and the values table is one sentence across its whole width rather than a word a line
-## down the Variable column; once a run reports, it is Variable and Value again.
-static func _test_inspect_columns() -> bool:
+## The window has exactly the Watch and Trail tabs, and the Trail tab carries the line that says how
+## the game got to the mode it is in (the line the separate Live Values window used to show).
+static func _test_the_window_is_two_tabs_with_the_mode_line() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	var dock: EventSheetDock = EventSheetDock.new()
 	dock.setup(sheet)
 	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
-	var page: Control = debugger._build_inspect_tab()
-	debugger._refresh_inspect()
-	var resting: Array = [debugger.objects_tree.get_column_width(1) > 0, debugger.values_tree.columns,
-		debugger.values_tree.column_titles_visible]
-	debugger._last_values = {"hp": 4}
-	debugger._refresh_values()
-	var reporting: Array = [debugger.values_tree.columns, debugger.values_tree.get_column_title(1)]
-	page.free()
+	debugger.ensure_window()
+	var titles: PackedStringArray = PackedStringArray()
+	for index: int in range(debugger.tabs.get_tab_count()):
+		titles.append(debugger.tabs.get_tab_title(index))
+	var panel: EventSheetLiveValuesPanel = dock._ensure_live_values_panel()
+	debugger._refresh_trail()
+	var quiet: bool = debugger.trail_modes_label.visible
+	panel.note_mode({"mode": "MENU"})
+	panel.note_mode({"mode": "PLAYING"})
+	debugger._refresh_trail()
+	var said: String = debugger.trail_modes_label.text
+	var shown: bool = debugger.trail_modes_label.visible
+	debugger.window.queue_free()
 	dock.free()
 	return SUPPORT.pins("debugger_window_test", [
-		["before a run the count column has room and the table is one sentence wide", resting, [true, 1, false]],
-		["once a run reports it is Variable and Value again", reporting, [2, "Value"]],
+		["the window has the two tabs", ",".join(titles), "Watch,Trail"],
+		["the mode line stays hidden until a mode has streamed", quiet, false],
+		["and once one has, the Trail tab says how the game got here", [shown, said.begins_with("How it got here: ")], [true, true]],
+		["Live Values opens no window of its own", panel.has_method("ensure_window"), false],
 	])
 
 
-static func _test_unticking_keeps_the_breakpoint_inactive() -> bool:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.events.append(_event("bp", true, "health <= 0"))
-	var dock: EventSheetDock = EventSheetDock.new()
-	dock.setup(sheet)
-	var undo: EventSheetEditorTest.FakeEditorUndoRedoManager = \
-		EventSheetEditorTest.FakeEditorUndoRedoManager.new()
-	dock.set_undo_redo_manager(undo)
-	var debugger: EventSheetDebuggerWindow = EventSheetDebuggerWindow.new(dock)
-	var before: EventSheetResource = dock._current_sheet
-	var changed: bool = debugger.set_breakpoint_armed("bp", false)
-	var after_untick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
-	var flat: Array = [_flat_of(after_untick, 1)]
-	var listed: Array[Dictionary] = EventSheetDebuggerWindow.breakpoint_rows(flat,
-		debugger.listed_uids())
-	var ok: bool = SUPPORT.pins("debugger_window_test", [
-		["unticking is a sheet edit", changed, true],
-		["the edit went through the funnel that replaces the sheet",
-			dock._current_sheet != before, true],
-		["the event no longer pauses", after_untick.debug_break, false],
-		["its condition is kept", after_untick.debug_break_condition, "health <= 0"],
-		["it is still listed", listed.size(), 1],
-		["listed unticked", bool(listed[0]["armed"]) if listed.size() > 0 else true, false],
-	])
-	undo.undo()
-	var after_undo: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
-	ok = SUPPORT.check("debugger_window_test", "undo arms it again",
-		after_undo.debug_break, true) and ok
-	debugger.set_breakpoint_armed("bp", false)
-	debugger.set_breakpoint_armed("bp", true)
-	var after_tick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
-	ok = SUPPORT.check("debugger_window_test", "ticking it again re-arms it",
-		after_tick.debug_break, true) and ok
-	# Undo past the re-arm leaves the event disarmed: it stays listed, unticked, rather than
-	# vanishing because the re-arm had forgotten it.
-	undo.undo()
-	var after_undo_tick: EventRow = EventSheetDock._find_event_by_uid(dock._current_sheet.events, "bp")
-	var relisted: Array[Dictionary] = EventSheetDebuggerWindow.breakpoint_rows(
-		[_flat_of(after_undo_tick, 1)], debugger.listed_uids())
-	ok = SUPPORT.check("debugger_window_test", "undo after a re-arm keeps it listed, unticked",
-		[after_undo_tick.debug_break, relisted.map(func(row: Dictionary) -> bool: return bool(row["armed"]))],
-		[false, [false]]) and ok
-	# Another sheet shown in the window does not inherit this sheet's kept rows.
-	dock._current_sheet_path = "res://another_sheet.tres"
-	ok = SUPPORT.check("debugger_window_test", "another sheet starts with nothing kept",
-		debugger.listed_uids(), {}) and ok
-	dock.free()
-	return ok
-
-
-## The watch table both windows draw, and the value rows both windows fill: an unreadable watch
-## says "cannot read" and why on its own line, and a value that cannot be edited reads muted.
-static func _test_watch_table_and_value_rows() -> bool:
+## The watch table the window draws: an unreadable watch says "cannot read" and why on its own line.
+static func _test_watch_table() -> bool:
 	var table: Tree = Tree.new()
 	table.columns = 2
 	var watched: Array[String] = ["health <= 0", "velocity.x > 0"]
 	EventSheetLiveValuesPanel.fill_watch_tree(table, watched, {"health": 1, "Sine.phase": 0.5})
 	var rows: Array[TreeItem] = table.get_root().get_children()
 	var why: TreeItem = rows[1].get_first_child()
-	var values: Tree = Tree.new()
-	values.columns = 2
-	var root: TreeItem = values.create_item()
-	var plain: TreeItem = values.create_item(root)
-	EventSheetLiveValuesPanel.fill_value_item(plain, 1)
-	var behaviour: TreeItem = values.create_item(root)
-	EventSheetLiveValuesPanel.fill_value_item(behaviour, 0.42, true)
-	var listed: TreeItem = values.create_item(root)
-	EventSheetLiveValuesPanel.fill_value_item(listed, [3, 7])
 	var ok: bool = SUPPORT.pins("debugger_window_test", [
 		["a readable watch shows its value", rows[0].get_text(1), "false"],
 		["an unreadable one says it cannot be read, not an engine error", rows[1].get_text(1), "cannot read"],
@@ -254,29 +124,14 @@ static func _test_watch_table_and_value_rows() -> bool:
 			EventSheetLiveValuesPanel.missing_name("sin(speed) + pos.x + hp", PackedStringArray(["hp"])), "speed"],
 		["Expression's own words are never missing",
 			EventSheetLiveValuesPanel.missing_name("true and not PI", PackedStringArray()), ""],
-		["a sheet variable stays editable", [plain.is_editable(1), plain.get_text(1)], [true, "1"]],
-		["a behavior's value is read-only and muted",
-			[behaviour.is_editable(1), behaviour.get_custom_color(1) == EventSheetPopupUI.muted_text_color()],
-			[false, true]],
-		["a list opens into read-only items",
-			[listed.get_text(1), listed.is_editable(1), listed.get_child_count(), listed.get_child(1).get_text(0)],
-			["[…] 2 items", false, 2, "[1]"]],
 	])
 	table.free()
-	values.free()
 	return ok
 
 
 static func _watch_cells_without_a_run(table: Tree, watched: Array[String]) -> String:
 	EventSheetLiveValuesPanel.fill_watch_tree(table, watched, {})
 	return ",".join(table.get_root().get_children().map(func(item: TreeItem) -> String: return item.get_text(1)))
-
-
-static func _flat_of(event_row: EventRow, number: int) -> Dictionary:
-	var row_data: EventRowData = EventRowData.new()
-	row_data.event_number = number
-	row_data.source_resource = event_row
-	return {"row": row_data}
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
