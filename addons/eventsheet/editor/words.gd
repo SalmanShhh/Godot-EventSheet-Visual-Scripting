@@ -298,16 +298,8 @@ static func word(key: String) -> String:
 	return word_for(key, familiar_words_enabled(), overrides())
 
 
-## The "New ..." names for the one always-on instance a project shares, in whichever word the Words
+## The "New ... sheet" name for the one always-on instance a project shares, in whichever word the Words
 ## page says: Godot's own "autoload" by default, "global" for a reader from another editor.
-static func new_global_label() -> String:
-	return EventSheetL10n.translate("New %s…") % word("global_singleton").to_lower()
-
-
-static func new_global_title() -> String:
-	return EventSheetL10n.translate("New %s") % word("global_singleton").to_lower()
-
-
 static func new_global_sheet_label() -> String:
 	return EventSheetL10n.translate("New %s sheet…") % word("global_singleton").to_lower()
 

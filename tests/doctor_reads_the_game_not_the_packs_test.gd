@@ -72,7 +72,7 @@ static func run() -> bool:
 	return ok
 
 
-## New behaviour, New global and Export Pack all write a folder under eventsheet_addons/, beside the
+## New behaviour and Export Pack both write a folder under eventsheet_addons/, beside the
 ## packs - so the folder alone cannot say whose a file is. A user's own global there was skipped by
 ## Interop, the reading ledger, Performance and Migration, and its guide by Docs. The project's script
 ## list and the guides are handed in through the walks' own caches, so nothing is written to disk.

@@ -391,7 +391,7 @@ static func strip_debug_flags(sheet: EventSheetResource) -> bool:
 
 
 ## Autoload sheets only run when project.godot points their singleton name at the
-## compiled script (Project > Project Settings > Globals > Autoload, or the New autoload form).
+## compiled script (Project > Project Settings > Globals > Autoload).
 static func check_autoload_registration(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource

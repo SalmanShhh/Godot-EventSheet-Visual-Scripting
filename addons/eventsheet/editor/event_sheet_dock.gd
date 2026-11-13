@@ -42,7 +42,6 @@ const FUNCTION_INSPECTOR_PATH := "res://addons/eventsheet/editor/dock/function_i
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 const STATE_TRAIL_PATH := "res://addons/eventsheet/editor/state_trail.gd"
 ## Insert new object: a new script class made the way an object is inserted, loaded when asked for.
-const INSERT_OBJECT_PATH := "res://addons/eventsheet/editor/dock/insert_object_dialog.gd"
 const ACE_APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
 const BEHAVIOUR_LIBRARY_WINDOW_PATH := "res://addons/eventsheet/editor/behaviour_library_window.gd"
 const ADD_BEHAVIOR_PATH := "res://addons/eventsheet/editor/add_behavior.gd"
@@ -528,7 +527,7 @@ var _library_flow: RefCounted = null:
 			_library_flow = load("res://addons/eventsheet/editor/dock/behaviour_library_flow.gd").new()
 			_library_flow.init(self)
 		return _library_flow
-var _new_addon_panel: RefCounted = null:  # Sheet ▸ New behaviour… / New global… (dock/new_addon_panel.gd)
+var _new_addon_panel: RefCounted = null:  # Sheet ▸ New behaviour… and the settings of a behaviour or global (dock/new_addon_panel.gd)
 	get:
 		if _new_addon_panel == null:
 			_new_addon_panel = load("res://addons/eventsheet/editor/dock/new_addon_panel.gd").new()
@@ -7308,12 +7307,6 @@ func _on_ace_comment_confirmed(new_comment: String, target: Resource) -> void:
 # ── Starter templates ("new from template") - menu + sheet construction in dock/starter_templates.gd ──
 func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palette + Welcome button
 	_starter.open_menu()
-
-
-## Sheet ▸ New Class…: picks what the class is, names it, writes
-## its file and opens it.
-func open_insert_object() -> void:
-	load(INSERT_OBJECT_PATH).new().open(self)
 
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:

@@ -40,7 +40,6 @@ const DIALOG_FILES: Array[String] = [
 	"res://addons/eventsheet/editor/dock/new_addon_panel.gd",
 	"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
 	"res://addons/eventsheet/editor/dock/comment_and_scope_dialogs.gd",
-	"res://addons/eventsheet/editor/dock/insert_object_dialog.gd",
 	"res://addons/eventsheet/editor/inspector_designer_dialog.gd",
 	"res://addons/eventsheet/editor/theme_editor_dialog.gd",
 	"res://addons/eventsheet/editor/dock/start_page.gd",

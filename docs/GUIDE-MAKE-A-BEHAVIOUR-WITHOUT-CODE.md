@@ -42,6 +42,8 @@ The bundled **Flash, 8-Direction Movement, Timer, State Machine, and Move To** b
 
 **New Behaviour** scaffolds a sheet in **behavior mode**: it compiles to a small node you attach under a host (a `CharacterBody2D`, `Node2D`, ...). Inside the sheet, **`host`** is that parent - node ACEs target it automatically (e.g. *Move And Slide* becomes `host.move_and_slide()`).
 
+A plain script class and a global are Godot's own to make: **FileSystem > right-click > Create New > Script** (Inherits, Class Name), and **Project > Project Settings > Globals** (Autoload tab); open either here as a sheet.
+
 The Sheet Type dialog's host field takes typing, the curated class menu - or a **drag**:
 drop any node from the Scene dock onto the dialog and the field takes that node's class
 (a script's `class_name` when it has one, the engine class otherwise), with the live

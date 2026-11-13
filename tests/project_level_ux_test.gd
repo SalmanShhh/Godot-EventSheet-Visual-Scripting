@@ -129,10 +129,10 @@ static func _start_page_columns() -> bool:
 		["and the strip says what Open does with it", EventSheetStartPage.opens_line(behaviour),
 			"Behavior Component as a new unsaved sheet - Save As… keeps it."],
 		["the Systems starter is offered", str((by_label.get("Entity System", {}) as Dictionary).get("tag", "")), "System"],
-		# The Behaviours and Project-wide shelves each open on the form that makes one of your own.
-		["the Behaviours shelf leads with New behaviour…", _first_on(templates, "Behaviours"), "New behaviour… · maker · behaviour"],
-		["the Project-wide shelf leads with New autoload…, Godot's word", _first_on(templates, "Project-wide (autoloads)"), "New autoload… · maker · global"],
-		["and the strip says which form opens", EventSheetStartPage.opens_line(by_label.get("New autoload…", {})), "The New autoload form."],
+		# The Behaviours shelf opens on the form that makes one of your own; a new global is Godot's own door.
+		["the Behaviours shelf leads with New behaviour...", _first_on(templates, "Behaviours"), "New behaviour… · maker · behaviour"],
+		["the Project-wide shelf has no maker row", templates.filter(func(entry: Dictionary) -> bool:
+			return str(entry.get("shelf", "")) == "Project-wide (autoloads)" and str(entry.get("kind", "")) == "maker").size(), 0],
 		["a showcase sits in the same column, on its genre",
 			[str((templates[templates.size() - 1] as Dictionary).get("label", "")),
 				str((templates[templates.size() - 1] as Dictionary).get("tag", "")),

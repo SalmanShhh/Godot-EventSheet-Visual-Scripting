@@ -34,7 +34,7 @@ const PLUGIN_DIRECTORY := "res://addons/"
 ## Where the behaviour packs live. The shipped ones are rebuilt from the plugin's pack builders, so in
 ## a game that installed them they are the plugin's code as much as `addons/` is: a finding about a
 ## pack's script was the first thing a new project's Doctor said, and nothing the reader could fix.
-## The SAME folder holds the reader's own work, though - New behaviour, New global and Export Pack
+## The SAME folder holds the reader's own work, though - New behaviour and Export Pack
 ## each write a folder here - so the folder alone does not say whose a file is.
 const PACK_DIRECTORY := "res://eventsheet_addons/"
 

@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Removed: Sheet > New Class and the New global form are gone
+
+- Sheet > \"New Class...\" is gone. Godot makes a script class with FileSystem > right-click > Create New > Script (Inherits, Class Name); the file opens here as a sheet. Sheet > \"New autoload...\" and the Start page's Project-wide maker row are gone too: add a global in Project > Project Settings > Globals (Autoload tab), then open its script here. What stays: \"New behaviour...\", and the settings form of a behaviour or a global that exists (rename across every sheet, change script or scene, picker heading, icon), reached from the picker's global settings link and the sheet head. The three pack pages that said to start from \"Copy of ...\" in the New global form (Event Bus, Named Scenes, Second View) now say to add the script under Globals.
+
 ### Removed: the Translation Studio no longer registers languages, and Language Variants is gone
 
 - The Translation Studio's \"Turn on in the game\" step and its \"Players see it\" line are gone, and so is the \"Language Variants...\" item on a row's menu. Godot does both: turn a finished language on in Project Settings > Localization > Translations, and map one asset per language in Localization > Remaps. The Studio still finds the text, fills the table, checks what is missing, tries a fake language and hands a CSV to a translator, and View > Preview In Language is unchanged.

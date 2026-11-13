@@ -47,18 +47,15 @@ static func run() -> bool:
 	# another sweeps it at any moment, so one look cannot say who put it there. A preview that writes it leaves it
 	# there EVERY time; a neighbour cannot do that every time, so the previews are clean if any one try is.
 	var stray: String = "res://event_sheet_generated.gd"
-	var head: String = ""
 	var global_source: String = ""
 	var left_behind: bool = true
 	for _attempt: int in range(5):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(stray))
-		head = load("res://addons/eventsheet/editor/dock/insert_object_dialog.gd").file_head("CharacterBody2D", "Hero", false)
 		global_source = EventSheetBehaviourAddonScaffold.source_of(EventSheetBehaviourAddonScaffold.global_sheet("Keeps the score."))
 		if not FileAccess.file_exists(stray):
 			left_behind = false
 			break
-	rows.append(["the Insert and New global previews leave no script behind", [head.begins_with("class_name Hero\n"),
-		global_source.contains("extends Node"), left_behind], [true, true, false]])
+	rows.append(["the global scaffold preview leaves no script behind", [global_source.contains("extends Node"), left_behind], [true, false]])
 	var on_disk: String = "extends Node\n\nvar hp: int = 1\n"
 	var disk_file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
 	disk_file.store_string(on_disk)

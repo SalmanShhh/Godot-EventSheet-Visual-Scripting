@@ -1,4 +1,4 @@
-# Godot EventSheets - the files the New behaviour and New global windows write.
+# Godot EventSheets - the files the New behaviour window writes, and the global scaffold the tests pin.
 #
 # A behaviour is one script in its own folder under eventsheet_addons/: it extends Node, is added as a
 # child of the object it works on, and reaches that object as `host`. A global is Godot's autoload: one

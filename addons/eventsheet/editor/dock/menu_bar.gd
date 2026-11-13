@@ -256,9 +256,6 @@ func build(root: Node) -> void:
 	menu_popup.add_child(sheet_popup)
 	menu_popup.add_submenu_node_item("Sheet", sheet_popup, 0)
 	sheet_popup.add_item("New…", 0)
-	sheet_popup.add_item(EventSheetL10n.translate("New Class…"), 20)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(20), EventSheetL10n.translate(
-		"Insert a new object: pick what it is, name it, and its script opens here."))
 	sheet_popup.add_item("Open…", 1)
 	sheet_popup.add_item("Save", 2)
 	sheet_popup.add_item("Save As…", 3)
@@ -297,16 +294,13 @@ func build(root: Node) -> void:
 	)
 	sheet_popup.add_item("Manage Includes…", 8)
 	sheet_popup.add_item("Custom Actions…", 5)
-	# Making your own behaviour and your own global: a form each, then the lists of what it offers.
+	# Making your own behaviour: a form, then the list of what it offers.
 	sheet_popup.add_item(EventSheetL10n.translate("New behaviour…"), 9)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9), EventSheetL10n.translate(
 		"Make a behaviour of your own: a child node that adds properties, actions, conditions and triggers to the object it is added to."))
 	sheet_popup.add_item(EventSheetL10n.translate("Behaviour library…"), 26)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(26), EventSheetL10n.translate(
 		"The behaviours this plugin carries that the project does not hold yet. Add one to the project, then add it to a node with Add Child Node."))
-	sheet_popup.add_item(EventSheetWords.new_global_label(), 22)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(22), EventSheetL10n.translate(
-		"Make a global of your own: one script or scene Godot loads before the first scene and keeps for the whole game, listed in Project Settings > Globals > Autoload."))
 	sheet_popup.add_item("New Editor Tool…", 12)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(12),
@@ -345,7 +339,6 @@ func build(root: Node) -> void:
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			17: _dock._open_start_page()
-			20: _dock.open_insert_object()
 			24: _dock._head_actions.handle("open_script_editor")
 			25: _dock._head_actions.handle("show_in_filesystem")
 			0: _dock._open_template_menu()
@@ -361,7 +354,6 @@ func build(root: Node) -> void:
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
 			26: _dock.open_behaviour_library()
-			22: _dock._new_addon_panel.open(true)
 			10: _dock._providers_glue.share_verbs_with_project()
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)

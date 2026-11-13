@@ -1,9 +1,9 @@
-# Godot EventSheets - the New behaviour and New global forms.
+# Godot EventSheets - the New behaviour form, and the rows of a global it edits.
 #
 # The forms ask the familiar questions as described dropdowns, keep the chosen choice's sentence in
 # view, say a name problem while it is typed, and only offer copies that fit (packs made for the same
-# kind of object, or meant to be an autoload). Turning a global on is its row in Godot's own
-# Project Settings > Globals > Autoload.
+# kind of object). A global's row in Godot's own Project Settings > Globals > Autoload is what the
+# settings form changes; making a new global is Godot's own door.
 @tool
 class_name NewAddonPanelTest
 extends RefCounted
@@ -50,22 +50,15 @@ static func run() -> bool:
 		["a pack shelf names the packs already on it", panel._shelf_option.get_item_tooltip(1).begins_with("Listed with "), true],
 	]) and ok
 
-	panel.open(true)
-	ok = SUPPORT.pins("new_addon_panel_test", [
-		["a global form asks script or scene", _items(panel._kind_option), ["Script", "Scene"]],
-		["its picker heading leads with its own name", panel._shelf_option.get_item_text(0), "Its own name"],
-		["it offers copies of the packs meant to be an autoload", _items(panel._start_option).has("Copy of Event Bus"), true],
-		["and the global you already have", _items(panel._start_option).back(), "From an autoload I already have"],
-	]) and ok
 	ProjectSettings.set_setting("autoload/ZzPanelGlobal", "*res://zz_panel_global.gd")
 	ok = _check("a global cannot take an autoload's name", EventSheetNewAddonPanel.name_problem("ZzPanelGlobal", true),
 		"Project Settings > Globals already has an autoload called ZzPanelGlobal - pick another name.") and ok
 	ProjectSettings.set_setting("autoload/ZzPanelGlobal", null)
 
 	# Turning a global on and off is its row in Project Settings > Globals > Autoload.
-	EventSheetNewAddonPanel.set_global_on("ZzPanelGlobal", "res://zz_panel_global.gd", true)
+	EventSheetNewAddonPanel.set_global_row("ZzPanelGlobal", "res://zz_panel_global.gd")
 	ok = _check("on writes the autoload row", ProjectSettings.get_setting("autoload/ZzPanelGlobal", ""), "*res://zz_panel_global.gd") and ok
-	EventSheetNewAddonPanel.set_global_on("ZzPanelGlobal", "res://zz_panel_global.gd", false)
+	EventSheetNewAddonPanel.set_global_row("ZzPanelGlobal", "")
 	ok = _check("off removes it", ProjectSettings.has_setting("autoload/ZzPanelGlobal"), false) and ok
 	# An existing project's autoload scene lives anywhere, under any name: its root node's script is
 	# the global.

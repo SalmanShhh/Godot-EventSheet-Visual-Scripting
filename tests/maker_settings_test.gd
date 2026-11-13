@@ -161,11 +161,11 @@ static func _the_doors() -> bool:
 		["New behaviour…", "Behaviour library…"]])
 	# The New behaviour form opened for an object starts on that object's kind.
 	var panel: EventSheetNewAddonPanel = dock._new_addon_panel
-	panel.open(false, {"label": "Enemy", "class": "Sprite2D"})
+	panel.open({"label": "Enemy", "class": "Sprite2D"})
 	rows.append(["Works on starts on the object's kind, said in its words",
 		[panel._kind_option.get_item_text(panel._kind_option.selected), panel._kind_option.get_item_tooltip(panel._kind_option.selected)],
 		["Sprite2D", "The kind of object Enemy is."]])
-	panel.open(false, {"label": "Hero", "class": "CharacterBody2D"})
+	panel.open({"label": "Hero", "class": "CharacterBody2D"})
 	rows.append(["a kind the list has is chosen, not added again",
 		[panel._kind_option.get_item_text(panel._kind_option.selected), panel._kind_option.item_count], ["CharacterBody2D", 7]])
 	rows.append(["the picker's globals ask for their settings", ACEPickerDialog.new().has_signal("global_settings_requested"), true])

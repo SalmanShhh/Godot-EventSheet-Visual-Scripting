@@ -2,18 +2,14 @@
 class_name EventSheetNewAddonPanel
 extends RefCounted
 
-# Sheet > New behaviour… and Sheet > New global…: one form, asked the familiar way.
+# Sheet > New behaviour…, and the settings of a behaviour or a global that already exists.
 #
 # A behaviour is asked its name, the kind of object it works on, the shelf it sits on in the Add
 # behaviour list, its icon (the Works-on class's own icon unless another is chosen), a description and
-# what to start from. A global is asked its name, whether Godot loads a script or a whole scene, the
-# heading its verbs sit under in the picker, its icon, a description and what to start from - the only
-# real choice Godot asks of an autoload is script or scene, so that is the only one here.
-#
-# Every choice is a described dropdown with the chosen choice's sentence kept in view under it. Create
-# writes the file (a behaviour is a folder under eventsheet_addons/, so is a global - that folder is
-# how the plugin reads what it offers), turns a global on in Project Settings > Globals > Autoload as
-# one undo step, and opens the result as a sheet.
+# what to start from. Every choice is a described dropdown with the chosen choice's sentence kept in
+# view under it. Create writes the file (a behaviour is a folder under eventsheet_addons/ - that folder
+# is how the plugin reads what it offers) and opens the result as a sheet. A new global is made with
+# Godot's own Project Settings > Globals; this form only edits one that exists.
 # The file text comes from EventSheetBehaviourAddonScaffold; this file only asks and writes.
 #
 # Behaviour settings… / Global settings… reopen the same form on a file that exists, every answer
@@ -27,7 +23,6 @@ const START_EMPTY := "empty"
 const START_COPY := "copy"
 const START_SCRIPT := "script"
 const START_NODE := "node"
-const START_AUTOLOAD := "autoload"
 
 var _dock: Control = null
 var _dialog: ConfirmationDialog = null
@@ -42,7 +37,6 @@ var _icon_label: Label = null
 var _icon_path: String = ""
 var _desc_edit: LineEdit = null
 var _script_edit: LineEdit = null
-var _autoload_option: OptionButton = null
 var _path_label: Label = null
 var _rows: Dictionary = {}
 ## The answers the form was reopened with on an existing file, or {} while it makes a new one: what
@@ -57,14 +51,13 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Opens the form fresh, for a behaviour or (`as_global`) a global. Built anew each time, because the
-## two kinds ask different questions in the same places and a reopened file adds its own answers to
-## the lists. `for_object` ({"label", "class"}) is the object whose Behaviours list asked: Works on
-## starts on its kind, and Create adds the new behaviour to it.
-func open(as_global: bool = false, for_object: Dictionary = {}) -> void:
-	_global = as_global
+## Opens the form fresh, for a new behaviour. Built anew each time, because a reopened file adds its
+## own answers to the lists. `for_object` ({"label", "class"}) is the object whose Behaviours list
+## asked: Works on starts on its kind, and Create adds the new behaviour to it.
+func open(for_object: Dictionary = {}) -> void:
+	_global = false
 	_editing = {}
-	_for_object = {} if as_global else for_object
+	_for_object = for_object
 	_icon_path = ""
 	_build_dialog()
 	if not str(_for_object.get("class", "")).is_empty():
@@ -124,7 +117,7 @@ static func _choose(dropdown: OptionButton, value: String, description: String) 
 func _build_dialog() -> void:
 	if _dialog != null:
 		_dialog.queue_free()
-	var title: String = EventSheetWords.new_global_title() if _global else EventSheetL10n.translate("New behaviour")
+	var title: String = EventSheetL10n.translate("New behaviour")
 	if not _editing.is_empty():
 		title = (EventSheetL10n.translate("%s · Global settings") if _global
 			else EventSheetL10n.translate("%s · Behaviour settings")) % str(_editing["name"])
@@ -188,10 +181,6 @@ func _build_dialog() -> void:
 		_refresh()))
 	_rows[START_SCRIPT] = EventSheetPopupUI.form_row(EventSheetL10n.translate("Script"), script_row)
 	form.add_child(_rows[START_SCRIPT])
-	_autoload_option = OptionButton.new()
-	_autoload_option.item_selected.connect(func(_index: int) -> void: _refresh())
-	_rows[START_AUTOLOAD] = EventSheetPopupUI.form_row(EventSheetL10n.translate("Autoload"), _autoload_option)
-	form.add_child(_rows[START_AUTOLOAD])
 	_path_label = EventSheetPopupUI.hint_label("")
 	form.add_child(_path_label)
 
@@ -237,57 +226,29 @@ func _fill_shelves() -> void:
 	EventSheetPopupUI.follow_description(_shelf_option)
 
 
-## What a new one can start from. Copies are of the installed packs made for the same kind of object
-## (a behaviour) or meant to be an autoload (a global), so the list only offers what fits.
+## What a new behaviour can start from. Copies are of the installed packs made for the same kind of
+## object, so the list only offers what fits.
 func _fill_starts() -> void:
 	_start_option.clear()
-	if _global:
-		_start_item(EventSheetL10n.translate("Empty"), EventSheetL10n.translate("A global with no values or events yet. You add each one next."), START_EMPTY)
-	else:
-		_start_item(EventSheetL10n.translate("Empty"), EventSheetL10n.translate(
-			"A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want."), START_EMPTY)
+	_start_item(EventSheetL10n.translate("Empty"), EventSheetL10n.translate(
+		"A behaviour with no properties or events yet. You add each one next. Pick this when nothing that ships is close to what you want."), START_EMPTY)
 	var works_on: String = str(_kind_option.get_item_metadata(_kind_option.selected))
 	for pack: Dictionary in EventSheetPackCatalog.packs():
 		var source: String = FileAccess.get_file_as_string(str(pack.get("path", "")))
-		var fits: bool = _is_global_shaped(source) if _global else Scaffold.host_class_of(source) == works_on
-		if fits and not Scaffold.is_yours(source):
+		if Scaffold.host_class_of(source) == works_on and not Scaffold.is_yours(source):
 			_start_item(EventSheetL10n.translate("Copy of %s") % str(pack.get("name", "")),
 				EventSheetL10n.translate("%s Your copy gets its own name and folder; the shipped one stays as it is.") % str(pack.get("pitch", "")),
 				START_COPY, str(pack.get("path", "")))
-	if _global:
-		_start_item(EventSheetL10n.translate("From a script I wrote"), EventSheetL10n.translate(
-			"Its variables become this global's values. The script itself is not changed."), START_SCRIPT)
-		_start_item(EventSheetL10n.translate("From an autoload I already have"), EventSheetL10n.translate(
-			"Opens a global your project already lists in Project Settings > Globals as a sheet. Nothing is moved or renamed."), START_AUTOLOAD)
-		_autoload_option.clear()
-		for entry: Dictionary in EventSheetProjectScanner.list_autoloads():
-			_autoload_option.add_item(str(entry.get("autoload", "")))
-			_autoload_option.set_item_metadata(_autoload_option.item_count - 1, str(entry.get("path", "")))
-	else:
-		_start_item(EventSheetL10n.translate("From a script I wrote"), EventSheetL10n.translate(
-			"Its exported variables become this behaviour's properties. The script itself is not changed."), START_SCRIPT)
-		_start_item(EventSheetL10n.translate("From the selected node"), EventSheetL10n.translate(
-			"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote."), START_NODE)
+	_start_item(EventSheetL10n.translate("From a script I wrote"), EventSheetL10n.translate(
+		"Its exported variables become this behaviour's properties. The script itself is not changed."), START_SCRIPT)
+	_start_item(EventSheetL10n.translate("From the selected node"), EventSheetL10n.translate(
+		"Uses the script on the node selected in the Scene dock, the same way as From a script I wrote."), START_NODE)
 	_start_option.select(0)
 	EventSheetPopupUI.follow_description(_start_option)
 
 
 func _start_item(label_text: String, description: String, kind: String, path: String = "") -> void:
 	EventSheetPopupUI.add_described_item(_start_option, label_text, description, {"kind": kind, "path": path})
-
-
-## A pack meant to run as an autoload says so in its own class description.
-static func _is_global_shaped(source: String) -> bool:
-	var after_extends: PackedStringArray = PackedStringArray()
-	var reading: bool = false
-	for line: String in source.split("\n"):
-		if line.begins_with("extends "):
-			reading = true
-		elif reading and line.begins_with("##"):
-			after_extends.append(line)
-		elif reading:
-			break
-	return " ".join(after_extends).to_lower().contains("autoload")
 
 
 func _build_icon_row() -> Control:
@@ -329,8 +290,6 @@ func _refresh() -> void:
 	var start: Dictionary = _start()
 	var kind: String = str(start.get("kind", START_EMPTY))
 	(_rows[START_SCRIPT] as Control).visible = kind == START_SCRIPT
-	(_rows[START_AUTOLOAD] as Control).visible = kind == START_AUTOLOAD
-	_name_edit.editable = kind != START_AUTOLOAD
 	if _icon_path.is_empty():
 		_icon_rect.texture = EventSheetPopupUI._editor_icon(_icon_class())
 		_icon_label.text = EventSheetL10n.translate("Default: the %s icon, following Works on") % _icon_class() \
@@ -344,18 +303,9 @@ func _refresh() -> void:
 			if _global else EventSheetL10n.translate("Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.")) % str(_editing["path"])
 		_name_note.say(name_problem(addon_name, _global, str(_editing["name"])))
 		return
-	if kind == START_AUTOLOAD:
-		_path_label.text = EventSheetL10n.translate("Opens %s as a sheet.") % _autoload_path()
-		_name_note.say("")
-		return
 	var path: String = Scaffold.script_path_for(addon_name if not addon_name.is_empty() else _name_edit.placeholder_text)
-	_path_label.text = (EventSheetL10n.translate("Makes %s, turns it on in Project Settings > Globals > Autoload and opens it as a sheet.") \
-		if _global else EventSheetL10n.translate("Makes %s and opens it as a sheet.")) % path
-	_name_note.say("" if addon_name.is_empty() else name_problem(addon_name, _global))
-
-
-func _autoload_path() -> String:
-	return str(_autoload_option.get_item_metadata(_autoload_option.selected)) if _autoload_option.selected >= 0 else ""
+	_path_label.text = EventSheetL10n.translate("Makes %s and opens it as a sheet.") % path
+	_name_note.say("" if addon_name.is_empty() else name_problem(addon_name))
 
 
 ## Why `addon_name` cannot be made, or "" when it can: not a usable name (or, for a global, the name
@@ -393,13 +343,8 @@ func _on_create() -> void:
 		return
 	var start: Dictionary = _start()
 	var kind: String = str(start.get("kind", START_EMPTY))
-	if kind == START_AUTOLOAD:
-		if not _autoload_path().is_empty():
-			_dialog.hide()
-			_open_made(_autoload_path(), EventSheetL10n.translate("Opened the global %s as a sheet - nothing was moved or renamed.") % _autoload_option.get_item_text(_autoload_option.selected))
-		return
 	var addon_name: String = _name_edit.text.strip_edges()
-	var problem: String = name_problem(addon_name, _global)
+	var problem: String = name_problem(addon_name)
 	var source_script: String = _source_script() if kind in [START_SCRIPT, START_NODE] else ""
 	if problem.is_empty() and kind in [START_SCRIPT, START_NODE] and not FileAccess.file_exists(source_script):
 		problem = EventSheetL10n.translate("Choose the script to start from.") if kind == START_SCRIPT \
@@ -418,41 +363,26 @@ func _on_create() -> void:
 	file.store_string(source)
 	file.close()
 	_dialog.hide()
-	if not _global and not _for_object.is_empty():
+	if not _for_object.is_empty():
 		# Added while the object's own sheet is still the open one: the dock finds its node through it.
 		var object_label: String = str(_for_object.get("label", ""))
 		_dock._add_made_behaviour(path, object_label)
 		_open_made(path, EventSheetL10n.translate("Made the behaviour %s at %s and added it to %s.") % [addon_name, path, object_label])
 		return
-	if not _global:
-		_open_made(path, EventSheetL10n.translate("Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.") % [addon_name, path])
-		return
-	var target: String = path
-	if _kind_option.selected == 1:
-		target = Scaffold.scene_path_for(addon_name)
-		ResourceSaver.save(Scaffold.global_scene(addon_name, ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)), target)
-	set_global_on(addon_name, target, true)
-	_open_made(path, EventSheetL10n.translate("Made the global %s and turned it on in Project Settings > Globals > Autoload. Ctrl+Z turns it off again; the file stays.") % addon_name)
+	_open_made(path, EventSheetL10n.translate("Made the behaviour %s at %s. Add it with Add Child Node (Ctrl+A) under the node it acts on.") % [addon_name, path])
 
 
-## The text of the new file. A global's picker heading and chosen icon are header lines, because a
-## global has no class_name for the sheet to hang them on.
+## The text of the new behaviour file.
 func _source_for(kind: String, addon_name: String, shelf: String, pack_path: String, source_script: String,
 		path: String) -> String:
 	var description: String = _desc_edit.text
 	if kind == START_COPY:
-		return Scaffold.copied_source(FileAccess.get_file_as_string(pack_path), addon_name,
-			"" if _global else shelf, description, not _global)
-	var sheet: EventSheetResource = Scaffold.global_sheet(description) if _global else Scaffold.behaviour_sheet(
+		return Scaffold.copied_source(FileAccess.get_file_as_string(pack_path), addon_name, shelf, description, true)
+	var sheet: EventSheetResource = Scaffold.behaviour_sheet(
 		addon_name, _icon_class(), shelf, description, _icon_path if not _icon_path.is_empty() else _write_default_icon(path))
 	if not source_script.is_empty():
-		Scaffold.with_variables(sheet, Scaffold.carried_variables(source_script, not _global))
-	var source: String = Scaffold.source_of(sheet)
-	if _global and not _icon_path.is_empty():
-		source = "@icon(\"%s\")\n%s" % [_icon_path, source]
-	if _global and not shelf.is_empty():
-		source = "## @ace_category(\"%s\")\n%s" % [shelf, source]
-	return source
+		Scaffold.with_variables(sheet, Scaffold.carried_variables(source_script, true))
+	return Scaffold.source_of(sheet)
 
 
 ## The Works-on class's own editor icon saved beside the behaviour, so it shows as that kind of object
@@ -473,12 +403,6 @@ func _open_made(path: String, message: String) -> void:
 	_dock._set_status(message)
 
 
-
-
-## Turns a global on or off in Godot's own list, Project Settings > Globals > Autoload, as one undo
-## step in the editor. `target` is the script or scene Godot loads; the "*" makes its name global.
-static func set_global_on(global_name: String, target: String, on: bool) -> void:
-	set_global_row(global_name, target if on else "")
 
 
 ## Writes a global's row in Godot's own list as one undo step in the editor: `target` is the script or
@@ -643,7 +567,7 @@ func _write_global_row_for(before: Dictionary, after: Dictionary) -> String:
 		return ""
 	var target: String = str(ProjectSettings.get_setting("autoload/" + current, "")).trim_prefix("*")
 	if scene != bool(before["scene"]):
-		# A scene made here sits beside the script, the way New global makes one.
+		# A scene made here sits beside the script, the way a global's scene does.
 		target = str(before["path"]).get_basename() + ".tscn" if scene else str(before["path"])
 		if scene and not FileAccess.file_exists(target):
 			ResourceSaver.save(Scaffold.global_scene(str(after["name"]), load(str(before["path"])) as Script), target)
