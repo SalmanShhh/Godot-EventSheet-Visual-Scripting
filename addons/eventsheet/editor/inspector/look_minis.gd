@@ -32,7 +32,7 @@ static func drawn_ids() -> PackedStringArray:
 	return PackedStringArray(["slider", "angle", "exp_slider", "no_handle", "progress_bar", "number_choices", "flags", "layers",
 		"easing", "unit", "file", "folder", "multiline", "placeholder", "choices", "suggestions", "toggle_row", "password",
 		"expression", "no_alpha", "swatch_row", "link", "vector_dial", "min_max", "corners", "node_path", "tool_button",
-		"texture_preview", "curve_editor", "table", "table_row", "custom", "storage"])
+		"texture_preview", "curve_editor", "table", "table_row", "table_tag", "custom", "storage"])
 
 
 ## Draws the picture of `look_id` inside `rect` on `canvas`, in the colours of `colours` (see COLOUR_KEYS).
@@ -167,6 +167,12 @@ static func draw_mini(canvas: CanvasItem, rect: Rect2, look_id: String, colours:
 			button.bg_color = rest
 			button.set_corner_radius_all(int(EventSheetLookStyle.px(3.0)))
 			canvas.draw_style_box(button, Rect2(inner.position.x + inner.size.x * 0.15, inner.position.y + inner.size.y * 0.1, inner.size.x * 0.7, inner.size.y * 0.8))
+		"table_tag":
+			# A field with a small tag beside it: a pointed label shape and a line of text.
+			var tag: Rect2 = Rect2(inner.position.x, centre.y - inner.size.y * 0.3, inner.size.x * 0.42, inner.size.y * 0.6)
+			canvas.draw_colored_polygon(PackedVector2Array([tag.position, Vector2(tag.end.x - tag.size.y * 0.3, tag.position.y), Vector2(tag.end.x, centre.y),
+				Vector2(tag.end.x - tag.size.y * 0.3, tag.end.y), Vector2(tag.position.x, tag.end.y)]), accent)
+			canvas.draw_line(Vector2(tag.end.x + pad * 0.8, centre.y), Vector2(inner.end.x, centre.y), rest, line * 1.5)
 		"custom":
 			# Your own hint: a field that holds a hint written by hand, three dots where the words go.
 			for index: int in 3:

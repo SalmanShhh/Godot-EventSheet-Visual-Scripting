@@ -10472,3 +10472,6 @@ Chances,확률
 "Roll 1,000 times","1,000번 굴리기"
 "Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","가중치에 비례해 행에서 1,000번 고르고 각 행이 몇 번 나왔는지 셉니다."
 "Weights only. Rules the game adds, such as pity, are not counted.",가중치만 계산합니다. 천장(pity)처럼 게임이 더하는 규칙은 반영되지 않습니다.
+The tags the rows already use.,행이 이미 사용하는 태그.
+No row has the tag %s.,태그 %s를 가진 행이 없습니다.
+No row has a tag yet.,아직 태그가 있는 행이 없습니다.

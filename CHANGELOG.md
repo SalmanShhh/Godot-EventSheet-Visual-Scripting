@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: a tag picked from a table's rows
+
+- A new look, "Tag from a table's rows" (`eventsheet:table_tag:<table>:<column>`), for a text variable beside a table: a field joined to a menu of the tags the rows already carry (comma separated in one column), typing a new one still allowed, and an amber line when no row carries the tag in the field. The menu is filled when it opens, so it is never stale. Without the plugin the variable is a plain text field and the file is byte-exact.
+
 ### New: roll a weighted table a thousand times
 
 - A weighted table gets a "Roll 1,000 times" button under it and, after a press, how often each row came up, with a line saying the count is from the weights alone ("Weights only. Rules the game adds, such as pity, are not counted."). The counts live in the Inspector row only, clear when the rows change, and are never stored. The button is off while no row has a weight.

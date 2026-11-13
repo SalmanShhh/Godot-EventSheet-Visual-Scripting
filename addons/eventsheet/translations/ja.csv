@@ -10472,3 +10472,6 @@ Chances,確率
 "Roll 1,000 times","1,000回ロール"
 "Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","各行の重みに比例して1,000回選び、それぞれが何回出たかを数えます。"
 "Weights only. Rules the game adds, such as pity, are not counted.",重みだけです。ピティのようにゲームが加えるルールは数えません。
+The tags the rows already use.,行がすでに使っているタグ。
+No row has the tag %s.,タグ %s を持つ行はありません。
+No row has a tag yet.,まだタグを持つ行はありません。

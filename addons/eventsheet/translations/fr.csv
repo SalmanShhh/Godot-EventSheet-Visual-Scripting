@@ -10472,3 +10472,6 @@ Chances,Probabilités
 "Roll 1,000 times",Tirer 1 000 fois
 "Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.",Tire 1 000 fois parmi les lignes selon leurs poids et compte combien de fois chacune est sortie.
 "Weights only. Rules the game adds, such as pity, are not counted.","Poids seulement. Les règles ajoutées par le jeu, comme la pitié (pity), ne sont pas comptées."
+The tags the rows already use.,Les étiquettes que les lignes utilisent déjà.
+No row has the tag %s.,Aucune ligne n'a l'étiquette %s.
+No row has a tag yet.,Aucune ligne n'a encore d'étiquette.

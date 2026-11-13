@@ -10472,3 +10472,6 @@ Chances,Chancen
 "Roll 1,000 times",1.000 Mal würfeln
 "Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","Wählt 1.000 Mal aus den Zeilen im Verhältnis ihrer Gewichte und zählt, wie oft jede vorkam."
 "Weights only. Rules the game adds, such as pity, are not counted.","Nur Gewichte. Regeln, die das Spiel hinzufügt, etwa Pity, werden nicht mitgezählt."
+The tags the rows already use.,"Die Tags, die die Zeilen schon verwenden."
+No row has the tag %s.,Keine Zeile hat den Tag %s.
+No row has a tag yet.,Noch keine Zeile hat einen Tag.

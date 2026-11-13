@@ -10472,3 +10472,6 @@ Chances,概率
 "Roll 1,000 times","抽取 1,000 次"
 "Picks from the rows 1,000 times in proportion to their weights and counts how often each came up.","按权重比例从各行中抽取 1,000 次，并统计每行出现的次数。"
 "Weights only. Rules the game adds, such as pity, are not counted.",仅按权重计算。游戏另行添加的规则（如保底）不计入。
+The tags the rows already use.,各行已经用过的标签。
+No row has the tag %s.,没有任何一行带有标签 %s。
+No row has a tag yet.,还没有任何一行带标签。

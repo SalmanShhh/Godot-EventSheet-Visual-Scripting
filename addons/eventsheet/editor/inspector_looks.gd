@@ -96,6 +96,7 @@ const LOOKS: Array[Dictionary] = [
 	{"id": "curve_editor", "from_file": true},
 	{"id": "table", "from_file": true},
 	{"id": "table_row", "from_file": true},
+	{"id": "table_tag", "from_file": true},
 	{"id": "custom", "label": "Your own hint", "types": [], "writes": "@export_custom(PROPERTY_HINT_…, \"…\", PROPERTY_USAGE_…)",
 		"tip": "Any PROPERTY_HINT_* with its hint text, and the usage flags when they matter.",
 		"fields": [["hint", "Hint", "text", "PROPERTY_HINT_NONE", "PROPERTY_HINT_…"], ["text", "Hint text", "text", "", "optional"],
