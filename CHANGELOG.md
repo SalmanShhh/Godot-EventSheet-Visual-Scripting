@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Inspector look hovers name the marker the compiler writes, and the Doctor reads .gd sheets for Required
+
+- Ten look hovers in the Look list said `es_drawer:` where the written marker is `eventsheet:`; a test now holds every hover to its own marker word.
+- The Doctor's required-field check only read `.tres` sheets. It now reads `.gd` sheets too, the default format, so a Required variable left empty in a scene is reported in a project made of scripts.
+
 ### Fixed: the no-collision-shape help strip fits beside its two doors
 
 - The sentence about a node with no collision shape lost its tail behind "Add a shape" and "Show me in the scene". It now says what is wrong and that the row never fires, and leaves the two options to the two doors.
