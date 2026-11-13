@@ -17,6 +17,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Variable window: the look is picked from a list with a small picture, the name and one grey sentence under the headings "Godot's own", "EventSheets looks" and "In your project", and each question says what it means and how it is written in the file. "Axis fields" is now "Two number fields" and "Linked axes" is "Linked fields".
 - The look list in the Variable window shows about five rows without scrolling and opens scrolled to the chosen look. The chosen row is a plain fill with no outline, and each look has its own small picture (dial, bar, table grid, swatches, strip, slider, menu, curve, picture), all drawn by one painter that takes its colours as arguments. The window's card area grows with the screen so the list is not cut.
 - Corner radii: at a narrow Inspector the link button stays icon-sized at the end of the first line of fields instead of sitting alone above them.
+- Inspector Look shelf: five more rows for look sheets (a themed panel, a message line, a number field, a joined strip, and "put this under the first row"), hidden outside look sheets like the first six. The toggle strip is built by the same `joined_strip` builder.
 - Markers in user scripts, ace_ids and the stored values are unchanged.
 
 ### Removed: the Manual no longer draws pages for Godot classes

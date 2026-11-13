@@ -5189,9 +5189,14 @@ the Inspector look (what a script that draws one property in Godot's Inspector d
 #### Actions
 - **Set Field Value** (`value: String`) - Writes a new value to the property this look draws. The Inspector keeps undo, so this is one undo step. Use it when the person changes something in your controls.
 - **Make Control Take Focus** (`control: String`) - Tells the Inspector that this control is where the keyboard focus goes when the person tabs to the property, or clicks its name.
+- **Add Under The Field** (`first_row: String, under: String`) - Puts a wide part (a dial, a picture, a table) on a line of its own under the first row, in the value column, with the name staying level with the first row. This adds both controls, so do not add them yourself.
 
 #### Expressions
 - **The Field's Value** - The value of the property this look draws, right now.
+- **A Themed Panel** - A panel wearing the Inspector's own field colour, for a block that sits under the row. Add the things it holds as its children.
+- **A Message Line** (`text: String`) - A line of words in the Inspector's own font that wraps to the room it has. Put it under the field to say what the field means or what is wrong.
+- **A Number Field** (`label: String`) - Godot's own number field with its label inside it. Connect its value_changed signal, and set its value with set_value_no_signal when the Inspector shows a value.
+- **A Joined Strip** (`buttons: String`) - Joins toggle buttons into one strip with no gaps, the pressed one filled with the accent. Give it an array of buttons you have made.
 
 ### Json (`res://addons/eventforge/registration/modules/json_aces.gd`)
 JSON (serialize, parse, validate, and save / load JSON files).

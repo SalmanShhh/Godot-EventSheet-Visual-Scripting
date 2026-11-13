@@ -132,6 +132,11 @@ func number_field(field_label: String = "") -> Range:
 	return EventSheetLookStyle.number_field(field_label)
 
 
+## A row of toggle buttons joined into one strip, the pressed one filled with the accent.
+func joined_strip(buttons: Array) -> Container:
+	return EventSheetLookStyle.joined_strip(buttons)
+
+
 ## The height of one Inspector field, from the editor theme.
 func field_height() -> float:
 	return EventSheetLookStyle.field_height()

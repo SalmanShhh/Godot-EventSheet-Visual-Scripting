@@ -75,7 +75,9 @@ static func _the_three_callbacks_read_as_triggers() -> bool:
 			words[descriptor.ace_id] = descriptor.display_text
 	rows.append(["each trigger has its sentence", words, {
 		"OnLookBuilt": "On look built", "OnValueShown": "On value shown", "OnValueChangedFromOutside": "On value changed from outside",
-		"SetFieldValue": "Set the field's value to {value}", "AddFocusable": "Make {control} the one focus lands on", "FieldValue": "the field's value"}])
+		"SetFieldValue": "Set the field's value to {value}", "AddFocusable": "Make {control} the one focus lands on", "FieldValue": "the field's value",
+		"ThemedPanel": "a themed panel", "MessageLine": "a line saying {text}", "NumberField": "a number field labelled {label}",
+		"JoinedStrip": "a joined strip of {buttons}", "AddUnderField": "Put {under} under {first_row}"}])
 	return SUPPORT.pins(NAME, rows)
 
 
@@ -125,8 +127,8 @@ static func _the_rows_are_offered_on_a_look_sheet_only() -> bool:
 		elif definition.id == "SetVar":
 			plain = EventSheetPickerGates.hidden_reason(definition, {EventSheetPickerGates.IN_LOOK_SHEET: false})
 	return SUPPORT.pins(NAME + ": picker", [
-		["six rows are on the shelf", shelf, 6],
-		["every one is offered on a look sheet", offered_on_look.size(), 6],
+		["eleven rows are on the shelf", shelf, 11],
+		["every one is offered on a look sheet", offered_on_look.size(), 11],
 		["none is offered on any other", offered_elsewhere, []],
 		["its reason is a named one", EventSheetPickerGates.HIDDEN_OUTSIDE_LOOK, "outside_inspector_look"],
 		["an ordinary row is not touched", plain, ""],

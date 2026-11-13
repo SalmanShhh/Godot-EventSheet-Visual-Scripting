@@ -394,6 +394,25 @@ static func join_toggle(button: Button, round_left: bool, round_right: bool) -> 
 		button.add_theme_color_override(item, on_accent)
 
 
+## Joins `buttons` into one strip of toggle buttons: each takes its corners from its place in the
+## row (the first keeps its left, the last its right, the middle none), is filled with the accent
+## while pressed, and is added to `into` (a new row of the same height when none is given, with no
+## gap between members). Returns the container the buttons now sit in.
+static func joined_strip(buttons: Array, into: Container = null) -> Container:
+	var strip: Container = into
+	if strip == null:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 0)
+		strip = row
+	for index: int in buttons.size():
+		var button: Button = buttons[index] as Button
+		var sides: Array[bool] = strip_sides(index, buttons.size())
+		join_toggle(button, sides[0], sides[1])
+		if button.get_parent() != strip:
+			strip.add_child(button)
+	return strip
+
+
 ## `content` inside a panel wearing the editor's field box with no margin of its own, so a control
 ## that draws no box (a resource picker) sits in the same dark field as the rows around it.
 static func boxed(content: Control) -> PanelContainer:

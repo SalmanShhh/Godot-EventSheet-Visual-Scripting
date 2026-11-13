@@ -36,4 +36,19 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.param("control", "self", "Control", "The control that takes the focus.", "expression"))
 	descriptors.append(F.expr("FieldValue", "The Field's Value", "field_value()", CAT, "the field's value",
 		"The value of the property this look draws, right now."))
+	descriptors.append(F.expr("ThemedPanel", "A Themed Panel", "themed_panel()", CAT, "a themed panel",
+		"A panel wearing the Inspector's own field colour, for a block that sits under the row. Add the things it holds as its children."))
+	descriptors.append(F.expr("MessageLine", "A Message Line", "message_line({text})", CAT, "a line saying {text}",
+		"A line of words in the Inspector's own font that wraps to the room it has. Put it under the field to say what the field means or what is wrong.")
+		.param("text", "\"\"", "Text", "The words to show.", "expression"))
+	descriptors.append(F.expr("NumberField", "A Number Field", "number_field({label})", CAT, "a number field labelled {label}",
+		"Godot's own number field with its label inside it. Connect its value_changed signal, and set its value with set_value_no_signal when the Inspector shows a value.")
+		.param("label", "\"\"", "Label", "The word shown inside the field, such as x or Reach.", "expression"))
+	descriptors.append(F.expr("JoinedStrip", "A Joined Strip", "joined_strip({buttons})", CAT, "a joined strip of {buttons}",
+		"Joins toggle buttons into one strip with no gaps, the pressed one filled with the accent. Give it an array of buttons you have made.")
+		.param("buttons", "[]", "Buttons", "The buttons to join, in order.", "expression"))
+	descriptors.append(F.act("AddUnderField", "Add Under The Field", "add_under_field({first_row}, {under})", CAT, "Put {under} under {first_row}",
+		"Puts a wide part (a dial, a picture, a table) on a line of its own under the first row, in the value column, with the name staying level with the first row. This adds both controls, so do not add them yourself.")
+		.param("first_row", "self", "First row", "The control that holds the first line of fields.", "expression")
+		.param("under", "self", "Under it", "The wide part that sits below.", "expression"))
 	return descriptors

@@ -902,14 +902,15 @@ class DrawerToggleRow:
 			if icon != null:
 				button.icon = icon
 				button.tooltip_text = option
-			var sides: Array[bool] = EventSheetLookStyle.strip_sides(index, _options.size())
-			EventSheetLookStyle.join_toggle(button, sides[0], sides[1])
+			button.pressed.connect(_on_option_pressed.bind(option))
+			_buttons.append(button)
+		EventSheetLookStyle.joined_strip(_buttons, self)
+		for index: int in _buttons.size():
+			var button: Button = _buttons[index]
+			var option: String = _options[index]
 			# The chosen word is written bold, which is wider; reserve that room so no word is ever cut.
 			var bold_extra: float = EventSheetLookStyle.bold_font().get_string_size(option, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetLookStyle.font_size()).x - EventSheetLookStyle.font().get_string_size(option, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetLookStyle.font_size()).x
 			button.custom_minimum_size.x = button.get_combined_minimum_size().x + maxf(0.0, bold_extra)
-			button.pressed.connect(_on_option_pressed.bind(option))
-			add_child(button)
-			_buttons.append(button)
 		if equal_widths:
 			var widest: float = 0.0
 			for button: Button in _buttons:

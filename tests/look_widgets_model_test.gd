@@ -14,6 +14,7 @@ static func run() -> bool:
 	ok = _swatches() and ok
 	ok = _min_max() and ok
 	ok = _corner_link() and ok
+	ok = _joined_strip() and ok
 	return ok
 
 
@@ -80,4 +81,25 @@ static func _corner_link() -> bool:
 	rows.append(["four different corners come up unlinked", corners.is_linked(), false])
 	rows.append(["four equal corners count as uniform", EventSheetDrawerWidgets.DrawerCorners.is_uniform(Vector4(5.0, 5.0, 5.0, 5.0)), true])
 	corners.free()
+	return SUPPORT.pins("look_widgets_model_test", rows)
+
+
+static func _joined_strip() -> bool:
+	var buttons: Array = []
+	for word: String in ["Left", "Centre", "Right"]:
+		var button: Button = Button.new()
+		button.text = word
+		buttons.append(button)
+	var strip: Container = EventSheetLookStyle.joined_strip(buttons)
+	var rows: Array = [
+		["a joined strip holds every button, in order", [strip.get_child(0), strip.get_child(1), strip.get_child(2)], buttons],
+		["a joined strip is one line of buttons", strip is HBoxContainer, true],
+		["members sit with no gap between them", strip.get_theme_constant("separation"), 0],
+	]
+	var grid: GridContainer = GridContainer.new()
+	var more: Array = [Button.new(), Button.new()]
+	var same: Container = EventSheetLookStyle.joined_strip(more, grid)
+	rows.append(["a strip can be built into a container the caller already has", same == grid and grid.get_child_count() == 2, true])
+	strip.free()
+	grid.free()
 	return SUPPORT.pins("look_widgets_model_test", rows)

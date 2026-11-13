@@ -136,7 +136,7 @@ const NOT_STANDALONE: Array[String] = [
 	# Node. Their round-trip is gated by editor_tool_shapes_test, which compiles the Command tool
 	# skeleton, opens the result and recompiles it byte for byte.
 	"CommandToolFinish", "CommandToolFinishWithCode",
-	"SetFieldValue", "AddFocusable", "FieldValue",  # EventSheetInspectorLook methods: they compile in a look host only; inspector_look_sheet_test compiles each one there
+	"SetFieldValue", "AddFocusable", "FieldValue", "ThemedPanel", "MessageLine", "NumberField", "JoinedStrip", "AddUnderField",  # EventSheetInspectorLook methods: they compile in a look host only; inspector_look_sheet_test compiles each one there
 	"AtMostEvery",  # calls a sheet-synthesized helper over its own last-run timestamp slot
 	"OnlyOncePerNode", "OnlyOncePerName", "OnlyOnceThisSceneLoad",  # call sheet-synthesized once-memory helpers
 	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to
