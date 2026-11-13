@@ -429,6 +429,16 @@ static func _var_name_from_line(line: String) -> String:
 	return after.strip_edges()
 
 
+## The weight column a table marker names (its trailing `weight=<column>` part), or "" when it names
+## none or one the columns do not have as an int or float.
+static func table_weight_column(columns: Array, notes: Array) -> String:
+	var named: String = str(widgets().sheet_compiler().peel_table_weight(notes)["weight"])
+	for column: Variant in columns:
+		if column is Dictionary and str((column as Dictionary).get("name", "")) == named and str((column as Dictionary).get("type", "")) in ["int", "float"]:
+			return named
+	return ""
+
+
 ## "hp=int,name=String" -> [{name:"hp", type:"int"}, {name:"name", type:"String"}]. The table
 ## marker's column schema; unknown types fall back to String, nameless entries are dropped. `notes`
 ## are the marker's parts after the columns - each column's own `default` and `about` - folded in
@@ -459,7 +469,7 @@ static func parse_table_columns(spec: String, notes: Array = []) -> Array:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
 	if not notes.is_empty():
-		widgets().sheet_compiler().read_table_column_notes(columns, notes)
+		widgets().sheet_compiler().read_table_column_notes(columns, widgets().sheet_compiler().peel_table_weight(notes)["parts"])
 	return columns
 
 

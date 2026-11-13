@@ -1111,9 +1111,12 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 				else:
 					columns.append({"name": pair.substr(0, eq), "type": lifted_type})
 		# Each column's own Default and Description ride the parts after the columns.
-		if columns.is_empty() or not EventSheetCompiler.read_table_column_notes(columns, Array(parts.slice(3))):
+		var peeled: Dictionary = EventSheetCompiler.peel_table_weight(Array(parts.slice(3)))
+		if columns.is_empty() or not EventSheetCompiler.read_table_column_notes(columns, peeled["parts"]):
 			return
 		attrs["table_columns"] = columns
+		if not str(peeled["weight"]).is_empty():
+			attrs["table_weight_column"] = str(peeled["weight"])
 	lifted.attributes = attrs
 	lifted.export_hint = ""
 	if EventSheetCompiler._emit_tree_variable_line(lifted) != line:

@@ -9,6 +9,9 @@ extends EventSheetInspectorLook
 ## Columns
 ## item:String, count:int
 @export var columns: String = ""
+## Weight column
+## The number column each row's share is worked out from. Leave empty for none.
+@export var weight_column: String = ""
 
 ## The door the plugin hands in: opens a .tres in the sheet editor's table view. Unset, no link is drawn.
 var open_table: Callable = Callable()

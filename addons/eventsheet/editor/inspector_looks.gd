@@ -251,7 +251,10 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 		"swatch_row", "corners", "texture_preview", "curve_editor":
 			return {"drawer": look_id}
 		"table":
-			return {"drawer": "table", "table_columns": parse_columns(text.call("columns"))}
+			var weighted: Dictionary = {"drawer": "table", "table_columns": parse_columns(text.call("columns"))}
+			if not str(text.call("weight_column")).strip_edges().is_empty():
+				weighted["table_weight_column"] = str(text.call("weight_column")).strip_edges()
+			return weighted
 		"table_row":
 			return {"drawer": "table_row", "table_row_table": text.call("table"), "table_row_column": _or(text.call("name_column"), "name")}
 		"node_path":
@@ -299,7 +302,7 @@ static func unfold(attributes: Dictionary, options: PackedStringArray = PackedSt
 		"toggle_row":
 			return ["toggle_row", {"choices": _joined(attributes.get("toggle_options", []))}]
 		"table":
-			return ["table", {"columns": columns_text(attributes.get("table_columns", []))}]
+			return ["table", {"columns": columns_text(attributes.get("table_columns", [])), "weight_column": str(attributes.get("table_weight_column", ""))}]
 		"table_row":
 			return ["table_row", {"table": str(attributes.get("table_row_table", "")), "name_column": str(attributes.get("table_row_column", ""))}]
 		"swatch_row", "corners", "texture_preview", "curve_editor":
@@ -350,7 +353,7 @@ static func unfold(attributes: Dictionary, options: PackedStringArray = PackedSt
 static func look_keys() -> PackedStringArray:
 	return PackedStringArray(["range", "drawer", "enum_values", "flags", "layers", "exp_easing", "exp_easing_flags",
 		"unit_kinds", "unit_store", "file", "multiline", "no_alpha", "storage", "placeholder", "suggestions",
-		"toggle_options", "custom_preset", "table_columns", "table_row_table", "table_row_column", "node_path_types", "tool_button",
+		"toggle_options", "custom_preset", "table_columns", "table_weight_column", "table_row_table", "table_row_column", "node_path_types", "tool_button",
 		"custom_hint", "look", "look_args"])
 
 

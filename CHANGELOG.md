@@ -19,6 +19,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Corner radii: at a narrow Inspector the link button stays icon-sized at the end of the first line of fields instead of sitting alone above them.
 - Inspector Look shelf: five more rows for look sheets (a themed panel, a message line, a number field, a joined strip, and "put this under the first row"), hidden outside look sheets like the first six. The toggle strip is built by the same `joined_strip` builder.
 - The sums behind a weighted table (each row's share, the odds as one line, a seeded roll) are one pure file, `weight_math.gd`; nothing is stored.
+- A table marker can end with `:weight=<column>` naming its number column of weights (new, written only when set, and the Variable window asks for it as "Weight column"). A build without the part leaves the line as written; the file re-saves byte for byte.
 - Markers in user scripts, ace_ids and the stored values are unchanged.
 
 ### Removed: the Manual no longer draws pages for Godot classes

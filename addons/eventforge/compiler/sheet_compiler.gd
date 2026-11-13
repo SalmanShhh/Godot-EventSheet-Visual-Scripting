@@ -5522,6 +5522,32 @@ static func table_column_notes(columns: Array) -> String:
 	return tail
 
 
+## The part that names a table's weight column, always the LAST part of the marker: `:weight=<column>`.
+## It turns on the share column, the odds bar and the roll button in the Inspector. A plugin that
+## does not know the part reads the line as it always read it and keeps the rest of the marker.
+const TABLE_WEIGHT_KEY: String = "weight"
+
+
+## The marker's weight part for a table whose attributes name a weight column, or "" when they name
+## none or name a column that is not a written int or float one (a part nothing could read back).
+static func table_weight_tail(attributes: Dictionary, written_columns: Array) -> String:
+	var wanted: String = str(attributes.get("table_weight_column", "")).strip_edges()
+	if wanted.is_empty():
+		return ""
+	for column: Variant in written_columns:
+		if column is Dictionary and str((column as Dictionary).get("name", "")).strip_edges() == wanted 				and str((column as Dictionary).get("type", "")) in ["int", "float"]:
+			return ":%s=%s" % [TABLE_WEIGHT_KEY, wanted]
+	return ""
+
+
+## Splits a marker's parts after the columns into the column notes and the weight column's name: the
+## trailing `weight=<name>` part comes off, everything else is returned untouched.
+static func peel_table_weight(parts: Array) -> Dictionary:
+	if not parts.is_empty() and str(parts[parts.size() - 1]).begins_with(TABLE_WEIGHT_KEY + "="):
+		return {"parts": parts.slice(0, parts.size() - 1), "weight": str(parts[parts.size() - 1]).substr(TABLE_WEIGHT_KEY.length() + 1)}
+	return {"parts": parts, "weight": ""}
+
+
 ## The inverse of table_column_notes: folds the marker's `default=` / `about=` parts into the
 ## columns read from it. False when a part is not one of them or does not name every column, so
 ## the reader leaves the line as it was written rather than guess.
@@ -5730,7 +5756,7 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 				written_columns.append(column)
 			if column_pairs.is_empty():
 				return ""
-			marker = "eventsheet:table:%s%s" % [",".join(column_pairs), table_column_notes(written_columns)]
+			marker = "eventsheet:table:%s%s%s" % [",".join(column_pairs), table_column_notes(written_columns), table_weight_tail(attributes, written_columns)]
 		"table_row":
 			# An int that names a row of a table property on the same object, picked in the Inspector
 			# by the row's name column. Both names ride the marker; the stored value stays the row's

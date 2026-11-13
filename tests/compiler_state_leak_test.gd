@@ -78,7 +78,7 @@ const PURE_HELPERS: Array[String] = [
 	"table_enum_entry", "table_enum_key", "table_enum_label", "table_enum_options",
 	"table_enum_pair", "table_enum_type", "variable_emit_order",
 	# A table column's own Default and Description, written into and read back out of its marker.
-	"table_column_notes", "read_table_column_notes",
+	"table_column_notes", "read_table_column_notes", "table_weight_tail", "peel_table_weight",
 	# What a sheet's declarations start each variable on: a read of the sheet handed in, nothing kept.
 	"declared_starting_values",
 	# The Show if / Lock unless a sheet's variables ask for, who refreshes the Inspector, and the
