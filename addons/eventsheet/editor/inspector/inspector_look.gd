@@ -158,7 +158,14 @@ func add_under_field(first_row: Control, under: Control) -> void:
 	draw.connect(align)
 
 
+## How far in from the row's left edge the part under the first row starts: the width of the label
+## column, which is what the first row's own width leaves of the whole. A first row with no width
+## yet gives 0, so nothing is pushed in before the layout has run.
+static func under_field_margin(row_width: float, first_width: float) -> int:
+	return int(maxf(0.0, row_width - first_width)) if first_width > 0.0 else 0
+
+
 func _align_under_field(first: Control, margin: MarginContainer) -> void:
-	var left: int = int(maxf(0.0, size.x - first.size.x)) if first.size.x > 0.0 else 0
+	var left: int = under_field_margin(size.x, first.size.x)
 	if margin.get_theme_constant("margin_left") != left:
 		margin.add_theme_constant_override("margin_left", left)
