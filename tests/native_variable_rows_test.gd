@@ -127,8 +127,8 @@ static func _test_native_rows() -> bool:
 			["Array[Node2D]", "guards"]],
 		["the name is the identifier as the file writes it, never capitalised",
 			[speed_name.text, speed_name.metadata.get("edit_text", "")], ["open_speed", ""]],
-		["the tiles are the attributes", speed_name.metadata.get("variable_badges"),
-			PackedStringArray(["inspector", "range", "tooltip"])],
+		["the tiles are the attributes, a range being the slider mark", speed_name.metadata.get("variable_badges"),
+			PackedStringArray(["inspector", "tooltip"])],
 		["the scope word moves to the name's hover",
 			str(speed_name.metadata.get("hover_note", "")).contains(EventSheetVariableSentence.scope_word(
 				EventSheetVariableSentence.SCOPE_INSTANCE)), true],

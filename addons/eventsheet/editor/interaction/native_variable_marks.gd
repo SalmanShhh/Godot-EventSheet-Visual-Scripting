@@ -509,7 +509,7 @@ static func inspector_mark(variable: LocalVariable, type_name: String, default_v
 	var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
 	var hint: String = variable.export_hint.strip_edges()
 	var is_colour: bool = type_name == "Color"
-	if attributes.is_empty() and hint.is_empty() and not is_colour:
+	if attributes.is_empty() and hint.is_empty() and variable.options.is_empty() and not is_colour:
 		return plain
 	var look_id: String = ""
 	var looks: GDScript = null
@@ -525,6 +525,8 @@ static func inspector_mark(variable: LocalVariable, type_name: String, default_v
 			if hint.begins_with(str((entry as Array)[0])):
 				look_id = str((entry as Array)[1])
 				break
+	if look_id.is_empty() and not variable.options.is_empty():
+		look_id = "choices"
 	if is_colour and (look_id.is_empty() or look_id == "no_alpha" or hint.begins_with("@export_color_no_alpha")):
 		var own: Variant = color_of(default_value)
 		if own != null:
@@ -536,6 +538,11 @@ static func inspector_mark(variable: LocalVariable, type_name: String, default_v
 	if looks != null and not str(attributes.get("look", "")).is_empty() and looks.by_id(look_id).is_empty():
 		return {"picture": "missing", "look_id": look_id, "missing": true, "colour": null}
 	return {"picture": look_id if drawn.has(look_id) else "look", "look_id": look_id, "missing": false, "colour": null}
+
+
+## The picture groups a range tile says the same thing as: once the mark is one of these, the separate
+## range tile folds into it (one mark, never two) and the mark's card carries the limits sentence.
+const SLIDER_PICTURES: PackedStringArray = ["slider", "angle", "exp_slider", "no_handle"]
 
 
 ## True for a member the compiler writes for its own bookkeeping, never one an author declared.
@@ -868,8 +875,14 @@ static func _fallback_style() -> EventSheetEventStyle:
 
 ## Paints one badge tile: a rounded tile in the badge's background with its icon on it.
 static func draw_badge_tile(control: CanvasItem, rect: Rect2, badge: String, foreground: Color,
-		background: Color) -> void:
+		background: Color, mark: Dictionary = {}) -> void:
 	_fill_rounded(control, rect, background, 4)
+	# The Inspector tile of a variable that wears a look shows that look's picture in place of the eye.
+	if badge == BADGE_INSPECTOR and not str(mark.get("picture", "")).is_empty():
+		var side: float = rect.size.y - 4.0
+		(load(MINIS_PATH) as GDScript).draw_mark(control, Rect2(rect.get_center() - Vector2(side, side) * 0.5, Vector2(side, side)),
+			str(mark["picture"]), foreground, mark.get("warning_ink", foreground), mark.get("colour"))
+		return
 	var icon := Rect2(rect.get_center() - Vector2(TILE_ICON, TILE_ICON) * 0.5, Vector2(TILE_ICON, TILE_ICON))
 	var stroke: float = maxf(icon.size.x / 16.0 * 1.4, 1.0)
 	match badge:

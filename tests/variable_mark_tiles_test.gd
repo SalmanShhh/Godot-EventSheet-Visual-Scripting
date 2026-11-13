@@ -35,11 +35,11 @@ static func run() -> bool:
 	var tip_card: Dictionary = NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_TOOLTIP)
 	var light: Dictionary = EventSheetEditorThemeDeriver.NATIVE_COLOURS_LIGHT
 	var ok: bool = SUPPORT.pins(P, [
-		["the default look's beat wears all three tiles", default_beat["badges"],
-			PackedStringArray(["inspector", "range", "tooltip"])],
+		["the default look's beat wears the slider mark and the note tile", default_beat["badges"],
+			PackedStringArray(["inspector", "tooltip"])],
 		["and trails its ## note", default_beat["note"], "Beats elapsed."],
 		["a theme still saying quiet marks draws them all the same", retired_beat["badges"],
-			PackedStringArray(["inspector", "range", "tooltip"])],
+			PackedStringArray(["inspector", "tooltip"])],
 		["and its note", retired_beat["note"], "Beats elapsed."],
 		["the retired value is no setting in the Theme Editor", _editable_token_names().has("variable_quiet_marks"), false],
 		["but a theme file naming it still stores it", _stored("variable_quiet_marks"), true],

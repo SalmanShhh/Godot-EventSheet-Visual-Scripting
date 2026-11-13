@@ -12927,6 +12927,17 @@ func _build_variable_row(
 		# And what the script itself does with it - a setter, an @onready, a show-if - after them,
 		# the same tiles the variable window puts beside the options that write them.
 		NativeVariableMarks.script_badges(source_variable))
+	# The picture the Inspector mark is drawn with, asked once: the look the variable wears, or a Color's
+	# own colour. "" is today's plain mark. A mark that is the slider says what the range tile says, so the
+	# range tile folds into it: one mark, never two.
+	var inspector_mark: Dictionary = {}
+	if bool(options.get("exported", false)):
+		inspector_mark = NativeVariableMarks.inspector_mark(source_variable, type_name, default_value)
+		if NativeVariableMarks.SLIDER_PICTURES.has(str(inspector_mark.get("picture", ""))):
+			var folded: int = variable_badges.find(NativeVariableMarks.BADGE_RANGE)
+			if folded >= 0:
+				variable_badges.remove_at(folded)
+		inspector_mark["warning_ink"] = reading_style.lift_note_badge_foreground_color
 	# The kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
 	# scrolling. A mark, never a word pill. An Inspector-style row has none: its type leads it.
 	row_data.spans = []
@@ -13003,11 +13014,6 @@ func _build_variable_row(
 					}, true)
 				)
 			)
-		# The picture the Inspector mark is drawn with, asked once: the look the variable wears, or a
-		# Color's own colour. "" is today's plain mark.
-		var inspector_mark: Dictionary = {}
-		if bool(options.get("exported", false)):
-			inspector_mark = NativeVariableMarks.inspector_mark(source_variable, type_name, default_value)
 		# The name is what a reader came for, so it is the one bold word on the row - and its hover
 		# keeps the declaration grammar (`hp : int`) for anyone who wants it.
 		#
@@ -13026,6 +13032,7 @@ func _build_variable_row(
 				# The badge tiles drawn at the row's right (View > Variable Badges).
 				"variable_badges": variable_badges,
 				"inspector_mark": inspector_mark,
+				"inspector_warning": reading_style.lift_note_badge_foreground_color,
 				"bbcode_segments": [{
 					"text": display_name,
 					"color": _viewport._get_event_style().object_label_color,
@@ -13057,6 +13064,7 @@ func _build_variable_row(
 						"badge_fixed_width": KIND_BADGE_WIDTH,
 						"inspector_badge": true,
 						"inspector_mark": inspector_mark,
+						"inspector_warning": reading_style.lift_note_badge_foreground_color,
 						"inspector_picture": str(inspector_mark.get("picture", "")),
 						"badge_bg": Color(0.0, 0.0, 0.0, 0.0),
 						"badge_fg": reading_style.inspector_chip_foreground_color,

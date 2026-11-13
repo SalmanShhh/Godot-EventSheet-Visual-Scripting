@@ -180,8 +180,9 @@ static func _test_builder_stamps_facts_and_keeps_words() -> bool:
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["the type word keeps its words", speed_type.text, "number"],
 		["and carries its family", speed_type.metadata.get("variable_type_family"), "number"],
-		["the name carries the badges it earned", speed_name.metadata.get("variable_badges"),
-			PackedStringArray(["inspector", "range", "tooltip"])],
+		["the name carries the badges it earned, the range folded into the slider mark", speed_name.metadata.get("variable_badges"),
+			PackedStringArray(["inspector", "tooltip"])],
+		["and the mark it wears is the slider", (speed_name.metadata.get("inspector_mark") as Dictionary).get("picture"), "slider"],
 		["a variable with nothing to say earns none", _span_with(locked_row, "variable_name_span").metadata.get("variable_badges"),
 			PackedStringArray()],
 		["the old Inspector mark is still a span, with its glyph", speed_mark.text, "⚙"],

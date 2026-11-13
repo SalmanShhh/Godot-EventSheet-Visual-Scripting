@@ -50,6 +50,11 @@ static func run() -> bool:
 	by_hint.export_hint = "@export_range(0, 100, 1)"
 	rows.append(["an opened script's @export_range line is a slider", NativeVariableMarks.inspector_mark(by_hint, "int", 5)["picture"], "slider"])
 	by_hint.export_hint = "@export_storage"
+	var combo: LocalVariable = LocalVariable.new()
+	combo.name = "difficulty"
+	combo.exported = true
+	combo.options = PackedStringArray(["easy", "hard"])
+	rows.append(["a String with a list of words is a dropdown", NativeVariableMarks.inspector_mark(combo, "String", "easy")["picture"], "choices"])
 	rows.append(["an opened script's @export_storage line is the plain mark", NativeVariableMarks.inspector_mark(by_hint, "int", 5)["picture"], ""])
 	rows.append(["no variable is the plain mark", NativeVariableMarks.inspector_mark(null, "int", 5)["picture"], ""])
 	rows.append(["a missing look is flagged missing", NativeVariableMarks.inspector_mark(_with({"look": "not_installed_anywhere"}), "int", 0)["missing"], true])

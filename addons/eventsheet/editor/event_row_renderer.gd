@@ -2580,10 +2580,14 @@ func _draw_variable_badges(control: CanvasItem, span: EventSheetSemanticSpan, me
 	var style: EventSheetEventStyle = event_style if event_style != null else _fallback_event_style()
 	var tiles_x: float = float(metadata["badge_tiles_x"])
 	var centre_y: float = span.rect.get_center().y
+	var wears: Dictionary = {}
+	if metadata.get("inspector_mark") is Dictionary and not str((metadata["inspector_mark"] as Dictionary).get("picture", "")).is_empty():
+		wears = (metadata["inspector_mark"] as Dictionary).duplicate()
+		wears["warning_ink"] = metadata.get("inspector_warning", NativeVariableMarks.badge_ink(style, NativeVariableMarks.BADGE_INSPECTOR, true))
 	for index: int in range(badges.size()):
 		NativeVariableMarks.draw_badge_tile(control, NativeVariableMarks.tile_rect(tiles_x, centre_y, index),
 			badges[index], NativeVariableMarks.badge_ink(style, badges[index], true),
-			NativeVariableMarks.badge_ink(style, badges[index], false))
+			NativeVariableMarks.badge_ink(style, badges[index], false), wears if badges[index] == NativeVariableMarks.BADGE_INSPECTOR else {})
 
 
 ## The muted line beside an open inline editor, starting one gap past the field it belongs to
@@ -2930,6 +2934,14 @@ func _draw_badge_span(control: CanvasItem, span: EventSheetSemanticSpan, font: F
 				Rect2(badge_rect.get_center() - Vector2(mark_side, mark_side) * 0.5, Vector2(mark_side, mark_side)),
 				false
 			)
+			return
+		# A variable that wears a look draws that look's picture in the row's ink, in place of the gear.
+		var picture: String = str(metadata.get("inspector_picture", ""))
+		if not picture.is_empty():
+			var own: Dictionary = metadata.get("inspector_mark", {}) if metadata.get("inspector_mark") is Dictionary else {}
+			(load(NativeVariableMarks.MINIS_PATH) as GDScript).draw_mark(control,
+				Rect2(badge_rect.get_center() - Vector2(mark_side, mark_side) * 0.5, Vector2(mark_side, mark_side)),
+				picture, badge_fg, metadata.get("inspector_warning", badge_fg), own.get("colour"))
 			return
 		var mark: Texture2D = _badge_icon(span.text, int(round(mark_side)))
 		if mark != null:

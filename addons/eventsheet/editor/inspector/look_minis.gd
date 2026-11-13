@@ -35,21 +35,60 @@ static func drawn_ids() -> PackedStringArray:
 		"texture_preview", "curve_editor", "table", "table_row", "table_tag", "seed", "cards", "custom", "storage"])
 
 
+## The colours a picture takes from one ink, for a place that has no editor theme to ask (a sheet row,
+## drawn in the sheet theme): the ink itself for the lit parts, the same ink faded for the idle ones, a
+## faint wash for the field, and `warning` for the parts that mean something is wrong.
+static func ink_colours(ink: Color, warning: Color) -> Dictionary:
+	return {
+		"field": Color(ink, 0.14),
+		"accent": ink,
+		"rest": Color(ink, 0.5),
+		"ink": ink,
+		"error": warning,
+		"warning": warning,
+	}
+
+
+## Draws the mark of a variable row in `rect`: the picture of the look it wears, in the row's own ink; a
+## Color's own colour as a square of that colour; and for a look that is not installed an amber "?"
+## with no box or border round it. `own_colour` is read only for the "colour" picture.
+static func draw_mark(canvas: CanvasItem, rect: Rect2, picture: String, ink: Color, warning: Color, own_colour: Variant = null) -> void:
+	if picture == "missing":
+		var font: Font = ThemeDB.fallback_font
+		var size: int = maxi(int(rect.size.y), 6)
+		var width: float = font.get_string_size("?", HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x
+		canvas.draw_string(font, Vector2(rect.get_center().x - width * 0.5, rect.position.y + rect.size.y * 0.86), "?",
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, size, warning)
+		return
+	var colours: Dictionary = ink_colours(ink, warning)
+	if own_colour is Color:
+		colours["colour"] = own_colour
+	draw_mini(canvas, rect, picture, colours, true)
+
+
 ## Draws the picture of `look_id` inside `rect` on `canvas`, in the colours of `colours` (see COLOUR_KEYS).
-static func draw_mini(canvas: CanvasItem, rect: Rect2, look_id: String, colours: Dictionary) -> void:
+## `compact` is for a picture the size of a glyph (a sheet row's mark): the margins and lines follow the
+## rect, not the editor's scale.
+static func draw_mini(canvas: CanvasItem, rect: Rect2, look_id: String, colours: Dictionary, compact: bool = false) -> void:
 	var field: Color = colours.get("field", Color.BLACK)
 	var accent: Color = colours.get("accent", Color.WHITE)
 	var rest: Color = colours.get("rest", Color.GRAY)
 	var ink: Color = colours.get("ink", Color.WHITE)
 	var box: StyleBoxFlat = StyleBoxFlat.new()
 	box.bg_color = field
-	box.set_corner_radius_all(int(EventSheetLookStyle.px(3.0)))
+	box.set_corner_radius_all(int(rect.size.y * 0.2) if compact else int(EventSheetLookStyle.px(3.0)))
 	canvas.draw_style_box(box, rect)
-	var pad: float = EventSheetLookStyle.px(6.0)
+	var pad: float = rect.size.y * 0.16 if compact else EventSheetLookStyle.px(6.0)
 	var inner: Rect2 = rect.grow(-pad)
 	var centre: Vector2 = rect.get_center()
-	var line: float = maxf(1.0, EventSheetLookStyle.px(1.5))
+	var line: float = maxf(1.0, rect.size.y * 0.07 if compact else EventSheetLookStyle.px(1.5))
 	match look_id:
+		"colour":
+			# A Color's own colour: the square is the value itself, on the faint field.
+			var fill: StyleBoxFlat = StyleBoxFlat.new()
+			fill.bg_color = colours.get("colour", ink)
+			fill.set_corner_radius_all(int(rect.size.y * 0.14))
+			canvas.draw_style_box(fill, rect.grow(-rect.size.y * 0.08))
 		"progress_bar":
 			var track: Rect2 = Rect2(inner.position.x, centre.y - inner.size.y * 0.2, inner.size.x, inner.size.y * 0.4)
 			canvas.draw_rect(track, rest)

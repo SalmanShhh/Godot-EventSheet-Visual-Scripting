@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: an exported variable's mark is the picture of its look
+
+- The mark at the right of an exported variable row (and its tile, with View > Variable Badges on) is drawn as the small picture of the look the variable wears, in the row's own ink: a slider, a table grid, a menu arrow, a die for a seed, a Color's own colour. A look whose file is not installed is an amber "?" with no border. With tiles on, the separate range tile folds into the slider mark, so a ranged variable shows one mark, not two. A plain `@export` keeps today's mark.
+
 ### New: a variable row knows which picture the Inspector will draw
 
 - An exported variable row now works out the picture of its Inspector mark from the same look table the Variable window reads (a slider for a range, a table grid, a menu arrow, a Color's own colour, an amber "?" for a look whose file is not installed), and stamps it on the row. Nothing is drawn differently yet; the reading dump shows it as `mark=<picture>`.
