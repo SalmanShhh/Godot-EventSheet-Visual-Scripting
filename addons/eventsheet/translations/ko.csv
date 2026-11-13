@@ -10527,3 +10527,5 @@ Name the look to make it.,룩을 만들려면 이름을 지어 주세요.
 """%s"" cannot be a look name.","""%s"" 은(는) 룩 이름이 될 수 없습니다."
 %s.gd is already in the looks folder.,%s.gd 은(는) 이미 룩 폴더에 있습니다.
 """%s"" is not a type or a class.","""%s"" 은(는) 타입도 클래스도 아닙니다."
+Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,
+It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,

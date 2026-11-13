@@ -10527,3 +10527,5 @@ Name the look to make it.,Dai un nome all'aspetto per crearlo.
 """%s"" cannot be a look name.","""%s"" non può essere il nome di un aspetto."
 %s.gd is already in the looks folder.,%s.gd è già nella cartella degli aspetti.
 """%s"" is not a type or a class.","""%s"" non è un tipo né una classe."
+Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it.,
+It shows as 0% until text is filled in. Godot makes the translation file; add it under Project Settings > Localization > Translations.,
