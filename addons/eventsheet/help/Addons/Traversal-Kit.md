@@ -37,7 +37,7 @@ character grabs a ledge only when your events say it should.
 
 - **The kit never moves the body on its own.** Almost every action writes `velocity` and stops. Your
   mover (the Platformer behavior, or your own rows) is what turns that velocity into motion, so the kit's
-  rows belong under an **Every tick** event or a trigger, alongside the movement you already run.
+  rows belong under an **On process** event or a trigger, alongside the movement you already run.
 - **The two exceptions are the moves the kit owns.** A hang, a timed climb and a vault place the body
   directly for as long as they last and zero its velocity, because they are scripted moves with a start
   and an end. While one runs, nothing else can move the character.
@@ -80,7 +80,7 @@ A ledge grab and a mantle, on top of Platformer movement:
 Player | Platformer  (your usual run and jump)
 Player | TraversalKit  (Probe Mask = your solid layer)
 
-Every tick
+On process
   Condition: Player | TraversalKit  Is At A Ledge
   Condition: Player | Platformer  Is Falling
     -> Player | TraversalKit: Grab Ledge
@@ -194,7 +194,7 @@ which survive auto-named children.
 **1. Grab a ledge automatically while falling.** The classic assist: reach for any lip you fall past.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit  Is At A Ledge
   Condition: Player | Platformer  Is Falling
     -> Player | TraversalKit: Grab Ledge
@@ -221,7 +221,7 @@ On down pressed
 **4. Hang idle animation.** Is Hanging is a plain state you can drive art from.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit  Is Hanging
     -> Player: play "hang" animation
 ```
@@ -230,9 +230,9 @@ Every tick
 wall and falling.
 
 ```
-Every tick
+On process
   -> Player | TraversalKit: Slide Down Wall  60
-Every tick
+On process
   Condition: Player | TraversalKit  Is Wall Sliding
     -> spawn dust at the Player's feet
 ```
@@ -250,7 +250,7 @@ On jump pressed
 **7. Wall run while sprinting.** It needs speed, a wall and air, and it gives out on its own.
 
 ```
-Every tick
+On process
   Condition: sprint is held
     -> Player | TraversalKit: Wall Run  20, 120
 ```
@@ -259,7 +259,7 @@ Every tick
 covers the whole level.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit  Is On Ladder
     -> Player | TraversalKit: Climb Ladder  120
     -> Player: play "climb" animation
@@ -296,7 +296,7 @@ On crouch released
 water.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit  Is In Water
     -> Player | TraversalKit: Swim  20, 10
 ```
@@ -305,11 +305,11 @@ Every tick
 **Fill Meter** system actions - the kit supplies the two tests, the meters supply the arithmetic.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit  Is In Water
   Condition: Player | TraversalKit  Is Above The Surface  (inverted)
     -> Drain Meter  breath  by 12 per second, floor 0
-Every tick
+On process
   Condition: Player | TraversalKit  Is Above The Surface
     -> Fill Meter  breath  by 30 per second, cap 100
 ```
@@ -318,7 +318,7 @@ Every tick
 are one expression each.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit  Is In Water
     -> set WaterTint alpha to Player | TraversalKit.Water Depth() / 400
     -> set the underwater bus wet level from the same value

@@ -5,7 +5,7 @@ extends RefCounted
 # Pins the four Godot-systems patterns batch eight reads - the shapes several lines of a script make
 # together, each of which an event sheet already has rows for:
 #
-#   Loading a layout in the background: Load layout X in the background, X has finished
+#   Loading a layout in the background: Load scene X in the background, X has finished
 #        loading, and the progress the status array carries
 #   The movement math a hand-rolled character body is built from, in the movement behaviors'
 #        own words: Apply gravity, Accelerate toward, Limit speed, Move, the collision switches,
@@ -91,7 +91,7 @@ func _on_agent_velocity_computed(safe: Vector2) -> void:
 ## parcel is that the two say the same sentence, so a rename on either side has to be made on both.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# The background-loading idiom
-	"System ▸ layout Level 2 has finished loading",
+	"System ▸ scene Level 2 has finished loading",
 	# The movement words, on a character body
 	"System ▸ Apply gravity gravity (per second)",
 	"System ▸ Accelerate x toward dir * speed at accel (per second)",
@@ -125,7 +125,7 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 ## The condition readings the grammar must answer on its own, as "object ▸ sentence".
 static var CONDITION_READINGS: Dictionary = {
 	# The status enum, named by the layout rather than by the local it was read into
-	"st == ResourceLoader.THREAD_LOAD_LOADED": "System ▸ layout Level 2 has finished loading",
+	"st == ResourceLoader.THREAD_LOAD_LOADED": "System ▸ scene Level 2 has finished loading",
 	# What a slide collision hit
 	"c.get_collider().is_in_group(\"enemy\")": "c ▸ collided object is in family enemy",
 	# The two questions Godot's high-level multiplayer answers
@@ -138,10 +138,10 @@ static var CONDITION_READINGS: Dictionary = {
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
 	"ResourceLoader.load_threaded_request(\"res://levels/level_2.tscn\")":
-		"System ▸ Load layout Level 2 in the background",
-	"ResourceLoader.load_threaded_request(path)": "System ▸ Load layout Level 2 in the background",
+		"System ▸ Load scene Level 2 in the background",
+	"ResourceLoader.load_threaded_request(path)": "System ▸ Load scene Level 2 in the background",
 	"get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get(path))":
-		"System ▸ Go to layout Level 2",
+		"System ▸ Change scene Level 2",
 	"velocity.y += gravity * delta": "Player ▸ Apply gravity gravity (per second)",
 	"velocity.x = move_toward(velocity.x, dir * speed, accel * delta)":
 		"Player ▸ Accelerate x toward dir * speed at accel (per second)",

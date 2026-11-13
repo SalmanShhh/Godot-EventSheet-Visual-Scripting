@@ -205,7 +205,7 @@ dock, the section grounds to that node's actual children before you even press R
 
 ## Use cases
 
-Each example targets the `SpringBehavior` on the named node. Host helpers apply to the parent for you; for custom named springs, read the value back with an expression and apply it in an "Every tick" event.
+Each example targets the `SpringBehavior` on the named node. Host helpers apply to the parent for you; for custom named springs, read the value back with an expression and apply it in an "On process" event.
 
 ### 1. Pop-in on spawn
 
@@ -229,7 +229,7 @@ On Ready
 On Button Pressed
   -> Button | Spring: Add Impulse  "pop", 6
 
-Every tick
+On process
   -> Button: set uniform scale to  Button | Spring: Spring Value  "pop"
 ```
 
@@ -243,7 +243,7 @@ A character squashes on impact and springs back to normal. **Spring Between** sn
 On Landed
   -> Player | Spring: Spring Between  "squash", 0.7, 1.0
 
-Every tick
+On process
   -> Player: set uniform scale to  Player | Spring: Spring Value  "squash"
 ```
 
@@ -254,7 +254,7 @@ The snap-to-0.7 gives the impact; the spring back to 1.0 overshoots slightly for
 A camera trails its target with mass. Spring the host X and Y toward the player every frame - the lag and ease come free from the spring.
 
 ```
-Every tick
+On process
   -> Camera | Spring: Spring Host X  Player.global_position.x
   -> Camera | Spring: Spring Host Y  Player.global_position.y
 ```
@@ -286,7 +286,7 @@ On Ready
 On Fired
   -> Gun | Spring: Add Impulse  "recoil", -30
 
-Every tick
+On process
   -> GunSprite: position.x = Gun | Spring: Spring Value  "recoil"
   -> Muzzle: scale.x = 1.0 + abs(Gun | Spring: Spring Velocity  "recoil") * 0.002
 ```
@@ -305,7 +305,7 @@ On Damaged
   -> Enemy | Spring: Set Color Value  "flash", Color(2, 2, 2)
   -> Enemy | Spring: Spring Color  "flash", Color.WHITE
 
-Every tick
+On process
   -> EnemySprite: modulate = Enemy | Spring: Color Value  "flash"
 ```
 
@@ -319,7 +319,7 @@ A health bar springs toward its new value instead of jumping. Spring a `"hp"` va
 On Health Changed
   -> Bar | Spring: Spring To  "hp", Player.hp / Player.max_hp
 
-Every tick
+On process
   -> BarFill: scale.x = Bar | Spring: Spring Value  "hp"
 ```
 
@@ -333,7 +333,7 @@ The score counts up with a snappy settle. Spring a `"score"` value toward the re
 On Score Changed
   -> HUD | Spring: Spring To  "score", Game.score
 
-Every tick
+On process
   -> ScoreLabel: text = str(round(HUD | Spring: Spring Value  "score"))
 ```
 
@@ -367,7 +367,7 @@ On Ready
 On Opened
   -> Chest | Spring: Spring To  "lid", 95
 
-Every tick
+On process
   -> Lid: rotation_degrees = Chest | Spring: Spring Value  "lid"
 ```
 
@@ -381,7 +381,7 @@ A door springs open, and the next event only fires once it has fully settled. Fi
 On Opened
   -> Door | Spring: Spring To  "swing", 110
 
-Every tick
+On process
   -> Door: rotation_degrees = Door | Spring: Spring Value  "swing"
 
 On Spring Reached  (name = "swing")
@@ -398,7 +398,7 @@ A charge-up ability sparks once it is halfway charged. Read Spring Progress and 
 On Charging
   -> Ability | Spring: Spring To  "charge", 1.0
 
-Every tick
+On process
   Condition: Ability | Spring: Spring Progress  "charge"  >=  0.5
     -> Ability: emit charge sparks
 ```

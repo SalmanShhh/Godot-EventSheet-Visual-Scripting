@@ -76,14 +76,14 @@ const BEHAVIORS: Array[Dictionary] = [
 		"name": "Wrap",
 		"here": "The Wrap pack: a node that leaves one edge of the scene comes back on the other.",
 		"pack": "wrap",
-		"reading": "A pair of edge tests that teleport the node across reads as Wrap around layout, on one row.",
+		"reading": "A pair of edge tests that teleport the node across reads as Wrap around scene, on one row.",
 	},
 	{
 		"key": "bound-to-layout",
-		"name": "Bound to layout",
+		"name": "Bound to scene",
 		"here": "The Bound To pack: the node is kept inside the scene's rectangle.",
 		"pack": "bound_to",
-		"reading": "A clamp of x and y against the scene rectangle reads as Bound to layout, on one row.",
+		"reading": "A clamp of x and y against the scene rectangle reads as Bound to scene, on one row.",
 	},
 	{
 		"key": "rotate",

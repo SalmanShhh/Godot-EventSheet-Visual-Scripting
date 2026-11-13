@@ -98,7 +98,7 @@ static func _existence_sentences() -> bool:
 		"sprite ▸ Set texture to null") and ok
 	ok = _check("leaving the layout is not being destroyed",
 		_reading(EventSheetSentence.statement("get_parent().remove_child(self)", context)),
-		"Player ▸ Remove from layout (kept alive, not destroyed)") and ok
+		"Player ▸ Remove from scene (kept alive, not destroyed)") and ok
 	return ok
 
 

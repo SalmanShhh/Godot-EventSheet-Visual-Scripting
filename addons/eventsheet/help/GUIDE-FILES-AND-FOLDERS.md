@@ -330,7 +330,7 @@ line that starts it. It has no fix button on purpose: where a watch was meant to
 closing, the menu leaving, the download finishing - is yours to say, and a guess would put **Stop
 Watching** somewhere the sheet never meant it.
 
-![Two events in a sheet called ModFolder, under a head whose files band reads watching user://mods every 2.0 s with watch_folder("user://mods", 2.0) echoed beside it: On Created with FolderWatcher Watch folder "user://mods" 2, and a second On Created with FolderWatcher Stop watching](images/folder-watcher.png)
+![Two events in a sheet called ModFolder, under a head whose files band reads watching user://mods every 2.0 s with watch_folder("user://mods", 2.0) echoed beside it: On Enter Tree with FolderWatcher Watch folder "user://mods" 2, and a second On Enter Tree with FolderWatcher Stop watching](images/folder-watcher.png)
 
 The pack's own page - [Folder Watcher](Addons/Folder-Watcher.md) - has the sixteen worked cases, the
 Inspector properties and the mistakes that bite.
@@ -383,7 +383,7 @@ func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:
 	print(bytes)
 ```
 
-![A sheet called ModInstaller under a head whose files bands read user://pack.zip - read and user://mods - written, the ZIPReader line echoed beside each: On Created unpacks "user://pack.zip" into folder "user://mods", and On Unpack Progress sets a bar value to entries divided by total, with the refused and finished events below](images/archive-unpack.png)
+![A sheet called ModInstaller under a head whose files bands read user://pack.zip - read and user://mods - written, the ZIPReader line echoed beside each: On Enter Tree unpacks "user://pack.zip" into folder "user://mods", and On Unpack Progress sets a bar value to entries divided by total, with the refused and finished events below](images/archive-unpack.png)
 
 ## The name the player typed
 
@@ -531,7 +531,7 @@ question to ask above the row that builds one:
 ```
 On load pressed
 + Scene file "user://built_level.tscn" is data-only
-  -> Add Layout On Top  "user://built_level.tscn", "Built"
+  -> Add Scene On Top  "user://built_level.tscn", "Built"
 ```
 
 It reads the file's own resource table as **text** and builds nothing, so asking is safe on a file

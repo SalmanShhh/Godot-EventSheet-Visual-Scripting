@@ -34,7 +34,7 @@ not agree on what "far" means:
    that trigger's delta.
 
 ```
-Every tick
+On process
   Condition: Guard | Is Beyond Home  240, Straight line
     -> Guard | Home & Leash: Walk home at  90, delta
 ```
@@ -96,7 +96,7 @@ behaviour lookups** in the dictionary and the same entries insert as
 The oldest enemy AI there is: chase until the leash snaps, then walk back to the post.
 
 ```
-Every tick
+On process
   Condition: Guard | Is Beyond Home  300, Straight line
     -> Guard | State Machine: Go to state  "returning"
 ```
@@ -107,7 +107,7 @@ Return Home is one step per call, so it belongs under a per-frame trigger with t
 delta.
 
 ```
-Every tick
+On process
   Condition: Guard | State Machine: Current state is  "returning"
     -> Guard | Home & Leash: Walk home at  80, delta
 On Arrived Home -> Guard | State Machine: Go to state  "idle"
@@ -126,7 +126,7 @@ On Customer Entered -> Keeper | Home & Leash: Walk home at  120, delta
 The pet follows the player freely, but only inside the fence.
 
 ```
-Every tick
+On process
   Condition: Pet | Is Beyond Home  180, Straight line
     -> Pet | Follow: Stop Following
     -> Pet | Home & Leash: Walk home at  140, delta
@@ -137,7 +137,7 @@ Every tick
 In a platformer the guard's height is irrelevant - only the sideways drift should end a chase.
 
 ```
-Every tick
+On process
   Condition: Guard | Is Beyond Home  200, Horizontal only
     -> Guard | give up the chase
 ```
@@ -147,7 +147,7 @@ Every tick
 Vertical only measures the shaft and nothing else, so a nudged elevator finds its rest floor.
 
 ```
-Every tick
+On process
   Condition: Lift | Is Beyond Home  4, Vertical only
     -> Lift | Home & Leash: Walk home at  60, delta
 ```
@@ -157,7 +157,7 @@ Every tick
 With a 32px grid, a three-tile leash is `96` in grid steps - the same unit the board draws in.
 
 ```
-Every tick
+On process
   Condition: Unit | Is Beyond Home  96, Grid steps
     -> Unit | mark "out of position"
 ```
@@ -168,7 +168,7 @@ King moves is the metric for an eight-way walker, so a diagonal step counts the 
 straight one.
 
 ```
-Every tick
+On process
   Condition: Knight | Is Beyond Home  64, King moves
     -> Knight | Home & Leash: Walk home at  100, delta
 ```
@@ -186,7 +186,7 @@ On Wave Cleared -> Turret | Home & Leash: Walk home at  40, delta
 The distance is a parameter, so the whole game's aggression is one variable.
 
 ```
-Every tick
+On process
   Condition: Guard | Is Beyond Home  leash_length, Straight line
     -> Guard | give up the chase
 ```
@@ -213,7 +213,7 @@ On Enemy Spawned -> Enemy | Home & Leash: Set home here
 Distance From Home is an expression, so it drops into a debug label or a Doctor-style HUD row.
 
 ```
-Every tick -> HUD Kit: Set Label  "GuardDrift", Guard.Distance From Home(0)
+On process -> HUD Kit: Set Label  "GuardDrift", Guard.Distance From Home(0)
 ```
 
 ### 14. Fade the chase music on the way back
@@ -230,7 +230,7 @@ Plant home on player one and check player two against it, so the camera never ha
 between them.
 
 ```
-Every tick -> Player2 | Home & Leash: Set home at  Player1.global_position
+On process -> Player2 | Home & Leash: Set home at  Player1.global_position
   Condition: Player2 | Is Beyond Home  400, Straight line
     -> show the "stay together" nudge
 ```

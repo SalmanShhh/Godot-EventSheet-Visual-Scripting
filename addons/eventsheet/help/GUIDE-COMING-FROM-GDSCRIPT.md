@@ -1,7 +1,7 @@
 # Coming from GDScript
 
 You already know Godot. You open a `.gd` file as a sheet, and it says **Destroy** where you wrote
-`queue_free()`, **Every tick** where you wrote `_process`, and **Wait for** where you wrote `await`.
+`queue_free()`, **On process** where you wrote `_process`, and **Wait for** where you wrote `await`.
 Nothing has been rewritten - the file on disk is byte for byte the file you saved - but the words on
 screen are the sheet's, and this page is the dictionary for them.
 
@@ -18,9 +18,9 @@ as, and where to go to see the two side by side.
 | You wrote | The sheet reads it | Where to look |
 | --- | --- | --- |
 | `queue_free()` | Destroy / Queue Free | the object's own actions |
-| `_process(delta)` | Every tick | the event's own condition lane |
-| `_physics_process(delta)` | Every physics tick | the event's own condition lane |
-| `_ready()` | On start of layout | triggers |
+| `_process(delta)` | On process | the event's own condition lane |
+| `_physics_process(delta)` | On physics process | the event's own condition lane |
+| `_ready()` | On ready | triggers |
 | `_input(event)` | the input conditions (Key Is Down, On Control Pressed) | Keyboard, Mouse, Gamepad |
 | `signal` | trigger | Triggers on any object's page |
 | `emit_signal(...)` / `x.emit()` | Emit Signal | Signals |
@@ -41,7 +41,7 @@ as, and where to go to see the two side by side.
 | `const` | Constant | System |
 | `add_to_group("x")` | Add To Group (Add to family with Familiar Words on) | Groups |
 | `is_in_group("x")` | Is In Group | Groups |
-| `get_tree().change_scene_to_file(...)` | Go To Layout | Scene |
+| `get_tree().change_scene_to_file(...)` | Change Scene | Scene |
 | `instantiate()` + `add_child(...)` | Create object | Nodes |
 | `is_on_floor()` | Is On Floor | General Conditions |
 | `is_on_wall()` | Is By Wall | Collisions |

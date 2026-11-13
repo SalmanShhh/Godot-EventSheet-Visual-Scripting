@@ -155,7 +155,7 @@ designer's own radius survives - it breathes within a tenth either way rather th
 ### 10. A magical flame that speeds up near danger
 
 ```
-Every tick -> Torch | Light Flicker: Set Times A Second  12 + (30 - distance_to_boss) * 0.4
+On process -> Torch | Light Flicker: Set Times A Second  12 + (30 - distance_to_boss) * 0.4
 ```
 
 ### 11. Asking whether a light is alight

@@ -195,7 +195,7 @@ On import pressed
 be: Has Changed turns any expression into an edge.
 
 ```
-Every Frame
+On Process
   Condition: Has Changed  Clipboard Text()
     Condition: Share Code Is Valid  Clipboard Text()
       -> show the "Import this build?" prompt
@@ -288,7 +288,7 @@ On cutscene ends
 is always an answer.
 
 ```
-Every Frame
+On Process
   -> set DeltaLabel text = "was " + str(Remembered Value("health", health))
 ```
 

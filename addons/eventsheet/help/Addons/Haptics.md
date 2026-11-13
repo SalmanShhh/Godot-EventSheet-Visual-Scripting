@@ -364,7 +364,7 @@ Both rows together cover a rumble started by any route.
 A debug read that answers with the two motors as a Vector2.
 
 ```
-Every tick
+On process
   Condition: Debug.overlay_open
     -> Debug Overlay: watch  Vibration: Gamepad Vibration Strength  0
 ```

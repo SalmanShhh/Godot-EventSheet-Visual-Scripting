@@ -21,8 +21,8 @@ per mode. Plus a **mask**, so a second picture decides where the first is allowe
 3. The mode field shows a little picture of every mode. Pick the one that looks right.
 
 ```
-On start of layout -> Muzzle | Blend As: self, screen, 1.0
-On start of layout -> Scorch | Blend As: self, multiply, 1.0
+On ready -> Muzzle | Blend As: self, screen, 1.0
+On ready -> Scorch | Blend As: self, multiply, 1.0
 ```
 
 ## The names you already know
@@ -153,7 +153,7 @@ full colour, so fading it up is the unit greying out.
 ### 5. A grimy window pane
 
 ```
-On start of layout -> Grime | Blend As: self, overlay, 0.6
+On ready -> Grime | Blend As: self, overlay, 0.6
 ```
 
 Overlay deepens the shadows and brightens the highlights of the room behind the glass without
@@ -162,7 +162,7 @@ touching the midtones, which is exactly what dirt on glass does.
 ### 6. Heat haze over a fire
 
 ```
-On start of layout -> Haze | Blend As: self, soft light, 0.35
+On ready -> Haze | Blend As: self, soft light, 0.35
 ```
 
 Soft light nudges without ever hitting pure black or white, so the air over the fire shifts
@@ -198,7 +198,7 @@ The tear texture is the shape; fading the mask strength opens it.
 ### 10. A health bar that is a shape, not a rectangle
 
 ```
-On start of layout -> HeartFrame | Clip My Children: clip only
+On ready -> HeartFrame | Clip My Children: clip only
 On Health Changed -> Fill | Set width: Health Percent * 64
 ```
 
@@ -217,7 +217,7 @@ it cannot spill.
 ### 12. Water that stops at the edge of the pool
 
 ```
-On start of layout -> PoolShape | Clip My Children: clip only
+On ready -> PoolShape | Clip My Children: clip only
 ```
 
 The pool shape is the cutter; the scrolling water texture under it is clipped to the pool's
@@ -246,7 +246,7 @@ reads as the room heating.
 ### 15. A shadow that only darkens
 
 ```
-On start of layout -> Shadow | Blend As: self, darken, 1.0
+On ready -> Shadow | Blend As: self, darken, 1.0
 ```
 
 Darken can never brighten a pixel, so the blob shadow works over grass, stone and water
@@ -272,7 +272,7 @@ reading the screen, which is the cheap setting for a low-end machine.
 ### 18. Mask one sprite with another sprite
 
 ```
-On start of layout -> Reflection | Mask With Node: self, PuddleSprite, inside
+On ready -> Reflection | Mask With Node: self, PuddleSprite, inside
 ```
 
 The puddle's own texture is the shape, so moving or swapping the puddle changes where the

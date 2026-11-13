@@ -177,7 +177,7 @@ func _ready() -> void:
 first, then convert.
 
 ```
-Every Frame
+On Process
   -> Set value  hovered_cell = Position To Tile( to_local(get_global_mouse_position()) )
 ```
 
@@ -185,7 +185,7 @@ Every Frame
 where the ghost sprite belongs.
 
 ```
-Every Frame
+On Process
   -> Set Property  Ghost.position = Tile To Position(hovered_cell)
 ```
 
@@ -263,7 +263,7 @@ On Ready
 free.
 
 ```
-Every Frame
+On Process
   -> Set Property  DigBar.value = 100.0 - Used Cells Count * 100.0 / starting_cells
 ```
 
@@ -280,7 +280,7 @@ On cell erased
 On node while the sheet lives on the player.
 
 ```
-Every Frame
+On Process
   -> Erase Tile  Position To Tile( FogLayer.to_local(global_position) )   On node: FogLayer
 ```
 

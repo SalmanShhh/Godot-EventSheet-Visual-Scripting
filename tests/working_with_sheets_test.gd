@@ -339,8 +339,8 @@ static func _test_a_base_keeps_running_under_the_script_that_extends_it() -> boo
 	var found: Array[Dictionary] = EventSheetSharedSheets.base_not_reached(later, "PauseHandling", shared)
 	ok = _check("a tick added later without super is the finding",
 		found[0].get("message", "") if found.size() > 0 else "",
-		"PauseHandling's Every tick events no longer run - this script's own _process replaces them. Call super(delta) first in it.") and ok
-	ok = _check("and it names the function, so the canvas finds the Every tick event",
+		"PauseHandling's On process events no longer run - this script's own _process replaces them. Call super(delta) first in it.") and ok
+	ok = _check("and it names the function, so the canvas finds the On process event",
 		str(EventSheetSharedSheets.TRIGGER_OF_FUNCTION.get(found[0].get("subject", "") if found.size() > 0 else "", "")), "OnProcess") and ok
 	ok = _check("a helper wiring never earns it",
 		EventSheetSharedSheets.base_not_reached(later, "PauseHandling",
@@ -377,7 +377,7 @@ static func _test_two_includes_on_one_trigger_are_reported() -> bool:
 	var messages: PackedStringArray = EventSheetSharedSheets.duplicate_trigger_messages(includer, sources)
 	ok = _check("and the clash is one finding", messages.size(), 1) and ok
 	ok = _check("worded so the reader knows which one wins", messages[0] if messages.size() > 0 else "",
-		"Two included sheets handle Every tick - PauseHandling and CheatKeys. Both run, in include order, and the last one wins.") and ok
+		"Two included sheets handle On process - PauseHandling and CheatKeys. Both run, in include order, and the last one wins.") and ok
 	ok = _check("one include on its own is silent",
 		EventSheetSharedSheets.duplicate_trigger_messages(
 			"extends Node\nvar _pause_handling := PauseHandling.new()\n", sources).size(), 0) and ok

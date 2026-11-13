@@ -429,7 +429,7 @@ Fade To Scene already ignores a second call while a fade runs, but checking Is T
 Lock input during a transition so the player cannot queue up conflicting actions.
 
 ```
-Every tick
+On process
   Condition: Menu | SceneFlowBehavior  Is Transitioning
     -> PlayButton: set disabled = true
     -> QuitButton: set disabled = true

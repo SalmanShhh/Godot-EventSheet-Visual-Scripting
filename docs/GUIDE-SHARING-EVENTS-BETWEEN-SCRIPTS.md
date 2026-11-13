@@ -64,7 +64,7 @@ point and also the thing to be careful about.
 
 One thing, and it is the one thing you cannot see by reading the includer:
 
-> Two included sheets handle Every tick - PauseHandling and CheatKeys. Both run, in include order,
+> Two included sheets handle On process - PauseHandling and CheatKeys. Both run, in include order,
 > and the last one wins.
 
 Both handlers really do run, and the second one's answer is the one that lasts - but neither handler

@@ -326,7 +326,7 @@ On Stroke Started
   -> Clear trail
   -> Show gesture trail
 
-Every tick
+On process
   TouchGesturesBehavior.Stroke Points() > 4
     -> Set trail thickness  min(TouchGesturesBehavior.Stroke Length() / 400.0, 1.0)
 ```

@@ -156,7 +156,7 @@ Scoped to a `Node2D` host. Each one fills an Array variable with the objects it 
 **1. A ground check.** Put a RayCast2D under the character pointing down, and read it.
 
 ```
-Every tick
+On process
   Condition: RayCast Is Colliding (2D)
     -> set OnGround to true
   Else
@@ -172,7 +172,7 @@ func _physics_process(_delta: float) -> void:
 the probe.
 
 ```
-Every tick
+On process
   -> Point RayCast At (2D)  Vector2(24 * facing, 0)
 ```
 
@@ -205,7 +205,7 @@ Parent (2D) already covers the common case of a ray parented to the body.
 **6. "Did I shoot an enemy?" in one cell.**
 
 ```
-Every tick
+On process
   Condition: RayCast Hits Group (2D)  "enemies"
     -> damage RayCast Collider (2D) by 10
 ```
@@ -213,7 +213,7 @@ Every tick
 **7. Tell a headshot from a body shot.** A body built from two collision shapes reports which one was hit.
 
 ```
-Every tick
+On process
   Condition: RayCast Is Colliding (2D)
   Condition: RayCast Hit Shape Index (2D) = 0
     -> deal double damage
@@ -223,7 +223,7 @@ Every tick
 that aims it and reads it immediately would read last frame's answer.
 
 ```
-Every tick
+On process
   -> Point RayCast At (2D)  aim_direction * 400
   -> Force RayCast Update (2D)
   Condition: RayCast Is Colliding (2D)
@@ -241,7 +241,7 @@ func _on_wall_hit() -> void:
 are free.
 
 ```
-Every tick
+On process
   -> Cast Ray Into (2D)  hit, from global_position, to player.global_position
   Condition: hit hit something
   Condition: hit is in "player"
@@ -282,7 +282,7 @@ same ray three times.
 single-shot condition is the tidier row.
 
 ```
-Every tick
+On process
   Condition: World Raycast Hits? (2D)  from A.global_position, to B.global_position
     -> break the cable
 ```
@@ -332,7 +332,7 @@ Mouse (2D) is the one with the areas switch.
 the move that is clear.
 
 ```
-Every tick
+On process
   -> Cast Circle Motion Into (2D)  travel, from global_position, motion velocity * delta, radius 8
   -> move by velocity * delta * travel
 ```
@@ -343,7 +343,7 @@ Every tick
 would slip between things.
 
 ```
-Every tick
+On process
   Condition: ShapeCast Is Colliding (2D)
     -> set Count = ShapeCast Hit Count (2D)
     -> For Each index from 0 to Count - 1
@@ -353,7 +353,7 @@ Every tick
 **20. Stop just short of the wall using the safe fraction.**
 
 ```
-Every tick
+On process
   -> Point ShapeCast At (2D)  velocity * delta
   -> Force ShapeCast Update (2D)
   -> move by velocity * delta * ShapeCast Safe Fraction (2D)

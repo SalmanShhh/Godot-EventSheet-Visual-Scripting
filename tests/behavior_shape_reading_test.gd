@@ -9,7 +9,7 @@ extends RefCounted
 #                 far the projectile has flown
 #   Turret    the nearest-in-family loop, holding a target, and turning toward it
 #   Move To   gliding to a point, being under way, arriving, stopping
-#   The five one-liners: Rotate, Wrap around layout, Bound to layout, Pin to, Fade out
+#   The five one-liners: Rotate, Wrap around scene, Bound to scene, Pin to, Fade out
 #
 # Four gates, in the order they matter:
 #   1. the recognisers' own values - one shape, one sentence, asserted literally;
@@ -115,10 +115,10 @@ static var STATEMENT_READINGS: Dictionary = {
 	# The five one-liners
 	"rotation_degrees += rotate_speed * delta":
 		"Coin ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)",
-	"position.x = wrapf(position.x, 0.0, screen.x)": "Coin ▸ Wrap  Wrap around layout horizontally",
-	"position.y = wrapf(position.y, 0.0, screen.y)": "Coin ▸ Wrap  Wrap around layout vertically",
+	"position.x = wrapf(position.x, 0.0, screen.x)": "Coin ▸ Wrap  Wrap around scene horizontally",
+	"position.y = wrapf(position.y, 0.0, screen.y)": "Coin ▸ Wrap  Wrap around scene vertically",
 	"position = position.clamp(Vector2.ZERO, screen)":
-		"Coin ▸ Bound To  Bound to layout (inside (0, 0) - screen)",
+		"Coin ▸ Bound To  Bound to scene (inside (0, 0) - screen)",
 	"global_position = anchor.global_position + pin_offset":
 		"Coin ▸ Pin  Pin to anchor (position · offset pin_offset)",
 	"rotation = anchor.rotation": "Coin ▸ Pin  Pin to anchor (angle)",
@@ -151,8 +151,8 @@ static var EXPECTED_ROW_READINGS: PackedStringArray = PackedStringArray([
 	"eventforge_behavior_shape_reading ▸ Move To  Has arrived",
 	"eventforge_behavior_shape_reading ▸ Move To  Stop",
 	"eventforge_behavior_shape_reading ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)",
-	"eventforge_behavior_shape_reading ▸ Wrap  Wrap around layout horizontally",
-	"eventforge_behavior_shape_reading ▸ Bound To  Bound to layout (inside (0, 0) - screen)",
+	"eventforge_behavior_shape_reading ▸ Wrap  Wrap around scene horizontally",
+	"eventforge_behavior_shape_reading ▸ Bound To  Bound to scene (inside (0, 0) - screen)",
 	"eventforge_behavior_shape_reading ▸ Pin  Pin to anchor (position · offset pin_offset)",
 	"eventforge_behavior_shape_reading ▸ Pin  Pin to anchor (angle)",
 	"eventforge_behavior_shape_reading ▸ Fade  Fade out over 1 seconds (then destroy)"
@@ -173,11 +173,11 @@ static var AUTHORING_PARITY: Dictionary = {
 	"RotateClockwise": [{"degrees_per_second": "rotate_speed", "delta_t": "delta"},
 		"Coin ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)"],
 	"WrapAroundLayoutX": [{"low": "0.0", "high": "screen.x"},
-		"Coin ▸ Wrap  Wrap around layout horizontally"],
+		"Coin ▸ Wrap  Wrap around scene horizontally"],
 	"WrapAroundLayoutY": [{"low": "0.0", "high": "screen.y"},
-		"Coin ▸ Wrap  Wrap around layout vertically"],
+		"Coin ▸ Wrap  Wrap around scene vertically"],
 	"BoundToLayout": [{"low": "Vector2.ZERO", "high": "screen"},
-		"Coin ▸ Bound To  Bound to layout (inside (0, 0) - screen)"],
+		"Coin ▸ Bound To  Bound to scene (inside (0, 0) - screen)"],
 	"PinToObject": [{"anchor": "anchor", "offset": "pin_offset"},
 		"Coin ▸ Pin  Pin to anchor (position · offset pin_offset)"],
 	"PinAngleToObject": [{"anchor": "anchor"}, "Coin ▸ Pin  Pin to anchor (angle)"],

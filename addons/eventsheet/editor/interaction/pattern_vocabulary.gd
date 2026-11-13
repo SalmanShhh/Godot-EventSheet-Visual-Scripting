@@ -131,7 +131,7 @@ const ENTRIES: Dictionary = {
 		"rank": 17
 	},
 	"blank_event": {
-		"words": "Every tick",
+		"words": "On process",
 		"why": "an event with no condition of its own, so it runs every tick",
 		"adoptable": "",
 		"rank": 18

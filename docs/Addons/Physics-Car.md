@@ -65,7 +65,7 @@ The mental model is small. Learn these ideas and the rest of the pack is just kn
 **4. Drive it.** Here is a complete first car - keyboard driving, where Simulate Control is paired with Stop when no key is down:
 
 ```
-Every tick
+On process
   Condition: Keyboard  Key "up" is down
     -> Car | PhysicsCar: Simulate Control  "up"
   Condition: Keyboard  Key "left" is down
@@ -210,7 +210,7 @@ Each example targets the `PhysicsCar` behavior on the named node (here, `Car`). 
 The classic four-key car. Feed each held key to Simulate Control, and release everything with `stop` when nothing is pressed.
 
 ```
-Every tick
+On process
   Condition: Keyboard  Key "up" is down
     -> Car | PhysicsCar: Simulate Control  "up"
   Condition: Keyboard  Key "left" is down
@@ -228,7 +228,7 @@ Every tick
 A gamepad car should feel smooth, not four-directional. Set Throttle and Set Steer clamp to -1..1, so you pipe raw analog values straight in.
 
 ```
-Every tick
+On process
   -> Car | PhysicsCar: Set Throttle  Input.get_action_strength("accelerate") - Input.get_action_strength("reverse")
   -> Car | PhysicsCar: Set Steer  Input.get_axis("steer_left", "steer_right")
 ```
@@ -240,7 +240,7 @@ A half-pressed trigger gives half throttle; a light stick tilt gives a gentle tu
 Point the car at the next waypoint each frame with Drive Toward Position, and advance the path when it arrives.
 
 ```
-Every tick
+On process
   -> Car | PhysicsCar: Drive Toward Position  Waypoint.global_position.x, Waypoint.global_position.y, 0.8, 1, 6
 
 Car On Drive Target Reached
@@ -255,7 +255,7 @@ Throttle 0.8 keeps it from overshooting tight corners; tolerance 6 lets it call 
 A pursuer that reads the track. Compute the angle from the car to the player each frame and hand it to Drive Toward Angle.
 
 ```
-Every tick
+On process
   -> Car | PhysicsCar: Drive Toward Angle  rad_to_deg((Player.global_position - Car.global_position).angle()), 1, 1, 5
 ```
 
@@ -266,7 +266,7 @@ The car turns to face the player and floors it. Lower `throttle_amount` for a la
 The handbrake is momentary - it only cuts grip for the frame you call it, so hold it by calling Enable Handbrake every frame the button is down. Spawn smoke on the drift trigger.
 
 ```
-Every tick
+On process
   Condition: Keyboard  Key "space" is down
     -> Car | PhysicsCar: Enable Handbrake
 
@@ -310,7 +310,7 @@ Resistance 2.5 makes the mud sap speed while grip 0.45 lets the tail wander, so 
 Read Slip Angle live while drifting for a HUD needle, and bank Drift Duration into the score when the drift ends.
 
 ```
-Every tick
+On process
   Condition: Car | PhysicsCar  Is Drifting
     -> set DriftMeter.value to Car | PhysicsCar: Slip Angle
 
@@ -341,7 +341,7 @@ The car surges to 700 for 1.5 seconds, then the cap returns to its normal 400.
 Show reverse lights and a beep whenever the car is actually moving backwards, using the Is Reversing condition.
 
 ```
-Every tick
+On process
   Condition: Car | PhysicsCar  Is Reversing
     -> show ReverseLights
     -> play "reverse-beep" (looping)

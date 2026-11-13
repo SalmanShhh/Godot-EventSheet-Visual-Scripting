@@ -37,7 +37,7 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "Add your first event",
-			"body": EventSheetL10n.translate("An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously."),
+			"body": EventSheetL10n.translate("An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame."),
 			"task": EventSheetL10n.translate("Click \"Add event\" in the sheet's top-left corner (or the trailing \"+ Add event…\" row) and pick a trigger - try On Ready."),
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_event(sheet),
 		},

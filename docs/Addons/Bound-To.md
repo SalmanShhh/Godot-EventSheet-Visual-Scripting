@@ -148,7 +148,7 @@ Classic single-screen adventure: hold against the screen edge and the game pans 
 room.
 
 ```
-Every tick
+On process
   Condition: Is At Bound  side = "right" -> start the pan to the next room
 ```
 
@@ -201,7 +201,7 @@ A gamepad aim reticle should keep its CENTER on screen while its art may overhan
 `bound_by_edge` off in the Inspector and only the origin is clamped.
 
 ```
-Every tick -> Reticle | move by the right stick   (the clamp tidies the result)
+On process -> Reticle | move by the right stick   (the clamp tidies the result)
 ```
 
 ### 15. Tutorial pen, then the world
@@ -243,4 +243,4 @@ screen)** the moment the file is opened as a sheet.
 
 The event wears the pattern chip, whose Adopt behavior offers this pack - which adds the parts one
 line cannot have: the live camera rect, edge-versus-origin binding, **Is At Bound** and **On Hit
-Bound**. Prefer the one line? The picker's **Bound To Layout** writes exactly it.
+Bound**. Prefer the one line? The picker's **Bound To Scene** writes exactly it.

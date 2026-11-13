@@ -78,7 +78,7 @@ The pack is small, and six ideas carry all of it.
 On Input Action Just Pressed  "lock_on"
   -> Player | Targeting 3D: Lock On To Nearest  "enemies", 60, 40
 
-Every tick
+On process
   Condition: Player | Targeting 3D  Is Locked On
     -> Reticle: Set Position to  Player | Targeting 3D: Locked Target On Screen
     -> Reticle: Show
@@ -206,7 +206,7 @@ On Player | Targeting 3D: On Target Lost
 Locked Target On Screen projects through the camera the player is actually looking through, so a reticle living on a CanvasLayer needs no conversion of its own.
 
 ```
-Every tick
+On process
   Condition: Player | Targeting 3D  Is Locked On
     -> Reticle: Set Position to  Player | Targeting 3D: Locked Target On Screen
 ```
@@ -253,7 +253,7 @@ On Slider "aim_assist" Changed
 Magnetism drags the turn rate while the aim crosses something, so the stick settles on an enemy instead of sliding past it.
 
 ```
-Every tick
+On process
   -> Player: Set look_speed to  Player | Targeting 3D: Magnetism  Player.base_look_speed
   -> Camera: Rotate by  Player.look_stick * Player.look_speed * delta
 ```
@@ -273,7 +273,7 @@ On Input Action Just Pressed  "fire"
 Is Locked On is the whole gate. Free camera when nothing is held, framed camera when something is.
 
 ```
-Every tick
+On process
   Condition: Player | Targeting 3D  Is Locked On
     -> Camera | Look At: Look At  Player | Targeting 3D: Locked Target  over 0.2 s
   Else

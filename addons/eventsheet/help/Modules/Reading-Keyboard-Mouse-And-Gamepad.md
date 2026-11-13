@@ -189,7 +189,7 @@ D-pad directions. The axis dropdown offers `JOY_AXIS_LEFT_X`, `LEFT_Y`, `RIGHT_X
 **1. A debug key that never reaches the rebinding screen.** A physical key check needs no InputMap entry.
 
 ```
-Every tick
+On process
   Condition: Key Is Down  KEY_F1
     -> show the debug overlay
 ```
@@ -220,7 +220,7 @@ Note the `not event.echo` in the shipped template: holding the key down does NOT
 **3. Press any key to continue.**
 
 ```
-Every tick
+On process
   Condition: Anything Is Pressed
     -> go to the main menu
 ```
@@ -272,7 +272,7 @@ func _process(_delta: float) -> void:
 comparison against half the sprite size works.
 
 ```
-Every tick
+On process
   Condition: Mouse Position (local).length() < 32
     -> highlight this icon
 ```
@@ -358,14 +358,14 @@ get for free is not applied to a raw axis read.
 **15. An analog trigger.** `JOY_AXIS_TRIGGER_RIGHT` reads 0 to 1, so it can drive a charge meter.
 
 ```
-Every tick
+On process
   -> set ChargeBar value = Gamepad Axis(0, JOY_AXIS_TRIGGER_RIGHT) * 100
 ```
 
 **16. Show the right button glyphs.**
 
 ```
-Every tick
+On process
   Condition: Gamepad Count > 0
     -> show the gamepad hint art
   Else
@@ -378,7 +378,7 @@ Gamepad Is Recognized tells you whether its buttons mean what you expect at all.
 **17. Local multiplayer joins.** Every gamepad row takes a device index, so player 2 is device 1.
 
 ```
-Every tick
+On process
   Condition: Gamepad Is Connected  1
   Condition: Gamepad Button Is Down  device 1, JOY_BUTTON_START
     -> add player 2 to the game

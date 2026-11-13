@@ -89,7 +89,7 @@ static func _test_badge_words() -> bool:
 	var passed: bool = _check("the badge counts the events", EventSheetSceneEvents.badge_text(badge), "⌗ 3")
 	passed = _check("and the hover names the triggers",
 		EventSheetSceneEvents.badge_tooltip(badge),
-		"On ready · Every tick · On collision with") and passed
+		"On ready · On process · On collision with") and passed
 	return passed
 
 

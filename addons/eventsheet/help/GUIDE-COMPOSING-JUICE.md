@@ -529,7 +529,7 @@ takes the underlay away again.
 Every piece in this guide was built to the same three rules, because a beat that stutters is worse
 than no beat at all.
 
-**Every tick parks itself.** A behaviour that is not doing anything calls `set_process(false)` and
+**On process parks itself.** A behaviour that is not doing anything calls `set_process(false)` and
 costs exactly zero frame time. A Feedback Player with no play running, a Juice behaviour whose shake
 has faded to nothing, a spring bank where every spring has settled, a stopped sequencer head, a HUD
 with no bar lagging, and a level full of channel listeners with nothing shaking are all free. A

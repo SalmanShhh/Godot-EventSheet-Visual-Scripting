@@ -317,7 +317,7 @@ On Generate Terrain
 Scenario: gentle, wandering wind strength over time.
 
 ```
-Every tick
+On process
   -> Local: set wind to AdvancedRandom.Noise 1D(elapsed_time * 0.2)
   -> Grass: sway by  wind * 10
   # smooth wander, not jittery random

@@ -342,7 +342,7 @@ This is one worked example. In the Manual it draws as rows, because it is a comp
 round-trips; on GitHub and in an exported site it is the file. Both are the same bytes - which is the
 point of the section, so it is deliberately not written out twice.
 
-![The example below drawn as rows: a sheet head whose class line carries the sheet's own description, an Instance number coyote_time = 0.12 row with its declaration echoed beside it, a signal row under its sentence, an On created event holding a documentation note, two Set actions and a private note, and a Still Forgiven condition function under its own sentence](images/description-surfaces.png)
+![The example below drawn as rows: a sheet head whose class line carries the sheet's own description, an Instance number coyote_time = 0.12 row with its declaration echoed beside it, a signal row under its sentence, an On enter tree event holding a documentation note, two Set actions and a private note, and a Still Forgiven condition function under its own sentence](images/description-surfaces.png)
 
 <!-- caption: One sheet carrying every description surface at once -->
 ```eventsheet

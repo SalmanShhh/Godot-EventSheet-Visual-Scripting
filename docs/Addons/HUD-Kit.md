@@ -89,7 +89,7 @@ from a sheet writing the Range, or from an animation.
 On Ready
   -> HUD | HUD Kit: Set Text  "ScoreLabel", "Score: 0"
 
-Every tick
+On process
   -> HUD | HUD Kit: Set Bar  "HealthBar", Player.hp, Player.max_hp
 
 On Button Pressed
@@ -243,7 +243,7 @@ Each example targets the `HudKitBehavior` behavior on the named node (here a UI 
 Fill a health bar straight from the player's values every frame. Passing the max keeps the bar's range in step if the max ever changes.
 
 ```
-Every tick
+On process
   -> HUD | HUD Kit: Set Bar  "HealthBar", Player.hp, Player.max_hp
 ```
 

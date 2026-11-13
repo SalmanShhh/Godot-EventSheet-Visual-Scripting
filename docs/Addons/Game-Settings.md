@@ -455,7 +455,7 @@ with the rest, and never a stray global.
 On Ready
   -> Settings: Declare Setting  "show_hitboxes", false, Yes/No
 
-On Every Frame
+On On Process
   Condition: Settings: Setting Is  "show_hitboxes", true
     -> draw the collision shapes
 ```

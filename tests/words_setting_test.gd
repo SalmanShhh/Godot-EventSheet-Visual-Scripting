@@ -33,8 +33,22 @@ static func run() -> bool:
 		EventSheetWords.familiar_default("destroy"), EventSheetWords.plain_default("destroy")) and all_passed
 	all_passed = _check("queue_free reads as Destroy",
 		EventSheetWords.word_for("destroy", true, {}), "Destroy") and all_passed
-	all_passed = _check("_process reads as Every tick",
-		EventSheetWords.word_for("every_tick", false, {}), "Every tick") and all_passed
+	all_passed = _check("_process reads as On process by default",
+		EventSheetWords.word_for("every_tick", false, {}), "On process") and all_passed
+	all_passed = _check("and as Every tick in the Familiar preset",
+		EventSheetWords.word_for("every_tick", true, {}), "Every tick") and all_passed
+	all_passed = _check("the default preset is Godot's, for a reader who never chose",
+		EventSheetWords.preset(), EventSheetWords.PRESET_GODOT) and all_passed
+	for pair: Array in [
+		["scene_ready", "On start of layout", "On ready"],
+		["scene_exit", "On end of layout", "On exit tree"],
+		["node_enter", "On created", "On enter tree"],
+		["node_exit", "On destroyed", "On exit tree"],
+		["every_physics_tick", "Every physics tick", "On physics process"],
+	]:
+		all_passed = _check("%s reads %s in the Familiar preset and %s in Godot's" % [pair[0], pair[1], pair[2]],
+			[EventSheetWords.word_for(str(pair[0]), true, {}), EventSheetWords.word_for(str(pair[0]), false, {})],
+			[pair[1], pair[2]]) and all_passed
 	all_passed = _check("Array / Dictionary read as list / table",
 		EventSheetWords.word_for("collection", true, {}), "list / table") and all_passed
 	all_passed = _check("the reader is the Manual",
@@ -63,6 +77,7 @@ static func run() -> bool:
 		"group", "collection", "destroy", "manual"]
 	var expected_keys: Array[String] = game_words.duplicate()
 	expected_keys.append_array(EventSheetWords.EDITOR_KEYS)
+	expected_keys.append_array(["scene_ready", "scene_exit", "node_enter", "node_exit", "every_physics_tick"])
 	all_passed = _check("the page lists every word in the approved order",
 		EventSheetWords.keys(), expected_keys) and all_passed
 	all_passed = _check("the game words still lead it",

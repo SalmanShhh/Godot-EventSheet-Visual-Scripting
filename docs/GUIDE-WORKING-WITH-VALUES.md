@@ -148,7 +148,7 @@ The part is a dropdown in plain words: X (left / right), Y (up / down), Z (forwa
 Green, Blue, Alpha (see-through).
 
 ```
-Every Frame
+On Process
 
   Compare Values   Part Of(velocity, Y (up / down)) > 0
     -> Play animation   "fall"

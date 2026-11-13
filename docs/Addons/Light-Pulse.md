@@ -114,7 +114,7 @@ Same period, half a breath apart: the delay is what makes the pair read as a seq
 ### 5. A charge-up that speeds up as it fills
 
 ```
-Every tick -> Weapon Light | Light Pulse: Set Period Seconds  2.0 - charge * 1.8
+On process -> Weapon Light | Light Pulse: Set Period Seconds  2.0 - charge * 1.8
 ```
 
 ### 6. An alarm

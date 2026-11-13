@@ -230,7 +230,7 @@ On hint requested
 **12. Read the current opacity for a custom effect.**
 
 ```
-Every tick
+On process
   -> set Shadow scale to 1.0 - Sprite | Fade.Opacity()
 ```
 

@@ -10209,3 +10209,73 @@ Pick any that fit. Each adds a few behaviours to this project; you can add or re
 Adds nothing. Sheet > Behaviour library… adds any of them later.,何も追加しません。後からシート > ビヘイビアライブラリ… で追加できます。
 Nothing will be added. Sheet > Behaviour library… is always there later.,何も追加されません。シート > ビヘイビアライブラリ… はいつでも後から使えます。
 Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,「画面内にいる」が参照できるよう、%s の下に VisibleOnScreenNotifier2D を追加しました - Ctrl+Z で元に戻せます。
+A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,ポーズ中のゲームの上に重ねたシーンも一緒にポーズします。ポーズ中も動かすには、そのルートノードの処理モードを「常に」（または「ポーズ時」）にしてください。対になる行は「ゲームをポーズする」です。
+"The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.",既定: すべてGodot自身の言葉 - エンジンが使うコールバック、名詞、動詞。
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.","他のイベントシートエディタが名詞とコールバックに使う言葉 (Family, Layout, On start of layout, Every tick)。動詞はGodotのままです。"
+"Debug scene: Event Trace, Live Values and breakpoints are on for this run.",シーンをデバッグ実行: この実行ではイベントトレース、ライブ値、ブレークポイントが有効です。
+calls · includes · Change scene,呼び出し · インクルード · シーン切り替え
+An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame.,イベントはトリガーから始まります - 実行される瞬間です。On Ready はオブジェクトの準備ができたときに一度だけ、On Process は毎フレーム実行されます。
+Wrap Around Scene Horizontally,シーンを水平に折り返す
+"Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.",オブジェクトをシーンの片側から出し、反対側から戻します - アーケードのラップです。シーンの端はレベル内の位置なので、折り返されるのはノードのレベル内の位置です。
+Scene Edges,シーンの端
+Wrap around scene horizontally,シーンを左右にラップ
+"The left edge of the scene, in pixels.",シーンの左端(ピクセル)。
+"The right edge of the scene, in pixels.",シーンの右端(ピクセル)。
+Wrap Around Scene Vertically,シーンを垂直に折り返す
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.",オブジェクトをシーンの上から出して下から戻します(逆も同様)。シーンの端はレベル内の位置なので、折り返されるのはノードのレベル内の位置です。
+Wrap around scene vertically,シーンを上下にラップ
+"The top edge of the scene, in pixels.",シーンの上端(ピクセル)。
+"The bottom edge of the scene, in pixels.",シーンの下端(ピクセル)。
+Bound To Scene,シーンに制限
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.",オブジェクトをシーンの端の内側に留め、外へ出さないようにします - アーケードの柵です。シーンの端はレベル内の位置なので、制限されるのはノードのレベル内の位置です。
+Bound to scene (inside {low} - {high}),シーン内に制限 ({low} - {high} の内側)
+Add Scene On Top,シーンを上に重ねる
+"Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.",実行中のゲームを置き換えるのではなく、その上にシーンを重ねます - ポーズメニュー、インベントリ、会話ウィンドウなど。コピーはツリーのルート直下に追加されるので、下のシーンが変わっても生き残り、あなたが付けた名前を持つので下の2行から見つけられます。すでにその名前が上に出ている場合は手を触れず、何も読み込みません。1つの名前に2つのシーンがあると、そのうち片方は二度と見つけることも取り除くこともできなくなるからです。
+Add scene {path} on top as {layout_name},シーン {path} を {layout_name} として上に重ねる
+"Scene file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.",上に重ねるシーンファイル。そのルートノードは自身の処理モードを保つので、ポーズ中に動くかどうかはそれが決めます。
+"The name the copy is given under the tree root. Remove Scene On Top and Scene Is On Top find it by this name, so keep all three saying the same one.",ツリーのルート下でコピーに付く名前。「上に重ねたシーンを外す」と「シーンが上に重なっている」はこの名前で探すので、3 行すべてで同じ名前にしてください。
+Remove Scene On Top,上に重ねたシーンを外す
+"Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.",「シーンを上に追加」で追加したシーンを取り外します。すぐにツリーから外され、解放は遅延方式で行われるので、「シーンが上にある」は同じフレームで偽を返し、直後の追加は同じ名前で新しいものを上げられます。何も置かれていない名前では静かに何も起きないので、閉じる行は二度実行しても安全です。
+Remove scene {layout_name} from on top,上に重ねたシーン {layout_name} を外す
+The name Add Scene On Top gave the copy. A name nothing is under removes nothing.,「シーンを上に重ねる」がコピーに付けた名前。何も無い名前を指定しても何も外れません。
+Scene Is On Top,シーンが上に重なっている
+"True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.",「シーンを上に重ねる」で追加したシーンがまだある間は真になります。メニューが二重に開くのを防いだり、開いている間だけ同じキーへの反応を変えたりするのに使います。
+scene {layout_name} is on top,シーン {layout_name} が上に重なっている
+The name Add Scene On Top gave the copy.,「シーンを上に重ねる」がコピーに付けた名前。
+"Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.",すでにシーンにあるノードを、新しい親の下へ移します。アイテムを手に持たせる、乗り手を鞍に乗せる、武器を背中に掛ける、といった使い方です。「位置を保つ」なら見えているそのままの場所に残り、「合わせる」なら親自身の位置に移ります。
+"Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.",ノードを、いま属している親から外してシーンの一番上に戻します。ワールド上の位置はそのままです。持っている物を落とす、乗り手を降ろす、といった使い方。ノードは解放されず、ほかは何も変わりません。
+"The node to take off its parent. It stays in the scene, at the top level.",親から外すノード。シーンには一番上の階層として残ります。
+"What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.",ある大きさに合わせて描いたゲームを、別の大きさのウィンドウで表示したときにどうするか。シーンを合わせる方式は文字と UI をくっきり保ったまま配置だけを伸ばします。絵を引き伸ばす方式は描き上げた画面全体を拡大するもので、ピクセルアートのゲームが求めるのはこちらです。自由はどれも動かさず、ワールドを多めまたは少なめに見せるだけです。
+"Fit - scale the scene, keep text crisp",合わせる - シーンを拡大し、文字はくっきりのまま
+"Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.",オブジェクトをシーンの片側から出し、反対側から戻します - アーケードのラップです。親内の位置を、レベル内の位置であるシーンの端に対して折り返すため、ワールド版の WrapAroundLayoutXWorld を使ってください。
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.",オブジェクトをシーンの上から出して下から戻します(逆も同様)。親内の位置を、レベル内の位置であるシーンの端に対して折り返すため、ワールド版の WrapAroundLayoutYWorld を使ってください。
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.",オブジェクトをシーンの端の内側に留め、外へ出さないようにします - アーケードの柵です。親内の位置を、レベル内の位置であるシーンの端に対して制限するため、ワールド版の BoundToLayoutWorld を使ってください。
+Change scene {path},シーン {path} へ切り替え
+Reload scene,シーンを再読み込み
+Remove from scene,シーンから削除
+Is outside screen,画面の外にある
+Load scene {path} in the background,シーン {path} をバックグラウンドで読み込む
+scene {path} has finished loading,シーン {path} の読み込みが完了
+Take out of the scene,シーンから取り出す
+keeping its place in the scene,シーン内の位置を保つ
+{name} in the scene,シーン内の {name}
+the scene,シーン
+On enter tree,ツリーに入った時 (_enter_tree)
+On exit tree,ツリーから出る時 (_exit_tree)
+On process,毎フレーム (_process)
+On physics process,物理ステップごと (_physics_process)
+▶ Preview scene,▶ シーンをプレビュー
+🐞 Debug scene,🐞 シーンをデバッグ
+Inspector add-on,インスペクターのアドオン
+Runs every frame (On process).,毎フレーム実行されます (On process)。
+Runs every physics step (On physics process).,物理ステップごとに実行されます (On physics process)。
+On Process,毎フレーム (_process)
+On Physics Process,物理ステップごと (_physics_process)
+On Enter Tree,ツリーに入った時 (_enter_tree)
+On Exit Tree,ツリーから出る時 (_exit_tree)
+Run on process,毎フレーム (_process)
+Run on physics process,物理ステップごと (_physics_process)
+Run on enter tree,ツリーに入った時 (_enter_tree)
+Run on exit tree,ツリーから出る時 (_exit_tree)
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.",正直に減衰するノックバック(指数形式、フレームレートに依存しません) - 毎フレームの下に1行置きます。押し出しはレベルの方向で計算されますが親内の位置に加算されるため、回転や拡大縮小された親の下では誤りになります。ワールド版の ApplyPushesWorld を使ってください。
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.",正直に減衰するノックバック(指数形式、フレームレートに依存しません) - 毎フレームの下に1行置きます。押し出しはレベルの方向で計算され、ノードのレベル内の位置に加算されるため、回転や拡大縮小された親の下でも正しく動きます。

@@ -259,7 +259,7 @@ On Calm Cast
 ### 14. Sound that follows the sway
 
 ```
-Every tick
+On process
   -> WaveSound: volume_db = linear_to_db(WaterTile | WaveBehavior: Wave Strength * 12.0)
 ```
 

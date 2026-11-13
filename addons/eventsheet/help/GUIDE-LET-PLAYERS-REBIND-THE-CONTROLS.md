@@ -78,7 +78,7 @@ Two rows fix it.
 
 | Condition | Actions |
 | --- | --- |
-| **Game** ▸ On created | **Keyboard** ▸ Load bindings |
+| **Game** ▸ On enter tree | **Keyboard** ▸ Load bindings |
 
 **Save bindings** writes every control's bindings to a plain settings file under `user://` - the same
 kind of file a variable's Save choice uses, readable and deletable by hand. **Load bindings** puts them
@@ -112,7 +112,7 @@ Two ways, depending on how much you want to build.
 ➜ Deadzone Slider  On value changed  v
                                  Gamepad ▸ Set deadzone of steer to v
 
-➜ Game  On created               Keyboard ▸ Load bindings
+➜ Game  On enter tree               Keyboard ▸ Load bindings
 ```
 
 ## Other use cases

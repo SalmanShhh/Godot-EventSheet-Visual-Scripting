@@ -32,7 +32,7 @@ directly).
 
 ```
 On Ready       -> Player | Drawing Canvas: Set Auto Clear  true
-Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
+On process     -> Player | Drawing Canvas: Draw Line Of Sight
                   Player.X, Player.Y, facing_deg, 90, 300, [Walls], Color(1, 0.9, 0.4, 0.35)
 ```
 
@@ -171,7 +171,7 @@ dock, the section grounds to that node's actual children before you even press R
 
 ```
 On Ready    -> Guard | Drawing Canvas: Set Auto Clear  true
-Every tick  -> Guard | Drawing Canvas: Draw Line Of Sight
+On process  -> Guard | Drawing Canvas: Draw Line Of Sight
                Guard.X, Guard.Y, guard_facing, 70, 340, [Walls], Color(1, 1, 0.5, 0.25)
 ```
 
@@ -192,7 +192,7 @@ Every 0.05s -> Level | Drawing Canvas: Clear Canvas
 
 ```
 On Windup Started -> Boss | Drawing Canvas: Set Auto Clear  true
-Every tick (while winding up)
+On process (while winding up)
   -> Boss | Drawing Canvas: Draw Cone  Boss.X, Boss.Y, Boss.facing, 45, 220, Color(1, 0.2, 0.2, 0.35)
 ```
 
@@ -277,7 +277,7 @@ The smallest useful canvas: auto-clear on, one circle a frame.
 
 ```
 On Ready   -> Player | Drawing Canvas: Set Auto Clear  true
-Every tick -> Player | Drawing Canvas: Draw Circle  Player.X, Player.Y + 14, 10, Color(0, 0, 0, 0.35)
+On process -> Player | Drawing Canvas: Draw Circle  Player.X, Player.Y + 14, 10, Color(0, 0, 0, 0.35)
 ```
 
 The canvas follows the host, so in world coordinates the shadow just tracks the player.
@@ -287,7 +287,7 @@ The canvas follows the host, so in world coordinates the shadow just tracks the 
 One live line from the muzzle to the cursor, redrawn every tick in auto-clear mode.
 
 ```
-Every tick -> Player | Drawing Canvas: Draw Line
+On process -> Player | Drawing Canvas: Draw Line
               Player.X, Player.Y, Mouse.X, Mouse.Y, 2, Color(1, 0, 0, 0.6)
 ```
 
@@ -299,7 +299,7 @@ While the throw button is held, ring the landing spot so the player can read the
 committing.
 
 ```
-Every tick (while aiming)
+On process (while aiming)
   -> Player | Drawing Canvas: Draw Ring  throw_x, throw_y, 96, 3, Color(1, 0.5, 0, 0.8)
 ```
 
@@ -334,7 +334,7 @@ Persistent painting plus the cleanup action: Clear Canvas is the bucket of water
 wall and then keeps accumulating again.
 
 ```
-Every tick
+On process
   Condition: MOUSE_BUTTON_LEFT is down
     -> Wall | Drawing Canvas: Draw Circle  Mouse.X, Mouse.Y, 8, spray_color
 On "c" pressed
@@ -360,7 +360,7 @@ Canvas Texture into your fog shader as the mask - explored ground stays revealed
 
 ```
 On Ready   -> Level | Drawing Canvas: Set Canvas Visible  false
-Every tick -> Level | Drawing Canvas: Draw Circle  Player.X, Player.Y, 80, Color(1, 1, 1, 1)
+On process -> Level | Drawing Canvas: Draw Circle  Player.X, Player.Y, 80, Color(1, 1, 1, 1)
 ```
 
 Persistent mode means the reveal never has to be re-issued - one pass over the ground is enough.
@@ -378,7 +378,7 @@ On "F3" pressed
     -> Level | Drawing Canvas: Set Auto Clear  true
 ```
 
-Gate your Every tick draw rows on the same state, or new strokes pile onto the frozen frame.
+Gate your On process draw rows on the same state, or new strokes pile onto the frozen frame.
 
 ### 16. Build-placement preview (dashed)
 
@@ -387,7 +387,7 @@ and a dashed ring shows its effect radius - dashed so it reads as "not placed ye
 terrain under it.
 
 ```
-Every tick
+On process
   On placing a building
     -> Player | Drawing Canvas: Set Auto Clear  true
     -> Player | Drawing Canvas: Draw Dashed Rect  ghost_x, ghost_y, tile_w, tile_h, 16, 10, 3, place_color
@@ -449,7 +449,7 @@ pack installed, every arc in that loop is one draw call and every cross is anoth
 
 ```
 On ready -> Canvas | Set Auto Clear: true
-Every tick -> Canvas | Set Draw Style: grid_faint.tres
+On process -> Canvas | Set Draw Style: grid_faint.tres
            -> Canvas | Draw Grid: 0, 0, 2048, 2048, Editor.cell_size
            -> Canvas | Draw Rounded Rect: Cursor.x, Cursor.y, Editor.cell_size, Editor.cell_size, 4, false
 ```
@@ -472,7 +472,7 @@ the placement preview - both in the same faint style, so the two cannot drift ap
 ## Tips and common mistakes
 
 - **Auto Clear drawings must be re-issued every tick.** A one-shot `Draw Cone` in auto-clear
-  mode shows for a single frame. Put live shapes under Every tick; put permanent marks in
+  mode shows for a single frame. Put live shapes under On process; put permanent marks in
   persistent mode.
 - **Ribbons want auto-clear.** In persistent mode a moving ribbon smears onto the texture -
   great for paint trails, wrong for a clean swoosh.

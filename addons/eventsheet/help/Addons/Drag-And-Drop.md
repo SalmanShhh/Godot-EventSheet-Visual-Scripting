@@ -76,7 +76,7 @@ The mental model is small. Learn these ideas and the rest is just rows.
 On "grab" pressed
   -> Piece | DragDropBehavior: Start Drag  get_global_mouse_position().x, get_global_mouse_position().y, 0
 
-Every tick
+On process
   Condition: Piece | DragDropBehavior  Is Dragging
     -> Piece | DragDropBehavior: Set Drag Point  get_global_mouse_position().x, get_global_mouse_position().y
 
@@ -198,7 +198,7 @@ Pick up a sprite, move it with the mouse, and set it down. This is the whole loo
 On "grab" pressed
   -> Piece | DragDropBehavior: Start Drag  get_global_mouse_position().x, get_global_mouse_position().y, 0
 
-Every tick
+On process
   Condition: Piece | DragDropBehavior  Is Dragging
     -> Piece | DragDropBehavior: Set Drag Point  get_global_mouse_position().x, get_global_mouse_position().y
 
@@ -274,7 +274,7 @@ Lock the drag to left/right and read the drag point's X to drive a value. The ha
 On Ready
   -> Handle | DragDropBehavior: Set Directions  2
 
-Every tick
+On process
   Condition: Handle | DragDropBehavior  Is Dragging
     -> Handle | DragDropBehavior: Set Drag Point  get_global_mouse_position().x, get_global_mouse_position().y
     -> Settings: set volume = clamp( ( Handle | DragDropBehavior Drag Point X - 100 ) / 300.0 , 0 , 1 )
@@ -306,7 +306,7 @@ Give the object a follow speed so it eases toward the pointer instead of stickin
 On Ready
   -> Crate | DragDropBehavior: Set Follow Speed  400
 
-Every tick
+On process
   Condition: Crate | DragDropBehavior  Is Dragging
     -> Crate | DragDropBehavior: Set Drag Point  get_global_mouse_position().x, get_global_mouse_position().y
     -> Rope: set stretch = Crate | DragDropBehavior Distance From Point

@@ -4671,7 +4671,7 @@ func _touch_filter_note(key: String) -> String:
 func _layout_on_top_note(key: String) -> String:
 	if _definition == null or _definition.id != LAYOUT_ON_TOP_ACE_ID or key != LAYOUT_ON_TOP_PARAM:
 		return ""
-	return EventSheetL10n.translate("A layout added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.")
+	return EventSheetL10n.translate("A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.")
 
 
 ## The two facts On Node Joins Group and On Node Leaves Group owe their author, said while the Group

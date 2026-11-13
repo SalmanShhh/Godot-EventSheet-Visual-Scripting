@@ -34,11 +34,11 @@ const NEW_ACES: Dictionary = {
 	"GlideTowardWorld": ["{host.}global_position = {host.}global_position.move_toward({destination}, {speed} * {delta_t})",
 		"Move toward {destination} at {speed}", "Node2D"],
 	"WrapAroundLayoutXWorld": ["{host.}global_position.x = wrapf({host.}global_position.x, {low}, {high})",
-		"Wrap around layout horizontally", "Node2D"],
+		"Wrap around scene horizontally", "Node2D"],
 	"WrapAroundLayoutYWorld": ["{host.}global_position.y = wrapf({host.}global_position.y, {low}, {high})",
-		"Wrap around layout vertically", "Node2D"],
+		"Wrap around scene vertically", "Node2D"],
 	"BoundToLayoutWorld": ["{host.}global_position = {host.}global_position.clamp({low}, {high})",
-		"Bound to layout (inside {low} - {high})", "Node2D"],
+		"Bound to scene (inside {low} - {high})", "Node2D"],
 	"WrapInsideScreenWorld": ["var __wrap_size_{uid}: Vector2 = get_viewport_rect().size\nglobal_position = Vector2(wrapf(global_position.x, 0.0, __wrap_size_{uid}.x), wrapf(global_position.y, 0.0, __wrap_size_{uid}.y))",
 		"wrap inside the screen", "Node2D"],
 	"SpawnNewCopyDeferredWorld": ["var {name} = {scene}.instantiate()\n{parent}.call_deferred(\"add_child\", {name})\n{name}.call_deferred(\"set_global_position\", {at})",
@@ -203,7 +203,7 @@ static func _new_aces_compile(by_id: Dictionary) -> bool:
 	var targeted: String = _compiled("SetWorldPosition2D", {"pos": "Vector2(3, 4)", "target": "$Sword"})
 	rows.append(["Set World Position on another node writes the world place there", targeted.contains("\t$Sword.set_global_position(Vector2(3, 4))"), true])
 	var wrap: String = _compiled("WrapAroundLayoutXWorld", {"low": "0.0", "high": "100.0"})
-	rows.append(["Wrap Around Layout Horizontally (world) wraps the world place",
+	rows.append(["Wrap Around Scene Horizontally (world) wraps the world place",
 		wrap.contains("\tglobal_position.x = wrapf(global_position.x, 0.0, 100.0)"), true])
 	var glide: String = _compiled("GlideTowardWorld", {"destination": "Vector2(10, 10)", "speed": "5.0", "delta_t": "delta"})
 	rows.append(["Move Toward Position (world) moves the world place",

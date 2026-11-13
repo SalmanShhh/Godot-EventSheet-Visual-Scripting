@@ -159,9 +159,9 @@ static func trigger_tooltip(kind: String) -> String:
 		TRIGGER_READY:
 			return EventSheetL10n.translate("Runs once, when the node starts (On ready).")
 		TRIGGER_TICK:
-			return EventSheetL10n.translate("Runs every frame (Every tick).")
+			return EventSheetL10n.translate("Runs every frame (On process).")
 		TRIGGER_PHYSICS:
-			return EventSheetL10n.translate("Runs every physics step (Every physics tick).")
+			return EventSheetL10n.translate("Runs every physics step (On physics process).")
 		TRIGGER_INPUT:
 			return EventSheetL10n.translate("Runs when input arrives - a key, a button, the mouse.")
 		TRIGGER_SIGNAL:

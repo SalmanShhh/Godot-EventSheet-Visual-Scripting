@@ -68,7 +68,7 @@ AJAX rows.
 
 ## Use cases
 
-**1. Fetch a leaderboard on the menu.** On start of layout, **AJAX ▸ Request** the scores URL. In
+**1. Fetch a leaderboard on the menu.** On ready, **AJAX ▸ Request** the scores URL. In
 the completed event, check **request succeeded**, read **AJAX.LastData**, **JSON Parse** it, and fill
 the labels.
 

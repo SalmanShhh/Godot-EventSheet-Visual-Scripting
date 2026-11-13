@@ -120,7 +120,7 @@ when the speed crosses zero.
 ```
 On Spin Pressed -> Wheel | Rotate: Set Rotation Speed  720
                 -> Wheel | Rotate: Set Rotation Acceleration  -160
-Every tick
+On process
   Condition: Rotation Speed <= 0 -> Wheel | Rotate: Set Rotation Enabled  false
                                  -> award the slice under the pointer
 ```
@@ -167,7 +167,7 @@ wind-up mechanic in four rows.
 On Drill Held     -> Drill | Rotate: Set Rotation Acceleration  240
 On Drill Released -> Drill | Rotate: Set Rotation Speed  0
                   -> Drill | Rotate: Set Rotation Acceleration  0
-Every tick -> set dig_rate to Rotation Speed / 720
+On process -> set dig_rate to Rotation Speed / 720
 ```
 
 ### 11. Security camera that freezes on you

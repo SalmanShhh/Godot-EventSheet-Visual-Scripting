@@ -75,18 +75,22 @@ static func offers_door(words: String, has_showcase: bool) -> bool:
 
 ## What one answer sets: {label, note, words, theme, code_panel, guide, tour}. `theme` is a
 ## theme file ("" keeps the editor-matching default); `words` is a words preset name.
+##
+## Every answer sets the Godot words: nobody is switched to the words other event-sheet editors use
+## by an answer on this card. A reader who wants them turns the Familiar preset on in Settings > Words,
+## and the migration guide the second answer opens says where.
 static func choice_settings(choice: String) -> Dictionary:
 	match choice:
 		CAME_FROM_SHEETS:
 			return {"label": "I come from another event-sheet editor",
-				"words": EventSheetWords.PRESET_SHEET, "theme": CLASSIC_THEME_PATH,
+				"words": EventSheetWords.PRESET_GODOT, "theme": CLASSIC_THEME_PATH,
 				"code_panel": false, "guide": MIGRATION_GUIDE_ID, "tour": false}
 		CAME_FROM_GDSCRIPT:
 			return {"label": "I write GDScript",
 				"words": EventSheetWords.PRESET_GODOT, "theme": "",
 				"code_panel": true, "guide": "", "tour": false}
 	return {"label": "I'm new to event sheets",
-		"words": EventSheetWords.PRESET_FAMILIAR, "theme": "",
+		"words": EventSheetWords.PRESET_GODOT, "theme": "",
 		"code_panel": false, "guide": "", "tour": true}
 
 

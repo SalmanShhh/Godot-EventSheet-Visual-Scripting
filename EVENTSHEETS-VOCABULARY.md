@@ -3764,9 +3764,9 @@ the behavior SHAPES as free actions.
 - **Bounce Off Solids** (`normal: String`) - Reflects the current velocity off a surface, so the projectile ricochets instead of stopping.
 - **Move Toward Position** (`destination: String, speed: String, delta_t: String`) - Deprecated. Glides this frame's share of the way toward a point, never overshooting it. It moves the place inside the parent, so it lands wrong for a node under a moved parent; Move Toward Position (the world twin, GlideTowardWorld) moves the place in the level.
 - **Rotate Clockwise** (`degrees_per_second: String, delta_t: String`) - Spins the object at a steady rate - a coin, a fan, a saw blade.
-- **Wrap Around Layout Horizontally** (`low: String, high: String`) - Deprecated. Sends the object off one side of the layout and back in the other - the arcade wrap. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.
-- **Wrap Around Layout Vertically** (`low: String, high: String`) - Deprecated. Sends the object off the top of the layout and back in at the bottom, or the other way round. It wraps the place inside the parent against the layout's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.
-- **Bound To Layout** (`low: String, high: String`) - Deprecated. Holds the object inside the layout's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the layout's edges, which are places in the level; use BoundToLayoutWorld, the world twin.
+- **Wrap Around Scene Horizontally** (`low: String, high: String`) - Deprecated. Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.
+- **Wrap Around Scene Vertically** (`low: String, high: String`) - Deprecated. Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.
+- **Bound To Scene** (`low: String, high: String`) - Deprecated. Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.
 - **Pin To** (`anchor: String, offset: String`) - Puts the object at another object's place, offset by however far apart you want them.  Pin or child? A pin follows at runtime and can let go; a child is structure and is destroyed with its parent. Reach for Add Child when the two are one thing that lives and dies together, and for a pin when one thing rides another for a while.
 - **Pin Angle To** (`anchor: String`) - Turns the object to match another object's angle, so the two stay aligned.
 - **Pin To (Rope)** (`anchor: String, length: String`) - Hangs the object off another on a rope: free to move inside the length, pulled back the moment the line goes taut. A lantern on a stick, a leash, a wrecking ball.  A pin follows at runtime and can let go; a child is structure and is destroyed with its parent.
@@ -3903,11 +3903,11 @@ Collections (rich variables)
 - **Retries Exhausted** (`retry_name: String`) - True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.
 - **Is Game Paused** - True when the game is currently paused.
 - **Pause Requested By** (`reason: String`) - True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.
-- **Layout Is On Top** (`layout_name: String`) - True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.
+- **Scene Is On Top** (`layout_name: String`) - True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.
 - **Is Playing** (`target: String`) - True while the audio player is currently playing a sound.
 - **Is Animation Playing** (`target: String`) - True while the animated sprite is currently playing an animation.
 - **Has Arrived** (`target: String`) - True once the navigation agent has reached its target destination.
-- **Layout Has Finished Loading** (`path: String`) - True once a layout started with Load Layout In The Background is ready to switch to.
+- **Scene Has Finished Loading** (`path: String`) - True once a scene started with Load Scene In The Background is ready to switch to.
 - **Is Visible** (`target: String`) - True when the node is currently visible on screen.
 - **Is Equal (approx)** (`a: String, b: String`) - True when two numbers are nearly equal, avoiding tiny floating-point errors.
 - **Is Zero (approx)** (`value: String`) - True when a value is essentially zero, ignoring tiny rounding differences.
@@ -3947,8 +3947,8 @@ Collections (rich variables)
 - **Read Input Axis Into** (`name: String, negative: String, positive: String`) - Reads a left/right input axis into a local variable for this event.
 - **Tween Property** (`target: String, property: String, value: String, duration: String, transition: String, ease: String`) - Smoothly animates a node's property to a target value over time with an easing curve.
 - **Tween Callback** (`callable: String, delay: String`) - Waits a delay, then calls a method or function once (handy for timed events).
-- **Go To Layout** (`path: String`) - Switches the game to a different layout (a scene file), replacing the current one.
-- **Restart Layout** - Restarts the current layout from the beginning, useful for retrying a level.
+- **Change Scene** (`path: String`) - Switches the game to a different scene (a scene file), replacing the current one.
+- **Reload Scene** - Restarts the current scene from the beginning, useful for retrying a level.
 - **Quit Game** - Closes the game and exits to desktop.
 - **Pause The Game** - Freezes the whole game. Nodes set to Always (or a pause menu's Process Mode) keep running, which is how the menu on top stays alive.
 - **Unpause** - Lets the game run again after Pause The Game.
@@ -3957,8 +3957,8 @@ Collections (rich variables)
 - **Spawn Scene Instance** (`path: String`) - Loads a scene file and adds an instance of it as a child (spawning objects).
 - **Ask To Pause** (`reason: String`) - Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.
 - **Stop Asking To Pause** (`reason: String`) - Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.
-- **Add Layout On Top** (`path: String, layout_name: String`) - Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two layouts under one name would mean one of them could never be found or removed again.
-- **Remove Layout On Top** (`layout_name: String`) - Takes a layout added by Add Layout On Top back off again. It comes off the tree straight away and is freed the deferred way, so Layout Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.
+- **Add Scene On Top** (`path: String, layout_name: String`) - Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.
+- **Remove Scene On Top** (`layout_name: String`) - Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.
 - **Play Sound** (`from_position: String, target: String`) - Plays the sound on an audio player, optionally starting from a given second.
 - **Stop Sound** (`target: String`) - Stops the sound currently playing on an audio player.
 - **Set Volume (dB)** (`db: String, target: String`) - Sets an audio player's loudness in decibels (0 is full, -80 is silent).
@@ -3976,8 +3976,8 @@ Collections (rich variables)
 - **Append Text** (`value: String, target: String`) - Adds more text onto the end of a label's existing text.
 - **Find Path To** (`position: String, target: String`) - Tells a navigation agent to pathfind toward a world position, for AI movement.
 - **Move Along Path** (`next: String, speed: String, target: String`) - Steers the body toward the next point on the path its navigation agent worked out. Follow it with Move so the body actually travels.
-- **Load Layout In The Background** (`path: String`) - Starts loading a layout on another thread while the game keeps running, so a loading screen can show progress instead of freezing.
-- **Go To Loaded Layout** (`path: String`) - Switches to a layout that finished loading in the background, with no second load and no pause.
+- **Load Scene In The Background** (`path: String`) - Starts loading a scene on another thread while the game keeps running, so a loading screen can show progress instead of freezing.
+- **Go To Loaded Scene** (`path: String`) - Switches to a scene that finished loading in the background, with no second load and no pause.
 - **Show** (`target: String`) - Makes a node visible on screen.
 - **Hide** (`target: String`) - Hides a node so it no longer shows on screen.
 - **Set Color Tint** (`color: String, target: String`) - Tints a node and its children with a color, also useful for fading via alpha.
@@ -4188,7 +4188,7 @@ Collision vocabulary (the "Helper ACEs for collisions").
 the everyday object rows, under the names people look for them by.
 
 #### Conditions
-- **Is Outside The Level Bounds** (`bounds: String`) - True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed layout size, so the rectangle is yours.
+- **Is Outside The Level Bounds** (`bounds: String`) - True when the node has left a rectangle you name once for the level - a bullet that flew off, a player that fell out of the world. Godot has no fixed scene size, so the rectangle is yours.
 - **Is Outside The Camera Limits** - True when the node is beyond the limits set on the current Camera2D - the edges of the level the camera will not show past.
 - **Once Ever** - True the first time the event's other conditions hold, and never again for this object. Trigger Once, by comparison, fires again each time the condition goes false and then true. It keeps one true-or-false variable on the script.
 
@@ -4371,13 +4371,13 @@ NAMED CLOCKS: cooldowns, countdowns and stopwatches as words.
 Core vocabulary (the Phase-1 surface, fully migrated).
 
 #### Triggers
-- **On Ready** - Runs once when this node first enters the scene, ideal for setup and initial values.
-- **Every Frame** - Runs every rendered frame, perfect for continuous movement, timers, or polling input.
-- **Every Physics Tick** - Runs every fixed physics step, the right place for physics-based movement and forces.
+- **On Ready** - Runs once when this node is ready (the _ready callback): it and all its children are in the scene, ideal for setup and initial values.
+- **On Process** - Runs every rendered frame (the _process callback), perfect for continuous movement, timers, or polling input.
+- **On Physics Process** - Runs every fixed physics step (the _physics_process callback), the right place for physics-based movement and forces.
 - **After Every Frame (post-tick)** - Runs once AFTER every node has processed this frame - for logic that must come last, like a camera that follows after movement, or end-of-frame cleanup.
 - **After Every Physics Tick** - Runs once AFTER every node has finished its physics step this tick - the physics sibling of post-tick.
-- **On Created** - Runs the moment this object is added to the scene - before its children exist, which is what makes it earlier than On Ready.
-- **On Destroyed** - Runs when this object leaves the scene - the place to let go of what it was holding, save its state, or tell others it is gone.
+- **On Enter Tree** - Runs the moment this node is added to the scene tree (the _enter_tree callback) - before its children exist, which is what makes it earlier than On Ready.
+- **On Exit Tree** - Runs when this node leaves the scene tree (the _exit_tree callback) - the place to let go of what it was holding, save its state, or tell others it is gone.
 - **On Draw** - Runs when this object is asked to paint itself - the only place the drawing actions may be used. Ask for a repaint with Queue Redraw.
 - **On Input On This Element** - Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.
 - **On Close Requested** - Runs when the player clicks the window's close button (X) or asks to quit - the place to save progress or pop a confirm dialog before exiting.
@@ -4716,8 +4716,8 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Remove Dock** (`control: Control`) - Takes a dock back out of the editor.
 - **Add Object Type** (`type_name: String, base: String, script: Script, icon: Texture2D`) - Teaches the editor a new object type, so it shows up in Create Node like a built-in one.
 - **Remove Object Type** (`type_name: String`) - Takes a custom object type back out of the Create Node dialog.
-- **Add Properties Bar Add-on** (`plugin: EditorInspectorPlugin`) - Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own.
-- **Remove Properties Bar Add-on** (`plugin: EditorInspectorPlugin`) - Takes a Properties bar add-on back out.
+- **Add Inspector Add-on** (`plugin: EditorInspectorPlugin`) - Registers an Inspector add-on, so your own buttons and fields appear in the Inspector beside the object's own.
+- **Remove Inspector Add-on** (`plugin: EditorInspectorPlugin`) - Takes an Inspector add-on back out.
 - **Redraw Viewport Overlays** - Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints.
 - **Add Item** (`menu: PopupMenu, label: String, id: int`) - Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.
 
@@ -5485,8 +5485,8 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 #### Actions
 - **Add Child** (`node: String`) - Attaches another node as a child of this one at runtime, e.g. spawning a bullet.
 - **Remove Child** (`node: String`) - Detaches a child node from this one without deleting it, so you can reattach it later.
-- **Add Child (existing node)** (`child: String, parent: String, keep: String`) - Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.
-- **Remove From Parent** (`child: String`) - Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.
+- **Add Child (existing node)** (`child: String, parent: String, keep: String`) - Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.
+- **Remove From Parent** (`child: String`) - Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.
 - **Set Ignore Parent's Movement** (`target: String, ignore: String`) - Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.
 - **Copy Place To** (`follower: String, path: String`) - Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.
 - **Stop Copying Place** (`follower: String`) - Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.
@@ -5504,7 +5504,7 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Wrap Inside The Screen** - Deprecated. The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. It wraps the place inside the parent against the screen's size, so a node under a moved parent wraps at the wrong edges; use WrapInsideScreenWorld, the world twin.
 - **Bob Up And Down** (`height: String, period: String`) - Floats the node gently up and down around wherever it was resting - pickups, idle hover, a breathing menu icon. No sin() to write; run it under a per-frame trigger.
 - **Push Away From** (`source: String, strength: String, target: String`) - Sets the impulse; pair with Apply Pushes under a per-frame trigger, which moves and decays it.
-- **Apply Pushes** (`friction: String`) - Deprecated. Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.
+- **Apply Pushes** (`friction: String`) - Deprecated. Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.
 - **Pull Group Toward** (`group: String, radius: String, speed: String`) - The vacuum-pickup loop - coins fly to the player, one row.
 - **Orbit Around** (`center: String, radius: String, degrees_per_second: String`) - Circles this node around another one - a shield satellite, a moon, a spinning hazard. Run it under a per-frame trigger.
 - **Vanish, Respawn In** (`seconds: String`) - Hides this pickup (and pauses its Area sensing when it has any), waits, then brings it back - calling its reset() if it defines one. The health-pack-respawns-in-10s pattern as one row; it awaits, so it suspends like Wait.
@@ -5922,7 +5922,7 @@ Rendering vocabulary (the RenderingServer from events).
 - **Set Debanding** (`enabled: bool`) - Toggles debanding - removes the visible stripes in smooth dark gradients for a tiny cost.
 - **Render 3D At** (`percent: float, method: String`) - Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.
 - **Smooth Edges With** (`how: String`) - The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.
-- **Scale The Game** (`mode: String`) - What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.
+- **Scale The Game** (`mode: String`) - What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.
 - **Fit The Shape** (`aspect: String`) - What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.
 - **Keep Pixels Sharp** (`stretch: String`) - Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.
 - **Pixel Size** (`factor: float`) - How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.
@@ -6166,8 +6166,8 @@ System (event-sheet System parity)
 - **Is About** (`a: String, b: String`) - True when two decimal numbers are near enough to count as the same. Any arithmetic leaves a tiny remainder, so this is the comparison you want wherever == would be a coin flip.
 - **Seconds Have Passed Since** (`seconds: String, since: String`) - True once a stretch of time has gone by since a moment you stamped with Now - the cooldown every shooting, dashing or spawning row needs, without a timer node.
 - **Chance** (`percent: String`) - True for the given share of the times it is asked - a 30% chance is true roughly three times in ten. The roll is fresh every time the row runs.
-- **Is Outside Layout** (`point: String`) - Deprecated. True when a point has left the visible layout on any side - the bullet-culling and stray-enemy question, in one row instead of four edge comparisons.
-- **Is On-Screen** (`point: String, target: String`) - Deprecated. True while a point is inside the visible layout - the guard that keeps off-screen things from doing expensive work.
+- **Is Outside Screen** (`point: String`) - Deprecated. True when a point has left the visible scene on any side - the bullet-culling and stray-enemy question, in one row instead of four edge comparisons.
+- **Is On-Screen** (`point: String, target: String`) - Deprecated. True while a point is inside the visible scene - the guard that keeps off-screen things from doing expensive work.
 - **Is Inside Area** (`area: String, point: String`) - True when a point falls inside a rectangle - a zone, a safe area, a spawn band - without needing an Area2D node in the scene.
 - **Expression Is True** (`expr: String`) - True when your custom GDScript expression evaluates to true; an escape hatch for advanced checks.
 - **Is Group Active** (`group: String`) - True when the named runtime group is currently switched on.
@@ -6253,8 +6253,8 @@ System (event-sheet System parity)
 - **Cooldown Time Left** (`name: String`) - Gives the seconds left on a named cooldown, or 0 when it is ready - handy for a HUD readout.
 - **Now** - The moment right now, as the game's own running clock. Store it in a variable and ask Seconds Have Passed Since about it later. It restarts with the game.
 - **Date: Now (Clock Time)** - The moment right now by the system clock, in seconds. Unlike Now, this keeps counting while the game is closed - which is what a daily reward or an idle-earnings sum needs.
-- **Viewport Width** (`target: String`) - How wide the visible layout is, in pixels - the right edge to spawn at, wrap around, or clamp to.
-- **Viewport Height** (`target: String`) - How tall the visible layout is, in pixels - the bottom edge to spawn at, wrap around, or clamp to.
+- **Viewport Width** (`target: String`) - How wide the visible scene is, in pixels - the right edge to spawn at, wrap around, or clamp to.
+- **Viewport Height** (`target: String`) - How tall the visible scene is, in pixels - the bottom edge to spawn at, wrap around, or clamp to.
 - **Effect Parameter** (`param: String, target: String`) - Gives the current value of one of this object's effect parameters.
 - **The Spawned** (`spawn_name: String`) - The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.
 
@@ -6672,11 +6672,11 @@ the world-space twins of the verbs that wrote the wrong place.
 - **Set World Position (3D)** (`pos: String, target: String`) - Teleports a 3D node to an exact place in the level, whoever its parent is. Set Position (3D) measures from the parent instead.
 - **Set Position To Another Object** (`other: String`) - Puts a 2D node exactly where another one is in the level - how a spawn point, a socket or a respawn marker is used.
 - **Move Toward Position** (`destination: String, speed: String, delta_t: String`) - Glides this frame's share of the way toward a place in the level, never overshooting it. The place is measured in the level, so a node under a moved parent still arrives at it.
-- **Apply Pushes** (`friction: String`) - Knockback that decays honestly (the exp form, frame-rate independent) - one row under Every Frame. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.
+- **Apply Pushes** (`friction: String`) - Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.
 - **Wrap Inside The Screen** - The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen. The node's place in the level is what wraps, so a node under a moved parent wraps at the screen's edges.
-- **Wrap Around Layout Horizontally** (`low: String, high: String`) - Sends the object off one side of the layout and back in the other - the arcade wrap. The layout's edges are places in the level, so the node's place in the level is what wraps.
-- **Wrap Around Layout Vertically** (`low: String, high: String`) - Sends the object off the top of the layout and back in at the bottom, or the other way round. The layout's edges are places in the level, so the node's place in the level is what wraps.
-- **Bound To Layout** (`low: String, high: String`) - Holds the object inside the layout's edges instead of letting it leave - the arcade fence. The layout's edges are places in the level, so the node's place in the level is what is held.
+- **Wrap Around Scene Horizontally** (`low: String, high: String`) - Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.
+- **Wrap Around Scene Vertically** (`low: String, high: String`) - Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.
+- **Bound To Scene** (`low: String, high: String`) - Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.
 - **Spawn A Copy Safely** (`scene: String, name: String, at: String, parent: String`) - The same spawn as Spawn A Copy, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.
 - **Spawn A Copy Safely (3D)** (`scene: String, name: String, at: String, parent: String`) - The same 3D spawn as Spawn A Copy (3D), added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is a place in the level, set right after the copy is added, so it lands there whoever the parent is.
 - **Spawn Scene In The World** (`path: String, position: String`) - Loads a scene and drops a copy into the current scene at a place in the level. Spawn Scene At adds the copy under this node and measures its place from this node instead.

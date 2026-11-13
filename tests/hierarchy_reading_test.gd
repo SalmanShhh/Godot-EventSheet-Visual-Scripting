@@ -6,7 +6,7 @@ extends RefCounted
 # one object under another, now said about Godot's own spellings of it:
 #
 #   Reparent / remove_child + add_child: Add child (said by the PARENT) with the keep-its-place
-#        choice spelled out, Remove from parent, and Take out of the layout for a bare removal
+#        choice spelled out, Remove from parent, and Take out of the scene for a bare removal
 #   The four follow-flags a hierarchy row carries, read back off whatever plumbing wrote them
 #        (a RemoteTransform with a switch off, a top_level beside it) as ONE flagged row
 #   The picks and the counts: For each c in x's children, x.ChildCount, x's parent, x's first
@@ -75,13 +75,13 @@ static var STATEMENT_READINGS: Dictionary = {
 	"item.reparent($Hand)": "Hand ▸ Add child item keeping its place",
 	"rider.reparent($Saddle, false)": "Saddle ▸ Add child rider, snapping to it",
 	"item.reparent(get_tree().current_scene)":
-		"item ▸ Remove from parent keeping its place in the layout",
-	"item.reparent(get_tree().root)": "item ▸ Remove from parent keeping its place in the layout",
+		"item ▸ Remove from parent keeping its place in the scene",
+	"item.reparent(get_tree().root)": "item ▸ Remove from parent keeping its place in the scene",
 	# A receiver-less reparent is the script's own object moving itself
 	"reparent($Hand)": "Hand ▸ Add child Player keeping its place",
 	# Taken out and kept, which is a different thing from destroyed
-	"item.get_parent().remove_child(item)": "item ▸ Take out of the layout (kept in memory)",
-	"$Bag.remove_child(item)": "item ▸ Take out of the layout (kept in memory)",
+	"item.get_parent().remove_child(item)": "item ▸ Take out of the scene (kept in memory)",
+	"$Bag.remove_child(item)": "item ▸ Take out of the scene (kept in memory)",
 	# The two escape hatches, in the words the answers to "why does my child not follow" use
 	"item.top_level = true": "item ▸ Set ignore parent's movement on",
 	"item.top_level = false": "item ▸ Set ignore parent's movement off",
@@ -110,7 +110,7 @@ static var EXPRESSION_READINGS: Dictionary = {
 ## per-line pin cannot see.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Hand ▸ Add child item keeping its place",
-	"item ▸ Remove from parent keeping its place in the layout",
+	"item ▸ Remove from parent keeping its place in the scene",
 	"Back ▸ Add child item, snapping to it",
 	"Saddle ▸ Add child rider, snapping to it",
 	"Head ▸ Add child hat keeping its place",

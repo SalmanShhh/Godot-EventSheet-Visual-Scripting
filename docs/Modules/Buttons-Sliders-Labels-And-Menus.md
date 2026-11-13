@@ -135,7 +135,7 @@ use case below.
 
 ## Use cases
 
-**1. A Play button.** A sheet on the button, one **On Pressed** event, one **Go To Layout** action:
+**1. A Play button.** A sheet on the button, one **On Pressed** event, one **Change Scene** action:
 
 ```gdscript
 get_tree().change_scene_to_file("res://levels/level1.tscn")
@@ -178,7 +178,7 @@ set_focus_neighbor(SIDE_RIGHT, ^"../RightColumn/Continue")
 honest:
 
 ```
-Every Frame
+On Process
   Condition: Has Focus  (On node $NameField)
   Condition: On Action Just Pressed  "ui_accept"
     -> Set value  player_name = Field Text (On node $NameField)
@@ -293,7 +293,7 @@ $PausePanel.hide()
 **22. A pause key that toggles it.** **Is Visible** answers which way to go:
 
 ```
-Every Frame
+On Process
   Condition: On Action Just Pressed  "ui_cancel"
   Condition: Is Visible  (On node $PausePanel, inverted)
     -> Show  (On node $PausePanel)

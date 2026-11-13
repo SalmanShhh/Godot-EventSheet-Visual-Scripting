@@ -38,15 +38,15 @@ runtime left in the output.
   sheet has always meant blank: its actions compile into `_process(delta)`, and any conditions it
   carries are checked there. The Add event dialog offers that as its first entry,
   **(none - runs every tick)**, so pressing Enter makes one.
-- **Lifecycle triggers become callbacks.** **On Ready** becomes `_ready()`, **Every Frame** becomes
-  `_process(delta)`, **Every Physics Tick** becomes `_physics_process(delta)`. That is why `delta` is a
+- **Lifecycle triggers become callbacks.** **On Ready** becomes `_ready()`, **On Process** becomes
+  `_process(delta)`, **On Physics Process** becomes `_physics_process(delta)`. That is why `delta` is a
   usable value inside those events and not inside **On Ready**.
 - **Signal triggers become a connection plus a handler.** The compiler emits the handler function and,
   in `_ready`, the `source.signal_name.connect(handler)` line that arms it. Nothing is polled.
 - **Post-tick is not "another frame trigger".** **After Every Frame (post-tick)** connects to the
   SceneTree's `process_frame` signal, which fires once after *every* node has processed. That is the
   place for a camera that must follow after movement, or for end-of-frame cleanup.
-- **Every event of the same trigger shares one handler.** Two events both under **Every Frame** compile
+- **Every event of the same trigger shares one handler.** Two events both under **On Process** compile
   into one `_process`, in sheet order. Ordering on the sheet is ordering in the code.
 - **A condition can also be a gate.** **Trigger Once**, **Has Changed**, **Was Recently True**,
   **Once At A Time** and **Only Once Ever** are conditions, not triggers: they sit in the condition lane
@@ -80,8 +80,8 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | On Ready | Runs once when this node first enters the scene, ideal for setup and initial values. | the `_ready()` callback |
-| Every Frame | Runs every rendered frame, perfect for continuous movement, timers, or polling input. | the `_process(delta: float)` callback |
-| Every Physics Tick | Runs every fixed physics step, the right place for physics-based movement and forces. | the `_physics_process(delta: float)` callback |
+| On Process | Runs every rendered frame, perfect for continuous movement, timers, or polling input. | the `_process(delta: float)` callback |
+| On Physics Process | Runs every fixed physics step, the right place for physics-based movement and forces. | the `_physics_process(delta: float)` callback |
 | After Every Frame (post-tick) | Runs once AFTER every node has processed this frame. | a handler connected to `get_tree().process_frame` |
 | After Every Physics Tick | Runs once AFTER every node has finished its physics step this tick. | a handler connected to `get_tree().physics_frame` |
 | On Editor Run | Runs inside the editor while building, useful for tool scripts and live previews. | the `_run()` callback |
@@ -278,7 +278,7 @@ On Ready
 **2. Move something every frame, using the frame's own delta.**
 
 ```
-Every Frame
+On Process
   -> Add To Property  self.position += Vector2(1, 0) * 200.0 * delta
 ```
 
@@ -290,8 +290,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 ```
 
-That is what an **Every Physics Tick** event holding **Apply Gravity** and **Move And Slide** emits.
-Use **Every Frame** for anything visual, and **Every Physics Tick** for anything that touches bodies,
+That is what an **On Physics Process** event holding **Apply Gravity** and **Move And Slide** emits.
+Use **On Process** for anything visual, and **On Physics Process** for anything that touches bodies,
 velocities or forces.
 
 **4. Follow the player with a camera, after the player has already moved.**
@@ -301,7 +301,7 @@ After Every Frame (post-tick)
   -> Set Property  self.global_position = $Player.global_position
 ```
 
-Under **Every Frame** the camera might read the player's position before the player updates it, which
+Under **On Process** the camera might read the player's position before the player updates it, which
 is exactly the one-frame lag that reads as jitter. Post-tick runs after every node's `_process`, so the
 value it reads is final.
 
@@ -376,7 +376,7 @@ On wave cleared
 **12. Do something on the tick a condition becomes true, not every tick after.**
 
 ```
-Every Frame
+On Process
   Condition: Is On Floor
   Condition: Trigger Once
     -> Play Sound
@@ -389,7 +389,7 @@ so "was I reached last tick?" really does mean "were the other conditions alread
 **13. Watch a value and react only when it moves.**
 
 ```
-Every Frame
+On Process
   Condition: Has Changed   value = health
     -> Set Text  "HP: " + str(health)
 ```
@@ -400,7 +400,7 @@ one.
 **14. Forgiving jumps (coyote time), with no timer of your own.**
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: On Action Just Pressed   "jump"
   Condition: Was Recently True   value = is_on_floor(), window = 0.1
     -> Set Velocity Y  -400.0
@@ -412,7 +412,7 @@ trigger, because that is what stamps the moment.
 **15. An event with a Wait in it that must never overlap itself.**
 
 ```
-Every Frame
+On Process
   Condition: Once At A Time
     -> Play Sound
     -> Wait  0.5
@@ -438,7 +438,7 @@ effect on the next run, because rows already running keep their cached answer fo
 **17. The wave director, without counting nodes by hand.**
 
 ```
-Every Frame
+On Process
   Condition: On Group Emptied   "enemies"
     -> Add to  wave += 1
     -> Call Function  spawn_wave(wave)
@@ -548,7 +548,7 @@ fires for the first item and never for the rest. Only Once Per Node is per THING
 row actually means.
 
 ```
-Every Frame
+On Process
   Condition: For Each  enemy in group "enemies"
     Condition: Only Once Per Node  ( enemy, "init" )
       -> Apply stat sheet to  enemy
@@ -667,7 +667,7 @@ On chapter two restarted
   the first item and never for the rest. Only Once Per Node is the one that means "once per thing".
 - **Only Once Per Node keeps its memory ON the node**, so it survives reparenting and a pooled
   instance remembers it was already initialised. Clear it with Forget Once For in the pool's reset.
-- **Only Once This Scene Load is forgotten on Restart Layout**, unlike Only Once Ever, which persists
+- **Only Once This Scene Load is forgotten on Reload Scene**, unlike Only Once Ever, which persists
   to `user://remembered.cfg` across runs. Pick by how long you want the memory to last.
 - **At Most Every is a rate, not an edge.** It lets the event run once per window however often it is
   reached; Trigger Once fires on the rising edge and never again until the conditions go false.
@@ -676,9 +676,9 @@ On chapter two restarted
 - **A blank event runs every tick.** An event with no trigger picked is not a broken event: it
   compiles into `_process(delta)`. If its rows fire far more often than you expected, that is why -
   give it a trigger, or narrow it with conditions. The Doctor says so too when a blank event only
-  sets values ("did you mean On start of layout?").
-- **`delta` only exists where the callback provides it.** It is a real value under **Every Frame** and
-  **Every Physics Tick**. Under **On Ready** or a signal trigger there is no `delta`, which is why the
+  sets values ("did you mean On ready?").
+- **`delta` only exists where the callback provides it.** It is a real value under **On Process** and
+  **On Physics Process**. Under **On Ready** or a signal trigger there is no `delta`, which is why the
   gravity and acceleration actions default their **Delta** parameter to `delta` and expect a per-frame
   trigger.
 - **Plain Connect Signal is not idempotent.** Running it twice connects twice and the handler fires

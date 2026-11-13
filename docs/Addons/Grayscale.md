@@ -264,7 +264,7 @@ A slow recolour is a whole story beat and is one row.
 ### 15. Drain that follows a countdown
 
 ```
-Every tick
+On process
   -> Portal | GrayscaleBehavior: Set effect.grayscale to 1.0 - (Portal.seconds_left / 30.0)
 ```
 

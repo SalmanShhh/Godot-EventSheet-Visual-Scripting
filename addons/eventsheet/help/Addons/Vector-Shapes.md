@@ -446,7 +446,7 @@ the tree, which is what you want a "should I bother updating it" condition to sa
 ### 18. One gradient shared by a whole HUD
 
 ```
-On start of layout -> HealthArc  | Set Gradient: hud_ramp
+On ready -> HealthArc  | Set Gradient: hud_ramp
                    -> ShieldArc  | Set Gradient: hud_ramp
                    -> StaminaArc | Set Gradient: hud_ramp
 ```
@@ -482,7 +482,7 @@ are up; a zero hides it now.
 ### 21. A marker that walks along a route
 
 ```
-Every tick -> Runner | Set Position: RoutePreview.Point Along Shape At(Runner.progress)
+On process -> Runner | Set Position: RoutePreview.Point Along Shape At(Runner.progress)
 ```
 
 **Point Along Shape At** walks the outline by LENGTH, so a marker at 0.5 is halfway along the path

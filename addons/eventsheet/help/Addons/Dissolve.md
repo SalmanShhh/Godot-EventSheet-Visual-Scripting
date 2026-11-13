@@ -254,7 +254,7 @@ On Illusion Broken
 ### 11. Sound that follows the burn
 
 ```
-Every tick
+On process
   Condition: NOT Enemy | DissolveBehavior: Is Gone
     -> BurnSound: volume_db = linear_to_db(1.0 - Enemy | DissolveBehavior: Burnt Away)
 ```

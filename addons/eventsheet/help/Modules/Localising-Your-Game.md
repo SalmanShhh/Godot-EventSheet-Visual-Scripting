@@ -271,7 +271,7 @@ func _ready() -> void:
 fills the number in, so `"%d apple"` / `"%d apples"` reads "3 apples".
 
 ```
-Every tick
+On process
   -> set BasketLabel text = Counted Text("%d apple", "%d apples", basket_count)
 ```
 
@@ -283,7 +283,7 @@ language pick the form first and the slots fill after, so a translator can move 
 where their grammar wants them.
 
 ```
-Every tick
+On process
   -> set ProgressLabel text = Counted Text From Pattern("{n} chapter left", "{n} chapters left", left, {"n": left})
 ```
 
@@ -446,7 +446,7 @@ so the list stays the same length as the table.
   number.
 - **Keep the `%d` in both plural forms.** A translation that drops it comes back unfilled, and nothing
   errors, because the fill is a `replace` rather than a `%` format. That is deliberate: a `%` on a
-  form the translator broke would raise once per evaluation, which under Every Frame is once a frame.
+  form the translator broke would raise once per evaluation, which under On Process is once a frame.
 - **A CSV catalog has two plural forms, not three.** Godot's CSV importer stores `"%d apple"` and
   `"%d apples"` as two ordinary keys with one form each, so **Counted Text** picks between the two
   translated keys directly. A `.po` catalog carrying three Russian forms uses all three. Both are

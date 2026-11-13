@@ -42,7 +42,7 @@ and nothing to attach. They compile to plain Godot: `await get_tree().create_tim
   something for later and let the current event carry straight on. Pick the one that matches how you
   want the rest of the row to behave.
 - **Every X Seconds needs a per-frame trigger.** It accumulates frame time, so it only counts while
-  the event it sits in is being evaluated. Under Every Frame it is a metronome; under a one-shot
+  the event it sits in is being evaluated. Under On Process it is a metronome; under a one-shot
   trigger it is a condition that never comes true.
 - **A wait that can end two ways names itself.** Wait Until, Wait For All Of and Wait For Any Of each
   take a name, stamp their verdict under it, and hand the branch back as two ordinary conditions:
@@ -315,7 +315,7 @@ func _on_bullet_fired() -> void:
 **3. A metronome.** Every X Seconds under a per-frame trigger.
 
 ```
-Every Frame
+On Process
   Condition: Every X Seconds  3.0
     -> Spawn Scene At  "res://enemy.tscn", spawn_point.position
 ```
@@ -324,7 +324,7 @@ Every Frame
 it fires, so the gaps vary.
 
 ```
-Every Frame
+On Process
   Condition: Every X To Y Seconds  2.0, 5.0
     -> play an idle bark
 ```
@@ -348,7 +348,7 @@ func _on_dash_pressed() -> void:
 expression drives both the number and a filling bar.
 
 ```
-Every Frame
+On Process
   -> set DashLabel text = str(Cooldown Time Left("dash"))
   -> set DashBar value = 100 - Cooldown Time Left("dash") / 1.5 * 100
 ```
@@ -360,7 +360,7 @@ happens, then consume the buffer so it cannot fire twice.
 On jump pressed
   -> Buffer Press  "jump", 0.12
 
-Every Physics Tick
+On Physics Process
   Condition: Press Is Buffered  "jump"
   Condition: is_on_floor()
     -> Clear Buffer  "jump"
@@ -429,7 +429,7 @@ On cutscene starts
 On round starts
   -> Start Timer  60.0   (On node: RoundTimer)
 
-Every Frame
+On Process
   -> set ClockLabel text = str(Get Time Left())   (On node: RoundTimer)
 
 On player wins
@@ -469,7 +469,7 @@ zero point of your own.
 On run starts
   -> set run_started_at = Game Time()
 
-Every Frame
+On Process
   -> set ClockLabel text = str(Game Time() - run_started_at)
 ```
 
@@ -480,7 +480,7 @@ the **Ramped** expression counts from the run rather than from launch.
 On run starts
   -> Start Ramp Clock
 
-Every Frame
+On Process
   Condition: Every X Seconds  Ramped(2.0, -0.3, 0.5)
     -> spawn an enemy
 ```
@@ -490,7 +490,7 @@ The spawn gap starts at 2 seconds, shortens by 0.3 per minute, and never goes be
 **19. A performance readout while you are testing.**
 
 ```
-Every Frame
+On Process
   -> set DebugLabel text = str(FPS()) + " fps, frame " + str(Frame Count())
 ```
 
@@ -668,7 +668,7 @@ happened; the throttle limits how often the expensive work runs; Has Been Quiet 
 typing stops.
 
 ```
-Every Frame
+On Process
   Condition: search_box.text has changed
     -> Poke  "search"
   Condition: At Most Every  0.25
@@ -695,7 +695,7 @@ and let the save wait for two seconds of quiet.
 On level edited
   -> Poke  "editing"
 
-Every Frame
+On Process
   Condition: Has Been Quiet For  "editing", 2.0
     -> Save Game
     -> Clear Poke  "editing"
@@ -751,7 +751,7 @@ set_meta("__ef_cooldown_length_" + str("dash"), maxf(1.5, 0.0))
 1 when it is ready, which is what a radial bar wants, so there is no arithmetic on the row.
 
 ```
-Every Frame
+On Process
   -> Set Property  DashIcon, "value", Cooldown Fraction("dash")
 ```
 
@@ -762,7 +762,7 @@ it on the way to the label.
 On round started
   -> Start Countdown  "round", 90.0, game time
 
-Every Frame
+On Process
   -> Set Text  RoundClock, Countdown Text("round")
 ```
 
@@ -818,7 +818,7 @@ On checkpoint reached
   -> Record Lap  "run"
   -> Set Text  SplitLabel, Lap Text("run")
 
-Every Frame
+On Process
   -> Set Text  RunClock, Stopwatch Text("run")
 ```
 
@@ -908,7 +908,7 @@ Name the variable after the input it remembers - `punch_input`, `jump_input` - a
 with that name in it. Ask and consume in the same breath:
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: Is On Floor
   Condition: Is Input Buffered  jump_input
     -> Consume Buffered Input  jump_input
@@ -918,7 +918,7 @@ Every Physics Tick
 ## Tips and common mistakes
 
 - **Every X Seconds under a one-shot trigger never fires.** It counts frame time from inside the event
-  it lives in, so it needs a per-frame trigger (Every Frame, Every Physics Tick). This is
+  it lives in, so it needs a per-frame trigger (On Process, On Physics Process). This is
   the single most common "my timer does nothing" report.
 - **Wait suspends everything below it in that event.** If the trigger can fire again while the event
   is still suspended, you get overlapping runs. Add the **Once At A Time** condition to the event and
@@ -956,7 +956,7 @@ Every Physics Tick
 - **Await If Over Budget only compiles inside a handler that ran Begin Frame Budget**, because it
   reads the `__ace_budget_end` local that Begin Frame Budget declares. Split across two events, it
   will not build.
-- **Frame budgeting belongs in a one-shot trigger.** Inside a re-firing Every Frame trigger, overlapping
+- **Frame budgeting belongs in a one-shot trigger.** Inside a re-firing On Process trigger, overlapping
   suspended runs duplicate the work they were spreading out. The Time Slicer pack is the easy path if
   you want spreading without minding this yourself.
 - **Vanish, Respawn In awaits**, so it suspends the event like Wait does. It also only touches

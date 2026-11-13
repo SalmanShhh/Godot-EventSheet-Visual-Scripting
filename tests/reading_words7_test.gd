@@ -13,7 +13,7 @@ extends RefCounted
 #        sheet's own expression names under Familiar Words
 #   The expression-name table, which also settles the length question: len(x) under Familiar
 #        Words, "length of x" otherwise
-#   The scene-flow actions read as Go to layout / Restart layout / Pause the game / Unpause /
+#   The scene-flow actions read as Change scene / Reload scene / Pause the game / Unpause /
 #        Set time scale / Quit game, always on, with the layout named the way the file is named
 #   The platform words on a CharacterBody, including the two the sign of a vertical speed means
 #        the OPPOSITE of in 3D
@@ -90,14 +90,14 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# importer files each comparison as its own row), so the reading - both edges
 	# collapsed into one line - is what a test written on the raw condition text gets; here the
 	# right-hand edge is the one this file proves reaches the canvas.
-	"eventforge_reading_words7 ▸ Is outside layout (right)",
+	"eventforge_reading_words7 ▸ Is outside screen (right)",
 	# A roll under a probability
 	"System ▸ 30% chance",
 	# The scene-flow words, always on
 	"System ▸ Pause the game",
 	"System ▸ Set time scale to 0.5",
-	"System ▸ Go to layout Level 2",
-	"System ▸ Restart layout",
+	"System ▸ Change scene Level 2",
+	"System ▸ Reload scene",
 	"System ▸ Quit game"
 ])
 
@@ -146,10 +146,10 @@ static var CONDITION_READINGS: Dictionary = {
 	"velocity.x != 0": "Player ▸ Is moving",
 	# The layout edges and the screen
 	"position.x < 0 or position.x > get_viewport_rect().size.x":
-		"Player ▸ Is outside layout (left or right)",
-	"position.y < 0": "Player ▸ Is outside layout (top)",
+		"Player ▸ Is outside screen (left or right)",
+	"position.y < 0": "Player ▸ Is outside screen (top)",
 	"get_viewport().get_visible_rect().has_point(global_position)": "Player ▸ Is on-screen",
-	"not get_viewport_rect().has_point(position)": "Player ▸ Is outside layout"
+	"not get_viewport_rect().has_point(position)": "Player ▸ Is outside screen"
 }
 
 ## The statements whose sentence this batch settles, as "object ▸ sentence".
@@ -159,9 +159,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	# variable filled from it says that, and the whole Date family reads alike. The game's own running
 	# clock above keeps "now", because no Date expression stands for a number that restarts with the game.
 	"started = Time.get_unix_time_from_system()": "Player ▸ Set started to Date.Now",
-	# The other scene-flow words (Restart layout, Pause the game, Unpause, Set time scale, Quit game)
+	# The other scene-flow words (Reload scene, Pause the game, Unpause, Set time scale, Quit game)
 	# are pinned value by value in reading_nouns_test, with the glossary off and on.
-	"get_tree().change_scene_to_file(\"res://levels/level_2.tscn\")": "System ▸ Go to layout Level 2"
+	"get_tree().change_scene_to_file(\"res://levels/level_2.tscn\")": "System ▸ Change scene Level 2"
 }
 
 ## One Godot spelling, one sheet name, and what the same value reads as with the glossary off.

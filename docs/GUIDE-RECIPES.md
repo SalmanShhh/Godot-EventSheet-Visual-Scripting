@@ -67,12 +67,12 @@ jump height, wall jump - all the juice).
 2. New sheet → **Sheet Type** → host class `CharacterBody2D`.
 3. Attach the **Platformer** pack as a child node (open the pack sheet and use Tools ▸ Attach to Selected Node, or drop the pack node in);
    set its speed/jump in the Inspector.
-4. One event: trigger **Every Frame** → action **Move And Slide**. The pack reads input and drives
+4. One event: trigger **On Process** → action **Move And Slide**. The pack reads input and drives
    `velocity`; Move And Slide applies it.
 5. **Save** - the sheet *is* the `.gd`; set it as the node's script and press Play.
 
-Want it from the ground up instead of the pack? Three events: *Every Frame* → set horizontal velocity
-from input; *Is on floor* + *jump pressed* → set `velocity.y`; *Every Frame* → Move And Slide.
+Want it from the ground up instead of the pack? Three events: *On Process* → set horizontal velocity
+from input; *Is on floor* + *jump pressed* → set `velocity.y`; *On Process* → Move And Slide.
 
 ---
 
@@ -95,7 +95,7 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 2. Give coins an `Area2D` in the `"coins"` group.
 3. Event: trigger **On Area Entered** (or condition **Is Overlapping Body**) → actions: *Add to
    variable* `score` by `1`, then *Queue Free* the coin.
-4. Show it: a `Label` + an event *Every Frame* → **Set Property** `text` = `"Score: %d" % score`.
+4. Show it: a `Label` + an event *On Process* → **Set Property** `text` = `"Score: %d" % score`.
 
 ---
 
@@ -522,7 +522,7 @@ func _on_time_slicer_process_item(item) -> void:
 **The one-liner - Budgeted For Each.** Already have a **For Each** loop? Don't attach anything - on the
 loop's pick filter set **frame_spread_count** (items/frame) and/or **frame_spread_budget_ms** (a wall-clock
 fence) in the Inspector. The loop then does a slice each frame and resumes on the next, over a snapshot
-taken once per pass, skipping anything freed mid-pass. Drive it from **Every Frame** (that's what re-enters
+taken once per pass, skipping anything freed mid-pass. Drive it from **On Process** (that's what re-enters
 the loop each frame to continue the pass):
 
 ```gdscript
@@ -660,7 +660,7 @@ lands as **one undo step**, so a refactor is something you try, look at, and und
 
 - **Wrap in Condition…** takes the run of actions you have selected (or all of the event's actions if
   you select none), opens the ACE picker, and moves them inside a fresh sub-event guarded by the
-  condition you pick. Before: three unguarded actions under *Every Frame*. After: *Every Frame* with
+  condition you pick. Before: three unguarded actions under *On Process*. After: *On Process* with
   no actions of its own and one child, *Player is moving*, holding all three.
   The picker lists triggers as well as conditions, because an ordinary sub-event may have one -
   but a wrap may not, and picking a trigger here is refused in one line. A trigger says when an
@@ -774,7 +774,7 @@ Use cases:
   stay untouched, a **GDScript block** row is still emitted as-is and round-trips.)
 - **Run In Background needs a pure callable.** No scene-tree or node access inside it - it runs off
   the main thread. Compute off-thread, then apply the result in the On Done handler (main thread).
-- **A Budgeted For Each only advances when re-entered.** Drive it from **Every Frame** - that's what
+- **A Budgeted For Each only advances when re-entered.** Drive it from **On Process** - that's what
   resumes the pass each frame. It works over a snapshot taken once per pass and skips anything freed
   mid-pass.
 - **Event Trace rides the Live Values stream.** If the cyan fire markers never appear, turn on

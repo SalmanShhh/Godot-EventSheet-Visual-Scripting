@@ -14,8 +14,8 @@
 # renaming what those functions READ AS costs nothing and moves nothing.
 #
 # Three tables, in the order a reader meets them:
-#   1. CLASS_WORDS - the head fact ("Properties bar add-on") and the object a row of that class
-#      wears in its object column ("Properties bar").
+#   1. CLASS_WORDS - the head fact ("Inspector add-on") and the object a row of that class
+#      wears in its object column ("Inspector").
 #   2. CALLBACKS - one entry per engine virtual: the sentence it reads as, and whether a `return`
 #      inside it is an Answer (and of what shape).
 #   3. VERBS - the add_* / remove_* calls, as the Add / Remove sentences the Editor object already
@@ -39,10 +39,10 @@ const EDITOR_OBJECT := "Editor"
 ##
 ## The words are the sheet's own, chosen so that someone who has never read Godot's class reference
 ## can point at the thing on screen: an EditorInspectorPlugin puts buttons and editors in the panel
-## the sheet calls the Properties bar, so it is a Properties bar add-on.
+## the sheet calls the Inspector, so it is an Inspector add-on.
 const CLASS_WORDS: Dictionary = {
 	"EditorPlugin": {"object": EDITOR_OBJECT, "word": "editor plugin"},
-	"EditorInspectorPlugin": {"object": "Properties bar", "word": "Properties bar add-on"},
+	"EditorInspectorPlugin": {"object": "Inspector", "word": "Inspector add-on"},
 	"EditorImportPlugin": {"object": "Importer", "word": "Importer add-on"},
 	"EditorExportPlugin": {"object": "Export hook", "word": "Export hook"},
 	"EditorDebuggerPlugin": {"object": "Debugger panel", "word": "Debugger panel"},
@@ -123,8 +123,8 @@ const VERBS: Dictionary = {
 		"remove_tool_menu_item": {"text": "Remove Tools menu item {0}", "arity": 1},
 		"add_context_menu_plugin": {"text": "Add context menu {1} to {0}", "arity": 2},
 		"remove_context_menu_plugin": {"text": "Remove context menu {0}", "arity": 1},
-		"add_inspector_plugin": {"text": "Add Properties bar add-on {0}", "arity": 1},
-		"remove_inspector_plugin": {"text": "Remove Properties bar add-on {0}", "arity": 1},
+		"add_inspector_plugin": {"text": "Add Inspector add-on {0}", "arity": 1},
+		"remove_inspector_plugin": {"text": "Remove Inspector add-on {0}", "arity": 1},
 		"add_import_plugin": {"text": "Add importer add-on {0}", "arity": 1},
 		"remove_import_plugin": {"text": "Remove importer add-on {0}", "arity": 1},
 		"add_export_plugin": {"text": "Add export hook {0}", "arity": 1},
@@ -182,7 +182,7 @@ static func is_editor_plugin_class(host_class: String) -> bool:
 	return CLASS_WORDS.has(host_class.strip_edges())
 
 
-## The object column a row of this class wears ("Editor", "Properties bar"), "" for anything else.
+## The object column a row of this class wears ("Editor", "Inspector"), "" for anything else.
 static func object_for(host_class: String) -> String:
 	var entry: Variant = CLASS_WORDS.get(host_class.strip_edges(), null)
 	return str((entry as Dictionary)["object"]) if entry is Dictionary else ""

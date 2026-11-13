@@ -264,7 +264,7 @@ func _notification(what: int) -> void:
 |---|---|
 | Lifted, but called by its constant - `NOTIFICATION_PAUSED` was the row's own name | **On paused**, **On unpaused**, **On object freed** and **On close**, pickable under **Notifications**, each compiling back into the same `match what:` |
 
-`NOTIFICATION_PREDELETE` also stopped reading *On destroyed*. That is what a node leaving the tree
+`NOTIFICATION_PREDELETE` also stopped reading *On exit tree*. That is what a node leaving the tree
 reads as, which can happen more than once; this happens exactly once and nothing follows it, so the
 two moments stopped sharing one sentence.
 

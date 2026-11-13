@@ -81,7 +81,7 @@ static func _test_descriptors() -> bool:
 		+ "\t__layout_{uid}.name = {layout_name}\n"
 		+ "\tget_tree().root.add_child(__layout_{uid})") and ok
 	ok = _check("and reads as a sentence", adding.get_display_text(),
-		"Add layout {path} on top as {layout_name}") and ok
+		"Add scene {path} on top as {layout_name}") and ok
 	ok = _check("filed with the layout rows it belongs beside", adding.category, "Scene") and ok
 	ok = _check("its layout field completes with the project's scenes",
 		adding.params[0].hint, "scene_path") and ok
@@ -96,7 +96,7 @@ static func _test_descriptors() -> bool:
 		+ "\tget_tree().root.remove_child(__layout_{uid})\n"
 		+ "\t__layout_{uid}.queue_free()") and ok
 	ok = _check("and reads as a sentence", removing.get_display_text(),
-		"Remove layout {layout_name} from on top") and ok
+		"Remove scene {layout_name} from on top") and ok
 
 	var asking: ACEDescriptor = ACERegistry.find_descriptor("Core", "LayoutIsOnTop")
 	ok = _check("the question is the same lookup, null-safe", asking.codegen_template,

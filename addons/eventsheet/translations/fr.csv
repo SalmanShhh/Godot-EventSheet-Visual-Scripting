@@ -10209,3 +10209,73 @@ Pick any that fit. Each adds a few behaviours to this project; you can add or re
 Adds nothing. Sheet > Behaviour library… adds any of them later.,N'ajoute rien. Feuille > Bibliothèque de comportements… les ajoute plus tard.
 Nothing will be added. Sheet > Behaviour library… is always there later.,Rien ne sera ajouté. Feuille > Bibliothèque de comportements… reste disponible plus tard.
 Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,VisibleOnScreenNotifier2D ajouté sous %s pour qu'Est à l'écran puisse l'interroger - Ctrl+Z l'annule.
+A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,Un scène ajouté par-dessus un jeu en pause est mis en pause avec lui : réglez le mode de traitement de son nœud racine sur Toujours (ou En pause) pour qu'il fonctionne pendant la pause. Mettre le jeu en pause est la ligne qui va avec celle-ci.
+"The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.","Par défaut : les mots propres à Godot partout - les callbacks, noms et verbes du moteur."
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.","Les mots que d'autres éditeurs de feuilles d'événements emploient pour les noms et les callbacks (Family, Layout, On start of layout, Every tick) ; les verbes restent ceux de Godot."
+"Debug scene: Event Trace, Live Values and breakpoints are on for this run.","Déboguer la scène : le suivi d'événements, les valeurs en direct et les points d'arrêt sont actifs pour cette exécution."
+calls · includes · Change scene,appelle · inclut · Changer de scène
+An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame.,Un événement commence par un déclencheur : le moment où il s'exécute. On Ready se déclenche une fois quand l'objet est prêt ; On Process s'exécute à chaque frame.
+Wrap Around Scene Horizontally,Boucler horizontalement dans la scène
+"Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.","Envoie l'objet hors d'un côté de la scène et le fait rentrer de l'autre - le bouclage d'arcade. Les bords de la scène sont des places du niveau, c'est donc la place du nœud dans le niveau qui boucle."
+Scene Edges,Bords de la scène
+Wrap around scene horizontally,Boucler horizontalement sur la scène
+"The left edge of the scene, in pixels.","Le bord gauche de la scène, en pixels."
+"The right edge of the scene, in pixels.","Le bord droit de la scène, en pixels."
+Wrap Around Scene Vertically,Boucler verticalement dans la scène
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.","Envoie l'objet hors du haut de la scène et le fait rentrer par le bas, ou l'inverse. Les bords de la scène sont des places du niveau, c'est donc la place du nœud dans le niveau qui boucle."
+Wrap around scene vertically,Boucler verticalement sur la scène
+"The top edge of the scene, in pixels.","Le bord supérieur de la scène, en pixels."
+"The bottom edge of the scene, in pixels.","Le bord inférieur de la scène, en pixels."
+Bound To Scene,Borner à la scène
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.","Garde l'objet à l'intérieur des bords de la scène au lieu de le laisser sortir - la clôture d'arcade. Les bords de la scène sont des places du niveau, c'est donc la place du nœud dans le niveau qui est bornée."
+Bound to scene (inside {low} - {high}),Rester dans la scène (entre {low} et {high})
+Add Scene On Top,Ajouter une scène par-dessus
+"Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.","Place une scène par-dessus le jeu en cours au lieu de la remplacer - un menu pause, un inventaire, une boîte de dialogue. La copie est ajoutée sous la racine de l'arbre, elle survit donc à un changement de scène en dessous, et prend le nom que vous donnez pour que les deux lignes suivantes la retrouvent. Un nom déjà en place est laissé tranquille et rien n'est chargé, car deux scènes sous un même nom signifieraient que l'une d'elles ne pourrait plus jamais être retrouvée ni retirée."
+Add scene {path} on top as {layout_name},Ajouter la scène {path} par-dessus sous le nom {layout_name}
+"Scene file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.","Fichier de scène à placer par-dessus. Son nœud racine garde son propre mode de traitement, et c'est lui qui décide s'il tourne pendant la pause."
+"The name the copy is given under the tree root. Remove Scene On Top and Scene Is On Top find it by this name, so keep all three saying the same one.","Le nom donné à la copie sous la racine de l'arbre. Retirer la scène par-dessus et Le scène est par-dessus la retrouvent par ce nom, gardez donc le même dans les trois lignes."
+Remove Scene On Top,Retirer la scène par-dessus
+"Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.","Retire une scène ajoutée par Ajouter Scène Par-Dessus. Elle sort de l'arbre tout de suite et est libérée de la manière différée, si bien que Scène Est Par-Dessus répond faux dans la même frame et qu'un ajout juste après remet la nouvelle sous le même nom. Un nom sous lequel il n'y a rien ne fait rien en silence : une ligne de fermeture peut donc s'exécuter deux fois."
+Remove scene {layout_name} from on top,Retirer la scène {layout_name} par-dessus
+The name Add Scene On Top gave the copy. A name nothing is under removes nothing.,Le nom donné à la copie par Ajouter une scène par-dessus. Un nom sous lequel il n'y a rien ne retire rien.
+Scene Is On Top,Le scène est par-dessus
+"True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.","Vrai tant qu'une scène ajouté par Ajouter une scène par-dessus est encore là. Sert à empêcher un menu de s'ouvrir deux fois, ou à répondre autrement à la même touche pendant qu'un menu est ouvert."
+scene {layout_name} is on top,la scène {layout_name} est par-dessus
+The name Add Scene On Top gave the copy.,Le nom donné à la copie par Ajouter une scène par-dessus.
+"Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","Deplace un noeud deja present dans la scène sous un nouveau parent - prendre un objet dans la main, installer un cavalier sur une selle, ranger une arme dans le dos. Conserver sa place le laisse exactement la ou on le voit ; le coller le met a l'endroit meme du parent."
+"Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","Retire un noeud de ce sous quoi il se trouve et le remet au niveau superieur de la scène, en gardant sa place dans le monde - lacher un objet porte, faire descendre un cavalier. Le noeud n'est pas libere et rien d'autre ne change chez lui."
+"The node to take off its parent. It stays in the scene, at the top level.","Le noeud a retirer de son parent. Il reste dans la scène, au niveau superieur."
+"What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.","Ce qui arrive à un jeu dessiné pour une taille quand la fenêtre en a une autre. Adapter la scène garde le texte et l'interface nets et étire le placement ; étirer l'image agrandit toute l'image rendue, ce que veut un jeu en pixel art ; libre laisse tout là où c'était dessiné et montre simplement plus ou moins de monde."
+"Fit - scale the scene, keep text crisp","Adapter - mettre la scène à l'échelle, garder le texte net"
+"Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","Envoie l'objet hors d'un côté de la scène et le fait rentrer de l'autre - le bouclage d'arcade. Il boucle la place dans le parent contre les bords de la scène, qui sont des places du niveau ; utilisez WrapAroundScèneXWorld, le jumeau monde."
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","Envoie l'objet hors du haut de la scène et le fait rentrer par le bas, ou l'inverse. Il boucle la place dans le parent contre les bords de la scène, qui sont des places du niveau ; utilisez WrapAroundScèneYWorld, le jumeau monde."
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","Garde l'objet à l'intérieur des bords de la scène au lieu de le laisser sortir - la clôture d'arcade. Elle borne la place dans le parent contre les bords de la scène, qui sont des places du niveau ; utilisez BoundToScèneWorld, le jumeau monde."
+Change scene {path},Changer de scène {path}
+Reload scene,Recharger la scène
+Remove from scene,Retirer de la scène
+Is outside screen,Est hors de l'écran
+Load scene {path} in the background,Charger la scène {path} en arrière-plan
+scene {path} has finished loading,la scène {path} a fini de charger
+Take out of the scene,Sortir de la scène
+keeping its place in the scene,gardant sa place dans la scène
+{name} in the scene,{name} dans la scène
+the scene,la scène
+On enter tree,À l'entrée dans l'arbre (_enter_tree)
+On exit tree,À la sortie de l'arbre (_exit_tree)
+On process,À chaque frame (_process)
+On physics process,À chaque pas de physique (_physics_process)
+▶ Preview scene,▶ Aperçu de la scène
+🐞 Debug scene,🐞 Déboguer la scène
+Inspector add-on,Extension de l'Inspecteur
+Runs every frame (On process).,S'exécute à chaque image (On process).
+Runs every physics step (On physics process).,S'exécute à chaque pas physique (On physics process).
+On Process,À chaque frame (_process)
+On Physics Process,À chaque pas de physique (_physics_process)
+On Enter Tree,À l'entrée dans l'arbre (_enter_tree)
+On Exit Tree,À la sortie de l'arbre (_exit_tree)
+Run on process,À chaque frame (_process)
+Run on physics process,À chaque pas de physique (_physics_process)
+Run on enter tree,À l'entrée dans l'arbre (_enter_tree)
+Run on exit tree,À la sortie de l'arbre (_exit_tree)
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","Un recul qui décroît honnêtement (la forme exp, indépendante de la cadence d'images) - une ligne sous Chaque image. La poussée est calculée dans les directions du niveau mais ajoutée à la place dans le parent, ce qui est faux sous un parent tourné ou mis à l'échelle ; utilisez ApplyPushesWorld, le jumeau monde."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","Un recul qui décroît honnêtement (la forme exp, indépendante de la cadence d'images) - une ligne sous Chaque image. La poussée est calculée dans les directions du niveau et ajoutée à la place du nœud dans le niveau, donc elle est juste même sous un parent tourné ou mis à l'échelle."

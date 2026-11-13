@@ -63,7 +63,7 @@ wires any other node signal - so "play the intro, then open the menu" is two eve
 
 ## Use cases
 
-**1. A boot logo.** On start of layout, **Set Video** the logo and **Play**. Wire the player's
+**1. A boot logo.** On ready, **Set Video** the logo and **Play**. Wire the player's
 finished signal to an event that goes to the title layout.
 
 **2. A skippable intro.** The same shape, plus an event on any key pressed that does **Stop** and

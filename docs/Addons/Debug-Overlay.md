@@ -42,7 +42,7 @@ you play.
 - **It is an autoload, so it is global.** Any sheet, any node, any scene calls the same overlay by
   name. There is nothing to attach and nothing to wire up.
 - **A watch is keyed by name.** Watch Value with the same name refreshes the line rather than adding
-  a second one, which is what makes it safe to call from an Every Frame row.
+  a second one, which is what makes it safe to call from an On Process row.
 - **Marks, rays, rects and labels are timed.** Each carries a number of seconds, ages itself out on the
   overlay's own tick, and disappears. Nothing accumulates forever.
 - **World positions stay glued to the world.** Marks, rays and rects are drawn through the viewport's canvas
@@ -124,7 +124,7 @@ func _process(delta: float) -> void:
 ```
 
 **2. Watch several values at once.** Each name is its own line, and calling the same name again
-refreshes rather than duplicating, so an Every Frame row is exactly right here.
+refreshes rather than duplicating, so an On Process row is exactly right here.
 
 ```gdscript
 extends Node

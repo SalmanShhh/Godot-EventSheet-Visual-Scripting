@@ -173,7 +173,7 @@ Scoped to a `Node3D` host. Each one fills an Array variable with the objects it 
 **1. A ground check under a character.** Put a RayCast3D under the body pointing down, and read it.
 
 ```
-Every tick
+On process
   Condition: RayCast Is Colliding (3D)
     -> set Grounded to true
   Else
@@ -195,7 +195,7 @@ On Ready
 **3. "Press E to open" for whatever the ray is on.**
 
 ```
-Every tick
+On process
   Condition: RayCast Hits Group (3D)  "interactable"
     -> show the prompt for RayCast Collider (3D)
   Else
@@ -239,7 +239,7 @@ On Ready
 **8. Read per-face surface data for footsteps.** A concave terrain mesh reports which triangle was hit.
 
 ```
-Every tick
+On process
   Condition: RayCast Is Colliding (3D)
     -> look up the footstep sound for RayCast Hit Face Index (3D)
 ```
@@ -250,7 +250,7 @@ It returns -1 on any shape that is not a concave mesh, so treat -1 as "use the d
 and reads immediately would read last frame's answer.
 
 ```
-Every tick
+On process
   -> Point RayCast At (3D)  aim_local * 50
   -> Force RayCast Update (3D)
   Condition: RayCast Is Colliding (3D)
@@ -283,7 +283,7 @@ same ray three times.
 **11. Line of sight for an enemy, with one cast and two questions.**
 
 ```
-Every tick
+On process
   -> Cast Ray Into (3D)  sight, from eyes.global_position, to player.global_position, ignore [get_rid()]
   Condition: sight hit something
   Condition: sight is in "player"
@@ -304,7 +304,7 @@ On shoot
 the tidier row.
 
 ```
-Every tick
+On process
   Condition: World Raycast Hits? (3D)  from turret.global_position, to target.global_position
     -> hold fire
 ```
@@ -330,7 +330,7 @@ On Input
 **16. A build ghost that follows the cursor.**
 
 ```
-Every tick
+On process
   Condition: Mouse Ray Hits Something (3D)  1000
     -> move the ghost to Mouse Ray Point (3D)(1000)
     -> show the ghost
@@ -344,7 +344,7 @@ acceptable for a ghost, but Cast Ray From Mouse Into is one cast if you want bot
 **17. Hover highlight.**
 
 ```
-Every tick
+On process
   -> set Hovered = Mouse Ray Collider (3D)(1000)
   Condition: Hovered is not nothing
     -> outline Hovered
@@ -381,7 +381,7 @@ On place block
 the move that is clear.
 
 ```
-Every tick
+On process
   -> Cast Sphere Motion Into (3D)  travel, from global_position, motion velocity * delta, radius 0.25
   -> move by velocity * delta * travel
 ```
@@ -392,7 +392,7 @@ Every tick
 would slip past something.
 
 ```
-Every tick
+On process
   Condition: ShapeCast Is Colliding (3D)
     -> set Count = ShapeCast Hit Count (3D)
     -> For Each index from 0 to Count - 1
@@ -402,7 +402,7 @@ Every tick
 **23. Stop just short of the wall using the safe fraction.**
 
 ```
-Every tick
+On process
   -> Point ShapeCast At (3D)  velocity * delta
   -> Force ShapeCast Update (3D)
   -> move by velocity * delta * ShapeCast Safe Fraction (3D)

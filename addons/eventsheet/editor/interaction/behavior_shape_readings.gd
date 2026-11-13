@@ -1200,8 +1200,8 @@ static func _wrap_statement(object_name: String, target: String, value: String,
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	if args.is_empty() or args[0].strip_edges().trim_prefix("self.") != target:
 		return {}
-	var template: String = "Wrap around layout horizontally" if axis == "x" \
-		else "Wrap around layout vertically"
+	var template: String = "Wrap around scene horizontally" if axis == "x" \
+		else "Wrap around scene vertically"
 	return _shape(object_name, CHIP_WRAP, "wrap", template, {})
 
 
@@ -1220,7 +1220,7 @@ static func _bound_statement(object_name: String, target: String, value: String,
 		value.substr(tail_at + TAIL.length(), value.length() - tail_at - TAIL.length() - 1), ",")
 	if bounds.size() != 2:
 		return {}
-	return _shape(object_name, CHIP_BOUND, "bound", "Bound to layout (inside {low} - {high})", {
+	return _shape(object_name, CHIP_BOUND, "bound", "Bound to scene (inside {low} - {high})", {
 		"low": [EventSheetSentence.expression_text(bounds[0], context), "value"],
 		"high": [EventSheetSentence.expression_text(bounds[1], context), "value"]
 	})

@@ -94,8 +94,8 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# Payload chips and the two tick waits
 	"ReadingWordsPlayer ▸ Signal On Damaged   amount = 3   source = attacker",
 	"System ▸ ⏳ Wait one tick",
-	# The tick triggers in the familiar words
-	"System ▸ Every physics tick",
+	# The tick triggers in Godot's words
+	"System ▸ On physics process",
 	# The every-FRAME handler here carries no condition of its own, so it reads as the BLANK
 	# event it is (nothing in the condition lane at all). The physics one above keeps its words
 	# because its loops are conditions. Pinned as an absence just below.
@@ -272,11 +272,17 @@ static func _loop_words() -> bool:
 		EventSheetViewportReadingRows.loop_words(PickFilter.CollectionKind.EXPRESSION, "x", "wave").is_empty(),
 		true) and ok
 	# The tick triggers, wording only: every other trigger keeps its own name.
-	ok = _check("the physics trigger reads the familiar words",
-		EventSheetViewportReadingRows.tick_trigger_words("OnPhysicsProcess", "Every Physics Tick"),
+	ok = _check("the physics trigger reads Godot's callback name by default",
+		EventSheetViewportReadingRows.tick_trigger_words("OnPhysicsProcess", "On Physics Process", false),
+		"On physics process") and ok
+	ok = _check("the frame trigger reads Godot's callback name by default",
+		EventSheetViewportReadingRows.tick_trigger_words("OnProcess", "On Process", false),
+		"On process") and ok
+	ok = _check("the physics trigger reads the other editors' words in the Familiar preset",
+		EventSheetViewportReadingRows.tick_trigger_words("OnPhysicsProcess", "On Physics Process", true),
 		"Every physics tick") and ok
-	ok = _check("the frame trigger reads the familiar words",
-		EventSheetViewportReadingRows.tick_trigger_words("OnProcess", "Every Frame"),
+	ok = _check("the frame trigger reads the other editors' words in the Familiar preset",
+		EventSheetViewportReadingRows.tick_trigger_words("OnProcess", "On Process", true),
 		"Every tick") and ok
 	ok = _check("any other trigger keeps its own name",
 		EventSheetViewportReadingRows.tick_trigger_words("OnReady", "On Ready"), "On Ready") and ok
@@ -291,8 +297,8 @@ static func _opened_file_reads() -> bool:
 		ok = _check("opened row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	# And the conditionless `_process` handler says nothing at all, because a blank event
 	# already means every tick.
-	ok = _check("a conditionless _process reads blank, not \"Every tick\"",
-		readings.has("System ▸ Every tick"), false) and ok
+	ok = _check("a conditionless _process reads blank, not \"On process\"",
+		readings.has("System ▸ On process"), false) and ok
 	return ok
 
 

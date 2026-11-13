@@ -72,7 +72,7 @@ while __loop_cursor_<id> < __loop_items_<id>.size():
 ```
 
 > [!NOTE]
-> Drive a Budgeted For Each from a **per-frame** trigger (Every Frame) - that's what re-enters the loop each
+> Drive a Budgeted For Each from a **per-frame** trigger (On Process) - that's what re-enters the loop each
 > frame to continue the pass; under a one-shot trigger it would only ever process the first slice (the
 > compiler warns when it can see that). It isn't yet combined with While/Repeat, order-by, or pick-first-N
 > (those emit a normal same-frame loop and a compile warning), nor with a named `loopindex` (the cursor
@@ -101,7 +101,7 @@ for enemy in get_tree().get_nodes_in_group("enemies"):
 > **These make the handler an implicit coroutine.** Use them ONLY inside a **one-shot** trigger
 > (On Ready, On Signal, a custom function) - or gate the event with the **Once At A Time** condition,
 > which skips re-entry while a previous run is still suspended. **Never** ungated inside a
-> re-firing **Every Frame**: the next tick fires while the previous run is still suspended, so the loop
+> re-firing **On Process**: the next tick fires while the previous run is still suspended, so the loop
 > overlaps itself and double-processes. `Begin Frame Budget` and `Await If Over Budget` must be in the
 > **same** handler (the budget fence is function-local). If you're not sure, use the Time Slicer pack.
 
@@ -145,9 +145,9 @@ The Time Slicer is the right tool for ~90% of frame-spreading needs; reach furth
 - **Spread when one frame's worth of the work would be felt** - a visible stutter, not a few items.
 - **Budget in milliseconds, not item counts,** when per-item cost varies (a raycast vs a `Set Variable`): the ms fence adapts; a fixed count doesn't.
 - **Reacting beats polling.** Prefer signals/triggers over per-frame `for` scans: a signal fires only when the event happens, so the work - and its frame cost - only occurs when it has to, instead of every tick.
-- **Budgeted For Each needs a per-frame trigger.** Every Frame is what re-enters the loop to continue the pass; under a one-shot trigger it only ever processes the first slice.
+- **Budgeted For Each needs a per-frame trigger.** On Process is what re-enters the loop to continue the pass; under a one-shot trigger it only ever processes the first slice.
 - **Budgeted For Each does not yet combine with While/Repeat, order-by, or pick-first-N.** Those combinations emit a normal same-frame loop and a compile warning. A named `loopindex` is dropped for the same reason (it would reset every frame), also with a warning.
-- **Never use the budget ACEs inside Every Frame.** They make the handler an implicit coroutine; a re-firing trigger overlaps the suspended run and double-processes. One-shot triggers only, or gate the event with the **Once At A Time** condition (it skips re-entry while a previous run is still suspended).
+- **Never use the budget ACEs inside On Process.** They make the handler an implicit coroutine; a re-firing trigger overlaps the suspended run and double-processes. One-shot triggers only, or gate the event with the **Once At A Time** condition (it skips re-entry while a previous run is still suspended).
 - **Keep Begin Frame Budget and Await If Over Budget in the same handler.** The budget fence is function-local; splitting them across handlers silently breaks the pacing.
 - **Run In Background callables must be pure.** Data in, data out - no scene-tree access, no Node methods, no non-thread-safe Resource touches. Nothing enforces this at compile time; violations crash or produce heisenbugs.
 - **To mutate the scene incrementally, use the Time Slicer, not a worker thread.** Threads are for computing a result; the scene gets touched only in *On Done* (or per-item on the main thread via the slicer).

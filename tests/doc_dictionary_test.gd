@@ -33,8 +33,8 @@ static func _the_page_is_the_tables(found: Array[Dictionary]) -> bool:
 		_reads_as(found, "queue_free"), "Queue Free") and passed
 	passed = _check("add_child is the row that adds one",
 		_reads_as(found, "add_child"), "Add Child") and passed
-	passed = _check("change_scene_to_file is the layout change",
-		_reads_as(found, "change_scene_to_file"), "Go To Layout") and passed
+	passed = _check("change_scene_to_file is the scene change",
+		_reads_as(found, "change_scene_to_file"), "Change Scene") and passed
 	passed = _check("is_on_wall is what the reading calls it",
 		_reads_as(found, "is_on_wall"), "Is By Wall") and passed
 	passed = _check("push_back comes from the list table, in the reading's own words",

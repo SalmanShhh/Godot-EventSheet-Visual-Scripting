@@ -43,7 +43,7 @@ with no plugin runtime behind it.
 ## Core concepts
 
 - **Shake is per tick, not a duration.** The row writes one random offset. Put it under an event that
-  runs while the shake should last (a countdown, an Every tick with a condition), and stop running it
+  runs while the shake should last (a countdown, an On process with a condition), and stop running it
   when the shake is over. The Juice behavior is the version with trauma and decay built in.
 - **Hitstop waits in REAL time.** The timer is created with the ignore-time-scale flag set, which is
   the whole trick: at `time_scale = 0.1` an ordinary timer would take ten times as long to fire, so
@@ -59,7 +59,7 @@ with no plugin runtime behind it.
 - **Flash waits, so the row that follows it waits too.** The action pauses its event until the flash
   is over, exactly as a Wait row does, and puts the tint back afterwards.
 - **Ease Size Back runs every tick.** It moves a fraction of the way to normal size each frame, so it
-  belongs under an Every tick event; the Rate is roughly how fast it converges, per second.
+  belongs under an On process event; the Rate is roughly how fast it converges, per second.
 - **The rows are node-scoped.** Shake is a `Camera2D` row, Flash is a `CanvasItem` row, Bob and Ease
   Size Back are `Node2D` rows, and each carries the optional **On node** target, so the same row can
   act on another node without changing what it does.
@@ -97,7 +97,7 @@ Hitstop for 0.12 seconds - under the "was a critical" condition.
 **5. A boss slam.** Hitstop for 0.2 seconds first, then the shockwave spawn: the freeze sells the
 weight before anything moves.
 
-**6. A pickup that floats.** Bob under Every tick on the collectible, magnitude 4, 2 per second. The
+**6. A pickup that floats.** Bob under On process on the collectible, magnitude 4, 2 per second. The
 eye finds a moving thing on a busy screen.
 
 **7. A row of pickups that do not bob in unison.** Give each one a different Around height and a

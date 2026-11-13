@@ -328,7 +328,7 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		"walk_a_copy":
 			return {"ok": true, "message": "Swap the walk for System ▸ For Each Child, which takes the snapshot for you - or add .duplicate() after the children so %s cannot shift the list it is walking." % subject}
 		"defer_reparent":
-			return {"ok": true, "message": "Move this out of On start of layout into a row that runs after the tree has settled - the parent is still adding its children while _ready runs."}
+			return {"ok": true, "message": "Move this out of On ready into a row that runs after the tree has settled - the parent is still adding its children while _ready runs."}
 		"guard_still_there":
 			return {"ok": true, "message": "Put the rows that use %s under a condition asking whether it is still there - a child goes when its parent goes." % subject}
 		# Both are one edit in the SCENE, not in the sheet, so each names it rather than

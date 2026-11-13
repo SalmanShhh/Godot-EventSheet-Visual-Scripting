@@ -49,8 +49,8 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Sub-events | Sub-events (compile nested under the parent's conditions) |
 | Else | Else / Else-If events (compile to `elif` / `else`) |
 | Families | **Families** - declare a sheet as a Family (Sheet Type → Family) for family-scoped iteration; see the **Family Arena** showcase. Godot node groups / a behavior shared across nodes remain the lower-level path |
-| Layouts | Scenes. The word splits in two here, on purpose: a place the player TRAVELS to keeps the word **Layout** (Go To Layout, Restart Layout, Add Layout On Top), and a file holding a branch of nodes keeps the word **Scene** (Spawn Scene Instance, Save Node As Scene, Scene File Is Data-Only) |
-| A pause menu, an inventory or a dialogue box over the layout | **Add Layout On Top**, **Remove Layout On Top** and **Layout Is On Top** - three lines that load the layout, name the copy, and add it under the TREE ROOT rather than under this node, which is what lets it outlive a change of layout beneath it. The name is the node's own name under the root, not a second registry, so all three rows have to say the same one and a close row is safe to run twice. **Set Game Paused** is the row they pair with, and the menu layout's own root node needs Process Mode **Always** or **When Paused** or it is frozen along with the game underneath it |
+| Layouts | **Scenes.** Everything here says scene: a place the player travels to (Change Scene, Reload Scene, Add Scene On Top) and a file holding a branch of nodes (Spawn Scene Instance, Save Node As Scene, Scene File Is Data-Only) are both a scene. The word layout appears only in the picker's search, and in the opt-in Familiar words (Settings > Words) |
+| A pause menu, an inventory or a dialogue box over the scene (a layout, there) | **Add Scene On Top**, **Remove Scene On Top** and **Scene Is On Top** - three lines that load the scene, name the copy, and add it under the TREE ROOT rather than under this node, which is what lets it outlive a change of scene beneath it. The name is the node's own name under the root, not a second registry, so all three rows have to say the same one and a close row is safe to run twice. **Set Game Paused** is the row they pair with, and the menu scene's own root node needs Process Mode **Always** or **When Paused** or it is frozen along with the game underneath it |
 | Referring to one instance from anywhere, without a path that breaks when you move it | **Godot's own `%name` mark**, spoken both ways. Tick *Access as Unique Name* on a node and the Add picker's object step lists it in a **%names** section with the class the `.tscn` says it is, so the picker scopes to that class's vocabulary; a line somebody already wrote on a `%Name` reads back as a row on that object. Nothing is registered - the mark lives in the scene file, and a field holding `$UI/Bars/HealthBar` offers **Make %HealthBar unique** on its help strip, which is a scene edit through the editor's own undo. Naming a whole SCENE by a short word is the Named Scenes pack's job instead |
 | Saving the level a player built in your in-game editor | **Save Branch As Scene File**, and the walk IS the row: `PackedScene.pack` writes out the root plus every node that root OWNS, and a node added while the game runs is owned by nothing, so a plain pack saves a scene holding one node, returns OK twice and loads back empty. The row gives every ownerless node the branch root as its owner first, in lines emitted where you can read them. Coming back in, **Scene File Is Data-Only** is the question to ask first - a `.tscn` is a table of resources and a resource may be a SCRIPT - and it reads that table as text and builds nothing, so it is safe on a file from anywhere |
 | A minimap, or a second Layout shown on a layer | The **Second View** pack: a SubViewport SHARING the running world plus a camera of its own following a node you name. **Make A View**, **Show View In**, **Set View Zoom**, **Stop View**, and **View Texture Of** for a material or a shader parameter. The node you follow decides the kind - a Node2D gets a Camera2D, a Node3D a Camera3D looking down - and the frame you show it in sizes the render, so there is no size row |
@@ -93,8 +93,8 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 
 | Construct 3 | Godot EventSheets / generated GDScript |
 |---|---|
-| Every tick | **Every Frame** trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
-| On start of layout | `On Ready` trigger (`_ready()`) - and when you OPEN a .gd file as a sheet it reads back under exactly this name: a `_ready` on the script the scene itself carries is **On start of layout**, a `_ready` on a script sitting on an object in the scene is that object's **On created**, and `_exit_tree` is **On end of layout** or **On destroyed** the same way round |
+| Every tick | **On Process** trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
+| On start of layout | **On Ready** trigger (`_ready()`), on any node, the scene's own root included. When you OPEN a .gd file as a sheet it reads back as **On ready**; `_enter_tree` reads **On enter tree** (On created, there) and `_exit_tree` reads **On exit tree** (On end of layout or On destroyed, there). Turn the Familiar words on in Settings > Words to read them in the old names |
 | Compare variable | One **Compare** dialog with the same three boxes: *Compare* (this sheet's variables, each with its type word and starting value, or any expression you type), *Is* (the operator list - `≤ at most`, `≥ at least`…, plus a **ranges** group for between / not between / within ±), *To* (one value, two for a range, or a value and a give-or-take). The operator decides which condition the row becomes - Compare Variable, Compare Values, Is Between Values, Is Outside Range or Values Are Near - and an **Invert** tick turns the question around. Or just type the condition: `health < 50` (plain GDScript) |
 | Compare two strings | The same **Compare** dialog: pick a text variable and the operator list becomes is / is not / begins with / ends with / contains / is one of / matches / is empty, with an **Ignore case** tick that writes `to_lower()` on both sides |
 | Set variable / Add to | The **Variables** group of the picker, in the order you reach for them: `Set value`, `Add to`, `Subtract from`, `Set boolean` (true / false already in the list), `Toggle boolean`, then the two questions `Compare variable` and `Is boolean set`. Each verb names the variables it can take. Or `health += 10` in ƒx |
@@ -284,7 +284,7 @@ The picker wraps the native feature:
 | Construct 3 | Godot EventSheets |
 | --- | --- |
 | Tween behavior | **Tween Property** action (Godot's `create_tween`; all the ease names map to `Tween.TRANS_*` + `EASE_*`) |
-| Go to layout / restart layout | **Go To Layout / Restart Layout** (Scene group; also Quit, Pause, Spawn Scene Instance) |
+| Go to layout / restart layout | **Change Scene / Reload Scene** (Scene group; also Quit, Pause, Spawn Scene Instance) |
 | Audio | **AudioStreamPlayer** group (Play/Stop Sound, Set Volume dB, Is Playing) - Play Sound remembers the LAST SOUND, so Set Last Sound Playback Rate right after gives per-shot pitch variation, C3-style (the default is randf_range(0.9, 1.1)) |
 | Sprite animations | **AnimatedSprite2D** group (Play/Stop Animation, Set Animation Frame, Set Mirrored) |
 | Pathfinding behavior | **NavigationAgent2D** group (Find Path To, Has Arrived, Next Path Position) |
@@ -387,8 +387,8 @@ i18n (Godot translations).
   ![The Menu open on Add, with E, C, A, G, Q, V and F printed beside their items](images/add-cascade-keys.png)
 - **One play button, and it holds every way to run.** The face runs the way you chose; the arrow
   beside it opens all six. The four the sheet owns come first - Run Scene (the scene this sheet's
-  script is on), Debug layout, Run with profiler, Play as host + client - and under *Godot's own*
-  sit Preview layout and Preview project, which are Godot's F6 and F5 under the names you already
+  script is on), Debug scene, Run with profiler, Play as host + client - and under *Godot's own*
+  sit Preview scene and Preview project, which are Godot's F6 and F5 under the names you already
   use. *Main button* at the foot says which one the face does, ticked, and the choice is remembered
   for the project.
 
@@ -400,7 +400,7 @@ i18n (Godot translations).
 
   ![The same play button while a game runs, its face reading Stop](images/play-button-stop.png)
 - **Your project's files are in Godot's FileSystem dock.** The plugin adds no second project list; Quick Open (Ctrl+Shift+O) jumps to a file by name.
-- **Preview is on the sheet.** `▶ Preview layout`, `▶▶ Preview project` and `🐞 Debug layout` sit in
+- **Preview is on the sheet.** `▶ Preview scene`, `▶▶ Preview project` and `🐞 Debug scene` sit in
   the play button's dropdown; the keys underneath are Godot's F6 and F5, and while the game runs the
   first two say `■ Stop` and `↻ Restart`. **Menu ▸ Sheet ▸ Start page** is the start page you expect - templates by genre,
   what you had open last, and the tutorials.
@@ -501,7 +501,7 @@ i18n (Godot translations).
   ![View then Outline: regions, nested groups and published functions as one click-to-jump tree](images/outline-panel.png)
 - **View > Arrange by** reads the same sheet four ways: **File order** (the untouched one),
   **Object**, **Trigger** or **Group**. The events are re-grouped under one header each - `Player`
-  / `Enemy` / `HUD`, or `On created` / `Every physics tick` / `On hit` - and they stay editable
+  / `Enemy` / `HUD`, or `On ready` / `On physics process` / `On hit` - and they stay editable
   in place and keep their numbers, because arranging is a way of READING: the file is never
   reordered, the generated GDScript cannot move, and the byte round-trip is untouched. The
   breadcrumb names the header you are scrolled inside and the Outline becomes the same
@@ -510,7 +510,7 @@ i18n (Godot translations).
 
   ![The same sheet arranged by Object: one folder per object with its event count, the events still numbered and editable inside](images/arrange-by-object.png)
 - **Right-click an object in the Object bar > Add common events…** gives you the four events you
-  were about to type: a `CharacterBody2D` starts with `On created`, `Every physics tick`, `On
+  were about to type: a `CharacterBody2D` starts with `On ready`, `On physics process`, `On
   hit` and `On died`, a `Button` with `On clicked`, a `Timer` with `On timer`, an `Area2D` with `On
   collision with`, and an attached behaviour pack adds its own triggers. Each event arrives with an
   empty action lane - the sheet's own `+ Add action` waiting for you. A starter naming a signal the
@@ -634,7 +634,7 @@ Ctrl+Z takes a parenting back like any other edit.
 
 The Project Doctor covers the three ways this goes wrong at run time: a walk over a node's children
 that **moves** one of them while it walks (the list is live, so the loop skips the next child), a
-reparent of **self** at start of layout (the old parent is still adding its children, and Godot
+reparent of **self** on ready (the old parent is still adding its children, and Godot
 refuses), and a variable **keeping hold of a child whose parent gets freed**. Each is a note with a
 one-click chip naming the single edit to make.
 

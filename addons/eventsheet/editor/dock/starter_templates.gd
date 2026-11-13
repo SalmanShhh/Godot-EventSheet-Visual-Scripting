@@ -143,9 +143,9 @@ const EDITOR_TOOL_SHAPES: Array[Dictionary] = [
 	{"id": 15, "label": "Dock panel", "note": "a panel beside the Scene dock"},
 	{"id": 16, "label": "Bottom panel", "note": "beside Output and Debugger"},
 	{"id": 17, "label": "Tools menu item", "note": "Project > Tools > your entry"},
-	{"id": 18, "label": "Properties bar add-on", "note": "buttons and editors in the Inspector"},
+	{"id": 18, "label": "Inspector add-on", "note": "buttons and editors in the Inspector"},
 	{"id": 19, "label": "Context menu item", "note": "right-click in the Scene or FileSystem dock"},
-	{"id": 20, "label": "Layout view handle", "note": "draw over the 2D view"},
+	{"id": 20, "label": "Viewport overlay", "note": "draw over the 2D view"},
 	{"id": 21, "label": "Thumbnail maker", "note": "previews for a file type"},
 	{"id": 22, "label": "Debugger panel", "note": "a tab while the game runs"},
 	{"id": 23, "label": "Command tool", "note": "headless, run with arguments"},
@@ -673,7 +673,7 @@ static func _build_tools_menu_item_starter() -> EventSheetResource:
 ## the callbacks Godot calls, so the sheet compiles to a class a plugin can hand over with
 ## Add Inspector plugin on plugin enabled.
 static func _build_properties_bar_starter() -> EventSheetResource:
-	var sheet: EventSheetResource = _tool_starter("EditorInspectorPlugin", "[b]Properties bar add-on[/b] - your own buttons and property editors in the Inspector. The editor asks whether you handle an object, then hands you each of its properties in turn.\nAn add-on does nothing on its own: make an Editor Plugin sheet too and give it Add Inspector plugin on plugin enabled.")
+	var sheet: EventSheetResource = _tool_starter("EditorInspectorPlugin", "[b]Inspector add-on[/b] - your own buttons and property editors in the Inspector. The editor asks whether you handle an object, then hands you each of its properties in turn.\nAn add-on does nothing on its own: make an Editor Plugin sheet too and give it Add Inspector plugin on plugin enabled.")
 	sheet.functions.append(_callback_function("_can_handle", [_fn_param("object", "Object")], "bool", "return object is Node"))
 	sheet.functions.append(_callback_function("_parse_begin", [_fn_param("_object", "Object")], "void", "# Add your own controls above the object's properties with add_custom_control()."))
 	return sheet
@@ -689,7 +689,7 @@ static func _build_context_menu_starter() -> EventSheetResource:
 ## A LAYOUT VIEW HANDLE: drawing on top of the 2D view, and getting the input that lands there
 ## first. Both triggers ship with the editor-tool vocabulary, so this shape is entirely events already.
 static func _build_view_handle_starter() -> EventSheetResource:
-	var sheet: EventSheetResource = _tool_starter("EditorPlugin", "[b]Layout view handle[/b] - draw guides, handles or labels over the editor's 2D view, and answer the input that lands there before the view does.\nAnswer true from the input event to keep the view from also acting on it.")
+	var sheet: EventSheetResource = _tool_starter("EditorPlugin", "[b]Viewport overlay[/b] - draw guides, handles or labels over the editor's 2D view, and answer the input that lands there before the view does.\nAnswer true from the input event to keep the view from also acting on it.")
 	var draw_event: EventRow = EventRow.new()
 	draw_event.trigger_provider_id = "Core"
 	draw_event.trigger_id = "OnDrawOver2DViewport"
@@ -1160,7 +1160,7 @@ static func _build_skill_tree_screen_starter() -> EventSheetResource:
 	sheet.events.append(clicked)
 
 	sheet.functions.append(_starter_function("lay_out",
-		"Spawns one button per skill in the asset, at the place the asset asks for or, when it leaves the layout blank, at its own depth in the tree.", "\n".join(PackedStringArray([
+		"Spawns one button per skill in the asset, at the place the asset asks for or, when it leaves the place blank, at its own depth in the tree.", "\n".join(PackedStringArray([
 			"built_for = tree",
 			"var parent: Node = find_child(nodes_parent, true, false)",
 			"if parent == null:",

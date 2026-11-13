@@ -76,7 +76,7 @@ static func _statements() -> bool:
 	ok = _check("wait", _read("await get_tree().create_timer(0.5).timeout"), "System ▸ ⏳ Wait 0.5 seconds") and ok
 	# The sheet's own action name, always on, with the layout named the way the file is named.
 	ok = _check("change scene", _read("get_tree().change_scene_to_file(\"res://menu.tscn\")"),
-		"System ▸ Go to layout Menu") and ok
+		"System ▸ Change scene Menu") and ok
 	# Refusals: a sentence that is almost right is worse than the code it replaced.
 	ok = _check("comparison refused", _read("x == y"), "") and ok
 	ok = _check("control flow refused", _read("if ready:"), "") and ok

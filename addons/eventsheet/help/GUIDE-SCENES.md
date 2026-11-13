@@ -7,7 +7,7 @@ bullet, a menu panel you drop in ten times.
 
 The sheet keeps those two apart on purpose, and it does it in the words:
 
-- The place you travel to is a **Layout**. Go To Layout, Restart Layout, Add Layout On Top.
+- The place you travel to is a **Layout**. Change Scene, Reload Scene, Add Scene On Top.
 - The file holding nodes keeps the word **Scene**. Spawn Scene Instance, Save Node As Scene, Scene
   File Is Data-Only.
 
@@ -71,7 +71,7 @@ func _process(_delta: float) -> void:
 		%ScoreLabel.text = "%d" % score
 ```
 
-![The four lines above, and the one event they read as: an Every tick event whose condition is player_hp under 25, with four action rows whose object column reads HealthBar ProgressBar twice and ScoreLabel Label twice, over a sheet head declaring the two variables](images/unique-name-rows.png)
+![The four lines above, and the one event they read as: an On process event whose condition is player_hp under 25, with four action rows whose object column reads HealthBar ProgressBar twice and ScoreLabel Label twice, over a sheet head declaring the two variables](images/unique-name-rows.png)
 
 **Nothing is registered.** The mark lives in the scene file and nowhere else, so there is no second
 list of names to keep in step, and a name the scene stops carrying simply stops resolving: the row
@@ -114,9 +114,9 @@ Three rows say exactly that:
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Add Layout On Top | Puts a layout over the running game under a name you choose | the name asked about first, then load and instance, name it, `get_tree().root.add_child(…)` |
-| Remove Layout On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `remove_child` and `queue_free()` |
-| Layout Is On Top | True while it is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
+| Add Scene On Top | Puts a layout over the running game under a name you choose | the name asked about first, then load and instance, name it, `get_tree().root.add_child(…)` |
+| Remove Scene On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `remove_child` and `queue_free()` |
+| Scene Is On Top | True while it is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
 
 **Under the tree root, not under this node.** That is the one design decision in the row, and it is
 the reason a menu survives the layout beneath it changing. A copy added under the node that spawned
@@ -130,7 +130,7 @@ safe to run twice.
 **One name, one layout.** `add_child` will not take a name a sibling already has - it renames the
 newcomer to something like `@Node@2` - so a second add under one name would leave a copy that
 neither of the other two rows could ever find or remove, sitting under the tree root for the rest of
-the run. Add Layout On Top therefore asks the name first and loads nothing when it is already up.
+the run. Add Scene On Top therefore asks the name first and loads nothing when it is already up.
 And the removal takes the node **off the tree** before freeing it, because `queue_free` frees at the
 end of the frame: a node only queued is still a child, still found by name, and still in the way.
 That is what makes the familiar pair - remove it, then add it again - work in one frame.
@@ -150,8 +150,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().paused = true
 ```
 
-Its twin is the same event with the question inverted: cancel pressed *while* `Layout Is On Top`
-answers true runs Remove Layout On Top and unpauses. Two events, told apart by one condition.
+Its twin is the same event with the question inverted: cancel pressed *while* `Scene Is On Top`
+answers true runs Remove Scene On Top and unpauses. Two events, told apart by one condition.
 
 ![Two events side by side: cancel pressed with no menu up adds the layout and pauses the game, cancel pressed with it up removes the layout and unpauses, with the plain GDScript both compile to underneath](images/layout-on-top-pause-pair.png)
 
@@ -173,13 +173,13 @@ Running While Paused** on the way in. The row does not write it for you - it emi
 it names and nothing else - and the parameters dialog says so on the help strip while the Layout
 field has focus, which is the moment it matters.
 
-The neighbours, so nothing is mistaken for anything else: **Go To Layout** replaces what is running.
+The neighbours, so nothing is mistaken for anything else: **Change Scene** replaces what is running.
 **Spawn Scene Instance** adds a copy under *this* node with a bare `add_child`, which is the right
 reading for a spawned enemy. These three leave the game running underneath and outlive it.
 
 ## The gap between two layouts
 
-**Go To Layout** is `get_tree().change_scene_to_file`, and that call reads the next scene off the
+**Change Scene** is `get_tree().change_scene_to_file`, and that call reads the next scene off the
 disk on the main thread. For a menu or a small room nobody notices. For a level of any size the game
 stops answering while it works, so the last frame of the old scene sits there, frozen, for as long as
 the read takes. Nothing is wrong; it just looks exactly like something is.
@@ -237,7 +237,7 @@ beside the pack. Neither the **Loading Scene** nor the **Loading Tips File** fie
 both open empty, so a project COPIES them and rewrites them rather than inheriting a screen and a
 table of tips the pack owns. A loading screen is the most branded ten seconds in a game.
 
-**The Doctor's quiet note.** A scene over a megabyte reached by a plain, uncovered Go To Layout gets
+**The Doctor's quiet note.** A scene over a megabyte reached by a plain, uncovered Change Scene gets
 an info note in the Doctor's inbox, with its size and this row named as the door out. It is a note and
 not a warning: an uncovered change is the right answer for a small scene, and most scenes are small.
 
@@ -418,7 +418,7 @@ So **Scene File Is Data-Only** is the question to ask above the row that builds 
 ```
 On load pressed
 + Scene file "user://built_level.tscn" is data-only
-  -> Add Layout On Top  "user://built_level.tscn", "Built"
+  -> Add Scene On Top  "user://built_level.tscn", "Built"
 ```
 
 It reads the file's own resource table as **text** and builds nothing, so asking is safe on a file
@@ -551,7 +551,7 @@ you name. Four rows and one expression are the whole vocabulary: **Make A View**
 **Set View Zoom**, **Stop View**, and **View Texture Of** for the places a frame cannot reach - a
 material's albedo, a shader parameter, a theme icon.
 
-![One event on the canvas: On created, then Make a view named "minimap" following $Player at zoom 0.25, then Show view "minimap" in $HUD/MinimapFrame](images/second-view-rows.png)
+![One event on the canvas: On enter tree, then Make a view named "minimap" following $Player at zoom 0.25, then Show view "minimap" in $HUD/MinimapFrame](images/second-view-rows.png)
 
 ![A 2D level of coloured blocks seen close up, with a small yellow player square in the middle, and in the top right corner a bordered panel showing the same level from much further back with the yellow marker in it](images/second-view-running.png)
 
@@ -579,7 +579,7 @@ Drawing Canvas pack's job. This one is a live picture of the world you are alrea
 - **A path breaks quietly; a `%name` does not.** If a row is about one particular node of the scene,
   tick Access as Unique Name on it once and stop thinking about where it lives. The offer to do that
   is on the field's own help strip.
-- **A menu added under this node dies with this node.** Add Layout On Top parents under the tree root
+- **A menu added under this node dies with this node.** Add Scene On Top parents under the tree root
   for exactly that reason. If your pause menu vanishes when the level changes, that is the bug.
 - **A pause menu paused with the game is a Process Mode, not a bug in the row.** Set the *menu
   layout's own root node* to Always or When Paused.

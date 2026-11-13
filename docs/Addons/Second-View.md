@@ -9,7 +9,7 @@ face and you have a portrait. Same four rows, different frames.
 Four rows and one expression is the whole vocabulary: **Make A View**, **Show View In**, **Set View
 Zoom**, **Stop View**, and **View Texture Of** for the places a frame cannot reach.
 
-![One event on the canvas: On created, then Make a view named "minimap" following $Player at zoom 0.25, then Show view "minimap" in $HUD/MinimapFrame](../images/second-view-rows.png)
+![One event on the canvas: On enter tree, then Make a view named "minimap" following $Player at zoom 0.25, then Show view "minimap" in $HUD/MinimapFrame](../images/second-view-rows.png)
 
 Those two sentences, running: the corner panel is a `TextureRect` holding the SubViewport the pack
 built, drawing the same world the big picture is drawing, from further back.

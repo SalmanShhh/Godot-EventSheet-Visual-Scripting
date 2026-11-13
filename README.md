@@ -20,8 +20,8 @@ It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary 
 
 A sheet isn't interpreted - it **compiles to a plain `.gd` script** you attach and ship. Rows like:
 
-- **On start of layout** → *Print* `"Spawned"`
-- **Every tick** · *Keyboard* `"ui_right"` *is down* → *Move by* `Vector2(speed * delta, 0)`
+- **On ready** → *Print* `"Spawned"`
+- **On process** · *Keyboard* `"ui_right"` *is down* → *Move by* `Vector2(speed * delta, 0)`
 - **Hitbox** · **On collision with** *(body)* · *body in* `"enemy"` → *Subtract* `10` *from health*
 
 become exactly this - typed GDScript with zero references to the plugin:
@@ -94,7 +94,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-type-check-light.png">
-    <img alt="The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused." src="docs/previews/editor-type-check.png">
+	<img alt="The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused." src="docs/previews/editor-type-check.png">
   </picture>
 
 - **Tooling** - Project Doctor (dock, CLI, CI), live debugging, Save Studio, Translation Studio (nine editor languages), the Manual inside the editor, a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.
@@ -112,7 +112,7 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 - **Stacks, queues and lists of instances.** Pop back / Pop front into a name, Move between lists, drain loops, keep the last N, and picking that lasts for its event and sub-events, the way it does in other event-sheet tools.
 - **Godot's own drawing calls** as actions under On Draw.
 - **Your own functions edit like events**, with no lock; shipped packs ask once before their first edit.
-- **Plainer words and windows**: Every tick, Every physics tick, `delta` as `delta`, and no coloured outlines.
+- **Plainer words and windows**: Godot's own callback names (On ready, On process, On physics process), `delta` as `delta`, and no coloured outlines.
 
 **Being built now:** behaviours as better Godot citizens - a warning when a behaviour sits under the wrong kind of node, an optional "Acts on" field, and a stated list of what each behaviour changes on its parent. Behaviours stay plain scripts you can copy into any project.
 

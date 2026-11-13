@@ -110,7 +110,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set reading to time",
 	"System ▸ Set reading to fps",
 	# The layout words are the action's own name, so they are on whatever the glossary says
-	"System ▸ Go to layout Menu",
+	"System ▸ Change scene Menu",
 	# A node lookup IS the object it names; an `@onready` one is the variable row every member
 	# reads as, its value exactly as the file writes it
 	"Boss ▸ Subtract 10 from hp",
@@ -329,8 +329,8 @@ static func _familiar_words() -> bool:
 	# so they read the same either way, and only the layer noun is still a glossary word.
 	for entry: Array in [
 		["get_tree().change_scene_to_file(\"res://scenes/menu.tscn\")",
-			"System ▸ Go to layout Menu", "System ▸ Go to layout Menu"],
-		["get_tree().reload_current_scene()", "System ▸ Restart layout", "System ▸ Restart layout"],
+			"System ▸ Change scene Menu", "System ▸ Change scene Menu"],
+		["get_tree().reload_current_scene()", "System ▸ Reload scene", "System ▸ Reload scene"],
 		["get_tree().paused = true", "System ▸ Pause the game", "System ▸ Pause the game"],
 		["get_tree().paused = false", "System ▸ Unpause", "System ▸ Unpause"],
 		["Engine.time_scale = 0.5", "System ▸ Set time scale to 0.5", "System ▸ Set time scale to 0.5"],
@@ -361,7 +361,7 @@ static func _toggle_defaults_off() -> bool:
 	plain.free()
 	var readings: PackedStringArray = _render(_import(), true)
 	for expected: String in [
-		"System ▸ Go to layout Menu",
+		"System ▸ Change scene Menu",
 		"hud (layer) ▸ Set layer invisible"
 	]:
 		ok = _check("with the glossary on the opened row reads \"%s\"" % expected, readings.has(expected), true) and ok

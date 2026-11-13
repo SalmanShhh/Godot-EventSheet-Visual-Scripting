@@ -64,7 +64,7 @@ const TYPE_HINTS: Array[String] = [
 	"Runs when the project is exported - stamp a build, bake a file, strip debug content.",
 	# The two remaining shapes. The add-on line names the six classes rather than the concept,
 	# because "add-on" alone tells a reader nothing about which one they are choosing.
-	"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",
+	"A piece a plugin hands the editor: an Inspector add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",
 	"A script the Godot binary runs headless from the command line, with arguments and an exit code.",
 ]
 
@@ -82,7 +82,7 @@ const TYPE_LABELS: PackedStringArray = [
 	"Editor Plugin (dock, menu item, object type)",   # extends EditorPlugin
 	"Import Tool (runs on import)",                   # EditorScript + On File Imported
 	"Export Hook (runs on export)",                   # EditorScript + On Project Export
-	"Editor Add-on (Properties bar, importer, thumbnails…)",
+	"Editor Add-on (Inspector, importer, thumbnails…)",
 	"Command Tool (runs headless from the command line)",  # extends SceneTree
 ]
 
@@ -238,7 +238,7 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 	elif type_index == 4:
 		effective_host = "Node"
 	elif type_index == 10 and effective_host.is_empty():
-		# An add-on with nothing typed yet is most often a Properties bar add-on, and a preview
+		# An add-on with nothing typed yet is most often an Inspector add-on, and a preview
 		# reading "extends Node" would be a lie about what the sheet will compile to.
 		effective_host = "EditorInspectorPlugin"
 	elif type_index == 5 and not EventSheetScriptIntent.is_resource_host(effective_host):

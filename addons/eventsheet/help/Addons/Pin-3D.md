@@ -189,7 +189,7 @@ straight.
 
 ```
 On Ready   -> Ball | Pin 3D: Pin To Rope  $Crane/Hook, 6
-Every tick -> Ball | subtract 9.8 * delta from y
+On process -> Ball | subtract 9.8 * delta from y
 ```
 
 ### 7. Ground shadow decal
@@ -225,7 +225,7 @@ Pin to a Path3D and the pack makes the follower for you; **Set Path Progress** d
 
 ```
 On Ready   -> Cart | Pin 3D: Pin To Path  $Rail
-Every tick -> Cart | Pin 3D: Set Path Progress  ride_progress
+On process -> Cart | Pin 3D: Set Path Progress  ride_progress
 ```
 
 ### 11. Turret on a hull
@@ -260,7 +260,7 @@ On Hand Over -> Torch | Pin 3D: Unpin
 Shrink the rope and the host is pulled along it, because a rope pulls the moment it is taut.
 
 ```
-Every tick -> Player | Pin 3D: subtract 6 * delta from Pin Length
+On process -> Player | Pin 3D: subtract 6 * delta from Pin Length
 ```
 
 ### 15. Ask whether the line is taut
@@ -268,7 +268,7 @@ Every tick -> Player | Pin 3D: subtract 6 * delta from Pin Length
 **Is Taut** is the frame a swing starts pulling - the cue for a creak, a dust puff, a stamina drain.
 
 ```
-Every tick
+On process
   Condition: Is Taut -> Juice 3D | Play Sound  "rope_creak"
 ```
 
@@ -287,7 +287,7 @@ On Ready -> Drone | Pin 3D: Pin To Softly  Player, 2
 overshoot are all one expression.
 
 ```
-Every tick
+On process
   Condition: PinDistance > 4 -> Camera | Snap To  Player
 ```
 

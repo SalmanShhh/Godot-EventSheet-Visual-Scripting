@@ -97,20 +97,20 @@ const EXPECTED_PLUGIN: Array[String] = [
 	"Editor ▸ Remove global \"Bridge\"",
 	# The members read under the names the sheet gives members everywhere else, not their identifier
 	# spelling - "edit button" is what every other row in every other sheet calls `_edit_button`.
-	"Editor ▸ Add Properties bar add-on _edit_button",
-	"Editor ▸ Remove Properties bar add-on _edit_button",
+	"Editor ▸ Add Inspector add-on _edit_button",
+	"Editor ▸ Remove Inspector add-on _edit_button",
 	"Editor ▸ Add export hook _export_integrity",
 	"Editor ▸ Add debugger panel _live_values",
 	"Editor ▸ Add context menu _menu to Scene dock"
 ]
 
-## And what the opened Properties bar add-on must say.
+## And what the opened Inspector add-on must say.
 const EXPECTED_INSPECTOR: Array[String] = [
-	"Properties bar ▸ Asks: show this add-on for object?",
+	"Inspector ▸ Asks: show this add-on for object?",
 	"System ▸ Answer object is Node",
-	"Properties bar ▸ On start of object's properties",
-	"Properties bar ▸ Add control",
-	"Properties bar ▸ On property name of object",
+	"Inspector ▸ On start of object's properties",
+	"Inspector ▸ Add control",
+	"Inspector ▸ On property name of object",
 	"System ▸ Answer handled",
 	"System ▸ Answer not handled"
 ]
@@ -163,8 +163,8 @@ static func _inspector_reads_in_the_properties_bar_words() -> bool:
 	var joined: String = "\n".join(readings)
 	for expected: String in EXPECTED_INSPECTOR:
 		ok = _check("the opened add-on reads \"%s\"" % expected, joined.contains(expected), true) and ok
-	ok = _check("the head calls it a Properties bar add-on",
-		joined.contains("Properties bar add-on"), true) and ok
+	ok = _check("the head calls it a Inspector add-on",
+		joined.contains("Inspector add-on"), true) and ok
 	# The words Godot uses are exactly the words a migrating reader cannot act on.
 	ok = _check("no callback reads as its engine virtual", joined.contains("On Parse Property"), false) and ok
 	return ok
@@ -176,7 +176,7 @@ static func _every_plugin_class_has_its_own_word() -> bool:
 	var ok: bool = true
 	var expected: Dictionary = {
 		"EditorPlugin": ["Editor", "editor plugin"],
-		"EditorInspectorPlugin": ["Properties bar", "Properties bar add-on"],
+		"EditorInspectorPlugin": ["Inspector", "Inspector add-on"],
 		"EditorImportPlugin": ["Importer", "Importer add-on"],
 		"EditorExportPlugin": ["Export hook", "Export hook"],
 		"EditorDebuggerPlugin": ["Debugger panel", "Debugger panel"],
@@ -222,7 +222,7 @@ static func _context_slots_read_as_panels() -> bool:
 static func _the_head_names_who_registered_the_addon() -> bool:
 	var ok: bool = true
 	EventSheetEditorPluginWords.clear_added_by_cache()
-	ok = _check("the Properties bar add-on names the plugin that registers it",
+	ok = _check("the Inspector add-on names the plugin that registers it",
 		EventSheetEditorPluginWords.added_by("EventSheetEditButtonPlugin"), "EventForgePlugin") and ok
 	ok = _check("an add-on nothing here registers names nobody",
 		EventSheetEditorPluginWords.added_by("SomeAddonNoProjectFileRegisters"), "") and ok

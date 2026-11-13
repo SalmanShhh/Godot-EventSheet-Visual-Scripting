@@ -215,7 +215,7 @@ On buy button pressed
 **2. Grey out what the player cannot afford.**
 
 ```
-Every tick
+On process
   Condition: Vendor  Can Afford Entry  "sword"
     -> set BuyButton disabled = false
   Else
@@ -252,7 +252,7 @@ On shop opened
 **6. Show what is left.**
 
 ```
-Every tick
+On process
   Condition: Vendor  Entry In Stock  "relic"
     -> set StockLabel text = str(Vendor.Stock Of("relic")) + " left"
   Else

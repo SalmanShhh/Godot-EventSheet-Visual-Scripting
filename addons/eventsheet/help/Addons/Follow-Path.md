@@ -177,7 +177,7 @@ This is the Is At Path End question, not the arrival one: the row may be reached
 wants the state, not the edge.
 
 ```
-Every Frame
+On Process
   Condition: Path: Is At Path End
     Condition: Input: Action Just Pressed  "interact"
       -> Animation: Play Animation  "doors_open"

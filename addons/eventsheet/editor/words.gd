@@ -71,7 +71,7 @@ static var _verb_words_state: int = -1
 const WORDS := {
 	"inheritance_set": ["an inheritance set", "Family", "Base class", ["Kind"]],
 	"layout": ["a scene", "Layout", "Scene", []],
-	"every_tick": ["_process", "Every tick", "Every tick", []],
+	"every_tick": ["the _process callback", "Every tick", "On process", []],
 	"behavior": ["an attached pack", "Behavior", "Behavior", []],
 	"group": ["a Godot group", "Family (group)", "Group", []],
 	"collection": ["Array / Dictionary", "list / table", "list / table", []],
@@ -84,8 +84,8 @@ const WORDS := {
 	"editor_plugin": ["what the editor switches on", "Editor plugin", "EditorPlugin", []],
 	"editor_object": ["the editor itself, as an object", "Editor", "EditorInterface", []],
 	"editor_dock": ["a panel docked in the editor", "Panel (dock)", "Dock", []],
-	"inspector": ["the properties panel and its add-ons", "Properties bar", "Inspector", ["Properties bar add-on"]],
-	"scene_dock": ["the tree of the open scene", "Layout's object list", "Scene dock", []],
+	"inspector": ["the properties panel and its add-ons", "Inspector", "Inspector", ["Inspector add-on"]],
+	"scene_dock": ["the tree of the open scene", "Scene dock", "Scene dock", []],
 	"filesystem_dock": ["the project's file list", "FileSystem dock", "FileSystem dock", []],
 	"tools_menu": ["Project > Tools", "Tools menu", "Tools menu", []],
 	"undo_history": ["what Ctrl+Z walks back", "Undo history", "UndoRedo", ["Undo/redo"]],
@@ -97,7 +97,7 @@ const WORDS := {
 	"command_tool": ["a script run from the command line", "Command tool", "SceneTree script", []],
 	"importer_addon": ["what runs when files are imported", "Importer add-on", "EditorImportPlugin", []],
 	"export_hook": ["what runs when the project is exported", "Export hook", "EditorExportPlugin", []],
-	"view_handle": ["something drawn over the 2D or 3D view", "Layout view handle", "Gizmo", ["Viewport overlay"]],
+	"view_handle": ["something drawn over the 2D or 3D view", "View handle", "Gizmo", ["Viewport overlay"]],
 	"thumbnail_maker": ["what draws a file's preview picture", "Thumbnail maker", "EditorResourcePreviewGenerator", []],
 	"debugger_panel": ["a tab in the Debugger while the game runs", "Debugger panel", "EditorDebuggerPlugin", []],
 	"object_type": ["a node of your own in Create Node", "Object type", "Custom type", ["add_custom_type"]],
@@ -105,6 +105,15 @@ const WORDS := {
 	"shared_store": ["one copy for the whole editor", "Shared store", "Static class", ["shared"]],
 	"behavior_of": ["a helper that points back at what it helps", "Behavior of …", "Helper class", []],
 	"workspace": ["one of the editor's top tabs", "Workspace", "Main screen", []],
+	# The engine callbacks, so what a trigger cell says is a word the Words page lists and controls.
+	# The Godot side is the callback's own name, written the way a sheet reads ("On process"); the
+	# familiar side is the word other event-sheet editors use. `_ready` and `_exit_tree` split by who
+	# owns the script: the scene's own script is the layout starting and ending there.
+	"scene_ready": ["the _ready callback on a scene's own script", "On start of layout", "On ready", []],
+	"scene_exit": ["the _exit_tree callback on a scene's own script", "On end of layout", "On exit tree", []],
+	"node_enter": ["the _enter_tree callback", "On created", "On enter tree", []],
+	"node_exit": ["the _exit_tree callback", "On destroyed", "On exit tree", []],
+	"every_physics_tick": ["the _physics_process callback", "Every physics tick", "On physics process", []],
 }
 
 ## Display order on the Words page - the order the page is read in, not the dictionary's.
@@ -118,7 +127,11 @@ const KEY_ORDER: Array[String] = [
 	"tool_annotation", "command_tool", "importer_addon", "export_hook", "view_handle",
 	"thumbnail_maker", "debugger_panel", "object_type", "global_singleton", "shared_store",
 	"behavior_of", "workspace",
+	"scene_ready", "scene_exit", "node_enter", "node_exit", "every_physics_tick",
 ]
+
+## The callback words the readings ask for, after the editor-building words on the page.
+const CALLBACK_KEYS: Array[String] = ["every_tick", "every_physics_tick", "scene_ready", "scene_exit", "node_enter", "node_exit"]
 
 ## The keys the editor-building wave added, so the Manual's page and any test can name "the editor-building words"
 ## without re-listing them. Everything before these is the game vocabulary the earlier batches shipped.

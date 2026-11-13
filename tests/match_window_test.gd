@@ -101,9 +101,9 @@ static func _test_sheet_reading() -> bool:
 	var match_row: MatchRow = case_rows[0].source_resource as MatchRow if not case_rows.is_empty() else null
 	var ok: bool = SUPPORT.pins(NAME, [
 		["the match says itself beside the trigger", head_texts, PackedStringArray(["match state"])],
-		# One sentence on one line, in every look: "System | Every physics tick, match state".
+		# One sentence on one line, in every look: "System | On physics process, match state".
 		["the tick it runs on keeps its words and its object, so the line reads as one sentence",
-			tick_cells, [["Every physics tick,", "System"]]],
+			tick_cells, [["On physics process,", "System"]]],
 		# A branch's step reads as the same line reads in an event's action lane: the object it acts on
 		# in the column, and the property as written - not "Set x to 0" with no object at all.
 		["each branch is a sub-event holding its own actions, an empty one only its Add action", case_reading, [

@@ -620,7 +620,7 @@ Facing And Moving is those two on the same row, because they are one decision - 
 computed from the facing the line above just set.
 
 ```
-Every tick
+On process
     "shoot" was just pressed
     cooldown <= 0.0
     -> Turret  Spawn a copy of Bullet as new_bullet, facing toward the mouse, moving at 900.0
@@ -1042,7 +1042,7 @@ that, or spawn a scene the row names outright.
 the editor moves the spawn, and the sheet never changes.
 
 ```
-Every tick
+On process
     spawn timer <= 0
     -> System  Spawn a copy of Enemy as new_enemy at $SpawnPoint.global_position, under $Enemies
 ```

@@ -202,7 +202,7 @@ Player On Slide Stopped
 **11. Show which way you last went.**
 
 ```
-Every tick
+On process
   -> set Arrow frame from Player | SlideMove.Slide Direction()
 ```
 

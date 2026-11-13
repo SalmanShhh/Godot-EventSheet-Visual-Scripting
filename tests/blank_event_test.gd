@@ -100,7 +100,7 @@ static func run() -> bool:
 		"") and all_passed
 	all_passed = _check("the physics tick keeps a muted note, because blank cannot say which tick",
 		str(EventSheetViewportReadingRows.blank_tick_reading("OnPhysicsProcess", false).get("note", "")),
-		"every physics tick") and all_passed
+		"on physics process") and all_passed
 	all_passed = _check("a tick event that carries a condition keeps its own words",
 		EventSheetViewportReadingRows.blank_tick_reading("OnProcess", true).is_empty(), true) and all_passed
 	all_passed = _check("with the Patterns reading off, the explicit Every tick word is back",

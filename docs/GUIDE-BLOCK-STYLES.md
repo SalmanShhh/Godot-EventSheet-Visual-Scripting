@@ -16,7 +16,7 @@ at every zoom:
 
 | Badge | Meaning |
 | --- | --- |
-| ⟳ (amber) | runs every tick (Every Frame / Every Physics Tick) |
+| ⟳ (amber) | runs every tick (On Process / On Physics Process) |
 | ▶ (green) | runs once (On Ready and other one-shot triggers) |
 | ⌨ | fires from input |
 | ➜ | a signal fires (triggers and published signal rows) |

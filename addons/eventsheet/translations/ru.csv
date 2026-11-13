@@ -10209,3 +10209,73 @@ Pick any that fit. Each adds a few behaviours to this project; you can add or re
 Adds nothing. Sheet > Behaviour library… adds any of them later.,Ничего не добавляет. Позже их можно добавить через Лист > Библиотека поведений….
 Nothing will be added. Sheet > Behaviour library… is always there later.,Ничего не будет добавлено. Лист > Библиотека поведений… всегда доступна позже.
 Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,"Добавлен VisibleOnScreenNotifier2D под %s, чтобы «На экране» мог его опрашивать - Ctrl+Z отменяет."
+A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,"Сцена, положенный поверх поставленной на паузу игры, останавливается вместе с ней: задайте корневому узлу режим обработки «Всегда» (или «На паузе»), чтобы он работал во время паузы. Парная строка - «Поставить игру на паузу»."
+"The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.","По умолчанию: везде собственные слова Godot - колбэки, существительные и глаголы движка."
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.","Слова, которые другие редакторы листов событий используют для существительных и колбэков (Family, Layout, On start of layout, Every tick); глаголы остаются из Godot."
+"Debug scene: Event Trace, Live Values and breakpoints are on for this run.","Отладка сцены: трассировка событий, живые значения и точки останова включены для этого запуска."
+calls · includes · Change scene,вызывает · включает · Сменить сцену
+An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame.,"Событие начинается с триггера - момента, когда оно выполняется. On Ready срабатывает один раз, когда объект готов; On Process выполняется каждый кадр."
+Wrap Around Scene Horizontally,Зациклить сцену по горизонтали
+"Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.","Выводит объект за одну сторону сцены и возвращает с другой - аркадная петля. Границы сцены - это места на уровне, поэтому зацикливается место узла на уровне."
+Scene Edges,Границы сцены
+Wrap around scene horizontally,Заворачивать по горизонтали сцены
+"The left edge of the scene, in pixels.",Левая граница сцены в пикселях.
+"The right edge of the scene, in pixels.",Правая граница сцены в пикселях.
+Wrap Around Scene Vertically,Зациклить сцену по вертикали
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.","Выводит объект за верх сцены и возвращает снизу, или наоборот. Границы сцены - это места на уровне, поэтому зацикливается место узла на уровне."
+Wrap around scene vertically,Заворачивать по вертикали сцены
+"The top edge of the scene, in pixels.",Верхняя граница сцены в пикселях.
+"The bottom edge of the scene, in pixels.",Нижняя граница сцены в пикселях.
+Bound To Scene,Ограничить сценуом
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.","Удерживает объект внутри границ сцены, не давая ему уйти - аркадная ограда. Границы сцены - это места на уровне, поэтому удерживается место узла на уровне."
+Bound to scene (inside {low} - {high}),Держать в сцене (внутри {low} - {high})
+Add Scene On Top,Добавить сцену поверх
+"Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.","Кладёт сцену поверх работающей игры, а не вместо неё - меню паузы, инвентарь, диалоговое окно. Копия добавляется под корень дерева, поэтому переживает смену сцены под собой, и получает имя, которое вы дали, чтобы две строки ниже смогли её найти. Имя, которое уже наверху, остаётся нетронутым, и ничего не загружается: два сцены под одним именем означали бы, что один из них уже никогда не найти и не убрать."
+Add scene {path} on top as {layout_name},Добавить сцену {path} поверх как {layout_name}
+"Scene file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.","Файл сцены, который кладётся поверх. Его корневой узел сохраняет собственный режим обработки, и именно он решает, работает ли сцену на паузе."
+"The name the copy is given under the tree root. Remove Scene On Top and Scene Is On Top find it by this name, so keep all three saying the same one.","Имя, которое копия получает под корнем дерева. Строки «Убрать сцену поверх» и «Сцена находится поверх» ищут её по этому имени, поэтому во всех трёх пишите одно и то же."
+Remove Scene On Top,Убрать сцену поверх
+"Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.","Убирает сцену, добавленный строкой Положить сцену сверху. Он сразу выходит из дерева и освобождается отложенным способом, поэтому Сцена сверху отвечает ложью в том же кадре, а добавление сразу после ставит новый под тем же именем. Имя, под которым ничего нет, тихо ничего не делает, так что строку закрытия можно выполнить дважды."
+Remove scene {layout_name} from on top,Убрать сцену {layout_name} с верхнего слоя
+The name Add Scene On Top gave the copy. A name nothing is under removes nothing.,"Имя, которое копии дала строка «Добавить сцену поверх». Имя, под которым ничего нет, ничего не удаляет."
+Scene Is On Top,Сцена находится поверх
+"True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.","Истинно, пока сцену, добавленный строкой «Добавить сцену поверх», ещё на месте. Используйте, чтобы меню не открылось дважды или чтобы та же клавиша работала иначе, пока оно открыто."
+scene {layout_name} is on top,сцену {layout_name} находится поверх
+The name Add Scene On Top gave the copy.,"Имя, которое копии дала строка «Добавить сцену поверх»."
+"Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","Переносит узел, который уже есть в сцене, под нового родителя - взять предмет в руку, посадить всадника в седло, закинуть оружие за спину. ""Сохранить место"" оставляет его ровно там, где он виден; ""притянуть"" ставит его в точку самого родителя."
+"Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","Снимает узел с того, под чем он находится, и возвращает его на верхний уровень сцены, сохраняя место в мире - выронить носимый предмет, ссадить всадника. Узел не освобождается, и больше в нём ничего не меняется."
+"The node to take off its parent. It stays in the scene, at the top level.","Узел, который снимают с родителя. Он остаётся в сцене, на верхнем уровне."
+"What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.","Что происходит с игрой, нарисованной под один размер, когда окно другого размера. Подгонка сцены сохраняет текст и интерфейс чёткими и растягивает расстановку; растяжение картинки увеличивает весь отрисованный кадр, чего и хочет игра в пиксель-арте; свободный режим ничего не масштабирует и просто показывает больше или меньше мира."
+"Fit - scale the scene, keep text crisp","Подогнать - масштабировать сцену, текст остаётся чётким"
+"Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","Выводит объект за одну сторону сцены и возвращает с другой - аркадная петля. Зацикливает место внутри родителя относительно границ сцены, которые являются местами на уровне; используйте WrapAroundLayoutXWorld, мировой двойник."
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","Выводит объект за верх сцены и возвращает снизу, или наоборот. Зацикливает место внутри родителя относительно границ сцены, которые являются местами на уровне; используйте WrapAroundLayoutYWorld, мировой двойник."
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","Удерживает объект внутри границ сцены, не давая ему уйти - аркадная ограда. Ограничивает место внутри родителя относительно границ сцены, которые являются местами на уровне; используйте BoundToLayoutWorld, мировой двойник."
+Change scene {path},Сменить сцену {path}
+Reload scene,Перезагрузить сцену
+Remove from scene,Убрать из сцены
+Is outside screen,Находится за пределами экрана
+Load scene {path} in the background,Загрузить сцену {path} в фоне
+scene {path} has finished loading,сцена {path} загружена
+Take out of the scene,Вынуть из сцены
+keeping its place in the scene,сохраняя место в сцене
+{name} in the scene,{name} в сцене
+the scene,сцена
+On enter tree,При входе в дерево (_enter_tree)
+On exit tree,При выходе из дерева (_exit_tree)
+On process,Каждый кадр (_process)
+On physics process,Каждый физический шаг (_physics_process)
+▶ Preview scene,▶ Просмотр сцены
+🐞 Debug scene,🐞 Отладка сцены
+Inspector add-on,Дополнение инспектора
+Runs every frame (On process).,Выполняется каждый кадр (On process).
+Runs every physics step (On physics process).,Выполняется каждый шаг физики (On physics process).
+On Process,Каждый кадр (_process)
+On Physics Process,Каждый физический шаг (_physics_process)
+On Enter Tree,При входе в дерево (_enter_tree)
+On Exit Tree,При выходе из дерева (_exit_tree)
+Run on process,Каждый кадр (_process)
+Run on physics process,Каждый физический шаг (_physics_process)
+Run on enter tree,При входе в дерево (_enter_tree)
+Run on exit tree,При выходе из дерева (_exit_tree)
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","Отбрасывание, которое затухает честно (экспоненциальная форма, не зависит от частоты кадров) - одна строка под «Каждый кадр». Толчок вычисляется в направлениях уровня, но прибавляется к месту внутри родителя, что неверно под повёрнутым или масштабированным родителем; используйте ApplyPushesWorld, мировой двойник."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","Отбрасывание, которое затухает честно (экспоненциальная форма, не зависит от частоты кадров) - одна строка под «Каждый кадр». Толчок вычисляется в направлениях уровня и прибавляется к месту узла на уровне, поэтому верен и под повёрнутым или масштабированным родителем."

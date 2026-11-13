@@ -4,6 +4,13 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the sheet reads in Godot's own words by default
+
+- A trigger now says the Godot callback it runs on: On ready (on any node, the scene's root included), On enter tree, On exit tree, On process and On physics process, where it used to say On start of layout, On created, On destroyed, Every tick and Every physics tick. The scene rows say scene: Change scene, Reload scene, Add scene on top, Is outside screen. The Inspector is the Inspector on both sides of the Words page.
+- The words other event-sheet editors use are one opt-in away, in Settings > Words > Familiar words, and the lifecycle and tick words now live in the Words table, so the page lists and controls them (five new rows: scene_ready, scene_exit, node_enter, node_exit, every_physics_tick). Typing an old word in the picker or the quick-add bar still finds the row (start of layout, every tick, every frame, on created, destroyed, go to layout, restart layout). A row's tooltip names its other word and the Godot function.
+- The Welcome answers no longer switch anyone to the other editors' words: all three set Godot words. The answer for people coming from another editor keeps the Classic theme and opens the migration guide, which says where the Familiar words are.
+- Wording only: ace ids, templates, emitted GDScript and stored sheets are untouched. Guides, the tutorial, the tour, the Doctor and the nine translations read in the new words, and the README pictures are retaken.
+
 ### New: the everyday object rows, under the names people look for them by
 
 - Set Opacity and Opacity (shown as a percentage, written as Godot's 0 to 1 `modulate.a`), Set Scale, Set Size (a Control's size), Set Sprite Size (the scale that gives a size in pixels), Width, Height, Left, Right, Top and Bottom for a sprite, Instance Id, Marker Position (a Marker2D child), Is Outside The Level Bounds and Is Outside The Camera Limits. Each writes the plain Godot line and its description names the property.

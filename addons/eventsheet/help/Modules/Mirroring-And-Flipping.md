@@ -200,7 +200,7 @@ tile that is there.
 hand, said once.
 
 ```
-Every tick
+On process
   -> Face Direction Of Movement  velocity
 ```
 
@@ -247,7 +247,7 @@ reason the row spells out **(whole object)** in its name.
 **4. An enemy that turns to look at the player.**
 
 ```
-Every tick
+On process
   Condition: Is Within Distance  global_position, player.global_position, 400.0
     -> Face Object  player
 ```
@@ -261,7 +261,7 @@ if global_position.distance_to(player.global_position) <= 400.0:
 it back.
 
 ```
-Every tick
+On process
   -> Face Direction Of Movement  velocity
   -> Keep Upright  $Body/NamePlate
 ```
@@ -278,7 +278,7 @@ The same row is what a health bar, a damage number and a floating interaction pr
 the sprite was ever mirrored.
 
 ```
-Every tick
+On process
   -> Face Direction Of Movement  velocity      (on the Body node, with the ray under it)
 ```
 
@@ -434,7 +434,7 @@ first guard's beat and you drew the route once.
 look at its owner while it travels.
 
 ```
-Every tick
+On process
   -> Face Object  thrower
 ```
 
@@ -446,7 +446,7 @@ scale.x = -1.0 if thrower.global_position.x < global_position.x else 1.0
 **On node**.
 
 ```
-Every tick
+On process
   -> Face Direction Of Movement  velocity      On node: $Pet
 ```
 

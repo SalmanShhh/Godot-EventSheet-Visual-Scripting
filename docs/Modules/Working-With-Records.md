@@ -308,7 +308,7 @@ save["version"] = 2
 **13. How many things are in this record?**
 
 ```
-Every tick
+On process
   -> set CountLabel text = str( Dictionary Size (inventory_counts) ) + " kinds of item"
 ```
 

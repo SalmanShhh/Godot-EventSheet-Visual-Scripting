@@ -182,7 +182,7 @@ if inventory.has("brass_key"):
 **4. How many potions?**
 
 ```
-Every tick
+On process
   -> set PotionLabel text = str( Count Of (inventory, "potion") )
 ```
 
@@ -256,7 +256,7 @@ exclusive, so `0, 10` is exactly ten entries - and it is safe when there are few
 **8. Show the inventory as one line of text.**
 
 ```
-Every tick
+On process
   -> set InventoryLabel text = Join To Text (inventory, ", ")
 ```
 
@@ -282,7 +282,7 @@ Weighting is repetition: put `"common"` in the table five times and `"rare"` onc
 **10. Keep only the living enemies.**
 
 ```
-Every tick
+On process
   -> Set Live Enemies to  Filter (enemies) where  is_instance_valid(x)
 ```
 
@@ -320,7 +320,7 @@ to build a list. Rename the accumulator if your sheet already has an `acc`.
 **13. Is anything on fire?**
 
 ```
-Every tick
+On process
   Condition: Any Match (hazards) where  x.burning
     -> raise the alarm
 ```
@@ -335,7 +335,7 @@ worth remembering when the list can legitimately be empty.
 **14. Are all the objectives done?**
 
 ```
-Every tick
+On process
   Condition: All Match (objectives) where  x.complete
     -> finish the level
 ```

@@ -129,7 +129,7 @@ Deriving the state from one base colour means a re-skin edits one value instead 
 **3. A health bar that runs green to red.**
 
 ```
-Every tick
+On process
   -> set HealthBar.modulate = Lerp Color(Color(1, 0, 0, 1), Color(0, 1, 0, 1), Progress Of(health, 0.0, max_health))
 ```
 
@@ -138,7 +138,7 @@ Progress Of gives a clamped 0-to-1 reading, which is exactly what Lerp Color's w
 **4. A fade out that does not touch the colour.**
 
 ```
-Every tick
+On process
   -> set fade = fade - delta
   -> Set Color Tint  Color With Alpha(modulate, Progress Of(fade, 0.0, 1.0))
 ```
@@ -168,7 +168,7 @@ Hex is the format a designer hands you, so no conversion step goes wrong in betw
 **7. A hue that cycles.**
 
 ```
-Every tick
+On process
   -> Set Color Tint  Color From HSV(fmod(Game Time(), 3.0) / 3.0, 0.8, 1.0, 1.0)
 ```
 
@@ -213,7 +213,7 @@ fire_ramp = __grad_a1
 **11. Sample that ramp over a particle's life.**
 
 ```
-Every tick
+On process
   -> Set Color Tint  Sample Gradient(fire_ramp, Progress Of(age, 0.0, lifetime))
 ```
 
@@ -221,7 +221,7 @@ Every tick
 many stops as the day needs (dawn, noon, dusk, midnight), then:
 
 ```
-Every tick
+On process
   -> set SkyRect.modulate = Sample Gradient(sky_ramp, time_of_day / 24.0)
 ```
 
@@ -246,7 +246,7 @@ Every Ramped(2.0, -0.3, 0.5) seconds
 **15. Falloff with distance.**
 
 ```
-Every tick
+On process
   -> set shake_strength = max_shake * Sample Curve(falloff, Progress Of(Distance Between(self.position, blast.position), 0.0, blast_radius))
 ```
 
@@ -256,7 +256,7 @@ exponent in the sheet.
 **16. Eased motion with no named easing.**
 
 ```
-Every tick
+On process
   -> set door.position = Vector Lerp(closed_position, open_position, Sample Curve(open_curve, Progress Of(open_time, 0.0, 0.6)))
 ```
 
@@ -265,7 +265,7 @@ The curve IS the easing, which means it can be tuned by looking at it.
 **17. A charge meter that changes colour as it fills.**
 
 ```
-Every tick while fire held
+On process while fire held
   -> Charge Toward  power, up to 100.0, over 1.5 seconds
   -> set ChargeBar.modulate = Sample Gradient(charge_ramp, Progress Of(power, 0.0, 100.0))
 ```

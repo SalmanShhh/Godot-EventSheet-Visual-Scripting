@@ -101,7 +101,7 @@ child node with a string that is whatever was typed, and the declared states put
 own script as an enum member the field offers and the Doctor checks. New work belongs on the declared states; nothing built
 on the pack has to move.
 
-The shape that reads best: one named group for the machine, ONE **Every Physics Tick** event,
+The shape that reads best: one named group for the machine, ONE **On Physics Process** event,
 each STATE as a sub-event under it (its condition reads as the ◆ `Current state is "patrol"` header,
 the same words the behavior publishes, so a hand-rolled machine and the pack read alike), and each
 transition nested one level deeper with its own condition lane - so piling on more guards later
@@ -161,7 +161,7 @@ already using this, and why a project with no modes has no band, no vocabulary a
 
 ```
 ▾ Movement   Everything the player steers.   Playing
-    Every tick   →   Move
+    On process   →   Move
 ```
 
 That is one muted word on the group head - the same shape as *runs on host* - and it compiles to the
@@ -262,7 +262,7 @@ Ten more spellings of everyday game code, shipped the same way:
 - **The wave director.** **On Group Emptied** fires the tick the last member leaves a group
   (never on a still-empty group at startup); **On Group Gains First Member** covers the other
   edge. `wave += 1`, `Start Wave ( wave )` - the whole rounds loop in one event.
-- **Knockback.** **Push Away From** sets the impulse; **Apply Pushes** under Every Frame moves
+- **Knockback.** **Push Away From** sets the impulse; **Apply Pushes** under On Process moves
   and decays it with the same honest exp form Move Toward uses.
 - **Springs.** Already a whole pack: the **Spring** behavior gives named springs with real
   velocity, overshoot and settle - squash-and-stretch juice as single rows.
@@ -289,7 +289,7 @@ Ten more spellings of everyday game code, shipped the same way:
 - **Checkpoint** - `Set Checkpoint Here`, `Respawn At Checkpoint` (restores position and calls
   the host's `reset()` - the same seam the Object Pool wake uses), `On Respawned` for the
   camera snap.
-- **Interaction** - `Focus Nearest Interactable` under Every Frame, `Interact With Focus` on
+- **Interaction** - `Focus Nearest Interactable` under On Process, `Interact With Focus` on
   the press, `On Interacted` on the thing's own sheet - a chest, a door and an NPC differ only
   in what their On Interacted does.
 - **Phase Cycle** - `Cycle Phases "day,night" every 60s`, `On Phase Changed`, and
@@ -371,11 +371,11 @@ hand that is four `ResourceLoader` calls, a status enum and an array passed by r
 is three sentences and one expression, and each of them writes exactly the line the reading
 recognises - so a loading screen you type and one you pick are the same bytes.
 
-1. On start of layout: **System ▸ Load layout `"res://levels/level_2.tscn"` in the background**.
-2. Every tick, feed the bar: **ProgressBar ▸ Set value to `System.LoadingProgress * 100`**. The
+1. On ready: **System ▸ Load layout `"res://levels/level_2.tscn"` in the background**.
+2. On process, feed the bar: **ProgressBar ▸ Set value to `System.LoadingProgress * 100`**. The
    expression answers 0 to 1, so multiply by 100 for a percentage.
 3. Add a condition **System ▸ layout `"res://levels/level_2.tscn"` has finished loading**, and under
-   it **System ▸ Go to layout `"res://levels/level_2.tscn"`**. That switch reuses what was already
+   it **System ▸ Change scene `"res://levels/level_2.tscn"`**. That switch reuses what was already
    loaded, so there is no second load and no pause.
 
 Use the same path in all three rows - that is what ties them together. Open the file afterwards and
@@ -456,8 +456,8 @@ say: an acceleration reads as a bullet's only in a file that also writes the ang
 the step, so a lone piece of arithmetic keeps the reading it had.
 
 All of them are authorable in the same words. The picker writes **Set Angle Of Motion**, **Move**,
-**Bounce Off Solids**, **Move Toward Position**, **Rotate Clockwise**, **Wrap Around Layout
-Horizontally / Vertically**, **Bound To Layout**, **Pin To** and **Pin Angle To** as exactly the
+**Bounce Off Solids**, **Move Toward Position**, **Rotate Clockwise**, **Wrap Around Scene
+Horizontally / Vertically**, **Bound To Scene**, **Pin To** and **Pin Angle To** as exactly the
 lines above, so a dropped row and a typed line are the same bytes; the four shapes a shipped row
 already writes keep that row (**Add To Variable** for the acceleration, **Apply Gravity**, **Distance
 To**, **Is Within Distance**) rather than gaining a duplicate. Where a pack covers the whole shape,
@@ -488,7 +488,7 @@ with no curve anywhere in your sheet. In 3D the same row projects gravity onto t
 which is what makes a bank carve.
 
 ```
-Every physics tick
+On physics process
   Condition: Player | Platform: Is on floor
     -> Player | Skateboard: Roll with the slope
 On push pressed -> Player | Skateboard: Push toward max speed by 40
@@ -515,12 +515,12 @@ all three:
   and puts the body on the point the curve bakes there.
 
 ```
-Every physics tick
+On physics process
   not Player | Grind: Is grinding
   Condition: Player | Platform: Is falling
   Condition: Player | Grind: Is near rail  Rail, 12
     -> Player | Grind: Start grinding  Rail
-Every physics tick
+On physics process
   Condition: Player | Grind: Is grinding
     -> Player | Grind: Grind along the rail at 320
 Player | Grind: Has reached the end

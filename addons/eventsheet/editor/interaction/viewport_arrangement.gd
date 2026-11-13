@@ -30,7 +30,7 @@ const MODE_LABELS: PackedStringArray = ["File order", "Object", "Trigger", "Grou
 ## What an event with no object of its own reads under when the sheet has no name to offer either.
 const OBJECT_FALLBACK := "System"
 ## An event with no trigger runs on its conditions every tick, which is what the sheet calls it.
-const TRIGGER_FALLBACK := "Every tick"
+const TRIGGER_FALLBACK := "On process"
 ## Events that sit in no group at all.
 const GROUP_FALLBACK := "Ungrouped"
 

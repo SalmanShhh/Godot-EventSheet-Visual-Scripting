@@ -172,7 +172,7 @@ On Ready
 **2. Walk forward along the node's own facing.**
 
 ```
-Every Frame
+On Process
   -> Move By (3D)   Vector3(0, 0, -1) * 4.0 * delta
 ```
 
@@ -186,7 +186,7 @@ with no extra rows.
 **3. A slowly spinning pickup.**
 
 ```
-Every Frame
+On Process
   -> Rotate (3D)   axis = Vector3.UP, radians = 1.5 * delta
 ```
 
@@ -202,7 +202,7 @@ On Ready
 **5. A turret that faces the player.**
 
 ```
-Every Frame
+On Process
   -> Look At   $Player.global_position
 ```
 
@@ -212,7 +212,7 @@ The target must differ from the node's own position, and must not be directly ab
 **6. The smallest complete 3D character.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Set Local Variable (typed)   move : Vector2 = Input Vector( "ui_left", "ui_right", "ui_up", "ui_down" )
   -> Set Velocity (3D)   Vector3(move.x, velocity.y - 9.8 * delta, move.y) * 1.0
   -> Move And Slide (3D)
@@ -224,7 +224,7 @@ ground plane.
 **7. Jump, and only from the ground.**
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: Is On Floor (3D)
   Condition: On Action Just Pressed   "ui_accept"
     -> Set Velocity (3D)   Vector3(velocity.x, 5.0, velocity.z)
@@ -253,7 +253,7 @@ On cutscene finished
 **10. Zoom in while aiming.**
 
 ```
-Every Frame
+On Process
   Condition: Is Action Pressed   "aim"
     -> Set Camera FOV   50.0
   Else
@@ -341,7 +341,7 @@ On Ready
 **19. Skip work on a node with nothing to draw.**
 
 ```
-Every Frame
+On Process
   Condition: Has Mesh
     -> Rotate (3D)   axis = Vector3.UP, radians = 1.0 * delta
 ```
@@ -450,7 +450,7 @@ about itself.
 - **Look At refuses degenerate targets.** A target equal to the node's own position, or directly above
   or below it, has no valid facing. Offset the target, or use a different up axis by other means.
 - **A CharacterBody3D does not move until Move And Slide (3D) runs.** Once, last, under
-  **Every Physics Tick**.
+  **On Physics Process**.
 - **The mesh builders are host-only.** Their templates are multi-line, so they never gain an "On node"
   parameter. To build a mesh on another node, put the row on a sheet attached to that node.
 - **Set Mesh Material overrides everything.** It writes `material_override`, which replaces the

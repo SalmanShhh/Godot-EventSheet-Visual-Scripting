@@ -207,11 +207,11 @@ static func _lane_words(row: EventRowData, lane: String) -> Array:
 
 static func _test_loop_names() -> bool:
 	var expected: Array = [
-		"⟳ | [System] Every physics tick | [shots] For each shots",
+		"⟳ | [System] On physics process | [shots] For each shots",
 		"[targets] For each targets",
 		"[System] shots still exists | [System] targets still exists | [shots] is within 42 of targets.global_position"
 			+ " || [shots] Destroy | [targets] Destroy | [System] Add 1 to score | [System] Stop loop",
-		"⟳ | [System] Every physics tick | [shots/targets] For each shots/targets",
+		"⟳ | [System] On physics process | [shots/targets] For each shots/targets",
 		"[System] shots/targets.global_position.x < -60 | [System] shots/targets.global_position.x > 1300"
 			+ " || [shots/targets] Destroy",
 	]
@@ -255,20 +255,20 @@ static func _test_loop_names() -> bool:
 		["native: each loop name reads as what it walks", native_loops, expected],
 		["a derived Native theme reads the same", derived_loops, expected],
 		["classic: the loop names read as the file writes them", classic_loops, [
-			"⟳ | [System] Every physics tick | [System] For each __shot in get_tree().get_nodes_in_group(\"shots\")",
+			"⟳ | [System] On physics process | [System] For each __shot in get_tree().get_nodes_in_group(\"shots\")",
 			"[System] For each __target in get_tree().get_nodes_in_group(\"targets\")",
 			"[System] __shot still exists | [System] __target still exists | [__shot] is within 42 of __target.global_position"
 				+ " || [__shot] Destroy | [__target] Destroy | [System] Add 1 to score | [System] Stop loop",
-			"⟳ | [System] Every physics tick | [System] For each __node in get_tree().get_nodes_in_group(\"shots\")"
+			"⟳ | [System] On physics process | [System] For each __node in get_tree().get_nodes_in_group(\"shots\")"
 				+ " + get_tree().get_nodes_in_group(\"targets\")",
 			"[System] __node.global_position.x < -60 | [System] __node.global_position.x > 1300 || [__node] Destroy",
 		]],
 		["a loop name the author wrote reads exactly as written", authored_loops, [
-			"⟳ | [System] Every physics tick | [System] For each shot in get_tree().get_nodes_in_group(\"shots\")",
+			"⟳ | [System] On physics process | [System] For each shot in get_tree().get_nodes_in_group(\"shots\")",
 			"[System] shot.global_position.x < -60 || [shot] Destroy",
 		]],
 		["a walk over a family's group reads as the family", family_loops, [
-			"⟳ | [System] Every physics tick | [Enemy] For each Enemy",
+			"⟳ | [System] On physics process | [Enemy] For each Enemy",
 			"[System] Enemy.global_position.x < -60 || [Enemy] Destroy",
 		]],
 	])

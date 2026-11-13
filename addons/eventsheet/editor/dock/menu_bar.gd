@@ -692,7 +692,7 @@ func build(root: Node) -> void:
 	display_menu.set_item_tooltip(display_menu.get_item_index(20), "Read variable names as words: \"_coyote_timer\" becomes \"coyote timer\", and an exported knob reads with its Inspector name (\"Coyote Time\"). The raw name is always on hover. On by default while reading a sheet, off while authoring one.")
 	display_menu.add_check_item("Familiar Words", 21)
 	display_menu.set_item_checked(display_menu.get_item_index(21), _dock._familiar_words_enabled())
-	display_menu.set_item_tooltip(display_menu.get_item_index(21), "Read the few Godot nouns other event-sheet editors name differently in the familiar word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer. The Godot word stays on hover. Off by default.")
+	display_menu.set_item_tooltip(display_menu.get_item_index(21), "Read the few Godot nouns other event-sheet editors name differently in the familiar word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer, process is every tick. The Godot word stays on hover. Off by default: the sheet reads in Godot's words.")
 	display_menu.add_check_item("Patterns", 27)
 	display_menu.set_item_checked(display_menu.get_item_index(27), _dock._patterns_lens_enabled())
 	display_menu.set_item_tooltip(display_menu.get_item_index(27), "Name the shape an event is when a reading recognised one - a cooldown, an object pool, a wait sequence - with a marker chip whose hover shows the lines that were the evidence. On by default; off shows every event as its own plain sentences.")
@@ -1103,7 +1103,7 @@ func build(root: Node) -> void:
 			_dock._toggle_row_costs(display_menu))
 	tools_popup.add_item("Run With Profiler", 9606)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(9606),
-		"Arm the Event Trace and play this layout. Play for a while, stop, and every row wears what it cost - kept until you clear it, and still there next time you open the editor.")
+		"Arm the Event Trace and play this scene. Play for a while, stop, and every row wears what it cost - kept until you clear it, and still there next time you open the editor.")
 	tools_popup.add_item("Optimise This Sheet…", 9608)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(9608),
 		"Every classic way this sheet spends a frame it did not have to, with the fix beside it. The safe ones apply together as one undo step; the rest open one at a time, showing what would change before anything does.")
@@ -1247,7 +1247,7 @@ func build(root: Node) -> void:
 	sheet_popup.add_child(workspaces_menu)
 	sheet_popup.add_submenu_item("Workspaces", "EventSheetWorkspacesMenu", 9810)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9810),
-		"A scene's sheets, open together: the whole layout plus every script in it, in tree order, as one named tab group. Right-click a scene in the FileSystem ▸ Open its sheets makes one; picking it here opens it again.")
+		"A scene's sheets, open together: the whole scene plus every script in it, in tree order, as one named tab group. Right-click a scene in the FileSystem ▸ Open its sheets makes one; picking it here opens it again.")
 	workspaces_menu.about_to_popup.connect(func() -> void:
 		workspaces_menu.clear()
 		var names: PackedStringArray = load(WORKSPACES_PATH).workspace_names()

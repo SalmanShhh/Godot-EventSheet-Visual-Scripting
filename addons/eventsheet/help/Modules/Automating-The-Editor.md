@@ -93,8 +93,8 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 | Remove Dock | Takes a dock back out of the editor. | `remove_control_from_docks({control})` |
 | Add Object Type | Teaches the editor a new object type, so it shows up in Create Node. | `add_custom_type({type_name}, {base}, {script}, {icon})` |
 | Remove Object Type | Takes a custom object type back out of the Create Node dialog. | `remove_custom_type({type_name})` |
-| Add Properties Bar Add-on | Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar. | `add_inspector_plugin({plugin})` |
-| Remove Properties Bar Add-on | Takes a Properties bar add-on back out. | `remove_inspector_plugin({plugin})` |
+| Add Inspector Add-on | Registers a Inspector add-on, so your own buttons and fields appear in the Inspector. | `add_inspector_plugin({plugin})` |
+| Remove Inspector Add-on | Takes a Inspector add-on back out. | `remove_inspector_plugin({plugin})` |
 | Redraw Viewport Overlays | Asks the editor to run the overlay pass again. | `update_overlays()` |
 | Editor Settings | The editor's own settings object - grid step, theme, font size. | `EditorInterface.get_editor_settings()` |
 | Undo History | The editor's undo / redo history, to add do and undo steps to. | `get_undo_redo()` |
@@ -249,7 +249,7 @@ func _run() -> void:
 lets one sheet carry both game logic and tool logic.
 
 ```
-Every Frame
+On Process
   Condition: running in the editor
     -> print "editor preview tick"
 ```

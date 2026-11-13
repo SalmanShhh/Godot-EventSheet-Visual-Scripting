@@ -327,7 +327,7 @@ name, with no need for the emitter to know anything about EventSheets.
   its signals show up in the trigger picker automatically, and these bake the signal's **real typed argument
   signature** so your handler receives the parameters (`func _on_generator_powered(level: int)`).
 
-- **Host lifecycle triggers** - *On Ready*, *Every Frame*, *On Physics Process*, *On Input*,
+- **Host lifecycle triggers** - *On Ready*, *On Process*, *On Physics Process*, *On Input*,
   *On Unhandled Input* compile straight to the engine callbacks (`_ready`, `_process`, …). No connection
   needed; they always work on the node the sheet runs on.
 
@@ -904,11 +904,11 @@ pivot turns.
   because in an event sheet a blank event already means "every tick". Hover the row and it says
   `Runs every tick`; the Explain panel says the same. `_physics_process` keeps one muted
   `every physics tick` note, because blank alone cannot say WHICH tick. The moment such an event
-  grows a condition it goes back to saying **Every tick** in full, so the reading never hides a fact
+  grows a condition it goes back to saying **On process** in full, so the reading never hides a fact
   that matters. Nothing is written to the file for any of this: a blank event compiles into
   `_process(delta)` and re-reads as a blank event, byte for byte.
 
-  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every physics tick", and an every-tick event carrying a condition, which keeps its full "Every tick" words and its tempo badge](images/blank-events.png)
+  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every physics tick", and an every-tick event carrying a condition, which keeps its full "On process" words and its tempo badge](images/blank-events.png)
 
   You can author one too. Press **E** and the Add event dialog's first entry is already selected -
   **(none - runs every tick)** - so Enter makes the blank event and **A** fills its actions. Under a
@@ -922,7 +922,7 @@ pivot turns.
   `NOTIFICATION_WM_CLOSE_REQUEST` reads **On close** (the player pressing the window's X, which is
   where a "save first?" prompt goes) and `NOTIFICATION_PREDELETE` reads **On object freed**. All four
   are pickable rows as well, filed under **Notifications**, and every one of them compiles back into
-  the same `match what:` block the file already had. **On object freed is not On destroyed**: a node
+  the same `match what:` block the file already had. **On object freed is not On exit tree**: a node
   leaving the tree can happen more than once, this happens exactly once and nothing follows it, so
   the two moments do not share a sentence.
 - **Every function reads as the trigger it is.** Its head is a line like any other in the CONDITION
@@ -965,9 +965,9 @@ pivot turns.
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
-  with the block's body as its actions, and the `Every tick` words go away - the poll already says
+  with the block's body as its actions, and the `On process` words go away - the poll already says
   when the event runs. Only the EDGE polls count: a held `Input.is_action_pressed("hold")` is a
-  check every tick, so its handler keeps `Every physics tick` with the check under it.
+  check every tick, so its handler keeps `On physics process` with the check under it.
 - **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
   (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way an event sheet
   draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
@@ -1009,7 +1009,7 @@ pivot turns.
   `System ▸ Subtract 1 from jumps left`,
   `host ▸ Set velocity X to direction X * speed`, `host ▸ Destroy (at end of frame)`,
   `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = amount`
-  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to layout
+  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Change scene
   Menu`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
   condition function `System ▸ Set return value to true` / inside an expression function `Set return value to
   jumps left`. The same sentence appears whether the row was typed
@@ -1050,8 +1050,8 @@ to the function it names, the same jump the Outline panel makes.
   that name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
   System (`System ▸ Print "ready"`). Any method call reads `Object ▸ what it does ▸ args` with the argument
   names Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its
-  icon, `queue_free()` as Destroy. `delta` reads as `delta`, exactly as the code says it; the tick triggers read `Every physics tick` /
-  `Every tick`. `and` never sits inside a condition cell - each conjunct is its own condition
+  icon, `queue_free()` as Destroy. `delta` reads as `delta`, exactly as the code says it; the tick triggers read `On physics process` /
+  `On process`. `and` never sits inside a condition cell - each conjunct is its own condition
   line, and `or` is the OR block. `"Score: %d" % score` reads `"Score: " & score`, `d["k"]` reads
   `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
   `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
@@ -1064,7 +1064,7 @@ to the function it names, the same jump the Outline panel makes.
   note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
 
-  ![The lifecycle words on two scripts of one scene: the scene's own script reading On start of layout, On end of layout, On draw with its drawing rows and On close, and the script on a child node reading On created and On destroyed instead](images/opened-script-words5.png)
+  ![The lifecycle words on two scripts of one scene: the scene's own script reading On ready, On exit tree, On draw with its drawing rows and On close, and the script on a child node reading On enter tree and On exit tree instead](images/opened-script-words5.png)
 - **A loop, a drop and a test say what they are for.** `for i in n:` whose body gives each step its
   share of a full turn reads `For i from 0 to n - 1 - evenly around a circle`, so the ring is on the
   head instead of three lines of trigonometry below it; the same count with an ordinary body keeps
@@ -1107,8 +1107,8 @@ to the function it names, the same jump the Outline panel makes.
   `get_viewport_rect().has_point(p)` reads `Is on-screen` - its negation reads `Is outside layout`.
   `get_viewport_rect().size.x` / `.y` read as `ViewportWidth` / `ViewportHeight`.
 - **Layout, pause and time-scale words, always on.**
-  `get_tree().change_scene_to_file("res://levels/level_2.tscn")` reads `System ▸ Go to layout Level 2`
-  with the file path on hover, `reload_current_scene()` reads `Restart layout`, `get_tree().paused`
+  `get_tree().change_scene_to_file("res://levels/level_2.tscn")` reads `System ▸ Change scene Level 2`
+  with the file path on hover, `reload_current_scene()` reads `Reload scene`, `get_tree().paused`
   reads `Pause the game` / `Unpause`, `Engine.time_scale = 0.5` reads `Set time scale to 0.5`, and
   `get_tree().quit()` reads `Quit game`. These are never behind the Familiar Words toggle: they are
   the names the shipped scene-flow rows already carry.
@@ -1442,10 +1442,10 @@ to the function it names, the same jump the Outline panel makes.
 
 - **The three statements that put a menu over the game are one row.** `var menu =
   load("res://pause_menu.tscn").instantiate()`, then `menu.name = "PauseMenu"`, then
-  `get_tree().root.add_child(menu)` is **Add Layout On Top**, in the `=`/`load` and the
+  `get_tree().root.add_child(menu)` is **Add Scene On Top**, in the `=`/`load` and the
   `:=`/`preload` spelling alike, with your own spelling baked onto the row so the file saves back
   byte for byte. The guarded removal beside it - `get_node_or_null` on the root, an `if`, a
-  `queue_free` - is **Remove Layout On Top**, and the same lookup asked as a question is **Layout Is
+  `queue_free` - is **Remove Scene On Top**, and the same lookup asked as a question is **Layout Is
   On Top**. Two neighbouring shapes are deliberately *not* claimed and read exactly as they always
   did: the bare `add_child(load(…).instantiate())` one-liner stays **Spawn Scene Instance**, and the
   same three statements ending in a plain `add_child` on *this* node stay the code they are, because
@@ -1831,7 +1831,7 @@ events around it.
     **System ▸ Load layout Level 2 in the background**, `st == ResourceLoader.THREAD_LOAD_LOADED`
     reads **System ▸ layout Level 2 has finished loading**, the progress array read by index reads
     **System.LoadingProgress**, and `change_scene_to_packed(load_threaded_get(path))` reads
-    **System ▸ Go to layout Level 2**. The layout is named the way the file is named, whether the
+    **System ▸ Change scene Level 2**. The layout is named the way the file is named, whether the
     path is written in the call or held in a variable the file declared from a literal.
   - **Movement math, on a `CharacterBody2D` or `CharacterBody3D` only.** `velocity.y += gravity *
     delta` reads **Apply gravity**, `move_toward` on one axis reads **Accelerate x toward … at …
@@ -2045,7 +2045,7 @@ events around it.
   step - and the sheet's own Wait is the one everybody means by "wait". The Doctor says the same
   thing in words, once per script, so the finding and the note can never disagree.
 
-  ![A rigid body opened as an event sheet: the mass, gravity scale, friction and elasticity set under On created, the pushes and the spin under On hit, and a blocking wait marked as one](images/opened-script-physics.png)
+  ![A rigid body opened as an event sheet: the mass, gravity scale, friction and elasticity set under On enter tree, the pushes and the spin under On hit, and a blocking wait marked as one](images/opened-script-physics.png)
 
   ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
 
@@ -2143,7 +2143,7 @@ is instantiated to answer a question.
   flipping Familiar Words from the View menu shows up here as the vocabulary it actually produced.
 - **The third preset renames a handful of VERBS.** With it on a row says *Create object* where Godot
   says *Spawn a copy of*, *is overlapping in family* where it says *is touching*, *Set disabled*
-  where a hand-written `set_process(false)` reads *Set Every tick deactivated*, and a loop
+  where a hand-written `set_process(false)` reads *Set On process deactivated*, and a loop
   over a group reads `For each item in family "enemies"`. The picker carries both names at once -
   *Create object · Spawn A Copy* - so the Godot verb never disappears from the place you pick it,
   and its search answers to either name whichever vocabulary is switched on. An alias is display
@@ -2164,7 +2164,7 @@ is instantiated to answer a question.
   applies through the same operation the dock already owns, and the audit re-runs immediately, so
   the finding's disappearance is proven rather than assumed.
 
-<img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
+<img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as On process, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
 
 - **The Scene dock and the sheet share one selection.** Pick a node in the Scene dock and its entry
   lights up on the Object bar, with the status line offering `Filter events to Enemy` - an offer,
@@ -2320,7 +2320,7 @@ All four are also authorable, and that is the point: every picker row's template
 shape the reading recognises, so a script that already had these lines OPENS as those rows and saves
 back byte for byte. See **docs/Modules/Around-Objects.md** for the rows themselves.
 
-<img src="images/around-objects-rows.png" alt="A hand-written Node2D script opened as a sheet: an On created event whose actions read set Z order to 5, move to top of layer, move to layer $../FX, set layer order to 10, set font size to 32 and set word wrap on, then a Share function whose actions read go to URL https://example.com, copy code to clipboard and request fullscreen." width="720">
+<img src="images/around-objects-rows.png" alt="A hand-written Node2D script opened as a sheet: an On enter tree event whose actions read set Z order to 5, move to top of layer, move to layer $../FX, set layer order to 10, set font size to 32 and set word wrap on, then a Share function whose actions read go to URL https://example.com, copy code to clipboard and request fullscreen." width="720">
 
 ### Inheritance shown as one thing - Family, Base class, or your own word
 
@@ -2472,7 +2472,7 @@ The band says what the object **is**. The **Debugger ▸ Trail** tab says what i
 same grammar and in the past tense:
 
 ```
-0.5 s · Every tick fired - went from Patrol to Chase
+0.5 s · On process fired - went from Patrol to Chase
 1 s   · On Hit fired - went from Chase to Stagger
 1.5 s · On Hit fired - re-entered Stagger
 2 s   · On Hit fired - re-entered Stagger

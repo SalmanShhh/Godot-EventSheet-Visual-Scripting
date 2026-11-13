@@ -994,7 +994,7 @@ On Shoot
 Bob while moving, stop when idle - two rows and the camera walks with the character.
 
 ```
-Every tick
+On process
   Condition: Player  is moving
     -> Player | Juice: Start Head Bob  6, 2.2
   Else

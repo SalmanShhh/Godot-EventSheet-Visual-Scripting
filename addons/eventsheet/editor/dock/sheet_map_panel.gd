@@ -149,7 +149,7 @@ func build() -> void:
 	legend = HBoxContainer.new()
 	legend.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
 	for words: String in [EventSheetL10n.translate("sheet"), EventSheetL10n.translate("scene"),
-			EventSheetL10n.translate("global"), EventSheetL10n.translate("calls · includes · Go to layout"),
+			EventSheetL10n.translate("global"), EventSheetL10n.translate("calls · includes · Change scene"),
 			EventSheetL10n.translate("signals")]:
 		var key: Label = Label.new()
 		key.text = words
@@ -428,7 +428,7 @@ func _open_node(id: String) -> void:
 		"tscn", "scn":
 			if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 				EditorInterface.open_scene_from_path(id)
-			_dock._set_status("Opened %s in the scene editor. Sheet ▸ Open… the same file to read the whole layout as one sheet."
+			_dock._set_status("Opened %s in the scene editor. Sheet ▸ Open… the same file to read the whole scene as one sheet."
 				% id.get_file())
 
 

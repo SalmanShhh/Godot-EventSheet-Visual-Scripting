@@ -176,7 +176,7 @@ const TUTORIALS: Array[Dictionary] = [
 				"check": "",
 			},
 			{
-				"text": "A layout is a scene. Add an event and give it the System ▸ On start of layout trigger - the same moment you know, under the name this editor uses.",
+				"text": "A scene is what other event-sheet editors call a layout. Add an event and give it the System ▸ On ready trigger (On start of layout there) - the same moment you know, under Godot's name for it.",
 				"control": "Add Event",
 				"check": "sheet_has_event",
 			},

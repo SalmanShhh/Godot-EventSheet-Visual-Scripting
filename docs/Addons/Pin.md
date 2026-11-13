@@ -265,7 +265,7 @@ goes straight, which is what makes it swing instead of glide.
 
 ```
 On Ready   -> Lantern | Pin: Pin To Rope  Post, 90
-Every tick -> Lantern | add 220 * delta to y
+On process -> Lantern | add 220 * delta to y
 ```
 
 ### 11. A cart behind an engine
@@ -321,7 +321,7 @@ along the curve from anywhere in the sheet.
 
 ```
 On Ready   -> Trolley | Pin: Pin To Path  $Track
-Every tick -> Trolley | Pin: Set Path Progress  ride_progress
+On process -> Trolley | Pin: Set Path Progress  ride_progress
 ```
 
 ### 17. A side bar riding a lift
@@ -339,7 +339,7 @@ On Ready -> DepthMarker | Pin: Pin Y Position To  Lift
 drain on a grapple.
 
 ```
-Every tick
+On process
   Condition: Is Taut -> Juice | Play Sound  "rope_creak"
 ```
 
@@ -348,7 +348,7 @@ Every tick
 **Set Pin Offset** on a plain pin, or shrinking `pin_length` on a rope, pulls the host in over time.
 
 ```
-Every tick -> Grapple | Pin: subtract 300 * delta from Pin Length
+On process -> Grapple | Pin: subtract 300 * delta from Pin Length
 ```
 
 ### 20. Ask whether it is still held
@@ -357,7 +357,7 @@ Every tick -> Grapple | Pin: subtract 300 * delta from Pin Length
 when the anchor is destroyed. **PinDistance** is the number behind it.
 
 ```
-Every tick
+On process
   Condition: Is Pinned is false -> Crate | fall
 ```
 

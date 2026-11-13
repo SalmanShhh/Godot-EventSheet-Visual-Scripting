@@ -257,7 +257,7 @@ Default controls are on by default, so the cursor moves the instant the scene lo
 A drawn crosshair trails the real mouse with a little lag. Push the mouse position every frame and let smoothing ease the cursor toward it.
 
 ```
-Every tick
+On process
   -> Cursor | Virtual Cursor: Simulate Mouse  get_global_mouse_position().x, get_global_mouse_position().y, 0.2
 
 On tick
@@ -271,7 +271,7 @@ Smoothing `0.2` gives a soft trail; raise it toward `1.0` to make the reticle st
 Feed the right analog stick into Simulate Axis so the aim reticle accelerates with the movement feel you tuned instead of teleporting.
 
 ```
-Every tick
+On process
   -> Reticle | Virtual Cursor: Simulate Axis  Input.get_axis("aim_left", "aim_right"), Input.get_axis("aim_up", "aim_down")
 
 On tick
@@ -393,7 +393,7 @@ On Interact Pressed
 On Interact Released
   -> (drop the held item at Cursor.Cursor X, Cursor.Cursor Y)
 
-Every tick
+On process
   Condition: Cursor | Virtual Cursor  Is Interact Held  "grab"
     -> (keep the held item glued to the cursor position)
 ```

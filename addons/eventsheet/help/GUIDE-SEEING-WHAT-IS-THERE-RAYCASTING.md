@@ -80,7 +80,7 @@ Both scenes are generated, and every cast in them is a real ACE row rather than 
 Add a `RayCast2D` or `RayCast3D` as a child of the thing that needs to see. Point it, and it reports what it touches every physics frame.
 
 ```
-Every tick
+On process
   -> Point RayCast At  Vector2(0, 40)
 
 RayCast Is Colliding
@@ -95,7 +95,7 @@ The target is measured **from the raycast node**, in its own local space, not fr
 Aiming it at a moving target is the same idea, converted into local space:
 
 ```
-Every tick
+On process
   -> Point RayCast At  to_local(player.global_position)
 ```
 
@@ -110,7 +110,7 @@ A ray is infinitely thin. A fast bullet can step straight over a thin wall betwe
 It also answers something a ray cannot: **everything** along the sweep, not just the first thing.
 
 ```
-Every tick
+On process
   -> Point ShapeCast At  Vector2(0, 120)
   -> Force ShapeCast Update
 
@@ -122,7 +122,7 @@ ShapeCast Is Colliding
 **Safe Fraction** is the useful one for movement. It is how far along the sweep the shape can travel without touching anything, from 0 (blocked right away) to 1 (clear all the way). Multiply your intended move by it to slide right up to the wall and stop:
 
 ```
-Every tick
+On process
   -> Set position  position + velocity * delta * (shapecast safe fraction)
 ```
 
@@ -197,7 +197,7 @@ On grenade exploded
 **How far can I go?** - Cast Circle / Sphere Motion Into answers with a fraction of the move that is clear. 1 means the whole path is free. This is the reliable way to move something fast without it tunnelling through a wall:
 
 ```
-Every tick
+On process
   -> Cast Sphere Motion Into  clear, from: global_position, motion: velocity * delta, radius: 0.5
   -> Set position  position + velocity * delta * clear
 ```

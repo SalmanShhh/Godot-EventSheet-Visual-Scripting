@@ -1495,7 +1495,7 @@ static func editor_words(text: String) -> String:
 		return text
 	var out: String = _editor_call_words(text)
 	out = out.replace("EditorInterface.get_selection().get_selected_nodes()", "Editor.SelectedObjects")
-	out = out.replace("EditorInterface.get_edited_scene_root()", "Editor.OpenLayout")
+	out = out.replace("EditorInterface.get_edited_scene_root()", "Editor.OpenScene")
 	out = out.replace("EditorInterface.get_editor_settings()", "Editor.Settings")
 	out = out.replace("get_undo_redo()", "Editor.UndoHistory")
 	# The right-click surfaces a context menu can be hung on, in the names the sheet uses for
@@ -2500,15 +2500,16 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if text.begins_with(SCENE_HEAD) and text.ends_with(")"):
 		var scene_path: String = text.substr(SCENE_HEAD.length(), text.length() - SCENE_HEAD.length() - 1)
 		if not scene_path.strip_edges().is_empty():
-			# Go to layout is not a friendlier spelling of Godot's call - it IS the name of the
-			# action the sheet's own Scene Flow rows carry, so it is always on, and the layout is named
-			# the way the reader named the file. The whole path stays one hover away on the row.
-			return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {"path": [layout_name(scene_path), "value"]})
+			# Change scene is the name of the action the Scene Flow rows carry, and the scene is named
+			# the way the reader named the file. The whole path stays one hover away on the row. The
+			# other editors' "Go to layout" is the Familiar preset's alias for this same row.
+			return _sentence(OBJECT_SYSTEM, EventSheetWords.verb_row_words("Core::ChangeScene", "Change scene") + " {path}",
+				{"path": [layout_name(scene_path), "value"]})
 	# `get_parent().remove_child(self)` takes an object OUT of the layout without destroying it -
 	# a different thing from Destroy, and the sheet has a different word for it. Said out loud, because
 	# the reader's first question about a removed object is whether it is still alive.
 	if text == "get_parent().remove_child(self)":
-		var removed: Dictionary = _sentence(script_object(context), "Remove from layout", {})
+		var removed: Dictionary = _sentence(script_object(context), "Remove from scene", {})
 		(removed["segments"] as Array).append(
 			{"text": " (%s)" % translate("kept alive, not destroyed"), "tone": "muted"})
 		return removed
@@ -2517,9 +2518,9 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var unparented: Dictionary = hierarchy_chained_call(text, context)
 	if not unparented.is_empty():
 		return unparented
-	# Godot reloads the current scene; an event sheet restarts the layout.
+	# Godot reloads the current scene; the Familiar preset's alias says "Restart layout".
 	if text == "get_tree().reload_current_scene()":
-		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
+		return _sentence(OBJECT_SYSTEM, EventSheetWords.verb_row_words("Core::ReloadScene", "Reload scene"), {})
 	# Leaving the game is one action with one name, whichever way the script spells the call.
 	if text == "get_tree().quit()" or text == "get_tree().quit(0)":
 		return _sentence(OBJECT_SYSTEM, "Quit game", {})
@@ -6995,7 +6996,7 @@ static func _layout_bounds_condition(text: String, context: Dictionary) -> Dicti
 		if str(second["side"]) == str(first["side"]):
 			return {}
 		note = _edge_note(str(first["axis"]), "both")
-	var reading: Dictionary = _sentence(str(first["object"]), "Is outside layout", {})
+	var reading: Dictionary = _sentence(str(first["object"]), "Is outside screen", {})
 	if not note.is_empty():
 		(reading["segments"] as Array).append({"text": " %s" % note, "tone": "plain"})
 	return reading
@@ -7086,7 +7087,7 @@ static func outside_layout_reading(text: String, context: Dictionary) -> Diction
 	var on_screen: Dictionary = _on_screen_condition(stripped_parens(text.substr(4)), context)
 	if on_screen.is_empty():
 		return {}
-	return _sentence(str(on_screen.get("object", "")), "Is outside layout", {})
+	return _sentence(str(on_screen.get("object", "")), "Is outside screen", {})
 
 
 ## The object a POINT belongs to: the script's own object for its own place, the named object for
@@ -7574,7 +7575,7 @@ static func _background_loading_statement(text: String, context: Dictionary) -> 
 		var requested: PackedStringArray = _split_arguments(
 			text.substr(LOAD_REQUEST_HEAD.length(), text.length() - LOAD_REQUEST_HEAD.length() - 1))
 		if requested.size() >= 1 and not requested[0].strip_edges().is_empty():
-			return _sentence(OBJECT_SYSTEM, "Load layout {path} in the background",
+			return _sentence(OBJECT_SYSTEM, "Load scene {path} in the background",
 				{"path": [loading_layout_name(requested[0], context), "value"]})
 	if text.begins_with(SCENE_PACKED_HEAD) and text.ends_with(")"):
 		var inner: String = text.substr(
@@ -7583,7 +7584,7 @@ static func _background_loading_statement(text: String, context: Dictionary) -> 
 			var got: String = inner.substr(
 				LOAD_GET_HEAD.length(), inner.length() - LOAD_GET_HEAD.length() - 1).strip_edges()
 			if not got.is_empty():
-				return _sentence(OBJECT_SYSTEM, "Go to layout {path}",
+				return _sentence(OBJECT_SYSTEM, EventSheetWords.verb_row_words("Core::ChangeScene", "Change scene") + " {path}",
 					{"path": [loading_layout_name(got, context), "value"]})
 	return {}
 
@@ -7607,7 +7608,7 @@ static func _background_loading_condition(text: String, context: Dictionary) -> 
 			path_text = asked[0]
 	if path_text.strip_edges().is_empty():
 		return {}
-	return _sentence(OBJECT_SYSTEM, "layout {path} has finished loading",
+	return _sentence(OBJECT_SYSTEM, "scene {path} has finished loading",
 		{"path": [loading_layout_name(path_text, context), "value"]})
 
 
@@ -10433,7 +10434,7 @@ static func hierarchy_call(target: String, method: String, args: PackedStringArr
 	# and keeps it.
 	if method == "remove_child" and args.size() == 1 and is_simple_target(args[0].strip_edges()):
 		var taken: Dictionary = _sentence(_receiver_object(args[0].strip_edges(), context),
-			"Take out of the layout", {})
+			"Take out of the scene", {})
 		(taken["segments"] as Array).append(
 			{"text": " (%s)" % translate("kept in memory"), "tone": "muted"})
 		return _patterned(taken, "hierarchy")
@@ -10469,7 +10470,7 @@ static func _reparent_place_tail(keeps_place: bool, into_layout: bool) -> Dictio
 	if not keeps_place:
 		return {"text": ", %s" % translate("snapping to it"), "tone": "plain"}
 	if into_layout:
-		return {"text": " %s" % translate("keeping its place in the layout"), "tone": "muted"}
+		return {"text": " %s" % translate("keeping its place in the scene"), "tone": "muted"}
 	return {"text": " %s" % translate("keeping its place"), "tone": "muted"}
 
 
@@ -12614,9 +12615,9 @@ static func scene_tree_words(text: String) -> String:
 				"get_tree\\(\\)\\.current_scene\\.\\$([A-Za-z_][A-Za-z0-9_/]*)")
 		if _scene_node_regex != null:
 			for found: RegExMatch in _scene_node_regex.search_all(out):
-				out = out.replace(found.get_string(0), _fill(translate("{name} in the layout"),
+				out = out.replace(found.get_string(0), _fill(translate("{name} in the scene"),
 					{"name": found.get_string(1)}))
-		out = out.replace("get_tree().current_scene", translate("the layout"))
+		out = out.replace("get_tree().current_scene", translate("the scene"))
 	# A receiver-less `find_child("HUD")` is the script's own child, and the object column has already
 	# said whose - so the row says "the child named HUD" with nobody's name repeated in it.
 	if out.contains("find_child("):

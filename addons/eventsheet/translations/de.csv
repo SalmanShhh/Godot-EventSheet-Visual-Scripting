@@ -10209,3 +10209,73 @@ Pick any that fit. Each adds a few behaviours to this project; you can add or re
 Adds nothing. Sheet > Behaviour library… adds any of them later.,Fügt nichts hinzu. Sheet > Verhaltensbibliothek… fügt sie später hinzu.
 Nothing will be added. Sheet > Behaviour library… is always there later.,Es wird nichts hinzugefügt. Sheet > Verhaltensbibliothek… steht später jederzeit bereit.
 Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,"VisibleOnScreenNotifier2D unter %s hinzugefügt, damit „Ist auf dem Bildschirm“ ihn fragen kann - Strg+Z nimmt es zurück."
+A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,"Ein über ein pausiertes Spiel gelegtes Szene ist mitpausiert: setze den Verarbeitungsmodus seines Wurzelknotens auf Immer (oder Bei Pause), damit es während der Pause funktioniert. Das Spiel pausieren ist die Zeile, mit der diese zusammengehört."
+"The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.","Der Standard: durchgehend Godots eigene Wörter - die Callbacks, Substantive und Verben der Engine."
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.","Die Wörter, die andere Ereignisblatt-Editoren für Substantive und Callbacks verwenden (Family, Layout, On start of layout, Every tick); die Verben bleiben Godots."
+"Debug scene: Event Trace, Live Values and breakpoints are on for this run.","Szene debuggen: Ereignisverfolgung, Live-Werte und Haltepunkte sind für diesen Lauf an."
+calls · includes · Change scene,ruft auf · bindet ein · Szene wechseln
+An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame.,"Ein Ereignis beginnt mit einem Auslöser - dem Moment, in dem es läuft. On Ready feuert einmal, wenn das Objekt bereit ist; On Process läuft in jedem Frame."
+Wrap Around Scene Horizontally,Horizontal in der Szene umbrechen
+"Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.","Schickt das Objekt auf der einen Seite aus der Szene hinaus und auf der anderen wieder herein - der Arcade-Umbruch. Die Ränder der Szene sind Orte im Level, also wird die Position des Knotens im Level umbrochen."
+Scene Edges,Szene-Ränder
+Wrap around scene horizontally,Waagerecht an der Szene umbrechen
+"The left edge of the scene, in pixels.","Der linke Rand der Szene, in Pixeln."
+"The right edge of the scene, in pixels.","Der rechte Rand der Szene, in Pixeln."
+Wrap Around Scene Vertically,Vertikal in der Szene umbrechen
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.","Schickt das Objekt oben aus der Szene hinaus und unten wieder herein, oder umgekehrt. Die Ränder der Szene sind Orte im Level, also wird die Position des Knotens im Level umbrochen."
+Wrap around scene vertically,Senkrecht an der Szene umbrechen
+"The top edge of the scene, in pixels.","Der obere Rand der Szene, in Pixeln."
+"The bottom edge of the scene, in pixels.","Der untere Rand der Szene, in Pixeln."
+Bound To Scene,An Szene begrenzen
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.","Hält das Objekt innerhalb der Ränder der Szene, statt es entkommen zu lassen - der Arcade-Zaun. Die Ränder der Szene sind Orte im Level, also wird die Position des Knotens im Level gehalten."
+Bound to scene (inside {low} - {high}),Im Szene halten (innerhalb {low} - {high})
+Add Scene On Top,Szene darüberlegen
+"Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.","Legt eine Szene über das laufende Spiel, statt es zu ersetzen - ein Pausenmenü, ein Inventar, ein Dialogfenster. Die Kopie wird unter der Baumwurzel eingehängt, überlebt also einen Szenewechsel darunter, und bekommt den Namen, den du angibst, damit die beiden Zeilen darunter sie wiederfinden. Ein Name, der bereits oben liegt, bleibt unangetastet und es wird nichts geladen, denn zwei Szenen unter einem Namen hieße, dass eines davon nie wieder gefunden oder entfernt werden könnte."
+Add scene {path} on top as {layout_name},Szene {path} als {layout_name} darüberlegen
+"Scene file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.","Szenendatei, die darübergelegt wird. Ihr Wurzelknoten behält seinen eigenen Verarbeitungsmodus, und der entscheidet, ob sie im pausierten Spiel läuft."
+"The name the copy is given under the tree root. Remove Scene On Top and Scene Is On Top find it by this name, so keep all three saying the same one.","Der Name, den die Kopie unter der Baumwurzel bekommt. Darübergelegte Szene entfernen und Szene liegt darüber finden sie über diesen Namen - alle drei sollten denselben nennen."
+Remove Scene On Top,Darübergelegte Szene entfernen
+"Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.","Nimmt ein von Szene Oben Hinzufügen hinzugefügte Szene wieder weg. Es kommt sofort aus dem Baum und wird auf die aufgeschobene Art freigegeben, sodass Szene Ist Oben im selben Frame falsch antwortet und ein Hinzufügen direkt danach das neue unter demselben Namen aufsetzt. Ein Name, unter dem nichts liegt, tut still nichts, sodass eine Schließen-Zeile zweimal laufen darf."
+Remove scene {layout_name} from on top,Darübergelegte Szene {layout_name} entfernen
+The name Add Scene On Top gave the copy. A name nothing is under removes nothing.,"Der Name, den Szene darüberlegen der Kopie gegeben hat. Ein Name, unter dem nichts liegt, entfernt nichts."
+Scene Is On Top,Szene liegt darüber
+"True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.","Wahr, solange ein mit Szene darüberlegen hinzugefügte Szene noch da ist. Damit verhinderst du, dass ein Menü zweimal aufgeht, oder beantwortest dieselbe Taste anders, während eines offen ist."
+scene {layout_name} is on top,Szene {layout_name} liegt darüber
+The name Add Scene On Top gave the copy.,"Der Name, den Szene darüberlegen der Kopie gegeben hat."
+"Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","Verschiebt einen Node, der bereits in der Szene ist, unter ein neues Elternobjekt - einen Gegenstand in die Hand nehmen, einen Reiter auf den Sattel setzen, eine Waffe auf den Ruecken schnallen. ""Position behalten"" laesst ihn genau dort, wo er zu sehen ist; ""Einrasten"" setzt ihn auf die Stelle des Elternobjekts."
+"Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","Nimmt einen Node von dem, worunter er haengt, und setzt ihn wieder auf die oberste Ebene der Szene, wobei er seinen Platz in der Welt behaelt - einen getragenen Gegenstand fallen lassen, einen Reiter absitzen lassen. Der Node wird nicht freigegeben, und sonst aendert sich nichts an ihm."
+"The node to take off its parent. It stays in the scene, at the top level.","Der Node, der vom Elternobjekt geloest wird. Er bleibt in der Szene, auf oberster Ebene."
+"What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.","Was mit einem Spiel geschieht, das für eine Größe gezeichnet wurde, wenn das Fenster eine andere hat. Die Szene anzupassen hält Text und Oberfläche knackig und dehnt die Platzierung; das Bild zu dehnen bläst das ganze gerenderte Bild auf, was ein Pixelart-Spiel will; frei lässt alles dort, wo es gezeichnet wurde, und zeigt einfach mehr oder weniger von der Welt."
+"Fit - scale the scene, keep text crisp","Anpassen - Szene skalieren, Text knackig halten"
+"Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","Schickt das Objekt auf der einen Seite aus der Szene hinaus und auf der anderen wieder herein - der Arcade-Umbruch. Es umbricht die Position im Elternknoten gegen die Ränder der Szene, die Orte im Level sind; nutze WrapAroundSzeneXWorld, den Welt-Zwilling."
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","Schickt das Objekt oben aus der Szene hinaus und unten wieder herein, oder umgekehrt. Es umbricht die Position im Elternknoten gegen die Ränder der Szene, die Orte im Level sind; nutze WrapAroundSzeneYWorld, den Welt-Zwilling."
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","Hält das Objekt innerhalb der Ränder der Szene, statt es entkommen zu lassen - der Arcade-Zaun. Es hält die Position im Elternknoten gegen die Ränder der Szene, die Orte im Level sind; nutze BoundToSzeneWorld, den Welt-Zwilling."
+Change scene {path},Szene {path} wechseln
+Reload scene,Szene neu laden
+Remove from scene,Aus der Szene entfernen
+Is outside screen,Ist außerhalb des Bildschirms
+Load scene {path} in the background,Szene {path} im Hintergrund laden
+scene {path} has finished loading,Szene {path} ist fertig geladen
+Take out of the scene,Aus der Szene nehmen
+keeping its place in the scene,behält seinen Platz in der Szene
+{name} in the scene,{name} in der Szene
+the scene,die Szene
+On enter tree,Beim Betreten des Baums (_enter_tree)
+On exit tree,Beim Verlassen des Baums (_exit_tree)
+On process,Bei jedem Frame (_process)
+On physics process,Bei jedem Physikschritt (_physics_process)
+▶ Preview scene,▶ Szene testen
+🐞 Debug scene,🐞 Szene debuggen
+Inspector add-on,Inspector-Erweiterung
+Runs every frame (On process).,Läuft in jedem Frame (On process).
+Runs every physics step (On physics process).,Läuft in jedem Physikschritt (On physics process).
+On Process,Bei jedem Frame (_process)
+On Physics Process,Bei jedem Physikschritt (_physics_process)
+On Enter Tree,Beim Betreten des Baums (_enter_tree)
+On Exit Tree,Beim Verlassen des Baums (_exit_tree)
+Run on process,Bei jedem Frame (_process)
+Run on physics process,Bei jedem Physikschritt (_physics_process)
+Run on enter tree,Beim Betreten des Baums (_enter_tree)
+Run on exit tree,Beim Verlassen des Baums (_exit_tree)
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","Rückstoß, der ehrlich abklingt (die Exp-Form, unabhängig von der Bildrate) - eine Zeile unter Jedes Bild. Der Stoß wird in den Richtungen des Levels berechnet, aber zur Position im Elternknoten addiert, was unter einem gedrehten oder skalierten Elternknoten falsch ist; nutze ApplyPushesWorld, den Welt-Zwilling."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","Rückstoß, der ehrlich abklingt (die Exp-Form, unabhängig von der Bildrate) - eine Zeile unter Jedes Bild. Der Stoß wird in den Richtungen des Levels berechnet und zur Position des Knotens im Level addiert, ist also auch unter einem gedrehten oder skalierten Elternknoten richtig."

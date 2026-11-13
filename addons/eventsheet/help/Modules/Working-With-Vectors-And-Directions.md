@@ -179,7 +179,7 @@ Direction To already returns length 1, so multiplying by the speed is the whole 
 **2. A range check with no square root written by hand.**
 
 ```
-Every tick
+On process
   Condition: Distance Between(self.position, player.position) < 200.0
     -> start chasing
 ```
@@ -187,7 +187,7 @@ Every tick
 **3. Diagonal movement that is not faster than straight movement.**
 
 ```
-Every tick
+On process
   -> set move_input = Make Vector2(Move Axis("move_left", "move_right"), Move Axis("move_up", "move_down"))
   -> set velocity = Normalized(move_input) * speed
 ```
@@ -198,7 +198,7 @@ sprints diagonally.
 **4. A speed limit that keeps the direction.**
 
 ```
-Every tick
+On process
   -> set velocity = Clamp Length(velocity, max_speed)
 ```
 
@@ -207,14 +207,14 @@ Clamp Length only shortens; a vector already inside the limit comes back untouch
 **5. Show the speed on a HUD.**
 
 ```
-Every tick
+On process
   -> set SpeedLabel text = To Text(int(Vector Length(velocity)))
 ```
 
 **6. Turn a sprite to face where it is going.**
 
 ```
-Every tick
+On process
   Condition: Vector Length(velocity) > 1.0
     -> set self.rotation = Vector Angle(velocity)
 ```
@@ -235,7 +235,7 @@ Rotated takes radians, so 0.15 is roughly 8.6 degrees either side.
 **8. Is the target in front of me?**
 
 ```
-Every tick
+On process
   Condition: Dot Product(Normalized(facing), Direction To(self.position, target.position)) > 0.0
     -> the target is in front
 ```
@@ -245,7 +245,7 @@ Both arguments are unit vectors, so the dot product is the cosine of the angle b
 **9. A cone of vision, not just a hemisphere.**
 
 ```
-Every tick
+On process
   Condition: Dot Product(Normalized(facing), Direction To(self.position, player.position)) > 0.7
     -> the player is inside a roughly 90 degree cone
 ```
@@ -256,7 +256,7 @@ narrow the cone.
 **10. A camera that eases toward its target.**
 
 ```
-Every tick
+On process
   -> set Camera.position = Vector Lerp(Camera.position, player.position, 0.1)
 ```
 
@@ -282,7 +282,7 @@ whole vector from its pieces.
 **12. The jump-or-fall test.**
 
 ```
-Every tick
+On process
   Condition: Part Of(velocity, Y (up / down)) < 0.0
     -> play the rising animation
   Else
@@ -304,7 +304,7 @@ target.
 **14. Fade only the see-through part of a tint.**
 
 ```
-Every tick
+On process
   -> Set Part Of  modulate, Alpha (see-through), fade_value
 ```
 
@@ -456,7 +456,7 @@ The 3D twin of **Wrap Inside The Screen**: leave the right of the view, come bac
 same distance from the camera. One row under a per-frame trigger, with no bounds to maintain.
 
 ```
-Every Frame
+On Process
   -> Movement: Wrap Inside The View (3D)
 ```
 
@@ -515,7 +515,7 @@ Face Along Velocity leaves a stopped node alone, which is the whole reason to us
 the angle yourself: an arrow that lands does not snap back to facing right.
 
 ```
-Every Frame
+On Process
   -> Movement: Face Along Velocity  Get Velocity
 ```
 
@@ -563,7 +563,7 @@ them. **Look At (safe up)** swaps the up vector at exactly that moment, and does
 target is where the node already stands.
 
 ```
-Every Frame
+On Process
   -> Movement: Look At (safe up)  Target.global_position
 ```
 

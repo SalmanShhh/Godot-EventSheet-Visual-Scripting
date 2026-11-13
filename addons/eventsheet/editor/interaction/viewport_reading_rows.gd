@@ -747,7 +747,7 @@ const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
 
 ## The one line the chip says for each pattern - the sheet's own name for the shape.
 const SYSTEMS_PATTERN_WORDS: Dictionary = {
-	"background_loading": "Loading a layout in the background",
+	"background_loading": "Loading a scene in the background",
 	"movement": "Movement math a behavior already has words for",
 	"multiplayer": "Messages sent between peers",
 	"navigation": "Following a path a navigation agent worked out",
@@ -2050,14 +2050,17 @@ static func class_of_object(object_label: String, class_map: Dictionary) -> Stri
 	return label if ClassDB.class_exists(label) else ""
 
 
-## The event-sheet words for the two tick triggers. The trigger ids are untouched - this is the
-## reading only, so a sheet still stores (and compiles to) exactly what it did before.
-static func tick_trigger_words(trigger_id: String, display_text: String) -> String:
+## The words for the two tick triggers. The trigger ids are untouched - this is the reading only, so a
+## sheet still stores (and compiles to) exactly what it did before. Godot's callback names by default
+## ("On process"); the other editors' words ("Every tick") are the Familiar preset's, both read from
+## the Words table so the Words page lists and controls them.
+static func tick_trigger_words(trigger_id: String, display_text: String,
+		familiar: bool = EventSheetWords.familiar_words_enabled()) -> String:
 	match trigger_id:
 		"OnPhysicsProcess":
-			return EventSheetL10n.translate("Every physics tick")
+			return callback_word("every_physics_tick", familiar)
 		"OnProcess":
-			return EventSheetL10n.translate("Every tick")
+			return callback_word("every_tick", familiar)
 	# The collision family reads as the event-sheet's own two triggers.
 	var collision: String = collision_trigger_words(trigger_id)
 	if not collision.is_empty():
@@ -2088,7 +2091,8 @@ const BLANK_SUB_EVENT_HOVER: String = "follows its parent, in order"
 ## explicit Every tick words for readers who want them.
 ## Returns {} when the event keeps its own trigger words, else {"note": String} - "" for the
 ## every-frame tick, the muted physics note for the physics tick.
-static func blank_tick_reading(trigger_id: String, has_conditions: bool, patterns_on: bool = true) -> Dictionary:
+static func blank_tick_reading(trigger_id: String, has_conditions: bool, patterns_on: bool = true,
+		familiar: bool = EventSheetWords.familiar_words_enabled()) -> Dictionary:
 	if not patterns_on or has_conditions:
 		return {}
 	if trigger_id.is_empty():
@@ -2096,7 +2100,7 @@ static func blank_tick_reading(trigger_id: String, has_conditions: bool, pattern
 	if not BLANK_TICK_TRIGGER_IDS.has(trigger_id):
 		return {}
 	if trigger_id == "OnPhysicsProcess":
-		return {"note": EventSheetL10n.translate("every physics tick")}
+		return {"note": callback_word("every_physics_tick", familiar).to_lower()}
 	return {"note": ""}
 
 
@@ -2131,26 +2135,32 @@ const NOTIFICATION_TRIGGER_PREFIX := "OnNotification:"
 ## which is the whole point of the split.
 const LIFECYCLE_TRIGGER_WORDS: Dictionary = {
 	"OnDraw": "On draw",
-	"OnEnterTree": "On created",
-	"OnExitTree": "On destroyed"
 }
 
 
-## The lifecycle triggers in the event sheet's own words, and who they belong to.
+## One callback word from the Words table, in the reader's current vocabulary and translated. A
+## caller that already holds the Familiar state passes it, so a row build does not re-read settings.
+static func callback_word(key: String, familiar: bool = EventSheetWords.familiar_words_enabled()) -> String:
+	return EventSheetL10n.translate(EventSheetWords.word_for(key, familiar, EventSheetWords.overrides()))
+
+
+## The lifecycle triggers in the reader's words, and who they belong to.
 ##
-## Always on, never behind the Familiar Words toggle: these are not a friendlier spelling of Godot's
-## names, they ARE the sheet's trigger names, and a reader who knows the sheet should find them here.
-## Godot's own word stays one hover away, as it does for every other reading.
+## By default these are Godot's own callback names: `_ready` is "On ready" on any node, the scene's
+## root included, `_enter_tree` is "On enter tree" and `_exit_tree` is "On exit tree". The Familiar
+## preset (Settings > Words) reads the other editors' words instead - "On start of layout" and "On end
+## of layout" for the scene's own script, "On created" and "On destroyed" elsewhere. All of them live in
+## the Words table, so the page lists them and the other word is one hover away.
 ##
-## The scene decides two of them. A `_ready` on the script the SCENE ITSELF carries is the layout
-## starting - there is one of those per layout, and it runs when the layout opens; a `_ready` on a
-## script sitting on some object in the scene is that object being created, which happens once per
-## instance. Same split for `_exit_tree`: the layout ending, or the object being destroyed.
+## The scene decides two of them in the familiar words: a `_ready` on the script the SCENE ITSELF
+## carries is the scene starting, and one on a script sitting on some object is that object being
+## ready. Same split for `_exit_tree`.
 ##
 ## Returns {"text", "object"} - both always filled - or {} when the trigger is not a lifecycle one,
 ## which is the caller's cue to keep whatever it was already drawing.
 static func lifecycle_trigger_reading(trigger_id: String, object_label: String,
-		scene_root: bool, script_object: String) -> Dictionary:
+		scene_root: bool, script_object: String,
+		familiar: bool = EventSheetWords.familiar_words_enabled()) -> Dictionary:
 	var owner: String = script_object.strip_edges()
 	if owner.is_empty():
 		owner = object_label
@@ -2158,14 +2168,16 @@ static func lifecycle_trigger_reading(trigger_id: String, object_label: String,
 	match trigger_id:
 		"OnReady":
 			if scene_root:
-				return {"text": EventSheetL10n.translate("On start of layout"), "object": system}
+				return {"text": callback_word("scene_ready", familiar), "object": system}
 			# `_ready` reads as what it is - the node being ready - said by System like the other
 			# whole-game triggers, not as the script's own object being "created".
 			return {"text": EventSheetL10n.translate("On ready"), "object": system}
+		"OnEnterTree":
+			return {"text": callback_word("node_enter", familiar), "object": owner}
 		"OnExitTree":
 			if scene_root:
-				return {"text": EventSheetL10n.translate("On end of layout"), "object": system}
-			return {"text": EventSheetL10n.translate("On destroyed"), "object": owner}
+				return {"text": callback_word("scene_exit", familiar), "object": system}
+			return {"text": callback_word("node_exit", familiar), "object": owner}
 	if LIFECYCLE_TRIGGER_WORDS.has(trigger_id):
 		return {"text": EventSheetL10n.translate(str(LIFECYCLE_TRIGGER_WORDS[trigger_id])), "object": owner}
 	if trigger_id.begins_with(NOTIFICATION_TRIGGER_PREFIX):

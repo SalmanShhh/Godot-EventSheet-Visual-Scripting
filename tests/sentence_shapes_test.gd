@@ -93,7 +93,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"host ▸ Destroy (at end of frame)",
 	"System ▸ Signal On Jumped",
 	"System ▸ ⏳ Wait 0.5 seconds",
-	"System ▸ Go to layout Menu",
+	"System ▸ Change scene Menu",
 	"host ▸ exists",
 	"Function ▸ Return true",
 	"Function ▸ Return false",

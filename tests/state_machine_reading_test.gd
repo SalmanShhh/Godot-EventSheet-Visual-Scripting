@@ -64,8 +64,8 @@ static func run() -> bool:
 	ok = _check("a non-reflected unknown id is left alone", builder._format_condition_descriptor_base(unknown), "NotAMethodId") and ok
 
 	# 2. Trigger ids resolve friendly names through the descriptor fallback.
-	ok = _check("physics trigger reads in words", builder._trigger_display_text("Core", "OnPhysicsProcess"), "Every Physics Tick") and ok
-	ok = _check("update trigger reads in words", builder._trigger_display_text("Core", "OnProcess"), "Every Frame") and ok
+	ok = _check("physics trigger reads in words", builder._trigger_display_text("Core", "OnPhysicsProcess"), "On Physics Process") and ok
+	ok = _check("update trigger reads in words", builder._trigger_display_text("Core", "OnProcess"), "On Process") and ok
 	ok = _check("unknown signal ids still humanize", builder._trigger_display_text("", "signal:door_opened"), "On Door Opened") and ok
 	ok = _check("an on_-named signal never reads On On", builder._trigger_display_text("", "signal:on_quest_completed"), "On Quest Completed") and ok
 

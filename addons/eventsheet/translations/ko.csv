@@ -10209,3 +10209,73 @@ Pick any that fit. Each adds a few behaviours to this project; you can add or re
 Adds nothing. Sheet > Behaviour library… adds any of them later.,아무것도 추가하지 않습니다. 나중에 시트 > 동작 라이브러리…에서 추가할 수 있습니다.
 Nothing will be added. Sheet > Behaviour library… is always there later.,아무것도 추가되지 않습니다. 시트 > 동작 라이브러리…는 나중에도 언제든 사용할 수 있습니다.
 Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,'화면 안에 있음'이 확인할 수 있도록 %s 아래에 VisibleOnScreenNotifier2D를 추가했습니다 - Ctrl+Z로 되돌릴 수 있습니다.
+A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,일시정지된 게임 위에 올린 씬도 함께 멈춥니다. 일시정지 중에도 동작시키려면 루트 노드의 처리 모드를 「항상」(또는 「일시정지 시」)으로 설정하세요. 짝이 되는 행은 「게임 일시정지」입니다.
+"The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.","기본값: 전부 Godot 자체의 용어 - 엔진이 쓰는 콜백, 명사, 동사."
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.","다른 이벤트 시트 에디터가 명사와 콜백에 쓰는 용어 (Family, Layout, On start of layout, Every tick). 동사는 Godot 그대로입니다."
+"Debug scene: Event Trace, Live Values and breakpoints are on for this run.","씬 디버그: 이번 실행에서는 이벤트 추적, 라이브 값, 중단점이 켜집니다."
+calls · includes · Change scene,호출 · 포함 · 씬 전환
+An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame.,"이벤트는 트리거로 시작합니다 - 실행되는 순간입니다. On Ready는 오브젝트가 준비되면 한 번, On Process는 매 프레임 실행됩니다."
+Wrap Around Scene Horizontally,씬을 가로로 감싸기
+"Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.","오브젝트를 씬 한쪽으로 내보내 반대쪽에서 다시 들어오게 합니다 - 아케이드 랩입니다. 씬 가장자리는 레벨 내 위치이므로, 노드의 레벨 내 위치가 감싸집니다."
+Scene Edges,씬 가장자리
+Wrap around scene horizontally,씬을 가로로 감싸기
+"The left edge of the scene, in pixels.",씬의 왼쪽 가장자리(픽셀)입니다.
+"The right edge of the scene, in pixels.",씬의 오른쪽 가장자리(픽셀)입니다.
+Wrap Around Scene Vertically,씬을 세로로 감싸기
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.","오브젝트를 씬 위쪽으로 내보내 아래쪽에서 다시 들어오게 합니다(반대도 마찬가지). 씬 가장자리는 레벨 내 위치이므로, 노드의 레벨 내 위치가 감싸집니다."
+Wrap around scene vertically,씬을 세로로 감싸기
+"The top edge of the scene, in pixels.",씬의 위쪽 가장자리(픽셀)입니다.
+"The bottom edge of the scene, in pixels.",씬의 아래쪽 가장자리(픽셀)입니다.
+Bound To Scene,씬에 제한
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.","오브젝트가 씬 가장자리 밖으로 나가지 못하게 안에 붙잡아 둡니다 - 아케이드 울타리입니다. 씬 가장자리는 레벨 내 위치이므로, 노드의 레벨 내 위치가 제한됩니다."
+Bound to scene (inside {low} - {high}),씬 안으로 제한 ({low} - {high} 내부)
+Add Scene On Top,씬을 위에 올리기
+"Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.","실행 중인 게임을 대체하는 대신 그 위에 씬을 올립니다 - 일시정지 메뉴, 인벤토리, 대화 상자. 복사본은 트리 루트 아래에 추가되므로 그 아래 씬이 바뀌어도 살아남고, 당신이 준 이름을 가지므로 아래 두 행이 다시 찾을 수 있습니다. 이미 그 이름이 위에 있으면 그대로 두고 아무것도 불러오지 않습니다. 한 이름에 씬이 둘이면 그중 하나는 다시는 찾을 수도 제거할 수도 없기 때문입니다."
+Add scene {path} on top as {layout_name},씬 {path} 을(를) {layout_name} (으)로 위에 올리기
+"Scene file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.","위에 올릴 씬 파일. 루트 노드가 자체 처리 모드를 유지하며, 일시정지 중에도 동작할지는 그 설정이 결정합니다."
+"The name the copy is given under the tree root. Remove Scene On Top and Scene Is On Top find it by this name, so keep all three saying the same one.",트리 루트 아래에서 사본에 붙는 이름. 「위에 올린 씬 제거」와 「씬이 위에 있다」가 이 이름으로 찾으므로 세 행 모두 같은 이름을 쓰세요.
+Remove Scene On Top,위에 올린 씬 제거
+"Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.","씬 위에 추가로 올려둔 씬을 다시 내립니다. 트리에서 곧바로 빠지고 해제는 지연 방식으로 이루어지므로, 씬이 위에 있음 은 같은 프레임에서 거짓을 답하고 바로 뒤의 추가가 같은 이름으로 새것을 올립니다. 아무것도 없는 이름은 조용히 아무 일도 하지 않으므로 닫기 행은 두 번 실행해도 안전합니다."
+Remove scene {layout_name} from on top,위에 올린 씬 {layout_name} 제거
+The name Add Scene On Top gave the copy. A name nothing is under removes nothing.,「씬을 위에 올리기」가 사본에 붙인 이름. 아무것도 없는 이름은 아무것도 제거하지 않습니다.
+Scene Is On Top,씬이 위에 있다
+"True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.","「씬을 위에 올리기」로 추가한 씬이 아직 남아 있는 동안 참입니다. 메뉴가 두 번 열리는 것을 막거나, 열려 있는 동안 같은 키에 다르게 반응하도록 하는 데 씁니다."
+scene {layout_name} is on top,씬 {layout_name} 이(가) 위에 있다
+The name Add Scene On Top gave the copy.,「씬을 위에 올리기」가 사본에 붙인 이름.
+"Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","이미 씬에 있는 노드를 새 부모 아래로 옮깁니다. 아이템을 손에 쥐여주기, 기수를 안장에 태우기, 무기를 등에 메기 같은 일에 씁니다. '자리 유지'는 보이는 그 자리에 그대로 두고, '맞추기'는 부모 자신의 위치로 옮깁니다."
+"Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","노드를 지금 속해 있는 부모에서 떼어 씬 최상위로 되돌리며, 월드에서의 위치는 그대로 둡니다. 들고 있던 물건을 떨어뜨리기, 기수를 내리기 같은 일에 씁니다. 노드는 해제되지 않고 나머지는 아무것도 바뀌지 않습니다."
+"The node to take off its parent. It stays in the scene, at the top level.",부모에서 뗄 노드. 씬에는 최상위로 남습니다.
+"What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.","한 크기에 맞춰 그린 게임을 다른 크기의 창에 띄웠을 때 어떻게 할지. 씬을 맞추는 방식은 글자와 인터페이스를 또렷하게 유지한 채 배치만 늘립니다. 그림을 늘리는 방식은 완성된 화면 전체를 확대하는 것으로, 픽셀 아트 게임이 원하는 쪽입니다. 자유는 아무것도 늘리지 않고 월드를 더 많이 또는 더 적게 보여 줍니다."
+"Fit - scale the scene, keep text crisp",맞추기 - 씬을 늘리고 글자는 또렷하게
+"Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.","오브젝트를 씬 한쪽으로 내보내 반대쪽에서 다시 들어오게 합니다 - 아케이드 랩입니다. 부모 안의 위치를 레벨 내 위치인 씬 가장자리에 대해 감싸므로, 월드 쌍둥이인 WrapAroundLayoutXWorld를 사용하세요."
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","오브젝트를 씬 위쪽으로 내보내 아래쪽에서 다시 들어오게 합니다(반대도 마찬가지). 부모 안의 위치를 레벨 내 위치인 씬 가장자리에 대해 감싸므로, 월드 쌍둥이인 WrapAroundLayoutYWorld를 사용하세요."
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.","오브젝트가 씬 가장자리 밖으로 나가지 못하게 안에 붙잡아 둡니다 - 아케이드 울타리입니다. 부모 안의 위치를 레벨 내 위치인 씬 가장자리에 대해 제한하므로, 월드 쌍둥이인 BoundToLayoutWorld를 사용하세요."
+Change scene {path},씬 {path} 로 전환
+Reload scene,씬 다시 불러오기
+Remove from scene,씬에서 제거
+Is outside screen,화면 밖에 있음
+Load scene {path} in the background,씬 {path} 을 백그라운드에서 불러오기
+scene {path} has finished loading,씬 {path} 불러오기 완료
+Take out of the scene,씬에서 꺼내기
+keeping its place in the scene,씬에서의 위치 유지
+{name} in the scene,씬 안의 {name}
+the scene,씬
+On enter tree,트리 진입 시 (_enter_tree)
+On exit tree,트리 이탈 시 (_exit_tree)
+On process,매 프레임 (_process)
+On physics process,물리 스텝마다 (_physics_process)
+▶ Preview scene,▶ 씬 미리보기
+🐞 Debug scene,🐞 씬 디버그
+Inspector add-on,인스펙터 애드온
+Runs every frame (On process).,매 프레임 실행됩니다 (On process).
+Runs every physics step (On physics process).,매 물리 단계마다 실행됩니다 (On physics process).
+On Process,매 프레임 (_process)
+On Physics Process,물리 스텝마다 (_physics_process)
+On Enter Tree,트리 진입 시 (_enter_tree)
+On Exit Tree,트리 이탈 시 (_exit_tree)
+Run on process,매 프레임 (_process)
+Run on physics process,물리 스텝마다 (_physics_process)
+Run on enter tree,트리 진입 시 (_enter_tree)
+Run on exit tree,트리 이탈 시 (_exit_tree)
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","프레임 속도와 무관하게 정직하게 감쇠하는 넉백(지수 형태) - 매 프레임 아래에 한 줄을 둡니다. 밀림은 레벨의 방향으로 계산되지만 부모 안의 위치에 더해지므로, 회전하거나 크기가 바뀐 부모 아래에서는 틀립니다. 월드 쌍둥이인 ApplyPushesWorld를 사용하세요."
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","프레임 속도와 무관하게 정직하게 감쇠하는 넉백(지수 형태) - 매 프레임 아래에 한 줄을 둡니다. 밀림은 레벨의 방향으로 계산되어 노드의 레벨 내 위치에 더해지므로, 회전하거나 크기가 바뀐 부모 아래에서도 올바릅니다."

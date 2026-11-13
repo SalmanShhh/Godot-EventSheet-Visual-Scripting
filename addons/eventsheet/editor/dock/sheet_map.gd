@@ -139,7 +139,7 @@ static func _read_script(path: String, nodes: Dictionary, edges: Array[Dictionar
 			var extension: String = target.get_extension().to_lower()
 			if line.contains("change_scene_to_file") and extension == "tscn":
 				_add_node(nodes, target, NODE_SCENE)
-				edges.append(_edge(path, target, EDGE_LAYOUT, "Go to layout"))
+				edges.append(_edge(path, target, EDGE_LAYOUT, "Change scene"))
 			elif extension == "gd" and (line.begins_with("extends") or line.contains("preload(") or line.contains("load(")):
 				_add_node(nodes, target, NODE_SHEET)
 				edges.append(_edge(path, target, EDGE_INCLUDES, "includes"))

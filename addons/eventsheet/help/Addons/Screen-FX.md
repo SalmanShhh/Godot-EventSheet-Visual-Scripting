@@ -438,7 +438,7 @@ Nothing was added, nothing has to be cleaned up, and the screen is exactly as it
 ```
 On Ready
   -> ScreenFx: Add vignette at 0.0
-Every tick
+On process
   -> ScreenFx: Set vignette strength to (1 - Player.health / 100) * 0.7
 ```
 

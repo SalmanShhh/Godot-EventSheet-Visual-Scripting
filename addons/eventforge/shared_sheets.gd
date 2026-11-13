@@ -510,11 +510,11 @@ static func duplicate_trigger_messages(source: String, sources_by_class: Diction
 static func _handler_words(handler: String) -> String:
 	match handler:
 		"on_ready":
-			return "On created"
+			return "On ready"
 		"on_tick":
-			return "Every tick"
+			return "On process"
 		"on_physics_tick":
-			return "Every physics tick"
+			return "On physics process"
 		"on_input":
 			return "On input"
 	return handler

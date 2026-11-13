@@ -232,7 +232,7 @@ mover and skeleton.
 
 ```
 On Ready   -> Wolf | Nav Agent 3D: Set Auto Control  false
-Every tick
+On process
   Condition: Wolf | Nav Agent 3D: Has Path
     -> (drive the wolf from Path Move X / Path Move Z, aim the skeleton the same way)
 ```

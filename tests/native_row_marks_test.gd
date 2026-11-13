@@ -68,8 +68,8 @@ static func _test_trigger_kinds() -> bool:
 			NativeRowMarks.trigger_tooltip("physics"), NativeRowMarks.trigger_tooltip("input"),
 			NativeRowMarks.trigger_tooltip("signal"), NativeRowMarks.trigger_tooltip("other"),
 			NativeRowMarks.trigger_tooltip("")], [
-			"Runs once, when the node starts (On ready).", "Runs every frame (Every tick).",
-			"Runs every physics step (Every physics tick).",
+			"Runs once, when the node starts (On ready).", "Runs every frame (On process).",
+			"Runs every physics step (On physics process).",
 			"Runs when input arrives - a key, a button, the mouse.", "Runs when a signal is emitted.",
 			"Runs when the engine sends this notification.", ""]],
 	])

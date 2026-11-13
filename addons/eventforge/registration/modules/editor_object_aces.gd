@@ -35,11 +35,11 @@ const CAT := "Editor Tools"
 ## The pages this module's rows are filed on. Every one begins "Editor Tools: " so the tool-sheet
 ## gate and the "Editor" object label keep working - both test the PREFIX, not the whole string - and
 ## every one names the surface a reader is already looking at when they come here: the plugin's own
-## life, the panels it hangs, the Properties bar it adds to, the history Ctrl+Z walks. A page per
+## life, the panels it hangs, the Inspector it adds to, the history Ctrl+Z walks. A page per
 ## surface is the whole point: the flat list was thirty-eight rows of four unrelated jobs.
 const CAT_LIFECYCLE := "Editor Tools: Plugin lifecycle"
 const CAT_PANELS := "Editor Tools: Panels & menus"
-const CAT_PROPERTIES := "Editor Tools: Properties bar"
+const CAT_PROPERTIES := "Editor Tools: Inspector"
 const CAT_UNDO := "Editor Tools: Undo history"
 const CAT_PREFERENCES := "Editor Tools: Project & preferences"
 
@@ -89,8 +89,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.act("RemoveEditorObjectType", "Remove Object Type", "remove_custom_type({type_name})", CAT_PANELS, "Remove object type {type_name}", "Takes a custom object type back out of the Create Node dialog.").param("type_name", "\"Waypoint\"", "Named", "The name the type was added with.", "expression"))
 	# The panel these two register an add-on with is the one the sheet calls the Properties
 	# bar, everywhere else it names it. Same ace_ids, same emitted calls; the words catch up.
-	descriptors.append(F.act("AddEditorInspectorPlugin", "Add Properties Bar Add-on", "add_inspector_plugin({plugin})", CAT_PROPERTIES, "Add Properties bar add-on {plugin}", "Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own.").param_typed("EditorInspectorPlugin", "plugin", "null", "Add-on", "The Properties bar add-on that draws the custom fields.", "expression"))
-	descriptors.append(F.act("RemoveEditorInspectorPlugin", "Remove Properties Bar Add-on", "remove_inspector_plugin({plugin})", CAT_PROPERTIES, "Remove Properties bar add-on {plugin}", "Takes a Properties bar add-on back out.").param_typed("EditorInspectorPlugin", "plugin", "null", "Add-on", "The Properties bar add-on that was registered.", "expression"))
+	descriptors.append(F.act("AddEditorInspectorPlugin", "Add Inspector Add-on", "add_inspector_plugin({plugin})", CAT_PROPERTIES, "Add Inspector add-on {plugin}", "Registers an Inspector add-on, so your own buttons and fields appear in the Inspector beside the object's own.").param_typed("EditorInspectorPlugin", "plugin", "null", "Add-on", "The Inspector add-on that draws the custom fields.", "expression"))
+	descriptors.append(F.act("RemoveEditorInspectorPlugin", "Remove Inspector Add-on", "remove_inspector_plugin({plugin})", CAT_PROPERTIES, "Remove Inspector add-on {plugin}", "Takes an Inspector add-on back out.").param_typed("EditorInspectorPlugin", "plugin", "null", "Add-on", "The Inspector add-on that was registered.", "expression"))
 	descriptors.append(F.act("UpdateViewportOverlays", "Redraw Viewport Overlays", "update_overlays()", CAT_LIFECYCLE, "redraw viewport overlays", "Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints."))
 
 	# ── The menu, and the item that was chosen out of it ──────

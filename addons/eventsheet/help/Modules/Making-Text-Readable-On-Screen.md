@@ -266,14 +266,14 @@ On item selected
 **2. A score nobody has to count digits in.**
 
 ```
-Every tick
+On process
   -> set ScoreLabel text = With Thousands Separators(score)
 ```
 
 **3. Health as a percentage beside the bar.**
 
 ```
-Every tick
+On process
   -> set HealthPercentLabel text = As Percent Text(health / max_health, 0)
 ```
 
@@ -283,7 +283,7 @@ Feed it a 0-to-1 fraction. The builtin Percent Of expression already returns 0-t
 **4. A run timer that survives an hour.**
 
 ```
-Every tick
+On process
   -> set RunTimerLabel text = As Duration(run_seconds)
 ```
 
@@ -365,7 +365,7 @@ Without this, a label filled once at startup keeps the old language until the sc
 **12. Catch a clipped button while you are still authoring.**
 
 ```
-Every tick
+On process
   Condition: StartButton  Text Overflows
     -> log "START button overflows in " + TranslationServer.get_locale()
 ```
@@ -376,7 +376,7 @@ Turn on Clip Text on the button first, or it grows to fit and honestly answers f
 **On node** parameter, so one watchdog row can check a button it is not attached to.
 
 ```
-Every tick
+On process
   Condition: Text Overflows  On node: $UI/Menu/StartButton
     -> tint the button red
 ```
@@ -431,7 +431,7 @@ On Ready
 **19. Ask about the font a label is really drawing with.**
 
 ```
-Every tick
+On process
   Condition: Font Can Show  TitleLabel.Font Of This Control, TitleLabel.text   (inverted)
     -> log "TitleLabel cannot draw its own text"
 ```

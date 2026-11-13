@@ -54,7 +54,7 @@ and the switch is on.
    outline's mask rig with the first row that outlines something.
 
 ```
-On start of layout -> Camera3D | Add Post Effect: vignette, "", 0.5
+On ready -> Camera3D | Add Post Effect: vignette, "", 0.5
 On Player Hurt     -> Camera3D | Pulse Post Effect: tint, 0.7, 0.4
 ```
 
@@ -285,7 +285,7 @@ it was when the player turns the quality up again.
 ### 16. Read the strength back into a sound
 
 ```
-Every tick -> AudioStreamPlayer | Set volume_db: -30.0 * Post Strength("hurt")
+On process -> AudioStreamPlayer | Set volume_db: -30.0 * Post Strength("hurt")
 ```
 
 The expression answers with what the camera is actually drawing, after the accessibility dials

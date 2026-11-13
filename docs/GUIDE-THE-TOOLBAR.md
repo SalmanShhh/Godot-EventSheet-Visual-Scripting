@@ -101,10 +101,10 @@ beside it opens all six.
 | Run | What it does | Key |
 |-----|--------------|-----|
 | **Run Scene** | Save, then play the scene that uses this sheet's script |  |
-| **Debug layout** | The same run with the sheet's own debugger armed: Event Trace lights rows as they fire, Live Values streams the variables, breakpointed rows pause the game | unbound by default |
+| **Debug scene** | The same run with the sheet's own debugger armed: Event Trace lights rows as they fire, Live Values streams the variables, breakpointed rows pause the game | unbound by default |
 | **Run with profiler** | The same run with the costs lens on. Play, stop, and every row wears what one fire of it cost |  |
 | **Play as host + client** | Two tagged copies of the game at once, for testing a networked one. It writes Godot's own Run Multiple Instances setting and says so |  |
-| **Preview layout** | Godot's own F6, under the name an event-sheet author reaches for | `F6` |
+| **Preview scene** | Godot's own F6, under the name an event-sheet author reaches for | `F6` |
 | **Preview project** | Godot's own F5, the whole game from its start | `F5` |
 
 The last two are relabels and nothing else: same key, same behaviour, familiar name.
@@ -173,8 +173,8 @@ always had them:
 
 ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
 
-Menu, Save, Undo, Redo, the play button, then Run Scene, Debug layout, Run with profiler, Play as
-host + client, Preview layout, Preview project, then Add Event, Add Condition, Add Action, Add Code,
+Menu, Save, Undo, Redo, the play button, then Run Scene, Debug scene, Run with profiler, Play as
+host + client, Preview scene, Preview project, then Add Event, Add Condition, Add Action, Add Code,
 then the GDScript panel toggle, Quick add, and the chevron pointing back the other way.
 
 The chevron and **Menu > View > Full toolbar** are one choice shown twice: use either and the other
@@ -217,9 +217,9 @@ the door inside the sheet that reaches the same thing without a menu at all.
 | **Save** | Still on the strip, as an icon | `Ctrl+S` |  |
 | **Run Scene** | The play button's face (the default choice), its dropdown, and the expanded strip |  |  |
 | **Play as host + client** | The play button's dropdown, and the expanded strip |  |  |
-| **Preview layout** | The play button's dropdown, under *Godot's own*, and the expanded strip | `F6` |  |
+| **Preview scene** | The play button's dropdown, under *Godot's own*, and the expanded strip | `F6` |  |
 | **Preview project** | The same, and the expanded strip | `F5` |  |
-| **Debug layout** | The same, and the expanded strip | unbound |  |
+| **Debug scene** | The same, and the expanded strip | unbound |  |
 | **Run with profiler** | The same, and the expanded strip; the lens itself is Menu > Tools > Run With Profiler |  |  |
 | **Add Event** | Menu > Add > Event, and the expanded strip | `E` | The **Add event** corner link, the trailing "+ Add event..." row, double-click on empty space, the Ghost Row |
 | **Add Condition** | Menu > Add > Condition, and the expanded strip | `C` | The row's own "+ Add condition..." cell; right-click the condition lane > Add Condition; right-click empty space > New condition |

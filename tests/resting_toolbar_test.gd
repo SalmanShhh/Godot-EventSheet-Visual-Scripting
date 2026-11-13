@@ -97,7 +97,7 @@ static func run() -> bool:
 ## DERIVED from the built strip rather than typed here, so a pass that adds a button to the toolbar
 ## and forgets the guide fails this check by name instead of shipping a guide that is quietly short
 ## one row. The names are compared with their leading glyph stripped, because the guide writes
-## "Debug layout" where the button wears an emoji in front of it.
+## "Debug scene" where the button wears an emoji in front of it.
 ##
 ## Each button is asked for the words it was BUILT with rather than for what is on its face: an
 ## icon-only face carries an icon in the editor and a glyph here, and reading the face meant the
@@ -140,8 +140,8 @@ static func _submenu_label_at(popup: PopupMenu, index: int) -> bool:
 	return popup.get_item_submenu_node(index) != null
 
 
-## A button's words with any leading icon glyph and spacing removed, so "🐞 Debug layout" compares as
-## "Debug layout". Returns "" for a control whose whole label is a glyph (the chevron), which the
+## A button's words with any leading icon glyph and spacing removed, so "🐞 Debug scene" compares as
+## "Debug scene". Returns "" for a control whose whole label is a glyph (the chevron), which the
 ## guide names in prose rather than by its character.
 static func _plain_label(text: String) -> String:
 	var start: int = 0

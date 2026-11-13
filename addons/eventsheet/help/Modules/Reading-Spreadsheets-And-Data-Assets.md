@@ -375,7 +375,7 @@ are real values and are kept.
 object has reads as NOT matching, so a typo shows up.
 
 ```
-Every Frame
+On Process
   Condition: Matches Properties Of  Ghost, "position, rotation", Player  (inverted)
     -> tint the desync warning red
 ```

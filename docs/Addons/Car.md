@@ -359,7 +359,7 @@ Low grip across the arena forces the player to plan every turn, which reads as a
 Show the live handling values on a debug HUD by reading the expressions each frame - handy while you dial in the feel.
 
 ```
-Every tick
+On process
   -> set TopSpeedLabel.text to Car | CarBehavior: Max Speed
   -> set GripLabel.text to Car | CarBehavior: Drift Recover
 ```

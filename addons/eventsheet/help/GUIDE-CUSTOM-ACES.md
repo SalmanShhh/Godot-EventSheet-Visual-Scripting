@@ -750,7 +750,7 @@ descriptors.append(F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds",
 
 All three receive the same `{uid}` and `{param}` substitutions ({uid} is baked fresh per applied
 instance, so two rows never share state). Stateful conditions only make sense inside per-frame
-triggers (Every Frame, On Physics Process) where `delta` exists; the compiler does not stop you from
+triggers (On Process, On Physics Process) where `delta` exists; the compiler does not stop you from
 using one elsewhere, so do not.
 
 The prelude and on-true must each be a SINGLE statement (they are emitted as one indented line inside

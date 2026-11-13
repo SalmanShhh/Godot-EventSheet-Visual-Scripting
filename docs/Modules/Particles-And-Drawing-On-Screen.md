@@ -240,7 +240,7 @@ func _process(delta: float) -> void:
 is held.
 
 ```
-Every Frame
+On Process
   Condition: fire is pressed
     -> Draw Dashed Line  On: self, from 0,0 to aim_x, aim_y, dash 12, gap 8, width 2
 ```
@@ -261,7 +261,7 @@ func _process(delta: float) -> void:
 ```
 On unit selected
   -> Set Auto Clear  On: Unit, true
-Every Frame
+On Process
   -> Draw Ring  On: Unit, x 0, y 0, radius 20, width 2
 ```
 
@@ -269,7 +269,7 @@ Every Frame
 redrawn while the aim is held.
 
 ```
-Every Frame
+On Process
   Condition: aiming
     -> Draw Dashed Ring  On: self, x land_x, y land_y, radius 96, dash 12, gap 8, width 2
 ```

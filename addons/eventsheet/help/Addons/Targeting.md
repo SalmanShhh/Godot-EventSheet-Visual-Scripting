@@ -74,7 +74,7 @@ The pack is small, and five ideas carry all of it.
 On Input Action Just Pressed  "lock_on"
   -> Player | Targeting: Lock On To Nearest  "enemies", 60, 400
 
-Every tick
+On process
   Condition: Player | Targeting  Is Locked On
     -> Reticle: Set Position to  Player | Targeting: Locked Target On Screen
     -> Reticle: Show
@@ -203,7 +203,7 @@ On Player | Targeting: On Target Locked
 Locked Target On Screen already accounts for camera zoom and scroll, so a reticle living on a CanvasLayer needs no conversion of its own.
 
 ```
-Every tick
+On process
   Condition: Player | Targeting  Is Locked On
     -> Reticle: Set Position to  Player | Targeting: Locked Target On Screen
 ```
@@ -240,7 +240,7 @@ On Slider "aim_assist" Changed
 Magnetism drags the turn rate while the aim crosses something, so the stick settles on an enemy instead of sliding past it.
 
 ```
-Every tick
+On process
   -> Player: Set turn_rate to  Player | Targeting: Magnetism  Player.base_turn_rate
   -> Player: Rotate by  Player.aim_stick.x * Player.turn_rate * delta
 ```
@@ -260,7 +260,7 @@ On Input Action Just Pressed  "fire"
 Is Locked On is the whole gate. Free camera when nothing is held, framed camera when something is.
 
 ```
-Every tick
+On process
   Condition: Player | Targeting  Is Locked On
     -> Camera | Look At: Look At  Player | Targeting: Locked Target  over 0.2 s
   Else

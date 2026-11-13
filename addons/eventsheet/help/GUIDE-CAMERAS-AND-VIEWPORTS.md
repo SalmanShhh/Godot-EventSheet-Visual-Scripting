@@ -146,8 +146,8 @@ could only be asked by the camera, which already knows. **Current Camera (3D)** 
 dimension where the live camera changes on every cutscene and every vehicle you climb into.
 
 ```
-Every Frame + Enemy is inside the view of the current camera, margin 200   ->  Enemy | Show
-Every Frame + [not] Enemy is inside the view of the current camera, margin 200  ->  Enemy | Hide
+On Process + Enemy is inside the view of the current camera, margin 200   ->  Enemy | Show
+On Process + [not] Enemy is inside the view of the current camera, margin 200  ->  Enemy | Hide
 ```
 
 ## The 3D camera: the shot, the lens and the clip range
@@ -232,7 +232,7 @@ necessarily the camera the pointer is inside.
 > looks like a physics bug and is not one.
 
 ```
-Every Frame + something is under the cursor within 1000  ->  Ghost | Set Position (3D) to <the point under the cursor within 1000>
+On Process + something is under the cursor within 1000  ->  Ghost | Set Position (3D) to <the point under the cursor within 1000>
 ```
 
 ## A shot list for a camera

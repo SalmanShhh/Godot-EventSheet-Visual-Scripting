@@ -137,7 +137,7 @@ for you.
 ```
 On Ready     -> World | Decal Painter: Set Max Decals  400
 On Paint Hit -> World | Decal Painter: Spawn Decal  $SplatTex, hx, hy, hz, 0.6, random(360), 0
-Every tick   -> set HUD score to Decal Count
+On process   -> set HUD score to Decal Count
 ```
 
 Raise the cap first - the default 64 would quietly recycle your score.

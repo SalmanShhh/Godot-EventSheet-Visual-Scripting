@@ -260,7 +260,7 @@ The trigger says the plan is over; the group count says the fight is.
 **5. A countdown to the next wave.**
 
 ```
-Every tick
+On process
   Condition: Arena  Encounter Is Running
     -> set NextLabel text = str(Arena.Next Entry Seconds() - Arena.Elapsed Seconds())
 ```
@@ -268,7 +268,7 @@ Every tick
 **6. A progress bar for the whole encounter.**
 
 ```
-Every tick
+On process
   -> set WaveBar value = Arena.Elapsed Seconds() / Arena.Encounter Duration() * 100
 ```
 

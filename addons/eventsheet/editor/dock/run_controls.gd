@@ -27,21 +27,21 @@ extends RefCounted
 const BUTTONS: Array = [
 	["run_scene", "Run Scene",
 		"Save, then play the scene that uses this sheet's script.", "Play", ""],
-	["debug_layout", "🐞 Debug layout",
-		"Run this layout with the sheet's own debugger armed: Event Trace lights the rows as they fire, Live Values streams the variables, and rows with a breakpoint pause the game.",
+	["debug_layout", "🐞 Debug scene",
+		"Run this scene with the sheet's own debugger armed: Event Trace lights the rows as they fire, Live Values streams the variables, and rows with a breakpoint pause the game.",
 		"Debug", "debug_layout"],
 	["run_profiler", "⏱ Run with profiler",
-		"Run this layout with the trace armed and the costs lens on. Play for a while, stop, and every row wears what one fire of it cost - kept until you clear it, and still there when you open the editor tomorrow.",
+		"Run this scene with the trace armed and the costs lens on. Play for a while, stop, and every row wears what one fire of it cost - kept until you clear it, and still there when you open the editor tomorrow.",
 		"Timer", ""],
 	["host_client", "Play as host + client", "", "Instance", ""],
-	["preview_layout", "▶ Preview layout",
+	["preview_layout", "▶ Preview scene",
 		"Run the scene this sheet's script is on (F6). The sheet keeps running beside it.",
 		"PlayScene", "preview_layout"],
 	# MainPlay, not MainScene: the editor ships no icon called MainScene (probed against the running
 	# 4.7 editor theme), so this entry arrived iconless on the face, in the dropdown and on the
 	# expanded strip. MainPlay is the icon Godot's own run bar wears for exactly this run.
 	["preview_project", "▶▶ Preview project",
-		"Run the project's main scene (F5) - the whole game from its start, not just this layout.",
+		"Run the project's main scene (F5) - the whole game from its start, not just this scene.",
 		"MainPlay", "preview_project"],
 ]
 
@@ -293,18 +293,18 @@ func activate(button_id: String) -> void:
 	refresh()
 
 
-## Debug layout is the ordinary run with the sheet's own debugger turned on first - the three
-## switches the Tools menu already offers, flipped together so "debug this layout" is one gesture.
+## Debug scene is the ordinary run with the sheet's own debugger turned on first - the three
+## switches the Tools menu already offers, flipped together so "debug this scene" is one gesture.
 func _arm_debugger() -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
 	if sheet == null:
 		return
 	# Set the flags rather than calling the toggles: a toggle turns a switch that is already on back
-	# OFF, and "Debug layout" must always end with all three armed.
+	# OFF, and "Debug scene" must always end with all three armed.
 	sheet.emit_event_trace = true
 	sheet.emit_live_values = true
 	sheet.emit_breakpoints = true
-	_dock._set_status(EventSheetL10n.translate("Debug layout: Event Trace, Live Values and breakpoints are on for this run."))
+	_dock._set_status(EventSheetL10n.translate("Debug scene: Event Trace, Live Values and breakpoints are on for this run."))
 
 
 func _play_current() -> void:

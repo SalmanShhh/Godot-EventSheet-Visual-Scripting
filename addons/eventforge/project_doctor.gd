@@ -834,7 +834,7 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		# the EDITOR's own tree, not the scene being edited, which is almost never what was meant.
 		if output.contains("get_tree().get_nodes_in_group(") or output.contains("get_tree().call_group("):
 			_add(findings, "info", "editor-tool-scope", sheet_path,
-				"This editor tool reaches for nodes through get_tree(), which in the editor is the editor's own tree and not the layout you have open. Walk Editor.OpenLayout (the edited scene root) instead, or the tool will find nothing - or the wrong thing.")
+				"This editor tool reaches for nodes through get_tree(), which in the editor is the editor's own tree and not the scene you have open. Walk Editor.OpenScene (the edited scene root) instead, or the tool will find nothing - or the wrong thing.")
 		# 1b. The same mistake one step subtler, and the one every first tool makes. A tool that
 		# CHANGES the scene while addressing nodes by path is addressing them against itself: an
 		# EditorScript or an EditorPlugin is not in the scene you have open, so `get_node("Player")`
@@ -842,12 +842,12 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		# Reaching the edited scene root anywhere in the file is the opt-out, because that IS the fix.
 		if _touches_nodes_outside_open_layout(output):
 			_add(findings, "info", "editor-tool-outside-layout", sheet_path,
-				"This editor tool changes nodes it looked up by path, but never starts from the layout you have open - so in the editor those paths resolve against the editor itself and the change lands outside your scene (or nowhere). Start from Editor.OpenLayout (the edited scene root) and walk down from there.")
+				"This editor tool changes nodes it looked up by path, but never starts from the scene you have open - so in the editor those paths resolve against the editor itself and the change lands outside your scene (or nowhere). Start from Editor.OpenScene (the edited scene root) and walk down from there.")
 		# 2. Destroying things while editing. A queue_free in the editor deletes from the OPEN scene,
 		# and without an undo step the only way back is to close the scene without saving.
 		if output.contains("queue_free()") and not output.contains("create_action("):
 			_add(findings, "info", "editor-tool-destroy", sheet_path,
-				"This editor tool calls Destroy while running in the editor, so it deletes from the layout you have open. Register an undo step around it, or the only way back is closing the scene without saving.")
+				"This editor tool calls Destroy while running in the editor, so it deletes from the scene you have open. Register an undo step around it, or the only way back is closing the scene without saving.")
 		# 3. Ticking in the editor with no way to switch it off - the guard.
 		if _ticks_without_editor_guard(output):
 			_add(findings, "info", "editor-tool-tick", sheet_path,
@@ -1132,7 +1132,7 @@ static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Arr
 			if not _is_setup_only_blank_event(event):
 				continue
 			_add(findings, "info", "every-tick-setup", sheet_path,
-				"This blank event runs every tick and only sets values - did you mean On start of layout?",
+				"This blank event runs on process and only sets values - did you mean On ready?",
 				int(numbers.get(event.get_instance_id(), 0)))
 
 

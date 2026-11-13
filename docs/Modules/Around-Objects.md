@@ -166,7 +166,7 @@ the rest of the clipboard family.
 
 ## Use cases
 
-**1. A turret that fires at the closest enemy.** Every tick, Pick Nearest of the "enemy" group to the turret's own position into `target`, then, when `target` exists, turn toward it and shoot. No throwaway "best distance" variable and no loop in sight.
+**1. A turret that fires at the closest enemy.** On process, Pick Nearest of the "enemy" group to the turret's own position into `target`, then, when `target` exists, turn toward it and shoot. No throwaway "best distance" variable and no loop in sight.
 
 **2. A homing missile that keeps its lock.** Pick Nearest once when the missile is created, remember the target's UID, and every tick Pick By UID to get it back - so the missile keeps chasing the one it started on, and gives up cleanly when that one is destroyed.
 

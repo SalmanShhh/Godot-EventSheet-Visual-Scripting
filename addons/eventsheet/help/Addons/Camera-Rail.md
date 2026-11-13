@@ -133,7 +133,7 @@ Is Flying is true for a flight and false for a hold or a blend, which is exactly
 cinematic border wants asked.
 
 ```
-Every tick
+On process
   Condition: Rail | Camera Rail: Is Flying     -> show LetterBox
   Condition: [X] Rail | Camera Rail: Is Flying -> hide LetterBox
 ```
@@ -144,7 +144,7 @@ Rail Progress runs 0 to 1 over whatever shot is running, so one expression drive
 a music cue.
 
 ```
-Every tick -> set SkipHint.modulate.a to Rail | Camera Rail: Rail Progress
+On process -> set SkipHint.modulate.a to Rail | Camera Rail: Rail Progress
 ```
 
 ### 7. Two rails, one scene

@@ -44,7 +44,7 @@ of songs anywhere in the editor.
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ On start of layout | **Music** ▸ Play **"forest"**, fade **2** s |
+| **System** ▸ On ready | **Music** ▸ Play **"forest"**, fade **2** s |
 | **Boss** ▸ On defeated | **Music** ▸ Crossfade to **"victory"** over **1.5** s |
 
 ```gdscript
@@ -127,7 +127,7 @@ with a slow buffer. A position cannot drift, because it is the position.
 | Condition | Actions |
 | --- | --- |
 | **Music** ▸ On beat | **Pulse** ▸ Set **scale** to **Vector2(1.1, 1.1)** |
-| **System** ▸ Every tick | **Lamp** ▸ Set **energy** to **1 + Music.Beat Phase() * 0.4** |
+| **System** ▸ On process | **Lamp** ▸ Set **energy** to **1 + Music.Beat Phase() * 0.4** |
 
 ```gdscript
 extends Node
@@ -307,7 +307,7 @@ tag typed by hand into a string, and a custom effect was a class nobody found.
 
 | Condition | Actions |
 | --- | --- |
-| **Title** ▸ On start of layout | **Title** ▸ Set text to **"Starfall"** with **wave** |
+| **Title** ▸ On ready | **Title** ▸ Set text to **"Starfall"** with **wave** |
 | **Enemy** ▸ On killed | **DamageLabel** ▸ Set text to **"CRITICAL"** with **shake** |
 
 ```gdscript
@@ -451,7 +451,7 @@ the string is assembled from a field that lists the tree's **own** names, read o
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ Every tick | **Anim** ▸ Set **Locomotion** blend to **move_input** |
+| **System** ▸ On process | **Anim** ▸ Set **Locomotion** blend to **move_input** |
 | **Input** ▸ On **"attack"** pressed + **Anim** ▸ Is in state **["Idle", "Run"]** | **Anim** ▸ Travel to **&"Swing"** |
 | **Player** ▸ Is locked on | **Anim** ▸ Blend layer **Aim** to **1**, over **0.2** s |
 
@@ -511,7 +511,7 @@ that step to the body.
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ Every physics tick | **Player** ▸ Apply root motion from *$Anim*, scale **1** |
+| **System** ▸ On physics process | **Player** ▸ Apply root motion from *$Anim*, scale **1** |
 | | **Player** ▸ Move and slide |
 
 ```gdscript

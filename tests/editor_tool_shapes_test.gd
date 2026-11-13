@@ -39,7 +39,7 @@ static func _test_shape_list() -> bool:
 		",".join(ids), "10,12,13,14,15,16,17,18,19,20,21,22,23,24,25") and all_passed
 	all_passed = _check("the list reads in the submenu's order and words",
 		" | ".join(labels),
-		"One-click chore | Editor plugin | Importer add-on | Export hook | Dock panel | Bottom panel | Tools menu item | Properties bar add-on | Context menu item | Layout view handle | Thumbnail maker | Debugger panel | Command tool | Test sheet | Object type") and all_passed
+		"One-click chore | Editor plugin | Importer add-on | Export hook | Dock panel | Bottom panel | Tools menu item | Inspector add-on | Context menu item | Viewport overlay | Thumbnail maker | Debugger panel | Command tool | Test sheet | Object type") and all_passed
 	var new_labels: PackedStringArray = PackedStringArray()
 	for starter: Dictionary in EventSheetStarterTemplates.create_new_starters():
 		if int(starter["id"]) == 23:
@@ -108,7 +108,7 @@ static func _test_sheet_type_dialog() -> bool:
 		EventSheetSheetTypeDialog.TYPE_HINTS.size(), 12) and all_passed
 	all_passed = _check("the add-on line names the six shapes rather than the concept",
 		EventSheetSheetTypeDialog.TYPE_HINTS[10],
-		"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.") and all_passed
+		"A piece a plugin hands the editor: an Inspector add-on, importer, thumbnail maker, debugger panel, context menu or view handle.") and all_passed
 	all_passed = _check("the command-tool line says where it runs",
 		EventSheetSheetTypeDialog.TYPE_HINTS[11],
 		"A script the Godot binary runs headless from the command line, with arguments and an exit code.") and all_passed
@@ -137,7 +137,7 @@ static func _test_sheet_type_dialog() -> bool:
 static func _test_intents() -> bool:
 	var all_passed: bool = true
 	var addon: EventSheetResource = EventSheetStarterTemplates.build_starter(18)
-	all_passed = _check("a Properties bar add-on reopens as an editor add-on",
+	all_passed = _check("a Inspector add-on reopens as an editor add-on",
 		EventSheetScriptIntent.of_sheet(addon), EventSheetScriptIntent.Intent.EDITOR_ADDON) and all_passed
 	var command: EventSheetResource = EventSheetStarterTemplates.build_starter(23)
 	all_passed = _check("a SceneTree script reopens as a command tool",
@@ -352,8 +352,8 @@ static func _test_picker_pages() -> bool:
 			["AddEditorDock", "Editor Tools: Panels & menus"],
 			["AddEditorObjectType", "Editor Tools: Panels & menus"],
 			["AddEditorWindow", "Editor Tools: Panels & menus"],
-			["AddEditorInspectorPlugin", "Editor Tools: Properties bar"],
-			["RemoveEditorInspectorPlugin", "Editor Tools: Properties bar"],
+			["AddEditorInspectorPlugin", "Editor Tools: Inspector"],
+			["RemoveEditorInspectorPlugin", "Editor Tools: Inspector"],
 			["EditorUndoHistory", "Editor Tools: Undo history"],
 			["EditorSettingsObject", "Editor Tools: Project & preferences"],
 			["OnFileImported", "Editor Tools: Import & export"],
@@ -370,7 +370,7 @@ static func _test_picker_pages() -> bool:
 			["EditorSelectedNodes", "Editor Tools"]]:
 		all_passed = _check("%s is filed on its own surface" % str(pair[0]),
 			str(filed.get(str(pair[0]), "")), str(pair[1])) and all_passed
-	for page: String in ["Editor Tools: Plugin lifecycle", "Editor Tools: Properties bar",
+	for page: String in ["Editor Tools: Plugin lifecycle", "Editor Tools: Inspector",
 			"Editor Tools: Undo history", "Editor Tools: Files & folders",
 			"Editor Tools: Import & export", "Editor Tools: Command tool", "Editor Tools: Menus"]:
 		all_passed = _check("the %s page is gated to tool sheets" % page,
@@ -435,11 +435,11 @@ static func _test_command_tool_rows() -> bool:
 static func _test_glossary_hover() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("the sheet's word hovers as Godot's",
-		EventSheetWords.glossary_hover_for("Properties bar", true, {}),
-		"Properties bar - Godot calls this Inspector.\nThe properties panel and its add-ons.") and all_passed
+		EventSheetWords.glossary_hover_for("View handle", true, {}),
+		"View handle - Godot calls this Gizmo.\nSomething drawn over the 2D or 3D view.") and all_passed
 	all_passed = _check("and Godot's hovers as the sheet's",
-		EventSheetWords.glossary_hover_for("Inspector", false, {}),
-		"Inspector - this sheet calls it Properties bar.\nThe properties panel and its add-ons.") and all_passed
+		EventSheetWords.glossary_hover_for("Gizmo", false, {}),
+		"Gizmo - this sheet calls it View handle.\nSomething drawn over the 2D or 3D view.") and all_passed
 	all_passed = _check("a command tool says what a SceneTree script is",
 		EventSheetWords.glossary_hover_for("Command tool", true, {}),
 		"Command tool - Godot calls this SceneTree script.\nA script run from the command line.") and all_passed
@@ -454,9 +454,9 @@ static func _test_glossary_hover() -> bool:
 	for key: String in EventSheetWords.EDITOR_KEYS:
 		if not EventSheetWords.glossary_hover_for(EventSheetWords.familiar_default(key), true, {}).is_empty():
 			covered += 1
-	# Tools menu and FileSystem dock are spelled identically in both vocabularies, so twenty-two of
+	# Tools menu and FileSystem dock are spelled identically in both vocabularies, so twenty of
 	# the twenty-four have something to say. A lens that answered for all of them would be padding.
-	all_passed = _check("every editor noun with two spellings carries the lens", covered, 22) and all_passed
+	all_passed = _check("every editor noun with two spellings carries the lens", covered, 20) and all_passed
 	return all_passed
 
 

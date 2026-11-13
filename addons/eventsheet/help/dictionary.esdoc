@@ -61,7 +61,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_do_property` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_do_reference` | [Add Node (Undoable)](ace:Core/AddNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
-| `add_inspector_plugin` | [Add Properties Bar Add-on](ace:Core/AddEditorInspectorPlugin) | Editor Tools: Properties bar | Vocabulary |
+| `add_inspector_plugin` | [Add Inspector Add-on](ace:Core/AddEditorInspectorPlugin) | Editor Tools: Inspector | Vocabulary |
 | `add_item` | [Add Item](ace:Core/MenuAddItem) | Editor Tools: Menus | Vocabulary |
 | `add_node` | [Select Node In Editor](ace:Core/SelectNodeInEditor) | Editor Tools | Vocabulary |
 | `add_theme_color_override` | [Set Font Colour](ace:Core/SetFontColour) | Text | Vocabulary |
@@ -154,10 +154,10 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ceil` | [Ceil](ace:Core/CeilValue) | Helpers | Vocabulary |
 | `ceili` | [Ceil (whole)](ace:Core/CeilWhole) | Helpers | Vocabulary |
 | `cfg` | [Has Saved Settings](ace:Core/OptionsHasSavedSettings) | Game Options | Vocabulary |
-| `change_scene_to_file` | [Go To Layout](ace:Core/ChangeScene) | Scene | Vocabulary |
-| `change_scene_to_packed` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
+| `change_scene_to_file` | [Change Scene](ace:Core/ChangeScene) | Scene | Vocabulary |
+| `change_scene_to_packed` | [Go To Loaded Scene](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
 | `circle` | [Draw Circle On Node](ace:Core/DrawCircle) | Drawing | Vocabulary |
-| `clamp` | [Bound To Layout](ace:Core/BoundToLayout) | Layout Edges | Vocabulary |
+| `clamp` | [Bound To Scene](ace:Core/BoundToLayout) | Scene Edges | Vocabulary |
 | `clampf` | [Adjust Camera FOV](ace:Core/AdjustCameraFov) | Camera | Vocabulary |
 | `clampi` | [Clamp (int)](ace:Core/ClampIntValue) | Helpers | Vocabulary |
 | `clear` | [Clear Dictionary](ace:Core/DictClear) | Variables: Dictionary | Vocabulary |
@@ -523,7 +523,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_value` | [Load Setting Into Variable](ace:Core/LoadSettingInto) | Utility: Settings | Vocabulary |
 | `get_vector` | [Move Vector](ace:Core/InputMoveVector) | Input | Vocabulary |
 | `get_viewport` | [Current Camera](ace:Core/CurrentCamera2D) | Camera | Vocabulary |
-| `get_viewport_rect` | [Is Outside Layout](ace:Core/IsOutsideLayout) | General Conditions | Vocabulary |
+| `get_viewport_rect` | [Is Outside Screen](ace:Core/IsOutsideLayout) | General Conditions | Vocabulary |
 | `get_viewport_rid` | [Set MSAA (2D)](ace:Core/RenderingSetMsaa2D) | Rendering | Vocabulary |
 | `get_visible_rect` | [Canvas Centre](ace:Core/CanvasCentre) | Canvas | Vocabulary |
 | `get_wall_normal` | [Wall Normal](ace:Core/GetWallNormal) | Collisions | Vocabulary |
@@ -674,9 +674,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `load` | [Use Palette](ace:Core/UsePalette) | Accessibility | Vocabulary |
 | `load_from_file` | [Sound From File](ace:Core/LoadSoundFile) | Files | Vocabulary |
 | `load_from_project_settings` | [Reset All Bindings](ace:Core/InputResetBindings) | Keyboard | Vocabulary |
-| `load_threaded_get` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
-| `load_threaded_get_status` | [Layout Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |
-| `load_threaded_request` | [Load Layout In The Background](ace:Core/LoadLayoutInBackground) | Scene | Vocabulary |
+| `load_threaded_get` | [Go To Loaded Scene](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
+| `load_threaded_get_status` | [Scene Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |
+| `load_threaded_request` | [Load Scene In The Background](ace:Core/LoadLayoutInBackground) | Scene | Vocabulary |
 | `local_to_map` | [Position To Tile](ace:Core/TileMapLocalToMap) | Tilemap | Vocabulary |
 | `locked_door_tried` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |
 | `look_at` | [Look At](ace:Core/LookAt3D) | General Actions | Vocabulary |
@@ -831,7 +831,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `region_rect` | [Set Bar Width](ace:Core/SetBarWidth) | World-space UI | Vocabulary |
 | `relative` | [Mouse Move Delta (event)](ace:Core/MouseMotionDelta) | Mouse | Vocabulary |
 | `release_focus` | [Release Focus](ace:Core/ReleaseFocus) | UI | Vocabulary |
-| `reload_current_scene` | [Restart Layout](ace:Core/ReloadScene) | Scene | Vocabulary |
+| `reload_current_scene` | [Reload Scene](ace:Core/ReloadScene) | Scene | Vocabulary |
 | `remap` | [Rescale](ace:Core/RescaleInto) | Math & Random | Vocabulary |
 | `remote_path` | [Copy Place To](ace:Core/CopyPlaceTo) | Nodes: Hierarchy | Vocabulary |
 | `remove_absolute` | [Delete File](ace:Core/DeleteFile) | Files | Vocabulary |
@@ -842,7 +842,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_custom_type` | [Remove Object Type](ace:Core/RemoveEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
 | `remove_exception` | [Stop Ignoring Node In RayCast (2D)](ace:Core/RayCast2DRemoveException) | Raycast 2D | Vocabulary |
 | `remove_from_group` | [Remove From Group](ace:Core/RemoveFromGroup) | Groups | Vocabulary |
-| `remove_inspector_plugin` | [Remove Properties Bar Add-on](ace:Core/RemoveEditorInspectorPlugin) | Editor Tools: Properties bar | Vocabulary |
+| `remove_inspector_plugin` | [Remove Inspector Add-on](ace:Core/RemoveEditorInspectorPlugin) | Editor Tools: Inspector | Vocabulary |
 | `remove_item` | [Remove Item](ace:Core/ListRemoveItem) | UI | Vocabulary |
 | `remove_meta` | [Remove Metadata](ace:Core/RemoveMeta) | Metadata | Vocabulary |
 | `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
@@ -866,7 +866,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `reverse` | [Reverse Array](ace:Core/ArrayReverse) | Variables: Array | Vocabulary |
 | `right` | [Right](ace:Core/TextRight) | Text | Vocabulary |
 | `ring` | [Draw Ring](ace:Core/DrawRing) | Drawing | Vocabulary |
-| `root` | [Layout Is On Top](ace:Core/LayoutIsOnTop) | Scene | Vocabulary |
+| `root` | [Scene Is On Top](ace:Core/LayoutIsOnTop) | Scene | Vocabulary |
 | `rotate` | [Rotate (3D)](ace:Core/RotateNode3D) | General Actions | Vocabulary |
 | `rotate_toward` | [Rotate Toward (angle)](ace:Core/RotateTowardAngle) | Math & Random | Vocabulary |
 | `rotate_x` | [Rotate Up Or Down](ace:Core/RotatePitch3D) | 3D: Move & Turn | Vocabulary |
@@ -875,7 +875,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `rotated` | [Rotated](ace:Core/VectorRotated) | Variables: Vector | Vocabulary |
 | `rotates` | [Set Rotate With Path](ace:Core/SetPathRotates) | Follow a Path | Vocabulary |
 | `rotation` | [Pin Angle To](ace:Core/PinAngleToObject) | Pin | Vocabulary |
-| `rotation_degrees` | [Rotate Clockwise](ace:Core/RotateClockwise) | Layout Edges | Vocabulary |
+| `rotation_degrees` | [Rotate Clockwise](ace:Core/RotateClockwise) | Scene Edges | Vocabulary |
 | `rotation_smoothing_enabled` | [Smooth Turns](ace:Core/CameraSmoothTurns) | Camera | Vocabulary |
 | `rotation_smoothing_speed` | [Smooth Turns](ace:Core/CameraSmoothTurns) | Camera | Vocabulary |
 | `roughness` | [Roughness](ace:Core/MaterialRoughness) | Material | Vocabulary |

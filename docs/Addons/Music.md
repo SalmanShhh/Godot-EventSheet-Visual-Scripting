@@ -228,7 +228,7 @@ On Beat -> Player | Juice: Punch Scale  1.1
 Beat Phase runs 0 to 1 within every beat, which is exactly the shape a pulse wants.
 
 ```
-Every tick -> Lamp | set energy to 1 + Music.Beat Phase() * 0.4
+On process -> Lamp | set energy to 1 + Music.Beat Phase() * 0.4
 ```
 
 ### 11. Grading a press against the song
@@ -312,7 +312,7 @@ Position In Bars says where the song is; the level reads it rather than keeping 
 own.
 
 ```
-Every tick  Music.Position In Bars() > 16 -> Spawner | Set Wave  2
+On process  Music.Position In Bars() > 16 -> Spawner | Set Wave  2
 ```
 
 ### Other use cases

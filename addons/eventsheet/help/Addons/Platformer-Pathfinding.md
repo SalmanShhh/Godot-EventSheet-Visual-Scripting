@@ -397,7 +397,7 @@ Auto control off; the sheet reads the intents and drives its own animation-heavy
 
 ```
 On Ready    -> Boss | Pathfinding: Set Auto Control  false
-Every tick
+On process
   -> set my_velocity_x to $Boss/Pathfinding.path_move_axis() * 260
   Condition: Boss | Pathfinding: Path Wants Jump
     -> (trigger the leap animation, then apply the jump)
@@ -449,7 +449,7 @@ stalling the frame.
 ```
 On Ready         -> Enemy | Pathfinding: Set Max Paths Per Tick  4
 Every 1 seconds  -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
-Every tick
+On process
   Condition: Enemy | Pathfinding: Is Path Pending
     -> (keep running the current animation - the route arrives next tick)
 ```
@@ -482,7 +482,7 @@ Every 0.5 seconds
 Current Path Action names what the current leg is - the whole animation switch in one expression.
 
 ```
-Every tick
+On process
   Condition: Current Path Action is "walk"  -> play "run"
   Condition: Current Path Action is "jump"  -> play "leap"
   Condition: Current Path Action is "fall"  -> play "fall"
@@ -622,7 +622,7 @@ you off - no setup, the scan reads the polygon.
 
 ```
 Every 1 seconds -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
-Every tick
+On process
   Condition: Current Path Action is "fall_through"  -> play "drop"
 ```
 

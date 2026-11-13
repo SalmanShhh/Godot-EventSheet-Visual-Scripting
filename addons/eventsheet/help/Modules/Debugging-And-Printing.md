@@ -152,7 +152,7 @@ it, whether that is Log Measurements, a label, or the Debug Overlay pack.
 | Log Measurements | Prints every named measurement with its last, average and peak cost. | a loop over the stats dictionary into `print(...)` |
 | Clear Measurements | Throws away every measurement recorded so far. | `set_meta(&"__ef_spans", {})` |
 
-**Both conditions need a per-frame trigger** (Every Frame). Frame Took Longer Than asks about the
+**Both conditions need a per-frame trigger** (On Process). Frame Took Longer Than asks about the
 frame it is evaluated on, and FPS Below For has to be reached every frame to keep its clock honest.
 **FPS Below For is the one that tells a real drop apart from one stuttery frame**: the framerate has
 to stay under the floor for the whole window, and one healthy frame re-arms it from the beginning.
@@ -309,33 +309,33 @@ func _process(delta: float) -> void:
 signature of a leak, and it shows up long before the frame rate does.
 
 ```
-Every Frame
+On Process
   -> Set Property  DebugLabel.text = "nodes: " + str( Performance Monitor(Performance.OBJECT_NODE_COUNT) )
 ```
 
 **16. Check draw calls before blaming the CPU.**
 
 ```
-Every Frame
+On Process
   -> Set Property  DrawLabel.text = "draws: " + str( Performance Monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME) )
 ```
 
 **17. Show memory in megabytes.** Static Memory hands back bytes, so divide.
 
 ```
-Every Frame
+On Process
   -> Set Property  MemLabel.text = str( Static Memory (bytes) / 1048576 ) + " MB"
 ```
 
 **18. A one-row debug HUD.** Three monitors joined into one label beats three separate readouts.
 
 ```
-Every Frame
+On Process
   -> Set Property  Hud.text = "fps " + str(Performance Monitor(Performance.TIME_FPS))
        + "  nodes " + str(Performance Monitor(Performance.OBJECT_NODE_COUNT))
 ```
 
-**19. Keep the last two seconds of fall speed.** One Remember In Trail row under Every Frame, and the
+**19. Keep the last two seconds of fall speed.** One Remember In Trail row under On Process, and the
 two seconds before any bug are still there when you go looking. Nothing is displayed; it just records.
 
 ```gdscript
@@ -576,7 +576,7 @@ func _on_run_started() -> void:
 - **The Log row's trailing comment is deliberate.** `# @ace:Core.ConsoleLog` is what makes the row reopen
   as Log rather than as Print or Push Warning. Deleting it by hand in the generated file does not break
   the game, but the row comes back as a different action.
-- **Per-frame printing is genuinely slow.** A print in an Every Frame event costs real milliseconds and
+- **Per-frame printing is genuinely slow.** A print in an On Process event costs real milliseconds and
   can itself cause the hitch you are hunting. Gate it with Log If, or use Log (Debug Builds Only), or
   put the value on a label instead of in the console.
 - **Warnings and errors survive; prints scroll away.** For anything you want to still be able to find at
@@ -596,7 +596,7 @@ func _on_run_started() -> void:
   nobody has filled yet is false, which is the safe answer, but do not print the number raw into a HUD.
 - **Save Trail To CSV needs a `user://` path.** A `res://` path is read-only in an exported game, so
   the file silently never appears for the playtester whose data you actually wanted.
-- **Both performance conditions need Every Frame.** Frame Took Longer Than asks about the frame it is
+- **Both performance conditions need On Process.** Frame Took Longer Than asks about the frame it is
   evaluated on, and FPS Below For keeps a clock that only stays honest if the row is reached each frame.
 - **Stop Measuring without a Start reads as zero, not as an error.** A stopwatch you forgot to start
   files a 0 ms sample, which quietly drags the average down. If a measurement looks impossibly good,
@@ -645,7 +645,7 @@ A new Run resets it automatically.
    read the counts: the branch with the biggest number is the one players actually see.
 6. **Check coverage after a refactor.** Play through the level once, then look for margins that never
    lit: those are the rows your playtest did not touch.
-7. **Teach "every tick".** Put a beginner in front of one Every Frame row with the lens on and let
+7. **Teach "every tick".** Put a beginner in front of one On Process row with the lens on and let
    them watch the number climb. It explains the frame loop in about four seconds.
 8. **Compare two runs of the same fight.** Reset Hit Counts, fight it the other way, and read the
    difference instead of guessing at it.

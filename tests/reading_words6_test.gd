@@ -6,7 +6,7 @@ extends RefCounted
 # as the GDScript they are rather than as the sheet's own row:
 #
 #   A just-pressed / just-released poll at the top of a tick handler reads as the TRIGGER it is,
-#        and the "Every tick" words go away; a HELD poll keeps them, because holding is a check
+#        and the "On process" words go away; a HELD poll keeps them, because holding is a check
 #   Numbers read the way a person writes them - 300.0 is 300, a million is grouped, 1e3 is
 #        spelled out, π/2 is named, and a 0..1 setting reads as a percentage
 #   List, table and text steps read in the List / Text modules' own words
@@ -139,7 +139,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Keyboard ▸ On \"jump\" pressed",
 	"Mouse ▸ On \"reading_words6_fire\" released",
 	# A HELD poll is a check, so its handler keeps the tick words
-	"System ▸ Every physics tick",
+	"System ▸ On physics process",
 	"Keyboard ▸ \"hold\" is down",
 	# A one-shot connection is the sheet's own Trigger once
 	"Beat ▸ On Timeout",
@@ -149,7 +149,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 ## Readings the file must NOT contain: the words each shape replaced. A reading that silently stops
 ## firing would otherwise pass the list above by never being asked about.
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
-	"System ▸ Every tick",
+	"System ▸ On process",
 	"System ▸ Add \"!\" to label",
 	"CharacterBody2D ▸ Set collision with layer 2 on",
 	"CharacterBody2D ▸ Set process mode to 3",

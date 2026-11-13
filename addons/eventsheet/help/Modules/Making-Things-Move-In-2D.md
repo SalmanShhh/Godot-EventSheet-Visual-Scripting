@@ -37,7 +37,7 @@ runtime in the output, so the emitted script is the code you would have written 
   fight its own physics.
 - **Velocity is a plan, Move And Slide executes it.** On a CharacterBody2D nothing moves until
   **Move And Slide** runs. Set velocity in as many rows as you like, then slide once, at the end, under
-  **Every Physics Tick**.
+  **On Physics Process**.
 - **Multiply by delta or the game changes with the frame rate.** Anything you add per frame - a
   position offset, a gravity pull, an acceleration - needs `delta`. **Get Delta** gives you the value;
   the gravity and acceleration actions already take a **Delta** parameter that defaults to `delta`.
@@ -181,9 +181,9 @@ picker.
 | Bounce Off Solids | Reflects the velocity off a surface **Normal**, so the shot ricochets. | `{host.}velocity = {host.}velocity.bounce({normal})` |
 | Move Toward Position | Glides this frame's share of the way toward a **Destination**. | `{host.}position = {host.}position.move_toward({destination}, {speed} * {delta_t})` |
 | Rotate Clockwise | Spins the object at **Degrees per second**. | `{host.}rotation_degrees += {degrees_per_second} * {delta_t}` |
-| Wrap Around Layout Horizontally | Off one side of the layout and back in the other. | `{host.}position.x = wrapf({host.}position.x, {low}, {high})` |
-| Wrap Around Layout Vertically | The same, top to bottom. | `{host.}position.y = wrapf({host.}position.y, {low}, {high})` |
-| Bound To Layout | Holds the object inside the layout's edges. | `{host.}position = {host.}position.clamp({low}, {high})` |
+| Wrap Around Scene Horizontally | Off one side of the layout and back in the other. | `{host.}position.x = wrapf({host.}position.x, {low}, {high})` |
+| Wrap Around Scene Vertically | The same, top to bottom. | `{host.}position.y = wrapf({host.}position.y, {low}, {high})` |
+| Bound To Scene | Holds the object inside the layout's edges. | `{host.}position = {host.}position.clamp({low}, {high})` |
 | Pin To | Puts the object at another **Object**'s place, plus an **Offset**. | `{host.}global_position = {anchor}.global_position + {offset}` |
 | Pin Angle To | Turns the object to match another **Object**'s angle. | `{host.}rotation = {anchor}.rotation` |
 
@@ -199,7 +199,7 @@ On respawn
 **2. Move a bullet by hand, every frame, frame-rate independently.**
 
 ```
-Every Frame
+On Process
   -> Move By   Vector2(600, 0) * delta
 ```
 
@@ -213,7 +213,7 @@ different on every machine.
 **3. The smallest complete platformer body.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Apply Gravity   980.0
   -> Set Velocity X   Input.get_axis(&"ui_left", &"ui_right") * 200.0
   -> Move And Slide
@@ -224,7 +224,7 @@ Three rows: pull down, steer sideways, then execute. **Move And Slide** goes las
 **4. A jump that only works on the ground.**
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: Is On Floor
   Condition: On Action Just Pressed   "ui_accept"
     -> Set Velocity Y   -420.0
@@ -236,14 +236,14 @@ through the jump.
 **5. Cap the falling speed so a long drop stays readable.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Apply Gravity (with terminal velocity)   gravity = 980.0, max fall = 700.0
 ```
 
 **6. Acceleration and braking instead of instant top speed.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Read Input Axis Into   direction  ( "ui_left" / "ui_right" )
   -> Accelerate Velocity X Toward   target speed = direction * 200.0, rate = 1500.0
   -> Move And Slide
@@ -258,7 +258,7 @@ number tunes both.
 On Body Entered ( body )
   -> Push Away From   away from = body, strength = 300.0
 
-Every Frame
+On Process
   -> Apply Pushes   friction = 8.0
 ```
 
@@ -278,18 +278,18 @@ Impulses are for RigidBody2D. Do not also write its `position` - that fights the
 **9. Steady thrust on a physics ship.**
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: Is Action Pressed   "ui_up"
     -> Apply Central Force   Vector2(0, -600)
 ```
 
-Forces are per-physics-frame and belong under **Every Physics Tick**; an impulse belongs on the event
+Forces are per-physics-frame and belong under **On Physics Process**; an impulse belongs on the event
 that happened once.
 
 **10. A turret that tracks the player at a real speed.**
 
 ```
-Every Frame
+On Process
   -> Turn Toward   target = $Player, turn speed = 180.0
 ```
 
@@ -298,14 +298,14 @@ For an instant snap, give it a huge turn speed rather than reaching for a differ
 **11. Asteroids wrap.**
 
 ```
-Every Frame
+On Process
   -> Wrap Inside The Screen
 ```
 
 **12. A pickup that hovers.**
 
 ```
-Every Frame
+On Process
   -> Bob Up And Down   height = 6.0, period = 2.0
 ```
 
@@ -315,7 +315,7 @@ you placed it in the editor.
 **13. A shield satellite.**
 
 ```
-Every Frame
+On Process
   -> Orbit Around   around = $Player, radius = 40.0, speed = 90.0
 ```
 
@@ -325,14 +325,14 @@ clock, so changing the speed mid-run does not teleport the satellite around the 
 **14. The coin magnet.**
 
 ```
-Every Frame
+On Process
   -> Pull Group Toward   group = "coins", within = 96.0, speed = 400.0
 ```
 
 **15. A prompt that only shows when you are close enough.**
 
 ```
-Every Frame
+On Process
   Condition: Is Within Distance (of a node)   of = $Chest, distance = 48.0
     -> Show
 ```
@@ -340,7 +340,7 @@ Every Frame
 **16. A platformer leash that only cares about horizontal distance.**
 
 ```
-Every Frame
+On Process
   Condition: Is Within Distance (choose metric)   of = $Player, distance = 300.0, measured as = Horizontal only
     -> Set value  chasing = true
 ```
@@ -351,7 +351,7 @@ a strategy game (King moves) alike.
 **17. Chase the player with real pathfinding.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Find Path To   $Player.global_position
   Condition: Has Arrived  (inverted)
     -> Set Velocity   (Next Path Position() - global_position).normalized() * 150.0
@@ -364,7 +364,7 @@ actually steer toward each tick.
 **18. Stop when you get there.**
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: Has Arrived
     -> Set Velocity   Vector2(0, 0)
     -> Play Animation   "idle"
@@ -373,7 +373,7 @@ Every Physics Tick
 **19. A speed readout on the HUD.**
 
 ```
-Every Frame
+On Process
   -> Set Text   str(int(Get Velocity().length())) + " px/s"
 ```
 
@@ -383,7 +383,7 @@ each when that is all you need.
 **20. Aim a sprite along the direction it is moving.**
 
 ```
-Every Frame
+On Process
   Condition: Expression Is True   velocity.length() > 1.0
     -> Set Rotation (Degrees)   rad_to_deg(velocity.angle())
 ```
@@ -415,7 +415,7 @@ func _process(delta: float) -> void:
 
 ### Other use cases
 
-**Conveyor belts.** An Every Physics Tick event that adds a fixed Vector2 to velocity with Add To Velocity while a body is inside the belt's Area gives push without changing how the body is otherwise controlled.
+**Conveyor belts.** An On Physics Process event that adds a fixed Vector2 to velocity with Add To Velocity while a body is inside the belt's Area gives push without changing how the body is otherwise controlled.
 
 **Dash with a cooldown.** Set Velocity X to a big number on the press, guarded by Cooldown Is Ready, and let Accelerate Velocity X Toward bleed it back down to walking speed on its own.
 
@@ -428,16 +428,16 @@ func _process(delta: float) -> void:
 ## Tips and common mistakes
 
 - **Nothing moves until Move And Slide runs.** Setting velocity is not movement on a CharacterBody2D.
-  Call it once, last, under **Every Physics Tick**.
+  Call it once, last, under **On Physics Process**.
 - **Do not mix movement styles on one node.** Position writes on a RigidBody2D, or impulses on a
   CharacterBody2D, produce motion that looks broken and is hard to debug. One node, one style.
 - **Negative Y is up.** **Set Velocity Y** with `-420.0` jumps; `420.0` drives into the floor.
 - **The Delta parameter expects a per-frame trigger.** **Apply Gravity**, both **Accelerate Velocity**
   actions and the gravity-with-terminal form default their **Delta** to `delta`, which only exists inside
-  **Every Frame** and **Every Physics Tick**. Under **On Ready** or a signal trigger, that default does
+  **On Process** and **On Physics Process**. Under **On Ready** or a signal trigger, that default does
   not resolve to anything.
 - **Physics belongs on the physics tick.** Gravity, velocity and **Apply Central Force** under
-  **Every Frame** will jitter, because the physics step and the render frame do not line up.
+  **On Process** will jitter, because the physics step and the render frame do not line up.
 - **Push Away From on its own does nothing visible.** It only records the impulse. **Apply Pushes**
   under a per-frame trigger is the half that moves the node, and both rows must be on the same node.
 - **The ready-made motions want a per-frame trigger.** **Bob Up And Down**, **Orbit Around**,

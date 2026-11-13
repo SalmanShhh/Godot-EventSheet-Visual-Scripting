@@ -258,7 +258,7 @@ On Menu Closed   -> Prompts: Force Device  "auto"
 The prompt draws its own ring, but a boss bar at the top of the screen can read the same number.
 
 ```
-Every tick  Prompts: Prompt Is Open -> BossBar | set value to Prompts.Prompt Time Left()
+On process  Prompts: Prompt Is Open -> BossBar | set value to Prompts.Prompt Time Left()
 ```
 
 ### 12. Slow motion while the moment lasts
@@ -284,7 +284,7 @@ On Prompt Missed  action = "parry" -> Player | Stagger  1.0
 Sequence Progress runs 0 to 1 across the whole list, which is exactly the shape a bar wants.
 
 ```
-Every tick -> SequenceBar | set value to Prompts.Sequence Progress() * 100
+On process -> SequenceBar | set value to Prompts.Sequence Progress() * 100
 ```
 
 ### 15. A dialogue choice on a timer

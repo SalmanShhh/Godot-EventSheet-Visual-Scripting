@@ -51,11 +51,11 @@ static func _test_the_dropdown() -> bool:
 	ok = _check("the dropdown lists the six ways to play, then the choice", entries,
 		PackedStringArray([
 			_t("Run Scene"),
-			_t("🐞 Debug layout"),
+			_t("🐞 Debug scene"),
 			_t("⏱ Run with profiler"),
 			_t("Play as host + client"),
 			_t("Godot's own"),
-			_with_key("▶ Preview layout", "preview_layout"),
+			_with_key("▶ Preview scene", "preview_layout"),
 			_with_key("▶▶ Preview project", "preview_project"),
 			"",
 			_t("Main button"),
@@ -72,10 +72,10 @@ static func _test_the_dropdown() -> bool:
 	ok = _check("Main button offers the same six", choice_labels,
 		PackedStringArray([
 			_t("Run Scene"),
-			_t("🐞 Debug layout"),
+			_t("🐞 Debug scene"),
 			_t("⏱ Run with profiler"),
 			_t("Play as host + client"),
-			_with_key("▶ Preview layout", "preview_layout"),
+			_with_key("▶ Preview scene", "preview_layout"),
 			_with_key("▶▶ Preview project", "preview_project"),
 		])) and ok
 	ok = _check("with Run Scene ticked in a project that never chose",
@@ -141,7 +141,7 @@ static func _test_the_face_says_stop() -> bool:
 	controls.release(face)
 	controls.adopt("debug_layout", face)
 	controls.refresh()
-	ok = _check("a re-chosen face wears the new run", face.text, _t("🐞 Debug layout")) and ok
+	ok = _check("a re-chosen face wears the new run", face.text, _t("🐞 Debug scene")) and ok
 	ok = _check("and the run it left has no adopters holding it",
 		(controls._buttons["run_scene"] as Array).size(), 0) and ok
 	face.free()

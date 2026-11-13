@@ -19,8 +19,8 @@ static func steps() -> Array[Dictionary]:
 	return [
 		{
 			"title": "The player faces the mouse",
-			"body": "Every tick, the Player turns toward the mouse. In the sheet that is one action under an Every tick event: set the Player's rotation to the direction from the Player to the mouse.",
-			"task": "Add an event with no condition (it runs every tick) and an action: Set Property on $Player, rotation = $Player.global_position.direction_to(get_global_mouse_position()).angle().",
+			"body": "On every frame the Player turns toward the mouse. In the sheet that is one action under an On process event: set the Player's rotation to the direction from the Player to the mouse.",
+			"task": "Add an event with no condition (it runs on process) and an action: Set Property on $Player, rotation = $Player.global_position.direction_to(get_global_mouse_position()).angle().",
 			"check": func(sheet: EventSheetResource) -> bool:
 				return _writes(sheet, ["get_global_mouse_position()", "rotation ="]),
 		},

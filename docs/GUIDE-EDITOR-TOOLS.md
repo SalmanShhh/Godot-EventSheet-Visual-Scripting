@@ -119,7 +119,7 @@ rows:
 | Editor Tools | The one-off chores: open / save / play the scene you are editing, select and inspect a node, add a node to the edited scene, render a scene to a picture, preview a table's odds. |
 | Editor Tools: Plugin lifecycle | What the editor calls on a plugin - switched on, switched off, handed an object to edit - and the two passes it paints over the 2D view. |
 | Editor Tools: Panels & menus | The docks, the Tools menu items, the object types, the bottom panels and the command palette entries a plugin adds and takes away. |
-| Editor Tools: Properties bar | Registering and removing a Properties bar add-on. |
+| Editor Tools: Inspector | Registering and removing a Inspector add-on. |
 | Editor Tools: Undo history | The editor's undo / redo history, so a tool's change is one Ctrl+Z away. |
 | Editor Tools: Files & folders | Writing what a tool generates back to the project: a resource to a file, a node as a scene, the folder to put them in, and whether one is already there. |
 | Editor Tools: Import & export | The two moments the editor calls a tool without being asked - just after assets are imported, and while an export is starting - plus the export flags and the version stamp. |
@@ -282,11 +282,11 @@ Four more callbacks read as what the editor wants rather than as their Godot spe
 
 ![This plugin's own plugin.gd opened as a sheet: the head bar says editor plugin, main screen "EventSheet" and icon eventsheet.svg, and the events below read as On Object Handed To Plugin](images/editor-plugin-reading.png)
 
-Every other editor plugin class Godot offers has a word of its own, and its callbacks read in that thing's voice: an `EditorInspectorPlugin` is a **Properties bar add-on** (*Asks: show this add-on for object? / On start of object's properties / On property name of object / Add control / Use editor X for property*), an `EditorImportPlugin` an **Importer add-on**, an `EditorExportPlugin` an **Export hook** (*On export begins / On file exported / On export ends / Add file to export / Skip file*), an `EditorDebuggerPlugin` a **Debugger panel**, an `EditorResourcePreviewGenerator` a **Thumbnail maker**, an `EditorContextMenuPlugin` a **Context menu**, an `EditorSyntaxHighlighter` **Code colours** and an `EditorTranslationParserPlugin` a **Text finder**. Where such a callback answers a "did this add-on take it" flag, `return true` / `return false` read as **Answer handled** / **Answer not handled**.
+Every other editor plugin class Godot offers has a word of its own, and its callbacks read in that thing's voice: an `EditorInspectorPlugin` is a **Inspector add-on** (*Asks: show this add-on for object? / On start of object's properties / On property name of object / Add control / Use editor X for property*), an `EditorImportPlugin` an **Importer add-on**, an `EditorExportPlugin` an **Export hook** (*On export begins / On file exported / On export ends / Add file to export / Skip file*), an `EditorDebuggerPlugin` a **Debugger panel**, an `EditorResourcePreviewGenerator` a **Thumbnail maker**, an `EditorContextMenuPlugin` a **Context menu**, an `EditorSyntaxHighlighter` **Code colours** and an `EditorTranslationParserPlugin` a **Text finder**. Where such a callback answers a "did this add-on take it" flag, `return true` / `return false` read as **Answer handled** / **Answer not handled**.
 
 The overlay trigger hands you the surface as `overlay`, and its body is the ordinary Drawing vocabulary: `overlay ▸ Draw circle at pos, radius 6, yellow`. The viewport-input trigger is the one editor callback that *answers*: returning true means this plugin consumed the input and the viewport must not also act on it, so an event under it has to end with a return.
 
-**Its actions** are what a plugin adds to the editor and takes away again - Add / Remove Tools Menu Item, Add / Remove Dock, Add / Remove Object Type, Add / Remove Properties Bar Add-on, and Redraw Viewport Overlays. Everything a plugin adds on the way in should be removed on the way out, or the editor keeps a dock nobody owns.
+**Its actions** are what a plugin adds to the editor and takes away again - Add / Remove Tools Menu Item, Add / Remove Dock, Add / Remove Object Type, Add / Remove Inspector Add-on, and Redraw Viewport Overlays. Everything a plugin adds on the way in should be removed on the way out, or the editor keeps a dock nobody owns.
 
 **Its expressions** are what the editor can be asked. In a row they read as the Editor's own names, so a loop over the selection says what it walks:
 

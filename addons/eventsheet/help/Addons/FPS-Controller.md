@@ -172,7 +172,7 @@ dock, the section grounds to that node's actual children before you even press R
 1. **Landing thud.** `On Landed → PlaySound "thud"` - two rows, no state tracking.
 2. **Speed pickup.** On the pickup's body_entered: `Set Move Speed 9` + `Every 5 seconds →
    Set Move Speed 5` to wear off.
-3. **Sprint FOV kick.** `Every tick + Is Sprinting → set $Player/Head/Arm/Camera3D.fov to 85`,
+3. **Sprint FOV kick.** `On process + Is Sprinting → set $Player/Head/Arm/Camera3D.fov to 85`,
    else back to 75 - Current Speed makes it proportional if you want.
 4. **Cutscene control.** `Release Mouse` + `Set Third Person true` when dialogue starts;
    `Capture Mouse` + restore on end.
@@ -186,13 +186,13 @@ dock, the section grounds to that node's actual children before you even press R
    ceiling check doubles as a "am I inside a crawlspace" test.
 9. **Parkour chain telegraph.** `On Wall Jumped → Juice 3D: Recoil 1.0 0.3` + a whoosh sound -
    every kick off a wall gets tactile feedback.
-10. **Speedometer HUD.** `Every tick → set SpeedLabel.text to round(Current Speed)` - the
+10. **Speedometer HUD.** `On process → set SpeedLabel.text to round(Current Speed)` - the
    expression is horizontal m/s, so it reads zero at the top of a straight-up jump, which is
    exactly what a speed readout should do.
 11. **Aim-down-sights.** While aim is held: `Is First Person → Set Mouse Sensitivity 0.08` (and
    narrow the camera FOV); on release `Set Mouse Sensitivity 0.25` - fine control while scoped,
    snappy turns when not.
-12. **Stamina sprint.** `Every tick + Is Sprinting → subtract 1 from stamina`; at zero
+12. **Stamina sprint.** `On process + Is Sprinting → subtract 1 from stamina`; at zero
    `Set Sprint Multiplier 1`, then once the Timer pack's regen delay refills the bar,
    `Set Sprint Multiplier 1.6` - Shift never stops working, it just stops being faster.
 13. **Slide tackle.** On touching an enemy: `Is Sliding → hurt them with the Health pack` - the
@@ -201,21 +201,21 @@ dock, the section grounds to that node's actual children before you even press R
    After re-adding the `Head`/`Arm` nodes call `Apply Camera Mode` - it re-applies the current
    mode to the new Arm, the edge case that otherwise leaves a first-person arm at third-person
    length.
-15. **Compass strip.** `Every tick → scroll the compass texture by Look Yaw` - the expression is
+15. **Compass strip.** `On process → scroll the compass texture by Look Yaw` - the expression is
    already in degrees, so 0-360 maps straight onto a wrap-around compass HUD.
 16. **Ledge jumps that never feel dropped.** Nothing to build: with Coyote Time at its 0.1 s
    default, a jump pressed a hair after walking off a rooftop still fires as the ground jump.
    Tune it in the Inspector like Jump Velocity; set it to 0 for a strict "feet on the floor"
    game, or 0.15 for a floaty, forgiving one.
-17. **Jump prompt.** `Every tick + Can Jump → show the A-button hint`, `else → hide it` - the
+17. **Jump prompt.** `On process + Can Jump → show the A-button hint`, `else → hide it` - the
    condition already knows about the floor, the coyote window, walls and banked air jumps, so
    the prompt agrees with what a press would actually do.
 18. **Hard mode / floaty power-up.** `On Setting Changed "hard_mode" → Set Coyote Time 0` and
    `On feather pickup → Set Coyote Time 0.25` + `Every 10 seconds → Set Coyote Time 0.1` to
    wear off - the same knob a designer tunes, driven by rows at runtime.
 
-19. **A weapon with weight.** `Every tick → Bob With Movement $Head/Weapon` and
-    `Every tick → Sway With Mouse $Head/Weapon` - two rows, and the thing in your hands starts
+19. **A weapon with weight.** `On process → Bob With Movement $Head/Weapon` and
+    `On process → Sway With Mouse $Head/Weapon` - two rows, and the thing in your hands starts
     behaving like an object rather than a decal on the camera. Bob Period is the footstep rhythm and
     Sway Speed is the weight: a pistol at 14 flicks, a rocket launcher at 5 wallows.
 20. **Bunny hopping.** Keep Momentum is on by default: land with jump still held and the host hops

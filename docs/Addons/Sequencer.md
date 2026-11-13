@@ -246,7 +246,7 @@ Play Sequence would replace the head anyway, so this is for when replacing it is
 Current Sequence Step is which column to light.
 
 ```
-Every tick
+On process
   Condition: Arena | Sequencer: Sequence Is Playing
     -> StepGrid: highlight column  Arena | Sequencer: Current Sequence Step  mod 16
 ```

@@ -420,7 +420,7 @@ Set Loop Count moves the number on a Loop Back card, so one list covers every ch
 Player: On charge level changed
   -> ChargeFeedback | Feedback Player: Set Loop Count  "loop_back", Player.charge_level
 
-Every tick
+On process
   -> ChargeMeter: value = ChargeFeedback | Feedback Player: Loops Left  "loop_back"
 ```
 
@@ -534,7 +534,7 @@ Reorder the cards, add a hold, retime the whole thing, and the wait is still exa
 Feedbacks Progress runs 0 to 1 down the list, and Current Feedback says which card the head is on.
 
 ```
-Every tick
+On process
   Condition: IntroFeedback | Feedback Player: Is Playing
     -> IntroBar: value = IntroFeedback | Feedback Player: Feedbacks Progress
     -> IntroLabel: text = IntroFeedback | Feedback Player: Current Feedback

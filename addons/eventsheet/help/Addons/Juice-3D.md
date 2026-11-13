@@ -224,7 +224,7 @@ On Explosion
 Pair with the FPS Controller's speed: bob when moving, stop when idle, sprint bobs faster.
 
 ```
-Every tick
+On process
   Condition: Player | FPS Controller: Current Speed > 0.5
     -> Player | Juice 3D: Start Head Bob  0.06, 2.2
   Else
@@ -283,7 +283,7 @@ The Trauma expression is the shake's live intensity - feed it straight into game
 hands feel what eyes see.
 
 ```
-Every tick
+On process
   -> Input: Start Vibration ($Player/Juice3D.current_trauma(), 0.1)
 ```
 
@@ -315,7 +315,7 @@ Jitter is a state, so bind it to a state: shaky hands under 25 health (the Healt
 the number), steady again above.
 
 ```
-Every tick
+On process
   Condition: player_health < 25
     -> Player | Juice 3D: Start Jitter  0.01, 0.4
   Else
@@ -327,7 +327,7 @@ Every tick
 Lean holds until told otherwise, so the release row is what levels you out.
 
 ```
-Every tick
+On process
   Condition: Key "q" is down      -> Player | Juice 3D: Lean  -14, 0.15
   Condition: Key "e" is down      -> Player | Juice 3D: Lean  14, 0.15
   Condition: neither key is down  -> Player | Juice 3D: Lean  0, 0.2

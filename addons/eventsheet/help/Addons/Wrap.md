@@ -185,7 +185,7 @@ retire each bullet after its second lap.
 
 ```
 On Wrapped -> Bullet | add 1 to wrap_count
-Every tick
+On process
   Condition: wrap_count >= 2 -> Bullet | queue free
 ```
 
@@ -227,4 +227,4 @@ On Ready -> Player1 | Wrap: Set Custom Wrap Bounds  0, 0, 576, 648
 the `.y` twin reads *vertically*. `wrapi`, `wrap`, `fmod` and `fposmod` are the same sentence.
 
 The event wears the pattern chip, whose Adopt behavior offers this pack. Prefer the one line? The
-picker's **Wrap Around Layout Horizontally** / **Vertically** write exactly it.
+picker's **Wrap Around Scene Horizontally** / **Vertically** write exactly it.

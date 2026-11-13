@@ -59,7 +59,7 @@ const TERMS: Array[Dictionary] = [
 	{
 		"key": "layout",
 		"term": "Layout",
-		"here": "Scene. A layout there is a .tscn here, and changing one is Go To Scene.",
+		"here": "Scene. A layout there is a .tscn here, and changing one is Change scene.",
 		"note": "",
 		"related": ["object-type"],
 	},
@@ -115,7 +115,7 @@ const TERMS: Array[Dictionary] = [
 	{
 		"key": "every-tick",
 		"term": "Every tick",
-		"here": "Every Tick, and it is still the row that runs each frame.",
+		"here": "On process, the _process callback, and it is still the row that runs each frame.",
 		"note": "Most sheets need far fewer of them here: a signal trigger reacts once instead of asking every frame.",
 		"related": ["trigger-once"],
 	},

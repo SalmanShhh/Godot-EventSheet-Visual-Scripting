@@ -157,7 +157,7 @@ Three rows, counted in SECONDS:
 Keyboard On "punch" pressed
   -> Buffer Input  punch_input for 0.1 s
 
-Every Physics Tick
+On Physics Process
   Condition: Can Act
   Condition: Is Input Buffered  punch_input
     -> Consume Buffered Input  punch_input
@@ -185,7 +185,7 @@ pair ships beside the seconds one, spelled out as such:
 Keyboard On "punch" pressed
   -> Buffer Input (Frames)  punch_input for 6 frames
 
-Every Physics Tick
+On Physics Process
   Condition: Can Act
   Condition: Is Input Buffered (Frames)  punch_input
     -> Consume Buffered Input (Frames)  punch_input

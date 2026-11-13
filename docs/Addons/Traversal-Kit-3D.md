@@ -37,7 +37,7 @@ call from the sheet, so a character grabs a ledge only when your events say it s
 
 - **The kit never moves the body on its own.** Almost every action writes `velocity` and stops. Your
   mover (the FPS Controller, or your own rows) is what turns that velocity into motion, so the kit's rows
-  belong under an **Every tick** event or a trigger, alongside the movement you already run.
+  belong under an **On process** event or a trigger, alongside the movement you already run.
 - **The two exceptions are the moves the kit owns.** A hang, a timed climb and a vault place the body
   directly for as long as they last and zero its velocity, because they are scripted moves with a start
   and an end. While one runs, nothing else can move the character.
@@ -217,7 +217,7 @@ On crouch pressed
 **3. Grab automatically while falling.** A generous assist for a platforming section.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is At A Ledge
   Condition: Player is off the floor and falling
     -> Player | TraversalKit3D: Grab Ledge
@@ -234,9 +234,9 @@ Player On Ledge Grabbed
 **5. Wall slide down a shaft.** Call it every tick; it only bites when the body is on a wall and falling.
 
 ```
-Every tick
+On process
   -> Player | TraversalKit3D: Slide Down Wall  1.5
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is Wall Sliding
     -> spawn scrape particles at the Player
 ```
@@ -255,10 +255,10 @@ On jump pressed
 after Wall Run Max Time.
 
 ```
-Every tick
+On process
   Condition: sprint is held
     -> Player | TraversalKit3D: Wall Run  20, 3
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is Wall Running
     -> Camera: lean toward the wall
 ```
@@ -267,7 +267,7 @@ Every tick
 covers the whole map.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is On Ladder
     -> Player | TraversalKit3D: Climb Ladder  2.5
 ```
@@ -309,7 +309,7 @@ Player On Slide Ended
 water.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is In Water
     -> Player | TraversalKit3D: Swim  20, 10
 ```
@@ -318,7 +318,7 @@ Every tick
 the harder the water pushes back - pair it with Swim.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is In Water
     -> Player | TraversalKit3D: Swim  20, 10
     -> Player | TraversalKit3D: Float  12
@@ -328,11 +328,11 @@ Every tick
 **Fill Meter** system actions - the kit supplies the two tests, the meters supply the arithmetic.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is In Water
   Condition: Player | TraversalKit3D  Is Above The Surface  (inverted)
     -> Drain Meter  breath  by 12 per second, floor 0
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is Above The Surface
     -> Fill Meter  breath  by 30 per second, cap 100
 ```
@@ -341,7 +341,7 @@ Every tick
 the muffle are one expression each.
 
 ```
-Every tick
+On process
   Condition: Player | TraversalKit3D  Is In Water
     -> set the underwater fog density from Player | TraversalKit3D.Water Depth() / 20
     -> set the underwater bus wet level from the same value

@@ -272,7 +272,7 @@ whole-number Health either truncates or errors.
 **2. A camera that eases behind the player instead of snapping.**
 
 ```
-Every tick
+On process
   -> Set Camera X to Smooth Lerp  camera_x, player_x, 0.15
 ```
 
@@ -286,7 +286,7 @@ ends gently.
 **3. A health bar from one expression.**
 
 ```
-Every tick
+On process
   -> Set HealthBar scale.x to Progress Of  health, 0, max_health
 ```
 
@@ -311,7 +311,7 @@ position = Vector2(snappedf(mouse_x, 32), snappedf(mouse_y, 32))
 **5. Aim a turret at the player.**
 
 ```
-Every tick
+On process
   -> Set Rotation to Angle Toward  player.global_position
 ```
 
@@ -325,7 +325,7 @@ rather than a target point, use **Angle Of (atan2)** on its x and y instead.
 **6. Turn toward that aim gradually rather than instantly.**
 
 ```
-Every tick
+On process
   -> Set Rotation to Rotate Toward (angle)  rotation, target_angle, 0.05
 ```
 
@@ -339,7 +339,7 @@ shortest path round the circle, which is the part a hand-written subtraction get
 **7. A pickup that bobs.**
 
 ```
-Every tick
+On process
   -> Set Position Y to base_y + Sin (degrees) ( Game Time * 180 ) * 8
 ```
 
@@ -367,7 +367,7 @@ down on the last item returns to the first.
 **9. Turn a health fraction into a shake amount.**
 
 ```
-Every tick
+On process
   -> Set Shake to Remap Range  health, 0, max_health, 12.0, 0.0
 ```
 
@@ -381,7 +381,7 @@ and no health gives the most.
 **10. Ease a fade the way a designer means it.**
 
 ```
-Every tick
+On process
   -> Set Alpha to Ease  fade_progress, 2.0
 ```
 
@@ -395,7 +395,7 @@ not want a knob.
 **11. Drain a meter at a fixed rate per frame.**
 
 ```
-Every tick
+On process
   -> Set Stamina to Move Toward  stamina, 0.0, 30.0 * delta
 ```
 
@@ -408,7 +408,7 @@ stamina = move_toward(stamina, 0.0, 30.0 * delta)
 **12. Never test a decimal with "equals".**
 
 ```
-Every tick
+On process
   Condition: Is Zero (approx)  velocity.x
     -> play the idle animation
 ```
@@ -535,7 +535,7 @@ missing key becomes a silent zero.
 **20. Catch a broken calculation.**
 
 ```
-Every tick
+On process
   Condition: Is NaN  ratio
     -> Set Ratio to 0.0
     -> log "ratio went NaN"
@@ -551,7 +551,7 @@ including comparisons, which all read false. **Is NaN** is the only way to see i
 **21. A facing cone for a guard.**
 
 ```
-Every tick
+On process
   Condition: Is Within Angle  Radians To Degrees(rotation), 45.0, Radians To Degrees(angle_to_player)
     -> the guard notices the player
 ```

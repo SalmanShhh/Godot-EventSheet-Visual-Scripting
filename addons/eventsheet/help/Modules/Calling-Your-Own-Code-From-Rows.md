@@ -169,7 +169,7 @@ func _on_pickup() -> void:
 comparison or into another row's field.
 
 ```
-Every tick
+On process
   Condition: Get Property($Sprite2D, visible) = false
     -> print "the sprite is hidden"
 ```
@@ -226,7 +226,7 @@ On body entered
 expression for, without leaving the row.
 
 ```
-Every tick
+On process
   -> set Label text = str((Engine.get_frames_per_second()))
 ```
 
@@ -234,7 +234,7 @@ Every tick
 condition, so the whole branch is skipped rather than erroring inside it.
 
 ```
-Every tick
+On process
   Condition: target is valid
     -> set target.modulate = Color.RED
 ```
@@ -328,7 +328,7 @@ func _physics_process(delta: float) -> void:
 it after it is freed, so **Host Is Valid** is the standing guard.
 
 ```
-Every Physics Tick
+On Physics Process
   Condition: host is valid
     -> set host.velocity = Vector2(0, 0)
 ```

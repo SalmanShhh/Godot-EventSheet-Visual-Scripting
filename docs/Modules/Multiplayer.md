@@ -230,7 +230,7 @@ to a label on arrival. Mark it *from any peer* or only the host will be able to 
 **7. A map ping.** The same shape with a position instead of text - the marker appears for everybody
 at the point one player clicked.
 
-**8. Say who you are on join.** On start of layout, send your name to the host with **Send … to the
+**8. Say who you are on join.** On ready, send your name to the host with **Send … to the
 host**, carrying **Multiplayer.MyID** so the host knows which peer the name belongs to.
 
 **9. A lobby list.** The host keeps the list, and every change is sent to everyone as one message

@@ -64,7 +64,7 @@ The mental model is small. Learn these ideas and the rest of the pack is just kn
 **3. Wire the loop.** Two moves: call Fire when the player shoots, and react to the triggers to make bullets and effects. Here is a complete first weapon - a semi-auto pistol that spawns a bullet on each shot and reloads on a key:
 
 ```
-Every tick
+On process
   Condition: Keyboard  "fire" is down
     -> Gun | WeaponKit: Fire
 
@@ -205,7 +205,7 @@ Each example targets the `WeaponKit` behavior on the named node (here, usually `
 Call Fire every frame the trigger is held - the cooldown paces it to the fire rate, so you never manage a timer yourself. Spawn the bullet on On Fire.
 
 ```
-Every tick
+On process
   Condition: Keyboard  "fire" is down
     -> Gun | WeaponKit: Fire
 
@@ -235,7 +235,7 @@ Same Fire action - the semi-auto feel comes purely from firing on the press, not
 Read Current Ammo, Max Ammo, and Reserve Ammo straight into a label. They update the moment a round is spent or a reload lands.
 
 ```
-Every tick
+On process
   -> set AmmoLabel.text to str(Gun | WeaponKit: Current Ammo) + " / " + str(Gun | WeaponKit: Max Ammo)
   -> set ReserveLabel.text to str(Gun | WeaponKit: Reserve Ammo)
 ```
@@ -250,7 +250,7 @@ Reload starts the timed reload; Reload Progress sweeps 0 to 1 while it runs. Sho
 Keyboard On "r" pressed
   -> Gun | WeaponKit: Reload
 
-Every tick
+On process
   Condition: Gun | WeaponKit  Is Reloading
     -> show ReloadBar
     -> set ReloadBar.value to Gun | WeaponKit: Reload Progress * 100
@@ -265,7 +265,7 @@ Reload Progress reads 1 when no reload is running, so the bar naturally sits ful
 Calling Fire on an empty magazine fires On Empty instead of On Fire. Use it for the classic empty-click sound and a prompt to reload.
 
 ```
-Every tick
+On process
   Condition: Keyboard  "fire" is down
     -> Gun | WeaponKit: Fire
 
@@ -399,7 +399,7 @@ Cancel Reload aborts with no rounds gained, so this only helps when the magazine
 Read Cooldown Progress for a reticle that "charges" between shots, and Ammo Percent for a low-ammo blink.
 
 ```
-Every tick
+On process
   -> set Reticle.charge to Gun | WeaponKit: Cooldown Progress
   Condition: Gun | WeaponKit  Can Fire
     -> tint Reticle white
@@ -416,7 +416,7 @@ Cooldown Progress rises 0 to 1 as the shot cooldown recovers, so the reticle fil
 Is Full tells you there is nothing to reload, so you can suppress a "press R to reload" hint at the wrong time.
 
 ```
-Every tick
+On process
   Condition: Gun | WeaponKit  Is Full
     -> hide ReloadPrompt
   Condition: Gun | WeaponKit  Current Ammo  <  Gun | WeaponKit: Max Ammo

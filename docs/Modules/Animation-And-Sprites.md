@@ -406,7 +406,7 @@ func _ready() -> void:
 **9. An animation progress bar.** Animation Position over Animation Length is a 0-to-1 fraction.
 
 ```
-Every Frame
+On Process
   -> Set Property  ProgressBar.value = Animation Position / Animation Length * 100
 ```
 
@@ -448,7 +448,7 @@ the row is skipped while it is already running. On an AnimationPlayer rig, Get C
 the read-back to use instead.
 
 ```
-Every Frame
+On Process
   Condition: Current Animation != "run"
     -> Play Sprite Animation  "run"
 ```

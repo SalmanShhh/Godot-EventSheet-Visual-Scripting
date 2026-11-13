@@ -363,10 +363,10 @@ There is nothing to hear during a load, so the walk would only be a delay before
 The peak expression is what turns a mix into something the game can read back.
 
 ```
-Every tick
+On process
   -> VUBar: value = Audio Server: Bus Peak Volume (dB)  "Voice"
 
-Every tick
+On process
   Condition: Audio Server: Bus Peak Volume (dB)  "Voice"  >  -30
     -> Audio Server: Dive Bus Volume  "Music", -10.0, 0.1
   Else

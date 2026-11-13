@@ -185,7 +185,7 @@ On Line Started
 **6. Show a "press to continue" arrow only when a line is done.**
 
 ```
-Every tick
+On process
   -> set ContinueArrow visible = not Dialogue Kit.Is Typing() and Dialogue Kit.Is Dialogue Active()
 ```
 
@@ -205,7 +205,7 @@ On Dialogue Finished
 **10. Show how much is left.**
 
 ```
-Every tick
+On process
   -> set ProgressLabel text = Dialogue Kit.Lines Remaining() + " lines left"
 ```
 

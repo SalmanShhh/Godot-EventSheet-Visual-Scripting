@@ -70,7 +70,7 @@ On Buy Farm Pressed
     -> CurrencyLedger: Spend  "gold", Farm.Last Cost()
     # the pack recorded the price; YOU spend it
 
-Every tick (Every Frame)
+On process (On Process)
   -> CurrencyLedger: Add  "gold", Farm.Production Over(delta)
   # credit this frame's continuous output
 ```
@@ -189,7 +189,7 @@ On Ready
 Scenario: a Cookie-Clicker producer trickles gold into the wallet each tick.
 
 ```
-Every tick (Every Frame)
+On process (On Process)
   -> CurrencyLedger: Add  "gold", Farm.Production Over(delta)
   # Production Over(delta) = Output Per Second * this frame's delta
 ```
@@ -269,7 +269,7 @@ On Cycle Complete
 Scenario: a progress bar shows how full the current cycle is.
 
 ```
-Every tick (Every Frame)
+On process (On Process)
   -> Fill Bar: set value to Stand.Cycle Progress() * 100
   # Cycle Progress is 0 to 1 while filling, 0 in continuous mode
 ```

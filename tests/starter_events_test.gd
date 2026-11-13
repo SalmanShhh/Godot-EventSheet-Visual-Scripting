@@ -32,7 +32,7 @@ static func _labels(host_class: String) -> String:
 
 static func _test_curated_classes() -> bool:
 	var passed: bool = _check("a body starts with the four events it always gets",
-		_labels("CharacterBody2D"), "On ready, Every physics tick, On hit, On died")
+		_labels("CharacterBody2D"), "On ready, On physics process, On hit, On died")
 	passed = _check("a button starts with the one event it has", _labels("Button"), "On clicked") and passed
 	passed = _check("a timer starts with its timeout", _labels("Timer"), "On timer") and passed
 	passed = _check("an area starts with the collision", _labels("Area2D"), "On collision with") and passed

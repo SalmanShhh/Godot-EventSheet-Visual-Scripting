@@ -587,7 +587,7 @@ The window is counted, not flagged: a sheet that saves its own key during On Bef
 **Is Loading** covers the whole restore - the read, the migration gap and the On After Load broadcast - so rows that must not fight the restore can stand aside for it.
 
 ```
-Every tick
+On process
   Save System: Is Loading  (inverted)
     -> Enemy AI: Think
 ```

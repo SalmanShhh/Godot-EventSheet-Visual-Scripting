@@ -41,7 +41,7 @@ static func _the_edges(found: Dictionary) -> bool:
 	var passed: bool = true
 	passed = _check("the map says who includes, who signals and who changes layout",
 		_edge_lines(found),
-		"game.gd -> level_two (scene): Go to layout · game.gd -> player.gd: includes · player.gd -> hud.gd: signals On sheet_map_fixture_died") and passed
+		"game.gd -> level_two (scene): Change scene · game.gd -> player.gd: includes · player.gd -> hud.gd: signals On sheet_map_fixture_died") and passed
 	return passed
 
 
@@ -133,12 +133,12 @@ static func _every_line_says_what_it_is() -> bool:
 	panel.found = {"nodes": panel.found["nodes"], "edges": [
 		{"from": "a", "to": "b", "kind": EventSheetSheetMap.EDGE_INCLUDES, "label": "includes"},
 		{"from": "b", "to": "a", "kind": EventSheetSheetMap.EDGE_CALLS, "label": "calls Game"},
-		{"from": "a", "to": "c", "kind": EventSheetSheetMap.EDGE_LAYOUT, "label": "Go to layout"},
+		{"from": "a", "to": "c", "kind": EventSheetSheetMap.EDGE_LAYOUT, "label": "Change scene"},
 	], "skipped": 0}
 	return _check("each line's label sits at its middle, stacked per pair", panel.edge_label_spots(), [
 		{"text": "includes", "position": Vector2(192.0, 29.0)},
 		{"text": "calls Game", "position": Vector2(192.0, 43.0)},
-		{"text": "Go to layout", "position": Vector2(90.0, 55.0)},
+		{"text": "Change scene", "position": Vector2(90.0, 55.0)},
 	])
 
 
@@ -158,7 +158,7 @@ static func _the_key_and_reset_layout() -> bool:
 		["sheet", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_sheet_color, 1.0))],
 		["scene", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_scene_color, 1.0))],
 		["global", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_global_color, 1.0))],
-		["calls · includes · Go to layout", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_edge_color, 1.0))],
+		["calls · includes · Change scene", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_edge_color, 1.0))],
 		["signals", EventSheetPopupUI.readable_on_panel(Color(chrome.sheet_map_signal_edge_color, 1.0))],
 	])
 	var offered_untouched: bool = panel.reset_button.disabled
@@ -184,7 +184,7 @@ static func _a_click_on_a_scene_opens_it() -> bool:
 	var status: String = editor._status_label.text if editor._status_label != null else ""
 	editor.free()
 	return _check("clicking a scene box opens that scene", status,
-		"Opened level_two.tscn in the scene editor. Sheet ▸ Open… the same file to read the whole layout as one sheet.")
+		"Opened level_two.tscn in the scene editor. Sheet ▸ Open… the same file to read the whole scene as one sheet.")
 
 
 ## Three standard boxes: `a` top left, `b` to its right, `c` under `a`.

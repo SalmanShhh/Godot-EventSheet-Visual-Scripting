@@ -272,7 +272,7 @@ On Roll Result
 Show the player how close they are to pity without rolling anything, using the `Pity Count` expression.
 
 ```
-Every Frame
+On Process
   -> Set Label text: "5-star in " + str(90 - LootBox.Pity Count("pity_banner", "5star")) + " pulls"
 ```
 

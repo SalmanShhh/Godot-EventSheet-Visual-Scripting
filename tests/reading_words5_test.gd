@@ -37,7 +37,7 @@ const CONTEXT: Dictionary = {
 ## class_name, so the class it extends is the only name anybody calls that object by.
 static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 	# The script the SCENE carries, so its _ready is the layout starting
-	"System ▸ On start of layout",
+	"System ▸ On ready",
 	# The question a @tool script asks about itself
 	"System ▸ is in the editor",
 	# The tick switches and the process mode
@@ -188,20 +188,28 @@ static func _lifecycle_trigger_words() -> bool:
 	var ok: bool = true
 	for row: Array in [
 		# The same trigger id, the two answers the scene decides between
-		["OnReady", true, "On start of layout", "System"],
-		["OnReady", false, "On ready", "System"],
-		["OnExitTree", true, "On end of layout", "System"],
-		["OnExitTree", false, "On destroyed", "Player"],
-		# The rest read the same wherever the script sits
-		["OnEnterTree", true, "On created", "Player"],
-		["OnEnterTree", false, "On created", "Player"],
-		["OnDraw", false, "On draw", "Player"]
+		# Godot's words by default: _ready is "On ready" on any node, the scene's root included
+		["OnReady", true, "On ready", "System", false],
+		["OnReady", false, "On ready", "System", false],
+		["OnExitTree", true, "On exit tree", "System", false],
+		["OnExitTree", false, "On exit tree", "Player", false],
+		["OnEnterTree", true, "On enter tree", "Player", false],
+		["OnEnterTree", false, "On enter tree", "Player", false],
+		["OnDraw", false, "On draw", "Player", false],
+		# The Familiar preset: the other editors' words, split by who owns the script
+		["OnReady", true, "On start of layout", "System", true],
+		["OnReady", false, "On ready", "System", true],
+		["OnExitTree", true, "On end of layout", "System", true],
+		["OnExitTree", false, "On destroyed", "Player", true],
+		["OnEnterTree", true, "On created", "Player", true],
+		["OnEnterTree", false, "On created", "Player", true],
+		["OnDraw", false, "On draw", "Player", true]
 	]:
 		var reading: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
-			str(row[0]), "Whatever", bool(row[1]), "Player")
-		ok = _check("%s (scene root %s) reads \"%s\"" % [str(row[0]), str(row[1]), str(row[2])],
+			str(row[0]), "Whatever", bool(row[1]), "Player", bool(row[4]))
+		ok = _check("%s (scene root %s, familiar %s) reads \"%s\"" % [str(row[0]), str(row[1]), str(row[4]), str(row[2])],
 			str(reading.get("text", "")), str(row[2])) and ok
-		ok = _check("%s (scene root %s) belongs to %s" % [str(row[0]), str(row[1]), str(row[3])],
+		ok = _check("%s (scene root %s, familiar %s) belongs to %s" % [str(row[0]), str(row[1]), str(row[4]), str(row[3])],
 			str(reading.get("object", "")), str(row[3])) and ok
 	# A script with no name of its own keeps whatever label the row already had.
 	ok = _check("a nameless script keeps the row's own object",

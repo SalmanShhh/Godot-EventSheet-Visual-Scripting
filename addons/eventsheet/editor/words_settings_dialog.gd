@@ -189,9 +189,9 @@ func _refresh_preset() -> void:
 func _preset_description(preset: String) -> String:
 	match preset:
 		EventSheetWords.PRESET_GODOT:
-			return EventSheetL10n.translate("Godot's own words throughout - the nouns and the verbs the engine uses.")
+			return EventSheetL10n.translate("The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.")
 		EventSheetWords.PRESET_FAMILIAR:
-			return EventSheetL10n.translate("The nouns in the sheet's words (Family, Layout); the verbs stay Godot's.")
+			return EventSheetL10n.translate("The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.")
 		EventSheetWords.PRESET_SHEET:
 			return EventSheetL10n.translate("The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change.")
 	return EventSheetL10n.translate("Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary.")
@@ -219,10 +219,9 @@ func _refresh_preview(familiar: bool) -> void:
 	_preview_action.text = "Enemy ▸ %s" % destroy_word
 	if _preview_verbs != null:
 		# The trigger reads in the `_process` word the table above sets, so the preview says what the
-		# page says: "Every tick" there and "Every Frame" here was one row in two words.
+		# page says: "On process" by default and "Every tick" in the Familiar words.
 		_preview_verbs.text = "System ▸ %s      Player ▸ %s Bullet" % [
-			EventSheetWords.verb_name_words("Core::OnProcess",
-				EventSheetWords.word_for("every_tick", familiar, override_map)),
+			EventSheetWords.word_for("every_tick", familiar, override_map),
 			EventSheetWords.verb_row_words("Core::SpawnNewCopy", "Spawn a copy of"),
 		]
 

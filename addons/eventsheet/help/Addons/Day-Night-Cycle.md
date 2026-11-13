@@ -172,7 +172,7 @@ On Cutscene Finished -> Day/Night Cycle: Resume The Clock
 ### 9. Showing the time on the HUD
 
 ```
-Every tick -> HUD Kit: Set Label  "clock" = "%02d:%02d" % [int(Day/Night Cycle: Time Of Day), int(fmod(Day/Night Cycle: Time Of Day, 1.0) * 60)]
+On process -> HUD Kit: Set Label  "clock" = "%02d:%02d" % [int(Day/Night Cycle: Time Of Day), int(fmod(Day/Night Cycle: Time Of Day, 1.0) * 60)]
 ```
 
 ### 10. A shop that closes

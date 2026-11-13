@@ -2957,7 +2957,7 @@ func _toggle_familiar_words(view_popup: PopupMenu) -> void:
 		var item_index: int = view_popup.get_item_index(21)
 		if item_index >= 0:
 			view_popup.set_item_checked(item_index, familiar)
-	_set_status("Familiar words - layout, time scale, layer; the Godot word is on hover." if familiar
+	_set_status("Familiar words - layout, every tick, time scale, layer; the Godot word is on hover." if familiar
 		else "Godot words - scenes, pausing and CanvasLayers read by their Godot names.")
 
 

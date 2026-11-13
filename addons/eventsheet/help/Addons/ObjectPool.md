@@ -237,7 +237,7 @@ Leave the Fade behavior's free-on-fade option off - freeing a pooled node loses 
 behind the player and hand them back out ahead.
 
 ```
-Every tick
+On process
   Condition: a Tile is off-screen behind the player
     -> ObjectPool: Despawn  the Tile
 On gap ahead

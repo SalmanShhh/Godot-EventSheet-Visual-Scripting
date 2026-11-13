@@ -317,7 +317,7 @@ On "ultimate" pressed
     -> Player | Simple Abilities: Activate Ability  "ultimate"
     -> Player: unleash ultimate
 
-Every tick
+On process
   -> UltIcon: set radial fill to Player | Simple Abilities  Cooldown Progress  "ultimate"
 
 On Ability Ready
@@ -374,7 +374,7 @@ Reset Cooldown refreshes the ability in one row: it clears the timer and hands b
 Read charges and cooldown straight into a bar of slots so the player always sees what is ready.
 
 ```
-Every tick
+On process
   -> Slot1_Count: set text to Player | Simple Abilities  Stacks  "fireball"
   -> Slot1_Sweep: set fill to Player | Simple Abilities  Cooldown Progress  "fireball"
   -> Slot2_Count: set text to Player | Simple Abilities  Stacks  "frostbolt"

@@ -130,7 +130,7 @@ pre-built RegEx object to declare and nothing to keep in a variable.
 pattern reads like the sentence it produces.
 
 ```
-Every tick
+On process
   -> set ScoreLabel text = Text From Pattern("{player} scored {score}!", {"player": player_name, "score": score})
 ```
 
@@ -153,7 +153,7 @@ Both produce `000420` for 420, so pick one and stay with it.
 **3. A countdown clock.**
 
 ```
-Every tick
+On process
   -> set TimerLabel text = As Clock Time(time_left)
 ```
 
@@ -294,7 +294,7 @@ The result is an ordinary list, so For Each takes it directly.
 **17. Money with exactly two decimal places.**
 
 ```
-Every tick
+On process
   -> set PriceLabel text = "$" + Format Decimals(price, 2)
 ```
 
@@ -303,7 +303,7 @@ Every tick
 **18. A text bar drawn out of characters.**
 
 ```
-Every tick
+On process
   -> set BarLabel text = Repeat Text("#", int(health / 10)) + Repeat Text(".", int((max_health - health) / 10))
 ```
 

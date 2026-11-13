@@ -71,7 +71,7 @@ compared, because the right question depends on the type:
 | Is Between Values | True when a value falls within a low and high range, bounds included. | `({min} <= {value} and {value} <= {max})` |
 | Is About | True when two decimal numbers are near enough to count as the same. | `is_equal_approx({a}, {b})` |
 | Is Inside Area | True when a point falls inside a rectangle - corner, then size. | `{area}.has_point({point})` |
-| Is Outside Layout | True when a point has left the visible layout on any side. | `not get_viewport_rect().has_point({point})` |
+| Is Outside Screen | True when a point has left the visible layout on any side. | `not get_viewport_rect().has_point({point})` |
 | Is On-Screen | True while a point is inside the visible layout. | `get_viewport_rect().has_point({point})` |
 | Expression Is True | True when your own GDScript boolean expression is true - the advanced escape hatch. | `{expr}` |
 
@@ -280,7 +280,7 @@ fallback that means "no". Use both when the two outcomes need different rows.
 **9. Never compare two positions with "equals".**
 
 ```
-Every tick
+On process
   Condition: Vectors Are Equal  global_position, waypoint
     -> pick the next waypoint
 ```
@@ -295,7 +295,7 @@ usually want **Is Within Distance** with a real tolerance instead.
 **10. Aggro range.**
 
 ```
-Every tick
+On process
   Condition: Is Within Distance  global_position, player.global_position, 240.0
     -> start chasing
 ```
@@ -307,7 +307,7 @@ if global_position.distance_to(player.global_position) <= 240.0:
 **11. Give up the chase when the player gets away.**
 
 ```
-Every tick
+On process
   Condition: Is Farther Than  global_position, player.global_position, 800.0
     -> go back to patrolling
 ```
@@ -319,7 +319,7 @@ if global_position.distance_to(player.global_position) > 800.0:
 **12. Is the guard looking at me?**
 
 ```
-Every tick
+On process
   Condition: Points The Same Way  facing_direction, direction_to_player, 0.7
     -> the guard spots the player
 ```
@@ -334,7 +334,7 @@ narrow stare, 0.0 is anything in front.
 **13. Am I actually moving?**
 
 ```
-Every tick
+On process
   Condition: Is Longer Than  velocity, 5.0
     -> play the run animation
   Else
@@ -377,7 +377,7 @@ if not (other == self):
 **16. The check that stops a freed node crashing the sheet.**
 
 ```
-Every tick
+On process
   Condition: Object Still Exists  target
     -> chase the target
   Else
@@ -452,7 +452,7 @@ if (int(10) != 0 and int(kills) % int(10) == 0):
 **21. Cull anything that wandered off the level.**
 
 ```
-Every tick
+On process
   Condition: Is Outside Range  position.x, -100, 4000
     -> queue_free this node
 ```
@@ -464,7 +464,7 @@ if (position.x < -100 or position.x > 4000):
 **22. A tolerance where "equal" would never fire.**
 
 ```
-Every tick
+On process
   Condition: Values Are Near  current_zoom, target_zoom, 0.01
     -> stop the zoom tween
 ```

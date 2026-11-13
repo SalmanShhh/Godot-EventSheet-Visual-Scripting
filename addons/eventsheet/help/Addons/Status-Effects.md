@@ -104,7 +104,7 @@ Every row lives in the **Status Effects** category and acts on the behavior of t
 | Trigger | Arguments | Fires when |
 |---------|-----------|-----------|
 | On Status Applied | `status`, `stacks` | A status lands, including the second and later times it is applied. |
-| On Status Ticked | `status`, `stacks` | Every tick of an active status, after its damage and healing have been dealt. |
+| On Status Ticked | `status`, `stacks` | On process of an active status, after its damage and healing have been dealt. |
 | On Status Expired | `status` | A status ends, however it ended - the clock ran out, it was removed, it was cleansed, or an immunity pushed it off. |
 | On Stacks Changed | `status`, `stacks` | An active status changes how many stacks it is on, and not when it lands at the count it was already on. |
 
@@ -160,11 +160,11 @@ On Fireball Hits Enemy
 Stun moves nothing by itself. The controller asks before it moves, which is one condition rather than a flag threaded through every movement row.
 
 ```
-On Enemy: Every Frame
+On Enemy: On Process
   Condition: Enemy | Status Effects  Has Status  "stun"
     -> (nothing: the enemy stands still)
 
-On Enemy: Every Frame
+On Enemy: On Process
   Condition: NOT Enemy | Status Effects  Has Status  "stun"
     -> Enemy | Platformer Movement: Move  Enemy.direction
 ```
@@ -174,7 +174,7 @@ On Enemy: Every Frame
 Speed Factor is a product, so a slow and a chill together are one number and the movement row never learns what caused it.
 
 ```
-On Player: Every Frame
+On Player: On Process
   -> Player | Platformer Movement: Set Speed  200 * Player.Status Effects.Speed Factor
 ```
 
@@ -193,7 +193,7 @@ On Player Drinks Antidote
 Active Statuses is the list, Status Icon is the picture and Status Time Left is the little bar under it.
 
 ```
-On HUD: Every Frame
+On HUD: On Process
   -> for each status in Player.Status Effects.Active Statuses
        -> set icon.texture  Player.Status Effects.Status Icon  status
        -> set icon.bar.value  Player.Status Effects.Status Time Left  status
@@ -299,7 +299,7 @@ On Enemy | Status Effects: On Status Ticked
 Has Status is a condition, so a transition can be written in the language the rest of the sheet is written in.
 
 ```
-On Enemy: Every Frame
+On Enemy: On Process
   Condition: Enemy | Status Effects  Has Status  "stun"
     -> Enemy | State Machine: Go To State  "stunned"
 ```

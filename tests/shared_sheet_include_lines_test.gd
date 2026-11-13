@@ -67,7 +67,7 @@ static func _the_lines() -> bool:
 		["the base's variable reads under its line, named by where it comes from",
 			texts.has("int | damage_taken | = | 0 | from FixtureDamageRules"), true],
 		["the forwarding call runs the helper's handler",
-			_any_contains(texts, "Include | FixturePauseHandling | ▸ run its Every Frame"), true],
+			_any_contains(texts, "Include | FixturePauseHandling | ▸ run its On Process"), true],
 		["no pill on an Include line", pills, 0],
 	])
 

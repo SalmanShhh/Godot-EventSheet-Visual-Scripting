@@ -10209,3 +10209,73 @@ Pick any that fit. Each adds a few behaviours to this project; you can add or re
 Adds nothing. Sheet > Behaviour library… adds any of them later.,不添加任何内容。之后可通过 表 > 行为库… 添加。
 Nothing will be added. Sheet > Behaviour library… is always there later.,不会添加任何内容。之后随时可用 表 > 行为库…。
 Added a VisibleOnScreenNotifier2D under %s for Is On Screen to ask - Ctrl+Z takes it back.,已在 %s 下添加 VisibleOnScreenNotifier2D，供“在屏幕上”查询 - Ctrl+Z 可撤销。
+A scene added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,叠在暂停游戏之上的场景也会一起暂停：把它根节点的处理模式设为「总是」（或「暂停时」），它才能在暂停期间工作。与之配对的行是「暂停游戏」。
+"The default: Godot's own words throughout - the callbacks, nouns and verbs the engine uses.",默认：全部使用 Godot 自己的词 - 引擎使用的回调、名词和动词。
+"The words other event-sheet editors use for the nouns and the callbacks (Family, Layout, On start of layout, Every tick); the verbs stay Godot's.",其他事件表编辑器用于名词和回调的词（Family、Layout、On start of layout、Every tick）；动词仍用 Godot 的。
+"Debug scene: Event Trace, Live Values and breakpoints are on for this run.",调试场景：本次运行已开启事件追踪、实时数值与断点。
+calls · includes · Change scene,调用 · 包含 · 切换场景
+An event starts with a trigger - the moment it runs. On Ready fires once when the object is ready; On Process runs every frame.,事件以触发器开头 - 即它运行的时刻。On Ready 在对象就绪时触发一次；On Process 每帧运行。
+Wrap Around Scene Horizontally,水平环绕场景
+"Sends the object off one side of the scene and back in the other - the arcade wrap. The scene's edges are places in the level, so the node's place in the level is what wraps.","让对象从场景的一侧出去、从另一侧回来 - 街机式环绕。场景边缘是关卡中的位置,所以被环绕的是节点在关卡中的位置。"
+Scene Edges,场景边缘
+Wrap around scene horizontally,在场景中水平环绕
+"The left edge of the scene, in pixels.","场景的左边缘,单位为像素。"
+"The right edge of the scene, in pixels.","场景的右边缘,单位为像素。"
+Wrap Around Scene Vertically,垂直环绕场景
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. The scene's edges are places in the level, so the node's place in the level is what wraps.","让对象从场景顶部出去、从底部回来,或反过来。场景边缘是关卡中的位置,所以被环绕的是节点在关卡中的位置。"
+Wrap around scene vertically,在场景中垂直环绕
+"The top edge of the scene, in pixels.","场景的上边缘,单位为像素。"
+"The bottom edge of the scene, in pixels.","场景的下边缘,单位为像素。"
+Bound To Scene,限制在场景内
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. The scene's edges are places in the level, so the node's place in the level is what is held.","把对象留在场景边缘之内而不让它离开 - 街机式围栏。场景边缘是关卡中的位置,所以被限制的是节点在关卡中的位置。"
+Bound to scene (inside {low} - {high}),限制在场景内（{low} - {high} 之间）
+Add Scene On Top,在上层添加场景
+"Puts a scene over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of scene underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two scenes under one name would mean one of them could never be found or removed again.",把一个场景盖在运行中的游戏之上，而不是替换它 - 暂停菜单、物品栏、对话框。副本被添加到树根之下，因此下面的场景改变时它仍然存在，并且取你给的名字，好让下面两行还能找到它。已经在上面的名字会被原样保留，也不会加载任何东西，因为同一个名字下有两个场景就意味着其中一个再也无法被找到或移除。
+Add scene {path} on top as {layout_name},将场景 {path} 以 {layout_name} 添加到上层
+"Scene file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.",要叠在上层的场景文件。它的根节点保留自己的处理模式，是否在暂停时继续运行由该设置决定。
+"The name the copy is given under the tree root. Remove Scene On Top and Scene Is On Top find it by this name, so keep all three saying the same one.",副本在树根之下获得的名称。「移除上层场景」和「场景在上层」按这个名称查找，所以三行请保持一致。
+Remove Scene On Top,移除上层场景
+"Takes a scene added by Add Scene On Top back off again. It comes off the tree straight away and is freed the deferred way, so Scene Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.",把由“在上面添加场景”添加的场景再取下来。它会立刻离开树，并以延迟方式释放，所以“场景在上面”在同一帧就返回假，紧接着的添加能用同一个名字放上新的。名字下没有东西时会安静地什么也不做，所以关闭行运行两次也安全。
+Remove scene {layout_name} from on top,从上层移除场景 {layout_name}
+The name Add Scene On Top gave the copy. A name nothing is under removes nothing.,「在上层添加场景」为副本指定的名称。名称下什么都没有时不会移除任何东西。
+Scene Is On Top,场景在上层
+"True while a scene added by Add Scene On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.",只要「在上层添加场景」加上的场景还在，就为真。可用来阻止菜单被打开两次，或在打开期间让同一个按键有不同反应。
+scene {layout_name} is on top,场景 {layout_name} 在上层
+The name Add Scene On Top gave the copy.,「在上层添加场景」为副本指定的名称。
+"Moves a node that is already in the scene under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","把已经在场景中的节点移到新的父节点下 - 把物品拿到手上、把骑手放上马鞍、把武器背到背上。""保持原位""让它停在看起来的那个位置；""贴合""则把它放到父节点自身所在的位置。"
+"Takes a node off whatever it is under and puts it back at the top of the scene, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.",把节点从它当前所属的父节点上摘下来，放回场景的最顶层，并保留它在世界中的位置 - 放下携带的物品、让骑手下马。节点不会被释放，其他一切都不变。
+"The node to take off its parent. It stays in the scene, at the top level.",要从父节点上摘下的节点。它仍留在场景中，处于最顶层。
+"What happens to a game drawn for one size when the window is another. Fitting the scene keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.",为一种尺寸绘制的游戏，遇到另一种尺寸的窗口时会怎样。贴合场景会保持文字和界面清晰，只拉伸摆放位置；拉伸画面会把整帧渲染结果放大，这正是像素风游戏想要的；自由则什么都不缩放，只是多显示或少显示一些世界。
+"Fit - scale the scene, keep text crisp",贴合 - 缩放场景，文字保持清晰
+"Sends the object off one side of the scene and back in the other - the arcade wrap. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutXWorld, the world twin.",让对象从场景的一侧出去、从另一侧回来 - 街机式环绕。它用父节点内的位置去对照场景边缘(关卡中的位置)进行环绕;请使用世界版本 WrapAroundLayoutXWorld。
+"Sends the object off the top of the scene and back in at the bottom, or the other way round. It wraps the place inside the parent against the scene's edges, which are places in the level; use WrapAroundLayoutYWorld, the world twin.","让对象从场景顶部出去、从底部回来,或反过来。它用父节点内的位置去对照场景边缘(关卡中的位置)进行环绕;请使用世界版本 WrapAroundLayoutYWorld。"
+"Holds the object inside the scene's edges instead of letting it leave - the arcade fence. It holds the place inside the parent against the scene's edges, which are places in the level; use BoundToLayoutWorld, the world twin.",把对象留在场景边缘之内而不让它离开 - 街机式围栏。它用父节点内的位置去对照场景边缘(关卡中的位置);请使用世界版本 BoundToLayoutWorld。
+Change scene {path},切换场景 {path}
+Reload scene,重新加载场景
+Remove from scene,从场景中移除
+Is outside screen,在屏幕之外
+Load scene {path} in the background,在后台加载场景 {path}
+scene {path} has finished loading,场景 {path} 已加载完成
+Take out of the scene,从场景中取出
+keeping its place in the scene,保持其在场景中的位置
+{name} in the scene,场景中的 {name}
+the scene,场景
+On enter tree,进入树时（_enter_tree）
+On exit tree,退出树时（_exit_tree）
+On process,每帧（_process）
+On physics process,每个物理步（_physics_process）
+▶ Preview scene,▶ 预览场景
+🐞 Debug scene,🐞 调试场景
+Inspector add-on,检查器附加组件
+Runs every frame (On process).,每帧运行（On process）。
+Runs every physics step (On physics process).,每个物理步运行（On physics process）。
+On Process,每帧（_process）
+On Physics Process,每个物理步（_physics_process）
+On Enter Tree,进入树时（_enter_tree）
+On Exit Tree,退出树时（_exit_tree）
+Run on process,每帧（_process）
+Run on physics process,每个物理步（_physics_process）
+Run on enter tree,进入树时（_enter_tree）
+Run on exit tree,退出树时（_exit_tree）
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions but added to the place inside the parent, which is wrong under a rotated or scaled parent; use ApplyPushesWorld, the world twin.","诚实衰减的击退(指数形式,与帧率无关) - 放在“每帧”下的一行。推力按关卡的方向计算,却加到父节点内的位置上,在旋转或缩放的父节点下会出错;请使用世界版本 ApplyPushesWorld。"
+"Knockback that decays honestly (the exp form, frame-rate independent) - one row under On Process. The push is worked out in the level's directions and added to the node's place in the level, so it is right under a rotated or scaled parent.","诚实衰减的击退(指数形式,与帧率无关) - 放在“每帧”下的一行。推力按关卡的方向计算,并加到节点在关卡中的位置上,因此在旋转或缩放的父节点下也正确。"

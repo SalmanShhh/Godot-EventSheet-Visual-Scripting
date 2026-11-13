@@ -191,7 +191,7 @@ On Action Just Pressed  "pause"
 **7. A camera value that glides instead of snapping.**
 
 ```
-Every Frame
+On Process
   -> Move Toward (smooth)   camera_x toward $Player.global_position.x at speed 8.0
 ```
 
@@ -201,7 +201,7 @@ same on a slow machine and a fast one.
 **8. Fade a colour, with the same action.**
 
 ```
-Every Frame
+On Process
   -> Move Toward (smooth)   flash_tint toward Color(1, 1, 1, 1) at speed 6.0
   -> Set Color Tint   flash_tint
 ```
@@ -211,7 +211,7 @@ Every Frame
 **9. A hold-to-charge shot.**
 
 ```
-Every Frame
+On Process
   Condition: Is Action Pressed   "fire"
     -> Charge Toward   power up to 100.0 over 1.5 seconds
 
@@ -226,7 +226,7 @@ value.
 **10. Pick between two values in one cell.**
 
 ```
-Every Frame
+On Process
   -> Set Text   Value If ( "ALIVE", health > 0, "DEAD" )
 ```
 
@@ -235,7 +235,7 @@ The three parameters are **If true**, **Condition**, **If false**, in that order
 **11. A speed that depends on a flag, with no branch.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Set Velocity X   direction * Value If ( 320.0, sprinting, 180.0 )
 ```
 
@@ -294,7 +294,7 @@ does not.
 **17. A throwaway value used by the rows after it.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Set Local Variable (inferred)   heading := (target.global_position - global_position).normalized()
   -> Set Velocity   heading * 200.0
   -> Move And Slide
@@ -306,7 +306,7 @@ another event's throwaway value.
 **18. A typed throwaway value, when the type matters.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Set Local Variable (typed)   speed : float = 200.0
   -> Set Velocity X   direction * speed
 ```
@@ -317,7 +317,7 @@ stored into an `int` truncates silently.
 **19. A tuning constant next to the rows that use it.**
 
 ```
-Every Physics Tick
+On Physics Process
   -> Set Local Constant (typed)   GRAVITY : float = 980.0
   -> Add To Velocity   Vector2(0, GRAVITY * delta)
 ```
@@ -328,7 +328,7 @@ tuning knob rather than as state.
 **20. Read a variable inside another row's cell.**
 
 ```
-Every Frame
+On Process
   Condition: Compare variable   health < 25
     -> Set Color Tint   Color(1, 0.4, 0.4, 1)
 ```

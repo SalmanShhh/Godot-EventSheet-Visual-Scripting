@@ -410,7 +410,7 @@ Stun and freeze move nothing themselves. They are words the movement packs and t
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ Every tick | |
+| **System** ▸ On process | |
 | **Player** ▸ *not* has status **"stunned"** | **Player** ▸ Move with the stick |
 
 And **Speed Factor** is the product of every active effect's speed factor: 1 with nothing on, 0.5
@@ -418,7 +418,7 @@ under one slow, 0 under a root.
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ Every tick | **Player** ▸ Set **speed** to **220** × *Player ▸ Speed Factor* |
+| **System** ▸ On process | **Player** ▸ Set **speed** to **220** × *Player ▸ Speed Factor* |
 
 ```gdscript
 	speed = 220.0 * $StatusEffectsBehavior.speed_factor()
@@ -445,7 +445,7 @@ own, so a factor invented today is an ordinary field in every difficulty file to
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ On start of layout | **Settings** ▸ Use the difficulty the setting **"difficulty"** names |
+| **System** ▸ On ready | **Settings** ▸ Use the difficulty the setting **"difficulty"** names |
 | **Wave** ▸ On wave starting | **Wave** ▸ Set **count** to **8** × *Settings ▸ Difficulty Factor* **"enemy_count"** |
 
 ```gdscript
@@ -495,7 +495,7 @@ Assist Changed** can speak about it.
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ On start of layout | **Settings** ▸ Declare assist **"infinite_ammo"**, default **off** |
+| **System** ▸ On ready | **Settings** ▸ Declare assist **"infinite_ammo"**, default **off** |
 | **Player** ▸ On fired | |
 | *not* **Settings** ▸ assist **"infinite_ammo"** is on | **Player** ▸ Subtract **1** from **ammo** |
 
@@ -572,7 +572,7 @@ Two expressions need no lock, and they are the ones a controller player feels:
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ Every tick | **Player** ▸ Set **aim** to *Player ▸ Assisted Aim* of **stick**, strength **0.4** |
+| **System** ▸ On process | **Player** ▸ Set **aim** to *Player ▸ Assisted Aim* of **stick**, strength **0.4** |
 
 ```gdscript
 	aim = $TargetingBehavior.assisted_aim(stick, 0.4)

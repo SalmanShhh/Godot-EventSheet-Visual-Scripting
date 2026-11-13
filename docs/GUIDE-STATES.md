@@ -188,8 +188,8 @@ Machines get long, and the shape that reads best is one **group per state**, nam
 
 ```
 ▾ Chase   What the sentry does while it is chasing.
-    Every tick   ◆ Is in CHASE   →   Move Forward 120/s
-    Every tick   ◆ Is in CHASE   ◆ Not Can See Player   →   Go to PATROL
+    On process   ◆ Is in CHASE   →   Move Forward 120/s
+    On process   ◆ Is in CHASE   ◆ Not Can See Player   →   Go to PATROL
 ```
 
 That is **a convention and nothing more**. A group here is plain organisation - a folder with a name,
@@ -361,7 +361,7 @@ The band says what the object **is**. The Debugger's **Trail** tab says what it 
 grammar and in the past tense, reading down, oldest first, the way the sheet reads:
 
 ```
-0.5 s · Every tick fired - went from Patrol to Chase
+0.5 s · On process fired - went from Patrol to Chase
 1 s   · On Hit fired - went from Chase to Stagger
 1.5 s · On Hit fired - re-entered Stagger
 2 s   · On Hit fired - re-entered Stagger

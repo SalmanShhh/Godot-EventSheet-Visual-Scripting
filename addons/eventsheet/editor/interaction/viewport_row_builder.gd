@@ -5645,10 +5645,9 @@ func _event_trigger_words(event_row: EventRow) -> String:
 	if trigger_id.is_empty():
 		return ""
 	if TICK_TRIGGER_METHODS.has(trigger_id):
-		return EventSheetL10n.translate(str(EventSheetSentence.PROCESS_SWITCH_WORDS[
-			str(TICK_TRIGGER_METHODS[trigger_id])]))
+		return EventSheetViewportReadingRows.tick_trigger_words(trigger_id, "", _familiar_words_enabled())
 	var lifecycle: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
-		trigger_id, "", false, "")
+		trigger_id, "", false, "", _familiar_words_enabled())
 	if not lifecycle.is_empty():
 		return str(lifecycle.get("text", ""))
 	return _trigger_display_text(event_row.trigger_provider_id, trigger_id)
@@ -14450,7 +14449,7 @@ func _blank_tick_reading(event_row: EventRow) -> Dictionary:
 	if not event_row.with_node_target.strip_edges().is_empty():
 		return {}
 	var reading: Dictionary = EventSheetViewportReadingRows.blank_tick_reading(
-		event_row.trigger_id, false, _patterns_reading_on())
+		event_row.trigger_id, false, _patterns_reading_on(), _familiar_words_enabled())
 	if reading.is_empty():
 		return {}
 	if not _is_top_level_event(event_row):
@@ -14681,7 +14680,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# sizes to its words, which puts the head straight after them instead of across the lane.
 		var match_beside: bool = _match_head_beside_tick(event_row)
 		if not blank_note.is_empty() or match_beside:
-			var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row))
+			var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row), _familiar_words_enabled())
 			spans.append(_make_span(
 				"%s," % tick_words if match_beside else tick_words,
 				SemanticSpan.SpanType.CONDITION, {
@@ -14721,7 +14720,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
 		var trigger_words: String = EventSheetViewportReadingRows.tick_trigger_words(
 			event_row.trigger_id,
-			_trigger_sentence(event_row)
+			_trigger_sentence(event_row),
+			_familiar_words_enabled()
 		)
 		var trigger_object: String = _handler_object_label(event_row)
 		# ── lens hook ──────────────────────────────────────────────────────────────────────────
@@ -14729,7 +14729,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# being created, the layout ending or an object being destroyed, a draw, and the notifications.
 		var lifecycle_reading: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
 			event_row.trigger_id, trigger_object,
-			bool(sentence_context().get("scene_root", false)), _own_object_word())
+			bool(sentence_context().get("scene_root", false)), _own_object_word(),
+			_familiar_words_enabled())
 		if not lifecycle_reading.is_empty():
 			trigger_words = str(lifecycle_reading.get("text", trigger_words))
 			trigger_object = str(lifecycle_reading.get("object", trigger_object))
@@ -18984,13 +18985,13 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/RotateClockwise"]
 	},
 	"wrap": {
-		"words": "Wrapping around the layout edges",
+		"words": "Wrapping around the scene edges",
 		"adoptable": "wrap",
 		"ace_ids": ["Core/WrapAroundLayoutX", "Core/WrapAroundLayoutY", "Core/WrapAroundLayoutXWorld",
 			"Core/WrapAroundLayoutYWorld"]
 	},
 	"bound": {
-		"words": "Held inside the layout edges",
+		"words": "Held inside the scene edges",
 		"adoptable": "bound_to",
 		"ace_ids": ["Core/BoundToLayout", "Core/BoundToLayoutWorld"]
 	},

@@ -134,7 +134,7 @@ the same `user://settings.cfg` the rest of the options live in.
 **1. Continuous movement.** Is Action Pressed is the one you want while a key is held.
 
 ```
-Every tick
+On process
   Condition: Is Action Pressed  "move_right"
     -> move the player right by 200 * delta
 ```
@@ -142,7 +142,7 @@ Every tick
 **2. A jump that fires once per press.**
 
 ```
-Every tick
+On process
   Condition: Is On Floor
   Condition: On Action Just Pressed  "jump"
     -> set the player's vertical velocity to -400
@@ -157,11 +157,11 @@ func _physics_process(delta: float) -> void:
 **3. A charge-and-release shot.**
 
 ```
-Every tick
+On process
   Condition: Is Action Pressed  "shoot"
     -> add delta to Charge
 
-Every tick
+On process
   Condition: On Action Just Released  "shoot"
     -> fire a shot with power Charge
     -> set Charge to 0
@@ -189,7 +189,7 @@ func _physics_process(delta: float) -> void:
 actions in the same event share one read.
 
 ```
-Every tick
+On process
   -> Read Input Axis Into  direction, "move_left", "move_right"
   -> set velocity.x = direction * 220
   -> flip the sprite when direction < 0
@@ -198,7 +198,7 @@ Every tick
 **7. An analog trigger drives the throttle.**
 
 ```
-Every tick
+On process
   -> set Throttle = Action Strength("accelerate")
 ```
 
@@ -207,7 +207,7 @@ On a keyboard that reads 0 or 1; on a trigger it reads everything in between, an
 **8. Look-around from the right stick, using two axes.**
 
 ```
-Every tick
+On process
   -> turn the camera by Input Axis("look_left", "look_right") * turn_speed * delta
   -> pitch the camera by Input Axis("look_up", "look_down") * turn_speed * delta
 ```
@@ -267,7 +267,7 @@ binding is gone.
 **14. Print each row's current binding.**
 
 ```
-Every tick
+On process
   -> set JumpRowLabel text = "Jump: " + Action Binding As Text("jump")
 ```
 
@@ -318,7 +318,7 @@ Add Input Action already checks for an existing action, so running it twice is h
 **19. Guard a row that talks about an optional action.**
 
 ```
-Every tick
+On process
   Condition: Has Input Action  "sprint"
   Condition: Is Action Pressed  "sprint"
     -> set speed to 400

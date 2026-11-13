@@ -335,7 +335,7 @@ On Ready
   -> Lamp | Sine: Set Movement  "value-only"
   -> Lamp | Sine: Set Period  2
 
-Every tick
+On process
   -> set Lamp.energy to 1.0 + $Lamp/Sine.wave_value * 0.3
 ```
 

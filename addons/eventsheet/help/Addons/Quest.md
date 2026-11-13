@@ -209,7 +209,7 @@ On Quest Completed
 **7. A quest-log label.**
 
 ```
-Every tick
+On process
   -> set QuestLabel text = Quests.Quest Title("gems") + "  " + Quests.Objective Text("gems", "collect_gem")
 ```
 
@@ -218,7 +218,7 @@ It reads `Gem Hunt  3/5`.
 **8. A progress bar per objective.**
 
 ```
-Every tick
+On process
   -> set QuestBar value = Quests.Objective Progress("gems", "collect_gem") * 100
 ```
 
@@ -262,7 +262,7 @@ An abandoned quest is neither active nor completed, so use case 10 will offer it
 **13. Show how busy the player is.**
 
 ```
-Every tick
+On process
   -> set TrackerLabel text = str(Quests.Active Quest Count()) + " quests in progress"
 ```
 

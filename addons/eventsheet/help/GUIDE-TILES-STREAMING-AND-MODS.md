@@ -100,7 +100,7 @@ somebody has to keep in step with it:
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ On start of layout | **Ground** ▸ For each in **cells with "kind" = "spawn"** |
+| **System** ▸ On ready | **Ground** ▸ For each in **cells with "kind" = "spawn"** |
 | ↳ (loop body) | **System** ▸ Spawn **Enemy** at **Ground.TileToPosition(cell)** |
 
 **Used Rect** is the number a camera's limits are set from, so a level knows how big it is without
@@ -384,7 +384,7 @@ game's own files.
 
 | Condition | Actions |
 | --- | --- |
-| **System** ▸ On start of layout | **Mods** ▸ Set load order **"CoreFixes, BigSwords"** |
+| **System** ▸ On ready | **Mods** ▸ Set load order **"CoreFixes, BigSwords"** |
 | | **Mods** ▸ Load mods from **"user://mods"**, data only **true** |
 | **Mods** ▸ On mod loaded | **ModList** ▸ Add item **Mods.ModName + " " + Mods.ModVersion** |
 | **Mods** ▸ On mod refused | **StatusLabel** ▸ Set text to **Mods.ModName + ": " + Mods.ModReason** |

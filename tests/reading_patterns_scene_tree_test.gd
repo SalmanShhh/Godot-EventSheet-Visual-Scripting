@@ -65,7 +65,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"= a copy of stats",
 	# The scene tree
 	"= the child named HUD",
-	"= Boss in the layout",
+	"= Boss in the scene",
 	"= HealthBar (unique name)",
 	"= enemy's path",
 	"System ▸ Clone object enemy (→ copy, next to it)",
@@ -116,8 +116,8 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"stats.duplicate(true)": "a copy of stats",
 	"find_child(\"HUD\")": "the child named HUD",
 	"hud.find_child(\"Bar\")": "hud's child named Bar",
-	"get_tree().current_scene": "the layout",
-	"get_tree().current_scene.get_node(\"Boss\")": "Boss in the layout",
+	"get_tree().current_scene": "the scene",
+	"get_tree().current_scene.get_node(\"Boss\")": "Boss in the scene",
 	"%HealthBar": "HealthBar (unique name)",
 	"enemy.get_path()": "enemy's path",
 	# The three other things a `%` is, all left exactly as they were written.
