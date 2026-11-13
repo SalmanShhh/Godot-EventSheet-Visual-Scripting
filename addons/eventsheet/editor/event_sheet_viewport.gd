@@ -84,6 +84,8 @@ signal drag_status_requested(message: String, is_error: bool)
 ## - or, for a shipped pack file, asks once whether to edit it anyway - and the gesture is not performed.
 signal locked_body_gesture(function_name: String)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
+## A click on a variable's Inspector mark: open the Variable window on the look list.
+signal variable_look_requested(row_data: EventRowData)
 ## The code echo beside a variable row was activated: open the code panel at the line it is.
 signal code_echo_activated(row_data: EventRowData)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
@@ -5385,7 +5387,7 @@ func update_head_card(hit: Dictionary, at_once: bool = false, logical_position: 
 ## head bar's own card alone.
 func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool = false) -> bool:
 	if not show_variable_badges:
-		return false
+		return _update_inline_mark_card(hit, at_once)
 	var badge_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	var badge: String = NativeVariableMarks.badge_at(badge_row, logical_position)
 	if badge.is_empty():
@@ -5394,7 +5396,7 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 	# The state row acts for its enum; its marks are the state variable's.
 	if shown == null and EventSheetViewportRowBuilder._is_state_machine_row(badge_row):
 		shown = EventSheetStateFacts.machine_of_entry(_sheet as EventSheetResource, badge_row.source_resource).get("variable") as LocalVariable
-	var card: Dictionary = NativeVariableMarks.badge_card(badge, shown)
+	var card: Dictionary = NativeVariableMarks.badge_card(badge, shown, NativeVariableMarks.row_mark(badge_row))
 	if card.is_empty():
 		return false
 	if _head_card == null:
@@ -5408,6 +5410,32 @@ func update_badge_card(hit: Dictionary, logical_position: Vector2, at_once: bool
 	var zoom: float = maxf(_zoom_factor, 0.001)
 	var on_screen: Rect2 = get_global_transform() * Rect2(tile.position * zoom, tile.size * zoom)
 	_head_card.call("hover_word", card, on_screen, at_once)
+	return true
+
+
+## The same card for the mark when the tiles are off and the mark is the glyph at the end of the row: only a
+## mark that wears a look has one (a plain mark keeps its plain tooltip). True when the pointer is on one.
+func _update_inline_mark_card(hit: Dictionary, at_once: bool) -> bool:
+	var metadata: Variant = hit.get("span_metadata", {})
+	if not (metadata is Dictionary) or not bool((metadata as Dictionary).get("inspector_badge", false)):
+		return false
+	var mark: Variant = (metadata as Dictionary).get("inspector_mark", {})
+	if not (mark is Dictionary) or str((mark as Dictionary).get("picture", "")).is_empty():
+		return false
+	var mark_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if mark_row == null or span_index < 0 or span_index >= mark_row.spans.size():
+		return false
+	var card: Dictionary = NativeVariableMarks.badge_card(NativeVariableMarks.BADGE_INSPECTOR, mark_row.source_resource as LocalVariable, mark as Dictionary)
+	if card.is_empty():
+		return false
+	if _head_card == null:
+		_head_card = load(HEAD_CARD_PATH).new()
+		_head_card.connect("door_pressed", func(action: String) -> void: sheet_head_action_requested.emit(action))
+		add_child(_head_card)
+	var zoom: float = maxf(_zoom_factor, 0.001)
+	var word: Rect2 = mark_row.spans[span_index].rect
+	_head_card.call("hover_word", card, get_global_transform() * Rect2(word.position * zoom, word.size * zoom), at_once)
 	return true
 
 
@@ -5617,6 +5645,9 @@ func _get_tooltip(at_position: Vector2) -> String:
 		if not NativeVariableMarks.badge_at(badge_row, _to_logical_position(at_position)).is_empty():
 			return ""
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
+	# The glyph mark of a variable that wears a look opens its card instead (update_badge_card).
+	if not show_variable_badges and bool(metadata.get("inspector_badge", false)) and not str(metadata.get("inspector_picture", "")).is_empty():
+		return ""
 	var kind: String = str(metadata.get("kind", ""))
 	# A MARK explains itself. The glyphs a sheet puts on a row (runs every frame, trigger, calls a
 	# function, function, inverted, disabled) are the one thing a reader cannot look up by reading

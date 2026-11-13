@@ -2,6 +2,8 @@
 class_name EventSheetViewportInputHandlers
 extends RefCounted
 
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+
 # The INPUT handling of the event sheet's virtualized viewport, extracted from
 # event_sheet_viewport.gd to keep that file maintainable. The four handlers behind
 # the viewport's _gui_input virtual live here:
@@ -335,6 +337,16 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			var comment_door: Dictionary = door_at(metadata, local_position)
 			if not comment_door.is_empty():
 				_viewport.comment_door_requested.emit(comment_door)
+				_viewport.accept_event()
+				return
+		# Click a variable's Inspector mark -> the Variable window opens on its look list. A control never
+		# enters the row; the mark is the door. A variable shown from another script is changed there.
+		if row_data != null and not event.double_click and NativeVariableMarks.look_door_open(row_data):
+			var on_glyph: bool = bool(metadata.get("inspector_badge", false))
+			var on_tile: bool = _viewport.show_variable_badges \
+				and NativeVariableMarks.badge_at(row_data, local_position) == NativeVariableMarks.BADGE_INSPECTOR
+			if on_glyph or on_tile:
+				_viewport.variable_look_requested.emit(row_data)
 				_viewport.accept_event()
 				return
 		# Click the square that leads a colour value -> the picker opens under it, with no parameters

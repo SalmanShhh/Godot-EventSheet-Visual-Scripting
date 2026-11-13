@@ -283,6 +283,7 @@ func build_ui() -> void:
 	_dock._viewport.colour_menu_requested.connect(_dock._on_colour_menu_requested)
 	_dock._viewport.param_node_drop_requested.connect(_dock._on_param_node_drop_requested)
 	_dock._viewport.variable_edit_requested.connect(_dock._on_viewport_variable_edit_requested)
+	_dock._viewport.variable_look_requested.connect(func(row_data: EventRowData) -> void: _dock._variable_gestures.open_window(row_data, "look"))
 	_dock._viewport.comment_edit_requested.connect(_dock._open_comment_dialog)
 	_dock._viewport.group_edit_requested.connect(later("_add_rows", "on_group_edit_requested"))
 	_dock._viewport.pick_filter_edit_requested.connect(_dock._open_pick_filter_dialog)

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### New: the mark says which look, and a click opens the look list
+
+- Hovering the Inspector mark of a variable that wears a look opens a card that names the look, says its sentence (the limits for a slider), quotes the whole declaration line and ends "Click the mark to change the look."; a look whose file is missing says "Look not installed" and names the file. With tiles off, the glyph at the end of the row opens the same card. A single click on the mark opens the Variable window on its look list; no control enters the row, and a variable shown from another script is changed there.
+
 ### Changed: an exported variable's mark is the picture of its look
 
 - The mark at the right of an exported variable row (and its tile, with View > Variable Badges on) is drawn as the small picture of the look the variable wears, in the row's own ink: a slider, a table grid, a menu arrow, a die for a seed, a Color's own colour. A look whose file is not installed is an amber "?" with no border. With tiles on, the separate range tile folds into the slider mark, so a ranged variable shows one mark, not two. A plain `@export` keeps today's mark.

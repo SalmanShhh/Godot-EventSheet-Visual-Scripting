@@ -676,7 +676,10 @@ static func badge_tooltip(badge: String, variable: LocalVariable = null) -> Stri
 ## The hover card a badge tile opens, in the words the head bar's card reads: a bold title, one
 ## sentence, and the line of code that earns the tile in the muted code face. The shape
 ## sheet_head_card.gd draws ({"id", "title", "mono", "lines", "width", "anchor"}); {} for no badge.
-static func badge_card(badge: String, variable: LocalVariable = null) -> Dictionary:
+static func badge_card(badge: String, variable: LocalVariable = null, mark: Dictionary = {}) -> Dictionary:
+	# A mark that is the picture of a look says which look, in its own words, and where to change it.
+	if badge == BADGE_INSPECTOR and not str(mark.get("picture", "")).is_empty():
+		return _mark_card(variable, mark)
 	var title: String = ""
 	var said: String = ""
 	match badge:
@@ -713,6 +716,66 @@ static func badge_card(badge: String, variable: LocalVariable = null) -> Diction
 	return {"id": "badge:%s:%s" % [badge, name_text], "title": title, "mono": code,
 		"lines": PackedStringArray([said]) if not said.is_empty() else PackedStringArray(),
 		"width": 250.0, "anchor": "right", "code_last": true}
+
+
+## The card behind a mark that wears a look: the look's name, its sentence (and the limits for a slider),
+## "Click the mark to change the look.", and the whole declaration line.
+static func _mark_card(variable: LocalVariable, mark: Dictionary) -> Dictionary:
+	var picture: String = str(mark.get("picture", ""))
+	var look_id: String = str(mark.get("look_id", ""))
+	var title: String = ""
+	var lines: PackedStringArray = PackedStringArray()
+	if bool(mark.get("missing", false)):
+		title = EventSheetL10n.translate("Look not installed")
+		lines.append(EventSheetL10n.translate("The file %s is missing, so the Inspector shows a plain field.") % ("%s.gd" % look_id))
+	elif picture == "colour":
+		title = EventSheetL10n.translate("Colour in the Inspector")
+		lines.append(EventSheetL10n.translate("The mark is the colour this variable holds."))
+	else:
+		var looks: GDScript = load(LOOKS_PATH)
+		var look: Dictionary = looks.by_id(look_id)
+		title = looks.label(look) if not look.is_empty() else EventSheetL10n.translate("In the Inspector")
+		var said: String = looks.description(look).get_slice("\n", 0) if not look.is_empty() else ""
+		if not said.is_empty():
+			lines.append(said)
+		if SLIDER_PICTURES.has(picture):
+			lines.append(_range_sentence(variable))
+	lines.append(EventSheetL10n.translate("Click the mark to change the look."))
+	var name_text: String = variable.name if variable != null else ""
+	return {"id": "badge:mark:%s:%s" % [picture, name_text], "title": title, "mono": declaration_line(variable),
+		"lines": lines, "width": 250.0, "anchor": "right", "code_last": true}
+
+
+## The line a variable is declared with, as the file writes it ("" for none): what the mark's card quotes.
+static func declaration_line(variable: LocalVariable) -> String:
+	if variable == null:
+		return ""
+	var written: String = str((load("res://addons/eventforge/compiler/sheet_compiler.gd") as GDScript)._emit_tree_variable_line(variable))
+	var last: String = ""
+	for line: String in written.split("\n"):
+		if not line.strip_edges().is_empty():
+			last = line
+	return last
+
+
+## The mark a variable row wears, as the row builder stamped it on the badge-carrying span, or {}.
+static func row_mark(row_data: EventRowData) -> Dictionary:
+	var span: EventSheetSemanticSpan = badge_span(row_data)
+	if span == null:
+		return {}
+	var stamped: Variant = (span.metadata as Dictionary).get("inspector_mark", {})
+	return stamped if stamped is Dictionary else {}
+
+
+## True when a click on the mark of this row may open the Variable window on its look: the row declares the
+## variable itself (a variable shown from another script is changed there).
+static func look_door_open(row_data: EventRowData) -> bool:
+	if row_data == null or not row_data.variable_row:
+		return false
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get("variable_name_span", false)):
+			return bool((span.metadata as Dictionary).get("editable", false))
+	return false
 
 
 ## "A slider in the Inspector, from 0 to 600." - the range card's sentence, from the limits the

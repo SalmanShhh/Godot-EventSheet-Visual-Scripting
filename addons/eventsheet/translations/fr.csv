@@ -10486,3 +10486,8 @@ Tag from a table's rows,Étiquette des lignes d'un tableau
 A menu of the tags a table's rows already use. You can still type a new one.,Un menu des étiquettes que les lignes d'un tableau utilisent déjà. Vous pouvez toujours en saisir une nouvelle.
 Seed with a New seed button,Graine avec bouton Nouvelle graine
 A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,Un champ numérique et un bouton qui écrit une nouvelle graine. Pour une graine où 0 signifie une nouvelle à chaque exécution.
+Look not installed,Apparence non installée
+"The file %s is missing, so the Inspector shows a plain field.","Le fichier %s est introuvable, l'inspecteur affiche donc un champ simple."
+Colour in the Inspector,Couleur dans l'inspecteur
+The mark is the colour this variable holds.,La marque est la couleur que contient cette variable.
+Click the mark to change the look.,Cliquez sur la marque pour changer l'apparence.

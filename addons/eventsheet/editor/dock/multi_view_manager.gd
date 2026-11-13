@@ -98,6 +98,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.param_node_drop_requested.connect(_dock._on_param_node_drop_requested)
 	view.property_dropped.connect(_dock._apply_property_drop)
 	view.variable_edit_requested.connect(_dock._on_viewport_variable_edit_requested)
+	view.variable_look_requested.connect(func(row_data: EventRowData) -> void: _dock._variable_gestures.open_window(row_data, "look"))
 	view.comment_edit_requested.connect(_dock._open_comment_dialog)
 	view.group_edit_requested.connect(_dock._ui_builder.later("_add_rows", "on_group_edit_requested"))
 	view.pick_filter_edit_requested.connect(_dock._open_pick_filter_dialog)

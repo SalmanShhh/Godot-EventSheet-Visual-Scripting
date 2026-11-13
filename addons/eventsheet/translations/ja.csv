@@ -10486,3 +10486,8 @@ Tag from a table's rows,表の行から選ぶタグ
 A menu of the tags a table's rows already use. You can still type a new one.,表の行がすでに使っているタグのメニュー。新しいタグを直接入力することもできます。
 Seed with a New seed button,「新しいシード」ボタン付きシード
 A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,数値欄と、新しいシードを書き込むボタン。0 が「実行ごとに新しいシード」を意味するシード向けです。
+Look not installed,ルックがインストールされていません
+"The file %s is missing, so the Inspector shows a plain field.",ファイル %s が見つからないため、インスペクターには通常のフィールドが表示されます。
+Colour in the Inspector,インスペクターの色
+The mark is the colour this variable holds.,マークはこの変数が持つ色です。
+Click the mark to change the look.,マークをクリックするとルックを変更できます。

@@ -10486,3 +10486,8 @@ Tag from a table's rows,Etiqueta de las filas de una tabla
 A menu of the tags a table's rows already use. You can still type a new one.,Un menú con las etiquetas que ya usan las filas de una tabla. Aun así puedes escribir una nueva.
 Seed with a New seed button,Semilla con botón de nueva semilla
 A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,Un campo numérico y un botón que escribe una semilla nueva. Para una semilla en la que 0 significa una nueva en cada partida.
+Look not installed,Aspecto no instalado
+"The file %s is missing, so the Inspector shows a plain field.","Falta el archivo %s, así que el Inspector muestra un campo simple."
+Colour in the Inspector,Color en el Inspector
+The mark is the colour this variable holds.,La marca es el color que guarda esta variable.
+Click the mark to change the look.,Haz clic en la marca para cambiar el aspecto.

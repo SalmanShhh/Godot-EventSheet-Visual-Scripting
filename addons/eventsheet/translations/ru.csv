@@ -10486,3 +10486,8 @@ Tag from a table's rows,Тег из строк таблицы
 A menu of the tags a table's rows already use. You can still type a new one.,"Меню тегов, которые уже есть в строках таблицы. Новый тег по-прежнему можно ввести вручную."
 Seed with a New seed button,Зерно с кнопкой «Новое зерно»
 A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,"Числовое поле и кнопка, которая записывает новое зерно. Для зерна, где 0 означает новое при каждом запуске."
+Look not installed,Вид не установлен
+"The file %s is missing, so the Inspector shows a plain field.","Файл %s отсутствует, поэтому инспектор показывает обычное поле."
+Colour in the Inspector,Цвет в инспекторе
+The mark is the colour this variable holds.,"Метка имеет цвет, который хранит эта переменная."
+Click the mark to change the look.,"Нажмите на метку, чтобы изменить вид."

@@ -10486,3 +10486,8 @@ Tag from a table's rows,Tag aus den Zeilen einer Tabelle
 A menu of the tags a table's rows already use. You can still type a new one.,"Ein Menü der Tags, die die Zeilen einer Tabelle schon verwenden. Ein neuer Tag lässt sich weiterhin eintippen."
 Seed with a New seed button,Seed mit Neuer-Seed-Knopf
 A number field and a button that writes a fresh seed. For a seed where 0 means a new one every run.,"Ein Zahlenfeld und ein Knopf, der einen frischen Seed schreibt. Für einen Seed, bei dem 0 bei jedem Start einen neuen bedeutet."
+Look not installed,Look nicht installiert
+"The file %s is missing, so the Inspector shows a plain field.","Die Datei %s fehlt, deshalb zeigt der Inspektor ein einfaches Feld."
+Colour in the Inspector,Farbe im Inspektor
+The mark is the colour this variable holds.,"Das Zeichen hat die Farbe, die diese Variable enthält."
+Click the mark to change the look.,Klick auf das Zeichen ändert den Look.
