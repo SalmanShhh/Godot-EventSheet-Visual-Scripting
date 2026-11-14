@@ -297,8 +297,10 @@ func init_dialog(parent_node: Node) -> void:
 	var live: VBoxContainer = EventSheetPopupUI.form_box()
 	live.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("Live, as you pick")))
 	_help_strip = EventSheetPopupUI.help_strip("", "", "", "", 300.0)
-	# The code can run long; it wraps inside the column rather than widening the window.
-	_help_strip.in_code_value.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	# The code can run long; it wraps inside the column rather than widening the window. It breaks
+	# between words, and inside one only when that word alone is wider than the column: the
+	# arbitrary mode split "String" into "Str" and "ing" at whatever column the line ran out.
+	_help_strip.in_code_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# The whole line shows, wrapped: this column has the room, so no ellipsis cuts the declaration.
 	_help_strip.in_code_value.max_lines_visible = -1
 	_help_strip.in_code_value.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
