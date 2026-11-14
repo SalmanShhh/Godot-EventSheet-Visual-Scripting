@@ -1227,18 +1227,11 @@ static func tone_color(tone: String) -> Color:
 	return accent_color()
 
 
-## The faint fill a note wears for a tone: the tone's own colour, never the darkened ink a light panel
-## reads its words in (a darkened amber on a pale panel is a grey), a little stronger on a light panel
-## so the amber stays amber. The sheet's quiet amber row is this same colour.
+## The faint fill of a note: the tone's own colour (never the darkened ink its words read in, which is a
+## grey on a pale panel), stronger on a light panel. The sheet's quiet amber row is the same colour.
 static func tone_tint(tone: String) -> Color:
-	var base: Color = accent_color()
-	match tone:
-		TONE_OK:
-			base = EventSheetPalette.COLOR_HEALTH_OK
-		TONE_WARNING:
-			base = EventSheetPalette.COLOR_HEALTH_WARN
-		TONE_ERROR:
-			base = EventSheetPalette.COLOR_ERROR_TEXT
+	var base: Color = {TONE_OK: EventSheetPalette.COLOR_HEALTH_OK, TONE_WARNING: EventSheetPalette.COLOR_HEALTH_WARN,
+		TONE_ERROR: EventSheetPalette.COLOR_ERROR_TEXT}.get(tone, accent_color())
 	return Color(base.r, base.g, base.b, 0.12 if panel_fill().get_luminance() < 0.5 else 0.26)
 
 
