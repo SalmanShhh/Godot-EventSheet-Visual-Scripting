@@ -83,7 +83,8 @@ static func run() -> bool:
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_PATH))
 	ok = _autoload_never_hides_itself() and ok
-	return _window_fits_its_form() and ok
+	ok = _window_fits_its_form() and ok
+	return _enter_adds() and ok
 
 
 ## Godot refuses a script whose class_name equals the autoload it is registered as. A new global's sheet
@@ -141,6 +142,20 @@ static func _window_fits_its_form() -> bool:
 	host.free()
 	return _check("the Add global variable preview wraps at a width of its own", width,
 		EventSheetPalette.scaled_f(EventSheetPopupUI.HINT_WRAP_WIDTH))
+
+
+## Enter in the Name or the Value field is the Add button, as it is in every other window with a field.
+static func _enter_adds() -> bool:
+	var host: Control = Control.new()
+	var globals: EventSheetGlobalVariables = EventSheetGlobalVariables.new()
+	globals.init(host)
+	globals._build_dialog()
+	var wired: Array = []
+	for field: LineEdit in [globals._name_edit, globals._value_edit]:
+		wired.append(field.text_submitted.get_connections().any(
+			func(connection: Dictionary) -> bool: return (connection["callable"] as Callable).get_object() == globals._dialog))
+	host.free()
+	return _check("Enter in the name and in the value field is the Add button", wired, [true, true])
 
 
 static func _names(entries: Array[Dictionary]) -> String:

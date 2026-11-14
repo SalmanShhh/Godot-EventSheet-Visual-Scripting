@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: Add global variable says where the variable went, and Enter in the name adds it
+
+- After Add > Global Variable made a new autoload, the line saying so ("Added global variable Score to Globals, a new autoload (see it in Project Settings > Globals > Autoload).") was replaced a moment later by "Opening globals.gd ..." and that stayed in the status bar until the next save. The variable is now added once the file has finished opening, so the line saying where to see it is the one that stays.
+- Enter in the Name or Value field of the Add global variable window now presses Add, as it does in the other windows.
+
 ### Changed: the risky button of a small question is a plain button
 
 - The risky choice of a small question (Delete anyway, Discard, Clear all, Delete the event, Use the file on disk, and Delete in the parameter window) was drawn with a red outline or red text. It is now a normal Godot button, still on the left and still never the one Enter or Esc reaches: the risk is in its words, and the plugin draws no colour or outline of its own on it.

@@ -222,6 +222,7 @@ func _build_dialog() -> void:
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "Score"
 	_name_edit.text_changed.connect(func(_text: String) -> void: _refresh_preview())
+	_dialog.register_text_enter(_name_edit)
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Name"), _name_edit))
 	_type_picker = OptionButton.new()
 	for word: String in EventSheetVariableSentence.TYPE_WORD_ORDER:
@@ -232,6 +233,7 @@ func _build_dialog() -> void:
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Type"), _type_picker))
 	_value_edit = LineEdit.new()
 	_value_edit.text_changed.connect(func(_text: String) -> void: _refresh_preview())
+	_dialog.register_text_enter(_value_edit)
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Value"), _value_edit))
 	_target_picker = OptionButton.new()
 	_target_picker.item_selected.connect(func(_index: int) -> void: _refresh_preview())
@@ -294,6 +296,11 @@ func add_global(raw_name: String, type_name: String, value_text: String, target:
 	# Open (or focus) the autoload as a sheet FIRST, then write into it through the ordinary funnel:
 	# the user sees where their global went, and the undo step lands on the tab that owns the file.
 	_dock._navigate.record_current()
+	_dock._navigate.open_or_focus(path)
+	# A .gd is read on a worker thread: an edit made before that ends is kept apart from the read and its
+	# "Opening ..." line would cover the line this adds, so the write waits for the read (a few frames).
+	while _dock.is_inside_tree() and _dock._open_progress.is_opening(path):
+		await _dock.get_tree().process_frame
 	_dock._navigate.open_or_focus(path)
 	var sheet: EventSheetResource = _dock._current_sheet
 	if sheet == null or str(sheet.get("external_source_path")) != path:
