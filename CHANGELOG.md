@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: an object's name on the sheet is read whole when the row has room for it
+
+- A long class name in a condition or an action ("ScriptRowsAnnotatedTwin") was cut to "ScriptRowsAnnotatedT..." in a lane with a thousand pixels to spare, because the object column was one fixed width. The column now grows to the widest object name of its lane, up to half the lane; only a lane that is truly short elides a name. A sheet with short names looks as before. Only the drawing changed: no row's words moved.
+- The size the first open of the editor is allowed to compile (the closure budget in the test suite) is raised by 10 lines, for the one function that measures the names.
+
 ### Fixed: the Variable window keeps its width for a long hint, and its code line breaks at a comma
 
 - A variable with a long hint (a table look with many columns) made the Variable window grow sideways, from about 1050 px to 1470 px and more, because the Inspector preview under the code line asked for the whole width of its table. The preview now scrolls sideways inside its card, so the window keeps the width it opened at.

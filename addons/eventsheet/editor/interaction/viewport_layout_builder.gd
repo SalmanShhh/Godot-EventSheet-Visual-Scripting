@@ -341,7 +341,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# this still matches the live style, so a token change between layout builds
 				# falls back to the base width instead of drawing/measuring a stale stamp.
 				var stamp_lane: String = str(metadata.get("lane", ""))
-				metadata["object_column_base"] = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane, int(metadata.get("row_indent", 0))))
+				metadata["object_column_base"] = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane, int(metadata.get("row_indent", 0))), _viewport.object_label_floor(stamp_lane))
 			else:
 				metadata.erase("object_column_px")
 				metadata.erase("object_column_base")

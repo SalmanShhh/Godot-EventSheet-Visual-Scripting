@@ -560,7 +560,7 @@ func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: F
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
 		var lane: String = str(metadata.get("lane", ""))
-		var column: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
+		var column: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))), _viewport.object_label_floor(lane))
 		if column_override >= 0.0:
 			lead += column_override
 		elif column > 0.0:
@@ -584,7 +584,7 @@ func object_column_override(metadata: Dictionary, lane_origin_x: float, span_x: 
 	if str(metadata.get("object_label", "")).is_empty():
 		return -1.0
 	var lane: String = str(metadata.get("lane", ""))
-	var column: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))))
+	var column: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane, int(metadata.get("row_indent", 0))), _viewport.object_label_floor(lane))
 	if column <= 0.0:
 		return -1.0
 	var lead: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0

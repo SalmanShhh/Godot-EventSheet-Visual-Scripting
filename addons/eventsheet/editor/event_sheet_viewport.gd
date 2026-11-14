@@ -1359,6 +1359,11 @@ func lane_width_for(lane: String, indent: int = 0) -> float:
 	return maxf(divider_x - lead_in, 1.0)
 
 
+## The widest object name of `lane` in the rows built so far, in pixels: the object column grows to hold it.
+func object_label_floor(lane: String) -> float:
+	return float(load("res://addons/eventsheet/editor/interaction/object_label_floor.gd").floors_for(self).get(lane, 0.0))
+
+
 ## True when a logical x sits over the draggable conditions/actions lane divider. Asked by the
 ## COLUMN HEADER only: down the sheet the divider is a line, not a handle, so a press five pixels
 ## from it selects the event it landed in instead of starting a resize the reader never asked for.
@@ -1412,7 +1417,7 @@ func _object_column_boundary_of(span: EventSheetSemanticSpan) -> Dictionary:
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventSheetRowRenderer.object_icon_advance(_get_event_style())
 	var boundary_x: float = anchor_x
-	var column_width: float = EventSheetRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, int(metadata.get("row_indent", 0))))
+	var column_width: float = EventSheetRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane, int(metadata.get("row_indent", 0))), object_label_floor(lane))
 	# The layout stamps the aligned per-span column (shared separator x); grab where it is
 	# actually drawn, not where the raw style width would put it.
 	var aligned_column: Variant = metadata.get("object_column_px")
@@ -1967,7 +1972,7 @@ func _span_text_origin_x(span: EventSheetSemanticSpan, font: Font, font_size: in
 		# Fixed object column (the event-sheet sub-lane) advances by the column width; flow mode by the
 		# label's own width - mirrors the renderer exactly.
 		var span_lane: String = str(metadata.get("lane", ""))
-		var object_column_width: float = EventSheetRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane, int(metadata.get("row_indent", 0))))
+		var object_column_width: float = EventSheetRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane, int(metadata.get("row_indent", 0))), object_label_floor(span_lane))
 		if object_column_width > 0.0:
 			# The layout stamps the aligned per-span column (shared-separator rule); the
 			# hit-test origin must advance by the DRAWN column or value clicks drift.

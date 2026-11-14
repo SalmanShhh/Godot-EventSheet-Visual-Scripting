@@ -247,6 +247,8 @@ static func _draw_object_column_separator(control: CanvasItem, span: EventSheetS
 ## default) only where the lane is genuinely unknown - the bound is then skipped, as before.
 ## The most of its lane a fixed name column may take: half, so the words beside it keep the rest.
 const OBJECT_COLUMN_LANE_SHARE := 0.5
+## The gap a column keeps after its widest object name.
+const OBJECT_LABEL_PAD := 8.0
 
 
 ## How far a line's words move past its object icon: the plate's advance, or the bare icon's in the
@@ -256,7 +258,7 @@ static func object_icon_advance(event_style: EventSheetEventStyle) -> float:
 	return BARE_ICON_ADVANCE if event_style != null and event_style.sub_event_strips else OBJECT_ICON_ADVANCE
 
 
-static func object_column_width_for(event_style: EventSheetEventStyle, lane: String, lane_width: float = 0.0) -> float:
+static func object_column_width_for(event_style: EventSheetEventStyle, lane: String, lane_width: float = 0.0, label_floor: float = 0.0) -> float:
 	if event_style == null:
 		return 0.0
 	var column: float = 0.0
@@ -267,6 +269,7 @@ static func object_column_width_for(event_style: EventSheetEventStyle, lane: Str
 			column = float(event_style.action_object_column_width)
 	if column <= 0.0:
 		return 0.0  # flow mode: text follows each label
+	column = maxf(column, label_floor + OBJECT_LABEL_PAD) if label_floor > 0.0 else column
 	return minf(column, lane_width * OBJECT_COLUMN_LANE_SHARE) if lane_width > 0.0 else column
 
 
@@ -2216,7 +2219,7 @@ func _draw_spans(
 			# measure / hit-test twins use or draw and hit-test drift apart.
 			var drawn_lane: String = str(metadata.get("lane", ""))
 			var lane_bound: float = control.lane_width_for(drawn_lane, int(metadata.get("row_indent", 0))) if control.has_method("lane_width_for") else 0.0
-			var object_column_width: float = object_column_width_for(event_style, drawn_lane, lane_bound)
+			var object_column_width: float = object_column_width_for(event_style, drawn_lane, lane_bound, control.object_label_floor(drawn_lane) if control.has_method("object_label_floor") else 0.0)
 			# Sub-lane alignment: the layout stamps the per-span column width whose boundary
 			# lands on the lane's SHARED separator x (a badge shifts a cell's start; the fixed
 			# style width would drift its separator off the lines below). Prefer it when set.

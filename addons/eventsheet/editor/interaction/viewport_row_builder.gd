@@ -17826,7 +17826,7 @@ func _measure_span_width(span: EventSheetSemanticSpan, display_text: String, fon
 		# Fixed object column (event-sheet sub-lane): the label occupies exactly the column width;
 		# flow mode occupies the label's own width. Must mirror the renderer's advance.
 		var measured_lane: String = str(metadata.get("lane", ""))
-		var object_column_width: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane, int(metadata.get("row_indent", 0))))
+		var object_column_width: float = EventSheetRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane, int(metadata.get("row_indent", 0))), _viewport.object_label_floor(measured_lane))
 		if object_column_width > 0.0:
 			# The layout stamps the aligned per-span column (the shared-separator rule); the
 			# measured advance must match the DRAWN advance or natural chips lose text room.

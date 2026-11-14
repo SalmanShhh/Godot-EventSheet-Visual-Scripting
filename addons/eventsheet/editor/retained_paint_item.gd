@@ -75,6 +75,10 @@ func lane_width_for(lane: String, indent: int) -> float:
 	return viewport.lane_width_for(lane, indent)
 
 
+func object_label_floor(lane: String) -> float:
+	return viewport.object_label_floor(lane)
+
+
 func get_zoom_factor() -> float:
 	return viewport.get_zoom_factor()
 
