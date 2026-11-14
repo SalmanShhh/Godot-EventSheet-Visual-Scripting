@@ -60,13 +60,79 @@ const OVERFLOW_MODE_NONE := "none"
 @export var max_value: float = 99999.0
 
 # --- Internal state ---
-# buff id -> {stat, value, mode, tags: Array[String], source, active, time_left (-1 =
-# permanent), duration, paused}. Ids are unique per node: re-adding replaces.
+## One buff on a stat: what it changes, by how much, and how long it has left.
+class StatBuff extends RefCounted:
+	## The stat the buff changes.
+	var stat: String = ""
+	## The amount: added, multiplied in, or the override.
+	var value: float = 0.0
+	## How the value applies: add, multiply or override.
+	var mode: String = "add"
+	## The tags the buff answers to, for removing or switching groups of buffs together.
+	var tags: Array[String] = []
+	## Who applied the buff, for removing everything one source applied.
+	var source: String = ""
+	## False while the buff is switched off: it stays in the stack but adds nothing.
+	var active: bool = true
+	## Seconds left on the countdown; -1 for a buff that never runs out.
+	var time_left: float = -1.0
+	## The seconds the countdown started from; 0 for none.
+	var duration: float = 0.0
+	## True while the countdown is frozen.
+	var paused: bool = false
+
+	# The buff as a saved state holds it.
+	func to_dict() -> Dictionary:
+		return {"stat": stat, "value": value, "mode": mode, "tags": tags.duplicate(), "source": source, "active": active, "time_left": time_left, "duration": duration, "paused": paused}
+
+	# A buff read back from a saved state; a key the record lacks keeps the value a fresh buff has.
+	static func from_dict(data: Dictionary) -> StatBuff:
+		var buff: StatBuff = StatBuff.new()
+		buff.stat = str(data.get("stat", ""))
+		buff.value = float(data.get("value", 0.0))
+		buff.mode = str(data.get("mode", "add"))
+		for tag: Variant in data.get("tags", []) as Array:
+			buff.tags.append(str(tag))
+		buff.source = str(data.get("source", ""))
+		buff.active = bool(data.get("active", true))
+		buff.time_left = float(data.get("time_left", -1.0))
+		buff.duration = float(data.get("duration", 0.0))
+		buff.paused = bool(data.get("paused", false))
+		return buff
+
+## One threshold rule: the stat it watches, the edge, which way counts, and whether it can fire again.
+class ThresholdRule extends RefCounted:
+	## The stat whose total is watched.
+	var stat: String = ""
+	## The edge the total has to cross.
+	var value: float = 0.0
+	## Which crossing counts: rising, falling or both.
+	var direction: String = "rising"
+	## True when the rule re-arms by itself once the stat is back across.
+	var repeating: bool = true
+	## True while the rule can fire; a one-shot rule is spent after it does.
+	var armed: bool = true
+
+	# The rule as a saved state holds it.
+	func to_dict() -> Dictionary:
+		return {"stat": stat, "value": value, "direction": direction, "repeating": repeating, "armed": armed}
+
+	# A rule read back from a saved state; a key the record lacks keeps the value a fresh rule has.
+	static func from_dict(data: Dictionary) -> ThresholdRule:
+		var rule: ThresholdRule = ThresholdRule.new()
+		rule.stat = str(data.get("stat", ""))
+		rule.value = float(data.get("value", 0.0))
+		rule.direction = str(data.get("direction", "rising"))
+		rule.repeating = bool(data.get("repeating", true))
+		rule.armed = bool(data.get("armed", true))
+		return rule
+
+# buff id -> StatBuff. Ids are unique per node: re-adding replaces.
 ## Active buffs by id, each with its stat, amount and time left.
 var _buffs: Dictionary = {}
 ## Base value of each stat before any buff.
 var _bases: Dictionary = {}
-# rule id -> {stat, value, direction, repeating, armed}
+# rule id -> ThresholdRule
 ## Threshold rules by id, each watching one stat's total for a crossing.
 var _rules: Dictionary = {}
 ## Each stat's total as of the last change, used to spot what changed.
@@ -100,17 +166,17 @@ func stat_total(stat: String) -> float:
 	var multiplier: float = 1.0
 	var best_override: float = -INF
 	var has_override: bool = false
-	for buff: Dictionary in _buffs.values():
-		if str(buff["stat"]) != stat or not bool(buff["active"]):
+	for buff: StatBuff in _buffs.values():
+		if buff.stat != stat or not buff.active:
 			continue
-		match str(buff["mode"]):
+		match buff.mode:
 			"add":
-				total += float(buff["value"])
+				total += buff.value
 			"multiply":
-				multiplier *= float(buff["value"])
+				multiplier *= buff.value
 			"override":
 				has_override = true
-				best_override = maxf(best_override, float(buff["value"]))
+				best_override = maxf(best_override, buff.value)
 	var result: float = best_override if has_override else total * multiplier
 	match overflow_mode:
 		OVERFLOW_MODE_CLAMP:
@@ -132,7 +198,8 @@ func stat_base(stat: String) -> float:
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.buff_value({buff_id})")
 func buff_value(buff_id: String) -> float:
-	return float((_buffs.get(buff_id, {}) as Dictionary).get("value", 0.0))
+	var buff: StatBuff = _buffs.get(buff_id, null) as StatBuff
+	return buff.value if buff != null else 0.0
 
 ## Seconds left on a timed buff (-1 = permanent or unknown).
 ## @ace_expression
@@ -140,7 +207,8 @@ func buff_value(buff_id: String) -> float:
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.buff_time_left({buff_id})")
 func buff_time_left(buff_id: String) -> float:
-	return float((_buffs.get(buff_id, {}) as Dictionary).get("time_left", -1.0))
+	var buff: StatBuff = _buffs.get(buff_id, null) as StatBuff
+	return buff.time_left if buff != null else -1.0
 
 ## @ace_expression
 ## @ace_name("Buff Count")
@@ -155,8 +223,8 @@ func buff_count() -> int:
 ## @ace_codegen_template("$StatForge.buff_count_with_tag({tag})")
 func buff_count_with_tag(tag: String) -> int:
 	var count: int = 0
-	for buff: Dictionary in _buffs.values():
-		if (buff["tags"] as Array).has(tag):
+	for buff: StatBuff in _buffs.values():
+		if buff.tags.has(tag):
 			count += 1
 	return count
 
@@ -197,7 +265,8 @@ func has_buff(buff_id: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.buff_is_active({buff_id})")
 func buff_is_active(buff_id: String) -> bool:
-	return bool((_buffs.get(buff_id, {}) as Dictionary).get("active", false))
+	var buff: StatBuff = _buffs.get(buff_id, null) as StatBuff
+	return buff != null and buff.active
 
 ## @ace_condition
 ## @ace_name("Has Buffs With Tag")
@@ -211,8 +280,8 @@ func has_buffs_with_tag(tag: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.has_buffs_from_source({source})")
 func has_buffs_from_source(source: String) -> bool:
-	for buff: Dictionary in _buffs.values():
-		if str(buff["source"]) == source:
+	for buff: StatBuff in _buffs.values():
+		if buff.source == source:
 			return true
 	return false
 
@@ -239,7 +308,15 @@ func add_buff(buff_id: String, stat: String, value: float, mode: String = "add",
 	var tag_list: Array[String] = []
 	for tag: String in tags.split(",", false):
 		tag_list.append(tag.strip_edges())
-	_buffs[buff_id] = {"stat": stat, "value": value, "mode": mode, "tags": tag_list, "source": source, "active": true, "time_left": duration if duration > 0.0 else -1.0, "duration": duration, "paused": false}
+	var buff: StatBuff = StatBuff.new()
+	buff.stat = stat
+	buff.value = value
+	buff.mode = mode
+	buff.tags = tag_list
+	buff.source = source
+	buff.time_left = duration if duration > 0.0 else -1.0
+	buff.duration = duration
+	_buffs[buff_id] = buff
 	if duration > 0.0:
 		# A timed buff is a countdown, so the auto-tick comes back on to run it.
 		set_physics_process(auto_tick)
@@ -254,7 +331,7 @@ func add_buff(buff_id: String, stat: String, value: float, mode: String = "add",
 func remove_buff(buff_id: String) -> void:
 	if not _buffs.has(buff_id):
 		return
-	var stat: String = str((_buffs[buff_id] as Dictionary)["stat"])
+	var stat: String = (_buffs[buff_id] as StatBuff).stat
 	_buffs.erase(buff_id)
 	buff_removed.emit(buff_id, stat)
 	_check_thresholds()
@@ -266,7 +343,7 @@ func remove_buff(buff_id: String) -> void:
 ## @ace_codegen_template("$StatForge.remove_buffs_by_tag({tag})")
 func remove_buffs_by_tag(tag: String) -> void:
 	for buff_id: String in _buffs.keys().duplicate():
-		if ((_buffs[buff_id] as Dictionary)["tags"] as Array).has(tag):
+		if (_buffs[buff_id] as StatBuff).tags.has(tag):
 			remove_buff(buff_id)
 
 ## Removes every buff a source applied - clear one enemy's curses when it dies.
@@ -276,7 +353,7 @@ func remove_buffs_by_tag(tag: String) -> void:
 ## @ace_codegen_template("$StatForge.remove_buffs_by_source({source})")
 func remove_buffs_by_source(source: String) -> void:
 	for buff_id: String in _buffs.keys().duplicate():
-		if str((_buffs[buff_id] as Dictionary)["source"]) == source:
+		if (_buffs[buff_id] as StatBuff).source == source:
 			remove_buff(buff_id)
 
 ## Empties the whole stack (bases stay).
@@ -305,7 +382,7 @@ func set_stat_base(stat: String, value: float) -> void:
 ## @ace_codegen_template("$StatForge.set_buff_active({buff_id}, {active})")
 func set_buff_active(buff_id: String, active: bool) -> void:
 	if _buffs.has(buff_id):
-		(_buffs[buff_id] as Dictionary)["active"] = active
+		(_buffs[buff_id] as StatBuff).active = active
 		_check_thresholds()
 
 ## Bulk activation by tag - silence every "aura" buff in an antimagic zone.
@@ -314,9 +391,9 @@ func set_buff_active(buff_id: String, active: bool) -> void:
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.set_buffs_active_by_tag({tag}, {active})")
 func set_buffs_active_by_tag(tag: String, active: bool) -> void:
-	for buff: Dictionary in _buffs.values():
-		if (buff["tags"] as Array).has(tag):
-			buff["active"] = active
+	for buff: StatBuff in _buffs.values():
+		if buff.tags.has(tag):
+			buff.active = active
 	_check_thresholds()
 
 ## Changes a live buff's value in place (a stacking poison that deepens).
@@ -326,7 +403,7 @@ func set_buffs_active_by_tag(tag: String, active: bool) -> void:
 ## @ace_codegen_template("$StatForge.set_buff_value({buff_id}, {value})")
 func set_buff_value(buff_id: String, value: float) -> void:
 	if _buffs.has(buff_id):
-		(_buffs[buff_id] as Dictionary)["value"] = value
+		(_buffs[buff_id] as StatBuff).value = value
 		_check_thresholds()
 
 ## Restarts a timed buff's countdown (re-drinking the potion refreshes, not stacks).
@@ -336,9 +413,9 @@ func set_buff_value(buff_id: String, value: float) -> void:
 ## @ace_codegen_template("$StatForge.refresh_buff({buff_id}, {duration})")
 func refresh_buff(buff_id: String, duration: float) -> void:
 	if _buffs.has(buff_id) and duration > 0.0:
-		var buff: Dictionary = _buffs[buff_id]
-		buff["time_left"] = duration
-		buff["duration"] = duration
+		var buff: StatBuff = _buffs[buff_id]
+		buff.time_left = duration
+		buff.duration = duration
 		# A restarted countdown needs the frame back; the timers stop once none is running.
 		set_physics_process(auto_tick)
 
@@ -349,7 +426,7 @@ func refresh_buff(buff_id: String, duration: float) -> void:
 ## @ace_codegen_template("$StatForge.set_buff_timer_paused({buff_id}, {paused})")
 func set_buff_timer_paused(buff_id: String, paused: bool) -> void:
 	if _buffs.has(buff_id):
-		(_buffs[buff_id] as Dictionary)["paused"] = paused
+		(_buffs[buff_id] as StatBuff).paused = paused
 		if not paused:
 			# Unfreezing a countdown needs the frame back; the timers stop once none runs.
 			set_physics_process(auto_tick)
@@ -363,14 +440,14 @@ func set_buff_timer_paused(buff_id: String, paused: bool) -> void:
 func advance_timers(seconds: float) -> void:
 	var expired: Array[String] = []
 	for buff_id: String in _buffs:
-		var buff: Dictionary = _buffs[buff_id]
-		if float(buff["time_left"]) < 0.0 or bool(buff["paused"]):
+		var buff: StatBuff = _buffs[buff_id]
+		if buff.time_left < 0.0 or buff.paused:
 			continue
-		buff["time_left"] = float(buff["time_left"]) - seconds
-		if float(buff["time_left"]) <= 0.0:
+		buff.time_left -= seconds
+		if buff.time_left <= 0.0:
 			expired.append(buff_id)
 	for buff_id: String in expired:
-		var stat: String = str((_buffs[buff_id] as Dictionary)["stat"])
+		var stat: String = (_buffs[buff_id] as StatBuff).stat
 		_buffs.erase(buff_id)
 		_last_expired = buff_id
 		buff_expired.emit(buff_id, stat)
@@ -388,7 +465,12 @@ func advance_timers(seconds: float) -> void:
 func add_threshold_rule(rule_id: String, stat: String, value: float, direction: String = "rising", repeating: bool = true) -> void:
 	if rule_id.is_empty() or stat.is_empty() or not direction in ["rising", "falling", "both"]:
 		return
-	_rules[rule_id] = {"stat": stat, "value": value, "direction": direction, "repeating": repeating, "armed": true}
+	var rule: ThresholdRule = ThresholdRule.new()
+	rule.stat = stat
+	rule.value = value
+	rule.direction = direction
+	rule.repeating = repeating
+	_rules[rule_id] = rule
 	_last_totals[stat] = stat_total(stat)
 
 ## @ace_action
@@ -405,7 +487,7 @@ func remove_threshold_rule(rule_id: String) -> void:
 ## @ace_codegen_template("$StatForge.rearm_threshold_rule({rule_id})")
 func rearm_threshold_rule(rule_id: String) -> void:
 	if _rules.has(rule_id):
-		(_rules[rule_id] as Dictionary)["armed"] = true
+		(_rules[rule_id] as ThresholdRule).armed = true
 
 ## Applies a StatSheetResource (.tres): its bases set stat bases, its buff rows Add
 ## Buff one by one IN ORDER - whole loadouts, classes, and difficulty presets as data.
@@ -437,19 +519,19 @@ func _check_thresholds() -> void:
 		return
 	var new_totals: Dictionary = {}
 	for rule_id: String in _rules:
-		var rule: Dictionary = _rules[rule_id]
-		var stat: String = str(rule["stat"])
+		var rule: ThresholdRule = _rules[rule_id]
+		var stat: String = rule.stat
 		if not new_totals.has(stat):
 			new_totals[stat] = stat_total(stat)
 		var now: float = float(new_totals[stat])
 		var before: float = float(_last_totals.get(stat, now))
-		var edge: float = float(rule["value"])
+		var edge: float = rule.value
 		var rose: bool = before < edge and now >= edge
 		var fell: bool = before > edge and now <= edge
-		var crossed: bool = (rose and str(rule["direction"]) != "falling") or (fell and str(rule["direction"]) != "rising")
-		if crossed and bool(rule["armed"]):
-			if not bool(rule["repeating"]):
-				rule["armed"] = false
+		var crossed: bool = (rose and rule.direction != "falling") or (fell and rule.direction != "rising")
+		if crossed and rule.armed:
+			if not rule.repeating:
+				rule.armed = false
 			_last_rule = rule_id
 			threshold_crossed.emit(rule_id, stat, now)
 	for stat: String in new_totals:
@@ -460,8 +542,8 @@ func _check_thresholds() -> void:
 ## never accumulated by the tick.
 ## @ace_hidden
 func _any_buff_timer_running() -> bool:
-	for buff: Dictionary in _buffs.values():
-		if float(buff["time_left"]) > 0.0 and not bool(buff["paused"]):
+	for buff: StatBuff in _buffs.values():
+		if buff.time_left > 0.0 and not buff.paused:
 			return true
 	return false
 
@@ -469,10 +551,16 @@ func _any_buff_timer_running() -> bool:
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	var saved_buffs: Dictionary = {}
+	for buff_id: Variant in _buffs:
+		saved_buffs[buff_id] = (_buffs[buff_id] as StatBuff).to_dict()
+	var saved_rules: Dictionary = {}
+	for rule_id: Variant in _rules:
+		saved_rules[rule_id] = (_rules[rule_id] as ThresholdRule).to_dict()
 	return {
 		"bases": _bases.duplicate(true),
-		"buffs": _buffs.duplicate(true),
-		"rules": _rules.duplicate(true),
+		"buffs": saved_buffs,
+		"rules": saved_rules,
 		"last_totals": _last_totals.duplicate(true)
 	}
 
@@ -481,8 +569,14 @@ func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
 	_bases = (state.get("bases", {}) as Dictionary).duplicate(true)
-	_buffs = (state.get("buffs", {}) as Dictionary).duplicate(true)
-	_rules = (state.get("rules", {}) as Dictionary).duplicate(true)
+	_buffs.clear()
+	var saved_buffs: Dictionary = state.get("buffs", {}) as Dictionary
+	for buff_id: Variant in saved_buffs:
+		_buffs[buff_id] = StatBuff.from_dict(saved_buffs[buff_id] as Dictionary)
+	_rules.clear()
+	var saved_rules: Dictionary = state.get("rules", {}) as Dictionary
+	for rule_id: Variant in saved_rules:
+		_rules[rule_id] = ThresholdRule.from_dict(saved_rules[rule_id] as Dictionary)
 	# Restoring the last-seen totals keeps threshold rules from spuriously re-firing
 	# on the first change after a load.
 	_last_totals = (state.get("last_totals", {}) as Dictionary).duplicate(true)

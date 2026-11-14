@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Stat Forge keeps each buff and threshold rule as a small class
+
+- A buff and a threshold rule were dictionaries read by text in about forty places; they are now a `StatBuff` and a `ThresholdRule` with typed fields. The saved state is the same record it was, written and read through each class's `to_dict` and `from_dict`: a state saved by an older version loads, and saving it again gives the identical text. Stat bases and last totals stay dictionaries, since their keys are your stat names.
+
 ### Changed: Storylet Weaver keeps its storylets, choices, requirements and effects as small classes
 
 - A storylet, a choice, a requirement and an effect were dictionaries read by text in about a hundred places; they are now `Storylet`, `StoryChoice`, `StoryRequirement` and `StoryEffect` with typed fields. A storylet's meta stays a dictionary because its keys are yours, and the rows of a book file are read as before. Every verb, trigger and expression behaves as it did, and what the save state holds is unchanged.
