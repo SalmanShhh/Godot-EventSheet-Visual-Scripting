@@ -115,7 +115,7 @@ var open_scripts_as_event_sheets: bool = false
 ## over to its new name, so the caller knows project.godot has a change worth saving.
 static func register_all() -> bool:
 	var renamed: bool = migrate_renamed()
-	# Authoring shortcuts moved to a per-user file (EventSheetShortcuts / Tools ▸ Keyboard Shortcuts),
+	# Authoring shortcuts moved to Editor Settings > Shortcuts (EventSheetShortcuts),
 	# so they are no longer registered as project settings.
 	var definitions: Array[Dictionary] = DEFINITIONS.duplicate()
 	for definition: Dictionary in definitions:

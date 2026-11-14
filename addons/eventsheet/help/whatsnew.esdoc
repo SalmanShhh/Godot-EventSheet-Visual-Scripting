@@ -6,6 +6,50 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a typed enum export wears the choices mark
+
+- Since Drag & Drop and the Virtual Cursor export real enums (`@export var directions: Directions`), their variable rows read with the plain export mark where the old `@export_enum` line read with the dropdown mark. An exported variable typed by an enum the sheet declares now wears the choices mark again, and the Variable window's Inspector preview draws the dropdown of the enum's members (the variable's own chosen) and says \"Shown as a dropdown of FREE, UP_DOWN, ...\". Only the four enum-typed export rows of those two packs read differently.
+
+### Fixed: the Variable window's look list rows grow with their sentence
+
+- A look's row in the Variable window had a fixed height while its sentence wrapped, so a three-line sentence ran under the next row's title and the last line was clipped. A row is now as tall as its wrapped text at any window width; the list still shows about five rows before it scrolls.
+
+### Fixed: the Variable window's code line is shown whole
+
+- The IN CODE block of the live panel cut its line with an ellipsis (`var stat_hea...`) although it already wrapped. It now shows the whole declaration, wrapped.
+
+### Fixed: the Inspector preview card reads on the light theme
+
+- The card's small \"Inspector preview\" caption and the sentence under the preview were a white fade, pale on pale in the light preset. Both take the editor theme's ink and keep their contrast against the card's fill, in light and dark.
+
+### Changed: Drag & Drop and Virtual Cursor modes are real enums
+
+- Drag & Drop's `directions` and the Virtual Cursor's `direction_mode`, `hover_mode` and `bounce_mode` were exported whole numbers behind an `@export_enum` list. They are now typed enums with pinned values (`Directions.FOUR_DIR = 3`, `BounceMode.CONSTRAINTS = 2`, ...), so the code reads `directions != Directions.FREE` rather than `directions != 0`. A scene saved before the change stores the same number and loads into the enum unchanged (`saved_int_choices_test` loads such a scene file and pins the values); the Set Directions, Set Bounce, Set Direction Mode and Set Hover Mode rows keep their number parameters. The Inspector dropdown labels now come from the enum names (Up Down, Four Dir) instead of the old lowercase words.
+
+### Changed: a behaviour's exported choices are named in its code
+
+- A behaviour's exported choice keeps the words it stores in a scene and its `@export_enum` line exactly as before, so every saved scene loads unchanged. The pack's own code now names each word through a constant (`BOUND_SPACE_SCREEN`, `PIN_MODE_ROPE`, ...), in every comparison, `match` arm and assignment, so a misspelled word is a parse error instead of a silent miss. Row templates such as `set_bound_space(\"{space}\")` keep their bytes. The option lists of `@export_enum` and `@ace_param_options` stay literal: Godot accepts a constant there, but an opened pack then reads that variable as raw code rather than a variable row. Done: Bound To, Pin, Pin 3D, Rotate, Wrap, Anchor, Follow Path, Stat Forge, Utility AI, Juice (the slowmo fade curve and direction), the Camera Rail pair (the shot ease) and Canvas Surface (the coordinates word). The Camera Rail's running shot, which is never saved, is a real enum with pinned values (`ShotMode`), and Canvas Surface's coordinate words are named too.
+
+### Fixed: a weighted table never cuts its text cells
+
+- A weighted table narrower than its roomy width no longer shows the per-row share column at all (the \"Chances\" line above the table already says every share, and \"Total weight\" stays), and the room goes to the text columns. A text cell also asks for the room its longest entry needs, up to a cap, so \"common\" and \"rare,weapon\" are whole at the Inspector's default width. The Loot Table's narrowest Inspector grows from 316 to 356 px to hold its tags whole.
+
+### Fixed: the Chances label reads like the labels around it
+
+- The \"Chances\" row above a weighted table no longer draws a dim label. The row is tied to no property once the Inspector has built it, so it shows neither a second revert arrow nor the dimmed label Godot gives a read-only row.
+
+### Fixed: the amber \"?\" of a missing look reads on a light theme
+
+- The amber \"?\" a row shows for a look that is not installed is held to a readable contrast against the tile or row it sits on: darker on a pale theme, unchanged on a dark one. No border or outline is added.
+
+### Fixed: a width and height pair never leaves its x or its link on a line alone
+
+- A width and height on one row (the texture size line and any `# @inspector_side_by_side` pair) wraps in two units: the width with the \"x\" after it, the height with the link button after it. Side by side while the Inspector has room, one under the other when it has not, and never a lone \"x\" or a lone link. Each field is only as wide as the digits its range needs, so the pair no longer squeezes the label beside it.
+
+### Fixed: a weighted table's columns share the width by need
+
+- In a weighted table (Loot Table, Random Table, Skin Catalog, Storylet Resource) the text columns now take the room that is left, instead of splitting it with the number column and the share column. A weight column is as wide as its widest number needs, and the share column as wide as its widest percent; the bar beside the percent shows once the table is wide enough to spare it. The tags cell no longer comes up short while the share column has room to spare.
+
 ### New: the mark says which look, and a click opens the look list
 
 - Hovering the Inspector mark of a variable that wears a look opens a card that names the look, says its sentence (the limits for a slider), quotes the whole declaration line and ends \"Click the mark to change the look.\"; a look whose file is missing says \"Look not installed\" and names the file. With tiles off, the glyph at the end of the row opens the same card. A single click on the mark opens the Variable window on its look list; no control enters the row, and a variable shown from another script is changed there.

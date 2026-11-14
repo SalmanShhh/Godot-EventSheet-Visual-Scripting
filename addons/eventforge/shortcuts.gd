@@ -24,8 +24,8 @@ const DEFAULTS: Dictionary = {
 	"add_condition": "C",
 	"add_action": "A",
 	"add_group": "G",
-	# D matches the event-sheet keyboard grammar's toggle-disabled key (was X; rebind via Tools -
-	# Keyboard Shortcuts).
+	# D matches the event-sheet keyboard grammar's toggle-disabled key (was X; rebind in
+	# Editor Settings > Shortcuts).
 	"toggle_enabled": "D",
 	"add_blank_subevent": "B",
 	# S matches the event-sheet keyboard grammar's add-sub-event key: picker-backed sub-condition

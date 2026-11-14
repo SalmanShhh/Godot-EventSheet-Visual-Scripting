@@ -388,7 +388,6 @@ static func _build_system_starter() -> EventSheetResource:
 	sheet.autoload_mode = true
 	sheet.autoload_name = "EnemySystem"
 	sheet.host_class = "Node"
-	sheet.custom_class_name = "EnemySystem"
 	sheet.class_description = "A SYSTEM (composition / ECS-lite): it runs over every entity in a group each frame, instead of putting logic on each node. Tag entities into the \"enemy\" group with add_to_group, rename the group + autoload for your own, and register this sheet as an autoload."
 	var note: CommentRow = CommentRow.new()
 	note.text = "[b]Entity System (Autoload)[/b] - composition / ECS-lite. Tag entities into a group and this runs once per frame for every one of them. Add more systems as more autoload sheets. Prefer signals over polling for big sets, and the Time Slicer pack to spread heavy sweeps."

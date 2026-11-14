@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: Add > Global Variable makes a file Godot can run
+
+- The first global of a project made its file blank: no `extends Node`, so Godot refused to start the autoload, and the first variable was then written above the `extends` line of any file that had none yet. The new file now starts `extends Node` (no generated banner, a one-line class doc), the first global lands after the head, and the sheet carries no class name - Godot refuses a script whose `class_name` equals the autoload it is registered as ("hides an autoload singleton"). The Entity System starter no longer sets a class name equal to its autoload name for the same reason. A sheet that already holds both names emits the same bytes as before.
+- Stale lines: Keyboard Shortcuts no longer listed under Tools in the Toolbar guide (the keys are rebound in Editor Settings > Shortcuts), and the play button's header counts four ways to play.
+
 ### Fixed: a typed enum export wears the choices mark
 
 - Since Drag & Drop and the Virtual Cursor export real enums (`@export var directions: Directions`), their variable rows read with the plain export mark where the old `@export_enum` line read with the dropdown mark. An exported variable typed by an enum the sheet declares now wears the choices mark again, and the Variable window's Inspector preview draws the dropdown of the enum's members (the variable's own chosen) and says "Shown as a dropdown of FREE, UP_DOWN, ...". Only the four enum-typed export rows of those two packs read differently.

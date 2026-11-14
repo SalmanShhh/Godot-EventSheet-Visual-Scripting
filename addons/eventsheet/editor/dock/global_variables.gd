@@ -320,14 +320,8 @@ func add_global(raw_name: String, type_name: String, value_text: String, target:
 func _create_global_sheet(for_variable: String) -> Dictionary:
 	var autoload_name: String = _fresh_global_name()
 	var path: String = "res://%s.gd" % autoload_name.to_snake_case()
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.autoload_mode = true
-	sheet.autoload_name = autoload_name
-	sheet.host_class = "Node"
-	sheet.custom_class_name = autoload_name
-	sheet.class_description = "Project-wide values every sheet can read and write by name."
-	sheet.external_source_path = path
-	var problem: String = _dock._register_autoload_entry(sheet, path)
+	var sheet: EventSheetResource = build_global_sheet(autoload_name, path)
+	var problem: String = _dock._register_autoload_entry(sheet, path, true)
 	if not problem.is_empty():
 		_dock._set_status(problem, true)
 		return {}
@@ -337,6 +331,33 @@ func _create_global_sheet(for_variable: String) -> Dictionary:
 		EditorInterface.get_resource_filesystem().scan()
 	_dock._set_status("Made %s and registered it as an autoload - %s will live there." % [path.get_file(), for_variable])
 	return {"name": autoload_name, "path": path}
+
+
+## The sheet a new global lives on. It carries NO class name: Godot refuses a script whose
+## `class_name` equals the name of the autoload it is registered as ("Class hides an autoload
+## singleton"), and the autoload name already addresses the script project-wide.
+static func build_global_sheet(autoload_name: String, path: String) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.autoload_mode = true
+	sheet.autoload_name = autoload_name
+	sheet.host_class = "Node"
+	sheet.class_description = "Project-wide values every sheet can read and write by name."
+	return sheet
+
+
+## The index just past the leading head lines of an opened .gd: blank lines, comments, annotations,
+## `extends` and `class_name`. 0 for a sheet that has none.
+static func _after_head(sheet: EventSheetResource) -> int:
+	var index: int = 0
+	while index < sheet.events.size():
+		var raw: RawCodeRow = sheet.events[index] as RawCodeRow
+		if raw == null:
+			break
+		var line: String = raw.code.strip_edges()
+		if not (line.is_empty() or line.begins_with("#") or line.begins_with("@") or line.begins_with("extends ") or line.begins_with("class_name ")):
+			break
+		index += 1
+	return index
 
 
 ## The first `Globals`, `Globals2`, `Globals3`… that is neither a registered autoload nor a file on
@@ -376,9 +397,19 @@ static func write_global(sheet: EventSheetResource, variable_name: String, type_
 	# claim it is a per-instance designer knob, which is the one thing a global is not.
 	variable.exported = false
 	# Straight after the declarations already at the top of the file, so the head stays one block.
-	var insert_at: int = 0
+	# A file with no declarations yet starts after its head (extends, class_name, annotations and doc
+	# lines), never above it: a `var` ahead of `extends` is a parse error.
+	var insert_at: int = _after_head(sheet)
 	for index: int in range(sheet.events.size()):
 		if sheet.events[index] is LocalVariable:
 			insert_at = index + 1
+	# A `##` line straight above a declaration reads as that declaration's own doc, so the class doc
+	# a head may end on is parted from the first variable by a blank line.
+	if insert_at > 0 and insert_at == _after_head(sheet) and sheet.events[insert_at - 1] is RawCodeRow \
+			and (sheet.events[insert_at - 1] as RawCodeRow).code.strip_edges().begins_with("##"):
+		var gap: RawCodeRow = RawCodeRow.new()
+		gap.code = ""
+		sheet.events.insert(insert_at, gap)
+		insert_at += 1
 	sheet.events.insert(insert_at, variable)
 	return true

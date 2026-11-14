@@ -273,7 +273,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 	# keys never fire mid-edit (text fields already consume their own text shortcuts).
 	var typing: bool = _dock._text_field_has_focus()
 	var shift: bool = key_event.shift_pressed
-	# Rebindable shortcuts (EventSheetShortcuts - edit via Tools ▸ Keyboard Shortcuts, saved per-user):
+	# Rebindable shortcuts (EventSheetShortcuts - edit in Editor Settings > Shortcuts):
 	# exact modifier matching, so a chord never shadows its plain form. Entries:
 	# [action, suppressed-while-typing, handler]. Core reflexes by default: E event,
 	# C condition, A action (each opens the Ghost Row - the type-a-sentence add popup; the Ctrl

@@ -82,7 +82,50 @@ static func run() -> bool:
 		EventSheetGlobalVariables.write_global(null, "Score", "int", 0), false) and ok
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_PATH))
+	ok = _autoload_never_hides_itself() and ok
 	return _window_fits_its_form() and ok
+
+
+## Godot refuses a script whose class_name equals the autoload it is registered as. A new global's sheet
+## and the Entity System starter therefore carry no class name; the compiler is untouched, so a sheet
+## that already holds both names still emits the same bytes (and still hits Godot's refusal).
+static func _autoload_never_hides_itself() -> bool:
+	var ok: bool = true
+	var probe_name: String = "ZzHidesProbe"
+	var path: String = "user://zz_hides_probe.gd"
+	var fresh: EventSheetResource = EventSheetGlobalVariables.build_global_sheet(probe_name, path)
+	var system: EventSheetResource = EventSheetStarterTemplates._build_system_starter()
+	var old_shape: EventSheetResource = EventSheetGlobalVariables.build_global_sheet(probe_name, path)
+	old_shape.custom_class_name = probe_name
+	var fresh_out: String = str(EventSheetCompiler.compile(fresh, path, true).get("output", ""))
+	var old_out: String = str(EventSheetCompiler.compile(old_shape, "user://zz_hides_old.gd").get("output", ""))
+	var system_out: String = str(EventSheetCompiler.compile(system, "user://zz_system_probe.gd").get("output", ""))
+	ok = _check("a new global's sheet emits no class_name line", fresh_out.contains("class_name"), false) and ok
+	ok = _check("the Entity System starter emits no class_name line", system_out.contains("class_name"), false) and ok
+	ok = _check("a sheet that already holds both names still emits its class_name line",
+		old_out.contains("class_name %s" % probe_name), true) and ok
+	ok = _check("a new global's file starts with extends Node, the host an autoload must have",
+		fresh_out.begins_with("extends Node"), true) and ok
+	# The file as the dock opens it: the first global lands after the head, never above `extends`.
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+	ok = _check("the new global's file opens as an autoload-shaped sheet", reopened != null, true) and ok
+	if reopened != null:
+		EventSheetGlobalVariables.write_global(reopened, "Score", "int", 0)
+		var again: String = str(EventSheetCompiler.echo(reopened).get("output", ""))
+		ok = _check("the first global is written after extends, not above it",
+			again.find("extends Node") >= 0 and again.find("extends Node") < again.find("var Score"), true) and ok
+	ProjectSettings.set_setting("autoload/%s" % probe_name, "*%s" % path)
+	var fresh_script: GDScript = GDScript.new()
+	fresh_script.source_code = fresh_out
+	ok = _check("with the autoload registered, the new global's script parses", fresh_script.reload(true), OK) and ok
+	var old_script: GDScript = GDScript.new()
+	old_script.source_code = old_out
+	ok = _check("with the autoload registered, the old shape is the one Godot refuses (probe)",
+		old_script.reload(true) != OK, true) and ok
+	ProjectSettings.set_setting("autoload/%s" % probe_name, null)
+	for leftover: String in [path, "user://zz_hides_old.gd", "user://zz_system_probe.gd"]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(leftover))
+	return ok
 
 
 ## The row preview wraps at a width of its own. With none, the first layout of the window wraps it a

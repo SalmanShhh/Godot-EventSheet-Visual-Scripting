@@ -2,7 +2,7 @@
 class_name EventSheetPlayButton
 extends RefCounted
 
-# THE PLAY BUTTON: one face, six ways to play.
+# THE PLAY BUTTON: one face, four ways to play.
 #
 # Godot has no split-button control, so this is two adjacent controls reading as one - a face Button
 # beside a narrow dropdown MenuButton, both inside a single PanelContainer so one frame draws around
@@ -65,7 +65,7 @@ func build(slot: HBoxContainer, dock: Control) -> void:
 	_menu.text = "▾"
 	_menu.flat = true
 	# Tab reaches the dropdown too. A MenuButton defaults to FOCUS_ACCESSIBILITY, which the focus
-	# ring skips - so the face was keyboard-reachable and the six ways to play behind it were not.
+	# ring skips - so the face was keyboard-reachable and the four ways to play behind it were not.
 	_menu.focus_mode = Control.FOCUS_ALL
 	_menu.tooltip_text = EventSheetL10n.translate("Every way to play this sheet, and which one this button does. The main button is remembered for this project.")
 	EventSheetBuiltHere.mark(_menu, THIS_FILE_PATH, "▾")
