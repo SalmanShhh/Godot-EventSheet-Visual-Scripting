@@ -24,11 +24,29 @@ func _enter_tree() -> void:
 ## Seconds a decal spends fading out when its lifetime ends.
 @export var fade_seconds: float = 0.5
 
+## One decal in the ledger: the node, when it was born and how long it lives.
+class TrackedDecal extends RefCounted:
+	## The decal node itself; it may have been freed from outside, so it is checked before it is used.
+	var node: Decal = null
+	## The painter's clock when the decal was stamped, in seconds.
+	var born: float = 0.0
+	## Seconds the decal lasts before it fades; 0 stays for ever.
+	var lifetime: float = 0.0
+
+## One blob shadow: the node it follows, its decal and the floor mask its ground ray reads.
+class BlobShadow extends RefCounted:
+	## The instance id of the node the shadow follows.
+	var id: int = 0
+	## The decal node drawn under the followed node; it may have been freed from outside.
+	var decal: Decal = null
+	## The collision layers the ground ray looks for.
+	var mask: int = 1
+
 # --- Internal state ---
-## Decals placed so far, each with its position, texture and age.
-var _decals: Array = []
-## Soft blobs placed so far, each with its position, size and age.
-var _blobs: Array = []
+## Decals placed so far, oldest first.
+var _decals: Array[TrackedDecal] = []
+## Soft blobs placed so far.
+var _blobs: Array[BlobShadow] = []
 ## Seconds since the painter started, used to age and fade decals.
 var _clock: float = 0.0
 ## The parent every spawned Decal goes under (the host, so decals live in the world).
@@ -57,17 +75,17 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_clock += delta
-	var kept: Array = []
+	var kept: Array[TrackedDecal] = []
 	# Counted while the ledger is walked: a decal with no lifetime is never aged, so a canvas of
 	# permanent splats and no blob shadows has nothing for the next frame to do.
 	var aging: int = 0
-	for entry: Dictionary in _decals:
-		var decal: Decal = entry["node"] if is_instance_valid(entry["node"]) else null
+	for entry: TrackedDecal in _decals:
+		var decal: Decal = entry.node if is_instance_valid(entry.node) else null
 		if decal == null:
 			continue
-		var lifetime: float = float(entry["lifetime"])
+		var lifetime: float = entry.lifetime
 		if lifetime > 0.0:
-			var age: float = _clock - float(entry["born"])
+			var age: float = _clock - entry.born
 			if age >= lifetime + fade_seconds:
 				decal.queue_free()
 				continue
@@ -76,10 +94,10 @@ func _physics_process(delta: float) -> void:
 			aging += 1
 		kept.append(entry)
 	_decals = kept
-	var live_blobs: Array = []
-	for blob: Dictionary in _blobs:
-		var followed: Node3D = instance_from_id(int(blob["id"])) as Node3D
-		var decal: Decal = blob["decal"] if is_instance_valid(blob["decal"]) else null
+	var live_blobs: Array[BlobShadow] = []
+	for blob: BlobShadow in _blobs:
+		var followed: Node3D = instance_from_id(blob.id) as Node3D
+		var decal: Decal = blob.decal if is_instance_valid(blob.decal) else null
 		if followed == null or decal == null:
 			if decal != null:
 				decal.queue_free()
@@ -91,7 +109,7 @@ func _physics_process(delta: float) -> void:
 		if is_inside_tree():
 			var space: PhysicsDirectSpaceState3D = (host as Node3D).get_world_3d().direct_space_state if host is Node3D else null
 			if space != null:
-				var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.5, at + Vector3.DOWN * 100.0, int(blob["mask"]))
+				var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.5, at + Vector3.DOWN * 100.0, blob.mask)
 				var hit: Dictionary = space.intersect_ray(query)
 				if not hit.is_empty():
 					at = hit["position"]
@@ -106,15 +124,19 @@ func _physics_process(delta: float) -> void:
 ## Registers a spawned decal in the FIFO ledger and enforces the cap.
 ## @ace_hidden
 func _track(decal: Decal, lifetime: float) -> void:
-	_decals.append({"node": decal, "born": _clock, "lifetime": lifetime})
+	var tracked: TrackedDecal = TrackedDecal.new()
+	tracked.node = decal
+	tracked.born = _clock
+	tracked.lifetime = lifetime
+	_decals.append(tracked)
 	# Only a decal with a lifetime has to be aged, so only that one buys back the physics tick;
 	# a decal that stays forever is stamped once and never looked at again.
 	if lifetime > 0.0:
 		set_physics_process(true)
 	while _decals.size() > maxi(max_decals, 1):
-		var oldest: Dictionary = _decals.pop_front()
-		if is_instance_valid(oldest["node"]):
-			(oldest["node"] as Decal).queue_free()
+		var oldest: TrackedDecal = _decals.pop_front()
+		if is_instance_valid(oldest.node):
+			oldest.node.queue_free()
 
 ## @ace_expression
 ## @ace_name("Decal Count")
@@ -122,8 +144,8 @@ func _track(decal: Decal, lifetime: float) -> void:
 ## @ace_codegen_template("$DecalPainter.decal_count()")
 func decal_count() -> int:
 	var alive: int = 0
-	for entry: Dictionary in _decals:
-		if is_instance_valid(entry["node"]):
+	for entry: TrackedDecal in _decals:
+		if is_instance_valid(entry.node):
 			alive += 1
 	return alive
 
@@ -157,7 +179,11 @@ func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_ma
 	decal.size = Vector3(radius * 2.0, 4.0, radius * 2.0)
 	_decal_parent().add_child(decal)
 	decal.global_position = (follow as Node3D).global_position
-	_blobs.append({"id": follow.get_instance_id(), "decal": decal, "mask": collision_mask_3d})
+	var shadow: BlobShadow = BlobShadow.new()
+	shadow.id = follow.get_instance_id()
+	shadow.decal = decal
+	shadow.mask = collision_mask_3d
+	_blobs.append(shadow)
 	# A shadow follows its character every physics frame, so it needs the tick back.
 	set_physics_process(true)
 
@@ -169,11 +195,11 @@ func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_ma
 func stop_blob_shadow(follow: Node) -> void:
 	if follow == null:
 		return
-	var kept: Array = []
-	for blob: Dictionary in _blobs:
-		if int(blob["id"]) == follow.get_instance_id():
-			if is_instance_valid(blob["decal"]):
-				(blob["decal"] as Decal).queue_free()
+	var kept: Array[BlobShadow] = []
+	for blob: BlobShadow in _blobs:
+		if blob.id == follow.get_instance_id():
+			if is_instance_valid(blob.decal):
+				blob.decal.queue_free()
 		else:
 			kept.append(blob)
 	_blobs = kept
@@ -196,13 +222,13 @@ func spawn_canvas_decal(canvas: Node, x: float, y: float, z: float, size: float,
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.clear_decals()")
 func clear_decals() -> void:
-	for entry: Dictionary in _decals:
-		if is_instance_valid(entry["node"]):
-			(entry["node"] as Decal).queue_free()
+	for entry: TrackedDecal in _decals:
+		if is_instance_valid(entry.node):
+			entry.node.queue_free()
 	_decals = []
-	for blob: Dictionary in _blobs:
-		if is_instance_valid(blob["decal"]):
-			(blob["decal"] as Decal).queue_free()
+	for blob: BlobShadow in _blobs:
+		if is_instance_valid(blob.decal):
+			blob.decal.queue_free()
 	_blobs = []
 	# An empty canvas has nothing to age and nothing to follow.
 	set_physics_process(false)
@@ -215,8 +241,8 @@ func clear_decals() -> void:
 func set_max_decals(count: int) -> void:
 	max_decals = maxi(count, 1)
 	while _decals.size() > max_decals:
-		var oldest: Dictionary = _decals.pop_front()
-		if is_instance_valid(oldest["node"]):
-			(oldest["node"] as Decal).queue_free()
+		var oldest: TrackedDecal = _decals.pop_front()
+		if is_instance_valid(oldest.node):
+			oldest.node.queue_free()
 
 # Decal Painter behavior (3D): sheet-driven Decal nodes - Spawn Decal stamps a texture onto world surfaces (splats, scorch marks, target rings) with an optional lifetime and a max-decals FIFO cap; Spawn Blob Shadow keeps a soft procedural shadow ground-snapped under a character (raycast vs your floor mask); Spawn Canvas Decal projects a 2D Drawing Canvas's live texture onto the world. This pack is an event sheet - extend it by editing it.

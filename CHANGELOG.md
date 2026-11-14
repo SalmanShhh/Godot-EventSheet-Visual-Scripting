@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Decal Painter keeps its ledger as two small classes
+
+- A stamped decal and a blob shadow were dictionaries read by text; they are now a `TrackedDecal` and a `BlobShadow` with a typed field each. The rows, their words and what they do are unchanged, and nothing here is saved.
+
 ### Changed: Platformer Pathfinding checks the version of an obstacle map
 
 - The obstacle map JSON has always carried a `version` that Load Obstacle Map JSON ignored. The number is now one constant, and a map marked newer than this behaviour reads says so once and is read as before; maps with no version or version 1 load exactly as they did, and the exported key is unchanged.
