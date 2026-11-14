@@ -944,7 +944,7 @@ static func draw_badge_tile(control: CanvasItem, rect: Rect2, badge: String, for
 	if badge == BADGE_INSPECTOR and not str(mark.get("picture", "")).is_empty():
 		var side: float = rect.size.y - 4.0
 		(load(MINIS_PATH) as GDScript).draw_mark(control, Rect2(rect.get_center() - Vector2(side, side) * 0.5, Vector2(side, side)),
-			str(mark["picture"]), foreground, mark.get("warning_ink", foreground), mark.get("colour"))
+			str(mark["picture"]), foreground, mark.get("warning_ink", foreground), mark.get("colour"), background)
 		return
 	var icon := Rect2(rect.get_center() - Vector2(TILE_ICON, TILE_ICON) * 0.5, Vector2(TILE_ICON, TILE_ICON))
 	var stroke: float = maxf(icon.size.x / 16.0 * 1.4, 1.0)

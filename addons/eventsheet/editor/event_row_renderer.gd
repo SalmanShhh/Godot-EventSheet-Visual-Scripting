@@ -2941,7 +2941,8 @@ func _draw_badge_span(control: CanvasItem, span: EventSheetSemanticSpan, font: F
 			var own: Dictionary = metadata.get("inspector_mark", {}) if metadata.get("inspector_mark") is Dictionary else {}
 			(load(NativeVariableMarks.MINIS_PATH) as GDScript).draw_mark(control,
 				Rect2(badge_rect.get_center() - Vector2(mark_side, mark_side) * 0.5, Vector2(mark_side, mark_side)),
-				picture, badge_fg, metadata.get("inspector_warning", badge_fg), own.get("colour"))
+				picture, badge_fg, metadata.get("inspector_warning", badge_fg), own.get("colour"),
+				badge_bg if bool(metadata.get("badge_plate", false)) else (event_style if event_style != null else _fallback_event_style()).row_background_color)
 			return
 		var mark: Texture2D = _badge_icon(span.text, int(round(mark_side)))
 		if mark != null:

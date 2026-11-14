@@ -52,8 +52,12 @@ static func ink_colours(ink: Color, warning: Color) -> Dictionary:
 ## Draws the mark of a variable row in `rect`: the picture of the look it wears, in the row's own ink; a
 ## Color's own colour as a square of that colour; and for a look that is not installed an amber "?"
 ## with no box or border round it. `own_colour` is read only for the "colour" picture.
-static func draw_mark(canvas: CanvasItem, rect: Rect2, picture: String, ink: Color, warning: Color, own_colour: Variant = null) -> void:
+## `backdrop` is the colour the mark sits on (a tile's fill, or the row); the amber is held to a
+## readable contrast against it, darker on a pale theme and lighter on a dark one, never with a border.
+static func draw_mark(canvas: CanvasItem, rect: Rect2, picture: String, ink: Color, warning: Color, own_colour: Variant = null,
+		backdrop: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	if picture == "missing":
+		warning = readable_ink(warning, backdrop)
 		var font: Font = ThemeDB.fallback_font
 		var size: int = maxi(int(rect.size.y), 6)
 		var width: float = font.get_string_size("?", HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x
@@ -64,6 +68,26 @@ static func draw_mark(canvas: CanvasItem, rect: Rect2, picture: String, ink: Col
 	if own_colour is Color:
 		colours["colour"] = own_colour
 	draw_mini(canvas, rect, picture, colours, true)
+
+
+## The least contrast a mark's amber keeps against what it is drawn on.
+const MARK_CONTRAST: float = 3.0
+
+
+## `ink` moved toward black (on a pale `backdrop`) or white (on a dark one), as little as it takes, until it
+## reads on `backdrop` with at least `minimum` contrast; its hue stays. A clear `backdrop` (not known) leaves
+## the ink as it is.
+static func readable_ink(ink: Color, backdrop: Color, minimum: float = MARK_CONTRAST) -> Color:
+	if backdrop.a <= 0.0:
+		return ink
+	var ground: Color = Color(backdrop, 1.0)
+	var target: Color = Color.BLACK if ground.get_luminance() > 0.4 else Color.WHITE
+	var result: Color = Color(ink, 1.0)
+	for step: int in 20:
+		if EventSheetLookStyle.contrast_ratio(result, ground) >= minimum:
+			break
+		result = result.lerp(target, 0.1)
+	return Color(result, ink.a)
 
 
 ## Draws the picture of `look_id` inside `rect` on `canvas`, in the colours of `colours` (see COLOUR_KEYS).

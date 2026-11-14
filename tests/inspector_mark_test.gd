@@ -58,7 +58,28 @@ static func run() -> bool:
 	rows.append(["an opened script's @export_storage line is the plain mark", NativeVariableMarks.inspector_mark(by_hint, "int", 5)["picture"], ""])
 	rows.append(["no variable is the plain mark", NativeVariableMarks.inspector_mark(null, "int", 5)["picture"], ""])
 	rows.append(["a missing look is flagged missing", NativeVariableMarks.inspector_mark(_with({"look": "not_installed_anywhere"}), "int", 0)["missing"], true])
+	rows.append_array(_readable_amber())
 	return SUPPORT.pins("inspector_mark_test", rows)
+
+
+## The amber "?" of a missing look is held to a readable contrast on the colour it sits on, in either theme,
+## and keeps its hue; a mark that does not know its ground is left alone.
+static func _readable_amber() -> Array:
+	var minis: GDScript = load("res://addons/eventsheet/editor/inspector/look_minis.gd")
+	var pale_amber: Color = Color(0.95, 0.82, 0.5)
+	var pale_tile: Color = Color("#c8d2e6")
+	var dark_tile: Color = Color("#23384d")
+	var on_pale: Color = minis.readable_ink(pale_amber, pale_tile)
+	var on_dark: Color = minis.readable_ink(pale_amber, dark_tile)
+	var unknown: Color = minis.readable_ink(pale_amber, Color(0.0, 0.0, 0.0, 0.0))
+	return [
+		["amber on a pale tile reads at the least contrast", EventSheetLookStyle.contrast_ratio(on_pale, pale_tile) >= minis.MARK_CONTRAST, true],
+		["amber on a pale tile is darker than it was", on_pale.get_luminance() < pale_amber.get_luminance(), true],
+		["amber on a pale tile keeps its hue", snappedf(on_pale.h, 0.02), snappedf(pale_amber.h, 0.02)],
+		["amber on a dark tile already reads and is left as it was", on_dark, pale_amber],
+		["an unknown ground leaves the amber as it was", unknown, pale_amber],
+		["a pale amber on a white tile is darkened to read", EventSheetLookStyle.contrast_ratio(minis.readable_ink(pale_amber, Color.WHITE), Color.WHITE) >= minis.MARK_CONTRAST, true],
+	]
 
 
 static func _with(attributes: Dictionary) -> LocalVariable:

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the amber "?" of a missing look reads on a light theme
+
+- The amber "?" a row shows for a look that is not installed is held to a readable contrast against the tile or row it sits on: darker on a pale theme, unchanged on a dark one. No border or outline is added.
+
 ### Fixed: a width and height pair never leaves its x or its link on a line alone
 
 - A width and height on one row (the texture size line and any `# @inspector_side_by_side` pair) wraps in two units: the width with the "x" after it, the height with the link button after it. Side by side while the Inspector has room, one under the other when it has not, and never a lone "x" or a lone link. Each field is only as wide as the digits its range needs, so the pair no longer squeezes the label beside it.
