@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a narrowed or %name card offers your script's rows on the node you picked
+
+- The card the picker shows for a value an event narrowed (`body` after `body is an Enemy`) or a `%Name` node took the rows of your own class and aimed them at it, but only for the old optional-target call. Your class's rows now carry their own On node slot, so the card opens them on the name you picked, and the old property ids kept only for rows already placed are not offered.
+
 ### Changed: "Your classes" reads your script the way a registered script is read
 
 - A class listed under "Your classes" was read by plain reflection while a script you registered was read by its `##` lines, so the same function came out as "Is Dead" in one place and "Dead" in the other, a variable's reader and writer had different ids, and a sentence or a name you wrote was ignored there. There is now one reading, the registered script's: its names, its kinds, the sentence you wrote with `@ace_display_template`, your categories and descriptions, a Set, Add and Subtract for each number, and the aimed calls (a Node script's functions call the node by its class, a Resource's act on the value the row names, a `static func` is called by its class).

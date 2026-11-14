@@ -262,9 +262,11 @@ static func _test_c3_metadata_contract() -> bool:
 	passed = _check("signal metadata carries trigger state model", trigger_state_model, "captured_context") and passed
 	passed = _check("signal definitions include description", signal_def != null and not signal_def.description.is_empty(), true) and passed
 	var method_def: ACEDefinition = registry.find_definition("AutoACESample", "method:take_damage")
-	var first_param: Dictionary = method_def.parameters[0] if method_def != null and not method_def.parameters.is_empty() else {}
-	passed = _check("method param keeps stable id field", str(first_param.get("id", "")), "amount") and passed
-	passed = _check("method param carries options metadata array", first_param.has("options"), true) and passed
+	# A Node script's function now leads with the "On node" slot; the method's own argument follows it.
+	var own_param: Dictionary = method_def.parameters[1] if method_def != null and method_def.parameters.size() > 1 else {}
+	passed = _check("a Node function leads with its target", str(method_def.parameters[0].get("id", "")) if method_def != null else "", "target") and passed
+	passed = _check("method param keeps stable id field", str(own_param.get("id", "")), "amount") and passed
+	passed = _check("method param carries options metadata array", own_param.has("options"), true) and passed
 	sample.free()
 	return passed
 

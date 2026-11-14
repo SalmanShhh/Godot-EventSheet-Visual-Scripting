@@ -1982,11 +1982,24 @@ static func unique_node_definitions(node_name: String, node_class: String, plain
 	for definition: ACEDefinition in EventSheetClassDBSource.definitions_for_class(node_class):
 		var entry: ACEDefinition = definition.copy()
 		var template: String = str(entry.metadata.get("codegen_template", ""))
+		# A verb kept only so a placed row resolves (an old id, a hidden function) is not offered.
+		if bool(entry.metadata.get("deprecated", false)):
+			continue
+		# A script of the project already carries its own "On node" slot: it opens on the name picked.
+		var own_target: bool = false
+		entry.parameters = entry.parameters.duplicate(true)
+		for parameter: Variant in entry.parameters:
+			if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == "target" and template.contains("{target}"):
+				(parameter as Dictionary)["default_value"] = reference
+				own_target = true
+		if own_target:
+			entry.metadata[SCENE_TARGET_META] = reference
+			offered.append(entry)
+			continue
 		# Only a retargetable row can be aimed at a node. Anything else is left exactly as the class
 		# offers it rather than being given a target it would ignore.
 		if not template.contains("{target.}"):
 			continue
-		entry.parameters = entry.parameters.duplicate(true)
 		entry.parameters.append({
 			"id": "target",
 			"display_name": EventSheetL10n.translate("On node"),
