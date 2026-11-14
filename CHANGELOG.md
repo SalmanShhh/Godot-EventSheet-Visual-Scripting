@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Add > Global Variable says where the autoload it made can be seen
+
+- When the gesture has to make a new global file, the status line now says it added an autoload and names Godot's own place for it, Project Settings > Globals > Autoload, and the new file's doc comment says the same. Adding a variable to an autoload that already exists is unchanged.
+
 ### Fixed: the guides say what the code does, and a test now holds them to it
 
 - A survey of the guides found 17 statements that were wrong against the code and 20 behaviour guides that never named 65 rows and 24 variables of their pack. They are fixed: the toolbar guide (the Events | Code | Both switch, the four ways to play, no counts that drift, the buttons that left), the custom inspectors guide (the look picker is a list, not a dropdown; no hand-typed count of looks), the coming-from-GDScript guide (the deleted Object properties window), the README (a test-file floor instead of a count that was already wrong), AGENTS.md (the Manual folder path), and the Manual's own behaviour index, which still said "Object properties".

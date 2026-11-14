@@ -282,7 +282,8 @@ func add_global(raw_name: String, type_name: String, value_text: String, target:
 	if variable_name.is_empty() or not EventSheetIdentifierRules.is_valid(variable_name):
 		_dock._set_status("\"%s\" can't be a variable name (letters/digits/underscores, not a GDScript keyword)." % raw_name, true)
 		return
-	if target.is_empty():
+	var made_new: bool = target.is_empty()
+	if made_new:
 		# "New global sheet…". The project has no autoload to write into yet (or the reader wants a
 		# second one), so make it here rather than sending them away to make it and come back.
 		target = _create_global_sheet(variable_name)
@@ -301,7 +302,8 @@ func add_global(raw_name: String, type_name: String, value_text: String, target:
 	if _dock._perform_undoable_sheet_edit("Add global variable %s" % variable_name, func() -> bool:
 			return write_global(_dock._current_sheet, variable_name, type_name, value)):
 		_dock._refresh_after_edit()
-		_dock._mark_dirty("Added global variable %s to %s." % [variable_name, str(target.get("name", ""))])
+		_dock._mark_dirty(("Added global variable %s to %s, a new autoload (see it in Project Settings > Globals > Autoload)." if made_new
+			else "Added global variable %s to %s.") % [variable_name, str(target.get("name", ""))])
 	else:
 		_dock._set_status("%s already declares %s." % [str(target.get("name", "")), variable_name], true)
 
@@ -329,7 +331,7 @@ func _create_global_sheet(for_variable: String) -> Dictionary:
 	EventSheetSentence.clear_autoload_cache()
 	if Engine.is_editor_hint():
 		EditorInterface.get_resource_filesystem().scan()
-	_dock._set_status("Made %s and registered it as an autoload - %s will live there." % [path.get_file(), for_variable])
+	_dock._set_status("Made %s and added it as an autoload (Project Settings > Globals > Autoload) - %s will live there." % [path.get_file(), for_variable])
 	return {"name": autoload_name, "path": path}
 
 
@@ -341,7 +343,7 @@ static func build_global_sheet(autoload_name: String, path: String) -> EventShee
 	sheet.autoload_mode = true
 	sheet.autoload_name = autoload_name
 	sheet.host_class = "Node"
-	sheet.class_description = "Project-wide values every sheet can read and write by name."
+	sheet.class_description = "Project-wide values every sheet can read and write by name. Registered as an autoload: Project Settings > Globals > Autoload."
 	return sheet
 
 

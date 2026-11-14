@@ -106,6 +106,8 @@ static func _autoload_never_hides_itself() -> bool:
 		old_out.contains("class_name %s" % probe_name), true) and ok
 	ok = _check("a new global's file starts with extends Node, the host an autoload must have",
 		fresh_out.begins_with("extends Node"), true) and ok
+	ok = _check("a new global's file says where the autoload entry can be seen",
+		fresh_out.contains("Project Settings > Globals > Autoload"), true) and ok
 	# The file as the dock opens it: the first global lands after the head, never above `extends`.
 	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 	ok = _check("the new global's file opens as an autoload-shaped sheet", reopened != null, true) and ok
