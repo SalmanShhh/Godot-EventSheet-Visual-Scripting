@@ -368,6 +368,13 @@ spelling, and the index cannot tell. Being plainly approximate about who calls s
 reader one glance. Being quietly wrong about it costs them a broken game. A rename claiming "6 rows in
 3 sheets" and touching four would be worse than saying nothing at all.
 
+Two things are kept out of the lists so they stay short. A row of your sheet that says the name only
+inside a text in quotes (`print("speed=")`) does not change, so it is not listed as rewritten: it sits
+under its own heading, **Text that mentions the name - left as it is**. And the behaviours that ship with
+the plugin are left out of the other files too, unless a file refers to your script by its path or its
+class name: each pack has variables and functions of its own, and the index cannot tell a pack's `speed`
+from yours. The sentence above the lists says how many files were left out and why.
+
 The button under the list is the only place a rename happens, it goes through the sheet's own undo
 funnel, and one Ctrl+Z takes all of it back.
 

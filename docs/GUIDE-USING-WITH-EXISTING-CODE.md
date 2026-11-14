@@ -416,6 +416,9 @@ text field with an OK button, it is the list.
   approximate about who calls something costs you one glance; being quietly wrong about it costs you
   a broken game. A rename that claimed "6 rows in 3 sheets" and touched four would be worse than
   saying nothing.
+  The behaviours that ship with the plugin are left out of this list unless a file refers to your
+  script by its path or its class name, and a row that says the name only inside a text in quotes has its
+  own heading, **Text that mentions the name - left as it is**.
 
 The button behind that list is the only place the rename happens, it goes through the sheet's own
 undo funnel, and one Ctrl+Z takes all of it back.

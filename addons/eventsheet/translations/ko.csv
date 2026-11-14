@@ -10547,3 +10547,4 @@ Couldn't save %s: %s. The sheet is still linked to %s.,%s을(를) 저장하지 �
 Couldn't save %s: %s.,%s을(를) 저장하지 못했습니다: %s.
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z로 이 시트의 모든 변경을 되돌릴 수 있습니다. 다른 시트는 저장되었고 각각 백업이 있습니다. 하나를 열어 도구 > 시트 백업으로 이전 버전을 되찾으세요.
 Text that mentions the name - left as it is,이름을 언급하는 텍스트 - 그대로 둡니다
+" %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed."," 이 플러그인과 함께 제공되는 동작 중 %d개 파일도 같은 이름을 쓰지만, 이 스크립트를 가리키는 것은 없어서 목록에 넣지 않았습니다."

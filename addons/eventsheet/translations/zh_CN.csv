@@ -10547,3 +10547,4 @@ Couldn't save %s: %s. The sheet is still linked to %s.,无法保存 %s：%s。�
 Couldn't save %s: %s.,无法保存 %s：%s。
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z 可以撤销此事件表中的全部改动。其他事件表已保存，且都有备份：打开其中一个，用 工具 > 事件表备份 即可找回旧版本。
 Text that mentions the name - left as it is,提到该名称的文字 - 保持原样
+" %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed.", 随此插件提供的行为中有 %d 个文件也使用这个名称，但其中没有任何内容指向这个脚本，所以没有列出。

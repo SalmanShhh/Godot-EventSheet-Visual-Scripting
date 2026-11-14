@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Rename window no longer lists the plugin's own behaviours as callers of your variable
+
+- Renaming a variable such as `speed` listed 37 files of the behaviours that ship with the plugin, 272 rows, in "Named and left exactly as they are", only because each of them has a `speed` of its own. The name index finds a word in a row; it cannot tell whose `speed` it is. Files in a shipped behaviour folder are now listed only when their text refers to your script by its path or its class name. The sentence above the lists says how many were left out and why: "37 file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed." Your own files are listed as before, whatever folder they are in.
+
 ### Fixed: a number with a unit keeps its whole name in a narrow Inspector
 
 - A property drawn as a number with a unit dropdown (a shape's Thickness) lost most of its name in a narrow Inspector, where it read "Thickn". When the Inspector is too narrow for the name and the field side by side, the field now goes under the name, so the name is read whole. A wide Inspector looks as before.

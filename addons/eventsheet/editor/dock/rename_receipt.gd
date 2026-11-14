@@ -36,6 +36,7 @@ class_name EventSheetRenameReceipt
 extends RefCounted
 
 const SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
+const FUNCTION_LOCKS := preload("res://addons/eventsheet/editor/interaction/function_locks.gd")
 ## Reads the project's scenes and resources as text: loaded by path, only when a variable rename opens.
 const SCENE_VALUES_PATH: String = "res://addons/eventsheet/editor/dock/scene_values.gd"
 
@@ -55,6 +56,8 @@ var _old_name: String = ""
 ## the walk imports every project script that mentions the word, which is not a thing to do while
 ## somebody is typing.
 var _elsewhere: Array[Dictionary] = []
+## How many files of the shipped behaviour packs say the name and were left out of that list.
+var _left_out: int = 0
 ## The outside-rename door's finding, held only while its own confirm is open.
 var _finding: Dictionary = {}
 ## The sheets that INCLUDE this one and say the name - the files the button will rewrite and save.
@@ -92,7 +95,11 @@ func open(function_name: String, typed: String = "") -> void:
 	if _old_name.is_empty():
 		return
 	_finding = {}
-	_elsewhere = elsewhere_for(_old_name, str(_dock._current_sheet_path))
+	var split: Dictionary = split_elsewhere(EventSheetFindReferences.find_in_project_rows(_old_name),
+		str(_dock._current_sheet_path), own_markers(_dock._current_sheet, str(_dock._current_sheet_path)),
+		func(path: String) -> String: return FileAccess.get_file_as_string(path))
+	_elsewhere = split["listed"]
+	_left_out = int(split["left_out"])
 	_build_dialog()
 	_keep_old.button_pressed = false
 	_name_edit.editable = true
@@ -114,6 +121,7 @@ func open_for_finding(finding: Dictionary) -> void:
 	_finding = finding
 	_old_name = str(finding.get("subject", ""))
 	_elsewhere = []
+	_left_out = 0
 	_build_dialog()
 	_scene_scan = {}
 	_draw_scenes()
@@ -201,19 +209,43 @@ static func node_lines(sheet: EventSheetResource, from_reference: String,
 	return lines
 
 
-## The other files that call this name, each with how many of their rows do - listed and left. Sorted
-## by path, so two machines draw the same receipt. The sheet being renamed is left out of its own
-## list: "this file uses it" is not news to the person renaming it.
-static func elsewhere_for(old_name: String, own_path: String) -> Array[Dictionary]:
-	var others: Array[Dictionary] = []
-	for entry: Dictionary in EventSheetFindReferences.find_in_project_rows(old_name):
+## The words a file has to contain to be pointing at THIS script: its path and, when it declares one, its
+## class name. The name index only knows that a row somewhere says the word, never whose member it is.
+static func own_markers(sheet: EventSheetResource, own_path: String) -> PackedStringArray:
+	var markers: PackedStringArray = PackedStringArray([own_path])
+	if sheet != null and not sheet.custom_class_name.is_empty():
+		markers.append(sheet.custom_class_name)
+	return markers
+
+
+## The other files that say this name, sorted by path so two machines draw the same receipt, as
+## {"listed": [{path, count}], "left_out": how many were not listed}. `found` is the index's answer
+## ([{sheet, count}]); `source_of` reads a file's text. The sheet being renamed is left out of its own
+## list. A file in a shipped behaviour pack folder is listed only when its text refers to this script
+## (one of `markers`): a pack has variables and functions of its own, `speed` among them, and the index
+## cannot tell its `speed` from the one being renamed, so a bare match there says nothing about this script.
+static func split_elsewhere(found: Array, own_path: String, markers: PackedStringArray,
+		source_of: Callable) -> Dictionary:
+	var listed: Array[Dictionary] = []
+	var left_out: int = 0
+	for entry: Dictionary in found:
 		var path: String = str(entry.get("sheet", ""))
 		if path.is_empty() or path == own_path:
 			continue
-		others.append({"path": path, "count": int(entry.get("count", 0))})
-	others.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		if FUNCTION_LOCKS.is_shipped_pack_file(path) and not _refers_to(str(source_of.call(path)), markers):
+			left_out += 1
+			continue
+		listed.append({"path": path, "count": int(entry.get("count", 0))})
+	listed.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
 		return str(left["path"]) < str(right["path"]))
-	return others
+	return {"listed": listed, "left_out": left_out}
+
+
+static func _refers_to(text: String, markers: PackedStringArray) -> bool:
+	for marker: String in markers:
+		if not marker.is_empty() and text.contains(marker):
+			return true
+	return false
 
 
 ## The list under "Named and left exactly as they are" - one line per other file, with the reason it
@@ -241,9 +273,11 @@ static func includer_lines(includers: PackedStringArray) -> PackedStringArray:
 ## "am I about to break enemy.gd" - and it ends with the part that is not about undo, because a
 ## closed sheet this rewrites is saved to disk and Ctrl+Z here does not reach it.
 static func summary_text(here: int, others: Array[Dictionary],
-		includers: PackedStringArray = PackedStringArray()) -> String:
+		includers: PackedStringArray = PackedStringArray(), left_out: int = 0) -> String:
 	var written: String = "" if includers.is_empty() \
 		else EventSheetL10n.translate(" %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.") % includers.size()
+	if left_out > 0:
+		written = EventSheetL10n.translate(" %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed.") % left_out + written
 	if others.is_empty():
 		return EventSheetL10n.translate("%d row(s) in this sheet, and nothing else in the project calls it by that name.") % here + written
 	var names: PackedStringArray = PackedStringArray()
@@ -399,7 +433,7 @@ func _fill() -> void:
 		else _dock._rename.includers_of(_old_name, new_name,
 			EventSheetProjectFind.list_project_sheets())
 	draw_includers(_includers)
-	_summary_label.text = summary_text(lines.size(), _elsewhere, _includers)
+	_summary_label.text = summary_text(lines.size(), _elsewhere, _includers, _left_out)
 	# Only a typed rename of this sheet's own variable: the outside-rename door already happened.
 	var left_behind: String = "" if not _finding.is_empty() else left_behind_text(_dock._current_sheet, _old_name)
 	_saved_note.say(left_behind, EventSheetPopupUI.TONE_WARNING)

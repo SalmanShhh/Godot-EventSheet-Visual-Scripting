@@ -10547,3 +10547,4 @@ Couldn't save %s: %s. The sheet is still linked to %s.,%s konnte nicht gespeiche
 Couldn't save %s: %s.,%s konnte nicht gespeichert werden: %s.
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.","Strg+Z macht alles in diesem Sheet rückgängig. Andere Sheets wurden gespeichert, jeweils mit einer Sicherung: öffne eines und nutze Werkzeuge > Blatt-Sicherungen, um die alte Version zurückzuholen."
 Text that mentions the name - left as it is,"Text, der den Namen erwähnt - bleibt, wie er ist"
+" %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed."," %d Datei(en) der Verhalten, die mit diesem Plugin kommen, sagen diesen Namen ebenfalls, und nichts darin bezieht sich auf dieses Skript, deshalb werden sie nicht aufgelistet."
