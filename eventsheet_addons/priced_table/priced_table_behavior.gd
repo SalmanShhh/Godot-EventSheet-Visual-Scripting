@@ -34,14 +34,49 @@ signal on_purchase_refused(entry_id: String, reason: String)
 ## Group searched for a wallet node before using the ledger autoload.
 @export var wallet_group: String = "wallet"
 
-# The live table: one record per entry in the order the table lists them, plus an id index into
-# the SAME dictionaries (a Dictionary is a reference, so a write through either is seen by both).
-# A record is {id, label, price, currency, stock, initial_stock, unlocked, requires}, where a
-# stock of -1 means unlimited and 0 means sold out.
+## One entry of the table: what it is, what it costs and how many are left.
+class PriceEntry extends RefCounted:
+	## The id rows buy it by.
+	var id: String = ""
+	## The name the game shows.
+	var label: String = ""
+	## What one costs, never below 0.
+	var price: float = 0.0
+	## The currency it is paid in.
+	var currency: String = "gold"
+	## How many are left: -1 is unlimited, 0 is sold out.
+	var stock: int = -1
+	## The stock the table shipped with, which Restock All goes back to.
+	var initial_stock: int = -1
+	## False while a tier or a story gate keeps it closed.
+	var unlocked: bool = true
+	## A free note saying what it needs, for the game's own UI.
+	var requires: String = ""
+
+	# The entry as a saved state holds it. The keys are the file's spelling and never change.
+	func to_dict() -> Dictionary:
+		return {"id": id, "label": label, "price": price, "currency": currency, "stock": stock,
+			"initial_stock": initial_stock, "unlocked": unlocked, "requires": requires}
+
+	# An entry read back from a saved state; a missing key reads as the field's default.
+	static func from_dict(data: Dictionary) -> PriceEntry:
+		var entry: PriceEntry = PriceEntry.new()
+		entry.id = str(data.get("id", ""))
+		entry.label = str(data.get("label", ""))
+		entry.price = float(data.get("price", 0.0))
+		entry.currency = str(data.get("currency", "gold"))
+		entry.stock = int(data.get("stock", -1))
+		entry.initial_stock = int(data.get("initial_stock", entry.stock))
+		entry.unlocked = bool(data.get("unlocked", true))
+		entry.requires = str(data.get("requires", ""))
+		return entry
+
+# The live table: one entry per row in the order the table lists them, plus an id index into the
+# SAME entries (an object is a reference, so a write through either is seen by both).
 ## Items loaded from the price table, each with its price and stock.
-var _entries: Array = []
+var _entries: Array[PriceEntry] = []
 ## Items looked up by id.
-var _by_id: Dictionary = {}
+var _by_id: Dictionary[String, PriceEntry] = {}
 ## Name of the price table that is loaded.
 var _table_name: String = ""
 ## Currency used by an entry that does not name one.
@@ -106,16 +141,16 @@ func load_price_table(table: Resource) -> void:
 			continue
 		var currency: String = str(_cell(row, "currency", ""))
 		var stock: int = int(_num(_cell(row, "stock", -1)))
-		_put({
-			"id": entry_id,
-			"label": str(_cell(row, "label", "")),
-			"price": maxf(_num(_cell(row, "price", 0.0)), 0.0),
-			"currency": currency if not currency.is_empty() else _default_currency,
-			"stock": stock,
-			"initial_stock": stock,
-			"unlocked": not bool(_cell(row, "locked", false)),
-			"requires": str(_cell(row, "requires", ""))
-		})
+		var entry: PriceEntry = PriceEntry.new()
+		entry.id = entry_id
+		entry.label = str(_cell(row, "label", ""))
+		entry.price = maxf(_num(_cell(row, "price", 0.0)), 0.0)
+		entry.currency = currency if not currency.is_empty() else _default_currency
+		entry.stock = stock
+		entry.initial_stock = stock
+		entry.unlocked = not bool(_cell(row, "locked", false))
+		entry.requires = str(_cell(row, "requires", ""))
+		_put(entry)
 
 ## @ace_action
 ## @ace_name("Add Entry")
@@ -127,16 +162,14 @@ func load_price_table(table: Resource) -> void:
 func add_entry(entry_id: String, label: String, price: float, currency: String, stock: int) -> void:
 	if entry_id.is_empty():
 		return
-	_put({
-		"id": entry_id,
-		"label": label,
-		"price": maxf(price, 0.0),
-		"currency": currency if not currency.is_empty() else _default_currency,
-		"stock": stock,
-		"initial_stock": stock,
-		"unlocked": true,
-		"requires": ""
-	})
+	var entry: PriceEntry = PriceEntry.new()
+	entry.id = entry_id
+	entry.label = label
+	entry.price = maxf(price, 0.0)
+	entry.currency = currency if not currency.is_empty() else _default_currency
+	entry.stock = stock
+	entry.initial_stock = stock
+	_put(entry)
 
 ## @ace_action
 ## @ace_name("Clear Table")
@@ -157,8 +190,8 @@ func clear_table() -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.buy({entry_id})")
 func buy(entry_id: String) -> void:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	if record.is_empty():
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	if record == null:
 		_refuse(entry_id, "unknown entry")
 		return
 	if not bool(record.unlocked):
@@ -188,8 +221,8 @@ func buy(entry_id: String) -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.restock({entry_id}, {amount})")
 func restock(entry_id: String, amount: int) -> void:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	if record.is_empty() or int(record.stock) < 0:
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	if record == null or record.stock < 0:
 		return
 	record.stock = maxi(int(record.stock) + amount, 0)
 
@@ -200,8 +233,8 @@ func restock(entry_id: String, amount: int) -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.restock_all()")
 func restock_all() -> void:
-	for record: Dictionary in _entries:
-		record.stock = int(record.initial_stock)
+	for record: PriceEntry in _entries:
+		record.stock = record.initial_stock
 
 ## @ace_action
 ## @ace_name("Set Stock")
@@ -210,8 +243,8 @@ func restock_all() -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.set_stock({entry_id}, {stock})")
 func set_stock(entry_id: String, stock: int) -> void:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	if not record.is_empty():
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	if record != null:
 		record.stock = stock
 
 ## @ace_action
@@ -222,8 +255,8 @@ func set_stock(entry_id: String, stock: int) -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.set_price({entry_id}, {price})")
 func set_price(entry_id: String, price: float) -> void:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	if not record.is_empty():
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	if record != null:
 		record.price = maxf(price, 0.0)
 
 ## @ace_action
@@ -234,8 +267,8 @@ func set_price(entry_id: String, price: float) -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.set_unlocked({entry_id}, {unlocked})")
 func set_unlocked(entry_id: String, unlocked: bool) -> void:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	if not record.is_empty():
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	if record != null:
 		record.unlocked = unlocked
 
 ## @ace_action
@@ -264,8 +297,8 @@ func set_local_wallet(amount: float) -> void:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.can_afford_entry({entry_id})")
 func can_afford_entry(entry_id: String) -> bool:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	return not record.is_empty() and _balance_of(str(record.currency)) >= float(record.price)
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	return record != null and _balance_of(str(record.currency)) >= float(record.price)
 
 ## @ace_condition
 ## @ace_name("Entry In Stock")
@@ -274,8 +307,8 @@ func can_afford_entry(entry_id: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.entry_in_stock({entry_id})")
 func entry_in_stock(entry_id: String) -> bool:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	return not record.is_empty() and int(record.stock) != 0
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	return record != null and int(record.stock) != 0
 
 ## @ace_condition
 ## @ace_name("Entry Is Unlocked")
@@ -284,8 +317,8 @@ func entry_in_stock(entry_id: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.entry_is_unlocked({entry_id})")
 func entry_is_unlocked(entry_id: String) -> bool:
-	var record: Dictionary = _by_id.get(entry_id, {})
-	return not record.is_empty() and bool(record.unlocked)
+	var record: PriceEntry = _by_id.get(entry_id, null)
+	return record != null and bool(record.unlocked)
 
 ## @ace_condition
 ## @ace_name("Has Entry")
@@ -303,8 +336,8 @@ func has_entry(entry_id: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.is_sold_out()")
 func is_sold_out() -> bool:
-	for record: Dictionary in _entries:
-		if int(record.stock) != 0 and bool(record.unlocked):
+	for record: PriceEntry in _entries:
+		if record.stock != 0 and record.unlocked:
 			return false
 	return true
 
@@ -482,16 +515,15 @@ func _num(value: Variant) -> float:
 		return (value as String).to_float()
 	return 0.0
 
-func _put(record: Dictionary) -> void:
+func _put(record: PriceEntry) -> void:
 	# Registers one record, replacing any entry that already had this id (so a second Load Price
 	# Table re-prices rather than duplicating) and keeping the table's original order. The position
-	# is found by id rather than by comparing the dictionaries, which is what keeps this honest
-	# whichever way the engine defines Dictionary equality.
-	var entry_id: String = str(record.id)
+	# is found by id.
+	var entry_id: String = record.id
 	var at: int = -1
 	var index: int = 0
-	for existing: Dictionary in _entries:
-		if str(existing.id) == entry_id:
+	for existing: PriceEntry in _entries:
+		if existing.id == entry_id:
 			at = index
 			break
 		index += 1
@@ -501,14 +533,21 @@ func _put(record: Dictionary) -> void:
 		_entries.append(record)
 	_by_id[entry_id] = record
 
-## @ace_hidden
-func save_state() -> Dictionary:
+func _entries_as_dicts() -> Array:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
 	# The whole table travels, so a shop reopens with the stock it was left with - and the
 	# id index is rebuilt from the restored records rather than saved twice.
+	# The table as the plain records a save holds.
+	var records: Array = []
+	for entry: PriceEntry in _entries:
+		records.append(entry.to_dict())
+	return records
+
+## @ace_hidden
+func save_state() -> Dictionary:
 	return {
-		"entries": _entries.duplicate(true),
+		"entries": _entries_as_dicts(),
 		"table_name": _table_name,
 		"default_currency": _default_currency,
 		"local_wallet": local_wallet
@@ -518,12 +557,15 @@ func save_state() -> Dictionary:
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
-	_entries = (state.get("entries", []) as Array).duplicate(true)
+	_entries.clear()
+	for saved: Variant in state.get("entries", []) as Array:
+		if saved is Dictionary:
+			_entries.append(PriceEntry.from_dict(saved as Dictionary))
 	_table_name = str(state.get("table_name", ""))
 	_default_currency = str(state.get("default_currency", "gold"))
 	local_wallet = float(state.get("local_wallet", 0.0))
 	_by_id.clear()
-	for record: Dictionary in _entries:
-		_by_id[str(record.id)] = record
+	for record: PriceEntry in _entries:
+		_by_id[record.id] = record
 
 # Priced Table behavior: attach it to the thing that sells (a vendor, a kiosk, a toll gate) and drop a Price Table resource (.tres) on its slot. Buy Entry checks unlocked / in stock / affordable, takes the money through whatever wallet answers (a node in the wallet group, then the CurrencyLedger autoload, then this table's own Local Wallet number), decrements the stock, and fires On Purchased or On Purchase Refused with the reason. Pair it with the Interaction pack by convention: focus the vendor, press the key, buy the focused entry. This pack is an event sheet - extend it by editing it.

@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: Priced Table keeps each entry as a small class
+
+- An entry of the table was a dictionary read by text in about twenty places; it is now a `PriceEntry` with typed fields, and the id index is a typed dictionary of them. The saved state is the same record it was, written and read through the class's `to_dict` and `from_dict`: a shop saved by an older version loads with the stock, locks and prices it was left with, and saving it again gives the identical text. Rows loaded from a price table resource are read as before.
+
 ### Changed: Encounter Timeline keeps each beat as a small class
 
 - A beat of the plan was a dictionary read by text in about twenty places; it is now a `Beat` with typed fields. The saved state is the same record it was, written and read through the class's `to_dict` and `from_dict`: a state saved by an older version loads, plays on from where it was, and saving it again gives the identical text. Rows loaded from an encounter resource are read as before.

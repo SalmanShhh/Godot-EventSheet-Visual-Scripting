@@ -54,14 +54,49 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
-		"# The live table: one record per entry in the order the table lists them, plus an id index into",
-		"# the SAME dictionaries (a Dictionary is a reference, so a write through either is seen by both).",
-		"# A record is {id, label, price, currency, stock, initial_stock, unlocked, requires}, where a",
-		"# stock of -1 means unlimited and 0 means sold out.",
+		"## One entry of the table: what it is, what it costs and how many are left.",
+		"class PriceEntry extends RefCounted:",
+		"\t## The id rows buy it by.",
+		"\tvar id: String = \"\"",
+		"\t## The name the game shows.",
+		"\tvar label: String = \"\"",
+		"\t## What one costs, never below 0.",
+		"\tvar price: float = 0.0",
+		"\t## The currency it is paid in.",
+		"\tvar currency: String = \"gold\"",
+		"\t## How many are left: -1 is unlimited, 0 is sold out.",
+		"\tvar stock: int = -1",
+		"\t## The stock the table shipped with, which Restock All goes back to.",
+		"\tvar initial_stock: int = -1",
+		"\t## False while a tier or a story gate keeps it closed.",
+		"\tvar unlocked: bool = true",
+		"\t## A free note saying what it needs, for the game's own UI.",
+		"\tvar requires: String = \"\"",
+		"",
+		"\t# The entry as a saved state holds it. The keys are the file's spelling and never change.",
+		"\tfunc to_dict() -> Dictionary:",
+		"\t\treturn {\"id\": id, \"label\": label, \"price\": price, \"currency\": currency, \"stock\": stock,",
+		"\t\t\t\"initial_stock\": initial_stock, \"unlocked\": unlocked, \"requires\": requires}",
+		"",
+		"\t# An entry read back from a saved state; a missing key reads as the field's default.",
+		"\tstatic func from_dict(data: Dictionary) -> PriceEntry:",
+		"\t\tvar entry: PriceEntry = PriceEntry.new()",
+		"\t\tentry.id = str(data.get(\"id\", \"\"))",
+		"\t\tentry.label = str(data.get(\"label\", \"\"))",
+		"\t\tentry.price = float(data.get(\"price\", 0.0))",
+		"\t\tentry.currency = str(data.get(\"currency\", \"gold\"))",
+		"\t\tentry.stock = int(data.get(\"stock\", -1))",
+		"\t\tentry.initial_stock = int(data.get(\"initial_stock\", entry.stock))",
+		"\t\tentry.unlocked = bool(data.get(\"unlocked\", true))",
+		"\t\tentry.requires = str(data.get(\"requires\", \"\"))",
+		"\t\treturn entry",
+		"",
+		"# The live table: one entry per row in the order the table lists them, plus an id index into the",
+		"# SAME entries (an object is a reference, so a write through either is seen by both).",
 		"## Items loaded from the price table, each with its price and stock.",
-		"var _entries: Array = []",
+		"var _entries: Array[PriceEntry] = []",
 		"## Items looked up by id.",
-		"var _by_id: Dictionary = {}",
+		"var _by_id: Dictionary[String, PriceEntry] = {}",
 		"## Name of the price table that is loaded.",
 		"var _table_name: String = \"\"",
 		"## Currency used by an entry that does not name one.",
@@ -151,14 +186,13 @@ static func build() -> bool:
 		"",
 		"# Registers one record, replacing any entry that already had this id (so a second Load Price",
 		"# Table re-prices rather than duplicating) and keeping the table's original order. The position",
-		"# is found by id rather than by comparing the dictionaries, which is what keeps this honest",
-		"# whichever way the engine defines Dictionary equality.",
-		"func _put(record: Dictionary) -> void:",
-		"\tvar entry_id: String = str(record.id)",
+		"# is found by id.",
+		"func _put(record: PriceEntry) -> void:",
+		"\tvar entry_id: String = record.id",
 		"\tvar at: int = -1",
 		"\tvar index: int = 0",
-		"\tfor existing: Dictionary in _entries:",
-		"\t\tif str(existing.id) == entry_id:",
+		"\tfor existing: PriceEntry in _entries:",
+		"\t\tif existing.id == entry_id:",
 		"\t\t\tat = index",
 		"\t\t\tbreak",
 		"\t\tindex += 1",
@@ -197,16 +231,16 @@ static func build() -> bool:
 			"\t\tcontinue",
 			"\tvar currency: String = str(_cell(row, \"currency\", \"\"))",
 			"\tvar stock: int = int(_num(_cell(row, \"stock\", -1)))",
-			"\t_put({",
-			"\t\t\"id\": entry_id,",
-			"\t\t\"label\": str(_cell(row, \"label\", \"\")),",
-			"\t\t\"price\": maxf(_num(_cell(row, \"price\", 0.0)), 0.0),",
-			"\t\t\"currency\": currency if not currency.is_empty() else _default_currency,",
-			"\t\t\"stock\": stock,",
-			"\t\t\"initial_stock\": stock,",
-			"\t\t\"unlocked\": not bool(_cell(row, \"locked\", false)),",
-			"\t\t\"requires\": str(_cell(row, \"requires\", \"\"))",
-			"\t})"
+			"\tvar entry: PriceEntry = PriceEntry.new()",
+			"\tentry.id = entry_id",
+			"\tentry.label = str(_cell(row, \"label\", \"\"))",
+			"\tentry.price = maxf(_num(_cell(row, \"price\", 0.0)), 0.0)",
+			"\tentry.currency = currency if not currency.is_empty() else _default_currency",
+			"\tentry.stock = stock",
+			"\tentry.initial_stock = stock",
+			"\tentry.unlocked = not bool(_cell(row, \"locked\", false))",
+			"\tentry.requires = str(_cell(row, \"requires\", \"\"))",
+			"\t_put(entry)"
 		])),
 		"Load price table [b]{table}[/b]")
 
@@ -216,16 +250,14 @@ static func build() -> bool:
 		"\n".join(PackedStringArray([
 			"if entry_id.is_empty():",
 			"\treturn",
-			"_put({",
-			"\t\"id\": entry_id,",
-			"\t\"label\": label,",
-			"\t\"price\": maxf(price, 0.0),",
-			"\t\"currency\": currency if not currency.is_empty() else _default_currency,",
-			"\t\"stock\": stock,",
-			"\t\"initial_stock\": stock,",
-			"\t\"unlocked\": true,",
-			"\t\"requires\": \"\"",
-			"})"
+			"var entry: PriceEntry = PriceEntry.new()",
+			"entry.id = entry_id",
+			"entry.label = label",
+			"entry.price = maxf(price, 0.0)",
+			"entry.currency = currency if not currency.is_empty() else _default_currency",
+			"entry.stock = stock",
+			"entry.initial_stock = stock",
+			"_put(entry)"
 		])),
 		"Add entry [b]{entry_id}[/b] ([b]{label}[/b]) at [b]{price}[/b] [b]{currency}[/b], stock [b]{stock}[/b]")
 
@@ -239,8 +271,8 @@ static func build() -> bool:
 		"The whole purchase in one row: refuses (firing On Purchase Refused with a reason) when the id is unknown, the entry is locked, its stock is 0, or the wallet cannot cover the price; otherwise it takes the price through whatever wallet answers, counts the stock down by one, and fires On Purchased with the id and what was paid. Hand over the goods in On Purchased - the pack never guesses what an entry means.",
 		[["entry_id", "String"]],
 		"\n".join(PackedStringArray([
-			"var record: Dictionary = _by_id.get(entry_id, {})",
-			"if record.is_empty():",
+			"var record: PriceEntry = _by_id.get(entry_id, null)",
+			"if record == null:",
 			"\t_refuse(entry_id, \"unknown entry\")",
 			"\treturn",
 			"if not bool(record.unlocked):",
@@ -269,8 +301,8 @@ static func build() -> bool:
 		"Adds to one entry's remaining stock (a delivery, a daily refill). An unlimited entry (-1) is left alone, and stock never falls below 0.",
 		[["entry_id", "String"], ["amount", "int"]],
 		"\n".join(PackedStringArray([
-			"var record: Dictionary = _by_id.get(entry_id, {})",
-			"if record.is_empty() or int(record.stock) < 0:",
+			"var record: PriceEntry = _by_id.get(entry_id, null)",
+			"if record == null or record.stock < 0:",
 			"\treturn",
 			"record.stock = maxi(int(record.stock) + amount, 0)"
 		])),
@@ -279,23 +311,23 @@ static func build() -> bool:
 	Lib.append_function(sheet, "restock_all", "Restock All", "Priced Tables",
 		"Puts every entry back to the stock its table shipped with - the one row behind \"the shop restocks each morning\". Prices, locks and requirement notes are untouched.",
 		[],
-		"for record: Dictionary in _entries:\n\trecord.stock = int(record.initial_stock)")
+		"for record: PriceEntry in _entries:\n\trecord.stock = record.initial_stock")
 
 	Lib.append_function(sheet, "set_stock", "Set Stock", "Priced Tables",
 		"Forces one entry's remaining stock to an exact number. -1 makes it unlimited, 0 sells it out.",
 		[["entry_id", "String"], ["stock", "int"]],
-		"var record: Dictionary = _by_id.get(entry_id, {})\nif not record.is_empty():\n\trecord.stock = stock")
+		"var record: PriceEntry = _by_id.get(entry_id, null)\nif record != null:\n\trecord.stock = stock")
 
 	Lib.append_function(sheet, "set_price", "Set Price", "Priced Tables",
 		"Re-prices one entry while the game runs - a sale, a haggle, a reputation discount. Negative prices are clamped to 0 (a free entry still goes through the whole purchase, so its trigger still fires).",
 		[["entry_id", "String"], ["price", "float"]],
-		"var record: Dictionary = _by_id.get(entry_id, {})\nif not record.is_empty():\n\trecord.price = maxf(price, 0.0)",
+		"var record: PriceEntry = _by_id.get(entry_id, null)\nif record != null:\n\trecord.price = maxf(price, 0.0)",
 		"Set price of [b]{entry_id}[/b] to [b]{price}[/b]")
 
 	Lib.append_function(sheet, "set_unlocked", "Set Entry Unlocked", "Priced Tables",
 		"Opens (or closes) one entry. A locked entry still shows in the table - Entry Is Unlocked greys it out in your UI, and buying it is refused with the reason \"locked\" - which is how a tier gate, a skill-tree prerequisite or a story unlock is expressed without deleting the row.",
 		[["entry_id", "String"], ["unlocked", "bool"]],
-		"var record: Dictionary = _by_id.get(entry_id, {})\nif not record.is_empty():\n\trecord.unlocked = unlocked",
+		"var record: PriceEntry = _by_id.get(entry_id, null)\nif record != null:\n\trecord.unlocked = unlocked",
 		"Set [b]{entry_id}[/b] unlocked to [b]{unlocked}[/b]")
 
 	Lib.append_function(sheet, "use_wallet_node", "Use Wallet Node", "Priced Tables",
@@ -313,17 +345,17 @@ static func build() -> bool:
 	Lib.condition(sheet, "can_afford_entry", "Can Afford Entry", "Priced Tables",
 		"True when the wallet covers this entry's price right now - the condition that greys out a shop button before the player clicks it. Reads through the same seam the purchase uses, so it can never disagree with Buy Entry.",
 		[["entry_id", "String"]],
-		"var record: Dictionary = _by_id.get(entry_id, {})\nreturn not record.is_empty() and _balance_of(str(record.currency)) >= float(record.price)")
+		"var record: PriceEntry = _by_id.get(entry_id, null)\nreturn record != null and _balance_of(str(record.currency)) >= float(record.price)")
 
 	Lib.condition(sheet, "entry_in_stock", "Entry In Stock", "Priced Tables",
 		"True while the entry has something left to sell. An unlimited entry (-1) is always in stock; an unknown id never is.",
 		[["entry_id", "String"]],
-		"var record: Dictionary = _by_id.get(entry_id, {})\nreturn not record.is_empty() and int(record.stock) != 0")
+		"var record: PriceEntry = _by_id.get(entry_id, null)\nreturn record != null and int(record.stock) != 0")
 
 	Lib.condition(sheet, "entry_is_unlocked", "Entry Is Unlocked", "Priced Tables",
 		"True when the entry is open for business - the gate behind a tier, a prerequisite or a story beat.",
 		[["entry_id", "String"]],
-		"var record: Dictionary = _by_id.get(entry_id, {})\nreturn not record.is_empty() and bool(record.unlocked)")
+		"var record: PriceEntry = _by_id.get(entry_id, null)\nreturn record != null and bool(record.unlocked)")
 
 	Lib.condition(sheet, "has_entry", "Has Entry", "Priced Tables",
 		"Whether the table holds an entry with this id at all - the guard that tells a typo apart from a sold-out row.",
@@ -334,8 +366,8 @@ static func build() -> bool:
 		"True when nothing in the table can be bought any more: every entry is either at 0 stock or locked. An empty table counts as sold out.",
 		[],
 		"\n".join(PackedStringArray([
-			"for record: Dictionary in _entries:",
-			"\tif int(record.stock) != 0 and bool(record.unlocked):",
+			"for record: PriceEntry in _entries:",
+			"\tif record.stock != 0 and record.unlocked:",
 			"\t\treturn false",
 			"return true"
 		])))
@@ -419,10 +451,17 @@ static func build() -> bool:
 		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
 		"# The whole table travels, so a shop reopens with the stock it was left with - and the",
 		"# id index is rebuilt from the restored records rather than saved twice.",
+		"# The table as the plain records a save holds.",
+		"func _entries_as_dicts() -> Array:",
+		"\tvar records: Array = []",
+		"\tfor entry: PriceEntry in _entries:",
+		"\t\trecords.append(entry.to_dict())",
+		"\treturn records",
+		"",
 		"## @ace_hidden",
 		"func save_state() -> Dictionary:",
 		"\treturn {",
-		"\t\t\"entries\": _entries.duplicate(true),",
+		"\t\t\"entries\": _entries_as_dicts(),",
 		"\t\t\"table_name\": _table_name,",
 		"\t\t\"default_currency\": _default_currency,",
 		"\t\t\"local_wallet\": local_wallet",
@@ -432,13 +471,16 @@ static func build() -> bool:
 		"func load_state(state: Dictionary) -> void:",
 		"\tif state.is_empty():",
 		"\t\treturn",
-		"\t_entries = (state.get(\"entries\", []) as Array).duplicate(true)",
+		"\t_entries.clear()",
+		"\tfor saved: Variant in state.get(\"entries\", []) as Array:",
+		"\t\tif saved is Dictionary:",
+		"\t\t\t_entries.append(PriceEntry.from_dict(saved as Dictionary))",
 		"\t_table_name = str(state.get(\"table_name\", \"\"))",
 		"\t_default_currency = str(state.get(\"default_currency\", \"gold\"))",
 		"\tlocal_wallet = float(state.get(\"local_wallet\", 0.0))",
 		"\t_by_id.clear()",
-		"\tfor record: Dictionary in _entries:",
-		"\t\t_by_id[str(record.id)] = record"
+		"\tfor record: PriceEntry in _entries:",
+		"\t\t_by_id[record.id] = record"
 	]))
 	sheet.events.append(persistence)
 
