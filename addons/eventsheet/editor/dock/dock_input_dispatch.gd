@@ -60,7 +60,7 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._row_edit_ops._insert_context_row_above(EventRow.new(), "Added event above.")
 		_dock.ROW_MENU_ADD_GROUP_BELOW:
 			var group: EventGroup = EventGroup.new()
-			group.name = "Group"
+			group.name = EventSheetWords.new_section_name()
 			group.group_name = group.name
 			_dock._row_edit_ops._insert_context_row_below(group, "Added group.")
 		_dock.ROW_MENU_ADD_COMMENT_BELOW:

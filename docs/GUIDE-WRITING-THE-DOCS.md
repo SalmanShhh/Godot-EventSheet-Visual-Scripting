@@ -96,7 +96,7 @@ so where you put a page in `docs/README.md` decides what a reader reads after it
 
 **F1 is "help for the selected item"**, not "open the manual": a condition or action row opens its
 entry, an object label opens that object's reference page, a group opens the Manual's page on
-groups, and a behavior's Include bar opens that behavior's reference. With the Manual docked,
+groups, and a behavior's head bar opens that behavior's reference. With the Manual docked,
 **Follow selection** does the same thing as you click around, and pauses the moment you click
 inside the Manual to read (press the pin again to resume).
 

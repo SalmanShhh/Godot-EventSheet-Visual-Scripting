@@ -611,7 +611,7 @@ Three details the head is careful about:
 - **Renaming says what it will touch first.** F2 on the name band shows "renames 9 uses in 4 sheets"
   before it writes anything.
 - **An opened file wears the same stack.** A behaviour pack or any `.gd` opened as a read-only
-  preview is not given a second kind of head: it gets these bands, and the Include bar under them
+  preview is not given a second kind of head: it gets these bands, and the head bar under them
   carries only what no band states - that it is an addon pack, its version, the class it behaves on,
   how much of it read as events, which file it is. Nothing on the head is said twice.
 

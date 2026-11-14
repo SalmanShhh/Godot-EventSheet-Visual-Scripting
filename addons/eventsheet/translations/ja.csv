@@ -2327,7 +2327,7 @@ Editor Tools,エディターツール
 "Reading marks - chips, badges, guides, stripes",読み取りの目印 - チップ、バッジ、ガイド、ストライプ
 "Bars around the sheet - Object bar, status strip, tab title",シート周りのバー - オブジェクトバー、ステータスバー、タブタイトル
 Manual pages,マニュアルのページ
-"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",インクルードバーのボタン (今すぐ実行、再読み込み、出力) に付く素のチップ、カバレッジのチップ、そして行の中のその他すべての中立的なチップ。
+"The plain chip on a head bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",見出しバーのボタン (今すぐ実行、再読み込み、出力) に付く素のチップ、カバレッジのチップ、そして行の中のその他すべての中立的なチップ。
 The word on those plain chips.,その素のチップに載る文字。
 "The chip that says where something sits in the picker (""Group › Subgroup"").","ピッカー内での場所を示すチップ (""Group › Subgroup"")。"
 The word on the picker-category chip.,ピッカーのカテゴリーチップに載る文字。
@@ -2335,7 +2335,7 @@ The word on the picker-category chip.,ピッカーのカテゴリーチップに
 The word on the Inspector chip.,Inspector チップに載る文字。
 The badge that says a variable is const or static.,変数が const または static であることを示すバッジ。
 The word on the const / static badge.,const / static バッジに載る文字。
-The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,セットアップ帯に付く控えめなバッジ - インクルードバーを開く ▣ と ⇥ の印。
+The dim badge on a setup strip - the ▣ and ⇥ marks that open a head bar.,セットアップ帯に付く控えめなバッジ - 見出しバーを開く ▣ と ⇥ の印。
 The glyph on a setup badge.,セットアップバッジに載る記号。
 "The ""Script block"" pill on a row that kept its GDScript as it was written.","書かれたままの GDScript を保っている行に付く ""Script block"" のピル。"
 The words on the Script block pill.,Script block のピルに載る文字。
@@ -2351,7 +2351,7 @@ The ▶ badge on an event that runs once.,一度だけ実行されるイベン�
 The glyph on the runs-once badge.,一度だけバッジに載る記号。
 The main word of a row's sentence.,行の文の中心となる語。
 The quieter half of a sentence.,文のうち控えめな側の部分。
-"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.",その後ろに続く控えめな補足 - インクルードバーのファイル名、INPUT 行のキー、見出しバーのサブタイトルなど。
+"The muted detail after it - a head bar's file name and subtitle, an INPUT row's keys.",その後ろに続く控えめな補足 - 見出しバーのファイル名とサブタイトル、INPUT 行のキー。
 "Text values inside a parameter (""coin""), so magic words are findable by colour.","パラメーター内の文字列値 (""coin"")。合言葉を色で見つけられるようにします。"
 true and false inside a parameter.,パラメーター内の true と false。
 """N errors - the game will not run this script"", and the words on a broken row.",「N 件のエラー - ゲームはこのスクリプトを実行しません」と、壊れた行に載る文字。
@@ -7244,10 +7244,10 @@ Use a class when values belong together,値がひとまとまりのときはク�
 "• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.",• 敵・レベル・アイテムごとの設定を 1 つの変数にまとめ、インスペクターで一緒に編集します。
 "• Keep a list of them: every wave, every shop item, every line of dialogue.",• リストにまとめます: ウェーブごと、ショップの品ごと、セリフ 1 行ごと。
 Used by %s,%s が使用
-Included variables shown under each Include bar.,各インクルードバーの下にインクルードされた変数を表示しました。
+Included variables shown under each Shared sheet line.,各共有シート行の下にインクルードされた変数を表示しました。
 Included variables hidden.,インクルードされた変数を非表示にしました。
 Included Variables,インクルードされた変数
-"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.",各インクルードバーの下に、インクルードされたシートが持ち込む変数を読み取り専用で、出どころの名前付きで表示します。クリックするとそのシートを開きます。オフにするとインクルードバーだけになります。
+"Under each Shared sheet line, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the lines alone.",各共有シート行の下に、インクルードされたシートが持ち込む変数を読み取り専用で、出どころの名前付きで表示します。クリックするとそのシートを開きます。オフにすると行だけになります。
 Add links shown on the event under the pointer.,ポインター下のイベントに追加リンクを表示しました。
 "Add links drawn as before: on hover, on the selected event and under an empty lane.",追加リンクを従来どおり描画します: ホバー時、選択中のイベント、空のレーンの下。
 Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,このシートで Doctor が指摘している行です。各行は琥珀色で描かれます。選択すると理由を読めます。

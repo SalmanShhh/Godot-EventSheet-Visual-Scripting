@@ -557,7 +557,7 @@ That is the order this section is in.
 
 #### The head - what this file is
 
-- **The Include bar says how much of the file reads as events.** A chip at the end of it -
+- **The head bar says how much of the file reads as events.** A chip at the end of it -
   `96% reads as events · 3 script blocks ▸` - is the share of the file that arrived as rows, and how
   many **script blocks** the rest of it sits in. Click it and it walks those blocks, one per click, so
   the parts that stayed code are a click away rather than a scroll away. A file that lifted completely
@@ -568,7 +568,7 @@ That is the order this section is in.
   under a single line (a behaviour, a global and the other files of a pack have no bar - they read
   in their file's order, below) - `▣ FPSController extends Node · reads as events · 5 input actions` -
   and the ▸ on it opens every bar a reader used to scroll past: the band per line of the file
-  (`class_name FPSController`, `extends Node`, `@icon(...)`, the host binding), the Include bar for
+  (`class_name FPSController`, `extends Node`, `@icon(...)`, the host binding), the head bar for
   what no line says (`⇥ Addon Pack  v1.0.0  behaves on a  CharacterBody3D  reads as events ▸`),
   and the **Input** bar. Each fact on the line keeps its door: the class it
   extends opens the base script when that base is another script of your project, and the coverage
@@ -585,7 +585,7 @@ That is the order this section is in.
 
   ![A behaviour pack's head: one bar reading "FPSController extends Node - reads as events - 5 input actions", the pack's own description as a comment row under it, and one folded folder per setting group below](images/opened-pack-head.png)
 
-  ![The same head with the fold open: the bands for class_name, extends, @icon and the host binding, the Include bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", the Input bar, and one folder per setting group](images/opened-pack-head-open.png)
+  ![The same head with the fold open: the bands for class_name, extends, @icon and the host binding, the head bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", the Input bar, and one folder per setting group](images/opened-pack-head-open.png)
 - **A behaviour or a global opens as its own file.** A behaviour (a pack's node script, or a
   sheet made as one), a global and any other file of a pack read exactly in the order the file is
   written, under the slim title row an edited sheet has with a quiet kind word -
@@ -703,7 +703,7 @@ That is the order this section is in.
 
   ![Functions read as an event sheet, each row a hierarchy sentence: Hand gains a child keeping its place, an item is removed from its parent, a remove-then-add pair reads as one row snapping to it, and an Add child row wears its follow-flag chips](images/hierarchy-reading.png)
 
-  ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
+  ![Three opened scripts stacked: one whose head bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
 
   **Three small lines that used to read as something else.** `x.owner = y` is not a property being
   poked - it says which scene the node belongs to, which is what decides whether it is written out
@@ -961,7 +961,7 @@ pivot turns.
 
   ![An `_unhandled_input` read as one trigger event per branch: Mouse - On mouse moved with Mouse - mouse is captured under it, and Keyboard - On Escape pressed](images/opened-pack-input-triggers.png)
 
-  ![A script the engine refuses to compile, opened as a sheet: the Include bar says "3 errors - the game will not run this script" in red, two events wear a red margin mark, and the rest still reads normally](images/opened-script-structure5.png)
+  ![A script the engine refuses to compile, opened as a sheet: the head bar says "3 errors - the game will not run this script" in red, two events wear a red margin mark, and the rest still reads normally](images/opened-script-structure5.png)
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
@@ -1045,7 +1045,7 @@ to the function it names, the same jump the Outline panel makes.
 
   ![A Variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it](images/typed-object-labels.png)
 - **A plain script is an object.** Its name band names it (`class_name`, else the file) with its
-  class icon, and its Include bar adds the fact no line of the file carries - the root node of the
+  class icon, and its head bar adds the fact no line of the file carries - the root node of the
   scene that runs it, when the script declares no class of its own; its engine properties read under
   that name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
   System (`System ▸ Print "ready"`). Any method call reads `Object ▸ what it does ▸ args` with the argument
@@ -1699,7 +1699,7 @@ each file runs, it just does something its author did not mean.
 Two more families of line that a plain Godot script is full of.
 
 A script that `extends Resource` is not an object in the scene - it is a **data type**, and that is
-what its Include bar says, under the name a designer would use out loud (`enemy_stats.gd` opens as
+what its head bar says, under the name a designer would use out loud (`enemy_stats.gd` opens as
 an `Enemy Stats`). Its `@export`s are **Field** rows rather than ordinary variables, because every
 `.tres` saved from it is one asset with those fields filled in. In the events, an asset reads as the
 asset: `load("res://data/slime.tres") as EnemyStats` is **the data asset slime.tres**, a field read
@@ -2175,7 +2175,7 @@ is instantiated to answer a question.
   `eventsheets/editor/follow_scene_selection` project setting, when you want to work on one row
   while clicking around a scene.
 - **Objects wear their own picture.** When an object's scene has a Sprite2D / AnimatedSprite2D /
-  TextureRect on or under its root, that texture becomes the object's mark - on the Include bar, in the
+  TextureRect on or under its root, that texture becomes the object's mark - on the head bar, in the
   Object bar, in the popup and on every object label - falling back to the class icon. The thumbnail
   comes from the editor's own preview cache, so nothing new is rendered.
 - **Tabs and titles name the object, not the file.** A tab reads `Player` with that picture, a pack

@@ -28,7 +28,7 @@ at every zoom:
 Above the first event sit the bars that answer "what am I looking at?", each collapsed to one
 readable line:
 
-- **The Include bar** names the object (its `class_name`, else its scene's root node, else the
+- **The head bar** names the object (its `class_name`, else its scene's root node, else the
   file) with its class icon and the scene it lives in. On a behavior pack it names the pack and
   its version; on an autoload it wears the globe and says `autoload (global)`. A chip at its end
   says how much of the file reads as events - `96% reads as events · 3 script blocks ▸` - and

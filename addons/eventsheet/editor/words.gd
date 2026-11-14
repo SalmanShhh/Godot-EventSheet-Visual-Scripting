@@ -320,6 +320,13 @@ static func shared_sheet_phrase(lower: bool = false) -> String:
 	return phrase.to_lower() if lower else phrase
 
 
+## The name a NEWLY added collapsible block starts with: "Section" by default, "Group" under the
+## Familiar words. Written into the file as the block's own text, so it is never translated, and a
+## block already in a file keeps whatever name it was saved with.
+static func new_section_name() -> String:
+	return word("section_block")
+
+
 ## The plural, for menu items about several: "Includes", "Shared sheets".
 static func shared_sheet_plural(lower: bool = false) -> String:
 	var plural: String = word("shared_sheet")

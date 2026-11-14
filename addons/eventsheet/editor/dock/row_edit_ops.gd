@@ -124,7 +124,7 @@ func _bulk_group_rows(targets: Array) -> String:
 		return container.find(a) < container.find(b))
 	last_group_created = null
 	var made: EventGroup = EventGroup.new()
-	made.group_name = "Group"
+	made.group_name = EventSheetWords.new_section_name()
 	made.name = made.group_name
 	var changed: bool = _dock._perform_undoable_sheet_edit("Group Selection", func() -> bool:
 		var insert_at: int = container.find(ordered[0])

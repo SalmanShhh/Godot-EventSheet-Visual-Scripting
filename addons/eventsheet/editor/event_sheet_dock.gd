@@ -3189,7 +3189,7 @@ func _included_variables_enabled() -> bool:
 func _toggle_included_variables(view_popup: PopupMenu) -> void:
 	var showing: bool = not _included_variables_enabled()
 	_set_variable_marks_flag("included_variables", showing, view_popup, EventSheetMenuBar.INCLUDED_VARIABLES_VIEW_ID)
-	_set_status(EventSheetL10n.translate("Included variables shown under each Include bar.") if showing
+	_set_status(EventSheetL10n.translate("Included variables shown under each Shared sheet line.") if showing
 		else EventSheetL10n.translate("Included variables hidden."))
 
 

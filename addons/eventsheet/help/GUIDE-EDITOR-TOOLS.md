@@ -73,11 +73,11 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 **Editor-only actions stay in the editor.** The Editor Tools actions call `EditorInterface`, which only exists in the editor process. Keep them in Tool sheets; a gameplay sheet that needs to know where it is running can use the **Is In Editor** condition (`Engine.is_editor_hint()`) as a guard.
 
-### Run it from the sheet - the tool's own Include bar
+### Run it from the sheet - the tool's own head bar
 
 ![An editor plugin sheet: the identity bar carries Run now, Reload, Output and Enable plugin, and the Anatomy rail's EDITOR TOOLS section lists the Tools menu item the plugin adds](images/editor-tool-bar.png)
 
-You do not have to leave the sheet to run a tool. A tool sheet's Include bar carries its own buttons, and they are the whole loop:
+You do not have to leave the sheet to run a tool. A tool sheet's head bar carries its own buttons, and they are the whole loop:
 
 | Button | What it does |
 | --- | --- |

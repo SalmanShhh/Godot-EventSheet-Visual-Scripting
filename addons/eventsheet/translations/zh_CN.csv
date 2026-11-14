@@ -2327,7 +2327,7 @@ Editor Tools,编辑器工具
 "Reading marks - chips, badges, guides, stripes",阅读标记 - 条目、徽章、参考线、条纹
 "Bars around the sheet - Object bar, status strip, tab title",事件表周围的栏 - 对象栏、状态条、标签标题
 Manual pages,手册页面
-"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",包含表栏按钮（立即运行、重新加载、输出）上的普通条目、覆盖率条目，以及行内其他所有中性条目。
+"The plain chip on a head bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",标题栏按钮（立即运行、重新加载、输出）上的普通条目、覆盖率条目，以及行内其他所有中性条目。
 The word on those plain chips.,这些普通条目上的文字。
 "The chip that says where something sits in the picker (""Group › Subgroup"").","标明某项在选择器中位置的条目（""Group › Subgroup""）。"
 The word on the picker-category chip.,选择器分类条目上的文字。
@@ -2335,7 +2335,7 @@ The word on the picker-category chip.,选择器分类条目上的文字。
 The word on the Inspector chip.,Inspector 条目上的文字。
 The badge that says a variable is const or static.,标明变量为 const 或 static 的徽章。
 The word on the const / static badge.,const / static 徽章上的文字。
-The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,设置条上的暗色徽章 - 用来打开包含表栏的 ▣ 和 ⇥ 标记。
+The dim badge on a setup strip - the ▣ and ⇥ marks that open a head bar.,设置条上的暗色徽章 - 用来打开标题栏的 ▣ 和 ⇥ 标记。
 The glyph on a setup badge.,设置徽章上的字形。
 "The ""Script block"" pill on a row that kept its GDScript as it was written.","保留原样 GDScript 的行上的 ""Script block"" 药丸标签。"
 The words on the Script block pill.,Script block 药丸标签上的文字。
@@ -2351,7 +2351,7 @@ The ▶ badge on an event that runs once.,只运行一次的事件上的 ▶ 徽
 The glyph on the runs-once badge.,只运行一次徽章上的字形。
 The main word of a row's sentence.,行内句子的主要词语。
 The quieter half of a sentence.,句子中较为次要的那一半。
-"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.",紧随其后的暗色细节 - 包含表栏的文件名、INPUT 行的按键、标题栏的副标题。
+"The muted detail after it - a head bar's file name and subtitle, an INPUT row's keys.",紧随其后的暗色细节 - 标题栏的文件名和副标题、INPUT 行的按键。
 "Text values inside a parameter (""coin""), so magic words are findable by colour.","参数中的文本值（""coin""），让关键词能靠颜色找到。"
 true and false inside a parameter.,参数中的 true 和 false。
 """N errors - the game will not run this script"", and the words on a broken row.","""N 个错误 - 游戏不会运行这个脚本""，以及出错行上的文字。"
@@ -7244,10 +7244,10 @@ Use a class when values belong together,当几个值属于一体时使用类
 "• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.",• 让每个敌人、关卡或物品在一个变量中拥有自己的设置，在检查器中一起编辑。
 "• Keep a list of them: every wave, every shop item, every line of dialogue.",• 把它们存成列表：每一波、每件商店物品、每句对白。
 Used by %s,被 %s 使用
-Included variables shown under each Include bar.,已在每个包含栏下显示包含的变量。
+Included variables shown under each Shared sheet line.,已在每个共享表行下显示包含的变量。
 Included variables hidden.,已隐藏包含的变量。
 Included Variables,包含的变量
-"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.",在每个包含栏下，列出被包含表带来的变量，只读并注明来源。点击一个即可打开该表。关闭后只保留包含栏。
+"Under each Shared sheet line, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the lines alone.",在每个共享表行下，列出被包含表带来的变量，只读并注明来源。点击一个即可打开该表。关闭后只保留这些行。
 Add links shown on the event under the pointer.,已在指针下的事件上显示添加链接。
 "Add links drawn as before: on hover, on the selected event and under an empty lane.",添加链接按原样绘制: 悬停时、选中的事件上以及空通道下方。
 Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,本表中 Doctor 有话要说的行。每一行都以琥珀色绘制; 选中一行即可查看原因。

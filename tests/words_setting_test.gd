@@ -32,6 +32,8 @@ static func run() -> bool:
 	all_passed = _check("a collapsible block of rows reads as Section by default, Group in the Familiar preset",
 		[EventSheetWords.word_for("section_block", false, {}), EventSheetWords.word_for("section_block", true, {})],
 		["Section", "Group"]) and all_passed
+	all_passed = _check("a newly added block starts with the word the page shows for it, and that word is the saved text",
+		EventSheetWords.new_section_name(), EventSheetWords.word("section_block")) and all_passed
 	all_passed = _check("a sheet other sheets include reads as Shared sheet by default, Include in the Familiar preset",
 		[EventSheetWords.word_for("shared_sheet", false, {}), EventSheetWords.word_for("shared_sheet", true, {})],
 		["Shared sheet", "Include"]) and all_passed

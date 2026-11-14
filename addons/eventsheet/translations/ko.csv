@@ -2327,7 +2327,7 @@ Editor Tools,에디터 도구
 "Reading marks - chips, badges, guides, stripes","읽기 표시 - 칩, 배지, 안내선, 줄무늬"
 "Bars around the sheet - Object bar, status strip, tab title","시트 주변의 바 - 오브젝트 바, 상태 표시줄, 탭 제목"
 Manual pages,설명서 페이지
-"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","포함 시트 바의 버튼(지금 실행, 다시 불러오기, 출력)에 붙는 기본 칩, 커버리지 칩, 그리고 행 안의 다른 모든 중립 칩."
+"The plain chip on a head bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","머리말 바의 버튼(지금 실행, 다시 불러오기, 출력)에 붙는 기본 칩, 커버리지 칩, 그리고 행 안의 다른 모든 중립 칩."
 The word on those plain chips.,그 기본 칩에 적히는 글자.
 "The chip that says where something sits in the picker (""Group › Subgroup"").","선택기에서 항목이 어디에 있는지 알려 주는 칩 (""Group › Subgroup"")."
 The word on the picker-category chip.,선택기 분류 칩에 적히는 글자.
@@ -2335,7 +2335,7 @@ The word on the picker-category chip.,선택기 분류 칩에 적히는 글자.
 The word on the Inspector chip.,Inspector 칩에 적히는 글자.
 The badge that says a variable is const or static.,변수가 const 또는 static임을 알리는 배지.
 The word on the const / static badge.,const / static 배지에 적히는 글자.
-The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,설정 띠에 붙는 흐린 배지 - 포함 시트 바를 여는 ▣ 와 ⇥ 표시.
+The dim badge on a setup strip - the ▣ and ⇥ marks that open a head bar.,설정 띠에 붙는 흐린 배지 - 머리말 바를 여는 ▣ 와 ⇥ 표시.
 The glyph on a setup badge.,설정 배지에 표시되는 기호.
 "The ""Script block"" pill on a row that kept its GDScript as it was written.","GDScript를 작성된 그대로 유지한 행에 붙는 ""Script block"" 알약 배지."
 The words on the Script block pill.,Script block 알약 배지에 적히는 글자.
@@ -2351,7 +2351,7 @@ The ▶ badge on an event that runs once.,한 번만 실행되는 이벤트에 �
 The glyph on the runs-once badge.,한 번만 실행 배지에 표시되는 기호.
 The main word of a row's sentence.,행 문장의 중심이 되는 낱말.
 The quieter half of a sentence.,문장에서 덜 두드러지는 나머지 부분.
-"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.","그 뒤에 붙는 흐린 세부 정보 - 포함 시트 바의 파일 이름, INPUT 행의 키, 머리말 바의 부제 등."
+"The muted detail after it - a head bar's file name and subtitle, an INPUT row's keys.","그 뒤에 붙는 흐린 세부 정보 - 머리말 바의 파일 이름과 부제, INPUT 행의 키."
 "Text values inside a parameter (""coin""), so magic words are findable by colour.","매개변수 안의 문자열 값(""coin""). 중요한 낱말을 색으로 찾을 수 있게 합니다."
 true and false inside a parameter.,매개변수 안의 true 와 false.
 """N errors - the game will not run this script"", and the words on a broken row.","""N개의 오류 - 게임이 이 스크립트를 실행하지 않습니다"", 그리고 깨진 행에 적히는 글자."
@@ -7244,10 +7244,10 @@ Use a class when values belong together,값들이 함께 묶일 때 클래스를
 "• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• 각 적, 레벨, 아이템에 자신만의 설정을 변수 하나로 주고 인스펙터에서 함께 편집하세요."
 "• Keep a list of them: every wave, every shop item, every line of dialogue.","• 목록으로 관리하세요: 모든 웨이브, 모든 상점 아이템, 모든 대사 한 줄."
 Used by %s,%s 에서 사용
-Included variables shown under each Include bar.,각 포함 막대 아래에 포함된 변수를 표시했습니다.
+Included variables shown under each Shared sheet line.,각 공유 시트 줄 아래에 포함된 변수를 표시했습니다.
 Included variables hidden.,포함된 변수를 숨겼습니다.
 Included Variables,포함된 변수
-"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","각 포함 막대 아래에 포함된 시트가 가져오는 변수를 읽기 전용으로, 출처 이름과 함께 표시합니다. 클릭하면 그 시트를 엽니다. 끄면 포함 막대만 남습니다."
+"Under each Shared sheet line, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the lines alone.","각 공유 시트 줄 아래에 포함된 시트가 가져오는 변수를 읽기 전용으로, 출처 이름과 함께 표시합니다. 클릭하면 그 시트를 엽니다. 끄면 줄만 남습니다."
 Add links shown on the event under the pointer.,포인터 아래 이벤트에 추가 링크를 표시했습니다.
 "Add links drawn as before: on hover, on the selected event and under an empty lane.","추가 링크를 이전처럼 그립니다: 마우스를 올렸을 때, 선택한 이벤트, 빈 레인 아래."
 Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,이 시트에서 Doctor가 지적한 행입니다. 각 행은 호박색으로 그려집니다. 하나를 선택하면 이유를 읽을 수 있습니다.

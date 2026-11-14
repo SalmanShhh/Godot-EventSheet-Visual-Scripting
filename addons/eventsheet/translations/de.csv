@@ -2327,7 +2327,7 @@ Editor Tools,Editor-Werkzeuge
 "Reading marks - chips, badges, guides, stripes","Lesehilfen - Chips, Badges, Führungslinien, Streifen"
 "Bars around the sheet - Object bar, status strip, tab title","Leisten rund um das Blatt - Objektleiste, Statusleiste, Tab-Titel"
 Manual pages,Handbuchseiten
-"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","Der schlichte Chip auf einer Schaltfläche der Include-Leiste (Jetzt ausführen, Neu laden, Ausgabe), der Abdeckungs-Chip und jeder andere neutrale Chip in einer Zeile."
+"The plain chip on a head bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","Der schlichte Chip auf einer Schaltfläche der Kopfleiste (Jetzt ausführen, Neu laden, Ausgabe), der Abdeckungs-Chip und jeder andere neutrale Chip in einer Zeile."
 The word on those plain chips.,Das Wort auf diesen schlichten Chips.
 "The chip that says where something sits in the picker (""Group › Subgroup"").","Der Chip, der zeigt, wo etwas in der Auswahl liegt (""Group › Subgroup"")."
 The word on the picker-category chip.,Das Wort auf dem Kategorie-Chip der Auswahl.
@@ -2335,7 +2335,7 @@ The word on the picker-category chip.,Das Wort auf dem Kategorie-Chip der Auswah
 The word on the Inspector chip.,Das Wort auf dem Inspector-Chip.
 The badge that says a variable is const or static.,"Das Badge, das anzeigt, dass eine Variable const oder static ist."
 The word on the const / static badge.,Das Wort auf dem const-/static-Badge.
-The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,"Das gedämpfte Badge auf einer Setup-Leiste - die Zeichen ▣ und ⇥, die eine Include-Leiste öffnen."
+The dim badge on a setup strip - the ▣ and ⇥ marks that open a head bar.,"Das gedämpfte Badge auf einer Setup-Leiste - die Zeichen ▣ und ⇥, die eine Kopfleiste öffnen."
 The glyph on a setup badge.,Das Zeichen auf einem Setup-Badge.
 "The ""Script block"" pill on a row that kept its GDScript as it was written.","Die Pille ""Script block"" auf einer Zeile, die ihr GDScript so behalten hat, wie es geschrieben wurde."
 The words on the Script block pill.,Die Wörter auf der Script-block-Pille.
@@ -2351,7 +2351,7 @@ The ▶ badge on an event that runs once.,"Das ▶-Badge an einem Ereignis, das 
 The glyph on the runs-once badge.,Das Zeichen auf dem Einmal-Badge.
 The main word of a row's sentence.,Das Hauptwort im Satz einer Zeile.
 The quieter half of a sentence.,Die leisere Hälfte eines Satzes.
-"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.","Das gedämpfte Detail danach - der Dateiname einer Include-Leiste, die Tasten einer INPUT-Zeile, der Untertitel einer Kopfleiste."
+"The muted detail after it - a head bar's file name and subtitle, an INPUT row's keys.","Das gedämpfte Detail danach - Dateiname und Untertitel einer Kopfleiste, die Tasten einer INPUT-Zeile."
 "Text values inside a parameter (""coin""), so magic words are findable by colour.","Textwerte in einem Parameter (""coin""), damit sich Schlüsselwörter an der Farbe finden lassen."
 true and false inside a parameter.,true und false in einem Parameter.
 """N errors - the game will not run this script"", and the words on a broken row.","""N Fehler - das Spiel führt dieses Skript nicht aus"" und die Wörter auf einer fehlerhaften Zeile."
@@ -7244,10 +7244,10 @@ Use a class when values belong together,"Nutze eine Klasse, wenn Werte zusammeng
 "• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• Gib jedem Gegner, Level oder Gegenstand eigene Einstellungen in einer Variable, gemeinsam im Inspektor bearbeitet."
 "• Keep a list of them: every wave, every shop item, every line of dialogue.","• Führe eine Liste davon: jede Welle, jeder Shop-Artikel, jede Dialogzeile."
 Used by %s,Verwendet von %s
-Included variables shown under each Include bar.,Eingebundene Variablen unter jeder Einbinden-Leiste angezeigt.
+Included variables shown under each Shared sheet line.,Eingebundene Variablen unter jeder Zeile des geteilten Blatts angezeigt.
 Included variables hidden.,Eingebundene Variablen ausgeblendet.
 Included Variables,Eingebundene Variablen
-"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Unter jeder Einbinden-Leiste die Variablen, die das eingebundene Blatt mitbringt, schreibgeschützt und nach ihrer Herkunft benannt. Klicke eine an, um das Blatt zu öffnen. Aus lässt nur die Einbinden-Leisten."
+"Under each Shared sheet line, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the lines alone.","Unter jeder Zeile des geteilten Blatts die Variablen, die das eingebundene Blatt mitbringt, schreibgeschützt und nach ihrer Herkunft benannt. Klicke eine an, um das Blatt zu öffnen. Aus lässt die Zeilen allein."
 Add links shown on the event under the pointer.,Hinzufügen-Links am Ereignis unter dem Zeiger angezeigt.
 "Add links drawn as before: on hover, on the selected event and under an empty lane.","Hinzufügen-Links wie bisher gezeichnet: beim Überfahren, am ausgewählten Ereignis und unter einer leeren Spur."
 Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,"Zeilen auf diesem Blatt, zu denen der Doktor etwas zu sagen hat. Jede ist bernsteinfarben gezeichnet; wähle eine aus, um den Grund zu lesen."

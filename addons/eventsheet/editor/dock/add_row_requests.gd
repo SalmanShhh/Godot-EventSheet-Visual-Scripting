@@ -166,7 +166,7 @@ func on_add_group_requested() -> void:
 		_add_region_group()
 		return
 	var group: EventGroup = EventGroup.new()
-	group.name = "Group"
+	group.name = EventSheetWords.new_section_name()
 	group.group_name = group.name
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Group", func() -> bool:
 		_dock._ace_apply._insert_row_below_selection(group)
@@ -186,7 +186,8 @@ func on_add_group_requested() -> void:
 func _add_region_group() -> void:
 	var opener: CustomBlockRow = CustomBlockRow.new()
 	opener.kind_id = "region"
-	opener.fields = {"label": "Group", "is_end": false}
+	var opener_name: String = EventSheetWords.new_section_name()
+	opener.fields = {"label": opener_name, "is_end": false}
 	var closer: CustomBlockRow = CustomBlockRow.new()
 	closer.kind_id = "region"
 	closer.fields = {"label": "", "is_end": true}
@@ -206,7 +207,7 @@ func _add_region_group() -> void:
 	# re-fetched from the sheet rather than trusting the instance built above.
 	for entry: Variant in _dock._current_sheet.events:
 		if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "region" \
-				and str((entry as CustomBlockRow).fields.get("label", "")) == "Group":
+				and str((entry as CustomBlockRow).fields.get("label", "")) == opener_name:
 			_dock.call_deferred("_open_block_editor", entry)
 			return
 

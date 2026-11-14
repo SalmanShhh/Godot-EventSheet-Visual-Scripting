@@ -38,7 +38,7 @@ Current additions on top of the model below:
 ![The event-number margin retinted through the style tokens, so the gutter follows the theme like everything else](images/themed-gutter.png)
 
 Until recently a theme stopped at the row shells and the chips in them. Everything the
-"an opened script reads like an event sheet" work added - the chips on an Include bar, the
+"an opened script reads like an event sheet" work added - the chips on a head bar, the
 coverage chip, the badge that says how often an event runs, the Script block and ⚠ code
 badges, the Inspector mark on a variable (drawn as the picture of its look, in the row's own ink), the guide lines, the stripe down a broken row,
 the bubble that refuses a drop, the Object bar, the status strip, the Manual's pages - was
@@ -154,13 +154,13 @@ Two more ship inside the addon, in `res://addons/eventsheet/themes/`:
   A group head reads the same in every theme: one line, with the description beside the name.
 
 The native look also brought tokens for marks the sheet is learning to draw (type colours, word
-colours, the Include line, the inner-class block, badges, links). The ones that re-colour something
+colours, the Shared sheet line, the inner-class block, badges, links). The ones that re-colour something
 older default to clear, and clear means "exactly as before", so a theme you saved earlier keeps its
 look. Every bundled theme states all of them from its own palette: numbers in its green, text in its
-orange, true/false in its blue, vectors and the Include line in its teal, colours in its pink, enums
+orange, true/false in its blue, vectors and the Shared sheet line in its teal, colours in its pink, enums
 and the comment edge in its yellow, lists and the inner-class block in its purple - each checked to
 read at 4.5:1 or better on the surface it is drawn on (7:1 in High Contrast), with light values in
-the light themes. The rows at the head of a sheet (its class line, variables, Include lines) are
+the light themes. The rows at the head of a sheet (its class line, variables, Shared sheet lines) are
 filled with the theme's own row colours, so a light theme is light there too.
 
 ## Density: the six numbers that decide how much room a row gets

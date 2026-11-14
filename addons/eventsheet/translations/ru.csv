@@ -2327,7 +2327,7 @@ Editor Tools,Инструменты редактора
 "Reading marks - chips, badges, guides, stripes","Метки чтения - чипы, значки, направляющие, полосы"
 "Bars around the sheet - Object bar, status strip, tab title","Панели вокруг листа - панель объектов, строка состояния, заголовок вкладки"
 Manual pages,Страницы Руководства
-"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","Простой чип на кнопке полосы включения (Запустить сейчас, Перезагрузить, Вывод), чип покрытия и любой другой нейтральный чип в строке."
+"The plain chip on a head bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","Простой чип на кнопке заголовочной полосы (Запустить сейчас, Перезагрузить, Вывод), чип покрытия и любой другой нейтральный чип в строке."
 The word on those plain chips.,Надпись на этих простых чипах.
 "The chip that says where something sits in the picker (""Group › Subgroup"").","Чип, который показывает, где элемент находится в списке выбора (""Group › Subgroup"")."
 The word on the picker-category chip.,Надпись на чипе категории в списке выбора.
@@ -2335,7 +2335,7 @@ The word on the picker-category chip.,Надпись на чипе катего�
 The word on the Inspector chip.,Надпись на чипе Inspector.
 The badge that says a variable is const or static.,"Значок, который сообщает, что переменная const или static."
 The word on the const / static badge.,Надпись на значке const / static.
-The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,"Приглушённый значок на полосе настройки - метки ▣ и ⇥, которые открывают полосу включения."
+The dim badge on a setup strip - the ▣ and ⇥ marks that open a head bar.,"Приглушённый значок на полосе настройки - метки ▣ и ⇥, которые открывают заголовочную полосу."
 The glyph on a setup badge.,Символ на значке настройки.
 "The ""Script block"" pill on a row that kept its GDScript as it was written.","Плашка ""Script block"" на строке, сохранившей свой GDScript в том виде, как он написан."
 The words on the Script block pill.,Надпись на плашке Script block.
@@ -2351,7 +2351,7 @@ The ▶ badge on an event that runs once.,"Значок ▶ на событии,
 The glyph on the runs-once badge.,Символ на значке «один раз».
 The main word of a row's sentence.,Главное слово во фразе строки.
 The quieter half of a sentence.,Более тихая половина фразы.
-"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.","Приглушённая подробность после него - имя файла полосы включения, клавиши строки INPUT, подзаголовок заголовочной полосы."
+"The muted detail after it - a head bar's file name and subtitle, an INPUT row's keys.","Приглушённая подробность после него - имя файла и подзаголовок заголовочной полосы, клавиши строки INPUT."
 "Text values inside a parameter (""coin""), so magic words are findable by colour.","Текстовые значения внутри параметра (""coin""), чтобы ключевые слова находились по цвету."
 true and false inside a parameter.,true и false внутри параметра.
 """N errors - the game will not run this script"", and the words on a broken row.","""N ошибок - игра не запустит этот скрипт"" и надписи на сломанной строке."
@@ -7244,10 +7244,10 @@ Use a class when values belong together,"Используйте класс, ко
 "• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• Дайте каждому врагу, уровню или предмету свои настройки в одной переменной и правьте их вместе в Инспекторе."
 "• Keep a list of them: every wave, every shop item, every line of dialogue.","• Храните их списком: каждая волна, каждый товар магазина, каждая реплика диалога."
 Used by %s,Используется в %s
-Included variables shown under each Include bar.,Включённые переменные показаны под каждой полосой «Включить».
+Included variables shown under each Shared sheet line.,Включённые переменные показаны под каждой строкой общего листа.
 Included variables hidden.,Включённые переменные скрыты.
 Included Variables,Включённые переменные
-"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Под каждой полосой «Включить» - переменные, которые приносит включённый лист, только для чтения и с указанием источника. Щёлкните одну, чтобы открыть этот лист. Выключено оставляет только полосы «Включить»."
+"Under each Shared sheet line, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the lines alone.","Под каждой строкой общего листа - переменные, которые приносит включённый лист, только для чтения и с указанием источника. Щёлкните одну, чтобы открыть этот лист. Выключено оставляет только строки."
 Add links shown on the event under the pointer.,Ссылки добавления показаны на событии под указателем.
 "Add links drawn as before: on hover, on the selected event and under an empty lane.","Ссылки добавления рисуются как раньше: при наведении, на выбранном событии и под пустой дорожкой."
 Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,"Строки этого листа, о которых Doctor может что-то сказать. Каждая нарисована янтарным; выберите строку, чтобы прочитать причину."

@@ -221,7 +221,7 @@ script like this one", that is a **shared sheet**.
 question that belongs to the shared sheet rather than to each script that includes it:
 
 - **as a base class** - the including script `extends` it, so the shared sheet's events simply *are*
-  that script's events. The Include bar at the top of the reading names it, and clicking it goes
+  that script's events. The shared sheet bar at the top of the reading names it, and clicking it goes
   there. Use this when the including scripts have no base class of their own.
 - **as a helper** - the including script keeps one of it, calls it each tick and forwards its
   triggers to it. The sheet writes those forwarding rows for you. Use this when the script already

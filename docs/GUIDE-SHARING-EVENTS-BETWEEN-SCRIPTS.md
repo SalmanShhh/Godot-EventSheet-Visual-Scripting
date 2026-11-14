@@ -55,7 +55,7 @@ function that is not there would compile to a call that fails the moment it runs
 
 ## Reading an includer
 
-The included events read in the includer greyed and foldable, under the **Include bar** at the top of
+The included events read in the includer greyed and foldable, under the **Shared sheet** bar at the top of
 the reading, which names the shared sheet. They are editable only in their own sheet: clicking one
 goes there. Changing the shared sheet changes every script that includes it, which is the whole
 point and also the thing to be careful about.

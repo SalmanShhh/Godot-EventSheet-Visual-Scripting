@@ -704,7 +704,7 @@ func build(root: Node) -> void:
 	display_menu.add_check_item(EventSheetL10n.translate("Included Variables"), INCLUDED_VARIABLES_VIEW_ID)
 	display_menu.set_item_checked(display_menu.get_item_index(INCLUDED_VARIABLES_VIEW_ID), _dock._included_variables_enabled())
 	display_menu.set_item_tooltip(display_menu.get_item_index(INCLUDED_VARIABLES_VIEW_ID), EventSheetL10n.translate(
-		"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone."))
+		"Under each Shared sheet line, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the lines alone."))
 	display_menu.add_check_item("Event Numbers", 16)
 	display_menu.set_item_checked(display_menu.get_item_index(16), true)
 	display_menu.add_check_item("Aligned Object Columns", 18)
