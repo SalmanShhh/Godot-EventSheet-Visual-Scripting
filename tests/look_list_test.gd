@@ -13,6 +13,7 @@ static func run() -> bool:
 	ok = _model() and ok
 	ok = _fill() and ok
 	ok = _pictures() and ok
+	ok = _rows_grow() and ok
 	return ok
 
 
@@ -51,6 +52,28 @@ static func _model() -> bool:
 	list.rebuild()
 	rows.append(["the list builds a row for every choice", list.look_ids(), PackedStringArray(["", "link", "vector_dial", "min_max"])])
 	rows.append(["the list is about five rows tall before it scrolls", list.custom_minimum_size.y, list.row_height() * float(EventSheetLookList.VISIBLE_ROWS)])
+	list.free()
+	option.free()
+	return SUPPORT.pins("look_list_test", rows)
+
+
+## A row is as tall as its wrapped sentence: one that needs more than the least height grows to it, so
+## it never runs under the next row, and a short one keeps the least height.
+static func _rows_grow() -> bool:
+	var option: OptionButton = _option()
+	var list: EventSheetLookList = EventSheetLookList.new(option)
+	var least: float = list.row_height()
+	var air: float = EventSheetLookStyle.px(8.0)
+	var rows: Array = [
+		["a short row keeps the least height", list.fitted_height(10.0), least],
+		["a row whose content is taller than the least grows to the content and its air", list.fitted_height(least + 40.0), least + 40.0 + air],
+		["a three-line sentence beside a picture is not cut", list.fitted_height(least + 24.0) >= least + 24.0, true],
+	]
+	list.rebuild()
+	var wraps: Array = []
+	for label: Node in list.find_children("*", "Label", true, false):
+		wraps.append((label as Label).autowrap_mode)
+	rows.append(["a row's sentence wraps rather than being cut", wraps.has(TextServer.AUTOWRAP_WORD_SMART), true])
 	list.free()
 	option.free()
 	return SUPPORT.pins("look_list_test", rows)

@@ -10,7 +10,7 @@ extends ScrollContainer
 
 ## How many rows are showing before the list scrolls.
 const VISIBLE_ROWS: int = 5
-## A row's height in lines of text.
+## The least a row's height is, in lines of text; a row whose sentence wraps further grows past it.
 const ROW_LINES: float = 3.0
 ## How strongly the accent shows under the pointer, as an opacity.
 const HOVER_ALPHA: float = 0.25
@@ -34,6 +34,12 @@ func _init(option: OptionButton = null) -> void:
 
 func row_height() -> float:
 	return EventSheetLookStyle.font().get_height(EventSheetLookStyle.font_size()) * ROW_LINES + EventSheetLookStyle.px(8.0)
+
+
+## How tall a row is whose content (the picture, the title and the wrapped sentence) needs `content`
+## pixels: the content and a little air, and never less than the row's least height.
+func fitted_height(content: float) -> float:
+	return maxf(row_height(), content + EventSheetLookStyle.px(8.0))
 
 
 ## The heading a look sits under: "own" (Godot's), "ours" (shipped with the plugin) or "project".
@@ -147,6 +153,13 @@ func _make_row(index: int) -> Button:
 	words.add_child(sentence)
 	inside.add_child(words)
 	row.add_child(inside)
+	# The row is as tall as what it holds: its sentence wraps to the width the window gives it, so a
+	# longer sentence or a narrower window grows the row instead of running under the next one.
+	var fit_height: Callable = func() -> void:
+		if is_instance_valid(row) and is_instance_valid(inside):
+			row.custom_minimum_size.y = fitted_height(inside.get_combined_minimum_size().y)
+	inside.minimum_size_changed.connect(fit_height)
+	fit_height.call_deferred()
 	row.toggled.connect(func(on: bool) -> void:
 		var on_accent: Color = EventSheetLookStyle.ink_on_accent()
 		title.add_theme_color_override("font_color", on_accent if on else EventSheetLookStyle.ink())
