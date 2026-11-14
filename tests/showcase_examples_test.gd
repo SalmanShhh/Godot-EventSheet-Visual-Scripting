@@ -24,7 +24,7 @@ static func run() -> bool:
 		"# @inspector_required",
 		"eventsheet:min_max:0:60",
 		"eventsheet:table:item=String,count=int,rare=bool",
-		"eventsheet:progress_bar:0:200",
+		"# @inspector_look progress_bar",
 		"combat_max_health = clampi(value, 0, 200)",
 		"@export_placeholder(\"e.g. Cave Rat\")",
 		"func roll_damage() -> float",
@@ -540,7 +540,7 @@ static func run() -> bool:
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\") var body_icon: Texture2D = null",
 		"@export_subgroup(\"Tuning\")",
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var stat_curve: Curve = null",
-		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var stat_health: int = 80",
+		"@export_range(0, 100) var stat_health: int = 80",
 	]) and passed
 	passed = _check_scene("inspector_playground scene has Body + Emblem + Info",
 		"res://demo/showcase/inspector_playground/inspector_playground.tscn", ["Body", "Emblem", "Info"]) and passed
