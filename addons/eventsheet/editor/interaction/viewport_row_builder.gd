@@ -12932,7 +12932,7 @@ func _build_variable_row(
 	# range tile folds into it: one mark, never two.
 	var inspector_mark: Dictionary = {}
 	if bool(options.get("exported", false)):
-		inspector_mark = NativeVariableMarks.inspector_mark(source_variable, type_name, default_value)
+		inspector_mark = NativeVariableMarks.inspector_mark(source_variable, type_name, default_value, _sheet_enum_names())
 		if NativeVariableMarks.SLIDER_PICTURES.has(str(inspector_mark.get("picture", ""))):
 			var folded: int = variable_badges.find(NativeVariableMarks.BADGE_RANGE)
 			if folded >= 0:

@@ -56,6 +56,19 @@ static func run() -> bool:
 	combo.options = PackedStringArray(["easy", "hard"])
 	rows.append(["a String with a list of words is a dropdown", NativeVariableMarks.inspector_mark(combo, "String", "easy")["picture"], "choices"])
 	rows.append(["an opened script's @export_storage line is the plain mark", NativeVariableMarks.inspector_mark(by_hint, "int", 5)["picture"], ""])
+	# An exported variable typed by an enum the sheet declares shows the Inspector's dropdown of its members.
+	var typed_enum: LocalVariable = LocalVariable.new()
+	typed_enum.name = "directions"
+	typed_enum.type_name = "Directions"
+	typed_enum.exported = true
+	var declared: PackedStringArray = PackedStringArray(["Directions", "HoverMode"])
+	var enum_mark: Dictionary = NativeVariableMarks.inspector_mark(typed_enum, "Directions", "Directions.FREE", declared)
+	rows.append(["a typed enum export wears the choices mark", [enum_mark["picture"], enum_mark["look_id"]], ["choices", "choices"]])
+	rows.append(["a type the sheet does not declare as an enum keeps the plain mark", NativeVariableMarks.inspector_mark(typed_enum, "Directions", "Directions.FREE")["picture"], ""])
+	rows.append(["a type that is another enum keeps the plain mark", NativeVariableMarks.inspector_mark(typed_enum, "Gate", "Gate.OPEN", declared)["picture"], ""])
+	typed_enum.exported = false
+	typed_enum.attributes = {"storage": true}
+	rows.append(["a typed enum saved but hidden keeps the plain mark", NativeVariableMarks.inspector_mark(typed_enum, "Directions", "Directions.FREE", declared)["picture"], ""])
 	rows.append(["no variable is the plain mark", NativeVariableMarks.inspector_mark(null, "int", 5)["picture"], ""])
 	rows.append(["a missing look is flagged missing", NativeVariableMarks.inspector_mark(_with({"look": "not_installed_anywhere"}), "int", 0)["missing"], true])
 	rows.append_array(_readable_amber())

@@ -502,14 +502,18 @@ const HINT_LOOKS: Array = [
 ## the variable wears ("" for none); `missing` is true for a look word whose file is not installed (drawn
 ## as an amber "?"); `colour` is the variable's own colour for a Color (its mark is that colour), else null.
 ## Asks the same table the Variable window reads, so the row and the window cannot disagree.
-static func inspector_mark(variable: LocalVariable, type_name: String, default_value: Variant) -> Dictionary:
+## `enum_names` are the enums the sheet declares: an exported variable typed by one (`@export var directions:
+## Directions`) shows the Inspector's dropdown of its members, so it wears the choices mark.
+static func inspector_mark(variable: LocalVariable, type_name: String, default_value: Variant,
+		enum_names: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var plain: Dictionary = {"picture": "", "look_id": "", "missing": false, "colour": null}
 	if variable == null or is_storage(variable):
 		return plain
 	var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
 	var hint: String = variable.export_hint.strip_edges()
 	var is_colour: bool = type_name == "Color"
-	if attributes.is_empty() and hint.is_empty() and variable.options.is_empty() and not is_colour:
+	var is_enum: bool = enum_names.has(type_name)
+	if attributes.is_empty() and hint.is_empty() and variable.options.is_empty() and not is_colour and not is_enum:
 		return plain
 	var look_id: String = ""
 	var looks: GDScript = null
@@ -525,7 +529,7 @@ static func inspector_mark(variable: LocalVariable, type_name: String, default_v
 			if hint.begins_with(str((entry as Array)[0])):
 				look_id = str((entry as Array)[1])
 				break
-	if look_id.is_empty() and not variable.options.is_empty():
+	if look_id.is_empty() and (not variable.options.is_empty() or is_enum):
 		look_id = "choices"
 	if is_colour and (look_id.is_empty() or look_id == "no_alpha" or hint.begins_with("@export_color_no_alpha")):
 		var own: Variant = color_of(default_value)

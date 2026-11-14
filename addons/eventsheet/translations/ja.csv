@@ -10491,3 +10491,4 @@ Look not installed,ルックがインストールされていません
 Colour in the Inspector,インスペクターの色
 The mark is the colour this variable holds.,マークはこの変数が持つ色です。
 Click the mark to change the look.,マークをクリックするとルックを変更できます。
+Shown as a dropdown of %s.,%s のドロップダウンとして表示されます。

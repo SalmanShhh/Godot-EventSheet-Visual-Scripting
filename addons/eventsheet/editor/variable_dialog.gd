@@ -906,6 +906,19 @@ func pick_type(type_name: String) -> void:
 	_type_search.text = ""
 
 
+## The member names of the sheet enum `type_name` (`FREE`, not `FREE = 0`), empty for any other type: the
+## options the Inspector's dropdown lists for a variable typed by it.
+func enum_member_names(type_name: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	if not _enum_provider.is_valid():
+		return names
+	for entry: Variant in (_enum_provider.call() as Array):
+		if entry is Dictionary and str((entry as Dictionary).get("name", "")) == type_name:
+			for member: Variant in (entry as Dictionary).get("members", []):
+				names.append(str(member).get_slice("=", 0).strip_edges())
+	return names
+
+
 ## The sheet's enum names, from the enum provider.
 func _enum_names() -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
@@ -1829,7 +1842,7 @@ func _refresh_reading() -> void:
 	if exported and not prefix.is_empty() and shown_name.begins_with(prefix):
 		shown_name = shown_name.substr(prefix.length())
 	_inspector_preview_card.update_preview(shown_name, type_name, _value_text(), attributes, exported,
-		_const_check.button_pressed)
+		_const_check.button_pressed, enum_member_names(type_name))
 	var misses: bool = exported and not prefix.is_empty() and not _shown_name().begins_with(prefix)
 	_prefix_note.say(EventSheetL10n.translate("%s does not start with %s, so Godot leaves it outside %s. Rename it, or turn off the prefix.") % [
 		_shown_name(), prefix, attributes.get("group", "")] if misses else "", EventSheetPopupUI.TONE_WARNING)

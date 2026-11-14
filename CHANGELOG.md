@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a typed enum export wears the choices mark
+
+- Since Drag & Drop and the Virtual Cursor export real enums (`@export var directions: Directions`), their variable rows read with the plain export mark where the old `@export_enum` line read with the dropdown mark. An exported variable typed by an enum the sheet declares now wears the choices mark again, and the Variable window's Inspector preview draws the dropdown of the enum's members (the variable's own chosen) and says "Shown as a dropdown of FREE, UP_DOWN, ...". Only the four enum-typed export rows of those two packs read differently.
+
 ### Fixed: the Variable window's look list rows grow with their sentence
 
 - A look's row in the Variable window had a fixed height while its sentence wrapped, so a three-line sentence ran under the next row's title and the last line was clipped. A row is now as tall as its wrapped text at any window width; the list still shows about five rows before it scrolls.

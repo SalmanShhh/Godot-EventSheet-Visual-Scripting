@@ -59,12 +59,15 @@ func hide_caption() -> void:
 ## Rebuilds the mock + sentence. attributes carries the SAME keys the compiler
 ## reads (range/file/flags/layers/drawer/multiline/group/subgroup...), collected
 ## live by the dialog exactly like the "Ships as:" strip.
-func update_preview(variable_name: String, type_name: String, default_text: String, attributes: Dictionary, exported: bool, constant: bool) -> void:
+## `enum_members` are the members of the sheet enum the variable is typed by (empty for any other type):
+## the card draws the Inspector's dropdown of them and says so.
+func update_preview(variable_name: String, type_name: String, default_text: String, attributes: Dictionary, exported: bool, constant: bool,
+		enum_members: PackedStringArray = PackedStringArray()) -> void:
 	while _rows.get_child_count() > 0:
 		var stale_row: Node = _rows.get_child(0)
 		_rows.remove_child(stale_row)
 		stale_row.free()
-	_sentence_label.text = describe(type_name, attributes, exported, constant)
+	_sentence_label.text = describe(type_name, attributes, exported, constant, enum_members)
 	visible = exported
 	if not exported:
 		return
@@ -106,7 +109,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	name_label.custom_minimum_size = Vector2(110.0, 0.0)
 	name_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 	property_row.add_child(name_label)
-	var widget: Control = _build_widget(type_name, default_text, attributes)
+	var widget: Control = _build_widget(type_name, default_text, attributes, enum_members)
 	widget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	property_row.add_child(widget)
 	# The link chip sits between the two neighbours, where the button will be - target-less, so it
@@ -130,7 +133,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 
 ## The type, the widget, the bounds and the grouping in plain words, one short sentence per fact -
 ## whole sentences so each one translates as a sentence. Pinned by tests as exact strings.
-static func describe(type_name: String, attributes: Dictionary, exported: bool, constant: bool) -> String:
+static func describe(type_name: String, attributes: Dictionary, exported: bool, constant: bool, enum_members: PackedStringArray = PackedStringArray()) -> String:
 	if constant:
 		return EventSheetL10n.translate("A constant - fixed while the game runs, not editable in the Inspector.")
 	if not exported:
@@ -154,6 +157,8 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 	var widget_sentence: String = _widget_sentence(attributes)
 	if not widget_sentence.is_empty():
 		said.append(widget_sentence)
+	elif not enum_members.is_empty():
+		said.append(EventSheetL10n.translate("Shown as a dropdown of %s.") % ", ".join(enum_members))
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	if not group_name.is_empty() and not subgroup_name.is_empty():
@@ -261,7 +266,7 @@ static func _widget_sentence(attributes: Dictionary) -> String:
 ## The widget miniature: drawers win, then look-derived widgets (reusing the
 ## gallery's builders so the two previews can't diverge), then a slider for
 ## ranges, then per-type defaults.
-func _build_widget(type_name: String, default_text: String, attributes: Dictionary) -> Control:
+func _build_widget(type_name: String, default_text: String, attributes: Dictionary, enum_members: PackedStringArray = PackedStringArray()) -> Control:
 	if attributes.get("tool_button") is Dictionary:
 		var button := Button.new()
 		button.text = str((attributes.get("tool_button") as Dictionary).get("label", ""))
@@ -413,6 +418,16 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		color_swatch.color = value if value is Color else Color(0.35, 0.55, 0.9)
 		color_swatch.custom_minimum_size = Vector2(60.0, 18.0)
 		return _ignored(color_swatch)
+	if not enum_members.is_empty():
+		# The Inspector draws a typed enum as a dropdown of its members, the variable's own value chosen.
+		var member_pick: OptionButton = OptionButton.new()
+		member_pick.disabled = true
+		var chosen_member: String = default_text.strip_edges().get_slice(".", default_text.strip_edges().get_slice_count(".") - 1)
+		for member: String in enum_members:
+			member_pick.add_item(member)
+			if member == chosen_member:
+				member_pick.select(member_pick.item_count - 1)
+		return _ignored(member_pick)
 	var field := LineEdit.new()
 	field.text = slot_text(default_text)
 	field.editable = false

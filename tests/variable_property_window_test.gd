@@ -144,6 +144,8 @@ static func _values_as_code(dialog: EventSheetVariableDialog) -> bool:
 	dialog.set_enum_provider(func() -> Array: return [{"name": "Kind", "members": ["ROUND", "LASER = 4"]}])
 	dialog.open_for_edit("tree", {}, "bullet_kind", "Kind", "Kind.ROUND", false, "Add", false, true)
 	rows.append(["a sheet enum offers its members as the value", Array(dialog._value_suggestions()), ["Kind.ROUND", "Kind.LASER"]])
+	rows.append(["a sheet enum lists its options by name for the Inspector preview", Array(dialog.enum_member_names("Kind")), ["ROUND", "LASER"]])
+	rows.append(["a type that is no sheet enum lists none", Array(dialog.enum_member_names("int")), []])
 	confirmed = _confirm(dialog)
 	rows.append(["…and the member is written as code", [confirmed.get("type"), confirmed.get("default"),
 		(confirmed.get("context", {}) as Dictionary).get("value_is_code")], ["Kind", "Kind.ROUND", true]])

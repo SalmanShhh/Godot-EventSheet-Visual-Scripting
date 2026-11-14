@@ -76,6 +76,17 @@ static func run() -> bool:
 	ok = _check("a colour shows its own colour", swatch.color, Color(1, 0, 0, 1)) and ok
 	var path_row: Control = _widget(card, "String", "\"res://sfx/hit.ogg\"", {"file": {"mode": "file"}})
 	ok = _check("a file look holds the variable's own path", (path_row.get_child(0) as LineEdit).text, "res://sfx/hit.ogg") and ok
+	var members: PackedStringArray = PackedStringArray(["FREE", "UP_DOWN", "LEFT_RIGHT"])
+	card.update_preview("directions", "Directions", "Directions.UP_DOWN", {}, true, false, members)
+	var member_row: Node = card._rows.get_child(card._rows.get_child_count() - 1)
+	var member_pick: OptionButton = member_row.get_child(member_row.get_child_count() - 1) as OptionButton
+	ok = _check("a typed enum draws a dropdown of its members", member_pick != null, true) and ok
+	if member_pick != null:
+		ok = _check("the dropdown lists the members and shows the variable's own", [member_pick.item_count, member_pick.get_item_text(member_pick.selected)], [3, "UP_DOWN"]) and ok
+	ok = _check("a typed enum's sentence lists its options",
+		EventSheetInspectorPreviewCard.describe("Directions", {}, true, false, members),
+		"A Directions value. Shown as a dropdown of FREE, UP_DOWN, LEFT_RIGHT.") and ok
+	ok = _check("a type with no members says nothing more", EventSheetInspectorPreviewCard.describe("Directions", {}, true, false), "A Directions value.") and ok
 	card.free()
 	ok = _readable_inks() and ok
 	return ok
