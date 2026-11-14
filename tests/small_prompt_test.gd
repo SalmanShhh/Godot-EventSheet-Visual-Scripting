@@ -29,6 +29,11 @@ static func run() -> bool:
 		dialog.cancel_button_text, dialog.get_cancel_button().visible, danger.text],
 		["Keep this event?", "Keep it", "Cancel", true, "Delete the event"]) and ok
 	ok = _check("the risky button stands first, on the left", danger.get_index(), 0) and ok
+	# No coloured outline, edge or text of our own: the risk is in the words, and the button is Godot's.
+	ok = _check("the risky button wears no style of our own",
+		[danger.has_theme_stylebox_override("normal"), danger.has_theme_stylebox_override("hover"),
+		danger.has_theme_stylebox_override("pressed"), danger.has_theme_stylebox_override("focus"),
+		danger.has_theme_color_override("font_color")], [false, false, false, false, false]) and ok
 	ok = _check("nothing to list, no code: neither is drawn",
 		[(dialog.find_child("Places", true, false) as Control).visible,
 		(dialog.find_child("Code", true, false) as Control).visible], [false, false]) and ok

@@ -8,7 +8,7 @@
 # line describing it - the four fields the verb dialog's parameter row carries, written through the
 # same undo funnel. On the window kit: a band showing the function's row with this input in it, the
 # Parameter card, a state note that refuses a bad name or a misplaced default while Apply waits, the
-# help strip with the `func` line it writes, and Delete as its own red button on the left. "Edit the
+# help strip with the `func` line it writes, and Delete as its own plain button on the left. "Edit the
 # whole function…" is one button away for anyone who wanted the big one.
 @tool
 class_name EventSheetParamDialog
@@ -96,10 +96,9 @@ func init_dialog(parent_node: Node) -> void:
 		EventSheetL10n.translate("One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it."))
 	_strip.follow(full_editor_button, EventSheetL10n.translate("Edit the whole function…"),
 		EventSheetL10n.translate("Opens the function's own window: its name, its doc comment, what kind it is and who can use it."))
-	# Delete is its own red-outlined button on the left - never OK, never Cancel, so neither Enter
-	# nor Esc can take it.
+	# Delete is its own plain button on the left - never OK, never Cancel, so neither Enter nor Esc can
+	# take it. The risk is in the word; the button wears no colour of ours.
 	_delete_button = _dialog.add_button(EventSheetL10n.translate("Delete"), false, DELETE_ACTION)
-	_delete_button.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR))
 	_delete_button.tooltip_text = EventSheetL10n.translate("Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.")
 	var buttons: Node = _delete_button.get_parent()
 	buttons.move_child(_delete_button, 0)

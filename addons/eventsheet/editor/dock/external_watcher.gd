@@ -101,7 +101,7 @@ func keep_unsaved_in_backups() -> String:
 
 
 ## What the reload question says, and which answer is the safe one. With unsaved edits here, keeping
-## them is the blue answer and the file on disk is the red one; on a clean tab a reload loses
+## them is the blue answer and the file on disk is the risky one; on a clean tab a reload loses
 ## nothing, so Reload is the blue answer and nothing is painted as dangerous. The list above the
 ## answers says, before anyone chooses, whether this tab has edits to lose and when the file changed
 ## (`changed_at` is its modification time, 0 when unknown).

@@ -6,7 +6,8 @@
 #   3. What it touches is shown as a short list before anyone agrees.
 #   4. The safe choice is the blue OK button, so Enter does it; Esc and the close box always cancel.
 #   5. A second safe choice, when a question has one, is a plain button beside OK - never the default.
-#   6. The risky choice (delete, discard, overwrite) is its own red-outlined button on the LEFT. It is
+#   6. The risky choice (delete, discard, overwrite) is its own plain button on the LEFT, the way Godot's
+#      own confirmations draw one: the risk is in its words, with no colour or outline of ours. It is
 #      never OK and never Cancel, so neither Enter nor Esc can take it.
 #   7. The note says out loud whether Ctrl+Z undoes it.
 #
@@ -35,8 +36,6 @@ const GLYPH_TONES := {
 	"{ }": [Color("#23384D"), Color("#7CC4FF"), Color("#C4DCF5"), Color("#0B4F96")],
 	"✓": [Color("#25402A"), Color("#8EE09A"), Color("#C7EBCB"), Color("#1D6A2A")],
 }
-## The risky button's colour outside the editor, where the theme has no error colour to read.
-const DANGER_FALLBACK := Color("#F07A7A")
 
 
 ## Builds the question under `host`, shows it when `host` is in the tree, and returns it. A dialog
@@ -147,7 +146,7 @@ static func set_code(dialog: ConfirmationDialog, text: String) -> void:
 	card.name = "Code"
 
 
-## The ways out. Only the red button runs `on_danger` and only the second safe one `on_also`; OK runs
+## The ways out. Only the risky button runs `on_danger` and only the second safe one `on_also`; OK runs
 ## `on_main`; Cancel, Esc and the close box all send `canceled` and run `on_cancel`. Whichever it was, the dialog is done with.
 static func _wire(dialog: ConfirmationDialog, ask: Dictionary) -> void:
 	if ask.get("on_main") is Callable:
@@ -168,8 +167,6 @@ static func _wire(dialog: ConfirmationDialog, ask: Dictionary) -> void:
 	if not danger_text.is_empty():
 		var danger: Button = dialog.add_button(danger_text, false, DANGER_ACTION)
 		danger.name = "Danger"
-		var red: Color = _danger_color()
-		EventSheetPopupUI.paint_button(danger, Color(red, 0.0), red, false)
 		_stand_apart(danger)
 		var on_danger: Callable = ask.get("on_danger", Callable()) as Callable
 		dialog.custom_action.connect(func(action: StringName) -> void:
@@ -232,11 +229,3 @@ static func _editor_theme() -> Theme:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		return Engine.get_singleton("EditorInterface").get_editor_theme()
 	return null
-
-
-## The editor's own error colour, so the risky button matches Godot's red in every theme.
-static func _danger_color() -> Color:
-	var theme: Theme = _editor_theme()
-	if theme != null and theme.has_color("error_color", "Editor"):
-		return theme.get_color("error_color", "Editor")
-	return DANGER_FALLBACK

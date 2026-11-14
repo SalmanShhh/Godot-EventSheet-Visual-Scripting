@@ -130,6 +130,8 @@ static func _test_parameter() -> bool:
 	var deleted: Dictionary = emitted[0] if not emitted.is_empty() else {}
 	dialog.open_for_new_param(verb)
 	var new_one: bool = dialog._delete_button.visible
+	var delete_style: Array = [dialog._delete_button.has_theme_color_override("font_color"),
+		dialog._delete_button.has_theme_stylebox_override("normal")]
 	parent.free()
 	return SUPPORT.pins(NAME, [
 		["the band is this input's own line under the head, the strip its func line", opened,
@@ -141,6 +143,7 @@ static func _test_parameter() -> bool:
 		["...and Apply sends nothing", after_refusal, 0],
 		["Delete is its own button and removes this input", [deleted.get("removed", false), deleted.get("index", -1)], [true, 0]],
 		["a new parameter has nothing to delete", new_one, false],
+		["Delete is a plain button: the risk is in the word, with no colour of our own", delete_style, [false, false]],
 	])
 
 

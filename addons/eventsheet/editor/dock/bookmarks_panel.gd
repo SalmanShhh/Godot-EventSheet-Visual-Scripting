@@ -92,7 +92,7 @@ func open() -> void:
 
 
 ## Clear All asks first. Bookmarks live outside the undo stack, so a slip would cost every mark with
-## no way back: OK (and Enter) KEEPS them, Esc keeps them too, and only the red Clear all removes them.
+## no way back: OK (and Enter) KEEPS them, Esc keeps them too, and only Clear all removes them.
 func ask_clear_all() -> void:
 	clear_confirm = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		"title": EventSheetL10n.translate("Clear every bookmark?"),

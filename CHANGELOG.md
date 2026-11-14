@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the risky button of a small question is a plain button
+
+- The risky choice of a small question (Delete anyway, Discard, Clear all, Delete the event, Use the file on disk, and Delete in the parameter window) was drawn with a red outline or red text. It is now a normal Godot button, still on the left and still never the one Enter or Esc reaches: the risk is in its words, and the plugin draws no colour or outline of its own on it.
+
 ### Fixed: a behaviour's description is read whole in the Behaviour library
 
 - Each row of the Behaviour library cut its description off at the right edge with no sign it was cut. The lines on a row now wrap inside it and the row grows to hold them, so the whole description is read.

@@ -191,7 +191,7 @@ func _prompt_keep_as_every_tick(event_uid: String) -> void:
 	if event_row.trigger != null or not event_row.trigger_id.strip_edges().is_empty():
 		return
 	_every_tick_event_uid = event_uid
-	# Deleting is its own red button, never Cancel: Esc and the close box keep the event, as OK does.
+	# Deleting is its own plain button, never Cancel: Esc and the close box keep the event, as OK does.
 	_every_tick_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		"title": EventSheetL10n.translate("Keep this event?"),
 		"say": EventSheetL10n.translate("You removed its last condition, so this event now runs every frame (60 times a second)."),

@@ -1594,7 +1594,7 @@ var _unsaved_close_dialog: ConfirmationDialog = null
 var _pending_close_index: int = -1
 
 
-## Discard (the red button): close the tab, losing its unsaved edits.
+## Discard (the risky button): close the tab, losing its unsaved edits.
 func _discard_pending_close() -> void:
 	var index: int = _pending_close_index
 	_pending_close_index = -1
