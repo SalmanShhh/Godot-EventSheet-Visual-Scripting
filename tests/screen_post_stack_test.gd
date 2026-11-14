@@ -313,6 +313,10 @@ static func _an_effects_own_dials() -> bool:
 	layer.set_post_dial("colour grade", "lut_size", 16)
 	rows.append(["the grade's table size is a dial a row can set, which is what makes it draw at all",
 		layer.post_dial("colour grade", "lut_size"), 16])
+	# A rectangle freed behind the pack's back is made again on the next write, not an error.
+	layer._stack[0].rect.free()
+	layer.set_post_strength("vignette", 0.7)
+	rows.append(["an entry whose rectangle was freed wears a new one", is_instance_valid(layer._stack[0].rect), true])
 	layer.free()
 	return SUPPORT.pins(P, rows)
 
@@ -425,8 +429,8 @@ static func _a_look(called: String, rows: Array[Dictionary]) -> Resource:
 ## The stack's entries, in order, by the names rows address them with.
 static func _order(layer: Node) -> String:
 	var names: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in layer._stack:
-		names.append(str(entry.get("called", "")))
+	for entry in layer._stack:
+		names.append(entry.called)
 	return ",".join(names)
 
 
@@ -436,10 +440,10 @@ static func _order(layer: Node) -> String:
 ## Strength answers with the request. Printed to three places because a dial applied to a float is
 ## not the float anyone would type, and a pin reading "0.4 is not 0.4" teaches nobody anything.
 static func _on_screen(layer: Node, called: String) -> String:
-	for entry: Dictionary in layer._stack:
-		if str(entry.get("called", "")) != called:
+	for entry in layer._stack:
+		if entry.called != called:
 			continue
-		var rect: ColorRect = entry.get("rect", null) as ColorRect
+		var rect: ColorRect = entry.rect as ColorRect
 		if rect == null or rect.material == null:
 			return "no rectangle"
 		return "%.3f" % float((rect.material as ShaderMaterial).get_shader_parameter(STRENGTH_DIAL))
@@ -448,9 +452,9 @@ static func _on_screen(layer: Node, called: String) -> String:
 
 ## One entry's own dial, for the two the colour-vision rows write.
 static func _dial(layer: Node, called: String, dial: String) -> Variant:
-	for entry: Dictionary in layer._stack:
-		if str(entry.get("called", "")) == called:
-			return (entry.get("params", {}) as Dictionary).get(dial, null)
+	for entry in layer._stack:
+		if entry.called == called:
+			return entry.params.get(dial, null)
 	return null
 
 

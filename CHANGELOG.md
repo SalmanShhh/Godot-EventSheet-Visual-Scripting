@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Screen FX keeps each stack entry as a small class
+
+- A post-stack entry was a dictionary read by text in about thirty-five places; it is now a `PostEntry` with typed fields. Every verb behaves as it did. The effect's own dials stay a dictionary (their names are the shader's), and a look file's rows keep their shape: Save Look writes the same rows and Use Look reads them back. An entry whose rectangle was freed behind the pack's back now gets a new one instead of raising.
+
 ### Added: a test keeps the plugin's class names prefixed
 
 - No new `class_name` may be added under `addons/eventforge/` or `addons/eventsheet/` without an `EventSheet`, `EventForge` or `ACE` prefix, because Godot keeps one list of class names per project and an unprefixed one can collide with a game's own. The 23 unprefixed names that shipped first are the allow list and are frozen; a name leaving the plugin must also leave the list.

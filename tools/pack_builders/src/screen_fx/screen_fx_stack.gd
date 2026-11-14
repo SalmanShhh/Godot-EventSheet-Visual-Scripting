@@ -72,21 +72,28 @@ const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 ## Path of the look resource script, loaded by path.
 const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen_look_resource.gd"
 
-# An entry is a small record rather than a node, because the order,
-# the names and the strengths are what rows ask about, and a rectangle is only how one reaches the
-# screen.
-#
-# called    the name rows address this entry by (its effect word, when nobody said otherwise)
-# effect    which of the shipped effects it is
-# strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the screen.
-# The two accessibility dials are applied once, on the way to the shader, so a walk
-# that moves this value cannot scale it a second time and a look saved from it holds
-# what the game asked for rather than what one player's settings allowed
-# enabled   whether it draws at all
-# params    the effect's own dials, by the uniform name the shader declares
-# rect      the full-screen ColorRect wearing it, once there is one
+# An entry is a small record rather than a node, because the order, the names and the strengths are
+# what rows ask about, and a rectangle is only how one reaches the screen.
+## One effect on the stack: what a row asked for, and the rectangle wearing it.
+class PostEntry extends RefCounted:
+	## The name rows address this entry by (its effect word, when nobody said otherwise).
+	var called: String = ""
+	## Which of the shipped effects it is.
+	var effect: String = ""
+	## How far the row ASKED it to go, 0 to 1 - the request, not what reached the screen. The two
+	## accessibility dials are applied once, on the way to the shader, so a walk that moves this value
+	## cannot scale it a second time and a look saved from it holds what the game asked for.
+	var strength: float = 0.0
+	## Whether it draws at all.
+	var enabled: bool = true
+	## The effect's own dials, by the uniform name the shader declares. Those names are the shader's,
+	## not this pack's, so this stays a dictionary.
+	var params: Dictionary = {}
+	## The full-screen ColorRect wearing it, once there is one.
+	var rect: ColorRect = null
+
 ## THE STACK, in the order the effects are drawn: the first entry is applied to the screen first and the last one has the last word.
-var _stack: Array[Dictionary] = []
+var _stack: Array[PostEntry] = []
 
 ## The shaders loaded so far, by effect word. A project that only ever uses a vignette loads one.
 var _shaders: Dictionary = {}
@@ -124,12 +131,15 @@ func add_post_effect(effect: String = "vignette", called: String = "", strength:
 		name_of_it = word
 	var at: int = _find(name_of_it)
 	if at >= 0:
-		_stack[at]["effect"] = word
-		_stack[at]["enabled"] = true
+		_stack[at].effect = word
+		_stack[at].enabled = true
 		_write_strength(name_of_it, strength)
 		return
-	_stack.append({"called": name_of_it, "effect": word, "strength": clampf(strength, 0.0, 1.0),
-		"enabled": true, "params": {}, "rect": null})
+	var added: PostEntry = PostEntry.new()
+	added.called = name_of_it
+	added.effect = word
+	added.strength = clampf(strength, 0.0, 1.0)
+	_stack.append(added)
 	_apply(_stack.size() - 1)
 	_reorder()
 
@@ -144,8 +154,8 @@ func remove_post_effect(called: String = "vignette") -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	_stop_walk_on(str(_stack[at].get("called", "")))
-	var rect: ColorRect = _stack[at].get("rect", null) as ColorRect
+	_stop_walk_on(_stack[at].called)
+	var rect: ColorRect = _stack[at].rect if is_instance_valid(_stack[at].rect) else null
 	if rect != null and is_instance_valid(rect):
 		rect.queue_free()
 	_stack.remove_at(at)
@@ -225,7 +235,7 @@ func post_dial(called: String = "vignette", dial: String = "softness") -> Varian
 	var at: int = _find(called)
 	if at < 0:
 		return null
-	return (_stack[at].get("params", {}) as Dictionary).get(dial.strip_edges(), null)
+	return _stack[at].params.get(dial.strip_edges(), null)
 
 
 ## Walks one entry's strength to a value over a time, and back again afterwards if a second time is
@@ -242,11 +252,11 @@ func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: f
 	var at: int = _find(called)
 	if at < 0:
 		return
-	var started_at: float = float(_stack[at].get("strength", 0.0))
+	var started_at: float = _stack[at].strength
 	if seconds <= 0.0 and then_back_seconds <= 0.0:
 		set_post_strength(called, to)
 		return
-	_walk_strength(str(_stack[at].get("called", "")), clampf(to, 0.0, 1.0), _slowed(seconds),
+	_walk_strength(_stack[at].called, clampf(to, 0.0, 1.0), _slowed(seconds),
 		started_at, _slowed(then_back_seconds) if then_back_seconds > 0.0 else 0.0, false)
 
 
@@ -275,7 +285,7 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, secon
 	if borrowed:
 		add_post_effect(word, word, 0.0)
 	else:
-		falls_back_to = float(_stack[_find(word)].get("strength", 0.0))
+		falls_back_to = _stack[_find(word)].strength
 	if _find(word) < 0:
 		return
 	_stop_walk_on(word)
@@ -297,7 +307,7 @@ func move_post_effect_before(called: String = "vignette", before: String = "") -
 	var at: int = _find(called)
 	if at < 0:
 		return
-	var moved: Dictionary = _stack[at]
+	var moved: PostEntry = _stack[at]
 	_stack.remove_at(at)
 	var landing: int = _find(before)
 	if landing < 0:
@@ -343,7 +353,7 @@ func post_effect_is_on(called: String = "vignette") -> bool:
 	var at: int = _find(called)
 	if at < 0:
 		return false
-	return bool(_stack[at].get("enabled", true)) and _dialled(_stack[at]) > 0.001
+	return _stack[at].enabled and _dialled(_stack[at]) > 0.001
 
 
 ## How far one entry has been ASKED to go, 0 to 1 - the strength the rows set, before the
@@ -360,7 +370,7 @@ func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
-	return float(_stack[at].get("strength", 0.0))
+	return _stack[at].strength
 
 
 ## How many effects the stack is drawing right now - the number a reader wants when the frame rate
@@ -370,8 +380,8 @@ func post_strength(called: String = "vignette") -> float:
 ## @ace_codegen_template("$ScreenFx.post_effect_count()")
 func post_effect_count() -> int:
 	var drawing: int = 0
-	for entry: Dictionary in _stack:
-		if bool(entry.get("enabled", true)) and _dialled(entry) > 0.001:
+	for entry: PostEntry in _stack:
+		if entry.enabled and _dialled(entry) > 0.001:
 			drawing += 1
 	return drawing
 
@@ -475,8 +485,8 @@ func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
 			add_post_effect(word, name_of_it, 0.0)
 		_write_params(name_of_it, entry.get("params", {}) as Dictionary)
 	var leaving: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in _stack:
-		var name_of_it: String = str(entry.get("called", ""))
+	for entry: PostEntry in _stack:
+		var name_of_it: String = entry.called
 		if wanted.has(name_of_it):
 			var arriving: Dictionary = wanted[name_of_it]
 			_walk_strength(name_of_it, clampf(float(arriving.get("strength", 0.0)), 0.0, 1.0), span,
@@ -496,8 +506,8 @@ func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
 ## @ace_name("Clear Look")
 ## @ace_codegen_template("$ScreenFx.clear_look()")
 func clear_look() -> void:
-	for entry: Dictionary in _stack.duplicate():
-		remove_post_effect(str(entry.get("called", "")))
+	for entry: PostEntry in _stack.duplicate():
+		remove_post_effect(entry.called)
 	_look_name = ""
 
 
@@ -548,7 +558,7 @@ func _find(called: String) -> int:
 	if wanted.is_empty():
 		return -1
 	for at: int in _stack.size():
-		if str(_stack[at].get("called", "")) == wanted:
+		if _stack[at].called == wanted:
 			return at
 	return -1
 
@@ -575,9 +585,9 @@ func _slowed(seconds: float) -> float:
 ## What ONE ENTRY puts on the screen: the strength its row asked for, through the dials - except for
 ## the two colour-vision entries, which are exempt. This is the only place a request becomes a screen
 ## value, which is what stops a walk over requests from being scaled a second time per step.
-func _dialled(entry: Dictionary) -> float:
-	var asked: float = clampf(float(entry.get("strength", 0.0)), 0.0, 1.0)
-	if UNDIALLED_EFFECTS.has(str(entry.get("effect", ""))):
+func _dialled(entry: PostEntry) -> float:
+	var asked: float = clampf(entry.strength, 0.0, 1.0)
+	if UNDIALLED_EFFECTS.has(entry.effect):
 		return asked
 	return _allowed(asked)
 
@@ -588,7 +598,7 @@ func _write_strength(called: String, strength: float) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	_stack[at]["strength"] = clampf(strength, 0.0, 1.0)
+	_stack[at].strength = clampf(strength, 0.0, 1.0)
 	_apply(at)
 
 
@@ -599,10 +609,9 @@ func _write_params(called: String, dials: Dictionary) -> void:
 	var at: int = _find(called)
 	if at < 0 or dials.is_empty():
 		return
-	var held: Dictionary = _stack[at].get("params", {})
+	var held: Dictionary = _stack[at].params
 	for dial: Variant in dials:
 		held[str(dial)] = dials[dial]
-	_stack[at]["params"] = held
 	_apply(at)
 
 
@@ -611,7 +620,7 @@ func _set_enabled(called: String, on: bool) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	_stack[at]["enabled"] = on
+	_stack[at].enabled = on
 	_apply(at)
 
 
@@ -640,12 +649,12 @@ func _wear_vision(effect: String, vision: String, row_name: String) -> void:
 ## back at a quarter, and one saved while no flashing was on would carry that ceiling for ever.
 func _look_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
-	for entry: Dictionary in _stack:
+	for entry: PostEntry in _stack:
 		rows.append({
-			"called": str(entry.get("called", "")),
-			"effect": str(entry.get("effect", "")),
-			"strength": float(entry.get("strength", 0.0)),
-			"params": (entry.get("params", {}) as Dictionary).duplicate(true)
+			"called": entry.called,
+			"effect": entry.effect,
+			"strength": entry.strength,
+			"params": entry.params.duplicate(true)
 		})
 	return rows
 
@@ -681,27 +690,27 @@ func _shader_for(effect: String) -> Shader:
 func _apply(at: int) -> void:
 	if at < 0 or at >= _stack.size():
 		return
-	var entry: Dictionary = _stack[at]
-	var rect: ColorRect = entry.get("rect", null) as ColorRect
+	var entry: PostEntry = _stack[at]
+	var rect: ColorRect = entry.rect if is_instance_valid(entry.rect) else null
 	if rect == null or not is_instance_valid(rect):
 		rect = ColorRect.new()
-		rect.name = "Post" + str(entry.get("called", "")).capitalize().replace(" ", "")
+		rect.name = "Post" + entry.called.capitalize().replace(" ", "")
 		rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		rect.material = ShaderMaterial.new()
 		add_child(rect)
-		entry["rect"] = rect
+		entry.rect = rect
 	var worn: ShaderMaterial = rect.material as ShaderMaterial
 	if worn == null:
 		return
-	var shader: Shader = _shader_for(str(entry.get("effect", "")))
+	var shader: Shader = _shader_for(entry.effect)
 	if worn.shader != shader:
 		worn.shader = shader
 	var showing: float = _dialled(entry)
-	if not bool(entry.get("enabled", true)):
+	if not entry.enabled:
 		showing = 0.0
 	worn.set_shader_parameter(STRENGTH_DIAL, showing)
-	var dials: Dictionary = entry.get("params", {})
+	var dials: Dictionary = entry.params
 	for dial: Variant in dials:
 		worn.set_shader_parameter(str(dial), dials[dial])
 	rect.visible = shader != null and showing > 0.001
@@ -711,8 +720,8 @@ func _apply(at: int) -> void:
 ## order becomes the tail of this layer's children - and the pack's Screen rectangle, which the six
 ## older verbs draw on, keeps its place underneath them all.
 func _reorder() -> void:
-	for entry: Dictionary in _stack:
-		var rect: ColorRect = entry.get("rect", null) as ColorRect
+	for entry: PostEntry in _stack:
+		var rect: ColorRect = entry.rect if is_instance_valid(entry.rect) else null
 		if rect != null and is_instance_valid(rect) and rect.get_parent() == self:
 			move_child(rect, get_child_count() - 1)
 
@@ -744,7 +753,7 @@ func _walk_strength(called: String, to_value: float, seconds: float, back_to: fl
 	var walk: Tween = create_tween()
 	if seconds > 0.0:
 		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			float(_stack[at].get("strength", 0.0)), to_value, seconds)
+			_stack[at].strength, to_value, seconds)
 	if back_seconds > 0.0:
 		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
 			to_value, back_to, back_seconds)
