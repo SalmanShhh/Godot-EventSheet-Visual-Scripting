@@ -17,6 +17,7 @@
 # here is a plain property with a setter, so nothing is lost but the picker noise. The seven scripts
 # keep the one or two geometry fields that are their own sentence (a Line's end point, a Rect's
 # size), and `tests/vector_shapes_pack_test.gd` pins that list so a dropped marker is named.
+@tool
 extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 
 #region fields_style
