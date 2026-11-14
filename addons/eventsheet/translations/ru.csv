@@ -10503,3 +10503,6 @@ Extract Selection to Shared Sheet…,Извлечь выделение в общ
 %s in %s - %s would bring a second one.,%s в %s - %s принесёт второй.
 and %d more.,и ещё %d.
 "Rename your class, or do not add this behaviour.",Переименуйте свой класс или не добавляйте это поведение.
+"%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.","%s объявляет класс %s, и %s плагина тоже. Godot допускает один класс на имя, поэтому плагин не загрузится, пока существуют оба. Переименуйте свой класс."
+"%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.","%s объявляет класс %s, и %s тоже, поведение этого проекта. Godot допускает один класс на имя, поэтому один из двух скриптов не загружается. Переименуйте свой класс или удалите поведение."
+"%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.","%s объявляет класс %s, это имя использует и поведение %s плагина. Пока ничего не сломано, но «Добавить в проект» откажет в этом поведении, пока ваш класс носит это имя."

@@ -241,6 +241,9 @@ static func run() -> Dictionary:
 	# fallback is documented behaviour a single-save game may have chosen - and the sheet says it
 	# the way the sheet says everything: amber on the row, words in the inbox and the strip.
 	EventSheetSaveMemoryDoctor.ensure_registered()
+	# The Class Name Clashes section: a script of the reader's whose class_name is one the plugin or
+	# a shipped behaviour already uses. Same seam, registered by path so it adds no class name of its own.
+	load("res://addons/eventforge/class_name_clash_doctor.gd").ensure_registered()
 	# The Damage section: a row dealing a kind of damage no DamageTypeSet in this project names, and
 	# a node guarding against a kind nothing deals. Both are a mistyped word rather than a broken line,
 	# which is why neither is an error and both stay quiet on a project that has written no set down.

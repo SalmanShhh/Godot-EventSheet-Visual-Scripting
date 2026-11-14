@@ -10503,3 +10503,6 @@ Extract Selection to Shared Sheet…,선택 항목을 공유 시트로 추출…
 %s in %s - %s would bring a second one.,%s 은(는) %s 에 있습니다 - %s 이(가) 두 번째를 가져옵니다.
 and %d more.,그 외 %d개.
 "Rename your class, or do not add this behaviour.",내 클래스 이름을 바꾸거나 이 동작을 추가하지 마세요.
+"%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.","%s 은(는) 클래스 %s 를 선언했는데, 플러그인의 %s 도 같은 이름입니다. Godot는 이름당 클래스를 하나만 허용하므로 둘이 함께 있는 동안 플러그인을 불러올 수 없습니다. 내 클래스 이름을 바꾸세요."
+"%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.","%s 은(는) 클래스 %s 를 선언했는데, 이 프로젝트의 동작 %s 도 같은 이름입니다. Godot는 이름당 클래스를 하나만 허용하므로 두 스크립트 중 하나는 불러와지지 않습니다. 클래스 이름을 바꾸거나 그 동작을 제거하세요."
+"%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.","%s 은(는) 클래스 %s 를 선언했는데, 플러그인의 동작 %s 도 이 이름을 씁니다. 아직 망가진 것은 없지만, 내 클래스가 이 이름인 동안 프로젝트에 추가는 그 동작을 거부합니다."

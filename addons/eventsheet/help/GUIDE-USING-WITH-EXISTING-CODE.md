@@ -2118,6 +2118,9 @@ is instantiated to answer a question.
   class names the behaviour would bring against that list. If one of your own scripts already has a
   name, nothing is copied and the window says which name and which of your files holds it: rename
   your class, or leave that behaviour out.
+  The Project Doctor says the same thing ahead of time: a script of yours whose `class_name` is one the
+  plugin or a shipped behaviour already uses is reported with both files named - an error when the plugin
+  itself or a behaviour already in the project has the name, a warning when only the plugin's library does.
 - **A pack is a folder, and Godot already shows folders.** Every pack is a folder of ordinary
   behaviour scripts under `eventsheet_addons/`, and the FileSystem dock is where you see them. Adding
   one is putting its folder there - from the Asset Library, or a .zip you unpack yourself - and its

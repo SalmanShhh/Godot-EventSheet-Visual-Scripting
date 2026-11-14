@@ -10503,3 +10503,6 @@ Extract Selection to Shared Sheet…,将所选内容提取到共享表…
 %s in %s - %s would bring a second one.,%s 在 %s 中 - %s 会带来第二个。
 and %d more.,另有 %d 个。
 "Rename your class, or do not add this behaviour.",请重命名你的类，或不要添加此行为。
+"%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.",%s 声明了类 %s，插件自己的 %s 也是。Godot 每个名称只允许一个类，所以两者并存时插件无法加载。请重命名你的类。
+"%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.",%s 声明了类 %s，此项目中的行为 %s 也是。Godot 每个名称只允许一个类，所以其中一个脚本不会加载。请重命名你的类，或移除该行为。
+"%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.",%s 声明了类 %s，插件的行为 %s 也使用这个名称。目前没有损坏，但只要你的类用着这个名称，“添加到项目”就会拒绝该行为。

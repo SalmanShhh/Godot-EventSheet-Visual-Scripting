@@ -10503,3 +10503,6 @@ Extract Selection to Shared Sheet…,選択範囲を共有シートへ抽出…
 %s in %s - %s would bring a second one.,%s は %s にあります - %s が 2 つ目を持ち込みます。
 and %d more.,ほか %d 件。
 "Rename your class, or do not add this behaviour.",自分のクラスの名前を変えるか、この挙動を追加しないでください。
+"%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.",%s はクラス %s を宣言していますが、プラグイン側の %s も同じ名前です。Godot ではクラス名ごとに 1 つしか使えないため、両方ある間はプラグインを読み込めません。自分のクラスの名前を変えてください。
+"%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.",%s はクラス %s を宣言していますが、このプロジェクトの挙動 %s も同じ名前です。Godot ではクラス名ごとに 1 つしか使えないため、どちらかのスクリプトが読み込まれません。クラスの名前を変えるか、挙動を取り除いてください。
+"%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.",%s はクラス %s を宣言していますが、この名前はプラグインの挙動 %s も使っています。まだ壊れてはいませんが、あなたのクラスがこの名前の間は「プロジェクトに追加」がその挙動を拒否します。
