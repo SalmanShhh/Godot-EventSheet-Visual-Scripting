@@ -311,6 +311,9 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		toggle_row.editable = false
 		# A String keeps the chosen word; an int keeps its place in the list.
 		var chosen: String = str(value) if value is String else ""
+		# A bare word (normal) reads as text here, the same way the code line reads it.
+		if value == null and not default_text.strip_edges().is_empty():
+			chosen = default_text.strip_edges()
 		if value is int and int(value) >= 0 and int(value) < toggle_texts.size():
 			chosen = toggle_texts[int(value)]
 		toggle_row.set_value(chosen)

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Toggle buttons preview shows the default choice chosen when the default is a bare word
+
+- In the Variable window, a Toggle buttons look with a default typed as a bare word (`normal`) left every button in the Inspector preview unselected, while the code line showed the default correctly. The preview now reads that word the same way the code line does, so the default's button is shown chosen.
+
 ### Changed: the rename window no longer sends you to version control for the sheets it saved
 
 - After a rename that also rewrote and saved other sheets that include this one, the window said "your version control can undo those", which means nothing to a project without version control. It now says what is true for everyone: each of those sheets was backed up first, and opening one and using Tools > Sheet Backups gets its old version back.
