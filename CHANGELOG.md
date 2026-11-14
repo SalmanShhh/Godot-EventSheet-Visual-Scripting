@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a test keeps the plugin's class names prefixed
+
+- No new `class_name` may be added under `addons/eventforge/` or `addons/eventsheet/` without an `EventSheet`, `EventForge` or `ACE` prefix, because Godot keeps one list of class names per project and an unprefixed one can collide with a game's own. The 23 unprefixed names that shipped first are the allow list and are frozen; a name leaving the plugin must also leave the list.
+
 ### Added: the Doctor reports a class name your script shares with the plugin
 
 - A script of yours whose `class_name` is one the plugin's own code or a shipped behaviour already uses is now a Doctor finding that names both files. It is an error when the plugin itself, or a behaviour already in your project, holds the name (Godot keeps one class per name, so the plugin cannot load, or one of the two scripts does not), and a warning when only the plugin's behaviour library does, since Add to project will refuse that behaviour until you rename your class.
