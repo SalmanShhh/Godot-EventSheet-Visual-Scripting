@@ -61,16 +61,11 @@ static func registered_lines(path: String) -> PackedStringArray:
 	return _fingerprints(EventSheetACEGenerator.new().reflect_script(script))
 
 
-## The "Your classes" reading, asked by name. The fixture is made known to the project the way an
-## autoload is, for the length of the call, so no class cache has to know about it.
+## The "Your classes" door's reading of a script, asked for the class card `class_text`: the one reading
+## every script goes through now. The script is handed in, so no class cache has to know the fixture.
 static func your_classes_lines(path: String, class_text: String) -> PackedStringArray:
-	var setting: String = "autoload/%s" % class_text
-	var had: bool = ProjectSettings.has_setting(setting)
-	var previous: Variant = ProjectSettings.get_setting(setting, null)
-	ProjectSettings.set_setting(setting, "*" + path)
-	var definitions: Array[ACEDefinition] = EventSheetClassDBSource.definitions_for_class(class_text)
-	ProjectSettings.set_setting(setting, previous if had else null)
-	return _fingerprints(definitions)
+	var reader: GDScript = load("res://addons/eventsheet/ace/script_reader.gd")
+	return _fingerprints(reader.definitions_for(class_text, load(path) as Script, ""))
 
 
 static func member_lines(path: String) -> PackedStringArray:
@@ -94,7 +89,7 @@ static func _fingerprints(definitions: Array[ACEDefinition]) -> PackedStringArra
 				str(param.get("default_value", "")), str(param.get("hint", ""))])
 		lines.append(" | ".join([definition.id, _type_word(definition.ace_type), definition.display_name,
 			definition.category, str(definition.metadata.get("display_template", "")),
-			str(definition.metadata.get("codegen_template", "")), ", ".join(params)]))
+			str(definition.metadata.get("codegen_template", "")), ", ".join(params)]) + (" | not offered" if bool(definition.metadata.get("deprecated", false)) else ""))
 	return lines
 
 

@@ -23,6 +23,7 @@ class_name EventSheetVocabularyCatalog
 extends Resource
 
 const DEFAULT_PATH: String = "res://eventsheet_vocabulary.tres"
+const SCRIPT_READER_PATH: String = "res://addons/eventsheet/ace/script_reader.gd"
 
 ## "Provider::ace_id" -> {display_name?: String, category?: String, hidden?: bool}
 @export var overrides: Dictionary = {}
@@ -157,7 +158,15 @@ static func apply(definitions: Array) -> Array[ACEDefinition]:
 			continue
 		if catalog.excluded_classes.has(str(definition.provider_id)):
 			continue
+		# An alias of an id this verb used to have is only there so a placed row resolves; it is never refined.
+		if bool(definition.metadata.get("hidden_member", false)) and bool(definition.metadata.get("deprecated", false)):
+			out.append(definition)
+			continue
 		var entry: Dictionary = catalog.overrides.get(key_for(str(definition.provider_id), str(definition.id)), {})
+		# A side-file entry written against the id this verb had before the one reading is still its entry.
+		if entry.is_empty():
+			for legacy_id: String in load(SCRIPT_READER_PATH).legacy_ids_for(str(definition.id)):
+				entry = catalog.overrides.get(key_for(str(definition.provider_id), legacy_id), {})
 		if entry.is_empty():
 			out.append(definition)
 			continue
@@ -166,7 +175,10 @@ static func apply(definitions: Array) -> Array[ACEDefinition]:
 		# copy(), never duplicate(): the fields are plain vars, so Resource.duplicate()
 		# would hand back a blank definition that publishes nothing.
 		var refined: ACEDefinition = definition.copy()
-		if entry.has("display_name"):
+		# What the script's own `##` lines said outranks the side file, facet by facet: a script that named a
+		# function and left its category to inference can still have the category refined here.
+		var authored: Dictionary = definition.metadata.get("authored", {})
+		if entry.has("display_name") and not bool(authored.get("name", false)):
 			var renamed: String = str(entry["display_name"])
 			refined.display_name = renamed
 			# The sentence leads with the display name, so a rename must carry into it -
@@ -175,7 +187,7 @@ static func apply(definitions: Array) -> Array[ACEDefinition]:
 			if not template.is_empty():
 				var slots: String = template.trim_prefix(str(definition.display_name))
 				refined.metadata["display_template"] = renamed + slots
-		if entry.has("category"):
+		if entry.has("category") and not bool(authored.get("category", false)):
 			refined.category = str(entry["category"])
 		refined.metadata["curated"] = true
 		out.append(refined)
@@ -230,7 +242,7 @@ static func bake_edits_for(class_id: String) -> Array:
 		# overwrite the first. Rather than silently lose a rename, only the getter - the verb
 		# named after the property itself - bakes; the setter's override stays in the catalog,
 		# where it keeps working and stays visible.
-		if str(parts[1]).begins_with("property:set:"):
+		if str(parts[1]).begins_with("property:set:") or str(parts[1]).begins_with("set:") or str(parts[1]).begins_with("add:") or str(parts[1]).begins_with("subtract:"):
 			continue
 		var entry: Dictionary = catalog.overrides[key]
 		var edit: Dictionary = {"source_kind": str(member_info["source_kind"]), "member": str(member_info["member"])}
@@ -257,6 +269,12 @@ static func member_from_ace_id(ace_id: String) -> Dictionary:
 		return {"source_kind": "property", "member": ace_id.trim_prefix("property:set:")}
 	if ace_id.begins_with("property:get:"):
 		return {"source_kind": "property", "member": ace_id.trim_prefix("property:get:")}
+	# The ids the one reading publishes: the reader is `property:x`; the writers are `set:x`, `add:x`, `subtract:x`.
+	if ace_id.begins_with("property:") and ace_id.count(":") == 1:
+		return {"source_kind": "property", "member": ace_id.trim_prefix("property:")}
+	for writer: String in ["set:", "add:", "subtract:"]:
+		if ace_id.begins_with(writer):
+			return {"source_kind": "property", "member": ace_id.trim_prefix(writer)}
 	return {}
 
 

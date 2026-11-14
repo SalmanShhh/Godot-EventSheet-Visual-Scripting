@@ -1047,12 +1047,19 @@ static func _keep_legacy_template(previous: Variant, replacement: Resource) -> v
 	if previous == null or replacement == null or not (previous is ACEAction or previous is ACECondition):
 		return
 	var old_template: String = str((previous as Resource).get("codegen_template"))
-	if not old_template.contains(LEGACY_INSTANCE_PREFIX) or str(replacement.get("codegen_template")).contains(LEGACY_INSTANCE_PREFIX):
+	var new_template: String = str(replacement.get("codegen_template"))
+	# The two shapes a script's rows used to bake to: a call on a hidden copy, and `{target.}`, the optional
+	# target a "Your classes" row wrote, which with no node named called the sheet's own node.
+	var legacy: bool = false
+	for marker: String in [LEGACY_INSTANCE_PREFIX, "{target.}"]:
+		if old_template.contains(marker) and not new_template.contains(marker):
+			legacy = true
+	if not legacy:
 		return
 	replacement.set("codegen_template", old_template)
 	var edited: Dictionary = replacement.get("params")
 	for aim: String in ["target", "resource", "object"]:
-		if not old_template.contains("{%s}" % aim):
+		if not old_template.contains("{%s}" % aim) and not old_template.contains("{%s.}" % aim):
 			edited.erase(aim)
 
 

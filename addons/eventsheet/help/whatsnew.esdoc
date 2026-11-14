@@ -6,6 +6,12 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: \"Your classes\" reads your script the way a registered script is read
+
+- A class listed under \"Your classes\" was read by plain reflection while a script you registered was read by its `##` lines, so the same function came out as \"Is Dead\" in one place and \"Dead\" in the other, a variable's reader and writer had different ids, and a sentence or a name you wrote was ignored there. There is now one reading, the registered script's: its names, its kinds, the sentence you wrote with `@ace_display_template`, your categories and descriptions, a Set, Add and Subtract for each number, and the aimed calls (a Node script's functions call the node by its class, a Resource's act on the value the row names, a `static func` is called by its class).
+- Nothing placed breaks. The two old property ids (`property:get:x`, `property:set:x`) stay as hidden, deprecated entries that carry the call they always carried and point at their successor, so a row you already placed keeps reading and compiles to the same bytes, and editing it keeps its call. A function you hide with `@ace_hidden` is kept for rows already placed and is not offered.
+- The project's vocabulary side file still refines what the script left to inference: a rename or category written against an old id finds its verb under the new one, and anything your own `##` lines said is no longer overruled, facet by facet.
+
 ### Changed: a row from a script of yours acts on the real thing, not on a hidden copy
 
 - A function of your own script that carries no call line used to bake to a call on a small copy of the class that the sheet kept for itself, so a row from a Node script changed an object no scene held and a row from a Resource changed a copy nobody could see. For a script you wrote (never a behaviour the plugin ships, whose rows read exactly as before):

@@ -48,6 +48,12 @@ var _provider_node_name: String = ""
 ## Only such a script is read by the rules that aim a row at the real thing; the plugin's own packs
 ## keep reading exactly as they always did.
 var _project_script: bool = false
+## Set per generate_from_script() call: members the script marks `@ace_hidden` are still built, flagged
+## so the picker does not offer them, because a row already placed from one has to keep resolving.
+var _keep_hidden: bool = false
+## The autoload name the caller already knows the script is registered under, for a script whose autoload
+## is a scene (the reflection cannot tell from the script alone). "" lets the project settings answer.
+var _singleton_override: String = ""
 ## For a project script that is neither a Node nor an autoload but holds state (every Resource, and a
 ## RefCounted that declares variables): the id of the parameter that names the one it acts on, so a
 ## row acts on a value the sheet holds and not on a hidden copy. "" for everything else.
@@ -84,12 +90,17 @@ func reflect_script(script: Script) -> Array[ACEDefinition]:
 ## A provider reflected from its SCRIPT, with no instance: the members the script declares, which
 ## are the only ones a provider publishes (an annotation names a member of this file). Whether it is a
 ## Node comes from the engine class it builds on.
-func generate_from_script(script: Script) -> Array[ACEDefinition]:
+func generate_from_script(script: Script, keep_hidden: bool = false, singleton_name: String = "") -> Array[ACEDefinition]:
 	if script == null:
 		return [] as Array[ACEDefinition]
 	var base_class: String = str(script.get_instance_base_type())
-	return _generate(script, ClassDB.is_parent_class(base_class, "Node"), base_class,
+	_keep_hidden = keep_hidden
+	_singleton_override = singleton_name
+	var generated: Array[ACEDefinition] = _generate(script, ClassDB.is_parent_class(base_class, "Node"), base_class,
 		script.get_script_signal_list(), script.get_script_property_list(), script.get_script_method_list())
+	_keep_hidden = false
+	_singleton_override = ""
+	return generated
 
 
 func generate_from_object(target: Object) -> Array[ACEDefinition]:
@@ -110,7 +121,7 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 	var source_metadata: Dictionary = _analyzer.parse_source_metadata(script)
 	_expose_all_mode = str(source_metadata.get("expose_all_mode", ""))
 	_provider_is_node = is_node
-	_autoload_singleton = _autoload_name_for(script)
+	_autoload_singleton = _singleton_override if not _singleton_override.is_empty() else _autoload_name_for(script)
 	var provider_id: String = _analyzer.provider_id_for_script(script, fallback_class, source_metadata)
 	_provider_node_name = str(source_metadata.get("class_name", ""))
 	_project_script = script != null and not script.resource_path.is_empty() and not ShippedScripts.is_shipped(script.resource_path)
@@ -133,10 +144,11 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 		if signal_name.is_empty() or (script != null and not signal_overrides.has(signal_name)):
 			continue
 		var overrides: Dictionary = signal_overrides.get(signal_name, {})
-		if bool(overrides.get("hidden", false)):
+		if bool(overrides.get("hidden", false)) and not _keep_hidden:
 			continue
 		var signal_definition: ACEDefinition = _build_signal_definition(provider_id, signal_name, signal_info, overrides)
 		_apply_deprecation_metadata(signal_definition, overrides)
+		_mark_hidden(signal_definition, overrides)
 		output.append(signal_definition)
 
 	for property_info: Dictionary in property_list:
@@ -144,13 +156,14 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 		if property_name.is_empty() or (script != null and not property_overrides.has(property_name)):
 			continue
 		var property_overrides_entry: Dictionary = property_overrides.get(property_name, {})
-		if bool(property_overrides_entry.get("hidden", false)):
+		if bool(property_overrides_entry.get("hidden", false)) and not _keep_hidden:
 			continue
 		if not bool(property_overrides_entry.get("exported", false)):
 			continue
 		var property_definitions: Array[ACEDefinition] = _build_property_definitions(provider_id, property_name, property_info, property_overrides_entry)
 		for property_definition: ACEDefinition in property_definitions:
 			_apply_deprecation_metadata(property_definition, property_overrides_entry)
+			_mark_hidden(property_definition, property_overrides_entry)
 		output.append_array(property_definitions)
 
 	for method_info: Dictionary in method_list:
@@ -163,10 +176,11 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 		if _is_static(method_info) and (not _project_script or str(source_metadata.get("class_name", "")).is_empty()):
 			continue
 		var method_entry_overrides: Dictionary = method_overrides.get(method_name, {})
-		if bool(method_entry_overrides.get("hidden", false)):
+		if bool(method_entry_overrides.get("hidden", false)) and not _keep_hidden:
 			continue
 		var method_definition: ACEDefinition = _build_method_definition(provider_id, method_name, method_info, method_entry_overrides)
 		_apply_deprecation_metadata(method_definition, method_entry_overrides)
+		_mark_hidden(method_definition, method_entry_overrides)
 		output.append(method_definition)
 	_disambiguate_reflected_name_collisions(output)
 	# A script the reader wrote says where it lives, so a row can start on the node of the open scene that wears it.
@@ -183,6 +197,14 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 		for definition in output:
 			definition.metadata["tags"] = provider_tags.duplicate()
 	return output
+
+
+## A member the script hides is kept resolvable but not offered: the picker already leaves out a definition
+## flagged as deprecated, and "hidden_member" says which of the two this one is.
+static func _mark_hidden(definition: ACEDefinition, overrides: Dictionary) -> void:
+	if bool(overrides.get("hidden", false)):
+		definition.metadata["hidden_member"] = true
+		definition.metadata["deprecated"] = true
 
 
 ## Reflected property names that collide with an AUTHORED verb are suffixed so the picker can tell them

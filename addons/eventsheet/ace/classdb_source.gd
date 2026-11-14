@@ -21,6 +21,9 @@ extends RefCounted
 ##   back stays as conservative as ever (the lossless covenant outranks lift
 ##   coverage).
 
+## The one reading of a script of the reader's, by path: only a class of theirs asks for it.
+const SCRIPT_READER_PATH: String = "res://addons/eventsheet/ace/script_reader.gd"
+
 ## class name -> Array[ACEDefinition], shared for the whole session.
 static var _cache: Dictionary = {}
 ## Every curated builtin codegen template, for the shadow filter (built once).
@@ -62,17 +65,9 @@ static func definitions_for_class(target_class: String, target_prefix: String = 
 		if user_script == null:
 			_cache[cache_key] = output
 			return output
-		_ensure_curated_templates()
-		for method_info: Dictionary in user_script.get_script_method_list():
-			var method_definition: ACEDefinition = _method_definition(target_class, method_info, target_prefix)
-			if method_definition != null:
-				output.append(method_definition)
-		for signal_info: Dictionary in user_script.get_script_signal_list():
-			var signal_trigger: ACEDefinition = _signal_definition(target_class, signal_info)
-			if signal_trigger != null:
-				output.append(signal_trigger)
-		for property_info: Dictionary in user_script.get_script_property_list():
-			output.append_array(_property_definitions(target_class, property_info, target_prefix))
+		# A script of the reader's is read the way a registered script is read - one reading, the
+		# generator's - and not by the plain reflection that is only right for the engine's classes.
+		output = load(SCRIPT_READER_PATH).definitions_for(target_class, user_script, target_prefix)
 		_cache[cache_key] = output
 		return output
 	_ensure_curated_templates()

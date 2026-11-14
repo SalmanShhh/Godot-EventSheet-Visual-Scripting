@@ -62,7 +62,7 @@ static func run() -> bool:
 	ok = _check("a user class reflects its void method as an Action",
 		user_fire != null and user_fire.ace_type == ACEDefinition.ACEType.ACTION, true) and ok
 	ok = _check("the user-class emission is the plain call",
-		str(user_fire.metadata.get("codegen_template", "")) if user_fire != null else "missing", "{target.}fire()") and ok
+		str(user_fire.metadata.get("codegen_template", "")) if user_fire != null else "missing", "{target}.fire()") and ok
 	ok = _check("a user class's signal reflects as a Trigger",
 		_find(user_definitions, "signal:reloaded") != null, true) and ok
 
