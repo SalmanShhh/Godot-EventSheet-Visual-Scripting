@@ -647,10 +647,32 @@ func _moment_screen_fx() -> CanvasLayer:
 # over it, turn it around half way through, or put back everything it moved. Nothing here plays
 # a step - the steps are still the pack's own verbs, played by the one function above.
 
-# A play is a small
-# dictionary: the steps it was made of, how long it has left, whether it is walking backwards,
-# the values it found and the values it will settle on. Empty for a node that has never played
-# one, which is what makes the tick free until a beat starts.
+## One moment in the air: the steps it is made of, how long it has left, whether it is walking
+## backwards, the values it found and the values it will settle on.
+class MomentPlay extends RefCounted:
+	## The steps the play was made of; each is a step card as the moment file spells it.
+	var steps: Array = []
+	## How long the whole play lasts, in seconds.
+	var span: float = 0.0
+	## How long the play has left, in seconds.
+	var left: float = 0.0
+	## The label of the step most recently taken; empty before the first.
+	var step: String = ""
+	## True while the play is walking its values back to where they started.
+	var reverting: bool = false
+	## How long the walk back takes, in seconds.
+	var revert_span: float = 0.0
+	## How long the walk back has left, in seconds.
+	var revert_left: float = 0.0
+	## What every value the play touches was worth before the play, by the name the play touches it under.
+	var start: Dictionary = {}
+	## What every value the play touches will be worth once it has run its course.
+	var end: Dictionary = {}
+	## What every value was worth when the walk back began.
+	var from: Dictionary = {}
+
+# Empty for a node that has never played one, which is what makes the tick free until a beat
+# starts.
 ## Every moment this node has IN THE AIR, by the name it was played under.
 var _moment_plays: Dictionary = {}
 
@@ -1484,21 +1506,21 @@ func moment_revert(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
 		return
-	var play: Dictionary = _moment_plays[key]
+	var play: MomentPlay = _moment_plays[key]
 	# The beat's own tweens are stopped before the way home is walked: a value being lerped back
 	# while the tween that took it out is still writing would be two hands on the same number.
-	_moment_let_go((play["start"] as Dictionary).keys())
+	_moment_let_go(play.start.keys())
 	var from: Dictionary = {}
-	for touched: String in (play["start"] as Dictionary).keys():
+	for touched: String in play.start.keys():
 		var now: Variant = _moment_value_of(touched)
 		if now != null:
 			from[touched] = now
-	play["from"] = from
-	play["reverting"] = true
-	play["revert_span"] = maxf(float(play["span"]), 0.001)
-	play["revert_left"] = float(play["revert_span"])
-	for at: int in MomentRunner.revert_order(play["steps"]):
-		var step: Variant = (play["steps"] as Array)[at]
+	play.from = from
+	play.reverting = true
+	play.revert_span = maxf(play.span, 0.001)
+	play.revert_left = play.revert_span
+	for at: int in MomentRunner.revert_order(play.steps):
+		var step: Variant = play.steps[at]
 		if step is Dictionary:
 			_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))
 	set_process(true)
@@ -1515,11 +1537,11 @@ func moment_skip_to_end(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
 		return
-	var play: Dictionary = _moment_plays[key]
-	var ends: Dictionary = play["end"]
+	var play: MomentPlay = _moment_plays[key]
+	var ends: Dictionary = play.end
 	for touched: String in ends.keys():
 		_moment_write_value(touched, ends[touched])
-	for step: Variant in (play["steps"] as Array):
+	for step: Variant in play.steps:
 		if step is Dictionary and str((step as Dictionary).get("verb", "")).strip_edges().to_lower() == "shake":
 			stop_shake()
 			break
@@ -1565,13 +1587,13 @@ func moment_is_playing(moment_name: String) -> bool:
 func moment_is_reverting(moment_name: String) -> bool:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
-		for play: Variant in _moment_plays.values():
-			if play is Dictionary and bool((play as Dictionary)["reverting"]):
+		for play: MomentPlay in _moment_plays.values():
+			if play.reverting:
 				return true
 		return false
 	if not _moment_plays.has(key):
 		return false
-	return bool((_moment_plays[key] as Dictionary)["reverting"])
+	return (_moment_plays[key] as MomentPlay).reverting
 
 ## @ace_condition
 ## @ace_name("Moment Was Cut Short")
@@ -1594,8 +1616,8 @@ func moment_progress(moment_name: String) -> float:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
 		return 0.0
-	var play: Dictionary = _moment_plays[key]
-	return MomentRunner.progress_of(float(play["span"]) - float(play["left"]), float(play["span"]))
+	var play: MomentPlay = _moment_plays[key]
+	return MomentRunner.progress_of(play.span - play.left, play.span)
 
 ## @ace_expression
 ## @ace_name("Moment Elapsed")
@@ -1608,8 +1630,8 @@ func moment_elapsed(moment_name: String) -> float:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
 		return 0.0
-	var play: Dictionary = _moment_plays[key]
-	return maxf(float(play["span"]) - float(play["left"]), 0.0)
+	var play: MomentPlay = _moment_plays[key]
+	return maxf(play.span - play.left, 0.0)
 
 ## @ace_expression
 ## @ace_name("Moment Step Name")
@@ -1622,7 +1644,7 @@ func moment_step_name(moment_name: String) -> String:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
 		return ""
-	return str((_moment_plays[key] as Dictionary)["step"])
+	return (_moment_plays[key] as MomentPlay).step
 
 ## @ace_action
 ## @ace_name("Shake Channel")
@@ -2259,20 +2281,10 @@ func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -
 ## @ace_hidden
 func _moment_begin(key: String, steps: Array, strength: float, backwards: bool) -> void:
 	_moment_end(key, true)
-	var play: Dictionary = {
-		"steps": steps,
-		"strength": strength,
-		"backwards": backwards,
-		"span": MomentRunner.length_of(steps),
-		"left": MomentRunner.length_of(steps),
-		"step": "",
-		"reverting": false,
-		"revert_span": 0.0,
-		"revert_left": 0.0,
-		"start": {},
-		"end": {},
-		"from": {}
-	}
+	var play: MomentPlay = MomentPlay.new()
+	play.steps = steps
+	play.span = MomentRunner.length_of(steps)
+	play.left = play.span
 	_moment_remember(key, play, steps)
 	_moment_plays[key] = play
 	_moment_cut[key] = false
@@ -2283,9 +2295,9 @@ func _moment_begin(key: String, steps: Array, strength: float, backwards: bool) 
 ## FIRST one it ever saw under that name, because a beat played twice must still put back what
 ## the game had before the first play, not what the first play left behind.
 ## @ace_hidden
-func _moment_remember(key: String, play: Dictionary, steps: Array) -> void:
-	var start: Dictionary = play["start"]
-	var ends: Dictionary = play["end"]
+func _moment_remember(key: String, play: MomentPlay, steps: Array) -> void:
+	var start: Dictionary = play.start
+	var ends: Dictionary = play.end
 	var kept: Dictionary = _moment_ledger.get(key, {})
 	for touched: String in MomentRunner.touched_by_steps(steps):
 		var was: Variant = _moment_value_of(touched)
@@ -2382,7 +2394,7 @@ func _moment_settled(key: String, was: Variant, steps: Array) -> Variant:
 func _moment_stepping(key: String, label: String) -> void:
 	if not _moment_plays.has(key):
 		return
-	(_moment_plays[key] as Dictionary)["step"] = label
+	(_moment_plays[key] as MomentPlay).step = label
 	moment_stepped.emit(key, label)
 
 ## The end of the opening frame: a beat whose steps are all instant is already over and says so,
@@ -2391,7 +2403,7 @@ func _moment_stepping(key: String, label: String) -> void:
 func _moment_launched(key: String) -> void:
 	if not _moment_plays.has(key):
 		return
-	if float((_moment_plays[key] as Dictionary)["span"]) <= 0.0:
+	if (_moment_plays[key] as MomentPlay).span <= 0.0:
 		_moment_end(key, false)
 		return
 	set_process(true)
@@ -2443,24 +2455,25 @@ func _moment_tick(delta: float) -> void:
 	# from the book and raises a signal a game may start another beat from.
 	_moment_ended.clear()
 	for key: Variant in _moment_plays:
-		var play: Dictionary = _moment_plays[key]
-		if bool(play["reverting"]):
-			play["revert_left"] = maxf(float(play["revert_left"]) - delta, 0.0)
-			var span: float = maxf(float(play["revert_span"]), 0.0001)
-			var walked: float = clampf(1.0 - float(play["revert_left"]) / span, 0.0, 1.0)
-			var from: Dictionary = play["from"]
-			var start: Dictionary = play["start"]
+		var play: MomentPlay = _moment_plays[key]
+		if play.reverting:
+			play.revert_left = maxf(play.revert_left - delta, 0.0)
+			var span: float = maxf(play.revert_span, 0.0001)
+			var walked: float = clampf(1.0 - play.revert_left / span, 0.0, 1.0)
+			var from: Dictionary = play.from
+			var start: Dictionary = play.start
 			for touched: Variant in from:
 				if start.has(touched):
 					_moment_write_value(str(touched), lerp(from[touched], start[touched], walked))
-			if float(play["revert_left"]) <= 0.0:
+			if play.revert_left <= 0.0:
 				_moment_ended.append(str(key))
 			continue
-		play["left"] = maxf(float(play["left"]) - delta, 0.0)
-		if float(play["left"]) <= 0.0:
+		play.left = maxf(play.left - delta, 0.0)
+		if play.left <= 0.0:
 			_moment_ended.append(str(key))
 	for ended: String in _moment_ended:
-		var cut: bool = bool((_moment_plays.get(ended, {}) as Dictionary).get("reverting", false))
+		var ending: MomentPlay = _moment_plays.get(ended, null) as MomentPlay
+		var cut: bool = ending != null and ending.reverting
 		_moment_end(ended, cut)
 
 ## Whether any beat is still in the air - the one thing the tick's parking check has to ask.

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Juice keeps each moment in the air as a small class
+
+- A moment that is playing was a dictionary of twelve keys read by text from a dozen places; it is now a small class with a typed field for each, so a misspelt key is a parse error. Two keys that were written into it and never read (the strength and the direction the play was started with) are gone. The step cards, the Feedback Player's list and the moment file's rows stay dictionaries on purpose: the user writes them, scenes and files store them, and their rows' words are the file format.
+
 ### Changed: Group, Include and System read in Godot's own words by default
 
 - By default the collapsible block of rows reads **Section** ("Group" is Godot's word for a node group, and the Words page's node-group entry is unchanged), a sheet other sheets include reads **Shared sheet** (Add > Shared sheet..., Sheet > Manage Shared Sheets..., Edit > Extract Selection to Shared Sheet..., the bar at the head of the including sheet, the picker window), and the picker's built-in card still reads **System** but now goes through the Words page like every other card. The Familiar preset keeps **Group**, **Include** and **System**. Three new Words keys (`section_block`, `shared_sheet`, `system_card`); no existing key, id, marker or saved byte changes, and the menus relabel when the Words page changes. All eight translations are filled.

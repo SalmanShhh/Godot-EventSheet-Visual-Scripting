@@ -129,9 +129,9 @@ static func _restore_pins() -> bool:
 	stage.modulate = Color(0.2, 0.4, 0.6, 1.0)
 	stage.scale = Vector2(1.5, 1.5)
 	Engine.time_scale = 1.0
-	var play: Dictionary = _opened(behavior, "impact", steps)
+	var play: Object = _opened(behavior, "impact", steps)
 	var recorded: PackedStringArray = PackedStringArray()
-	for key: Variant in (play["start"] as Dictionary).keys():
+	for key: Variant in (play.get("start") as Dictionary).keys():
 		recorded.append(str(key))
 	recorded.sort()
 	# The beat has been felt: the three values are somewhere else now.
@@ -379,9 +379,9 @@ static func _clamp_pins() -> bool:
 ## letting the steps fire, because a flash and a punch drive a Tween and a Tween needs a live
 ## scene tree - and what these pins are about is the book, the end values and the walk home, all
 ## of which are written before a single step has run.
-static func _opened(behavior: Node, named: String, steps: Array) -> Dictionary:
+static func _opened(behavior: Node, named: String, steps: Array) -> Object:
 	behavior._moment_begin(named, steps, 1.0, false)
-	return behavior._moment_plays.get(named, {})
+	return behavior._moment_plays.get(named, null) as Object
 
 
 ## A moment FILE holding these steps - the shape Moment reads, built here rather than loaded so a

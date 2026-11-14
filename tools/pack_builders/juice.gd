@@ -922,14 +922,14 @@ moment(moment_name, here)",
 	_quoted_argument(sheet, "moment_backwards(\"{moment_name}\", {strength})")
 	Lib.append_function(sheet, "moment_revert", "Revert Moment", "Juice", "Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: Dictionary = _moment_plays[key]\n# The beat's own tweens are stopped before the way home is walked: a value being lerped back\n# while the tween that took it out is still writing would be two hands on the same number.\n_moment_let_go((play[\"start\"] as Dictionary).keys())\nvar from: Dictionary = {}\nfor touched: String in (play[\"start\"] as Dictionary).keys():\n\tvar now: Variant = _moment_value_of(touched)\n\tif now != null:\n\t\tfrom[touched] = now\nplay[\"from\"] = from\nplay[\"reverting\"] = true\nplay[\"revert_span\"] = maxf(float(play[\"span\"]), 0.001)\nplay[\"revert_left\"] = float(play[\"revert_span\"])\nfor at: int in MomentRunner.revert_order(play[\"steps\"]):\n\tvar step: Variant = (play[\"steps\"] as Array)[at]\n\tif step is Dictionary:\n\t\t_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))\nset_process(true)",
+		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: MomentPlay = _moment_plays[key]\n# The beat's own tweens are stopped before the way home is walked: a value being lerped back\n# while the tween that took it out is still writing would be two hands on the same number.\n_moment_let_go(play.start.keys())\nvar from: Dictionary = {}\nfor touched: String in play.start.keys():\n\tvar now: Variant = _moment_value_of(touched)\n\tif now != null:\n\t\tfrom[touched] = now\nplay.from = from\nplay.reverting = true\nplay.revert_span = maxf(play.span, 0.001)\nplay.revert_left = play.revert_span\nfor at: int in MomentRunner.revert_order(play.steps):\n\tvar step: Variant = play.steps[at]\n\tif step is Dictionary:\n\t\t_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))\nset_process(true)",
 		"Revert moment [b]{moment_name}[/b]")
 	_default(sheet, "moment_name", "hover")
 	_param_desc(sheet, "moment_name", "Which moment to turn around. A moment that is not playing is left alone.")
 	_quoted_argument(sheet, "moment_revert(\"{moment_name}\")")
 	Lib.append_function(sheet, "moment_skip_to_end", "Skip Moment To End", "Juice", "Ends a moment NOW, on the values it would have finished on: a held effect lands at its full strength, a freeze lets time go, a shake settles. The way out of an intro somebody has seen twenty times, and the way a cutscene skip leaves nothing half-played. It fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: Dictionary = _moment_plays[key]\nvar ends: Dictionary = play[\"end\"]\nfor touched: String in ends.keys():\n\t_moment_write_value(touched, ends[touched])\nfor step: Variant in (play[\"steps\"] as Array):\n\tif step is Dictionary and str((step as Dictionary).get(\"verb\", \"\")).strip_edges().to_lower() == \"shake\":\n\t\tstop_shake()\n\t\tbreak\nmoment_skipped.emit(key)\n_moment_end(key, true)",
+		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: MomentPlay = _moment_plays[key]\nvar ends: Dictionary = play.end\nfor touched: String in ends.keys():\n\t_moment_write_value(touched, ends[touched])\nfor step: Variant in play.steps:\n\tif step is Dictionary and str((step as Dictionary).get(\"verb\", \"\")).strip_edges().to_lower() == \"shake\":\n\t\tstop_shake()\n\t\tbreak\nmoment_skipped.emit(key)\n_moment_end(key, true)",
 		"Skip moment [b]{moment_name}[/b] to the end")
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to jump to the end of. A moment that is not playing is left alone.")
@@ -947,7 +947,7 @@ moment(moment_name, here)",
 	_quoted_argument(sheet, "moment_is_playing(\"{moment_name}\")")
 	Lib.condition(sheet, "moment_is_reverting", "Moment Is Reverting", "Juice", "True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif key.is_empty():\n\tfor play: Variant in _moment_plays.values():\n\t\tif play is Dictionary and bool((play as Dictionary)[\"reverting\"]):\n\t\t\treturn true\n\treturn false\nif not _moment_plays.has(key):\n\treturn false\nreturn bool((_moment_plays[key] as Dictionary)[\"reverting\"])")
+		"var key: String = _moment_key(moment_name)\nif key.is_empty():\n\tfor play: MomentPlay in _moment_plays.values():\n\t\tif play.reverting:\n\t\t\treturn true\n\treturn false\nif not _moment_plays.has(key):\n\treturn false\nreturn (_moment_plays[key] as MomentPlay).reverting")
 	_param_desc(sheet, "moment_name", "Which moment to ask about. Empty asks whether any moment is reverting.")
 	_quoted_argument(sheet, "moment_is_reverting(\"{moment_name}\")")
 	Lib.condition(sheet, "moment_was_cut_short", "Moment Was Cut Short", "Juice", "True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.",
@@ -958,19 +958,19 @@ moment(moment_name, here)",
 	_quoted_argument(sheet, "moment_was_cut_short(\"{moment_name}\")")
 	Lib.number(sheet, "moment_progress", "Moment Progress", "Juice", "How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn 0.0\nvar play: Dictionary = _moment_plays[key]\nreturn MomentRunner.progress_of(float(play[\"span\"]) - float(play[\"left\"]), float(play[\"span\"]))", TYPE_FLOAT)
+		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn 0.0\nvar play: MomentPlay = _moment_plays[key]\nreturn MomentRunner.progress_of(play.span - play.left, play.span)", TYPE_FLOAT)
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to measure.")
 	_quoted_argument(sheet, "moment_progress(\"{moment_name}\")")
 	Lib.number(sheet, "moment_elapsed", "Moment Elapsed", "Juice", "How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn 0.0\nvar play: Dictionary = _moment_plays[key]\nreturn maxf(float(play[\"span\"]) - float(play[\"left\"]), 0.0)", TYPE_FLOAT)
+		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn 0.0\nvar play: MomentPlay = _moment_plays[key]\nreturn maxf(play.span - play.left, 0.0)", TYPE_FLOAT)
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to measure.")
 	_quoted_argument(sheet, "moment_elapsed(\"{moment_name}\")")
 	Lib.number(sheet, "moment_step_name", "Moment Step Name", "Juice", "What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn \"\"\nreturn str((_moment_plays[key] as Dictionary)[\"step\"])", TYPE_STRING)
+		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn \"\"\nreturn (_moment_plays[key] as MomentPlay).step", TYPE_STRING)
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to ask about.")
 	_quoted_argument(sheet, "moment_step_name(\"{moment_name}\")")
@@ -1377,10 +1377,32 @@ static func _moment_lines() -> PackedStringArray:
 		"## @ace_name(\"On Moment Finished\")",
 		"signal moment_finished(moment_name: String, cut_short: bool)",
 		"",
-		"# A play is a small",
-		"# dictionary: the steps it was made of, how long it has left, whether it is walking backwards,",
-		"# the values it found and the values it will settle on. Empty for a node that has never played",
-		"# one, which is what makes the tick free until a beat starts.",
+		"## One moment in the air: the steps it is made of, how long it has left, whether it is walking",
+		"## backwards, the values it found and the values it will settle on.",
+		"class MomentPlay extends RefCounted:",
+		"\t## The steps the play was made of; each is a step card as the moment file spells it.",
+		"\tvar steps: Array = []",
+		"\t## How long the whole play lasts, in seconds.",
+		"\tvar span: float = 0.0",
+		"\t## How long the play has left, in seconds.",
+		"\tvar left: float = 0.0",
+		"\t## The label of the step most recently taken; empty before the first.",
+		"\tvar step: String = \"\"",
+		"\t## True while the play is walking its values back to where they started.",
+		"\tvar reverting: bool = false",
+		"\t## How long the walk back takes, in seconds.",
+		"\tvar revert_span: float = 0.0",
+		"\t## How long the walk back has left, in seconds.",
+		"\tvar revert_left: float = 0.0",
+		"\t## What every value the play touches was worth before the play, by the name the play touches it under.",
+		"\tvar start: Dictionary = {}",
+		"\t## What every value the play touches will be worth once it has run its course.",
+		"\tvar end: Dictionary = {}",
+		"\t## What every value was worth when the walk back began.",
+		"\tvar from: Dictionary = {}",
+		"",
+		"# Empty for a node that has never played one, which is what makes the tick free until a beat",
+		"# starts.",
 		"## Every moment this node has IN THE AIR, by the name it was played under.",
 		"var _moment_plays: Dictionary = {}",
 		"",
@@ -1438,20 +1460,10 @@ static func _moment_lines() -> PackedStringArray:
 		"## @ace_hidden",
 		"func _moment_begin(key: String, steps: Array, strength: float, backwards: bool) -> void:",
 		"\t_moment_end(key, true)",
-		"\tvar play: Dictionary = {",
-		"\t\t\"steps\": steps,",
-		"\t\t\"strength\": strength,",
-		"\t\t\"backwards\": backwards,",
-		"\t\t\"span\": MomentRunner.length_of(steps),",
-		"\t\t\"left\": MomentRunner.length_of(steps),",
-		"\t\t\"step\": \"\",",
-		"\t\t\"reverting\": false,",
-		"\t\t\"revert_span\": 0.0,",
-		"\t\t\"revert_left\": 0.0,",
-		"\t\t\"start\": {},",
-		"\t\t\"end\": {},",
-		"\t\t\"from\": {}",
-		"\t}",
+		"\tvar play: MomentPlay = MomentPlay.new()",
+		"\tplay.steps = steps",
+		"\tplay.span = MomentRunner.length_of(steps)",
+		"\tplay.left = play.span",
 		"\t_moment_remember(key, play, steps)",
 		"\t_moment_plays[key] = play",
 		"\t_moment_cut[key] = false",
@@ -1462,9 +1474,9 @@ static func _moment_lines() -> PackedStringArray:
 		"## FIRST one it ever saw under that name, because a beat played twice must still put back what",
 		"## the game had before the first play, not what the first play left behind.",
 		"## @ace_hidden",
-		"func _moment_remember(key: String, play: Dictionary, steps: Array) -> void:",
-		"\tvar start: Dictionary = play[\"start\"]",
-		"\tvar ends: Dictionary = play[\"end\"]",
+		"func _moment_remember(key: String, play: MomentPlay, steps: Array) -> void:",
+		"\tvar start: Dictionary = play.start",
+		"\tvar ends: Dictionary = play.end",
 		"\tvar kept: Dictionary = _moment_ledger.get(key, {})",
 		"\tfor touched: String in MomentRunner.touched_by_steps(steps):",
 		"\t\tvar was: Variant = _moment_value_of(touched)",
@@ -1561,7 +1573,7 @@ static func _moment_lines() -> PackedStringArray:
 		"func _moment_stepping(key: String, label: String) -> void:",
 		"\tif not _moment_plays.has(key):",
 		"\t\treturn",
-		"\t(_moment_plays[key] as Dictionary)[\"step\"] = label",
+		"\t(_moment_plays[key] as MomentPlay).step = label",
 		"\tmoment_stepped.emit(key, label)",
 		"",
 		"## The end of the opening frame: a beat whose steps are all instant is already over and says so,",
@@ -1570,7 +1582,7 @@ static func _moment_lines() -> PackedStringArray:
 		"func _moment_launched(key: String) -> void:",
 		"\tif not _moment_plays.has(key):",
 		"\t\treturn",
-		"\tif float((_moment_plays[key] as Dictionary)[\"span\"]) <= 0.0:",
+		"\tif (_moment_plays[key] as MomentPlay).span <= 0.0:",
 		"\t\t_moment_end(key, false)",
 		"\t\treturn",
 		"\tset_process(true)",
@@ -1622,24 +1634,25 @@ static func _moment_lines() -> PackedStringArray:
 		"\t# from the book and raises a signal a game may start another beat from.",
 		"\t_moment_ended.clear()",
 		"\tfor key: Variant in _moment_plays:",
-		"\t\tvar play: Dictionary = _moment_plays[key]",
-		"\t\tif bool(play[\"reverting\"]):",
-		"\t\t\tplay[\"revert_left\"] = maxf(float(play[\"revert_left\"]) - delta, 0.0)",
-		"\t\t\tvar span: float = maxf(float(play[\"revert_span\"]), 0.0001)",
-		"\t\t\tvar walked: float = clampf(1.0 - float(play[\"revert_left\"]) / span, 0.0, 1.0)",
-		"\t\t\tvar from: Dictionary = play[\"from\"]",
-		"\t\t\tvar start: Dictionary = play[\"start\"]",
+		"\t\tvar play: MomentPlay = _moment_plays[key]",
+		"\t\tif play.reverting:",
+		"\t\t\tplay.revert_left = maxf(play.revert_left - delta, 0.0)",
+		"\t\t\tvar span: float = maxf(play.revert_span, 0.0001)",
+		"\t\t\tvar walked: float = clampf(1.0 - play.revert_left / span, 0.0, 1.0)",
+		"\t\t\tvar from: Dictionary = play.from",
+		"\t\t\tvar start: Dictionary = play.start",
 		"\t\t\tfor touched: Variant in from:",
 		"\t\t\t\tif start.has(touched):",
 		"\t\t\t\t\t_moment_write_value(str(touched), lerp(from[touched], start[touched], walked))",
-		"\t\t\tif float(play[\"revert_left\"]) <= 0.0:",
+		"\t\t\tif play.revert_left <= 0.0:",
 		"\t\t\t\t_moment_ended.append(str(key))",
 		"\t\t\tcontinue",
-		"\t\tplay[\"left\"] = maxf(float(play[\"left\"]) - delta, 0.0)",
-		"\t\tif float(play[\"left\"]) <= 0.0:",
+		"\t\tplay.left = maxf(play.left - delta, 0.0)",
+		"\t\tif play.left <= 0.0:",
 		"\t\t\t_moment_ended.append(str(key))",
 		"\tfor ended: String in _moment_ended:",
-		"\t\tvar cut: bool = bool((_moment_plays.get(ended, {}) as Dictionary).get(\"reverting\", false))",
+		"\t\tvar ending: MomentPlay = _moment_plays.get(ended, null) as MomentPlay",
+		"\t\tvar cut: bool = ending != null and ending.reverting",
 		"\t\t_moment_end(ended, cut)",
 		"",
 		"## Whether any beat is still in the air - the one thing the tick's parking check has to ask.",
