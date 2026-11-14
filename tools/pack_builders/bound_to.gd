@@ -21,6 +21,12 @@ static func build() -> bool:
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
+		"## bound_space: stay inside the camera's on-screen view.",
+		"const BOUND_SPACE_SCREEN := \"screen\"",
+		"## bound_space: stay inside the custom bounds rectangle.",
+		"const BOUND_SPACE_CUSTOM := \"custom\"",
+		"",
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## What to stay inside: the camera's on-screen view, or the custom bounds rectangle.",
 		"@export_enum(\"screen\", \"custom\") var bound_space: String = \"screen\"",
@@ -73,14 +79,14 @@ static func build() -> bool:
 		# Same rule as Is At Bound above: the picked word carries its quotes in the template.
 		"## @ace_codegen_template(\"$BoundToBehavior.set_bound_space(\"{space}\")\")",
 		"func set_bound_space(space: String) -> void:",
-		"\tif space in [\"screen\", \"custom\"]:",
+		"\tif space in [BOUND_SPACE_SCREEN, BOUND_SPACE_CUSTOM]:",
 		"\t\tbound_space = space",
 		"",
 		"## The world-space rectangle being bound to: the camera's visible rect (the canvas",
 		"## transform inverted maps screen space to world space) or the custom rectangle.",
 		"## @ace_hidden",
 		"func _bound_rect() -> Rect2:",
-		"\tif bound_space == \"custom\":",
+		"\tif bound_space == BOUND_SPACE_CUSTOM:",
 		"\t\treturn custom_bounds",
 		"\tvar viewport: Viewport = host.get_viewport() if host != null else null",
 		"\tif viewport == null:",
@@ -95,7 +101,7 @@ static func build() -> bool:
 		"\tif not bool(params.get(\"bound_enabled\", true)):",
 		"\t\treturn",
 		"\tvar rect: Rect2 = params.get(\"custom_bounds\", Rect2())",
-		"\tif str(params.get(\"bound_space\", \"screen\")) == \"screen\":",
+		"\tif str(params.get(\"bound_space\", BOUND_SPACE_SCREEN)) == BOUND_SPACE_SCREEN:",
 		"\t\t# The editor has no running camera - show the project's base view size from 0,0.",
 		"\t\trect = Rect2(0.0, 0.0, float(ProjectSettings.get_setting(\"display/window/size/viewport_width\", 1152)), float(ProjectSettings.get_setting(\"display/window/size/viewport_height\", 648)))",
 		"\t# The rect is world-space; the canvas rides the host, so draw through the inverse.",

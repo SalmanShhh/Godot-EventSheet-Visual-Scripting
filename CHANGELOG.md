@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a behaviour's exported choices are named in its code
+
+- A behaviour's exported choice keeps the words it stores in a scene and its `@export_enum` line exactly as before, so every saved scene loads unchanged. The pack's own code now names each word through a constant (`BOUND_SPACE_SCREEN`, `PIN_MODE_ROPE`, ...), in every comparison, `match` arm and assignment, so a misspelled word is a parse error instead of a silent miss. Row templates such as `set_bound_space("{space}")` keep their bytes. The option lists of `@export_enum` and `@ace_param_options` stay literal: Godot accepts a constant there, but an opened pack then reads that variable as raw code rather than a variable row. Done so far: Bound To.
+
 ### Fixed: a weighted table never cuts its text cells
 
 - A weighted table narrower than its roomy width no longer shows the per-row share column at all (the "Chances" line above the table already says every share, and "Total weight" stays), and the room goes to the text columns. A text cell also asks for the room its longest entry needs, up to a cap, so "common" and "rare,weapon" are whole at the Inspector's default width. The Loot Table's narrowest Inspector grows from 316 to 356 px to hold its tags whole.

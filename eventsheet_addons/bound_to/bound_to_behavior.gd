@@ -24,6 +24,12 @@ func _enter_tree() -> void:
 ## @ace_name("On Hit Bound")
 signal bound_hit(side: String)
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## bound_space: stay inside the camera's on-screen view.
+const BOUND_SPACE_SCREEN := "screen"
+## bound_space: stay inside the custom bounds rectangle.
+const BOUND_SPACE_CUSTOM := "custom"
+
 # --- Designer knobs (tune in the Inspector) ---
 ## What to stay inside: the camera's on-screen view, or the custom bounds rectangle.
 @export_enum("screen", "custom") var bound_space: String = "screen"
@@ -54,7 +60,7 @@ var _pressed_sides: Dictionary = {}
 ## transform inverted maps screen space to world space) or the custom rectangle.
 ## @ace_hidden
 func _bound_rect() -> Rect2:
-	if bound_space == "custom":
+	if bound_space == BOUND_SPACE_CUSTOM:
 		return custom_bounds
 	var viewport: Viewport = host.get_viewport() if host != null else null
 	if viewport == null:
@@ -147,7 +153,7 @@ func is_at_bound(side: String = "any") -> bool:
 ## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.set_bound_space("{space}")")
 func set_bound_space(space: String) -> void:
-	if space in ["screen", "custom"]:
+	if space in [BOUND_SPACE_SCREEN, BOUND_SPACE_CUSTOM]:
 		bound_space = space
 
 static func editor_gizmo_draw(params: Dictionary, gizmo_host: Node2D, canvas: CanvasItem) -> void:
@@ -158,7 +164,7 @@ static func editor_gizmo_draw(params: Dictionary, gizmo_host: Node2D, canvas: Ca
 	if not bool(params.get("bound_enabled", true)):
 		return
 	var rect: Rect2 = params.get("custom_bounds", Rect2())
-	if str(params.get("bound_space", "screen")) == "screen":
+	if str(params.get("bound_space", BOUND_SPACE_SCREEN)) == BOUND_SPACE_SCREEN:
 		# The editor has no running camera - show the project's base view size from 0,0.
 		rect = Rect2(0.0, 0.0, float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)), float(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
 	# The rect is world-space; the canvas rides the host, so draw through the inverse.
