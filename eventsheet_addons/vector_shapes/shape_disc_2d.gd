@@ -52,10 +52,11 @@ extends VectorShape2D
 		end_angle = value
 		shape_changed()
 
+# @inspector_look unit:kinds=px|world|screen,store=px
 @export_group("Stroke")
 ## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var thickness: float = 2.0:
 	set(value):
 		thickness = value
 		shape_changed()
@@ -160,9 +161,10 @@ extends VectorShape2D
 	set(value):
 		dash_offset = value
 		shape_changed()
+# @inspector_look toggle_row:icons=vector_shapes_dash
 ## What one dash looks like: cut square, leaning over, or rounded at both ends.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=vector_shapes_dash") var dash_style: String = "plain":
+@export_enum("plain", "angled", "rounded") var dash_style: String = "plain":
 	set(value):
 		dash_style = value
 		shape_changed()

@@ -53,7 +53,7 @@ const PACK_SCRIPTS: PackedStringArray = [
 
 ## The marker that says a thickness is STORED in pixels however the Inspector's dropdown reads it.
 ## Every shape carries it, which is what keeps an emitted number still when the view is switched.
-const UNIT_MARKER := "eventsheet:unit:kinds=px|world|screen,store=px"
+const UNIT_MARKER := "# @inspector_look unit:kinds=px|world|screen,store=px"
 
 ## Which exported field of each shape earns a ROW, sorted.
 ##

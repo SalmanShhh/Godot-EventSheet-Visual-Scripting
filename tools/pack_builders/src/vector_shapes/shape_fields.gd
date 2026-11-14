@@ -39,10 +39,11 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 #endregion
 
 #region fields_stroke
+# @inspector_look unit:kinds=px|world|screen,store=px
 @export_group("Stroke")
 ## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var thickness: float = 2.0:
 	set(value):
 		thickness = value
 		shape_changed()
@@ -55,9 +56,10 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 #endregion
 
 #region fields_caps
+# @inspector_look toggle_row:segmented
 ## What the two ends of the stroke look like: cut off, squared off half a thickness past the end, or rounded.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:segmented") var caps: String = "round":
+@export_enum("none", "square", "round") var caps: String = "round":
 	set(value):
 		caps = value
 		shape_changed()
@@ -131,9 +133,10 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 	set(value):
 		border_colour = value
 		shape_changed()
+# @inspector_look unit:kinds=px|world|screen,store=px
 ## How wide the border is. Read in pixels, world units or screen units; stored in pixels.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var border_thickness: float = 2.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var border_thickness: float = 2.0:
 	set(value):
 		border_thickness = value
 		shape_changed()
@@ -180,9 +183,10 @@ extends "res://tools/pack_builders/src/vector_shapes/vector_shape_2d.gd"
 	set(value):
 		dash_offset = value
 		shape_changed()
+# @inspector_look toggle_row:icons=vector_shapes_dash
 ## What one dash looks like: cut square, leaning over, or rounded at both ends.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=vector_shapes_dash") var dash_style: String = "plain":
+@export_enum("plain", "angled", "rounded") var dash_style: String = "plain":
 	set(value):
 		dash_style = value
 		shape_changed()

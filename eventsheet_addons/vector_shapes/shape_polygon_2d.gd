@@ -39,10 +39,11 @@ extends VectorShape2D
 		points = value
 		shape_changed()
 
+# @inspector_look unit:kinds=px|world|screen,store=px
 @export_group("Stroke")
 ## Stroke width; the dropdown reads it in pixels, world units or screen units.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var thickness: float = 2.0:
 	set(value):
 		thickness = value
 		shape_changed()
@@ -114,9 +115,10 @@ extends VectorShape2D
 	set(value):
 		border_colour = value
 		shape_changed()
+# @inspector_look unit:kinds=px|world|screen,store=px
 ## How wide the border is. Read in pixels, world units or screen units; stored in pixels.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var border_thickness: float = 2.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var border_thickness: float = 2.0:
 	set(value):
 		border_thickness = value
 		shape_changed()

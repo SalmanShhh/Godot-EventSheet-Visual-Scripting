@@ -18,15 +18,17 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		inner_radius = value
 		shape_changed()
+# @inspector_look unit:kinds=deg|turn|rad,store=deg
 ## Where the sweep starts; the dropdown reads it in degrees, turns or radians.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var start_angle: float = 0.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:deg") var start_angle: float = 0.0:
 	set(value):
 		start_angle = value
 		shape_changed()
+# @inspector_look unit:kinds=deg|turn|rad,store=deg
 ## Where the sweep ends. A full turn past the start is a whole disc; anything less is the pie or the arc a cooldown or a scanning cone is drawn as.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var end_angle: float = 360.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:deg") var end_angle: float = 360.0:
 	set(value):
 		end_angle = value
 		shape_changed()

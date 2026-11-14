@@ -7,10 +7,11 @@ class_name ShapeRegularPolygon3D
 extends VectorShape3D
 ## A shape of N equal sides at a radius: a triangle, a hexagon, a near-circle - filled, bordered and dashable, from two numbers. The hex tile marker, the summoning ring, the landing pad.
 
+# @inspector_look toggle_row:segmented
 @export_group("Geometry")
 ## How the shape lives in 3D: flat, facing the camera, or real geometry.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:flat,billboard,volumetric:segmented") var geometry: String = "billboard":
+@export_enum("flat", "billboard", "volumetric") var geometry: String = "billboard":
 	set(value):
 		geometry = value
 		notify_property_list_changed()
@@ -37,8 +38,9 @@ extends VectorShape3D
 	set(value):
 		radius = value
 		shape_changed()
+# @inspector_look unit:kinds=deg|turn|rad,store=deg
 ## Turns the whole shape. The dropdown at the field's edge reads the number in degrees, turns or radians; the number stored is always degrees.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var angle: float = 90.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:deg") var angle: float = 90.0:
 	set(value):
 		angle = value
 		shape_changed()
@@ -54,9 +56,10 @@ extends VectorShape3D
 # 0.05), and screen units are PIXELS - the shape keeps that weight however far away the camera is,
 # which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
 # because a distance is what turns one into the other and only the camera knows it.
+# @inspector_look toggle_row:segmented
 ## Whether thickness is in world units or in screen pixels.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:world,screen:segmented") var thickness_unit: String = "world":
+@export_enum("world", "screen") var thickness_unit: String = "world":
 	set(value):
 		thickness_unit = value
 		shape_changed()
@@ -178,9 +181,10 @@ extends VectorShape3D
 	set(value):
 		dash_offset = value
 		shape_changed()
+# @inspector_look toggle_row:icons=vector_shapes_dash
 ## What one dash looks like: cut square, leaning over, or rounded at both ends.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=vector_shapes_dash") var dash_style: String = "plain":
+@export_enum("plain", "angled", "rounded") var dash_style: String = "plain":
 	set(value):
 		dash_style = value
 		shape_changed()
@@ -192,9 +196,10 @@ extends VectorShape3D
 	set(value):
 		blend = value
 		shape_changed()
+# @inspector_look toggle_row:segmented
 ## Sort with the world normally, or draw over everything in front.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:test,through walls:segmented") var depth: String = "test":
+@export_enum("test", "through walls") var depth: String = "test":
 	set(value):
 		depth = value
 		shape_changed()

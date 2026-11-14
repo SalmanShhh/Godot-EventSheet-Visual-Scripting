@@ -24,9 +24,10 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		blend = value
 		shape_changed()
+# @inspector_look toggle_row:segmented
 ## Sort with the world normally, or draw over everything in front.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:test,through walls:segmented") var depth: String = "test":
+@export_enum("test", "through walls") var depth: String = "test":
 	set(value):
 		depth = value
 		shape_changed()

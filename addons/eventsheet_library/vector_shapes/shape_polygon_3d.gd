@@ -7,10 +7,11 @@ class_name ShapePolygon3D
 extends VectorShape3D
 ## A closed outline through points you drag in the 3D viewport, filled or hollow, with a border of its own - the claimed territory, the zone marker, the stylised leaf.
 
+# @inspector_look toggle_row:segmented
 @export_group("Geometry")
 ## How the shape lives in 3D: flat, facing the camera, or real geometry.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:flat,billboard,volumetric:segmented") var geometry: String = "billboard":
+@export_enum("flat", "billboard", "volumetric") var geometry: String = "billboard":
 	set(value):
 		geometry = value
 		notify_property_list_changed()
@@ -45,9 +46,10 @@ extends VectorShape3D
 # 0.05), and screen units are PIXELS - the shape keeps that weight however far away the camera is,
 # which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
 # because a distance is what turns one into the other and only the camera knows it.
+# @inspector_look toggle_row:segmented
 ## Whether thickness is in world units or in screen pixels.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:world,screen:segmented") var thickness_unit: String = "world":
+@export_enum("world", "screen") var thickness_unit: String = "world":
 	set(value):
 		thickness_unit = value
 		shape_changed()
@@ -128,9 +130,10 @@ extends VectorShape3D
 	set(value):
 		blend = value
 		shape_changed()
+# @inspector_look toggle_row:segmented
 ## Sort with the world normally, or draw over everything in front.
 ## @ace_hidden
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:test,through walls:segmented") var depth: String = "test":
+@export_enum("test", "through walls") var depth: String = "test":
 	set(value):
 		depth = value
 		shape_changed()

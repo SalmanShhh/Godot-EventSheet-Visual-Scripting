@@ -19,8 +19,9 @@ extends "res://tools/pack_builders/src/vector_shapes_3d/vector_shape_3d.gd"
 	set(value):
 		radius = value
 		shape_changed()
+# @inspector_look unit:kinds=deg|turn|rad,store=deg
 ## Turns the whole shape. The dropdown at the field's edge reads the number in degrees, turns or radians; the number stored is always degrees.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var angle: float = 90.0:
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:deg") var angle: float = 90.0:
 	set(value):
 		angle = value
 		shape_changed()

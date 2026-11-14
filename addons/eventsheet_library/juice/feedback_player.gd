@@ -57,10 +57,12 @@ signal on_loop(loops_left: int)
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:cards:kind=verb,schema=feedback_steps,stripes=category") var steps: Array[Dictionary] = []
 ## Scales every amount in the list before the row's own strength applies.
 @export var strength: float = 1.0
+# @inspector_look toggle_row
 ## Which end of the list a play starts from.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:top to bottom,bottom to top") var direction: String = "top to bottom"
+@export_enum("top to bottom", "bottom to top") var direction: String = "top to bottom"
+# @inspector_look toggle_row
 ## What a second play does while the first is still running: restart it, ignore the new one, or let the two overlap.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:restart,ignore,overlap") var while_playing: String = "restart"
+@export_enum("restart", "ignore", "overlap") var while_playing: String = "restart"
 ## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
 ## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
