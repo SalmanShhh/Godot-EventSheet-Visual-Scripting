@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: the vocabulary record in project.godot is written less often, and says so
+
+- The first sheet save after installing or updating wrote `eventsheets/project/vocabulary_version` into `project.godot` with no word about it. Proved in a scratch project: the whole diff is a new four-line `[eventsheets]` section. The only thing that reads the value is the head band's \"since\" half, and it has to live in the project file for a team to share it, so it stays there. It is now written for the first record and once per minor release (a patch release leaves it alone), and the save puts one line on the status line naming the entry. Projects already carrying the line keep reading it unchanged.
+
 ### Changed: the seven Vector Shapes use Godot's own tool button for Save As Style
 
 - Save As Style was a `# @inspector_action` comment line over the Style field, drawn only with the plugin. Each shape now carries Godot's `@export_tool_button` (a new public `save_as_style_button` that is hidden from the picker and never saved into a scene), so the button shows without the plugin. Every existing member, row id, template and saved value is unchanged. A file that still holds the comment-line spelling opens and saves byte for byte as before; the shipped shapes open as a sheet that reads the new line as a variable and re-emit byte for byte.

@@ -287,7 +287,7 @@ The one thing the plugin remembers about your project across sessions is a singl
 eventsheets/project/vocabulary_version="0.17.0"
 ```
 
-It is written when a sheet is saved from the editor, and only when the value would change. Two
+It is written when a sheet is saved from the editor, and only when the value would change meaning: the first record, then once per minor release (a patch release leaves it alone). The save says so on the status line, so the one-line change in `project.godot` is never unexplained. It has to live in the project file, because a team shares it through version control, while the editor's own settings are per machine. Two
 branches that disagree about it resolve by taking either side: the value only moves forward, and the
 next edit rewrites it. There is no sidecar file, nothing machine-local, and nothing anybody has to
 remember to commit.

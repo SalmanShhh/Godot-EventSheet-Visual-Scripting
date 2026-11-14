@@ -10492,3 +10492,4 @@ Colour in the Inspector,Colore nell'Inspector
 The mark is the colour this variable holds.,Il segno è il colore che contiene questa variabile.
 Click the mark to change the look.,Fai clic sul segno per cambiare l'aspetto.
 Shown as a dropdown of %s.,Mostrata come menu a tendina con %s.
+Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,Vocabolario %s registrato in project.godot (eventsheets/project/vocabulary_version) così un aggiornamento successivo può dire quali righe sono più recenti.

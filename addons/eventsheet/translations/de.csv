@@ -10492,3 +10492,4 @@ Colour in the Inspector,Farbe im Inspektor
 The mark is the colour this variable holds.,"Das Zeichen hat die Farbe, die diese Variable enthält."
 Click the mark to change the look.,Klick auf das Zeichen ändert den Look.
 Shown as a dropdown of %s.,Als Dropdown mit %s angezeigt.
+Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,"Vokabular %s in project.godot festgehalten (eventsheets/project/vocabulary_version), damit ein späteres Update sagen kann, welche Zeilen neuer sind."

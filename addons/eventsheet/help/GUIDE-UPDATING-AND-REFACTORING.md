@@ -126,7 +126,7 @@ The head band is the other half, and it is derived from the rows rather than sto
 
 The *since* half comes from one project-level line, `eventsheets/project/vocabulary_version` in
 Project Settings, remembering which vocabulary this project's sheets were last edited under. It is
-written when a sheet is saved from the editor and only when it would change; a project that has never
+written when a sheet is saved from the editor and only when it would change meaning (the first record, then once per minor release; the save says so on the status line); a project that has never
 carried it gets the same band without the version. **Nothing about the plugin is written into a
 sheet's own file** - a `.gd` stays a `.gd` a hand author could have typed, with no version header and
 no tool marker.

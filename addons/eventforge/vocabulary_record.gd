@@ -42,7 +42,10 @@ static func current() -> String:
 
 ## Writes the record, and returns whether it actually wrote. Called when a sheet is SAVED from the
 ## editor, which is the moment "last edited under" becomes true - and only when the value would
-## change, so a project.godot is touched once per version rather than once per save.
+## change meaning: the vocabulary moves with the plugin's minor releases, so a project.godot is
+## touched once per minor release (or never, after the first record) rather than once per save or per
+## patch. The record has to live in the project file: a team shares it through version control, and
+## the editor's own settings and the .godot folder are per machine.
 ##
 ## Never runs outside a live editor session: a headless compile, a test run or an exported game has
 ## not edited anything, and writing a project file from one of those would be a surprise.
@@ -50,11 +53,27 @@ static func stamp() -> bool:
 	if not Engine.is_editor_hint():
 		return false
 	var running: String = current()
-	if recorded() == running:
+	if recorded() == running or same_series(recorded(), running):
 		return false
 	ProjectSettings.set_setting(SETTING, running)
 	ProjectSettings.save()
 	return true
+
+
+## Whether two versions are the same minor series ("0.20.0" and "0.20.3"), which is the grain the
+## vocabulary moves at. An empty or unreadable version is in no series.
+static func same_series(first: String, second: String) -> bool:
+	var a: PackedStringArray = first.strip_edges().split(".")
+	var b: PackedStringArray = second.strip_edges().split(".")
+	if a.size() < 2 or b.size() < 2:
+		return false
+	return a[0] == b[0] and a[1] == b[1]
+
+
+## What the status line says the one time a save writes the record, so the line that appears in
+## project.godot under version control is never unexplained.
+static func written_note() -> String:
+	return EventSheetL10n.translate("Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.") % current()
 
 
 ## The head band's entry for one sheet: how many of its rows have a newer spelling, how many hold a

@@ -10492,3 +10492,4 @@ Colour in the Inspector,インスペクターの色
 The mark is the colour this variable holds.,マークはこの変数が持つ色です。
 Click the mark to change the look.,マークをクリックするとルックを変更できます。
 Shown as a dropdown of %s.,%s のドロップダウンとして表示されます。
+Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,語彙 %s を project.godot に記録しました (eventsheets/project/vocabulary_version)。今後のアップデートでどの行が新しいかを示せます。

@@ -439,8 +439,9 @@ func _save_backed_sheet() -> bool:
 		_dock._current_sheet.external_source_path, compile_result)
 	# The project's one-line record of which vocabulary its sheets were last edited under. Nothing is
 	# written into the .gd - it is a plain script and stays one - and this only writes at all when the
-	# value would change, so a project file is touched once per version rather than once per save.
-	EventForgeVocabularyRecord.stamp()
+	# value would change meaning (a new minor release), and says so on the status line when it does.
+	if EventForgeVocabularyRecord.stamp():
+		_dock._set_status(EventForgeVocabularyRecord.written_note())
 	DOCK_REGISTRY.notify_lifecycle("saved", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path})
 	return true
 

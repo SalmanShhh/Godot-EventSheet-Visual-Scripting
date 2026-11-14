@@ -10492,3 +10492,4 @@ Colour in the Inspector,인스펙터의 색상
 The mark is the colour this variable holds.,표시는 이 변수가 가진 색상입니다.
 Click the mark to change the look.,표시를 클릭하면 룩을 바꿀 수 있습니다.
 Shown as a dropdown of %s.,%s 드롭다운으로 표시됩니다.
+Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,어휘 %s을(를) project.godot에 기록했습니다 (eventsheets/project/vocabulary_version). 이후 업데이트에서 어떤 행이 더 새로운지 알려 줄 수 있습니다.

@@ -10492,3 +10492,4 @@ Colour in the Inspector,检查器中的颜色
 The mark is the colour this variable holds.,标记就是这个变量所保存的颜色。
 Click the mark to change the look.,点击标记可更改外观。
 Shown as a dropdown of %s.,显示为包含 %s 的下拉菜单。
+Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,已在 project.godot 中记录词汇版本 %s (eventsheets/project/vocabulary_version)，以便之后的更新能指出哪些行更新。

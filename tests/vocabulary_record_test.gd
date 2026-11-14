@@ -33,6 +33,15 @@ static func _test_the_record() -> bool:
 		EventForgeVocabularyRecord.current(), EventSheetCompiler.VERSION) and ok
 	# THE LAW, pinned: a headless run has not edited anything, so it writes nothing. Every test in
 	# this suite compiles sheets, and none of them may leave a project.godot behind.
+	# What makes a record worth a line in project.godot: a minor release, not every patch or save.
+	ok = _check("a patch release is the same series", EventForgeVocabularyRecord.same_series("0.20.0", "0.20.3"), true) and ok
+	ok = _check("a minor release is a new series", EventForgeVocabularyRecord.same_series("0.20.0", "0.21.0"), false) and ok
+	ok = _check("a major release is a new series", EventForgeVocabularyRecord.same_series("0.20.0", "1.20.0"), false) and ok
+	ok = _check("no record is in no series", EventForgeVocabularyRecord.same_series("", "0.20.0"), false) and ok
+	ok = _check("an unreadable record is in no series", EventForgeVocabularyRecord.same_series("dev", "0.20.0"), false) and ok
+	ok = _check("the note a write leaves names the entry and the version",
+		EventForgeVocabularyRecord.written_note().contains("eventsheets/project/vocabulary_version")
+		and EventForgeVocabularyRecord.written_note().contains(EventSheetCompiler.VERSION), true) and ok
 	ok = _check("a run with no editor writes no record", EventForgeVocabularyRecord.stamp(), false) and ok
 	ok = _check("the band facts carry the counts and the recorded version",
 		EventForgeVocabularyRecord.band_facts(3),
