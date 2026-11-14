@@ -12,6 +12,10 @@ extends PanelContainer
 
 ## The catalogue of looks that are files, loaded by path: a look says its own sentence there.
 const LOOK_CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+## The least contrast the sentence keeps against the card's fill, and the caption (set in a smaller size,
+## whose thin strokes lose more to anti-aliasing) keeps.
+const READABLE_CONTRAST: float = 4.5
+const CAPTION_CONTRAST: float = 5.5
 
 var _rows: VBoxContainer = null
 var _sentence_label: Label = null
@@ -19,21 +23,31 @@ var _caption: Label = null
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
+	var panel_box: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
+	add_theme_stylebox_override("panel", panel_box)
+	var ground: Color = Color(panel_box.bg_color, 1.0)
 	var column := VBoxContainer.new()
 	add_child(column)
 	_caption = Label.new()
 	_caption.text = EventSheetL10n.translate("Inspector preview")
 	_caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	_caption.modulate = Color(1.0, 1.0, 1.0, 0.5)
+	_caption.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), ground, CAPTION_CONTRAST))
 	column.add_child(_caption)
 	_rows = VBoxContainer.new()
 	column.add_child(_rows)
 	_sentence_label = Label.new()
 	_sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sentence_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	_sentence_label.modulate = Color(1.0, 1.0, 1.0, 0.72)
+	_sentence_label.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.ink(), ground))
 	column.add_child(_sentence_label)
+
+
+## `ink` as it shows on `ground`: laid over it when it is translucent, then moved toward black or white
+## until it keeps `minimum` contrast. The ink comes from the editor theme, so the light preset gets a
+## dark grey and the dark preset a pale one, where a white fade vanished on a pale card.
+static func reading_ink(ink: Color, ground: Color, minimum: float = READABLE_CONTRAST) -> Color:
+	var shown: Color = ground.lerp(Color(ink, 1.0), ink.a)
+	return EventSheetLookMinis.readable_ink(shown, ground, minimum)
 
 
 ## Hides the per-card "Inspector preview" caption - for surfaces that stack many cards into one

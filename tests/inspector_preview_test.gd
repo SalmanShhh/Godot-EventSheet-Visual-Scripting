@@ -77,6 +77,21 @@ static func run() -> bool:
 	var path_row: Control = _widget(card, "String", "\"res://sfx/hit.ogg\"", {"file": {"mode": "file"}})
 	ok = _check("a file look holds the variable's own path", (path_row.get_child(0) as LineEdit).text, "res://sfx/hit.ogg") and ok
 	card.free()
+	ok = _readable_inks() and ok
+	return ok
+
+
+## The caption and the sentence read on the card's own fill in both presets: dark ink on a pale card,
+## pale ink on a dark one, never a white fade.
+static func _readable_inks() -> bool:
+	var ok: bool = true
+	for ground: Color in [Color(0.93, 0.93, 0.93), Color(0.12, 0.12, 0.12)]:
+		var caption: Color = EventSheetInspectorPreviewCard.reading_ink(Color(1.0, 1.0, 1.0, 0.5), ground, EventSheetInspectorPreviewCard.CAPTION_CONTRAST)
+		var sentence: Color = EventSheetInspectorPreviewCard.reading_ink(Color(1.0, 1.0, 1.0, 0.72), ground)
+		ok = _check("the caption keeps its contrast on %s" % ground.to_html(), EventSheetLookStyle.contrast_ratio(caption, ground) >= EventSheetInspectorPreviewCard.CAPTION_CONTRAST, true) and ok
+		ok = _check("the sentence keeps its contrast on %s" % ground.to_html(), EventSheetLookStyle.contrast_ratio(sentence, ground) >= EventSheetInspectorPreviewCard.READABLE_CONTRAST, true) and ok
+	var pale: Color = EventSheetInspectorPreviewCard.reading_ink(Color(1.0, 1.0, 1.0, 0.5), Color(0.93, 0.93, 0.93))
+	ok = _check("on a pale card the ink is dark", pale.get_luminance() < 0.4, true) and ok
 	return ok
 
 
