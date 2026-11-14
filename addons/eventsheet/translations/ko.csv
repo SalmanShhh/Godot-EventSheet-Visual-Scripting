@@ -7703,7 +7703,7 @@ A dropdown of fixed choices.,고정된 선택지의 드롭다운.
 A dropdown of suggestions that still accepts anything typed.,제안 목록이지만 입력한 것은 무엇이든 받는 드롭다운.
 Suggestions,제안
 Toggle buttons,토글 버튼
-"A row of buttons, one per choice. Without this plugin it is a plain text box.",선택지마다 하나씩인 버튼 줄. 이 플러그인이 없으면 일반 텍스트 상자입니다.
+"A row of buttons, one per choice. Without this plugin it is Godot's own dropdown.",선택지마다 하나씩인 버튼 줄. 이 플러그인이 없으면 Godot 기본 드롭다운입니다.
 Password dots,비밀번호 점
 Typed text shows as dots.,입력한 글자가 점으로 보입니다.
 Expression field,식 입력란

@@ -7703,7 +7703,7 @@ A dropdown of fixed choices.,決まった選択肢のドロップダウンです
 A dropdown of suggestions that still accepts anything typed.,候補のドロップダウンですが、入力したものは何でも受け付けます。
 Suggestions,候補
 Toggle buttons,トグルボタン
-"A row of buttons, one per choice. Without this plugin it is a plain text box.",選択肢ごとに 1 つ並ぶボタンです。このプラグインがなければ普通のテキストボックスになります。
+"A row of buttons, one per choice. Without this plugin it is Godot's own dropdown.",選択肢ごとに 1 つ並ぶボタンです。このプラグインがなければ Godot 標準のドロップダウンになります。
 Password dots,パスワードの伏せ字
 Typed text shows as dots.,入力した文字が点で表示されます。
 Expression field,式の欄

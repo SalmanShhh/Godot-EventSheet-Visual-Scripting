@@ -7703,7 +7703,7 @@ A dropdown of fixed choices.,固定选项的下拉列表。
 A dropdown of suggestions that still accepts anything typed.,提供建议、但仍接受任意输入的下拉列表。
 Suggestions,建议
 Toggle buttons,切换按钮
-"A row of buttons, one per choice. Without this plugin it is a plain text box.",一排按钮，每个选项一个。没有此插件时就是普通文本框。
+"A row of buttons, one per choice. Without this plugin it is Godot's own dropdown.",一排按钮，每个选项一个。没有此插件时就是 Godot 自带的下拉框。
 Password dots,密码圆点
 Typed text shows as dots.,输入的文本显示为圆点。
 Expression field,表达式字段

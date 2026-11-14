@@ -21,7 +21,7 @@ extends RefCounted
 ## Everything here is static and UI-free so the headless suite pins it.
 
 ## The looks written this way. Any other word keeps the marker spelling.
-const WORDS: PackedStringArray = ["progress_bar"]
+const WORDS: PackedStringArray = ["progress_bar", "toggle_row", "unit"]
 ## The attribute that says a variable's look rides the comment spelling.
 const FLAG: String = "look_line"
 ## The comment line's head, and the length of it.

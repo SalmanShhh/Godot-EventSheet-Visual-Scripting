@@ -228,7 +228,7 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 			return easing
 		"unit":
 			var units: Dictionary = parse_units(text.call("units"))
-			return {"drawer": "unit", "unit_kinds": units.get("units", []), "unit_store": str(units.get("store", ""))}
+			return _with_look_line({"drawer": "unit", "unit_kinds": units.get("units", []), "unit_store": str(units.get("store", ""))})
 		"file", "folder":
 			var spec: Dictionary = {"mode": "file" if look_id == "file" else "dir", "global": text.call("reach") == REACH[1]}
 			if look_id == "file":
@@ -247,7 +247,7 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 		"suggestions":
 			return {"suggestions": split_list(text.call("choices"))}
 		"toggle_row":
-			return {"drawer": "toggle_row", "toggle_options": split_list(text.call("choices"))}
+			return _with_look_line({"drawer": "toggle_row", "toggle_options": split_list(text.call("choices"))})
 		"password", "expression", "link":
 			return {"custom_preset": look_id}
 		"swatch_row", "corners", "texture_preview", "curve_editor":

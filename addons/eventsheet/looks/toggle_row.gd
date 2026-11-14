@@ -2,7 +2,7 @@
 extends EventSheetInspectorLook
 
 ## Toggle buttons
-## A row of buttons, one per choice. Without this plugin it is a plain text box.
+## A row of buttons, one per choice. Without this plugin it is Godot's own dropdown.
 
 ## The kinds of property this look can be put on.
 @export var works_on: String = "String"

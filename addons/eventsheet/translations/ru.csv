@@ -7703,7 +7703,7 @@ A dropdown of fixed choices.,Выпадающий список фиксиров�
 A dropdown of suggestions that still accepts anything typed.,"Выпадающий список подсказок, который всё равно принимает любой ввод."
 Suggestions,Подсказки
 Toggle buttons,Кнопки-переключатели
-"A row of buttons, one per choice. Without this plugin it is a plain text box.","Ряд кнопок, по одной на вариант. Без этого плагина - обычное текстовое поле."
+"A row of buttons, one per choice. Without this plugin it is Godot's own dropdown.","Ряд кнопок, по одной на вариант. Без этого плагина - обычный выпадающий список Godot."
 Password dots,Точки пароля
 Typed text shows as dots.,Введённый текст показывается точками.
 Expression field,Поле выражения

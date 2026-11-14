@@ -7703,7 +7703,7 @@ A dropdown of fixed choices.,Un menu a tendina di scelte fisse.
 A dropdown of suggestions that still accepts anything typed.,Un menu di suggerimenti che accetta comunque qualsiasi cosa digitata.
 Suggestions,Suggerimenti
 Toggle buttons,Pulsanti a interruttore
-"A row of buttons, one per choice. Without this plugin it is a plain text box.","Una fila di pulsanti, uno per scelta. Senza questo plugin è una semplice casella di testo."
+"A row of buttons, one per choice. Without this plugin it is Godot's own dropdown.","Una fila di pulsanti, uno per scelta. Senza questo plugin è il menu a tendina di Godot."
 Password dots,Punti della password
 Typed text shows as dots.,Il testo digitato appare come punti.
 Expression field,Campo espressione

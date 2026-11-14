@@ -74,6 +74,20 @@ const PROBES: Array = [
 @export_range(0, 100) var speed: float = 55.5
 @export_range(0, 100) var health_plain: int = 60
 "],
+	["toggle_row_godot_line", "# @inspector_look toggle_row
+@export_enum(\"easy\", \"normal\", \"hard\") var difficulty: String = \"normal\"
+# @inspector_look toggle_row:segmented
+@export_enum(\"test\", \"through walls\") var depth: String = \"test\"
+# @inspector_look toggle_row
+@export_enum(\"a\", \"b\", \"c\") var level: int = 1
+@export_enum(\"easy\", \"normal\", \"hard\") var difficulty_plain: String = \"normal\"
+"],
+	["unit_godot_line", "# @inspector_look unit:kinds=px|world|screen,store=px
+@export_range(0, 1, 0.001, \"or_greater\", \"or_less\", \"hide_slider\", \"suffix:px\") var thickness: float = 2.0
+# @inspector_look unit:kinds=deg|turn|rad,store=deg
+@export_range(0, 1, 0.001, \"or_greater\", \"or_less\", \"hide_slider\", \"suffix:deg\") var angle: float = 90.0
+@export_range(0, 1, 0.001, \"or_greater\", \"or_less\", \"hide_slider\", \"suffix:px\") var thickness_plain: float = 2.0
+"],
 	["swatch_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var team_colour: Color = Color(\"#e23b3b\")\n@export var team_colour_plain: Color = Color(\"#e23b3b\")\n"],
 	["corners", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:corners\") var corner_radius: Vector4 = Vector4(8, 8, 8, 8)\n@export var corner_radius_plain: Vector4 = Vector4(8, 8, 8, 8)\n"],
 	["vector_dial", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var wind: Vector2 = Vector2(60, -40)\n@export var wind_plain: Vector2 = Vector2(60, -40)\n"],
