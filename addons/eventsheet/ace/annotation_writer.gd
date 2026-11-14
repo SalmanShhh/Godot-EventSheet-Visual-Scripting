@@ -33,8 +33,20 @@ extends RefCounted
 ## and therefore must not clear.
 const MANAGED_ANNOTATIONS: PackedStringArray = [
 	"@ace_hidden", "@ace_action", "@ace_condition", "@ace_expression", "@ace_trigger",
-	"@ace_name", "@ace_category", "@ace_description", "@ace_param"
+	"@ace_name", "@ace_category", "@ace_description", "@ace_param", "@ace_display_template"
 ]
+
+## Where each word sits in the block the sheet compiler writes for a function, so a block this
+## writer touches still reads back as the same function when the script is opened as a sheet (the
+## lift is gated on a byte-exact re-emission). A word not listed rides just before the icon.
+const COMPILER_RANK: Dictionary = {
+	"@ace_hidden": -1, "@ace_action": 0, "@ace_condition": 0, "@ace_expression": 0, "@ace_trigger": 0,
+	"@ace_looping": 0, "@ace_featured": 1, "@ace_name": 2, "@ace_category": 3, "@ace_description": 4,
+	"@ace_deprecated": 5, "@ace_display_template": 6, "@ace_lift_example": 7, "@ace_param_options": 8,
+	"@ace_param_hint": 8, "@ace_param": 8, "@ace_icon": 10, "@ace_codegen_template": 11
+}
+const OTHER_RANK: int = 9
+const PARAM_KEY_ORDER: PackedStringArray = ["hint", "options", "autocomplete", "default", "desc"]
 
 ## The kind annotations, keyed by the `kind` an edit may ask for.
 const KIND_ANNOTATIONS: Dictionary = {
@@ -155,31 +167,181 @@ static func block_start(lines: PackedStringArray, anchor: int) -> int:
 
 static func _rewrite_block(lines: PackedStringArray, anchor: int, edit: Dictionary) -> PackedStringArray:
 	var start: int = block_start(lines, anchor)
-	# The block splits into three: the user's own `##` prose, their decorators, and our annotations.
-	# Prose stays on top, decorators must stay welded to the declaration, and ours goes between.
+	# The block splits into three: the user's own `##` prose, their decorators, and the `@ace_*`
+	# annotations. Prose stays on top, decorators stay welded to the declaration, and the annotations
+	# go between them MERGED with the edit: a word the edit does not mention is kept as it was.
 	var prose: PackedStringArray = PackedStringArray()
 	var decorators: PackedStringArray = PackedStringArray()
+	var existing: Array = []
 	var indent: String = _leading_whitespace(lines[anchor])
 	for index: int in range(start, anchor):
 		var line: String = lines[index]
 		var trimmed: String = line.strip_edges()
 		if trimmed.begins_with("@") and not trimmed.begins_with("@ace"):
 			decorators.append(line)
-		elif trimmed.begins_with("##") and not _is_managed(trimmed):
-			prose.append(line)
-		elif not trimmed.begins_with("##"):
+		elif trimmed.begins_with("##"):
+			var body: String = trimmed.trim_prefix("##").strip_edges()
+			if body.begins_with("@ace_"):
+				existing.append(body)
+			else:
+				prose.append(line)
+		else:
 			decorators.append(line)
 
 	var rebuilt: PackedStringArray = PackedStringArray()
 	for index: int in range(0, start):
 		rebuilt.append(lines[index])
 	rebuilt.append_array(prose)
-	for annotation: String in annotation_lines(edit):
+	for annotation: String in merged_annotation_lines(existing, edit):
 		rebuilt.append("%s%s" % [indent, annotation])
 	rebuilt.append_array(decorators)
 	for index: int in range(anchor, lines.size()):
 		rebuilt.append(lines[index])
 	return rebuilt
+
+
+## The annotation lines (`## @ace_...`) a block ends up with once `edit` is applied to the lines it
+## already carries (each given without its `##`), in the compiler's order. A word the edit does not
+## name is kept; a name, category, description or sentence set to empty text is removed.
+static func merged_annotation_lines(existing: Array, edit: Dictionary) -> PackedStringArray:
+	var output: PackedStringArray = PackedStringArray()
+	if bool(edit.get("hidden", false)):
+		output.append("## @ace_hidden")
+		return output
+	var unhide: bool = edit.has("hidden") and not bool(edit.get("hidden", false))
+	var kind: String = str(edit.get("kind", "")).strip_edges().to_lower()
+	var params: Dictionary = edit.get("params", {}) as Dictionary
+	var edit_key_of: Dictionary = {
+		"@ace_name": "name", "@ace_category": "category", "@ace_description": "description",
+		"@ace_display_template": "display_template"
+	}
+	var kept: Array = []
+	var param_lines: Dictionary = {}
+	for entry: Variant in existing:
+		var text: String = str(entry)
+		var word: String = _word_of(text)
+		if word == "@ace_hidden" and unhide:
+			continue
+		if KIND_ANNOTATIONS.has(kind) and (KIND_ANNOTATIONS.values().has(word) or word == "@ace_looping"):
+			continue
+		if edit_key_of.has(word) and edit.has(edit_key_of[word]):
+			continue
+		if word == "@ace_param" and params.has(_param_id_of(text)):
+			param_lines[_param_id_of(text)] = text
+			continue
+		if word == "@ace_param_options" or word == "@ace_param_hint":
+			var legacy_id: String = _param_id_of(text)
+			if params.has(legacy_id):
+				var legacy_spec: Dictionary = params[legacy_id] as Dictionary
+				if legacy_spec.has("hint") or legacy_spec.has("options"):
+					continue
+		kept.append({"rank": _rank_of(word), "text": text})
+	if KIND_ANNOTATIONS.has(kind):
+		kept.append({"rank": 0, "text": KIND_ANNOTATIONS[kind]})
+	for key: String in ["name", "category", "description", "display_template"]:
+		if not edit.has(key):
+			continue
+		var value: String = str(edit[key]).strip_edges()
+		if value.is_empty():
+			continue
+		var word_for_key: String = "@ace_%s" % key
+		kept.append({"rank": _rank_of(word_for_key), "text": "%s(\"%s\")" % [word_for_key, _quoted(value)]})
+	for param_id: Variant in params:
+		var merged_line: String = _merged_param_line(str(param_id), str(param_lines.get(str(param_id), "")), params[param_id] as Dictionary)
+		if not merged_line.is_empty():
+			kept.append({"rank": _rank_of("@ace_param"), "text": merged_line})
+	# A stable sort by the compiler's rank: lines of one rank keep the order they had.
+	for index: int in range(kept.size()):
+		(kept[index] as Dictionary)["at"] = index
+	kept.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["rank"]) != int(b["rank"]):
+			return int(a["rank"]) < int(b["rank"])
+		return int(a["at"]) < int(b["at"]))
+	for item: Variant in kept:
+		output.append("## %s" % str((item as Dictionary)["text"]))
+	return output
+
+
+static func _word_of(text: String) -> String:
+	var end: int = text.length()
+	for index: int in range(text.length()):
+		var character: String = text.substr(index, 1)
+		if character == "(" or character == " " or character == "\t":
+			end = index
+			break
+	return text.substr(0, end)
+
+
+static func _rank_of(word: String) -> int:
+	return int(COMPILER_RANK.get(word, OTHER_RANK))
+
+
+## The id a parameter line (`@ace_param(count, ...)`, `@ace_param_hint(count hint)`) is about.
+static func _param_id_of(text: String) -> String:
+	var open: int = text.find("(")
+	if open < 0:
+		return ""
+	var inner: String = text.substr(open + 1)
+	var stop: int = inner.length()
+	for index: int in range(inner.length()):
+		var character: String = inner.substr(index, 1)
+		if character == "," or character == " " or character == ")":
+			stop = index
+			break
+	return inner.substr(0, stop).strip_edges()
+
+
+## One `@ace_param` line: the existing one's keys with the edit's keys laid over them, in the
+## compiler's key order. Keys the edit does not name (help text, autocomplete) survive.
+static func _merged_param_line(param_id: String, existing_line: String, spec: Dictionary) -> String:
+	var parts: Dictionary = {}
+	if not existing_line.is_empty():
+		var open: int = existing_line.find("(")
+		var close: int = existing_line.rfind(")")
+		if open >= 0 and close > open:
+			var pieces: PackedStringArray = _split_top_level(existing_line.substr(open + 1, close - open - 1))
+			for index: int in range(1, pieces.size()):
+				var piece: String = pieces[index].strip_edges()
+				var colon: int = piece.find(":")
+				if colon > 0:
+					parts[piece.substr(0, colon).strip_edges()] = piece.substr(colon + 1).strip_edges()
+	for key: String in ["hint", "options", "default"]:
+		if spec.has(key):
+			parts[key] = _inline(str(spec[key]))
+	var written: PackedStringArray = PackedStringArray()
+	for key: String in PARAM_KEY_ORDER:
+		if parts.has(key):
+			written.append("%s: %s" % [key, str(parts[key])])
+	for key: Variant in parts:
+		if not PARAM_KEY_ORDER.has(str(key)):
+			written.append("%s: %s" % [str(key), str(parts[key])])
+	if written.is_empty():
+		return ""
+	return "@ace_param(%s, %s)" % [param_id, ", ".join(written)]
+
+
+## Splits on commas that sit outside quotes and brackets.
+static func _split_top_level(text: String) -> PackedStringArray:
+	var pieces: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var quoted: bool = false
+	var current: String = ""
+	for index: int in range(text.length()):
+		var character: String = text.substr(index, 1)
+		if character == "\"":
+			quoted = not quoted
+		elif not quoted:
+			if character in ["(", "[", "{"]:
+				depth += 1
+			elif character in [")", "]", "}"]:
+				depth -= 1
+			elif character == "," and depth == 0:
+				pieces.append(current)
+				current = ""
+				continue
+		current += character
+	pieces.append(current)
+	return pieces
 
 
 ## The managed annotation lines an edit produces, in canonical order. Exposed on its own so a diff

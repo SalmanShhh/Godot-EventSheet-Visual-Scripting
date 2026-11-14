@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: writing a sentence or a label into your script no longer drops the lines it did not mention
+
+- Changing one thing about a function from the editor (its name, say) used to rewrite the whole comment block above it from only what that edit carried, so its kind, category, description and parameter lines vanished. An edit now merges: what it does not name stays, a field set to empty text is removed, and a parameter keeps its help text when only its starting value changes.
+- The sentence line (`@ace_display_template`) is now a word the writer knows. It lands where the sheet compiler writes it, so a script written this way still opens as a function when you open it as a sheet and saves back byte for byte.
+
 ### Changed: Post Kit keeps each stack entry as a small class
 
 - A post-stack entry was a dictionary read by text in about twenty places; it is now a `PostEntry` with typed fields, holding the CompositorEffect that wears it. Every verb behaves as it did, and nothing about the stack was ever saved.

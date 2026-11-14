@@ -237,6 +237,69 @@ static func run() -> bool:
 		str(shim_definition.metadata.get("replacement_ace_id", "")), "method:begin_wave") and ok
 	shim_instance.free()
 
+	# ---- 11. An edit never drops a line it does not mention, and the sentence is a managed word ----
+	var authored: EventSheetResource = EventSheetResource.new()
+	authored.host_class = "Node"
+	var fire: EventFunction = EventFunction.new()
+	fire.function_name = "fire"
+	fire.expose_as_ace = true
+	fire.ace_display_name = "Fire"
+	fire.ace_category = "Weapons"
+	fire.description = "Shoots a round."
+	var count_param: ACEParam = ACEParam.new()
+	count_param.id = "count"
+	count_param.type = TYPE_INT
+	count_param.default_value = 3
+	count_param.description = "How many rounds"
+	fire.params = [count_param]
+	var fire_body: EventRow = EventRow.new()
+	var fire_return: ACEAction = ACEAction.new()
+	fire_return.provider_id = "Core"
+	fire_return.ace_id = "ReturnEarly"
+	fire_body.actions.append(fire_return)
+	fire.events = [fire_body]
+	authored.functions = [fire]
+	var compiled: String = str(EventSheetCompiler.compile(authored, "user://aw_authored.gd").get("output", ""))
+	ok = _check("the authored function compiled with a category and a description",
+		compiled.contains("## @ace_category(\"Weapons\")") and compiled.contains("## @ace_description(\"Shoots a round.\")"), true) and ok
+	var renamed_only: String = str(EventSheetACEAnnotationWriter.apply(compiled, [
+		{"source_kind": "method", "member": "fire", "name": "Blast"}]).get("source", ""))
+	ok = _check("a one-field edit keeps the kind", renamed_only.contains("## @ace_action
+"), true) and ok
+	ok = _check("a one-field edit keeps the category", renamed_only.contains("## @ace_category(\"Weapons\")"), true) and ok
+	ok = _check("a one-field edit keeps the description", renamed_only.contains("## @ace_description(\"Shoots a round.\")"), true) and ok
+	ok = _check("a one-field edit keeps the parameter line", renamed_only.contains("## @ace_param(count,"), true) and ok
+	ok = _check("a one-field edit keeps the call line", renamed_only.contains("## @ace_codegen_template("), true) and ok
+	ok = _check("and changes only the name", renamed_only.replace("Blast", "Fire"), compiled) and ok
+	var sentence: String = str(EventSheetACEAnnotationWriter.apply(compiled, [
+		{"source_kind": "method", "member": "fire", "display_template": "Fire {count} rounds"}]).get("source", ""))
+	ok = _check("the sentence is written",
+		sentence.contains("## @ace_display_template(\"Fire {count} rounds\")"), true) and ok
+	ok = _check("and written where the compiler writes it, after the description",
+		sentence.find("@ace_description") < sentence.find("@ace_display_template") and sentence.find("@ace_display_template") < sentence.find("@ace_param(count"), true) and ok
+	ok = _check("writing the sentence twice changes nothing",
+		str(EventSheetACEAnnotationWriter.apply(sentence, [
+			{"source_kind": "method", "member": "fire", "display_template": "Fire {count} rounds"}]).get("source", "")), sentence) and ok
+	var reopened_sentence: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(sentence)
+	var lifted: EventFunction = null
+	for candidate: Variant in reopened_sentence.functions:
+		if candidate is EventFunction and (candidate as EventFunction).function_name == "fire":
+			lifted = candidate as EventFunction
+	ok = _check("the written function still lifts as a function", lifted != null, true) and ok
+	if lifted != null:
+		ok = _check("with its sentence", lifted.display_template, "Fire {count} rounds") and ok
+	reopened_sentence.external_source_path = "user://aw_authored_rt.gd"
+	ok = _check("and re-emits byte for byte",
+		str(EventSheetCompiler.compile(reopened_sentence, "user://aw_authored_rt.gd").get("output", "")), sentence) and ok
+	var cleared: String = str(EventSheetACEAnnotationWriter.apply(sentence, [
+		{"source_kind": "method", "member": "fire", "display_template": ""}]).get("source", ""))
+	ok = _check("an empty sentence removes the line", cleared, compiled) and ok
+	var one_param: String = str(EventSheetACEAnnotationWriter.apply(compiled, [
+		{"source_kind": "method", "member": "fire", "params": {"count": {"default": "5"}}}]).get("source", ""))
+	ok = _check("editing one key of a parameter keeps its help text",
+		one_param.contains("desc: \"How many rounds\""), true) and ok
+	ok = _check("and sets the new starting value", one_param.contains("default: 5"), true) and ok
+
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_path))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(curate_path))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(shim_path))
