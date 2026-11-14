@@ -116,12 +116,16 @@ This pack defines no expressions of its own. The host's own `position` is availa
 | Trigger | Fires when |
 |---|---|
 | On Arrived (3D) | The host reaches the last waypoint and the queue empties. Fires once per completed move, not once per intermediate stop. Stop Moving (3D) does not fire it. |
+| On Path Blocked (3D) | The swept path hit something (Stepping must be on). With Stop On Step Hit on, the waypoint queue is dropped first, so it fires once and the host stops. |
 
 ### Inspector properties
 
 | Property | Type | Default | What it does |
 |---|---|---|---|
 | `max_speed` | float | `5.0` | Units per second the host travels toward the current waypoint. |
+| `stepping` | bool | `false` | Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through thin geometry between two frames. |
+| `step_mask` | int | `1` | Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5. |
+| `stop_on_step_hit` | bool | `true` | Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it. |
 
 ### Inspector properties are ACEs too
 

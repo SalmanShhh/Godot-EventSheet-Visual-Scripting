@@ -65,6 +65,7 @@ The model is tiny. Learn these five ideas and the whole pack is just knobs.
 | `follow_speed` | `5.0` | Smooth mode only: how fast the host closes the gap (used as a per-frame lerp factor). Higher = snappier. |
 | `delay` | `0.4` | Delayed mode: how many seconds behind the target the host trails (also sets how much position history is kept). |
 | `min_distance` | `0.0` | Smooth mode: the host stops and fires On Reached Target once it is within this many pixels (0 = only when overlapping). |
+| `target_group` | `""` | Follow the first node in this group instead of a path; blank uses the path. |
 | `stepping` | `false` | Smooth mode: sweep the path each frame so a fast chase cannot pass through a thin wall. Delayed mode ignores it. |
 | `step_mask` | `1` | Collision layers the swept path tests against. |
 | `step_hits_areas` | `false` | Also stop the sweep on Area2D nodes. |

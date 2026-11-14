@@ -64,7 +64,7 @@ The model is small. Learn these six ideas and every ACE in the pack is just a le
 
 **Credit is only taken for a hit that landed.** Take Damage From and Take Damage Of Type record who dealt it, but not when the hit changed nothing: a kind the actor is immune to, a hit inside its invincibility window, or a hit while it is invulnerable leaves Last Hit From and Assists Of exactly as they were. A boss that turns on whoever hurt it last never turns on somebody who did not.
 
-**The kinds are yours, in a file.** A damage type is only ever a word, so nothing in this pack holds a list of them. A **DamageTypeSet** resource - names and the colour each is drawn in - is a file your game owns; the type field of the typed rows suggests the names in it, the HUD Kit's Pop Floating Text As takes a number's colour from it, and the Doctor uses it to notice a row dealing a kind no set names. One starter ships beside the pack with physical, fire, ice and poison in it, to edit or replace. None of it is required: a game with no set deals typed damage perfectly well and simply gets no suggestions and no colours.
+**The kinds are yours, in a file.** A damage type is only ever a word, so nothing in this pack holds a list of them. A **DamageTypeSet** resource - names and the colour each is drawn in - is a file your game owns; the type field of the typed rows suggests the names in it, the HUD Kit's Pop Floating Text As takes a number's colour from it, and the Doctor uses it to notice a row dealing a kind no set names. The set holds two lists read in step: `type_names` (the kinds of damage this game deals - "fire", "ice", "bleed" - the words the typed-damage rows offer while you author) and `type_colors` (one colour per name, in the same order, which a floating damage number takes its colour from). One starter ships beside the pack with physical, fire, ice and poison in it, to edit or replace. None of it is required: a game with no set deals typed damage perfectly well and simply gets no suggestions and no colours.
 
 **The report is written before On Damaged fires.** After every typed hit the behaviour holds what kind it was (Last Damage Type), what it came to (Last Damage Dealt), what it was worth before this actor's resistance, armour and critical touched it (Last Damage Before Mitigation), and whether it rolled a critical (Last Hit Was A Crit). They are properties rather than signal arguments on purpose: On Damaged is a shipped trigger that existing sheets are already connected to, and growing its arity would break every one of them.
 
@@ -158,6 +158,7 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Weak To | `type` (String), `percent` (float) | Takes extra damage from one kind - 50 for half again, 100 for double. |
 | Set Armour | `amount` (float) | Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least `minimum_damage`. |
 | Set Crit | `chance` (float), `multiplier` (float) | Sets how often a typed hit on this actor lands as a critical (0 to 1) and what it multiplies by. A multiplier below 1 is raised to 1. |
+| Grant Invincibility | `seconds` (float) | Opens an invincibility window for the given seconds: Take Damage is ignored (no HP lost, no On Damaged) until it closes. Pair it with the Flash pack for the classic i-frame flicker. |
 
 ### Conditions
 
@@ -171,6 +172,7 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Killed By Me | `who` (Node) | Whether this actor is dead and the kill traces back to the node you name. The asker is walked up the ownership chain too, so a kill by a turret you own still counts as yours. |
 | Last Hit Was A Crit | (none) | Whether the last typed hit rolled a critical. Under On Damaged, this is the row that makes the number bigger, the shake harder and the sound sharper. |
 | Damage Type Is | `type` (String) | Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds. |
+| Is Invincible | (none) | True while an invincibility window granted by Grant Invincibility is still open. |
 
 ### Expressions
 

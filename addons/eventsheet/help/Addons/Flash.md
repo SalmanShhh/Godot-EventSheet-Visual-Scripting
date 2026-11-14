@@ -67,7 +67,9 @@ phases = [
 The **Blink** row plays a pattern on the host, and **Blink Phase** answers which phase is playing,
 counting from 1, so a row can tell the fast winks from the slow ones that follow them. One starter
 file ships beside the pack, `starter_blink_invulnerable.tres`; it is an ordinary resource - retune
-it, rename it, duplicate it into the rhythm this game actually wants, or delete it.
+it, rename it, duplicate it into the rhythm this game actually wants, or delete it. The file also
+holds a `pattern_name`, what this rhythm is called: it is for your own reading, because the Blink
+row takes the file itself, so a pattern never has to be looked up by name.
 
 A pattern is never a strobe. When the project has asked for no flashing (the plain `no_flashing`
 metadata on `Engine` that every flashing thing here reads), no part of a blink is allowed to be

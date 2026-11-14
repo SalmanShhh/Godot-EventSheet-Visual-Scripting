@@ -57,7 +57,7 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 1. In the EventSheets dock, add or edit a **variable** (double-click its row, or right-click it and pick "Edit Variable").
 2. In the **Variable** card, pick the **Type** - every GDScript type is listed under its own name, with the plain words beside it ("int · Whole number") and a sentence on hover.
 3. Tick **"Editable in the Inspector"** at the top of the **In the Inspector** card. This is what makes the value an `@export` and unlocks the looks.
-4. Pick an **Inspector look** (a slider, a dropdown, a layers grid, a drawer...), fill in its details, and watch the live column update: the row it reads as, the code it writes, and a picture of the Inspector.
+4. Pick an **Inspector look** from the list (a slider, a dropdown, a layers grid, a drawer...), fill in its details, and watch the live column update: the row it reads as, the code it writes, and a picture of the Inspector.
 
 ![The Variable dialog authoring an inspector-rich int](images/variable-dialog.png)
 
@@ -71,14 +71,15 @@ The variable above compiles to exactly this:
 
 The `##` line becomes the Inspector's hover tooltip, `@export_range` is Godot's own bounds, and the `# @inspector_look progress_bar` comment is what the editor plugin turns into the draggable bar. Without the plugin, and in an exported game, that same line is just an `int` with a spin box between 0 and 100.
 
-## 3b. Choosing a look (the Inspector look dropdown + the Inspector preview)
+## 3b. Choosing a look (the Inspector look list + the Inspector preview)
 
 You do not need to know any of the vocabulary below to design a property:
 
 1. In the Variable window, tick **Editable in the Inspector**.
-2. Open **Inspector look**. It lists only the looks the variable's type can wear, and every choice
-   says on hover what the Inspector will show and the annotation it writes. The chosen look's
-   annotation sits muted beside the dropdown.
+2. Open **Inspector look**. It is a list of the looks the variable's type can wear, grouped under a
+   heading that says whose they are (Godot's own, EventSheets', or your project's). Every row has a small
+   picture of what the look draws, its name and one sentence, and hovering it says what the Inspector
+   will show and the annotation it writes. The **In code** lines show that annotation for the chosen look.
 3. The look's details appear under it - min, max and step for a slider, the choices for a
    dropdown, the filters for a file picker - each with an example in the empty field.
 4. Watch the **Inspector preview** card on the right: it mocks the final Inspector live - the
@@ -102,7 +103,7 @@ naming popup.
 
 ## 4. The Drawers (the rich controls)
 
-A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **Inspector look** dropdown for the types that can host one (the default is always the type's own editor, so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). There are eleven in total, each documented below; the image at the top of this guide shows a representative set, not all of them.
+A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **Inspector look** list for the types that can host one (the default is always the type's own editor, so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). Each one is documented below; the image at the top of this guide shows a representative set, not all of them.
 
 ### Progress bar (int / float)
 
@@ -429,7 +430,7 @@ Holding **Ctrl** while dragging snaps to the editor's own Configure Snap default
 
 ## 5. The Export Options
 
-These are native Godot `@export_*` flavours, picked from the same **Inspector look** dropdown. They work with or without the editor plugin because they are stock Godot annotations.
+These are native Godot `@export_*` flavours, picked from the same **Inspector look** list. They work with or without the editor plugin because they are stock Godot annotations.
 
 ### Tooltip
 

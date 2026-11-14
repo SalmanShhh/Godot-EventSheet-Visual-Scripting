@@ -53,6 +53,7 @@ It is also **fully data-driven**: a `UHTNPlanResource` (.tres) holds an entire p
    - **Conditions**: preconditions per method id (`key`, an operator from the dropdown, `value`).
    - **Scorer Inputs**: the utility half - each row feeds a world-state key through a curve (dropdown) into a named scorer, with weight, center, and slope.
    - Set **Root Task** (the grid warns while it is empty).
+   - Give it a `plan_name` if you like: a readable name for the plan, handed to **On Plan Loaded** when the plan is loaded.
 3. Attach a `UHTNPlanner` behavior to the agent node and drop the .tres onto its **Plan Resource** slot - it loads on ready and fires **On Plan Loaded**.
 4. In the sheet: write facts with **Set World State**, call **Request Plan**, execute the **Current Task** on **On Task Started**, and call **Mark Task Complete** / **Mark Task Failed** as steps finish.
 

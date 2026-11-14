@@ -113,6 +113,7 @@ Every row below is exactly what the pack exposes. Parameter names and types are 
 | Set Seed | `seed_value` (int) | Makes rolls repeatable from a fixed seed (same seed = same sequence). Pass 0 to go back to random. |
 | Roll | `table_id` (String) | Rolls the table once, firing On Roll Result then On Roll Complete. |
 | Roll Times | `table_id` (String), `count` (int) | Rolls the table `count` times in one batch (guarantees + pity apply across the batch), then shuffles. |
+| Use Advanced Random | `enabled` (bool) | When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own seed. Needs the Advanced Random pack installed (it safely falls back to the local generator if not). |
 
 ### Conditions
 

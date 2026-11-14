@@ -201,6 +201,7 @@ holding one row per manner:
 | `shakes` | How hard it shakes on the way, in pixels - 0 is a clean rise |
 | `lifetimes` | How long it stays, in seconds |
 | `colour_from_damage_type` | The manners whose colour comes from the HIT rather than from this file |
+| `set_name` | A label for your own reference - nothing reads it. Leave it blank and the file's own name is the set's name |
 
 The six lists are read **in step**: the third name's size is the third size. A manner the file has
 never heard of is answered with the plain default rather than an error, so a file half-written while

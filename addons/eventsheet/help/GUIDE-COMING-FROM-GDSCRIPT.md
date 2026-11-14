@@ -36,7 +36,7 @@ as, and where to go to see the two side by side.
 | `func _on_state_changed(from_state, to_state)` | On leaving X / On entering X, leaving first - when the handler's `from_state` arms sit above its `to_state` arms, which is the order they run in | Object State |
 | `extends` | family / base class (the word follows View ▸ Familiar Words) | the Object bar |
 | `class_name` | the object's own name in the Object bar | the Object bar |
-| `@export var` | Variable · Inspector | Object properties |
+| `@export var` | Variable · Inspector | Add > Global Variable, then tick **Editable in the Inspector** |
 | `var` inside a function | Local variable, then a Set row | System |
 | `const` | Constant | System |
 | `add_to_group("x")` | Add To Group (Add to family with Familiar Words on) | Groups |
@@ -45,7 +45,7 @@ as, and where to go to see the two side by side.
 | `instantiate()` + `add_child(...)` | Instantiate | Nodes |
 | `is_on_floor()` | Is On Floor | General Conditions |
 | `is_on_wall()` | Is By Wall | Collisions |
-| `rotation_degrees` | angle | Object properties |
+| `rotation_degrees` | Set Rotation (Degrees), or the `angle` word in an expression | General Actions |
 | `create_tween().tween_property(...)` | Tween Property | Tween |
 | `set_process(false)` | Set Node Per-Frame Processing | Nodes: Activation |
 | `print(...)` | Log | Debug |
@@ -105,6 +105,6 @@ answers the same way: type a Godot call and the glossary results say what it is 
 
 Nothing here asks you to stop writing GDScript. A class of your own appears in the picker with zero
 setup - its methods are actions, its yes-or-no methods are conditions, its signals are triggers, and
-its `@export`s are Object properties. A function you already wrote can be renamed for the sheet
+its `@export`s are properties a row can read and set. A function you already wrote can be renamed for the sheet
 without touching your source. The full story is in
 [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md).

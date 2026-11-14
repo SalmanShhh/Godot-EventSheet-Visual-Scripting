@@ -279,8 +279,8 @@ note in the Doctor's inbox and a quiet amber state on the row - never a block dr
 ### A difficulty is a file
 
 A difficulty is not a global enum and not an `if` in front of every damage row. It is a
-**Difficulty** `.tres`: the word a player picks, a line for the menu, and a dictionary of named
-**factors** your rows multiply by where they care.
+**Difficulty** `.tres`: the word a player picks (`difficulty_name`), a line for the menu (`description`, what this
+difficulty is for, in the player's terms), and a dictionary of named **factors** your rows multiply by where they care.
 
 ```
 On Ready
@@ -582,6 +582,8 @@ A colour-blind palette is a setting like any other, but the value it stores is a
 colours rather than a number. The **Color Palette** pack ships as a data asset for exactly that: a
 resource holding several named colour sets, one per vision type, each set naming the same roles so
 a row that asks for the Danger colour gets the right one whichever set is in use.
+
+Its fields are `palette_name` (a label for your own reference - nothing reads it), `set_names` (one name per colour set - "Default", "Deuteranopia", "Protanopia" - the name the player picks), `role_names` (what each position in a set means: "Danger", "Safe", "Neutral") and `set_colors` (one colour array per set, in the same order as the set names; inside an array the colours follow the role names).
 
 Author it as a `.tres` in the Godot Inspector, then swap it at runtime with the **Use palette** row
 from the accessibility words. When you fill that row's palette field in, the parameter draws every

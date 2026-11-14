@@ -83,6 +83,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Action | Apply Camera Mode | Re-applies the mode to the Arm (after swapping rigs at runtime). |
 | Action | Capture Mouse / Release Mouse | Locks the cursor for looking / frees it (Esc also frees it). |
 | Action | Set Move Speed / Set Sprint Multiplier / Set Mouse Sensitivity | Runtime feel tuning. |
+| Action | Set Move Speed While Firing (speed, seconds) | Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. |
 | Action | Crouch / Stand Up / Set Crouching (enabled) | Crouches (capsule shrinks to Crouch Height, Head drops, speed drops to the crouch multiplier) / stands - refused while a ceiling blocks the headroom. Held Ctrl drives these automatically. |
 | Action | Stop Sliding | Ends a crouch slide early (you stay crouched). |
 | Action | Jump / Air Jump | Launches up with Jump Velocity: Jump fires On Jumped, Air Jump is the mid-air (double) jump firing On Air Jumped. The tick calls the right one automatically; call them for scripted or power-up jumps. |
@@ -100,24 +101,26 @@ the behavior finds them by name and quietly skips what's missing.
 | Action | Set Air Control (share) | Retunes how much of the run the host keeps in mid-air (1 = full ground control, 0 = pure momentum). |
 | Condition | Is Bunny Hopping | True on the frame a landing became the next hop instead - jump was still held as the feet touched down. |
 | Condition | Is Sprinting | True while Shift is held. |
+| Condition | Is Firing | True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose. |
 | Condition | Is First Person | True in first-person mode. |
 | Condition | Is Crouching / Is Sliding / Is Wall Riding | The movement-tech states. |
 | Condition | Can Stand Up | True when there is headroom to stand (no ceiling above the crouched capsule). |
 | Condition | Can Jump | True while some jump is available right now: on the floor, inside the coyote window just after leaving it, against a wall with Wall Jump enabled, or holding a mid-air jump. Show a jump prompt or gate a jump sound with it. |
 | Expression | Current Speed | Horizontal speed in m/s (drive a speed HUD or FOV kick). |
 | Expression | Look Yaw / Look Pitch | The current view angles in degrees. |
-| Expression | Wall Normal X / Z | The touched wall's outward normal (zero off-wall) - the wall-jump push direction; feed it to a camera lean. |
+| Expression | Wall Normal X | The touched wall's outward normal, X component (zero off-wall) - the wall-jump push direction; feed it to a camera lean. |
+| Expression | Wall Normal Z | The touched wall's outward normal, Z component (zero when not on a wall). |
 
 Exported knobs (Inspector or sheet variables): Move Speed, Sprint Multiplier, Jump Velocity,
 Max Jumps (1 = single, 2 = double jump, 3 = triple - the extras are mid-air),
 Coyote Time (the grace window, 0.1 s by default, in which the GROUND jump still fires just after
 walking off a ledge - it is the floor jump, so it never spends the air-jump budget, and taking it
 closes the window so a coyote jump can never chain into a second ground jump; 0 turns it off),
-Gravity, Gravity Direction, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
+Gravity, Gravity Direction, Mouse Sensitivity, Pitch Min/Max (`pitch_max` is the highest look angle in degrees, how far you can look up), Third Person, Camera Distance, Capture Mouse On Ready.
 Feel knobs: Air Control (how much of the run survives into the air, as a share - 0.35 by default),
 Keep Momentum (the bunny hop: landing with jump still held hops straight back off and the landing
 frame keeps the speed it came in with), Bob Amount + Bob Period (the weapon bob), Sway Amount +
-Sway Speed (how far a weapon lags behind the view and how fast it catches up).
+Sway Speed (how far a weapon lags behind the view and how fast it catches up), Firing Move Speed (`firing_move_speed`, the walking speed in metres per second while firing, 2.5 by default; it replaces Move Speed during the firing window), Gyro Aim (`gyro_aim`, off by default: aim with the device's gyroscope as well as the mouse, so the phone itself turns the view; on desktop the sensor reads 0 anyway) + Gyro Sensitivity (`gyro_sensitivity`, how far a turn of the device moves the view, in mouse pixels per radian per second, 220 by default; higher is twitchier).
 Movement tech knobs: Crouch Height + Crouch Speed Multiplier; Slide Enabled + Slide Boost Speed +
 Slide Min Speed (the speed a crouch must be moving at to slide - default just above walking, so
 only a sprint-crouch slides) + Slide Duration; Wall Ride Enabled + Wall Ride Gravity Scale +

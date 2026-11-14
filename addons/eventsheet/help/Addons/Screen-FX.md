@@ -163,7 +163,9 @@ says so as a quiet note when a scene has an interface layer and no row has settl
 ## Looks - a whole screen as one file
 
 A **look** is the post stack written down: which effects, in which order, how far each one goes, and
-what its own dials are set to. It is a `ScreenLookResource` - an ordinary Godot resource file.
+what its own dials are set to. It is a `ScreenLookResource` - an ordinary Godot resource file - and its
+`look_name` is what the look answers to: **Look Is** and **Current Look** compare it, so two files holding
+the same name are the same look to them.
 
 **Nothing here is a preset.** This plugin ships no named looks and no dropdown of house styles. The
 one file that comes with the pack is `clean.tres`, which holds no rows at all - the screen as the

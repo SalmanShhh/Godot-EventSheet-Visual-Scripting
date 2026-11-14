@@ -120,6 +120,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Dismiss** | (none) | Clears the active storylet without making a choice (the play still counted). |
 | **Reset Play Count** | `id` | Lets a one-shot or limited storylet play again (also clears its cooldown). |
 | **Reset All History** | (none) | Clears every play count + cooldown (e.g. on New Game). |
+| Use Advanced Random | `enabled` (bool) | When on, Draw Weighted picks using the shared AdvancedRandom autoload instead of Godot's own randf(), so one seed drives your whole game's randomness. When off (the default) it uses randf(). Needs the Advanced Random pack installed (it safely falls back if not). |
 
 ### Conditions
 
@@ -700,6 +701,8 @@ A StoryletResource is a plain Godot `Resource` (it `extends Resource`, with zero
 - **Author in a table, not a wall of rows.** A writer fills the Inspector grids and never opens a sheet; a fifty-storylet book is a spreadsheet, not fifty stacks of Define/Add actions.
 - **The book is a first-class file.** It lives as `some_book.tres`, diffs cleanly in version control, and a variant ("the hard-mode deck") is just another `.tres` you load instead.
 - **It seeds; ACEs still tweak.** Load a book at startup, then keep using the discrete actions to adjust it from live state - re-weight a beat, set a quality-driven cooldown, define a beat the resource did not cover.
+
+The book also carries a `book_name`: a readable name for it, for your own reference - the engine does not use it.
 
 ### How the grids fit together
 

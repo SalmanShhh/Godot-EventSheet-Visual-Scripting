@@ -160,6 +160,7 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 | Reset Pity | Sets the pity counter back to 0. |
 | Load Owned  `owned_csv` | Restores the owned set from a comma-separated id list (pair with the Owned Ids expression to save). |
 | Set Pity Count  `count` | Restores the pity counter (for save/load). |
+| Use Advanced Random | When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own generator. Needs the Advanced Random pack installed (it safely falls back to the local generator if not). |
 
 ### Conditions
 

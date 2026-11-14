@@ -184,6 +184,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Reset Cooldown For Abilities With Tag | `tag` (String) | Refreshes every ability with a tag: clears each cooldown and grants a charge back, so the group is ready again. |
 | Set Cooldown Multiplier | `multiplier` (float) | Global cooldown scaling for all future Set Ability Cooldown calls (0.8 = 20% reduction). |
 | Load Ability Set | `resource` (Resource) | Creates every ability listed in an `AbilitySetResource` (`.tres`): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is created ready. Call it to swap loadouts at runtime; the `ability_set` Inspector slot calls it once on ready. |
+| Use Skill | `id` (String) | Uses a skill: consumes a charge, starts its cooldown and fires On Ability Activated. The skill wording for Activate Ability, so active skills and an Upgrades tree read alike. |
 
 ### Conditions
 
@@ -196,6 +197,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Has Stacks Available | `id` (String) | Whether the ability has at least one charge. |
 | Ability Has Tag | `id` (String), `tag` (String) | Whether the ability carries a tag. |
 | Current Ability Is | `id` (String) | Whether the ability that last fired a trigger is this one. Use it inside trigger events. |
+| Is Skill Ready | `id` (String) | The same readiness question in the skill words. A game whose active skills and whose passive tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to remember that one of them is spelled "ability". |
 
 ### Expressions
 
@@ -218,6 +220,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Count Abilities By Tag | `tag` (String) | int | How many abilities carry a tag. |
 | Ability By Tag Index | `tag` (String), `index` (int) | String | The id of the tagged ability at a position (empty past the end). |
 | List Abilities By Tag | `tag` (String) | String | A comma-separated list of the ids carrying a tag. |
+| Skill Charges | `id` (String) | int | A skill's remaining charges, in the skill words - the number a hotbar prints on the icon. |
 
 ### Triggers
 

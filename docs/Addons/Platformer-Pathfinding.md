@@ -240,7 +240,11 @@ they are placed on.
 | Add Elevator Stop | `group` (String), `x`, `y`, `speed` (float), `tag` | Two-way gradual portals to every other stop of the group. |
 | Pause At Portal / Resume Portal / Complete Portal | (none) | Hold the agent at a portal inside On Portal Entered, then run the portal's move, or finish it without one. |
 | Remove Portal / Remove Portal Near / Remove Portals By Tag | id / `x`, `y` / `tag` | Portal links leave the graph at once. |
-| Set Portal Cost / Speed / Tag / Ignore Hazards / Position | `portal_id` plus the new value(s) | Edit a portal in place, keeping its id. |
+| Set Portal Cost | `portal_id` (int), `cost` (float) | Changes a portal's price multiplier (higher = routes avoid it). |
+| Set Portal Speed | `portal_id` (int), `speed` (float) | Changes a gradual portal's travel speed in px/s. |
+| Set Portal Tag | `portal_id` (int), `tag` (String) | Replaces a portal's tags. |
+| Set Portal Ignore Hazards | `portal_id` (int), `ignore` (bool) | On: routes use the portal even when a hazard covers it. |
+| Set Portal Position | `portal_id` (int), `from_x`, `from_y`, `to_x`, `to_y` (float) | Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving platform. |
 
 ### Conditions, expressions, and triggers
 
@@ -251,7 +255,8 @@ they are placed on.
 | Condition | Is Path Pending | This agent's route request is queued for a later tick (the shared budget was spent). |
 | Condition | Is In Hazard | The agent is standing inside a registered hazard right now (deadly or danger). |
 | Expression | Path Move Axis | The current steering, -1..1 - feed it to your own driver in manual mode. |
-| Expression | Current Waypoint X / Y | The waypoint being moved toward, in world pixels. |
+| Expression | Current Waypoint X | The X of the waypoint being moved toward, in world pixels. |
+| Expression | Current Waypoint Y | The Y of the waypoint being moved toward, in world pixels. |
 | Expression | Waypoint Count / Current Waypoint Index | Path length and progress. |
 | Expression | Current Path Action | What this leg is: `walk`, `jump`, `fall`, `portal`, or `platform`. |
 | Trigger | On Path Found / On Path Failed / On Path Complete | The reaction trio. |
@@ -281,7 +286,11 @@ they are placed on.
 | Expression | Coyote Timer / Estimated Velocity X | Coyote grace left; the speed the route asks for. |
 | Expression | Nearby Agent Count (radius) / Nearest Ledge (direction) / Node On Platform (group, which) | Crowd and platform questions; Node On Platform returns the Node. |
 | Expression | Obstacle Map JSON / Obstacle Map Source / Tile State / World To Grid / Grid To World / Grid Size / Grid Tile Size | The obstacle map. |
-| Expression | Graph Node Count / Graph Node Cell / Graph Node Position / Ledge Side / Graph Node Connection Count / Kind / Cost / Target / Nearest Graph Node / Nearest Graph Node Cell | Graph inspection. |
+| Expression | Graph Node Count / Graph Node Cell / Graph Node Position / Ledge Side / Nearest Graph Node / Nearest Graph Node Cell | Graph inspection. |
+| Expression | Graph Node Connection Count | How many links leave one node. |
+| Expression | Graph Node Connection Kind | The kind of one link leaving a node (walk, jump, fall, portal...). |
+| Expression | Graph Node Connection Cost | The cost of one link leaving a node, under the current strategy. |
+| Expression | Graph Node Connection Target | The world position one link leaving a node lands on. |
 | Expression | Calculated Jump Distance / Calculated Jump Height | The reach the graph is built with. |
 | Expression | Hazard At / Hazard Count / Tracked Hazard Count / Last Hazard Id | 0 clear, 1 danger, 2 deadly; counts; the id for Remove Hazard. |
 | Expression | Current Portal Id / Last Portal Id / Portal Count / Nearest Portal Id / Furthest Portal Id / Portal Count By Tag / Portal Id By Tag / Portal Tag / Portal Type / Portal Exit / Portal Progress | Portal bookkeeping. |

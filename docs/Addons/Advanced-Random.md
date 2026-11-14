@@ -102,6 +102,7 @@ Every name below is exactly what the pack publishes. Parameter names and types a
 | Set Noise Octaves | `octaves` (int) | Sets the fractal detail layers - more octaves add fine detail (fractal / fBm noise). |
 | Generate Permutation Table | `size` (int) | Builds a shuffled 0..size-1 table (read it back with the Permutation Value expression) - a fixed deck order. |
 | Make Shuffle Bag | `bag_name` (String), `items` (Array) | Creates a named bag of items - Shuffle Bag Pick then draws each once before any repeats. |
+| Reset Pity | `counter_name` (String) | Puts a named pity counter back to zero - for a new run, a new chest, a new banner. |
 
 ### Conditions
 
@@ -109,6 +110,7 @@ Every name below is exactly what the pack publishes. Parameter names and types a
 |---|---|---|
 | Chance | `percent` (float) | True roughly `percent` of the time (0-100). For example `Chance(5)` for a 5% event. |
 | One In | `n` (int) | True with a 1-in-`n` probability. |
+| Roll With Pity | `counter_name` (String), `base_chance` (float), `step` (float), `cap` (int) | True on a win. Every miss raises the odds by the step, and reaching the cap guarantees it - the win resets the counter for you. Name the counter and one autoload keeps as many as your project needs. |
 
 ### Expressions
 
@@ -128,6 +130,7 @@ Every name below is exactly what the pack publishes. Parameter names and types a
 | Weighted Index | `weights` (Array) | int | An index chosen in proportion to the weights array (heavier = likelier). |
 | Pick From Table | `table` (Resource) | String | A weighted-random value drawn from a **RandomTableResource** (a `.tres` whose value/weight pairs you fill in the Inspector), so your odds live in a data asset instead of parallel arrays in the sheet. `""` when the table is empty. |
 | Shuffle Bag Pick | `bag_name` (String) | Variant | Draws the next item from a named bag - every item appears once before any repeat. |
+| Pity Count | `counter_name` (String) | int | How many misses a named pity counter has piled up since its last win. |
 
 ### Triggers
 

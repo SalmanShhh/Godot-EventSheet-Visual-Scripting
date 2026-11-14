@@ -85,7 +85,9 @@ placed on.
 |---|---|---|
 | Condition | Has Path | An active path exists. |
 | Condition | Target Is Reachable | The current target sits on the navmesh. |
-| Expression | Current Waypoint X / Y / Z | The point being moved toward. |
+| Expression | Current Waypoint X | The X of the point being moved toward. |
+| Expression | Current Waypoint Y | The Y of the point being moved toward. |
+| Expression | Current Waypoint Z | The Z of the point being moved toward. |
 | Expression | Distance To Target | Straight-line metres to the target. |
 | Expression | Path Move X / Z | The current steering (-1..1, world axes) - the manual-mode feed. |
 | Trigger | On Path Found / On Path Failed / On Path Complete | The reaction trio (same names as 2D). |

@@ -109,6 +109,7 @@ All names below are the exact display names you will see in the picker. Because 
 | **Unlock Room** | `room_id` (String) | Unlocks a locked room. |
 | **Reveal Room** | `room_id` (String) | Marks a room as revealed (for fog-of-war maps). |
 | **Reset Traversal** | (none) | Clears visited, revealed, and locked flags and returns to the start room, keeping the same map. |
+| Use Advanced Random | `enabled` (bool) | When on, ProcRoom draws its randomness from the shared AdvancedRandom autoload, so one seed can drive every procedural system at once. When off (the default) it uses its own seeded generator. Set the AdvancedRandom seed before Generate for reproducible maps. Needs the Advanced Random pack installed (it safely falls back to the local generator if not). |
 
 ### Conditions
 

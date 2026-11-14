@@ -1,7 +1,7 @@
 # The Toolbar: The Strip Across The Top
 
 The event-sheet workspace has one strip along its top edge. At rest it carries **seven controls**,
-in one row that never wraps:
+in one row that never wraps (once a sheet is open, the Events / Code / Both switch joins the end of it):
 
 ![The editor strip at rest: a Menu button, the Save, Undo and Redo icons, the play button with its dropdown arrow, the Quick add field, and a chevron at the end](images/resting-toolbar.png)
 
@@ -9,9 +9,11 @@ Everything the editor can do is still one or two clicks from that row. This page
 thing is, what the play button does, why adding lives in the sheet rather than on the strip, and
 what happened to every button that used to sit up there.
 
-**The one promise this page is written around:** nothing was removed. Every command that ever had a
-place on the strip still has its id, its key and its home in a menu, and most of them have a second
-door inside the sheet itself. A button you cannot see still answers to its key.
+**The one promise this page is written around:** nothing the sheet can do was taken away. Every
+command that had a place on the strip still has its id, its key and its home in a menu, and most of
+them have a second door inside the sheet itself. A button you cannot see still answers to its key.
+The one thing the strip no longer carries is a plain run of the scene or the project: those are
+Godot's own Run Current Scene (`F6`) and Run Project (`F5`), in the bar at the top right of the editor.
 
 ## Contents
 
@@ -40,6 +42,9 @@ In reading order, left to right:
 | 6 | **Quick add or find** | Type a whole row (`heal 5`, `boss fla 0.4`) and press Enter, or read the answers underneath: the states, rows, variables, functions, signals, modes and Doctor findings that match what you typed |  |
 | 7 | **The chevron** | Expands the strip to every button it has, and back |  |
 
+After the chevron, once a sheet is open, comes the **Events | Code | Both** switch: the rows, the GDScript
+the file is, or both side by side. It is offered for every open sheet and is not part of the seven.
+
 ![The resting strip drawn with the editor's own icons: the Menu, the Save / Undo / Redo icons, the play button, Quick add and the chevron](images/resting-toolbar-icons.png)
 
 The three icons are the editor's own. Godot ships a `Redo` arrow but no `Undo` one, so the undo
@@ -51,12 +56,12 @@ Every key printed on the strip and in its menus is read from **your** bindings, 
 editor's source. Rebind one in *Editor Settings > Shortcuts* and the tooltip and the menu item
 say the new key with nothing else to change. The keys quoted on this page are the shipped defaults.
 
-The row measures **603 px** at its narrowest inside a running editor, which is the whole point of it
-fitting: a suite test builds the strip, measures it, and fails if it grows past 640 px, so a future
-pass that wants a resting control has to come here, re-measure, and say why. The suite's own
-measurement is **555 px**, and it is smaller for a reason worth knowing: a headless run has no
-editor theme to lend an icon, so the icon faces wear a one-character glyph and the play face wears
-no icon at all. The editor number is the one that matters, and the preview harness
+The row has to fit on one line in an editor of ordinary width, which is the whole point of it
+resting: a suite test builds the strip, measures it, and fails if it outgrows its budget, so a
+future pass that wants a resting control has to come here, re-measure, and say why. The headless
+figure is smaller than the real strip, because a headless run has no editor theme to lend an icon,
+so the icon faces wear a one-character glyph and the play face wears no icon at all. The number from
+a real editor is the one that matters, and the preview harness
 (`tools/render_toolbar_icons_preview.gd`) is what prints it.
 
 ## The Menu, group by group
@@ -65,16 +70,16 @@ One button, five groups, then two doors at its foot:
 
 ![The strip at rest with the Menu open, cascading into its Sheet, Add, Edit, View and Tools submenus](images/resting-toolbar-menu.png)
 
-| Group | What lives there | Commands |
-|-------|------------------|----------|
-| **Sheet** | The file's own life: New, Open, Save, Save As, Export GDScript, Import event sheet, Save as Text, Sheet Type, shared sheets, Manage Includes, the addon / editor-tool / custom-resource starters, Teach a Verb, Inspector Designer, Export Addon, Publish New Version, Name Raw Calls, Health, Export (image / PDF / Markdown), Workspaces, Start page | 23 |
-| **Add** | The whole authoring vocabulary: Event, Condition, Action, Group, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, includes, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind | 20 |
-| **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Include, Find References, Generate from Description | 7 |
-| **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Full toolbar, Text labels | 50 |
-| **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Words | 35 |
-| _(foot)_ | **Manual...** and **What's new...**, the two doors a reader looks for by name rather than by group | 2 |
+| Group | What lives there |
+|-------|------------------|
+| **Sheet** | The file's own life: New, Open, Save, Save As, Export GDScript, Import event sheet, Save as Text, Open in Script Editor, Show in FileSystem, Sheet Type, shared sheets, Manage Includes, the behaviour / Behaviour library / editor-tool / inspector-look / data-table starters, Teach a Verb, Inspector Designer, Export Addon, Publish New Version, Name Raw Calls, Health, Export (image / PDF / Markdown), Workspaces, Start page |
+| **Add** | The whole authoring vocabulary: Event, Condition, Action, Group, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, includes, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind |
+| **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Include, Find References, Generate from Description |
+| **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Preview In Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Full toolbar, Text labels |
+| **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Words |
+| _(foot)_ | **Manual...** and **What's new...**, the two doors a reader looks for by name rather than by group |
 
-That is **135 commands** behind one button, which is exactly why they are behind one button.
+That is a long list behind one button, which is exactly why it is behind one button.
 
 Three things about the cascade are worth knowing:
 
@@ -83,12 +88,12 @@ Three things about the cascade are worth knowing:
   order, the same ids and the same handlers - held item by item by the suite rather than claimed
   here - so Godot's Command Palette, the keyboard dispatch and every test that addresses an item by
   number still finds it.
-- **The ones that rebuild themselves still do.** Language, Sheet theme, Arrange by, Saved Views,
+- **The ones that rebuild themselves still do.** Sheet theme, Arrange by, Saved Views,
   Workspaces and Export refill every time they open, so a theme dropped into the themes folder or a
   view saved a second ago is listed with no restart.
 - **The Menu teaches its keys.** Sheet > Open / Save / Save As, Edit > Copy / Paste / Undo / Redo,
   Tools > Find in Project and the whole head of the Add menu print their bindings beside them, read
-  from your own table.
+  from your Editor Settings shortcuts.
 
 ## The play button, and which run it does
 
@@ -112,13 +117,12 @@ and Run Project (`F5`) in the bar at the top right of the editor.
 the face does from then on, and the choice is remembered for this project, so a game you open next
 week still opens wearing it. A project that never chose gets **Run Scene**.
 
-While a game is running the face reads **Stop** (or **Restart**, when the chosen run is Preview
-project), because the face is adopted by the same run controls that relabel every other run button
+While a game is running the face reads **Stop**, because the face is adopted by the same run controls that relabel every other run button
 on the strip. There is one answer to what a run is called right now, not two.
 
 ![The same play button while a game runs, its face reading Stop](images/play-button-stop.png)
 
-All six are still plain buttons on the expanded strip, relabelled by the very same table.
+All four are still plain buttons on the expanded strip, relabelled by the very same table.
 
 ## Adding lives in the sheet
 
@@ -158,7 +162,7 @@ them:
 
 The whole Add menu also teaches the keys it stands for. Event (`E`), Condition (`C`), Action (`A`),
 Group (`G`), Comment (`Q`), Global Variable (`V`) and Function (`F`) each print their binding beside
-them, read from your own table, so a rebind shows the new key with nothing to edit.
+them, read from your Editor Settings shortcuts, so a rebind shows the new key with nothing to edit.
 
 ![The Menu open on Add, with E, C, A, G, Q, V and F printed beside their items](images/add-cascade-keys.png)
 
@@ -207,7 +211,7 @@ the Theme Editor), as an editor window stacks its tabs over the tools for the do
 
 ## Where did it go? The whole table
 
-The strip fronted **21 interactive controls**. Here is every one that left it, what it is now, and
+The strip used to front more than twenty controls. Here is every one that left it, what it is now, and
 the door inside the sheet that reaches the same thing without a menu at all.
 
 | Old strip control | Its home now | Key | Its door in the sheet |
@@ -222,6 +226,7 @@ the door inside the sheet that reaches the same thing without a menu at all.
 | **Add Condition** | Menu > Add > Condition, and the expanded strip | `C` | The row's own "+ Add condition..." cell; right-click the condition lane > Add Condition; right-click empty space > New condition |
 | **Add Action** | Menu > Add > Action, and the expanded strip | `A` | The row's own "+ Add action..." cell; right-click the action lane > Add Action |
 | **Add Code** | Menu > Add > Code (GDScript) on Selected Event, and the expanded strip |  | Right-click a row > Insert > Script Block |
+| **Preview layout** / **Preview project** | Not on the strip any more: a plain run of the scene or the project is Godot's own Run Current Scene (`F6`) and Run Project (`F5`), in the bar at the top right of the editor | `F6` / `F5` |  |
 | **Add** (menu) | Menu > Add |  | The **+ Add...** corner link, and right-click on empty space: the same menu |
 | **Edit** (menu) | Menu > Edit | `Ctrl+C` / `Ctrl+V` / `Ctrl+Z` / `Ctrl+Shift+Z` | Right-click a selection |
 | **View** (menu) | Menu > View |  |  |
@@ -280,15 +285,16 @@ button that left along with where it went. No key changed.
 
 ## Why the strip is shaped this way
 
-The strip used to front 21 interactive controls over 137 menu commands. That is a menu bar wearing a
-toolbar's clothes: everything one click away, and nothing findable. Of those 21, **six** were menus,
-**six** were different ways to start a game (so "how do I run this" had six answers and no obvious
-one), **four** duplicated the four most-used keyboard reflexes, and the remaining five were Save,
+The strip used to front more than twenty interactive controls over well over a hundred menu commands.
+That is a menu bar wearing a toolbar's clothes: everything one click away, and nothing findable. Of
+those controls, **six** were menus, **six** were different ways to start a game (so "how do I run this"
+had six answers and no obvious one; two of them repeated Godot's own `F5` and `F6`, and are gone),
+**four** duplicated the four most-used keyboard reflexes, and the remaining five were Save,
 the Simple Mode pill, the GDScript toggle, the theme dropdown and Quick add.
 
 The shape it has now comes with three rules the code holds itself to:
 
-1. **Nothing is removed.** Every retired control keeps its id, its key, its home in a menu and, where
+1. **Nothing the sheet does is lost.** Every retired control keeps its id, its key, its home in a menu and, where
    it had one, its door inside the sheet. The `E` key still adds an event whether or not there is a
    button called Add Event on screen.
 2. **Godot's own widgets only.** A `MenuButton` with `PopupMenu` submenus for the cascade; a face

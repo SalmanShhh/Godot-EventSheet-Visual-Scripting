@@ -17,10 +17,17 @@ Conditions: **Is On Mobile**, **Is On Desktop**, **Is On Web**, **Has Touchscree
 **Is Portrait**, **Is Debug Build**, **Has Feature Tag** (engine tags like `"mobile"`, or your own
 custom export-preset tags like `"demo"`).
 
-Expressions: **OS Name / OS Version / Device Model / Locale / Locale Language / Engine Version**,
-**Screen Width / Height / DPI / Refresh Rate / Count / Scale**, **Safe Area Top / Left /
-Bottom Inset / Right Inset**, **GPU Name / GPU Vendor / Rendering Method**,
-**CPU Thread Count / CPU Name / Physical Memory (MB)**.
+Expressions: **OS Name**, **OS Version**, **Device Model**, **Locale**, **Locale Language**,
+**Engine Version**, **GPU Name**, **GPU Vendor**, **Rendering Method**, **CPU Thread Count**,
+**CPU Name**, **Physical Memory (MB)**, plus the screen questions:
+
+- **Screen Width** and **Screen Height** - the current screen's size in pixels.
+- **Screen DPI** - the pixel density; scale touch buttons by it so they stay finger-sized.
+- **Screen Refresh Rate** - in Hz (-1 when unknown); cap or uncap smoothing with it.
+- **Screen Count** - how many displays are connected.
+- **Screen Scale** - the display's scale factor (2.0 on hiDPI and Retina screens, 1.0 elsewhere).
+- **Safe Area Top**, **Safe Area Left**, **Safe Area Bottom Inset** and **Safe Area Right Inset** - the pixels
+  a notch, rounded corner or home indicator shaves off each edge of the screen; keep buttons inside them.
 
 ## Reading it from expressions - the Self section
 

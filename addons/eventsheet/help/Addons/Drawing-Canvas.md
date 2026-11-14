@@ -217,6 +217,8 @@ The Inspector shows a **live preview** of the composed drawing at the top of the
 as you edit the steps), and the saved `.tres` gets a matching **thumbnail** in the FileSystem dock and
 the Draw Prefab prefab picker - so you choose a formation by its picture, not its filename.
 
+Beside the steps grid the resource has three whole-formation knobs: `prefab_name` (a label for your own reference - the canvas does not read it), `prefab_scale` (a uniform scale applied to the whole formation, 1 by default) and `prefab_rotation` (the rotation of the whole formation, in degrees, 0 by default).
+
 Steps draw top to bottom (the formation is ordered), and the whole prefab translates,
 scales, and rotates as one - rings-and-crosshair markers, explosion scorches, magic circles,
 minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you

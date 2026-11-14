@@ -139,14 +139,14 @@ const BEHAVIORS: Array[Dictionary] = [
 		"name": "Solid",
 		"here": "What a body IS here: a StaticBody2D (or a TileMap collision layer). Nothing is attached - the collision shape is the solidity.",
 		"pack": "",
-		"reading": "The head of the sheet says which body the node is, and the Object properties show the collision layers it stops.",
+		"reading": "The head of the sheet says which body the node is, and Godot's Inspector shows the collision layers it stops.",
 	},
 	{
 		"key": "jump-thru",
 		"name": "Jump-thru",
-		"here": "What a body IS here: a StaticBody2D whose collision shape is one-way. Two toggles in Object properties, no behavior.",
+		"here": "What a body IS here: a StaticBody2D whose collision shape is one-way. Two toggles in Godot's Inspector, no behavior.",
 		"pack": "",
-		"reading": "The head names the body; the one-way toggle and its margin read on the Object properties, not as rows.",
+		"reading": "The head names the body; the one-way toggle and its margin are set in Godot's Inspector, not as rows.",
 	},
 	{
 		"key": "platform",
@@ -244,7 +244,7 @@ const BEHAVIORS: Array[Dictionary] = [
 		"name": "Shadow light",
 		"here": "No pack needed: a PointLight2D or DirectionalLight2D with shadows enabled.",
 		"pack": "",
-		"reading": "The light is a child node in the head; its colour, energy and range read as Object properties.",
+		"reading": "The light is a child node in the head; its colour, energy and range are set in Godot's Inspector.",
 	},
 ]
 

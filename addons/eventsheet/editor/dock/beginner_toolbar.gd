@@ -15,7 +15,7 @@ extends RefCounted
 # IT IS AN ADD TOOLBAR, and only that. It used to end with the run buttons too - "how do I add
 # something" and "how do I see it run" asked side by side - and that made a second place to start a
 # game, one strip below the first. The one run control is the play button at the head of the strip:
-# one face for the run this project chose, one dropdown for all six ways to play. Nothing was lost
+# one face for the run this project chose, one dropdown for all four ways to play. Nothing was lost
 # in moving them out; there is simply one of them now, where a reader already looks for it.
 
 ## The strip, in reading order, as [id, label, action id whose key it shows, what it does].

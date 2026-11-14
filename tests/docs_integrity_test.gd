@@ -104,7 +104,7 @@ static func _test_index_lists_every_guide() -> bool:
 	return passed
 
 
-## Every screenshot in docs/images/ must be SHOWN by a guide, and every image a guide shows must
+## Every screenshot in docs/images/ and docs/previews/ must be SHOWN by a guide, and every image a guide shows must
 ## exist. A picture nobody looks at is worse than no picture: it goes stale silently, and the next
 ## reader of the folder cannot tell which of two similar shots is the current one - which is exactly
 ## how four generations of the same three figures piled up in there. Naming a file in prose (the
@@ -126,7 +126,7 @@ static func _test_every_image_is_shown() -> bool:
 			orphans.append(name)
 	orphans.sort()
 	missing.sort()
-	passed = _check("every image in docs/images/ is shown by a guide (orphans: %s)"
+	passed = _check("every image in docs/images/ and docs/previews/ is shown by a guide (orphans: %s)"
 		% ", ".join(orphans), orphans.size(), 0) and passed
 	passed = _check("every image a guide shows exists on disk (broken: %s)"
 		% ", ".join(missing), missing.size(), 0) and passed
@@ -156,23 +156,27 @@ static func _collect_markdown(directory_path: String, into: PackedStringArray) -
 	directory.list_dir_end()
 
 
+## Both picture folders: docs/images/ (the guides' pictures) and docs/previews/ (the README's). The
+## second used to slip past this check, which is how six pictures nothing showed sat in it unnoticed.
 static func _images_on_disk() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	var directory: DirAccess = DirAccess.open("res://docs/images")
-	if directory == null:
-		return found
-	for name: String in directory.get_files():
-		if name.get_extension().to_lower() == "png":
-			found.append(name)
+	for folder: String in ["res://docs/images", "res://docs/previews"]:
+		var directory: DirAccess = DirAccess.open(folder)
+		if directory == null:
+			continue
+		for name: String in directory.get_files():
+			if name.get_extension().to_lower() == "png":
+				found.append(name)
 	return found
 
 
-## The image file names a page really EMBEDS: Markdown `![alt](path.png)` and the HTML
-## `<img src="path.png">` the corpus uses when a figure needs a width. Both forms ship in the
+## The image file names a page really EMBEDS: Markdown `![alt](path.png)`, the HTML
+## `<img src="path.png">` the corpus uses when a figure needs a width, and the `<source srcset="...">`
+## of a `<picture>` the README uses to swap in the light-theme shot. Both forms ship in the
 ## guides, so a check that knew only one would call half the corpus orphaned.
 static func _images_embedded_in(body: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for marker: String in ["](", "src=\""]:
+	for marker: String in ["](", "src=\"", "srcset=\""]:
 		var closer: String = ")" if marker == "](" else "\""
 		var at: int = body.find(marker)
 		while at >= 0:

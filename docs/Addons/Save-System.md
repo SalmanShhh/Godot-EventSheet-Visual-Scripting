@@ -127,6 +127,18 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Remove Save Key | `key` (String) | Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. |
 | Clear Slot Keys | (none) | Empties the slot of everything the game saved, firing On Key Removed once per key. The file, its slot card, its version stamp, its run number and its backups all stay. |
 | Check Save Key | `key` (String) | Asks whether the slot holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. |
+| Set Slot Detail | `detail_name` (String), `value` (any) | Writes one line of the active slot's card - the header a load menu reads without ever calling Load Game (chapter, hero name, percent, difficulty...). Playtime rides along automatically. |
+| Capture Slot Thumbnail | `width` (int), `height` (int) | Photographs the viewport, shrinks it to tile size and writes it beside the active slot's file, so the picture travels with the save - Copy Slot brings it along, Delete Slot takes it away, and an encryption key covers the picture exactly as it covers the save. Hide your pause menu first. |
+| Copy Slot | `from_slot` (int), `to_slot` (int) | Duplicates one slot's save file (and its picture) onto another slot - branching a save as one row. The destination is overwritten. |
+| Delay Autosave By | `seconds` (float) | Pushes the next autosave out by this many seconds. The beat is deferred, never dropped - use it in the not-now branch of On Autosave Due. |
+| Pause Autosave | (none) | Stops the autosave clock without losing the interval - for a boss fight, a cutscene, or a scene transition. Resume Autosave starts it again. |
+| Resume Autosave | (none) | Starts the autosave clock again after Pause Autosave, from a fresh interval. |
+| Use Upgraded Save | `save_data` (Dictionary) | Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file. |
+| Load All Addons | (none) | Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence. |
+| Restore Slot From Backup | `slot_index` (int), `how_many_back` (int) | Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0. |
+| Carry Value Into Next Run | `key` (String) | Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset. |
+| Start New Run | `slot_index` (int) | Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings. |
+| Open Save Folder | (none) | Shows the folder that holds the saves (the Save Directory) in the player's own file manager - Explorer, Finder or Files - so they can back up, share or delete a save. On the web and on phones there is no folder to show, and it does nothing. |
 
 ### Conditions
 
@@ -139,6 +151,11 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Save Key Is | `key` (String), `value` (any) | Whether the stored key equals this value, with no variable in between. A key the slot does not hold matches nothing, so a missing key reads as false. |
 | Is Saving | (none) | Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. The write is synchronous, so this is a re-entrancy guard, not a progress spinner. |
 | Is Loading | (none) | Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside the window. |
+| Autosave Is Paused | (none) | Whether Pause Autosave is currently holding the clock. |
+| Safe To Save Now | (none) | Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write). |
+| Slot Is Readable | `slot_index` (int) | Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one. |
+| Addon Saves Itself | `addon_name` (String) | Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam. |
+| Can Open Save Folder | (none) | Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work. |
 
 ### Expressions
 
@@ -155,6 +172,16 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Slot Modified Time | `slot_index` (int) | int | Unix modified time of the slot's file, or 0 when the slot has no file. |
 | Save Key Count | (none) | int | How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists. |
 | Save Key At | `index` (int) | String | The key at that position in the active slot, for a numbered or paged list; an empty string when the position is past the end. |
+| Slot Detail | `slot_index` (int), `detail_name` (String), `fallback` (any) | any | Reads one card field of any slot straight off disk (your fallback when that slot has no such detail). Nothing is loaded and nothing is applied - safe to call for every tile of a load menu. |
+| Slot Playtime | `slot_index` (int) | float | Seconds played on that slot, accumulated by this pack and stamped on every save (0 when the slot has none). Feed it to Format Time for a 4h12m tile. |
+| Slot Thumbnail | `slot_index` (int) | Texture2D | The picture saved beside that slot, ready to drop into a TextureRect (null when the slot has none). Read off disk, so a load menu never loads a game to draw its tiles. |
+| Slot Path | `slot_index` (int) | String | Where that slot's file lives (built from the Save Directory and File Pattern properties). Feed it to Read Save File, File Size or Copy File - the paths the pack uses are no longer private. |
+| Seconds Until Autosave | (none) | float | How long until the next autosave beat - for a countdown pip in the corner. 0 when autosave is off or paused. |
+| Slot Save Version | `slot_index` (int) | int | Which Save Version wrote that slot's file. A file with no stamp counts as 1, so saves written before you ever bumped the number still answer. |
+| Slot Problem | `slot_index` (int) | String | What is wrong with that slot's file, as one readable sentence ("" when it reads fine or does not exist) - the tooltip for a greyed-out Continue button. |
+| Save Size | (none) | int | How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save. |
+| Save Report | (none) | String | A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total. |
+| Slot Backup Count | `slot_index` (int) | int | How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet). |
 
 ### Triggers
 
@@ -167,6 +194,10 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | On Key Loaded | Check Save Key found the key in the slot. |
 | On Key Removed | Remove Save Key took the key out of the file - and once per key that Clear Slot Keys emptied out of it. |
 | On Save Key Missing | A key was asked for and the slot does not hold it: Check Save Key came up empty, or Remove Save Key had nothing to remove. |
+| On Autosave Due | Fires when the autosave clock comes round, INSTEAD of saving - so the conditions on this event decide whether now is a good moment (mid boss phase, mid scene change, mid death animation). With nothing connected the pack saves itself on the interval, exactly as it always did, so an existing project does not change behaviour. |
+| On Save Needs Upgrade | Fires inside Load Game when the file on disk was written by an older Save Version, BEFORE anything reads it - so migration rows (Data Is Older Than Version, Rename Field, Stamp Data Version) rewrite the record in the gap. Hand it back with Use Upgraded Save. Nothing connected? Load Game behaves exactly as it does today. |
+| On Load Failed | Fires when Load Game meets a file it cannot read - a wrong encryption key, a truncated write from an older build, a hand-edited JSON. The reason is a plain sentence, ready to drop straight into a label. |
+| On New Run Started | Fires when Start New Run has written the fresh slot - where the NG+ banner, the difficulty curve and the seeded map generation hang, instead of on whichever button happened to be pressed. |
 
 Each slot-wide trigger passes the slot number that was saved or loaded, so a handler can tell which slot the broadcast is for. The four per-key triggers pass the `key` first and the slot second, so one trigger serves every key: the row reads `key` straight off the trigger, and a handler that wants exactly one key drops an ordinary condition on that captured value underneath. Nothing has to remember to check a "last saved key" variable afterwards.
 
@@ -182,6 +213,8 @@ Each slot-wide trigger passes the slot number that was saved or loaded, so a han
 | `persist_group` | String | `persist` | Scene-tree group Save Game snapshots (and Load Game restores) automatically. |
 | `encryption_key` | String | (empty) | Non-empty encrypts the saves. |
 | `autosave_interval` | float | `0` | Seconds between automatic Save Game calls (0 = off). |
+| `backup_count` | int | `0` | Earlier versions kept per slot; 0 turns backups off. |
+| `save_version` | int | `1` | Save format number this build writes; raise it when saved data changes shape. |
 
 ### Inspector properties are ACEs too
 

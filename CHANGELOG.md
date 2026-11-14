@@ -4,6 +4,12 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the guides say what the code does, and a test now holds them to it
+
+- A survey of the guides found 17 statements that were wrong against the code and 20 behaviour guides that never named 65 rows and 24 variables of their pack. They are fixed: the toolbar guide (the Events | Code | Both switch, the four ways to play, no counts that drift, the buttons that left), the custom inspectors guide (the look picker is a list, not a dropdown; no hand-typed count of looks), the coming-from-GDScript guide (the deleted Object properties window), the README (a test-file floor instead of a count that was already wrong), AGENTS.md (the Manual folder path), and the Manual's own behaviour index, which still said "Object properties".
+- New `tests/docs_truth_test.gd` holds five questions the suite can answer exactly: each behaviour guide names every row and exported variable of its pack; every menu path a guide writes in bold or italics ends at an item the editor builds; no current doc describes a removed UI name as present; every repo path a doc writes in backticks exists; and the numbers a doc states about the repo are measured. Each check keeps an allow list only where a miss is deliberate, with the reason beside every entry.
+- `docs_integrity_test` now sweeps `docs/previews/` as well as `docs/images/`, and reads a README `<picture>` source as showing its picture. Six unused pictures in `docs/previews/` were removed.
+
 ### Changed: three looks keep Godot's own export line
 
 - A look used to be written `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<look>...")`, which tells Godot "no hint", so in a project without the plugin a toggle-button variable was a free text box (40 in the packs), a unit number a bare float (15) and a progress bar a bare number. Proven in a scratch project with no plugin: the three now keep the control Godot gives their own annotation.
