@@ -335,7 +335,21 @@ static func _read(script_path: String) -> Dictionary:
 
 
 static func _member(name: String, args: String, doc_lines: PackedStringArray) -> Dictionary:
-	return {"name": name, "args": args.strip_edges(), "doc": " ".join(doc_lines), "from": ""}
+	return {"name": name, "args": args.strip_edges(), "doc": " ".join(doc_lines), "from": "", "sentence": _written_sentence(doc_lines)}
+
+
+## The sentence the author wrote for a member with `## @ace_display_template("Take {amount} damage")`, or ""
+## when none: the same words the picker offers it under, kept so the canvas can say them after the file is
+## reopened. Read the way the annotation reader reads the line - one surrounding quote pair comes off.
+static func _written_sentence(doc_lines: PackedStringArray) -> String:
+	for line: String in doc_lines:
+		var text: String = line.strip_edges()
+		if not text.begins_with("@ace_display_template("):
+			continue
+		var close: int = text.rfind(")")
+		if close > 0:
+			return text.substr(22, close - 22).strip_edges().trim_prefix("\"").trim_suffix("\"")
+	return ""
 
 
 ## What the engine class underneath adds, appended after what the file declares and named with the

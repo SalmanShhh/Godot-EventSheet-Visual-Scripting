@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a call in an opened script reads as the sentence you wrote for the function
+
+- When a `.gd` is opened as a sheet, each call reads through the function it goes to. If that function, in a script you wrote, carries a sentence of its own (`## @ace_display_template("Take {amount} damage")`), the row now says that sentence with the call's own values in its slots - "Take 5 damage" for `hero.take_damage(5)` - the same words the picker offered it under, kept after the file is closed and opened again. A function without a sentence, and every call to a behaviour the plugin ships, reads exactly as before.
+
 ### Fixed: a narrowed or %name card offers your script's rows on the node you picked
 
 - The card the picker shows for a value an event narrowed (`body` after `body is an Enemy`) or a `%Name` node took the rows of your own class and aimed them at it, but only for the old optional-target call. Your class's rows now carry their own On node slot, so the card opens them on the name you picked, and the old property ids kept only for rows already placed are not offered.

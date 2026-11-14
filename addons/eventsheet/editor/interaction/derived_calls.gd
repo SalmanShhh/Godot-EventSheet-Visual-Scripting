@@ -52,6 +52,7 @@ const SOURCE_DECLARED: String = "declared"
 const SOURCE_AUTOLOAD: String = "autoload"
 const SOURCE_CLASS: String = "class"
 const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
+const SHIPPED_PATH: String = "res://addons/eventsheet/ace/shipped_scripts.gd"
 
 ## `<class>|<script path>|<method>` -> what that method is. One entry per method a file actually
 ## calls, so a sheet pays for the methods in front of the reader rather than for every method in the
@@ -92,7 +93,10 @@ static func derived_pieces(code: String, context: Dictionary, class_map: Diction
 	if reading.is_empty():
 		return {}
 	var pieces: Array = []
-	for entry: Variant in (reading.get("segments", []) as Array):
+	var written: String = str(facts.get("sentence", ""))
+	if not written.is_empty():
+		pieces = _sentence_pieces(written, call.get("args", PackedStringArray()), facts.get("params", PackedStringArray()), context)
+	for entry: Variant in ([] if not pieces.is_empty() else (reading.get("segments", []) as Array)):
 		var segment: Dictionary = entry
 		# The ONE thing this layer changes about the words: the verb stops being the bold name of a
 		# curated sentence and reads in the plainer derived tone. The values, the connectives and
@@ -110,6 +114,29 @@ static func derived_pieces(code: String, context: Dictionary, class_map: Diction
 		"credit": str(facts.get("credit", "")),
 		"doc_id": str(facts.get("doc_id", "")),
 	}
+
+
+## The sentence a script's author wrote for a function, said with the call's own values in its slots:
+## "Take {amount} damage" and the call `take_damage(5)` read "Take 5 damage". The words are the plainer
+## derived tone (the layer is told apart by how it looks, and a sentence the author wrote is still the
+## API read back, not a curated one); each value is drawn as a value. A slot the call left to the
+## function's default says nothing, and a slot that names no argument (`{target}`) is left out.
+static func _sentence_pieces(sentence: String, arguments: PackedStringArray, parameter_names: PackedStringArray,
+		context: Dictionary) -> Array:
+	var pieces: Array = []
+	var plain: String = RegEx.create_from_string(r"\[/?[a-z]+\]").sub(sentence, "", true)
+	var slot: RegEx = RegEx.create_from_string(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
+	var at: int = 0
+	for found: RegExMatch in slot.search_all(plain):
+		if found.get_start() > at:
+			pieces.append([plain.substr(at, found.get_start() - at), TONE_DERIVED])
+		at = found.get_end()
+		var index: int = parameter_names.find(found.get_string(1))
+		if index >= 0 and index < arguments.size():
+			pieces.append([EventSheetSentence.expression_text(arguments[index], context), "value"])
+	if at < plain.length():
+		pieces.append([plain.substr(at), TONE_DERIVED])
+	return pieces
 
 
 ## What the sheet knows about the thing a call is aimed at: {"class", "script_path", "source"}, or
@@ -276,8 +303,12 @@ static func _read_method(class_text: String, script_path: String, method: String
 			var member: Dictionary = entry
 			if str(member.get("name", "")) != method:
 				continue
+			# Only a script the reader wrote may say its own sentence: a shipped behaviour's calls read as they always did.
+			var written: String = str(member.get("sentence", ""))
+			if not written.is_empty() and load(SHIPPED_PATH).is_shipped(path):
+				written = ""
 			return {"params": parameter_names(str(member.get("args", ""))),
-				"doc": str(member.get("doc", "")), "credit": "", "doc_id": ""}
+				"doc": str(member.get("doc", "")), "credit": "", "doc_id": "", "sentence": written}
 		var base: String = str(declared.get("base", "")).strip_edges()
 		path = script_of_class(base)
 		if path.is_empty():
