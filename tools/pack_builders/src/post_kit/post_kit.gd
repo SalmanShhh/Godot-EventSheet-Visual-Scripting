@@ -57,18 +57,25 @@ const MASK_NODE_NAME: String = "PostKitMask"
 ## Visual layer the mask camera sees and outlined meshes use; 20 is rarely used.
 @export_range(1, 20, 1) var mask_layer: int = 20
 
-# An entry is a small record rather than a node, because the order, the
-# names and the strengths are what rows ask about.
-#
-# called    the name rows address this entry by (its effect word, when nobody said otherwise)
-# effect    which of the shipped effects it is
-# strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the frame.
-# The two accessibility dials are applied once, on the way to the CompositorEffect, so
-# a walk that moves this value cannot scale it a second time
-# enabled   whether it is applied at all
-# resource  the CompositorEffect wearing it
+# An entry is a small record rather than a node, because the order, the names and the strengths are
+# what rows ask about.
+## One effect on the stack: what a row asked for, and the effect wearing it.
+class PostEntry extends RefCounted:
+	## The name rows address this entry by (its effect word, when nobody said otherwise).
+	var called: String = ""
+	## Which of the shipped effects it is.
+	var effect: String = ""
+	## How far the row ASKED it to go, 0 to 1 - the request, not what reached the frame. The two
+	## accessibility dials are applied once, on the way to the CompositorEffect, so a walk that moves
+	## this value cannot scale it a second time.
+	var strength: float = 0.0
+	## Whether it is applied at all.
+	var enabled: bool = true
+	## The CompositorEffect wearing it.
+	var resource: CompositorEffect = null
+
 ## THE STACK, in the order the effects are applied: the first entry works on the frame first and the last one has the last word.
-var _stack: Array[Dictionary] = []
+var _stack: Array[PostEntry] = []
 
 ## The Compositor this node hangs its effects on - the parent's own, when it had one already.
 var _compositor: Compositor = null
@@ -127,7 +134,7 @@ func remove_post_effect(called: String = "vignette") -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	_stop_walk_on(str(_stack[at].get("called", "")))
+	_stop_walk_on(_stack[at].called)
 	_stack.remove_at(at)
 	_write_effects()
 
@@ -187,12 +194,12 @@ func set_post_dial(called: String = "vignette", dial: String = "tint", value: Va
 	var dial_name: String = dial.strip_edges()
 	if at < 0 or dial_name.is_empty():
 		return
-	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	var made: CompositorEffect = _stack[at].resource
 	if made == null:
 		return
 	if not _has_dial(made, dial_name):
 		push_warning("Set Post Dial: the \"%s\" effect has no dial called \"%s\"." % [
-			str(_stack[at].get("effect", "")), dial_name])
+			_stack[at].effect, dial_name])
 		return
 	made.set(dial_name, value)
 
@@ -211,7 +218,7 @@ func post_dial(called: String = "vignette", dial: String = "tint") -> Variant:
 	var at: int = _find(called)
 	if at < 0:
 		return null
-	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	var made: CompositorEffect = _stack[at].resource
 	if made == null or not _has_dial(made, dial.strip_edges()):
 		return null
 	return made.get(dial.strip_edges())
@@ -258,7 +265,7 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, secon
 	if borrowed:
 		_add_entry(word, word, 0.0)
 	else:
-		falls_back_to = float(_stack[_find(word)].get("strength", 0.0))
+		falls_back_to = _stack[_find(word)].strength
 	if _find(word) < 0:
 		return
 	_stop_walk_on(word)
@@ -295,7 +302,7 @@ func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
-	return float(_stack[at].get("strength", 0.0))
+	return _stack[at].strength
 
 
 ## Draws an outline around every node in a group, THROUGH whatever is standing in front of them -
@@ -421,7 +428,7 @@ func _find(called: String) -> int:
 	if wanted.is_empty():
 		return -1
 	for at: int in _stack.size():
-		if str(_stack[at].get("called", "")) == wanted:
+		if _stack[at].called == wanted:
 			return at
 	return -1
 
@@ -515,7 +522,7 @@ func _make(effect: String) -> CompositorEffect:
 func _add_entry(effect: String, called: String, strength: float) -> void:
 	var at: int = _find(called)
 	if at >= 0:
-		_stack[at]["enabled"] = true
+		_stack[at].enabled = true
 		_write_strength(called, strength)
 		return
 	if _ensure_compositor() == null:
@@ -525,8 +532,12 @@ func _add_entry(effect: String, called: String, strength: float) -> void:
 		return
 	var asked: float = clampf(strength, 0.0, 1.0)
 	_set_effect_strength(made, _allowed(asked))
-	_stack.append({"called": called, "effect": effect, "strength": asked,
-		"enabled": true, "resource": made})
+	var added: PostEntry = PostEntry.new()
+	added.called = called
+	added.effect = effect
+	added.strength = asked
+	added.resource = made
+	_stack.append(added)
 	_write_effects()
 
 
@@ -537,11 +548,11 @@ func _write_effects() -> void:
 	if compositor == null:
 		return
 	var effects: Array[CompositorEffect] = []
-	for entry: Dictionary in _stack:
-		var made: CompositorEffect = entry.get("resource", null) as CompositorEffect
+	for entry: PostEntry in _stack:
+		var made: CompositorEffect = entry.resource
 		if made == null:
 			continue
-		made.enabled = bool(entry.get("enabled", true))
+		made.enabled = entry.enabled
 		effects.append(made)
 	compositor.compositor_effects = effects
 
@@ -555,8 +566,8 @@ func _write_strength(called: String, strength: float) -> void:
 	if at < 0:
 		return
 	var asked: float = clampf(strength, 0.0, 1.0)
-	_stack[at]["strength"] = asked
-	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	_stack[at].strength = asked
+	var made: CompositorEffect = _stack[at].resource
 	if made != null:
 		_set_effect_strength(made, _allowed(asked))
 
@@ -566,8 +577,8 @@ func _set_enabled(called: String, on: bool) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	_stack[at]["enabled"] = on
-	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	_stack[at].enabled = on
+	var made: CompositorEffect = _stack[at].resource
 	if made != null:
 		made.enabled = on
 
@@ -599,7 +610,7 @@ func _walk_strength(called: String, to_value: float, seconds: float, back_to: fl
 	var walk: Tween = create_tween()
 	if seconds > 0.0:
 		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			float(_stack[at].get("strength", 0.0)), to_value, seconds)
+			_stack[at].strength, to_value, seconds)
 	if back_seconds > 0.0:
 		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
 			to_value, back_to, back_seconds)
@@ -641,7 +652,7 @@ func _start_outline(colour: Color, width: float, fill: float, seconds: float) ->
 	var at: int = _find(OUTLINE_EFFECT)
 	if at < 0:
 		return
-	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	var made: CompositorEffect = _stack[at].resource
 	var outline: PostOutline = made as PostOutline
 	if outline != null:
 		outline.ink = colour
@@ -713,7 +724,7 @@ func _outline_effect() -> CompositorEffect:
 	var at: int = _find(OUTLINE_EFFECT)
 	if at < 0:
 		return null
-	return _stack[at].get("resource", null) as CompositorEffect
+	return _stack[at].resource
 #endregion
 
 
