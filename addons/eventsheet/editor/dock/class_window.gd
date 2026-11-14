@@ -222,11 +222,12 @@ static func say_text(problem: String, lost: PackedStringArray, current: Dictiona
 
 
 ## The sheet's rows as the text they compile to - what the rebase warning reads identifiers from.
+## Read with echo(), which writes nowhere: the rows in memory may hold edits not yet saved.
 ## Compiled once per window.
 func _used_text() -> String:
 	if not _compiled_ready:
 		_compiled_ready = true
-		_compiled = str(EventSheetCompiler.compile(_dock._current_sheet, "").get("output", ""))
+		_compiled = str(EventSheetCompiler.echo(_dock._current_sheet).get("output", ""))
 	return _compiled
 
 

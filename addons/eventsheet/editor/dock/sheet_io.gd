@@ -381,7 +381,7 @@ func _offer_read_next(sheet: EventSheetResource) -> void:
 ## Marks the rows built from lines the ENGINE could not parse, using the errors the open job already
 ## collected. The line-to-row join is the source map of a compile of this sheet: an opened file
 ## re-emits byte-identically, so line N of the output is line N of the file on disk. A file that
-## parses clears any marks a previous check left behind.
+## parses clears any marks a previous check left behind. The compile is echo(): it writes nowhere.
 func _flag_parse_error_rows(sheet: EventSheetResource, resolved_path: String) -> void:
 	if sheet == null or _dock._viewport == null:
 		return
@@ -390,7 +390,7 @@ func _flag_parse_error_rows(sheet: EventSheetResource, resolved_path: String) ->
 		load(SAVE_CHECKS_PATH).set_engine_layer(sheet, [])
 		_dock._viewport.clear_row_diagnostics()
 		return
-	var source_map: Array = load(SHEET_COMPILER_PATH).compile(sheet, resolved_path).get("source_map", [])
+	var source_map: Array = load(SHEET_COMPILER_PATH).echo(sheet).get("source_map", [])
 	var marks: Array = EventSheetParseErrors.row_diagnostics(errors, source_map)
 	load(SAVE_CHECKS_PATH).set_engine_layer(sheet, marks)
 	_dock._viewport.set_row_diagnostics(marks)

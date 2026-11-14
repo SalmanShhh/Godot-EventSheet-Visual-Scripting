@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: typing a new "extends" in the Class window no longer writes your script
+
+- The Class window reads the sheet's code to warn about members the new base does not have. It did that with a compile that also wrote the sheet's file, so typing in the Extends field put your unsaved row edits on disk with no save, no backup and no undo. It now only reads. Apply is still one undo step and the file changes when you save, with the usual backup.
+- Opening a script that the engine reports a parse error in no longer rewrites its file while it marks the rows (same cause, same fix).
+
 ### Fixed: an object's name on the sheet is read whole when the row has room for it
 
 - A long class name in a condition or an action ("ScriptRowsAnnotatedTwin") was cut to "ScriptRowsAnnotatedT..." in a lane with a thousand pixels to spare, because the object column was one fixed width. The column now grows to the widest object name of its lane, up to half the lane; only a lane that is truly short elides a name. A sheet with short names looks as before. Only the drawing changed: no row's words moved.
