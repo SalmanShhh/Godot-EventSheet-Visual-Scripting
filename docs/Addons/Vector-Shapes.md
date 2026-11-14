@@ -206,7 +206,7 @@ nothing.
 
 | Group | Field | Notes |
 |---|---|---|
-| (top) | Style | A **Shape Style** file this shape wears instead of its own look, with a **Save As Style** button above it. Empty is the usual case. See "Styles you own" below. |
+| (top) | Style | A **Shape Style** file this shape wears instead of its own look, with a **Save As Style** tool button above it (Godot's own `@export_tool_button`, so it needs no plugin to show). Empty is the usual case. See "Styles you own" below. |
 | Stroke | Thickness | A number with a **unit dropdown** at its right edge: pixels, world units or screen units. Switching the dropdown converts the number in front of you; the stored value is always pixels, so nothing an emitted script reads ever moves. |
 | Stroke | Thickness scale | With the node, or fixed on screen (what a HUD line wants). |
 | Stroke | Caps | None, square or round, as three icon buttons. |

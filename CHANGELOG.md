@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the seven Vector Shapes use Godot's own tool button for Save As Style
+
+- Save As Style was a `# @inspector_action` comment line over the Style field, drawn only with the plugin. Each shape now carries Godot's `@export_tool_button` (a new public `save_as_style_button` that is hidden from the picker and never saved into a scene), so the button shows without the plugin. Every existing member, row id, template and saved value is unchanged. A file that still holds the comment-line spelling opens and saves byte for byte as before; the shipped shapes open as a sheet that reads the new line as a variable and re-emit byte for byte.
+
 ### Changed: Add > Global Variable says where the autoload it made can be seen
 
 - When the gesture has to make a new global file, the status line now says it added an autoload and names Godot's own place for it, Project Settings > Globals > Autoload, and the new file's doc comment says the same. Adding a variable to an autoload that already exists is unchanged.

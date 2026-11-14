@@ -7,7 +7,9 @@ class_name ShapeDisc2D
 extends VectorShape2D
 ## A disc, and by two angles and an inner radius also a ring, a pie and an arc - the cooldown ring, the vision cone and the health arc are all this one node.
 
-# @inspector_action save_as_style Save As Style
+## Writes the current fields out as a new style file, ready to reuse.
+## @ace_hidden
+@export_tool_button("Save As Style") var save_as_style_button = save_as_style
 # The style slot is empty in the usual case - the fields
 # below are this shape's own. With one dropped in, every field the style speaks for is read from
 # the file and shown greyed here, so twenty lines share one thickness, one cap and one dash

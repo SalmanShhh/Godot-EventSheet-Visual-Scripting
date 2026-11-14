@@ -85,7 +85,56 @@ static func run() -> bool:
 	all_passed = _pin_the_scroll_tick() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
 	all_passed = _pin_the_published_fields() and all_passed
+	all_passed = _pin_the_save_as_style_button() and all_passed
 	return all_passed
+
+
+## The Save As Style button is Godot's own tool button on each shape: an extra public Callable that
+## is never saved into a scene, hidden from the picker, on a script that is already `@tool`. The
+## shipped file opens as a sheet that reads the line as a variable (not a verbatim block) and
+## re-emits the file byte for byte, and the older comment-line spelling of the same button still
+## reads as the field decoration it was.
+static func _pin_the_save_as_style_button() -> bool:
+	var rows: Array = []
+	var line: String = "@export_tool_button(\"Save As Style\") var save_as_style_button = save_as_style"
+	for file_name: String in PUBLISHED_FIELDS.keys():
+		var path: String = PACK_DIR + file_name
+		var shipped: String = FileAccess.get_file_as_string(path)
+		rows.append(["%s is a @tool script" % file_name, shipped.begins_with("@tool"), true])
+		rows.append(["%s carries Godot's tool button once" % file_name, shipped.count(line), 1])
+		rows.append(["%s no longer carries the comment-line button" % file_name, shipped.contains("# @inspector_action"), false])
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var lifted_as: String = "no sheet"
+		var echoed: bool = false
+		if sheet != null:
+			lifted_as = "not found"
+			for entry: Variant in sheet.events:
+				if entry is LocalVariable and (entry as LocalVariable).name == "save_as_style_button":
+					lifted_as = "variable with tool_button" if (entry as LocalVariable).attributes is Dictionary 						and ((entry as LocalVariable).attributes as Dictionary).get("tool_button") is Dictionary else "variable"
+				elif entry is RawCodeRow and (entry as RawCodeRow).code.contains("save_as_style_button"):
+					lifted_as = "verbatim block"
+			echoed = str(EventSheetCompiler.echo(sheet, true).get("output", "")) == shipped
+		rows.append(["%s reads the button as a variable" % file_name, lifted_as, "variable with tool_button"])
+		rows.append(["%s re-emits byte for byte" % file_name, echoed, true])
+	var script: GDScript = load(PACK_DIR + "shape_disc_2d.gd") as GDScript
+	var storage: bool = true
+	var editor_only: bool = false
+	for property: Dictionary in script.get_script_property_list():
+		if str(property.get("name", "")) == "save_as_style_button":
+			var usage: int = int(property.get("usage", 0))
+			storage = (usage & PROPERTY_USAGE_STORAGE) != 0
+			editor_only = (usage & PROPERTY_USAGE_EDITOR) != 0
+	rows.append(["the button is shown in the Inspector", editor_only, true])
+	rows.append(["the button is never stored in a scene", storage, false])
+	# Old files keep their spelling: the comment-line form still reads as the decoration it was.
+	var old_form: String = "extends Node
+
+# @inspector_action save_as_style Save As Style
+@export var style: Resource = null
+"
+	var decor: Dictionary = EventSheetAttributeDrawers.build_decor_map(old_form)
+	rows.append(["the comment-line button still reads", str(decor.get("style", "")).contains("save_as_style"), true])
+	return SUPPORT.pins(PREFIX, rows)
 
 
 ## The fields each shape publishes as a row, read back out of the shipped source the same way the

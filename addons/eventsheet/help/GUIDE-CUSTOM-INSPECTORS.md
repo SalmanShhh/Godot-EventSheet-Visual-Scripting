@@ -940,7 +940,7 @@ pieces on this page, with nothing bespoke in it. Open
 `eventsheet_addons/vector_shapes/shape_disc_2d.gd` beside this section and read down.
 
 ```gdscript
-# @inspector_action save_as_style Save As Style
+@export_tool_button("Save As Style") var save_as_style_button = save_as_style
 @export var style: ShapeStyle = null
 
 # @inspector_preview
@@ -970,8 +970,11 @@ pieces on this page, with nothing bespoke in it. Open
 
 Read top to bottom, that is seven pieces of this guide doing one job each:
 
-1. **A field button** (`@inspector_action`) puts **Save As Style** at the top, so the look you
-   just tuned becomes a `.tres` without leaving the Inspector.
+1. **A tool button** (Godot's own `@export_tool_button`) puts **Save As Style** at the top, so the
+   look you just tuned becomes a `.tres` without leaving the Inspector. The shapes used to carry
+   the same button as a `# @inspector_action` comment line; a file that still has that line opens
+   and saves exactly as before, and the comment form stays the right choice when a button should
+   sit beside one field rather than on a row of its own.
 2. **The preview card** (`@inspector_preview`) draws the shape itself above the fields. The disc
    is a node with no renderer registered, so it takes the fourth path in section 4c: the node
    rendered live into a viewport of its own, which for a shape is the shape.
