@@ -10543,3 +10543,6 @@ Keep the variable,Оставить переменную
 Delete anyway,Всё равно удалить
 it already stores a value under the name %s - open it and decide which value to keep,"Она уже хранит значение под именем %s - откройте её и решите, какое значение оставить"
 The version before this save is in Tools > Sheet Backups.,Версия до этого сохранения находится в Инструменты > Резервные копии листа.
+Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,"Сохранено как %s - теперь это лист .tres. Сцены по-прежнему запускают %s: прикрепите %s, чтобы использовать этот лист. Файл .gd оставлен как был."
+Couldn't save %s: %s. The sheet is still linked to %s.,Не удалось сохранить %s: %s. Лист по-прежнему связан с %s.
+Couldn't save %s: %s.,Не удалось сохранить %s: %s.

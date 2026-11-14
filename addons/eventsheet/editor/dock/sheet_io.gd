@@ -689,6 +689,7 @@ func _save_sheet_to_path(path: String) -> void:
 	# Save As .tres converts a GDScript-backed sheet into a normal sheet: the .gd stops
 	# being the source of truth (it is left untouched on disk).
 	var was_backed: bool = not _dock._current_sheet.external_source_path.is_empty()
+	var linked_to: String = _dock._current_sheet.external_source_path
 	if was_backed:
 		_dock._current_sheet.external_source_path = ""
 	# Save As over an EXISTING file is still an overwrite - ring its pre-save bytes too.
@@ -700,12 +701,21 @@ func _save_sheet_to_path(path: String) -> void:
 		_dock._dirty = false
 		_dock._refresh_title_strip()
 		if was_backed:
-			# Don't silently change the format under an expert: name the consequence.
-			_dock._set_status("Saved as %s - now a .tres sheet; the .gd is no longer the source (left untouched on disk)." % resolved_path.get_file())
+			# Don't silently change the format under an expert: name the consequence. Every scene that
+			# used the .gd still does, and the new .tres writes a script of its own that nothing uses yet.
+			_dock._set_status(EventSheetL10n.translate("Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.") % [
+				resolved_path.get_file(), linked_to.get_file(),
+				load(SHEET_COMPILER_PATH)._resolve_output_path(_dock._current_sheet, "").get_file()])
 		else:
 			_dock._set_status("Saved as: %s" % resolved_path.get_file())
 	else:
-		_dock._set_status("Save failed (error %d)." % err, true)
+		# The sheet stays linked to the .gd it came from: nothing was saved, so nothing changed.
+		if was_backed:
+			_dock._current_sheet.external_source_path = linked_to
+			_dock._set_status(EventSheetL10n.translate("Couldn't save %s: %s. The sheet is still linked to %s.") % [
+				resolved_path.get_file(), error_string(err), linked_to.get_file()], true)
+		else:
+			_dock._set_status(EventSheetL10n.translate("Couldn't save %s: %s.") % [resolved_path.get_file(), error_string(err)], true)
 
 
 ## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the

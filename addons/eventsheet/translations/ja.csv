@@ -10543,3 +10543,6 @@ Keep the variable,変数を残す
 Delete anyway,それでも削除
 it already stores a value under the name %s - open it and decide which value to keep,すでに %s という名前で値を保存しています - 開いて、どちらの値を残すか決めてください
 The version before this save is in Tools > Sheet Backups.,この保存の前のバージョンは、ツール > シートのバックアップ にあります。
+Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,%s として保存しました - これは .tres のシートになりました。シーンは引き続き %s を実行します。このシートを使うには %s をアタッチしてください。.gd はそのままです。
+Couldn't save %s: %s. The sheet is still linked to %s.,%s を保存できませんでした: %s。シートは引き続き %s にリンクされています。
+Couldn't save %s: %s.,%s を保存できませんでした: %s。

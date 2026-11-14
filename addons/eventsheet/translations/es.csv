@@ -10543,3 +10543,6 @@ Keep the variable,Conservar la variable
 Delete anyway,Borrar de todos modos
 it already stores a value under the name %s - open it and decide which value to keep,Ya guarda un valor con el nombre %s - ábrela y decide qué valor conservar
 The version before this save is in Tools > Sheet Backups.,La versión anterior a este guardado está en Herramientas > Copias de seguridad de la hoja.
+Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,Guardado como %s - ahora es una hoja .tres. Las escenas siguen ejecutando %s: adjunta %s para usar esta hoja. El .gd se dejó como estaba.
+Couldn't save %s: %s. The sheet is still linked to %s.,No se pudo guardar %s: %s. La hoja sigue vinculada a %s.
+Couldn't save %s: %s.,No se pudo guardar %s: %s.

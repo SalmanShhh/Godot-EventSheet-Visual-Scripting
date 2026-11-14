@@ -54,6 +54,11 @@ When you save a sheet and Godot cannot compile the script it wrote, the save sti
 typed is dropped), the row it came from is marked, and the status line gives Godot's own words, the line
 and the file, then where the way back is: the version before that save is in **Tools > Sheet Backups**.
 
+**Save As** to a `.tres` from a sheet opened from a `.gd` leaves the `.gd` as it was, and every scene
+that used it keeps running it: the new `.tres` writes a script of its own (`name_generated.gd`) that
+nothing uses until you attach it. The status line says so and names that script. If the save fails the
+sheet stays linked to its `.gd`, and the line gives the file and Godot's reason.
+
 After the chevron, once a sheet is open, comes the **Events | Code | Both** switch: the rows, the GDScript
 the file is, or both side by side. It is offered for every open sheet and is not part of the seven.
 

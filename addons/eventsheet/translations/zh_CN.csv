@@ -10543,3 +10543,6 @@ Keep the variable,保留变量
 Delete anyway,仍然删除
 it already stores a value under the name %s - open it and decide which value to keep,它已经用名称 %s 保存了一个值 - 请打开它并决定保留哪个值
 The version before this save is in Tools > Sheet Backups.,此次保存之前的版本在 工具 > 事件表备份 中。
+Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,已另存为 %s - 现在是 .tres 事件表。场景仍在运行 %s：请附加 %s 来使用这个事件表。.gd 保持原样。
+Couldn't save %s: %s. The sheet is still linked to %s.,无法保存 %s：%s。该事件表仍与 %s 关联。
+Couldn't save %s: %s.,无法保存 %s：%s。

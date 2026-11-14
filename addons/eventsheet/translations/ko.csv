@@ -10543,3 +10543,6 @@ Keep the variable,변수 유지
 Delete anyway,그래도 삭제
 it already stores a value under the name %s - open it and decide which value to keep,이미 %s 이름으로 값을 저장하고 있습니다 - 열어서 어느 값을 유지할지 정하세요
 The version before this save is in Tools > Sheet Backups.,이 저장 이전 버전은 도구 > 시트 백업에 있습니다.
+Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,%s(으)로 저장했습니다 - 이제 .tres 시트입니다. 씬은 계속 %s을(를) 실행합니다. 이 시트를 쓰려면 %s을(를) 붙이세요. .gd는 그대로 두었습니다.
+Couldn't save %s: %s. The sheet is still linked to %s.,%s을(를) 저장하지 못했습니다: %s. 시트는 여전히 %s에 연결되어 있습니다.
+Couldn't save %s: %s.,%s을(를) 저장하지 못했습니다: %s.

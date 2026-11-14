@@ -6,6 +6,11 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: Save As a .tres from a .gd sheet says scenes still run the .gd, and a failed save leaves the link
+
+- Saving a sheet that was opened from a `.gd` as a `.tres` leaves the `.gd` on disk and every scene still runs it, while the new `.tres` writes a script of its own that nothing uses yet. The status line now says so and names the script to attach: \"Scenes still run mover.gd: attach mover_copy_generated.gd to use this sheet.\"
+- The sheet's link to its `.gd` was cleared before the save was tried, so a save that failed left the tab unlinked. The link is now put back when the save fails, and the line names the file and Godot's own reason instead of a bare error number.
+
 ### Fixed: a save that Godot cannot compile now says where the version before it is
 
 - Saving a sheet whose script Godot cannot compile still writes it (your edits are never dropped), and the status line already named the engine's words, the line and the file, and marked the row. It now ends with where the way back is: \"The version before this save is in Tools > Sheet Backups.\"
