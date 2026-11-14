@@ -249,7 +249,7 @@ static func _test_recipe_facts() -> bool:
 		EventSheetToolFiles.recipe_pack_id(lines), "res://eventsheet_addons/pin/pin_behavior") and passed
 	var code: PackedStringArray = EventSheetToolFiles.recipe_code_lines(lines)
 	passed = _check("the string list opens as the GDScript it becomes",
-		code[0] if not code.is_empty() else "", "# --- Designer knobs (tune in the Inspector) ---") and passed
+		code[0] if not code.is_empty() else "", "# --- Choices (the stored words are the promise: saved scenes keep them) ---") and passed
 	passed = _check("an escaped quote comes back out as a quote",
 		"\n".join(code).contains("## @ace_name(\"Is Pinned\")"), true) and passed
 	passed = _check("a tab escape comes back out as a tab",
