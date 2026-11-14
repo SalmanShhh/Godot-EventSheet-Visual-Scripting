@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Drunken Walkers reads a saved walker and mark through small classes
+
+- A saved walker is read back by `Walker.from_dict`, the pair of the `to_dict` that wrote it, and a mark is a `Mark` with its own `to_dict` and `from_dict`, instead of fields picked out of dictionaries by text in `load_state`. The saved state is the same text it was: a state written by an older version loads, and saving it again gives the identical text.
+
 ### Changed: Platformer Pathfinding keeps its records as small classes
 
 - A link, a route stop, a portal, a hazard, a moving platform, a pending side request and a map tag's shared map were dictionaries read by text in about a hundred and thirty places; they are now `NavEdge`, `NavWaypoint`, `NavPortal`, `NavHazard`, `NavRide`, `NavSideRequest` and `NavSharedMap` with typed fields. Routes, portals, hazards and platforms behave as before, and the only saved text, the obstacle map JSON, is read and written exactly as it was.

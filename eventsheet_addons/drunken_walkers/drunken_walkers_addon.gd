@@ -140,6 +140,34 @@ class Walker extends RefCounted:
 			"path": flat_path,
 		}
 
+	# The walker read back from the shape to_dict writes, a saved state's record of it. Every key is
+	# optional, so a record written by an older version still loads; the keys keep their file spelling.
+	func from_dict(data: Dictionary) -> void:
+		start_x = int(data.get("startX", 0))
+		start_y = int(data.get("startY", 0))
+		steps = int(data.get("steps", 400))
+		directions = clampi(int(data.get("directions", 8)), 1, 8)
+		max_turn = float(data.get("maxTurn", 180.0))
+		start_angle = float(data.get("startAngle", 0.0))
+		turn_chance = float(data.get("turnChance", 1.0))
+		carve_value = int(data.get("carveValue", 1))
+		brush_size = int(data.get("brushSize", 1))
+		brush_width = int(data.get("brushWidth", 0))
+		brush_height = int(data.get("brushHeight", 0))
+		weights = weights_from_array(data.get("weights", []) as Array)
+		tag = str(data.get("tag", ""))
+		apply_progress(data)
+
+	# A weights list from a JSON array: a number is kept (never below zero), anything else counts as 1.
+	static func weights_from_array(values: Array) -> Array[float]:
+		var parsed: Array[float] = []
+		for entry: Variant in values:
+			if entry is float or entry is int:
+				parsed.append(maxf(0.0, float(entry)))
+			else:
+				parsed.append(1.0)
+		return parsed
+
 	# The progress half of the shape, applied over a walker whose definition has already been read.
 	func apply_progress(data: Dictionary) -> void:
 		x = int(data.get("x", start_x))
@@ -155,6 +183,27 @@ class Walker extends RefCounted:
 		while index + 1 < flat.size():
 			path.append(Vector2i(int(flat[index]), int(flat[index + 1])))
 			index += 2
+
+## One marked cell: where it is and the tag it was placed under.
+class Mark extends RefCounted:
+	## Column of the marked cell.
+	var x: int = 0
+	## Row of the marked cell.
+	var y: int = 0
+	## The tag the mark was placed under; empty for none.
+	var tag: String = ""
+
+	# The mark as a saved state holds it.
+	func to_dict() -> Dictionary:
+		return {"x": x, "y": y, "tag": tag}
+
+	# A mark read back from a saved state; a missing key reads as 0 or empty.
+	static func from_dict(data: Dictionary) -> Mark:
+		var mark: Mark = Mark.new()
+		mark.x = int(data.get("x", 0))
+		mark.y = int(data.get("y", 0))
+		mark.tag = str(data.get("tag", ""))
+		return mark
 
 # The grid: one flat row-major buffer of integers plus its two dimensions. Every cell holds one
 # number and nothing else, which is what keeps this fast and lets any art pipeline read it.
@@ -172,9 +221,8 @@ var _walkers: Dictionary = {}
 ## Walker ids in the order they were spawned, which is the order they step in.
 var _order: Array[String] = []
 
-# The marks, in placement order: {"x": int, "y": int, "tag": String}.
-## Marked cells, each with its position and tag.
-var _marks: Array[Dictionary] = []
+## Marked cells in placement order.
+var _marks: Array[Mark] = []
 
 # The one seeded stream everything draws from, and the seed string it was last set with.
 ## Random source for every walker's choices, seeded from the seed text.
@@ -279,13 +327,7 @@ func _weights_from_text(text: String) -> Array[float]:
 ## A weights list from a JSON array, under the same rules as the text spelling.
 ## @ace_hidden
 func _weights_from_array(values: Array) -> Array[float]:
-	var parsed: Array[float] = []
-	for entry: Variant in values:
-		if entry is float or entry is int:
-			parsed.append(maxf(0.0, float(entry)))
-		else:
-			parsed.append(1.0)
-	return parsed
+	return Walker.weights_from_array(values)
 ## Registers a walker under an id, keeping its place in the run order when the id is already
 ## taken - because the run order is part of the seed, and replacing a walker must not reshuffle
 ## the map. Returns the walker so the caller can fill in the rest of the definition.
@@ -810,9 +852,9 @@ func clear_marks(tag: String) -> void:
 	if tag.is_empty():
 		_marks.clear()
 		return
-	var kept: Array[Dictionary] = []
-	for mark: Dictionary in _marks:
-		if str(mark["tag"]) != tag:
+	var kept: Array[Mark] = []
+	for mark: Mark in _marks:
+		if mark.tag != tag:
 			kept.append(mark)
 	_marks = kept
 
@@ -916,8 +958,8 @@ func is_inside_grid(x: int, y: int) -> bool:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.has_mark_at({x}, {y}, {tag})")
 func has_mark_at(x: int, y: int, tag: String) -> bool:
-	for mark: Dictionary in _marks:
-		if int(mark["x"]) == x and int(mark["y"]) == y and (tag.is_empty() or str(mark["tag"]) == tag):
+	for mark: Mark in _marks:
+		if mark.x == x and mark.y == y and (tag.is_empty() or mark.tag == tag):
 			return true
 	return false
 
@@ -1076,8 +1118,8 @@ func count_marks(tag: String) -> int:
 	if tag.is_empty():
 		return _marks.size()
 	var found: int = 0
-	for mark: Dictionary in _marks:
-		if str(mark["tag"]) == tag:
+	for mark: Mark in _marks:
+		if mark.tag == tag:
 			found += 1
 	return found
 
@@ -1089,11 +1131,11 @@ func count_marks(tag: String) -> int:
 ## @ace_codegen_template("DrunkenWalkers.mark_x_by_index({tag}, {index})")
 func mark_x_by_index(tag: String, index: int) -> int:
 	var found: int = 0
-	for mark: Dictionary in _marks:
-		if not tag.is_empty() and str(mark["tag"]) != tag:
+	for mark: Mark in _marks:
+		if not tag.is_empty() and mark.tag != tag:
 			continue
 		if found == index:
-			return int(mark["x"])
+			return mark.x
 		found += 1
 	return -1
 
@@ -1105,11 +1147,11 @@ func mark_x_by_index(tag: String, index: int) -> int:
 ## @ace_codegen_template("DrunkenWalkers.mark_y_by_index({tag}, {index})")
 func mark_y_by_index(tag: String, index: int) -> int:
 	var found: int = 0
-	for mark: Dictionary in _marks:
-		if not tag.is_empty() and str(mark["tag"]) != tag:
+	for mark: Mark in _marks:
+		if not tag.is_empty() and mark.tag != tag:
 			continue
 		if found == index:
-			return int(mark["y"])
+			return mark.y
 		found += 1
 	return -1
 
@@ -1520,11 +1562,11 @@ func _cells_holding(value: int) -> PackedInt32Array:
 ## @ace_hidden
 func _spacing_allows(x: int, y: int, tag: String, min_spacing: float) -> bool:
 	var limit: float = maxf(0.0, min_spacing)
-	for mark: Dictionary in _marks:
-		if str(mark["tag"]) != tag:
+	for mark: Mark in _marks:
+		if mark.tag != tag:
 			continue
-		var dx: float = float(int(mark["x"]) - x)
-		var dy: float = float(int(mark["y"]) - y)
+		var dx: float = float(mark.x - x)
+		var dy: float = float(mark.y - y)
 		var squared: float = dx * dx + dy * dy
 		if squared == 0.0 or squared < limit * limit:
 			return false
@@ -1533,7 +1575,11 @@ func _spacing_allows(x: int, y: int, tag: String, min_spacing: float) -> bool:
 ## Records a mark and fires On Mark Placed with it in context.
 ## @ace_hidden
 func _place_mark(x: int, y: int, tag: String) -> void:
-	_marks.append({"x": x, "y": y, "tag": tag})
+	var mark: Mark = Mark.new()
+	mark.x = x
+	mark.y = y
+	mark.tag = tag
+	_marks.append(mark)
 	_ctx_mark_x = x
 	_ctx_mark_y = y
 	_ctx_mark_tag = tag
@@ -1586,6 +1632,9 @@ func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> 
 func save_state() -> Dictionary:
 	_ensure_started()
 	var saved_walkers: Array[Dictionary] = []
+	var saved_marks: Array[Dictionary] = []
+	for mark: Mark in _marks:
+		saved_marks.append(mark.to_dict())
 	for id: String in _order:
 		saved_walkers.append((_walkers[id] as Walker).to_dict())
 	var remaining: Array[float] = []
@@ -1598,7 +1647,7 @@ func save_state() -> Dictionary:
 		"cellSize": cell_size, "seed": _seed_text,
 		"rngSeed": str(_rng.seed), "rngState": str(_rng.state),
 		"randomSource": random_source, "injected": remaining,
-		"walkers": saved_walkers, "marks": _marks.duplicate(true),
+		"walkers": saved_walkers, "marks": saved_marks,
 	}
 
 ## Puts a saved record back, SILENTLY: no On Cell Carved and no On Mark Placed for restored
@@ -1640,25 +1689,9 @@ func load_state(state: Dictionary) -> void:
 	_order.clear()
 	for entry: Variant in state.get("walkers", []) as Array:
 		var saved: Dictionary = entry as Dictionary
-		var walker: Walker = _register(str(saved.get("id", "")))
-		walker.start_x = int(saved.get("startX", 0))
-		walker.start_y = int(saved.get("startY", 0))
-		walker.steps = int(saved.get("steps", 400))
-		walker.directions = clampi(int(saved.get("directions", 8)), 1, 8)
-		walker.max_turn = float(saved.get("maxTurn", 180.0))
-		walker.start_angle = float(saved.get("startAngle", 0.0))
-		walker.turn_chance = float(saved.get("turnChance", 1.0))
-		walker.carve_value = int(saved.get("carveValue", 1))
-		walker.brush_size = int(saved.get("brushSize", 1))
-		walker.brush_width = int(saved.get("brushWidth", 0))
-		walker.brush_height = int(saved.get("brushHeight", 0))
-		walker.weights = _weights_from_array(saved.get("weights", []) as Array)
-		walker.tag = str(saved.get("tag", ""))
-		walker.apply_progress(saved)
+		_register(str(saved.get("id", ""))).from_dict(saved)
 	_marks.clear()
 	for entry: Variant in state.get("marks", []) as Array:
-		var mark: Dictionary = entry as Dictionary
-		_marks.append({"x": int(mark.get("x", 0)), "y": int(mark.get("y", 0)),
-			"tag": str(mark.get("tag", ""))})
+		_marks.append(Mark.from_dict(entry as Dictionary))
 
 # Drunken Walkers (autoload): register as the DrunkenWalkers autoload, then size a grid, set a seed, register walkers and run them from any sheet. The pack owns the grid and the marks; you paint the tiles and spawn the objects from the results. Same seed plus same action order = the same map every time. This pack is an event sheet - extend it by editing it.
