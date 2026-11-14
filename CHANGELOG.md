@@ -4,6 +4,16 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: three looks keep Godot's own export line
+
+- A look used to be written `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<look>...")`, which tells Godot "no hint", so in a project without the plugin a toggle-button variable was a free text box (40 in the packs), a unit number a bare float (15) and a progress bar a bare number. Proven in a scratch project with no plugin: the three now keep the control Godot gives their own annotation.
+  - **Toggle buttons** write `@export_enum("a", "b")` under `# @inspector_look toggle_row[:segmented][:icons=...]`. A String stores the same word and an int the same index, so a scene saved either way loads the same value.
+  - **Number with its unit** writes `@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:<stored unit>")` under `# @inspector_look unit:kinds=...,store=...`, so Godot itself shows `2.0 px`; the stored float is unchanged.
+  - **Progress bar** writes `@export_range(min, max)` under `# @inspector_look progress_bar`.
+- A new pick in the Variable window writes the new form (its "Writes" hover and IN CODE block say the Godot line and the comment). A script that already holds the old `eventsheet:` marker opens as the same look, shows the same mark and saves back byte for byte; opening such a variable in the Variable window and pressing OK without touching it keeps the old spelling. Nothing is rewritten for you. The marker form stays for looks Godot has no hint for (tables, cards, dials, swatch rows, curves, textures, corners, seeds) and for any look you add.
+- The shipped packs were rebuilt through their builders: Feedback Player (2 toggle rows) and the 18 Vector Shape scripts (10 toggle rows and 6 unit numbers in the builder's field text, 40 and 15 in the emitted scripts); the three showcase bars (`enemy_stats`, `inspector_playground`) follow their builder.
+- The importer reads a hidden pack field's `## @ace_hidden` line, its doc and its section line through a look comment above them, and a look over a property with a setter, so those fields still open as the look. A hidden field with no look comment is read exactly as before.
+
 ### Fixed: Add > Global Variable makes a file Godot can run
 
 - The first global of a project made its file blank: no `extends Node`, so Godot refused to start the autoload, and the first variable was then written above the `extends` line of any file that had none yet. The new file now starts `extends Node` (no generated banner, a one-line class doc), the first global lands after the head, and the sheet carries no class name - Godot refuses a script whose `class_name` equals the autoload it is registered as ("hides an autoload singleton"). The Entity System starter no longer sets a class name equal to its autoload name for the same reason. A sheet that already holds both names emits the same bytes as before.

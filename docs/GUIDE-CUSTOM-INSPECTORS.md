@@ -37,7 +37,7 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 
 **Key design decisions you should know:**
 
-- **The parity covenant.** Every custom drawer compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>...")` marker. With the EventSheets editor plugin installed, the Inspector swaps in the rich control. **Without** the plugin, or in an **exported game**, the property quietly degrades to a plain field. Your shipped game never depends on the plugin and never breaks.
+- **The parity covenant.** A look whose data Godot can say itself - the progress bar, the toggle buttons, the number with its unit - keeps **Godot's own export line** (`@export_range`, `@export_enum`) and names itself on a plain comment above it, `# @inspector_look <word>`. A look Godot has no hint for (a table, a dial, a swatch row) compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>...")` marker. With the EventSheets editor plugin installed, the Inspector swaps in the rich control. **Without** the plugin, or in an **exported game**, the first kind shows Godot's ordinary control with the same limits (a dropdown, a suffixed number, a number with its bounds) and the second quietly degrades to a plain field. Your shipped game never depends on the plugin and never breaks. A script written with the older marker for the first kind keeps working and saves byte for byte as it was.
 - **It is just GDScript.** Everything you author becomes a normal `@export` line (or a small generated setter / `_validate_property`). Open the `.gd` in Godot's script editor and it reads like hand-written code. Nothing is locked inside a proprietary format.
 - **Lossless round-trip.** Reopening the `.gd` as a sheet recovers your choices. The drawers, ranges, and the no-alpha flag come back as **editable dialog fields** (re-tick them, they survive editing). The rest round-trips byte-for-byte even when it stays a verbatim annotation.
 - **Inspector options apply to exported variables.** A control only matters for a value the Inspector shows, so the looks appear once you tick **"Editable in the Inspector"**.
@@ -64,11 +64,12 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 The variable above compiles to exactly this:
 
 ```gdscript
+# @inspector_look progress_bar
 ## The player's current health (0-100).
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:100") var health: int = 100
+@export_range(0, 100) var health: int = 100
 ```
 
-The `##` line becomes the Inspector's hover tooltip, and the `eventsheet:progress_bar` marker is what the editor plugin turns into the draggable bar. In an exported game that same line is just an `int` with a plain spin box.
+The `##` line becomes the Inspector's hover tooltip, `@export_range` is Godot's own bounds, and the `# @inspector_look progress_bar` comment is what the editor plugin turns into the draggable bar. Without the plugin, and in an exported game, that same line is just an `int` with a spin box between 0 and 100.
 
 ## 3b. Choosing a look (the Inspector look dropdown + the Inspector preview)
 
@@ -109,10 +110,13 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **How to use it.** Choose **Inspector look: Progress bar** and fill in its `min` and `max` (for example `0` and `100`). The questions are named as the variables are written in the look's file.
 
-**Emits** (the min and max ride inside the marker, so there is no separate `@export_range`):
+**Emits** (the min and max are Godot's own `@export_range`; the comment names the look):
 ```gdscript
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:100") var health: int = 100
+# @inspector_look progress_bar
+@export_range(0, 100) var health: int = 100
 ```
+
+A script written with the older `@export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:100")` line still opens as a progress bar and saves back as it was.
 
 **Use case.** A `stamina` value designers drain-test by dragging, or a `volume` from 0 to 1 with step `0.05`.
 
@@ -133,13 +137,17 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **What it does.** A spin box with a **unit dropdown at its right edge**: "Thickness `0.6` world", "Start angle `0.25` turns". The value is **stored in one unit** (the export line says which) and **shown** in whichever the dropdown says, so switching the dropdown re-reads the number without moving it. A designer stops guessing whether a thickness is pixels or world units, because the field says so.
 
-**How to use it.** On a `float` variable pick the **Unit** look and fill its one field the way the marker reads it: `kinds=px|world|screen, store=world`. The first kind listed is the stored one when `store=` names something not in the list. Leaving the field empty gives the length kinds.
+**How to use it.** On a `float` variable pick the **Unit** look and fill its one field: `kinds=px|world|screen, store=world`. The first kind listed is the stored one when `store=` names something not in the list. Leaving the field empty gives the length kinds.
 
-**Emits:**
+**Emits** (the stored unit is also the `suffix:` of a number field with no limits, so Godot itself shows `2.0 px`; the comment lists the units the dropdown offers):
 ```gdscript
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=world") var thickness: float = 2.0
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var start_angle: float = 0.0
+# @inspector_look unit:kinds=px|world|screen,store=world
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:world") var thickness: float = 2.0
+# @inspector_look unit:kinds=deg|turn|rad,store=deg
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:deg") var start_angle: float = 0.0
 ```
+
+The stored number never changes form: it is the same float in the scene file with the look or without it. A script written with the older `@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:...")` line still opens as a unit number and saves back as it was.
 
 **The four families it converts**, and nothing else: length (`px`, `world`, `screen`), angle (`deg`, `turn`, `rad`), time (`s`, `ms`, `frames` at the project's physics tick rate) and level (`db`, `fraction`). Inside the length family `px` and `world` are one to one, so the dropdown only relabels them; `screen` is the one that scales, and one screen unit is the project's configured viewport width in pixels. A word from outside the four families is a **pack's own label**: the dropdown shows it and the number stays exactly as typed, because there is no honest factor to apply between two words the drawer has never met. Two kinds from different families never convert into each other either.
 
@@ -272,23 +280,29 @@ Three details of that schema are worth copying when you derive one of your own. 
 
 **What it does.** Shows a String's fixed choices as **one row of toggle buttons** instead of a dropdown - every option visible at a glance, one click to switch. The pressed button is the value.
 
-**How to use it.** Choose **Inspector look: Toggle buttons** and fill its **Choices** (`easy, normal, hard`). The choices ride the drawer marker instead of `@export_enum` (one annotation slot), so without the plugin the field degrades to plain text - editor convenience only, like every drawer.
+**How to use it.** Choose **Inspector look: Toggle buttons** and fill its **Choices** (`easy, normal, hard`). The choices are Godot's own `@export_enum`, so without the plugin the field is Godot's ordinary dropdown of the same words - the buttons are editor convenience only, like every drawer. The variable stores the same word (a `String`) or the same index (an `int`) either way.
 
 **Emits:**
 ```gdscript
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:easy,normal,hard") var difficulty: String = "normal"
+# @inspector_look toggle_row
+@export_enum("easy", "normal", "hard") var difficulty: String = "normal"
 ```
+
+A script written with the older `@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:easy,normal,hard")` line still opens as toggle buttons and saves back as it was.
 
 **Use case.** A `difficulty`, `team`, or `weapon_slot` a designer flips constantly during playtesting - three visible buttons beat a three-item dropdown.
 
 #### Pictures on the buttons, and equal widths
 
-Some choices are not words. "Round" or "Square" end cap, "angled" or "rounded" dash, a mask mode: the honest button is the picture of what you will get. Two optional tails ride after the choices in a **fixed order**, and both are editor-only like the buttons themselves:
+Some choices are not words. "Round" or "Square" end cap, "angled" or "rounded" dash, a mask mode: the honest button is the picture of what you will get. Two optional tails ride on the look comment after `toggle_row` in a **fixed order**, and both are editor-only like the buttons themselves:
 
 ```gdscript
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:segmented") var caps: String = "round"
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:icons=res://art/cap_%s.svg") var caps: String = "round"
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=shapes_dash") var dash_style: String = "plain"
+# @inspector_look toggle_row:segmented
+@export_enum("none", "square", "round") var caps: String = "round"
+# @inspector_look toggle_row:icons=res://art/cap_%s.svg
+@export_enum("none", "square", "round") var caps: String = "round"
+# @inspector_look toggle_row:icons=shapes_dash
+@export_enum("plain", "angled", "rounded") var dash_style: String = "plain"
 ```
 
 - **`:segmented`** gives every button an equal width and joins them into one strip, which is what turns a handful of words into a single control instead of a ragged row. It applies to **two to five** options; past that the strip stops being readable and the row falls back to ordinary buttons on its own.
@@ -655,14 +669,14 @@ func _validate_property(property: Dictionary) -> void:
 | Solid colour, no alpha | Inspector look | Color | `@export_color_no_alpha` |
 | Easing curve | Inspector look | float | `@export_exp_easing` |
 | Hint inside the box | Inspector look | String | `@export_placeholder("hint")` |
-| Inspector look: Progress bar | Inspector look | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
+| Inspector look: Progress bar | Inspector look | int / float | `@export_range(min, max)` + `# @inspector_look progress_bar` |
 | Inspector look: Min-max range | Inspector look | Vector2 | `@export_custom(... "eventsheet:min_max:min:max")` |
 | Inspector look: Editable table | Inspector look | Array | `@export_custom(... "eventsheet:table:name=type,...")` |
 | Card list | authored on the export | Array of Dictionary | `@export_custom(... "eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>")` |
-| Inspector look: Toggle buttons | Inspector look | String + Options | `@export_custom(... "eventsheet:toggle_row:a,b,c")` |
+| Inspector look: Toggle buttons | Inspector look | String + Options | `@export_enum("a", "b", "c")` + `# @inspector_look toggle_row` |
 | Toggle buttons, equal widths | authored on the export | String / int + Options | `...:toggle_row:a,b,c:segmented` |
 | Toggle buttons, with pictures | authored on the export | String / int + Options | `...:toggle_row:a,b,c:icons=<pattern or provider>` |
-| Inspector look: Number with its unit | Inspector look | float | `@export_custom(... "eventsheet:unit:kinds=a\|b,store=a")` |
+| Inspector look: Number with its unit | Inspector look | float | `@export_range(0, 1, 0.001, ..., "suffix:a")` + `# @inspector_look unit:kinds=a\|b,store=a` |
 | Inspector look: Four corners | Inspector look | Vector4 | `@export_custom(... "eventsheet:corners")` |
 | Inspector look: Direction dial | Inspector look | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
 | Inspector look: Swatch row | Inspector look | Color | `@export_custom(... "eventsheet:swatch_row")` |
@@ -936,7 +950,8 @@ pieces on this page, with nothing bespoke in it. Open
 @export_range(-360.0, 360.0, 0.1) var start_angle: float = 0.0
 
 @export_group("Stroke")
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0
+# @inspector_look unit:kinds=px|world|screen,store=px
+@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var thickness: float = 2.0
 @export var dashed: bool = false
 
 @export_group("Colour")
@@ -948,7 +963,8 @@ pieces on this page, with nothing bespoke in it. Open
 # @inspector_link dash_count dash_spacing
 @export_range(1, 128, 1) var dash_count: int = 12
 @export var dash_spacing: float = 0.5
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=vector_shapes_dash") var dash_style: String = "plain"
+# @inspector_look toggle_row:icons=vector_shapes_dash
+@export_enum("plain", "angled", "rounded") var dash_style: String = "plain"
 ```
 
 Read top to bottom, that is seven pieces of this guide doing one job each:
