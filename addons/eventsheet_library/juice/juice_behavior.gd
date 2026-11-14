@@ -2080,7 +2080,7 @@ func _play_moment_block(moment_name: String, strength: float) -> bool:
 	if not host.has_method(written):
 		return false
 	var key: String = _moment_key(moment_name)
-	_moment_begin(key, [], strength, false)
+	_moment_begin(key, [])
 	var running: Variant = host.call(written, strength, null)
 	if running is Signal:
 		# A coroutine called and not awaited hands back the signal it finishes on.
@@ -2263,7 +2263,7 @@ func _moment_block_method(moment_name: String, suffix: String) -> String:
 ## ONE function, so Moment and Play Moment Backwards can only differ in the order they walk.
 ## @ace_hidden
 func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -> void:
-	_moment_begin(key, steps, strength, backwards)
+	_moment_begin(key, steps)
 	for at: int in MomentRunner.walk_order(steps, backwards):
 		var step: Variant = steps[at]
 		if step is Dictionary:
@@ -2279,7 +2279,7 @@ func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -
 ## because a sheet that pairs a Started with a Finished must get both: two hits in quick
 ## succession are two beats, and the first of them did not run its course.
 ## @ace_hidden
-func _moment_begin(key: String, steps: Array, strength: float, backwards: bool) -> void:
+func _moment_begin(key: String, steps: Array) -> void:
 	_moment_end(key, true)
 	var play: MomentPlay = MomentPlay.new()
 	play.steps = steps

@@ -380,7 +380,7 @@ static func _clamp_pins() -> bool:
 ## scene tree - and what these pins are about is the book, the end values and the walk home, all
 ## of which are written before a single step has run.
 static func _opened(behavior: Node, named: String, steps: Array) -> Object:
-	behavior._moment_begin(named, steps, 1.0, false)
+	behavior._moment_begin(named, steps)
 	return behavior._moment_plays.get(named, null) as Object
 
 
