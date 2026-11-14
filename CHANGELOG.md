@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Platformer Pathfinding checks the version of an obstacle map
+
+- The obstacle map JSON has always carried a `version` that Load Obstacle Map JSON ignored. The number is now one constant, and a map marked newer than this behaviour reads says so once and is read as before; maps with no version or version 1 load exactly as they did, and the exported key is unchanged.
+
 ### Changed: Drunken Walkers checks the version of a saved state
 
 - A saved state has always carried a `version` that loading ignored. Loading now says once when the state is newer than the behaviour reading it ("parts of it may be left out") and still reads it; a state with no version or the current one reads exactly as before, and the saved key is unchanged.

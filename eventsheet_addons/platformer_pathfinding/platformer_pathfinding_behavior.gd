@@ -152,6 +152,8 @@ signal nav_graph_cleared
 ## Print each route found (waypoints, cost) and each failure with its reason to the Output panel.
 @export var debug_log: bool = false
 
+## The version written into an exported obstacle map, and the newest one this behaviour reads.
+const OBSTACLE_MAP_VERSION: int = 1
 # --- Internal state (the graph lives per agent, or per map tag when one is set) ---
 ## The tile map the route is searched over.
 var _tilemap: TileMapLayer = null
@@ -1610,6 +1612,9 @@ func load_obstacle_map_json(json: String) -> void:
 		push_warning("[PlatformerPathfinding] Load Obstacle Map JSON: not an obstacle map.")
 		return
 	var data: Dictionary = parsed
+	var map_version: int = int(data.get("version", OBSTACLE_MAP_VERSION))
+	if map_version > OBSTACLE_MAP_VERSION:
+		push_warning("[PlatformerPathfinding] Load Obstacle Map JSON: this map is version %d and this behaviour reads version %d, so parts of it may be left out." % [map_version, OBSTACLE_MAP_VERSION])
 	_tilemap = null
 	_custom_grid = true
 	grid_cell_size = maxf(float(data.get("cell_size", grid_cell_size)), 1.0)
@@ -1641,7 +1646,7 @@ func obstacle_map_json() -> String:
 		cells.append([cell.x, cell.y, _states[cell]])
 	var origin: Vector2 = _cell_world(Vector2i.ZERO) - Vector2(_tile_px(), _tile_px()) * 0.5
 	var size: Vector2i = grid_size()
-	return JSON.stringify({"version": 1, "cell_size": _tile_px(), "origin": [origin.x, origin.y], "size": [size.x, size.y], "cells": cells})
+	return JSON.stringify({"version": OBSTACLE_MAP_VERSION, "cell_size": _tile_px(), "origin": [origin.x, origin.y], "size": [size.x, size.y], "cells": cells})
 
 ## @ace_expression
 ## @ace_name("Obstacle Map Source")
