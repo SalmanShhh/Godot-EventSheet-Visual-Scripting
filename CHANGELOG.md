@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Drunken Walkers checks the version of a saved state
+
+- A saved state has always carried a `version` that loading ignored. Loading now says once when the state is newer than the behaviour reading it ("parts of it may be left out") and still reads it; a state with no version or the current one reads exactly as before, and the saved key is unchanged.
+
 ### Changed: Juice keeps each moment in the air as a small class
 
 - A moment that is playing was a dictionary of twelve keys read by text from a dozen places; it is now a small class with a typed field for each, so a misspelt key is a parse error. Two keys that were written into it and never read (the strength and the direction the play was started with) are gone. The step cards, the Feedback Player's list and the moment file's rows stay dictionaries on purpose: the user writes them, scenes and files store them, and their rows' words are the file format.

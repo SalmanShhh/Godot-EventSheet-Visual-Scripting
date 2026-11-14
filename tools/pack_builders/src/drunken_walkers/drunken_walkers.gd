@@ -658,6 +658,11 @@ func save_state() -> Dictionary:
 ## than waiting for a trigger.
 ## @ace_hidden
 func load_state(state: Dictionary) -> void:
+	# A record written by a newer version of this behaviour is still read, field by field, with what
+	# this version knows; it is said once that parts of it may be lost, rather than read in silence.
+	var saved_version: int = int(state.get("version", STATE_VERSION))
+	if saved_version > STATE_VERSION:
+		push_warning("[DrunkenWalkers] This saved state is version %d and this behaviour reads version %d, so parts of it may be left out." % [saved_version, STATE_VERSION])
 	_started = true
 	_width = maxi(1, int(state.get("width", 1)))
 	_height = maxi(1, int(state.get("height", 1)))
