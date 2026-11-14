@@ -32,9 +32,9 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
-		"## selection_mode: the highest-scoring action wins.",
+		"## The highest-scoring action wins.",
 		"const SELECTION_MODE_HIGHEST := \"highest\"",
-		"## selection_mode: a weighted random pick among the top few.",
+		"## A weighted random pick among the top few.",
 		"const SELECTION_MODE_WEIGHTED_RANDOM := \"weighted_random\"",
 		"",
 		"# --- Designer knobs (tune the FEEL in the Inspector) ---",

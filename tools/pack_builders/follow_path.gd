@@ -27,11 +27,11 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
-		"## loop_mode: stop at the end and fire On Path Finished.",
+		"## Stop at the end and fire On Path Finished.",
 		"const LOOP_MODE_ONCE := \"once\"",
-		"## loop_mode: start over at the end.",
+		"## Start over at the end.",
 		"const LOOP_MODE_LOOP := \"loop\"",
-		"## loop_mode: walk back at the end.",
+		"## Walk back at the end.",
 		"const LOOP_MODE_PINGPONG := \"pingpong\"",
 		"",
 		"# --- Designer knobs (tune in the Inspector) ---",

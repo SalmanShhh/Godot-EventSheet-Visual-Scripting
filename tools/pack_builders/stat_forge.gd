@@ -27,11 +27,11 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
-		"## overflow_mode: stop at the min/max boundary.",
+		"## Stop at the min/max boundary.",
 		"const OVERFLOW_MODE_CLAMP := \"clamp\"",
-		"## overflow_mode: loop around the min/max range.",
+		"## Loop around the min/max range.",
 		"const OVERFLOW_MODE_WRAP := \"wrap\"",
-		"## overflow_mode: apply no limit.",
+		"## Apply no limit.",
 		"const OVERFLOW_MODE_NONE := \"none\"",
 		"",
 		"# --- Designer knobs (tune in the Inspector) ---",

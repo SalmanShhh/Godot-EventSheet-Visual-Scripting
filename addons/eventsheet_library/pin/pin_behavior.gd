@@ -21,27 +21,27 @@ func _enter_tree() -> void:
 		push_warning("Pin Behavior needs a Node2D: put it under one, or set Acts on.")
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
-## pin_mode: copy the anchor's place only.
+## Copy the anchor's place only.
 const PIN_MODE_POSITION := "position"
-## pin_mode: copy the anchor's angle only.
+## Copy the anchor's angle only.
 const PIN_MODE_ANGLE := "angle"
-## pin_mode: copy both place and angle.
+## Copy both place and angle.
 const PIN_MODE_POSITION_AND_ANGLE := "position and angle"
-## pin_mode: hang on a rope, pulled only when taut.
+## Hang on a rope, pulled only when taut.
 const PIN_MODE_ROPE := "rope"
-## pin_mode: hold at exactly the bar's length.
+## Hold at exactly the bar's length.
 const PIN_MODE_BAR := "bar"
-## pin_mode: close a share of the gap each frame.
+## Close a share of the gap each frame.
 const PIN_MODE_SOFT := "soft"
-## pin_mode: carry a velocity, overshoot and settle.
+## Carry a velocity, overshoot and settle.
 const PIN_MODE_SPRING := "spring"
-## pin_mode: copy the anchor's scale.
+## Copy the anchor's scale.
 const PIN_MODE_SIZE := "size"
-## pin_axes: follow both axes.
+## Follow both axes.
 const PIN_AXES_BOTH := "both"
-## pin_axes: follow the column only.
+## Follow the column only.
 const PIN_AXES_X_ONLY := "x only"
-## pin_axes: follow the height only.
+## Follow the height only.
 const PIN_AXES_Y_ONLY := "y only"
 
 # --- Designer knobs (tune in the Inspector) ---

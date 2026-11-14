@@ -25,9 +25,9 @@ func _enter_tree() -> void:
 signal bound_hit(side: String)
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
-## bound_space: stay inside the camera's on-screen view.
+## Stay inside the camera's on-screen view.
 const BOUND_SPACE_SCREEN := "screen"
-## bound_space: stay inside the custom bounds rectangle.
+## Stay inside the custom bounds rectangle.
 const BOUND_SPACE_CUSTOM := "custom"
 
 # --- Designer knobs (tune in the Inspector) ---

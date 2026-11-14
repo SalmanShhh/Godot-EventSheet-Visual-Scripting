@@ -6,9 +6,9 @@ extends Node2D
 ## Shared 2D drawing runtime for the Drawing Canvas behaviour and the Draw ACEs: an offscreen render target, a command queue, and self-updating ribbons. One per host, cached on the host - call CanvasSurface.for_node(host).
 
 # --- Choices (the words the Drawing Canvas behaviour stores in saved scenes) ---
-## coordinates: positions are world points, centred on the host.
+## Positions are world points, centred on the host.
 const COORDINATES_WORLD := "world"
-## coordinates: positions are raw texture pixels.
+## Positions are raw texture pixels.
 const COORDINATES_CANVAS := "canvas"
 
 ## Metadata key under which the surface is stored on its host node.

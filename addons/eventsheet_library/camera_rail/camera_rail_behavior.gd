@@ -28,13 +28,13 @@ signal shot_finished
 signal blend_finished
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
-## shot_ease: no easing: a steady pace.
+## No easing: a steady pace.
 const SHOT_EASE_LINEAR := "linear"
-## shot_ease: start slowly and speed up.
+## Start slowly and speed up.
 const SHOT_EASE_EASE_IN := "ease_in"
-## shot_ease: start fast and slow down.
+## Start fast and slow down.
 const SHOT_EASE_EASE_OUT := "ease_out"
-## shot_ease: start and end slowly.
+## Start and end slowly.
 const SHOT_EASE_EASE_IN_OUT := "ease_in_out"
 
 ## The kinds of shot a rail can be running, in a pinned order: none, a flight along the route, a hold on a beat, or a blend onto another camera.

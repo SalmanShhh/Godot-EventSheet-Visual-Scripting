@@ -23,13 +23,13 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
-		"## rotation_type: spin a Node2D by its rotation.",
+		"## Spin a Node2D by its rotation.",
 		"const ROTATION_TYPE_2D := \"2d\"",
-		"## rotation_type: spin a Node3D about its x axis.",
+		"## Spin a Node3D about its x axis.",
 		"const ROTATION_TYPE_X := \"x\"",
-		"## rotation_type: spin a Node3D about its y axis.",
+		"## Spin a Node3D about its y axis.",
 		"const ROTATION_TYPE_Y := \"y\"",
-		"## rotation_type: spin a Node3D about its z axis.",
+		"## Spin a Node3D about its z axis.",
 		"const ROTATION_TYPE_Z := \"z\"",
 		"",
 		"# --- Designer knobs (tune in the Inspector) ---",

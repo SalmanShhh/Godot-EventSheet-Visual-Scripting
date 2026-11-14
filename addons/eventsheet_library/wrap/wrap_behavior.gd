@@ -25,13 +25,13 @@ func _enter_tree() -> void:
 signal wrapped(side: String)
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
-## wrap_space: wrap around the camera's on-screen view.
+## Wrap around the camera's on-screen view.
 const WRAP_SPACE_SCREEN := "screen"
-## wrap_space: wrap around the custom bounds.
+## Wrap around the custom bounds.
 const WRAP_SPACE_CUSTOM := "custom"
-## wrap_shape: a rectangle.
+## The custom wrap area is a rectangle.
 const WRAP_SHAPE_RECT := "rect"
-## wrap_shape: a circle.
+## The custom wrap area is a circle.
 const WRAP_SHAPE_CIRCLE := "circle"
 
 # --- Designer knobs (tune in the Inspector) ---

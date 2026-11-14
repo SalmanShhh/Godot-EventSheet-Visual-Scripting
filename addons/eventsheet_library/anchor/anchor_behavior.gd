@@ -25,25 +25,25 @@ func _enter_tree() -> void:
 signal anchored(corner: String)
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
-## anchored_to: the top-left corner.
+## The top-left corner.
 const ANCHORED_TO_TOP_LEFT := "top left"
-## anchored_to: the top-right corner.
+## The top-right corner.
 const ANCHORED_TO_TOP_RIGHT := "top right"
-## anchored_to: the bottom-left corner.
+## The bottom-left corner.
 const ANCHORED_TO_BOTTOM_LEFT := "bottom left"
-## anchored_to: the bottom-right corner.
+## The bottom-right corner.
 const ANCHORED_TO_BOTTOM_RIGHT := "bottom right"
-## anchored_to: the middle of the parent.
+## The middle of the parent.
 const ANCHORED_TO_CENTRE := "centre"
-## anchored_to: the whole parent.
+## The whole parent.
 const ANCHORED_TO_FULL_RECT := "full rect"
-## anchored_to: across the top.
+## Across the top.
 const ANCHORED_TO_TOP_EDGE := "top edge"
-## anchored_to: across the bottom.
+## Across the bottom.
 const ANCHORED_TO_BOTTOM_EDGE := "bottom edge"
-## anchored_to: down the left side.
+## Down the left side.
 const ANCHORED_TO_LEFT_EDGE := "left edge"
-## anchored_to: down the right side.
+## Down the right side.
 const ANCHORED_TO_RIGHT_EDGE := "right edge"
 
 # --- Designer knobs (tune in the Inspector) ---

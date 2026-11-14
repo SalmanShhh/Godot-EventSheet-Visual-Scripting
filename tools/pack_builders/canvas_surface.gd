@@ -19,9 +19,9 @@ static func build() -> bool:
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
 		"# --- Choices (the words the Drawing Canvas behaviour stores in saved scenes) ---",
-		"## coordinates: positions are world points, centred on the host.",
+		"## Positions are world points, centred on the host.",
 		"const COORDINATES_WORLD := \"world\"",
-		"## coordinates: positions are raw texture pixels.",
+		"## Positions are raw texture pixels.",
 		"const COORDINATES_CANVAS := \"canvas\"",
 		"",
 		"## Metadata key under which the surface is stored on its host node.",
