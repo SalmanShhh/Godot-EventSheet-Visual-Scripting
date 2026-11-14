@@ -525,8 +525,28 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
 			definition.metadata["codegen_template"] = "%s.%s(%s)" % [_autoload_singleton, method_name, ", ".join(__arg_ids)]
 		elif _expose_all_mode == "node":
 			definition.metadata["codegen_template"] = "$%s.%s(%s)" % [_provider_node_name, method_name, ", ".join(__arg_ids)]
-	_apply_template_overrides(definition, overrides)
+	_apply_template_overrides(definition, _aimed_at_node(overrides, method_name, parameter_definitions))
 	return definition
+
+
+## A named sheet that publishes a function writes the call as a bare `fn({args})` into its own
+## script, which is a call on itself - correct inside that file and wrong in any OTHER sheet, where
+## it would call a function that sheet does not have. When a Node script is read as a vocabulary and
+## its call line is exactly that bare call of this method, the call is aimed at the node by its
+## class, the way a behaviour pack's is, so the row gets an "On node" slot. A call the author
+## qualified by hand, or wrote any other shape, is left alone. The script itself is never touched.
+func _aimed_at_node(overrides: Dictionary, method_name: String, parameter_definitions: Array) -> Dictionary:
+	if not _provider_is_node or not _autoload_singleton.is_empty() or _provider_node_name.is_empty():
+		return overrides
+	var written: String = str(overrides.get("codegen_template", "")).strip_edges()
+	var arguments: PackedStringArray = PackedStringArray()
+	for parameter_definition: Variant in parameter_definitions:
+		arguments.append("{%s}" % str((parameter_definition as Dictionary).get("id", "")))
+	if written != "%s(%s)" % [method_name, ", ".join(arguments)]:
+		return overrides
+	var aimed: Dictionary = overrides.duplicate()
+	aimed["codegen_template"] = "$%s.%s" % [_provider_node_name, written]
+	return aimed
 
 
 func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:

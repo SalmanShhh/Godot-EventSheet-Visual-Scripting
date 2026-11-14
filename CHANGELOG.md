@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a function a named sheet publishes calls the node when another sheet uses it
+
+- A sheet that names its class and publishes a function wrote the call line as a bare `fn(args)` into its compiled script. That is a call on itself, correct in its own file, and wrong in any other sheet, where it called a function that sheet does not have even though the status message promised a call on the node. A Node script read as vocabulary now aims that exact bare call at the node by its class, so the row gets an "On node" slot defaulting to `$ClassName`. A call you qualified yourself is left as written. The compiled script is not touched, so no script or showcase file changes, and rows already placed keep the call they were baked with.
+
 ### Fixed: writing a sentence or a label into your script no longer drops the lines it did not mention
 
 - Changing one thing about a function from the editor (its name, say) used to rewrite the whole comment block above it from only what that edit carried, so its kind, category, description and parameter lines vanished. An edit now merges: what it does not name stays, a field set to empty text is removed, and a parameter keeps its help text when only its starting value changes.
