@@ -60,7 +60,7 @@ static func run() -> bool:
 	# Drag & Drop: event-driven surface (author feeds the drag point; never polls Input).
 	var drag_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/drag_drop/drag_drop_behavior.gd")
 	all_passed = _check("drag is event-driven (start/set-point/drop + direction lock + throw)",
-		drag_source.contains("@export_enum(\"free\", \"up_down\", \"left_right\", \"four_dir\", \"eight_dir\") var directions")
+		drag_source.contains("@export var directions: Directions = Directions.FREE") and drag_source.contains("EIGHT_DIR = 4")
 			and drag_source.contains("func start_drag(")
 			and drag_source.contains("func set_drag_point(")
 			and drag_source.contains("func drop_drag(")

@@ -70,8 +70,23 @@ var snapped_uid: int = -1
 ## Position in the throw history where the next sample goes.
 var throw_cursor: int = 0
 
+# --- Choices (saved scenes store the numbers; the numbers are pinned) ---
+## The movement locks a drag can have, in a pinned order.
+enum Directions {
+	## No lock: the drag goes where the pointer goes.
+	FREE = 0,
+	## Up and down only.
+	UP_DOWN = 1,
+	## Left and right only.
+	LEFT_RIGHT = 2,
+	## Four ways, one axis at a time.
+	FOUR_DIR = 3,
+	## Eight ways, snapped to 45 degrees.
+	EIGHT_DIR = 4
+}
+
 ## Per-tick movement lock (8Direction style).
-@export_enum("free", "up_down", "left_right", "four_dir", "eight_dir") var directions: int = 0
+@export var directions: Directions = Directions.FREE
 ## Where the pointer is holding the host, in world pixels.
 var drag_point: Vector2 = Vector2.ZERO
 ## Where the pointer held the host on the previous frame.
@@ -102,7 +117,7 @@ func _process(delta: float) -> void:
 		else:
 			follow_uid = -1
 	var target := drag_point + grab_offset
-	if directions != 0:
+	if directions != Directions.FREE:
 		target = host.global_position + _constrain_step(target - host.global_position)
 	if snap_radius > 0.0 and magnet_strength > 0.0 and not _snap_points().is_empty():
 		var near := _nearest_snap(target)
@@ -221,7 +236,7 @@ func set_follow_speed(speed: float) -> void:
 ## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
 ## @ace_codegen_template("$DragDropBehavior.set_directions({dirs})")
 func set_directions(dirs: int) -> void:
-	directions = clampi(dirs, 0, 4)
+	directions = clampi(dirs, 0, 4) as Directions
 
 ## @ace_action
 ## @ace_name("Set Break Distance")
@@ -419,10 +434,10 @@ func snapped_object_uid() -> int:
 
 func _constrain_step(step: Vector2) -> Vector2:
 	match directions:
-		1: return Vector2(0.0, step.y)
-		2: return Vector2(step.x, 0.0)
-		3: return Vector2(step.x, 0.0) if absf(step.x) >= absf(step.y) else Vector2(0.0, step.y)
-		4:
+		Directions.UP_DOWN: return Vector2(0.0, step.y)
+		Directions.LEFT_RIGHT: return Vector2(step.x, 0.0)
+		Directions.FOUR_DIR: return Vector2(step.x, 0.0) if absf(step.x) >= absf(step.y) else Vector2(0.0, step.y)
+		Directions.EIGHT_DIR:
 			var ang := snappedf(atan2(step.y, step.x), PI / 4.0)
 			var dir := Vector2(cos(ang), sin(ang))
 			return dir * (step.x * dir.x + step.y * dir.y)

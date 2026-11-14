@@ -47,8 +47,23 @@ static func build() -> bool:
 	# Vector2/PackedVector2Array literals).
 	var decls: RawCodeRow = RawCodeRow.new()
 	decls.code = "\n".join(PackedStringArray([
+		"# --- Choices (saved scenes store the numbers; the numbers are pinned) ---",
+		"## The movement locks a drag can have, in a pinned order.",
+		"enum Directions {",
+		"\t## No lock: the drag goes where the pointer goes.",
+		"\tFREE = 0,",
+		"\t## Up and down only.",
+		"\tUP_DOWN = 1,",
+		"\t## Left and right only.",
+		"\tLEFT_RIGHT = 2,",
+		"\t## Four ways, one axis at a time.",
+		"\tFOUR_DIR = 3,",
+		"\t## Eight ways, snapped to 45 degrees.",
+		"\tEIGHT_DIR = 4",
+		"}",
+		"",
 		"## Per-tick movement lock (8Direction style).",
-		"@export_enum(\"free\", \"up_down\", \"left_right\", \"four_dir\", \"eight_dir\") var directions: int = 0",
+		"@export var directions: Directions = Directions.FREE",
 		"## Where the pointer is holding the host, in world pixels.",
 		"var drag_point: Vector2 = Vector2.ZERO",
 		"## Where the pointer held the host on the previous frame.",
@@ -157,10 +172,10 @@ static func build() -> bool:
 		"",
 		"func _constrain_step(step: Vector2) -> Vector2:",
 		"\tmatch directions:",
-		"\t\t1: return Vector2(0.0, step.y)",
-		"\t\t2: return Vector2(step.x, 0.0)",
-		"\t\t3: return Vector2(step.x, 0.0) if absf(step.x) >= absf(step.y) else Vector2(0.0, step.y)",
-		"\t\t4:",
+		"\t\tDirections.UP_DOWN: return Vector2(0.0, step.y)",
+		"\t\tDirections.LEFT_RIGHT: return Vector2(step.x, 0.0)",
+		"\t\tDirections.FOUR_DIR: return Vector2(step.x, 0.0) if absf(step.x) >= absf(step.y) else Vector2(0.0, step.y)",
+		"\t\tDirections.EIGHT_DIR:",
 		"\t\t\tvar ang := snappedf(atan2(step.y, step.x), PI / 4.0)",
 		"\t\t\tvar dir := Vector2(cos(ang), sin(ang))",
 		"\t\t\treturn dir * (step.x * dir.x + step.y * dir.y)",
@@ -289,7 +304,7 @@ static func build() -> bool:
 		"\telse:",
 		"\t\tfollow_uid = -1",
 		"var target := drag_point + grab_offset",
-		"if directions != 0:",
+		"if directions != Directions.FREE:",
 		"\ttarget = host.global_position + _constrain_step(target - host.global_position)",
 		"if snap_radius > 0.0 and magnet_strength > 0.0 and not _snap_points().is_empty():",
 		"\tvar near := _nearest_snap(target)",
@@ -388,7 +403,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_directions", "Set Directions", "Drag & Drop",
 		"Direction lock: 0 free, 1 up/down, 2 left/right, 3 four-dir, 4 eight-dir.",
 		[["dirs", "int"]], "\n".join(PackedStringArray([
-		"directions = clampi(dirs, 0, 4)"
+		"directions = clampi(dirs, 0, 4) as Directions"
 	])))
 
 	Lib.append_function(sheet, "set_break_distance", "Set Break Distance", "Drag & Drop",

@@ -113,6 +113,37 @@ var hovered_uid: int = -1
 ## True if the cursor was against the edge of its bounds on the previous frame.
 var edge_hit_prev: bool = false
 
+# --- Choices (saved scenes store the numbers; the numbers are pinned) ---
+## Which directions the cursor moves in, in a pinned order.
+enum DirectionMode {
+	## Up and down only.
+	UP_DOWN = 0,
+	## Left and right only.
+	LEFT_RIGHT = 1,
+	## Four ways, one axis at a time.
+	FOUR = 2,
+	## Eight ways, diagonals too.
+	EIGHT = 3
+}
+## How the cursor decides it is over a target, in a pinned order.
+enum HoverMode {
+	## The cursor's origin must be inside the shape.
+	POINT = 0,
+	## The cursor's shape must overlap the target's.
+	OVERLAP = 1
+}
+## Which surfaces reflect the cursor, in a pinned order.
+enum BounceMode {
+	## Nothing reflects the cursor.
+	NONE = 0,
+	## Solid bodies reflect the cursor.
+	SOLIDS = 1,
+	## The constraint bounds reflect the cursor.
+	CONSTRAINTS = 2,
+	## Solids and the constraint bounds both reflect it.
+	BOTH = 3
+}
+
 ## Master on/off.
 @export var enabled: bool = true:
 	set(value):
@@ -127,11 +158,11 @@ var edge_hit_prev: bool = false
 			report_vel = Vector2.ZERO
 		set_physics_process(value)
 ## Which directions the cursor moves in: up_down, left_right, four (one axis at a time) or eight.
-@export_enum("up_down", "left_right", "four", "eight") var direction_mode: int = 3
+@export var direction_mode: DirectionMode = DirectionMode.EIGHT
 ## Point = origin inside shape; Overlap = shapes overlap.
-@export_enum("point", "overlap") var hover_mode: int = 0
+@export var hover_mode: HoverMode = HoverMode.POINT
 ## Which surfaces reflect the cursor losslessly.
-@export_enum("none", "solids", "constraints", "both") var bounce_mode: int = 0
+@export var bounce_mode: BounceMode = BounceMode.NONE
 ## The cursor's velocity, in pixels per second.
 var vel: Vector2 = Vector2.ZERO
 ## The velocity rows read, in pixels per second; a teleport reports its implied velocity.
@@ -186,11 +217,11 @@ func _physics_process(delta: float) -> void:
 		axis = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	else:
 		axis = Vector2.ZERO
-	if direction_mode == 0:
+	if direction_mode == DirectionMode.UP_DOWN:
 		axis.x = 0.0
-	elif direction_mode == 1:
+	elif direction_mode == DirectionMode.LEFT_RIGHT:
 		axis.y = 0.0
-	elif direction_mode == 2:
+	elif direction_mode == DirectionMode.FOUR:
 		if absf(axis.x) >= absf(axis.y):
 			axis.y = 0.0
 		else:
@@ -275,7 +306,7 @@ func _physics_process(delta: float) -> void:
 		var col := host.get_last_slide_collision()
 		solid_uid = col.get_collider().get_instance_id() if col != null and col.get_collider() != null else -1
 		solid_hit.emit()
-		if bounce_mode == 1 or bounce_mode == 3:
+		if bounce_mode == BounceMode.SOLIDS or bounce_mode == BounceMode.BOTH:
 			for i in host.get_slide_collision_count():
 				vel = vel.bounce(host.get_slide_collision(i).get_normal())
 			bounce_triggered.emit()
@@ -291,7 +322,7 @@ func _physics_process(delta: float) -> void:
 		var edge := cp != p
 		if edge:
 			host.global_position = cp
-			if bounce_mode == 2 or bounce_mode == 3:
+			if bounce_mode == BounceMode.CONSTRAINTS or bounce_mode == BounceMode.BOTH:
 				if cp.x != p.x:
 					vel.x = -vel.x
 				if cp.y != p.y:
@@ -568,7 +599,7 @@ func set_allow_sliding(state: bool) -> void:
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_bounce({mode})")
 func set_bounce(mode: int) -> void:
-	bounce_mode = clampi(mode, 0, 3)
+	bounce_mode = clampi(mode, 0, 3) as BounceMode
 
 ## @ace_action
 ## @ace_name("Set Direction Mode")
@@ -577,7 +608,7 @@ func set_bounce(mode: int) -> void:
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_direction_mode({mode})")
 func set_direction_mode(mode: int) -> void:
-	direction_mode = clampi(mode, 0, 3)
+	direction_mode = clampi(mode, 0, 3) as DirectionMode
 
 ## @ace_action
 ## @ace_name("Set Default Controls")
@@ -637,7 +668,7 @@ func set_constraint_bounds(left: float, top: float, right: float, bottom: float)
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_hover_mode({mode})")
 func set_hover_mode(mode: int) -> void:
-	hover_mode = clampi(mode, 0, 1)
+	hover_mode = clampi(mode, 0, 1) as HoverMode
 
 ## @ace_condition
 ## @ace_name("Is Interact Held")
@@ -695,7 +726,7 @@ func is_hovering(target: Node2D) -> bool:
 	if host == null or target == null or target == host or not target.visible:
 		return false
 	var hit := false
-	if hover_mode == 0:
+	if hover_mode == HoverMode.POINT:
 		var shape := target.get_node_or_null("CollisionShape2D") as CollisionShape2D
 		if shape != null and shape.shape != null:
 			hit = shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))

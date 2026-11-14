@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/drag_drop/drag_drop_behavior.gd" id="1_drag"]
+[ext_resource type="Script" path="res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd" id="2_cursor"]
+
+[node name="Root" type="Node2D"]
+
+[node name="DragDrop" type="Node" parent="."]
+script = ExtResource("1_drag")
+directions = 3
+
+[node name="VirtualCursor" type="Node" parent="."]
+script = ExtResource("2_cursor")
+direction_mode = 1
+hover_mode = 1
+bounce_mode = 2

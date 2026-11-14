@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Drag & Drop and Virtual Cursor modes are real enums
+
+- Drag & Drop's `directions` and the Virtual Cursor's `direction_mode`, `hover_mode` and `bounce_mode` were exported whole numbers behind an `@export_enum` list. They are now typed enums with pinned values (`Directions.FOUR_DIR = 3`, `BounceMode.CONSTRAINTS = 2`, ...), so the code reads `directions != Directions.FREE` rather than `directions != 0`. A scene saved before the change stores the same number and loads into the enum unchanged (`saved_int_choices_test` loads such a scene file and pins the values); the Set Directions, Set Bounce, Set Direction Mode and Set Hover Mode rows keep their number parameters. The Inspector dropdown labels now come from the enum names (Up Down, Four Dir) instead of the old lowercase words.
+
 ### Changed: a behaviour's exported choices are named in its code
 
 - A behaviour's exported choice keeps the words it stores in a scene and its `@export_enum` line exactly as before, so every saved scene loads unchanged. The pack's own code now names each word through a constant (`BOUND_SPACE_SCREEN`, `PIN_MODE_ROPE`, ...), in every comparison, `match` arm and assignment, so a misspelled word is a parse error instead of a silent miss. Row templates such as `set_bound_space("{space}")` keep their bytes. The option lists of `@export_enum` and `@ace_param_options` stay literal: Godot accepts a constant there, but an opened pack then reads that variable as raw code rather than a variable row. Done: Bound To, Pin, Pin 3D, Rotate, Wrap, Anchor, Follow Path, Stat Forge, Utility AI, Juice (the slowmo fade curve and direction), the Camera Rail pair (the shot ease) and Canvas Surface (the coordinates word). The Camera Rail's running shot, which is never saved, is a real enum with pinned values (`ShotMode`), and Canvas Surface's coordinate words are named too.

@@ -61,6 +61,37 @@ static func build() -> bool:
 	# can carry a setter (the variables dict has no spelling for one).
 	var decls: RawCodeRow = RawCodeRow.new()
 	decls.code = "\n".join(PackedStringArray([
+		"# --- Choices (saved scenes store the numbers; the numbers are pinned) ---",
+		"## Which directions the cursor moves in, in a pinned order.",
+		"enum DirectionMode {",
+		"\t## Up and down only.",
+		"\tUP_DOWN = 0,",
+		"\t## Left and right only.",
+		"\tLEFT_RIGHT = 1,",
+		"\t## Four ways, one axis at a time.",
+		"\tFOUR = 2,",
+		"\t## Eight ways, diagonals too.",
+		"\tEIGHT = 3",
+		"}",
+		"## How the cursor decides it is over a target, in a pinned order.",
+		"enum HoverMode {",
+		"\t## The cursor's origin must be inside the shape.",
+		"\tPOINT = 0,",
+		"\t## The cursor's shape must overlap the target's.",
+		"\tOVERLAP = 1",
+		"}",
+		"## Which surfaces reflect the cursor, in a pinned order.",
+		"enum BounceMode {",
+		"\t## Nothing reflects the cursor.",
+		"\tNONE = 0,",
+		"\t## Solid bodies reflect the cursor.",
+		"\tSOLIDS = 1,",
+		"\t## The constraint bounds reflect the cursor.",
+		"\tCONSTRAINTS = 2,",
+		"\t## Solids and the constraint bounds both reflect it.",
+		"\tBOTH = 3",
+		"}",
+		"",
 		"## Master on/off.",
 		"@export var enabled: bool = true:",
 		"\tset(value):",
@@ -75,11 +106,11 @@ static func build() -> bool:
 		"\t\t\treport_vel = Vector2.ZERO",
 		"\t\tset_physics_process(value)",
 		"## Which directions the cursor moves in: up_down, left_right, four (one axis at a time) or eight.",
-		"@export_enum(\"up_down\", \"left_right\", \"four\", \"eight\") var direction_mode: int = 3",
+		"@export var direction_mode: DirectionMode = DirectionMode.EIGHT",
 		"## Point = origin inside shape; Overlap = shapes overlap.",
-		"@export_enum(\"point\", \"overlap\") var hover_mode: int = 0",
+		"@export var hover_mode: HoverMode = HoverMode.POINT",
 		"## Which surfaces reflect the cursor losslessly.",
-		"@export_enum(\"none\", \"solids\", \"constraints\", \"both\") var bounce_mode: int = 0",
+		"@export var bounce_mode: BounceMode = BounceMode.NONE",
 		"## The cursor's velocity, in pixels per second.",
 		"var vel: Vector2 = Vector2.ZERO",
 		"## The velocity rows read, in pixels per second; a teleport reports its implied velocity.",
@@ -176,7 +207,7 @@ static func build() -> bool:
 		"\tif host == null or target == null or target == host or not target.visible:",
 		"\t\treturn false",
 		"\tvar hit := false",
-		"\tif hover_mode == 0:",
+		"\tif hover_mode == HoverMode.POINT:",
 		"\t\tvar shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D",
 		"\t\tif shape != null and shape.shape != null:",
 		"\t\t\thit = shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))",
@@ -356,11 +387,11 @@ static func build() -> bool:
 		"\taxis = Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")",
 		"else:",
 		"\taxis = Vector2.ZERO",
-		"if direction_mode == 0:",
+		"if direction_mode == DirectionMode.UP_DOWN:",
 		"\taxis.x = 0.0",
-		"elif direction_mode == 1:",
+		"elif direction_mode == DirectionMode.LEFT_RIGHT:",
 		"\taxis.y = 0.0",
-		"elif direction_mode == 2:",
+		"elif direction_mode == DirectionMode.FOUR:",
 		"\tif absf(axis.x) >= absf(axis.y):",
 		"\t\taxis.y = 0.0",
 		"\telse:",
@@ -445,7 +476,7 @@ static func build() -> bool:
 		"\tvar col := host.get_last_slide_collision()",
 		"\tsolid_uid = col.get_collider().get_instance_id() if col != null and col.get_collider() != null else -1",
 		"\tsolid_hit.emit()",
-		"\tif bounce_mode == 1 or bounce_mode == 3:",
+		"\tif bounce_mode == BounceMode.SOLIDS or bounce_mode == BounceMode.BOTH:",
 		"\t\tfor i in host.get_slide_collision_count():",
 		"\t\t\tvel = vel.bounce(host.get_slide_collision(i).get_normal())",
 		"\t\tbounce_triggered.emit()",
@@ -461,7 +492,7 @@ static func build() -> bool:
 		"\tvar edge := cp != p",
 		"\tif edge:",
 		"\t\thost.global_position = cp",
-		"\t\tif bounce_mode == 2 or bounce_mode == 3:",
+		"\t\tif bounce_mode == BounceMode.CONSTRAINTS or bounce_mode == BounceMode.BOTH:",
 		"\t\t\tif cp.x != p.x:",
 		"\t\t\t\tvel.x = -vel.x",
 		"\t\t\tif cp.y != p.y:",
@@ -668,13 +699,13 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_bounce", "Set Bounce", "Virtual Cursor",
 		"0 none, 1 solids, 2 constraints, 3 both.",
 		[["mode", "int"]], "\n".join(PackedStringArray([
-		"bounce_mode = clampi(mode, 0, 3)"
+		"bounce_mode = clampi(mode, 0, 3) as BounceMode"
 	])))
 
 	Lib.append_function(sheet, "set_direction_mode", "Set Direction Mode", "Virtual Cursor",
 		"0 up/down, 1 left/right, 2 four-way, 3 eight-way.",
 		[["mode", "int"]], "\n".join(PackedStringArray([
-		"direction_mode = clampi(mode, 0, 3)"
+		"direction_mode = clampi(mode, 0, 3) as DirectionMode"
 	])))
 
 	Lib.append_function(sheet, "set_default_controls", "Set Default Controls", "Virtual Cursor",
@@ -716,7 +747,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_hover_mode", "Set Hover Mode", "Virtual Cursor",
 		"0 point (origin inside shape), 1 overlap (shapes overlap).",
 		[["mode", "int"]], "\n".join(PackedStringArray([
-		"hover_mode = clampi(mode, 0, 1)"
+		"hover_mode = clampi(mode, 0, 1) as HoverMode"
 	])))
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
