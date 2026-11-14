@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: Run now, Reload, Enable plugin and Attach to node save the sheet the way Save does
+
+- With edits not saved yet, these four wrote the sheet's script straight to disk: no backup of the version before and the tab still marked unsaved. They now make the same save as the Save button first, so the version before is in Tools > Sheet Backups and the tab is clean, as when Godot saves a scene before it runs. A sheet that was never saved opens Save As and the command waits.
+
 ### Fixed: while a file opens, the Code button no longer gets a coloured ring
 
 - The button took a 1 px accent outline while a script opened. It now takes its own hover fill, with no outline, and goes back when the open ends.

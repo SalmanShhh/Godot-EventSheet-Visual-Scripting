@@ -26,6 +26,7 @@ extends RefCounted
 
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
+const UNSAVED_SHEETS_PATH := "res://addons/eventsheet/editor/dock/unsaved_sheets.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
 
 ## The button kinds, in bar order. Each is the `kind` its span carries and the branch the viewport's
@@ -473,6 +474,8 @@ func run_now() -> void:
 	if is_plugin_sheet(_dock._current_sheet):
 		_dock._set_status("A plugin runs when it is enabled, not on demand - use Enable plugin, then Reload after each change.", true)
 		return
+	if not load(UNSAVED_SHEETS_PATH).save_current_first(_dock):
+		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("This tool doesn't compile yet, so there is nothing to run. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
@@ -503,6 +506,8 @@ func reload() -> void:
 	var target: String = script_path()
 	if target.is_empty():
 		_dock._set_status("Save the sheet first - Reload re-reads the script on disk.", true)
+		return
+	if not load(UNSAVED_SHEETS_PATH).save_current_first(_dock):
 		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
@@ -558,6 +563,8 @@ func enable_plugin() -> void:
 	var folder: String = plugin_folder_name(target)
 	if folder.is_empty():
 		_dock._set_status("A plugin has to live in its own folder under res://addons/ - save this sheet there first.", true)
+		return
+	if not load(UNSAVED_SHEETS_PATH).save_current_first(_dock):
 		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):

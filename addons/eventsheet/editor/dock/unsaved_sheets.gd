@@ -107,3 +107,17 @@ static func file_name(tab: Dictionary) -> String:
 	if path.is_empty() and resource != null:
 		path = resource.resource_path
 	return path.get_file() if not path.is_empty() else EventSheetL10n.translate("Untitled EventSheet")
+
+
+## The save a command that needs the sheet's script on disk (Run now, Reload, Enable plugin, Attach
+## behaviour) makes first, when the sheet in front has edits not saved yet: the Save button's own save,
+## so the version before goes into the backup ring and the tab ends clean, as when Godot saves a scene
+## before it runs. Returns true when there is nothing left unsaved, so the command may go on. A sheet
+## that was never saved opens Save As, stays unsaved, and the command stops.
+static func save_current_first(dock: Control) -> bool:
+	if dock == null or dock._current_sheet == null:
+		return false
+	if not dock._dirty:
+		return true
+	dock._sheet_io._on_save_requested()
+	return not dock._dirty

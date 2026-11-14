@@ -7142,6 +7142,8 @@ func start_tour() -> void:  # Tools menu (id 17) + the Welcome window's tour but
 func _attach_behavior_to_selection() -> void:
 	if not Engine.is_editor_hint() or not is_inside_tree():
 		return
+	if _current_sheet != null and _current_sheet.behavior_mode and not load("res://addons/eventsheet/editor/dock/unsaved_sheets.gd").save_current_first(self):
+		return
 	var selected: Array[Node] = EditorInterface.get_selection().get_selected_nodes()
 	var result: Dictionary = load(AUTHOR_LOOP_PATH).attach_behavior(_current_sheet, selected[0] if not selected.is_empty() else null)
 	if bool(result.get("ok", false)):
