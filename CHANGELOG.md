@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: while a file opens, the Code button no longer gets a coloured ring
+
+- The button took a 1 px accent outline while a script opened. It now takes its own hover fill, with no outline, and goes back when the open ends.
+
 ### Fixed: typing a new "extends" in the Class window no longer writes your script
 
 - The Class window reads the sheet's code to warn about members the new base does not have. It did that with a compile that also wrote the sheet's file, so typing in the Extends field put your unsaved row edits on disk with no save, no backup and no undo. It now only reads. Apply is still one undo step and the file changes when you save, with the usual backup.

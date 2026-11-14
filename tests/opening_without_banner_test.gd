@@ -50,17 +50,15 @@ static func run() -> bool:
 	var after: Array = [progress.is_active(), hairline.visible, link.visible]
 	hairline.free()
 	link.free()
-	# The ring on Code is the button's own box with a border added, so the button keeps its fill.
-	var filled: StyleBoxFlat = StyleBoxFlat.new()
-	filled.bg_color = Color(0.2, 0.3, 0.4)
-	filled.content_margin_left = 7.0
-	var accent: Color = Color(0.3, 0.5, 0.8)
-	var ringed: StyleBoxFlat = EventSheetOpenProgress.ring_style(filled, accent) as StyleBoxFlat
-	var ring_facts: Array = [ringed.draw_center, ringed.bg_color, ringed.content_margin_left, ringed.border_width_top,
-		ringed.border_color, filled.border_width_top]
+	# While an open runs, Code takes the button's own hover box: no outline of any colour is added.
+	var door: Button = Button.new()
+	var hover: StyleBox = door.get_theme_stylebox("hover")
+	var quiet: StyleBox = EventSheetOpenProgress.quiet_style(door)
+	var quiet_facts: Array = [quiet.get_class(), quiet.get_minimum_size(), quiet is StyleBoxFlat and (quiet as StyleBoxFlat).border_width_top == (hover as StyleBoxFlat).border_width_top]
+	var hover_facts: Array = [hover.get_class(), hover.get_minimum_size(), hover is StyleBoxFlat]
+	door.free()
 	return SUPPORT.pins(NAME, [
-		["the ring keeps the button's fill and margins and adds a 1 px border in the accent, leaving the original box alone",
-			ring_facts, [true, Color(0.2, 0.3, 0.4), 7.0, 1, Color(0.3, 0.5, 0.8), 0]],
+		["the open gives Code its own hover box and draws no ring of its own", quiet_facts, hover_facts],
 		["the ratio (in percent) runs through the passes in order", ratios, [0, 48, 88, 88, 94]],
 		["each pass is named in the board's words", words, [
 			"reading the code", "reading functions 5 of 10", "reading functions 10 of 10",

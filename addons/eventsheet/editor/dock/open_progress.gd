@@ -257,8 +257,8 @@ func _hug_status(on: bool) -> void:
 	label.clip_text = not on
 
 
-## Rings the Code button of the Events / Code / Both switch in the accent while the open runs: it is
-## the other door to "show as code".
+## Gives the Code button of the Events / Code / Both switch its own hover look while the open runs: it
+## is the other door to "show as code", and a lifted fill says so without drawing anything around it.
 func _ring_code_door(on: bool) -> void:
 	if _dock == null or not ("_code_panel_glue" in _dock) or _dock._code_panel_glue == null:
 		return
@@ -271,22 +271,9 @@ func _ring_code_door(on: bool) -> void:
 	if not on:
 		button.remove_theme_stylebox_override("normal")
 		return
-	button.add_theme_stylebox_override("normal", ring_style(button.get_theme_stylebox("normal"), look_accent()))
+	button.add_theme_stylebox_override("normal", quiet_style(button))
 
 
-## The button's own normal box with a 1 px ring in `accent` added, so the button keeps its fill and its
-## margins during the open. A box that is not flat (a texture, an empty box) gets a ring-only box with
-## its margins, which is the most that can be added to it without replacing what it draws.
-static func ring_style(base: StyleBox, accent: Color) -> StyleBox:
-	var ring: StyleBoxFlat = (base as StyleBoxFlat).duplicate() as StyleBoxFlat if base is StyleBoxFlat else StyleBoxFlat.new()
-	if not (base is StyleBoxFlat):
-		ring.draw_center = false
-		ring.set_corner_radius_all(3)
-		if base != null:
-			ring.content_margin_left = base.get_margin(SIDE_LEFT)
-			ring.content_margin_right = base.get_margin(SIDE_RIGHT)
-			ring.content_margin_top = base.get_margin(SIDE_TOP)
-			ring.content_margin_bottom = base.get_margin(SIDE_BOTTOM)
-	ring.set_border_width_all(1)
-	ring.border_color = accent
-	return ring
+## The button's own hover box, as its normal box: the fill and margins it already has, and no outline.
+static func quiet_style(button: Button) -> StyleBox:
+	return button.get_theme_stylebox("hover").duplicate() as StyleBox
