@@ -371,6 +371,24 @@ reader one glance. Being quietly wrong about it costs them a broken game. A rena
 The button under the list is the only place a rename happens, it goes through the sheet's own undo
 funnel, and one Ctrl+Z takes all of it back.
 
+**Renaming an exported variable also carries the values your scenes stored for it.** An `@export`
+variable keeps what you typed in the Inspector in the scene file, under the variable's name
+(`speed = 300.0` on the node). Rename the variable and Godot would no longer find `speed` on the
+script, drop every one of those values without a word, and the next save of the scene would remove
+them. So when the variable is exported, the Rename window reads the text of the project's scenes and
+resources (it loads none of them) and adds a card: **Scenes and resources that store a value for it**,
+one line per file with how many values it holds. The button renames the name on exactly those lines
+and nothing else - each value is copied exactly as it was - and it is the same single undo step as
+the rename: one Ctrl+Z puts the sheet and every scene back, byte for byte. A copy of each scene's old
+text is also kept in Godot's user data folder, in `eventsheet_backups`.
+
+A scene that only inherits the value from another scene is not touched; the one that stores it is.
+A node whose script has a variable of the same name but is a different script is never touched. A
+file that cannot be rewritten with certainty is named in a second card, **Not changed**, with what to
+do: a scene saved in Godot's binary format (`.scn`, `.res`), a scene open in the editor with changes
+you have not saved yet, or a node that already stores a value under the new name. **Deleting** an
+exported variable asks first when scenes store a value for it, names them, and writes nothing to them.
+
 ### Somebody else renamed it
 
 The other direction is the one that used to be silent: somebody renames a function in the script

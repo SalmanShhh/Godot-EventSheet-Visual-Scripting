@@ -10519,3 +10519,26 @@ These event sheets were not saved: %s,次のイベントシートは保存され
 "it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","まだ一度も保存されておらず、ファイルがありません - EventSheet 画面の「名前を付けて保存」でファイルを作ってください"
 its file still holds unresolved merge markers - finish the merge first,ファイルにまだ解決されていないマージマーカーが残っています - 先にマージを完了してください
 "it is open read-only - press Edit Events, or use Save As to keep a copy","読み取り専用で開いています - 「イベントを編集」を押すか、「名前を付けて保存」でコピーを残してください"
+"%s could not be written, so no file was changed.",%s を書き込めなかったため、どのファイルも変更されていません。
+%d kept,%d 個を保持
+open it,開いてください
+"A copy of each scene's old text is also kept in Godot's user data folder, in eventsheet_backups.",各シーンの古いテキストのコピーは、Godot のユーザーデータフォルダ内の eventsheet_backups にも残ります。
+"Ctrl+Z undoes all of it, the scenes included.",Ctrl+Z でシーンも含めてすべて元に戻せます。
+The scenes go back with Ctrl+Z too.,シーンも Ctrl+Z で元に戻ります。
+"Scenes and resources that store a value for it - renamed with it, so every value is kept, and Ctrl+Z puts them back",この値を保存しているシーンとリソース - 一緒に名前が変わるので、すべての値が残ります。Ctrl+Z で元に戻せます
+Not changed - what to do is on each line,変更しません - 各行に対処方法が書かれています
+Looking through %d scenes and resources for values stored under this name...,この名前で保存された値を %d 個のシーンとリソースから探しています...
+%s - %d value(s),%s - %d 個の値
+"%d scene or resource file(s) store a value for %s. Godot drops a stored value whose name no longer exists, so they are listed below.",%d 個のシーンまたはリソースファイルが %s の値を保存しています。Godot は名前が存在しなくなった保存済みの値を捨てるため、下に一覧を示します。
+"it is open with changes you have not saved - save or close it, then rename again",保存していない変更があるまま開かれています - 保存するか閉じてから、もう一度名前を変えてください
+it is not plain UTF-8 text - open it and type the value in again under the new name,通常の UTF-8 テキストではありません - 開いて、新しい名前で値を入力し直してください
+it is in Godot's binary format - open it and type the value in again under the new name,Godot のバイナリ形式です - 開いて、新しい名前で値を入力し直してください
+%d value(s) in %d scene(s) kept under the new name - Ctrl+Z puts them back.,%d 個の値（%d 個のシーン）を新しい名前で保持しました - Ctrl+Z で元に戻せます。
+"Not changed, open each one and type its value in again under the new name: %s.",変更していません - それぞれを開いて、新しい名前で値を入力し直してください: %s。
+%d value(s),%d 個の値
+Scenes store a value for %s,シーンが %s の値を保存しています
+%d scene or resource file(s) store a value for it. Deleting it makes Godot drop those values the next time each one is saved.,%d 個のシーンまたはリソースファイルがこの値を保存しています。削除すると、各ファイルを次に保存するときに Godot がそれらの値を捨てます。
+"Nothing in those files is changed by deleting. To keep the values, cancel and use Rename instead: it carries them along.",削除してもそれらのファイルは何も変更されません。値を残したい場合は、キャンセルして代わりに「名前を変更」を使ってください。値も一緒に移ります。
+Keep the variable,変数を残す
+Delete anyway,それでも削除
+it already stores a value under the name %s - open it and decide which value to keep,すでに %s という名前で値を保存しています - 開いて、どちらの値を残すか決めてください

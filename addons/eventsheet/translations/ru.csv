@@ -10519,3 +10519,26 @@ These event sheets were not saved: %s,Эти листы событий не со
 "it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","Он ещё ни разу не сохранялся, поэтому у него нет файла - используйте «Сохранить как» на экране EventSheet, чтобы создать его"
 its file still holds unresolved merge markers - finish the merge first,В файле остались неразрешённые маркеры слияния - сначала завершите слияние
 "it is open read-only - press Edit Events, or use Save As to keep a copy","Открыт только для чтения - нажмите «Редактировать события» или используйте «Сохранить как», чтобы сохранить копию"
+"%s could not be written, so no file was changed.","Не удалось записать %s, поэтому ни один файл не изменён."
+%d kept,Сохранено: %d
+open it,откройте
+"A copy of each scene's old text is also kept in Godot's user data folder, in eventsheet_backups.","Копия старого текста каждой сцены также хранится в папке пользовательских данных Godot, в eventsheet_backups."
+"Ctrl+Z undoes all of it, the scenes included.","Ctrl+Z отменяет всё, включая сцены."
+The scenes go back with Ctrl+Z too.,Сцены тоже возвращаются по Ctrl+Z.
+"Scenes and resources that store a value for it - renamed with it, so every value is kept, and Ctrl+Z puts them back","Сцены и ресурсы, хранящие для неё значение - переименовываются вместе с ней, так что все значения сохраняются, а Ctrl+Z возвращает их"
+Not changed - what to do is on each line,"Не изменяются - что делать, написано в каждой строке"
+Looking through %d scenes and resources for values stored under this name...,Ищу значения под этим именем в сценах и ресурсах: %d...
+%s - %d value(s),%s - значений: %d
+"%d scene or resource file(s) store a value for %s. Godot drops a stored value whose name no longer exists, so they are listed below.","Файлов сцен или ресурсов, хранящих значение для %s: %d. Godot отбрасывает сохранённое значение, имени которого больше нет, поэтому они перечислены ниже."
+"it is open with changes you have not saved - save or close it, then rename again","Она открыта с несохранёнными изменениями - сохраните или закройте её, затем переименуйте снова"
+it is not plain UTF-8 text - open it and type the value in again under the new name,Это не обычный текст UTF-8 - откройте её и введите значение заново под новым именем
+it is in Godot's binary format - open it and type the value in again under the new name,Она в двоичном формате Godot - откройте её и введите значение заново под новым именем
+%d value(s) in %d scene(s) kept under the new name - Ctrl+Z puts them back.,Значений: %d в сценах: %d сохранены под новым именем - Ctrl+Z вернёт их.
+"Not changed, open each one and type its value in again under the new name: %s.",Не изменены - откройте каждую и введите её значение заново под новым именем: %s.
+%d value(s),Значений: %d
+Scenes store a value for %s,В сценах хранится значение для %s
+%d scene or resource file(s) store a value for it. Deleting it makes Godot drop those values the next time each one is saved.,"Файлов сцен или ресурсов, хранящих для неё значение: %d. После удаления Godot отбросит эти значения при следующем сохранении каждого из них."
+"Nothing in those files is changed by deleting. To keep the values, cancel and use Rename instead: it carries them along.","Удаление ничего не меняет в этих файлах. Чтобы сохранить значения, отмените и используйте переименование: оно переносит их с собой."
+Keep the variable,Оставить переменную
+Delete anyway,Всё равно удалить
+it already stores a value under the name %s - open it and decide which value to keep,"Она уже хранит значение под именем %s - откройте её и решите, какое значение оставить"

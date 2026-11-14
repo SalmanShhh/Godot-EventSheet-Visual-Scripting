@@ -6,6 +6,13 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: renaming an exported variable keeps the values your scenes stored for it
+
+- A scene stores the value you typed in the Inspector under the variable's name. Renaming the variable made Godot drop every such value without a word, and the next save of the scene removed it from the file. The Rename window now reads the project's scenes and resources as text (nothing is loaded) and lists the ones that store a value for an exported variable, then renames that one name on exactly those lines when you press the button. The value text is copied byte for byte, a different script's variable of the same name is never touched, a scene that only inherits the value is not rewritten, and the whole rename is still one undo step: Ctrl+Z puts the sheet and every scene back as they were. Each scene's old text is also kept in the editor's backup folder.
+- Files it cannot rewrite with certainty are named in their own card with what to do: scenes saved in Godot's binary format, a scene open in the editor with unsaved changes, and a node that already stores a value under the new name. The inline name field opens the window instead of renaming straight away when scenes store a value for the variable.
+- Deleting an exported variable now asks first when scenes store a value for it, names them, and writes nothing to them.
+- The files a state rename or a variable rename writes in the project are now written through a temporary file and a rename, so a crash cannot leave one half-written.
+
 ### Fixed: quitting Godot, Save All and Run no longer lose a sheet's unsaved edits
 
 - Quit Godot with an event sheet that had edits not saved yet and Godot's window said only \"Save modified resources before closing?\"; its Save & Quit then wrote nothing, so the edits were gone. Save All and the save Godot does before Run skipped sheets the same way. The plugin now answers Godot's own two questions, so Godot's window reads \"Event sheets with changes that are not saved yet:\" with each sheet named, Save & Close writes them exactly the way the Save button does (backup first, the same checks), Don't Save leaves the files as they are, and Cancel keeps the editor open. Save All and Run save them too.

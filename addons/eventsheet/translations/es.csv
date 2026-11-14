@@ -10519,3 +10519,26 @@ These event sheets were not saved: %s,Estas hojas de eventos no se guardaron: %s
 "it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","Nunca se ha guardado, así que aún no tiene archivo - usa Guardar como en la pantalla EventSheet para darle uno"
 its file still holds unresolved merge markers - finish the merge first,Su archivo aún contiene marcas de fusión sin resolver - termina primero la fusión
 "it is open read-only - press Edit Events, or use Save As to keep a copy","Está abierta en solo lectura - pulsa Editar eventos, o usa Guardar como para conservar una copia"
+"%s could not be written, so no file was changed.","No se pudo escribir %s, así que no se cambió ningún archivo."
+%d kept,%d conservados
+open it,ábrela
+"A copy of each scene's old text is also kept in Godot's user data folder, in eventsheet_backups.","Además, se guarda una copia del texto anterior de cada escena en la carpeta de datos de usuario de Godot, en eventsheet_backups."
+"Ctrl+Z undoes all of it, the scenes included.","Ctrl+Z lo deshace todo, escenas incluidas."
+The scenes go back with Ctrl+Z too.,Las escenas también vuelven con Ctrl+Z.
+"Scenes and resources that store a value for it - renamed with it, so every value is kept, and Ctrl+Z puts them back","Escenas y recursos que guardan un valor para ella - se renombran con ella, así que se conserva cada valor, y Ctrl+Z los devuelve"
+Not changed - what to do is on each line,Sin cambios - lo que hay que hacer está en cada línea
+Looking through %d scenes and resources for values stored under this name...,Buscando en %d escenas y recursos valores guardados con este nombre...
+%s - %d value(s),%s - %d valor(es)
+"%d scene or resource file(s) store a value for %s. Godot drops a stored value whose name no longer exists, so they are listed below.","%d archivo(s) de escena o recurso guardan un valor para %s. Godot descarta un valor guardado cuyo nombre ya no existe, así que se listan abajo."
+"it is open with changes you have not saved - save or close it, then rename again",Está abierta con cambios sin guardar - guárdala o ciérrala y luego vuelve a renombrar
+it is not plain UTF-8 text - open it and type the value in again under the new name,No es texto UTF-8 simple - ábrela y vuelve a escribir el valor con el nombre nuevo
+it is in Godot's binary format - open it and type the value in again under the new name,Está en el formato binario de Godot - ábrela y vuelve a escribir el valor con el nombre nuevo
+%d value(s) in %d scene(s) kept under the new name - Ctrl+Z puts them back.,%d valor(es) en %d escena(s) conservados con el nombre nuevo - Ctrl+Z los devuelve.
+"Not changed, open each one and type its value in again under the new name: %s.",Sin cambios - abre cada una y escribe su valor de nuevo con el nombre nuevo: %s.
+%d value(s),%d valor(es)
+Scenes store a value for %s,Hay escenas que guardan un valor para %s
+%d scene or resource file(s) store a value for it. Deleting it makes Godot drop those values the next time each one is saved.,"%d archivo(s) de escena o recurso guardan un valor para ella. Al borrarla, Godot descartará esos valores la próxima vez que se guarde cada uno."
+"Nothing in those files is changed by deleting. To keep the values, cancel and use Rename instead: it carries them along.","Borrar no cambia nada en esos archivos. Para conservar los valores, cancela y usa Renombrar: los lleva consigo."
+Keep the variable,Conservar la variable
+Delete anyway,Borrar de todos modos
+it already stores a value under the name %s - open it and decide which value to keep,Ya guarda un valor con el nombre %s - ábrela y decide qué valor conservar

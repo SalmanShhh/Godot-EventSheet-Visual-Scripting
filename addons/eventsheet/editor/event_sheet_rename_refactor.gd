@@ -12,8 +12,10 @@ extends RefCounted
 # Extracted from event_sheet_dock.gd; the sheet + path state, the mutation funnel, status, and title-strip
 # refresh it needs stay on the dock, reached through _dock.
 
+const SCENE_VALUES_PATH: String = "res://addons/eventsheet/editor/dock/scene_values.gd"
+
 var _dock: Control = null
-## The last rename's places - {moved, touched, callers} - which the receipt after it lists.
+## The last rename's places - {moved, touched, callers, scenes} - which the receipt after it lists.
 var _last_done: Dictionary = {}
 
 
@@ -139,12 +141,14 @@ func rename_everywhere(old_name: String, new_name: String, also: Callable = Call
 		_dock._set_status(problem, true)
 		return false
 	var moved: Array[int] = [0]
+	# The scenes that store a value for an exported variable go with it, in this same undo step.
+	var scenes: Dictionary = load(SCENE_VALUES_PATH).stored_for(_dock, old_name, new_name)
 	var renamed: bool = _dock._perform_undoable_sheet_edit(
 		EventSheetL10n.translate("Rename %s") % old_name, func() -> bool:
 			moved[0] = EventSheetRefactor.rename_symbol(_dock._current_sheet, old_name, new_name)
 			if moved[0] > 0 and also.is_valid():
 				also.call()
-			return moved[0] > 0)
+			return moved[0] > 0, scenes.get("edits", {}))
 	if not renamed:
 		_dock._set_status(EventSheetL10n.translate("\"%s\" appears nowhere in this sheet.") % old_name, true)
 		return false
@@ -153,12 +157,23 @@ func rename_everywhere(old_name: String, new_name: String, also: Callable = Call
 		touched = rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
 	var callers: PackedStringArray = hand_written_callers(old_name,
 		str(_dock._current_sheet.external_source_path))
-	_last_done = {"moved": moved[0], "touched": touched, "callers": callers}
+	_last_done = {"moved": moved[0], "touched": touched, "callers": callers, "scenes": scenes}
 	_dock._refresh_title_strip()
-	_dock._set_status(done_text(moved[0], touched) + ("" if callers.is_empty() else " " + EventSheetL10n.translate(
+	var scene_tail: String = load(SCENE_VALUES_PATH).status_tail(scenes)
+	_dock._set_status(done_text(moved[0], touched) + ("" if scene_tail.is_empty() else " " + scene_tail) + ("" if callers.is_empty() else " " + EventSheetL10n.translate(
 		"Hand-written code was not changed - check these, which call %s by that name: %s") % [
 			old_name, ", ".join(callers)]))
 	return true
+
+
+## The inline name field's commit. A name no scene stores a value under is renamed on the spot; an exported
+## variable that scenes do store a value for opens the rename window instead, so the scenes are listed
+## before anything is written.
+func rename_in_place(old_name: String, new_name: String) -> bool:
+	if load(SCENE_VALUES_PATH).stored_for(_dock, old_name, "").get("counts", {}).is_empty():
+		return rename_everywhere(old_name, new_name)
+	_dock.open_rename_receipt(old_name, new_name)
+	return false
 
 
 ## The status line after a rename. "One Ctrl+Z takes all of it back" is only true while nothing
@@ -175,26 +190,37 @@ static func done_text(moved: int, touched: PackedStringArray) -> String:
 ## places are kept by rename_everywhere, so what is listed is what was written.
 func show_done(old_name: String, new_name: String) -> ConfirmationDialog:
 	return show_receipt(old_name, new_name, int(_last_done.get("moved", 0)),
-		_last_done.get("touched", PackedStringArray()), _last_done.get("callers", PackedStringArray()))
+		_last_done.get("touched", PackedStringArray()), _last_done.get("callers", PackedStringArray()),
+		_last_done.get("scenes", {}))
 
 
 ## The receipt for any rename that moved rows: how many places in this sheet, the other files it
 ## wrote and saved, and the hand-written files it left for a person to check. A group rename shows the
 ## same window with the Set/Is Group Active rows that followed it.
 func show_receipt(old_name: String, new_name: String, moved: int, touched: PackedStringArray,
-		callers: PackedStringArray = PackedStringArray()) -> ConfirmationDialog:
+		callers: PackedStringArray = PackedStringArray(), scenes: Dictionary = {}) -> ConfirmationDialog:
 	var places: Array = [[EventSheetL10n.translate("this sheet"),
 		EventSheetL10n.translate("1 place") if moved == 1 else EventSheetL10n.translate("%d places") % moved]]
 	for file: String in touched:
 		places.append([file, EventSheetL10n.translate("saved")])
 	for file: String in callers:
 		places.append([EventSheetL10n.translate("%s - not changed") % file, EventSheetL10n.translate("check it")])
+	var scene_values: GDScript = load(SCENE_VALUES_PATH)
+	for path: Variant in scenes.get("edits", {}):
+		places.append([scene_values.shown(str(path)), EventSheetL10n.translate("%d kept") % int(scenes["counts"].get(path, 0))])
+	for entry: Dictionary in scenes.get("unchanged", []):
+		places.append([EventSheetL10n.translate("%s - not changed") % scene_values.shown(str(entry["path"])), EventSheetL10n.translate("open it")])
+	var wrote_scenes: bool = not scenes.get("edits", {}).is_empty()
+	var scene_backup: String = EventSheetL10n.translate(
+		"A copy of each scene's old text is also kept in Godot's user data folder, in eventsheet_backups.")
 	return load(_dock.SMALL_PROMPT_PATH).open(_dock, {
 		"title": EventSheetL10n.translate("Renamed %s to %s") % [old_name, new_name],
 		"say": EventSheetL10n.translate("Changed %d place(s) in %d sheet(s).") % [moved, 1 + touched.size()],
 		"list": places,
-		"note": EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet.") if touched.is_empty()
-			else EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those."),
+		"note": (EventSheetL10n.translate("Ctrl+Z undoes all of it, the scenes included.") + " " + scene_backup) if wrote_scenes and touched.is_empty()
+			else (EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet.") if touched.is_empty()
+			else EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.")
+				+ ("" if not wrote_scenes else " " + EventSheetL10n.translate("The scenes go back with Ctrl+Z too.") + " " + scene_backup)),
 		"glyph": "✓",
 		"main": EventSheetL10n.translate("OK"),
 		"cancel": "",

@@ -10519,3 +10519,26 @@ These event sheets were not saved: %s,다음 이벤트 시트는 저장되지 �
 "it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","한 번도 저장된 적이 없어 아직 파일이 없습니다 - EventSheet 화면에서 다른 이름으로 저장을 눌러 파일을 만드세요"
 its file still holds unresolved merge markers - finish the merge first,파일에 해결되지 않은 병합 표시가 남아 있습니다 - 먼저 병합을 끝내세요
 "it is open read-only - press Edit Events, or use Save As to keep a copy","읽기 전용으로 열려 있습니다 - 이벤트 편집을 누르거나 다른 이름으로 저장으로 사본을 만드세요"
+"%s could not be written, so no file was changed.",%s을(를) 쓸 수 없어서 어떤 파일도 변경되지 않았습니다.
+%d kept,%d개 유지
+open it,열어 보세요
+"A copy of each scene's old text is also kept in Godot's user data folder, in eventsheet_backups.",각 씬의 이전 텍스트 사본은 Godot 사용자 데이터 폴더의 eventsheet_backups에도 보관됩니다.
+"Ctrl+Z undoes all of it, the scenes included.",Ctrl+Z로 씬을 포함한 모든 것을 되돌릴 수 있습니다.
+The scenes go back with Ctrl+Z too.,씬도 Ctrl+Z로 되돌아갑니다.
+"Scenes and resources that store a value for it - renamed with it, so every value is kept, and Ctrl+Z puts them back","이 값을 저장하는 씬과 리소스 - 함께 이름이 바뀌어 모든 값이 유지되며, Ctrl+Z로 되돌릴 수 있습니다"
+Not changed - what to do is on each line,변경하지 않음 - 각 줄에 할 일이 적혀 있습니다
+Looking through %d scenes and resources for values stored under this name...,이 이름으로 저장된 값을 %d개의 씬과 리소스에서 찾는 중...
+%s - %d value(s),%s - %d개의 값
+"%d scene or resource file(s) store a value for %s. Godot drops a stored value whose name no longer exists, so they are listed below.",%d개의 씬 또는 리소스 파일이 %s의 값을 저장하고 있습니다. Godot는 이름이 더 이상 없는 저장된 값을 버리므로 아래에 나열합니다.
+"it is open with changes you have not saved - save or close it, then rename again",저장하지 않은 변경 사항이 있는 채로 열려 있습니다 - 저장하거나 닫은 뒤 다시 이름을 바꾸세요
+it is not plain UTF-8 text - open it and type the value in again under the new name,일반 UTF-8 텍스트가 아닙니다 - 열어서 새 이름으로 값을 다시 입력하세요
+it is in Godot's binary format - open it and type the value in again under the new name,Godot의 바이너리 형식입니다 - 열어서 새 이름으로 값을 다시 입력하세요
+%d value(s) in %d scene(s) kept under the new name - Ctrl+Z puts them back.,%d개의 값(%d개의 씬)을 새 이름으로 유지했습니다 - Ctrl+Z로 되돌릴 수 있습니다.
+"Not changed, open each one and type its value in again under the new name: %s.",변경하지 않았습니다 - 각각 열어서 새 이름으로 값을 다시 입력하세요: %s.
+%d value(s),%d개의 값
+Scenes store a value for %s,씬이 %s의 값을 저장하고 있습니다
+%d scene or resource file(s) store a value for it. Deleting it makes Godot drop those values the next time each one is saved.,%d개의 씬 또는 리소스 파일이 이 값을 저장하고 있습니다. 삭제하면 각 파일을 다음에 저장할 때 Godot가 그 값들을 버립니다.
+"Nothing in those files is changed by deleting. To keep the values, cancel and use Rename instead: it carries them along.",삭제해도 그 파일들은 바뀌지 않습니다. 값을 유지하려면 취소하고 대신 이름 바꾸기를 사용하세요. 값이 함께 옮겨집니다.
+Keep the variable,변수 유지
+Delete anyway,그래도 삭제
+it already stores a value under the name %s - open it and decide which value to keep,이미 %s 이름으로 값을 저장하고 있습니다 - 열어서 어느 값을 유지할지 정하세요

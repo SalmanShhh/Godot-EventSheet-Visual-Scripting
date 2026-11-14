@@ -542,10 +542,27 @@ func _toggle_context_group_fold() -> void:
 	_dock._mark_dirty("Updated group collapse state.")
 
 
+## True while a delete runs again from the answer to the question about scenes that store a value.
+var _scene_values_cleared: bool = false
+
+
+## Asks, before an exported variable is deleted, which scenes store a value for it (dock/scene_values.gd).
+## True when the question took the delete over: it runs `again` from the answer.
+func _asked_about_scenes(resources: Array, again: Callable) -> bool:
+	if _scene_values_cleared:
+		return false
+	return load("res://addons/eventsheet/editor/dock/scene_values.gd").guard_delete(_dock, resources, func() -> void:
+		_scene_values_cleared = true
+		again.call()
+		_scene_values_cleared = false)
+
+
 func _delete_context_row() -> void:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
 		return
 	var target_resource: Resource = _dock._context_row.source_resource
+	if _asked_about_scenes([target_resource], _delete_context_row):
+		return
 	var machine: Array[Resource] = EventSheetStateFacts.machine_parts(_dock._current_sheet, target_resource)
 	if not machine.is_empty():
 		# A state row's right-click Delete takes the whole machine, as Delete on the selection does.
@@ -666,7 +683,7 @@ func _delete_selected_rows() -> void:
 	for resource_entry in resources_to_delete:
 		if not _dock._ace_apply._find_resource_location(resource_entry).is_empty():
 			deletable.append(resource_entry)
-	if deletable.is_empty():
+	if deletable.is_empty() or _asked_about_scenes(deletable, _delete_selected_rows):
 		return
 	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete Row", func() -> bool:
 		deletable.sort_custom(func(a: Resource, b: Resource) -> bool:

@@ -10519,3 +10519,26 @@ These event sheets were not saved: %s,这些事件表未保存：%s
 "it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","它从未保存过，所以还没有文件 - 请在 EventSheet 界面中使用另存为来创建文件"
 its file still holds unresolved merge markers - finish the merge first,文件中仍有未解决的合并标记 - 请先完成合并
 "it is open read-only - press Edit Events, or use Save As to keep a copy","它以只读方式打开 - 请点击编辑事件，或使用另存为保存一份副本"
+"%s could not be written, so no file was changed.",无法写入 %s，因此没有更改任何文件。
+%d kept,已保留 %d 个
+open it,请打开
+"A copy of each scene's old text is also kept in Godot's user data folder, in eventsheet_backups.",每个场景旧文本的副本也保存在 Godot 的用户数据文件夹中的 eventsheet_backups 里。
+"Ctrl+Z undoes all of it, the scenes included.",Ctrl+Z 可以撤销全部内容，包括场景。
+The scenes go back with Ctrl+Z too.,场景也可以用 Ctrl+Z 还原。
+"Scenes and resources that store a value for it - renamed with it, so every value is kept, and Ctrl+Z puts them back",保存了它的值的场景和资源 - 会随它一起改名，因此每个值都得以保留，Ctrl+Z 可以还原
+Not changed - what to do is on each line,不会更改 - 每一行都写明了该怎么做
+Looking through %d scenes and resources for values stored under this name...,正在 %d 个场景和资源中查找以此名称保存的值...
+%s - %d value(s),%s - %d 个值
+"%d scene or resource file(s) store a value for %s. Godot drops a stored value whose name no longer exists, so they are listed below.",有 %d 个场景或资源文件保存了 %s 的值。Godot 会丢弃名称已不存在的已保存值，因此在下方列出它们。
+"it is open with changes you have not saved - save or close it, then rename again",它带着未保存的更改处于打开状态 - 请保存或关闭后再重新改名
+it is not plain UTF-8 text - open it and type the value in again under the new name,它不是普通的 UTF-8 文本 - 请打开它并用新名称重新输入该值
+it is in Godot's binary format - open it and type the value in again under the new name,它是 Godot 的二进制格式 - 请打开它并用新名称重新输入该值
+%d value(s) in %d scene(s) kept under the new name - Ctrl+Z puts them back.,%d 个值（%d 个场景）已保留在新名称下 - Ctrl+Z 可以还原。
+"Not changed, open each one and type its value in again under the new name: %s.",未更改 - 请逐一打开，并用新名称重新输入其值：%s。
+%d value(s),%d 个值
+Scenes store a value for %s,有场景保存了 %s 的值
+%d scene or resource file(s) store a value for it. Deleting it makes Godot drop those values the next time each one is saved.,有 %d 个场景或资源文件保存了它的值。删除后，Godot 会在下次保存每个文件时丢弃这些值。
+"Nothing in those files is changed by deleting. To keep the values, cancel and use Rename instead: it carries them along.",删除不会改动这些文件。若想保留这些值，请取消并改用重命名：它会把值一起带过去。
+Keep the variable,保留变量
+Delete anyway,仍然删除
+it already stores a value under the name %s - open it and decide which value to keep,它已经用名称 %s 保存了一个值 - 请打开它并决定保留哪个值

@@ -36,6 +36,8 @@ class_name EventSheetRenameReceipt
 extends RefCounted
 
 const SAVE_CHOICES := preload("res://addons/eventforge/compiler/save_choices.gd")
+## Reads the project's scenes and resources as text: loaded by path, only when a variable rename opens.
+const SCENE_VALUES_PATH: String = "res://addons/eventsheet/editor/dock/scene_values.gd"
 
 var _dock: Node = null
 var _dialog: AcceptDialog = null
@@ -59,6 +61,15 @@ var _finding: Dictionary = {}
 var _includers: PackedStringArray = PackedStringArray()
 var _includers_card: Control = null
 var _includers_list: ItemList = null
+## The scenes and resources that store a value for the variable being renamed: found once, when the
+## window opens, by reading their text (nothing is loaded). They are rewritten with the rename, in the
+## same undo step, except the ones listed in the second card, which are named and left as they are.
+var _scene_scan: Dictionary = {}
+var _scenes_note: Label = null
+var _scenes_card: Control = null
+var _scenes_list: ItemList = null
+var _scenes_left_card: Control = null
+var _scenes_left_list: ItemList = null
 ## Shown when the variable has a Save choice: what the rename does to values players already saved,
 ## and the one-time fallback read that keeps them loading.
 var _saved_box: Control = null
@@ -86,9 +97,10 @@ func open(function_name: String, typed: String = "") -> void:
 	_name_edit.text = typed if not typed.is_empty() else _old_name
 	_fill()
 	if _dock.is_inside_tree():
-		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(520.0))))
+		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(int(EventSheetPalette.scaled_f(720.0)), int(EventSheetPalette.scaled_f(560.0))))
 		_name_edit.grab_focus()
 		_name_edit.select_all()
+	_look_through_scenes()
 
 
 ## Opens the same receipt for an outside rename the file itself proved - the door under a row whose
@@ -101,6 +113,8 @@ func open_for_finding(finding: Dictionary) -> void:
 	_old_name = str(finding.get("subject", ""))
 	_elsewhere = []
 	_build_dialog()
+	_scene_scan = {}
+	_draw_scenes()
 	_name_edit.text = str(finding.get("to", ""))
 	_name_edit.editable = false
 	_fill()
@@ -298,6 +312,18 @@ func _build_dialog() -> void:
 		EventSheetL10n.translate("Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them"),
 		_includers_list)
 	content.add_child(_includers_card)
+	_scenes_note = EventSheetPopupUI.hint_label("")
+	content.add_child(_scenes_note)
+	_scenes_list = EventSheetPopupUI.sized_list(70.0)
+	_scenes_card = EventSheetPopupUI.titled_card(
+		EventSheetL10n.translate("Scenes and resources that store a value for it - renamed with it, so every value is kept, and Ctrl+Z puts them back"),
+		_scenes_list)
+	content.add_child(_scenes_card)
+	_scenes_left_list = EventSheetPopupUI.sized_list(50.0)
+	_scenes_left_card = EventSheetPopupUI.titled_card(
+		EventSheetL10n.translate("Not changed - what to do is on each line"),
+		_scenes_left_list)
+	content.add_child(_scenes_left_card)
 	var saved_column: VBoxContainer = VBoxContainer.new()
 	_saved_note = EventSheetPopupUI.StateNote.new()
 	saved_column.add_child(_saved_note)
@@ -358,6 +384,55 @@ func _fill() -> void:
 		else EventSheetL10n.translate("A snake_case name nothing else in this sheet uses."),
 		EventSheetPopupUI.HelpStrip.TONE_ERROR if not problem.is_empty() else EventSheetPopupUI.HelpStrip.TONE_NORMAL)
 	_dialog.get_ok_button().disabled = new_name == _old_name or not problem.is_empty()
+
+
+## Looks through the project's scenes and resources, as text, for values stored under this variable's
+## name - only for an exported variable, the one kind a scene stores a value for. The line saying it is
+## looking is drawn first and the reading starts two frames later, so the window is on screen while a big
+## project is read.
+func _look_through_scenes() -> void:
+	_scene_scan = {}
+	_draw_scenes()
+	var values: GDScript = load(SCENE_VALUES_PATH)
+	if not values.is_exported_variable(_dock._current_sheet, _old_name):
+		return
+	var asked_for: String = _old_name
+	_scenes_note.text = EventSheetL10n.translate("Looking through %d scenes and resources for values stored under this name...") % values.file_count()
+	_scenes_note.visible = true
+	if _dock.is_inside_tree():
+		await _dock.get_tree().process_frame
+		await _dock.get_tree().process_frame
+		if _old_name != asked_for or _dialog == null or not _dialog.visible:
+			return
+	_scene_scan = values.stored_for(_dock, asked_for, "")
+	_draw_scenes()
+
+
+## Draws the two scene cards and the sentence above them from what the reading found.
+func _draw_scenes() -> void:
+	var values: GDScript = load(SCENE_VALUES_PATH)
+	var counts: Dictionary = _scene_scan.get("counts", {})
+	var left: Dictionary = {}
+	for entry: Dictionary in _scene_scan.get("unchanged", []):
+		left[str(entry["path"])] = str(entry["why"])
+	_scenes_list.clear()
+	_scenes_left_list.clear()
+	var paths: Array = counts.keys()
+	paths.sort()
+	for path: String in paths:
+		var line: String = EventSheetL10n.translate("%s - %d value(s)") % [values.shown(path), int(counts[path])]
+		if left.has(path):
+			line = "%s - %s" % [line, left[path]]
+			_scenes_left_list.add_item(line)
+			_scenes_left_list.set_item_tooltip(_scenes_left_list.item_count - 1, line)
+		else:
+			_scenes_list.add_item(line)
+			_scenes_list.set_item_tooltip(_scenes_list.item_count - 1, line)
+	_scenes_card.visible = _scenes_list.item_count > 0
+	_scenes_left_card.visible = _scenes_left_list.item_count > 0
+	_scenes_note.visible = not counts.is_empty()
+	if not counts.is_empty():
+		_scenes_note.text = EventSheetL10n.translate("%d scene or resource file(s) store a value for %s. Godot drops a stored value whose name no longer exists, so they are listed below.") % [counts.size(), _old_name]
 
 
 ## Draws the third card from a list of paths. Separate from the walk that finds them so the suite and

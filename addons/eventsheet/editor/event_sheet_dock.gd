@@ -7439,7 +7439,7 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 	# use of it in this sheet, and every sheet that includes this one - the same writer the row menu's
 	# dialog calls, so the inline field is that gesture without the dialog.
 	if edit_kind == "variable_rename":
-		_rename.rename_everywhere(old_value, new_value.strip_edges())
+		_rename.rename_in_place(old_value, new_value.strip_edges())
 		return
 	# A group's NAME, edited in place, is the Edit group window's rename without the window: the
 	# Set/Is Group Active rows that name it follow, in the same undo step.
@@ -8289,16 +8289,9 @@ func _capture_sheet_snapshot() -> EventSheetResource:
 ## editor's file system so the files re-import. Callers check first (project_texts_changed) that every file
 ## still holds the text the step expects, so a file is only ever written back to a text it was read as.
 func _write_project_texts(texts: Dictionary) -> void:
-	for path: Variant in texts:
-		EventSheetBackups.backup_sheet(str(path))
-		var handle: FileAccess = FileAccess.open(str(path), FileAccess.WRITE)
-		if handle != null:
-			handle.store_string(str(texts[path]))
-			handle.close()
-		if Engine.is_editor_hint():
-			var file_system: EditorFileSystem = EditorInterface.get_resource_filesystem()
-			if file_system != null:
-				file_system.update_file(str(path))
+	var failed: String = load("res://addons/eventsheet/editor/dock/scene_values.gd").write_all(texts)
+	if not failed.is_empty():
+		_set_status(EventSheetL10n.translate("%s could not be written, so no file was changed.") % failed.get_file(), true)
 
 
 ## The files of `expected` ({path: text}) that no longer hold that text: changed on disk since the step,
