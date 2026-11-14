@@ -17,6 +17,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 ### Fixed: Add > Global Variable makes a file Godot can run
 
 - The first global of a project made its file blank: no `extends Node`, so Godot refused to start the autoload, and the first variable was then written above the `extends` line of any file that had none yet. The new file now starts `extends Node` (no generated banner, a one-line class doc), the first global lands after the head, and the sheet carries no class name - Godot refuses a script whose `class_name` equals the autoload it is registered as ("hides an autoload singleton"). The Entity System starter no longer sets a class name equal to its autoload name for the same reason. A sheet that already holds both names emits the same bytes as before.
+- Sheet Type > Autoload no longer keeps a class name equal to the autoload name (the same Godot refusal); a class name of its own is kept.
 - Stale lines: Keyboard Shortcuts no longer listed under Tools in the Toolbar guide (the keys are rebound in Editor Settings > Shortcuts), and the play button's header counts four ways to play.
 
 ### Fixed: a typed enum export wears the choices mark

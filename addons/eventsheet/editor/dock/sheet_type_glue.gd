@@ -76,7 +76,12 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		# Added two more (Editor add-on / Command tool), and the add-on is the one tool type that
 		# does NOT force a host - so the @tool answer reads the type-index list, not the host table.
 		_dock._current_sheet.tool_mode = tool_enabled or load(SHEET_TYPE_DIALOG_PATH).TOOL_TYPE_INDICES.has(type_index)
-		_dock._current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
+		# Godot refuses a script whose class_name is also the name of the autoload it is registered as, so an
+		# autoload sheet never takes a class name equal to its autoload name.
+		var named_class: String = class_name_text.strip_edges() if type_index != 0 else ""
+		if type_index == 4 and named_class == autoload_name_text.strip_edges():
+			named_class = ""
+		_dock._current_sheet.custom_class_name = named_class
 		_dock._current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
 		# Family rides with the named-type identity: a plain sheet has no class to form a group from, so
 		# clear it there (mirrors custom_class_name) to avoid a stale flag that would emit nothing.

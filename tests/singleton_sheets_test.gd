@@ -33,6 +33,13 @@ static func run() -> bool:
 	all_passed = _check("Sheet Type applies the autoload identity",
 		sheet.autoload_mode and sheet.autoload_name == "GameState" and sheet.host_class == "Node", true) and all_passed
 
+	# A class name equal to the autoload name is dropped: Godot refuses a class_name that hides its autoload.
+	editor._sheet_type_glue.apply_sheet_type_settings(4, "GameState", "", "", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+	all_passed = _check("an autoload sheet takes no class name equal to its autoload name", sheet.custom_class_name, "") and all_passed
+	editor._sheet_type_glue.apply_sheet_type_settings(4, "GameStateData", "", "", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+	all_passed = _check("...but keeps a class name of its own", sheet.custom_class_name, "GameStateData") and all_passed
+	editor._sheet_type_glue.apply_sheet_type_settings(4, "", "", "", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+
 	# Exposed functions publish ACEs that call THROUGH the autoload name.
 	var add_score: EventFunction = EventFunction.new()
 	add_score.function_name = "add_score"
