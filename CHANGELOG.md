@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: the Timer behavior's counting is pinned
+
+- New `tests/timer_behavior_pins_test.gd` pins what the Timer behavior does today: its verbs, trigger and variables, what Start and Stop do, how a one-shot and a repeating clock end (the overshoot is dropped, not carried), zero and negative starts, the parked processing of a stopped clock, and the saved state. The behavior is not rebuilt on Godot's Timer node: the pins that make a rebuild safe cannot be run against a node that needs a scene tree, and a Timer node does not keep three of today's meanings on its own: it reads zero seconds left after a stop where the behavior keeps what was left, a start of zero or less reuses its old wait time instead of firing on the next tick, and its time left cannot be set by a Set Variable row. Each would need scaffolding that makes the 90-line pack bigger than the loop it replaces. The pack is unchanged.
+
 ### Changed: the vocabulary record in project.godot is written less often, and says so
 
 - The first sheet save after installing or updating wrote `eventsheets/project/vocabulary_version` into `project.godot` with no word about it. Proved in a scratch project: the whole diff is a new four-line `[eventsheets]` section. The only thing that reads the value is the head band's "since" half, and it has to live in the project file for a team to share it, so it stays there. It is now written for the first record and once per minor release (a patch release leaves it alone), and the save puts one line on the status line naming the entry. Projects already carrying the line keep reading it unchanged.
