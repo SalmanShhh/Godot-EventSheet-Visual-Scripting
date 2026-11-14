@@ -194,7 +194,7 @@ func _group_members(group: StringName) -> Array:
 func _velocity_of(member: Node3D) -> Vector3:
 	for child: Node in member.get_children():
 		if child.get_script() == get_script():
-			var flying: Vector3 = child.get("flock_velocity")
+			var flying: Vector3 = (child as Flock3DBehavior).flock_velocity
 			return flying
 	if member is CharacterBody3D:
 		return (member as CharacterBody3D).velocity

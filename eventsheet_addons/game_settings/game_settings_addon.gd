@@ -470,7 +470,7 @@ func bind_control(control: Node, setting_name: String) -> void:
 	_fill_control(control, setting_name, setting_value(setting_name))
 	# One writer for all four control signals: each of them carries exactly one argument, which
 	# unbind drops, and the pair this row is about is bound in its place.
-	var writer: Callable = Callable(self, "_control_wrote").bind(control, setting_name).unbind(1)
+	var writer: Callable = _control_wrote.bind(control, setting_name).unbind(1)
 	for signal_name: String in ["value_changed", "item_selected", "toggled", "text_changed"]:
 		if control.has_signal(signal_name) and not control.is_connected(signal_name, writer):
 			control.connect(signal_name, writer)
@@ -899,7 +899,7 @@ func build_controls_page(container: Node) -> void:
 		reset.pressed.connect(reset_binding.bind(action))
 		row.add_child(reset)
 		container.add_child(row)
-	var refresh: Callable = Callable(self, "_show_bindings").bind(container).unbind(1)
+	var refresh: Callable = _show_bindings.bind(container).unbind(1)
 	if not binding_changed.is_connected(refresh):
 		binding_changed.connect(refresh)
 	_show_bindings(container)

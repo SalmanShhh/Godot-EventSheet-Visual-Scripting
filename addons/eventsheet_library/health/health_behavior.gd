@@ -186,7 +186,7 @@ func take_damage(amount: float) -> void:
 		on_death.emit()
 		on_health_changed.emit()
 		if destroy_on_death and host != null:
-			host.call_deferred("queue_free")
+			host.queue_free.call_deferred()
 	else:
 		on_damaged.emit()
 		on_health_changed.emit()
@@ -228,7 +228,7 @@ func set_health_value(amount: float) -> void:
 		on_death.emit()
 		on_health_changed.emit()
 		if destroy_on_death and host != null:
-			host.call_deferred("queue_free")
+			host.queue_free.call_deferred()
 	elif new_value < old_value:
 		last_damage = old_value - new_value
 		on_damaged.emit()

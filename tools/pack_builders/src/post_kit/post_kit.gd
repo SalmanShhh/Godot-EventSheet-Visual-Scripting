@@ -9,6 +9,12 @@ var host: Node = null
 ## Folder holding the effect scripts and compute shaders once installed.
 const EFFECT_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"
 
+## The base every shipped effect extends, so its strength is read and written by name-checked access.
+const PostEffect: GDScript = preload("res://eventsheet_addons/post_kit/effects/post_effect.gd")
+
+## The outline effect, the one that carries a colour, a width, a fill and a mask texture.
+const PostOutline: GDScript = preload("res://eventsheet_addons/post_kit/effects/post_outline.gd")
+
 ## Prefix of an effect's script name; the effect word with spaces closed up.
 const EFFECT_PREFIX: String = "post_"
 
@@ -485,6 +491,14 @@ func _ensure_compositor() -> Compositor:
 	return _compositor
 
 
+## Sets how far an effect goes. Every effect this pack builds extends the shared base, so the cast
+## holds; anything else has no strength to set and is left alone.
+func _set_effect_strength(made: CompositorEffect, value: float) -> void:
+	var own: PostEffect = made as PostEffect
+	if own != null:
+		own.strength = value
+
+
 ## One effect, built from its own script file. A word with no file draws nothing and says so, which
 ## is what a pack folder missing its effects looks like from a row.
 func _make(effect: String) -> CompositorEffect:
@@ -510,7 +524,7 @@ func _add_entry(effect: String, called: String, strength: float) -> void:
 	if made == null:
 		return
 	var asked: float = clampf(strength, 0.0, 1.0)
-	made.set("strength", _allowed(asked))
+	_set_effect_strength(made, _allowed(asked))
 	_stack.append({"called": called, "effect": effect, "strength": asked,
 		"enabled": true, "resource": made})
 	_write_effects()
@@ -544,7 +558,7 @@ func _write_strength(called: String, strength: float) -> void:
 	_stack[at]["strength"] = asked
 	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
 	if made != null:
-		made.set("strength", _allowed(asked))
+		_set_effect_strength(made, _allowed(asked))
 
 
 ## Turns one entry on or off without forgetting how far up it was.
@@ -628,10 +642,11 @@ func _start_outline(colour: Color, width: float, fill: float, seconds: float) ->
 	if at < 0:
 		return
 	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
-	if made != null:
-		made.set("ink", colour)
-		made.set("width", maxf(width, 1.0))
-		made.set("fill", clampf(fill, 0.0, 1.0))
+	var outline: PostOutline = made as PostOutline
+	if outline != null:
+		outline.ink = colour
+		outline.width = maxf(width, 1.0)
+		outline.fill = clampf(fill, 0.0, 1.0)
 	_stop_walk_on(OUTLINE_EFFECT)
 	if seconds <= 0.0:
 		return
@@ -730,6 +745,6 @@ func _process(_delta: float) -> void:
 	_mask_camera.keep_aspect = camera.keep_aspect
 	# The mask's texture is handed over every frame rather than once: a viewport that has been
 	# resized is a different texture, and an outline pointed at the old one would draw nothing.
-	var made: CompositorEffect = _outline_effect()
-	if made != null:
-		made.set("mask_texture", RenderingServer.texture_get_rd_texture(_mask.get_texture().get_rid()))
+	var outline: PostOutline = _outline_effect() as PostOutline
+	if outline != null:
+		outline.mask_texture = RenderingServer.texture_get_rd_texture(_mask.get_texture().get_rid())

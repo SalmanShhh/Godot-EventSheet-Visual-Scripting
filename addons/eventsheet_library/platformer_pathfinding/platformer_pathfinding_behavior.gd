@@ -400,6 +400,25 @@ func _nearest_ledge_cell(direction: int) -> Vector2i:
 			best_gap = gap
 			best = cell
 	return best
+## The other live agents on the same map (same grid, same map tag), freed ones pruned.
+## @ace_hidden
+func _other_agents() -> Array[PlatformerPathfinding]:
+	var others: Array[PlatformerPathfinding] = []
+	for agent_id in _agent_ids.keys():
+		if agent_id == get_instance_id():
+			continue
+		if not is_instance_id_valid(agent_id):
+			_agent_ids.erase(agent_id)
+			continue
+		var agent: PlatformerPathfinding = instance_from_id(agent_id) as PlatformerPathfinding
+		if agent == null or not agent.is_inside_tree():
+			continue
+		if agent._tilemap != _tilemap or agent.map_tag != map_tag:
+			continue
+		if agent.host == null:
+			continue
+		others.append(agent)
+	return others
 ## Crowd arrivals: claims the goal node, or the nearest unclaimed node walkable from it when
 ## another agent already holds it, so a crowd spreads out instead of stacking on one spot.
 ## @ace_hidden
@@ -1251,7 +1270,8 @@ func path_fail_reason() -> String:
 func path_queue_size() -> int:
 	var waiting: int = 0
 	for agent_id in _agent_ids.keys():
-		if is_instance_id_valid(agent_id) and bool(instance_from_id(agent_id).get("_path_pending")):
+		var queued: PlatformerPathfinding = instance_from_id(agent_id) as PlatformerPathfinding if is_instance_id_valid(agent_id) else null
+		if queued != null and queued._path_pending:
 			waiting += 1
 	return waiting
 
@@ -1362,7 +1382,7 @@ func nearby_agent_count(radius: float) -> int:
 		return 0
 	var count: int = 0
 	for agent in _other_agents():
-		if (agent.get("host") as Node2D).global_position.distance_to(host.global_position) <= radius:
+		if agent.host.global_position.distance_to(host.global_position) <= radius:
 			count += 1
 	return count
 
@@ -3255,36 +3275,16 @@ func _map_key() -> String:
 func _register_agent() -> void:
 	_agent_ids[get_instance_id()] = true
 
-## The other live agents on the same map (same grid, same map tag), freed ones pruned.
-## @ace_hidden
-func _other_agents() -> Array:
-	var others: Array = []
-	for agent_id in _agent_ids.keys():
-		if agent_id == get_instance_id():
-			continue
-		if not is_instance_id_valid(agent_id):
-			_agent_ids.erase(agent_id)
-			continue
-		var agent: Object = instance_from_id(agent_id)
-		if not (agent is Node) or not (agent as Node).is_inside_tree():
-			continue
-		if agent.get("_tilemap") != _tilemap or str(agent.get("map_tag")) != map_tag:
-			continue
-		if not (agent.get("host") is Node2D):
-			continue
-		others.append(agent)
-	return others
-
 ## Multi-agent avoidance: extra cost on the cells other agents stand on or are about to walk.
 ## @ace_hidden
 func _agent_avoidance_costs() -> Dictionary:
 	var costs: Dictionary = {}
 	for agent in _other_agents():
-		var at: Vector2i = _nearest_node((agent.get("host") as Node2D).global_position, 1)
+		var at: Vector2i = _nearest_node(agent.host.global_position, 1)
 		if at != Vector2i.MAX:
 			costs[at] = float(costs.get(at, 0.0)) + 3.0
-		var their_path: Array = agent.get("_path")
-		var their_index: int = int(agent.get("_path_index"))
+		var their_path: Array = agent._path
+		var their_index: int = agent._path_index
 		for index in range(their_index, mini(their_index + 4, their_path.size())):
 			var cell: Vector2i = their_path[index].get("cell", Vector2i.MAX)
 			costs[cell] = float(costs.get(cell, 0.0)) + 1.5
@@ -3299,7 +3299,8 @@ func _claimed_by_other(cell: Vector2i) -> bool:
 	var owner_id: int = int(_goal_claims[key])
 	if owner_id == get_instance_id():
 		return false
-	if not is_instance_id_valid(owner_id) or str(instance_from_id(owner_id).get("_claimed_key")) != key:
+	var owner_agent: PlatformerPathfinding = instance_from_id(owner_id) as PlatformerPathfinding if is_instance_id_valid(owner_id) else null
+	if owner_agent == null or owner_agent._claimed_key != key:
 		_goal_claims.erase(key)
 		return false
 	return true
@@ -3355,7 +3356,7 @@ func _separate(delta: float) -> bool:
 	var push: int = 0
 	var nearest_gap: float = INF
 	for agent in _other_agents():
-		var other: Node2D = agent.get("host")
+		var other: Node2D = agent.host
 		if absf(other.global_position.y - host.global_position.y) > _tile_px():
 			continue
 		var dx: float = host.global_position.x - other.global_position.x

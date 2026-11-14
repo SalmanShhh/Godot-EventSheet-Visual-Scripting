@@ -544,7 +544,7 @@ static func _append_options_menu(sheet: EventSheetResource) -> void:
 			"_fill_control(control, setting_name, setting_value(setting_name))",
 			"# One writer for all four control signals: each of them carries exactly one argument, which",
 			"# unbind drops, and the pair this row is about is bound in its place.",
-			"var writer: Callable = Callable(self, \"_control_wrote\").bind(control, setting_name).unbind(1)",
+			"var writer: Callable = _control_wrote.bind(control, setting_name).unbind(1)",
 			"for signal_name: String in [\"value_changed\", \"item_selected\", \"toggled\", \"text_changed\"]:",
 			"\tif control.has_signal(signal_name) and not control.is_connected(signal_name, writer):",
 			"\t\tcontrol.connect(signal_name, writer)"
@@ -980,7 +980,7 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 			"\treset.pressed.connect(reset_binding.bind(action))",
 			"\trow.add_child(reset)",
 			"\tcontainer.add_child(row)",
-			"var refresh: Callable = Callable(self, \"_show_bindings\").bind(container).unbind(1)",
+			"var refresh: Callable = _show_bindings.bind(container).unbind(1)",
 			"if not binding_changed.is_connected(refresh):",
 			"\tbinding_changed.connect(refresh)",
 			"_show_bindings(container)",

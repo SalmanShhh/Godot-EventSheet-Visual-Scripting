@@ -326,7 +326,7 @@ static func build() -> bool:
 		"\ton_death.emit()",
 		"\ton_health_changed.emit()",
 		"\tif destroy_on_death and host != null:",
-		"\t\thost.call_deferred(\"queue_free\")",
+		"\t\thost.queue_free.call_deferred()",
 		"else:",
 		"\ton_damaged.emit()",
 		"\ton_health_changed.emit()"
@@ -359,7 +359,7 @@ static func build() -> bool:
 		"\ton_death.emit()",
 		"\ton_health_changed.emit()",
 		"\tif destroy_on_death and host != null:",
-		"\t\thost.call_deferred(\"queue_free\")",
+		"\t\thost.queue_free.call_deferred()",
 		"elif new_value < old_value:",
 		"\tlast_damage = old_value - new_value",
 		"\ton_damaged.emit()",
