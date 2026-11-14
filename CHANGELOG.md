@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a width and height pair never leaves its x or its link on a line alone
+
+- A width and height on one row (the texture size line and any `# @inspector_side_by_side` pair) wraps in two units: the width with the "x" after it, the height with the link button after it. Side by side while the Inspector has room, one under the other when it has not, and never a lone "x" or a lone link. Each field is only as wide as the digits its range needs, so the pair no longer squeezes the label beside it.
+
 ### Fixed: a weighted table's columns share the width by need
 
 - In a weighted table (Loot Table, Random Table, Skin Catalog, Storylet Resource) the text columns now take the room that is left, instead of splitting it with the number column and the share column. A weight column is as wide as its widest number needs, and the share column as wide as its widest percent; the bar beside the percent shows once the table is wide enough to spare it. The tags cell no longer comes up short while the share column has room to spare.

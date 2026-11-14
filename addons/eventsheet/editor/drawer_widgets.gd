@@ -2360,6 +2360,10 @@ class SideBySideProperty:
 	var _names: PackedStringArray = PackedStringArray()
 	var _shared_label: String = ""
 	var _spins: Array[Range] = []
+	## The two things the row wraps: each field with whatever travels beside it.
+	var _units: Array[HBoxContainer] = []
+	## The words each field carries inside it.
+	var _inner: Array = []
 	var _row: HFlowContainer = null
 	var _linked: bool = false
 	var _link: Control = null
@@ -2377,6 +2381,7 @@ class SideBySideProperty:
 		var parts: Dictionary = name_parts(first, second)
 		_shared_label = (EventSheetL10n.translate("%s Size") % str(parts["label"])) if texture else str(parts["label"])
 		var inner: Array = parts["inner"]
+		_inner = inner
 		var row: HFlowContainer = HFlowContainer.new()
 		_row = row
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2389,18 +2394,20 @@ class SideBySideProperty:
 		for index: int in _names.size():
 			var property_name: String = _names[index]
 			var spin: Range = EventSheetLookStyle.number_field(str(inner[index]), EventSheetLookStyle.quiet(), false)
-			spin.custom_minimum_size.x = EventSheetLookStyle.text_room("%s -1000.0" % str(inner[index]))
+			spin.custom_minimum_size.x = EventSheetLookStyle.text_room_plain("%s 9999" % str(inner[index]))
 			EventSheetLookStyle.open_number_field(spin, 0.001)
 			spin.tooltip_text = property_name
 			spin.value_changed.connect(_on_changed.bind(property_name))
-			row.add_child(spin)
+			var unit: HBoxContainer = wrap_unit(spin)
+			row.add_child(unit)
+			_units.append(unit)
 			add_focusable(spin)
 			_spins.append(spin)
 			if texture and index == 0:
 				var times: Label = Label.new()
 				times.text = "x"
 				times.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
-				row.add_child(times)
+				unit.add_child(times)
 		add_child(row)
 		draw_background = false
 		if _notes_margin != null:
@@ -2408,6 +2415,28 @@ class SideBySideProperty:
 			set_bottom_editor(_notes_margin)
 			sort_children.connect(_align_notes)
 			draw.connect(_align_notes)
+
+	## The widest a field's number will be, as text to measure: nines as long as the longest of the range's
+	## limits and the number it holds now (a sign counts when the number can go below zero). A field is
+	## as wide as that needs, so a pair does not ask the Inspector for more room than its numbers use.
+	static func widest_number(declared: Dictionary, value: float, is_int: bool) -> String:
+		var longest: int = maxi(4, str(int(absf(value))).length())
+		var signed: bool = value < 0.0
+		if not declared.is_empty():
+			longest = maxi(longest, str(int(absf(float(declared["max"])))).length())
+			longest = maxi(longest, str(int(absf(float(declared["min"])))).length())
+			signed = signed or float(declared["min"]) < 0.0
+		return ("-" if signed else "") + "9".repeat(longest) + ("" if is_int else ".9")
+
+	## One thing the row wraps: a field, with whatever travels beside it (the "x" after the width, the link
+	## after the height) added to the unit later. The row wraps whole units, so a lone "x" or a lone link
+	## never lands on a line by itself: side by side while the Inspector has room, one unit under the
+	## other when it truly has not.
+	static func wrap_unit(field: Control) -> HBoxContainer:
+		var unit: HBoxContainer = HBoxContainer.new()
+		unit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		unit.add_child(field)
+		return unit
 
 	## The range an @export_range property declares, as {min, max, step, or_greater, or_less}, or {} for a
 	## property with none. Read from the object's own property list, so a pair never loses its clamp.
@@ -2502,7 +2531,7 @@ class SideBySideProperty:
 	func _update_property() -> void:
 		if _linked and _link == null:
 			_link = LinkToggle.new(get_edited_object(), _names[0], _names[1], true)
-			_row.add_child(_link)
+			_units[_units.size() - 1].add_child(_link)
 			add_focusable(_link.get_child(0))
 		for index: int in _names.size():
 			var value: Variant = get_edited_object().get(_names[index])
@@ -2512,6 +2541,7 @@ class SideBySideProperty:
 			_spins[index].rounded = is_int
 			apply_range(_spins[index], declared, is_int)
 			_spins[index].set_value_no_signal(float(value))
+			_spins[index].custom_minimum_size.x = EventSheetLookStyle.text_room_plain("%s %s" % [_inner[index], widest_number(declared, float(value), is_int)])
 			EventSheetLookStyle.set_number_field_locked(_spins[index], read_only)
 		if _notes != null:
 			_notes.call("show_pair", int(get_edited_object().get(_names[0])), int(get_edited_object().get(_names[1])))

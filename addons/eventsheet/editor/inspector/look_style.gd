@@ -318,6 +318,12 @@ static func text_room(sample: String) -> float:
 	return text_width + arrows_width + field_box().get_minimum_size().x + px(SPIN_PADDING)
 
 
+## The narrowest a field that shows no spin arrows may be and still show `sample` whole inside its box.
+static func text_room_plain(sample: String) -> float:
+	var text_width: float = font().get_string_size(sample, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size()).x
+	return text_width + field_box().get_minimum_size().x + px(SPIN_PADDING)
+
+
 ## The editor's ink or its base colour, whichever reads better laid over `fill` (a swatch, a chosen cell).
 static func ink_over(fill: Color) -> Color:
 	var light: Color = ink()

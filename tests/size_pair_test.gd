@@ -20,6 +20,7 @@ static func run() -> bool:
 	ok = _decor() and ok
 	ok = _range() and ok
 	ok = _notes() and ok
+	ok = _wrapping_units() and ok
 	return ok
 
 
@@ -98,3 +99,26 @@ static func _notes() -> bool:
 	])
 	notes.free()
 	return result
+
+
+## The row wraps whole units, never loose pieces: a field and what travels with it stay together, and a
+## unit takes the line's spare room.
+static func _wrapping_units() -> bool:
+	var widgets: GDScript = EventSheetAttributeDrawers.widgets()
+	var spin: SpinBox = SpinBox.new()
+	var unit: HBoxContainer = widgets.SideBySideProperty.wrap_unit(spin)
+	var times: Label = Label.new()
+	times.text = "x"
+	unit.add_child(times)
+	var result: bool = SUPPORT.pins("size_pair_test", [
+		["a unit holds its field first, then the x that follows it", [unit.get_child_count(), unit.get_child(0) == spin, (unit.get_child(1) as Label).text], [2, true, "x"]],
+		["a unit takes the line's spare room", unit.size_flags_horizontal, Control.SIZE_EXPAND_FILL],
+	])
+	unit.free()
+	var pair: GDScript = widgets.SideBySideProperty
+	return SUPPORT.pins("size_pair_test", [
+		["a pair's field is as wide as its range's digits need", pair.widest_number({"min": 1.0, "max": 2048.0}, 512.0, true), "9999"],
+		["a range that goes below zero makes room for the sign", pair.widest_number({"min": -100.0, "max": 100.0}, 5.0, true), "-9999"],
+		["a number longer than the range's limits asks for its own digits", pair.widest_number({"min": 1.0, "max": 99.0}, 1234567.0, true), "9999999"],
+		["a decimal number makes room for its fraction", pair.widest_number({}, 0.5, false), "9999.9"],
+	]) and result
