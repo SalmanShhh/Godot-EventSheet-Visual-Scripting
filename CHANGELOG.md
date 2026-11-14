@@ -4,6 +4,18 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Variable window's look list rows grow with their sentence
+
+- A look's row in the Variable window had a fixed height while its sentence wrapped, so a three-line sentence ran under the next row's title and the last line was clipped. A row is now as tall as its wrapped text at any window width; the list still shows about five rows before it scrolls.
+
+### Fixed: the Variable window's code line is shown whole
+
+- The IN CODE block of the live panel cut its line with an ellipsis (`var stat_hea...`) although it already wrapped. It now shows the whole declaration, wrapped.
+
+### Fixed: the Inspector preview card reads on the light theme
+
+- The card's small "Inspector preview" caption and the sentence under the preview were a white fade, pale on pale in the light preset. Both take the editor theme's ink and keep their contrast against the card's fill, in light and dark.
+
 ### Changed: Drag & Drop and Virtual Cursor modes are real enums
 
 - Drag & Drop's `directions` and the Virtual Cursor's `direction_mode`, `hover_mode` and `bounce_mode` were exported whole numbers behind an `@export_enum` list. They are now typed enums with pinned values (`Directions.FOUR_DIR = 3`, `BounceMode.CONSTRAINTS = 2`, ...), so the code reads `directions != Directions.FREE` rather than `directions != 0`. A scene saved before the change stores the same number and loads into the enum unchanged (`saved_int_choices_test` loads such a scene file and pins the values); the Set Directions, Set Bounce, Set Direction Mode and Set Hover Mode rows keep their number parameters. The Inspector dropdown labels now come from the enum names (Up Down, Four Dir) instead of the old lowercase words.
