@@ -1,8 +1,13 @@
 # Godot EventSheets - one row's share of a weighted table: a bar and the percent beside it.
 #
 # The bar is Godot's own ProgressBar with the accent fill and no reading of its own; the percent is a
-# label that never gets cut. When the cell is too narrow for both, the bar hides and the percent stays
-# whole. The cell draws no outline and holds nothing but the number it was last given.
+# label that never gets cut. The bar shows only while the table says it has room for it, and the
+# percent stays whole either way. The cell draws no outline and holds nothing but the number it was
+# last given.
+#
+# The cell never asks for more than it needs: in a grid it is a column that takes the room its widest
+# percent wants (and the bar's, once the table says it is roomy), so the text columns beside it get
+# every pixel that is left over rather than an equal share of it.
 @tool
 extends HBoxContainer
 
@@ -11,10 +16,13 @@ const BAR_MIN_WIDTH: float = 28.0
 
 var _bar: ProgressBar = null
 var _percent: Label = null
+## True while the table around the cell has room to spare for the bar.
+var _roomy: bool = false
 
 
 func _init() -> void:
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_horizontal = Control.SIZE_FILL
+	custom_minimum_size.y = EventSheetLookStyle.field_height()
 	add_theme_constant_override("separation", int(EventSheetLookStyle.px(6.0)))
 	_bar = ProgressBar.new()
 	_bar.show_percentage = false
@@ -25,24 +33,25 @@ func _init() -> void:
 	_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_bar.custom_minimum_size.x = 0.0
 	_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bar.visible = false
 	_bar.add_theme_stylebox_override("fill", EventSheetLookStyle.accent_fill())
 	add_child(_bar)
 	_percent = Label.new()
 	_percent.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_percent.custom_minimum_size.x = EventSheetLookStyle.text_room("100.0%")
+	_percent.custom_minimum_size.x = EventSheetLookStyle.font().get_string_size("99.9%", HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetLookStyle.font_size()).x
 	_percent.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 	add_child(_percent)
 
 
-## The room the percent needs, so a column can be as wide as that and no narrower.
-func _get_minimum_size() -> Vector2:
-	var percent_size: Vector2 = _percent.get_combined_minimum_size() if _percent != null else Vector2.ZERO
-	return Vector2(percent_size.x, maxf(percent_size.y, EventSheetLookStyle.field_height()))
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and _bar != null:
-		_bar.visible = size.x >= _percent.custom_minimum_size.x + EventSheetLookStyle.px(BAR_MIN_WIDTH) + EventSheetLookStyle.px(6.0)
+## Tells the cell whether the table around it has room for the bar; the bar then takes its own
+## minimum width beside the percent, and no more.
+func set_roomy(roomy: bool) -> void:
+	if roomy == _roomy:
+		return
+	_roomy = roomy
+	if _bar != null:
+		_bar.custom_minimum_size.x = EventSheetLookStyle.px(BAR_MIN_WIDTH) if _roomy else 0.0
+		_bar.visible = _roomy
 
 
 ## Shows `share` (0 to 1): the bar's fill and the percent in words.

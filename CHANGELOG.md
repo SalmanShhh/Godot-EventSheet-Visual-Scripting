@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a weighted table's columns share the width by need
+
+- In a weighted table (Loot Table, Random Table, Skin Catalog, Storylet Resource) the text columns now take the room that is left, instead of splitting it with the number column and the share column. A weight column is as wide as its widest number needs, and the share column as wide as its widest percent; the bar beside the percent shows once the table is wide enough to spare it. The tags cell no longer comes up short while the share column has room to spare.
+
 ### New: the mark says which look, and a click opens the look list
 
 - Hovering the Inspector mark of a variable that wears a look opens a card that names the look, says its sentence (the limits for a slider), quotes the whole declaration line and ends "Click the mark to change the look."; a look whose file is missing says "Look not installed" and names the file. With tiles off, the glyph at the end of the row opens the same card. A single click on the mark opens the Variable window on its look list; no control enters the row, and a variable shown from another script is changed there.

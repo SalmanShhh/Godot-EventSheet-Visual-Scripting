@@ -1438,6 +1438,8 @@ class DrawerTable:
 	const PAGE_SIZE: int = 8
 	## The sort key of the leading "#" column: the order the file keeps.
 	const STORED_ORDER: String = "#"
+	## The width, unscaled, from which a share cell draws its bar as well as its percent.
+	const ROOMY_WIDTH: float = 440.0
 	## One row's share: a bar and its percent.
 	const SHARE_CELL: GDScript = preload("res://addons/eventsheet/editor/inspector/share_cell.gd")
 	var editable: bool = true
@@ -1713,6 +1715,7 @@ class DrawerTable:
 				_grid.add_child(cell)
 			if not weight_column.is_empty():
 				var share_cell: Control = SHARE_CELL.new()
+				share_cell.call("set_roomy", is_roomy(size.x))
 				_share_cells.append([share_cell, row_index])
 				_grid.add_child(share_cell)
 			var remove_button: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this row"))
@@ -1833,6 +1836,29 @@ class DrawerTable:
 				(pair[0] as Control).call("set_share", shares[int(pair[1])])
 		_total_label.text = total_text(float(math.total(_value, weight_column)))
 
+	## The widest a number column's cell will be, as text to measure: nines as long as the longest value the
+	## column holds, with one more for a sign, and never fewer than four.
+	static func widest_cell(rows: Array, column_name: String) -> String:
+		var longest: int = 3
+		for row: Variant in rows:
+			var value: Variant = _cell(row, column_name)
+			if value != null:
+				longest = maxi(longest, str(snappedf(float(value), 0.01)).length())
+		return "9".repeat(longest + 1)
+
+	## True when a table this wide has room to spare for the bar in each share cell.
+	static func is_roomy(width: float) -> bool:
+		return width >= EventSheetLookStyle.px(ROOMY_WIDTH)
+
+	func _notification(what: int) -> void:
+		if what != NOTIFICATION_RESIZED:
+			return
+		var roomy: bool = is_roomy(size.x)
+		for entry: Variant in _share_cells:
+			var cell: Object = (entry as Array)[0]
+			if is_instance_valid(cell):
+				cell.call("set_roomy", roomy)
+
 	## "Total weight 80" for the sum of the weights, whole when it is whole.
 	static func total_text(total: float) -> String:
 		var rounded: float = roundf(total)
@@ -1872,7 +1898,9 @@ class DrawerTable:
 			"int", "float":
 				var spin: Range = EventSheetLookStyle.number_field("", EventSheetLookStyle.NO_COLOUR, false)
 				EventSheetLookStyle.open_number_field(spin, 1.0 if column_type == "int" else 0.01)
-				spin.custom_minimum_size.x = EventSheetLookStyle.text_room("-1000.00")
+				# A number takes the room its widest value needs; the text columns share what is left.
+				spin.custom_minimum_size.x = EventSheetLookStyle.text_room(widest_cell(_value, column_name))
+				spin.size_flags_horizontal = Control.SIZE_FILL
 				spin.set_value_no_signal(float(row.get(column_name, 0)))
 				EventSheetLookStyle.set_number_field_locked(spin, not editable)
 				spin.value_changed.connect(func(v: float) -> void:
