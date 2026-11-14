@@ -10513,3 +10513,9 @@ and %d more.,и ещё %d.
 "Line %d: %s has no colon, so it is left out. Write it as key: value.","Строка %d: в %s нет двоеточия, поэтому оно пропущено. Запишите в виде ключ: значение."
 "Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","Строка %d - это комментарий # между словами выше и %s, поэтому %s читается без них. Начните эту строку с ##."
 "%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","У %s нет типа возвращаемого значения, поэтому оно читается как действие. Добавьте -> bool для условия или тип для выражения."
+Event sheets with changes that are not saved yet:,Листы событий с несохранёнными изменениями:
+it was not saved - open it in the EventSheet screen and press Save,Не сохранено - откройте лист на экране EventSheet и нажмите «Сохранить»
+These event sheets were not saved: %s,Эти листы событий не сохранены: %s
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","Он ещё ни разу не сохранялся, поэтому у него нет файла - используйте «Сохранить как» на экране EventSheet, чтобы создать его"
+its file still holds unresolved merge markers - finish the merge first,В файле остались неразрешённые маркеры слияния - сначала завершите слияние
+"it is open read-only - press Edit Events, or use Save As to keep a copy","Открыт только для чтения - нажмите «Редактировать события» или используйте «Сохранить как», чтобы сохранить копию"

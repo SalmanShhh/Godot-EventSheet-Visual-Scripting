@@ -42,6 +42,14 @@ In reading order, left to right:
 | 6 | **Quick add or find** | Type a whole row (`heal 5`, `boss fla 0.4`) and press Enter, or read the answers underneath: the states, rows, variables, functions, signals, modes and Doctor findings that match what you typed |  |
 | 7 | **The chevron** | Expands the strip to every button it has, and back |  |
 
+**Godot saves your sheets too.** An event sheet with edits that are not saved yet (a dot on its tab) is
+part of what Godot's own Save All (`Ctrl+Shift+Alt+S`), Run, and quitting or reloading the project look
+after. Quit with one open and Godot's "save changes?" window lists it by name; Save & Close writes it the
+way the Save button does, Don't Save leaves the file as it was, and Cancel keeps the editor open. A sheet
+that cannot be written is named with the reason (never saved so it has no file yet, a file still holding
+merge markers, open read-only, or a sheet that does not compile yet) and is left alone rather than
+overwritten.
+
 After the chevron, once a sheet is open, comes the **Events | Code | Both** switch: the rows, the GDScript
 the file is, or both side by side. It is offered for every open sheet and is not part of the seven.
 

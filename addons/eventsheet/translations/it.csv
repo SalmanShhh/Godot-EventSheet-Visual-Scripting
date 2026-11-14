@@ -10513,3 +10513,9 @@ and %d more.,e altre %d.
 "Line %d: %s has no colon, so it is left out. Write it as key: value.","Riga %d: %s non ha i due punti, quindi viene saltato. Scrivilo come chiave: valore."
 "Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","La riga %d è un commento # tra le parole sopra e %s, quindi %s viene letto senza nessuna di esse. Inizia invece quella riga con ##."
 "%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s non ha un tipo di ritorno, quindi viene letta come un'azione. Aggiungi -> bool per una condizione, o un tipo per un'espressione."
+Event sheets with changes that are not saved yet:,Fogli di eventi con modifiche non ancora salvate:
+it was not saved - open it in the EventSheet screen and press Save,Non è stato salvato - aprilo nella schermata EventSheet e premi Salva
+These event sheets were not saved: %s,Questi fogli di eventi non sono stati salvati: %s
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","Non è mai stato salvato, quindi non ha ancora un file - usa Salva con nome nella schermata EventSheet per darglielo"
+its file still holds unresolved merge markers - finish the merge first,Il suo file contiene ancora marcatori di merge non risolti - completa prima il merge
+"it is open read-only - press Edit Events, or use Save As to keep a copy","È aperto in sola lettura - premi Modifica eventi, oppure usa Salva con nome per tenere una copia"

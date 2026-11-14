@@ -10513,3 +10513,9 @@ and %d more.,et %d de plus.
 "Line %d: %s has no colon, so it is left out. Write it as key: value.","Ligne %d : %s n'a pas de deux-points, il est donc ignoré. Écris-le sous la forme clé: valeur."
 "Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","La ligne %d est un commentaire # entre les mots au-dessus et %s, donc %s est lu sans aucun d'eux. Commence plutôt cette ligne par ##."
 "%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s n'a pas de type de retour, il est donc lu comme une action. Ajoute -> bool pour une condition, ou un type pour une expression."
+Event sheets with changes that are not saved yet:,Feuilles d'événements avec des modifications pas encore enregistrées :
+it was not saved - open it in the EventSheet screen and press Save,Elle n'a pas été enregistrée - ouvre-la dans l'écran EventSheet et appuie sur Enregistrer
+These event sheets were not saved: %s,Ces feuilles d'événements n'ont pas été enregistrées : %s
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","Elle n'a jamais été enregistrée, donc elle n'a pas encore de fichier - utilise Enregistrer sous dans l'écran EventSheet pour lui en donner un"
+its file still holds unresolved merge markers - finish the merge first,Son fichier contient encore des marqueurs de fusion non résolus - termine d'abord la fusion
+"it is open read-only - press Edit Events, or use Save As to keep a copy","Elle est ouverte en lecture seule - appuie sur Modifier les événements, ou utilise Enregistrer sous pour garder une copie"

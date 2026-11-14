@@ -10513,3 +10513,9 @@ and %d more.,另有 %d 个。
 "Line %d: %s has no colon, so it is left out. Write it as key: value.","第 %d 行：%s 没有冒号，因此被忽略。请写成 键: 值 的形式。"
 "Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","第 %d 行是位于上方词语与 %s 之间的 # 注释，因此 %s 读取时不会带有这些词。请改为以 ## 开头。"
 "%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s 没有返回类型，因此被读作动作。添加 -> bool 可变成条件，添加类型可变成表达式。"
+Event sheets with changes that are not saved yet:,有尚未保存更改的事件表：
+it was not saved - open it in the EventSheet screen and press Save,未能保存 - 请在 EventSheet 界面中打开它并点击保存
+These event sheets were not saved: %s,这些事件表未保存：%s
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","它从未保存过，所以还没有文件 - 请在 EventSheet 界面中使用另存为来创建文件"
+its file still holds unresolved merge markers - finish the merge first,文件中仍有未解决的合并标记 - 请先完成合并
+"it is open read-only - press Edit Events, or use Save As to keep a copy","它以只读方式打开 - 请点击编辑事件，或使用另存为保存一份副本"

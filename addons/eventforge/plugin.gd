@@ -63,6 +63,9 @@ const SCENE_EVENTS_OVERLAY_PATH: String = "res://addons/eventsheet/editor/scene_
 const EXPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/export_tools_plugin.gd"
 const IMPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/import_tools_plugin.gd"
 const DOC_DOCK_PATH: String = "res://addons/eventsheet/editor/docs/doc_dock.gd"
+## What answers Godot's two questions about sheets with edits not saved yet. Loaded by path only when
+## Godot asks, so an editor start that never asks never compiles it.
+const UNSAVED_SHEETS_PATH: String = "res://addons/eventsheet/editor/dock/unsaved_sheets.gd"
 
 var _event_sheet_editor: Control = null
 ## A plugin icon check is waiting on its timer (see _schedule_plugin_icon_refresh).
@@ -264,6 +267,26 @@ func _make_visible(visible: bool) -> void:
 		_ensure_editor()
 	if _event_sheet_editor != null:
 		_event_sheet_editor.visible = visible
+
+
+## Godot asks this when the editor quits, when the project is reloaded or closed, and the sentence it
+## returns is printed in Godot's own "save changes?" dialog. It names each event sheet with edits that
+## are not saved yet. Godot passes the path of an open scene here, not an empty string, so the answer
+## cannot depend on it. The editor workspace is built only when somebody opens it, so before that there
+## is nothing to name.
+func _get_unsaved_status(_for_scene: String) -> String:
+	if _event_sheet_editor == null:
+		return ""
+	return str(load(UNSAVED_SHEETS_PATH).status_text(_event_sheet_editor))
+
+
+## Godot calls this on Save All, before running the project (when it saves first) and on Save & Quit.
+## Every sheet with unsaved edits is saved the way its own Save button saves it; one that cannot be
+## written is named in the Output panel and on the sheet's status line instead of being skipped.
+func _save_external_data() -> void:
+	if _event_sheet_editor == null:
+		return
+	load(UNSAVED_SHEETS_PATH).save_dirty_tabs(_event_sheet_editor)
 
 
 ## Connects (or disconnects) the FileSystem dock's tree and file list clicks. Only a left click does

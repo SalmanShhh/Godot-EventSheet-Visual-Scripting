@@ -6,6 +6,11 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: quitting Godot, Save All and Run no longer lose a sheet's unsaved edits
+
+- Quit Godot with an event sheet that had edits not saved yet and Godot's window said only \"Save modified resources before closing?\"; its Save & Quit then wrote nothing, so the edits were gone. Save All and the save Godot does before Run skipped sheets the same way. The plugin now answers Godot's own two questions, so Godot's window reads \"Event sheets with changes that are not saved yet:\" with each sheet named, Save & Close writes them exactly the way the Save button does (backup first, the same checks), Don't Save leaves the files as they are, and Cancel keeps the editor open. Save All and Run save them too.
+- A sheet that cannot be written is named with the reason in Godot's window instead of being skipped: never saved so it has no file yet (use Save As), a file still holding merge markers, or open read-only. One that fails to save at that moment (it does not compile yet, for example) is named in the Output panel and on the sheet's status line, and it never holds the editor open: Don't Save and Cancel are always there.
+
 ### Changed: a call in an opened script reads as the sentence you wrote for the function
 
 - When a `.gd` is opened as a sheet, each call reads through the function it goes to. If that function, in a script you wrote, carries a sentence of its own (`## @ace_display_template(\"Take {amount} damage\")`), the row now says that sentence with the call's own values in its slots - \"Take 5 damage\" for `hero.take_damage(5)` - the same words the picker offered it under, kept after the file is closed and opened again. A function without a sentence, and every call to a behaviour the plugin ships, reads exactly as before.
