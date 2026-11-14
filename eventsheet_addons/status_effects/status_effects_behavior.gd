@@ -48,7 +48,20 @@ signal stacks_changed(status: String, stacks: int)
 ## Warn about unknown statuses and ticks on hosts without health; turn off for release.
 @export var debug_mode: bool = false
 
-## Statuses on now, each with its effect, time left, stacks and tick timer.
+## One status that is on: its effect file, the particles it brought, and where its clock stands.
+class ActiveStatus extends RefCounted:
+	## The effect file this status reads its numbers from.
+	var effect: Resource = null
+	## The particle scene instance the status added to the host, or null when it has none.
+	var particles: Node = null
+	## Seconds the status has left.
+	var remaining: float = 0.0
+	## How many times the status is stacked.
+	var stacks: int = 0
+	## Seconds until the next tick.
+	var tick_in: float = 0.0
+
+## Statuses on now, by the word they were applied under.
 var _active: Dictionary = {}
 
 ## What cannot land right now: the status word -> the seconds of immunity left.
@@ -197,22 +210,22 @@ func _process(delta: float) -> void:
 		# everything. A word that has gone since the list was made is simply skipped.
 		if not _active.has(status):
 			continue
-		var entry: Dictionary = _active[status]
-		entry["remaining"] = float(entry["remaining"]) - delta
-		entry["tick_in"] = float(entry["tick_in"]) - delta
+		var entry: ActiveStatus = _active[status]
+		entry.remaining -= delta
+		entry.tick_in -= delta
 		# A long frame may owe several ticks; each one is paid, and the clock keeps its remainder so
 		# ten ticks a second stay ten ticks a second however uneven the frames were. A tick that
 		# comes due exactly as the clock runs out is paid before the status ends, which is what makes
 		# a one-second burn with a half-second tick two ticks rather than one.
-		var every: float = maxf(float(_knob(entry["effect"], &"tick_seconds", 0.5)), MINIMUM_TICK_SECONDS)
-		while float(entry["tick_in"]) <= 0.0 and float(entry["remaining"]) >= 0.0:
-			entry["tick_in"] = float(entry["tick_in"]) + every
+		var every: float = maxf(float(_knob(entry.effect, &"tick_seconds", 0.5)), MINIMUM_TICK_SECONDS)
+		while entry.tick_in <= 0.0 and entry.remaining >= 0.0:
+			entry.tick_in += every
 			_tick(status, entry)
 			# A tick that killed the host, or a sheet row under On Status Ticked that cleansed this
 			# very status, has already taken the entry away - there is no second tick to owe it.
 			if not _active.has(status):
 				break
-		if _active.has(status) and float(entry["remaining"]) <= 0.0:
+		if _active.has(status) and entry.remaining <= 0.0:
 			ended.append(status)
 	for status: String in ended:
 		_end(status)
@@ -236,30 +249,33 @@ func apply(status: String, seconds: float, stacks: int) -> void:
 		return
 	if _immune.has(word):
 		return
-	var entry: Dictionary = _active.get(word, {})
-	var effect: Resource = entry["effect"] if entry.has("effect") else _effect(word)
-	var was: int = int(entry.get("stacks", 0))
+	var entry: ActiveStatus = _active.get(word, null) as ActiveStatus
+	var landing: bool = entry == null
+	if landing:
+		entry = ActiveStatus.new()
+	var effect: Resource = _effect(word) if landing else entry.effect
+	var was: int = entry.stacks
 	var now: int = _stacks_after(effect, was, stacks)
-	entry["effect"] = effect
-	entry["stacks"] = now
-	entry["remaining"] = _seconds_after(effect, float(entry.get("remaining", 0.0)), seconds)
+	entry.effect = effect
+	entry.stacks = now
+	entry.remaining = _seconds_after(effect, entry.remaining, seconds)
 	# A status landing for the first time waits a full interval for its first tick, so an effect
 	# applied and removed inside one interval does nothing - which is what makes a one-second burn
 	# with a half-second tick two ticks rather than three: one at the half, one as it goes out.
-	if not entry.has("tick_in"):
-		entry["tick_in"] = maxf(float(_knob(effect, &"tick_seconds", 0.5)), MINIMUM_TICK_SECONDS)
+	if landing:
+		entry.tick_in = maxf(float(_knob(effect, &"tick_seconds", 0.5)), MINIMUM_TICK_SECONDS)
 	var scene: PackedScene = _knob(effect, &"particle_scene", null) as PackedScene
-	if scene != null and host != null and not is_instance_valid(entry.get("particles", null) as Node):
+	if scene != null and host != null and not is_instance_valid(entry.particles):
 		var made: Node = scene.instantiate()
 		host.add_child(made)
-		entry["particles"] = made
+		entry.particles = made
 	_active[word] = entry
 	var tag: String = str(_knob(effect, &"multiplier_tag", "")).strip_edges()
 	var factor: float = float(_knob(effect, &"multiplier", 1.0))
 	if not tag.is_empty() and not is_equal_approx(factor, 1.0):
 		var boosts: Node = _boosts()
 		if boosts != null:
-			boosts.call("start_tagged_boost", _boost_id(word), factor, float(entry["remaining"]), tag)
+			boosts.call("start_tagged_boost", _boost_id(word), factor, entry.remaining, tag)
 	_retint()
 	set_process(true)
 	status_applied.emit(word, now)
@@ -276,8 +292,8 @@ func apply(status: String, seconds: float, stacks: int) -> void:
 func extend_status(status: String, seconds: float) -> void:
 	if not _active.has(status):
 		return
-	var entry: Dictionary = _active[status]
-	entry["remaining"] = float(entry["remaining"]) + maxf(seconds, 0.0)
+	var entry: ActiveStatus = _active[status]
+	entry.remaining += maxf(seconds, 0.0)
 	# THE MULTIPLIER RUNS ON THE SAME CLOCK. A shield extended by five seconds whose defence
 	# multiplier still ended at the old time would leave Has Status saying shield while the shield
 	# did nothing, so the boost this effect started is given the same seconds the status was.
@@ -308,7 +324,7 @@ func cleanse(status: String) -> void:
 		# A NAMED CLEANSE IS STILL A CLEANSE. What makes a curse a curse is that the antidote does
 		# not answer it, and an antidote that names the curse is still an antidote - so Cleanse asks
 		# the file either way, and Remove Status is the row that takes something off regardless.
-		if _active.has(word) and bool(_knob((_active[word] as Dictionary)["effect"], &"cleansable", true)):
+		if _active.has(word) and bool(_knob((_active[word] as ActiveStatus).effect, &"cleansable", true)):
 			_end(word)
 		return
 	# The keys are a snapshot, and ending one fires On Status Expired - which a sheet may answer by
@@ -316,7 +332,7 @@ func cleanse(status: String) -> void:
 	for active: String in _active.keys():
 		if not _active.has(active):
 			continue
-		if bool(_knob((_active[active] as Dictionary)["effect"], &"cleansable", true)):
+		if bool(_knob((_active[active] as ActiveStatus).effect, &"cleansable", true)):
 			_end(active)
 
 ## @ace_action
@@ -357,7 +373,7 @@ func has(status: String) -> bool:
 func status_stacks(status: String) -> int:
 	if not _active.has(status):
 		return 0
-	return int((_active[status] as Dictionary)["stacks"])
+	return (_active[status] as ActiveStatus).stacks
 
 ## @ace_expression
 ## @ace_name("Status Time Left")
@@ -369,7 +385,7 @@ func status_stacks(status: String) -> int:
 func status_time_left(status: String) -> float:
 	if not _active.has(status):
 		return 0.0
-	return maxf(float((_active[status] as Dictionary)["remaining"]), 0.0)
+	return maxf((_active[status] as ActiveStatus).remaining, 0.0)
 
 ## @ace_expression
 ## @ace_name("Status Icon")
@@ -381,7 +397,7 @@ func status_time_left(status: String) -> float:
 func status_icon(status: String) -> Texture2D:
 	if not _active.has(status):
 		return null
-	return _knob((_active[status] as Dictionary)["effect"], &"icon", null) as Texture2D
+	return _knob((_active[status] as ActiveStatus).effect, &"icon", null) as Texture2D
 
 ## @ace_expression
 ## @ace_name("Active Statuses")
@@ -405,7 +421,7 @@ func active_statuses() -> Array:
 func speed_factor() -> float:
 	var product: float = 1.0
 	for status: String in _active:
-		product *= float(_knob((_active[status] as Dictionary)["effect"], &"speed_factor", 1.0))
+		product *= float(_knob((_active[status] as ActiveStatus).effect, &"speed_factor", 1.0))
 	return product
 
 ## Whether one effect file is the one a word names. A file that says its own name is asked; anything
@@ -468,7 +484,7 @@ func _retint() -> void:
 		return
 	var mixed: Color = Color(1.0, 1.0, 1.0, 1.0)
 	for status: String in _active:
-		var written: Variant = _knob((_active[status] as Dictionary)["effect"], &"tint", Color(1.0, 1.0, 1.0, 1.0))
+		var written: Variant = _knob((_active[status] as ActiveStatus).effect, &"tint", Color(1.0, 1.0, 1.0, 1.0))
 		if written is Color:
 			mixed *= written
 	# What the tint comes to once the strength dial has had its say - white when nothing is on, and
@@ -522,12 +538,12 @@ func _channel_under(shown: float, written: float, remembered: float) -> float:
 func _end(status: String) -> void:
 	if not _active.has(status):
 		return
-	var entry: Dictionary = _active[status]
+	var entry: ActiveStatus = _active[status]
 	var boosts: Node = _boosts()
 	if boosts != null:
 		boosts.call("stop_boost", _boost_id(status))
-	var particles: Node = entry.get("particles", null) as Node
-	if is_instance_valid(particles):
+	var particles: Node = entry.particles if is_instance_valid(entry.particles) else null
+	if particles != null:
 		particles.queue_free()
 	_active.erase(status)
 	_retint()
@@ -536,9 +552,9 @@ func _end(status: String) -> void:
 ## One tick of one status: its damage through the Health pack's typed pipeline so resistances,
 ## armour and the damage report all apply, then its healing, then the trigger a sheet listens to.
 ## @ace_hidden
-func _tick(status: String, entry: Dictionary) -> void:
-	var effect: Resource = entry["effect"]
-	var stacks: int = int(entry["stacks"])
+func _tick(status: String, entry: ActiveStatus) -> void:
+	var effect: Resource = entry.effect
+	var stacks: int = entry.stacks
 	var damage: float = float(_knob(effect, &"tick_amount", 0.0)) * stacks
 	var healing: float = float(_knob(effect, &"heal_amount", 0.0)) * stacks
 	if damage > 0.0 or healing > 0.0:

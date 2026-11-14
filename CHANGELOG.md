@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Status Effects keeps each running status as a small class
+
+- A status that is on was a dictionary of five keys read and written by text in about thirty places; it is now an `ActiveStatus` with typed fields. Applying, stacking, ticking, extending and ending behave exactly as before, and nothing here is saved.
+
 ### Changed: Decal Painter keeps its ledger as two small classes
 
 - A stamped decal and a blob shadow were dictionaries read by text; they are now a `TrackedDecal` and a `BlobShadow` with a typed field each. The rows, their words and what they do are unchanged, and nothing here is saved.

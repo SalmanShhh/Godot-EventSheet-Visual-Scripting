@@ -390,7 +390,7 @@ static func _extending_a_status_extends_its_multiplier() -> bool:
 	var pack: String = FileAccess.get_file_as_string(PACK)
 	var boosts: String = FileAccess.get_file_as_string(BOOSTS_PACK)
 	return SUPPORT.pins("status_effects_pack_test", [
-		["the status clock is extended", pack.contains("entry[\"remaining\"] = float(entry[\"remaining\"]) + maxf(seconds, 0.0)"), true],
+		["the status clock is extended", pack.contains("entry.remaining += maxf(seconds, 0.0)"), true],
 		["and the boost it started is extended with it",
 			pack.contains("boosts.call(\"extend_boost\", _boost_id(status), maxf(seconds, 0.0))"), true],
 		["by the same seconds, through the row the Boosts pack ships for it",
