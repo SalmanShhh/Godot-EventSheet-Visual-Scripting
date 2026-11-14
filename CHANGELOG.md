@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Rename window no longer lists a text in quotes as if it were rewritten
+
+- A row such as `print("speed=", speed)` was listed under "What will be rewritten" as `"speed=" -> "speed="`, a text that does not change. Only rows that really change are listed there now. A row that says the name only inside a text in quotes is listed under its own heading, "Text that mentions the name - left as it is".
+
 ### Fixed: the amber note in a window is amber in the light theme too
 
 - A warning note in a window (the Behaviour library's "Nothing was copied" line, the parameter window's warnings) was tinted from a darkened amber that read as grey on the light theme. It now uses the same amber the sheet's quiet warning row uses, a little stronger on a light panel, with no outline. The dark theme looks as before.

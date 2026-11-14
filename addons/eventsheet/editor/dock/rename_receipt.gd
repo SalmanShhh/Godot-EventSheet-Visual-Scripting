@@ -46,6 +46,8 @@ var _summary_label: Label = null
 ## The foot that says what the field wants, why a typed name is refused, and the line it writes.
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _rows_list: ItemList = null
+var _mentions_card: Control = null
+var _mentions_list: ItemList = null
 var _elsewhere_card: Control = null
 var _elsewhere_list: ItemList = null
 var _old_name: String = ""
@@ -144,9 +146,32 @@ static func row_lines(sheet: EventSheetResource, old_name: String,
 		var before: String = str(reference.get("preview", "")).strip_edges()
 		if before.is_empty():
 			continue
-		lines.append("%s → %s" % [before,
-			EventSheetRefactor.rename_in_code(before, old_name, new_name)])
+		var after: String = EventSheetRefactor.rename_in_code(before, old_name, new_name)
+		# A row that only says the name inside a text in quotes reads the same after the rename: it is
+		# not rewritten, so it is not listed here (mention_lines lists it under its own heading).
+		if not _only_in_text(before, old_name):
+			lines.append("%s → %s" % [before, after])
 	return lines
+
+
+## The rows of one sheet that say the name only inside a text in quotes, as written: the rename leaves
+## them exactly as they are, so they are listed apart from the rows it rewrites.
+static func mention_lines(sheet: EventSheetResource, old_name: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null or old_name.strip_edges().is_empty():
+		return lines
+	for reference: Dictionary in EventSheetFindReferences.find_in_sheet(sheet, old_name):
+		var before: String = str(reference.get("preview", "")).strip_edges()
+		if not before.is_empty() and _only_in_text(before, old_name):
+			lines.append(before)
+	return lines
+
+
+## True when `line` says `old_name` only inside a text in quotes. Asked with a spelling nobody typed, so
+## the answer is the same before a new name is typed (the field holds the old one) and after.
+static func _only_in_text(line: String, old_name: String) -> bool:
+	var probe: String = old_name + "_renamed"
+	return EventSheetRefactor.rename_in_code(line, old_name, probe) == line
 
 
 ## The node half of the same receipt: the reference as the rows write it, the reference they would
@@ -302,6 +327,10 @@ func _build_dialog() -> void:
 	content.add_child(_summary_label)
 	_rows_list = EventSheetPopupUI.sized_list(170.0)
 	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rows_list))
+	_mentions_list = EventSheetPopupUI.sized_list(50.0)
+	_mentions_card = EventSheetPopupUI.titled_card(
+		EventSheetL10n.translate("Text that mentions the name - left as it is"), _mentions_list)
+	content.add_child(_mentions_card)
 	_elsewhere_list = EventSheetPopupUI.sized_list(90.0)
 	_elsewhere_card = EventSheetPopupUI.titled_card(
 		EventSheetL10n.translate("Named and left exactly as they are - the index answers by name, so a file here may be calling something else"),
@@ -351,6 +380,12 @@ func _fill() -> void:
 		# A long sentence is wider than the list; the tooltip carries the whole of it so nothing the
 		# receipt promises to say is only half-said.
 		_rows_list.set_item_tooltip(_rows_list.item_count - 1, line)
+	_mentions_list.clear()
+	if not _is_node_gesture():
+		for line: String in mention_lines(_dock._current_sheet, _old_name):
+			_mentions_list.add_item(line)
+			_mentions_list.set_item_tooltip(_mentions_list.item_count - 1, line)
+	_mentions_card.visible = _mentions_list.item_count > 0
 	_elsewhere_list.clear()
 	for line: String in elsewhere_lines(_elsewhere):
 		_elsewhere_list.add_item(line)

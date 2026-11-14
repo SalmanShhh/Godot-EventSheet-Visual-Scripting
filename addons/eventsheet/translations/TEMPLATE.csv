@@ -10530,3 +10530,4 @@ Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this shee
 Couldn't save %s: %s. The sheet is still linked to %s.,
 Couldn't save %s: %s.,
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",
+Text that mentions the name - left as it is,

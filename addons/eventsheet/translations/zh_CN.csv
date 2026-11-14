@@ -10546,3 +10546,4 @@ Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this shee
 Couldn't save %s: %s. The sheet is still linked to %s.,无法保存 %s：%s。该事件表仍与 %s 关联。
 Couldn't save %s: %s.,无法保存 %s：%s。
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z 可以撤销此事件表中的全部改动。其他事件表已保存，且都有备份：打开其中一个，用 工具 > 事件表备份 即可找回旧版本。
+Text that mentions the name - left as it is,提到该名称的文字 - 保持原样

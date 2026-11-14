@@ -10546,3 +10546,4 @@ Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this shee
 Couldn't save %s: %s. The sheet is still linked to %s.,Impossibile salvare %s: %s. Il foglio è ancora collegato a %s.
 Couldn't save %s: %s.,Impossibile salvare %s: %s.
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.","Ctrl+Z annulla tutto in questo foglio. Gli altri fogli sono stati salvati, ciascuno con un backup: aprine uno e usa Strumenti > Backup del foglio per riavere la vecchia versione."
+Text that mentions the name - left as it is,Testo che menziona il nome - lasciato com'è

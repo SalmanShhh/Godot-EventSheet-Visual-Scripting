@@ -10546,3 +10546,4 @@ Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this shee
 Couldn't save %s: %s. The sheet is still linked to %s.,%s を保存できませんでした: %s。シートは引き続き %s にリンクされています。
 Couldn't save %s: %s.,%s を保存できませんでした: %s。
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z でこのシートの変更はすべて元に戻せます。ほかのシートは保存され、それぞれバックアップがあります。開いて ツール > シートのバックアップ から古いバージョンを取り戻せます。
+Text that mentions the name - left as it is,名前に触れているテキスト - そのまま残します
