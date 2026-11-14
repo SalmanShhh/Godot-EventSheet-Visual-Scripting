@@ -62,6 +62,20 @@ static func run() -> bool:
 	EventSheetProjectDoctor.check_pack_dependencies(PackedStringArray(), findings)
 	all_passed = _check("an unused pack's unmet requirement stays silent", _probe_findings(findings).size(), 0) and all_passed
 
+	# ---- a `.gd` sheet is a user of the pack too: its own text counts as usage ----
+	_write_probe("## @ace_requires(NoSuchClassAnywhere)", false)
+	var gd_user: String = "user://dep_probe_user.gd"
+	var gd_file: FileAccess = FileAccess.open(gd_user, FileAccess.WRITE)
+	gd_file.store_string("extends Node
+
+var probe: DepProbePack = null
+")
+	gd_file.close()
+	findings = []
+	EventSheetProjectDoctor.check_pack_dependencies(PackedStringArray([gd_user]), findings)
+	all_passed = _check("a pack named only by a .gd sheet is in use, so its unmet requirement warns", _probe_findings(findings).size(), 1) and all_passed
+	DirAccess.remove_absolute(gd_user)
+
 	_cleanup()
 
 	# ---- the real repo: every shipped declaration is satisfied ----

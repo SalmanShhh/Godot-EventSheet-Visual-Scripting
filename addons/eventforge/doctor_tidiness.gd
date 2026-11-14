@@ -488,6 +488,8 @@ static func check_declaration_reach(findings: Array[Dictionary]) -> void:
 ## questions of it - loading a project's sheets seven times over is the slow way to the same report.
 static func check_tidiness(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
+		if sheet_path.get_extension().to_lower() == "gd":
+			continue  # A script's function or signal is a public offer to code that may call it from anywhere.
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue

@@ -21,6 +21,7 @@ extends RefCounted
 
 const TEMP_PATH := "user://eventsheets_doctor_temp.gd"
 const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
+const GdSheets := preload("res://addons/eventforge/doctor_gd_sheets.gd")
 
 ## Extension checks registered through EventSheets.register_doctor_check: Array of
 ## {"id": String, "run": Callable}. They run after the built-ins in every runner
@@ -104,7 +105,15 @@ static func run() -> Dictionary:
 	# compiles to - so of the two ways to be wrong here, auditing a folder the reader called
 	# uninteresting is the better one. Losing the one check that catches a stale committed output,
 	# silently, because the sheet happened to live in a declared folder, is the worse one.
-	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
+	var tres_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
+	# The sheet checks read the project's `.gd` sheets as well: `.gd` is the default sheet format, and a
+	# check handed only the `.tres` list said nothing at all about a project of scripts. The few checks
+	# that cannot apply to a script skip it themselves, and one note below says which and why.
+	var script_sheets: PackedStringArray = GdSheets.script_sheets()
+	var sheet_paths: PackedStringArray = tres_paths + script_sheets
+	var coverage: Dictionary = GdSheets.coverage_finding(tres_paths.size(), script_sheets.size())
+	if not coverage.is_empty():
+		findings.append(coverage)
 	check_generated_outputs(sheet_paths, findings)
 	check_debug_residue(sheet_paths, findings)
 	check_autoload_registration(sheet_paths, findings)
@@ -169,7 +178,7 @@ static func run() -> Dictionary:
 	check_raw_error_notes(sheet_paths, findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
-	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
+	EventSheetDoctorTidiness.check_tidiness(tres_paths, findings)
 	# Declarations nobody reaches (dead enum values, signals nothing hears) - driven by the
 	# project's generated scripts, not by sheet_paths. After the tidiness sweep for the same
 	# reason the sweep runs last: new notes append, the established report never reorders.
@@ -288,7 +297,7 @@ static func run() -> Dictionary:
 	for entry: Dictionary in _extension_checks:
 		var extension_check: Callable = entry.get("run") as Callable
 		if extension_check.is_valid():
-			extension_check.call(sheet_paths, findings)
+			extension_check.call(tres_paths, findings)
 	# The report is complete, so the texts the checks shared are dead weight - a dock that ran the
 	# audit once should not carry the project's source for the rest of the session.
 	_run_in_progress = false
@@ -336,7 +345,9 @@ static func output_path_for(sheet_path: String) -> String:
 ## byte-identity contract pack goldens pin, generalized to every sheet in the project.
 static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if _is_script(sheet_path):
+			continue  # A script is its own output: nothing for it to be stale against.
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var output_path: String = output_path_for(sheet_path)
@@ -365,7 +376,14 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 ## but the documented CI recipe can escalate it for release branches.
 static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if _is_script(sheet_path):
+			# A script keeps no switches, only the lines the switches wrote.
+			var written: PackedStringArray = GdSheets.residue_in_source(source_of(sheet_path))
+			if not written.is_empty():
+				_add(findings, "warning", "debug-residue", sheet_path,
+					"Debug instrumentation (%s) is in this script - remove those lines before shipping." % ", ".join(written))
+			continue
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var flags: PackedStringArray = PackedStringArray()
@@ -401,7 +419,9 @@ static func strip_debug_flags(sheet: EventSheetResource) -> bool:
 ## compiled script (Project > Project Settings > Globals > Autoload).
 static func check_autoload_registration(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if _is_script(sheet_path):
+			continue  # A script is an autoload only because the project registers it.
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or not sheet.autoload_mode:
 			continue
 		if sheet.autoload_name.is_empty():
@@ -431,7 +451,7 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or sheet.autoload_mode:
 			continue
 		var output_path: String = output_path_for(sheet_path)
@@ -442,6 +462,10 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 			if scene_text.contains(output_path):
 				attached = true
 				break
+		# A script is also reached by a class name, another script's preload, a saved resource or an
+		# autoload - all of which a `.tres` sheet's separate output is not asked to excuse.
+		if not attached and _is_script(sheet_path) and GdSheets.script_is_reached(sheet_path):
+			attached = true
 		if not attached:
 			_add(findings, "info", "scene-attachment", sheet_path,
 				"%s is attached to no scene - fine if it's instanced from code or used as a class." % output_path.get_file())
@@ -534,12 +558,12 @@ static func required_gaps_in_container(text: String, watched: Dictionary) -> Arr
 ## the seam is detected in the compiled OUTPUT, so a hand-written save_state counts too.
 static func check_missing_save_support(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or not (sheet.behavior_mode or sheet.autoload_mode):
 			continue
 		var state_vars: int = 0
-		for descriptor: Variant in sheet.variables.values():
-			if descriptor is Dictionary and not bool((descriptor as Dictionary).get("exported", true)):
+		for row: Dictionary in declared_variables(sheet):
+			if not bool(row.get("inspector", true)):
 				state_vars += 1
 		if state_vars == 0:
 			continue
@@ -749,7 +773,7 @@ const _SCENE_MUTATORS := ["add_child(", "queue_free(", "remove_child(", "reparen
 
 static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or not sheet.tool_mode:
 			continue
 		var output_path: String = output_path_for(sheet_path)
@@ -843,7 +867,7 @@ static func sheet_edit_outside_funnel(source: String) -> String:
 ## and the check should say the same thing about all three.
 static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or not sheet.tool_mode:
 			continue
 		var output_path: String = output_path_for(sheet_path)
@@ -1011,31 +1035,62 @@ static func check_unused_variables(sheet_paths: PackedStringArray, findings: Arr
 	var usage_by_path: Dictionary = {}
 	var includes_by_path: Dictionary = {}
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		usage_by_path[sheet_path] = _sheet_usage_text(sheet)
 		includes_by_path[sheet_path] = sheet.includes.duplicate()
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
-		if sheet == null or sheet.variables.is_empty():
+		var sheet: EventSheetResource = sheet_at(sheet_path)
+		if sheet == null:
 			continue
-		var names: Array = sheet.variables.keys()
-		names.sort()
-		for variable_name: Variant in names:
-			var descriptor: Variant = sheet.variables[variable_name]
-			if not (descriptor is Dictionary) or bool((descriptor as Dictionary).get("exported", true)):
+		# Members are stored two ways (an entry in the sheet's own table, or a row among its events,
+		# which is how a `.gd` keeps every one) and this reads both.
+		var declared: Array[Dictionary] = declared_variables(sheet)
+		for row: Dictionary in declared:
+			if bool(row.get("inspector", true)):
 				continue
+			var variable_name: String = str(row.get("name", ""))
 			var corpus: String = str(usage_by_path.get(sheet_path, ""))
-			for other_name: Variant in sheet.variables:
-				if str(other_name) != str(variable_name):
-					corpus += "\n" + str(sheet.variables[other_name])
+			for other: Dictionary in declared:
+				if str(other.get("name", "")) != variable_name:
+					corpus += "\n" + str(other.get("text", ""))
 			for other_path: String in sheet_paths:
 				if other_path != sheet_path and (includes_by_path.get(other_path, []) as Array).has(sheet_path):
 					corpus += "\n" + str(usage_by_path.get(other_path, ""))
-			if RegEx.create_from_string("\\b%s\\b" % str(variable_name)).search(corpus) == null:
-				_add(findings, "info", "unused-variable", sheet_path,
-					"Private variable \"%s\" is never referenced - dead vocabulary?" % str(variable_name))
+			var name_pattern: RegEx = RegEx.create_from_string("\\b%s\\b" % variable_name)
+			if name_pattern.search(corpus) != null:
+				continue
+			# A script's own text is part of the sheet, and a function body the importer kept as code
+			# is not in the rows above. Another script may also reach it as `thing.name`: a member of a
+			# script is public to every other script, unlike a `.tres` sheet's compiled output.
+			if _is_script(sheet_path) and GdSheets.script_names_it(sheet_path, variable_name):
+				continue
+			_add(findings, "info", "unused-variable", sheet_path,
+				"Private variable \"%s\" is never referenced - dead vocabulary?" % variable_name)
+
+
+## Every variable a sheet declares, whichever way it is stored: {name, inspector (exported), text (what
+## else it says: default and attributes), storage}. The sheet's own table is the older shape; a row
+## among the events is the one a `.gd` always uses and a `.tres` sheet may.
+static func declared_variables(sheet: EventSheetResource) -> Array[Dictionary]:
+	var declared: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	for row: Dictionary in EventSheetVariableOwners.member_rows(sheet):
+		var name_text: String = str(row.get("name", ""))
+		if name_text.is_empty() or seen.has(name_text):
+			continue
+		seen[name_text] = true
+		var text: String = str(row.get("value", ""))
+		var resource: Object = row.get("resource") as Object
+		if resource is LocalVariable:
+			text += " " + str((resource as LocalVariable).attributes)
+		else:
+			text += " " + str(sheet.variables.get(name_text, ""))
+		declared.append({"name": name_text, "inspector": bool(row.get("inspector", false)),
+			"text": text, "storage": str(row.get("storage", ""))})
+	declared.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["name"]) < str(b["name"]))
+	return declared
 
 
 ## The same global declared across several sheets is N copies of one truth; Godot's answer is a single
@@ -1046,9 +1101,11 @@ static func check_duplicated_globals(sheet_paths: PackedStringArray, findings: A
 	var name_to_sheets: Dictionary = {}
 	var autoload_published: Dictionary = {}
 	for sheet_path: String in sheet_paths:
+		if _is_script(sheet_path):
+			continue  # A script's variable is its own member, not a value shared with the next script.
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		if sheet.autoload_mode:
@@ -1088,7 +1145,7 @@ static func check_fanout_god_sheets(sheet_paths: PackedStringArray, findings: Ar
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or sheet.behavior_mode or sheet.autoload_mode:
 			continue
 		var targets: Dictionary = {}
@@ -1120,7 +1177,7 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var numbers: Dictionary = margin_numbers_of(sheet)
@@ -1139,9 +1196,11 @@ static func _is_per_frame_trigger(trigger_id: String) -> bool:
 ## tier, because a per-tick set is legal and sometimes deliberate.
 static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
+		if _is_script(sheet_path):
+			continue  # A blank event has no spelling in a script.
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var numbers: Dictionary = margin_numbers_of(sheet)
@@ -1192,9 +1251,13 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each." % [pick.iterator_name, event.actions.size()],
 					int(numbers.get(event.get_instance_id(), 0)))
 			break
+	# A sub-event with a condition of its own does not run every frame: it runs while the condition
+	# holds, which a script writes as a key press or a "once" flag as often as a continuous state, and
+	# the audit cannot tell them apart. So the walk stops at a condition, rather than accuse a loop a
+	# guard may be keeping to one frame.
 	for sub: Variant in event.sub_events:
-		if sub is EventRow:
-			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings)
+		if sub is EventRow and (sub as EventRow).conditions.is_empty():
+			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings, numbers)
 
 ## ACE ids whose codegen `await`s - they suspend the handler into a coroutine (Begin Frame Budget alone
 ## does not await, so it is intentionally absent).
@@ -1217,7 +1280,7 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var numbers: Dictionary = margin_numbers_of(sheet)
@@ -1297,7 +1360,7 @@ static func check_fragile_node_paths(sheet_paths: PackedStringArray, findings: A
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var fragile: Dictionary = {}
@@ -1369,7 +1432,7 @@ static func unused_packs(sheet_paths: PackedStringArray) -> Array[Dictionary]:
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue  # A pack referencing itself isn't project usage.
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		corpus_parts.append(_sheet_usage_text(sheet))
@@ -1421,10 +1484,12 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		corpus_parts.append(_sheet_usage_text(sheet))
+		if _is_script(sheet_path):
+			corpus_parts.append(source_of(sheet_path))
 		corpus_parts.append(" ".join(sheet.uses_addons) + " " + " ".join(sheet.requires_behaviors)
 			+ " " + " ".join(sheet.ace_provider_scripts) + " " + " ".join(sheet.includes))
 	for scene_path: String in _list_files_with_extension("tscn"):
@@ -1466,7 +1531,7 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 ## conservatism is the feature: this check must never cry wolf.
 static func check_param_type_mismatches(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		for entry: Variant in sheet.events:
@@ -1484,22 +1549,23 @@ static func check_param_type_mismatches(sheet_paths: PackedStringArray, findings
 ## report rather than two descriptions of one problem.
 static func check_variable_notes(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var entries: Array[Dictionary] = EventSheetVariableOwners.own_entries(sheet)
 		if entries.is_empty():
 			continue
 		_scan_variable_notes(sheet.events, sheet_path, entries,
-			EventSheetVariableOwners.owner_of_sheet(sheet), findings, sheet)
+			EventSheetVariableOwners.owner_of_sheet(sheet), findings, sheet, GdSheets.local_names_anywhere(sheet))
 
 
 static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array[Dictionary],
-		owner: String, findings: Array[Dictionary], host_sheet: EventSheetResource = null) -> void:
+		owner: String, findings: Array[Dictionary], host_sheet: EventSheetResource = null,
+		locals: Dictionary = {}) -> void:
 	for entry: Variant in rows:
 		if entry is EventGroup:
 			_scan_variable_notes(EventSheetGroupFacts.children(entry as EventGroup), sheet_path,
-				entries, owner, findings, host_sheet)
+				entries, owner, findings, host_sheet, locals)
 			continue
 		if not (entry is EventRow):
 			continue
@@ -1517,6 +1583,11 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 				# own list is the wrong place to look for it - the same guard the row makes.
 				if not EventSheetIdentifierRules.is_valid(name_text):
 					continue
+				# A local, a parameter or a loop's item is a name the line may use and no member list holds -
+				# the canvas settles WHICH body owns it, and the audit, which must never accuse a working
+				# line, settles for "declared somewhere in this sheet".
+				if locals.has(name_text):
+					continue
 				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner, host_sheet)
 				if not unknown.is_empty():
 					_add(findings, "error", "unknown-variable", sheet_path, str(unknown.get("note", "")))
@@ -1525,7 +1596,7 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 					EventSheetVariableOwners.find(entries, name_text), ace_id)
 				if not mismatch.is_empty():
 					_add(findings, "warning", "variable-type-mismatch", sheet_path, str(mismatch.get("note", "")))
-		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings, host_sheet)
+		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings, host_sheet, locals)
 
 
 ## A note row carrying Godot's own error text, pasted raw. The runtime-error strip already re-says
@@ -1535,7 +1606,7 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 ## compiles fine, it just talks to its reader in the wrong language.
 static func check_raw_error_notes(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet != null:
 			_scan_raw_error_notes(sheet.events, sheet_path, findings)
 
@@ -1562,7 +1633,7 @@ static func _scan_raw_error_notes(rows: Array, sheet_path: String, findings: Arr
 ## A warning, never an error: the file still compiles, and the fence only fails to fold.
 static func check_region_fences(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet != null:
 			_scan_region_fences(sheet.events, sheet_path, findings)
 
@@ -1673,14 +1744,16 @@ static func shadowed_member_class(sheet: EventSheetResource, variable_name: Stri
 ## member) - error tier: the game cannot run until the variable is renamed.
 static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
-		for variable_name: Variant in sheet.variables:
-			var owner_class: String = shadowed_member_class(sheet, str(variable_name))
+		for row: Dictionary in declared_variables(sheet):
+			var variable_name: String = str(row.get("name", ""))
+			var owner_class: String = shadowed_member_class(sheet, variable_name)
 			if not owner_class.is_empty():
 				_add(findings, "error", "shadowed-variable", sheet_path,
-					"Variable \"%s\" shadows a %s member - the generated script can't load. Rename Everywhere… fixes every reference." % [str(variable_name), owner_class])
+					"Variable \"%s\" shadows a %s member - the %s can't load. Rename Everywhere… fixes every reference." % [
+						variable_name, owner_class, "script" if _is_script(sheet_path) else "generated script"])
 
 
 ## A generated vocabulary doc is a promise to the team - once one exists, the doctor
@@ -2628,7 +2701,7 @@ static func _provider_member_index(sheet_paths: PackedStringArray) -> Dictionary
 	for taught: Variant in ProjectSettings.get_setting("eventsheets/vocabulary/taught_provider_scripts", PackedStringArray()):
 		candidate_paths[str(taught)] = true
 	for sheet_path: String in sheet_paths:
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		for provider: Variant in sheet.ace_provider_scripts:
@@ -3012,6 +3085,20 @@ static func sheet_of(path: String) -> EventSheetResource:
 	return sheet
 
 
+## The sheet a path names, in whichever form it is kept: a `.tres` loads, and a `.gd` is opened by the
+## importer (once per audit, through `sheet_of`). `.gd` is the default sheet format, so a check that
+## only called `load()` here read nothing at all from most projects. Null for a file that is not a
+## sheet, which every caller already treats as "nothing to say".
+static func _is_script(sheet_path: String) -> bool:
+	return sheet_path.get_extension().to_lower() == "gd"
+
+
+static func sheet_at(sheet_path: String) -> EventSheetResource:
+	if _is_script(sheet_path):
+		return sheet_of(sheet_path)
+	return load(sheet_path) as EventSheetResource
+
+
 ## The numbers `sheet`'s margin draws (EventSheetResource.margin_numbers), read once per sheet per run
 ## under the same guard as the sheets themselves: a section asked on its own reads them fresh.
 static func margin_numbers_of(sheet: EventSheetResource) -> Dictionary:
@@ -3230,7 +3317,7 @@ static func check_pattern_smells(sheet_paths: PackedStringArray, findings: Array
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		scan_pattern_smells(sheet, sheet_path, findings)
@@ -3367,6 +3454,19 @@ static func _sheet_uses_ace(sheet: EventSheetResource, ace_id: String) -> bool:
 	return false
 
 
+## Whether a Fill Meter row fills a VARIABLE. The row's template is also what a line like
+## `$Lantern.position.y = minf($Lantern.position.y + 220.0 * delta, 620.0)` lifts to, and that is a
+## thing falling or sliding to a stop, not a meter: only a plain name is a meter someone could drain.
+static func _fills_a_variable(sheet: EventSheetResource) -> bool:
+	for event_row: EventRow in _pattern_events(sheet):
+		for action: Variant in event_row.actions:
+			if action is ACEAction and (action as ACEAction).ace_id == "FillMeter":
+				var params: Dictionary = (action as ACEAction).params
+				if EventSheetIdentifierRules.is_valid(str(params.get("var_name", "")).strip_edges()):
+					return true
+	return false
+
+
 ## THREE ADVISORY NOTES on the game shapes, each one a HALF that is missing.
 ##
 ## Unlike the pattern smells above these cannot read the claim registry, because a claim requires
@@ -3388,7 +3488,7 @@ static func scan_game_shape_smells(sheet: EventSheetResource, sheet_path: String
 	for filled: String in _filled_without_drain(lines):
 		_add(findings, "info", "meter-never-drains", sheet_path,
 			"%s is filled at a rate and nothing drains it - once it reaches its cap it stays there." % filled)
-	if _sheet_uses_ace(sheet, "FillMeter") and not _sheet_uses_ace(sheet, "DrainMeter"):
+	if _fills_a_variable(sheet) and not _sheet_uses_ace(sheet, "DrainMeter"):
 		_add(findings, "info", "meter-never-drains", sheet_path,
 			"This sheet fills a meter and never drains one - a meter that only goes up reaches its cap and stays there.")
 	# The mission clock the player cannot see. Pressure nobody can read is not pressure.

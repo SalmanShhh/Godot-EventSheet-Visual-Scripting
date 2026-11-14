@@ -4,6 +4,13 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
+
+- `.gd` is the default sheet format, but about twenty of the Doctor's checks were handed `.tres` sheets only, so in a project of scripts they said nothing and gave no sign they had not looked. They now read the project's own scripts as well: debug code left in, a script no scene or other script uses, editor tools that reach the editor's own tree, work in a thread that touches nodes, private variables nothing reads, a script driving many nodes, fragile `../../` paths, a loop run every frame, a wait inside a per-frame event, notes that are pasted engine errors, an unpaired `#region`, a variable that shadows an engine member (an error: Godot cannot load it), and the pattern notes.
+- One note now opens the report and says how many `.gd` and `.tres` sheets the checks read, and which checks do not apply to a script and why: generated outputs, autoload registration, duplicated globals, every-tick setup and the tidiness notes.
+- Variables are read wherever the sheet keeps them. A `.gd` keeps each one as a row among its events, which the unused-variable, shadowed-variable and save-support checks did not look at.
+- Two checks stop accusing lines that are fine. A loop under a sub-event that has a condition of its own is no longer called an every-frame loop (the condition may be a key press or a once flag), and a line that slides a node to a stop (`$Lantern.position.y = minf(..., 620.0)`) is no longer called a meter that never drains. A name a line declares itself (a local, a parameter, a loop's item) is no longer called "not a variable".
+
 ### Fixed: Run now, Reload, Enable plugin and Attach to node save the sheet the way Save does
 
 - With edits not saved yet, these four wrote the sheet's script straight to disk: no backup of the version before and the tab still marked unsaved. They now make the same save as the Save button first, so the version before is in Tools > Sheet Backups and the tab is clean, as when Godot saves a scene before it runs. A sheet that was never saved opens Save As and the command waits.
