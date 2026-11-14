@@ -31,6 +31,12 @@ static func build() -> bool:
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
+		"## selection_mode: the highest-scoring action wins.",
+		"const SELECTION_MODE_HIGHEST := \"highest\"",
+		"## selection_mode: a weighted random pick among the top few.",
+		"const SELECTION_MODE_WEIGHTED_RANDOM := \"weighted_random\"",
+		"",
 		"# --- Designer knobs (tune the FEEL in the Inspector) ---",
 		"## How the winner is chosen: highest score, or weighted random among the top few.",
 		"@export_enum(\"highest\", \"weighted_random\") var selection_mode: String = \"highest\"",
@@ -272,7 +278,7 @@ static func build() -> bool:
 			"\ton_no_valid_action.emit()",
 			"\treturn",
 			"var winner: String = \"\"",
-			"if selection_mode == \"weighted_random\":",
+			"if selection_mode == SELECTION_MODE_WEIGHTED_RANDOM:",
 			"\twinner = _weighted_pick(candidates)",
 			"else:",
 			"\tvar best: float = -1.0",

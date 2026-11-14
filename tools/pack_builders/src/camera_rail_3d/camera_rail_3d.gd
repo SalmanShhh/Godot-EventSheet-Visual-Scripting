@@ -7,6 +7,28 @@ extends Camera3D
 var host: Camera3D = null
 
 #region block_1
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## shot_ease: no easing: a steady pace.
+const SHOT_EASE_LINEAR := "linear"
+## shot_ease: start slowly and speed up.
+const SHOT_EASE_EASE_IN := "ease_in"
+## shot_ease: start fast and slow down.
+const SHOT_EASE_EASE_OUT := "ease_out"
+## shot_ease: start and end slowly.
+const SHOT_EASE_EASE_IN_OUT := "ease_in_out"
+
+## The kinds of shot a rail can be running, in a pinned order: none, a flight along the route, a hold on a beat, or a blend onto another camera.
+enum ShotMode {
+	## No shot is running.
+	NONE = 0,
+	## Fly Along: travelling the route.
+	FLY = 1,
+	## Hold: standing still for a beat.
+	HOLD = 2,
+	## Blend To: moving onto another camera.
+	BLEND = 3,
+}
+
 # --- Designer knobs (tune in the Inspector) ---
 ## The route Fly Along walks when a row hands it no path of its own - the rail's own track.
 @export var route: Path3D = null
@@ -18,10 +40,10 @@ var host: Camera3D = null
 @export var current_on_ready: bool = true
 
 # --- Internal state ---
-# Which shot is running: "" for none, or "fly", "hold", "blend". ONE at a time on purpose - a
+# Which shot is running: NONE, FLY, HOLD or BLEND. ONE at a time on purpose - a
 # rail is a shot list, and two shots driving one camera at once have no meaning.
-## Which shot is running: "fly", "hold" or "blend", or empty when none is.
-var _mode: String = ""
+## Which shot is running, or NONE when none is.
+var _mode: ShotMode = ShotMode.NONE
 # Seconds into the current shot, and how long it lasts. _progress is the fraction of the two,
 # kept rather than recomputed so it survives the shot ending.
 ## Seconds spent on the current move.
@@ -32,7 +54,7 @@ var _duration: float = 0.0
 var _progress: float = 0.0
 # The ease the current shot runs on - the row's word, or the Inspector's when the row named none.
 ## The easing curve of the current move.
-var _ease: String = "linear"
+var _ease: String = SHOT_EASE_LINEAR
 # The Fly Along run: the route being walked and its baked length in metres. Length is read once
 # per run because baking a curve is not free and the curve does not change mid-shot.
 ## The path the camera is flying along.
@@ -74,11 +96,11 @@ signal blend_finished
 func _eased(fraction: float, curve: String) -> float:
 	var straight: float = clampf(fraction, 0.0, 1.0)
 	match curve:
-		"ease_in":
+		SHOT_EASE_EASE_IN:
 			return straight * straight
-		"ease_out":
+		SHOT_EASE_EASE_OUT:
 			return 1.0 - (1.0 - straight) * (1.0 - straight)
-		"ease_in_out":
+		SHOT_EASE_EASE_IN_OUT:
 			return straight * straight * (3.0 - 2.0 * straight)
 		_:
 			return straight
@@ -157,7 +179,7 @@ func _camera_on_screen() -> Camera3D:
 ## announce an ending fire their own, which is what keeps Stop quiet and Hold loud.
 ## @ace_hidden
 func _park() -> void:
-	_mode = ""
+	_mode = ShotMode.NONE
 	# A rail with no shot running has nothing to work out each frame, so an idle rail costs
 	# nothing until the next Fly Along, Hold or Blend To starts one.
 	set_process(false)
@@ -190,16 +212,16 @@ func _ready() -> void:
 	set_process(false)
 
 func _process(delta: float) -> void:
-	if _mode.is_empty():
+	if _mode == ShotMode.NONE:
 		return
 	_elapsed = minf(_elapsed + delta, _duration)
 	# A shot of no length is already over: it reads as finished on its first frame rather than
 	# dividing by zero, which is what makes "0 seconds" an honest way to spell "cut".
 	var fraction: float = 1.0 if _duration <= 0.0 else _elapsed / _duration
 	_progress = clampf(fraction, 0.0, 1.0)
-	if _mode == "fly":
+	if _mode == ShotMode.FLY:
 		_apply_flight(_eased(_progress, _ease))
-	elif _mode == "blend":
+	elif _mode == ShotMode.BLEND:
 		if not is_instance_valid(_blend_target):
 			# The camera being travelled onto has gone. End the blend on this frame rather
 			# than animating nothing for the rest of its seconds.
@@ -208,7 +230,7 @@ func _process(delta: float) -> void:
 		_apply_blend(_eased(_progress, _ease))
 	if _progress < 1.0:
 		return
-	if _mode == "blend":
+	if _mode == ShotMode.BLEND:
 		_finish_blend()
 		return
 	_park()
@@ -231,7 +253,7 @@ func fly_along(path: Path3D, seconds: float, ease: String, look_at: Node3D) -> v
 	_duration = shot_seconds if seconds <= 0.0 else seconds
 	_elapsed = 0.0
 	_progress = 0.0
-	_mode = "fly"
+	_mode = ShotMode.FLY
 	set_process(true)
 	# A flight the player cannot see is not a flight: the rail's own camera takes the view before
 	# the first frame of it, whoever was holding the picture a moment ago.
@@ -263,7 +285,7 @@ func blend_to(camera: Camera3D, seconds: float, ease: String) -> void:
 	_duration = shot_seconds if seconds <= 0.0 else seconds
 	_elapsed = 0.0
 	_progress = 0.0
-	_mode = "blend"
+	_mode = ShotMode.BLEND
 	set_process(true)
 
 func hold(seconds: float) -> void:
@@ -271,7 +293,7 @@ func hold(seconds: float) -> void:
 	_duration = shot_seconds if seconds <= 0.0 else seconds
 	_elapsed = 0.0
 	_progress = 0.0
-	_mode = "hold"
+	_mode = ShotMode.HOLD
 	set_process(true)
 
 func stop_rail() -> void:
@@ -279,7 +301,7 @@ func stop_rail() -> void:
 	_park()
 
 func is_flying() -> bool:
-	return _mode == "fly"
+	return _mode == ShotMode.FLY
 
 func rail_progress() -> float:
 	return _progress

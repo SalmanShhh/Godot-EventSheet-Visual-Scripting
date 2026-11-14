@@ -18,6 +18,12 @@ static func build() -> bool:
 	sheet.class_description = "Shared 2D drawing runtime for the Drawing Canvas behaviour and the Draw ACEs: an offscreen render target, a command queue, and self-updating ribbons. One per host, cached on the host - call CanvasSurface.for_node(host)."
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# --- Choices (the words the Drawing Canvas behaviour stores in saved scenes) ---",
+		"## coordinates: positions are world points, centred on the host.",
+		"const COORDINATES_WORLD := \"world\"",
+		"## coordinates: positions are raw texture pixels.",
+		"const COORDINATES_CANVAS := \"canvas\"",
+		"",
 		"## Metadata key under which the surface is stored on its host node.",
 		"const META_KEY: String = \"__canvas_surface\"",
 		"",
@@ -28,7 +34,7 @@ static func build() -> bool:
 		"## Wipe the surface at the start of every frame, so only what is drawn this frame shows.",
 		"var auto_clear: bool = false",
 		"## Where drawing positions are measured from: world (centred on the host) or canvas (raw texture pixels).",
-		"var coordinates: String = \"world\"  # \"world\" (centered on the host) or \"canvas\" (raw texture pixels)",
+		"var coordinates: String = COORDINATES_WORLD",
 		"## Show the surface as a sprite on the host. Off keeps it as a texture only.",
 		"var display_on_host: bool = true",
 		"",
@@ -118,7 +124,7 @@ static func build() -> bool:
 		"## World position -> canvas pixels: the canvas is centered on the host, so the mapping is a",
 		"## translation. In canvas coordinate mode points pass through untouched.",
 		"func to_canvas(point: Vector2) -> Vector2:",
-		"\tif coordinates != \"world\" or _host == null:",
+		"\tif coordinates != COORDINATES_WORLD or _host == null:",
 		"\t\treturn point",
 		"\treturn point - _host.global_position + Vector2(canvas_width, canvas_height) * 0.5",
 		"",

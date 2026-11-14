@@ -26,6 +26,14 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
+		"## overflow_mode: stop at the min/max boundary.",
+		"const OVERFLOW_MODE_CLAMP := \"clamp\"",
+		"## overflow_mode: loop around the min/max range.",
+		"const OVERFLOW_MODE_WRAP := \"wrap\"",
+		"## overflow_mode: apply no limit.",
+		"const OVERFLOW_MODE_NONE := \"none\"",
+		"",
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## Temporary buffs count down automatically every frame. Off: drive time yourself with Advance Timers (turn-based games advance per turn).",
 		"@export var auto_tick: bool = true:",
@@ -101,9 +109,9 @@ static func build() -> bool:
 		"\t\t\t\tbest_override = maxf(best_override, float(buff[\"value\"]))",
 		"\tvar result: float = best_override if has_override else total * multiplier",
 		"\tmatch overflow_mode:",
-		"\t\t\"clamp\":",
+		"\t\tOVERFLOW_MODE_CLAMP:",
 		"\t\t\tresult = clampf(result, min_value, max_value)",
-		"\t\t\"wrap\":",
+		"\t\tOVERFLOW_MODE_WRAP:",
 		"\t\t\tif max_value > min_value:",
 		"\t\t\t\tresult = fposmod(result - min_value, max_value - min_value) + min_value",
 		"\treturn result",

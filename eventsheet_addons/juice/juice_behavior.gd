@@ -192,6 +192,30 @@ signal moment_skipped(moment_name: String)
 ## @ace_name("On Moment Finished")
 signal moment_finished(moment_name: String, cut_short: bool)
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## The slowmo fade curve - a steady fade.
+const SLOWMO_TRANS_LINEAR := "linear"
+## The slowmo fade curve - a gentle sine curve.
+const SLOWMO_TRANS_SINE := "sine"
+## The slowmo fade curve - a quadratic curve.
+const SLOWMO_TRANS_QUAD := "quad"
+## The slowmo fade curve - a cubic curve.
+const SLOWMO_TRANS_CUBIC := "cubic"
+## The slowmo fade curve - an exponential curve.
+const SLOWMO_TRANS_EXPO := "expo"
+## The slowmo fade curve - a circular curve.
+const SLOWMO_TRANS_CIRC := "circ"
+## The slowmo fade curve - overshoot a little, then settle.
+const SLOWMO_TRANS_BACK := "back"
+## The slowmo fade direction - start slowly.
+const SLOWMO_EASE_IN := "in"
+## The slowmo fade direction - end slowly.
+const SLOWMO_EASE_OUT := "out"
+## The slowmo fade direction - start and end slowly.
+const SLOWMO_EASE_IN_OUT := "in_out"
+## The slowmo fade direction - fast at the ends, slow in the middle.
+const SLOWMO_EASE_OUT_IN := "out_in"
+
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
 @export var max_offset: Vector2 = Vector2(24, 16)
@@ -1657,20 +1681,20 @@ func _set_time_scale(s: float) -> void:
 ## Maps a slowmo easing-curve name (Inspector enum) to a Tween.TransitionType.
 func _slowmo_trans(easing_name: String) -> int:
 	match easing_name:
-		"linear": return Tween.TRANS_LINEAR
-		"quad": return Tween.TRANS_QUAD
-		"cubic": return Tween.TRANS_CUBIC
-		"expo": return Tween.TRANS_EXPO
-		"circ": return Tween.TRANS_CIRC
-		"back": return Tween.TRANS_BACK
+		SLOWMO_TRANS_LINEAR: return Tween.TRANS_LINEAR
+		SLOWMO_TRANS_QUAD: return Tween.TRANS_QUAD
+		SLOWMO_TRANS_CUBIC: return Tween.TRANS_CUBIC
+		SLOWMO_TRANS_EXPO: return Tween.TRANS_EXPO
+		SLOWMO_TRANS_CIRC: return Tween.TRANS_CIRC
+		SLOWMO_TRANS_BACK: return Tween.TRANS_BACK
 		_: return Tween.TRANS_SINE
 
 ## Maps a slowmo easing-direction name (Inspector enum) to a Tween.EaseType.
 func _slowmo_ease(easing_name: String) -> int:
 	match easing_name:
-		"in": return Tween.EASE_IN
-		"in_out": return Tween.EASE_IN_OUT
-		"out_in": return Tween.EASE_OUT_IN
+		SLOWMO_EASE_IN: return Tween.EASE_IN
+		SLOWMO_EASE_IN_OUT: return Tween.EASE_IN_OUT
+		SLOWMO_EASE_OUT_IN: return Tween.EASE_OUT_IN
 		_: return Tween.EASE_OUT
 
 ## Applies a scale to the host whether it's a Node2D or a Control (centring a Control's pivot so

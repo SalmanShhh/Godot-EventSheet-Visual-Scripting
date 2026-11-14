@@ -304,7 +304,7 @@ static func _test_the_2d_rail() -> bool:
 	rail._process(1.0)
 	doomed.free()
 	rail._process(0.1)
-	all_passed = _check("a freed target ends the blend on the spot", rail.get("_mode"), "") and all_passed
+	all_passed = _check("a freed target ends the blend on the spot", rail.get("_mode"), 0) and all_passed
 	all_passed = _check("and the blend still announces itself", blends[0], blends_before + 1) and all_passed
 
 	camera.free()

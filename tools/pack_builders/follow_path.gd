@@ -26,6 +26,14 @@ static func build() -> bool:
 
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
+		"## loop_mode: stop at the end and fire On Path Finished.",
+		"const LOOP_MODE_ONCE := \"once\"",
+		"## loop_mode: start over at the end.",
+		"const LOOP_MODE_LOOP := \"loop\"",
+		"## loop_mode: walk back at the end.",
+		"const LOOP_MODE_PINGPONG := \"pingpong\"",
+		"",
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## The drawn route. Follow Path can hand over a different one at runtime; this is the starting route, and the one the editor gizmo draws.",
 		"@export var route: Path2D = null",
@@ -199,9 +207,9 @@ static func build() -> bool:
 		"\treturn",
 		"_distance += travel_speed * delta * float(_travel_direction)",
 		"if _distance >= length:",
-		"\tif loop_mode == \"loop\":",
+		"\tif loop_mode == LOOP_MODE_LOOP:",
 		"\t\t_distance = fmod(_distance, length)",
-		"\telif loop_mode == \"pingpong\":",
+		"\telif loop_mode == LOOP_MODE_PINGPONG:",
 		"\t\t# Reflect the overshoot rather than clamping it, so a fast mover keeps its pace",
 		"\t\t# through the turn instead of pausing for a frame at the end.",
 		"\t\t_distance = maxf(length - (_distance - length), 0.0)",

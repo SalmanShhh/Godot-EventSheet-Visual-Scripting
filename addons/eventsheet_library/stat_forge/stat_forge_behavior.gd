@@ -32,6 +32,14 @@ signal buff_expired(buff_id: String, stat: String)
 ## @ace_name("On Threshold Crossed")
 signal threshold_crossed(rule_id: String, stat: String, total: float)
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## overflow_mode: stop at the min/max boundary.
+const OVERFLOW_MODE_CLAMP := "clamp"
+## overflow_mode: loop around the min/max range.
+const OVERFLOW_MODE_WRAP := "wrap"
+## overflow_mode: apply no limit.
+const OVERFLOW_MODE_NONE := "none"
+
 # --- Designer knobs (tune in the Inspector) ---
 ## Temporary buffs count down automatically every frame. Off: drive time yourself with Advance Timers (turn-based games advance per turn).
 @export var auto_tick: bool = true:
@@ -105,9 +113,9 @@ func stat_total(stat: String) -> float:
 				best_override = maxf(best_override, float(buff["value"]))
 	var result: float = best_override if has_override else total * multiplier
 	match overflow_mode:
-		"clamp":
+		OVERFLOW_MODE_CLAMP:
 			result = clampf(result, min_value, max_value)
-		"wrap":
+		OVERFLOW_MODE_WRAP:
 			if max_value > min_value:
 				result = fposmod(result - min_value, max_value - min_value) + min_value
 	return result

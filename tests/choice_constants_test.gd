@@ -17,9 +17,14 @@ const CHOICES: Array = [
 	["res://eventsheet_addons/pin_3d/pin_3d_behavior.gd", "pin_mode", "PIN_MODE_"],
 	["res://eventsheet_addons/pin_3d/pin_3d_behavior.gd", "pin_axes", "PIN_AXES_"],
 	["res://eventsheet_addons/rotate/rotate_behavior.gd", "rotation_type", "ROTATION_TYPE_"],
+	["res://eventsheet_addons/follow_path/path_follow_behavior.gd", "loop_mode", "LOOP_MODE_"],
+	["res://eventsheet_addons/stat_forge/stat_forge_behavior.gd", "overflow_mode", "OVERFLOW_MODE_"],
+	["res://eventsheet_addons/utility_ai/utility_ai_addon.gd", "selection_mode", "SELECTION_MODE_"],
 	["res://eventsheet_addons/anchor/anchor_behavior.gd", "anchored_to", "ANCHORED_TO_"],
 	["res://eventsheet_addons/wrap/wrap_behavior.gd", "wrap_space", "WRAP_SPACE_"],
 	["res://eventsheet_addons/wrap/wrap_behavior.gd", "wrap_shape", "WRAP_SHAPE_"],
+	["res://eventsheet_addons/camera_rail/camera_rail_behavior.gd", "shot_ease", "SHOT_EASE_"],
+	["res://eventsheet_addons/camera_rail_3d/camera_rail_3d_behavior.gd", "shot_ease", "SHOT_EASE_"],
 ]
 
 

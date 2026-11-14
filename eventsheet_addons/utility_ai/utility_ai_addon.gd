@@ -51,6 +51,12 @@ signal on_cooldown_ended
 ## @ace_category("Utility AI")
 signal on_no_valid_action
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## selection_mode: the highest-scoring action wins.
+const SELECTION_MODE_HIGHEST := "highest"
+## selection_mode: a weighted random pick among the top few.
+const SELECTION_MODE_WEIGHTED_RANDOM := "weighted_random"
+
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## How the winner is chosen: highest score, or weighted random among the top few.
 @export_enum("highest", "weighted_random") var selection_mode: String = "highest"
@@ -207,7 +213,7 @@ func evaluate() -> void:
 		on_no_valid_action.emit()
 		return
 	var winner: String = ""
-	if selection_mode == "weighted_random":
+	if selection_mode == SELECTION_MODE_WEIGHTED_RANDOM:
 		winner = _weighted_pick(candidates)
 	else:
 		var best: float = -1.0

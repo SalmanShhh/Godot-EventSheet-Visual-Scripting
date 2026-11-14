@@ -153,6 +153,14 @@ func _preview_repeat(run: int) -> void:
 ## @ace_name("On Path Finished")
 signal path_finished
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## loop_mode: stop at the end and fire On Path Finished.
+const LOOP_MODE_ONCE := "once"
+## loop_mode: start over at the end.
+const LOOP_MODE_LOOP := "loop"
+## loop_mode: walk back at the end.
+const LOOP_MODE_PINGPONG := "pingpong"
+
 # --- Designer knobs (tune in the Inspector) ---
 ## The drawn route. Follow Path can hand over a different one at runtime; this is the starting route, and the one the editor gizmo draws.
 @export var route: Path2D = null
@@ -186,9 +194,9 @@ func _process(delta: float) -> void:
 		return
 	_distance += travel_speed * delta * float(_travel_direction)
 	if _distance >= length:
-		if loop_mode == "loop":
+		if loop_mode == LOOP_MODE_LOOP:
 			_distance = fmod(_distance, length)
-		elif loop_mode == "pingpong":
+		elif loop_mode == LOOP_MODE_PINGPONG:
 			# Reflect the overshoot rather than clamping it, so a fast mover keeps its pace
 			# through the turn instead of pausing for a frame at the end.
 			_distance = maxf(length - (_distance - length), 0.0)
