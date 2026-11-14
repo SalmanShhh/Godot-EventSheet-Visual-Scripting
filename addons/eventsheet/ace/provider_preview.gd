@@ -161,7 +161,7 @@ static func _warnings_for(scan_result: Dictionary, source: String, script: Scrip
 	if script.get_instance_base_type() == "Node" or ClassDB.is_parent_class(script.get_instance_base_type(), "Node"):
 		warnings.append({
 			"kind": "node_target",
-			"text": "This is a Node script. Rows for its variables, and for functions that carry a call line, act on a node in the scene: the row's On node field names it. The scene needs a node that wears this script for those rows to run.",
+			"text": "This is a Node script, so its rows act on a node in the scene: the row's On node field names it, and starts as $%s. The scene needs a node that wears this script for the rows to run." % str(script.get_global_name() if not str(script.get_global_name()).is_empty() else scan_result.get("provider_id", "")),
 		})
 	return warnings
 

@@ -6,10 +6,11 @@ add:max_health | action | Add To Max Health | Combat | Add To Max Health {amount
 subtract:max_health | action | Subtract From Max Health | Combat | Subtract From Max Health {amount} | {target}.max_health -= {amount} | target:String:$ScriptRowsNodeThing:expression, amount:Nil:0:
 property:label_text | expression | Label Text | UI | Label Text | {target}.label_text | target:String:$ScriptRowsNodeThing:expression
 set:label_text | action | Set Label Text | UI | Set Label Text {value} | {target}.label_text = {value} | target:String:$ScriptRowsNodeThing:expression, value:Nil:0:
-method:take_damage | action | Take Damage | Combat | Take Damage {amount} {from} |  | amount:int:10:, from:Object:null:
-method:is_dead | condition | Dead | Gameplay | Dead |  | 
-method:get_health | expression | Health | Combat | Health |  | 
-method:pick | action | Pick | Gameplay | Pick |  | 
+method:take_damage | action | Take Damage | Combat | Take Damage {amount} {from} | {target}.take_damage({amount}, {from}) | target:String:$ScriptRowsNodeThing:expression, amount:int:10:, from:Object:null:
+method:is_dead | condition | Dead | Gameplay | Dead | {target}.is_dead() | target:String:$ScriptRowsNodeThing:expression
+method:get_health | expression | Health | Combat | Health | {target}.get_health() | target:String:$ScriptRowsNodeThing:expression
+method:pick | action | Pick | Gameplay | Pick | {target}.pick() | target:String:$ScriptRowsNodeThing:expression
+method:make_label | expression | Make Label | UI | Make Label {prefix} | ScriptRowsNodeThing.make_label({prefix}) | prefix:String::
 ## your_classes node_thing.gd
 method:take_damage | action | Take Damage | All of ScriptRowsNodeThing | Take Damage {amount} {from} | {target.}take_damage({amount}, {from}) | amount:String:0:expression, from:String:null:expression
 method:is_dead | condition | Is Dead | All of ScriptRowsNodeThing | Is Dead | {target.}is_dead() | 
@@ -32,12 +33,12 @@ properties | label_text | args=String | ret= | doc=
 properties | internal_count | args=int | ret= | doc=
 base=Node2D
 ## registered resource_thing.gd
-property:amount | expression | Amount | Gameplay | Amount | __eventsheet_provider_ScriptRowsResourceThing.amount | 
-set:amount | action | Set Amount | Gameplay | Set Amount {value} | __eventsheet_provider_ScriptRowsResourceThing.amount = {value} | value:Nil:0:
-add:amount | action | Add To Amount | Gameplay | Add To Amount {amount} | __eventsheet_provider_ScriptRowsResourceThing.amount += {amount} | amount:Nil:0:
-subtract:amount | action | Subtract From Amount | Gameplay | Subtract From Amount {amount} | __eventsheet_provider_ScriptRowsResourceThing.amount -= {amount} | amount:Nil:0:
-method:total | expression | Total | Gameplay | Total |  | 
-method:add | action | Add | Gameplay | Add {count} |  | count:int:0:
+property:amount | expression | Amount | Gameplay | Amount | {resource}.amount | resource:String:null:expression
+set:amount | action | Set Amount | Gameplay | Set Amount {value} on {resource} | {resource}.amount = {value} | resource:String:null:expression, value:Nil:0:
+add:amount | action | Add To Amount | Gameplay | Add To Amount {amount} on {resource} | {resource}.amount += {amount} | resource:String:null:expression, amount:Nil:0:
+subtract:amount | action | Subtract From Amount | Gameplay | Subtract From Amount {amount} on {resource} | {resource}.amount -= {amount} | resource:String:null:expression, amount:Nil:0:
+method:total | expression | Total | Gameplay | Total | {resource}.total() | resource:String:null:expression
+method:add | action | Add | Gameplay | Add {count} on {resource} | {resource}.add({count}) | resource:String:null:expression, count:int:0:
 ## your_classes resource_thing.gd
 method:total | expression | Total | All of ScriptRowsResourceThing | Total | {target.}total() | 
 method:add | action | Add | All of ScriptRowsResourceThing | Add {count} | {target.}add({count}) | count:String:0:expression
@@ -47,6 +48,8 @@ methods | add | args=count: int | ret=void | doc=
 properties | amount | args=int | ret= | doc=
 base=Resource
 ## registered static_only.gd
+method:clamp_score | expression | Clamp Score | Gameplay | Clamp Score {value} | ScriptRowsStaticOnly.clamp_score({value}) | value:int:0:
+method:reset_all | action | Reset All | Gameplay | Reset All | ScriptRowsStaticOnly.reset_all() | 
 ## your_classes static_only.gd
 ## members static_only.gd
 methods | clamp_score | args=value: int | ret=int | doc=
@@ -57,7 +60,7 @@ property:speed | expression | Speed | Gameplay | Speed | {target}.speed | target
 set:speed | action | Set Speed | Gameplay | Set Speed {value} | {target}.speed = {value} | target:String:$LooseThing:expression, value:Nil:0:
 add:speed | action | Add To Speed | Gameplay | Add To Speed {amount} | {target}.speed += {amount} | target:String:$LooseThing:expression, amount:Nil:0:
 subtract:speed | action | Subtract From Speed | Gameplay | Subtract From Speed {amount} | {target}.speed -= {amount} | target:String:$LooseThing:expression, amount:Nil:0:
-method:ping | action | Ping | Gameplay | Ping |  | 
+method:ping | action | Ping | Gameplay | Ping | {target}.ping() | target:String:$LooseThing:expression
 ## your_classes loose_thing.gd
 method:ping | action | Ping | All of ScriptRowsLooseThing | Ping | {target.}ping() | 
 property:set:speed | action | Set Speed | All of ScriptRowsLooseThing | Set Speed {value} | {target.}speed = {value} | value:String:0.0:expression
@@ -72,8 +75,8 @@ property:max_health | expression | Max Health | Combat | Max Health | {target}.m
 set:max_health | action | Set Max Health | Combat | Set Max Health {value} | {target}.max_health = {value} | target:String:$ScriptRowsAnnotatedTwin:expression, value:Nil:0:
 add:max_health | action | Add To Max Health | Combat | Add To Max Health {amount} | {target}.max_health += {amount} | target:String:$ScriptRowsAnnotatedTwin:expression, amount:Nil:0:
 subtract:max_health | action | Subtract From Max Health | Combat | Subtract From Max Health {amount} | {target}.max_health -= {amount} | target:String:$ScriptRowsAnnotatedTwin:expression, amount:Nil:0:
-method:take_damage | action | Hurt | Fighting | Take {amount} damage |  | amount:int:5:
-method:alive | condition | Alive | Gameplay | Alive |  | 
+method:take_damage | action | Hurt | Fighting | Take {amount} damage | {target}.take_damage({amount}) | target:String:$ScriptRowsAnnotatedTwin:expression, amount:int:5:
+method:alive | condition | Alive | Gameplay | Alive | {target}.alive() | target:String:$ScriptRowsAnnotatedTwin:expression
 ## your_classes annotated_twin.gd
 method:take_damage | action | Take Damage | All of ScriptRowsAnnotatedTwin | Take Damage {amount} | {target.}take_damage({amount}) | amount:String:0:expression
 method:internal_step | action | Internal Step | All of ScriptRowsAnnotatedTwin | Internal Step | {target.}internal_step() | 

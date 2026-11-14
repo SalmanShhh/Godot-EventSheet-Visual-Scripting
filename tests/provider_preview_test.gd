@@ -30,7 +30,7 @@ static func run() -> bool:
 	ok = _check("an @export publishes a reader", _kind_of(typed, "property:difficulty"), "Expression") and ok
 	ok = _check("and a writer", _kind_of(typed, "set:difficulty"), "Action") and ok
 	ok = _check("the emitted code is shown for a property write",
-		_emits_of(typed, "set:difficulty"), "__eventsheet_provider_TypedProviderFixture.difficulty = {value}") and ok
+		_emits_of(typed, "set:difficulty"), "{object}.difficulty = {value}") and ok
 	ok = _check("a typed script raises no untyped warning", _has_warning(typed, "untyped"), false) and ok
 	ok = _check("nor a class_name warning", _has_warning(typed, "no_class_name"), false) and ok
 	# 8 = the trigger, the four from the float @export (read + set + add + subtract), and the three methods.

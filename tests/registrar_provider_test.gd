@@ -76,10 +76,11 @@ static func _parameter_signature(definition: ACEDefinition) -> String:
 		var option_keys: Array = []
 		for option_entry in parameter_dict.get("options", []):
 			option_keys.append(str((option_entry as Dictionary).get("key", "")))
+		# The two twins are different classes, so the node path a row starts on names a different one.
 		parts.append("%s|%s|%s|%s|%s" % [
 			str(parameter_dict.get("id", "")),
 			str(parameter_dict.get("hint", "")),
-			str(parameter_dict.get("description", "")),
+			str(parameter_dict.get("description", "")).replace("RegistrarProviderSample", "TerseProviderSample"),
 			str(option_keys),
 			str(parameter_dict.get("autocomplete", []))
 		])

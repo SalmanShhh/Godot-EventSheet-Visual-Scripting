@@ -23,6 +23,7 @@ const COMMON_METHOD_IGNORE := {
 ## finish before its next row runs. Lifted off before the node path is parameterized and put back
 ## after, so "waits" and "which node" stay two separate facts about the same line.
 const AWAIT_PREFIX: String = "await "
+const ShippedScripts := preload("res://addons/eventsheet/ace/shipped_scripts.gd")
 
 var _analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
 ## Set per generate_from_object() call from the provider's @ace_expose_all(node) marker; when "node",
@@ -43,6 +44,14 @@ var _autoload_singleton: String = ""
 ## and defeats {target} parameterization - so node templates use the class_name, else the
 ## PascalCase filename.
 var _provider_node_name: String = ""
+## Whether the script being reflected is one the reader wrote (not a shipped pack or a plugin file).
+## Only such a script is read by the rules that aim a row at the real thing; the plugin's own packs
+## keep reading exactly as they always did.
+var _project_script: bool = false
+## For a project script that is neither a Node nor an autoload but holds state (every Resource, and a
+## RefCounted that declares variables): the id of the parameter that names the one it acts on, so a
+## row acts on a value the sheet holds and not on a hidden copy. "" for everything else.
+var _value_param_id: String = ""
 ## The root-node script of each autoload scene read so far, keyed by "<path>@<modified time>" so
 ## an edited scene is read again.
 static var _scene_root_scripts: Dictionary = {}
@@ -104,6 +113,13 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 	_autoload_singleton = _autoload_name_for(script)
 	var provider_id: String = _analyzer.provider_id_for_script(script, fallback_class, source_metadata)
 	_provider_node_name = str(source_metadata.get("class_name", ""))
+	_project_script = script != null and not script.resource_path.is_empty() and not ShippedScripts.is_shipped(script.resource_path)
+	_value_param_id = ""
+	if _project_script and not is_node and _autoload_singleton.is_empty():
+		if ClassDB.is_parent_class(str(script.get_instance_base_type()), "Resource"):
+			_value_param_id = "resource"
+		elif bool(source_metadata.get("stateful", false)):
+			_value_param_id = "object"
 	if _provider_node_name.is_empty() and script != null and not script.resource_path.is_empty():
 		_provider_node_name = script.resource_path.get_file().get_basename().to_pascal_case()
 	if _provider_node_name.is_empty():
@@ -143,6 +159,9 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 			continue
 		if script != null and not method_overrides.has(method_name):
 			continue
+		# A static function is called by its class's name, so a script with no class_name has no way to say it.
+		if _is_static(method_info) and (not _project_script or str(source_metadata.get("class_name", "")).is_empty()):
+			continue
 		var method_entry_overrides: Dictionary = method_overrides.get(method_name, {})
 		if bool(method_entry_overrides.get("hidden", false)):
 			continue
@@ -150,6 +169,10 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 		_apply_deprecation_metadata(method_definition, method_entry_overrides)
 		output.append(method_definition)
 	_disambiguate_reflected_name_collisions(output)
+	# A script the reader wrote says where it lives, so a row can start on the node of the open scene that wears it.
+	if _project_script:
+		for definition: ACEDefinition in output:
+			definition.metadata["script_path"] = script.resource_path
 	# Provider description derives from the script's top doc comment (zero-config addons).
 	var class_description: String = str(source_metadata.get("class_description", ""))
 	if not class_description.is_empty():
@@ -358,6 +381,7 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
 	# An explicit @ace_codegen_template override still wins inside _apply_template_overrides.
 	expression_definition.metadata["codegen_template"] = _property_access(provider_id, property_name)
 	_apply_template_overrides(expression_definition, overrides)
+	_add_value_param(expression_definition, false)
 	output.append(expression_definition)
 
 	# The write-side actions inherit the member/class icon override too (a pack's own icon),
@@ -402,6 +426,7 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
 	var operator: String = "=" if prefix == "set" else ("+=" if prefix == "add" else "-=")
 	definition.metadata["codegen_template"] = "%s %s {%s}" % [_property_access(provider_id, property_name), operator, parameter_name]
 	_parameterize_node_target(definition)
+	_add_value_param(definition, true)
 	return definition
 
 
@@ -414,6 +439,8 @@ func _property_access(provider_id: String, property_name: String) -> String:
 		return "%s.%s" % [_autoload_singleton, property_name]
 	if _provider_is_node or _expose_all_mode == "node":
 		return "$%s.%s" % [_provider_node_name, property_name]
+	if not _value_param_id.is_empty():
+		return "{%s}.%s" % [_value_param_id, property_name]
 	return "__eventsheet_provider_%s.%s" % [provider_id, property_name]
 
 
@@ -523,10 +550,50 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
 			__arg_ids.append("{%s}" % str((__pd as Dictionary).get("id", "")))
 		if not _autoload_singleton.is_empty():
 			definition.metadata["codegen_template"] = "%s.%s(%s)" % [_autoload_singleton, method_name, ", ".join(__arg_ids)]
-		elif _expose_all_mode == "node":
+		elif _is_static(method_info):
+			# Called by its class's name: there is no instance for it to act on.
+			definition.metadata["codegen_template"] = "%s.%s(%s)" % [_provider_node_name, method_name, ", ".join(__arg_ids)]
+		elif _expose_all_mode == "node" or (_project_script and _provider_is_node):
+			# A Node script's function acts on the node that wears it, named by class and retargetable.
 			definition.metadata["codegen_template"] = "$%s.%s(%s)" % [_provider_node_name, method_name, ", ".join(__arg_ids)]
+		elif not _value_param_id.is_empty():
+			definition.metadata["codegen_template"] = "{%s}.%s(%s)" % [_value_param_id, method_name, ", ".join(__arg_ids)]
 	_apply_template_overrides(definition, _aimed_at_node(overrides, method_name, parameter_definitions))
+	_add_value_param(definition, str(overrides.get("display_template", "")).is_empty())
 	return definition
+
+
+## True when a reflected method is a `static func`.
+static func _is_static(method_info: Dictionary) -> bool:
+	return (int(method_info.get("flags", 0)) & METHOD_FLAG_STATIC) != 0
+
+
+## A project script that is not a Node holds its state in an instance the sheet has to name: this puts
+## that instance in front of the row as a parameter, the way "On node" does for a node. A row whose
+## call does not go through the instance (an authored template, a static, an autoload) is left alone.
+## `into_sentence` appends "on {param}" to the row's sentence so the value it acts on is on the row.
+func _add_value_param(definition: ACEDefinition, into_sentence: bool) -> void:
+	var token: String = "{%s}" % _value_param_id
+	if _value_param_id.is_empty() or not str(definition.metadata.get("codegen_template", "")).contains(token):
+		return
+	var parameter: Dictionary = {
+		"id": _value_param_id,
+		"display_name": "On resource" if _value_param_id == "resource" else "On object",
+		"description": "Which one this acts on: a variable that holds it, for example my_item.",
+		"type": TYPE_STRING,
+		"default_value": "null",
+		"property_hint": PROPERTY_HINT_NONE,
+		"hint": "expression",
+		"hint_string": "",
+		"widget_hint": "",
+		"options": [],
+		"autocomplete": []
+	}
+	var reordered: Array = [parameter]
+	reordered.append_array(definition.parameters)
+	definition.parameters = reordered
+	if into_sentence and definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
+		definition.metadata["display_template"] = "%s on %s" % [str(definition.metadata.get("display_template", definition.display_name)), token]
 
 
 ## A named sheet that publishes a function writes the call as a bare `fn({args})` into its own

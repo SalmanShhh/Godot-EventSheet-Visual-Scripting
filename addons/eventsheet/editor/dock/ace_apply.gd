@@ -44,6 +44,8 @@ const BUILDING_ACES_PATH := "res://addons/eventforge/registration/modules/buildi
 ## The class facts "Also run the parent's version" is answered from, reached by path and only when that row
 ## is picked, so nothing about classes loads with the dock.
 const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
+## The start of the owned-instance call every template-less function of a script used to bake to.
+const LEGACY_INSTANCE_PREFIX: String = "__eventsheet_provider_"
 
 var _dock: Control = null
 
@@ -55,6 +57,8 @@ func init(dock: Control) -> void:
 
 
 func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
+	if not context.has("existing_params") and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		definition = aimed_at_scene(definition, Engine.get_singleton("EditorInterface").call("get_edited_scene_root") as Node)
 	# "Also run the parent's version" is answered by where it is added: the holding function's own
 	# parameters, and the return form when the parent's function answers. Nothing is left to ask.
 	if definition.id == "CallParentFunction" and str(definition.provider_id) == "Core" \
@@ -82,6 +86,35 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 		return
 	context["from_picker"] = true
 	_dock._ace_params.open_with_values(definition, context, initial_values)
+
+
+## A row from a Node script of the reader's starts on the node of the open scene that wears the script,
+## when exactly one does - the node they would have picked - and on `$ClassName` when none or several do.
+## Answered with a copy: a definition is shared by every tab for the session and never written to.
+static func aimed_at_scene(definition: ACEDefinition, scene_root: Node) -> ACEDefinition:
+	var script_path: String = str(definition.metadata.get("script_path", ""))
+	if script_path.is_empty() or scene_root == null:
+		return definition
+	var wearers: Array[Node] = []
+	_collect_wearers(scene_root, script_path, wearers)
+	if wearers.size() != 1 or wearers[0] == scene_root:
+		return definition
+	var aimed: ACEDefinition = definition.copy()
+	aimed.parameters = aimed.parameters.duplicate(true)
+	for entry: Variant in aimed.parameters:
+		if entry is Dictionary and str((entry as Dictionary).get("id", "")) == "target":
+			var path: String = str(scene_root.get_path_to(wearers[0]))
+			(entry as Dictionary)["default_value"] = "$%s" % path if path.replace("/", "").is_valid_identifier() else "$\"%s\"" % path
+			return aimed
+	return definition
+
+
+static func _collect_wearers(node: Node, script_path: String, into: Array[Node]) -> void:
+	var script: Script = node.get_script() as Script
+	if script != null and script.resource_path == script_path:
+		into.append(node)
+	for child: Node in node.get_children():
+		_collect_wearers(child, script_path, into)
 
 
 ## True when this ACE is one of the comparisons the Compare dialog owns. One list (the dialog's own),
@@ -552,6 +585,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 							return true
 						var edited_condition: ACECondition = _create_condition_from_definition(definition, params, _context_negated(context))
 						_carry_notes(replace_row.conditions[condition_index], edited_condition)
+						_keep_legacy_template(replace_row.conditions[condition_index], edited_condition)
 						replace_row.conditions[condition_index] = edited_condition
 						message["text"] = "Updated condition."
 						return true
@@ -562,6 +596,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						var edited_action: ACEAction = _create_action_from_definition(definition, params)
 						var replaced_action: Variant = (selected_resource as EventRow).actions[action_index]
 						_carry_notes(replaced_action, edited_action)
+						_keep_legacy_template(replaced_action, edited_action)
 						_keep_value_layouts(replaced_action, edited_action)
 						(selected_resource as EventRow).actions[action_index] = edited_action
 						message["text"] = "Updated action."
@@ -607,6 +642,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						for param_key: Variant in fresh_params.keys():
 							if not apply_keys.has(str(param_key)) and existing_params.has(param_key):
 								fresh_params[param_key] = _duplicated_if_container(existing_params[param_key])
+					_keep_legacy_template(existing, fresh)
 					lane_array[slot_index] = fresh
 					applied += 1
 				if applied > 0:
@@ -1000,6 +1036,24 @@ static func _carry_notes(previous: Variant, replacement: Resource) -> void:
 	if previous is ACEAction and replacement is ACEAction:
 		(replacement as ACEAction).note_above = (previous as ACEAction).note_above
 		(replacement as ACEAction).note_above_marker = (previous as ACEAction).note_above_marker
+
+
+## A row placed while a script's functions were called on a hidden copy of it keeps that call when it is
+## edited. Its template is baked on the row and compiles as it always did; re-baking it from today's
+## definition would swap the hidden copy for the instance the row now names, which is a different
+## object holding different state - nothing a user placed may change meaning under an edit. The
+## parameter that names the node or instance has no place in the old call, so it is left off the row.
+static func _keep_legacy_template(previous: Variant, replacement: Resource) -> void:
+	if previous == null or replacement == null or not (previous is ACEAction or previous is ACECondition):
+		return
+	var old_template: String = str((previous as Resource).get("codegen_template"))
+	if not old_template.contains(LEGACY_INSTANCE_PREFIX) or str(replacement.get("codegen_template")).contains(LEGACY_INSTANCE_PREFIX):
+		return
+	replacement.set("codegen_template", old_template)
+	var edited: Dictionary = replacement.get("params")
+	for aim: String in ["target", "resource", "object"]:
+		if not old_template.contains("{%s}" % aim):
+			edited.erase(aim)
 
 
 ## The lines a value was written over go on to the row that replaces its action: a value the window

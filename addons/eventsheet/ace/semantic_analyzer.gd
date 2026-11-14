@@ -51,6 +51,7 @@ func parse_source_metadata(script: Script) -> Dictionary:
 		"class_name": "",
 		"class_description": "",
 		"tags": [],
+		"stateful": false,
 		"expose_all": false,
 		"expose_all_mode": "",
 		"default_category": "",
@@ -64,6 +65,9 @@ func parse_source_metadata(script: Script) -> Dictionary:
 	if script == null or script.resource_path.is_empty() or not FileAccess.file_exists(script.resource_path):
 		return metadata
 	var source: String = FileAccess.get_file_as_string(script.resource_path)
+	# A `static func` is a row only in a script the reader wrote: the plugin's own packs carry statics
+	# that were never published, and reading them now would move every pack's vocabulary.
+	var reads_statics: bool = not ShippedScripts.is_shipped(script.resource_path)
 	var pending_directives: Array[String] = []
 	var pending_export: bool = false
 	# The compiler emits the class description as a `##` block right AFTER `extends` (Godot's
@@ -74,6 +78,9 @@ func parse_source_metadata(script: Script) -> Dictionary:
 	var class_doc_lines: PackedStringArray = PackedStringArray()
 	for raw_line in source.split("\n"):
 		var stripped: String = raw_line.strip_edges()
+		# Instance state: a variable declared at the top level (a static one is global, not an instance's).
+		if raw_line.begins_with("var ") or raw_line.begins_with("@export") or raw_line.begins_with("@onready"):
+			metadata["stateful"] = true
 		if awaiting_class_doc:
 			if stripped.begins_with("## ") and not stripped.begins_with("## @"):
 				class_doc_lines.append(stripped.trim_prefix("##").strip_edges())
@@ -150,8 +157,8 @@ func parse_source_metadata(script: Script) -> Dictionary:
 			pending_directives.clear()
 			pending_export = false
 			continue
-		if stripped.begins_with("func "):
-			var method_name: String = _parse_func_name(stripped)
+		if stripped.begins_with("func ") or (reads_statics and stripped.begins_with("static func ")):
+			var method_name: String = _parse_func_name(stripped.trim_prefix("static "))
 			metadata["methods"][method_name] = _build_overrides(pending_directives, false, metadata)
 			pending_directives.clear()
 			pending_export = false
@@ -624,6 +631,7 @@ const COMPARISON_OPTIONS: Array = EventForgeACEFactory.COMPARISON_OPTIONS
 ## takes, and naming the importer from the provider scanner would tie the two together for a helper
 ## that belongs to neither.
 const SpecText := preload("res://addons/eventforge/registration/annotation_spec_text.gd")
+const ShippedScripts := preload("res://addons/eventsheet/ace/shipped_scripts.gd")
 
 
 ## Splits an `options:` value into {key, label} pairs, so a dropdown can READ as English while

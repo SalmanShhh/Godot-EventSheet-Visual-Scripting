@@ -24,7 +24,7 @@ const Closure := preload("res://tools/measure_editor_closure.gd")
 
 ## The closure measured when this budget was set (files, lines), from the default root.
 const MEASURED_FILES: int = 316
-const MEASURED_LINES: int = 165938
+const MEASURED_LINES: int = 166100
 ## How far past the measured figure the closure may grow before the test fails, in percent. Room for
 ## ordinary growth of the files already in the set; not room for a new subtree.
 const HEADROOM_PERCENT: int = 3

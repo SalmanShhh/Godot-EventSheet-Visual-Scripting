@@ -43,15 +43,16 @@ static func run() -> bool:
 		"{target}.health") and ok
 	node_sample.free()
 
-	# ── Utility (RefCounted) provider: writes go through the owned instance ──
+	# ── Utility (RefCounted) provider that holds state: a row acts on a value the sheet names, never on a
+	# hidden copy (the parameter is `object`, and it starts empty so the row visibly asks which one) ──
 	var utility_definitions: Array[ACEDefinition] = generator.generate_from_object(UTILITY_SAMPLE.new())
 	var set_streak: ACEDefinition = _find(utility_definitions, "set:streak")
-	ok = _check("utility Set writes through the owned instance",
+	ok = _check("utility Set writes through the value the row names",
 		str(set_streak.metadata.get("codegen_template", "")) if set_streak != null else "",
-		"__eventsheet_provider_UtilityProviderFixture.streak = {value}") and ok
-	ok = _check("utility property expression reads the owned instance",
+		"{object}.streak = {value}") and ok
+	ok = _check("utility property expression reads the value the row names",
 		str(_find(utility_definitions, "property:streak").metadata.get("codegen_template", "")) if _find(utility_definitions, "property:streak") != null else "",
-		"__eventsheet_provider_UtilityProviderFixture.streak") and ok
+		"{object}.streak") and ok
 
 	# ── End to end: the baked Set action emits a real assignment, never empty ──
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -100,12 +101,21 @@ static func run() -> bool:
 	ok = _check("a class_name-less provider id is a valid identifier",
 		nameless_setter.provider_id if nameless_setter != null else "", "NamelessProviderFixture") and ok
 	var nameless_template: String = str(nameless_setter.metadata.get("codegen_template", "")) if nameless_setter != null else ""
-	ok = _check("its owned-instance write emits no space in the identifier",
-		nameless_template, "__eventsheet_provider_NamelessProviderFixture.high_score = {value}") and ok
-	# The emitted line must also parse - the whole point of the identifier being legal.
+	ok = _check("its write goes through the value the row names",
+		nameless_template, "{object}.high_score = {value}") and ok
 	var nameless_probe: GDScript = GDScript.new()
-	nameless_probe.source_code = "@tool\nextends Node\nvar __eventsheet_provider_NamelessProviderFixture\nfunc _t() -> void:\n\t%s\n" % nameless_template.replace("{value}", "7")
+	nameless_probe.source_code = "@tool\nextends Node\nvar item\nfunc _t() -> void:\n\t%s\n" % nameless_template.replace("{value}", "7").replace("{object}", "item")
 	ok = _check("and the emitted assignment parses", nameless_probe.reload(), OK) and ok
+	# The owned-instance form still exists for a script that holds no state and for the plugin's own packs, so
+	# the identifier a provider id becomes must still be one the compiler can declare.
+	var legacy: ACEDefinition = ACEDefinition.new()
+	legacy.provider_id = str(nameless_setter.provider_id)
+	legacy.metadata = {"semantic_source": "reflection", "source_kind": "method", "source_name": "bump"}
+	var legacy_probe: GDScript = GDScript.new()
+	legacy_probe.source_code = "@tool\nextends Node\nvar legacy_copy\nfunc _t() -> void:\n\t%s\n" % legacy.instance_backed_template().replace("__eventsheet_provider_NamelessProviderFixture", "legacy_copy")
+	ok = _check("the owned-instance call for it emits no space in the identifier",
+		legacy.instance_backed_template(), "__eventsheet_provider_NamelessProviderFixture.bump()") and ok
+	ok = _check("and parses", legacy_probe.reload(), OK) and ok
 	return ok
 
 

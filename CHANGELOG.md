@@ -4,6 +4,15 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a row from a script of yours acts on the real thing, not on a hidden copy
+
+- A function of your own script that carries no call line used to bake to a call on a small copy of the class that the sheet kept for itself, so a row from a Node script changed an object no scene held and a row from a Resource changed a copy nobody could see. For a script you wrote (never a behaviour the plugin ships, whose rows read exactly as before):
+  - a Node script's functions call the node by its class name, with an "On node" slot that starts as `$ClassName` and can be retargeted - and starts as the node itself when exactly one node of the open scene wears the script;
+  - a Resource's functions and variables, and those of a plain class that holds variables, act on a value the sheet names: an "On resource" or "On object" slot that starts empty (`null`), and the row reads "Add 3 on item";
+  - a `static func` is now offered, called by its class's name (it needs a `class_name`);
+  - an authored call line or sentence is kept exactly as written.
+- A row you already placed keeps the call it was baked with and compiles to the same bytes, and editing it keeps that call rather than swapping the hidden copy for another object. The preview's note for a Node script now says what is true.
+
 ### Fixed: confirming a row that has a number or a tick in it raised an engine error
 
 - The parameters window let a reading lens rewrite typed text just before it was stored, and that step took only text. A spin box hands back a number and a tick a bool, so pressing Done on any row with a number or tick slot (a function with an `int` argument from your own script, say) stopped with "Cannot convert argument 2 from int to String" and the row was never added. Numbers and ticks are now stored as they are, and typed text is rewritten exactly as before.
