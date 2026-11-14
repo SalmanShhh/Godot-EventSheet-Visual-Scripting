@@ -6,6 +6,25 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: lines of your script that read as nothing are named, with the line and the word you probably meant
+
+- The `##` words above a function, signal or variable are read by exact spelling, so a word one letter off (`@ace_nmae`) is just a note, a parameter slot with a key nothing reads (`defualt:`) or no colon is dropped, and a plain `#` comment between the words and their function cuts them off, all without a sound. They are now named in a new Script Rows section of the Project Doctor, each with its line number and, where a close spelling exists, the word that was meant, and a \"Go to the line\" chip opens Godot's own script editor there. The same lines appear as amber notes when a script is previewed, and a function with no return type is named as reading as an action. Only scripts that put a `##` word of their own in the file are read, never a file the plugin ships, and nothing is written or loaded.
+- The preview's notes now say \"rows\" where they said \"verbs\", and the Node script note says what is true: rows for variables and for functions that carry a call line act on a node named in the row's On node field.
+- Corrected two false statements: `EventSheets.register_provider_script` registers on the open sheet, not project-wide, and the message after sharing a sheet's published functions no longer promises more than it does.
+
+### Added: tests pin how a script of yours reads before the readings are unified
+
+- Five real script files (a Node, a Resource, a class of statics, a script with no class name, and an annotated twin of the Node) are read through all three of the ways a script reaches the picker today, and the exact result - names, sentences, templates, parameters - is kept as text beside them. A later change that moves a reading now moves a visible line of that text. A second test holds the behaviour rows the showcase builder places to the vocabulary of the pack they name, listing the few that spell a baked node path. No behaviour changes.
+
+### Fixed: a function a named sheet publishes calls the node when another sheet uses it
+
+- A sheet that names its class and publishes a function wrote the call line as a bare `fn(args)` into its compiled script. That is a call on itself, correct in its own file, and wrong in any other sheet, where it called a function that sheet does not have even though the status message promised a call on the node. A Node script read as vocabulary now aims that exact bare call at the node by its class, so the row gets an \"On node\" slot defaulting to `$ClassName`. A call you qualified yourself is left as written. The compiled script is not touched, so no script or showcase file changes, and rows already placed keep the call they were baked with.
+
+### Fixed: writing a sentence or a label into your script no longer drops the lines it did not mention
+
+- Changing one thing about a function from the editor (its name, say) used to rewrite the whole comment block above it from only what that edit carried, so its kind, category, description and parameter lines vanished. An edit now merges: what it does not name stays, a field set to empty text is removed, and a parameter keeps its help text when only its starting value changes.
+- The sentence line (`@ace_display_template`) is now a word the writer knows. It lands where the sheet compiler writes it, so a script written this way still opens as a function when you open it as a sheet and saves back byte for byte.
+
 ### Changed: Post Kit keeps each stack entry as a small class
 
 - A post-stack entry was a dictionary read by text in about twenty places; it is now a `PostEntry` with typed fields, holding the CompositorEffect that wears it. Every verb behaves as it did, and nothing about the stack was ever saved.

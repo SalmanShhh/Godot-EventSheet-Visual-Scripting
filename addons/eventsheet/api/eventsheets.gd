@@ -51,7 +51,9 @@ static var _dock: Control:
 
 ## Registers a @tool class_name script as an ACE provider: its public methods, signals,
 ## and @export vars become actions/conditions/expressions/triggers (see the Custom ACEs
-## guide for the annotation and registrar dialects). Project-wide; idempotent.
+## guide for the annotation and registrar dialects). Registers on the sheet that is open - not on the
+## whole project - so another sheet does not see it until the script is added there too; with no
+## workspace open it joins the runtime bridge instead. Idempotent.
 static func register_provider_script(script_path: String) -> bool:
 	if script_path.strip_edges().is_empty():
 		return false

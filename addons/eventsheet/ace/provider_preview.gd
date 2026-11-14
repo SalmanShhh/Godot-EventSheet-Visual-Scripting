@@ -13,6 +13,7 @@ extends RefCounted
 
 ## More verbs than this from one script and the picker starts to feel crowded, so the scan says so.
 const BUSY_VERB_COUNT: int = 25
+const FINDINGS_PATH: String = "res://addons/eventsheet/ace/annotation_findings.gd"
 
 
 ## Everything the wizard needs to render a decision, from one script path:
@@ -68,6 +69,15 @@ static func scan(script_path: String) -> Dictionary:
 			"member": str(definition.metadata.get("source_name", "")),
 		})
 	result["warnings"] = _warnings_for(result, source, script)
+	# The lines of the script that read as nothing - a misspelt word, a slot with no such key, a plain
+	# comment between the words and their function. Loaded by path: this scan is the only door that asks.
+	var findings_reader: GDScript = load(FINDINGS_PATH)
+	for finding: Dictionary in findings_reader.read(source):
+		# A function with no return type already has its own, fuller warning above.
+		if str(finding.get("kind", "")) == findings_reader.KIND_UNTYPED:
+			continue
+		(result["warnings"] as Array).append({"kind": str(finding["kind"]), "line": int(finding["line"]),
+			"text": findings_reader.sentence(finding)})
 	return result
 
 
@@ -91,14 +101,14 @@ static func summary_line(scan_result: Dictionary) -> String:
 		return str(scan_result.get("reason", ""))
 	var entries: Array = scan_result.get("entries", [])
 	if entries.is_empty():
-		return "No verbs - this script has no signals, exported properties or public methods to publish."
+		return "No rows - this script has no signals, exported properties or public methods to publish."
 	var counts: Dictionary = scan_result.get("counts", {})
 	var parts: PackedStringArray = PackedStringArray()
 	for kind: int in [ACEDefinition.ACEType.ACTION, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.EXPRESSION, ACEDefinition.ACEType.TRIGGER]:
 		var count: int = int(counts.get(kind, 0))
 		if count > 0:
 			parts.append("%d %s%s" % [count, kind_label(kind).to_lower(), "s" if count != 1 else ""])
-	return "%d verb%s - %s" % [entries.size(), "s" if entries.size() != 1 else "", ", ".join(parts)]
+	return "%d row%s - %s" % [entries.size(), "s" if entries.size() != 1 else "", ", ".join(parts)]
 
 
 static func _param_names(definition: ACEDefinition) -> PackedStringArray:
@@ -131,19 +141,19 @@ static func _warnings_for(scan_result: Dictionary, source: String, script: Scrip
 	if str(scan_result.get("class_name", "")).is_empty():
 		warnings.append({
 			"kind": "no_class_name",
-			"text": "This script has no `class_name`, so its verbs publish under \"%s\" (taken from the file name). Add a `class_name` to control it." % scan_result.get("provider_id", ""),
+			"text": "This script has no `class_name`, so its rows publish under \"%s\" (taken from the file name). Add a `class_name` to control it." % scan_result.get("provider_id", ""),
 		})
 
 	if entries.size() > BUSY_VERB_COUNT:
 		warnings.append({
 			"kind": "busy",
-			"text": "%d verbs will join the picker from this one script. Consider marking the internal ones `## @ace_hidden`." % entries.size(),
+			"text": "%d rows will join the picker from this one script. Consider marking the internal ones `## @ace_hidden`." % entries.size(),
 		})
 
 	if entries.is_empty():
 		warnings.append({
 			"kind": "empty",
-			"text": "Nothing to publish: only signals, `@export` properties and public methods declared in THIS script become verbs (inherited members and `_`-prefixed methods do not).",
+			"text": "Nothing to publish: only signals, `@export` properties and public methods declared in THIS script become rows (inherited members and `_`-prefixed methods do not).",
 		})
 
 	# A Node provider is targeted as $NodeName in the scene, so the
@@ -151,7 +161,7 @@ static func _warnings_for(scan_result: Dictionary, source: String, script: Scrip
 	if script.get_instance_base_type() == "Node" or ClassDB.is_parent_class(script.get_instance_base_type(), "Node"):
 		warnings.append({
 			"kind": "node_target",
-			"text": "This is a Node script, so its verbs target a node in the scene (the row's On-node field). Its rows need that node present to run.",
+			"text": "This is a Node script. Rows for its variables, and for functions that carry a call line, act on a node in the scene: the row's On node field names it. The scene needs a node that wears this script for those rows to run.",
 		})
 	return warnings
 

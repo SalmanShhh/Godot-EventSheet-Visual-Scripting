@@ -10506,3 +10506,10 @@ and %d more.,另有 %d 个。
 "%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.",%s 声明了类 %s，插件自己的 %s 也是。Godot 每个名称只允许一个类，所以两者并存时插件无法加载。请重命名你的类。
 "%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.",%s 声明了类 %s，此项目中的行为 %s 也是。Godot 每个名称只允许一个类，所以其中一个脚本不会加载。请重命名你的类，或移除该行为。
 "%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.",%s 声明了类 %s，插件的行为 %s 也使用这个名称。目前没有损坏，但只要你的类用着这个名称，“添加到项目”就会拒绝该行为。
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.","第 %d 行以 %s 开头，这不是会被读取的词，因此只是一条注释。请检查拼写。"
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?","第 %d 行以 %s 开头，这不是会被读取的词，因此只是一条注释。你是想写 %s 吗？"
+"Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.","第 %d 行：%s 不是参数行会读取的设置，因此被忽略。会读取 hint、options、default、default_word、default_code、autocomplete 和 desc。"
+"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?","第 %d 行：%s 不是参数行会读取的设置，因此被忽略。你是想写 %s 吗？"
+"Line %d: %s has no colon, so it is left out. Write it as key: value.","第 %d 行：%s 没有冒号，因此被忽略。请写成 键: 值 的形式。"
+"Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","第 %d 行是位于上方词语与 %s 之间的 # 注释，因此 %s 读取时不会带有这些词。请改为以 ## 开头。"
+"%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s 没有返回类型，因此被读作动作。添加 -> bool 可变成条件，添加类型可变成表达式。"

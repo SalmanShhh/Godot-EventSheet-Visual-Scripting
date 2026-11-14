@@ -40,6 +40,11 @@ const OFFERED := {
 		{"id": "create_function", "label": "Create %s"},
 		{"id": "pick_function", "label": "Pick the renamed one…"},
 	],
+	# A line of a script's own words that reads as nothing: the chip opens the script in Godot's own
+	# editor on that line, because the cure is a spelling in the file and not an edit to a sheet.
+	"script-rows": [
+		{"id": "go_to_the_line", "label": "Go to the line"},
+	],
 	"raw-call-has-action": [
 		{"id": "convert_raw_call", "label": "Convert to the action it matches"},
 	],
@@ -279,6 +284,12 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 				"change_the_variable", "make_it_an_if", "rename_the_local", "remove_the_local", "open_the_value", "use_the_value", \
 				"go_to_the_variable":
 			return load("res://addons/eventsheet/editor/dock/mistake_fixes.gd").apply_from_report(dock, fix_id, finding)
+		"go_to_the_line":
+			var script_path: String = str(finding.get("path", ""))
+			var line_number: int = int(finding.get("line", -1))
+			if dock != null and dock.has_method("open_script_at_line") and dock.call("open_script_at_line", script_path, line_number):
+				return {"ok": true, "message": "%s, line %d." % [script_path.get_file(), line_number]}
+			return {"ok": false, "message": "Open %s in Godot's script editor and look at line %d." % [script_path.get_file(), line_number]}
 		"add_input_action":
 			return _add_input_action(subject)
 		"never_ask_error_report":

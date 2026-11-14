@@ -84,12 +84,13 @@ func share_verbs_with_project() -> bool:
 		if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 			ProjectSettings.save()
 	_dock._refresh_ace_registry()
-	_dock._set_status("Taught: %s's published functions are now in every sheet's picker (node-targeted at $%s)." % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
+	_dock._set_status("Shared: %s's published functions are now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change." % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
 	return true
 
 
-## Registers a GDScript file as a custom-ACE provider on the current sheet. Its annotated
-## methods/signals/exported properties then appear in the ACE picker.
+## Registers a GDScript file for the current sheet only: its annotated methods, signals and exported
+## properties then appear in this sheet's picker and in no other sheet's. Sharing a sheet's own
+## published functions with every sheet is `share_verbs_with_project`, which is a project setting.
 func add_ace_provider_script(path: String) -> bool:
 	if not _dock._ensure_sheet_for_editing():
 		return false

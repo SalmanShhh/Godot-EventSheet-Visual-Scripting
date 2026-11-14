@@ -34,7 +34,7 @@ static func run() -> bool:
 	ok = _check("a typed script raises no untyped warning", _has_warning(typed, "untyped"), false) and ok
 	ok = _check("nor a class_name warning", _has_warning(typed, "no_class_name"), false) and ok
 	# 8 = the trigger, the four from the float @export (read + set + add + subtract), and the three methods.
-	ok = _check("the summary counts the verbs", str(EventSheetProviderPreview.summary_line(typed)).begins_with("8 verbs - "), true) and ok
+	ok = _check("the summary counts the rows", str(EventSheetProviderPreview.summary_line(typed)).begins_with("8 rows - "), true) and ok
 
 	# ── The realistic case: untyped and class_name-less, so the preview must set expectations ──
 	var untyped: Dictionary = EventSheetProviderPreview.scan(UNTYPED)
@@ -68,7 +68,7 @@ func _private_helper() -> void:
 	draft_file.close()
 	var draft: Dictionary = EventSheetProviderPreview.scan(draft_path)
 	ok = _check("a script that publishes nothing yet still reads", draft.get("ok", false), true) and ok
-	ok = _check("and says what would become a verb", _warning_text(draft, "empty").is_empty(), false) and ok
+	ok = _check("and says what would become a row", _warning_text(draft, "empty").is_empty(), false) and ok
 	ok = _check("the compile test does not lean on instancing, which the editor refuses",
 		str((load(draft_path) as Script).get_instance_base_type()), "Node") and ok
 	DirAccess.remove_absolute(draft_path)

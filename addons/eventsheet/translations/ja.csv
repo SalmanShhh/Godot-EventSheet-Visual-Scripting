@@ -10506,3 +10506,10 @@ and %d more.,ほか %d 件。
 "%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.",%s はクラス %s を宣言していますが、プラグイン側の %s も同じ名前です。Godot ではクラス名ごとに 1 つしか使えないため、両方ある間はプラグインを読み込めません。自分のクラスの名前を変えてください。
 "%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.",%s はクラス %s を宣言していますが、このプロジェクトの挙動 %s も同じ名前です。Godot ではクラス名ごとに 1 つしか使えないため、どちらかのスクリプトが読み込まれません。クラスの名前を変えるか、挙動を取り除いてください。
 "%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.",%s はクラス %s を宣言していますが、この名前はプラグインの挙動 %s も使っています。まだ壊れてはいませんが、あなたのクラスがこの名前の間は「プロジェクトに追加」がその挙動を拒否します。
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.","%d 行目は %s で始まっていますが、これは読み取られる語ではないため、ただのメモになります。綴りを確認してください。"
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?","%d 行目は %s で始まっていますが、これは読み取られる語ではないため、ただのメモになります。%s のことですか？"
+"Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.","%d 行目: %s はパラメータ行が読み取る設定ではないため、無視されます。読み取られるのは hint、options、default、default_word、default_code、autocomplete、desc です。"
+"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?","%d 行目: %s はパラメータ行が読み取る設定ではないため、無視されます。%s のことですか？"
+"Line %d: %s has no colon, so it is left out. Write it as key: value.","%d 行目: %s にはコロンがないため、無視されます。キー: 値 の形で書いてください。"
+"Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","%d 行目は、上の語と %s の間にある # コメントなので、%s はそれらなしで読み取られます。この行は代わりに ## で始めてください。"
+"%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s には戻り値の型がないため、アクションとして読み取られます。条件にするには -> bool を、式にするには型を追加してください。"

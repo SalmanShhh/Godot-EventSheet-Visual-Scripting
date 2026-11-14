@@ -4,6 +4,12 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: lines of your script that read as nothing are named, with the line and the word you probably meant
+
+- The `##` words above a function, signal or variable are read by exact spelling, so a word one letter off (`@ace_nmae`) is just a note, a parameter slot with a key nothing reads (`defualt:`) or no colon is dropped, and a plain `#` comment between the words and their function cuts them off, all without a sound. They are now named in a new Script Rows section of the Project Doctor, each with its line number and, where a close spelling exists, the word that was meant, and a "Go to the line" chip opens Godot's own script editor there. The same lines appear as amber notes when a script is previewed, and a function with no return type is named as reading as an action. Only scripts that put a `##` word of their own in the file are read, never a file the plugin ships, and nothing is written or loaded.
+- The preview's notes now say "rows" where they said "verbs", and the Node script note says what is true: rows for variables and for functions that carry a call line act on a node named in the row's On node field.
+- Corrected two false statements: `EventSheets.register_provider_script` registers on the open sheet, not project-wide, and the message after sharing a sheet's published functions no longer promises more than it does.
+
 ### Added: tests pin how a script of yours reads before the readings are unified
 
 - Five real script files (a Node, a Resource, a class of statics, a script with no class name, and an annotated twin of the Node) are read through all three of the ways a script reaches the picker today, and the exact result - names, sentences, templates, parameters - is kept as text beside them. A later change that moves a reading now moves a visible line of that text. A second test holds the behaviour rows the showcase builder places to the vocabulary of the pack they name, listing the few that spell a baked node path. No behaviour changes.

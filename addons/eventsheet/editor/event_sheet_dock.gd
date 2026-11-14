@@ -7093,6 +7093,12 @@ func open_pack_guide_for_sheet() -> bool:
 	return load(EVENTSHEETS_API_PATH).open_docs("addon:%s" % pack_dir)
 
 
+## Opens a script in Godot's own script editor on a line - the door a finding about a line of a script
+## uses. False outside the editor or when the script cannot be opened.
+func open_script_at_line(script_path: String, line: int) -> bool:
+	return _preview_glue._open_gdscript_path_in_godot(script_path, line)
+
+
 ## The popup's "Show in code": the verb's own function in Godot's script editor. Falls back to the top
 ## of the file when the line cannot be found - landing in the right file always beats not opening.
 func show_verb_in_code(event_function: Resource) -> void:

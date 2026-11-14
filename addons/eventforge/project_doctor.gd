@@ -244,6 +244,10 @@ static func run() -> Dictionary:
 	# The Class Name Clashes section: a script of the reader's whose class_name is one the plugin or
 	# a shipped behaviour already uses. Same seam, registered by path so it adds no class name of its own.
 	load("res://addons/eventforge/class_name_clash_doctor.gd").ensure_registered()
+	# The Script Rows section: a line of a script's own `##` words that reads as nothing - a word one
+	# letter off, a parameter key nothing reads, a plain comment between the words and their function.
+	# Same seam, registered by path so it adds no class name of its own.
+	load("res://addons/eventforge/script_rows_doctor.gd").ensure_registered()
 	# The Damage section: a row dealing a kind of damage no DamageTypeSet in this project names, and
 	# a node guarding against a kind nothing deals. Both are a mistyped word rather than a broken line,
 	# which is why neither is an error and both stay quiet on a project that has written no set down.
