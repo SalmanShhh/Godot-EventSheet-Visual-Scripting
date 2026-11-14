@@ -28,6 +28,7 @@ static func run() -> bool:
 	passed = _scene_dock_shortcut() and passed
 	passed = _shared_material_is_never_written() and passed
 	passed = _retired_sampler_door() and passed
+	passed = _table_written_by_an_older_script() and passed
 	return passed
 
 
@@ -81,7 +82,9 @@ static func _emitted_lines() -> bool:
 		["leaving the tree stops the preview", previewing.contains("if what == NOTIFICATION_EXIT_TREE:\n\t\t_preview_stop()\n"), true],
 		["nothing starts outside the editor", previewing.contains("func _preview_start() -> void:\n\tif not Engine.is_editor_hint() or _previewing or host == null or not is_inside_tree():\n\t\treturn\n"), true],
 		["running tweens are killed on stop", previewing.contains("\t_previewing = false\n\t_preview_kill_tweens()\n"), true],
-		["the rest values live in an Engine meta table", previewing.contains("Engine.set_meta(\"_eventsheets_previews\", {})"), true],
+		["the rest values live in an Engine meta table named by one constant", previewing.contains("Engine.set_meta(_PREVIEW_TABLE_META, {})"), true],
+		["the table key is spelled once, in its constant", previewing.count("\"_eventsheets_previews\""), 1],
+		["an entry's two fields are named by constants", previewing.contains("table[key] = {_PREVIEW_REST: _preview_values(host, false), _PREVIEW_USERS: 1}"), true],
 		["a previewing behaviour is not a sheet-wide tool sheet", _sheet(true, "", "", "").tool_mode, false],
 	])
 
@@ -256,3 +259,37 @@ static func _retired_sampler_door() -> bool:
 		["the Tools menu has no Preview Behaviors item", menu.contains("Preview Behaviors on Selected Node"), false],
 		["the sampler service file is gone", FileAccess.file_exists("res://addons/eventsheet/editor/behavior_preview.gd"), false],
 	])
+
+
+## The Engine meta table is shared by every previewing behaviour on a host, and an editor session can hold
+## an entry written by a script compiled before the keys became constants. Same table name, same two field
+## words, so a new script reads the old entry and an old script reads the new one: the entry is a plain
+## Dictionary with a "rest" and a "users" field, spelled out here as an older script wrote it.
+static func _table_written_by_an_older_script() -> bool:
+	var host: Node2D = Node2D.new()
+	var entry: Dictionary = {"rest": {"position": Vector2(1, 2)}, "users": 1}
+	Engine.set_meta("_eventsheets_previews", {host.get_instance_id(): entry})
+	var passed: bool = true
+	for folder: String in ["sine", "juice", "tween", "wave"]:
+		var script: GDScript = load("res://eventsheet_addons/%s/%s" % [folder, _behavior_file(folder)]) as GDScript
+		var behaviour: Node = script.new() as Node
+		var rest: Dictionary = behaviour.call("_preview_rest_of", host)
+		passed = SUPPORT.pin_value(NAME, "%s reads the rest values an older script stored" % folder, rest.get("position"), Vector2(1, 2)) and passed
+		behaviour.free()
+	var source: String = FileAccess.get_file_as_string("res://eventsheet_addons/sine/sine_behavior.gd")
+	passed = SUPPORT.pins(NAME, [
+		["the entry's rest field keeps its word", source.contains("const _PREVIEW_REST: String = \"rest\""), true],
+		["the entry's users field keeps its word", source.contains("const _PREVIEW_USERS: String = \"users\""), true],
+		["the table keeps its Engine meta name", source.contains("const _PREVIEW_TABLE_META: String = \"_eventsheets_previews\""), true],
+	]) and passed
+	Engine.remove_meta("_eventsheets_previews")
+	host.free()
+	return passed
+
+
+## The behaviour script a pack ships under its folder, found by the one file there that ends in _behavior.gd.
+static func _behavior_file(folder: String) -> String:
+	for file: String in DirAccess.get_files_at("res://eventsheet_addons/%s" % folder):
+		if file.ends_with("_behavior.gd"):
+			return file
+	return ""

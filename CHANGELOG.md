@@ -8,6 +8,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 - By default the collapsible block of rows reads **Section** ("Group" is Godot's word for a node group, and the Words page's node-group entry is unchanged), a sheet other sheets include reads **Shared sheet** (Add > Shared sheet..., Sheet > Manage Shared Sheets..., Edit > Extract Selection to Shared Sheet..., the bar at the head of the including sheet, the picker window), and the picker's built-in card still reads **System** but now goes through the Words page like every other card. The Familiar preset keeps **Group**, **Include** and **System**. Three new Words keys (`section_block`, `shared_sheet`, `system_card`); no existing key, id, marker or saved byte changes, and the menus relabel when the Words page changes. All eight translations are filled.
 
+### Changed: the editor Preview's shared table names its keys once
+
+- A behavior that can be watched in the editor keeps the written-down rest values in an Engine meta table shared by every previewing behavior on the host. The table's name and the two field words of an entry (`rest`, `users`) were spelled out as text at every use in the 18 previewing packs; the compiler now emits each once as a private constant and uses the constant, so a misspelling is a parse error. The words themselves are unchanged, so a behavior compiled before this release and one compiled after it read and write the same table entry. The entry stays a plain Dictionary because the packs are separate files that cannot share a class.
+
 ### Changed: the last "Include bar" and "Include line" wording, and the name a new block starts with
 
 - The guides and the Theme Editor's colour descriptions that still said "Include bar" or "Include line" now say **head bar** (the bar that names the object) or **Shared sheet line**; the guide for readers coming from another editor keeps its own word. The nine translation files carry the new wording for the five strings it touched.

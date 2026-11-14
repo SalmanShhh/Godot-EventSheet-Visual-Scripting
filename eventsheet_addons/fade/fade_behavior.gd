@@ -29,6 +29,15 @@ func _enter_tree() -> void:
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
+## The Engine meta key every previewing behaviour shares for its table of rest values, one entry per host.
+const _PREVIEW_TABLE_META: String = "_eventsheets_previews"
+
+## The key of a table entry's remembered rest values.
+const _PREVIEW_REST: String = "rest"
+
+## The key of a table entry's count of behaviours previewing on that host.
+const _PREVIEW_USERS: String = "users"
+
 ## True while Preview is playing in the editor. Always false in a running game.
 var _previewing: bool = false
 
@@ -78,15 +87,15 @@ static func _preview_put_back(node: Object, values: Dictionary) -> void:
 			node.set(prop_name, rest)
 
 static func _preview_table() -> Dictionary:
-	if not Engine.has_meta("_eventsheets_previews"):
-		Engine.set_meta("_eventsheets_previews", {})
-	return Engine.get_meta("_eventsheets_previews")
+	if not Engine.has_meta(_PREVIEW_TABLE_META):
+		Engine.set_meta(_PREVIEW_TABLE_META, {})
+	return Engine.get_meta(_PREVIEW_TABLE_META)
 
 func _preview_rest_of(node: Object) -> Dictionary:
 	if node == null:
 		return {}
 	var entry: Dictionary = _preview_table().get(node.get_instance_id(), {})
-	return entry.get("rest", {})
+	return entry.get(_PREVIEW_REST, {})
 
 func _preview_start() -> void:
 	if not Engine.is_editor_hint() or _previewing or host == null or not is_inside_tree():
@@ -94,10 +103,10 @@ func _preview_start() -> void:
 	var table: Dictionary = _preview_table()
 	var key: int = host.get_instance_id()
 	if table.has(key):
-		_preview_put_back(host, table[key].rest)
-		table[key].users += 1
+		_preview_put_back(host, table[key][_PREVIEW_REST])
+		table[key][_PREVIEW_USERS] += 1
 	else:
-		table[key] = {"rest": _preview_values(host, false), "users": 1}
+		table[key] = {_PREVIEW_REST: _preview_values(host, false), _PREVIEW_USERS: 1}
 	_preview_own = _preview_values(self, true)
 	_previewing = true
 	_preview_run += 1
@@ -114,9 +123,9 @@ func _preview_stop() -> void:
 	var table: Dictionary = _preview_table()
 	var key: int = host.get_instance_id() if host != null else 0
 	if table.has(key):
-		_preview_put_back(host, table[key].rest)
-		table[key].users -= 1
-		if table[key].users <= 0:
+		_preview_put_back(host, table[key][_PREVIEW_REST])
+		table[key][_PREVIEW_USERS] -= 1
+		if table[key][_PREVIEW_USERS] <= 0:
 			table.erase(key)
 	notify_property_list_changed()
 
