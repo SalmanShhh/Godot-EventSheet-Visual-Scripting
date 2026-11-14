@@ -13,10 +13,12 @@ extends Node2D
 @export_group("Stats")
 @export_subgroup("Tuning")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:curve_editor") var stat_curve: Curve = null
+# @inspector_look progress_bar
 ## Health - drag the bar.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:100") var stat_health: int = 80
+@export_range(0, 100) var stat_health: int = 80
+# @inspector_look progress_bar
 ## Drift amplitude - drag the bar.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:200") var stat_speed: float = 90.0
+@export_range(0, 200) var stat_speed: float = 90.0
 
 func _ready() -> void:
 	if body_icon != null:

@@ -211,7 +211,7 @@ static func fold(look_id: String, values: Dictionary, type_name: String) -> Dict
 		"progress_bar", "min_max":
 			var bounds: Dictionary = _range(values)
 			bounds["step"] = "1"
-			return {"drawer": look_id, "range": bounds}
+			return _with_look_line({"drawer": look_id, "range": bounds})
 		"vector_dial":
 			return {"drawer": look_id, "range": {"min": "0", "max": _or(text.call("max"), "100"), "step": "1"}}
 		"number_choices":
@@ -356,7 +356,16 @@ static func look_keys() -> PackedStringArray:
 	return PackedStringArray(["range", "drawer", "enum_values", "flags", "layers", "exp_easing", "exp_easing_flags",
 		"unit_kinds", "unit_store", "file", "multiline", "no_alpha", "storage", "placeholder", "suggestions",
 		"toggle_options", "custom_preset", "table_columns", "table_weight_column", "table_row_table", "table_row_column", "node_path_types", "tool_button",
-		"custom_hint", "look", "look_args"])
+		"custom_hint", "look", "look_args", EventForgeLookLines.FLAG])
+
+
+## A look that keeps Godot's own export line carries the flag that says its look is written on a comment
+## line over that line. Every new pick of such a look goes through here, so the Variable window writes the
+## Godot way and only an untouched old line keeps the marker.
+static func _with_look_line(attributes: Dictionary) -> Dictionary:
+	if EventForgeLookLines.WORDS.has(str(attributes.get("drawer", ""))):
+		attributes[EventForgeLookLines.FLAG] = true
+	return attributes
 
 
 ## "Fire:1, Ice" -> [{label, value}] (the value stays text; empty = automatic).

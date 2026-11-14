@@ -1485,9 +1485,9 @@ func _build_inspector_playground() -> bool:
 		"stat_curve": {"type": "Curve", "default": null, "exported": true,
 			"attributes": {"tooltip": "Pulse shape over time.", "group": "Stats", "subgroup": "Tuning", "drawer": "curve_editor"}},
 		"stat_health": {"type": "int", "default": 80, "exported": true,
-			"attributes": {"tooltip": "Health - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "100", "step": "1"}}},
+			"attributes": {"tooltip": "Health - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "look_line": true, "range": {"min": "0", "max": "100", "step": "1"}}},
 		"stat_speed": {"type": "float", "default": 90.0, "exported": true,
-			"attributes": {"tooltip": "Drift amplitude - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "200", "step": "1"}}}
+			"attributes": {"tooltip": "Drift amplitude - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "look_line": true, "range": {"min": "0", "max": "200", "step": "1"}}}
 	}
 
 	var about: CommentRow = CommentRow.new()
@@ -1567,7 +1567,7 @@ func _build_enemy_stats() -> bool:
 			"attributes": {"tooltip": "Drop table - one row per possible drop.", "group": "Combat", "drawer": "table",
 				"table_columns": [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}]}},
 		"combat_max_health": {"type": "int", "default": 120, "exported": true,
-			"attributes": {"tooltip": "Hit points - drag the bar.", "group": "Combat", "drawer": "progress_bar",
+			"attributes": {"tooltip": "Hit points - drag the bar.", "group": "Combat", "drawer": "progress_bar", "look_line": true,
 				"range": {"min": "0", "max": "200", "step": "1"}, "clamp": true}},
 		"id_display_name": {"type": "String", "default": "Cave Rat", "exported": true,
 			"attributes": {"tooltip": "Shown in dialogs and the bestiary.", "group": "Identity",

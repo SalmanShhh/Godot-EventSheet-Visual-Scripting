@@ -37,6 +37,8 @@
 #   # @inspector_choices <function>   a String as a dropdown of the words that function returns
 #                                     (only for a @tool script that has it; else the plain field)
 #   # @inspector_side_by_side         two numbers, this one and the next declared, on one line
+#   # @inspector_look <word>[:<value>...]  the look of a variable whose export line is Godot's own: the
+#                                     bounds of an @export_range, the choices of an @export_enum
 @tool
 class_name EventSheetAttributeDrawers
 extends EditorInspectorPlugin
@@ -54,6 +56,9 @@ const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card
 ## The catalogue of looks that are files (the progress bar, and any look the project adds), loaded BY
 ## PATH for the same reason: it is read the first time a marker names a look it does not know by heart.
 const LOOK_CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+## The looks that keep Godot's own export line and name themselves on a `# @inspector_look` comment. Loaded
+## BY PATH, only when a property carries such a comment, because the file reaches the compiler.
+const LOOK_LINES_PATH: String = "res://addons/eventforge/look_lines.gd"
 ## The widgets themselves, loaded BY PATH for the same reason: most objects an Inspector shows carry
 ## no drawer and no decor, and the widgets (with their translations) are the larger half of this file's
 ## weight at boot. Reached through `widgets()`; the property wrappers below hold them as plain Controls.
@@ -123,13 +128,13 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	# field, in the value column, so they read as belonging to it. They are collected while the decor
 	# is read and added after whatever draws the field itself - Godot's plain one or one of ours.
 	var under_field: Array[Control] = []
-	var handled: bool = _parse_field(_object, type, name, hint_string, under_field)
+	var handled: bool = _parse_field(_object, type, name, hint_string, under_field, _hint_type)
 	for note: Control in under_field:
 		add_property_editor(name, widgets().NoteRow.new(note), true)
 	return handled
 
 
-func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string: String, under_field: Array[Control]) -> bool:
+func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string: String, under_field: Array[Control], hint_type: int = PROPERTY_HINT_NONE) -> bool:
 	var decor: Array = decor_for(_object, name)
 	# A pair that shares one line also holds its link button and its sizes inside that one row.
 	var pair: Dictionary = _pair_shape(_object, name, decor)
@@ -154,7 +159,7 @@ func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string
 				# emits once per member, exactly as the per-field Show If compiles. The entry is here
 				# so the Designer (and anything else reading the map) can say WHY a group hides.
 				pass
-			"tabs", "choices", "side_by_side", "side_by_side_second", "texture_size":
+			"tabs", "choices", "side_by_side", "side_by_side_second", "texture_size", "look":
 				# Drawn as the field itself (below) or at the top of the Inspector (_parse_begin).
 				pass
 			_:
@@ -177,7 +182,15 @@ func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string
 			"side_by_side_second":
 				if side_by_side_fits(_object, str(shape.get("first", "")), name):
 					return true
-	var drawer: Dictionary = parse_drawer_hint(hint_string)
+	# A look written the comment way: Godot's own hint supplies the data (the enum's choices, the range's
+	# bounds) and the comment names the look, so the marker the drawers read is rebuilt from the two.
+	var marker_hint: String = hint_string
+	if not marker_hint.begins_with("eventsheet:"):
+		for entry: Variant in decor:
+			if str((entry as Dictionary).get("kind", "")) == "look":
+				marker_hint = str(load(LOOK_LINES_PATH).marker_for(str((entry as Dictionary).get("body", "")), hint_type, hint_string))
+				break
+	var drawer: Dictionary = parse_drawer_hint(marker_hint)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
 		"cards":
@@ -360,6 +373,8 @@ static func build_decor_map(source: String) -> Dictionary:
 				if size_word.is_valid_int() and size_word.to_int() > 0:
 					size_list.append(size_word.to_int())
 			pending.append({"kind": "texture_size", "sizes": size_list})
+		elif line.begins_with("# @inspector_look "):
+			pending.append({"kind": "look", "body": line.substr(18).strip_edges()})
 		elif line == "# @inspector_tabs":
 			pending.append({"kind": "tabs"})
 		elif line.begins_with("# @inspector_choices "):

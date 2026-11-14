@@ -26,6 +26,7 @@ extends RefCounted
 ## The marker a look writes is `eventsheet:<name>[:<value>[:<value>...]]`, one value per question in file
 ## order, or the template with each `{key}` replaced when the file names one.
 
+const LOOK_LINES_PATH: String = "res://addons/eventforge/look_lines.gd"
 const SHIPPED_FOLDER: String = "res://addons/eventsheet/looks"
 const PROJECT_FOLDER: String = "res://eventsheet_addons/looks"
 ## The names the compiler and the importer already own: a marker with one of these words is carried by
@@ -235,6 +236,9 @@ static func read_look(path: String, source: String, origin: String = "project") 
 	for question: Dictionary in questions:
 		defaults[question["key"]] = question["default"]
 	entry["writes"] = "@export_custom(PROPERTY_HINT_NONE, \"%s\")" % marker_text(entry, defaults, true)
+	# A shipped look that keeps Godot's own export line says THAT line, not the marker.
+	if origin == "shipped" and not load(LOOK_LINES_PATH).writes_text(look_name).is_empty():
+		entry["writes"] = load(LOOK_LINES_PATH).writes_text(look_name)
 	return entry
 
 

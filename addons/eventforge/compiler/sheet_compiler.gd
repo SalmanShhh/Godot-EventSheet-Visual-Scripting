@@ -4215,7 +4215,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			# doc comment is Godot's native Inspector tooltip.
 			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
 			if exported:
-				for decor_line: String in _decor_prefix_lines(attributes, str(var_name)):
+				for decor_line: String in _decor_prefix_lines(attributes, str(var_name), type_name):
 					lines.append(decor_line)
 			# The variable's description doubles as its Inspector tooltip (Godot's `##` doc-comment
 			# convention): an explicit "tooltip" attribute wins, else the plain description field is
@@ -5685,6 +5685,10 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 	var drawer: String = str(attributes.get("drawer", "")).strip_edges()
 	if drawer.is_empty():
 		return _look_export_prefix(attributes)
+	# A look that keeps Godot's own export line (EventForgeLookLines): the line is Godot's, the look rides
+	# a comment line written by _decor_prefix_lines.
+	if EventForgeLookLines.uses_comment(attributes):
+		return str(EventForgeLookLines.parts(attributes, type_name).get("prefix", ""))
 	var bounds: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
 	var marker: String = ""
 	match drawer:
@@ -5897,7 +5901,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	# Decor first, then tooltip, then category/group/subgroup - same canonical order as the
 	# dict-var path (_emit_variables), so the importer's absorb can verify-lift the whole block.
 	# The ## doc attaches to the following @export var.
-	for decor_line: String in _decor_prefix_lines(attributes, local_var.name):
+	for decor_line: String in _decor_prefix_lines(attributes, local_var.name, local_var.type_name):
 		prefix += decor_line + "\n"
 	# The description doubles as the Inspector tooltip: an explicit "tooltip" attribute wins, else the
 	# plain description field is used (so a comment on a variable becomes its Inspector description).
@@ -5945,7 +5949,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 ## The order is frozen and read back bottom-up by the importer: tabs, header, info, required,
 ## validate, action, link, choices, side by side. A new line extends it at an end, never in between;
 ## the texture size line is at the top end, above tabs.
-static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "") -> PackedStringArray:
+static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "", type_name: String = "") -> PackedStringArray:
 	var decor: PackedStringArray = PackedStringArray()
 	# Texture size: this field and the one beside it are a texture's width and height in pixels. The
 	# optional words after it are the common sizes the Inspector offers as one click each.
@@ -5995,6 +5999,12 @@ static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "") -
 	# are two ordinary lines.
 	if bool(attributes.get("side_by_side", false)):
 		decor.append("# @inspector_side_by_side")
+	# Look: a look that keeps Godot's own export line names itself here, at the end nearest the variable.
+	# Written only when the Godot line is, so a variable whose look cannot be written stays a plain field.
+	if EventForgeLookLines.uses_comment(attributes):
+		var look_body: String = str(EventForgeLookLines.parts(attributes, type_name).get("body", ""))
+		if not look_body.is_empty():
+			decor.append(EventForgeLookLines.COMMENT_HEAD + look_body)
 	return decor
 
 

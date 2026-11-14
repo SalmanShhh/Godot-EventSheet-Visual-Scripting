@@ -84,8 +84,8 @@ static func _the_shipped_progress_bar_reads_from_its_file() -> bool:
 		["the lines after it are the hint", look["fields"][0][4], "The value at the empty end of the bar."],
 		["the hover says the name as written, then the hint", look["fields"][0][5], "min
 The value at the empty end of the bar."],
-		["the line it writes is generated from the file", look.get("writes"),
-			"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\")"],
+		["the line it writes is Godot's own range plus its comment", look.get("writes"),
+			"@export_range(0, 100) + # @inspector_look progress_bar"],
 		["it is a shipped look", look.get("source"), "shipped"],
 		["its file is where the plugin keeps its own looks", look.get("script_path"), "res://addons/eventsheet/looks/progress_bar.gd"],
 	])

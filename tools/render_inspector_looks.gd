@@ -68,6 +68,12 @@ const THEME_PROBE: Array = [
 ## a plain twin of the same type sits under it, so the two read side by side in one picture.
 const PROBES: Array = [
 	["progress_bar", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var health: int = 60\n@export var health_plain: int = 60\n"],
+	["progress_bar_godot_line", "# @inspector_look progress_bar
+@export_range(0, 100) var health: int = 60
+# @inspector_look progress_bar
+@export_range(0, 100) var speed: float = 55.5
+@export_range(0, 100) var health_plain: int = 60
+"],
 	["swatch_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var team_colour: Color = Color(\"#e23b3b\")\n@export var team_colour_plain: Color = Color(\"#e23b3b\")\n"],
 	["corners", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:corners\") var corner_radius: Vector4 = Vector4(8, 8, 8, 8)\n@export var corner_radius_plain: Vector4 = Vector4(8, 8, 8, 8)\n"],
 	["vector_dial", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var wind: Vector2 = Vector2(60, -40)\n@export var wind_plain: Vector2 = Vector2(60, -40)\n"],

@@ -1254,6 +1254,15 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# The link decor is emitted LAST of the decor block (closest to the variable), so it is read
 	# first here. It names both fields; only a line whose FIRST name is this variable belongs to it.
 	# Side by side and choices extend the block below the link, so they are read before it.
+	# The look line (`# @inspector_look progress_bar`) is the end of the block nearest the variable, so it
+	# is read before every other decor line. It is taken only when the variable can wear that look; any
+	# other comment of that shape stays an ordinary comment.
+	var look_found: Dictionary = {}
+	if cursor >= 0 and pending[cursor].begins_with(EventForgeLookLines.COMMENT_HEAD):
+		look_found = EventForgeLookLines.lift(pending[cursor].substr(EventForgeLookLines.COMMENT_HEAD.length()).strip_edges(), lifted)
+		if not look_found.is_empty():
+			meta_count += 1
+			cursor -= 1
 	var side_by_side_value: bool = false
 	if cursor >= 0 and pending[cursor] == "# @inspector_side_by_side":
 		side_by_side_value = true
@@ -1381,14 +1390,21 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["subgroup_end"] = true
 	if doc_after_group:
 		candidate["doc_after_group"] = true
-	if candidate.is_empty():
+	if candidate.is_empty() and look_found.is_empty():
 		return
 	# MERGE, don't overwrite: a drawer (+ its range bounds) may already have been recovered onto the variable
 	# by _extract_drawer_from_hint, and the grouping/tooltip rides alongside it. Overwriting here dropped the
 	# drawer whenever a variable carried BOTH a custom drawer AND an @export_group (the common showcase case).
 	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	var saved_options: PackedStringArray = lifted.options
 	var merged: Dictionary = saved_attrs.duplicate()
 	merged.merge(candidate, true)
+	if not look_found.is_empty():
+		merged.merge(look_found["attributes"], true)
+		for erased: String in look_found["erase"]:
+			merged.erase(erased)
+		if bool(look_found["clear_options"]):
+			lifted.options = PackedStringArray()
 	lifted.attributes = merged
 	var absorbed: PackedStringArray = PackedStringArray()
 	for index: int in range(pending.size() - meta_count, pending.size()):
@@ -1396,6 +1412,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	absorbed.append(var_line)
 	if EventSheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
 		lifted.attributes = saved_attrs  # reverted - keep whatever was already recovered (e.g. the drawer)
+		lifted.options = saved_options
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)

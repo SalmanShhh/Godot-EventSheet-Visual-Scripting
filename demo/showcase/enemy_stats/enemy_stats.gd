@@ -9,8 +9,9 @@ extends Resource
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:curve_editor") var combat_falloff: Curve = null
 ## Drop table - one row per possible drop.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,count=int,rare=bool") var combat_loot: Array = []
+# @inspector_look progress_bar
 ## Hit points - drag the bar.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:200") var combat_max_health: int = 120:
+@export_range(0, 200) var combat_max_health: int = 120:
 	set(value):
 		combat_max_health = clampi(value, 0, 200)
 # @inspector_header Identity #3aa6e0

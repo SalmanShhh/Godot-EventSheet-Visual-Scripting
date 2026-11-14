@@ -70,8 +70,8 @@ static func _a_choice_rewrites_only_its_lines() -> bool:
 	var rows: Array = [["the file opens and saves byte for byte", _emitted(sheet), ENEMY]]
 	SHAPE.write(sheet, "max_health", "look", "progress_bar", {"max": "500"})
 	var bar: String = _emitted(sheet)
-	rows.append(["a bar with its limits is one line", _changed(ENEMY, bar),
-		["@export var max_health: int = 100", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:500\") var max_health: int = 100"]])
+	rows.append(["a bar with its limits is Godot's range line under its look comment", _changed(ENEMY, bar),
+		["@export var max_health: int = 100", "# @inspector_look progress_bar", "@export_range(0, 500) var max_health: int = 100"]])
 	rows.append(["...and the panel shows the very line the file gets",
 		bar.contains(SHAPE.code(sheet, "max_health", "look", "progress_bar")), true])
 	SHAPE.write(sheet, "max_health", "check", "clamp")
