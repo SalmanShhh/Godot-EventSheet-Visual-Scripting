@@ -66,7 +66,10 @@ func add_to_project(pack: Dictionary) -> Dictionary:
 	var wanted: PackedStringArray = EventSheetPackLibrary.folders_to_add(pack_dir)
 	var copied: Dictionary = await copy_and_import(wanted)
 	if not bool(copied.get("ok", false)):
-		_dock._set_status(str(copied.get("message", "")), true)
+		# A clash is said on the Behaviour library window itself, beside the button; the status line
+		# is for failures the window has no room for.
+		if not bool(copied.get("clash", false)):
+			_dock._set_status(str(copied.get("message", "")), true)
 		return copied
 	var added: PackedStringArray = copied.get("copied", PackedStringArray())
 	var needed_names: PackedStringArray = PackedStringArray()
@@ -107,6 +110,12 @@ func _trash_folders(folders: PackedStringArray) -> void:
 ## "Failed loading resource" per pack, and on a large add an editor that crashed part way. Returns
 ## what copy_into_project returns. A coroutine: await it.
 func copy_and_import(wanted: PackedStringArray) -> Dictionary:
+	# A class name the project already uses would make one of two scripts fail to parse, so the add
+	# stops before anything is copied and says which name and which file.
+	var clashing: Array[Dictionary] = EventSheetPackLibrary.clashes(wanted)
+	if not clashing.is_empty():
+		return {"ok": false, "clash": true, "copied": PackedStringArray(), "kept": PackedStringArray(),
+			"message": EventSheetPackLibrary.clash_message(clashing)}
 	var copied: Dictionary = EventSheetPackLibrary.copy_into_project(wanted, EventSheetPackLibrary.LIBRARY_ROOT,
 		EventSheetPackLibrary.PROJECT_ROOT, true)
 	var added: PackedStringArray = copied.get("copied", PackedStringArray())

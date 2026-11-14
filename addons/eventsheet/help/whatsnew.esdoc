@@ -6,9 +6,66 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: Add to project checks class names first
+
+- Godot keeps one list of class names for a project, and a second script with a name in it stops parsing. Adding a behaviour from the Behaviour library now compares the class names it would bring with that list before copying anything; on a clash it copies nothing and says, in a quiet amber note in the window, which name clashes, which of your files holds it, and that you can rename your class or leave the behaviour out. A behaviour's own copy already in the project is not a clash.
+
+### Changed: Stat Forge keeps each buff and threshold rule as a small class
+
+- A buff and a threshold rule were dictionaries read by text in about forty places; they are now a `StatBuff` and a `ThresholdRule` with typed fields. The saved state is the same record it was, written and read through each class's `to_dict` and `from_dict`: a state saved by an older version loads, and saving it again gives the identical text. Stat bases and last totals stay dictionaries, since their keys are your stat names.
+
+### Changed: Storylet Weaver keeps its storylets, choices, requirements and effects as small classes
+
+- A storylet, a choice, a requirement and an effect were dictionaries read by text in about a hundred places; they are now `Storylet`, `StoryChoice`, `StoryRequirement` and `StoryEffect` with typed fields. A storylet's meta stays a dictionary because its keys are yours, and the rows of a book file are read as before. Every verb, trigger and expression behaves as it did, and what the save state holds is unchanged.
+
+### Changed: Drunken Walkers reads a saved walker and mark through small classes
+
+- A saved walker is read back by `Walker.from_dict`, the pair of the `to_dict` that wrote it, and a mark is a `Mark` with its own `to_dict` and `from_dict`, instead of fields picked out of dictionaries by text in `load_state`. The saved state is the same text it was: a state written by an older version loads, and saving it again gives the identical text.
+
+### Changed: Platformer Pathfinding keeps its records as small classes
+
+- A link, a route stop, a portal, a hazard, a moving platform, a pending side request and a map tag's shared map were dictionaries read by text in about a hundred and thirty places; they are now `NavEdge`, `NavWaypoint`, `NavPortal`, `NavHazard`, `NavRide`, `NavSideRequest` and `NavSharedMap` with typed fields. Routes, portals, hazards and platforms behave as before, and the only saved text, the obstacle map JSON, is read and written exactly as it was.
+- The mistake check now carries a sheet's own small classes into the probe it loads rows in, and a loop over a list of them no longer counts as a picked node.
+
+### Changed: Status Effects keeps each running status as a small class
+
+- A status that is on was a dictionary of five keys read and written by text in about thirty places; it is now an `ActiveStatus` with typed fields. Applying, stacking, ticking, extending and ending behave exactly as before, and nothing here is saved.
+
+### Changed: Decal Painter keeps its ledger as two small classes
+
+- A stamped decal and a blob shadow were dictionaries read by text; they are now a `TrackedDecal` and a `BlobShadow` with a typed field each. The rows, their words and what they do are unchanged, and nothing here is saved.
+
+### Changed: Platformer Pathfinding checks the version of an obstacle map
+
+- The obstacle map JSON has always carried a `version` that Load Obstacle Map JSON ignored. The number is now one constant, and a map marked newer than this behaviour reads says so once and is read as before; maps with no version or version 1 load exactly as they did, and the exported key is unchanged.
+
+### Changed: Drunken Walkers checks the version of a saved state
+
+- A saved state has always carried a `version` that loading ignored. Loading now says once when the state is newer than the behaviour reading it (\"parts of it may be left out\") and still reads it; a state with no version or the current one reads exactly as before, and the saved key is unchanged.
+
+### Changed: Juice keeps each moment in the air as a small class
+
+- A moment that is playing was a dictionary of twelve keys read by text from a dozen places; it is now a small class with a typed field for each, so a misspelt key is a parse error. Two keys that were written into it and never read (the strength and the direction the play was started with) are gone. The step cards, the Feedback Player's list and the moment file's rows stay dictionaries on purpose: the user writes them, scenes and files store them, and their rows' words are the file format.
+
 ### Changed: Group, Include and System read in Godot's own words by default
 
 - By default the collapsible block of rows reads **Section** (\"Group\" is Godot's word for a node group, and the Words page's node-group entry is unchanged), a sheet other sheets include reads **Shared sheet** (Add > Shared sheet..., Sheet > Manage Shared Sheets..., Edit > Extract Selection to Shared Sheet..., the bar at the head of the including sheet, the picker window), and the picker's built-in card still reads **System** but now goes through the Words page like every other card. The Familiar preset keeps **Group**, **Include** and **System**. Three new Words keys (`section_block`, `shared_sheet`, `system_card`); no existing key, id, marker or saved byte changes, and the menus relabel when the Words page changes. All eight translations are filled.
+
+### Changed: the vector shapes name their choice words once
+
+- The 2D shapes, the 3D shapes and the shared base spelled the choice words (colour mode, dash space, dash snap, dash style, blend, caps, thickness scale and unit, and the 3D geometry and depth words) as text at every use. The 2D base now names each word once (`COLOUR_MODE_SINGLE`, `DASH_SPACE_COUNT`, `BLEND_ADD` and so on), the shader-order tables are built from those names, and the 3D base reads the same names, so a misspelt word is a parse error. The words stored in saved scenes and the `@export_enum` lines are unchanged, because the editor builds the drop-down from that line and a scene stores the word itself. The Canvas Surface is a separate pack and keeps its own copy of the words, which `tests/shape_words_test.gd` pins to the shapes'.
+
+### Changed: a behaviour's own members are read by name, not by text
+
+- Platformer Pathfinding reads the other agents (their map, host, path and claims) through its own class, Flock and Flock 3D read a neighbour's velocity through theirs, Post Kit sets an effect's strength and the outline's colour, width, fill and mask through the effect scripts it ships, Game Settings and Health name the method they hand on instead of spelling it as text. A misspelt member is now a parse error; behaviour is unchanged, and the gizmo drawers that receive the editor's property dictionary (Bound To, Follow Path, Juice) keep their text keys because the dictionary is the editor's.
+
+### Changed: behaviours that drive a sibling or a named node check every member they use, once
+
+- Platformer Pathfinding, Juice, HUD Kit, Dialogue Kit and NavAgent3D each probed one member of the node they found and then used several. Each now checks every member it uses when it first finds that node and says, once, by name, which are missing (`push_warning`; no `@tool` was added). Nothing is refused that was accepted before, so a driver or label that worked still works; one that lacked a member used to be ignored without a word. The shipped pairs never warn, which `tests/host_member_probes_test.gd` pins against the shipped movement, Screen FX layer, text styles file and controller.
+
+### Changed: the editor Preview's shared table names its keys once
+
+- A behavior that can be watched in the editor keeps the written-down rest values in an Engine meta table shared by every previewing behavior on the host. The table's name and the two field words of an entry (`rest`, `users`) were spelled out as text at every use in the 18 previewing packs; the compiler now emits each once as a private constant and uses the constant, so a misspelling is a parse error. The words themselves are unchanged, so a behavior compiled before this release and one compiled after it read and write the same table entry. The entry stays a plain Dictionary because the packs are separate files that cannot share a class.
 
 ### Changed: the last \"Include bar\" and \"Include line\" wording, and the name a new block starts with
 

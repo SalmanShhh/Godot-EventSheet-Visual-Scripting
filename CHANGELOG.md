@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: Add to project checks class names first
+
+- Godot keeps one list of class names for a project, and a second script with a name in it stops parsing. Adding a behaviour from the Behaviour library now compares the class names it would bring with that list before copying anything; on a clash it copies nothing and says, in a quiet amber note in the window, which name clashes, which of your files holds it, and that you can rename your class or leave the behaviour out. A behaviour's own copy already in the project is not a clash.
+
 ### Changed: Stat Forge keeps each buff and threshold rule as a small class
 
 - A buff and a threshold rule were dictionaries read by text in about forty places; they are now a `StatBuff` and a `ThresholdRule` with typed fields. The saved state is the same record it was, written and read through each class's `to_dict` and `from_dict`: a state saved by an older version loads, and saving it again gives the identical text. Stat bases and last totals stay dictionaries, since their keys are your stat names.

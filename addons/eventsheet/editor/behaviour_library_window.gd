@@ -27,6 +27,8 @@ var _scope_waiting: Button = null
 var _scope_held: Button = null
 var _guide_link: Button = null
 var _said_band: Label = null
+## Says why an add copied nothing (a class name the project already uses), in the quiet amber of a warning.
+var _clash_note: EventSheetPopupUI.StateNote = null
 ## (pack) -> {"ok", "message"}, awaited: copies a library pack in and imports it.
 var _on_add: Callable = Callable()
 ## (pack) - Remove from project… on a pack the project holds.
@@ -56,6 +58,7 @@ func configure(on_add: Callable, on_remove: Callable = Callable()) -> void:
 func open(preselect: String = "") -> void:
 	_selected_dir = ""
 	_said_band.text = ""
+	_clash_note.say("")
 	_scope_waiting.set_pressed_no_signal(true)
 	_scope_held.set_pressed_no_signal(false)
 	_load_packs()
@@ -149,6 +152,8 @@ func _build_body() -> Control:
 	_said_band.custom_minimum_size.x = EventSheetPalette.scaled_f(540.0)
 	_said_band.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_OK))
 	page.add_child(_said_band)
+	_clash_note = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(540.0))
+	page.add_child(_clash_note)
 	return page
 
 
@@ -438,6 +443,7 @@ func _add_from_library(pack: Dictionary) -> void:
 	_adding = true
 	get_ok_button().disabled = true
 	ok_button_text = EventSheetL10n.translate("Adding…")
+	_clash_note.say("")
 	var result: Dictionary = await _on_add.call(pack)
 	_adding = false
 	_selected_dir = ""
@@ -447,6 +453,8 @@ func _add_from_library(pack: Dictionary) -> void:
 		_said_band.text = "✓ %s\n%s" % [str(result.get("message", "")), added_next_step()]
 	else:
 		_said_band.text = ""
+		if bool(result.get("clash", false)):
+			_clash_note.say(str(result.get("message", "")), EventSheetPopupUI.TONE_WARNING)
 
 
 ## The one line said after a behaviour is added to the project: where it goes from here.

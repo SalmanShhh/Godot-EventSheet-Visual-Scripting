@@ -193,6 +193,70 @@ static func folders_to_add(pack_dir: String, root: String = LIBRARY_ROOT,
 	return out
 
 
+# --- class name clashes ------------------------------------------------------------------------
+
+
+## The most clashes a message lists by name; the rest are counted.
+const CLASH_LINES_SHOWN := 5
+
+
+## class_name -> the library script declaring it, for the scripts of the given library folders. A
+## plain text read of each script's `class_name` line; no script is loaded.
+static func declared_classes(wanted: PackedStringArray, root: String = LIBRARY_ROOT) -> Dictionary:
+	var out: Dictionary = {}
+	var pattern: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	for folder: String in wanted:
+		for script_path: String in _scripts_in(root.path_join(folder)):
+			var found: RegExMatch = pattern.search(FileAccess.get_file_as_string(script_path))
+			if found != null and not out.has(found.get_string(1)):
+				out[found.get_string(1)] = {"folder": folder, "script": script_path}
+	return out
+
+
+## The names adding these library folders would bring that the project already uses, as
+## {"name", "folder", "pack", "file"} - `pack` is the behaviour's display name, `file` being the project script that holds the name. Godot keeps one
+## list of class names for the whole project and a second script with a name in it fails to parse, so
+## the add must not happen. `class_list` is Godot's own list (`ProjectSettings.get_global_class_list()`
+## by default); a class sitting in the folder a wanted pack would copy to is that pack's own earlier
+## copy, not a clash.
+static func clashes(wanted: PackedStringArray, root: String = LIBRARY_ROOT, project_root: String = PROJECT_ROOT,
+		class_list: Array = []) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var held: Array = class_list if not class_list.is_empty() else ProjectSettings.get_global_class_list()
+	var owners: Dictionary = {}
+	for entry: Variant in held:
+		if entry is Dictionary:
+			var held_name: String = str((entry as Dictionary).get("class", ""))
+			if not held_name.is_empty() and not owners.has(held_name):
+				owners[held_name] = str((entry as Dictionary).get("path", ""))
+	var declared: Dictionary = declared_classes(wanted, root)
+	var names: Array = declared.keys()
+	names.sort()
+	for class_label: String in names:
+		var file: String = str(owners.get(class_label, ""))
+		var folder: String = str(declared[class_label]["folder"])
+		if file.is_empty() or file.begins_with(project_root.path_join(folder) + "/") or file.begins_with(root + "/"):
+			continue
+		out.append({"name": class_label, "folder": folder, "pack": str(EventSheetPackCatalog.describe(folder, root).get("name", folder)), "file": file})
+	return out
+
+
+## What the Behaviour library says when an add would clash, in plain words. Empty when nothing clashes.
+static func clash_message(found: Array[Dictionary]) -> String:
+	if found.is_empty():
+		return ""
+	var lines: PackedStringArray = PackedStringArray(
+		[EventSheetL10n.translate("Nothing was copied. Godot allows one class per name, and this project already has:")])
+	for index: int in mini(found.size(), CLASH_LINES_SHOWN):
+		var clash: Dictionary = found[index]
+		lines.append(EventSheetL10n.translate("%s in %s - %s would bring a second one.") % [
+			clash["name"], clash["file"], clash["pack"]])
+	if found.size() > CLASH_LINES_SHOWN:
+		lines.append(EventSheetL10n.translate("and %d more.") % (found.size() - CLASH_LINES_SHOWN))
+	lines.append(EventSheetL10n.translate("Rename your class, or do not add this behaviour."))
+	return "\n".join(lines)
+
+
 # --- copying in and taking out -----------------------------------------------------------------
 
 

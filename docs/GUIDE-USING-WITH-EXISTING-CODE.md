@@ -2114,6 +2114,10 @@ is instantiated to answer a question.
   for the platformer pack). If a behaviour is not in the list yet, it is in the plugin's library:
   **Sheet > Behaviour library…** lists the ones this project does not hold, with what else each brings
   along, and **Add to project** copies its folder in so Create Node lists it from then on.
+  Godot keeps one list of class names per project, so before copying anything the window checks the
+  class names the behaviour would bring against that list. If one of your own scripts already has a
+  name, nothing is copied and the window says which name and which of your files holds it: rename
+  your class, or leave that behaviour out.
 - **A pack is a folder, and Godot already shows folders.** Every pack is a folder of ordinary
   behaviour scripts under `eventsheet_addons/`, and the FileSystem dock is where you see them. Adding
   one is putting its folder there - from the Asset Library, or a .zip you unpack yourself - and its
