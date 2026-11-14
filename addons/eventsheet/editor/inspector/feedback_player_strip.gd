@@ -127,8 +127,11 @@ static func file_steps_of(list: Array) -> Dictionary:
 ## The row of doors: the four that play, the one that draws, and the two that move the list between
 ## this node and a file.
 func _build_buttons() -> Control:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 3)
+	# Godot's own wrapping row: the doors drop to a second line when the Inspector is narrow, instead of
+	# their combined width holding the whole Inspector open.
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 3)
+	row.add_theme_constant_override("v_separation", 3)
 	for entry: Array in [["Play", play], ["Stop", stop], ["Skip", skip],
 			["Restore", restore], ["Debug view", _on_debug], ["Save as file", _on_save],
 			["Load from file", _on_load]]:

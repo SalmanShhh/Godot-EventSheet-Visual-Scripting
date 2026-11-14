@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Feedback Player's row of buttons wraps instead of widening the Inspector
+
+- The seven buttons under the Feedback Player's list (Play, Stop, Skip, Restore, Debug view, Save as file, Load from file) sat in one row that asked for about 520 px, which pushed the Inspector to 543 px wide. They are in Godot's own wrapping row now, so the buttons drop to a second line when the Inspector is narrow and the Inspector keeps the width you gave it.
+
 ### Fixed: the Rename window no longer lists a text in quotes as if it were rewritten
 
 - A row such as `print("speed=", speed)` was listed under "What will be rewritten" as `"speed=" -> "speed="`, a text that does not change. Only rows that really change are listed there now. A row that says the name only inside a text in quotes is listed under its own heading, "Text that mentions the name - left as it is".
