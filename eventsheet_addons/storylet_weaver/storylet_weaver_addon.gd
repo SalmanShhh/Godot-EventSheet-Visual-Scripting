@@ -19,9 +19,58 @@ signal on_choice_made
 ## @ace_category("Storylets")
 signal on_none_available
 
-# id -> {title, body, weight, cooldown, max_plays (-1=unlimited),
-#        reqs:Array of {key,op,value,value_key(bool)}, choices:Array of {id,text,reqs,effects},
-#        effects:Array of {op,key,value}, meta:Dictionary}.
+## One rule a storylet or a choice needs: a comparison against a quality, a chance gate or a recency gate.
+class StoryRequirement extends RefCounted:
+	## The quality the rule reads; unused by a chance or recency gate.
+	var key: String = ""
+	## The comparison: = != > >= < <=, or chance, recent, not_recent.
+	var op: String = ""
+	## What the quality is compared with: a number, a text, or the name of another quality when value_key is on.
+	var value: Variant = null
+	## True when value names another quality to compare against.
+	var value_key: bool = false
+
+## One quality change a storylet makes when drawn, or a choice makes when picked.
+class StoryEffect extends RefCounted:
+	## What it does to the quality: set, inc, dec, toggle or delete.
+	var op: String = "set"
+	## The quality it changes.
+	var key: String = ""
+	## The amount or the new value.
+	var value: Variant = 0
+
+## One choice the player can pick on a storylet.
+class StoryChoice extends RefCounted:
+	## The id Choose picks it by.
+	var id: String = ""
+	## The label the game shows.
+	var text: String = ""
+	## Rules that must pass for the choice to be offered.
+	var reqs: Array[StoryRequirement] = []
+	## Quality changes made when it is picked.
+	var effects: Array[StoryEffect] = []
+
+## One storylet: its text, how it is weighed and limited, its rules, its choices and its effects.
+class Storylet extends RefCounted:
+	## The title the game shows.
+	var title: String = ""
+	## The body text the game shows.
+	var body: String = ""
+	## How strongly it is preferred when several are eligible.
+	var weight: float = 1.0
+	## Seconds it stays ineligible after it plays; 0 for none.
+	var cooldown: float = 0.0
+	## How many times it may ever play; -1 for no limit.
+	var max_plays: float = -1.0
+	## Rules that must all pass for it to be eligible.
+	var reqs: Array[StoryRequirement] = []
+	## The choices the player can pick.
+	var choices: Array[StoryChoice] = []
+	## Quality changes made when it is drawn.
+	var effects: Array[StoryEffect] = []
+	## Free key-value payload the game reads back (a speaker, a portrait); the engine never reads it.
+	var meta: Dictionary = {}
+
 ## Every storylet loaded, by id.
 var _lib: Dictionary = {}
 # Flat quality store (the mirror of game state the requirements read).
@@ -45,6 +94,56 @@ var _chosen: String = ""
 var _clock: float = 0.0
 ## True when picks use the shared random generator instead of the weaver's own.
 var _use_shared: bool = false
+func _story(id: String) -> Storylet:
+	if not _lib.has(id):
+		_lib[id] = Storylet.new()
+	return _lib[id]
+# The draft choice with this id on a storylet, or null. READ-ONLY: it must not create the
+# storylet (a missing id simply yields no choice), so the loader and the forecast expressions never
+# conjure a phantom storylet from an unknown reference - unlike _story(), which auto-vivifies.
+func _choice(id: String, choice_id: String) -> StoryChoice:
+	var story: Storylet = _lib.get(id, null) as Storylet
+	if story == null:
+		return null
+	for c: StoryChoice in story.choices:
+		if c.id == choice_id:
+			return c
+	return null
+# The active storylet's choices that pass their requirements, in order.
+func _active_choices() -> Array[StoryChoice]:
+	if not _lib.has(_active):
+		return []
+	var out: Array[StoryChoice] = []
+	for c: StoryChoice in _lib[_active].choices:
+		if _choice_ok(c, _active):
+			out.append(c)
+	return out
+# Turns one Requirements-grid row into a requirement the eligibility check understands -
+# a comparison (optionally key-vs-key), a chance gate, or a recency gate.
+func _req_from_row(row: Dictionary) -> StoryRequirement:
+	var op: String = str(_cell(row, "op", "gte"))
+	var req: StoryRequirement = StoryRequirement.new()
+	match op:
+		"chance":
+			req.op = "chance"
+			req.value = _num(_cell(row, "value", 0))
+			return req
+		"recent", "not_recent":
+			req.op = op
+			req.value = int(_num(_cell(row, "value", 0)))
+			return req
+	req.key = str(_cell(row, "key", ""))
+	req.op = _op_symbol(op)
+	req.value = _norm_value(_cell(row, "value", ""))
+	req.value_key = bool(_cell(row, "value_is_key", false))
+	return req
+# Turns one Effects-grid row into an effect.
+func _effect_from_row(row: Dictionary) -> StoryEffect:
+	var eff: StoryEffect = StoryEffect.new()
+	eff.op = str(_cell(row, "op", "set"))
+	eff.key = str(_cell(row, "key", ""))
+	eff.value = _norm_value(_cell(row, "value", ""))
+	return eff
 
 func _process(delta: float) -> void:
 	_clock += delta
@@ -58,7 +157,7 @@ func _process(delta: float) -> void:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.define_storylet({id}, {title}, {body})")
 func define_storylet(id: String, title: String, body: String) -> void:
-	_lib[id] = _blank_story()
+	_lib[id] = Storylet.new()
 	_lib[id].title = title
 	_lib[id].body = body
 
@@ -97,7 +196,11 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, "{op}", {value})")
 func add_requirement(id: String, quality_key: String, op: String, value: Variant) -> void:
-	_story(id).reqs.append({"key": quality_key, "op": op, "value": value})
+	var req: StoryRequirement = StoryRequirement.new()
+	req.key = quality_key
+	req.op = op
+	req.value = value
+	_story(id).reqs.append(req)
 
 ## @ace_action
 ## @ace_name("Add Choice")
@@ -106,7 +209,10 @@ func add_requirement(id: String, quality_key: String, op: String, value: Variant
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice({id}, {choice_id}, {text})")
 func add_choice(id: String, choice_id: String, text: String) -> void:
-	_story(id).choices.append({"id": choice_id, "text": text, "reqs": [], "effects": []})
+	var choice: StoryChoice = StoryChoice.new()
+	choice.id = choice_id
+	choice.text = text
+	_story(id).choices.append(choice)
 
 ## @ace_action
 ## @ace_name("Add Choice Requirement")
@@ -116,9 +222,13 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, "{op}", {value})")
 func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value: Variant) -> void:
-	var c: Dictionary = _choice(id, choice_id)
-	if not c.is_empty():
-		c.reqs.append({"key": quality_key, "op": op, "value": value})
+	var c: StoryChoice = _choice(id, choice_id)
+	if c != null:
+		var req: StoryRequirement = StoryRequirement.new()
+		req.key = quality_key
+		req.op = op
+		req.value = value
+		c.reqs.append(req)
 
 ## @ace_action
 ## @ace_name("Add Choice Effect")
@@ -128,9 +238,13 @@ func add_choice_requirement(id: String, choice_id: String, quality_key: String, 
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, "{op}", {key}, {value})")
 func add_choice_effect(id: String, choice_id: String, op: String, key: String, value: Variant) -> void:
-	var c: Dictionary = _choice(id, choice_id)
-	if not c.is_empty():
-		c.effects.append({"op": op, "key": key, "value": value})
+	var c: StoryChoice = _choice(id, choice_id)
+	if c != null:
+		var eff: StoryEffect = StoryEffect.new()
+		eff.op = op
+		eff.key = key
+		eff.value = value
+		c.effects.append(eff)
 
 ## @ace_action
 ## @ace_name("Add Effect")
@@ -140,7 +254,11 @@ func add_choice_effect(id: String, choice_id: String, op: String, key: String, v
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_effect({id}, "{op}", {key}, {value})")
 func add_effect(id: String, op: String, key: String, value: Variant) -> void:
-	_story(id).effects.append({"op": op, "key": key, "value": value})
+	var eff: StoryEffect = StoryEffect.new()
+	eff.op = op
+	eff.key = key
+	eff.value = value
+	_story(id).effects.append(eff)
 
 ## @ace_action
 ## @ace_name("Add Meta")
@@ -159,7 +277,12 @@ func add_meta(id: String, key: String, value: Variant) -> void:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, "{op}", {other_key})")
 func add_requirement_key(id: String, quality_key: String, op: String, other_key: String) -> void:
-	_story(id).reqs.append({"key": quality_key, "op": op, "value": other_key, "value_key": true})
+	var req: StoryRequirement = StoryRequirement.new()
+	req.key = quality_key
+	req.op = op
+	req.value = other_key
+	req.value_key = true
+	_story(id).reqs.append(req)
 
 ## @ace_action
 ## @ace_name("Add Chance Requirement")
@@ -168,7 +291,10 @@ func add_requirement_key(id: String, quality_key: String, op: String, other_key:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_chance_requirement({id}, {percent})")
 func add_chance_requirement(id: String, percent: float) -> void:
-	_story(id).reqs.append({"op": "chance", "value": clampf(percent, 0.0, 100.0)})
+	var req: StoryRequirement = StoryRequirement.new()
+	req.op = "chance"
+	req.value = clampf(percent, 0.0, 100.0)
+	_story(id).reqs.append(req)
 
 ## @ace_action
 ## @ace_name("Add Recency Requirement")
@@ -178,7 +304,10 @@ func add_chance_requirement(id: String, percent: float) -> void:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_recency_requirement({id}, "{mode}", {within})")
 func add_recency_requirement(id: String, mode: String, within: int) -> void:
-	_story(id).reqs.append({"op": mode, "value": within})
+	var req: StoryRequirement = StoryRequirement.new()
+	req.op = mode
+	req.value = within
+	_story(id).reqs.append(req)
 
 ## @ace_action
 ## @ace_name("Set Quality")
@@ -268,10 +397,10 @@ func draw_weighted() -> void:
 func choose(choice_id: String) -> void:
 	if _active.is_empty():
 		return
-	var picked: Dictionary = _choice(_active, choice_id)
-	if picked.is_empty() or not _choice_ok(picked, _active):
+	var picked: StoryChoice = _choice(_active, choice_id)
+	if picked == null or not _choice_ok(picked, _active):
 		return
-	for eff: Dictionary in picked.get("effects", []):
+	for eff: StoryEffect in picked.effects:
 		_apply_effect(eff)
 	_chosen = choice_id
 	on_choice_made.emit()
@@ -379,8 +508,8 @@ func has_been_played(id: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.is_on_cooldown({id})")
 func is_on_cooldown(id: String) -> bool:
-	var s: Dictionary = _lib.get(id, {})
-	return s.get("cooldown", 0.0) > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.get("cooldown", 0.0)
+	var s: Storylet = _lib.get(id, null) as Storylet
+	return s != null and s.cooldown > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.cooldown
 
 ## @ace_condition
 ## @ace_name("Is Library Empty")
@@ -497,8 +626,8 @@ func active_choice_count() -> int:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choice_id_at({index})")
 func choice_id_at(index: int) -> String:
-	var c: Array = _active_choices()
-	return str(c[index].id) if index >= 0 and index < c.size() else ""
+	var c: Array[StoryChoice] = _active_choices()
+	return c[index].id if index >= 0 and index < c.size() else ""
 
 ## @ace_expression
 ## @ace_name("Choice Text At")
@@ -507,8 +636,8 @@ func choice_id_at(index: int) -> String:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choice_text_at({index})")
 func choice_text_at(index: int) -> String:
-	var c: Array = _active_choices()
-	return str(c[index].text) if index >= 0 and index < c.size() else ""
+	var c: Array[StoryChoice] = _active_choices()
+	return c[index].text if index >= 0 and index < c.size() else ""
 
 ## @ace_expression
 ## @ace_name("Chosen Id")
@@ -526,7 +655,7 @@ func chosen_id() -> String:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.forecast_storylet_effects({id})")
 func forecast_storylet_effects(id: String) -> String:
-	return _forecast(_lib[id].get("effects", [])) if _lib.has(id) else ""
+	return _forecast((_lib[id] as Storylet).effects) if _lib.has(id) else ""
 
 ## @ace_expression
 ## @ace_name("Forecast Choice Effects")
@@ -535,8 +664,8 @@ func forecast_storylet_effects(id: String) -> String:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.forecast_choice_effects({id}, {choice_id})")
 func forecast_choice_effects(id: String, choice_id: String) -> String:
-	var c: Dictionary = _choice(id, choice_id)
-	return _forecast(c.get("effects", [])) if not c.is_empty() else ""
+	var c: StoryChoice = _choice(id, choice_id)
+	return _forecast(c.effects) if c != null else ""
 
 ## @ace_expression
 ## @ace_name("Active Meta")
@@ -583,8 +712,8 @@ func play_count(id: String) -> int:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.cooldown_remaining({id})")
 func cooldown_remaining(id: String) -> float:
-	var s: Dictionary = _lib.get(id, {})
-	if s.get("cooldown", 0.0) <= 0.0 or not _last_played.has(id):
+	var s: Storylet = _lib.get(id, null) as Storylet
+	if s == null or s.cooldown <= 0.0 or not _last_played.has(id):
 		return 0.0
 	return maxf(s.cooldown - (_clock - _last_played[id]), 0.0)
 
@@ -624,23 +753,6 @@ func _rand_float() -> float:
 			return shared.random_value()
 	return randf()
 
-func _blank_story() -> Dictionary:
-	return {"title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1.0, "reqs": [], "choices": [], "effects": [], "meta": {}}
-
-func _story(id: String) -> Dictionary:
-	if not _lib.has(id):
-		_lib[id] = _blank_story()
-	return _lib[id]
-
-func _choice(id: String, choice_id: String) -> Dictionary:
-	# The draft choice with this id on a storylet, or an empty dict. READ-ONLY: it must not create the
-	# storylet (a missing id simply yields no choice), so the loader and the forecast expressions never
-	# conjure a phantom storylet from an unknown reference - unlike _story(), which auto-vivifies.
-	for c: Dictionary in (_lib.get(id, {}) as Dictionary).get("choices", []):
-		if str(c.id) == choice_id:
-			return c
-	return {}
-
 func _num(v: Variant) -> float:
 	if v is float or v is int:
 		return float(v)
@@ -651,21 +763,21 @@ func _num(v: Variant) -> float:
 func _text(v: Variant) -> String:
 	return "" if v == null else str(v)
 
-func _req_ok(req: Dictionary, id: String) -> bool:
+func _req_ok(req: StoryRequirement, id: String) -> bool:
 	# One requirement against the current qualities. Missing quality = 0 / "". `id` is the storylet
 	# being evaluated (recency reads it). chance re-rolls each call; recency reads the draw history;
 	# a key-vs-key rule (value_key) compares the quality against ANOTHER quality's current value.
-	match str(req.op):
+	match req.op:
 		"chance":
 			return _rand_float() * 100.0 < _num(req.value)
 		"recent", "not_recent":
 			var within: int = int(_num(req.value))
 			var recent: bool = _selection_order.slice(maxi(_selection_order.size() - within, 0)).has(id)
-			return recent if str(req.op) == "recent" else not recent
+			return recent if req.op == "recent" else not recent
 	var have: Variant = _qualities.get(req.key, null)
-	var want: Variant = _qualities.get(req.value, null) if bool(req.get("value_key", false)) else req.value
+	var want: Variant = _qualities.get(req.value, null) if req.value_key else req.value
 	var textual: bool = want is String and not (want as String).is_valid_float()
-	match str(req.op):
+	match req.op:
 		"=":
 			return _text(have) == _text(want) if textual else is_equal_approx(_num(have), _num(want))
 		"!=":
@@ -682,67 +794,57 @@ func _req_ok(req: Dictionary, id: String) -> bool:
 
 func _eligible(id: String) -> bool:
 	# Whether a storylet passes ALL requirements, its play limit, and its cooldown right now.
-	var s: Dictionary = _lib[id]
+	var s: Storylet = _lib[id]
 	if s.max_plays >= 0.0 and _plays.get(id, 0) >= int(s.max_plays):
 		return false
 	if s.cooldown > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.cooldown:
 		return false
-	for req: Dictionary in s.reqs:
+	for req: StoryRequirement in s.reqs:
 		if not _req_ok(req, id):
 			return false
 	return true
 
-func _apply_effect(eff: Dictionary) -> void:
+func _apply_effect(eff: StoryEffect) -> void:
 	# Applies one effect to the qualities store (the storylet/choice's declared consequence).
-	var key: String = str(eff.get("key", ""))
+	var key: String = eff.key
 	if key.is_empty():
 		return
-	match str(eff.get("op", "set")):
+	match eff.op:
 		"set":
-			_qualities[key] = eff.get("value", 0)
+			_qualities[key] = eff.value
 		"inc":
-			_qualities[key] = _num(_qualities.get(key, 0.0)) + _num(eff.get("value", 0))
+			_qualities[key] = _num(_qualities.get(key, 0.0)) + _num(eff.value)
 		"dec":
-			_qualities[key] = _num(_qualities.get(key, 0.0)) - _num(eff.get("value", 0))
+			_qualities[key] = _num(_qualities.get(key, 0.0)) - _num(eff.value)
 		"toggle":
 			_qualities[key] = 0.0 if _num(_qualities.get(key, 0.0)) != 0.0 else 1.0
 		"delete":
 			_qualities.erase(key)
 
-func _forecast(effects: Array) -> String:
+func _forecast(effects: Array[StoryEffect]) -> String:
 	# A readable one-line preview of a list of effects, e.g. "gold -10, gate_open = 1". Never mutates.
 	var parts: PackedStringArray = PackedStringArray()
-	for eff: Dictionary in effects:
-		var key: String = str(eff.get("key", ""))
-		match str(eff.get("op", "set")):
+	for eff: StoryEffect in effects:
+		var key: String = eff.key
+		match eff.op:
 			"set":
-				parts.append("%s = %s" % [key, str(eff.get("value", 0))])
+				parts.append("%s = %s" % [key, str(eff.value)])
 			"inc":
-				parts.append("%s +%s" % [key, str(eff.get("value", 0))])
+				parts.append("%s +%s" % [key, str(eff.value)])
 			"dec":
-				parts.append("%s -%s" % [key, str(eff.get("value", 0))])
+				parts.append("%s -%s" % [key, str(eff.value)])
 			"toggle":
 				parts.append("toggle %s" % key)
 			"delete":
 				parts.append("clear %s" % key)
 	return ", ".join(parts)
 
-func _choice_ok(choice: Dictionary, id: String) -> bool:
+func _choice_ok(choice: StoryChoice, id: String) -> bool:
 	# Whether a choice's own requirements pass right now (only eligible choices are shown/pickable).
-	for req: Dictionary in choice.get("reqs", []):
+	for req: StoryRequirement in choice.reqs:
 		if not _req_ok(req, id):
 			return false
 	return true
-
-func _active_choices() -> Array:
-	# The active storylet's choices that pass their requirements, in order.
-	if not _lib.has(_active):
-		return []
-	var out: Array = []
-	for c: Dictionary in _lib[_active].choices:
-		if _choice_ok(c, _active):
-			out.append(c)
-	return out
 
 func _rows(source: Variant, field: String) -> Array:
 	# A grid field off a book source - a StoryletResource (a property) OR a parsed JSON object (a key);
@@ -786,24 +888,6 @@ func _op_symbol(op: String) -> String:
 		"neq": return "!="
 	return op
 
-func _req_from_row(row: Dictionary) -> Dictionary:
-	# Turns one Requirements-grid row into a requirement dict the eligibility check understands -
-	# a comparison (optionally key-vs-key), a chance gate, or a recency gate.
-	var op: String = str(_cell(row, "op", "gte"))
-	match op:
-		"chance":
-			return {"op": "chance", "value": _num(_cell(row, "value", 0))}
-		"recent", "not_recent":
-			return {"op": op, "value": int(_num(_cell(row, "value", 0)))}
-	var req: Dictionary = {"key": str(_cell(row, "key", "")), "op": _op_symbol(op), "value": _norm_value(_cell(row, "value", ""))}
-	if bool(_cell(row, "value_is_key", false)):
-		req["value_key"] = true
-	return req
-
-func _effect_from_row(row: Dictionary) -> Dictionary:
-	# Turns one Effects-grid row into an effect dict.
-	return {"op": str(_cell(row, "op", "set")), "key": str(_cell(row, "key", "")), "value": _norm_value(_cell(row, "value", ""))}
-
 func _validate_book(source: Variant) -> PackedStringArray:
 	# Reads a book source (a StoryletResource OR a parsed JSON object) and lists the references a load
 	# would silently skip - a row naming a storylet id (or a choice on it) that is not defined - plus
@@ -834,8 +918,8 @@ func _validate_book(source: Variant) -> PackedStringArray:
 	for live_id: String in _lib:
 		known[live_id] = true
 		var live_choices: Dictionary = {}
-		for c: Dictionary in _lib[live_id].get("choices", []):
-			live_choices[str(c.get("id", ""))] = true
+		for c: StoryChoice in (_lib[live_id] as Storylet).choices:
+			live_choices[c.id] = true
 		choices[live_id] = live_choices
 	var book_ids: Dictionary = {}
 	var i: int = 0
@@ -895,15 +979,15 @@ func _load_grids(source: Variant) -> void:
 		if _lib.has(str(_cell(row, "storylet", ""))):
 			add_choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")), str(_cell(row, "text", "")))
 	for row: Dictionary in _rows(source, "choice_requirements"):
-		var cr: Dictionary = _choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")))
-		if not cr.is_empty():
+		var cr: StoryChoice = _choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")))
+		if cr != null:
 			cr.reqs.append(_req_from_row(row))
 	for row: Dictionary in _rows(source, "effects"):
 		if _lib.has(str(_cell(row, "storylet", ""))):
 			_lib[str(_cell(row, "storylet", ""))].effects.append(_effect_from_row(row))
 	for row: Dictionary in _rows(source, "choice_effects"):
-		var ce: Dictionary = _choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")))
-		if not ce.is_empty():
+		var ce: StoryChoice = _choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")))
+		if ce != null:
 			ce.effects.append(_effect_from_row(row))
 	for row: Dictionary in _rows(source, "meta"):
 		if _lib.has(str(_cell(row, "storylet", ""))):
@@ -934,7 +1018,7 @@ func _activate(id: String) -> void:
 	_plays[id] = _plays.get(id, 0) + 1
 	_last_played[id] = _clock
 	_selection_order.append(id)
-	for eff: Dictionary in _lib[id].get("effects", []):
+	for eff: StoryEffect in (_lib[id] as Storylet).effects:
 		_apply_effect(eff)
 	_active = id
 	on_storylet_drawn.emit()

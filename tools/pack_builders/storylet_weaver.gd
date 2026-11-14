@@ -52,9 +52,58 @@ static func build() -> bool:
 		"## @ace_category(\"Storylets\")",
 		"signal on_none_available()",
 		"",
-		"# id -> {title, body, weight, cooldown, max_plays (-1=unlimited),",
-		"#        reqs:Array of {key,op,value,value_key(bool)}, choices:Array of {id,text,reqs,effects},",
-		"#        effects:Array of {op,key,value}, meta:Dictionary}.",
+		"## One rule a storylet or a choice needs: a comparison against a quality, a chance gate or a recency gate.",
+		"class StoryRequirement extends RefCounted:",
+		"\t## The quality the rule reads; unused by a chance or recency gate.",
+		"\tvar key: String = \"\"",
+		"\t## The comparison: = != > >= < <=, or chance, recent, not_recent.",
+		"\tvar op: String = \"\"",
+		"\t## What the quality is compared with: a number, a text, or the name of another quality when value_key is on.",
+		"\tvar value: Variant = null",
+		"\t## True when value names another quality to compare against.",
+		"\tvar value_key: bool = false",
+		"",
+		"## One quality change a storylet makes when drawn, or a choice makes when picked.",
+		"class StoryEffect extends RefCounted:",
+		"\t## What it does to the quality: set, inc, dec, toggle or delete.",
+		"\tvar op: String = \"set\"",
+		"\t## The quality it changes.",
+		"\tvar key: String = \"\"",
+		"\t## The amount or the new value.",
+		"\tvar value: Variant = 0",
+		"",
+		"## One choice the player can pick on a storylet.",
+		"class StoryChoice extends RefCounted:",
+		"\t## The id Choose picks it by.",
+		"\tvar id: String = \"\"",
+		"\t## The label the game shows.",
+		"\tvar text: String = \"\"",
+		"\t## Rules that must pass for the choice to be offered.",
+		"\tvar reqs: Array[StoryRequirement] = []",
+		"\t## Quality changes made when it is picked.",
+		"\tvar effects: Array[StoryEffect] = []",
+		"",
+		"## One storylet: its text, how it is weighed and limited, its rules, its choices and its effects.",
+		"class Storylet extends RefCounted:",
+		"\t## The title the game shows.",
+		"\tvar title: String = \"\"",
+		"\t## The body text the game shows.",
+		"\tvar body: String = \"\"",
+		"\t## How strongly it is preferred when several are eligible.",
+		"\tvar weight: float = 1.0",
+		"\t## Seconds it stays ineligible after it plays; 0 for none.",
+		"\tvar cooldown: float = 0.0",
+		"\t## How many times it may ever play; -1 for no limit.",
+		"\tvar max_plays: float = -1.0",
+		"\t## Rules that must all pass for it to be eligible.",
+		"\tvar reqs: Array[StoryRequirement] = []",
+		"\t## The choices the player can pick.",
+		"\tvar choices: Array[StoryChoice] = []",
+		"\t## Quality changes made when it is drawn.",
+		"\tvar effects: Array[StoryEffect] = []",
+		"\t## Free key-value payload the game reads back (a speaker, a portrait); the engine never reads it.",
+		"\tvar meta: Dictionary = {}",
+		"",
 		"## Every storylet loaded, by id.",
 		"var _lib: Dictionary = {}",
 		"# Flat quality store (the mirror of game state the requirements read).",
@@ -88,22 +137,22 @@ static func build() -> bool:
 		"\t\t\treturn shared.random_value()",
 		"\treturn randf()",
 		"",
-		"func _blank_story() -> Dictionary:",
-		"\treturn {\"title\": \"\", \"body\": \"\", \"weight\": 1.0, \"cooldown\": 0.0, \"max_plays\": -1.0, \"reqs\": [], \"choices\": [], \"effects\": [], \"meta\": {}}",
-		"",
-		"func _story(id: String) -> Dictionary:",
+		"func _story(id: String) -> Storylet:",
 		"\tif not _lib.has(id):",
-		"\t\t_lib[id] = _blank_story()",
+		"\t\t_lib[id] = Storylet.new()",
 		"\treturn _lib[id]",
 		"",
-		"# The draft choice with this id on a storylet, or an empty dict. READ-ONLY: it must not create the",
+		"# The draft choice with this id on a storylet, or null. READ-ONLY: it must not create the",
 		"# storylet (a missing id simply yields no choice), so the loader and the forecast expressions never",
 		"# conjure a phantom storylet from an unknown reference - unlike _story(), which auto-vivifies.",
-		"func _choice(id: String, choice_id: String) -> Dictionary:",
-		"\tfor c: Dictionary in (_lib.get(id, {}) as Dictionary).get(\"choices\", []):",
-		"\t\tif str(c.id) == choice_id:",
+		"func _choice(id: String, choice_id: String) -> StoryChoice:",
+		"\tvar story: Storylet = _lib.get(id, null) as Storylet",
+		"\tif story == null:",
+		"\t\treturn null",
+		"\tfor c: StoryChoice in story.choices:",
+		"\t\tif c.id == choice_id:",
 		"\t\t\treturn c",
-		"\treturn {}",
+		"\treturn null",
 		"",
 		"func _num(v: Variant) -> float:",
 		"\tif v is float or v is int:",
@@ -118,18 +167,18 @@ static func build() -> bool:
 		"# One requirement against the current qualities. Missing quality = 0 / \"\". `id` is the storylet",
 		"# being evaluated (recency reads it). chance re-rolls each call; recency reads the draw history;",
 		"# a key-vs-key rule (value_key) compares the quality against ANOTHER quality's current value.",
-		"func _req_ok(req: Dictionary, id: String) -> bool:",
-		"\tmatch str(req.op):",
+		"func _req_ok(req: StoryRequirement, id: String) -> bool:",
+		"\tmatch req.op:",
 		"\t\t\"chance\":",
 		"\t\t\treturn _rand_float() * 100.0 < _num(req.value)",
 		"\t\t\"recent\", \"not_recent\":",
 		"\t\t\tvar within: int = int(_num(req.value))",
 		"\t\t\tvar recent: bool = _selection_order.slice(maxi(_selection_order.size() - within, 0)).has(id)",
-		"\t\t\treturn recent if str(req.op) == \"recent\" else not recent",
+		"\t\t\treturn recent if req.op == \"recent\" else not recent",
 		"\tvar have: Variant = _qualities.get(req.key, null)",
-		"\tvar want: Variant = _qualities.get(req.value, null) if bool(req.get(\"value_key\", false)) else req.value",
+		"\tvar want: Variant = _qualities.get(req.value, null) if req.value_key else req.value",
 		"\tvar textual: bool = want is String and not (want as String).is_valid_float()",
-		"\tmatch str(req.op):",
+		"\tmatch req.op:",
 		"\t\t\"=\":",
 		"\t\t\treturn _text(have) == _text(want) if textual else is_equal_approx(_num(have), _num(want))",
 		"\t\t\"!=\":",
@@ -146,45 +195,45 @@ static func build() -> bool:
 		"",
 		"# Whether a storylet passes ALL requirements, its play limit, and its cooldown right now.",
 		"func _eligible(id: String) -> bool:",
-		"\tvar s: Dictionary = _lib[id]",
+		"\tvar s: Storylet = _lib[id]",
 		"\tif s.max_plays >= 0.0 and _plays.get(id, 0) >= int(s.max_plays):",
 		"\t\treturn false",
 		"\tif s.cooldown > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.cooldown:",
 		"\t\treturn false",
-		"\tfor req: Dictionary in s.reqs:",
+		"\tfor req: StoryRequirement in s.reqs:",
 		"\t\tif not _req_ok(req, id):",
 		"\t\t\treturn false",
 		"\treturn true",
 		"",
 		"# Applies one effect to the qualities store (the storylet/choice's declared consequence).",
-		"func _apply_effect(eff: Dictionary) -> void:",
-		"\tvar key: String = str(eff.get(\"key\", \"\"))",
+		"func _apply_effect(eff: StoryEffect) -> void:",
+		"\tvar key: String = eff.key",
 		"\tif key.is_empty():",
 		"\t\treturn",
-		"\tmatch str(eff.get(\"op\", \"set\")):",
+		"\tmatch eff.op:",
 		"\t\t\"set\":",
-		"\t\t\t_qualities[key] = eff.get(\"value\", 0)",
+		"\t\t\t_qualities[key] = eff.value",
 		"\t\t\"inc\":",
-		"\t\t\t_qualities[key] = _num(_qualities.get(key, 0.0)) + _num(eff.get(\"value\", 0))",
+		"\t\t\t_qualities[key] = _num(_qualities.get(key, 0.0)) + _num(eff.value)",
 		"\t\t\"dec\":",
-		"\t\t\t_qualities[key] = _num(_qualities.get(key, 0.0)) - _num(eff.get(\"value\", 0))",
+		"\t\t\t_qualities[key] = _num(_qualities.get(key, 0.0)) - _num(eff.value)",
 		"\t\t\"toggle\":",
 		"\t\t\t_qualities[key] = 0.0 if _num(_qualities.get(key, 0.0)) != 0.0 else 1.0",
 		"\t\t\"delete\":",
 		"\t\t\t_qualities.erase(key)",
 		"",
 		"# A readable one-line preview of a list of effects, e.g. \"gold -10, gate_open = 1\". Never mutates.",
-		"func _forecast(effects: Array) -> String:",
+		"func _forecast(effects: Array[StoryEffect]) -> String:",
 		"\tvar parts: PackedStringArray = PackedStringArray()",
-		"\tfor eff: Dictionary in effects:",
-		"\t\tvar key: String = str(eff.get(\"key\", \"\"))",
-		"\t\tmatch str(eff.get(\"op\", \"set\")):",
+		"\tfor eff: StoryEffect in effects:",
+		"\t\tvar key: String = eff.key",
+		"\t\tmatch eff.op:",
 		"\t\t\t\"set\":",
-		"\t\t\t\tparts.append(\"%s = %s\" % [key, str(eff.get(\"value\", 0))])",
+		"\t\t\t\tparts.append(\"%s = %s\" % [key, str(eff.value)])",
 		"\t\t\t\"inc\":",
-		"\t\t\t\tparts.append(\"%s +%s\" % [key, str(eff.get(\"value\", 0))])",
+		"\t\t\t\tparts.append(\"%s +%s\" % [key, str(eff.value)])",
 		"\t\t\t\"dec\":",
-		"\t\t\t\tparts.append(\"%s -%s\" % [key, str(eff.get(\"value\", 0))])",
+		"\t\t\t\tparts.append(\"%s -%s\" % [key, str(eff.value)])",
 		"\t\t\t\"toggle\":",
 		"\t\t\t\tparts.append(\"toggle %s\" % key)",
 		"\t\t\t\"delete\":",
@@ -192,18 +241,18 @@ static func build() -> bool:
 		"\treturn \", \".join(parts)",
 		"",
 		"# Whether a choice's own requirements pass right now (only eligible choices are shown/pickable).",
-		"func _choice_ok(choice: Dictionary, id: String) -> bool:",
-		"\tfor req: Dictionary in choice.get(\"reqs\", []):",
+		"func _choice_ok(choice: StoryChoice, id: String) -> bool:",
+		"\tfor req: StoryRequirement in choice.reqs:",
 		"\t\tif not _req_ok(req, id):",
 		"\t\t\treturn false",
 		"\treturn true",
 		"",
 		"# The active storylet's choices that pass their requirements, in order.",
-		"func _active_choices() -> Array:",
+		"func _active_choices() -> Array[StoryChoice]:",
 		"\tif not _lib.has(_active):",
 		"\t\treturn []",
-		"\tvar out: Array = []",
-		"\tfor c: Dictionary in _lib[_active].choices:",
+		"\tvar out: Array[StoryChoice] = []",
+		"\tfor c: StoryChoice in _lib[_active].choices:",
 		"\t\tif _choice_ok(c, _active):",
 		"\t\t\tout.append(c)",
 		"\treturn out",
@@ -250,23 +299,33 @@ static func build() -> bool:
 		"\t\t\"neq\": return \"!=\"",
 		"\treturn op",
 		"",
-		"# Turns one Requirements-grid row into a requirement dict the eligibility check understands -",
+		"# Turns one Requirements-grid row into a requirement the eligibility check understands -",
 		"# a comparison (optionally key-vs-key), a chance gate, or a recency gate.",
-		"func _req_from_row(row: Dictionary) -> Dictionary:",
+		"func _req_from_row(row: Dictionary) -> StoryRequirement:",
 		"\tvar op: String = str(_cell(row, \"op\", \"gte\"))",
+		"\tvar req: StoryRequirement = StoryRequirement.new()",
 		"\tmatch op:",
 		"\t\t\"chance\":",
-		"\t\t\treturn {\"op\": \"chance\", \"value\": _num(_cell(row, \"value\", 0))}",
+		"\t\t\treq.op = \"chance\"",
+		"\t\t\treq.value = _num(_cell(row, \"value\", 0))",
+		"\t\t\treturn req",
 		"\t\t\"recent\", \"not_recent\":",
-		"\t\t\treturn {\"op\": op, \"value\": int(_num(_cell(row, \"value\", 0)))}",
-		"\tvar req: Dictionary = {\"key\": str(_cell(row, \"key\", \"\")), \"op\": _op_symbol(op), \"value\": _norm_value(_cell(row, \"value\", \"\"))}",
-		"\tif bool(_cell(row, \"value_is_key\", false)):",
-		"\t\treq[\"value_key\"] = true",
+		"\t\t\treq.op = op",
+		"\t\t\treq.value = int(_num(_cell(row, \"value\", 0)))",
+		"\t\t\treturn req",
+		"\treq.key = str(_cell(row, \"key\", \"\"))",
+		"\treq.op = _op_symbol(op)",
+		"\treq.value = _norm_value(_cell(row, \"value\", \"\"))",
+		"\treq.value_key = bool(_cell(row, \"value_is_key\", false))",
 		"\treturn req",
 		"",
-		"# Turns one Effects-grid row into an effect dict.",
-		"func _effect_from_row(row: Dictionary) -> Dictionary:",
-		"\treturn {\"op\": str(_cell(row, \"op\", \"set\")), \"key\": str(_cell(row, \"key\", \"\")), \"value\": _norm_value(_cell(row, \"value\", \"\"))}",
+		"# Turns one Effects-grid row into an effect.",
+		"func _effect_from_row(row: Dictionary) -> StoryEffect:",
+		"\tvar eff: StoryEffect = StoryEffect.new()",
+		"\teff.op = str(_cell(row, \"op\", \"set\"))",
+		"\teff.key = str(_cell(row, \"key\", \"\"))",
+		"\teff.value = _norm_value(_cell(row, \"value\", \"\"))",
+		"\treturn eff",
 		"",
 		"# Reads a book source (a StoryletResource OR a parsed JSON object) and lists the references a load",
 		"# would silently skip - a row naming a storylet id (or a choice on it) that is not defined - plus",
@@ -298,8 +357,8 @@ static func build() -> bool:
 		"\tfor live_id: String in _lib:",
 		"\t\tknown[live_id] = true",
 		"\t\tvar live_choices: Dictionary = {}",
-		"\t\tfor c: Dictionary in _lib[live_id].get(\"choices\", []):",
-		"\t\t\tlive_choices[str(c.get(\"id\", \"\"))] = true",
+		"\t\tfor c: StoryChoice in (_lib[live_id] as Storylet).choices:",
+		"\t\t\tlive_choices[c.id] = true",
 		"\t\tchoices[live_id] = live_choices",
 		"\tvar book_ids: Dictionary = {}",
 		"\tvar i: int = 0",
@@ -359,15 +418,15 @@ static func build() -> bool:
 		"\t\tif _lib.has(str(_cell(row, \"storylet\", \"\"))):",
 		"\t\t\tadd_choice(str(_cell(row, \"storylet\", \"\")), str(_cell(row, \"choice_id\", \"\")), str(_cell(row, \"text\", \"\")))",
 		"\tfor row: Dictionary in _rows(source, \"choice_requirements\"):",
-		"\t\tvar cr: Dictionary = _choice(str(_cell(row, \"storylet\", \"\")), str(_cell(row, \"choice_id\", \"\")))",
-		"\t\tif not cr.is_empty():",
+		"\t\tvar cr: StoryChoice = _choice(str(_cell(row, \"storylet\", \"\")), str(_cell(row, \"choice_id\", \"\")))",
+		"\t\tif cr != null:",
 		"\t\t\tcr.reqs.append(_req_from_row(row))",
 		"\tfor row: Dictionary in _rows(source, \"effects\"):",
 		"\t\tif _lib.has(str(_cell(row, \"storylet\", \"\"))):",
 		"\t\t\t_lib[str(_cell(row, \"storylet\", \"\"))].effects.append(_effect_from_row(row))",
 		"\tfor row: Dictionary in _rows(source, \"choice_effects\"):",
-		"\t\tvar ce: Dictionary = _choice(str(_cell(row, \"storylet\", \"\")), str(_cell(row, \"choice_id\", \"\")))",
-		"\t\tif not ce.is_empty():",
+		"\t\tvar ce: StoryChoice = _choice(str(_cell(row, \"storylet\", \"\")), str(_cell(row, \"choice_id\", \"\")))",
+		"\t\tif ce != null:",
 		"\t\t\tce.effects.append(_effect_from_row(row))",
 		"\tfor row: Dictionary in _rows(source, \"meta\"):",
 		"\t\tif _lib.has(str(_cell(row, \"storylet\", \"\"))):",
@@ -398,7 +457,7 @@ static func build() -> bool:
 		"\t_plays[id] = _plays.get(id, 0) + 1",
 		"\t_last_played[id] = _clock",
 		"\t_selection_order.append(id)",
-		"\tfor eff: Dictionary in _lib[id].get(\"effects\", []):",
+		"\tfor eff: StoryEffect in (_lib[id] as Storylet).effects:",
 		"\t\t_apply_effect(eff)",
 		"\t_active = id",
 		"\ton_storylet_drawn.emit()"
@@ -416,7 +475,7 @@ static func build() -> bool:
 	# --- Authoring ---
 	Lib.append_function(sheet, "define_storylet", "Define Storylet", "Storylets", "Registers (or replaces) a storylet: an id plus the title + body text your game shows.",
 		[["id", "String"], ["title", "String"], ["body", "String"]],
-		"_lib[id] = _blank_story()\n_lib[id].title = title\n_lib[id].body = body")
+		"_lib[id] = Storylet.new()\n_lib[id].title = title\n_lib[id].body = body")
 	Lib.append_function(sheet, "set_storylet_weight", "Set Storylet Weight", "Storylets", "How strongly this storylet is preferred when several are eligible (higher = picked first / likelier).",
 		[["id", "String"], ["weight", "float"]],
 		"_story(id).weight = maxf(weight, 0.0)")
@@ -428,23 +487,23 @@ static func build() -> bool:
 		"_story(id).max_plays = max_plays")
 	var req_fn: EventFunction = Lib.exposed_function("add_requirement", "Add Requirement", "Storylets", "A rule this storylet needs to be eligible, e.g. quality \"courage\" >= 3. A missing quality counts as 0 (or \"\").",
 		[["id", "String"], ["quality_key", "String"], ["op", "String"], ["value", "Variant"]],
-		"_story(id).reqs.append({\"key\": quality_key, \"op\": op, \"value\": value})")
+		"var req: StoryRequirement = StoryRequirement.new()\nreq.key = quality_key\nreq.op = op\nreq.value = value\n_story(id).reqs.append(req)")
 	_op_options(req_fn, "op")
 	_quoted_call(req_fn, "Storylets.add_requirement({id}, {quality_key}, \"{op}\", {value})")
 	sheet.functions.append(req_fn)
 	Lib.append_function(sheet, "add_choice", "Add Choice", "Storylets", "Adds a labelled choice the player can pick on this storylet (resolve it with Choose).",
 		[["id", "String"], ["choice_id", "String"], ["text", "String"]],
-		"_story(id).choices.append({\"id\": choice_id, \"text\": text, \"reqs\": [], \"effects\": []})")
+		"var choice: StoryChoice = StoryChoice.new()\nchoice.id = choice_id\nchoice.text = text\n_story(id).choices.append(choice)")
 	var choice_req_fn: EventFunction = Lib.exposed_function("add_choice_requirement", "Add Choice Requirement", "Storylets", "A rule that must pass for this choice to be OFFERED, e.g. quality \"gold\" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.",
 		[["id", "String"], ["choice_id", "String"], ["quality_key", "String"], ["op", "String"], ["value", "Variant"]],
-		"var c: Dictionary = _choice(id, choice_id)\nif not c.is_empty():\n\tc.reqs.append({\"key\": quality_key, \"op\": op, \"value\": value})")
+		"var c: StoryChoice = _choice(id, choice_id)\nif c != null:\n\tvar req: StoryRequirement = StoryRequirement.new()\n\treq.key = quality_key\n\treq.op = op\n\treq.value = value\n\tc.reqs.append(req)")
 	_op_options(choice_req_fn, "op")
 	_quoted_call(choice_req_fn,
 		"Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, \"{op}\", {value})")
 	sheet.functions.append(choice_req_fn)
 	var choice_eff_fn: EventFunction = Lib.exposed_function("add_choice_effect", "Add Choice Effect", "Storylets", "A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.",
 		[["id", "String"], ["choice_id", "String"], ["op", "String"], ["key", "String"], ["value", "Variant"]],
-		"var c: Dictionary = _choice(id, choice_id)\nif not c.is_empty():\n\tc.effects.append({\"op\": op, \"key\": key, \"value\": value})")
+		"var c: StoryChoice = _choice(id, choice_id)\nif c != null:\n\tvar eff: StoryEffect = StoryEffect.new()\n\teff.op = op\n\teff.key = key\n\teff.value = value\n\tc.effects.append(eff)")
 	_effect_op_options(choice_eff_fn, "op")
 	_quoted_call(choice_eff_fn, "Storylets.add_choice_effect({id}, {choice_id}, \"{op}\", {key}, {value})")
 	sheet.functions.append(choice_eff_fn)
@@ -452,7 +511,7 @@ static func build() -> bool:
 	# --- Effects & meta (data-driven consequences + arbitrary payload) ---
 	var effect_fn: EventFunction = Lib.exposed_function("add_effect", "Add Effect", "Storylets", "A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.",
 		[["id", "String"], ["op", "String"], ["key", "String"], ["value", "Variant"]],
-		"_story(id).effects.append({\"op\": op, \"key\": key, \"value\": value})")
+		"var eff: StoryEffect = StoryEffect.new()\neff.op = op\neff.key = key\neff.value = value\n_story(id).effects.append(eff)")
 	_effect_op_options(effect_fn, "op")
 	_quoted_call(effect_fn, "Storylets.add_effect({id}, \"{op}\", {key}, {value})")
 	sheet.functions.append(effect_fn)
@@ -463,16 +522,16 @@ static func build() -> bool:
 	# --- Richer requirements (chance / recency / key-vs-key) ---
 	var key_req_fn: EventFunction = Lib.exposed_function("add_requirement_key", "Add Requirement (Key vs Key)", "Storylets", "A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.",
 		[["id", "String"], ["quality_key", "String"], ["op", "String"], ["other_key", "String"]],
-		"_story(id).reqs.append({\"key\": quality_key, \"op\": op, \"value\": other_key, \"value_key\": true})")
+		"var req: StoryRequirement = StoryRequirement.new()\nreq.key = quality_key\nreq.op = op\nreq.value = other_key\nreq.value_key = true\n_story(id).reqs.append(req)")
 	_op_options(key_req_fn, "op")
 	_quoted_call(key_req_fn, "Storylets.add_requirement_key({id}, {quality_key}, \"{op}\", {other_key})")
 	sheet.functions.append(key_req_fn)
 	Lib.append_function(sheet, "add_chance_requirement", "Add Chance Requirement", "Storylets", "A probability gate: the storylet is eligible only percent% of the time, re-rolled on every Evaluate/Draw. Use it to make a beat show only sometimes.",
 		[["id", "String"], ["percent", "float"]],
-		"_story(id).reqs.append({\"op\": \"chance\", \"value\": clampf(percent, 0.0, 100.0)})")
+		"var req: StoryRequirement = StoryRequirement.new()\nreq.op = \"chance\"\nreq.value = clampf(percent, 0.0, 100.0)\n_story(id).reqs.append(req)")
 	var recency_fn: EventFunction = Lib.exposed_function("add_recency_requirement", "Add Recency Requirement", "Storylets", "An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.",
 		[["id", "String"], ["mode", "String"], ["within", "int"]],
-		"_story(id).reqs.append({\"op\": mode, \"value\": within})")
+		"var req: StoryRequirement = StoryRequirement.new()\nreq.op = mode\nreq.value = within\n_story(id).reqs.append(req)")
 	_recency_options(recency_fn, "mode")
 	_quoted_call(recency_fn, "Storylets.add_recency_requirement({id}, \"{mode}\", {within})")
 	sheet.functions.append(recency_fn)
@@ -527,10 +586,10 @@ static func build() -> bool:
 		"\n".join(PackedStringArray([
 			"if _active.is_empty():",
 			"\treturn",
-			"var picked: Dictionary = _choice(_active, choice_id)",
-			"if picked.is_empty() or not _choice_ok(picked, _active):",
+			"var picked: StoryChoice = _choice(_active, choice_id)",
+			"if picked == null or not _choice_ok(picked, _active):",
 			"\treturn",
-			"for eff: Dictionary in picked.get(\"effects\", []):",
+			"for eff: StoryEffect in picked.effects:",
 			"\t_apply_effect(eff)",
 			"_chosen = choice_id",
 			"on_choice_made.emit()",
@@ -565,7 +624,7 @@ static func build() -> bool:
 	_condition(sheet, "has_been_played", "Has Been Played", "Storylets", "Whether a storylet has played at least once.", [["id", "String"]],
 		"return _plays.get(id, 0) > 0")
 	_condition(sheet, "is_on_cooldown", "Is On Cooldown", "Storylets", "Whether a storylet is still cooling down.", [["id", "String"]],
-		"var s: Dictionary = _lib.get(id, {})\nreturn s.get(\"cooldown\", 0.0) > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.get(\"cooldown\", 0.0)")
+		"var s: Storylet = _lib.get(id, null) as Storylet\nreturn s != null and s.cooldown > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.cooldown")
 	_condition(sheet, "is_library_empty", "Is Library Empty", "Storylets", "Whether no storylets are registered.", [],
 		"return _lib.is_empty()")
 	_condition(sheet, "book_resource_is_valid", "Book Resource Is Valid", "Storylets", "Whether a StoryletResource is free of structural problems - every requirement / choice / effect / meta row names a defined storylet, every choice-rule row names a real choice, and no storylet id is blank or duplicated. Read the specific problems with Validate Book Resource.", [["resource", "Resource"]],
@@ -595,16 +654,16 @@ static func build() -> bool:
 	_expr(sheet, "active_choice_count", "Choice Count", "Storylets", "How many ELIGIBLE choices the active storylet offers (choices whose requirements fail are not counted).", [],
 		"return _active_choices().size()", TYPE_INT)
 	_expr(sheet, "choice_id_at", "Choice Id At", "Storylets", "The id of the eligible choice at a position on the active storylet.", [["index", "int"]],
-		"var c: Array = _active_choices()\nreturn str(c[index].id) if index >= 0 and index < c.size() else \"\"", TYPE_STRING)
+		"var c: Array[StoryChoice] = _active_choices()\nreturn c[index].id if index >= 0 and index < c.size() else \"\"", TYPE_STRING)
 	_expr(sheet, "choice_text_at", "Choice Text At", "Storylets", "The label of the eligible choice at a position on the active storylet.", [["index", "int"]],
-		"var c: Array = _active_choices()\nreturn str(c[index].text) if index >= 0 and index < c.size() else \"\"", TYPE_STRING)
+		"var c: Array[StoryChoice] = _active_choices()\nreturn c[index].text if index >= 0 and index < c.size() else \"\"", TYPE_STRING)
 	_expr(sheet, "chosen_id", "Chosen Id", "Storylets", "The choice just picked (inside On Choice Made).", [],
 		"return _chosen", TYPE_STRING)
 	# --- Expressions: effect forecasts (read-only "what will this do") ---
 	_expr(sheet, "forecast_storylet_effects", "Forecast Storylet Effects", "Storylets", "A readable preview of the quality changes a storylet applies when drawn, e.g. \"gold -10, gate_open = 1\". Never changes anything - put it on a button.", [["id", "String"]],
-		"return _forecast(_lib[id].get(\"effects\", [])) if _lib.has(id) else \"\"", TYPE_STRING)
+		"return _forecast((_lib[id] as Storylet).effects) if _lib.has(id) else \"\"", TYPE_STRING)
 	_expr(sheet, "forecast_choice_effects", "Forecast Choice Effects", "Storylets", "A readable preview of the quality changes a choice applies when picked. Pass Active Id() for the current storylet. Never changes anything.", [["id", "String"], ["choice_id", "String"]],
-		"var c: Dictionary = _choice(id, choice_id)\nreturn _forecast(c.get(\"effects\", [])) if not c.is_empty() else \"\"", TYPE_STRING)
+		"var c: StoryChoice = _choice(id, choice_id)\nreturn _forecast(c.effects) if c != null else \"\"", TYPE_STRING)
 	# --- Expressions: meta ---
 	_expr(sheet, "active_meta", "Active Meta", "Storylets", "A meta value on the active storylet (\"\" if unset).", [["key", "String"]],
 		"return str(_lib[_active].meta.get(key, \"\")) if _lib.has(_active) else \"\"", TYPE_STRING)
@@ -616,7 +675,7 @@ static func build() -> bool:
 	_expr(sheet, "play_count", "Play Count", "Storylets", "How many times a storylet has played.", [["id", "String"]],
 		"return _plays.get(id, 0)", TYPE_INT)
 	_expr(sheet, "cooldown_remaining", "Cooldown Remaining", "Storylets", "Seconds left on a storylet's cooldown (0 if ready).", [["id", "String"]],
-		"var s: Dictionary = _lib.get(id, {})\nif s.get(\"cooldown\", 0.0) <= 0.0 or not _last_played.has(id):\n\treturn 0.0\nreturn maxf(s.cooldown - (_clock - _last_played[id]), 0.0)", TYPE_FLOAT)
+		"var s: Storylet = _lib.get(id, null) as Storylet\nif s == null or s.cooldown <= 0.0 or not _last_played.has(id):\n\treturn 0.0\nreturn maxf(s.cooldown - (_clock - _last_played[id]), 0.0)", TYPE_FLOAT)
 	_expr(sheet, "storylet_count", "Storylet Count", "Storylets", "How many storylets are registered.", [],
 		"return _lib.size()", TYPE_INT)
 	# --- Expression: authoring safety net ---

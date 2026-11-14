@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Storylet Weaver keeps its storylets, choices, requirements and effects as small classes
+
+- A storylet, a choice, a requirement and an effect were dictionaries read by text in about a hundred places; they are now `Storylet`, `StoryChoice`, `StoryRequirement` and `StoryEffect` with typed fields. A storylet's meta stays a dictionary because its keys are yours, and the rows of a book file are read as before. Every verb, trigger and expression behaves as it did, and what the save state holds is unchanged.
+
 ### Changed: Drunken Walkers reads a saved walker and mark through small classes
 
 - A saved walker is read back by `Walker.from_dict`, the pair of the `to_dict` that wrote it, and a mark is a `Mark` with its own `to_dict` and `from_dict`, instead of fields picked out of dictionaries by text in `load_state`. The saved state is the same text it was: a state written by an older version loads, and saving it again gives the identical text.
