@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a number with a unit keeps its whole name in a narrow Inspector
+
+- A property drawn as a number with a unit dropdown (a shape's Thickness) lost most of its name in a narrow Inspector, where it read "Thickn". When the Inspector is too narrow for the name and the field side by side, the field now goes under the name, so the name is read whole. A wide Inspector looks as before.
+
 ### Fixed: Add global variable says where the variable went, and Enter in the name adds it
 
 - After Add > Global Variable made a new autoload, the line saying so ("Added global variable Score to Globals, a new autoload (see it in Project Settings > Globals > Autoload).") was replaced a moment later by "Opening globals.gd ..." and that stayed in the status bar until the next save. The variable is now added once the file has finished opening, so the line saying where to see it is the one that stays.

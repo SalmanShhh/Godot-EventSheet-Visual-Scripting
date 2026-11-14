@@ -14,6 +14,7 @@ extends EventSheetInspectorLook
 const PREVIEW_SENTENCE := "Shown with a unit dropdown."
 
 var _field: Control
+var _beside: bool = true
 
 
 ## No unit at all leaves the plain number field, as without this plugin.
@@ -28,6 +29,12 @@ func _look_built() -> void:
 	_field.connect("value_changed", _on_field_changed)
 	add_child(_field)
 	add_focusable(_field)
+
+
+## The name keeps its room: a field too wide to sit beside it in a narrow Inspector goes under it.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and _field != null:
+		_beside = load("res://addons/eventsheet/editor/inspector/label_room.gd").place(self, _field, _beside)
 
 
 func _value_shown(value: Variant) -> void:

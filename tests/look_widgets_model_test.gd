@@ -25,6 +25,9 @@ static func _under_field() -> bool:
 		["the wide part starts where the value column starts", EventSheetInspectorLook.under_field_margin(300.0, 120.0), 180],
 		["a first row with no width yet leaves no margin", EventSheetInspectorLook.under_field_margin(300.0, 0.0), 0],
 		["a first row wider than the row never gives a negative margin", EventSheetInspectorLook.under_field_margin(100.0, 160.0), 0],
+		["a field beside a name that has the room stays beside it", load("res://addons/eventsheet/editor/inspector/label_room.gd").fits_beside(400.0, 182.0, 90.0), true],
+		["a field that would shorten the name goes under it", load("res://addons/eventsheet/editor/inspector/label_room.gd").fits_beside(246.0, 182.0, 90.0), false],
+		["a row not laid out yet moves nothing", load("res://addons/eventsheet/editor/inspector/label_room.gd").fits_beside(0.0, 182.0, 90.0), true],
 	])
 
 
