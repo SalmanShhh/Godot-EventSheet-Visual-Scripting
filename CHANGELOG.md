@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: tests pin how a script of yours reads before the readings are unified
+
+- Five real script files (a Node, a Resource, a class of statics, a script with no class name, and an annotated twin of the Node) are read through all three of the ways a script reaches the picker today, and the exact result - names, sentences, templates, parameters - is kept as text beside them. A later change that moves a reading now moves a visible line of that text. A second test holds the behaviour rows the showcase builder places to the vocabulary of the pack they name, listing the few that spell a baked node path. No behaviour changes.
+
 ### Fixed: a function a named sheet publishes calls the node when another sheet uses it
 
 - A sheet that names its class and publishes a function wrote the call line as a bare `fn(args)` into its compiled script. That is a call on itself, correct in its own file, and wrong in any other sheet, where it called a function that sheet does not have even though the status message promised a call on the node. A Node script read as vocabulary now aims that exact bare call at the node by its class, so the row gets an "On node" slot defaulting to `$ClassName`. A call you qualified yourself is left as written. The compiled script is not touched, so no script or showcase file changes, and rows already placed keep the call they were baked with.
