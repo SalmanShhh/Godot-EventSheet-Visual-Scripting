@@ -53,6 +53,10 @@ var _tilemap: TileMapLayer = null
 var _movement: Node = null
 ## True once the warning about a tilted gravity has been printed.
 var _gravity_angle_warned: bool = false
+## True once the movement sibling has been checked for the members this behaviour drives.
+var _movement_members_checked: bool = false
+## Members this behaviour drives on the movement sibling without asking first; a sibling lacking one is reported once, not refused.
+const MOVEMENT_MEMBERS: PackedStringArray = ["jump_velocity", "gravity", "ai_controlled", "ai_move_axis"]
 ## Standable cells (the cell the agent's feet occupy) -> true.
 var _nodes: Dictionary = {}
 ## Links out of each cell: target, kind (walk, jump, fall, portal) and cost.
@@ -560,6 +564,7 @@ func _find_movement() -> Node:
 	for child in host.get_children():
 		if child != self and child.has_method("jump") and child.get("move_speed") != null:
 			_movement = child
+			_check_movement_members(child)
 			# The planner's frame is straight-down gravity: the graph, jump arcs, and
 			# steering all reason in screen x/y. A rotated movement frame would make
 			# every planned path wrong, so say so LOUDLY once instead of failing quietly.
@@ -569,6 +574,22 @@ func _find_movement() -> Node:
 				push_warning("[PlatformerPathfinding] The movement pack's gravity_angle is %.0f - pathfinding plans with straight-down gravity (90) and its paths will be wrong under rotated gravity." % float(movement_angle))
 			return _movement
 	return null
+
+## Says, once, which of the members this behaviour drives are missing from the movement sibling it
+## found. It probed only a jump() and a move_speed to accept it, so a driver of your own that lacks
+## the rest would otherwise be ignored without a word.
+## @ace_hidden
+func _check_movement_members(movement: Node) -> void:
+	if _movement_members_checked:
+		return
+	_movement_members_checked = true
+	var missing: PackedStringArray = PackedStringArray()
+	for member: String in MOVEMENT_MEMBERS:
+		if not (member in movement):
+			missing.append(member)
+	if not missing.is_empty():
+		push_warning("[PlatformerPathfinding] The movement sibling %s has no %s - the paths and the driving that need %s will not work." % [
+			movement.name, ", ".join(missing), "it" if missing.size() == 1 else "them"])
 
 ## Jump reach in PIXELS (x = distance, y = height), derived from the movement pack's physics
 ## (the overrides win when set): height = v^2/2g, distance = speed * full air time, both with a

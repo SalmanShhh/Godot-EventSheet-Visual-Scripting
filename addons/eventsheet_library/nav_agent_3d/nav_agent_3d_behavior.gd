@@ -54,6 +54,8 @@ signal waypoint_reached
 var _agent: NavigationAgent3D = null
 ## The node that is moved along the route.
 var _driver: Node = null
+## True once the driver sibling has been checked for the members this behaviour writes.
+var _driver_checked: bool = false
 ## True while the host is following a route.
 var _active: bool = false
 ## True while a destination check is waiting for the map to be ready.
@@ -105,6 +107,10 @@ func _find_driver() -> Node:
 	for child in host.get_children():
 		if child != self and child.get("ai_move_z") != null and child.get("ai_controlled") != null:
 			_driver = child
+			if not _driver_checked:
+				_driver_checked = true
+				if not ("ai_move_x" in child):
+					push_warning("NavAgent3D: the driver %s has no ai_move_x - it is steered forward and back only." % child.name)
 			return _driver
 	return null
 

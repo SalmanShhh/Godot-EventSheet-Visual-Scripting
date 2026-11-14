@@ -26,7 +26,9 @@ static func build() -> bool:
 		"bar_lags": {"type": "Dictionary", "default": {}, "exported": false, "description": "Lag bars that trail behind a bar's value, by bar name."},
 		"damage_types": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "Damage type set used to colour floating numbers by type; empty uses one colour."}},
 		"crit_text_scale": {"type": "float", "default": 1.6, "exported": true, "attributes": {"tooltip": "How much bigger a crit number is drawn when no styles file sets it.", "range": {"min": "1", "max": "4", "step": "0.1"}}},
-		"text_styles": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "Floating text styles file that sets number size, colour, rise and lifetime."}}
+		"text_styles": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "Floating text styles file that sets number size, colour, rise and lifetime."}},
+		"styles_checked": {"type": "bool", "default": false, "exported": false, "description": "True once the styles file has been checked for the methods a floating number calls on it."},
+		"text_checked": {"type": "Dictionary", "default": {}, "exported": false, "description": "The controls already checked for a text to write, by name, so each is reported at most once."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "HUD Kit behavior: drive a menu or HUD by NODE NAME - set label text, fill bars, switch menu screens (show one panel, hide its siblings), pop auto-fading toasts - and every descendant Button reports through one On Button Pressed trigger, so a whole menu needs zero connected signals. Drop it under your UI root (CanvasLayer or Control)."
@@ -214,6 +216,10 @@ static func build() -> bool:
 		[["control_name", "String"], ["text", "String"]], "\n".join(PackedStringArray([
 		"var target: Node = _ui(control_name)",
 		"if target != null:",
+		"\tif not text_checked.has(control_name):",
+		"\t\ttext_checked[control_name] = true",
+		"\t\tif not (\"text\" in target):",
+		"\t\t\tpush_warning(\"HUD Kit: %s has no text, so Set Text cannot write it.\" % control_name)",
 		"\ttarget.set(\"text\", text)"
 	])))
 
@@ -367,6 +373,11 @@ static func build() -> bool:
 		"var rise: float = 24.0",
 		"var shake: float = 0.0",
 		"var life: float = 0.7",
+		"if text_styles != null and not styles_checked:",
+		"\tstyles_checked = true",
+		"\tfor method: String in [\"has_style\", \"colour_of\", \"size_of\", \"rise_of\", \"shake_of\", \"lifetime_of\"]:",
+		"\t\tif not text_styles.has_method(method):",
+		"\t\t\tpush_warning(\"HUD Kit: Text Styles has no %s, so a style cannot draw a number without it.\" % method)",
 		"if text_styles != null and text_styles.has_method(\"has_style\") and text_styles.call(\"has_style\", style):",
 		"\ttint = text_styles.call(\"colour_of\", style, tint)",
 		"\tsize = text_styles.call(\"size_of\", style)",

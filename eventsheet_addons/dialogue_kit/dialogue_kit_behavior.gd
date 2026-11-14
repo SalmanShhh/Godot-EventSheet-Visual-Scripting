@@ -55,6 +55,8 @@ var current_text: String = ""
 var revealed_chars: float = 0.0
 ## The dialogue box controls once found, so they are looked up only once.
 var ui_cache: Dictionary = {}
+## The labels already checked for the text members this behaviour writes, by name, so each is reported at most once.
+var ui_checked: Dictionary = {}
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).
 func _ui(control_name: String) -> Node:
@@ -64,6 +66,16 @@ func _ui(control_name: String) -> Node:
 	var found: Node = host.find_child(control_name, true, false) if host != null else null
 	if found != null:
 		ui_cache[control_name] = found
+	return found
+## A named label, checked once for the members this behaviour writes to it: a node that has no text (or no visible_characters, for the line that types out) ignores the write, so the gap is said once by name.
+func _ui_label(control_name: String, members: Array) -> Node:
+	var found: Node = _ui(control_name)
+	if found == null or ui_checked.has(control_name):
+		return found
+	ui_checked[control_name] = true
+	for member: String in members:
+		if not (member in found):
+			push_warning("Dialogue Kit: %s has no %s, so the dialogue cannot write it." % [control_name, member])
 	return found
 
 func _ready() -> void:
@@ -199,10 +211,10 @@ func _show_next_line() -> void:
 	current_text = str(line.get("text", ""))
 	revealed_chars = 0.0
 	typing = true
-	var speaker_label: Node = _ui(speaker_label_name)
+	var speaker_label: Node = _ui_label(speaker_label_name, ["text"])
 	if speaker_label != null:
 		speaker_label.set("text", current_speaker)
-	var text_label: Node = _ui(text_label_name)
+	var text_label: Node = _ui_label(text_label_name, ["text", "visible_characters"])
 	if text_label != null:
 		text_label.set("text", current_text)
 		text_label.set("visible_characters", 0)

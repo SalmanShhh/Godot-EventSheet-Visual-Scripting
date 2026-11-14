@@ -48,6 +48,8 @@ static func build() -> bool:
 		"var _agent: NavigationAgent3D = null",
 		"## The node that is moved along the route.",
 		"var _driver: Node = null",
+		"## True once the driver sibling has been checked for the members this behaviour writes.",
+		"var _driver_checked: bool = false",
 		"## True while the host is following a route.",
 		"var _active: bool = false",
 		"## True while a destination check is waiting for the map to be ready.",
@@ -165,6 +167,10 @@ static func build() -> bool:
 		"\tfor child in host.get_children():",
 		"\t\tif child != self and child.get(\"ai_move_z\") != null and child.get(\"ai_controlled\") != null:",
 		"\t\t\t_driver = child",
+		"\t\t\tif not _driver_checked:",
+		"\t\t\t\t_driver_checked = true",
+		"\t\t\t\tif not (\"ai_move_x\" in child):",
+		"\t\t\t\t\tpush_warning(\"NavAgent3D: the driver %s has no ai_move_x - it is steered forward and back only.\" % child.name)",
 		"\t\t\treturn _driver",
 		"\treturn null"
 	]))

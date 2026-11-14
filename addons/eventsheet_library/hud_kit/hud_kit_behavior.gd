@@ -42,6 +42,10 @@ var bar_lags: Dictionary = {}
 @export_range(1, 4, 0.1) var crit_text_scale: float = 1.6
 ## Floating text styles file that sets number size, colour, rise and lifetime.
 @export var text_styles: Resource = null
+## True once the styles file has been checked for the methods a floating number calls on it.
+var styles_checked: bool = false
+## The controls already checked for a text to write, by name, so each is reported at most once.
+var text_checked: Dictionary = {}
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).
 func _ui(control_name: String) -> Node:
@@ -88,6 +92,10 @@ func connect_buttons() -> void:
 func set_text(control_name: String, text: String) -> void:
 	var target: Node = _ui(control_name)
 	if target != null:
+		if not text_checked.has(control_name):
+			text_checked[control_name] = true
+			if not ("text" in target):
+				push_warning("HUD Kit: %s has no text, so Set Text cannot write it." % control_name)
 		target.set("text", text)
 
 ## @ace_action
@@ -251,6 +259,11 @@ func pop_floating_text_as(text: String, style: String, at: Vector2) -> void:
 	var rise: float = 24.0
 	var shake: float = 0.0
 	var life: float = 0.7
+	if text_styles != null and not styles_checked:
+		styles_checked = true
+		for method: String in ["has_style", "colour_of", "size_of", "rise_of", "shake_of", "lifetime_of"]:
+			if not text_styles.has_method(method):
+				push_warning("HUD Kit: Text Styles has no %s, so a style cannot draw a number without it." % method)
 	if text_styles != null and text_styles.has_method("has_style") and text_styles.call("has_style", style):
 		tint = text_styles.call("colour_of", style, tint)
 		size = text_styles.call("size_of", style)

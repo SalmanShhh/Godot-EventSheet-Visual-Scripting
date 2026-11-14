@@ -27,7 +27,8 @@ static func build() -> bool:
 		"current_speaker": {"type": "String", "default": "", "exported": false, "description": "Name of whoever is speaking the current line."},
 		"current_text": {"type": "String", "default": "", "exported": false, "description": "Full text of the current line."},
 		"revealed_chars": {"type": "float", "default": 0.0, "exported": false, "description": "How many characters of the current line are showing so far."},
-		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false, "description": "The dialogue box controls once found, so they are looked up only once."}
+		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false, "description": "The dialogue box controls once found, so they are looked up only once."},
+		"ui_checked": {"type": "Dictionary", "default": {}, "exported": false, "description": "The labels already checked for the text members this behaviour writes, by name, so each is reported at most once."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Dialogue Kit behavior: queue lines (speaker + text), play them with a typewriter reveal into NAMED labels, advance on one input action (mid-line advance completes the line instantly). Triggers fire per line and per conversation, so portraits, sounds, and camera moves hang off the sheet - no dialogue system to write."
@@ -91,6 +92,17 @@ static func build() -> bool:
 		"\t\tui_cache[control_name] = found",
 		"\treturn found",
 		"",
+		"## A named label, checked once for the members this behaviour writes to it: a node that has no text (or no visible_characters, for the line that types out) ignores the write, so the gap is said once by name.",
+		"func _ui_label(control_name: String, members: Array) -> Node:",
+		"\tvar found: Node = _ui(control_name)",
+		"\tif found == null or ui_checked.has(control_name):",
+		"\t\treturn found",
+		"\tui_checked[control_name] = true",
+		"\tfor member: String in members:",
+		"\t\tif not (member in found):",
+		"\t\t\tpush_warning(\"Dialogue Kit: %s has no %s, so the dialogue cannot write it.\" % [control_name, member])",
+		"\treturn found",
+		"",
 		"func _set_panel_visible(state: bool) -> void:",
 		"\tvar panel: Node = _ui(panel_name)",
 		"\tif panel is CanvasItem:",
@@ -102,10 +114,10 @@ static func build() -> bool:
 		"\tcurrent_text = str(line.get(\"text\", \"\"))",
 		"\trevealed_chars = 0.0",
 		"\ttyping = true",
-		"\tvar speaker_label: Node = _ui(speaker_label_name)",
+		"\tvar speaker_label: Node = _ui_label(speaker_label_name, [\"text\"])",
 		"\tif speaker_label != null:",
 		"\t\tspeaker_label.set(\"text\", current_speaker)",
-		"\tvar text_label: Node = _ui(text_label_name)",
+		"\tvar text_label: Node = _ui_label(text_label_name, [\"text\", \"visible_characters\"])",
 		"\tif text_label != null:",
 		"\t\ttext_label.set(\"text\", current_text)",
 		"\t\ttext_label.set(\"visible_characters\", 0)",

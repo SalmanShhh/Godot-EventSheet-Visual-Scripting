@@ -575,6 +575,12 @@ const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 ## The Screen FX layer this game has, once one has been FOUND.
 var _moment_screen: CanvasLayer = null
 
+## The methods a moment calls on the Screen FX layer; one that lacks any is reported once, by name.
+const SCREEN_FX_METHODS: PackedStringArray = ["shockwave", "chromatic_pulse", "pulse_post_effect", "post_strength", "add_post_effect", "fade_post_strength"]
+
+## True once the Screen FX layer has been checked for the methods a moment calls.
+var _moment_screen_checked: bool = false
+
 # The missing-post-stack warning is said once per scene rather than once per step: a moment that plays on
 # every hit would otherwise write the same sentence sixty times a second, which is how a warning
 # stops being read at all.
@@ -625,6 +631,14 @@ func _moment_screen_fx() -> CanvasLayer:
 	var found: Node = get_tree().get_first_node_in_group(POST_STACK_GROUP)
 	if found is CanvasLayer and found.has_method("pulse_post_effect"):
 		_moment_screen = found as CanvasLayer
+		if not _moment_screen_checked:
+			_moment_screen_checked = true
+			var missing: PackedStringArray = PackedStringArray()
+			for method: String in SCREEN_FX_METHODS:
+				if not found.has_method(method):
+					missing.append(method)
+			if not missing.is_empty():
+				push_warning("Moment: the post stack layer %s has no %s - a step that needs one will not work." % [found.name, ", ".join(missing)])
 	return _moment_screen
 # --- A moment that talks back: what is in the air, what it wrote down, and how it is ended ---
 #
