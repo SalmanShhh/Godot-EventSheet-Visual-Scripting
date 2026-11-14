@@ -146,6 +146,7 @@ static func _engine_words_land_on_the_row() -> bool:
 		["the status line says it, as an error", bool(dock.status_is_error), true],
 		["in the engine's words", str(dock.status).contains("Identifier \"flub\" not declared"), true],
 		["with the line and the file", str(dock.status).contains("line 4 of silent_holes_engine_sheet.gd"), true],
+		["and says where the version before this save is", str(dock.status).contains("The version before this save is in Tools > Sheet Backups."), true],
 		["a .gd sheet's stored parse errors (the head bar) are replaced", EventSheetParseErrors.error_count(sheet), 1],
 	])
 	# The lint's generic wording is replaced by the engine's reason for the same row; another row keeps

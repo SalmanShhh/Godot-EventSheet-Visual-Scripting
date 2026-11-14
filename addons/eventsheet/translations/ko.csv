@@ -10542,3 +10542,4 @@ Scenes store a value for %s,씬이 %s의 값을 저장하고 있습니다
 Keep the variable,변수 유지
 Delete anyway,그래도 삭제
 it already stores a value under the name %s - open it and decide which value to keep,이미 %s 이름으로 값을 저장하고 있습니다 - 열어서 어느 값을 유지할지 정하세요
+The version before this save is in Tools > Sheet Backups.,이 저장 이전 버전은 도구 > 시트 백업에 있습니다.

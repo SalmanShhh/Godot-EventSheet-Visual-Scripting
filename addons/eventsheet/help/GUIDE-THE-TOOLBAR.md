@@ -50,6 +50,10 @@ that cannot be written is named with the reason (never saved so it has no file y
 merge markers, open read-only, or a sheet that does not compile yet) and is left alone rather than
 overwritten.
 
+When you save a sheet and Godot cannot compile the script it wrote, the save still happens (nothing you
+typed is dropped), the row it came from is marked, and the status line gives Godot's own words, the line
+and the file, then where the way back is: the version before that save is in **Tools > Sheet Backups**.
+
 After the chevron, once a sheet is open, comes the **Events | Code | Both** switch: the rows, the GDScript
 the file is, or both side by side. It is offered for every open sheet and is not part of the seven.
 

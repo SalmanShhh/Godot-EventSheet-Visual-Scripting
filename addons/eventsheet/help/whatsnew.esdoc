@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a save that Godot cannot compile now says where the version before it is
+
+- Saving a sheet whose script Godot cannot compile still writes it (your edits are never dropped), and the status line already named the engine's words, the line and the file, and marked the row. It now ends with where the way back is: \"The version before this save is in Tools > Sheet Backups.\"
+
 ### Fixed: renaming an exported variable keeps the values your scenes stored for it
 
 - A scene stores the value you typed in the Inspector under the variable's name. Renaming the variable made Godot drop every such value without a word, and the next save of the scene removed it from the file. The Rename window now reads the project's scenes and resources as text (nothing is loaded) and lists the ones that store a value for an exported variable, then renames that one name on exactly those lines when you press the button. The value text is copied byte for byte, a different script's variable of the same name is never touched, a scene that only inherits the value is not rewritten, and the whole rename is still one undo step: Ctrl+Z puts the sheet and every scene back as they were. Each scene's old text is also kept in the editor's backup folder.

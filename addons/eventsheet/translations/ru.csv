@@ -10542,3 +10542,4 @@ Scenes store a value for %s,В сценах хранится значение д
 Keep the variable,Оставить переменную
 Delete anyway,Всё равно удалить
 it already stores a value under the name %s - open it and decide which value to keep,"Она уже хранит значение под именем %s - откройте её и решите, какое значение оставить"
+The version before this save is in Tools > Sheet Backups.,Версия до этого сохранения находится в Инструменты > Резервные копии листа.

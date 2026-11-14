@@ -146,6 +146,7 @@ func apply_engine_result(request: Dictionary, errors: Array) -> void:
 		_dock._set_status(EventSheetL10n.translate(
 			"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.") % [
 			str(first.get("message", "")), int(first.get("line", 0)), str(request.get("path", "")).get_file()]
+			+ " " + EventSheetL10n.translate("The version before this save is in Tools > Sheet Backups.")
 			+ EventSheetCompileFindings.tail_for(key), true)
 
 

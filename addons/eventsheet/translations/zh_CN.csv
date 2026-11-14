@@ -10542,3 +10542,4 @@ Scenes store a value for %s,有场景保存了 %s 的值
 Keep the variable,保留变量
 Delete anyway,仍然删除
 it already stores a value under the name %s - open it and decide which value to keep,它已经用名称 %s 保存了一个值 - 请打开它并决定保留哪个值
+The version before this save is in Tools > Sheet Backups.,此次保存之前的版本在 工具 > 事件表备份 中。

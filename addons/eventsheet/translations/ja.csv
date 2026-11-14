@@ -10542,3 +10542,4 @@ Scenes store a value for %s,シーンが %s の値を保存しています
 Keep the variable,変数を残す
 Delete anyway,それでも削除
 it already stores a value under the name %s - open it and decide which value to keep,すでに %s という名前で値を保存しています - 開いて、どちらの値を残すか決めてください
+The version before this save is in Tools > Sheet Backups.,この保存の前のバージョンは、ツール > シートのバックアップ にあります。

@@ -10542,3 +10542,4 @@ Scenes store a value for %s,Hay escenas que guardan un valor para %s
 Keep the variable,Conservar la variable
 Delete anyway,Borrar de todos modos
 it already stores a value under the name %s - open it and decide which value to keep,Ya guarda un valor con el nombre %s - ábrela y decide qué valor conservar
+The version before this save is in Tools > Sheet Backups.,La versión anterior a este guardado está en Herramientas > Copias de seguridad de la hoja.
