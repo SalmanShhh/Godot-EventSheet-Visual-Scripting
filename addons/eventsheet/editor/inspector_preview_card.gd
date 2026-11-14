@@ -33,8 +33,12 @@ func _init() -> void:
 	_caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	_caption.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), ground, CAPTION_CONTRAST))
 	column.add_child(_caption)
+	# A wide preview (a table of many columns) scrolls sideways inside the card instead of widening the window.
+	var sideways: ScrollContainer = ScrollContainer.new()
+	sideways.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(sideways)
 	_rows = VBoxContainer.new()
-	column.add_child(_rows)
+	sideways.add_child(_rows)
 	_sentence_label = Label.new()
 	_sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sentence_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))

@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Variable window keeps its width for a long hint, and its code line breaks at a comma
+
+- A variable with a long hint (a table look with many columns) made the Variable window grow sideways, from about 1050 px to 1470 px and more, because the Inspector preview under the code line asked for the whole width of its table. The preview now scrolls sideways inside its card, so the window keeps the width it opened at.
+- The IN CODE line split a long quoted hint in the middle of a word ("Stri" and "ng"). It now breaks after a comma or an opening bracket. The line the window reads, and the code the variable writes, are unchanged: only the way the line is drawn has break points.
+
 ### Fixed: the Rename window no longer lists the plugin's own behaviours as callers of your variable
 
 - Renaming a variable such as `speed` listed 37 files of the behaviours that ship with the plugin, 272 rows, in "Named and left exactly as they are", only because each of them has a `speed` of its own. The name index finds a word in a row; it cannot tell whose `speed` it is. Files in a shipped behaviour folder are now listed only when their text refers to your script by its path or its class name. The sentence above the lists says how many were left out and why: "37 file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed." Your own files are listed as before, whatever folder they are in.

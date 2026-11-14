@@ -210,6 +210,7 @@ var _look_doors: HBoxContainer = null
 var _look_open_button: Button = null
 var _look_copy_button: Button = null
 var _inspector_preview_card: EventSheetInspectorPreviewCard = null
+var _code_drawn: Label = null
 ## Where it sits: category, group, the group's name prefix, subgroup.
 var _sections_card: Control = null
 var _category_edit: LineEdit = null
@@ -304,6 +305,11 @@ func init_dialog(parent_node: Node) -> void:
 	# The whole line shows, wrapped: this column has the room, so no ellipsis cuts the declaration.
 	_help_strip.in_code_value.max_lines_visible = -1
 	_help_strip.in_code_value.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	# A twin label draws the line with a break point after each comma and bracket; the true line stays in
+	# in_code_value (hidden), so everything that reads it reads the real code.
+	_code_drawn = _help_strip.in_code_value.duplicate()
+	_help_strip.in_code_value.visible = false
+	_help_strip.in_code_row.add_child(_code_drawn)
 	live.add_child(_help_strip)
 	_inspector_preview_card = EventSheetInspectorPreviewCard.new()
 	live.add_child(_inspector_preview_card)
@@ -1838,6 +1844,7 @@ func _refresh_reading() -> void:
 	var type_name: String = _selected_stored_type()
 	var attributes: Dictionary = _collect_attributes(type_name)
 	_help_strip.set_reading(row_preview_text(), code_block_text(attributes))
+	_code_drawn.text = load("res://addons/eventsheet/editor/inspector/break_hints.gd").after_separators(_help_strip.in_code_value.text)
 	_refresh_mark_tiles()
 	if _look_option.has_meta("code_note"):
 		(_look_option.get_meta("code_note") as Label).text = annotation_text()
