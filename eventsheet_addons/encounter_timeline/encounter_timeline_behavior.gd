@@ -34,10 +34,37 @@ signal on_encounter_finished
 ## Start the encounter as soon as the node is ready.
 @export var auto_start: bool = false
 
-# The loaded plan, kept sorted by time: one record per beat, {at, scene, count, group, note}.
+## One beat of the plan: when it plays and what it spawns.
+class Beat extends RefCounted:
+	## Seconds after the start at which it plays.
+	var at: float = 0.0
+	## The scene it spawns, as a path; empty spawns nothing.
+	var scene: String = ""
+	## How many copies it spawns.
+	var count: int = 1
+	## The group every copy joins; empty joins none.
+	var group: String = ""
+	## A free note about the beat.
+	var note: String = ""
+
+	# The beat as a saved state holds it. The keys are the file's spelling and never change.
+	func to_dict() -> Dictionary:
+		return {"at": at, "scene": scene, "count": count, "group": group, "note": note}
+
+	# A beat read back from a saved state; a missing key reads as the field's default.
+	static func from_dict(data: Dictionary) -> Beat:
+		var beat: Beat = Beat.new()
+		beat.at = float(data.get("at", 0.0))
+		beat.scene = str(data.get("scene", ""))
+		beat.count = int(data.get("count", 1))
+		beat.group = str(data.get("group", ""))
+		beat.note = str(data.get("note", ""))
+		return beat
+
+# The loaded plan, kept sorted by time, one beat each.
 # _next is the index of the beat that has not played yet, so the clock never re-reads the past.
 ## The spawn rows of the loaded encounter, in time order.
-var _entries: Array = []
+var _entries: Array[Beat] = []
 ## Seconds since the encounter started.
 var _clock: float = 0.0
 ## Index of the next row waiting to fire.
@@ -123,13 +150,13 @@ func load_encounter(resource: Resource) -> void:
 	var raw_name: Variant = resource.get("encounter_name")
 	_encounter_name = str(raw_name) if raw_name != null else ""
 	for row: Dictionary in _rows(resource, "entries"):
-		_insert_sorted({
-			"at": maxf(_num(_cell(row, "at_seconds", 0.0)), 0.0),
-			"scene": str(_cell(row, "scene_path", "")),
-			"count": maxi(int(_num(_cell(row, "count", 1))), 0),
-			"group": str(_cell(row, "group_name", "")),
-			"note": str(_cell(row, "note", ""))
-		})
+		var beat: Beat = Beat.new()
+		beat.at = maxf(_num(_cell(row, "at_seconds", 0.0)), 0.0)
+		beat.scene = str(_cell(row, "scene_path", ""))
+		beat.count = maxi(int(_num(_cell(row, "count", 1))), 0)
+		beat.group = str(_cell(row, "group_name", ""))
+		beat.note = str(_cell(row, "note", ""))
+		_insert_sorted(beat)
 
 ## @ace_action
 ## @ace_name("Add Encounter Entry")
@@ -139,13 +166,13 @@ func load_encounter(resource: Resource) -> void:
 ## @ace_icon("res://eventsheet_addons/encounter_timeline/icon.svg")
 ## @ace_codegen_template("$EncounterTimelineBehavior.add_entry({at_seconds}, {scene_path}, {count}, {group_name}, {note})")
 func add_entry(at_seconds: float, scene_path: String, count: int, group_name: String, note: String) -> void:
-	var at: int = _insert_sorted({
-		"at": maxf(at_seconds, 0.0),
-		"scene": scene_path,
-		"count": maxi(count, 0),
-		"group": group_name,
-		"note": note
-	})
+	var beat: Beat = Beat.new()
+	beat.at = maxf(at_seconds, 0.0)
+	beat.scene = scene_path
+	beat.count = maxi(count, 0)
+	beat.group = group_name
+	beat.note = note
+	var at: int = _insert_sorted(beat)
 	# A beat inserted BEFORE the cursor is one the clock has already run past, so the cursor
 	# steps over it: adding an early beat mid-encounter must not replay it, and must not push
 	# the next real beat out of reach either.
@@ -304,7 +331,7 @@ func entry_count() -> int:
 ## @ace_codegen_template("$EncounterTimelineBehavior.planned_spawns()")
 func planned_spawns() -> int:
 	var total: int = 0
-	for entry: Dictionary in _entries:
+	for entry: Beat in _entries:
 		total += int(entry.count)
 	return total
 
@@ -325,7 +352,7 @@ func spawned_count() -> int:
 ## @ace_codegen_template("$EncounterTimelineBehavior.spawns_between({from_seconds}, {to_seconds})")
 func spawns_between(from_seconds: float, to_seconds: float) -> int:
 	var total: int = 0
-	for entry: Dictionary in _entries:
+	for entry: Beat in _entries:
 		var at: float = float(entry.at)
 		if at >= from_seconds and at < to_seconds:
 			total += int(entry.count)
@@ -388,7 +415,7 @@ func encounter_report() -> String:
 	lines.append("Beats: %d   Planned spawns: %d   Length: %s s" % [_entries.size(), planned_spawns(), String.num(duration(), 2)])
 	lines.append("")
 	lines.append("  at (s) | count | scene | group | note")
-	for entry: Dictionary in _entries:
+	for entry: Beat in _entries:
 		lines.append("  %s | %d | %s | %s | %s" % [
 			String.num(float(entry.at), 2),
 			int(entry.count),
@@ -431,7 +458,7 @@ func advance(delta: float) -> void:
 		set_process(false)
 		on_encounter_finished.emit()
 
-func _spawn_entry(entry: Dictionary) -> void:
+func _spawn_entry(entry: Beat) -> void:
 	# Plays one beat: count copies, each added to the beat's group (persistent, so the group survives
 	# being packed into a scene) and announced individually. A beat with no scene still fires nothing
 	# per node - use its note and On Encounter Finished, or give it a scene.
@@ -449,13 +476,13 @@ func _spawn_entry(entry: Dictionary) -> void:
 		_last_group = group_name
 		on_entry_spawned.emit(node, group_name)
 
-func _insert_sorted(entry: Dictionary) -> int:
+func _insert_sorted(entry: Beat) -> int:
 	# Inserts a beat in time order without a sort callable, so the plan is always ordered and
 	# equal times keep the order they were written in. Returns where it landed, which is what lets
 	# a beat added mid-encounter re-seat the cursor correctly.
 	var at: int = _entries.size()
 	var index: int = 0
-	for existing: Dictionary in _entries:
+	for existing: Beat in _entries:
 		if float(existing.at) > float(entry.at):
 			at = index
 			break
@@ -494,7 +521,7 @@ func _problems() -> PackedStringArray:
 	# prints these verbatim instead of quietly rounding them away.
 	var out: PackedStringArray = PackedStringArray()
 	var index: int = 0
-	for entry: Dictionary in _entries:
+	for entry: Beat in _entries:
 		var where: String = "beat %d at %ss" % [index + 1, String.num(float(entry.at), 2)]
 		var scene_path: String = str(entry.scene)
 		if scene_path.is_empty():
@@ -508,14 +535,21 @@ func _problems() -> PackedStringArray:
 		index += 1
 	return out
 
-## @ace_hidden
-func save_state() -> Dictionary:
+func _entries_as_dicts() -> Array:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
 	# The plan and the cursor travel together, so a save mid-wave reopens mid-wave; already
 	# spawned nodes are NOT saved here (they are the scene's, not the timeline's).
+	# The plan as the plain records a save holds.
+	var records: Array = []
+	for beat: Beat in _entries:
+		records.append(beat.to_dict())
+	return records
+
+## @ace_hidden
+func save_state() -> Dictionary:
 	return {
-		"entries": _entries.duplicate(true),
+		"entries": _entries_as_dicts(),
 		"encounter_name": _encounter_name,
 		"clock": _clock,
 		"next": _next,
@@ -528,7 +562,10 @@ func save_state() -> Dictionary:
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
-	_entries = (state.get("entries", []) as Array).duplicate(true)
+	_entries.clear()
+	for saved: Variant in state.get("entries", []) as Array:
+		if saved is Dictionary:
+			_entries.append(Beat.from_dict(saved as Dictionary))
 	_encounter_name = str(state.get("encounter_name", ""))
 	_clock = float(state.get("clock", 0.0))
 	_next = int(state.get("next", 0))
