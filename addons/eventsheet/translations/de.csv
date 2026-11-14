@@ -10493,3 +10493,9 @@ The mark is the colour this variable holds.,"Das Zeichen hat die Farbe, die dies
 Click the mark to change the look.,Klick auf das Zeichen ändert den Look.
 Shown as a dropdown of %s.,Als Dropdown mit %s angezeigt.
 Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,"Vokabular %s in project.godot festgehalten (eventsheets/project/vocabulary_version), damit ein späteres Update sagen kann, welche Zeilen neuer sind."
+Made %s - include it from any script with Add > %s,%s erstellt - in jedem Skript über Hinzufügen > %s einbinden
+Shared sheet,Gemeinsames Blatt
+Shared Sheet,Gemeinsames Blatt
+Shared sheet…,Gemeinsames Blatt…
+Manage Shared Sheets…,Gemeinsame Blätter verwalten…
+Extract Selection to Shared Sheet…,Auswahl in ein gemeinsames Blatt extrahieren…

@@ -208,7 +208,7 @@ play the role both run at a definite, visible point:
 |---|---|---|
 | Include a sheet so its events run *at this point* | **Teach a Verb** - publish the shared logic and CALL it from a row | Exactly when the calling row runs - more explicit than an include, because the call is a row you can see |
 | Include a behaviour sheet for a whole family of objects | A **behavior pack** on the node | In scene-tree order each tick, as a separate node - NOT where any include line sits |
-| Include a sheet so *its whole set of events* runs in this script | **Sheet ▸ New shared sheet…**, then **Add ▸ Include sheet…** | Wherever those events' own triggers run - a shared sheet is included as a base class or as a helper, and both are ordinary Godot |
+| Include a sheet so *its whole set of events* runs in this script | **Sheet ▸ New shared sheet…**, then **Add ▸ Include sheet…** (it reads **Shared sheet…** by default and **Include sheet…** once you pick the Familiar preset on the Words page) | Wherever those events' own triggers run - a shared sheet is included as a base class or as a helper, and both are ordinary Godot |
 
 So when you reach for an include meaning "run this shared logic here, now", the honest mapping
 is a called function. When you reach for it meaning "give these objects this behavior", it is a
@@ -227,7 +227,7 @@ question that belongs to the shared sheet rather than to each script that includ
   triggers to it. The sheet writes those forwarding rows for you. Use this when the script already
   extends something (a `CharacterBody2D`, a pack's class) and cannot extend anything else.
 
-`Add ▸ Include sheet…` then wires any script to it with nothing left to ask, because the wiring was
+`Add ▸ Include sheet…` (**Shared sheet…** by default, **Include sheet…** with the Familiar preset) then wires any script to it with nothing left to ask, because the wiring was
 decided once. Included events read in the includer greyed and foldable; they are editable only in
 their own sheet, and changing that sheet changes every script that includes it.
 
@@ -380,7 +380,7 @@ i18n (Godot translations).
   ![A sheet with the Add event link in its top-left corner and the + Add… link in its top-right](images/sheet-corner-links.png)
 
   The whole Add menu lives inside the **☰ Menu** beside Sheet, Edit, View and Tools, and it teaches
-  the keys: Event (E), Condition (C), Action (A), Group (G), Comment (Q), Global Variable (V) and
+  the keys: Event (E), Condition (C), Action (A), Group (G; it reads Section by default and Group with the Familiar preset), Comment (Q), Global Variable (V) and
   Function (F) each print their key beside them, read from your own bindings - rebind one in
   *Editor Settings ▸ Shortcuts* and the menu says the new key.
 

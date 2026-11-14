@@ -72,9 +72,9 @@ One button, five groups, then two doors at its foot:
 
 | Group | What lives there |
 |-------|------------------|
-| **Sheet** | The file's own life: New, Open, Save, Save As, Export GDScript, Import event sheet, Save as Text, Open in Script Editor, Show in FileSystem, Sheet Type, shared sheets, Manage Includes, the behaviour / Behaviour library / editor-tool / inspector-look / data-table starters, Teach a Verb, Inspector Designer, Export Addon, Publish New Version, Name Raw Calls, Health, Export (image / PDF / Markdown), Workspaces, Start page |
-| **Add** | The whole authoring vocabulary: Event, Condition, Action, Group, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, includes, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind |
-| **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Include, Find References, Generate from Description |
+| **Sheet** | The file's own life: New, Open, Save, Save As, Export GDScript, Import event sheet, Save as Text, Open in Script Editor, Show in FileSystem, Sheet Type, shared sheets, Manage Shared Sheets, the behaviour / Behaviour library / editor-tool / inspector-look / data-table starters, Teach a Verb, Inspector Designer, Export Addon, Publish New Version, Name Raw Calls, Health, Export (image / PDF / Markdown), Workspaces, Start page |
+| **Add** | The whole authoring vocabulary: Event, Condition, Action, Section, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, shared sheets, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind |
+| **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Shared Sheet, Find References, Generate from Description |
 | **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Preview In Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Full toolbar, Text labels |
 | **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Words |
 | _(foot)_ | **Manual...** and **What's new...**, the two doors a reader looks for by name rather than by group |
@@ -149,7 +149,7 @@ them:
 | 5 | **The "Add event" corner link** | Top left of the canvas, on every sheet |
 | 6 | **The "+ Add..." corner link** | Top right of the canvas, on every sheet |
 | 7 | **Right-click a lane** | The condition lane offers *Add Condition*, the action lane offers *Add Action* |
-| 8 | **Right-click a row** | Insert > Event Above, Event Below, Group, Comment, Variable, Timeline, Script Block, Signal Handler, Enum - with *Make 'Or' block* and *Add 'Else'* beside it |
+| 8 | **Right-click a row** | Insert > Event Above, Event Below, Section, Comment, Variable, Timeline, Script Block, Signal Handler, Enum - with *Make 'Or' block* and *Add 'Else'* beside it |
 | 9 | **Right-click empty space** | New event, new condition, the three kinds of variable, an Inspector button, Insert snippet |
 | 10 | **Quick add on the strip** | Type the whole row and press Enter |
 | 11 | **Menu > Add** | The complete vocabulary, with the five reflexes at its head and their keys printed |
@@ -161,7 +161,7 @@ them:
 | 17 | **Drag onto the canvas** | An object from the Objects list starts an event on it; an Input Map action starts an On pressed event |
 
 The whole Add menu also teaches the keys it stands for. Event (`E`), Condition (`C`), Action (`A`),
-Group (`G`), Comment (`Q`), Global Variable (`V`) and Function (`F`) each print their binding beside
+Section (`G`), Comment (`Q`), Global Variable (`V`) and Function (`F`) each print their binding beside
 them, read from your Editor Settings shortcuts, so a rebind shows the new key with nothing to edit.
 
 ![The Menu open on Add, with E, C, A, G, Q, V and F printed beside their items](images/add-cascade-keys.png)
@@ -257,7 +257,7 @@ that disagree about what is on them help nobody. What it does do, all of it:
   under it, on every open view. It is a view state: turning Simple Mode off restores the programmer
   look instantly and no row is touched.
 - **Shows the beginner Add toolbar.** The eight-button strip below the sheet: Event, Sub-event,
-  Condition, Action, Group, Comment, Variable, Function, each with its key on hover. It adds; it
+  Condition, Action, Section, Comment, Variable, Function, each with its key on hover. It adds; it
   does not run anything.
 - **Pins variable rows to the sentence.** The one-sentence reading rather than the sentence plus its
   compiled echo. Turning Simple Mode off does not push the dial back: your own choice of dial stays

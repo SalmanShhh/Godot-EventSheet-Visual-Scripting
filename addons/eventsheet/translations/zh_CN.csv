@@ -10493,3 +10493,9 @@ The mark is the colour this variable holds.,标记就是这个变量所保存的
 Click the mark to change the look.,点击标记可更改外观。
 Shown as a dropdown of %s.,显示为包含 %s 的下拉菜单。
 Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,已在 project.godot 中记录词汇版本 %s (eventsheets/project/vocabulary_version)，以便之后的更新能指出哪些行更新。
+Made %s - include it from any script with Add > %s,已创建 %s - 在任何脚本中通过 添加 > %s 引入
+Shared sheet,共享表
+Shared Sheet,共享表
+Shared sheet…,共享表…
+Manage Shared Sheets…,管理共享表…
+Extract Selection to Shared Sheet…,将所选内容提取到共享表…

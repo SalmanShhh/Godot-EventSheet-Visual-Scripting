@@ -20,8 +20,8 @@ question that belongs to the shared sheet rather than to each script that includ
 
 ![The New Shared Sheet window: a name, the one wiring choice, and a live "Ships as" line reading class_name PauseHandling  ·  as a helper](images/shared-sheet-new.png)
 
-**`Add ▸ Include sheet…`** wires the open script to one. It asks nothing at all, because the wiring
-was already decided - pick the shared sheet, and the rows that wire it are written for you.
+**`Add ▸ Shared sheet…`** (it reads **Include sheet…** under the Familiar preset) wires the open script to one. It asks nothing at all, because the wiring
+was already decided - pick the shared sheet, and the rows that wire it are written for you. The bar it leaves at the head of the including sheet reads **Shared sheet** by default and **Include** with the Familiar preset; either way the line ends in the Godot shape it stands for.
 
 ## What the two wirings write
 

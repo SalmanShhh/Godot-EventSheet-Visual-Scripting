@@ -79,6 +79,12 @@ const WORDS := {
 	"every_tick": ["the _process callback", "Every tick", "On process", []],
 	"behavior": ["an attached pack", "Behavior", "Behavior", []],
 	"group": ["a Godot group", "Family (group)", "Group", []],
+	# What the sheet calls the collapsible block of rows, and the sheet other sheets include, and the
+	# picker's card for the built-in rows. "Group" is Godot's word for a node group, so by default
+	# the block is a Section; a reader from another event-sheet editor keeps the word they expect.
+	"section_block": ["a collapsible block of rows", "Group", "Section", []],
+	"shared_sheet": ["a sheet other sheets include", "Include", "Shared sheet", []],
+	"system_card": ["the picker's card for the built-in rows", "System", "System", []],
 	"collection": ["Array / Dictionary", "list / table", "list / table", []],
 	"destroy": ["queue_free()", "Destroy", "Queue free", []],
 	"instantiate": ["PackedScene.instantiate()", "Spawn a copy of", "Instantiate", []],
@@ -139,6 +145,7 @@ const KEY_ORDER: Array[String] = [
 	"thumbnail_maker", "debugger_panel", "object_type", "global_singleton", "shared_store",
 	"behavior_of", "workspace",
 	"scene_ready", "scene_exit", "node_enter", "node_exit", "every_physics_tick",
+	"section_block", "shared_sheet", "system_card",
 ]
 
 ## The callback words the readings ask for, after the editor-building words on the page.
@@ -302,6 +309,46 @@ static func word(key: String) -> String:
 ## page says: Godot's own "autoload" by default, "global" for a reader from another editor.
 static func new_global_sheet_label() -> String:
 	return EventSheetL10n.translate("New %s sheet…") % word("global_singleton").to_lower()
+
+
+## The shared-sheet word followed by "sheet" unless the word already ends in it: "Include sheet",
+## "Shared sheet", and whatever a typed-in word makes of it ("Link sheet").
+static func shared_sheet_phrase(lower: bool = false) -> String:
+	var phrase: String = word("shared_sheet")
+	if not phrase.to_lower().ends_with("sheet"):
+		phrase += " sheet"
+	return phrase.to_lower() if lower else phrase
+
+
+## The plural, for menu items about several: "Includes", "Shared sheets".
+static func shared_sheet_plural(lower: bool = false) -> String:
+	var plural: String = word("shared_sheet")
+	plural += "s"
+	return plural.to_lower() if lower else plural
+
+
+## Title case for a menu item or window title: every word starts with a capital.
+static func title_case(text: String) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for part: String in text.split(" ", false):
+		out.append(part.substr(0, 1).to_upper() + part.substr(1))
+	return " ".join(out)
+
+
+## "Manage Includes…" with the familiar words, "Manage Shared Sheets…" by default.
+static func manage_shared_label() -> String:
+	return "Manage %s…" % title_case(shared_sheet_plural())
+
+
+## "Extract Selection to Include…" with the familiar words, "Extract Selection to Shared Sheet…" by default.
+static func extract_shared_label() -> String:
+	return "Extract Selection to %s…" % title_case(word("shared_sheet"))
+
+
+## The menu item that wires the open script to a shared sheet: "Include sheet…" with the familiar
+## words, "Shared sheet…" by default.
+static func shared_sheet_menu_label() -> String:
+	return "%s…" % shared_sheet_phrase()
 
 
 ## The pure form, for tests and for callers that already hold the state (the viewport builds

@@ -10493,3 +10493,9 @@ The mark is the colour this variable holds.,표시는 이 변수가 가진 색�
 Click the mark to change the look.,표시를 클릭하면 룩을 바꿀 수 있습니다.
 Shown as a dropdown of %s.,%s 드롭다운으로 표시됩니다.
 Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,어휘 %s을(를) project.godot에 기록했습니다 (eventsheets/project/vocabulary_version). 이후 업데이트에서 어떤 행이 더 새로운지 알려 줄 수 있습니다.
+Made %s - include it from any script with Add > %s,%s을(를) 만들었습니다 - 어느 스크립트에서든 추가 > %s로 포함할 수 있습니다
+Shared sheet,공유 시트
+Shared Sheet,공유 시트
+Shared sheet…,공유 시트…
+Manage Shared Sheets…,공유 시트 관리…
+Extract Selection to Shared Sheet…,선택 항목을 공유 시트로 추출…

@@ -93,14 +93,14 @@ func _create_shared_sheet() -> void:
 	new_window.hide()
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.get_resource_filesystem().scan()
-	_dock._set_status(EventSheetL10n.translate("Made %s - include it from any script with Add > Include sheet….") % path.get_file())
+	_dock._set_status(EventSheetL10n.translate("Made %s - include it from any script with Add > %s") % [path.get_file(), EventSheetWords.shared_sheet_menu_label()])
 	_dock._load_sheet_from_path(path)
 
 
 ## Add ▸ Include sheet…: browse to a shared sheet and wire the open script to it.
 func open_include_sheet() -> void:
 	EventSheetPopupUI.browse_file(_dock, ["*.gd ; Shared sheet"], include_shared_sheet, {"plain": true,
-		"title": EventSheetL10n.translate("Include Sheet"), "size": Vector2i(820, 560)})
+		"title": EventSheetL10n.translate(EventSheetWords.title_case(EventSheetWords.shared_sheet_phrase())), "size": Vector2i(820, 560)})
 
 
 ## Wires the open script to the shared sheet at `path`. Returns what happened, so the menu item and

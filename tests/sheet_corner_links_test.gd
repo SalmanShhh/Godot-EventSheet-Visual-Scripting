@@ -223,7 +223,7 @@ static func _test_the_add_cascade() -> bool:
 	for index: int in mini(add_popup.item_count, 6):
 		head.append(add_popup.get_item_text(index))
 	ok = _check("the five reflexes lead the Add menu", head,
-		PackedStringArray(["Event", "Condition", "Action", "Group", "Comment", ""])) and ok
+		PackedStringArray(["Event", "Condition", "Action", "Section", "Comment", ""])) and ok
 	# The key beside each item, read off the item's own Shortcut - which is what the reader sees.
 	for entry: Array in [[12, "add_event"], [13, "add_condition"], [14, "add_action"],
 			[15, "add_group"], [16, "add_comment"], [8, "add_variable"], [3, "add_function"]]:

@@ -10493,3 +10493,9 @@ The mark is the colour this variable holds.,"Метка имеет цвет, к�
 Click the mark to change the look.,"Нажмите на метку, чтобы изменить вид."
 Shown as a dropdown of %s.,Показана как выпадающий список: %s.
 Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,"Словарь %s записан в project.godot (eventsheets/project/vocabulary_version), чтобы следующее обновление могло сказать, какие строки новее."
+Made %s - include it from any script with Add > %s,%s создан - подключите его из любого скрипта через Добавить > %s
+Shared sheet,Общий лист
+Shared Sheet,Общий лист
+Shared sheet…,Общий лист…
+Manage Shared Sheets…,Управление общими листами…
+Extract Selection to Shared Sheet…,Извлечь выделение в общий лист…

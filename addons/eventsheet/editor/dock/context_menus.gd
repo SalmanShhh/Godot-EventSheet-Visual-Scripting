@@ -278,7 +278,7 @@ func build_all() -> void:
 	_dock._empty_space_context_menu.add_item("Insert Snippet…", _dock.EMPTY_MENU_INSERT_SNIPPET)
 	# Another sheet's events, in this one - the shared-sheet include, where a reader from another
 	# event-sheet editor looks for "Include event sheet".
-	_dock._empty_space_context_menu.add_item("Include sheet…", _dock.EMPTY_MENU_INCLUDE_SHEET)
+	_dock._empty_space_context_menu.add_item(EventSheetWords.shared_sheet_menu_label(), _dock.EMPTY_MENU_INCLUDE_SHEET)
 	_dock._empty_space_context_menu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock.add_child(_dock._empty_space_context_menu)
 
@@ -652,7 +652,7 @@ func _build_row_insert_submenu() -> void:
 	m.clear()
 	m.add_item("Event Above", _dock.ROW_MENU_ADD_EVENT_ABOVE)
 	m.add_item("Event Below", _dock.ROW_MENU_ADD_EVENT_BELOW)
-	m.add_item("Group", _dock.ROW_MENU_ADD_GROUP_BELOW)
+	m.add_item(EventSheetWords.word("section_block"), _dock.ROW_MENU_ADD_GROUP_BELOW)
 	m.add_item("Comment", _dock.ROW_MENU_ADD_COMMENT_BELOW)
 	m.add_item("Variable", _dock.ROW_MENU_ADD_VARIABLE_BELOW)
 	m.add_item("Timeline", _dock.ROW_MENU_ADD_TIMELINE_BELOW)

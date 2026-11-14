@@ -10493,3 +10493,9 @@ The mark is the colour this variable holds.,マークはこの変数が持つ色
 Click the mark to change the look.,マークをクリックするとルックを変更できます。
 Shown as a dropdown of %s.,%s のドロップダウンとして表示されます。
 Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,語彙 %s を project.godot に記録しました (eventsheets/project/vocabulary_version)。今後のアップデートでどの行が新しいかを示せます。
+Made %s - include it from any script with Add > %s,%s を作成しました - どのスクリプトからも 追加 > %s で取り込めます
+Shared sheet,共有シート
+Shared Sheet,共有シート
+Shared sheet…,共有シート…
+Manage Shared Sheets…,共有シートの管理…
+Extract Selection to Shared Sheet…,選択範囲を共有シートへ抽出…

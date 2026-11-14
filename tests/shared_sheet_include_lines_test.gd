@@ -59,15 +59,19 @@ static func _the_lines() -> bool:
 				pills += 1
 		texts.append(" | ".join(parts))
 	view.free()
+	# The line leads with the Words page's word for a shared sheet: "Shared sheet" by default (what a
+	# Godot reader calls it), "Include" with the Familiar preset.
+	var lead: String = EventSheetWords.word("shared_sheet")
 	return SUPPORT.pins("shared_sheet_include_lines_test", [
+		["the line leads with the shared-sheet word, Shared sheet by default", lead, "Shared sheet"],
 		["the base reads as one line, with its Godot shape",
-			texts.has("⇥ | Include | FixtureDamageRules | · shared sheet, as its base | extends FixtureDamageRules"), true],
+			texts.has("⇥ | %s | FixtureDamageRules | · shared sheet, as its base | extends FixtureDamageRules" % lead), true],
 		["the helper reads as one line, with its Godot shape",
-			texts.has("⇥ | Include | FixturePauseHandling | · shared sheet, as a helper, called from _process | var _fixture_pause_handling"), true],
+			texts.has("⇥ | %s | FixturePauseHandling | · shared sheet, as a helper, called from _process | var _fixture_pause_handling" % lead), true],
 		["the base's variable reads under its line, named by where it comes from",
 			texts.has("int | damage_taken | = | 0 | from FixtureDamageRules"), true],
 		["the forwarding call runs the helper's handler",
-			_any_contains(texts, "Include | FixturePauseHandling | ▸ run its On Process"), true],
+			_any_contains(texts, "%s | FixturePauseHandling | ▸ run its On Process" % lead), true],
 		["no pill on an Include line", pills, 0],
 	])
 

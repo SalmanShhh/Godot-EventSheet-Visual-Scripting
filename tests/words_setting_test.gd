@@ -29,6 +29,23 @@ static func run() -> bool:
 		EventSheetWords.plain_default("layout"), "Scene") and all_passed
 	all_passed = _check("a Godot group reads as Family (group) with Familiar Words on",
 		EventSheetWords.familiar_default("group"), "Family (group)") and all_passed
+	all_passed = _check("a collapsible block of rows reads as Section by default, Group in the Familiar preset",
+		[EventSheetWords.word_for("section_block", false, {}), EventSheetWords.word_for("section_block", true, {})],
+		["Section", "Group"]) and all_passed
+	all_passed = _check("a sheet other sheets include reads as Shared sheet by default, Include in the Familiar preset",
+		[EventSheetWords.word_for("shared_sheet", false, {}), EventSheetWords.word_for("shared_sheet", true, {})],
+		["Shared sheet", "Include"]) and all_passed
+	all_passed = _check("the picker's built-in card reads as System in both, and is a word the page can change",
+		[EventSheetWords.word_for("system_card", false, {}), EventSheetWords.word_for("system_card", true, {}),
+		EventSheetWords.word_for("system_card", false, {"plain": {"system_card": "Built-in"}})],
+		["System", "System", "Built-in"]) and all_passed
+	all_passed = _check("the node-group word keeps Godot's own word by default, so Group means one thing",
+		EventSheetWords.word_for("group", false, {}), "Group") and all_passed
+	all_passed = _check("the word-following menu labels, by default",
+		[EventSheetWords.shared_sheet_menu_label(), EventSheetWords.manage_shared_label(), EventSheetWords.extract_shared_label()],
+		["Shared sheet…", "Manage Shared Sheets…", "Extract Selection to Shared Sheet…"]) and all_passed
+	all_passed = _check("a typed-in word is made into a sheet phrase",
+		EventSheetWords.title_case("link sheet"), "Link Sheet") and all_passed
 	all_passed = _check("a word with one honest name reads the same either way",
 		EventSheetWords.familiar_default("opacity"), EventSheetWords.plain_default("opacity")) and all_passed
 	all_passed = _check("queue_free reads as Destroy in the Familiar preset",
@@ -81,6 +98,7 @@ static func run() -> bool:
 	var expected_keys: Array[String] = game_words.duplicate()
 	expected_keys.append_array(EventSheetWords.EDITOR_KEYS)
 	expected_keys.append_array(["scene_ready", "scene_exit", "node_enter", "node_exit", "every_physics_tick"])
+	expected_keys.append_array(["section_block", "shared_sheet", "system_card"])
 	all_passed = _check("the page lists every word in the approved order",
 		EventSheetWords.keys(), expected_keys) and all_passed
 	all_passed = _check("the game words still lead it",

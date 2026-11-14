@@ -1049,6 +1049,7 @@ func _init() -> void:
 		func(resource: Resource) -> void:
 			explain_row(resource))
 	_ui_builder.build_ui()
+	_menu_bar.relabel_words()
 
 var _editor_dialogs_initialized: bool = false
 
@@ -8515,6 +8516,7 @@ func _on_words_changed() -> void:
 	# view carries that state as a flag it builds rows from - so the stored preference is pushed
 	# back out before the rebuild rather than after the next tab switch.
 	_apply_familiar_words_pref()
+	_menu_bar.relabel_words()
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.set_sheet(_current_sheet)

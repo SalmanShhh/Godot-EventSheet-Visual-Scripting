@@ -1626,7 +1626,7 @@ static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Diction
 		if provider.is_empty() or seen.has(provider):
 			continue
 		seen[provider] = true
-		cards.append({"provider": provider, "label": "System" if provider == "Core" else provider,
+		cards.append({"provider": provider, "label": EventSheetWords.word("system_card") if provider == "Core" else provider,
 			"global": ProjectSettings.has_setting("autoload/" + provider)})
 	# A pack's card reads by the word its rows read under ("Bullet", "Platformer"), never by the class
 	# it is spelled with ("BulletBehavior"). Two packs that share a word keep their class names, so no

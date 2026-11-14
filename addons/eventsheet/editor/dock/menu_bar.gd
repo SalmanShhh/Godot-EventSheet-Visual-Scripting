@@ -25,6 +25,9 @@ const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 const WORKSPACES_PATH := "res://addons/eventsheet/editor/dock/workspaces.gd"
 
 var _dock: Control = null
+## [popup, item id, which word] for every menu item whose text follows the Words page, so a change
+## of words relabels them in place instead of waiting for a restart.
+var _word_menu_items: Array = []
 
 
 ## The page each of the Menu's two Manual doors asks for: What's new for What's new…, and "" for
@@ -204,6 +207,27 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
+## Sets every word-following menu item to the word the Words page says today.
+func relabel_words() -> void:
+	for entry: Variant in _word_menu_items:
+		var row: Array = entry as Array
+		var popup: PopupMenu = row[0] as PopupMenu
+		if popup == null or not is_instance_valid(popup):
+			continue
+		var index: int = popup.get_item_index(int(row[1]))
+		if index < 0:
+			continue
+		match str(row[2]):
+			"section":
+				popup.set_item_text(index, EventSheetWords.word("section_block"))
+			"shared":
+				popup.set_item_text(index, EventSheetWords.shared_sheet_menu_label())
+			"manage":
+				popup.set_item_text(index, EventSheetWords.manage_shared_label())
+			"extract":
+				popup.set_item_text(index, EventSheetWords.extract_shared_label())
+
+
 ## Builds the toolbar + menu bar and adds it as the FIRST child of `root` (the workspace
 ## VBox), exactly where the dock used to inline this. Assigns _toolbar/_view_popup/
 ## _quick_add_edit back onto the dock during the build, before any reader runs.
@@ -294,6 +318,7 @@ func build(root: Node) -> void:
 		"Write events once and include them in many scripts. You choose here how it is wired: as a base class (the including script extends it) or as a helper (the including script keeps one of it and forwards its triggers to it)."
 	)
 	sheet_popup.add_item("Manage Includes…", 8)
+	_word_menu_items.append([sheet_popup, 8, "manage"])
 	sheet_popup.add_item("Custom Actions…", 5)
 	# Making your own behaviour: a form, then the list of what it offers.
 	sheet_popup.add_item(EventSheetL10n.translate("New behaviour…"), 9)
@@ -447,6 +472,7 @@ func build(root: Node) -> void:
 	add_popup.add_item("Condition", 13)
 	add_popup.add_item("Action", 14)
 	add_popup.add_item("Group", 15)
+	_word_menu_items.append([add_popup, 15, "section"])
 	add_popup.add_item("Comment", 16)
 	add_popup.add_separator()
 	add_popup.add_item("Signal Event…", 0)
@@ -497,6 +523,7 @@ func build(root: Node) -> void:
 	# The other half of the shared-sheet gesture. How it is wired was decided by the shared
 	# sheet itself, so this asks nothing: pick the sheet, and the rows that wire it are written.
 	add_popup.add_item("Include sheet…", 10)
+	_word_menu_items.append([add_popup, 10, "shared"])
 	add_popup.add_separator()
 	# The three event-shape commands, on the Add menu as well as the right-click menu: the sheet
 	# reads Or blocks, blank sub-events and Else, so all three must be typeable in the same words.
@@ -571,6 +598,7 @@ func build(root: Node) -> void:
 	edit_popup.add_item("Redo", 3)
 	edit_popup.add_separator()
 	edit_popup.add_item("Extract Selection to Include…", 4)
+	_word_menu_items.append([edit_popup, 4, "extract"])
 	edit_popup.add_item("Find References…", 5)
 	edit_popup.add_separator()
 	edit_popup.add_item("Generate from Description (AI)…", 6)

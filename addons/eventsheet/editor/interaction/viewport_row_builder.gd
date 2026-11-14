@@ -2898,11 +2898,11 @@ func _include_line_inks(row_data: EventRowData) -> Dictionary:
 	}
 
 
-## The word an Include line leads with. One word for every reader: the line ENDS in the Godot
-## shape it stands for (`extends X`, `var _x`), so a reader from another event-sheet editor and a
-## Godot reader each find their own word on the same line, whatever the Words setting says.
+## The word an Include line leads with: the Words page's word for a shared sheet ("Shared sheet" by
+## default, "Include" for a reader from another event-sheet editor). The line ENDS in the Godot shape
+## it stands for (`extends X`, `var _x`), so either reader still finds Godot's own words on it.
 func _include_word() -> String:
-	return EventSheetL10n.translate("Include")
+	return EventSheetL10n.translate(EventSheetWords.word("shared_sheet"))
 
 
 ## The shared sheets this sheet's file includes, read off the file on disk once per file version.
@@ -13835,7 +13835,7 @@ func _append_super_call_spans(spans: Array[EventSheetSemanticSpan], reading: Dic
 		"natural_width": true,
 		"line_index": action_line_index
 	}
-	spans.append(_make_span(EventSheetL10n.translate("Include"), EventSheetSemanticSpan.SpanType.VALUE,
+	spans.append(_make_span(EventSheetL10n.translate(EventSheetWords.word("shared_sheet")), EventSheetSemanticSpan.SpanType.VALUE,
 		base_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true).merged(action_style_meta, false)))
 	spans.append(_make_span(str(reading.get("file", "")), EventSheetSemanticSpan.SpanType.KEYWORD,
 		base_meta.duplicate().merged({

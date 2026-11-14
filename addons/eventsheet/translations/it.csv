@@ -10493,3 +10493,9 @@ The mark is the colour this variable holds.,Il segno è il colore che contiene q
 Click the mark to change the look.,Fai clic sul segno per cambiare l'aspetto.
 Shown as a dropdown of %s.,Mostrata come menu a tendina con %s.
 Recorded vocabulary %s in project.godot (eventsheets/project/vocabulary_version) so a later update can say which rows are newer.,Vocabolario %s registrato in project.godot (eventsheets/project/vocabulary_version) così un aggiornamento successivo può dire quali righe sono più recenti.
+Made %s - include it from any script with Add > %s,%s creato - includilo da qualsiasi script con Aggiungi > %s
+Shared sheet,Foglio condiviso
+Shared Sheet,Foglio condiviso
+Shared sheet…,Foglio condiviso…
+Manage Shared Sheets…,Gestisci fogli condivisi…
+Extract Selection to Shared Sheet…,Estrai la selezione in un foglio condiviso…
