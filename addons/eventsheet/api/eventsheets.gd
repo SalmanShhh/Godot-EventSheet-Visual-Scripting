@@ -1324,7 +1324,20 @@ static func curate_provider(script_path: String, edits: Array) -> Dictionary:
 	handle.store_string(str(result["source"]))
 	handle.close()
 	result["ok"] = true
+	_script_was_written(clean_path)
 	return result
+
+
+## Tells the editor and the open workspace that a script was just rewritten from here: Godot's
+## filesystem takes the new file, and the picker is rebuilt from it, so the words written show up
+## without waiting for the next filesystem scan.
+static func _script_was_written(script_path: String) -> void:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var filesystem: Object = Engine.get_singleton("EditorInterface").call("get_resource_filesystem")
+		if filesystem != null and filesystem.has_method("update_file"):
+			filesystem.call("update_file", script_path)
+	if _dock_alive():
+		_dock._refresh_ace_registry()
 
 
 ## The "Publish New Version" ritual for a pack script: bump `@ace_version` (patch/minor/major),

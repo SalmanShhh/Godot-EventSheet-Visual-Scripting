@@ -201,13 +201,13 @@ func registry_signature() -> String:
 	var sheet: EventSheetResource = _dock._current_sheet
 	if sheet != null:
 		for provider_path: Variant in sheet.ace_provider_scripts:
-			parts.append("sheet|%s" % str(provider_path))
+			parts.append("sheet|%s|%s" % [str(provider_path), _saved_stamp(str(provider_path))])
 	parts.append("scan|%s" % EventSheetAddonScanner.scan_revision())
 	for bridge_path: String in EventForgeBridgeRuntime.get_registered_provider_scripts():
 		parts.append("bridge|%s" % bridge_path)
 	for taught_path: Variant in ProjectSettings.get_setting(
 			EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray()):
-		parts.append("taught|%s" % str(taught_path))
+		parts.append("taught|%s|%s" % [str(taught_path), _saved_stamp(str(taught_path))])
 	# An autoload joins the vocabulary only once its script carries an annotation, so the file's
 	# own modification time is part of the answer - not just its path.
 	for property_info: Dictionary in ProjectSettings.get_property_list():
@@ -221,6 +221,16 @@ func registry_signature() -> String:
 		parts.append("autoload|%s|%d" % [autoload_path, stamp])
 	parts.append("manual|%d" % _dock._manual_ace_sources.size())
 	return "\n".join(parts)
+
+
+## A file's saved time and length as one string ("0|0" when missing); two saves in a second share a time.
+func _saved_stamp(path: String) -> String:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return "0|0"
+	var stamp: String = "%d|%d" % [FileAccess.get_modified_time(path), file.get_length()]
+	file.close()
+	return stamp
 
 
 # ── The generated-code panel ─────────────────────────────────────────────────

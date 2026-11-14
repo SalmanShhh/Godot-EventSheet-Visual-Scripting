@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: saving a script you registered changes the picker at once, without a restart
+
+- A script registered on a sheet, or a sheet shared with the project, was read into the picker when it was registered and again only when the list of such scripts changed, so a word edited on a `##` line (a new sentence, a new name) and saved in Godot's script editor left the picker on the old words until the editor was restarted. The vocabulary is now derived from each such script's saved time and length as well as its path, and the editor's filesystem ping rebuilds it when one of them moved. Writing annotations from the editor, or through `EventSheets.curate_provider`, tells Godot's filesystem about the file and rebuilds the picker straight away. A switch between two tabs whose scripts did not change still builds nothing.
+
 ### Added: lines of your script that read as nothing are named, with the line and the word you probably meant
 
 - The `##` words above a function, signal or variable are read by exact spelling, so a word one letter off (`@ace_nmae`) is just a note, a parameter slot with a key nothing reads (`defualt:`) or no colon is dropped, and a plain `#` comment between the words and their function cuts them off, all without a sound. They are now named in a new Script Rows section of the Project Doctor, each with its line number and, where a close spelling exists, the word that was meant, and a "Go to the line" chip opens Godot's own script editor there. The same lines appear as amber notes when a script is previewed, and a function with no return type is named as reading as an action. Only scripts that put a `##` word of their own in the file are read, never a file the plugin ships, and nothing is written or loaded.

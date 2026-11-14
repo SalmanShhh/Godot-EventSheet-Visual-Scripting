@@ -1112,6 +1112,8 @@ func _ready() -> void:
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
 ## change reloads catalogs and re-translates the live UI (and redraws the canvas-drawn strings).
 func _on_translations_maybe_changed() -> void:
+	if _tab_state != null and _tab_state.registry_needs_rebuild():
+		_refresh_ace_registry()
 	# The object facts, the signal fan-out and the thumbnails are all reads of files that
 	# just changed, so they are dropped here rather than kept for a session that has outlived them.
 	# Each rebuilds lazily on the next question, which costs one scan and never a wrong answer.
