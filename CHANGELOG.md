@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Chances label reads like the labels around it
+
+- The "Chances" row above a weighted table no longer draws a dim label. The row is tied to no property once the Inspector has built it, so it shows neither a second revert arrow nor the dimmed label Godot gives a read-only row.
+
 ### Fixed: the amber "?" of a missing look reads on a light theme
 
 - The amber "?" a row shows for a look that is not installed is held to a readable contrast against the tile or row it sits on: darker on a pale theme, unchanged on a dark one. No border or outline is added.

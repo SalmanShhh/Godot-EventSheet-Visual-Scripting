@@ -17,6 +17,7 @@ static func run() -> bool:
 	ok = _plain_table() and ok
 	ok = _weight_choice() and ok
 	ok = _columns_by_need() and ok
+	ok = _chances_label() and ok
 	ok = _widest_cell() and ok
 	return ok
 
@@ -106,6 +107,16 @@ static func _columns_by_need() -> bool:
 	])
 	table.free()
 	return result
+
+
+## The "Chances" row is tied to no property once the Inspector has built it: tied to the property it sits
+## beside it would show that property's revert arrow a second time, and keeping the arrow off by making
+## the row read-only dims its label. Tied to nothing it shows neither.
+static func _chances_label() -> bool:
+	var note_row: GDScript = EventSheetAttributeDrawers.widgets().NoteRow
+	return SUPPORT.pins("weighted_table_share_test", [
+		["a note row lets go of the property it sits beside", note_row.detached_property(), &""],
+	])
 
 
 ## A number column is as wide as its widest value needs: nines as long as the longest number, one more

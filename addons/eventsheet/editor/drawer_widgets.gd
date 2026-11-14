@@ -234,15 +234,28 @@ class NoteRow:
 	func _follow_content() -> void:
 		visible = _content == null or _content.visible
 
+	## The property this row is tied to once the Inspector has built it: none. The Inspector ties a row to the
+	## property it sits beside, and a row tied to a property shows that property's revert arrow (or, when the
+	## row is read-only to hide the arrow, dims its label as Godot dims a worked-out value). Tied to nothing
+	## it shows neither: no arrow, and a label like its neighbours'.
+	static func detached_property() -> StringName:
+		return &""
+
 	func _notification(what: int) -> void:
 		# The Inspector hands every editor its label after _init; this row keeps none.
 		if what == NOTIFICATION_READY:
 			label = _row_label
 			selectable = false
-			# Read-only keeps the revert arrow of the property this row sits beside off it, and says what
-			# the row is: something worked out, not a field to type in. Its label reads dimmed, as Godot's
-			# own read-only rows do.
 			read_only = true
+			_detach.call_deferred()
+
+	## Read-only first, which is what keeps the revert arrow off while the Inspector builds the row; then
+	## tied to nothing, so the arrow is never worked out again, and then the label is let read like the
+	## ones around it.
+	func _detach() -> void:
+		set_object_and_property(get_edited_object(), detached_property())
+		read_only = false
+		queue_redraw()
 
 
 ## The `# @inspector_required` badge: a warning row that WATCHES the property and shows only while
