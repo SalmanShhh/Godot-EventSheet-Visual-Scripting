@@ -18,6 +18,10 @@ const INSPECTOR_CONDITION_LIFT_PATH := "res://addons/eventforge/importer/inspect
 ## The lift that reads the block a variable's Save choice writes back into the choices. Loaded by path
 ## for the same reason, and only for a file carrying that block's doc line.
 const SAVE_CHOICE_LIFT_PATH := "res://addons/eventforge/importer/save_choice_lift.gd"
+## The looks that keep Godot's own export line (look_lines.gd, loaded by path), and the head of the comment
+## line that names one.
+const LOOK_LINES_PATH := "res://addons/eventforge/look_lines.gd"
+const LOOK_COMMENT_HEAD := "# @inspector_look "
 ## The marker words the compiler writes from structured attributes of their own (`drawer` and the keys
 ## beside it). Any other `eventsheet:` word is a look that is a file, kept as `look` and `look_args`.
 const LEGACY_MARKER_WORDS: PackedStringArray = ["progress_bar", "min_max", "vector_dial", "toggle_row", "unit", "corners",
@@ -186,7 +190,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		# edits as a row instead of a code wall. Byte-gated inside; a non-canonical shape stays verbatim.
 		var lifted_property: Dictionary = _try_lift_property(lines, index)
 		if not lifted_property.is_empty():
-			_absorb_tree_variable_group(lifted_property["var"], pending, line)
+			_absorb_tree_variable_group(lifted_property["var"], pending, line, str(lifted_property["written"]))
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted_property["var"])
 			index += int(lifted_property["consumed"])
@@ -443,7 +447,7 @@ func _try_lift_property(lines: PackedStringArray, index: int) -> Dictionary:
 	# Byte-gate: the re-emitted property (declaration + accessors) must reproduce the collected block exactly.
 	if EventSheetCompiler._emit_tree_variable_line(lifted) != "\n".join(block):
 		return {}
-	return {"var": lifted, "consumed": scan - index}
+	return {"var": lifted, "consumed": scan - index, "written": "\n".join(block)}
 
 
 ## Parses a property's accessor block (header line + indented body) into {setter_body, getter_body,
@@ -1175,11 +1179,40 @@ static func _doc_block_above(pending: PackedStringArray, cursor: int) -> Diction
 ## those exact lines plus the var line (the verify-lift rule). A wrong guess is reverted, so a grouped var
 ## becomes a clean grouped variable instead of a stray @export_group GDScript block - without ever risking
 ## the byte-exact round-trip. (Order matches _emit_variables: @export_group then @export_subgroup.)
-func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArray, var_line: String) -> void:
+## Whether a look comment sits above a run of `## @ace_*` lines that end the pending block: the one shape
+## whose annotation lines are carried along so the look can be read through them.
+static func _look_above_annotations(pending: PackedStringArray) -> bool:
+	var at: int = pending.size() - 1
+	var annotations: int = 0
+	while at >= 0 and pending[at].begins_with("## @ace_"):
+		annotations += 1
+		at -= 1
+	if annotations == 0:
+		return false
+	while at >= 0 and (pending[at].begins_with("##") or pending[at].begins_with("@export_") or pending[at].begins_with("# @inspector_")):
+		if pending[at].begins_with(LOOK_COMMENT_HEAD):
+			return true
+		at -= 1
+	return false
+
+
+## `property_text` is the whole property block (header and accessors) when the declaration is one. Only a look
+## comment (`# @inspector_look`) over a property is verified against it; every other line above a property
+## keeps being read against the header alone, exactly as before.
+func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArray, var_line: String, property_text: String = "") -> void:
 	# A Static local's member answers first and alone: it is a private local's hoisted half, so
 	# there is no Inspector grouping below to look for.
 	if _absorb_static_local_marker(lifted, pending, var_line):
 		return
+	# `## @ace_*` lines (a hidden field's `## @ace_hidden`) sit between a look comment and the declaration
+	# in a pack. They are carried as the declaration's own leading lines, written back after the doc and the
+	# section lines, so the look above them can still be read. Only done when a look comment is there to read.
+	var annotation_tail: PackedStringArray = PackedStringArray()
+	if lifted.leading_lines.is_empty() and _look_above_annotations(pending):
+		while not pending.is_empty() and pending[pending.size() - 1].begins_with("## @ace_"):
+			annotation_tail.insert(0, pending[pending.size() - 1])
+			pending.remove_at(pending.size() - 1)
+		lifted.leading_lines = annotation_tail
 	var subgroup_value: String = ""
 	var group_value: String = ""
 	var meta_count: int = 0
@@ -1258,8 +1291,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# is read before every other decor line. It is taken only when the variable can wear that look; any
 	# other comment of that shape stays an ordinary comment.
 	var look_found: Dictionary = {}
-	if cursor >= 0 and pending[cursor].begins_with(EventForgeLookLines.COMMENT_HEAD):
-		look_found = EventForgeLookLines.lift(pending[cursor].substr(EventForgeLookLines.COMMENT_HEAD.length()).strip_edges(), lifted)
+	if cursor >= 0 and pending[cursor].begins_with(LOOK_COMMENT_HEAD):
+		look_found = load(LOOK_LINES_PATH).lift(pending[cursor].substr(LOOK_COMMENT_HEAD.length()).strip_edges(), lifted)
 		if not look_found.is_empty():
 			meta_count += 1
 			cursor -= 1
@@ -1390,6 +1423,10 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["subgroup_end"] = true
 	if doc_after_group:
 		candidate["doc_after_group"] = true
+	if look_found.is_empty() and not annotation_tail.is_empty():
+		pending.append_array(annotation_tail)
+		lifted.leading_lines = PackedStringArray()
+		return
 	if candidate.is_empty() and look_found.is_empty():
 		return
 	# MERGE, don't overwrite: a drawer (+ its range bounds) may already have been recovered onto the variable
@@ -1409,10 +1446,14 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	var absorbed: PackedStringArray = PackedStringArray()
 	for index: int in range(pending.size() - meta_count, pending.size()):
 		absorbed.append(pending[index])
-	absorbed.append(var_line)
+	absorbed.append_array(annotation_tail)
+	absorbed.append(property_text if not property_text.is_empty() and not look_found.is_empty() else var_line)
 	if EventSheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
 		lifted.attributes = saved_attrs  # reverted - keep whatever was already recovered (e.g. the drawer)
 		lifted.options = saved_options
+		if not annotation_tail.is_empty():
+			pending.append_array(annotation_tail)
+			lifted.leading_lines = PackedStringArray()
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)

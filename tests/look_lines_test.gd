@@ -43,6 +43,27 @@ const UNIT_ANGLE_NEW: String = "# @inspector_look unit:kinds=deg|turn|rad,store=
 "
 const UNIT_OLD: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:unit:kinds=px|world|screen,store=px\") var thickness: float = 2.0
 "
+const HIDDEN_UNIT_PROPERTY: String = "# @inspector_look unit:kinds=px|world|screen,store=px
+@export_group(\"Stroke\")
+## Stroke width.
+## @ace_hidden
+@export_range(0, 1, 0.001, \"or_greater\", \"or_less\", \"hide_slider\", \"suffix:px\") var thickness: float = 2.0:
+	set(value):
+		thickness = value
+		queue_redraw()
+"
+const HIDDEN_TOGGLE_PROPERTY: String = "# @inspector_look toggle_row:segmented
+## What the ends look like.
+## @ace_hidden
+@export_enum(\"none\", \"square\", \"round\") var caps: String = \"round\":
+	set(value):
+		caps = value
+"
+const HIDDEN_PROGRESS: String = "# @inspector_look progress_bar
+## Hit points.
+## @ace_hidden
+@export_range(0, 200) var health: int = 120
+"
 const PROGRESS_GROUPED_NEW: String = "# @inspector_look progress_bar\n@export_group(\"Vitals\")\n## Hit points - drag the bar.\n@export_range(0, 200) var health: int = 120\n"
 
 
@@ -202,6 +223,40 @@ static func run() -> bool:
 		EventSheetInspectorLookCatalogue.entry("unit").get("writes", ""), unit_range + " + # @inspector_look unit:kinds=px|world|screen,store=px") and ok
 	ok = _eq("a new unit pick through the Variable window carries the flag",
 		bool(EventSheetInspectorLooks.fold("unit", {"units": "px|world, store=px"}, "float").get("look_line", false)), true) and ok
+
+	# --- A hidden field in a pack: the group, the doc and `## @ace_hidden` sit between the comment and the declaration, and the
+	# declaration may be a property with a setter. The look is still read, and the whole block still writes back. ---
+	for pack_fixture: String in [HIDDEN_UNIT_PROPERTY, HIDDEN_TOGGLE_PROPERTY, HIDDEN_PROGRESS]:
+		var pack_variable: LocalVariable = _first_variable(SUPPORT.reopen("extends Node
+
+" + pack_fixture, true))
+		ok = _eq("a hidden pack field keeps its look: %s" % pack_fixture.get_slice("
+", 0),
+			[str(pack_variable.attributes.get("drawer", "")) if pack_variable != null else "none", bool(pack_variable.attributes.get("look_line", false)) if pack_variable != null else false],
+			[pack_fixture.get_slice("
+", 0).get_slice(" ", 2).get_slice(":", 0), true]) and ok
+		ok = _eq("...and writes back byte for byte: %s" % pack_fixture.get_slice("
+", 0),
+			SUPPORT.reemit("extends Node
+
+" + pack_fixture, VERIFY_PATH), "extends Node
+
+" + pack_fixture) and ok
+	ok = _eq("a hidden field with no look comment is read exactly as before: its doc stays a code row",
+		SUPPORT.reemit("extends Node
+
+@export_group(\"Stroke\")
+## Width.
+## @ace_hidden
+@export var width: float = 1.0
+", VERIFY_PATH),
+		"extends Node
+
+@export_group(\"Stroke\")
+## Width.
+## @ace_hidden
+@export var width: float = 1.0
+") and ok
 
 	# --- The row mark: a variable written the Godot way wears the same mark as the old marker line. ---
 	var mark_pairs: Array = [

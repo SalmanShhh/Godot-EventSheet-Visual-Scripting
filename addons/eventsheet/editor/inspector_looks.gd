@@ -30,6 +30,7 @@ const SLIDER_EXTRAS: Array = [["unit", "Unit", "text", "", "px, s, %, tiles/s"],
 	["or_less", "Below min", "tick", false, "allow typing below the min (or_less)"]]
 const LAYER_KINDS: Array = ["2d_physics", "2d_render", "2d_navigation", "3d_physics", "3d_render", "3d_navigation", "avoidance"]
 const REACH: Array = ["project", "anywhere on disk"]
+const LOOK_LINES_PATH: String = "res://addons/eventforge/look_lines.gd"
 const CATALOGUE_PATH: String = "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
 const VECTOR_TYPES: Array = ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]
 
@@ -356,15 +357,15 @@ static func look_keys() -> PackedStringArray:
 	return PackedStringArray(["range", "drawer", "enum_values", "flags", "layers", "exp_easing", "exp_easing_flags",
 		"unit_kinds", "unit_store", "file", "multiline", "no_alpha", "storage", "placeholder", "suggestions",
 		"toggle_options", "custom_preset", "table_columns", "table_weight_column", "table_row_table", "table_row_column", "node_path_types", "tool_button",
-		"custom_hint", "look", "look_args", EventForgeLookLines.FLAG])
+		"custom_hint", "look", "look_args", "look_line"])
 
 
 ## A look that keeps Godot's own export line carries the flag that says its look is written on a comment
 ## line over that line. Every new pick of such a look goes through here, so the Variable window writes the
 ## Godot way and only an untouched old line keeps the marker.
 static func _with_look_line(attributes: Dictionary) -> Dictionary:
-	if EventForgeLookLines.WORDS.has(str(attributes.get("drawer", ""))):
-		attributes[EventForgeLookLines.FLAG] = true
+	if load(LOOK_LINES_PATH).WORDS.has(str(attributes.get("drawer", ""))):
+		attributes["look_line"] = true
 	return attributes
 
 

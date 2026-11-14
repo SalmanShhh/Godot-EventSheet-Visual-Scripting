@@ -5674,6 +5674,20 @@ static func _valid_enum_label(label: String) -> bool:
 	return not label.strip_edges().is_empty()
 
 
+## The looks that keep Godot's own export line (see look_lines.gd), loaded by path so naming them does not
+## widen what the first open of the editor compiles. The flag is checked first, so a variable with no such
+## look never loads the file.
+const LOOK_LINES_PATH: String = "res://addons/eventforge/look_lines.gd"
+
+
+static func _look_lines() -> GDScript:
+	return load(LOOK_LINES_PATH)
+
+
+static func _looks_written_on_a_comment(attributes: Dictionary) -> bool:
+	return bool(attributes.get("look_line", false)) and _look_lines().uses_comment(attributes)
+
+
 ## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`
 ## marker rides an @export_custom hint string; the editor's EventSheetAttributeDrawers plugin recognises it
 ## and swaps in a richer control, while WITHOUT the plugin (or in an exported game) the property degrades to
@@ -5687,8 +5701,8 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 		return _look_export_prefix(attributes)
 	# A look that keeps Godot's own export line (EventForgeLookLines): the line is Godot's, the look rides
 	# a comment line written by _decor_prefix_lines.
-	if EventForgeLookLines.uses_comment(attributes):
-		return str(EventForgeLookLines.parts(attributes, type_name).get("prefix", ""))
+	if _looks_written_on_a_comment(attributes):
+		return str(_look_lines().parts(attributes, type_name).get("prefix", ""))
 	var bounds: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
 	var marker: String = ""
 	match drawer:
@@ -6001,10 +6015,10 @@ static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "", t
 		decor.append("# @inspector_side_by_side")
 	# Look: a look that keeps Godot's own export line names itself here, at the end nearest the variable.
 	# Written only when the Godot line is, so a variable whose look cannot be written stays a plain field.
-	if EventForgeLookLines.uses_comment(attributes):
-		var look_body: String = str(EventForgeLookLines.parts(attributes, type_name).get("body", ""))
+	if _looks_written_on_a_comment(attributes):
+		var look_body: String = str(_look_lines().parts(attributes, type_name).get("body", ""))
 		if not look_body.is_empty():
-			decor.append(EventForgeLookLines.COMMENT_HEAD + look_body)
+			decor.append(_look_lines().COMMENT_HEAD + look_body)
 	return decor
 
 

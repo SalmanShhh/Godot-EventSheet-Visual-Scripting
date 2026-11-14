@@ -1341,7 +1341,7 @@ func _collect_attributes(type_name: String) -> Dictionary:
 		for key: String in EventSheetInspectorLooks.look_keys():
 			if _opened_attributes.has(key):
 				attributes[key] = _opened_attributes[key]
-			elif key == EventForgeLookLines.FLAG:
+			elif key == "look_line":
 				# A look written the old way stays written the old way until its details are touched.
 				attributes.erase(key)
 	for level: Array in [["category", _category_edit], ["group", _group_edit], ["subgroup", _subgroup_edit]]:
