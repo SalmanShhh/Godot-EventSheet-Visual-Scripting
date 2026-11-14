@@ -16,38 +16,98 @@ extends Node2D
 ## Where the pack's own shaders live once it is installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/vector_shapes/"
 
+# The choice words of the shape fields, each spelled once. The exported lines in the shape scripts
+# keep the same words as text because the editor reads that line to build the drop-down, and a
+# saved scene stores the word itself; the rest of the pack names a word through these.
+## Stroke width scales with the node it sits on.
+const THICKNESS_SCALE_WITH_THE_NODE: String = "with the node"
+## Stroke width keeps the weight it has on screen however the node is scaled.
+const THICKNESS_SCALE_FIXED_ON_SCREEN: String = "fixed on screen"
+## One flat colour.
+const COLOUR_MODE_SINGLE: String = "single"
+## A blend from the first colour to the second.
+const COLOUR_MODE_TWO: String = "two"
+## A blend from the middle outward.
+const COLOUR_MODE_RADIAL: String = "radial"
+## A blend that sweeps round the shape.
+const COLOUR_MODE_ANGULAR: String = "angular"
+## A whole gradient ramp.
+const COLOUR_MODE_GRADIENT: String = "gradient"
+## A different colour at each corner of a rectangle.
+const COLOUR_MODE_PER_CORNER: String = "per corner"
+## A dash length measured in pixels.
+const DASH_SPACE_WORLD: String = "world"
+## A dash length measured in multiples of the stroke's thickness.
+const DASH_SPACE_RELATIVE: String = "relative"
+## A fixed number of dashes however long the line is.
+const DASH_SPACE_COUNT: String = "count"
+## Dashes run on and stop where the line stops.
+const DASH_SNAP_OFF: String = "off"
+## Dashes are fitted so the pattern tiles evenly along the line.
+const DASH_SNAP_TILING: String = "tiling"
+## Dashes are fitted so the first and the last sit exactly on the ends.
+const DASH_SNAP_END_TO_END: String = "end to end"
+## Square-ended dashes.
+const DASH_STYLE_PLAIN: String = "plain"
+## Dashes slanted like a hatch mark.
+const DASH_STYLE_ANGLED: String = "angled"
+## Dashes with round ends.
+const DASH_STYLE_ROUNDED: String = "rounded"
+## A stroke that ends flat at its last point.
+const CAPS_NONE: String = "none"
+## A stroke that ends in a square a half-width past its last point.
+const CAPS_SQUARE: String = "square"
+## A stroke that ends in a half circle.
+const CAPS_ROUND: String = "round"
+## Ordinary alpha blending.
+const BLEND_NORMAL: String = "normal"
+## Colour is added to what is behind.
+const BLEND_ADD: String = "add"
+## Colour is taken away from what is behind.
+const BLEND_SUBTRACT: String = "subtract"
+## Colour is multiplied with what is behind.
+const BLEND_MULTIPLY: String = "multiply"
+## Colour that already carries its own alpha.
+const BLEND_PREMULTIPLIED: String = "premultiplied"
+## A thickness typed in pixels.
+const THICKNESS_UNIT_PX: String = "px"
+## A thickness typed in world units, one to one with pixels in 2D.
+const THICKNESS_UNIT_WORLD: String = "world"
+## A thickness typed as a share of the viewport width.
+const THICKNESS_UNIT_SCREEN: String = "screen"
+
 # A canvas shader can express five blends by itself. The ones that read the screen back belong to the
 # Blend Modes pack, which replaces an item's material - and a shape owns its material, so the guide
 # says to put such a shape under a blended parent instead of fighting over the slot.
 ## The blend words a row and the Inspector offer, and the file each one is.
 const BLEND_SHADERS: Dictionary = {
-	"normal": "vector_shape_mix.gdshader",
-	"add": "vector_shape_add.gdshader",
-	"subtract": "vector_shape_sub.gdshader",
-	"multiply": "vector_shape_mul.gdshader",
-	"premultiplied": "vector_shape_premul.gdshader"
+	BLEND_NORMAL: "vector_shape_mix.gdshader",
+	BLEND_ADD: "vector_shape_add.gdshader",
+	BLEND_SUBTRACT: "vector_shape_sub.gdshader",
+	BLEND_MULTIPLY: "vector_shape_mul.gdshader",
+	BLEND_PREMULTIPLIED: "vector_shape_premul.gdshader"
 }
 
 ## Dash styles in the order the shader numbers them.
-const DASH_STYLES: PackedStringArray = ["plain", "angled", "rounded"]
+const DASH_STYLES: PackedStringArray = [DASH_STYLE_PLAIN, DASH_STYLE_ANGLED, DASH_STYLE_ROUNDED]
 
 ## How a dash pattern meets the ends of the line it runs along, in the shader's own order.
-const DASH_SNAPS: PackedStringArray = ["off", "tiling", "end to end"]
+const DASH_SNAPS: PackedStringArray = [DASH_SNAP_OFF, DASH_SNAP_TILING, DASH_SNAP_END_TO_END]
 
 ## How a dash length is measured, in the shader's own order: pixels, multiples of the thickness, or a fixed number of dashes however long the line is.
-const DASH_SPACES: PackedStringArray = ["world", "relative", "count"]
+const DASH_SPACES: PackedStringArray = [DASH_SPACE_WORLD, DASH_SPACE_RELATIVE, DASH_SPACE_COUNT]
 
 ## The end of a stroke, in the shader's own order.
-const CAP_STYLES: PackedStringArray = ["none", "square", "round"]
+const CAP_STYLES: PackedStringArray = [CAPS_NONE, CAPS_SQUARE, CAPS_ROUND]
 
 ## The colour modes, in the shader's own order.
-const COLOUR_MODES: PackedStringArray = ["single", "two", "radial", "angular", "gradient", "per corner"]
+const COLOUR_MODES: PackedStringArray = [COLOUR_MODE_SINGLE, COLOUR_MODE_TWO, COLOUR_MODE_RADIAL, COLOUR_MODE_ANGULAR, COLOUR_MODE_GRADIENT, COLOUR_MODE_PER_CORNER]
 
 ## Most points the shader can hold; longer outlines belong to Polygon2D.
 const MAX_POINTS: int = 32
 
 ## The unit words a thickness may be typed in. Pixels and world units are one to one in Godot's 2D; a screen unit is a whole viewport width.
-const THICKNESS_UNITS: PackedStringArray = ["px", "world", "screen"]
+const THICKNESS_UNITS: PackedStringArray = [THICKNESS_UNIT_PX, THICKNESS_UNIT_WORLD, THICKNESS_UNIT_SCREEN]
 
 # One Shader resource per blend word, shared by every shape in the project - the material is per
 # node (its uniforms are that shape's own numbers), the compiled shader is not.
@@ -288,7 +348,7 @@ func shape_changed() -> void:
 ## @ace_hidden
 func _pixel_thickness() -> float:
 	var value: float = _number("thickness", 2.0)
-	if _word("thickness_scale", "with the node") == "fixed on screen":
+	if _word("thickness_scale", THICKNESS_SCALE_WITH_THE_NODE) == THICKNESS_SCALE_FIXED_ON_SCREEN:
 		return value / maxf(absf(global_scale.x), 0.0001)
 	return value
 
@@ -395,9 +455,9 @@ func save_as_style() -> String:
 ## every shape in the project; only the uniforms are this node's.
 ## @ace_hidden
 func _shape_material() -> ShaderMaterial:
-	var blend: String = _word("blend", "normal")
+	var blend: String = _word("blend", BLEND_NORMAL)
 	if not BLEND_SHADERS.has(blend):
-		blend = "normal"
+		blend = BLEND_NORMAL
 	if _material != null and _material_blend == blend:
 		return _material
 	var shader: Shader = shader_for_blend(blend)
@@ -415,7 +475,7 @@ func _shape_material() -> ShaderMaterial:
 static func shader_for_blend(blend: String) -> Shader:
 	if _shaders.has(blend):
 		return _shaders[blend]
-	var file_name: String = str(BLEND_SHADERS.get(blend, BLEND_SHADERS["normal"]))
+	var file_name: String = str(BLEND_SHADERS.get(blend, BLEND_SHADERS[BLEND_NORMAL]))
 	var path: String = SHADER_DIRECTORY + file_name
 	if not ResourceLoader.exists(path):
 		return null
@@ -428,28 +488,28 @@ static func shader_for_blend(blend: String) -> Shader:
 ## @ace_hidden
 func _push_uniforms(target_material: ShaderMaterial, quad: Rect2) -> void:
 	var thickness: float = _pixel_thickness()
-	var space: String = _word("dash_space", "count")
+	var space: String = _word("dash_space", DASH_SPACE_COUNT)
 	target_material.set_shader_parameter("shape_kind", shape_kind_id())
 	target_material.set_shader_parameter("quad_origin", quad.position)
 	target_material.set_shader_parameter("quad_size", quad.size)
 	target_material.set_shader_parameter("thickness_px", thickness)
 	target_material.set_shader_parameter("aa_width", maxf(_number("antialias_width", 1.0), 0.0001))
 	target_material.set_shader_parameter("filled", _flag("fill"))
-	target_material.set_shader_parameter("caps", maxi(CAP_STYLES.find(_word("caps", "round")), 0))
+	target_material.set_shader_parameter("caps", maxi(CAP_STYLES.find(_word("caps", CAPS_ROUND)), 0))
 	target_material.set_shader_parameter("colour_a", _colour("colour"))
 	target_material.set_shader_parameter("colour_b", _colour("colour_b"))
 	target_material.set_shader_parameter("colour_c", _colour("colour_c"))
 	target_material.set_shader_parameter("colour_d", _colour("colour_d"))
-	target_material.set_shader_parameter("colour_mode", maxi(COLOUR_MODES.find(_word("colour_mode", "single")), 0))
+	target_material.set_shader_parameter("colour_mode", maxi(COLOUR_MODES.find(_word("colour_mode", COLOUR_MODE_SINGLE)), 0))
 	target_material.set_shader_parameter("gradient_texture", _gradient_texture())
 	target_material.set_shader_parameter("border_on", _flag("border"))
 	target_material.set_shader_parameter("border_colour", _colour("border_colour"))
 	target_material.set_shader_parameter("border_px", _number("border_thickness", 2.0))
 	target_material.set_shader_parameter("dashed", _flag("dashed"))
-	target_material.set_shader_parameter("dash_snap", maxi(DASH_SNAPS.find(_word("dash_snap", "tiling")), 0))
-	target_material.set_shader_parameter("dash_style", maxi(DASH_STYLES.find(_word("dash_style", "plain")), 0))
+	target_material.set_shader_parameter("dash_snap", maxi(DASH_SNAPS.find(_word("dash_snap", DASH_SNAP_TILING)), 0))
+	target_material.set_shader_parameter("dash_style", maxi(DASH_STYLES.find(_word("dash_style", DASH_STYLE_PLAIN)), 0))
 	target_material.set_shader_parameter("dash_offset", _number("dash_offset", 0.0))
-	target_material.set_shader_parameter("dash_count", int(_number("dash_count", 16.0)) if space == "count" else 0)
+	target_material.set_shader_parameter("dash_count", int(_number("dash_count", 16.0)) if space == DASH_SPACE_COUNT else 0)
 	target_material.set_shader_parameter("dash_gap_share", clampf(_number("dash_spacing", 0.5), 0.0, 0.95))
 	target_material.set_shader_parameter("dash_length_px", dash_length_in_pixels(_number("dash_size", 12.0), space, thickness))
 	target_material.set_shader_parameter("dash_gap_px", dash_length_in_pixels(_number("dash_spacing", 6.0), space, thickness))
@@ -493,7 +553,7 @@ func _gradient_texture() -> Texture2D:
 ## read at all, because the count decides the period.
 ## @ace_hidden
 static func dash_length_in_pixels(value: float, space: String, thickness: float) -> float:
-	if space == "relative":
+	if space == DASH_SPACE_RELATIVE:
 		return maxf(value, 0.0) * maxf(thickness, 0.01)
 	return maxf(value, 0.0)
 
@@ -504,7 +564,7 @@ static func dash_length_in_pixels(value: float, space: String, thickness: float)
 ## flipped - that dropdown is a view of one stored number.
 ## @ace_hidden
 static func thickness_in_pixels(value: float, unit: String, viewport_width: float) -> float:
-	if unit == "screen":
+	if unit == THICKNESS_UNIT_SCREEN:
 		return value * maxf(viewport_width, 1.0)
 	return value
 
@@ -556,12 +616,12 @@ static func dash_style_icon(option: String, size: int) -> Texture2D:
 		for y: int in side:
 			var across: float = absf(float(y) - middle)
 			var lean: float = 0.0
-			if option == "angled":
+			if option == DASH_STYLE_ANGLED:
 				lean = (float(y) - middle) * 0.5
 			var phase: float = fposmod(float(x) + lean, period)
 			var along: float = absf(phase - half_dash)
 			var covered: bool = along <= half_dash and across <= half
-			if option == "rounded":
+			if option == DASH_STYLE_ROUNDED:
 				covered = Vector2(maxf(along - flat, 0.0), across).length() <= half
 			if covered:
 				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, 1.0))
@@ -612,15 +672,15 @@ func set_shape_colour(colour: Color = Color.WHITE) -> void:
 func set_colours(from_colour: Color = Color.WHITE, to_colour: Color = Color.TRANSPARENT) -> void:
 	set("colour", from_colour)
 	set("colour_b", to_colour)
-	if _word("colour_mode", "single") == "single":
-		set("colour_mode", "two")
+	if _word("colour_mode", COLOUR_MODE_SINGLE) == COLOUR_MODE_SINGLE:
+		set("colour_mode", COLOUR_MODE_TWO)
 	shape_changed()
 
 ## Hands the shape a Gradient resource and switches it to the gradient mode - the whole ramp, shaped
 ## in Godot's own gradient editor.
 func set_gradient(gradient_resource: Gradient) -> void:
 	set("gradient", gradient_resource)
-	set("colour_mode", "gradient")
+	set("colour_mode", COLOUR_MODE_GRADIENT)
 	shape_changed()
 
 ## Fills the shape or leaves it as an outline. A filled shape draws its border rather than its
@@ -633,7 +693,7 @@ func set_fill(filled: bool = true) -> void:
 ## and which of the three ends they wear.
 func set_dashes(count: int = 12, spacing: float = 0.5, style: String = "plain") -> void:
 	set("dashed", true)
-	set("dash_space", "count")
+	set("dash_space", DASH_SPACE_COUNT)
 	set("dash_count", maxi(count, 1))
 	set("dash_spacing", clampf(spacing, 0.0, 0.95))
 	if DASH_STYLES.has(style):

@@ -198,24 +198,24 @@ func shape_bounds() -> Rect2:
 ## than sitting there meaning nothing. Godot's own way, so a hidden field still stores and still
 ## reads back - this only decides what the Inspector draws.
 func _validate_property(property: Dictionary) -> void:
-	var mode: String = _word("colour_mode", "single")
-	var blends_two: bool = mode == "two" or mode == "radial" or mode == "angular"
-	var per_corner: bool = mode == "per corner"
+	var mode: String = _word("colour_mode", COLOUR_MODE_SINGLE)
+	var blends_two: bool = mode == COLOUR_MODE_TWO or mode == COLOUR_MODE_RADIAL or mode == COLOUR_MODE_ANGULAR
+	var per_corner: bool = mode == COLOUR_MODE_PER_CORNER
 	if str(property.name) == "colour_b" and not bool(blends_two or per_corner):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) == "colour_c" and not bool(per_corner):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) == "colour_d" and not bool(per_corner):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
-	if str(property.name) == "gradient" and not bool(mode == "gradient"):
+	if str(property.name) == "gradient" and not bool(mode == COLOUR_MODE_GRADIENT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) in ["border_colour", "border_thickness"] and not bool(_flag("border")):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) in ["dash_space", "dash_snap", "dash_size", "dash_count", "dash_spacing", "dash_offset", "dash_style"] and not bool(_flag("dashed")):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
-	if str(property.name) == "dash_size" and not bool(_word("dash_space", "count") != "count"):
+	if str(property.name) == "dash_size" and not bool(_word("dash_space", DASH_SPACE_COUNT) != DASH_SPACE_COUNT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
-	if str(property.name) == "dash_count" and not bool(_word("dash_space", "count") == "count"):
+	if str(property.name) == "dash_count" and not bool(_word("dash_space", DASH_SPACE_COUNT) == DASH_SPACE_COUNT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	# A field a style speaks for is still THIS shape's field, and still what the file stores - it is
 	# simply not what the shape draws with while the style is in the slot. So it is shown greyed

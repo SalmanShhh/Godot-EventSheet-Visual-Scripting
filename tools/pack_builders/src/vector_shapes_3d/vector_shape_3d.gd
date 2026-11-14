@@ -21,32 +21,43 @@ const SHAPE_WORDS := preload("res://eventsheet_addons/vector_shapes/vector_shape
 ## Where the pack's own shaders live once it is installed.
 const SHADER_DIRECTORY: String = "res://eventsheet_addons/vector_shapes/"
 
+## A 3D shape that lies flat on its own plane.
+const GEOMETRY_FLAT: String = "flat"
+## Always turned to face the camera.
+const GEOMETRY_BILLBOARD: String = "billboard"
+## Real geometry that lights and the depth buffer treat like anything else in the scene.
+const GEOMETRY_VOLUMETRIC: String = "volumetric"
+## Hidden by what is in front of it, as any surface is.
+const DEPTH_TEST: String = "test"
+## Drawn over everything in front of it.
+const DEPTH_THROUGH_WALLS: String = "through walls"
+
 ## Blend words a 3D shape offers, with the shader file for each.
 const BLEND_SHADERS_3D: Dictionary = {
-	"normal": "vector_shape_3d_mix.gdshader",
-	"add": "vector_shape_3d_add.gdshader",
-	"subtract": "vector_shape_3d_sub.gdshader",
-	"multiply": "vector_shape_3d_mul.gdshader",
-	"premultiplied": "vector_shape_3d_premul.gdshader"
+	SHAPE_WORDS.BLEND_NORMAL: "vector_shape_3d_mix.gdshader",
+	SHAPE_WORDS.BLEND_ADD: "vector_shape_3d_add.gdshader",
+	SHAPE_WORDS.BLEND_SUBTRACT: "vector_shape_3d_sub.gdshader",
+	SHAPE_WORDS.BLEND_MULTIPLY: "vector_shape_3d_mul.gdshader",
+	SHAPE_WORDS.BLEND_PREMULTIPLIED: "vector_shape_3d_premul.gdshader"
 }
 
 ## The blend shaders for shapes drawn over everything in front of them.
 const BLEND_SHADERS_3D_THROUGH: Dictionary = {
-	"normal": "vector_shape_3d_mix_through.gdshader",
-	"add": "vector_shape_3d_add_through.gdshader",
-	"subtract": "vector_shape_3d_sub_through.gdshader",
-	"multiply": "vector_shape_3d_mul_through.gdshader",
-	"premultiplied": "vector_shape_3d_premul_through.gdshader"
+	SHAPE_WORDS.BLEND_NORMAL: "vector_shape_3d_mix_through.gdshader",
+	SHAPE_WORDS.BLEND_ADD: "vector_shape_3d_add_through.gdshader",
+	SHAPE_WORDS.BLEND_SUBTRACT: "vector_shape_3d_sub_through.gdshader",
+	SHAPE_WORDS.BLEND_MULTIPLY: "vector_shape_3d_mul_through.gdshader",
+	SHAPE_WORDS.BLEND_PREMULTIPLIED: "vector_shape_3d_premul_through.gdshader"
 }
 
 ## The three 3D forms: on its plane, facing the camera, or real geometry.
-const GEOMETRIES: PackedStringArray = ["flat", "billboard", "volumetric"]
+const GEOMETRIES: PackedStringArray = [GEOMETRY_FLAT, GEOMETRY_BILLBOARD, GEOMETRY_VOLUMETRIC]
 
 ## The two ways a stroke's width is read: in the node's own units, or in pixels on the screen.
-const THICKNESS_UNITS_3D: PackedStringArray = ["world", "screen"]
+const THICKNESS_UNITS_3D: PackedStringArray = [SHAPE_WORDS.THICKNESS_UNIT_WORLD, SHAPE_WORDS.THICKNESS_UNIT_SCREEN]
 
 ## The two depth readings, in the order the shader files are named for.
-const DEPTH_MODES: PackedStringArray = ["test", "through walls"]
+const DEPTH_MODES: PackedStringArray = [DEPTH_TEST, DEPTH_THROUGH_WALLS]
 
 ## Extra cull margin, in metres, for a screen-width stroke so it is not culled at its box edge.
 const SCREEN_CULL_MARGIN: float = 1.0
@@ -180,9 +191,9 @@ func shape_volume_mesh(detail: int) -> Mesh:
 ## @ace_hidden
 func shape_geometry() -> String:
 	if shape_is_solid():
-		return "volumetric"
-	var mode: String = _word("geometry", "flat")
-	return mode if GEOMETRIES.has(mode) else "flat"
+		return GEOMETRY_VOLUMETRIC
+	var mode: String = _word("geometry", GEOMETRY_FLAT)
+	return mode if GEOMETRIES.has(mode) else GEOMETRY_FLAT
 
 ## Redraws after a field a shape script wrote - the one line every setter in the shape scripts calls,
 ## so a change made in the Inspector and a change made by a row look the same. The work itself is
@@ -204,7 +215,7 @@ func shape_changed() -> void:
 ## @ace_hidden
 func _refresh_shape() -> void:
 	_refresh_queued = false
-	if shape_geometry() == "volumetric":
+	if shape_geometry() == GEOMETRY_VOLUMETRIC:
 		_build_volume()
 		return
 	_volume_key = ""
@@ -213,7 +224,7 @@ func _refresh_shape() -> void:
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# A screen-unit stroke is only as wide as the camera says it is, so the box this shape claims
 	# cannot be worked out here. The engine's own cull margin is what covers the difference.
-	extra_cull_margin = SCREEN_CULL_MARGIN if _word("thickness_unit", "world") == "screen" else 0.0
+	extra_cull_margin = SCREEN_CULL_MARGIN if _word("thickness_unit", SHAPE_WORDS.THICKNESS_UNIT_WORLD) == SHAPE_WORDS.THICKNESS_UNIT_SCREEN else 0.0
 	var box: Rect2 = shape_plane_bounds()
 	var pad: float = maxf(_number("thickness", 0.05), _number("border_thickness", 0.0)) + 0.02
 	var outline: PackedVector3Array = shape_points_3d()
@@ -222,7 +233,7 @@ func _refresh_shape() -> void:
 	else:
 		var grown: Rect2 = box.grow(pad)
 		# A billboard turns about its own centre, so the box it claims has to hold it turned.
-		var depth: float = maxf(grown.size.x, grown.size.y) if shape_geometry() == "billboard" else pad
+		var depth: float = maxf(grown.size.x, grown.size.y) if shape_geometry() == GEOMETRY_BILLBOARD else pad
 		custom_aabb = AABB(Vector3(grown.position.x, grown.position.y, -depth * 0.5),
 			Vector3(grown.size.x, grown.size.y, depth))
 	_push_uniforms_3d()
@@ -261,8 +272,8 @@ func _volume_material() -> StandardMaterial3D:
 	var tint: Color = _colour("colour")
 	_solid_material.albedo_color = tint
 	_solid_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if tint.a < 1.0 else BaseMaterial3D.TRANSPARENCY_DISABLED
-	_solid_material.blend_mode = solid_blend_mode(_word("blend", "normal"))
-	_solid_material.no_depth_test = _word("depth", "test") != "test"
+	_solid_material.blend_mode = solid_blend_mode(_word("blend", SHAPE_WORDS.BLEND_NORMAL))
+	_solid_material.no_depth_test = _word("depth", DEPTH_TEST) != DEPTH_TEST
 	return _solid_material
 
 ## The engine's own blend number for one of the pack's five blend words. Four of the five are a
@@ -271,11 +282,11 @@ func _volume_material() -> StandardMaterial3D:
 ## @ace_hidden
 static func solid_blend_mode(blend: String) -> BaseMaterial3D.BlendMode:
 	match blend:
-		"add":
+		SHAPE_WORDS.BLEND_ADD:
 			return BaseMaterial3D.BLEND_MODE_ADD
-		"subtract":
+		SHAPE_WORDS.BLEND_SUBTRACT:
 			return BaseMaterial3D.BLEND_MODE_SUB
-		"multiply", "premultiplied":
+		SHAPE_WORDS.BLEND_MULTIPLY, SHAPE_WORDS.BLEND_PREMULTIPLIED:
 			return BaseMaterial3D.BLEND_MODE_MUL
 	return BaseMaterial3D.BLEND_MODE_MIX
 
@@ -375,10 +386,10 @@ func _colour(key: String) -> Color:
 ## Shader itself is shared by every 3D shape in the project; only the uniforms are this node's.
 ## @ace_hidden
 func _shape_material_3d() -> ShaderMaterial:
-	var blend: String = _word("blend", "normal")
+	var blend: String = _word("blend", SHAPE_WORDS.BLEND_NORMAL)
 	if not BLEND_SHADERS_3D.has(blend):
-		blend = "normal"
-	var through: bool = _word("depth", "test") != "test"
+		blend = SHAPE_WORDS.BLEND_NORMAL
+	var through: bool = _word("depth", DEPTH_TEST) != DEPTH_TEST
 	var key: String = "%s|%s" % [blend, str(through)]
 	if _material_3d != null and _material_key == key:
 		return _material_3d
@@ -397,7 +408,7 @@ func _shape_material_3d() -> ShaderMaterial:
 ## @ace_hidden
 static func shader_for_blend_3d(blend: String, through_walls: bool) -> Shader:
 	var table: Dictionary = BLEND_SHADERS_3D_THROUGH if through_walls else BLEND_SHADERS_3D
-	var file_name: String = str(table.get(blend, table["normal"]))
+	var file_name: String = str(table.get(blend, table[SHAPE_WORDS.BLEND_NORMAL]))
 	if _shaders_3d.has(file_name):
 		return _shaders_3d[file_name]
 	var path: String = SHADER_DIRECTORY + file_name
@@ -417,7 +428,7 @@ func _push_uniforms_3d() -> void:
 	# A shape that has just come back from volumetric is still wearing the solid surface.
 	if material_override != shape_material:
 		material_override = shape_material
-	var screen_units: bool = _word("thickness_unit", "world") == "screen"
+	var screen_units: bool = _word("thickness_unit", SHAPE_WORDS.THICKNESS_UNIT_WORLD) == SHAPE_WORDS.THICKNESS_UNIT_SCREEN
 	var quad: Rect2 = shape_plane_bounds()
 	var outline: PackedVector3Array = shape_points_3d()
 	shape_material.set_shader_parameter("shape_kind", shape_kind_id())
@@ -425,29 +436,29 @@ func _push_uniforms_3d() -> void:
 	shape_material.set_shader_parameter("quad_size", quad.size)
 	shape_material.set_shader_parameter("thickness_px", maxf(_number("thickness", 0.05), 0.0))
 	shape_material.set_shader_parameter("screen_thickness", screen_units)
-	shape_material.set_shader_parameter("billboard", shape_geometry() == "billboard")
+	shape_material.set_shader_parameter("billboard", shape_geometry() == GEOMETRY_BILLBOARD)
 	shape_material.set_shader_parameter("ribbon", shape_is_ribbon())
 	shape_material.set_shader_parameter("ribbon_a", outline[0] if outline.size() > 0 else Vector3.ZERO)
 	shape_material.set_shader_parameter("ribbon_b", outline[outline.size() - 1] if outline.size() > 1 else Vector3.RIGHT)
 	shape_material.set_shader_parameter("aa_width", maxf(_number("antialias_width", 1.0), 0.0001))
 	shape_material.set_shader_parameter("filled", _flag("fill"))
-	shape_material.set_shader_parameter("caps", maxi(SHAPE_WORDS.CAP_STYLES.find(_word("caps", "round")), 0))
+	shape_material.set_shader_parameter("caps", maxi(SHAPE_WORDS.CAP_STYLES.find(_word("caps", SHAPE_WORDS.CAPS_ROUND)), 0))
 	shape_material.set_shader_parameter("colour_a", _colour("colour"))
 	shape_material.set_shader_parameter("colour_b", _colour("colour_b"))
 	shape_material.set_shader_parameter("colour_c", _colour("colour_c"))
 	shape_material.set_shader_parameter("colour_d", _colour("colour_d"))
-	shape_material.set_shader_parameter("colour_mode", maxi(SHAPE_WORDS.COLOUR_MODES.find(_word("colour_mode", "single")), 0))
+	shape_material.set_shader_parameter("colour_mode", maxi(SHAPE_WORDS.COLOUR_MODES.find(_word("colour_mode", SHAPE_WORDS.COLOUR_MODE_SINGLE)), 0))
 	shape_material.set_shader_parameter("gradient_texture", _gradient_texture())
 	shape_material.set_shader_parameter("border_on", _flag("border"))
 	shape_material.set_shader_parameter("border_colour", _colour("border_colour"))
 	shape_material.set_shader_parameter("border_px", _number("border_thickness", 0.02))
 	shape_material.set_shader_parameter("dashed", _flag("dashed"))
-	shape_material.set_shader_parameter("dash_snap", maxi(SHAPE_WORDS.DASH_SNAPS.find(_word("dash_snap", "tiling")), 0))
-	shape_material.set_shader_parameter("dash_style", maxi(SHAPE_WORDS.DASH_STYLES.find(_word("dash_style", "plain")), 0))
+	shape_material.set_shader_parameter("dash_snap", maxi(SHAPE_WORDS.DASH_SNAPS.find(_word("dash_snap", SHAPE_WORDS.DASH_SNAP_TILING)), 0))
+	shape_material.set_shader_parameter("dash_style", maxi(SHAPE_WORDS.DASH_STYLES.find(_word("dash_style", SHAPE_WORDS.DASH_STYLE_PLAIN)), 0))
 	shape_material.set_shader_parameter("dash_offset", _number("dash_offset", 0.0))
-	var space: String = _word("dash_space", "count")
+	var space: String = _word("dash_space", SHAPE_WORDS.DASH_SPACE_COUNT)
 	var thickness: float = maxf(_number("thickness", 0.05), 0.0)
-	shape_material.set_shader_parameter("dash_count", int(_number("dash_count", 12.0)) if space == "count" else 0)
+	shape_material.set_shader_parameter("dash_count", int(_number("dash_count", 12.0)) if space == SHAPE_WORDS.DASH_SPACE_COUNT else 0)
 	shape_material.set_shader_parameter("dash_gap_share", clampf(_number("dash_spacing", 0.5), 0.0, 0.95))
 	shape_material.set_shader_parameter("dash_length_px",
 		SHAPE_WORDS.dash_length_in_pixels(_number("dash_size", 0.2), space, thickness))
@@ -497,7 +508,7 @@ func _gradient_texture() -> Texture2D:
 ## @ace_hidden
 func pick_reach() -> float:
 	var width: float = maxf(_number("thickness", 0.05), 0.001)
-	if _word("thickness_unit", "world") != "screen" or not is_inside_tree():
+	if _word("thickness_unit", SHAPE_WORDS.THICKNESS_UNIT_WORLD) != SHAPE_WORDS.THICKNESS_UNIT_SCREEN or not is_inside_tree():
 		return width * 0.5
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	if camera == null:
@@ -567,15 +578,15 @@ func set_shape_colour(colour: Color = Color.WHITE) -> void:
 func set_colours(from_colour: Color = Color.WHITE, to_colour: Color = Color.TRANSPARENT) -> void:
 	set("colour", from_colour)
 	set("colour_b", to_colour)
-	if _word("colour_mode", "single") == "single":
-		set("colour_mode", "two")
+	if _word("colour_mode", SHAPE_WORDS.COLOUR_MODE_SINGLE) == SHAPE_WORDS.COLOUR_MODE_SINGLE:
+		set("colour_mode", SHAPE_WORDS.COLOUR_MODE_TWO)
 	shape_changed()
 
 ## Hands the shape a Gradient resource and switches it to the gradient mode - the whole ramp, shaped
 ## in Godot's own gradient editor.
 func set_gradient(gradient_resource: Gradient) -> void:
 	set("gradient", gradient_resource)
-	set("colour_mode", "gradient")
+	set("colour_mode", SHAPE_WORDS.COLOUR_MODE_GRADIENT)
 	shape_changed()
 
 ## Fills the shape or leaves it as an outline. A filled shape draws its border rather than its
@@ -589,7 +600,7 @@ func set_fill(filled: bool = true) -> void:
 ## the pattern is what its flat and billboard forms draw.
 func set_dashes(count: int = 12, spacing: float = 0.5, style: String = "plain") -> void:
 	set("dashed", true)
-	set("dash_space", "count")
+	set("dash_space", SHAPE_WORDS.DASH_SPACE_COUNT)
 	set("dash_count", maxi(count, 1))
 	set("dash_spacing", clampf(spacing, 0.0, 0.95))
 	if SHAPE_WORDS.DASH_STYLES.has(style):

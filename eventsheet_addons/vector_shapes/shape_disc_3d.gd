@@ -224,10 +224,10 @@ func shape_volume_mesh(segments: int) -> Mesh:
 ## than sitting there meaning nothing. Godot's own way, so a hidden field still stores and still
 ## reads back - this only decides what the Inspector draws.
 func _validate_property(property: Dictionary) -> void:
-	var mode: String = _word("colour_mode", "single")
-	var solid: bool = shape_geometry() == "volumetric"
-	var blends_two: bool = mode == "two" or mode == "radial" or mode == "angular"
-	var per_corner: bool = mode == "per corner"
+	var mode: String = _word("colour_mode", SHAPE_WORDS.COLOUR_MODE_SINGLE)
+	var solid: bool = shape_geometry() == GEOMETRY_VOLUMETRIC
+	var blends_two: bool = mode == SHAPE_WORDS.COLOUR_MODE_TWO or mode == SHAPE_WORDS.COLOUR_MODE_RADIAL or mode == SHAPE_WORDS.COLOUR_MODE_ANGULAR
+	var per_corner: bool = mode == SHAPE_WORDS.COLOUR_MODE_PER_CORNER
 	if str(property.name) == "detail" and not bool(solid):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) in ["caps", "dashed", "antialias_width", "colour_mode"] and bool(solid):
@@ -238,15 +238,15 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) == "colour_d" and not bool(per_corner):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
-	if str(property.name) == "gradient" and not bool(mode == "gradient"):
+	if str(property.name) == "gradient" and not bool(mode == SHAPE_WORDS.COLOUR_MODE_GRADIENT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) in ["border_colour", "border_thickness"] and not bool(_flag("border")):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) in ["dash_space", "dash_snap", "dash_size", "dash_count", "dash_spacing", "dash_offset", "dash_style"] and not bool(_flag("dashed") and not solid):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
-	if str(property.name) == "dash_size" and not bool(_word("dash_space", "count") != "count"):
+	if str(property.name) == "dash_size" and not bool(_word("dash_space", SHAPE_WORDS.DASH_SPACE_COUNT) != SHAPE_WORDS.DASH_SPACE_COUNT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
-	if str(property.name) == "dash_count" and not bool(_word("dash_space", "count") == "count"):
+	if str(property.name) == "dash_count" and not bool(_word("dash_space", SHAPE_WORDS.DASH_SPACE_COUNT) == SHAPE_WORDS.DASH_SPACE_COUNT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 
 ## @ace_hidden
