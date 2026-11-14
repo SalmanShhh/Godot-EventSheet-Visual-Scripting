@@ -25,6 +25,7 @@ static func run() -> bool:
 	ok = _looks_compile(dialog) and ok
 	ok = _sections(dialog) and ok
 	ok = _look_doors(dialog) and ok
+	ok = _godot_line_looks(dialog) and ok
 	ok = _values_as_code(dialog) and ok
 	host.free()
 	ok = _fold_and_unfold_are_inverses() and ok
@@ -173,7 +174,7 @@ static func _fold_and_unfold_are_inverses() -> bool:
 		["String", {"custom_hint": {"hint": "PROPERTY_HINT_RANGE", "text": "0,10", "usage": ""}}],
 		["Callable", {"tool_button": {"args": "\"Bake\",\"Bake\"", "label": "Bake"}}],
 		["Vector2", {"drawer": "min_max", "range": {"min": "0", "max": "10", "step": "1"}}],
-		["float", {"drawer": "unit", "unit_kinds": ["s", "ms"], "unit_store": "s"}],
+		["float", {"drawer": "unit", "unit_kinds": ["s", "ms"], "unit_store": "s", "look_line": true}],
 		["String", {"suggestions": ["sword", "bow"]}],
 		["Color", {"no_alpha": true}],
 		["int", {"storage": true}],
@@ -248,6 +249,26 @@ static func _look_doors(dialog: EventSheetVariableDialog) -> bool:
 		["an annotation look has none", annotation, false],
 		["a shipped file look offers the sheet and the copy", [dialog._look_doors.visible, dialog._look_open_button.visible, dialog._look_copy_button.visible], [true, true, true]],
 	])
+
+
+## A new pick of a look that keeps Godot's own export line writes that line plus the look comment; a
+## variable opened on the old marker and left alone keeps the marker, byte for byte.
+static func _godot_line_looks(dialog: EventSheetVariableDialog) -> bool:
+	var rows: Array = []
+	dialog.open_for_edit("tree", {}, "difficulty", "String", "normal", false, "Add", false, true)
+	_pick_look(dialog, "toggle_row", {"choices": "easy, normal, hard"})
+	rows.append(["a new toggle row writes Godot's enum line", dialog.code_line_text(),
+		"@export_enum(\"easy\", \"normal\", \"hard\") var difficulty: String = \"normal\""])
+	rows.append(["...and the block the strip shows carries the look comment", dialog.code_block_text(_confirm(dialog).get("attributes", {})),
+		"# @inspector_look toggle_row
+@export_enum(\"easy\", \"normal\", \"hard\") var difficulty: String = \"normal\""])
+	rows.append(["...and carries the flag on the attributes it confirms", bool(_confirm(dialog).get("attributes", {}).get("look_line", false)), true])
+	dialog.open_for_edit("tree", {"editing": true, "attributes": {"drawer": "unit", "unit_kinds": ["px", "world"], "unit_store": "px"}},
+		"thickness", "float", "2.0", false, "Edit", false, true)
+	rows.append(["an old unit line left alone is still the marker", dialog.code_line_text(),
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:unit:kinds=px|world,store=px\") var thickness: float = 2.0"])
+	rows.append(["...and confirming it untouched adds no flag", _confirm(dialog).get("attributes", {}).has("look_line"), false])
+	return SUPPORT.pins(P + ": godot line", rows)
 
 
 static func _pick_look(dialog: EventSheetVariableDialog, look_id: String, values: Dictionary) -> void:
