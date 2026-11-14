@@ -22,6 +22,16 @@ static func build() -> bool:
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"# --- Choices (the stored words are the promise: saved scenes keep them) ---",
+		"## rotation_type: spin a Node2D by its rotation.",
+		"const ROTATION_TYPE_2D := \"2d\"",
+		"## rotation_type: spin a Node3D about its x axis.",
+		"const ROTATION_TYPE_X := \"x\"",
+		"## rotation_type: spin a Node3D about its y axis.",
+		"const ROTATION_TYPE_Y := \"y\"",
+		"## rotation_type: spin a Node3D about its z axis.",
+		"const ROTATION_TYPE_Z := \"z\"",
+		"",
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## Spin on/off - Set Rotation Enabled flips it at runtime.",
 		"@export var rotate_enabled: bool = true:",
@@ -88,7 +98,7 @@ static func build() -> bool:
 		# 2D rotation asked it with `2d`, which is not even a name GDScript could resolve.
 		"## @ace_codegen_template(\"$RotateBehavior.set_rotation_type(\"{type}\")\")",
 		"func set_rotation_type(type: String) -> void:",
-		"\tif type in [\"2d\", \"x\", \"y\", \"z\"]:",
+		"\tif type in [ROTATION_TYPE_2D, ROTATION_TYPE_X, ROTATION_TYPE_Y, ROTATION_TYPE_Z]:",
 		"\t\trotation_type = type",
 		"",
 		"## Flips the spin direction (negates the live speed).",
@@ -128,15 +138,15 @@ static func build() -> bool:
 		"var step: float = deg_to_rad(_current_speed * delta)",
 		"# Type-safe spin: a mismatched host (rotation_type \"2d\" on a Node3D) is a no-op,",
 		"# never an error - swap the knob or the parent freely.",
-		"if rotation_type == \"2d\" and host is Node2D:",
+		"if rotation_type == ROTATION_TYPE_2D and host is Node2D:",
 		"\t(host as Node2D).rotation += step",
 		"elif host is Node3D:",
 		"\tmatch rotation_type:",
-		"\t\t\"x\":",
+		"\t\tROTATION_TYPE_X:",
 		"\t\t\t(host as Node3D).rotation.x += step",
-		"\t\t\"y\":",
+		"\t\tROTATION_TYPE_Y:",
 		"\t\t\t(host as Node3D).rotation.y += step",
-		"\t\t\"z\":",
+		"\t\tROTATION_TYPE_Z:",
 		"\t\t\t(host as Node3D).rotation.z += step"
 	]))
 	tick.actions.append(tick_body)

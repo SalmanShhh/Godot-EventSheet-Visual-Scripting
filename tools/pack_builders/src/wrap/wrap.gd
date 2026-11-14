@@ -7,6 +7,16 @@ extends Node2D
 var host: Node2D = null
 
 #region block_1
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## wrap_space: wrap around the camera's on-screen view.
+const WRAP_SPACE_SCREEN := "screen"
+## wrap_space: wrap around the custom bounds.
+const WRAP_SPACE_CUSTOM := "custom"
+## wrap_shape: a rectangle.
+const WRAP_SHAPE_RECT := "rect"
+## wrap_shape: a circle.
+const WRAP_SHAPE_CIRCLE := "circle"
+
 # --- Designer knobs (tune in the Inspector) ---
 ## What to wrap around: the camera's on-screen view, or the custom bounds rectangle.
 @export_enum("screen", "custom") var wrap_space: String = "screen"
@@ -47,7 +57,7 @@ signal wrapped(side: String)
 ## transform inverted maps screen space to world space) or the custom rectangle.
 ## @ace_hidden
 func _wrap_rect() -> Rect2:
-	if wrap_space == "custom":
+	if wrap_space == WRAP_SPACE_CUSTOM:
 		return custom_bounds
 	var viewport: Viewport = host.get_viewport() if host != null else null
 	if viewport == null:
@@ -60,7 +70,7 @@ func _wrap_rect() -> Rect2:
 ## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
 ## @ace_codegen_template("$WrapBehavior.set_wrap_space("{space}")")
 func set_wrap_space(space: String) -> void:
-	if space in ["screen", "custom"]:
+	if space in [WRAP_SPACE_SCREEN, WRAP_SPACE_CUSTOM]:
 		wrap_space = space
 
 ## Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it:
@@ -70,8 +80,8 @@ func set_wrap_space(space: String) -> void:
 func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:
 	wrap_circle_center = Vector2(center_x, center_y)
 	wrap_circle_radius = maxf(radius, 1.0)
-	wrap_shape = "circle"
-	wrap_space = "custom"
+	wrap_shape = WRAP_SHAPE_CIRCLE
+	wrap_space = WRAP_SPACE_CUSTOM
 
 ## The dominant exit direction as a side word - so circle wraps report through the
 ## same On Wrapped vocabulary the rect edges use.
@@ -92,7 +102,7 @@ func _physics_process(delta: float) -> void:
 		return
 	# The circular constraint: once fully outside the circle, re-enter at the ANTIPODE
 	# (still fully outside, so momentum glides the host in instead of popping it).
-	if wrap_shape == "circle" and wrap_space == "custom":
+	if wrap_shape == WRAP_SHAPE_CIRCLE and wrap_space == WRAP_SPACE_CUSTOM:
 		var offset: Vector2 = host.global_position - wrap_circle_center
 		var pad: float = maxf(half_width, half_height)
 		if offset.length() - pad > wrap_circle_radius:
@@ -130,8 +140,8 @@ func set_wrap_enabled(enabled: bool) -> void:
 
 func set_custom_wrap_bounds(x: float, y: float, width: float, height: float) -> void:
 	custom_bounds = Rect2(x, y, width, height)
-	wrap_shape = "rect"
-	wrap_space = "custom"
+	wrap_shape = WRAP_SHAPE_RECT
+	wrap_space = WRAP_SPACE_CUSTOM
 
 func set_wrap_axes(horizontal: bool, vertical: bool) -> void:
 	wrap_horizontal = horizontal

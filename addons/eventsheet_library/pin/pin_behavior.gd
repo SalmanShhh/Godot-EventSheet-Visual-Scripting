@@ -20,6 +20,30 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Pin Behavior needs a Node2D: put it under one, or set Acts on.")
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## pin_mode: copy the anchor's place only.
+const PIN_MODE_POSITION := "position"
+## pin_mode: copy the anchor's angle only.
+const PIN_MODE_ANGLE := "angle"
+## pin_mode: copy both place and angle.
+const PIN_MODE_POSITION_AND_ANGLE := "position and angle"
+## pin_mode: hang on a rope, pulled only when taut.
+const PIN_MODE_ROPE := "rope"
+## pin_mode: hold at exactly the bar's length.
+const PIN_MODE_BAR := "bar"
+## pin_mode: close a share of the gap each frame.
+const PIN_MODE_SOFT := "soft"
+## pin_mode: carry a velocity, overshoot and settle.
+const PIN_MODE_SPRING := "spring"
+## pin_mode: copy the anchor's scale.
+const PIN_MODE_SIZE := "size"
+## pin_axes: follow both axes.
+const PIN_AXES_BOTH := "both"
+## pin_axes: follow the column only.
+const PIN_AXES_X_ONLY := "x only"
+## pin_axes: follow the height only.
+const PIN_AXES_Y_ONLY := "y only"
+
 # --- Designer knobs (tune in the Inspector) ---
 # The first three pin modes are
 # the plain copies; rope, bar, soft and spring are the ways a follow can lag or be held at
@@ -68,11 +92,11 @@ var pin_velocity: Vector2 = Vector2.ZERO
 ## The ways the host's place can be pinned, as the words a row picks from.
 ## @ace_hidden
 const PIN_PLACE_MODES: PackedStringArray = [
-	"position", "position and angle", "rope", "bar", "soft", "spring"
+	PIN_MODE_POSITION, PIN_MODE_POSITION_AND_ANGLE, PIN_MODE_ROPE, PIN_MODE_BAR, PIN_MODE_SOFT, PIN_MODE_SPRING
 ]
 ## The ways the host's turn can be pinned, as the words a row picks from.
 ## @ace_hidden
-const PIN_ANGLE_MODES: PackedStringArray = ["angle", "position and angle"]
+const PIN_ANGLE_MODES: PackedStringArray = [PIN_MODE_ANGLE, PIN_MODE_POSITION_AND_ANGLE]
 # The node the host actually rides: the anchor, or the named point on it. The lookup is a
 # RECURSIVE search of the anchor's whole subtree - fine once, far too much every physics
 # frame - so the answer is remembered and only searched for again when it goes stale: a
@@ -117,7 +141,7 @@ func _physics_process(delta: float) -> void:
 		_place_host(seat.global_position + offset, delta)
 	if pin_mode in PIN_ANGLE_MODES:
 		host.global_rotation = seat.global_rotation + pin_angle_offset
-	if pin_follow_size or pin_mode == "size":
+	if pin_follow_size or pin_mode == PIN_MODE_SIZE:
 		host.scale = seat.scale
 
 ## @ace_action
@@ -174,7 +198,7 @@ func set_pin_offset(offset_x: float, offset_y: float) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_rope({target}, {max_length})")
 func pin_rope(target: Node2D, max_length: float) -> void:
-	_begin_pin(target, "rope")
+	_begin_pin(target, PIN_MODE_ROPE)
 	pin_length = maxf(max_length, 0.0)
 
 ## @ace_action
@@ -185,7 +209,7 @@ func pin_rope(target: Node2D, max_length: float) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_bar({target}, {length})")
 func pin_bar(target: Node2D, length: float) -> void:
-	_begin_pin(target, "bar")
+	_begin_pin(target, PIN_MODE_BAR)
 	pin_length = maxf(length, 0.0)
 
 ## @ace_action
@@ -196,7 +220,7 @@ func pin_bar(target: Node2D, length: float) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_soft({target}, {speed})")
 func pin_soft(target: Node2D, speed: float) -> void:
-	_begin_pin(target, "soft")
+	_begin_pin(target, PIN_MODE_SOFT)
 	pin_speed = maxf(speed, 0.0)
 
 ## @ace_action
@@ -207,7 +231,7 @@ func pin_soft(target: Node2D, speed: float) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_spring({target}, {stiffness}, {damping})")
 func pin_spring(target: Node2D, stiffness: float, damping: float) -> void:
-	_begin_pin(target, "spring")
+	_begin_pin(target, PIN_MODE_SPRING)
 	pin_stiffness = maxf(stiffness, 0.0)
 	pin_damping = clampf(damping, 0.0, 1.0)
 
@@ -219,8 +243,8 @@ func pin_spring(target: Node2D, stiffness: float, damping: float) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_x_to({target})")
 func pin_x_to(target: Node2D) -> void:
-	_begin_pin(target, "position")
-	pin_axes = "x only"
+	_begin_pin(target, PIN_MODE_POSITION)
+	pin_axes = PIN_AXES_X_ONLY
 
 ## @ace_action
 ## @ace_name("Pin Y Position To")
@@ -230,8 +254,8 @@ func pin_x_to(target: Node2D) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_y_to({target})")
 func pin_y_to(target: Node2D) -> void:
-	_begin_pin(target, "position")
-	pin_axes = "y only"
+	_begin_pin(target, PIN_MODE_POSITION)
+	pin_axes = PIN_AXES_Y_ONLY
 
 ## @ace_action
 ## @ace_name("Pin Size To")
@@ -241,7 +265,7 @@ func pin_y_to(target: Node2D) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.pin_size_to({target})")
 func pin_size_to(target: Node2D) -> void:
-	_begin_pin(target, "size")
+	_begin_pin(target, PIN_MODE_SIZE)
 	pin_follow_size = true
 
 ## @ace_action
@@ -256,7 +280,7 @@ func pin_to_point(target: Node2D, point_name: String) -> void:
 	pin_enabled = is_instance_valid(target)
 	_clear_pin_modes()
 	pin_point = point_name
-	pin_mode = "position and angle"
+	pin_mode = PIN_MODE_POSITION_AND_ANGLE
 	# The host rides something from this frame on, which is per-frame work; a target that
 	# is already gone leaves the tick off rather than running it for nothing.
 	set_physics_process(pin_enabled)
@@ -288,7 +312,7 @@ func pin_to_path(path_node: Node2D) -> void:
 			follower.name = "PinPathFollow"
 			follower.loop = true
 			path.add_child(follower)
-	_begin_pin(follower, "position")
+	_begin_pin(follower, PIN_MODE_POSITION)
 	pin_point = ""
 
 ## @ace_action
@@ -334,7 +358,7 @@ func is_pinned() -> bool:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.is_taut()")
 func is_taut() -> bool:
-	if not pin_mode in ["rope", "bar"] or host == null or not is_instance_valid(anchor):
+	if not pin_mode in [PIN_MODE_ROPE, PIN_MODE_BAR] or host == null or not is_instance_valid(anchor):
 		return false
 	return host.global_position.distance_to(anchor.global_position) >= pin_length - 0.5
 
@@ -384,7 +408,7 @@ func pin_path_progress() -> float:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.set_pin_mode("{mode}")")
 func set_pin_mode(mode: String) -> void:
-	if mode in ["position", "angle", "position and angle", "rope", "bar", "soft", "spring", "size"]:
+	if mode in [PIN_MODE_POSITION, PIN_MODE_ANGLE, PIN_MODE_POSITION_AND_ANGLE, PIN_MODE_ROPE, PIN_MODE_BAR, PIN_MODE_SOFT, PIN_MODE_SPRING, PIN_MODE_SIZE]:
 		pin_mode = mode
 
 ## Chooses which axes of the place follow: both of them, the column only, or the height only.
@@ -394,7 +418,7 @@ func set_pin_mode(mode: String) -> void:
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
 ## @ace_codegen_template("$PinBehavior.set_pin_axes("{axes}")")
 func set_pin_axes(axes: String) -> void:
-	if axes in ["both", "x only", "y only"]:
+	if axes in [PIN_AXES_BOTH, PIN_AXES_X_ONLY, PIN_AXES_Y_ONLY]:
 		pin_axes = axes
 
 func _pin_reach(current: Vector2, goal: Vector2, delta: float) -> Vector2:
@@ -403,17 +427,17 @@ func _pin_reach(current: Vector2, goal: Vector2, delta: float) -> Vector2:
 	# at exactly its length in whatever direction the host already lies; soft closes a share of the
 	# gap; spring carries a velocity, so it overshoots and settles.
 	match pin_mode:
-		"rope":
+		PIN_MODE_ROPE:
 			var slack: Vector2 = current - goal
 			return current if slack.length() <= pin_length else goal + slack.normalized() * pin_length
-		"bar":
+		PIN_MODE_BAR:
 			var arm: Vector2 = current - goal
 			if arm.length() < 0.0001:
 				arm = Vector2.RIGHT
 			return goal + arm.normalized() * pin_length
-		"soft":
+		PIN_MODE_SOFT:
 			return current.lerp(goal, clampf(pin_speed * delta, 0.0, 1.0))
-		"spring":
+		PIN_MODE_SPRING:
 			pin_velocity += (goal - current) * pin_stiffness * delta
 			pin_velocity *= pow(1.0 - clampf(pin_damping, 0.0, 1.0), delta)
 			return current + pin_velocity * delta
@@ -422,9 +446,9 @@ func _pin_reach(current: Vector2, goal: Vector2, delta: float) -> Vector2:
 func _place_host(goal: Vector2, delta: float) -> void:
 	# Writes the reached place onto the host, one axis at a time when the pin is axis-locked.
 	var placed: Vector2 = _pin_reach(host.global_position, goal, delta)
-	if pin_axes == "x only":
+	if pin_axes == PIN_AXES_X_ONLY:
 		host.global_position.x = placed.x
-	elif pin_axes == "y only":
+	elif pin_axes == PIN_AXES_Y_ONLY:
 		host.global_position.y = placed.y
 	else:
 		host.global_position = placed
@@ -433,7 +457,7 @@ func _clear_pin_modes() -> void:
 	# Puts every mode knob back to its plain value. Each new pin starts from a clean sheet, or a
 	# Pin X Position To followed later by a Pin To Rope would quietly give the rope one axis, and
 	# a Pin Size To would keep copying an old anchor's scale forever.
-	pin_axes = "both"
+	pin_axes = PIN_AXES_BOTH
 	pin_follow_size = false
 	pin_point = ""
 	pin_velocity = Vector2.ZERO

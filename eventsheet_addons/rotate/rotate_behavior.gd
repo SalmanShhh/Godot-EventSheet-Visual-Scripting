@@ -138,6 +138,16 @@ func _preview_kill_tweens() -> void:
 func _preview_kick() -> void:
 	pass
 
+# --- Choices (the stored words are the promise: saved scenes keep them) ---
+## rotation_type: spin a Node2D by its rotation.
+const ROTATION_TYPE_2D := "2d"
+## rotation_type: spin a Node3D about its x axis.
+const ROTATION_TYPE_X := "x"
+## rotation_type: spin a Node3D about its y axis.
+const ROTATION_TYPE_Y := "y"
+## rotation_type: spin a Node3D about its z axis.
+const ROTATION_TYPE_Z := "z"
+
 # --- Designer knobs (tune in the Inspector) ---
 ## Spin on/off - Set Rotation Enabled flips it at runtime.
 @export var rotate_enabled: bool = true:
@@ -179,15 +189,15 @@ func _physics_process(delta: float) -> void:
 	var step: float = deg_to_rad(_current_speed * delta)
 	# Type-safe spin: a mismatched host (rotation_type "2d" on a Node3D) is a no-op,
 	# never an error - swap the knob or the parent freely.
-	if rotation_type == "2d" and host is Node2D:
+	if rotation_type == ROTATION_TYPE_2D and host is Node2D:
 		(host as Node2D).rotation += step
 	elif host is Node3D:
 		match rotation_type:
-			"x":
+			ROTATION_TYPE_X:
 				(host as Node3D).rotation.x += step
-			"y":
+			ROTATION_TYPE_Y:
 				(host as Node3D).rotation.y += step
-			"z":
+			ROTATION_TYPE_Z:
 				(host as Node3D).rotation.z += step
 
 ## @ace_condition
@@ -239,7 +249,7 @@ func set_rotation_acceleration(degrees_per_second_squared: float) -> void:
 ## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
 ## @ace_codegen_template("$RotateBehavior.set_rotation_type("{type}")")
 func set_rotation_type(type: String) -> void:
-	if type in ["2d", "x", "y", "z"]:
+	if type in [ROTATION_TYPE_2D, ROTATION_TYPE_X, ROTATION_TYPE_Y, ROTATION_TYPE_Z]:
 		rotation_type = type
 
 ## Flips the spin direction (negates the live speed).

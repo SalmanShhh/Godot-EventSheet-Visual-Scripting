@@ -334,7 +334,7 @@ static func _pack_verbs() -> bool:
 		three_d.contains("anchor.find_child(pin_point, true, false) as Node3D"), true) and ok
 	var two_d: String = FileAccess.get_file_as_string("res://eventsheet_addons/pin/pin_behavior.gd")
 	ok = _check("the shipped three modes keep the meaning they always had",
-		two_d.contains("const PIN_ANGLE_MODES: PackedStringArray = [\"angle\", \"position and angle\"]"),
+		two_d.contains("const PIN_ANGLE_MODES: PackedStringArray = [PIN_MODE_ANGLE, PIN_MODE_POSITION_AND_ANGLE]") and two_d.contains("const PIN_MODE_ANGLE := \"angle\"") and two_d.contains("const PIN_MODE_POSITION_AND_ANGLE := \"position and angle\""),
 		true) and ok
 	ok = _check("the mode knob grew rather than being renamed",
 		two_d.contains("@export_enum(\"position\", \"angle\", \"position and angle\", \"rope\", \"bar\", \"soft\", \"spring\", \"size\") var pin_mode"),
