@@ -4259,8 +4259,12 @@ var _commit_validation_prompt: ConfirmationDialog = null
 
 ## A field whose reading lens has a commit validator may put the typed text right before it is stored
 ## (a percentage typed as 50% stored as 0.5). The validator answers {"value": text}; any other answer
-## leaves the text as typed.
-func _lens_rewritten(key: String, text: String) -> String:
+## leaves the text as typed. A value that is not text (a number from a spin box, a tick) has no text to
+## rewrite and comes back as it was.
+func _lens_rewritten(key: String, value: Variant) -> Variant:
+	if not (value is String):
+		return value
+	var text: String = value
 	var lens: String = EventForgeValueLens.lens_of(_param_dict(key))
 	if lens.is_empty():
 		return text

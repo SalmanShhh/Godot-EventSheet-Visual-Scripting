@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: confirming a row that has a number or a tick in it raised an engine error
+
+- The parameters window let a reading lens rewrite typed text just before it was stored, and that step took only text. A spin box hands back a number and a tick a bool, so pressing Done on any row with a number or tick slot (a function with an `int` argument from your own script, say) stopped with \"Cannot convert argument 2 from int to String\" and the row was never added. Numbers and ticks are now stored as they are, and typed text is rewritten exactly as before.
+
 ### Fixed: saving a script you registered changes the picker at once, without a restart
 
 - A script registered on a sheet, or a sheet shared with the project, was read into the picker when it was registered and again only when the list of such scripts changed, so a word edited on a `##` line (a new sentence, a new name) and saved in Godot's script editor left the picker on the old words until the editor was restarted. The vocabulary is now derived from each such script's saved time and length as well as its path, and the editor's filesystem ping rebuilds it when one of them moved. Writing annotations from the editor, or through `EventSheets.curate_provider`, tells Godot's filesystem about the file and rebuilds the picker straight away. A switch between two tabs whose scripts did not change still builds nothing.

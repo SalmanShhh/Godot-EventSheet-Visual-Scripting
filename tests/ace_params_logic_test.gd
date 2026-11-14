@@ -177,6 +177,14 @@ static func run() -> bool:
 	all_passed = _check("and the resource hint has a field of its own, so the slot is picked not typed",
 		_knows_resource_hint(), true) and all_passed
 
+	# A spin box hands back a number and a tick a bool; the commit step that lets a reading lens rewrite typed
+	# text used to take only text, so confirming any row with a number slot failed with an engine error.
+	var commit_dialog: ACEParamsDialog = ACEParamsDialog.new()
+	all_passed = _check("a number is committed as the number it is", commit_dialog._lens_rewritten("amount", 5), 5) and all_passed
+	all_passed = _check("a decimal too", commit_dialog._lens_rewritten("amount", 2.5), 2.5) and all_passed
+	all_passed = _check("a tick as a bool", commit_dialog._lens_rewritten("on", true), true) and all_passed
+	all_passed = _check("typed text with no lens comes back as typed", commit_dialog._lens_rewritten("name", "hero"), "hero") and all_passed
+
 	return all_passed
 
 
