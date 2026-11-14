@@ -1227,6 +1227,21 @@ static func tone_color(tone: String) -> Color:
 	return accent_color()
 
 
+## The faint fill a note wears for a tone: the tone's own colour, never the darkened ink a light panel
+## reads its words in (a darkened amber on a pale panel is a grey), a little stronger on a light panel
+## so the amber stays amber. The sheet's quiet amber row is this same colour.
+static func tone_tint(tone: String) -> Color:
+	var base: Color = accent_color()
+	match tone:
+		TONE_OK:
+			base = EventSheetPalette.COLOR_HEALTH_OK
+		TONE_WARNING:
+			base = EventSheetPalette.COLOR_HEALTH_WARN
+		TONE_ERROR:
+			base = EventSheetPalette.COLOR_ERROR_TEXT
+	return Color(base.r, base.g, base.b, 0.12 if panel_fill().get_luminance() < 0.5 else 0.26)
+
+
 ## A STATE NOTE: one sentence on a faint tint of its tone, the way a window says what is wrong with the
 ## field above it. `say("")` hides it, so a caller sets it on every change and never toggles
 ## visibility by hand. `text` reads back what it says.
@@ -1259,8 +1274,7 @@ class StateNote extends PanelContainer:
 	func say(sentence: String, level: String = EventSheetPopupUI.TONE_ERROR) -> void:
 		tone = level
 		_label.text = sentence
-		var colour: Color = EventSheetPopupUI.tone_color(level)
-		_style.bg_color = Color(colour.r, colour.g, colour.b, 0.12)
+		_style.bg_color = EventSheetPopupUI.tone_tint(level)
 		visible = not sentence.strip_edges().is_empty()
 
 

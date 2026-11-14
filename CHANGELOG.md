@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the amber note in a window is amber in the light theme too
+
+- A warning note in a window (the Behaviour library's "Nothing was copied" line, the parameter window's warnings) was tinted from a darkened amber that read as grey on the light theme. It now uses the same amber the sheet's quiet warning row uses, a little stronger on a light panel, with no outline. The dark theme looks as before.
+
 ### Fixed: the Toggle buttons preview shows the default choice chosen when the default is a bare word
 
 - In the Variable window, a Toggle buttons look with a default typed as a bare word (`normal`) left every button in the Inspector preview unselected, while the code line showed the default correctly. The preview now reads that word the same way the code line does, so the default's button is shown chosen.

@@ -116,6 +116,10 @@ static func _state_note() -> bool:
 	var amber: Color = EventSheetPalette.COLOR_HEALTH_WARN
 	rows.append(["a warning tints the note amber", _tint(note), Color(amber.r, amber.g, amber.b, 0.12)])
 	rows.append(["and draws no coloured edge", _edge_width(note), 0])
+	rows.append(["the tint is the tone's own colour, never the darkened ink a light panel reads words in",
+		Color(EventSheetPopupUI.tone_tint(EventSheetPopupUI.TONE_WARNING), 1.0), Color(amber, 1.0)])
+	rows.append(["a tone nobody named tints with the editor's accent",
+		Color(EventSheetPopupUI.tone_tint("other"), 1.0), Color(EventSheetPopupUI.accent_color(), 1.0)])
 	note.say("")
 	rows.append(["saying nothing hides it again", note.visible, false])
 	note.free()
