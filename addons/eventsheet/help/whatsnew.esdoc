@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: the rename window no longer sends you to version control for the sheets it saved
+
+- After a rename that also rewrote and saved other sheets that include this one, the window said \"your version control can undo those\", which means nothing to a project without version control. It now says what is true for everyone: each of those sheets was backed up first, and opening one and using Tools > Sheet Backups gets its old version back.
+
 ### Fixed: Save As a .tres from a .gd sheet says scenes still run the .gd, and a failed save leaves the link
 
 - Saving a sheet that was opened from a `.gd` as a `.tres` leaves the `.gd` on disk and every scene still runs it, while the new `.tres` writes a script of its own that nothing uses yet. The status line now says so and names the script to attach: \"Scenes still run mover.gd: attach mover_copy_generated.gd to use this sheet.\"

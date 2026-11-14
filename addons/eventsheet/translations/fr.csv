@@ -7391,7 +7391,6 @@ not changed - check it,non modifié - vérifie-le
 Renamed %s to %s,%s renommé en %s
 Changed %d place(s) in %d sheet(s).,%d endroit(s) modifié(s) dans %d feuille(s).
 Ctrl+Z undoes all of it in this sheet.,Ctrl+Z annule tout dans cette feuille.
-Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z annule tout dans cette feuille. D'autres fichiers ont été enregistrés ; ton contrôle de version peut les annuler.
 Clear every bookmark?,Effacer tous les signets ?
 Every bookmark in this sheet goes; the rows themselves stay as they are.,Tous les signets de cette feuille disparaissent ; les lignes elles-mêmes restent telles quelles.
 "Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","Les signets ne font pas partie de l'annulation, donc Ctrl+Z ne peut pas les récupérer."
@@ -10546,3 +10545,4 @@ The version before this save is in Tools > Sheet Backups.,La version précédant
 Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,Enregistré sous %s - c'est maintenant une feuille .tres. Les scènes exécutent toujours %s : attache %s pour utiliser cette feuille. Le .gd n'a pas été modifié.
 Couldn't save %s: %s. The sheet is still linked to %s.,Impossible d'enregistrer %s : %s. La feuille est toujours liée à %s.
 Couldn't save %s: %s.,Impossible d'enregistrer %s : %s.
+"Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.","Ctrl+Z annule tout dans cette feuille. Les autres feuilles ont été enregistrées, chacune avec une sauvegarde : ouvre-en une et utilise Outils > Sauvegardes de la feuille pour retrouver son ancienne version."

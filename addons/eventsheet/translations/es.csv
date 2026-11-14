@@ -7391,7 +7391,6 @@ not changed - check it,sin cambiar - revísalo
 Renamed %s to %s,%s renombrado a %s
 Changed %d place(s) in %d sheet(s).,Se cambiaron %d lugar(es) en %d hoja(s).
 Ctrl+Z undoes all of it in this sheet.,Ctrl+Z lo deshace todo en esta hoja.
-Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z lo deshace todo en esta hoja. Otros archivos se guardaron; tu control de versiones puede deshacerlos.
 Clear every bookmark?,¿Quitar todos los marcadores?
 Every bookmark in this sheet goes; the rows themselves stay as they are.,Se van todos los marcadores de esta hoja; las filas quedan como están.
 "Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","Los marcadores no forman parte de deshacer, así que Ctrl+Z no puede recuperarlos."
@@ -10546,3 +10545,4 @@ The version before this save is in Tools > Sheet Backups.,La versión anterior a
 Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,Guardado como %s - ahora es una hoja .tres. Las escenas siguen ejecutando %s: adjunta %s para usar esta hoja. El .gd se dejó como estaba.
 Couldn't save %s: %s. The sheet is still linked to %s.,No se pudo guardar %s: %s. La hoja sigue vinculada a %s.
 Couldn't save %s: %s.,No se pudo guardar %s: %s.
+"Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.","Ctrl+Z lo deshace todo en esta hoja. Las otras hojas se guardaron, cada una con una copia de seguridad: abre una y usa Herramientas > Copias de seguridad de la hoja para recuperar su versión anterior."

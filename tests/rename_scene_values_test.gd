@@ -58,6 +58,14 @@ static func run() -> bool:
 	ok = _check("a rename nothing stores a value for goes through", dock._rename.rename_everywhere("speed", "move_speed"), true) and ok
 	ok = _check("and writes no scene", FileAccess.get_file_as_string(LEVEL), untouched) and ok
 
+	# The window after a rename that also saved another sheet tells the reader where the way back is, in
+	# the editor's own words, and does not assume they use version control.
+	var receipt: ConfirmationDialog = dock._rename.show_receipt("speed", "move_speed", 1, PackedStringArray(["other.tres"]))
+	var note: Label = receipt.find_child("Note", true, false) as Label
+	ok = _check("the note names Sheet Backups", note != null and note.text.contains("Tools > Sheet Backups"), true) and ok
+	ok = _check("and does not send the reader to version control", note != null and note.text.contains("version control"), false) and ok
+	receipt.queue_free()
+
 	dock.free()
 	reader.roots = PackedStringArray(["res://"])
 	for name: String in ["mover.gd", "mover.gd.uid", "level.tscn"]:

@@ -219,7 +219,7 @@ func show_receipt(old_name: String, new_name: String, moved: int, touched: Packe
 		"list": places,
 		"note": (EventSheetL10n.translate("Ctrl+Z undoes all of it, the scenes included.") + " " + scene_backup) if wrote_scenes and touched.is_empty()
 			else (EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet.") if touched.is_empty()
-			else EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.")
+			else EventSheetL10n.translate("Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.")
 				+ ("" if not wrote_scenes else " " + EventSheetL10n.translate("The scenes go back with Ctrl+Z too.") + " " + scene_backup)),
 		"glyph": "✓",
 		"main": EventSheetL10n.translate("OK"),

@@ -371,6 +371,10 @@ reader one glance. Being quietly wrong about it costs them a broken game. A rena
 The button under the list is the only place a rename happens, it goes through the sheet's own undo
 funnel, and one Ctrl+Z takes all of it back.
 
+The one thing Ctrl+Z does not reach is another sheet that includes this one: the rename rewrites and saves
+it, listed in its own card first. Each such sheet gets a backup before it is written, so you do not need
+version control to get its old version back: open that sheet and use **Tools > Sheet Backups**.
+
 **Renaming an exported variable also carries the values your scenes stored for it.** An `@export`
 variable keeps what you typed in the Inspector in the scene file, under the variable's name
 (`speed = 300.0` on the node). Rename the variable and Godot would no longer find `speed` on the

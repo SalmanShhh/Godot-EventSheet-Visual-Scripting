@@ -7391,7 +7391,6 @@ not changed - check it,未更改 - 请检查
 Renamed %s to %s,已将 %s 重命名为 %s
 Changed %d place(s) in %d sheet(s).,已更改 %d 处，涉及 %d 个表。
 Ctrl+Z undoes all of it in this sheet.,Ctrl+Z 可在此表中全部撤销。
-Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z 可在此表中全部撤销。其他文件已保存；可用版本控制撤销它们。
 Clear every bookmark?,清除所有书签？
 Every bookmark in this sheet goes; the rows themselves stay as they are.,此表中的所有书签都会移除；行本身保持不变。
 "Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.",书签不在撤销范围内，所以 Ctrl+Z 无法找回。
@@ -10546,3 +10545,4 @@ The version before this save is in Tools > Sheet Backups.,此次保存之前的�
 Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,已另存为 %s - 现在是 .tres 事件表。场景仍在运行 %s：请附加 %s 来使用这个事件表。.gd 保持原样。
 Couldn't save %s: %s. The sheet is still linked to %s.,无法保存 %s：%s。该事件表仍与 %s 关联。
 Couldn't save %s: %s.,无法保存 %s：%s。
+"Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z 可以撤销此事件表中的全部改动。其他事件表已保存，且都有备份：打开其中一个，用 工具 > 事件表备份 即可找回旧版本。

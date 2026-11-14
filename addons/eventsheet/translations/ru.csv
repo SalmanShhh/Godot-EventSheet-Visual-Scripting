@@ -7391,7 +7391,6 @@ not changed - check it,не изменено - проверьте
 Renamed %s to %s,%s переименован в %s
 Changed %d place(s) in %d sheet(s).,"Изменено мест: %d, листов: %d."
 Ctrl+Z undoes all of it in this sheet.,Ctrl+Z отменяет всё это в этом листе.
-Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Ctrl+Z отменяет всё это в этом листе. Другие файлы сохранены; их можно откатить в системе контроля версий.
 Clear every bookmark?,Удалить все закладки?
 Every bookmark in this sheet goes; the rows themselves stay as they are.,Все закладки этого листа исчезнут; сами строки останутся как есть.
 "Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","Закладки не входят в отмену, поэтому Ctrl+Z их не вернёт."
@@ -10546,3 +10545,4 @@ The version before this save is in Tools > Sheet Backups.,Версия до эт
 Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,"Сохранено как %s - теперь это лист .tres. Сцены по-прежнему запускают %s: прикрепите %s, чтобы использовать этот лист. Файл .gd оставлен как был."
 Couldn't save %s: %s. The sheet is still linked to %s.,Не удалось сохранить %s: %s. Лист по-прежнему связан с %s.
 Couldn't save %s: %s.,Не удалось сохранить %s: %s.
+"Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.","Ctrl+Z отменяет всё в этом листе. Другие листы сохранены, у каждого есть резервная копия: откройте нужный и воспользуйтесь Инструменты > Резервные копии листа, чтобы вернуть старую версию."

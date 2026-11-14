@@ -7391,7 +7391,6 @@ not changed - check it,변경 안 됨 - 확인하세요
 Renamed %s to %s,%s을(를) %s(으)로 이름을 바꿨습니다
 Changed %d place(s) in %d sheet(s).,%d곳을 시트 %d개에서 변경했습니다.
 Ctrl+Z undoes all of it in this sheet.,이 시트에서는 Ctrl+Z로 모두 되돌릴 수 있습니다.
-Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,이 시트에서는 Ctrl+Z로 모두 되돌릴 수 있습니다. 다른 파일은 저장되었으므로 버전 관리로 되돌릴 수 있습니다.
 Clear every bookmark?,모든 책갈피를 지울까요?
 Every bookmark in this sheet goes; the rows themselves stay as they are.,"이 시트의 모든 책갈피가 사라지며, 행 자체는 그대로 남습니다."
 "Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.",책갈피는 실행 취소 대상이 아니므로 Ctrl+Z로 되돌릴 수 없습니다.
@@ -10546,3 +10545,4 @@ The version before this save is in Tools > Sheet Backups.,이 저장 이전 버�
 Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,%s(으)로 저장했습니다 - 이제 .tres 시트입니다. 씬은 계속 %s을(를) 실행합니다. 이 시트를 쓰려면 %s을(를) 붙이세요. .gd는 그대로 두었습니다.
 Couldn't save %s: %s. The sheet is still linked to %s.,%s을(를) 저장하지 못했습니다: %s. 시트는 여전히 %s에 연결되어 있습니다.
 Couldn't save %s: %s.,%s을(를) 저장하지 못했습니다: %s.
+"Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z로 이 시트의 모든 변경을 되돌릴 수 있습니다. 다른 시트는 저장되었고 각각 백업이 있습니다. 하나를 열어 도구 > 시트 백업으로 이전 버전을 되찾으세요.

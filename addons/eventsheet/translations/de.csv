@@ -7391,7 +7391,6 @@ not changed - check it,nicht geändert - bitte prüfen
 Renamed %s to %s,%s in %s umbenannt
 Changed %d place(s) in %d sheet(s).,%d Stelle(n) in %d Sheet(s) geändert.
 Ctrl+Z undoes all of it in this sheet.,Strg+Z macht alles in diesem Sheet rückgängig.
-Ctrl+Z undoes all of it in this sheet. Other files were saved; your version control can undo those.,Strg+Z macht alles in diesem Sheet rückgängig. Andere Dateien wurden gespeichert; deine Versionsverwaltung kann sie zurücksetzen.
 Clear every bookmark?,Alle Lesezeichen entfernen?
 Every bookmark in this sheet goes; the rows themselves stay as they are.,"Alle Lesezeichen dieses Sheets verschwinden; die Zeilen selbst bleiben, wie sie sind."
 "Bookmarks are not part of undo, so Ctrl+Z cannot bring them back.","Lesezeichen sind nicht Teil des Rückgängigmachens, daher kann Strg+Z sie nicht zurückholen."
@@ -10546,3 +10545,4 @@ The version before this save is in Tools > Sheet Backups.,Die Version vor diesem
 Saved as %s - now a .tres sheet. Scenes still run %s: attach %s to use this sheet. The .gd was left as it was.,"Gespeichert als %s - jetzt ein .tres-Sheet. Szenen führen weiterhin %s aus: hänge %s an, um dieses Sheet zu verwenden. Die .gd wurde nicht verändert."
 Couldn't save %s: %s. The sheet is still linked to %s.,%s konnte nicht gespeichert werden: %s. Das Sheet ist weiterhin mit %s verknüpft.
 Couldn't save %s: %s.,%s konnte nicht gespeichert werden: %s.
+"Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.","Strg+Z macht alles in diesem Sheet rückgängig. Andere Sheets wurden gespeichert, jeweils mit einer Sicherung: öffne eines und nutze Werkzeuge > Blatt-Sicherungen, um die alte Version zurückzuholen."
