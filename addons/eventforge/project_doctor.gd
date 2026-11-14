@@ -1050,6 +1050,8 @@ static func check_unused_variables(sheet_paths: PackedStringArray, findings: Arr
 		for row: Dictionary in declared:
 			if bool(row.get("inspector", true)):
 				continue
+			if _is_script(sheet_path) and bool(row.get("constant", false)):
+				continue  # A script's constant is a public offer: other code reaches it as Class.NAME.
 			var variable_name: String = str(row.get("name", ""))
 			var corpus: String = str(usage_by_path.get(sheet_path, ""))
 			for other: Dictionary in declared:
@@ -1088,7 +1090,8 @@ static func declared_variables(sheet: EventSheetResource) -> Array[Dictionary]:
 		else:
 			text += " " + str(sheet.variables.get(name_text, ""))
 		declared.append({"name": name_text, "inspector": bool(row.get("inspector", false)),
-			"text": text, "storage": str(row.get("storage", ""))})
+			"text": text, "storage": str(row.get("storage", "")),
+			"constant": str(row.get("scope", "")) == EventSheetVariableSentence.SCOPE_CONSTANT})
 	declared.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["name"]) < str(b["name"]))
 	return declared
 
@@ -1236,6 +1239,12 @@ static func _is_setup_only_blank_event(event: EventRow) -> bool:
 
 ## Walks an event + its sub-events for unbounded, unbudgeted For Each loops with >= threshold actions.
 static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary], numbers: Dictionary = {}) -> void:
+	# An event with a condition of its own does not run every frame: it runs while the condition holds,
+	# which a script writes as a key press or a "once" flag as often as a continuous state, and the audit
+	# cannot tell them apart. So a condition ends the walk, rather than accuse a loop that a guard may
+	# be keeping to one frame.
+	if not event.conditions.is_empty():
+		return
 	for filter_entry: Variant in event.pick_filters:
 		if not (filter_entry is PickFilter):
 			continue
@@ -1251,12 +1260,8 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each." % [pick.iterator_name, event.actions.size()],
 					int(numbers.get(event.get_instance_id(), 0)))
 			break
-	# A sub-event with a condition of its own does not run every frame: it runs while the condition
-	# holds, which a script writes as a key press or a "once" flag as often as a continuous state, and
-	# the audit cannot tell them apart. So the walk stops at a condition, rather than accuse a loop a
-	# guard may be keeping to one frame.
 	for sub: Variant in event.sub_events:
-		if sub is EventRow and (sub as EventRow).conditions.is_empty():
+		if sub is EventRow:
 			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings, numbers)
 
 ## ACE ids whose codegen `await`s - they suspend the handler into a coroutine (Begin Frame Budget alone
@@ -1750,6 +1755,10 @@ static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: A
 		for row: Dictionary in declared_variables(sheet):
 			var variable_name: String = str(row.get("name", ""))
 			var owner_class: String = shadowed_member_class(sheet, variable_name)
+			# For a script Godot is the judge: a name its parent class has as a METHOD (`set_name` on a
+			# Resource) loads without complaint, so only a script the engine refuses to load is accused.
+			if not owner_class.is_empty() and _is_script(sheet_path) and GdSheets.script_loads(sheet_path):
+				owner_class = ""
 			if not owner_class.is_empty():
 				_add(findings, "error", "shadowed-variable", sheet_path,
 					"Variable \"%s\" shadows a %s member - the %s can't load. Rename Everywhere… fixes every reference." % [
@@ -3025,6 +3034,7 @@ static func _project_scripts() -> PackedStringArray:
 ## and from the editor's filesystem hook. The texts those files hold go with it, for the same reason
 ## and under the same contract.
 static func clear_project_scripts() -> void:
+	GdSheets.forget()
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
 	ProjectFiles.clear()

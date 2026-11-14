@@ -99,16 +99,49 @@ static func script_is_reached(script_path: String) -> bool:
 ## script's own lines the importer kept as code, or as `something.name` in another project script. A
 ## member of a script is public to every other script, which a `.tres` sheet's compiled output is not.
 static func script_names_it(script_path: String, variable_name: String) -> bool:
-	var name_pattern: RegEx = RegEx.create_from_string("\\b%s\\b" % variable_name)
-	var declaration: RegEx = RegEx.create_from_string("^\\s*(@[A-Za-z_]+(\\([^)]*\\))?\\s*)*(static\\s+)?(var|const)\\s+%s\\b" % variable_name)
-	for line: String in EventSheetProjectDoctor.source_of(script_path).split("\n"):
-		if declaration.search(line) == null and name_pattern.search(line) != null:
-			return true
-	var member_use: RegEx = RegEx.create_from_string("\\.%s\\b" % variable_name)
-	for other_path: String in EventSheetProjectDoctor._project_scripts():
-		if other_path != script_path and member_use.search(EventSheetProjectDoctor.source_of(other_path)) != null:
+	var source: String = EventSheetProjectDoctor.source_of(script_path)
+	# The plain-text test first: a name written once is the declaration and nothing else, which is
+	# the common answer and costs one substring count.
+	if source.count(variable_name) > 1:
+		var name_pattern: RegEx = RegEx.create_from_string("\\b%s\\b" % variable_name)
+		var declaration: RegEx = RegEx.create_from_string("^\\s*(@[A-Za-z_]+(\\([^)]*\\))?\\s*)*(static\\s+)?(var|const)\\s+%s\\b" % variable_name)
+		for line: String in source.split("\n"):
+			if declaration.search(line) == null and name_pattern.search(line) != null:
+				return true
+	var users: Dictionary = _member_users().get(variable_name, {})
+	for user_path: Variant in users:
+		if str(user_path) != script_path:
 			return true
 	return false
+
+
+## name -> {script path: true} for every `.name` written in a project script, read once per audit: the
+## answer to "does another script reach this member" for every variable the audit asks about, instead
+## of one scan of every script per variable.
+static var _users_by_member: Dictionary = {}
+static var _users_walked: bool = false
+
+
+static func _member_users() -> Dictionary:
+	if _users_walked:
+		return _users_by_member
+	var users: Dictionary = {}
+	var member_use: RegEx = RegEx.create_from_string("\\.([A-Za-z_][A-Za-z0-9_]*)")
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		for found: RegExMatch in member_use.search_all(EventSheetProjectDoctor.source_of(script_path)):
+			var member: String = found.get_string(1)
+			if not users.has(member):
+				users[member] = {}
+			(users[member] as Dictionary)[script_path] = true
+	_users_by_member = users
+	_users_walked = true
+	return users
+
+
+## Forgets the index above; the Doctor calls it with the rest of its per-audit memory.
+static func forget() -> void:
+	_users_by_member = {}
+	_users_walked = false
 
 
 ## Every name a line of this sheet may use that is not a member: its locals, the parameters of its
@@ -170,3 +203,10 @@ static func _note_local_names(entries: Variant, names: Dictionary, walked: Dicti
 				names[str(local_name)] = true
 		for key: String in ["events", "rows"]:
 			_note_local_names((entry as Resource).get(key), names, walked)
+
+
+## Whether the engine accepts this script: it loads and can make an instance. Asked only about a script
+## the checks already suspect, because a script Godot rejects prints its own parse errors as it loads.
+static func script_loads(script_path: String) -> bool:
+	var script: GDScript = ResourceLoader.load(script_path, "GDScript", ResourceLoader.CACHE_MODE_REUSE) as GDScript
+	return script != null and script.can_instantiate()

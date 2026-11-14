@@ -77,6 +77,17 @@ static func run() -> bool:
 	var shadow_findings: Array[Dictionary] = _run_check("check_shadowed_variables", _write("shadow", "extends Node2D\n\nvar position: Vector2 = Vector2.ZERO\n"))
 	rows.append(["a .gd variable that shadows a Node2D member is an error", _checks_of_findings(shadow_findings), ["shadowed-variable"]])
 	rows.append(["and the finding says error", str(shadow_findings[0].get("severity", "")) if not shadow_findings.is_empty() else "", "error"])
+	# Godot is the judge of a script: a name the parent class has as a METHOD loads fine.
+	rows.append(["a Resource script with a set_name variable loads, so it is not accused", _checks_of("check_shadowed_variables", _write("setname",
+		"extends Resource
+
+@export var set_name: String = \"\"
+")), []])
+	rows.append(["an unused constant in a script is a public offer, not dead", _checks_of("check_unused_variables", _write("const",
+		"extends Node
+
+const UNUSED_OFFER: int = 3
+")), []])
 	rows.append(["a .gd variable that shadows nothing is fine", _checks_of("check_shadowed_variables", dead), []])
 
 	# Translation: a tr() call in a project with no catalogs.

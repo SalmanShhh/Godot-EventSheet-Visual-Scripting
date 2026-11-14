@@ -42,8 +42,9 @@ static func run() -> bool:
 	EventSheetProjectDoctor._scan_unbounded_loops(_loop_event(0, 0.0, 0, 2), "res://x.tres", 3, findings)
 	all_passed = _check("a light loop (under threshold) is exempt", findings.size(), 0) and all_passed
 
-	# A loop under a sub-event that has a condition of its own is not accused: the guard may be a key
-	# press or a once flag, and the audit cannot tell which. An unguarded sub-event is still walked.
+	# A loop in an event that has a condition of its own is not accused, nor one under a sub-event that
+	# does: the guard may be a key press or a once flag, and the audit cannot tell which. An unguarded
+	# sub-event is still walked.
 	var guarded_parent: EventRow = EventRow.new()
 	guarded_parent.trigger_id = "OnProcess"
 	var guarded_child: EventRow = _loop_event(0, 0.0, 0, 3)
@@ -53,6 +54,11 @@ static func run() -> bool:
 	findings = []
 	EventSheetProjectDoctor._scan_unbounded_loops(guarded_parent, "res://x.tres", 3, findings)
 	all_passed = _check("a loop under a guarded sub-event is not accused", findings.size(), 0) and all_passed
+	var guarded_top: EventRow = _loop_event(0, 0.0, 0, 3)
+	guarded_top.conditions.append(ACECondition.new())
+	findings = []
+	EventSheetProjectDoctor._scan_unbounded_loops(guarded_top, "res://x.tres", 3, findings)
+	all_passed = _check("a loop in an event with its own condition is not accused either", findings.size(), 0) and all_passed
 	var open_parent: EventRow = EventRow.new()
 	open_parent.trigger_id = "OnProcess"
 	var open_child: EventRow = _loop_event(0, 0.0, 0, 3)
