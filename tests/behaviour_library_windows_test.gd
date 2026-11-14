@@ -92,8 +92,10 @@ static func run() -> bool:
 	var first_pack: String = str(dialog.rows()[0].get_meta("pack_dir")) if listed > 0 else ""
 	var add_words: Array = [dialog.get_ok_button().text, dialog.get_ok_button().disabled]
 	var needs_on_row: bool = false
+	var wrapped_lines: Array = []
 	for label: Node in dialog.rows()[0].find_children("*", "Label", true, false):
 		needs_on_row = needs_on_row or (label as Label).text.begins_with("Also adds") or (label as Label).text == "Nothing else comes with it."
+		wrapped_lines.append([(label as Label).clip_text, (label as Label).autowrap_mode != TextServer.AUTOWRAP_OFF])
 	dialog._search.text = "zzz-no-such-pack"
 	dialog._filter()
 	var hidden_by_search: int = dialog.rows().filter(func(row: Button) -> bool: return not row.visible).size()
@@ -110,6 +112,7 @@ static func run() -> bool:
 		["every library pack the project lacks has a row", listed, waiting],
 		["the first row is selected, so the button has something to act on", [first_pack.is_empty(), add_words], [false, ["Add to project", false]]],
 		["a row says what else comes with its pack", needs_on_row, true],
+		["every line of a row wraps and none is clipped at the edge", wrapped_lines.all(func(line: Array) -> bool: return line == [false, true]), true],
 		["a search that matches nothing hides every row and says so", [hidden_by_search, empty_words], [waiting, "No behaviour here matches that."]],
 		["In this project lists none of them (none is held)", held_rows, 0],
 		["its button says Remove from project…", remove_words, "Remove from project…"],

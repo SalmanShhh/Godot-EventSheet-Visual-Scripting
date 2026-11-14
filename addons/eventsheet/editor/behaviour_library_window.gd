@@ -17,6 +17,8 @@ extends ConfirmationDialog
 # project" lists the packs the project holds instead, and its button, "Remove from project…", asks
 # first and sends the folder to the system trash.
 
+## The most a row may grow, as a multiple of the height it opens at, when its lines wrap.
+const ROW_MAX_GROWTH: float = 3.0
 ## The pack folder this window is on, kept across a rebuild.
 var _selected_dir: String = ""
 var _packs: Array[Dictionary] = []
@@ -282,13 +284,20 @@ func _build_row(pack: Dictionary) -> Button:
 	for said: Array in said_lines:
 		var label: Label = Label.new()
 		label.text = str(said[0])
-		label.clip_text = true
+		# Every line wraps inside the row and the row grows to hold the lines: a long pitch is read whole,
+		# never cut at the right edge.
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.add_theme_color_override("font_color", said[1])
 		if int(said[2]) > 0:
 			label.add_theme_font_size_override("font_size", int(said[2]))
 		words.add_child(label)
 	row.add_child(inset)
+	# The row asks for the height its wrapped lines need, never less than the one it opens at.
+	var row_floor: float = row.custom_minimum_size.y
+	inset.minimum_size_changed.connect(func() -> void:
+		row.custom_minimum_size.y = clampf(inset.get_combined_minimum_size().y + EventSheetPalette.scaled_f(8.0),
+			row_floor, row_floor * ROW_MAX_GROWTH))
 	return row
 
 

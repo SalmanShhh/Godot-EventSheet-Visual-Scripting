@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a behaviour's description is read whole in the Behaviour library
+
+- Each row of the Behaviour library cut its description off at the right edge with no sign it was cut. The lines on a row now wrap inside it and the row grows to hold them, so the whole description is read.
+
 ### Fixed: the Feedback Player's row of buttons wraps instead of widening the Inspector
 
 - The seven buttons under the Feedback Player's list (Play, Stop, Skip, Restore, Debug view, Save as file, Load from file) sat in one row that asked for about 520 px, which pushed the Inspector to 543 px wide. They are in Godot's own wrapping row now, so the buttons drop to a second line when the Inspector is narrow and the Inspector keeps the width you gave it.
