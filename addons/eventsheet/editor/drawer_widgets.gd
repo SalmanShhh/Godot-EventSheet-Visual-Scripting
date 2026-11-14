@@ -1453,6 +1453,8 @@ class DrawerTable:
 	const STORED_ORDER: String = "#"
 	## The width, unscaled, from which a share cell draws its bar as well as its percent.
 	const ROOMY_WIDTH: float = 440.0
+	## The most room, unscaled, a text cell asks for on the strength of its content alone.
+	const TEXT_CELL_CAP: float = 140.0
 	## One row's share: a bar and its percent.
 	const SHARE_CELL: GDScript = preload("res://addons/eventsheet/editor/inspector/share_cell.gd")
 	var editable: bool = true
@@ -1465,6 +1467,8 @@ class DrawerTable:
 	var _total_label: Label = null
 	## The share cell of each drawn row, as [cell, stored index], repainted when a weight changes.
 	var _share_cells: Array = []
+	## The "share" heading; it goes with the share cells while the table is too narrow for them.
+	var _share_head: Label = null
 	var _search: LineEdit = null
 	var _pager: HBoxContainer = null
 	var _page_label: Label = null
@@ -1703,7 +1707,8 @@ class DrawerTable:
 		_cell_marks.clear()
 		_share_cells.clear()
 		_add_button.disabled = not editable
-		_grid.columns = _columns.size() + (3 if not weight_column.is_empty() else 2)  # grip + cells + (share) + remove
+		_share_head = null
+		_grid.columns = _grid_columns(is_roomy(size.x))
 		_grid.add_child(_header(STORED_ORDER, EventSheetL10n.translate("Back to the order the file keeps")))
 		for column: Dictionary in _columns:
 			# The column's name exactly as the code writes it; its Description, when it has one, on hover.
@@ -1714,6 +1719,8 @@ class DrawerTable:
 			var share_head: Label = Label.new()
 			share_head.text = EventSheetL10n.translate("share")
 			share_head.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+			share_head.visible = is_roomy(size.x)
+			_share_head = share_head
 			_grid.add_child(share_head)
 		_grid.add_child(Control.new())
 		var view: Dictionary = _view()
@@ -1729,6 +1736,7 @@ class DrawerTable:
 			if not weight_column.is_empty():
 				var share_cell: Control = SHARE_CELL.new()
 				share_cell.call("set_roomy", is_roomy(size.x))
+				share_cell.visible = is_roomy(size.x)
 				_share_cells.append([share_cell, row_index])
 				_grid.add_child(share_cell)
 			var remove_button: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this row"))
@@ -1859,6 +1867,15 @@ class DrawerTable:
 				longest = maxi(longest, str(snappedf(float(value), 0.01)).length())
 		return "9".repeat(longest + 1)
 
+	## The room a text column's cell asks for: its longest entry whole, never more than TEXT_CELL_CAP.
+	static func text_cell_room(rows: Array, column_name: String) -> float:
+		var widest: float = 0.0
+		for row: Variant in rows:
+			var value: Variant = _cell(row, column_name)
+			if value != null:
+				widest = maxf(widest, EventSheetLookStyle.text_room_plain(str(value)))
+		return minf(widest, EventSheetLookStyle.px(TEXT_CELL_CAP))
+
 	## True when a table this wide has room to spare for the bar in each share cell.
 	static func is_roomy(width: float) -> bool:
 		return width >= EventSheetLookStyle.px(ROOMY_WIDTH)
@@ -1866,11 +1883,25 @@ class DrawerTable:
 	func _notification(what: int) -> void:
 		if what != NOTIFICATION_RESIZED:
 			return
-		var roomy: bool = is_roomy(size.x)
+		_apply_roomy(is_roomy(size.x))
+
+	## The grid's column count: the grip, the cells, the share column only while there is room, the remove button.
+	func _grid_columns(roomy: bool) -> int:
+		return _columns.size() + (3 if not weight_column.is_empty() and roomy else 2)
+
+	## Shows the share column (and its bar) when the table is roomy and takes it away when it is not, so the
+	## text columns keep every pixel a narrow table has; the "Chances" line above already says every share.
+	func _apply_roomy(roomy: bool) -> void:
+		if _grid == null:
+			return
+		_grid.columns = _grid_columns(roomy)
+		if is_instance_valid(_share_head):
+			_share_head.visible = roomy
 		for entry: Variant in _share_cells:
 			var cell: Object = (entry as Array)[0]
 			if is_instance_valid(cell):
 				cell.call("set_roomy", roomy)
+				(cell as Control).visible = roomy
 
 	## "Total weight 80" for the sum of the weights, whole when it is whole.
 	static func total_text(total: float) -> String:
@@ -1968,6 +1999,9 @@ class DrawerTable:
 		edit.text = str(row.get(column_name, ""))
 		edit.editable = editable
 		edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# A text cell asks for the room its longest entry in this column needs, up to a cap, so a narrow
+		# table never cuts "common" to "commo" while another column keeps room it does not use.
+		edit.custom_minimum_size.x = text_cell_room(_value, column_name)
 		edit.text_changed.connect(func(text: String) -> void:
 			row[column_name] = text
 			value_changed.emit(get_value()))

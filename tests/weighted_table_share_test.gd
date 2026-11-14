@@ -19,6 +19,7 @@ static func run() -> bool:
 	ok = _columns_by_need() and ok
 	ok = _chances_label() and ok
 	ok = _widest_cell() and ok
+	ok = _text_cell_room() and ok
 	return ok
 
 
@@ -32,8 +33,14 @@ static func _share_column() -> bool:
 	for entry: Variant in cells:
 		shown.append(((entry as Array)[0] as Control).call("percent_text"))
 	var total: Label = table.get("_total_label") as Label
+	var narrow_columns: int = grid.columns
+	var narrow_share_shown: bool = ((cells[0] as Array)[0] as Control).visible
+	table.call("_apply_roomy", true)
 	var result: bool = SUPPORT.pins("weighted_table_share_test", [
-		["a weighted grid has a grip, two cells, a share and a remove button", grid.columns, 5],
+		["a narrow weighted grid has no share column: a grip, two cells and a remove button", narrow_columns, 4],
+		["a narrow weighted grid shows no share cell", narrow_share_shown, false],
+		["a roomy weighted grid has a grip, two cells, a share and a remove button", grid.columns, 5],
+		["a roomy weighted grid shows its share cell", ((cells[0] as Array)[0] as Control).visible, true],
 		["every row shows its share", shown, PackedStringArray(["50%", "25%", "25%"])],
 		["the total is said beside Add row", total.text, "Total weight 100"],
 		["the total is visible", total.visible, true],
@@ -128,4 +135,16 @@ static func _widest_cell() -> bool:
 		["a wider number asks for one more", table.widest_cell([{"weight": 5.0}, {"weight": 25.0}], "weight"), "99999"],
 		["a long number asks for its digits and a sign", table.widest_cell([{"weight": 12345.5}], "weight"), "99999999"],
 		["a column nobody has filled keeps the least room", table.widest_cell([{"item": "coin"}], "weight"), "9999"],
+	])
+
+
+## A text cell asks for the room its longest entry needs, so a narrow table does not cut it, up to a cap.
+static func _text_cell_room() -> bool:
+	var table: GDScript = EventSheetAttributeDrawers.widgets().DrawerTable
+	var rows: Array = [{"tags": "common"}, {"tags": "rare,weapon"}]
+	var long_rows: Array = [{"tags": "x".repeat(200)}]
+	return SUPPORT.pins("weighted_table_share_test", [
+		["a text cell asks for its longest entry", table.text_cell_room(rows, "tags") > EventSheetLookStyle.text_room_plain("rare,weap"), true],
+		["a column with no entry asks for nothing", table.text_cell_room(rows, "item"), 0.0],
+		["a very long entry is held to the cap", table.text_cell_room(long_rows, "tags"), EventSheetLookStyle.px(table.TEXT_CELL_CAP)],
 	])

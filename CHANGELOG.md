@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a weighted table never cuts its text cells
+
+- A weighted table narrower than its roomy width no longer shows the per-row share column at all (the "Chances" line above the table already says every share, and "Total weight" stays), and the room goes to the text columns. A text cell also asks for the room its longest entry needs, up to a cap, so "common" and "rare,weapon" are whole at the Inspector's default width. The Loot Table's narrowest Inspector grows from 316 to 356 px to hold its tags whole.
+
 ### Fixed: the Chances label reads like the labels around it
 
 - The "Chances" row above a weighted table no longer draws a dim label. The row is tied to no property once the Inspector has built it, so it shows neither a second revert arrow nor the dimmed label Godot gives a read-only row.
