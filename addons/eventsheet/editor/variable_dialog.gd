@@ -299,6 +299,9 @@ func init_dialog(parent_node: Node) -> void:
 	_help_strip = EventSheetPopupUI.help_strip("", "", "", "", 300.0)
 	# The code can run long; it wraps inside the column rather than widening the window.
 	_help_strip.in_code_value.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	# The whole line shows, wrapped: this column has the room, so no ellipsis cuts the declaration.
+	_help_strip.in_code_value.max_lines_visible = -1
+	_help_strip.in_code_value.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	live.add_child(_help_strip)
 	_inspector_preview_card = EventSheetInspectorPreviewCard.new()
 	live.add_child(_inspector_preview_card)

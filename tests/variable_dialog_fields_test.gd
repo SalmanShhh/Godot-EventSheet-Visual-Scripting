@@ -108,6 +108,9 @@ static func run() -> bool:
 	# ── the strip follows focus, and its two lines are the row and the line ──────
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
 	ok = _check("the strip opens on the scope", dialog._help_strip.heading_label.text, "SCOPE · INSTANCE") and ok
+	ok = _check("the code line wraps whole, with no line cap and no ellipsis",
+		[dialog._help_strip.in_code_value.max_lines_visible, dialog._help_strip.in_code_value.text_overrun_behavior],
+		[-1, TextServer.OVERRUN_NO_TRIMMING]) and ok
 	ok = _check("READS AS is the row the sheet will show",
 		dialog._help_strip.reads_as_value.text, "Instance whole number  hp = 100") and ok
 	ok = _check("IN CODE is the line the compiler will write",
