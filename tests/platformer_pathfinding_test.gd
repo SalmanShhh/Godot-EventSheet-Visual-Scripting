@@ -128,7 +128,7 @@ static func run() -> bool:
 	all_passed = _check("the platform edge works both ways", _edge_kind(behavior, Vector2i(13, 2), Vector2i(0, 4)), "platform") and all_passed
 	behavior.regenerate_nav_graph()
 	all_passed = _check("platforms survive Regenerate Nav Graph", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "platform") and all_passed
-	var ride: Dictionary = behavior._platform_for_waypoint(behavior._cell_world(Vector2i(13, 2)))
+	var ride: RefCounted = behavior._platform_for_waypoint(behavior._cell_world(Vector2i(13, 2)))
 	all_passed = _check("the drive can find the platform serving a waypoint", ride.get("node") == ferry, true) and all_passed
 	behavior.clear_moving_platforms()
 	all_passed = _check("Clear Moving Platforms removes the edge", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "") and all_passed
@@ -203,9 +203,9 @@ static func _make_map() -> TileMapLayer:
 
 
 static func _edge_kind(behavior: Node, from_cell: Vector2i, to_cell: Vector2i) -> String:
-	for edge in (behavior.get("_edges").get(from_cell, []) as Array):
-		if edge["to"] == to_cell:
-			return str(edge["kind"])
+	for edge: RefCounted in (behavior.get("_edges").get(from_cell, []) as Array):
+		if edge.get("to") == to_cell:
+			return str(edge.get("kind"))
 	return ""
 
 

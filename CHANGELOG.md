@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Platformer Pathfinding keeps its records as small classes
+
+- A link, a route stop, a portal, a hazard, a moving platform, a pending side request and a map tag's shared map were dictionaries read by text in about a hundred and thirty places; they are now `NavEdge`, `NavWaypoint`, `NavPortal`, `NavHazard`, `NavRide`, `NavSideRequest` and `NavSharedMap` with typed fields. Routes, portals, hazards and platforms behave as before, and the only saved text, the obstacle map JSON, is read and written exactly as it was.
+- The mistake check now carries a sheet's own small classes into the probe it loads rows in, and a loop over a list of them no longer counts as a picked node.
+
 ### Changed: Status Effects keeps each running status as a small class
 
 - A status that is on was a dictionary of five keys read and written by text in about thirty places; it is now an `ActiveStatus` with typed fields. Applying, stacking, ticking, extending and ending behave exactly as before, and nothing here is saved.

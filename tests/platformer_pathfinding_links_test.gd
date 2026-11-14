@@ -120,12 +120,12 @@ static func _strategies_and_search(script: GDScript) -> bool:
 	var map: TileMapLayer = _classic_map()
 	var nav: Node = script.new()
 	nav.build_nav_graph(map)
-	var gap_jump: Dictionary = _edge(nav, Vector2i(7, 4), Vector2i(10, 4))
+	var gap_jump: RefCounted = _edge(nav, Vector2i(7, 4), Vector2i(10, 4))
 	var prices: Dictionary = {"balanced": 4.5, "shortest": 5.0, "safest": 11.719, "ground_hugging": 22.0}
 	for strategy: String in prices:
 		nav.set_path_strategy(strategy)
 		ok = _check("%s prices the 3-cell gap jump" % strategy, snappedf(nav._edge_cost(Vector2i(7, 4), gap_jump), 0.001), prices[strategy]) and ok
-	var drop: Dictionary = _edge(nav, Vector2i(12, 2), Vector2i(11, 4))
+	var drop: RefCounted = _edge(nav, Vector2i(12, 2), Vector2i(11, 4))
 	nav.set_path_strategy("walk_only")
 	ok = _check("walk_only: the gap jump is filtered out", nav._edge_allowed(Vector2i(7, 4), gap_jump), false) and ok
 	ok = _check("walk_only: the platform drop is filtered out", nav._edge_allowed(Vector2i(12, 2), drop), false) and ok
@@ -267,7 +267,7 @@ static func _portals(script: GDScript) -> bool:
 	var door: int = nav.last_portal_id()
 	ok = _check("the first portal is id 1", door, 1) and ok
 	ok = _check("instant portal link", _kind(nav, Vector2i(0, 4), Vector2i(13, 2)), "portal") and ok
-	ok = _check("its cost scales the base of 2", _edge(nav, Vector2i(0, 4), Vector2i(13, 2))["cost"], 6.0) and ok
+	ok = _check("its cost scales the base of 2", _edge(nav, Vector2i(0, 4), Vector2i(13, 2)).get("cost"), 6.0) and ok
 	ok = _check("portal type", nav.portal_type(door), "instant") and ok
 	ok = _check("tags match by token", [nav.portal_count_by_tag("door"), nav.portal_count_by_tag("east"), nav.portal_count_by_tag("doo")], [1, 1, 0]) and ok
 	nav.add_gradual_portal(48.0, 144.0, 464.0, 80.0, false, 100.0, 1.0, "lift")
@@ -427,15 +427,16 @@ static func _body(at: Vector2, size: Vector2, one_way: bool) -> StaticBody2D:
 	return body
 
 
-static func _edge(behavior: Node, from_cell: Vector2i, to_cell: Vector2i) -> Dictionary:
-	for edge in (behavior.get("_edges").get(from_cell, []) as Array):
-		if edge["to"] == to_cell:
+static func _edge(behavior: Node, from_cell: Vector2i, to_cell: Vector2i) -> RefCounted:
+	for edge: RefCounted in (behavior.get("_edges").get(from_cell, []) as Array):
+		if edge.get("to") == to_cell:
 			return edge
-	return {}
+	return null
 
 
 static func _kind(behavior: Node, from_cell: Vector2i, to_cell: Vector2i) -> String:
-	return str(_edge(behavior, from_cell, to_cell).get("kind", ""))
+	var edge: RefCounted = _edge(behavior, from_cell, to_cell)
+	return str(edge.get("kind")) if edge != null else ""
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

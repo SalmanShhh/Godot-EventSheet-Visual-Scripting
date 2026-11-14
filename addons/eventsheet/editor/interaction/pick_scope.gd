@@ -144,6 +144,40 @@ static func type_made_by(ace_id: String, params: Dictionary) -> String:
 	return str((nodes[0] as Dictionary).get("type", "")) if not nodes.is_empty() else ""
 
 
+## The helper classes a sheet declares itself (`class Edge extends RefCounted:`), by sheet: {sheet id: [event count, {name: true}]}.
+## A small record a script holds is not something a scene has instances of, so a loop over a list of them picks nothing.
+static var _helper_classes: Dictionary = {}
+
+
+## True when `type_name` has instances in a scene and is not a plain helper class this sheet declares for itself.
+static func _is_pick_type(sheet: EventSheetResource, type_name: String) -> bool:
+	if not is_instance_type(type_name):
+		return false
+	return ClassDB.class_exists(type_name.strip_edges()) or not _sheet_helper_classes(sheet).has(type_name.strip_edges())
+
+
+## The names of the classes written inside the sheet that are not nodes: {name: true}.
+static func _sheet_helper_classes(sheet: EventSheetResource) -> Dictionary:
+	var key: int = sheet.get_instance_id()
+	var cached: Array = _helper_classes.get(key, []) as Array
+	if not cached.is_empty() and int(cached[0]) == sheet.events.size():
+		return cached[1]
+	var names: Dictionary = {}
+	var header: RegEx = RegEx.create_from_string("(?m)^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends ([A-Za-z_][A-Za-z0-9_.]*))?:")
+	for entry: Variant in sheet.events:
+		var text: String = ""
+		if entry is InnerClassRow:
+			text = (entry as InnerClassRow).header
+		elif entry is RawCodeRow and (entry as RawCodeRow).code.contains("class "):
+			text = (entry as RawCodeRow).code
+		for found: RegExMatch in header.search_all(text):
+			var base: String = found.get_string(2)
+			if base.is_empty() or (ClassDB.class_exists(base) and not ClassDB.is_parent_class(base, "Node")):
+				names[found.get_string(1)] = true
+	_helper_classes[key] = [sheet.events.size(), names]
+	return names
+
+
 ## The picks one event makes by itself: [{"name", "type"}]. A For each names its item and takes the
 ## element type of the list it walks; a pop or pick row names the item it took; a typed local names itself. The
 ## amber "nothing is picked here" check leaves the locals a line declares out (`with_declared_locals`): a name a function
@@ -166,7 +200,7 @@ static func own_picks(sheet: EventSheetResource, event_row: EventRow, with_decla
 		if type_name.is_empty() and pick.collection_kind in [PickFilter.CollectionKind.ARRAY, PickFilter.CollectionKind.EXPRESSION]:
 			type_name = own_list_element(sheet, pick.collection_value.strip_edges())
 		# A loop over a list of values (Array[String]) holds no instances, so it picks nothing the object column names.
-		if not type_name.is_empty() and not is_instance_type(type_name):
+		if not type_name.is_empty() and not _is_pick_type(sheet, type_name):
 			continue
 		picks.append({"name": item, "type": type_name})
 	for entry: Variant in event_row.actions:
@@ -178,22 +212,22 @@ static func own_picks(sheet: EventSheetResource, event_row: EventRow, with_decla
 			var names: Array = PICK_ACES[action.ace_id]
 			var taken: String = str(params.get(names[0], "")).strip_edges()
 			var taken_type: String = list_expression_element(sheet, str(params.get(names[1], "")))
-			if taken.is_valid_identifier() and (taken_type.is_empty() or is_instance_type(taken_type)):
+			if taken.is_valid_identifier() and (taken_type.is_empty() or _is_pick_type(sheet, taken_type)):
 				picks.append({"name": taken, "type": taken_type})
 		elif MADE_NAMES.NAME_PARAMS.has(action.ace_id):
 			var made: String = str(params.get(MADE_NAMES.NAME_PARAMS[action.ace_id], "")).strip_edges()
 			var made_type: String = type_made_by(action.ace_id, params)
-			if made.is_valid_identifier() and (made_type.is_empty() or is_instance_type(made_type)):
+			if made.is_valid_identifier() and (made_type.is_empty() or _is_pick_type(sheet, made_type)):
 				picks.append({"name": made, "type": made_type})
 		elif with_declared_locals and TYPED_LOCAL_ACES.has(action.ace_id):
 			var declared: Array = TYPED_LOCAL_ACES[action.ace_id]
 			var local_name: String = str(params.get(declared[0], "")).strip_edges()
 			var local_type: String = str(params.get(declared[1], "")).strip_edges()
-			if local_name.is_valid_identifier() and is_instance_type(local_type):
+			if local_name.is_valid_identifier() and _is_pick_type(sheet, local_type):
 				picks.append({"name": local_name, "type": local_type})
 	for entry: Variant in event_row.local_variables:
 		var local: LocalVariable = entry as LocalVariable
-		if local != null and not local.name.strip_edges().is_empty() and is_instance_type(local.type_name):
+		if local != null and not local.name.strip_edges().is_empty() and _is_pick_type(sheet, local.type_name):
 			picks.append({"name": local.name.strip_edges(), "type": local.type_name.strip_edges()})
 	return picks
 

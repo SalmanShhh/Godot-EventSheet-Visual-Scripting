@@ -266,6 +266,15 @@ static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetRes
 		for entry in sheet.events:
 			if entry is SignalRow and (entry as SignalRow).enabled:
 				lines.append(EventSheetCompiler._emit_signal_line(entry))
+	# A class written inside the sheet is a type the rows use (`var edge: Edge`, `Array[Edge]`), so the probe
+	# carries it as the file holds it; without it every row naming one would fail to load.
+	if sheet != null:
+		for entry in sheet.events:
+			if entry is InnerClassRow:
+				lines.append_array(EventSheetCompiler.inner_class_lines(entry as InnerClassRow))
+			elif entry is RawCodeRow and _is_class_block((entry as RawCodeRow).code):
+				lines.append_array((entry as RawCodeRow).code.split("
+"))
 	if typed:
 		lines.append_array(typed_variable_lines(sheet))
 		lines.append_array(typed_function_lines(sheet))
@@ -284,6 +293,21 @@ static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetRes
 		for code_line: String in code.split("\n"):
 			lines.append(code_line)
 	return "\n".join(lines)
+
+
+## Whether a verbatim block is a class written in the file: a `class Name:` line at the left edge with
+## nothing but comments and its own indented body around it.
+static func _is_class_block(code: String) -> bool:
+	var has_class: bool = false
+	for line: String in code.split("
+"):
+		if line.is_empty() or line.begins_with("	") or line.begins_with("#"):
+			continue
+		if line.begins_with("class "):
+			has_class = true
+			continue
+		return false
+	return has_class
 
 
 ## Members of the type the dotted token resolves to:

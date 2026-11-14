@@ -48,6 +48,107 @@ var debug_log: bool = false
 #region state
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
 const OBSTACLE_MAP_VERSION: int = 1
+## One link out of a cell in the search graph.
+class NavEdge extends RefCounted:
+	## The cell the link leads to.
+	var to: Vector2i = Vector2i.ZERO
+	## What kind of link it is: walk, jump, double_jump, coyote_jump, fall, fall_through, portal, portal_gradual or platform.
+	var kind: String = "walk"
+	## What the router pays to take the link, before the Path Strategy re-prices an airborne one.
+	var cost: float = 1.0
+	## The id of the portal that made this link; -1 when it is not a portal link.
+	var portal_id: int = -1
+
+## One stop on the active route.
+class NavWaypoint extends RefCounted:
+	## Where the host heads for, in pixels.
+	var world: Vector2 = Vector2.ZERO
+	## What the host does to get here: walk, jump, double_jump, coyote_jump, fall, fall_through, portal, portal_gradual or platform.
+	var action: String = "walk"
+	## The graph cell this stop stands for.
+	var cell: Vector2i = Vector2i.ZERO
+	## The id of the portal this stop enters; -1 when it is not a portal stop.
+	var portal_id: int = -1
+
+## One registered portal: a link between two spots that survives a regenerate.
+class NavPortal extends RefCounted:
+	## The id Add Portal handed out.
+	var id: int = 0
+	## Where the portal is entered, in pixels.
+	var from: Vector2 = Vector2.ZERO
+	## Where the portal comes out, in pixels.
+	var to: Vector2 = Vector2.ZERO
+	## True when the portal can be taken in both directions.
+	var both: bool = false
+	## "instant" blinks across; "gradual" carries the host at its speed.
+	var type: String = "instant"
+	## Scales the cost of taking the portal in a route.
+	var cost: float = 1.0
+	## Pixels per second a gradual portal carries the host.
+	var speed: float = 100.0
+	## Comma-separated tags the portal answers to; empty for none.
+	var tag: String = ""
+	## True when a route may take the portal through a deadly hazard.
+	var ignore_hazards: bool = false
+
+## One registered hazard: a rectangle, a circle, or a circle that follows a node.
+class NavHazard extends RefCounted:
+	## The id Add Hazard handed out.
+	var id: int = 0
+	## "rect", "circle" or "tracked".
+	var kind: String = "rect"
+	## The covered area of a rect hazard, in pixels.
+	var rect: Rect2 = Rect2()
+	## The middle of a circle hazard, in pixels.
+	var center: Vector2 = Vector2.ZERO
+	## The reach of a circle or tracked hazard, in pixels.
+	var radius: float = 0.0
+	## The node a tracked hazard follows; it may be freed from outside, so it is checked before use.
+	var node: Node = null
+	## True when a route may never cross the hazard; false makes it a costly danger.
+	var deadly: bool = false
+
+## One registered moving platform: the node and the two ends of its travel.
+class NavRide extends RefCounted:
+	## The platform node; it may be freed from outside, so it is checked before use.
+	var node: Node2D = null
+	## One end of the platform's travel, in pixels.
+	var a: Vector2 = Vector2.ZERO
+	## The other end of the platform's travel, in pixels.
+	var b: Vector2 = Vector2.ZERO
+
+## A pending request to stand on one side of a node.
+class NavSideRequest extends RefCounted:
+	## The node to stand beside; it may be freed from outside, so it is checked before use.
+	var node: Node = null
+	## Which side: -1 left, 1 right.
+	var side: int = 1
+	## The spot the route is aimed at, in pixels.
+	var spot: Vector2 = Vector2.ZERO
+
+## What every agent on one map tag shares: the graph, the obstacle edits, the portals, the hazards and the platforms.
+class NavSharedMap extends RefCounted:
+	## The grid the shared graph was built over.
+	var grid_id: int = 0
+	## Standable cells.
+	var nodes: Dictionary = {}
+	## Links out of each cell.
+	var edges: Dictionary = {}
+	## Obstacle map the last build read.
+	var states: Dictionary = {}
+	## Hand-set tile states.
+	var overrides: Dictionary = {}
+	## Tile states scanned from collision bodies.
+	var bodies: Dictionary = {}
+	## Registered portals.
+	var portals: Array[NavPortal] = []
+	## Registered hazards.
+	var hazards: Array[NavHazard] = []
+	## Registered moving platforms.
+	var platforms: Array[NavRide] = []
+	## Elevator groups: group name -> stop positions.
+	var elevators: Dictionary = {}
+
 # --- Internal state (the graph lives per agent, or per map tag when one is set) ---
 ## The tile map the route is searched over.
 var _tilemap: TileMapLayer = null
@@ -61,7 +162,7 @@ var _movement_members_checked: bool = false
 const MOVEMENT_MEMBERS: PackedStringArray = ["jump_velocity", "gravity", "ai_controlled", "ai_move_axis"]
 ## Standable cells (the cell the agent's feet occupy) -> true.
 var _nodes: Dictionary = {}
-## Links out of each cell: target, kind (walk, jump, fall, portal) and cost.
+## Links out of each cell: cell -> Array of NavEdge.
 var _edges: Dictionary = {}
 ## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" / "slope_right". Clear cells are simply absent.
 var _states: Dictionary = {}
@@ -75,8 +176,8 @@ var _custom_grid: bool = false
 var _custom_size: Vector2i = Vector2i.ZERO
 ## Where the tile grid starts, in pixels.
 var _grid_origin: Vector2 = Vector2.ZERO
-## The active path: Array of {"world": Vector2, "action": String, "cell": Vector2i} (portal waypoints also carry "portal_id").
-var _path: Array = []
+## The active path, one NavWaypoint per stop.
+var _path: Array[NavWaypoint] = []
 ## Which point of the route the host is heading for.
 var _path_index: int = 0
 ## True once the host has jumped on the current leg.
@@ -95,8 +196,8 @@ var _move_axis: float = 0.0
 var _debug_line: Line2D = null
 ## Node that draws the whole search graph when debug drawing is on.
 var _debug_graph: Node2D = null
-## Registered portals: {"id", "from", "to", "both", "type" ("instant"/"gradual"), "cost", "speed", "tag", "ignore_hazards"} - they survive regenerate.
-var _portals: Array = []
+## Registered portals - they survive regenerate.
+var _portals: Array[NavPortal] = []
 ## Id given to the next portal that is added.
 var _next_portal_id: int = 1
 ## Id of the portal used most recently; -1 when none.
@@ -104,7 +205,7 @@ var _last_portal_id: int = -1
 ## Elevator groups: group name -> Array of stop positions (Vector2).
 var _elevator_stops: Dictionary = {}
 ## Portal execution: the portal being taken, whether the sheet paused it, and the gradual move.
-var _current_portal: Dictionary = {}
+var _current_portal: NavPortal = null
 ## Where the host comes out of the portal it is using.
 var _current_portal_exit: Vector2 = Vector2.ZERO
 ## True while the host walks into a portal.
@@ -121,8 +222,8 @@ var _portal_to: Vector2 = Vector2.ZERO
 var _portal_progress: float = 0.0
 # Hazards are applied at ROUTING time (no rebuild needed when they change):
 # deadly blocks links outright, danger multiplies their cost.
-## World-space hazards: {"id", "kind" ("rect"/"circle"/"tracked"), "rect" or "center"/"radius" or "node"/"radius", "deadly"}.
-var _hazards: Array = []
+## World-space hazards.
+var _hazards: Array[NavHazard] = []
 ## Id given to the next hazard that is added.
 var _next_hazard_id: int = 1
 ## Id of the hazard touched most recently; 0 when none.
@@ -130,7 +231,7 @@ var _last_hazard_id: int = 0
 ## True if the host was inside a hazard on the previous frame.
 var _was_in_hazard: bool = false
 ## Registered moving platforms, each a link the agent waits for, boards and rides.
-var _moving_platforms: Array = []
+var _moving_platforms: Array[NavRide] = []
 # Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
 ## The node the host keeps routing toward.
 var _follow_target: Node = null
@@ -145,7 +246,7 @@ var _fail_reason: String = ""
 ## Why the most recent search found no route.
 var _last_search_fail: String = ""
 ## The legs of the most recent route, in order.
-var _last_route_edges: Array = []
+var _last_route_edges: Array[NavEdge] = []
 ## How a goal that cannot be reached is handled: nearest point or fail.
 var _goal_mode: String = "nearest"
 ## Seconds since the route was last worked out.
@@ -195,7 +296,7 @@ var _jump_toward_airborne: bool = false
 var _jump_toward_target: Vector2 = Vector2.ZERO
 # Find Path To Node Side: the node, the side and the spot the route was aimed at.
 ## The pending request to stand on a given side of a target.
-var _side_request: Dictionary = {}
+var _side_request: NavSideRequest = null
 ## Which side of the target the host arrived on: -1 left, 1 right, 0 none.
 var _reached_side: int = 0
 # Idle separation: time spent trying, and the rest after giving up.
@@ -323,15 +424,15 @@ func has_path() -> bool:
 func path_wants_jump() -> bool:
 	if _path.is_empty() or _jumped_this_segment or host == null:
 		return false
-	var waypoint: Dictionary = _path[_path_index]
-	if waypoint["action"] == "jump" or waypoint["action"] == "double_jump":
+	var waypoint: NavWaypoint = _path[_path_index]
+	if waypoint.action == "jump" or waypoint.action == "double_jump":
 		return true
-	if waypoint["action"] == "coyote_jump":
+	if waypoint.action == "coyote_jump":
 		return not host.is_on_floor() and _floor_grace >= _coyote_window() * 0.5
 	# Step assist: a close-and-higher walk waypoint needs a hop on full-block stairs.
 	var tile: float = _tile_px()
-	var target: Vector2 = waypoint["world"]
-	return waypoint["action"] == "walk" and target.y < host.global_position.y - 8.0 and absf(target.x - host.global_position.x) < tile * 1.5
+	var target: Vector2 = waypoint.world
+	return waypoint.action == "walk" and target.y < host.global_position.y - 8.0 and absf(target.x - host.global_position.x) < tile * 1.5
 
 ## @ace_expression
 ## @ace_name("Path Move Axis")
@@ -351,17 +452,17 @@ func current_waypoint_index() -> int:
 ## @ace_expression
 ## @ace_name("Current Waypoint X")
 func current_waypoint_x() -> float:
-	return (_path[_path_index]["world"] as Vector2).x if not _path.is_empty() else 0.0
+	return _path[_path_index].world.x if not _path.is_empty() else 0.0
 
 ## @ace_expression
 ## @ace_name("Current Waypoint Y")
 func current_waypoint_y() -> float:
-	return (_path[_path_index]["world"] as Vector2).y if not _path.is_empty() else 0.0
+	return _path[_path_index].world.y if not _path.is_empty() else 0.0
 
 ## @ace_expression
 ## @ace_name("Current Path Action")
 func current_path_action() -> String:
-	return str(_path[_path_index]["action"]) if not _path.is_empty() else ""
+	return _path[_path_index].action if not _path.is_empty() else ""
 #endregion
 
 #region grid
@@ -475,21 +576,21 @@ func _scan_states() -> void:
 func _bind_shared_map(grid_id: int) -> bool:
 	if map_tag == "":
 		return false
-	var entry: Dictionary = _shared_maps.get(map_tag, {})
-	if entry.is_empty():
-		entry = {"grid_id": 0, "nodes": {}, "edges": {}, "states": {}, "overrides": {}, "bodies": {}, "portals": [], "hazards": [], "platforms": [], "elevators": {}}
-		_shared_maps[map_tag] = entry
-	var built: bool = int(entry["grid_id"]) == grid_id and not (entry["nodes"] as Dictionary).is_empty()
-	entry["grid_id"] = grid_id
-	_nodes = entry["nodes"]
-	_edges = entry["edges"]
-	_states = entry["states"]
-	_tile_overrides = entry["overrides"]
-	_body_states = entry["bodies"]
-	_portals = entry["portals"]
-	_hazards = entry["hazards"]
-	_moving_platforms = entry["platforms"]
-	_elevator_stops = entry["elevators"]
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap
+	if shared == null:
+		shared = NavSharedMap.new()
+		_shared_maps[map_tag] = shared
+	var built: bool = shared.grid_id == grid_id and not shared.nodes.is_empty()
+	shared.grid_id = grid_id
+	_nodes = shared.nodes
+	_edges = shared.edges
+	_states = shared.states
+	_tile_overrides = shared.overrides
+	_body_states = shared.bodies
+	_portals = shared.portals
+	_hazards = shared.hazards
+	_moving_platforms = shared.platforms
+	_elevator_stops = shared.elevators
 	return built
 
 ## Builds the graph from the first physics TileMapLayer in the running scene when a route is
@@ -513,29 +614,28 @@ func _auto_build() -> void:
 ## @ace_hidden
 func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
 	for hazard in _hazards:
-		if (not deadly_only or bool(hazard["deadly"])) and _hazard_hit(hazard, world, 0.0):
+		if (not deadly_only or hazard.deadly) and _hazard_hit(hazard, world, 0.0):
 			return true
 	return false
 
 ## Whether one hazard covers a point, grown by `margin` pixels.
 ## @ace_hidden
-func _hazard_hit(hazard: Dictionary, world: Vector2, margin: float) -> bool:
-	var kind: String = str(hazard.get("kind", "rect"))
-	if kind == "circle":
-		return world.distance_to(hazard["center"]) <= float(hazard["radius"]) + margin
-	if kind == "tracked":
-		var followed: Variant = hazard.get("node")
+func _hazard_hit(hazard: NavHazard, world: Vector2, margin: float) -> bool:
+	if hazard.kind == "circle":
+		return world.distance_to(hazard.center) <= hazard.radius + margin
+	if hazard.kind == "tracked":
+		var followed: Variant = hazard.node
 		if not is_instance_valid(followed) or not (followed is Node2D):
 			return false
-		return world.distance_to((followed as Node2D).global_position) <= float(hazard["radius"]) + margin
-	return (hazard["rect"] as Rect2).grow(margin).has_point(world)
+		return world.distance_to((followed as Node2D).global_position) <= hazard.radius + margin
+	return hazard.rect.grow(margin).has_point(world)
 
 ## Drops tracked hazards whose node has been freed.
 ## @ace_hidden
 func _prune_tracked_hazards() -> void:
 	for index in range(_hazards.size() - 1, -1, -1):
-		var hazard: Dictionary = _hazards[index]
-		if str(hazard.get("kind", "rect")) == "tracked" and not is_instance_valid(hazard.get("node")):
+		var hazard: NavHazard = _hazards[index]
+		if hazard.kind == "tracked" and not is_instance_valid(hazard.node):
 			_hazards.remove_at(index)
 
 ## Hazard verdict for one link (endpoints + midpoint): 0 = clear, 1 = danger, 2 = deadly.
@@ -548,7 +648,7 @@ func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 	for sample in [_cell_world(from_cell), _cell_world(to_cell), (_cell_world(from_cell) + _cell_world(to_cell)) * 0.5]:
 		for hazard in _hazards:
 			if _hazard_hit(hazard, sample, 0.0):
-				if bool(hazard["deadly"]):
+				if hazard.deadly:
 					return 2
 				verdict = 1
 			elif hazard_margin > 0.0 and _hazard_hit(hazard, sample, hazard_margin):
@@ -664,22 +764,29 @@ func _release_velocity_for(target: Vector2) -> float:
 	var rise: float = maxf(host.global_position.y - target.y, 0.0) + 20.0
 	return sqrt(2.0 * _drive_gravity() * rise)
 
-## The registered portal with this id, or {}.
+## The registered portal with this id, or null.
 ## @ace_hidden
-func _portal_by_id(portal_id: int) -> Dictionary:
+func _portal_by_id(portal_id: int) -> NavPortal:
 	for portal in _portals:
-		if int(portal["id"]) == portal_id:
+		if portal.id == portal_id:
 			return portal
-	return {}
+	return null
 
 ## Registers a portal and links it into the built graph; returns its id.
 ## @ace_hidden
 func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: String, cost: float, speed: float, tag: String) -> int:
-	var portal: Dictionary = {"id": _next_portal_id, "from": from, "to": to, "both": both, "type": portal_kind,
-		"cost": cost, "speed": speed, "tag": tag, "ignore_hazards": false}
+	var portal: NavPortal = NavPortal.new()
+	portal.id = _next_portal_id
+	portal.from = from
+	portal.to = to
+	portal.both = both
+	portal.type = portal_kind
+	portal.cost = cost
+	portal.speed = speed
+	portal.tag = tag
 	_next_portal_id += 1
 	_portals.append(portal)
-	_last_portal_id = int(portal["id"])
+	_last_portal_id = portal.id
 	if not _nodes.is_empty():
 		_apply_portal(portal)
 		_refresh_graph_overlay()
@@ -689,48 +796,46 @@ func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: Str
 ## endpoints: "portal" (instant, base cost 2) or "portal_gradual" (cost from its travel time
 ## measured in walking cells). The portal's Cost scales either.
 ## @ace_hidden
-func _apply_portal(portal: Dictionary) -> void:
-	var from_node: Vector2i = _nearest_node(portal["from"], 2)
-	var to_node: Vector2i = _nearest_node(portal["to"], 2)
+func _apply_portal(portal: NavPortal) -> void:
+	var from_node: Vector2i = _nearest_node(portal.from, 2)
+	var to_node: Vector2i = _nearest_node(portal.to, 2)
 	if from_node == Vector2i.MAX or to_node == Vector2i.MAX:
 		return
-	var scale: float = maxf(float(portal.get("cost", 1.0)), 0.01)
+	var scale: float = maxf(portal.cost, 0.01)
 	var kind: String = "portal"
 	var cost: float = 2.0 * scale
-	if str(portal.get("type", "instant")) == "gradual":
+	if portal.type == "gradual":
 		kind = "portal_gradual"
-		var seconds: float = (portal["from"] as Vector2).distance_to(portal["to"]) / maxf(float(portal.get("speed", 100.0)), 1.0)
+		var seconds: float = portal.from.distance_to(portal.to) / maxf(portal.speed, 1.0)
 		cost = maxf(seconds * _run_speed() / _tile_px(), 0.5) * scale
-	_add_edge(from_node, to_node, kind, cost)
-	(_edges[from_node] as Array).back()["portal_id"] = portal["id"]
-	if bool(portal["both"]):
-		_add_edge(to_node, from_node, kind, cost)
-		(_edges[to_node] as Array).back()["portal_id"] = portal["id"]
+	_add_edge(from_node, to_node, kind, cost).portal_id = portal.id
+	if portal.both:
+		_add_edge(to_node, from_node, kind, cost).portal_id = portal.id
 
 ## Removes every link a portal put into the graph.
 ## @ace_hidden
 func _unlink_portal(portal_id: int) -> void:
 	for cell in _edges:
-		var kept: Array = []
-		for edge in (_edges[cell] as Array):
-			if int(edge.get("portal_id", -1)) != portal_id:
+		var kept: Array[NavEdge] = []
+		for edge: NavEdge in (_edges[cell] as Array):
+			if edge.portal_id != portal_id:
 				kept.append(edge)
 		_edges[cell] = kept
 
 ## Re-links one portal after its position, cost or speed changed.
 ## @ace_hidden
-func _relink_portal(portal: Dictionary) -> void:
-	_unlink_portal(int(portal["id"]))
+func _relink_portal(portal: NavPortal) -> void:
+	_unlink_portal(portal.id)
 	if not _nodes.is_empty():
 		_apply_portal(portal)
 	_refresh_graph_overlay()
 
 ## Whether a tag matches a portal's comma-separated tags (an empty tag matches every portal).
 ## @ace_hidden
-func _portal_has_tag(portal: Dictionary, tag: String) -> bool:
+func _portal_has_tag(portal: NavPortal, tag: String) -> bool:
 	if tag == "":
 		return true
-	for token in str(portal["tag"]).split(","):
+	for token in portal.tag.split(","):
 		if token.strip_edges() == tag:
 			return true
 	return false
@@ -738,24 +843,24 @@ func _portal_has_tag(portal: Dictionary, tag: String) -> bool:
 ## Injects one moving platform as a slow bidirectional "platform" link between the
 ## standable nodes nearest its two travel endpoints.
 ## @ace_hidden
-func _apply_moving_platform(ride: Dictionary) -> void:
-	var from_node: Vector2i = _nearest_node(ride["a"], 3)
-	var to_node: Vector2i = _nearest_node(ride["b"], 3)
+func _apply_moving_platform(ride: NavRide) -> void:
+	var from_node: Vector2i = _nearest_node(ride.a, 3)
+	var to_node: Vector2i = _nearest_node(ride.b, 3)
 	if from_node == Vector2i.MAX or to_node == Vector2i.MAX:
 		return
-	var span: float = (ride["a"] as Vector2).distance_to(ride["b"]) / _tile_px()
+	var span: float = ride.a.distance_to(ride.b) / _tile_px()
 	_add_edge(from_node, to_node, "platform", span * 1.3)
 	_add_edge(to_node, from_node, "platform", span * 1.3)
 
 ## The registered platform serving this waypoint (one of its endpoints is near it).
 ## @ace_hidden
-func _platform_for_waypoint(target: Vector2) -> Dictionary:
+func _platform_for_waypoint(target: Vector2) -> NavRide:
 	for ride in _moving_platforms:
-		if not is_instance_valid(ride["node"]):
+		if not is_instance_valid(ride.node):
 			continue
-		if (ride["a"] as Vector2).distance_to(target) < 96.0 or (ride["b"] as Vector2).distance_to(target) < 96.0:
+		if ride.a.distance_to(target) < 96.0 or ride.b.distance_to(target) < 96.0:
 			return ride
-	return {}
+	return null
 
 ## Steering for a platform leg: wait BESIDE the track (a descending platform must land on
 ## empty space), board when it arrives at the near side, stand centered while it travels,
@@ -763,15 +868,15 @@ func _platform_for_waypoint(target: Vector2) -> Dictionary:
 ## progress, so the stuck watchdog is held off for the leg.
 ## @ace_hidden
 func _platform_move_axis(target: Vector2, default_axis: float) -> float:
-	var ride: Dictionary = _platform_for_waypoint(target)
-	if ride.is_empty():
+	var ride: NavRide = _platform_for_waypoint(target)
+	if ride == null:
 		return default_axis
 	_stuck_clock = 0.0
 	_best_waypoint_distance = INF
-	var platform: Node2D = ride["node"]
+	var platform: Node2D = ride.node
 	var plat: Vector2 = platform.global_position
-	var dest_side: Vector2 = ride["a"] if (ride["a"] as Vector2).distance_to(target) <= (ride["b"] as Vector2).distance_to(target) else ride["b"]
-	var board_side: Vector2 = ride["b"] if dest_side == ride["a"] else ride["a"]
+	var dest_side: Vector2 = ride.a if ride.a.distance_to(target) <= ride.b.distance_to(target) else ride.b
+	var board_side: Vector2 = ride.b if dest_side == ride.a else ride.a
 	var riding: bool = host.is_on_floor() and absf(host.global_position.x - plat.x) < 64.0 and host.global_position.y < plat.y + 8.0 and absf(host.global_position.y - plat.y) < 48.0
 	if riding:
 		if plat.distance_to(dest_side) < 40.0:
@@ -794,12 +899,12 @@ func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 ## side (never strolls under a platform that is about to land on it).
 ## @ace_hidden
 func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
-	var ride: Dictionary = _platform_for_waypoint(leg_target)
-	if ride.is_empty():
+	var ride: NavRide = _platform_for_waypoint(leg_target)
+	if ride == null:
 		return default_axis
-	var plat: Vector2 = (ride["node"] as Node2D).global_position
-	var dest_side: Vector2 = ride["a"] if (ride["a"] as Vector2).distance_to(leg_target) <= (ride["b"] as Vector2).distance_to(leg_target) else ride["b"]
-	var board_side: Vector2 = ride["b"] if dest_side == ride["a"] else ride["a"]
+	var plat: Vector2 = ride.node.global_position
+	var dest_side: Vector2 = ride.a if ride.a.distance_to(leg_target) <= ride.b.distance_to(leg_target) else ride.b
+	var board_side: Vector2 = ride.b if dest_side == ride.a else ride.a
 	if plat.distance_to(board_side) < 12.0:
 		return default_axis
 	_stuck_clock = 0.0
@@ -816,12 +921,12 @@ func _riding_moving_platform() -> bool:
 	if host == null or not host.is_on_floor():
 		return false
 	for ride in _moving_platforms:
-		if not is_instance_valid(ride["node"]):
+		if not is_instance_valid(ride.node):
 			continue
-		var plat: Vector2 = (ride["node"] as Node2D).global_position
+		var plat: Vector2 = ride.node.global_position
 		if absf(host.global_position.x - plat.x) >= 40.0 or host.global_position.y > plat.y or plat.y - host.global_position.y >= 48.0:
 			continue
-		if plat.distance_to(ride["a"]) > 12.0 and plat.distance_to(ride["b"]) > 12.0:
+		if plat.distance_to(ride.a) > 12.0 and plat.distance_to(ride.b) > 12.0:
 			return true
 	return false
 
@@ -836,11 +941,11 @@ func _advance_waypoint() -> void:
 	_path_index += 1
 	waypoint_reached.emit()
 	if _path_index >= _path.size():
-		var side: Dictionary = _side_request
+		var side: NavSideRequest = _side_request
 		_finish_path()
 		path_complete.emit()
-		if not side.is_empty():
-			_side_request = {}
+		if side != null:
+			_side_request = null
 			_check_side_reached(side)
 		if _patrolling and not _patrol_dwelling and _path.is_empty():
 			_on_patrol_end()
@@ -940,11 +1045,13 @@ func _route(x: float, y: float, mode: String) -> void:
 	_path = []
 	_path_cost = 0.0
 	for index in range(cells.size()):
-		var edge: Dictionary = _last_route_edges[index]
-		var action: String = "walk" if index == 0 else str(edge.get("kind", "walk"))
-		var waypoint: Dictionary = {"world": _cell_world(cells[index]), "action": action, "cell": cells[index]}
-		if edge.has("portal_id"):
-			waypoint["portal_id"] = edge["portal_id"]
+		var edge: NavEdge = _last_route_edges[index]
+		var waypoint: NavWaypoint = NavWaypoint.new()
+		waypoint.world = _cell_world(cells[index])
+		waypoint.action = "walk" if index == 0 else edge.kind
+		waypoint.cell = cells[index]
+		if index > 0:
+			waypoint.portal_id = edge.portal_id
 		if index > 0:
 			_path_cost += _edge_cost(cells[index - 1], edge)
 		_path.append(waypoint)
@@ -953,14 +1060,14 @@ func _route(x: float, y: float, mode: String) -> void:
 	# A route aimed at an exact spot (patrol ends, beside a node, back from a ledge) lands its
 	# last waypoint on that x while the spot is still over the goal node's own ground.
 	_exact_arrival = false
-	if not is_nan(_exact_final) and absf(_exact_final - (_path.back()["world"] as Vector2).x) <= _tile_px() * 1.5:
-		_path.back()["world"] = Vector2(_exact_final, (_path.back()["world"] as Vector2).y)
+	if not is_nan(_exact_final) and absf(_exact_final - _path.back().world.x) <= _tile_px() * 1.5:
+		_path.back().world = Vector2(_exact_final, _path.back().world.y)
 		_exact_arrival = true
 	_path_index = 0
 	# A fresh route starts at OUR nearest node - when we already stand on it, aim at the
 	# next waypoint instead (a repath mid-stride must never walk the agent backward, or a
 	# chaser re-finding on a timer thrashes in place at node boundaries).
-	if _path.size() > 1 and host.global_position.distance_to(_path[0]["world"]) <= _tile_px():
+	if _path.size() > 1 and host.global_position.distance_to(_path[0].world) <= _tile_px():
 		_path_index = 1
 	_jumped_this_segment = false
 	_second_jump_done = false
@@ -977,11 +1084,11 @@ func _route(x: float, y: float, mode: String) -> void:
 func _smooth_path() -> void:
 	var index: int = 1
 	while index < _path.size() - 1:
-		var before: Dictionary = _path[index - 1]
-		var here: Dictionary = _path[index]
-		var after: Dictionary = _path[index + 1]
-		var flat: bool = (before["cell"] as Vector2i).y == (here["cell"] as Vector2i).y and (here["cell"] as Vector2i).y == (after["cell"] as Vector2i).y
-		if flat and here["action"] == "walk" and after["action"] == "walk" and (index > 1 or before["action"] == "walk"):
+		var before: NavWaypoint = _path[index - 1]
+		var here: NavWaypoint = _path[index]
+		var after: NavWaypoint = _path[index + 1]
+		var flat: bool = before.cell.y == here.cell.y and here.cell.y == after.cell.y
+		if flat and here.action == "walk" and after.action == "walk" and (index > 1 or before.action == "walk"):
 			_path.remove_at(index)
 		else:
 			index += 1
@@ -999,16 +1106,22 @@ func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bo
 	return true
 
 ## @ace_hidden
-func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float) -> void:
+func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float) -> NavEdge:
 	if not _edges.has(from_cell):
-		_edges[from_cell] = []
-	(_edges[from_cell] as Array).append({"to": to_cell, "kind": kind, "cost": cost})
+		var fresh: Array[NavEdge] = []
+		_edges[from_cell] = fresh
+	var edge: NavEdge = NavEdge.new()
+	edge.to = to_cell
+	edge.kind = kind
+	edge.cost = cost
+	(_edges[from_cell] as Array).append(edge)
+	return edge
 
 ## True when a link already joins these two cells.
 ## @ace_hidden
 func _has_edge(from_cell: Vector2i, to_cell: Vector2i) -> bool:
-	for edge in (_edges.get(from_cell, []) as Array):
-		if edge["to"] == to_cell:
+	for edge: NavEdge in (_edges.get(from_cell, []) as Array):
+		if edge.to == to_cell:
 			return true
 	return false
 
@@ -1061,10 +1174,10 @@ func _walk_component(start: Vector2i) -> Dictionary:
 	var frontier: Array = [start]
 	while not frontier.is_empty():
 		var cell: Vector2i = frontier.pop_back()
-		for edge in (_edges.get(cell, []) as Array):
-			if str(edge["kind"]) == "walk" and not seen.has(edge["to"]):
-				seen[edge["to"]] = true
-				frontier.append(edge["to"])
+		for edge: NavEdge in (_edges.get(cell, []) as Array):
+			if edge.kind == "walk" and not seen.has(edge.to):
+				seen[edge.to] = true
+				frontier.append(edge.to)
 	return seen
 
 ## The nearest ledge on this agent's platform in a direction (-1 left, 1 right), or MAX.
@@ -1089,12 +1202,12 @@ func _nearest_ledge_cell(direction: int) -> Vector2i:
 func _reconstruct(goal: Vector2i, came_from: Dictionary, came_edge: Dictionary) -> Array:
 	var current: Vector2i = goal
 	var cells: Array = [current]
-	var edges: Array = [came_edge.get(current, {})]
+	var edges: Array[NavEdge] = [came_edge.get(current, null)]
 	while came_from.has(current):
 		current = came_from[current]
 		cells.push_front(current)
-		edges.push_front(came_edge.get(current, {}))
-	edges[0] = {}
+		edges.push_front(came_edge.get(current, null))
+	edges[0] = null
 	_last_route_edges = edges
 	return cells
 
@@ -1129,10 +1242,10 @@ func _astar(start: Vector2i, goal: Vector2i, allow_partial: bool = false) -> Arr
 			closest = current
 		if current == goal:
 			return _reconstruct(current, came_from, came_edge)
-		for edge in (_edges.get(current, []) as Array):
+		for edge: NavEdge in (_edges.get(current, []) as Array):
 			if not _edge_allowed(current, edge):
 				continue
-			var next_cell: Vector2i = edge["to"]
+			var next_cell: Vector2i = edge.to
 			# Danger (non-deadly) hazards stay traversable but cost Danger Cost Multiplier -
 			# taken only when no clean route exists.
 			var danger: bool = not _ignores_hazards(edge) and _segment_hazard(current, next_cell) == 1
@@ -1151,25 +1264,26 @@ func _astar(start: Vector2i, goal: Vector2i, allow_partial: bool = false) -> Arr
 
 ## Whether a link is a portal set to ignore hazards.
 ## @ace_hidden
-func _ignores_hazards(edge: Dictionary) -> bool:
-	if not edge.has("portal_id"):
+func _ignores_hazards(edge: NavEdge) -> bool:
+	if edge.portal_id < 0:
 		return false
-	return bool(_portal_by_id(int(edge["portal_id"])).get("ignore_hazards", false))
+	var portal: NavPortal = _portal_by_id(edge.portal_id)
+	return portal != null and portal.ignore_hazards
 
 ## A link's cost under the active Path Strategy. Walking, portals and platforms keep their own
 ## cost; airborne links are re-priced: shortest = raw distance plus a landing fee per jump,
 ## safest = long leaps and deep drops cost more the bigger they are, ground_hugging = every
 ## jump and fall carries a heavy fee so walking wins whenever it can.
 ## @ace_hidden
-func _edge_cost(from_cell: Vector2i, edge: Dictionary) -> float:
-	var base: float = float(edge.get("cost", 1.0))
-	var kind: String = str(edge.get("kind", "walk"))
+func _edge_cost(from_cell: Vector2i, edge: NavEdge) -> float:
+	var base: float = edge.cost
+	var kind: String = edge.kind
 	var is_jump: bool = kind == "jump" or kind == "double_jump" or kind == "coyote_jump"
 	var is_fall: bool = kind == "fall" or kind == "fall_through"
 	if not is_jump and not is_fall:
 		return base
-	var span: float = Vector2((edge["to"] as Vector2i) - from_cell).length()
-	var drop: float = maxf(float((edge["to"] as Vector2i).y - from_cell.y), 0.0)
+	var span: float = Vector2(edge.to - from_cell).length()
+	var drop: float = maxf(float(edge.to.y - from_cell.y), 0.0)
 	if path_strategy == "shortest":
 		return span + (2.0 if is_jump else 0.0)
 	if path_strategy == "safest":
@@ -1185,13 +1299,13 @@ func _edge_cost(from_cell: Vector2i, edge: Dictionary) -> float:
 ## never; Walk Only never leaves the ground and the drop limit (No Falling forces it to at
 ## least 0) removes airborne links that land too far down.
 ## @ace_hidden
-func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
-	if not _ignores_hazards(edge) and _segment_hazard(from_cell, edge["to"]) == 2:
+func _edge_allowed(from_cell: Vector2i, edge: NavEdge) -> bool:
+	if not _ignores_hazards(edge) and _segment_hazard(from_cell, edge.to) == 2:
 		return false
-	var kind: String = str(edge["kind"])
+	var kind: String = edge.kind
 	if _patrolling and kind != "walk":
 		return false
-	var drop: float = float(((edge["to"] as Vector2i).y - from_cell.y)) * _tile_px()
+	var drop: float = float(edge.to.y - from_cell.y) * _tile_px()
 	if ledge_restriction:
 		if kind == "walk":
 			return true
@@ -1210,9 +1324,9 @@ func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
 ## The link kind walking cell A -> B (the first link joining them).
 ## @ace_hidden
 func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:
-	for edge in (_edges.get(from_cell, []) as Array):
-		if edge["to"] == to_cell:
-			return str(edge["kind"])
+	for edge: NavEdge in (_edges.get(from_cell, []) as Array):
+		if edge.to == to_cell:
+			return edge.kind
 	return "walk"
 
 ## The map identity crowd claims and agent spacing compare: the grid plus the map tag.
@@ -1252,10 +1366,10 @@ func _agent_avoidance_costs() -> Dictionary:
 		var at: Vector2i = _nearest_node(agent.host.global_position, 1)
 		if at != Vector2i.MAX:
 			costs[at] = float(costs.get(at, 0.0)) + 3.0
-		var their_path: Array = agent._path
+		var their_path: Array[NavWaypoint] = agent._path
 		var their_index: int = agent._path_index
 		for index in range(their_index, mini(their_index + 4, their_path.size())):
-			var cell: Vector2i = their_path[index].get("cell", Vector2i.MAX)
+			var cell: Vector2i = their_path[index].cell
 			costs[cell] = float(costs.get(cell, 0.0)) + 1.5
 	return costs
 
@@ -1287,15 +1401,15 @@ func _claim_goal(goal: Vector2i) -> Vector2i:
 		while not frontier.is_empty() and not found:
 			var next_frontier: Array = []
 			for cell in frontier:
-				for edge in (_edges.get(cell, []) as Array):
-					if str(edge["kind"]) != "walk" or seen.has(edge["to"]):
+				for edge: NavEdge in (_edges.get(cell, []) as Array):
+					if edge.kind != "walk" or seen.has(edge.to):
 						continue
-					seen[edge["to"]] = true
-					if not _claimed_by_other(edge["to"]):
-						chosen = edge["to"]
+					seen[edge.to] = true
+					if not _claimed_by_other(edge.to):
+						chosen = edge.to
 						found = true
 						break
-					next_frontier.append(edge["to"])
+					next_frontier.append(edge.to)
 				if found:
 					break
 			frontier = next_frontier
@@ -1409,12 +1523,12 @@ func _end_patrol() -> void:
 
 ## Side-of-node arrival: the agent stands on the requested side at the requested distance.
 ## @ace_hidden
-func _check_side_reached(side: Dictionary) -> void:
-	if host == null or not is_instance_valid(side.get("node")):
+func _check_side_reached(side: NavSideRequest) -> void:
+	if host == null or not is_instance_valid(side.node):
 		return
-	var spot: Vector2 = side["spot"]
+	var spot: Vector2 = side.spot
 	if absf(host.global_position.x - spot.x) <= _tile_px() and absf(host.global_position.y - spot.y) <= _tile_px() * 2.0:
-		_reached_side = int(side["side"])
+		_reached_side = side.side
 		node_side_reached.emit()
 
 ## Pauses or resumes the sibling movement's own physics (a gradual portal moves the body).
@@ -1427,9 +1541,9 @@ func _set_movement_processing(active: bool) -> void:
 ## A portal waypoint has been reached: fire On Portal Entered, then run the portal unless the
 ## sheet paused it there.
 ## @ace_hidden
-func _enter_portal(waypoint: Dictionary) -> void:
-	_current_portal = _portal_by_id(int(waypoint.get("portal_id", -1)))
-	_current_portal_exit = waypoint["world"]
+func _enter_portal(waypoint: NavWaypoint) -> void:
+	_current_portal = _portal_by_id(waypoint.portal_id)
+	_current_portal_exit = waypoint.world
 	_portal_paused = false
 	_portal_entering = true
 	portal_entered.emit()
@@ -1441,23 +1555,23 @@ func _enter_portal(waypoint: Dictionary) -> void:
 ## Instant: blink to the exit. Gradual: start the straight-line move at the portal's speed with
 ## the movement sibling paused.
 ## @ace_hidden
-func _run_portal(waypoint: Dictionary) -> void:
-	if str(waypoint["action"]) == "portal_gradual":
+func _run_portal(waypoint: NavWaypoint) -> void:
+	if waypoint.action == "portal_gradual":
 		_portal_traversing = true
 		_portal_from = host.global_position
-		_portal_to = waypoint["world"]
+		_portal_to = waypoint.world
 		_portal_progress = 0.0
 		host.velocity = Vector2.ZERO
 		_set_movement_processing(false)
 		return
-	host.global_position = waypoint["world"]
+	host.global_position = waypoint.world
 	host.velocity = Vector2.ZERO
 	_finish_portal()
 
 ## One tick of a gradual portal move.
 ## @ace_hidden
 func _step_gradual_portal(delta: float) -> void:
-	var speed: float = maxf(float(_current_portal.get("speed", 100.0)), 1.0)
+	var speed: float = maxf(_current_portal.speed if _current_portal != null else 100.0, 1.0)
 	var span: float = _portal_from.distance_to(_portal_to)
 	_portal_progress = 1.0 if span <= 0.5 else minf(_portal_progress + speed * delta / span, 1.0)
 	host.global_position = _portal_from.lerp(_portal_to, _portal_progress)
@@ -1549,7 +1663,7 @@ func _refresh_debug() -> void:
 		return
 	_debug_line.add_point(host.global_position)
 	for index in range(_path_index, _path.size()):
-		_debug_line.add_point(_path[index]["world"])
+		_debug_line.add_point(_path[index].world)
 
 ## Creates, redraws or hides the whole-graph overlay (Debug Draw Graph).
 ## @ace_hidden
@@ -1598,8 +1712,8 @@ func _draw_graph_overlay() -> void:
 		return
 	for cell in _edges:
 		var from: Vector2 = _cell_world(cell)
-		for edge in (_edges[cell] as Array):
-			_debug_graph.draw_line(from, _cell_world(edge["to"]), _kind_color(str(edge["kind"])), 1.5)
+		for edge: NavEdge in (_edges[cell] as Array):
+			_debug_graph.draw_line(from, _cell_world(edge.to), _kind_color(edge.kind), 1.5)
 	for cell in _nodes:
 		_debug_graph.draw_circle(_cell_world(cell), 2.5, Color(1.0, 1.0, 1.0, 0.9))
 #endregion
@@ -1661,17 +1775,17 @@ func _physics_process(delta: float) -> void:
 		if not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty() and not _patrolling and idle_separation <= 0.0:
 			set_physics_process(false)
 		return
-	var waypoint: Dictionary = _path[_path_index]
-	var target: Vector2 = waypoint["world"]
+	var waypoint: NavWaypoint = _path[_path_index]
+	var target: Vector2 = waypoint.world
 	# Portal traversal: On Portal Entered, then the blink or the gradual move.
-	if waypoint["action"] == "portal" or waypoint["action"] == "portal_gradual":
+	if waypoint.action == "portal" or waypoint.action == "portal_gradual":
 		_enter_portal(waypoint)
 		return
 	var dx: float = target.x - host.global_position.x
 	_move_axis = clampf(dx / 24.0, -1.0, 1.0) if absf(dx) > 2.0 else 0.0
 	var movement: Node = _find_movement()
 	var tile: float = _tile_px()
-	var action: String = str(waypoint["action"])
+	var action: String = waypoint.action
 	# Jump on jump arcs, and STEP-ASSIST on raised walk waypoints: a full-block stair stops
 	# a walking body, so a close-and-higher waypoint gets a hop (slope tiles just walk).
 	# A coyote jump runs off the ledge first and leaps half way through the coyote window.
@@ -1683,7 +1797,7 @@ func _physics_process(delta: float) -> void:
 	# Strict jump positioning: walk onto the exact takeoff spot before leaping (relaxed
 	# leaps the moment the jump leg starts - faster, but looser on tight arcs).
 	if (action == "jump" or action == "double_jump") and jump_positioning == "strict" and not _jumped_this_segment and _path_index > 0:
-		var takeoff_dx: float = (_path[_path_index - 1]["world"] as Vector2).x - host.global_position.x
+		var takeoff_dx: float = _path[_path_index - 1].world.x - host.global_position.x
 		if absf(takeoff_dx) > 4.0:
 			_move_axis = clampf(takeoff_dx / 24.0, -1.0, 1.0)
 			wants_jump = false
@@ -1702,8 +1816,8 @@ func _physics_process(delta: float) -> void:
 	# the platform parks instead of idling beneath a descending one.
 	else:
 		for ahead in range(_path_index + 1, mini(_path_index + 4, _path.size())):
-			if _path[ahead]["action"] == "platform":
-				_move_axis = _platform_approach_axis(_path[ahead]["world"], _move_axis)
+			if _path[ahead].action == "platform":
+				_move_axis = _platform_approach_axis(_path[ahead].world, _move_axis)
 				wants_jump = false
 				break
 	# The final waypoint is the chase goal, and a chased body physically OCCUPIES its node -
@@ -1721,7 +1835,7 @@ func _physics_process(delta: float) -> void:
 	# Drift re-route: knocked well off the leg it is walking (and on the ground again), the
 	# agent re-plans from where it actually is - once per Repath Interval at most.
 	if drift_repath_distance > 0.0 and not _teleport_grace and host.is_on_floor() and _repath_clock >= repath_interval and _path_index > 0:
-		var leg_start: Vector2 = _path[_path_index - 1]["world"]
+		var leg_start: Vector2 = _path[_path_index - 1].world
 		if _distance_to_segment(host.global_position, leg_start, target) > drift_repath_distance:
 			_repath_clock = 0.0
 			_route(_path_goal.x, _path_goal.y, _goal_mode)
@@ -1896,7 +2010,7 @@ func regenerate_nav_graph() -> void:
 
 func find_path_to(x: float, y: float, mode: String) -> void:
 	_end_patrol()
-	_side_request = {}
+	_side_request = null
 	_exact_final = NAN
 	_route(x, y, mode)
 
@@ -1911,7 +2025,7 @@ func find_path_to_node(target: Node, mode: String) -> void:
 
 func stop_pathfinding() -> void:
 	_end_patrol()
-	_side_request = {}
+	_side_request = null
 	_jump_toward_active = false
 	_release_claim()
 	if _portal_traversing or _portal_paused:
@@ -1957,7 +2071,12 @@ func clear_portals() -> void:
 	regenerate_nav_graph()
 
 func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -> void:
-	_hazards.append({"id": _next_hazard_id, "kind": "rect", "rect": Rect2(x, y, width, height), "deadly": deadly})
+	var hazard: NavHazard = NavHazard.new()
+	hazard.id = _next_hazard_id
+	hazard.kind = "rect"
+	hazard.rect = Rect2(x, y, width, height)
+	hazard.deadly = deadly
+	_hazards.append(hazard)
 	_last_hazard_id = _next_hazard_id
 	_next_hazard_id += 1
 	# A hazard is watched per frame (On Hazard Entered fires on the way in), so a parked
@@ -1970,7 +2089,10 @@ func clear_hazards() -> void:
 func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
 	if not (platform is Node2D):
 		return
-	var ride: Dictionary = {"node": platform, "a": Vector2(from_x, from_y), "b": Vector2(to_x, to_y)}
+	var ride: NavRide = NavRide.new()
+	ride.node = platform as Node2D
+	ride.a = Vector2(from_x, from_y)
+	ride.b = Vector2(to_x, to_y)
 	_moving_platforms.append(ride)
 	if not _nodes.is_empty():
 		_apply_moving_platform(ride)
@@ -2045,7 +2167,7 @@ func set_debug_draw_graph(enabled: bool) -> void:
 
 func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
 	_end_patrol()
-	_side_request = {}
+	_side_request = null
 	var facing: int = -1 if direction == "left" else 1
 	if _nodes.is_empty():
 		_auto_build()
@@ -2074,7 +2196,10 @@ func find_path_to_node_side(target: Node, side: String, distance: float) -> void
 	if side == "any" and _nearest_node(spot, 1) == Vector2i.MAX:
 		facing = -facing
 		spot = at + Vector2(gap * float(facing), 0.0)
-	_side_request = {"node": target, "side": facing, "spot": spot}
+	_side_request = NavSideRequest.new()
+	_side_request.node = target
+	_side_request.side = facing
+	_side_request.spot = spot
 	_exact_final = spot.x
 	_route(spot.x, spot.y, "nearest")
 
@@ -2129,8 +2254,8 @@ func log_graph_stats() -> void:
 	var counts: Dictionary = {}
 	var total: int = 0
 	for cell in _edges:
-		for edge in (_edges[cell] as Array):
-			counts[edge["kind"]] = int(counts.get(edge["kind"], 0)) + 1
+		for edge: NavEdge in (_edges[cell] as Array):
+			counts[edge.kind] = int(counts.get(edge.kind, 0)) + 1
 			total += 1
 	print("[PlatformerPathfinding] nodes=%d links=%d %s portals=%d hazards=%d platforms=%d jump_reach=%s cells" % [_nodes.size(), total, str(counts), _portals.size(), _hazards.size(), _moving_platforms.size(), str(_jump_reach_cells())])
 
@@ -2245,7 +2370,7 @@ func add_elevator_stop(group: String, x: float, y: float, speed: float, tag: Str
 
 func remove_portal(portal_id: int) -> void:
 	for index in range(_portals.size() - 1, -1, -1):
-		if int(_portals[index]["id"]) == portal_id:
+		if _portals[index].id == portal_id:
 			_portals.remove_at(index)
 	_unlink_portal(portal_id)
 	_refresh_graph_overlay()
@@ -2254,10 +2379,10 @@ func remove_portal_near(x: float, y: float) -> void:
 	var best_id: int = -1
 	var best_gap: float = INF
 	for portal in _portals:
-		var gap: float = minf((portal["from"] as Vector2).distance_to(Vector2(x, y)), (portal["to"] as Vector2).distance_to(Vector2(x, y)))
+		var gap: float = minf(portal.from.distance_to(Vector2(x, y)), portal.to.distance_to(Vector2(x, y)))
 		if gap < best_gap:
 			best_gap = gap
-			best_id = int(portal["id"])
+			best_id = portal.id
 	if best_id >= 0:
 		remove_portal(best_id)
 
@@ -2265,37 +2390,37 @@ func remove_portals_by_tag(tag: String) -> void:
 	var doomed: Array = []
 	for portal in _portals:
 		if _portal_has_tag(portal, tag):
-			doomed.append(int(portal["id"]))
+			doomed.append(portal.id)
 	for portal_id in doomed:
 		remove_portal(portal_id)
 
 func set_portal_cost(portal_id: int, cost: float) -> void:
-	var portal: Dictionary = _portal_by_id(portal_id)
-	if not portal.is_empty():
-		portal["cost"] = cost
+	var portal: NavPortal = _portal_by_id(portal_id)
+	if portal != null:
+		portal.cost = cost
 		_relink_portal(portal)
 
 func set_portal_speed(portal_id: int, speed: float) -> void:
-	var portal: Dictionary = _portal_by_id(portal_id)
-	if not portal.is_empty():
-		portal["speed"] = speed
+	var portal: NavPortal = _portal_by_id(portal_id)
+	if portal != null:
+		portal.speed = speed
 		_relink_portal(portal)
 
 func set_portal_tag(portal_id: int, tag: String) -> void:
-	var portal: Dictionary = _portal_by_id(portal_id)
-	if not portal.is_empty():
-		portal["tag"] = tag
+	var portal: NavPortal = _portal_by_id(portal_id)
+	if portal != null:
+		portal.tag = tag
 
 func set_portal_ignore_hazards(portal_id: int, ignore: bool) -> void:
-	var portal: Dictionary = _portal_by_id(portal_id)
-	if not portal.is_empty():
-		portal["ignore_hazards"] = ignore
+	var portal: NavPortal = _portal_by_id(portal_id)
+	if portal != null:
+		portal.ignore_hazards = ignore
 
 func set_portal_position(portal_id: int, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
-	var portal: Dictionary = _portal_by_id(portal_id)
-	if not portal.is_empty():
-		portal["from"] = Vector2(from_x, from_y)
-		portal["to"] = Vector2(to_x, to_y)
+	var portal: NavPortal = _portal_by_id(portal_id)
+	if portal != null:
+		portal.from = Vector2(from_x, from_y)
+		portal.to = Vector2(to_x, to_y)
 		_relink_portal(portal)
 
 func pause_at_portal() -> void:
@@ -2315,7 +2440,13 @@ func complete_portal() -> void:
 	_finish_portal()
 
 func add_circle_hazard(x: float, y: float, radius: float, deadly: bool) -> void:
-	_hazards.append({"id": _next_hazard_id, "kind": "circle", "center": Vector2(x, y), "radius": radius, "deadly": deadly})
+	var hazard: NavHazard = NavHazard.new()
+	hazard.id = _next_hazard_id
+	hazard.kind = "circle"
+	hazard.center = Vector2(x, y)
+	hazard.radius = radius
+	hazard.deadly = deadly
+	_hazards.append(hazard)
 	_last_hazard_id = _next_hazard_id
 	_next_hazard_id += 1
 	set_physics_process(true)
@@ -2323,14 +2454,20 @@ func add_circle_hazard(x: float, y: float, radius: float, deadly: bool) -> void:
 func add_tracked_hazard(target: Node, radius: float, deadly: bool) -> void:
 	if not (target is Node2D):
 		return
-	_hazards.append({"id": _next_hazard_id, "kind": "tracked", "node": target, "radius": radius, "deadly": deadly})
+	var hazard: NavHazard = NavHazard.new()
+	hazard.id = _next_hazard_id
+	hazard.kind = "tracked"
+	hazard.node = target
+	hazard.radius = radius
+	hazard.deadly = deadly
+	_hazards.append(hazard)
 	_last_hazard_id = _next_hazard_id
 	_next_hazard_id += 1
 	set_physics_process(true)
 
 func remove_hazard(hazard_id: int) -> void:
 	for index in range(_hazards.size() - 1, -1, -1):
-		if int(_hazards[index].get("id", -1)) == hazard_id:
+		if _hazards[index].id == hazard_id:
 			_hazards.remove_at(index)
 
 func is_patrolling() -> bool:
@@ -2455,15 +2592,15 @@ func graph_node_connection_count(gx: int, gy: int) -> int:
 
 func graph_node_connection_kind(gx: int, gy: int, index: int) -> String:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
-	return str(links[index]["kind"]) if index >= 0 and index < links.size() else ""
+	return (links[index] as NavEdge).kind if index >= 0 and index < links.size() else ""
 
 func graph_node_connection_cost(gx: int, gy: int, index: int) -> float:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
-	return _edge_cost(Vector2i(gx, gy), links[index]) if index >= 0 and index < links.size() else 0.0
+	return _edge_cost(Vector2i(gx, gy), links[index] as NavEdge) if index >= 0 and index < links.size() else 0.0
 
 func graph_node_connection_target(gx: int, gy: int, index: int) -> Vector2:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
-	return _cell_world(links[index]["to"]) if index >= 0 and index < links.size() else Vector2.ZERO
+	return _cell_world((links[index] as NavEdge).to) if index >= 0 and index < links.size() else Vector2.ZERO
 
 func ledge_side(gx: int, gy: int) -> int:
 	return _ledge_side(Vector2i(gx, gy))
@@ -2486,7 +2623,7 @@ func path_cost() -> float:
 	return _path_cost if not _path.is_empty() else 0.0
 
 func path_end() -> Vector2:
-	return _path.back()["world"] if not _path.is_empty() else Vector2.ZERO
+	return _path.back().world if not _path.is_empty() else Vector2.ZERO
 
 func path_target() -> Vector2:
 	return _path_goal
@@ -2506,23 +2643,23 @@ func path_queue_size() -> int:
 	return waiting
 
 func waypoint_position(index: int) -> Vector2:
-	return _path[index]["world"] if index >= 0 and index < _path.size() else Vector2.ZERO
+	return _path[index].world if index >= 0 and index < _path.size() else Vector2.ZERO
 
 func waypoint_cell(index: int) -> Vector2i:
-	return _path[index]["cell"] if index >= 0 and index < _path.size() else Vector2i(-1, -1)
+	return _path[index].cell if index >= 0 and index < _path.size() else Vector2i(-1, -1)
 
 func waypoint_action(index: int) -> String:
-	return str(_path[index]["action"]) if index >= 0 and index < _path.size() else ""
+	return _path[index].action if index >= 0 and index < _path.size() else ""
 
 func distance_to_waypoint() -> float:
 	if _path.is_empty() or host == null:
 		return 0.0
-	return host.global_position.distance_to(_path[_path_index]["world"])
+	return host.global_position.distance_to(_path[_path_index].world)
 
 func angle_to_waypoint() -> float:
 	if _path.is_empty() or host == null:
 		return 0.0
-	return rad_to_deg(host.global_position.angle_to_point(_path[_path_index]["world"]))
+	return rad_to_deg(host.global_position.angle_to_point(_path[_path_index].world))
 
 func nearby_agent_count(radius: float) -> int:
 	if host == null:
@@ -2581,7 +2718,7 @@ func hazard_count() -> int:
 func tracked_hazard_count() -> int:
 	var count: int = 0
 	for hazard in _hazards:
-		if str(hazard.get("kind", "rect")) == "tracked":
+		if hazard.kind == "tracked":
 			count += 1
 	return count
 
@@ -2593,7 +2730,7 @@ func hazard_at(x: float, y: float) -> int:
 	var verdict: int = 0
 	for hazard in _hazards:
 		if _hazard_hit(hazard, point, 0.0):
-			if bool(hazard["deadly"]):
+			if hazard.deadly:
 				return 2
 			verdict = 1
 		elif hazard_margin > 0.0 and _hazard_hit(hazard, point, hazard_margin):
@@ -2601,7 +2738,7 @@ func hazard_at(x: float, y: float) -> int:
 	return verdict
 
 func current_portal_id() -> int:
-	return int(_current_portal.get("id", -1))
+	return _current_portal.id if _current_portal != null else -1
 
 func last_portal_id() -> int:
 	return _last_portal_id
@@ -2613,20 +2750,20 @@ func nearest_portal_id(x: float, y: float, tag: String) -> int:
 	var best_id: int = -1
 	var best_gap: float = INF
 	for portal in _portals:
-		var gap: float = (portal["from"] as Vector2).distance_to(Vector2(x, y))
+		var gap: float = portal.from.distance_to(Vector2(x, y))
 		if _portal_has_tag(portal, tag) and gap < best_gap:
 			best_gap = gap
-			best_id = int(portal["id"])
+			best_id = portal.id
 	return best_id
 
 func furthest_portal_id(x: float, y: float, tag: String) -> int:
 	var best_id: int = -1
 	var best_gap: float = -1.0
 	for portal in _portals:
-		var gap: float = (portal["from"] as Vector2).distance_to(Vector2(x, y))
+		var gap: float = portal.from.distance_to(Vector2(x, y))
 		if _portal_has_tag(portal, tag) and gap > best_gap:
 			best_gap = gap
-			best_id = int(portal["id"])
+			best_id = portal.id
 	return best_id
 
 func portal_count_by_tag(tag: String) -> int:
@@ -2641,18 +2778,20 @@ func portal_id_by_tag(tag: String, index: int) -> int:
 	for portal in _portals:
 		if _portal_has_tag(portal, tag):
 			if seen == index:
-				return int(portal["id"])
+				return portal.id
 			seen += 1
 	return -1
 
 func portal_tag(portal_id: int) -> String:
-	return str(_portal_by_id(portal_id).get("tag", ""))
+	var portal: NavPortal = _portal_by_id(portal_id)
+	return portal.tag if portal != null else ""
 
 func portal_type(portal_id: int) -> String:
-	return str(_portal_by_id(portal_id).get("type", ""))
+	var portal: NavPortal = _portal_by_id(portal_id)
+	return portal.type if portal != null else ""
 
 func portal_exit() -> Vector2:
-	return _current_portal_exit if not _current_portal.is_empty() else Vector2.ZERO
+	return _current_portal_exit if _current_portal != null else Vector2.ZERO
 
 func portal_progress() -> float:
 	return _portal_progress if _portal_traversing else 0.0
