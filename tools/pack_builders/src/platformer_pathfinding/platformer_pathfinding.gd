@@ -1366,7 +1366,7 @@ func _agent_avoidance_costs() -> Dictionary:
 		var at: Vector2i = _nearest_node(agent.host.global_position, 1)
 		if at != Vector2i.MAX:
 			costs[at] = float(costs.get(at, 0.0)) + 3.0
-		var their_path: Array[NavWaypoint] = agent._path
+		var their_path: Array = agent._path
 		var their_index: int = agent._path_index
 		for index in range(their_index, mini(their_index + 4, their_path.size())):
 			var cell: Vector2i = their_path[index].cell
