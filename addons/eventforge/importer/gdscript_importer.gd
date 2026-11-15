@@ -1676,10 +1676,20 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 		var claim: Dictionary = kind.lift(lines, index)
 		if claim.is_empty():
 			continue
-		# Resource kinds hand back a ready row instance, not fields, so there is nothing to re-emit
-		# from a schema - they own their own round-trip. This check must stay ABOVE the gate.
+		# Resource kinds hand back a ready row instance, not fields. The same byte gate applies to
+		# them: the kind's own emit_lines() of that row must reproduce the consumed source lines
+		# exactly, or the claim is dropped and the lines stay a verbatim block. A kind's own
+		# round-trip care is welcome, but the promise to the user's file cannot depend on it.
 		if claim.has("resource"):
-			return {"row": claim["resource"], "consumed": maxi(1, int(claim.get("consumed", 1)))}
+			var claimed_row: Variant = claim["resource"]
+			if not (claimed_row is Resource):
+				continue
+			var claimed_count: int = maxi(1, int(claim.get("consumed", 1)))
+			if index + claimed_count > lines.size():
+				continue
+			if not _resource_claim_reproduces(kind, claimed_row as Resource, lines, index, claimed_count):
+				continue
+			return {"row": claimed_row, "consumed": claimed_count}
 		var fields: Variant = claim.get("fields")
 		if not (fields is Dictionary):
 			continue
@@ -1695,6 +1705,17 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 		block_row.fields = fields
 		return {"row": block_row, "consumed": consumed}
 	return {}
+
+
+## True when `kind` re-emits `row` as exactly the `count` source lines starting at `index`.
+func _resource_claim_reproduces(kind: EventSheetBlockKind, row: Resource, lines: PackedStringArray, index: int, count: int) -> bool:
+	var emitted: PackedStringArray = kind.emit_lines(row)
+	if emitted.size() != count:
+		return false
+	for offset: int in range(count):
+		if emitted[offset] != lines[index + offset]:
+			return false
+	return true
 
 
 ## Lifts a Moment block: a coroutine of the exact shape a Moment block emits - the fixed

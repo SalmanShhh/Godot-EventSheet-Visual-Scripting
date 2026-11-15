@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a custom block kind can no longer corrupt a file it lifts
+
+- A block kind that hands the importer a ready-made row instead of a field table used to skip the check every other lift passes: opening a `.gd` file asked the kind for a row and trusted it, so a kind whose row did not re-emit the line it had claimed changed the file on save (in one case writing `extends Node` twice). That claim now goes through the same byte check. The kind's own emitted lines must reproduce the lines it consumed exactly, or the claim is dropped and the lines stay a verbatim block, so opening and saving a file untouched still gives the same bytes whatever kinds are installed.
+
 ### Fixed: changing one object's feedback no longer changes every copy of its scene
 
 - Objects made from one scene all started out sharing the same feedback cards, so a row that changed a card on one of them (Set Feedback Field, Set Feedback Timing, Set Feedback Chance, Set Feedback Label, Enable or Disable Feedback, Set Loop Count, Scale Feedback Amounts, Retime Feedbacks or Pick One Feedback Of) changed it on all of them, and on every one spawned afterwards for the rest of the run. One Scale Feedback Amounts row per spawned enemy kept halving them all. A Feedback Player now takes its own copy of its cards the first time a row changes one, so each object keeps its own beat. A player no row changes copies nothing, and nothing in a saved scene changes: the copy is made while the game runs, never when a scene loads or saves. Copy Feedbacks From, Load Moment File and Duplicate Feedback still do what their descriptions say.
