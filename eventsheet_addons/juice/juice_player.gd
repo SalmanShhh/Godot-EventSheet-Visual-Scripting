@@ -92,7 +92,7 @@ const IGNORE: String = "ignore"
 ## Answer to a play while already playing: start a second play alongside the first.
 const OVERLAP: String = "overlap"
 
-# The seven words below are this node's own. Every other word is played by the Juice behaviour
+# The words below are this node's own. Every other word is played by the Juice behaviour
 # beside it - the same call a moment file makes - so a card list and a moment file are the same
 # ten words plus timing.
 ## Step word: stop the play here until Resume is called.
@@ -109,6 +109,16 @@ const TWEEN_PROPERTY: String = "tween_property"
 const EMIT_SIGNAL: String = "emit_signal"
 ## Step word: start another Juice Player and let it run.
 const PLAY_PLAYER: String = "play_player"
+## Step word: play a sound.
+const SOUND: String = "sound"
+## Heard-from word: the sound comes from the object this player is under, so it sits in space.
+const HEARD_HERE: String = "here"
+## Heard-from word: the sound plays flat, the same wherever the listener is.
+const HEARD_EVERYWHERE: String = "everywhere"
+## Most sounds one player has going at once. A new one takes the oldest voice when all are busy.
+const SOUND_VOICES: int = 4
+## The lowest pitch a roll may land on, because a pitch scale has to stay above zero.
+const LOWEST_PITCH: float = 0.05
 
 ## Raised whenever a pause ends, however it ended. Private, so it is plumbing rather than vocabulary.
 ## @ace_hidden
@@ -162,6 +172,13 @@ var _tweens: Array[Tween] = []
 ## Players this play started through a Play Player card; they follow it.
 var _nested: Array[Node] = []
 
+## The few players this node plays its Sound cards through, kept and reused instead of made per hit.
+var _voices: Array[Node] = []
+## Which voice a run of hits takes next once every voice is busy.
+var _next_voice: int = 0
+## The Sound cards already complained about, so a missing sound is said once and not on every hit.
+var _told_sound: Dictionary = {}
+
 ## The Juice behaviour found beside this player, kept once found.
 var _juice_node: Node = null
 ## True once the missing-Juice warning has been printed, so it is printed only once.
@@ -185,6 +202,36 @@ func _juice() -> Node:
 		_told_no_juice = true
 		push_warning("Juice Player: %s has no Juice behaviour beside it, so its shake, flash and hitstop steps did nothing. Add a Juice node under the same object." % name)
 	return null
+## The sound a card names, or null when it names none or the file is not there.
+static func _stream_at(path: String) -> AudioStream:
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return null
+	return load(path) as AudioStream
+## A voice of the kind asked for: a free one if there is one, else a new one while there is room, else
+## the oldest one taken over (and made the kind asked for).
+func _voice_for(kind: String) -> Node:
+	for index: int in range(_voices.size() - 1, -1, -1):
+		if not is_instance_valid(_voices[index]):
+			_voices.remove_at(index)
+	for voice: Node in _voices:
+		if voice.get_class() == kind and not bool(voice.get("playing")):
+			return voice
+	if _voices.size() < SOUND_VOICES:
+		var fresh: Node = ClassDB.instantiate(kind) as Node
+		add_child(fresh)
+		_voices.append(fresh)
+		return fresh
+	var slot: int = _next_voice % _voices.size()
+	_next_voice += 1
+	var taken: Node = _voices[slot]
+	if taken.get_class() == kind:
+		taken.call("stop")
+		return taken
+	taken.queue_free()
+	var replacement: Node = ClassDB.instantiate(kind) as Node
+	add_child(replacement)
+	_voices[slot] = replacement
+	return replacement
 
 # --- Addressed by label: the rows that edit the list while the game runs ---
 # Every row that names one juice card names it by its LABEL - the name typed on the card in the
@@ -215,6 +262,7 @@ const CATEGORY_OF: Dictionary = {
 	"loop_back": "loop",
 	"emit_signal": "signal",
 	"play_player": "signal",
+	"sound": "audio",
 	"tween_property": "transform"
 }
 
@@ -1093,7 +1141,7 @@ func feedback_progress(label: String) -> float:
 ## @ace_codegen_template("$JuicePlayer.feedback_duration("{label}")")
 func feedback_duration(label: String) -> float:
 	var card: Dictionary = _card_named(label)
-	return maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("delay", 0.0)), 0.0)
+	return card_length(card) + maxf(float(card.get("delay", 0.0)), 0.0)
 
 ## @ace_expression
 ## @ace_name("Current Juice Card")
@@ -1167,7 +1215,7 @@ static func duration_of(list: Array) -> float:
 		if not bool(card.get("active", true)):
 			continue
 		var word: String = str(card.get("verb", ""))
-		var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("delay", 0.0)), 0.0)
+		var seconds: float = card_length(card) + maxf(float(card.get("delay", 0.0)), 0.0)
 		if word == HOLD_UNTIL:
 			total += stretch + seconds
 			stretch = 0.0
@@ -1182,10 +1230,10 @@ static func _is_timing(word: String) -> bool:
 	return word == PAUSE or word == HOLD_UNTIL or word == LOOP_START or word == LOOP_BACK
 
 ## And whether a word is this NODE'S own rather than a moment's: a property walked to a value, a
-## signal, and a nested player. The ten moment words are played by the Juice node beside this one;
-## these three are done here, and a moment FILE has nowhere to keep them.
+## signal, a nested player and a sound. The ten moment words are played by the Juice node beside this
+## one; these four are done here, and a moment FILE has nowhere to keep them.
 static func _is_own_word(word: String) -> bool:
-	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER
+	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER or word == SOUND
 
 ## The number a card's chance is answered with. One roll per card is thrown before the beat
 ## begins, so a Skip To End reads the decision the walk would have read rather than throwing the
@@ -1344,6 +1392,10 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 			_tween_property(effect, amount * at, maxf(seconds, 0.0))
 		EMIT_SIGNAL:
 			on_feedback_signal.emit(effect)
+		SOUND:
+			# A skip jumps to where the beat ends, and a sound is not a place: it is not heard late.
+			if not skipping:
+				_play_sound(card, at)
 		PLAY_PLAYER:
 			var other: Node = get_node_or_null(NodePath(effect))
 			if other != null and other.has_method("play"):
@@ -1408,6 +1460,71 @@ func _tween_property(property: String, value: float, seconds: float) -> void:
 	_tweens.append(walked)
 	walked.tween_property(host, NodePath(property), value, seconds)
 
+## What one play of a Sound card is made of: the stream, the level, the pitch and the bus. The two rolls
+## are numbers from 0 to 1 that land inside the card's spreads (0 is the bottom of one, 0.5 the middle and
+## 1 the top), so the game, which throws dice, and the editor's Listen button, which throws them too,
+## read one function and mean the same card.
+## @ace_hidden
+static func sound_settings(card: Dictionary, at_strength: float, pitch_roll: float, volume_roll: float) -> Dictionary:
+	var volume: float = float(card.get("volume_db", 0.0)) + (clampf(volume_roll, 0.0, 1.0) * 2.0 - 1.0) * maxf(float(card.get("volume_spread_db", 0.0)), 0.0)
+	if bool(card.get("follows_strength", false)):
+		volume += linear_to_db(maxf(at_strength, 0.0001))
+	var pitch: float = float(card.get("pitch", 1.0)) + (clampf(pitch_roll, 0.0, 1.0) * 2.0 - 1.0) * maxf(float(card.get("pitch_spread", 0.0)), 0.0)
+	return {
+		"stream": str(card.get("stream", "")),
+		"volume_db": volume,
+		"pitch_scale": maxf(pitch, LOWEST_PITCH),
+		"bus": str(card.get("bus", "Master")),
+		"here": str(card.get("heard_from", HEARD_HERE)) != HEARD_EVERYWHERE
+	}
+
+## How long one card lasts on its own, its delay not counted. A Sound card lasts as long as its stream
+## plays at its pitch (a half second sound at double pitch is a quarter of a second); every other card
+## says so with its Seconds. The plan, the badge and the Hold all read this one function.
+## @ace_hidden
+static func card_length(card: Dictionary) -> float:
+	if str(card.get("verb", "")) != SOUND:
+		return maxf(float(card.get("seconds", 0.0)), 0.0)
+	var stream: AudioStream = _stream_at(str(card.get("stream", "")))
+	if stream == null:
+		return 0.0
+	return stream.get_length() / maxf(float(card.get("pitch", 1.0)), LOWEST_PITCH)
+
+## One Sound card, heard. It plays through one of a few voices kept for the purpose, so a fast run of
+## hits reuses them instead of making a node each. Muting the Sound family never reaches here: the walk
+## has already stepped over the card.
+func _play_sound(card: Dictionary, at: float) -> void:
+	var settings: Dictionary = sound_settings(card, at, randf(), randf())
+	var stream: AudioStream = _stream_at(str(settings.get("stream", "")))
+	if stream == null:
+		_tell_sound(card, "has no sound to play, so it stayed silent.")
+		return
+	var bus: String = str(settings.get("bus", "Master"))
+	if AudioServer.get_bus_index(bus) < 0:
+		_tell_sound(card, "asks for the bus \"%s\", which this project does not have, so it played on Master." % bus)
+		bus = "Master"
+	var kind: String = "AudioStreamPlayer"
+	if bool(settings.get("here", true)) and host is Node2D:
+		kind = "AudioStreamPlayer2D"
+	elif bool(settings.get("here", true)) and host is Node3D:
+		kind = "AudioStreamPlayer3D"
+	var voice: Node = _voice_for(kind)
+	voice.set("stream", stream)
+	voice.set("volume_db", float(settings.get("volume_db", 0.0)))
+	voice.set("pitch_scale", float(settings.get("pitch_scale", 1.0)))
+	voice.set("bus", bus)
+	if kind != "AudioStreamPlayer":
+		voice.set("global_position", host.get("global_position"))
+	voice.call("play")
+
+## Says what is wrong with a Sound card once, naming this player and the card.
+func _tell_sound(card: Dictionary, what: String) -> void:
+	var told: String = _label_of(card) + what
+	if _told_sound.has(told):
+		return
+	_told_sound[told] = true
+	push_warning("Juice Player: the sound card \"%s\" on %s %s" % [_label_of(card), name, what])
+
 ## How much of the slowest step above is still to run when a Hold is reached - the number the hold
 ## word waits for. Read back over the cards between this hold and the one above it.
 func _longest_above(order: Array, index: int) -> float:
@@ -1424,7 +1541,7 @@ func _longest_above(order: Array, index: int) -> float:
 			break
 		if bool(card.get("active", true)):
 			var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
-			var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0)
+			var seconds: float = card_length(card)
 			if word == PAUSE:
 				spent += delay + seconds
 			else:
@@ -1503,7 +1620,7 @@ static func schedule_of(list: Array) -> Array:
 			continue
 		var word: String = str(card.get("verb", ""))
 		var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
-		var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0)
+		var seconds: float = card_length(card)
 		if word == HOLD_UNTIL:
 			at += stretch + delay + seconds
 			stretch = 0.0

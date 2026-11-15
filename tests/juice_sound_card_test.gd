@@ -26,6 +26,7 @@ const LIGHT_CARD_LINE: Color = Color("#f5f5f5")
 static func run() -> bool:
 	var ok: bool = true
 	ok = _storage_pins() and ok
+	ok = _sound_runtime_pins() and ok
 	ok = _seed_pins() and ok
 	ok = _family_pins() and ok
 	return ok
@@ -122,3 +123,63 @@ static func _sorted_keys(card: Dictionary) -> PackedStringArray:
 		keys.append(str(key))
 	keys.sort()
 	return keys
+
+
+## The Sound card: its fields, its length, and what a play of it is made of.
+static func _sound_runtime_pins() -> bool:
+	var script: Script = _pack()
+	var has_settings: bool = _has_static(script, "sound_settings")
+	var has_length: bool = _has_static(script, "card_length")
+	var low: Dictionary = {}
+	var high: Dictionary = {}
+	var still: Dictionary = {}
+	var length: float = -1.0
+	var card: Dictionary = {"verb": "sound", "stream": _beep_path(), "volume_db": -6.0, "volume_spread_db": 2.0,
+		"pitch": 1.0, "pitch_spread": 0.2, "bus": "Master", "follows_strength": false}
+	if has_settings:
+		low = script.call("sound_settings", card, 1.0, 0.0, 0.0)
+		high = script.call("sound_settings", card, 1.0, 1.0, 1.0)
+		var following: Dictionary = card.duplicate()
+		following["follows_strength"] = true
+		still = script.call("sound_settings", following, 0.5, 0.5, 1.0)
+	if has_length:
+		var faster: Dictionary = card.duplicate()
+		faster["pitch"] = 2.0
+		faster["pitch_spread"] = 0.0
+		length = snappedf(float(script.call("card_length", faster)), 0.001)
+	return SUPPORT.pins(TEST_NAME, [
+		["the Sound card belongs to the family the Mute row already offers", str(_constant_table("CATEGORY_OF").get("sound", "")), "audio"],
+		["the pack publishes the one function the game and the editor both read", has_settings, true],
+		["the lowest roll lands on the bottom of the pitch spread", snappedf(float(low.get("pitch_scale", 0.0)), 0.001), 0.8],
+		["the highest roll lands on the top of it", snappedf(float(high.get("pitch_scale", 0.0)), 0.001), 1.2],
+		["the volume spread goes both ways", [snappedf(float(low.get("volume_db", 0.0)), 0.001), snappedf(float(high.get("volume_db", 0.0)), 0.001)], [-8.0, -4.0]],
+		["a sound that follows the strength is quieter at half strength", float(still.get("volume_db", 0.0)) < -6.0, true],
+		["a half-second sound at double pitch lasts a quarter second", length, 0.25],
+		["a moment file cannot hold a sound, so Save as file names it", bool(script.call("_is_own_word", "sound")), true]
+	])
+
+
+static func _has_static(script: Script, method: String) -> bool:
+	for listed: Dictionary in script.get_script_method_list():
+		if str(listed.get("name")) == method:
+			return true
+	return false
+
+
+## A half second of silence written to a file the test owns, so the length is a real stream's.
+static func _beep_path() -> String:
+	var path: String = SUPPORT.own_path("juice_sound_card_beep.tres")
+	if not ResourceLoader.exists(path):
+		var wav: AudioStreamWAV = AudioStreamWAV.new()
+		wav.format = AudioStreamWAV.FORMAT_16_BITS
+		wav.mix_rate = 22050
+		var bytes: PackedByteArray = PackedByteArray()
+		bytes.resize(22050)
+		wav.data = bytes
+		ResourceSaver.save(wav, path)
+	return path
+
+
+static func _constant_table(constant_name: String) -> Dictionary:
+	var value: Variant = _constant(constant_name)
+	return value if value is Dictionary else {}
