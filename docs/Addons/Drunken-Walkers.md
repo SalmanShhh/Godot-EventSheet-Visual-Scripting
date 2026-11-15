@@ -476,6 +476,7 @@ the terrain values at all.
 
 ## Tips and common mistakes
 
+- **Spell the walker id the same way everywhere.** Every row that names a walker (the Set Walker rows, Run Walker, Step Walker, Drop Marks Along Walk) given an id no Add Walker made does nothing and says so once in the Debugger's Errors tab, whether or not Debug Mode is on; Add Walker From Preset does the same for a shape recipe that does not exist.
 - **One autoload means one grid.** The generator is a project-wide service, like every other
   generator here, so two maps are two passes over it rather than two nodes. Paint or save the
   first before Create Grid starts the second.

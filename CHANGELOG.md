@@ -16,6 +16,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Stat Forge: Set Buff Active, Set Buff Value, Refresh Buff, Set Buff Timer Paused and Re-Arm Threshold Rule. Remove Buff stays quiet: removing a buff that is already gone is its documented normal case.
 - Second View: Show View In and Set View Zoom already warned, on every call and without naming the node; they now say it once and name the node, the view and the views that exist.
 - Combo Box: Set Combo Tags, Set Combo Priority, Set Combo Strict, Enable Combo and Disable Combo.
+- Drunken Walkers: every row that names a walker (the Set Walker rows, Run Walker, Step Walker, Drop Marks Along Walk) and Add Walker From Preset with a recipe that does not exist. These warned only with Debug Mode ticked, which a newcomer does not know to do; they now say it once in every run.
 
 ### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
 

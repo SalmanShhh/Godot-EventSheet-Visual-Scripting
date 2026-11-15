@@ -339,14 +339,15 @@ func _register(id: String) -> Walker:
 		_order.append(id)
 	_walkers[id] = walker
 	return walker
-## The registered walker, or null. Every Set Walker action warns by name through this one door in
-## debug mode, so a typo in an id says so instead of doing nothing.
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
+## The registered walker, or null. Every action that names a walker goes through this one door, and a
+## name nothing answers to says so once - in every run, not only in debug mode - naming the row.
 ## @ace_hidden
-func _walker(id: String) -> Walker:
+func _walker(id: String, action: String = "") -> Walker:
 	if _walkers.has(id):
 		return _walkers[id] as Walker
-	if debug_mode:
-		push_warning("Drunken Walkers: there is no walker called '%s' registered." % id)
+	_say_missing(action, "walker", id, _walkers.keys(), "register it with Add Walker first, or check the spelling")
 	return null
 
 func _ready() -> void:
@@ -520,8 +521,7 @@ func add_walker_from_preset(preset: String, id: String, start_x: int, start_y: i
 	_ensure_started()
 	var recipe_name: String = preset.strip_edges().to_lower().replace("_", " ")
 	if not PRESETS.has(recipe_name):
-		if debug_mode:
-			push_warning("Drunken Walkers: '%s' is not a shape recipe. Use cave, corridors, river, ore vein, lightning or blob." % preset)
+		_say_once("preset:" + recipe_name, "Add Walker From Preset did nothing, because \"%s\" is not a shape recipe - use cave, corridors, river, ore vein, lightning or blob." % preset)
 		return
 	var recipe: Dictionary = PRESETS[recipe_name] as Dictionary
 	var walker: Walker = _register(id)
@@ -587,7 +587,7 @@ func define_walker(definition: String) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_carve_value({id}, {value})")
 func set_walker_carve_value(id: String, value: int) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Carve Value")
 	if walker != null:
 		# Applies from the walker's next step, so anything already carved keeps its old value.
 		# That is the point: change it mid-walk and one walker lays down two materials.
@@ -601,7 +601,7 @@ func set_walker_carve_value(id: String, value: int) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_steps({id}, {steps})")
 func set_walker_steps(id: String, steps: int) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Steps")
 	if walker == null:
 		return
 	# The value becomes the REMAINING budget and un-finishes a finished walker, so topping a
@@ -619,7 +619,7 @@ func set_walker_steps(id: String, steps: int) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_turn_chance({id}, {chance})")
 func set_walker_turn_chance(id: String, chance: float) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Turn Chance")
 	if walker != null:
 		walker.turn_chance = clampf(chance, 0.0, 1.0)
 
@@ -631,7 +631,7 @@ func set_walker_turn_chance(id: String, chance: float) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_brush_size({id}, {size})")
 func set_walker_brush_size(id: String, size: int) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Brush Size")
 	if walker != null:
 		walker.brush_size = maxi(1, size)
 
@@ -643,7 +643,7 @@ func set_walker_brush_size(id: String, size: int) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_start_angle({id}, {degrees})")
 func set_walker_start_angle(id: String, degrees: float) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Start Angle")
 	if walker == null:
 		return
 	# The whole direction set rotates, and the current heading rotates with it, so the walker
@@ -660,7 +660,7 @@ func set_walker_start_angle(id: String, degrees: float) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_dig_size({id}, {width}, {depth})")
 func set_walker_dig_size(id: String, width: int, depth: int) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Dig Size")
 	if walker != null:
 		# 0 on an axis falls back to the square brush for that axis, and 0 on both restores the
 		# plain square brush - so this action is a toggle rather than a one-way door.
@@ -675,7 +675,7 @@ func set_walker_dig_size(id: String, width: int, depth: int) -> void:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("DrunkenWalkers.set_walker_direction_weights({id}, {weights})")
 func set_walker_direction_weights(id: String, weights: String) -> void:
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Set Walker Direction Weights")
 	if walker != null:
 		walker.weights = _weights_from_text(weights)
 
@@ -751,7 +751,7 @@ func run_walkers_by_tag(tag: String) -> void:
 ## @ace_codegen_template("DrunkenWalkers.run_walker({id})")
 func run_walker(id: String) -> void:
 	_ensure_started()
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Run Walker")
 	if walker != null:
 		# One walker, to the end of its budget. On Generation Complete is deliberately NOT fired:
 		# this is one pass of a bigger generation, not the end of it.
@@ -767,7 +767,7 @@ func run_walker(id: String) -> void:
 ## @ace_codegen_template("DrunkenWalkers.step_walker({id}, {steps})")
 func step_walker(id: String, steps: int) -> void:
 	_ensure_started()
-	var walker: Walker = _walker(id)
+	var walker: Walker = _walker(id, "Step Walker")
 	if walker == null:
 		return
 	for _index: int in maxi(0, steps):
@@ -784,7 +784,7 @@ func step_walker(id: String, steps: int) -> void:
 @warning_ignore("shadowed_variable")  # walker_id: ACE parameter id of this verb, frozen since it shipped
 func drop_marks_along_walk(walker_id: String, tag: String, every_steps: int, chance: float, min_spacing: float) -> void:
 	_ensure_started()
-	var walker: Walker = _walker(walker_id)
+	var walker: Walker = _walker(walker_id, "Drop Marks Along Walk")
 	if walker == null:
 		return
 	var stride: int = maxi(1, every_steps)
@@ -1693,5 +1693,29 @@ func load_state(state: Dictionary) -> void:
 	_marks.clear()
 	for entry: Variant in state.get("marks", []) as Array:
 		_marks.append(Mark.from_dict(entry as Dictionary))
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Drunken Walkers on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
 
 # Drunken Walkers (autoload): register as the DrunkenWalkers autoload, then size a grid, set a seed, register walkers and run them from any sheet. The pack owns the grid and the marks; you paint the tiles and spawn the objects from the results. Same seed plus same action order = the same map every time. This pack is an event sheet - extend it by editing it.

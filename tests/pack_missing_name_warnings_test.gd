@@ -27,6 +27,7 @@ static func run() -> bool:
 	ok = _stat_forge() and ok
 	ok = _second_view() and ok
 	ok = _combo_box() and ok
+	ok = _drunken_walkers() and ok
 	return ok
 
 
@@ -261,4 +262,33 @@ static func _combo_box() -> bool:
 			"Combo Box on Combos: %s did nothing, because no combo is called \"%s\"%s" % [entry[0], entry[1], tail]))
 	rows.append(["a real combo says nothing", _heard(func() -> void: combos.disable_combo("hadouken")), []])
 	combos.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _drunken_walkers() -> bool:
+	var script: GDScript = load(ROOT + "drunken_walkers/drunken_walkers_addon.gd")
+	var walkers: Node = script.new()
+	walkers.name = "Walkers"
+	walkers.add_walker("rock", 1, 1, 10, 4, 90.0, "t", 1)
+	var tail: String = " (there are: rock) - register it with Add Walker first, or check the spelling."
+	var rows: Array = []
+	var actions: Array = [
+		["Set Walker Carve Value", "rok1", func() -> void: walkers.set_walker_carve_value("rok1", 2)],
+		["Set Walker Steps", "rok2", func() -> void: walkers.set_walker_steps("rok2", 5)],
+		["Set Walker Turn Chance", "rok3", func() -> void: walkers.set_walker_turn_chance("rok3", 0.5)],
+		["Set Walker Brush Size", "rok4", func() -> void: walkers.set_walker_brush_size("rok4", 2)],
+		["Set Walker Start Angle", "rok5", func() -> void: walkers.set_walker_start_angle("rok5", 45.0)],
+		["Set Walker Dig Size", "rok6", func() -> void: walkers.set_walker_dig_size("rok6", 2, 2)],
+		["Set Walker Direction Weights", "rok7", func() -> void: walkers.set_walker_direction_weights("rok7", "1,1,1,1")],
+		["Run Walker", "rok8", func() -> void: walkers.run_walker("rok8")],
+		["Step Walker", "rok9", func() -> void: walkers.step_walker("rok9", 2)],
+		["Drop Marks Along Walk", "rok0", func() -> void: walkers.drop_marks_along_walk("rok0", "m", 2, 1.0, 1.0)],
+	]
+	for entry: Array in actions:
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"Drunken Walkers on Walkers: %s did nothing, because no walker is called \"%s\"%s" % [entry[0], entry[1], tail]))
+	rows.append_array(_once("Add Walker From Preset", func() -> void: walkers.add_walker_from_preset("lava", "x", 1, 1, "t", 1),
+		"Drunken Walkers on Walkers: Add Walker From Preset did nothing, because \"lava\" is not a shape recipe - use cave, corridors, river, ore vein, lightning or blob."))
+	rows.append(["a real walker says nothing", _heard(func() -> void: walkers.set_walker_steps("rock", 5)), []])
+	walkers.free()
 	return SUPPORT.pins(NAME, rows)
