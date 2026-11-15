@@ -353,6 +353,7 @@ Stepping both the speed and the primary radius makes the new sweep visibly bigge
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The node is the orbiter - there is no target id.** Every Action and Expression acts on the `OrbitBehavior` of the node it is placed on. Attach one behavior per circling node; you never pass an orbiter id.
 - **The center captures once, on the first frame.** The behavior remembers wherever the node sits on its first process frame as the center. If that spot is wrong, or you moved the node before it ran, call Set Orbit Center to fix it. Do not rely on the auto-capture for a node that starts somewhere it should not orbit.
 - **To orbit a moving anchor, retarget every frame.** The captured center is a fixed point; it does not chase a player or emitter on its own. Call Set Orbit Center with the anchor's position each frame (or each tick) if the thing being orbited moves.

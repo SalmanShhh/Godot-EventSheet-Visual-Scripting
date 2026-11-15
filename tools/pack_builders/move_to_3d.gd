@@ -174,4 +174,5 @@ static func build() -> bool:
 	stop_moving_3d_fn.events.append(stop_moving_3d_fn_body)
 	sheet.functions.append(stop_moving_3d_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Move To 3D", "RigidBody3D", "position", "MeshInstance3D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/move_to_3d/move_to_3d_behavior")

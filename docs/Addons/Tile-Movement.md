@@ -371,6 +371,7 @@ On Step Finished
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a Node2D.** The behavior moves its parent by writing the host's position, so attach it as a child of a `Node2D` (a `Sprite2D`, `CharacterBody2D`, and so on). If the parent is not a Node2D it warns and does nothing.
 - **No diagonals, by design.** If a horizontal and a vertical step are requested at the same instant, horizontal wins and the vertical is dropped. Plan four-direction movement, not eight.
 - **One step at a time.** You cannot start a new step while one is sliding - a `Simulate Step` requested mid-slide is buffered until the current tile lands. Do not expect two calls in the same frame to move two tiles at once.

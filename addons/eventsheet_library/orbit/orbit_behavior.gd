@@ -189,6 +189,10 @@ func _process(delta: float) -> void:
 	if match_rotation and host.position != previous:
 		host.rotation = (host.position - previous).angle()
 
+func _ready() -> void:
+	if host is RigidBody2D:
+		push_warning("Orbit on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
+
 ## @ace_action
 ## @ace_name("Set Orbit Center")
 ## @ace_category("Orbit")

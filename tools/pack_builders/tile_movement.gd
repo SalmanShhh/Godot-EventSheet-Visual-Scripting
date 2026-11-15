@@ -138,6 +138,7 @@ static func build() -> bool:
 	teleport_to_tile_fn.events.append(teleport_to_tile_fn_body)
 	sheet.functions.append(teleport_to_tile_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Tile Movement", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/tile_movement/tile_movement_behavior")
 
 

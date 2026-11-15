@@ -397,6 +397,7 @@ Keep the orbit inactive until the arrival so only one behavior is moving the sen
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody3D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `MeshInstance3D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **On Arrived (3D) fires only at the final stop.** When you chain several Add Waypoint stops, the trigger fires once, when the whole queue empties - not once per waypoint. If you need a reaction at an intermediate stop, issue that leg as its own Move To Position so the queue empties there and fires the trigger.
 - **Move To Position replaces, Add Waypoint appends - order matters.** Move To Position clears the queue first, so calling it after building a path throws that path away. Build a path as one Move To Position followed by Add Waypoint calls, and never put a Move To Position in the middle of a path you are assembling.
 - **Stop Moving (3D) is silent by design.** It clears the queue without firing On Arrived, so a cancel or interrupt never trips your arrival reactions. Use it for recalls and aborts; use Move To Position when you want to redirect and still get an arrival at the new spot.

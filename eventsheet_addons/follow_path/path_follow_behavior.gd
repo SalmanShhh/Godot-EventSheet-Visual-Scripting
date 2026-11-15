@@ -225,6 +225,8 @@ func _process(delta: float) -> void:
 	_apply_path_position()
 
 func _ready() -> void:
+	if host is RigidBody2D:
+		push_warning("Follow Path on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 	if auto_start and route != null:
 		follow_path(route, travel_speed, loop_mode)
 	# A host that is not walking a route has nothing to work out each frame, so a pack left

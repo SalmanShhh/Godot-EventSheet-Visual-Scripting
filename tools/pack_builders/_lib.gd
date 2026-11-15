@@ -140,6 +140,42 @@ static func missing_name_block(label: String) -> String:
 	]))
 
 
+## Gives a movement pack ONE warning, said once per node when the pack's host is a rigid body. A pack
+## that writes its host's position or scale every frame fights the physics engine for a RigidBody2D or
+## RigidBody3D (jitter, snapping back, passing through walls); what the pack does is a promise, so only
+## the silence changes. The row is an On ready event, and a node is ready once, which is what makes it
+## once per node: no table of what was said is needed (the missing-name block above keeps one because
+## its rows run every frame). It reads like the missing-name warnings: the pack's name, the node's path,
+## then what is wrong and what to do. `label` is the pack's name as a person says it ("Move To"),
+## `body_class` is "RigidBody2D" or "RigidBody3D", `writes` is what it changes ("position", "position and
+## scale") and `child_example` is a node a person would put it on instead ("Sprite2D"). Plain GDScript with
+## no plugin dependency, so the sentence is English and carries no translation key.
+static func rigid_body_host_warning(sheet: EventSheetResource, label: String, body_class: String, writes: String, child_example: String) -> void:
+	var sentence: String = "this behaviour moves a %s by changing its %s, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the %s inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % [body_class, writes, child_example]
+	var message: String = "\"" + label + " on %s: " + sentence + "\" % (str(get_path()) if is_inside_tree() else str(name))"
+	# A pack that already writes its own `func _ready()` in a verbatim block cannot take a second one:
+	# the warning goes at the top of that body instead.
+	for entry: Variant in sheet.events:
+		var block: RawCodeRow = entry as RawCodeRow
+		if block != null and block.code.contains("func _ready() -> void:\n"):
+			block.code = block.code.replace("func _ready() -> void:\n", "func _ready() -> void:\n\tif host is %s:\n\t\tpush_warning(%s)\n" % [body_class, message])
+			return
+	var row: EventRow = EventRow.new()
+	row.trigger_provider_id = "Core"
+	row.trigger_id = "OnReady"
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = "ExpressionIsTrue"
+	condition.params = {"expr": "host is " + body_class}
+	row.conditions.append(condition)
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "PushWarning"
+	action.params = {"message": message}
+	row.actions.append(action)
+	sheet.events.append(row)
+
+
 ## Declares a REQUIRED resource slot on a behavior pack - the data-driven-config helper. Adds an
 ## exported var (a Resource slot the user drags a .tres onto) marked `required`, so the Inspector shows a
 ## "required" warning on the field while it is empty - the "you forgot to attach it" safety net a

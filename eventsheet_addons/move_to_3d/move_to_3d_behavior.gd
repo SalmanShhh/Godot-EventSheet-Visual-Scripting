@@ -185,6 +185,8 @@ func _ready() -> void:
 	# off and every verb that hands it a destination turns it back on. `moving` is what the whole
 	# tick is gated on, so reading it here keeps the two in step with no second flag.
 	set_process(moving)
+	if host is RigidBody3D:
+		push_warning("Move To 3D on %s: this behaviour moves a RigidBody3D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the MeshInstance3D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() and not _previewing:

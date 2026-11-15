@@ -372,6 +372,7 @@ Add Waypoint keeps the in-progress route intact and tacks the new stop on at the
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a Node2D.** The behavior moves its parent's `position`, so attach it under a 2D node (Sprite2D, CharacterBody2D, Area2D, and so on). Under a non-Node2D parent it warns and does nothing.
 - **Move To Position replaces, Add Waypoint appends.** Reach for Move To Position when a new order should override the old route ("go here now"), and Add Waypoint when you are building or extending a path. Mixing them up is the usual reason a route gets wiped or a stop lands in the wrong place.
 - **On Arrived fires once, at the end of the queue.** It does not fire for each intermediate waypoint. If you need to react at every stop, use single-point Move To Position calls chained through On Arrived rather than one big Add Waypoint route.

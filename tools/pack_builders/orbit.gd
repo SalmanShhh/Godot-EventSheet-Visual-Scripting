@@ -114,4 +114,5 @@ static func build() -> bool:
 	set_orbit_radii_fn.events.append(set_orbit_radii_fn_body)
 	sheet.functions.append(set_orbit_radii_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Orbit", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/orbit/orbit_behavior")

@@ -189,4 +189,5 @@ static func build() -> bool:
 	stop_following_fn.events.append(stop_following_fn_body)
 	sheet.functions.append(stop_following_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Follow", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/follow/follow_behavior")

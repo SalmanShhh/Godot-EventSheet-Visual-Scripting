@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: movement packs under a rigid body now say what will go wrong
+
+- A pack that moves its node by writing its position or scale every frame fights the physics engine when that node is a RigidBody2D or RigidBody3D: the body jitters, snaps back or passes through walls, and nothing said why. Each such pack now pushes one plain warning (Debugger, Errors tab) when it becomes ready under a rigid body, naming the node, what the pack changes and what to put it on instead. What the packs do is unchanged. Each pack's guide says the same in its tips.
+- This first group: Move To, Move To 3D, Follow, Follow Path, Orbit, Orbit 3D and Tile Movement.
+
 ### Added: three classic Godot mistakes now show on the row that makes them
 
 - Three things Godot's own manual warns about used to pass in silence: the sheet compiled and the game only misbehaved. A row that meets one now turns quiet amber (no outline, no widget in the row), and the help strip under the selected row says what is wrong and what to use instead. Each also appears in the Project Doctor under its own check name.

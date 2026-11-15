@@ -369,6 +369,7 @@ Start Following on the return leg clears the history, so the trip back begins fr
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a Node2D.** The behavior moves its parent's `position`, so attach it under a Node2D (a Sprite2D, a body, a plain Node2D). If the parent is not a Node2D it prints a warning and does nothing.
 - **Paths are relative to the host, not the behavior node.** A sibling of the host is `"../Player"`; a child of the host is just `"Child"`. If nothing follows, an unresolved path is almost always the cause - check it against the host's position in the tree.
 - **On Reached Target only fires in smooth mode.** Delayed mode is a replay and never "arrives", so do not wait on On Reached Target there. If you need an arrival cue, use smooth mode with a real Min Distance.

@@ -71,4 +71,5 @@ static func build() -> bool:
 	set_orbit3d_center_fn.events.append(set_orbit3d_center_fn_body)
 	sheet.functions.append(set_orbit3d_center_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Orbit 3D", "RigidBody3D", "position", "MeshInstance3D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/orbit_3d/orbit_3d_behavior")

@@ -177,6 +177,10 @@ func _process(delta: float) -> void:
 	angle += deg_to_rad(speed_degrees) * delta
 	host.position = Vector3(center_x + cos(angle) * radius, center_y, center_z + sin(angle) * radius)
 
+func _ready() -> void:
+	if host is RigidBody3D:
+		push_warning("Orbit 3D on %s: this behaviour moves a RigidBody3D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the MeshInstance3D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
+
 ## @ace_action
 ## @ace_name("Set Orbit 3D Center")
 ## @ace_category("Orbit 3D")

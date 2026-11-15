@@ -165,6 +165,7 @@ static func build() -> bool:
 	stop_moving.events.append(stop_moving_body)
 	sheet.functions.append(stop_moving)
 
+	Lib.rigid_body_host_warning(sheet, "Move To", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/move_to/move_to_behavior")
 
 

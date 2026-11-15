@@ -231,4 +231,5 @@ static func build() -> bool:
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 
+	Lib.rigid_body_host_warning(sheet, "Follow Path", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/follow_path/path_follow_behavior")

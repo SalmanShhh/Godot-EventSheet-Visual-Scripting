@@ -314,6 +314,7 @@ shoal, and costs one curve.
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **Point the Route at a Path2D, not at its parent.** The slot takes the Path2D node itself; a Node2D
   that merely contains one has no curve, and Follow Path quietly refuses to start.
 - **A Path2D with fewer than two points has no length.** Follow Path refuses such a route rather than
