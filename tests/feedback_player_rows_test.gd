@@ -280,7 +280,7 @@ static func _segment_pins() -> bool:
 		["a player row earns the segment", str(EventSheetMomentSegment.subject_of(player_row).get("kind", "")),
 			EventSheetMomentSegment.SUBJECT_PLAYER],
 		["and leads with the list it is about",
-			EventSheetMomentSegment.title_for(EventSheetMomentSegment.subject_of(player_row)), "Feedbacks"],
+			EventSheetMomentSegment.title_for(EventSheetMomentSegment.subject_of(player_row)), "Juice"],
 		["a moment row earns it and names the moment",
 			EventSheetMomentSegment.title_for(EventSheetMomentSegment.subject_of(moment_row)), "Moment: impact"],
 		["a moment block's head earns it too",

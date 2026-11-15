@@ -8,7 +8,7 @@
 # The plugin's own `_enter_tree` has to register a card schema and a parameter field before any
 # workspace is open, and a registration is three dictionary writes. Doing those writes through the
 # API charged every editor start for the whole subtree: the cold-boot closure measured ~330 ms
-# before the Feedback Player's schema was registered that way and ~19,000 ms after it.
+# before the Juice Player's schema was registered that way and ~19,000 ms after it.
 #
 # So the STORAGE lives here, in a file that names nothing at all, and `EventSheets` forwards to it.
 # The public method shapes on the API are unchanged - they are a frozen contract - and this is only

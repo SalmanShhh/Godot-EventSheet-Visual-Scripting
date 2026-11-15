@@ -1,6 +1,6 @@
-# Godot EventSheets - the Doctor's Feedbacks section.
+# Godot EventSheets - the Doctor's Juice Players section.
 #
-# One check, about the one thing a row on a Feedback Player can silently get wrong: it names a card
+# One check, about the one thing a row on a Juice Player can silently get wrong: it names a card
 # by a LABEL, and a card that has been renamed leaves the row compiling, running, and doing nothing.
 # The editor can see that before the game runs, because the scene the sheet's script sits on carries
 # the player's list in its own saved bytes.
@@ -16,7 +16,7 @@
 # plugin having to be loaded first.
 #
 # THE CORPUS IS NARROW ON PURPOSE. A script is only opened when its own text says it addresses a
-# Feedback Player at all, so a project with no feedback in it pays one substring test per script and
+# Juice Player at all, so a project with no feedback in it pays one substring test per script and
 # reports nothing.
 #
 # NOTHING is written and nothing is stored: a script is opened as a sheet in memory, measured, and
@@ -47,7 +47,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	findings.append_array(report(scripts_naming_a_player()))
 
 
-## Every script in the project that addresses a Feedback Player, in path order. Excludes the
+## Every script in the project that addresses a Juice Player, in path order. Excludes the
 ## plugin's own code and its packs, like every other Doctor corpus.
 static func scripts_naming_a_player() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
@@ -83,7 +83,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			worst_path = script_path
 		findings.append_array(script_findings(script_path, mine))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Feedbacks: %d sheet(s) play a beat through a Feedback Player, and %d row(s) name a feedback no player in their scene has." % [
+		"Juice Players: %d sheet(s) play a beat through a Juice Player, and %d row(s) name a juice card no player in their scene has." % [
 			measured, unknown], ""))
 	return findings
 

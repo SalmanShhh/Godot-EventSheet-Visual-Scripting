@@ -1,7 +1,7 @@
-# Godot EventSheets - the card vocabulary a Feedback Player's list is edited with (editor-only,
+# Godot EventSheets - the card vocabulary a Juice Player's list is edited with (editor-only,
 # UI-free).
 #
-# A Feedback Player holds an Array of Dictionaries, and each dictionary is one felt thing: the same
+# A Juice Player holds an Array of Dictionaries, and each dictionary is one felt thing: the same
 # four keys a moment FILE holds (verb, amount, effect, seconds) plus the timing keys a file cannot
 # carry. This file says what those dictionaries MEAN so the card-list drawer can draw them: what
 # each word is called, what it explains, which fields it has and which of its values the running
@@ -34,7 +34,7 @@
 class_name EventSheetFeedbackCardSchema
 extends RefCounted
 
-## The name the Feedback Player's export marker asks for, and the name the plugin registers.
+## The name the Juice Player's export marker asks for, and the name the plugin registers.
 const SCHEMA_NAME: String = "feedback_steps"
 
 ## The pack the ten words come from, and the verb that lists them.
@@ -101,7 +101,7 @@ static var _family_cache: Dictionary = {}
 static var _family_done: bool = false
 
 
-## Which family a word's stripe is coloured by. NOT written here: it is the Feedback Player's own
+## Which family a word's stripe is coloured by. NOT written here: it is the Juice Player's own
 ## CATEGORY_OF, read off the shipped pack, because the running game asks the same question when Mute
 ## Feedback Category decides what to skip and a word must not be able to belong to one family in the
 ## Inspector and another in the game. Still an OVERRIDE list at the far end - a word the pack does
@@ -299,7 +299,7 @@ static func other_kinds() -> Array:
 			"kind": EMIT_SIGNAL,
 			"category": "signal",
 			"label": "Emit Signal",
-			"help": "Says one word out of the player's On Feedback Signal trigger, so a sheet can hang anything at all off a point in the list.",
+			"help": "Says one word out of the player's On Juice Signal trigger, so a sheet can hang anything at all off a point in the list.",
 			"fields": [{"key": EFFECT_KEY, "label": "Word", "drawer": "text", "default": ""}],
 			"live": [],
 			"defaults": {EFFECT_KEY: ""},
@@ -309,7 +309,7 @@ static func other_kinds() -> Array:
 			"kind": PLAY_PLAYER,
 			"category": "",
 			"label": "Play Player",
-			"help": "Plays another Feedback Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",
+			"help": "Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",
 			"fields": [
 				{"key": EFFECT_KEY, "label": "Player", "drawer": "text", "default": ""},
 				{"key": AMOUNT_KEY, "label": "Strength", "drawer": "num", "default": 1.0}

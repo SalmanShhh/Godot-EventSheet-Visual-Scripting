@@ -2,7 +2,7 @@
 # Player's Inspector list unfolds, opened from a row.
 #
 # THE ONE THING THIS FILE IS ABOUT: a feedback added by a row and a feedback added in the Inspector
-# have to be the same thing. Add Feedback takes a dictionary, and a dictionary typed by hand into a
+# have to be the same thing. Add Juice Card takes a dictionary, and a dictionary typed by hand into a
 # parameter box is the worst field in the editor - no kinds, no fields, no help, and a missing brace
 # for a mistake. So the box opens the CARD: the very drawer the Inspector draws the list with,
 # holding one card, and what it gives back is written into the box as the dictionary literal the row
@@ -25,7 +25,7 @@ extends LineEdit
 ## file does. Everything else follows, sorted, so the order can never depend on a dictionary's own.
 const LEADING_KEYS: PackedStringArray = ["verb", "amount", "effect", "seconds"]
 
-## The card vocabulary this field draws with - the same name the Feedback Player's export marker
+## The card vocabulary this field draws with - the same name the Juice Player's export marker
 ## asks for, so the row's card and the list's card are one schema.
 const SCHEMA_NAME: String = "feedback_steps"
 
@@ -36,10 +36,10 @@ var _drawer: EventSheetCardListDrawer = null
 func _init(starting_text: String = "") -> void:
 	text = starting_text
 	placeholder_text = "{\"verb\": \"shake\", \"amount\": 0.4, \"seconds\": 0.2}"
-	tooltip_text = "The feedback this row adds. Press the card button to fill it in."
+	tooltip_text = "The juice card this row adds. Press the card button to fill it in."
 	var open: Button = Button.new()
 	open.text = "Card"
-	open.tooltip_text = "Open this feedback as the card the Inspector's list draws."
+	open.tooltip_text = "Open this juice card as the card the Inspector's list draws."
 	open.flat = true
 	open.focus_mode = Control.FOCUS_ALL
 	open.pressed.connect(_open_card)
@@ -60,7 +60,7 @@ func _open_card() -> void:
 		"kind_key": "verb", "schema": SCHEMA_NAME, "stripe_key": "category"})
 	_drawer.set_value([parse_step(text)])
 	_window = Window.new()
-	_window.title = "Feedback"
+	_window.title = "Juice card"
 	_window.size = Vector2i(520, 460)
 	_window.close_requested.connect(_close_card)
 	var scroll: ScrollContainer = ScrollContainer.new()

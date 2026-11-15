@@ -1,13 +1,13 @@
 # Godot EventSheets - the one thing a row about a feedback can get wrong: a label nobody has.
 #
-# Every row on a Feedback Player addresses one card by its LABEL - the name typed on it in the
+# Every row on a Juice Player addresses one card by its LABEL - the name typed on it in the
 # Inspector, or, for a card nobody named, its own word. That is what makes a list tuned in the
 # Inspector and a list retuned by rows agree about which step is meant, and it is also the one place
 # the two can silently drift apart: rename a card and the row that named it goes on compiling, goes
 # on running, and does nothing at all.
 #
 # So the mistake is found where it can be fixed - in the editor, against the scene the sheet's script
-# actually runs in. The evidence is the scene's own saved bytes: a Feedback Player in it holds its
+# actually runs in. The evidence is the scene's own saved bytes: a Juice Player in it holds its
 # list as a plain property, so the labels are read out of the packed scene without instancing
 # anything and without a game running.
 #
@@ -19,7 +19,7 @@
 # is a one-property write a strip button can make on somebody's behalf - so the finding offers no
 # fix and the strip shows the sentence alone.
 #
-# EVIDENCE, NOT SUSPICION. A sheet whose script no scene runs, or a scene with no Feedback Player in
+# EVIDENCE, NOT SUSPICION. A sheet whose script no scene runs, or a scene with no Juice Player in
 # it, earns NOTHING: without a list to hold the row up against there is no way to know the label is
 # wrong, and a finding that fires on no evidence is noise the reader learns to skip.
 #
@@ -82,7 +82,7 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	return found
 
 
-## Every label every Feedback Player in one saved scene holds, sorted and without repeats. Read off
+## Every label every Juice Player in one saved scene holds, sorted and without repeats. Read off
 ## the scene's own state rather than out of an instance: a packed scene answers what its nodes were
 ## saved with, which is exactly the list the reader is looking at in the Inspector, and reading it
 ## costs no tree, no physics and no running game.
@@ -144,7 +144,7 @@ static func labels_named(row_resource: Resource) -> PackedStringArray:
 
 ## The sentence the inbox and the help strip say. One function, so the two can never drift.
 static func message_for(label: String, scene_file: String) -> String:
-	return "This row plays a feedback called \"%s\", and no Feedback Player in %s has one. Rename the card, or name a card the player has." % [
+	return "This row names a juice card called \"%s\", and no Juice Player in %s has one. Rename the card, or name a card the player has." % [
 		label, scene_file]
 
 

@@ -40,11 +40,11 @@ const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/
 const INSPECTOR_HANDLES_PATH: String = "res://addons/eventsheet/editor/inspector/handle_plugin.gd"
 const FEEDBACK_PLAYER_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_inspector_plugin.gd"
 const FEEDBACK_CARD_SCHEMA_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_card_schema.gd"
-## The name the Feedback Player's export marker asks its card vocabulary for. Spelled here as a
+## The name the Juice Player's export marker asks its card vocabulary for. Spelled here as a
 ## literal rather than read off the schema file: naming that class would compile it, and the ACE
 ## reflection behind it, into every editor boot to register one callable.
 const FEEDBACK_CARD_SCHEMA_NAME: String = "feedback_steps"
-## The parameter HINT the Feedback Player's step parameters carry, the field that answers it, and
+## The parameter HINT the Juice Player's step parameters carry, the field that answers it, and
 ## the paragraph the params dialog's help strip says about that field. The paragraph is spelled here
 ## rather than on the field so registering it costs no load at boot - the field is only fetched the
 ## first time a row with a step in it is opened.
@@ -55,7 +55,7 @@ const FEEDBACK_STEP_HINT: String = "feedback_step"
 ## ~19,000 ms. The store names nothing, so registering through it costs a parse of a few lines.
 const EXTENSION_REGISTRIES_PATH: String = "res://addons/eventsheet/api/extension_registries.gd"
 const FEEDBACK_STEP_FIELD_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_step_field.gd"
-const FEEDBACK_STEP_HELP: String = "The feedback itself. Press Card to fill it in as the card the Feedback Player's list unfolds in the Inspector - the same kinds, the same fields, the same keys. The box holds what the row will emit, so an expression can be typed straight into it instead."
+const FEEDBACK_STEP_HELP: String = "The juice card itself. Press Card to fill it in as the card the Juice Player's list unfolds in the Inspector - the same kinds, the same fields, the same keys. The box holds what the row will emit, so an expression can be typed straight into it instead."
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
@@ -669,7 +669,7 @@ func _enter_tree() -> void:
 	var extension_registries: Script = load(EXTENSION_REGISTRIES_PATH)
 	extension_registries.call("register_card_schema", FEEDBACK_CARD_SCHEMA_NAME,
 		func() -> Dictionary: return load(FEEDBACK_CARD_SCHEMA_PATH).call("schema"))
-	# And the SAME card, opened from a row: Add Feedback, Insert Feedback Before and Replace Feedback
+	# And the SAME card, opened from a row: Add Juice Card, Insert Juice Card Before and Replace Juice Card
 	# each take a step, and a step typed into a plain parameter box is a dictionary with no kinds, no
 	# fields and no help. The registered field opens the card instead, so a feedback authored by a row
 	# and one authored in the list are the same dictionary spelled the same way. Loaded by path on

@@ -271,7 +271,7 @@ static func run() -> Dictionary:
 	# silence, which is why neither is an error and both stay quiet on a script no scene can be
 	# paired with. Same seam, same reason.
 	EventSheetAnimationDoctor.ensure_registered()
-	# The Feedbacks section: a row that plays a feedback by a label no Feedback Player in its scene
+	# The Juice Players section: a row that names a juice card by a label no Juice Player in its scene
 	# has. A renamed card leaves the row compiling and running and doing nothing, which is exactly
 	# the shape of mistake that never surfaces on its own. Quiet on a sheet no scene runs and on a
 	# scene with no player in it - without a list to hold the row up against there is no evidence.

@@ -1,4 +1,4 @@
-# Godot EventSheets - the Feedback Player's Inspector (editor-only).
+# Godot EventSheets - the Juice Player's Inspector (editor-only).
 #
 # One thing: the strip under the list - the count and the length of the beat, the buttons that play
 # it in the editor, the debug timeline, and the two doors between this node's list and a moment

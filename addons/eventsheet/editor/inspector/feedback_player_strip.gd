@@ -1,4 +1,4 @@
-# Godot EventSheets - the strip under a Feedback Player's list (editor-only).
+# Godot EventSheets - the strip under a Juice Player's list (editor-only).
 #
 # The list itself is drawn by the shared card-list drawer; this is the row of doors under it - how
 # long the beat is, and the buttons that let a designer feel it without pressing Play on the game.
@@ -71,9 +71,15 @@ func _init(player: Node = null) -> void:
 ## The head line and the timeline, re-read from the player as it is edited.
 func refresh() -> void:
 	var list: Array = steps_of(_player)
-	_head.text = "%d feedback%s - %s total" % [list.size(), "" if list.size() == 1 else "s", seconds_text(duration_of(list))]
+	_head.text = head_text(list.size(), seconds_text(duration_of(list)))
 	if _timeline != null:
 		_timeline.queue_redraw()
+
+
+## The head line over the list: how many juice cards it holds and how long the beat lasts. One card
+## reads "1 juice card", every other count "N juice cards". PURE + STATIC.
+static func head_text(count: int, total: String) -> String:
+	return "%d juice card%s - %s total" % [count, "" if count == 1 else "s", total]
 
 
 ## The steps a player is holding: the moment file's when one is on the slot, else its own list. The
@@ -297,15 +303,15 @@ func _on_file_chosen(path: String) -> void:
 		file.set("moment_name", path.get_file().get_basename())
 		file.set("steps", carried.get("steps"))
 		if ResourceSaver.save(file, path) != OK:
-			push_warning("Feedback Player: %s could not be written." % path)
+			push_warning("Juice Player: %s could not be written." % path)
 			return
 		if not (carried.get("left_behind") as PackedStringArray).is_empty():
-			push_warning("Feedback Player: %s holds the cards a file can hold. These use timing a file cannot carry and were left in the list: %s." % [
+			push_warning("Juice Player: %s holds the cards a file can hold. These use timing a file cannot carry and were left in the list: %s." % [
 				path.get_file(), ", ".join(carried.get("left_behind") as PackedStringArray)])
 		return
 	var loaded: Resource = load(path)
 	if loaded == null or not (loaded.get("steps") is Array):
-		push_warning("Feedback Player: %s is not a moment file." % path.get_file())
+		push_warning("Juice Player: %s is not a moment file." % path.get_file())
 		return
 	_player.set("moment_file", loaded)
 	refresh()

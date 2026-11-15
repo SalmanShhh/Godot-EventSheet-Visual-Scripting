@@ -6,7 +6,7 @@
 # is the resting toolbar: a contextual segment that appears while a row about a beat is selected and
 # goes away when the selection moves, exactly as the toolbar's other contextual controls do.
 #
-# WHAT COUNTS AS "about a beat": a row on a Feedback Player (the node that holds a list), a Moment
+# WHAT COUNTS AS "about a beat": a row on a Juice Player (the node that holds a list), a Moment
 # row on either Juice behaviour, or a Moment block's head. The answer is derived from the row's own
 # provider and verb rather than from a list of ids kept here, so a pack that grows another moment
 # verb is covered by the same rule.
@@ -28,7 +28,7 @@
 class_name EventSheetMomentSegment
 extends RefCounted
 
-## The providers a row about a beat comes from. The Feedback Player holds a list; the two Juice
+## The providers a row about a beat comes from. The Juice Player holds a list; the two Juice
 ## behaviours hold the Moment verbs.
 const PLAYER_PROVIDER: String = "FeedbackPlayer"
 const JUICE_PROVIDERS: PackedStringArray = ["JuiceBehavior", "Juice3DBehavior"]
@@ -55,13 +55,13 @@ const BUTTONS: Array = [
 	["stop", "Stop", "Stop", "Stop the preview and put the object back the way it was."],
 	["skip", "Skip", "DebugNext", "Jump to the last frame of the beat, the way Skip To End does."],
 	["restore", "Restore", "Reload", "Put back every value the preview moved, without playing anything."],
-	["inspector", "Open", "Edit", "Select the Feedback Player this row is about, so its list opens in the Inspector."]
+	["inspector", "Open", "Edit", "Select the Juice Player this row is about, so its list opens in the Inspector."]
 ]
 
 ## What a door says when it is on a beat the editor cannot sample. One sentence, on every disabled
 ## button, because a button that does nothing without saying why is the thing this segment exists
 ## not to be.
-const NO_PREVIEW_REASON: String = "Only a Feedback Player's list can be previewed here - this beat is a moment the game plays, so there is nothing on a node to sample."
+const NO_PREVIEW_REASON: String = "Only a Juice Player's list can be previewed here - this beat is a moment the game plays, so there is nothing on a node to sample."
 
 ## What the strength field offers. A beat is tuned between nothing and twice as much; the box takes
 ## anything, these are only the ends of its drag.
@@ -118,7 +118,7 @@ static func subject_of(row_resource: Resource, block_kind: String = "") -> Dicti
 static func title_for(subject: Dictionary) -> String:
 	match str(subject.get("kind", "")):
 		SUBJECT_PLAYER:
-			return "Feedbacks"
+			return "Juice"
 		SUBJECT_BLOCK:
 			return "Moment"
 		SUBJECT_MOMENT:
@@ -127,7 +127,7 @@ static func title_for(subject: Dictionary) -> String:
 	return ""
 
 
-## Whether the segment's doors can honestly act on this subject: a Feedback Player's list is a list
+## Whether the segment's doors can honestly act on this subject: a Juice Player's list is a list
 ## on a node, which the Inspector's strip walks; a Moment row or block is a coroutine the running
 ## game plays, which nothing in the editor holds. PURE + STATIC.
 static func previewable(subject: Dictionary) -> bool:
@@ -218,7 +218,7 @@ func activate(kind: String) -> bool:
 	return true
 
 
-## The Feedback Player this segment is about: the one selected in the Scene dock when that is one,
+## The Juice Player this segment is about: the one selected in the Scene dock when that is one,
 ## else the first one in the open scene. Naming it that way rather than resolving it from the row
 ## keeps the segment honest - it says what it is about in the Scene dock's own terms, and a scene
 ## with no player in it simply leaves the buttons doing nothing.
@@ -231,7 +231,7 @@ func _player() -> Node:
 	return first_player(EditorInterface.get_edited_scene_root())
 
 
-## Whether a node is a Feedback Player, asked of the SCRIPT it carries rather than of a class name,
+## Whether a node is a Juice Player, asked of the SCRIPT it carries rather than of a class name,
 ## because naming the pack's class here would compile it into every editor boot. PURE + STATIC.
 static func is_player(node: Node) -> bool:
 	if node == null:
@@ -240,7 +240,7 @@ static func is_player(node: Node) -> bool:
 	return script != null and bool(load("res://addons/eventsheet/editor/inspector/juice_player_names.gd").is_player_script(script))
 
 
-## The first Feedback Player under a node, in tree order, or null. PURE + STATIC.
+## The first Juice Player under a node, in tree order, or null. PURE + STATIC.
 static func first_player(root: Node) -> Node:
 	if root == null:
 		return null
