@@ -13,34 +13,14 @@ const BASE_CHAIN_WALK_LIMIT: int = 16
 
 static var _kinds: Dictionary = {}
 static var _built_ins_registered: bool = false
-## The ids the five built-in kinds hold. Filled by `_ensure_built_ins` and read when a registration arrives.
-static var _built_in_ids: Array = []
+static var _built_in_ids: Array = []  # the ids the five built-in kinds hold; a registration may not take one
 
 
-## Registers a kind for the session. The built-in kinds are built FIRST, so a registration that
-## arrives before anything has asked the registry (an editor plugin's `_enter_tree`) can never take
-## a built-in id, and a repeated id keeps the first registration. A refused kind is reported once
-## with a plain warning naming the id.
 static func register_kind(kind: EventSheetBlockKind) -> void:
 	_ensure_built_ins()
-	_add_kind(kind)
-
-
-## Why `kind` would be refused, in the words a caller reads, or "" when it would be accepted.
-static func _refusal_for(kind: EventSheetBlockKind) -> String:
-	if _built_in_ids.has(kind.kind_id):
-		return "EventSheets: the block kind id '%s' belongs to a built-in kind and cannot be replaced. Choose a different kind_id, such as 'my_pack.%s'." % [kind.kind_id, kind.kind_id]
-	if _kinds.has(kind.kind_id):
-		return "EventSheets: duplicate block kind_id '%s' ignored." % kind.kind_id
-	return ""
-
-
-## The one place a kind enters `_kinds`. It does NOT build the built-ins, so the built-in
-## registration itself and the pack scan can use it without re-entering `_ensure_built_ins`.
-static func _add_kind(kind: EventSheetBlockKind) -> void:
 	if kind == null or kind.kind_id.strip_edges().is_empty():
 		return
-	var refusal: String = _refusal_for(kind)
+	var refusal: String = load("res://addons/eventforge/registration/block_kind_rules.gd").refusal(kind.kind_id, _kinds, _built_in_ids)
 	if not refusal.is_empty():
 		push_warning(refusal)
 		return
@@ -131,13 +111,14 @@ static func split_params_top_level(params_text: String) -> PackedStringArray:
 static func _ensure_built_ins() -> void:
 	if _built_ins_registered:
 		return
-	# Set here and only here: this function does the whole initialization. It goes first so a kind
-	# whose _init asks the registry something does not start the work a second time.
 	_built_ins_registered = true
 	_built_in_ids = []
-	for built_in: EventSheetBlockKind in [PreloadBlockKind.new(), RegionBlockKind.new(), EnumBlockKind.new(), SignalBlockKind.new(), MomentBlockKind.new()]:
-		_add_kind(built_in)
-		_built_in_ids.append(built_in.kind_id)
+	register_kind(PreloadBlockKind.new())
+	register_kind(RegionBlockKind.new())
+	register_kind(EnumBlockKind.new())
+	register_kind(SignalBlockKind.new())
+	register_kind(MomentBlockKind.new())
+	_built_in_ids = _kinds.keys()
 	_scan_pack_kinds()
 
 
@@ -170,7 +151,7 @@ static func _scan_pack_kinds() -> void:
 			continue  # additive rescan: first registration (or a built-in) wins
 		if not kind.kind_id.contains("."):
 			push_warning("EventSheets: pack block kind '%s' (%s) should namespace its kind_id as '<pack>.<name>'." % [kind.kind_id, script_path])
-		_add_kind(kind)
+		register_kind(kind)
 
 
 ## Cheap text pre-filter for the scan above: can this file POSSIBLY be a block kind, without

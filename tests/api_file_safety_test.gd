@@ -129,10 +129,10 @@ static func _built_in_ids_cannot_be_taken() -> bool:
 		EventSheetBlockRegistry.register_kind(ImpostorKind.new(built_in))
 		var holder: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(built_in)
 		ok = SUPPORT.check(P, "the %s id stays the built-in kind" % built_in, holder != null and not (holder is ImpostorKind), true) and ok
-	var reason: String = _registry().call("_refusal_for", ImpostorKind.new("region"))
+	var reason: String = _rules().refusal("region", EventSheetBlockRegistry._kinds, EventSheetBlockRegistry._built_in_ids)
 	ok = SUPPORT.check(P, "the refusal names the id", reason.contains("'region'"), true) and ok
 	ok = SUPPORT.check(P, "the refusal says it is built in", reason.contains("built-in"), true) and ok
-	ok = SUPPORT.check(P, "an ordinary id is not refused", _registry().call("_refusal_for", ImpostorKind.new("my_pack.note")), "") and ok
+	ok = SUPPORT.check(P, "an ordinary id is not refused", _rules().refusal("my_pack.note", EventSheetBlockRegistry._kinds, EventSheetBlockRegistry._built_in_ids), "") and ok
 	# Registering a pack-style kind first still works and leaves every built-in alone.
 	EventSheetBlockRegistry._built_ins_registered = false
 	EventSheetBlockRegistry._kinds.clear()
@@ -146,9 +146,9 @@ static func _built_in_ids_cannot_be_taken() -> bool:
 	return ok
 
 
-## The registry as a script object, so a private helper can be asked by name.
-static func _registry() -> GDScript:
-	return EventSheetBlockRegistry
+## The refusal rule, loaded by path the way the registry loads it.
+static func _rules() -> GDScript:
+	return load("res://addons/eventforge/registration/block_kind_rules.gd")
 
 
 ## A kind whose emit() hits a script error, as a pack with a bug does: the call returns nothing.
@@ -203,3 +203,4 @@ static func _a_block_that_cannot_be_written_is_reported() -> bool:
 	var fine: Dictionary = EventSheetCompiler.echo(_block_sheet("preload", {"name": "Icon", "path": "res://icon.svg"}), true)
 	ok = SUPPORT.check(P, "a registered kind still compiles", fine.get("success"), true) and ok
 	return ok
+

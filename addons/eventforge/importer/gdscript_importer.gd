@@ -1660,36 +1660,20 @@ func _extract_first_quoted(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
-## Probes every registered Custom Block API kind at this line. Every fields claim is byte-verify
-## gated HERE: re-emission must reproduce the consumed source lines exactly, so a permissive kind
-## cannot corrupt a sheet - it just fails to lift and the lines stay a verbatim GDScript block.
-## Returns {} when no kind claims, else {"row": CustomBlockRow, "consumed": int}.
-##
-## The gate used to live only in EventSheetBlockKind.verified_claim, which a kind calls on ITSELF at
-## the end of lift(). That made the guarantee voluntary, and the no-code path could not opt in even
-## if its author wanted to: a lift Callable written inline in a simple_block_kind() config has no
-## kind instance to call it on. Re-verifying here costs one emit() per claim - contractually pure,
-## so it is a no-op for the built-ins, which all still gate themselves - and makes the promise real
-## for a third-party kind, which is the only kind that could ever have broken it.
+## Probes every registered Custom Block API kind at this line. Every claim is byte-verify gated
+## HERE, a fields claim by re-emitting its fields and a ready-made row ({"resource": ...}) through
+## the kind's emit_lines(), so a permissive kind just fails to lift and the lines stay a verbatim
+## block. Returns {} when no kind claims, else {"row": Resource, "consumed": int}.
 func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 	for kind: EventSheetBlockKind in EventSheetBlockRegistry.all_kinds():
 		var claim: Dictionary = kind.lift(lines, index)
 		if claim.is_empty():
 			continue
-		# Resource kinds hand back a ready row instance, not fields. The same byte gate applies to
-		# them: the kind's own emit_lines() of that row must reproduce the consumed source lines
-		# exactly, or the claim is dropped and the lines stay a verbatim block. A kind's own
-		# round-trip care is welcome, but the promise to the user's file cannot depend on it.
 		if claim.has("resource"):
-			var claimed_row: Variant = claim["resource"]
-			if not (claimed_row is Resource):
-				continue
-			var claimed_count: int = maxi(1, int(claim.get("consumed", 1)))
-			if index + claimed_count > lines.size():
-				continue
-			if not _resource_claim_reproduces(kind, claimed_row as Resource, lines, index, claimed_count):
-				continue
-			return {"row": claimed_row, "consumed": claimed_count}
+			var gated: Dictionary = load("res://addons/eventforge/importer/resource_claim_gate.gd").gate(kind, claim, lines, index)
+			if not gated.is_empty():
+				return gated
+			continue
 		var fields: Variant = claim.get("fields")
 		if not (fields is Dictionary):
 			continue
@@ -1705,17 +1689,6 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 		block_row.fields = fields
 		return {"row": block_row, "consumed": consumed}
 	return {}
-
-
-## True when `kind` re-emits `row` as exactly the `count` source lines starting at `index`.
-func _resource_claim_reproduces(kind: EventSheetBlockKind, row: Resource, lines: PackedStringArray, index: int, count: int) -> bool:
-	var emitted: PackedStringArray = kind.emit_lines(row)
-	if emitted.size() != count:
-		return false
-	for offset: int in range(count):
-		if emitted[offset] != lines[index + offset]:
-			return false
-	return true
 
 
 ## Lifts a Moment block: a coroutine of the exact shape a Moment block emits - the fixed

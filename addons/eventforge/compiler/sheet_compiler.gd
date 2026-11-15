@@ -4873,42 +4873,11 @@ static func _moment_step_statements(step: MomentStepRow) -> PackedStringArray:
 	return _emit_match_case_body(step.actions, "", "", null)
 
 
-## The lines one Custom Block row writes, or an honest account of why it writes none. A block whose
-## kind is not registered (its pack was removed) or whose emit() produced nothing for a row that
-## holds fields (emit() hit a script error) is never dropped silently: the result gets a warning and
-## an error naming the kind and the row, `success` turns false, and the file is not written, so a
-## saved script never quietly lacks a line the sheet still holds. A `.tres` sheet stores only the
-## kind id and the fields, never the emitted line, so there is nothing to keep verbatim.
+## The lines one Custom Block row writes; a row that cannot be written is reported, not dropped.
 static func _custom_block_lines(block: CustomBlockRow, result: Dictionary) -> PackedStringArray:
 	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
-	if kind == null:
-		var missing: String = "This sheet has %s, but no behaviour pack provides that kind, so its line cannot be written. Put the pack back, or delete the row." % _block_label(block)
-		(result["warnings"] as Array).append(missing)
-		(result["errors"] as Array).append(missing)
-		result["success"] = false
-		return PackedStringArray()
-	var lines: PackedStringArray = kind.emit(block)
-	if lines.is_empty() and not block.fields.is_empty():
-		var label: String = _block_label(block)
-		var silent: String = "%s%s wrote nothing, so its line is missing from the script. Its pack's emit code may have an error - check the Output panel." % [label.left(1).to_upper(), label.substr(1)]
-		(result["warnings"] as Array).append(silent)
-		(result["errors"] as Array).append(silent)
-		result["success"] = false
-	return lines
-
-
-## "the 'my_pack.todo' block (text: fix this)" - the kind and what the row holds, so a person can
-## find the row.
-static func _block_label(block: CustomBlockRow) -> String:
-	var shown: PackedStringArray = PackedStringArray()
-	for field_id: Variant in block.fields:
-		var text: String = str(block.fields[field_id]).replace("
-", " ")
-		shown.append("%s: %s" % [field_id, text.left(30) + ("..." if text.length() > 30 else "")])
-		if shown.size() == 3:
-			break
-	var held: String = "" if shown.is_empty() else " (%s)" % ", ".join(shown)
-	return "the '%s' block%s" % [block.kind_id, held]
+	var lines: PackedStringArray = kind.emit(block) if kind != null else PackedStringArray()
+	return load("res://addons/eventforge/compiler/custom_block_gap.gd").checked(block, kind, lines, result)
 
 
 ## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive
