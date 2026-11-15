@@ -10,7 +10,7 @@
 # are not part of the promise and are not listed.
 #
 # To print the table the code has today, in the form pasted below, run this file's `dump_table()` from
-# a scratch script: `print(preload("res://tests/api_surface_test.gd").dump_table())`.
+# a throwaway script: `print(preload("res://tests/api_surface_test.gd").dump_table())`.
 @tool
 extends RefCounted
 
