@@ -109,7 +109,7 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	rows.append(["dark reference: text, gutter numbers, type word, comment note", [
 		dark_style.get_condition_style().text_color.to_html(false), dark.gutter_text_color.to_html(false),
 		dark.type_number_color.to_html(false), dark.comment_row_background_color.to_html(false)],
-		["d2d2d2", "8c8c8c", "d0d0d0", "38321f"]])
+		["d2d2d2", "a1a1a1", "d0d0d0", "38321f"]])
 	rows.append(["light reference: canvas, card, edge, divider, lanes", [light.sheet_background_color.to_html(false),
 		light.row_background_color.to_html(false), light.row_border_color.to_html(false), light.lane_divider_color.to_html(false),
 		light.condition_lane_color.to_html(false), light.action_lane_color.to_html(false)],
@@ -142,7 +142,7 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 	var bl: EventSheetEventStyle = bright_light.get_event_style()
 	rows.append(["a #252525 editor: canvas", nd.sheet_background_color.to_html(false), "232323"])
 	rows.append(["a #252525 editor: card", nd.row_background_color.to_html(false), "2d2d2d"])
-	rows.append(["a #252525 editor: gutter numbers", nd.gutter_text_color.to_html(false), "898989"])
+	rows.append(["a #252525 editor: gutter numbers", nd.gutter_text_color.to_html(false), "9f9f9f"])
 	rows.append(["a #252525 editor: the type word keeps its colour", nd.type_number_color.to_html(false), "d0d0d0"])
 	rows.append(["a #252525 editor: the sentence text is the dark hand's",
 		neutral_dark.get_condition_style().text_color.to_html(false), "d2d2d2"])

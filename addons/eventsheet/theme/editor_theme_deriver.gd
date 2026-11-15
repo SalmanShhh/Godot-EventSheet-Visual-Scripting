@@ -426,6 +426,7 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)
+	_native_quiet_words(style)
 	# The one bar colour the shared rule leaves clear on purpose (every other theme keeps the tab as
 	# the editor draws it), stated here because the design gives the open tab its accent edge.
 	# The lines of the nesting, one per level: the board's grey spine, a step off the canvas.
@@ -433,6 +434,27 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	style.get_chrome_style().active_tab_edge_color =NATIVE_TAB_EDGE_LIGHT if light else NATIVE_TAB_EDGE_DARK
 	style.get_chrome_style().status_ok_color = NATIVE_STATUS_OK_LIGHT if light else NATIVE_STATUS_OK_DARK
 	return style
+
+
+## The quiet words, moved the least it takes to read at 4.5 to 1 on every ground they are drawn on (the
+## sheet, a row, a head bar; the gutter for its numbers), the way the sentence text is. The shared
+## rule's own tones stay as they are for every other theme.
+static func _native_quiet_words(style: EventSheetEditorStyle) -> void:
+	var mover: Script = load("res://addons/eventsheet/theme/readable_ink.gd")
+	var event_style: EventSheetEventStyle = style.get_event_style()
+	var reading: EventSheetReadingStyle = style.get_reading_style()
+	var grounds: Array = [event_style.sheet_background_color, event_style.row_background_color, event_style.head_bar_color]
+	reading.muted_text_color = mover.move(reading.muted_text_color, grounds)
+	# Secondary keeps its step above the muted voice, which may have moved up to meet it.
+	var secondary: Color = mover.move(reading.secondary_text_color, grounds)
+	var primary: Color = reading.primary_text_color
+	if absf(secondary.get_luminance() - reading.muted_text_color.get_luminance()) < 0.03:
+		secondary = reading.muted_text_color.lerp(primary, 0.5)
+	reading.secondary_text_color = secondary
+	event_style.gutter_text_color = mover.move(event_style.gutter_text_color, [event_style.gutter_background_color])
+	style.get_chrome_style().object_bar_section_color = reading.muted_text_color
+	# The amber of every finding reads on the same grounds as the words around it.
+	style.get_chrome_style().object_bar_warning_color = mover.move(style.get_chrome_style().object_bar_warning_color, grounds)
 
 
 ## A lane's cells: the sentence text of the hand on a plate that IS the lane, so nothing draws a

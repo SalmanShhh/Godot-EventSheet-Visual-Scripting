@@ -180,7 +180,8 @@ static func _ink_for(background: Color) -> Color:
 ## it does not disappear into the page.
 static func _warning_for(background: Color) -> Color:
 	var amber := Color("#e8bd73")
-	return amber.darkened(0.35) if background.get_luminance() > 0.5 else amber
+	# Darkened far enough (0.55) to read at 4.5 to 1 on a light sheet, a light row and a light head bar.
+	return amber.darkened(0.55) if background.get_luminance() > 0.5 else amber
 
 
 ## "This is broken" - red, held to the same rule.

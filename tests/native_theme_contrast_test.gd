@@ -26,6 +26,39 @@ static func run() -> bool:
 	ok = _test_the_light_palette_has_no_dark_fills() and ok
 	ok = _test_the_dark_palette_has_no_light_fills() and ok
 	ok = _test_the_variable_card_is_a_neutral_grey() and ok
+	for base: Color in BASES:
+		ok = _test_quiet_words_read(base) and ok
+	return ok
+
+
+## The quiet voices of the sheet - the muted detail, the gutter numbers, the amber of every finding - read
+## at the body-text bar on every ground they are drawn on (the sheet, a row, a head bar, the gutter), in a
+## dark editor and in a light one.
+static func _test_quiet_words_read(base: Color) -> bool:
+	var style: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(base)
+	var event_style: EventSheetEventStyle = style.get_event_style()
+	var grounds: Array = [event_style.sheet_background_color, event_style.row_background_color, event_style.head_bar_color]
+	var rows: Array = [
+		["muted words", style.get_reading_style().muted_text_color, grounds],
+		["secondary words", style.get_reading_style().secondary_text_color, grounds],
+		["gutter numbers", event_style.gutter_text_color, [event_style.gutter_background_color]],
+		["finding amber", style.get_chrome_style().object_bar_warning_color, grounds],
+	]
+	var weak: Array[String] = []
+	for row: Array in rows:
+		for ground: Color in row[2]:
+			var ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(row[1], ground)
+			if ratio < TEXT_BAR:
+				weak.append("%s %.2f (%s on %s)" % [row[0], ratio, (row[1] as Color).to_html(false), ground.to_html(false)])
+	var ok: bool = SUPPORT.check(TEST_NAME, "the quiet words read at base %s" % base.to_html(false), weak, [])
+	var reading: EventSheetReadingStyle = style.get_reading_style()
+	var primary: float = reading.primary_text_color.get_luminance()
+	var secondary: float = reading.secondary_text_color.get_luminance()
+	var muted: float = reading.muted_text_color.get_luminance()
+	# Three steps stay three steps: primary, then secondary, then muted, each a visible step apart.
+	var dark: bool = not EventSheetEditorThemeDeriver.is_light_base(base)
+	var steps_apart: bool = absf(primary - secondary) > 0.02 and absf(secondary - muted) > 0.02
+	ok = SUPPORT.check(TEST_NAME, "muted stays a step off secondary at base %s" % base.to_html(false), steps_apart, true) and ok
 	return ok
 
 
