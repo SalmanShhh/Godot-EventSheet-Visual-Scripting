@@ -25,6 +25,7 @@ static func run() -> bool:
 	ok = _looks_compile(dialog) and ok
 	ok = _sections(dialog) and ok
 	ok = _look_doors(dialog) and ok
+	ok = _look_details_read_whole(dialog) and ok
 	ok = _godot_line_looks(dialog) and ok
 	ok = _values_as_code(dialog) and ok
 	host.free()
@@ -249,6 +250,46 @@ static func _look_doors(dialog: EventSheetVariableDialog) -> bool:
 		["an annotation look has none", annotation, false],
 		["a shipped file look offers the sheet and the copy", [dialog._look_doors.visible, dialog._look_open_button.visible, dialog._look_copy_button.visible], [true, true, true]],
 	])
+
+
+## A look's question that carries a whole sentence is read under its box, wrapped, and not as a grey
+## placeholder a text box has to cut; a short example still sits grey in the box. The annotation the
+## look writes wraps instead of trailing off.
+static func _look_details_read_whole(dialog: EventSheetVariableDialog) -> bool:
+	dialog.open_for_edit("global", {}, "waves", "Array", "[]", false, "Add", false, true)
+	dialog._select_look("table")
+	dialog._rebuild_look_details()
+	var placeholders: Dictionary = {}
+	for edit: Node in dialog._look_details.find_children("*", "LineEdit", true, false):
+		var label: Node = edit.get_parent().get_child(0)
+		placeholders[(label as Label).text if label is Label else ""] = (edit as LineEdit).placeholder_text
+	var about: PackedStringArray = PackedStringArray()
+	for line: Node in dialog._look_details.find_children("*", "Label", true, false):
+		if (line as Label).autowrap_mode != TextServer.AUTOWRAP_OFF:
+			about.append((line as Label).text)
+	var note: Label = dialog._look_option.get_meta("code_note") as Label
+	return SUPPORT.pins(P + ": details", [
+		["a sentence is not a placeholder", placeholders.get("Weight column", "missing"), ""],
+		["a short example is", placeholders.get("Columns", "missing"), "item:String, count:int"],
+		["the sentence is read whole under the box", "
+".join(about).contains("Leave empty for none. Written as weight_column in the file."), true],
+		["and the key line is not repeated in it", "
+".join(about).contains("weight_column
+"), false],
+		["the annotation note wraps and is not trimmed", [note.autowrap_mode, note.text_overrun_behavior], [TextServer.AUTOWRAP_ARBITRARY, TextServer.OVERRUN_NO_TRIMMING]],
+		["Add row starts at the left of its button so a wide table never hides it", _add_row_alignment(), HORIZONTAL_ALIGNMENT_LEFT],
+		["a hint is a sentence when it ends in a full stop", [EventSheetVariableDialog.look_hint_is_sentence("Leave empty for none."), EventSheetVariableDialog.look_hint_is_sentence("item:String")], [true, false]],
+	])
+
+
+static func _add_row_alignment() -> int:
+	var table: Control = EventSheetDrawerWidgets.DrawerTable.new([{"name": "a", "type": "String"}])
+	var found: int = -1
+	for button: Node in table.find_children("*", "Button", true, false):
+		if (button as Button).text.contains("Add row"):
+			found = (button as Button).alignment
+	table.free()
+	return found
 
 
 ## A new pick of a look that keeps Godot's own export line writes that line plus the look comment; a

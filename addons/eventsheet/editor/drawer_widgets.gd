@@ -1528,6 +1528,9 @@ class DrawerTable:
 		_add_button.text = EventSheetL10n.translate("Add row") if add_picture != null else "+ " + EventSheetL10n.translate("Add row")
 		_add_button.icon = add_picture
 		_add_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# A table wider than its frame scrolls sideways: the words start at the left edge so they are
+		# in view, not centred in a button whose middle is past the edge.
+		_add_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_add_button.pressed.connect(_on_add_row)
 		add_line.add_child(_add_button)
 		_total_label = Label.new()

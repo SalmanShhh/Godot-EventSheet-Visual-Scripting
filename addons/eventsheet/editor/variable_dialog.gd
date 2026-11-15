@@ -564,7 +564,9 @@ func _build_inspector_card() -> PanelContainer:
 	box.add_child(_with_label_tile(EventSheetPopupUI.form_row(EventSheetL10n.translate("Inspector look"),
 		EventSheetPopupUI.code_noted_option(_look_option, func(_index: int) -> String: return annotation_text())), LOOK_OPTION))
 	var annotation_note: Label = _look_option.get_meta("code_note") as Label
-	annotation_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	# The annotation is one long unbroken word, so it wraps anywhere rather than trailing off.
+	annotation_note.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	annotation_note.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	annotation_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_look_option.visible = false
 	_look_list = load("res://addons/eventsheet/editor/inspector/look_list.gd").new(_look_option)
@@ -1209,6 +1211,19 @@ func _selected_look_id() -> String:
 	return str(_look_option.get_item_metadata(_look_option.selected))
 
 
+## True when a look question's hint is a sentence to read (it ends in a full stop) rather than a short
+## grey example to type like (`item:String, count:int`). A sentence cannot wrap inside a text box.
+static func look_hint_is_sentence(hint: String) -> bool:
+	return hint.strip_edges().ends_with(".")
+
+
+## The hint half of a question's hover, which is the key on its first line and the hint after it.
+static func look_hint_of(hover: String) -> String:
+	var parts: PackedStringArray = hover.split("
+", true, 1)
+	return parts[1].strip_edges() if parts.size() > 1 else ""
+
+
 ## The chosen look's detail fields, each remembering what was typed into it for this look.
 func _rebuild_look_details() -> void:
 	for old: Node in _look_details.get_children():
@@ -1240,14 +1255,16 @@ func _rebuild_look_details() -> void:
 			_:
 				var edit: LineEdit = LineEdit.new()
 				edit.text = str(value)
-				edit.placeholder_text = EventSheetL10n.translate(str(field[4])) if field.size() > 4 else ""
+				# A grey example fits the box; a whole sentence does not, so it is said under the box instead.
+				edit.placeholder_text = EventSheetL10n.translate(str(field[4])) if field.size() > 4 and not look_hint_is_sentence(str(field[4])) else ""
 				edit.text_changed.connect(func(typed: String) -> void: _set_look_value(key, typed))
 				control = edit
 		_look_details.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate(str(field[1])), control,
 			EventSheetPopupUI.LABEL_MIN_WIDTH, str(field[5]) if field.size() > 5 else ""))
 		# What the question means, and how it is written in the file, in words under it.
 		var about: Label = Label.new()
-		about.text = (str(field[5]) + " " if field.size() > 5 and not str(field[5]).is_empty() else "") + EventSheetL10n.translate("Written as %s in the file.") % str(field[0])
+		var hover_hint: String = look_hint_of(str(field[5])) if field.size() > 5 else ""
+		about.text = (hover_hint + " " if look_hint_is_sentence(hover_hint) else "") + EventSheetL10n.translate("Written as %s in the file.") % str(field[0])
 		about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		about.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		_look_details.add_child(about)
