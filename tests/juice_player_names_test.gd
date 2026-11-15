@@ -45,6 +45,14 @@ static func _class_pins() -> bool:
 		["FeedbackPlayer stays at its path and extends it", classes.get("FeedbackPlayer", []), ["JuicePlayer", OLD_PATH]],
 		["an old node is both", answers[0], [true, true]],
 		["a new node is a JuicePlayer and not a FeedbackPlayer", answers[1], [true, false]],
+		# Create Node shows the first doc comment of the file as the class description, so the old name's
+		# file carries no annotation header above it: just the sentence that says what it is.
+		["the old name is a stub that says what it is", FileAccess.get_file_as_string(OLD_PATH),
+			"@icon(\"res://eventsheet_addons/juice/icon.svg\")
+class_name FeedbackPlayer
+extends JuicePlayer
+## The old name of Juice Player. Kept so projects made before version 0.21.0 keep working. Use Juice Player.
+"],
 	])
 
 

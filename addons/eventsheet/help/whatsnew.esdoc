@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a node that wears a script extending another still draws its base class's Inspector decoration
+
+The header, info line and look a script gives a variable (`# @inspector_header`, `# @inspector_info`, `# @inspector_look`) were read from the script the node wears and from nowhere else, so a node wearing a thin subclass lost them: an old scene's FeedbackPlayer, which now only extends JuicePlayer, showed no \"Juice Player\" header over its list and drew its direction and while-playing choices as plain dropdowns instead of toggle rows. The Inspector now asks the script a node wears first and then each script it extends.
+
 ### Changed: the Inspector strip, the toolbar, the finding and the Doctor say Juice Player
 
 Under a Juice Player's list the strip reads \"3 juice cards - 1.20 s total\" (and \"1 juice card\"), the toolbar's list segment is called \"Juice\" and its Open button selects \"the Juice Player this row is about\", the step window is titled \"Juice card\", the quiet finding on a row says \"This row names a juice card called ..., and no Juice Player in ... has one\", and the Doctor's section reads \"Juice Players: N sheet(s) play a beat through a Juice Player ...\". The warnings the node prints say \"Juice Player:\". Only words changed: the Doctor check and the finding keep the ids they always had.
@@ -26,7 +30,7 @@ Rows from a shipped pack (the Juice Player's Play Juice, a Health row, and the r
 
 ### Changed: the Feedback Player's code now lives in a Juice Player file
 
-The node that holds a list of effects is now the class `JuicePlayer` (`juice_player.gd`, in the Juice pack). The old class `FeedbackPlayer` is still there, at the same path with the same id, and only extends it, so a scene that already has a FeedbackPlayer node loads, plays and saves exactly as before, and a script of yours that names `FeedbackPlayer` (as a type, in `is`, or with `.new()`) still compiles, and still reaches its constants and statics. A node you add from now on is a JuicePlayer: it is not `is FeedbackPlayer`, so a variable typed `FeedbackPlayer` will not hold it. Change that type to `JuicePlayer`, which the old nodes also are. Create Node lists both, the old one nested under the new one. The rows keep their ids and the code they write; a new row's \"On node\" starts on `$JuicePlayer`, the name a new node gets. The Inspector strip, the toolbar's list buttons, the unknown-card finding and the Doctor recognise both names, and the strip class no longer shows in Create Node.
+The node that holds a list of effects is now the class `JuicePlayer` (`juice_player.gd`, in the Juice pack). The old class `FeedbackPlayer` is still there, at the same path with the same id, and only extends it, so a scene that already has a FeedbackPlayer node loads, plays and saves exactly as before, and a script of yours that names `FeedbackPlayer` (as a type, in `is`, or with `.new()`) still compiles, and still reaches its constants and statics. A node you add from now on is a JuicePlayer: it is not `is FeedbackPlayer`, so a variable typed `FeedbackPlayer` will not hold it. Change that type to `JuicePlayer`, which the old nodes also are. Create Node lists both, the old one nested under the new one and described as the old name. The rows keep their ids and the code they write; a new row's \"On node\" starts on `$JuicePlayer`, the name a new node gets. The Inspector strip, the toolbar's list buttons, the unknown-card finding and the Doctor recognise both names, and the strip class no longer shows in Create Node.
 
 ### Added: a script can keep the name its rows were saved under
 

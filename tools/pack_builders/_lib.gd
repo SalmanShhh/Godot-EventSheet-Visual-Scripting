@@ -19,7 +19,11 @@ static var output_override_dir: String = ""
 ## The order the members are DECLARED in a builder is the order they are emitted in, so a
 ## builder's `sheet.variables` order is part of the shipped pack, not a private detail: change it
 ## and the pack's file, its head bars and any .tres saved against it all change with it.
-static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
+##
+## `versioned` false leaves the pack without an `@ace_version` line: a script that holds no vocabulary of its
+## own (the old name of a renamed node, which only extends the new one) has nothing to version, and the line
+## would be the first doc comment Godot reads for the class, hiding the sentence that says what it is.
+static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON, versioned: bool = true) -> bool:
 	# The whole pack pipeline (icon auto-detect, the four byte-gated de-coding lifts, stable
 	# row uids, banner-less .gd-is-the-pack compile) lives on the PUBLIC API now -
 	# EventSheets.publish_pack - so the bundled builders, the dock's Export Addon flow, and
@@ -28,7 +32,7 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# and the build-log line.
 	# Every bundled pack ships versioned (builders may set their own; 1.0.0 is the floor) -
 	# the Addon Pack banner chip shows it and future update tooling compares against it.
-	if sheet.addon_version.strip_edges().is_empty():
+	if versioned and sheet.addon_version.strip_edges().is_empty():
 		sheet.addon_version = "1.0.0"
 	# The pack-local icon is resolved against the path the builder ASKED for, not the path the
 	# bytes land on, so a redirected build still emits the shipped @icon line.

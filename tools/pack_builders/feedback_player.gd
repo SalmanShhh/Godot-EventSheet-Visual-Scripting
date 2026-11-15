@@ -140,7 +140,7 @@ static func build() -> bool:
 	Lib.feature_verbs(sheet, ["play", "play_and_wait", "stop"])
 	if not Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_player"):
 		return false
-	return Lib.save_pack(_old_name_sheet(), "res://eventsheet_addons/juice/feedback_player")
+	return Lib.save_pack(_old_name_sheet(), "res://eventsheet_addons/juice/feedback_player", Lib.BEHAVIOR_ICON, false)
 
 
 ## The old name, kept at its old path and uid so scenes and scripts made before the rename keep working.
