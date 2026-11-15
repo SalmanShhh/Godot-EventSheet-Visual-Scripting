@@ -3,7 +3,7 @@
 # THE PROMISE: a name people READ may change, nothing they SAVED may. The fixture folder holds what
 # such a project has on disk: a scene with two players and a script that names the old class, a
 # `.gd` sheet with the exact bytes the plugin wrote for four rows (stored as `old_sheet.gd.txt`, so the
-# style gate does not read compiler bytes as hand-written code), and a `.tres` sheet with one row.
+# style gate does not read compiler bytes as hand-written code), and a `.tres` sheet with one row (stored as text for the same reason).
 # Every pin here is green on the code from before the rename and must stay green after every commit
 # of it. How the reopened rows READ is not pinned here (a later fix gives them their own sentence);
 # only the bytes are, because the bytes are the promise.
@@ -124,10 +124,14 @@ static func _script_pins() -> bool:
 ## The `.gd` sheet re-saves byte for byte, and the `.tres` row still compiles to the same line.
 static func _sheet_pins() -> bool:
 	var source: String = FileAccess.get_file_as_string(DIR + "old_sheet.gd.txt")
-	var tres: EventSheetResource = ResourceLoader.load(DIR + "old_sheet.tres", "",
-		ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
-	# A copy with no home, so the compiler does not write a generated file beside the fixture.
-	var compiled: String = SUPPORT.compile_output(tres.duplicate(true) as EventSheetResource, "user://juice_rename_old_sheet_tres.gd")
+	# The saved row is kept as text and read from a copy under user://, so the plugin that compiles every
+	# sheet it sees in the project never writes a generated file beside the fixture.
+	var copy_path: String = "user://juice_rename_old_sheet.tres"
+	var copy: FileAccess = FileAccess.open(copy_path, FileAccess.WRITE)
+	copy.store_string(FileAccess.get_file_as_string(DIR + "old_sheet.tres.txt"))
+	copy.close()
+	var tres: EventSheetResource = ResourceLoader.load(copy_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+	var compiled: String = SUPPORT.compile_output(tres, "user://juice_rename_old_sheet_tres.gd")
 	var action: ACEAction = (tres.events[0] as EventRow).actions[0] as ACEAction
 	return SUPPORT.pins(TEST_NAME, [
 		["the old .gd sheet re-saves byte for byte",
