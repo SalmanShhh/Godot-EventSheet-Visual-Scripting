@@ -19,6 +19,7 @@ static func run() -> bool:
 	passed = _the_rows() and passed
 	passed = _the_lines_they_write() and passed
 	passed = _the_old_row_is_retired() and passed
+	passed = _a_file_round_trips() and passed
 	passed = _the_sizes_come_out_right() and passed
 	return passed
 
@@ -131,6 +132,23 @@ static func _the_old_row_is_retired() -> bool:
 		["keeping the size and the node", entry.get("after", ""),
 			"$Enemy.scale = Vector2(96, 48) / $Enemy.get_rect().size if $Enemy.texture else $Enemy.scale"],
 	])
+
+
+## A script that holds the old line, or any new one, reopens as a sheet and saves back the same bytes.
+static func _a_file_round_trips() -> bool:
+	var rows: Array = []
+	var cases: Array[Array] = [
+		["the old Set Sprite Size line", "SetSpriteSize", {"size": "Vector2(96, 48)"}],
+		["the old line on another node", "SetSpriteSize", {"size": "Vector2(96, 48)", "target": "$Enemy"}],
+		["a Set Size line", "SpriteSetSize", {"size": "Vector2(64, 64)"}],
+		["a Set Width line on another node", "SpriteSetWidth", {"width": "80.0", "target": "$Enemy"}],
+		["a Set Height line", "SpriteSetHeight", {"height": "48.0"}],
+	]
+	for case: Array in cases:
+		var source: String = SUPPORT.compile_output(_sheet_with(case[1], case[2]), "user://sprite_size_rows_test.gd")
+		var again: String = SUPPORT.reemit(source, "user://sprite_size_rows_test.gd")
+		rows.append(["%s reopens and saves back the same bytes" % case[0], again == source, true])
+	return SUPPORT.pins(NAME, rows)
 
 
 static func _texture(width: int, height: int) -> ImageTexture:
