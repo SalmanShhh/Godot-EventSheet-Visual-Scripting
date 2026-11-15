@@ -63,6 +63,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _resource_claims_are_gated() and ok
 	ok = _built_in_ids_cannot_be_taken() and ok
+	ok = _a_block_that_cannot_be_written_is_reported() and ok
 	return ok
 
 
@@ -148,3 +149,57 @@ static func _built_in_ids_cannot_be_taken() -> bool:
 ## The registry as a script object, so a private helper can be asked by name.
 static func _registry() -> GDScript:
 	return EventSheetBlockRegistry
+
+
+## A kind whose emit() hits a script error, as a pack with a bug does: the call returns nothing.
+class ThrowingEmitKind extends EventSheetBlockKind:
+	func _init() -> void:
+		kind_id = "audit.throw_emit"
+		title = "ThrowEmit"
+
+	func emit(_block: CustomBlockRow) -> PackedStringArray:
+		var nothing: Object = null
+		return PackedStringArray([str(nothing.get_name())])
+
+
+static func _block_sheet(kind_id: String, fields: Dictionary) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheets.new_sheet()
+	var row: CustomBlockRow = CustomBlockRow.new()
+	row.kind_id = kind_id
+	row.fields = fields
+	sheet.events.append(row)
+	return sheet
+
+
+static func _a_block_that_cannot_be_written_is_reported() -> bool:
+	var ok: bool = true
+	# A .tres sheet whose pack was removed: the row keeps its kind id and fields, nothing registers the kind.
+	var gone: Dictionary = EventSheetCompiler.echo(_block_sheet("gone.pack", {"text": "fix the jump arc"}), true)
+	ok = SUPPORT.check(P, "a block whose pack is gone makes the compile fail", gone.get("success"), false) and ok
+	var gone_words: String = " ".join(PackedStringArray(gone.get("errors", [])))
+	ok = SUPPORT.check(P, "the error names the kind", gone_words.contains("'gone.pack'"), true) and ok
+	ok = SUPPORT.check(P, "the error names what the row holds", gone_words.contains("fix the jump arc"), true) and ok
+	ok = SUPPORT.check(P, "the same words ride in the warnings", " ".join(PackedStringArray(gone.get("warnings", []))).contains("'gone.pack'"), true) and ok
+	# A failed compile leaves the file on disk as it was, rather than writing a script that lacks the row.
+	var path: String = "user://api_file_safety_gone.gd"
+	var held: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	held.store_string("# the last good script
+")
+	held.close()
+	var written: Dictionary = EventSheetCompiler.compile(_block_sheet("gone.pack", {"text": "x"}), path)
+	ok = SUPPORT.check(P, "compile reports the failure when it was to write a file", written.get("success"), false) and ok
+	ok = SUPPORT.check(P, "the file the compile would have overwritten is untouched",
+		FileAccess.get_file_as_string(path), "# the last good script
+") and ok
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	# A kind that is there but whose emit() errors.
+	EventSheetBlockRegistry._kinds["audit.throw_emit"] = ThrowingEmitKind.new()
+	var thrown: Dictionary = EventSheetCompiler.echo(_block_sheet("audit.throw_emit", {"text": "x"}), true)
+	ok = SUPPORT.check(P, "a block whose emit() errors makes the compile fail", thrown.get("success"), false) and ok
+	ok = SUPPORT.check(P, "the failure names the kind",
+		" ".join(PackedStringArray(thrown.get("warnings", []))).contains("'audit.throw_emit'"), true) and ok
+	EventSheetBlockRegistry._kinds.erase("audit.throw_emit")
+	# The ordinary cases do not change: a registered kind compiles, and a row with no fields may write nothing.
+	var fine: Dictionary = EventSheetCompiler.echo(_block_sheet("preload", {"name": "Icon", "path": "res://icon.svg"}), true)
+	ok = SUPPORT.check(P, "a registered kind still compiles", fine.get("success"), true) and ok
+	return ok

@@ -590,10 +590,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_collect_custom_blocks(all_events, custom_block_rows)
 	var pending_custom_sections: Array = []
 	for block_entry: Variant in custom_block_rows:
-		var custom_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind((block_entry as CustomBlockRow).kind_id)
-		if custom_kind == null:
-			continue
-		var custom_lines: PackedStringArray = custom_kind.emit(block_entry as CustomBlockRow)
+		var custom_lines: PackedStringArray = _custom_block_lines(block_entry as CustomBlockRow, result)
 		if not custom_lines.is_empty():
 			pending_custom_sections.append({"row": block_entry, "lines": custom_lines})
 	if not pending_custom_sections.is_empty():
@@ -1058,7 +1055,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	result["output"] = output
 
 	var final_output_path: String = _resolve_output_path(sheet, output_path)
-	if _writes_output and not _write_output_if_changed(final_output_path, output):
+	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result
@@ -1280,14 +1277,12 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			# Custom Block API: the registered kind owns the GDScript. Emission is in array
 			# position (the same ordering contract enums/signals follow), so a lifted block
 			# re-emits exactly where it came from and the whole-file byte-verify holds.
-			var block_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind((entry as CustomBlockRow).kind_id)
-			if block_kind != null:
-				var block_lines: PackedStringArray = block_kind.emit(entry as CustomBlockRow)
-				if not block_lines.is_empty():
-					var custom_block_start: int = lines.size() + 1
-					for block_line: String in block_lines:
-						lines.append(block_line)
-					source_map.append({"uid": str((entry as CustomBlockRow).get_instance_id()), "start": custom_block_start, "end": lines.size(), "kind": "custom_block"})
+			var block_lines: PackedStringArray = _custom_block_lines(entry as CustomBlockRow, result)
+			if not block_lines.is_empty():
+				var custom_block_start: int = lines.size() + 1
+				for block_line: String in block_lines:
+					lines.append(block_line)
+				source_map.append({"uid": str((entry as CustomBlockRow).get_instance_id()), "start": custom_block_start, "end": lines.size(), "kind": "custom_block"})
 		elif entry is MomentBlockRow:
 			# A Moment block emits IN ARRAY POSITION on the opened-file path (the ordering contract
 			# enums, signals and custom blocks all follow), so a coroutine lifted out of a
@@ -1380,7 +1375,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 	var final_output_path: String = output_path if not output_path.is_empty() else sheet.external_source_path
-	if _writes_output and not _write_output_if_changed(final_output_path, output):
+	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result
@@ -4876,6 +4871,44 @@ static func _moment_step_statements(step: MomentStepRow) -> PackedStringArray:
 	if step == null:
 		return PackedStringArray()
 	return _emit_match_case_body(step.actions, "", "", null)
+
+
+## The lines one Custom Block row writes, or an honest account of why it writes none. A block whose
+## kind is not registered (its pack was removed) or whose emit() produced nothing for a row that
+## holds fields (emit() hit a script error) is never dropped silently: the result gets a warning and
+## an error naming the kind and the row, `success` turns false, and the file is not written, so a
+## saved script never quietly lacks a line the sheet still holds. A `.tres` sheet stores only the
+## kind id and the fields, never the emitted line, so there is nothing to keep verbatim.
+static func _custom_block_lines(block: CustomBlockRow, result: Dictionary) -> PackedStringArray:
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
+	if kind == null:
+		var missing: String = "This sheet has %s, but no behaviour pack provides that kind, so its line cannot be written. Put the pack back, or delete the row." % _block_label(block)
+		(result["warnings"] as Array).append(missing)
+		(result["errors"] as Array).append(missing)
+		result["success"] = false
+		return PackedStringArray()
+	var lines: PackedStringArray = kind.emit(block)
+	if lines.is_empty() and not block.fields.is_empty():
+		var label: String = _block_label(block)
+		var silent: String = "%s%s wrote nothing, so its line is missing from the script. Its pack's emit code may have an error - check the Output panel." % [label.left(1).to_upper(), label.substr(1)]
+		(result["warnings"] as Array).append(silent)
+		(result["errors"] as Array).append(silent)
+		result["success"] = false
+	return lines
+
+
+## "the 'my_pack.todo' block (text: fix this)" - the kind and what the row holds, so a person can
+## find the row.
+static func _block_label(block: CustomBlockRow) -> String:
+	var shown: PackedStringArray = PackedStringArray()
+	for field_id: Variant in block.fields:
+		var text: String = str(block.fields[field_id]).replace("
+", " ")
+		shown.append("%s: %s" % [field_id, text.left(30) + ("..." if text.length() > 30 else "")])
+		if shown.size() == 3:
+			break
+	var held: String = "" if shown.is_empty() else " (%s)" % ", ".join(shown)
+	return "the '%s' block%s" % [block.kind_id, held]
 
 
 ## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive
