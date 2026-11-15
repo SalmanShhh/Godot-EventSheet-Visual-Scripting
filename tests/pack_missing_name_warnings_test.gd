@@ -28,6 +28,7 @@ static func run() -> bool:
 	ok = _second_view() and ok
 	ok = _combo_box() and ok
 	ok = _drunken_walkers() and ok
+	ok = _advanced_random() and ok
 	return ok
 
 
@@ -291,4 +292,16 @@ static func _drunken_walkers() -> bool:
 		"Drunken Walkers on Walkers: Add Walker From Preset did nothing, because \"lava\" is not a shape recipe - use cave, corridors, river, ore vein, lightning or blob."))
 	rows.append(["a real walker says nothing", _heard(func() -> void: walkers.set_walker_steps("rock", 5)), []])
 	walkers.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _advanced_random() -> bool:
+	var script: GDScript = load(ROOT + "advanced_random/advanced_random_addon.gd")
+	var rng: Node = script.new()
+	rng.name = "Rng"
+	rng.make_shuffle_bag("loot", ["a", "b"])
+	var rows: Array = _once("Shuffle Bag Pick", func() -> void: rng.shuffle_bag_pick("lot"),
+		"Advanced Random on Rng: Shuffle Bag Pick did nothing, because no shuffle bag is called \"lot\" (there are: loot) - make it with Make Shuffle Bag first, or check the spelling.")
+	rows.append(["a real bag says nothing", _heard(func() -> void: rng.shuffle_bag_pick("loot")), []])
+	rng.free()
 	return SUPPORT.pins(NAME, rows)

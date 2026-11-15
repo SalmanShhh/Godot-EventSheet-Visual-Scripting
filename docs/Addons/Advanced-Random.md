@@ -396,6 +396,7 @@ It draws through the same seeded generator as every other expression and conditi
 
 ## Tips and common mistakes
 
+- **Spell the bag name the same way everywhere.** Shuffle Bag Pick given a name no Make Shuffle Bag made gives back nothing and says so once in the Debugger's Errors tab, naming the name you typed and the bags that exist.
 - **`Chance` and `One In` are conditions, not numbers.** Put them in an event's condition slot (`[ if AdvancedRandom.Chance(25) ]`), not in a value field. They already return true or false, so you never compare them to anything.
 - **Seed once, before you roll.** `Set Seed` pins the sequence from that point forward. If you want a reproducible run, set `seed_on_start` in the Inspector or call `Set Seed` before the first number is drawn - seeding halfway through only makes the *rest* of the run repeatable.
 - **One seed pins everything.** Numbers and noise share the same generator, so `Set Seed` reproduces dice, picks, ranges, *and* terrain all at once. That is the point - but it also means an extra roll you added anywhere shifts every later result. Keep the order of your rolls stable if you rely on reproducibility.

@@ -41,6 +41,8 @@ static func build() -> bool:
 		"var _bags: Dictionary = {}",
 		"## Pity counters by roll name: how many misses in a row, so a long streak raises the next chance.",
 		"var _pity: Dictionary = {}",
+		"",
+		Lib.missing_name_block("Advanced Random")
 	]))
 	sheet.events.append(state)
 
@@ -147,6 +149,7 @@ static func build() -> bool:
 	_expr(sheet, "shuffle_bag_pick", "Shuffle Bag Pick", "Advanced Random: Picking", "Draws the next item from a named bag - every item appears once before any repeat.", [["bag_name", "String"]],
 		"\n".join(PackedStringArray([
 			"if not _bags.has(bag_name):",
+			"\t_say_missing(\"Shuffle Bag Pick\", \"shuffle bag\", bag_name, _bags.keys(), \"make it with Make Shuffle Bag first, or check the spelling\")",
 			"\treturn null",
 			"var bag: Dictionary = _bags[bag_name]",
 			"var pile: Array = bag[\"pile\"]",
