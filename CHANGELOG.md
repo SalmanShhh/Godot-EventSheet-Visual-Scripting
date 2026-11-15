@@ -12,6 +12,10 @@ A second open now edits the theme you opened (its swatches had stayed tied to th
 
 The Variable window wraps the annotation a look writes instead of trailing off, reads a long hint under its box instead of a cut-off placeholder, and starts "Add row" at the left of a wide table in the Inspector preview. The Class window wraps the reason a member would be lost ("Control does not have it"). Migrate wraps a long line of code, names a row with no stored sentence by its verb ("Set Sprite Size", not its id) and, when the old and the new row read the same, says which row it becomes.
 
+### Fixed: a wide table in the Variable window's Inspector preview, and the status bar after a theme switch
+
+The preview card now draws a table with many columns smaller to fit (down to a readable floor), so every column and Add row can be read without a sideways scroll; only a table wider than that scrolls. Switching theme repaints the status bar's counts at once (they kept the old theme's colours until the next edit), and a translucent word there is judged as it shows on the panel. Comments on the theme's own band and the margin numbers also read at 4.5 to 1 on every shipped theme.
+
 ### Fixed: the sheet reads in a dark and a light editor, and a light sheet in a dark editor (and the reverse)
 
 Editor Native's quiet words, the gutter numbers and the amber of every finding now read at 4.5 to 1 on the sheet, a row and a head bar, in both hands. The code beside a variable row keeps the sheet theme's colours when the sheet and the editor are different brightness. The status bar's words and the finding sentence use a font colour moved until it reads on the editor's panel, instead of a modulate over the editor's own text. Run counts, the margin number after a run, live values and a coloured comment's words take the theme's own colours (no new theme fields) and read on their ground. The parameter hint's coloured outline is gone (the edited value is marked by a wash) and its chip takes the drag bubble's colours. The plugin now has one contrast formula, and the ink mover steps finely so amber stays amber.
