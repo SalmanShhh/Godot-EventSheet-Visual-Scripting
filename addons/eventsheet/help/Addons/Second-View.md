@@ -330,6 +330,7 @@ func _on_drone_launched(drone: Node2D) -> void:
 
 ## Tips and common mistakes
 
+- **Spell the view name the same way everywhere.** Show View In and Set View Zoom given a name no Make A View made do nothing and say so once in the Debugger's Errors tab, naming the name you typed and the views that exist.
 - **The followed node decides 2D or 3D, so point at the right thing.** Following a `Control` or a
   plain `Node` warns and builds nothing, because there would be nowhere to put a camera.
 - **A view is not free.** It is a second render of the world every frame. Two or three are ordinary;

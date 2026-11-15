@@ -95,7 +95,7 @@ All ACEs live in the **StatForge** category and target the `StatForge` behavior 
 | Set Buff Active | `buff_id` (String), `active` (bool) | Turns one buff on or off WITHOUT removing it - inactive buffs stay in the stack but contribute nothing. |
 | Set Buffs Active By Tag | `tag` (String), `active` (bool) | Bulk activation by tag - silence every "aura" buff in an antimagic zone, restore them on exit. |
 | Set Buff Value | `buff_id` (String), `value` (float) | Changes a live buff's value in place (a stacking poison that deepens). |
-| Refresh Buff | `buff_id` (String), `duration` (float) | Restarts a timed buff's countdown from a fresh duration (re-drinking the potion refreshes, not stacks). No-op if the buff is absent or the duration is 0 or less. |
+| Refresh Buff | `buff_id` (String), `duration` (float) | Restarts a timed buff's countdown from a fresh duration (re-drinking the potion refreshes, not stacks). Does nothing if the duration is 0 or less, or if the buff is absent (and then says so once). |
 | Set Buff Timer Paused | `buff_id` (String), `paused` (bool) | Freezes or unfreezes one buff's countdown (cutscenes, pause-adjacent states). |
 | Advance Timers | `seconds` (float) | Advances every unpaused timer by the given seconds - the manual clock for turn-based games (turn ends: Advance Timers 1). Expired buffs are removed and fire On Buff Expired. |
 | Add Threshold Rule | `rule_id` (String), `stat` (String), `value` (float), `direction` (rising / falling / both), `repeating` (bool) | Watches a stat and fires On Threshold Crossed when its total crosses the value. A repeating rule fires on every crossing; a one-shot stays spent until Re-Arm Threshold Rule. |
@@ -486,6 +486,7 @@ Without the Re-Arm row, the rule fires exactly once per game - a spent one-shot 
 
 ## Tips and common mistakes
 
+- **Spell the buff id the same way everywhere.** Set Buff Active, Set Buff Value, Refresh Buff and Set Buff Timer Paused given an id no Add Buff made do nothing and say so once in the Debugger's Errors tab, naming the id you typed and the buffs that exist; Re-Arm Threshold Rule does the same for a rule id. Remove Buff stays quiet on purpose - removing a buff that is already gone is the normal case.
 - **Re-adding an id replaces - it never stacks.** Add Buff with an existing id throws away the old buff entirely: new value, new mode, fresh timer, active again. That is a feature for refreshing potions, and a trap for stacking poisons. When you want N copies, mint N ids ("poison_1", "poison_2") or grow one buff with Set Buff Value.
 - **Override ignores everything, and the highest override wins.** One active override buff makes the base, every add, and every multiplier irrelevant for that stat. With several active overrides, the LARGEST value wins - so an override of 0 (a stun) silently loses to an override of 500 (an enrage). Deactivate the bigger one first if the smaller must apply.
 - **Inactive is not removed.** A buff switched off with Set Buff Active contributes nothing to Stat Total, but Has Buff still says true, Buff Count and Buff Count With Tag still count it, and its timer keeps running unless paused. Use Buff Is Active when you mean "is it doing anything right now", and Remove Buff when you mean gone.

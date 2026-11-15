@@ -317,8 +317,9 @@ On Quest Completed
 - **Address quests by their id, not their title.** The title is for the player; the id is what every
   action takes. Changing the title later is free, changing the id is not.
 - **Objective names must match exactly.** `collect_gem` in the resource grid and `"collect_gem"` in the
-  Advance Objective row - a typo silently does nothing, because the pack ignores an objective it does
-  not know.
+  Advance Objective row - a typo does nothing, because the pack ignores an objective it does
+  not know, and says so once in the Debugger's Errors tab, naming the objective you typed and the ones the quest has.
+  A quest name nobody registered, or a quest registered but not started, is reported the same way.
 - **Register the later quests of a chain.** A Next Quest that was never registered or started cannot be
   started automatically; the pack warns in the output when that happens.
 - **Starting a quest again resets it** and takes it off the completed list - handy for repeatable

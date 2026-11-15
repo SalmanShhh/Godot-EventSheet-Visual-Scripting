@@ -6,6 +6,51 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a pack action given a name that does not exist now says so, once
+
+- Many packs keep things by name (abilities, pools, quests, rooms, buffs). An action given a name that did not exist returned without a word, so a mistyped `dash` for `Dash` looked exactly like a row that ran. Each such action now pushes one plain warning (Debugger, Errors tab) naming the node, the row as the sheet words it, the name that was not found, the names that do exist and what to do next. It is said once per missing name per node, never every frame, and the action still does nothing.
+- Simple Abilities: Activate Ability, Set Ability Cooldown, Reset Cooldown, Set Max Stacks, Set Stacks, Add Stacks, Consume Ability Stack, Set Ability Enabled, Set Ability Active, Set Ability Data, Add Tag, Remove Tag, Clear All Tags, Remove Ability and Remove Ability After Duration.
+- Object Pool (which had no warnings at all): Add To Pool, Prewarm, Despawn All, Clear Pool, Spawn and Spawn Safely given a pool that does not exist; Create Pool when the scene path does not load (the pool is still made, with no scene, and later Spawn rows return nothing); Prewarm of a pool made with Create Empty Pool.
+- Quest: Advance Objective (a quest nobody registered, a quest registered but not started, or an objective the quest does not have) and Abandon Quest. A quest that already finished is still advanced or abandoned quietly.
+- ProcRoom: Enter Room, Force Enter Room, Lock Room, Unlock Room and Reveal Room given a room that does not exist.
+- Utility Brain: Add Consideration, Set Action Enabled and Force Action given an action that was never added.
+- Milestones: Update Progress, Set Threshold and Force Reach on an id nobody defined now say that they made a new milestone with a target of 0 (a misspelled id used to latch at once, unseen).
+- Stat Forge: Set Buff Active, Set Buff Value, Refresh Buff, Set Buff Timer Paused and Re-Arm Threshold Rule. Remove Buff stays quiet: removing a buff that is already gone is its documented normal case.
+- Second View: Show View In and Set View Zoom already warned, on every call and without naming the node; they now say it once and name the node, the view and the views that exist.
+- Combo Box: Set Combo Tags, Set Combo Priority, Set Combo Strict, Enable Combo and Disable Combo.
+- Drunken Walkers: every row that names a walker (the Set Walker rows, Run Walker, Step Walker, Drop Marks Along Walk) and Add Walker From Preset with a recipe that does not exist. These warned only with Debug Mode ticked, which a newcomer does not know to do; they now say it once in every run.
+- Advanced Random: Shuffle Bag Pick for a bag nobody made.
+
+### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
+
+- `.gd` is the default sheet format, but about twenty of the Doctor's checks were handed `.tres` sheets only, so in a project of scripts they said nothing and gave no sign they had not looked. They now read the project's own scripts as well: debug code left in, a script no scene or other script uses, editor tools that reach the editor's own tree, work in a thread that touches nodes, private variables nothing reads, a script driving many nodes, fragile `../../` paths, a loop run every frame, a wait inside a per-frame event, notes that are pasted engine errors, an unpaired `#region`, a variable that shadows an engine member (an error: Godot cannot load it), and the pattern notes.
+- One note now opens the report and says how many `.gd` and `.tres` sheets the checks read, and which checks do not apply to a script and why: generated outputs, autoload registration, duplicated globals, every-tick setup and the tidiness notes.
+- Variables are read wherever the sheet keeps them. A `.gd` keeps each one as a row among its events, which the unused-variable, shadowed-variable and save-support checks did not look at.
+- Two checks stop accusing lines that are fine. A loop in an event that has a condition of its own is no longer called an every-frame loop (the condition may be a key press or a once flag), and a line that slides a node to a stop (`$Lantern.position.y = minf(..., 620.0)`) is no longer called a meter that never drains. A name a line declares itself (a local, a parameter, a loop's item) is no longer called \"not a variable\". In a script, a constant is a public offer and is not called dead, and a name the parent class has as a method (`set_name` on a Resource) is not called a shadow: Godot loads such a script, so only a script the engine refuses to load is accused.
+
+### Fixed: Run now, Reload, Enable plugin and Attach to node save the sheet the way Save does
+
+- With edits not saved yet, these four wrote the sheet's script straight to disk: no backup of the version before and the tab still marked unsaved. They now make the same save as the Save button first, so the version before is in Tools > Sheet Backups and the tab is clean, as when Godot saves a scene before it runs. A sheet that was never saved opens Save As and the command waits.
+
+### Fixed: while a file opens, the Code button no longer gets a coloured ring
+
+- The button took a 1 px accent outline while a script opened. It now takes its own hover fill, with no outline, and goes back when the open ends.
+
+### Fixed: typing a new \"extends\" in the Class window no longer writes your script
+
+- The Class window reads the sheet's code to warn about members the new base does not have. It did that with a compile that also wrote the sheet's file, so typing in the Extends field put your unsaved row edits on disk with no save, no backup and no undo. It now only reads. Apply is still one undo step and the file changes when you save, with the usual backup.
+- Opening a script that the engine reports a parse error in no longer rewrites its file while it marks the rows (same cause, same fix).
+
+### Fixed: an object's name on the sheet is read whole when the row has room for it
+
+- A long class name in a condition or an action (\"ScriptRowsAnnotatedTwin\") was cut to \"ScriptRowsAnnotatedT...\" in a lane with a thousand pixels to spare, because the object column was one fixed width. The column now grows to the widest object name of its lane, up to half the lane; only a lane that is truly short elides a name. A sheet with short names looks as before. Only the drawing changed: no row's words moved.
+- The size the first open of the editor is allowed to compile (the closure budget in the test suite) is raised by 10 lines, for the one function that measures the names.
+
+### Fixed: the Variable window keeps its width for a long hint, and its code line breaks at a comma
+
+- A variable with a long hint (a table look with many columns) made the Variable window grow sideways, from about 1050 px to 1470 px and more, because the Inspector preview under the code line asked for the whole width of its table. The preview now scrolls sideways inside its card, so the window keeps the width it opened at.
+- The IN CODE line split a long quoted hint in the middle of a word (\"Stri\" and \"ng\"). It now breaks after a comma or an opening bracket. The line the window reads, and the code the variable writes, are unchanged: only the way the line is drawn has break points.
+
 ### Fixed: the Rename window no longer lists the plugin's own behaviours as callers of your variable
 
 - Renaming a variable such as `speed` listed 37 files of the behaviours that ship with the plugin, 272 rows, in \"Named and left exactly as they are\", only because each of them has a `speed` of its own. The name index finds a word in a row; it cannot tell whose `speed` it is. Files in a shipped behaviour folder are now listed only when their text refers to your script by its path or its class name. The sentence above the lists says how many were left out and why: \"37 file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed.\" Your own files are listed as before, whatever folder they are in.

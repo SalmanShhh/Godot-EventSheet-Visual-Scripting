@@ -544,6 +544,7 @@ On punch pressed
 
 ## Tips and common mistakes
 
+- **Spell the combo id the same way everywhere.** Set Combo Tags, Set Combo Priority, Set Combo Strict, Enable Combo and Disable Combo given an id no Register Combo made do nothing and say so once in the Debugger's Errors tab, naming the id you typed and the combos that exist.
 - **Press Input is yours to call.** ComboBox reads no hardware. Nothing happens until you call **Press Input** from your own events, and that is the point: wire it to keys, gamepad buttons, touch swipes, a gesture recognizer, or network packets, and the same detector works for all of them.
 - **Timing is in seconds, not milliseconds.** A `timing_window` of `0.3` is 300 ms. If your combos feel impossibly tight, you probably typed a millisecond value like `300` where you meant `0.3`.
 - **A timing window of `0` means no time limit.** Use `0` for cheat codes and combination locks where the player should not be rushed. Use `-1` to fall back to **default_timing** (`0.5` by default). Any positive number is the real per-gap window in seconds.
