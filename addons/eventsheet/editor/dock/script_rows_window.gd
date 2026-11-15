@@ -53,6 +53,11 @@ func open(dock: Control, path: String = "") -> void:
 	var target: String = path
 	if target.is_empty() and _scripts.item_count > 0:
 		target = str((_scripts.get_item_metadata(0) as Dictionary).get("path", ""))
+	if not target.is_empty():
+		_add_script_line(target, false)
+		for index: int in _scripts.item_count:
+			if str((_scripts.get_item_metadata(index) as Dictionary).get("path", "")) == target:
+				_scripts.select(index)
 	show_script(target)
 	EventSheetWindowPlacement.popup_centered(_window, Vector2i(760, 640))
 
@@ -117,6 +122,14 @@ func _build() -> void:
 	# A sentence is changed where it is read: Enter or a double click on the row, or F2.
 	_tree.item_activated.connect(_change_reading)
 	_tree.gui_input.connect(func(input_event: InputEvent) -> void:
+		var click: InputEventMouseButton = input_event as InputEventMouseButton
+		if click != null and click.pressed and click.button_index == MOUSE_BUTTON_RIGHT:
+			var clicked: TreeItem = _tree.get_item_at_position(click.position)
+			if clicked != null:
+				clicked.select(1)
+				_change_reading()
+				_tree.accept_event()
+			return
 		var key_event: InputEventKey = input_event as InputEventKey
 		if key_event != null and key_event.pressed and key_event.keycode == KEY_F2:
 			_change_reading()

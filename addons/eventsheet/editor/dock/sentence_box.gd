@@ -209,7 +209,7 @@ static func function_requested(dock: Control) -> void:
 	for param: ACEParam in picked.params:
 		draft.parameters.append({"id": param.id if not param.id.is_empty() else param.name,
 			"default_value": param.default_value})
-	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("How should this read in other sheets?"),
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("How should this read?"),
 		Vector2i(460, 0), dock, EventSheetL10n.translate("Done"))
 	var window: ConfirmationDialog = parts["window"]
 	var form: VBoxContainer = parts["box"]

@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: the guides match the code
+
+The custom-actions guides now describe the Scripts in event sheets window, Use in event sheets, how a function reads, and \"This sheet in other sheets\"; the score example names (Add To Score, Winning), the \"Your classes\" heading and the \"Other sheets can use this\" tick are spelled as the editor spells them, and the stale provider-table picture is gone. The reading check no longer recommends a sentence inside the name word or a positional parameter label.
+
 ### Fixed: a row of your script reads the same in the picker, the parameters window and the canvas
 
 A function whose script wrote a sentence and no name (\"Take {amount} damage\") now reads as that sentence in the picker row and the parameters window's title (each slot as a gap), not as the name made from the function; the window's head names your class instead of the open sheet's object (\"System\"); and the toolbar's Add Event opens on the objects first, like a double click on empty canvas, so \"Your classes\" is offered there too.
