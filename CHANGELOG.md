@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a plugin can no longer take over a built-in block kind
+
+- A block kind registered before the editor had asked for anything (an editor plugin does this when it loads) used to be filed first, so a kind named `preload`, `region`, `enum`, `signal` or `moment` replaced the built-in one and the built-in was the one ignored: the user's preload line then came out as the other kind's text. Registering a block kind now builds the built-in kinds first and refuses a built-in id with a plain warning that names the id and suggests a `<pack>.<name>` id. A repeated id still keeps the first registration, and a kind with an ordinary id registers as before.
+
 ### Fixed: a custom block kind can no longer corrupt a file it lifts
 
 - A block kind that hands the importer a ready-made row instead of a field table used to skip the check every other lift passes: opening a `.gd` file asked the kind for a row and trusted it, so a kind whose row did not re-emit the line it had claimed changed the file on save (in one case writing `extends Node` twice). That claim now goes through the same byte check. The kind's own emitted lines must reproduce the lines it consumed exactly, or the claim is dropped and the lines stay a verbatim block, so opening and saving a file untouched still gives the same bytes whatever kinds are installed.

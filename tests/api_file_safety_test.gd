@@ -62,6 +62,7 @@ class FaithfulResourceKind extends EventSheetBlockKind:
 static func run() -> bool:
 	var ok: bool = true
 	ok = _resource_claims_are_gated() and ok
+	ok = _built_in_ids_cannot_be_taken() and ok
 	return ok
 
 
@@ -94,3 +95,56 @@ static func _resource_claims_are_gated() -> bool:
 		SUPPORT.reemit(faithful_source, "user://api_file_safety.gd"), faithful_source) and ok
 	_forget(["audit.ungated", "audit.faithful"])
 	return ok
+
+
+## A kind that names a built-in id, as an editor plugin's `_enter_tree` might before anything has asked
+## the registry for anything.
+class ImpostorKind extends EventSheetBlockKind:
+	var wording: String = ""
+
+	func _init(id: String = "preload") -> void:
+		kind_id = id
+		title = "Impostor"
+
+	func emit(_block: CustomBlockRow) -> PackedStringArray:
+		return PackedStringArray(["# hijacked"])
+
+
+static func _built_in_ids_cannot_be_taken() -> bool:
+	var ok: bool = true
+	var built_ins: Array = ["preload", "region", "enum", "signal", "moment"]
+	# A cold registry: nothing has asked it for anything yet, which is when an editor plugin registers.
+	EventSheetBlockRegistry._built_ins_registered = false
+	EventSheetBlockRegistry._kinds.clear()
+	EventSheets.register_block_kind(ImpostorKind.new("preload"))
+	ok = SUPPORT.check(P, "a kind registered first cannot replace the built-in preload kind",
+		EventSheetBlockRegistry.get_kind("preload") is EventSheetBlockRegistry.PreloadBlockKind, true) and ok
+	var block: CustomBlockRow = EventSheets.preload_block_for("res://icon.svg")
+	var emitted: PackedStringArray = EventSheetBlockRegistry.get_kind("preload").emit(block)
+	ok = SUPPORT.check(P, "the user's preload row still emits a preload line", emitted[0].begins_with("const "), true) and ok
+	for built_in: String in built_ins:
+		EventSheetBlockRegistry._built_ins_registered = false
+		EventSheetBlockRegistry._kinds.clear()
+		EventSheetBlockRegistry.register_kind(ImpostorKind.new(built_in))
+		var holder: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(built_in)
+		ok = SUPPORT.check(P, "the %s id stays the built-in kind" % built_in, holder != null and not (holder is ImpostorKind), true) and ok
+	var reason: String = _registry().call("_refusal_for", ImpostorKind.new("region"))
+	ok = SUPPORT.check(P, "the refusal names the id", reason.contains("'region'"), true) and ok
+	ok = SUPPORT.check(P, "the refusal says it is built in", reason.contains("built-in"), true) and ok
+	ok = SUPPORT.check(P, "an ordinary id is not refused", _registry().call("_refusal_for", ImpostorKind.new("my_pack.note")), "") and ok
+	# Registering a pack-style kind first still works and leaves every built-in alone.
+	EventSheetBlockRegistry._built_ins_registered = false
+	EventSheetBlockRegistry._kinds.clear()
+	EventSheetBlockRegistry.register_kind(ImpostorKind.new("my_pack.note"))
+	var all_there: bool = EventSheetBlockRegistry.get_kind("my_pack.note") != null
+	for built_in: String in built_ins:
+		all_there = all_there and EventSheetBlockRegistry.get_kind(built_in) != null
+	ok = SUPPORT.check(P, "a first registration of an ordinary id leaves the built-ins in place", all_there, true) and ok
+	# Put the registry back the way the rest of the suite expects it.
+	EventSheetBlockRegistry._kinds.erase("my_pack.note")
+	return ok
+
+
+## The registry as a script object, so a private helper can be asked by name.
+static func _registry() -> GDScript:
+	return EventSheetBlockRegistry
