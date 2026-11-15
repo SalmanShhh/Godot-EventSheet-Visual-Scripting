@@ -12,14 +12,13 @@
 #             published but unused, compiled sheet attached to no scene, a stateful
 #             behavior missing the save-state seam, one name kept both by Remember
 #             Between Runs and by the Save System. Never fails CI.
-# The doctor NEVER writes inside res:// - verification recompiles go to a user://
-# temporary file and are compared as text (contrast tools/audit_addons.gd, which repairs
+# The doctor NEVER writes a file to answer a question - verification recompiles are asked of the
+# compiler's write-nothing call and compared as text (contrast tools/audit_addons.gd, which repairs
 # pack outputs in place while reporting drift).
 @tool
 class_name EventSheetProjectDoctor
 extends RefCounted
 
-const TEMP_PATH := "user://eventsheets_doctor_temp.gd"
 const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
 const GdSheets := preload("res://addons/eventforge/doctor_gd_sheets.gd")
 
@@ -355,7 +354,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			_add(findings, "warning", "stale-output", sheet_path,
 				"No generated script yet - saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
 			continue
-		var result: Dictionary = EventSheetCompiler.compile(sheet, TEMP_PATH)
+		var result: Dictionary = EventSheetCompiler.echo(sheet)
 		if not bool(result.get("success", false)):
 			_add(findings, "error", "compile", sheet_path,
 				"Sheet no longer compiles: %s" % str(result.get("errors")))
@@ -363,7 +362,6 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 		if str(result.get("output", "")) != source_of(output_path):
 			_add(findings, "error", "stale-output", sheet_path,
 				"%s is stale - re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
-	DirAccess.remove_absolute(TEMP_PATH)
 
 
 ## Debug residue: a sheet saved with a debug-emit toggle ON compiles debug instrumentation INTO its
