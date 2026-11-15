@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a Building row in a tool sheet works in the running game
+
+A Building row dropped into a tool sheet built under `get_tree().edited_scene_root`, which is null when the same script runs in the game, so Add New Node called `add_child` on null and Remove What This Sheet Built read `get_children()` on null. The tool row now starts under `get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene`, read once into a local (`var __scene_<id>: Node = ...`) that the lines below use, so the editor builds in the edited scene and the game builds in the running scene exactly as a plain sheet's row does. Remove What This Sheet Built is baked the same way when dropped in a tool sheet, and "Clear what it built first" writes it that way. A parent you chose is left as you wrote it. A tool sheet saved by an earlier unreleased build reopens and saves byte for byte, its old line unchanged.
+
 ### Fixed: a scene the editor saved is read for its scripts
 
 The scene reader looked up an attribute by its key anywhere in the header, so `id="` matched inside `uid="` and every `ext_resource` of a scene the editor had saved was filed under its uid instead of its id. Every fact that asks which node wears which script (the lights, the materials, the connections and now the Juice Players) saw no script at all on such a scene. A key now has to start after a space.

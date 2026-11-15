@@ -989,19 +989,24 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	# And the reading beside it, for the same reason: a row must still say what it was written as
 	# when the vocabulary it came from is no longer installed.
 	action.display_text = baked_reading_for(definition)
+	# A Building row dropped into a TOOL sheet owns what it builds: the lines that give the node the scene
+	# being edited as its owner, and the mark a rebuild finds it by, become part of the row, and a node it
+	# builds goes under that scene in the editor and under the running scene in the game. In a game sheet
+	# the row is untouched and writes only what it always did. This comes before the uid is baked because
+	# the tool form adds a local named with it.
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet != null and sheet.tool_mode and _building().is_tool_aware(action.ace_id, action.codegen_template):
+		action.codegen_template = _building().tool_form(action.codegen_template)
+		action.params = _building().tool_params(action.params)
 	# Multi-statement action templates declare locals - bake a fresh uid per instance.
 	if action.codegen_template.contains("{uid}"):
 		action.codegen_template = action.codegen_template.replace("{uid}", _dock._fresh_uid_token())
-	# A Building row dropped into a TOOL sheet owns what it builds: the lines that give the node the scene
-	# being edited as its owner, and the mark a rebuild finds it by, become part of the row, and a node it
-	# builds goes under that scene by default. In a game sheet the row is untouched and writes only what
-	# it always did.
-	var sheet: EventSheetResource = _dock._current_sheet
-	if sheet != null and sheet.tool_mode and action.codegen_template.contains("{?tool=yes}"):
-		var building: GDScript = load(BUILDING_ACES_PATH)
-		action.codegen_template = building.tool_form(action.codegen_template)
-		action.params = building.tool_params(action.params)
 	return action
+
+
+## The Building module, loaded by path so the first open does not compile it.
+static func _building() -> GDScript:
+	return load(BUILDING_ACES_PATH)
 
 
 ## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon

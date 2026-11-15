@@ -277,9 +277,9 @@ static func _a_tool_sheet_owns_what_it_builds() -> bool:
 	var baked: String = BUILDING.tool_form(raw)
 	passed = SUPPORT.pin_value(NAME, "a tool sheet keeps them as part of the row", baked.contains("{?tool") or baked.contains("{/tool}"), false) and passed
 	var lines: String = EventSheetActionCodegen._apply_template(baked.replace("{uid}", "t1"),
-		{"type": "Node2D", "label": "", "parent": "get_tree().edited_scene_root", "name": "fence"})
-	passed = SUPPORT.pin_value(NAME, "and writes the owner and the mark after the node is in the tree", lines,
-		"var fence := Node2D.new()\nget_tree().edited_scene_root.add_child(fence, true)\nif Engine.is_editor_hint():\n\tfence.owner = get_tree().edited_scene_root\n\tfence.set_meta(&\"built_by_sheet\", get_script().resource_path)") and passed
+		{"type": "Node2D", "label": "", "parent": BUILDING.TOOL_PARENT, "name": "fence"})
+	passed = SUPPORT.pin_value(NAME, "and writes the owner and the mark after the node is in the tree, under a parent that exists in the game too", lines,
+		"var __scene_t1: Node = get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene\nvar fence := Node2D.new()\n__scene_t1.add_child(fence, true)\nif Engine.is_editor_hint():\n\tfence.owner = get_tree().edited_scene_root\n\tfence.set_meta(&\"built_by_sheet\", get_script().resource_path)") and passed
 	passed = SUPPORT.pin_value(NAME, "that parses as GDScript", _parses("AddNewNodeInto", lines), true) and passed
 	for ace_id: String in ["AddBehaviourInto", "AddSpriteTo", "AddSprite3DTo", "AddCircleShapeTo", "AddRectangleShapeTo",
 			"AddCapsuleShapeTo", "AddSphereShapeTo", "AddBoxShapeTo", "AddCapsuleShape3DTo", "AddTimerTo"]:
@@ -291,7 +291,18 @@ static func _a_tool_sheet_owns_what_it_builds() -> bool:
 			tool_lines.contains(".owner = get_tree().edited_scene_root") and tool_lines.contains("set_meta(&\"built_by_sheet\", get_script().resource_path)")
 			and _parses(ace_id, tool_lines), true) and passed
 	var swapped: Dictionary = BUILDING.tool_params({"parent": "get_tree().current_scene", "name": "n"})
-	passed = SUPPORT.pin_value(NAME, "a tool sheet builds in the scene being edited by default", swapped["parent"], "get_tree().edited_scene_root") and passed
+	passed = SUPPORT.pin_value(NAME, "a tool sheet builds in the scene being edited in the editor and the running scene in the game", swapped["parent"],
+		"get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene") and passed
+	passed = SUPPORT.pins(NAME, [
+		["the editor-only property is never the parent on its own", BUILDING.TOOL_PARENT.begins_with("get_tree().edited_scene_root if Engine.is_editor_hint() else "), true],
+		["a row the unreleased build saved with the old parent is told from a chosen one", BUILDING.tool_parent_for("get_tree().edited_scene_root"), BUILDING.TOOL_PARENT],
+		["the running scene becomes the tool parent", BUILDING.tool_parent_for("get_tree().current_scene"), BUILDING.TOOL_PARENT],
+		["a parent the reader chose stays", BUILDING.tool_parent_for("$Level"), "$Level"],
+		["Remove What This Sheet Built is baked by a tool sheet", BUILDING.is_tool_aware("RemoveBuiltNodes", _descriptor("RemoveBuiltNodes").codegen_template), true],
+		["a plain row without the tool lines is not", BUILDING.is_tool_aware("AddToGroupSaved", _descriptor("AddToGroupSaved").codegen_template), false],
+		["its tool form says the parent once, then the local", BUILDING.tool_form(_descriptor("RemoveBuiltNodes").codegen_template).count("{parent}"), 1],
+		["a row whose parent is a target is left as it was", BUILDING.tool_form("{target}.add_child(x)"), "{target}.add_child(x)"],
+	]) and passed
 	passed = SUPPORT.pin_value(NAME, "a parent the reader chose is left alone",
 		BUILDING.tool_params({"parent": "$Level"})["parent"], "$Level") and passed
 	passed = SUPPORT.pins(NAME, [
@@ -327,8 +338,18 @@ static func _the_dock_keeps_the_tool_lines_only_in_a_tool_sheet() -> bool:
 		var written: String = EventSheetActionCodegen.generate_action(action, "Node2D")
 		passed = SUPPORT.pin_value(NAME, "%s: the row %s the owner" % [label, "writes" if in_a_tool else "does not write"],
 			written.contains(".owner = get_tree().edited_scene_root"), in_a_tool) and passed
-		passed = SUPPORT.pin_value(NAME, "%s: the parent starts as %s" % [label, "the edited scene" if in_a_tool else "the running scene"],
-			str(action.params.get("parent", "")), "get_tree().edited_scene_root" if in_a_tool else "get_tree().current_scene") and passed
+		passed = SUPPORT.pin_value(NAME, "%s: the parent starts as %s" % [label, "the edited scene, or the running one in the game" if in_a_tool else "the running scene"],
+			str(action.params.get("parent", "")), BUILDING.TOOL_PARENT if in_a_tool else "get_tree().current_scene") and passed
+		# The tool row's lines must never call anything on null when the game runs the script.
+		if in_a_tool:
+			passed = SUPPORT.pin_value(NAME, "a tool row's baked lines carry no unbaked marker and read the parent into a local",
+				action.codegen_template.contains("{?tool") or not action.codegen_template.begins_with("var __scene_"), false) and passed
+		var remove: ACEAction = editor._ace_apply._create_action_from_definition(editor._find_definition("Core", "RemoveBuiltNodes"), {})
+		passed = SUPPORT.pin_value(NAME, "%s: Remove What This Sheet Built under %s" % [label, "the editor's scene, or the running one" if in_a_tool else "the running scene"],
+			str(remove.params.get("parent", "")), BUILDING.TOOL_PARENT if in_a_tool else "get_tree().current_scene") and passed
+		var remove_lines: String = EventSheetActionCodegen.generate_action(remove, "Node2D")
+		passed = SUPPORT.pin_value(NAME, "%s: it %s" % [label, "reads its parent once into a local with a baked id" if in_a_tool else "writes the parent inline"],
+			remove_lines.begins_with("var __scene_") if in_a_tool else remove_lines.contains("get_tree().current_scene.get_children()"), true) and passed
 		var part: ACEAction = editor._ace_apply._create_action_from_definition(
 			editor._find_definition("Core", "AddSpriteTo"), {"texture": "load(\"res://icon.svg\")", "target": "self"})
 		passed = SUPPORT.pin_value(NAME, "%s: a part row is baked the same way" % label,

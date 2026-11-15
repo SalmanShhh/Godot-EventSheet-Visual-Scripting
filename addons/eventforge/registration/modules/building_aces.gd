@@ -61,10 +61,20 @@ const TOOL_OWNER_HEAD: String = "{?tool=yes}" + NL + "if Engine.is_editor_hint()
 ## is called `Fence2` in a tool (the scene is saved with it) and `@Node2D@19811` otherwise. That is the
 ## `, true` inside each add_child, kept by the same segment.
 
-## The parent a node is added under in the game, and in a tool: a tool runs outside the running scene,
-## so the scene being edited is the one to build in.
+## The parent a node is added under in the game, and in a tool. A tool sheet runs in two places: in the
+## editor, where the scene being edited is the one to build in (there is no running scene), and in the
+## game, where there is no edited scene and the running one is. `edited_scene_root` is null in the game,
+## so a tool row reads the one that exists. A reader who named a parent keeps it.
 const GAME_PARENT: String = "get_tree().current_scene"
-const TOOL_PARENT: String = "get_tree().edited_scene_root"
+const TOOL_PARENT: String = "get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene"
+
+## The spelling an unreleased build wrote for a tool row's parent: null in the game. Kept so a row that
+## carries it can be told from one the reader chose (see tool_parent_for).
+const OLD_TOOL_PARENT: String = "get_tree().edited_scene_root"
+
+## The local a tool row keeps its parent in, so the parent expression is written once and a longer
+## expression never needs brackets before `.add_child` or `.get_children`.
+const SCENE_LOCAL: String = "__scene_{uid}"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
@@ -215,14 +225,32 @@ static func _add_tools(descriptors: Array[ACEDescriptor]) -> void:
 		"for __built_{uid}: Node in {parent}.get_children():\n\tif __built_{uid}.has_meta(&\"" + BUILT_META + "\") and __built_{uid}.get_meta(&\"" + BUILT_META + "\") == get_script().resource_path:\n\t\t{parent}.remove_child(__built_{uid})\n\t\t__built_{uid}.queue_free()",
 		CATEGORY, "Remove the nodes this sheet built under [i]{parent}[/i]",
 		"Frees the nodes this sheet built earlier under a node, the ones it marked when it added them (another sheet's are left alone), so a rebuild starts from nothing instead of adding a second copy. Each is taken out of the tree at once, so the name it had is free again. Only direct children are looked at, and in the editor this is not a step Ctrl+Z takes back.",
-		"Node").param_built(F.make_param("parent", "String", "get_tree().edited_scene_root", "Under", "The node whose children are looked at. In a tool this is the scene being edited.", "expression")))
+		"Node").param_built(F.make_param("parent", "String", GAME_PARENT, "Under", "The node whose children are looked at. In a tool this is the scene being edited.", "expression")))
 
 
 ## A row's template as it is written when the row is dropped into a TOOL sheet: the owner and mark lines
 ## are kept as part of the row (the segment marks come off), so the row writes them from then on and a
-## game sheet that never had them writes nothing extra. A template with no such segment is returned as it was.
+## game sheet that never had them writes nothing extra. A row that takes a parent also reads it into a
+## local first, so the parent is one line (an `if` expression included) and the lines below say the local.
+## The text still holds `{uid}`: the caller bakes it. A template with neither is returned as it was.
 static func tool_form(template: String) -> String:
-	return template.replace("{?tool=yes}", "").replace("{/tool}", "")
+	var written: String = template.replace("{?tool=yes}", "").replace("{/tool}", "")
+	if not written.contains("{parent}"):
+		return written
+	return "var " + SCENE_LOCAL + ": Node = {parent}" + NL + written.replace("{parent}", SCENE_LOCAL)
+
+
+## Whether a row is one a tool sheet bakes: it has the owner lines to keep, or it is the row that clears
+## what they marked.
+static func is_tool_aware(ace_id: String, template: String) -> bool:
+	return ace_id == "RemoveBuiltNodes" or template.contains("{?tool=yes}")
+
+
+## The parent a tool row starts under: the running scene and the spelling the unreleased build wrote both
+## become the one that works in the editor and in the game; anything else the reader chose stays.
+static func tool_parent_for(value: String) -> String:
+	var plain: String = value.strip_edges()
+	return TOOL_PARENT if plain == GAME_PARENT or plain == OLD_TOOL_PARENT else value
 
 
 ## A row's values as they are filled in when the row is dropped into a tool sheet: the parent a built node

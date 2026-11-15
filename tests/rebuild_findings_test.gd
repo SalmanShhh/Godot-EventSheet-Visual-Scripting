@@ -29,8 +29,8 @@ static func _clearing_row() -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = "RemoveBuiltNodes"
-	action.params = {"parent": "get_tree().edited_scene_root"}
-	action.codegen_template = ACERegistry.find_descriptor("Core", "RemoveBuiltNodes").codegen_template.replace("{uid}", "t2")
+	action.params = {"parent": BUILDING.TOOL_PARENT}
+	action.codegen_template = BUILDING.tool_form(ACERegistry.find_descriptor("Core", "RemoveBuiltNodes").codegen_template).replace("{uid}", "t2")
 	return action
 
 
@@ -109,7 +109,9 @@ static func _the_door() -> bool:
 		["and only once", again, false],
 		["it goes at the top of the event", (event.actions[0] as ACEAction).ace_id, "RemoveBuiltNodes"],
 		["the building row is still there after it", (event.actions[1] as ACEAction).ace_id, "AddNewNodeInto"],
-		["it clears under the node the event builds under", str((event.actions[0] as ACEAction).params.get("parent", "")), "get_tree().edited_scene_root"],
+		["it clears under the node the event builds under, which in the game is the running scene", str((event.actions[0] as ACEAction).params.get("parent", "")), BUILDING.TOOL_PARENT],
+		["it reads the parent into a local first, written once", (event.actions[0] as ACEAction).codegen_template.begins_with("var __scene_t9: Node = {parent}
+"), true],
 		["its local carries the id it was given", (event.actions[0] as ACEAction).codegen_template.contains("__built_t9"), true],
 		["the event no longer earns the note", EventSheetRebuildFindings.findings(sheet).size(), 0],
 	])
@@ -118,8 +120,19 @@ static func _the_door() -> bool:
 static func _the_pair_compiles() -> bool:
 	var sheet: EventSheetResource = _sheet(true, [_event("OnReady", [_clearing_row(), _fence()])])
 	var output: String = SUPPORT.compile_output(sheet)
-	var cleared_at: int = output.find("\tfor __built_t2: Node in get_tree().edited_scene_root.get_children():\n\t\tif __built_t2.has_meta(&\"built_by_sheet\") and __built_t2.get_meta(&\"built_by_sheet\") == get_script().resource_path:\n\t\t\tget_tree().edited_scene_root.remove_child(__built_t2)\n\t\t\t__built_t2.queue_free()\n")
-	var built_at: int = output.find("\tvar fence := Node2D.new()\n\tfence.name = \"Fence\"\n\tget_tree().edited_scene_root.add_child(fence, true)\n\tif Engine.is_editor_hint():\n\t\tfence.owner = get_tree().edited_scene_root\n\t\tfence.set_meta(&\"built_by_sheet\", get_script().resource_path)\n")
+	var cleared_at: int = output.find("	var __scene_t2: Node = get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene
+	for __built_t2: Node in __scene_t2.get_children():
+		if __built_t2.has_meta(&\"built_by_sheet\") and __built_t2.get_meta(&\"built_by_sheet\") == get_script().resource_path:
+			__scene_t2.remove_child(__built_t2)
+			__built_t2.queue_free()
+")
+	var built_at: int = output.find("	var fence := Node2D.new()
+	fence.name = \"Fence\"
+	__scene_t1.add_child(fence, true)
+	if Engine.is_editor_hint():
+		fence.owner = get_tree().edited_scene_root
+		fence.set_meta(&\"built_by_sheet\", get_script().resource_path)
+")
 	return SUPPORT.pins(NAME, [
 		["the clearing loop is written", cleared_at >= 0, true],
 		["the node is built, owned and marked", built_at >= 0, true],

@@ -36,6 +36,9 @@ const FIX_CLEAR_FIRST := "clear_what_it_built_first"
 const CLEAR_ACE_ID := "RemoveBuiltNodes"
 const BUILT_MARK := "set_meta(&\"built_by_sheet\""
 
+## The module that writes the Building rows, loaded by path so the first open does not compile it.
+const BUILDING_PATH := "res://addons/eventforge/registration/modules/building_aces.gd"
+
 
 ## Every rebuild note this sheet earns, one per event that builds without clearing first. `script_path` is
 ## only the label the sentence leads with.
@@ -95,9 +98,10 @@ static func clear_first(finding: Dictionary, uid: String) -> bool:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = CLEAR_ACE_ID
+	var building: GDScript = load(BUILDING_PATH)
 	var under: String = str(finding.get("to", "")).strip_edges()
-	action.params = {"parent": under if not under.is_empty() else str(descriptor.params[0].default_value)}
-	action.codegen_template = descriptor.codegen_template.replace("{uid}", uid)
+	action.params = {"parent": building.tool_parent_for(under) if not under.is_empty() else building.TOOL_PARENT}
+	action.codegen_template = building.tool_form(descriptor.codegen_template).replace("{uid}", uid)
 	event_row.actions.insert(0, action)
 	return true
 
