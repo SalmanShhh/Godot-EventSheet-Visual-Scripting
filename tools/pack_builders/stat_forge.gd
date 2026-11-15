@@ -261,7 +261,9 @@ static func build() -> bool:
 		"## @ace_condition",
 		"## @ace_name(\"Stat Is At Least\")",
 		"func stat_is_at_least(stat: String, value: float) -> bool:",
-		"\treturn stat_total(stat) >= value"
+		"\treturn stat_total(stat) >= value",
+		"",
+		Lib.missing_name_block("Stat Forge")
 	]))
 	sheet.events.append(block)
 
@@ -353,6 +355,8 @@ static func build() -> bool:
 		"\tif _buffs.has(buff_id):",
 		"\t\t(_buffs[buff_id] as StatBuff).active = active",
 		"\t\t_check_thresholds()",
+		"\telse:",
+		"\t\t_say_missing(\"Set Buff Active\", \"buff\", buff_id, _buffs.keys(), \"add it with Add Buff first, or check the spelling\")",
 		"",
 		"## Bulk activation by tag - silence every \"aura\" buff in an antimagic zone.",
 		"## @ace_action",
@@ -370,6 +374,8 @@ static func build() -> bool:
 		"\tif _buffs.has(buff_id):",
 		"\t\t(_buffs[buff_id] as StatBuff).value = value",
 		"\t\t_check_thresholds()",
+		"\telse:",
+		"\t\t_say_missing(\"Set Buff Value\", \"buff\", buff_id, _buffs.keys(), \"add it with Add Buff first, or check the spelling\")",
 		"",
 		"## Restarts a timed buff's countdown (re-drinking the potion refreshes, not stacks).",
 		"## @ace_action",
@@ -381,6 +387,8 @@ static func build() -> bool:
 		"\t\tbuff.duration = duration",
 		"\t\t# A restarted countdown needs the frame back; the timers stop once none is running.",
 		"\t\tset_physics_process(auto_tick)",
+		"\telif not _buffs.has(buff_id):",
+		"\t\t_say_missing(\"Refresh Buff\", \"buff\", buff_id, _buffs.keys(), \"add it with Add Buff first, or check the spelling\")",
 		"",
 		"## Freezes/unfreezes one buff's countdown (cutscenes, pause-adjacent states).",
 		"## @ace_action",
@@ -391,6 +399,8 @@ static func build() -> bool:
 		"\t\tif not paused:",
 		"\t\t\t# Unfreezing a countdown needs the frame back; the timers stop once none runs.",
 		"\t\t\tset_physics_process(auto_tick)",
+		"\telse:",
+		"\t\t_say_missing(\"Set Buff Timer Paused\", \"buff\", buff_id, _buffs.keys(), \"add it with Add Buff first, or check the spelling\")",
 		"",
 		"## Advances every unpaused timer by the given seconds - the manual clock for",
 		"## turn-based games (turn ends: Advance Timers 1).",
@@ -444,6 +454,8 @@ static func build() -> bool:
 		"func rearm_threshold_rule(rule_id: String) -> void:",
 		"\tif _rules.has(rule_id):",
 		"\t\t(_rules[rule_id] as ThresholdRule).armed = true",
+		"\telse:",
+		"\t\t_say_missing(\"Re-Arm Threshold Rule\", \"threshold rule\", rule_id, _rules.keys(), \"add it with Add Threshold Rule first, or check the spelling\")",
 		"",
 		"## Applies a StatSheetResource (.tres): its bases set stat bases, its buff rows Add",
 		"## Buff one by one IN ORDER - whole loadouts, classes, and difficulty presets as data.",

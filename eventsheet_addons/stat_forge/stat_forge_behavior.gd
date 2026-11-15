@@ -141,6 +141,8 @@ var _last_totals: Dictionary = {}
 var _last_expired: String = ""
 ## Name of the rule that was applied most recently.
 var _last_rule: String = ""
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 func _ready() -> void:
 	# A node with no timed buff has nothing to count down, so it pays for no frame. Add Buff
@@ -293,6 +295,30 @@ func has_buffs_from_source(source: String) -> bool:
 func stat_is_at_least(stat: String, value: float) -> bool:
 	return stat_total(stat) >= value
 
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Stat Forge on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
+
 ## The one action that runs the whole system: a named buff targeting a stat with a
 ## value and a mode (add / multiply / override - highest override wins). Tags are
 ## comma-separated labels for bulk ops, source names who applied it, duration in
@@ -384,6 +410,8 @@ func set_buff_active(buff_id: String, active: bool) -> void:
 	if _buffs.has(buff_id):
 		(_buffs[buff_id] as StatBuff).active = active
 		_check_thresholds()
+	else:
+		_say_missing("Set Buff Active", "buff", buff_id, _buffs.keys(), "add it with Add Buff first, or check the spelling")
 
 ## Bulk activation by tag - silence every "aura" buff in an antimagic zone.
 ## @ace_action
@@ -405,6 +433,8 @@ func set_buff_value(buff_id: String, value: float) -> void:
 	if _buffs.has(buff_id):
 		(_buffs[buff_id] as StatBuff).value = value
 		_check_thresholds()
+	else:
+		_say_missing("Set Buff Value", "buff", buff_id, _buffs.keys(), "add it with Add Buff first, or check the spelling")
 
 ## Restarts a timed buff's countdown (re-drinking the potion refreshes, not stacks).
 ## @ace_action
@@ -418,6 +448,8 @@ func refresh_buff(buff_id: String, duration: float) -> void:
 		buff.duration = duration
 		# A restarted countdown needs the frame back; the timers stop once none is running.
 		set_physics_process(auto_tick)
+	elif not _buffs.has(buff_id):
+		_say_missing("Refresh Buff", "buff", buff_id, _buffs.keys(), "add it with Add Buff first, or check the spelling")
 
 ## Freezes/unfreezes one buff's countdown (cutscenes, pause-adjacent states).
 ## @ace_action
@@ -430,6 +462,8 @@ func set_buff_timer_paused(buff_id: String, paused: bool) -> void:
 		if not paused:
 			# Unfreezing a countdown needs the frame back; the timers stop once none runs.
 			set_physics_process(auto_tick)
+	else:
+		_say_missing("Set Buff Timer Paused", "buff", buff_id, _buffs.keys(), "add it with Add Buff first, or check the spelling")
 
 ## Advances every unpaused timer by the given seconds - the manual clock for
 ## turn-based games (turn ends: Advance Timers 1).
@@ -488,6 +522,8 @@ func remove_threshold_rule(rule_id: String) -> void:
 func rearm_threshold_rule(rule_id: String) -> void:
 	if _rules.has(rule_id):
 		(_rules[rule_id] as ThresholdRule).armed = true
+	else:
+		_say_missing("Re-Arm Threshold Rule", "threshold rule", rule_id, _rules.keys(), "add it with Add Threshold Rule first, or check the spelling")
 
 ## Applies a StatSheetResource (.tres): its bases set stat bases, its buff rows Add
 ## Buff one by one IN ORDER - whole loadouts, classes, and difficulty presets as data.

@@ -24,6 +24,7 @@ static func run() -> bool:
 	ok = _proc_room() and ok
 	ok = _utility_ai() and ok
 	ok = _milestones() and ok
+	ok = _stat_forge() and ok
 	return ok
 
 
@@ -198,4 +199,28 @@ static func _milestones() -> bool:
 			"Milestones on Milestones: %s made a new milestone \"%s\" with a target of 0 because none is called that (there are: %s) - use Define Milestone first, or check the spelling." % [entry[0], entry[1], listing]))
 	rows.append(["a defined milestone says nothing", _heard(func() -> void: marks.update_progress("first", 3.0)), []])
 	marks.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _stat_forge() -> bool:
+	var script: GDScript = load(ROOT + "stat_forge/stat_forge_behavior.gd")
+	var forge: Node = script.new()
+	forge.name = "StatForge"
+	forge.add_buff("haste", "speed", 1.5)
+	var tail: String = " (there are: haste) - add it with Add Buff first, or check the spelling."
+	var rows: Array = []
+	var actions: Array = [
+		["Set Buff Active", "hast", func() -> void: forge.set_buff_active("hast", false)],
+		["Set Buff Value", "hste", func() -> void: forge.set_buff_value("hste", 2.0)],
+		["Refresh Buff", "haist", func() -> void: forge.refresh_buff("haist", 3.0)],
+		["Set Buff Timer Paused", "hsate", func() -> void: forge.set_buff_timer_paused("hsate", true)],
+	]
+	for entry: Array in actions:
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"Stat Forge on StatForge: %s did nothing, because no buff is called \"%s\"%s" % [entry[0], entry[1], tail]))
+	rows.append_array(_once("Re-Arm Threshold Rule", func() -> void: forge.rearm_threshold_rule("low_hp"),
+		"Stat Forge on StatForge: Re-Arm Threshold Rule did nothing, because no threshold rule is called \"low_hp\" (none exist yet) - add it with Add Threshold Rule first, or check the spelling."))
+	rows.append(["a real buff says nothing", _heard(func() -> void: forge.set_buff_active("haste", true)), []])
+	rows.append(["Remove Buff stays quiet, since removing what is gone is its documented no-op", _heard(func() -> void: forge.remove_buff("gone")), []])
+	forge.free()
 	return SUPPORT.pins(NAME, rows)
