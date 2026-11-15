@@ -221,6 +221,9 @@ const FIELD_KEYS: PackedStringArray = ["amount", "effect", "seconds", "delay", "
 ## Feedback families muted right now.
 var _muted: Dictionary = {}
 
+## The list whose cards this player has copied for itself; until then they are shared with scene copies.
+var _owned_steps: Array[Dictionary] = []
+
 ## Labels to skip once on the next play, removed as they are used.
 var _skip_once: Dictionary = {}
 
@@ -1496,7 +1499,11 @@ func _no_such(label: String, row: String) -> void:
 ## The list the EDIT rows work on: this player's own. A player whose moment-file slot is filled is
 ## playing a beat two other objects may be playing too, and an edit row must never write into that
 ## file - so the first edit takes a copy of it into this list and lets the slot go. The beat is
-## unchanged; it is simply this object's own now.
+## unchanged; it is simply this object's own now. The same goes for the list itself: copies of one
+## scene share the card dictionaries inside it, so the first edit also swaps every card for a copy
+## made in place (the list keeps its identity, so a play already walking it carries on). A player
+## nothing ever edits copies nothing. A stream, a curve or any other resource on a card stays the
+## very same resource; only the dictionaries and arrays around it are copied.
 func _own_list() -> Array:
 	if moment_file != null:
 		var carried: Variant = moment_file.get("steps")
@@ -1506,6 +1513,12 @@ func _own_list() -> Array:
 				if entry is Dictionary:
 					steps.append((entry as Dictionary).duplicate(true))
 		moment_file = null
+		_owned_steps = steps
+		return steps
+	if not is_same(_owned_steps, steps):
+		for at: int in range(steps.size()):
+			steps[at] = (steps[at] as Dictionary).duplicate(true)
+		_owned_steps = steps
 	return steps
 
 ## The card a row is about to write to, taken from this player's OWN list, or an empty dictionary

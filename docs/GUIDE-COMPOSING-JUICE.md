@@ -255,6 +255,8 @@ Insert Feedback Before, Replace Feedback, Remove Feedback, Move Feedback To, Ena
 Disable Feedback, Set Feedback Field, Set Feedback Timing, Set Feedback Chance, Set Feedback Label,
 Duplicate Feedback, Clear Feedbacks, Copy Feedbacks From, Load Moment File and Save Moment File, Set
 Player Strength, Set Player Cooldown and Set Can Play While Playing.
+A row that changes a card changes it for that object, for that run: enemies made from one scene each
+keep their own list, so retuning one never retunes another, and the saved scene is never touched.
 
 The **running-game** rows are the ones a designed list cannot have: Mute Feedback Category (and Mute
 Feedback Category On Channel) silences a whole family at once, which is the accessibility option -
