@@ -10555,3 +10555,11 @@ Text that mentions the name - left as it is,提到该名称的文字 - 保持原
 "This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","这个行为位于 %s（%s）之下，每一帧都会写入其父节点的 %s，而物理引擎也在移动同一个物体，所以两者会对抗：物体会抖动、弹回原处或穿过墙壁。请把这个行为放到不是物理物体的节点上（其中的 Sprite2D，或普通的 Node2D），或者改用 %s 来移动物体。"
 "An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","在一次编辑内部又开始了另一次编辑，这无法作为两步撤销，所以没有应用。请把两处更改都放在外层编辑里。"
 "That edit stopped on a script error, so the sheet was left exactly as it was.","该编辑因脚本错误而中止，因此工作表保持原样。"
+Could not save %s - Godot says: %s. %s,无法保存 %s - Godot 提示:%s。%s
+"Nothing was changed. Check that the file is not read-only or open in another program, that its folder exists and that the disk has room, then try again.","没有任何更改。请检查文件是否为只读或被其他程序打开、其文件夹是否存在、磁盘是否有空间,然后重试。"
+Could not delete %s - Godot says: %s. %s,无法删除 %s - Godot 提示:%s。%s
+"Nothing was removed. Close anything that has the file open, then try again.","没有删除任何内容。请关闭所有打开该文件的程序,然后重试。"
+Could not copy to %s - Godot says: %s. %s,无法复制到 %s - Godot 提示:%s。%s
+"The original is untouched. Check that the folder exists and is not read-only, then try again.","原文件未被改动。请检查文件夹是否存在且不是只读,然后重试。"
+Could not reach %s - Godot says: %s. %s,无法连接 %s - Godot 提示:%s。%s
+"Nothing was sent. Check the address and your internet connection, then try again.","没有发送任何内容。请检查地址和网络连接,然后重试。"

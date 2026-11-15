@@ -1,0 +1,34 @@
+# Godot EventSheets - the words for a file Godot would not write.
+#
+# Godot hands back a bare error NUMBER when a save, a copy or a delete fails, and a number tells a
+# reader nothing. Every message that used to print one now goes through here, so each says what failed,
+# names the file, gives Godot's own words for the cause and says what to try next. Reach it by path
+# (`load("res://addons/eventforge/failure_words.gd")`); it has no class_name so loading it compiles
+# nothing more and no boot-path script has to name it.
+@tool
+extends RefCounted
+
+
+## "Could not save <file> - Godot says: <cause>. <what to do>". `error` is a Godot Error value.
+static func save_failed(path: String, error: int) -> String:
+	return EventSheetL10n.translate("Could not save %s - Godot says: %s. %s") % [path, error_string(error),
+		EventSheetL10n.translate("Nothing was changed. Check that the file is not read-only or open in another program, that its folder exists and that the disk has room, then try again.")]
+
+
+## The same for a delete.
+static func delete_failed(path: String, error: int) -> String:
+	return EventSheetL10n.translate("Could not delete %s - Godot says: %s. %s") % [path, error_string(error),
+		EventSheetL10n.translate("Nothing was removed. Close anything that has the file open, then try again.")]
+
+
+## The same for a copy that did not land at `destination`.
+static func copy_failed(destination: String, error: int) -> String:
+	return EventSheetL10n.translate("Could not copy to %s - Godot says: %s. %s") % [destination, error_string(error),
+		EventSheetL10n.translate("The original is untouched. Check that the folder exists and is not read-only, then try again.")]
+
+
+## The same for a web request that could not even start.
+static func request_failed(address: String, error: int) -> String:
+	return EventSheetL10n.translate("Could not reach %s - Godot says: %s. %s") % [address, error_string(error),
+		EventSheetL10n.translate("Nothing was sent. Check the address and your internet connection, then try again.")]
+

@@ -185,7 +185,7 @@ static func write_field(path: String, field: String, value: Variant) -> Dictiona
 	var error: int = ResourceSaver.save(resource, path)
 	if error != OK:
 		return {"ok": false, "changed": false,
-			"message": "Could not write %s (error %d)." % [path.get_file(), error]}
+			"message": load("res://addons/eventforge/failure_words.gd").save_failed(path.get_file(), error)}
 	return {"ok": true, "changed": true, "message": ""}
 
 
@@ -220,7 +220,7 @@ static func new_asset(directory: String, type_named: String, base_name: String =
 	var error: int = ResourceSaver.save(made as Resource, path)
 	if error != OK:
 		return {"ok": false, "path": path,
-			"message": "Could not write %s (error %d)." % [path.get_file(), error]}
+			"message": load("res://addons/eventforge/failure_words.gd").save_failed(path.get_file(), error)}
 	return {"ok": true, "path": path, "message": "Added %s." % path.get_file()}
 
 
@@ -237,7 +237,7 @@ static func delete_asset(path: String) -> Dictionary:
 		return {"ok": false, "message": "There is no file at %s." % path}
 	var error: int = DirAccess.remove_absolute(path)
 	if error != OK:
-		return {"ok": false, "message": "Could not delete %s (error %d)." % [path.get_file(), error]}
+		return {"ok": false, "message": load("res://addons/eventforge/failure_words.gd").delete_failed(path.get_file(), error)}
 	return {"ok": true, "message": "Deleted %s." % path.get_file()}
 
 

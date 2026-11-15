@@ -1371,7 +1371,7 @@ static func curate_provider(script_path: String, edits: Array) -> Dictionary:
 	result["backup"] = EventSheetBackups.backup_sheet(clean_path)
 	var handle: FileAccess = FileAccess.open(clean_path, FileAccess.WRITE)
 	if handle == null:
-		result["reason"] = "Could not open %s for writing (error %d)." % [clean_path, FileAccess.get_open_error()]
+		result["reason"] = load("res://addons/eventforge/failure_words.gd").save_failed(clean_path, FileAccess.get_open_error())
 		return result
 	handle.store_string(str(result["source"]))
 	handle.close()
@@ -1410,7 +1410,7 @@ static func publish_pack_version(script_path: String, bump: String, note: String
 	result["backup"] = EventSheetBackups.backup_sheet(clean_path)
 	var handle: FileAccess = FileAccess.open(clean_path, FileAccess.WRITE)
 	if handle == null:
-		result["reason"] = "Could not open %s for writing (error %d)." % [clean_path, FileAccess.get_open_error()]
+		result["reason"] = load("res://addons/eventforge/failure_words.gd").save_failed(clean_path, FileAccess.get_open_error())
 		return result
 	handle.store_string(str(bumped.get("source", original)))
 	handle.close()
@@ -1445,7 +1445,7 @@ static func keep_old_verb_working(script_path: String, old_member: String, new_m
 	result["backup"] = EventSheetBackups.backup_sheet(clean_path)
 	var handle: FileAccess = FileAccess.open(clean_path, FileAccess.WRITE)
 	if handle == null:
-		result["reason"] = "Could not open %s for writing (error %d)." % [clean_path, FileAccess.get_open_error()]
+		result["reason"] = load("res://addons/eventforge/failure_words.gd").save_failed(clean_path, FileAccess.get_open_error())
 		return result
 	handle.store_string(str(result["source"]))
 	handle.close()

@@ -10555,3 +10555,11 @@ Text that mentions the name - left as it is,名前に触れているテキスト
 "This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","この挙動は %s（%s）の下にあり、毎フレーム親の %s を書き換えますが、物理エンジンも同じボディを動かすため、両者が争います。ボディが震えたり、元に戻ったり、壁をすり抜けたりします。挙動は物理ボディではないノード（中の Sprite2D か、通常の Node2D）に置くか、代わりに %s でボディを動かしてください。"
 "An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","編集の中で別の編集が始まりました。これは 2 つの手順として元に戻せないため、適用されませんでした。両方の変更を外側の編集の中で行ってください。"
 "That edit stopped on a script error, so the sheet was left exactly as it was.","その編集はスクリプトエラーで止まったため、シートは元のままです。"
+Could not save %s - Godot says: %s. %s,%s を保存できませんでした - Godot のメッセージ: %s。%s
+"Nothing was changed. Check that the file is not read-only or open in another program, that its folder exists and that the disk has room, then try again.",何も変更されていません。ファイルが読み取り専用でないか、別のプログラムで開かれていないか、フォルダが存在するか、ディスクに空きがあるかを確認して、もう一度お試しください。
+Could not delete %s - Godot says: %s. %s,%s を削除できませんでした - Godot のメッセージ: %s。%s
+"Nothing was removed. Close anything that has the file open, then try again.",何も削除されていません。そのファイルを開いているものをすべて閉じて、もう一度お試しください。
+Could not copy to %s - Godot says: %s. %s,%s へコピーできませんでした - Godot のメッセージ: %s。%s
+"The original is untouched. Check that the folder exists and is not read-only, then try again.",元のファイルには手を加えていません。フォルダが存在し、読み取り専用でないことを確認して、もう一度お試しください。
+Could not reach %s - Godot says: %s. %s,%s に接続できませんでした - Godot のメッセージ: %s。%s
+"Nothing was sent. Check the address and your internet connection, then try again.",何も送信されていません。アドレスとインターネット接続を確認して、もう一度お試しください。

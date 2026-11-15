@@ -121,8 +121,7 @@ func _send_live(request: Dictionary, definitions: Array) -> void:
 	var error: int = _http.request(EventSheetAsk.endpoint(), EventSheetAsk.request_headers(),
 		HTTPClient.METHOD_POST, JSON.stringify(request))
 	if error != OK:
-		_proposal_label.text = "Could not reach %s (error %d). Nothing was sent." \
-			% [EventSheetAsk.endpoint(), error]
+		_proposal_label.text = load("res://addons/eventforge/failure_words.gd").request_failed(EventSheetAsk.endpoint(), error)
 		return
 	var result: Array = await _http.request_completed
 	var status: int = int(result[1])

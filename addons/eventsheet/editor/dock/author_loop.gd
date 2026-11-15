@@ -240,5 +240,5 @@ func build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
 		return "Test Bench: couldn't pack the scene."
 	var save_error: Error = ResourceSaver.save(packed, scene_path)
 	host.queue_free()
-	return "" if save_error == OK else "Test Bench: couldn't save %s (error %d)." % [scene_path, save_error]
+	return "" if save_error == OK else "Test Bench: %s" % load("res://addons/eventforge/failure_words.gd").save_failed(scene_path, save_error)
 

@@ -583,7 +583,7 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 		else:
 			_dock._set_status("Saved: %s%s" % [save_path.get_file(), warning_tail])
 	else:
-		_dock._set_status("Save failed (error %d)." % err, true)
+		_dock._set_status(load("res://addons/eventforge/failure_words.gd").save_failed(save_path, err), true)
 
 
 ## The compiler's warnings of the last write, as the one sentence the status line carries ("" when there

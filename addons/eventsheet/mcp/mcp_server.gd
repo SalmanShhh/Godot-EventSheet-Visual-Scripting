@@ -733,7 +733,7 @@ func _mutate(path: String, label: String, change: Callable) -> Dictionary:
 	EventSheetBackups.backup_sheet(path)
 	var save_error: Error = ResourceSaver.save(sheet, path)
 	if save_error != OK:
-		return {"error": "Failed to save %s (error %d)." % [path, save_error]}
+		return {"error": load("res://addons/eventforge/failure_words.gd").save_failed(path, save_error)}
 	outcome["saved"] = true
 	return outcome
 
@@ -794,7 +794,7 @@ func _mutate_script(path: String, change: Callable) -> Dictionary:
 	EventSheetBackups.backup_sheet(path)
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		return {"error": "Could not write %s (error %d)." % [path, FileAccess.get_open_error()]}
+		return {"error": load("res://addons/eventforge/failure_words.gd").save_failed(path, FileAccess.get_open_error())}
 	file.store_string(written)
 	file.close()
 	outcome["saved"] = true

@@ -60,7 +60,7 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 	# reproduces the exported .gd byte-for-byte - the same no-drift rule the bundled packs obey.
 	var save_error: Error = ResourceSaver.save(pack_sheet, base_path + ".tres")
 	if save_error != OK:
-		_dock._set_status("Export failed: couldn't save %s.tres (error %d)." % [base_path, save_error], true)
+		_dock._set_status("Export failed. %s" % load("res://addons/eventforge/failure_words.gd").save_failed(base_path + ".tres", save_error), true)
 		return
 	pack_sheet.take_over_path(base_path + ".tres")
 	# Auto-docs: shared packs are documented by default.

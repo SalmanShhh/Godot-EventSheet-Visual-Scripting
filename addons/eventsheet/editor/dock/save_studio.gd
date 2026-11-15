@@ -298,7 +298,7 @@ static func make_settings_scene(scene_path: String) -> String:
 	node.free()
 	var saved: Error = ResourceSaver.save(scene, scene_path)
 	if saved != OK:
-		return EventSheetL10n.translate("Could not save %s (error %d).") % [scene_path, saved]
+		return load("res://addons/eventforge/failure_words.gd").save_failed(scene_path, saved)
 	ProjectSettings.set_setting("autoload/%s" % SAVE_AUTOLOAD, "*%s" % scene_path)
 	if Engine.is_editor_hint():
 		ProjectSettings.save()
@@ -381,7 +381,7 @@ func _write(property: String, value: Variant) -> void:
 	if error == OK:
 		_dock._set_status(EventSheetL10n.translate("Saved %s into %s.") % [property, scene_path.get_file()])
 	else:
-		_dock._set_status(EventSheetL10n.translate("Could not save %s (error %d).") % [scene_path, error], true)
+		_dock._set_status(load("res://addons/eventforge/failure_words.gd").save_failed(scene_path, error), true)
 	_load_settings()
 	_refresh_slots()
 
@@ -551,7 +551,7 @@ static func copy_slot(source: String, destination: String, settings: Dictionary)
 	var to_format: String = format_for_extension(destination)
 	if from_format == to_format:
 		var copied: Error = DirAccess.copy_absolute(source, destination)
-		return "" if copied == OK else EventSheetL10n.translate("The copy failed (error %d).") % copied
+		return "" if copied == OK else load("res://addons/eventforge/failure_words.gd").copy_failed(destination, copied)
 	var reader: Node = _save_system(settings)
 	var data: Dictionary = reader.call("read_file", source, from_format)
 	reader.free()

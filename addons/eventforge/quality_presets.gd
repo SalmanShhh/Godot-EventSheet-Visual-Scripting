@@ -186,7 +186,7 @@ static func write_preset(path: String, word: String, rank: int, values: Dictiona
 	preset.set("rank", rank)
 	preset.set("values", values.duplicate(true))
 	var saved: int = ResourceSaver.save(preset, path)
-	return "" if saved == OK else "Could not write %s (error %d)." % [path, saved]
+	return "" if saved == OK else load("res://addons/eventforge/failure_words.gd").save_failed(path, saved)
 
 
 ## Writes the three starter words, skipping any that already exist. Returns "" on success and the
