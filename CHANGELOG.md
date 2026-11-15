@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a pack action given a name that does not exist now says so, once
+
+- Many packs keep things by name (abilities, pools, quests, rooms, buffs). An action given a name that did not exist returned without a word, so a mistyped `dash` for `Dash` looked exactly like a row that ran. Each such action now pushes one plain warning (Debugger, Errors tab) naming the node, the row as the sheet words it, the name that was not found, the names that do exist and what to do next. It is said once per missing name per node, never every frame, and the action still does nothing.
+- Simple Abilities: Activate Ability, Set Ability Cooldown, Reset Cooldown, Set Max Stacks, Set Stacks, Add Stacks, Consume Ability Stack, Set Ability Enabled, Set Ability Active, Set Ability Data, Add Tag, Remove Tag, Clear All Tags, Remove Ability and Remove Ability After Duration.
+
 ### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
 
 - `.gd` is the default sheet format, but about twenty of the Doctor's checks were handed `.tres` sheets only, so in a project of scripts they said nothing and gave no sign they had not looked. They now read the project's own scripts as well: debug code left in, a script no scene or other script uses, editor tools that reach the editor's own tree, work in a thread that touches nodes, private variables nothing reads, a script driving many nodes, fragile `../../` paths, a loop run every frame, a wait inside a per-frame event, notes that are pasted engine errors, an unpaired `#region`, a variable that shadows an engine member (an error: Godot cannot load it), and the pattern notes.

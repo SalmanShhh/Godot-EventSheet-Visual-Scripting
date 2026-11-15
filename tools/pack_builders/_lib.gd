@@ -103,6 +103,35 @@ static func append_function(sheet: EventSheetResource, function_name: String, di
 	sheet.functions.append(event_function)
 
 
+## The class-level GDScript a pack adds so an action given a name nothing answers to says so ONCE: a
+## private set of the names already reported, and `_say_missing`, which the action calls where it used
+## to return without a word. `label` is the pack's name as a person says it ("Simple Abilities"). The
+## warning names the node, the row's action in the words the sheet shows, the name that was not found
+## and the names that do exist. The action still does nothing: only the silence changes. It is plain
+## GDScript with no plugin dependency, so it is English and carries no translation key.
+static func missing_name_block(label: String) -> String:
+	return "\n".join(PackedStringArray([
+		"## Names this node has already said it could not find, so a row that runs every frame says it once.",
+		"var _said_missing: Dictionary = {}",
+		"",
+		"## Warns once per missing name that a row was given a name nothing here answers to; the row itself does nothing.",
+		"func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:",
+		"\tvar key: String = what + \":\" + wrong",
+		"\tif _said_missing.has(key):",
+		"\t\treturn",
+		"\t_said_missing[key] = true",
+		"\tvar names: PackedStringArray = PackedStringArray()",
+		"\tfor each: Variant in known:",
+		"\t\tnames.append(str(each))",
+		"\tnames.sort()",
+		"\tvar exist: String = \"none exist yet\"",
+		"\tif not names.is_empty():",
+		"\t\texist = \"there are: \" + \", \".join(names.slice(0, 8)) + (\", and more\" if names.size() > 8 else \"\")",
+		"\tvar where: String = str(get_path()) if is_inside_tree() else str(name)",
+		"\tpush_warning(\"" + label + " on %s: %s did nothing, because no %s is called \\\"%s\\\" (%s) - %s.\" % [where, action, what, wrong, exist, advice])"
+	]))
+
+
 ## Declares a REQUIRED resource slot on a behavior pack - the data-driven-config helper. Adds an
 ## exported var (a Resource slot the user drags a .tres onto) marked `required`, so the Inspector shows a
 ## "required" warning on the field while it is empty - the "you forgot to attach it" safety net a

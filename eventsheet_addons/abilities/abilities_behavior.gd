@@ -66,6 +66,8 @@ func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
 		abilities[id] = AbilityData.new()
 	return abilities[id] as AbilityData
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 func _ready() -> void:
 	if ability_set != null:
@@ -183,6 +185,7 @@ func create_temporary_ability(id: String, seconds: float) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_ability_after({id}, {seconds})")
 func remove_ability_after(id: String, seconds: float) -> void:
 	if not abilities.has(id):
+		_say_missing("Remove Ability After Duration", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)
 	(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)
@@ -197,6 +200,7 @@ func remove_ability_after(id: String, seconds: float) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_ability({id})")
 func remove_ability(id: String) -> void:
 	if not abilities.has(id):
+		_say_missing("Remove Ability", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	abilities.erase(id)
 	current_ability_id = id
@@ -224,6 +228,7 @@ func clear_all_abilities() -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.activate_ability({id})")
 func activate_ability(id: String) -> void:
 	if not abilities.has(id):
+		_say_missing("Activate Ability", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var a: AbilityData = abilities[id]
 	if not a.enabled or a.stacks <= 0:
@@ -256,6 +261,7 @@ func use_skill(id: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_cooldown({id}, {seconds})")
 func set_cooldown(id: String, seconds: float) -> void:
 	if not abilities.has(id):
+		_say_missing("Set Ability Cooldown", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var cd: float = maxf(0.0, seconds * cooldown_multiplier)
 	(abilities[id] as AbilityData).cooldown = cd
@@ -271,6 +277,7 @@ func set_cooldown(id: String, seconds: float) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown({id})")
 func reset_cooldown(id: String) -> void:
 	if not abilities.has(id):
+		_say_missing("Reset Cooldown", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var a: AbilityData = abilities[id]
 	a.cooldown = 0.0
@@ -291,6 +298,7 @@ func reset_cooldown(id: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_max_stacks({id}, {max_stacks})")
 func set_max_stacks(id: String, max_stacks: int) -> void:
 	if not abilities.has(id):
+		_say_missing("Set Max Stacks", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var a: AbilityData = abilities[id]
 	a.max_stacks = maxi(1, max_stacks)
@@ -304,6 +312,7 @@ func set_max_stacks(id: String, max_stacks: int) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_stacks({id}, {stacks})")
 func set_stacks(id: String, stacks: int) -> void:
 	if not abilities.has(id):
+		_say_missing("Set Stacks", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	(abilities[id] as AbilityData).stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)
 
@@ -315,6 +324,7 @@ func set_stacks(id: String, stacks: int) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.add_stacks({id}, {count})")
 func add_stacks(id: String, count: int) -> void:
 	if not abilities.has(id):
+		_say_missing("Add Stacks", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var a: AbilityData = abilities[id]
 	var before: int = a.stacks
@@ -334,6 +344,7 @@ func add_stacks(id: String, count: int) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.consume_stack({id})")
 func consume_stack(id: String) -> void:
 	if not abilities.has(id):
+		_say_missing("Consume Ability Stack", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var a: AbilityData = abilities[id]
 	if a.stacks <= 0:
@@ -355,6 +366,8 @@ func consume_stack(id: String) -> void:
 func set_enabled(id: String, enabled: bool) -> void:
 	if abilities.has(id):
 		(abilities[id] as AbilityData).enabled = enabled
+	else:
+		_say_missing("Set Ability Enabled", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Set Ability Active")
@@ -365,6 +378,8 @@ func set_enabled(id: String, enabled: bool) -> void:
 func set_active(id: String, active: bool) -> void:
 	if abilities.has(id):
 		(abilities[id] as AbilityData).active = active
+	else:
+		_say_missing("Set Ability Active", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Set Ability Data")
@@ -375,6 +390,8 @@ func set_active(id: String, active: bool) -> void:
 func set_ability_data(id: String, key: String, value: String) -> void:
 	if abilities.has(id):
 		(abilities[id] as AbilityData).data[key] = str(value)
+	else:
+		_say_missing("Set Ability Data", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Add Tag")
@@ -384,6 +401,7 @@ func set_ability_data(id: String, key: String, value: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.add_tag({id}, {tag})")
 func add_tag(id: String, tag: String) -> void:
 	if not abilities.has(id):
+		_say_missing("Add Tag", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 		return
 	var tags: Array = (abilities[id] as AbilityData).tags
 	if not tags.has(tag):
@@ -398,6 +416,8 @@ func add_tag(id: String, tag: String) -> void:
 func remove_tag(id: String, tag: String) -> void:
 	if abilities.has(id):
 		(abilities[id] as AbilityData).tags.erase(tag)
+	else:
+		_say_missing("Remove Tag", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Clear All Tags")
@@ -408,6 +428,8 @@ func remove_tag(id: String, tag: String) -> void:
 func clear_tags(id: String) -> void:
 	if abilities.has(id):
 		(abilities[id] as AbilityData).tags.clear()
+	else:
+		_say_missing("Clear All Tags", "ability", id, abilities.keys(), "add it with Create Ability first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Set Abilities With Tag Enabled")
@@ -715,6 +737,22 @@ func _any_ability_on_a_clock() -> bool:
 		if a.cooldown > 0.0 or a.expiration > 0.0:
 			return true
 	return false
+
+## Warns once per missing name that a row was given a name nothing here answers to; the row itself does nothing.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	var key: String = what + ":" + wrong
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	var exist: String = "none exist yet"
+	if not names.is_empty():
+		exist = "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Simple Abilities on %s: %s did nothing, because no %s is called \"%s\" (%s) - %s." % [where, action, what, wrong, exist, advice])
 
 ## @ace_hidden
 func save_state() -> Dictionary:

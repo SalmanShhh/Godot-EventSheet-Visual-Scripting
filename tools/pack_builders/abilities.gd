@@ -242,7 +242,9 @@ static func build() -> bool:
 		"\t\tvar a: AbilityData = abilities[id]",
 		"\t\tif a.cooldown > 0.0 or a.expiration > 0.0:",
 		"\t\t\treturn true",
-		"\treturn false"
+		"\treturn false",
+		"",
+		Lib.missing_name_block("Simple Abilities")
 	]))
 	sheet.events.append(block)
 
@@ -361,6 +363,7 @@ static func build() -> bool:
 		"Schedules removal of an existing ability after `seconds`.",
 		[["id", "String"], ["seconds", "float"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Remove Ability After Duration\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)",
 		"(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)",
@@ -372,6 +375,7 @@ static func build() -> bool:
 		"Deletes an ability and all its data. Fires On Ability Removed.",
 		[["id", "String"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Remove Ability\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"abilities.erase(id)",
 		"current_ability_id = id",
@@ -391,6 +395,7 @@ static func build() -> bool:
 		"Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.",
 		[["id", "String"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Activate Ability\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var a: AbilityData = abilities[id]",
 		"if not a.enabled or a.stacks <= 0:",
@@ -417,6 +422,7 @@ static func build() -> bool:
 		"Puts an ability on cooldown (scaled by the global cooldown multiplier).",
 		[["id", "String"], ["seconds", "float"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Set Ability Cooldown\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var cd: float = maxf(0.0, seconds * cooldown_multiplier)",
 		"(abilities[id] as AbilityData).cooldown = cd",
@@ -429,6 +435,7 @@ static func build() -> bool:
 		"Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.",
 		[["id", "String"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Reset Cooldown\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var a: AbilityData = abilities[id]",
 		"a.cooldown = 0.0",
@@ -446,6 +453,7 @@ static func build() -> bool:
 		"Changes max charges (current stacks clamp down).",
 		[["id", "String"], ["max_stacks", "int"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Set Max Stacks\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var a: AbilityData = abilities[id]",
 		"a.max_stacks = maxi(1, max_stacks)",
@@ -456,6 +464,7 @@ static func build() -> bool:
 		"Sets current charges (clamped 0..max).",
 		[["id", "String"], ["stacks", "int"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Set Stacks\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"(abilities[id] as AbilityData).stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
 	])))
@@ -464,6 +473,7 @@ static func build() -> bool:
 		"Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow.",
 		[["id", "String"], ["count", "int"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Add Stacks\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var a: AbilityData = abilities[id]",
 		"var before: int = a.stacks",
@@ -480,6 +490,7 @@ static func build() -> bool:
 		"Removes one charge without activating; starts regen if needed.",
 		[["id", "String"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Consume Ability Stack\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var a: AbilityData = abilities[id]",
 		"if a.stacks <= 0:",
@@ -497,27 +508,34 @@ static func build() -> bool:
 		"Enables or disables activation.",
 		[["id", "String"], ["enabled", "bool"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\t(abilities[id] as AbilityData).enabled = enabled"
+		"\t(abilities[id] as AbilityData).enabled = enabled",
+		"else:",
+		"\t_say_missing(\"Set Ability Enabled\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")"
 	])))
 
 	Lib.append_function(sheet, "set_active", "Set Ability Active", "Abilities",
 		"Sets the active flag (for channeled / toggle abilities).",
 		[["id", "String"], ["active", "bool"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\t(abilities[id] as AbilityData).active = active"
+		"\t(abilities[id] as AbilityData).active = active",
+		"else:",
+		"\t_say_missing(\"Set Ability Active\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")"
 	])))
 
 	Lib.append_function(sheet, "set_ability_data", "Set Ability Data", "Abilities",
 		"Stores a custom key/value (string) on an ability.",
 		[["id", "String"], ["key", "String"], ["value", "String"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\t(abilities[id] as AbilityData).data[key] = str(value)"
+		"\t(abilities[id] as AbilityData).data[key] = str(value)",
+		"else:",
+		"\t_say_missing(\"Set Ability Data\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")"
 	])))
 
 	Lib.append_function(sheet, "add_tag", "Add Tag", "Abilities",
 		"Tags an ability (safe if it already has the tag).",
 		[["id", "String"], ["tag", "String"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
+		"\t_say_missing(\"Add Tag\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")",
 		"\treturn",
 		"var tags: Array = (abilities[id] as AbilityData).tags",
 		"if not tags.has(tag):",
@@ -528,14 +546,18 @@ static func build() -> bool:
 		"Removes a tag from an ability.",
 		[["id", "String"], ["tag", "String"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\t(abilities[id] as AbilityData).tags.erase(tag)"
+		"\t(abilities[id] as AbilityData).tags.erase(tag)",
+		"else:",
+		"\t_say_missing(\"Remove Tag\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")"
 	])))
 
 	Lib.append_function(sheet, "clear_tags", "Clear All Tags", "Abilities",
 		"Removes every tag from an ability.",
 		[["id", "String"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\t(abilities[id] as AbilityData).tags.clear()"
+		"\t(abilities[id] as AbilityData).tags.clear()",
+		"else:",
+		"\t_say_missing(\"Clear All Tags\", \"ability\", id, abilities.keys(), \"add it with Create Ability first, or check the spelling\")"
 	])))
 
 	Lib.append_function(sheet, "set_tag_enabled", "Set Abilities With Tag Enabled", "Abilities",

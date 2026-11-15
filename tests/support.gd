@@ -146,3 +146,15 @@ static func _same(actual: Variant, expected: Variant) -> bool:
 static func _shown(value: Variant) -> String:
 	var text: String = "\"%s\"" % value if value is String or value is StringName else str(value)
 	return text if text.length() <= 200 else text.substr(0, 197) + "..."
+
+
+## Hears every `push_warning` printed while it is added and keeps the text of each, so a test can pin
+## what a pack said. Add it with `OS.add_logger`, run the rows, `OS.remove_logger` it. The message
+## rides `code` for a script warning and `rationale` for an engine one, so both are read.
+class WarningEar extends Logger:
+	var heard: Array = []
+
+	func _log_error(_function: String, _file: String, _line: int, code: String, rationale: String,
+			_editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type == Logger.ERROR_TYPE_WARNING:
+			heard.append(rationale if not rationale.is_empty() else code)
