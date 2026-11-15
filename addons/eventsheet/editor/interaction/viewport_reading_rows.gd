@@ -3093,7 +3093,11 @@ static func behaviour_pack_index() -> Dictionary:
 		var declared: String = str(head.get("class", ""))
 		if not declared.is_empty():
 			index[declared] = category
-		index[path.get_base_dir().get_file().to_pascal_case()] = category
+		# A folder is named by the first script that claims it: a second script in the same folder (the
+		# Juice pack holds the effects node and the list node) is still found by its own class and category.
+		var folder_key: String = path.get_base_dir().get_file().to_pascal_case()
+		if not index.has(folder_key):
+			index[folder_key] = category
 		index[category.replace(" ", "")] = category
 	_pack_index = index
 	_pack_index_built = true
