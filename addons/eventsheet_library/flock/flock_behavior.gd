@@ -64,6 +64,8 @@ func _enter_tree() -> void:
 var flock_velocity: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
+	if host is RigidBody2D:
+		push_warning("Flock on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 	if host != null:
 		if not String(flock_group).is_empty():
 			host.add_to_group(flock_group)

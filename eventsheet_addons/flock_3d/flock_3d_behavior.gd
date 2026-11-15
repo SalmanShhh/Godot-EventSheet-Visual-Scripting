@@ -64,6 +64,8 @@ func _enter_tree() -> void:
 var flock_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
+	if host is RigidBody3D:
+		push_warning("Flock 3D on %s: this behaviour moves a RigidBody3D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the MeshInstance3D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 	if host != null:
 		if not String(flock_group).is_empty():
 			host.add_to_group(flock_group)

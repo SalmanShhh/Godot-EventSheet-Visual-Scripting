@@ -481,6 +481,7 @@ static func build() -> bool:
 		"start_drag": "Start drag at ([b]{drag_point_x}[/b], [b]{drag_point_y}[/b]) grab mode [b]{grab_mode}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["start_drag", "drop_drag"])
+	Lib.rigid_body_host_warning(sheet, "Drag Drop", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/drag_drop/drag_drop_behavior")
 
 

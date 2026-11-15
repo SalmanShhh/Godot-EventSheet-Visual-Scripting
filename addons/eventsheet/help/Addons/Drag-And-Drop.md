@@ -403,6 +403,7 @@ On Drag Cancelled
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The pack does not read input - you must feed the drag point.** Nothing moves unless you call Set Drag Point each tick while Is Dragging. If a picked-up object sits still, you are missing the per-tick Set Drag Point, or you are calling it while Is Dragging is false. This is by design so the same rows work with a mouse, a touch, or a gamepad cursor.
 - **Guard your per-tick Set Drag Point with Is Dragging.** Feeding the point when no drag is active does nothing useful and can hide bugs. Wrap the tick row in an Is Dragging condition.
 - **Pass the right `how` to Drop.** `how` 0 applies the throw or snap (the normal release); `how` 1 cancels silently. Mixing these up is why a throw does not fire or a cancel unexpectedly launches the object.

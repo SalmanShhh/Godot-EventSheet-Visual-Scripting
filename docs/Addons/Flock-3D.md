@@ -189,6 +189,7 @@ cloud rising off the fire.
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody3D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `MeshInstance3D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **Separation radius is the overlap dial.** A little more than the model's width keeps members apart.
 - **Model the member facing -Z.** Face Heading looks along the velocity with Godot's forward.
 - **A flock is free in all three axes.** If birds should stay above the ground, give them a

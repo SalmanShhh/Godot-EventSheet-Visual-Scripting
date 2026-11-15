@@ -10,6 +10,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Gliding, following and orbiting: Move To, Move To 3D, Follow, Follow Path, Orbit, Orbit 3D and Tile Movement.
 - Waves, springs and juice: Sine, Sine 3D, Spring and Juice.
 - Holding a node in place: Bound To, Pin, Pin 3D, Home Leash and Checkpoint.
+- Bullets, dragging, wrapping and flocking: Bullet, Bullet 3D, Drag Drop, Wrap, Flock and Flock 3D. That makes 22 packs in all; the camera rails, Targeting 3D (which only turns its node) and the character-body packs cannot meet the problem or do not move the node.
 
 ### Added: three classic Godot mistakes now show on the row that makes them
 

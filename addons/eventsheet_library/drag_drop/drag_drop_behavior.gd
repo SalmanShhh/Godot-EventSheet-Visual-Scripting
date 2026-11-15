@@ -106,6 +106,8 @@ func _ready() -> void:
 	# The follow / magnet / break-distance work only exists during a drag, so a node sitting
 	# there waiting to be picked up costs nothing per frame. Start Drag turns the tick on.
 	set_process(false)
+	if host is RigidBody2D:
+		push_warning("Drag Drop on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _process(delta: float) -> void:
 	if not enabled or not dragging or host == null:

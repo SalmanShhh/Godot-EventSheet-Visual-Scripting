@@ -68,6 +68,8 @@ func _ready() -> void:
 	# The tick runs only while the bullet is actually flying - a shot authored frozen, or one
 	# parked by a stepping hit, costs nothing per frame until Set Bullet Enabled starts it again.
 	set_process(enabled_movement)
+	if host is RigidBody2D:
+		push_warning("Bullet on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _process(delta: float) -> void:
 	if host == null or not enabled_movement:

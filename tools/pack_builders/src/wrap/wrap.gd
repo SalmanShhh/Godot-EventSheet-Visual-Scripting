@@ -93,6 +93,8 @@ func _direction_side(direction: Vector2) -> String:
 #endregion
 
 func _ready() -> void:
+	if host is RigidBody2D:
+		push_warning("Wrap on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 	# The edge test only runs while wrapping is on - a host authored with Wrap off costs
 	# nothing per physics frame until Set Wrap Enabled turns it on.
 	set_physics_process(wrap_enabled)

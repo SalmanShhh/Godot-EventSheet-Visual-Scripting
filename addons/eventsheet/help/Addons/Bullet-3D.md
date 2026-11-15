@@ -380,6 +380,7 @@ Launch Forward exists exactly for this - a recycled bolt keeps its old velocity 
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody3D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `MeshInstance3D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The node is the projectile - there is no bullet id.** Every Action and Expression acts on the `Bullet3DBehavior` of the node it is placed on. Attach one behavior per flying node; you never pass a bullet or emitter id.
 - **It launches itself on the first frame.** A freshly spawned bullet auto-launches along its facing at the current speed. You do not need Launch Forward for the common case - aim the node and spawn it. Launch Forward is for relaunching a pooled or re-aimed shot.
 - **Aim by rotating the node.** Forward is the node's -Z direction. To change where a shot goes, rotate the node (the barrel, the hand, the turret) before it launches; the behavior flies whatever way the node faces.

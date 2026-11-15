@@ -412,6 +412,7 @@ Freezing first keeps the shot from drifting while it dissolves, and the fade han
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a `Node2D`.** The behavior moves its parent, and that parent has to be a `Node2D` or a subclass (Sprite2D, Area2D, CharacterBody2D, and so on). Attached to anything else it warns and does nothing. The behavior is the child; the projectile is the parent. One behavior per projectile.
 - **It launches itself - there is no fire call.** The moment the behavior spawns it starts moving on the next frame. Do not look for an "activate" action; instead aim the node before or at spawn and it goes.
 - **Aim by rotation.** The initial direction is the host's `rotation` on its first frame, so you aim a shot by setting the projectile's rotation, not by any Bullet action. Point the node at the target before it launches.

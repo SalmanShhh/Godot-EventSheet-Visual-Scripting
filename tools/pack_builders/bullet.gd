@@ -221,4 +221,5 @@ static func build() -> bool:
 		"	host.set_meta(&\"owner\", shooter)"
 	])), "Fired by [i]{shooter}[/i]")
 
+	Lib.rigid_body_host_warning(sheet, "Bullet", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/bullet/bullet_behavior")
