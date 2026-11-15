@@ -84,8 +84,8 @@ signal save_key_missing(key: String, slot_index: int)
 var autosave_accumulator: float = 0.0
 ## Seconds between autosaves (0 = off). Fires On Before Save first.
 @export_range(0, 600, 1) var autosave_interval: float = 0.0
-## Earlier versions kept per slot; 0 turns backups off.
-@export_range(0, 50, 1) var backup_count: int = 0
+## Earlier versions kept per slot (2 unless you change it, so one bad save never costs the one before it); 0 turns backups off.
+@export_range(0, 50, 1) var backup_count: int = 2
 ## Non-empty = encrypted saves (keep the key out of screenshots!).
 @export var encryption_key: String = ""
 ## {slot} becomes the slot number.

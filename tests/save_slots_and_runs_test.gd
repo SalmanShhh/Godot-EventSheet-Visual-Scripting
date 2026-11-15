@@ -79,7 +79,7 @@ static func _pins() -> PackedStringArray:
 		"signal new_run_started(slot_index: int, run_number: int)",
 		# The two new Inspector knobs, both inert at their defaults.
 		"@export_range(1, 999, 1) var save_version: int = 1",
-		"@export_range(0, 50, 1) var backup_count: int = 0",
+		"@export_range(0, 50, 1) var backup_count: int = 2",
 		# Reserved keys: everything the pack writes for itself is namespaced.
 		"const CARD_KEY: String = \"__card\"",
 		"const VERSION_KEY: String = \"__version\"",
@@ -606,7 +606,8 @@ static func _never_save_and_report() -> bool:
 static func _backup_ring() -> bool:
 	var ok: bool = true
 	var system: Node = _new_system("ring")
-	ok = _check("backups are off until you ask for them", system.slot_backup_count(0), 0) and ok
+	ok = _check("two earlier versions are kept unless you turn backups off", system.backup_count, 2) and ok
+	system.backup_count = 0
 	system.save_value("v", 1)
 	ok = _check("a write with backups off keeps no ring", system.slot_backup_count(0), 0) and ok
 
