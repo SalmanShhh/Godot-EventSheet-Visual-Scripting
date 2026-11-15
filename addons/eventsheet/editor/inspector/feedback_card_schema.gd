@@ -230,7 +230,7 @@ static func timing_kinds() -> Array:
 	return [
 		{
 			"kind": PAUSE,
-			"category": "pause",
+			"category": str(family_of().get(PAUSE, "")),
 			"label": "Pause",
 			"help": "Waits this long before the next card, whatever the cards above are still doing.",
 			"fields": [{"key": SECONDS_KEY, "label": "Pause", "drawer": "unit:time", "default": 0.25}],
@@ -240,7 +240,7 @@ static func timing_kinds() -> Array:
 		},
 		{
 			"kind": HOLD_UNTIL,
-			"category": "pause",
+			"category": str(family_of().get(HOLD_UNTIL, "")),
 			"label": "Hold",
 			"help": "Waits for the slowest card above to finish, then this long. What is under a hold is what happens AFTER the hit rather than during it.",
 			"fields": [{"key": SECONDS_KEY, "label": "Then wait", "drawer": "unit:time", "default": 0.0}],
@@ -250,7 +250,7 @@ static func timing_kinds() -> Array:
 		},
 		{
 			"kind": LOOP_START,
-			"category": "loop",
+			"category": str(family_of().get(LOOP_START, "")),
 			"label": "Loop Start",
 			"help": "Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead.",
 			"fields": [],
@@ -260,7 +260,7 @@ static func timing_kinds() -> Array:
 		},
 		{
 			"kind": LOOP_BACK,
-			"category": "loop",
+			"category": str(family_of().get(LOOP_BACK, "")),
 			"label": "Loop Back",
 			"help": "Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands.",
 			"fields": [
@@ -283,7 +283,7 @@ static func other_kinds() -> Array:
 	return [
 		{
 			"kind": TWEEN_PROPERTY,
-			"category": "transform",
+			"category": str(family_of().get(TWEEN_PROPERTY, "")),
 			"label": "Tween Property",
 			"help": "Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back.",
 			"fields": [
@@ -297,7 +297,7 @@ static func other_kinds() -> Array:
 		},
 		{
 			"kind": EMIT_SIGNAL,
-			"category": "signal",
+			"category": str(family_of().get(EMIT_SIGNAL, "")),
 			"label": "Emit Signal",
 			"help": "Says one word out of the player's On Juice Signal trigger, so a sheet can hang anything at all off a point in the list.",
 			"fields": [{"key": EFFECT_KEY, "label": "Word", "drawer": "text", "default": ""}],
@@ -307,7 +307,7 @@ static func other_kinds() -> Array:
 		},
 		{
 			"kind": PLAY_PLAYER,
-			"category": "",
+			"category": str(family_of().get(PLAY_PLAYER, "")),
 			"label": "Play Player",
 			"help": "Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",
 			"fields": [

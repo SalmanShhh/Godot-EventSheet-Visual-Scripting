@@ -26,6 +26,7 @@ const LIGHT_CARD_LINE: Color = Color("#f5f5f5")
 static func run() -> bool:
 	var ok: bool = true
 	ok = _storage_pins() and ok
+	ok = _family_pins() and ok
 	return ok
 
 
@@ -68,4 +69,27 @@ static func _storage_pins() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["the list is still a typed array of dictionaries", typed, TYPE_ARRAY],
 		["the list keeps its marker, word for word", hint, "eventsheet:cards:kind=verb,schema=feedback_steps,stripes=category"]
+	])
+
+
+## One family per word, the same in the Inspector and in the game, and a muted family never takes a
+## wait out of the beat.
+static func _family_pins() -> bool:
+	var families: Variant = _constant("CATEGORY_OF")
+	var table: Dictionary = families if families is Dictionary else {}
+	var player: Node = _pack().new()
+	player.call("mute_feedback_category", "pause", true)
+	var pause_refused: String = str(player.call("_why_not", {"verb": "pause", "seconds": 0.2}, 1.0, 0))
+	var hold_refused: String = str(player.call("_why_not", {"verb": "hold_until", "seconds": 0.0}, 1.0, 1))
+	var hitstop_refused: String = str(player.call("_why_not", {"verb": "hitstop", "amount": 0.0, "seconds": 0.08}, 1.0, 2))
+	player.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["a muted pause family still waits on a Pause card", pause_refused, ""],
+		["and on a Hold card", hold_refused, ""],
+		["while the hitstop it holds is still muted", hitstop_refused, "muted"],
+		["Tween Property is an Object-family card in the game", str(table.get("tween_property", "")), "transform"],
+		["and in the Inspector", str(_kind("tween_property").get("category", "")), "transform"],
+		["the card that plays another player is a Flow-family card in the Inspector too",
+			str(_kind("play_player").get("category", "")), str(table.get("play_player", "?"))]
+
 	])

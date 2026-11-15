@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: muting a family of juice cards no longer shortens the beat
+
+Mute Juice Family used to take every card of the family out of the list, and Pause and Hold are in the Time family, so muting it removed the waits as well and the rest of the beat came early. A muted family now silences only what is felt: a Pause, a Hold and the two loop cards keep waiting, so a list is as long with the switch on as with it off. If you relied on the old shorter beat, delete the Pause card or shorten it. Tween Property now belongs to the Object family in the game (it already did in the Inspector), so muting "transform" mutes it too, and the card that plays another Juice Player is a Flow card in the Inspector as it is in the game. The words the Mute row takes are unchanged.
+
 ### Fixed: two editors open, or the Doctor and Migrate at once, can no longer make a good sheet look broken
 
 Migrate's plan and the Doctor's stale-output check used to write a trial compile into a file with a fixed name in the project's user folder, and read the write's success as the answer. Every Godot editor, headless run or second copy of a project with the same name shares that one folder, so a second one writing the same name at the same moment made a good row ask a question it had no reason to ask (the file "refuses" it) and made the Doctor say "Sheet no longer compiles: Could not write ..." about a sheet that compiles. Both now ask the compiler for the text alone, which writes no file, so there is nothing left to collide on and nothing left behind in the user folder.

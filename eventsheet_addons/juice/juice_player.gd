@@ -214,7 +214,8 @@ const CATEGORY_OF: Dictionary = {
 	"loop_start": "loop",
 	"loop_back": "loop",
 	"emit_signal": "signal",
-	"play_player": "signal"
+	"play_player": "signal",
+	"tween_property": "transform"
 }
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
@@ -1307,7 +1308,9 @@ func _why_not(card: Dictionary, at_strength: float, index: int) -> String:
 	if _skip_once.has(named):
 		_skip_once.erase(named)
 		return "skipped once"
-	if _muted.has(_category_of(card)):
+	# A family switch silences what is FELT. A Pause, a Hold and the two loop cards only move the head,
+	# so muting their family leaves the beat the length it was.
+	if _muted.has(_category_of(card)) and not _is_timing(str(card.get("verb", "")).strip_edges().to_lower()):
 		return "muted"
 	var chance: float = float(card.get("chance", 100.0))
 	if chance < 100.0 and _rolled_at(index) >= chance:
