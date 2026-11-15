@@ -51,7 +51,9 @@ static func build() -> bool:
 		"# been handed to (frame instance id -> the resize callable connected to that frame, so Stop View",
 		"# can take it off again).",
 		"## Views that have been created, by name.",
-		"var _views: Dictionary = {}"
+		"var _views: Dictionary = {}",
+		"",
+		Lib.missing_name_block("Second View")
 	]))
 	sheet.events.append(block)
 
@@ -105,7 +107,7 @@ static func build() -> bool:
 		[["view_name", "String"], ["frame", "Node"]],
 		"\n".join(PackedStringArray([
 			"if not _views.has(view_name):",
-			"\tpush_warning(\"Second View: there is no view named '%s' to show - make it first.\" % view_name)",
+			"\t_say_missing(\"Show View In\", \"view\", view_name, _views.keys(), \"make it with Make A View first, or check the spelling\")",
 			"\treturn",
 			"if frame == null or not is_instance_valid(frame):",
 			"\tpush_warning(\"Second View: Show View In needs a frame to show the view in.\")",
@@ -131,7 +133,7 @@ static func build() -> bool:
 		[["view_name", "String"], ["zoom", "float"]],
 		"\n".join(PackedStringArray([
 			"if not _views.has(view_name):",
-			"\tpush_warning(\"Second View: there is no view named '%s' to zoom.\" % view_name)",
+			"\t_say_missing(\"Set View Zoom\", \"view\", view_name, _views.keys(), \"make it with Make A View first, or check the spelling\")",
 			"\treturn",
 			"var record: Dictionary = _views[view_name]",
 			"record[\"zoom\"] = maxf(zoom, 0.01)",

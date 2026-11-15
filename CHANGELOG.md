@@ -14,6 +14,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Utility Brain: Add Consideration, Set Action Enabled and Force Action given an action that was never added.
 - Milestones: Update Progress, Set Threshold and Force Reach on an id nobody defined now say that they made a new milestone with a target of 0 (a misspelled id used to latch at once, unseen).
 - Stat Forge: Set Buff Active, Set Buff Value, Refresh Buff, Set Buff Timer Paused and Re-Arm Threshold Rule. Remove Buff stays quiet: removing a buff that is already gone is its documented normal case.
+- Second View: Show View In and Set View Zoom already warned, on every call and without naming the node; they now say it once and name the node, the view and the views that exist.
 
 ### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
 

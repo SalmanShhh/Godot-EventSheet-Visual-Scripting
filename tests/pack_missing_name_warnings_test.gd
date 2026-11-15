@@ -25,6 +25,7 @@ static func run() -> bool:
 	ok = _utility_ai() and ok
 	ok = _milestones() and ok
 	ok = _stat_forge() and ok
+	ok = _second_view() and ok
 	return ok
 
 
@@ -223,4 +224,18 @@ static func _stat_forge() -> bool:
 	rows.append(["a real buff says nothing", _heard(func() -> void: forge.set_buff_active("haste", true)), []])
 	rows.append(["Remove Buff stays quiet, since removing what is gone is its documented no-op", _heard(func() -> void: forge.remove_buff("gone")), []])
 	forge.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _second_view() -> bool:
+	var script: GDScript = load(ROOT + "second_view/second_view_addon.gd")
+	var views: Node = script.new()
+	views.name = "SecondView"
+	var tail: String = " (none exist yet) - make it with Make A View first, or check the spelling."
+	var rows: Array = []
+	rows.append_array(_once("Show View In", func() -> void: views.show_view_in("minimp", null),
+		"Second View on SecondView: Show View In did nothing, because no view is called \"minimp\"" + tail))
+	rows.append_array(_once("Set View Zoom", func() -> void: views.set_view_zoom("minmap", 0.5),
+		"Second View on SecondView: Set View Zoom did nothing, because no view is called \"minmap\"" + tail))
+	views.free()
 	return SUPPORT.pins(NAME, rows)

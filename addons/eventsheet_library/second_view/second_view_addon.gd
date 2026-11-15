@@ -22,6 +22,9 @@ const OVERHEAD_METRES: float = 20.0
 ## Views that have been created, by name.
 var _views: Dictionary = {}
 
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
+
 ## The live handle on a view's picture. It is taken only once the viewport is really in the tree,
 ## and it is marked NOT local to scene before it is handed out: a ViewportTexture that is local to
 ## scene re-resolves its viewport by node path whenever the scene holding it is set up, and this
@@ -99,7 +102,7 @@ func make_a_view(view_name: String, followed: Node, zoom: float) -> void:
 ## @ace_codegen_template("SecondView.show_view_in({view_name}, {frame})")
 func show_view_in(view_name: String, frame: Node) -> void:
 	if not _views.has(view_name):
-		push_warning("Second View: there is no view named '%s' to show - make it first." % view_name)
+		_say_missing("Show View In", "view", view_name, _views.keys(), "make it with Make A View first, or check the spelling")
 		return
 	if frame == null or not is_instance_valid(frame):
 		push_warning("Second View: Show View In needs a frame to show the view in.")
@@ -130,7 +133,7 @@ func show_view_in(view_name: String, frame: Node) -> void:
 ## @ace_codegen_template("SecondView.set_view_zoom({view_name}, {zoom})")
 func set_view_zoom(view_name: String = "minimap", zoom: float = 0.25) -> void:
 	if not _views.has(view_name):
-		push_warning("Second View: there is no view named '%s' to zoom." % view_name)
+		_say_missing("Set View Zoom", "view", view_name, _views.keys(), "make it with Make A View first, or check the spelling")
 		return
 	var record: Dictionary = _views[view_name]
 	record["zoom"] = maxf(zoom, 0.01)
@@ -166,6 +169,30 @@ func view_texture_of(view_name: String = "minimap") -> Texture2D:
 	if not _views.has(view_name):
 		return null
 	return _texture_of(_views[view_name])
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Second View on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
 
 func _ready() -> void:
 	# There is nothing to follow until a view exists, and the frame is handed straight back the
