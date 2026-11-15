@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,Impossibile raggiungere %s - Godot dice:
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","Il globale SaveSystem ora esegue save_system.tscn; le sue impostazioni cambiano qui e nel suo Inspector. Annulla non copre questa modifica - per tornare indietro, punta di nuovo il globale SaveSystem allo script in Impostazioni progetto > Globali."
 "%s could not be read as a sheet, so the version here was kept.","%s non si è potuto leggere come foglio, quindi è stata mantenuta la versione presente qui."
 Open the sheet,Apri il foglio
+Set Size,Imposta dimensione
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.","Dà a uno sprite una dimensione in pixel. Uno sprite non ha una proprietà di dimensione: la sua dimensione è il fotogramma che disegna per la sua scala, quindi questa riga scrive la scala che dà la dimensione indicata. Il fotogramma è l'immagine intera, una cella di un foglio di sprite o la regione. Uno sprite senza immagine resta com'è."
+Size another sprite instead of this one. Leave blank for this node.,Ridimensiona un altro sprite invece di questo. Lascia vuoto per questo nodo.
+Set Width,Imposta larghezza
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,Dà a uno sprite una larghezza in pixel e non tocca l'altezza. Scrive scale.x: la larghezza indicata divisa per la larghezza del fotogramma disegnato. Uno sprite senza immagine resta com'è.
+Set width to {width} pixels,Imposta larghezza a {width} pixel
+The width in pixels.,La larghezza in pixel.
+Set Height,Imposta altezza
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,Dà a uno sprite un'altezza in pixel e non tocca la larghezza. Scrive scale.y: l'altezza indicata divisa per l'altezza del fotogramma disegnato. Uno sprite senza immagine resta com'è.
+Set height to {height} pixels,Imposta altezza a {height} pixel
+The height in pixels.,L'altezza in pixel.

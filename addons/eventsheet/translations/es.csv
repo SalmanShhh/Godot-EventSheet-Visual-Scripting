@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,No se pudo conectar con %s - Godot dice:
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","El global SaveSystem ahora ejecuta save_system.tscn; sus ajustes cambian aquí y en su Inspector. Deshacer no cubre esto - para volver atrás, apunta de nuevo el global SaveSystem al script en Ajustes del proyecto > Globales."
 "%s could not be read as a sheet, so the version here was kept.","%s no se pudo leer como hoja, así que se conservó la versión de aquí."
 Open the sheet,Abrir la hoja
+Set Size,Fijar tamaño
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.","Da a un sprite un tamaño en píxeles. Un sprite no tiene propiedad de tamaño: su tamaño es el fotograma que dibuja por su escala, así que esta fila escribe la escala que da el tamaño indicado. El fotograma es la imagen entera, una celda de una hoja de sprites o la región. Un sprite sin imagen se deja como está."
+Size another sprite instead of this one. Leave blank for this node.,Cambiar otro sprite en lugar de este. Déjalo en blanco para este nodo.
+Set Width,Fijar anchura
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,Da a un sprite una anchura en píxeles y no toca su altura. Escribe scale.x: la anchura indicada dividida entre la anchura del fotograma que dibuja. Un sprite sin imagen se deja como está.
+Set width to {width} pixels,Fijar anchura en {width} píxeles
+The width in pixels.,La anchura en píxeles.
+Set Height,Fijar altura
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,Da a un sprite una altura en píxeles y no toca su anchura. Escribe scale.y: la altura indicada dividida entre la altura del fotograma que dibuja. Un sprite sin imagen se deja como está.
+Set height to {height} pixels,Fijar altura en {height} píxeles
+The height in pixels.,La altura en píxeles.

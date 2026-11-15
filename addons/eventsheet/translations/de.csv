@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,%s ist nicht erreichbar - Godot meldet: 
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","Das globale SaveSystem startet jetzt save_system.tscn; seine Einstellungen ändern sich hier und in seinem Inspektor. Rückgängig macht das nicht rückgängig - um zurückzugehen, richte das globale SaveSystem in den Projekteinstellungen > Globals wieder auf das Skript aus."
 "%s could not be read as a sheet, so the version here was kept.","%s ließ sich nicht als Blatt lesen, daher wurde die Version hier behalten."
 Open the sheet,Blatt öffnen
+Set Size,Größe setzen
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.","Gibt einem Sprite eine Größe in Pixeln. Ein Sprite hat keine Größeneigenschaft: Seine Größe ist der Ausschnitt, den es zeichnet, mal seine Skalierung. Daher schreibt diese Zeile die Skalierung, die die genannte Größe ergibt. Der Ausschnitt ist das ganze Bild, eine Zelle eines Sprite-Sheets oder die Region. Ein Sprite ohne Bild bleibt, wie es ist."
+Size another sprite instead of this one. Leave blank for this node.,Einen anderen Sprite statt diesen Knoten ändern. Leer lassen für diesen Knoten.
+Set Width,Breite setzen
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,"Gibt einem Sprite eine Breite in Pixeln und lässt die Höhe unverändert. Sie schreibt scale.x: die genannte Breite geteilt durch die Breite des gezeichneten Ausschnitts. Ein Sprite ohne Bild bleibt, wie es ist."
+Set width to {width} pixels,Breite auf {width} Pixel setzen
+The width in pixels.,Die Breite in Pixeln.
+Set Height,Höhe setzen
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,"Gibt einem Sprite eine Höhe in Pixeln und lässt die Breite unverändert. Sie schreibt scale.y: die genannte Höhe geteilt durch die Höhe des gezeichneten Ausschnitts. Ein Sprite ohne Bild bleibt, wie es ist."
+Set height to {height} pixels,Höhe auf {height} Pixel setzen
+The height in pixels.,Die Höhe in Pixeln.

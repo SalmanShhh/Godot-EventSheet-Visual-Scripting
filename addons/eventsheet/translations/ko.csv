@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,%s에 연결하지 못했습니다 - God
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","SaveSystem 글로벌이 이제 save_system.tscn을 실행하며, 설정은 여기와 인스펙터에서 바뀝니다. 실행 취소로는 되돌릴 수 없습니다. 되돌리려면 프로젝트 설정 > 글로벌에서 SaveSystem 글로벌이 스크립트를 다시 가리키게 하세요."
 "%s could not be read as a sheet, so the version here was kept.",%s을(를) 시트로 읽지 못해 여기 있는 버전을 그대로 두었습니다.
 Open the sheet,시트 열기
+Set Size,크기 설정
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.","스프라이트의 크기를 픽셀로 정합니다. 스프라이트에는 크기 속성이 없고, 크기는 그려지는 프레임에 스케일을 곱한 값입니다. 그래서 이 줄은 지정한 크기가 되는 스케일을 씁니다. 프레임은 전체 이미지, 스프라이트 시트의 한 칸, 또는 리전입니다. 이미지가 없는 스프라이트는 그대로 둡니다."
+Size another sprite instead of this one. Leave blank for this node.,이 노드 대신 다른 스프라이트의 크기를 바꿉니다. 이 노드라면 비워 두세요.
+Set Width,너비 설정
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,스프라이트의 너비를 픽셀로 정하고 높이는 그대로 둡니다. scale.x에 지정한 너비를 그려지는 프레임의 너비로 나눈 값을 씁니다. 이미지가 없는 스프라이트는 그대로 둡니다.
+Set width to {width} pixels,너비를 {width} 픽셀로 설정
+The width in pixels.,너비(픽셀).
+Set Height,높이 설정
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,스프라이트의 높이를 픽셀로 정하고 너비는 그대로 둡니다. scale.y에 지정한 높이를 그려지는 프레임의 높이로 나눈 값을 씁니다. 이미지가 없는 스프라이트는 그대로 둡니다.
+Set height to {height} pixels,높이를 {height} 픽셀로 설정
+The height in pixels.,높이(픽셀).

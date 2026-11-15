@@ -183,7 +183,8 @@ const FULLY_KEYED_ACES: Array[String] = [
 	# The everyday object rows: opacity, sprite size and edges, instance id, marker position, the
 	# outside-the-level checks and Once Ever.
 	"InstanceId", "IsOutsideCameraLimits", "IsOutsideLevelBounds", "MarkerPosition", "OnceEver", "Opacity",
-	"SetOpacity", "SetSpriteSize", "SpriteBottom", "SpriteHeight", "SpriteLeft", "SpriteRight", "SpriteTop", "SpriteWidth",
+	"SetOpacity", "SetSpriteSize", "SpriteBottom", "SpriteHeight", "SpriteLeft", "SpriteRight", "SpriteSetHeight", "SpriteSetSize",
+	"SpriteSetWidth", "SpriteTop", "SpriteWidth",
 	# The positioning wave: the world-space twins, the place readers, the Control rows and the verbs
 	# whose reading now says which space they work in.
 	"GlideToward", "WrapAroundLayoutX", "WrapAroundLayoutY", "BoundToLayout", "MouseMoveCursorTo",

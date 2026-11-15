@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,无法连接 %s - Godot 提示:%s。%s
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","SaveSystem 全局现在运行 save_system.tscn;其设置可在此处和它的检查器中更改。撤销无法还原此操作 - 要返回,请在项目设置 > 全局中把 SaveSystem 全局重新指向该脚本。"
 "%s could not be read as a sheet, so the version here was kept.","无法将 %s 读取为表单,因此保留了此处的版本。"
 Open the sheet,打开表单
+Set Size,设置大小
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.","把精灵设为指定的像素大小。精灵没有大小属性:它的大小是所绘制的帧乘以缩放,所以这一行写入的是能得到该大小的缩放。帧指整张图片、精灵表中的一格,或区域。没有图片的精灵保持原样。"
+Size another sprite instead of this one. Leave blank for this node.,"改变另一个精灵,而不是这个节点。留空表示这个节点。"
+Set Width,设置宽度
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,"把精灵的宽度设为指定像素,高度不变。它写入 scale.x:指定的宽度除以所绘制帧的宽度。没有图片的精灵保持原样。"
+Set width to {width} pixels,把宽度设为 {width} 像素
+The width in pixels.,宽度(像素)。
+Set Height,设置高度
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,"把精灵的高度设为指定像素,宽度不变。它写入 scale.y:指定的高度除以所绘制帧的高度。没有图片的精灵保持原样。"
+Set height to {height} pixels,把高度设为 {height} 像素
+The height in pixels.,高度(像素)。

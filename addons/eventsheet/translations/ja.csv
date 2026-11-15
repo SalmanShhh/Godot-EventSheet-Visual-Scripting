@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,%s に接続できませんでした - G
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.",SaveSystem グローバルは save_system.tscn を実行するようになり、設定はここでもインスペクターでも変更できます。元に戻す(Undo)ではこの変更は戻せません。戻すには、プロジェクト設定 > グローバルで SaveSystem グローバルをスクリプトに向け直してください。
 "%s could not be read as a sheet, so the version here was kept.",%s をシートとして読み込めなかったため、ここにあるバージョンを残しました。
 Open the sheet,シートを開く
+Set Size,サイズを設定
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.",スプライトのサイズをピクセルで指定します。スプライトにはサイズのプロパティがなく、サイズは描画しているフレームにスケールを掛けたものです。そのため、この行は指定したサイズになるスケールを書き込みます。フレームとは、画像全体、スプライトシートの1コマ、またはリージョンです。画像のないスプライトはそのままになります。
+Size another sprite instead of this one. Leave blank for this node.,このノードの代わりに別のスプライトのサイズを変えます。このノードなら空欄のままにします。
+Set Width,幅を設定
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,スプライトの幅をピクセルで指定し、高さはそのままにします。scale.x に、指定した幅を描画フレームの幅で割った値を書き込みます。画像のないスプライトはそのままになります。
+Set width to {width} pixels,幅を {width} ピクセルに設定
+The width in pixels.,幅(ピクセル)。
+Set Height,高さを設定
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,スプライトの高さをピクセルで指定し、幅はそのままにします。scale.y に、指定した高さを描画フレームの高さで割った値を書き込みます。画像のないスプライトはそのままになります。
+Set height to {height} pixels,高さを {height} ピクセルに設定
+The height in pixels.,高さ(ピクセル)。

@@ -10568,3 +10568,14 @@ Could not reach %s - Godot says: %s. %s,Не удалось связаться �
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","Глобальный SaveSystem теперь запускает save_system.tscn; его настройки меняются здесь и в его Инспекторе. Отмена это не покрывает - чтобы вернуться, снова направьте глобальный SaveSystem на скрипт в Настройках проекта > Глобальные."
 "%s could not be read as a sheet, so the version here was kept.","%s не удалось прочитать как лист, поэтому оставлена версия, которая здесь."
 Open the sheet,Открыть лист
+Set Size,Задать размер
+"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.","Задаёт спрайту размер в пикселях. У спрайта нет свойства размера: его размер - это рисуемый кадр, умноженный на масштаб, поэтому эта строка записывает масштаб, который даёт названный размер. Кадр - это вся картинка, одна ячейка листа спрайтов или область. Спрайт без картинки остаётся как есть."
+Size another sprite instead of this one. Leave blank for this node.,Изменить другой спрайт вместо этого. Оставьте пустым для этого узла.
+Set Width,Задать ширину
+Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.,"Задаёт спрайту ширину в пикселях и не трогает высоту. Записывает scale.x: названную ширину, делённую на ширину рисуемого кадра. Спрайт без картинки остаётся как есть."
+Set width to {width} pixels,Задать ширину {width} пикселей
+The width in pixels.,Ширина в пикселях.
+Set Height,Задать высоту
+Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,"Задаёт спрайту высоту в пикселях и не трогает ширину. Записывает scale.y: названную высоту, делённую на высоту рисуемого кадра. Спрайт без картинки остаётся как есть."
+Set height to {height} pixels,Задать высоту {height} пикселей
+The height in pixels.,Высота в пикселях.
