@@ -71,6 +71,11 @@ static func run() -> bool:
 	ProjectSettings.set_setting("autoload/EventSheetsTestSingleton", "*res://somewhere_else.gd")
 	all_passed = _check("name collisions refuse to overwrite",
 		editor._register_autoload_entry(sheet, "user://eventsheets_singleton.tres").contains("already exists"), true) and all_passed
+	# A refused name leaves no script behind: the name is checked before anything is written.
+	var clash_script: String = "user://eventsheets_singleton_clash.gd"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(clash_script))
+	editor._register_autoload_entry(sheet, "user://eventsheets_singleton_clash.tres")
+	all_passed = _check("a refused autoload name writes no script", FileAccess.file_exists(clash_script), false) and all_passed
 	ProjectSettings.set_setting("autoload/EventSheetsTestSingleton", null)
 	editor.free()
 

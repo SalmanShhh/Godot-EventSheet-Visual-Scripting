@@ -4787,13 +4787,13 @@ func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String, omi
 	if sheet_path.is_empty():
 		return "Save the sheet first - the autoload entry must point at a real file."
 	var output_path: String = sheet_path.get_basename() + ".gd"
-	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, output_path, omit_banner)
-	if not bool(compile_result.get("success", false)):
-		return "Autoload not registered: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
 	var setting_name: String = "autoload/%s" % autoload_name
 	var target_value: String = "*%s" % output_path
 	if ProjectSettings.has_setting(setting_name) and str(ProjectSettings.get_setting(setting_name)) != target_value:
 		return "An autoload named \"%s\" already exists and points elsewhere - pick another name." % autoload_name
+	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, output_path, omit_banner)
+	if not bool(compile_result.get("success", false)):
+		return "Autoload not registered: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
 	ProjectSettings.set_setting(setting_name, target_value)
 	if Engine.is_editor_hint():
 		ProjectSettings.save()
