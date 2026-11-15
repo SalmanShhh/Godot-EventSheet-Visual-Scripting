@@ -397,6 +397,7 @@ Restore the swing with Set Magnitude when the banner powers back up, and Set Sin
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position or scale of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a Node2D.** The behavior finds its parent as the host and reads and writes that node's position, scale, rotation, and opacity. On a plain Node or a Control it has nothing to move and warns instead. If nothing wobbles, check the parent's type first.
 - **Place the node at its resting spot.** The wave swings around wherever the node starts, captured on the first frame. Position the node where you want the middle of the motion to be, not one of the extremes; the behavior handles the rest.
 - **Move the host, then Update Initial State.** The base is grabbed once. If you teleport or reparent the node after it starts, the wave keeps oscillating around the old center. Call Update Initial State right after the move so it re-centers.

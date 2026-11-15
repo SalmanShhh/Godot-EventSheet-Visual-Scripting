@@ -7,7 +7,8 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 ### Fixed: movement packs under a rigid body now say what will go wrong
 
 - A pack that moves its node by writing its position or scale every frame fights the physics engine when that node is a RigidBody2D or RigidBody3D: the body jitters, snaps back or passes through walls, and nothing said why. Each such pack now pushes one plain warning (Debugger, Errors tab) when it becomes ready under a rigid body, naming the node, what the pack changes and what to put it on instead. What the packs do is unchanged. Each pack's guide says the same in its tips.
-- This first group: Move To, Move To 3D, Follow, Follow Path, Orbit, Orbit 3D and Tile Movement.
+- Gliding, following and orbiting: Move To, Move To 3D, Follow, Follow Path, Orbit, Orbit 3D and Tile Movement.
+- Waves, springs and juice: Sine, Sine 3D, Spring and Juice.
 
 ### Added: three classic Godot mistakes now show on the row that makes them
 

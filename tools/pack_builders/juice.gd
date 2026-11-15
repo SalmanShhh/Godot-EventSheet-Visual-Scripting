@@ -1012,6 +1012,7 @@ moment(moment_name, here)",
 		"shake": "Shake at [b]{strength}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["shake", "hitstop", "flash", "moment"])
+	Lib.rigid_body_host_warning(sheet, "Juice", "RigidBody2D", "position and scale", "Sprite2D")
 	if not Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior"):
 		return false
 	# The six starter moments ship beside the pack, because Moment "impact" looks for impact.tres

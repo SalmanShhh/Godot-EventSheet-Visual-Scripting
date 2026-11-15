@@ -26,11 +26,18 @@ const GLIDING: Array = [
 	["orbit_3d/orbit_3d_behavior.gd", "Orbit 3D", "position", "MeshInstance3D"],
 	["tile_movement/tile_movement_behavior.gd", "Tile Movement", "position", "Sprite2D"],
 ]
+const WAVING: Array = [
+	["sine/sine_behavior.gd", "Sine", "position or scale", "Sprite2D"],
+	["sine_3d/sine_3d_behavior.gd", "Sine 3D", "position", "MeshInstance3D"],
+	["spring/spring_behavior.gd", "Spring", "position and scale", "Sprite2D"],
+	["juice/juice_behavior.gd", "Juice", "position and scale", "Sprite2D"],
+]
 
 
 static func run() -> bool:
 	var ok: bool = true
 	ok = _packs("the gliding packs", GLIDING) and ok
+	ok = _packs("the waving packs", WAVING) and ok
 	return ok
 
 

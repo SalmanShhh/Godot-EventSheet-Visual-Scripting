@@ -188,6 +188,8 @@ func _ready() -> void:
 	# Processing runs only while the wave does - an oscillation authored inactive costs
 	# nothing per frame until Set Sine Active turns it on.
 	set_process(active)
+	if host is RigidBody2D:
+		push_warning("Sine on %s: this behaviour moves a RigidBody2D by changing its position or scale, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() and not _previewing:

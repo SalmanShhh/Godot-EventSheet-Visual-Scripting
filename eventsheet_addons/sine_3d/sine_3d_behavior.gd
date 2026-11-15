@@ -182,6 +182,8 @@ func _ready() -> void:
 	# Processing runs only while the wobble does - a host authored frozen costs nothing
 	# per frame until Set Sine 3D Active turns it on.
 	set_process(active)
+	if host is RigidBody3D:
+		push_warning("Sine 3D on %s: this behaviour moves a RigidBody3D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the MeshInstance3D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() and not _previewing:

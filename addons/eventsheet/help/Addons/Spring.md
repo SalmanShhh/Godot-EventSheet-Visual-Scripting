@@ -456,6 +456,7 @@ Pause Spring freezes a spring exactly where it is; Resume Spring picks it back u
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position and scale of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a Node2D.** The behavior reads and writes the parent's position, rotation, and scale, and warns if the parent is not a Node2D (or a subclass like Sprite2D or a body). The host helpers do nothing on a wrong parent; custom named springs still work, but you would have nothing to apply them to automatically.
 - **Host helpers apply themselves; custom springs you read back.** Spring Host X, Y, Angle, and Scale write to the parent every frame - no reading needed. Any other named spring only integrates internally; read it with Spring Value (or Color Value) each tick and apply it wherever you want.
 - **Seed color springs before you spring them.** Color Value returns white for a spring that was never set. Call Set Color Value first (usually to the resting color) so a flash springs from the right starting point instead of jumping in from white.

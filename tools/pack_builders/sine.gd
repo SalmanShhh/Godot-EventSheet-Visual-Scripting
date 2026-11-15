@@ -181,4 +181,5 @@ static func build() -> bool:
 	reset_sine_fn.events.append(reset_sine_fn_body)
 	sheet.functions.append(reset_sine_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Sine", "RigidBody2D", "position or scale", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/sine/sine_behavior")

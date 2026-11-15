@@ -155,4 +155,5 @@ static func build() -> bool:
 	reset_sine3d_fn.events.append(reset_sine3d_fn_body)
 	sheet.functions.append(reset_sine3d_fn)
 
+	Lib.rigid_body_host_warning(sheet, "Sine 3D", "RigidBody3D", "position", "MeshInstance3D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/sine_3d/sine_3d_behavior")

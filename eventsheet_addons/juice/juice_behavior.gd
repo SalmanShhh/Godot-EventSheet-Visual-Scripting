@@ -733,6 +733,8 @@ func _ready() -> void:
 	# Nothing is shaking, bobbing, blinking or springing on the first frame, and every verb that
 	# starts one of those turns processing back on - so an idle Juice costs nothing per frame.
 	set_process(false)
+	if host is RigidBody2D:
+		push_warning("Juice on %s: this behaviour moves a RigidBody2D by changing its position and scale, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _on_tree_exiting() -> void:
 	var __owned_time := _hitstop_active or (_slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running())

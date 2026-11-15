@@ -354,6 +354,7 @@ static func build() -> bool:
 		"spring_to": "Spring [b]{spring_name}[/b] to [b]{target}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["spring_to", "add_impulse"])
+	Lib.rigid_body_host_warning(sheet, "Spring", "RigidBody2D", "position and scale", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/spring/spring_behavior")
 
 

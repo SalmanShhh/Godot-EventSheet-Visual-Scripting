@@ -377,6 +377,7 @@ On Ready
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody3D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `MeshInstance3D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **The host must be a Node3D.** The behavior drives its parent's `position` and `rotation.y`, so attach it under a 3D node (MeshInstance3D, CharacterBody3D, Area3D, and so on). Under a non-Node3D parent it warns and does nothing.
 - **It runs on its own - no rows required.** As soon as the scene runs, the node oscillates from the Inspector values. The actions are only for changing the motion live; a prop that never changes needs zero event rows.
 - **Magnitude means different units per axis.** For `x`, `y`, and `z` it is world units; for `rotation-y` it is degrees. A magnitude of 2 lifts a node 2 units on `y`, but rocks it only 2 degrees on `rotation-y` - bump it up (15 to 20) for a visible sway, or all the way to 180 for a full turn.
