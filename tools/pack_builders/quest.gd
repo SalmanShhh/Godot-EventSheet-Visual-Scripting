@@ -131,7 +131,9 @@ static func build() -> bool:
 		"\ton_quest_completed.emit(quest_id)",
 		"\tvar next_id: String = str((_library.get(quest_id, {}) as Dictionary).get(\"next\", \"\"))",
 		"\tif not next_id.is_empty():",
-		"\t\t_begin(next_id)"
+		"\t\t_begin(next_id)",
+		"",
+		Lib.missing_name_block("Quests")
 	]))
 	sheet.events.append(block)
 
@@ -146,9 +148,15 @@ static func build() -> bool:
 		[["quest_id", "String"], ["objective", "String"], ["amount", "int"]],
 		"\n".join(PackedStringArray([
 			"if not _active.has(quest_id):",
+			"\tif not _completed.has(quest_id):",
+			"\t\tif _library.has(quest_id):",
+			"\t\t\t_say_once(\"notstarted:\" + quest_id, \"Advance Objective did nothing, because the quest \\\"%s\\\" has not been started - Start Quest first.\" % quest_id)",
+			"\t\telse:",
+			"\t\t\t_say_missing(\"Advance Objective\", \"quest\", quest_id, _library.keys(), \"start or register it first, or check the spelling\")",
 			"\treturn",
 			"var goals: Dictionary = _active[quest_id]",
 			"if not goals.has(objective):",
+			"\t_say_missing(\"Advance Objective\", \"objective\", objective, goals.keys(), \"check the spelling against the quest's objectives\")",
 			"\treturn",
 			"var goal: Dictionary = goals[objective]",
 			"if int(goal.done) >= int(goal.needed):",
@@ -162,7 +170,7 @@ static func build() -> bool:
 		])))
 	Lib.append_function(sheet, "abandon_quest", "Abandon Quest", "Quest", "Drops an active quest and forgets its progress. It does NOT count as completed, and no trigger fires - start it again to try over.",
 		[["quest_id", "String"]],
-		"_active.erase(quest_id)")
+		"if not _active.has(quest_id) and not _completed.has(quest_id) and not _library.has(quest_id):\n\t_say_missing(\"Abandon Quest\", \"quest\", quest_id, _library.keys(), \"start or register it first, or check the spelling\")\n\treturn\n_active.erase(quest_id)")
 	Lib.append_function(sheet, "reset_quests", "Reset All Quests", "Quest", "Clears every active quest and the completed list (e.g. on New Game). Registered quest definitions are kept, so a chain still works.",
 		[],
 		"_active.clear()\n_completed.clear()")

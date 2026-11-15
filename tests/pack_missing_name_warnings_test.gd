@@ -20,6 +20,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _abilities() and ok
 	ok = _object_pool() and ok
+	ok = _quest() and ok
 	return ok
 
 
@@ -99,4 +100,34 @@ static func _object_pool() -> bool:
 	rows.append(["a missing pool is still not made by a row that missed", pool.has_pool("bulets"), false])
 	rows.append(["a real pool says nothing", _heard(func() -> void: pool.despawn_all("bullets")), []])
 	pool.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _quest() -> bool:
+	var script: GDScript = load(ROOT + "quest/quest_addon.gd")
+	var resource_script: GDScript = load(ROOT + "quest_resource/quest_resource.gd")
+	var gems: Resource = resource_script.new()
+	gems.quest_id = "gems"
+	gems.objectives = [{"name": "collect_gem", "needed": 5}]
+	var hoard: Resource = resource_script.new()
+	hoard.quest_id = "hoard"
+	hoard.objectives = [{"name": "deliver", "needed": 1}]
+	var quests: Node = script.new()
+	quests.name = "Quests"
+	quests.register_quest(gems)
+	quests.start_quest(hoard)
+	var advice: String = " (there are: gems, hoard) - start or register it first, or check the spelling."
+	var rows: Array = []
+	rows.append_array(_once("Advance Objective on a quest nobody registered", func() -> void: quests.advance_objective("gem", "collect_gem", 1),
+		"Quests on Quests: Advance Objective did nothing, because no quest is called \"gem\"" + advice))
+	rows.append_array(_once("Advance Objective on a quest not started", func() -> void: quests.advance_objective("gems", "collect_gem", 1),
+		"Quests on Quests: Advance Objective did nothing, because the quest \"gems\" has not been started - Start Quest first."))
+	rows.append_array(_once("Advance Objective on an objective it does not have", func() -> void: quests.advance_objective("hoard", "delivr", 1),
+		"Quests on Quests: Advance Objective did nothing, because no objective is called \"delivr\" (there are: deliver) - check the spelling against the quest's objectives."))
+	rows.append_array(_once("Abandon Quest", func() -> void: quests.abandon_quest("hord"),
+		"Quests on Quests: Abandon Quest did nothing, because no quest is called \"hord\"" + advice))
+	quests.advance_objective("hoard", "deliver", 1)
+	rows.append(["a finished quest is advanced again without a word", _heard(func() -> void: quests.advance_objective("hoard", "deliver", 1)), []])
+	rows.append(["abandoning a finished quest says nothing", _heard(func() -> void: quests.abandon_quest("hoard")), []])
+	quests.free()
 	return SUPPORT.pins(NAME, rows)

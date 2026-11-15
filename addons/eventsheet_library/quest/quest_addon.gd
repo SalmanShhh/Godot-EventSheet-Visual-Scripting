@@ -30,6 +30,8 @@ var _completed: Array[String] = []
 # quest can only auto-start a Next Quest that was registered or started at least once.
 ## Every quest that has been defined, by id.
 var _library: Dictionary = {}
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 ## @ace_action
 ## @ace_featured
@@ -64,9 +66,15 @@ func register_quest(quest: Resource) -> void:
 ## @ace_codegen_template("Quests.advance_objective({quest_id}, {objective}, {amount})")
 func advance_objective(quest_id: String, objective: String, amount: int) -> void:
 	if not _active.has(quest_id):
+		if not _completed.has(quest_id):
+			if _library.has(quest_id):
+				_say_once("notstarted:" + quest_id, "Advance Objective did nothing, because the quest \"%s\" has not been started - Start Quest first." % quest_id)
+			else:
+				_say_missing("Advance Objective", "quest", quest_id, _library.keys(), "start or register it first, or check the spelling")
 		return
 	var goals: Dictionary = _active[quest_id]
 	if not goals.has(objective):
+		_say_missing("Advance Objective", "objective", objective, goals.keys(), "check the spelling against the quest's objectives")
 		return
 	var goal: Dictionary = goals[objective]
 	if int(goal.done) >= int(goal.needed):
@@ -86,6 +94,9 @@ func advance_objective(quest_id: String, objective: String, amount: int) -> void
 ## @ace_icon("res://eventsheet_addons/quest/icon.svg")
 ## @ace_codegen_template("Quests.abandon_quest({quest_id})")
 func abandon_quest(quest_id: String) -> void:
+	if not _active.has(quest_id) and not _completed.has(quest_id) and not _library.has(quest_id):
+		_say_missing("Abandon Quest", "quest", quest_id, _library.keys(), "start or register it first, or check the spelling")
+		return
 	_active.erase(quest_id)
 
 ## @ace_action
@@ -281,6 +292,30 @@ func _finish(quest_id: String) -> void:
 	var next_id: String = str((_library.get(quest_id, {}) as Dictionary).get("next", ""))
 	if not next_id.is_empty():
 		_begin(next_id)
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Quests on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
 
 ## @ace_hidden
 func save_state() -> Dictionary:
