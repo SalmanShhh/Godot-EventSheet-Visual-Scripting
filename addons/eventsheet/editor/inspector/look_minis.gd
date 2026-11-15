@@ -83,7 +83,6 @@ static func readable_ink(ink: Color, backdrop: Color, minimum: float = MARK_CONT
 	var ground: Color = Color(backdrop, 1.0)
 	var target: Color = Color.BLACK if ground.get_luminance() > 0.4 else Color.WHITE
 	var result: Color = Color(ink, 1.0)
-	# Small steps, so a colour stops the moment it reads and keeps its character (amber stays amber).
 	for step: int in 60:
 		if EventSheetLookStyle.contrast_ratio(result, ground) >= minimum:
 			break

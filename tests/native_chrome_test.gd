@@ -18,6 +18,7 @@ extends RefCounted
 #      frames as #3979b0, a hair from the design's #3a72b0).
 
 const SUPPORT := preload("res://tests/support.gd")
+const READABLE_INK := preload("res://addons/eventsheet/theme/readable_ink.gd")
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 const TEST_NAME := "native_chrome_test"
 const NATIVE_THEME := "res://addons/eventsheet/themes/editor_native_theme.tres"
@@ -128,22 +129,24 @@ static func _test_the_status_layout() -> bool:
 	_select_event(native, 2)
 	var native_index: int = native._row_address_label.get_index()
 	var native_text: String = native._row_address_label.text
-	var ok_colour: Color = native._problem_count_label.modulate
+	var ok_colour: Color = native._problem_count_label.get_theme_color("font_color")
+	var ok_modulate: Color = native._problem_count_label.modulate
 	native.free()
 	var classic: EventSheetEditor = _editor(CLASSIC_THEME, _sheet_with_events(3))
 	_select_event(classic, 2)
 	var classic_after_count: int = classic._row_address_label.get_index() - classic._event_count_label.get_index()
 	var classic_text: String = classic._row_address_label.text
-	var classic_colour: Color = classic._problem_count_label.modulate
+	var classic_colour: Color = classic._problem_count_label.get_theme_color("font_color")
 	classic.free()
 	return SUPPORT.pins(TEST_NAME, [
 		["Editor Native says what is selected at the strip's left edge", native_index, 0],
 		["in the sheet's words", native_text.begins_with("Event 2 selected"), true],
-		["No problems in the ok colour", ok_colour, Color("#8fc27a")],
+		["No problems in the ok colour, as it reads on the editor's panel", ok_colour, READABLE_INK.on_editor_panels(Color("#8fc27a"))],
+		["as a font colour, never a modulate over the editor's own text", ok_modulate, Color.WHITE],
 		["Classic Sheet keeps the address beside the counts", classic_after_count, 1],
 		["worded as it was", classic_text.begins_with("event 2 of 3"), true],
 		["in the counts' quiet colour",
-			classic_colour, (load(CLASSIC_THEME) as EventSheetEditorStyle).get_chrome_style().row_address_color],
+			classic_colour, READABLE_INK.on_editor_panels((load(CLASSIC_THEME) as EventSheetEditorStyle).get_chrome_style().row_address_color)],
 	])
 
 

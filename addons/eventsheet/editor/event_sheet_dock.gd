@@ -22,6 +22,7 @@ const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 ## The files this dock reaches BY PATH, at the moment something asks. Naming one of these classes
 ## anywhere in this file would compile it - and everything it names - into the first open of a
 ## sheet, for a window, a scan or a write that most sessions never ask for.
+const READABLE_INK_PATH := "res://addons/eventsheet/theme/readable_ink.gd"
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 const DOC_EXPLAIN_PATH := "res://addons/eventsheet/editor/docs/doc_explain.gd"
 const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
@@ -7569,14 +7570,14 @@ func _update_sheet_counts_status() -> void:
 	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
 	# "No problems" in the ok colour when the theme gives one (status_ok_color); quiet otherwise.
 	var quiet: Color = chrome.status_ok_color if chrome.status_ok_color.a > 0.0 else chrome.row_address_color
-	_problem_count_label.modulate = chrome.object_bar_warning_color if problems > 0 else quiet
+	load(READABLE_INK_PATH).paint_label(_problem_count_label, chrome.object_bar_warning_color if problems > 0 else quiet)
 	# The selection line follows the theme in the same breath as the counts (a theme switch lands
 	# here); the classic address keeps its own selection-driven refresh.
 	if _apply_status_layout() or EventSheetActiveTheme.active().status_bar_selection_line:
 		_update_row_address_status()
 	# Every event the margin numbers, a function's body included: a behaviour pack is mostly functions.
 	_event_count_label.text = event_count_text(EventSheetResource.event_count(_current_sheet.events, _current_sheet.functions))
-	_event_count_label.modulate = chrome.row_address_color
+	load(READABLE_INK_PATH).paint_label(_event_count_label, chrome.row_address_color)
 
 
 ## "No problems", "1 problem" or "N problems".
@@ -7732,7 +7733,7 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 ## line above the bar (plain hairline panel, the state colour on the text only), with the doors left in the bar. The
 ## bar's width is only known once it is laid out, so a dock that has not been laid out keeps the sentence in the bar.
 func _say_finding_sentence(color: Color) -> void:
-	_row_help_label.modulate = color
+	load(READABLE_INK_PATH).paint_label(_row_help_label, color)
 	_row_help_label.visible = true
 	if _help_sentence_panel == null or _help_sentence_label == null:
 		return
@@ -7747,7 +7748,7 @@ func _say_finding_sentence(color: Color) -> void:
 	_row_help_label.visible = false
 	_help_sentence_label.text = _row_help_label.text
 	_help_sentence_label.tooltip_text = _row_help_label.tooltip_text
-	_help_sentence_label.add_theme_color_override("font_color", color)
+	_help_sentence_label.add_theme_color_override("font_color", load(READABLE_INK_PATH).on_editor_panels(color))
 	_help_sentence_panel.visible = true
 
 

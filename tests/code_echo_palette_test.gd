@@ -8,6 +8,7 @@ class_name CodeEchoPaletteTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
+const CHOICES := preload("res://addons/eventsheet/theme/theme_choices.gd")
 const P := "code_echo_palette_test"
 
 
@@ -15,11 +16,11 @@ static func run() -> bool:
 	var dark: Color = Color("#262626")
 	var light: Color = Color("#ededed")
 	var ok: bool = SUPPORT.pins(P, [
-		["a dark sheet in a dark editor takes the editor's colours", EventSheetCodeEcho.use_editor_colours(dark, Color("#292929")), true],
-		["a light sheet in a light editor takes the editor's colours", EventSheetCodeEcho.use_editor_colours(light, Color("#e6e6e6")), true],
-		["a light sheet in a dark editor keeps its own", EventSheetCodeEcho.use_editor_colours(light, Color("#292929")), false],
-		["a dark sheet in a light editor keeps its own", EventSheetCodeEcho.use_editor_colours(dark, Color("#e6e6e6")), false],
-		["with no editor there are no editor colours", EventSheetCodeEcho.use_editor_colours(dark, Color(0, 0, 0, 0)), false],
+		["a dark sheet in a dark editor takes the editor's colours", CHOICES.use_editor_colours(dark, Color("#292929")), true],
+		["a light sheet in a light editor takes the editor's colours", CHOICES.use_editor_colours(light, Color("#e6e6e6")), true],
+		["a light sheet in a dark editor keeps its own", CHOICES.use_editor_colours(light, Color("#292929")), false],
+		["a dark sheet in a light editor keeps its own", CHOICES.use_editor_colours(dark, Color("#e6e6e6")), false],
+		["with no editor there are no editor colours", CHOICES.use_editor_colours(dark, Color(0, 0, 0, 0)), false],
 	])
 	var style: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(Color("#e6e6e6"))
 	var own: Dictionary = EventSheetCodeEcho.palette(style.get_reading_style(), style.get_event_style())

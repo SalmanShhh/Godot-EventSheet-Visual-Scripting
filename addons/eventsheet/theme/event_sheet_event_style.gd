@@ -64,8 +64,7 @@ extends Resource
 @export var group_background_alt_color: Color = EventSheetPalette.COLOR_GROUP_BG_ALT
 @export var group_accent_color: Color = EventSheetPalette.COLOR_GROUP_ACCENT
 @export var group_title_color: Color = EventSheetPalette.COLOR_GROUP_TITLE
-## Stored only: nothing in the editor reads it any more, so the Theme Editor does not show it. It stays
-## so a theme file that names it still loads and saves unchanged.
+## Stored only, not shown in the Theme Editor: no row reads it, but a theme file that names it still loads and saves.
 @export_storage var group_badge_background_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_BG
 @export_storage var group_badge_foreground_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_FG
 @export var group_fold_background_color: Color = EventSheetPalette.COLOR_GROUP_FOLD_BG

@@ -51,3 +51,44 @@ static func _worst(ink: Color, grounds: Array[Color]) -> float:
 	for ground: Color in grounds:
 		worst = minf(worst, EventSheetEditorThemeDeriver.contrast_ratio(ink, ground))
 	return worst
+
+
+## `ink` moved until it reads on the editor's two panel grounds (the dock's base colour, and the inset panel
+## fill the wrapped finding sentence sits on), so a theme colour made for another brightness of sheet still
+## reads on Godot's own panel.
+static func on_editor_panels(ink: Color) -> Color:
+	var grounds: Array = [EventSheetPopupUI.panel_fill()]
+	var theme: Theme = EventSheetPopupUI.editor_theme()
+	if theme != null and theme.has_color("base_color", "Editor"):
+		grounds.append(theme.get_color("base_color", "Editor"))
+	return move(ink, grounds)
+
+
+## Paints `label`'s words in `ink` as it reads on the editor's panels. A font colour, never a modulate:
+## a modulate multiplies the editor's own text colour instead of replacing it.
+static func paint_label(label: Control, ink: Color) -> void:
+	if label == null:
+		return
+	label.modulate = Color.WHITE
+	label.add_theme_color_override("font_color", on_editor_panels(ink))
+
+
+## The quiet words, moved the least it takes to read at 4.5 to 1 on every ground they are drawn on (the
+## sheet, a row, a head bar; the gutter for its numbers), the way the sentence text is. The shared
+## rule's own tones stay as they are for every other theme.
+static func native_quiet_words(style: EventSheetEditorStyle) -> void:
+	var mover: Script = load("res://addons/eventsheet/theme/readable_ink.gd")
+	var event_style: EventSheetEventStyle = style.get_event_style()
+	var reading: EventSheetReadingStyle = style.get_reading_style()
+	var grounds: Array = [event_style.sheet_background_color, event_style.row_background_color, event_style.head_bar_color]
+	reading.muted_text_color = mover.move(reading.muted_text_color, grounds)
+	# Secondary keeps its step above the muted voice, which may have moved up to meet it.
+	var secondary: Color = mover.move(reading.secondary_text_color, grounds)
+	var primary: Color = reading.primary_text_color
+	if absf(secondary.get_luminance() - reading.muted_text_color.get_luminance()) < 0.03:
+		secondary = reading.muted_text_color.lerp(primary, 0.5)
+	reading.secondary_text_color = secondary
+	event_style.gutter_text_color = mover.move(event_style.gutter_text_color, [event_style.gutter_background_color])
+	style.get_chrome_style().object_bar_section_color = reading.muted_text_color
+	# The amber of every finding reads on the same grounds as the words around it.
+	style.get_chrome_style().object_bar_warning_color = mover.move(style.get_chrome_style().object_bar_warning_color, grounds)

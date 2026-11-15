@@ -69,8 +69,7 @@ extends Resource
 @export var minimap_finding_color: Color = Color(1.0, 0.48, 0.48, 1.0)
 ## The band a group paints down the column, and the name written on it.
 @export var minimap_band_color: Color = Color(1.0, 1.0, 1.0, 0.05)
-## Stored only: nothing in the editor reads it any more, so the Theme Editor does not show it. It stays
-## so a theme file that names it still loads and saves unchanged.
+## Stored only, not shown in the Theme Editor: no row reads it, but a theme file that names it still loads and saves.
 @export_storage var minimap_band_text_color: Color = Color(1.0, 1.0, 1.0, 0.55)
 
 # ── The Sheet map ─────────────────────────────────────────────────────────────────────────────

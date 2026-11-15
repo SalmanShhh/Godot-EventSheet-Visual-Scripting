@@ -113,8 +113,7 @@ static func ink_on_accent() -> Color:
 
 
 ## WCAG contrast ratio between two opaque colours, 1.0 (none) to 21.0.
-## There is one formula in the plugin (the theme deriver's, which linearises the channels first), so a
-## contrast measured here and one measured for a theme can never disagree.
+## The plugin's one formula, the theme deriver's (channels linearised first).
 static func contrast_ratio(a: Color, b: Color) -> float:
 	return EventSheetEditorThemeDeriver.contrast_ratio(a, b)
 

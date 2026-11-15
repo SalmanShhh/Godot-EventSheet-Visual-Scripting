@@ -293,25 +293,11 @@ func _refresh_theme_menu_selection() -> void:
 	var paths: Array = []
 	for i in range(_theme_menu.item_count):
 		paths.append(str(_theme_menu.get_item_metadata(i)))
-	var target_index: int = menu_index_for(active_path, has_style, paths)
+	var target_index: int = load("res://addons/eventsheet/theme/theme_choices.gd").menu_index_for(active_path, has_style, paths)
 	for i in range(_theme_menu.item_count):
 		if str(_theme_menu.get_item_metadata(i)) == DENSITY_SUBMENU_METADATA:
 			continue
 		_theme_menu.set_item_checked(i, i == target_index)
-
-
-## Which theme menu entry to tick. `paths` is each entry's stored path ("" is Match Editor). No theme on
-## the sheet ticks Match Editor; a theme from a file ticks its entry; a theme with no file (the copy
-## Apply To Current Sheet writes into the sheet) is none of the entries, so nothing is ticked.
-static func menu_index_for(active_path: String, has_style: bool, paths: Array) -> int:
-	if not has_style:
-		return 0
-	if active_path.is_empty():
-		return -1
-	for i in range(paths.size()):
-		if str(paths[i]) == active_path:
-			return i
-	return 0
 
 
 ## Applies the chosen theme preset (or the built-in default) to the current sheet. Per-sheet, out of

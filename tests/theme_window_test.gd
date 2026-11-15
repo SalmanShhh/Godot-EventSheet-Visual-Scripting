@@ -10,6 +10,7 @@ extends RefCounted
 
 
 const SUPPORT := preload("res://tests/support.gd")
+const CHOICES := preload("res://addons/eventsheet/theme/theme_choices.gd")
 const P := "theme_window_test"
 
 ## Swatches nothing in the editor reads. They stay in saved files; the form just does not show them.
@@ -31,15 +32,32 @@ static func run() -> bool:
 	ok = _dead_swatches() and ok
 	ok = _descriptions() and ok
 	ok = _menu_tick() and ok
+	ok = _status_words() and ok
 	return ok
+
+
+## The status bar's words wear a colour moved until it reads on the editor's panel, for a sheet theme made
+## for the other brightness (near-black at 65% on a dark panel, or pale on a light one).
+static func _status_words() -> bool:
+	var ink: GDScript = load("res://addons/eventsheet/theme/readable_ink.gd")
+	var dark_panel: Color = EventSheetPopupUI.panel_fill()
+	var light_theme_ink: Color = Color(0.08, 0.09, 0.11, 0.65)
+	var moved: Color = ink.on_editor_panels(light_theme_ink)
+	var light_ground: Color = Color("#e6e6e6")
+	var pale: Color = ink.move(Color("#e8bd73"), [light_ground])
+	return SUPPORT.pins(P + ": status", [
+		["a near-black word reads on a dark panel", EventSheetEditorThemeDeriver.contrast_ratio(moved, dark_panel) >= 4.5, true],
+		["amber is moved on a light ground and stays amber", [EventSheetEditorThemeDeriver.contrast_ratio(pale, light_ground) >= 4.5, pale.r > pale.b], [true, true]],
+		["a colour that already reads is left as it is", ink.move(Color.WHITE, [dark_panel]), Color.WHITE],
+	])
 
 
 static func _menu_tick() -> bool:
 	var paths: Array = ["", "res://a.tres", "res://b.tres"]
 	return SUPPORT.pins(P, [
-		["no theme on the sheet ticks Match Editor", EventSheetThemeManager.menu_index_for("", false, paths), 0],
-		["a theme from a file ticks its entry", EventSheetThemeManager.menu_index_for("res://b.tres", true, paths), 2],
-		["an applied copy with no file ticks nothing", EventSheetThemeManager.menu_index_for("", true, paths), -1],
+		["no theme on the sheet ticks Match Editor", CHOICES.menu_index_for("", false, paths), 0],
+		["a theme from a file ticks its entry", CHOICES.menu_index_for("res://b.tres", true, paths), 2],
+		["an applied copy with no file ticks nothing", CHOICES.menu_index_for("", true, paths), -1],
 	])
 
 
