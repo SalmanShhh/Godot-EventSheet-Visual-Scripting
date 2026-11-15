@@ -88,7 +88,9 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# dictionary literal per step, title, body, task and check - so most of its rows are entries
 	# rather than logic, the same reason the pack-recipe and vocabulary groups sit where they do.
 	# Nothing about the reading layer changed to move this; the ceiling is the worst file in the group.
-	"workspace": 3,
+	# Raised from 3 when the sample (which moves whenever the corpus gains a file) reached
+	# sheet_type_glue.gd, which measures 4: a glue file is mostly calls into the dock and its dialogs.
+	"workspace": 4,
 	"canvas": 0,
 	"readings": 4,
 	# Read off the tree like the rest. Raised by one when the rotating sample reached
