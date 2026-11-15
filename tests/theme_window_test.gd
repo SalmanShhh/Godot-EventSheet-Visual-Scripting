@@ -46,7 +46,13 @@ static func _status_words() -> bool:
 	var moved: Color = ink.on_editor_panels(light_theme_ink)
 	var light_ground: Color = Color("#e6e6e6")
 	var pale: Color = ink.move(Color("#e8bd73"), [light_ground])
+	var faded: Color = ink.move(light_theme_ink, [Color("#e6e6e6"), Color("#ffffff")])
+	var faded_dark: Color = ink.move(Color(0.95, 0.96, 0.98, 0.65), [Color("#292929"), Color("#000000")])
+	var shown_light: float = ink.worst_contrast_shown(faded, [Color("#e6e6e6"), Color("#ffffff")])
+	var shown_dark: float = ink.worst_contrast_shown(faded_dark, [Color("#292929"), Color("#000000")])
 	return SUPPORT.pins(P + ": status", [
+		["a translucent word is judged as it shows: on the light panels it reads", shown_light >= 4.5, true],
+		["and on the dark panels", shown_dark >= 4.5, true],
 		["a near-black word reads on a dark panel", EventSheetEditorThemeDeriver.contrast_ratio(moved, dark_panel) >= 4.5, true],
 		["amber is moved on a light ground and stays amber", [EventSheetEditorThemeDeriver.contrast_ratio(pale, light_ground) >= 4.5, pale.r > pale.b], [true, true]],
 		["a colour that already reads is left as it is", ink.move(Color.WHITE, [dark_panel]), Color.WHITE],

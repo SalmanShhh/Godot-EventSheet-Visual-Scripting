@@ -363,6 +363,7 @@ func _publish_active_style() -> void:
 	# The strip's layout and the open tab's edge come from the same style, so they follow it here.
 	if _dock._menu_bar != null:
 		_dock._menu_bar.apply_theme_chrome()
+	_dock._update_sheet_counts_status()
 
 
 func _on_active_theme_style_changed() -> void:

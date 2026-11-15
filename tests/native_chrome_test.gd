@@ -31,6 +31,7 @@ static func run() -> bool:
 	ok = _test_tabs_over_the_strip() and ok
 	ok = _test_the_selection_line() and ok
 	ok = _test_the_status_layout() and ok
+	ok = _test_a_theme_switch_repaints_the_status_words() and ok
 	ok = _test_comment_notes() and ok
 	ok = _test_the_selection_frame() and ok
 	ok = _test_counts_on_a_pack_sheet() and ok
@@ -122,6 +123,17 @@ static func _test_the_selection_line() -> bool:
 		["a row the margin does not number says nothing", EventSheetDock.selection_line_text(comment), ""],
 		["and no selection says nothing", EventSheetDock.selection_line_text(null), ""],
 	])
+
+
+## Switching theme repaints the status bar's counts in the new theme's colours straight away, not at the next
+## edit: a word left in the old theme's colour can be unreadable on the editor's panel.
+static func _test_a_theme_switch_repaints_the_status_words() -> bool:
+	var editor: EventSheetEditor = _editor(CLASSIC_THEME, _sheet_with_events(2))
+	editor._theme_manager.use_default_theme()
+	var wanted: Color = READABLE_INK.on_editor_panels(EventSheetActiveTheme.chrome().row_address_color)
+	var shown: Color = editor._event_count_label.get_theme_color("font_color")
+	editor.free()
+	return SUPPORT.check(TEST_NAME, "the counts wear the new theme's colour after a switch", shown, wanted)
 
 
 static func _test_the_status_layout() -> bool:

@@ -15,7 +15,8 @@ const MAX_STEPS: int = 80
 
 
 ## `ink` moved toward black or white (whichever the grounds ask for) until it reads at `minimum` on
-## every one of `grounds`. Alpha is kept. An ink that already reads is returned as it is.
+## every one of `grounds`. A translucent ink is judged as it SHOWS on each ground (laid over it); one that
+## already reads that way is returned as it is, one that does not is moved as an opaque colour.
 static func move(ink: Color, grounds: Array, minimum: float = TEXT_CONTRAST) -> Color:
 	var opaque: Array[Color] = []
 	for ground: Variant in grounds:
@@ -24,14 +25,23 @@ static func move(ink: Color, grounds: Array, minimum: float = TEXT_CONTRAST) -> 
 	if opaque.is_empty():
 		return ink
 	var result: Color = Color(ink, 1.0)
-	if _reads(result, opaque, minimum):
+	if worst_contrast_shown(ink, opaque) >= minimum:
 		return ink
 	var target: Color = Color.BLACK if _worst(Color.BLACK, opaque) >= _worst(Color.WHITE, opaque) else Color.WHITE
 	for step: int in MAX_STEPS:
 		result = result.lerp(target, STEP)
 		if _reads(result, opaque, minimum):
 			break
-	return Color(result, ink.a)
+	return result
+
+
+## The contrast `ink` shows at against its worst ground, laid over each at its own alpha.
+static func worst_contrast_shown(ink: Color, grounds: Array) -> float:
+	var worst: float = 1000.0
+	for ground: Variant in grounds:
+		var under: Color = Color(ground as Color, 1.0)
+		worst = minf(worst, EventSheetEditorThemeDeriver.contrast_ratio(under.lerp(Color(ink, 1.0), ink.a), under))
+	return worst
 
 
 ## The contrast of `ink` against its worst ground.
