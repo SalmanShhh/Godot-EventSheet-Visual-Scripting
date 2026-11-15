@@ -32,3 +32,10 @@ static func request_failed(address: String, error: int) -> String:
 	return EventSheetL10n.translate("Could not reach %s - Godot says: %s. %s") % [address, error_string(error),
 		EventSheetL10n.translate("Nothing was sent. Check the address and your internet connection, then try again.")]
 
+
+
+## The compiler could not put the script it wrote at `path`: the usual causes are a file that is
+## read-only, open in another program or held by a cloud-sync tool. The write goes through a temporary
+## file and a rename, so the old file is still whole.
+static func write_blocked(path: String) -> String:
+	return EventSheetL10n.translate("Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.") % path

@@ -1057,7 +1057,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	var final_output_path: String = _resolve_output_path(sheet, output_path)
 	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
-		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
+		(result["errors"] as Array[String]).append(load("res://addons/eventforge/failure_words.gd").write_blocked(final_output_path))
 		return result
 	return result
 
@@ -1377,7 +1377,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var final_output_path: String = output_path if not output_path.is_empty() else sheet.external_source_path
 	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
-		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
+		(result["errors"] as Array[String]).append(load("res://addons/eventforge/failure_words.gd").write_blocked(final_output_path))
 		return result
 	return result
 

@@ -10563,3 +10563,4 @@ Could not copy to %s - Godot says: %s. %s,Не удалось скопирова
 "The original is untouched. Check that the folder exists and is not read-only, then try again.","Оригинал не тронут. Проверьте, что папка существует и не только для чтения, затем повторите попытку."
 Could not reach %s - Godot says: %s. %s,Не удалось связаться с %s - Godot сообщает: %s. %s
 "Nothing was sent. Check the address and your internet connection, then try again.","Ничего не отправлено. Проверьте адрес и подключение к интернету, затем повторите попытку."
+"Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.","Не удалось записать %s. Возможно, он только для чтения, открыт в другой программе или удерживается средством облачной синхронизации. Ничего не перезаписано - файл остался как был. Закройте то, что его держит, и сохраните снова."

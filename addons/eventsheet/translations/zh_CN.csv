@@ -10563,3 +10563,4 @@ Could not copy to %s - Godot says: %s. %s,无法复制到 %s - Godot 提示:%s�
 "The original is untouched. Check that the folder exists and is not read-only, then try again.","原文件未被改动。请检查文件夹是否存在且不是只读,然后重试。"
 Could not reach %s - Godot says: %s. %s,无法连接 %s - Godot 提示:%s。%s
 "Nothing was sent. Check the address and your internet connection, then try again.","没有发送任何内容。请检查地址和网络连接,然后重试。"
+"Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.","无法写入 %s。它可能是只读的、被其他程序打开,或被云同步工具占用。没有覆盖任何内容 - 文件保持原样。请关闭占用它的程序,然后再次保存。"

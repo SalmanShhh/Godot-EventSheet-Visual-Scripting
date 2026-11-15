@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a script sheet whose saved script Godot cannot compile takes you to the row
+
+A sheet saved as a resource already jumped to the row that did not compile; a script sheet only said the row was marked. Both now select the row the first failing line came from, and a script sheet whose save could not write also marks the rows the check found.
+
+### Fixed: "Failed to open output path" now says why and what to do
+
+The message named a path and no cause. It now says the file may be read-only, open in another program or held by a cloud-sync tool, that nothing was overwritten (the old file is exactly as it was), and to close what has it open and save again.
+
 ### Fixed: a file Godot would not write is told in words, not as a number
 
 About twenty messages used to end in "(error 31)": a failed Save (which did not name the file), Save Studio's scene and slot copies, Export, the Test Bench, the data tables, the Ask window, the Quality Presets pack and the MCP and API write doors. Each now says what failed, names the file, gives Godot's own words for the cause and says what to try next, in all eight languages.

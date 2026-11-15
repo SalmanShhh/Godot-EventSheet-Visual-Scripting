@@ -10563,3 +10563,4 @@ Could not copy to %s - Godot says: %s. %s,%s へコピーできませんでし�
 "The original is untouched. Check that the folder exists and is not read-only, then try again.",元のファイルには手を加えていません。フォルダが存在し、読み取り専用でないことを確認して、もう一度お試しください。
 Could not reach %s - Godot says: %s. %s,%s に接続できませんでした - Godot のメッセージ: %s。%s
 "Nothing was sent. Check the address and your internet connection, then try again.",何も送信されていません。アドレスとインターネット接続を確認して、もう一度お試しください。
+"Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.",%s に書き込めませんでした。読み取り専用か、別のプログラムで開かれているか、クラウド同期ツールが使用中の可能性があります。何も上書きされていません - ファイルは元のままです。開いているものを閉じてから、もう一度保存してください。
