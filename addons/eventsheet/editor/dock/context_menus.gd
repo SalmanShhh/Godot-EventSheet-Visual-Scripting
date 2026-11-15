@@ -20,6 +20,11 @@ const MOMENT_FILE_DOOR_PATH := "res://addons/eventsheet/editor/dock/moment_file_
 const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
 const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
 const REFACTOR_MENU_PATH := "res://addons/eventsheet/editor/dock/refactor_menu.gd"
+const SENTENCE_BOX_PATH := "res://addons/eventsheet/editor/dock/sentence_box.gd"
+## The ids and words of "Change how this reads…" on a placed row, spelled here so building the menus never loads the box.
+const CONDITION_MENU_CHANGE_READING := 721
+const ACTION_MENU_CHANGE_READING := 722
+const CHANGE_READING_TEXT := "Change how this reads…"
 const SNIPPET_PATH := "res://addons/eventsheet/editor/event_sheet_snippet.gd"
 ## The list the public API keeps the extension row items on, in a file that names nothing: asking
 ## the API itself here would compile it, and everything it names, into the first open.
@@ -296,6 +301,16 @@ func build_all() -> void:
 	_dock._action_context_menu.id_pressed.connect(func(id: int) -> void:
 		if id == load(REFACTOR_MENU_PATH).ACTION_MENU_INLINE_CALL:
 			load(REFACTOR_MENU_PATH).inline_call_requested(_dock))
+	# "Change how this reads…" on a placed row of a script of yours: the box that writes its sentence into
+	# the script. Its own listener on each popup, like Inline This Call, so the shared dispatcher never sees it.
+	_dock._action_context_menu.add_item(EventSheetL10n.translate(CHANGE_READING_TEXT), ACTION_MENU_CHANGE_READING)
+	_dock._condition_context_menu.add_item(EventSheetL10n.translate(CHANGE_READING_TEXT), CONDITION_MENU_CHANGE_READING)
+	_dock._action_context_menu.id_pressed.connect(func(id: int) -> void:
+		if id == ACTION_MENU_CHANGE_READING:
+			load(SENTENCE_BOX_PATH).row_requested(_dock, "action"))
+	_dock._condition_context_menu.id_pressed.connect(func(id: int) -> void:
+		if id == CONDITION_MENU_CHANGE_READING:
+			load(SENTENCE_BOX_PATH).row_requested(_dock, "condition"))
 	# ── "Why didn't this fire?" (appended block - keep together) ───────────────────────────────
 	# Its own handler on the row menu, so the item costs the shared dispatcher nothing: id 9700 is
 	# far above the 900+ extension range, where that dispatcher finds no extension item and returns.

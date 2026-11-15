@@ -256,6 +256,7 @@ const PROJECT_HEADER_META := "__your_project__"
 ## The head of the project's own classes, which lead every object list as a tree of kinds.
 const CLASSES_HEADER_META := "__your_classes__"
 const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
+const SENTENCE_BOX_PATH := "res://addons/eventsheet/editor/dock/sentence_box.gd"
 const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple - custom / runtime providers
 const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted - other categories
 # Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
@@ -3368,6 +3369,13 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 		elif key_event.pressed and not key_event.echo and key_event.keycode == KEY_F1:
 			_request_help()
 			_tree.accept_event()
+		elif key_event.pressed and not key_event.echo and key_event.keycode == KEY_F2:
+			# F2 on a row of a script of yours is the same door as its right-click entry: how it reads.
+			var selected_item: TreeItem = _tree.get_selected()
+			var selected_meta: Variant = selected_item.get_metadata(0) if selected_item != null else null
+			if selected_meta is ACEDefinition and not str(load(SENTENCE_BOX_PATH).script_path_for(selected_meta)).is_empty():
+				_change_how_it_reads(selected_meta as ACEDefinition)
+				_tree.accept_event()
 		return
 	if not (input_event is InputEventMouseButton):
 		return
@@ -3402,6 +3410,9 @@ func _open_tree_context_menu(definition: ACEDefinition) -> void:
 		_tree_context_menu.add_item("Hide everything from %s" % definition.provider_id, 6)
 		if EventSheetVocabularyCatalog.provenance_of(definition) == "curated":
 			_tree_context_menu.add_item("Reset to the inferred name", 7)
+	if not str(load(SENTENCE_BOX_PATH).script_path_for(definition)).is_empty():
+		_tree_context_menu.add_separator()
+		_tree_context_menu.add_item(EventSheetL10n.translate("Change how this reads…"), 8)
 	_tree_context_menu.add_separator()
 	_tree_context_menu.add_item("Copy annotation stub", 1)
 	_tree_context_menu.add_item("Copy registrar snippet", 2)
@@ -3484,12 +3495,22 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 			_populate_object_cards()
 			_refresh_tree()
 			_say(definition.provider_id, EventSheetL10n.translate("Hid everything from %s.") % definition.provider_id)
+		8:
+			_change_how_it_reads(definition)
 		7:
 			# Clearing every field drops the entry, which restores the inferred identity.
 			EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id,
 				{"display_name": null, "category": null, "hidden": null})
 			_refresh_tree()
 			_say(definition.id, EventSheetL10n.translate("Reset %s to its inferred name.") % definition.id)
+
+
+## Opens the box that writes this row's sentence into its script; the picker follows once it is written.
+func _change_how_it_reads(definition: ACEDefinition) -> void:
+	load(SENTENCE_BOX_PATH).open(_window, definition, func(said: String, ok: bool) -> void:
+		if ok:
+			_refresh_tree()
+		_say(definition.display_name, said))
 
 
 ## Enter in the search box applies the first concrete match - type-and-Enter, no mouse.

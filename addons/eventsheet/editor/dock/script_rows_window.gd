@@ -12,6 +12,8 @@ extends RefCounted
 
 const PROVIDER_PREVIEW_PATH := "res://addons/eventsheet/ace/provider_preview.gd"
 const SHIPPED_SCRIPTS_PATH := "res://addons/eventsheet/ace/shipped_scripts.gd"
+const SENTENCE_BOX_PATH := "res://addons/eventsheet/editor/dock/sentence_box.gd"
+const SCRIPT_READER_PATH := "res://addons/eventsheet/ace/script_reader.gd"
 const ANNOTATION_WRITER_PATH := "res://addons/eventsheet/ace/annotation_writer.gd"
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 
@@ -112,6 +114,12 @@ func _build() -> void:
 	rows_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	form.add_child(rows_card)
 	_tree.item_selected.connect(_sync_buttons)
+	# A sentence is changed where it is read: Enter or a double click on the row, or F2.
+	_tree.item_activated.connect(_change_reading)
+	_tree.gui_input.connect(func(input_event: InputEvent) -> void:
+		if input_event is InputEventKey and (input_event as InputEventKey).pressed \n				and (input_event as InputEventKey).keycode == KEY_F2:
+			_change_reading()
+			_tree.accept_event())
 
 	_file_dialog = FileDialog.new()
 	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -191,6 +199,23 @@ func _selected_row() -> Dictionary:
 	var item: TreeItem = _tree.get_selected() if _tree != null else null
 	return item.get_metadata(0) as Dictionary if item != null and item.get_metadata(0) is Dictionary else {}
 
+
+## Opens the box for the selected row, on the script this window shows.
+func _change_reading() -> void:
+	var row: Dictionary = _selected_row()
+	if row.is_empty() or bool(row.get("left_out", false)):
+		return
+	var script: Script = load(_path) as Script
+	if script == null:
+		return
+	for candidate: ACEDefinition in load(SCRIPT_READER_PATH).definitions_for(str(_scan.get("provider_id", "")), script, ""):
+		if candidate.id == str(row.get("ace_id", "")):
+			load(SENTENCE_BOX_PATH).open(_window, candidate, func(said: String, ok: bool) -> void:
+				_dock._set_status(said, not ok)
+				if ok:
+					show_script(_path),
+				func(behaviour_path: String) -> void: _dock._navigate.open_or_focus(behaviour_path), _path)
+			return
 
 func _selected_line() -> int:
 	return int(_selected_row().get("line", -1))

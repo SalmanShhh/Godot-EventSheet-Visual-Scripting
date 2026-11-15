@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: "How should this read?" for a function of a script of yours
+
+Right-click a placed row that comes from a script of yours and choose "Change how this reads…" (or press F2 on its row in the picker, or press Enter or F2 on a row in the scripts window): a small box shows the sentence, what it reads as with the row's starting values, and names a slot the function does not have. Done writes `## @ace_display_template` above the function after a backup, and every row that uses it follows. A row of a shipped behaviour never writes anything: the box says it belongs to the behaviour and offers to open it, and a script with changes not yet saved in Godot's script editor is refused until it is saved.
+
 ### Added: "Use in event sheets" on a script in the FileSystem
 
 Right-click a script of yours in the FileSystem and one entry gives every sheet rows from it with no setup: it writes the path into the taught-scripts setting (which now holds scripts as well as compiled sheets) and the status line says how many rows it added. Once a script is in use, or when it lists itself (a Node or Resource script with a class_name, an autoload), the entry reads "Use in event sheets…" and opens its window. A shipped behaviour, the plugin's own files and scenes are never offered. Resource scripts with a class_name now list themselves in the picker's cards.
