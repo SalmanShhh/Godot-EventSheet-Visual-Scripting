@@ -23,7 +23,7 @@ extends RefCounted
 #     `_refresh_after_edit`), plus `_save_backed_sheet`, `_refresh_title_strip`, `_persist_session`,
 #     `_clear_undo_history`,
 #   • the RAW-CODE dialog (`_raw_code_target` / `_raw_code_edit` / `_raw_code_dialog` - a separate
-#     concern that lives on the dock), `_side_panel` / `_code_edit`, and `_provider_list`.
+#     concern that lives on the dock), `_side_panel` / `_code_edit`.
 # Globals (EditorInterface, EventSheetLiftReport, EventSheetGDScriptImporter, …) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
@@ -269,17 +269,6 @@ func _open_generated_in_godot() -> void:
 		_dock._set_status("Open in Godot opens the .gd source - Save As… this sheet as a .gd to open its generated code in Godot (or use Copy).", true)
 		return
 	_open_gdscript_path_in_godot(_dock._current_sheet.external_source_path)
-
-
-## "Open in Godot" for the selected custom-ACE provider script (a real res:// .gd).
-func _on_provider_open_in_godot_pressed() -> void:
-	if _dock._provider_list == null:
-		return
-	var selected: PackedInt32Array = _dock._provider_list.get_selected_items()
-	if selected.is_empty():
-		_dock._set_status("Select a provider script first, then Open in Godot.", true)
-		return
-	_open_gdscript_path_in_godot(_dock._provider_list.get_item_text(selected[0]))
 
 
 func _open_lift_report() -> void:

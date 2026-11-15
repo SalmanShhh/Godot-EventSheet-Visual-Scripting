@@ -205,9 +205,10 @@ static func _rewrite_block(lines: PackedStringArray, anchor: int, edit: Dictiona
 ## name is kept; a name, category, description or sentence set to empty text is removed.
 static func merged_annotation_lines(existing: Array, edit: Dictionary) -> PackedStringArray:
 	var output: PackedStringArray = PackedStringArray()
-	if bool(edit.get("hidden", false)):
-		output.append("## @ace_hidden")
-		return output
+	var hide: bool = bool(edit.get("hidden", false))
+	# Opting out names nothing else: the edit's own words are not written, the script's own are kept.
+	if hide:
+		edit = {"hidden": true}
 	var unhide: bool = edit.has("hidden") and not bool(edit.get("hidden", false))
 	var kind: String = str(edit.get("kind", "")).strip_edges().to_lower()
 	var params: Dictionary = edit.get("params", {}) as Dictionary
@@ -221,6 +222,8 @@ static func merged_annotation_lines(existing: Array, edit: Dictionary) -> Packed
 		var text: String = str(entry)
 		var word: String = _word_of(text)
 		if word == "@ace_hidden" and unhide:
+			continue
+		if hide and word == "@ace_hidden":
 			continue
 		if KIND_ANNOTATIONS.has(kind) and (KIND_ANNOTATIONS.values().has(word) or word == "@ace_looping"):
 			continue
@@ -236,6 +239,10 @@ static func merged_annotation_lines(existing: Array, edit: Dictionary) -> Packed
 				if legacy_spec.has("hint") or legacy_spec.has("options"):
 					continue
 		kept.append({"rank": _rank_of(word), "text": text})
+	if hide:
+		# Opting out leaves every other word the script already carries where it was, so a member that is
+		# ticked again reads exactly as it did before it was left out.
+		kept.append({"rank": _rank_of("@ace_hidden"), "text": "@ace_hidden"})
 	if KIND_ANNOTATIONS.has(kind):
 		kept.append({"rank": 0, "text": KIND_ANNOTATIONS[kind]})
 	for key: String in ["name", "category", "description", "display_template"]:

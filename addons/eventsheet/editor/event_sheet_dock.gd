@@ -335,24 +335,6 @@ var _row_help_button_third: Button = null
 ## The finding the door acts on, held only between the selection that showed it and the click that
 ## answers it.
 var _row_help_finding: Dictionary = {}
-var _provider_dialog: Window = null
-var _provider_list: ItemList = null
-var _provider_file_dialog: FileDialog = null
-# The provider dialog's "what will this publish?" half: browsing a script PREVIEWS it (the scan is
-# read-only) and registering is a second, deliberate click, so nothing joins the vocabulary unseen.
-var _provider_preview_summary: Label = null
-var _provider_preview_warnings: VBoxContainer = null
-var _provider_preview_tree: Tree = null
-var _provider_register_button: Button = null
-var _provider_pending_path: String = ""
-# Curation (the wizard's second half): the script currently shown in the preview, and the scan it
-# came from. The scan is the BEFORE side of the diff - what the table shows is compared against it,
-# so only members the user actually changed get annotated.
-var _provider_curate_button: Button = null
-var _provider_params_button: Button = null
-var _provider_shim_button: Button = null
-var _provider_preview_path: String = ""
-var _provider_preview_scan: Dictionary = {}
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
 # The side panel beside the sheet. _workspace_body is a stable HSplit holding [side panel |

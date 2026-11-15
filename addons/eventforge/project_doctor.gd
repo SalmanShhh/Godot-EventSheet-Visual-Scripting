@@ -2612,7 +2612,7 @@ static func check_orphaned_provider_calls(sheet_paths: PackedStringArray, findin
 			var hint: String = EventSheetRefactorFollow.rename_hint(str(orphan["member"]),
 				EventSheetRefactorFollow.member_names(providers.get(str(orphan["provider"]), {})))
 			if hint.is_empty():
-				hint = " If the function was renamed, open Sheet > Custom ACE Providers, select it under its new name and use \"Keep Old Name\" to add a stand-in."
+				hint = " If the function was renamed, open Sheet > Custom Actions, select it under its new name and use \"Keep Old Name\" to add a stand-in."
 			_add(findings, "error", "orphaned-verb", script_path,
 				"%s.%s() does not exist on %s - the call still compiles but will fail at runtime.%s"
 					% [str(orphan["provider"]), str(orphan["member"]), str(orphan["path"]).get_file(), hint])

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: one window for what a script of yours gives sheets
+
+Sheet > Custom Actions now opens "Scripts in event sheets": the scripts a sheet reads, and for the one you pick, every row it gives as a plain sentence with a tick. Unticking writes `## @ace_hidden` above the member after a backup; a member the script already leaves out is listed as "left out" so it can be ticked back, and ticking it again keeps every other word the script wrote (hiding no longer drops them). Each row carries the sentence and the line of its function, and "Go to the line" opens Godot's script editor there. The old table with Kind, Name, Category and Parameters columns, Register This Script and Curate Script are gone; Keep Old Name stays for a renamed function.
+
 ### Fixed: curating a script never writes a file the plugin ships
 
 The public curate call refuses a script under `addons/` or in a shipped behaviour folder, with a plain reason, and writes nothing (no backup either). A script of yours is written as before.

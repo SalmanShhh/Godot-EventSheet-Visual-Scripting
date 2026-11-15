@@ -67,17 +67,18 @@ static func run() -> bool:
 
 	# The un-teach: the Manage Providers dialog lists the taught entry, and Remove is
 	# the inverse gesture - settings only, the sheet and its verbs untouched.
-	dock._ui_builder.build_provider_dialog()
-	dock._providers_glue.refresh_provider_list()
+	var rows_window: RefCounted = load("res://addons/eventsheet/editor/dock/script_rows_window.gd").new()
+	dock._providers_glue._script_rows = rows_window
+	rows_window.open(dock, "")
 	var taught_row: int = -1
-	for row_index in range(dock._provider_list.item_count):
-		var entry: Variant = dock._provider_list.get_item_metadata(row_index)
-		if entry is Dictionary and bool((entry as Dictionary).get("taught", false)):
+	for row_index in range(rows_window._scripts.item_count):
+		var entry: Variant = rows_window._scripts.get_item_metadata(row_index)
+		if entry is Dictionary and bool((entry as Dictionary).get("project_wide", false)):
 			taught_row = row_index
 	ok = _check("the providers dialog lists the taught script", taught_row >= 0, true) and ok
 	if taught_row >= 0:
-		dock._provider_list.select(taught_row)
-		dock._providers_glue.on_provider_remove_pressed()
+		rows_window._scripts.select(taught_row)
+		rows_window._remove_selected()
 	ok = _check("un-teach clears the setting",
 		PackedStringArray(ProjectSettings.get_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray())).is_empty(), true) and ok
 	ok = _check("un-teach removes the verb from the vocabulary",

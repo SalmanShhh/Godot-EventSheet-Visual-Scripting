@@ -67,6 +67,22 @@ static func scan(script_path: String) -> Dictionary:
 			"emits": str(definition.metadata.get("codegen_template", "")),
 			"source": str(definition.metadata.get("source_kind", "")),
 			"member": str(definition.metadata.get("source_name", "")),
+			# The sentence the row reads as (what the script wrote, or the one made for it) and the line
+			# of its declaration, one-based, so "Go to the line" lands on it.
+			"sentence": _sentence_of(definition),
+			"line": _line_of(source, definition),
+			"left_out": false,
+		})
+	# The members the script hides: listed, marked left out, so unticking is never a one-way door.
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_script(script, true):
+		if not bool(definition.metadata.get("hidden_member", false)):
+			continue
+		(result["entries"] as Array).append({
+			"kind": definition.ace_type, "kind_label": kind_label(definition.ace_type),
+			"label": definition.display_name, "category": str(definition.category), "ace_id": definition.id,
+			"params": _param_names(definition), "emits": "", "source": str(definition.metadata.get("source_kind", "")),
+			"member": str(definition.metadata.get("source_name", "")), "sentence": _sentence_of(definition),
+			"line": _line_of(source, definition), "left_out": true,
 		})
 	result["warnings"] = _warnings_for(result, source, script)
 	# The lines of the script that read as nothing - a misspelt word, a slot with no such key, a plain
@@ -176,3 +192,18 @@ static func _untyped_methods(source: String) -> PackedStringArray:
 	for match_result: RegExMatch in regex.search_all(source):
 		names.append(match_result.get_string(1))
 	return names
+
+
+## What a row reads as, with its slots still in braces: the sentence the script wrote when it wrote
+## one, otherwise the row's own name.
+static func _sentence_of(definition: ACEDefinition) -> String:
+	var sentence: String = str(definition.metadata.get("display_template", ""))
+	return sentence if not sentence.is_empty() else definition.display_name
+
+
+## The one-based line a row's member is declared on, or -1 when the source does not show it.
+static func _line_of(source: String, definition: ACEDefinition) -> int:
+	var lines: PackedStringArray = source.replace("\r\n", "\n").split("\n")
+	var found: int = EventSheetACEAnnotationWriter.find_declaration(lines,
+		str(definition.metadata.get("source_kind", "method")), str(definition.metadata.get("source_name", "")))
+	return found + 1 if found >= 0 else -1

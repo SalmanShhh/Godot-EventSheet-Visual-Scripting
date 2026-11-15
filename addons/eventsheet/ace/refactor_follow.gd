@@ -62,7 +62,7 @@ static func rename_hint(missing: String, candidates: PackedStringArray) -> Strin
 	var suggestion: String = closest_member(missing, candidates)
 	if suggestion.is_empty():
 		return ""
-	return " Did you rename it to %s()? If so, open Sheet > Custom ACE Providers, select it under the new name and use \"Keep Old Name\" to add a stand-in so existing rows keep working." % suggestion
+	return " Did you rename it to %s()? If so, open Sheet > Custom Actions, select it under the new name and use \"Keep Old Name\" to add a stand-in so existing rows keep working." % suggestion
 
 
 ## The member names a provider index entry offers, as a flat list for `closest_member`.

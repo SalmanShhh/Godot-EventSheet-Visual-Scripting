@@ -4,7 +4,7 @@ extends RefCounted
 # The dock's UI CONSTRUCTION pass, extracted from event_sheet_dock.gd to keep that file
 # maintainable. Everything here BUILDS controls and wires their signals back into the dock:
 # the main workspace layout (_build_ui: toolbar strip, viewport scroll host, status bar,
-# panels), the provider-registration dialog, the GDScript code panel, the lazily-created
+# panels), the GDScript code panel, the lazily-created
 # editor dialogs, and the raw-GDScript block dialog. All state (every widget reference,
 # every preference flag) STAYS ON THE DOCK - construction writes through the `_dock.`
 # back-reference, so lifecycle, signal targets, and teardown behave exactly as before the
@@ -15,7 +15,6 @@ extends RefCounted
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const RAW_CODE_EDIT_PATH := "res://addons/eventsheet/editor/raw_code_edit.gd"
 const OBJECT_LOOKUP_PATH := "res://addons/eventsheet/editor/dock/object_lookup.gd"
-const PROVIDER_DIALOG_BUILDER_PATH := "res://addons/eventsheet/editor/dock/provider_dialog_builder.gd"
 ## The runtime error strip's button, spelled out here so building the strip does not compile the
 ## error wording it only needs once an error arrives; a test holds it equal to that file's label.
 const GODOT_WORDS_LABEL := "Godot's words"
@@ -504,12 +503,6 @@ func build_ui() -> void:
 	# The strip exists now (the menus above it are built), so the "should this project have it" rule
 	# can finally be resolved; it could not run inside the menu build.
 	_dock._beginner_toolbar.apply_visibility()
-
-
-func build_provider_dialog() -> void:
-	if _dock._provider_dialog != null:
-		return
-	load(PROVIDER_DIALOG_BUILDER_PATH).new().build(_dock)
 
 
 ## Builds the panel lazily on first toggle: wraps the sheet scroll in an HSplitContainer
