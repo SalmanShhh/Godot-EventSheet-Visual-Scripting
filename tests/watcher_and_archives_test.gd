@@ -33,15 +33,15 @@ const SUPPORT := preload("res://tests/support.gd")
 const MODULE_PATH := "res://addons/eventforge/registration/modules/file_aces.gd"
 const PACK_PATH := "res://eventsheet_addons/folder_watcher/folder_watcher_behavior.gd"
 
-const WORK_DIR := "user://watcher_archives_probe"
-const SOURCE_DIR := WORK_DIR + "/source"
-const OUT_DIR := WORK_DIR + "/unpacked"
-const ARCHIVE := WORK_DIR + "/bundle.zip"
-const HOSTILE := WORK_DIR + "/hostile.zip"
-const BLOCKED := WORK_DIR + "/blocked.zip"
-const LYING := WORK_DIR + "/lying.zip"
-const BLOCKED_DIR := OUT_DIR + "/taken"
-const PROBE_SCRIPT := "user://watcher_archives_probe.gd"
+static var work_dir: String = SUPPORT.own_path("watcher_archives_probe")
+static var source_dir: String = work_dir + "/source"
+static var out_dir: String = work_dir + "/unpacked"
+static var own_archive: String = work_dir + "/bundle.zip"
+static var own_hostile: String = work_dir + "/hostile.zip"
+static var own_blocked: String = work_dir + "/blocked.zip"
+static var own_lying: String = work_dir + "/lying.zip"
+static var blocked_dir: String = out_dir + "/taken"
+static var probe_script: String = SUPPORT.own_path("watcher_archives_probe.gd")
 
 
 static func run() -> bool:
@@ -174,19 +174,19 @@ static func _run_emission() -> bool:
 ## Pack a folder, unpack it again, and compare what came out with what went in.
 static func _run_archive_runtime() -> bool:
 	var ok: bool = true
-	_fresh_dir(SOURCE_DIR)
-	ok = _write(SOURCE_DIR + "/one.txt", "first") and ok
-	ok = _write(SOURCE_DIR + "/two.txt", "second") and ok
-	_run_emitted("PackFolderIntoZip", {"folder": _quote(SOURCE_DIR), "archive": _quote(ARCHIVE),
+	_fresh_dir(source_dir)
+	ok = _write(source_dir + "/one.txt", "first") and ok
+	ok = _write(source_dir + "/two.txt", "second") and ok
+	_run_emitted("PackFolderIntoZip", {"folder": _quote(source_dir), "archive": _quote(own_archive),
 		"uid": "1"})
-	ok = _check("the archive is written", FileAccess.file_exists(ARCHIVE), true) and ok
+	ok = _check("the archive is written", FileAccess.file_exists(own_archive), true) and ok
 
-	_fresh_dir(OUT_DIR)
-	var report: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(ARCHIVE),
-		"folder": _quote(OUT_DIR), "uid": "1"})
-	ok = _check("both files land", FileAccess.get_file_as_string(OUT_DIR + "/one.txt"), "first") and ok
+	_fresh_dir(out_dir)
+	var report: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(own_archive),
+		"folder": _quote(out_dir), "uid": "1"})
+	ok = _check("both files land", FileAccess.get_file_as_string(out_dir + "/one.txt"), "first") and ok
 	ok = _check("with the second one's bytes too",
-		FileAccess.get_file_as_string(OUT_DIR + "/two.txt"), "second") and ok
+		FileAccess.get_file_as_string(out_dir + "/two.txt"), "second") and ok
 	ok = _check("progress was reported once per entry, then the finish",
 		_kinds(report), ["progress", "progress", "finished"] as Array) and ok
 	# The numbers below are read out of those three reports by position, so they are only asked for
@@ -205,10 +205,10 @@ static func _run_archive_runtime() -> bool:
 	# opened for writing on any platform, so this is the portable way to watch the loop meet a write
 	# it cannot do. What is under test is the honesty of the numbers: the bar must not move and the
 	# finish must not count an entry that never landed.
-	_fresh_dir(OUT_DIR)
-	DirAccess.make_dir_recursive_absolute(BLOCKED_DIR)
+	_fresh_dir(out_dir)
+	DirAccess.make_dir_recursive_absolute(blocked_dir)
 	var packer: ZIPPacker = ZIPPacker.new()
-	var opened: int = packer.open(BLOCKED)
+	var opened: int = packer.open(own_blocked)
 	if opened != OK:
 		return _check("the blocked archive could not be written", error_string(opened), "(written)")
 	for entry: Array in [["landed.txt", "here"], ["taken", "cannot land"]]:
@@ -216,10 +216,10 @@ static func _run_archive_runtime() -> bool:
 		packer.write_file(str(entry[1]).to_utf8_buffer())
 		packer.close_file()
 	packer.close()
-	var blocked: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(BLOCKED),
-		"folder": _quote(OUT_DIR), "uid": "1"})
+	var blocked: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(own_blocked),
+		"folder": _quote(out_dir), "uid": "1"})
 	ok = _check("the entry that could be written landed",
-		FileAccess.get_file_as_string(OUT_DIR + "/landed.txt"), "here") and ok
+		FileAccess.get_file_as_string(out_dir + "/landed.txt"), "here") and ok
 	ok = _check("the bar moved once, for the one write that happened",
 		_kinds(blocked), ["progress", "finished"] as Array) and ok
 	# Read by position again, and asked only of a run that really reported the two.
@@ -230,19 +230,19 @@ static func _run_archive_runtime() -> bool:
 		# AND THE ONE THAT DID NOT LAND IS COUNTED. It used to vanish: the finish said one
 		# entry of a two-entry archive and nothing anywhere said the other was missing.
 		ok = _check("the write the machine refused is counted as skipped", blocked[1][3], 1) and ok
-	DirAccess.remove_absolute(BLOCKED_DIR)
+	DirAccess.remove_absolute(blocked_dir)
 
-	# AN ARCHIVE THAT LIES ABOUT ITS OWN BYTES. A stored entry whose header claims more bytes than
+	# AN own_archive THAT LIES ABOUT ITS OWN BYTES. A stored entry whose header claims more bytes than
 	# the archive holds is one `ZIPReader.read_file` answers EMPTY for, after printing an engine
 	# message about it. Writing that answer out lands a 0-byte file the game then reads as content,
 	# so the entry is skipped and counted instead. Godot's own printed error is expected here.
-	_fresh_dir(OUT_DIR)
-	if not _write_lying_archive(LYING):
+	_fresh_dir(out_dir)
+	if not _write_lying_archive(own_lying):
 		return false
-	var lying: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(LYING),
-		"folder": _quote(OUT_DIR), "uid": "1"})
+	var lying: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(own_lying),
+		"folder": _quote(out_dir), "uid": "1"})
 	ok = _check("an entry the reader could not decode is not written at all",
-		FileAccess.file_exists(OUT_DIR + "/truncated.txt"), false) and ok
+		FileAccess.file_exists(out_dir + "/truncated.txt"), false) and ok
 	ok = _check("the bar never moved for it", _kinds(lying), ["finished"] as Array) and ok
 	# The one report's three numbers, asked only of a run that made one report to read them out of.
 	if lying.size() == 1:
@@ -327,7 +327,7 @@ static func _put_int(into: PackedByteArray, value: int, width: int) -> void:
 static func _run_guard() -> bool:
 	var ok: bool = true
 	var packer: ZIPPacker = ZIPPacker.new()
-	var opened: int = packer.open(HOSTILE)
+	var opened: int = packer.open(own_hostile)
 	if opened != OK:
 		return _check("the hostile archive could not be written", error_string(opened), "(written)")
 	# One innocent entry, then one that climbs two folders out of the target and lands beside it.
@@ -337,10 +337,10 @@ static func _run_guard() -> bool:
 		packer.close_file()
 	packer.close()
 
-	_fresh_dir(OUT_DIR)
-	var escapes_to: String = WORK_DIR.get_base_dir().path_join("escaped.txt")
-	var report: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(HOSTILE),
-		"folder": _quote(OUT_DIR), "uid": "1"})
+	_fresh_dir(out_dir)
+	var escapes_to: String = work_dir.get_base_dir().path_join("escaped.txt")
+	var report: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(own_hostile),
+		"folder": _quote(out_dir), "uid": "1"})
 	ok = _check("the climbing entry is refused", _kinds(report).has("refused"), true) and ok
 	ok = _check("and nothing is written outside the folder",
 		FileAccess.file_exists(escapes_to), false) and ok
@@ -357,7 +357,7 @@ static func _run_guard() -> bool:
 	# The entry BEFORE the bad one landed, which is the honest reading of a stopped unpack: what was
 	# written stays written, and the sheet is told where it stopped.
 	ok = _check("the entry that came first had already landed",
-		FileAccess.get_file_as_string(OUT_DIR + "/safe.txt"), "safe") and ok
+		FileAccess.get_file_as_string(out_dir + "/safe.txt"), "safe") and ok
 	return ok
 
 
@@ -374,15 +374,15 @@ static func _run_handlers() -> bool:
 		body.code = "pass"
 		row.actions.append(body)
 		sheet.events.append(row)
-	var compiled: String = str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
+	var compiled: String = str(EventSheetCompiler.compile(sheet, probe_script).get("output", ""))
 	ok = _check("progress is answered by the function the loop calls",
 		compiled.contains("func _on_unpack_progress(_entries: int, _bytes: int, _total: int) -> void:"), true) and ok
 	ok = _check("refusal too",
 		compiled.contains("func _on_unpack_refused(_entry: String, _reason: String) -> void:"), true) and ok
 	ok = _check("and the finish",
 		compiled.contains("func _on_unpack_finished(_entries: int, _bytes: int, _skipped: int) -> void:"), true) and ok
-	if FileAccess.file_exists(PROBE_SCRIPT):
-		DirAccess.remove_absolute(PROBE_SCRIPT)
+	if FileAccess.file_exists(probe_script):
+		DirAccess.remove_absolute(probe_script)
 
 	# AND THE LOOP FITS IN A FUNCTION THAT ANSWERS WITH A VALUE. The refusal used to leave by
 	# `return`, which is a script that does not parse the moment the unpack sits inside a sheet
@@ -412,14 +412,14 @@ static func _run_handlers() -> bool:
 	unpacking.actions.append(_action("ReturnValue", {"value": "true"}))
 	installer.events.append(unpacking)
 	answering.functions.append(installer)
-	var answering_output: String = str(EventSheetCompiler.compile(answering, PROBE_SCRIPT).get("output", ""))
+	var answering_output: String = str(EventSheetCompiler.compile(answering, probe_script).get("output", ""))
 	ok = _check("the unpack sits in a function that answers with a value",
 		answering_output.contains("func install_pack() -> bool:"), true) and ok
 	var parsed: GDScript = GDScript.new()
 	parsed.source_code = answering_output
 	ok = _check("and the script Godot is handed actually parses", parsed.reload(), OK) and ok
-	if FileAccess.file_exists(PROBE_SCRIPT):
-		DirAccess.remove_absolute(PROBE_SCRIPT)
+	if FileAccess.file_exists(probe_script):
+		DirAccess.remove_absolute(probe_script)
 	return ok
 
 
@@ -439,12 +439,12 @@ static func _run_lift() -> bool:
 		+ "\n\n\nfunc _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:\n\tprint(entries, bytes)\n"
 	# The whole half below opens this file again, so a handle that did not open is a null the next
 	# line calls store_string on - the process ends and no [FAIL] line is ever printed.
-	var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(probe_script, FileAccess.WRITE)
 	if file == null:
-		return _check("the probe script could be written", PROBE_SCRIPT, "(unwritable)")
+		return _check("the probe script could be written", probe_script, "(unwritable)")
 	file.store_string(source)
 	file.close()
-	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(probe_script, false)
 	EventSheetACELifter.reset_progress()
 	var lifted: bool = EventSheetACELifter.attempt_lift(sheet, source)
 	ok = _check("the file opens as events", lifted, true) and ok
@@ -459,8 +459,8 @@ static func _run_lift() -> bool:
 		ok = _check("the three answers open as their own events: %s" % answer,
 			trigger_ids.has(answer), true) and ok
 	ok = _check("and saving it again reproduces the file byte for byte",
-		str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
-	DirAccess.remove_absolute(PROBE_SCRIPT)
+		str(EventSheetCompiler.compile(sheet, probe_script).get("output", "")), source) and ok
+	DirAccess.remove_absolute(probe_script)
 	ok = _run_lift_refusals() and ok
 	return ok
 
@@ -492,12 +492,12 @@ static func _run_lift_refusals() -> bool:
 %s
 	print(entries, bytes)
 " % header
-		var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
+		var file: FileAccess = FileAccess.open(probe_script, FileAccess.WRITE)
 		if file == null:
-			return _check("the probe script could be written", PROBE_SCRIPT, "(unwritable)")
+			return _check("the probe script could be written", probe_script, "(unwritable)")
 		file.store_string(source)
 		file.close()
-		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(probe_script, false)
 		EventSheetACELifter.reset_progress()
 		EventSheetACELifter.attempt_lift(sheet, source)
 		var triggers: Array[String] = []
@@ -508,8 +508,8 @@ static func _run_lift_refusals() -> bool:
 		ok = _check("%s is a plain function, not an answer" % header, triggers,
 			([] as Array[String])) and ok
 		ok = _check("and the file holding it comes back byte for byte",
-			str(EventSheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
-		DirAccess.remove_absolute(PROBE_SCRIPT)
+			str(EventSheetCompiler.compile(sheet, probe_script).get("output", "")), source) and ok
+		DirAccess.remove_absolute(probe_script)
 	return ok
 
 
@@ -596,9 +596,9 @@ signal file_appeared"),
 ## The diff, driven for real against a folder on disk.
 static func _run_watcher_runtime() -> bool:
 	var ok: bool = true
-	_fresh_dir(SOURCE_DIR)
-	ok = _write(SOURCE_DIR + "/kept.txt", "one") and ok
-	ok = _write(SOURCE_DIR + "/ignored.dat", "not a txt") and ok
+	_fresh_dir(source_dir)
+	ok = _write(source_dir + "/kept.txt", "one") and ok
+	ok = _write(source_dir + "/ignored.dat", "not a txt") and ok
 	var watcher: Node = load(PACK_PATH).new()
 	watcher.only_names_like = "*.txt"
 	var raised: Array = []
@@ -606,19 +606,19 @@ static func _run_watcher_runtime() -> bool:
 	watcher.file_changed.connect(func(path: String) -> void: raised.append(["changed", path]))
 	watcher.file_removed.connect(func(path: String) -> void: raised.append(["removed", path]))
 
-	watcher.watch_folder(SOURCE_DIR, 2.0)
+	watcher.watch_folder(source_dir, 2.0)
 	ok = _check("the first look raises nothing - it is the baseline", raised.size(), 0) and ok
 	ok = _check("and it is watching", bool(watcher.is_watching()), true) and ok
 	ok = _check("the filter is honoured: only the .txt was counted",
 		int(watcher.watched_file_count()), 1) and ok
 	ok = _check("the folder and interval the row named are what it watches",
 		[str(watcher.watched_folder), float(watcher.look_every_seconds)],
-		[SOURCE_DIR, 2.0] as Array) and ok
+		[source_dir, 2.0] as Array) and ok
 
-	ok = _write(SOURCE_DIR + "/new.txt", "two") and ok
+	ok = _write(source_dir + "/new.txt", "two") and ok
 	watcher.look_now()
 	ok = _check("a file that appeared is raised, whole path and all", raised,
-		[["appeared", SOURCE_DIR + "/new.txt"]] as Array) and ok
+		[["appeared", source_dir + "/new.txt"]] as Array) and ok
 
 	# A filesystem stamps a file to the nearest second, so rewriting one here would leave the stamp
 	# where it was and raise nothing. What is under test is the DIFF, so the watcher's own last
@@ -627,13 +627,13 @@ static func _run_watcher_runtime() -> bool:
 	watcher._seen["kept.txt"] = 0
 	watcher.look_now()
 	ok = _check("a file whose stamp moved is raised as changed", raised,
-		[["changed", SOURCE_DIR + "/kept.txt"]] as Array) and ok
+		[["changed", source_dir + "/kept.txt"]] as Array) and ok
 
 	raised.clear()
-	DirAccess.remove_absolute(SOURCE_DIR + "/new.txt")
+	DirAccess.remove_absolute(source_dir + "/new.txt")
 	watcher.look_now()
 	ok = _check("a file that went is raised as removed", raised,
-		[["removed", SOURCE_DIR + "/new.txt"]] as Array) and ok
+		[["removed", source_dir + "/new.txt"]] as Array) and ok
 
 	raised.clear()
 	watcher.look_now()
@@ -643,15 +643,15 @@ static func _run_watcher_runtime() -> bool:
 	# exactly as an empty one does, so a look taken then used to raise a removal for every file the
 	# folder held - and an appearance for every one of them the moment it came back.
 	raised.clear()
-	for entry: String in DirAccess.get_files_at(SOURCE_DIR):
-		DirAccess.remove_absolute(SOURCE_DIR.path_join(entry))
+	for entry: String in DirAccess.get_files_at(source_dir):
+		DirAccess.remove_absolute(source_dir.path_join(entry))
 	var remembered: int = int(watcher.watched_file_count())
-	DirAccess.remove_absolute(SOURCE_DIR)
+	DirAccess.remove_absolute(source_dir)
 	watcher.look_now()
 	ok = _check("a folder that is gone raises nothing at all", raised.size(), 0) and ok
 	ok = _check("and the watcher still remembers what was in it",
 		int(watcher.watched_file_count()), remembered) and ok
-	_fresh_dir(SOURCE_DIR)
+	_fresh_dir(source_dir)
 
 	watcher.stop_watching()
 	ok = _check("stopping stops the watch", bool(watcher.is_watching()), false) and ok
@@ -826,12 +826,12 @@ static func _write(path: String, text: String) -> bool:
 
 
 static func _clean() -> void:
-	DirAccess.remove_absolute(BLOCKED_DIR)
-	for folder: String in [SOURCE_DIR, OUT_DIR, WORK_DIR]:
+	DirAccess.remove_absolute(blocked_dir)
+	for folder: String in [source_dir, out_dir, work_dir]:
 		for entry: String in DirAccess.get_files_at(folder):
 			DirAccess.remove_absolute(folder.path_join(entry))
 		DirAccess.remove_absolute(folder)
-	DirAccess.remove_absolute(WORK_DIR.get_base_dir().path_join("escaped.txt"))
+	DirAccess.remove_absolute(work_dir.get_base_dir().path_join("escaped.txt"))
 
 
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:

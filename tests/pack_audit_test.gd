@@ -17,7 +17,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const AUDIT := preload("res://tools/audit_addons.gd")
 const PREFIX := "pack_audit_test"
 
-const FIXTURE_ROOT := "user://_pack_audit_fixture"
+static var fixture_root: String = SUPPORT.own_path("_pack_audit_fixture")
 
 ## A pack script that does not compile: the initializer's expression is missing.
 const BROKEN_SOURCE := "extends Node\n\n\nfunc go() -> void:\n\tvar broken: int = \n"
@@ -41,7 +41,7 @@ static func run() -> bool:
 		["the audit reports the broken pack as not compiling", AUDIT.script_compiles(broken_script), false],
 		["and the whole pack as compiling", AUDIT.script_compiles(good_script), true],
 		# A path with no script behind it is a failure, never a silent pass.
-		["a missing script cannot compile", AUDIT.script_compiles("%s/nothing_here.gd" % FIXTURE_ROOT), false],
+		["a missing script cannot compile", AUDIT.script_compiles("%s/nothing_here.gd" % fixture_root), false],
 	]) and all_passed
 	_remove_fixture()
 	return all_passed
@@ -50,7 +50,7 @@ static func run() -> bool:
 ## Writes one fixture pack folder (`user://_pack_audit_fixture/<folder>/<file>`) and returns the
 ## folder path, shaped exactly like a shipped pack: one folder, one `.gd` inside it.
 static func _write_fixture_pack(folder: String, file_name: String, source: String) -> String:
-	var path: String = "%s/%s" % [FIXTURE_ROOT, folder]
+	var path: String = "%s/%s" % [fixture_root, folder]
 	DirAccess.make_dir_recursive_absolute(path)
 	var handle: FileAccess = FileAccess.open("%s/%s" % [path, file_name], FileAccess.WRITE)
 	if handle != null:
@@ -63,7 +63,7 @@ static func _write_fixture_pack(folder: String, file_name: String, source: Strin
 ## a cached invalid script is exactly the state these pins are trying to describe.
 static func _remove_fixture() -> void:
 	for folder: String in ["broken_pack", "good_pack"]:
-		var path: String = "%s/%s" % [FIXTURE_ROOT, folder]
+		var path: String = "%s/%s" % [fixture_root, folder]
 		var dir: DirAccess = DirAccess.open(path)
 		if dir == null:
 			continue
@@ -73,4 +73,4 @@ static func _remove_fixture() -> void:
 			DirAccess.remove_absolute("%s/%s" % [path, entry])
 			entry = dir.get_next()
 		DirAccess.remove_absolute(path)
-	DirAccess.remove_absolute(FIXTURE_ROOT)
+	DirAccess.remove_absolute(fixture_root)

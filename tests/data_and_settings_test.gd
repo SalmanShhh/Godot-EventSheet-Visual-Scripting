@@ -20,8 +20,10 @@
 class_name DataAndSettingsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 const PACK_PATH := "res://eventsheet_addons/game_settings/game_settings_addon.gd"
-const WORK_DIR := "user://data_and_settings_test"
+static var work_dir: String = SUPPORT.own_path("data_and_settings_test")
 
 ## The item script the folder-validation fixtures use: a data asset with an id, which is what the
 ## folder report reads. It is written to disk because a GDScript built from a source string has no
@@ -260,7 +262,7 @@ static func _test_spawn_trigger_compiles() -> bool:
 static func _test_spawn_runtime() -> bool:
 	var ok: bool = true
 	_reset_work_dir()
-	var scene_path: String = WORK_DIR + "/spawned.tscn"
+	var scene_path: String = work_dir + "/spawned.tscn"
 	var template_node: Node2D = Node2D.new()
 	var packed: PackedScene = PackedScene.new()
 	packed.pack(template_node)
@@ -415,7 +417,7 @@ static func _test_live_data_trigger_compiles() -> bool:
 static func _test_watch_data_file_runtime() -> bool:
 	var ok: bool = true
 	_reset_work_dir()
-	var watched: String = WORK_DIR + "/live.json"
+	var watched: String = work_dir + "/live.json"
 	var watch: ACEDescriptor = _descriptor(EventForgeResourceACEs.get_descriptors(), "WatchDataFile")
 	var body: String = _substitute(watch.codegen_template, {"uid": "1", "path": "path"})
 	var host: Node = _node_from_source("extends Node\n\nsignal data_file_changed(path: String)\n\n\nfunc check(path: String) -> void:\n%s\n" % _indent(body))
@@ -439,7 +441,7 @@ static func _test_watch_data_file_runtime() -> bool:
 	ok = _pin(ok, watcher.calls, 1, "the same file, unchanged since, fires nothing more")
 
 	# The reload half: the copy every node is already holding picks up the new numbers.
-	var gradient_path: String = WORK_DIR + "/curve.tres"
+	var gradient_path: String = work_dir + "/curve.tres"
 	var gradient: Gradient = Gradient.new()
 	gradient.offsets = PackedFloat32Array([0.0, 1.0])
 	ResourceSaver.save(gradient, gradient_path)
@@ -461,7 +463,7 @@ static func _test_watch_data_file_runtime() -> bool:
 static func _test_data_folder_runtime() -> bool:
 	var ok: bool = true
 	_reset_work_dir()
-	var script_path: String = WORK_DIR + "/item.gd"
+	var script_path: String = work_dir + "/item.gd"
 	var script_file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
 	script_file.store_string(ITEM_SCRIPT_SOURCE)
 	script_file.close()
@@ -477,16 +479,16 @@ static func _test_data_folder_runtime() -> bool:
 	if reader == null:
 		return false
 
-	var clean_dir: String = WORK_DIR + "/clean"
+	var clean_dir: String = work_dir + "/clean"
 	DirAccess.make_dir_recursive_absolute(clean_dir)
 	_save_item(item_script, clean_dir + "/sword.tres", "sword")
 	_save_item(item_script, clean_dir + "/shield.tres", "shield")
 	ok = _pin(ok, reader.call("report", clean_dir), "", "a clean folder reports nothing at all")
 	ok = _pin(ok, reader.call("is_valid", clean_dir), true, "and reads as valid")
-	ok = _pin(ok, reader.call("report", WORK_DIR + "/not_there"), "",
+	ok = _pin(ok, reader.call("report", work_dir + "/not_there"), "",
 		"a folder that is not there is not a problem, it is empty")
 
-	var broken_dir: String = WORK_DIR + "/broken"
+	var broken_dir: String = work_dir + "/broken"
 	DirAccess.make_dir_recursive_absolute(broken_dir)
 	_save_item(item_script, broken_dir + "/axe.tres", "axe")
 	_save_item(item_script, broken_dir + "/axe_copy.tres", "axe")
@@ -558,9 +560,9 @@ static func _descriptor(descriptors: Array[ACEDescriptor], ace_id: String) -> AC
 
 static func _reset_work_dir() -> void:
 	var dir: DirAccess = DirAccess.open("user://")
-	if dir != null and dir.dir_exists(WORK_DIR.trim_prefix("user://")):
-		_remove_tree(WORK_DIR)
-	DirAccess.make_dir_recursive_absolute(WORK_DIR)
+	if dir != null and dir.dir_exists(work_dir.trim_prefix("user://")):
+		_remove_tree(work_dir)
+	DirAccess.make_dir_recursive_absolute(work_dir)
 
 
 static func _remove_tree(path: String) -> void:

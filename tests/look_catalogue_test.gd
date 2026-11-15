@@ -13,7 +13,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME: String = "look_catalogue_test"
-const FIXTURE_FOLDER: String = "user://look_catalogue_test"
+static var fixture_folder: String = SUPPORT.own_path("look_catalogue_test")
 
 const STAR_RATING: String = """@tool
 extends EventSheetInspectorLook
@@ -190,10 +190,10 @@ static func _types_are_matched_by_what_the_inspector_says() -> bool:
 
 
 static func _a_project_file_beats_a_shipped_one_of_the_same_name() -> bool:
-	DirAccess.make_dir_recursive_absolute(FIXTURE_FOLDER)
-	_write(FIXTURE_FOLDER + "/progress_bar.gd", STAR_RATING)
-	_write(FIXTURE_FOLDER + "/star_rating.gd", STAR_RATING)
-	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray([EventSheetInspectorLookCatalogue.SHIPPED_FOLDER, FIXTURE_FOLDER]))
+	DirAccess.make_dir_recursive_absolute(fixture_folder)
+	_write(fixture_folder + "/progress_bar.gd", STAR_RATING)
+	_write(fixture_folder + "/star_rating.gd", STAR_RATING)
+	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray([EventSheetInspectorLookCatalogue.SHIPPED_FOLDER, fixture_folder]))
 	var names: Array = []
 	for look: Dictionary in EventSheetInspectorLookCatalogue.entries():
 		names.append(look["name"])
@@ -205,10 +205,10 @@ static func _a_project_file_beats_a_shipped_one_of_the_same_name() -> bool:
 		["its questions are the project file's", overriding["questions"].size(), 4],
 	])
 	# A look added or removed shows up without anyone asking the catalogue to forget.
-	DirAccess.remove_absolute(FIXTURE_FOLDER + "/star_rating.gd")
+	DirAccess.remove_absolute(fixture_folder + "/star_rating.gd")
 	passed = SUPPORT.pin_value(NAME, "a removed look is gone", EventSheetInspectorLookCatalogue.entry("star_rating"), {}) and passed
-	DirAccess.remove_absolute(FIXTURE_FOLDER + "/progress_bar.gd")
-	DirAccess.remove_absolute(FIXTURE_FOLDER)
+	DirAccess.remove_absolute(fixture_folder + "/progress_bar.gd")
+	DirAccess.remove_absolute(fixture_folder)
 	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray())
 	return passed
 
@@ -336,7 +336,7 @@ static func _a_shipped_look_says_its_own_preview_sentence() -> bool:
 ## "Copy into my project": the shipped file, byte for byte, into the project's looks folder; nothing is ever
 ## overwritten, and a name that is not a shipped look copies nothing.
 static func _a_shipped_look_is_copied_into_the_project_and_never_over_one() -> bool:
-	var folder: String = "user://look_copy_test"
+	var folder: String = SUPPORT.own_path("look_copy_test")
 	DirAccess.make_dir_recursive_absolute(folder)
 	DirAccess.remove_absolute("%s/vector_dial.gd" % folder)
 	var first: Dictionary = EventSheetInspectorLookCatalogue.copy_into_project("vector_dial", folder)
@@ -360,7 +360,7 @@ static func _a_shipped_look_is_copied_into_the_project_and_never_over_one() -> b
 ## "New inspector look": the file written is a look the catalogue reads, it opens as a sheet and saves back
 ## byte for byte, it is in the shape the style gate holds scripts to, and nothing is overwritten.
 static func _a_new_look_is_a_small_working_file() -> bool:
-	var folder: String = "user://new_look_test"
+	var folder: String = SUPPORT.own_path("new_look_test")
 	DirAccess.make_dir_recursive_absolute(folder)
 	DirAccess.remove_absolute("%s/my_look.gd" % folder)
 	var made: Dictionary = EventSheetInspectorLookCatalogue.create_look("My Look", "int, float", folder)
@@ -383,7 +383,7 @@ static func _a_new_look_is_a_small_working_file() -> bool:
 		["it is written", [made.get("ok"), made.get("path")], [true, "%s/my_look.gd" % folder]],
 		["the catalogue reads its name, hover and types", [look.get("name"), look.get("label"), look.get("types")], ["my_look", "My Look", ["int", "float"]]],
 		["it opens as a sheet with the callbacks as triggers", triggers, ["OnLookBuilt", "OnValueShown"]],
-		["it saves back byte for byte", SUPPORT.reemit(text, "user://new_look_test_again.gd") == text, true],
+		["it saves back byte for byte", SUPPORT.reemit(text, SUPPORT.own_path("new_look_test_again.gd")) == text, true],
 		["two blank lines above each function, tabs, no class_name", [two_blank_above_functions, text.contains("
 	_label"), text.contains("class_name")], [true, true, false]],
 		["a name that is not an identifier is refused", EventSheetInspectorLookCatalogue.new_look_problem("2 fast!", "", folder).is_empty(), false],
@@ -399,20 +399,20 @@ static func _a_look_kept_elsewhere_can_be_registered() -> bool:
 	var registry: Script = load("res://addons/eventsheet/api/extension_registries.gd")
 	registry.call("clear_inspector_look_paths")
 	EventSheetInspectorLookCatalogue.use_folders(PackedStringArray())
-	FileAccess.open("user://reg_star.gd", FileAccess.WRITE).store_string(STAR_RATING)
-	FileAccess.open("user://not_a_look.gd", FileAccess.WRITE).store_string("extends Node
+	FileAccess.open(SUPPORT.own_path("reg_star.gd"), FileAccess.WRITE).store_string(STAR_RATING)
+	FileAccess.open(SUPPORT.own_path("not_a_look.gd"), FileAccess.WRITE).store_string("extends Node
 ")
-	var accepted: bool = EventSheets.register_inspector_look("user://reg_star.gd")
-	var again: bool = EventSheets.register_inspector_look("user://reg_star.gd")
-	var refused_text: bool = EventSheets.register_inspector_look("user://not_a_look.gd")
-	var refused_missing: bool = EventSheets.register_inspector_look("user://nothing_here.gd")
-	var refused_kind: bool = EventSheets.register_inspector_look("user://reg_star.txt")
+	var accepted: bool = EventSheets.register_inspector_look(SUPPORT.own_path("reg_star.gd"))
+	var again: bool = EventSheets.register_inspector_look(SUPPORT.own_path("reg_star.gd"))
+	var refused_text: bool = EventSheets.register_inspector_look(SUPPORT.own_path("not_a_look.gd"))
+	var refused_missing: bool = EventSheets.register_inspector_look(SUPPORT.own_path("nothing_here.gd"))
+	var refused_kind: bool = EventSheets.register_inspector_look(SUPPORT.own_path("reg_star.txt"))
 	var listed: Dictionary = EventSheetInspectorLookCatalogue.entry("reg_star")
 	var kept: int = (registry.call("inspector_look_paths") as PackedStringArray).size()
 	registry.call("clear_inspector_look_paths")
 	EventSheetInspectorLookCatalogue.forget()
-	DirAccess.remove_absolute("user://reg_star.gd")
-	DirAccess.remove_absolute("user://not_a_look.gd")
+	DirAccess.remove_absolute(SUPPORT.own_path("reg_star.gd"))
+	DirAccess.remove_absolute(SUPPORT.own_path("not_a_look.gd"))
 	return SUPPORT.pins(NAME, [
 		["a look file is accepted", accepted, true],
 		["asking again is true and adds nothing", [again, kept], [true, 1]],

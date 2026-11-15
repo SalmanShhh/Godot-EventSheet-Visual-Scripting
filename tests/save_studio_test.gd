@@ -13,22 +13,22 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "save_studio_test"
-const DIR := "user://save_studio_test/"
+static var dir: String = SUPPORT.own_path("save_studio_test/")
 const GAME_SETTINGS_PACK := "res://eventsheet_addons/game_settings/game_settings_addon.gd"
 const BINDINGS_MODULE := "res://addons/eventforge/registration/modules/controls_aces.gd"
 const REBIND_MODULE := "res://addons/eventforge/registration/modules/game_accessibility_aces.gd"
 
 
 static func run() -> bool:
-	DirAccess.make_dir_recursive_absolute(DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
 	var all_passed: bool = _formats_and_slots()
 	all_passed = _settings_scene() and all_passed
 	all_passed = _copy_and_plain_words() and all_passed
 	all_passed = _open_save_folder_pair() and all_passed
 	all_passed = _player_settings_cards() and all_passed
-	for file: String in DirAccess.get_files_at(DIR):
-		DirAccess.remove_absolute(DIR + file)
-	DirAccess.remove_absolute(DIR)
+	for file: String in DirAccess.get_files_at(dir):
+		DirAccess.remove_absolute(dir + file)
+	DirAccess.remove_absolute(dir)
 	return all_passed
 
 
@@ -53,7 +53,7 @@ static func _formats_and_slots() -> bool:
 
 
 static func _settings_scene() -> bool:
-	var scene_path: String = DIR + "save_system.tscn"
+	var scene_path: String = dir + "save_system.tscn"
 	var before: Variant = ProjectSettings.get_setting("autoload/SaveSystem", null)
 	var problem: String = EventSheetSaveStudio.make_settings_scene(scene_path)
 	var global_after: String = str(ProjectSettings.get_setting("autoload/SaveSystem", ""))
@@ -78,15 +78,15 @@ static func _settings_scene() -> bool:
 
 static func _copy_and_plain_words() -> bool:
 	var writer: Node = (load(EventSheetSaveStudio.SAVE_SYSTEM_SCRIPT) as GDScript).new()
-	writer.set("save_directory", DIR)
+	writer.set("save_directory", dir)
 	writer.call("save_value", "coins", 42)
 	writer.call("save_value", "position", Vector2(120, 64))
 	writer.free()
-	var settings: Dictionary = {"save_directory": DIR, "section": "save", "format": "config"}
-	var problem: String = EventSheetSaveStudio.copy_slot(DIR + "save_0.cfg", DIR + "copy.json", settings)
+	var settings: Dictionary = {"save_directory": dir, "section": "save", "format": "config"}
+	var problem: String = EventSheetSaveStudio.copy_slot(dir + "save_0.cfg", dir + "copy.json", settings)
 	var reader: Node = (load(EventSheetSaveStudio.SAVE_SYSTEM_SCRIPT) as GDScript).new()
-	var copied: Dictionary = reader.call("read_file", DIR + "copy.json", "json")
-	var detected: String = reader.call("save_file_format", DIR + "copy.json")
+	var copied: Dictionary = reader.call("read_file", dir + "copy.json", "json")
+	var detected: String = reader.call("save_file_format", dir + "copy.json")
 	reader.free()
 	var snapshot: Dictionary = {".": {"health": 3}, "Timer": {"left": 1.5}, "pos": Vector2(120, 64), "flag": true, "bag": [1, 2]}
 	return SUPPORT.pins(NAME, [
@@ -111,7 +111,7 @@ static func _open_save_folder_pair() -> bool:
 	var desktop: bool = pack.call("can_open_save_folder")
 	pack.free()
 	# The reader's hide list, on a catalog of the test's own: an AUTHORED row is hidden by it too.
-	EventSheetVocabularyCatalog.reset_for_tests(DIR + "vocabulary.tres")
+	EventSheetVocabularyCatalog.reset_for_tests(dir + "vocabulary.tres")
 	var key: String = EventSheetVocabularyCatalog.key_for(EventSheetSaveStudio.OPEN_FOLDER_PROVIDER, EventSheetSaveStudio.OPEN_FOLDER_ACE)
 	EventSheetVocabularyCatalog.set_override(EventSheetSaveStudio.OPEN_FOLDER_PROVIDER, EventSheetSaveStudio.OPEN_FOLDER_ACE, {"hidden": true})
 	var hidden: bool = EventSheetVocabularyCatalog.hidden_keys().has(key)

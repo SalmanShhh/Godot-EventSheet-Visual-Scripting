@@ -44,14 +44,14 @@ const PACK := "res://eventsheet_addons/mods/mods_addon.gd"
 const MANIFEST_RESOURCE := "res://eventsheet_addons/mod_manifest_resource/mod_manifest.gd"
 
 ## Everything this test writes lives under here, and it is removed on the way in and on the way out.
-const ROOT := "user://mods_pack_test"
+static var root: String = SUPPORT.own_path("mods_pack_test")
 
 ## The file a crafted mod's script writes if anything ever builds it. Its ABSENCE is the assertion:
 ## a data-only load that has to run a stranger's code to find out whether it may is not a tier.
-const MARKER := "user://mods_pack_test/probe/crafted_ran.txt"
+static var own_marker: String = SUPPORT.own_path("mods_pack_test/probe/crafted_ran.txt")
 
 ## And the one a script carried inside a BINARY resource writes, for the same assertion.
-const BINARY_MARKER := "user://mods_pack_test/probe/binary_ran.txt"
+static var binary_marker: String = SUPPORT.own_path("mods_pack_test/probe/binary_ran.txt")
 
 
 ## The Game Settings autoload as this pack talks to it: four methods, and a dictionary behind them.
@@ -115,11 +115,11 @@ static func run() -> bool:
 ## somebody's mod list showed one mod with no author.
 static func _both_manifest_spellings_arrive_as_one_record(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var written: Dictionary = director._manifest_at(ROOT.path_join("mods/big_swords"))
-	var saved: Dictionary = director._manifest_at(ROOT.path_join("mods/winter_skins"))
-	var nameless: Dictionary = director._manifest_at(ROOT.path_join("mods/nameless"))
-	var nothing: Dictionary = director._manifest_at(ROOT.path_join("mods/not_a_mod"))
-	var quoted: Dictionary = director._manifest_at(ROOT.path_join("probe/quoted"))
+	var written: Dictionary = director._manifest_at(root.path_join("mods/big_swords"))
+	var saved: Dictionary = director._manifest_at(root.path_join("mods/winter_skins"))
+	var nameless: Dictionary = director._manifest_at(root.path_join("mods/nameless"))
+	var nothing: Dictionary = director._manifest_at(root.path_join("mods/not_a_mod"))
+	var quoted: Dictionary = director._manifest_at(root.path_join("probe/quoted"))
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a mod.json gives its five fields", [written.get("name"), written.get("version"),
@@ -153,9 +153,9 @@ static func _code_is_decided_by_the_files_not_the_claim(script: GDScript) -> boo
 		"res://mod/items/blade.tres", "res://mod/art/blade.png"]))
 	var honest: String = director._code_reason({"scripts": true, "kind": "folder", "folder": ""})
 	var quiet_folder: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("mods/codey")})
+		"folder": root.path_join("mods/codey")})
 	var data_folder: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("mods/big_swords")})
+		"folder": root.path_join("mods/big_swords")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["every code file in a pack's own index is found, remaps included", Array(carried),
@@ -174,14 +174,14 @@ static func _code_is_decided_by_the_files_not_the_claim(script: GDScript) -> boo
 ## first is the only order that works.
 static func _a_zip_is_read_without_being_loaded(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var index: Dictionary = director._pack_index(ROOT.path_join("mods/zippy.zip"))
+	var index: Dictionary = director._pack_index(root.path_join("mods/zippy.zip"))
 	var paths: Array = Array(index.get("paths", PackedStringArray()))
 	paths.sort()
 	var reason: String = director._code_reason({"scripts": false, "kind": "pack",
-		"path": ROOT.path_join("mods/zippy.zip")})
-	var unreadable: Dictionary = director._pack_index(ROOT.path_join("mods/rubbish.pck"))
+		"path": root.path_join("mods/zippy.zip")})
+	var unreadable: Dictionary = director._pack_index(root.path_join("mods/rubbish.pck"))
 	var unreadable_reason: String = director._code_reason({"scripts": false, "kind": "pack",
-		"path": ROOT.path_join("mods/rubbish.pck")})
+		"path": root.path_join("mods/rubbish.pck")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a zip hands back its own file list", paths,
@@ -289,7 +289,7 @@ static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
 ## bytes no text reading can clear, and refused by name.
 static func _a_binary_resource_is_not_cleared_by_its_extension(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var folder: String = ROOT.path_join("probe/binary")
+	var folder: String = root.path_join("probe/binary")
 	var known: bool = director._resource_extensions().has("material")
 	var scene_reason: String = director._resource_reason("world.tscn",
 		FileAccess.get_file_as_string(folder.path_join("world.tscn")), folder)
@@ -300,7 +300,7 @@ static func _a_binary_resource_is_not_cleared_by_its_extension(script: GDScript)
 	var built: Resource = load(folder.path_join("evil.material"))
 	var brought_a_script: bool = built != null and built.get_script() != null
 	built = null
-	DirAccess.remove_absolute(BINARY_MARKER)
+	DirAccess.remove_absolute(binary_marker)
 	return SUPPORT.pins("mods_pack_test", [
 		["the extensions read are the engine's own, not four written down here", known, true],
 		["the scene naming the mod's own material is data", scene_reason, ""],
@@ -317,20 +317,20 @@ static func _a_binary_resource_is_not_cleared_by_its_extension(script: GDScript)
 ## is refused as well, so this asks for both: the mod is refused, and the marker is not there.
 static func _a_crafted_manifest_never_gets_to_run(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var record: Dictionary = director._manifest_at(ROOT.path_join("probe/crafted"))
+	var record: Dictionary = director._manifest_at(root.path_join("probe/crafted"))
 	var refusal: String = director._code_reason(record)
-	director.load_mod(ROOT.path_join("probe/crafted"), true)
+	director.load_mod(root.path_join("probe/crafted"), true)
 	var reason: String = director.mod_reason()
 	var loaded: int = director.mod_count()
-	var marker_written: bool = FileAccess.file_exists(MARKER)
+	var marker_written: bool = FileAccess.file_exists(own_marker)
 	director.free()
 	# THE PROBE HAS TO BE A REAL ONE. Building that same manifest - which is what asking a loaded
 	# object for its fields costs - runs the script and writes the marker, so "the marker is not
 	# there" means the reading refused it rather than that the fixture was inert.
-	var built: Resource = load(ROOT.path_join("probe/crafted/mod.tres"))
-	var marker_after_building: bool = FileAccess.file_exists(MARKER)
+	var built: Resource = load(root.path_join("probe/crafted/mod.tres"))
+	var marker_after_building: bool = FileAccess.file_exists(own_marker)
 	built = null
-	DirAccess.remove_absolute(MARKER)
+	DirAccess.remove_absolute(own_marker)
 	var refused_for: String = "it carries 1 code file(s), starting with hack.gd, and this row loads data only"
 	return SUPPORT.pins("mods_pack_test", [
 		["a manifest naming a script is not read as a manifest, so the mod keeps its folder's name",
@@ -349,17 +349,17 @@ static func _a_crafted_manifest_never_gets_to_run(script: GDScript) -> bool:
 static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> bool:
 	var director: Node = script.new()
 	var hidden: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("probe/sneaky")})
+		"folder": root.path_join("probe/sneaky")})
 	var honest: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("mods/big_swords")})
+		"folder": root.path_join("mods/big_swords")})
 	var two_code: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("probe/two_code")})
+		"folder": root.path_join("probe/two_code")})
 	var deep: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("probe/deep")})
+		"folder": root.path_join("probe/deep")})
 	var deeper: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("probe/deeper")})
+		"folder": root.path_join("probe/deeper")})
 	var shady: String = director._code_reason({"scripts": false, "kind": "folder",
-		"folder": ROOT.path_join("probe/shady")})
+		"folder": root.path_join("probe/shady")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a folder with no code file in it can still be refused, by what its scene carries",
@@ -383,15 +383,15 @@ static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> b
 ## in the world while the suite stayed green.
 static func _a_real_pack_file_is_read_off_its_own_bytes(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var data_index: Dictionary = director._pack_index(ROOT.path_join("probe/tidy.pck"))
+	var data_index: Dictionary = director._pack_index(root.path_join("probe/tidy.pck"))
 	var paths: Array = Array(data_index.get("paths", PackedStringArray()))
 	paths.sort()
 	var data_reason: String = director._code_reason({"scripts": false, "kind": "pack",
-		"path": ROOT.path_join("probe/tidy.pck")})
+		"path": root.path_join("probe/tidy.pck")})
 	var sneaky_reason: String = director._code_reason({"scripts": false, "kind": "pack",
-		"path": ROOT.path_join("probe/sneaky.pck")})
+		"path": root.path_join("probe/sneaky.pck")})
 	var codey_reason: String = director._code_reason({"scripts": false, "kind": "pack",
-		"path": ROOT.path_join("probe/codey.pck")})
+		"path": root.path_join("probe/codey.pck")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a real pack file's own table is read", bool(data_index.get("read")), true],
@@ -411,10 +411,10 @@ static func _a_real_pack_file_is_read_off_its_own_bytes(script: GDScript) -> boo
 ## reasoning. The older two are written out byte by byte instead and read back through the same door.
 static func _the_older_pack_formats_are_read_too(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var oldest: Dictionary = director._pack_index(ROOT.path_join("probe/oldest.pck"))
-	var old: Dictionary = director._pack_index(ROOT.path_join("probe/old.pck"))
+	var oldest: Dictionary = director._pack_index(root.path_join("probe/oldest.pck"))
+	var old: Dictionary = director._pack_index(root.path_join("probe/old.pck"))
 	var old_reason: String = director._code_reason({"scripts": false, "kind": "pack",
-		"path": ROOT.path_join("probe/old.pck")})
+		"path": root.path_join("probe/old.pck")})
 	director.free()
 	var held: PackedStringArray = PackedStringArray([
 		"res://old/items/blade.tres", "res://old/cheat.gd"])
@@ -433,7 +433,7 @@ static func _the_older_pack_formats_are_read_too(script: GDScript) -> bool:
 ## "<null>" - and the rule that a blank name falls back to the folder's own never fired.
 static func _a_mod_tres_that_is_not_a_manifest_keeps_its_folders_name(script: GDScript) -> bool:
 	var director: Node = script.new()
-	var record: Dictionary = director._manifest_at(ROOT.path_join("probe/odd_tres"))
+	var record: Dictionary = director._manifest_at(root.path_join("probe/odd_tres"))
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a resource that is not a manifest is named after its folder",
@@ -481,7 +481,7 @@ static func _data_only_takes_the_data_mods_and_names_the_rest(script: GDScript) 
 	director.mod_refused.connect(func(refused_name: String, reason: String) -> void:
 		refused.append("%s: %s" % [refused_name, reason]))
 	director.mods_changed.connect(func() -> void: changed.append(true))
-	director.load_from(ROOT.path_join("mods"), true)
+	director.load_from(root.path_join("mods"), true)
 	var names: Array = []
 	for record: Dictionary in director.each_mod():
 		names.append(record.get("name"))
@@ -510,15 +510,15 @@ static func _data_only_takes_the_data_mods_and_names_the_rest(script: GDScript) 
 ## a pack file would be loaded into this process and could never be taken back out.
 static func _the_script_tier_takes_the_one_it_refused(script: GDScript) -> bool:
 	var director: Node = script.new()
-	director.load_mod(ROOT.path_join("mods/codey"), false)
+	director.load_mod(root.path_join("mods/codey"), false)
 	var loaded_it: bool = director.mod_is_loaded("Codey")
 	var counted: int = director.mod_count()
 	director.free()
 	var refuser: Node = script.new()
-	refuser.load_mod(ROOT.path_join("mods/codey"), true)
+	refuser.load_mod(root.path_join("mods/codey"), true)
 	var refused_it: bool = refuser.mod_is_loaded("Codey")
 	var nowhere: Node = script.new()
-	nowhere.load_mod(ROOT.path_join("mods/nowhere_at_all"), true)
+	nowhere.load_mod(root.path_join("mods/nowhere_at_all"), true)
 	var nowhere_reason: String = nowhere.mod_reason()
 	refuser.free()
 	nowhere.free()
@@ -527,7 +527,7 @@ static func _the_script_tier_takes_the_one_it_refused(script: GDScript) -> bool:
 		["and it is the only mod loaded", counted, 1],
 		["the same mod is refused when the row does not", refused_it, false],
 		["a path with no mod at it says so rather than passing quietly", nowhere_reason,
-			"there is no mod at %s" % ROOT.path_join("mods/nowhere_at_all")]
+			"there is no mod at %s" % root.path_join("mods/nowhere_at_all")]
 	])
 
 
@@ -538,7 +538,7 @@ static func _the_script_tier_takes_the_one_it_refused(script: GDScript) -> bool:
 static func _load_order_puts_the_named_ones_first(script: GDScript) -> bool:
 	var director: Node = script.new()
 	director.set_load_order("Winter Skins, Big Swords")
-	director.load_from(ROOT.path_join("mods"), true)
+	director.load_from(root.path_join("mods"), true)
 	var ordered: Array = []
 	for record: Dictionary in director.each_mod():
 		ordered.append(record.get("name"))
@@ -574,7 +574,7 @@ static func _the_switched_off_list_survives_a_new_director(script: GDScript) -> 
 	var fresh: Node = script.new()
 	fresh.settings_node = settings
 	fresh._ready()
-	fresh.load_from(ROOT.path_join("mods"), true)
+	fresh.load_from(root.path_join("mods"), true)
 	var skipped: bool = fresh.mod_is_loaded("Big Swords")
 	var still_there: bool = fresh.mod_is_loaded("Winter Skins")
 	fresh.enable_mod("Big Swords")
@@ -583,7 +583,7 @@ static func _the_switched_off_list_survives_a_new_director(script: GDScript) -> 
 
 	var alone: Node = script.new()
 	alone.disable_mod("Big Swords")
-	alone.load_from(ROOT.path_join("mods"), true)
+	alone.load_from(root.path_join("mods"), true)
 	var alone_skipped: bool = alone.mod_is_loaded("Big Swords")
 	alone.free()
 	return SUPPORT.pins("mods_pack_test", [
@@ -629,17 +629,17 @@ static func _a_pack_file_says_it_cannot_be_unloaded(script: GDScript) -> bool:
 ## In Folder and checked by the same structural questions Data Folder Problems asks.
 static func _the_doors_onto_a_mods_content(script: GDScript) -> bool:
 	var director: Node = script.new()
-	director.load_from(ROOT.path_join("mods"), true)
+	director.load_from(root.path_join("mods"), true)
 	var one: String = director.mod_folder("Big Swords")
 	var absent: String = director.mod_folder("Never Was")
 	var every: Array = director.mod_folders("items")
 	var problems: String = director.mod_content_problems("items")
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
-		["a loaded mod says where its files are", one, ROOT.path_join("mods/big_swords")],
+		["a loaded mod says where its files are", one, root.path_join("mods/big_swords")],
 		["a mod nobody loaded has no folder", absent, ""],
 		["every mod's items folder comes back in load order, skipping those without one", every,
-			[ROOT.path_join("mods/big_swords/items"), ROOT.path_join("mods/winter_skins/items")]],
+			[root.path_join("mods/big_swords/items"), root.path_join("mods/winter_skins/items")]],
 		["and a file two mods both bring is named, with the winner", problems,
 			"Winter Skins: blade.tres is also in Big Swords, and the one loaded last wins"]
 	])
@@ -652,7 +652,7 @@ static func _the_doors_onto_a_mods_content(script: GDScript) -> bool:
 ## THROUGH THE PACK - the same _manifest_at that will read theirs. A template the loader cannot read
 ## is worse than none, and this is the only place the two ends meet.
 static func _the_template_is_a_folder_a_modder_can_copy(script: GDScript) -> bool:
-	var folder: String = ROOT.path_join("template")
+	var folder: String = root.path_join("template")
 	var receipt: Dictionary = EventSheetModTemplateTool.export_template(folder, {
 		"name": "Example Mod", "version": "1.0", "author": "Ada",
 		"replaces": "nothing yet", "scripts": false}, "items", true)
@@ -682,7 +682,7 @@ static func _the_template_is_a_folder_a_modder_can_copy(script: GDScript) -> boo
 ## A folder that already holds a manifest is somebody's mod. The tool refuses it whole rather than
 ## writing half a template over the top, and the refusal is the sentence the status bar shows.
 static func _the_template_never_writes_over_somebodys_mod() -> bool:
-	var folder: String = ROOT.path_join("mods/big_swords")
+	var folder: String = root.path_join("mods/big_swords")
 	var receipt: Dictionary = EventSheetModTemplateTool.export_template(folder, {"name": "Nope"})
 	var nowhere: Dictionary = EventSheetModTemplateTool.export_template("  ", {"name": "Nope"})
 	return SUPPORT.pins("mods_pack_test", [
@@ -702,11 +702,11 @@ static func _the_template_never_writes_over_somebodys_mod() -> bool:
 ## manifest, one whose manifest names nothing, a folder that is not a mod at all, a .zip with a
 ## script in it, and a .pck that is not one.
 static func _write_fixtures(manifest_script: GDScript) -> void:
-	_write(ROOT.path_join("mods/big_swords/mod.json"), JSON.stringify({
+	_write(root.path_join("mods/big_swords/mod.json"), JSON.stringify({
 		"name": "Big Swords", "version": "2.1", "author": "Ada",
 		"replaces": "the sword icons", "scripts": false}, "\t"))
-	_write_resource(ROOT.path_join("mods/big_swords/items/blade.tres"))
-	_write_resource(ROOT.path_join("mods/big_swords/items/shield.tres"))
+	_write_resource(root.path_join("mods/big_swords/items/blade.tres"))
+	_write_resource(root.path_join("mods/big_swords/items/shield.tres"))
 
 	var saved: Resource = manifest_script.new()
 	saved.set("mod_name", "Winter Skins")
@@ -714,21 +714,21 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	saved.set("author", "Bo")
 	saved.set("replaces", "the winter tiles")
 	saved.set("scripts", false)
-	_make_folder(ROOT.path_join("mods/winter_skins"))
-	ResourceSaver.save(saved, ROOT.path_join("mods/winter_skins/mod.tres"))
-	_write_resource(ROOT.path_join("mods/winter_skins/items/blade.tres"))
+	_make_folder(root.path_join("mods/winter_skins"))
+	ResourceSaver.save(saved, root.path_join("mods/winter_skins/mod.tres"))
+	_write_resource(root.path_join("mods/winter_skins/items/blade.tres"))
 
-	_write(ROOT.path_join("mods/nameless/mod.json"), JSON.stringify({"version": "1.0"}, "\t"))
+	_write(root.path_join("mods/nameless/mod.json"), JSON.stringify({"version": "1.0"}, "\t"))
 
-	_write(ROOT.path_join("mods/codey/mod.json"), JSON.stringify({
+	_write(root.path_join("mods/codey/mod.json"), JSON.stringify({
 		"name": "Codey", "version": "1.0", "scripts": false}, "\t"))
-	_write(ROOT.path_join("mods/codey/cheat.gd"), "extends Node\n")
+	_write(root.path_join("mods/codey/cheat.gd"), "extends Node\n")
 
-	_write(ROOT.path_join("mods/not_a_mod/readme.txt"), "no manifest here\n")
+	_write(root.path_join("mods/not_a_mod/readme.txt"), "no manifest here\n")
 
-	_make_folder(ROOT.path_join("mods"))
+	_make_folder(root.path_join("mods"))
 	var packer: ZIPPacker = ZIPPacker.new()
-	if packer.open(ROOT.path_join("mods/zippy.zip")) == OK:
+	if packer.open(root.path_join("mods/zippy.zip")) == OK:
 		for inner: String in ["res://zippy/items/blade.tres", "res://zippy/cheat.gd"]:
 			packer.start_file(inner)
 			packer.write_file("[gd_resource type=\"Resource\" format=3]\n".to_utf8_buffer())
@@ -736,41 +736,41 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 		packer.close()
 	# A file that opens and is not a pack: the case a data-only row must refuse rather than read as
 	# empty, because "I could not tell" and "there is nothing in it" are different answers.
-	_write(ROOT.path_join("mods/rubbish.pck"), "this is not a pack file, it is a sentence\n")
+	_write(root.path_join("mods/rubbish.pck"), "this is not a pack file, it is a sentence\n")
 
 	# A mod with no code file in it at all, whose one scene has a script written inside it. This is
 	# the folder a tier decided by file extension took as data.
-	_write(ROOT.path_join("probe/sneaky/mod.json"), JSON.stringify({
+	_write(root.path_join("probe/sneaky/mod.json"), JSON.stringify({
 		"name": "Sneaky", "version": "1.0", "scripts": false}, "\t"))
-	_write(ROOT.path_join("probe/sneaky/world.tscn"), _scene_text([
+	_write(root.path_join("probe/sneaky/world.tscn"), _scene_text([
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
 
 	# The two older pack shapes, which no engine still writes.
 	for older: Array in [[1, "probe/oldest.pck"], [3, "probe/old.pck"]]:
-		_pack_in_format(ROOT.path_join(str(older[1])), int(older[0]),
+		_pack_in_format(root.path_join(str(older[1])), int(older[0]),
 			PackedStringArray(["res://old/items/blade.tres", "res://old/cheat.gd"]))
 
 	# A mod whose only code is a shader file. It is not a script, and it is not data either.
-	_write(ROOT.path_join("probe/shady/mod.json"), JSON.stringify({
+	_write(root.path_join("probe/shady/mod.json"), JSON.stringify({
 		"name": "Shady", "version": "1.0", "scripts": false}, "\t"))
-	_write(ROOT.path_join("probe/shady/water.gdshader"), "shader_type canvas_item;\n")
+	_write(root.path_join("probe/shady/water.gdshader"), "shader_type canvas_item;\n")
 
 	# Two mods with a `.gd` at the bottom of a chain of folders: one deeper than the walk used to
 	# reach and still within it, one deeper than it reaches at all.
-	_write(ROOT.path_join("probe/deep/mod.json"), JSON.stringify({
+	_write(root.path_join("probe/deep/mod.json"), JSON.stringify({
 		"name": "Deep", "version": "1.0", "scripts": false}, "\t"))
-	_write(_nest(ROOT.path_join("probe/deep"), 9).path_join("deep.gd"), "extends Node\n")
-	_write(ROOT.path_join("probe/deeper/mod.json"), JSON.stringify({
+	_write(_nest(root.path_join("probe/deep"), 9).path_join("deep.gd"), "extends Node\n")
+	_write(root.path_join("probe/deeper/mod.json"), JSON.stringify({
 		"name": "Deeper", "version": "1.0", "scripts": false}, "\t"))
-	_write(_nest(ROOT.path_join("probe/deeper"), 20).path_join("deep.gd"), "extends Node\n")
+	_write(_nest(root.path_join("probe/deeper"), 20).path_join("deep.gd"), "extends Node\n")
 
 	# Two code files, written in the order that is NOT their sorted order, so the file the refusal
 	# names is the walk's answer rather than the disk's.
-	_write(ROOT.path_join("probe/two_code/mod.json"), JSON.stringify({
+	_write(root.path_join("probe/two_code/mod.json"), JSON.stringify({
 		"name": "Two", "version": "1.0", "scripts": false}, "\t"))
-	_write(ROOT.path_join("probe/two_code/zebra.gd"), "extends Node\n")
-	_write(ROOT.path_join("probe/two_code/alpha.gd"), "extends Node\n")
+	_write(root.path_join("probe/two_code/zebra.gd"), "extends Node\n")
+	_write(root.path_join("probe/two_code/alpha.gd"), "extends Node\n")
 
 	# A BINARY resource with a script on it, and a scene that names it. Neither file is a `.gd`, and
 	# `.material` was not one of the four extensions this reading used to know, so the mod cleared as
@@ -778,60 +778,60 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	# cannot be what refuses it.
 	# It extends the material class it is saved as, because `.material` is the extension the engine
 	# recognises for THAT class - a plain Resource saved under that name is not saved at all.
-	_write(ROOT.path_join("hostile/evil_material.gd"),
+	_write(root.path_join("hostile/evil_material.gd"),
 		"extends StandardMaterial3D\n\n\nfunc _init() -> void:\n"
-		+ "\tvar marker: FileAccess = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % BINARY_MARKER
+		+ "\tvar marker: FileAccess = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % binary_marker
 		+ "\tif marker != null:\n\t\tmarker.store_string(\"ran\")\n\t\tmarker.close()\n")
-	_write(ROOT.path_join("probe/binary/mod.json"), JSON.stringify({
+	_write(root.path_join("probe/binary/mod.json"), JSON.stringify({
 		"name": "Binary", "version": "1.0", "scripts": false}, "\t"))
-	var evil_script: GDScript = load(ROOT.path_join("hostile/evil_material.gd"))
+	var evil_script: GDScript = load(root.path_join("hostile/evil_material.gd"))
 	if evil_script != null:
-		ResourceSaver.save(evil_script.new(), ROOT.path_join("probe/binary/evil.material"))
-	_write(ROOT.path_join("probe/binary/world.tscn"), _scene_text([
-		"[ext_resource type=\"Material\" path=\"%s\" id=\"1\"]" % ROOT.path_join("probe/binary/evil.material"),
+		ResourceSaver.save(evil_script.new(), root.path_join("probe/binary/evil.material"))
+	_write(root.path_join("probe/binary/world.tscn"), _scene_text([
+		"[ext_resource type=\"Material\" path=\"%s\" id=\"1\"]" % root.path_join("probe/binary/evil.material"),
 		"[node name=\"Thing\" type=\"MeshInstance3D\"]",
 		"material_override = ExtResource(\"1\")"]))
 	# Building the fixture ran it once, which is the whole point of it. The marker starts absent.
-	DirAccess.remove_absolute(BINARY_MARKER)
+	DirAccess.remove_absolute(binary_marker)
 
 	# A manifest whose name carries a quote of its own, and an author with a backslash. Godot writes
 	# both escaped, and a reading that stops at the first quote of any kind gets half a name.
-	_write(ROOT.path_join("probe/quoted/mod.tres"),
+	_write(root.path_join("probe/quoted/mod.tres"),
 		"[gd_resource type=\"Resource\" format=3]\n\n[resource]\n"
 		+ "mod_name = \"Bob's \\\"Big\\\" Swords\"\nauthor = \"a\\\\b\"\nscripts = false\n")
 
 	# A crafted mod: a mod.tres naming a script in the mod's own folder, and a script that writes a
 	# file the moment anything builds it. Hand-written rather than saved, because the whole point is
 	# a file no honest tool would write.
-	_write(ROOT.path_join("probe/crafted/hack.gd"), "extends Resource\n\n\nfunc _init() -> void:\n"
-		+ "\tvar marker: FileAccess = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % MARKER
+	_write(root.path_join("probe/crafted/hack.gd"), "extends Resource\n\n\nfunc _init() -> void:\n"
+		+ "\tvar marker: FileAccess = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % own_marker
 		+ "\tif marker != null:\n\t\tmarker.store_string(\"ran\")\n\t\tmarker.close()\n")
-	_write(ROOT.path_join("probe/crafted/mod.tres"),
+	_write(root.path_join("probe/crafted/mod.tres"),
 		"[gd_resource type=\"Resource\" load_steps=2 format=3]\n\n"
-		+ "[ext_resource type=\"Script\" path=\"%s\" id=\"1_h\"]\n\n" % ROOT.path_join("probe/crafted/hack.gd")
+		+ "[ext_resource type=\"Script\" path=\"%s\" id=\"1_h\"]\n\n" % root.path_join("probe/crafted/hack.gd")
 		+ "[resource]\nscript = ExtResource(\"1_h\")\nmod_name = \"Crafted\"\nversion = \"9.9\"\n")
 
 	# A mod.tres that is not a ModManifest: every field it is asked for answers null.
-	_make_folder(ROOT.path_join("probe/odd_tres"))
-	ResourceSaver.save(Resource.new(), ROOT.path_join("probe/odd_tres/mod.tres"))
+	_make_folder(root.path_join("probe/odd_tres"))
+	ResourceSaver.save(Resource.new(), root.path_join("probe/odd_tres/mod.tres"))
 
 	# Three REAL pack files, packed here rather than described: one of data, one whose scene hides a
 	# script, one carrying a code file by name.
-	_write(ROOT.path_join("packed/blade.tres"), "[gd_resource type=\"Resource\" format=3]\n")
-	_write(ROOT.path_join("packed/tidy.tscn"), _scene_text([
+	_write(root.path_join("packed/blade.tres"), "[gd_resource type=\"Resource\" format=3]\n")
+	_write(root.path_join("packed/tidy.tscn"), _scene_text([
 		"[node name=\"Tree\" type=\"Node2D\"]"]))
-	_write(ROOT.path_join("packed/sneaky.tscn"), _scene_text([
+	_write(root.path_join("packed/sneaky.tscn"), _scene_text([
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
-	_write(ROOT.path_join("packed/cheat.gd"), "extends Node\n")
-	_pack(ROOT.path_join("probe/tidy.pck"), {
-		"res://tidy/items/blade.tres": ROOT.path_join("packed/blade.tres"),
-		"res://tidy/world.tscn": ROOT.path_join("packed/tidy.tscn")})
-	_pack(ROOT.path_join("probe/sneaky.pck"), {
-		"res://sneaky/items/blade.tres": ROOT.path_join("packed/blade.tres"),
-		"res://sneaky/world.tscn": ROOT.path_join("packed/sneaky.tscn")})
-	_pack(ROOT.path_join("probe/codey.pck"), {
-		"res://codey/cheat.gd": ROOT.path_join("packed/cheat.gd")})
+	_write(root.path_join("packed/cheat.gd"), "extends Node\n")
+	_pack(root.path_join("probe/tidy.pck"), {
+		"res://tidy/items/blade.tres": root.path_join("packed/blade.tres"),
+		"res://tidy/world.tscn": root.path_join("packed/tidy.tscn")})
+	_pack(root.path_join("probe/sneaky.pck"), {
+		"res://sneaky/items/blade.tres": root.path_join("packed/blade.tres"),
+		"res://sneaky/world.tscn": root.path_join("packed/sneaky.tscn")})
+	_pack(root.path_join("probe/codey.pck"), {
+		"res://codey/cheat.gd": root.path_join("packed/cheat.gd")})
 
 
 ## One resource file's text, head and all. Written through one helper so a fixture and an
@@ -923,7 +923,7 @@ static func _make_folder(path: String) -> void:
 
 ## Removes the fixture tree, on the way in as well as on the way out - a run that crashed half way
 ## through must not decide what the next one sees.
-static func _clear(path: String = ROOT) -> void:
+static func _clear(path: String = root) -> void:
 	if not DirAccess.dir_exists_absolute(path):
 		return
 	for file_name: String in DirAccess.get_files_at(path):

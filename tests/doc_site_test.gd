@@ -13,9 +13,11 @@
 class_name DocSiteTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 ## Where the test writes. Under user:// because a test that wrote into res:// would leave a folder
 ## in somebody's checkout, and cleared at both ends so a re-run starts cold.
-const WORK_ROOT := "user://eventsheet_test_site"
+static var work_root: String = SUPPORT.own_path("eventsheet_test_site")
 
 
 static func run() -> bool:
@@ -29,7 +31,7 @@ static func run() -> bool:
 	all_passed = _test_no_engine_pages() and all_passed
 	all_passed = _test_search_data() and all_passed
 	all_passed = _test_same_bytes_twice() and all_passed
-	_clear(WORK_ROOT)
+	_clear(work_root)
 	return all_passed
 
 
@@ -189,7 +191,7 @@ static func _test_search_data() -> bool:
 ## twice under one id and lose the other.
 ##
 static func _test_same_bytes_twice() -> bool:
-	_clear(WORK_ROOT)
+	_clear(work_root)
 	var ids: PackedStringArray = PackedStringArray()
 	for id: String in EventSheetDocLibrary.page_ids():
 		ids.append(id)
@@ -201,9 +203,9 @@ static func _test_same_bytes_twice() -> bool:
 		print("[doc_site] no help bundle installed - byte identity not exercised")
 		return true
 	var options: Dictionary = {"page_ids": Array(ids), "sheets": _sheets_in_two_folders(),
-		"figures_dir": "%s/figures" % WORK_ROOT}
-	var first: Dictionary = EventSheetDocSiteExport.export_site("%s/a" % WORK_ROOT, options)
-	var second: Dictionary = EventSheetDocSiteExport.export_site("%s/b" % WORK_ROOT, options)
+		"figures_dir": "%s/figures" % work_root}
+	var first: Dictionary = EventSheetDocSiteExport.export_site("%s/a" % work_root, options)
+	var second: Dictionary = EventSheetDocSiteExport.export_site("%s/b" % work_root, options)
 	var passed: bool = _check("both exports wrote the same page count",
 		int(first.get("pages", 0)), int(second.get("pages", 0)))
 	# BOTH FILE LISTS, not just the first: a second export that wrote an EXTRA file is a difference,
@@ -214,7 +216,7 @@ static func _test_same_bytes_twice() -> bool:
 		", ".join(first_files), ", ".join(second_files)) and passed
 	var differing: PackedStringArray = PackedStringArray()
 	for relative: String in first_files:
-		if _read("%s/a/%s" % [WORK_ROOT, relative]) != _read("%s/b/%s" % [WORK_ROOT, relative]):
+		if _read("%s/a/%s" % [work_root, relative]) != _read("%s/b/%s" % [work_root, relative]):
 			differing.append(relative)
 	passed = _check("every exported file is byte-identical to the other export's",
 		", ".join(differing), "") and passed
@@ -227,10 +229,10 @@ static func _test_same_bytes_twice() -> bool:
 		sheet_pages.size(), 2) and passed
 	# And the folder holds nothing the export did not write: a page deleted from the corpus has to
 	# disappear from the site, which only works because the export clears what it owns first.
-	_write("%s/a/pages/GHOST.html" % WORK_ROOT, "left over")
-	EventSheetDocSiteExport.export_site("%s/a" % WORK_ROOT, options)
+	_write("%s/a/pages/GHOST.html" % work_root, "left over")
+	EventSheetDocSiteExport.export_site("%s/a" % work_root, options)
 	passed = _check("a page that is no longer in the corpus is cleared out",
-		FileAccess.file_exists("%s/a/pages/GHOST.html" % WORK_ROOT), false) and passed
+		FileAccess.file_exists("%s/a/pages/GHOST.html" % work_root), false) and passed
 	return passed
 
 

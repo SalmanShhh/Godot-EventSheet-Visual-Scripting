@@ -34,7 +34,7 @@ const StyleGuide := preload("res://tests/style_guide_test.gd")
 const ThisEditorFacts := preload("res://addons/eventsheet/editor/interaction/this_editor_facts.gd")
 
 const SOURCE_ROOT := "res://tools/pack_builders/src"
-const FIXTURE_DIR := "user://eventsheets_pack_source_fixture"
+static var fixture_dir: String = SUPPORT.own_path("eventsheets_pack_source_fixture")
 
 
 static func run() -> bool:
@@ -56,7 +56,7 @@ static func _reader_pins() -> bool:
 	# a past run of a past fixture left behind would join this one's pieces and fail the piece-name
 	# pin with a message about a file this test has never heard of.
 	_empty_fixture_dir()
-	_write(FIXTURE_DIR.path_join("a_first.gd"), [
+	_write(fixture_dir.path_join("a_first.gd"), [
 		"# A fixture, not a pack.",
 		"extends Node",
 		"",
@@ -76,14 +76,14 @@ static func _reader_pins() -> bool:
 		"\t\tspeed = 0.0",
 		"",
 		""])
-	_write(FIXTURE_DIR.path_join("b_second.gd"), [
+	_write(fixture_dir.path_join("b_second.gd"), [
 		"# The companion file: its pieces join the first file's.",
 		"extends Node",
 		"",
 		"func set_speed(value: float) -> void:",
 		"\tspeed = value",
 		""])
-	_write(FIXTURE_DIR.path_join("c_third.gd"), [
+	_write(fixture_dir.path_join("c_third.gd"), [
 		"# The two rules a reader of this tree has to know, pinned so they cannot change quietly.",
 		"extends Node",
 		"",
@@ -95,7 +95,7 @@ static func _reader_pins() -> bool:
 		"# A comment at column 0 ends the piece here.",
 		"	var lost: int = 2",
 		""])
-	var pieces: Dictionary = Lib._read_pieces(FIXTURE_DIR)
+	var pieces: Dictionary = Lib._read_pieces(fixture_dir)
 	var all_passed: bool = true
 	all_passed = _pins("the folder's piece names", ",".join(PackedStringArray(pieces.keys())),
 		"knobs,_ready,set_speed,stops_at_a_column_zero_comment") and all_passed
@@ -338,14 +338,14 @@ static func _source_files() -> PackedStringArray:
 ## The fixture folder, emptied. `user://` survives between runs on a developer's machine (CI gets a
 ## fresh one), so the folder is cleared rather than trusted.
 static func _empty_fixture_dir() -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(FIXTURE_DIR))
-	var dir: DirAccess = DirAccess.open(FIXTURE_DIR)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(fixture_dir))
+	var dir: DirAccess = DirAccess.open(fixture_dir)
 	if dir == null:
 		return
 	var names: PackedStringArray = dir.get_files()
 	names.sort()
 	for file_name: String in names:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(FIXTURE_DIR.path_join(file_name)))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(fixture_dir.path_join(file_name)))
 
 
 static func _write(path: String, lines: PackedStringArray) -> void:

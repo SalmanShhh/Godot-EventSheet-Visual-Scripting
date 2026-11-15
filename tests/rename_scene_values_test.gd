@@ -10,53 +10,53 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const READER_PATH: String = "res://addons/eventsheet/editor/dock/scene_values.gd"
-const FOLDER: String = "user://rename_scene_values_fixture"
-const SCRIPT: String = "user://rename_scene_values_fixture/mover.gd"
-const LEVEL: String = "user://rename_scene_values_fixture/level.tscn"
+static var folder: String = SUPPORT.own_path("rename_scene_values_fixture")
+static var own_script: String = SUPPORT.own_path("rename_scene_values_fixture/mover.gd")
+static var own_level: String = SUPPORT.own_path("rename_scene_values_fixture/level.tscn")
 const SOURCE: String = "extends Node2D\n\n\n@export var speed: float = 1.0\n\n\nfunc _ready() -> void:\n\tprint(speed)\n"
 
 
 static func run() -> bool:
 	var ok: bool = true
-	DirAccess.make_dir_recursive_absolute(FOLDER)
-	_write(SCRIPT, SOURCE)
-	var level: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"%s\" id=\"1_mv\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n" % SCRIPT
+	DirAccess.make_dir_recursive_absolute(folder)
+	_write(own_script, SOURCE)
+	var level: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"%s\" id=\"1_mv\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n" % own_script
 	for index: int in range(1, 11):
 		level += "\n[node name=\"Enemy%d\" type=\"Node2D\" parent=\".\"]\nscript = ExtResource(\"1_mv\")\nspeed = %s\n" % [index, str(index * 25.5)]
-	_write(LEVEL, level)
+	_write(own_level, level)
 	var reader: GDScript = load(READER_PATH)
-	reader.roots = PackedStringArray([FOLDER])
+	reader.roots = PackedStringArray([folder])
 
 	var dock: EventSheetEditor = EventSheetEditor.new()
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock._load_sheet_from_path(SCRIPT)
+	dock._load_sheet_from_path(own_script)
 	dock._preview_glue._on_preview_edit_requested()
 	ok = _check("the variable is an exported one", reader.is_exported_variable(dock._current_sheet, "speed"), true) and ok
 	var stored: Dictionary = reader.stored_for(dock, "speed", "")
-	ok = _check("the window lists the scene that stores ten values", stored["counts"].get(LEVEL, 0), 10) and ok
+	ok = _check("the window lists the scene that stores ten values", stored["counts"].get(own_level, 0), 10) and ok
 
 	ok = _check("the rename goes through", dock._rename.rename_everywhere("speed", "move_speed"), true) and ok
-	var after: String = FileAccess.get_file_as_string(LEVEL)
+	var after: String = FileAccess.get_file_as_string(own_level)
 	ok = _check("all ten values moved to the new name", after.count("\nmove_speed = "), 10) and ok
 	ok = _check("none was left under the old name", after.count("\nspeed = "), 0) and ok
 	ok = _check("every value is the text it was", after.replace("move_speed = ", "speed = "), level) and ok
-	ok = _check("the script on disk says the new name", FileAccess.get_file_as_string(SCRIPT).contains("var move_speed: float = 1.0"), true) and ok
+	ok = _check("the script on disk says the new name", FileAccess.get_file_as_string(own_script).contains("var move_speed: float = 1.0"), true) and ok
 	ok = _check("the line under the sheet says what it did", dock._status_label.text.contains("10 value(s) in 1 scene(s) kept under the new name"), true) and ok
 
 	# One Ctrl+Z puts the sheet and the scene back, byte for byte.
 	dock._on_undo_requested()
-	ok = _check("undo puts the scene back byte for byte", FileAccess.get_file_as_string(LEVEL), level) and ok
-	ok = _check("undo puts the script back", FileAccess.get_file_as_string(SCRIPT).contains("var speed: float = 1.0"), true) and ok
+	ok = _check("undo puts the scene back byte for byte", FileAccess.get_file_as_string(own_level), level) and ok
+	ok = _check("undo puts the script back", FileAccess.get_file_as_string(own_script).contains("var speed: float = 1.0"), true) and ok
 	# And Ctrl+Shift+Z does it again.
 	dock._on_redo_requested()
-	ok = _check("redo renames the scene's values again", FileAccess.get_file_as_string(LEVEL).count("\nmove_speed = "), 10) and ok
+	ok = _check("redo renames the scene's values again", FileAccess.get_file_as_string(own_level).count("\nmove_speed = "), 10) and ok
 
 	# A variable no scene stores a value for renames as it always did, and writes no scene.
 	dock._on_undo_requested()
-	_write(LEVEL, level.replace("speed = ", "other_value = "))
-	var untouched: String = FileAccess.get_file_as_string(LEVEL)
+	_write(own_level, level.replace("speed = ", "other_value = "))
+	var untouched: String = FileAccess.get_file_as_string(own_level)
 	ok = _check("a rename nothing stores a value for goes through", dock._rename.rename_everywhere("speed", "move_speed"), true) and ok
-	ok = _check("and writes no scene", FileAccess.get_file_as_string(LEVEL), untouched) and ok
+	ok = _check("and writes no scene", FileAccess.get_file_as_string(own_level), untouched) and ok
 
 	# The window after a rename that also saved another sheet tells the reader where the way back is, in
 	# the editor's own words, and does not assume they use version control.
@@ -69,8 +69,8 @@ static func run() -> bool:
 	dock.free()
 	reader.roots = PackedStringArray(["res://"])
 	for name: String in ["mover.gd", "mover.gd.uid", "level.tscn"]:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/%s" % [FOLDER, name]))
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(FOLDER))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/%s" % [folder, name]))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(folder))
 	return ok
 
 

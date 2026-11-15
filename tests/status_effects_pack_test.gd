@@ -344,7 +344,7 @@ static func _a_tick_handler_may_end_the_others() -> bool:
 ## row can apply and another cannot find. Written into user:// because the point is a file whose two
 ## names DISAGREE, and no starter does.
 static func _a_file_is_found_by_the_name_it_calls_itself() -> bool:
-	var folder: String = "user://eventforge_status_naming"
+	var folder: String = SUPPORT.own_path("eventforge_status_naming")
 	DirAccess.make_dir_recursive_absolute(folder)
 	var written: FileAccess = FileAccess.open(folder + "/curse.tres", FileAccess.WRITE)
 	if written == null:

@@ -36,8 +36,8 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 
 ## Where the staged script lives. user://, so a run leaves nothing under res://.
-const STAGED_DIR: String = "user://derived_property_rows_staged"
-const STAGED_SCRIPT: String = STAGED_DIR + "/lantern.gd"
+static var staged_dir: String = SUPPORT.own_path("derived_property_rows_staged")
+static var staged_script: String = staged_dir + "/lantern.gd"
 
 ## A project script with `##` lines above its own declarations, including one that an `@export`
 ## annotation sits between - the ordinary way an exported, documented property is written.
@@ -214,7 +214,7 @@ static func _test_curated_outranks_and_upgrades_in_place() -> bool:
 static func _test_the_words_ride() -> bool:
 	var ok: bool = true
 	_stage_script()
-	var receiver: Dictionary = {"class": "", "script_path": STAGED_SCRIPT, "source": "declared"}
+	var receiver: Dictionary = {"class": "", "script_path": staged_script, "source": "declared"}
 	var glow: Dictionary = EventSheetDerivedProperties.property_facts(receiver, "glow")
 	ok = _check("a project property's words are the `##` lines above it",
 		str(glow.get("doc", "")), "How bright the lantern burns, from out to full.") and ok
@@ -283,7 +283,7 @@ shadow_filter_smooth: How smooth the filter is.") and ok
 ## which is exactly why it is worth proving on a real buffer rather than trusting the mechanism.
 static func _test_the_row_is_the_line() -> bool:
 	_stage_script()
-	var reading: Dictionary = EventSheetLiftReading.read(STAGED_SOURCE, STAGED_SCRIPT)
+	var reading: Dictionary = EventSheetLiftReading.read(STAGED_SOURCE, staged_script)
 	return _check("a file of derived property rows saves back byte-identical",
 		bool(reading.get("identical", false)), true)
 
@@ -421,8 +421,8 @@ static func _tone_of(segments: Array, wanted: String) -> String:
 
 
 static func _stage_script() -> void:
-	DirAccess.make_dir_recursive_absolute(STAGED_DIR)
-	var handle: FileAccess = FileAccess.open(STAGED_SCRIPT, FileAccess.WRITE)
+	DirAccess.make_dir_recursive_absolute(staged_dir)
+	var handle: FileAccess = FileAccess.open(staged_script, FileAccess.WRITE)
 	if handle != null:
 		handle.store_string(STAGED_SOURCE)
 		handle.close()
@@ -435,5 +435,5 @@ static func _tidy_up() -> void:
 	EventSheetDerivedCalls.clear_cache()
 	EventSheetScriptMembers.clear_cache()
 	EventSheetLiftReading.clear_cache()
-	DirAccess.remove_absolute(STAGED_SCRIPT)
-	DirAccess.remove_absolute(STAGED_DIR)
+	DirAccess.remove_absolute(staged_script)
+	DirAccess.remove_absolute(staged_dir)

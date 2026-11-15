@@ -16,6 +16,8 @@
 class_name PackDependencyDoctorTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 ## Runs in the serial tail rather than in a shard: it creates and deletes a pack directory in the
 ## shipped tree, which a pack sweep in a neighbouring process would read mid-flight.
 const PARALLEL_UNSAFE: bool = true
@@ -64,7 +66,7 @@ static func run() -> bool:
 
 	# ---- a `.gd` sheet is a user of the pack too: its own text counts as usage ----
 	_write_probe("## @ace_requires(NoSuchClassAnywhere)", false)
-	var gd_user: String = "user://dep_probe_user.gd"
+	var gd_user: String = SUPPORT.own_path("dep_probe_user.gd")
 	var gd_file: FileAccess = FileAccess.open(gd_user, FileAccess.WRITE)
 	gd_file.store_string("extends Node
 

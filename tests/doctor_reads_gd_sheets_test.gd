@@ -14,11 +14,11 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const GdSheets := preload("res://addons/eventforge/doctor_gd_sheets.gd")
 const TEST_NAME := "doctor_reads_gd_sheets_test"
-const FOLDER := "user://doctor_gd_sheets/"
+static var own_folder: String = SUPPORT.own_path("doctor_gd_sheets/")
 
 
 static func run() -> bool:
-	DirAccess.make_dir_recursive_absolute(FOLDER)
+	DirAccess.make_dir_recursive_absolute(own_folder)
 	var rows: Array = []
 
 	# Debug residue: a script that still carries the live-values receiver or a breakpoint statement.
@@ -165,7 +165,7 @@ func _physics_process(delta: float) -> void:
 
 
 static func _write(name: String, source: String) -> String:
-	var path: String = FOLDER + name + ".gd"
+	var path: String = own_folder + name + ".gd"
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(source)
 	file.close()
@@ -199,9 +199,9 @@ static func _any_begins_with(paths: PackedStringArray, prefix: String) -> bool:
 
 
 static func _clean_up() -> void:
-	var dir: DirAccess = DirAccess.open(FOLDER)
+	var dir: DirAccess = DirAccess.open(own_folder)
 	if dir == null:
 		return
 	for file_name: String in dir.get_files():
-		DirAccess.remove_absolute(FOLDER + file_name)
-	DirAccess.remove_absolute(FOLDER)
+		DirAccess.remove_absolute(own_folder + file_name)
+	DirAccess.remove_absolute(own_folder)

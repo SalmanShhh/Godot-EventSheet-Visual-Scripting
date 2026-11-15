@@ -6,23 +6,23 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const P := "pack_usage_addons_test"
-const ROOT := "user://pack_usage_addons_test"
+static var root: String = SUPPORT.own_path("pack_usage_addons_test")
 
 
 static func run() -> bool:
-	_clear(ROOT)
-	_write(ROOT.path_join("addons/my_addon/mine.gd"), "extends Node\nvar p: Painter = null\n")
-	_write(ROOT.path_join("addons/eventsheet/ours.gd"), "extends Node\nvar p: Painter = null\n")
-	_write(ROOT.path_join("addons/eventforge/ours.gd"), "extends Node\nvar p: Painter = null\n")
-	_write(ROOT.path_join("addons/eventsheet_library/painter/painter.gd"), "class_name Painter\nextends Node\n")
-	_write(ROOT.path_join("eventsheet_addons/painter/painter.gd"), "class_name Painter\nextends Node\n")
+	_clear(root)
+	_write(root.path_join("addons/my_addon/mine.gd"), "extends Node\nvar p: Painter = null\n")
+	_write(root.path_join("addons/eventsheet/ours.gd"), "extends Node\nvar p: Painter = null\n")
+	_write(root.path_join("addons/eventforge/ours.gd"), "extends Node\nvar p: Painter = null\n")
+	_write(root.path_join("addons/eventsheet_library/painter/painter.gd"), "class_name Painter\nextends Node\n")
+	_write(root.path_join("eventsheet_addons/painter/painter.gd"), "class_name Painter\nextends Node\n")
 	var paths: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in EventSheetPackLibrary.usage_corpus(ROOT):
-		paths.append(str(entry["path"]).trim_prefix(ROOT + "/"))
+	for entry: Dictionary in EventSheetPackLibrary.usage_corpus(root):
+		paths.append(str(entry["path"]).trim_prefix(root + "/"))
 	paths.sort()
 	var result: bool = SUPPORT.check(P, "a user's addon is read; this plugin's own folders are not", paths,
 		PackedStringArray(["addons/my_addon/mine.gd", "eventsheet_addons/painter/painter.gd"]))
-	_clear(ROOT)
+	_clear(root)
 	return result
 
 

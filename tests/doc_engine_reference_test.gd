@@ -23,7 +23,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 ## Where the fixture harvest is written. Under user:// on purpose: a fixture XML inside the repo
 ## would be indistinguishable from a harvested one to anybody reading the folder later.
-const FIXTURE_ROOT := "user://doc_engine_reference_test"
+static var fixture_root: String = SUPPORT.own_path("doc_engine_reference_test")
 
 ## One class in the engine's own reference shape - inheritance, a brief and a full description, a
 ## property, a method with a return type, and a signal. Deliberately written with the members OUT
@@ -296,21 +296,21 @@ static func _test_plain() -> bool:
 static func _test_scan() -> bool:
 	var all_passed: bool = true
 	_clean_up()
-	DirAccess.make_dir_recursive_absolute("%s/doc/classes" % FIXTURE_ROOT)
-	DirAccess.make_dir_recursive_absolute("%s/modules/extra/doc_classes" % FIXTURE_ROOT)
-	_write("%s/doc/classes/TestNode.xml" % FIXTURE_ROOT, FIXTURE_XML)
-	_write("%s/doc/classes/Alpha.xml" % FIXTURE_ROOT, FIXTURE_XML.replace("TestNode", "Alpha"))
-	_write("%s/modules/extra/doc_classes/ModuleClass.xml" % FIXTURE_ROOT,
+	DirAccess.make_dir_recursive_absolute("%s/doc/classes" % fixture_root)
+	DirAccess.make_dir_recursive_absolute("%s/modules/extra/doc_classes" % fixture_root)
+	_write("%s/doc/classes/TestNode.xml" % fixture_root, FIXTURE_XML)
+	_write("%s/doc/classes/Alpha.xml" % fixture_root, FIXTURE_XML.replace("TestNode", "Alpha"))
+	_write("%s/modules/extra/doc_classes/ModuleClass.xml" % fixture_root,
 		FIXTURE_XML.replace("TestNode", "ModuleClass"))
-	_write("%s/doc/classes/notes.txt" % FIXTURE_ROOT, "not a class")
-	var found: Dictionary = EventSheetDocEngineReference.scan_files(FIXTURE_ROOT)
+	_write("%s/doc/classes/notes.txt" % fixture_root, "not a class")
+	var found: Dictionary = EventSheetDocEngineReference.scan_files(fixture_root)
 	var names: PackedStringArray = PackedStringArray()
 	for name: Variant in found:
 		names.append(str(name))
 	all_passed = _check("the scan finds every class, in every folder, sorted and XML only",
 		", ".join(names), "Alpha, ModuleClass, TestNode") and all_passed
 	all_passed = _check("a folder with no harvest in it scans to nothing",
-		EventSheetDocEngineReference.scan_files("%s/nowhere" % FIXTURE_ROOT).size(), 0) and all_passed
+		EventSheetDocEngineReference.scan_files("%s/nowhere" % fixture_root).size(), 0) and all_passed
 
 	return all_passed
 
@@ -356,7 +356,7 @@ static func _write(path: String, text: String) -> void:
 ## harvest: asking for any class scans the cache directory once and keeps the answer for the rest of
 ## the process. Both are dropped here, so the next test starts as cold as a fresh editor.
 static func _clean_up() -> void:
-	_remove_tree(FIXTURE_ROOT)
+	_remove_tree(fixture_root)
 	EventSheetDocEngineReference.reload()
 
 

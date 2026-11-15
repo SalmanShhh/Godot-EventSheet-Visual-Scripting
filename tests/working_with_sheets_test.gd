@@ -19,7 +19,7 @@ class_name WorkingWithSheetsTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const COMPILE_PATH := "user://ef_working_with_sheets_compile.gd"
+static var compile_path: String = SUPPORT.own_path("ef_working_with_sheets_compile.gd")
 
 
 static func run() -> bool:
@@ -352,7 +352,7 @@ static func _test_a_base_keeps_running_under_the_script_that_extends_it() -> boo
 ## the class the include names is swapped for a preload of a stand-in written beside it, so the
 ## question is only the SHAPE the include wrote - two functions of one name is what fails here.
 static func _parses(text: String) -> bool:
-	var dir: String = "user://include_parse_check"
+	var dir: String = SUPPORT.own_path("include_parse_check")
 	DirAccess.make_dir_recursive_absolute(dir)
 	var stand_in: FileAccess = FileAccess.open(dir + "/pause_handling.gd", FileAccess.WRITE)
 	stand_in.store_string("extends RefCounted\n\n\nfunc on_ready(host: Node) -> void:\n\tpass\n\n\nfunc on_tick(host: Node, delta: float) -> void:\n\tpass\n")
@@ -444,8 +444,8 @@ static func _conflicted_source() -> String:
 
 
 static func _compile(sheet: EventSheetResource) -> String:
-	var result: Dictionary = EventSheetCompiler.compile(sheet, COMPILE_PATH)
-	DirAccess.remove_absolute(COMPILE_PATH)
+	var result: Dictionary = EventSheetCompiler.compile(sheet, compile_path)
+	DirAccess.remove_absolute(compile_path)
 	return str(result.get("output", ""))
 
 

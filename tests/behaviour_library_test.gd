@@ -23,43 +23,43 @@ const SUPPORT := preload("res://tests/support.gd")
 const LIBRARY_BUILD := preload("res://tools/build_library.gd")
 const SHIPPED := preload("res://addons/eventforge/shipped_pack_folders.gd")
 const P := "behaviour_library_test"
-const ROOT := "user://behaviour_library_test"
-const LIB := ROOT + "/library"
-const PROJECT := ROOT + "/project"
+static var root: String = SUPPORT.own_path("behaviour_library_test")
+static var lib: String = root + "/library"
+static var own_project: String = root + "/project"
 
 
 static func run() -> bool:
-	_clear(ROOT)
+	_clear(root)
 	EventSheetPackLibrary.forget()
-	_write(LIB.path_join(".gdignore"), "")
-	_write(LIB.path_join("painter/painter.gd"), "## @ace_requires(Surface, Node2D)\n## @ace_tags(drawing, visual)\n## @ace_name(\"Painter\")\nclass_name Painter\nextends Node\n## Paints onto a surface. More words.\n\n## @ace_action\n## @ace_name(\"Splash Paint\")\n## @ace_codegen_template(\"$Painter.splash()\")\nfunc splash() -> void:\n\tpass\n")
-	_write(LIB.path_join("painter/painter.gd.uid"), "uid://painter1\n")
-	_write(LIB.path_join("painter/icon.svg.import"), "[remap]\n")
-	_write(LIB.path_join("surface/surface.gd"), "## @ace_requires(pack:brushes)\n## @ace_tags(drawing, visual)\nclass_name Surface\nextends Node2D\n")
-	_write(LIB.path_join("brushes/brushes.gd"), "## @ace_tags(drawing, visual)\nclass_name BrushSet\nextends Node\n")
-	_write(LIB.path_join("palette/palette.gd"), "## @ace_tags(drawing, visual)\nclass_name Palette\nextends Resource\n")
-	_write(LIB.path_join("stamp/stamp.gd"), "## @ace_tags(drawing, visual, stamp)\nclass_name Stamp\nextends Node\n")
-	_write(LIB.path_join("runner/runner.gd"), "## @ace_tags(movement)\nclass_name Runner\nextends Node\n\n## @ace_condition\n## @ace_name(\"Is Dashing\")\nfunc is_dashing() -> bool:\n\treturn false\n")
-	_write(PROJECT.path_join("eventsheet_addons/brushes/brushes.gd"), "# the project's own copy\n")
-	_write(PROJECT.path_join("player.gd"), "extends Node\nvar p: Painter = null\nfunc _ready() -> void:\n\t$Painter.splash()\n\tprint(\"no\")\n\t%Painter.splash()\n")
-	_write(PROJECT.path_join("level.tscn"), "[ext_resource path=\"res://eventsheet_addons/painter/painter.gd\"]\n")
-	var packs_dir: String = PROJECT.path_join("eventsheet_addons")
+	_write(lib.path_join(".gdignore"), "")
+	_write(lib.path_join("painter/painter.gd"), "## @ace_requires(Surface, Node2D)\n## @ace_tags(drawing, visual)\n## @ace_name(\"Painter\")\nclass_name Painter\nextends Node\n## Paints onto a surface. More words.\n\n## @ace_action\n## @ace_name(\"Splash Paint\")\n## @ace_codegen_template(\"$Painter.splash()\")\nfunc splash() -> void:\n\tpass\n")
+	_write(lib.path_join("painter/painter.gd.uid"), "uid://painter1\n")
+	_write(lib.path_join("painter/icon.svg.import"), "[remap]\n")
+	_write(lib.path_join("surface/surface.gd"), "## @ace_requires(pack:brushes)\n## @ace_tags(drawing, visual)\nclass_name Surface\nextends Node2D\n")
+	_write(lib.path_join("brushes/brushes.gd"), "## @ace_tags(drawing, visual)\nclass_name BrushSet\nextends Node\n")
+	_write(lib.path_join("palette/palette.gd"), "## @ace_tags(drawing, visual)\nclass_name Palette\nextends Resource\n")
+	_write(lib.path_join("stamp/stamp.gd"), "## @ace_tags(drawing, visual, stamp)\nclass_name Stamp\nextends Node\n")
+	_write(lib.path_join("runner/runner.gd"), "## @ace_tags(movement)\nclass_name Runner\nextends Node\n\n## @ace_condition\n## @ace_name(\"Is Dashing\")\nfunc is_dashing() -> bool:\n\treturn false\n")
+	_write(own_project.path_join("eventsheet_addons/brushes/brushes.gd"), "# the project's own copy\n")
+	_write(own_project.path_join("player.gd"), "extends Node\nvar p: Painter = null\nfunc _ready() -> void:\n\t$Painter.splash()\n\tprint(\"no\")\n\t%Painter.splash()\n")
+	_write(own_project.path_join("level.tscn"), "[ext_resource path=\"res://eventsheet_addons/painter/painter.gd\"]\n")
+	var packs_dir: String = own_project.path_join("eventsheet_addons")
 
 	var ok: bool = SUPPORT.pins(P, [
-		["a library is a folder holding .gdignore", EventSheetPackLibrary.exists(LIB), true],
-		["a folder without .gdignore is no library", EventSheetPackLibrary.exists(PROJECT), false],
-		["the library's folders, sorted", EventSheetPackLibrary.folders(LIB),
+		["a library is a folder holding .gdignore", EventSheetPackLibrary.exists(lib), true],
+		["a folder without .gdignore is no library", EventSheetPackLibrary.exists(own_project), false],
+		["the library's folders, sorted", EventSheetPackLibrary.folders(lib),
 			PackedStringArray(["brushes", "painter", "palette", "runner", "stamp", "surface"])],
-		["@ace_requires entries across a folder, in file order", EventSheetPackLibrary.requirement_entries(LIB.path_join("painter")),
+		["@ace_requires entries across a folder, in file order", EventSheetPackLibrary.requirement_entries(lib.path_join("painter")),
 			PackedStringArray(["Surface", "Node2D"])],
 		["what a pack needs: the class's folder, then what that folder names, never an engine class",
-			EventSheetPackLibrary.needs("painter", LIB), PackedStringArray(["surface", "brushes"])],
-		["a pack needing nothing drags nothing", EventSheetPackLibrary.needs("runner", LIB), PackedStringArray()],
+			EventSheetPackLibrary.needs("painter", lib), PackedStringArray(["surface", "brushes"])],
+		["a pack needing nothing drags nothing", EventSheetPackLibrary.needs("runner", lib), PackedStringArray()],
 		["adding leaves out a folder the project already holds",
-			EventSheetPackLibrary.folders_to_add("painter", LIB, packs_dir), PackedStringArray(["painter", "surface"])],
+			EventSheetPackLibrary.folders_to_add("painter", lib, packs_dir), PackedStringArray(["painter", "surface"])],
 	])
 
-	var copied: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["painter", "brushes"]), LIB, packs_dir)
+	var copied: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["painter", "brushes"]), lib, packs_dir)
 	ok = SUPPORT.pins(P, [
 		["the copy says what it copied and what it kept", [copied["ok"], copied["copied"], copied["kept"]],
 			[true, PackedStringArray(["painter"]), PackedStringArray(["brushes"])]],
@@ -71,7 +71,7 @@ static func run() -> bool:
 				FileAccess.file_exists(packs_dir.path_join("painter/icon.svg.import"))],
 			[true, "uid://painter1\n", false]],
 		["a folder the library lacks is refused by name",
-			EventSheetPackLibrary.copy_into_project(PackedStringArray(["nowhere"]), LIB, packs_dir)["ok"], false],
+			EventSheetPackLibrary.copy_into_project(PackedStringArray(["nowhere"]), lib, packs_dir)["ok"], false],
 		["the trash never takes a path that leaves the packs folder",
 			EventSheetPackLibrary.send_to_trash("../player.gd", packs_dir), ERR_INVALID_PARAMETER],
 		["the trash says when there is no such folder", EventSheetPackLibrary.send_to_trash("ghost", packs_dir), ERR_DOES_NOT_EXIST],
@@ -80,10 +80,10 @@ static func run() -> bool:
 	# A project pack nobody uses that reads the project's own Brushes: both are unused, together.
 	_write(packs_dir.path_join("brush_user/brush_user.gd"), "class_name BrushUser\nextends Node\nvar brushes: BrushSet = null\n")
 	_write(packs_dir.path_join("brushes/brushes.gd"), "class_name BrushSet\nextends Resource\n")
-	var corpus: Array[Dictionary] = EventSheetPackLibrary.usage_corpus(PROJECT)
+	var corpus: Array[Dictionary] = EventSheetPackLibrary.usage_corpus(own_project)
 	var tidy_lines: PackedStringArray = PackedStringArray()
 	for row: Dictionary in EventSheetPackLibrary.tidy_rows([{"dir": "brush_user", "name": "Brush User"},
-			{"dir": "brushes", "name": "Brushes"}, {"dir": "painter", "name": "Painter"}], corpus, LIB, packs_dir):
+			{"dir": "brushes", "name": "Brushes"}, {"dir": "painter", "name": "Painter"}], corpus, lib, packs_dir):
 		tidy_lines.append("%s: %s%s" % [row["name"], EventSheetPackLibrary.used_by_text(row["users"]),
 			"" if bool(row["in_library"]) else " (own)"])
 	ok = SUPPORT.check(P, "Tidy: a pack read only by a pack nothing uses is unused too, and a used one names its files",
@@ -99,7 +99,7 @@ static func run() -> bool:
 		["the Tidy line for a used one names the files", EventSheetPackLibrary.used_by_text(painter_users), "used by level.tscn, player.gd"],
 	]) and ok
 
-	var library_packs: Array[Dictionary] = EventSheetPackLibrary.packs(LIB, packs_dir)
+	var library_packs: Array[Dictionary] = EventSheetPackLibrary.packs(lib, packs_dir)
 	var states: Dictionary = {}
 	for pack: Dictionary in library_packs:
 		states[str(pack["dir"])] = str(pack["state"])
@@ -107,26 +107,26 @@ static func run() -> bool:
 	for kit: Dictionary in EventSheetPackLibrary.kits(library_packs):
 		kit_lines.append("%s: %s" % [kit["tag"], ", ".join(kit["names"])])
 	var found: PackedStringArray = PackedStringArray()
-	for hit: Dictionary in EventSheetPackLibrary.search("dash", LIB, packs_dir):
+	for hit: Dictionary in EventSheetPackLibrary.search("dash", lib, packs_dir):
 		found.append("%s · %s" % [hit["name"], hit["said"]])
 	ok = SUPPORT.pins(P, [
 		["a library pack the project holds is marked so", [states.get("painter"), states.get("runner")], ["project", "library"]],
 		["kits: a tag four packs share, once for the same four (drawing and visual are one kit), never a data pack", kit_lines,
 			PackedStringArray(["drawing: Brushes, Painter, Stamp, Surface"])],
 		["the library search reads an action's name", found, PackedStringArray(["Runner · Is Dashing"])],
-		["the library search never offers what the project holds", EventSheetPackLibrary.search("splash", LIB, packs_dir).size(), 0],
+		["the library search never offers what the project holds", EventSheetPackLibrary.search("splash", lib, packs_dir).size(), 0],
 		["the folders every kit copies, once each, minus what is there",
-			EventSheetPackLibrary.kit_folders(EventSheetPackLibrary.kits(library_packs), LIB, packs_dir),
+			EventSheetPackLibrary.kit_folders(EventSheetPackLibrary.kits(library_packs), lib, packs_dir),
 			PackedStringArray(["surface", "stamp"])],
 	]) and ok
 
 	# The editor's two-step copy: everything but the scripts first, then the scripts.
-	_write(LIB.path_join("runner/icon.svg"), "<svg/>")
-	_write(LIB.path_join("runner/runner.gd.uid"), "uid://runner1\n")
-	EventSheetPackLibrary.copy_into_project(PackedStringArray(["runner"]), LIB, packs_dir, true)
+	_write(lib.path_join("runner/icon.svg"), "<svg/>")
+	_write(lib.path_join("runner/runner.gd.uid"), "uid://runner1\n")
+	EventSheetPackLibrary.copy_into_project(PackedStringArray(["runner"]), lib, packs_dir, true)
 	var first_step: Array = [FileAccess.file_exists(packs_dir.path_join("runner/icon.svg")),
 		FileAccess.file_exists(packs_dir.path_join("runner/runner.gd")), FileAccess.file_exists(packs_dir.path_join("runner/runner.gd.uid"))]
-	EventSheetPackLibrary.copy_scripts(PackedStringArray(["runner"]), LIB, packs_dir)
+	EventSheetPackLibrary.copy_scripts(PackedStringArray(["runner"]), lib, packs_dir)
 	ok = SUPPORT.pins(P, [
 		["the first step copies the pictures and holds the scripts back", first_step, [true, false, false]],
 		["the second step brings the scripts and their uid", [FileAccess.file_exists(packs_dir.path_join("runner/runner.gd")),
@@ -139,10 +139,10 @@ static func run() -> bool:
 		["the library is the shipped packs, byte for byte (run tools/build_library.gd)",
 			LIBRARY_BUILD.drift(LIBRARY_BUILD.SOURCE_ROOT, EventSheetPackLibrary.LIBRARY_ROOT, PackedStringArray(SHIPPED.FOLDERS), false),
 			PackedStringArray()],
-		["the mirror gate names a stale file", LIBRARY_BUILD.drift(LIB, PROJECT, PackedStringArray(["painter"]), false).has("painter/painter.gd"), true],
+		["the mirror gate names a stale file", LIBRARY_BUILD.drift(lib, own_project, PackedStringArray(["painter"]), false).has("painter/painter.gd"), true],
 	]) and ok
 	ok = _pin_failed_copy(packs_dir) and ok
-	_clear(ROOT)
+	_clear(root)
 	EventSheetPackLibrary.forget()
 	return ok
 
@@ -153,7 +153,7 @@ static func run() -> bool:
 static func _pin_failed_copy(packs_dir: String) -> bool:
 	_write(packs_dir.path_join("stamp"), "a file, not a folder")
 	var failed: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["surface", "palette", "stamp"]),
-		LIB, packs_dir)
+		lib, packs_dir)
 	var ok: bool = SUPPORT.pins(P, [
 		["a copy that fails part way says so and copied nothing", [failed["ok"], failed["copied"]],
 			[false, PackedStringArray()]],
@@ -165,9 +165,9 @@ static func _pin_failed_copy(packs_dir: String) -> bool:
 	# The second step failing takes back every folder the first step made. A folder standing where
 	# the script has to go is what refuses its copy.
 	DirAccess.remove_absolute(packs_dir.path_join("stamp"))
-	var first: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["surface"]), LIB, packs_dir, true)
+	var first: Dictionary = EventSheetPackLibrary.copy_into_project(PackedStringArray(["surface"]), lib, packs_dir, true)
 	DirAccess.make_dir_recursive_absolute(packs_dir.path_join("surface/surface.gd"))
-	var second: Error = EventSheetPackLibrary.copy_scripts(first["copied"], LIB, packs_dir)
+	var second: Error = EventSheetPackLibrary.copy_scripts(first["copied"], lib, packs_dir)
 	ok = SUPPORT.pins(P, [
 		["a failed script step reports its error", second != OK, true],
 		["and leaves no half-copied folder behind", DirAccess.dir_exists_absolute(packs_dir.path_join("surface")), false],

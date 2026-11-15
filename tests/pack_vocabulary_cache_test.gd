@@ -13,13 +13,13 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME: String = "pack_vocabulary_cache_test"
-const TEST_CACHE: String = "user://eventsheets_pack_vocabulary_test.bin"
-const PROBE_DIR: String = "user://pack_vocabulary_probe"
-const BASE_PATH: String = "user://pack_vocabulary_probe/probe_base.gd"
-const PROVIDER_PATH: String = "user://pack_vocabulary_probe/probe_provider.gd"
-const NAMED_PATH: String = "user://pack_vocabulary_probe/probe_named.gd"
-const WAITING_PATH: String = "user://pack_vocabulary_probe/probe_waiting.gd"
-const HELPER_PATH: String = "user://pack_vocabulary_probe/probe_helper.gd"
+static var test_cache: String = SUPPORT.own_path("eventsheets_pack_vocabulary_test.bin")
+static var probe_dir: String = SUPPORT.own_path("pack_vocabulary_probe")
+static var base_path: String = SUPPORT.own_path("pack_vocabulary_probe/probe_base.gd")
+static var provider_path: String = SUPPORT.own_path("pack_vocabulary_probe/probe_provider.gd")
+static var named_path: String = SUPPORT.own_path("pack_vocabulary_probe/probe_named.gd")
+static var waiting_path: String = SUPPORT.own_path("pack_vocabulary_probe/probe_waiting.gd")
+static var helper_path: String = SUPPORT.own_path("pack_vocabulary_probe/probe_helper.gd")
 const HELPER_CLASS: String = "PackVocabularyProbeHelper"
 
 const BASE_SOURCE: String = """extends Node
@@ -50,7 +50,7 @@ func jump(times: int = Named.LIMIT) -> void:
 
 static func run() -> bool:
 	var saved_path: String = EventSheetPackVocabularyCache.cache_path
-	EventSheetPackVocabularyCache.cache_path = TEST_CACHE
+	EventSheetPackVocabularyCache.cache_path = test_cache
 	EventSheetPackVocabularyCache.forget(true)
 	var all_passed: bool = true
 	all_passed = _every_pack_matches_a_fresh_reflection() and all_passed
@@ -142,11 +142,11 @@ static func _the_migration_vocabulary_reads_the_same_memory() -> bool:
 ## at an unchanged length, and the autoload it is registered as, sends it back to a fresh reflection,
 ## and every answer equals what reflecting the script right now gives.
 static func _a_changed_input_is_never_trusted() -> bool:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(PROBE_DIR))
-	_write(BASE_PATH, BASE_SOURCE)
-	_write(NAMED_PATH, NAMED_SOURCE)
-	_write(PROVIDER_PATH, PROVIDER_SOURCE.replace("res://pack_vocabulary_probe/", PROBE_DIR + "/"))
-	var probe: Array[String] = [PROVIDER_PATH]
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(probe_dir))
+	_write(base_path, BASE_SOURCE)
+	_write(named_path, NAMED_SOURCE)
+	_write(provider_path, PROVIDER_SOURCE.replace("res://pack_vocabulary_probe/", probe_dir + "/"))
+	var probe: Array[String] = [provider_path]
 	var reflected: PackedStringArray = PackedStringArray(probe)
 	EventSheetPackVocabularyCache.forget(true)
 	var rows: Array = []
@@ -156,8 +156,8 @@ static func _a_changed_input_is_never_trusted() -> bool:
 	_ask(rows, "the next session remembers from the file", "last_remembered", reflected)
 
 	# Same length, same second: only the content hash can tell.
-	_write(PROVIDER_PATH, FileAccess.get_file_as_string(PROVIDER_PATH).replace("Jump High", "Leap High"))
-	_reload(PROVIDER_PATH)
+	_write(provider_path, FileAccess.get_file_as_string(provider_path).replace("Jump High", "Leap High"))
+	_reload(provider_path)
 	_ask(rows, "a same-length edit is reflected", "last_reflected", reflected)
 	EventSheetPackVocabularyCache.forget()
 	_ask(rows, "and the next session reads the edit back", "last_remembered", reflected)
@@ -165,42 +165,42 @@ static func _a_changed_input_is_never_trusted() -> bool:
 		.contains("Leap High"), true])
 
 	# The base script it builds on.
-	_write(BASE_PATH, BASE_SOURCE.replace("Base Step", "Base Stride") + "\n")
-	_reload(BASE_PATH)
-	_reload(PROVIDER_PATH)
+	_write(base_path, BASE_SOURCE.replace("Base Step", "Base Stride") + "\n")
+	_reload(base_path)
+	_reload(provider_path)
 	_ask(rows, "an edited base script is reflected", "last_reflected", reflected)
 
 	# A script it only names: its constant is the parameter's default.
-	_write(NAMED_PATH, NAMED_SOURCE.replace("3", "7") + "\n")
-	_reload(NAMED_PATH)
-	_reload(PROVIDER_PATH)
+	_write(named_path, NAMED_SOURCE.replace("3", "7") + "\n")
+	_reload(named_path)
+	_reload(provider_path)
 	_ask(rows, "an edited named script is reflected", "last_reflected", reflected)
 	rows.append(["and its constant reaches the default", _defaults(EventSheetPackVocabularyCache.definitions_for(probe)), "7"])
 
 	# Registered as an autoload: its verbs call the singleton, so the entry is not the same entry.
-	ProjectSettings.set_setting("autoload/VocabularyProbe", "*" + PROVIDER_PATH)
+	ProjectSettings.set_setting("autoload/VocabularyProbe", "*" + provider_path)
 	_ask(rows, "becoming an autoload is reflected", "last_reflected", reflected)
 	ProjectSettings.set_setting("autoload/VocabularyProbe", null)
 	_ask(rows, "and ceasing to be one", "last_reflected", reflected)
 
 	# A script that computes its own surface is never remembered.
-	_write(PROVIDER_PATH, FileAccess.get_file_as_string(PROVIDER_PATH)
+	_write(provider_path, FileAccess.get_file_as_string(provider_path)
 		+ "\n\nfunc _get_property_list() -> Array[Dictionary]:\n\treturn []\n")
-	_reload(PROVIDER_PATH)
+	_reload(provider_path)
 	_ask(rows, "a computed surface is reflected", "last_reflected", reflected)
 	_ask(rows, "and reflected again every time", "last_reflected", reflected)
-	for path: String in [PROVIDER_PATH, BASE_PATH, NAMED_PATH]:
+	for path: String in [provider_path, base_path, named_path]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_dir))
 	return SUPPORT.pins(TEST_NAME, rows)
 
 
 ## Asks the cache for the probe once and adds two rows: how it was answered (`which` names the
 ## static that must hold the probe), and that the answer is what a fresh reflection gives now.
 static func _ask(rows: Array, label: String, which: String, expected: PackedStringArray) -> void:
-	var answered: Array[ACEDefinition] = EventSheetPackVocabularyCache.definitions_for([PROVIDER_PATH] as Array[String])
+	var answered: Array[ACEDefinition] = EventSheetPackVocabularyCache.definitions_for([provider_path] as Array[String])
 	rows.append([label, _how_answered(which), expected])
-	var fresh: Array[ACEDefinition] = EventSheetACEGenerator.new().reflect_script(load(PROVIDER_PATH) as Script)
+	var fresh: Array[ACEDefinition] = EventSheetACEGenerator.new().reflect_script(load(provider_path) as Script)
 	rows.append([label + " - the answer is the fresh one", _field_text(answered), _field_text(fresh)])
 
 
@@ -215,11 +215,11 @@ static func _how_answered(which: String) -> PackedStringArray:
 ## here, because only an editor filesystem scan registers a new class_name.
 static func _a_class_that_appears_is_seen() -> bool:
 	var saved_source: Callable = EventSheetPackVocabularyCache.class_list_source
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(PROBE_DIR))
-	_write(WAITING_PATH, "extends Node\n\n\n## @ace_action\n## @ace_name(\"Wait For Helper\")\n"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(probe_dir))
+	_write(waiting_path, "extends Node\n\n\n## @ace_action\n## @ace_name(\"Wait For Helper\")\n"
 		+ "## @ace_codegen_template(\"wait_for_helper()\")\nfunc wait_for_helper() -> void:\n"
 		+ "\tprint(%s.new())\n" % HELPER_CLASS)
-	var probe: Array[String] = [WAITING_PATH]
+	var probe: Array[String] = [waiting_path]
 	var expected: PackedStringArray = PackedStringArray(probe)
 	EventSheetPackVocabularyCache.forget(true)
 	var rows: Array = []
@@ -231,10 +231,10 @@ static func _a_class_that_appears_is_seen() -> bool:
 	EventSheetPackVocabularyCache.forget()
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["the next session remembers it too", EventSheetPackVocabularyCache.last_remembered, expected])
-	_write(HELPER_PATH, "class_name %s\nextends RefCounted\n" % HELPER_CLASS)
+	_write(helper_path, "class_name %s\nextends RefCounted\n" % HELPER_CLASS)
 	EventSheetPackVocabularyCache.class_list_source = func() -> Array[Dictionary]:
 		var classes: Array[Dictionary] = ProjectSettings.get_global_class_list()
-		classes.append({"class": HELPER_CLASS, "path": HELPER_PATH, "base": "RefCounted", "language": "GDScript"})
+		classes.append({"class": HELPER_CLASS, "path": helper_path, "base": "RefCounted", "language": "GDScript"})
 		return classes
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["the class appearing sends it back to a fresh reflection", EventSheetPackVocabularyCache.last_reflected,
@@ -242,9 +242,9 @@ static func _a_class_that_appears_is_seen() -> bool:
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["after which it is remembered again", EventSheetPackVocabularyCache.last_remembered, expected])
 	EventSheetPackVocabularyCache.class_list_source = saved_source
-	for path: String in [WAITING_PATH, HELPER_PATH]:
+	for path: String in [waiting_path, helper_path]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_dir))
 	EventSheetPackVocabularyCache.forget(true)
 	return SUPPORT.pins(TEST_NAME, rows)
 
@@ -252,33 +252,33 @@ static func _a_class_that_appears_is_seen() -> bool:
 ## A same-session entry checked in a later second than its file was last written is not hashed
 ## again - and an edit that keeps the length is still caught, because it moves the modified time.
 static func _a_settled_entry_is_not_hashed_again() -> bool:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(PROBE_DIR))
-	_write(BASE_PATH, BASE_SOURCE)
-	_reload(BASE_PATH)
-	var probe: Array[String] = [BASE_PATH]
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(probe_dir))
+	_write(base_path, BASE_SOURCE)
+	_reload(base_path)
+	var probe: Array[String] = [base_path]
 	EventSheetPackVocabularyCache.forget(true)
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	# Let the second the file was written in end, so the next check may settle the entry.
-	var written: int = FileAccess.get_modified_time(BASE_PATH)
+	var written: int = FileAccess.get_modified_time(base_path)
 	while int(Time.get_unix_time_from_system()) <= written:
 		OS.delay_msec(50)
 	EventSheetPackVocabularyCache.definitions_for(probe)
-	var settled: int = int((EventSheetPackVocabularyCache._entries[BASE_PATH] as Dictionary).get("hashed_at", 0))
+	var settled: int = int((EventSheetPackVocabularyCache._entries[base_path] as Dictionary).get("hashed_at", 0))
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	var rows: Array = [
 		["the entry is hashed once after its file's second is over", settled > written, true],
 		["and not hashed again while nothing moved",
-			int((EventSheetPackVocabularyCache._entries[BASE_PATH] as Dictionary).get("hashed_at", 0)), settled],
+			int((EventSheetPackVocabularyCache._entries[base_path] as Dictionary).get("hashed_at", 0)), settled],
 		["it is still answered from memory", EventSheetPackVocabularyCache.last_remembered, PackedStringArray(probe)],
 	]
-	_write(BASE_PATH, BASE_SOURCE.replace("Base Step", "Base Hops"))
-	_reload(BASE_PATH)
+	_write(base_path, BASE_SOURCE.replace("Base Step", "Base Hops"))
+	_reload(base_path)
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["a same-length edit after that is still reflected", EventSheetPackVocabularyCache.last_reflected,
 		PackedStringArray(probe)])
 	rows.append(["and answers the edit", _names(EventSheetPackVocabularyCache.definitions_for(probe)), "Base Hops"])
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(BASE_PATH))
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(base_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_dir))
 	EventSheetPackVocabularyCache.forget(true)
 	return SUPPORT.pins(TEST_NAME, rows)
 
@@ -288,22 +288,22 @@ static func _a_damaged_file_is_ignored() -> bool:
 	var probe: Array[String] = ["res://eventsheet_addons/demo_health_addon.gd"]
 	EventSheetPackVocabularyCache.forget(true)
 	EventSheetPackVocabularyCache.definitions_for(probe)
-	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(TEST_CACHE)
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(test_cache)
 	var rows: Array = []
 	var damaged: PackedByteArray = bytes.duplicate()
 	damaged[damaged.size() - 3] = (damaged[damaged.size() - 3] + 1) % 256
-	_write_bytes(TEST_CACHE, damaged)
+	_write_bytes(test_cache, damaged)
 	EventSheetPackVocabularyCache.forget()
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["a payload that fails its hash is ignored", EventSheetPackVocabularyCache.last_reflected,
 		PackedStringArray(probe)])
 	var other_format: PackedByteArray = bytes.duplicate()
 	other_format.encode_u32(EventSheetPackVocabularyCache.MAGIC.length(), EventSheetPackVocabularyCache.FORMAT + 1)
-	_write_bytes(TEST_CACHE, other_format)
+	_write_bytes(test_cache, other_format)
 	EventSheetPackVocabularyCache.forget()
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["another format is ignored", EventSheetPackVocabularyCache.last_reflected, PackedStringArray(probe)])
-	_write_bytes(TEST_CACHE, bytes.slice(0, 10))
+	_write_bytes(test_cache, bytes.slice(0, 10))
 	EventSheetPackVocabularyCache.forget()
 	EventSheetPackVocabularyCache.definitions_for(probe)
 	rows.append(["a short file is ignored", EventSheetPackVocabularyCache.last_reflected, PackedStringArray(probe)])
@@ -374,7 +374,8 @@ static func _defaults(definitions: Array[ACEDefinition]) -> String:
 
 static func _write(path: String, text: String) -> void:
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(text)
+	# The probe sources name each other by a fixed folder; the folder is this process's own.
+	file.store_string(text.replace("user://pack_vocabulary_probe/", probe_dir + "/"))
 	file.close()
 
 

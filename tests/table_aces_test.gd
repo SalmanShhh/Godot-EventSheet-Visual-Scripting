@@ -17,9 +17,11 @@
 class_name TableACEsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 const MODULE_PATH := "res://addons/eventforge/registration/modules/table_aces.gd"
-const PROBE_CSV := "user://table_aces_probe.csv"
-const PROBE_ASSETS := "user://table_aces_probe_assets"
+static var probe_csv: String = SUPPORT.own_path("table_aces_probe.csv")
+static var probe_assets: String = SUPPORT.own_path("table_aces_probe_assets")
 
 # The spreadsheet every parse case reads: CRLF endings, a quoted cell holding the separator, and NO
 # trailing newline (three traps in one fixture, so a regression in any of them moves these values).
@@ -99,11 +101,11 @@ static func _run_emission() -> bool:
 	action.params = {"var_name": "items", "value": emitted}
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(EventSheetCompiler.compile(sheet, "user://table_aces_compile_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, SUPPORT.own_path("table_aces_compile_probe.gd")).get("output", ""))
 	ok = _check("the whole expression compiles into the assignment verbatim",
 		output.contains("items = " + emitted), true) and ok
-	if FileAccess.file_exists("user://table_aces_compile_probe.gd"):
-		DirAccess.remove_absolute("user://table_aces_compile_probe.gd")
+	if FileAccess.file_exists(SUPPORT.own_path("table_aces_compile_probe.gd")):
+		DirAccess.remove_absolute(SUPPORT.own_path("table_aces_compile_probe.gd"))
 
 	# The short templates are pinned whole - these two ARE the covenant.
 	ok = _check("For Each Line In Text emits the normalised split",
@@ -178,15 +180,15 @@ static func _run_table_runtime() -> bool:
 		_field(_table_from_text("id,label\n1,\"a,b\""), 0, "label"), "a,b") and ok
 
 	# Table From File over a real file on disk, then the failure path: a file that is not there.
-	var file: FileAccess = FileAccess.open(PROBE_CSV, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(probe_csv, FileAccess.WRITE)
 	file.store_string(ITEMS_CSV)
 	file.close()
-	var from_file: Variant = _eval(_emitted("TableFromFile", {"path": _quote(PROBE_CSV), "separator": "\",\""}))
+	var from_file: Variant = _eval(_emitted("TableFromFile", {"path": _quote(probe_csv), "separator": "\",\""}))
 	ok = _check("Table From File reads the file on disk", _size(from_file), 2) and ok
 	ok = _check("Table From File keeps a quoted separator", _field(from_file, 0, "label"), "sword, long") and ok
 	var missing: Variant = _eval(_emitted("TableFromFile", {"path": "\"user://table_aces_does_not_exist.csv\"", "separator": "\",\""}))
 	ok = _check("a missing file is no rows, not an error", _size(missing), 0) and ok
-	DirAccess.remove_absolute(PROBE_CSV)
+	DirAccess.remove_absolute(probe_csv)
 	return ok
 
 
@@ -255,12 +257,12 @@ static func _run_looping_seam() -> bool:
 	action.codegen_template = "print(line)"
 	row.actions.append(action)
 	sheet.events.append(row)
-	var output: String = str(EventSheetCompiler.compile(sheet, "user://table_aces_loop_probe.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.compile(sheet, SUPPORT.own_path("table_aces_loop_probe.gd")).get("output", ""))
 	ok = _check("the looping condition compiles as a for over the collection",
 		output.contains("for line in " + collection + ":"), true) and ok
 	ok = _check("the event's action runs inside that loop", output.contains("\t\tprint(line)"), true) and ok
-	if FileAccess.file_exists("user://table_aces_loop_probe.gd"):
-		DirAccess.remove_absolute("user://table_aces_loop_probe.gd")
+	if FileAccess.file_exists(SUPPORT.own_path("table_aces_loop_probe.gd")):
+		DirAccess.remove_absolute(SUPPORT.own_path("table_aces_loop_probe.gd"))
 	ok = _run_looping_apply_routes(definition) and ok
 	return ok
 
@@ -306,12 +308,12 @@ static func _run_looping_apply_routes(definition: ACEDefinition) -> bool:
 	action.ace_id = "Print"
 	action.codegen_template = "print(line)"
 	row.actions.append(action)
-	var compiled_output: String = str(EventSheetCompiler.compile(sheet, "user://table_aces_route_probe.gd").get("output", ""))
+	var compiled_output: String = str(EventSheetCompiler.compile(sheet, SUPPORT.own_path("table_aces_route_probe.gd")).get("output", ""))
 	var compiled: GDScript = GDScript.new()
 	compiled.source_code = compiled_output.replace("blob", "\"a\\nb\"")
 	ok = _check("and the sheet it produces really parses", compiled.reload(true), OK) and ok
-	if FileAccess.file_exists("user://table_aces_route_probe.gd"):
-		DirAccess.remove_absolute("user://table_aces_route_probe.gd")
+	if FileAccess.file_exists(SUPPORT.own_path("table_aces_route_probe.gd")):
+		DirAccess.remove_absolute(SUPPORT.own_path("table_aces_route_probe.gd"))
 
 	# The batch route sweeps the CONDITIONS lane, where a looping condition never lives - so there is
 	# nothing to update, and building one there would write the same unparseable row.
@@ -348,22 +350,22 @@ static func _run_looping_runtime() -> bool:
 	ok = _check("empty text is no parts", _as_array(_eval(_emitted("ForEachPartInText", {"text": "\"\"", "separator": "\",\""}))).size(), 0) and ok
 
 	# A folder of data assets, with a stray non-resource file in it that must be ignored.
-	DirAccess.make_dir_recursive_absolute(PROBE_ASSETS)
+	DirAccess.make_dir_recursive_absolute(probe_assets)
 	var asset: Resource = Resource.new()
 	asset.resource_name = "probe_entry"
-	ResourceSaver.save(asset, PROBE_ASSETS + "/entry.tres")
-	var stray: FileAccess = FileAccess.open(PROBE_ASSETS + "/notes.txt", FileAccess.WRITE)
+	ResourceSaver.save(asset, probe_assets + "/entry.tres")
+	var stray: FileAccess = FileAccess.open(probe_assets + "/notes.txt", FileAccess.WRITE)
 	stray.store_string("not a resource")
 	stray.close()
-	var entries: Array = _as_array(_eval(_emitted("ForEachResourceInFolder", {"folder": _quote(PROBE_ASSETS)})))
+	var entries: Array = _as_array(_eval(_emitted("ForEachResourceInFolder", {"folder": _quote(probe_assets)})))
 	ok = _check("only the data assets are walked", entries.size(), 1) and ok
 	ok = _check("and they arrive already loaded, not as paths",
 		str((entries[0] as Resource).resource_name) if entries.size() == 1 else "<nothing loaded>", "probe_entry") and ok
 	var no_folder: Array = _as_array(_eval(_emitted("ForEachResourceInFolder", {"folder": "\"user://table_aces_no_such_folder\""})))
 	ok = _check("a folder that is not there walks nothing", no_folder.size(), 0) and ok
-	DirAccess.remove_absolute(PROBE_ASSETS + "/entry.tres")
-	DirAccess.remove_absolute(PROBE_ASSETS + "/notes.txt")
-	DirAccess.remove_absolute(PROBE_ASSETS)
+	DirAccess.remove_absolute(probe_assets + "/entry.tres")
+	DirAccess.remove_absolute(probe_assets + "/notes.txt")
+	DirAccess.remove_absolute(probe_assets)
 	return ok
 
 

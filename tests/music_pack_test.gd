@@ -38,7 +38,7 @@ const TEST := "music_pack_test"
 
 ## Where the tracks this test writes live. A folder of its own so the director's own name lookup is
 ## exercised, rather than a path handed straight to it.
-const TRACK_FOLDER := "user://music_pack_test/"
+static var track_folder: String = SUPPORT.own_path("music_pack_test/")
 
 
 static func run() -> bool:
@@ -329,11 +329,11 @@ static func _layers_walk_and_set_layers_states_the_mix(script: GDScript) -> bool
 ## filled in sorted name order, so the slot a layer takes is the same on every machine.
 static func _layers_become_one_synchronized_stream(script: GDScript) -> bool:
 	var director: Node = _director(script)
-	var track: Resource = load(TRACK_FOLDER + "forest.tres")
+	var track: Resource = load(track_folder + "forest.tres")
 	var built: AudioStream = director._stream_for(track)
 	var synchronized: AudioStreamSynchronized = built as AudioStreamSynchronized
 	var order: String = ", ".join(director._layer_order)
-	var plain: Resource = load(TRACK_FOLDER + "battle.tres")
+	var plain: Resource = load(track_folder + "battle.tres")
 	var unlayered: AudioStream = director._stream_for(plain)
 	var no_layers: String = ", ".join(director._layer_order)
 	director.free()
@@ -356,7 +356,7 @@ static func _layers_become_one_synchronized_stream(script: GDScript) -> bool:
 ## A track is an ordinary resource file the game owns. What the Inspector wrote into it is what the
 ## director reads back out - which is the whole contract, and the reason the pack ships no tracks.
 static func _a_track_file_round_trips() -> bool:
-	var written: Resource = load(TRACK_FOLDER + "forest.tres")
+	var written: Resource = load(track_folder + "forest.tres")
 	var layers: Dictionary = written.layers
 	var names: Array = layers.keys()
 	names.sort()
@@ -612,14 +612,14 @@ static func _a_track_that_ends_stops_being_the_track(script: GDScript) -> bool:
 ## tracks rather than a path handed straight to it.
 static func _director(script: GDScript) -> Node:
 	var director: Node = script.new()
-	director.music_folder = TRACK_FOLDER
+	director.music_folder = track_folder
 	return director
 
 
 ## Two track files: one with layers and a loop point, one plain and at a different tempo, so a
 ## crossfade can be seen carrying the tempo across with it.
 static func _write_tracks() -> void:
-	DirAccess.make_dir_recursive_absolute(TRACK_FOLDER)
+	DirAccess.make_dir_recursive_absolute(track_folder)
 	var track_script: GDScript = load(TRACK_RESOURCE)
 	var forest: Resource = track_script.new()
 	forest.track_name = "Forest"
@@ -629,21 +629,21 @@ static func _write_tracks() -> void:
 	forest.beats_per_bar = 4
 	forest.loop_from = 4.0
 	forest.loop_to = 8.0
-	ResourceSaver.save(forest, TRACK_FOLDER + "forest.tres")
+	ResourceSaver.save(forest, track_folder + "forest.tres")
 	var battle: Resource = track_script.new()
 	battle.track_name = "Battle"
 	battle.stream = _silence()
 	battle.bpm = 140.0
-	ResourceSaver.save(battle, TRACK_FOLDER + "battle.tres")
+	ResourceSaver.save(battle, track_folder + "battle.tres")
 
 
 ## The tracks this test wrote, taken back off the machine. A serial run of the whole suite inherits
 ## whatever the run before it left in user://, so a test that writes files puts them away again.
 static func _forget_tracks() -> void:
 	for name: String in ["forest.tres", "battle.tres"]:
-		if FileAccess.file_exists(TRACK_FOLDER + name):
-			DirAccess.remove_absolute(TRACK_FOLDER + name)
-	DirAccess.remove_absolute(TRACK_FOLDER)
+		if FileAccess.file_exists(track_folder + name):
+			DirAccess.remove_absolute(track_folder + name)
+	DirAccess.remove_absolute(track_folder)
 
 
 ## A list of names in one order, whatever order they were gathered in - so a pin reads as the names

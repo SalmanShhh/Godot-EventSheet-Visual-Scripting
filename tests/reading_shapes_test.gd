@@ -30,13 +30,13 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 
 ## Where the staged pair is written. user://, so a run leaves nothing under res://.
-const STAGED_DIR: String = "user://reading_shapes_staged"
-const STAGED_A: String = STAGED_DIR + "/coin.gd"
-const STAGED_B: String = STAGED_DIR + "/spark.gd"
+static var staged_dir: String = SUPPORT.own_path("reading_shapes_staged")
+static var staged_a: String = staged_dir + "/coin.gd"
+static var staged_b: String = staged_dir + "/spark.gd"
 
 ## Where the capped-walk probe writes its folder of thirteen. Its own directory, removed when the
 ## check is done, so the staged pair above is never one of the thirteen.
-const CAPPED_DIR: String = "user://reading_shapes_capped"
+static var capped_dir: String = SUPPORT.own_path("reading_shapes_capped")
 
 ## A multi-line literal, which is where the ledger used to read prose as code: the opening line IS a
 ## statement, and the three under it are the inside of a text block.
@@ -239,11 +239,11 @@ static func _test_the_corpus_code_lines() -> bool:
 ## The page itself over a staged pair: the head that says both numbers apart, the grouped shape with
 ## its lines as doors, and the tail counted rather than expanded.
 static func _test_the_doctor_page() -> bool:
-	DirAccess.make_dir_recursive_absolute(STAGED_DIR)
-	_write(STAGED_A, SOURCE_A)
-	_write(STAGED_B, SOURCE_B)
+	DirAccess.make_dir_recursive_absolute(staged_dir)
+	_write(staged_a, SOURCE_A)
+	_write(staged_b, SOURCE_B)
 	var findings: Array[Dictionary] = EventSheetReadingDoctor.report(
-		PackedStringArray([STAGED_A, STAGED_B]))
+		PackedStringArray([staged_a, staged_b]))
 	var checks: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in findings:
 		checks.append(str(finding.get("check", "")))
@@ -262,7 +262,7 @@ static func _test_the_doctor_page() -> bool:
 	ok = _check("the shape is named with its count", str(findings[1].get("message", "")),
 		"3 line(s) are the same shape: name.chain().tween_callback(name)") and ok
 	ok = _check("a door opens the file the line is in", str(findings[3].get("path", "")),
-		STAGED_A) and ok
+		staged_a) and ok
 	ok = _check("the door quotes the line the way the file spells it",
 		str(findings[3].get("message", "")), "line 14: out.chain().tween_callback(queue_free)") and ok
 	# The front page sorts by check, file and message, which would drop the head sentence to the
@@ -326,10 +326,10 @@ static func _test_a_text_block_is_not_a_statement() -> bool:
 ## so the same scripts are read every run and the page is a SAMPLE. A sentence inviting a reader to
 ## open the Doctor again for the rest would be a promise this cannot keep.
 static func _test_the_capped_walk() -> bool:
-	DirAccess.make_dir_recursive_absolute(CAPPED_DIR)
+	DirAccess.make_dir_recursive_absolute(capped_dir)
 	var paths: PackedStringArray = PackedStringArray()
 	for index: int in range(EventSheetReadingDoctor.SCRIPTS_READ_LIMIT + 1):
-		var path: String = "%s/probe_%02d.gd" % [CAPPED_DIR, index]
+		var path: String = "%s/probe_%02d.gd" % [capped_dir, index]
 		_write(path, SOURCE_B)
 		paths.append(path)
 	var first: Array[Dictionary] = EventSheetReadingDoctor.report(paths)
@@ -351,16 +351,16 @@ static func _test_the_capped_walk() -> bool:
 	ok = _check("and a second run is the same page, not the next twelve", second, again) and ok
 	for path: String in paths:
 		DirAccess.remove_absolute(path)
-	DirAccess.remove_absolute(CAPPED_DIR)
+	DirAccess.remove_absolute(capped_dir)
 	return ok
 
 
 ## Drops what this test warmed, and takes the staged scripts with it. CI runs the suite serially in
 ## one process: a family cache left standing here is a cache the next test inherits.
 static func _tidy_up() -> void:
-	DirAccess.remove_absolute(STAGED_A)
-	DirAccess.remove_absolute(STAGED_B)
-	DirAccess.remove_absolute(STAGED_DIR)
+	DirAccess.remove_absolute(staged_a)
+	DirAccess.remove_absolute(staged_b)
+	DirAccess.remove_absolute(staged_dir)
 	EventSheetLiftReading.clear_cache()
 
 

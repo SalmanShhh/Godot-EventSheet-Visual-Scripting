@@ -19,7 +19,7 @@ class_name DocEngineFetchTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const FIXTURE_ROOT := "user://doc_engine_fetch_test"
+static var fixture_root: String = SUPPORT.own_path("doc_engine_fetch_test")
 
 ## The two states a class file is in: written by `--doctool` on the reader's machine (structure, no
 ## words) and published by the engine's repository (the same structure with the words in it).
@@ -108,23 +108,23 @@ static func _test_what_is_still_missing() -> bool:
 	all_passed = _check("a file from the repository does",
 		EventSheetDocEngineFetch.xml_has_text(WITH_TEXT), true) and all_passed
 
-	DirAccess.make_dir_recursive_absolute("%s/doc/classes" % FIXTURE_ROOT)
-	DirAccess.make_dir_recursive_absolute("%s/modules/gdscript/doc_classes" % FIXTURE_ROOT)
-	_write("%s/doc/classes/Node2D.xml" % FIXTURE_ROOT, SKELETON)
-	_write("%s/doc/classes/Sprite2D.xml" % FIXTURE_ROOT, WITH_TEXT.replace("Node2D", "Sprite2D"))
-	_write("%s/modules/gdscript/doc_classes/GDScript.xml" % FIXTURE_ROOT,
+	DirAccess.make_dir_recursive_absolute("%s/doc/classes" % fixture_root)
+	DirAccess.make_dir_recursive_absolute("%s/modules/gdscript/doc_classes" % fixture_root)
+	_write("%s/doc/classes/Node2D.xml" % fixture_root, SKELETON)
+	_write("%s/doc/classes/Sprite2D.xml" % fixture_root, WITH_TEXT.replace("Node2D", "Sprite2D"))
+	_write("%s/modules/gdscript/doc_classes/GDScript.xml" % fixture_root,
 		SKELETON.replace("Node2D", "GDScript"))
-	_write("%s/doc/classes/notes.txt" % FIXTURE_ROOT, "not a class")
+	_write("%s/doc/classes/notes.txt" % fixture_root, "not a class")
 	all_passed = _check("every class file is found, in every folder, sorted and XML only",
-		", ".join(EventSheetDocEngineFetch.relative_paths(FIXTURE_ROOT)),
+		", ".join(EventSheetDocEngineFetch.relative_paths(fixture_root)),
 		"doc/classes/Node2D.xml, doc/classes/Sprite2D.xml, modules/gdscript/doc_classes/GDScript.xml") and all_passed
 	# The one that already carries its text is not asked for again - which is what makes a second run
 	# after an interrupted one cost nothing.
 	all_passed = _check("only the files with no text in them are still to fetch",
-		", ".join(EventSheetDocEngineFetch.pending(FIXTURE_ROOT)),
+		", ".join(EventSheetDocEngineFetch.pending(fixture_root)),
 		"doc/classes/Node2D.xml, modules/gdscript/doc_classes/GDScript.xml") and all_passed
 	all_passed = _check("a folder with no harvest in it needs nothing fetched",
-		EventSheetDocEngineFetch.pending("%s/nowhere" % FIXTURE_ROOT).size(), 0) and all_passed
+		EventSheetDocEngineFetch.pending("%s/nowhere" % fixture_root).size(), 0) and all_passed
 	return all_passed
 
 
@@ -158,7 +158,7 @@ static func _write(path: String, text: String) -> void:
 ## and a test that left files under user:// would be handing whatever runs next a folder it did not
 ## make.
 static func _clean_up() -> void:
-	_remove_tree(FIXTURE_ROOT)
+	_remove_tree(fixture_root)
 
 
 static func _remove_tree(directory: String) -> void:

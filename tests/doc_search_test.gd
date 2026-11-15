@@ -25,7 +25,7 @@ const SUPPORT := preload("res://tests/support.gd")
 ## The fixture tree, written under user:// on purpose: writing a guide.md into a real pack would
 ## be indistinguishable from a shipped one and would break the addon drift gate for whoever ran it
 ## next.
-const FIXTURE_ROOT := "user://doc_search_test"
+static var fixture_root: String = SUPPORT.own_path("doc_search_test")
 
 
 static func run() -> bool:
@@ -55,7 +55,7 @@ static func run() -> bool:
 static func _test_older_bundle_degrades() -> bool:
 	var all_passed: bool = true
 	var header := "[eventsheet-search v1]"
-	var missing := "user://doc_search_test_absent.esdoc"
+	var missing := SUPPORT.own_path("doc_search_test_absent.esdoc")
 	if FileAccess.file_exists(missing):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(missing))
 	all_passed = _check("a baked file that is not there reads as no payload",
@@ -63,7 +63,7 @@ static func _test_older_bundle_degrades() -> bool:
 
 	# A bundle from a LATER format: the payload is perfectly good text, and the header is the only
 	# thing that says this reader must not trust it.
-	var newer := "user://doc_search_test_newer.esdoc"
+	var newer := SUPPORT.own_path("doc_search_test_newer.esdoc")
 	var newer_file: FileAccess = FileAccess.open(newer, FileAccess.WRITE)
 	if newer_file == null:
 		return _check("the fixture bundle is writable", false, true) and all_passed
@@ -74,7 +74,7 @@ static func _test_older_bundle_degrades() -> bool:
 
 	# And the header this build DOES know still parses, so the guard is about the version rather
 	# than about refusing everything.
-	var current := "user://doc_search_test_current.esdoc"
+	var current := SUPPORT.own_path("doc_search_test_current.esdoc")
 	var current_file: FileAccess = FileAccess.open(current, FileAccess.WRITE)
 	if current_file == null:
 		return _check("the fixture bundle is writable", false, true) and all_passed
@@ -325,8 +325,8 @@ static func _test_corpus_search() -> bool:
 ## without it does not, and a project docs folder contributes its .md files.
 static func _test_discovery() -> bool:
 	var all_passed: bool = true
-	var packs_root: String = "%s/packs" % FIXTURE_ROOT
-	var docs_dir: String = "%s/project_docs" % FIXTURE_ROOT
+	var packs_root: String = "%s/packs" % fixture_root
+	var docs_dir: String = "%s/project_docs" % fixture_root
 	DirAccess.make_dir_recursive_absolute("%s/with_guide" % packs_root)
 	DirAccess.make_dir_recursive_absolute("%s/without_guide" % packs_root)
 	DirAccess.make_dir_recursive_absolute(docs_dir)
@@ -343,7 +343,7 @@ static func _test_discovery() -> bool:
 		str((found.get("Packs/with_guide", {}) as Dictionary).get("title", "")), "Grapple Hook") and all_passed
 	all_passed = _check("a project guide joins under its own set", found.has("Project/TEAM-NOTES"), true) and all_passed
 	all_passed = _check("a folder with no guides contributes nothing",
-		EventSheetDocLibrary.discover_pages("%s/nowhere" % FIXTURE_ROOT, "%s/nowhere" % FIXTURE_ROOT).size(), 0) and all_passed
+		EventSheetDocLibrary.discover_pages("%s/nowhere" % fixture_root, "%s/nowhere" % fixture_root).size(), 0) and all_passed
 
 	# The shipped corpus is unaffected: no pack in this repo ships a guide.md, so an "addon:" id
 	# still resolves to the bundled docs/Addons page rather than to a discovered one.

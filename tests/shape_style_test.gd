@@ -17,7 +17,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const PREFIX := "shape_style_test"
 
 ## Where a style written by the test goes - never res://, which is the repository.
-const WRITE_DIR := "user://shape_style_test"
+static var write_dir: String = SUPPORT.own_path("shape_style_test")
 
 ## Where the pack ships.
 const PACK_DIR := "res://eventsheet_addons/vector_shapes/"
@@ -174,10 +174,10 @@ static func _pin_the_group_verb() -> bool:
 ## Save As Style writes the fields it read, and the shape wears the file it wrote - so the picture
 ## on screen does not move when the button is pressed.
 static func _pin_save_as_style() -> bool:
-	DirAccess.make_dir_recursive_absolute(WRITE_DIR)
+	DirAccess.make_dir_recursive_absolute(write_dir)
 	var line: ShapeLine2D = ShapeLine2D.new()
 	line.name = "AimLine"
-	line.scene_file_path = WRITE_DIR + "/aim.tscn"
+	line.scene_file_path = write_dir + "/aim.tscn"
 	line.thickness = 4.5
 	line.caps = "none"
 	line.colour = Color("#ff8800")
@@ -186,7 +186,7 @@ static func _pin_save_as_style() -> bool:
 	var written: String = line.save_as_style()
 	var reopened: ShapeStyle = ResourceLoader.load(written, "", ResourceLoader.CACHE_MODE_IGNORE) as ShapeStyle
 	var rows: Array = [
-		["it writes beside the scene, named for the node", written, WRITE_DIR + "/aim_line_style.tres"],
+		["it writes beside the scene, named for the node", written, write_dir + "/aim_line_style.tres"],
 		["the file is a style", reopened != null, true],
 		["it holds the thickness it read", reopened.thickness if reopened != null else -1.0, 4.5],
 		["it holds the caps it read", reopened.caps if reopened != null else "", "none"],
@@ -198,5 +198,5 @@ static func _pin_save_as_style() -> bool:
 	]
 	line.free()
 	DirAccess.remove_absolute(written)
-	DirAccess.remove_absolute(WRITE_DIR)
+	DirAccess.remove_absolute(write_dir)
 	return SUPPORT.pins(PREFIX, rows)

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: two editors open, or the Doctor and Migrate at once, can no longer make a good sheet look broken
+
+Migrate's plan and the Doctor's stale-output check used to write a trial compile into a file with a fixed name in the project's user folder, and read the write's success as the answer. Every Godot editor, headless run or second copy of a project with the same name shares that one folder, so a second one writing the same name at the same moment made a good row ask a question it had no reason to ask (the file "refuses" it) and made the Doctor say "Sheet no longer compiles: Could not write ..." about a sheet that compiles. Both now ask the compiler for the text alone, which writes no file, so there is nothing left to collide on and nothing left behind in the user folder.
+
 ### Changed: Add Event keeps a door to the full list
 
 Add Event on the toolbar still opens on the short object page. That page now starts with one plain entry, Browse every row, which opens the full list with Favourites and Recent beside it, exactly as the toolbar opened it before, with no typing. A regression test pins the other half of the same change: a row on the open sheet follows its sentence at once after the sentence is changed.

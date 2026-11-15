@@ -2,6 +2,8 @@
 class_name DataTableSheetTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 # V4b. A .tres opened as a TABLE, and a folder of .tres opened as ONE grid.
 #
 # Pins the model the table view is drawn from - what the columns are, what each asset holds, what a
@@ -175,7 +177,7 @@ static func _titles(path: String) -> bool:
 ## made looked exactly like a real regression in the table model and were not one, so the folder
 ## carries the process id and the run takes it away with it.
 static func _folder() -> String:
-	return "user://%s" % _folder_name()
+	return SUPPORT.own_path(_folder_name())
 
 
 static func _folder_name() -> String:

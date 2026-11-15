@@ -12,34 +12,34 @@ const SUPPORT := preload("res://tests/support.gd")
 const HELPERS := preload("res://addons/eventforge/runtime_helpers.gd")
 const SHIPPED := preload("res://addons/eventforge/shipped_pack_folders.gd")
 const P := "runtime_helpers_test"
-const ROOT := "user://runtime_helpers_test"
-const LIB := ROOT + "/library"
-const PROJECT := ROOT + "/project"
+static var root: String = SUPPORT.own_path("runtime_helpers_test")
+static var lib: String = root + "/library"
+static var own_project: String = root + "/project"
 
 
 static func run() -> bool:
-	_clear(ROOT)
-	_write(LIB.path_join("spot.gd"), "class_name FreeSpotX\nextends RefCounted\nvar p: OtherHelper = null\n")
-	_write(LIB.path_join("spot.gd.uid"), "uid://spot1\n")
-	_write(LIB.path_join("other.gd"), "class_name OtherHelper\nextends RefCounted\n")
-	_write(LIB.path_join("alone.gd"), "class_name AloneHelper\nextends RefCounted\n")
+	_clear(root)
+	_write(lib.path_join("spot.gd"), "class_name FreeSpotX\nextends RefCounted\nvar p: OtherHelper = null\n")
+	_write(lib.path_join("spot.gd.uid"), "uid://spot1\n")
+	_write(lib.path_join("other.gd"), "class_name OtherHelper\nextends RefCounted\n")
+	_write(lib.path_join("alone.gd"), "class_name AloneHelper\nextends RefCounted\n")
 	var row_text: String = "var at: Vector2 = FreeSpotX.find(self)"
-	var named: PackedStringArray = HELPERS.files_named_in(row_text, LIB)
-	var lacking_before: PackedStringArray = HELPERS.lacking_for_text(row_text, LIB, PROJECT)
-	var copied: PackedStringArray = HELPERS.ensure_for_text(row_text, LIB, PROJECT)
-	_write(PROJECT.path_join("alone.gd"), "# the project's own\n")
+	var named: PackedStringArray = HELPERS.files_named_in(row_text, lib)
+	var lacking_before: PackedStringArray = HELPERS.lacking_for_text(row_text, lib, own_project)
+	var copied: PackedStringArray = HELPERS.ensure_for_text(row_text, lib, own_project)
+	_write(own_project.path_join("alone.gd"), "# the project's own\n")
 	var ok: bool = SUPPORT.pins(P, [
 		["a class named in a row brings its file, then the helper that file names", named, PackedStringArray(["other.gd", "spot.gd"])],
-		["a longer identifier is not the class", HELPERS.files_named_in("FreeSpotXY.find()", LIB), PackedStringArray()],
+		["a longer identifier is not the class", HELPERS.files_named_in("FreeSpotXY.find()", lib), PackedStringArray()],
 		["before anything is copied both are lacking", lacking_before, PackedStringArray(["other.gd", "spot.gd"])],
 		["ensure copies them", copied, PackedStringArray(["other.gd", "spot.gd"])],
-		["the file arrives", FileAccess.file_exists(PROJECT.path_join("spot.gd")), true],
-		["its uid sidecar arrives with it", FileAccess.get_file_as_string(PROJECT.path_join("spot.gd.uid")), "uid://spot1\n"],
-		["after that nothing is lacking", HELPERS.lacking_for_text(row_text, LIB, PROJECT), PackedStringArray()],
-		["a second ensure copies nothing", HELPERS.ensure_for_text(row_text, LIB, PROJECT), PackedStringArray()],
+		["the file arrives", FileAccess.file_exists(own_project.path_join("spot.gd")), true],
+		["its uid sidecar arrives with it", FileAccess.get_file_as_string(own_project.path_join("spot.gd.uid")), "uid://spot1\n"],
+		["after that nothing is lacking", HELPERS.lacking_for_text(row_text, lib, own_project), PackedStringArray()],
+		["a second ensure copies nothing", HELPERS.ensure_for_text(row_text, lib, own_project), PackedStringArray()],
 		["a file the project holds is never overwritten",
-			HELPERS.copy_into_project(PackedStringArray(["alone.gd"]), LIB, PROJECT), PackedStringArray()],
-		["...and keeps its own text", FileAccess.get_file_as_string(PROJECT.path_join("alone.gd")), "# the project's own\n"],
+			HELPERS.copy_into_project(PackedStringArray(["alone.gd"]), lib, own_project), PackedStringArray()],
+		["...and keeps its own text", FileAccess.get_file_as_string(own_project.path_join("alone.gd")), "# the project's own\n"],
 	])
 	# The real tree.
 	var library_classes: Dictionary = HELPERS.class_files()
@@ -57,7 +57,7 @@ static func run() -> bool:
 			HELPERS.files_named_in(FileAccess.get_file_as_string("res://addons/eventforge/registration/modules/spawn_aces.gd")).has("free_spot.gd"), true],
 		["the rows' modules ask for helpers the library has", in_templates.size() > 0, true],
 	]) and ok
-	_clear(ROOT)
+	_clear(root)
 	return ok
 
 

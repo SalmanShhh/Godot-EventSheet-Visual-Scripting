@@ -24,11 +24,11 @@ static func run() -> bool:
 
 	# ── Backup ring core ──────────────────────────────────────────────────────────
 	all_passed = _check("missing files have nothing to back up",
-		EventSheetBackups.backup_sheet("user://backup_nothing_here.tres"), "") and all_passed
+		EventSheetBackups.backup_sheet(SUPPORT.own_path("backup_nothing_here.tres")), "") and all_passed
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
 	sheet.variables = {"hp": {"type": "int", "default": 1, "exported": true}}
-	var sheet_path: String = "user://backup_fixture.tres"
+	var sheet_path: String = SUPPORT.own_path("backup_fixture.tres")
 	for stale: String in EventSheetBackups.list_backups(sheet_path):
 		DirAccess.remove_absolute(stale)
 	ResourceSaver.save(sheet, sheet_path)
@@ -69,20 +69,20 @@ static func run() -> bool:
 	hook_sheet.variables = {"hp": {"type": "int", "default": 1, "exported": true}}
 	editor.setup(hook_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._current_sheet_path = "user://backup_hook.tres"
-	if FileAccess.file_exists("user://backup_hook.tres"):
-		DirAccess.remove_absolute("user://backup_hook.tres")
-	for stale: String in EventSheetBackups.list_backups("user://backup_hook.tres"):
+	editor._current_sheet_path = SUPPORT.own_path("backup_hook.tres")
+	if FileAccess.file_exists(SUPPORT.own_path("backup_hook.tres")):
+		DirAccess.remove_absolute(SUPPORT.own_path("backup_hook.tres"))
+	for stale: String in EventSheetBackups.list_backups(SUPPORT.own_path("backup_hook.tres")):
 		DirAccess.remove_absolute(stale)
 	editor._sheet_io._on_save_requested()
 	all_passed = _check("the first save has no pre-save bytes to ring",
-		EventSheetBackups.list_backups("user://backup_hook.tres").is_empty(), true) and all_passed
+		EventSheetBackups.list_backups(SUPPORT.own_path("backup_hook.tres")).is_empty(), true) and all_passed
 	hook_sheet.variables = {"hp": {"type": "int", "default": 2, "exported": true}}
 	editor._sheet_io._on_save_requested()
 	all_passed = _check("the second save backs up the previous state",
-		EventSheetBackups.list_backups("user://backup_hook.tres").size(), 1) and all_passed
+		EventSheetBackups.list_backups(SUPPORT.own_path("backup_hook.tres")).size(), 1) and all_passed
 	hook_sheet.variables = {"hp": {"type": "int", "default": 3, "exported": true}}
-	editor._restore_backup_path(EventSheetBackups.list_backups("user://backup_hook.tres")[0])
+	editor._restore_backup_path(EventSheetBackups.list_backups(SUPPORT.own_path("backup_hook.tres"))[0])
 	all_passed = _check("restore brings the backed-up model into the editor",
 		int((editor._current_sheet.variables.get("hp", {}) as Dictionary).get("default", -1)), 1) and all_passed
 	all_passed = _check("a restore is an unsaved change", editor._dirty, true) and all_passed
@@ -91,7 +91,7 @@ static func run() -> bool:
 	# ── .gd sheets ride the same ring (review fix) ────────────────────────────────
 	# GDScript-backed saves used to skip the backup ring entirely (and list_backups
 	# filtered to .tres, so even a hand-made .gd backup was invisible to Restore).
-	var gd_path: String = "user://backup_ring_source.gd"
+	var gd_path: String = SUPPORT.own_path("backup_ring_source.gd")
 	for stale_gd: String in EventSheetBackups.list_backups(gd_path):
 		DirAccess.remove_absolute(stale_gd)
 	var gd_v1: String = "extends Node\n"
@@ -125,7 +125,7 @@ static func run() -> bool:
 	# ── Atomic compile writes ─────────────────────────────────────────────────────
 	# _write_output_if_changed goes through a temp file + rename now: overwriting an
 	# EXISTING .gd must land the new content whole and leave no temp file behind.
-	var atomic_path: String = "user://atomic_write_probe.gd"
+	var atomic_path: String = SUPPORT.own_path("atomic_write_probe.gd")
 	var atomic_sheet: EventSheetResource = EventSheetResource.new()
 	atomic_sheet.host_class = "Node"
 	EventSheetCompiler.compile(atomic_sheet, atomic_path)
@@ -137,8 +137,8 @@ static func run() -> bool:
 		FileAccess.file_exists(atomic_path + ".efwrite.tmp"), false) and all_passed
 
 	# ── Project templates ─────────────────────────────────────────────────────────
-	ProjectSettings.set_setting("eventsheets/project/templates_dir", "user://tpl_dir")
-	DirAccess.make_dir_recursive_absolute("user://tpl_dir")
+	ProjectSettings.set_setting("eventsheets/project/templates_dir", SUPPORT.own_path("tpl_dir"))
+	DirAccess.make_dir_recursive_absolute(SUPPORT.own_path("tpl_dir"))
 	# The dir has to START empty. This test SAVES templates into it, and Save as Template suffixes
 	# rather than overwrites, so a run that ends between the saves and the cleanup leaves a
 	# boss_fight-N.tres behind for every later run to find - and the scan below then reports this
@@ -148,16 +148,16 @@ static func run() -> bool:
 	template.host_class = "CharacterBody2D"
 	template.custom_class_name = "BossFight"
 	template.variables = {"phase": {"type": "int", "default": 1, "exported": true}}
-	ResourceSaver.save(template, "user://tpl_dir/boss_fight.tres")
+	ResourceSaver.save(template, SUPPORT.own_path("tpl_dir/boss_fight.tres"))
 	all_passed = _check("templates dir is scanned",
-		EventSheetTemplates.list_templates(), PackedStringArray(["user://tpl_dir/boss_fight.tres"])) and all_passed
+		EventSheetTemplates.list_templates(), PackedStringArray([SUPPORT.own_path("tpl_dir/boss_fight.tres")])) and all_passed
 	all_passed = _check("template paths are recognized",
-		EventSheetTemplates.is_template_path("user://tpl_dir/boss_fight.tres")
+		EventSheetTemplates.is_template_path(SUPPORT.own_path("tpl_dir/boss_fight.tres"))
 		and not EventSheetTemplates.is_template_path("res://tests/fixtures/compiler_golden_sheet.tres"), true) and all_passed
 	all_passed = _check("doctor/vocab filter drops only templates",
-		EventSheetTemplates.non_template_sheets(PackedStringArray(["user://tpl_dir/boss_fight.tres", "res://tests/fixtures/compiler_golden_sheet.tres"])),
+		EventSheetTemplates.non_template_sheets(PackedStringArray([SUPPORT.own_path("tpl_dir/boss_fight.tres"), "res://tests/fixtures/compiler_golden_sheet.tres"])),
 		PackedStringArray(["res://tests/fixtures/compiler_golden_sheet.tres"])) and all_passed
-	var copy: EventSheetResource = EventSheetTemplates.load_copy("user://tpl_dir/boss_fight.tres")
+	var copy: EventSheetResource = EventSheetTemplates.load_copy(SUPPORT.own_path("tpl_dir/boss_fight.tres"))
 	all_passed = _check("template copies are deep and path-less",
 		copy.resource_path.is_empty() and copy.custom_class_name == "BossFight"
 		and int((copy.variables.get("phase", {}) as Dictionary).get("default", -1)) == 1, true) and all_passed
@@ -171,7 +171,7 @@ static func run() -> bool:
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
 		editor._starter._template_menu.item_count == 23 - 4 + 1 + 5 + 2 + 1 + 1 + 1
-		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
+		and editor._starter._project_template_paths == PackedStringArray([SUPPORT.own_path("tpl_dir/boss_fight.tres")]), true) and all_passed
 	# The tool starters are VALUES rather than a count, so a renamed entry names itself. They now live
 	# in the submenu, which is where the "New Sheet ▸ Editor tool" list lives.
 	var tool_entries: PackedStringArray = PackedStringArray()
@@ -195,13 +195,13 @@ static func run() -> bool:
 	editor._save_as_project_template()
 	editor._save_as_project_template()
 	all_passed = _check("save-as-template suffixes instead of overwriting",
-		FileAccess.file_exists("user://tpl_dir/boss_fight-2.tres")
-		and FileAccess.file_exists("user://tpl_dir/boss_fight-3.tres"), true) and all_passed
+		FileAccess.file_exists(SUPPORT.own_path("tpl_dir/boss_fight-2.tres"))
+		and FileAccess.file_exists(SUPPORT.own_path("tpl_dir/boss_fight-3.tres")), true) and all_passed
 
 	ProjectSettings.set_setting("eventsheets/project/templates_dir", null)
 	editor.free()
-	for cleanup_path: String in ["user://backup_fixture.tres", "user://backup_hook.tres",
-			"user://backup_ring_source.gd", "user://atomic_write_probe.gd"]:
+	for cleanup_path: String in [SUPPORT.own_path("backup_fixture.tres"), SUPPORT.own_path("backup_hook.tres"),
+			SUPPORT.own_path("backup_ring_source.gd"), SUPPORT.own_path("atomic_write_probe.gd")]:
 		if FileAccess.file_exists(cleanup_path):
 			DirAccess.remove_absolute(cleanup_path)
 	_sweep_template_dir()
@@ -213,8 +213,8 @@ static func run() -> bool:
 ## only ever list the ones a finished run made, and the stragglers come from the runs that did not
 ## finish.
 static func _sweep_template_dir() -> void:
-	for file_name: String in DirAccess.get_files_at("user://tpl_dir"):
-		DirAccess.remove_absolute("user://tpl_dir/%s" % file_name)
+	for file_name: String in DirAccess.get_files_at(SUPPORT.own_path("tpl_dir")):
+		DirAccess.remove_absolute(SUPPORT.own_path("tpl_dir") + "/" + file_name)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

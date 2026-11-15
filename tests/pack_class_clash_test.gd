@@ -11,43 +11,43 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const P := "pack_class_clash_test"
-const ROOT := "user://pack_class_clash_test"
-const LIB := ROOT + "/library"
-const PROJECT := ROOT + "/eventsheet_addons"
+static var root: String = SUPPORT.own_path("pack_class_clash_test")
+static var lib: String = root + "/library"
+static var own_project: String = root + "/eventsheet_addons"
 
 
 static func run() -> bool:
-	_clear(ROOT)
+	_clear(root)
 	EventSheetPackLibrary.forget()
-	_write(LIB.path_join(".gdignore"), "")
-	_write(LIB.path_join("nav/nav.gd"), "class_name NavThing\nextends Node\n")
-	_write(LIB.path_join("nav/extra/helper.gd"), "# no name here\nclass_name NavHelper\nextends RefCounted\n")
-	_write(LIB.path_join("plain/plain.gd"), "extends Node\n")
+	_write(lib.path_join(".gdignore"), "")
+	_write(lib.path_join("nav/nav.gd"), "class_name NavThing\nextends Node\n")
+	_write(lib.path_join("nav/extra/helper.gd"), "# no name here\nclass_name NavHelper\nextends RefCounted\n")
+	_write(lib.path_join("plain/plain.gd"), "extends Node\n")
 	var user_list: Array = [{"class": "NavThing", "path": "res://game/my_nav.gd", "base": "Node"}]
-	var own_copy: Array = [{"class": "NavThing", "path": PROJECT + "/nav/nav.gd", "base": "Node"}]
-	var found: Array[Dictionary] = EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), LIB, PROJECT, user_list)
-	var both: Array[Dictionary] = EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), LIB, PROJECT,
+	var own_copy: Array = [{"class": "NavThing", "path": own_project + "/nav/nav.gd", "base": "Node"}]
+	var found: Array[Dictionary] = EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), lib, own_project, user_list)
+	var both: Array[Dictionary] = EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), lib, own_project,
 		[{"class": "NavHelper", "path": "res://a.gd"}, {"class": "NavThing", "path": "res://b.gd"}])
 	var message: String = EventSheetPackLibrary.clash_message(found)
 	var ok: bool = SUPPORT.pins(P, [
 		["the names a pack folder brings are read off its class_name lines, subfolders included",
-			EventSheetPackLibrary.declared_classes(PackedStringArray(["nav"]), LIB).keys(), ["NavHelper", "NavThing"]],
+			EventSheetPackLibrary.declared_classes(PackedStringArray(["nav"]), lib).keys(), ["NavHelper", "NavThing"]],
 		["a name the project's own file holds is a clash, naming that file",
 			found.map(func(row: Dictionary) -> Array: return [row["name"], row["folder"], row["file"]]),
 			[["NavThing", "nav", "res://game/my_nav.gd"]]],
 		["several clashes are listed by name order", both.map(func(row: Dictionary) -> String: return str(row["name"])),
 			["NavHelper", "NavThing"]],
 		["no clash when the project holds no such name",
-			EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), LIB, PROJECT, [{"class": "Other", "path": "res://o.gd"}]), []],
+			EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), lib, own_project, [{"class": "Other", "path": "res://o.gd"}]), []],
 		["the pack's own earlier copy is not a clash",
-			EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), LIB, PROJECT, own_copy), []],
+			EventSheetPackLibrary.clashes(PackedStringArray(["nav"]), lib, own_project, own_copy), []],
 		["a pack with no class_name never clashes",
-			EventSheetPackLibrary.clashes(PackedStringArray(["plain"]), LIB, PROJECT, user_list), []],
+			EventSheetPackLibrary.clashes(PackedStringArray(["plain"]), lib, own_project, user_list), []],
 		["the message names the class and the file", [message.contains("NavThing"), message.contains("res://game/my_nav.gd")], [true, true]],
 		["the message says what to do", message.contains("Rename your class, or do not add this behaviour."), true],
 		["no clash says nothing", EventSheetPackLibrary.clash_message([] as Array[Dictionary]), ""],
 	])
-	_clear(ROOT)
+	_clear(root)
 	return ok
 
 

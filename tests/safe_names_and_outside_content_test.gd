@@ -15,7 +15,7 @@ class_name SafeNamesAndOutsideContentTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const TEST_DIR := "user://__safe_name_test"
+static var test_dir: String = SUPPORT.own_path("__safe_name_test")
 
 ## The two paths this test compiles TO. A compile writes its output where it is told, so these are
 ## files on the machine that ran the suite and belong in the clean-up like anything else it wrote.
@@ -97,21 +97,21 @@ static func _runs_on_disk() -> bool:
 	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
 		by_id[descriptor.ace_id] = descriptor
 	_cleanup()
-	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	DirAccess.make_dir_recursive_absolute(test_dir)
 	# The whole half below is about the free path stepping PAST this file, so a handle that did not
 	# open is a null the next line calls store_string on - the process ends there and no [FAIL] line
 	# is printed for any test in it. It is named as a failure instead.
-	var taken: FileAccess = FileAccess.open("%s/my_run.txt" % TEST_DIR, FileAccess.WRITE)
+	var taken: FileAccess = FileAccess.open("%s/my_run.txt" % test_dir, FileAccess.WRITE)
 	if taken == null:
 		return _check("the file that is already there could be written",
-			"%s/my_run.txt" % TEST_DIR, "(unwritable)")
+			"%s/my_run.txt" % test_dir, "(unwritable)")
 	taken.store_string("the first one")
 	taken.close()
 
 	var safe_name: String = str(by_id["SafeFileName"].codegen_template)\
 		.replace("{?fallback}", "").replace("{/fallback}", "")\
 		.replace("{name}", "\"  my/run  \"").replace("{fallback}", "\"untitled\"")
-	var wanted: String = "\"%s/\" + %s + \".txt\"" % [TEST_DIR, safe_name]
+	var wanted: String = "\"%s/\" + %s + \".txt\"" % [test_dir, safe_name]
 	var free_path: String = str(by_id["FreeFilePath"].codegen_template)\
 		.replace("{path}", wanted).replace("{at_most}", "9")
 
@@ -132,11 +132,11 @@ static func _runs_on_disk() -> bool:
 		var node: Node = script.new()
 		node._ready()
 		ok = _check("the name the player typed became a name a file system takes",
-			FileAccess.file_exists("%s/my_run_1.txt" % TEST_DIR), true) and ok
+			FileAccess.file_exists("%s/my_run_1.txt" % test_dir), true) and ok
 		ok = _check("the free path stepped past the file that was already there",
-			FileAccess.get_file_as_string("%s/my_run_1.txt" % TEST_DIR), "the second one") and ok
+			FileAccess.get_file_as_string("%s/my_run_1.txt" % test_dir), "the second one") and ok
 		ok = _check("the file that was already there is untouched",
-			FileAccess.get_file_as_string("%s/my_run.txt" % TEST_DIR), "the first one") and ok
+			FileAccess.get_file_as_string("%s/my_run.txt" % test_dir), "the first one") and ok
 		node.free()
 
 	# The two answers on their own, run as the lines they compile to.
@@ -168,9 +168,9 @@ static func _runs_on_disk() -> bool:
 	ok = _check("a name built out of pieces is made safe whole, not just its last piece",
 		_answer(joined), "_evil.json") and ok
 	var untaken: String = str(by_id["FreeFilePath"].codegen_template)\
-		.replace("{path}", "\"%s/never_written.txt\"" % TEST_DIR).replace("{at_most}", "9")
+		.replace("{path}", "\"%s/never_written.txt\"" % test_dir).replace("{at_most}", "9")
 	ok = _check("a path with nothing at it is answered back unchanged",
-		_answer(untaken), "%s/never_written.txt" % TEST_DIR) and ok
+		_answer(untaken), "%s/never_written.txt" % test_dir) and ok
 	_cleanup()
 	return ok
 
@@ -444,9 +444,9 @@ static func _joined(lines: PackedStringArray) -> String:
 ## which the compiler writes where it is told to write it: they sit beside the folder rather than
 ## inside it, so a sweep of the folder alone leaves them behind on the machine that ran the suite.
 static func _cleanup() -> void:
-	for name_text: String in DirAccess.get_files_at(TEST_DIR):
-		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, name_text])
-	DirAccess.remove_absolute(TEST_DIR)
+	for name_text: String in DirAccess.get_files_at(test_dir):
+		DirAccess.remove_absolute("%s/%s" % [test_dir, name_text])
+	DirAccess.remove_absolute(test_dir)
 	for compiled: String in COMPILE_OUTPUTS:
 		if FileAccess.file_exists(compiled):
 			DirAccess.remove_absolute(compiled)

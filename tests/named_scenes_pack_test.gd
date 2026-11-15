@@ -17,7 +17,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/named_scenes/named_scenes_addon.gd"
-const SCENE_DIR := "user://named_scenes_test"
+static var scene_dir: String = SUPPORT.own_path("named_scenes_test")
 
 
 static func run() -> bool:
@@ -71,10 +71,10 @@ static func _test_registry(script: GDScript) -> bool:
 
 	# The folder sweep, over real files.
 	_write_scene_folder()
-	scenes.register_scenes_in_folder(SCENE_DIR)
+	scenes.register_scenes_in_folder(scene_dir)
 	all_passed = _check("every .tscn in the folder registered under its file name",
 		scenes.scene_is_registered("box"), true) and all_passed
-	all_passed = _check("with its full path", scenes.path_of_named_scene("box"), SCENE_DIR + "/box.tscn") and all_passed
+	all_passed = _check("with its full path", scenes.path_of_named_scene("box"), scene_dir + "/box.tscn") and all_passed
 	all_passed = _check("a second scene in the same folder too", scenes.scene_is_registered("hub"), true) and all_passed
 	all_passed = _check("and a file that is not a .tscn is left alone", scenes.scene_is_registered("notes"), false) and all_passed
 	scenes.register_scenes_in_folder("user://no_such_folder_here")
@@ -222,23 +222,23 @@ static func _test_persistence(script: GDScript) -> bool:
 
 ## Two real .tscn files plus one that is not, so the folder sweep is proved to filter.
 static func _write_scene_folder() -> void:
-	DirAccess.make_dir_recursive_absolute(SCENE_DIR)
+	DirAccess.make_dir_recursive_absolute(scene_dir)
 	for scene_name: String in ["box", "hub"]:
 		var root: Node = Node.new()
 		root.name = scene_name
 		var packed: PackedScene = PackedScene.new()
 		packed.pack(root)
-		ResourceSaver.save(packed, "%s/%s.tscn" % [SCENE_DIR, scene_name])
+		ResourceSaver.save(packed, "%s/%s.tscn" % [scene_dir, scene_name])
 		root.free()
-	var notes: FileAccess = FileAccess.open(SCENE_DIR + "/notes.txt", FileAccess.WRITE)
+	var notes: FileAccess = FileAccess.open(scene_dir + "/notes.txt", FileAccess.WRITE)
 	notes.store_string("not a scene")
 	notes.close()
 
 
 static func _clear_scene_folder() -> void:
-	for file_name: String in DirAccess.get_files_at(SCENE_DIR):
-		DirAccess.remove_absolute(SCENE_DIR.path_join(file_name))
-	DirAccess.remove_absolute(SCENE_DIR)
+	for file_name: String in DirAccess.get_files_at(scene_dir):
+		DirAccess.remove_absolute(scene_dir.path_join(file_name))
+	DirAccess.remove_absolute(scene_dir)
 
 
 ## The shipped pack source with its class_name and icon dropped (an in-memory script cannot claim a

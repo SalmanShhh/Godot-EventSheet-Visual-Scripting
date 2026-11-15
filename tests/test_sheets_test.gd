@@ -20,8 +20,8 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const RUNNER_PATH := "res://addons/eventsheet/editor/test_sheet_runner.gd"
 const PANEL_PATH := "res://addons/eventsheet/editor/dock/test_report_panel.gd"
-const FIXTURE_DIR := "user://ef_test_sheet_fixtures"
-const TEMP_COMPILE_PATH := "user://ef_test_sheet_compile.gd"
+static var fixture_dir: String = SUPPORT.own_path("ef_test_sheet_fixtures")
+static var temp_compile_path: String = SUPPORT.own_path("ef_test_sheet_compile.gd")
 
 
 static func run() -> bool:
@@ -241,8 +241,8 @@ static func _test_a_disabled_signal_row_does_not_swallow_the_declaration() -> bo
 ## emitted script, open it the way the editor opens a .gd sheet, re-emit, compare. A marker that
 ## moved, or a prelude that swallowed it, would show up here and nowhere else.
 static func _test_the_emitted_test_sheet_reopens_byte_identically() -> bool:
-	DirAccess.make_dir_recursive_absolute(FIXTURE_DIR)
-	var path: String = FIXTURE_DIR + "/round_trip_test.gd"
+	DirAccess.make_dir_recursive_absolute(fixture_dir)
+	var path: String = fixture_dir + "/round_trip_test.gd"
 	var first: String = _compile(_passing_sheet())
 	_write(path, first)
 	var importer: EventSheetGDScriptImporter = EventSheetGDScriptImporter.new()
@@ -251,7 +251,7 @@ static func _test_the_emitted_test_sheet_reopens_byte_identically() -> bool:
 	ok = _check("re-emitting it is byte-identical", _compile(reopened), first) and ok
 	ok = _check("…with the marker still declared exactly once", first.count("## @ace_test_sheet"), 1) and ok
 	DirAccess.remove_absolute(path)
-	DirAccess.remove_absolute(FIXTURE_DIR)
+	DirAccess.remove_absolute(fixture_dir)
 	return ok
 
 
@@ -259,17 +259,17 @@ static func _test_the_emitted_test_sheet_reopens_byte_identically() -> bool:
 ## test suite with no registry, no project setting and no editor running.
 static func _test_the_runner_discovers_test_scripts_by_their_marker() -> bool:
 	var runner: GDScript = load(RUNNER_PATH)
-	DirAccess.make_dir_recursive_absolute(FIXTURE_DIR)
-	_write(FIXTURE_DIR + "/failing_test.gd", _compile(_failing_sheet()))
-	_write(FIXTURE_DIR + "/passing_test.gd", _compile(_passing_sheet()))
-	_write(FIXTURE_DIR + "/not_a_test.gd", _compile(_plain_sheet()))
-	var found: PackedStringArray = runner.call("discover", FIXTURE_DIR)
+	DirAccess.make_dir_recursive_absolute(fixture_dir)
+	_write(fixture_dir + "/failing_test.gd", _compile(_failing_sheet()))
+	_write(fixture_dir + "/passing_test.gd", _compile(_passing_sheet()))
+	_write(fixture_dir + "/not_a_test.gd", _compile(_plain_sheet()))
+	var found: PackedStringArray = runner.call("discover", fixture_dir)
 	var ok: bool = _check("only the marked scripts are found", found.size(), 2)
-	ok = _check("they come back sorted, first", found[0], FIXTURE_DIR + "/failing_test.gd") and ok
-	ok = _check("they come back sorted, second", found[1], FIXTURE_DIR + "/passing_test.gd") and ok
-	for file_name: String in DirAccess.get_files_at(FIXTURE_DIR):
-		DirAccess.remove_absolute(FIXTURE_DIR + "/" + file_name)
-	DirAccess.remove_absolute(FIXTURE_DIR)
+	ok = _check("they come back sorted, first", found[0], fixture_dir + "/failing_test.gd") and ok
+	ok = _check("they come back sorted, second", found[1], fixture_dir + "/passing_test.gd") and ok
+	for file_name: String in DirAccess.get_files_at(fixture_dir):
+		DirAccess.remove_absolute(fixture_dir + "/" + file_name)
+	DirAccess.remove_absolute(fixture_dir)
 	return ok
 
 
@@ -458,8 +458,8 @@ static func _compile(sheet: EventSheetResource) -> String:
 	# at the project root. A test sheet written there would be a real, discoverable test sheet sitting in
 	# the project, which the runner would then find and run on every headless invocation. So the write is
 	# aimed at a temporary path and removed again.
-	var source: String = str(EventSheetCompiler.compile(sheet, TEMP_COMPILE_PATH).get("output", ""))
-	DirAccess.remove_absolute(TEMP_COMPILE_PATH)
+	var source: String = str(EventSheetCompiler.compile(sheet, temp_compile_path).get("output", ""))
+	DirAccess.remove_absolute(temp_compile_path)
 	return source
 
 

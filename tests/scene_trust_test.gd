@@ -38,14 +38,14 @@ const NEW_ACE_IDS: Array[String] = ["SaveBranchAsSceneFile", "SceneFileIsDataOnl
 
 ## Where the scene files this test writes and reads go. Under user://, which is the place a test may
 ## write, and cleaned up at the end of the run that made them.
-const TEST_DIR: String = "user://_scene_trust_test"
+static var test_dir: String = SUPPORT.own_path("_scene_trust_test")
 
 ## The paths this test compiles TO, cleaned up beside the folder above for the same reason. A compile
 ## writes its output where it is told, and a path spelled at the compile site instead of listed here
 ## is one the sweep below cannot see - a file left on the machine that ran the suite.
-const COMPILE_OUTPUTS: Array[String] = [
-	"user://_scene_trust_authored.gd", "user://_scene_trust_quiet.gd",
-	"user://_scene_save_refusals.gd", "user://_scene_save_roundtrip.gd",
+static var compile_outputs: Array[String] = [
+	SUPPORT.own_path("_scene_trust_authored.gd"), SUPPORT.own_path("_scene_trust_quiet.gd"),
+	SUPPORT.own_path("_scene_save_refusals.gd"), SUPPORT.own_path("_scene_save_roundtrip.gd"),
 ]
 
 
@@ -222,7 +222,7 @@ static func _test_the_question_answers() -> bool:
 	if asking == null:
 		print("[FAIL] scene_trust_test: the emitted question does not parse")
 		return false
-	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	DirAccess.make_dir_recursive_absolute(test_dir)
 	var ok: bool = _check("a scene that is only data answers true",
 		asking.call(EventForgeSceneTrust.HELPER_NAME, _written("data_only.tscn", DATA_ONLY_SCENE)),
 		true)
@@ -240,7 +240,7 @@ static func _test_the_question_answers() -> bool:
 			_written("not_a_scene.tscn", NOT_A_SCENE)), false) and ok
 	ok = _check("and a file that is not there answers false - unreadable is not cleared",
 		asking.call(EventForgeSceneTrust.HELPER_NAME,
-			"%s/nothing_here.tscn" % TEST_DIR), false) and ok
+			"%s/nothing_here.tscn" % test_dir), false) and ok
 
 	# THE CRAFTED SPELLINGS. The threat this question exists for is a HAND-WRITTEN file, so "Godot
 	# writes it the other way" is not an answer: every one of these parses as the tag it looks like
@@ -321,7 +321,7 @@ static func _test_the_helper_lands_once() -> bool:
 	again.conditions.append(_authored_condition("SceneFileIsDataOnly",
 		{"path": "\"user://built_ship.tscn\""}))
 	sheet.events.append(again)
-	sheet.external_source_path = COMPILE_OUTPUTS[0]
+	sheet.external_source_path = compile_outputs[0]
 	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	var ok: bool = _check("the question compiles to the call it names",
 		output.contains("if %s(\"user://built_level.tscn\"):" % EventForgeSceneTrust.HELPER_NAME),
@@ -339,8 +339,8 @@ static func _test_the_helper_lands_once() -> bool:
 	# Reopening an emitted file and saving it again must not add a second definition: the one that is
 	# already there reads back as an ordinary function and is re-emitted where it sits.
 	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
-		output, true, COMPILE_OUTPUTS[0])
-	reopened.external_source_path = COMPILE_OUTPUTS[0]
+		output, true, compile_outputs[0])
+	reopened.external_source_path = compile_outputs[0]
 	var again_out: String = str(EventSheetCompiler.compile(
 		reopened, reopened.external_source_path).get("output", ""))
 	ok = _check("a file that already defines it gains no second copy",
@@ -393,7 +393,7 @@ static func _test_the_lift() -> bool:
 	ok = _check("a bare pack-and-save is not claimed",
 		_function_row_ids(sheet, "pack_it_only").has("SaveBranchAsSceneFile"), false) and ok
 
-	sheet.external_source_path = COMPILE_OUTPUTS[3]
+	sheet.external_source_path = compile_outputs[3]
 	var output: String = str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	ok = _check("%s comes back byte for byte" % FIXTURE, output, _source(FIXTURE)) and ok
 	ok = _test_the_lift_refuses() and ok
@@ -730,8 +730,8 @@ static func _the_question_as_a_running_function() -> Object:
 
 ## One scene file on disk, written for this test, and the path it landed at.
 static func _written(file_name: String, text: String) -> String:
-	DirAccess.make_dir_recursive_absolute(TEST_DIR)
-	var path: String = "%s/%s" % [TEST_DIR, file_name]
+	DirAccess.make_dir_recursive_absolute(test_dir)
+	var path: String = "%s/%s" % [test_dir, file_name]
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file != null:
 		file.store_string(text)
@@ -743,14 +743,14 @@ static func _written(file_name: String, text: String) -> String:
 ## which lands where the compile was told to write it - beside the folder rather than inside it - so
 ## sweeping the folder alone left them on the machine that ran the suite.
 static func _clean_up() -> void:
-	for compiled: String in COMPILE_OUTPUTS:
+	for compiled: String in compile_outputs:
 		if FileAccess.file_exists(compiled):
 			DirAccess.remove_absolute(compiled)
-	if not DirAccess.dir_exists_absolute(TEST_DIR):
+	if not DirAccess.dir_exists_absolute(test_dir):
 		return
-	for file_name: String in DirAccess.get_files_at(TEST_DIR):
-		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, file_name])
-	DirAccess.remove_absolute(TEST_DIR)
+	for file_name: String in DirAccess.get_files_at(test_dir):
+		DirAccess.remove_absolute("%s/%s" % [test_dir, file_name])
+	DirAccess.remove_absolute(test_dir)
 
 
 ## A sheet that asks nothing, compiled - the proof that a project which never asks the question
@@ -764,7 +764,7 @@ static func _compiled_without_the_question() -> String:
 	event.actions.append(_authored_action("SaveBranchAsSceneFile",
 		{"branch": "self", "path": "\"user://built_level.tscn\""}, "c3"))
 	sheet.events.append(event)
-	sheet.external_source_path = COMPILE_OUTPUTS[1]
+	sheet.external_source_path = compile_outputs[1]
 	return str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 
 
@@ -796,13 +796,13 @@ static func _open(file_name: String) -> EventSheetResource:
 ## file - a stray space survives a string literal and does not survive every editor a fixture passes
 ## through, so the runs that must not be claimed are written here rather than committed as files.
 static func _opened(source: String) -> EventSheetResource:
-	return EventSheetGDScriptImporter.new().import_external_source(source, true, COMPILE_OUTPUTS[2])
+	return EventSheetGDScriptImporter.new().import_external_source(source, true, compile_outputs[2])
 
 
 ## The same sheet written back out. The byte comparison is the point: a run this family refuses is
 ## still every byte the author typed, because a refusal leaves the statements exactly as they are.
 static func _reemitted(sheet: EventSheetResource) -> String:
-	sheet.external_source_path = COMPILE_OUTPUTS[2]
+	sheet.external_source_path = compile_outputs[2]
 	return str(EventSheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 
 

@@ -25,7 +25,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const EXPORT_TOOLS := preload("res://addons/eventforge/editor/export_tools_plugin.gd")
 const CODEGEN := preload("res://addons/eventforge/compiler/action_codegen.gd")
-const TEMP_DIR := "user://eventforge_export_bake_test"
+static var temp_dir: String = SUPPORT.own_path("eventforge_export_bake_test")
 const HANDLER_HEADER := "func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:"
 
 
@@ -76,8 +76,8 @@ static func run() -> bool:
 	# The one artefact this feature produces, handed to the engine rather than to `contains`: a tool
 	# that does not parse is not a bake step, and the hook's own reflection must find the handler on
 	# the compiled script - that is the join between the two halves.
-	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
-	var compiled_path: String = TEMP_DIR + "/compiled_bake_tool.gd"
+	DirAccess.make_dir_recursive_absolute(temp_dir)
+	var compiled_path: String = temp_dir + "/compiled_bake_tool.gd"
 	_write_script(compiled_path, PackedStringArray([compiled]))
 	var compiled_script: GDScript = load(compiled_path) as GDScript
 	ok = _check("the compiled tool parses", compiled_script != null, true) and ok
@@ -113,8 +113,8 @@ static func run() -> bool:
 		"DictHasKey") and ok
 
 	# ── 5. Write Version Stamp, run for real ──
-	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
-	var stamp_path: String = TEMP_DIR + "/build_stamp.cfg"
+	DirAccess.make_dir_recursive_absolute(temp_dir)
+	var stamp_path: String = temp_dir + "/build_stamp.cfg"
 	var stamp: ACEDescriptor = descriptors.get("WriteVersionStamp", null)
 	ok = _check("Write Version Stamp is registered", stamp != null, true) and ok
 	if stamp != null:
@@ -130,7 +130,7 @@ static func run() -> bool:
 			str(written.get_value("build", "stamped_at", "")).length() >= 19, true) and ok
 
 	# ── 6a. Discovery: declaring the handler IS the opt-in ──
-	var discovery_dir: String = TEMP_DIR + "/discovery"
+	var discovery_dir: String = temp_dir + "/discovery"
 	DirAccess.make_dir_recursive_absolute(discovery_dir)
 	var editor_tool_path: String = discovery_dir + "/bake_tool.gd"
 	_write_script(editor_tool_path, PackedStringArray([
@@ -176,9 +176,9 @@ static func run() -> bool:
 	# The tool here is RefCounted-hosted rather than an EditorScript, because the engine only lets an
 	# EditorScript be instantiated while an editor is running - true during every export, including
 	# the headless one CI runs, but not in a plain `--script` suite. Same discovery, same call.
-	var run_dir: String = TEMP_DIR + "/run"
+	var run_dir: String = temp_dir + "/run"
 	DirAccess.make_dir_recursive_absolute(run_dir)
-	var receipt_path: String = TEMP_DIR + "/receipt.txt"
+	var receipt_path: String = temp_dir + "/receipt.txt"
 	var tool_path: String = run_dir + "/bake_tool.gd"
 	_write_script(tool_path, PackedStringArray([
 		"@tool", "extends RefCounted", "", "",
@@ -197,7 +197,7 @@ static func run() -> bool:
 	# Discovery is a TEXT match, so a file that merely quotes the header - this very test file does -
 	# reaches the run. Nothing may be constructed to find that out: the _init here leaves a receipt,
 	# and that receipt must never appear.
-	var construction_path: String = TEMP_DIR + "/must_not_construct.txt"
+	var construction_path: String = temp_dir + "/must_not_construct.txt"
 	_write_script(run_dir + "/mentions_only.gd", PackedStringArray([
 		"@tool", "extends RefCounted", "", "",
 		"const HEADER := \"%s\"" % HANDLER_HEADER, "", "",
@@ -228,10 +228,10 @@ static func run() -> bool:
 	# moment the handler suspends and the exporter carries on packaging files. Everything before the
 	# await has run; everything after it has not, and may miss the build entirely. The hook has to say
 	# so rather than count it as a clean run - silence here is a bake step that half happened.
-	var await_dir: String = TEMP_DIR + "/awaits"
+	var await_dir: String = temp_dir + "/awaits"
 	DirAccess.make_dir_recursive_absolute(await_dir)
-	var before_await_path: String = TEMP_DIR + "/before_await.txt"
-	var after_await_path: String = TEMP_DIR + "/after_await.txt"
+	var before_await_path: String = temp_dir + "/before_await.txt"
+	var after_await_path: String = temp_dir + "/after_await.txt"
 	_write_script(await_dir + "/awaiting_tool.gd", PackedStringArray([
 		"@tool", "extends RefCounted", "", "",
 		"signal never_fires", "", "",
@@ -251,7 +251,7 @@ static func run() -> bool:
 	ok = _check("and not as skipped either - it did start", int(await_report.get("skipped", -1)), 0) and ok
 
 	# Nothing to do in a project with no bake steps.
-	var empty_root: String = TEMP_DIR + "/empty"
+	var empty_root: String = temp_dir + "/empty"
 	DirAccess.make_dir_recursive_absolute(empty_root)
 	ok = _check("a project with no bake steps runs nothing",
 		int(EXPORT_TOOLS.run_export_tools(PackedStringArray(), false, empty_root).get("ran", -1)), 0) and ok
@@ -312,7 +312,7 @@ static func _run_statements(statements: String, name: String) -> void:
 	var lines: PackedStringArray = PackedStringArray(["@tool", "extends RefCounted", "", "", "static func go() -> void:"])
 	for line: String in statements.split("\n"):
 		lines.append("\t" + line)
-	var script_path: String = TEMP_DIR + "/%s_probe.gd" % name
+	var script_path: String = temp_dir + "/%s_probe.gd" % name
 	_write_script(script_path, lines)
 	var script: GDScript = load(script_path) as GDScript
 	if script != null:
@@ -335,7 +335,7 @@ static func _param_hint(descriptor: ACEDescriptor, param_id: String) -> String:
 
 
 static func _clear_temp_dirs() -> void:
-	for folder: String in [TEMP_DIR + "/empty", TEMP_DIR + "/discovery/apex", TEMP_DIR + "/discovery", TEMP_DIR + "/awaits", TEMP_DIR + "/run", TEMP_DIR]:
+	for folder: String in [temp_dir + "/empty", temp_dir + "/discovery/apex", temp_dir + "/discovery", temp_dir + "/awaits", temp_dir + "/run", temp_dir]:
 		var dir: DirAccess = DirAccess.open(folder)
 		if dir == null:
 			continue

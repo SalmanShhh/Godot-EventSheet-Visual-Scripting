@@ -11,7 +11,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const NAME := "manual_doors_test"
-const FIXTURE_ROOT := "user://manual_doors_test"
+static var fixture_root: String = SUPPORT.own_path("manual_doors_test")
 
 
 static func run() -> bool:
@@ -175,8 +175,8 @@ static func _test_pictures() -> bool:
 
 ## A behaviour page offers Add to project when the pack waits in the library and not in the project.
 static func _test_library_page() -> bool:
-	var library: String = FIXTURE_ROOT.path_join("library")
-	var project: String = FIXTURE_ROOT.path_join("project")
+	var library: String = fixture_root.path_join("library")
+	var project: String = fixture_root.path_join("project")
 	DirAccess.make_dir_recursive_absolute(library.path_join("platformer"))
 	DirAccess.make_dir_recursive_absolute(project)
 	FileAccess.open(library.path_join(".gdignore"), FileAccess.WRITE).close()
@@ -189,7 +189,7 @@ static func _test_library_page() -> bool:
 	DirAccess.remove_absolute(library.path_join("platformer"))
 	DirAccess.remove_absolute(library.path_join(".gdignore"))
 	DirAccess.remove_absolute(library)
-	DirAccess.remove_absolute(FIXTURE_ROOT)
+	DirAccess.remove_absolute(fixture_root)
 	return SUPPORT.pins(NAME, [
 		["a library-only pack's page offers it", waiting, "platformer"],
 		["a page that is not a behaviour's offers nothing", other_page, ""],

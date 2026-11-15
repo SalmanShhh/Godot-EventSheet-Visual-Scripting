@@ -12,7 +12,9 @@
 class_name DocChoresTest
 extends RefCounted
 
-const WORK_ROOT := "user://eventsheet_test_chores"
+const SUPPORT := preload("res://tests/support.gd")
+
+static var work_root: String = SUPPORT.own_path("eventsheet_test_chores")
 
 
 static func run() -> bool:
@@ -21,7 +23,7 @@ static func run() -> bool:
 	# a serial CI run does not hand the next test a setting this one changed.
 	var previous_docs_dir: Variant = ProjectSettings.get_setting(
 		EventSheetDocLibrary.USER_DOCS_SETTING, EventSheetDocLibrary.USER_DOCS_DEFAULT)
-	ProjectSettings.set_setting(EventSheetDocLibrary.USER_DOCS_SETTING, WORK_ROOT)
+	ProjectSettings.set_setting(EventSheetDocLibrary.USER_DOCS_SETTING, work_root)
 	var all_passed: bool = true
 	all_passed = _test_the_chore_list() and all_passed
 	all_passed = _test_unknown_chore() and all_passed
@@ -33,8 +35,8 @@ static func run() -> bool:
 	all_passed = _test_remembered_boxes() and all_passed
 	all_passed = _test_the_ci_file() and all_passed
 	all_passed = _test_the_bulk_reduction_agrees() and all_passed
-	_clear("%s/manual" % WORK_ROOT)
-	_clear(WORK_ROOT)
+	_clear("%s/manual" % work_root)
+	_clear(work_root)
 	ProjectSettings.set_setting(EventSheetDocLibrary.USER_DOCS_SETTING, previous_docs_dir)
 	EventSheetDocLibrary.reload()
 	return all_passed

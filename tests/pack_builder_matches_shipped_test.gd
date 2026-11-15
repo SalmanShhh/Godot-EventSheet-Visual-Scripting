@@ -45,7 +45,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 const PARALLEL_UNSAFE := true
 
 const PIN := "pack_builder_matches_shipped_test"
-const TEMP_DIR := "user://eventsheets_pack_builder_gate"
+static var temp_dir: String = SUPPORT.own_path("eventsheets_pack_builder_gate")
 const BUILDERS_DIR := "res://tools/pack_builders/"
 const PACKS_DIR := "res://eventsheet_addons"
 
@@ -59,7 +59,7 @@ const ROTATION_DAYS := 7
 
 static func run() -> bool:
 	var all_passed: bool = true
-	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
+	DirAccess.make_dir_recursive_absolute(temp_dir)
 	var shipped_index: Dictionary = _shipped_by_file_name()
 	if shipped_index.is_empty():
 		return SUPPORT.check(PIN, "the shipped packs are readable", 0, 1)
@@ -160,7 +160,7 @@ static func _check_builder(builder_name: String, shipped_index: Dictionary) -> b
 	_empty_temp_dir()
 	# The override is a shared static, so it is cleared the moment the build returns - a later
 	# test that publishes a pack must not inherit this test's temporary directory.
-	Lib.output_override_dir = TEMP_DIR
+	Lib.output_override_dir = temp_dir
 	var built: bool = bool(builder.call("build"))
 	Lib.output_override_dir = ""
 	var passed: bool = SUPPORT.check(PIN, "%s: the builder compiles" % builder_name, built, true)
@@ -183,7 +183,7 @@ static func _compare_one(builder_name: String, file_name: String, shipped_index:
 		# drift in the other direction, and just as invisible until somebody runs the rebuild.
 		return SUPPORT.check(PIN, "%s: %s is a shipped pack script" % [builder_name, file_name], false, true)
 	var shipped: String = FileAccess.get_file_as_string(shipped_path)
-	var rebuilt: String = FileAccess.get_file_as_string(TEMP_DIR.path_join(file_name))
+	var rebuilt: String = FileAccess.get_file_as_string(temp_dir.path_join(file_name))
 	if rebuilt == shipped:
 		return SUPPORT.check(PIN, "%s: the builder reproduces %s" % [builder_name, file_name], true, true)
 	return SUPPORT.check(PIN, "%s: the builder reproduces %s (%s)" % [builder_name, file_name,
@@ -194,7 +194,7 @@ static func _compare_one(builder_name: String, file_name: String, shipped_index:
 ## the same on every machine.
 static func _temp_script_names() -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
-	var dir: DirAccess = DirAccess.open(TEMP_DIR)
+	var dir: DirAccess = DirAccess.open(temp_dir)
 	if dir == null:
 		return names
 	for file_name: String in dir.get_files():
@@ -207,11 +207,11 @@ static func _temp_script_names() -> PackedStringArray:
 ## Clears the temporary directory between builders, so one builder's output can never be read as the
 ## next one's (a builder that writes nothing would otherwise be compared against its predecessor).
 static func _empty_temp_dir() -> void:
-	var dir: DirAccess = DirAccess.open(TEMP_DIR)
+	var dir: DirAccess = DirAccess.open(temp_dir)
 	if dir == null:
 		return
 	for file_name: String in dir.get_files():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(TEMP_DIR.path_join(file_name)))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(temp_dir.path_join(file_name)))
 
 
 ## The first line that differs, so a failure names the drift instead of dumping two files.

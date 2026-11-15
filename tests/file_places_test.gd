@@ -33,7 +33,7 @@ const P := preload("res://addons/eventforge/registration/file_places.gd")
 
 ## Where the round-trip half writes. Under user:// because that is the only place a test may write,
 ## which is the lesson this whole file is about.
-const TEST_DIR := "user://__fileplaces_test"
+static var test_dir: String = SUPPORT.own_path("__fileplaces_test")
 
 
 static func run() -> bool:
@@ -204,8 +204,8 @@ static func _test_leads() -> bool:
 static func _test_path_completion_is_fresh() -> bool:
 	var passed: bool = true
 	EventSheetCompletions.clear_cache()
-	DirAccess.make_dir_recursive_absolute(TEST_DIR)
-	var written_later: String = "%s/written_by_a_test_run.txt" % TEST_DIR
+	DirAccess.make_dir_recursive_absolute(test_dir)
+	var written_later: String = "%s/written_by_a_test_run.txt" % test_dir
 	DirAccess.remove_absolute(written_later)
 	var asked: String = "\"%s" % written_later
 	passed = _check("a file nobody has written yet is not offered",
@@ -266,23 +266,23 @@ static func _test_visible_guard() -> bool:
 	# And it RUNS: an emitted ternary that reads right and parses wrong is exactly the failure this
 	# whole vocabulary exists to end.
 	var read_back: Variant = _run_expression(_emit(template,
-		{"path": "\"%s/nothing.txt\"" % TEST_DIR, "fallback": "\"the fallback\""}))
+		{"path": "\"%s/nothing.txt\"" % test_dir, "fallback": "\"the fallback\""}))
 	passed = _check("the guarded read really answers the fallback for a missing file",
 		read_back, "the fallback") and passed
 	# AND IT ANSWERS INSIDE SOMEBODY ELSE'S SENTENCE. An expression is dropped into a parameter slot,
 	# and Compare Values is `{a} {op} {b}` - so an unbracketed ternary would bind the comparison into
 	# its own branches and the row would quietly BE the file's text instead of a comparison. The file
 	# here EXISTS, which is the case where the two spellings answer differently.
-	DirAccess.make_dir_recursive_absolute(TEST_DIR)
-	var present: FileAccess = FileAccess.open("%s/present.txt" % TEST_DIR, FileAccess.WRITE)
+	DirAccess.make_dir_recursive_absolute(test_dir)
+	var present: FileAccess = FileAccess.open("%s/present.txt" % test_dir, FileAccess.WRITE)
 	if present != null:
 		present.store_string("here")
 		present.close()
 	var compared: Variant = _run_expression("%s == \"here\"" % _emit(template,
-		{"path": "\"%s/present.txt\"" % TEST_DIR, "fallback": "\"the fallback\""}))
+		{"path": "\"%s/present.txt\"" % test_dir, "fallback": "\"the fallback\""}))
 	passed = _check("and a guarded read dropped into a comparison IS a comparison",
 		compared, true) and passed
-	DirAccess.remove_absolute("%s/present.txt" % TEST_DIR)
+	DirAccess.remove_absolute("%s/present.txt" % test_dir)
 	return passed
 
 
@@ -684,8 +684,8 @@ static func _test_lifts() -> bool:
 ## One source, opened as a sheet and written back out. The bytes, so a lift that "worked" and
 ## reformatted somebody's file still fails here.
 static func _round_trip(source: String) -> String:
-	var path: String = "%s/round_trip.gd" % TEST_DIR
-	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	var path: String = "%s/round_trip.gd" % test_dir
+	DirAccess.make_dir_recursive_absolute(test_dir)
 	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if handle == null:
 		return ""
@@ -823,11 +823,11 @@ static func _sorted(source: Dictionary) -> PackedStringArray:
 ## that swept nothing left a folder on the machine that ran the suite, which is exactly the habit this
 ## file is about.
 static func _clean_up() -> void:
-	if not DirAccess.dir_exists_absolute(TEST_DIR):
+	if not DirAccess.dir_exists_absolute(test_dir):
 		return
-	for file_name: String in DirAccess.get_files_at(TEST_DIR):
-		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, file_name])
-	DirAccess.remove_absolute(TEST_DIR)
+	for file_name: String in DirAccess.get_files_at(test_dir):
+		DirAccess.remove_absolute("%s/%s" % [test_dir, file_name])
+	DirAccess.remove_absolute(test_dir)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

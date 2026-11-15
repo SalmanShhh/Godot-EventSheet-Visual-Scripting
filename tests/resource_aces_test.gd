@@ -22,7 +22,7 @@ class_name ResourceACEsTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const SANDBOX := "user://eventforge_resource_aces_test"
+static var own_sandbox: String = SUPPORT.own_path("eventforge_resource_aces_test")
 
 
 static func run() -> bool:
@@ -113,7 +113,7 @@ static func _test_folder_emission() -> bool:
 ## A real folder of .tres on disk: the list loads them, the by-name fetch finds one, the count
 ## ignores everything that is not a data asset, and every one of them survives a missing folder.
 static func _test_folder_runtime() -> bool:
-	var folder: String = SANDBOX + "/library"
+	var folder: String = own_sandbox + "/library"
 	DirAccess.make_dir_recursive_absolute(folder)
 	_save_curve(folder + "/alpha.tres", 42)
 	_save_curve(folder + "/beta.tres", 7)
@@ -146,7 +146,7 @@ static func _test_folder_runtime() -> bool:
 	resolutions.sort()
 	var ok: bool = _check("Resources In Folder loads every data asset and skips the .txt", resolutions, [7, 42])
 	ok = _check("Resources In Folder returns an empty list for a folder that is not there",
-		instance.call("all_in", SANDBOX + "/nope"), []) and ok
+		instance.call("all_in", own_sandbox + "/nope"), []) and ok
 
 	# A mod folder is the case this verb was added for, and a .tres saved by an older build (or one
 	# whose script class was removed) loads as NOTHING. It must be left out rather than arriving as a
@@ -189,7 +189,7 @@ static func _test_folder_runtime() -> bool:
 
 	ok = _check("Count Of Resources In counts the data assets only", int(instance.call("count_in", folder)), 2) and ok
 	ok = _check("Count Of Resources In is zero for a folder that is not there",
-		int(instance.call("count_in", SANDBOX + "/nope")), 0) and ok
+		int(instance.call("count_in", own_sandbox + "/nope")), 0) and ok
 	return ok
 
 

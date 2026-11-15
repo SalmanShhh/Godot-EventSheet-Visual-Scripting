@@ -40,8 +40,8 @@ const SUPPORT := preload("res://tests/support.gd")
 const ROOM: String = "res://tests/fixtures/interop_corpus/room.gd"
 
 ## Where the staged script lives. user://, so a run leaves nothing under res://.
-const STAGED_DIR: String = "user://derived_call_rows_staged"
-const STAGED_SCRIPT: String = STAGED_DIR + "/beacon.gd"
+static var staged_dir: String = SUPPORT.own_path("derived_call_rows_staged")
+static var staged_script: String = staged_dir + "/beacon.gd"
 
 ## A project script with `##` lines above its own declarations - the words a derived row shows for a
 ## method the engine never heard of.
@@ -433,7 +433,7 @@ static func _test_the_docs_ride() -> bool:
 	ok = _check("a class the engine does not have has no page",
 		EventSheetDerivedCalls.doc_id_for("BeaconThatIsNotAClass", "light"), "") and ok
 	_stage_script()
-	var receiver: Dictionary = {"class": "", "script_path": STAGED_SCRIPT, "source": "declared"}
+	var receiver: Dictionary = {"class": "", "script_path": staged_script, "source": "declared"}
 	var facts: Dictionary = EventSheetDerivedCalls.method_facts(receiver, "light")
 	ok = _check("a project method's words are the `##` line above it",
 		str(facts.get("doc", "")), "Lights the beacon and holds it for a while.") and ok
@@ -489,7 +489,7 @@ static func _test_the_pickers_derived_section() -> bool:
 		ok = _check("`(%s)` prefills `%s`" % [str(pair[0]), str(pair[1])],
 			EventSheetScriptMembers.call_arguments(str(pair[0])), str(pair[1])) and ok
 	_stage_script()
-	var declared: Array = EventSheetScriptMembers.of_script(STAGED_SCRIPT)["methods"]
+	var declared: Array = EventSheetScriptMembers.of_script(staged_script)["methods"]
 	var names: PackedStringArray = PackedStringArray()
 	for entry: Variant in declared:
 		names.append(str((entry as Dictionary).get("name", "")))
@@ -528,7 +528,7 @@ static func _test_the_pickers_derived_section() -> bool:
 ## worth proving on a real buffer rather than trusting the shape of the mechanism.
 static func _test_the_row_is_the_line() -> bool:
 	_stage_script()
-	var reading: Dictionary = EventSheetLiftReading.read(STAGED_SOURCE, STAGED_SCRIPT)
+	var reading: Dictionary = EventSheetLiftReading.read(STAGED_SOURCE, staged_script)
 	return _check("a file of derived rows saves back byte-identical",
 		bool(reading.get("identical", false)), true)
 
@@ -649,8 +649,8 @@ static func _tones(pieces: Array) -> Array:
 
 
 static func _stage_script() -> void:
-	DirAccess.make_dir_recursive_absolute(STAGED_DIR)
-	var handle: FileAccess = FileAccess.open(STAGED_SCRIPT, FileAccess.WRITE)
+	DirAccess.make_dir_recursive_absolute(staged_dir)
+	var handle: FileAccess = FileAccess.open(staged_script, FileAccess.WRITE)
 	if handle != null:
 		handle.store_string(STAGED_SOURCE)
 		handle.close()
@@ -662,5 +662,5 @@ static func _tidy_up() -> void:
 	EventSheetDerivedCalls.clear_cache()
 	EventSheetScriptMembers.clear_cache()
 	EventSheetLiftReading.clear_cache()
-	DirAccess.remove_absolute(STAGED_SCRIPT)
-	DirAccess.remove_absolute(STAGED_DIR)
+	DirAccess.remove_absolute(staged_script)
+	DirAccess.remove_absolute(staged_dir)

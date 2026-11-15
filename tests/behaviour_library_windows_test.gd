@@ -69,7 +69,7 @@ static func run() -> bool:
 	])
 
 	# A copied folder's pictures are imported before anything loads them; scripts need no import.
-	var folder: String = "user://behaviour_library_windows_test_import"
+	var folder: String = SUPPORT.own_path("behaviour_library_windows_test_import")
 	DirAccess.make_dir_recursive_absolute(folder.path_join("art"))
 	for file_name: String in ["a.gd", "a.gd.uid", "art/icon.svg", "done.png", "done.png.import"]:
 		FileAccess.open(folder.path_join(file_name), FileAccess.WRITE).close()

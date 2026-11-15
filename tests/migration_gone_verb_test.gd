@@ -23,7 +23,7 @@ const GONE_SENTENCE := "Flicker $Lamp by 0.4"
 const GONE_LINE := "flicker($Lamp, 0.4)"
 
 ## Where a compiled probe is written. `user://` so nothing under res:// is touched by a test.
-const PROBE_PATH := "user://eventforge_migration_probe.gd"
+static var probe_path: String = SUPPORT.own_path("eventforge_migration_probe.gd")
 
 
 static func run() -> bool:
@@ -67,9 +67,9 @@ static func _test_the_sheet_is_never_written_to() -> bool:
 	# And the round trip the whole plugin stands on: the emitted file, opened as a sheet and emitted
 	# again, is the same bytes. A lost verb degrades to a verbatim block, which is exactly the shape
 	# that reproduces itself.
-	var wrote: Error = _write(PROBE_PATH, before)
+	var wrote: Error = _write(probe_path, before)
 	ok = _check("the probe is written", wrote, OK) and ok
-	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(PROBE_PATH)
+	var reopened: EventSheetResource = EventSheetGDScriptImporter.new().import_external(probe_path)
 	ok = _check("the file opens as a sheet", reopened != null, true) and ok
 	if reopened != null:
 		ok = _check("and saving it untouched reproduces it byte for byte",
@@ -254,10 +254,10 @@ static func _test_keeping_it_as_code() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	var sheet: EventSheetResource = _sheet_with_a_gone_verb()
-	sheet.external_source_path = PROBE_PATH
+	sheet.external_source_path = probe_path
 	dock.setup(sheet)
 	var finding: Dictionary = EventSheetMigrationFindings.findings(
-		dock.get_current_sheet(), PROBE_PATH, _known_vocabulary())[0]
+		dock.get_current_sheet(), probe_path, _known_vocabulary())[0]
 
 	var comment: String = EventSheetKeepAsCodeDialog.comment_for(finding)
 	var ok: bool = _check("the offered comment leads with the sentence the code no longer says",
@@ -312,10 +312,10 @@ static func _test_the_row_is_found_again_rather_than_held() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	var sheet: EventSheetResource = _sheet_with_a_gone_verb()
-	sheet.external_source_path = PROBE_PATH
+	sheet.external_source_path = probe_path
 	dock.setup(sheet)
 	var finding: Dictionary = EventSheetMigrationFindings.findings(
-		dock.get_current_sheet(), PROBE_PATH, _known_vocabulary())[0]
+		dock.get_current_sheet(), probe_path, _known_vocabulary())[0]
 	dock._keep_as_code_dialog.open(finding)
 	# The funnel's own commit, written out: every resource in the sheet is replaced by a snapshot
 	# duplicate, which is exactly what detaches a row somebody held across the edit.
@@ -505,7 +505,7 @@ static func _sheet_with(row: Resource) -> EventSheetResource:
 
 
 static func _compiled(sheet: EventSheetResource) -> String:
-	return str(EventSheetCompiler.compile(sheet, PROBE_PATH).get("output", ""))
+	return str(EventSheetCompiler.compile(sheet, probe_path).get("output", ""))
 
 
 static func _write(path: String, text: String) -> Error:
@@ -557,7 +557,7 @@ static func _test_the_two_corpus_modes() -> bool:
 		" The .gd half was read whole: 1 script(s).") and ok
 
 	# The second half: a real folder, read both ways.
-	var folder: String = "user://eventforge_corpus_fixture"
+	var folder: String = SUPPORT.own_path("eventforge_corpus_fixture")
 	DirAccess.make_dir_recursive_absolute(folder)
 	var sheet_path: String = folder.path_join("stored.tres")
 	if ResourceSaver.save(_stored_sheet_on_an_older_spelling(), sheet_path) != OK:
