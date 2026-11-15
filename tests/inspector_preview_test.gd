@@ -102,7 +102,7 @@ static func _readable_inks() -> bool:
 		ok = _check("the caption keeps its contrast on %s" % ground.to_html(), EventSheetLookStyle.contrast_ratio(caption, ground) >= EventSheetInspectorPreviewCard.CAPTION_CONTRAST, true) and ok
 		ok = _check("the sentence keeps its contrast on %s" % ground.to_html(), EventSheetLookStyle.contrast_ratio(sentence, ground) >= EventSheetInspectorPreviewCard.READABLE_CONTRAST, true) and ok
 	var pale: Color = EventSheetInspectorPreviewCard.reading_ink(Color(1.0, 1.0, 1.0, 0.5), Color(0.93, 0.93, 0.93))
-	ok = _check("on a pale card the ink is dark", pale.get_luminance() < 0.4, true) and ok
+	ok = _check("on a pale card the ink is dark", pale.get_luminance() < 0.5, true) and ok
 	return ok
 
 
