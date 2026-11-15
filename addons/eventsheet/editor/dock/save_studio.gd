@@ -290,6 +290,12 @@ static func write_setting(scene_path: String, property: String, value: Variant) 
 ## Saves the Save System node as a scene and points the SaveSystem global at it - the way Godot keeps
 ## a node's settings, so they change here and in its Inspector alike. Returns "" or the problem.
 static func make_settings_scene(scene_path: String) -> String:
+	# A file of that name may be the reader's own: it is never written over. One this button made
+	# earlier, and already running as the global, needs nothing.
+	if FileAccess.file_exists(scene_path):
+		if str(ProjectSettings.get_setting("autoload/%s" % SAVE_AUTOLOAD, "")) == "*%s" % scene_path:
+			return ""
+		return EventSheetL10n.translate("%s already exists, so nothing was changed. Rename or delete that file, or point the SaveSystem global at it yourself in Project Settings > Globals.") % scene_path
 	var node: Node = Node.new()
 	node.name = SAVE_AUTOLOAD
 	node.set_script(load(SAVE_SYSTEM_SCRIPT))
@@ -388,7 +394,7 @@ func _write(property: String, value: Variant) -> void:
 
 func _keep_settings_in_scene() -> void:
 	var problem: String = make_settings_scene(SETTINGS_SCENE)
-	_dock._set_status(problem if not problem.is_empty() else EventSheetL10n.translate("The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector."), not problem.is_empty())
+	_dock._set_status(problem if not problem.is_empty() else EventSheetL10n.translate("The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals."), not problem.is_empty())
 	_load_settings()
 
 
