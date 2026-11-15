@@ -74,8 +74,12 @@ static func open(host: Node, ask: Dictionary) -> ConfirmationDialog:
 	places.columns = 2
 	places.hide_root = true
 	places.focus_mode = Control.FOCUS_NONE
-	# The where-column is a short count; the what-column gets the rest of the width.
-	places.set_column_expand(1, false)
+	# The second column is a count or a reason ("Node does not have it"): it takes the room it needs and
+	# wraps rather than being cut at the edge.
+	places.set_column_expand(0, true)
+	places.set_column_expand_ratio(0, 3)
+	places.set_column_expand(1, true)
+	places.set_column_expand_ratio(1, 2)
 	places.set_column_custom_minimum_width(1, roundi(EventSheetPalette.scaled_f(96.0)))
 	column.add_child(places)
 	set_list(dialog, ask.get("list", []))
@@ -118,12 +122,14 @@ static func set_list(dialog: ConfirmationDialog, rows: Array) -> void:
 		item.set_text(0, str(cells[0]))
 		item.set_tooltip_text(0, str(cells[0]))
 		item.set_text(1, str(cells[1]) if cells.size() > 1 else "")
+		item.set_tooltip_text(1, str(cells[1]) if cells.size() > 1 else "")
+		item.set_autowrap_mode(1, TextServer.AUTOWRAP_WORD_SMART)
 		item.set_custom_color(1, EventSheetPopupUI.muted_text_color())
 	places.visible = not rows.is_empty()
 	# Tall enough for five places before it scrolls, so a long list still fits on the screen.
 	places.custom_minimum_size = Vector2(wrap_width(),
 		EventSheetPalette.scaled_f(34.0) * clampi(rows.size(), 1, 5) + EventSheetPalette.scaled_f(6.0))
-	places.scroll_vertical_enabled = rows.size() > 5
+	places.scroll_vertical_enabled = true
 
 
 ## Redraws the code card - for a question whose code depends on what is being typed. Empty hides it.

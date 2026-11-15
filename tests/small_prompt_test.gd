@@ -54,6 +54,12 @@ static func run() -> bool:
 		(listed.find_child("Code", true, false) as Control).visible, listed.get_cancel_button().visible,
 		listed.find_child("Danger", true, false) == null],
 		[true, 2, "2 places", true, false, true]) and ok
+	# A reason too long for one line is not cut: the reason's column takes room, wraps, and its hover says it whole.
+	load(SMALL_PROMPT_PATH).set_list(listed, [["position", "Control does not have it"]])
+	var reason: TreeItem = places.get_root().get_child(0)
+	ok = _check("a long reason wraps, takes room and carries its hover",
+		[places.is_column_expanding(1), reason.get_autowrap_mode(1), reason.get_tooltip_text(1)],
+		[true, TextServer.AUTOWRAP_WORD_SMART, "Control does not have it"]) and ok
 	# A long preview asks for a wider card, and scrolls past twelve lines instead of growing.
 	var long_code: String = "\n".join(range(20).map(func(index: int) -> String: return "+ ## @ace_action line %d" % index))
 	var long_preview: ConfirmationDialog = load(SMALL_PROMPT_PATH).open(host, {"title": "Write these?",
