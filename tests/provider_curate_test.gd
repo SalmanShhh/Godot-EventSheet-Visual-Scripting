@@ -14,7 +14,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const WINDOW_PATH := "res://addons/eventsheet/editor/dock/script_rows_window.gd"
 const UNTYPED := "res://tests/fixtures/untyped_provider_fixture.gd"
-const SCRATCH := "user://script_rows_window_scratch.gd"
+const TEMP_SCRIPT := "user://script_rows_window_temp.gd"
 
 
 static func run() -> bool:
@@ -39,14 +39,14 @@ static func run() -> bool:
 
 	# Done writes a script of yours, and ticking a left-out member again brings back what it carried.
 	var source: String = "extends Node\n\n\n## @ace_name(\"Go Now\")\nfunc go() -> void:\n\tpass\n"
-	var handle: FileAccess = FileAccess.open(SCRATCH, FileAccess.WRITE)
+	var handle: FileAccess = FileAccess.open(TEMP_SCRIPT, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
-	var written: Dictionary = EventSheets.curate_provider(SCRATCH, [{"source_kind": "method", "member": "go", "hidden": true}])
-	var hidden_text: String = FileAccess.get_file_as_string(SCRATCH)
-	var back: Dictionary = EventSheets.curate_provider(SCRATCH, [{"source_kind": "method", "member": "go", "hidden": false}])
-	var shown_text: String = FileAccess.get_file_as_string(SCRATCH)
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCRATCH))
+	var written: Dictionary = EventSheets.curate_provider(TEMP_SCRIPT, [{"source_kind": "method", "member": "go", "hidden": true}])
+	var hidden_text: String = FileAccess.get_file_as_string(TEMP_SCRIPT)
+	var back: Dictionary = EventSheets.curate_provider(TEMP_SCRIPT, [{"source_kind": "method", "member": "go", "hidden": false}])
+	var shown_text: String = FileAccess.get_file_as_string(TEMP_SCRIPT)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEMP_SCRIPT))
 	ok = SUPPORT.pins("provider_curate_test", [
 		["hiding a member keeps the words it already carried", [str(written.get("ok", "")), hidden_text.contains("@ace_hidden"), hidden_text.contains("@ace_name(\"Go Now\")")], ["true", true, true]],
 		["showing it again removes only the opt-out", [str(back.get("ok", "")), shown_text.contains("@ace_hidden"), shown_text.contains("@ace_name(\"Go Now\")")], ["true", false, true]],
