@@ -36,6 +36,7 @@ static func run() -> bool:
 	ok = _test_the_shipped_tables() and ok
 	ok = _test_the_id_is_the_published_one() and ok
 	ok = _test_a_hand_written_file() and ok
+	ok = _test_the_spellings_people_really_write() and ok
 	ok = _test_the_refusals() and ok
 	ok = _test_shadowing_and_collisions() and ok
 	EventForgePackSpellings.reset_cache_for_tests()
@@ -152,6 +153,60 @@ static func _test_a_hand_written_file() -> bool:
 		"Core::CallMethod", "Core::CallMethod", "Core::CallMethod", "Core::CallMethod",
 		"Core::CallMethod"]) and ok
 	ok = _check("which is byte-identical either way", EventSheets.round_trips(source), true) and ok
+	return ok
+
+
+## A pack's example shows one line; the line a person writes varies in the values. A word in quotes also
+## takes a text with spaces or brackets, or a variable; an argument that holds commas and brackets of its
+## own is still one argument. Each reads as the pack's own verb, and the file saves back byte for byte.
+static func _test_the_spellings_people_really_write() -> bool:
+	var lines: Array = [
+		["a text with a space", "$LightFlickerBehavior.start_flickering(0.5)", "$Probe.rename(\"one\", \"big shake\")"],
+		["a text with a comma and a bracket", "", "$Probe.rename(\"one\", \"big, (shake)\")"],
+		["a variable for a quoted word", "", "$Probe.rename(\"one\", new_label)"],
+		["a variable for a quoted literal", "", "$Probe.load_file(my_path)"],
+		["a call with a comma as a middle argument", "", "$Probe.scale(Vector2(1, 2), 0.5)"],
+		["a list and a dictionary as arguments", "", "$Probe.scale([1, 2], {\"a\": 1, \"b\": [2, 3]})"],
+		["a string holding a comma and a bracket as an argument", "", "$Probe.scale(\"a, (b\", 0.5)"],
+	]
+	var pack: String = "
+".join(PackedStringArray([
+		"class_name Probe", "extends Node", "",
+		"## @ace_action",
+		"## @ace_lift_example(\"[[target|node: $Probe]].rename([[old|name: \"one\"]], [[new|name: \"two\"]])\")",
+		"func rename(old: String, new: String) -> void:", "	pass", "",
+		"## @ace_action",
+		"## @ace_lift_example(\"[[target|node: $Probe]].load_file([[path|text: \"res://a.tres\"]])\")",
+		"func load_file(path: String) -> void:", "	pass", "",
+		"## @ace_action",
+		"## @ace_lift_example(\"[[target|node: $Probe]].scale([[by|argument: 2.0]], [[then|argument: 0.5]])\")",
+		"func scale(by: Variant, then: Variant) -> void:", "	pass", ""]))
+	EventForgePackSpellings.override_tables_for_tests({IMAGINED_PACK: EventForgePackSpellings.entries_in_source(pack, IMAGINED_PACK)})
+	var ok: bool = _check("the widened table is still sound", EventForgePackSpellings.problems_for(IMAGINED_PACK,
+		EventForgePackSpellings.tables()[IMAGINED_PACK]), PackedStringArray())
+	for case: Array in lines:
+		var source: String = "extends Node
+
+
+func _ready() -> void:
+	%s
+" % str(case[2])
+		var actions: Array = _actions_of(EventSheets.open_gd_as_sheet(source))
+		var claimed: String = "%s::%s" % [(actions[0] as ACEAction).provider_id, (actions[0] as ACEAction).ace_id] if actions.size() == 1 else "<%d rows>" % actions.size()
+		ok = _check("%s reads as the pack's verb" % str(case[0]), claimed.begins_with("Probe::method:"), true) and ok
+		ok = _check("%s saves back byte for byte" % str(case[0]), EventSheets.round_trips(source), true) and ok
+	# A line a widened span could swallow wrongly still falls to the plain call: unbalanced brackets, and a
+	# bare variable for a receiver.
+	for plain: String in ["$Probe.scale(Vector2(1, 2, 0.5)", "probe.rename(\"one\", \"two\")"]:
+		var source: String = "extends Node
+
+
+func _ready() -> void:
+	%s
+" % plain
+		var read: Array = _actions_of(EventSheets.open_gd_as_sheet(source))
+		ok = _check("%s keeps the plain reading" % plain, read.size() == 0 or (read[0] as ACEAction).provider_id != "Probe", true) and ok
+	EventForgePackSpellings.reset_cache_for_tests()
 	return ok
 
 

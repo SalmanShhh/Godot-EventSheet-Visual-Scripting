@@ -59,6 +59,19 @@ const ANNOTATION: String = "@ace_lift_example"
 ## `tests/pack_spellings_test.gd` pins the two against a real pack rather than trusting the mirror.
 const METHOD_ACE_PREFIX: String = "method:"
 
+## One argument of a call as the pattern for it, brackets and strings and all, up to the comma that ends
+## it: text with no comma or bracket of its own, a string, or a bracketed group (round, square or curly)
+## that may hold commas, itself holding groups up to three deep. Written bottom up, each level naming
+## the one below it.
+const _STRING: String = "\"(?:[^\"\\\\]|\\\\.)*\""
+const _INNER_0: String = "(?:[^()\\[\\]{}\"]|" + _STRING + ")*"
+const _GROUP_1: String = "(?:\\(" + _INNER_0 + "\\)|\\[" + _INNER_0 + "\\]|\\{" + _INNER_0 + "\\})"
+const _INNER_1: String = "(?:[^()\\[\\]{}\"]|" + _STRING + "|" + _GROUP_1 + ")*"
+const _GROUP_2: String = "(?:\\(" + _INNER_1 + "\\)|\\[" + _INNER_1 + "\\]|\\{" + _INNER_1 + "\\})"
+const _INNER_2: String = "(?:[^()\\[\\]{}\"]|" + _STRING + "|" + _GROUP_2 + ")*"
+const _GROUP_3: String = "(?:\\(" + _INNER_2 + "\\)|\\[" + _INNER_2 + "\\]|\\{" + _INNER_2 + "\\})"
+const BALANCED_ARGUMENT: String = "(?:[^,()\\[\\]{}\"]|" + _STRING + "|" + _GROUP_3 + ")+"
+
 ## The annotations that say what KIND of verb a block publishes. Only an action may carry an example
 ## today; the other two refuse, out loud, rather than annotating something that never matches.
 const ACTION_ANNOTATION: String = "@ace_action"
@@ -372,8 +385,59 @@ static func _entries_for(examples: PackedStringArray, kinds: PackedStringArray, 
 		var extras: Dictionary = {"provider": provider}
 		if kinds.has(CONDITION_ANNOTATION):
 			extras["kind"] = KIND_CONDITION
-		found.append(Example.entry(id, ace_id, examples[index], extras))
+		found.append(widened(Example.entry(id, ace_id, examples[index], extras)))
 	return found
+
+
+## The entry an example built, with the two spans a pack's own lines most often vary in opened up to
+## the spellings a person really writes there. The grammar's narrow spans are right for the tables the
+## importer ships, which know their lines; a pack's example shows ONE line, and its readers write the
+## same call with a text that has a space in it, with a variable where the example has a quoted word,
+## or with a call that has a comma inside an argument that is not the last. Each of those used to fall
+## through to the plain method call. What changes is only which lines the pattern accepts: the row's
+## template is still the author's own text with the captured spans spliced out for their slots, so the
+## file saves back byte for byte, and the entry's gate still re-emits its own fixture line.
+##
+##   - a `name` span (a word in quotes) also takes any other text between the quotes, or a bare
+##     variable in place of the quotes (`enable_feedback(my_label)`); a `text` span (a whole quoted
+##     literal) also takes a bare variable (`load_moment_file(my_path)`);
+##   - an `argument` span (up to the next comma) takes a whole argument that holds brackets, strings
+##     and commas of its own (`Vector2(1, 2)`, `[1, 2]`, `{"a": 1}`), nested three deep.
+static func widened(entry: Dictionary) -> Dictionary:
+	if entry.has(EventForgeLiftTable.REFUSAL_KEY) or not entry.has("pattern"):
+		return entry
+	var pattern: String = str(entry["pattern"])
+	var changed: bool = false
+	for param: String in entry.get("params", PackedStringArray()) as PackedStringArray:
+		var narrow_name: String = EventForgeLiftGrammar.quoted_name(param)
+		if pattern.contains(narrow_name):
+			pattern = pattern.replace(narrow_name, _name_or_variable(param))
+			changed = true
+		var narrow_text: String = EventForgeLiftGrammar.quoted_text(param)
+		if pattern.contains(narrow_text):
+			pattern = pattern.replace(narrow_text, _text_or_variable(param))
+			changed = true
+		var narrow_argument: String = EventForgeLiftGrammar.argument(param)
+		if pattern.contains(narrow_argument):
+			pattern = pattern.replace(narrow_argument, "(?<%s>%s)" % [param, BALANCED_ARGUMENT])
+			changed = true
+	if not changed:
+		return entry
+	var wide: Dictionary = entry.duplicate()
+	wide["pattern"] = pattern
+	return wide
+
+
+## A quoted text, or a bare variable in its place: the capture is the value as written, quotes included
+## for a text.
+static func _text_or_variable(param: String) -> String:
+	return "(?|&?(?<%s>\"[^\"]*\")|(?<%s>%s))" % [param, param, EventForgeLiftGrammar.IDENTIFIER]
+
+
+## A word in quotes, or any other text between the quotes, or a bare variable: one capture of the
+## value itself, whichever way it was written. The branch reset keeps one name over both spellings.
+static func _name_or_variable(param: String) -> String:
+	return "(?|&?\"(?<%s>[^\"\\\\]+)\"|(?<%s>%s))" % [param, param, EventForgeLiftGrammar.IDENTIFIER]
 
 
 ## Why this block may not carry an example, or "" when it may. A verb with no kind annotation at all

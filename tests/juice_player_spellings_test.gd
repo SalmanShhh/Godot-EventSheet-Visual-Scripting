@@ -26,6 +26,15 @@ const UNREADABLE_BY_LINE: PackedStringArray = [
 ]
 
 
+## How the values of a line are written: as the row starts (its real defaults, a text with a space in it
+## included), each value given as a variable (a quoted text replaced by the variable, quotes and all), and each given as a
+## call with a comma inside it (a quoted text as one with a comma and a bracket inside its quotes).
+const SPELLINGS: PackedStringArray = ["defaults", "variable", "comma"]
+const VARIABLE_VALUE: String = "my_value"
+const COMMA_VALUE: String = "Vector2(1, 2)"
+const TEXT_WITH_COMMA: String = "one, (two)"
+
+
 static func run() -> bool:
 	var wrong: Array = []
 	var asked: int = 0
@@ -40,10 +49,12 @@ static func run() -> bool:
 			unreadable.append(definition.id)
 			continue
 		for node_name: String in ["$FeedbackPlayer", "$JuicePlayer"]:
-			asked += 1
-			var row: Array = _reopened(definition, _line_for(definition, node_name))
-			if row != ["FeedbackPlayer", definition.id, _sentence(definition)]:
-				wrong.append([node_name, definition.id, row])
+			for spelling: String in SPELLINGS:
+				asked += 1
+				var written: Dictionary = _line_for(definition, node_name, spelling)
+				var row: Array = _reopened(definition, str(written["line"]))
+				if row != ["FeedbackPlayer", definition.id, _sentence(definition, written["values"])]:
+					wrong.append([node_name, spelling, definition.id, str(written["line"]), row])
 	unreadable.sort()
 	var expected: PackedStringArray = PackedStringArray(UNREADABLE_BY_LINE)
 	expected.append_array(PackedStringArray(_expression_ids()))
@@ -56,21 +67,34 @@ static func run() -> bool:
 	return _scene_pins() and ok
 
 
-## The line a row is written as: its template with the node and its starting values put in.
-static func _line_for(definition: ACEDefinition, node: String) -> String:
-	var line: String = str(definition.metadata.get("codegen_template", "")).replace("{target}", node)
+## The line a row is written as: its template with the node and its values put in, and the values it used
+## by parameter id (what the reopened sentence should say).
+static func _line_for(definition: ACEDefinition, node: String, spelling: String) -> Dictionary:
+	var template: String = str(definition.metadata.get("codegen_template", ""))
+	var line: String = template.replace("{target}", node)
+	var values: Dictionary = {}
 	for parameter: Variant in definition.parameters:
 		var entry: Dictionary = parameter as Dictionary
-		line = line.replace("{%s}" % str(entry.get("id", "")), _value(entry, false))
-	return line
+		var id: String = str(entry.get("id", ""))
+		var value: String = _value(entry, spelling, template)
+		values[id] = value
+		# A variable stands where the whole quoted text stood, quotes and all.
+		if value == VARIABLE_VALUE and template.contains("\"{%s}\"" % id):
+			line = line.replace("\"{%s}\"" % id, value)
+		else:
+			line = line.replace("{%s}" % id, value)
+	return {"line": line, "values": values}
 
 
-## What the sentence reads as with the row's starting values: the display template, plain.
-static func _sentence(definition: ACEDefinition) -> String:
+## What the sentence reads as with the values the line was written with: the display template, plain.
+static func _sentence(definition: ACEDefinition, values: Dictionary) -> String:
 	var text: String = str(definition.metadata.get("display_template", ""))
 	for parameter: Variant in definition.parameters:
-		var entry: Dictionary = parameter as Dictionary
-		text = text.replace("{%s}" % str(entry.get("id", "")), _value(entry, true))
+		var id: String = str((parameter as Dictionary).get("id", ""))
+		var value: String = str(values.get(id, ""))
+		if id == "path" and value != VARIABLE_VALUE:
+			value = "\"%s\"" % value
+		text = text.replace("{%s}" % id, value)
 	return _plain(text)
 
 
@@ -136,14 +160,18 @@ static func _ids(sheet: EventSheetResource) -> Array:
 	return ids
 
 
-## The value a parameter is written with in the test line. Its starting value, except that a row that
-## starts blank (the Juice Player to copy from) is given a node to name, and a text value that is more
-## than one plain word (`big shake`) is written as one word: a label that is not a plain word is a line
-## the pack does not teach, and reads as before. `as_read` wraps a path in the quotes a lifted row keeps.
-static func _value(entry: Dictionary, as_read: bool) -> String:
+## The value a parameter is written with in the test line. Its starting value in the first spelling, a
+## variable or a call with a comma in it for a value the template writes without quotes in the others (a text
+## the template quotes is only ever text). A row that starts blank (the Juice Player to copy from) is given a
+## node to name.
+static func _value(entry: Dictionary, spelling: String, template: String) -> String:
+	var id: String = str(entry.get("id", ""))
 	var value: String = str(entry.get("default_value", ""))
-	if value.is_empty() and str(entry.get("id", "")) == "other":
+	if value.is_empty() and id == "other":
 		value = "$Template"
-	if str(entry.get("id", "")) != "path":
-		value = value.replace(" ", "_") if not value.begins_with("{") else value
-	return "\"%s\"" % value if as_read and str(entry.get("id", "")) == "path" else value
+	if spelling == "defaults" or id == "other":
+		return value
+	if spelling == "variable":
+		return VARIABLE_VALUE
+	# A text the template quotes gets a comma and a bracket inside its quotes; any other value a call with a comma.
+	return TEXT_WITH_COMMA if template.contains("\"{%s}\"" % id) and id != "path" else COMMA_VALUE
