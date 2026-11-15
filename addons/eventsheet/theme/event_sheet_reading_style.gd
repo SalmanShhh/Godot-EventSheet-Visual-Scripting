@@ -28,8 +28,10 @@ extends Resource
 ## and the muted text tone, so every preset ever saved - including the ones written before patterns
 ## existed - dresses it in its own palette instead of inheriting a hard-coded dark plate onto pale
 ## paper. Give the token a real colour to override that derivation.
-@export var pattern_chip_background_color: Color = Color(0, 0, 0, 0)
-@export var pattern_chip_foreground_color: Color = Color(0, 0, 0, 0)
+## Stored only: nothing in the editor reads it any more, so the Theme Editor does not show it. It stays
+## so a theme file that names it still loads and saves unchanged.
+@export_storage var pattern_chip_background_color: Color = Color(0, 0, 0, 0)
+@export_storage var pattern_chip_foreground_color: Color = Color(0, 0, 0, 0)
 ## The picker-category chip ("Group › Subgroup" on a variable row, a pack's category).
 @export var category_chip_background_color: Color = EventSheetPalette.COLOR_CAT_CHIP_BG
 @export var category_chip_foreground_color: Color = EventSheetPalette.COLOR_CAT_CHIP_FG

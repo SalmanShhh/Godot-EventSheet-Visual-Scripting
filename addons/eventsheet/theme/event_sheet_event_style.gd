@@ -64,8 +64,10 @@ extends Resource
 @export var group_background_alt_color: Color = EventSheetPalette.COLOR_GROUP_BG_ALT
 @export var group_accent_color: Color = EventSheetPalette.COLOR_GROUP_ACCENT
 @export var group_title_color: Color = EventSheetPalette.COLOR_GROUP_TITLE
-@export var group_badge_background_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_BG
-@export var group_badge_foreground_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_FG
+## Stored only: nothing in the editor reads it any more, so the Theme Editor does not show it. It stays
+## so a theme file that names it still loads and saves unchanged.
+@export_storage var group_badge_background_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_BG
+@export_storage var group_badge_foreground_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_FG
 @export var group_fold_background_color: Color = EventSheetPalette.COLOR_GROUP_FOLD_BG
 # A warm note band (event-sheet style) so a full-width comment reads as a banner, not another row.
 @export var comment_row_background_color: Color = Color("#38321f")

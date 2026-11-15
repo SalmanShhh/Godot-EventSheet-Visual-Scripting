@@ -69,7 +69,9 @@ extends Resource
 @export var minimap_finding_color: Color = Color(1.0, 0.48, 0.48, 1.0)
 ## The band a group paints down the column, and the name written on it.
 @export var minimap_band_color: Color = Color(1.0, 1.0, 1.0, 0.05)
-@export var minimap_band_text_color: Color = Color(1.0, 1.0, 1.0, 0.55)
+## Stored only: nothing in the editor reads it any more, so the Theme Editor does not show it. It stays
+## so a theme file that names it still loads and saves unchanged.
+@export_storage var minimap_band_text_color: Color = Color(1.0, 1.0, 1.0, 0.55)
 
 # ── The Sheet map ─────────────────────────────────────────────────────────────────────────────
 ## The Sheet map window's boxes, one tint per kind: sheets, the scenes that carry them, and the
@@ -91,18 +93,18 @@ extends Resource
 ## base every hairline, guide and value label mixes its own alpha from, and the WELL is the sunken
 ## plate a bar or preview sits in.
 @export var drawer_accent_color: Color = Color(0.36, 0.66, 1.0, 0.92)
-@export var drawer_accent_bright_color: Color = Color(0.45, 0.74, 1.0, 1.0)
+@export_storage var drawer_accent_bright_color: Color = Color(0.45, 0.74, 1.0, 1.0)
 @export var drawer_ink_color: Color = Color(1.0, 1.0, 1.0, 1.0)
 @export var drawer_well_color: Color = Color(0.0, 0.0, 0.0, 0.28)
 ## The min-max range slider's two round handles, and the line around each.
-@export var drawer_handle_color: Color = Color(0.86, 0.9, 0.97, 1.0)
+@export_storage var drawer_handle_color: Color = Color(0.86, 0.9, 0.97, 1.0)
 @export var drawer_handle_border_color: Color = Color(0.2, 0.28, 0.4, 1.0)
 ## The quiet note panel an `@inspector_info` comment builds, and the words on it.
-@export var drawer_info_background_color: Color = Color(0.25, 0.42, 0.6, 0.22)
-@export var drawer_info_border_color: Color = Color(0.36, 0.66, 1.0, 0.5)
-@export var drawer_info_text_color: Color = Color(0.86, 0.9, 0.96, 1.0)
+@export_storage var drawer_info_background_color: Color = Color(0.25, 0.42, 0.6, 0.22)
+@export_storage var drawer_info_border_color: Color = Color(0.36, 0.66, 1.0, 0.5)
+@export_storage var drawer_info_text_color: Color = Color(0.86, 0.9, 0.96, 1.0)
 ## An `@inspector_header` section label that named no accent of its own.
-@export var drawer_header_text_color: Color = Color(0.85, 0.88, 0.95, 1.0)
+@export_storage var drawer_header_text_color: Color = Color(0.85, 0.88, 0.95, 1.0)
 ## The ⚠ badges: "assign a value" while a required property is empty, and the message a sheet's own
 ## validator function returns while a value is out of bounds.
 @export var drawer_required_color: Color = Color("#e06666")
