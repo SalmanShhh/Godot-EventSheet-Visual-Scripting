@@ -1,0 +1,7 @@
+extends Node2D
+
+func _ready() -> void:
+	$FeedbackPlayer.play(0.6)
+	$FeedbackPlayer.enable_feedback("hit")
+	$HitFeedback.play(1.0)
+	$FeedbackPlayer.stop()

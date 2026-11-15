@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cgxg3u53yyxu" path="res://eventsheet_addons/juice/feedback_player.gd" id="1_mx2sn"]
+[ext_resource type="Script" path="res://tests/fixtures/juice_rename_old/old_user.gd" id="2_47b6j"]
+
+[node name="Level" type="Node2D" unique_id=107401782]
+
+[node name="FeedbackPlayer" type="Node" parent="." unique_id=812077195]
+script = ExtResource("1_mx2sn")
+steps = Array[Dictionary]([{
+"label": "hit",
+"verb": "emit_signal",
+"word": "bang"
+}, {
+"active": false,
+"amount": 0.4,
+"label": "kick",
+"verb": "shake"
+}, {
+"amount": 0.5,
+"label": "other",
+"verb": "play_player"
+}])
+strength = 0.75
+while_playing = "overlap"
+
+[node name="HitFeedback" type="Node" parent="." unique_id=1952665138]
+script = ExtResource("1_mx2sn")
+
+[node name="User" type="Node" parent="." unique_id=1309633742 node_paths=PackedStringArray("p")]
+script = ExtResource("2_47b6j")
+p = NodePath("../FeedbackPlayer")

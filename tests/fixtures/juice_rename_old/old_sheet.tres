@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_1bqyc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_vdkam"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_3smf1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_kjf6l"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_ixmos"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="6_suv6i"]
+
+[sub_resource type="Resource" id="Resource_p7gwx"]
+script = ExtResource("1_1bqyc")
+provider_id = "FeedbackPlayer"
+ace_id = "method:play"
+params = {
+"at_strength": "0.6",
+"target": "$FeedbackPlayer"
+}
+codegen_template = "{target}.play({at_strength})"
+
+[sub_resource type="Resource" id="Resource_2vmyd"]
+script = ExtResource("5_ixmos")
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_p7gwx")])
+event_uid = "c2ce3d"
+
+[resource]
+script = ExtResource("6_suv6i")
+host_class = "Node2D"
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_2vmyd")])
