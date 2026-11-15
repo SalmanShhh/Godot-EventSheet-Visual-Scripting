@@ -578,6 +578,11 @@ class CardListProperty:
 		set_bottom_editor(panel)
 		draw_background = false
 
+	func _ready() -> void:
+		# The owner of the list is known once the property is on screen: tell the drawer, which builds
+		# whatever its schema declares under the cards (the Juice Player's strip of play buttons).
+		_list.call("set_edited_object", get_edited_object())
+
 	func _on_changed(cards: Array) -> void:
 		emit_changed(get_edited_property(), cards)
 		# A property write does not fire a resource's `changed` signal, so live previews (a prefab's
@@ -591,6 +596,10 @@ class CardListProperty:
 		# it keeps the field being edited alive. Only an outside change (undo, reselecting) rebuilds.
 		var value: Variant = get_edited_object().get(get_edited_property())
 		var incoming: Array = value if value is Array else []
+		_list.call("set_edited_object", get_edited_object())
+		var footer: Variant = _list.call("footer")
+		if footer is Control and (footer as Control).has_method("refresh"):
+			(footer as Control).call("refresh")
 		if incoming == _list.call("get_value"):
 			return
 		_list.call("set_value", incoming)

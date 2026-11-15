@@ -1,7 +1,8 @@
 # Godot EventSheets - the strip under a Juice Player's list (editor-only).
 #
-# The list itself is drawn by the shared card-list drawer; this is the row of doors under it - how
-# long the beat is, and the buttons that let a designer feel it without pressing Play on the game.
+# The list itself is drawn by the shared card-list drawer, which builds this strip under its cards (the
+# schema's footer): how long the beat is, and the buttons that let a designer feel it without pressing
+# Play on the game.
 #
 # NONE OF IT IS A ROW. A sheet row says WHEN a beat plays; how the beat is tuned is a property of
 # the object, and the buttons that try it are Inspector chrome. Nothing here is drawn in a sheet,
@@ -50,12 +51,16 @@ var _time: float = 0.0
 var _base: Dictionary = {}
 var _dialog: EditorFileDialog = null
 var _saving: bool = true
+## The card list this strip sits under, or null.
+var _drawer: Control = null
 
 
 ## The strip for one player. The argument defaults so the class stays constructible with a bare
-## new() - a Control with a class_name is offered by the editor's own node dialog.
-func _init(player: Node = null) -> void:
+## new() - a Control with a class_name is offered by the editor's own node dialog. `drawer` is the card
+## list this strip sits under, when there is one (the toolbar's own strip has none).
+func _init(player: Node = null, drawer: Control = null) -> void:
 	_player = player
+	_drawer = drawer
 	add_theme_constant_override("separation", 4)
 	_head = Label.new()
 	# Through the palette, not a literal: a literal font size ignores the editor's own display

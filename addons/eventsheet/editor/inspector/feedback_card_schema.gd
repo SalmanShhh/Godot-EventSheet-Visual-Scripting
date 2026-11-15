@@ -67,6 +67,9 @@ const SOUND: String = "sound"
 ## the strip's play buttons. By path, so the first open of the editor does not compile it.
 const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
 
+## The strip of buttons that plays the whole list, drawn under it.
+const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
+
 ## The file that says where the Juice Player's code is, which is where a word's FAMILY is written down.
 const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
 const FAMILY_CONSTANT: String = "CATEGORY_OF"
@@ -193,7 +196,8 @@ static func schema() -> Dictionary:
 		"stripes_light": STRIPES_LIGHT,
 		"groups": GROUPS,
 		"group_order": GROUP_ORDER,
-		"tiles": true
+		"tiles": true,
+		"footer": strip_footer
 	}
 
 
@@ -323,6 +327,13 @@ static func sound_kinds() -> Array:
 			"badge": seconds_badge
 		}
 	]
+
+
+## The strip under the list: the head line, the buttons that play the list in the editor and the debug
+## timeline. Built once for the object being edited, and handed the drawer so it can light the card
+## that is sounding.
+static func strip_footer(object: Object, drawer: Control) -> Control:
+	return load(STRIP_PATH).new(object, drawer) as Control
 
 
 ## The grey line under the pitch: the range a random roll lands in.

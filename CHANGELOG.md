@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the Juice Player's play buttons sit under the list they play
+
+The strip with the head line (how many cards and how long the beat is), Play, Stop, Skip, Restore, Debug view, Save as file and Load from file used to sit at the very top of the Inspector, above even the Acts On field. It now sits directly under the cards and the Add card button, and its head line counts the list as you edit it instead of only when the node is first selected. The buttons and what they do are the same.
+
 ### Added: a family tile on each juice card, and the Add box says Sound, Object, Camera, Screen, Time and Flow
 
 Each card on a Juice Player's list now shows a small square in the colour of its family, the way a variable row shows its type, so a Sound card and a Camera card no longer look alike when eight cards are folded. A light editor gets a darker value of each colour so every tile reads against the card line. The Add box headings wear the same tile and read Sound, Scene, Object, Device, Camera, Screen, Time and Flow, in that order; Loop and Signal cards are both Flow, and Tween Property sits with the Object cards. These are words people read: a card is still saved and muted by the family word it always had (`audio`, `transform`, `camera`, `screen`, `pause`, `loop`, `signal`), and no saved scene changes. The Drawing Prefab list draws no tile.

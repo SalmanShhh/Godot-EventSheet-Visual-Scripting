@@ -1,9 +1,10 @@
 # Godot EventSheets - the Juice Player's Inspector (editor-only).
 #
-# One thing: the strip under the list - the count and the length of the beat, the buttons that play
-# it in the editor, the debug timeline, and the two doors between this node's list and a moment
-# file. The list itself is drawn by the shared card-list drawer through the ordinary `eventsheet:`
-# marker on the export, so there is no second list editor here and nothing to keep in step.
+# Says which nodes are Juice Players. The list is drawn by the shared card-list drawer through the
+# ordinary `eventsheet:` marker on the export, and the strip of play buttons under it is that
+# schema's footer, so there is no second list editor here and nothing to keep in step. (Godot asks
+# the plugin registered LAST about a property first, and the attribute drawers are registered after
+# this one, so claiming the list from here would never run and would lose its header and notes.)
 #
 # NOTHING HEAVY IS NAMED. The plugin is constructed at editor boot (add_inspector_plugin takes an
 # instance), so a class named in this file is compiled at every editor start in every project -
@@ -13,8 +14,6 @@
 @tool
 class_name EventSheetFeedbackPlayerInspector
 extends EditorInspectorPlugin
-
-const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
 
 ## The one file that knows both shapes of the pack's node, reached by path (see its header).
 const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
@@ -31,7 +30,3 @@ static func is_feedback_player(object: Object) -> bool:
 	# Most inspected objects carry no script at all: answer those without touching the names file.
 	return object != null and object.get_script() != null and bool(load(NAMES_PATH).is_player(object))
 
-
-func _parse_begin(object: Object) -> void:
-	if is_feedback_player(object):
-		add_custom_control(load(STRIP_PATH).new(object))
