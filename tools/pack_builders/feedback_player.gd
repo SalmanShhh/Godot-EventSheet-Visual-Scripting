@@ -159,12 +159,14 @@ static func _verbs(sheet: EventSheetResource) -> void:
 		[["at_strength", "float", "Scales every amount in the list. 1 is the list as tuned, 0.5 a lighter version of the same beat."]],
 		"if _may_start():\n\t_walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)")
 	_default(sheet, "at_strength", "1.0")
+	_spelled(sheet, "", "play", true)
 	Lib.append_function(sheet, "play_and_wait", "Play Feedbacks And Wait", "Feedback Player",
 		"Plays the list and WAITS for the last card to finish - the rows under this one are what happens afterwards. Use it when the hit has to land before the death animation starts.",
 		[["at_strength", "float", "Scales every amount in the list, exactly as Play Feedbacks does."]],
 		"if _may_start():\n\tawait _walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)")
 	_default(sheet, "at_strength", "1.0")
 	_await_call(sheet, "play_and_wait({at_strength})")
+	_spelled(sheet, "await ", "play_and_wait", true)
 	Lib.append_function(sheet, "play_backwards", "Play Backwards", "Feedback Player",
 		"Plays the list from the far end, so the last feedback is felt first. The other half of a beat that has to undo itself - a door that opened, closing.",
 		[["at_strength", "float", "Scales every amount in the list, exactly as Play Feedbacks does."]],
@@ -181,6 +183,7 @@ static func _verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "stop", "Stop Feedbacks", "Feedback Player",
 		"Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.",
 		[], "if not playing:\n\treturn\n_live.clear()\n_resumed.emit()\n_told_nested(\"stop\")\n_close()")
+	_spelled(sheet, "", "stop", false)
 	Lib.append_function(sheet, "skip_to_end", "Skip To End", "Feedback Player",
 		"Stops waiting and does everything that is left at once - the cutscene skip of a feedback list. Every card from the head down is felt, without the pauses between them.",
 		[], "if not playing:\n\treturn\n_live.clear()\n_paused = false\n_resumed.emit()\nvar left: Array = _order\nvar from: int = _head + 1 if _head_taken else _head\nvar at_strength: float = _head_strength\n_close()\n_told_nested(\"skip_to_end\")\nfor index: int in range(from, left.size()):\n\tif not (left[index] is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = left[index]\n\tif _card_runs(card, at_strength, index) and not _is_timing(str(card.get(\"verb\", \"\"))):\n\t\t_do_step(card, at_strength, true)")
@@ -504,6 +507,21 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 		"if playing:\n\tvar at: int = _index_in(_order, label)\n\tif at >= 0:\n\t\treturn int(_loops_left.get(at, 0))\nreturn int(_card_named(label).get(\"loops\", 0))", TYPE_INT)
 	_default(sheet, "label", "loop_back")
 	_quoted_call(sheet, "loops_left(\"{label}\")")
+
+
+## The lines somebody who played a list by hand wrote, so an opened script reads them as THIS verb
+## instead of as a sound or a plain method call (the rows a Play button on an audio node would claim).
+## The node is spelled out, never a wildcard: `$AudioStreamPlayer.play(0.5)` is a sound and must stay
+## one. Both names the node has had are covered; a node with any other name reads as before. The
+## spelled line is kept as the row's own text, so saving writes the file back exactly.
+static func _spelled(sheet: EventSheetResource, lead: String, method: String, takes_strength: bool) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	var lines: PackedStringArray = PackedStringArray()
+	for node_name: String in ["FeedbackPlayer", "JuicePlayer"]:
+		if takes_strength:
+			lines.append("%s$%s.%s([[at_strength|argument: 1.0]])" % [lead, node_name, method])
+		lines.append("%s$%s.%s()" % [lead, node_name, method])
+	fn.lift_examples = lines
 
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value.

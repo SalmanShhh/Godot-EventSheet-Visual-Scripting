@@ -202,7 +202,7 @@ static func override_tables_for_tests(pack_tables: Dictionary) -> void:
 ## entry ids; nothing is read from it.
 static func entries_in_source(source: String, path: String) -> Array:
 	var found: Array = []
-	var provider: String = _declared_class_name(source, path)
+	var provider: String = _provider_of(source, path)
 	var pending: PackedStringArray = PackedStringArray()
 	var kind_annotations: PackedStringArray = PackedStringArray()
 	for raw_line: String in source.split("\n"):
@@ -372,8 +372,20 @@ static func _function_name(text: String) -> String:
 	return name if RegEx.create_from_string(Example.NAME_PATTERN).search(name) != null else ""
 
 
-## The provider a pack publishes under: its declared `class_name`, falling back to the file's own name
-## exactly as the zero-config scanner does when a script declares none.
+## The provider a pack publishes under: the id it kept through a rename (`@ace_provider_id`, written
+## above its class), else its declared `class_name`, falling back to the file's own name exactly as
+## the zero-config scanner does when a script declares none.
+static func _provider_of(source: String, path: String) -> String:
+	for raw_line: String in source.split("\n", false, 40):
+		var text: String = raw_line.strip_edges()
+		if text.begins_with("## @ace_provider_id(") or text.begins_with("# @ace_provider_id("):
+			return text.get_slice("(", 1).get_slice(")", 0).strip_edges()
+		if text.begins_with("class_name "):
+			break
+	return _declared_class_name(source, path)
+
+
+## The class a pack script declares, or its file's own name when it declares none.
 static func _declared_class_name(source: String, path: String) -> String:
 	for raw_line: String in source.split("\n"):
 		var text: String = raw_line.strip_edges()

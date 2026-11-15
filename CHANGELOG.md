@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a Juice Player line you wrote reopens as its own row, not as Play Sound
+
+Opening a script that holds `$FeedbackPlayer.play(0.6)` (or `$JuicePlayer.play(1.0)`, `.stop()`, `await ....play_and_wait(1.0)`) used to read the line as the built-in "Play Sound", "Stop Sound" or "Await Signal" rows: the file was always written back exactly, but the sentence was wrong. They now read as Play Juice, Stop Juice and Play Juice And Wait. The pack teaches these three lines to the reader (a node written by name, never any node: `$AudioStreamPlayer.play(0.5)` is still a sound), and saving writes your file back byte for byte. A Juice Player with any other name still reads as it did.
+
 ### Changed: a row from a behaviour pack starts on the node in your scene that wears it
 
 Rows from a shipped pack (the Juice Player's Play Juice, a Health row, and the rest) used to start on a node named after the pack's class, so a node you had called something else got rows that failed at run time with "node not found" until you retargeted each one. Now "On node" starts on the one node of the open scene whose script is the pack's (or extends it), and stays on the class name when none or several do. Rows already placed are untouched.
