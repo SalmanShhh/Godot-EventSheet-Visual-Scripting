@@ -18083,7 +18083,7 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 		if not behaviour_object.is_empty():
 			return behaviour_object
 		return "System"
-	return provider_id
+	return str(definition.metadata.get("provider_label", provider_id)) if definition != null else provider_id
 
 
 ## The behaviour's name when this row writes one of its own variables, else "". See OWN_VARIABLE_WRITE_ACE_IDS.

@@ -3076,7 +3076,7 @@ func _item_label(definition: ACEDefinition) -> String:
 		return display_name
 	# Title-case the pack suffix for display ("weapon_kit" -> "Weapon Kit"): raw snake_case ids
 	# read as internals, not as the addon's name. Display-only - the id itself never changes.
-	return "%s  ·  %s" % [display_name, definition.provider_id.capitalize()]
+	return "%s  ·  %s" % [display_name, str(definition.metadata.get("provider_label", definition.provider_id)).capitalize()]
 
 
 ## The ALSO CALLED line for a verb a search found by another engine's word: that word, as written,

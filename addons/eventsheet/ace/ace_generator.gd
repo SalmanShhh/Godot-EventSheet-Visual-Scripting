@@ -187,6 +187,11 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 	if _project_script or (_provider_is_node and script != null and not script.resource_path.is_empty()):
 		for definition: ACEDefinition in output:
 			definition.metadata["script_path"] = script.resource_path
+	# A script that kept an older provider id still reads under its CURRENT class name wherever a person
+	# sees the pack: the id is the row's identity and never moves, the label is what people read.
+	if source_metadata.has("provider_id") and not _provider_node_name.is_empty():
+		for definition: ACEDefinition in output:
+			definition.metadata["provider_label"] = _provider_node_name
 	# Provider description derives from the script's top doc comment (zero-config addons).
 	var class_description: String = str(source_metadata.get("class_description", ""))
 	if not class_description.is_empty():

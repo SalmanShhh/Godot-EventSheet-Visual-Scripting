@@ -39,7 +39,32 @@ static func run() -> bool:
 	file.close()
 	var report: Array[Dictionary] = DOCTOR.report(PackedStringArray([SHEET_PATH]))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SHEET_PATH))
-	return SUPPORT.pins(TEST_NAME, [
+	return label_pins() and SUPPORT.pins(TEST_NAME, [
 		["the Doctor's summary", str(report[0].get("message", "")) if not report.is_empty() else "<no summary>",
 			"Juice Players: 1 sheet(s) play a beat through a Juice Player, and 0 row(s) name a juice card no player in their scene has."],
 	]) and ok
+
+
+## A row from the pack is filed under the id it was saved with (`FeedbackPlayer`, frozen) but READS
+## under the class it is now: the object column on a placed row and the name beside a row in the
+## picker say Juice Player. A pack that never renamed its class has no label of its own.
+static func label_pins() -> bool:
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport._sheet = EventSheetResource.new()
+	var pack: Array[ACEDefinition] = []
+	for path: String in ["res://eventsheet_addons/juice/juice_player.gd", "res://eventsheet_addons/juice/juice_behavior.gd"]:
+		pack.append_array(EventSheetACEGenerator.new().generate_from_script(load(path)))
+	viewport._ace_registry.refresh_from_sources([], true, pack)
+	var from_player: ACEDefinition = viewport._find_definition("FeedbackPlayer", "method:play")
+	var from_juice: ACEDefinition = viewport._find_definition("JuiceBehavior", "method:moment")
+	var labels: Array = [viewport._row_builder._object_label_for("FeedbackPlayer", "method:play", {"target": "$JuicePlayer"}),
+		viewport._row_builder._object_label_for("FeedbackPlayer", "signal:on_loop", {})]
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["a placed row's object column says Juice Player", labels, ["JuicePlayer", "JuicePlayer"]],
+		["the definition carries the label beside the frozen id",
+			[from_player.provider_id if from_player != null else "<none>", from_player.metadata.get("provider_label", "") if from_player != null else "<none>"],
+			["FeedbackPlayer", "JuicePlayer"]],
+		["a pack whose class was never renamed carries none", str(from_juice.metadata.has("provider_label")) if from_juice != null else "<none>", "false"],
+	])
+	viewport.free()
+	return ok
