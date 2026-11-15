@@ -60,9 +60,13 @@ static func run() -> bool:
 	all_passed = _check("identity stays out of the description", str(metadata.get("class_description", "")), "A versioned pack.") and all_passed
 
 	# ---- every shipped pack carries the 1.0.0 stamp ----
+	# A shell - a script that only says `class_name X` and `extends Y`, the old name of a renamed pack
+	# class - holds nothing to version, and a version line above its class would be the first doc comment
+	# Create Node reads for it, hiding the sentence that says what it is.
 	var unstamped: Array[String] = []
 	for pack_script: String in EventSheetAddonScanner.list_addon_scripts():
-		if not FileAccess.get_file_as_string(pack_script).contains("## @ace_version("):
+		var source: String = FileAccess.get_file_as_string(pack_script)
+		if not source.contains("## @ace_version(") and not _is_shell(source):
 			unstamped.append(pack_script)
 	all_passed = _check("all shipped packs are versioned (got unstamped: %s)" % str(unstamped), unstamped.is_empty(), true) and all_passed
 
@@ -81,3 +85,16 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 		return true
 	print("  [FAIL] addon_version_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
 	return false
+
+
+## True for a script whose only code lines are an icon, a class name and the class it extends.
+static func _is_shell(source: String) -> bool:
+	var code_lines: int = 0
+	for raw_line: String in source.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.is_empty() or line.begins_with("#"):
+			continue
+		if not (line.begins_with("@icon(") or line.begins_with("class_name ") or line.begins_with("extends ")):
+			return false
+		code_lines += 1
+	return code_lines > 0
