@@ -46,6 +46,8 @@ static func run() -> bool:
 	var dialog: ConfirmationDialog = watcher._external_reload_dialog
 	rows.append(["the question is asked for the .tres", dialog != null and dialog.title.begins_with("resource_sheet_watch_probe.tres changed outside"), true])
 	rows.append(["and keeps the edits by default", dialog.ok_button_text if dialog != null else "", "Keep mine"])
+	rows.append(["What Changed is not offered for a .tres (it reads a script's file)",
+		dialog.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return b.text == "What Changed…").size() if dialog != null else -1, 0])
 	# Taking the file on disk keeps this version in Sheet Backups first, then loads the disk one.
 	for old_backup: String in EventSheetBackups.list_backups(PATH):
 		DirAccess.remove_absolute(old_backup)

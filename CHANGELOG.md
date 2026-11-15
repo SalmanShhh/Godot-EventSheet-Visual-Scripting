@@ -14,7 +14,7 @@ An error from the running game finds its row only in a sheet open in a tab; one 
 
 ### Fixed: a sheet saved as a resource gets the "changed outside the editor" question too
 
-A `.tres` sheet changed by a merge or another tool, with its tab open and unsaved, was written over by the next Save. It now asks, the way a script sheet always has: keep yours (the default) or use the file on disk, and taking the disk's version first puts your unsaved one into Sheet Backups.
+A `.tres` sheet changed by a merge or another tool, with its tab open and unsaved, was written over by the next Save. It now asks, the way a script sheet always has: keep yours (the default) or use the file on disk, and taking the disk's version first puts your unsaved one into Sheet Backups. (What Changed is only offered for a script sheet.)
 
 ### Fixed: a refused autoload name leaves no script behind
 

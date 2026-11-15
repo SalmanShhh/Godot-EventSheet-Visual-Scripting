@@ -74,6 +74,8 @@ func prompt_external_reload_if_changed() -> void:
 	ask["on_main"] = keep if dirty else reload_external_sheet
 	ask["on_danger"] = use_file_on_disk
 	_external_reload_dialog = load(_dock.SMALL_PROMPT_PATH).open(_dock, ask)
+	if _dock._current_sheet.external_source_path.is_empty():
+		return  # What Changed reads a script sheet's file; a .tres has no such diff
 	# What Changed… opens the row-language diff OVER the question, so it is read before choosing; it
 	# sits beside the blue answer and never closes the question by itself.
 	var dialog: ConfirmationDialog = _external_reload_dialog
