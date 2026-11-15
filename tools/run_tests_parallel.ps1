@@ -118,39 +118,63 @@ if (-not $Force -and $identity -and (Test-Path $stampFile)) {
 #
 # The wait has a CEILING. A run that queues behind a holder which is alive but wedged would otherwise
 # block forever with no output, and a suite that never answers is worse than one that says why.
-$lockPath = Join-Path $root ".godot\suite.lock"
-$lock = $null
-$announced = $false
-$waitedUntil = [datetime]::UtcNow.AddMinutes($LockTimeoutMinutes)
-while (-not $lock) {
-	if ([datetime]::UtcNow -gt $waitedUntil) {
-		"suite lock: still held after $LockTimeoutMinutes minutes - giving up rather than waiting silently."
-		"(the holder's pid is in $lockPath; delete that file once you know the process is gone,"
-		" or pass -LockTimeoutMinutes to wait longer.)"
-		exit 2
-	}
-	# Shared for READING, so a waiting run can say whose lock it is; a second writer is still refused,
-	# which is the exclusion itself.
-	try { $lock = [IO.File]::Open($lockPath, "OpenOrCreate", "ReadWrite", "Read") }
-	catch {
-		$holder = @(Get-Content $lockPath -ErrorAction SilentlyContinue)[0]
-		if ($holder -match "^\d+$" -and -not (Get-Process -Id ([int]$holder) -ErrorAction SilentlyContinue)) {
-			"suite lock: holder process $holder is gone - breaking the stale lock."
-			Remove-Item $lockPath -Force -ErrorAction SilentlyContinue
-		} else {
-			if (-not $announced) { "suite lock: held by process $holder - waiting for it to finish."; $announced = $true }
-			Start-Sleep -Seconds 5
+# The same lock, as a function, because the tail takes a second one (below). Returns the open handle;
+# the handle dies with the process, so a holder that is gone leaves a stale file this breaks with a note.
+function Get-SuiteLock([string]$path, [string]$what) {
+	$handle = $null
+	$said = $false
+	$giveUpAt = [datetime]::UtcNow.AddMinutes($LockTimeoutMinutes)
+	while (-not $handle) {
+		if ([datetime]::UtcNow -gt $giveUpAt) {
+			"${what}: still held after $LockTimeoutMinutes minutes - giving up rather than waiting silently."
+			"(the holder's pid is in $path; delete that file once you know the process is gone,"
+			" or pass -LockTimeoutMinutes to wait longer.)"
+			exit 2
+		}
+		# Shared for READING, so a waiting run can say whose lock it is; a second writer is still refused,
+		# which is the exclusion itself.
+		try { $handle = [IO.File]::Open($path, "OpenOrCreate", "ReadWrite", "Read") }
+		catch {
+			$holder = @(Get-Content $path -ErrorAction SilentlyContinue)[0]
+			if ($holder -match "^\d+$" -and -not (Get-Process -Id ([int]$holder) -ErrorAction SilentlyContinue)) {
+				"${what}: holder process $holder is gone - breaking the stale lock."
+				Remove-Item $path -Force -ErrorAction SilentlyContinue
+			} else {
+				if (-not $said) { "${what}: held by process $holder - waiting for it to finish."; $said = $true }
+				Start-Sleep -Seconds 5
+			}
 		}
 	}
+	$handle.SetLength(0)   # a shorter pid must not leave the tail of a longer one behind
+	$stamper = New-Object IO.StreamWriter($handle)
+	$stamper.WriteLine($PID)
+	$stamper.Flush()
+	return $handle
 }
-$lock.SetLength(0)   # a shorter pid must not leave the tail of a longer one behind
-$writer = New-Object IO.StreamWriter($lock)
-$writer.WriteLine($PID)
-$writer.Flush()
+
+$lock = Get-SuiteLock (Join-Path $root ".godot\suite.lock") "suite lock"
+
+# THE TAIL'S SECOND LOCK, in the USER folder. The lock above is per checkout, so two checkouts on one
+# machine ran their timing tails at the same moment, and a hover budget that takes 1.6 ms alone
+# failed at 3 ms and 3.6 ms beside the other one's. Every checkout of this project that keeps its
+# name shares one user folder, and the folder is where every checkout can see the same file, so the
+# tail takes its turn there. The shards do not: they only share the folder, and each test keeps its
+# own files in a per-process folder, so two suites' shards can run side by side.
+function Get-UserFolder {
+	$name = "EventForge"
+	$settings = Join-Path $root "project.godot"
+	if (Test-Path $settings) {
+		$line = Select-String -Path $settings -Pattern '^config/name="(.*)"' | Select-Object -First 1
+		if ($line) { $name = $line.Matches[0].Groups[1].Value }
+	}
+	$base = if ($env:APPDATA) { Join-Path $env:APPDATA "Godot\app_userdata" } else { Join-Path $HOME ".local/share/godot/app_userdata" }
+	return Join-Path $base $name
+}
 
 # The crash trail is read back at the end, so it starts empty: a trail left by a run that is not
 # this one would otherwise be reported as this run's crash.
 Remove-Item (Join-Path $root ".godot\test_progress\*.log") -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $root ".godot\test_progress\*.names") -ErrorAction SilentlyContinue
 # The logs start empty for the same reason. tools/test_report.gd reads every .txt in that folder, so
 # a log an earlier run left - the -Iterate stage's, when this run picked nothing to iterate, or a
 # shard number this run does not have - was reported as this run's failure under shards that all
@@ -223,10 +247,14 @@ foreach ($job in $jobs) { $job.Process.WaitForExit() }
 
 $tailLog = Join-Path $logDir "tail.txt"
 $tailErr = Join-Path $logDir "tail.err.txt"
+$userFolder = Get-UserFolder
+New-Item -ItemType Directory -Force $userFolder | Out-Null
+$userLock = Get-SuiteLock (Join-Path $userFolder "eventforge_suite_tail.lock") "tail lock"
 $env:EVENTFORGE_TEST_SHARD = "tail"
 $tail = Run-Godot $tailLog $tailErr
 $tail.WaitForExit()
 Remove-Item Env:\EVENTFORGE_TEST_SHARD -ErrorAction SilentlyContinue
+$userLock.Dispose()
 
 $allGreen = $true
 $passes = 0; $fails = 0
@@ -237,6 +265,14 @@ foreach ($job in ($jobs + @(@{ Log = $tailLog; Err = $tailErr; Name = "tail" }))
 	if ($result.Verdict -ne "green") { $allGreen = $false }
 }
 "total: $passes pass, $fails fail across $Shards shards + tail"
+# The names tests wrote in the shared user folder outside their own scratch folder, unioned over the
+# shards: a name two shards both saw (one wrote it, one watched it appear) is counted once. A warning
+# today; the count only goes down.
+$sharedNames = @{}
+foreach ($file in (Get-ChildItem (Join-Path $root ".godot\test_progress") -Filter *.names -ErrorAction SilentlyContinue)) {
+	foreach ($entry in @(Get-Content $file.FullName -ErrorAction SilentlyContinue)) { if ($entry.Trim()) { $sharedNames[$entry.Trim()] = $true } }
+}
+"shared user folder: $($sharedNames.Count) name(s) written outside the per-process scratch folders (a warning until the count is zero)"
 # The real-editor boot numbers, and any WARN past their tighter line, said under the verdict where
 # they can be compared run to run instead of left inside the tail's log.
 Get-Content $tailLog -ErrorAction SilentlyContinue | Where-Object { $_ -match "\[boot\]" } | ForEach-Object { $_.Trim() }

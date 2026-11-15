@@ -22,9 +22,10 @@ const STRAY_COMPILE_OUTPUT := "res://event_sheet_generated.gd"
 const PROJECT_METADATA := "res://.godot/editor/project_metadata.cfg"
 const METADATA_SECTION := "eventsheets"
 
-## Entries at the top of the user folder that the engine and the editor write themselves. They are not
-## a test's doing, so the shared-folder check leaves them out.
-const USER_FOLDER_ENGINE_NAMES: Array[String] = ["logs", "editor", "shader_cache", "vulkan", "projects"]
+## Entries at the top of the user folder that the engine, the editor and the parallel launcher (its tail
+## lock) write themselves. They are not a test's doing, so the shared-folder check leaves them out.
+const USER_FOLDER_ENGINE_NAMES: Array[String] = ["logs", "editor", "shader_cache", "vulkan", "projects",
+	"eventforge_suite_tail.lock"]
 
 ## False: a test that writes a name outside its own per-process folder is a WARNING, counted in the
 ## summary. The count is what to bring down; once it reaches zero this flips to true and the same
