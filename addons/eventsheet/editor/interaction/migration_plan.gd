@@ -330,6 +330,7 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 		"reading_before": EventSheetMigrationFindings.reading_text(stored_reading, old_params),
 		"reading_after": "", "params_after": {}, "template_after": "", "display_after": "",
 		"asks": true, "why": WHY_NO_SUCCESSOR,
+		"name_before": str(here.get("name", "")) if here is Dictionary else "", "name_after": "",
 	}
 	if not (here is Dictionary):
 		# The verb is gone from the vocabulary entirely. Nothing can carry a forwarding address for
@@ -340,6 +341,7 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 	var successor_key: String = str(resolved[EventForgeSuccessors.KEY_ID])
 	var successor: Dictionary = known.get(successor_key, {})
 	listed["to"] = successor_key
+	listed["name_after"] = str(successor.get("name", ""))
 	if successor.is_empty():
 		planned.append(listed)
 		return

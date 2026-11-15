@@ -39,6 +39,7 @@ static func run() -> bool:
 	ok = _test_the_ways_a_row_stays() and ok
 	ok = _test_the_round_trip_gate_refuses() and ok
 	ok = _test_the_receipt() and ok
+	ok = _test_the_receipt_names_the_swap() and ok
 	ok = _test_apply_is_one_undo_step() and ok
 	ok = _test_the_button_applies_the_plan_it_drew() and ok
 	ok = _test_the_project_report() and ok
@@ -294,6 +295,32 @@ static func _test_the_round_trip_gate_refuses() -> bool:
 
 
 # ── 5. the receipt ────────────────────────────────────────────────────────────────
+
+
+## A row with no stored sentence is named by its verb's name, not its id; and when the old and the new
+## row read the same words, the line says which row it becomes.
+static func _test_the_receipt_names_the_swap() -> bool:
+	var old_row: ACEAction = ACEAction.new()
+	old_row.provider_id = "Core"
+	old_row.ace_id = "SetSpriteSize"
+	old_row.codegen_template = "scale = {size} / texture.get_size()"
+	old_row.params = {"size": "Vector2(32, 32)"}
+	var planned: Array[Dictionary] = EventSheetMigrationPlan.plan(_sheet([old_row]))
+	var lines: PackedStringArray = EventSheetMigrateDialog.preview_lines(planned)
+	var ok: bool = _check("a row with no stored sentence is named by its verb, not its id",
+		lines[0].begins_with("Set Sprite Size"), true)
+	var same: Array[Dictionary] = [{"asks": false, "reading_before": "Set size to 32", "reading_after": "Set size to 32",
+		"name_after": "Set Size", "before": "a", "after": "b", "from": "Core::X"}]
+	ok = _check("two sides reading the same say which row it becomes",
+		EventSheetMigrateDialog.preview_lines(same)[0], "Set size to 32 → Set size to 32 (the Set Size row)") and ok
+	var list: Tree = EventSheetMigrateDialog._wrapping_list(90.0)
+	EventSheetMigrateDialog._clear_list(list)
+	EventSheetMigrateDialog._add_line(list, lines[1])
+	var item: TreeItem = list.get_root().get_child(0)
+	ok = _check("a long line of code wraps in the list and says itself whole on hover",
+		[item.get_autowrap_mode(0), item.get_tooltip_text(0) == lines[1]], [TextServer.AUTOWRAP_WORD_SMART, true]) and ok
+	list.free()
+	return ok
 
 
 ## What the dialog draws, pinned as the strings it draws. Two lines per rewritten row - the sentence

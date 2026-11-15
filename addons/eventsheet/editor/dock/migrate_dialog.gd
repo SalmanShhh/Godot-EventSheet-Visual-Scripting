@@ -30,9 +30,9 @@ extends RefCounted
 var _dock: Node = null
 var _dialog: AcceptDialog = null
 var _summary_label: Label = null
-var _rewrite_list: ItemList = null
+var _rewrite_list: Tree = null
 var _left_alone_card: Control = null
-var _left_alone_list: ItemList = null
+var _left_alone_list: Tree = null
 var _planned: Array[Dictionary] = []
 ## The vocabulary this receipt was drawn against, held so the button answers the same corpus the
 ## reader was shown. Reflecting the installed packs twice would let the two disagree.
@@ -64,7 +64,13 @@ func open(vocabulary: Dictionary = {}) -> void:
 static func preview_lines(planned: Array[Dictionary]) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in EventSheetMigrationPlan.migrating(planned):
-		lines.append("%s → %s" % [_said(entry, "reading_before"), _said(entry, "reading_after")])
+		var before_reading: String = _said(entry, "reading_before")
+		var after_reading: String = _said(entry, "reading_after")
+		# Both sides can read the same words (the old row and the new one share a sentence), so the new
+		# row is named: the swap is the point of the line.
+		if before_reading == after_reading and not str(entry.get("name_after", "")).is_empty():
+			after_reading = EventSheetL10n.translate("%s (the %s row)") % [after_reading, str(entry["name_after"])]
+		lines.append("%s → %s" % [before_reading, after_reading])
 		lines.append("    %s → %s" % [str(entry.get("before", "")), str(entry.get("after", ""))])
 	return lines
 
@@ -158,6 +164,10 @@ static func _said(entry: Dictionary, key: String) -> String:
 	var text: String = str(entry.get(key, "")).strip_edges()
 	if not text.is_empty():
 		return text
+	# A row with no sentence of its own is named by its verb's display name, and only as a last resort by its id.
+	var verb_name: String = str(entry.get("name_before", "")) if key == "reading_before" else str(entry.get("name_after", ""))
+	if not verb_name.is_empty():
+		return verb_name
 	return EventForgeSuccessors.split_key(str(entry.get("from", "")))[1]
 
 
@@ -170,12 +180,41 @@ func _build_dialog() -> void:
 	var content: VBoxContainer = parts["box"]
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
-	_rewrite_list = EventSheetPopupUI.sized_list(180.0)
+	_rewrite_list = _wrapping_list(180.0)
 	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rewrite_list))
-	_left_alone_list = EventSheetPopupUI.sized_list(90.0)
+	_left_alone_list = _wrapping_list(90.0)
 	_left_alone_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Left exactly as they are"), _left_alone_list)
 	content.add_child(_left_alone_card)
 	EventSheetL10n.apply_to(_dialog)
+
+
+## A list of lines that wrap at the window's edge: a long sentence or a long line of code is read whole,
+## never cut with "..." or left past the edge.
+static func _wrapping_list(rows_high: float) -> Tree:
+	var list: Tree = Tree.new()
+	list.hide_root = true
+	list.columns = 1
+	list.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	list.focus_mode = Control.FOCUS_NONE
+	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return list
+
+
+static func _clear_list(list: Tree) -> void:
+	list.clear()
+	list.create_item()
+
+
+static func _add_line(list: Tree, line: String) -> void:
+	var item: TreeItem = list.create_item(list.get_root())
+	item.set_text(0, line)
+	item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+	item.set_tooltip_text(0, line)
+
+
+static func _list_size(list: Tree) -> int:
+	return list.get_root().get_child_count() if list.get_root() != null else 0
 
 
 ## Draws the receipt for the plan this dialog was opened on. What is shown is what would land: both
@@ -183,16 +222,12 @@ func _build_dialog() -> void:
 func _fill() -> void:
 	_dialog.title = EventSheetL10n.translate("Migrate rows")
 	_summary_label.text = summary_text(_planned)
-	_rewrite_list.clear()
+	_clear_list(_rewrite_list)
 	for line: String in preview_lines(_planned):
-		_rewrite_list.add_item(line)
-		# A long sentence is wider than the list; the tooltip carries the whole of it so nothing the
-		# receipt promises to say is only half-said.
-		_rewrite_list.set_item_tooltip(_rewrite_list.item_count - 1, line)
-	_left_alone_list.clear()
+		_add_line(_rewrite_list, line)
+	_clear_list(_left_alone_list)
 	for line: String in left_alone_lines(_planned):
-		_left_alone_list.add_item(line)
-		_left_alone_list.set_item_tooltip(_left_alone_list.item_count - 1, line)
+		_add_line(_left_alone_list, line)
 	# A card with nothing under it is a heading that says a sheet has a problem it does not have.
-	_left_alone_card.visible = _left_alone_list.item_count > 0
-	_dialog.get_ok_button().disabled = _rewrite_list.item_count == 0
+	_left_alone_card.visible = _list_size(_left_alone_list) > 0
+	_dialog.get_ok_button().disabled = _list_size(_rewrite_list) == 0
