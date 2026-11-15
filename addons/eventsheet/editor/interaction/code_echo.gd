@@ -140,6 +140,12 @@ static func palette(reading: EventSheetReadingStyle, event_style: EventSheetEven
 	var colours: Dictionary = _theme_palette(reading, event_style)
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return colours
+	# The script editor's colours were chosen for the editor's own ground. On a sheet of the other
+	# brightness (a light theme in a dark editor, or the reverse) they would be unreadable, so the
+	# sheet theme's own tokens, made for that ground, are kept.
+	var sheet_ground: Color = event_style.row_background_color if event_style != null else Color(0, 0, 0, 0)
+	if not use_editor_colours(sheet_ground, EventSheetEditorThemeDeriver.running_editor_base()):
+		return colours
 	var editor_interface: Object = Engine.get_singleton("EditorInterface")
 	if not editor_interface.has_method("get_editor_settings"):
 		return colours
@@ -154,6 +160,15 @@ static func palette(reading: EventSheetReadingStyle, event_style: EventSheetEven
 		if value is Color:
 			colours[token_name] = value as Color
 	return colours
+
+
+## Whether the script editor's colours may paint the echo on a sheet whose rows are `sheet_ground`, in an
+## editor whose base colour is `editor_base`: only when both are the same brightness. With no editor
+## (a clear base) there are no editor colours to use.
+static func use_editor_colours(sheet_ground: Color, editor_base: Color) -> bool:
+	if editor_base.a <= 0.0 or sheet_ground.a <= 0.0:
+		return editor_base.a > 0.0 and sheet_ground.a <= 0.0
+	return EventSheetEditorThemeDeriver.is_light_base(sheet_ground) == EventSheetEditorThemeDeriver.is_light_base(editor_base)
 
 
 ## The fallback table: every class answered from tokens the sheet theme already dresses, so a
