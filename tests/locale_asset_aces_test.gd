@@ -24,9 +24,11 @@
 class_name LocaleAssetACEsTest
 extends RefCounted
 
-const PROBE_ROOT := "user://locale_asset_probe"
-const ART_DIR := PROBE_ROOT + "/art"
-const VOICE_DIR := PROBE_ROOT + "/voice"
+## The assets live in a folder named for THIS process: every editor and test run of this project shares
+## one user folder, and a second run deleting the folder under this one emptied every read it made.
+static var probe_root: String = "user://locale_asset_probe_%d" % OS.get_process_id()
+static var art_dir: String = probe_root + "/art"
+static var voice_dir: String = probe_root + "/voice"
 
 ## The line every timing case uses. Its German is 42 characters, so at the shipped 14 characters a
 ## second it needs exactly 3.0s - a number that cannot be reached by accident. Its English is three
@@ -206,18 +208,18 @@ static func _run_emission() -> bool:
 ## The <name>.<locale>.<ext> convention, against real files, in four languages.
 static func _run_asset_runtime() -> bool:
 	var ok: bool = true
-	var base: String = ART_DIR + "/sign.tres"
+	var base: String = art_dir + "/sign.tres"
 
 	TranslationServer.set_locale("en")
 	ok = _check("a language with no variant gets the base file", _localized(base), base) and ok
 	TranslationServer.set_locale("de")
-	ok = _check("a language with a variant gets the variant", _localized(base), ART_DIR + "/sign.de.tres") and ok
+	ok = _check("a language with a variant gets the variant", _localized(base), art_dir + "/sign.de.tres") and ok
 	TranslationServer.set_locale("pt_BR")
-	ok = _check("pt_BR narrows to the pt variant", _localized(base), ART_DIR + "/sign.pt.tres") and ok
+	ok = _check("pt_BR narrows to the pt variant", _localized(base), art_dir + "/sign.pt.tres") and ok
 	TranslationServer.set_locale("ja")
 	ok = _check("a language nobody made art for gets the base file", _localized(base), base) and ok
 	ok = _check("a base file that is not there is returned untouched, not an error",
-		_localized(ART_DIR + "/nothing_here.png"), ART_DIR + "/nothing_here.png") and ok
+		_localized(art_dir + "/nothing_here.png"), art_dir + "/nothing_here.png") and ok
 
 	# Load For Language hands back the ASSET, not the path - the same choice, resolved.
 	TranslationServer.set_locale("de")
@@ -302,7 +304,7 @@ static func _run_say_line_runtime() -> bool:
 	# THE drift case: the same row, a language whose line is far longer, holds the caption longer.
 	# A hand-typed Wait would have cut this one off in a language nobody on the team reads.
 	TranslationServer.set_locale("de")
-	var long_line: RefCounted = _say_line_stub(VOICE_DIR + "/none")
+	var long_line: RefCounted = _say_line_stub(voice_dir + "/none")
 	long_line.set("caption", label)
 	long_line.call("say")
 	ok = _check("a longer translation is given the time it needs", float(long_line.get("timer_seconds")), 3.0) and ok
@@ -353,9 +355,9 @@ static func _run_translated_field_runtime() -> bool:
 	# A data ASSET on disk reads the same way a table row does: the single-argument get() answers
 	# null for a field neither shape has, so one verb serves a .tres and a CSV record alike.
 	ok = _check("a data asset reads by property name",
-		_field("load(\"%s\")" % (ART_DIR + "/entry.tres"), "\"resource_name\""), TITLE_DE) and ok
+		_field("load(\"%s\")" % (art_dir + "/entry.tres"), "\"resource_name\""), TITLE_DE) and ok
 	ok = _check("a property the asset does not have is empty text",
-		_field("load(\"%s\")" % (ART_DIR + "/entry.tres"), "\"no_such_property\""), "") and ok
+		_field("load(\"%s\")" % (art_dir + "/entry.tres"), "\"no_such_property\""), "") and ok
 
 	# A whole column: keys translate, literals pass through, a row missing the field stays in place
 	# so the list is still the same length as the table.
@@ -397,13 +399,13 @@ static func _remove_catalogs() -> void:
 ## Three language variants of one asset, and a voice folder that covers de but not ja - plus a pt
 ## folder holding something that is NOT audio, for the guard in Voice Line Length.
 static func _write_assets() -> void:
-	DirAccess.make_dir_recursive_absolute(ART_DIR)
-	DirAccess.make_dir_recursive_absolute(VOICE_DIR + "/de")
-	DirAccess.make_dir_recursive_absolute(VOICE_DIR + "/pt")
+	DirAccess.make_dir_recursive_absolute(art_dir)
+	DirAccess.make_dir_recursive_absolute(voice_dir + "/de")
+	DirAccess.make_dir_recursive_absolute(voice_dir + "/pt")
 	for pair: Array in [["/sign.tres", "SIGN_BASE"], ["/sign.de.tres", "SIGN_DE"], ["/sign.pt.tres", "SIGN_PT"]]:
 		var asset: Resource = Resource.new()
 		asset.resource_name = str(pair[1])
-		ResourceSaver.save(asset, ART_DIR + str(pair[0]))
+		ResourceSaver.save(asset, art_dir + str(pair[0]))
 	# 2000 frames of silence at 8 kHz, 16-bit mono: exactly 0.25 seconds.
 	var clip: AudioStreamWAV = AudioStreamWAV.new()
 	clip.format = AudioStreamWAV.FORMAT_16_BITS
@@ -412,23 +414,23 @@ static func _write_assets() -> void:
 	var frames: PackedByteArray = PackedByteArray()
 	frames.resize(4000)
 	clip.data = frames
-	ResourceSaver.save(clip, VOICE_DIR + "/de/" + LINE_KEY + ".tres")
+	ResourceSaver.save(clip, voice_dir + "/de/" + LINE_KEY + ".tres")
 	var not_audio: Resource = Resource.new()
 	not_audio.resource_name = "NOT_A_CLIP"
-	ResourceSaver.save(not_audio, VOICE_DIR + "/pt/" + LINE_KEY + ".tres")
+	ResourceSaver.save(not_audio, voice_dir + "/pt/" + LINE_KEY + ".tres")
 	# A data asset whose text field holds a translation key rather than display text.
 	var entry: Resource = Resource.new()
 	entry.resource_name = TITLE_KEY
-	ResourceSaver.save(entry, ART_DIR + "/entry.tres")
+	ResourceSaver.save(entry, art_dir + "/entry.tres")
 
 
 static func _remove_assets() -> void:
-	for path: String in [ART_DIR + "/sign.tres", ART_DIR + "/sign.de.tres", ART_DIR + "/sign.pt.tres",
-			ART_DIR + "/entry.tres", VOICE_DIR + "/de/" + LINE_KEY + ".tres",
-			VOICE_DIR + "/pt/" + LINE_KEY + ".tres"]:
+	for path: String in [art_dir + "/sign.tres", art_dir + "/sign.de.tres", art_dir + "/sign.pt.tres",
+			art_dir + "/entry.tres", voice_dir + "/de/" + LINE_KEY + ".tres",
+			voice_dir + "/pt/" + LINE_KEY + ".tres"]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
-	for folder: String in [ART_DIR, VOICE_DIR + "/de", VOICE_DIR + "/pt", VOICE_DIR, PROBE_ROOT]:
+	for folder: String in [art_dir, voice_dir + "/de", voice_dir + "/pt", voice_dir, probe_root]:
 		DirAccess.remove_absolute(folder)
 
 
@@ -446,11 +448,13 @@ static func _loaded_name(base_path: String) -> String:
 	return str((loaded as Resource).resource_name) if loaded is Resource else "<nothing loaded>"
 
 
-static func _has_voice(folder: String = VOICE_DIR) -> bool:
+static func _has_voice(folder: String = "") -> bool:
+	folder = folder if not folder.is_empty() else voice_dir
 	return bool(_eval(_emitted("HasVoiceForLanguage", {"key": _quote(LINE_KEY), "folder": _quote(folder), "extension": "\".tres\""})))
 
 
-static func _voice_length(folder: String = VOICE_DIR) -> float:
+static func _voice_length(folder: String = "") -> float:
+	folder = folder if not folder.is_empty() else voice_dir
 	return _eval_float(_emitted("VoiceLineLength", {"key": _quote(LINE_KEY), "folder": _quote(folder), "extension": "\".tres\""}))
 
 
@@ -471,7 +475,8 @@ static func tr_probe(key: String) -> String:
 ## Say Line's emitted body, running in a stand-in for the AudioStreamPlayer it is hosted on: the
 ## stream, play(), the finished signal, get_tree() and create_timer() are all answered here, so the
 ## action's real control flow can be stepped through without a scene tree.
-static func _say_line_stub(folder: String = VOICE_DIR) -> RefCounted:
+static func _say_line_stub(folder: String = "") -> RefCounted:
+	folder = folder if not folder.is_empty() else voice_dir
 	var body: String = _emitted("SayLine", {"key": _quote(LINE_KEY), "folder": _quote(folder),
 		"extension": "\".tres\"", "caption": "caption", "target": "", "uid": "1"})
 	var lines: Array[String] = [
