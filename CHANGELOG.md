@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a run-time error from a sheet that is not open offers to open it
+
+An error from the running game finds its row only in a sheet open in a tab; one from any other script got its sentence and no address. The strip's button now says "Open the sheet" for a project script no tab holds, opens it and then finds the row, as it would have if the tab had been there.
+
 ### Fixed: a sheet saved as a resource gets the "changed outside the editor" question too
 
 A `.tres` sheet changed by a merge or another tool, with its tab open and unsaved, was written over by the next Save. It now asks, the way a script sheet always has: keep yours (the default) or use the file on disk, and taking the disk's version first puts your unsaved one into Sheet Backups.

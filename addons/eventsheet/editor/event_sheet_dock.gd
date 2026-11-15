@@ -90,6 +90,7 @@ const REPLACE_OBJECT_PATH := "res://addons/eventsheet/editor/dock/replace_object
 const RESCUE_TIPS_PATH := "res://addons/eventsheet/editor/rescue_tips.gd"
 const RUNTIME_ERROR_WORDS_PATH := "res://addons/eventsheet/editor/dock/runtime_error_words.gd"
 const RUNTIME_ERROR_LOCATOR_PATH := "res://addons/eventsheet/editor/dock/runtime_error_locator.gd"
+const RUNTIME_ERROR_OPEN_PATH := "res://addons/eventsheet/editor/dock/runtime_error_open.gd"
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
 const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
 const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
@@ -3815,6 +3816,7 @@ func report_runtime_error(message: String, script_path: String, line: int = 0) -
 	report["tab_index"] = int(located.get("tab_index", -1))
 	report["candidates"] = located.get("candidates", [])
 	report["line"] = line
+	report["open_path"] = load(RUNTIME_ERROR_OPEN_PATH).sheet_to_open(script_path, _open_tabs)
 	_runtime_error_report = report
 	for output_line: String in words.output_lines(report):
 		print(output_line)
@@ -3824,7 +3826,8 @@ func report_runtime_error(message: String, script_path: String, line: int = 0) -
 		_runtime_error_label.tooltip_text = str(report.get("original", ""))
 		_runtime_error_strip.visible = true
 	if _runtime_error_jump_button != null:
-		_runtime_error_jump_button.disabled = report.get("row_resource") == null
+		_runtime_error_jump_button.disabled = report.get("row_resource") == null and str(report["open_path"]).is_empty()
+		_runtime_error_jump_button.text = load(RUNTIME_ERROR_OPEN_PATH).jump_label(report)
 	if _runtime_error_explain_button != null:
 		_runtime_error_explain_button.disabled = not words.can_explain(report)
 	return report
@@ -3926,6 +3929,8 @@ static func row_reading(row_data: EventRowData) -> String:
 
 ## Jump to event: the deep-link that already existed, aimed at the row the failure came from.
 func _jump_to_runtime_error_row() -> void:
+	if not str(_runtime_error_report.get("open_path", "")).is_empty():
+		load(RUNTIME_ERROR_OPEN_PATH).open_sheet_of(self, _runtime_error_report)
 	var resource: Variant = _runtime_error_report.get("row_resource")
 	# The error may belong to a sheet on another tab: bring that tab forward first.
 	var report_tab: int = int(_runtime_error_report.get("tab_index", -1))

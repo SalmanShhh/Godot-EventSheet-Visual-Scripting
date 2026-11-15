@@ -10567,3 +10567,4 @@ Could not reach %s - Godot says: %s. %s,无法连接 %s - Godot 提示:%s。%s
 "%s already exists, so nothing was changed. Rename or delete that file, or point the SaveSystem global at it yourself in Project Settings > Globals.","%s 已存在,因此没有做任何更改。请重命名或删除该文件,或自己在项目设置 > 全局中让 SaveSystem 全局指向它。"
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","SaveSystem 全局现在运行 save_system.tscn;其设置可在此处和它的检查器中更改。撤销无法还原此操作 - 要返回,请在项目设置 > 全局中把 SaveSystem 全局重新指向该脚本。"
 "%s could not be read as a sheet, so the version here was kept.","无法将 %s 读取为表单,因此保留了此处的版本。"
+Open the sheet,打开表单

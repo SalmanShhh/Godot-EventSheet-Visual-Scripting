@@ -10567,3 +10567,4 @@ Could not reach %s - Godot says: %s. %s,%s에 연결하지 못했습니다 - God
 "%s already exists, so nothing was changed. Rename or delete that file, or point the SaveSystem global at it yourself in Project Settings > Globals.","%s이(가) 이미 있어 아무것도 바꾸지 않았습니다. 그 파일의 이름을 바꾸거나 삭제하거나, 프로젝트 설정 > 글로벌에서 SaveSystem 글로벌이 그 파일을 가리키도록 직접 설정하세요."
 "The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","SaveSystem 글로벌이 이제 save_system.tscn을 실행하며, 설정은 여기와 인스펙터에서 바뀝니다. 실행 취소로는 되돌릴 수 없습니다. 되돌리려면 프로젝트 설정 > 글로벌에서 SaveSystem 글로벌이 스크립트를 다시 가리키게 하세요."
 "%s could not be read as a sheet, so the version here was kept.",%s을(를) 시트로 읽지 못해 여기 있는 버전을 그대로 두었습니다.
+Open the sheet,시트 열기
