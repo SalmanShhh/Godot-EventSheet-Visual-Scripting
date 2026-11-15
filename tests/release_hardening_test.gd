@@ -116,8 +116,7 @@ static func run() -> bool:
 	# names the token under the pointer and its preset line, and a save says how it went in the foot.
 	var status_dock: Control = _status_recorder()
 	theme_editor._dock = status_dock
-	theme_editor._working_style = EventSheetThemeEditor.duplicate_style(null)
-	theme_editor._ensure_dialog()
+	theme_editor._prepare(status_dock, null)
 	var folds: Array = []
 	for fold: Node in theme_editor._dialog.find_children("*", "FoldableContainer", true, false):
 		folds.append([(fold as FoldableContainer).title, (fold as FoldableContainer).folded])
@@ -129,13 +128,13 @@ static func run() -> bool:
 	var spins: Dictionary = {}
 	for spin_node: Node in theme_editor._detail_form.find_children("*", "SpinBox", true, false):
 		spins[(spin_node.get_parent().get_child(0) as Label).text] = spin_node
-	var lane_spin: SpinBox = spins.get("condition_lane_ratio") as SpinBox
-	all_passed = _check("a token row reads as the code names it", lane_spin != null, true) and all_passed
+	var lane_spin: SpinBox = spins.get("Condition Lane Ratio") as SpinBox
+	all_passed = _check("a token row reads in plain words", lane_spin != null, true) and all_passed
 	# Each number token's spin box takes the token's OWN range and step, so a 0.20-0.80 ratio
 	# stepping 0.01 can be set to 0.45 instead of snapping to the 0.5 grid of a -4096..4096 box.
 	all_passed = _check("the lane ratio spin box carries the token's range and step",
 		[lane_spin.min_value, lane_spin.max_value, lane_spin.step] if lane_spin != null else [], [0.2, 0.8, 0.01]) and all_passed
-	var width_spin: SpinBox = spins.get("minimum_conditions_lane_width") as SpinBox
+	var width_spin: SpinBox = spins.get("Minimum Conditions Lane Width") as SpinBox
 	all_passed = _check("an int token keeps its own bounds too",
 		[width_spin.min_value, width_spin.max_value, width_spin.step] if width_spin != null else [], [120.0, 480.0, 1.0]) and all_passed
 	all_passed = _check("a float token with no range of its own steps 0.01",

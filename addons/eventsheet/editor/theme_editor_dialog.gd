@@ -5,7 +5,7 @@
 # tokens added to the style classes appear here automatically - no editor changes needed.
 # Edits write into a duplicated working style and repaint live; "Apply" assigns it to the
 # current sheet, "Save As Preset…" writes a shareable .tres. Every section folds, a token row is named
-# as the code names it, and the strip at the foot says what the token under the pointer does.
+# in plain words (the Inspector's way) and the strip at the foot says what the token under the pointer does.
 @tool
 class_name EventSheetThemeEditor
 extends RefCounted
@@ -30,11 +30,52 @@ var _focus_resource: Resource = null
 
 ## Opens the theme editor seeded from the dock's active style (or defaults).
 func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
+	_prepare(dock, base_style)
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640)))
+
+
+## Everything an open does short of showing the window, so a second open starts the new theme from
+## scratch: the form is rebuilt over the new working copy (a swatch left from the first open would
+## still edit the first one), the strip and the note say the new session's words, and Quick Style
+## starts from the colours of the theme now open.
+func _prepare(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_dock = dock
 	_working_style = duplicate_style(base_style)
+	var existed: bool = _dialog != null
 	_ensure_dialog()
+	if existed:
+		_focus_name = ""
+		_rebuild_detail_form()
+	_note.say(EventSheetL10n.translate("Apply writes this look into the open sheet only"), EventSheetPopupUI.TONE_WARNING)
+	_seed_quick_style()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
-	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640)))
+
+
+## The three colours Quick Style opens on for a theme: its accent, its text, and its base - the row
+## colour lifted back by the step Generate darkens it (Generate writes the row colour as the base
+## darkened by 0.15, so dividing by 0.85 returns to within rounding of what was picked).
+static func quick_style_seed(style: EventSheetEditorStyle) -> Dictionary:
+	var event_style: EventSheetEventStyle = style.event_style if style != null else null
+	if event_style == null:
+		return {}
+	var row: Color = event_style.row_background_color
+	return {
+		"base": Color(minf(row.r / 0.85, 1.0), minf(row.g / 0.85, 1.0), minf(row.b / 0.85, 1.0), 1.0),
+		"accent": event_style.group_accent_color,
+		"text": event_style.group_title_color,
+	}
+
+
+## Puts the open theme's colours into the three Quick Style pickers. A colour the theme leaves clear
+## keeps whatever the picker already holds.
+func _seed_quick_style() -> void:
+	var seeds: Dictionary = quick_style_seed(_working_style)
+	if _quick_base == null or seeds.is_empty():
+		return
+	for pair: Array in [[_quick_base, "base"], [_quick_accent, "accent"], [_quick_font, "text"]]:
+		var seeded: Color = seeds[pair[1]]
+		if seeded.a > 0.0:
+			(pair[0] as ColorPickerButton).color = Color(seeded.r, seeded.g, seeded.b, 1.0)
 
 
 ## Deep-duplicates a style so live edits never touch the original resource.
@@ -201,7 +242,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"action_lane_padding": "Inner padding on the actions lane, in pixels.",
 	"lane_divider_width": "Thickness of the conditions/actions divider line.",
 	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
-	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
+	"group_row_height": "Height of a Section header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
 	"inspector_variable_rows": "Draw a variable row the way the Inspector lists a property: its type, its name exactly as the code writes it, its value and its ## description, with its attributes as icon tiles - no scope word, no kind mark and no code.",
 	"variable_row_cards": "Draw each Inspector-style variable row as its own small card - the event card's fill and edge, with a gap to the next - instead of the flat variable wash.",
 	"variable_card_fill_color": "The fill of a variable card. Clear uses the event card's fill.",
@@ -220,7 +261,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"row_font_size": "The size the sheet's text is drawn at, in pixels at 100% editor scale - never larger than the editor's own font. 0 follows the editor's font size.",
 	"condition_object_column_width":"Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
 	"action_object_column_width": "Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
-	"event_block_gap": "Gap opened before an event or group that starts a new block, in pixels - the air between one event and the next.",
+	"event_block_gap": "Gap opened before an event or Section that starts a new block, in pixels - the air between one event and the next.",
 	"sub_event_indent": "How far one nesting level steps a sub-event in, in pixels.",
 	"sub_event_rail_line": "Draw the rail a sub-event hangs from - a vertical line down its parent's indent step.",
 	"sub_event_strips": "Draw nesting as one thin line per level in the margin, the fold arrow beside a block's first line, and each condition as its own ruled strip over a quieter cell, in place of connector lines.",
@@ -228,13 +269,11 @@ const _TOKEN_DESCRIPTIONS := {
 	"event_card_gutter_gap": "Gap kept between the number gutter and the card's left edge, so the number reads as a margin mark outside the event.",
 	"trigger_badge_background_color": "Fill of the trigger arrow badge (On Ready, On Signal...).",
 	"trigger_badge_foreground_color": "Icon/text colour on the trigger badge.",
-	"group_background_color": "Background of a group header row.",
-	"group_background_alt_color": "Alternate group header background (zebra).",
-	"group_accent_color": "The group's left accent stripe and hairlines.",
-	"group_title_color": "The group title text colour.",
-	"group_badge_background_color": "Fill of the count badge on a group.",
-	"group_badge_foreground_color": "Text colour on the group count badge.",
-	"group_fold_background_color": "Background of the collapse triangle box on a group.",
+	"group_background_color": "Background of a Section header row.",
+	"group_background_alt_color": "Alternate Section header background (zebra).",
+	"group_accent_color": "The Section's left accent stripe and hairlines.",
+	"group_title_color": "The Section title text colour.",
+	"group_fold_background_color": "Background of the collapse triangle box on a Section.",
 	"comment_row_background_color": "The banner colour behind a full-width comment.",
 	"comment_text_color": "The text colour of comments.",
 	"selection_fill_color": "The highlight over a selected row.",
@@ -255,7 +294,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"language_block_accent_color": "The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.",
 	"event_corner_radius": "Corner roundness of the event block, in pixels (0 = square).",
 	"cell_corner_radius": "Corner roundness of individual condition/action cells.",
-	"group_corner_radius": "Corner roundness of group rows (0 = square bar).",
+	"group_corner_radius": "Corner roundness of Section rows (0 = square bar).",
 	"region_corner_radius": "Corner roundness of region marker bubbles.",
 	"region_line_width": "Line thickness of region marker borders.",
 	"type_number_color": "The type word of a variable that holds a number (int, float).",
@@ -315,8 +354,6 @@ const _TOKEN_DESCRIPTIONS := {
 	# ── Reading marks ────────────────────────────────────────────────────────────────────────
 	"plain_chip_background_color": "The plain chip on a head bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",
 	"plain_chip_foreground_color": "The word on those plain chips.",
-	"pattern_chip_background_color": "The ⟡ chip that names the pattern an event is (Cooldown, Object pool, Wait sequence). Leave it clear to follow the plain chip.",
-	"pattern_chip_foreground_color": "The words on the ⟡ pattern chip. Leave it clear to follow the muted text tone.",
 	"category_chip_background_color": "The chip that says where something sits in the picker (\"Group › Subgroup\").",
 	"category_chip_foreground_color": "The word on the picker-category chip.",
 	"inspector_chip_background_color": "The \"Inspector\" chip on a variable the game's designer can edit.",
@@ -348,7 +385,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"disabled_row_color": "The scrim over a row that is switched off.",
 	"breakpoint_color": "The breakpoint dot in the event-number margin.",
 	"runtime_error_color": "The strip under the sheet that says what just went wrong in the running game, in the row's own words.",
-	"debugger_accent_color": "The Debugger window's accent - the busiest rows of its Profile tab.",
+	"debugger_accent_color": "The Debugger window's accent - the pattern notes on its Trail tab.",
 	"bookmark_color": "The bookmark pennant in the event-number margin.",
 	"event_number_rail_color": "The hairline down the right edge of the event-number margin.",
 	"indent_guide_color": "The faint stop that marks each level of indent.",
@@ -367,7 +404,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"name_highlight_strength": "How strongly every other use of a hovered variable lights up, inside that variable's own scope.",
 	# ── Bars around the sheet ────────────────────────────────────────────────────────────────
 	"object_bar_section_color": "The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.",
-	"object_bar_warning_color": "The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.",
+	"object_bar_warning_color": "The amber of every finding - the ⚠ on an Object bar entry, the mark beside a flagged row, the help strip's finding words: a node the scene lost, an action the Input Map does not have.",
 	"object_bar_hover_wash_color": "The wash over every row that uses the object you point at in the Object bar.",
 	"object_bar_grip_color": "The grab dots on the row under the mouse.",
 	"object_bar_grip_active_color": "Those dots once the pointer is in the grab zone.",
@@ -385,15 +422,14 @@ const _TOKEN_DESCRIPTIONS := {
 	"minimap_trigger_color": "A trigger's bar in the column.",
 	"minimap_tick_color": "An every-tick event's bar.",
 	"minimap_function_color": "A function's bar.",
-	"minimap_group_color": "A group's bar.",
+	"minimap_group_color": "A Section's bar.",
 	"minimap_comment_color": "A comment's bar.",
 	"minimap_script_color": "A Script block's bar.",
 	"minimap_event_color": "Every other event's bar.",
 	"minimap_disabled_color": "A disabled row's bar - present, but not asking to be read.",
 	"minimap_bookmark_color": "The mark in the margin beside a row you bookmarked.",
 	"minimap_finding_color": "The mark beside a row the sheet flagged.",
-	"minimap_band_color": "The band a group paints down the column, from its own row to its last.",
-	"minimap_band_text_color": "The group's name written on that band.",
+	"minimap_band_color": "The band a Section paints down the column, from its own row to its last.",
 	# ── The Sheet map window ─────────────────────────────────────────────────────────────────
 	"sheet_map_sheet_color": "An event sheet's box in the Sheet map.",
 	"sheet_map_scene_color": "A scene's box - the scenes that carry the sheets.",
@@ -403,15 +439,9 @@ const _TOKEN_DESCRIPTIONS := {
 	"sheet_map_text_color": "The name written inside every box in the Sheet map.",
 	# ── The Inspector drawers ────────────────────────────────────────────────────────────────
 	"drawer_accent_color": "The fill of every interactive drawer in the Inspector - a progress bar's filled part, a range slider's span, a dial's vector line.",
-	"drawer_accent_bright_color": "The lit end of that fill - the dial's handle, a curve's plotted line.",
 	"drawer_ink_color": "The quiet ink the drawers write and rule with - value labels, hairlines, the dial's grid. Each mark keeps its own softness.",
 	"drawer_well_color": "The sunken plate a bar, track or preview sits in.",
-	"drawer_handle_color": "The range slider's two round handles.",
 	"drawer_handle_border_color": "The line around each handle.",
-	"drawer_info_background_color": "The note panel an @inspector_info comment builds.",
-	"drawer_info_border_color": "That panel's border, heavier on the left.",
-	"drawer_info_text_color": "The words on that panel.",
-	"drawer_header_text_color": "An @inspector_header section label that named no accent of its own.",
 	"drawer_required_color": "The ⚠ that says a required property still has no value.",
 	"drawer_validate_color": "The ⚠ message a sheet's own validator function returns while a value is out of bounds.",
 	"drawer_checker_dark_color": "The darker square of the checkerboard behind a texture thumbnail.",
@@ -508,7 +538,6 @@ func _ensure_dialog() -> void:
 	save_button.get_parent().move_child(save_button, _note.get_index() + 1)
 	save_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_dialog.custom_action.connect(func(_action: StringName) -> void: _open_save_dialog())
-	_note.say(EventSheetL10n.translate("Apply writes this look into the open sheet only"), EventSheetPopupUI.TONE_WARNING)
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var preview_scroll: ScrollContainer = ScrollContainer.new()
@@ -556,7 +585,7 @@ func _build_quick_style(form: VBoxContainer) -> void:
 	var quick_box: VBoxContainer = EventSheetPopupUI.form_box()
 	quick_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Pick a base + accent, then Generate. Fine-tune individual tokens below.")))
 	_quick_base = _quick_color_row(quick_box, EventSheetL10n.translate("Base (background tone)"), Color("#252525"))
-	_quick_accent = _quick_color_row(quick_box, EventSheetL10n.translate("Accent (groups, selection)"), Color("#569eff"))
+	_quick_accent = _quick_color_row(quick_box, EventSheetL10n.translate("Accent (Sections, selection)"), Color("#569eff"))
 	_quick_font = _quick_color_row(quick_box, EventSheetL10n.translate("Text"), Color("#ced0d2"))
 	var buttons: HBoxContainer = HBoxContainer.new()
 	var reset: Button = Button.new()
@@ -591,14 +620,14 @@ func _build_reading_comfort(form: VBoxContainer) -> void:
 	dyslexia_check.button_pressed = EventSheetAccessibility.dyslexia_friendly_text()
 	dyslexia_check.toggled.connect(func(pressed: bool) -> void:
 		EventSheetAccessibility.set_dyslexia_friendly_text(pressed)
-		_apply_to_sheet())
+		_repaint_personal())
 	box.add_child(dyslexia_check)
 	var font_edit: LineEdit = LineEdit.new()
 	font_edit.placeholder_text = EventSheetL10n.translate("res://… .ttf or .otf - blank keeps the editor's own font")
 	font_edit.text = EventSheetAccessibility.reading_font_path()
 	font_edit.text_submitted.connect(func(path: String) -> void:
 		EventSheetAccessibility.set_reading_font_path(path)
-		_apply_to_sheet())
+		_repaint_personal())
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Reading font"), font_edit))
 	form.add_child(_fold(EventSheetL10n.translate("Reading Comfort"), box, true))
 
@@ -616,13 +645,15 @@ func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Co
 func _generate_quick_style() -> void:
 	var base: Color = _quick_base.color
 	EventSheetGodotTheme.apply(_working_style, base, base.darkened(0.15), base.darkened(0.25), _quick_accent.color, _quick_font.color)
-	_reset_to_default(_working_style)
+	_reset_to_default(_working_style, false)
 
 
 ## Restores the bundled default look - a clean starting point - or shows `style` afresh.
-func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null)) -> void:
+func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null), reseed: bool = true) -> void:
 	_working_style = style
 	_rebuild_detail_form()
+	if reseed:
+		_seed_quick_style()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 
 
@@ -653,7 +684,6 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 	if section_tokens.is_empty():
 		return
 	var section_box: VBoxContainer = EventSheetPopupUI.form_box()
-	var mono: Font = EventSheetPopupUI.editor_font("doc_source")
 	for token: Dictionary in section_tokens:
 		var token_name: String = str(token.get("name"))
 		var field: Control = null
@@ -677,11 +707,11 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 				spin.value = float(style_resource.get(token_name))
 				spin.value_changed.connect(func(value: float) -> void: _on_token_edited(style_resource, token_name, value if int(token.get("type")) == TYPE_FLOAT else int(value)))
 				field = spin
-		var row: HBoxContainer = EventSheetPopupUI.form_row(token_name, field)
-		# The name is the code's own, so it is never translated.
+		# The label is the field's name in plain words, the way Godot's own Inspector spells a property
+		# (follow_editor_greys reads "Follow Editor Greys"); the exact field name is in the strip.
+		var row: HBoxContainer = EventSheetPopupUI.form_row(token_name.capitalize(), field)
 		row.get_child(0).auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-		if mono != null:
-			row.get_child(0).add_theme_font_override("font", mono)
+		row.set_meta("token", token_name)
 		for part: Control in [row, row.get_child(0), field]:
 			part.mouse_entered.connect(_focus_token.bind(style_resource, token_name))
 		field.focus_entered.connect(_focus_token.bind(style_resource, token_name))
@@ -691,12 +721,21 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 	form.add_child(_fold(title, section_box, open))
 
 
+## A description written with the word Section, said with the word the sheet uses for that block: Section
+## by default, Group under the Familiar words preset.
+static func fit_section_word(text: String) -> String:
+	var word: String = EventSheetWords.word("section_block")
+	if word == "Section":
+		return text
+	return text.replace("Section", word).replace("section", word.to_lower())
+
+
 ## Puts one token in the strip: what it does, and the line it writes into a saved preset.
 func _focus_token(style_resource: Resource, token_name: String) -> void:
 	_focus_name = token_name
 	_focus_resource = style_resource
 	if _strip != null:
-		_strip.set_line(_this_field, "%s: %s" % [token_name, EventSheetL10n.translate(_token_description(token_name))])
+		_strip.set_line(_this_field, "%s: %s" % [token_name, fit_section_word(EventSheetL10n.translate(_token_description(token_name)))])
 		_strip.set_line(_in_file, file_line(style_resource, token_name))
 
 
@@ -706,6 +745,19 @@ func _on_token_edited(style_resource: Resource, token_name: String, value: Varia
 		# widths, line thickness) show live - a plain repaint keeps the old cached layout.
 		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 		_focus_token(style_resource, token_name)
+
+
+## Redraws the preview and the open sheet after a personal reading setting changed. Nothing is written
+## into the sheet: the workbench theme is still unsaved, and these settings belong to the reader.
+func _repaint_personal() -> void:
+	if _preview_viewport != null and _working_style != null:
+		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	if _dock == null:
+		return
+	var dock_viewport: Variant = _dock.get("_viewport")
+	var dock_sheet: Variant = _dock.get("_current_sheet")
+	if dock_viewport is EventSheetViewport and dock_sheet != null:
+		(dock_viewport as EventSheetViewport).set_sheet(dock_sheet)
 
 
 func _apply_to_sheet() -> void:
