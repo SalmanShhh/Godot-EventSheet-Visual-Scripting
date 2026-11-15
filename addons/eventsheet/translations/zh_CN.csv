@@ -10579,3 +10579,5 @@ Set Height,设置高度
 Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,"把精灵的高度设为指定像素,宽度不变。它写入 scale.y:指定的高度除以所绘制帧的高度。没有图片的精灵保持原样。"
 Set height to {height} pixels,把高度设为 {height} 像素
 The height in pixels.,高度(像素)。
+"Accent (Sections, selection)",强调色（分区、选择）
+%s (the %s row),%s（%s 行）

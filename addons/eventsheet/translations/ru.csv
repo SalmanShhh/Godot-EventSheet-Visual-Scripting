@@ -10579,3 +10579,5 @@ Set Height,Задать высоту
 Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,"Задаёт спрайту высоту в пикселях и не трогает ширину. Записывает scale.y: названную высоту, делённую на высоту рисуемого кадра. Спрайт без картинки остаётся как есть."
 Set height to {height} pixels,Задать высоту {height} пикселей
 The height in pixels.,Высота в пикселях.
+"Accent (Sections, selection)","Акцент (разделы, выделение)"
+%s (the %s row),%s (строка %s)

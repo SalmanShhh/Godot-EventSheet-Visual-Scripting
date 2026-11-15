@@ -10579,3 +10579,5 @@ Set Height,高さを設定
 Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,スプライトの高さをピクセルで指定し、幅はそのままにします。scale.y に、指定した高さを描画フレームの高さで割った値を書き込みます。画像のないスプライトはそのままになります。
 Set height to {height} pixels,高さを {height} ピクセルに設定
 The height in pixels.,高さ(ピクセル)。
+"Accent (Sections, selection)",アクセント（セクション、選択）
+%s (the %s row),%s（%s の行）

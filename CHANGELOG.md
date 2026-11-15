@@ -4,6 +4,18 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Theme Editor does what its window says
+
+A second open now edits the theme you opened (its swatches had stayed tied to the first one, so a change drew nothing and saved nothing), and its Quick Style colours start from the open theme instead of fixed dark ones. The Dyslexia-friendly tick and the Reading font no longer write the unsaved workbench theme into your open sheet. Applying the editor's copy no longer ticks Match Editor in the theme menu. The eleven swatches that drove nothing are no longer listed (a theme file that names them still loads and saves them). Each row reads in plain words, the way Godot's Inspector spells a property ("Follow Editor Greys"); the strip at the foot still gives the exact field name and the line a save writes. Descriptions say Section where the sheet does, the debugger accent names the Trail tab it tints, and the amber token says it colours every finding. The preview is wide enough for "On process" to read whole.
+
+### Fixed: three windows no longer cut their words short
+
+The Variable window wraps the annotation a look writes instead of trailing off, reads a long hint under its box instead of a cut-off placeholder, and starts "Add row" at the left of a wide table in the Inspector preview. The Class window wraps the reason a member would be lost ("Control does not have it"). Migrate wraps a long line of code, names a row with no stored sentence by its verb ("Set Sprite Size", not its id) and, when the old and the new row read the same, says which row it becomes.
+
+### Fixed: the sheet reads in a dark and a light editor, and a light sheet in a dark editor (and the reverse)
+
+Editor Native's quiet words, the gutter numbers and the amber of every finding now read at 4.5 to 1 on the sheet, a row and a head bar, in both hands. The code beside a variable row keeps the sheet theme's colours when the sheet and the editor are different brightness. The status bar's words and the finding sentence use a font colour moved until it reads on the editor's panel, instead of a modulate over the editor's own text. Run counts, the margin number after a run, live values and a coloured comment's words take the theme's own colours (no new theme fields) and read on their ground. The parameter hint's coloured outline is gone (the edited value is marked by a wash) and its chip takes the drag bubble's colours. The plugin now has one contrast formula, and the ink mover steps finely so amber stays amber.
+
 ### Fixed: Set Size, Set Width and Set Height size a sprite by the frame it draws
 
 Set Sprite Size divided by the whole picture, so a sprite sheet or a region came out the wrong size (a 4 x 2 sheet asked for 64 x 64 measured 16 x 32; a region measured 8 x 4), a sprite with no picture stopped with an error, and "On node" divided by this node's picture instead of the other sprite's. Three new rows, Set Size, Set Width and Set Height, divide by the frame that is drawn, take "On node" on every member of the line, and leave a sprite with no picture as it is. Set Sprite Size keeps writing exactly the line it always did, so existing scripts compile and reopen byte for byte; it is retired from the picker, and Migrate moves a row of it onto Set Size without asking, keeping its size and node.

@@ -10579,3 +10579,5 @@ Set Height,높이 설정
 Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,스프라이트의 높이를 픽셀로 정하고 너비는 그대로 둡니다. scale.y에 지정한 높이를 그려지는 프레임의 높이로 나눈 값을 씁니다. 이미지가 없는 스프라이트는 그대로 둡니다.
 Set height to {height} pixels,높이를 {height} 픽셀로 설정
 The height in pixels.,높이(픽셀).
+"Accent (Sections, selection)","강조색 (섹션, 선택)"
+%s (the %s row),%s (%s 행)

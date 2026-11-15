@@ -10579,3 +10579,5 @@ Set Height,Höhe setzen
 Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.,"Gibt einem Sprite eine Höhe in Pixeln und lässt die Breite unverändert. Sie schreibt scale.y: die genannte Höhe geteilt durch die Höhe des gezeichneten Ausschnitts. Ein Sprite ohne Bild bleibt, wie es ist."
 Set height to {height} pixels,Höhe auf {height} Pixel setzen
 The height in pixels.,Die Höhe in Pixeln.
+"Accent (Sections, selection)","Akzent (Abschnitte, Auswahl)"
+%s (the %s row),%s (die Zeile %s)
