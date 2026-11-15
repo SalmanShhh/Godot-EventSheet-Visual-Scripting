@@ -26,6 +26,7 @@ static func run() -> bool:
 	ok = _milestones() and ok
 	ok = _stat_forge() and ok
 	ok = _second_view() and ok
+	ok = _combo_box() and ok
 	return ok
 
 
@@ -238,4 +239,26 @@ static func _second_view() -> bool:
 	rows.append_array(_once("Set View Zoom", func() -> void: views.set_view_zoom("minmap", 0.5),
 		"Second View on SecondView: Set View Zoom did nothing, because no view is called \"minmap\"" + tail))
 	views.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _combo_box() -> bool:
+	var script: GDScript = load(ROOT + "combo_box/combo_box_addon.gd")
+	var combos: Node = script.new()
+	combos.name = "Combos"
+	combos.register_combo("hadouken", "down,forward,punch", 0.5)
+	var tail: String = " (there are: hadouken) - register it with Register Combo first, or check the spelling."
+	var rows: Array = []
+	var actions: Array = [
+		["Set Combo Tags", "hadoken", func() -> void: combos.set_combo_tags("hadoken", "ground")],
+		["Set Combo Priority", "hadouke", func() -> void: combos.set_combo_priority("hadouke", 2)],
+		["Set Combo Strict", "hadkuen", func() -> void: combos.set_combo_strict("hadkuen", true)],
+		["Enable Combo", "hadoukn", func() -> void: combos.enable_combo("hadoukn")],
+		["Disable Combo", "hadouen", func() -> void: combos.disable_combo("hadouen")],
+	]
+	for entry: Array in actions:
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"Combo Box on Combos: %s did nothing, because no combo is called \"%s\"%s" % [entry[0], entry[1], tail]))
+	rows.append(["a real combo says nothing", _heard(func() -> void: combos.disable_combo("hadouken")), []])
+	combos.free()
 	return SUPPORT.pins(NAME, rows)

@@ -228,7 +228,9 @@ static func build() -> bool:
 		"\t\t\tstate.count = 0",
 		"\t\t\t_failed_id = id",
 		"\t\t\t_fail_index = reached",
-		"\t\t\ton_combo_failed.emit()"
+		"\t\t\ton_combo_failed.emit()",
+		"",
+		Lib.missing_name_block("Combo Box")
 	]))
 	sheet.events.append(block)
 	# The clock below only ever measures the gap BETWEEN two buffered inputs, so an empty buffer
@@ -258,13 +260,13 @@ static func build() -> bool:
 	_default(sheet, "timing_window", "-1")
 	Lib.append_function(sheet, "set_combo_tags", "Set Combo Tags", "ComboBox", "Tags a registered combo with comma-separated tags, so you can enable or disable it in batches (for example \"ground_move\").",
 		[["id", "String"], ["tags", "String"]],
-		"if not _combos.has(id):\n\treturn\nvar tag_list: PackedStringArray = PackedStringArray()\nfor raw: String in tags.split(\",\", false):\n\tvar trimmed: String = raw.strip_edges()\n\tif not trimmed.is_empty():\n\t\ttag_list.append(trimmed)\n_combos[id].tags = tag_list")
+		"if not _combos.has(id):\n\t_say_missing(\"Set Combo Tags\", \"combo\", id, _combos.keys(), \"register it with Register Combo first, or check the spelling\")\n\treturn\nvar tag_list: PackedStringArray = PackedStringArray()\nfor raw: String in tags.split(\",\", false):\n\tvar trimmed: String = raw.strip_edges()\n\tif not trimmed.is_empty():\n\t\ttag_list.append(trimmed)\n_combos[id].tags = tag_list")
 	Lib.append_function(sheet, "set_combo_priority", "Set Combo Priority", "ComboBox", "Sets a combo's priority. When more than one combo completes on the same input, the highest priority wins (ties go to the longest, then to the first registered).",
 		[["id", "String"], ["priority", "int"]],
-		"if _combos.has(id):\n\t_combos[id].priority = priority")
+		"if _combos.has(id):\n\t_combos[id].priority = priority\nelse:\n\t_say_missing(\"Set Combo Priority\", \"combo\", id, _combos.keys(), \"register it with Register Combo first, or check the spelling\")")
 	Lib.append_function(sheet, "set_combo_strict", "Set Combo Strict", "ComboBox", "When strict is on, the combo's inputs must be adjacent in the buffer (no unrelated input allowed between them). Off (the default) tolerates stray inputs in between, like a fighting-game motion.",
 		[["id", "String"], ["strict", "bool"]],
-		"if _combos.has(id):\n\t_combos[id].strict = strict")
+		"if _combos.has(id):\n\t_combos[id].strict = strict\nelse:\n\t_say_missing(\"Set Combo Strict\", \"combo\", id, _combos.keys(), \"register it with Register Combo first, or check the spelling\")")
 
 	# --- Configuration ---
 	Lib.append_function(sheet, "set_default_timing", "Set Default Timing", "ComboBox", "Sets the default seconds allowed between inputs, used by any combo whose own timing window is -1.",
@@ -285,10 +287,10 @@ static func build() -> bool:
 	# --- Management ---
 	Lib.append_function(sheet, "enable_combo", "Enable Combo", "ComboBox", "Enables a combo so it takes part in matching.",
 		[["id", "String"]],
-		"if _combos.has(id):\n\t_combos[id].enabled = true")
+		"if _combos.has(id):\n\t_combos[id].enabled = true\nelse:\n\t_say_missing(\"Enable Combo\", \"combo\", id, _combos.keys(), \"register it with Register Combo first, or check the spelling\")")
 	Lib.append_function(sheet, "disable_combo", "Disable Combo", "ComboBox", "Disables a combo so it is skipped in matching (its registration is kept).",
 		[["id", "String"]],
-		"if _combos.has(id):\n\t_combos[id].enabled = false")
+		"if _combos.has(id):\n\t_combos[id].enabled = false\nelse:\n\t_say_missing(\"Disable Combo\", \"combo\", id, _combos.keys(), \"register it with Register Combo first, or check the spelling\")")
 	Lib.append_function(sheet, "enable_combos_by_tag", "Enable Combos By Tag", "ComboBox", "Enables every combo carrying a tag (for example all \"air_move\" combos).",
 		[["tag", "String"]],
 		"for id: String in _combos:\n\tif tag in (_combos[id].tags as PackedStringArray):\n\t\t_combos[id].enabled = true")

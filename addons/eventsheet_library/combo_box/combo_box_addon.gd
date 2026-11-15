@@ -74,6 +74,8 @@ var _chain_last: String = ""
 # here makes those twenty one table rather than twenty copies of the same event.
 ## Animation to play for each combo, by id.
 var _animations: Dictionary = {}
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 func _ready() -> void:
 	set_process(not _buffer.is_empty())
@@ -106,6 +108,7 @@ func register_combo(id: String, sequence: String, timing_window: float) -> void:
 ## @ace_codegen_template("ComboBox.set_combo_tags({id}, {tags})")
 func set_combo_tags(id: String, tags: String) -> void:
 	if not _combos.has(id):
+		_say_missing("Set Combo Tags", "combo", id, _combos.keys(), "register it with Register Combo first, or check the spelling")
 		return
 	var tag_list: PackedStringArray = PackedStringArray()
 	for raw: String in tags.split(",", false):
@@ -123,6 +126,8 @@ func set_combo_tags(id: String, tags: String) -> void:
 func set_combo_priority(id: String, priority: int) -> void:
 	if _combos.has(id):
 		_combos[id].priority = priority
+	else:
+		_say_missing("Set Combo Priority", "combo", id, _combos.keys(), "register it with Register Combo first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Set Combo Strict")
@@ -133,6 +138,8 @@ func set_combo_priority(id: String, priority: int) -> void:
 func set_combo_strict(id: String, strict: bool) -> void:
 	if _combos.has(id):
 		_combos[id].strict = strict
+	else:
+		_say_missing("Set Combo Strict", "combo", id, _combos.keys(), "register it with Register Combo first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Set Default Timing")
@@ -196,6 +203,8 @@ func clear_buffer() -> void:
 func enable_combo(id: String) -> void:
 	if _combos.has(id):
 		_combos[id].enabled = true
+	else:
+		_say_missing("Enable Combo", "combo", id, _combos.keys(), "register it with Register Combo first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Disable Combo")
@@ -206,6 +215,8 @@ func enable_combo(id: String) -> void:
 func disable_combo(id: String) -> void:
 	if _combos.has(id):
 		_combos[id].enabled = false
+	else:
+		_say_missing("Disable Combo", "combo", id, _combos.keys(), "register it with Register Combo first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Enable Combos By Tag")
@@ -645,5 +656,29 @@ func _advance(delta: float) -> void:
 			_failed_id = id
 			_fail_index = reached
 			on_combo_failed.emit()
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Combo Box on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
 
 # ComboBox: register as the ComboBox autoload. Register Combos (a comma-separated token sequence), then Press Input a token from your own input events - it matches the rolling buffer and fires On Combo Matched. Timing is in seconds; "*" is a wildcard. It detects; you react. This pack is an event sheet - extend it by editing it.
