@@ -58,9 +58,8 @@ const LINTED_PAINTERS := [
 ## the user's own sheet. Anything not on this list is a regression.
 const LINT_ALLOWANCES := {
 	"event_row_renderer.gd": [
-		# The hit-count chip family and the object-icon plate: the debugger's own lens chrome and a
-		# neutral plate, both drawn over whatever the row is, neither a token a theme would set.
-		"HIT_CHIP", "OBJECT_ICON_PLATE", "CODE_CELL",
+		# The object-icon plate: a neutral plate drawn over whatever the row is, not a token a theme would set.
+		"OBJECT_ICON_PLATE", "CODE_CELL",
 		# A colour square's checkerboard and its overbright corner mark: a neutral board a see-through colour
 		# is judged against, and a mark that must read on any colour - not tokens a theme would set.
 		"COLOUR_CHECK", "COLOUR_HDR_MARK",

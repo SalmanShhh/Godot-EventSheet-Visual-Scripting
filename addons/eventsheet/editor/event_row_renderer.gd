@@ -144,24 +144,8 @@ const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/nat
 # Height/inset of the small count chip that stacks under the event number in the 20px gutter.
 const HIT_CHIP_HEIGHT := 11.0
 const HIT_CHIP_INSET := 1.5
-# The count chip's tones. Blue is the resting readout; warm marks the run's busiest rows and the
-# rows whose fires cost real milliseconds; red marks a row that has not fired once since Run, and a
-# hollow rail down the margin makes it findable by scrolling rather than by reading every chip.
-const HIT_CHIP_FILL := Color(0.31, 0.56, 0.87, 0.15)
-const HIT_CHIP_BORDER := Color(0.31, 0.56, 0.87, 0.30)
-const HIT_CHIP_TEXT := Color("#7fb0e8")
-const HIT_CHIP_HOT_FILL := Color(0.93, 0.58, 0.26, 0.20)
-const HIT_CHIP_HOT_BORDER := Color(0.93, 0.58, 0.26, 0.38)
-const HIT_CHIP_HOT_TEXT := Color("#f0b174")
-const HIT_CHIP_COLD_FILL := Color(0.0, 0.0, 0.0, 0.0)
-const HIT_CHIP_COLD_BORDER := Color(0.91, 0.54, 0.54, 0.34)
-const HIT_CHIP_COLD_TEXT := Color("#e88989")
-const HIT_CHIP_COLD_RAIL := Color(0.91, 0.54, 0.54, 0.45)
-# A row over the frame-cost threshold: the same red the never-fired mark wears, because both mean
-# "look here". Amber is the middle band (over a millisecond a fire), red the quarter-of-a-frame one.
-const HIT_CHIP_COST_FILL := Color(0.91, 0.54, 0.54, 0.16)
-const HIT_CHIP_COST_BORDER := Color(0.91, 0.54, 0.54, 0.38)
-const HIT_CHIP_COST_TEXT := Color("#e88989")
+# The chip's and the margin number's colours come from the theme (theme/run_marks.gd).
+const RUN_MARKS_PATH := "res://addons/eventsheet/theme/run_marks.gd"
 
 ## The reading tokens a style-less draw falls back to (a headless measure, a preview with no style).
 ## Built once and kept, because draw_row runs per row per frame and a fresh Resource each time would
@@ -1152,7 +1136,7 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 	if disabled:
 		control.draw_rect(row_rect, reading_style.disabled_row_color, true)
 	if not debug_text.is_empty():
-		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
+		_draw_debug_overlay(control, row_rect, font, font_size, debug_text, reading_style, event_style.row_background_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0))
 
 
 ## Where an "or" divider sits on a row: the y of the rule, and the x range it may use. Measured
@@ -1247,6 +1231,7 @@ func _draw_gutter(control: CanvasItem, gutter_rect: Rect2, line_number: int, bre
 	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one
 	# thing the lens must never do. Only a run that has actually streamed draws anything.
 	var stacked: bool = not hit_uid.is_empty() and EventSheetRunProfile.has_numbers()
+	var run_marks: Dictionary = load(RUN_MARKS_PATH).marks_for(hit_uid, gutter_text, reading, EventSheetActiveTheme.chrome().object_bar_warning_color, gutter_bg) if stacked else {}
 	if line_number > 0:
 		var text: String = str(line_number)
 		var center_ratio: float = ROW_VERTICAL_CENTER_RATIO if not stacked else 0.0
@@ -1263,9 +1248,9 @@ func _draw_gutter(control: CanvasItem, gutter_rect: Rect2, line_number: int, bre
 			# The number starts 8 px in from the canvas edge in its 34 px column, as the board sets it.
 			number_box = Vector2(gutter_rect.position.x + NUMBER_COLUMN_INSET, maxf(gutter_rect.size.x - NUMBER_COLUMN_INSET, number_width))
 		_draw_text(control, Vector2(number_box.x, baseline_y), text, number_box.y, font, font_size - 1,
-			_gutter_number_color(hit_uid, gutter_text) if stacked else gutter_text)
+			_gutter_number_color(run_marks) if stacked else gutter_text)
 	if stacked:
-		_draw_hit_count_chip(control, gutter_rect, hit_uid, font, font_size)
+		_draw_hit_count_chip(control, gutter_rect, hit_uid, font, font_size, run_marks)
 	_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, bookmark_enabled, reading)
 
 
@@ -1303,44 +1288,21 @@ static func gutter_number_box(gutter_rect: Rect2, number_width: float, right_ali
 	return Vector2(gutter_rect.position.x + start, gutter_rect.size.x - start)
 
 
-func _gutter_number_color(hit_uid: String, resting: Color) -> Color:
-	if hit_uid.is_empty():
-		return resting
-	if EventSheetRunProfile.calls_for(hit_uid) == 0:
-		return HIT_CHIP_COLD_TEXT
-	match EventSheetRunProfile.cost_band(hit_uid):
-		EventSheetRunProfile.BAND_HOT:
-			return HIT_CHIP_COST_TEXT
-		EventSheetRunProfile.BAND_WARM:
-			return HIT_CHIP_HOT_TEXT
-	return HIT_CHIP_HOT_TEXT if EventSheetRunProfile.is_absurd(hit_uid) else resting
+func _gutter_number_color(marks: Dictionary) -> Color:
+	return marks["text"]
 
 
 ## The Event Trace's tally for one row, as a chip in the bottom half of the gutter cell: a muted
 ## count, warm when the row is among the run's busiest, and a dim left rail plus x0 when the row
 ## has not fired once since Run. The exact number is one hover away (the gutter tooltip) - at this
 ## width the chip is a glance, not a readout.
-func _draw_hit_count_chip(control: CanvasItem, gutter_rect: Rect2, hit_uid: String, font: Font, font_size: int) -> void:
-	var count: int = EventSheetRunProfile.calls_for(hit_uid)
-	var fill: Color = HIT_CHIP_FILL
-	var border: Color = HIT_CHIP_BORDER
-	var text_color: Color = HIT_CHIP_TEXT
-	var band: String = EventSheetRunProfile.cost_band(hit_uid)
-	if count == 0:
-		fill = HIT_CHIP_COLD_FILL
-		border = HIT_CHIP_COLD_BORDER
-		text_color = HIT_CHIP_COLD_TEXT
-		# The never-fired rail: a hollow red bar down the margin, so a cold row is findable by
-		# scrolling past it rather than by reading every chip.
-		control.draw_rect(Rect2(gutter_rect.position.x, gutter_rect.position.y + 1.0, 2.0, gutter_rect.size.y - 2.0), HIT_CHIP_COLD_RAIL, true)
-	elif band == EventSheetRunProfile.BAND_HOT:
-		fill = HIT_CHIP_COST_FILL
-		border = HIT_CHIP_COST_BORDER
-		text_color = HIT_CHIP_COST_TEXT
-	elif band == EventSheetRunProfile.BAND_WARM or EventSheetTraceHitCounts.is_hot(hit_uid) or EventSheetRunProfile.is_absurd(hit_uid):
-		fill = HIT_CHIP_HOT_FILL
-		border = HIT_CHIP_HOT_BORDER
-		text_color = HIT_CHIP_HOT_TEXT
+func _draw_hit_count_chip(control: CanvasItem, gutter_rect: Rect2, hit_uid: String, font: Font, font_size: int, marks: Dictionary) -> void:
+	var fill: Color = marks["fill"]
+	var border: Color = marks["border"]
+	var text_color: Color = marks["text"]
+	if bool(marks["cold"]):
+		# The never-fired rail: a hollow bar down the margin, so a cold row is findable by scrolling past it.
+		control.draw_rect(Rect2(gutter_rect.position.x, gutter_rect.position.y + 1.0, 2.0, gutter_rect.size.y - 2.0), marks["rail"], true)
 	var chip_rect := Rect2(
 		gutter_rect.position.x + HIT_CHIP_INSET,
 		gutter_rect.get_center().y + 1.0,
@@ -2099,7 +2061,7 @@ func _draw_spans(
 			continue
 		if bool(metadata.get("comment_note_lead", false)):
 			# A note's grip and speech bubble, in the room the lead span holds before its words.
-			var note_ink: Color = event_style.comment_text_color if event_style != null else EventSheetPalette.COLOR_COMMENT
+			var note_ink: Color = load(RUN_MARKS_PATH).comment_ink(event_style.comment_text_color if event_style != null else EventSheetPalette.COLOR_COMMENT, row_data.custom_color)
 			NativeRowMarks.draw_comment_note_lead(control, span.rect.position.x, span.rect.get_center().y, note_ink)
 			continue
 		if bool(metadata.get("badge", false)):
@@ -2112,6 +2074,8 @@ func _draw_spans(
 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
+		if span.type == EventSheetSemanticSpan.SpanType.COMMENT and not metadata.has("text_color"):
+			color = load(RUN_MARKS_PATH).comment_ink(color, row_data.custom_color)
 		# While the game runs, the state it is in lights up in the state row: its name sits on a plate.
 		var live_token_text: String = ""
 		if metadata.has("state_name") and EventSheetStateWatch.is_live() \
@@ -3169,13 +3133,16 @@ func _draw_tempo_glyph(control: CanvasItem, center: Vector2, radius: float, glyp
 	return false
 
 
-func _draw_debug_overlay(control: CanvasItem, row_rect: Rect2, font: Font, font_size: int, debug_text: String) -> void:
+func _draw_debug_overlay(control: CanvasItem, row_rect: Rect2, font: Font, font_size: int, debug_text: String, reading: EventSheetReadingStyle, row_ground: Color) -> void:
+	# The live value wears the firing stripe's colour, moved until it reads on the row.
+	var live: Color = Color(reading.firing_stripe_color, 1.0)
+	var live_ink: Color = load(RUN_MARKS_PATH).live_ink(reading, row_ground) if row_ground.a > 0.0 else live
 	var badge_width: float = font.get_string_size(debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x + 10.0
 	var badge_rect := Rect2(row_rect.end.x - badge_width - 8.0, row_rect.position.y + 5.0, badge_width, row_rect.size.y - 10.0)
-	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 4.0, row_rect.size.y), EventSheetPalette.COLOR_DEBUG, true)
-	control.draw_rect(badge_rect, EventSheetPalette.COLOR_DEBUG, true)
+	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 4.0, row_rect.size.y), live, true)
+	control.draw_rect(badge_rect, Color(live, 0.14), true)
 	var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
-	_draw_text(control, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, -1.0, font, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
+	_draw_text(control, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, -1.0, font, font_size - 1, live_ink)
 
 
 ## The surface a full-width row that is not an event (a variable, a head line, an Include bar's
