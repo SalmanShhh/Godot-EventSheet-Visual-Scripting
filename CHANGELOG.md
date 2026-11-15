@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a Sound card for the Juice Player
+
+A hit is a sound as much as a shake, and until now the sound sat outside the list: the list could not mute it, retime it or play it when you pressed Play in the editor. The Add box now offers a Sound card. Pick the sound with Godot's own resource picker (the card keeps the file's uid, so it follows the file when you move it), then set the Volume and a Random volume, the Pitch and a Random pitch (each play lands somewhere between the two ends, and a grey line says where), the Bus (read from the project's audio buses), whether it is heard from this object or everywhere, whether it follows the play strength, and an optional Delay. The Listen row on the card plays that one card alone in the editor with a new random pitch each press, shows how long it lasts, and a second press stops it. In the game the card plays through four reusable voices on the Juice Player, so a fast run of hits does not make a node each, and it is muted with the Sound family. A card with no sound, or whose sound has gone from the project, says so in quiet amber and plays nothing. The card's length is the sound's length at its pitch, so the head line, the badge and Hold all count it. Save as file names a Sound card it leaves out, as it does for the other cards a moment file cannot hold.
+
 ### Fixed: a new Hitstop, Slowmo or Zoom card does something the moment it is added
 
 A new juice card used to start at an amount of 1 and a length of 0 whatever its kind. For Hitstop the amount is the time scale it freezes to, so a new one froze nothing; a new Slowmo never slowed anything; and a new Zoom card zoomed the camera out to its floor, because its amount is a percentage. A new Hitstop card now freezes time completely for 0.08 s, a new Slowmo slows to 0.3 for 0.3 s and a new Zoom zooms in to 110 percent over 0.2 s. Cards already in a list keep the numbers they were saved with. The Amount help on the Moment Step row now reads the right way round (0 is a full stop).

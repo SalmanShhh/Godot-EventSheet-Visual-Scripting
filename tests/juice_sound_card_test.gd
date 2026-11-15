@@ -26,6 +26,7 @@ const LIGHT_CARD_LINE: Color = Color("#f5f5f5")
 static func run() -> bool:
 	var ok: bool = true
 	ok = _storage_pins() and ok
+	ok = _sound_card_pins() and ok
 	ok = _sound_runtime_pins() and ok
 	ok = _seed_pins() and ok
 	ok = _family_pins() and ok
@@ -183,3 +184,70 @@ static func _beep_path() -> String:
 static func _constant_table(constant_name: String) -> Dictionary:
 	var value: Variant = _constant(constant_name)
 	return value if value is Dictionary else {}
+
+
+## The Sound card in the Inspector: its fields in the order the card draws them, the words it reads in,
+## and what it keeps. A picked file is kept as text, a choice keeps its word and shows its words, and
+## a field that starts empty stores nothing until it is touched.
+static func _sound_card_pins() -> bool:
+	var entry: Dictionary = _kind("sound")
+	var keys: PackedStringArray = PackedStringArray()
+	var note_field: Dictionary = {}
+	var heard_field: Dictionary = {}
+	var delay_field: Dictionary = {}
+	for field: Variant in EventSheetCardSchemas.fields_of(entry):
+		var described: Dictionary = field as Dictionary
+		var drawn: String = str(described.get("drawer", ""))
+		if drawn != "note" and drawn != "custom":
+			keys.append(str(described.get("key", "")))
+		if str(described.get("key", "")) == "sound_missing":
+			note_field = described
+		if str(described.get("key", "")) == "heard_from":
+			heard_field = described
+		if str(described.get("key", "")) == "delay":
+			delay_field = described
+	var fresh: Dictionary = _new_card("sound")
+	var with_sound: Dictionary = fresh.duplicate()
+	var stored_uid: String = ResourceUID.id_to_text(ResourceLoader.get_resource_uid("res://eventsheet_addons/juice/icon.svg"))
+	with_sound["stream"] = stored_uid
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": _schema(), "kind_key": "verb", "stripe_key": "category"})
+	drawer.set_value([fresh])
+	var heard_row: Control = drawer._build_field(0, fresh, heard_field)
+	var choice: OptionButton = heard_row.find_children("*", "OptionButton", true, false)[0] as OptionButton
+	var shown: String = choice.get_item_text(choice.selected)
+	choice.select(1)
+	choice.item_selected.emit(1)
+	var delay_row: Control = drawer._build_field(0, fresh, delay_field)
+	var delay_box: SpinBox = delay_row.find_children("*", "SpinBox", true, false)[0] as SpinBox
+	var after_reading: Dictionary = drawer.get_value()[0] as Dictionary
+	var kept: Dictionary = (drawer.get_value()[0] as Dictionary).duplicate()
+	drawer.set_value([with_sound])
+	drawer._unfolded[0] = true
+	drawer._rebuild()
+	var rebuilt: Dictionary = drawer.get_value()[0] as Dictionary
+	var wav_path: String = SUPPORT.own_path("juice_sound_card_ref.tres")
+	ResourceSaver.save(AudioStreamWAV.new(), wav_path)
+	var inside: AudioStreamWAV = AudioStreamWAV.new()
+	var result: bool = SUPPORT.pins(TEST_NAME, [
+		["the Add box offers a Sound card", str(entry.get("label", "")), "Sound"],
+		["it is a Sound-family card", str(entry.get("category", "")), "audio"],
+		["its fields, in the order the card draws them", keys,
+			PackedStringArray(["stream", "volume_db", "volume_spread_db", "pitch", "pitch_spread", "bus", "heard_from", "follows_strength", "delay"])],
+		["a new Sound card holds its settings and no delay until one is typed",
+			_sorted_keys(fresh), PackedStringArray(["bus", "follows_strength", "heard_from", "pitch", "pitch_spread", "stream", "verb", "volume_db", "volume_spread_db"])],
+		["a choice shows its words and not the word the card keeps", shown, "This object"],
+		["and writes the word the card keeps", str((drawer.get_value()[0] as Dictionary).get("heard_from", "")), "here"],
+		["a delay box reads 0 off a card that holds none", delay_box.value, 0.0],
+		["and reading it stored nothing", after_reading.has("delay"), false],
+		["opening a card leaves a stored sound exactly as it was", str(rebuilt.get("stream", "")), stored_uid],
+		["a card with no sound says so in a note", EventSheetCardSchemas.field_visible(note_field, fresh), true],
+		["and a card with one says nothing", EventSheetCardSchemas.field_visible(note_field, with_sound), false],
+		["a picked file is kept as its path when it has no uid", EventSheetCardSchemas.resource_reference(load(wav_path) as Resource), wav_path],
+		["a resource that lives inside a scene cannot be kept as text", EventSheetCardSchemas.resource_reference(inside), ""],
+		["and a cleared pick keeps nothing", EventSheetCardSchemas.resource_reference(null), ""]
+	])
+	kept.clear()
+	heard_row.free()
+	delay_row.free()
+	drawer.free()
+	return result

@@ -62,6 +62,14 @@ var _add_button: Button = null
 var _add_popup: PopupPanel = null
 var _add_filter: LineEdit = null
 var _add_tree: Tree = null
+## The object whose list this is, when the owner told us (the Inspector does). A card's pickers, its
+## play mark and the footer under the list all need to know which object they are about.
+var _edited: Object = null
+## What the schema's footer built for the edited object, kept so it can be refreshed as the list changes.
+var _footer: Control = null
+## The note lines drawn right now, so one can be rewritten in place when a number beside it changes
+## instead of rebuilding the card under the cursor. Each is {label, field, index}.
+var _notes: Array = []
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -92,6 +100,28 @@ func set_value(cards: Array) -> void:
 
 func get_value() -> Array:
 	return _cards.duplicate(true)
+
+
+## Tells the drawer which object it is editing, and builds the footer the schema declares for it
+## (the strip of buttons that play a Juice Player's list sits there, under the cards it plays).
+func set_edited_object(object: Object) -> void:
+	_edited = object
+	var maker: Variant = _schema.get("footer")
+	if _footer != null or object == null or not (maker is Callable) or not (maker as Callable).is_valid():
+		return
+	var built: Variant = (maker as Callable).call(object, self)
+	if built is Control:
+		_footer = built as Control
+		_body.add_child(_footer)
+
+
+func edited_object() -> Object:
+	return _edited
+
+
+## The footer the schema built, or null. The owner refreshes it when the list changes underneath it.
+func footer() -> Control:
+	return _footer
 
 
 func set_editable(flag: bool) -> void:
@@ -404,6 +434,7 @@ func _rebuild() -> void:
 	for stale: Node in _list.get_children():
 		_list.remove_child(stale)
 		stale.queue_free()
+	_notes.clear()
 	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
@@ -705,13 +736,23 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 		else:
 			_write_field(index, written, value)
 			value_changed.emit(get_value())
+		_refresh_notes(index)
 		# Changing a card's KIND changes which fields it has, so the card is redrawn - deferred,
 		# because the control that just emitted is still finishing its own signal.
 		if written == str(_spec.get("kind_key", "kind")):
 			_rebuild.call_deferred()
-	var editor: Control = _build_field_editor(card, field, write)
+	var editor: Control = _build_field_editor(card, field, write, index)
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(editor)
+	if str(field.get("drawer", "")) == "note":
+		_notes.append({"label": editor, "field": field, "index": index})
+	var suffix: String = str(field.get("suffix", ""))
+	if not suffix.is_empty():
+		var unit: Label = Label.new()
+		unit.text = suffix
+		unit.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		unit.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		row.add_child(unit)
 	if link_toggle != null:
 		row.add_child(link_toggle)
 	return row
@@ -766,8 +807,13 @@ func _field_number(index: int, key: String) -> float:
 ## The editor for one field, chosen by the field's `drawer` word. The words are the SAME ones the
 ## `eventsheet:` markers use, so a schema names a drawer the way an export does, and the widgets are
 ## the shipped ones rather than second copies.
-func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable) -> Control:
+func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, index: int = -1) -> Control:
 	var key: String = str(field.get("key", ""))
+	# A field with an `unset` value shows it while the card holds nothing under the key, and stores
+	# nothing until the field is touched: the box is drawn from a copy, so reading a card never writes it.
+	if field.has("unset") and not card.has(key):
+		card = card.duplicate()
+		card[key] = field["unset"]
 	var spelling: String = str(field.get("drawer", "")).strip_edges()
 	var drawer: String = spelling.get_slice(":", 0)
 	var tail: String = spelling.substr(drawer.length() + 1) if spelling.length() > drawer.length() else ""
@@ -786,12 +832,14 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable) -
 			return edit
 		"options":
 			var choice: OptionButton = OptionButton.new()
-			var options: PackedStringArray = tail.split(",", false)
+			# A choice may be spelled `value=Words to show`: the file keeps the value, the person reads the words.
+			var options: PackedStringArray = PackedStringArray()
 			var current: String = str(card.get(key, ""))
-			for option_index: int in range(options.size()):
-				choice.add_item(options[option_index])
-				if options[option_index] == current:
-					choice.select(option_index)
+			for spelled: String in tail.split(",", false):
+				options.append(spelled.get_slice("=", 0))
+				choice.add_item(spelled.get_slice("=", 1) if spelled.contains("=") else spelled)
+				if options[options.size() - 1] == current:
+					choice.select(options.size() - 1)
 			choice.disabled = not editable
 			choice.item_selected.connect(func(chosen: int) -> void:
 				if chosen >= 0 and chosen < options.size():
@@ -853,6 +901,16 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable) -
 			return _curve_field(card, key, write)
 		"int":
 			return _number_field(card, key, write, INT_STEP)
+		"spread":
+			return _spread_field(card, key, write)
+		"bus":
+			return _bus_field(card, key, write)
+		"resource":
+			return _resource_text_field(card, key, write, tail)
+		"note":
+			return _note_line(card, field)
+		"custom":
+			return _custom_field(index, field)
 	return _number_field(card, key, write, FLOAT_STEP)
 
 
@@ -871,6 +929,102 @@ func _number_field(card: Dictionary, key: String, write: Callable, step: float) 
 	spin.value = float(card.get(key, 0.0))
 	spin.value_changed.connect(func(value: float) -> void: write.call(value))
 	return spin
+
+
+## A number with a plus-or-minus sign in front of it: how far a random roll may land either side of
+## another number.
+func _spread_field(card: Dictionary, key: String, write: Callable) -> Control:
+	var box: HBoxContainer = HBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	var sign_mark: Label = Label.new()
+	sign_mark.text = "±"
+	sign_mark.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	box.add_child(sign_mark)
+	var number: Control = _number_field(card, key, write, FLOAT_STEP)
+	number.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(number)
+	return box
+
+
+## The project's audio buses as a choice, read from the audio server the way Godot's own audio player
+## nodes read them. A bus the card names that the project no longer has stays in the list, said so,
+## because swapping it for another would rewrite a card nobody touched.
+func _bus_field(card: Dictionary, key: String, write: Callable) -> Control:
+	var choice: OptionButton = OptionButton.new()
+	var names: PackedStringArray = PackedStringArray()
+	for bus_index: int in range(AudioServer.bus_count):
+		names.append(AudioServer.get_bus_name(bus_index))
+	var current: String = str(card.get(key, "Master"))
+	if not names.has(current):
+		names.append(current)
+	for bus_index: int in range(names.size()):
+		var missing: bool = AudioServer.get_bus_index(names[bus_index]) < 0
+		choice.add_item(names[bus_index] if not missing else EventSheetL10n.translate("%s (not in this project)") % names[bus_index])
+		if names[bus_index] == current:
+			choice.select(bus_index)
+	choice.disabled = not editable
+	choice.item_selected.connect(func(chosen: int) -> void:
+		if chosen >= 0 and chosen < names.size():
+			write.call(names[chosen]))
+	return choice
+
+
+## A file picked with Godot's own resource picker and kept as text: the file's uid when it has one (so
+## it survives a move), else its path. A card is plain data, so it never holds the resource itself.
+## What cannot be kept as text, a resource that lives inside the scene, is refused in words.
+func _resource_text_field(card: Dictionary, key: String, write: Callable, base_type: String) -> Control:
+	var box: VBoxContainer = VBoxContainer.new()
+	var stored: String = str(card.get(key, ""))
+	var current: Resource = load(stored) as Resource if not stored.is_empty() and ResourceLoader.exists(stored) else null
+	var refusal: Label = EventSheetLookStyle.message_line("", EventSheetLookStyle.Tone.WARNING)
+	refusal.visible = false
+	box.add_child(_resource_picker(base_type, current, func(picked: Resource) -> void:
+		var text: String = EventSheetCardSchemas.resource_reference(picked)
+		if picked != null and text.is_empty():
+			refusal.text = EventSheetL10n.translate("Save it as a file first. A card keeps the file, not a copy inside the scene.")
+			refusal.visible = true
+			return
+		refusal.visible = false
+		write.call(text)
+		# The notes under the picker (no sound picked, sound gone) change with the pick.
+		_rebuild.call_deferred()))
+	box.add_child(refusal)
+	return box
+
+
+## Rewrites the note lines of one card from the card as it is now.
+func _refresh_notes(index: int) -> void:
+	if index < 0 or index >= _cards.size():
+		return
+	for note: Variant in _notes:
+		var entry: Dictionary = note as Dictionary
+		var maker: Variant = (entry.get("field") as Dictionary).get("text")
+		if int(entry.get("index", -1)) == index and maker is Callable and is_instance_valid(entry.get("label")):
+			(entry.get("label") as Label).text = str((maker as Callable).call(_cards[index]))
+
+
+## A line of words under a field, computed from the card by the schema, never stored. It turns amber
+## when the schema says the card needs attention.
+func _note_line(card: Dictionary, field: Dictionary) -> Control:
+	var maker: Variant = field.get("text")
+	var said: String = str((maker as Callable).call(card)) if maker is Callable else str(field.get("label", ""))
+	var warn: Variant = field.get("warn_when")
+	var needs_care: bool = warn is Callable and bool((warn as Callable).call(card))
+	var line: Label = EventSheetLookStyle.message_line(said, EventSheetLookStyle.Tone.WARNING if needs_care else EventSheetLookStyle.Tone.NOTE)
+	line.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	return line
+
+
+## A control the schema builds itself. It is handed the card as it is NOW and a way to ask for it again
+## (at every press), so what it does follows the numbers the person has just changed.
+func _custom_field(index: int, field: Dictionary) -> Control:
+	var maker: Variant = field.get("build")
+	if not (maker is Callable) or not (maker as Callable).is_valid():
+		return Control.new()
+	var now: Callable = func() -> Dictionary:
+		return _cards[index] if index >= 0 and index < _cards.size() else {}
+	var made: Variant = (maker as Callable).call(now.call(), now, _edited)
+	return made as Control if made is Control else Control.new()
 
 
 ## A texture slot: a path field and its thumbnail when the card stores a PATH (which is what a saved

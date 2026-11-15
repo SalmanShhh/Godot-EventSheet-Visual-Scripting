@@ -234,6 +234,10 @@ static func field_group(field: Dictionary) -> String:
 ## Whether a field shows for this card: a field with a `show_if` key appears only while that key's
 ## value is on. This is the show-if of the Inspector's own conditions, scoped to one card.
 static func field_visible(field: Dictionary, card: Dictionary) -> bool:
+	# A schema may decide for itself, from the card as it is now, whether a field has anything to show.
+	var when: Variant = field.get("visible_when")
+	if when is Callable and not bool((when as Callable).call(card)):
+		return false
 	var gate: String = str(field.get("show_if", ""))
 	if gate.is_empty():
 		return true
@@ -268,6 +272,19 @@ static func new_card(spec: Dictionary, entry: Dictionary) -> Dictionary:
 		if not field_key.is_empty() and not card.has(field_key) and (field as Dictionary).has("default"):
 			card[field_key] = (field as Dictionary)["default"]
 	return card
+
+
+## A picked file as the text a card keeps: the file's uid when it has one (so the card still finds it
+## after the file is moved), else its path. A resource that lives inside a scene has no file to name, so
+## it answers "" and the caller says why it was not kept. A cleared pick is "" too.
+static func resource_reference(resource: Resource) -> String:
+	if resource == null:
+		return ""
+	var path: String = resource.resource_path
+	if path.is_empty() or path.contains("::"):
+		return ""
+	var id: int = ResourceLoader.get_resource_uid(path)
+	return ResourceUID.id_to_text(id) if id != ResourceUID.INVALID_ID else path
 
 
 ## The list with the card at `from` moved to `to` - what a finished drag writes. Out-of-range indices

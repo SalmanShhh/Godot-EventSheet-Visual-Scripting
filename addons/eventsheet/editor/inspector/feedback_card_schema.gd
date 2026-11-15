@@ -60,6 +60,13 @@ const TWEEN_PROPERTY: String = "tween_property"
 const EMIT_SIGNAL: String = "emit_signal"
 const PLAY_PLAYER: String = "play_player"
 
+## The word of the card that plays a sound.
+const SOUND: String = "sound"
+
+## The editor-side file that plays things for a moment and puts them back: Listen on a Sound card, and
+## the strip's play buttons. By path, so the first open of the editor does not compile it.
+const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
+
 ## The file that says where the Juice Player's code is, which is where a word's FAMILY is written down.
 const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
 const FAMILY_CONSTANT: String = "CATEGORY_OF"
@@ -140,6 +147,7 @@ static func family_of() -> Dictionary:
 static func schema() -> Dictionary:
 	var kinds: Array = []
 	kinds.append_array(derived_kinds(pack_reading()))
+	kinds.append_array(sound_kinds())
 	kinds.append_array(timing_kinds())
 	kinds.append_array(other_kinds())
 	return {
@@ -244,6 +252,65 @@ static func seeds_for(word: String) -> Dictionary:
 		EFFECT_KEY: "",
 		SECONDS_KEY: float(seed.get(SECONDS_KEY, 0.0))
 	}
+
+
+## The Sound card: a stream picked with Godot's own resource picker (kept as the file's uid), how loud and
+## how high with a little random either side so one file does not sound like a machine gun, which bus it
+## plays on and whether it is placed in space, and a Listen button that plays it alone. Its length is the
+## stream's length at its pitch, so it has no Seconds field: the badge reads that off the file.
+static func sound_kinds() -> Array:
+	return [
+		{
+			"kind": SOUND,
+			"category": str(family_of().get(SOUND, "")),
+			"label": "Sound",
+			"help": "Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.",
+			"fields": [
+				{"key": "stream", "label": "Stream", "drawer": "resource:AudioStream", "default": ""},
+				{"key": "sound_missing", "label": "", "drawer": "note", "text": sound_note, "visible_when": sound_needs_care, "warn_when": sound_needs_care},
+				{"key": "volume_db", "label": "Volume", "drawer": "num", "default": 0.0, "suffix": "dB"},
+				{"key": "volume_spread_db", "label": "Random volume", "drawer": "spread", "default": 2.0, "suffix": "dB"},
+				{"key": "pitch", "label": "Pitch", "drawer": "num", "default": 1.0},
+				{"key": "pitch_spread", "label": "Random pitch", "drawer": "spread", "default": 0.1},
+				{"key": "pitch_range", "label": "", "drawer": "note", "text": pitch_note},
+				{"key": "bus", "label": "Bus", "drawer": "bus", "default": "Master"},
+				{"key": "heard_from", "label": "Heard from", "drawer": "options:here=This object,everywhere=Everywhere", "default": "here"},
+				{"key": "follows_strength", "label": "Follows strength", "drawer": "bool", "default": false},
+				{"key": "delay", "label": "Delay", "drawer": "num", "unset": 0.0, "suffix": "s"},
+				{"key": "listen", "label": "Listen", "drawer": "custom", "build": listen_row}
+			],
+			"live": [],
+			"defaults": {"stream": "", "volume_db": 0.0, "volume_spread_db": 2.0, "pitch": 1.0, "pitch_spread": 0.1, "bus": "Master", "heard_from": "here", "follows_strength": false},
+			"badge": seconds_badge
+		}
+	]
+
+
+## The grey line under the pitch: the range a random roll lands in.
+static func pitch_note(card: Dictionary) -> String:
+	var middle: float = float(card.get("pitch", 1.0))
+	var spread: float = maxf(float(card.get("pitch_spread", 0.0)), 0.0)
+	return EventSheetL10n.translate("Each play lands between %.2f and %.2f.") % [maxf(middle - spread, 0.05), middle + spread]
+
+
+## What is wrong with the sound a Sound card names, in words, or nothing when it is fine.
+static func sound_note(card: Dictionary) -> String:
+	var path: String = str(card.get("stream", ""))
+	if path.is_empty():
+		return EventSheetL10n.translate("Pick a sound. Until then this card is silent.")
+	if not ResourceLoader.exists(path):
+		return EventSheetL10n.translate("That sound is not in the project any more, so this card is silent.")
+	return ""
+
+
+## Whether the sound note has anything to say.
+static func sound_needs_care(card: Dictionary) -> bool:
+	return not sound_note(card).is_empty()
+
+
+## The Listen row, built by the preview file the first time a Sound card is opened.
+static func listen_row(_card: Dictionary, current: Callable, _edited: Object) -> Control:
+	return load(PREVIEW_PATH).call("listen_control", current)
 
 
 ## The four words that move the head instead of being felt. Written here rather than derived,
@@ -352,7 +419,9 @@ static func seconds_badge(card: Dictionary) -> String:
 ## How long one card takes: its own duration plus the delay before it. The number the badge shows
 ## and the number the longest path is measured with.
 static func card_seconds(card: Dictionary) -> float:
-	return maxf(float(card.get(SECONDS_KEY, 0.0)), 0.0) + maxf(float(card.get("delay", 0.0)), 0.0)
+	var pack: Script = load(str(load(NAMES_PATH).pack_path())) as Script if str(card.get(WORD_KEY, "")) == SOUND else null
+	var own: float = float(pack.call("card_length", card)) if pack != null else maxf(float(card.get(SECONDS_KEY, 0.0)), 0.0)
+	return own + maxf(float(card.get("delay", 0.0)), 0.0)
 
 
 ## The verb whose name begins with a prefix - how a word finds the verb that spells it out in full
