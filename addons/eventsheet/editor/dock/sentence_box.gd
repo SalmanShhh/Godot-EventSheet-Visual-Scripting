@@ -192,3 +192,64 @@ static func definition_for(registry: Object, provider_id: String, ace_id: String
 			if candidate.id == ace_id:
 				return candidate
 	return null
+
+
+## F2 on a function head of the open sheet: the box in function mode. It writes the sentence, the
+## description and "Other sheets can use this" onto the function itself, as one undo step. The name is not
+## here: renaming a function changes what every call to it means, and has its own window (double-click
+## the head).
+static func function_requested(dock: Control) -> void:
+	var row_data: EventRowData = dock._viewport._row_at(dock._viewport._selected_row_index)
+	var picked: EventFunction = row_data.source_resource as EventFunction if row_data != null else null
+	if picked == null:
+		return
+	var function_name: String = picked.function_name
+	var draft: ACEDefinition = ACEDefinition.new()
+	draft.display_name = function_name
+	for param: ACEParam in picked.params:
+		draft.parameters.append({"id": param.id if not param.id.is_empty() else param.name,
+			"default_value": param.default_value})
+	var parts: Dictionary = EventSheetPopupUI.panel_window(EventSheetL10n.translate("How should this read in other sheets?"),
+		Vector2i(460, 0), dock, EventSheetL10n.translate("Done"))
+	var window: ConfirmationDialog = parts["window"]
+	var form: VBoxContainer = parts["box"]
+	var edit: LineEdit = LineEdit.new()
+	edit.text = picked.display_template
+	edit.placeholder_text = function_name
+	edit.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(380.0), 0.0)
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("How should this read in other sheets?"), edit))
+	var about: LineEdit = LineEdit.new()
+	about.text = picked.description
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Description"), about))
+	var shared: CheckBox = CheckBox.new()
+	shared.text = EventSheetL10n.translate("Other sheets can use this")
+	shared.button_pressed = picked.expose_as_ace
+	form.add_child(shared)
+	var reads_as: Label = Label.new()
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Reads as"), reads_as))
+	var note: EventSheetPopupUI.StateNote = EventSheetPopupUI.StateNote.new()
+	form.add_child(note)
+	var refresh: Callable = func(_typed: String = "") -> void:
+		draft.metadata["display_template"] = edit.text
+		var finding: String = finding_for(draft, edit.text)
+		reads_as.text = (preview(draft, edit.text) if not edit.text.strip_edges().is_empty() else function_name) if finding.is_empty() else ""
+		note.say(finding, EventSheetPopupUI.TONE_WARNING)
+		window.get_ok_button().disabled = not finding.is_empty()
+	edit.text_changed.connect(refresh)
+	window.confirmed.connect(func() -> void:
+		var changed: bool = dock._perform_undoable_sheet_edit("Change how a function reads", func() -> bool:
+			# Re-fetched from the LIVE sheet: the funnel replaces resources on commit.
+			for candidate: Variant in dock._current_sheet.functions:
+				if candidate is EventFunction and (candidate as EventFunction).function_name == function_name:
+					(candidate as EventFunction).display_template = edit.text.strip_edges()
+					(candidate as EventFunction).description = about.text.strip_edges()
+					(candidate as EventFunction).expose_as_ace = shared.button_pressed
+					return true
+			return false)
+		if changed:
+			dock._mark_dirty(EventSheetL10n.translate("%s now reads as: %s") % [function_name, edit.text.strip_edges() if not edit.text.strip_edges().is_empty() else function_name])
+		window.queue_free())
+	window.canceled.connect(func() -> void: window.queue_free())
+	refresh.call()
+	EventSheetWindowPlacement.popup_centered(window, Vector2i(480, 260))
+	edit.grab_focus()

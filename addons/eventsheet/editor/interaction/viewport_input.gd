@@ -911,6 +911,8 @@ func handle_key(event: InputEventKey) -> void:
 		# Everywhere else it stays the plain begin-edit escape hatch.
 		if not _selected_head_action().is_empty():
 			_viewport.sheet_head_action_requested.emit(_selected_head_action())
+		elif _selected_function_head():
+			_viewport.sheet_head_action_requested.emit("change_function_reading")
 		elif not _viewport.begin_variable_rename(_viewport._selected_row_index):
 			_viewport._begin_edit(_viewport._selected_row_index, _viewport._selected_span_index)
 		_viewport.accept_event()
@@ -919,6 +921,17 @@ func handle_key(event: InputEventKey) -> void:
 		# passes through (lens clear, dialog close keep their meanings).
 		if _viewport.clear_cell_focus():
 			_viewport.accept_event()
+
+
+## True when the selected span sits on a function's own head line, where F2 opens how the function reads.
+func _selected_function_head() -> bool:
+	var row_data: EventRowData = _viewport._row_at(_viewport._selected_row_index)
+	if row_data == null or not (row_data.source_resource is EventFunction) or _viewport._selected_span_index < 0:
+		return false
+	if _viewport._selected_span_index >= row_data.spans.size():
+		return false
+	var metadata: Variant = row_data.spans[_viewport._selected_span_index].metadata
+	return metadata is Dictionary and str((metadata as Dictionary).get("kind", "")) == "define_function"
 
 
 ## The head-band action the SELECTED span offers, "" when the selection is anywhere else. Read for

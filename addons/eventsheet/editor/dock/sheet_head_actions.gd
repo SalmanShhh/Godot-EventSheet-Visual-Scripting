@@ -102,6 +102,8 @@ func handle(action: String) -> void:
 			_dock._attach_behavior_to_selection()
 		"add":
 			open_add_menu()
+		"change_function_reading":
+			load("res://addons/eventsheet/editor/dock/sentence_box.gd").function_requested(_dock)
 		"file_options":
 			open_file_options()
 		# The doors on the head bar's hover cards.

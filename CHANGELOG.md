@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: F2 on a function head says how the function reads in other sheets
+
+With a function's head selected, F2 opens a box with the sentence the function reads as in other sheets, its description and "Other sheets can use this". Done writes all three onto the function as one undo step. The name stays where it was (double-click the head), because renaming changes what every call means.
+
 ### Changed: a named sheet's new function starts shared, and "Teach a Verb" is "This sheet in other sheets…"
 
 The New Function window's tick now reads "Other sheets can use this" and starts ticked on a sheet that has a class name (another sheet can only reach a node it can name); an unnamed sheet's starts unticked as before. Only the starting state changed: old sheets, the resource default and every emitted byte are as they were. The Sheet menu entry that shared a sheet's published functions is now "This sheet in other sheets…", with plain status lines, and a sheet with no class name is told so with a door to Sheet Type.
