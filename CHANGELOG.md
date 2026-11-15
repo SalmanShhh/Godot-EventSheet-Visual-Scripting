@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Write Text File says what happens when the file cannot be opened
+
+The row does nothing, and says nothing, when its folder is not there or the place is read-only (`res://` in an exported game). Its template keeps its bytes; its help now says so, and points to Write Text File (in a folder) for a folder that may not exist yet.
+
 ### Fixed: a behaviour your own addon uses no longer shows as "unused"
 
 "Used by" in the behaviour library and Tidy behaviours skipped every folder under `addons/`, so a pack that one of your own addons reached for read as unused and was ticked for removal. It now reads your addons and leaves out only this plugin's own folders.
