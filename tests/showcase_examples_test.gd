@@ -600,7 +600,9 @@ static func _check_sheet(label: String, path: String, required: Array) -> bool:
 	var ok: bool = _check("%s opens as a sheet" % label, sheet is EventSheetResource, true)
 	if sheet == null:
 		return false
-	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://%s_showcase_test.gd" % label)
+	# echo(): the same text and the same verdict as compile(), written nowhere - a file in the shared user
+	# folder made this check fail whenever another run wrote a different text under the same name.
+	var result: Dictionary = EventSheetCompiler.echo(sheet)
 	ok = _check("%s compiles to GDScript" % label, bool(result.get("success", false)), true) and ok
 	var output: String = str(result.get("output", ""))
 	# The .gd IS the showcase sheet now (no .tres): opening it and recompiling must reproduce it exactly
