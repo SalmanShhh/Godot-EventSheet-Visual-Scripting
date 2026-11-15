@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: three classic Godot mistakes now show on the row that makes them
+
+- Three things Godot's own manual warns about used to pass in silence: the sheet compiled and the game only misbehaved. A row that meets one now turns quiet amber (no outline, no widget in the row), and the help strip under the selected row says what is wrong and what to use instead. Each also appears in the Project Doctor under its own check name.
+- A Control inside a Container: a row that sets the position of a Control whose parent is a VBoxContainer, HBoxContainer, GridContainer or another arranging Container. The Container puts its children back the next time it arranges them, so the row seems to do nothing. The strip suggests a plain Control as the parent, or the Container's own settings and the Control's size flags. It matches the line a row writes, so it holds for Set Control Position, Set Position and a hand-written `position = ...` alike.
+- A Tween on a physics body: a Tween Property row (or a `tween_property` line) on the position, global position or scale of a RigidBody2D or RigidBody3D. The physics engine moves the body every frame and fights the Tween. The strip suggests tweening a child node, moving the body with Apply Central Impulse, or turning on Freeze first.
+- A behaviour that fights a physics body: a behaviour sheet that writes its host's position or scale, placed in a scene under a RigidBody2D or RigidBody3D. The strip names the body and suggests a node that is not a physics body, or Apply Central Impulse.
+- Only a real scene counts as evidence. A sheet no scene runs, a node held in a variable, a node inside an instanced scene, and the base Container class (which arranges nothing) earn nothing. A CharacterBody and an AnimatableBody, which code moves on purpose, earn nothing. A behaviour told to act on another node is not judged by what it sits under.
+
 ### Fixed: a pack action given a name that does not exist now says so, once
 
 - Many packs keep things by name (abilities, pools, quests, rooms, buffs). An action given a name that did not exist returned without a word, so a mistyped `dash` for `Dash` looked exactly like a row that ran. Each such action now pushes one plain warning (Debugger, Errors tab) naming the node, the row as the sheet words it, the name that was not found, the names that do exist and what to do next. It is said once per missing name per node, never every frame, and the action still does nothing.

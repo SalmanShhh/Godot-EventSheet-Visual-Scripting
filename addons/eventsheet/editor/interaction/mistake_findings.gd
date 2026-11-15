@@ -63,6 +63,11 @@ const KIND_LOCAL_HIDES_VARIABLE := "local-hides-variable"
 const KIND_LOCAL_HIDES_PARAMETER := "local-hides-parameter"
 const KIND_DIVIDE_BY_ZERO := "divide-by-literal-zero"
 const KIND_WRONG_KIND := "value-of-the-wrong-kind"
+## The three classic mistakes (see classic_findings.gd): a Control moved inside a Container, a Tween on a
+## rigid body, a behaviour that moves its parent when its parent is a rigid body.
+const KIND_CONTROL_IN_CONTAINER := "control-inside-a-container"
+const KIND_TWEEN_ON_BODY := "tween-fights-physics-body"
+const KIND_BEHAVIOUR_ON_BODY := "behaviour-fights-physics-body"
 
 ## The one-click repairs a finding offers. "" on a finding whose repair is a decision.
 const FIX_USE_NAME := "use_the_name"
@@ -201,6 +206,8 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	_zero_divisions(rows, walk, found)
 	_wrong_kinds(sheet, rows, scene, walk, found)
 	found.append_array(EventSheetListFindings.findings(sheet, rows))
+	# Loaded by path: the first open of the editor does not compile what only a judged sheet needs.
+	found.append_array(load("res://addons/eventsheet/editor/interaction/classic_findings.gd").findings(rows, walk, scene, own_path))
 	return found
 
 

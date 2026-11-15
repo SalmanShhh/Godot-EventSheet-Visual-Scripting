@@ -42,6 +42,9 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetMistakeFindings.KIND_LOCAL_HIDES_PARAMETER: "local-hides-parameter",
 	EventSheetMistakeFindings.KIND_DIVIDE_BY_ZERO: "divide-by-literal-zero",
 	EventSheetMistakeFindings.KIND_WRONG_KIND: "value-of-the-wrong-kind",
+	EventSheetMistakeFindings.KIND_CONTROL_IN_CONTAINER: "control-inside-a-container",
+	EventSheetMistakeFindings.KIND_TWEEN_ON_BODY: "tween-fights-physics-body",
+	EventSheetMistakeFindings.KIND_BEHAVIOUR_ON_BODY: "behaviour-fights-physics-body",
 	EventSheetListFindings.KIND_UNORDERED_NODE_LIST: "node-list-never-read-by-order",
 	EventSheetListFindings.KIND_NEVER_CLEANED: "node-list-never-cleaned",
 	EventSheetPickScope.FINDING_KIND: "no-pick-here",
@@ -55,6 +58,8 @@ const SAID_ELSEWHERE: PackedStringArray = [EventSheetMistakeFindings.KIND_MISSIN
 const SCENE_WORDS: PackedStringArray = ["$", "%", "get_node("]
 const SIGNAL_WORDS: PackedStringArray = [".emit(", "emit_signal(", ".connect("]
 const GROUP_WORDS: PackedStringArray = ["_group("]
+## The classic mistakes: a Tween, or a write to a position, which a Container or the physics engine may undo.
+const CLASSIC_WORDS: PackedStringArray = ["tween_property(", "host.position", "host.global_position", "host.scale", "position =", "position +=", "position.x", "position.y"]
 
 ## A ceiling on how many scripts one run opens: a COUNT, never a clock, so the same project reads the
 ## same on every machine. Candidates are ranked strongest evidence first.
@@ -166,6 +171,8 @@ static func evidence(source: String, script_path: String = "") -> int:
 	if _division_pattern().search(source) != null:
 		weight += 1
 	if source.contains("\"res://"):
+		weight += 1
+	if _says_any(source, CLASSIC_WORDS):
 		weight += 1
 	if _says_any(source, GROUP_WORDS):
 		weight += 1

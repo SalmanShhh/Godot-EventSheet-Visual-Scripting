@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/classic_in_box.gd" id="1_in"]
+[ext_resource type="Script" path="res://tests/fixtures/classic_loose.gd" id="2_loose"]
+[ext_resource type="Script" path="res://tests/fixtures/classic_bare.gd" id="3_bare"]
+[ext_resource type="Script" path="res://tests/fixtures/classic_menu.gd" id="4_menu"]
+
+[node name="Menu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+script = ExtResource("4_menu")
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 0
+
+[node name="InBox" type="Button" parent="Box"]
+layout_mode = 2
+script = ExtResource("1_in")
+
+[node name="Free" type="Control" parent="."]
+layout_mode = 3
+
+[node name="Loose" type="Button" parent="Free"]
+layout_mode = 0
+script = ExtResource("2_loose")
+
+[node name="Plain" type="Container" parent="."]
+layout_mode = 3
+
+[node name="Bare" type="Button" parent="Plain"]
+layout_mode = 0
+script = ExtResource("3_bare")
+
+[node name="Label" type="Label" parent="Box"]
+layout_mode = 2

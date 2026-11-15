@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/classic_ball.gd" id="1_ball"]
+[ext_resource type="Script" path="res://tests/fixtures/classic_ball_3d.gd" id="2_ball3d"]
+[ext_resource type="Script" path="res://tests/fixtures/classic_walker.gd" id="3_walker"]
+[ext_resource type="Script" path="res://tests/fixtures/classic_door.gd" id="4_door"]
+
+[node name="World" type="Node2D"]
+
+[node name="Ball" type="RigidBody2D" parent="."]
+script = ExtResource("1_ball")
+
+[node name="Sprite" type="Sprite2D" parent="Ball"]
+
+[node name="Ball3D" type="RigidBody3D" parent="."]
+script = ExtResource("2_ball3d")
+
+[node name="Walker" type="CharacterBody2D" parent="."]
+script = ExtResource("3_walker")
+
+[node name="Door" type="AnimatableBody2D" parent="."]
+script = ExtResource("4_door")
