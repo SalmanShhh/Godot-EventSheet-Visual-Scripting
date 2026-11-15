@@ -492,10 +492,35 @@ static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
 	return sheet
 
 
-## Compiles a sheet to plain GDScript. Returns the compiler's result Dictionary:
-## "output" (the source text), "success", "errors", "warnings", "source_map".
+## Compiles a sheet to plain GDScript AND WRITES IT TO A FILE. Returns the compiler's result
+## Dictionary: "output" (the source text), "success", "errors", "warnings", "source_map".
+##   * With `output_path`: writes exactly that file (as before).
+##   * With no path on a sheet that has a file (an opened `.gd`, or a saved sheet): writes that
+##     sheet's own script, after taking the same backup a Save takes, so the file's earlier bytes
+##     can be restored from Tools > Sheet Backups.
+##   * With no path on a sheet that has NO file yet: writes nothing, and says so in "warnings" -
+##     the text is still in "output".
+## To read the code a sheet compiles to without writing anything, call `echo()`.
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
-	return EventSheetCompiler.compile(sheet, output_path)
+	if sheet == null or not output_path.is_empty():
+		return EventSheetCompiler.compile(sheet, output_path)
+	var own_file: String = sheet.external_source_path
+	if own_file.is_empty() and not sheet.resource_path.is_empty():
+		own_file = EventSheetCompiler._resolve_output_path(sheet, "")
+	if own_file.is_empty():
+		var unwritten: Dictionary = EventSheetCompiler.echo(sheet)
+		(unwritten["warnings"] as Array).append("EventSheets.compile() wrote nothing: this sheet has no file yet. Pass an output path to write the script, or call EventSheets.echo(sheet) to read it without a file.")
+		return unwritten
+	EventSheetBackups.backup_sheet(own_file)
+	return EventSheetCompiler.compile(sheet, "")
+
+
+## The GDScript a sheet compiles to, WITHOUT writing anything: the same result Dictionary `compile()`
+## returns ("output", "success", "errors", "warnings", "source_map"). Safe to call on any sheet at
+## any time - it never touches a file, so it is the call for showing code, counting lines or pinning
+## an output string in a test.
+static func echo(sheet: EventSheetResource) -> Dictionary:
+	return EventSheetCompiler.echo(sheet)
 
 
 ## ALL the GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip, grouping

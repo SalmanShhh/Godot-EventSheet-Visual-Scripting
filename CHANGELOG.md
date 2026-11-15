@@ -4,6 +4,11 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: EventSheets.compile() says what it writes, and EventSheets.echo() reads without writing
+
+- `EventSheets.compile(sheet)` with no path always wrote a file and nothing said so: on a sheet opened from a `.gd` it overwrote that script with no backup (unsaved edits and all), and on a sheet with no file it dropped `res://event_sheet_generated.gd` into the project. It keeps its shape and its result keys, and now: with a path it writes that path as before; with no path on a sheet that has a file it takes the same backup a Save takes before it overwrites (restore it from Tools > Sheet Backups); with no path on a sheet with no file it writes nothing and returns a warning in `"warnings"` (the text is still in `"output"`). The docstring and the guide say which call writes.
+- New `EventSheets.echo(sheet)` returns the same result Dictionary and never writes a file, for showing code, counting lines or pinning an output string in a test. The Building on EventSheets guide's codegen snippet and its team-pin example now use it.
+
 ### Fixed: a block whose pack was removed draws as a quiet row instead of disappearing
 
 - When a behaviour pack was removed, a sheet saved as a `.tres` file still holds that pack's block rows, and the editor raised a script error on every redraw and left the row out of the sheet. The row now draws as a plain "block" chip beside the kind id in the muted ink, in the dark and the light editor theme, and the rows around it are unaffected. No widget and no outline: it is the same quiet chip the preload row wears.

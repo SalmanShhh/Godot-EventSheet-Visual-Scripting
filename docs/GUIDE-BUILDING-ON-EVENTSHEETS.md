@@ -25,7 +25,7 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 - **A vocabulary pack from another plugin.** Your editor plugin registers a provider script and a custom block kind in its `_enter_tree()`; EventSheets users get your vocabulary and rows with no files copied anywhere.
 - **A Command Palette power tool.** "Sort events by trigger", "Insert my team's standard header", "Renumber TODO comments": register a command, mutate the sheet through `edit()`, and it lands as one undo step.
 - **A sheet linter or codemod.** Walk `current_sheet().events`, rewrite what you find inside `edit()`, report through `set_status()`.
-- **Headless tooling.** A CI script that compiles every sheet in a project, or byte-verifies that hand-edited GDScript still round-trips, using `compile()` / `round_trips()` with no editor open at all.
+- **Headless tooling.** A CI script that compiles every sheet in a project, or byte-verifies that hand-edited GDScript still round-trips, using `echo()` / `compile()` / `round_trips()` with no editor open at all.
 - **A custom emission you can trust.** Building a block kind or tweaking what your pack emits? `round_trips(source)` is the same gate every built-in lift must pass; put it in your own tests.
 - **A health check that ships with your pack.** Your dialogue pack knows what a broken dialogue setup looks like ("this .dialogue file is referenced but missing"). Register a Doctor check and the warning appears in the Doctor panel, the CLI, CI and MCP, right next to the built-in checks.
 
@@ -167,15 +167,17 @@ A source is asked ONCE per sheet and only filtered afterwards, so it is free to 
 The compiler and importer as plain services, dock-free, usable from tests and CI:
 
 ```gdscript
-# GDScript in, sheet out, GDScript back: the lossless external path.
+# GDScript in, sheet out, the compiled text back - and nothing written anywhere.
 var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source_text)
-var result: Dictionary = EventSheets.compile(sheet)
+var result: Dictionary = EventSheets.echo(sheet)
 print(result["output"])       # the emitted GDScript
 print(result["success"])      # plus "errors", "warnings", "source_map"
 
 # The byte gate as a one-liner: does import -> re-emit reproduce the source exactly?
 assert(EventSheets.round_trips(source_text))
 ```
+
+**Which call writes.** `echo(sheet)` only returns the text; it never touches a file. `compile(sheet, output_path := "")` WRITES: with a path it writes that file; with no path on a sheet that has a file it writes that sheet's own script, after taking the same backup a Save takes (restore it from Tools > Sheet Backups); with no path on a sheet that has no file it writes nothing and says so in `"warnings"`. Reach for `echo()` whenever you only want to look at, count or compare the code.
 
 `open_gd_as_sheet()` is the same lift the editor uses when you open a `.gd` file: everything liftable lifts, everything else stays a verbatim block, and nothing can be corrupted. `round_trips()` is the covenant check itself; if your custom block kind or provider changes emission, pin it with this in a test.
 
@@ -341,7 +343,8 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Rows | `mark_language_block(row)` - marks a row as GDScript structure (accent stripe + wash) | `EventRowData` | no |
 | Rows | `collection_decl(variable_name, entries, dictionary := true)` - a structured multi-line collection declaration (`var waves := { ... }`), the row an opened `.gd`'s canonical literal lifts into. `entries` is `[key, value]` pairs for a dictionary (keys carry their own quotes) or plain values for an array. Append it to an `EventRow`'s actions, or to `sheet.events` for a file-scope table; entries stay individually editable rows. Returns `null` when the name is not an identifier or an entry is refused | `CollectionDeclRow` | no |
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
-| Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
+| Codegen | `compile(sheet: EventSheetResource, output_path := "")` - compiles AND WRITES the script: to `output_path`, else to the sheet's own file after the Save's backup, else (a sheet with no file) nowhere, with a warning in the result | `Dictionary` | no |
+| Codegen | `echo(sheet: EventSheetResource)` - what the sheet compiles to, the same result as `compile()`, written NOWHERE | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` - ALL the GDScript a variable compiles to, decor comments and Inspector grouping included. For the one line out of it that declares, ask `row_code_line()` | `String` | no |
 | Codegen | `row_code_line(row: Resource, sheet := null)` - THE line of the emitted file a row stands for, and what the sheet echoes at its right edge: a `LocalVariable`'s declaration (not the doc comment, the `@export_group` header or a Static local's marker written above it), a `CustomBlockRow`'s last emitted line, an `EventGroup`'s `## @ace_group(...)` line (pass `sheet` - a group's line names its parent). `""` for every other row: those three are the rows the sheet draws an echo on | `String` | no |
 | Codegen | `group_declaration_lines(sheet)` - the `## @ace_group(...)` line the compiler writes for each of the sheet's event groups, keyed by the `EventGroup` (uid, name, parent, description, colour and the two flags). What a group head echoes, and what the importer reads back | `Dictionary` | no |
@@ -417,7 +420,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Localisation | `available_languages()` | `PackedStringArray` | no |
 | Localisation | `set_editor_language(locale: String)` | `void` | no |
 
-`compile()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
+`compile()`'s and `echo()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
 
 ## 8. Use Cases
 
@@ -521,7 +524,7 @@ EventSheets.register_palette_command("Strip Debug Prints", func() -> void:
 **Scenario:** your team standardises on one weapon pack; a CI test compiles a canonical sheet and pins the exact output string, so an accidental template edit fails the merge before it reaches anyone.
 
 ```gdscript
-var result: Dictionary = EventSheets.compile(_canonical_weapon_sheet())
+var result: Dictionary = EventSheets.echo(_canonical_weapon_sheet())
 ok = _check("weapon emission is frozen", result["output"], _golden_weapon_source) and ok
 ```
 
@@ -878,5 +881,5 @@ The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working templat
 - **Never cache rows across `edit()` calls.** Undo commits replace resources with snapshot duplicates. The row you held is now detached from the sheet; re-fetch from `current_sheet()`.
 - **Return `false` for no-ops.** An `edit()` mutation that changed nothing should say so, or the user gets an undo step that does nothing.
 - **Definitions are immutable.** `find_ace()` and `class_vocabulary()` hand you session-cached shared instances. Mutating one changes it for every tab; bake per-row changes into the row's own fields instead.
-- **`compile()` result key is `"output"`.** Reading `"source"` gets you an empty string that compares equal to other empty strings, which makes broken tests pass.
+- **`compile()` and `echo()` result key is `"output"`.** Reading `"source"` gets you an empty string that compares equal to other empty strings, which makes broken tests pass.
 - **Palette titles are the identity.** Re-registering a title replaces the old command, so a plugin reload never duplicates entries; pick titles that read like actions ("Collapse All Regions").

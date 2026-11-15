@@ -65,6 +65,7 @@ static func run() -> bool:
 	ok = _built_in_ids_cannot_be_taken() and ok
 	ok = _a_block_that_cannot_be_written_is_reported() and ok
 	ok = _a_block_without_its_pack_still_draws() and ok
+	ok = _compile_says_what_it_writes() and ok
 	return ok
 
 
@@ -224,3 +225,69 @@ static func _a_block_without_its_pack_still_draws() -> bool:
 			ok = SUPPORT.check(P, "the summary wears the muted ink", row.spans[1].metadata.get("text_color") == muted, true) and ok
 	viewport.free()
 	return ok
+
+
+static func _compile_says_what_it_writes() -> bool:
+	var ok: bool = true
+	var stray: String = "res://event_sheet_generated.gd"
+	if FileAccess.file_exists(stray):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(stray))
+	# A sheet with no file: compile() writes nothing, hands the text back and says so.
+	var fresh: EventSheetResource = EventSheets.open_gd_as_sheet("extends Node
+
+var hp: int = 3
+")
+	var fresh_result: Dictionary = EventSheets.compile(fresh)
+	ok = SUPPORT.check(P, "compile with no path on a sheet with no file writes no stray file", FileAccess.file_exists(stray), false) and ok
+	ok = SUPPORT.check(P, "that compile still hands the text back", str(fresh_result.get("output", "")).contains("var hp: int = 3"), true) and ok
+	ok = SUPPORT.check(P, "that compile succeeds", fresh_result.get("success"), true) and ok
+	ok = SUPPORT.check(P, "that compile says it wrote nothing",
+		" ".join(PackedStringArray(fresh_result.get("warnings", []))).contains("wrote nothing"), true) and ok
+	ok = SUPPORT.check(P, "the result keeps its keys",
+		fresh_result.keys().has("output") and fresh_result.keys().has("source_map") and fresh_result.keys().has("errors"), true) and ok
+	# echo(): the same text, no file, no warning.
+	var echoed: Dictionary = EventSheets.echo(fresh)
+	ok = SUPPORT.check(P, "echo returns the compiled text", echoed.get("output"), fresh_result.get("output")) and ok
+	ok = SUPPORT.check(P, "echo writes no stray file", FileAccess.file_exists(stray), false) and ok
+	ok = SUPPORT.check(P, "echo carries no unwritten warning", " ".join(PackedStringArray(echoed.get("warnings", []))).contains("wrote nothing"), false) and ok
+	ok = SUPPORT.check(P, "echo of nothing is a failure, not a crash", EventSheets.echo(null).get("success"), false) and ok
+	# A sheet that has a file: compile() takes the Save's backup before it overwrites.
+	var own: String = "user://api_file_safety_own.gd"
+	var original: String = "extends Node
+
+# hand written, keep
+var hp: int = 3
+"
+	var handle: FileAccess = FileAccess.open(own, FileAccess.WRITE)
+	handle.store_string(original)
+	handle.close()
+	_clear_backups(own)
+	var backed: EventSheetResource = EventSheets.open_gd_as_sheet(original)
+	backed.external_source_path = own
+	var extra: LocalVariable = LocalVariable.new()
+	extra.name = "speed"
+	extra.type_name = "int"
+	extra.default_value = "5"
+	backed.events.append(extra)
+	var written: Dictionary = EventSheets.compile(backed)
+	ok = SUPPORT.check(P, "compile with no path on a sheet with a file writes that file", written.get("success"), true) and ok
+	ok = SUPPORT.check(P, "the file now holds the new variable", FileAccess.get_file_as_string(own).contains("speed"), true) and ok
+	var ring: PackedStringArray = EventSheetBackups.list_backups(own)
+	ok = SUPPORT.check(P, "a backup was taken first", ring.size(), 1) and ok
+	if ring.size() == 1:
+		ok = SUPPORT.check(P, "the backup holds the bytes the compile overwrote", FileAccess.get_file_as_string(ring[0]), original) and ok
+	# An explicit path keeps writing exactly that file and takes no backup of anything else.
+	var explicit: String = "user://api_file_safety_explicit.gd"
+	var explicit_result: Dictionary = EventSheets.compile(fresh, explicit)
+	ok = SUPPORT.check(P, "compile with a path still writes that path", FileAccess.get_file_as_string(explicit), str(explicit_result.get("output", "")) + "") and ok
+	_clear_backups(own)
+	for leftover: String in [own, explicit]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(leftover))
+	if FileAccess.file_exists(stray):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(stray))
+	return ok
+
+
+static func _clear_backups(path: String) -> void:
+	for backup: String in EventSheetBackups.list_backups(path):
+		DirAccess.remove_absolute(backup)
