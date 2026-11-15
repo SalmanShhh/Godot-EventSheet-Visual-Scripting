@@ -2157,8 +2157,8 @@ func _populate_object_cards() -> void:
 	_populate_project_cards(root)
 	# Last, at the very top: what this event picked is the first thing the next row is about.
 	_populate_picked_cards(root)
-	# And at the very bottom, the way to the whole list with no typing.
-	var door: TreeItem = _objects_tree.create_item(root)
+	# And first of all, the way to the whole list with no typing: under a long page nobody finds it.
+	var door: TreeItem = _objects_tree.create_item(root, 0)
 	door.set_text(0, EventSheetL10n.translate("Browse every row"))
 	door.set_metadata(0, BROWSE_ALL_META)
 

@@ -8,7 +8,7 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ### Changed: Add Event keeps a door to the full list
 
-Add Event on the toolbar still opens on the short object page. That page now ends with one plain entry, Browse every row, which opens the full list with Favourites and Recent beside it, exactly as the toolbar opened it before, with no typing. A regression test pins the other half of the same change: a row on the open sheet follows its sentence at once after the sentence is changed.
+Add Event on the toolbar still opens on the short object page. That page now starts with one plain entry, Browse every row, which opens the full list with Favourites and Recent beside it, exactly as the toolbar opened it before, with no typing. A regression test pins the other half of the same change: a row on the open sheet follows its sentence at once after the sentence is changed.
 
 ### Changed: a pack's lines reopen as its rows whatever the values are
 

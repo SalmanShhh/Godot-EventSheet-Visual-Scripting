@@ -5,7 +5,7 @@ extends RefCounted
 # Godot EventSheets - the toolbar's Add Event keeps a door to the full list.
 #
 # Add Event opens on the short object page (the same page a double click on empty canvas opens), and that
-# page ends with one plain entry, "Browse every row", that opens the full list with Favourites and Recent
+# page starts with one plain entry, "Browse every row", that opens the full list with Favourites and Recent
 # exactly as the toolbar used to. Picking it needs no typing. Beside it, the live-dock pin that a row
 # on the open sheet follows its sentence at once after the sentence is changed.
 
@@ -32,10 +32,7 @@ static func _picker_open_on_the_objects(host: Node) -> ACEPickerDialog:
 
 
 static func _door_item(picker: ACEPickerDialog) -> TreeItem:
-	var last: TreeItem = null
-	for child: TreeItem in picker._objects_tree.get_root().get_children():
-		last = child
-	return last
+	return picker._objects_tree.get_root().get_first_child()
 
 
 static func _the_door_opens_the_full_list() -> bool:
@@ -44,11 +41,11 @@ static func _the_door_opens_the_full_list() -> bool:
 	var door: TreeItem = _door_item(picker)
 	var on_objects: bool = picker._objects_page.visible and not picker._body_holder.visible
 	var door_text: String = door.get_text(0) if door != null else "<none>"
-	# The door is last, after every object and class the page lists.
+	# The door is first, above every object and class the page lists, so it is on screen without a scroll.
 	door.select(0)
 	var rows: Array = [
 		["Add Event still opens on the short object page", on_objects, true],
-		["its last entry is the door", door_text, "Browse every row"],
+		["its first entry is the door", door_text, "Browse every row"],
 		["the door is picked with no typing, and the object page steps aside", picker._objects_page.visible, false],
 		["the full list takes its place, with Favourites and Recent beside it", picker._body_holder.visible, true],
 		["no object is left chosen", picker._object_filter_provider, ""],
