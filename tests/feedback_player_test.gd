@@ -1,4 +1,4 @@
-# Godot EventSheets - the Feedback Player: the list of feedbacks an object plays.
+# Godot EventSheets - the Juice Player: the list of feedbacks an object plays.
 #
 # THE ONE THING THIS FILE IS ABOUT: three homes, one shape. A moment written as a block of rows, a
 # moment kept as a FILE and a list held by a node are the same steps, so the pins here are about the
@@ -111,7 +111,7 @@ static func _boundary_pins() -> bool:
 	var first: String = chancer._why_not(chance_card, 1.0, 0)
 	var second: String = chancer._why_not(chance_card, 1.0, 0)
 
-	# A restart ends the play it interrupts the way Stop Feedbacks ends one, children included.
+	# A restart ends the play it interrupts the way Stop Juice ends one, children included.
 	var restarter: Node = PLAYER.new()
 	var interrupted: TellTale = TellTale.new()
 	restarter.while_playing = "restart"

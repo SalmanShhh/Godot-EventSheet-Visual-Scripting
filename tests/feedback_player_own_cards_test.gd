@@ -1,6 +1,6 @@
 # Godot EventSheets - a row that changes a card changes only its own object.
 #
-# THE FAULT THIS PINS: copies of one scene copy a Feedback Player's list but SHARE the card
+# THE FAULT THIS PINS: copies of one scene copy a Juice Player's list but SHARE the card
 # dictionaries inside it, so a row that changed a card on one enemy changed it on every enemy made
 # from that scene, including ones spawned later. The pins here use a REAL scene file on disk and
 # instance it more than once, because a player built with .new() never shares anything and would
@@ -57,16 +57,16 @@ static func _amount(player: Node, at: int) -> Variant:
 
 static func _rows() -> Array:
 	return [
-		["Set Feedback Field", func(p: Node) -> void: p.set_feedback_field("kick", "amount", 0.9), "amount", 0.9],
-		["Set Feedback Timing", func(p: Node) -> void: p.set_feedback_timing("kick", 0.7, 3, 0.2, "game"), "delay", 0.7],
-		["Set Feedback Chance", func(p: Node) -> void: p.set_feedback_chance("kick", 25.0), "chance", 25.0],
-		["Set Feedback Label", func(p: Node) -> void: p.set_feedback_label("kick", "punch"), "label", "punch"],
-		["Disable Feedback", func(p: Node) -> void: p.disable_feedback("kick"), "active", false],
+		["Set Juice Card Field", func(p: Node) -> void: p.set_feedback_field("kick", "amount", 0.9), "amount", 0.9],
+		["Set Juice Card Timing", func(p: Node) -> void: p.set_feedback_timing("kick", 0.7, 3, 0.2, "game"), "delay", 0.7],
+		["Set Juice Card Chance", func(p: Node) -> void: p.set_feedback_chance("kick", 25.0), "chance", 25.0],
+		["Rename Juice Card", func(p: Node) -> void: p.set_feedback_label("kick", "punch"), "label", "punch"],
+		["Disable Juice Card", func(p: Node) -> void: p.disable_feedback("kick"), "active", false],
 		["Set Loop Count", func(p: Node) -> void: p.set_loop_count("kick", 9), "loops", 9],
-		["Scale Feedback Amounts", func(p: Node) -> void: p.scale_feedback_amounts("", 0.5), "amount", 0.2],
-		["Retime Feedbacks", func(p: Node) -> void: p.retime_feedbacks(0.5), "seconds", 0.1],
-		["Replace Feedback", func(p: Node) -> void: p.replace_feedback("kick", {"verb": "recoil", "label": "kick"}), "verb", "recoil"],
-		["Pick One Feedback Of", func(p: Node) -> void: p.pick_one_feedback_of("kick"), "active", true]
+		["Scale Juice Amounts", func(p: Node) -> void: p.scale_feedback_amounts("", 0.5), "amount", 0.2],
+		["Scale Juice Timing", func(p: Node) -> void: p.retime_feedbacks(0.5), "seconds", 0.1],
+		["Replace Juice Card", func(p: Node) -> void: p.replace_feedback("kick", {"verb": "recoil", "label": "kick"}), "verb", "recoil"],
+		["Pick One Juice Card Starting With", func(p: Node) -> void: p.pick_one_feedback_of("kick"), "active", true]
 	]
 
 
@@ -95,8 +95,8 @@ static func _row_pins() -> bool:
 	return ok
 
 
-## Copy Feedbacks From gives a COPY: changing either list afterwards leaves the other alone. Load
-## Moment File and Duplicate Feedback still do what their words say.
+## Copy Juice Cards From gives a COPY: changing either list afterwards leaves the other alone. Load
+## Moment File and Duplicate Juice Card still do what their words say.
 static func _copy_pins() -> bool:
 	var scene: PackedScene = _scene(_cards())
 	var source: Node = scene.instantiate()
@@ -116,7 +116,7 @@ static func _copy_pins() -> bool:
 	duplicated.set_feedback_field("kick2", "amount", 0.11)
 	var fresh: Node = scene.instantiate()
 	ok = SUPPORT.pins(TEST_NAME, [
-		["Duplicate Feedback puts the copy under the original", [duplicated.steps.size(), str((duplicated.steps[1] as Dictionary).get("label", ""))], [3, "kick2"]],
+		["Duplicate Juice Card puts the copy under the original", [duplicated.steps.size(), str((duplicated.steps[1] as Dictionary).get("label", ""))], [3, "kick2"]],
 		["and the original keeps its amount", _amount(duplicated, 0), 0.4],
 		["and the scene's next copy has two cards still", [fresh.steps.size(), _amount(fresh, 0)], [2, 0.4]]
 	]) and ok

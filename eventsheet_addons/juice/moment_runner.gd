@@ -66,7 +66,7 @@ const ONE_WAY_VERBS: PackedStringArray = ["shake", "hitstop", "punch", "shockwav
 # kinds: holding one of those to 0.3 would not be less flashing, it would be the wrong number.
 #
 # ONE list, here, because a moment has three homes - a block of rows, a moment file, and the
-# list a feedback node holds - and a word held to the ceiling in one of them and not in another
+# list a Juice Player holds - and a word held to the ceiling in one of them and not in another
 # would be a different beat depending on where somebody wrote it down.
 ## The step words whose amount is an AMPLITUDE - how much of something a player SEES, from none of it to all of it.
 const AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",

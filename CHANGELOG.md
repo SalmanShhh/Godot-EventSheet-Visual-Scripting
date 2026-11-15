@@ -4,6 +4,12 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the Feedback Player is now the Juice Player, and its rows say "juice"
+
+The node that holds a list of effects belongs to the Juice pack, so it now reads as part of it. The node is the **Juice Player**, the list is "juice" (Play Juice, Stop Juice, On Juice Started, Juice Duration) and one entry in it is a **juice card** (Add Juice Card, Enable Juice Card, On Juice Card Started, Juice Card Count). A few names say a little more than the rule gives so they cannot be mistaken for something else: Play Juice Backwards, Play Juice On Channel, Rename Juice Card, Clear Juice Cards, Copy Juice Cards From, Set Juice Player Strength, Set Juice Player Cooldown, Mute Juice Family, Scale Juice Timing, Pick One Juice Card Starting With and For Each Juice Card. The picker section is "Juice Player", the guide is Juice Player (the old Feedback Player page stays as a short note for projects that still hold the older copy of the pack), and a Juice node does one effect when a row asks while a Juice Player plays a list of them. A new Play Juice On Channel row starts on the group `juice_players`. Searching "feedback" in the picker and in the manual still finds it.
+
+Nothing you saved changes: every row keeps its id and writes the same code, a script written by the plugin reopens and saves byte for byte, and scenes and moment files load as before.
+
 ### Fixed: a Juice Player line you wrote reopens as its own row, not as Play Sound
 
 Opening a script that holds `$FeedbackPlayer.play(0.6)` (or `$JuicePlayer.play(1.0)`, `.stop()`, `await ....play_and_wait(1.0)`) used to read the line as the built-in "Play Sound", "Stop Sound" or "Await Signal" rows: the file was always written back exactly, but the sentence was wrong. They now read as Play Juice, Stop Juice and Play Juice And Wait. The pack teaches these three lines to the reader (a node written by name, never any node: `$AudioStreamPlayer.play(0.5)` is still a sound), and saving writes your file back byte for byte. A Juice Player with any other name still reads as it did.

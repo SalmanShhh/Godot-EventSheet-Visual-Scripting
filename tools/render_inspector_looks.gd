@@ -145,8 +145,8 @@ const PACK_PROBES: Array = [
 	["pack_random_table", "res://eventsheet_addons/random_table_resource/random_table_resource.gd", {"entries": [{"value": "north", "weight": 3.0}, {"value": "south", "weight": 1.0}]}],
 	["pack_advanced_random", "res://eventsheet_addons/advanced_random/advanced_random_addon.gd", {}],
 	["pack_drawing_canvas", "res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd", {}],
-	# The Feedback Player is a pack too; its fourth card is unfolded by index (the fourth entry).
-	["pack_feedback_player", "res://eventsheet_addons/juice/juice_player.gd", {"steps": [
+	# The Juice Player is a pack too; its fourth card is unfolded by index (the fourth entry).
+	["pack_juice_player", "res://eventsheet_addons/juice/juice_player.gd", {"steps": [
 		{"verb": "punch_scale", "seconds": 0.3}, {"verb": "hold", "seconds": 0.1},
 		{"verb": "shake", "seconds": 0.2}, {"verb": "loop_back", "seconds": 0.25, "loops": 2, "to_hold": true, "to_loop_start": true}]}, 3],
 ]

@@ -130,6 +130,13 @@ static func _test_baked_index() -> bool:
 	all_passed = _check("the baked index covers every shipped page", shipped.size(), corpus.size()) and all_passed
 	all_passed = _check("the baked index is what a rebuild would write",
 		FileAccess.get_file_as_string(EventSheetDocLibrary.SEARCH_PATH), builder.search_text(corpus)) and all_passed
+	# The old name still finds the thing: a reader who types "feedback player" lands on a page that says
+	# Juice Player, because the node was called that until the rename and the guide says so.
+	var old_name_titles: PackedStringArray = PackedStringArray()
+	for hit: Dictionary in EventSheetDocSearch.search_all("feedback player"):
+		old_name_titles.append(str(hit.get("title", "")))
+	all_passed = _check("searching the old name finds a Juice Player page",
+		"\n".join(old_name_titles).contains("Juice Player"), true) and all_passed
 	return all_passed
 
 

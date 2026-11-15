@@ -1,4 +1,4 @@
-# Godot EventSheets - everything the Feedback Player's Inspector does, as rows.
+# Godot EventSheets - everything the Juice Player's Inspector does, as rows.
 #
 # THE ONE THING THIS FILE IS ABOUT: a list edited in the Inspector and a list edited by rows have to
 # be the same list. So the pins here are about the ADDRESS (a card answers to its label, or to its
@@ -38,7 +38,7 @@ static func run() -> bool:
 
 
 ## The address: a card answers to the name it was given, or to its own word when it was never named,
-## and For Each Feedback reads the list out in order.
+## and For Each Juice Card reads the list out in order.
 static func _address_pins() -> bool:
 	var player: Node = _player([
 		{"verb": "shake", "label": "kick", "amount": 0.4, "seconds": 0.0},
@@ -49,10 +49,10 @@ static func _address_pins() -> bool:
 		["a named card answers to its name", player._index_of("kick"), 0],
 		["an unnamed one answers to its word", player._index_of("flash"), 1],
 		["a name nobody has is not found", player._index_of("nobody"), -1],
-		["For Each Feedback reads the list out in order", PackedStringArray(player.for_each_feedback()),
+		["For Each Juice Card reads the list out in order", PackedStringArray(player.for_each_feedback()),
 			PackedStringArray(["kick", "flash", "swell"])],
-		["Feedback Count counts every card", player.feedback_count(), 3],
-		["Feedback Label At is one-based", player.feedback_label_at(2), "flash"],
+		["Juice Card Count counts every card", player.feedback_count(), 3],
+		["Juice Card Label At is one-based", player.feedback_label_at(2), "flash"],
 		["and answers with nothing past the end", player.feedback_label_at(9), ""],
 		["Has Feedback is the same question the rows ask", [player.has_feedback("swell"), player.has_feedback("nope")],
 			[true, false]]
@@ -99,22 +99,22 @@ static func _edit_pins() -> bool:
 	var cleared: int = player.feedback_count()
 
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["Add Feedback puts a card after the one it names", added, PackedStringArray(["kick", "pop"])],
-		["Insert Feedback Before puts one above it", inserted, PackedStringArray(["freeze", "kick", "pop"])],
-		["Replace Feedback swaps the card and keeps its name", replaced,
+		["Add Juice Card puts a card after the one it names", added, PackedStringArray(["kick", "pop"])],
+		["Insert Juice Card Before puts one above it", inserted, PackedStringArray(["freeze", "kick", "pop"])],
+		["Replace Juice Card swaps the card and keeps its name", replaced,
 			["recoil", PackedStringArray(["freeze", "kick", "pop"])]],
-		["Set Feedback Field writes the one value", tuned, 0.25],
-		["Set Feedback Timing writes the three and the clock", timed, [0.05, 3, "real"]],
-		["Set Feedback Chance writes the roll", chanced, 40.0],
-		["Disable and Enable Feedback move the box both ways", [off, on], [false, true]],
-		["Set Feedback Label renames the card", renamed, PackedStringArray(["freeze", "kick", "flashy"])],
-		["Duplicate Feedback puts the copy under the original", duplicated,
+		["Set Juice Card Field writes the one value", tuned, 0.25],
+		["Set Juice Card Timing writes the three and the clock", timed, [0.05, 3, "real"]],
+		["Set Juice Card Chance writes the roll", chanced, 40.0],
+		["Disable and Enable Juice Card move the box both ways", [off, on], [false, true]],
+		["Rename Juice Card renames the card", renamed, PackedStringArray(["freeze", "kick", "flashy"])],
+		["Duplicate Juice Card puts the copy under the original", duplicated,
 			PackedStringArray(["freeze", "kick", "flashy", "flashier"])],
-		["Move Feedback To is one-based", moved,
+		["Move Juice Card To is one-based", moved,
 			PackedStringArray(["flashier", "freeze", "kick", "flashy"])],
-		["Remove Feedback takes one out", removed, PackedStringArray(["freeze", "kick", "flashy"])],
+		["Remove Juice Card takes one out", removed, PackedStringArray(["freeze", "kick", "flashy"])],
 		["Set Loop Count is what Loops Left answers with", looped, 4],
-		["Clear Feedbacks empties the list", cleared, 0]
+		["Clear Juice Cards empties the list", cleared, 0]
 	])
 	player.free()
 	return ok
@@ -159,13 +159,13 @@ static func _sweep_pins() -> bool:
 		["a muted family says why it was skipped", muted, "muted"],
 		["and only that family is muted", camera_still_runs, ""],
 		["unmuting lets it be felt again", unmuted, ""],
-		["Scale Feedback Amounts moves one family only", scaled, [0.5, 1.0]],
-		["Retime Feedbacks moves every length", retimed, 0.2],
-		["Pick One Feedback Of leaves exactly one of the prefix on", picked, 1],
+		["Scale Juice Amounts moves one family only", scaled, [0.5, 1.0]],
+		["Scale Juice Timing moves every length", retimed, 0.2],
+		["Pick One Juice Card Starting With leaves exactly one of the prefix on", picked, 1],
 		["and leaves everything else alone", untouched, true],
-		["Skip Feedback Once says why", skipped, "skipped once"],
+		["Skip Juice Card Once says why", skipped, "skipped once"],
 		["and means once", only_once, ""],
-		["Copy Feedbacks From takes the whole list", copied,
+		["Copy Juice Cards From takes the whole list", copied,
 			PackedStringArray(["shake_a", "shake_b", "screeny"])],
 		["as a copy, so editing it leaves the original alone", independent, 3]
 	])
@@ -206,7 +206,7 @@ static func _hold_pins() -> bool:
 	return ok
 
 
-## The quiet finding: a row naming a card no Feedback Player in the scene has. The evidence is the
+## The quiet finding: a row naming a card no Juice Player in the scene has. The evidence is the
 ## scene's own saved bytes, so the pins write one, read the labels back out of it, and take it away.
 static func _finding_pins() -> bool:
 	var root: Node2D = Node2D.new()

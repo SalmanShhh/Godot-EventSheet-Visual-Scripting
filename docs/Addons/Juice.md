@@ -10,7 +10,7 @@ Juice is a Godot EventSheets behavior pack that adds game feel to a scene withou
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [Moments - a whole beat in one row](#moments---a-whole-beat-in-one-row)
-5. [The Feedback Player - the list an object carries](#the-feedback-player---the-list-an-object-carries)
+5. [The Juice Player - the list an object carries](#the-juice-player---the-list-an-object-carries)
 6. [Channels - a shake heard by everything listening](#channels---a-shake-heard-by-everything-listening)
 7. [ACE reference](#ace-reference)
 8. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
@@ -328,19 +328,19 @@ for it.
 
 ---
 
-## The Feedback Player - the list an object carries
+## The Juice Player - the list an object carries
 
 A moment file is shared between objects. Sometimes the beat belongs to ONE object - this enemy's
-hit, that button's hover - and lives better on the object itself. That is the **Feedback Player**:
-a node you add under any object, holding the list of feedbacks that object plays. Its Inspector is
+hit, that button's hover - and lives better on the object itself. That is the **Juice Player**:
+a node you add under any object, holding the list of juice cards that object plays. Its Inspector is
 the list; the sheet's side of it is one row that never changes as the list is tuned.
 
 ```
-Add a Node under the enemy, attach FeedbackPlayer, add a Juice node beside it.
+Add a Node under the enemy, attach JuicePlayer, add a Juice node beside it.
 Fill the list. Then, once, in the sheet:
 
   Enemy: On damaged
-      -> HitFeedback: Play feedbacks at 0.6
+      -> HitJuice: Play juice at 0.6
 ```
 
 The list holds the SAME steps a moment file holds - the ten words, each with how much, which extra
@@ -350,12 +350,12 @@ beat behaves identically wherever it was written.
 
 ### The card list
 
-Each feedback is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
+Each effect is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
 arrow, a tick box, its label, a badge saying how long it takes, and a menu. Under the list sits
-**Add a feedback**, a searchable dropdown grouped by family, and a strip of buttons.
+**Add card**, a searchable dropdown grouped by family, and a strip of buttons.
 
 ```
-Feedbacks 7 - 0.95 s total
+7 juice cards - 0.95 s total
   | Sound              hit_crunch      0.00 s
   | Punch Scale        1.3             0.30 s
   | Hold               until the above finish
@@ -363,14 +363,14 @@ Feedbacks 7 - 0.95 s total
   | Loop Start
   | Pulse Post Effect  chromatic 0.6   0.15 s     (unticked - skipped)
   | Loop Back          2 times         0.25 s
-  Add a feedback  |  Play  Stop  Skip  Restore  Debug view  Save as file  Load from file
+  Add a juice card  |  Play  Stop  Skip  Restore  Debug view  Save as file  Load from file
 ```
 
-![The Feedback Player's Inspector: four cards, one of them unfolded](../images/feedback-player-inspector.png)
+![The Juice Player's Inspector: four cards, one of them unfolded](../images/juice-player-inspector.png)
 
 The head counts the cards and adds up the **longest path** through the list: cards between two
 holds run at once, so a stretch is as long as its slowest card, and the holds and pauses add up.
-That is the same number the **Feedbacks Duration** expression answers, so a row can wait exactly as
+That is the same number the **Juice Duration** expression answers, so a row can wait exactly as
 long as the beat lasts.
 
 ### What a card can be
@@ -395,12 +395,12 @@ And three are neither a feeling nor a wait:
 | Card | What it does |
 | --- | --- |
 | **Tween Property** | Walks one property of the object to a value, over a time. Restore Initial Values puts it back |
-| **Emit Signal** | Says one word out of the player's **On Feedback Signal** trigger, so a sheet can hang anything off a point in the list |
-| **Play Player** | Plays another Feedback Player from inside this one, at a share of this play's strength |
+| **Emit Signal** | Says one word out of the player's **On Juice Signal** trigger, so a sheet can hang anything off a point in the list |
+| **Play Player** | Plays another Juice Player from inside this one, at a share of this play's strength |
 
 ### The unfolded card
 
-Click a card's arrow and it opens: a line saying what that feedback does, **Active**, **Label**,
+Click a card's arrow and it opens: a line saying what that juice card does, **Active**, **Label**,
 **Chance**, a **Timing** foldout, then the card's own fields drawn with the real drawers - seconds
 get a unit dropdown, a fixed choice gets its toggles - and then, while the game runs, the values
 the play is writing back, greyed. A Loop Back shows its **Loops left** counting down in the
@@ -420,7 +420,7 @@ a moment file's step.
 | **Strength** | What every amount in the list is scaled by, before the strength on the row |
 | **Direction** | Which end of the list a play starts from |
 | **While playing** | What a second play does while the first runs: restart, ignore, or overlap |
-| **Cooldown** | The shortest gap between two plays, so a rapid hit stops stacking its own feedback |
+| **Cooldown** | The shortest gap between two plays, so a rapid hit stops stacking its own juice |
 | **Moment file** | Optional: a moment file to play INSTEAD of the list |
 
 **Save as file** writes the list out as a moment file, naming any card whose timing a file cannot
@@ -439,25 +439,25 @@ you see why the flash came late.
 
 ### The rows on the node
 
-The player publishes its own vocabulary in the **Feedback Player** category, read on the node:
+The player publishes its own vocabulary in the **Juice Player** category, read on the node:
 
 | Row | Kind | What it does |
 | --- | --- | --- |
-| Play Feedbacks | action | Plays the list and carries on with the rows under it |
-| Play Feedbacks And Wait | action | Plays the list and waits for the last card |
-| Play Backwards | action | Plays it from the far end |
-| Play On Channel | action | Plays every feedback player in a group at once |
-| Stop Feedbacks | action | Stops the play where it is |
+| Play Juice | action | Plays the list and carries on with the rows under it |
+| Play Juice And Wait | action | Plays the list and waits for the last card |
+| Play Juice Backwards | action | Plays it from the far end |
+| Play Juice On Channel | action | Plays every juice card player in a group at once |
+| Stop Juice | action | Stops the play where it is |
 | Skip To End | action | Does everything that is left at once |
 | Restore Initial Values | action | Puts back what the tween cards changed |
 | Revert | action | Stops and puts it back, the last change first |
-| Pause Feedbacks / Resume Feedbacks | actions | Hold the play, then carry on from the same card |
+| Pause Juice / Resume Juice | actions | Hold the play, then carry on from the same card |
 | Is Playing | condition | True while a play is running |
 | Has Played | condition | True once it has played at least once |
-| On Feedbacks Started / On Feedbacks Finished | triggers | The two ends of a play |
-| On Feedback Signal | trigger | The word an Emit Signal card said |
-| Feedbacks Progress | expression | How far down the list the play has got, 0 to 1 |
-| Feedbacks Duration | expression | The longest path through the list, in seconds |
+| On Juice Started / On Juice Finished | triggers | The two ends of a play |
+| On Juice Signal | trigger | The word an Emit Signal card said |
+| Juice Progress | expression | How far down the list the play has got, 0 to 1 |
+| Juice Duration | expression | The longest path through the list, in seconds |
 
 ### Editing the list while the game runs
 
@@ -471,32 +471,32 @@ The weapon-change beat, in two rows:
 | Lane | Row |
 | --- | --- |
 | condition | Player: **On weapon changed** |
-| action | FireFeedback: **Replace feedback "kick" with** `{"verb": "recoil", "amount": Weapon.recoil}` |
-| action | FireFeedback: **Set feedback "shot" effect to** `Weapon.sound` |
+| action | FireJuice: **Replace juice card "kick" with** `{"verb": "recoil", "amount": Weapon.recoil}` |
+| action | FireJuice: **Set juice card "shot" effect to** `Weapon.sound` |
 
 The replacement keeps the old card's name unless it brings one of its own, so every other row that
 addressed it goes on working.
 
 | Row | Kind | What it does |
 | --- | --- | --- |
-| Add Feedback | action | Adds a card, at the end or after the one you name |
-| Insert Feedback Before | action | Adds a card immediately above the one you name |
-| Replace Feedback | action | Swaps one card for another, in place, keeping its name |
-| Remove Feedback | action | Takes one card out |
-| Move Feedback To | action | Moves a card to a place in the list (the first is 1) |
-| Enable Feedback / Disable Feedback | actions | The card's tick box, both ways |
-| Set Feedback Field | action | Writes one value on one card: amount, effect, seconds, delay, interval, repeat, chance, loops |
-| Set Feedback Timing | action | Delay, repeats, the gap between them, and which clock |
-| Set Feedback Chance | action | How often that card is felt at all, as a percentage |
-| Set Feedback Label | action | Renames a card - and with it what the rest of the sheet says |
-| Duplicate Feedback | action | Copies a card in under a name of its own |
-| Clear Feedbacks | action | Empties the list |
-| Copy Feedbacks From | action | Takes another player's whole list, as a copy |
+| Add Juice Card | action | Adds a card, at the end or after the one you name |
+| Insert Juice Card Before | action | Adds a card immediately above the one you name |
+| Replace Juice Card | action | Swaps one card for another, in place, keeping its name |
+| Remove Juice Card | action | Takes one card out |
+| Move Juice Card To | action | Moves a card to a place in the list (the first is 1) |
+| Enable Juice Card / Disable Juice Card | actions | The card's tick box, both ways |
+| Set Juice Card Field | action | Writes one value on one card: amount, effect, seconds, delay, interval, repeat, chance, loops |
+| Set Juice Card Timing | action | Delay, repeats, the gap between them, and which clock |
+| Set Juice Card Chance | action | How often that card is felt at all, as a percentage |
+| Rename Juice Card | action | Renames a card - and with it what the rest of the sheet says |
+| Duplicate Juice Card | action | Copies a card in under a name of its own |
+| Clear Juice Cards | action | Empties the list |
+| Copy Juice Cards From | action | Takes another player's whole list, as a copy |
 | Load Moment File / Save Moment File | actions | The two doors between this list and a file |
-| Set Player Strength / Set Player Cooldown | actions | The object's own volume knob, and the shortest gap between plays |
+| Set Juice Player Strength / Set Juice Player Cooldown | actions | The object's own volume knob, and the shortest gap between plays |
 | Set Can Play While Playing | action | Restart, ignore, or overlap |
 
-The Add, Insert and Replace rows each take a **feedback**, and the parameter opens the card - the
+The Add, Insert and Replace rows each take a **juice card**, and the parameter opens the card - the
 same card the Inspector's list unfolds, with the same kinds and the same fields. What ends up in the
 box is the dictionary the row emits, so an expression can be typed straight in instead.
 
@@ -510,14 +510,14 @@ The rows a designed list cannot have, because they are about a game that is runn
 
 | Row | Kind | What it does |
 | --- | --- | --- |
-| Mute Feedback Category | action | Silences a whole family at once - audio, transform, camera, screen, pause, loop, signal. THE accessibility option: one row per switch |
-| Mute Feedback Category On Channel | action | The same switch, thrown for every player in a group |
-| Scale Feedback Amounts | action | Multiplies how much a family does - the effect-strength slider, where half is still the same beat |
-| Retime Feedbacks | action | Multiplies every length, wait and gap - a snappier version with nothing retuned |
-| Shuffle Feedbacks Between | action | Reorders the stretch between two cards at random |
-| Pick One Feedback Of | action | Ticks one of `shake_a`, `shake_b`, `shake_c` and unticks the rest |
-| Jump To Feedback | action | Moves the head of a running play to a card |
-| Skip Feedback Once | action | Steps over one card next time, then forgets about it |
+| Mute Juice Family | action | Silences a whole family at once - audio, transform, camera, screen, pause, loop, signal. THE accessibility option: one row per switch |
+| Mute Juice Family On Channel | action | The same switch, thrown for every player in a group |
+| Scale Juice Amounts | action | Multiplies how much a family does - the effect-strength slider, where half is still the same beat |
+| Scale Juice Timing | action | Multiplies every length, wait and gap - a snappier version with nothing retuned |
+| Shuffle Juice Cards Between | action | Reorders the stretch between two cards at random |
+| Pick One Juice Card Starting With | action | Ticks one of `shake_a`, `shake_b`, `shake_c` and unticks the rest |
+| Jump To Juice Card | action | Moves the head of a running play to a card |
+| Skip Juice Card Once | action | Steps over one card next time, then forgets about it |
 | Set Loop Count | action | How many times a Loop Back card goes round |
 | Hold Here / Release Hold | actions | Stops the head where it is, and carries on from the same card. Nothing ticks while it waits |
 
@@ -525,24 +525,24 @@ The rows a designed list cannot have, because they are about a game that is runn
 
 | Row | Kind | What it answers |
 | --- | --- | --- |
-| Feedback Is Playing | condition | True while the head is on that card |
-| Has Feedback | condition | True when the list holds a card by that name |
-| Feedback Is Enabled | condition | True when that card's box is ticked |
-| For Each Feedback | looping condition | Runs the actions under it once per card, with each label in hand |
-| Feedback Count | expression | How many cards the list holds |
-| Feedback Label At | expression | The name of the card at a place (the first is 1) |
-| Feedback Field | expression | What one card says at one of its fields |
-| Feedback Progress | expression | How far through ONE card the play is, 0 to 1 |
-| Feedback Duration | expression | How long ONE card lasts, its own wait included |
-| Current Feedback | expression | The label of the card the head is on |
+| Juice Card Is Playing | condition | True while the head is on that card |
+| Has Juice Card | condition | True when the list holds a card by that name |
+| Juice Card Is Enabled | condition | True when that card's box is ticked |
+| For Each Juice Card | looping condition | Runs the actions under it once per card, with each label in hand |
+| Juice Card Count | expression | How many cards the list holds |
+| Juice Card Label At | expression | The name of the card at a place (the first is 1) |
+| Juice Card Field | expression | What one card says at one of its fields |
+| Juice Card Progress | expression | How far through ONE card the play is, 0 to 1 |
+| Juice Card Duration | expression | How long ONE card lasts, its own wait included |
+| Current Juice Card | expression | The label of the card the head is on |
 | Loops Left | expression | How many times round a Loop Back still has to go |
-| On Feedback Started / On Feedback Finished | triggers | The two ends of one card, carrying its label |
-| On Feedback Skipped | trigger | The label and why: off, muted, chance, strength, or skipped once |
+| On Juice Card Started / On Juice Card Finished | triggers | The two ends of one card, carrying its label |
+| On Juice Card Skipped | trigger | The label and why: off, muted, chance, strength, or skipped once |
 | On Hold Reached | trigger | A Hold card began waiting |
 | On Loop | trigger | A Loop Back sent the head round, with the loops left |
 
-A settings screen is **For Each Feedback** over the list, one switch per label, each one
-**Disable Feedback** on the label it is about.
+A settings screen is **For Each Juice Card** over the list, one switch per label, each one
+**Disable Juice Card** on the label it is about.
 
 ### Where the buttons are
 
@@ -558,8 +558,8 @@ of one list. The segment goes away when the selection moves.
 
 Rename a card and every row that named it goes on compiling, goes on running, and does nothing. The
 editor says so before the game runs: the row takes the quiet amber state, and the sentence is in the
-Doctor's **Feedbacks** section and in the row's help strip once the row is selected. It stays quiet
-without evidence - a sheet no scene runs, a scene with no Feedback Player in it, and a label that
+Doctor's **Juice Players** section and in the row's help strip once the row is selected. It stays quiet
+without evidence - a sheet no scene runs, a scene with no Juice Player in it, and a label that
 comes from an expression all earn nothing rather than a guess.
 
 ---

@@ -7,7 +7,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## MomentRunner is the ONE piece of code every home of a moment runs through: a Moment
 ## block's emitted coroutine, a moment FILE played by the Juice pack's Moment row, and the list a
-## feedback node holds. Three places to write a moment down, one thing that plays it - so a beat
+## Juice Player holds. Three places to write a moment down, one thing that plays it - so a beat
 ## behaves the same wherever it was written, and a fix lands once.
 ##
 ## It publishes no verbs. It is a library the emitted code names by class, which is why it ships
@@ -94,7 +94,7 @@ static func _runner_lines() -> PackedStringArray:
 		"# kinds: holding one of those to 0.3 would not be less flashing, it would be the wrong number.",
 		"#",
 		"# ONE list, here, because a moment has three homes - a block of rows, a moment file, and the",
-		"# list a feedback node holds - and a word held to the ceiling in one of them and not in another",
+		"# list a Juice Player holds - and a word held to the ceiling in one of them and not in another",
 		"# would be a different beat depending on where somebody wrote it down.",
 		"## The step words whose amount is an AMPLITUDE - how much of something a player SEES, from none of it to all of it.",
 		"const AMPLITUDE_VERBS: PackedStringArray = [\"shake\", \"flash\", \"punch\", \"shockwave\",",

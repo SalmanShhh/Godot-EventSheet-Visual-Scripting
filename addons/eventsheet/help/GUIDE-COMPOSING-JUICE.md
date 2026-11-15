@@ -6,7 +6,7 @@ things happen in an order, at different strengths, at different distances. Writi
 timers and a boolean per effect is how most games do it, and it is why nobody ever tunes it twice.
 
 This guide is the other way: **a beat is written down, once, as rows**, and then it is played by
-name. It covers the Moment block and its four timing words, the Feedback Player and the list of
+name. It covers the Moment block and its four timing words, the Juice Player and the list of
 cards an object carries, the rows that edit that list while the game runs, strength and place and
 range, playing a beat backwards or turning it around mid-play, channels, springs and curves under
 any property, blink patterns, audio sweeps and mix snapshots, haptics, the sequencer, and a bar
@@ -23,7 +23,7 @@ GDScript in your own project folder. Nothing invents a parallel environment to l
 - [Where it happened, and how far it reaches](#where-it-happened-and-how-far-it-reaches)
 - [Backwards, reverted, skipped, put back](#backwards-reverted-skipped-put-back)
 - [What a beat says while it plays](#what-a-beat-says-while-it-plays)
-- [The Feedback Player: the list an object carries](#the-feedback-player-the-list-an-object-carries)
+- [The Juice Player: the list an object carries](#the-juice-player-the-list-an-object-carries)
 - [Every card, by its label](#every-card-by-its-label)
 - [Channels: one row heard by everything listening](#channels-one-row-heard-by-everything-listening)
 - [Springs under any property](#springs-under-any-property)
@@ -45,7 +45,7 @@ three homes, and they hold the same shape:
 | Home | What it is | Best for |
 | --- | --- | --- |
 | A **moment file** (`MomentResource`) | A `.tres` in your project holding the steps | A beat several objects share: the standard hit, the standard death |
-| A **Feedback Player** node | A node under one object, whose Inspector is the list | This object's own beat: this enemy's hit, this button's hover |
+| A **Juice Player** node | A node under one object, whose Inspector is the list | This object's own beat: this enemy's hit, this button's hover |
 | A **Moment block** | A block of rows in the sheet, its children the steps | A beat with timing in it, read in the sheet beside the event that fires it |
 
 All three are played by the same runner, so a beat behaves identically wherever it was written, and
@@ -188,30 +188,30 @@ than running two copies of it over each other.
 
 ---
 
-## The Feedback Player: the list an object carries
+## The Juice Player: the list an object carries
 
 A moment file is shared between objects. Sometimes the beat belongs to ONE object, and lives better
-on the object itself. That is the **Feedback Player**: a node you add under any object, holding the
-list of feedbacks that object plays. Its Inspector is the list; the sheet's side of it is one row
+on the object itself. That is the **Juice Player**: a node you add under any object, holding the
+list of juice cards that object plays. Its Inspector is the list; the sheet's side of it is one row
 that never changes as the list is tuned.
 
 ```
 On Enemy damaged
-  -> HitFeedback | FeedbackPlayer: Play Feedbacks  at 0.6
+  -> HitJuice | JuicePlayer: Play Juice  at 0.6
 On Enemy died
-  -> HitFeedback | FeedbackPlayer: Play Feedbacks And Wait  at 1.0
+  -> HitJuice | JuicePlayer: Play Juice And Wait  at 1.0
   -> Enemy | Object: Destroy
 ```
 
-Each feedback is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
+Each effect is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
 arrow, a tick box, its label, a badge saying how long it takes, and a menu. Under the list sits
-**Add a feedback**, a searchable dropdown grouped by family.
+**Add card**, a searchable dropdown grouped by family.
 
-![The Feedback Player's Inspector: four cards, one of them unfolded](images/feedback-player-inspector.png)
+![The Juice Player's Inspector: four cards, one of them unfolded](images/juice-player-inspector.png)
 
 The head counts the cards and adds up the **longest path** through the list: cards between two holds
 run at once, so a stretch is as long as its slowest card, and the holds and pauses add up. That is
-the same number the **Feedbacks Duration** expression answers, so a row can wait exactly as long as
+the same number the **Juice Duration** expression answers, so a row can wait exactly as long as
 the beat lasts without the number being typed twice.
 
 Ten of the card words are the same words a moment file holds - shake, hitstop, slowmo, flash, punch,
@@ -221,7 +221,7 @@ rather than being felt (**Pause**, **Hold**, **Loop Start**, **Loop Back**), and
 feeling nor a wait (**Tween Property**, **Emit Signal**, **Play Player**, which plays another player
 from inside this one at a share of this play's strength).
 
-Unfold a card and it opens: what that feedback does, **Active**, **Label**, **Chance**, a **Timing**
+Unfold a card and it opens: what that juice card does, **Active**, **Label**, **Chance**, a **Timing**
 foldout (delay, cooldown, repeat and interval, the clock, a strength window it only plays inside,
 skip on stop), and then the card's own fields drawn with the real Inspector drawers. While the game
 runs, the values the play is writing back are shown greyed, through Godot's own remote Inspector.
@@ -244,36 +244,36 @@ never disagree about which step is meant.
 
 ```
 On Weapon changed
-  -> FireFeedback | FeedbackPlayer: Replace Feedback  "kick"  with  {"verb": "recoil", "amount": Weapon.recoil}
-  -> FireFeedback | FeedbackPlayer: Set Feedback Field  "shot"  "effect"  Weapon.sound
+  -> FireJuice | JuicePlayer: Replace Juice Card  "kick"  with  {"verb": "recoil", "amount": Weapon.recoil}
+  -> FireJuice | JuicePlayer: Set Juice Card Field  "shot"  "effect"  Weapon.sound
 On Options screen shake changed
-  -> FireFeedback | FeedbackPlayer: Scale Feedback Amounts  "camera"  Settings.shake_percent
+  -> FireJuice | JuicePlayer: Scale Juice Amounts  "camera"  Settings.shake_percent
 ```
 
-The rows fall into four groups. The **editing** rows are the Inspector's own gestures: Add Feedback,
-Insert Feedback Before, Replace Feedback, Remove Feedback, Move Feedback To, Enable Feedback and
-Disable Feedback, Set Feedback Field, Set Feedback Timing, Set Feedback Chance, Set Feedback Label,
-Duplicate Feedback, Clear Feedbacks, Copy Feedbacks From, Load Moment File and Save Moment File, Set
-Player Strength, Set Player Cooldown and Set Can Play While Playing.
+The rows fall into four groups. The **editing** rows are the Inspector's own gestures: Add Juice Card,
+Insert Juice Card Before, Replace Juice Card, Remove Juice Card, Move Juice Card To, Enable Juice Card and
+Disable Juice Card, Set Juice Card Field, Set Juice Card Timing, Set Juice Card Chance, Rename Juice Card,
+Duplicate Juice Card, Clear Juice Cards, Copy Juice Cards From, Load Moment File and Save Moment File, Set
+Juice Player Strength, Set Juice Player Cooldown and Set Can Play While Playing.
 A row that changes a card changes it for that object, for that run: enemies made from one scene each
 keep their own list, so retuning one never retunes another, and the saved scene is never touched.
 
-The **running-game** rows are the ones a designed list cannot have: Mute Feedback Category (and Mute
-Feedback Category On Channel) silences a whole family at once, which is the accessibility option -
-one row per switch; Scale Feedback Amounts is the effect-strength slider, where half is still the
-same beat; Retime Feedbacks multiplies every length and wait, so a snappier version needs nothing
-retuned; Shuffle Feedbacks Between reorders a stretch; Pick One Feedback Of ticks one of several and
-unticks the rest; Jump To Feedback, Skip Feedback Once, Set Loop Count, Hold Here and Release Hold
+The **running-game** rows are the ones a designed list cannot have: Mute Juice Family (and Mute
+Juice Family On Channel) silences a whole family at once, which is the accessibility option -
+one row per switch; Scale Juice Amounts is the effect-strength slider, where half is still the
+same beat; Scale Juice Timing multiplies every length and wait, so a snappier version needs nothing
+retuned; Shuffle Juice Cards Between reorders a stretch; Pick One Juice Card Starting With ticks one of several and
+unticks the rest; Jump To Juice Card, Skip Juice Card Once, Set Loop Count, Hold Here and Release Hold
 move the head of a play that is already running.
 
-The **asks** are Feedback Is Playing, Has Feedback, Feedback Is Enabled, the looping condition For
-Each Feedback, and the readings Feedback Count, Feedback Label At, Feedback Field, Feedback Progress,
-Feedback Duration, Current Feedback and Loops Left. A settings screen is For Each Feedback over the
-list, one switch per label, each one Disable Feedback on the label it is about.
+The **asks** are Juice Card Is Playing, Has Juice Card, Juice Card Is Enabled, the looping condition For
+Each Juice Card, and the readings Juice Card Count, Juice Card Label At, Juice Card Field, Juice Card Progress,
+Juice Card Duration, Current Juice Card and Loops Left. A settings screen is For Each Juice Card over the
+list, one switch per label, each one Disable Juice Card on the label it is about.
 
-The **triggers** are On Feedbacks Started and On Feedbacks Finished, On Feedback Started, On Feedback
-Finished and On Feedback Skipped (which carries why: off, muted, chance, strength, or skipped once),
-On Feedback Signal, On Hold Reached and On Loop.
+The **triggers** are On Juice Started and On Juice Finished, On Juice Card Started, On Juice Card
+Finished and On Juice Card Skipped (which carries why: off, muted, chance, strength, or skipped once),
+On Juice Signal, On Hold Reached and On Loop.
 
 An edit row never writes into a moment file. A player whose file slot is filled is playing a beat
 other objects may be playing too, so the first edit takes a copy of it into this list and lets the
@@ -281,8 +281,8 @@ slot go: the shared beat is unchanged, and this one is this object's own.
 
 **When a label names nothing.** Rename a card and every row that named it goes on compiling, goes on
 running, and does nothing. The editor says so before the game runs: the row takes the quiet amber
-state, and the sentence is in the Doctor's Feedbacks section and in the row's help strip once the
-row is selected. It stays quiet without evidence, so a sheet no scene runs, a scene with no Feedback
+state, and the sentence is in the Doctor's Juice Players section and in the row's help strip once the
+row is selected. It stays quiet without evidence, so a sheet no scene runs, a scene with no Juice
 Player in it, and a label that comes from an expression all earn nothing rather than a guess.
 
 ---
@@ -312,7 +312,7 @@ leaving every other channel it listens on alone.
 
 The same three words answer on the Juice 3D pack, so one Shake Channel row reaches a prop in a 3D
 level and a panel on the 2D interface and shakes both. **Play On Channel** does the same for a whole
-group of Feedback Players.
+group of Juice Players.
 
 Nothing new is invented for any of this: Shake Channel is one `call_group`, a listener is a node in
 that group, and the Node dock already tells you which groups a node is in.
@@ -532,7 +532,7 @@ Every piece in this guide was built to the same three rules, because a beat that
 than no beat at all.
 
 **On process parks itself.** A behaviour that is not doing anything calls `set_process(false)` and
-costs exactly zero frame time. A Feedback Player with no play running, a Juice behaviour whose shake
+costs exactly zero frame time. A Juice Player with no play running, a Juice behaviour whose shake
 has faded to nothing, a spring bank where every spring has settled, a stopped sequencer head, a HUD
 with no bar lagging, and a level full of channel listeners with nothing shaking are all free. A
 channel listener in particular is a group membership, which costs no frames at all until a broadcast
@@ -554,7 +554,7 @@ on one; and a tab that throttles frames is exactly why the sequencer reads the s
 position rather than counting frames. A dropped frame never eats a beat - a frame long enough to
 cross three steps says all three, in order.
 
-**Two habits that pay for themselves.** Scale Feedback Amounts and Mute Feedback Category give a
+**Two habits that pay for themselves.** Scale Juice Amounts and Mute Juice Family give a
 mobile build a lighter version of the same beat with nothing rewritten and no second list to keep in
 step. And a beat that reaches far - a quake, an explosion - is one Play Moment At with a range,
 which does its distance arithmetic once per play, rather than one moment per object in earshot.

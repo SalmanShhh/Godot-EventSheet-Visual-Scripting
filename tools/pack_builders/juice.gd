@@ -1080,7 +1080,7 @@ static func _moment_lines() -> PackedStringArray:
 		"# those would not mean twice as much of anything.",
 		"#",
 		"# The list itself lives in the moment runner beside this pack. A moment has three homes - a block",
-		"# of rows, a moment file, and the list a feedback node holds - and a word held to the ceiling in",
+		"# of rows, a moment file, and the list a Juice Player holds - and a word held to the ceiling in",
 		"# one of them and not in another would be a different beat depending on where somebody wrote it",
 		"# down. The name stays here so a sheet that already reads it goes on reading it.",
 		"## The step words whose amount is an AMPLITUDE - how much of something a player sees, 0 to 1.",

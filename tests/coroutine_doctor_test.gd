@@ -45,7 +45,7 @@ static func run() -> bool:
 	all_passed = _check("and one that does not await stays quiet", f4.size(), 0) and all_passed
 
 	# The three lists that have to agree, asked the same question about the same id.
-	all_passed = _check("the Doctor knows the awaiting Feedback Player row",
+	all_passed = _check("the Doctor knows the awaiting Juice Player row",
 		EventSheetProjectDoctor.COROUTINE_ACE_IDS.has("play_and_wait"), true) and all_passed
 	all_passed = _check("and so does the compiler",
 		EventSheetCompiler._COROUTINE_ACE_IDS.has("play_and_wait"), true) and all_passed

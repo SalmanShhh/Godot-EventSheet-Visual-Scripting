@@ -12,6 +12,10 @@ Node script extending `CharacterBody2D`.
 - `health: int` (default `100`)
 - `speed: float` (default `200.0`)
 
+### old_sheet (`res://tests/fixtures/juice_rename_old/old_sheet.tres`)
+Node script extending `Node2D`.
+(publishes nothing yet)
+
 ## Script packs
 
 ### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.gd`)
@@ -1311,80 +1315,6 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Focused Node** - The node currently in focus, or nothing when none is. Feed it to the Juice pack's Start Blinking to highlight it, or read a name off it for the prompt text.
 
-### FeedbackPlayer (`res://eventsheet_addons/juice/feedback_player.gd`)
-@ace_tags(juice, feedback, game feel) @ace_category("Feedback Player") @ace_version(1.0.0)
-
-#### Triggers
-- **On Feedbacks Started** (`at_strength: float`)
-- **On Feedbacks Finished**
-- **On Feedback Signal** (`word: String`)
-- **On Feedback Started** (`label: String`)
-- **On Feedback Finished** (`label: String`)
-- **On Feedback Skipped** (`label: String, why: String`)
-- **On Hold Reached**
-- **On Loop** (`loops_left: int`)
-
-#### Conditions
-- **Is Playing** - True while a play is running - between the started and the finished trigger.
-- **Has Played** - True once this player has played at least once, and stays true. The "they have seen this already" question, with nothing to store.
-- **Feedback Is Playing** (`label: String`) - True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.
-- **Has Feedback** (`label: String`) - True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.
-- **Feedback Is Enabled** (`label: String`) - True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.
-- **For Each Feedback** - Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.
-
-#### Actions
-- **Play Feedbacks** (`at_strength: float`) - Plays this node's list of feedbacks and carries straight on with the rows under this one. The strength scales every amount in the list, so a light hit and a heavy one are one list at two numbers.
-- **Play Feedbacks And Wait** (`at_strength: float`) - Plays the list and WAITS for the last card to finish - the rows under this one are what happens afterwards. Use it when the hit has to land before the death animation starts.
-- **Play Backwards** (`at_strength: float`) - Plays the list from the far end, so the last feedback is felt first. The other half of a beat that has to undo itself - a door that opened, closing.
-- **Play On Channel** (`channel: String, at_strength: float`) - Plays every feedback player in a group at once, at one strength - the whole squad flinching, every button in a menu bouncing. Put the players in the group and name it here.
-- **Stop Feedbacks** - Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.
-- **Skip To End** - Stops waiting and does everything that is left at once - the cutscene skip of a feedback list. Every card from the head down is felt, without the pauses between them.
-- **Restore Initial Values** - Puts every value this player's Tween Property cards changed back the way they found it. The undo of a list that moved the object rather than flashing it.
-- **Revert** - Stops the play and puts back what it changed, the LAST change first - so a stack of tweens unwinds in the order it was built rather than all at once.
-- **Pause Feedbacks** - Holds the play where it is without losing its place. Resume Feedbacks carries on from the same card.
-- **Resume Feedbacks** - Carries on from where Pause Feedbacks left off.
-- **Add Feedback** (`step: Dictionary, after_label: String`) - Adds one feedback to this player's list while the game runs - the same card the Inspector adds, with the same fields. Leave the after box empty to put it at the end, or name a card to put it straight after that one.
-- **Insert Feedback Before** (`step: Dictionary, before_label: String`) - Puts a feedback into the list immediately ABOVE the card you name - the other half of Add Feedback, for a step that has to be felt before something already in the beat.
-- **Replace Feedback** (`label: String, step: Dictionary`) - Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own, so every other row that names it goes on working.
-- **Remove Feedback** (`label: String`) - Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Feedback.
-- **Move Feedback To** (`label: String, position: int`) - Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last.
-- **Enable Feedback** (`label: String`) - Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row.
-- **Disable Feedback** (`label: String`) - Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row.
-- **Set Feedback Field** (`label: String, field: String, value: Variant`) - Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.
-- **Set Feedback Timing** (`label: String, delay: float, repeat: int, interval: float, clock: String`) - Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.
-- **Set Feedback Chance** (`label: String, percent: float`) - How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is.
-- **Set Feedback Label** (`label: String, new_label: String`) - Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say.
-- **Duplicate Feedback** (`label: String, new_label: String`) - Copies one card and puts the copy straight under it, under a name of its own. Two shakes a frame apart out of one tuned card.
-- **Clear Feedbacks** - Empties the list. What a player that is about to be handed a whole beat by Copy Feedbacks From or Load Moment File wants first.
-- **Copy Feedbacks From** (`other: Node`) - Takes another player's whole list and makes it this one's - a copy, so retuning either afterwards leaves the other alone. One tuned enemy hit, given to every enemy that spawns.
-- **Load Moment File** (`path: String`) - Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.
-- **Save Moment File** (`path: String`) - Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.
-- **Set Player Strength** (`value: float`) - Turns this whole player up or down without retuning a single card - the object's own volume knob, on top of the strength the play row asks for.
-- **Set Player Cooldown** (`seconds: float`) - The shortest gap between two plays, in seconds. A play asked for sooner is refused, which is how a rapid-fire hit stops stacking its own feedback.
-- **Set Can Play While Playing** (`answer: String`) - What a second play does while the first is still running: start again from the top, be ignored, or run alongside it.
-- **Mute Feedback Category** (`category: String, muted: bool`) - Silences a whole family of cards at once - every screen effect, every camera move, every sound - and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked.
-- **Mute Feedback Category On Channel** (`channel: String, category: String, muted: bool`) - The same switch, thrown for every Feedback Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object.
-- **Scale Feedback Amounts** (`category: String, factor: float`) - Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list.
-- **Retime Feedbacks** (`factor: float`) - Stretches or squeezes the whole beat in time: every length, every wait and every gap multiplied by the same number. Half makes a snappier version of a beat nobody has to retune card by card.
-- **Shuffle Feedbacks Between** (`first_label: String, last_label: String`) - Reorders the stretch of the list between two cards, both included, at random. The cheapest variety a repeated hit can have: the same feedbacks, in a different order every time.
-- **Pick One Feedback Of** (`prefix: String`) - Ticks exactly one of the cards whose label starts with what you type and unticks the rest, so shake_a, shake_b and shake_c become one shake chosen fresh each time. Variety out of the list itself, with no branch in the sheet.
-- **Jump To Feedback** (`label: String`) - Moves the head of a RUNNING play to the card you name, so the rest of the beat starts there. What a hit that interrupts its own wind-up wants.
-- **Skip Feedback Once** (`label: String`) - Steps over one card the NEXT time the play reaches it, and then forgets about it. The one-off exception a disable would have to be undone after.
-- **Set Loop Count** (`label: String, loops: int`) - How many times a Loop Back card sends the head round. A charge that gets longer the further it is held, without a second list.
-- **Hold Here** - Stops the head where it is and leaves it there - a charge held, a beat waiting on the player. Release Hold carries on from the same card, and nothing ticks while it waits.
-- **Release Hold** - Lets a held play carry on from the card it stopped on.
-
-#### Expressions
-- **Feedbacks Progress** - How far down the list the play has got, 0 at the first card and 1 when the last one is done.
-- **Feedbacks Duration** - The longest path through the list in seconds - the same number the head of the Inspector shows, so a row can wait exactly as long as the beat lasts.
-- **Feedback Count** - How many cards this player's list holds, ticked or not - the number the head of the Inspector shows.
-- **Feedback Label At** (`position: int`) - The name of the card at a place in the list, so a settings screen can list a beat without knowing what is in it. The first card is 1; a number past the end answers with nothing.
-- **Feedback Field** (`label: String, field: String`) - What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Feedback Field, so a slider can be shown at the value the list actually holds.
-- **Feedback Progress** (`label: String`) - How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.
-- **Feedback Duration** (`label: String`) - How long ONE card lasts, its own wait included - beside Feedbacks Duration, which is how long the whole beat lasts.
-- **Current Feedback** - The label of the card the head is on right now, or nothing when no play is running.
-- **Loops Left** (`label: String`) - How many times round a Loop Back card still has to go in the play that is running.
-
 ### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.gd`)
 @ace_tags(camera, juice) @ace_category("Juice") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -1473,6 +1403,80 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Trauma**
 - **Ticker Value** (`ticker_name: String`) - What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.
 - **Chromatic Shake Magnitude** - How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing, not the width the row asked for. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it and the whole hit reads as one thing.
+
+### JuicePlayer (`res://eventsheet_addons/juice/juice_player.gd`)
+@ace_tags(juice, juice player, feedback, game feel) @ace_category("Juice Player") @ace_provider_id(FeedbackPlayer) @ace_version(1.0.0)
+
+#### Triggers
+- **On Juice Started** (`at_strength: float`)
+- **On Juice Finished**
+- **On Juice Signal** (`word: String`)
+- **On Juice Card Started** (`label: String`)
+- **On Juice Card Finished** (`label: String`)
+- **On Juice Card Skipped** (`label: String, why: String`)
+- **On Hold Reached**
+- **On Loop** (`loops_left: int`)
+
+#### Conditions
+- **Is Playing** - True while a play is running - between the started and the finished trigger.
+- **Has Played** - True once this player has played at least once, and stays true. The "they have seen this already" question, with nothing to store.
+- **Juice Card Is Playing** (`label: String`) - True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.
+- **Has Juice Card** (`label: String`) - True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.
+- **Juice Card Is Enabled** (`label: String`) - True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.
+- **For Each Juice Card** - Runs the actions under it once per juice card in this player's list, top to bottom, with the label of each one in hand.
+
+#### Actions
+- **Play Juice** (`at_strength: float`) - Plays this node's list of juice cards and carries straight on with the rows under this one. The strength scales every amount in the list, so a light hit and a heavy one are one list at two numbers.
+- **Play Juice And Wait** (`at_strength: float`) - Plays the list and WAITS for the last card to finish - the rows under this one are what happens afterwards. Use it when the hit has to land before the death animation starts.
+- **Play Juice Backwards** (`at_strength: float`) - Plays the list from the far end, so the last juice card is felt first. The other half of a beat that has to undo itself - a door that opened, closing.
+- **Play Juice On Channel** (`channel: String, at_strength: float`) - Plays every Juice Player in a group at once, at one strength - the whole squad flinching, every button in a menu bouncing. Put the players in the group and name it here.
+- **Stop Juice** - Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.
+- **Skip To End** - Stops waiting and does everything that is left at once - the cutscene skip of a juice list. Every card from the head down is felt, without the pauses between them.
+- **Restore Initial Values** - Puts every value this player's Tween Property cards changed back the way they found it. The undo of a list that moved the object rather than flashing it.
+- **Revert** - Stops the play and puts back what it changed, the LAST change first - so a stack of tweens unwinds in the order it was built rather than all at once.
+- **Pause Juice** - Holds the play where it is without losing its place. Resume Juice carries on from the same card.
+- **Resume Juice** - Carries on from where Pause Juice left off.
+- **Add Juice Card** (`step: Dictionary, after_label: String`) - Adds one juice card to this player's list while the game runs - the same card the Inspector adds, with the same fields. Leave the after box empty to put it at the end, or name a card to put it straight after that one.
+- **Insert Juice Card Before** (`step: Dictionary, before_label: String`) - Puts a juice card into the list immediately ABOVE the card you name - the other half of Add Juice Card, for a step that has to be felt before something already in the beat.
+- **Replace Juice Card** (`label: String, step: Dictionary`) - Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own, so every other row that names it goes on working.
+- **Remove Juice Card** (`label: String`) - Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Juice Card.
+- **Move Juice Card To** (`label: String, position: int`) - Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last.
+- **Enable Juice Card** (`label: String`) - Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row.
+- **Disable Juice Card** (`label: String`) - Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row.
+- **Set Juice Card Field** (`label: String, field: String, value: Variant`) - Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.
+- **Set Juice Card Timing** (`label: String, delay: float, repeat: int, interval: float, clock: String`) - Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.
+- **Set Juice Card Chance** (`label: String, percent: float`) - How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is.
+- **Rename Juice Card** (`label: String, new_label: String`) - Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say.
+- **Duplicate Juice Card** (`label: String, new_label: String`) - Copies one card and puts the copy straight under it, under a name of its own. Two shakes a frame apart out of one tuned card.
+- **Clear Juice Cards** - Empties the list. What a player that is about to be handed a whole beat by Copy Juice Cards From or Load Moment File wants first.
+- **Copy Juice Cards From** (`other: Node`) - Takes another player's whole list and makes it this one's - a copy, so retuning either afterwards leaves the other alone. One tuned enemy hit, given to every enemy that spawns.
+- **Load Moment File** (`path: String`) - Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.
+- **Save Moment File** (`path: String`) - Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.
+- **Set Juice Player Strength** (`value: float`) - Turns this whole player up or down without retuning a single card - the object's own volume knob, on top of the strength the play row asks for.
+- **Set Juice Player Cooldown** (`seconds: float`) - The shortest gap between two plays, in seconds. A play asked for sooner is refused, which is how a rapid-fire hit stops stacking its own juice.
+- **Set Can Play While Playing** (`answer: String`) - What a second play does while the first is still running: start again from the top, be ignored, or run alongside it.
+- **Mute Juice Family** (`category: String, muted: bool`) - Silences a whole family of cards at once - every screen effect, every camera move, every sound - and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked.
+- **Mute Juice Family On Channel** (`channel: String, category: String, muted: bool`) - The same switch, thrown for every Juice Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object.
+- **Scale Juice Amounts** (`category: String, factor: float`) - Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list.
+- **Scale Juice Timing** (`factor: float`) - Stretches or squeezes the whole beat in time: every length, every wait and every gap multiplied by the same number. Half makes a snappier version of a beat nobody has to retune card by card.
+- **Shuffle Juice Cards Between** (`first_label: String, last_label: String`) - Reorders the stretch of the list between two cards, both included, at random. The cheapest variety a repeated hit can have: the same juice cards, in a different order every time.
+- **Pick One Juice Card Starting With** (`prefix: String`) - Ticks exactly one of the cards whose label starts with what you type and unticks the rest, so shake_a, shake_b and shake_c become one shake chosen fresh each time. Variety out of the list itself, with no branch in the sheet.
+- **Jump To Juice Card** (`label: String`) - Moves the head of a RUNNING play to the card you name, so the rest of the beat starts there. What a hit that interrupts its own wind-up wants.
+- **Skip Juice Card Once** (`label: String`) - Steps over one card the NEXT time the play reaches it, and then forgets about it. The one-off exception a disable would have to be undone after.
+- **Set Loop Count** (`label: String, loops: int`) - How many times a Loop Back card sends the head round. A charge that gets longer the further it is held, without a second list.
+- **Hold Here** - Stops the head where it is and leaves it there - a charge held, a beat waiting on the player. Release Hold carries on from the same card, and nothing ticks while it waits.
+- **Release Hold** - Lets a held play carry on from the card it stopped on.
+
+#### Expressions
+- **Juice Progress** - How far down the list the play has got, 0 at the first card and 1 when the last one is done.
+- **Juice Duration** - The longest path through the list in seconds - the same number the head of the Inspector shows, so a row can wait exactly as long as the beat lasts.
+- **Juice Card Count** - How many cards this player's list holds, ticked or not - the number the head of the Inspector shows.
+- **Juice Card Label At** (`position: int`) - The name of the card at a place in the list, so a settings screen can list a beat without knowing what is in it. The first card is 1; a number past the end answers with nothing.
+- **Juice Card Field** (`label: String, field: String`) - What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds.
+- **Juice Card Progress** (`label: String`) - How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.
+- **Juice Card Duration** (`label: String`) - How long ONE card lasts, its own wait included - beside Juice Duration, which is how long the whole beat lasts.
+- **Current Juice Card** - The label of the card the head is on right now, or nothing when no play is running.
+- **Loops Left** (`label: String`) - How many times round a Loop Back card still has to go in the play that is running.
 
 ### Juice3DBehavior (`res://eventsheet_addons/juice_3d/juice_3d_behavior.gd`)
 @ace_tags(camera, juice, 3d) @ace_category("Juice 3D") @ace_expose_all(node) @ace_version(1.0.0)
