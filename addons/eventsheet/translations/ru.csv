@@ -10581,3 +10581,41 @@ Set height to {height} pixels,Задать высоту {height} пикселе�
 The height in pixels.,Высота в пикселях.
 "Accent (Sections, selection)","Акцент (разделы, выделение)"
 %s (the %s row),%s (строка %s)
+Change how this reads…,Изменить формулировку…
+Other sheets can use this,Могут использовать другие листы
+"No function of this sheet is ticked ""Other sheets can use this"" yet. Tick it on a function, or right-click an event and Extract All Actions to Function.",В этом листе ещё нет функции с галочкой «Могут использовать другие листы». Поставьте её у функции или щёлкните событие правой кнопкой и выберите «Вынести все действия в функцию».
+Save the sheet first - other sheets read the script it writes.,"Сначала сохраните лист: другие листы читают скрипт, который он записывает."
+"Save the sheet first, so %s exists - other sheets read that script.","Сначала сохраните лист, чтобы появился %s: другие листы читают этот скрипт."
+"%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.","%s теперь есть в выборе каждого листа. Каждая строка действует на узел $%s, который можно изменить в поле «На узле» строки."
+Give this sheet a name first,Сначала дайте этому листу имя
+"Another sheet can only reach this one by the name of its class, and this sheet has none yet.","Другой лист может обратиться к этому только по имени его класса, а у этого листа его ещё нет."
+Open Sheet Type,Открыть тип листа
+%s could not be used in event sheets.,%s не удалось использовать в листах событий.
+%s: %d rows added,%s: добавлено строк: %d
+Scripts in event sheets,Скрипты в листах событий
+Untick what sheets should not see. Click a sentence to change it.,"Снимите галочки с того, что листы не должны видеть. Щёлкните фразу, чтобы изменить её."
+Add a script…,Добавить скрипт…
+Remove from this sheet,Убрать из этого листа
+Go to the line,Перейти к строке
+Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.,"Переименовали эту функцию? Добавьте устаревшую подмену под старым именем, чтобы листы, которые её уже используют, продолжали работать."
+What sheets can use,Что могут использовать листы
+No script yet. Add one to see what sheets can use from it.,"Скриптов пока нет. Добавьте один, чтобы увидеть, что из него могут использовать листы."
+From %s. Right-click one to change how it reads.,"Из %s. Щёлкните правой кнопкой, чтобы изменить формулировку."
+"This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.","Этот скрипт принадлежит поведению, поставляемому с плагином, поэтому он только показывается и здесь никогда не меняется."
+left out,исключено
+Pick a script in the list first.,Сначала выберите скрипт в списке.
+Written to %s: %s,Записано в %s: %s
+the members are shown again,члены снова показываются
+Not found: %s.,Не найдено: %s.
+There is no slot called %s here. This function has: %s.,Здесь нет поля %s. У этой функции есть: %s.
+"%s belongs to a behaviour that ships with the plugin, so how its rows read is changed in the behaviour itself.","%s принадлежит поведению, поставляемому с плагином, поэтому формулировки его строк меняются в самом поведении."
+"%s has changes you have not saved in Godot's script editor. Save it there first, so nothing you typed is lost.","В %s есть изменения, не сохранённые в редакторе скриптов Godot. Сначала сохраните его там, чтобы ничего не потерялось."
+"This row does not come from a script of yours, so there is no script to write its words into.","Эта строка не из вашего скрипта, поэтому некуда записать её формулировку."
+How should this read?,Как это должно читаться?
+How should this read in other sheets?,Как это должно читаться в других листах?
+Reads as,Читается как
+Kept in %s. Every row that uses it follows.,"Хранится в %s. Все строки, которые это используют, последуют за ним."
+Open the behaviour,Открыть поведение
+%s now reads as: %s,%s теперь читается так: %s
+Use in event sheets…,Использовать в листах событий…
+Use in event sheets,Использовать в листах событий

@@ -10581,3 +10581,41 @@ Set height to {height} pixels,Définir la hauteur à {height} pixels
 The height in pixels.,La hauteur en pixels.
 "Accent (Sections, selection)","Accent (sections, sélection)"
 %s (the %s row),%s (la ligne %s)
+Change how this reads…,Changer la formulation…
+Other sheets can use this,Les autres feuilles peuvent l'utiliser
+"No function of this sheet is ticked ""Other sheets can use this"" yet. Tick it on a function, or right-click an event and Extract All Actions to Function.","Aucune fonction de cette feuille n'est cochée « Les autres feuilles peuvent l'utiliser ». Cochez-le sur une fonction, ou faites un clic droit sur un événement et choisissez Extraire toutes les actions dans une fonction."
+Save the sheet first - other sheets read the script it writes.,Enregistrez d'abord la feuille : les autres feuilles lisent le script qu'elle écrit.
+"Save the sheet first, so %s exists - other sheets read that script.",Enregistrez d'abord la feuille pour que %s existe : les autres feuilles lisent ce script.
+"%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.","%s est maintenant dans le sélecteur de chaque feuille. Chaque ligne agit sur le nœud nommé $%s, que le champ Sur le nœud de la ligne peut changer."
+Give this sheet a name first,Donnez d'abord un nom à cette feuille
+"Another sheet can only reach this one by the name of its class, and this sheet has none yet.","Une autre feuille ne peut atteindre celle-ci que par le nom de sa classe, et cette feuille n'en a pas encore."
+Open Sheet Type,Ouvrir Type de feuille
+%s could not be used in event sheets.,%s n'a pas pu être utilisé dans les feuilles d'événements.
+%s: %d rows added,%s : %d lignes ajoutées
+Scripts in event sheets,Scripts dans les feuilles d'événements
+Untick what sheets should not see. Click a sentence to change it.,Décochez ce que les feuilles ne doivent pas voir. Cliquez sur une phrase pour la modifier.
+Add a script…,Ajouter un script…
+Remove from this sheet,Retirer de cette feuille
+Go to the line,Aller à la ligne
+Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.,Cette fonction a été renommée ? Ajoutez un substitut obsolète sous son ancien nom pour que les feuilles qui l'utilisent déjà continuent de fonctionner.
+What sheets can use,Ce que les feuilles peuvent utiliser
+No script yet. Add one to see what sheets can use from it.,Pas encore de script. Ajoutez-en un pour voir ce que les feuilles peuvent en utiliser.
+From %s. Right-click one to change how it reads.,Depuis %s. Clic droit sur une entrée pour changer sa formulation.
+"This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.",Ce script appartient à un comportement livré avec le plugin : il est affiché mais jamais modifié ici.
+left out,exclu
+Pick a script in the list first.,Choisissez d'abord un script dans la liste.
+Written to %s: %s,Écrit dans %s : %s
+the members are shown again,les membres sont de nouveau affichés
+Not found: %s.,Introuvable : %s.
+There is no slot called %s here. This function has: %s.,Il n'y a pas d'emplacement nommé %s ici. Cette fonction a : %s.
+"%s belongs to a behaviour that ships with the plugin, so how its rows read is changed in the behaviour itself.",%s appartient à un comportement livré avec le plugin : la formulation de ses lignes se change dans le comportement lui-même.
+"%s has changes you have not saved in Godot's script editor. Save it there first, so nothing you typed is lost.",%s contient des modifications non enregistrées dans l'éditeur de scripts de Godot. Enregistrez-le d'abord pour ne rien perdre.
+"This row does not come from a script of yours, so there is no script to write its words into.",Cette ligne ne vient pas d'un de vos scripts : il n'y a donc aucun script où écrire sa formulation.
+How should this read?,Comment cela doit-il se lire ?
+How should this read in other sheets?,Comment cela doit-il se lire dans les autres feuilles ?
+Reads as,Se lit comme
+Kept in %s. Every row that uses it follows.,Conservé dans %s. Toutes les lignes qui l'utilisent suivent.
+Open the behaviour,Ouvrir le comportement
+%s now reads as: %s,%s se lit maintenant : %s
+Use in event sheets…,Utiliser dans les feuilles d'événements…
+Use in event sheets,Utiliser dans les feuilles d'événements

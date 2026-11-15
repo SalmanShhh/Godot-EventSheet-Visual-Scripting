@@ -10581,3 +10581,41 @@ Set height to {height} pixels,Höhe auf {height} Pixel setzen
 The height in pixels.,Die Höhe in Pixeln.
 "Accent (Sections, selection)","Akzent (Abschnitte, Auswahl)"
 %s (the %s row),%s (die Zeile %s)
+Change how this reads…,Anzeige ändern…
+Other sheets can use this,Andere Blätter können dies verwenden
+"No function of this sheet is ticked ""Other sheets can use this"" yet. Tick it on a function, or right-click an event and Extract All Actions to Function.",Bei keiner Funktion dieses Blatts ist „Andere Blätter können dies verwenden“ angehakt. Hake es an einer Funktion an oder wähle per Rechtsklick auf ein Ereignis „Alle Aktionen in Funktion auslagern“.
+Save the sheet first - other sheets read the script it writes.,"Speichere zuerst das Blatt - andere Blätter lesen das Skript, das es schreibt."
+"Save the sheet first, so %s exists - other sheets read that script.","Speichere zuerst das Blatt, damit %s existiert - andere Blätter lesen dieses Skript."
+"%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.","%s ist jetzt in der Auswahl jedes Blatts. Jede Zeile wirkt auf den Knoten namens $%s, den das Feld „Auf Knoten“ der Zeile ändern kann."
+Give this sheet a name first,Gib diesem Blatt zuerst einen Namen
+"Another sheet can only reach this one by the name of its class, and this sheet has none yet.","Ein anderes Blatt erreicht dieses nur über den Namen seiner Klasse, und dieses Blatt hat noch keinen."
+Open Sheet Type,Blatttyp öffnen
+%s could not be used in event sheets.,%s konnte nicht in Ereignisblättern verwendet werden.
+%s: %d rows added,%s: %d Zeilen hinzugefügt
+Scripts in event sheets,Skripte in Ereignisblättern
+Untick what sheets should not see. Click a sentence to change it.,"Entferne den Haken bei dem, was Blätter nicht sehen sollen. Klicke auf einen Satz, um ihn zu ändern."
+Add a script…,Skript hinzufügen…
+Remove from this sheet,Aus diesem Blatt entfernen
+Go to the line,Zur Zeile springen
+Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.,"Diese Funktion umbenannt? Füge unter dem alten Namen einen veralteten Stellvertreter hinzu, damit Blätter, die sie schon verwenden, weiter funktionieren."
+What sheets can use,Was Blätter verwenden können
+No script yet. Add one to see what sheets can use from it.,"Noch kein Skript. Füge eines hinzu, um zu sehen, was Blätter daraus verwenden können."
+From %s. Right-click one to change how it reads.,"Aus %s. Rechtsklick auf einen Eintrag, um die Anzeige zu ändern."
+"This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.","Dieses Skript gehört zu einem Verhalten, das mit dem Plugin ausgeliefert wird. Es wird angezeigt, hier aber nie geändert."
+left out,ausgelassen
+Pick a script in the list first.,Wähle zuerst ein Skript in der Liste.
+Written to %s: %s,In %s geschrieben: %s
+the members are shown again,die Mitglieder werden wieder angezeigt
+Not found: %s.,Nicht gefunden: %s.
+There is no slot called %s here. This function has: %s.,Hier gibt es keinen Platzhalter namens %s. Diese Funktion hat: %s.
+"%s belongs to a behaviour that ships with the plugin, so how its rows read is changed in the behaviour itself.","%s gehört zu einem Verhalten, das mit dem Plugin ausgeliefert wird. Wie seine Zeilen lauten, wird im Verhalten selbst geändert."
+"%s has changes you have not saved in Godot's script editor. Save it there first, so nothing you typed is lost.","%s hat Änderungen, die du im Skripteditor von Godot nicht gespeichert hast. Speichere dort zuerst, damit nichts verloren geht."
+"This row does not come from a script of yours, so there is no script to write its words into.","Diese Zeile stammt nicht aus einem deiner Skripte, also gibt es kein Skript, in das ihr Wortlaut geschrieben werden könnte."
+How should this read?,Wie soll das lauten?
+How should this read in other sheets?,Wie soll das in anderen Blättern lauten?
+Reads as,Lautet
+Kept in %s. Every row that uses it follows.,"Gespeichert in %s. Jede Zeile, die es verwendet, folgt."
+Open the behaviour,Verhalten öffnen
+%s now reads as: %s,%s lautet jetzt: %s
+Use in event sheets…,In Ereignisblättern verwenden…
+Use in event sheets,In Ereignisblättern verwenden

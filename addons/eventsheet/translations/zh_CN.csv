@@ -10581,3 +10581,41 @@ Set height to {height} pixels,把高度设为 {height} 像素
 The height in pixels.,高度(像素)。
 "Accent (Sections, selection)",强调色（分区、选择）
 %s (the %s row),%s（%s 行）
+Change how this reads…,更改显示方式…
+Other sheets can use this,其他表可以使用
+"No function of this sheet is ticked ""Other sheets can use this"" yet. Tick it on a function, or right-click an event and Extract All Actions to Function.",此表中还没有勾选“其他表可以使用”的函数。请在某个函数上勾选，或右键事件并选择“将所有动作提取为函数”。
+Save the sheet first - other sheets read the script it writes.,请先保存此表：其他表读取它写出的脚本。
+"Save the sheet first, so %s exists - other sheets read that script.",请先保存此表以生成 %s：其他表读取该脚本。
+"%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.",%s 现在出现在每个表的选择器中。每一行作用于名为 $%s 的节点，可通过该行的“在节点”字段更改。
+Give this sheet a name first,请先为此表命名
+"Another sheet can only reach this one by the name of its class, and this sheet has none yet.",其他表只能通过类名访问此表，而此表还没有类名。
+Open Sheet Type,打开表类型
+%s could not be used in event sheets.,%s 无法在事件表中使用。
+%s: %d rows added,%s：已添加 %d 行
+Scripts in event sheets,事件表中的脚本
+Untick what sheets should not see. Click a sentence to change it.,取消勾选不希望表看到的内容。点击一句话即可更改。
+Add a script…,添加脚本…
+Remove from this sheet,从此表移除
+Go to the line,转到该行
+Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.,重命名了此函数？请用旧名称添加一个已弃用的替代项，让已在使用它的表继续工作。
+What sheets can use,表可以使用的内容
+No script yet. Add one to see what sheets can use from it.,还没有脚本。添加一个即可查看表可以从中使用什么。
+From %s. Right-click one to change how it reads.,来自 %s。右键单击某项可更改其显示方式。
+"This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.",此脚本属于插件自带的行为，因此只显示，不会在这里更改。
+left out,已排除
+Pick a script in the list first.,请先在列表中选择一个脚本。
+Written to %s: %s,已写入 %s：%s
+the members are shown again,成员将重新显示
+Not found: %s.,未找到：%s。
+There is no slot called %s here. This function has: %s.,这里没有名为 %s 的占位。此函数有：%s。
+"%s belongs to a behaviour that ships with the plugin, so how its rows read is changed in the behaviour itself.",%s 属于插件自带的行为，因此其行的显示方式要在该行为本身中更改。
+"%s has changes you have not saved in Godot's script editor. Save it there first, so nothing you typed is lost.",%s 在 Godot 脚本编辑器中有未保存的更改。请先在那里保存，以免丢失所输入的内容。
+"This row does not come from a script of yours, so there is no script to write its words into.",此行不是来自你的脚本，因此没有可写入其措辞的脚本。
+How should this read?,这应该怎么显示？
+How should this read in other sheets?,在其他表中应怎么显示？
+Reads as,显示为
+Kept in %s. Every row that uses it follows.,保存在 %s 中。所有使用它的行都会随之更新。
+Open the behaviour,打开该行为
+%s now reads as: %s,%s 现在显示为：%s
+Use in event sheets…,在事件表中使用…
+Use in event sheets,在事件表中使用

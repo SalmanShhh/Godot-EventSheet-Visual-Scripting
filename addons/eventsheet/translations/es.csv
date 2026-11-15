@@ -10581,3 +10581,41 @@ Set height to {height} pixels,Fijar altura en {height} píxeles
 The height in pixels.,La altura en píxeles.
 "Accent (Sections, selection)","Acento (secciones, selección)"
 %s (the %s row),%s (la fila %s)
+Change how this reads…,Cambiar cómo se lee…
+Other sheets can use this,Otras hojas pueden usar esto
+"No function of this sheet is ticked ""Other sheets can use this"" yet. Tick it on a function, or right-click an event and Extract All Actions to Function.",Ninguna función de esta hoja tiene marcado «Otras hojas pueden usar esto». Márcalo en una función o haz clic derecho en un evento y elige Extraer todas las acciones a una función.
+Save the sheet first - other sheets read the script it writes.,Guarda primero la hoja: las otras hojas leen el script que escribe.
+"Save the sheet first, so %s exists - other sheets read that script.",Guarda primero la hoja para que exista %s: las otras hojas leen ese script.
+"%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.","%s ya está en el selector de todas las hojas. Cada fila actúa sobre el nodo llamado $%s, que el campo En nodo de la fila puede cambiar."
+Give this sheet a name first,Dale primero un nombre a esta hoja
+"Another sheet can only reach this one by the name of its class, and this sheet has none yet.","Otra hoja solo puede llegar a esta por el nombre de su clase, y esta hoja todavía no tiene ninguno."
+Open Sheet Type,Abrir Tipo de hoja
+%s could not be used in event sheets.,%s no se pudo usar en las hojas de eventos.
+%s: %d rows added,%s: %d filas añadidas
+Scripts in event sheets,Scripts en las hojas de eventos
+Untick what sheets should not see. Click a sentence to change it.,Desmarca lo que las hojas no deben ver. Haz clic en una frase para cambiarla.
+Add a script…,Añadir un script…
+Remove from this sheet,Quitar de esta hoja
+Go to the line,Ir a la línea
+Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.,¿Has renombrado esta función? Añade un sustituto obsoleto con su nombre anterior para que las hojas que ya la usan sigan funcionando.
+What sheets can use,Lo que las hojas pueden usar
+No script yet. Add one to see what sheets can use from it.,Aún no hay ningún script. Añade uno para ver qué pueden usar las hojas de él.
+From %s. Right-click one to change how it reads.,De %s. Haz clic derecho en una para cambiar cómo se lee.
+"This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.","Este script pertenece a un comportamiento que se incluye con el plugin, así que se muestra pero nunca se cambia aquí."
+left out,excluido
+Pick a script in the list first.,Elige primero un script de la lista.
+Written to %s: %s,Escrito en %s: %s
+the members are shown again,los miembros se muestran de nuevo
+Not found: %s.,No se encontró: %s.
+There is no slot called %s here. This function has: %s.,Aquí no hay ningún hueco llamado %s. Esta función tiene: %s.
+"%s belongs to a behaviour that ships with the plugin, so how its rows read is changed in the behaviour itself.","%s pertenece a un comportamiento incluido con el plugin, así que cómo se leen sus filas se cambia en el propio comportamiento."
+"%s has changes you have not saved in Godot's script editor. Save it there first, so nothing you typed is lost.",%s tiene cambios que no has guardado en el editor de scripts de Godot. Guárdalo allí primero para no perder lo que escribiste.
+"This row does not come from a script of yours, so there is no script to write its words into.","Esta fila no viene de un script tuyo, así que no hay ningún script donde escribir sus palabras."
+How should this read?,¿Cómo debería leerse esto?
+How should this read in other sheets?,¿Cómo debería leerse en otras hojas?
+Reads as,Se lee como
+Kept in %s. Every row that uses it follows.,Guardado en %s. Todas las filas que lo usan lo siguen.
+Open the behaviour,Abrir el comportamiento
+%s now reads as: %s,%s ahora se lee como: %s
+Use in event sheets…,Usar en las hojas de eventos…
+Use in event sheets,Usar en las hojas de eventos

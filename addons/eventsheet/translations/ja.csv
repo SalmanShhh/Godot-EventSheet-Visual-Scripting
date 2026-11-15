@@ -10581,3 +10581,41 @@ Set height to {height} pixels,高さを {height} ピクセルに設定
 The height in pixels.,高さ(ピクセル)。
 "Accent (Sections, selection)",アクセント（セクション、選択）
 %s (the %s row),%s（%s の行）
+Change how this reads…,表示を変更…
+Other sheets can use this,他のシートで使える
+"No function of this sheet is ticked ""Other sheets can use this"" yet. Tick it on a function, or right-click an event and Extract All Actions to Function.",このシートに「他のシートで使える」にチェックした関数がまだありません。関数にチェックを入れるか、イベントを右クリックして「すべてのアクションを関数に抽出」を選んでください。
+Save the sheet first - other sheets read the script it writes.,先にシートを保存してください。他のシートはそれが書き出すスクリプトを読みます。
+"Save the sheet first, so %s exists - other sheets read that script.",先にシートを保存して %s を作成してください。他のシートはそのスクリプトを読みます。
+"%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.",%s はすべてのシートのピッカーに入りました。各行は $%s という名前のノードに作用し、行の「ノード」欄で変更できます。
+Give this sheet a name first,まずこのシートに名前を付けてください
+"Another sheet can only reach this one by the name of its class, and this sheet has none yet.",他のシートはクラス名でしかこのシートに到達できませんが、このシートにはまだクラス名がありません。
+Open Sheet Type,シートの種類を開く
+%s could not be used in event sheets.,%s をイベントシートで使えませんでした。
+%s: %d rows added,%s: %d 行を追加しました
+Scripts in event sheets,イベントシートのスクリプト
+Untick what sheets should not see. Click a sentence to change it.,シートに見せたくないもののチェックを外してください。文をクリックすると変更できます。
+Add a script…,スクリプトを追加…
+Remove from this sheet,このシートから削除
+Go to the line,その行へ移動
+Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.,この関数の名前を変更しましたか？ 旧名の非推奨の代替を追加すると、すでに使っているシートが動き続けます。
+What sheets can use,シートで使えるもの
+No script yet. Add one to see what sheets can use from it.,まだスクリプトがありません。追加すると、シートで使えるものが表示されます。
+From %s. Right-click one to change how it reads.,%s から。右クリックで表示を変更できます。
+"This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.",このスクリプトはプラグインに同梱された挙動のもので、表示のみで、ここでは変更されません。
+left out,除外
+Pick a script in the list first.,先にリストからスクリプトを選んでください。
+Written to %s: %s,%s に書き込みました: %s
+the members are shown again,メンバーが再び表示されます
+Not found: %s.,見つかりません: %s。
+There is no slot called %s here. This function has: %s.,ここに %s という欄はありません。この関数にあるのは: %s。
+"%s belongs to a behaviour that ships with the plugin, so how its rows read is changed in the behaviour itself.",%s はプラグインに同梱された挙動のもので、行の表示は挙動そのものの中で変更します。
+"%s has changes you have not saved in Godot's script editor. Save it there first, so nothing you typed is lost.",%s には Godot のスクリプトエディタで保存していない変更があります。入力した内容が失われないよう、先にそこで保存してください。
+"This row does not come from a script of yours, so there is no script to write its words into.",この行はあなたのスクリプト由来ではないため、表示を書き込むスクリプトがありません。
+How should this read?,これはどう表示しますか？
+How should this read in other sheets?,他のシートではどう表示しますか？
+Reads as,表示
+Kept in %s. Every row that uses it follows.,%s に保存されます。これを使うすべての行が追従します。
+Open the behaviour,挙動を開く
+%s now reads as: %s,%s の表示は次になりました: %s
+Use in event sheets…,イベントシートで使う…
+Use in event sheets,イベントシートで使う
