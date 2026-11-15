@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: Add Event keeps a door to the full list
+
+Add Event on the toolbar still opens on the short object page. That page now ends with one plain entry, Browse every row, which opens the full list with Favourites and Recent beside it, exactly as the toolbar opened it before, with no typing. A regression test pins the other half of the same change: a row on the open sheet follows its sentence at once after the sentence is changed.
+
+### Changed: a pack's lines reopen as its rows whatever the values are
+
+A line a pack teaches (`$JuicePlayer.set_feedback_label("shake", "big shake")`) used to reopen as its row only when each value looked like the example it was taught from. The pack-spelling door now also takes a text with spaces or brackets in it, a variable where the example has a quoted word or a quoted literal (`enable_feedback(my_label)`, `load_moment_file(my_path)`), and an argument that holds commas and brackets of its own (`Vector2(1, 2)`, `[1, 2]`, `{"a": 1}`). The file still saves back byte for byte: the row keeps the line as written, and a spelling the byte gate cannot reproduce keeps its plain reading. The Juice Player test now reopens every action and condition from its real starting values, from a variable and from a comma value, on both node names.
+
 ### Fixed: a Building row in a tool sheet works in the running game
 
 A Building row dropped into a tool sheet built under `get_tree().edited_scene_root`, which is null when the same script runs in the game, so Add New Node called `add_child` on null and Remove What This Sheet Built read `get_children()` on null. The tool row now starts under `get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene`, read once into a local (`var __scene_<id>: Node = ...`) that the lines below use, so the editor builds in the edited scene and the game builds in the running scene exactly as a plain sheet's row does. Remove What This Sheet Built is baked the same way when dropped in a tool sheet, and "Clear what it built first" writes it that way. A parent you chose is left as you wrote it. A tool sheet saved by an earlier unreleased build reopens and saves byte for byte, its old line unchanged.
@@ -56,7 +64,7 @@ A script can say `## @ace_provider_id(OldName)` above its `class_name`. Rows sav
 
 ### Changed: the toolbar's Add Event opens on the objects first
 
-Add Event on the toolbar (and the E key, and the "+ Add event" door) now opens the picker on its object page, the same page a double click on empty canvas opened: "Your classes", the open script's Functions, System, and Objects and Behaviors. Before, it opened the full list of every object's conditions and triggers at once. Pick a card to see that object's verbs, or start typing: the search box looks across every object at once, exactly like the old full list narrowed to what you typed. The "All objects" button above a card's list brings the cards back. Add Condition and Add Action are unchanged.
+Add Event on the toolbar now opens the picker on its object page, the same page a double click on empty canvas opened: "Your classes", the open script's Functions, System, and Objects and Behaviors. Before, it opened the full list of every object's conditions and triggers at once. Pick a card to see that object's verbs, or start typing: the search box looks across every object at once, exactly like the old full list narrowed to what you typed. The "All objects" button above a card's list brings the cards back. Add Condition and Add Action are unchanged. The E key opens the type-a-sentence box, whose Ctrl+Enter opens the same page, and the "+ Add event" link on the canvas opens the full list.
 
 ### Fixed: a row follows the sentence you just wrote
 

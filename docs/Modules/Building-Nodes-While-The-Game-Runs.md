@@ -54,7 +54,7 @@ Finding And Rearranging Nodes. This page is for the nodes that have no scene fil
 - **In a tool sheet, what you build is saved with the scene.** Drop a row into a Tool sheet and it also
   makes the new node owned by the scene being edited (`get_tree().edited_scene_root`, only under
   `Engine.is_editor_hint()`) and marks it, so it is saved with the scene and a rebuild can find it. The
-  Under field starts as the scene being edited, because a tool has no running scene. In a game sheet the
+  Under field starts as the scene being edited when you are in the editor and as the running scene when the same script runs in the game (the row reads it once into a local, `var __scene_<id>: Node = get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene`, because `edited_scene_root` is null in the game). In a game sheet the
   same row writes none of that. This is not an undo step: Ctrl+Z does not take back what a tool built.
 - **A rebuild button needs to clear first.** A tool that builds when a button is pressed adds another copy
   every press. Remove What This Sheet Built at the top of the event removes what the last press made; the
