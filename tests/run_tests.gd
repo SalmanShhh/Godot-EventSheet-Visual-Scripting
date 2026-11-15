@@ -22,6 +22,15 @@ const STRAY_COMPILE_OUTPUT := "res://event_sheet_generated.gd"
 const PROJECT_METADATA := "res://.godot/editor/project_metadata.cfg"
 const METADATA_SECTION := "eventsheets"
 
+## Entries at the top of the user folder that the engine and the editor write themselves. They are not
+## a test's doing, so the shared-folder check leaves them out.
+const USER_FOLDER_ENGINE_NAMES: Array[String] = ["logs", "editor", "shader_cache", "vulkan", "projects"]
+
+## False: a test that writes a name outside its own per-process folder is a WARNING, counted in the
+## summary. The count is what to bring down; once it reaches zero this flips to true and the same
+## finding fails the run instead.
+const USER_FOLDER_CHECK_FAILS: bool = false
+
 # Tests that mutate shared state (filesystem / plugin enablement / workspace) must run AFTER everything
 # else, in this order, so they never tear down state an earlier test still needs.
 const DEFERRED_LAST: Array[String] = [
@@ -41,6 +50,7 @@ func _init() -> void:
 	var passed: bool = true
 	_start_progress()
 	var metadata_before: String = _read_project_metadata()
+	var shared_names: Dictionary = {}
 	for test_file: String in _test_files():
 		_mark_started(test_file)
 		var script: GDScript = load(TESTS_DIR + test_file)
@@ -65,6 +75,7 @@ func _init() -> void:
 		if not _has_static_run(script):
 			_mark_finished(test_file, 0)  # a shared helper living in tests/, not a test
 			continue
+		var user_before: Dictionary = _top_of_user_folder()
 		var started_at: int = Time.get_ticks_msec()
 		var result: Variant = script.call("run")
 		if result is bool:
@@ -75,7 +86,10 @@ func _init() -> void:
 		_sweep_stray_output()
 		_sweep_session_state()
 		passed = _sweep_project_metadata(test_file, metadata_before) and passed
+		passed = _note_shared_user_folder(test_file, user_before, shared_names) and passed
 		_mark_finished(test_file, Time.get_ticks_msec() - started_at)
+	_remove_tree(ProjectSettings.globalize_path(EventSheetTestSupport.scratch_root()))
+	_report_shared_user_folder(shared_names)
 	if passed:
 		print("All tests passed.")
 		quit(0)
@@ -141,6 +155,73 @@ func _sweep_project_metadata(test_file: String, before: String) -> bool:
 func _sweep_session_state() -> void:
 	EventSheetRenameEvidence.clear_cache()
 	EventSheetLocalTokens.clear_index()
+
+
+# ── the shared user folder ──────────────────────────────────────────────────────
+#
+# Every process started on this project shares one user folder (every shard, another checkout, an
+# open editor), so a test that writes or deletes a FIXED name there can be broken at random by a
+# neighbour. A test's own files belong in `EventSheetTestSupport.scratch(name)`, a folder named for
+# the process. After each test the top of the user folder is read again, and any name that is new
+# or was rewritten is reported - except this process's scratch folder and the engine's own entries.
+# Names another shard wrote in the same moment can show up under the wrong test, which is why the
+# summary counts DISTINCT NAMES, not findings, and why the parallel launcher unions the shards'.
+
+
+## The top level of the user folder as `{name: modified time}`: files and folders, with a folder's
+## own time, which moves when something is made or removed directly inside it.
+func _top_of_user_folder() -> Dictionary:
+	var top: Dictionary = {}
+	for file_name: String in DirAccess.get_files_at("user://"):
+		top[file_name] = FileAccess.get_modified_time("user://" + file_name)
+	for folder_name: String in DirAccess.get_directories_at("user://"):
+		top[folder_name] = FileAccess.get_modified_time("user://" + folder_name)
+	return top
+
+
+## Notes what `test_file` left at the top of the user folder, outside its own scratch folder. Returns
+## false only when the check is set to fail the run.
+func _note_shared_user_folder(test_file: String, before: Dictionary, names: Dictionary) -> bool:
+	var after: Dictionary = _top_of_user_folder()
+	var found: PackedStringArray = PackedStringArray()
+	for entry: String in after:
+		if entry.begins_with("eventforge_tests_") or USER_FOLDER_ENGINE_NAMES.has(entry):
+			continue
+		if not before.has(entry) or before[entry] != after[entry]:
+			found.append(entry)
+			names[entry] = true
+	if found.is_empty():
+		return true
+	found.sort()
+	print("[WARN] run_tests: %s wrote %d name(s) in the shared user folder outside its own scratch folder: %s"
+		% [test_file, found.size(), ", ".join(found.slice(0, 5)) + (", ..." if found.size() > 5 else "")])
+	return not USER_FOLDER_CHECK_FAILS
+
+
+## The one summary line, and the names behind it in this run's trail folder for the launcher to union.
+func _report_shared_user_folder(names: Dictionary) -> void:
+	var sorted_names: Array = names.keys()
+	sorted_names.sort()
+	print("shared user folder: %d name(s) written outside the per-process scratch folder (%s)"
+		% [sorted_names.size(), "a failure" if USER_FOLDER_CHECK_FAILS else "a warning until the count is zero"])
+	var file: FileAccess = FileAccess.open(PROGRESS_DIR + progress_token() + ".names", FileAccess.WRITE)
+	if file == null:
+		return
+	for entry: Variant in sorted_names:
+		file.store_line(str(entry))
+	file.close()
+
+
+## Removes a folder and everything in it. Absolute path, so a test's scratch folder is swept without
+## a second resource path to get wrong.
+func _remove_tree(absolute: String) -> void:
+	if not DirAccess.dir_exists_absolute(absolute):
+		return
+	for file_name: String in DirAccess.get_files_at(absolute):
+		DirAccess.remove_absolute(absolute.path_join(file_name))
+	for folder_name: String in DirAccess.get_directories_at(absolute):
+		_remove_tree(absolute.path_join(folder_name))
+	DirAccess.remove_absolute(absolute)
 
 
 # ── the crash sentinel ──────────────────────────────────────────────────────────

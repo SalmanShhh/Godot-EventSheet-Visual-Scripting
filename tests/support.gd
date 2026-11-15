@@ -33,6 +33,26 @@
 class_name EventSheetTestSupport
 extends RefCounted
 
+## What every process's scratch folder in the user folder is named from (the process id follows).
+const SCRATCH_PREFIX: String = "user://eventforge_tests_"
+
+
+## The folder this process keeps its test scratch in. Every process started on this project - each
+## shard of a parallel run, another checkout, an open editor - shares ONE user folder, so a test that
+## writes or deletes a fixed name there can be broken by any of them at random. A folder named for
+## the process cannot be reached by the others; the runner removes it when the run ends.
+static func scratch_root() -> String:
+	return "%s%d" % [SCRATCH_PREFIX, OS.get_process_id()]
+
+
+## A path in this process's scratch folder: `scratch("fd_lift.gd")` is a file name, `scratch("probe")`
+## a folder a test builds and deletes. The folders above it exist when this returns, so a test can
+## write straight to the path; the path itself is never created here.
+static func scratch(name: String) -> String:
+	var path: String = scratch_root() + "/" + name
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	return path
+
 
 ## Reports one assertion in the suite's line format and returns whether it held, so a caller can
 ## fold it: `all_passed = EventSheetTestSupport.check(P, "label", got, want) and all_passed`.
