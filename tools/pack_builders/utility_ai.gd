@@ -187,7 +187,9 @@ static func build() -> bool:
 		"\t\tacc += float(candidates[i].score)",
 		"\t\tif r <= acc:",
 		"\t\t\treturn str(candidates[i].name)",
-		"\treturn str(candidates[n - 1].name)"
+		"\treturn str(candidates[n - 1].name)",
+		"",
+		Lib.missing_name_block("Utility Brain")
 	]))
 	sheet.events.append(block)
 	# Seed the RNG once (weighted-random mode). Tests set _rng.seed directly for determinism.
@@ -233,7 +235,7 @@ static func build() -> bool:
 	_default(sheet, "priority", "1.0")
 	Lib.append_function(sheet, "add_consideration", "Add Consideration", "Utility AI", "Adds a scoring factor to an action: it reads a world-state input (0-1) and maps it through a response curve to a 0-1 score. An action's considerations all multiply together, so any near-zero factor vetoes it. weight sharpens (>1) or softens (<1) this factor; center + slope tune the logistic / threshold / bell curves.",
 		[["action_name", "String"], ["input_key", "String"], ["curve", "String"], ["weight", "float"], ["curve_center", "float"], ["curve_slope", "float"]],
-		"if not _actions.has(action_name):\n\treturn\n(_actions[action_name].considerations as Array).append({\"input\": input_key, \"curve\": curve, \"weight\": maxf(weight, 0.0), \"center\": curve_center, \"slope\": curve_slope})")
+		"if not _actions.has(action_name):\n\t_say_missing(\"Add Consideration\", \"action\", action_name, _actions.keys(), \"add it with Add Action first, or check the spelling\")\n\treturn\n(_actions[action_name].considerations as Array).append({\"input\": input_key, \"curve\": curve, \"weight\": maxf(weight, 0.0), \"center\": curve_center, \"slope\": curve_slope})")
 	_param_options(sheet, "curve", ["linear", "inverse", "quadratic", "inverse_quadratic", "logistic", "threshold", "bell"])
 	_quoted_argument(sheet, "add_consideration({action_name}, {input_key}, \"{curve}\", {weight}, {curve_center}, {curve_slope})")
 	_default(sheet, "curve", "linear")
@@ -245,7 +247,7 @@ static func build() -> bool:
 		"_actions.erase(action_name)\n_cooldowns.erase(action_name)\nset_process(not _cooldowns.is_empty())\nif _current == action_name:\n\t_current = \"\"")
 	Lib.append_function(sheet, "set_action_enabled", "Set Action Enabled", "Utility AI", "Enables or disables an action without removing it (a disabled action is never chosen).",
 		[["action_name", "String"], ["enabled", "bool"]],
-		"if _actions.has(action_name):\n\t_actions[action_name].enabled = enabled")
+		"if _actions.has(action_name):\n\t_actions[action_name].enabled = enabled\nelse:\n\t_say_missing(\"Set Action Enabled\", \"action\", action_name, _actions.keys(), \"add it with Add Action first, or check the spelling\")")
 
 	# --- World state ---
 	Lib.append_function(sheet, "set_input", "Set Input", "Utility AI", "Writes a world-state value considerations read by key (usually normalized 0-1, e.g. hp_ratio). Push these right before Evaluate; an unset key reads as 0.",
@@ -291,7 +293,7 @@ static func build() -> bool:
 		])))
 	Lib.append_function(sheet, "force_action", "Force Action", "Utility AI", "Overrides the decision and starts an action directly (fires On Decision Made + On Action Started). Use it for cutscenes, scripted beats, or an emergency fallback, then return to Evaluate.",
 		[["action_name", "String"]],
-		"if not _actions.has(action_name):\n\treturn\n_decision_score = 0.0\n_decide(action_name, true)")
+		"if not _actions.has(action_name):\n\t_say_missing(\"Force Action\", \"action\", action_name, _actions.keys(), \"add it with Add Action first, or check the spelling\")\n\treturn\n_decision_score = 0.0\n_decide(action_name, true)")
 	Lib.append_function(sheet, "mark_complete", "Mark Action Complete", "Utility AI", "Marks the running action finished: fires On Action Completed, starts its cooldown if it has one, then re-evaluates. Call it when your gameplay finishes performing the action (it already re-evaluates, so do not also call Evaluate).",
 		[],
 		"if _current == \"\":\n\treturn\nvar action_name: String = _current\non_action_completed.emit()\nvar cd: float = float(_actions[action_name].cooldown) if _actions.has(action_name) else 0.0\nif cd > 0.0:\n\t_cooldowns[action_name] = cd\n\t_cooldown_action = action_name\n\t# A cooldown is counted down per frame, so starting one wakes the tick up.\n\tset_process(true)\n\ton_cooldown_started.emit()\nevaluate()")

@@ -22,6 +22,7 @@ static func run() -> bool:
 	ok = _object_pool() and ok
 	ok = _quest() and ok
 	ok = _proc_room() and ok
+	ok = _utility_ai() and ok
 	return ok
 
 
@@ -156,4 +157,25 @@ static func _proc_room() -> bool:
 		"ProcRoom on ProcRoom: Enter Room did nothing, because no room is called \"d0_9\" (there are: d0_0"), true])
 	rows.append(["a real room says nothing", _heard(func() -> void: rooms.lock_room("d0_0")), []])
 	rooms.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _utility_ai() -> bool:
+	var script: GDScript = load(ROOT + "utility_ai/utility_ai_addon.gd")
+	var brain: Node = script.new()
+	brain.name = "Brain"
+	brain.add_action("Attack", 0.0, true, 1.0)
+	brain.add_action("Flee", 0.0, true, 1.0)
+	var tail: String = " (there are: Attack, Flee) - add it with Add Action first, or check the spelling."
+	var rows: Array = []
+	var actions: Array = [
+		["Add Consideration", "attak", func() -> void: brain.add_consideration("attak", "hp", "linear", 1.0, 0.5, 1.0)],
+		["Set Action Enabled", "fle", func() -> void: brain.set_action_enabled("fle", false)],
+		["Force Action", "run", func() -> void: brain.force_action("run")],
+	]
+	for entry: Array in actions:
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"Utility Brain on Brain: %s did nothing, because no action is called \"%s\"%s" % [entry[0], entry[1], tail]))
+	rows.append(["a real action says nothing", _heard(func() -> void: brain.set_action_enabled("Flee", true)), []])
+	brain.free()
 	return SUPPORT.pins(NAME, rows)

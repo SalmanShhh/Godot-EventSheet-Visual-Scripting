@@ -101,6 +101,8 @@ var _cooldown_action: String = ""
 var _history: PackedStringArray = PackedStringArray()
 ## Random source for the weighted-random pick among the top-scoring actions.
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 func _ready() -> void:
 	_rng.randomize()
@@ -140,6 +142,7 @@ func add_action(action_name: String, cooldown: float, interruptible: bool, prior
 ## @ace_codegen_template("$UtilityBrain.add_consideration({action_name}, {input_key}, "{curve}", {weight}, {curve_center}, {curve_slope})")
 func add_consideration(action_name: String, input_key: String, curve: String, weight: float, curve_center: float, curve_slope: float) -> void:
 	if not _actions.has(action_name):
+		_say_missing("Add Consideration", "action", action_name, _actions.keys(), "add it with Add Action first, or check the spelling")
 		return
 	(_actions[action_name].considerations as Array).append({"input": input_key, "curve": curve, "weight": maxf(weight, 0.0), "center": curve_center, "slope": curve_slope})
 
@@ -165,6 +168,8 @@ func remove_action(action_name: String) -> void:
 func set_action_enabled(action_name: String, enabled: bool) -> void:
 	if _actions.has(action_name):
 		_actions[action_name].enabled = enabled
+	else:
+		_say_missing("Set Action Enabled", "action", action_name, _actions.keys(), "add it with Add Action first, or check the spelling")
 
 ## @ace_action
 ## @ace_featured
@@ -232,6 +237,7 @@ func evaluate() -> void:
 ## @ace_codegen_template("$UtilityBrain.force_action({action_name})")
 func force_action(action_name: String) -> void:
 	if not _actions.has(action_name):
+		_say_missing("Force Action", "action", action_name, _actions.keys(), "add it with Add Action first, or check the spelling")
 		return
 	_decision_score = 0.0
 	_decide(action_name, true)
@@ -499,5 +505,29 @@ func _weighted_pick(candidates: Array) -> String:
 		if r <= acc:
 			return str(candidates[i].name)
 	return str(candidates[n - 1].name)
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Utility Brain on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
 
 # UtilityBrain: attach one to each AI node. Add Actions, give each a few Considerations (an input mapped through a curve), Set Input every so often, then Evaluate. The best-scoring action wins and fires On Decision Made / On Action Started - your sheet performs it, then calls Mark Action Complete. This pack is an event sheet - extend it by editing it.
