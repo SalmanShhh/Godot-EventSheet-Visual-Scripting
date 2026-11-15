@@ -18,6 +18,7 @@ var _dock: Control = null
 ## The window of "what a script gives sheets", made the first time it is asked for.
 var _script_rows: RefCounted = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 

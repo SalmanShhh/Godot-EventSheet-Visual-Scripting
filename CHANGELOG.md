@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: "Use in event sheets" on a script in the FileSystem
+
+Right-click a script of yours in the FileSystem and one entry gives every sheet rows from it with no setup: it writes the path into the taught-scripts setting (which now holds scripts as well as compiled sheets) and the status line says how many rows it added. Once a script is in use, or when it lists itself (a Node or Resource script with a class_name, an autoload), the entry reads "Use in event sheets…" and opens its window. A shipped behaviour, the plugin's own files and scenes are never offered. Resource scripts with a class_name now list themselves in the picker's cards.
+
 ### Changed: one window for what a script of yours gives sheets
 
 Sheet > Custom Actions now opens "Scripts in event sheets": the scripts a sheet reads, and for the one you pick, every row it gives as a plain sentence with a tick. Unticking writes `## @ace_hidden` above the member after a backup; a member the script already leaves out is listed as "left out" so it can be ticked back, and ticking it again keeps every other word the script wrote (hiding no longer drops them). Each row carries the sentence and the line of its function, and "Go to the line" opens Godot's script editor there. The old table with Kind, Name, Category and Parameters columns, Register This Script and Curate Script are gone; Keep Old Name stays for a renamed function.

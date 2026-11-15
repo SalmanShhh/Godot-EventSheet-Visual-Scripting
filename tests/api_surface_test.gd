@@ -137,6 +137,7 @@ const TABLE: Dictionary = {
 		"static register_param_help(hint: String, paragraph: String) -> void",
 		"static register_preference(builder: Callable) -> void",
 		"static register_provider_script(script_path: String) -> bool",
+		"static use_script_in_sheets(script_path: String) -> bool",
 		"static register_quick_add_synonyms(synonyms: Dictionary) -> void",
 		"static register_row_menu_item(label: String, filter: Callable, action: Callable) -> void",
 		"static register_section_description(section_name: String, blurb: String) -> void",

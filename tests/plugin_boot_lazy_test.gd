@@ -56,6 +56,7 @@ const FORBIDDEN := {
 	],
 	"res://addons/eventforge/editor/context_menu_plugin.gd": [
 		"EventSheetWorkflow", "EventSheetProjectDoctor",
+		"EventSheetProjectScanner", "EventSheetACEGenerator", "EventSheetL10n",
 	],
 	"res://addons/eventforge/editor/sheet_edit_inspector_plugin.gd": [
 		"EventSheetProjectDoctor",

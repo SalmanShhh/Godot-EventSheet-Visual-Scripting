@@ -27,6 +27,7 @@ const SETTINGS_HOVER_PATH: String = "res://addons/eventforge/editor/settings_hov
 # each subtree to its first actual use and caches it from then on, so enabling the plugin (and
 # opening any project that has it installed) stays near-instant.
 const WORKFLOW_PATH: String = "res://addons/eventforge/editor/workflow_entry_points.gd"
+const SCRIPT_ROWS_FLOW_PATH: String = "res://addons/eventsheet/editor/dock/script_rows_flow.gd"
 const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
 const STARTER_TEMPLATES_PATH: String = "res://addons/eventsheet/editor/dock/starter_templates.gd"
 const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_dialog.gd"
@@ -468,6 +469,16 @@ func _show_events_for_node(node: Node) -> void:
 		_event_sheet_editor.call("filter_events_to_object", node.name)
 
 
+## The FileSystem "Use in event sheets" entry: the script gives every sheet rows at once, or - when it
+## already does - opens its window in the workspace.
+func _use_script_in_sheets(script_path: String) -> void:
+	_ensure_editor()
+	if _event_sheet_editor == null:
+		return
+	get_editor_interface().set_main_screen_editor(_get_plugin_name())
+	load(SCRIPT_ROWS_FLOW_PATH).use(script_path, _event_sheet_editor)
+
+
 ## The FileSystem "Create New > Event Sheet..." entry: pop the name + starter dialog for the
 ## clicked folder. The dialog is parented to the editor's base control (always present), so it
 ## works even before the workspace editor has ever been built.
@@ -614,6 +625,7 @@ func _enter_tree() -> void:
 		menu.connect_signal = _connect_signal_from_node
 		menu.open_workspace = _open_scene_workspace
 		menu.show_events = _show_events_for_node
+		menu.use_in_sheets = _use_script_in_sheets
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.

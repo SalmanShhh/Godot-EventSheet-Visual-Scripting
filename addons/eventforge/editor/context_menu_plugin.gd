@@ -12,6 +12,9 @@ extends EditorContextMenuPlugin
 # right there. Right-click latency absorbs the one-time load instead; load() caches afterwards.
 const WORKFLOW_PATH: String = "res://addons/eventforge/editor/workflow_entry_points.gd"
 const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
+const SCANNER_PATH: String = "res://addons/eventsheet/ace/project_scanner.gd"
+const SHIPPED_SCRIPTS_PATH: String = "res://addons/eventsheet/ace/shipped_scripts.gd"
+const L10N_PATH: String = "res://addons/eventsheet/editor/l10n.gd"
 
 var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
@@ -21,6 +24,7 @@ var create_sheet: Callable = Callable()  # Callable(directory: String)
 var connect_signal: Callable = Callable()  # Callable(node: Node)
 var open_workspace: Callable = Callable()  # Callable(scene_path: String)
 var show_events: Callable = Callable()   # Callable(node: Node)
+var use_in_sheets: Callable = Callable()  # Callable(script_path: String)
 
 
 func _popup_menu(paths: PackedStringArray) -> void:
@@ -50,6 +54,9 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# layout and every script in it as one named tab group.
 			if should_offer_open_workspace(slot, paths):
 				add_context_menu_item("Open its sheets", _on_open_workspace_requested, _open_as_sheet_icon())
+			# A script of yours gives sheets rows with one click; once it does, the entry opens its page.
+			if should_offer_use_in_sheets(slot, paths):
+				add_context_menu_item(use_in_sheets_text(paths[0]), _on_use_in_sheets_requested, _open_as_sheet_icon())
 			# A script that names a class can be made a kind of: the new sheet extends it.
 			var kind_parent: String = class_declared_in(paths)
 			if not kind_parent.is_empty():
@@ -66,6 +73,27 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				if not load(PROJECT_DOCTOR_PATH).sheet_for_script(path).is_empty():
 					add_context_menu_item("Go to Sheet Row", _on_goto_row_requested)
 					break
+
+
+## True when this slot + paths should offer "Use in event sheets": the FileSystem, one script of the
+## project that is not the plugin's own and not a shipped behaviour. Pure + static, so the decision is
+## unit-testable without the editor-only plugin.
+static func should_offer_use_in_sheets(menu_slot: int, paths: PackedStringArray) -> bool:
+	if menu_slot != EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM or paths.size() != 1:
+		return false
+	var path: String = paths[0]
+	if not path.begins_with("res://") or path.get_extension().to_lower() != "gd":
+		return false
+	return not load(SHIPPED_SCRIPTS_PATH).is_shipped(path)
+
+
+## The entry's words: it acts at once for a script not yet in use, and reads with an ellipsis (it opens
+## the page) for one that already lists itself or has been used.
+static func use_in_sheets_text(path: String) -> String:
+	var l10n: GDScript = load(L10N_PATH)
+	if load(SCANNER_PATH).script_is_in_use(path):
+		return l10n.translate("Use in event sheets…")
+	return l10n.translate("Use in event sheets")
 
 
 ## The class a single selected script names (`class_name Enemy` gives "Enemy"), or "" when the
@@ -200,6 +228,14 @@ func _on_show_events_requested(targets: Variant) -> void:
 
 ## "New kind of <Class>..." on a script: the New Event Sheet window opens in that script's folder
 ## with the class already in its "A kind of" field.
+func _on_use_in_sheets_requested(targets: Variant) -> void:
+	if not use_in_sheets.is_valid() or not (targets is PackedStringArray):
+		return
+	var paths: PackedStringArray = targets as PackedStringArray
+	if not paths.is_empty():
+		use_in_sheets.call(paths[0])
+
+
 func _on_new_kind_requested(targets: Variant) -> void:
 	if not create_sheet.is_valid() or not (targets is PackedStringArray):
 		return

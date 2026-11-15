@@ -65,6 +65,28 @@ static func register_provider_script(script_path: String) -> bool:
 	return true
 
 
+## Tells every sheet in the project to read this script of yours: writes the path into the taught-scripts
+## setting (the same one a sheet's Teach entry fills), so its rows reach every picker with no further step.
+## Returns false when the script is already in use, is not a script of the project, or ships with the plugin
+## (a shipped behaviour is never written into the setting by this door).
+static func use_script_in_sheets(script_path: String) -> bool:
+	var clean_path: String = script_path.strip_edges()
+	if not clean_path.begins_with("res://") or clean_path.get_extension().to_lower() != "gd" or not FileAccess.file_exists(clean_path):
+		return false
+	if load("res://addons/eventsheet/ace/shipped_scripts.gd").is_shipped(clean_path):
+		return false
+	var setting: String = "eventsheets/vocabulary/taught_provider_scripts"
+	var taught: PackedStringArray = PackedStringArray(ProjectSettings.get_setting(setting, PackedStringArray()))
+	if taught.has(clean_path):
+		return false
+	taught.append(clean_path)
+	ProjectSettings.set_setting(setting, taught)
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		ProjectSettings.save()
+	_script_was_written(clean_path)
+	return true
+
+
 ## Registers a Custom Block kind (a new NON-ACE row type: markers, notes, data blocks).
 ## The kind gets the Add menu, Command Palette, edit dialog, compile and lift wiring
 ## automatically; its round-trip is byte-verify gated like every built-in.

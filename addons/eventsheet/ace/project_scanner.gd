@@ -33,6 +33,8 @@ const _PACK_PREFIX: String = "res://eventsheet_addons/"
 ## list or the autoload/extra-path settings change - member CONTENT is cached downstream).
 static var _cache: Array = []
 static var _cache_signature: String = ""
+static var _offered_cache: Array = []
+static var _offered_signature: String = ""
 
 
 ## Every class this project publishes, deterministic and deduped. Entries are
@@ -83,6 +85,59 @@ static func list_project_classes() -> Array:
 	_cache = out
 	_cache_signature = signature
 	return out.duplicate(true)
+
+
+## Everything that lists itself with no setup: what `list_project_classes` gives (Node scripts with a
+## class_name and the autoloads) plus Resource scripts with a class_name, since a sheet reads a
+## resource's functions and values too. A helper of statics or a script with no class_name is not
+## here: it takes one click on the FileSystem menu. Nothing is loaded to list a script.
+static func list_offered_scripts() -> Array:
+	var signature: String = _current_signature()
+	if signature == _offered_signature:
+		return _offered_cache.duplicate(true)
+	var by_path: Dictionary = {}
+	for entry: Dictionary in list_project_classes():
+		by_path[str(entry["path"])] = entry
+	var bases: Dictionary = base_map()
+	var published: Dictionary = published_provider_paths()
+	for class_info: Dictionary in ProjectSettings.get_global_class_list():
+		var path: String = str(class_info.get("path", ""))
+		var declared: String = str(class_info.get("class", ""))
+		if by_path.has(path) or published.has(path):
+			continue
+		if not is_project_script_path(path) or not is_publishable_class_name(declared):
+			continue
+		if not is_resource_class(str(class_info.get("base", "")), bases):
+			continue
+		by_path[path] = {"name": declared, "path": path, "kind": "class", "autoload": ""}
+	var out: Array = by_path.values()
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["name"]) < str(b["name"]))
+	_offered_cache = out
+	_offered_signature = signature
+	return out.duplicate(true)
+
+
+## True when a script is already giving sheets rows: it lists itself (a Node or Resource class, an
+## autoload) or it was told to with "Use in event sheets" (the taught setting).
+static func script_is_in_use(path: String) -> bool:
+	for taught: Variant in ProjectSettings.get_setting(TAUGHT_PROVIDERS_SETTING, PackedStringArray()):
+		if str(taught) == path:
+			return true
+	for entry: Dictionary in list_offered_scripts():
+		if str(entry.get("path", "")) == path:
+			return true
+	return false
+
+
+## True when a class ultimately derives from Resource, walking a custom base chain the way
+## `is_scene_class` does.
+static func is_resource_class(declared_base: String, bases: Dictionary) -> bool:
+	var base: String = declared_base.strip_edges()
+	var hops: int = 0
+	while bases.has(base) and hops < 32:
+		base = str(bases[base])
+		hops += 1
+	return ClassDB.class_exists(base) and ClassDB.is_parent_class(base, "Resource")
 
 
 ## Registered autoloads whose script is GDScript, as scan entries. The singleton name is the
@@ -194,6 +249,8 @@ static func class_name_for_path(path: String) -> String:
 static func reset_for_tests() -> void:
 	_cache = []
 	_cache_signature = ""
+	_offered_cache = []
+	_offered_signature = ""
 
 
 ## Cheap membership signature: the class list and the settings that decide WHICH scripts are
