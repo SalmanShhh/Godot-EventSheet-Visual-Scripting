@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: curating a script never writes a file the plugin ships
+
+The public curate call refuses a script under `addons/` or in a shipped behaviour folder, with a plain reason, and writes nothing (no backup either). A script of yours is written as before.
+
 ### Fixed: the Theme Editor does what its window says
 
 A second open now edits the theme you opened (its swatches had stayed tied to the first one, so a change drew nothing and saved nothing), and its Quick Style colours start from the open theme instead of fixed dark ones. The Dyslexia-friendly tick and the Reading font no longer write the unsaved workbench theme into your open sheet. Applying the editor's copy no longer ticks Match Editor in the theme menu. The eleven swatches that drove nothing are no longer listed (a theme file that names them still loads and saves them). Each row reads in plain words, the way Godot's Inspector spells a property ("Follow Editor Greys"); the strip at the foot still gives the exact field name and the line a save writes. Descriptions say Section where the sheet does, the debugger accent names the Trail tab it tints, and the amber token says it colours every finding. The preview is wide enough for "On process" to read whole.

@@ -1347,6 +1347,9 @@ static func register_section_description(section_name: String, blurb: String) ->
 ## bolting `-> bool` onto someone's function. The file is backed up first (Tools > Sheet Backups
 ## restores it), and re-applying the same edits is a no-op rather than a second copy of the block.
 ##
+## A file the plugin ships (under addons/ or in a shipped behaviour folder) is refused with a plain reason
+## and never written.
+##
 ## Returns {"ok", "reason", "changed", "skipped", "backup", "source"}. Nothing is written when
 ## `ok` is false, or when the edits produce text identical to what is already on disk.
 static func curate_provider(script_path: String, edits: Array) -> Dictionary:
@@ -1354,6 +1357,9 @@ static func curate_provider(script_path: String, edits: Array) -> Dictionary:
 	var clean_path: String = script_path.strip_edges()
 	if not FileAccess.file_exists(clean_path):
 		result["reason"] = "No such script: %s" % clean_path
+		return result
+	if load("res://addons/eventsheet/ace/shipped_scripts.gd").is_shipped(clean_path):
+		result["reason"] = "%s belongs to a behaviour that ships with the plugin, so it is never rewritten here. Open the behaviour to change it." % clean_path.get_file()
 		return result
 	var original: String = FileAccess.get_file_as_string(clean_path)
 	var written: Dictionary = EventSheetACEAnnotationWriter.apply(original, edits)
