@@ -4214,7 +4214,10 @@ the everyday object rows, under the names people look for them by.
 
 #### Actions
 - **Set Opacity** (`opacity: float, target: String`) - Sets how see-through the node is. Godot has no opacity property: it is the alpha of the node's tint, so this writes modulate.a, where 0 is invisible and 1 is solid.
-- **Set Sprite Size** (`size: String, target: String`) - Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.
+- **Set Sprite Size** (`size: String, target: String`) - Deprecated. Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.
+- **Set Size** (`size: String, target: String`) - Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.
+- **Set Width** (`width: String, target: String`) - Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.
+- **Set Height** (`height: String, target: String`) - Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.
 
 #### Expressions
 - **Opacity** (`target: String`) - How solid the node is, from 0 (invisible) to 1 (solid). It is the alpha of the node's tint, modulate.a.

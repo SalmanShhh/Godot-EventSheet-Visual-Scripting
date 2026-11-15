@@ -93,7 +93,9 @@ Godot has no opacity property: it is the alpha of the node's tint, so Set Opacit
 |------|--------------|----------|
 | Set Opacity | How see-through a node is | `modulate.a = {opacity}` |
 | Opacity | How solid a node is, from 0 to 1 | `modulate.a` |
-| Set Sprite Size | Makes a sprite a size in pixels, by writing the scale that gives it | `scale = {size} / texture.get_size()` |
+| Set Size | Makes a sprite a size in pixels, by writing the scale that gives it. It measures the frame the sprite draws (the whole picture, one cell of a sprite sheet, or the region) and leaves a sprite with no picture as it is | `scale = {size} / get_rect().size if texture else scale` |
+| Set Width | Makes a sprite a width in pixels and leaves its height alone | `scale.x = {width} / get_rect().size.x if texture else scale.x` |
+| Set Height | Makes a sprite a height in pixels and leaves its width alone | `scale.y = {height} / get_rect().size.y if texture else scale.y` |
 | Width | A sprite's width on screen, in pixels | `(get_rect().size.x * scale.x)` |
 | Height | A sprite's height on screen, in pixels | `(get_rect().size.y * scale.y)` |
 | Left | The x of a sprite's left edge in the level | `(global_position.x + get_rect().position.x * scale.x)` |

@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: Set Size, Set Width and Set Height size a sprite by the frame it draws
+
+Set Sprite Size divided by the whole picture, so a sprite sheet or a region came out the wrong size (a 4 x 2 sheet asked for 64 x 64 measured 16 x 32; a region measured 8 x 4), a sprite with no picture stopped with an error, and \"On node\" divided by this node's picture instead of the other sprite's. Three new rows, Set Size, Set Width and Set Height, divide by the frame that is drawn, take \"On node\" on every member of the line, and leave a sprite with no picture as it is. Set Sprite Size keeps writing exactly the line it always did, so existing scripts compile and reopen byte for byte; it is retired from the picker, and Migrate moves a row of it onto Set Size without asking, keeping its size and node.
+
 ### Fixed: Attach to Node works on a behaviour sheet that is a script
 
 The check asked for a resource path, which a script sheet (the default format) never has, so Attach saved the sheet and then said \"Save the sheet first\" - and attached nothing. It now attaches the sheet's own file. A script sheet whose Save only failed to write the file now says that alone, instead of \"fix the error\".
