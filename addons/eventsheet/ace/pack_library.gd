@@ -36,6 +36,9 @@ const KIT_SMALLEST := 4
 ## The files a project's own work is read from when the question is "who uses this behaviour".
 const USAGE_EXTENSIONS: PackedStringArray = ["gd", "tscn", "tres"]
 
+## The folders under `addons/` that are this plugin's own, which no usage question reads.
+const OWN_ADDON_FOLDERS: PackedStringArray = ["eventforge", "eventsheet", "eventsheet_library"]
+
 static var _class_index_cache: Dictionary = {}
 static var _search_index_cache: Dictionary = {}
 
@@ -381,8 +384,9 @@ static func _scripts_in(folder_path: String) -> PackedStringArray:
 
 
 ## The project's own files as lines, read once for every usage question asked of them: every
-## `.gd`, `.tscn` and `.tres` under `scan_root`, leaving out `.godot`, the plugin's `addons/` and
-## hidden folders. The project's packs ARE read, because one pack needing another is a use.
+## `.gd`, `.tscn` and `.tres` under `scan_root`, leaving out `.godot`, this plugin's own folders under
+## `addons/` and hidden folders. A user's own addon IS read, and so are the project's packs: one pack
+## needing another is a use, and so is an addon that reaches for one.
 static func usage_corpus(scan_root: String = "res://") -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	_collect_usage(scan_root, out)
@@ -395,7 +399,7 @@ static func _collect_usage(folder: String, out: Array[Dictionary]) -> void:
 			var path: String = folder.path_join(file_name)
 			out.append({"path": path, "lines": FileAccess.get_file_as_string(path).split("\n")})
 	for child: String in DirAccess.get_directories_at(folder):
-		if child.begins_with(".") or (folder == "res://" and child == "addons"):
+		if child.begins_with(".") or (folder.get_file() == "addons" and OWN_ADDON_FOLDERS.has(child)):
 			continue
 		if FileAccess.file_exists(folder.path_join(child).path_join(IGNORE_FILE)):
 			continue

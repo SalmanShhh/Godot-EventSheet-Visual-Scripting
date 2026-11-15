@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a behaviour your own addon uses no longer shows as "unused"
+
+"Used by" in the behaviour library and Tidy behaviours skipped every folder under `addons/`, so a pack that one of your own addons reached for read as unused and was ticked for removal. It now reads your addons and leaves out only this plugin's own folders.
+
 ### Fixed: a script sheet whose saved script Godot cannot compile takes you to the row
 
 A sheet saved as a resource already jumped to the row that did not compile; a script sheet only said the row was marked. Both now select the row the first failing line came from, and a script sheet whose save could not write also marks the rows the check found.
