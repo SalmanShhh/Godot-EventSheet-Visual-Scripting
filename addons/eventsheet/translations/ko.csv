@@ -10564,3 +10564,6 @@ Could not copy to %s - Godot says: %s. %s,%s(으)로 복사하지 못했습니�
 Could not reach %s - Godot says: %s. %s,%s에 연결하지 못했습니다 - Godot의 설명: %s. %s
 "Nothing was sent. Check the address and your internet connection, then try again.",아무것도 전송되지 않았습니다. 주소와 인터넷 연결을 확인한 뒤 다시 시도하세요.
 "Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.","%s에 쓰지 못했습니다. 읽기 전용이거나, 다른 프로그램에서 열려 있거나, 클라우드 동기화 도구가 잡고 있을 수 있습니다. 아무것도 덮어쓰지 않았으며 파일은 그대로입니다. 파일을 열어 둔 것을 닫은 뒤 다시 저장하세요."
+"%s already exists, so nothing was changed. Rename or delete that file, or point the SaveSystem global at it yourself in Project Settings > Globals.","%s이(가) 이미 있어 아무것도 바꾸지 않았습니다. 그 파일의 이름을 바꾸거나 삭제하거나, 프로젝트 설정 > 글로벌에서 SaveSystem 글로벌이 그 파일을 가리키도록 직접 설정하세요."
+"The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.","SaveSystem 글로벌이 이제 save_system.tscn을 실행하며, 설정은 여기와 인스펙터에서 바뀝니다. 실행 취소로는 되돌릴 수 없습니다. 되돌리려면 프로젝트 설정 > 글로벌에서 SaveSystem 글로벌이 스크립트를 다시 가리키게 하세요."
+"%s could not be read as a sheet, so the version here was kept.",%s을(를) 시트로 읽지 못해 여기 있는 버전을 그대로 두었습니다.

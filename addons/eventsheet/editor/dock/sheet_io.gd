@@ -71,6 +71,7 @@ func _load_sheet_from_path(path: String) -> void:
 		_dock.setup(loaded as EventSheetResource)
 		_dock._current_sheet_path = resolved_path
 		_dock._dirty = false
+		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
 		_dock._refresh_title_strip()
 		DOCK_REGISTRY.notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
 		return
@@ -550,6 +551,7 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 		_dock._current_sheet.take_over_path(save_path)
 		_dock._current_sheet_path = save_path
 		_dock._dirty = false
+		_dock._external_mtime = FileAccess.get_modified_time(save_path)
 		_refresh_documentation_for(save_path)
 		# Save As can change the path - keep the saved session pointing at it
 		# (sweep catch: sessions otherwise lag until the next tab switch).
@@ -700,6 +702,7 @@ func _save_sheet_to_path(path: String) -> void:
 		_dock._current_sheet.take_over_path(resolved_path)
 		_dock._current_sheet_path = resolved_path
 		_dock._dirty = false
+		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
 		_dock._refresh_title_strip()
 		if was_backed:
 			# Don't silently change the format under an expert: name the consequence. Every scene that

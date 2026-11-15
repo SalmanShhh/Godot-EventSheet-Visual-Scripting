@@ -4,6 +4,22 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a sheet saved as a resource gets the "changed outside the editor" question too
+
+A `.tres` sheet changed by a merge or another tool, with its tab open and unsaved, was written over by the next Save. It now asks, the way a script sheet always has: keep yours (the default) or use the file on disk, and taking the disk's version first puts your unsaved one into Sheet Backups.
+
+### Fixed: a refused autoload name leaves no script behind
+
+Registering a sheet as an autoload compiled and wrote its script before checking whether the name was taken, so the refusal left a fresh file in the project. The name is checked first.
+
+### Changed: the Save System keeps two earlier versions of a save by default
+
+`backup_count` was 0, so a save that was written perfectly and was wrong (a bug that zeroed the wallet) had no earlier copy. It is now 2. Set it to 0 to turn backups off; a scene that already sets it keeps its value.
+
+### Fixed: Save Studio's "Keep them in a scene" never writes over a file of that name
+
+It wrote `res://save_system.tscn` without looking, replaced whatever was there and re-pointed the SaveSystem global with no undo. It now refuses by name when a file is there (unless the global already runs it), and says that Undo does not cover the change and how to go back.
+
 ### Changed: Write Text File says what happens when the file cannot be opened
 
 The row does nothing, and says nothing, when its folder is not there or the place is read-only (`res://` in an exported game). Its template keeps its bytes; its help now says so, and points to Write Text File (in a folder) for a folder that may not exist yet.

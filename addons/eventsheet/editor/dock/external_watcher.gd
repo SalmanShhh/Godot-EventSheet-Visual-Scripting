@@ -2,17 +2,12 @@
 class_name EventSheetExternalWatcher
 extends RefCounted
 
-# Watches the active GDScript-backed sheet's file on disk and offers to reload when it diverges
-# from what the editor last opened/saved. Extracted from event_sheet_dock.gd so the dock stays
-# focused.
-#
-# The reload dialog is owned state and lives here. The mtime baseline (_external_mtime) stays on
-# the DOCK because it is written from several load/save sites that remain on the dock; this class
-# reads and writes it through the dock reference. The dock keeps thin delegates
-# (_prompt_external_reload_if_changed / _external_sheet_changed_on_disk / _reload_external_sheet)
-# so the focus-in notification and the watch test keep calling the dock unchanged.
+# Watches the active sheet's file on disk (a script sheet's .gd, or a .tres) and offers to reload when
+# it diverges from what the editor last opened or saved. The reload dialog lives here; the mtime
+# baseline (_external_mtime) stays on the dock, written from its load and save sites.
 
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+const RELOAD_FROM_DISK_PATH := "res://addons/eventsheet/editor/dock/reload_from_disk.gd"
 ## The file the unsaved version is compiled into before it joins the backup ring; removed straight after.
 const UNSAVED_COPY := "user://eventsheet_unsaved_before_reload.gd"
 ## The custom action of the question's What Changed… button.
@@ -26,20 +21,35 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## True when the active GDScript-backed sheet's file changed on disk since open/save.
+## The file the open tab stands on: a script sheet's .gd, or the .tres a resource sheet was opened from
+## or saved to. "" for a sheet with no file yet.
+func watched_path() -> String:
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == null:
+		return ""
+	if not sheet.external_source_path.is_empty():
+		return sheet.external_source_path
+	var path: String = _dock._current_sheet_path if not _dock._current_sheet_path.is_empty() else sheet.resource_path
+	return path if path.get_extension() == "tres" else ""
+
+
+## True when the active sheet's file changed on disk since open/save.
 func sheet_changed_on_disk() -> bool:
-	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
+	if watched_path().is_empty():
 		return false
-	var disk_mtime: int = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
+	var disk_mtime: int = FileAccess.get_modified_time(watched_path())
 	return disk_mtime != 0 and _dock._external_mtime != 0 and disk_mtime != _dock._external_mtime
 
 
-## Re-imports the active external sheet from disk (fresh lossless import + ACE lift).
+## Re-reads the active sheet from disk (a script: fresh lossless import + ACE lift; a .tres: a fresh load).
 func reload_external_sheet() -> void:
-	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
+	if watched_path().is_empty():
 		return
-	_dock._load_sheet_from_path(_dock._current_sheet.external_source_path)
-	_dock._set_status("Reloaded from disk: %s" % _dock._current_sheet_path.get_file())
+	if _dock._current_sheet.external_source_path.is_empty():
+		load(RELOAD_FROM_DISK_PATH).reload(_dock, watched_path())
+	else:
+		_dock._load_sheet_from_path(_dock._current_sheet.external_source_path)
+	_dock._set_status("Reloaded from disk: %s" % watched_path().get_file())
 
 
 func prompt_external_reload_if_changed() -> void:
@@ -55,12 +65,11 @@ func prompt_external_reload_if_changed() -> void:
 	if is_instance_valid(_external_reload_dialog) and _external_reload_dialog.visible:
 		return
 	var dirty: bool = bool(_dock._dirty)
-	var ask: Dictionary = reload_prompt(_dock._current_sheet.external_source_path.get_file(), dirty,
-		FileAccess.get_modified_time(_dock._current_sheet.external_source_path))
+	var ask: Dictionary = load(RELOAD_FROM_DISK_PATH).reload_prompt(watched_path().get_file(), dirty, FileAccess.get_modified_time(watched_path()))
 	# Keeping the editor version remembers the new mtime, so the question is asked once per change.
 	var keep: Callable = func() -> void:
 		if _dock._current_sheet != null:
-			_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
+			_dock._external_mtime = FileAccess.get_modified_time(watched_path())
 	ask["on_cancel"] = keep
 	ask["on_main"] = keep if dirty else reload_external_sheet
 	ask["on_danger"] = use_file_on_disk
@@ -90,42 +99,13 @@ func use_file_on_disk() -> bool:
 ## the file on disk loses nothing for good. Returns the backup's path, "" when it could not be kept.
 func keep_unsaved_in_backups() -> String:
 	var sheet: EventSheetResource = _dock._current_sheet
-	if sheet == null or sheet.external_source_path.is_empty():
+	if sheet == null or watched_path().is_empty():
 		return ""
+	if sheet.external_source_path.is_empty():
+		return load(RELOAD_FROM_DISK_PATH).keep_unsaved(sheet, watched_path())
 	var compiled: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, UNSAVED_COPY)
 	var kept: String = ""
 	if bool(compiled.get("success", false)):
 		kept = EventSheetBackups.backup_bytes(sheet.external_source_path, FileAccess.get_file_as_bytes(UNSAVED_COPY))
 	DirAccess.remove_absolute(UNSAVED_COPY)
 	return kept
-
-
-## What the reload question says, and which answer is the safe one. With unsaved edits here, keeping
-## them is the blue answer and the file on disk is the risky one; on a clean tab a reload loses
-## nothing, so Reload is the blue answer and nothing is painted as dangerous. The list above the
-## answers says, before anyone chooses, whether this tab has edits to lose and when the file changed
-## (`changed_at` is its modification time, 0 when unknown).
-static func reload_prompt(file_name: String, dirty: bool, changed_at: int = 0) -> Dictionary:
-	var at: String = "" if changed_at <= 0 else Time.get_time_string_from_unix_time(
-		changed_at + int(Time.get_time_zone_from_system().get("bias", 0)) * 60).left(5)
-	var ask: Dictionary = {
-		"list": [[EventSheetL10n.translate("This tab - unsaved edits") if dirty
-				else EventSheetL10n.translate("This tab - nothing unsaved"), EventSheetL10n.translate("yours")],
-			[EventSheetL10n.translate("On disk - changed at %s") % at if not at.is_empty()
-				else EventSheetL10n.translate("On disk - changed"), EventSheetL10n.translate("the file")]],
-		"title": EventSheetL10n.translate("%s changed outside the editor") % file_name,
-		"say": EventSheetL10n.translate("The file on disk changed, and nothing here is unsaved. Show the new version?"),
-		"note": EventSheetL10n.translate("Reloading reads its events again; there is nothing for Ctrl+Z to take back."),
-		"glyph": "!",
-		"main": EventSheetL10n.translate("Reload"),
-		"cancel": EventSheetL10n.translate("Keep this version"),
-	}
-	if dirty:
-		ask.merge({
-			"say": EventSheetL10n.translate("The file on disk changed while you were editing it here. Which version do you want?"),
-			"note": EventSheetL10n.translate("Using the file on disk keeps your unsaved edits as a backup in Sheet Backups first; Ctrl+Z cannot bring them back."),
-			"main": EventSheetL10n.translate("Keep mine"),
-			"cancel": "",
-			"danger": EventSheetL10n.translate("Use the file on disk"),
-		}, true)
-	return ask

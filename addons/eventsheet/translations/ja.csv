@@ -10564,3 +10564,6 @@ Could not copy to %s - Godot says: %s. %s,%s へコピーできませんでし�
 Could not reach %s - Godot says: %s. %s,%s に接続できませんでした - Godot のメッセージ: %s。%s
 "Nothing was sent. Check the address and your internet connection, then try again.",何も送信されていません。アドレスとインターネット接続を確認して、もう一度お試しください。
 "Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.",%s に書き込めませんでした。読み取り専用か、別のプログラムで開かれているか、クラウド同期ツールが使用中の可能性があります。何も上書きされていません - ファイルは元のままです。開いているものを閉じてから、もう一度保存してください。
+"%s already exists, so nothing was changed. Rename or delete that file, or point the SaveSystem global at it yourself in Project Settings > Globals.",%s はすでに存在するため、何も変更していません。そのファイルの名前を変えるか削除するか、プロジェクト設定 > グローバルで SaveSystem グローバルをそのファイルに自分で向けてください。
+"The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals.",SaveSystem グローバルは save_system.tscn を実行するようになり、設定はここでもインスペクターでも変更できます。元に戻す(Undo)ではこの変更は戻せません。戻すには、プロジェクト設定 > グローバルで SaveSystem グローバルをスクリプトに向け直してください。
+"%s could not be read as a sheet, so the version here was kept.",%s をシートとして読み込めなかったため、ここにあるバージョンを残しました。
