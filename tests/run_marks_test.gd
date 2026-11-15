@@ -18,6 +18,7 @@ static func run() -> bool:
 	for base: Color in BASES:
 		ok = _chips(base) and ok
 	ok = _comments() and ok
+	ok = _every_theme_reads() and ok
 	EventSheetRunProfile.forget_stored_for_test()
 	return ok
 
@@ -44,6 +45,37 @@ static func _chips(base: Color) -> bool:
 	var ok: bool = SUPPORT.check(P, "chips and numbers read at base %s" % base.to_html(false), weak, [])
 	ok = SUPPORT.check(P, "the live value reads on its row at base %s" % base.to_html(false), live_ratio >= 4.5, true) and ok
 	return ok
+
+
+## Every shipped sample theme, dark and light: a comment on the theme's own comment band, a comment on a
+## colour of its own, and the margin number all come out at 4.5 to 1 on what is under them.
+static func _every_theme_reads() -> bool:
+	var weak: Array[String] = []
+	var custom: Color = Color(0.32, 0.27, 0.14, 1.0)
+	var paths: Array[String] = []
+	for folder: String in ["res://demo/themes/", "res://addons/eventsheet/themes/"]:
+		for file: String in DirAccess.get_files_at(folder):
+			if file.ends_with("_theme.tres"):
+				paths.append(folder + file)
+	for path: String in paths:
+		var style: EventSheetEditorStyle = load(path) as EventSheetEditorStyle
+		if style == null:
+			continue
+		style.ensure_defaults()
+		var event_style: EventSheetEventStyle = style.get_event_style()
+		var base: Color = event_style.row_background_color
+		var band: Color = Color(base, 1.0).lerp(Color(event_style.comment_row_background_color, 1.0), event_style.comment_row_background_color.a)
+		var pairs: Array = [
+			["comment on its band", MARKS.comment_ink(event_style.comment_text_color, Color(0, 0, 0, 0), event_style.comment_row_background_color, base), band],
+			["comment on a colour of its own", MARKS.comment_ink(event_style.comment_text_color, custom, event_style.comment_row_background_color, base), custom],
+			["margin number", MARKS.margin_ink(event_style.gutter_text_color, event_style.sheet_background_color), event_style.sheet_background_color],
+		]
+		for pair: Array in pairs:
+			var shown: Color = (pair[2] as Color).lerp(Color(pair[1], 1.0), (pair[1] as Color).a)
+			var ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(shown, pair[2])
+			if ratio < 4.5:
+				weak.append("%s: %s %.2f" % [path.get_file(), pair[0], ratio])
+	return SUPPORT.check(P, "comments and margin numbers read at 4.5 on every shipped theme", weak, [])
 
 
 static func _comments() -> bool:

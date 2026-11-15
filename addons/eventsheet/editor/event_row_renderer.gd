@@ -1230,6 +1230,7 @@ func _draw_gutter(control: CanvasItem, gutter_rect: Rect2, line_number: int, bre
 	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
 	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one
 	# thing the lens must never do. Only a run that has actually streamed draws anything.
+	gutter_text = load(RUN_MARKS_PATH).margin_ink(gutter_text, event_style.sheet_background_color if margin_bare and not filled else gutter_bg) if event_style != null else gutter_text
 	var stacked: bool = not hit_uid.is_empty() and EventSheetRunProfile.has_numbers()
 	var run_marks: Dictionary = load(RUN_MARKS_PATH).marks_for(hit_uid, gutter_text, reading, EventSheetActiveTheme.chrome().object_bar_warning_color, gutter_bg) if stacked else {}
 	if line_number > 0:
@@ -2075,7 +2076,7 @@ func _draw_spans(
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
 		if row_data.row_type == EventRowData.RowType.COMMENT:
-			color = load(RUN_MARKS_PATH).comment_ink(color, row_data.custom_color)
+			color = load(RUN_MARKS_PATH).comment_ink(color, row_data.custom_color, event_style.comment_row_background_color, event_style.row_background_color) if event_style != null else color
 		# While the game runs, the state it is in lights up in the state row: its name sits on a plate.
 		var live_token_text: String = ""
 		if metadata.has("state_name") and EventSheetStateWatch.is_live() \

@@ -54,8 +54,20 @@ static func live_ink(reading: EventSheetReadingStyle, row_ground: Color) -> Colo
 
 ## A comment's words on a band of its own colour: the theme's comment ink, moved until it reads on that band.
 ## A comment with no colour of its own (a clear `band`) keeps the theme's ink as it is.
-static func comment_ink(ink: Color, band: Color) -> Color:
+## `theme_band` is the theme's own comment band, laid over `base` (the row) when the comment has no colour.
+static func comment_ink(ink: Color, band: Color, theme_band: Color = Color(0.0, 0.0, 0.0, 0.0), base: Color = Color(0.0, 0.0, 0.0, 0.0)) -> Color:
+	var ground: Color = band
 	if band.a <= 0.01:
+		if base.a <= 0.0:
+			return ink
+		ground = Color(base, 1.0).lerp(Color(theme_band, 1.0), theme_band.a)
+	ground = Color(ground, 1.0)
+	# A faded ink is judged as it shows; one that fails is moved as an opaque colour so it reads for certain.
+	if EventSheetEditorThemeDeriver.contrast_ratio(ground.lerp(Color(ink, 1.0), ink.a), ground) >= 4.5:
 		return ink
-	# Opaque: a faded ink would read less than the colour moved for.
-	return load(READABLE_INK_PATH).move(Color(ink, 1.0), [Color(band, 1.0)])
+	return load(READABLE_INK_PATH).move(Color(ink, 1.0), [ground])
+
+
+## The margin number's colour as it reads on `ground` (the margin's fill, or the canvas when the margin is bare).
+static func margin_ink(ink: Color, ground: Color) -> Color:
+	return load(READABLE_INK_PATH).move(ink, [ground])
