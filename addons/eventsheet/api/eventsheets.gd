@@ -41,6 +41,8 @@ const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 
 ## The live dock, registered by the dock itself while it is built. Weak by contract: every use
 ## checks validity, so a closed workspace never leaves the API pointing at a freed node.
+## True while an edit() mutation is running: a second edit() from inside it is refused.
+static var _editing: bool = false
 static var _dock: Control:
 	get:
 		return DOCK_REGISTRY.dock()
@@ -226,12 +228,37 @@ static func open_sheet(path: String) -> bool:
 ## "nothing changed" (no undo step, no dirty). RULES: never cache rows across calls -
 ## the funnel's commit replaces resources with snapshot duplicates, so re-fetch from
 ## current_sheet() every time.
+## ATOMIC: a mutation that hits a script error leaves the sheet exactly as it was, adds no undo
+## step, and the status line says so; edit() returns false. NOT NESTABLE: calling edit() from inside
+## a mutation is refused (the status line says why, nothing is applied and it returns false), because
+## the outer step's snapshot cannot honestly hold a second step - make both changes in the outer
+## mutation instead.
 static func edit(label: String, mutation: Callable) -> bool:
 	if not _dock_alive() or not mutation.is_valid():
 		return false
+	if _editing:
+		_dock._set_status(EventSheetL10n.translate("An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit."), true)
+		return false
+	_editing = true
+	var stopped: Array = [false]
 	var changed: bool = _dock._perform_undoable_sheet_edit(label, func() -> bool:
+		var snapshot: EventSheetResource = _dock._capture_sheet_snapshot()
+		var was_dirty: bool = _dock._dirty
+		var watcher: Object = load("res://addons/eventsheet/api/edit_guard.gd").new()
+		OS.add_logger(watcher)
 		var result: Variant = mutation.call(_dock._current_sheet)
+		OS.remove_logger(watcher)
+		if int(watcher.get("errors")) > 0:
+			stopped[0] = true
+			_dock._restore_sheet_snapshot(snapshot)
+			_dock._dirty = was_dirty
+			_dock._refresh_title_strip()
+			return false
 		return bool(result) if result is bool else true)
+	_editing = false
+	if stopped[0]:
+		_dock._set_status(EventSheetL10n.translate("That edit stopped on a script error, so the sheet was left exactly as it was."), true)
+		return false
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty(label)

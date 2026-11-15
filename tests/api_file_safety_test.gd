@@ -66,6 +66,7 @@ static func run() -> bool:
 	ok = _a_block_that_cannot_be_written_is_reported() and ok
 	ok = _a_block_without_its_pack_still_draws() and ok
 	ok = _compile_says_what_it_writes() and ok
+	ok = _edit_is_atomic() and ok
 	return ok
 
 
@@ -291,3 +292,61 @@ var hp: int = 3
 static func _clear_backups(path: String) -> void:
 	for backup: String in EventSheetBackups.list_backups(path):
 		DirAccess.remove_absolute(backup)
+
+
+static func _edit_is_atomic() -> bool:
+	var ok: bool = true
+	var undo: EventSheetEditorTest.FakeEditorUndoRedoManager = EventSheetEditorTest.FakeEditorUndoRedoManager.new()
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(undo)
+	var start: EventSheetResource = EventSheets.new_sheet()
+	start.events.append(CommentRow.new())
+	start.events.append(CommentRow.new())
+	dock.setup(start)
+	var steps_before: int = undo._undo_stack.size()
+	# A mutation that appends, then hits a script error.
+	var half: bool = EventSheets.edit("Half an edit", func(sheet: EventSheetResource) -> bool:
+		sheet.events.append(CommentRow.new())
+		var nothing: Object = null
+		nothing.call("boom")
+		return true)
+	ok = SUPPORT.check(P, "a mutation that errors makes edit() return false", half, false) and ok
+	ok = SUPPORT.check(P, "the sheet is exactly as it was", EventSheets.current_sheet().events.size(), 2) and ok
+	ok = SUPPORT.check(P, "no undo step was added", undo._undo_stack.size(), steps_before) and ok
+	# The same, from a mutation with no declared return (which edit() reads as "changed").
+	var untyped: bool = EventSheets.edit("Untyped half", func(sheet: EventSheetResource) -> void:
+		sheet.events.append(CommentRow.new())
+		var nothing: Object = null
+		nothing.call("boom"))
+	ok = SUPPORT.check(P, "an erroring mutation with no return is refused too", untyped, false) and ok
+	ok = SUPPORT.check(P, "that sheet is exactly as it was", EventSheets.current_sheet().events.size(), 2) and ok
+	ok = SUPPORT.check(P, "that added no undo step", undo._undo_stack.size(), steps_before) and ok
+	# A clean edit still lands as one step.
+	var clean: bool = EventSheets.edit("Add one", func(sheet: EventSheetResource) -> bool:
+		sheet.events.append(CommentRow.new())
+		return true)
+	ok = SUPPORT.check(P, "a clean mutation lands", clean, true) and ok
+	ok = SUPPORT.check(P, "a clean mutation is one undo step", undo._undo_stack.size(), steps_before + 1) and ok
+	ok = SUPPORT.check(P, "a clean mutation reached the sheet", EventSheets.current_sheet().events.size(), 3) and ok
+	# A mutation that says "nothing changed" adds nothing.
+	var nothing_changed: bool = EventSheets.edit("Nothing", func(_sheet: EventSheetResource) -> bool: return false)
+	ok = SUPPORT.check(P, "a mutation returning false adds no step", nothing_changed, false) and ok
+	ok = SUPPORT.check(P, "and no step is recorded for it", undo._undo_stack.size(), steps_before + 1) and ok
+	# A nested edit is refused with a plain message and applies nothing of its own.
+	var inner_result: Array = []
+	var outer: bool = EventSheets.edit("Outer", func(_sheet: EventSheetResource) -> bool:
+		inner_result.append(EventSheets.edit("Inner", func(inner_sheet: EventSheetResource) -> bool:
+			inner_sheet.events.append(CommentRow.new())
+			return true))
+		EventSheets.current_sheet().events.append(CommentRow.new())
+		return true)
+	ok = SUPPORT.check(P, "a nested edit is refused", inner_result, [false]) and ok
+	ok = SUPPORT.check(P, "the outer edit still lands", outer, true) and ok
+	ok = SUPPORT.check(P, "only the outer write is in the sheet", EventSheets.current_sheet().events.size(), 4) and ok
+	ok = SUPPORT.check(P, "the outer edit is one undo step", undo._undo_stack.size(), steps_before + 2) and ok
+	var after_nested: bool = EventSheets.edit("After", func(sheet: EventSheetResource) -> bool:
+		sheet.events.append(CommentRow.new())
+		return true)
+	ok = SUPPORT.check(P, "an edit after a refused nested one works", after_nested, true) and ok
+	dock.free()
+	return ok

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: EventSheets.edit() is all or nothing
+
+- An edit whose callable hit a script error used to leave its half-change in the open sheet with no undo step to take it back, and an `edit()` started from inside another edit's callable silently lost one of the two writes. Now a callable that hits a script error leaves the sheet exactly as it was, adds no undo step, says so on the status line and `edit()` returns false; and an `edit()` called from inside another edit is refused with a plain line on the status line (nothing is applied, `false` comes back), because the outer step cannot honestly hold two. A clean edit is still one undo step.
+
 ### Changed: EventSheets.compile() says what it writes, and EventSheets.echo() reads without writing
 
 - `EventSheets.compile(sheet)` with no path always wrote a file and nothing said so: on a sheet opened from a `.gd` it overwrote that script with no backup (unsaved edits and all), and on a sheet with no file it dropped `res://event_sheet_generated.gd` into the project. It keeps its shape and its result keys, and now: with a path it writes that path as before; with no path on a sheet that has a file it takes the same backup a Save takes before it overwrites (restore it from Tools > Sheet Backups); with no path on a sheet with no file it writes nothing and returns a warning in `"warnings"` (the text is still in `"output"`). The docstring and the guide say which call writes.

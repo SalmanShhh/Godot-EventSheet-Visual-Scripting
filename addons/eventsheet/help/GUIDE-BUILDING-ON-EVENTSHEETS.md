@@ -71,7 +71,7 @@ These add words to the event sheet language. They work with or without the edito
 
 These drive the live editor. They require the EventSheet dock to be open and no-op safely otherwise (`null` / `false` returns), so the same script works headless.
 
-**The one rule of mutation:** all sheet changes go through `edit(label, mutation)`. Your callable receives the live `EventSheetResource`; the whole change becomes ONE undo step named `label`, and the API refreshes the rows and marks the sheet dirty for you. The undo funnel's commit REPLACES resources with snapshot duplicates, so never cache a row or resource across calls: re-fetch from `current_sheet()` every time. Return `false` from the mutation to say "nothing changed" (no undo step gets created).
+**The one rule of mutation:** all sheet changes go through `edit(label, mutation)`. Your callable receives the live `EventSheetResource`; the whole change becomes ONE undo step named `label`, and the API refreshes the rows and marks the sheet dirty for you. The edit is **atomic**: if your callable hits a script error the sheet is put back exactly as it was, no undo step is added, the status line says so and `edit()` returns `false`. It is **not nestable**: an `edit()` called from inside another edit's callable is refused (the status line says why, `false` comes back, nothing is applied), so make both changes in the outer callable. The undo funnel's commit REPLACES resources with snapshot duplicates, so never cache a row or resource across calls: re-fetch from `current_sheet()` every time. Return `false` from the mutation to say "nothing changed" (no undo step gets created).
 
 ```gdscript
 # A codemod: upper-case every comment row. One undo step, re-fetch built in.
