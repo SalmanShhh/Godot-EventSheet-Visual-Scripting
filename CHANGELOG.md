@@ -10,6 +10,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - Simple Abilities: Activate Ability, Set Ability Cooldown, Reset Cooldown, Set Max Stacks, Set Stacks, Add Stacks, Consume Ability Stack, Set Ability Enabled, Set Ability Active, Set Ability Data, Add Tag, Remove Tag, Clear All Tags, Remove Ability and Remove Ability After Duration.
 - Object Pool (which had no warnings at all): Add To Pool, Prewarm, Despawn All, Clear Pool, Spawn and Spawn Safely given a pool that does not exist; Create Pool when the scene path does not load (the pool is still made, with no scene, and later Spawn rows return nothing); Prewarm of a pool made with Create Empty Pool.
 - Quest: Advance Objective (a quest nobody registered, a quest registered but not started, or an objective the quest does not have) and Abandon Quest. A quest that already finished is still advanced or abandoned quietly.
+- ProcRoom: Enter Room, Force Enter Room, Lock Room, Unlock Room and Reveal Room given a room that does not exist.
 
 ### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
 

@@ -53,6 +53,8 @@ var _block_reason: String = ""
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## True when generation uses the shared random generator instead of its own.
 var _use_shared: bool = false
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 ## @ace_action
 ## @ace_featured
@@ -124,6 +126,7 @@ func regenerate() -> void:
 ## @ace_codegen_template("ProcRoom.enter_room({room_id})")
 func enter_room(room_id: String) -> void:
 	if not _rooms.has(room_id):
+		_say_missing("Enter Room", "room", room_id, _rooms.keys(), "Generate makes the rooms, so run it first, or check the spelling")
 		return
 	if not (_current.is_empty() or room_id in (_rooms[_current].to as Array)):
 		_blocked_id = room_id
@@ -151,6 +154,7 @@ func enter_room(room_id: String) -> void:
 ## @ace_codegen_template("ProcRoom.force_enter_room({room_id})")
 func force_enter_room(room_id: String) -> void:
 	if not _rooms.has(room_id):
+		_say_missing("Force Enter Room", "room", room_id, _rooms.keys(), "Generate makes the rooms, so run it first, or check the spelling")
 		return
 	_previous = _current
 	_current = room_id
@@ -169,6 +173,8 @@ func force_enter_room(room_id: String) -> void:
 func lock_room(room_id: String) -> void:
 	if _rooms.has(room_id):
 		_rooms[room_id].locked = true
+	else:
+		_say_missing("Lock Room", "room", room_id, _rooms.keys(), "Generate makes the rooms, so run it first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Unlock Room")
@@ -179,6 +185,8 @@ func lock_room(room_id: String) -> void:
 func unlock_room(room_id: String) -> void:
 	if _rooms.has(room_id):
 		_rooms[room_id].locked = false
+	else:
+		_say_missing("Unlock Room", "room", room_id, _rooms.keys(), "Generate makes the rooms, so run it first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Reveal Room")
@@ -189,6 +197,8 @@ func unlock_room(room_id: String) -> void:
 func reveal_room(room_id: String) -> void:
 	if _rooms.has(room_id):
 		_rooms[room_id].revealed = true
+	else:
+		_say_missing("Reveal Room", "room", room_id, _rooms.keys(), "Generate makes the rooms, so run it first, or check the spelling")
 
 ## @ace_action
 ## @ace_name("Reset Traversal")
@@ -501,6 +511,30 @@ func _build() -> void:
 		_rooms[_current].visited = true
 		_rooms[_current].revealed = true
 	on_graph_generated.emit()
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("ProcRoom on %s: %s" % [where, sentence])
+
+## The names a row could have meant, as a phrase: the first eight, sorted, or that none exist yet.
+func _list_names(known: Array) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	if names.is_empty():
+		return "none exist yet"
+	return "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, _list_names(known), advice])
 
 ## @ace_hidden
 func save_state() -> Dictionary:

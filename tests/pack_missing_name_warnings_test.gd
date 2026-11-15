@@ -21,6 +21,7 @@ static func run() -> bool:
 	ok = _abilities() and ok
 	ok = _object_pool() and ok
 	ok = _quest() and ok
+	ok = _proc_room() and ok
 	return ok
 
 
@@ -130,4 +131,29 @@ static func _quest() -> bool:
 	rows.append(["a finished quest is advanced again without a word", _heard(func() -> void: quests.advance_objective("hoard", "deliver", 1)), []])
 	rows.append(["abandoning a finished quest says nothing", _heard(func() -> void: quests.abandon_quest("hoard")), []])
 	quests.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _proc_room() -> bool:
+	var script: GDScript = load(ROOT + "proc_room/proc_room_addon.gd")
+	var rooms: Node = script.new()
+	rooms.name = "ProcRoom"
+	var tail: String = " (none exist yet) - Generate makes the rooms, so run it first, or check the spelling."
+	var rows: Array = []
+	var actions: Array = [
+		["Enter Room", "d9_9", func() -> void: rooms.enter_room("d9_9")],
+		["Force Enter Room", "d9_8", func() -> void: rooms.force_enter_room("d9_8")],
+		["Lock Room", "d9_7", func() -> void: rooms.lock_room("d9_7")],
+		["Unlock Room", "d9_6", func() -> void: rooms.unlock_room("d9_6")],
+		["Reveal Room", "d9_5", func() -> void: rooms.reveal_room("d9_5")],
+	]
+	for entry: Array in actions:
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"ProcRoom on ProcRoom: %s did nothing, because no room is called \"%s\"%s" % [entry[0], entry[1], tail]))
+	rooms.generate("seed", 3, 2)
+	var heard: Array = _heard(func() -> void: rooms.enter_room("d0_9"))
+	rows.append(["with a map, a wrong room is named and the real ones listed", str(heard[0]).begins_with(
+		"ProcRoom on ProcRoom: Enter Room did nothing, because no room is called \"d0_9\" (there are: d0_0"), true])
+	rows.append(["a real room says nothing", _heard(func() -> void: rooms.lock_room("d0_0")), []])
+	rooms.free()
 	return SUPPORT.pins(NAME, rows)

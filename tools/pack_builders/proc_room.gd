@@ -154,7 +154,9 @@ static func build() -> bool:
 		"\tif _rooms.has(_current):",
 		"\t\t_rooms[_current].visited = true",
 		"\t\t_rooms[_current].revealed = true",
-		"\ton_graph_generated.emit()"
+		"\ton_graph_generated.emit()",
+		"",
+		Lib.missing_name_block("ProcRoom")
 	]))
 	sheet.events.append(block)
 
@@ -185,6 +187,7 @@ static func build() -> bool:
 		[["room_id", "String"]],
 		"\n".join(PackedStringArray([
 			"if not _rooms.has(room_id):",
+			"\t_say_missing(\"Enter Room\", \"room\", room_id, _rooms.keys(), \"Generate makes the rooms, so run it first, or check the spelling\")",
 			"\treturn",
 			"if not (_current.is_empty() or room_id in (_rooms[_current].to as Array)):",
 			"\t_blocked_id = room_id",
@@ -206,16 +209,16 @@ static func build() -> bool:
 		])))
 	Lib.append_function(sheet, "force_enter_room", "Force Enter Room", "ProcRoom", "Moves to any room ignoring connection + lock checks (for teleports / debug). Fires On Room Entered.",
 		[["room_id", "String"]],
-		"if not _rooms.has(room_id):\n\treturn\n_previous = _current\n_current = room_id\n_rooms[room_id].visited = true\n_rooms[room_id].revealed = true\n_entered_id = room_id\n_entered_type = str(_rooms[room_id].type)\non_room_entered.emit()")
+		"if not _rooms.has(room_id):\n\t_say_missing(\"Force Enter Room\", \"room\", room_id, _rooms.keys(), \"Generate makes the rooms, so run it first, or check the spelling\")\n\treturn\n_previous = _current\n_current = room_id\n_rooms[room_id].visited = true\n_rooms[room_id].revealed = true\n_entered_id = room_id\n_entered_type = str(_rooms[room_id].type)\non_room_entered.emit()")
 	Lib.append_function(sheet, "lock_room", "Lock Room", "ProcRoom", "Locks a room so Enter Room is blocked until unlocked (a key door).",
 		[["room_id", "String"]],
-		"if _rooms.has(room_id):\n\t_rooms[room_id].locked = true")
+		"if _rooms.has(room_id):\n\t_rooms[room_id].locked = true\nelse:\n\t_say_missing(\"Lock Room\", \"room\", room_id, _rooms.keys(), \"Generate makes the rooms, so run it first, or check the spelling\")")
 	Lib.append_function(sheet, "unlock_room", "Unlock Room", "ProcRoom", "Unlocks a locked room.",
 		[["room_id", "String"]],
-		"if _rooms.has(room_id):\n\t_rooms[room_id].locked = false")
+		"if _rooms.has(room_id):\n\t_rooms[room_id].locked = false\nelse:\n\t_say_missing(\"Unlock Room\", \"room\", room_id, _rooms.keys(), \"Generate makes the rooms, so run it first, or check the spelling\")")
 	Lib.append_function(sheet, "reveal_room", "Reveal Room", "ProcRoom", "Marks a room as revealed (for fog-of-war maps).",
 		[["room_id", "String"]],
-		"if _rooms.has(room_id):\n\t_rooms[room_id].revealed = true")
+		"if _rooms.has(room_id):\n\t_rooms[room_id].revealed = true\nelse:\n\t_say_missing(\"Reveal Room\", \"room\", room_id, _rooms.keys(), \"Generate makes the rooms, so run it first, or check the spelling\")")
 	Lib.append_function(sheet, "reset_traversal", "Reset Traversal", "ProcRoom", "Clears visited/revealed/locked and returns to the start room, keeping the same map (a fresh run of the same layout).",
 		[],
 		"for id: String in _rooms:\n\t_rooms[id].visited = false\n\t_rooms[id].revealed = false\n\t_rooms[id].locked = false\n_current = \"d0_0\"\n_previous = \"\"\nif _rooms.has(_current):\n\t_rooms[_current].visited = true\n\t_rooms[_current].revealed = true")
