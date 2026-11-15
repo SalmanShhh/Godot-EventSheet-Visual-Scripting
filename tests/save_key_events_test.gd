@@ -269,7 +269,7 @@ static func _key_reads() -> bool:
 ## save or another test's files.
 static func _new_system(tag: String) -> Node:
 	var system: Node = (load(PACK) as GDScript).new()
-	system.save_directory = "user://"
+	system.save_directory = SUPPORT.own_folder("saves")
 	system.file_pattern = "test_keys_%s_{slot}.dat" % tag
 	system.slot = 3
 	return system

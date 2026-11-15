@@ -69,7 +69,8 @@ static func run() -> bool:
 		load("res://eventsheet_addons/save_system/save_system_addon.gd") != null, true) and all_passed
 	var save_instance: Node = load("res://eventsheet_addons/save_system/save_system_addon.gd").new()
 	save_instance.slot = 7
-	all_passed = _check("slots map to per-slot files", save_instance._slot_path(), "user://save_7.cfg") and all_passed
+	save_instance.save_directory = SUPPORT.own_folder("saves")
+	all_passed = _check("slots map to per-slot files", save_instance._slot_path(), SUPPORT.own_folder("saves") + "/save_7.cfg") and all_passed
 	save_instance.save_number("hp", 42.0)
 	all_passed = _check("saved values round-trip", save_instance.load_number("hp"), 42.0) and all_passed
 	all_passed = _check("has_save_key sees the key", save_instance.has_save_key("hp"), true) and all_passed
@@ -78,6 +79,7 @@ static func run() -> bool:
 	# v2: Variant core, formats, encryption, lifecycle, slot metadata, autosave.
 	var v2: Node = load("res://eventsheet_addons/save_system/save_system_addon.gd").new()
 	v2.slot = 8
+	v2.save_directory = SUPPORT.own_folder("saves")
 	v2.save_value("spawn", Vector2(3, 4))
 	all_passed = _check("Variant values round-trip", v2.load_value("spawn", Vector2.ZERO), Vector2(3, 4)) and all_passed
 	v2.format = "json"

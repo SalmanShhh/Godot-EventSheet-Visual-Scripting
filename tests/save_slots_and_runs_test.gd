@@ -717,7 +717,7 @@ static func _new_game_plus() -> bool:
 
 static func _new_system(name: String, fmt: String = "config") -> Node:
 	var system: Node = (load(PACK) as GDScript).new()
-	system.save_directory = "user://"
+	system.save_directory = SUPPORT.own_folder("saves")
 	system.file_pattern = "test_slots_%s_{slot}.dat" % name
 	system.format = fmt
 	return system

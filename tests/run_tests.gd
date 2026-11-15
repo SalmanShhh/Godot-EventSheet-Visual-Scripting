@@ -186,7 +186,9 @@ func _note_shared_user_folder(test_file: String, before: Dictionary, names: Dict
 	var after: Dictionary = _top_of_user_folder()
 	var found: PackedStringArray = PackedStringArray()
 	for entry: String in after:
-		if entry.begins_with("eventforge_tests_") or USER_FOLDER_ENGINE_NAMES.has(entry):
+		# The compiler's own in-flight file (`<name>.efwrite.tmp`) is only ever seen mid-write, so it would
+		# make the count depend on timing; the name it belongs to is counted when it lands.
+		if entry.begins_with("eventforge_tests_") or USER_FOLDER_ENGINE_NAMES.has(entry) 				or entry.ends_with(".efwrite.tmp"):
 			continue
 		if not before.has(entry) or before[entry] != after[entry]:
 			found.append(entry)

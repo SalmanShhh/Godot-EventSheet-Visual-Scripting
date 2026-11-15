@@ -52,7 +52,7 @@ static func _format_detection() -> bool:
 	var extensions: Dictionary = {"config": "cfg", "json": "json", "binary": "sav", "csv": "csv", "ini": "ini", "xml": "xml"}
 	for fmt: String in extensions:
 		var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
-		sv.set("save_directory", "user://")
+		sv.set("save_directory", SUPPORT.own_folder("saves"))
 		sv.set("file_pattern", "test_detect_%s_{slot}.%s" % [fmt, str(extensions[fmt])])
 		sv.set("format", fmt)
 		sv.call("save_value", "hp", 10)
@@ -198,7 +198,7 @@ static func _reviewer_regressions() -> bool:
 
 static func _new_save_system(name: String, fmt: String) -> Node:
 	var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
-	sv.set("save_directory", "user://")
+	sv.set("save_directory", SUPPORT.own_folder("saves"))
 	sv.set("file_pattern", "test_%s_{slot}.dat" % name)
 	sv.set("format", fmt)
 	return sv
@@ -366,7 +366,7 @@ static func _format_round_trips() -> bool:
 	var all_passed: bool = true
 	for fmt: String in ["config", "json", "binary", "csv", "ini", "xml"]:
 		var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
-		sv.set("save_directory", "user://")
+		sv.set("save_directory", SUPPORT.own_folder("saves"))
 		sv.set("file_pattern", "test_seam_%s_{slot}.dat" % fmt)
 		sv.set("format", fmt)
 		sv.call("save_value", "hp", 42.5)
@@ -385,11 +385,11 @@ static func _format_round_trips() -> bool:
 		sv.free()
 	# Spreadsheet workflow: a hand-authored CSV (bare numbers and words, no var_to_str
 	# quoting) still loads - numbers parse, unquoted words fall back to raw text.
-	var hand: FileAccess = FileAccess.open("user://test_seam_hand_0.dat", FileAccess.WRITE)
+	var hand: FileAccess = FileAccess.open(SUPPORT.own_folder("saves") + "/test_seam_hand_0.dat", FileAccess.WRITE)
 	hand.store_string("gold,150\nhero,Zed\n")
 	hand.close()
 	var reader: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
-	reader.set("save_directory", "user://")
+	reader.set("save_directory", SUPPORT.own_folder("saves"))
 	reader.set("file_pattern", "test_seam_hand_{slot}.dat")
 	reader.set("format", "csv")
 	all_passed = _check("hand-authored csv: bare number parses", reader.call("load_value", "gold", 0), 150) and all_passed
@@ -404,7 +404,7 @@ static func _format_round_trips() -> bool:
 static func _node_state_walk() -> bool:
 	var all_passed: bool = true
 	var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
-	sv.set("save_directory", "user://")
+	sv.set("save_directory", SUPPORT.own_folder("saves"))
 	sv.set("file_pattern", "test_seam_walk_{slot}.cfg")
 	var player: Node = Node.new()
 	player.name = "Player"

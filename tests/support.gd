@@ -54,6 +54,14 @@ static func own_path(name: String) -> String:
 	return path
 
 
+## The same, for a folder: `own_folder("saves")` is made before it is returned, so a pack's save
+## directory can point at it straight away.
+static func own_folder(name: String) -> String:
+	var path: String = own_path(name)
+	DirAccess.make_dir_recursive_absolute(path)
+	return path
+
+
 ## Reports one assertion in the suite's line format and returns whether it held, so a caller can
 ## fold it: `all_passed = EventSheetTestSupport.check(P, "label", got, want) and all_passed`.
 ##
