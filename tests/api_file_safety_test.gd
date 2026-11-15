@@ -64,6 +64,7 @@ static func run() -> bool:
 	ok = _resource_claims_are_gated() and ok
 	ok = _built_in_ids_cannot_be_taken() and ok
 	ok = _a_block_that_cannot_be_written_is_reported() and ok
+	ok = _a_block_without_its_pack_still_draws() and ok
 	return ok
 
 
@@ -204,3 +205,22 @@ static func _a_block_that_cannot_be_written_is_reported() -> bool:
 	ok = SUPPORT.check(P, "a registered kind still compiles", fine.get("success"), true) and ok
 	return ok
 
+
+static func _a_block_without_its_pack_still_draws() -> bool:
+	var ok: bool = true
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	var builder: EventSheetViewportRowBuilder = viewport._row_builder
+	var orphan: CustomBlockRow = CustomBlockRow.new()
+	orphan.kind_id = "gone.pack"
+	orphan.fields = {"text": "ship it"}
+	var row: EventRowData = builder._build_custom_block_row(orphan, 0)
+	ok = SUPPORT.check(P, "a block whose pack is gone still builds a row", row != null, true) and ok
+	if row != null:
+		var muted: Color = viewport._get_reading_style().muted_text_color
+		ok = SUPPORT.check(P, "the row has a badge and a summary", row.spans.size(), 2) and ok
+		if row.spans.size() == 2:
+			ok = SUPPORT.check(P, "the summary names the kind that is missing", str(row.spans[1].text), "gone.pack") and ok
+			ok = SUPPORT.check(P, "the badge is the quiet chip", row.spans[0].metadata.get("badge_style"), "scope") and ok
+			ok = SUPPORT.check(P, "the summary wears the muted ink", row.spans[1].metadata.get("text_color") == muted, true) and ok
+	viewport.free()
+	return ok

@@ -5409,7 +5409,9 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	# First-class display: a kind may describe variable-style spans (name / operator / value /
 	# keyword pills) and its rows read like the plugin's own variable rows - the built-in
 	# preload kind ships through this hook, so it is load-bearing, not just an extension seam.
-	var described: Array[Dictionary] = kind.display_spans(block) if kind != null else []
+	var described: Array[Dictionary] = []
+	if kind != null:
+		described = kind.display_spans(block)
 	if not described.is_empty():
 		row_data.spans = []
 		for span_descriptor: Dictionary in described:
@@ -5438,16 +5440,17 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 		# Extension hooks: a kind may tint its badge (style) and flag bad fields live (validate).
 		var kind_style: Dictionary = kind.style(block) if kind != null else {}
 		var badge_color: Color = kind_style.get("accent", event_style.behavior_accent_color)
+		var quiet_chip: Dictionary = {} if kind != null else {"badge_style": "scope", "badge_bg": _viewport._get_reading_style().inspector_chip_background_color, "badge_fg": _viewport._get_reading_style().inspector_chip_foreground_color}
 		row_data.spans = [
 			_make_span(
 				badge_text,
 				EventSheetSemanticSpan.SpanType.KEYWORD,
-				{"badge": true, "text_color": badge_color}
+				{"badge": true, "text_color": badge_color}.merged(quiet_chip)
 			),
 			_make_span(
 				summary_text,
 				EventSheetSemanticSpan.SpanType.VALUE,
-				{"kind": "custom_block_row", "text_color": event_style.object_label_color}
+				{"kind": "custom_block_row", "text_color": _viewport._get_reading_style().muted_text_color if kind == null else event_style.object_label_color}
 			)
 		]
 	var problem: String = kind.validate(block) if kind != null else ""

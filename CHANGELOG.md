@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a block whose pack was removed draws as a quiet row instead of disappearing
+
+- When a behaviour pack was removed, a sheet saved as a `.tres` file still holds that pack's block rows, and the editor raised a script error on every redraw and left the row out of the sheet. The row now draws as a plain "block" chip beside the kind id in the muted ink, in the dark and the light editor theme, and the rows around it are unaffected. No widget and no outline: it is the same quiet chip the preload row wears.
+
 ### Fixed: a block that cannot be written is no longer dropped without a word
 
 - A block row whose kind is not registered (its behaviour pack was removed, which a sheet saved as a `.tres` file can still hold) or whose emit code hits an error used to vanish from the compiled script while the compile reported success, so a saved script quietly lacked a line the sheet still held. The compile now fails with a message naming the kind and what the row holds, adds the same words to its warnings, and leaves the file it would have overwritten as it was. A `.tres` row keeps only the kind id and its fields, never the emitted line, so there is nothing to keep verbatim: the message tells the author to put the pack back or delete the row. Sheets opened from a `.gd` file are not affected - their lines stay a verbatim block when a kind is missing.
