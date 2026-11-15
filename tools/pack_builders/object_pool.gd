@@ -215,14 +215,16 @@ static func build() -> bool:
 		"\t(_pools[pool_name].active as Array).erase(node)",
 		"\t_stow(pool_name, node)",
 		"\t_last_despawned = node",
-		"\ton_despawned.emit()"
+		"\ton_despawned.emit()",
+		"",
+		Lib.missing_name_block("Object Pool")
 	]))
 	sheet.events.append(block)
 
 	# --- Create pools ---
 	Lib.append_function(sheet, "create_pool", "Create Pool", "Object Pool", "The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.",
 		[["pool_name", "String"], ["scene_path", "String"], ["prewarm", "int"]],
-		"var scene: PackedScene = load(scene_path) as PackedScene\n_pools[pool_name] = {\"scene\": scene, \"free\": [], \"active\": []}\nif scene == null:\n\treturn\nfor _i: int in maxi(prewarm, 0):\n\t_stow(pool_name, scene.instantiate())")
+		"var scene: PackedScene = load(scene_path) as PackedScene\n_pools[pool_name] = {\"scene\": scene, \"free\": [], \"active\": []}\nif scene == null:\n\t_say_once(\"scene:\" + scene_path, \"Create Pool made the pool \\\"%s\\\" with no scene, because \\\"%s\\\" is not a scene Godot can load - check the path in the FileSystem dock.\" % [pool_name, scene_path])\n\treturn\nfor _i: int in maxi(prewarm, 0):\n\t_stow(pool_name, scene.instantiate())")
 	_default(sheet, "prewarm", "8")
 	# `prewarm` is the Create Pool row's own parameter name, frozen with the row, so it keeps sharing a
 	# name with the Prewarm verb and the shadowing is said to be deliberate.
@@ -233,10 +235,10 @@ static func build() -> bool:
 		"_pools[pool_name] = {\"scene\": null, \"free\": [], \"active\": []}")
 	Lib.append_function(sheet, "add_to_pool", "Add To Pool", "Object Pool", "Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.",
 		[["pool_name", "String"], ["node", "Node"]],
-		"_stow(pool_name, node)")
+		"if not _pools.has(pool_name):\n\t_say_missing(\"Add To Pool\", \"pool\", pool_name, _pools.keys(), \"make it with Create Pool or Create Empty Pool first, or check the spelling\")\n\treturn\n_stow(pool_name, node)")
 	Lib.append_function(sheet, "prewarm", "Prewarm", "Object Pool", "Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).",
 		[["pool_name", "String"], ["count", "int"]],
-		"if not _pools.has(pool_name) or _pools[pool_name].scene == null:\n\treturn\nfor _i: int in maxi(count, 0):\n\t_stow(pool_name, (_pools[pool_name].scene as PackedScene).instantiate())")
+		"if not _pools.has(pool_name):\n\t_say_missing(\"Prewarm\", \"pool\", pool_name, _pools.keys(), \"make it with Create Pool or Create Empty Pool first, or check the spelling\")\n\treturn\nif _pools[pool_name].scene == null:\n\t_say_once(\"noscene:\" + pool_name, \"Prewarm did nothing, because the pool \\\"%s\\\" has no scene of its own - Prewarm only fills a pool made with Create Pool, so fill this one with Add To Pool.\" % pool_name)\n\treturn\nfor _i: int in maxi(count, 0):\n\t_stow(pool_name, (_pools[pool_name].scene as PackedScene).instantiate())")
 
 	# --- Spawn + despawn ---
 	Lib.append_function(sheet, "despawn", "Despawn", "Object Pool", "Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned. The handing back lands at the next idle moment rather than on this line, exactly as a destroy does, so the node is still in the world for the rest of the event and the row is safe inside a collision or area callback. Safe to run twice - a node already booked, or already back in its pool, is left alone.",
@@ -244,10 +246,10 @@ static func build() -> bool:
 		"if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():\n\treturn\nif not node.has_meta(&\"__pool__\"):\n\treturn\nvar pool_name: String = str(node.get_meta(&\"__pool__\"))\nif not _pools.has(pool_name) or (_pools[pool_name].free as Array).has(node):\n\treturn\nif _already_retiring(node):\n\t_hand_back_now(pool_name, node)\n\treturn\nif _booked.has(node.get_instance_id()):\n\treturn\n_booked[node.get_instance_id()] = true\ncall_deferred(&\"_hand_back_by_id\", node.get_instance_id())")
 	Lib.append_function(sheet, "despawn_all", "Despawn All", "Object Pool", "Hands every active node of a pool back at once (for a level reset). Like Despawn, each handing back lands at the next idle moment.",
 		[["pool_name", "String"]],
-		"if not _pools.has(pool_name):\n\treturn\nfor node: Node in (_pools[pool_name].active as Array).duplicate():\n\tdespawn(node)")
+		"if not _pools.has(pool_name):\n\t_say_missing(\"Despawn All\", \"pool\", pool_name, _pools.keys(), \"make it with Create Pool or Create Empty Pool first, or check the spelling\")\n\treturn\nfor node: Node in (_pools[pool_name].active as Array).duplicate():\n\tdespawn(node)")
 	Lib.append_function(sheet, "clear_pool", "Clear Pool", "Object Pool", "Frees (deletes) every node in a pool and removes the pool. Use it when the pool is truly done.",
 		[["pool_name", "String"]],
-		"if not _pools.has(pool_name):\n\treturn\nfor node: Node in (_pools[pool_name].free as Array) + (_pools[pool_name].active as Array):\n\tif is_instance_valid(node):\n\t\tnode.queue_free()\n_pools.erase(pool_name)")
+		"if not _pools.has(pool_name):\n\t_say_missing(\"Clear Pool\", \"pool\", pool_name, _pools.keys(), \"make it with Create Pool or Create Empty Pool first, or check the spelling\")\n\treturn\nfor node: Node in (_pools[pool_name].free as Array) + (_pools[pool_name].active as Array):\n\tif is_instance_valid(node):\n\t\tnode.queue_free()\n_pools.erase(pool_name)")
 
 	# --- Conditions ---
 	_condition(sheet, "has_pool", "Has Pool", "Object Pool", "Whether a pool with this name exists.", [["pool_name", "String"]],
@@ -256,10 +258,10 @@ static func build() -> bool:
 	# --- Expressions ---
 	_expr_node(sheet, "spawn", "Spawn", "Object Pool", "Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.",
 		[["pool_name", "String"]],
-		"var node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_wake(node)\n(_pools[pool_name].active as Array).append(node)\n_last_spawned = node\non_spawned.emit()\nreturn node")
+		"if not _pools.has(pool_name):\n\t_say_missing(\"Spawn\", \"pool\", pool_name, _pools.keys(), \"make it with Create Pool or Create Empty Pool first, or check the spelling\")\n\treturn null\nvar node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_wake(node)\n(_pools[pool_name].active as Array).append(node)\n_last_spawned = node\non_spawned.emit()\nreturn node")
 	_expr_node(sheet, "spawn_safely", "Spawn Safely", "Object Pool", "The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: A 2D physics body reparented while the physics server is flushing its queries makes Godot print an error (the move still happens), and this row waits for that to finish so nothing is printed. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.",
 		[["pool_name", "String"], ["at", "Variant"]],
-		"var node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_ready_for_use(node)\n_place(node, at)\n(_pools[pool_name].active as Array).append(node)\ncall_deferred(&\"_join_world_by_id\", node.get_instance_id())\nreturn node")
+		"if not _pools.has(pool_name):\n\t_say_missing(\"Spawn Safely\", \"pool\", pool_name, _pools.keys(), \"make it with Create Pool or Create Empty Pool first, or check the spelling\")\n\treturn null\nvar node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_ready_for_use(node)\n_place(node, at)\n(_pools[pool_name].active as Array).append(node)\ncall_deferred(&\"_join_world_by_id\", node.get_instance_id())\nreturn node")
 	_field(sheet, "at", "Vector2.ZERO", "Where the copy goes, set before it joins the world - so it is a place relative to the parent it is about to get, and a pool has no transform of its own. A Vector3 places a 3D copy; a value of the wrong shape for the copy is left alone.")
 	_expr_node(sheet, "last_spawned", "Last Spawned", "Object Pool", "The node most recently spawned (handy inside On Spawned).", [],
 		"return _last_spawned")

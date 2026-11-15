@@ -19,6 +19,7 @@ const ROOT := "res://eventsheet_addons/"
 static func run() -> bool:
 	var ok: bool = true
 	ok = _abilities() and ok
+	ok = _object_pool() and ok
 	return ok
 
 
@@ -71,3 +72,31 @@ static func _abilities() -> bool:
 	pack.free()
 	return SUPPORT.pins(NAME, rows)
 
+
+
+static func _object_pool() -> bool:
+	var script: GDScript = load(ROOT + "object_pool/object_pool_addon.gd")
+	var pool: Node = script.new()
+	pool.name = "ObjectPool"
+	pool.create_empty_pool("bullets")
+	var tail: String = " (there are: bullets) - make it with Create Pool or Create Empty Pool first, or check the spelling."
+	var rows: Array = []
+	var actions: Array = [
+		["Add To Pool", "bulets", func() -> void: pool.add_to_pool("bulets", Node.new())],
+		["Prewarm", "bulet", func() -> void: pool.prewarm("bulet", 4)],
+		["Despawn All", "bullet", func() -> void: pool.despawn_all("bullet")],
+		["Clear Pool", "bullts", func() -> void: pool.clear_pool("bullts")],
+		["Spawn", "bulllets", func() -> void: pool.spawn("bulllets")],
+		["Spawn Safely", "bulletz", func() -> void: pool.spawn_safely("bulletz", Vector2.ZERO)],
+	]
+	for entry: Array in actions:
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"Object Pool on ObjectPool: %s did nothing, because no pool is called \"%s\"%s" % [entry[0], entry[1], tail]))
+	rows.append_array(_once("Create Pool with a path that is no scene", func() -> void: pool.create_pool("rocks", "res://nowhere.tscn", 2),
+		"Object Pool on ObjectPool: Create Pool made the pool \"rocks\" with no scene, because \"res://nowhere.tscn\" is not a scene Godot can load - check the path in the FileSystem dock."))
+	rows.append_array(_once("Prewarm of a pool with no scene", func() -> void: pool.prewarm("bullets", 4),
+		"Object Pool on ObjectPool: Prewarm did nothing, because the pool \"bullets\" has no scene of its own - Prewarm only fills a pool made with Create Pool, so fill this one with Add To Pool."))
+	rows.append(["a missing pool is still not made by a row that missed", pool.has_pool("bulets"), false])
+	rows.append(["a real pool says nothing", _heard(func() -> void: pool.despawn_all("bullets")), []])
+	pool.free()
+	return SUPPORT.pins(NAME, rows)

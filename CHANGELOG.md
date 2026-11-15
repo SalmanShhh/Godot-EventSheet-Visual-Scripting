@@ -8,6 +8,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 - Many packs keep things by name (abilities, pools, quests, rooms, buffs). An action given a name that did not exist returned without a word, so a mistyped `dash` for `Dash` looked exactly like a row that ran. Each such action now pushes one plain warning (Debugger, Errors tab) naming the node, the row as the sheet words it, the name that was not found, the names that do exist and what to do next. It is said once per missing name per node, never every frame, and the action still does nothing.
 - Simple Abilities: Activate Ability, Set Ability Cooldown, Reset Cooldown, Set Max Stacks, Set Stacks, Add Stacks, Consume Ability Stack, Set Ability Enabled, Set Ability Active, Set Ability Data, Add Tag, Remove Tag, Clear All Tags, Remove Ability and Remove Ability After Duration.
+- Object Pool (which had no warnings at all): Add To Pool, Prewarm, Despawn All, Clear Pool, Spawn and Spawn Safely given a pool that does not exist; Create Pool when the scene path does not load (the pool is still made, with no scene, and later Spawn rows return nothing); Prewarm of a pool made with Create Empty Pool.
 
 ### Fixed: the Project Doctor reads your `.gd` sheets, not only the `.tres` ones
 

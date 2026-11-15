@@ -79,6 +79,8 @@ func _retire_runtime_script() -> Script:
 	if ResourceLoader.exists(RETIRE_RUNTIME_PATH):
 		_retire_runtime = load(RETIRE_RUNTIME_PATH) as Script
 	return _retire_runtime
+## Names this node has already said it could not find, so a row that runs every frame says it once.
+var _said_missing: Dictionary = {}
 
 ## @ace_action
 ## @ace_featured
@@ -93,6 +95,7 @@ func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
 	var scene: PackedScene = load(scene_path) as PackedScene
 	_pools[pool_name] = {"scene": scene, "free": [], "active": []}
 	if scene == null:
+		_say_once("scene:" + scene_path, "Create Pool made the pool \"%s\" with no scene, because \"%s\" is not a scene Godot can load - check the path in the FileSystem dock." % [pool_name, scene_path])
 		return
 	for _i: int in maxi(prewarm, 0):
 		_stow(pool_name, scene.instantiate())
@@ -113,6 +116,9 @@ func create_empty_pool(pool_name: String) -> void:
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.add_to_pool({pool_name}, {node})")
 func add_to_pool(pool_name: String, node: Node) -> void:
+	if not _pools.has(pool_name):
+		_say_missing("Add To Pool", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
+		return
 	_stow(pool_name, node)
 
 ## @ace_action
@@ -122,7 +128,11 @@ func add_to_pool(pool_name: String, node: Node) -> void:
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.prewarm({pool_name}, {count})")
 func prewarm(pool_name: String, count: int) -> void:
-	if not _pools.has(pool_name) or _pools[pool_name].scene == null:
+	if not _pools.has(pool_name):
+		_say_missing("Prewarm", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
+		return
+	if _pools[pool_name].scene == null:
+		_say_once("noscene:" + pool_name, "Prewarm did nothing, because the pool \"%s\" has no scene of its own - Prewarm only fills a pool made with Create Pool, so fill this one with Add To Pool." % pool_name)
 		return
 	for _i: int in maxi(count, 0):
 		_stow(pool_name, (_pools[pool_name].scene as PackedScene).instantiate())
@@ -159,6 +169,7 @@ func despawn(node: Node) -> void:
 ## @ace_codegen_template("ObjectPool.despawn_all({pool_name})")
 func despawn_all(pool_name: String) -> void:
 	if not _pools.has(pool_name):
+		_say_missing("Despawn All", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
 		return
 	for node: Node in (_pools[pool_name].active as Array).duplicate():
 		despawn(node)
@@ -171,6 +182,7 @@ func despawn_all(pool_name: String) -> void:
 ## @ace_codegen_template("ObjectPool.clear_pool({pool_name})")
 func clear_pool(pool_name: String) -> void:
 	if not _pools.has(pool_name):
+		_say_missing("Clear Pool", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
 		return
 	for node: Node in (_pools[pool_name].free as Array) + (_pools[pool_name].active as Array):
 		if is_instance_valid(node):
@@ -193,6 +205,9 @@ func has_pool(pool_name: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.spawn({pool_name})")
 func spawn(pool_name: String) -> Node:
+	if not _pools.has(pool_name):
+		_say_missing("Spawn", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
+		return null
 	var node: Node = _take_from_pool(pool_name)
 	if node == null:
 		return null
@@ -210,6 +225,9 @@ func spawn(pool_name: String) -> Node:
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.spawn_safely({pool_name}, {at})")
 func spawn_safely(pool_name: String, at: Variant) -> Node:
+	if not _pools.has(pool_name):
+		_say_missing("Spawn Safely", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
+		return null
 	var node: Node = _take_from_pool(pool_name)
 	if node == null:
 		return null
@@ -378,5 +396,26 @@ func _hand_back_now(pool_name: String, node: Node) -> void:
 	_stow(pool_name, node)
 	_last_despawned = node
 	on_despawned.emit()
+
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
+	if _said_missing.has(key):
+		return
+	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Object Pool on %s: %s" % [where, sentence])
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
+	var names: PackedStringArray = PackedStringArray()
+	for each: Variant in known:
+		names.append(str(each))
+	names.sort()
+	var exist: String = "none exist yet"
+	if not names.is_empty():
+		exist = "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, exist, advice])
 
 # ObjectPool: register as the ObjectPool autoload. Create Pool from a scene (or Create Empty Pool + Add To Pool your own nodes), then Spawn to get a ready node and Despawn to hand it back. Reusing nodes keeps heavy scenes smooth. This pack is an event sheet - extend it by editing it.

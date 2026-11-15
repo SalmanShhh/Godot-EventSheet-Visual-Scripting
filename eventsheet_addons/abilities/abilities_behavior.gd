@@ -738,12 +738,18 @@ func _any_ability_on_a_clock() -> bool:
 			return true
 	return false
 
-## Warns once per missing name that a row was given a name nothing here answers to; the row itself does nothing.
-func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
-	var key: String = what + ":" + wrong
+## Warns once per key that a row could not do what it was asked; the row itself does nothing more.
+func _say_once(key: String, sentence: String) -> void:
 	if _said_missing.has(key):
 		return
 	_said_missing[key] = true
+	var where: String = str(get_path()) if is_inside_tree() else str(name)
+	push_warning("Simple Abilities on %s: %s" % [where, sentence])
+
+## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.
+func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:
+	if _said_missing.has(what + ":" + wrong):
+		return
 	var names: PackedStringArray = PackedStringArray()
 	for each: Variant in known:
 		names.append(str(each))
@@ -751,8 +757,7 @@ func _say_missing(action: String, what: String, wrong: String, known: Array, adv
 	var exist: String = "none exist yet"
 	if not names.is_empty():
 		exist = "there are: " + ", ".join(names.slice(0, 8)) + (", and more" if names.size() > 8 else "")
-	var where: String = str(get_path()) if is_inside_tree() else str(name)
-	push_warning("Simple Abilities on %s: %s did nothing, because no %s is called \"%s\" (%s) - %s." % [where, action, what, wrong, exist, advice])
+	_say_once(what + ":" + wrong, "%s did nothing, because no %s is called \"%s\" (%s) - %s." % [action, what, wrong, exist, advice])
 
 ## @ace_hidden
 func save_state() -> Dictionary:

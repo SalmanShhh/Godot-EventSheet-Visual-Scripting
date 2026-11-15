@@ -114,12 +114,18 @@ static func missing_name_block(label: String) -> String:
 		"## Names this node has already said it could not find, so a row that runs every frame says it once.",
 		"var _said_missing: Dictionary = {}",
 		"",
-		"## Warns once per missing name that a row was given a name nothing here answers to; the row itself does nothing.",
-		"func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:",
-		"\tvar key: String = what + \":\" + wrong",
+		"## Warns once per key that a row could not do what it was asked; the row itself does nothing more.",
+		"func _say_once(key: String, sentence: String) -> void:",
 		"\tif _said_missing.has(key):",
 		"\t\treturn",
 		"\t_said_missing[key] = true",
+		"\tvar where: String = str(get_path()) if is_inside_tree() else str(name)",
+		"\tpush_warning(\"" + label + " on %s: %s\" % [where, sentence])",
+		"",
+		"## Warns once per missing name that a row was given a name nothing here answers to, and lists the names that do exist.",
+		"func _say_missing(action: String, what: String, wrong: String, known: Array, advice: String) -> void:",
+		"\tif _said_missing.has(what + \":\" + wrong):",
+		"\t\treturn",
 		"\tvar names: PackedStringArray = PackedStringArray()",
 		"\tfor each: Variant in known:",
 		"\t\tnames.append(str(each))",
@@ -127,8 +133,7 @@ static func missing_name_block(label: String) -> String:
 		"\tvar exist: String = \"none exist yet\"",
 		"\tif not names.is_empty():",
 		"\t\texist = \"there are: \" + \", \".join(names.slice(0, 8)) + (\", and more\" if names.size() > 8 else \"\")",
-		"\tvar where: String = str(get_path()) if is_inside_tree() else str(name)",
-		"\tpush_warning(\"" + label + " on %s: %s did nothing, because no %s is called \\\"%s\\\" (%s) - %s.\" % [where, action, what, wrong, exist, advice])"
+		"\t_say_once(what + \":\" + wrong, \"%s did nothing, because no %s is called \\\"%s\\\" (%s) - %s.\" % [action, what, wrong, exist, advice])"
 	]))
 
 

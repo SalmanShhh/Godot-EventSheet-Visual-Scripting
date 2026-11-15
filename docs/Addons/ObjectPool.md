@@ -294,3 +294,4 @@ line.
 - **Create the pool once** (on ready or at load), not every frame.
 - **Clear Pool actually frees** its nodes; use it only when the pool is truly finished, not between
   waves (use Despawn All for that).
+- **Spell the pool name the same way everywhere.** `"bullets"` and `"Bullets"` are two pools. Add To Pool, Prewarm, Spawn, Spawn Safely, Despawn All and Clear Pool given a name no pool has do nothing and say so once in the Debugger's Errors tab, naming the pool you typed and the pools that exist; Create Pool says so when its scene path does not load, and Prewarm says so for a pool made with Create Empty Pool, which has no scene to copy.
