@@ -33,6 +33,7 @@ static func run() -> bool:
 	ok = _descriptions() and ok
 	ok = _menu_tick() and ok
 	ok = _status_words() and ok
+	ok = _preview_width() and ok
 	return ok
 
 
@@ -49,6 +50,20 @@ static func _status_words() -> bool:
 		["a near-black word reads on a dark panel", EventSheetEditorThemeDeriver.contrast_ratio(moved, dark_panel) >= 4.5, true],
 		["amber is moved on a light ground and stays amber", [EventSheetEditorThemeDeriver.contrast_ratio(pale, light_ground) >= 4.5, pale.r > pale.b], [true, true]],
 		["a colour that already reads is left as it is", ink.move(Color.WHITE, [dark_panel]), Color.WHITE],
+	])
+
+
+## The preview is wide enough that a condition line reads whole under the theme it shows: a theme with a
+## narrow conditions share gets a wider preview, never less than before and never past the cap.
+static func _preview_width() -> bool:
+	var narrow: EventSheetEditorStyle = EventSheetThemeEditor.duplicate_style(null)
+	narrow.event_style.condition_lane_ratio = 0.25
+	var roomy: EventSheetEditorStyle = EventSheetThemeEditor.duplicate_style(null)
+	roomy.event_style.condition_lane_ratio = 0.8
+	return SUPPORT.pins(P + ": preview", [
+		["a narrow share widens the preview", EventSheetThemeEditor.preview_min_width(narrow), EventSheetThemeEditor.PREVIEW_MAX_WIDTH],
+		["a roomy share keeps the width it always had", EventSheetThemeEditor.preview_min_width(roomy), EventSheetThemeEditor.PREVIEW_BASE_WIDTH],
+		["the open theme decides: Editor Native's share is enough", EventSheetThemeEditor.preview_min_width(EventSheetEditorThemeDeriver.native_style(Color("#292929"))) <= EventSheetThemeEditor.PREVIEW_MAX_WIDTH, true],
 	])
 
 

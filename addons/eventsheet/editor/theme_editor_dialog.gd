@@ -10,8 +10,15 @@
 class_name EventSheetThemeEditor
 extends RefCounted
 
+const PREVIEW_BASE_WIDTH: float = 720.0
+const PREVIEW_MAX_WIDTH: float = 960.0
+## What a condition line's words need beside the margin, padding and columns: the trigger's icon, its chip
+## padding and "On process" at the sheet's size.
+const PREVIEW_WORDS_ROOM: float = 220.0
+
 var _dialog: ConfirmationDialog = null
 var _preview_viewport: EventSheetViewport = null
+var _preview_scroll: ScrollContainer = null
 var _working_style: EventSheetEditorStyle = null
 var _dock: Control = null
 # Quick Style: derive the whole palette from a few colours (no token-by-token tweaking).
@@ -31,7 +38,7 @@ var _focus_resource: Resource = null
 ## Opens the theme editor seeded from the dock's active style (or defaults).
 func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_prepare(dock, base_style)
-	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640)))
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240 + roundi(preview_min_width(_working_style) - PREVIEW_BASE_WIDTH)), EventSheetPalette.scaled(640)))
 
 
 ## Everything an open does short of showing the window, so a second open starts the new theme from
@@ -48,7 +55,27 @@ func _prepare(dock: Control, base_style: EventSheetEditorStyle) -> void:
 		_rebuild_detail_form()
 	_note.say(EventSheetL10n.translate("Apply writes this look into the open sheet only"), EventSheetPopupUI.TONE_WARNING)
 	_seed_quick_style()
+	_fit_preview_width()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+
+
+## The preview's width, before the display scale, that gives a condition line the room to say "On process"
+## whole under this theme: the conditions lane (the margin, its padding, the badge and object columns and the
+## words) is only a share of the row, so the row has to be wide enough that the share holds all of that.
+## Never narrower than the 720 the preview has always had, and never wider than 960.
+static func preview_min_width(style: EventSheetEditorStyle) -> float:
+	var event_style: EventSheetEventStyle = style.event_style if style != null else null
+	if event_style == null:
+		return PREVIEW_BASE_WIDTH
+	var lane: float = float(EventSheetPalette.GUTTER_WIDTH) + event_style.condition_lane_padding * 2.0
+	lane += event_style.condition_badge_column_width + event_style.condition_object_column_width + PREVIEW_WORDS_ROOM
+	var needed: float = maxf(lane, event_style.minimum_conditions_lane_width) / clampf(event_style.condition_lane_ratio, 0.2, 0.8)
+	return clampf(needed, PREVIEW_BASE_WIDTH, PREVIEW_MAX_WIDTH)
+
+
+func _fit_preview_width() -> void:
+	if _preview_scroll != null:
+		_preview_scroll.custom_minimum_size.x = EventSheetPalette.scaled_f(preview_min_width(_working_style))
 
 
 ## The three colours Quick Style opens on for a theme: its accent, its text, and its base - the row
@@ -540,11 +567,11 @@ func _ensure_dialog() -> void:
 	_dialog.custom_action.connect(func(_action: StringName) -> void: _open_save_dialog())
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var preview_scroll: ScrollContainer = ScrollContainer.new()
-	preview_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(720.0), EventSheetPalette.scaled_f(440.0))
+	_preview_scroll = ScrollContainer.new()
+	_preview_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(preview_min_width(_working_style)), EventSheetPalette.scaled_f(440.0))
 	_preview_viewport = EventSheetViewport.new()
-	preview_scroll.add_child(_preview_viewport)
-	split.add_child(preview_scroll)
+	_preview_scroll.add_child(_preview_viewport)
+	split.add_child(_preview_scroll)
 	var form_scroll: ScrollContainer = ScrollContainer.new()
 	form_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(460.0), 0.0)
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -652,6 +679,7 @@ func _generate_quick_style() -> void:
 func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null), reseed: bool = true) -> void:
 	_working_style = style
 	_rebuild_detail_form()
+	_fit_preview_width()
 	if reseed:
 		_seed_quick_style()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
