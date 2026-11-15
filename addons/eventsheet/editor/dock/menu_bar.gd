@@ -340,10 +340,10 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(13),
 		"A list of entries you fill in like a spreadsheet - loot, waves, dialogue lines, shop items - saved as a Custom Resource script and a .tres any sheet can read."
 	)
-	sheet_popup.add_item("Teach a Verb - Share Published Verbs", 10)
+	sheet_popup.add_item("This sheet in other sheets…", 10)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(10),
-		"Make this sheet's published functions (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $%s. Extract actions to a function first (right-click an event), then teach it here." % "<ClassName>"
+		"Let every sheet use the functions of this sheet that are ticked \"Other sheets can use this\": they join every picker, aimed at the node named $%s." % "<ClassName>"
 	)
 	sheet_popup.add_item("Inspector Designer…", 11)
 	sheet_popup.set_item_tooltip(

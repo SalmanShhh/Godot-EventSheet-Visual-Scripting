@@ -58,7 +58,7 @@ func _open_function_dialog() -> void:
 		return
 	_ensure_dialog()
 	_set_dialog_context()
-	_function_dialog.open()
+	_function_dialog.open("", EventSheetFunctionDialog.starts_published(_dock._current_sheet))
 
 
 ## What the dialog needs to know about the open sheet, told per open: whether it is an editor tool,

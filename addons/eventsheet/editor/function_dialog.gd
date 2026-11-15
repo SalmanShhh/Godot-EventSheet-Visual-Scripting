@@ -204,7 +204,7 @@ func init_dialog(parent_node: Node) -> void:
 		return {"heading": _value_type_option.get_item_text(index), "body": _value_type_option.get_item_tooltip(index)})
 
 	_expose_check = CheckBox.new()
-	_expose_check.text = EventSheetL10n.translate("Publish to the picker (other sheets can use it)")
+	_expose_check.text = EventSheetL10n.translate("Other sheets can use this")
 	_expose_check.toggled.connect(func(on: bool) -> void:
 		_preview_card.visible = on
 		_refresh_studio())
@@ -250,6 +250,14 @@ func set_tool_mode_context(enabled: bool) -> void:
 ## the preview files an uncategorised function on the same shelf the picker will.
 func set_sheet_category_context(category: String) -> void:
 	_sheet_category = category.strip_edges()
+
+
+## Whether a new function of `sheet` starts with "Other sheets can use this" ticked: a sheet with a class
+## name can be reached by another sheet, so its functions start shared; an unnamed one has nothing for
+## another sheet to name, so they start private. Only the starting state of the tick - the resource
+## default, a function loaded from disk and every emitted byte are untouched.
+static func starts_published(sheet: EventSheetResource) -> bool:
+	return sheet != null and not sheet.custom_class_name.strip_edges().is_empty()
 
 
 ## Opens the window for a NEW function. `kind` pre-selects a kind ("action" / "condition" /

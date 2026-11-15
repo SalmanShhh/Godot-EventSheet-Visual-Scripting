@@ -28,17 +28,17 @@ func set_auto_ace_sources(sources: Array[Object]) -> void:
 	_dock._refresh_ace_registry()
 
 
-## "Teach a Verb", the sharing half: this sheet's compiled .gd joins the project-wide
-## provider scan (persisted in project settings), so every sheet's picker gains its
-## published verbs - node-targeted at $<class name> and retargetable, exactly like a
-## behavior pack's. The verb LIVES in its home sheet (correct self-semantics: the code
-## runs on the node that owns it); teaching only publishes the vocabulary.
+## "This sheet in other sheets": the sharing half. This sheet's compiled .gd joins the project-wide
+## scan (persisted in project settings), so every sheet's picker gains the functions ticked
+## "Other sheets can use this" - node-targeted at $<class name> and retargetable, exactly like a
+## behavior pack's. The function LIVES in its home sheet (correct self-semantics: the code runs on the
+## node that owns it); sharing only publishes the vocabulary.
 func share_verbs_with_project() -> bool:
 	var sheet: EventSheetResource = _dock._current_sheet
 	if sheet == null:
 		return false
 	if sheet.custom_class_name.strip_edges().is_empty():
-		_dock._set_status("Teach a Verb needs a class name so other sheets can target the node - set one in Sheet > Sheet Type first.", true)
+		_ask_for_a_name()
 		return false
 	var has_exposed: bool = false
 	for entry: Variant in sheet.functions:
@@ -46,15 +46,15 @@ func share_verbs_with_project() -> bool:
 			has_exposed = true
 			break
 	if not has_exposed:
-		_dock._set_status("No published functions to teach yet - right-click an event and Extract All Actions to Function first.", true)
+		_dock._set_status(EventSheetL10n.translate("No function of this sheet is ticked \"Other sheets can use this\" yet. Tick it on a function, or right-click an event and Extract All Actions to Function."), true)
 		return false
 	var sheet_path: String = str(_dock._current_sheet_path)
 	if sheet_path.is_empty():
-		_dock._set_status("Save the sheet first - Teach a Verb shares the compiled script on disk.", true)
+		_dock._set_status(EventSheetL10n.translate("Save the sheet first - other sheets read the script it writes."), true)
 		return false
 	var output_path: String = load(PROJECT_DOCTOR_PATH).output_path_for(sheet_path)
 	if not FileAccess.file_exists(output_path):
-		_dock._set_status("Save the sheet first (compile-on-save writes %s) - Teach a Verb shares that script." % output_path.get_file(), true)
+		_dock._set_status(EventSheetL10n.translate("Save the sheet first, so %s exists - other sheets read that script.") % output_path.get_file(), true)
 		return false
 	var taught: PackedStringArray = PackedStringArray(ProjectSettings.get_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray()))
 	if not taught.has(output_path):
@@ -65,8 +65,21 @@ func share_verbs_with_project() -> bool:
 		if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 			ProjectSettings.save()
 	_dock._refresh_ace_registry()
-	_dock._set_status("Shared: %s's published functions are now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change." % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
+	_dock._set_status(EventSheetL10n.translate("%s is now in every sheet's picker. Each row acts on the node named $%s, which the row's On node field can change.") % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
 	return true
+
+
+## A sheet with no class name has nothing another sheet could name: says so, with the door to where the
+## name is set.
+func _ask_for_a_name() -> void:
+	load(_dock.SMALL_PROMPT_PATH).open(_dock, {
+		"title": EventSheetL10n.translate("Give this sheet a name first"),
+		"say": EventSheetL10n.translate("Another sheet can only reach this one by the name of its class, and this sheet has none yet."),
+		"glyph": "i",
+		"main": EventSheetL10n.translate("Open Sheet Type"),
+		"cancel": EventSheetL10n.translate("Not now"),
+		"on_main": func() -> void: _dock._open_sheet_type_dialog(),
+	})
 
 
 ## Registers a GDScript file for the current sheet only: its annotated methods, signals and exported
