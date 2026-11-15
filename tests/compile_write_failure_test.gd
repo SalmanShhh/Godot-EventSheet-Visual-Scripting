@@ -21,4 +21,7 @@ static func run() -> bool:
 		["the error says nothing was overwritten", text.contains("Nothing was overwritten"), true],
 		["the error says what to do", text.contains("then save again"), true],
 		["the old wording is gone", text.contains("Failed to open"), false],
+		["a write failure alone is the whole status line", load("res://addons/eventforge/failure_words.gd").compile_failed(errors, path), text],
+		["a compile error keeps the fix-the-error sentence",
+			load("res://addons/eventforge/failure_words.gd").compile_failed(["Sheet is null"], path).begins_with("This sheet doesn't compile yet"), true],
 	])

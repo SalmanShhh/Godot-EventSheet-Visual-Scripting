@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: Attach to Node works on a behaviour sheet that is a script
+
+The check asked for a resource path, which a script sheet (the default format) never has, so Attach saved the sheet and then said "Save the sheet first" - and attached nothing. It now attaches the sheet's own file. A script sheet whose Save only failed to write the file now says that alone, instead of "fix the error".
+
 ### Added: a run-time error from a sheet that is not open offers to open it
 
 An error from the running game finds its row only in a sheet open in a tab; one from any other script got its sentence and no address. The strip's button now says "Open the sheet" for a project script no tab holds, opens it and then finds the row, as it would have if the tab had been there.

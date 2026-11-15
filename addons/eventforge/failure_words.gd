@@ -39,3 +39,12 @@ static func request_failed(address: String, error: int) -> String:
 ## file and a rename, so the old file is still whole.
 static func write_blocked(path: String) -> String:
 	return EventSheetL10n.translate("Could not write %s. It may be read-only, open in another program, or held by a cloud-sync tool. Nothing was overwritten - the file is exactly as it was. Close whatever has it open, then save again.") % path
+
+
+## The status line for a script sheet whose Save did not compile. When the only thing wrong is that the
+## file could not be written there is nothing for the reader to fix in a row, so the line is the
+## write failure alone; otherwise it is the compiler's errors after "fix the error, then save again".
+static func compile_failed(errors: Array, path: String) -> String:
+	if errors.size() == 1 and str(errors[0]) == write_blocked(path):
+		return str(errors[0])
+	return "This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(errors))

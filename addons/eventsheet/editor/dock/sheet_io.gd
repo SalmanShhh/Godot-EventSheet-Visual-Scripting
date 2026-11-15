@@ -430,7 +430,7 @@ func _save_backed_sheet() -> bool:
 	DOCK_REGISTRY.notify_lifecycle("compiled", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path, "success": bool(compile_result.get("success", false))})
 	if not bool(compile_result.get("success", false)):
 		_dock._run_diagnostics()
-		_dock._set_status("This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+		_dock._set_status(load("res://addons/eventforge/failure_words.gd").compile_failed(compile_result.get("errors", []), _dock._current_sheet.external_source_path), true)
 		return false
 	_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)

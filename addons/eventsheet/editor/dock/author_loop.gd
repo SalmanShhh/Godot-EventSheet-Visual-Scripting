@@ -186,12 +186,16 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 		return {"ok": false, "message": "Attach to Node works on behavior sheets - set the Sheet Type first."}
 	if host == null:
 		return {"ok": false, "message": "Select a node in the Scene dock first."}
-	if sheet.resource_path.is_empty():
+	# A script sheet IS its file: that is the script to attach. A resource sheet attaches the script it
+	# compiles to beside itself.
+	var script_path: String = sheet.external_source_path
+	if script_path.is_empty() and sheet.resource_path.is_empty():
 		return {"ok": false, "message": "Save the sheet first - the behavior attaches by its compiled script."}
-	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, "")
+	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, script_path)
 	if not bool(compile_result.get("success", false)):
 		return {"ok": false, "message": "The sheet doesn't compile: %s" % str(compile_result.get("errors"))}
-	var script_path: String = EventSheetCompiler._resolve_output_path(sheet, "")
+	if script_path.is_empty():
+		script_path = EventSheetCompiler._resolve_output_path(sheet, "")
 	var behavior: Node = Node.new()
 	behavior.name = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else script_path.get_file().get_basename().to_pascal_case()
 	behavior.set_script(load(script_path))
