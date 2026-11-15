@@ -153,7 +153,7 @@ static func _test_the_shipped_addresses() -> bool:
 	addressed.sort()
 	var ok: bool = _check("the shipped vocabulary carries exactly these forwarding addresses", addressed,
 		PackedStringArray(["Core::AsClockTime", "Core::FormatTime", "Core::IsAudioPlaying",
-			"Core::MissionTimeLeft", "Core::PlayAudio", "Core::SetVolumeDb", "Core::StopAudio"]))
+			"Core::MissionTimeLeft", "Core::PlayAudio", "Core::SetSpriteSize", "Core::SetVolumeDb", "Core::StopAudio"]))
 	ok = _check("Play Sound forwards to Play, renaming its one parameter",
 		EventForgeSuccessors.resolve("Core::PlayAudio", known),
 		{"id": "Core::AudioPlay", "renames": {"from_position": "from"}, "defaults": {},

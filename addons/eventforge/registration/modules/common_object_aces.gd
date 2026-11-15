@@ -10,8 +10,11 @@
 # number the sheet shows is the one people think in and the number in the script is the one Godot
 # stores.
 #
-# SIZE. A sprite's size is its texture's size times its scale, so Set Sprite Size writes the scale that
-# gives that size, and its description says so. A Control has Set Control Size already.
+# SIZE. A sprite's size is the frame it draws (the whole picture, one cell of a sprite sheet, or the
+# region) times its scale, so Set Size, Set Width and Set Height write the scale that gives the size
+# named, dividing by get_rect() and leaving a sprite with no picture as it is. The older Set Sprite
+# Size divided by the whole picture and keeps compiling the same line for files that hold it; it is
+# retired from the picker with Set Size as its successor. A Control has Set Control Size already.
 #
 # WHERE AN OBJECT ENDS. The four edges are measured in the level (the node's own rectangle through
 # its position and scale). A rotated node is measured as if it were not, and the descriptions say so.
@@ -47,7 +50,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Set Scale (3D) and Set Control Size already exist and write `scale = ...` and `set_size(...)`. A second
 	# row with the same line would make a hand-written line read back as either, so there is none.
 	descriptors.append(F.act("SetSpriteSize", "Set Sprite Size", "scale = {size} / texture.get_size()", CAT_ACTIONS, "Set size to {size} pixels",
-		"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.", "Sprite2D").param("size", "Vector2(64, 64)", "Size", "Width and height in pixels, as a Vector2.", "expression"))
+		"Makes a sprite a size in pixels. A sprite has no size property: its size is its picture's size times its scale, so this writes the scale that gives the size you name.", "Sprite2D").param("size", "Vector2(64, 64)", "Size", "Width and height in pixels, as a Vector2.", "expression").deprecated("Divides by the whole picture, so a sprite sheet or a region comes out the wrong size, a sprite with no picture stops with an error, and On node reads this node's picture instead of the other one's. Set Size measures the frame that is drawn.", "Core::SpriteSetSize").succeeded_by("Core::SpriteSetSize"))
+	descriptors.append(F.act("SpriteSetSize", "Set Size", "{target.}scale = {size} / {target.}get_rect().size if {target.}texture else {target.}scale", CAT_ACTIONS, "Set size to {size} pixels",
+		"Makes a sprite a size in pixels. A sprite has no size property: its size is the frame it draws times its scale, so this writes the scale that gives the size you name. The frame is the whole picture, one cell of a sprite sheet, or the region. A sprite with no picture is left as it is.", "Sprite2D").param("size", "Vector2(64, 64)", "Size", "Width and height in pixels, as a Vector2.", "expression").param("target", "", "On node", "Size another sprite instead of this one. Leave blank for this node.", "expression"))
+	descriptors.append(F.act("SpriteSetWidth", "Set Width", "{target.}scale.x = {width} / {target.}get_rect().size.x if {target.}texture else {target.}scale.x", CAT_ACTIONS, "Set width to {width} pixels",
+		"Makes a sprite a width in pixels and leaves its height alone. It writes scale.x: the width you name divided by the width of the frame it draws. A sprite with no picture is left as it is.", "Sprite2D").param("width", "64.0", "Width", "The width in pixels.", "expression").param("target", "", "On node", "Size another sprite instead of this one. Leave blank for this node.", "expression"))
+	descriptors.append(F.act("SpriteSetHeight", "Set Height", "{target.}scale.y = {height} / {target.}get_rect().size.y if {target.}texture else {target.}scale.y", CAT_ACTIONS, "Set height to {height} pixels",
+		"Makes a sprite a height in pixels and leaves its width alone. It writes scale.y: the height you name divided by the height of the frame it draws. A sprite with no picture is left as it is.", "Sprite2D").param("height", "64.0", "Height", "The height in pixels.", "expression").param("target", "", "On node", "Size another sprite instead of this one. Leave blank for this node.", "expression"))
 	descriptors.append(F.expr("SpriteWidth", "Width", "(get_rect().size.x * scale.x)", CAT_EXPRESSIONS, "width",
 		"How wide a sprite is on screen, in pixels: its picture's width times its scale. A sprite has no width property.", "Sprite2D"))
 	descriptors.append(F.expr("SpriteHeight", "Height", "(get_rect().size.y * scale.y)", CAT_EXPRESSIONS, "height",
