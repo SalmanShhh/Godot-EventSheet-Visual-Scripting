@@ -101,6 +101,7 @@ static func _test_section_help() -> bool:
 		["Time opens its module page", ACEPickerDialog.section_doc_id("Time"), "module:Time"],
 		["a sub-section asks for its own page first", ACEPickerDialog.section_doc_id("Variables: Array"), "module:Variables: Array"],
 		["the module page is drawn inside", EventSheetDocExplain.opens_inside(ACEPickerDialog.section_doc_id("Time")), true],
+		["a section under an older title opens the page it has now", [ACEPickerDialog.section_doc_id("Feedback Player"), ACEPickerDialog.section_doc_id("Juice Player")], ["guide:Addons/Juice-Player", "guide:Addons/Juice-Player"]],
 		["a heading with no page has no ?", ACEPickerDialog.section_doc_id("No Such Words"), ""],
 		["a behaviour's heading opens its guide", ACEPickerDialog.section_doc_id("FPS Controller"), "guide:Addons/FPS-Controller"],
 	])

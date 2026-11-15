@@ -2896,6 +2896,11 @@ func _mark_section_header(item: TreeItem, section_name: String) -> void:
 			EventSheetL10n.translate("Help for every word under %s") % item.get_text(0))
 
 
+## Picker sections that were renamed, by their older title: a project that still holds an older copy of
+## a pack shows the old title on its section, and the "?" on it opens the page the pack has now.
+const RENAMED_SECTIONS: Dictionary = {"Feedback Player": "Juice Player"}
+
+
 ## The Manual page a picker section heading's "?" opens: the vocabulary module guide for the section
 ## ("Timers, Waiting and Cooldowns" for Time), asked for the full "Parent: Sub" key first and then
 ## its parent, or "" when the Manual has no page for that group of words.
@@ -2912,7 +2917,7 @@ static func section_doc_id(section_name: String) -> String:
 				and EventSheetDocExplain.opens_inside(doc_id):
 			return doc_id
 		# A behaviour's section is titled as its guide is ("FPS Controller" - Addons/FPS-Controller).
-		var pack_page: String = "guide:Addons/%s" % key.replace(" ", "-")
+		var pack_page: String = "guide:Addons/%s" % str(RENAMED_SECTIONS.get(key, key)).replace(" ", "-")
 		if EventSheetDocExplain.opens_inside(pack_page):
 			return pack_page
 	return ""
