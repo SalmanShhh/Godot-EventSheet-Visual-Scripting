@@ -24,75 +24,75 @@ static func run() -> bool:
 	var all_passed: bool = true
 
 	# ── Attach Event Sheet (the "Attach Script" reflex): a single hand-editable .gd, no .tres ──
-	for stale: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet_2.gd",
-			"user://boss_fight_sheet.tres", "user://boss_fight_sheet_generated.gd"]:
+	for stale: String in [SUPPORT.scratch("boss_fight_sheet.gd"), SUPPORT.scratch("boss_fight_sheet_2.gd"),
+			SUPPORT.scratch("boss_fight_sheet.tres"), SUPPORT.scratch("boss_fight_sheet_generated.gd")]:
 		if FileAccess.file_exists(stale):
 			DirAccess.remove_absolute(stale)
 	var node: Node2D = Node2D.new()
 	node.name = "Boss Fight"
-	var created: Dictionary = EventSheetWorkflow.create_sheet_for_node(node, "user://")
+	var created: Dictionary = EventSheetWorkflow.create_sheet_for_node(node, SUPPORT.scratch(""))
 	# The attached sheet is a plain .gd (the default format), so it lifts back to an EventSheetResource.
 	var created_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(created.get("sheet_path")))
 	all_passed = _check("attach creates a host-matched .gd sheet beside the scene",
-		bool(created.get("ok")) and str(created.get("sheet_path")) == "user://boss_fight_sheet.gd"
+		bool(created.get("ok")) and str(created.get("sheet_path")) == SUPPORT.scratch("boss_fight_sheet.gd")
 		and created_sheet != null and created_sheet.host_class == "Node2D", true) and all_passed
 	all_passed = _check("attach writes a single .gd (no .tres companion) and scripts the node",
 		node.get_script() != null
-		and not FileAccess.file_exists("user://boss_fight_sheet.tres"), true) and all_passed
+		and not FileAccess.file_exists(SUPPORT.scratch("boss_fight_sheet.tres")), true) and all_passed
 	all_passed = _check("nodes that already have a script are refused",
-		bool(EventSheetWorkflow.create_sheet_for_node(node, "user://").get("ok")), false) and all_passed
+		bool(EventSheetWorkflow.create_sheet_for_node(node, SUPPORT.scratch("")).get("ok")), false) and all_passed
 	var sibling_node: Node2D = Node2D.new()
 	sibling_node.name = "Boss Fight"
-	var suffixed: Dictionary = EventSheetWorkflow.create_sheet_for_node(sibling_node, "user://")
+	var suffixed: Dictionary = EventSheetWorkflow.create_sheet_for_node(sibling_node, SUPPORT.scratch(""))
 	all_passed = _check("name collisions suffix instead of overwriting",
-		str(suffixed.get("sheet_path")), "user://boss_fight_sheet_2.gd") and all_passed
+		str(suffixed.get("sheet_path")), SUPPORT.scratch("boss_fight_sheet_2.gd")) and all_passed
 
 	# ── New Event Sheet (the FileSystem "Create New > Event Sheet" core) ──────────
 	# write_sheet_file compiles a starter straight to a hand-editable .gd (the default sheet
 	# format) in the chosen folder; the .gd IS the sheet, so it lifts back to an EventSheetResource.
-	for stale_gd: String in ["user://event_sheet.gd", "user://event_sheet_2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
+	for stale_gd: String in [SUPPORT.scratch("event_sheet.gd"), SUPPORT.scratch("event_sheet_2.gd"), SUPPORT.scratch("loot_table.gd"), SUPPORT.scratch("escape.gd"), SUPPORT.scratch("player.gd")]:
 		if FileAccess.file_exists(stale_gd):
 			DirAccess.remove_absolute(stale_gd)
-	var made: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
+	var made: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), SUPPORT.scratch(""), "event_sheet")
 	all_passed = _check("Create New writes a .gd sheet file that exists",
 		bool(made.get("ok")) and FileAccess.file_exists(str(made.get("sheet_path"))), true) and all_passed
 	all_passed = _check("Create New returns the .gd path (the default format, no .tres)",
-		str(made.get("sheet_path")), "user://event_sheet.gd") and all_passed
+		str(made.get("sheet_path")), SUPPORT.scratch("event_sheet.gd")) and all_passed
 	var made_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(made.get("sheet_path")))
 	all_passed = _check("the created .gd lifts back to a sheet that compiles",
 		made_sheet != null and bool(EventSheetCompiler.compile(made_sheet, "").get("success")), true) and all_passed
 	# event_sheet.gd now exists, so a same-named create must suffix.
-	var made_again: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
+	var made_again: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), SUPPORT.scratch(""), "event_sheet")
 	all_passed = _check("a second Create New suffixes instead of overwriting",
-		str(made_again.get("sheet_path")), "user://event_sheet_2.gd") and all_passed
+		str(made_again.get("sheet_path")), SUPPORT.scratch("event_sheet_2.gd")) and all_passed
 	# The suffixed stem stays a valid identifier, and the result names the rename for the user.
 	all_passed = _check("a suffixed sheet name is still a valid identifier",
 		str(made_again.get("sheet_path")).get_file().get_basename().is_valid_ascii_identifier(), true) and all_passed
 	all_passed = _check("a taken name is reported, naming both files",
 		str(made_again.get("message")), "event_sheet.gd was taken, so the new event sheet is event_sheet_2.gd.") and all_passed
 	# Clear both so the empty-name fallback lands on the un-suffixed default.
-	for reset_gd: String in ["user://event_sheet.gd", "user://event_sheet_2.gd"]:
+	for reset_gd: String in [SUPPORT.scratch("event_sheet.gd"), SUPPORT.scratch("event_sheet_2.gd")]:
 		if FileAccess.file_exists(reset_gd):
 			DirAccess.remove_absolute(reset_gd)
-	var blank_named: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "")
+	var blank_named: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), SUPPORT.scratch(""), "")
 	all_passed = _check("a blank name falls back to event_sheet.gd",
-		str(blank_named.get("sheet_path")), "user://event_sheet.gd") and all_passed
-	var loot: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(9), "user://", "Loot Table")
+		str(blank_named.get("sheet_path")), SUPPORT.scratch("event_sheet.gd")) and all_passed
+	var loot: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(9), SUPPORT.scratch(""), "Loot Table")
 	var loot_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(str(loot.get("sheet_path")))
 	all_passed = _check("the given name snake_cases into the filename and keeps the starter's shape",
-		str(loot.get("sheet_path")) == "user://loot_table.gd"
+		str(loot.get("sheet_path")) == SUPPORT.scratch("loot_table.gd")
 		and loot_sheet != null and loot_sheet.host_class == "Resource", true) and all_passed
 	all_passed = _check("a null sheet is refused, never written",
-		bool(EventSheetWorkflow.write_sheet_file(null, "user://", "x").get("ok")), false) and all_passed
+		bool(EventSheetWorkflow.write_sheet_file(null, SUPPORT.scratch(""), "x").get("ok")), false) and all_passed
 	# The typed name is sanitized to a bare filename: "../escape" can't traverse out of the folder,
 	# and "player.gd" doesn't become player.gd.gd.
-	var traversal: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "../escape")
+	var traversal: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), SUPPORT.scratch(""), "../escape")
 	all_passed = _check("a name with ../ stays inside the chosen folder",
-		str(traversal.get("sheet_path")), "user://escape.gd") and all_passed
-	var double_ext: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "player.gd")
+		str(traversal.get("sheet_path")), SUPPORT.scratch("escape.gd")) and all_passed
+	var double_ext: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), SUPPORT.scratch(""), "player.gd")
 	all_passed = _check("a .gd in the typed name is not doubled",
-		str(double_ext.get("sheet_path")), "user://player.gd") and all_passed
-	for cleanup_gd: String in ["user://event_sheet.gd", "user://event_sheet_2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
+		str(double_ext.get("sheet_path")), SUPPORT.scratch("player.gd")) and all_passed
+	for cleanup_gd: String in [SUPPORT.scratch("event_sheet.gd"), SUPPORT.scratch("event_sheet_2.gd"), SUPPORT.scratch("loot_table.gd"), SUPPORT.scratch("escape.gd"), SUPPORT.scratch("player.gd")]:
 		if FileAccess.file_exists(cleanup_gd):
 			DirAccess.remove_absolute(cleanup_gd)
 
@@ -124,10 +124,10 @@ static func run() -> bool:
 		EventSheetStarterTemplates.create_new_starters().size()) and all_passed
 	# The band names the exact file before Create, and a taken name says so and holds Create
 	# instead of quietly writing a suffixed file.
-	var taken_handle: FileAccess = FileAccess.open("user://event_sheet.gd", FileAccess.WRITE)
+	var taken_handle: FileAccess = FileAccess.open(SUPPORT.scratch("event_sheet.gd"), FileAccess.WRITE)
 	taken_handle.store_string("extends Node\n")
 	taken_handle.close()
-	new_sheet_dialog._directory = "user://"
+	new_sheet_dialog._directory = SUPPORT.scratch("")
 	new_sheet_dialog._name_edit.text = "Event Sheet.gd"
 	new_sheet_dialog._refresh()
 	var taken_state: Array = [new_sheet_dialog._band.words_label.text, new_sheet_dialog._taken_note.text,
@@ -138,7 +138,7 @@ static func run() -> bool:
 	new_sheet_dialog._refresh()
 	all_passed = SUPPORT.pins("new_event_sheet_window", [
 		["the band names the file a typed name becomes, and a taken one holds Create", taken_state,
-			["user://event_sheet.gd", "event_sheet.gd is already in this folder - pick another name.", true]],
+			[SUPPORT.scratch("event_sheet.gd"), "event_sheet.gd is already in this folder - pick another name.", true]],
 		["and Create on a taken name writes nothing", create_payload[0], null],
 		["a free name clears the note and lets Create go",
 			[new_sheet_dialog._taken_note.text, new_sheet_dialog._dialog.get_ok_button().disabled], ["", false]],
@@ -148,7 +148,7 @@ static func run() -> bool:
 		["an editor tool starter carries its shape's note",
 			EventSheetNewSheetDialog.starter_pitch(10), "Run it yourself, from the sheet's bar."],
 	]) and all_passed
-	DirAccess.remove_absolute("user://event_sheet.gd")
+	DirAccess.remove_absolute(SUPPORT.scratch("event_sheet.gd"))
 	new_sheet_host.free()
 
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
@@ -161,7 +161,7 @@ static func run() -> bool:
 	# there is nothing to draw a table from.
 	all_passed = _check("a non-sheet .tres that is a data asset opens as a table",
 		EventSheetWorkflow.is_openable_as_sheet("res://demo/themes/dracula_theme.tres"), true) and all_passed
-	var plain_resource_path: String = "user://eventforge_plain_resource.tres"
+	var plain_resource_path: String = SUPPORT.scratch("eventforge_plain_resource.tres")
 	ResourceSaver.save(Resource.new(), plain_resource_path)
 	all_passed = _check("a .tres with no fields of its own is not openable",
 		EventSheetWorkflow.is_openable_as_sheet(plain_resource_path), false) and all_passed
@@ -174,18 +174,18 @@ static func run() -> bool:
 	# The .tres-companion case (a .tres sheet compiles to a <name>_generated.gd whose header points
 	# back) still exists for .tres-authored sheets; build one explicitly so the pairing is tested
 	# independently of how Attach Event Sheet writes its file (a plain .gd, tested above).
-	for stale_paired: String in ["user://paired.tres", "user://paired_generated.gd"]:
+	for stale_paired: String in [SUPPORT.scratch("paired.tres"), SUPPORT.scratch("paired_generated.gd")]:
 		if FileAccess.file_exists(stale_paired):
 			DirAccess.remove_absolute(stale_paired)
 	var paired_sheet: EventSheetResource = EventSheetResource.new()
 	paired_sheet.host_class = "Node2D"
-	ResourceSaver.save(paired_sheet, "user://paired.tres")
-	var paired_loaded: EventSheetResource = ResourceLoader.load("user://paired.tres", "", ResourceLoader.CACHE_MODE_IGNORE)
-	paired_loaded.take_over_path("user://paired.tres")
+	ResourceSaver.save(paired_sheet, SUPPORT.scratch("paired.tres"))
+	var paired_loaded: EventSheetResource = ResourceLoader.load(SUPPORT.scratch("paired.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	paired_loaded.take_over_path(SUPPORT.scratch("paired.tres"))
 	EventSheetCompiler.compile(paired_loaded, "")
 	var paired_gd: String = EventSheetCompiler._resolve_output_path(paired_loaded, "")
 	all_passed = _check("the Source header pairs generated scripts to their sheet",
-		EventSheetProjectDoctor.sheet_for_script(paired_gd), "user://paired.tres") and all_passed
+		EventSheetProjectDoctor.sheet_for_script(paired_gd), SUPPORT.scratch("paired.tres")) and all_passed
 	all_passed = _check("a behaviour pack .gd pairs to itself (the .gd IS the sheet, no .tres)",
 		EventSheetProjectDoctor.sheet_for_script("res://eventsheet_addons/spring/spring_behavior.gd"),
 		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed
@@ -197,14 +197,14 @@ static func run() -> bool:
 	scripted.set_script(load(paired_gd))
 	var plain: Node = Node.new()
 	all_passed = _check("the Inspector button handles sheet-scripted nodes only",
-		EventSheetEditButtonPlugin.sheet_path_for(scripted) == "user://paired.tres"
+		EventSheetEditButtonPlugin.sheet_path_for(scripted) == SUPPORT.scratch("paired.tres")
 		and EventSheetEditButtonPlugin.sheet_path_for(plain) == "", true) and all_passed
 	scripted.free()
 	plain.free()
 	node.free()
 	sibling_node.free()
-	for cleanup: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet_2.gd",
-			"user://paired.tres", paired_gd]:
+	for cleanup: String in [SUPPORT.scratch("boss_fight_sheet.gd"), SUPPORT.scratch("boss_fight_sheet_2.gd"),
+			SUPPORT.scratch("paired.tres"), paired_gd]:
 		if FileAccess.file_exists(cleanup):
 			DirAccess.remove_absolute(cleanup)
 
@@ -285,7 +285,7 @@ static func run() -> bool:
 	goto_sheet.events.append(goto_event)
 	goto_editor.setup(goto_sheet)
 	goto_editor.set_undo_redo_manager(NoopUndoManager.new())
-	var preview: Dictionary = EventSheetCompiler.compile(goto_sheet, "user://goto_probe.gd")
+	var preview: Dictionary = EventSheetCompiler.compile(goto_sheet, SUPPORT.scratch("goto_probe.gd"))
 	var event_line: int = 0
 	for entry: Variant in (preview.get("source_map", []) as Array):
 		if entry is Dictionary and str((entry as Dictionary).get("kind")) == "event":
@@ -297,7 +297,7 @@ static func run() -> bool:
 		and goto_editor._viewport.get_selected_row_data() != null
 		and goto_editor._viewport.get_selected_row_data().source_resource == goto_event, true) and all_passed
 	goto_editor.free()
-	DirAccess.remove_absolute("user://goto_probe.gd")
+	DirAccess.remove_absolute(SUPPORT.scratch("goto_probe.gd"))
 
 	# ── The welcome panel's Godot-native default: code panel rides every sheet ────
 	ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true)
@@ -358,9 +358,9 @@ static func run() -> bool:
 	spin_raw.code = "rotation = 0.0"
 	airborne_event.actions.append(spin_raw)
 	rt_sheet.events.append(airborne_event)
-	var rt_compile: Dictionary = EventSheetCompiler.compile(rt_sheet, "user://lift_roundtrip.gd")
+	var rt_compile: Dictionary = EventSheetCompiler.compile(rt_sheet, SUPPORT.scratch("lift_roundtrip.gd"))
 	all_passed = _check("the branching fixture compiles", bool(rt_compile.get("success")), true) and all_passed
-	var lifted: EventSheetResource = EventSheetGDScriptImporter.new().import_external("user://lift_roundtrip.gd")
+	var lifted: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SUPPORT.scratch("lift_roundtrip.gd"))
 	var lifted_events: Array = []
 	for row: Variant in lifted.events:
 		if row is EventRow:
@@ -376,9 +376,9 @@ static func run() -> bool:
 		and (lifted_first.sub_events[0] as EventRow).conditions.size() == 1
 		and ((lifted_first.sub_events[0] as EventRow).conditions[0] as ACECondition).ace_id == "IsActionJustPressed"
 		and (lifted_first.sub_events[1] as EventRow).else_mode == EventRow.ElseMode.ELSE, true) and all_passed
-	var rt_back: Dictionary = EventSheetCompiler.compile(lifted, "user://lift_roundtrip_back.gd")
+	var rt_back: Dictionary = EventSheetCompiler.compile(lifted, SUPPORT.scratch("lift_roundtrip_back.gd"))
 	all_passed = _check("the lifted structure reproduces the source byte-for-byte",
-		str(rt_back.get("output")), FileAccess.get_file_as_string("user://lift_roundtrip.gd")) and all_passed
+		str(rt_back.get("output")), FileAccess.get_file_as_string(SUPPORT.scratch("lift_roundtrip.gd"))) and all_passed
 
 	# ── The lift report: the boundary explains itself ─────────────────────────────
 	all_passed = _check("await blocks point at Wait",
@@ -396,8 +396,8 @@ static func run() -> bool:
 			event_entries += 1
 	all_passed = _check("the report covers lifted events and the summary counts them",
 		event_entries == 2 and EventSheetLiftReport.summary(report).contains("2 event(s)"), true) and all_passed
-	DirAccess.remove_absolute("user://lift_roundtrip.gd")
-	DirAccess.remove_absolute("user://lift_roundtrip_back.gd")
+	DirAccess.remove_absolute(SUPPORT.scratch("lift_roundtrip.gd"))
+	DirAccess.remove_absolute(SUPPORT.scratch("lift_roundtrip_back.gd"))
 
 	# ── Sweep regression: the export-integrity pass skips template blueprints ─────
 	ProjectSettings.set_setting("eventsheets/project/templates_dir", "res://tests/fixtures")
@@ -411,18 +411,18 @@ static func run() -> bool:
 
 	# ── Review fixes: Run Scene targets the .gd itself for GDScript-backed sheets;
 	# the welcome panel discovers the newest showcase instead of hardcoding it ─────
-	var run_target_file: FileAccess = FileAccess.open("user://run_target.gd", FileAccess.WRITE)
+	var run_target_file: FileAccess = FileAccess.open(SUPPORT.scratch("run_target.gd"), FileAccess.WRITE)
 	run_target_file.store_string("extends Node\n\n\nfunc _ready() -> void:\n\tpass\n")
 	run_target_file.close()
-	var external_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("user://run_target.gd")
+	var external_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(SUPPORT.scratch("run_target.gd"))
 	var run_editor_2: EventSheetEditor = EventSheetEditor.new()
 	run_editor_2.setup(external_sheet)
 	run_editor_2.set_undo_redo_manager(NoopUndoManager.new())
-	run_editor_2._current_sheet_path = "user://run_target.gd"
+	run_editor_2._current_sheet_path = SUPPORT.scratch("run_target.gd")
 	all_passed = _check("Run Scene targets the source .gd for GDScript-backed sheets",
-		run_editor_2._run_target_script_path(), "user://run_target.gd") and all_passed
+		run_editor_2._run_target_script_path(), SUPPORT.scratch("run_target.gd")) and all_passed
 	run_editor_2.free()
-	DirAccess.remove_absolute("user://run_target.gd")
+	DirAccess.remove_absolute(SUPPORT.scratch("run_target.gd"))
 	all_passed = _check("the welcome panel discovers the newest showcase scene",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/carousel/showcase_carousel.tscn") and all_passed
 

@@ -51,7 +51,7 @@ static func _run_against_compiler_output() -> bool:
 	boot.actions.append(_save_system_action("SaveNumber", "SaveSystem.save_number({key}, {value})", {"key": _quoted("coins"), "value": "coins"}))
 	sheet.events.append(boot)
 
-	var result: Dictionary = EventSheetCompiler.compile(sheet, "user://save_key_symmetry_out.gd")
+	var result: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.scratch("save_key_symmetry_out.gd"))
 	all_passed = _check("the fixture sheet compiles", bool(result.get("success", false)), true) and all_passed
 	var output: String = str(result.get("output", ""))
 
@@ -69,7 +69,7 @@ static func _run_against_compiler_output() -> bool:
 	# A sheet with no save vocabulary at all contributes nothing (the early-out path).
 	var plain: EventSheetResource = EventSheetResource.new()
 	plain.variables = {"score": {"type": "int", "default": 0, "exported": true}}
-	var plain_usage: Dictionary = EventSheetProjectDoctor.save_key_usage(str(EventSheetCompiler.compile(plain, "user://save_key_symmetry_plain.gd").get("output", "")))
+	var plain_usage: Dictionary = EventSheetProjectDoctor.save_key_usage(str(EventSheetCompiler.compile(plain, SUPPORT.scratch("save_key_symmetry_plain.gd")).get("output", "")))
 	all_passed = _check("a sheet with no saves yields no keys", (plain_usage["loaded"] as PackedStringArray).size() + (plain_usage["saved"] as PackedStringArray).size(), 0) and all_passed
 
 	return all_passed
@@ -341,14 +341,14 @@ static func _run_api_surface() -> bool:
 	all_passed = _check("the separator is honoured", str((semicolons[0] as Dictionary).get("price", "")), "99") and all_passed
 
 	# table_from_file: the same parse over a real file on disk, and a missing file reads as no rows.
-	var csv_path: String = "user://save_key_symmetry_table.csv"
+	var csv_path: String = SUPPORT.scratch("save_key_symmetry_table.csv")
 	var handle: FileAccess = FileAccess.open(csv_path, FileAccess.WRITE)
 	handle.store_string("name,price\n\"dagger, short\",7\n")
 	handle.close()
 	var file_rows: Array = EventSheets.table_from_file(csv_path)
 	all_passed = _check("a file reads the same records as the text", str((file_rows[0] as Dictionary).get("name", "")), "dagger, short") and all_passed
 	DirAccess.remove_absolute(csv_path)
-	all_passed = _check("a missing file reads as no rows", EventSheets.table_from_file("user://no_such_table.csv").size(), 0) and all_passed
+	all_passed = _check("a missing file reads as no rows", EventSheets.table_from_file(SUPPORT.scratch("no_such_table.csv")).size(), 0) and all_passed
 
 	return all_passed
 

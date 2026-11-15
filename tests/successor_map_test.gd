@@ -58,7 +58,7 @@ static func _test_the_vocabulary_is_sound() -> bool:
 ## source string in memory has no `resource_path`, and the analyzer reads annotations off disk - so a
 ## round-trip written that way would pass for the wrong reason.
 static func _test_the_annotation() -> bool:
-	var path: String = "user://_successor_annotation_probe.gd"
+	var path: String = SUPPORT.scratch("_successor_annotation_probe.gd")
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string("\n".join(PackedStringArray([
 		"@tool",
@@ -207,7 +207,7 @@ static func _test_the_shipped_addresses() -> bool:
 ## the migration plan over the whole sheet is pinned EMPTY - the same question the head band asks
 ## before it offers anybody a rewrite.
 static func _test_a_hand_written_line_reads_as_the_current_verb() -> bool:
-	var path: String = "user://_successor_audio_lift_probe.gd"
+	var path: String = SUPPORT.scratch("_successor_audio_lift_probe.gd")
 	var source: String = "extends Node\n\n\nfunc _ready() -> void:\n\t$Sfx.play(0.5)\n\t$Sfx.stop()\n\t$Sfx.volume_db = -6.0\n\tif $Sfx.playing:\n\t\tprint(\"still going\")\n"
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
@@ -571,7 +571,7 @@ static func _compiles_to(successor_key: String, successor: Dictionary, params: D
 		if named.is_valid_ascii_identifier() and not ClassDB.class_exists(named) and named != "null" \
 				and named != "true" and named != "false":
 			sheet.variables[named] = {"type": "float", "default": 0.0, "exported": false}
-	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://_successor_map_fixture.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.scratch("_successor_map_fixture.gd"))
 	if not bool(compiled.get("success", false)):
 		print("  [why] %s did not compile: %s" % [successor_key, str(compiled.get("errors", []))])
 		return false

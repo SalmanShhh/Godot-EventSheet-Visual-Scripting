@@ -250,7 +250,7 @@ static func _test_starter() -> bool:
 			function_names.append((entry as EventFunction).function_name)
 	passed = _check("it lays out, refreshes, hovers and draws", ", ".join(function_names),
 		"lay_out, refresh_states, show_grants, _draw") and passed
-	var compiled: Dictionary = EventSheetCompiler.compile(sheet, "user://skill_tree_screen_probe.gd")
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.scratch("skill_tree_screen_probe.gd"))
 	passed = _check("the starter compiles", bool(compiled.get("success", false)), true) and passed
 	var output: String = str(compiled.get("output", ""))
 	passed = _check("a click is one Unlock row", output.contains("Upgrades.unlock_skill("), true) and passed
