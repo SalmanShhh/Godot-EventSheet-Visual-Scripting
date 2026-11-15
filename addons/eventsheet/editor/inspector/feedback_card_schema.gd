@@ -76,6 +76,17 @@ const TITLE_OF: Dictionary = {"hold": "Hold Effect"}
 ## titled and explained by whatever that verb says about itself.
 const VERB_OF: Dictionary = {"punch": "punch_scale"}
 
+## What a NEW card of three words starts with, because the amount means something different for each
+## and 1.0 does nothing: a hitstop's amount is the time scale it freezes to (0 is a full stop, and it
+## needs a length to be felt), a slowmo's is the time scale it slows to, and a zoom's is a percentage.
+## An OVERRIDE list: every other word starts at 1.0 for 0 s. Only a card ADDED here takes these - a
+## stored card keeps the numbers it was saved with.
+const SEEDS: Dictionary = {
+	"hitstop": {"amount": 0.0, "seconds": 0.08},
+	"slowmo": {"amount": 0.3, "seconds": 0.3},
+	"zoom": {"amount": 110.0, "seconds": 0.2}
+}
+
 ## The words whose `effect` key means something. The other seven carry an amount and a duration and
 ## nothing else, so their cards do not offer a field that would never be read.
 const EFFECT_WORDS: PackedStringArray = ["flash", "pulse", "hold"]
@@ -218,10 +229,21 @@ static func derived_kinds(reading: Dictionary) -> Array:
 			"help": str(twin.get("help", (params.get(WORD_KEY, {}) as Dictionary).get("help", ""))),
 			"fields": fields,
 			"live": [],
-			"defaults": {AMOUNT_KEY: 1.0, EFFECT_KEY: "", SECONDS_KEY: 0.0},
+			"defaults": seeds_for(word),
 			"badge": seconds_badge
 		})
 	return kinds
+
+
+## The values a new card of a derived word starts with: the four keys a moment file's step holds, in
+## the file's order, with the word's own seed where it has one.
+static func seeds_for(word: String) -> Dictionary:
+	var seed: Dictionary = SEEDS.get(word, {}) as Dictionary
+	return {
+		AMOUNT_KEY: float(seed.get(AMOUNT_KEY, 1.0)),
+		EFFECT_KEY: "",
+		SECONDS_KEY: float(seed.get(SECONDS_KEY, 0.0))
+	}
 
 
 ## The four words that move the head instead of being felt. Written here rather than derived,

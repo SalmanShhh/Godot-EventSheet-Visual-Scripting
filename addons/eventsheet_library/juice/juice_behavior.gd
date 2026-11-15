@@ -1464,7 +1464,7 @@ func moment_strength() -> float:
 ## @ace_description("Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.")
 ## @ace_display_template("Moment step [b]{verb}[/b] at [b]{amount}[/b] for [b]{seconds}[/b] s")
 ## @ace_param(verb, options: shake|hitstop|slowmo|flash|punch|zoom|shockwave|chromatic|pulse|hold, default: shake, desc: "What this step does - the same ten words a moment file's steps are made of.")
-## @ace_param(amount, default: 0.4, desc: "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, and for a hitstop how hard the freeze is between 0 and 1.")
+## @ace_param(amount, default: 0.4, desc: "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, for a hitstop the time scale it freezes to (0 is a full stop, 1 changes nothing), and for a slowmo the time scale it slows to.")
 ## @ace_param(effect, desc: "The extra word two steps need: the colour a flash goes to, and the name of the post effect a pulse or a hold reaches for. Leave it empty for the rest.")
 ## @ace_param(seconds, default: 0, desc: "How long it lasts. 0 lets the step use its own natural length.")
 ## @ace_param(strength, default: 1, desc: "Scales what a player sees, exactly as a moment's own strength does. 1 is the step as written.")

@@ -902,7 +902,7 @@ moment(moment_name, here)",
 	_default(sheet, "verb", "shake")
 	_param_desc(sheet, "verb", "What this step does - the same ten words a moment file's steps are made of.")
 	_default(sheet, "amount", "0.4")
-	_param_desc(sheet, "amount", "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, and for a hitstop how hard the freeze is between 0 and 1.")
+	_param_desc(sheet, "amount", "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, for a hitstop the time scale it freezes to (0 is a full stop, 1 changes nothing), and for a slowmo the time scale it slows to.")
 	_param_desc(sheet, "effect", "The extra word two steps need: the colour a flash goes to, and the name of the post effect a pulse or a hold reaches for. Leave it empty for the rest.")
 	_default(sheet, "seconds", "0")
 	_param_desc(sheet, "seconds", "How long it lasts. 0 lets the step use its own natural length.")

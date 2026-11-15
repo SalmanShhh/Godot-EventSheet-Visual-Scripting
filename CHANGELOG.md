@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a new Hitstop, Slowmo or Zoom card does something the moment it is added
+
+A new juice card used to start at an amount of 1 and a length of 0 whatever its kind. For Hitstop the amount is the time scale it freezes to, so a new one froze nothing; a new Slowmo never slowed anything; and a new Zoom card zoomed the camera out to its floor, because its amount is a percentage. A new Hitstop card now freezes time completely for 0.08 s, a new Slowmo slows to 0.3 for 0.3 s and a new Zoom zooms in to 110 percent over 0.2 s. Cards already in a list keep the numbers they were saved with. The Amount help on the Moment Step row now reads the right way round (0 is a full stop).
+
 ### Changed: muting a family of juice cards no longer shortens the beat
 
 Mute Juice Family used to take every card of the family out of the list, and Pause and Hold are in the Time family, so muting it removed the waits as well and the rest of the beat came early. A muted family now silences only what is felt: a Pause, a Hold and the two loop cards keep waiting, so a list is as long with the switch on as with it off. If you relied on the old shorter beat, delete the Pause card or shorten it. Tween Property now belongs to the Object family in the game (it already did in the Inspector), so muting "transform" mutes it too, and the card that plays another Juice Player is a Flow card in the Inspector as it is in the game. The words the Mute row takes are unchanged.

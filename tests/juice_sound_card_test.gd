@@ -26,6 +26,7 @@ const LIGHT_CARD_LINE: Color = Color("#f5f5f5")
 static func run() -> bool:
 	var ok: bool = true
 	ok = _storage_pins() and ok
+	ok = _seed_pins() and ok
 	ok = _family_pins() and ok
 	return ok
 
@@ -93,3 +94,31 @@ static func _family_pins() -> bool:
 			str(_kind("play_player").get("category", "")), str(table.get("play_player", "?"))]
 
 	])
+
+
+## A card added in the Inspector is felt when it plays. The numbers were measured on a running tree:
+## a Hitstop card at amount 1 and 0 s left the time scale at 1, and at amount 0 and 0 s the freeze
+## began and ended inside one frame; amount 0 for 0.08 s held the time scale at 0 for 73 ms. A Slowmo
+## card at amount 1 never slowed anything, and a Zoom card at amount 1 zoomed the camera OUT to its
+## floor (zoom 0.2), because the amount is a percentage.
+static func _seed_pins() -> bool:
+	var hitstop: Dictionary = _new_card("hitstop")
+	var slowmo: Dictionary = _new_card("slowmo")
+	var zoom: Dictionary = _new_card("zoom")
+	return SUPPORT.pins(TEST_NAME, [
+		["a new Hitstop card freezes time completely", float(hitstop.get("amount", -1.0)), 0.0],
+		["and for long enough to be felt", float(hitstop.get("seconds", 0.0)) >= 0.05, true],
+		["a new Slowmo card slows time", float(slowmo.get("amount", 1.0)) < 1.0, true],
+		["and holds it for a while", float(slowmo.get("seconds", 0.0)) > 0.0, true],
+		["a new Zoom card zooms in a little, not out to the floor", float(zoom.get("amount", 0.0)) > 100.0, true],
+		["a new card still holds exactly the keys a moment file's step holds",
+			_sorted_keys(hitstop), EventSheetMomentFile.STEP_KEYS]
+	])
+
+
+static func _sorted_keys(card: Dictionary) -> PackedStringArray:
+	var keys: PackedStringArray = PackedStringArray()
+	for key: Variant in card:
+		keys.append(str(key))
+	keys.sort()
+	return keys
