@@ -140,7 +140,7 @@ static func class_vocabulary(target_class: String) -> Array[ACEDefinition]:
 
 
 ## The classes THIS project publishes (global `class_name` scripts + autoloads) as scan
-## entries {name, path, kind, autoload} - the input set behind the picker's Your Project
+## entries {name, path, kind, autoload} - the input set behind the picker's Your classes
 ## section. Node-derived only: data classes and helpers are reachable in expressions, but
 ## nobody picks an action on them.
 static func project_classes() -> Array:

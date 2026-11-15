@@ -125,7 +125,7 @@ static func reset_for_tests() -> void:
 static func _build_steps() -> Array[Callable]:
 	var steps: Array[Callable] = []
 	steps.append(_compile_picker_in_background)
-	# Which classes this project publishes - the object cards' "Your Project" section, and the
+	# Which classes this project publishes - the object cards' "Your classes" section, and the
 	# reflection behind any of them a reader picks.
 	steps.append(func() -> void: EventSheetProjectScanner.list_project_classes())
 	# What each installed pack adds to the EDITOR, which is the line on its object card. One read of

@@ -11,7 +11,7 @@ naming, parameter design, descriptions, and picker UX that beginners can use fir
 in-editor, no-code way to author one function from a dialog, see [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md).
 
 **Before you author anything, check whether you need to.** Your project's own `Node`-derived
-classes and autoloads are already pickable - they appear under **Your Project** on the
+classes and autoloads are already pickable - they appear under **Your classes** on the
 picker's object page, with their methods classified as Actions, Conditions and Expressions,
 their properties as Set/Get pairs, and their signals as triggers. That costs nothing and
 needs no annotations, and you can rename or hide any of it from the picker's right-click
@@ -131,9 +131,9 @@ The picker now shows, under a **Score** category:
 
 - **On High Score Beaten** (a trigger, from the `high_score_beaten` signal)
 - **Score** (an expression, from the `@export var score`)
-- **Set / Add / Subtract Score** (actions, from the same `@export var`)
+- **Add To Score** and **Subtract From Score** (actions, from the same `@export var`)
 - **Add Points** (an action, from the `add_points` method)
-- **Is Winning** (a condition, because `is_winning` returns `bool`)
+- **Winning** (a condition, because `is_winning` returns `bool`)
 
 You wrote no descriptors. That is Path 1. The rest of this guide explains it, the two more explicit
 paths, and the schema they all share.
@@ -318,8 +318,8 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 The same annotations also curate the ƒx dictionary's **Self ▸ Behaviours** group - the section a
 user sees when they type `self` in an expression field with your behaviour attached. Your exported
 variables list there as knobs (`$YourPack.knob_name`), and a value-returning public method lists
-when it carries `@ace_expression` or the pack declares `@ace_expose_all`; `@ace_hidden` and
-`@ace_internal` exclude a member from it exactly as they do from the picker. This derivation is
+when it carries `@ace_expression` or the pack declares `@ace_expose_all`; `@ace_hidden` excludes
+a member from it exactly as it does from the picker. This derivation is
 SCRIPT-level (property list, method list, and these comments read from the file), so it works the
 same whether or not your script is `@tool`.
 
@@ -489,8 +489,8 @@ func _internal_recalc() -> void:   # underscore + hidden: never shows
     pass
 ```
 
-This single file exposes: **On Died** (trigger), **Health** (expression) plus **Set / Add / Subtract
-Health** (actions), **Take Damage** (action, Combat), **Equip** (action, with a `head/chest/legs`
+This single file exposes: **On Died** (trigger), **Health** (expression) plus **Set Health**, **Add To Health** and
+**Subtract From Health** (actions), **Take Damage** (action, Combat), **Equip** (action, with a `head/chest/legs`
 dropdown), and **Is Dead** (condition). `_internal_recalc` stays private.
 
 ### Registering Path 1 providers
@@ -499,30 +499,32 @@ dropdown), and **Is Dead** (condition). `_internal_recalc` stays private.
   sheet (`EventSheetResource.ace_provider_scripts`) and de-duplicates on add. Remove it with
   `remove_ace_provider_script`.
 - **Project-wide by convention:** any `*.gd` in `res://eventsheet_addons/` is scanned automatically.
-- **From the editor:** **Sheet > Custom Actions...** browses to a script and previews it before
-  anything is registered (see below).
+- **From the editor:** **Sheet > Custom Actions...** lists the scripts a sheet reads and what each gives sheets (see below);
+  **Use in event sheets** on a script in the FileSystem gives every sheet its rows in one click.
 
-### The provider wizard: preview, curate, keep old names
+### The scripts window: see what a script gives sheets, and change how it reads
 
-**Sheet > Custom Actions...** opens the **Custom ACE Providers** window, the in-editor front end for
-everything above. Browsing to a `.gd` (press **Add...**) runs the same generation the registry runs, so
-its **What it publishes** table is what you will actually get: one row per entry, with **Publish**,
-**Kind**, **Name**, **Category**, **Parameters**, and the exact code it **Emits**. Browsing previews
-only - **Register This Script** is a second, deliberate click, so nothing joins the vocabulary unseen.
+**Sheet > Custom Actions...** opens the **Scripts in event sheets** window, the in-editor front end for
+everything above. It lists the scripts this sheet reads (and the project's own, added with **Use in event
+sheets** on a script in the FileSystem) and, for the one you pick, every row it gives sheets as a plain
+sentence with a tick, so what you see is what you will actually get. A row the script already leaves
+out (`## @ace_hidden`) is listed too, marked **left out**, so unticking is never a one-way door.
 
-The table is also an editing surface, which matters because raw reflection guesses from the signature
-and most hand-written game code is untyped (a `func is_wave_active():` with no `-> bool` reads as an
-Action). Correct it in place, then press one of:
+Untick what sheets should not see, then press **Done**: the window writes `## @ace_hidden` above those
+members straight into your script, after a backup (**Tools > Sheet Backups** restores it), and its status
+line names the lines it wrote. Ticking a left-out member again removes only that line, and every other
+`##` word you wrote stays. Only `##` comments above a declaration are ever added or removed - never a
+signature or a body, which is why a wrong kind is fixed with `@ace_condition` rather than by editing
+someone's function. A shipped behaviour is shown but never written here: its words are changed in the
+behaviour itself.
 
-- **Curate Script...** writes your differences into the file as `## @ace_*` comment lines - exactly the
-  dialect this guide documents, so you can reopen and adjust later, and a teammate reading the script
-  sees why it publishes what it does. A diff of the lines each member will gain is shown first; only
-  `##` comments above a declaration are added or removed (never a signature or a body, which is why a
-  wrong KIND is fixed with `@ace_condition` rather than by editing someone's function), the file is
-  backed up first (**Tools > Sheet Backups**), and re-applying the same edits is a no-op.
-- **Parameters...** shapes the selected member's inputs - a hint (including `comparison`), labeled
-  `value=Label` options, and the starting value the row shows on drop. It records the spec; the next
-  Curate Script writes it as `@ace_param(id, hint: ..., options: ..., default: ...)`.
+- **Click a sentence** (or press Enter or F2 on it) to open **How should this read?**: type the sentence
+  with `{slot}` gaps, see what it reads as with the row's starting values, and press **Done**; the
+  `## @ace_display_template` line is written above the function and every row that uses it, in every
+  sheet, follows. A slot the function does not have is named before anything is written. The same box
+  opens from **Change how this reads...** on a placed row's right-click menu and from F2 on a row of your
+  script in the picker.
+- **Go to the line** opens Godot's script editor on the selected function.
 - **Keep Old Name...** is the fix for a member you RENAMED. A rename changes the ace_id and orphans every
   row that used it, silently: the compiler prefers the template baked onto the row, so the sheet still
   emits the old call, compiles clean, and fails when the player triggers it. Select the member under its

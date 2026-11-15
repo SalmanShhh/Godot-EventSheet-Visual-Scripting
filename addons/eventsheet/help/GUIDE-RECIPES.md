@@ -318,9 +318,9 @@ Two routes:
   operator dropdown in one word. (`@ace_param_options` / `@ace_param_autocomplete` / `@ace_param_hint`
   remain as the single-purpose spellings.) It registers project-wide automatically.
 
-Prefer to see the vocabulary before committing to it? **Sheet ▸ Custom Actions…** previews everything a
-script would publish, lets you fix the kind, name and category in the table, and writes those choices
-back into the file as `## @ace_*` comments (with a diff and a backup first).
+Prefer to see the vocabulary before committing to it? **Sheet ▸ Custom Actions…** lists everything a
+script gives sheets as plain sentences, lets you untick what sheets should not see and change how a
+function reads, and writes those choices back into the file as `## @ace_*` comments (after a backup).
 
 ---
 

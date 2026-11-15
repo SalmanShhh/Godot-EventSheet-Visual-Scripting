@@ -53,7 +53,7 @@ Each row is covered below with the exact code it compiles to.
 
 | You want to… | How | No ACE needed? |
 | --- | --- | --- |
-| Pick your own classes' methods from the picker | **Your Project** section on the object page - zero setup (2b) | ✅ |
+| Pick your own classes' methods from the picker | **Your classes** section on the object page - zero setup (2b) | ✅ |
 | Call your existing code from a sheet | ƒx expressions are real GDScript + the **Helpers** ACEs + RawCode blocks | ✅ |
 | React to a signal your code emits | **On Signal** trigger (any node / autoload / `self`) | ✅ |
 | Put a sheet on a node that already has a script | **Behavior mode** - attach the sheet as a child node | ✅ |
@@ -61,7 +61,7 @@ Each row is covered below with the exact code it compiles to.
 
 ## 2b. Your Own Classes Are Already Vocabulary
 
-Open the picker's object page and, under **Your Project**, you will find the classes and
+Open the picker's object page and, under **Your classes**, you will find the classes and
 autoloads your game declares.
 
 <img src="images/interop-your-project.png" alt="The Add Event picker's object page: a System card, a collapsed Objects and Behaviors section, and a Your Project section listing the game's own classes - AutoACESample, CarouselOfJuice, Enemy, FamilyArena and more." width="620">
@@ -72,7 +72,7 @@ its editor properties become Set/Get pairs, and its signals become triggers. Eac
 plain call you would have written by hand:
 
 ```gdscript
-$Inventory.add_item("potion", 3)          # picked from Your Project > Inventory
+$Inventory.add_item("potion", 3)          # picked from Your classes > Inventory
 Inventory.add_item("potion", 3)           # an autoload emits through its own name
 ```
 
@@ -948,7 +948,7 @@ pivot turns.
   The picker knows about them too. Open **Add Event** on a `.gd` you opened as a sheet and its first
   page is **ƒ Functions - this script**, listing the file's own functions with the kind each one
   publishes as and the inputs it takes, its unpublished helpers behind a `+ Helpers (N)` fold, and
-  **Your Project** under that with every class the project declares. Picking one inserts an ordinary
+  **Your classes** under that with every class the project declares. Picking one inserts an ordinary
   Call Function row.
 
   ![The Add Event picker opened on a script's own functions: a Functions section headed "this script - 4" listing Award Points as an action taking amount number and Round Is Ready as a condition taking enabled true/false, a collapsed Helpers (2) entry, then a Your Project section listing the project's own classes](images/picker-functions-page.png)
@@ -2720,34 +2720,30 @@ or drop the file in `res://eventsheet_addons/`). Every public method/signal beco
 with **zero per-member annotations** - see the [Custom ACEs Guide](GUIDE-CUSTOM-ACES.md#5-path-1-auto-ace-provider-scripts).
 For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).
 
-### See what a script will publish before you commit to it
+### See what a script gives sheets, and change how it reads
 
 You never have to hand-write those annotations and hope. **Sheet ▸ Custom Actions…** opens the
-**Custom ACE Providers** window: press **Add…** to browse to a `.gd` (or click one already registered),
-and the **What it publishes** table lists one row per entry it would generate - *Publish*, *Kind*,
-*Name*, *Category*, *Parameters*, and *Emits* (the exact GDScript that row compiles to). Browsing only
-previews; **Register This Script** is a second, deliberate click, so a script never joins the
-vocabulary unseen.
+**Scripts in event sheets** window: it lists the scripts this sheet reads, and for the one you pick it
+shows every row the script gives sheets as a plain sentence with a tick. A member the script already
+leaves out is listed too, marked *left out*. Untick what sheets should not see and press **Done**: the
+window writes `## @ace_hidden` above those members into your script, after a backup (Tools ▸ Sheet
+Backups restores it), and the status line names the lines it wrote. Only `##` comments are added or
+removed - no signature and no body is ever touched.
 
-The table is also the editing surface, which matters because raw reflection guesses wrong on ordinary
-game code: an untyped `func is_wave_active():` with no `-> bool` reads as an *Action* rather than a
-Condition. Correct it in the table, then use one of the three actions beside it:
-
-- **Curate Script…** writes your edits back into the file as `## @ace_*` comment lines. It shows you
-  the exact lines first, backs the file up before writing (Tools ▸ Sheet Backups restores it), and
-  re-applying the same edits is a no-op rather than a second copy of the block. **Only `##` comments
-  are added** - no signature and no body is ever touched, which is why an entry's lane is corrected with
-  `@ace_condition` instead of bolting `-> bool` onto your function.
-- **Parameters…** shapes the selected entry's parameters: a *Hint* (`comparison` is the whole labeled
-  operator dropdown in one word), *Options* written as `value=Label` separated by `|`, and a *Starting
-  value* - what the row shows the moment it is dropped. These land as
-  `## @ace_param(id, hint: …, options: …, default: …)`.
+- **Click a sentence** (Enter or F2 works too) to open **How should this read?**, which writes
+  `## @ace_display_template` above the function. It shows what the sentence reads as with the row's
+  starting values and names a slot the function does not have. Every row that uses the function, in every
+  sheet, follows.
+- **Go to the line** opens Godot's script editor on the selected function.
 - **Keep Old Name…** is for after you rename a function. A rename changes the entry's identity and
   orphans every row that used it - *silently*, because each row carries the old call baked in, so the
   sheet still compiles clean and only breaks at game runtime. Select the entry under its new name, type
   what it used to be called, and a deprecated stand-in of the old name is appended that forwards to the
   new one. Nothing existing is edited, and the old name is hidden from the picker so it cannot be added
   to new work.
+
+A script that does not list itself (a helper of statics, a script with no `class_name`) takes one click:
+right-click it in the FileSystem and choose **Use in event sheets**; every sheet then reads its rows.
 
 The same three moves are scriptable: `EventSheets.curate_provider(script_path, edits)` and
 `EventSheets.keep_old_verb_working(script_path, old_member, new_member, message)`.
@@ -2833,7 +2829,7 @@ Interop is broad, but it isn't magic - here's the candid list so nothing surpris
 - **Renaming a function in your own provider script breaks rows quietly.** A row bakes in its call text
   when you drop it, so a call to a member the script no longer has still compiles clean and fails at game
   runtime. **Tools ▸ Project Doctor…** catches exactly this (its *orphaned-verb* check), and **Keep Old
-  Name…** in the Custom ACE Providers window adds a forwarding stand-in so the existing rows keep working.
+  Name…** in the Scripts in event sheets window adds a forwarding stand-in so the existing rows keep working.
 - **Signal connections to other nodes aren't validated** against the engine's known signals - wrong
   path/name is a runtime failure. (Only signals on `self` are checked and skipped-with-warning if missing.)
 - **An already-scripted node needs behavior mode** (a child node), not a plain sheet - see section 5.

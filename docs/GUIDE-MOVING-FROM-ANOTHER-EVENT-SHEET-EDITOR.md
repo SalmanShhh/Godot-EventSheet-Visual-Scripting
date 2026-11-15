@@ -206,7 +206,7 @@ play the role both run at a definite, visible point:
 
 | C3 habit | Here | When it runs |
 |---|---|---|
-| Include a sheet so its events run *at this point* | **Teach a Verb** - publish the shared logic and CALL it from a row | Exactly when the calling row runs - more explicit than an include, because the call is a row you can see |
+| Include a sheet so its events run *at this point* | **This sheet in other sheets…** - publish the shared logic and CALL it from a row | Exactly when the calling row runs - more explicit than an include, because the call is a row you can see |
 | Include a behaviour sheet for a whole family of objects | A **behavior pack** on the node | In scene-tree order each tick, as a separate node - NOT where any include line sits |
 | Include a sheet so *its whole set of events* runs in this script | **Sheet ▸ New shared sheet…**, then **Add ▸ Include sheet…** (it reads **Shared sheet…** by default and **Include sheet…** once you pick the Familiar preset on the Words page) | Wherever those events' own triggers run - a shared sheet is included as a base class or as a helper, and both are ordinary Godot |
 

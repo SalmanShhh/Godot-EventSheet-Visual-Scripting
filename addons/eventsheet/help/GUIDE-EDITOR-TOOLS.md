@@ -823,7 +823,7 @@ A run that leans on an event-local variable or a For Each item is listed and mar
 3. **Turning a prototype into a behaviour pack.** The repeated runs are the functions the pack should publish.
 4. **Inheriting a project.** The repeats name its real concepts before anyone has written a document about them.
 5. **Shrinking generated output.** A size-sensitive export gets smaller by exactly the rows the list says it will.
-6. **Feeding Teach a Verb.** Publish the extracted function project-wide instead of waiting to notice the repetition again.
+6. **Sharing it.** Tick "Other sheets can use this" on the extracted function and use Sheet ▸ This sheet in other sheets…, instead of waiting to notice the repetition again.
 
 ---
 

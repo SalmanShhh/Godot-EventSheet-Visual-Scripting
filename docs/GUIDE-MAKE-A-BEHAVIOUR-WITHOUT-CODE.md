@@ -111,7 +111,7 @@ Add a **Function** (a name and which kind it is). The dialog is the **ACE Studio
 - **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
 - **A value** (returns anything else) → an **Expression** (e.g. `health_percent()`)
 
-Tick **"Publish to the picker"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The three details that decide how it reads there - its display name, description, and picker category - are edited inline on its own row (double-click the name, the caption above it, or the muted category chip), not in the dialog.
+Tick **"Other sheets can use this"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The three details that decide how it reads there - its display name, description, and picker category - are edited inline on its own row (double-click the name, the caption above it, or the muted category chip), not in the dialog.
 
 Each published function reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the function's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
 
@@ -175,7 +175,7 @@ Author the patrol once (waypoints as exported variables), drop the behaviour und
 
 ### 3. Teach the team your vocabulary
 
-A behaviour sheet's published functions become picker entries project-wide via Teach a Verb - your "Flash Red" is now everyone's Flash Red.
+A behaviour sheet's published functions become picker entries project-wide through Sheet ▸ This sheet in other sheets… - your "Flash Red" is now everyone's Flash Red.
 
 ### 4. A shared cooldown gate
 
@@ -216,7 +216,7 @@ Send an artist the Flash behaviour and they tune `flash_color` from a colour swa
 - **Choose export vs non-export deliberately.** Exported variables are the designer's surface (badge + Inspector drawer); internal state like `remaining` or a coyote timer should stay non-exported so it does not clutter the Inspector.
 - **Use Set Local Variable (typed) for throwaway values.** A value that only matters inside one event does not need a sheet variable.
 - **A Signal row is not a trigger until you tick "trigger".** Only then does it publish as an *On ...* entry other sheets can react to.
-- **The return type decides how a function publishes.** void → Action, bool → Condition, anything else → Expression. Pick the return type for the ACE role you want, then tick "Publish to the picker" or it stays sheet-private.
+- **The return type decides how a function publishes.** void → Action, bool → Condition, anything else → Expression. Pick the return type for the ACE role you want, then tick "Other sheets can use this" or it stays sheet-private.
 - **Multiple conditions on a row are AND by default.** Switch the row to OR when you mean "any of these"; use Else (right-click or the chain keys) for if/else, not a duplicated inverted event.
 - **Big loops can hitch.** Reach for *Budgeted For Each* to spread a heavy loop across frames instead of processing everything in one tick.
 - **Do not force real code into rows.** Inner classes and continuous numeric math (`cos`/`sin`/spring kernels) read better as a GDScript block - the goal is zero *gratuitous* GDScript, not dogmatic zero.

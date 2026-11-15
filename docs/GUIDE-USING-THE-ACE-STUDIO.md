@@ -27,7 +27,7 @@ There are several ways to open the ACE Studio to author a brand-new function:
 - The **Add** menu in the event sheet dock has a **"Function..."** entry.
 - There is an **add-function button** in the sheet itself.
 - It is reachable from Godot's **Command Palette** (Ctrl+Shift+P), where every EventSheets command is listed.
-- **Right-click empty canvas ▸ New Function** offers a submenu: **Function** (a plain, unpublished helper), or **Action** / **Condition** / **Expression** - the last three open the dialog with that kind's card already picked and **Publish to the picker** already ticked, so "I want a new Action" is one gesture.
+- **Right-click empty canvas ▸ New Function** offers a submenu: **Function** (a plain, unpublished helper), or **Action** / **Condition** / **Expression** - the last three open the dialog with that kind's card already picked and **Other sheets can use this** already ticked, so "I want a new Action" is one gesture.
 
 They all open the same **"New Function"** dialog, ready for a new function.
 
@@ -69,7 +69,7 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ![A filled-in ACE Studio: a Take Damage function with its doc comment, the three kind cards with Action selected, the live preview showing the Action badge and the Ships-as line reading func take_damage() -> void, and the Publish-to-the-picker checkbox ticked](images/ace-studio-example.png)
 
-The card labelled **"This is what other people will see"** appears once **Publish to the picker** is ticked - it is about what OTHER sheets will meet, so it stays out of the way while you are writing a private helper - and it updates on every keystroke. It is there so you can shape a clear, picker-ready action, condition or expression before you commit. It shows:
+The card labelled **"This is what other people will see"** appears once **Other sheets can use this** is ticked - it is about what OTHER sheets will meet, so it stays out of the way while you are writing a private helper - and it updates on every keystroke. It is there so you can shape a clear, picker-ready action, condition or expression before you commit. It shows:
 
 - A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter the function has**, and a **category chip**.
 - A one-line summary that reads like a real picker row, for example `Combat > Take Damage  amount`.
@@ -94,7 +94,7 @@ An optional default lets a caller skip the parameter. One rule carries over from
 
 ## 5. Publishing to the Picker
 
-By default a function is a private helper for the sheet you are on. To make it reusable across your whole project, tick the checkbox **"Publish to the picker (other sheets can use it)"**. That is the whole control - a plain checkbox.
+By default a function is a private helper for the sheet you are on. To make it reusable across your whole project, tick the checkbox **"Other sheets can use this"**. That is the whole control - a plain checkbox.
 
 The three details that decide how a published function READS in the picker are edited **on its own row**, not in this dialog (the same idea as its parameters):
 
@@ -135,16 +135,13 @@ This no-code path complements the other ways to add vocabulary. The **"Make a be
 
 ## 7. Publishing From a Script You Already Have
 
-![The Manage Providers table previewing an untyped script: one method moved into the Conditions lane, one member opted out](images/provider-curation.png)
 
-The ACE Studio authors a function out of event rows. When the logic already exists as GDScript - a score keeper, a wave manager, an inventory you wrote long before you met this plugin - the same result is one dialog away: **Sheet ▸ Custom Actions...**, which opens the **Custom ACE Providers** window.
+The ACE Studio authors a function out of event rows. When the logic already exists as GDScript - a score keeper, a wave manager, an inventory you wrote long before you met this plugin - the same result is one click away: right-click the script in the FileSystem and choose **Use in event sheets**, or open **Sheet ▸ Custom Actions...**, which opens the **Scripts in event sheets** window.
 
-Press **Add...** to browse to the `.gd` (or click one already listed) and the **What it publishes** table shows one row per entry the script would contribute: **Publish**, **Kind**, **Name**, **Category**, **Parameters**, and the exact code it **Emits**. Looking registers nothing - **Register This Script** is a separate, deliberate click, so a script never joins the vocabulary unseen.
+The window lists every row the script gives sheets as a plain sentence with a tick. A member the script already leaves out is listed too, marked **left out**. Untick the members you do not want sheets to see and press **Done**: `## @ace_hidden` is written above them in your script, after a backup (**Tools ▸ Sheet Backups** restores it), and the status line names the lines. Only `##` comments above a declaration are added or removed - no signature and no body is ever touched, so the kinds, which are inferred from each function's signature, are corrected with an `@ace_condition` comment instead of by editing someone's function.
 
-The table is an editing surface too, and that matters because the kinds are inferred from each function's signature: an untyped `func is_wave_active():` with no `-> bool` reads as an Action rather than a Condition, which is exactly what most hand-written game code looks like. Untick the members you do not want published, correct the kind, name and category in place, then use one of the three actions beneath the table:
-
-- **Curate Script...** writes your edits back into the file as `## @ace_*` comment lines, so the script keeps publishing them the next time it is scanned. A preview of the exact lines each member will gain is shown first. Only `##` comments above a declaration are added or removed - no signature and no body is ever touched, which is why a wrong kind is corrected with an `@ace_condition` comment instead of by editing someone's function - the file is backed up first (**Tools ▸ Sheet Backups** restores it), and re-applying the same edits changes nothing.
-- **Parameters...** shapes the selected member's inputs: a widget hint (try `comparison`, which is the whole six-operator dropdown in one word), a fixed set of choices written `value=Label` so the menu reads as English while the row inserts the real token, and the starting value the row shows the moment it is dropped. The shapes are recorded; press Curate Script to write them.
+- **Click a sentence** to open **How should this read?**: type the sentence with `{slot}` gaps, see what it reads as, press **Done**. It is written above the function as `## @ace_display_template`, and every row that uses the function follows. The same box opens from **Change how this reads...** on a placed row, and from F2 on a function's head in a sheet (where it also holds the description and **Other sheets can use this**).
+- **Go to the line** opens Godot's script editor on the function.
 - **Keep Old Name...** is the fix for a member you renamed. Renaming a function changes its identity in the picker, so sheets that already use it break - and silently, because the old call is baked into each row and still compiles clean, failing only when the game runs. Name what the function used to be called and a deprecated stand-in of the old name is added that forwards to the new one: rows that already hold it keep working, while the old name stays out of the picker. Nothing existing is edited.
 
 ---

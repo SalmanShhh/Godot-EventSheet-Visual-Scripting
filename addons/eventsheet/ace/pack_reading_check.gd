@@ -43,7 +43,7 @@ static func check_definition(definition: ACEDefinition) -> Array[Dictionary]:
 	if shown.is_empty() or _is_bare_call(shown):
 		problems.append(_problem(definition, label,
 			"the words a reader sees are a bare call, not a sentence",
-			"give it @ace_name(\"Set thing to {value}\") - a sentence with its parameters in it"))
+			"give it @ace_display_template(\"Set thing to {value}\") - a sentence with its parameters in it"))
 	if definition.description.strip_edges().is_empty():
 		problems.append(_problem(definition, label,
 			"it publishes no description",
@@ -58,7 +58,7 @@ static func check_definition(definition: ACEDefinition) -> Array[Dictionary]:
 		if _is_unnamed(parameter_name, parameter_id):
 			problems.append(_problem(definition, label,
 				"the parameter \"%s\" is not named" % (parameter_id if not parameter_id.is_empty() else parameter_name),
-				"give it @ace_param(%s, \"Speed\", …) - the words the row shows beside the field" % parameter_id))
+				"name the parameter in plain words in the function (\"speed\", not \"s\") - its name is the word the row shows beside the field"))
 	var offending: String = _forbidden_word_in("%s %s %s" % [label, shown, definition.description])
 	if not offending.is_empty():
 		problems.append(_problem(definition, label,

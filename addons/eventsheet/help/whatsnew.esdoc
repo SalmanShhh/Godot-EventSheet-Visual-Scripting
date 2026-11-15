@@ -6,6 +6,50 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a row of your script reads the same in the picker, the parameters window and the canvas
+
+A function whose script wrote a sentence and no name (\"Take {amount} damage\") now reads as that sentence in the picker row and the parameters window's title (each slot as a gap), not as the name made from the function; the window's head names your class instead of the open sheet's object (\"System\"); and the toolbar's Add Event opens on the objects first, like a double click on empty canvas, so \"Your classes\" is offered there too.
+
+### Added: F2 on a function head says how the function reads in other sheets
+
+With a function's head selected, F2 opens a box with the sentence the function reads as in other sheets, its description and \"Other sheets can use this\". Done writes all three onto the function as one undo step. The name stays where it was (double-click the head), because renaming changes what every call means.
+
+### Changed: a named sheet's new function starts shared, and \"Teach a Verb\" is \"This sheet in other sheets…\"
+
+The New Function window's tick now reads \"Other sheets can use this\" and starts ticked on a sheet that has a class name (another sheet can only reach a node it can name); an unnamed sheet's starts unticked as before. Only the starting state changed: old sheets, the resource default and every emitted byte are as they were. The Sheet menu entry that shared a sheet's published functions is now \"This sheet in other sheets…\", with plain status lines, and a sheet with no class name is told so with a door to Sheet Type.
+
+### Added: \"How should this read?\" for a function of a script of yours
+
+Right-click a placed row that comes from a script of yours and choose \"Change how this reads…\" (or press F2 on its row in the picker, or press Enter or F2 on a row in the scripts window): a small box shows the sentence, what it reads as with the row's starting values, and names a slot the function does not have. Done writes `## @ace_display_template` above the function after a backup, and every row that uses it follows. A row of a shipped behaviour never writes anything: the box says it belongs to the behaviour and offers to open it, and a script with changes not yet saved in Godot's script editor is refused until it is saved.
+
+### Added: \"Use in event sheets\" on a script in the FileSystem
+
+Right-click a script of yours in the FileSystem and one entry gives every sheet rows from it with no setup: it writes the path into the taught-scripts setting (which now holds scripts as well as compiled sheets) and the status line says how many rows it added. Once a script is in use, or when it lists itself (a Node or Resource script with a class_name, an autoload), the entry reads \"Use in event sheets…\" and opens its window. A shipped behaviour, the plugin's own files and scenes are never offered. Resource scripts with a class_name now list themselves in the picker's cards.
+
+### Changed: one window for what a script of yours gives sheets
+
+Sheet > Custom Actions now opens \"Scripts in event sheets\": the scripts a sheet reads, and for the one you pick, every row it gives as a plain sentence with a tick. Unticking writes `## @ace_hidden` above the member after a backup; a member the script already leaves out is listed as \"left out\" so it can be ticked back, and ticking it again keeps every other word the script wrote (hiding no longer drops them). Each row carries the sentence and the line of its function, and \"Go to the line\" opens Godot's script editor there. The old table with Kind, Name, Category and Parameters columns, Register This Script and Curate Script are gone; Keep Old Name stays for a renamed function.
+
+### Fixed: curating a script never writes a file the plugin ships
+
+The public curate call refuses a script under `addons/` or in a shipped behaviour folder, with a plain reason, and writes nothing (no backup either). A script of yours is written as before.
+
+### Fixed: the Theme Editor does what its window says
+
+A second open now edits the theme you opened (its swatches had stayed tied to the first one, so a change drew nothing and saved nothing), and its Quick Style colours start from the open theme instead of fixed dark ones. The Dyslexia-friendly tick and the Reading font no longer write the unsaved workbench theme into your open sheet. Applying the editor's copy no longer ticks Match Editor in the theme menu. The eleven swatches that drove nothing are no longer listed (a theme file that names them still loads and saves them). Each row reads in plain words, the way Godot's Inspector spells a property (\"Follow Editor Greys\"); the strip at the foot still gives the exact field name and the line a save writes. Descriptions say Section where the sheet does, the debugger accent names the Trail tab it tints, and the amber token says it colours every finding. The preview is wide enough for \"On process\" to read whole.
+
+### Fixed: three windows no longer cut their words short
+
+The Variable window wraps the annotation a look writes instead of trailing off, reads a long hint under its box instead of a cut-off placeholder, and starts \"Add row\" at the left of a wide table in the Inspector preview. The Class window wraps the reason a member would be lost (\"Control does not have it\"). Migrate wraps a long line of code, names a row with no stored sentence by its verb (\"Set Sprite Size\", not its id) and, when the old and the new row read the same, says which row it becomes.
+
+### Fixed: a wide table in the Variable window's Inspector preview, and the status bar after a theme switch
+
+The preview card now draws a table with many columns smaller to fit (down to a readable floor), so every column and Add row can be read without a sideways scroll; only a table wider than that scrolls. Switching theme repaints the status bar's counts at once (they kept the old theme's colours until the next edit), and a translucent word there is judged as it shows on the panel. Comments on the theme's own band and the margin numbers also read at 4.5 to 1 on every shipped theme.
+
+### Fixed: the sheet reads in a dark and a light editor, and a light sheet in a dark editor (and the reverse)
+
+Editor Native's quiet words, the gutter numbers and the amber of every finding now read at 4.5 to 1 on the sheet, a row and a head bar, in both hands. The code beside a variable row keeps the sheet theme's colours when the sheet and the editor are different brightness. The status bar's words and the finding sentence use a font colour moved until it reads on the editor's panel, instead of a modulate over the editor's own text. Run counts, the margin number after a run, live values and a coloured comment's words take the theme's own colours (no new theme fields) and read on their ground. The parameter hint's coloured outline is gone (the edited value is marked by a wash) and its chip takes the drag bubble's colours. The plugin now has one contrast formula, and the ink mover steps finely so amber stays amber.
+
 ### Fixed: Set Size, Set Width and Set Height size a sprite by the frame it draws
 
 Set Sprite Size divided by the whole picture, so a sprite sheet or a region came out the wrong size (a 4 x 2 sheet asked for 64 x 64 measured 16 x 32; a region measured 8 x 4), a sprite with no picture stopped with an error, and \"On node\" divided by this node's picture instead of the other sprite's. Three new rows, Set Size, Set Width and Set Height, divide by the frame that is drawn, take \"On node\" on every member of the line, and leave a sprite with no picture as it is. Set Sprite Size keeps writing exactly the line it always did, so existing scripts compile and reopen byte for byte; it is retired from the picker, and Migrate moves a row of it onto Set Size without asking, keeping its size and node.
