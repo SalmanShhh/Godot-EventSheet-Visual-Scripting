@@ -10621,3 +10621,4 @@ Use in event sheets…,イベントシートで使う…
 Use in event sheets,イベントシートで使う
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s: 行は追加されませんでした。スクリプトに class_name を付けると、関数を呼び出す名前ができます。
 From %s.,%s から。
+Browse every row,すべての行を見る

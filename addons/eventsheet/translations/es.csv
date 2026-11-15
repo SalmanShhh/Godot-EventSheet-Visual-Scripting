@@ -10621,3 +10621,4 @@ Use in event sheets…,Usar en las hojas de eventos…
 Use in event sheets,Usar en las hojas de eventos
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s: no se añadió ninguna fila. Dale al script un class_name para que sus funciones tengan un nombre con el que llamarlas.
 From %s.,De %s.
+Browse every row,Explorar todas las filas

@@ -83,6 +83,11 @@ const DRAWING_PAGE_PREFIX := "Drawing: "
 ## rather than a scope target. The rest of the string is the GDScript function name.
 const FUNCTION_PREFIX := "function:"
 
+## Marks the last entry of the object page: the door to the full list, the page the Add Event button
+## opened before the object page, with Favourites and Recent beside it. The entry is the door itself, so
+## picking it leaves the page rather than scoping to an object.
+const BROWSE_ALL_META := "browse_every_row"
+
 ## Marks an object-page entry as one of the SCENE'S OWN scene-unique nodes - the `%HealthBar` Godot
 ## itself hands out. The rest of the string is `<name>|<class>`, which is everything the scope needs:
 ## the spelling the row will address the node by, and the class whose vocabulary it may take.
@@ -2152,6 +2157,10 @@ func _populate_object_cards() -> void:
 	_populate_project_cards(root)
 	# Last, at the very top: what this event picked is the first thing the next row is about.
 	_populate_picked_cards(root)
+	# And at the very bottom, the way to the whole list with no typing.
+	var door: TreeItem = _objects_tree.create_item(root)
+	door.set_text(0, EventSheetL10n.translate("Browse every row"))
+	door.set_metadata(0, BROWSE_ALL_META)
 
 
 ## The Your Project section's head, made the first time a card needs it: the project's own globals
@@ -2361,6 +2370,15 @@ func _on_object_tree_selected() -> void:
 		return
 	# The way back from "Hide everything from X": selecting the greyed card restores it.
 	var chosen: String = str(selected.get_metadata(0))
+	if chosen == BROWSE_ALL_META:
+		_object_filter_provider = ""
+		_unique_scope = {}
+		_show_classic(false)
+		_refresh_tree()
+		_select_first_match()
+		if _search.is_inside_tree():
+			_search.grab_focus()
+		return
 	if chosen.begins_with(UNHIDE_PREFIX):
 		var restored: String = chosen.trim_prefix(UNHIDE_PREFIX)
 		EventSheetVocabularyCatalog.set_class_excluded(restored, false)

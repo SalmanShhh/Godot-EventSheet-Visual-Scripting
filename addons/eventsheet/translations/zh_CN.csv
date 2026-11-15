@@ -10621,3 +10621,4 @@ Use in event sheets…,在事件表中使用…
 Use in event sheets,在事件表中使用
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s：未添加任何行。请给脚本加上 class_name，这样它的函数才有可调用的名字。
 From %s.,来自 %s。
+Browse every row,浏览所有行
