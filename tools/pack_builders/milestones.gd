@@ -37,10 +37,14 @@ static func build() -> bool:
 		"## Id of the milestone reached most recently.",
 		"var _last_reached_id: String = \"\"",
 		"",
-		"func _ensure(id: String) -> Dictionary:",
+		"func _ensure(id: String, action: String = \"\") -> Dictionary:",
 		"\tif not _milestones.has(id):",
+		"\t\tif not action.is_empty():",
+		"\t\t\t_say_once(\"milestone:\" + id, \"%s made a new milestone \\\"%s\\\" with a target of 0 because none is called that (%s) - use Define Milestone first, or check the spelling.\" % [action, id, _list_names(_milestones.keys())])",
 		"\t\t_milestones[id] = {\"threshold\": 0.0, \"reward\": 0.0, \"reached\": false, \"value\": 0.0}",
-		"\treturn _milestones[id]"
+		"\treturn _milestones[id]",
+		"",
+		Lib.missing_name_block("Milestones")
 	]))
 	sheet.events.append(block)
 
@@ -51,12 +55,12 @@ static func build() -> bool:
 		])))
 	Lib.append_function(sheet, "set_threshold", "Set Threshold", "Milestones", "Changes a milestone's threshold (does not un-reach it if already reached).",
 		[["id", "String"], ["threshold", "float"]],
-		"_ensure(id).threshold = threshold")
+		"_ensure(id, \"Set Threshold\").threshold = threshold")
 
 	# --- Reporting progress ---
 	Lib.append_function(sheet, "update_progress", "Update Progress", "Milestones", "Reports the current value of the tracked number. The first time it reaches the threshold the milestone latches and On Milestone Reached fires (read Last Reached / Reward there).",
 		[["id", "String"], ["value", "float"]], "\n".join(PackedStringArray([
-			"var record: Dictionary = _ensure(id)",
+			"var record: Dictionary = _ensure(id, \"Update Progress\")",
 			"record.value = value",
 			"if not record.reached and value >= float(record.threshold):",
 			"\trecord.reached = true",
@@ -65,7 +69,7 @@ static func build() -> bool:
 		])))
 	Lib.append_function(sheet, "force_reach", "Force Reach", "Milestones", "Marks a milestone reached immediately (for a load) - fires On Milestone Reached if it was not already reached.",
 		[["id", "String"]], "\n".join(PackedStringArray([
-			"var record: Dictionary = _ensure(id)",
+			"var record: Dictionary = _ensure(id, \"Force Reach\")",
 			"if not record.reached:",
 			"\trecord.reached = true",
 			"\t_last_reached_id = id",

@@ -23,6 +23,7 @@ static func run() -> bool:
 	ok = _quest() and ok
 	ok = _proc_room() and ok
 	ok = _utility_ai() and ok
+	ok = _milestones() and ok
 	return ok
 
 
@@ -178,4 +179,23 @@ static func _utility_ai() -> bool:
 			"Utility Brain on Brain: %s did nothing, because no action is called \"%s\"%s" % [entry[0], entry[1], tail]))
 	rows.append(["a real action says nothing", _heard(func() -> void: brain.set_action_enabled("Flee", true)), []])
 	brain.free()
+	return SUPPORT.pins(NAME, rows)
+
+
+static func _milestones() -> bool:
+	var script: GDScript = load(ROOT + "milestones/milestones_addon.gd")
+	var marks: Node = script.new()
+	marks.name = "Milestones"
+	marks.define_milestone("first", 10.0, 1.0)
+	var rows: Array = []
+	for entry: Array in [
+		["Set Threshold", "frist", func() -> void: marks.set_threshold("frist", 5.0)],
+		["Update Progress", "secnd", func() -> void: marks.update_progress("secnd", 1.0)],
+		["Force Reach", "thrid", func() -> void: marks.force_reach("thrid")],
+	]:
+		var listing: String = "first" if entry[1] == "frist" else ("first, frist" if entry[1] == "secnd" else "first, frist, secnd")
+		rows.append_array(_once(str(entry[0]), entry[2],
+			"Milestones on Milestones: %s made a new milestone \"%s\" with a target of 0 because none is called that (there are: %s) - use Define Milestone first, or check the spelling." % [entry[0], entry[1], listing]))
+	rows.append(["a defined milestone says nothing", _heard(func() -> void: marks.update_progress("first", 3.0)), []])
+	marks.free()
 	return SUPPORT.pins(NAME, rows)
