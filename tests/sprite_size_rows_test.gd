@@ -16,12 +16,13 @@ const NAME: String = "sprite_size_rows_test"
 
 static func run() -> bool:
 	var passed: bool = true
+	# First, before anything else here plans a row, so the folder is seen before the plan's first write.
+	passed = _the_plan_writes_no_file() and passed
 	passed = _the_rows() and passed
 	passed = _the_lines_they_write() and passed
 	passed = _the_old_row_is_retired() and passed
 	passed = _a_file_round_trips() and passed
 	passed = _the_sizes_come_out_right() and passed
-	passed = _the_probe_file_is_this_process_s() and passed
 	return passed
 
 
@@ -204,12 +205,15 @@ static func _the_sizes_come_out_right() -> bool:
 	return SUPPORT.pins(NAME, rows) and passed
 
 
-## The migration gate's probe file is named for the process: two runs sharing one user folder (the
-## parallel suite, two editors) must never write and parse the same probe at once, which made a plan
-## ask a question about a row the file takes without trouble.
-static func _the_probe_file_is_this_process_s() -> bool:
-	var path: String = EventSheetMigrationPlan.probe_path()
-	return SUPPORT.pins(NAME, [
-		["the migration probe file is named for this process", path.contains("_%d.gd" % OS.get_process_id()), true],
-		["and still sits in the user folder", path.begins_with("user://"), true],
-	])
+## Migrate's plan answers from the compiled text alone: it writes nothing into the user folder, so a
+## second editor or test run sharing that folder - or a sync tool holding a file in it - cannot make
+## a row the file takes ask a question.
+static func _the_plan_writes_no_file() -> bool:
+	var before: PackedStringArray = DirAccess.get_files_at("user://")
+	EventSheetMigrationPlan.plan(_sheet_with("SetSpriteSize", {"size": "Vector2(96, 48)", "target": "$Enemy"}),
+		EventForgeSuccessors.catalog())
+	var added: Array[String] = []
+	for file: String in DirAccess.get_files_at("user://"):
+		if not before.has(file):
+			added.append(file)
+	return SUPPORT.check(NAME, "Migrate plans a row without writing a file", added, [] as Array[String])

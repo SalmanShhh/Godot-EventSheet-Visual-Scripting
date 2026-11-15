@@ -62,19 +62,6 @@ const WHY_NEEDS_PICKING := "needs-picking"
 const WHY_UNPROVABLE := "unprovable"
 const WHY_FILE_REFUSES := "file-refuses"
 
-## Where a candidate rewrite is compiled, and it is NEVER the sheet's own file: `EventSheetCompiler.compile`
-## writes its output to the path it is given, so asking a question about a sheet under that sheet's
-## real path would save the trial answer over somebody's work.
-const COMPILE_PROBE_PATH: String = "user://eventforge_migration_gate.gd"
-
-
-## The probe file's name for THIS process. Several editors or test runs share one user folder, and two
-## of them writing and parsing one probe file at once refused each other's rows as "the file will not
-## take it" - a plan that asked a question it had no reason to ask - so the process id is in the name.
-static func probe_path() -> String:
-	return COMPILE_PROBE_PATH.replace(".gd", "_%d.gd" % OS.get_process_id())
-
-
 ## Every row of this sheet that migration has something to say about, in reading order.
 ##
 ## Two populations, and they are genuinely different states. A row whose verb has a forwarding
@@ -137,7 +124,7 @@ static func _hold_to_the_file(sheet: EventSheetResource, known: Dictionary,
 			_walk(_function_rows(event_function), known, mirror, "", host, counter)
 	if mirror.size() != planned.size():
 		return
-	var baseline: Dictionary = ReadingDoors.compiler().compile(copy, probe_path())
+	var baseline: Dictionary = ReadingDoors.compiler().echo(copy)
 	var baseline_parses: bool = bool(baseline.get("success", false)) \
 		and parses(str(baseline.get("output", "")))
 	if not baseline_parses:
@@ -151,7 +138,7 @@ static func _hold_to_the_file(sheet: EventSheetResource, known: Dictionary,
 			continue
 		var held: Dictionary = _identity_of(row)
 		apply([trial])
-		var written: Dictionary = ReadingDoors.compiler().compile(copy, probe_path())
+		var written: Dictionary = ReadingDoors.compiler().echo(copy)
 		var accepted: bool = bool(written.get("success", false)) \
 			and parses(str(written.get("output", "")))
 		_restore_identity(row, held)
