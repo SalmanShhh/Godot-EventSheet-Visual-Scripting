@@ -14,12 +14,14 @@
 # pack ships one pure function and both doors show the same picture. The host's rest state is
 # captured before a play and put back when it ends, so the scene's saved bytes are never touched.
 @tool
-class_name EventSheetFeedbackPlayerStrip
+# No class_name on purpose: Create Node lists every named Node class, and an editor-only strip has no
+# business in that list. It is reached by path, from the Inspector plugin and the toolbar segment.
 extends VBoxContainer
 
-## The pack whose statics the preview reads. By PATH: naming the class here would compile the pack
+## The file that says where the pack whose statics the preview reads lives (the code file, or the old
+## name's file in a project holding the old copy). By PATH: naming the class here would compile the pack
 ## into every editor boot, in projects that hold no feedback player at all.
-const PACK_PATH: String = "res://eventsheet_addons/juice/feedback_player.gd"
+const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
 
 ## The moment file's own class, written when a list is saved out. Also by path, and also for the
 ## same reason.
@@ -89,7 +91,7 @@ static func steps_of(player: Object) -> Array:
 ## The longest path through a list, asked of the pack itself so the strip and the running game can
 ## never disagree about how long a beat is. 0 when the pack is not in the project.
 static func duration_of(list: Array) -> float:
-	var pack: Script = load(PACK_PATH) as Script
+	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
 	if pack == null:
 		return 0.0
 	return float(pack.call("duration_of", list))
@@ -154,7 +156,7 @@ func _build_timeline() -> Control:
 
 
 func _draw_timeline(canvas: Control) -> void:
-	var pack: Script = load(PACK_PATH) as Script
+	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
 	if pack == null:
 		return
 	var list: Array = steps_of(_player)
@@ -236,7 +238,7 @@ func restore() -> void:
 
 func _tick() -> void:
 	var target: Node = _host()
-	var pack: Script = load(PACK_PATH) as Script
+	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
 	if target == null or pack == null:
 		stop()
 		return

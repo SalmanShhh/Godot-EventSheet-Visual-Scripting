@@ -28,7 +28,8 @@ static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
-	sheet.custom_class_name = "FeedbackPlayer"
+	sheet.custom_class_name = "JuicePlayer"
+	sheet.addon_provider_id = "FeedbackPlayer"
 	sheet.class_description = "The list of feedbacks an object plays: add this node under it, fill the list with shakes, flashes, holds and loops, and one row plays the lot. The list is the same shape a moment file holds, so it can be saved out and shared; the strength on the row scales every amount in it."
 	sheet.addon_category = "Feedback Player"
 	sheet.addon_tags = PackedStringArray(["juice", "feedback", "game feel"])
@@ -137,7 +138,18 @@ static func build() -> bool:
 		"feedback_is_enabled": "Feedback [b]{label}[/b] is enabled"
 	})
 	Lib.feature_verbs(sheet, ["play", "play_and_wait", "stop"])
-	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/feedback_player")
+	if not Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_player"):
+		return false
+	return Lib.save_pack(_old_name_sheet(), "res://eventsheet_addons/juice/feedback_player")
+
+
+## The old name, kept at its old path and uid so scenes and scripts made before the rename keep working.
+static func _old_name_sheet() -> EventSheetResource:
+	var old_name: EventSheetResource = EventSheetResource.new()
+	old_name.host_class = "JuicePlayer"
+	old_name.custom_class_name = "FeedbackPlayer"
+	old_name.class_description = "The old name of Juice Player. Kept so projects made before version 0.21.0 keep working. Use Juice Player."
+	return old_name
 
 
 ## The verbs a sheet reads on the node: the plays, the two that ask, and the two that answer.

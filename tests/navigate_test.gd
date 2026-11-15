@@ -33,6 +33,8 @@ static func run() -> bool:
 
 	# The class→path map reads the addon scripts' class_name lines.
 	ok = _check("CarBehavior resolves to its script", dock._navigate._script_path_for_class("CarBehavior"), CAR_PATH) and ok
+	# A script that kept its old provider id answers to it: the old name opens the file that holds the code.
+	ok = _check("the old Feedback Player name opens the Juice Player file", dock._navigate._script_path_for_class("FeedbackPlayer"), "res://eventsheet_addons/juice/juice_player.gd") and ok
 	ok = _check("an unknown class resolves to nothing", dock._navigate._script_path_for_class("NoSuchBehavior"), "") and ok
 
 	# Per-cell probe: the addon verb navigates, the Core verb and non-ACE spans don't.

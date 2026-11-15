@@ -31,8 +31,8 @@ const CHECK_ID := "feedbacks"
 const CHECK_UNKNOWN_LABEL := EventSheetFeedbackFindings.KIND_UNKNOWN_LABEL
 
 ## What a script has to say before it is worth opening. The pack's calls all go through one node
-## name, so a file that never writes it can never earn the finding.
-const PLAYER_WORD := "$FeedbackPlayer"
+## name (the new one or the old one), so a file that never writes either can never earn the finding.
+const PLAYER_WORDS: PackedStringArray = ["$FeedbackPlayer", "$JuicePlayer"]
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
@@ -52,7 +52,8 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func scripts_naming_a_player() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
-		if EventSheetProjectDoctor.source_of(script_path).contains(PLAYER_WORD):
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if source.contains(PLAYER_WORDS[0]) or source.contains(PLAYER_WORDS[1]):
 			found.append(script_path)
 	return found
 

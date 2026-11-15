@@ -60,8 +60,8 @@ const TWEEN_PROPERTY: String = "tween_property"
 const EMIT_SIGNAL: String = "emit_signal"
 const PLAY_PLAYER: String = "play_player"
 
-## The Feedback Player itself, which is where a word's FAMILY is written down.
-const PLAYER_PATH: String = "res://eventsheet_addons/juice/feedback_player.gd"
+## The file that says where the Juice Player's code is, which is where a word's FAMILY is written down.
+const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
 const FAMILY_CONSTANT: String = "CATEGORY_OF"
 
 ## The one derived title that would collide with a timing word's. The pack's screen-effect "hold"
@@ -114,7 +114,8 @@ static func family_of() -> Dictionary:
 	if _family_done:
 		return _family_cache
 	_family_done = true
-	var pack: GDScript = load(PLAYER_PATH) as GDScript if ResourceLoader.exists(PLAYER_PATH) else null
+	var player_path: String = str(load(NAMES_PATH).pack_path())
+	var pack: GDScript = load(player_path) as GDScript if ResourceLoader.exists(player_path) else null
 	if pack == null:
 		return _family_cache
 	var declared: Variant = pack.get_script_constant_map().get(FAMILY_CONSTANT)

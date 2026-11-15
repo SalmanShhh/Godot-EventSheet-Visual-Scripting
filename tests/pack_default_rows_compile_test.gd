@@ -101,7 +101,7 @@ const SCAFFOLD_MEMBERS: Array[String] = ["v", "item", "loop_index", "event", "te
 ## A name joins this list only when the script genuinely publishes no vocabulary. A PACK appearing
 ## here is a pack that stopped compiling.
 const NO_TEMPLATED_ROWS: Array[String] = [
-	"bus_mix.gd", "free_spot.gd", "haptics.gd", "loading_screen.gd", "moment_runner.gd",
+	"bus_mix.gd", "feedback_player.gd", "free_spot.gd", "haptics.gd", "loading_screen.gd", "moment_runner.gd",
 	"pooled_nodes.gd", "post_desaturate.gd", "post_effect.gd", "post_fade.gd", "post_outline.gd",
 	"post_pixelate.gd", "post_tint.gd", "post_vignette.gd", "shape_sphere_3d.gd", "shape_style.gd",
 	"world_look.gd"

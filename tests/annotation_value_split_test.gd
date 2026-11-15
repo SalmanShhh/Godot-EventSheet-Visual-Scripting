@@ -181,7 +181,7 @@ static func run() -> bool:
 
 	# The verb the whole thing was reported against, as it actually publishes today.
 	ok = _check("the shipped verb publishes the blank its own description tells you to use",
-		_published_option_keys("res://eventsheet_addons/juice/feedback_player.gd",
+		_published_option_keys("res://eventsheet_addons/juice/juice_player.gd",
 			"method:scale_feedback_amounts", "category"),
 		["", "audio", "transform", "camera", "screen", "pause", "loop", "signal"]) and ok
 

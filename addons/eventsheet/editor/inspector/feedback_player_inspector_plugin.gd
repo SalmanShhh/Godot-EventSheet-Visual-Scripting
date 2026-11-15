@@ -16,25 +16,20 @@ extends EditorInspectorPlugin
 
 const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
 
-## The class this plugin claims, as a NAME rather than as the class itself.
-const PLAYER_CLASS: StringName = &"FeedbackPlayer"
+## The one file that knows both shapes of the pack's node, reached by path (see its header).
+const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
 
 
 func _can_handle(object: Object) -> bool:
 	return is_feedback_player(object)
 
 
-## Whether an object is a feedback player, asked of the script it already carries. The base chain is
-## walked so a project's own subclass of the pack's node is claimed too, exactly as `is` would.
+## Whether an object is a Juice Player (or an old Feedback Player, which is one), asked of the script
+## it already carries. The base chain is walked so a project's own subclass of the pack's node is
+## claimed too, exactly as `is` would.
 static func is_feedback_player(object: Object) -> bool:
-	if object == null:
-		return false
-	var script: Script = object.get_script() as Script
-	while script != null:
-		if script.get_global_name() == PLAYER_CLASS:
-			return true
-		script = script.get_base_script()
-	return false
+	# Most inspected objects carry no script at all: answer those without touching the names file.
+	return object != null and object.get_script() != null and bool(load(NAMES_PATH).is_player(object))
 
 
 func _parse_begin(object: Object) -> void:

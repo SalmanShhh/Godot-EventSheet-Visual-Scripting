@@ -8,10 +8,11 @@ class_name FeedbackStripWrapTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
+const STRIP := preload("res://addons/eventsheet/editor/inspector/feedback_player_strip.gd")
 
 
 static func run() -> bool:
-	var strip: EventSheetFeedbackPlayerStrip = EventSheetFeedbackPlayerStrip.new()
+	var strip: VBoxContainer = STRIP.new()
 	var rows: Array = strip.find_children("*", "HFlowContainer", true, false)
 	var row: Control = rows[0] as Control if not rows.is_empty() else null
 	var widest: float = 0.0

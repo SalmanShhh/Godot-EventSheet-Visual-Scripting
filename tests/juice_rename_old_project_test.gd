@@ -55,6 +55,7 @@ static func run() -> bool:
 	ok = _script_pins() and ok
 	ok = _sheet_pins() and ok
 	ok = _frozen_name_pins() and ok
+	ok = _old_name_members_pins() and ok
 	return ok
 
 
@@ -171,3 +172,33 @@ static func _constant(script: Script, constant_name: String) -> Variant:
 			return declared[constant_name]
 		script = script.get_base_script()
 	return null
+
+
+## Everything a user's script could reach as `FeedbackPlayer.X` before the rename: the constants and
+## the statics, asked the way a script of theirs asks, through a small script built at run time.
+static func _old_name_members_pins() -> bool:
+	var asker: GDScript = GDScript.new()
+	asker.source_code = "static func ask() -> Dictionary:\n" \
+		+ "\treturn {\n" \
+		+ "\t\t\"steps\": FeedbackPlayer.MAX_PLAY_STEPS,\n" \
+		+ "\t\t\"words\": [FeedbackPlayer.TOP_TO_BOTTOM, FeedbackPlayer.BOTTOM_TO_TOP, FeedbackPlayer.RESTART,\n" \
+		+ "\t\t\tFeedbackPlayer.IGNORE, FeedbackPlayer.OVERLAP, FeedbackPlayer.PAUSE, FeedbackPlayer.HOLD_UNTIL,\n" \
+		+ "\t\t\tFeedbackPlayer.LOOP_START, FeedbackPlayer.LOOP_BACK, FeedbackPlayer.TWEEN_PROPERTY,\n" \
+		+ "\t\t\tFeedbackPlayer.EMIT_SIGNAL, FeedbackPlayer.PLAY_PLAYER],\n" \
+		+ "\t\t\"families\": FeedbackPlayer.CATEGORY_OF.size(),\n" \
+		+ "\t\t\"shake\": FeedbackPlayer.CATEGORY_OF.get(\"shake\", \"\"),\n" \
+		+ "\t\t\"keys\": FeedbackPlayer.FIELD_KEYS,\n" \
+		+ "\t\t\"duration\": FeedbackPlayer.duration_of([{\"verb\": \"pause\", \"seconds\": 0.25}]),\n" \
+		+ "\t}\n"
+	var reloaded: int = asker.reload()
+	var answers: Dictionary = asker.call("ask") if reloaded == OK else {}
+	return SUPPORT.pins(TEST_NAME, [
+		["a script reaches the old name's constants and statics", reloaded, OK],
+		["the step cap", answers.get("steps"), 4096],
+		["the twelve words", answers.get("words"), ["top to bottom", "bottom to top", "restart", "ignore", "overlap",
+			"pause", "hold_until", "loop_start", "loop_back", "tween_property", "emit_signal", "play_player"]],
+		["the family table", [answers.get("families"), answers.get("shake")], [16, "camera"]],
+		["the field keys", Array(answers.get("keys", [])),
+			["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"]],
+		["a static answers", answers.get("duration"), 0.25],
+	])

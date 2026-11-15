@@ -42,10 +42,10 @@ const ANCHOR_EVENT := "event"
 ## an ACE row carries.
 const PLAYER_PROVIDER := "FeedbackPlayer"
 
-## The pack's file name, which is how a node in a saved scene is recognised as a Feedback Player
-## without this file naming the pack's class (naming it would compile the pack into every editor
-## boot, in projects that hold no player at all).
-const PLAYER_FILE := "feedback_player.gd"
+## The one file that knows both shapes of the pack's node (the code file and the old name's file), which
+## is how a node in a saved scene is recognised as a Juice Player without this file naming the pack's
+## class (naming it would compile the pack into every editor boot, in projects that hold no player).
+const NAMES_PATH := "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
 
 ## The property a player holds its list in, and the keys one card names itself with.
 const STEPS_PROPERTY := "steps"
@@ -101,7 +101,7 @@ static func labels_in_scene(scene_path: String) -> PackedStringArray:
 			var property: String = str(state.get_node_property_name(node_index, property_index))
 			var value: Variant = state.get_node_property_value(node_index, property_index)
 			if property == "script" and value is Script:
-				is_player = (value as Script).resource_path.get_file() == PLAYER_FILE
+				is_player = bool(load(NAMES_PATH).is_player_script(value as Script))
 			elif property == STEPS_PROPERTY and value is Array:
 				carried = value
 		if not is_player or not (carried is Array):

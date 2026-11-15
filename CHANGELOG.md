@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the Feedback Player's code now lives in a Juice Player file
+
+The node that holds a list of effects is now the class `JuicePlayer` (`juice_player.gd`, in the Juice pack). The old class `FeedbackPlayer` is still there, at the same path with the same id, and only extends it, so a scene that already has a FeedbackPlayer node loads, plays and saves exactly as before, and a script of yours that names `FeedbackPlayer` (as a type, in `is`, or with `.new()`) still compiles, and still reaches its constants and statics. A node you add from now on is a JuicePlayer: it is not `is FeedbackPlayer`, so a variable typed `FeedbackPlayer` will not hold it. Change that type to `JuicePlayer`, which the old nodes also are. Create Node lists both, the old one nested under the new one. The rows keep their ids and the code they write; a new row's "On node" starts on `$JuicePlayer`, the name a new node gets. The Inspector strip, the toolbar's list buttons, the unknown-card finding and the Doctor recognise both names, and the strip class no longer shows in Create Node.
+
 ### Added: a script can keep the name its rows were saved under
 
 A script can say `## @ace_provider_id(OldName)` above its `class_name`. Rows saved under the old class name keep finding the script's vocabulary when the class is renamed, the old name still opens the script from a row, and the line is written and read back byte for byte like the other header words. Leave it out and nothing changes: the class name is the provider, as before.

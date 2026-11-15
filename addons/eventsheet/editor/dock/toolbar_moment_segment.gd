@@ -237,7 +237,7 @@ static func is_player(node: Node) -> bool:
 	if node == null:
 		return false
 	var script: Script = node.get_script() as Script
-	return script != null and script.resource_path.get_file() == "feedback_player.gd"
+	return script != null and bool(load("res://addons/eventsheet/editor/inspector/juice_player_names.gd").is_player_script(script))
 
 
 ## The first Feedback Player under a node, in tree order, or null. PURE + STATIC.
