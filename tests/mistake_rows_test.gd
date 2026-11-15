@@ -111,10 +111,10 @@ static func _strip_pins() -> bool:
 	var red: EventRowData = _stamped(dock, "signal-emit-value-count")
 	var amber: EventRowData = _stamped(dock, "group-nothing-is-in")
 	dock._update_row_help_strip(red)
-	var red_modulate: Color = dock._row_help_label.modulate
+	var red_modulate: Color = dock._row_help_label.get_theme_color("font_color")
 	var red_visible: bool = dock._row_help_label.visible
 	dock._update_row_help_strip(amber)
-	var amber_modulate: Color = dock._row_help_label.modulate
+	var amber_modulate: Color = dock._row_help_label.get_theme_color("font_color")
 	var amber_text: String = dock._row_help_label.text
 	var door: String = dock._row_help_button.text
 	var door_shown: bool = dock._row_help_button.visible
