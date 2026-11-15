@@ -6,6 +6,54 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: Attach to Node works on a behaviour sheet that is a script
+
+The check asked for a resource path, which a script sheet (the default format) never has, so Attach saved the sheet and then said \"Save the sheet first\" - and attached nothing. It now attaches the sheet's own file. A script sheet whose Save only failed to write the file now says that alone, instead of \"fix the error\".
+
+### Added: a run-time error from a sheet that is not open offers to open it
+
+An error from the running game finds its row only in a sheet open in a tab; one from any other script got its sentence and no address. The strip's button now says \"Open the sheet\" for a project script no tab holds, opens it and then finds the row, as it would have if the tab had been there.
+
+### Fixed: a sheet saved as a resource gets the \"changed outside the editor\" question too
+
+A `.tres` sheet changed by a merge or another tool, with its tab open and unsaved, was written over by the next Save. It now asks, the way a script sheet always has: keep yours (the default) or use the file on disk, and taking the disk's version first puts your unsaved one into Sheet Backups. (What Changed is only offered for a script sheet.)
+
+### Fixed: a refused autoload name leaves no script behind
+
+Registering a sheet as an autoload compiled and wrote its script before checking whether the name was taken, so the refusal left a fresh file in the project. The name is checked first.
+
+### Changed: the Save System keeps two earlier versions of a save by default
+
+`backup_count` was 0, so a save that was written perfectly and was wrong (a bug that zeroed the wallet) had no earlier copy. It is now 2. Set it to 0 to turn backups off; a scene that already sets it keeps its value.
+
+### Fixed: Save Studio's \"Keep them in a scene\" never writes over a file of that name
+
+It wrote `res://save_system.tscn` without looking, replaced whatever was there and re-pointed the SaveSystem global with no undo. It now refuses by name when a file is there (unless the global already runs it), and says that Undo does not cover the change and how to go back.
+
+### Changed: Write Text File says what happens when the file cannot be opened
+
+The row does nothing, and says nothing, when its folder is not there or the place is read-only (`res://` in an exported game). Its template keeps its bytes; its help now says so, and points to Write Text File (in a folder) for a folder that may not exist yet.
+
+### Fixed: a behaviour your own addon uses no longer shows as \"unused\"
+
+\"Used by\" in the behaviour library and Tidy behaviours skipped every folder under `addons/`, so a pack that one of your own addons reached for read as unused and was ticked for removal. It now reads your addons and leaves out only this plugin's own folders.
+
+### Fixed: a script sheet whose saved script Godot cannot compile takes you to the row
+
+A sheet saved as a resource already jumped to the row that did not compile; a script sheet only said the row was marked. Both now select the row the first failing line came from, and a script sheet whose save could not write also marks the rows the check found.
+
+### Fixed: \"Failed to open output path\" now says why and what to do
+
+The message named a path and no cause. It now says the file may be read-only, open in another program or held by a cloud-sync tool, that nothing was overwritten (the old file is exactly as it was), and to close what has it open and save again.
+
+### Fixed: a file Godot would not write is told in words, not as a number
+
+About twenty messages used to end in \"(error 31)\": a failed Save (which did not name the file), Save Studio's scene and slot copies, Export, the Test Bench, the data tables, the Ask window, the Quality Presets pack and the MCP and API write doors. Each now says what failed, names the file, gives Godot's own words for the cause and says what to try next, in all eight languages.
+
+### Fixed: EventSheets.edit() is all or nothing
+
+- An edit whose callable hit a script error used to leave its half-change in the open sheet with no undo step to take it back, and an `edit()` started from inside another edit's callable silently lost one of the two writes. Now a callable that hits a script error leaves the sheet exactly as it was, adds no undo step, says so on the status line and `edit()` returns false; and an `edit()` called from inside another edit is refused with a plain line on the status line (nothing is applied, `false` comes back), because the outer step cannot honestly hold two. A clean edit is still one undo step.
+
 ### Changed: EventSheets.compile() says what it writes, and EventSheets.echo() reads without writing
 
 - `EventSheets.compile(sheet)` with no path always wrote a file and nothing said so: on a sheet opened from a `.gd` it overwrote that script with no backup (unsaved edits and all), and on a sheet with no file it dropped `res://event_sheet_generated.gd` into the project. It keeps its shape and its result keys, and now: with a path it writes that path as before; with no path on a sheet that has a file it takes the same backup a Save takes before it overwrites (restore it from Tools > Sheet Backups); with no path on a sheet with no file it writes nothing and returns a warning in `\"warnings\"` (the text is still in `\"output\"`). The docstring and the guide say which call writes.
