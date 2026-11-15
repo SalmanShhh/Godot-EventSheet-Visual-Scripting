@@ -233,6 +233,7 @@ On Rewind Requested -> Car | Checkpoint: Respawn at the checkpoint
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **It teleports, it does not tween.** Respawn At Checkpoint sets the position outright. Want a
   glide? Pair it with Move To, or fade the screen over the jump.
 - **`reset()` is optional but powerful.** A host without one simply skips the call. A host with

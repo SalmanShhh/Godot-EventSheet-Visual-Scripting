@@ -182,4 +182,5 @@ static func build() -> bool:
 		"set_bound_enabled": "Set bound to [b]{enabled}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["set_bound_enabled"])
+	Lib.rigid_body_host_warning(sheet, "Bound To", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/bound_to/bound_to_behavior")

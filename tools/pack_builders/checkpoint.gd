@@ -94,4 +94,5 @@ static func build() -> bool:
 		"The point the host respawns at.", [], "return _checkpoint", TYPE_VECTOR2)
 
 	Lib.feature_verbs(sheet, ["set_checkpoint_here", "respawn"])
+	Lib.rigid_body_host_warning(sheet, "Checkpoint", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/checkpoint/checkpoint_behavior")

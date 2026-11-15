@@ -127,6 +127,8 @@ func _ready() -> void:
 	# Nothing is being ridden until a Pin To row names something, and the tick can do no work
 	# without an anchor - so a pin that has not been made yet costs nothing per physics frame.
 	set_physics_process(is_pinned())
+	if host is RigidBody2D:
+		push_warning("Pin on %s: this behaviour moves a RigidBody2D by changing its position and scale, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _physics_process(delta: float) -> void:
 	if not pin_enabled or host == null or not is_instance_valid(anchor):

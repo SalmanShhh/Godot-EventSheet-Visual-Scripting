@@ -125,6 +125,7 @@ static func build() -> bool:
 	])), "Walk home at [b]{speed}[/b]")
 
 	Lib.feature_verbs(sheet, ["is_beyond_home", "return_home"])
+	Lib.rigid_body_host_warning(sheet, "Home Leash", "RigidBody2D", "position", "Sprite2D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/home_leash/home_leash_behavior")
 
 

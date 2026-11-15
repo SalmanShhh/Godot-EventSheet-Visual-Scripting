@@ -71,6 +71,8 @@ func _ready() -> void:
 	# The clamp only runs while binding is on - a host authored with Bound off costs nothing
 	# per physics frame until Set Bound Enabled turns it on.
 	set_physics_process(bound_enabled)
+	if host is RigidBody2D:
+		push_warning("Bound To on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 func _physics_process(_delta: float) -> void:
 	if not bound_enabled or host == null:

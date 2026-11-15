@@ -454,5 +454,6 @@ static func build() -> bool:
 		"unpin": "Unpin"
 	})
 	Lib.feature_verbs(sheet, ["pin_to", "unpin"])
+	Lib.rigid_body_host_warning(sheet, "Pin 3D", "RigidBody3D", "position and scale", "MeshInstance3D")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/pin_3d/pin_3d_behavior",
 		"res://eventsheet_addons/pin_3d/icon.svg")

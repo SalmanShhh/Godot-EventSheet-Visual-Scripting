@@ -35,6 +35,8 @@ var _has_checkpoint: bool = false
 func _ready() -> void:
 	if capture_on_ready:
 		_ensure_checkpoint()
+	if host is RigidBody2D:
+		push_warning("Checkpoint on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
 ## @ace_action
 ## @ace_featured

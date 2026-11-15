@@ -228,6 +228,7 @@ On Tutorial Done -> Player | Bound To: Set Bound Space  "screen"
 
 ## Tips and common mistakes
 
+- **Keep it off a physics body.** This pack changes the position of the node it moves every frame, and a `RigidBody2D` is moved by the physics engine too, so the two fight: the body jitters, snaps back or passes through walls. Under one it still does what it does, but says so once in the Debugger's Errors tab, naming the node. Put it on a node that is not a physics body, such as the `Sprite2D` inside the body, or move the body with Apply Central Impulse or its linear velocity instead.
 - **Half-size is yours to set.** The pack does not measure your sprite - set the extents (or
   call Set Bound Extents when the sprite changes size).
 - **It clamps position, not physics.** A CharacterBody2D keeps its velocity while pressed
