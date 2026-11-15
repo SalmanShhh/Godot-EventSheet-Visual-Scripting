@@ -117,7 +117,8 @@ func _build() -> void:
 	# A sentence is changed where it is read: Enter or a double click on the row, or F2.
 	_tree.item_activated.connect(_change_reading)
 	_tree.gui_input.connect(func(input_event: InputEvent) -> void:
-		if input_event is InputEventKey and (input_event as InputEventKey).pressed \n				and (input_event as InputEventKey).keycode == KEY_F2:
+		var key_event: InputEventKey = input_event as InputEventKey
+		if key_event != null and key_event.pressed and key_event.keycode == KEY_F2:
 			_change_reading()
 			_tree.accept_event())
 
@@ -216,6 +217,7 @@ func _change_reading() -> void:
 					show_script(_path),
 				func(behaviour_path: String) -> void: _dock._navigate.open_or_focus(behaviour_path), _path)
 			return
+
 
 func _selected_line() -> int:
 	return int(_selected_row().get("line", -1))
