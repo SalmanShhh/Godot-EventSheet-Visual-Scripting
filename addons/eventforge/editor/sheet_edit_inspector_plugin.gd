@@ -249,8 +249,19 @@ static var _pairing_cache: Dictionary = {}
 static func sheet_path_for(object: Object) -> String:
 	if not (object is Node):
 		return ""
+	# The script the node wears, then each script it extends: a thin subclass (the old name of a
+	# renamed pack node) is no sheet of its own, and the sheet is the one that holds the code.
 	var script: Script = (object as Node).get_script() as Script
-	if script == null or script.resource_path.is_empty():
+	while script != null:
+		var found: String = _sheet_path_of_script(script)
+		if not found.is_empty():
+			return found
+		script = script.get_base_script()
+	return ""
+
+
+static func _sheet_path_of_script(script: Script) -> String:
+	if script.resource_path.is_empty():
 		return ""
 	var script_path: String = script.resource_path
 	var mtime: int = int(FileAccess.get_modified_time(script_path))

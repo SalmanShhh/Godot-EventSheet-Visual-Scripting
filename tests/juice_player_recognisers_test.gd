@@ -63,7 +63,7 @@ static func run() -> bool:
 	root.free()
 	old.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCENE_PATH))
-	return ok
+	return edit_button_pins() and ok
 
 
 ## The decoration kinds the Inspector draws for the list, the direction and the while-playing rows.
@@ -73,3 +73,17 @@ static func _decor_kinds(node: Node) -> Array:
 		for entry: Variant in EventSheetAttributeDrawers.decor_for(node, property):
 			kinds.append(str((entry as Dictionary).get("kind", "")))
 	return kinds
+
+
+## The Inspector's "Edit Event Sheet" button: the node wearing the old name is paired with the sheet
+## that holds the code (juice_player.gd), as the new node is, instead of with the thin stub.
+static func edit_button_pins() -> bool:
+	var fresh: Node = (load(NEW_PATH) as GDScript).new()
+	var old: Node = (load(OLD_PATH) as GDScript).new()
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["a new node's button opens the pack's sheet", EventSheetEditButtonPlugin.sheet_path_for(fresh), NEW_PATH],
+		["and so does the old name's", EventSheetEditButtonPlugin.sheet_path_for(old), NEW_PATH],
+	])
+	fresh.free()
+	old.free()
+	return ok
