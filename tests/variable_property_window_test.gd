@@ -26,6 +26,7 @@ static func run() -> bool:
 	ok = _sections(dialog) and ok
 	ok = _look_doors(dialog) and ok
 	ok = _look_details_read_whole(dialog) and ok
+	ok = _preview_fits() and ok
 	ok = _godot_line_looks(dialog) and ok
 	ok = _values_as_code(dialog) and ok
 	host.free()
@@ -279,6 +280,16 @@ static func _look_details_read_whole(dialog: EventSheetVariableDialog) -> bool:
 		["the annotation note wraps and is not trimmed", [note.autowrap_mode, note.text_overrun_behavior], [TextServer.AUTOWRAP_ARBITRARY, TextServer.OVERRUN_NO_TRIMMING]],
 		["Add row starts at the left of its button so a wide table never hides it", _add_row_alignment(), HORIZONTAL_ALIGNMENT_LEFT],
 		["a hint is a sentence when it ends in a full stop", [EventSheetVariableDialog.look_hint_is_sentence("Leave empty for none."), EventSheetVariableDialog.look_hint_is_sentence("item:String")], [true, false]],
+	])
+
+
+## A preview wider than its card is drawn smaller to fit, down to a readable floor; only past the floor does it scroll.
+static func _preview_fits() -> bool:
+	var fit: Script = EventSheetInspectorPreviewCard.FitWidth
+	return SUPPORT.pins(P + ": preview fit", [
+		["a preview that fits is drawn whole", fit.scale_for(300.0, 340.0), 1.0],
+		["a wider one shrinks to the card", is_equal_approx(fit.scale_for(500.0, 340.0), 0.68), true],
+		["and never below the floor", fit.scale_for(900.0, 340.0), fit.FLOOR_SCALE],
 	])
 
 

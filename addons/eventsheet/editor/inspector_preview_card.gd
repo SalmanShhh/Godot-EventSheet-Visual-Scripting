@@ -33,17 +33,53 @@ func _init() -> void:
 	_caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	_caption.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), ground, CAPTION_CONTRAST))
 	column.add_child(_caption)
-	# A wide preview (a table of many columns) scrolls sideways inside the card instead of widening the window.
+	# A wide preview (a table of many columns) is drawn smaller to fit the card, down to a floor where it is
+	# still readable; only a table wider than that scrolls sideways. Neither widens the window.
 	var sideways: ScrollContainer = ScrollContainer.new()
 	sideways.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	column.add_child(sideways)
 	_rows = VBoxContainer.new()
-	sideways.add_child(_rows)
+	var fitting: FitWidth = FitWidth.new(_rows)
+	fitting.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sideways.add_child(fitting)
 	_sentence_label = Label.new()
 	_sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sentence_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	_sentence_label.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.ink(), ground))
 	column.add_child(_sentence_label)
+
+
+## Draws its one child at a scale that makes it fit the width it is given, never below `FLOOR_SCALE`. Its own
+## least width is the child's at that floor, so a child still too wide after shrinking makes the parent scroll.
+class FitWidth extends Container:
+	const FLOOR_SCALE: float = 0.62
+	var _content: Control = null
+
+	func _init(content: Control) -> void:
+		_content = content
+		add_child(content)
+		content.minimum_size_changed.connect(update_minimum_size)
+
+	## The scale the content is drawn at in `width` pixels: 1 when it fits, down to the floor.
+	static func scale_for(content_width: float, width: float) -> float:
+		if content_width <= 0.0 or width <= 0.0:
+			return 1.0
+		return clampf(width / content_width, FLOOR_SCALE, 1.0)
+
+	func _get_minimum_size() -> Vector2:
+		var wanted: Vector2 = _content.get_combined_minimum_size()
+		var drawn: float = scale_for(wanted.x, size.x)
+		return Vector2(wanted.x * FLOOR_SCALE, wanted.y * drawn)
+
+	func _notification(what: int) -> void:
+		if what != NOTIFICATION_SORT_CHILDREN:
+			return
+		var wanted: Vector2 = _content.get_combined_minimum_size()
+		var drawn: float = scale_for(wanted.x, size.x)
+		_content.scale = Vector2(drawn, drawn)
+		_content.position = Vector2.ZERO
+		_content.size = Vector2(maxf(size.x / drawn, wanted.x), wanted.y)
+		update_minimum_size()
 
 
 ## `ink` as it shows on `ground`: laid over it when it is translucent, then moved toward black or white
