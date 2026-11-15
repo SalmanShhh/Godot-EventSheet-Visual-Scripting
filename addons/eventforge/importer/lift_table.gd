@@ -93,7 +93,7 @@ const FAMILY_DIR: String = "res://addons/eventforge/importer/"
 ## Keys every entry must carry, and the ones it may. A MULTI-STATEMENT entry answers for `pattern`
 ## with `statements` instead, which is the one substitution `validate` makes below.
 const REQUIRED_KEYS: Array[String] = ["id", "ace_id", "pattern", "shape", "slots"]
-const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error", "origin",
+const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error", "origin", "kind",
 	"statements", "mark"]
 
 ## The key a MULTI-STATEMENT entry carries instead of `pattern`: an ordered Array of

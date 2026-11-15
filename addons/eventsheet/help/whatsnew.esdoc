@@ -6,6 +6,18 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a node wearing the old name gets its Edit Event Sheet button back
+
+The Inspector's \"Edit Event Sheet\" button asked only the script a node wears, and the old FeedbackPlayer's script is now a thin stub that holds no sheet, so the button vanished on every old node. It now asks the script a node wears and then each script it extends, so an old node opens the Juice Player's own sheet, as a new one does.
+
+### Changed: every Juice Player action and condition reopens as its own row
+
+Opening a script that holds `$FeedbackPlayer.enable_feedback(\"hit\")` or `$JuicePlayer.set_feedback_chance(\"kick\", 25.0)` now reads each line as the Juice Player row it is (Enable Juice Card, Set Juice Card Chance, ... and the five questions such as Has Juice Card), with the pack's icon and sentence, instead of a plain method call. This covers every action and condition on both node names; only the file's reading changes and it is written back byte for byte. A label that is not a plain word (it holds a space), a value that is a variable and a call on any other node read as before. A scene that holds a Juice Player under another name (`HitJuice`) and runs the script also makes `$HitJuice.play(1.0)` read as Play Juice, so what Play Juice writes into a sheet reads as Play Juice again when the sheet is reopened; with no scene, or a node the scene does not hold, the line reads as it did. Expressions are values inside other rows, triggers are signals the file connects, and the For Each Juice Card loop is a `for` over a call, so those are not rows a line can name.
+
+### Fixed: two inner members of the Juice Player are no longer rows in the picker
+
+\"Play Feedbacks From Channel\" (what a channel broadcast calls) and the private resume signal showed up as rows to place. Both are hidden from the picker and search now. A sheet that already holds a row with one of them opens and compiles the same line.
+
 ### Fixed: a node that wears a script extending another still draws its base class's Inspector decoration
 
 The header, info line and look a script gives a variable (`# @inspector_header`, `# @inspector_info`, `# @inspector_look`) were read from the script the node wears and from nowhere else, so a node wearing a thin subclass lost them: an old scene's FeedbackPlayer, which now only extends JuicePlayer, showed no \"Juice Player\" header over its list and drew its direction and while-playing choices as plain dropdowns instead of toggle rows. The Inspector now asks the script a node wears first and then each script it extends.

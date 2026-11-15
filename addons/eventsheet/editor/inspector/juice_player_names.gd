@@ -60,3 +60,18 @@ static func file_name_among(present: PackedStringArray) -> String:
 		if present.has(file_name):
 			return file_name
 	return FILE_NAMES[-1]
+
+
+## The names of the nodes that wear a Juice Player script in the scenes that run a given script, read
+## from the scenes' own saved text (nothing is instanced). What lets a line written on `$HitJuice`
+## read as the pack's own row when the sheet's scene says that node is a Juice Player.
+static func player_node_names(script_path: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for scene_path: String in EventSheetSceneConnections.scenes_using_script(script_path):
+		for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
+			var worn: String = str((entry as Dictionary).get("script_path", ""))
+			if worn.is_empty():
+				continue
+			if FILE_NAMES.has(worn.get_file()) or (ResourceLoader.exists(worn) and is_player_script(load(worn) as Script)):
+				names.append(str((entry as Dictionary).get("name", "")))
+	return names

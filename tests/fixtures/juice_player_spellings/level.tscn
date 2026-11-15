@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/juice_player_spellings/level.gd" id="1_a"]
+[ext_resource type="Script" path="res://eventsheet_addons/juice/juice_player.gd" id="2_b"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_a")
+
+[node name="HitJuice" type="Node" parent="."]
+script = ExtResource("2_b")

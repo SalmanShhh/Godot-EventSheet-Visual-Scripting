@@ -64,6 +64,11 @@ const METHOD_ACE_PREFIX: String = "method:"
 const ACTION_ANNOTATION: String = "@ace_action"
 const NON_ACTION_ANNOTATIONS: Array[String] = ["@ace_condition", "@ace_expression", "@ace_trigger"]
 
+## A verb that is a CONDITION may carry examples too: the line is a question (`$Player.has_card("hit")`),
+## read where a condition is, and its entry says so with this kind so an action line never takes it.
+const CONDITION_ANNOTATION: String = "@ace_condition"
+const KIND_CONDITION: String = "condition"
+
 ## The parsed tables for the session, keyed by pack script path, and the flat list in walk order.
 ## Built once: a pack is compiler output that changes when somebody rebuilds it, and the ACE
 ## definition cache beside this one makes the same trade. `reset_cache_for_tests` is how a suite (or a
@@ -90,7 +95,68 @@ static func tables() -> Dictionary:
 ## The row one statement means to some pack, or {} when no pack claims it. The same call the built-in
 ## spelling families answer, so the lifter asks this exactly as it asks them.
 static func match_line(line: String) -> Dictionary:
-	return EventForgeLiftTable.match_line(entries(), line)
+	return _claim(false, line)
+
+
+## The row one condition TERM (`$Player.has_card("hit")`) means to some pack, or {}. The condition
+## twin of `match_line`: only entries taught by a verb that is a condition answer it.
+static func match_condition(term: String) -> Dictionary:
+	return _claim(true, term)
+
+
+## Tells the pack spellings which script is being read, so a node the file's own scene says is a Juice
+## Player can be spelled by its own name (`$HitJuice.play(1.0)`), not only by the two names the node
+## has had by default. The scene is asked lazily, at the first line that calls a pack verb on a `$Node`.
+static func note_source(script_path: String) -> void:
+	_scene_script = script_path
+	_scene_players = null
+
+
+static var _scene_script: String = ""
+static var _scene_players: Variant = null
+static var _by_kind: Array = []
+static var _kinds_built: bool = false
+
+## The node name the example spellings are written with: a line on any other player of the scene is
+## claimed as if it were written on this one, and its own receiver is put back on the template.
+const STAND_IN_RECEIVER: String = "$FeedbackPlayer"
+const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
+
+
+static func _claim(condition: bool, line: String) -> Dictionary:
+	if not _kinds_built:
+		_kinds_built = true
+		_by_kind = [[], []]
+		for entry: Variant in entries():
+			(_by_kind[1 if str((entry as Dictionary).get("kind", "")) == KIND_CONDITION else 0] as Array).append(entry)
+	var own: Dictionary = EventForgeLiftTable.match_line(_by_kind[1 if condition else 0], line)
+	if not own.is_empty() or _scene_script.is_empty() or not line.contains("$"):
+		return own
+	return _claim_on_scene_player(condition, line)
+
+
+## A line whose receiver is a node the scene of this script says wears the Juice Player script. A scene
+## that is not known, or a node it does not hold, claims nothing: the reading stays what it was.
+static func _claim_on_scene_player(condition: bool, line: String) -> Dictionary:
+	var lead: String = "await " if line.begins_with("await ") else ""
+	var rest: String = line.substr(lead.length())
+	var dot: int = rest.find(".")
+	if not rest.begins_with("$") or dot < 2:
+		return {}
+	var receiver: String = rest.substr(0, dot)
+	if _scene_players == null:
+		_scene_players = load(NAMES_PATH).player_node_names(_scene_script)
+	if not (_scene_players as PackedStringArray).has(receiver.substr(1).split("/")[-1]):
+		return {}
+	var claimed: Dictionary = EventForgeLiftTable.match_line(_by_kind[1 if condition else 0],
+		lead + STAND_IN_RECEIVER + rest.substr(dot))
+	if claimed.is_empty():
+		return {}
+	var named: Dictionary = claimed.duplicate()
+	var template: String = str(claimed.get("template", ""))
+	var at: int = template.find(STAND_IN_RECEIVER)
+	named["template"] = template.substr(0, at) + receiver + template.substr(at + STAND_IN_RECEIVER.length())
+	return named
 
 
 ## The same answer with the PACK that gave it named: the match plus a `path`, or {} when no pack
@@ -183,6 +249,8 @@ static func reset_cache_for_tests() -> void:
 	_tables = {}
 	_entries = []
 	_built = false
+	_kinds_built = false
+	_scene_script = ""
 
 
 ## Answers with these tables instead of the installed packs', until the next reset. The one caller
@@ -195,6 +263,7 @@ static func override_tables_for_tests(pack_tables: Dictionary) -> void:
 	for path: String in _sorted_keys(_tables):
 		_entries.append_array(_tables[path])
 	_built = true
+	_kinds_built = false
 
 
 ## The entries one pack SOURCE teaches, without touching the disk - the parser itself, so a test (or a
@@ -300,7 +369,10 @@ static func _entries_for(examples: PackedStringArray, kinds: PackedStringArray, 
 		if not refusal.is_empty():
 			found.append({"id": id, "ace_id": ace_id, EventForgeLiftTable.REFUSAL_KEY: refusal})
 			continue
-		found.append(Example.entry(id, ace_id, examples[index], {"provider": provider}))
+		var extras: Dictionary = {"provider": provider}
+		if kinds.has(CONDITION_ANNOTATION):
+			extras["kind"] = KIND_CONDITION
+		found.append(Example.entry(id, ace_id, examples[index], extras))
 	return found
 
 
@@ -309,8 +381,8 @@ static func _entries_for(examples: PackedStringArray, kinds: PackedStringArray, 
 ## a verb that says it is something else is refused by name.
 static func _kind_refusal(kinds: PackedStringArray) -> String:
 	for name: String in NON_ACTION_ANNOTATIONS:
-		if kinds.has(name):
-			return "a lift example teaches the spelling of an action, and this verb is %s" % name
+		if kinds.has(name) and name != CONDITION_ANNOTATION:
+			return "a lift example teaches the spelling of an action or a condition, and this verb is %s" % name
 	return ""
 
 

@@ -174,7 +174,7 @@ static func _test_the_refusals() -> bool:
 		"class_name ImaginedBehavior",
 		"extends Node",
 		"",
-		"## @ace_condition",
+		"## @ace_expression",
 		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]].is_lit()\")",
 		"func is_lit() -> bool:",
 		"\treturn true",
@@ -196,7 +196,7 @@ static func _test_the_refusals() -> bool:
 	for entry: Dictionary in EventForgePackSpellings.entries_in_source(source, IMAGINED_PACK):
 		refusals.append(str(entry.get(EventForgeLiftTable.REFUSAL_KEY, "")))
 	return _check("every example that cannot work says why", refusals, PackedStringArray([
-		"a lift example teaches the spelling of an action, and this verb is @ace_condition",
+		"a lift example teaches the spelling of an action or a condition, and this verb is @ace_expression",
 		"the receiver span target is not followed by a dot",
 		"the target span is a receiver, which also matches a bare variable, so this spelling would"\
 			+ " claim the verb on any object at all - write it as a node span",

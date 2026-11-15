@@ -604,6 +604,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# only means "turn the light off" when the scene says Torch is a light. Nothing else can say so,
 	# and a row that guessed would relabel somebody's door.
 	EventForgeLightingLift.note_source(source, _scene_source_path_of(sheet))
+	# And the Juice Players of that scene, so a line on `$HitJuice` reads as the pack's row when the scene says so.
+	EventForgePackSpellings.note_source(_scene_source_path_of(sheet))
 	# And the material-wearing nodes of that same scene, for the third time the same reason:
 	# `material.set_shader_parameter(&"dissolve", 0.7)` only means "turn the dissolve dial" when the
 	# scene says this node wears a material and that material's shader declares `dissolve`.
@@ -4691,6 +4693,8 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
 		var matched: Dictionary = _matched_condition_spelling(candidate)
+		if matched.is_empty():
+			matched = EventForgePackSpellings.match_condition(candidate)
 		if matched.is_empty():
 			matched = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
 		if matched.is_empty():
