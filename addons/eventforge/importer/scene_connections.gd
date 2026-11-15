@@ -440,7 +440,9 @@ static func instance_path_in(line: String, resource_paths: Dictionary) -> String
 ## is the project's ONE reader of scene text: anything else that has to answer a question about a
 ## `.tscn` asks through here rather than growing a second parser beside it.
 static func attribute(line: String, key: String) -> String:
-	var marker: String = "%s=\"" % key
+	# The key is preceded by a space, so `id="` never matches inside `uid="` (a scene the editor saved
+	# writes both on an ext_resource line, and the shorter key used to read the uid as the id).
+	var marker: String = " %s=\"" % key
 	var start: int = line.find(marker)
 	if start < 0:
 		return ""

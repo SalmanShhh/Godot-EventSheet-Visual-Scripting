@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a scene the editor saved is read for its scripts
+
+The scene reader looked up an attribute by its key anywhere in the header, so `id="` matched inside `uid="` and every `ext_resource` of a scene the editor had saved was filed under its uid instead of its id. Every fact that asks which node wears which script (the lights, the materials, the connections and now the Juice Players) saw no script at all on such a scene. A key now has to start after a space.
+
 ### Fixed: a node wearing the old name gets its Edit Event Sheet button back
 
 The Inspector's "Edit Event Sheet" button asked only the script a node wears, and the old FeedbackPlayer's script is now a thin stub that holds no sheet, so the button vanished on every old node. It now asks the script a node wears and then each script it extends, so an old node opens the Juice Player's own sheet, as a new one does.
