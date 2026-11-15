@@ -41,8 +41,8 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240 + roundi(preview_min_width(_working_style) - PREVIEW_BASE_WIDTH)), EventSheetPalette.scaled(640)))
 
 
-## Everything an open does short of showing the window, so a second open starts the new theme from
-## afresh: the form is rebuilt over the new working copy (a swatch left from the first open would
+## Everything an open does short of showing the window, so a second open starts the new theme
+## over: the form is rebuilt over the new working copy (a swatch left from the first open would
 ## still edit the first one), the strip and the note say the new session's words, and Quick Style
 ## starts from the colours of the theme now open.
 func _prepare(dock: Control, base_style: EventSheetEditorStyle) -> void:
