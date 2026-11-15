@@ -12,10 +12,6 @@ Node script extending `CharacterBody2D`.
 - `health: int` (default `100`)
 - `speed: float` (default `200.0`)
 
-### old_sheet (`res://tests/fixtures/juice_rename_old/old_sheet.tres`)
-Node script extending `Node2D`.
-(publishes nothing yet)
-
 ## Script packs
 
 ### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.gd`)
