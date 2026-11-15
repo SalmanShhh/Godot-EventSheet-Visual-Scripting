@@ -203,9 +203,10 @@ On Enemy died
   -> Enemy | Object: Destroy
 ```
 
-Each effect is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
+Each effect is a **card**: a small tile in its family's colour, a drag handle to reorder it, a fold
 arrow, a tick box, its label, a badge saying how long it takes, and a menu. Under the list sits
-**Add card**, a searchable dropdown grouped by family.
+**Add card**, a searchable dropdown grouped by family (Sound, Scene, Object, Device, Camera, Screen,
+Time and Flow).
 
 ![The Juice Player's Inspector: four cards, one of them unfolded](images/juice-player-inspector.png)
 

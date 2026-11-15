@@ -58,7 +58,7 @@ Juice Player is a Godot EventSheets node you add under any object so that object
 
 **2. Put a Juice node beside it.** The ten felt words are played by the Juice behaviour, found beside the player (a sibling under the same parent, or a child of the player). Without one, the shake, flash and hitstop cards do nothing and the player says so once.
 
-**3. Fill the list.** Select the player node and use **Add card** under the list. Each card gets a stripe coloured by its family, a drag handle, a fold arrow, a tick box, its label and a badge saying how long it takes. The head of the list counts the cards and adds up the longest path through them.
+**3. Fill the list.** Select the player node and use **Add card** under the list. Each card gets a small tile in its family's colour, a drag handle, a fold arrow, a tick box, its label and a badge saying how long it takes. The head of the list counts the cards and adds up the longest path through them.
 
 ```
 7 juice cards - 0.95 s total

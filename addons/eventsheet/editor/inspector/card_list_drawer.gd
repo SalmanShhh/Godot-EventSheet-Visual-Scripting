@@ -407,9 +407,13 @@ func _fill_add_tree() -> void:
 			continue
 		var category: String = str(group_dict.get("category", ""))
 		var parent: TreeItem = _add_tree.create_item(root)
-		parent.set_text(0, category.capitalize() if not category.is_empty() else "Other")
+		parent.set_text(0, str(group_dict.get("name", category.capitalize() if not category.is_empty() else "Other")))
 		parent.set_selectable(0, false)
-		parent.set_custom_color(0, EventSheetCardSchemas.stripe_color(_schema, category))
+		if EventSheetCardSchemas.tiles_wanted(_schema):
+			# A heading wears the family's tile, the same square the cards of that family wear.
+			parent.set_icon(0, _tile_texture(category))
+		else:
+			parent.set_custom_color(0, EventSheetCardSchemas.stripe_color(_schema, category))
 		for entry: Variant in matching:
 			var leaf: TreeItem = _add_tree.create_item(parent)
 			leaf.set_text(0, str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", ""))))
@@ -496,6 +500,8 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 		box.tooltip_text = EventSheetL10n.translate("Untick to skip this card.")
 		box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(index, pressed))
 		inside.add_child(box)
+	if EventSheetCardSchemas.tiles_wanted(_schema):
+		inside.add_child(_family_tile(EventSheetCardSchemas.card_category(_spec, entry, card)))
 	var title: Label = Label.new()
 	title.text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
 	title.add_theme_font_override("font", EventSheetLookStyle.bold_font())
@@ -515,6 +521,35 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	remove.pressed.connect(func() -> void: remove_card(index))
 	header.add_child(remove)
 	return header
+
+
+## Whether the card line is a light ground, which decides which of a family's two colours a tile wears.
+func _on_light_ground() -> bool:
+	return EventSheetLookStyle.field_fill().get_luminance() > 0.5
+
+
+## The small square in a family's colour on a card head: what kind of thing the card is, at a glance, the
+## way a variable row shows its type. It is drawn from the family and never stored on the card.
+func _family_tile(category: String) -> Control:
+	var tile: Panel = Panel.new()
+	var side: float = EventSheetLookStyle.px(11.0)
+	tile.custom_minimum_size = Vector2(side, side)
+	tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tile.mouse_filter = Control.MOUSE_FILTER_PASS
+	var box: StyleBoxFlat = StyleBoxFlat.new()
+	box.bg_color = EventSheetCardSchemas.tile_color(_schema, category, _on_light_ground())
+	box.set_corner_radius_all(int(EventSheetLookStyle.px(3.0)))
+	tile.add_theme_stylebox_override("panel", box)
+	tile.tooltip_text = EventSheetCardSchemas.group_name(_schema, category)
+	return tile
+
+
+## The same square as a picture, for the headings of the Add box.
+func _tile_texture(category: String) -> Texture2D:
+	var side: int = int(EventSheetLookStyle.px(11.0))
+	var picture: Image = Image.create(side, side, false, Image.FORMAT_RGBA8)
+	picture.fill(EventSheetCardSchemas.tile_color(_schema, category, _on_light_ground()))
+	return ImageTexture.create_from_image(picture)
 
 
 ## One of the editor's own icons, or null when there is no editor theme to ask (a headless tool run,

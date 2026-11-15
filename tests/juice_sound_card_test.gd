@@ -26,6 +26,7 @@ const LIGHT_CARD_LINE: Color = Color("#f5f5f5")
 static func run() -> bool:
 	var ok: bool = true
 	ok = _storage_pins() and ok
+	ok = _tile_pins() and ok
 	ok = _sound_card_pins() and ok
 	ok = _sound_runtime_pins() and ok
 	ok = _seed_pins() and ok
@@ -251,3 +252,43 @@ static func _sound_card_pins() -> bool:
 	delay_row.free()
 	drawer.free()
 	return result
+
+
+## Each family has a colour for a dark editor and one for a light editor, and each reads 3:1 on the
+## card line it sits on. The tile belongs to the Juice Player's list only: a Drawing Prefab draws none.
+## The Add box says Sound, Scene, Object, Device, Camera, Screen, Time and Flow, in that order, while
+## the words a card is saved and muted by are the ones they always were.
+static func _tile_pins() -> bool:
+	var schema: Dictionary = _schema()
+	var dark: Dictionary = schema.get("stripes") if schema.get("stripes") is Dictionary else {}
+	var light: Dictionary = schema.get("stripes_light") if schema.get("stripes_light") is Dictionary else {}
+	var weak: PackedStringArray = PackedStringArray()
+	for family: Variant in dark:
+		if EventSheetEditorThemeDeriver.contrast_ratio(Color(str(dark[family])), DARK_CARD_LINE) < 3.0:
+			weak.append("dark " + str(family))
+		if not light.has(family) or EventSheetEditorThemeDeriver.contrast_ratio(Color(str(light[family])), LIGHT_CARD_LINE) < 3.0:
+			weak.append("light " + str(family))
+	var headings: PackedStringArray = PackedStringArray()
+	var contents: Dictionary = {}
+	for group: Variant in EventSheetCardSchemas.kinds_by_category(schema):
+		var heading: String = str((group as Dictionary).get("name", ""))
+		headings.append(heading)
+		var labels: PackedStringArray = PackedStringArray()
+		for entry: Variant in (group as Dictionary).get("kinds", []):
+			labels.append(str((entry as Dictionary).get("label", "")))
+		contents[heading] = labels
+	var prefab_schema: Dictionary = {"kinds": [{"kind": "a", "category": "x", "label": "A"}]}
+	var on_light: Color = EventSheetCardSchemas.tile_color(schema, "scene", true)
+	var on_dark: Color = EventSheetCardSchemas.tile_color(schema, "scene", false)
+	return SUPPORT.pins(TEST_NAME, [
+		["the juice list asks for a family tile", bool(schema.get("tiles", false)), true],
+		["a list that does not ask draws none", EventSheetCardSchemas.tiles_wanted(prefab_schema), false],
+		["every family reads 3:1 on its card line in both editor themes", weak, PackedStringArray()],
+		["the Sound family is one of them", dark.has("audio") and light.has("audio"), true],
+		["a light editor draws the light colour and a dark one the dark", [on_light.to_html(false), on_dark.to_html(false)], ["a88a2f", "f2c744"]],
+		["the Add box headings, in order", headings, PackedStringArray(["Sound", "Object", "Camera", "Screen", "Time", "Flow"])],
+		["Loop and signal cards share the Flow heading", contents.get("Flow"),
+			PackedStringArray(["Loop Start", "Loop Back", "Emit Signal", "Play Player"])],
+		["Tween Property sits with the Object cards", (contents.get("Object") as PackedStringArray).has("Tween Property"), true],
+		["a card is still saved and muted by the family word it always was", str(_kind("shake").get("category", "")), "camera"]
+	])

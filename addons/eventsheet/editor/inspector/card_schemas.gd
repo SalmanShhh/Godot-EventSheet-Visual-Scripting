@@ -27,6 +27,15 @@
 #     "label_key":   "",        an optional card key whose value replaces the kind's label
 #     "enabled_key": "",        an optional card key holding the enable box (absent = enabled)
 #     "stripes":     {}         category -> "#rrggbb", overriding the derived colour
+#     "stripes_light": {}       the same for a light editor, read when the editor's ground is light
+#     "tiles":       false      draw a small square in the family's colour on each card head, and on
+#                               the Add box headings
+#     "groups":      {}         category -> the words its Add box heading shows (two categories may
+#                               share one heading); "group_order" lists the headings in the order
+#                               they come in
+#     "footer":      Callable(object, drawer) -> Control   built once and shown under the Add button
+#     "marks":       {"run": Callable(object, action, index)}  a play mark on each card head and a
+#                               "Play from here" entry in each card menu, both handled by `run`
 #   }
 #
 # TWO RULES THE WHOLE FILE OBEYS, because a card list is somebody's saved .tres:
@@ -108,8 +117,10 @@ static func kind_entry(schema: Dictionary, kind: String) -> Dictionary:
 	return {}
 
 
-## The Add dropdown's contents: [{category, kinds: [entry, ...]}], categories in first-seen order and
-## the kinds within a category in declared order - so a pack decides how its own list reads.
+## The Add dropdown's contents: [{category, name, kinds: [entry, ...]}]. Headings come in the order the
+## schema names them in `group_order` and the rest in first-seen order, and the kinds within a heading
+## in declared order - so a pack decides how its own list reads. Two categories that share a heading
+## (the schema's `groups` map) are one group, headed by the first of them.
 static func kinds_by_category(schema: Dictionary) -> Array:
 	var groups: Array = []
 	var index_of: Dictionary = {}
@@ -117,11 +128,45 @@ static func kinds_by_category(schema: Dictionary) -> Array:
 		if not (entry is Dictionary):
 			continue
 		var category: String = str((entry as Dictionary).get("category", ""))
-		if not index_of.has(category):
-			index_of[category] = groups.size()
-			groups.append({"category": category, "kinds": []})
-		(groups[int(index_of[category])]["kinds"] as Array).append(entry)
-	return groups
+		var heading: String = group_name(schema, category)
+		if not index_of.has(heading):
+			index_of[heading] = groups.size()
+			groups.append({"category": category, "name": heading, "kinds": []})
+		(groups[int(index_of[heading])]["kinds"] as Array).append(entry)
+	var order: PackedStringArray = schema.get("group_order") if schema.get("group_order") is PackedStringArray else PackedStringArray()
+	if order.is_empty():
+		return groups
+	var placed: Array = []
+	for heading: String in order:
+		for group: Variant in groups:
+			if str((group as Dictionary).get("name", "")) == heading:
+				placed.append(group)
+	for group: Variant in groups:
+		if not placed.has(group):
+			placed.append(group)
+	return placed
+
+
+## The words a category's heading shows: the schema's own for it, else the category capitalised.
+static func group_name(schema: Dictionary, category: String) -> String:
+	var named: Dictionary = schema.get("groups") if schema.get("groups") is Dictionary else {}
+	if named.has(category):
+		return str(named[category])
+	return category.capitalize() if not category.is_empty() else "Other"
+
+
+## Whether the schema asks for a family tile on each card.
+static func tiles_wanted(schema: Dictionary) -> bool:
+	return bool(schema.get("tiles", false))
+
+
+## The colour of a family's tile on the editor's ground: the light value where the schema has one and
+## the ground is light, else the dark one.
+static func tile_color(schema: Dictionary, category: String, on_light: bool) -> Color:
+	var light: Dictionary = schema.get("stripes_light") if schema.get("stripes_light") is Dictionary else {}
+	if on_light and light.has(category):
+		return Color.from_string(str(light[category]), UNCATEGORISED_STRIPE)
+	return stripe_color(schema, category)
 
 
 ## The stripe colour for a category. DERIVED from the word, not from a table of pack names: the

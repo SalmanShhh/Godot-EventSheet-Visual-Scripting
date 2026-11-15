@@ -101,14 +101,49 @@ const EFFECT_WORDS: PackedStringArray = ["flash", "pulse", "hold"]
 ## The stripe colour per family. The drawer derives a colour from any word it is handed, so this is
 ## the small set the eye has to tell apart at a glance rather than a colour per verb.
 const STRIPES: Dictionary = {
-	"audio": "#b06fc4",
-	"transform": "#4f8fd6",
-	"camera": "#7b5fd0",
-	"screen": "#3fa9a0",
-	"pause": "#4faf74",
-	"loop": "#d98b3a",
-	"signal": "#c76fa8"
+	"audio": "#E061A8",
+	"transform": "#4C8DF0",
+	"camera": "#8B63E0",
+	"screen": "#39B8A8",
+	"pause": "#59B85C",
+	"scene": "#F2C744",
+	"device": "#F08A2B",
+	"loop": "#9A9A9A",
+	"signal": "#9A9A9A"
 }
+
+## The same families for a light editor. The dark colours read 3:1 on a dark card line and several of
+## them do not on a light one (the yellow reads 1.5:1), so a light editor draws these: the same hue,
+## darkened until it reaches 3:1 on the light card line.
+const STRIPES_LIGHT: Dictionary = {
+	"audio": "#dd60a6",
+	"transform": "#4C8DF0",
+	"camera": "#8B63E0",
+	"screen": "#309c8e",
+	"pause": "#4d9f4f",
+	"scene": "#a88a2f",
+	"device": "#cf7725",
+	"loop": "#8d8d8d",
+	"signal": "#8d8d8d"
+}
+
+## What a family is called where a person reads it: a heading in the Add box. The words a family is
+## saved and muted by do not change (a card keeps `audio`, the Mute row offers `audio`); only the words
+## shown do. Loop and signal cards are both Flow.
+const GROUPS: Dictionary = {
+	"audio": "Sound",
+	"scene": "Scene",
+	"transform": "Object",
+	"device": "Device",
+	"camera": "Camera",
+	"screen": "Screen",
+	"pause": "Time",
+	"loop": "Flow",
+	"signal": "Flow"
+}
+
+## The order the headings come in.
+const GROUP_ORDER: PackedStringArray = ["Sound", "Scene", "Object", "Device", "Camera", "Screen", "Time", "Flow"]
 
 ## The pack, read once per session: a file on disk that does not change while the editor is open.
 static var _reading_cache: Dictionary = {}
@@ -154,7 +189,11 @@ static func schema() -> Dictionary:
 		"kinds": kinds,
 		"label_key": LABEL_KEY,
 		"enabled_key": ENABLED_KEY,
-		"stripes": STRIPES
+		"stripes": STRIPES,
+		"stripes_light": STRIPES_LIGHT,
+		"groups": GROUPS,
+		"group_order": GROUP_ORDER,
+		"tiles": true
 	}
 
 
