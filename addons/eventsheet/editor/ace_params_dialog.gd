@@ -36,6 +36,7 @@ const ICON_TILE_DARK := Color("#3a4350")
 const ICON_TILE_LIGHT := Color("#d3dce6")
 ## The one shape every quick question takes, loaded the first time a value asks one.
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
+const SCRIPT_READER_PATH := "res://addons/eventsheet/ace/script_reader.gd"
 const ADD_ANOTHER_ACTION := "add_another"
 
 ## The row that puts a layout over the running game, and the field of it that decides which layout
@@ -249,12 +250,19 @@ func _build_header() -> Control:
 	return header
 
 
+## The words the window says the action in: the sentence a script of yours wrote (its slots as gaps) when
+## it wrote one and no name, otherwise the row's own name, translated.
+static func action_words(definition: ACEDefinition) -> String:
+	var written_words: String = load(SCRIPT_READER_PATH).row_words(definition)
+	return written_words if written_words != definition.display_name else EventSheetL10n.translate(definition.display_name)
+
+
 ## "Parameters for Player: Move toward" - the object, then the action. An action no object owns
 ## reads "Parameters: Move toward". Static and pure, so a test pins it without a window.
 static func window_title(definition: ACEDefinition, object_name: String = "") -> String:
 	if definition == null:
 		return ""
-	var action: String = EventSheetL10n.translate(definition.display_name)
+	var action: String = action_words(definition)
 	if object_name.strip_edges().is_empty():
 		return EventSheetL10n.translate("Parameters: %s") % action
 	return EventSheetL10n.translate("Parameters for %s: %s") % [object_name.strip_edges(), action]
@@ -263,6 +271,10 @@ static func window_title(definition: ACEDefinition, object_name: String = "") ->
 ## The object this window's action belongs to: the sheet's own object, or the node class a native
 ## action acts on when there is no sheet to ask.
 func _object_name() -> String:
+	# A row of one of your classes belongs to that class, whatever object the open sheet is.
+	var reflected_class: String = str(_definition.metadata.get("reflect_class", "")).strip_edges() if _definition != null else ""
+	if not reflected_class.is_empty():
+		return reflected_class
 	if not _row_owner.strip_edges().is_empty():
 		return _row_owner.strip_edges()
 	return str(_definition.metadata.get("node_type", "")).strip_edges() if _definition != null else ""
@@ -286,7 +298,7 @@ func _fill_header() -> void:
 	_dialog.title = window_title(_definition, object_name)
 	if _header_name == null:
 		return
-	var action: String = EventSheetL10n.translate(_definition.display_name)
+	var action: String = action_words(_definition)
 	_header_name.text = action if object_name.is_empty() else "%s  ·  %s" % [object_name, action]
 	_header_about.text = EventSheetL10n.translate(_definition.description.strip_edges())
 	_header_about.visible = not _header_about.text.is_empty()

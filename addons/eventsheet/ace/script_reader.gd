@@ -97,3 +97,20 @@ static func _legacy_alias(definition: ACEDefinition, target_prefix: String) -> A
 	alias.metadata["successor"] = {"id": definition.id, "renames": {}, "defaults": {}}
 	alias.metadata["replacement_ace_id"] = definition.id
 	return alias
+
+
+## The words a row of a script of yours goes by in a LIST (the picker row, the parameters window's title):
+## when the script wrote a sentence and no name, the sentence with each slot as a gap ("Take … damage"),
+## so the list says what the canvas says; otherwise the row's own name. The generator's name is left
+## alone, so a shipped row that carries a sentence and no name keeps the name it always had.
+static func row_words(definition: ACEDefinition) -> String:
+	var authored: Variant = definition.metadata.get("authored", {})
+	if not (authored is Dictionary) or not bool((authored as Dictionary).get("sentence", false)) \
+			or bool((authored as Dictionary).get("name", false)):
+		return definition.display_name
+	var sentence: String = str(definition.metadata.get("display_template", "")).strip_edges()
+	if sentence.is_empty():
+		return definition.display_name
+	var slots: RegEx = RegEx.new()
+	slots.compile("\\{[^{}]*\\}")
+	return slots.sub(sentence, "…", true)

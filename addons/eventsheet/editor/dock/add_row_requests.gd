@@ -7,6 +7,10 @@ extends RefCounted
 # uids) and the group rename/edit prompts. Each is thin glue into the undo
 # funnel; bodies moved verbatim behind the `_dock.` back-reference.
 
+## What the toolbar's Add Event asks the picker for: the objects first, the same page a double click on
+## empty canvas opens, so the project's own classes are on it.
+const ADD_EVENT_CONTEXT: Dictionary = {"object_first": true}
+
 var _dock: Control = null
 ## The small menu the "+ Add..." doors open, built once and refilled for every press.
 var _door_menu: PopupMenu = null
@@ -21,7 +25,7 @@ func init(dock: Control) -> void:
 func on_add_event_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
-	_dock._ace_picker.open("new_event", false, _dock._active_view().get_selected_context().get("source_resource", null))
+	_dock._ace_picker.open("new_event", false, _dock._active_view().get_selected_context().get("source_resource", null), ADD_EVENT_CONTEXT)
 
 
 func on_add_signal_event_requested() -> void:

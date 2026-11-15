@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a row of your script reads the same in the picker, the parameters window and the canvas
+
+A function whose script wrote a sentence and no name ("Take {amount} damage") now reads as that sentence in the picker row and the parameters window's title (each slot as a gap), not as the name made from the function; the window's head names your class instead of the open sheet's object ("System"); and the toolbar's Add Event opens on the objects first, like a double click on empty canvas, so "Your classes" is offered there too.
+
 ### Added: F2 on a function head says how the function reads in other sheets
 
 With a function's head selected, F2 opens a box with the sentence the function reads as in other sheets, its description and "Other sheets can use this". Done writes all three onto the function as one undo step. The name stays where it was (double-click the head), because renaming changes what every call means.

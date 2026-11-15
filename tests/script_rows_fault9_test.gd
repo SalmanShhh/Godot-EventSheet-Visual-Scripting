@@ -70,8 +70,8 @@ static func _window_head_names_the_class() -> bool:
 	])
 
 
-## Fault 9 (c): the toolbar's Add Event (the classic tree, no object cards) offers the class's
-## condition, by browsing and by typing its name.
+## Fault 9 (c): the toolbar's Add Event opens on the objects, like a double click on empty canvas, so the
+## project's own class is a card there; picking the card lists its condition, browsed and typed.
 static func _toolbar_add_event_lists_the_class() -> bool:
 	EventSheetProjectScanner.reset_for_tests()
 	var listed: bool = EventSheetProjectScanner.list_project_classes().any(func(entry: Dictionary) -> bool:
@@ -81,9 +81,12 @@ static func _toolbar_add_event_lists_the_class() -> bool:
 	var host: Node = Node.new()
 	var picker: ACEPickerDialog = ACEPickerDialog.new()
 	picker.init_dialog(host, registry)
-	picker.open("new_event", false, null, {})
+	picker.open("new_event", false, null, EventSheetAddRowRequests.ADD_EVENT_CONTEXT)
 	picker._fill_after_popup(picker._fill_token)
-	var sections: int = picker._tree.get_root().get_child_count() if picker._tree.get_root() != null else 0
+	var has_card: bool = _card_named(picker._objects_tree.get_root(), CLASS_TEXT)
+	picker.close()
+	picker.open("new_event", false, null, {"object_scope": CLASS_TEXT})
+	picker._fill_after_popup(picker._fill_token)
 	var browsed: bool = _tree_offers(picker._tree.get_root(), "method:alive")
 	picker._search.text = "alive"
 	picker._refresh_tree()
@@ -91,11 +94,23 @@ static func _toolbar_add_event_lists_the_class() -> bool:
 	picker.close()
 	host.free()
 	return SUPPORT.pins("script_rows_fault9_test", [
+		["the toolbar asks for the objects first", EventSheetAddRowRequests.ADD_EVENT_CONTEXT, {"object_first": true}],
 		["the class is one of the project's own", listed, true],
-		["the open really built a tree", sections > 0, true],
-		["Add Event lists its condition", browsed, true],
+		["it is a card on the objects page", has_card, true],
+		["its card lists the condition", browsed, true],
 		["and typing its name finds it", typed, true],
 	])
+
+
+static func _card_named(item: TreeItem, card_name: String) -> bool:
+	if item == null:
+		return false
+	if str(item.get_metadata(0)) == card_name or item.get_text(0) == card_name:
+		return true
+	for child: TreeItem in item.get_children():
+		if _card_named(child, card_name):
+			return true
+	return false
 
 
 static func _tree_offers(item: TreeItem, ace_id: String) -> bool:

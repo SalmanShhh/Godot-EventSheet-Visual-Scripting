@@ -257,6 +257,7 @@ const PROJECT_HEADER_META := "__your_project__"
 const CLASSES_HEADER_META := "__your_classes__"
 const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
 const SENTENCE_BOX_PATH := "res://addons/eventsheet/editor/dock/sentence_box.gd"
+const SCRIPT_READER_PATH := "res://addons/eventsheet/ace/script_reader.gd"
 const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple - custom / runtime providers
 const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted - other categories
 # Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
@@ -3051,7 +3052,11 @@ static func ordered_variable_verbs(definitions: Array[ACEDefinition]) -> Array[A
 func _item_label(definition: ACEDefinition) -> String:
 	# Display names route through the plugin l10n layer (a pass-through in English), so a pack
 	# that ships a translation CSV gets localised picker rows for free. Ids never translate.
+	# A row of a script of yours that wrote a sentence and no name reads as that sentence here too.
 	var display_name: String = EventSheetL10n.translate(definition.display_name)
+	var written_words: String = load(SCRIPT_READER_PATH).row_words(definition)
+	if written_words != definition.display_name:
+		display_name = written_words
 	# BOTH names on a verb the words seam renamed, with the chosen vocabulary leading ("Create
 	# object · Instantiate"). The shipped name never disappears from the picker, so the reader who
 	# turned the second vocabulary on still learns which Godot verb they are placing.
