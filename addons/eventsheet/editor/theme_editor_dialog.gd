@@ -42,7 +42,7 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 
 
 ## Everything an open does short of showing the window, so a second open starts the new theme from
-## scratch: the form is rebuilt over the new working copy (a swatch left from the first open would
+## afresh: the form is rebuilt over the new working copy (a swatch left from the first open would
 ## still edit the first one), the strip and the note say the new session's words, and Quick Style
 ## starts from the colours of the theme now open.
 func _prepare(dock: Control, base_style: EventSheetEditorStyle) -> void:
