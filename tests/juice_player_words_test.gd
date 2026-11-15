@@ -107,6 +107,7 @@ static func run() -> bool:
 		["the pack is one picker category", categories.keys(), [CATEGORY]],
 		["a new Play On Channel row starts on the Juice Players' group", _default_of(published, "method:play_on_channel", "channel"), "juice_players"],
 	])
+	ok = plumbing_pins() and ok
 	return _search_pins(published) and ok
 
 
@@ -135,3 +136,29 @@ static func _default_of(published: Dictionary, id: String, param: String) -> Str
 		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == param:
 			return str((parameter as Dictionary).get("default_value", ""))
 	return "<no such param>"
+
+
+## The two members a channel broadcast and the node's own waiting use are plumbing, not vocabulary: they
+## are not in the picker or in search. A row saved with one of them still compiles to the same line.
+static func plumbing_pins() -> bool:
+	var published: Dictionary = {}
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_script(load(PACK_PATH)):
+		published[definition.id] = true
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "FeedbackPlayer"
+	action.ace_id = "method:play_feedbacks_from_channel"
+	action.codegen_template = "{target}.play_feedbacks_from_channel({at_strength})"
+	action.params = {"target": "$FeedbackPlayer", "at_strength": "0.5"}
+	var event: EventRow = EventRow.new()
+	event.trigger_id = "OnReady"
+	event.actions.append(action)
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.events.append(event)
+	var compiled: String = SUPPORT.compile_output(sheet, "user://juice_player_words_plumbing.gd")
+	return SUPPORT.pins(TEST_NAME, [
+		["the channel receiver is not a row to place", published.has("method:play_feedbacks_from_channel"), false],
+		["nor is the private resume signal", published.has("signal:_resumed"), false],
+		["a row saved with the receiver still compiles to the same line",
+			compiled.contains("\t$FeedbackPlayer.play_feedbacks_from_channel(0.5)\n"), true],
+	])

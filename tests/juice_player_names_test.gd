@@ -18,7 +18,7 @@ const NEW_PATH: String = "res://eventsheet_addons/juice/juice_player.gd"
 const OLD_PATH: String = "res://eventsheet_addons/juice/feedback_player.gd"
 
 ## How many rows the pack publishes, and how many of them start on a node.
-const DEFINITIONS: int = 81
+const DEFINITIONS: int = 79
 const NODE_ROWS: int = 71
 
 

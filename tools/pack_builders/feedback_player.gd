@@ -137,6 +137,7 @@ static func build() -> bool:
 		"has_feedback": "Has juice card [b]{label}[/b]",
 		"feedback_is_enabled": "Juice card [b]{label}[/b] is enabled"
 	})
+	_spell_all(sheet)
 	Lib.feature_verbs(sheet, ["play", "play_and_wait", "stop"])
 	if not Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_player"):
 		return false
@@ -159,14 +160,12 @@ static func _verbs(sheet: EventSheetResource) -> void:
 		[["at_strength", "float", "Scales every amount in the list. 1 is the list as tuned, 0.5 a lighter version of the same beat."]],
 		"if _may_start():\n\t_walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)")
 	_default(sheet, "at_strength", "1.0")
-	_spelled(sheet, "", "play", true)
 	Lib.append_function(sheet, "play_and_wait", "Play Juice And Wait", "Juice Player",
 		"Plays the list and WAITS for the last card to finish - the rows under this one are what happens afterwards. Use it when the hit has to land before the death animation starts.",
 		[["at_strength", "float", "Scales every amount in the list, exactly as Play Juice does."]],
 		"if _may_start():\n\tawait _walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)")
 	_default(sheet, "at_strength", "1.0")
 	_await_call(sheet, "play_and_wait({at_strength})")
-	_spelled(sheet, "await ", "play_and_wait", true)
 	Lib.append_function(sheet, "play_backwards", "Play Juice Backwards", "Juice Player",
 		"Plays the list from the far end, so the last juice card is felt first. The other half of a beat that has to undo itself - a door that opened, closing.",
 		[["at_strength", "float", "Scales every amount in the list, exactly as Play Juice does."]],
@@ -183,7 +182,6 @@ static func _verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "stop", "Stop Juice", "Juice Player",
 		"Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.",
 		[], "if not playing:\n\treturn\n_live.clear()\n_resumed.emit()\n_told_nested(\"stop\")\n_close()")
-	_spelled(sheet, "", "stop", false)
 	Lib.append_function(sheet, "skip_to_end", "Skip To End", "Juice Player",
 		"Stops waiting and does everything that is left at once - the cutscene skip of a juice list. Every card from the head down is felt, without the pauses between them.",
 		[], "if not playing:\n\treturn\n_live.clear()\n_paused = false\n_resumed.emit()\nvar left: Array = _order\nvar from: int = _head + 1 if _head_taken else _head\nvar at_strength: float = _head_strength\n_close()\n_told_nested(\"skip_to_end\")\nfor index: int in range(from, left.size()):\n\tif not (left[index] is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = left[index]\n\tif _card_runs(card, at_strength, index) and not _is_timing(str(card.get(\"verb\", \"\"))):\n\t\t_do_step(card, at_strength, true)")
@@ -509,19 +507,60 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 	_quoted_call(sheet, "loops_left(\"{label}\")")
 
 
-## The lines somebody who played a list by hand wrote, so an opened script reads them as THIS verb
-## instead of as a sound or a plain method call (the rows a Play button on an audio node would claim).
+## The lines somebody who played a list by hand wrote, for EVERY action and condition the node has, so
+## an opened script reads them as THIS verb instead of as a sound or a plain method call. Derived from
+## each function's own parameters rather than listed: a text parameter is a quoted word, a number or a
+## node is one argument, a dictionary or a variant is the whole rest of the call.
+##
 ## The node is spelled out, never a wildcard: `$AudioStreamPlayer.play(0.5)` is a sound and must stay
-## one. Both names the node has had are covered; a node with any other name reads as before. The
-## spelled line is kept as the row's own text, so saving writes the file back exactly.
-static func _spelled(sheet: EventSheetResource, lead: String, method: String, takes_strength: bool) -> void:
-	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
-	var lines: PackedStringArray = PackedStringArray()
-	for node_name: String in ["FeedbackPlayer", "JuicePlayer"]:
-		if takes_strength:
-			lines.append("%s$%s.%s([[at_strength|argument: 1.0]])" % [lead, node_name, method])
-		lines.append("%s$%s.%s()" % [lead, node_name, method])
-	fn.lift_examples = lines
+## one. Both names the node has had are covered here; a node a scene says is a Juice Player is covered
+## by the reader. A text value that is not a plain word (a label with a space in it) reads as before.
+## The spelled line is kept as the row's own text, so saving writes the file back exactly.
+static func _spell_all(sheet: EventSheetResource) -> void:
+	for entry: Variant in sheet.functions:
+		var fn: EventFunction = entry as EventFunction
+		if fn == null or not fn.expose_as_ace or not fn.looping_iterator.is_empty():
+			continue
+		if fn.return_type != TYPE_NIL and fn.return_type != TYPE_BOOL:
+			continue
+		var lead: String = "await " if fn.codegen_template_override.begins_with("await ") else ""
+		var lines: PackedStringArray = PackedStringArray()
+		for node_name: String in ["FeedbackPlayer", "JuicePlayer"]:
+			for arguments: String in _argument_spellings(fn):
+				lines.append("%s$%s.%s(%s)" % [lead, node_name, fn.function_name, arguments])
+		fn.lift_examples = lines
+
+
+## The argument lists one function is written with: the plain one, and for every text parameter that
+## starts empty the same list with that parameter left as an empty string.
+static func _argument_spellings(fn: EventFunction) -> PackedStringArray:
+	var spellings: PackedStringArray = PackedStringArray()
+	var count: int = fn.params.size()
+	spellings.append(", ".join(_spelled_arguments(fn, -1)))
+	for index: int in range(count):
+		var parameter: ACEParam = fn.params[index]
+		if parameter.type_name == "String" and parameter.id != "path" and parameter.default_value.strip_edges().is_empty():
+			spellings.append(", ".join(_spelled_arguments(fn, index)))
+	return spellings
+
+
+static func _spelled_arguments(fn: EventFunction, empty_at: int) -> PackedStringArray:
+	var parts: PackedStringArray = PackedStringArray()
+	for index: int in range(fn.params.size()):
+		var parameter: ACEParam = fn.params[index]
+		var sample: String = parameter.default_value.strip_edges()
+		if parameter.type_name == "String" and parameter.id == "path":
+			parts.append("[[%s|text: \"res://moment.tres\"]]" % parameter.id)
+		elif parameter.type_name == "String":
+			if index == empty_at:
+				parts.append("\"\"")
+			else:
+				parts.append("[[%s|name: \"%s\"]]" % [parameter.id, sample if sample.is_valid_identifier() else "shake"])
+		elif parameter.type_name == "Dictionary" or parameter.type_name == "Variant":
+			parts.append("[[%s|expression: %s]]" % [parameter.id, "{\"verb\": \"shake\"}" if parameter.type_name == "Dictionary" else "0.5"])
+		else:
+			parts.append("[[%s|argument: %s]]" % [parameter.id, sample if not sample.is_empty() and not sample.contains(",") else "1"])
+	return parts
 
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value.
@@ -620,6 +659,7 @@ static func _player_lines() -> PackedStringArray:
 		"const PLAY_PLAYER: String = \"play_player\"",
 		"",
 		"## Raised whenever a pause ends, however it ended. Private, so it is plumbing rather than vocabulary.",
+		"## @ace_hidden",
 		"signal _resumed",
 		"",
 		"## Live while the game runs - written by the play, read in the remote Inspector of the running node.",
@@ -918,6 +958,7 @@ static func _player_lines() -> PackedStringArray:
 		"## What a broadcast on a channel arrives as. A NAME OF THIS PACK'S OWN, never the bare word play:",
 		"## an audio, video or animation player in the same group answers to that one too, and call_group",
 		"## swallows the error - so a channel meant for juice would quietly start somebody's music.",
+		"## @ace_hidden",
 		"func play_feedbacks_from_channel(at_strength: float) -> void:",
 		"\tplay(at_strength)",
 		"",
