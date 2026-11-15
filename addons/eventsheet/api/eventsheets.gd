@@ -1418,6 +1418,7 @@ static func _script_was_written(script_path: String) -> void:
 			filesystem.call("update_file", script_path)
 	if _dock_alive():
 		_dock._refresh_ace_registry()
+		_dock._on_translations_maybe_changed()
 
 
 ## The "Publish New Version" ritual for a pack script: bump `@ace_version` (patch/minor/major),

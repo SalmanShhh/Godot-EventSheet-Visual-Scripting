@@ -59,7 +59,7 @@ func open(dock: Control, path: String = "") -> void:
 			if str((_scripts.get_item_metadata(index) as Dictionary).get("path", "")) == target:
 				_scripts.select(index)
 	show_script(target)
-	EventSheetWindowPlacement.popup_centered(_window, Vector2i(760, 640))
+	EventSheetWindowPlacement.popup_centered(_window, Vector2i(780, 780))
 
 
 func _build() -> void:
@@ -97,7 +97,7 @@ func _build() -> void:
 	rows_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_heading = EventSheetPopupUI.hint_label("")
 	rows_box.add_child(_heading)
-	_tree = EventSheetPopupUI.table(PackedStringArray(["", "Reads as", "Kind"]), 160.0, {0: 40.0, 2: 100.0})
+	_tree = EventSheetPopupUI.table(PackedStringArray(["", "Reads as", "Kind"]), 240.0, {0: 40.0, 2: 100.0})
 	_tree.set_column_expand(1, true)
 	rows_box.add_child(_tree)
 	_notes = VBoxContainer.new()
@@ -180,7 +180,7 @@ func show_script(path: String) -> void:
 	var preview: GDScript = load(PROVIDER_PREVIEW_PATH)
 	_scan = preview.scan(path)
 	var shipped: bool = load(SHIPPED_SCRIPTS_PATH).is_shipped(path)
-	_heading.text = EventSheetL10n.translate("From %s. Right-click one to change how it reads.") % path.get_file()
+	_heading.text = EventSheetL10n.translate("From %s.") % path.get_file()
 	if shipped:
 		_heading.text += "\n" + EventSheetL10n.translate("This script belongs to a behaviour that ships with the plugin, so it is shown but never changed here.")
 	elif not bool(_scan.get("ok", false)):
@@ -227,6 +227,7 @@ func _change_reading() -> void:
 			load(SENTENCE_BOX_PATH).open(_window, candidate, func(said: String, ok: bool) -> void:
 				_dock._set_status(said, not ok)
 				if ok:
+					load(SENTENCE_BOX_PATH).refresh_after_write(_dock)
 					show_script(_path),
 				func(behaviour_path: String) -> void: _dock._navigate.open_or_focus(behaviour_path), _path)
 			return
@@ -304,6 +305,7 @@ func _apply() -> void:
 	var skipped: Array = result.get("skipped", [])
 	if not skipped.is_empty():
 		message += " " + EventSheetL10n.translate("Not found: %s.") % ", ".join(PackedStringArray(skipped))
+	load(SENTENCE_BOX_PATH).refresh_after_write(_dock)
 	_dock._set_status(message, not skipped.is_empty())
 
 

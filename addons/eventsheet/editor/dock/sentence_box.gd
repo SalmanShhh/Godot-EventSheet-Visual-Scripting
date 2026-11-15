@@ -135,7 +135,7 @@ static func open(host: Node, definition: ACEDefinition, on_written: Callable = C
 		window.queue_free())
 	window.canceled.connect(func() -> void: window.queue_free())
 	refresh.call()
-	EventSheetWindowPlacement.popup_centered(window, Vector2i(480, 220))
+	EventSheetPopupUI.popup_fitted(window)
 	edit.grab_focus()
 	return window
 
@@ -152,11 +152,11 @@ static func _refuse(host: Node, sentence: String, behaviour_path: String, open_b
 			open_behaviour.call(behaviour_path)
 			window.queue_free())
 		(window as ConfirmationDialog).canceled.connect(func() -> void: window.queue_free())
-		EventSheetWindowPlacement.popup_centered(window, Vector2i(480, 160))
+		EventSheetPopupUI.popup_fitted(window)
 		return window
 	# Nothing to open: a plain window with the one sentence.
 	window.close_requested.connect(func() -> void: window.queue_free())
-	EventSheetWindowPlacement.popup_centered(window, Vector2i(480, 160))
+	EventSheetPopupUI.popup_fitted(window)
 	return window
 
 
@@ -167,12 +167,51 @@ static func row_requested(dock: Control, lane: String) -> void:
 	if ace == null:
 		return
 	var definition: ACEDefinition = definition_for(dock._ace_registry, str(ace.get("provider_id")), str(ace.get("ace_id")))
+	if str(ace.get("ace_id")) == "CallMethod":
+		definition = definition_for_call(str((ace.get("params") as Dictionary).get("method", "")))
 	if definition == null:
 		dock._set_status(EventSheetL10n.translate("This row does not come from a script of yours, so there is no script to write its words into."), true)
 		return
 	open(dock, definition, func(said: String, ok: bool) -> void:
+		if ok:
+			refresh_after_write(dock)
 		dock._set_status(said, not ok),
 		func(behaviour_path: String) -> void: dock._navigate.open_or_focus(behaviour_path))
+
+
+## What every open row must do once a script of yours was rewritten: the vocabulary and the readings
+## that were cached from the old file are dropped, and the rows are read again, so a row that uses the
+## function follows at once.
+static func refresh_after_write(dock: Control) -> void:
+	dock._refresh_ace_registry()
+	dock._on_translations_maybe_changed()
+	if dock._viewport != null:
+		dock._viewport.rebuild_rows()
+
+
+## A call written in a script (a Call Method row, which names a function and no class): the function of the
+## one project class that declares it, or null when none or several do - then there is no one script to write.
+static func definition_for_call(method_name: String) -> ACEDefinition:
+	if method_name.is_empty():
+		return null
+	var owners: Array[Dictionary] = []
+	var declaration: RegEx = RegEx.new()
+	declaration.compile("(?m)^(?:static\\s+)?func\\s+%s\\s*\\(" % method_name)
+	for info: Dictionary in ProjectSettings.get_global_class_list():
+		var path: String = str(info.get("path", ""))
+		if load(SHIPPED_SCRIPTS_PATH).is_shipped(path):
+			continue
+		if declaration.search(FileAccess.get_file_as_string(path)) != null:
+			owners.append(info)
+	if owners.size() != 1:
+		return null
+	var script: Script = load(str(owners[0].get("path", "")))
+	if script == null:
+		return null
+	for candidate: ACEDefinition in load("res://addons/eventsheet/ace/script_reader.gd").definitions_for(str(owners[0].get("class", "")), script, ""):
+		if candidate.id == "method:%s" % method_name:
+			return candidate
+	return null
 
 
 ## A row's definition: the registry's when it has one, otherwise the script's own reading of it (a class
@@ -251,5 +290,5 @@ static func function_requested(dock: Control) -> void:
 		window.queue_free())
 	window.canceled.connect(func() -> void: window.queue_free())
 	refresh.call()
-	EventSheetWindowPlacement.popup_centered(window, Vector2i(480, 260))
+	EventSheetPopupUI.popup_fitted(window)
 	edit.grab_focus()

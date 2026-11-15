@@ -31,4 +31,6 @@ static func rows_added_text(path: String) -> String:
 	for entry: Variant in load(PROVIDER_PREVIEW_PATH).scan(path).get("entries", []):
 		if not bool((entry as Dictionary).get("left_out", false)):
 			count += 1
+	if count == 0:
+		return EventSheetL10n.translate("%s: no rows added. Give the script a class_name, so its functions have a name to be called by.") % path.get_file()
 	return EventSheetL10n.translate("%s: %d rows added") % [path.get_file(), count]

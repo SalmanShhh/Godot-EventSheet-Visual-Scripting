@@ -64,7 +64,9 @@ Each row is covered below with the exact code it compiles to.
 Open the picker's object page and, under **Your classes**, you will find the classes and
 autoloads your game declares.
 
-<img src="images/interop-your-project.png" alt="The Add Event picker's object page: a System card, a collapsed Objects and Behaviors section, and a Your Project section listing the game's own classes - AutoACESample, CarouselOfJuice, Enemy, FamilyArena and more." width="620">
+<img src="images/interop-your-project.png" alt="The Add Event picker's object page: a Your classes section listing the game's own classes - Checkpoint, Door, Enemy, Hero and Inventory - then the open script's Functions, System, and an Objects and Behaviors section." width="620">
+
+The toolbar's Add Event opens on this page, the same one a double click on empty canvas opens. Pick a card to see what that object offers, or just start typing: the search box looks across every object at once, and the "All objects" button above a card's list brings the cards back.
 
 Pick one and the tree scopes to what it publishes: methods that return
 nothing are Actions, methods returning `bool` are Conditions, anything else is an Expression,
@@ -951,7 +953,7 @@ pivot turns.
   **Your classes** under that with every class the project declares. Picking one inserts an ordinary
   Call Function row.
 
-  ![The Add Event picker opened on a script's own functions: a Functions section headed "this script - 4" listing Award Points as an action taking amount number and Round Is Ready as a condition taking enabled true/false, a collapsed Helpers (2) entry, then a Your Project section listing the project's own classes](images/picker-functions-page.png)
+  ![The Add Event picker opened on a script's own functions: a Your classes section listing the project's own classes, then a Functions section headed "this script - 1" listing the function heal, then System and Objects and Behaviors](images/picker-functions-page.png)
 
   ![The Change Type Everywhere dialog listing each row it will rewrite before the retype is committed](images/seam-change-type.png)
 

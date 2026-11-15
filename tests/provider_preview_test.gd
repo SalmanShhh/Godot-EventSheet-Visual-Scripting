@@ -42,6 +42,7 @@ static func run() -> bool:
 	ok = _check("an untyped bool method falls back to an Action", _kind_of(untyped, "method:is_wave_active"), "Action") and ok
 	ok = _check("so the untyped warning fires", _has_warning(untyped, "untyped"), true) and ok
 	ok = _check("naming both untyped methods", _warning_text(untyped, "untyped").contains("start_wave") and _warning_text(untyped, "untyped").contains("is_wave_active"), true) and ok
+	ok = _check("no note carries a backtick", _all_warning_text(untyped).contains("`"), false) and ok
 	ok = _check("the class_name warning fires and names the fallback id",
 		_warning_text(untyped, "no_class_name").contains("UntypedProviderFixture"), true) and ok
 	ok = _check("and that fallback id is a valid identifier (no space)",
@@ -108,3 +109,10 @@ static func _warning_text(scan_result: Dictionary, kind: String) -> String:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("provider_preview_test", label, actual, expected)
+
+
+static func _all_warning_text(scan: Dictionary) -> String:
+	var said: String = ""
+	for warning: Variant in scan.get("warnings", []):
+		said += str((warning as Dictionary).get("text", "")) + "\n"
+	return said

@@ -10619,3 +10619,5 @@ Open the behaviour,동작 열기
 %s now reads as: %s,%s의 표시가 이제 다음과 같습니다: %s
 Use in event sheets…,이벤트 시트에서 사용…
 Use in event sheets,이벤트 시트에서 사용
+"%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s: 추가된 행이 없습니다. 스크립트에 class_name을 지정하면 함수를 호출할 이름이 생깁니다.
+From %s.,%s에서.

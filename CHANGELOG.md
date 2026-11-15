@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the toolbar's Add Event opens on the objects first
+
+Add Event on the toolbar (and the E key, and the "+ Add event" door) now opens the picker on its object page, the same page a double click on empty canvas opened: "Your classes", the open script's Functions, System, and Objects and Behaviors. Before, it opened the full list of every object's conditions and triggers at once. Pick a card to see that object's verbs, or start typing: the search box looks across every object at once, exactly like the old full list narrowed to what you typed. The "All objects" button above a card's list brings the cards back. Add Condition and Add Action are unchanged.
+
+### Fixed: a row follows the sentence you just wrote
+
+Changing how a function reads (the box, the scripts window) now drops the readings kept from the old file and reads the rows again, so a call row on the open sheet shows the new sentence at once instead of after a reopen. "Change how this reads…" also works on a call written in a script (a Call Method row) when exactly one project class declares that function. Use in event sheets on a script whose functions are static and which has no class_name says so in the status line instead of reporting zero rows added, and the scripts window opens taller so its list is not cut, says its hint once, and its notes carry no markdown.
+
 ### Changed: the guides match the code
 
 The custom-actions guides now describe the Scripts in event sheets window, Use in event sheets, how a function reads, and "This sheet in other sheets"; the score example names (Add To Score, Winning), the "Your classes" heading and the "Other sheets can use this" tick are spelled as the editor spells them, and the stale provider-table picture is gone. The reading check no longer recommends a sentence inside the name word or a positional parameter label.

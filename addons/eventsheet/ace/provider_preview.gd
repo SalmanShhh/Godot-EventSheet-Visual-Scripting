@@ -85,6 +85,9 @@ static func scan(script_path: String) -> Dictionary:
 			"line": _line_of(source, definition), "left_out": true,
 		})
 	result["warnings"] = _warnings_for(result, source, script)
+	# A note is said in plain words, never with the markdown a script comment would use.
+	for note: Variant in result["warnings"] as Array:
+		(note as Dictionary)["text"] = str((note as Dictionary)["text"]).replace("`", "")
 	# The lines of the script that read as nothing - a misspelt word, a slot with no such key, a plain
 	# comment between the words and their function. Loaded by path: this scan is the only door that asks.
 	var findings_reader: GDScript = load(FINDINGS_PATH)
@@ -93,7 +96,7 @@ static func scan(script_path: String) -> Dictionary:
 		if str(finding.get("kind", "")) == findings_reader.KIND_UNTYPED:
 			continue
 		(result["warnings"] as Array).append({"kind": str(finding["kind"]), "line": int(finding["line"]),
-			"text": findings_reader.sentence(finding)})
+			"text": findings_reader.sentence(finding).replace("`", "")})
 	return result
 
 
@@ -143,13 +146,21 @@ static func _warnings_for(scan_result: Dictionary, source: String, script: Scrip
 
 	# An untyped `func foo():` cannot be classified: no return type means the generator can only assume
 	# ACTION, so a boolean check silently lands in the wrong lane and its parameters lose their types.
-	var untyped: PackedStringArray = _untyped_methods(source)
+	# Only the functions the list above shows: the note and the table must name the same ones.
+	var shown_methods: PackedStringArray = PackedStringArray()
+	for entry: Variant in entries:
+		if str((entry as Dictionary).get("source", "")) == "method" and not bool((entry as Dictionary).get("left_out", false)):
+			shown_methods.append(str((entry as Dictionary).get("member", "")))
+	var untyped: PackedStringArray = PackedStringArray()
+	for method_name: String in _untyped_methods(source):
+		if shown_methods.has(method_name):
+			untyped.append(method_name)
 	if not untyped.is_empty():
 		warnings.append({
 			"kind": "untyped",
-			"text": "%d method%s ha%s no return type, so %s published as Actions. Add `-> bool` for a Condition, or `-> float` / `-> String` for an Expression: %s" % [
-				untyped.size(), "s" if untyped.size() != 1 else "", "ve" if untyped.size() != 1 else "s",
-				"they are" if untyped.size() != 1 else "it is", ", ".join(untyped)],
+			"text": "%s %s not say what %s gives back, so sheets read %s as an action. To make a function a condition, say so on its first line, for example func is_alive() -⁠> bool. Write float or String there instead and it reads as a value." % [
+				" and ".join(untyped) if untyped.size() <= 2 else ", ".join(untyped), "does" if untyped.size() == 1 else "do",
+				"it" if untyped.size() == 1 else "each", "it" if untyped.size() == 1 else "them"],
 		})
 
 	# Without a class_name the provider id falls back to the file name. That is legal, but it is the name
@@ -157,7 +168,7 @@ static func _warnings_for(scan_result: Dictionary, source: String, script: Scrip
 	if str(scan_result.get("class_name", "")).is_empty():
 		warnings.append({
 			"kind": "no_class_name",
-			"text": "This script has no `class_name`, so its rows publish under \"%s\" (taken from the file name). Add a `class_name` to control it." % scan_result.get("provider_id", ""),
+			"text": "This script has no class_name line, so its rows are listed under \"%s\" (taken from the file name). Put class_name and a name at the top of the script to choose it yourself." % scan_result.get("provider_id", ""),
 		})
 
 	if entries.size() > BUSY_VERB_COUNT:

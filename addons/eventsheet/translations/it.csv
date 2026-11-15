@@ -10619,3 +10619,5 @@ Open the behaviour,Apri il comportamento
 %s now reads as: %s,%s ora si legge: %s
 Use in event sheets…,Usa nei fogli eventi…
 Use in event sheets,Usa nei fogli eventi
+"%s: no rows added. Give the script a class_name, so its functions have a name to be called by.","%s: nessuna riga aggiunta. Dai allo script un class_name, così le sue funzioni hanno un nome con cui essere chiamate."
+From %s.,Da %s.

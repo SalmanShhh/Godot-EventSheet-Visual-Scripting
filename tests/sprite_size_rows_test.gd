@@ -21,6 +21,7 @@ static func run() -> bool:
 	passed = _the_old_row_is_retired() and passed
 	passed = _a_file_round_trips() and passed
 	passed = _the_sizes_come_out_right() and passed
+	passed = _the_probe_file_is_this_process_s() and passed
 	return passed
 
 
@@ -201,3 +202,14 @@ static func _the_sizes_come_out_right() -> bool:
 		rows.append(["%s keeps a scale it can be drawn with" % names[index], sprite.scale.is_finite(), true])
 		sprite.free()
 	return SUPPORT.pins(NAME, rows) and passed
+
+
+## The migration gate's probe file is named for the process: two runs sharing one user folder (the
+## parallel suite, two editors) must never write and parse the same probe at once, which made a plan
+## ask a question about a row the file takes without trouble.
+static func _the_probe_file_is_this_process_s() -> bool:
+	var path: String = EventSheetMigrationPlan.probe_path()
+	return SUPPORT.pins(NAME, [
+		["the migration probe file is named for this process", path.contains("_%d.gd" % OS.get_process_id()), true],
+		["and still sits in the user folder", path.begins_with("user://"), true],
+	])

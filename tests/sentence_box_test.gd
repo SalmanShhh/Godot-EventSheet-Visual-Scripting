@@ -24,6 +24,7 @@ const MISSING: String = "<not written yet>"
 
 static func run() -> bool:
 	var ok: bool = _preview_on_a_copy()
+	ok = _a_call_finds_its_one_class() and ok
 	ok = _shipped_files_are_never_written() and ok
 	return ok
 
@@ -79,4 +80,17 @@ static func _shipped_files_are_never_written() -> bool:
 		["the box says whose row it is instead", not shipped_reason.is_empty() and shipped_reason != MISSING, true],
 		["a plugin file is refused the same way", not plugin_reason.is_empty() and plugin_reason != MISSING, true],
 		["a script of yours may be written", str(_box_call("writable_reason", [FIXTURE])), ""],
+	])
+
+
+## A Call Method row names a function and no class: it finds the one project class that declares the
+## function, and says nothing when several do or none does (no script to write).
+static func _a_call_finds_its_one_class() -> bool:
+	var one: Variant = _box_call("definition_for_call", ["clamp_score"])
+	var several: Variant = _box_call("definition_for_call", ["take_damage"])
+	var none: Variant = _box_call("definition_for_call", ["no_such_function_anywhere"])
+	return SUPPORT.pins("sentence_box_test", [
+		["a function one class declares finds its row", (one as ACEDefinition).id if one is ACEDefinition else "<none>", "method:clamp_score"],
+		["a function several classes declare finds none", several == null, true],
+		["and a function nobody declares finds none", none == null, true],
 	])

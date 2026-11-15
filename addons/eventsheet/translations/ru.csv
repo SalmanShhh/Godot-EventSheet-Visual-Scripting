@@ -10619,3 +10619,5 @@ Open the behaviour,Открыть поведение
 %s now reads as: %s,%s теперь читается так: %s
 Use in event sheets…,Использовать в листах событий…
 Use in event sheets,Использовать в листах событий
+"%s: no rows added. Give the script a class_name, so its functions have a name to be called by.","%s: строки не добавлены. Задайте скрипту class_name, чтобы у его функций было имя для вызова."
+From %s.,Из %s.
