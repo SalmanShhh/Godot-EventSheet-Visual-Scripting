@@ -329,6 +329,7 @@ same whether or not your script is `@tool`.
 | `@ace_featured` | Highlight this member as an everyday row: bold, floated to the top of its picker category. Reserve it for your pack's hero rows - featuring everything features nothing. |
 | `@ace_name(Text)` | Override the display name. |
 | `@ace_category(Text)` | Put the ACE in this picker category. |
+| `@ace_provider_id(OldName)` | Class level, above `class_name`. Keeps the name your rows were saved under when you rename the class: sheets that already use the pack keep finding its rows, and the old name still opens this script. Leave it out and the class name is the provider, as always. |
 | `@ace_description(Text)` | The tooltip and help text. |
 | `@ace_action` / `@ace_condition` / `@ace_expression` / `@ace_trigger` | Force the ACE type instead of inferring it from the return type. |
 | `@ace_looping(iterator)` | A LOOPING condition: the method returns a collection (an Array of ids, nodes, anything iterable) and adding it to an event loops that event's actions once per item - your pack owns its own "For Each X" condition. The value names the loop variable actions read (`item` if omitted). Applies as a pick filter, so the loop lane, frame-spreading, and round-trip all work like a built-in For Each. |

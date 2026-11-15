@@ -11,6 +11,7 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_deprecated": true,
 	"@ace_succeeded_by": true,
 	"@ace_category": true,
+	"@ace_provider_id": true,
 	"@ace_name": true,
 	"@ace_description": true,
 	"@ace_icon": true,
@@ -113,6 +114,8 @@ func parse_source_metadata(script: Script) -> Dictionary:
 							# Class-level category is the pack-wide default: every member without
 							# its own @ace_category inherits it (member annotations win).
 							metadata["default_category"] = _extract_annotation_value(pending)
+						"@ace_provider_id":
+							metadata["provider_id"] = _extract_annotation_value(pending).strip_edges()
 						"@ace_icon":
 							# Class-level icon likewise defaults every member's picker icon.
 							metadata["default_icon"] = _extract_annotation_value(pending)
@@ -282,6 +285,9 @@ func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
 ## The provider id from the script alone, for a provider reflected without an instance: its
 ## class_name, else its file name, else the engine class it builds on.
 func provider_id_for_script(script: Script, fallback_class: String, source_metadata: Dictionary) -> String:
+	var kept_id: String = str(source_metadata.get("provider_id", ""))
+	if not kept_id.is_empty():
+		return kept_id
 	var class_name_text: String = str(source_metadata.get("class_name", ""))
 	if not class_name_text.is_empty():
 		return class_name_text

@@ -333,6 +333,11 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 		var version_match: RegExMatch = version_regex.search(header)
 		if version_match != null:
 			sheet.addon_version = version_match.get_string(1).strip_edges()
+	var provider_regex: RegEx = RegEx.new()
+	if provider_regex.compile("(?m)^## @ace_provider_id\\(([^)]*)\\)") == OK:
+		var provider_match: RegExMatch = provider_regex.search(header)
+		if provider_match != null:
+			sheet.addon_provider_id = provider_match.get_string(1).strip_edges()
 	var author_regex: RegEx = RegEx.new()
 	if author_regex.compile("(?m)^## @ace_author\\(\"([^\"]*)\"\\)") == OK:
 		var author_match: RegExMatch = author_regex.search(header)

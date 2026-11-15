@@ -109,6 +109,8 @@ extends Resource
 @export var addon_version: String = ""
 @export var addon_author: String = ""
 @export var addon_help_url: String = ""
+## The provider id the published rows keep when the class is renamed: rows saved under the old class name keep finding their vocabulary. Written as `## @ace_provider_id(OldName)` in the script header.
+@export var addon_provider_id: String = ""
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
 ## Compile-time includes (event-sheet-style): paths to other event sheets (res://….tres) whose

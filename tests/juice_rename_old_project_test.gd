@@ -125,7 +125,8 @@ static func _sheet_pins() -> bool:
 	var source: String = FileAccess.get_file_as_string(DIR + "old_sheet.gd.txt")
 	var tres: EventSheetResource = ResourceLoader.load(DIR + "old_sheet.tres", "",
 		ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
-	var compiled: String = SUPPORT.compile_output(tres, "user://juice_rename_old_sheet_tres.gd")
+	# A copy with no home, so the compiler does not write a generated file beside the fixture.
+	var compiled: String = SUPPORT.compile_output(tres.duplicate(true) as EventSheetResource, "user://juice_rename_old_sheet_tres.gd")
 	var action: ACEAction = (tres.events[0] as EventRow).actions[0] as ACEAction
 	return SUPPORT.pins(TEST_NAME, [
 		["the old .gd sheet re-saves byte for byte",

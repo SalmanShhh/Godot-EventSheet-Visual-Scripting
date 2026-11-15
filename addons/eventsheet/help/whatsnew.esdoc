@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: a script can keep the name its rows were saved under
+
+A script can say `## @ace_provider_id(OldName)` above its `class_name`. Rows saved under the old class name keep finding the script's vocabulary when the class is renamed, the old name still opens the script from a row, and the line is written and read back byte for byte like the other header words. Leave it out and nothing changes: the class name is the provider, as before.
+
 ### Changed: the toolbar's Add Event opens on the objects first
 
 Add Event on the toolbar (and the E key, and the \"+ Add event\" door) now opens the picker on its object page, the same page a double click on empty canvas opened: \"Your classes\", the open script's Functions, System, and Objects and Behaviors. Before, it opened the full list of every object's conditions and triggers at once. Pick a card to see that object's verbs, or start typing: the search box looks across every object at once, exactly like the old full list narrowed to what you typed. The \"All objects\" button above a card's list brings the cards back. Add Condition and Add Action are unchanged.

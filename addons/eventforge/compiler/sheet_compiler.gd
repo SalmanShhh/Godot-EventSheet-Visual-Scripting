@@ -446,6 +446,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		# prelude, so they can never double-emit).
 		if not sheet.addon_category.strip_edges().is_empty():
 			lines.append("## @ace_category(\"%s\")" % sheet.addon_category.strip_edges())
+		if not sheet.addon_provider_id.strip_edges().is_empty():
+			lines.append("## @ace_provider_id(%s)" % sheet.addon_provider_id.strip_edges())
 		if sheet.ace_expose_all_mode == "node":
 			lines.append("## @ace_expose_all(node)")
 		elif sheet.ace_expose_all_mode == "all":

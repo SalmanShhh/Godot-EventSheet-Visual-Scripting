@@ -136,14 +136,20 @@ func _current_history_path() -> String:
 
 
 ## class_name → script path over the addon folders. A script's class_name is a single top-of-file
-## declaration, so a cheap line scan resolves it without loading the script.
+## declaration, so a cheap line scan resolves it without loading the script. A script that kept the
+## provider id its rows were saved under (`@ace_provider_id`) answers to that name too, and wins it:
+## the old class name may now be a thin shell that only extends the class holding the code.
 func _script_path_for_class(target_class: String) -> String:
 	if not _cache_built:
 		_cache_built = true
+		var kept: Dictionary = {}
 		for script_path: String in EventSheetAddonScanner.list_addon_scripts():
 			var source: String = FileAccess.get_file_as_string(script_path)
 			for line: String in source.split("\n", false, 40):
 				if line.begins_with("class_name "):
 					_class_script_cache[line.trim_prefix("class_name ").strip_edges()] = script_path
 					break
+				if line.begins_with("## @ace_provider_id(") or line.begins_with("# @ace_provider_id("):
+					kept[line.get_slice("(", 1).get_slice(")", 0).strip_edges()] = script_path
+		_class_script_cache.merge(kept, true)
 	return str(_class_script_cache.get(target_class, ""))
