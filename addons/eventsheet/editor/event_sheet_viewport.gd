@@ -2207,15 +2207,15 @@ func _draw_param_cursor(font: Font, font_size: int) -> void:
 	if rect.size.x <= 0.0:
 		return
 	var accent: Color = _get_event_style().behavior_accent_color
-	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.16), true)
-	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.9), false, 1.0)
+	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.26), true)
 	var hint: String = str(entry.get("param_id"))
 	var hint_size: int = maxi(font_size - 3, 9)
 	var hint_width: float = font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1.0, hint_size).x
 	var chip: Rect2 = Rect2(rect.position + Vector2(0.0, rect.size.y + 2.0), Vector2(hint_width + 10.0, font.get_height(hint_size) + 4.0))
-	draw_rect(chip, Color(0.10, 0.11, 0.13, 0.92), true)
+	var hint_reading: EventSheetReadingStyle = _get_reading_style()
+	draw_rect(chip, Color(hint_reading.drag_bubble_background_color, 0.96), true)
 	draw_string(font, Vector2(chip.position.x + 5.0, chip.position.y + 2.0 + font.get_ascent(hint_size)), hint,
-		HORIZONTAL_ALIGNMENT_LEFT, -1.0, hint_size, EventSheetPalette.TEXT_MUTED)
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, hint_size, hint_reading.drag_bubble_text_color)
 
 
 func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1) -> bool:
