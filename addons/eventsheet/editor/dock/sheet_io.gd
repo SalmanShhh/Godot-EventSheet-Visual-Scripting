@@ -428,6 +428,7 @@ func _save_backed_sheet() -> bool:
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, _dock._current_sheet.external_source_path)
 	DOCK_REGISTRY.notify_lifecycle("compiled", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path, "success": bool(compile_result.get("success", false))})
 	if not bool(compile_result.get("success", false)):
+		_dock._run_diagnostics()
 		_dock._set_status("This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return false
 	_dock._dirty = false

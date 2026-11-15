@@ -142,6 +142,10 @@ func apply_engine_result(request: Dictionary, errors: Array) -> void:
 	# are the old ones. An unchanged set rebuilds nothing (the viewport's own rule).
 	_paint(sheet, head_changed)
 	if not errors.is_empty():
+		# Take the reader to the row the first failing line came from, as a sheet saved as a resource does.
+		var view: EventSheetViewport = _dock._active_view()
+		if view != null:
+			view.reveal_and_select_first_diagnostic()
 		var first: Dictionary = errors[0]
 		_dock._set_status(EventSheetL10n.translate(
 			"Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.") % [
