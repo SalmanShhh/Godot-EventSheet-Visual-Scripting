@@ -62,6 +62,7 @@ const WHY_NEEDS_PICKING := "needs-picking"
 const WHY_UNPROVABLE := "unprovable"
 const WHY_FILE_REFUSES := "file-refuses"
 
+
 ## Every row of this sheet that migration has something to say about, in reading order.
 ##
 ## Two populations, and they are genuinely different states. A row whose verb has a forwarding
