@@ -184,7 +184,7 @@ func _generate(script: Script, is_node: bool, fallback_class: String, signal_lis
 		output.append(method_definition)
 	_disambiguate_reflected_name_collisions(output)
 	# A script the reader wrote says where it lives, so a row can start on the node of the open scene that wears it.
-	if _project_script:
+	if _project_script or (_provider_is_node and script != null and not script.resource_path.is_empty()):
 		for definition: ACEDefinition in output:
 			definition.metadata["script_path"] = script.resource_path
 	# Provider description derives from the script's top doc comment (zero-config addons).

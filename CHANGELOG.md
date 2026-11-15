@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: a row from a behaviour pack starts on the node in your scene that wears it
+
+Rows from a shipped pack (the Juice Player's Play Juice, a Health row, and the rest) used to start on a node named after the pack's class, so a node you had called something else got rows that failed at run time with "node not found" until you retargeted each one. Now "On node" starts on the one node of the open scene whose script is the pack's (or extends it), and stays on the class name when none or several do. Rows already placed are untouched.
+
 ### Changed: the Feedback Player's code now lives in a Juice Player file
 
 The node that holds a list of effects is now the class `JuicePlayer` (`juice_player.gd`, in the Juice pack). The old class `FeedbackPlayer` is still there, at the same path with the same id, and only extends it, so a scene that already has a FeedbackPlayer node loads, plays and saves exactly as before, and a script of yours that names `FeedbackPlayer` (as a type, in `is`, or with `.new()`) still compiles, and still reaches its constants and statics. A node you add from now on is a JuicePlayer: it is not `is FeedbackPlayer`, so a variable typed `FeedbackPlayer` will not hold it. Change that type to `JuicePlayer`, which the old nodes also are. Create Node lists both, the old one nested under the new one. The rows keep their ids and the code they write; a new row's "On node" starts on `$JuicePlayer`, the name a new node gets. The Inspector strip, the toolbar's list buttons, the unknown-card finding and the Doctor recognise both names, and the strip class no longer shows in Create Node.

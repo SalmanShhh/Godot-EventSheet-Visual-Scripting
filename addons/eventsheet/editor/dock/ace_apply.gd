@@ -111,8 +111,11 @@ static func aimed_at_scene(definition: ACEDefinition, scene_root: Node) -> ACEDe
 
 static func _collect_wearers(node: Node, script_path: String, into: Array[Node]) -> void:
 	var script: Script = node.get_script() as Script
-	if script != null and script.resource_path == script_path:
-		into.append(node)
+	while script != null:
+		if script.resource_path == script_path:
+			into.append(node)
+			break
+		script = script.get_base_script()
 	for child: Node in node.get_children():
 		_collect_wearers(child, script_path, into)
 
