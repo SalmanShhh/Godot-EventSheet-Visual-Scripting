@@ -46,7 +46,17 @@ static func is_player(object: Object) -> bool:
 ## old name's file is a thin shell that only extends the class holding the code, so statics and
 ## constants are read from the code file rather than through it.
 static func pack_path() -> String:
+	var present: PackedStringArray = PackedStringArray()
 	for file_name: String in FILE_NAMES:
 		if ResourceLoader.exists(PACK_FOLDER + file_name):
-			return PACK_FOLDER + file_name
-	return PACK_FOLDER + FILE_NAMES[-1]
+			present.append(file_name)
+	return PACK_FOLDER + file_name_among(present)
+
+
+## Which of the node's file names holds the code, given the ones a project has: the newest that is
+## there, and the old single-file name when that is all an older copy of the pack carries. PURE.
+static func file_name_among(present: PackedStringArray) -> String:
+	for file_name: String in FILE_NAMES:
+		if present.has(file_name):
+			return file_name
+	return FILE_NAMES[-1]

@@ -657,7 +657,7 @@ func _enter_tree() -> void:
 	# Cosmetic - a prefab still edits as a plain steps table and draws identically without this plugin.
 	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
 	add_inspector_plugin(_drawing_prefab_inspector)
-	# FeedbackPlayer: the strip under its list (how long the beat is, the buttons that play it in the
+	# The Juice Player (FeedbackPlayer before 0.21.0): the strip under its list (how long the beat is, the buttons that play it in the
 	# editor, the debug timeline, and the two doors to a moment file). The list itself is drawn by the
 	# shared card-list drawer through the ordinary marker on its export, so nothing is claimed here.
 	_feedback_player_inspector = load(FEEDBACK_PLAYER_INSPECTOR_PATH).new()

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a node that wears a script extending another still draws its base class's Inspector decoration
+
+The header, info line and look a script gives a variable (`# @inspector_header`, `# @inspector_info`, `# @inspector_look`) were read from the script the node wears and from nowhere else, so a node wearing a thin subclass lost them: an old scene's FeedbackPlayer, which now only extends JuicePlayer, showed no "Juice Player" header over its list and drew its direction and while-playing choices as plain dropdowns instead of toggle rows. The Inspector now asks the script a node wears first and then each script it extends.
+
 ### Changed: the Inspector strip, the toolbar, the finding and the Doctor say Juice Player
 
 Under a Juice Player's list the strip reads "3 juice cards - 1.20 s total" (and "1 juice card"), the toolbar's list segment is called "Juice" and its Open button selects "the Juice Player this row is about", the step window is titled "Juice card", the quiet finding on a row says "This row names a juice card called ..., and no Juice Player in ... has one", and the Doctor's section reads "Juice Players: N sheet(s) play a beat through a Juice Player ...". The warnings the node prints say "Juice Player:". Only words changed: the Doctor check and the finding keep the ids they always had.

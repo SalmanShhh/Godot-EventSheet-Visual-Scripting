@@ -12389,7 +12389,7 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 							and (_viewport._find_definition(provider_id, ace_id) != null
 								or ACERegistry.find_descriptor(provider_id, ace_id) != null))
 			FINDINGS_FEEDBACK:
-				# A row that names a feedback the scene's Feedback Player has not got. The evidence is
+				# A row that names a juice card the scene's Juice Player has not got. The evidence is
 				# the scene's saved bytes rather than a guess, so a sheet no scene runs and a scene
 				# with no player in it both earn nothing at all.
 				_sheet_findings_cache[family] = EventSheetFeedbackFindings.findings(sheet,

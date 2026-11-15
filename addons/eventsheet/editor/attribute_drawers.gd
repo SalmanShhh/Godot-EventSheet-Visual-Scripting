@@ -315,10 +315,24 @@ static func forget_decor() -> void:
 ## The decor entries for one property, parsed from the object's script source. Decor comments are plain
 ## `#` lines (never `##` - those merge into the hover tooltip), so they reach the editor only through
 ## the source text, exactly like the parity covenant wants: inert in the exported game.
+##
+## The script the object wears is asked first, then each script it extends. A node can wear a thin
+## subclass whose exported variables are declared in its base class (the old name of a pack node does),
+## and Godot lists those variables for it; the lines that decorate them sit in the base class's source.
 static func decor_for(object: Object, property: String) -> Array:
 	if object == null:
 		return []
-	var script: GDScript = object.get_script() as GDScript
+	var script: Script = object.get_script() as Script
+	while script != null:
+		var found: Array = _decor_in(script as GDScript, property)
+		if not found.is_empty():
+			return found
+		script = script.get_base_script()
+	return []
+
+
+## The decor one script's own source holds for a property, through the per-script cache.
+static func _decor_in(script: GDScript, property: String) -> Array:
 	if script == null:
 		return []
 	var source: String = script.source_code

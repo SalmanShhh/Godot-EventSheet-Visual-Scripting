@@ -35,6 +35,8 @@ static func run() -> bool:
 	var packed: PackedScene = PackedScene.new()
 	packed.pack(root)
 	ResourceSaver.save(packed, SCENE_PATH)
+	var kinds_new: Array = _decor_kinds(fresh)
+	var kinds_old: Array = _decor_kinds(old)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		# The three shapes a project can hold, as (file name, global name): an old single-file copy, the new
 		# code file, and the old name's file that now extends it. A script that is neither is not claimed.
@@ -43,15 +45,31 @@ static func run() -> bool:
 		["the old name's file is a player", NAMES.is_player_names("feedback_player.gd", ""), true],
 		["a script that is neither is not", NAMES.is_player_names("juice_behavior.gd", "JuiceBehavior"), false],
 		["the code file is where the pack is read from", NAMES.pack_path(), NEW_PATH],
+		["an old copy with only the old file is read from that file", NAMES.file_name_among(PackedStringArray(["feedback_player.gd"])), "feedback_player.gd"],
+		["the new pair is read from the code file", NAMES.file_name_among(PackedStringArray(["feedback_player.gd", "juice_player.gd"])), "juice_player.gd"],
 		["the new file exists", made, NEW_PATH],
 		["the Inspector strip claims a new node", INSPECTOR.is_feedback_player(fresh), true],
 		["and an old one", INSPECTOR.is_feedback_player(old), true],
 		["the toolbar segment claims a new node", SEGMENT.is_player(fresh), true],
 		["and an old one", SEGMENT.is_player(old), true],
 		["a saved scene's new node is read for its labels", FINDINGS.labels_in_scene(SCENE_PATH), PackedStringArray(["kick"])],
+		# A node wearing the old name draws what its base class declares: the header over the list, the info
+		# line and the toggle rows. Godot hands the Inspector the exported variables of the base class, and
+		# the comment lines that decorate them sit in the base class's source.
+		["a new node draws the list header, the info line and the toggle rows", kinds_new, ["header", "info", "look", "look"]],
+		["and so does a node wearing the old name", kinds_old, ["header", "info", "look", "look"]],
 		["the card families are read off the class that declares them", SCHEMA.family_of().get("shake", ""), "camera"],
 	])
 	root.free()
 	old.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCENE_PATH))
 	return ok
+
+
+## The decoration kinds the Inspector draws for the list, the direction and the while-playing rows.
+static func _decor_kinds(node: Node) -> Array:
+	var kinds: Array = []
+	for property: String in ["steps", "direction", "while_playing"]:
+		for entry: Variant in EventSheetAttributeDrawers.decor_for(node, property):
+			kinds.append(str((entry as Dictionary).get("kind", "")))
+	return kinds
