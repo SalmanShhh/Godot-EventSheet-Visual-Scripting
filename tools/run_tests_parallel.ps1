@@ -118,6 +118,8 @@ if (-not $Force -and $identity -and (Test-Path $stampFile)) {
 #
 # The wait has a CEILING. A run that queues behind a holder which is alive but wedged would otherwise
 # block forever with no output, and a suite that never answers is worse than one that says why.
+# Notices go to the host, not the output stream: a function returns everything it prints, and the
+# caller wants the open handle and nothing else.
 # The same lock, as a function, because the tail takes a second one (below). Returns the open handle;
 # the handle dies with the process, so a holder that is gone leaves a stale file this breaks with a note.
 function Get-SuiteLock([string]$path, [string]$what) {
@@ -126,9 +128,9 @@ function Get-SuiteLock([string]$path, [string]$what) {
 	$giveUpAt = [datetime]::UtcNow.AddMinutes($LockTimeoutMinutes)
 	while (-not $handle) {
 		if ([datetime]::UtcNow -gt $giveUpAt) {
-			"${what}: still held after $LockTimeoutMinutes minutes - giving up rather than waiting silently."
-			"(the holder's pid is in $path; delete that file once you know the process is gone,"
-			" or pass -LockTimeoutMinutes to wait longer.)"
+			Write-Host "${what}: still held after $LockTimeoutMinutes minutes - giving up rather than waiting silently."
+			Write-Host "(the holder's pid is in $path; delete that file once you know the process is gone,"
+			Write-Host " or pass -LockTimeoutMinutes to wait longer.)"
 			exit 2
 		}
 		# Shared for READING, so a waiting run can say whose lock it is; a second writer is still refused,
@@ -137,10 +139,10 @@ function Get-SuiteLock([string]$path, [string]$what) {
 		catch {
 			$holder = @(Get-Content $path -ErrorAction SilentlyContinue)[0]
 			if ($holder -match "^\d+$" -and -not (Get-Process -Id ([int]$holder) -ErrorAction SilentlyContinue)) {
-				"${what}: holder process $holder is gone - breaking the stale lock."
+				Write-Host "${what}: holder process $holder is gone - breaking the stale lock."
 				Remove-Item $path -Force -ErrorAction SilentlyContinue
 			} else {
-				if (-not $said) { "${what}: held by process $holder - waiting for it to finish."; $said = $true }
+				if (-not $said) { Write-Host "${what}: held by process $holder - waiting for it to finish."; $said = $true }
 				Start-Sleep -Seconds 5
 			}
 		}
@@ -149,7 +151,7 @@ function Get-SuiteLock([string]$path, [string]$what) {
 	$stamper = New-Object IO.StreamWriter($handle)
 	$stamper.WriteLine($PID)
 	$stamper.Flush()
-	return $handle
+	return , $handle
 }
 
 $lock = Get-SuiteLock (Join-Path $root ".godot\suite.lock") "suite lock"

@@ -212,8 +212,9 @@ static func _the_plan_writes_no_file() -> bool:
 	var before: PackedStringArray = DirAccess.get_files_at("user://")
 	EventSheetMigrationPlan.plan(_sheet_with("SetSpriteSize", {"size": "Vector2(96, 48)", "target": "$Enemy"}),
 		EventForgeSuccessors.catalog())
+	# Only the plan's own trial file names count: another process sharing the folder writes its own.
 	var added: Array[String] = []
 	for file: String in DirAccess.get_files_at("user://"):
-		if not before.has(file):
+		if not before.has(file) and file.begins_with("eventforge_migration_gate"):
 			added.append(file)
 	return SUPPORT.check(NAME, "Migrate plans a row without writing a file", added, [] as Array[String])

@@ -213,7 +213,7 @@ static func run() -> bool:
 	all_passed = _check("freshly compiled sheet is clean", findings.is_empty(), true) and all_passed
 	# The staleness check answers from the compiled text alone. A folder sitting where a temporary file
 	# used to be written (what a second editor holding that name looks like) must change nothing, and
-	# the check must leave no new file in the user folder.
+	# the check must leave no new trial file in the user folder (a neighbour's own files do not count).
 	var held_name: String = "user://eventsheets_doctor_temp.gd"
 	DirAccess.make_dir_recursive_absolute(held_name)
 	var files_before: PackedStringArray = DirAccess.get_files_at("user://")
@@ -221,7 +221,7 @@ static func run() -> bool:
 	EventSheetProjectDoctor.check_generated_outputs(PackedStringArray([sheet_path]), findings)
 	var files_added: Array[String] = []
 	for file: String in DirAccess.get_files_at("user://"):
-		if not files_before.has(file):
+		if not files_before.has(file) and file.begins_with("eventsheets_doctor_temp"):
 			files_added.append(file)
 	DirAccess.remove_absolute(held_name)
 	all_passed = _check("a held temporary name does not make a good sheet fail to compile", findings.is_empty(), true) and all_passed
