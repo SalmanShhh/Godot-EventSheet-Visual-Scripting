@@ -50,13 +50,13 @@ static func run() -> bool:
 	_clear_policies()
 
 	# Meta-pack: a behavior sheet including a base addon compiles standalone.
-	_make_base(SUPPORT.scratch("eventsheets_base_addon.tres"), PackedStringArray(["approved"]))
+	_make_base(SUPPORT.own_path("eventsheets_base_addon.tres"), PackedStringArray(["approved"]))
 	var meta: EventSheetResource = EventSheetResource.new()
 	meta.behavior_mode = true
 	meta.host_class = "Node2D"
 	meta.custom_class_name = "JamKit"
-	meta.includes = [SUPPORT.scratch("eventsheets_base_addon.tres")]
-	var result: Dictionary = EventSheetCompiler.compile(meta, SUPPORT.scratch("eventsheets_jamkit.gd"))
+	meta.includes = [SUPPORT.own_path("eventsheets_base_addon.tres")]
+	var result: Dictionary = EventSheetCompiler.compile(meta, SUPPORT.own_path("eventsheets_jamkit.gd"))
 	var output: String = str(result.get("output", ""))
 	all_passed = _check("meta-pack compiles with the include's function",
 		bool(result.get("success", false)) and output.contains("func shake() -> void:"), true) and all_passed
@@ -66,58 +66,58 @@ static func run() -> bool:
 
 	# Policy: composition off blocks addon includes with a named error.
 	_set_policy("composition_mode", "off")
-	var blocked: Dictionary = EventSheetCompiler.compile(meta, SUPPORT.scratch("eventsheets_jamkit_off.gd"))
+	var blocked: Dictionary = EventSheetCompiler.compile(meta, SUPPORT.own_path("eventsheets_jamkit_off.gd"))
 	all_passed = _check("composition_mode off errors for addon sheets",
 		not bool(blocked.get("success", true)) and str(blocked.get("errors")).contains("composition_mode"), true) and all_passed
 	_clear_policies()
 
 	# Policy: tagged sources reject untagged includes, accept tagged ones.
-	_make_base(SUPPORT.scratch("eventsheets_untagged_addon.tres"))
+	_make_base(SUPPORT.own_path("eventsheets_untagged_addon.tres"))
 	var strict: EventSheetResource = EventSheetResource.new()
 	strict.behavior_mode = true
 	strict.host_class = "Node2D"
 	strict.custom_class_name = "StrictKit"
-	strict.includes = [SUPPORT.scratch("eventsheets_untagged_addon.tres")]
+	strict.includes = [SUPPORT.own_path("eventsheets_untagged_addon.tres")]
 	_set_policy("include_sources", "tagged:approved")
-	var rejected: Dictionary = EventSheetCompiler.compile(strict, SUPPORT.scratch("eventsheets_strict.gd"))
+	var rejected: Dictionary = EventSheetCompiler.compile(strict, SUPPORT.own_path("eventsheets_strict.gd"))
 	all_passed = _check("tagged: sourcing rejects untagged includes",
 		not bool(rejected.get("success", true)) and str(rejected.get("errors")).contains("approved"), true) and all_passed
-	var accepted: Dictionary = EventSheetCompiler.compile(meta, SUPPORT.scratch("eventsheets_jamkit_tagged.gd"))
+	var accepted: Dictionary = EventSheetCompiler.compile(meta, SUPPORT.own_path("eventsheets_jamkit_tagged.gd"))
 	all_passed = _check("tagged: sourcing accepts tagged includes", bool(accepted.get("success", false)), true) and all_passed
 	_clear_policies()
 
 	# Policy: deprecated includes warn by default, error when configured.
-	_make_base(SUPPORT.scratch("eventsheets_old_addon.tres"), PackedStringArray(["deprecated"]))
+	_make_base(SUPPORT.own_path("eventsheets_old_addon.tres"), PackedStringArray(["deprecated"]))
 	var old_user: EventSheetResource = EventSheetResource.new()
-	old_user.includes = [SUPPORT.scratch("eventsheets_old_addon.tres")]
-	var warned: Dictionary = EventSheetCompiler.compile(old_user, SUPPORT.scratch("eventsheets_old_user.gd"))
+	old_user.includes = [SUPPORT.own_path("eventsheets_old_addon.tres")]
+	var warned: Dictionary = EventSheetCompiler.compile(old_user, SUPPORT.own_path("eventsheets_old_user.gd"))
 	all_passed = _check("deprecated includes warn by default",
 		bool(warned.get("success", false)) and str(warned.get("warnings")).contains("deprecated"), true) and all_passed
 	_set_policy("deprecated_tag_blocks", "error")
-	var banned: Dictionary = EventSheetCompiler.compile(old_user, SUPPORT.scratch("eventsheets_old_user2.gd"))
+	var banned: Dictionary = EventSheetCompiler.compile(old_user, SUPPORT.own_path("eventsheets_old_user2.gd"))
 	all_passed = _check("deprecated_tag_blocks=error blocks", not bool(banned.get("success", true)), true) and all_passed
 	_clear_policies()
 
 	# Policy: collision_policy=error turns root-wins into a failure.
 	var collide_base: EventSheetResource = EventSheetResource.new()
 	collide_base.variables = {"speed": {"type": "int", "default": 1, "exported": false}}
-	ResourceSaver.save(collide_base, SUPPORT.scratch("eventsheets_collide_base.tres"))
+	ResourceSaver.save(collide_base, SUPPORT.own_path("eventsheets_collide_base.tres"))
 	var collider: EventSheetResource = EventSheetResource.new()
 	collider.variables = {"speed": {"type": "int", "default": 2, "exported": false}}
-	collider.includes = [SUPPORT.scratch("eventsheets_collide_base.tres")]
-	var soft: Dictionary = EventSheetCompiler.compile(collider, SUPPORT.scratch("eventsheets_collide.gd"))
+	collider.includes = [SUPPORT.own_path("eventsheets_collide_base.tres")]
+	var soft: Dictionary = EventSheetCompiler.compile(collider, SUPPORT.own_path("eventsheets_collide.gd"))
 	all_passed = _check("collisions warn by default (root wins)",
 		bool(soft.get("success", false)) and str(soft.get("warnings")).contains("root wins"), true) and all_passed
 	_set_policy("collision_policy", "error")
-	var hard: Dictionary = EventSheetCompiler.compile(collider, SUPPORT.scratch("eventsheets_collide2.gd"))
+	var hard: Dictionary = EventSheetCompiler.compile(collider, SUPPORT.own_path("eventsheets_collide2.gd"))
 	all_passed = _check("collision_policy=error fails the compile", not bool(hard.get("success", true)), true) and all_passed
 	_clear_policies()
 
 	# THE INVARIANT: identical bytes under permissive vs strict-but-passing policy.
-	var permissive_output: String = str(EventSheetCompiler.compile(meta, SUPPORT.scratch("eventsheets_inv1.gd")).get("output", ""))
+	var permissive_output: String = str(EventSheetCompiler.compile(meta, SUPPORT.own_path("eventsheets_inv1.gd")).get("output", ""))
 	_set_policy("include_sources", "tagged:approved")
 	_set_policy("collision_policy", "error")
-	var strict_output: String = str(EventSheetCompiler.compile(meta, SUPPORT.scratch("eventsheets_inv2.gd")).get("output", ""))
+	var strict_output: String = str(EventSheetCompiler.compile(meta, SUPPORT.own_path("eventsheets_inv2.gd")).get("output", ""))
 	_clear_policies()
 	all_passed = _check("policy never changes emitted bytes", permissive_output == strict_output, true) and all_passed
 
@@ -126,22 +126,22 @@ static func run() -> bool:
 	var dialog_sheet: EventSheetResource = EventSheetResource.new()
 	editor.setup(dialog_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._sheet_type_glue.apply_sheet_type_settings(2, "ComposedThing", "", "Node2D", false, PackedStringArray(["kit"]), PackedStringArray([SUPPORT.scratch("eventsheets_base_addon.tres")]))
+	editor._sheet_type_glue.apply_sheet_type_settings(2, "ComposedThing", "", "Node2D", false, PackedStringArray(["kit"]), PackedStringArray([SUPPORT.own_path("eventsheets_base_addon.tres")]))
 	all_passed = _check("Sheet Type applies includes",
-		dialog_sheet.includes.size() == 1 and dialog_sheet.includes[0] == SUPPORT.scratch("eventsheets_base_addon.tres"), true) and all_passed
+		dialog_sheet.includes.size() == 1 and dialog_sheet.includes[0] == SUPPORT.own_path("eventsheets_base_addon.tres"), true) and all_passed
 
 	# Export bundling: the included sheet travels with the pack.
 	dialog_sheet.behavior_mode = true
 	dialog_sheet.host_class = "Node2D"
-	editor._export_pack._export_addon_pack(SUPPORT.scratch("eventsheets_pack_out"))
+	editor._export_pack._export_addon_pack(SUPPORT.own_path("eventsheets_pack_out"))
 	all_passed = _check("Export Addon bundles the include",
-		FileAccess.file_exists(SUPPORT.scratch("eventsheets_pack_out/eventsheets_base_addon.tres")), true) and all_passed
+		FileAccess.file_exists(SUPPORT.own_path("eventsheets_pack_out/eventsheets_base_addon.tres")), true) and all_passed
 	editor.free()
 
 	# Lane B: uses_addons emit owned helper instances; bad names warn-and-skip.
 	var lane_b: EventSheetResource = EventSheetResource.new()
 	lane_b.uses_addons = ["EventSheetIdentifierRules", "Not A Class!"]
-	var lane_b_result: Dictionary = EventSheetCompiler.compile(lane_b, SUPPORT.scratch("eventsheets_laneb.gd"))
+	var lane_b_result: Dictionary = EventSheetCompiler.compile(lane_b, SUPPORT.own_path("eventsheets_laneb.gd"))
 	var lane_b_output: String = str(lane_b_result.get("output", ""))
 	all_passed = _check("uses_addons emits an owned instance",
 		lane_b_output.contains("var __uses_event_sheet_identifier_rules := EventSheetIdentifierRules.new()"), true) and all_passed
@@ -154,14 +154,14 @@ static func run() -> bool:
 	# Depth rail: chains past max_include_depth warn (rail tightened to 1 here so a
 	# two-level chain crosses it; the default rail is 2).
 	var chain_base: EventSheetResource = EventSheetResource.new()
-	ResourceSaver.save(chain_base, SUPPORT.scratch("eventsheets_chain_base.tres"))
+	ResourceSaver.save(chain_base, SUPPORT.own_path("eventsheets_chain_base.tres"))
 	var chain_mid: EventSheetResource = EventSheetResource.new()
-	chain_mid.includes = [SUPPORT.scratch("eventsheets_chain_base.tres")]
-	ResourceSaver.save(chain_mid, SUPPORT.scratch("eventsheets_chain_mid.tres"))
+	chain_mid.includes = [SUPPORT.own_path("eventsheets_chain_base.tres")]
+	ResourceSaver.save(chain_mid, SUPPORT.own_path("eventsheets_chain_mid.tres"))
 	var chain_top: EventSheetResource = EventSheetResource.new()
-	chain_top.includes = [SUPPORT.scratch("eventsheets_chain_mid.tres")]
+	chain_top.includes = [SUPPORT.own_path("eventsheets_chain_mid.tres")]
 	_set_policy("max_include_depth", 1)
-	var chain_result: Dictionary = EventSheetCompiler.compile(chain_top, SUPPORT.scratch("eventsheets_chain.gd"))
+	var chain_result: Dictionary = EventSheetCompiler.compile(chain_top, SUPPORT.own_path("eventsheets_chain.gd"))
 	_clear_policies()
 	all_passed = _check("include chains past the depth rail warn",
 		bool(chain_result.get("success", false)) and str(chain_result.get("warnings")).contains("Deep chains"), true) and all_passed
@@ -182,7 +182,7 @@ static func run() -> bool:
 	pack.host_class = "Node2D"
 	pack.custom_class_name = "ComboKit"
 	pack.requires_behaviors = ["ScreenShake", "bad name!"]
-	var pack_result: Dictionary = EventSheetCompiler.compile(pack, SUPPORT.scratch("eventsheets_b2.gd"))
+	var pack_result: Dictionary = EventSheetCompiler.compile(pack, SUPPORT.own_path("eventsheets_b2.gd"))
 	var pack_output: String = str(pack_result.get("output", ""))
 	all_passed = _check("requires emits the configuration-warnings hook",
 		pack_output.contains("func _get_configuration_warnings() -> PackedStringArray:") and pack_output.contains("[\"ScreenShake\"]"), true) and all_passed
@@ -193,7 +193,7 @@ static func run() -> bool:
 	all_passed = _check("requires output parses", pack_script.reload(true) == OK, true) and all_passed
 	pack.requires_behaviors = []
 	all_passed = _check("no requires, no hook",
-		str(EventSheetCompiler.compile(pack, SUPPORT.scratch("eventsheets_b2b.gd")).get("output", "")).contains("_get_configuration_warnings"), false) and all_passed
+		str(EventSheetCompiler.compile(pack, SUPPORT.own_path("eventsheets_b2b.gd")).get("output", "")).contains("_get_configuration_warnings"), false) and all_passed
 
 	# Sheet Type applies Requires too.
 	var req_editor: EventSheetEditor = EventSheetEditor.new()

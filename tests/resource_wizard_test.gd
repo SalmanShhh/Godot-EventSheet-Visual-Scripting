@@ -103,7 +103,7 @@ static func run() -> bool:
 
 	# ---- the covenant: the wizard's output compiles and round-trips byte-exactly ----
 	EventSheetNewResourceWizard._check_rows(sheet, validator_name)
-	var compiled: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.scratch("wizard_roundtrip.gd"))
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.own_path("wizard_roundtrip.gd"))
 	ok = _check(ok, bool(compiled.get("success", false)), "the wizard sheet compiles")
 	var source: String = str(compiled.get("output", ""))
 	ok = _check(ok, source.contains("class_name LootDropTable") and source.contains("extends Resource"), "output is a named Resource script")
@@ -113,8 +113,8 @@ static func run() -> bool:
 		source.contains("\t\t\tif row[column] is String and str(row[column]).is_empty():\n\t\t\t\treturn \"Row %d has no %s.\" % [loot_drops.find(row), column]"),
 		true) and ok
 	ok = _check(ok, EventSheets.round_trips(source), "the wizard sheet round-trips byte-exactly")
-	if FileAccess.file_exists(SUPPORT.scratch("wizard_roundtrip.gd")):
-		DirAccess.remove_absolute(SUPPORT.scratch("wizard_roundtrip.gd"))
+	if FileAccess.file_exists(SUPPORT.own_path("wizard_roundtrip.gd")):
+		DirAccess.remove_absolute(SUPPORT.own_path("wizard_roundtrip.gd"))
 
 	ok = _window_says_its_own_problems() and ok
 	ok = _table_edits() and ok
@@ -223,7 +223,7 @@ static func _column_notes() -> bool:
 	wizard.set_column_note(2, "about", "The picture shown in the inventory.")
 	wizard.add_row()
 	var sheet: EventSheetResource = EventSheetNewResourceWizard.build_wizard_sheet("", "LootDrop", wizard.columns, false)
-	var source: String = SUPPORT.compile_output(sheet, SUPPORT.scratch("column_notes_probe.gd"))
+	var source: String = SUPPORT.compile_output(sheet, SUPPORT.own_path("column_notes_probe.gd"))
 	var declared: String = ""
 	for line: String in source.split("\n"):
 		if line.contains("eventsheet:table:"):
@@ -254,7 +254,7 @@ static func _column_notes() -> bool:
 			{"name": "name", "type": "String", "about": "The text shown for this drop."},
 			{"name": "amount", "type": "int", "default": "1", "about": "How many to give, at least one: never none."},
 			{"name": "icon", "type": "texture", "about": "The picture shown in the inventory."}]],
-		["and saves back byte for byte", SUPPORT.reemit(source, SUPPORT.scratch("column_notes_probe.gd")), source],
+		["and saves back byte for byte", SUPPORT.reemit(source, SUPPORT.own_path("column_notes_probe.gd")), source],
 		["the Inspector's Add Row starts with the Default", table.get_value(), [{"name": "", "amount": 1, "icon": ""}]],
 		["its headers are the names as written, the Description on hover", heads, [
 			["name", "The text shown for this drop."], ["amount", "How many to give, at least one: never none."],
@@ -280,7 +280,7 @@ static func _csv_and_files() -> bool:
 	wizard.open()
 	wizard._row_edit.text = "ProbeDrop"
 	wizard._warn_check.button_pressed = true
-	var csv_path: String = SUPPORT.scratch("data_table_probe.csv")
+	var csv_path: String = SUPPORT.own_path("data_table_probe.csv")
 	var csv_text: String = "name,amount,weight\nCoin,5,0.6\nGem,1,0.25\n"
 	var file: FileAccess = FileAccess.open(csv_path, FileAccess.WRITE)
 	file.store_string(csv_text)
@@ -295,7 +295,7 @@ static func _csv_and_files() -> bool:
 		[wizard.export_csv(csv_path), FileAccess.get_file_as_string(csv_path)],
 		["Wrote 2 row(s) to data_table_probe.csv.", csv_text]) and passed
 	DirAccess.remove_absolute(csv_path)
-	var folder: String = SUPPORT.scratch("data_table_probe")
+	var folder: String = SUPPORT.own_path("data_table_probe")
 	DirAccess.make_dir_recursive_absolute(folder)
 	var written: Dictionary = wizard.write_files(folder)
 	var data: Resource = load(str(written.get("tres", ""))) if bool(written.get("ok", false)) else null

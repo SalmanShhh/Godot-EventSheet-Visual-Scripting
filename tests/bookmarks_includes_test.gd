@@ -147,13 +147,13 @@ static func run() -> bool:
 	body.code = "shared_score = 0"
 	library_function.events.append(body)
 	library.functions.append(library_function)
-	var save_error: Error = ResourceSaver.save(library, SUPPORT.scratch("eventsheets_include_lib.tres"))
+	var save_error: Error = ResourceSaver.save(library, SUPPORT.own_path("eventsheets_include_lib.tres"))
 	all_passed = _check("library sheet saves", save_error, OK) and all_passed
 
 	var root: EventSheetResource = EventSheetResource.new()
-	root.includes = [SUPPORT.scratch("eventsheets_include_lib.tres")]
+	root.includes = [SUPPORT.own_path("eventsheets_include_lib.tres")]
 	root.variables = {"own_var": {"type": "int", "default": 1, "exported": false}}
-	var compile_result: Dictionary = EventSheetCompiler.compile(root, SUPPORT.scratch("eventsheets_include_out.gd"))
+	var compile_result: Dictionary = EventSheetCompiler.compile(root, SUPPORT.own_path("eventsheets_include_out.gd"))
 	var output: String = str(compile_result.get("output", ""))
 	all_passed = _check("included variable emits", output.contains("@export var shared_score: int = 0"), true) and all_passed
 	all_passed = _check("own variable still emits", output.contains("var own_var: int = 1"), true) and all_passed
@@ -163,25 +163,25 @@ static func run() -> bool:
 
 	# Collisions: root wins, with a warning.
 	root.variables["shared_score"] = {"type": "int", "default": 99, "exported": false}
-	var collision_result: Dictionary = EventSheetCompiler.compile(root, SUPPORT.scratch("eventsheets_include_coll.gd"))
+	var collision_result: Dictionary = EventSheetCompiler.compile(root, SUPPORT.own_path("eventsheets_include_coll.gd"))
 	all_passed = _check("root wins variable collisions",
 		str(collision_result.get("output", "")).contains("var shared_score: int = 99"), true) and all_passed
 	all_passed = _check("collision warns", str(collision_result.get("warnings", [])).contains("root wins"), true) and all_passed
 
 	# Cycles: a sheet including itself terminates with a warning.
 	var cyclic: EventSheetResource = EventSheetResource.new()
-	cyclic.includes = [SUPPORT.scratch("eventsheets_include_cycle.tres")]
-	var cycle_save: Error = ResourceSaver.save(cyclic, SUPPORT.scratch("eventsheets_include_cycle.tres"))
+	cyclic.includes = [SUPPORT.own_path("eventsheets_include_cycle.tres")]
+	var cycle_save: Error = ResourceSaver.save(cyclic, SUPPORT.own_path("eventsheets_include_cycle.tres"))
 	all_passed = _check("cyclic sheet saves", cycle_save, OK) and all_passed
-	var loaded_cycle: EventSheetResource = load(SUPPORT.scratch("eventsheets_include_cycle.tres"))
-	var cycle_result: Dictionary = EventSheetCompiler.compile(loaded_cycle, SUPPORT.scratch("eventsheets_include_cycle_out.gd"))
+	var loaded_cycle: EventSheetResource = load(SUPPORT.own_path("eventsheets_include_cycle.tres"))
+	var cycle_result: Dictionary = EventSheetCompiler.compile(loaded_cycle, SUPPORT.own_path("eventsheets_include_cycle_out.gd"))
 	all_passed = _check("include cycles terminate with a warning",
 		str(cycle_result.get("warnings", [])).contains("cycle"), true) and all_passed
 
 	# Missing include: warning, not failure.
 	var missing: EventSheetResource = EventSheetResource.new()
-	missing.includes = [SUPPORT.scratch("does_not_exist.tres")]
-	var missing_result: Dictionary = EventSheetCompiler.compile(missing, SUPPORT.scratch("eventsheets_include_missing.gd"))
+	missing.includes = [SUPPORT.own_path("does_not_exist.tres")]
+	var missing_result: Dictionary = EventSheetCompiler.compile(missing, SUPPORT.own_path("eventsheets_include_missing.gd"))
 	all_passed = _check("missing includes warn but compile",
 		bool(missing_result.get("success", false)) and str(missing_result.get("warnings", [])).contains("not found"), true) and all_passed
 

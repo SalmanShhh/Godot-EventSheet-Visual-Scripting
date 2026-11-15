@@ -211,7 +211,7 @@ static func run() -> bool:
 	findings = []
 	EventSheetProjectDoctor.check_generated_outputs(PackedStringArray([sheet_path]), findings)
 	all_passed = _check("freshly compiled sheet is clean", findings.is_empty(), true) and all_passed
-	# The staleness check answers from the compiled text alone. A folder sitting where a scratch file
+	# The staleness check answers from the compiled text alone. A folder sitting where a temporary file
 	# used to be written (what a second editor holding that name looks like) must change nothing, and
 	# the check must leave no new file in the user folder.
 	var held_name: String = "user://eventsheets_doctor_temp.gd"
@@ -224,7 +224,7 @@ static func run() -> bool:
 		if not files_before.has(file):
 			files_added.append(file)
 	DirAccess.remove_absolute(held_name)
-	all_passed = _check("a held scratch name does not make a good sheet fail to compile", findings.is_empty(), true) and all_passed
+	all_passed = _check("a held temporary name does not make a good sheet fail to compile", findings.is_empty(), true) and all_passed
 	all_passed = _check("the staleness check writes no file", files_added.is_empty(), true) and all_passed
 	var tamper: FileAccess = FileAccess.open(generated_path, FileAccess.READ_WRITE)
 	tamper.seek_end()

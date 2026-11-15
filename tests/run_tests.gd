@@ -89,7 +89,7 @@ func _init() -> void:
 		passed = _sweep_project_metadata(test_file, metadata_before) and passed
 		passed = _note_shared_user_folder(test_file, user_before, shared_names) and passed
 		_mark_finished(test_file, Time.get_ticks_msec() - started_at)
-	_remove_tree(ProjectSettings.globalize_path(EventSheetTestSupport.scratch_root()))
+	_remove_tree(ProjectSettings.globalize_path(EventSheetTestSupport.own_root()))
 	_report_shared_user_folder(shared_names)
 	if passed:
 		print("All tests passed.")
@@ -162,9 +162,9 @@ func _sweep_session_state() -> void:
 #
 # Every process started on this project shares one user folder (every shard, another checkout, an
 # open editor), so a test that writes or deletes a FIXED name there can be broken at random by a
-# neighbour. A test's own files belong in `EventSheetTestSupport.scratch(name)`, a folder named for
+# neighbour. A test's own files belong in `EventSheetTestSupport.own_path(name)`, a folder named for
 # the process. After each test the top of the user folder is read again, and any name that is new
-# or was rewritten is reported - except this process's scratch folder and the engine's own entries.
+# or was rewritten is reported - except this process's per-process folder and the engine's own entries.
 # Names another shard wrote in the same moment can show up under the wrong test, which is why the
 # summary counts DISTINCT NAMES, not findings, and why the parallel launcher unions the shards'.
 
@@ -180,7 +180,7 @@ func _top_of_user_folder() -> Dictionary:
 	return top
 
 
-## Notes what `test_file` left at the top of the user folder, outside its own scratch folder. Returns
+## Notes what `test_file` left at the top of the user folder, outside its own per-process folder. Returns
 ## false only when the check is set to fail the run.
 func _note_shared_user_folder(test_file: String, before: Dictionary, names: Dictionary) -> bool:
 	var after: Dictionary = _top_of_user_folder()
@@ -194,7 +194,7 @@ func _note_shared_user_folder(test_file: String, before: Dictionary, names: Dict
 	if found.is_empty():
 		return true
 	found.sort()
-	print("[WARN] run_tests: %s wrote %d name(s) in the shared user folder outside its own scratch folder: %s"
+	print("[WARN] run_tests: %s wrote %d name(s) in the shared user folder outside its own per-process folder: %s"
 		% [test_file, found.size(), ", ".join(found.slice(0, 5)) + (", ..." if found.size() > 5 else "")])
 	return not USER_FOLDER_CHECK_FAILS
 
@@ -203,7 +203,7 @@ func _note_shared_user_folder(test_file: String, before: Dictionary, names: Dict
 func _report_shared_user_folder(names: Dictionary) -> void:
 	var sorted_names: Array = names.keys()
 	sorted_names.sort()
-	print("shared user folder: %d name(s) written outside the per-process scratch folder (%s)"
+	print("shared user folder: %d name(s) written outside the per-process folder (%s)"
 		% [sorted_names.size(), "a failure" if USER_FOLDER_CHECK_FAILS else "a warning until the count is zero"])
 	var file: FileAccess = FileAccess.open(PROGRESS_DIR + progress_token() + ".names", FileAccess.WRITE)
 	if file == null:
@@ -213,7 +213,7 @@ func _report_shared_user_folder(names: Dictionary) -> void:
 	file.close()
 
 
-## Removes a folder and everything in it. Absolute path, so a test's scratch folder is swept without
+## Removes a folder and everything in it. Absolute path, so a test's per-process folder is swept without
 ## a second resource path to get wrong.
 func _remove_tree(absolute: String) -> void:
 	if not DirAccess.dir_exists_absolute(absolute):

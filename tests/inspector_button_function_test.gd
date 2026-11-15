@@ -38,13 +38,13 @@ static func run() -> bool:
 	body.code = "print(\"baked\")"
 	button_function.events.append(body)
 	sheet.functions.append(button_function)
-	var compiled: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.scratch("btn_fn_test.gd"))
+	var compiled: Dictionary = EventSheetCompiler.compile(sheet, SUPPORT.own_path("btn_fn_test.gd"))
 	ok = _check(ok, bool(compiled.get("success", false)), "the button sheet compiles")
 	var source: String = str(compiled.get("output", ""))
 	ok = _check(ok, source.contains("@export_tool_button(\"Re-bake\") var _btn_rebake: Callable = rebake"), "output wires the Inspector button to the function")
 	ok = _check(ok, EventSheets.round_trips(source), "the button script round-trips byte-exactly")
-	if FileAccess.file_exists(SUPPORT.scratch("btn_fn_test.gd")):
-		DirAccess.remove_absolute(SUPPORT.scratch("btn_fn_test.gd"))
+	if FileAccess.file_exists(SUPPORT.own_path("btn_fn_test.gd")):
+		DirAccess.remove_absolute(SUPPORT.own_path("btn_fn_test.gd"))
 
 	return ok
 

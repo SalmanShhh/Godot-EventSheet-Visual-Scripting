@@ -78,20 +78,20 @@ static func run() -> bool:
 	var library: EventSheetResource = EventSheetResource.new()
 	library.host_class = "Node"
 	library.variables = {"spd": {"type": "float", "default": 1.0, "exported": true}}
-	ResourceSaver.save(library, SUPPORT.scratch("rename_lib.tres"))
+	ResourceSaver.save(library, SUPPORT.own_path("rename_lib.tres"))
 	var consumer: EventSheetResource = EventSheetResource.new()
 	consumer.host_class = "Node"
-	consumer.includes = [SUPPORT.scratch("rename_lib.tres")]
+	consumer.includes = [SUPPORT.own_path("rename_lib.tres")]
 	var consumer_raw: RawCodeRow = RawCodeRow.new()
 	consumer_raw.code = "var x = spd * 2"
 	consumer.events.append(consumer_raw)
-	ResourceSaver.save(consumer, SUPPORT.scratch("rename_consumer.tres"))
+	ResourceSaver.save(consumer, SUPPORT.own_path("rename_consumer.tres"))
 	var editor: EventSheetEditor = EventSheetEditor.new()
-	editor.setup(ResourceLoader.load(SUPPORT.scratch("rename_lib.tres"), "", ResourceLoader.CACHE_MODE_IGNORE))
+	editor.setup(ResourceLoader.load(SUPPORT.own_path("rename_lib.tres"), "", ResourceLoader.CACHE_MODE_IGNORE))
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._current_sheet_path = SUPPORT.scratch("rename_lib.tres")
-	var touched: PackedStringArray = editor._rename_in_includers("spd", "speed", PackedStringArray([SUPPORT.scratch("rename_consumer.tres")]))
-	var reloaded: EventSheetResource = ResourceLoader.load(SUPPORT.scratch("rename_consumer.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	editor._current_sheet_path = SUPPORT.own_path("rename_lib.tres")
+	var touched: PackedStringArray = editor._rename_in_includers("spd", "speed", PackedStringArray([SUPPORT.own_path("rename_consumer.tres")]))
+	var reloaded: EventSheetResource = ResourceLoader.load(SUPPORT.own_path("rename_consumer.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
 	all_passed = _check("includers are rewritten and saved",
 		touched == PackedStringArray(["rename_consumer.tres"])
 		and (reloaded.events[0] as RawCodeRow).code == "var x = speed * 2", true) and all_passed
@@ -138,11 +138,11 @@ static func run() -> bool:
 		editor._current_sheet.variables.has("missing_thing") and dialog._note_for("amount").is_empty(), true) and all_passed
 	field_box.free()
 	editor.free()
-	DirAccess.remove_absolute(SUPPORT.scratch("rename_lib.tres"))
-	DirAccess.remove_absolute(SUPPORT.scratch("rename_consumer.tres"))
+	DirAccess.remove_absolute(SUPPORT.own_path("rename_lib.tres"))
+	DirAccess.remove_absolute(SUPPORT.own_path("rename_consumer.tres"))
 
 	# ── Row snippets: the clipboard text format is the file format ────────────────
-	ProjectSettings.set_setting("eventsheets/project/snippets_dir", SUPPORT.scratch("snip_dir"))
+	ProjectSettings.set_setting("eventsheets/project/snippets_dir", SUPPORT.own_path("snip_dir"))
 	for stale: String in EventSheetSnippetLibrary.list_snippets():
 		DirAccess.remove_absolute(stale)
 	var snippet_sheet: EventSheetResource = EventSheetResource.new()
@@ -158,23 +158,23 @@ static func run() -> bool:
 	var snippet_text: String = EventSheetSnippet.serialize_rows([snippet_event], snippet_sheet)
 	var saved_path: String = EventSheetSnippetLibrary.save_snippet("Combo Bump", snippet_text)
 	all_passed = _check("snippets file under snake_case names",
-		saved_path, SUPPORT.scratch("snip_dir/combo_bump.txt")) and all_passed
+		saved_path, SUPPORT.own_path("snip_dir/combo_bump.txt")) and all_passed
 	all_passed = _check("the file IS the clipboard format",
 		EventSheetSnippetLibrary.read_snippet(saved_path), snippet_text) and all_passed
 	all_passed = _check("name collisions suffix instead of overwriting",
-		EventSheetSnippetLibrary.save_snippet("Combo Bump", snippet_text), SUPPORT.scratch("snip_dir/combo_bump-2.txt")) and all_passed
+		EventSheetSnippetLibrary.save_snippet("Combo Bump", snippet_text), SUPPORT.own_path("snip_dir/combo_bump-2.txt")) and all_passed
 	all_passed = _check("the library lists sorted snippets",
 		EventSheetSnippetLibrary.list_snippets(),
-		PackedStringArray([SUPPORT.scratch("snip_dir/combo_bump-2.txt"), SUPPORT.scratch("snip_dir/combo_bump.txt")])) and all_passed
+		PackedStringArray([SUPPORT.own_path("snip_dir/combo_bump-2.txt"), SUPPORT.own_path("snip_dir/combo_bump.txt")])) and all_passed
 	# Review fix: the name is a FILENAME, not a path - "enemies/spawn" or "../notes" used to
 	# write the file outside the snippets dir (then never showed in the list).
 	all_passed = _check("path separators in a snippet name collapse to underscores",
-		EventSheetSnippetLibrary.save_snippet("enemies/spawn", snippet_text), SUPPORT.scratch("snip_dir/enemies_spawn.txt")) and all_passed
+		EventSheetSnippetLibrary.save_snippet("enemies/spawn", snippet_text), SUPPORT.own_path("snip_dir/enemies_spawn.txt")) and all_passed
 	var dotty_path: String = EventSheetSnippetLibrary.save_snippet("../notes", snippet_text)
 	all_passed = _check("dot-dot names stay inside the snippets dir",
-		dotty_path, SUPPORT.scratch("snip_dir/notes.txt")) and all_passed
-	DirAccess.remove_absolute(SUPPORT.scratch("snip_dir/enemies_spawn.txt"))
-	DirAccess.remove_absolute(SUPPORT.scratch("snip_dir/notes.txt"))
+		dotty_path, SUPPORT.own_path("snip_dir/notes.txt")) and all_passed
+	DirAccess.remove_absolute(SUPPORT.own_path("snip_dir/enemies_spawn.txt"))
+	DirAccess.remove_absolute(SUPPORT.own_path("snip_dir/notes.txt"))
 	# Insert rides the normal snippet paste: fresh rows land on the open sheet.
 	var insert_editor: EventSheetEditor = EventSheetEditor.new()
 	var insert_sheet: EventSheetResource = EventSheetResource.new()
@@ -208,9 +208,9 @@ static func run() -> bool:
 		clash_editor._author_actions._save_selection_snippet_named("Combo Bump").get_file(), "combo_bump-3.txt") and all_passed
 	clash_editor.free()
 	ProjectSettings.set_setting("eventsheets/project/snippets_dir", null)
-	DirAccess.remove_absolute(SUPPORT.scratch("snip_dir/combo_bump.txt"))
-	DirAccess.remove_absolute(SUPPORT.scratch("snip_dir/combo_bump-2.txt"))
-	DirAccess.remove_absolute(SUPPORT.scratch("snip_dir/combo_bump-3.txt"))
+	DirAccess.remove_absolute(SUPPORT.own_path("snip_dir/combo_bump.txt"))
+	DirAccess.remove_absolute(SUPPORT.own_path("snip_dir/combo_bump-2.txt"))
+	DirAccess.remove_absolute(SUPPORT.own_path("snip_dir/combo_bump-3.txt"))
 
 	# ── Bulk operations on a selection ────────────────────────────────────────────
 	var bulk_sheet: EventSheetResource = insert_editor._current_sheet
@@ -253,31 +253,31 @@ static func run() -> bool:
 	# ── Session restore: tabs survive a restart ──────────────────────────────────
 	var session_a: EventSheetResource = EventSheetResource.new()
 	session_a.host_class = "Node"
-	ResourceSaver.save(session_a, SUPPORT.scratch("session_a.tres"))
+	ResourceSaver.save(session_a, SUPPORT.own_path("session_a.tres"))
 	var session_b: EventSheetResource = EventSheetResource.new()
 	session_b.host_class = "Node"
-	ResourceSaver.save(session_b, SUPPORT.scratch("session_b.tres"))
+	ResourceSaver.save(session_b, SUPPORT.own_path("session_b.tres"))
 	var session_editor: EventSheetEditor = EventSheetEditor.new()
-	session_editor.setup(ResourceLoader.load(SUPPORT.scratch("session_a.tres"), "", ResourceLoader.CACHE_MODE_IGNORE))
+	session_editor.setup(ResourceLoader.load(SUPPORT.own_path("session_a.tres"), "", ResourceLoader.CACHE_MODE_IGNORE))
 	session_editor.set_undo_redo_manager(NoopUndoManager.new())
-	session_editor._open_sheet_in_tab(ResourceLoader.load(SUPPORT.scratch("session_b.tres"), "", ResourceLoader.CACHE_MODE_IGNORE), SUPPORT.scratch("session_b.tres"))
+	session_editor._open_sheet_in_tab(ResourceLoader.load(SUPPORT.own_path("session_b.tres"), "", ResourceLoader.CACHE_MODE_IGNORE), SUPPORT.own_path("session_b.tres"))
 	session_editor._session._session_tracking = true
 	session_editor._persist_session()
 	var written: ConfigFile = ConfigFile.new()
 	written.load("user://eventsheets_session.cfg")
 	all_passed = _check("sessions persist saved-tab paths + the active index",
 		PackedStringArray(written.get_value("session", "paths", PackedStringArray()))
-		== PackedStringArray([SUPPORT.scratch("session_a.tres"), SUPPORT.scratch("session_b.tres")])
+		== PackedStringArray([SUPPORT.own_path("session_a.tres"), SUPPORT.own_path("session_b.tres")])
 		and int(written.get_value("session", "active", -1)) == 1, true) and all_passed
 	session_editor.free()
-	DirAccess.remove_absolute(SUPPORT.scratch("session_b.tres"))
+	DirAccess.remove_absolute(SUPPORT.own_path("session_b.tres"))
 	var restored_editor: EventSheetEditor = EventSheetEditor.new()
 	restored_editor.setup(null)
 	restored_editor.set_undo_redo_manager(NoopUndoManager.new())
 	restored_editor._restore_session()
 	all_passed = _check("restore reopens existing sheets and skips deleted ones",
 		restored_editor.get_open_tab_count() == 2
-		and restored_editor._current_sheet_path == SUPPORT.scratch("session_a.tres"), true) and all_passed
+		and restored_editor._current_sheet_path == SUPPORT.own_path("session_a.tres"), true) and all_passed
 	ProjectSettings.set_setting("eventsheets/editor/restore_session", false)
 	var gated_editor: EventSheetEditor = EventSheetEditor.new()
 	gated_editor.setup(null)
@@ -322,7 +322,7 @@ static func run() -> bool:
 		image_row != null and image_row.kind_id == "preload" and str(image_row.fields.get("path", "")) == "res://hero.png", true) and all_passed
 	# The whole sheet must actually COMPILE after these drops (the bug was non-compiling output).
 	all_passed = _check("the sheet with dropped rows compiles",
-		bool(EventSheetCompiler.compile(restored_editor._current_sheet, SUPPORT.scratch("drop_compile.gd")).get("success", false)), true) and all_passed
+		bool(EventSheetCompiler.compile(restored_editor._current_sheet, SUPPORT.own_path("drop_compile.gd")).get("success", false)), true) and all_passed
 	# Empty-space drops start a fresh On Ready event instead of bouncing with a hint.
 	var events_before: int = restored_editor._current_sheet.events.size()
 	restored_editor._apply_asset_drop(null, PackedStringArray(["res://x.tscn"]))
@@ -354,7 +354,7 @@ static func run() -> bool:
 	all_passed = _check("a same-named different-path resource gets a suffixed const",
 		dup_name_row != null and str(dup_name_row.fields.get("name", "")) == "LootTable_2", true) and all_passed
 	all_passed = _check("the sheet still compiles after the collision-suffixed preloads",
-		bool(EventSheetCompiler.compile(restored_editor._current_sheet, SUPPORT.scratch("drop_dedup.gd")).get("success", false)), true) and all_passed
+		bool(EventSheetCompiler.compile(restored_editor._current_sheet, SUPPORT.own_path("drop_dedup.gd")).get("success", false)), true) and all_passed
 	# The extension seam itself: registering a handler makes a new extension droppable
 	# and its row lands top-level like any declaration.
 	EventSheets.register_asset_drop_handler(PackedStringArray(["txt"]), _drop_note_row, "Reference the note")
@@ -380,7 +380,7 @@ static func run() -> bool:
 	EventSheets._asset_drop_handlers = saved_handlers
 	EventSheets._builtin_asset_drop_handlers_registered = saved_flag
 	restored_editor.free()
-	DirAccess.remove_absolute(SUPPORT.scratch("session_a.tres"))
+	DirAccess.remove_absolute(SUPPORT.own_path("session_a.tres"))
 	DirAccess.remove_absolute("user://eventsheets_session.cfg")
 
 	# ── Loop closers: attach where you're looking, run what uses the sheet ────────
@@ -395,8 +395,8 @@ static func run() -> bool:
 	var behavior_sheet: EventSheetResource = EventSheetResource.new()
 	behavior_sheet.behavior_mode = true
 	behavior_sheet.host_class = "Node2D"
-	ResourceSaver.save(behavior_sheet, SUPPORT.scratch("attach_probe.tres"))
-	var attach_sheet: EventSheetResource = ResourceLoader.load(SUPPORT.scratch("attach_probe.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	ResourceSaver.save(behavior_sheet, SUPPORT.own_path("attach_probe.tres"))
+	var attach_sheet: EventSheetResource = ResourceLoader.load(SUPPORT.own_path("attach_probe.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
 	var host: Node2D = Node2D.new()
 	var attach_result: Dictionary = EventSheetAuthorLoop.attach_behavior(attach_sheet, host)
 	all_passed = _check("attach compiles + parents the behavior child",
@@ -416,8 +416,8 @@ static func run() -> bool:
 		bool(EventSheetAuthorLoop.attach_behavior(EventSheetResource.new(), host).get("ok")), false) and all_passed
 	host.free()
 	wrong_host.free()
-	DirAccess.remove_absolute(SUPPORT.scratch("attach_probe.tres"))
-	DirAccess.remove_absolute(SUPPORT.scratch("attach_probe_generated.gd"))
+	DirAccess.remove_absolute(SUPPORT.own_path("attach_probe.tres"))
+	DirAccess.remove_absolute(SUPPORT.own_path("attach_probe_generated.gd"))
 	# Run-from-sheet routes behaviors to the Test Bench instead of hunting scenes.
 	var run_editor: EventSheetEditor = EventSheetEditor.new()
 	var run_sheet: EventSheetResource = EventSheetResource.new()

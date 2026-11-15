@@ -265,14 +265,14 @@ foreach ($job in ($jobs + @(@{ Log = $tailLog; Err = $tailErr; Name = "tail" }))
 	if ($result.Verdict -ne "green") { $allGreen = $false }
 }
 "total: $passes pass, $fails fail across $Shards shards + tail"
-# The names tests wrote in the shared user folder outside their own scratch folder, unioned over the
+# The names tests wrote in the shared user folder outside their own per-process folder, unioned over the
 # shards: a name two shards both saw (one wrote it, one watched it appear) is counted once. A warning
 # today; the count only goes down.
 $sharedNames = @{}
 foreach ($file in (Get-ChildItem (Join-Path $root ".godot\test_progress") -Filter *.names -ErrorAction SilentlyContinue)) {
 	foreach ($entry in @(Get-Content $file.FullName -ErrorAction SilentlyContinue)) { if ($entry.Trim()) { $sharedNames[$entry.Trim()] = $true } }
 }
-"shared user folder: $($sharedNames.Count) name(s) written outside the per-process scratch folders (a warning until the count is zero)"
+"shared user folder: $($sharedNames.Count) name(s) written outside the per-process folders (a warning until the count is zero)"
 # The real-editor boot numbers, and any WARN past their tighter line, said under the verdict where
 # they can be compared run to run instead of left inside the tail's log.
 Get-Content $tailLog -ErrorAction SilentlyContinue | Where-Object { $_ -match "\[boot\]" } | ForEach-Object { $_.Trim() }
