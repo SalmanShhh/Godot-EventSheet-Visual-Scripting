@@ -2074,7 +2074,7 @@ func _draw_spans(
 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
-		if span.type == EventSheetSemanticSpan.SpanType.COMMENT and not metadata.has("text_color"):
+		if row_data.row_type == EventRowData.RowType.COMMENT:
 			color = load(RUN_MARKS_PATH).comment_ink(color, row_data.custom_color)
 		# While the game runs, the state it is in lights up in the state row: its name sits on a plate.
 		var live_token_text: String = ""

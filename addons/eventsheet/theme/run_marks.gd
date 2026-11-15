@@ -57,4 +57,5 @@ static func live_ink(reading: EventSheetReadingStyle, row_ground: Color) -> Colo
 static func comment_ink(ink: Color, band: Color) -> Color:
 	if band.a <= 0.01:
 		return ink
-	return load(READABLE_INK_PATH).move(ink, [Color(band, 1.0)])
+	# Opaque: a faded ink would read less than the colour moved for.
+	return load(READABLE_INK_PATH).move(Color(ink, 1.0), [Color(band, 1.0)])
