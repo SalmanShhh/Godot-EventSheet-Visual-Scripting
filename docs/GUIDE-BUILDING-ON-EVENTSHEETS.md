@@ -86,7 +86,7 @@ EventSheets.edit("Shout Comments", func(sheet: EventSheetResource) -> bool:
 	return changed)
 ```
 
-Palette commands are the discoverability seam: `register_palette_command(title, action)` puts your tool in Godot's own Command Palette (Ctrl+Shift+P), listed under EventSheets next to the plugin's commands (re-register the same title to replace it, `unregister_palette_command` to remove it). Registration works even before a dock exists, and `palette_commands()` keeps listing every entry.
+Palette commands are the discoverability seam: `register_palette_command(title, action)` puts your tool in Godot's own Command Palette (Ctrl+Shift+P), listed under EventSheets next to the plugin's commands (re-register the same title to replace it, `unregister_palette_command(title, category)` to remove it). Registration works even before a dock exists, and `palette_commands()` keeps listing every entry.
 
 **Asset drops.** Files dragged from the FileSystem dock onto the sheet canvas become pre-filled rows, and the mapping is a registry you can extend. `register_asset_drop_handler(extensions, build)` takes a builder `build(asset_path: String, target_event: Resource) -> Resource`; registering it also lights up the drop cursor for those extensions with no other wiring. Return an `ACEAction` and it joins the event row the file landed on (or a fresh On Ready event on an empty-space drop) - an effect is always an action. Return any other row resource (a preload `CustomBlockRow`, a `RawCodeRow`) and it lands at the sheet's top level as a declaration. Return `null` to decline. The built-ins run through this same seam: scenes spawn, sounds play, images and `.tres`/`.res`/`.gd` become preload blocks (a `const` that compiles on any host), and JSON loads into a variable (auto-declared so the sheet always compiles). Registering a handler registers the built-ins first, so retargeting a built-in extension wins (last registration wins). The dock never lets a dropped preload redefine an existing name (deduped by path, suffixed on clash).
 
@@ -393,7 +393,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Editor | `set_status(text: String, is_error := false)` | `void` | yes |
 | Editor | `refresh()` | `void` | yes |
 | Editor | `register_palette_command(title: String, action: Callable, category := "")` - an optional `category` prefixes the display title ("My Pack: Reroll Loot") so a pack's commands group together in the palette's filter | `void` | no (shows when open) |
-| Editor | `unregister_palette_command(title: String)` | `void` | no |
+| Editor | `unregister_palette_command(title: String, category: String = "")` - pass the category you registered it with, if any | `void` | no |
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
 | Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |

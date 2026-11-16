@@ -81,7 +81,11 @@ static func register_palette_command(title: String, action: Callable, category: 
 	_forward(true, title, action)
 
 
-static func unregister_palette_command(title: String) -> void:
+## Takes a command back by the title it was registered with. Pass the category too when it had one;
+## the title alone also matches the "Category: Title" the palette lists it under.
+static func unregister_palette_command(title: String, category: String = "") -> void:
+	if not category.is_empty():
+		title = "%s: %s" % [category, title]
 	for index: int in range(_palette_commands.size() - 1, -1, -1):
 		if str(_palette_commands[index].get("title", "")) == title:
 			_palette_commands.remove_at(index)

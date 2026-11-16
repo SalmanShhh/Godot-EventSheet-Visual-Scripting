@@ -184,7 +184,7 @@ const TABLE: Dictionary = {
 		"static unregister_completion_source(field_kind: String) -> void",
 		"static unregister_doctor_check(check_id: String) -> void",
 		"static unregister_inspector_preview(script_path: String) -> void",
-		"static unregister_palette_command(title: String) -> void",
+		"static unregister_palette_command(title: String, category: String = \"\") -> void",
 		"static unregister_row_menu_item(label: String) -> void",
 		"static unregister_toggle_icon_provider(provider_name: String) -> void",
 		"static user_docs_dir() -> String",

@@ -462,8 +462,9 @@ static func register_palette_command(title: String, action: Callable, category: 
 	DOCK_REGISTRY.register_palette_command(title, action, category)
 
 
-static func unregister_palette_command(title: String) -> void:
-	DOCK_REGISTRY.unregister_palette_command(title)
+## Takes a command back. Give the same `category` you registered it with, if you gave one.
+static func unregister_palette_command(title: String, category: String = "") -> void:
+	DOCK_REGISTRY.unregister_palette_command(title, category)
 
 
 ## The registered commands, in registration order: every one of them is on Godot's Command Palette.

@@ -4,6 +4,7 @@
 #   block kinds   a kind can say "nothing to write for this row" and the compile still succeeds
 #   the compiler  a sheet with no file and no output path writes no stray script
 #   unregister    everything an extension can register can be taken back
+#   palette       a command registered with a category is taken back by its title and category
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -45,6 +46,7 @@ static func run() -> bool:
 	ok = _open_sheet() and ok
 	ok = _language() and ok
 	ok = _unregister_set() and ok
+	ok = _palette() and ok
 	return ok
 
 
@@ -209,3 +211,30 @@ static func _unregister_set() -> bool:
 	rows.append(["a gizmo drawer is registered", gizmo_in, true])
 	rows.append(["and taken back by its script path", EventSheets.editor_gizmo_drawer_for("res://keeps_its_word.gd").is_valid(), false])
 	return SUPPORT.pins(P, rows)
+
+
+static func _palette() -> bool:
+	EventSheets.register_palette_command("Keeps Probe", func() -> void: pass, "Keeps Pack")
+	EventSheets.register_palette_command("Keeps Plain", func() -> void: pass)
+	var titles_in: PackedStringArray = _palette_titles()
+	EventSheets.unregister_palette_command("Keeps Probe", "Keeps Pack")
+	EventSheets.unregister_palette_command("Keeps Plain")
+	var titles_out: PackedStringArray = _palette_titles()
+	# The old way, by the combined title, still works.
+	EventSheets.register_palette_command("Keeps Probe", func() -> void: pass, "Keeps Pack")
+	EventSheets.unregister_palette_command("Keeps Pack: Keeps Probe")
+	var combined_out: PackedStringArray = _palette_titles()
+	return SUPPORT.pins(P, [
+		["a palette command with a category is listed under it", titles_in.has("Keeps Pack: Keeps Probe"), true],
+		["a palette command without one is listed by its title", titles_in.has("Keeps Plain"), true],
+		["the title and category take a command back", titles_out.has("Keeps Pack: Keeps Probe"), false],
+		["the title alone takes back one with no category", titles_out.has("Keeps Plain"), false],
+		["the combined title still takes it back", combined_out.has("Keeps Pack: Keeps Probe"), false],
+	])
+
+
+static func _palette_titles() -> PackedStringArray:
+	var titles: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheets.palette_commands():
+		titles.append(str(entry.get("title", "")))
+	return titles
