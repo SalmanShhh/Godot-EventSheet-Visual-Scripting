@@ -23,6 +23,9 @@ const DOC_REFERENCE_PATH := "res://addons/eventsheet/editor/docs/doc_reference.g
 const DOC_WHATS_NEW_PATH := "res://addons/eventsheet/editor/docs/doc_whats_new.gd"
 const EVENTSHEETS_API_PATH := "res://addons/eventsheet/api/eventsheets.gd"
 const WORKSPACES_PATH := "res://addons/eventsheet/editor/dock/workspaces.gd"
+## The events-in-the-scene switch and the facts behind it, reached by path when the item is clicked.
+const SCENE_EVENTS_PATH := "res://addons/eventsheet/editor/scene_events_facts.gd"
+const SCENE_EVENTS_SETTING := "eventsheets/editor/show_scene_events"
 
 var _dock: Control = null
 ## [popup, item id, which word] for every menu item whose text follows the Words page, so a change
@@ -1260,14 +1263,14 @@ func build(root: Node) -> void:
 	# The events overlay's switch. It marks the SCENE, not the sheet, which is why it is one item
 	# rather than a lens - and it starts off. Id 9803 is clear of every block above.
 	view_popup.add_check_item("Show Events in the Scene", 9803)
-	view_popup.set_item_checked(view_popup.get_item_index(9803), EventSheetSceneEvents.is_enabled())
+	view_popup.set_item_checked(view_popup.get_item_index(9803), _scene_events_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(9803),
 		"Mark every node whose script is a sheet with a small ⌗ and its event count - in the Scene dock, and beside the node in the 2D editor. Hover names its triggers. Nodes with no events are unmarked, and this is off by default.")
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id != 9803:
 			return
-		var wanted: bool = not EventSheetSceneEvents.is_enabled()
-		EventSheetSceneEvents.set_enabled(wanted)
+		var wanted: bool = not _scene_events_enabled()
+		load(SCENE_EVENTS_PATH).set_enabled(wanted)
 		view_popup.set_item_checked(view_popup.get_item_index(9803), wanted)
 		_dock._set_status(EventSheetL10n.translate("Events in the scene: on") if wanted
 			else EventSheetL10n.translate("Events in the scene: off")))
@@ -1993,3 +1996,8 @@ func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callab
 func _add_toolbar_separator(toolbar: HFlowContainer) -> void:
 	var sep: VSeparator = VSeparator.new()
 	toolbar.add_child(sep)
+
+
+## Whether the View menu's Show Events in the Scene is on: read off the setting, so the menu does not compile the facts.
+static func _scene_events_enabled() -> bool:
+	return bool(ProjectSettings.get_setting(SCENE_EVENTS_SETTING, false))
