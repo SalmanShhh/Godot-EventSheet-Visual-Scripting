@@ -111,6 +111,9 @@ const TWEEN_PROPERTY: String = "tween_property"
 const EMIT_SIGNAL: String = "emit_signal"
 ## Step word: start another Juice Player and let it run.
 const PLAY_PLAYER: String = "play_player"
+## The word a card of your own answers to, whatever its class is called: the address of its script
+## decides what the card is, so a class named Pause or Sound is never mistaken for the built-in word.
+const YOURS: String = "yours"
 ## Step word: play a sound.
 const SOUND: String = "sound"
 ## Step word: stop a sound an earlier Sound card started, by that card's name, with an optional fade.
@@ -182,6 +185,11 @@ var _tweens: Array[Tween] = []
 ## Players this play started through a Play Player card; they follow it.
 var _nested: Array[Node] = []
 
+## Most cards of your own a player keeps hold of at once, the oldest let go first.
+const MOST_OWN_RUNNING: int = 16
+## The cards of your own a play has started and not yet stopped, so Stop and Restore can reach them.
+var _own_running: Array[Resource] = []
+
 ## The few players this node plays its Sound cards through, kept and reused instead of made per hit.
 var _voices: Array[Node] = []
 
@@ -221,6 +229,32 @@ func _juice() -> Node:
 		_told_no_juice = true
 		push_warning("Juice Player: %s has no Juice behaviour beside it, so its shake, flash and hitstop steps did nothing. Add a Juice node under the same object." % name)
 	return null
+## The script of a card of your own, by the uid (or path) the card holds, or null when that file is not
+## in the project any more.
+static func own_script_of(card: Dictionary) -> Script:
+	var address: String = str(card.get("card_script", "")).strip_edges()
+	if address.is_empty() or not ResourceLoader.exists(address):
+		return null
+	return load(address) as Script
+## A fresh card of your own holding the values the saved card keeps under its export names. A file kept
+## as text (a uid or a path) is loaded for an export that holds a Resource. Null when the script is gone or
+## is not a card (it has no `play`).
+static func own_card_of(card: Dictionary) -> Resource:
+	var script: Script = own_script_of(card)
+	if script == null or not script.can_instantiate():
+		return null
+	var made: Variant = script.new()
+	if not (made is Resource) or not (made as Resource).has_method("play"):
+		return null
+	for property: Dictionary in script.get_script_property_list():
+		var export_name: String = str(property.get("name", ""))
+		if not (int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE) or not card.has(export_name):
+			continue
+		var stored: Variant = card[export_name]
+		if int(property.get("type", TYPE_NIL)) == TYPE_OBJECT and stored is String:
+			stored = load(stored) if ResourceLoader.exists(stored) else null
+		(made as Resource).set(export_name, stored)
+	return made as Resource
 ## The sound a card names, or null when it names none or the file is not there.
 static func _stream_at(path: String) -> AudioStream:
 	if path.is_empty() or not ResourceLoader.exists(path):
@@ -546,6 +580,7 @@ func play_on_channel(channel: String, at_strength: float) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.stop()")
 func stop() -> void:
+	_told_own("stop")
 	if not playing:
 		return
 	_live.clear()
@@ -576,7 +611,7 @@ func skip_to_end() -> void:
 		if not (left[index] is Dictionary):
 			continue
 		var card: Dictionary = left[index]
-		if _card_runs(card, at_strength, index) and not _is_timing(str(card.get("verb", ""))):
+		if _card_runs(card, at_strength, index) and not _is_timing(word_of(card)):
 			_do_step(card, at_strength, true)
 
 ## @ace_action
@@ -591,6 +626,7 @@ func restore() -> void:
 	_stop_tweens()
 	_restore_buses()
 	_release_forces()
+	_told_own("restore")
 	_told_nested("restore")
 	for entry: Variant in _restore_to:
 		var card: Dictionary = entry as Dictionary
@@ -817,7 +853,7 @@ func disable_feedback(label: String) -> void:
 ## @ace_lift_example("$FeedbackPlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 ## @ace_lift_example("$JuicePlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 ## @ace_param(label, default: shake, desc: "The label of the card being tuned.")
-## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value on the card to write.")
+## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value on the card to write.")
 ## @ace_param(value, default: 1.0, desc: "What to write. A number for an amount or a length, a word for the extra one.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_feedback_field("{label}", "{field}", {value})")
@@ -825,7 +861,10 @@ func set_feedback_field(label: String, field: String, value: Variant) -> void:
 	var card: Dictionary = _edited(label, "Set Juice Card Field")
 	if card.is_empty():
 		return
-	if not FIELD_KEYS.has(field):
+	if field == "verb" or field == "card_script":
+		push_warning("Juice Player: the %s of a card is what makes it that card, so Set Juice Card Field left it alone. Replace the card instead." % field)
+		return
+	if not FIELD_KEYS.has(field) and not card.has(field):
 		push_warning("Juice Player: a card has no field called \"%s\", so Set Juice Card Field did nothing." % field)
 		return
 	card[field] = value
@@ -985,7 +1024,7 @@ func save_moment_file(path: String) -> void:
 		if not (entry is Dictionary):
 			continue
 		var card: Dictionary = entry as Dictionary
-		var word: String = str(card.get("verb", "")).strip_edges().to_lower()
+		var word: String = word_of(card)
 		if not bool(card.get("active", true)) or _is_timing(word) or _is_own_word(word):
 			left_behind.append(_label_of(card))
 			continue
@@ -1308,7 +1347,7 @@ func feedback_label_at(position: int) -> String:
 ## @ace_category("Juice Player")
 ## @ace_description("What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds.")
 ## @ace_param(label, default: shake, desc: "The label of the card being read.")
-## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value to read.")
+## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value to read.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_field("{label}", "{field}")")
 func feedback_field(label: String, field: String) -> Variant:
@@ -1413,7 +1452,7 @@ static func duration_of(list: Array) -> float:
 		var card: Dictionary = entry as Dictionary
 		if not bool(card.get("active", true)):
 			continue
-		var word: String = str(card.get("verb", ""))
+		var word: String = word_of(card)
 		var seconds: float = card_length(card) + maxf(float(card.get("delay", 0.0)), 0.0)
 		if word == HOLD_UNTIL:
 			var waited: float = _waited_for(card, ends, stretch)
@@ -1435,6 +1474,13 @@ static func _waited_for(hold: Dictionary, ends: Dictionary, stretch: float) -> f
 		return stretch
 	return float(ends[wanted])
 
+## The word a card is played under: `yours` for a card of your own (it holds the address of its script),
+## else its saved word, trimmed and in lower case. Every place that asks what a card is asks here.
+static func word_of(card: Dictionary) -> String:
+	if card.has("card_script"):
+		return YOURS
+	return str(card.get("verb", "")).strip_edges().to_lower()
+
 ## Whether a word moves the head rather than being felt.
 static func _is_timing(word: String) -> bool:
 	return word == PAUSE or word == HOLD_UNTIL or word == LOOP_START or word == LOOP_BACK
@@ -1444,7 +1490,7 @@ static func _is_timing(word: String) -> bool:
 ## one; these four are done here, and a moment FILE has nowhere to keep them.
 static func _is_own_word(word: String) -> bool:
 	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER or word == SOUND \
-			or word == STOP_SOUND or word == FADE_BUS or word == VIBRATE or WORLD_WORDS.has(word)
+			or word == STOP_SOUND or word == FADE_BUS or word == VIBRATE or word == YOURS or WORLD_WORDS.has(word)
 
 ## The number a card's chance is answered with. One roll per card is thrown before the beat
 ## begins, so a Skip To End reads the decision the walk would have read rather than throwing the
@@ -1501,7 +1547,7 @@ func _wait_out_pause(token: int) -> void:
 ## What one card does, and where the head goes next. The timing words move the head; every other
 ## word is a juice card, which is felt and stepped over.
 func _take(order: Array, index: int, card: Dictionary, at_strength: float, token: int) -> int:
-	var word: String = str(card.get("verb", "")).strip_edges().to_lower()
+	var word: String = word_of(card)
 	var refused: String = _why_not(card, at_strength, index)
 	_head_taken = true
 	_roll_again(index)
@@ -1570,7 +1616,7 @@ func _why_not(card: Dictionary, at_strength: float, index: int) -> String:
 		return "skipped once"
 	# A family switch silences what is FELT. A Pause, a Hold and the two loop cards only move the head,
 	# so muting their family leaves the beat the length it was.
-	if _muted.has(_category_of(card)) and not _is_timing(str(card.get("verb", "")).strip_edges().to_lower()):
+	if _muted.has(_category_of(card)) and not _is_timing(word_of(card)):
 		return "muted"
 	var chance: float = float(card.get("chance", 100.0))
 	if chance < 100.0 and _rolled_at(index) >= chance:
@@ -1585,7 +1631,7 @@ func _why_not(card: Dictionary, at_strength: float, index: int) -> String:
 ## One juice card, felt. The ten moment words go to the Juice behaviour beside this node - the same
 ## call a moment file makes - and this node's own words are done here.
 func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> void:
-	var word: String = str(card.get("verb", "")).strip_edges().to_lower()
+	var word: String = word_of(card)
 	var amount: float = float(card.get("amount", 1.0))
 	var effect: String = str(card.get("effect", ""))
 	var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0)
@@ -1599,6 +1645,9 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 	# Holding a tween to 200 pixels down to 0.3 would not be less flashing, it would be the wrong
 	# number. The ten moment words below ARE in the list, and the Juice node holds them to it as
 	# they arrive.
+	if word == YOURS:
+		_play_own_card(card, at)
+		return
 	if WORLD_WORDS.has(word):
 		_play_world_card(word, card, at, seconds)
 		return
@@ -1714,12 +1763,47 @@ static func sound_settings(card: Dictionary, at_strength: float, pitch_roll: flo
 ## says so with its Seconds. The plan, the badge and the Hold all read this one function.
 ## @ace_hidden
 static func card_length(card: Dictionary) -> float:
-	if str(card.get("verb", "")) != SOUND:
+	if word_of(card) == YOURS:
+		return _own_length(card)
+	if word_of(card) != SOUND:
 		return maxf(float(card.get("seconds", 0.0)), 0.0)
 	var stream: AudioStream = _stream_at(str(card.get("stream", "")))
 	if stream == null:
 		return 0.0
 	return stream.get_length() / maxf(float(card.get("pitch", 1.0)), LOWEST_PITCH)
+
+## How long a card of your own says it takes. The editor does not run a script that is not a tool script, so
+## there the card's seconds stand in for it.
+static func _own_length(card: Dictionary) -> float:
+	if Engine.is_editor_hint():
+		return maxf(float(card.get("seconds", 0.0)), 0.0)
+	var made: Resource = own_card_of(card)
+	if made == null or not made.has_method("length"):
+		return 0.0
+	return maxf(float(made.call("length")), 0.0)
+
+## Plays a card of your own: a fresh copy holding the card's values, told which player is playing it, and
+## kept until the list is stopped or restored so it can be told to stop or put things back.
+func _play_own_card(card: Dictionary, at: float) -> void:
+	var made: Resource = own_card_of(card)
+	if made == null:
+		_card_missing(card, "names a card script that is not in the project")
+		return
+	if "player" in made:
+		made.set("player", self)
+	_own_running.append(made)
+	if _own_running.size() > MOST_OWN_RUNNING:
+		_own_running.remove_at(0)
+	made.call("play", host, at)
+
+## Tells every card of your own that is still going to `stop` or `restore`. A card is let go of once it has
+## been told to put things back, so a Stop followed by a Restore reaches it twice.
+func _told_own(what: String) -> void:
+	for made: Resource in _own_running:
+		if is_instance_valid(made) and made.has_method(what):
+			made.call(what)
+	if what == "restore":
+		_own_running.clear()
 
 ## One Sound card, heard. It plays through one of a few voices kept for the purpose, so a fast run of
 ## hits reuses them instead of making a node each. Muting the Sound family never reaches here: the walk
@@ -1786,7 +1870,7 @@ static func _left_of_cards(order: Array, index: int, wanted: String) -> float:
 	var walk: int = index - 1
 	while walk >= 0:
 		var card: Dictionary = order[walk] as Dictionary
-		var word: String = str(card.get("verb", ""))
+		var word: String = word_of(card)
 		if word == HOLD_UNTIL:
 			break
 		if bool(card.get("active", true)):
@@ -1815,7 +1899,7 @@ func _loop_target(order: Array, index: int, card: Dictionary) -> int:
 	var to_start: bool = bool(card.get("to_loop_start", true))
 	var walk: int = index - 1
 	while walk >= 0:
-		var word: String = str((order[walk] as Dictionary).get("verb", ""))
+		var word: String = word_of(order[walk] as Dictionary)
 		if to_hold and word == HOLD_UNTIL:
 			return walk + 1
 		if to_start and word == LOOP_START:
@@ -1877,7 +1961,7 @@ static func schedule_of(list: Array) -> Array:
 		var card: Dictionary = entry as Dictionary
 		if not bool(card.get("active", true)):
 			continue
-		var word: String = str(card.get("verb", ""))
+		var word: String = word_of(card)
 		var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
 		var seconds: float = card_length(card)
 		if word == HOLD_UNTIL:
@@ -1921,7 +2005,7 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 		if through < 0.0 or through > 1.0:
 			continue
 		var amount: float = float(card.get("amount", 1.0)) * at_strength
-		var word: String = str(card.get("verb", ""))
+		var word: String = word_of(card)
 		if word == "shake":
 			offset += Vector2(sin(time * 47.0), cos(time * 53.0)) * amount * 8.0 * (1.0 - through)
 		elif word == "punch":
@@ -2046,7 +2130,7 @@ func _category_of(card: Dictionary) -> String:
 	var said: String = str(card.get("category", "")).strip_edges().to_lower()
 	if not said.is_empty():
 		return said
-	return str(CATEGORY_OF.get(str(card.get("verb", "")).strip_edges().to_lower(), ""))
+	return str(CATEGORY_OF.get(word_of(card), ""))
 
 ## Where a label sits in a list, or -1 when nothing in it answers to that name.
 func _index_in(list: Array, label: String) -> int:
@@ -2114,6 +2198,10 @@ func _edited(label: String, row: String) -> Dictionary:
 ## a step written by a row and one added in the Inspector are the same shape and neither has to be
 ## converted into the other. The enable key is left ABSENT, which is what on means.
 func _carded(step: Dictionary) -> Dictionary:
+	# A card of your own holds the keys of its own exports and nothing a moment file's step has, so its
+	# `seconds` is the one it exports or none at all.
+	if step.has("card_script"):
+		return step.duplicate()
 	var card: Dictionary = {"verb": "", "amount": 1.0, "effect": "", "seconds": 0.0}
 	for key: Variant in step:
 		card[key] = step[key]

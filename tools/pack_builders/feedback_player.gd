@@ -187,13 +187,13 @@ static func _verbs(sheet: EventSheetResource) -> void:
 	_quoted_call(sheet, "play_on_channel(\"{channel}\", {at_strength})")
 	Lib.append_function(sheet, "stop", "Stop Juice", "Juice Player",
 		"Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.",
-		[], "if not playing:\n\treturn\n_live.clear()\n_resumed.emit()\n_told_nested(\"stop\")\n_close()")
+		[], "_told_own(\"stop\")\nif not playing:\n\treturn\n_live.clear()\n_resumed.emit()\n_told_nested(\"stop\")\n_close()")
 	Lib.append_function(sheet, "skip_to_end", "Skip To End", "Juice Player",
 		"Stops waiting and does everything that is left at once - the cutscene skip of a juice list. Every card from the head down is felt, without the pauses between them.",
-		[], "if not playing:\n\treturn\n_live.clear()\n_paused = false\n_resumed.emit()\nvar left: Array = _order\nvar from: int = _head + 1 if _head_taken else _head\nvar at_strength: float = _head_strength\n_close()\n_told_nested(\"skip_to_end\")\nfor index: int in range(from, left.size()):\n\tif not (left[index] is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = left[index]\n\tif _card_runs(card, at_strength, index) and not _is_timing(str(card.get(\"verb\", \"\"))):\n\t\t_do_step(card, at_strength, true)")
+		[], "if not playing:\n\treturn\n_live.clear()\n_paused = false\n_resumed.emit()\nvar left: Array = _order\nvar from: int = _head + 1 if _head_taken else _head\nvar at_strength: float = _head_strength\n_close()\n_told_nested(\"skip_to_end\")\nfor index: int in range(from, left.size()):\n\tif not (left[index] is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = left[index]\n\tif _card_runs(card, at_strength, index) and not _is_timing(word_of(card)):\n\t\t_do_step(card, at_strength, true)")
 	Lib.append_function(sheet, "restore", "Restore Initial Values", "Juice Player",
 		"Puts every value this player's Tween Property cards changed back the way they found it. The undo of a list that moved the object rather than flashing it.",
-		[], "_stop_tweens()\n_restore_buses()\n_release_forces()\n_told_nested(\"restore\")\nfor entry: Variant in _restore_to:\n\tvar card: Dictionary = entry as Dictionary\n\tvar object: Object = card.get(\"object\") as Object\n\tif object != null and is_instance_valid(object):\n\t\tobject.set(str(card.get(\"property\", \"\")), card.get(\"value\"))\n_restore_to.clear()")
+		[], "_stop_tweens()\n_restore_buses()\n_release_forces()\n_told_own(\"restore\")\n_told_nested(\"restore\")\nfor entry: Variant in _restore_to:\n\tvar card: Dictionary = entry as Dictionary\n\tvar object: Object = card.get(\"object\") as Object\n\tif object != null and is_instance_valid(object):\n\t\tobject.set(str(card.get(\"property\", \"\")), card.get(\"value\"))\n_restore_to.clear()")
 	Lib.append_function(sheet, "revert", "Revert", "Juice Player",
 		"Stops the play and puts back what it changed, the LAST change first - so a stack of tweens unwinds in the order it was built rather than all at once.",
 		[], "stop()\n_restore_to.reverse()\nrestore()")
@@ -291,9 +291,10 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		[["label", "String", "The label of the card being tuned."],
 			["field", "String", "Which value on the card to write."],
 			["value", "Variant", "What to write. A number for an amount or a length, a word for the extra one."]],
-		"var card: Dictionary = _edited(label, \"Set Juice Card Field\")\nif card.is_empty():\n\treturn\nif not FIELD_KEYS.has(field):\n\tpush_warning(\"Juice Player: a card has no field called \\\"%s\\\", so Set Juice Card Field did nothing.\" % field)\n\treturn\ncard[field] = value")
+		"var card: Dictionary = _edited(label, \"Set Juice Card Field\")\nif card.is_empty():\n\treturn\nif field == \"verb\" or field == \"card_script\":\n\tpush_warning(\"Juice Player: the %s of a card is what makes it that card, so Set Juice Card Field left it alone. Replace the card instead.\" % field)\n\treturn\nif not FIELD_KEYS.has(field) and not card.has(field):\n\tpush_warning(\"Juice Player: a card has no field called \\\"%s\\\", so Set Juice Card Field did nothing.\" % field)\n\treturn\ncard[field] = value")
 	_default(sheet, "label", "shake")
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_default(sheet, "field", "amount")
 	_default(sheet, "value", "1.0")
 	_quoted_call(sheet, "set_feedback_field(\"{label}\", \"{field}\", {value})")
@@ -352,7 +353,7 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "save_moment_file", "Save Moment File", "Juice Player",
 		"Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.",
 		[["path", "String", "Where to write it. At run time that is a user:// path, which is the only place a game may write."]],
-		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Juice Player: this project has no moment file script, so Save Moment File did nothing.\")\n\treturn\nvar written: Array[Dictionary] = []\nvar left_behind: PackedStringArray = PackedStringArray()\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tvar word: String = str(card.get(\"verb\", \"\")).strip_edges().to_lower()\n\tif not bool(card.get(\"active\", true)) or _is_timing(word) or _is_own_word(word):\n\t\tleft_behind.append(_label_of(card))\n\t\tcontinue\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif not left_behind.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so these were left out of the file: %s.\" % \", \".join(left_behind))\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Juice Player: \\\"%s\\\" could not be written, so Save Moment File saved nothing.\" % path)")
+		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Juice Player: this project has no moment file script, so Save Moment File did nothing.\")\n\treturn\nvar written: Array[Dictionary] = []\nvar left_behind: PackedStringArray = PackedStringArray()\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tvar word: String = word_of(card)\n\tif not bool(card.get(\"active\", true)) or _is_timing(word) or _is_own_word(word):\n\t\tleft_behind.append(_label_of(card))\n\t\tcontinue\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif not left_behind.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so these were left out of the file: %s.\" % \", \".join(left_behind))\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Juice Player: \\\"%s\\\" could not be written, so Save Moment File saved nothing.\" % path)")
 	_default(sheet, "path", "user://my_moment.tres")
 	_quoted_call(sheet, "save_moment_file(\"{path}\")")
 	Lib.append_function(sheet, "set_player_strength", "Set Juice Player Strength", "Juice Player",
@@ -488,6 +489,7 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 		"return _card_named(label).get(field, null)", TYPE_MAX)
 	_default(sheet, "label", "shake")
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_default(sheet, "field", "amount")
 	_quoted_call(sheet, "feedback_field(\"{label}\", \"{field}\")")
 	Lib.number(sheet, "feedback_progress", "Juice Card Progress", "Juice Player",
@@ -594,6 +596,18 @@ static func _param_options(sheet: EventSheetResource, param_id: String, choices:
 			parameter.options = typed
 
 
+## Lets the last-appended ACE's parameter be typed freely, with these words offered as suggestions: the box
+## for a value whose names a project can add to (the fields of a card of your own).
+static func _param_autocomplete(sheet: EventSheetResource, param_id: String, suggestions: Array) -> void:
+	var typed: Array[String] = []
+	for suggestion: Variant in suggestions:
+		typed.append(str(suggestion))
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.autocomplete = typed
+
+
 ## Names the EDITOR a parameter opens. The Juice Player uses one: a step, which opens the very
 ## card the Inspector unfolds, so a juice card authored by a row and one authored in the list are the
 ## same dictionary spelled the same way.
@@ -668,6 +682,9 @@ static func _player_lines() -> PackedStringArray:
 		"const EMIT_SIGNAL: String = \"emit_signal\"",
 		"## Step word: start another Juice Player and let it run.",
 		"const PLAY_PLAYER: String = \"play_player\"",
+		"## The word a card of your own answers to, whatever its class is called: the address of its script",
+		"## decides what the card is, so a class named Pause or Sound is never mistaken for the built-in word.",
+		"const YOURS: String = \"yours\"",
 		"## Step word: play a sound.",
 		"const SOUND: String = \"sound\"",
 		"## Step word: stop a sound an earlier Sound card started, by that card's name, with an optional fade.",
@@ -738,6 +755,11 @@ static func _player_lines() -> PackedStringArray:
 		"",
 		"## Players this play started through a Play Player card; they follow it.",
 		"var _nested: Array[Node] = []",
+		"",
+		"## Most cards of your own a player keeps hold of at once, the oldest let go first.",
+		"const MOST_OWN_RUNNING: int = 16",
+		"## The cards of your own a play has started and not yet stopped, so Stop and Restore can reach them.",
+		"var _own_running: Array[Resource] = []",
 		"",
 		"## The few players this node plays its Sound cards through, kept and reused instead of made per hit.",
 		"var _voices: Array[Node] = []",
@@ -810,7 +832,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\tvar card: Dictionary = entry as Dictionary",
 		"\t\tif not bool(card.get(\"active\", true)):",
 		"\t\t\tcontinue",
-		"\t\tvar word: String = str(card.get(\"verb\", \"\"))",
+		"\t\tvar word: String = word_of(card)",
 		"\t\tvar seconds: float = card_length(card) + maxf(float(card.get(\"delay\", 0.0)), 0.0)",
 		"\t\tif word == HOLD_UNTIL:",
 		"\t\t\tvar waited: float = _waited_for(card, ends, stretch)",
@@ -832,6 +854,13 @@ static func _player_lines() -> PackedStringArray:
 		"\t\treturn stretch",
 		"\treturn float(ends[wanted])",
 		"",
+		"## The word a card is played under: `yours` for a card of your own (it holds the address of its script),",
+		"## else its saved word, trimmed and in lower case. Every place that asks what a card is asks here.",
+		"static func word_of(card: Dictionary) -> String:",
+		"\tif card.has(\"card_script\"):",
+		"\t\treturn YOURS",
+		"\treturn str(card.get(\"verb\", \"\")).strip_edges().to_lower()",
+		"",
 		"## Whether a word moves the head rather than being felt.",
 		"static func _is_timing(word: String) -> bool:",
 		"\treturn word == PAUSE or word == HOLD_UNTIL or word == LOOP_START or word == LOOP_BACK",
@@ -841,7 +870,7 @@ static func _player_lines() -> PackedStringArray:
 		"## one; these four are done here, and a moment FILE has nowhere to keep them.",
 		"static func _is_own_word(word: String) -> bool:",
 		"\treturn word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER or word == SOUND \\",
-		"\t\t\tor word == STOP_SOUND or word == FADE_BUS or word == VIBRATE or WORLD_WORDS.has(word)",
+		"\t\t\tor word == STOP_SOUND or word == FADE_BUS or word == VIBRATE or word == YOURS or WORLD_WORDS.has(word)",
 		"",
 		"## The number a card's chance is answered with. One roll per card is thrown before the beat",
 		"## begins, so a Skip To End reads the decision the walk would have read rather than throwing the",
@@ -898,7 +927,7 @@ static func _player_lines() -> PackedStringArray:
 		"## What one card does, and where the head goes next. The timing words move the head; every other",
 		"## word is a juice card, which is felt and stepped over.",
 		"func _take(order: Array, index: int, card: Dictionary, at_strength: float, token: int) -> int:",
-		"\tvar word: String = str(card.get(\"verb\", \"\")).strip_edges().to_lower()",
+		"\tvar word: String = word_of(card)",
 		"\tvar refused: String = _why_not(card, at_strength, index)",
 		"\t_head_taken = true",
 		"\t_roll_again(index)",
@@ -967,7 +996,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\treturn \"skipped once\"",
 		"\t# A family switch silences what is FELT. A Pause, a Hold and the two loop cards only move the head,",
 		"\t# so muting their family leaves the beat the length it was.",
-		"\tif _muted.has(_category_of(card)) and not _is_timing(str(card.get(\"verb\", \"\")).strip_edges().to_lower()):",
+		"\tif _muted.has(_category_of(card)) and not _is_timing(word_of(card)):",
 		"\t\treturn \"muted\"",
 		"\tvar chance: float = float(card.get(\"chance\", 100.0))",
 		"\tif chance < 100.0 and _rolled_at(index) >= chance:",
@@ -982,7 +1011,7 @@ static func _player_lines() -> PackedStringArray:
 		"## One juice card, felt. The ten moment words go to the Juice behaviour beside this node - the same",
 		"## call a moment file makes - and this node's own words are done here.",
 		"func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> void:",
-		"\tvar word: String = str(card.get(\"verb\", \"\")).strip_edges().to_lower()",
+		"\tvar word: String = word_of(card)",
 		"\tvar amount: float = float(card.get(\"amount\", 1.0))",
 		"\tvar effect: String = str(card.get(\"effect\", \"\"))",
 		"\tvar seconds: float = maxf(float(card.get(\"seconds\", 0.0)), 0.0)",
@@ -996,6 +1025,9 @@ static func _player_lines() -> PackedStringArray:
 		"\t# Holding a tween to 200 pixels down to 0.3 would not be less flashing, it would be the wrong",
 		"\t# number. The ten moment words below ARE in the list, and the Juice node holds them to it as",
 		"\t# they arrive.",
+		"\tif word == YOURS:",
+		"\t\t_play_own_card(card, at)",
+		"\t\treturn",
 		"\tif WORLD_WORDS.has(word):",
 		"\t\t_play_world_card(word, card, at, seconds)",
 		"\t\treturn",
@@ -1131,12 +1163,75 @@ static func _player_lines() -> PackedStringArray:
 		"## says so with its Seconds. The plan, the badge and the Hold all read this one function.",
 		"## @ace_hidden",
 		"static func card_length(card: Dictionary) -> float:",
-		"\tif str(card.get(\"verb\", \"\")) != SOUND:",
+		"\tif word_of(card) == YOURS:",
+		"\t\treturn _own_length(card)",
+		"\tif word_of(card) != SOUND:",
 		"\t\treturn maxf(float(card.get(\"seconds\", 0.0)), 0.0)",
 		"\tvar stream: AudioStream = _stream_at(str(card.get(\"stream\", \"\")))",
 		"\tif stream == null:",
 		"\t\treturn 0.0",
 		"\treturn stream.get_length() / maxf(float(card.get(\"pitch\", 1.0)), LOWEST_PITCH)",
+		"",
+		"## The script of a card of your own, by the uid (or path) the card holds, or null when that file is not",
+		"## in the project any more.",
+		"static func own_script_of(card: Dictionary) -> Script:",
+		"\tvar address: String = str(card.get(\"card_script\", \"\")).strip_edges()",
+		"\tif address.is_empty() or not ResourceLoader.exists(address):",
+		"\t\treturn null",
+		"\treturn load(address) as Script",
+		"",
+		"## A fresh card of your own holding the values the saved card keeps under its export names. A file kept",
+		"## as text (a uid or a path) is loaded for an export that holds a Resource. Null when the script is gone or",
+		"## is not a card (it has no `play`).",
+		"static func own_card_of(card: Dictionary) -> Resource:",
+		"\tvar script: Script = own_script_of(card)",
+		"\tif script == null or not script.can_instantiate():",
+		"\t\treturn null",
+		"\tvar made: Variant = script.new()",
+		"\tif not (made is Resource) or not (made as Resource).has_method(\"play\"):",
+		"\t\treturn null",
+		"\tfor property: Dictionary in script.get_script_property_list():",
+		"\t\tvar export_name: String = str(property.get(\"name\", \"\"))",
+		"\t\tif not (int(property.get(\"usage\", 0)) & PROPERTY_USAGE_STORAGE) or not card.has(export_name):",
+		"\t\t\tcontinue",
+		"\t\tvar stored: Variant = card[export_name]",
+		"\t\tif int(property.get(\"type\", TYPE_NIL)) == TYPE_OBJECT and stored is String:",
+		"\t\t\tstored = load(stored) if ResourceLoader.exists(stored) else null",
+		"\t\t(made as Resource).set(export_name, stored)",
+		"\treturn made as Resource",
+		"",
+		"## How long a card of your own says it takes. The editor does not run a script that is not a tool script, so",
+		"## there the card's seconds stand in for it.",
+		"static func _own_length(card: Dictionary) -> float:",
+		"\tif Engine.is_editor_hint():",
+		"\t\treturn maxf(float(card.get(\"seconds\", 0.0)), 0.0)",
+		"\tvar made: Resource = own_card_of(card)",
+		"\tif made == null or not made.has_method(\"length\"):",
+		"\t\treturn 0.0",
+		"\treturn maxf(float(made.call(\"length\")), 0.0)",
+		"",
+		"## Plays a card of your own: a fresh copy holding the card's values, told which player is playing it, and",
+		"## kept until the list is stopped or restored so it can be told to stop or put things back.",
+		"func _play_own_card(card: Dictionary, at: float) -> void:",
+		"\tvar made: Resource = own_card_of(card)",
+		"\tif made == null:",
+		"\t\t_card_missing(card, \"names a card script that is not in the project\")",
+		"\t\treturn",
+		"\tif \"player\" in made:",
+		"\t\tmade.set(\"player\", self)",
+		"\t_own_running.append(made)",
+		"\tif _own_running.size() > MOST_OWN_RUNNING:",
+		"\t\t_own_running.remove_at(0)",
+		"\tmade.call(\"play\", host, at)",
+		"",
+		"## Tells every card of your own that is still going to `stop` or `restore`. A card is let go of once it has",
+		"## been told to put things back, so a Stop followed by a Restore reaches it twice.",
+		"func _told_own(what: String) -> void:",
+		"\tfor made: Resource in _own_running:",
+		"\t\tif is_instance_valid(made) and made.has_method(what):",
+		"\t\t\tmade.call(what)",
+		"\tif what == \"restore\":",
+		"\t\t_own_running.clear()",
 		"",
 		"## The sound a card names, or null when it names none or the file is not there.",
 		"static func _stream_at(path: String) -> AudioStream:",
@@ -1236,7 +1331,7 @@ static func _player_lines() -> PackedStringArray:
 		"\tvar walk: int = index - 1",
 		"\twhile walk >= 0:",
 		"\t\tvar card: Dictionary = order[walk] as Dictionary",
-		"\t\tvar word: String = str(card.get(\"verb\", \"\"))",
+		"\t\tvar word: String = word_of(card)",
 		"\t\tif word == HOLD_UNTIL:",
 		"\t\t\tbreak",
 		"\t\tif bool(card.get(\"active\", true)):",
@@ -1265,7 +1360,7 @@ static func _player_lines() -> PackedStringArray:
 		"\tvar to_start: bool = bool(card.get(\"to_loop_start\", true))",
 		"\tvar walk: int = index - 1",
 		"\twhile walk >= 0:",
-		"\t\tvar word: String = str((order[walk] as Dictionary).get(\"verb\", \"\"))",
+		"\t\tvar word: String = word_of(order[walk] as Dictionary)",
 		"\t\tif to_hold and word == HOLD_UNTIL:",
 		"\t\t\treturn walk + 1",
 		"\t\tif to_start and word == LOOP_START:",
@@ -1327,7 +1422,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\tvar card: Dictionary = entry as Dictionary",
 		"\t\tif not bool(card.get(\"active\", true)):",
 		"\t\t\tcontinue",
-		"\t\tvar word: String = str(card.get(\"verb\", \"\"))",
+		"\t\tvar word: String = word_of(card)",
 		"\t\tvar delay: float = maxf(float(card.get(\"delay\", 0.0)), 0.0)",
 		"\t\tvar seconds: float = card_length(card)",
 		"\t\tif word == HOLD_UNTIL:",
@@ -1371,7 +1466,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\tif through < 0.0 or through > 1.0:",
 		"\t\t\tcontinue",
 		"\t\tvar amount: float = float(card.get(\"amount\", 1.0)) * at_strength",
-		"\t\tvar word: String = str(card.get(\"verb\", \"\"))",
+		"\t\tvar word: String = word_of(card)",
 		"\t\tif word == \"shake\":",
 		"\t\t\toffset += Vector2(sin(time * 47.0), cos(time * 53.0)) * amount * 8.0 * (1.0 - through)",
 		"\t\telif word == \"punch\":",
@@ -1580,7 +1675,7 @@ static func _addressing_lines() -> PackedStringArray:
 		"\tvar said: String = str(card.get(\"category\", \"\")).strip_edges().to_lower()",
 		"\tif not said.is_empty():",
 		"\t\treturn said",
-		"\treturn str(CATEGORY_OF.get(str(card.get(\"verb\", \"\")).strip_edges().to_lower(), \"\"))",
+		"\treturn str(CATEGORY_OF.get(word_of(card), \"\"))",
 		"",
 		"## Where a label sits in a list, or -1 when nothing in it answers to that name.",
 		"func _index_in(list: Array, label: String) -> int:",
@@ -1648,6 +1743,10 @@ static func _addressing_lines() -> PackedStringArray:
 		"## a step written by a row and one added in the Inspector are the same shape and neither has to be",
 		"## converted into the other. The enable key is left ABSENT, which is what on means.",
 		"func _carded(step: Dictionary) -> Dictionary:",
+		"\t# A card of your own holds the keys of its own exports and nothing a moment file's step has, so its",
+		"\t# `seconds` is the one it exports or none at all.",
+		"\tif step.has(\"card_script\"):",
+		"\t\treturn step.duplicate()",
 		"\tvar card: Dictionary = {\"verb\": \"\", \"amount\": 1.0, \"effect\": \"\", \"seconds\": 0.0}",
 		"\tfor key: Variant in step:",
 		"\t\tcard[key] = step[key]",

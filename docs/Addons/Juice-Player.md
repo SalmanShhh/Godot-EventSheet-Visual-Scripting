@@ -136,6 +136,38 @@ Play Player now picks the other player instead of asking for its name; an older 
 
 **The unfolded card.** Click a card's arrow and it opens: a line saying what that juice card does, **Active**, **Label**, **Chance**, a **Timing** foldout, then the card's own fields drawn with the real drawers, and, while the game runs, the values the play is writing back, greyed. The Timing foldout is the same on every card: initial delay, cooldown, repeat count and interval, the clock (game time or real time), a strength window the card only plays inside, and skip on stop. Every one of those keys is absent by default, which is what keeps a plain card identical to a moment file's step.
 
+**A card of your own.** The cards that ship are words the player knows. When none fits, write one: a script that extends `JuiceCard`, anywhere in the project.
+
+```gdscript
+class_name ScreenFlashCard
+extends JuiceCard
+## Flashes the whole screen a colour.
+
+## The colour to flash.
+@export var colour: Color = Color.WHITE
+## How long the flash lasts.
+@export_range(0.0, 2.0, 0.01, "suffix:s") var seconds: float = 0.1
+
+
+func play(target: Node, strength: float) -> void:
+	var layer: CanvasLayer = CanvasLayer.new()
+	var flash: ColorRect = ColorRect.new()
+	flash.color = Color(colour, strength)
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(flash)
+	target.add_child(layer)
+	await target.get_tree().create_timer(seconds).timeout
+	layer.queue_free()
+```
+
+- **It lists itself.** A script with a `class_name` that extends `JuiceCard` appears in Add card under a **Yours** heading, named from the class (`ScreenFlashCard` reads Screen Flash, a closing Card is dropped), with the line under the class as its help. Delete the file and the card is gone from the box.
+- **The exports are the fields.** Each export is drawn with Godot's own editor for its type, as it would be in the Inspector: a colour button, a range with its suffix, a file picker, a drop-down for an enum. A `NodePath` export is the node picker the built-in cards use, kept as a path from the player so a renamed node is followed. The `##` line above an export is its tooltip, and the field is named as you wrote the variable.
+- **`play(target, strength)` is the only function you must write.** `target` is the object the player is under and `strength` is the strength of this play. `length()` says how long the card takes so a Hold card and the length of the list can wait for it; a card that exports a number called `seconds` is that long without it. `stop()` is called when Stop Juice is pressed and `restore()` when Restore Initial Values is. The player hands itself over as `player` just before `play` runs, so a card that exports a `NodePath` finds its node with `player.get_node_or_null(path)`.
+- **How it is saved.** A card of yours is one more entry in the same list: its class name, the address of its script and a key for each export. Moving the script file is safe, because the address is the file's uid, and renaming the class works too, because the card is found by its script first. When the script is gone the card stays in the list with the values it holds and does nothing, and the game says so once in the Output panel.
+- **Rows reach it.** Add Juice Card, Replace Juice Card and Set Juice Card Field work on a card of yours by its label and its export names. Type the export's name in the field box of Set Juice Card Field (it offers the eight shipped names and takes any other the card holds); the word of a card and the script it holds are the two it refuses to change.
+- **The preview.** Play in the editor runs a card of yours only when its script is marked `@tool`, which is Godot's rule for any script that runs in the editor, and Debug view says which. A tool card is told to `stop` and `restore` when the pass ends, so put back there whatever it changed.
+- **As an event sheet.** `eventsheet_addons/juice/screen_flash_card.gd` is this same card written as a Custom Resource sheet that extends `JuiceCard`: two variables marked editable, a `play` function and a `length` function. It is the plain script above with no trace of the plugin in it, so a card written as code opens as a sheet and a card made as a sheet can be read, shared and edited as code. Copy the file and rename the class to make another card.
+
 ---
 
 ## ACE reference
@@ -163,7 +195,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Move Juice Card To | `label` (String, `shake`), `position` (int, `1`) | Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last. |
 | Enable Juice Card | `label` (String, `shake`) | Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row. |
 | Disable Juice Card | `label` (String, `shake`) | Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row. |
-| Set Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops`, default `amount`), `value` (`1.0`) | Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. |
+| Set Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` or any value the card holds, default `amount`), `value` (`1.0`) | Retunes ONE value on one card: how much, how long, which extra word, or any value the card holds under that name (the export of a card of your own). The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. |
 | Set Juice Card Timing | `label` (String, `shake`), `delay` (float, `0.0`), `repeat` (int, `1`), `interval` (float, `0.0`), `clock` (`game` \| `real`, default `game`) | Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row. |
 | Set Juice Card Chance | `label` (String, `shake`), `percent` (float, `100.0`) | How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is. |
 | Rename Juice Card | `label` (String, `shake`), `new_label` (String, `big shake`) | Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say. |
@@ -206,7 +238,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Juice Duration | (none) | float | The longest path through the list in seconds - the same number the head of the Inspector shows, so a row can wait exactly as long as the beat lasts. |
 | Juice Card Count | (none) | int | How many cards this player's list holds, ticked or not - the number the head of the Inspector shows. |
 | Juice Card Label At | `position` (int, `1`) | String | The name of the card at a place in the list. The first card is 1; a number past the end answers with nothing. |
-| Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops`, default `amount`) | Variant | What one card says at one of its fields. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. |
+| Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` or any value the card holds, default `amount`) | Variant | What one card says at one of its fields. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. |
 | Juice Card Progress | `label` (String, `shake`) | float | How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing. |
 | Juice Card Duration | `label` (String, `shake`) | float | How long ONE card lasts, its own wait included - beside Juice Duration, which is how long the whole beat lasts. |
 | Current Juice Card | (none) | String | The label of the card the head is on right now, or nothing when no play is running. |

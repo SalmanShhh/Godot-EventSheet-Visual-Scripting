@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a sheet that extends a class of your own project that extends Resource is a Custom Resource sheet
+
+The Sheet Type dialog and the Variable drawer knew only the engine's classes, so a sheet that extended a Resource class you wrote (a card base, a stat block) fell back to a plain Resource host and its members read as instance variables. The project's own list of classes is now followed down to Resource, so such a sheet is a data asset and its members are fields.
+
+### Added: a juice card of your own, a script that extends JuiceCard
+
+A script with a `class_name` that extends the new `JuiceCard` (`eventsheet_addons/juice/juice_card.gd`) is a card of your own. It appears in the Add card box under a **Yours** heading, named from the class (`ScreenFlashCard` reads Screen Flash) with the line written under the class as its help, and it goes when its file does. Its exports are its fields and are drawn with Godot's own editors for their types: a colour button, a range with its suffix, a file picker, a drop-down, a node picker for a `NodePath`; the `##` line above an export is its tooltip. `play(target, strength)` is the only function it must write; `length`, `stop` and `restore` are optional, and a card that exports `seconds` is that long without writing `length`. The card is saved as one more entry in the same list (its class name, the address of its script as a uid, a key for each export), so the list keeps its saved type, copy and paste carry it, a renamed class is still found by its script, and a class called Pause or Sound is never mistaken for the built-in word. Stop Juice and Restore Initial Values reach a card that is still going. Set Juice Card Field and Juice Card Field take any value the card holds (the box offers the eight shipped names and accepts any other; the word and the script of a card are refused), and Add Juice Card and Replace Juice Card add a card of yours as it is. The editor's Play runs a card of yours only when its script is a tool script, and Debug view says which. `eventsheet_addons/juice/screen_flash_card.gd` is the example, written as a Custom Resource sheet that extends `JuiceCard`; the same card written by hand as GDScript opens as a sheet and saves back byte for byte.
+
 ### Fixed: the Add card box is as wide as the Add card button and shows whole lines
 
 The box was a narrow list about 220 pixels wide that cut its last line in half. It is now as wide as the Add card button above it and as tall as fourteen whole lines, and scrolls after that.
