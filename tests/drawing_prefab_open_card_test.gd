@@ -47,6 +47,7 @@ static func run() -> bool:
 	all_passed = _pin_the_fields() and all_passed
 	all_passed = _pin_the_controls() and all_passed
 	all_passed = _pin_the_texture_is_kept_as_text() and all_passed
+	all_passed = _pin_the_dash_words() and all_passed
 	return all_passed
 
 
@@ -60,7 +61,7 @@ static func _pin_the_fields() -> bool:
 		["a line", _keys(line), "kind,x,p1,p2,p3,color,caps,scale_mode,dashed,dash_size,dash_spacing,dash_offset,dash_style,finding"],
 		["a cone", _keys(editor.call("fields_for", "cone")), "kind,x,p1,p2,p3,color,finding"],
 		["a stamp", _keys(editor.call("fields_for", "stamp")), "kind,x,texture,p1,p2,color,help_note,finding"],
-		["a line's names", _labels(line), "Shape,Offset,End X,End Y,Thickness,Colour,End caps,Follows scale,Dashed,Dash,Gap,Offset,Style,"],
+		["a line's names", _labels(line), "Shape,Offset,End X,End Y,Thickness,Colour,End caps,Follows scale,Dashed,Dash,Gap,Dash offset,Style,"],
 		["a ring's names", _labels(editor.call("fields_for", "ring")), "Shape,Offset,Radius,Thickness,Colour,"],
 		["a stamp's names", _labels(editor.call("fields_for", "stamp")), "Shape,Offset,Texture,Scale,Spin,Colour,,"],
 		["a cone's names", _labels(editor.call("fields_for", "cone")), "Shape,Offset,Facing,FOV,Radius,Colour,"],
@@ -182,3 +183,28 @@ static func _pin_the_texture_is_kept_as_text() -> bool:
 static func _drive(spin: SpinBox, value: float) -> void:
 	spin.set_value_no_signal(value)
 	spin.value_changed.emit(value)
+
+
+## A line's dash row says what it is, so no two rows of an open line card share the word Offset, and the "=" that ties
+## the dash to the gap sits between the number and its unit.
+static func _pin_the_dash_words() -> bool:
+	var labels: String = _labels((PREFAB_STEPS.ShapeStepsEditor as GDScript).call("fields_for", "line"))
+	var editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
+	editor.set_steps([_step("line", {"dashed": true})])
+	editor.set_unfolded(0, true)
+	editor._rebuild()
+	var order: String = ""
+	for check: Node in _nodes_of(editor, "CheckButton", []):
+		var row: Node = check.get_parent()
+		if (check as CheckButton).text == "=":
+			var parts: PackedStringArray = PackedStringArray()
+			for child: Node in row.get_children():
+				parts.append((child as Label).text if child is Label else child.get_class())
+			order = ",".join(parts)
+			break
+	editor.free()
+	return SUPPORT.pins(PREFIX, [
+		["the dash row is called Dash offset", labels.contains("Dash offset"), true],
+		["and the word Offset is the position's alone", labels.split(",").count("Offset"), 1],
+		["the tie reads number, equals, unit", order.ends_with(",CheckButton,px") or order.contains("CheckButton,px"), true],
+	])

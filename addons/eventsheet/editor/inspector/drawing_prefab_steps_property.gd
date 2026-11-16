@@ -206,7 +206,7 @@ class ShapeStepsEditor:
 				"defaults": defaults_for(kind),
 				"badge": Callable(ShapeStepsEditor, "summary_of"),
 			})
-		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true, "badge_warn": Callable(ShapeStepsEditor, "has_finding"), "fold_word": EventSheetL10n.translate("Shapes (%d)"),
+		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true, "badge_warn": Callable(ShapeStepsEditor, "has_finding"), "fold_word": EventSheetL10n.translate("Shapes (%d)"), "link_before_unit": true,
 			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for"), "fallback_entry": Callable(ShapeStepsEditor, "unknown_entry"),
 			"order_captions": [EventSheetL10n.translate("Drawn first, underneath"), EventSheetL10n.translate("Drawn last, on top")],
 			"add_word": EventSheetL10n.translate("Add shape"), "add_hint": EventSheetL10n.translate("Enter adds the highlighted shape."),
@@ -383,7 +383,7 @@ class ShapeStepsEditor:
 			fields.append({"key": "dashed", "label": "Dashed", "drawer": "bool", "redraw": true, "fold": LOOK_FOLD})
 			fields.append({"key": "dash_size", "label": "Dash", "show_if": "dashed", "link": "dash_spacing", "suffix": "px", "fold": LOOK_FOLD})
 			fields.append({"key": "dash_spacing", "label": "Gap", "show_if": "dashed", "link": "dash_size", "suffix": "px", "fold": LOOK_FOLD})
-			fields.append({"key": "dash_offset", "label": "Offset", "show_if": "dashed", "suffix": EventSheetL10n.translate("dashes"), "fold": LOOK_FOLD})
+			fields.append({"key": "dash_offset", "label": "Dash offset", "show_if": "dashed", "suffix": EventSheetL10n.translate("dashes"), "fold": LOOK_FOLD})
 			fields.append({"key": "dash_style", "label": "Style", "drawer": "toggle_row:plain,angled,rounded:segmented", "show_if": "dashed", "fold": LOOK_FOLD})
 		if HELP_LINE_KINDS.has(kind):
 			fields.append({"key": "help_note", "label": "", "drawer": "note", "text": Callable(ShapeStepsEditor, "help_line"), "full_width": true})

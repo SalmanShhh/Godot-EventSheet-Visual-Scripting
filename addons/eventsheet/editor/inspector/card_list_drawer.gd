@@ -1745,13 +1745,17 @@ func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxCon
 		_notes.append({"label": editor, "field": field, "index": index})
 		# A line with nothing to say takes no room, and neither does the row that holds it.
 		row.visible = editor.visible
+	# The tie sits between the box and its unit when the schema says so (`link_before_unit`), as it reads: 8 = px.
+	var tie_first: bool = link_toggle != null and bool(_schema.get("link_before_unit", false))
+	if tie_first:
+		row.add_child(link_toggle)
 	var suffix: String = str(field.get("suffix", ""))
 	if not suffix.is_empty():
 		var unit: Label = Label.new()
 		unit.text = suffix
 		unit.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		row.add_child(unit)
-	if link_toggle != null:
+	if link_toggle != null and not tie_first:
 		row.add_child(link_toggle)
 	return row
 
