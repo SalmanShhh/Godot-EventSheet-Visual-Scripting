@@ -24,6 +24,8 @@ GDScript in your own project folder. Nothing invents a parallel environment to l
 - [Backwards, reverted, skipped, put back](#backwards-reverted-skipped-put-back)
 - [What a beat says while it plays](#what-a-beat-says-while-it-plays)
 - [The Juice Player: the list an object carries](#the-juice-player-the-list-an-object-carries)
+- [A card of your own](#a-card-of-your-own)
+- [Finding what went wrong](#finding-what-went-wrong)
 - [Every card, by its label](#every-card-by-its-label)
 - [Channels: one row heard by everything listening](#channels-one-row-heard-by-everything-listening)
 - [Springs under any property](#springs-under-any-property)
@@ -265,7 +267,7 @@ written down before it starts (the object's position, rotation, scale and colour
 Tween Property card names) and put back on Stop, on Restore, at the end of each pass and when the
 editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays
 for real what Godot can play - a shake as a wobble, a punch as a swell, a tweened property walking to its
-value and a sound - and shows the waits and the two time cards (Hitstop and Slowmo) as time. A flash, a
+value, a sound, and the cards that move another node (a label's text, a bar, a particles node, a clip) - and shows the waits and the two time cards (Hitstop and Slowmo) as time. A flash, a
 zoom and the screen effects are drawn by the running game, a signal runs your own code and another
 Juice Player runs its own list, so the editor skips those and says so. **Debug view** draws the
 timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came
@@ -279,6 +281,26 @@ next pass uses. **Try at strength** plays at any strength; it is the same number
 sets, and neither is saved on the player.
 
 ---
+
+## A card of your own
+
+When no card that ships fits, write one. A card of your own is a script that extends `JuiceCard`: its exports are the card's fields, its `play(target, strength)` is what happens when the list reaches it, and the Add card box lists it by itself under **Yours** as soon as the project knows the class. The Juice Player page of this pack shows the whole card (a screen flash of twenty lines) and the doors it can answer (`length`, `stop`, `restore`).
+
+Three things about it that a plain list of cards would not tell you:
+
+- **It is one more entry in the same list.** The card is saved as its class name, the address of its script and a key per export, so copying it, pasting it onto another object, moving the script and renaming the class all keep working, and a row can address it by its label like any other card.
+- **Godot draws its fields.** Each export is drawn by Godot's own editor for its type, so a colour is a colour button, a range is a slider with its suffix, and a file is a file picker. The `##` line above an export is its tooltip.
+- **The editor plays it only if it is a tool script.** That is Godot's rule for any script that runs in the editor, and Debug view says which of your cards it played and which it did not. In the game it always plays.
+
+The same card can be written as an event sheet: a Custom Resource sheet that extends `JuiceCard`, whose editable variables are the fields and whose `play` function holds the actions. `eventsheet_addons/juice/screen_flash_card.gd` is exactly that, and it is the same plain script a person would write by hand.
+
+## Finding what went wrong
+
+A card that does nothing is the hardest thing in a beat to see, so the player says so in words you can act on. Every warning it prints names the player, the card's label and the reason, once per card: a property the object does not have, a bus the project does not have, a sound that is not there, a node the card points at that is gone, a field no card holds.
+
+Before the game runs, the Doctor reads each saved scene for the same two mistakes (a card that points at a node the scene does not have, and a card that names a file the project does not have) and files a warning for each. It reads the scene's saved bytes without instancing it, and it says nothing about a path it cannot judge from the file.
+
+Between a sheet and its cards there are two doors. **Show its cards**, on the right-click menu of a row that plays a Juice Player, opens the scene the sheet runs in and selects that player so its list is in the Inspector. **Find what plays this**, on the strip under the list, lists the sheets that play the player and opens the one you pick.
 
 ## Every card, by its label
 

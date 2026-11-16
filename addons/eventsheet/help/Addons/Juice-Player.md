@@ -79,7 +79,7 @@ Enemy: On damaged
   -> HitJuice | Juice Player: Play Juice  0.6
 ```
 
-**5. Preview without running the game.** The strip sits under the cards. **Play** samples the list in the editor and applies it to the object; **Stop** and **Restore** put the object back the way they found it. Everything a preview may move (position, rotation, scale and colour, and each property a Tween Property card names) is written down first and put back on Stop, on Restore, at the end of each pass and when the editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays for real a shake, a punch, a tweened property and a Sound card, and shows the waits, Hitstop and Slowmo as time; a flash, a zoom and the screen effects are drawn by the running game, a signal runs your own code and another Juice Player runs its own list, so those are skipped and named. **Debug view** draws the timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came late, and writes a line per card saying which of those it is. The play mark on a card head plays that one card alone, the card menu's **Play from here** plays it and everything under it, **Repeat** plays again each time the list ends (reading the list as it is then), and **Try at strength** plays at any strength. None of the three is saved.
+**5. Preview without running the game.** The strip sits under the cards. **Play** samples the list in the editor and applies it to the object; **Stop** and **Restore** put the object back the way they found it. Everything a preview may move (position, rotation, scale and colour, and each property a Tween Property card names) is written down first and put back on Stop, on Restore, at the end of each pass and when the editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays for real a shake, a punch, a tweened property, a Sound card and the cards that move another node (the property of every node they point at is written down too), and shows the waits, Hitstop and Slowmo as time; a flash, a zoom and the screen effects are drawn by the running game, a signal runs your own code and another Juice Player runs its own list, so those are skipped and named. **Debug view** draws the timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came late, and writes a line per card saying which of those it is. The play mark on a card head plays that one card alone, the card menu's **Play from here** plays it and everything under it, **Repeat** plays again each time the list ends (reading the list as it is then), and **Try at strength** plays at any strength. None of the three is saved.
 
 ---
 
@@ -104,7 +104,7 @@ Enemy: On damaged
 | **Fade Bus** | Bus, To (`-12` dB), Over (`0.3` s) | Moves a bus volume to a value over a time, and Restore Initial Values puts it back. A bus the project does not have is said once and left alone. It belongs to the `audio` family. |
 | **Vibrate** | Weak motor (`0.5`), Strong motor (`0.5`), For (`0.2` s) | Rumbles every connected controller and buzzes a phone for the time, each motor scaled by the strength of the play. Does nothing on the web, and nothing when no controller is connected (it has been tried on a desktop with none, not on a real controller or a phone). It belongs to the `device` family. |
 
-**Cards that point at something in the scene.** A card that acts on a node keeps the way to it as a node path written from this player, picked with Godot's own node picker, so a renamed or moved node is followed and a scene copied elsewhere still finds its nodes. A card that picks no node acts on the object this player is under. When a picked node is gone the card says so in quiet amber, and when the game runs a card that finds nothing says so once in the Output panel and does nothing: it never raises an error. None of these cards is felt in the editor; Debug view names each as skipped.
+**Cards that point at something in the scene.** A card that acts on a node keeps the way to it as a node path written from this player, picked with Godot's own node picker, so a renamed or moved node is followed and a scene copied elsewhere still finds its nodes. A card that picks no node acts on the object this player is under. When a picked node is gone the card says so in quiet amber, and when the game runs a card that finds nothing says so once in the Output panel and does nothing: it never raises an error. Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node play in the editor's preview, on the nodes they point at, and everything they moved is put back before the scene is saved. Spawn Scene, the body cards, Grab Focus, Call Method, Emit Signal and Play Player are not shown in the editor, and Debug view says why.
 
 | Card | Fields | What it does |
 |---|---|---|
@@ -136,6 +136,44 @@ Play Player now picks the other player instead of asking for its name; an older 
 
 **The unfolded card.** Click a card's arrow and it opens: a line saying what that juice card does, **Active**, **Label**, **Chance**, a **Timing** foldout, then the card's own fields drawn with the real drawers, and, while the game runs, the values the play is writing back, greyed. The Timing foldout is the same on every card: initial delay, cooldown, repeat count and interval, the clock (game time or real time), a strength window the card only plays inside, and skip on stop. Every one of those keys is absent by default, which is what keeps a plain card identical to a moment file's step.
 
+**A card of your own.** The cards that ship are words the player knows. When none fits, write one: a script that extends `JuiceCard`, anywhere in the project.
+
+```gdscript
+class_name ScreenFlashCard
+extends JuiceCard
+## Flashes the whole screen a colour.
+
+## The colour to flash.
+@export var colour: Color = Color.WHITE
+## How long the flash lasts.
+@export_range(0.0, 2.0, 0.01, "suffix:s") var seconds: float = 0.1
+
+
+func play(target: Node, strength: float) -> void:
+	var layer: CanvasLayer = CanvasLayer.new()
+	var flash: ColorRect = ColorRect.new()
+	flash.color = Color(colour, strength)
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(flash)
+	target.add_child(layer)
+	await target.get_tree().create_timer(seconds).timeout
+	layer.queue_free()
+```
+
+- **It lists itself.** A script with a `class_name` that extends `JuiceCard` appears in Add card under a **Yours** heading, named from the class (`ScreenFlashCard` reads Screen Flash, a closing Card is dropped), with the line under the class as its help. Delete the file and the card is gone from the box.
+- **The exports are the fields.** Each export is drawn with Godot's own editor for its type, as it would be in the Inspector: a colour button, a range with its suffix, a file picker, a drop-down for an enum. A `NodePath` export is the node picker the built-in cards use, kept as a path from the player so a renamed node is followed. The `##` line above an export is its tooltip, and the field is named as you wrote the variable.
+- **`play(target, strength)` is the only function you must write.** `target` is the object the player is under and `strength` is the strength of this play. `length()` says how long the card takes so a Hold card and the length of the list can wait for it; a card that exports a number called `seconds` is that long without it. `stop()` is called when Stop Juice is pressed and `restore()` when Restore Initial Values is. The player hands itself over as `player` just before `play` runs, so a card that exports a `NodePath` finds its node with `player.get_node_or_null(path)`.
+- **How it is saved.** A card of yours is one more entry in the same list: its class name, the address of its script and a key for each export. Moving the script file is safe, because the address is the file's uid, and renaming the class works too, because the card is found by its script first. When the script is gone the card stays in the list with the values it holds and does nothing, and the game says so once in the Output panel.
+- **Rows reach it.** Add Juice Card, Replace Juice Card and Set Juice Card Field work on a card of yours by its label and its export names. Type the export's name in the field box of Set Juice Card Field (it offers the eight shipped names and takes any other the card holds); the word of a card and the script it holds are the two it refuses to change.
+- **The preview.** Play in the editor runs a card of yours only when its script is marked `@tool`, which is Godot's rule for any script that runs in the editor, and Debug view says which. A tool card is told to `stop` and `restore` when the pass ends, so put back there whatever it changed.
+- **As an event sheet.** `eventsheet_addons/juice/screen_flash_card.gd` is this same card written as a Custom Resource sheet that extends `JuiceCard`: two variables marked editable, a `play` function and a `length` function. It is the plain script above with no trace of the plugin in it, so a card written as code opens as a sheet and a card made as a sheet can be read, shared and edited as code. Copy the file and rename the class to make another card.
+
+**When a card goes wrong.** Every message a running Juice Player prints in the Output panel names the player, the card's label and the reason, for example `the card "Spin" on HitJuice points at Crate, which has no property called "wobble", so it did nothing`, and says it once per card. Three more doors lead from the message to the cause:
+
+- **The Doctor** reads every saved scene for a card that points at a node the scene does not have, or names a sound, scene or card script the project does not have, and files a warning for each (two short sentences: what it points at, and to pick it again). It reads the scene's saved bytes without instancing anything, so it finds a lost node without running the game, and it stays quiet about a path that leads into a scene instanced inside this one or out of this one, because those cannot be judged from the file.
+- **Show its cards** is an entry on the right-click menu of a row that plays a Juice Player (Play Juice, Play Juice And Wait, Play Juice Backwards, written in the sheet or as a line of code the sheet shows as one). It opens the scene the sheet runs in if it is not open, selects that player and leaves the Inspector on its list. It is offered only when the scene the sheet runs in holds a Juice Player of that name.
+- **Find what plays this** is a button on the strip under the list. It lists the sheets of the project that play this player and opens the one you pick, or says in one quiet line that no sheet does.
+
 ---
 
 ## ACE reference
@@ -163,7 +201,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Move Juice Card To | `label` (String, `shake`), `position` (int, `1`) | Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last. |
 | Enable Juice Card | `label` (String, `shake`) | Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row. |
 | Disable Juice Card | `label` (String, `shake`) | Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row. |
-| Set Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops`, default `amount`), `value` (`1.0`) | Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. |
+| Set Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` or any value the card holds, default `amount`), `value` (`1.0`) | Retunes ONE value on one card: how much, how long, which extra word, or any value the card holds under that name (the export of a card of your own). The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. |
 | Set Juice Card Timing | `label` (String, `shake`), `delay` (float, `0.0`), `repeat` (int, `1`), `interval` (float, `0.0`), `clock` (`game` \| `real`, default `game`) | Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row. |
 | Set Juice Card Chance | `label` (String, `shake`), `percent` (float, `100.0`) | How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is. |
 | Rename Juice Card | `label` (String, `shake`), `new_label` (String, `big shake`) | Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say. |
@@ -206,7 +244,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Juice Duration | (none) | float | The longest path through the list in seconds - the same number the head of the Inspector shows, so a row can wait exactly as long as the beat lasts. |
 | Juice Card Count | (none) | int | How many cards this player's list holds, ticked or not - the number the head of the Inspector shows. |
 | Juice Card Label At | `position` (int, `1`) | String | The name of the card at a place in the list. The first card is 1; a number past the end answers with nothing. |
-| Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops`, default `amount`) | Variant | What one card says at one of its fields. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. |
+| Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` or any value the card holds, default `amount`) | Variant | What one card says at one of its fields. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. |
 | Juice Card Progress | `label` (String, `shake`) | float | How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing. |
 | Juice Card Duration | `label` (String, `shake`) | float | How long ONE card lasts, its own wait included - beside Juice Duration, which is how long the whole beat lasts. |
 | Current Juice Card | (none) | String | The label of the card the head is on right now, or nothing when no play is running. |
@@ -620,5 +658,5 @@ With `HeadJuice`, `ArmJuice` and `CameraJuice` named on Play Juice Player cards 
 - **A Loop Back with nothing to end it is caught, not hung.** A play gives up after its step limit and says so rather than looping forever, but a Loop Back always wants either a Loop Start or a Hold above it and a loop count that ends.
 - **Editing a player whose moment-file slot is filled takes a copy first.** The file two other objects may be playing is never written into. The beat is unchanged; from the first edit row on, it is this object's own list.
 - **Save Moment File cannot carry the whole list.** Only the four keys a file holds are written, so a switched-off card and the timing words a list adds are named in a warning and left out. Keep the list on the node when the timing words matter.
-- **Preview shows three things, not everything.** In the editor, a shake, a punch and a tweened property are drawn; a hitstop and a flash are left out because they are things a running game does to time and to the screen. A beat that looks thin in preview is not necessarily thin.
+- **Preview shows most things, not everything.** In the editor, a shake, a punch, a tweened property and the cards that move another node are drawn; a hitstop and a flash are left out because they are things a running game does to time and to the screen. A beat that looks thin in preview is not necessarily thin.
 - **Scale Juice Amounts and Scale Juice Timing change the list.** They are not a temporary lens: they multiply the values the cards hold. Scaling by 0.5 twice leaves the amounts at a quarter, so drive them from a setting's absolute value rather than applying them repeatedly.
