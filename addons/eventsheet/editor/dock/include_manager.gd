@@ -79,7 +79,7 @@ func _build_include_manager() -> void:
 	left.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(300.0), 0.0)
 	_include_list = _two_column_list()
 	_include_list.item_selected.connect(_refresh_include_preview)
-	var list_card: PanelContainer = EventSheetPopupUI.titled_card("Included sheets", _include_list)
+	var list_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetWords.title_case(EventSheetWords.shared_sheet_plural()), _include_list)
 	list_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(list_card)
 	var buttons: HFlowContainer = HFlowContainer.new()

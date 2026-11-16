@@ -18,6 +18,7 @@ const NORD := "res://demo/themes/nord_theme.tres"
 static func run() -> bool:
 	var ok: bool = true
 	ok = _reading_font_hint() and ok
+	ok = _shared_sheets_heading() and ok
 	return ok
 
 
@@ -41,3 +42,24 @@ static func _reading_font_hint() -> bool:
 	window._dialog.free()
 	dock.free()
 	return ok
+
+
+## The list in the Shared Sheets window is headed with the same words as the window's title.
+static func _shared_sheets_heading() -> bool:
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(EventSheetResource.new())
+	editor.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	editor._includes.open()
+	var window: Window = editor._includes._include_manager_window
+	var heading: String = ""
+	var old_heading: bool = false
+	for node: Node in window.find_children("*", "Label", true, false):
+		var text: String = (node as Label).text
+		heading = text if text == "Shared Sheets" else heading
+		old_heading = old_heading or text == "Included sheets"
+	window.hide()
+	editor.free()
+	return SUPPORT.pins(P + ": the Shared Sheets window", [
+		["the list is headed Shared Sheets", heading, "Shared Sheets"],
+		["and no heading says Included sheets", old_heading, false],
+	])
