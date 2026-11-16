@@ -142,7 +142,7 @@ class ShapeStepsEditor:
 	const SHAPE_HELP: Dictionary = {
 		"circle": "A filled disc of the given radius, centred on the offset.",
 		"ring": "An outlined circle - its radius, and how thick the outline is.",
-		"rect": "A filled rectangle of the given width and height, centred on the offset.",
+		"rect": "A filled rectangle of the given width and height, drawn right and down from the offset.",
 		"line": "A stroke from the offset to the end point, of the given thickness - with ends you pick and a dash pattern you can turn on.",
 		"cone": "A filled wedge: which way it faces, how wide it opens, and how far it reaches.",
 		"stamp": "A texture drawn at the offset, scaled and spun.",

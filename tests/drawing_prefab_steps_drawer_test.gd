@@ -23,6 +23,7 @@ const PREFAB_SCRIPT_PATH := "res://eventsheet_addons/drawing_prefab_resource/dra
 static func run() -> bool:
 	var ok: bool = true
 	ok = _order_pins() and ok
+	ok = _shape_word_pins() and ok
 	ok = _read_only_pins() and ok
 	return ok
 
@@ -43,6 +44,22 @@ static func _order_pins() -> bool:
 		["the prefab's plugin is added after the generic drawers, so Godot asks it first", prefab_at > drawers_at, true],
 		["the steps export still carries the table marker, which is why the order matters",
 			steps_hint.begins_with("eventsheet:table:"), true],
+	])
+
+
+static func _shape_word_pins() -> bool:
+	var editor: GDScript = (load(STEPS_PROPERTY_PATH) as GDScript).get_script_constant_map().get("ShapeStepsEditor") as GDScript
+	var help: Dictionary = editor.get_script_constant_map().get("SHAPE_HELP", {})
+	var ring_keys: PackedStringArray = PackedStringArray()
+	for field: Variant in editor.call("fields_for", "ring"):
+		ring_keys.append(str((field as Dictionary).get("key", "")))
+	var line_keys: PackedStringArray = PackedStringArray()
+	for field: Variant in editor.call("fields_for", "line"):
+		line_keys.append(str((field as Dictionary).get("key", "")))
+	return SUPPORT.pins(TEST_NAME, [
+		["a rectangle is not said to be centred", str(help.get("rect", "")).contains("centred"), false],
+		["a rectangle is said to be drawn from its offset", str(help.get("rect", "")).contains("right and down from the offset"), true],
+		["a line is offered the scale rule", line_keys.has("scale_mode"), true],
 	])
 
 
