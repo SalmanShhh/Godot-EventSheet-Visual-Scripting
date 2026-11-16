@@ -817,7 +817,8 @@ func _size_add_box() -> void:
 	# line does, so no part of a next line shows under it.
 	var top: float = _add_tree.get_item_area_rect(first).position.y if first != null else 0.0
 	var lines: int = EventSheetCardSchemas.kinds_of(_schema).size() if bool(_schema.get("flat_add", false)) else ADD_BOX_LINES
-	_add_tree.custom_minimum_size = Vector2(wide, top + line * float(mini(lines, ADD_BOX_LINES)))
+	var pad: float = EventSheetPalette.scaled(8) if bool(_schema.get("flat_add", false)) else 0.0
+	_add_tree.custom_minimum_size = Vector2(wide, top + line * float(mini(lines, ADD_BOX_LINES)) + pad)
 
 
 func _fill_add_tree() -> void:

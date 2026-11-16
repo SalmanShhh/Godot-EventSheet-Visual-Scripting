@@ -46,7 +46,7 @@ static func shape_image(kind: String, color: Color, side: int, on_light: bool) -
 	# A pale shape on a light ground wears a faint dark edge a little wider than itself.
 	var edge: bool = on_light and color.get_luminance() > 0.55
 	var edge_colour: Color = Color(0.1, 0.1, 0.12, 0.45)
-	var ink: Color = color if kind in ["circle", "ring", "rect", "line", "cone", "stamp"] else Color(0.55, 0.55, 0.6, 1.0)
+	var ink: Color = color if kind in ["circle", "ring", "rect", "line", "cone", "stamp"] else Color(0.5, 0.5, 0.55, 1.0)
 	for y: int in range(side):
 		for x: int in range(side):
 			var point: Vector2 = Vector2(float(x) + 0.5 - half, float(y) + 0.5 - half)
