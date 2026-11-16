@@ -43,8 +43,10 @@ static func _step_bounds(entry: Dictionary) -> Rect2:
 		"rect":
 			return Rect2(at, Vector2(p1, p2)).abs()
 		"line":
+			# A line's End is a point in the prefab's own space, measured from the origin - not a
+			# length added to the offset - so the box runs from the offset to that point.
 			var w: float = maxf(absf(p3), 1.0)
-			return Rect2(at, Vector2(p1, p2)).abs().grow(w * 0.5)
+			return Rect2(at, Vector2.ZERO).expand(Vector2(p1, p2)).grow(w * 0.5)
 		"cone":
 			var cr: float = maxf(absf(p3), 1.0)
 			return Rect2(at.x - cr, at.y - cr, cr * 2.0, cr * 2.0)
@@ -99,7 +101,7 @@ static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_
 			var corner: Vector2 = _to_px(at_local + Vector2(p1, p2), scale, center_local, center_px)
 			_fill_rect(img, Rect2(at, corner - at).abs(), tint)
 		"line":
-			var to_px: Vector2 = _to_px(at_local + Vector2(p1, p2), scale, center_local, center_px)
+			var to_px: Vector2 = _to_px(Vector2(p1, p2), scale, center_local, center_px)
 			_fill_stroke(img, at, to_px, maxf(p3 * scale, float(_SUPERSAMPLE)), tint, entry, scale)
 		"cone":
 			_fill_cone(img, at, maxf(p3, 0.5) * scale, p1, p2, tint)

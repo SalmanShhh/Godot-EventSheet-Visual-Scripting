@@ -37,6 +37,16 @@ func _invalidate_compiled() -> void:
 	_compiled_valid = false
 	_compiled = []
 
+## A line step's two points, both in the prefab's own space: where it starts (its offset) and where
+## it ends (its End, measured from the prefab's origin, not from the offset). Every renderer takes
+## the span from here so a line ends at the same point in the game, the viewport and the Inspector.
+## Works on a raw step and on a compiled entry alike.
+static func line_span(entry: Dictionary) -> PackedVector2Array:
+	return PackedVector2Array([
+		Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))),
+		Vector2(float(entry.get("p1", 0.0)), float(entry.get("p2", 0.0))),
+	])
+
 ## Parses raw steps (Dictionaries of strings) into typed entries - colors parsed once, stamp
 ## textures loaded once (main thread). The renderers use the SAME shape for their generic-Resource
 ## fallback, so a cached draw and an uncached draw are identical.

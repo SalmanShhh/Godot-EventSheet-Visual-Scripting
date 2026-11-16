@@ -172,9 +172,9 @@ static func _pin_the_picture() -> bool:
 	])
 
 
-## The one line step the pixel pins are read from - 40 units long, 4 thick, across the middle.
+## The one line step the pixel pins are read from - from -20 to 20, 40 units long, 4 thick, across the middle.
 static func _pixel_step(extra: Dictionary) -> Dictionary:
-	var step: Dictionary = {"kind": "line", "x": -20.0, "y": 0.0, "p1": 40.0, "p2": 0.0, "p3": 4.0, "color": "#ff0000", "texture": ""}
+	var step: Dictionary = {"kind": "line", "x": -20.0, "y": 0.0, "p1": 20.0, "p2": 0.0, "p3": 4.0, "color": "#ff0000", "texture": ""}
 	for key: Variant in extra:
 		step[str(key)] = extra[key]
 	return step

@@ -62,7 +62,8 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 				var width: float = maxf(p3, 1.0)
 				if str(entry.get("scale_mode", "uniform")) == "fixed":
 					width /= maxf(scale_by, 0.001)
-				draw_stroke(canvas, at, at + Vector2(p1, p2), width, tint, entry)
+				var span: PackedVector2Array = DrawingPrefabResource.line_span(entry)
+				draw_stroke(canvas, span[0], span[1], width, tint, entry)
 			"cone":
 				var points: PackedVector2Array = PackedVector2Array([at])
 				for i: int in 25:
