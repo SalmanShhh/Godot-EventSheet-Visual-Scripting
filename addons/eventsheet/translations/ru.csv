@@ -10989,4 +10989,4 @@ Shows this list as cards again.,Снова показывает этот спи�
 Move to bottom,Переместить вниз
 Shapes (%d),Фигуры (%d)
 Dash offset,Смещение штриха
-"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s: %s (строка %d) теперь называется %s. Замените имя; больше ничего не изменилось."
+"Line %d: rename %s to %s. Nothing else changed.","Строка %d: переименуйте %s в %s. Больше ничего не изменилось."

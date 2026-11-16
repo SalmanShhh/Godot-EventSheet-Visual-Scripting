@@ -39,10 +39,9 @@ static func run() -> bool:
 	ok = SUPPORT.pins(P, [
 		["one finding for the line", findings.size(), 1],
 		["it is a warning filed under the section's id", [findings[0]["severity"], findings[0]["check"]], ["warning", "renamed-classes"]],
-		["it names the file, the old name, the new name and the line", [
-			str(findings[0]["message"]).contains("old_name_script.gd"), str(findings[0]["message"]).contains("SheetCompiler"),
-			str(findings[0]["message"]).contains("EventSheetCompiler"), str(findings[0]["message"]).contains("line 4")], [true, true, true, true]],
-		["it opens the file", findings[0]["path"], path],
+		["it says the line, the old name and the new name in one short sentence", findings[0]["message"],
+			"Line 4: rename SheetCompiler to EventSheetCompiler. Nothing else changed."],
+		["it opens the file the finding is about", findings[0]["path"], path],
 	]) and ok
 	var live: Array[Dictionary] = []
 	SECTION.check(PackedStringArray(), live)

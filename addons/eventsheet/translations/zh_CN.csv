@@ -10989,4 +10989,4 @@ Shows this list as cards again.,再次以卡片显示此列表。
 Move to bottom,移到底部
 Shapes (%d),形状 (%d)
 Dash offset,虚线偏移
-"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s：%s（第 %d 行）现在叫 %s。请替换名称；其他内容没有变化。"
+"Line %d: rename %s to %s. Nothing else changed.","第 %d 行：把 %s 改名为 %s。其他内容没有变化。"

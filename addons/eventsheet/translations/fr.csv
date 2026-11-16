@@ -10989,4 +10989,4 @@ Shows this list as cards again.,Affiche de nouveau cette liste en cartes.
 Move to bottom,Déplacer tout en bas
 Shapes (%d),Formes (%d)
 Dash offset,Décalage du tiret
-"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s nomme %s à la ligne %d, qui s'appelle désormais %s. Remplace le nom ; rien d'autre n'a changé."
+"Line %d: rename %s to %s. Nothing else changed.","Ligne %d : renomme %s en %s. Rien d'autre n'a changé."

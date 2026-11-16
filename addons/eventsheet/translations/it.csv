@@ -10989,4 +10989,4 @@ Shows this list as cards again.,Mostra di nuovo questa lista come schede.
 Move to bottom,Sposta in fondo
 Shapes (%d),Forme (%d)
 Dash offset,Scostamento del tratto
-"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s nomina %s alla riga %d, che ora si chiama %s. Sostituisci il nome; nient'altro è cambiato."
+"Line %d: rename %s to %s. Nothing else changed.","Riga %d: rinomina %s in %s. Nient'altro è cambiato."

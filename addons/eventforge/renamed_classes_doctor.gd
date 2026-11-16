@@ -75,8 +75,8 @@ static func report(sources: Dictionary, project_classes: PackedStringArray) -> A
 	for path: String in paths:
 		for hit: Dictionary in hits(str(sources[path]), project_classes):
 			findings.append(_finding("warning", CHECK_ID, path, EventSheetL10n.translate(
-				"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.") % [
-				path.get_file(), hit["old"], int(hit["line"]), hit["new"]], str(hit["old"])))
+				"Line %d: rename %s to %s. Nothing else changed.") % [
+				int(hit["line"]), hit["old"], hit["new"]], str(hit["old"])))
 	return findings
 
 
