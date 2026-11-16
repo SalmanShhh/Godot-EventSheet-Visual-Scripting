@@ -12,9 +12,9 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "native_theme_contrast_test"
-## The bar for words a reader works through (WCAG body text) and for marks and badge letters.
+const PAIRS_PATH := "res://addons/eventsheet/theme/theme_contrast_pairs.gd"
+## The bar for words a reader works through (WCAG body text).
 const TEXT_BAR := 4.5
-const MARK_BAR := 3.0
 ## The editor bases the pins run at: each hand's reference and the base Godot's own presets use.
 const BASES := [Color("#292929"), Color("#e6e6e6"), Color(0.89, 0.89, 0.89), Color(0.161, 0.161, 0.161)]
 
@@ -62,72 +62,15 @@ static func _test_quiet_words_read(base: Color) -> bool:
 	return ok
 
 
-## [what, section ("event", "condition", "action"), ink token, fill token, bar]. A section holds the
-## token; the fill's section is the same unless the name is prefixed "action:" or "condition:".
-static func _pairs() -> Array:
-	return [
-		["condition sentence", "condition", "text_color", "event:condition_lane_color", TEXT_BAR],
-		["action sentence", "action", "text_color", "event:action_lane_color", TEXT_BAR],
-		["note words on the note band", "event", "comment_text_color", "event:comment_row_background_color", TEXT_BAR],
-		["group title on the group box", "event", "group_title_color", "event:group_background_color", TEXT_BAR],
-		["group badge words on the badge", "event", "group_badge_foreground_color", "event:group_badge_background_color", MARK_BAR],
-		["gutter numbers on the gutter", "event", "gutter_text_color", "event:gutter_background_color", MARK_BAR],
-		["conditions header on its header", "event", "column_header_conditions_color", "event:column_header_background_color", MARK_BAR],
-		["actions header on its header", "event", "column_header_actions_color", "event:column_header_background_color", MARK_BAR],
-		["trigger badge", "event", "trigger_badge_foreground_color", "event:trigger_badge_background_color", MARK_BAR],
-		["object label on a condition lane", "event", "object_label_color", "event:condition_lane_color", TEXT_BAR],
-		["variable word on a condition lane", "event", "word_variable_color", "event:condition_lane_color", TEXT_BAR],
-		["value word on an action lane", "event", "value_highlight_color", "event:action_lane_color", TEXT_BAR],
-		["link on a condition lane", "event", "link_color", "event:condition_lane_color", TEXT_BAR],
-		["invert mark on a condition lane", "event", "invert_marker_color", "event:condition_lane_color", MARK_BAR],
-		["trigger mark on a condition lane", "event", "trigger_mark_color", "event:condition_lane_color", MARK_BAR],
-		["behaviour name on a condition lane", "event", "behaviour_name_color", "event:condition_lane_color", MARK_BAR],
-		["type word on the variable card", "event", "type_number_color", "event:variable_card_fill_color", MARK_BAR],
-		["ace action badge", "event", "ace_action_accent_color", "event:ace_action_badge_background_color", MARK_BAR],
-		["ace condition badge", "event", "ace_condition_accent_color", "event:ace_condition_badge_background_color", MARK_BAR],
-		["ace expression badge", "event", "ace_expression_accent_color", "event:ace_expression_badge_background_color", MARK_BAR],
-		["verb chip", "event", "verb_chip_foreground_color", "event:verb_chip_background_color", MARK_BAR],
-		["include tag on its fill", "event", "include_tag_color", "event:include_fill_color", MARK_BAR],
-		["include name on its fill", "event", "include_name_color", "event:include_fill_color", TEXT_BAR],
-		["class tag on its fill", "event", "class_tag_color", "event:class_fill_color", MARK_BAR],
-		["class name on its fill", "event", "class_name_color", "event:class_fill_color", TEXT_BAR],
-		["inspector badge", "event", "inspector_badge_foreground_color", "event:inspector_badge_background_color", MARK_BAR],
-		["range badge", "event", "range_badge_foreground_color", "event:range_badge_background_color", MARK_BAR],
-		["tooltip badge", "event", "tooltip_badge_foreground_color", "event:tooltip_badge_background_color", MARK_BAR],
-		["saved badge", "event", "saved_badge_foreground_color", "event:saved_badge_background_color", MARK_BAR],
-	]
-
-
-static func _section(style: EventSheetEditorStyle, name: String) -> Resource:
-	match name:
-		"condition":
-			return style.get_condition_style()
-		"action":
-			return style.get_action_style()
-	return style.get_event_style()
-
-
-## One token, composited over the sheet's canvas when it is translucent, so a wash reads as the
-## colour that actually reaches the screen.
-static func _opaque(style: EventSheetEditorStyle, color: Color) -> Color:
-	if color.a >= 1.0:
-		return color
-	var canvas: Color = style.get_event_style().sheet_background_color
-	return canvas.lerp(Color(color.r, color.g, color.b, 1.0), color.a)
-
-
+## Every pair the sheet draws, read from the one list the Theme Editor marks its swatches by.
 static func _test_pairs_read(base: Color) -> bool:
 	var style: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(base)
 	var weak: Array[String] = []
-	for pair: Array in _pairs():
-		var ink_resource: Resource = _section(style, str(pair[1]))
-		var fill_parts: PackedStringArray = str(pair[3]).split(":")
-		var fill_resource: Resource = _section(style, fill_parts[0])
-		var ink: Color = _opaque(style, ink_resource.get(str(pair[2])))
-		var fill: Color = _opaque(style, fill_resource.get(fill_parts[1]))
-		var ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(ink, fill)
-		if ratio < float(pair[4]):
-			weak.append("%s %.2f (%s on %s)" % [pair[0], ratio, ink.to_html(false), fill.to_html(false)])
+	var pairs: GDScript = load(PAIRS_PATH)
+	for pair: Array in pairs.PAIRS:
+		var measured: Dictionary = pairs.measure(style, pair)
+		if float(measured["ratio"]) < float(measured["bar"]):
+			weak.append("%s %.2f (%s on %s)" % [measured["what"], measured["ratio"], (measured["ink"] as Color).to_html(false), (measured["fill"] as Color).to_html(false)])
 	return SUPPORT.check(TEST_NAME, "every pair the sheet draws reads at base %s" % base.to_html(false), weak, [])
 
 
