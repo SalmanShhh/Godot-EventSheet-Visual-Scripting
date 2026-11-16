@@ -10919,3 +10919,4 @@ Show its cards,显示其卡片
 Showing the cards of %s.,正在显示 %s 的卡片。
 No sheet in this project plays %s.,此项目中没有表播放 %s。
 Find what plays this,查找谁在播放它
+"There is no file at %s, so no sheet was opened.","%s 处没有文件，因此没有打开工作表。"

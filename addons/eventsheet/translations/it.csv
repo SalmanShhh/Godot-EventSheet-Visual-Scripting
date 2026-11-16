@@ -10919,3 +10919,4 @@ Show its cards,Mostra le sue carte
 Showing the cards of %s.,Mostro le carte di %s.
 No sheet in this project plays %s.,Nessun foglio di questo progetto riproduce %s.
 Find what plays this,Trova cosa lo riproduce
+"There is no file at %s, so no sheet was opened.","Non c'è nessun file in %s, quindi nessun foglio è stato aperto."

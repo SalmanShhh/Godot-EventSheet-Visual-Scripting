@@ -10919,3 +10919,4 @@ Show its cards,Показать его карточки
 Showing the cards of %s.,Показаны карточки %s.
 No sheet in this project plays %s.,Ни один лист этого проекта не запускает %s.
 Find what plays this,"Найти, что это запускает"
+"There is no file at %s, so no sheet was opened.","По пути %s нет файла, поэтому лист не открыт."

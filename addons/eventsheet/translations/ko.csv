@@ -10919,3 +10919,4 @@ Show its cards,카드 보기
 Showing the cards of %s.,%s의 카드를 보여 주고 있습니다.
 No sheet in this project plays %s.,이 프로젝트에는 %s를 재생하는 시트가 없습니다.
 Find what plays this,이것을 재생하는 것 찾기
+"There is no file at %s, so no sheet was opened.","%s에 파일이 없어서 시트를 열지 않았습니다."
