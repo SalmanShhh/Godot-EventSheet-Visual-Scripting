@@ -4,6 +4,12 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: behaviour icons and picker section icons are drawn the way Godot draws its own node icons
+
+Every behaviour, global, resource and node-type pack (141 in all) now wears a flat 16 x 16 icon with no tile behind it, in one of Godot's own ink colours: red for what works on a 3D node, green for a Control, blue for a 2D node, purple for animation, Godot's grey for everything else, taken from what the pack's scripts say it works on. A pack that is a behaviour (it declares a host) also wears one small dot in the bottom-right corner, which is what tells it from a plain node. The icons are made by `tools/build_icons.gd` from a glyph source beside each pack builder and the pack build runs it, so a rebuild writes the same bytes; a 3D twin reuses its 2D drawing in red. `vector_shapes` has a 2D icon and a 3D one, and its 3D classes (and their picker rows) now name `icon_3d.svg`; every other `@icon` and `@ace_icon` path is unchanged. 57 picker sections (the three that borrowed the wrong picture, Camera, the 3D header and Performance, included) wear a drawn icon of their own, and a section that is one Godot class keeps Godot's icon. The resolver for a section's icon returns either a Godot icon name or the `res://` path of a drawn file.
+
+Each icon's import asks Godot to draw it in the editor's own colours, so the same file reads on a light editor as Godot's icons do: in the Scene dock, the Create Node dialog, the picker and the sheet. The imports ship beside the repo's icons; a pack added from the behaviour library arrives without one, so the plugin turns the flag on and imports it again, and after a switch between a dark and a light editor it imports the pack and section icons again (once per switch). The behaviour library window, which draws files Godot never imports, swaps the same ink pairs itself. A new test pins every icon (16 x 16, no ground, one ink from Godot's map, the family ink, the dot rule, the import flag, no two the same).
+
 ### Changed: playing one card on its own, and the strip's preview, play a card's repeats
 
 The mark that plays one card alone, the strip's Play, the lit marks on the cards and the sound of a Sound card in the editor now follow a card's Delay and Repeat as the game does: a shake with a delay of 0.05 s and three repeats 0.08 s apart is seen for 0.51 s, three times over, where it used to be seen once for 0.35 s (measured per frame in the editor).
