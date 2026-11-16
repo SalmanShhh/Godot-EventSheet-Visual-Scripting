@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a shape set to "fixed on screen" keeps its weight when the camera zooms
+
+A 4 px line set to "fixed on screen" was drawn 8 px wide under a Camera2D at zoom 2, and 2 px wide at zoom 0.5, because the width followed the shape's own scale and ignored the camera. It now follows the scale the shape is actually shown at, so the line is 4 px at every zoom, in a running game and in the editor's 2D view when you zoom it. A fixed shape checks that scale once a frame to redraw when it changes; a shape set to "with the node" stays parked as before. Shapes in a project made before this fix pick it up when the Vector Shapes pack is added again from the library.
+
 ### Changed (breaking): nine plugin classes have new names
 
 Godot has one global class namespace, so a plugin class named like `SheetCompiler` could stop a project's own class of that name from loading. Nine classes now carry the EventSheet prefix: `SheetCompiler` is `EventSheetCompiler`, `GDScriptImporter` is `EventSheetGDScriptImporter`, `VariableParser` is `EventSheetVariableParser`, `TriggerResolver` is `EventSheetTriggerResolver`, `VariableDialog` is `EventSheetVariableDialog`, `FunctionParser` is `EventSheetFunctionParser`, `ParamDefaultResolver` is `EventSheetParamDefaultResolver`, `ActionCodegen` is `EventSheetActionCodegen`, `ConditionCodegen` is `EventSheetConditionCodegen`. A script of yours that names an old one stops parsing until the name is replaced, and the Project Doctor has a new Renamed Classes section that lists each such line with the replacement. The old names are not kept as aliases on purpose: an alias would bring the clash back. Nothing else about these classes changed, and the `EventSheets` API itself did not change.

@@ -161,6 +161,9 @@ var _scrolling: bool = false
 # fighting the first for it.
 ## The tween fading the shape in or out.
 var _fade: Tween = null
+
+## The scale a stroke fixed on screen was last drawn at, so a zoom is noticed and redrawn.
+var _canvas_scale_seen: float = 0.0
 ## What a node covers, in world coordinates - what a Fit Around row sizes itself to. A node that
 ## draws a rectangle (a sprite, a texture rect) is measured by it; anything else is measured by the
 ## collision shapes and drawable children under it. An empty rectangle is a node with nothing to
@@ -731,12 +734,23 @@ func _draw() -> void:
 	var quad: Rect2 = shape_bounds().grow(pad)
 	_push_uniforms(shape_material, quad)
 	draw_rect(quad, Color.WHITE)
+	# A stroke fixed on screen is sized for the scale it is drawn at, so it keeps a tick that
+	# notices the scale move (a camera zoom, the editor view's zoom) and draws it again.
+	if _is_fixed_on_screen():
+		_canvas_scale_seen = _shown_scale()
+		set_process(true)
 
 func _process(delta: float) -> void:
 	# Four things can want a frame - scrolling dashes, a tether, a followed cursor and a Show For
 	# counting down - and the shape stops processing the moment none of them does. A parked shape
 	# costs nothing per frame, which is the rule every pack here follows.
 	var working: bool = false
+	if _is_fixed_on_screen():
+		# Only a fixed stroke keeps the tick for this: one float compared a frame. A stroke that
+		# follows the node never depends on the view, and stays parked.
+		working = true
+		if not is_equal_approx(_shown_scale(), _canvas_scale_seen):
+			queue_redraw()
 	if not is_zero_approx(_dash_scroll_speed):
 		# Whole numbers tile, so a pattern that has scrolled for an hour is exactly where it started.
 		#
@@ -831,17 +845,39 @@ func shape_changed() -> void:
 	_gradient_strip = null
 	queue_redraw()
 
-## The shape's thickness in pixels, after the scale rule: a stroke set to keep its weight on screen
-## divides by THE NODE'S OWN SCALE, so a shape parented under something scaled up keeps the weight
-## it was typed at. It is the node's scale and not the camera's, because the quad this number also
-## sizes is built here on the CPU and a Camera2D zoom tells a redrawn shape nothing - a shape
-## nothing has written to does not redraw when a camera moves.
+## The thickness to draw with, in the shape's own units, after the scale rule. A stroke that follows
+## the node is the number typed. A stroke fixed on screen is that number divided by the scale the
+## shape is SHOWN at - its own scale, any parent's, a camera's zoom, and the editor view's zoom - so
+## a 4 px line is 4 px on the screen however far the view is zoomed. Screen pixels here are the
+## game's own pixels: the window stretch, which scales the whole picture, stays out of it.
+## @ace_hidden
+static func on_screen_thickness(typed: float, rule: String, screen_scale: float) -> float:
+	if rule == THICKNESS_SCALE_FIXED_ON_SCREEN:
+		return typed / maxf(absf(screen_scale), 0.0001)
+	return typed
+
+## The scale the shape is shown at: its transform with the canvas (the camera's zoom and a canvas
+## layer's scale) and the viewport's own canvas transform (what the editor's 2D view zooms with).
+## Outside the tree there is no canvas, so the node's own scale stands in.
+## @ace_hidden
+func _shown_scale() -> float:
+	if not is_inside_tree():
+		return global_scale.x
+	var shown: Transform2D = get_global_transform_with_canvas()
+	var viewport: Viewport = get_viewport()
+	if viewport != null:
+		shown = viewport.get_global_canvas_transform() * shown
+	return shown.get_scale().x
+
+## True when the stroke is set to keep its weight on screen.
+## @ace_hidden
+func _is_fixed_on_screen() -> bool:
+	return _word("thickness_scale", THICKNESS_SCALE_WITH_THE_NODE) == THICKNESS_SCALE_FIXED_ON_SCREEN
+
+## The shape's thickness in pixels, after the scale rule.
 ## @ace_hidden
 func _pixel_thickness() -> float:
-	var value: float = _number("thickness", 2.0)
-	if _word("thickness_scale", THICKNESS_SCALE_WITH_THE_NODE) == THICKNESS_SCALE_FIXED_ON_SCREEN:
-		return value / maxf(absf(global_scale.x), 0.0001)
-	return value
+	return on_screen_thickness(_number("thickness", 2.0), _word("thickness_scale", THICKNESS_SCALE_WITH_THE_NODE), _shown_scale())
 
 ## One exported number of whichever shape script this is, or the fallback when that shape has no
 ## such field. The base declares no fields of its own on purpose (a subclass cannot re-export an

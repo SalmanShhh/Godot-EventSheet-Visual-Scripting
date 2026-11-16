@@ -208,7 +208,7 @@ nothing.
 |---|---|---|
 | (top) | Style | A **Shape Style** file this shape wears instead of its own look, with a **Save As Style** tool button above it (Godot's own `@export_tool_button`, so it needs no plugin to show). Empty is the usual case. See "Styles you own" below. |
 | Stroke | Thickness | A number with a **unit dropdown** at its right edge: pixels, world units or screen units. Switching the dropdown converts the number in front of you; the stored value is always pixels, so nothing an emitted script reads ever moves. |
-| Stroke | Thickness scale | With the node, or fixed on screen (what a HUD line wants). |
+| Stroke | Thickness scale | With the node, or fixed on screen (what a HUD line wants: the line keeps its weight at any camera zoom, and in the editor's 2D view at any view zoom). |
 | Stroke | Caps | None, square or round, as three icon buttons. |
 | Colour | Colour mode | `single`, `two`, `radial`, `angular`, `gradient` or `per corner`, depending on the shape. The mode decides which swatches are shown below it. |
 | Colour | Colour, Colour B, Colour C, Colour D | Only the swatches the mode needs. |
