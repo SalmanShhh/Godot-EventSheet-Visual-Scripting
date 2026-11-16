@@ -2,11 +2,13 @@
 #
 # Each block below is one promise of the extension API that had no test:
 #   block kinds   a kind can say "nothing to write for this row" and the compile still succeeds
+#   the compiler  a sheet with no file and no output path writes no stray script
 @tool
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const P := "api_keeps_its_word_test"
+const STRAY := "res://event_sheet_generated.gd"
 
 
 class QuietKind extends EventSheetBlockKind:
@@ -36,6 +38,7 @@ class MutedKind extends EventSheetBlockKind:
 static func run() -> bool:
 	var ok: bool = true
 	ok = _writes_nothing() and ok
+	ok = _stray_file() and ok
 	return ok
 
 
@@ -60,4 +63,20 @@ static func _writes_nothing() -> bool:
 		["and the same kind switched on writes its line", (quiet_on.get("output", "") as String).contains("# quiet"), true],
 		["a kind that does not say so still fails when it writes nothing", silent.get("success"), false],
 		["the kind base class has the hook, default false", EventSheetBlockKind.new().writes_nothing(CustomBlockRow.new()), false],
+	])
+
+
+static func _stray_file() -> bool:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(STRAY))
+	var result: Dictionary = EventSheetCompiler.compile(EventSheets.new_sheet())
+	var wrote: bool = FileAccess.file_exists(STRAY)
+	var helper: String = SUPPORT.compile_output(EventSheets.new_sheet())
+	var helper_wrote: bool = FileAccess.file_exists(STRAY)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(STRAY))
+	return SUPPORT.pins(P, [
+		["the compiler writes no stray script for a sheet with no file", wrote, false],
+		["and says why it wrote nothing", (result.get("warnings", []) as Array).size() > 0, true],
+		["the text is still in the result", str(result.get("output", "")).is_empty(), false],
+		["the test helper's compile_output writes none either", helper_wrote, false],
+		["and still returns the text", helper.is_empty(), false],
 	])

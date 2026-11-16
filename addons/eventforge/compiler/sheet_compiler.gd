@@ -285,7 +285,7 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 ## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header - used when the .gd IS the
 ## user's source of truth (Save As .gd), not a regenerated companion of a .tres sheet.
 ## With no output_path the file is the sheet's own: a script-backed sheet's .gd, else a generated
-## file beside it (or res://event_sheet_generated.gd for a sheet with no path). To READ what a sheet
+## file beside it (or nothing, with a warning, for a sheet with no path). To READ what a sheet
 ## compiles to, ask echo(), which writes nothing.
 ## own_file says the .gd written is the sheet from now on (Save As .gd): its comment rows are written
 ## above the events they sit over, as an opened .gd writes them, so reopening it keeps them there. A
@@ -1056,6 +1056,10 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 
+	# A sheet with no file and no path given has nowhere to be written: say so, and keep the text.
+	if _writes_output and output_path.is_empty() and sheet.resource_path.is_empty():
+		(result["warnings"] as Array).append("Nothing was written: this sheet has no file yet. Pass an output path to write the script, or ask echo() for its text.")
+		return result
 	var final_output_path: String = _resolve_output_path(sheet, output_path)
 	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
