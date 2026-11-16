@@ -201,7 +201,7 @@ static func _old_name_members_pins() -> bool:
 		["the step cap", answers.get("steps"), 4096],
 		["the twelve words", answers.get("words"), ["top to bottom", "bottom to top", "restart", "ignore", "overlap",
 			"pause", "hold_until", "loop_start", "loop_back", "tween_property", "emit_signal", "play_player"]],
-		["the family table", [answers.get("families"), answers.get("shake")], [16, "camera"]],
+		["the family table keeps every word it had and may only grow", [int(answers.get("families")) >= 16, answers.get("shake")], [true, "camera"]],
 		["the field keys", Array(answers.get("keys", [])),
 			["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"]],
 		["a static answers", answers.get("duration"), 0.25],
