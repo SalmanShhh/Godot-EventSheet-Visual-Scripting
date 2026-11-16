@@ -10878,3 +10878,10 @@ Pick a scene. Until then this card drops nothing.,씬을 고르세요. 그전까
 "The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","이 플레이어가 속한 오브젝트는 물리 바디이며, 바디의 크기를 바꾸면 충돌 모양도 같이 바뀝니다. 대신 스프라이트 아래에 플레이어를 두세요."
 "That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","그 노드는 물리 바디이며, 바디의 크기를 바꾸면 충돌 모양도 같이 바뀝니다. 대신 그 아래의 스프라이트를 고르세요."
 "This material is shared with other nodes. With ""Only this object"" off, they change too.",이 머티리얼은 다른 노드와 공유됩니다. '이 오브젝트만'을 끄면 그 노드들도 함께 바뀝니다.
+The letters of a label appear one after another at a speed. The card's length is the label's text divided by the speed.,라벨의 글자가 정해진 속도로 하나씩 나타납니다. 카드의 길이는 라벨 글자 수를 속도로 나눈 값입니다.
+Where it is now,현재 값에서
+Force x,힘 x
+Force y,힘 y
+Force z,힘 z
+Label node,라벨 노드
+Pick a property first,먼저 속성을 고르세요

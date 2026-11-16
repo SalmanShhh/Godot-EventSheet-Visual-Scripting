@@ -10878,3 +10878,10 @@ Pick a scene. Until then this card drops nothing.,Elige una escena. Hasta entonc
 "The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","El objeto bajo el que está este reproductor es un cuerpo físico, y escalar un cuerpo escala su forma de colisión. Pon el reproductor bajo el sprite."
 "That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","Ese nodo es un cuerpo físico, y escalar un cuerpo escala su forma de colisión. Elige mejor el sprite que tiene debajo."
 "This material is shared with other nodes. With ""Only this object"" off, they change too.","Este material se comparte con otros nodos. Con ""Solo este objeto"" desactivado, ellos también cambian."
+The letters of a label appear one after another at a speed. The card's length is the label's text divided by the speed.,Las letras de una etiqueta aparecen una tras otra a una velocidad. La duración de la carta es el texto de la etiqueta dividido por la velocidad.
+Where it is now,Donde está ahora
+Force x,Fuerza x
+Force y,Fuerza y
+Force z,Fuerza z
+Label node,Nodo de etiqueta
+Pick a property first,Elige primero una propiedad

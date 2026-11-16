@@ -10878,3 +10878,10 @@ Pick a scene. Until then this card drops nothing.,シーンを選んでくださ
 "The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.",このプレイヤーがぶら下がっているオブジェクトは物理ボディで、ボディを拡大縮小すると衝突形状も変わります。代わりにスプライトの下にプレイヤーを置いてください。
 "That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.",そのノードは物理ボディで、ボディを拡大縮小すると衝突形状も変わります。代わりにその下のスプライトを選んでください。
 "This material is shared with other nodes. With ""Only this object"" off, they change too.",このマテリアルは他のノードと共有されています。「このオブジェクトだけ」をオフにすると、それらも変わります。
+The letters of a label appear one after another at a speed. The card's length is the label's text divided by the speed.,ラベルの文字が、指定の速さで1文字ずつ現れます。カードの長さは、ラベルの文字数を速さで割った値です。
+Where it is now,現在の値から
+Force x,力 x
+Force y,力 y
+Force z,力 z
+Label node,ラベルノード
+Pick a property first,先にプロパティを選んでください

@@ -10878,3 +10878,10 @@ Pick a scene. Until then this card drops nothing.,请选择一个场景。在此
 "The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","此播放器所在的对象是物理物体,缩放物体会同时缩放它的碰撞形状。请把播放器放到精灵下面。"
 "That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","该节点是物理物体,缩放物体会同时缩放它的碰撞形状。请改选它下面的精灵。"
 "This material is shared with other nodes. With ""Only this object"" off, they change too.","此材质与其他节点共用。关闭“仅此对象”后,它们也会一起变化。"
+The letters of a label appear one after another at a speed. The card's length is the label's text divided by the speed.,标签的文字按指定速度逐个出现。卡片时长等于标签文字数除以速度。
+Where it is now,从当前值开始
+Force x,力 x
+Force y,力 y
+Force z,力 z
+Label node,标签节点
+Pick a property first,请先选择属性

@@ -10878,3 +10878,10 @@ Pick a scene. Until then this card drops nothing.,"Выберите сцену. 
 "The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","Объект, под которым стоит этот проигрыватель, - физическое тело, а масштабирование тела меняет и его форму столкновений. Поставьте проигрыватель под спрайт."
 "That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","Этот узел - физическое тело, а масштабирование тела меняет и его форму столкновений. Выберите спрайт под ним."
 "This material is shared with other nodes. With ""Only this object"" off, they change too.","Этот материал общий с другими узлами. Если «Только этот объект» выключено, они тоже изменятся."
+The letters of a label appear one after another at a speed. The card's length is the label's text divided by the speed.,"Буквы метки появляются одна за другой с заданной скоростью. Длительность карточки - это текст метки, делённый на скорость."
+Where it is now,Где он сейчас
+Force x,Сила x
+Force y,Сила y
+Force z,Сила z
+Label node,Узел метки
+Pick a property first,Сначала выберите свойство
