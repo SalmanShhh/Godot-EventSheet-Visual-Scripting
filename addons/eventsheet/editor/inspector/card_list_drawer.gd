@@ -1679,6 +1679,10 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			for spelled: String in tail.split(",", false):
 				options.append(spelled.get_slice("=", 0))
 				choice.add_item(_said(spelled.get_slice("=", 1) if spelled.contains("=") else spelled))
+				# A choice may wear a small picture, drawn by the schema from the stored word.
+				var item_picture: Variant = field.get("option_icon")
+				if item_picture is Callable and (item_picture as Callable).is_valid():
+					choice.set_item_icon(choice.item_count - 1, (item_picture as Callable).call(spelled.get_slice("=", 0), _on_light_ground()) as Texture2D)
 				if options[options.size() - 1] == current:
 					choice.select(options.size() - 1)
 			if bool(field.get("blank_unknown", false)) and not options.has(current):

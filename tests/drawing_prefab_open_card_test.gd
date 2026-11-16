@@ -82,6 +82,8 @@ static func _pin_the_fields() -> bool:
 		["the Line look fold opens when a look key is not at its default", editor.call("fold_open_for", _step("line", {"caps": "round"}), "Line look"), true],
 		["and stays shut for a plain line", editor.call("fold_open_for", _step("line", {}), "Line look"), false],
 		["the card does not print its explanation above its fields", editor.call("build_schema").get("help_in_body"), false],
+		["Shape wears a picture per choice", editor.call("fields_for", "ring")[0].get("option_icon") is Callable, true],
+		["the picture is one drawing for every place a shape is named", editor.call("kind_icon", "ring", false).get_width(), int(EventSheetLookStyle.px(16.0))],
 		["the shape names are the plain ones, the stored words are not", editor.call("build_schema").kinds[2].label, "Rectangle"],
 		["Shape offers the stored words under plain names", str(editor.call("fields_for", "circle")[0].get("drawer")), "options:circle=Circle,ring=Ring,rect=Rectangle,line=Line,cone=Cone,stamp=Stamp"],
 	]

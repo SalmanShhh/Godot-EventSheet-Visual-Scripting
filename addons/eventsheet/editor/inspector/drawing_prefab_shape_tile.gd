@@ -16,11 +16,11 @@ extends TextureRect
 ## What the tile shows now, so a test (and a repaint) can read it back.
 var shown_kind: String = ""
 var shown_color: Color = Color.WHITE
-var _side: int = 14
+var _side: int = 16
 var _on_light: bool = false
 
 
-func _init(side: int = 14, on_light: bool = false) -> void:
+func _init(side: int = 16, on_light: bool = false) -> void:
 	_side = side
 	_on_light = on_light
 	custom_minimum_size = Vector2(side, side)

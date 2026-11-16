@@ -276,7 +276,7 @@ class ShapeStepsEditor:
 	## The tile on a card line: the shape drawn in the step's colour. Loaded by path, so nothing that runs
 	## at editor boot names it.
 	static func make_tile(card: Dictionary, on_light: bool) -> Control:
-		var tile: Control = load(SHAPE_TILE_PATH).new(int(EventSheetLookStyle.px(14.0)), on_light)
+		var tile: Control = load(SHAPE_TILE_PATH).new(int(EventSheetLookStyle.px(16.0)), on_light)
 		tile.call("set_card", card)
 		return tile
 
@@ -339,7 +339,8 @@ class ShapeStepsEditor:
 		var shape_choices: PackedStringArray = PackedStringArray()
 		for named: String in KINDS:
 			shape_choices.append("%s=%s" % [named, kind_label(named)])
-		return {"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(shape_choices), "blank_unknown": true}
+		return {"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(shape_choices), "blank_unknown": true,
+			"option_icon": Callable(ShapeStepsEditor, "kind_icon")}
 
 
 	## The quiet amber line under a card's fields: empty (and taking no room) while the step draws something.
@@ -348,11 +349,11 @@ class ShapeStepsEditor:
 			"warn_when": Callable(ShapeStepsEditor, "has_finding"), "hide_empty": true, "full_width": true}
 
 
-	## The picture a kind wears in the Add box: its tile, in the colour a new step of that kind starts as.
+	## The picture a kind wears where no step exists yet (the Add box, the Shape drop-down): its tile in the editor's text colour.
 	static func kind_icon(kind: String, on_light: bool) -> Texture2D:
-		var defaults: Dictionary = defaults_for(kind)
-		var colour: Color = Color.from_string(str(defaults.get("color", "#ffffff")), Color.WHITE)
-		return ImageTexture.create_from_image(load(SHAPE_TILE_PATH).call("shape_image", kind, colour, int(EventSheetLookStyle.px(14.0)), on_light))
+		# No step yet, so the editor's own text colour: the one picture every place a shape is named draws.
+		var colour: Color = EventSheetLookStyle.ink()
+		return ImageTexture.create_from_image(load(SHAPE_TILE_PATH).call("shape_image", kind, colour, int(EventSheetLookStyle.px(16.0)), on_light))
 
 
 	## One shape's fields, in the order the card draws them: where it sits, what it is, what colour it
