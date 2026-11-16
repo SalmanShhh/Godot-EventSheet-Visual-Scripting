@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the example juice card of your own shows its unit
+
+A field of a card of your own is drawn by Godot's own editor for the export, which draws the unit an export hint carries (`@export_range(0.0, 2.0, 0.01, "suffix:s")` shows `0.1 s`). The shipped Screen Flash example card had no unit on its Seconds, so it read as a bare number beside the built-in cards; it carries `suffix:s` now, and a test holds the hint all the way to the editor for any card of your own.
+
 ### Added: a Timing foldout on every juice card, and a clock mark on a card whose timing is not the default
 
 Every kind of juice card, a card of your own included, ends with a **Timing** foldout, closed until you open it: **Delay** (seconds), **Repeat** (times), **Every** (seconds between repeats), **Clock** (Game time or Real time), **Chance** (percent) and **Only at strength** (from, to; the top empty means no limit). They write the keys the running game has always read on every card, the keys Set Juice Card Timing, Set Juice Card Chance and Set Juice Card Field write (a repeat is a whole number), and nothing is written until you change a number: a new card holds none of them, a card nobody opens stores nothing new, and every saved scene stays exactly as it is. A grey line under the fold says what the numbers do ("Waits 0.05 s, then is felt 3 times, 0.08 s apart."), and a card whose timing is not the default wears a small clock mark on its head. The time on a card's head and the length under the list count the repeats. The Sound card's own Delay box moved into the fold, where every card has it.

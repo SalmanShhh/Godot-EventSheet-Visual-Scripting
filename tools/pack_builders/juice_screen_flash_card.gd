@@ -19,7 +19,7 @@ static func build() -> bool:
 		"colour": {"type": "Color", "default": Color(1.0, 1.0, 1.0, 1.0), "exported": true,
 			"attributes": {"tooltip": "The colour to flash."}},
 		"seconds": {"type": "float", "default": 0.1, "exported": true,
-			"attributes": {"tooltip": "How long the flash lasts.", "range": {"min": "0.0", "max": "2.0", "step": "0.01"}}}
+			"attributes": {"tooltip": "How long the flash lasts.", "range": {"min": "0.0", "max": "2.0", "step": "0.01", "suffix": "s"}}}
 	}
 	sheet.functions.append(_function("play", [["target", "Node"], ["strength", "float"]], "\n".join(PackedStringArray([
 		"var layer: CanvasLayer = CanvasLayer.new()",

@@ -172,8 +172,11 @@ static func _list_pins() -> bool:
 		if str((each as Dictionary).get("kind")) == "ScreenFlashCard":
 			entry = each as Dictionary
 	var field_keys: PackedStringArray = PackedStringArray()
+	var seconds_hint: String = ""
 	for field: Variant in entry.get("fields", []):
 		field_keys.append(str((field as Dictionary).get("key")))
+		if str((field as Dictionary).get("key")) == "seconds":
+			seconds_hint = str(((field as Dictionary).get("spec", {}) as Dictionary).get("hint_string", ""))
 	var schema: Dictionary = (load("res://addons/eventsheet/editor/inspector/feedback_card_schema.gd") as Script).call("schema")
 	var headings: Dictionary = {}
 	for group: Variant in EventSheetCardSchemas.kinds_by_category(schema):
@@ -206,6 +209,7 @@ static func _list_pins() -> bool:
 		["in the family of the ones you wrote", entry.get("category"), "yours"],
 		["with the help line written under the class", entry.get("help"), "Flashes the whole screen a colour."],
 		["and a field for each export, named as written", field_keys, PackedStringArray(["colour", "seconds"])],
+		["a field whose export hint carries a unit hands Godot's own editor that hint, which draws the unit after the number", seconds_hint.contains("suffix:s"), true],
 		["the Add box has a Yours heading holding it", (headings.get("Yours", PackedStringArray()) as PackedStringArray).has("Screen Flash"), true],
 		["Yours comes after the families that ship", str(headings.keys()[headings.keys().size() - 1]), "Yours"],
 		["a new card names its script first and starts with the values its exports start with",

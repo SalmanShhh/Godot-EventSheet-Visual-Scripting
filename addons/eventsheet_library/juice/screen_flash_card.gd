@@ -7,7 +7,7 @@ extends JuiceCard
 ## The colour to flash.
 @export var colour: Color = Color(1.0, 1.0, 1.0, 1.0)
 ## How long the flash lasts.
-@export_range(0.0, 2.0, 0.01) var seconds: float = 0.1
+@export_range(0.0, 2.0, 0.01, "suffix:s") var seconds: float = 0.1
 
 ## The layer the flash is drawn on while it lasts, so stop can take it away.
 var _layer: CanvasLayer = null
