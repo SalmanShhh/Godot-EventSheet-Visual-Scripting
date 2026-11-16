@@ -175,7 +175,9 @@ static func is_resource_host(host_class: String) -> bool:
 	var bare: String = host_class.strip_edges()
 	if bare.is_empty():
 		return false
-	return ClassDB.class_exists(bare) and ClassDB.is_parent_class(bare, "Resource")
+	if ClassDB.class_exists(bare):
+		return ClassDB.is_parent_class(bare, "Resource")
+	return bool(load("res://addons/eventsheet/editor/resource_hosts.gd").call("is_project_resource", bare))
 
 
 ## A colour as the sheet prints it: the word for the handful of colours anybody says out loud, else

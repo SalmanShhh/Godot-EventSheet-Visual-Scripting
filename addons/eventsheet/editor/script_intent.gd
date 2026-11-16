@@ -79,13 +79,15 @@ static func of_sheet(sheet: EventSheetResource) -> Intent:
 
 
 ## True when the host class IS a data asset (Resource or any subclass - AudioStream, Texture2D,
-## a project class). Engine classes resolve through ClassDB; unknown names count as resources
-## only when they are exactly "Resource" (a project-defined subclass types the sheet by hand).
+## a project class). Engine classes resolve through ClassDB; a name the engine does not know is looked up
+## among the project's own classes, and counts when its chain of bases reaches Resource.
 static func is_resource_host(host_class: String) -> bool:
 	var trimmed: String = host_class.strip_edges()
 	if trimmed == "Resource":
 		return true
-	return ClassDB.class_exists(trimmed) and ClassDB.is_parent_class(trimmed, "Resource")
+	if ClassDB.class_exists(trimmed):
+		return ClassDB.is_parent_class(trimmed, "Resource")
+	return bool(load("res://addons/eventsheet/editor/resource_hosts.gd").call("is_project_resource", trimmed))
 
 
 ## Display identity for banners/pills: {label, glyph}. Glyphs are plain geometric characters so
