@@ -6,6 +6,29 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: the Theme Editor edits one theme file, and saves it
+
+The Theme Editor's title now names the theme file it opened (\"Theme Editor - nord_copy.tres\") and gains \"(changed)\" the moment a swatch moves. Ctrl+Z and Ctrl+Shift+Z step the swatches back and forward inside the window, and Revert goes back to the file. A Theme field at the top of the form switches to another theme without closing the window, grouped as Match Editor, Your themes, In this project and Starters. Save (or Ctrl+S) writes the file the window opened, and every sheet wearing that theme repaints at once. Save As... makes a new file from what you see and the window then edits that file; it replaces the old Save As Preset button. A starter that comes with the plugin, or a theme in the demo folder, is never written: the window offers Save a Copy... instead, which starts in `res://eventsheet_themes/` with a free name such as `editor_native_copy.tres` and puts the open sheet on the copy. Match Editor has no file: change a swatch and it becomes an untitled theme that Save As... asks where to keep. Closing the window, or switching theme, with changes asks Save, Discard or Cancel the way Godot asks for a changed scene. Godot renumbers the blocks inside a `.tres` on every save, so two saves of the same values read the same only when those numbers are ignored; every value is the same. A theme file saved before this change opens, saves and reloads with every value kept. All eight languages are translated.
+
+### Added: right-click a theme file in the FileSystem and choose Edit in Theme Editor
+
+The entry is offered for exactly one theme file, decided by the file's own first line without loading it, and opens the Theme Editor on it whichever sheet is open. Double-clicking a theme is left to Godot on purpose: claiming it would pull the editor into the sheet workspace whenever a theme is inspected, a sheet's own theme shown in the Inspector included, so the Inspector keeps editing a theme as it always did.
+
+### Added: Use For Every Sheet names a project theme in Project Settings
+
+View, Sheet theme, Use For Every Sheet makes the theme the sheet wears the project's default look, kept in the registered setting `eventsheets/theme/default_theme` (a file, empty by default). A sheet that chose no theme of its own wears it, a sheet's own theme always wins, and a project that sets nothing looks exactly as before. Choosing the entry again, or clearing the setting in Project Settings, takes it off. While a project theme is set the first entry of the Sheet theme menu reads \"Project theme: <name>\" in place of Match Editor, and Theme Editor... opens on it for a sheet that wears it.
+
+### Changed: Apply To Current Sheet on a script keeps a saved theme
+
+For a script sheet the Theme Editor's opening note now says what Apply does: it keeps a theme from a saved file for the script in this project, and nothing is written into the script. A look that has no file yet is still worn until the script is closed, and the status line says so.
+
+### Fixed: the Sheet theme menu keeps ticking the theme after a Density pick
+
+A Density pick copies the sheet's theme, and the copy has no file, so the menu ticked nothing. It now ticks the theme the copy was made from (Match Editor when the sheet had none).
+
+### Fixed: the Section right-click menu says Section in every entry, and the Shared sheet window is titled Shared Sheets
+
+The fold entries read \"Open / Close Section\", \"Open All / Close All Sections\" and \"Open Section\" or \"Close Section\", and the multi-row entry reads \"Put Selection into New Section\" (Group under the Familiar words preset). The Shared sheet window's title read \"Manage what probe.gd includes\"; it now reads \"Shared Sheets in probe.gd\" (Includes in probe.gd under the Familiar words). All eight languages are translated.
 ### Added: juice cards that point at a node, an animation, a body, a Control or a shader
 
 The Add box gains Particles, Spawn Scene, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Push, Force For A Time, Gravity For A Time, Freeze Body, Pop, Fade, Grab Focus, Count To, Reveal Text, Fill Bar, Shader Value and Call Method. A node is picked with Godot's own node picker and kept as a path from the player, a property with Godot's property picker, and an animation, shader value, signal or method is chosen from what the picked node really has. When a picked node is gone the card says so in quiet amber; when the game runs, a card that finds nothing says so once in the Output panel and does nothing. Tween Property can now move any property of any node to a number, a colour or a vector with a transition, an ease, a way back and an \"add to the value\" tick (a card saved the old way plays exactly as before), Emit Signal can fire a signal of a node you pick, and Play Player picks the other player instead of asking for its name (a typed name still works, and a player will not play itself or one that is playing it). Quiet notes warn about moving a physics body by position, a container's child by position, scaling a body, and a shared shader material. Not yet: playing these cards in the editor (Debug view names each as skipped), a curve of your own for a tween, and the node list of a sheet's Add Juice Card row.
