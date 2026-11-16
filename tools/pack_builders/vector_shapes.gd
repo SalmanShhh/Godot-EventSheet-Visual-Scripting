@@ -9,6 +9,9 @@ const PACK_CLASS := "VectorShape2D"
 ## Where the pack lands.
 const PACK_DIR := "res://eventsheet_addons/vector_shapes"
 
+## The icon the 3D classes wear; the pack's icon.svg is the 2D one (tools/build_icons.gd writes both).
+const ICON_3D := "res://eventsheet_addons/vector_shapes/icon_3d.svg"
+
 ## The thickness units a Set Thickness row offers - the same three the Inspector's unit dropdown
 ## reads, so a number typed in a row and a number typed in the Inspector mean the same thing.
 const UNITS := ["px", "world", "screen"]
@@ -407,6 +410,7 @@ static func _build_base_3d() -> bool:
 	})
 	Lib.feature_verbs(src.sheet, ["set_geometry", "set_thickness", "set_dashes"])
 	_target_every_verb(src.sheet, PACK_CLASS_3D)
+	src.sheet.custom_class_icon = ICON_3D
 	return Lib.publish(src, "%s/vector_shape_3d" % PACK_DIR)
 
 
@@ -461,6 +465,7 @@ static func _build_shape_3d(shape: Array) -> bool:
 	var parts: Array = shape[4]
 	var src: Lib.PackSource = Lib.pack_from_source("vector_shapes_3d", PACK_CLASS_3D, pack_class, description,
 		Lib.manifest().category("Vector Shapes").tags(["visual", "shapes", "drawing", "3d"]))
+	src.sheet.custom_class_icon = ICON_3D
 	src.sheet.tool_mode = true
 	src.block("fields_geometry_3d")
 	src.block("%s_geometry" % piece_prefix)
@@ -493,6 +498,7 @@ static func _build_solid_3d(solid: Array) -> bool:
 	var description: String = str(solid[3])
 	var src: Lib.PackSource = Lib.pack_from_source("vector_shapes_3d", PACK_CLASS_3D, pack_class, description,
 		Lib.manifest().category("Vector Shapes").tags(["visual", "shapes", "drawing", "3d"]))
+	src.sheet.custom_class_icon = ICON_3D
 	src.sheet.tool_mode = true
 	src.block("%s_geometry" % piece_prefix)
 	src.block("fields_solid_3d")

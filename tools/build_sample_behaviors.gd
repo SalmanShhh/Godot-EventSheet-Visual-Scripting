@@ -18,6 +18,9 @@ const BUILDERS_DIR := "res://tools/pack_builders/"
 const UID_SIDECARS := preload("res://tools/uid_sidecars.gd")
 ## The behaviour library writer: what a build puts in eventsheet_addons/ is mirrored into the library.
 const LIBRARY_BUILD := preload("res://tools/build_library.gd")
+## The icon writer: every pack's icon.svg is made from its glyph before the builders run, because a
+## builder reads the pack's icon.svg to write the @icon line.
+const ICON_BUILD := preload("res://tools/build_icons.gd")
 
 ## The trees a build writes into, whose sidecars it must leave exactly as it found them.
 const BUILT_TREES: PackedStringArray = ["res://eventsheet_addons", "res://tools/pack_builders"]
@@ -27,6 +30,8 @@ func _init() -> void:
 	var ok: bool = true
 	var built: int = 0
 	var sidecars: Dictionary = UID_SIDECARS.snapshot(BUILT_TREES)
+	var icons: Dictionary = ICON_BUILD.build(false)
+	print("[build_sample_behaviors] icons written=%d" % (icons.get("drifted", []) as Array).size())
 	for builder_name: String in _discover_builders():
 		var builder: GDScript = load(BUILDERS_DIR + builder_name + ".gd")
 		if builder == null:

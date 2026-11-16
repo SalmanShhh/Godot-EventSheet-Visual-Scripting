@@ -10,6 +10,13 @@
 # (editor/convert_colors_with_editor_theme), which is what turns the @icon on a sheet resource dark
 # grey on a light editor theme. Without it every project imports the icon in its light-theme grey.
 !addons/eventsheet/icons/eventsheet.svg.import
+# AND the drawn icons': every pack's icon and every picker section's icon asks the importer to draw it
+# in the editor's own icon colours, the way Godot draws its own icons, which is what makes one file read
+# on both a dark and a light editor. (The behaviour library never carries an import: the plugin sets the
+# flag itself on the icons of the packs a project holds.)
+!eventsheet_addons/*/icon.svg.import
+!eventsheet_addons/*/icon_3d.svg.import
+!addons/eventsheet/icons/sections/*.svg.import
 *.translation
 
 # Godot export presets
