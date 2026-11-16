@@ -158,6 +158,8 @@ const FINDINGS_INCLUDES := "includes"
 const FINDINGS_COMPILER := "compiler"
 const FINDINGS_MISTAKES := "mistakes"
 const FINDINGS_BLOCK := "block"
+## The head's migration facts are counted by path: this file is on the boot path.
+const HEAD_MIGRATION_FACTS_PATH := "res://addons/eventsheet/editor/interaction/head_migration_facts.gd"
 ## The mistake checks are named by path: this file is on the boot path, and a class name would compile the checks into the first open.
 const MISTAKE_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/mistake_findings.gd"
 const MISTAKE_ANCHOR_VARIABLE := "variable"
@@ -673,9 +675,7 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	# many of them are written in a spelling the vocabulary has since replaced, and how many hold a
 	# verb it no longer has at all. Counted here, said as one line, and said NOWHERE else - the rows
 	# themselves stay exactly as they look, wearing at most the quiet amber state.
-	head_facts["migration"] = EventForgeVocabularyRecord.band_facts(
-		_rows_with_a_newer_spelling(sheet),
-		EventSheetMigrationFindings.events_asking(_sheet_findings(FINDINGS_MIGRATION)))
+	head_facts["migration"] = load(HEAD_MIGRATION_FACTS_PATH).facts(self, sheet, _sheet_findings(FINDINGS_MIGRATION))
 	# THE CLASS HEAD: the name band and the extends band read as ONE row - the class, the kind of
 	# file it is, and what it extends - the way a component's header reads in an Inspector. The
 	# extends band keeps its own words, its control and its gesture; it is drawn on the head row
@@ -1441,6 +1441,21 @@ const HEAD_CARD_FILE_WIDTH: float = 330.0
 const HEAD_CARD_DESCRIPTION_LIMIT: int = 240
 ## The name card's Edit description… door when the description is the `#` paragraph the file closes on.
 const HEAD_ACTION_EDIT_DESCRIPTION_NOTE := "edit_description_note"
+
+
+## The migration band alone, for a sheet whose head is the bar and nothing else (a `.tres` has no
+## scaffold lines to build the other bands from): the same band, the same count and the same Migrate
+## door, so a sheet with rows to migrate says so wherever it is saved.
+func build_migration_band_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if sheet == null:
+		return rows
+	var head_facts: Dictionary = EventSheetHeadBands.facts(sheet, "")
+	head_facts["migration"] = load(HEAD_MIGRATION_FACTS_PATH).facts(self, sheet, _sheet_findings(FINDINGS_MIGRATION))
+	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
+		if str(band["kind"]) == EventSheetHeadBands.BAND_MIGRATION:
+			rows.append(_build_head_band_row(sheet, band, head_facts, null))
+	return rows
 
 
 ## The one head bar for `sheet`. `head_facts` are the band model's facts when the caller already read

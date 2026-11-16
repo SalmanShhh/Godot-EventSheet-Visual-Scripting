@@ -3983,6 +3983,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# still opens on the one head bar: it is the sheet's name, kind and counts, not a line of the file.
 	if event_start == 0 and (EventSheetViewportRowBuilder.opens_on_head_bar(sheet) or heads_unsaved_sheets):
 		root_rows.append(_row_builder.build_sheet_head_bar_row(sheet))
+		root_rows.append_array(_row_builder.build_migration_band_rows(sheet))
 	# The declarations, under the head that names the file and above the events that use them:
 	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
 	# it declares itself. A reader meets `Game.Score` where it is used, not only where it lives.
