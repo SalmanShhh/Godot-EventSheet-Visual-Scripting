@@ -276,6 +276,10 @@ func fire() -> void:
 
 That is a complete, fully-described, categorized action: two doc lines and the func.
 
+### Giving a pack an icon in Godot's style
+
+A pack's picture is the file `icon.svg` in its folder, and every script of the pack names it with `@icon`. Draw it the way Godot draws its own node icons: 16 x 16, no tile or outline behind it, filled shapes on the pixel grid about 2 px thick, one ink. If you build the pack with a pack builder, you do not write the file yourself: put the drawing alone, in Godot's grey `#e0e0e0` with every colour written as a `fill` or `stroke` attribute, in `tools/pack_builders/icons/<pack>.glyph`, and run the pack build (or `tools/build_icons.gd`). It writes `icon.svg` for you: the ink becomes the colour of what the pack works on (red for a 3D node, green for a Control, blue for a 2D node, purple for animation, grey for anything else), a pack that declares `var host: X = null` gets the small behaviour dot in the bottom-right corner, and an import file is written beside it that asks Godot to recolour the icon for a light editor. A pack that has a 3D twin needs no second drawing: the twin reuses the 2D one in red. By hand, write the same file and keep one of Godot's five inks (`#e0e0e0`, `#8da5f3`, `#fc7f7f`, `#8eef97`, `#c38ef1`) so the conversion has something to turn into its light-theme colour, and set `editor/convert_colors_with_editor_theme=true` in the icon's import.
+
 ### Prefer autocomplete? The typed registrar
 
 Comments cannot autocomplete in the script editor - real code can. A provider may declare a
