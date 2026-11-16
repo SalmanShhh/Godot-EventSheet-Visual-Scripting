@@ -16,6 +16,9 @@
 extends EditorProperty
 
 var _view: ShapeStepsView = null
+## What joins this list to the prefab's picture (set by the Inspector plugin): a click in the picture selects a card here, and a
+## selection here quietens the other shapes in the picture.
+var picking: RefCounted = null
 
 
 func _init() -> void:
@@ -27,6 +30,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	if picking != null:
+		picking.call("attach_cards", _view.cards())
 	# The view this object was last left in, for as long as the editor runs: the Inspector rebuilds its rows on
 	# every selection, and a list shown as a table a moment ago comes back as a table. Nothing is written to the file.
 	var edited: Object = get_edited_object()

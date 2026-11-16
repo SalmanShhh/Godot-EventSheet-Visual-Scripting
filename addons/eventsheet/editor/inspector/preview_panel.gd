@@ -19,6 +19,10 @@
 class_name EventSheetInspectorPreviewPanel
 extends PanelContainer
 
+## A click on the picture, as a point of the picture itself (0,0 is its top left corner, in raster pixels) and the keys held.
+## A click on the bars beside a picture that does not fill the card is reported as a point outside the picture.
+signal picture_pressed(point: Vector2, shift: bool, command: bool)
+
 const API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
 
 ## The card's own height, and the raster it asks a renderer for. Both are the drawing prefab card's
@@ -59,6 +63,8 @@ func _init(object: Object = null, renderer: Callable = Callable()) -> void:
 		_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_rect.mouse_filter = Control.MOUSE_FILTER_PASS
+		_rect.gui_input.connect(_on_picture_input)
 		column.add_child(_rect)
 	var chips: PackedStringArray = EventSheetInspectorObjectDecor.chips(EventSheetInspectorObjectDecor.handles_for(_object))
 	if not chips.is_empty():
@@ -109,6 +115,26 @@ static func state_hash(object: Object) -> int:
 func _exit_tree() -> void:
 	if _object is Resource and (_object as Resource).changed.is_connected(refresh):
 		(_object as Resource).changed.disconnect(refresh)
+
+
+func _on_picture_input(event: InputEvent) -> void:
+	var click: InputEventMouseButton = event as InputEventMouseButton
+	if click == null or not click.pressed or click.button_index != MOUSE_BUTTON_LEFT or _rect.texture == null:
+		return
+	picture_pressed.emit(raster_point(_rect.size, Vector2(_rect.texture.get_size()), click.position),
+		click.shift_pressed, click.is_command_or_control_pressed())
+	_rect.accept_event()
+
+
+## The point of a picture of `picture` pixels that a point of the control showing it lands on, when the picture is
+## scaled to fit the control, kept in proportion and centred (what the card's picture does). Outside the picture the
+## point has a negative or too large coordinate.
+static func raster_point(control: Vector2, picture: Vector2, at: Vector2) -> Vector2:
+	if picture.x <= 0.0 or picture.y <= 0.0:
+		return Vector2(-1.0, -1.0)
+	var fit: float = minf(control.x / picture.x, control.y / picture.y)
+	var shown: Vector2 = picture * fit
+	return (at - (control - shown) * 0.5) / fit
 
 
 ## Re-renders the picture. Called on the resource's `changed` signal, and by hand after an edit a

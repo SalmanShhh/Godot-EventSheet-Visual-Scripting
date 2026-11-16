@@ -20,6 +20,9 @@ class_name EventSheetCardListDrawer
 extends VBoxContainer
 
 signal value_changed(value: Array)
+## The selected cards' positions changed (a click, a key, a move, an undo). Nothing is written; this is only for a view
+## that follows the selection, such as the Drawing Prefab's picture.
+signal selection_changed(cards: Array)
 
 ## The ids of the card menu's entries. The first seven are the ones every list has had; the ids are kept
 ## so a saved shortcut or a test that names one still means the same entry.
@@ -108,6 +111,8 @@ var _marks: Dictionary = {}
 var _selected: Dictionary = {}
 ## The card a Shift+click measures its run from: the one last clicked or Ctrl+clicked.
 var _anchor: int = -1
+## The selection last announced, so `selection_changed` fires only when it truly differs.
+var _announced: Array = []
 ## Each card's line and title as drawn right now, by index, so a selection can be painted in place
 ## instead of rebuilding the list under the cursor (which would also lose the keyboard focus).
 var _lines: Dictionary = {}
@@ -160,6 +165,7 @@ func set_value(cards: Array) -> void:
 	_selected.clear()
 	_anchor = -1
 	_rebuild()
+	_announce_selection()
 
 
 func get_value() -> Array:
@@ -425,6 +431,29 @@ func paste_after_selection(text: String) -> bool:
 func _paint_selection() -> void:
 	for index: Variant in _lines:
 		_paint_line(int(index))
+	_announce_selection()
+
+
+## Says the selection changed, once, when it differs from what was last said.
+func _announce_selection() -> void:
+	var now: Array = selected_cards()
+	if now == _announced:
+		return
+	_announced = now
+	selection_changed.emit(now)
+
+
+## Scrolls the Inspector (or whatever scrolls this list) so the card at `index` is in view. Nothing happens where nothing
+## scrolls.
+func reveal_card(index: int) -> void:
+	var line: Control = _lines.get(index) as Control
+	if line == null or not is_instance_valid(line) or not line.is_inside_tree():
+		return
+	var parent: Node = line.get_parent()
+	while parent != null and not (parent is ScrollContainer):
+		parent = parent.get_parent()
+	if parent != null:
+		(parent as ScrollContainer).ensure_control_visible(line)
 
 
 ## One card's line, selected or not. The selected fill is stronger while the list holds the keyboard.
@@ -515,7 +544,12 @@ func _first_focusable(node: Node) -> Control:
 ## them again. A card that meets the edge, or another selected card already stopped there, stays where it is. Returns
 ## whether anything moved: a move that changes nothing makes no change and no undo step.
 func move_selected(step: int) -> bool:
-	return _move_set(selected_cards(), step)
+	var moved: bool = _move_set(selected_cards(), step)
+	if moved:
+		# A held key walks the cards out of view: follow the one that leads.
+		var chosen: Array = selected_cards()
+		call_deferred("reveal_card", int(chosen[0]) if step < 0 else int(chosen[chosen.size() - 1]))
+	return moved
 
 
 ## Moves the selected cards all the way to the top (`to_end` false) or the bottom, keeping their order.
@@ -774,6 +808,7 @@ func paste_over(index: int, text: String) -> void:
 
 func _commit() -> void:
 	_rebuild()
+	_announce_selection()
 	value_changed.emit(get_value())
 
 

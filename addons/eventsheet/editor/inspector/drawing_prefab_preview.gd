@@ -13,6 +13,8 @@ class_name EventSheetDrawingPrefabPreview
 extends RefCounted
 
 const _SUPERSAMPLE: int = 2  # render at 2x then shrink for cheap anti-aliasing
+## How strong a step is drawn while another step is the chosen one.
+const QUIET_STRENGTH: float = 0.28
 
 
 ## The prefab-local bounding box that encloses every step (before any fit/scale). Empty steps -> a unit box.
@@ -74,42 +76,117 @@ static func _stamp_texture(entry: Dictionary) -> Texture2D:
 	return ResourceLoader.load(path) as Texture2D
 
 
-## Renders the steps into an Image of `size`, letterboxed on `bg`. Deterministic and tree-free.
-static func rasterize(steps: Array, size: Vector2i, bg: Color) -> Image:
+## Renders the steps into an Image of `size`, letterboxed on `bg`. Deterministic and tree-free. When `quiet_except`
+## names steps (by position in `steps`), every other step is drawn quietened to a fraction of its strength so the named
+## ones stand out; an empty list quietens nothing and draws the very same pixels as before it existed.
+static func rasterize(steps: Array, size: Vector2i, bg: Color, quiet_except: Array = []) -> Image:
 	var w: int = maxi(size.x, 8) * _SUPERSAMPLE
 	var h: int = maxi(size.y, 8) * _SUPERSAMPLE
 	var img: Image = Image.create(w, h, false, Image.FORMAT_RGBA8)
 	img.fill(bg)
-	var bounds: Rect2 = compute_bounds(steps).grow(4.0)
-	# Fit the whole prefab into the image with a margin, preserving aspect and centering.
-	var span: Vector2 = Vector2(maxf(bounds.size.x, 1.0), maxf(bounds.size.y, 1.0))
-	var scale: float = minf(float(w) / span.x, float(h) / span.y) * 0.86
-	var center_local: Vector2 = bounds.get_center()
-	var center_px: Vector2 = Vector2(w, h) * 0.5
-	for step: Variant in steps:
+	var layout: Dictionary = _layout(steps, size)
+	var scale: float = float(layout["scale"])
+	var center_local: Vector2 = layout["center_local"]
+	var center_px: Vector2 = layout["center_px"]
+	for position: int in range(steps.size()):
+		var step: Variant = steps[position]
 		if step is Dictionary:
-			_rasterize_step(img, step as Dictionary, scale, center_local, center_px)
+			var fade: float = 1.0 if quiet_except.is_empty() or quiet_except.has(position) else QUIET_STRENGTH
+			_rasterize_step(img, step as Dictionary, scale, center_local, center_px, fade)
 	if _SUPERSAMPLE > 1:
 		img.resize(maxi(size.x, 8), maxi(size.y, 8), Image.INTERPOLATE_LANCZOS)
 	return img
 
 
+## How the steps are laid into a picture of `size`: the scale (in supersampled pixels per local unit), the local point
+## that sits in the middle and the pixel it sits at. The one place the fit is worked out, shared by drawing and picking.
+static func _layout(steps: Array, size: Vector2i) -> Dictionary:
+	var w: int = maxi(size.x, 8) * _SUPERSAMPLE
+	var h: int = maxi(size.y, 8) * _SUPERSAMPLE
+	var bounds: Rect2 = compute_bounds(steps).grow(4.0)
+	# Fit the whole prefab into the image with a margin, preserving aspect and centering.
+	var span: Vector2 = Vector2(maxf(bounds.size.x, 1.0), maxf(bounds.size.y, 1.0))
+	return {"scale": minf(float(w) / span.x, float(h) / span.y) * 0.86, "center_local": bounds.get_center(), "center_px": Vector2(w, h) * 0.5}
+
+
+## Picture pixels per prefab-local unit, at the size the picture is shown.
+static func view_scale(steps: Array, size: Vector2i) -> float:
+	return float(_layout(steps, size)["scale"]) / float(_SUPERSAMPLE)
+
+
+## The prefab-local point drawn at a pixel of the picture (and the pixel a local point is drawn at, the other way).
+static func local_from_pixel(steps: Array, size: Vector2i, pixel: Vector2) -> Vector2:
+	var layout: Dictionary = _layout(steps, size)
+	return (pixel * float(_SUPERSAMPLE) - (layout["center_px"] as Vector2)) / float(layout["scale"]) + (layout["center_local"] as Vector2)
+
+
+static func pixel_from_local(steps: Array, size: Vector2i, local: Vector2) -> Vector2:
+	var layout: Dictionary = _layout(steps, size)
+	return _to_px(local, float(layout["scale"]), layout["center_local"], layout["center_px"]) / float(_SUPERSAMPLE)
+
+
+## The step drawn at a prefab-local point, or -1: the one drawn LAST (on top) when several cover it, as what you see
+## is what is taken. `tolerance` is how far, in local units, a point may miss a shape and still hit it. A step that
+## draws nothing (a stamp whose texture does not load) cannot be taken. Uses the same sizes the picture is drawn with.
+static func hit_step(steps: Array, local: Vector2, tolerance: float) -> int:
+	for position: int in range(steps.size() - 1, -1, -1):
+		var step: Variant = steps[position]
+		if step is Dictionary and _covers(step as Dictionary, local, tolerance):
+			return position
+	return -1
+
+
+static func _covers(entry: Dictionary, local: Vector2, tolerance: float) -> bool:
+	var at: Vector2 = Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0)))
+	var p1: float = float(entry.get("p1", 0.0))
+	var p2: float = float(entry.get("p2", 0.0))
+	var p3: float = float(entry.get("p3", 0.0))
+	match str(entry.get("kind", "")):
+		"circle":
+			return local.distance_to(at) <= maxf(p1, 0.5) + tolerance
+		"ring":
+			return absf(local.distance_to(at) - maxf(p1, 0.5)) <= maxf(p2, tolerance) * 0.5 + tolerance
+		"rect":
+			return Rect2(at, Vector2(p1, p2)).abs().grow(tolerance).has_point(local)
+		"line":
+			var closest: Vector2 = Geometry2D.get_closest_point_to_segment(local, at, Vector2(p1, p2))
+			return local.distance_to(closest) <= maxf(p3, tolerance) * 0.5 + tolerance
+		"cone":
+			var apex_offset: Vector2 = local - at
+			if apex_offset.length() > maxf(p3, 0.5) + tolerance:
+				return false
+			if apex_offset.length() <= tolerance:
+				return true
+			return absf(wrapf(apex_offset.angle() - deg_to_rad(p1), -PI, PI)) <= deg_to_rad(maxf(p2, 1.0)) * 0.5
+		"stamp":
+			var texture: Texture2D = _stamp_texture(entry)
+			if texture == null:
+				return false
+			var box: Vector2 = texture.get_size() * maxf(absf(p1), 0.01)
+			var turn: float = deg_to_rad(p2)
+			var from_centre: Vector2 = local - at
+			var inside: Vector2 = Vector2(from_centre.x * cos(turn) + from_centre.y * sin(turn), -from_centre.x * sin(turn) + from_centre.y * cos(turn))
+			return absf(inside.x) <= box.x * 0.5 + tolerance and absf(inside.y) <= box.y * 0.5 + tolerance
+	return false
+
+
 ## Convenience: a ready-to-show texture (used by the Inspector panel).
-static func rasterize_texture(steps: Array, size: Vector2i, bg: Color) -> ImageTexture:
-	return ImageTexture.create_from_image(rasterize(steps, size, bg))
+static func rasterize_texture(steps: Array, size: Vector2i, bg: Color, quiet_except: Array = []) -> ImageTexture:
+	return ImageTexture.create_from_image(rasterize(steps, size, bg, quiet_except))
 
 
 static func _to_px(local: Vector2, scale: float, center_local: Vector2, center_px: Vector2) -> Vector2:
 	return (local - center_local) * scale + center_px
 
 
-static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_local: Vector2, center_px: Vector2) -> void:
+static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_local: Vector2, center_px: Vector2, fade: float = 1.0) -> void:
 	var at_local: Vector2 = Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0)))
 	var at: Vector2 = _to_px(at_local, scale, center_local, center_px)
 	var p1: float = float(entry.get("p1", 0.0))
 	var p2: float = float(entry.get("p2", 0.0))
 	var p3: float = float(entry.get("p3", 0.0))
 	var tint: Color = Color.from_string(str(entry.get("color", "white")), Color.WHITE)
+	tint.a *= fade
 	match str(entry.get("kind", "")):
 		"circle":
 			_fill_disc(img, at, maxf(p1, 0.5) * scale, tint)

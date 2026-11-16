@@ -24,10 +24,15 @@ extends EditorInspectorPlugin
 const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/preview_panel.gd"
 const PREFAB_PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview.gd"
 const STEPS_PROPERTY_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_steps_property.gd"
+const PICKING_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_picking.gd"
 ## The class this plugin claims, as a NAME rather than as the class itself. Reading it off the object's
 ## own script costs nothing and loads nothing; `object is DrawingPrefabResource` would compile the pack's
 ## resource script into every editor boot to answer the same question.
 const PREFAB_CLASS: StringName = &"DrawingPrefabResource"
+
+## Joins the picture and the shape cards of the prefab being shown (see the picking file); made with the picture,
+## handed to the steps editor when it is made.
+var _picking: RefCounted = null
 
 
 func _can_handle(object: Object) -> bool:
@@ -49,7 +54,10 @@ static func is_drawing_prefab(object: Object) -> bool:
 
 func _parse_begin(object: Object) -> void:
 	if is_drawing_prefab(object):
-		add_custom_control(load(PREVIEW_PANEL_PATH).new(object, rasterize_prefab))
+		_picking = load(PICKING_PATH).new(object)
+		var panel: Control = load(PREVIEW_PANEL_PATH).new(object, Callable(_picking, "render"))
+		_picking.call("attach_panel", panel)
+		add_custom_control(panel)
 
 
 ## The prefab's own picture: the steps rasterized at the card's size, on the card's background. Handed to
@@ -65,6 +73,8 @@ static func rasterize_prefab(object: Object, size: Vector2i) -> Texture2D:
 ## property before the generic table marker on the export claims it.
 func _parse_property(object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, _hint_string: String, _usage_flags: int, _wide: bool) -> bool:
 	if name == "steps" and type == TYPE_ARRAY and is_drawing_prefab(object):
-		add_property_editor(name, load(STEPS_PROPERTY_PATH).new())
+		var editor: EditorProperty = load(STEPS_PROPERTY_PATH).new()
+		editor.set("picking", _picking)
+		add_property_editor(name, editor)
 		return true
 	return false
