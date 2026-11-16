@@ -78,6 +78,9 @@ Stop Sound ends a sound an earlier Sound card started, by that card's name, with
 ### Added: Autoplay on the Juice Player
 
 A new Autoplay tick on the node plays its list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. It starts off, and while it is off nothing is written into the scene, so a saved scene stays the bytes it was.
+### Changed: Migrate lists the two retired on-screen rows, to be replaced by hand
+
+Is On-Screen and Is Outside Screen were retired because they test the window rectangle, which is wrong as soon as a camera moves. Migrate used to skip them without a word, since neither has a newer row that means the same thing. They are now listed under the rows it leaves alone, with the reason: the row was retired and a replacement is picked by hand. Nothing is rewritten and nothing is forwarded on its own, so the point value the old row held is never dropped by accident.
 
 ### Added: play one card, or play from a card down, without running the game
 

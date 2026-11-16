@@ -10686,3 +10686,4 @@ Every sound of this player,このプレイヤーのすべてのサウンド
 all the cards above,上のすべてのカード
 "Waiting %.2f s, for %s.",%.2f 秒待ちます（待つ対象: %s）。
 "No card called ""%s"" is above this Hold, so it waits for all of them.",この Hold の上に「%s」というカードはないため、すべてのカードを待ちます。
+"this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand",この行は廃止され、同じ意味を持つ新しい行もないため、そのまま残ります - 置き換えは手動で選んでください

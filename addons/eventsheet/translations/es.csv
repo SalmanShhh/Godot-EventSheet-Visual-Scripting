@@ -10686,3 +10686,4 @@ Every sound of this player,Todos los sonidos de este reproductor
 all the cards above,todas las tarjetas de arriba
 "Waiting %.2f s, for %s.",Espera %.2f s a %s.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","No hay ninguna tarjeta llamada ""%s"" sobre este Hold, así que espera a todas."
+"this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand","esta fila se retiró y ninguna fila más nueva significa lo mismo, así que queda tal como está escrita - elige un reemplazo a mano"

@@ -58,6 +58,9 @@ const LANE_ACTION := "action"
 ## from one of them plus the row's own facts, and two surfaces saying it differently would be two
 ## answers.
 const WHY_NO_SUCCESSOR := "no-successor"
+## A row the vocabulary still holds but has retired, with no row it could be rewritten into without
+## changing what it means: listed, never rewritten, replaced by hand.
+const WHY_RETIRED := "retired"
 const WHY_NEEDS_PICKING := "needs-picking"
 const WHY_UNPROVABLE := "unprovable"
 const WHY_FILE_REFUSES := "file-refuses"
@@ -309,7 +312,8 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 	var resolved: Dictionary = {} if not (here is Dictionary) else EventForgeSuccessors.resolve(key, known)
 	# A row on the current spelling with nowhere newer to go is not a migration question at all, and
 	# is the state nearly every row of nearly every sheet is in.
-	if here is Dictionary and resolved.is_empty():
+	var retired_by_hand: bool = here is Dictionary and resolved.is_empty() and bool(here.get("is_deprecated", false))
+	if here is Dictionary and resolved.is_empty() and not retired_by_hand:
 		return
 	var before: String = EventSheetMigrationFindings.emitted_line(row, scope, host)
 	if before.is_empty():
@@ -331,6 +335,12 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 		# The verb is gone from the vocabulary entirely. Nothing can carry a forwarding address for
 		# it, because the address would have been carried by the entry that is missing - so this row
 		# is listed and left, and its two doors are the ones the row's own help strip offers.
+		planned.append(listed)
+		return
+	if retired_by_hand:
+		# Retired and still in the vocabulary. Its replacement id, where it has one, is only a hint
+		# for the person: forwarding it on its own would drop what the old row's value meant.
+		listed["why"] = WHY_RETIRED
 		planned.append(listed)
 		return
 	var successor_key: String = str(resolved[EventForgeSuccessors.KEY_ID])

@@ -85,11 +85,13 @@ static func left_alone_lines(planned: Array[Dictionary]) -> PackedStringArray:
 
 ## Why one row is being left alone, in the words the reader needs to decide what to do about it.
 ## Each reason names a different situation and a different next step, which is the whole reason they
-## are four sentences rather than one "could not migrate".
+## are five sentences rather than one "could not migrate".
 static func reason_text(entry: Dictionary) -> String:
 	match str(entry.get("why", "")):
 		EventSheetMigrationPlan.WHY_NO_SUCCESSOR:
 			return EventSheetL10n.translate("the vocabulary has no newer spelling for this one, so it stays exactly as written")
+		EventSheetMigrationPlan.WHY_RETIRED:
+			return EventSheetL10n.translate("this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand")
 		EventSheetMigrationPlan.WHY_NEEDS_PICKING:
 			return EventSheetL10n.translate("the newer verb keeps state of its own, so it has to be picked rather than rewritten")
 		EventSheetMigrationPlan.WHY_FILE_REFUSES:

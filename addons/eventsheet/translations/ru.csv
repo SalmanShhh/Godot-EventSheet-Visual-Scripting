@@ -10686,3 +10686,4 @@ Every sound of this player,Все звуки этого проигрывател
 all the cards above,все карточки выше
 "Waiting %.2f s, for %s.",Ждёт %.2f с: %s.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","Над этим Hold нет карточки ""%s"", поэтому он ждёт все."
+"this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand","эта строка снята с использования, а равнозначной новой строки нет, поэтому она остаётся как есть - выберите замену вручную"

@@ -10686,3 +10686,4 @@ Every sound of this player,이 플레이어의 모든 소리
 all the cards above,위의 모든 카드
 "Waiting %.2f s, for %s.",%.2f초 동안 %s을(를) 기다립니다.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","이 Hold 위에 ""%s""라는 카드가 없어서 모든 카드를 기다립니다."
+"this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand",이 행은 폐기되었고 같은 의미의 새 행이 없으므로 그대로 남습니다 - 대체 항목은 직접 고르세요

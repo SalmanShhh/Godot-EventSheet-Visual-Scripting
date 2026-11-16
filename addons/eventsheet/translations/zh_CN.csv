@@ -10686,3 +10686,4 @@ Every sound of this player,此播放器的所有声音
 all the cards above,上方的所有卡片
 "Waiting %.2f s, for %s.",等待 %.2f 秒，等待对象：%s。
 "No card called ""%s"" is above this Hold, so it waits for all of them.",此 Hold 上方没有名为“%s”的卡片，因此会等待所有卡片。
+"this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand",这一行已被淘汰，没有含义相同的新行，因此保持原样 - 请手动选择替代项
