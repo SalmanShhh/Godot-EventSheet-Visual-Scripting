@@ -525,8 +525,9 @@ const ENGLISH_EQUAL_CEILING: Dictionary = {
 	# The positioning wave added the axis letters X, Y and Z, which every language spells the same,
 	# and the words Position (German, French) and Destination (French), which are shared too.
 	# The colour reading names - Hex, RGB 0-255, RGB 0-1, HSV - are the same words in every language.
+	# The menu labels Enum…, Signal… and Collection… are the same word in several languages.
 	# "Variable…" is spelled the same in German, Spanish and French, and "%s - variables" in Spanish and French.
-	"de": 154, "es": 116, "fr": 208, "it": 128, "ja": 55, "ko": 59, "ru": 55, "zh_CN": 52,
+	"de": 156, "es": 117, "fr": 211, "it": 128, "ja": 56, "ko": 60, "ru": 56, "zh_CN": 53,
 }
 
 

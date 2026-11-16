@@ -35,12 +35,12 @@ static func _dock(undo: RefCounted = null) -> EventSheetDock:
 
 
 static func _script_pick_survives_reopen() -> bool:
-	var SCRIPT_PATH: String = SUPPORT.own_path("theme_pick_probe_sheet.gd")
-	var file: FileAccess = FileAccess.open(SCRIPT_PATH, FileAccess.WRITE)
+	var script_path: String = SUPPORT.own_path("theme_pick_probe_sheet.gd")
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
 	file.store_string(SCRIPT_TEXT)
 	file.close()
 	var first: EventSheetDock = _dock()
-	first._load_sheet_from_path(SCRIPT_PATH)
+	first._load_sheet_from_path(script_path)
 	var picked: bool = first.load_theme_style_from_path(THEME_PATH)
 	var ok: bool = SUPPORT.pins(P + ": script pick", [
 		["the theme is picked", picked, true],
@@ -48,14 +48,14 @@ static func _script_pick_survives_reopen() -> bool:
 	])
 	first.free()
 	var second: EventSheetDock = _dock()
-	second._load_sheet_from_path(SCRIPT_PATH)
+	second._load_sheet_from_path(script_path)
 	var style: EventSheetEditorStyle = second.get_current_sheet().editor_style
 	ok = SUPPORT.check(P, "the script opens again wearing the theme picked for it",
 		style.resource_path if style != null else "", THEME_PATH) and ok
-	ok = SUPPORT.check(P, "and its bytes are untouched", FileAccess.get_file_as_string(SCRIPT_PATH), SCRIPT_TEXT) and ok
+	ok = SUPPORT.check(P, "and its bytes are untouched", FileAccess.get_file_as_string(script_path), SCRIPT_TEXT) and ok
 	second.use_default_theme()
 	second.free()
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCRIPT_PATH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(script_path))
 	return ok
 
 

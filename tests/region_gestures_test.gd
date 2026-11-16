@@ -265,7 +265,7 @@ static func _test_menus_are_translated() -> bool:
 	dock._context_menus._build_row_context_menu(dock._context_row)
 	var menu: PopupMenu = dock._row_context_menu
 	passed = SUPPORT.pins("region_gestures_test", [
-		["the group menu is translated", menu.get_item_text(menu.get_item_index(EventSheetDock.ROW_MENU_EDIT_GROUP)), "Gruppe bearbeiten…"],
+		["the group menu is translated", menu.get_item_text(menu.get_item_index(EventSheetDock.ROW_MENU_EDIT_GROUP)), "Abschnitt bearbeiten…"],
 		["Turn Into Region too", menu.get_item_text(menu.get_item_index(EventSheetDock.ROW_MENU_GROUP_TO_REGION)), "In Region umwandeln"],
 	]) and passed
 	dock._context_row = _opener_row(dock)
