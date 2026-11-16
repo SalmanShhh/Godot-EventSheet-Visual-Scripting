@@ -211,6 +211,17 @@ static func _card_row_pins() -> bool:
 		bool((drawer.get_value()[0] as Dictionary).get("on", true)), false) and ok
 	drawer.free()
 
+	# A right click anywhere on a card's line reaches the card, which opens its menu: no panel inside
+	# the line may swallow it (a panel takes a click unless it is told to pass it on).
+	var click_drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": schema})
+	click_drawer.set_value([{"kind": "shake", "amount": 2.0}])
+	var swallowing: Array = []
+	for node: Node in click_drawer._list.get_child(0).find_children("*", "PanelContainer", true, false):
+		if (node as Control).mouse_filter == Control.MOUSE_FILTER_STOP:
+			swallowing.append(node.get_class())
+	ok = _eq("no panel in a card's line swallows a right click", swallowing, []) and ok
+	click_drawer.free()
+
 	# A list whose stripe key IS the key holding the kind (the Drawing Prefab) can never be given a
 	# colour, because the colour would land where the shape is stored.
 	var prefab_drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({

@@ -525,6 +525,9 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	var line: PanelContainer = PanelContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_theme_stylebox_override("panel", EventSheetLookStyle.field_box())
+	# A panel keeps a click unless it is told to pass it on; the card behind this line is what a right
+	# click (its menu), a click (its selection) and a drag (its place in the list) are meant for.
+	line.mouse_filter = Control.MOUSE_FILTER_PASS
 	var inside: HBoxContainer = HBoxContainer.new()
 	line.add_child(inside)
 	var open: bool = bool(_unfolded.get(index, false))
