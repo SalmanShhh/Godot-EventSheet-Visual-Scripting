@@ -13,6 +13,8 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 5. [Codegen Services](#5-codegen-services)
 6. [Project Health Services](#6-project-health-services)
 6b. [Localisation Services](#6b-localisation-services)
+6c. [Save Support Services](#6c-save-support-services)
+6d. [Manual, Reading and Snippet Services](#6d-manual-reading-and-snippet-services)
 7. [Full Reference](#7-full-reference)
 8. [Use Cases](#8-use-cases)
 9. [Testing Your Extension](#9-testing-your-extension)
@@ -313,6 +315,68 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 ```
 
 `save_state_code` follows the repo convention exactly (int/float/bool/String/Dictionary/Array coercion, anything else passes through), and the generated pair is valid GDScript that round-trips a live node. `preview_save` runs the REAL Save System backend for the given format (`"config"`, `"json"`, `"binary"`, `"csv"`, `"ini"`, `"xml"`), so the text you show is byte-for-byte what ships - all six formats preserve exact types. When `eventsheet_addons/save_system/` is not installed, `preview_save` returns an explanatory line and `save_capable_scripts` returns empty rather than erroring.
+
+## 6d. Manual, Reading and Snippet Services
+
+The calls below sit beside the ones above. Each is a plain static on `EventSheets`, and its shape is frozen like the rest. Where a call needs the editor open it says what it returns when there is none.
+
+**Opening the Manual and the guides**
+
+| Method | What it does |
+|---|---|
+| `open_docs(doc_id := "", anchor := "") -> bool` | Opens the Manual on one page. The one door: Menu, F1, "What does this do?" and any extension come through it. Ids: `""` the index, `ace:<provider_id>/<ace_id>` one verb, `section:<header text>` a picker category, `addon:<pack directory>` a pack's guide, `guide:<page id>` a shipped guide, `module:<module name>` a vocabulary module. An id that names nothing returns false and warns, never a blank page. A guide the bundle leaves out opens its version-pinned repo page in the browser instead |
+| `search_docs(query, limit := 25) -> Array[Dictionary]` | Searches the shipped guides plus every pack and project guide found on disk. Each result is `{doc_id, page_id, title, heading, anchor, score}`, best first, and `doc_id` and `anchor` feed straight back into `open_docs`. An empty query lists every page |
+| `user_docs_dir() -> String` | Where this project keeps its own Markdown guides (the `eventsheets/project/docs_dir` setting). Every `.md` there joins the Manual's tree under "This project" |
+| `docs_version() -> String` | The version every doc link is pinned to, the same constant a release bumps |
+| `doc_url(relative_path, anchor := "") -> String` | The absolute, version-pinned URL of a repo-relative guide path. An absolute http(s) URL comes back unchanged, so a pack that hosts its guide elsewhere uses the same call. An empty path gives `""` |
+| `open_online_doc(relative_path, anchor := "") -> bool` | Opens that URL in the reader's browser. False when the path is empty |
+| `focus_sheet() -> bool` | Puts the keyboard focus back on the sheet itself (what Esc in the Manual means). False when no workspace is open |
+| `pulse_control(control_label) -> bool` | Makes the toolbar control with that exact label pulse, so a step that says "click Add Action" points at the button. False when the workspace is closed or has no such control |
+
+**Finding a pack's or a module's guide**
+
+| Method | What it does |
+|---|---|
+| `addon_guide_name(pack_dir) -> String` | The guide file name (no extension) for a pack directory: its override when it has one, else the Title-Case-Words spelling of the directory |
+| `addon_guide_target(pack_dir, help_url := "") -> String` | Where that pack's documentation lives: the pack's own `@ace_help` value when it set one, else the derived repo path. Pure: the caller supplies the help value |
+| `addon_guide_for_pack(pack_dir) -> String` | The same answer for a pack directory, reading the pack's own `@ace_help` for you. This is what an `addon:<pack>` id resolves through |
+| `addon_guide_for_provider(provider_id) -> String` | The same for a verb's provider. `""` for built-in vocabulary and project-local providers, which have no pack guide |
+| `addon_pack_directory(provider_id) -> String` | The pack directory a provider id belongs to (`"PricedTableBehavior"` gives `"priced_table"`). `""` for a built-in or project-local provider |
+| `pack_providers(pack_dir) -> PackedStringArray` | Every provider id a pack directory declares, sorted. The inverse of `addon_pack_directory` |
+| `open_addon_guide(provider_id) -> bool` | Opens a pack's guide in the browser. False when the provider has none, so a caller can hide the button |
+| `module_guide_name(module_or_category) -> String` | The guide file name for a built-in vocabulary unit: a module file, a path or a picker category |
+| `module_guide_target(module_or_category) -> String` | Where a built-in unit's documentation lives, as a repo-relative path. `""` when it resolves to nothing. Pure |
+| `module_guide_unit(module_or_category) -> String` | The lookup key for a unit: path decoration and the `_aces` suffix dropped, words folded to lowercase and joined by `_`, so `text_fit_aces.gd` and `Text Fit` key the same guide |
+| `module_guide_units() -> PackedStringArray` | Every built-in vocabulary module on disk, as lookup units, sorted. The list a test walks to catch a unit whose guide is missing |
+| `add_behaviour_from_library(pack_dir) -> bool` | Opens the Behaviour library window on a pack that waits in the library, where Add to project copies it in. False when no editor is open or the library does not carry that pack |
+
+**Reading what a project and its sheets use**
+
+| Method | What it does |
+|---|---|
+| `all_verbs() -> Array[ACEDefinition]` | Every verb the live registry offers, as immutable definitions (the Manual's reference pages are built from exactly this). Empty when no dock is open |
+| `provider_verbs(provider_id) -> Array[ACEDefinition]` | The same, for one provider. Treat the definitions as read-only: they are cached and shared across tabs |
+| `project_uses_of(definition) -> Array[Dictionary]` | Where the whole project already uses a verb, as `{sheet, count, rows}`. Worked out fresh each call and stored nowhere. Empty outside the editor |
+| `reveal_verb_row(provider_id, ace_id, index := 0) -> bool` | Selects and scrolls to the index-th row of the open sheet that uses a verb, unfolding any group it hides in. False when there is no sheet, no such row, or the index is past the end |
+| `reveal_project_row(sheet_path, line) -> bool` | Opens the sheet a project-wide result names and lands on the event at that line, the way a Find result does. False when no workspace is open |
+| `values_for_hint(sheet, hint) -> Array[Dictionary]` | Every value the sheet's rows hold in a parameter of one hint, in sheet order, as `{value, param, provider_id, ace_id, event}`. "Which animations does this sheet play" and "which groups does it name" are the same question asked of a different hint, and a pack's own hint gets the same answer as a built-in one |
+| `distinct_values_for_hint(sheet, hint) -> PackedStringArray` | The same values with duplicates folded, first mention first |
+| `save_keys_used(source) -> Dictionary` | What one script's source says about save keys: `{saved, slot_keys, loaded, remembered}`, each a sorted `PackedStringArray`. The Doctor's own save-key rule, so a save browser or a pack's check reads the same keys the built-in check does. A computed key is reported by neither side |
+| `migration_report(read_every_script := false) -> Array[Dictionary]` | Every row the migration has something to say about, as `{sheet, row, from_id, to_id, before, after, asks}`. Sorted and deterministic, writes nothing. The default reads every stored sheet and a capped sample of scripts; pass true for a whole read before a release |
+| `round_trip_failure(source) -> String` | The byte gate's reason: `""` exactly when `round_trips(source)` is true, else `"import failed"`, `"compile failed: <errors>"` or `"output differs"` |
+| `report_runtime_error(message, script_path, line := 0) -> Dictionary` | Says a runtime error from a running game in the sheet's words (event, row, what the row was trying to do) on the strip and in Output. Returns `{sentence, translated, said, why, explain, original}`, or an empty Dictionary when no dock is open |
+
+**Building and inserting rows**
+
+| Method | What it does |
+|---|---|
+| `insert_snippet(text, label := "Insert Snippet", as_example := false) -> bool` | Inserts snippet text (the form the editor's Copy produces) below the selection as one undo step, creating any variables it needs. False when no sheet is open or the text is not a snippet. Never hold a row reference across it |
+| `timeline(steps := []) -> TimelineRow` | Builds a Timeline block from `[[at_seconds, gdscript_line], ...]` pairs. Steps sort by time; a malformed pair returns null |
+| `moment_block(moment_name, steps := []) -> MomentBlockRow` | Builds a moment block, a beat of feedback written as rows that compiles to one coroutine on the host. Each step is `[timing, seconds, code...]` with the timing word `at`, `then`, `hold` or `loop_back`. Returns null on a malformed entry |
+| `table_from_file(path, separator := ",") -> Array` | Reads a `.csv` (first line is the column names) as an Array of Dictionaries, one per row, reachable by column name. A missing or unreadable file reads as no rows |
+| `table_from_text(text, separator := ",") -> Array` | The same parse over text you already hold. Returns `[]` when the text is empty |
+| `register_inspector_look(path) -> bool` | Adds one Inspector look kept outside the two folders the editor reads: a script that extends `EventSheetInspectorLook`. Its name is its file name, and a look of the same name in the project's looks folder still wins. False and nothing added when the file is missing, is not `.gd`, or does not read as a look |
+| `use_script_in_sheets(script_path) -> bool` | Tells every sheet in the project to read this script of yours, with no further step. False when the script is already in use, is not a script of the project, or ships with the plugin |
 
 ## 7. Full Reference
 
