@@ -2127,7 +2127,7 @@ static func _drop_build_preload(asset_path: String, _target_event: Resource) -> 
 	return preload_block_for(asset_path)
 
 
-# ── Collection declarations (a function-local `var x := {...}` held as structure) ──────
+# ── Timelines and moments (a schedule held as rows) ────────────────────────────────────────
 
 
 ## Builds a Timeline block from [[at_seconds, gdscript_line], ...] pairs - the schedule-as-rows
@@ -2200,6 +2200,9 @@ static func _append_moment_statement(step: MomentStepRow, line: String) -> bool:
 	action.code = code_line
 	step.actions.append(action)
 	return true
+
+
+# ── Collection declarations (a function-local `var x := {...}` held as structure) ──────
 
 
 ## Builds a structured in-body collection declaration - the row an opened `.gd`'s canonical
