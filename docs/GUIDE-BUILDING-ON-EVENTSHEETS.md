@@ -388,7 +388,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Vocabulary | `find_ace(provider_id: String, ace_id: String)` | `ACEDefinition` | yes |
 | Vocabulary | `class_vocabulary(target_class: String)` | `Array[ACEDefinition]` | no |
 | Editor | `current_sheet()` | `EventSheetResource` | yes |
-| Editor | `open_sheet(path: String)` | `bool` | yes |
+| Editor | `open_sheet(path: String)` - opens the sheet, or brings its tab forward when that file is already open; false when there is no file at the path | `bool` | yes |
 | Editor | `edit(label: String, mutation: Callable)` | `bool` (changed) | yes |
 | Editor | `set_status(text: String, is_error := false)` | `void` | yes |
 | Editor | `refresh()` | `void` | yes |

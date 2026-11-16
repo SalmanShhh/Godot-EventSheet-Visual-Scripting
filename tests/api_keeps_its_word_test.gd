@@ -3,6 +3,7 @@
 # Each block below is one promise of the extension API that had no test:
 #   block kinds   a kind can say "nothing to write for this row" and the compile still succeeds
 #   the compiler  a sheet with no file and no output path writes no stray script
+#   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
 extends RefCounted
 
@@ -39,6 +40,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _writes_nothing() and ok
 	ok = _stray_file() and ok
+	ok = _open_sheet() and ok
 	return ok
 
 
@@ -79,4 +81,34 @@ static func _stray_file() -> bool:
 		["the text is still in the result", str(result.get("output", "")).is_empty(), false],
 		["the test helper's compile_output writes none either", helper_wrote, false],
 		["and still returns the text", helper.is_empty(), false],
+	])
+
+
+static func _dock() -> EventSheetDock:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(EventSheets.new_sheet())
+	return dock
+
+
+static func _open_sheet() -> bool:
+	var dock: EventSheetDock = _dock()
+	var missing: bool = EventSheets.open_sheet("res://no_such_folder/no_such_sheet.gd")
+	var missing_tres: bool = EventSheets.open_sheet("res://no_such_folder/no_such_sheet.tres")
+	var tabs_after_missing: int = dock._open_tabs.size()
+	# A file already open in a tab: the call brings that tab forward and opens no second one.
+	var path: String = "res://tests/fixtures/auto_ace_sample.gd"
+	var held: EventSheetResource = EventSheets.new_sheet()
+	held.external_source_path = path
+	dock._open_tabs.append({"sheet": held, "path": path})
+	var tabs_before: int = dock._open_tabs.size()
+	var opened: bool = EventSheets.open_sheet(path)
+	var tabs_after: int = dock._open_tabs.size()
+	dock.free()
+	return SUPPORT.pins(P, [
+		["open_sheet refuses a .gd that is not there", missing, false],
+		["open_sheet refuses a .tres that is not there", missing_tres, false],
+		["a refused path opens no tab", tabs_after_missing, 1],
+		["open_sheet on an open file says it worked", opened, true],
+		["and opens no second tab for it", tabs_after, tabs_before],
 	])

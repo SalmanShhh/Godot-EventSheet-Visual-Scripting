@@ -260,11 +260,16 @@ static func focus_sheet() -> bool:
 	return true
 
 
-## Opens a sheet (.gd or .tres) in the editor. Returns false when no dock is open.
+## Opens a sheet (.gd or .tres) in the editor, or brings its tab forward when that file is already
+## open (asking twice never makes a second tab). Returns false when no dock is open or when there is
+## no file at `path`; the status line says which.
 static func open_sheet(path: String) -> bool:
 	if not _dock_alive():
 		return false
-	_dock._load_sheet_from_path(path)
+	if not FileAccess.file_exists(path):
+		_dock._set_status(EventSheetL10n.translate("There is no file at %s, so no sheet was opened.") % path, true)
+		return false
+	_dock.open_or_focus_sheet(path)
 	return true
 
 
