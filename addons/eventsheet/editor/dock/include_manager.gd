@@ -37,7 +37,7 @@ func open() -> void:
 		return
 	if _include_manager_window == null:
 		_build_include_manager()
-	_include_manager_window.title = EventSheetL10n.translate("Manage what %s includes") % _sheet_name()
+	_include_manager_window.title = EventSheetL10n.translate("%s in %s") % [EventSheetWords.title_case(EventSheetWords.shared_sheet_plural()), _sheet_name()]
 	_refresh_include_list()
 	EventSheetWindowPlacement.popup_centered(_include_manager_window, Vector2i(EventSheetPalette.scaled(760), EventSheetPalette.scaled(540)))
 

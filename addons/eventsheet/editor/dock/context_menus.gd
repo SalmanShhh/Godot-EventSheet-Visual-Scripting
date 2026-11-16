@@ -531,8 +531,8 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item(EventSheetL10n.translate("Remove %s - Keep The Rows") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_UNGROUP)
 		menu.add_separator()
 		menu.add_item(EventSheetL10n.translate("Add Local Variable…"), _dock.ROW_MENU_GROUP_ADD_LOCAL)
-		menu.add_item(EventSheetL10n.translate("Open / Close Group"), _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
-		menu.add_item(EventSheetL10n.translate("Open All / Close All Groups"), _dock.ROW_MENU_FOLD_ALL_GROUPS)
+		menu.add_item(EventSheetL10n.translate("Open / Close %s") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
+		menu.add_item(EventSheetL10n.translate("Open All / Close All %s") % (EventSheetL10n.translate(EventSheetWords.word("section_block")) + "s"), _dock.ROW_MENU_FOLD_ALL_GROUPS)
 	elif is_region:
 		# What a region offers: rename the fence, fold it, and the two things it can become.
 		# No locals, no on/off switch, no ungroup - a region holds none of that. It folds by its own
@@ -565,7 +565,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	else:
 		menu.add_item("Disable Row", _dock.ROW_MENU_TOGGLE_ENABLED)
 	if multi:
-		menu.add_item(EventSheetL10n.translate("Group Selection into New Group"), _dock.ROW_MENU_BULK_GROUP)
+		menu.add_item(EventSheetL10n.translate("Put Selection into New %s") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_BULK_GROUP)
 		# The script editor's selection gesture, surfaced top-level on a multi-selection (the single-row
 		# form stays under More): wraps the selected rows in a #region fence pair and opens the name editor.
 		menu.add_item(EventSheetL10n.translate("Create Code Region"), _dock.ROW_MENU_SURROUND_REGION)
@@ -803,8 +803,8 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				context_group = _dock._context_row.source_resource as EventGroup
 			menu.set_item_disabled(group_toggle_index, context_group == null)
 			if context_group != null:
-				menu.set_item_text(group_toggle_index, EventSheetL10n.translate("Open Group")
-					if context_group.is_collapsed() else EventSheetL10n.translate("Close Group"))
+				menu.set_item_text(group_toggle_index, (EventSheetL10n.translate("Open %s")
+					if context_group.is_collapsed() else EventSheetL10n.translate("Close %s")) % EventSheetL10n.translate(EventSheetWords.word("section_block")))
 		# A region reads its fold off the row, because the fold is view state and never the file's.
 		# A fence that never closes holds nothing to fold, so its item stays and is greyed.
 		var region_toggle_index: int = menu.get_item_index(_dock.ROW_MENU_TOGGLE_REGION_FOLD)
