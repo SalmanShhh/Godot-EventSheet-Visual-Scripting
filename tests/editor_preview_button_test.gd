@@ -78,7 +78,7 @@ static func _emitted_lines() -> bool:
 		["Nudge presses Preview first, then runs its code", nudging.contains("func _preview_nudge() -> void:\n\t_preview_start()\n\tif not _previewing:\n\t\treturn\n\tpoke(2.0)\n"), true],
 		["the repeat loop waits the declared expression", nudging.contains("create_timer(maxf(1.5, 0.1)).timeout"), true],
 		["a repeat loop stops when the preview does", nudging.contains("if not _previewing or run != _preview_run:\n\t\t\treturn\n"), true],
-		["a save puts the host back", previewing.contains("elif what == NOTIFICATION_EDITOR_PRE_SAVE:\n\t\t_preview_put_back(host, _preview_rest_of(host))\n"), true],
+		["a save puts the host back, after keeping a hand edit", previewing.contains("elif what == NOTIFICATION_EDITOR_PRE_SAVE:\n\t\t_preview_keep_hand_edits()\n\t\t_preview_put_back(host, _preview_rest_of(host))\n\t\t_preview_note_seen()\n"), true],
 		["leaving the tree stops the preview", previewing.contains("if what == NOTIFICATION_EXIT_TREE:\n\t\t_preview_stop()\n"), true],
 		["nothing starts outside the editor", previewing.contains("func _preview_start() -> void:\n\tif not Engine.is_editor_hint() or _previewing or host == null or not is_inside_tree():\n\t\treturn\n"), true],
 		["running tweens are killed on stop", previewing.contains("\t_previewing = false\n\t_preview_kill_tweens()\n"), true],

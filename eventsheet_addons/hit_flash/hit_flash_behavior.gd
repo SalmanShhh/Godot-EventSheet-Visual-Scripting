@@ -41,6 +41,9 @@ const _PREVIEW_REST: String = "rest"
 ## The key of a table entry's count of behaviours previewing on that host.
 const _PREVIEW_USERS: String = "users"
 
+## The key of a table entry's host values as the preview last left them, to tell a hand edit from the preview's own writes.
+const _PREVIEW_SEEN: String = "seen"
+
 ## True while Preview is playing in the editor. Always false in a running game.
 var _previewing: bool = false
 
@@ -49,6 +52,9 @@ var _preview_run: int = 0
 
 ## This behaviour's own unsaved values from when Preview started, put back on Stop.
 var _preview_own: Dictionary = {}
+
+## True when the host's values were noted since the last check for a hand edit, so the note is fresh enough to trust.
+var _preview_noted: bool = false
 
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "_preview_start_button" and _previewing:
@@ -62,7 +68,9 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_EXIT_TREE:
 		_preview_stop()
 	elif what == NOTIFICATION_EDITOR_PRE_SAVE:
+		_preview_keep_hand_edits()
 		_preview_put_back(host, _preview_rest_of(host))
+		_preview_note_seen()
 
 static func _preview_values(node: Object, own: bool) -> Dictionary:
 	var values: Dictionary = {}
@@ -116,10 +124,74 @@ func _preview_start() -> void:
 	notify_property_list_changed()
 	_preview_kick()
 	_preview_repeat(_preview_run)
+	_preview_watch_begin()
+
+## Starts watching for a hand edit: notes the host as it stands now, then again just before each drawn frame, and
+## checks at the start of each physics and process frame, before anything has written to the host that frame.
+func _preview_watch_begin() -> void:
+	_preview_note_seen()
+	var tree: SceneTree = get_tree()
+	if not RenderingServer.frame_pre_draw.is_connected(_preview_note_seen):
+		RenderingServer.frame_pre_draw.connect(_preview_note_seen)
+	if tree != null and not tree.physics_frame.is_connected(_preview_watch):
+		tree.physics_frame.connect(_preview_watch)
+	if tree != null and not tree.process_frame.is_connected(_preview_watch):
+		tree.process_frame.connect(_preview_watch)
+
+func _preview_watch_end() -> void:
+	_preview_noted = false
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if RenderingServer.frame_pre_draw.is_connected(_preview_note_seen):
+		RenderingServer.frame_pre_draw.disconnect(_preview_note_seen)
+	if tree != null and tree.physics_frame.is_connected(_preview_watch):
+		tree.physics_frame.disconnect(_preview_watch)
+	if tree != null and tree.process_frame.is_connected(_preview_watch):
+		tree.process_frame.disconnect(_preview_watch)
+
+## Writes the host's values down as the preview leaves them. Taken just before a frame is drawn, it is what the
+## next frame's check compares the host with.
+func _preview_note_seen() -> void:
+	if not is_instance_valid(host):
+		return
+	var entry: Dictionary = _preview_table().get(host.get_instance_id(), {})
+	if entry.is_empty():
+		return
+	entry[_PREVIEW_SEEN] = _preview_values(host, false)
+	_preview_noted = true
+
+## Takes anything on the host that is not what the preview last left there as the host's new resting value, so
+## Stop and a save keep it. Returns whether there was any. A note that has not been refreshed since the last check
+## is stale and proves nothing, so then there is nothing to keep.
+func _preview_keep_hand_edits() -> bool:
+	if not _preview_noted or not is_instance_valid(host):
+		return false
+	var entry: Dictionary = _preview_table().get(host.get_instance_id(), {})
+	if not entry.has(_PREVIEW_SEEN):
+		return false
+	var seen: Dictionary = entry[_PREVIEW_SEEN]
+	var rest: Dictionary = entry.get(_PREVIEW_REST, {})
+	var kept: bool = false
+	for prop_name: String in seen:
+		var now: Variant = host.get(prop_name)
+		var before: Variant = seen[prop_name]
+		if typeof(now) != typeof(before) or now != before:
+			rest[prop_name] = now.duplicate() if (now is Array or now is Dictionary) else now
+			kept = true
+	return kept
+
+## Runs at the start of every physics and process frame, once per drawn frame: a hand edit ends the preview and keeps the edit.
+func _preview_watch() -> void:
+	if not _previewing or not _preview_noted:
+		return
+	if _preview_keep_hand_edits():
+		_preview_stop()
+	_preview_noted = false
 
 func _preview_stop() -> void:
 	if not _previewing:
 		return
+	_preview_keep_hand_edits()
+	_preview_watch_end()
 	_previewing = false
 	_preview_kill_tweens()
 	_preview_put_back(self, _preview_own)
