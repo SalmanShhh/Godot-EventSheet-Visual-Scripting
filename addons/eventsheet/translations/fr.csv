@@ -10899,13 +10899,13 @@ Separate colours: click to use the dark colour in both,"Couleurs séparées : cl
 Worked out from the editor. Pick a colour to give light its own.,"Calculée depuis l'éditeur. Choisissez une couleur pour donner sa propre couleur au clair."
 auto,"automatique"
 Follow the editor in light,"Suivre l'éditeur en clair"
-Follows the editor,
-Starters (copy to edit),
-worked out from the editor,
-same colour in both,
-hard to read on its row,
-"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.",
-"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.",
-A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,
-A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,
-not a file: the colours come from Godot's editor theme,
+Follows the editor,"Suit l'éditeur"
+Starters (copy to edit),"Modèles (copier pour modifier)"
+worked out from the editor,"calculé à partir de l'éditeur"
+same colour in both,"même couleur des deux côtés"
+hard to read on its row,"difficile à lire sur sa ligne"
+"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","Calculé à partir de l'éditeur Godot, sombre ou clair. Changez quelque chose et il devient un thème à vous : Enregistrer sous demande où le ranger."
+"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","Un modèle livré avec le plugin : une mise à jour du plugin le remplacerait. Enregistrer une copie crée le vôtre dans eventsheet_themes/ et laisse le modèle tel que livré."
+A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"Un thème livré avec les démos. Enregistrer une copie crée le vôtre dans eventsheet_themes/ et laisse celui-ci tel que livré."
+A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"Un fichier de votre projet. Enregistrer l'écrit sur place (Ctrl+S) et chaque feuille ouverte qui le porte est redessinée."
+not a file: the colours come from Godot's editor theme,"pas un fichier : les couleurs viennent du thème de l'éditeur Godot"

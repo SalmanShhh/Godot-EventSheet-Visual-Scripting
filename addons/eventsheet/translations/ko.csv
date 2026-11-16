@@ -10899,13 +10899,13 @@ Separate colours: click to use the dark colour in both,"서로 다른 색: 클�
 Worked out from the editor. Pick a colour to give light its own.,"편집기에서 계산된 색입니다. 색을 고르면 밝은 쪽에 별도 색을 줍니다."
 auto,"자동"
 Follow the editor in light,"밝은 쪽에서 편집기를 따름"
-Follows the editor,
-Starters (copy to edit),
-worked out from the editor,
-same colour in both,
-hard to read on its row,
-"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.",
-"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.",
-A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,
-A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,
-not a file: the colours come from Godot's editor theme,
+Follows the editor,"에디터를 따름"
+Starters (copy to edit),"템플릿 (복사해서 편집)"
+worked out from the editor,"에디터에서 계산됨"
+same colour in both,"양쪽에 같은 색"
+hard to read on its row,"그 줄에서 읽기 어려움"
+"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","Godot 에디터에서 계산한 어두운 또는 밝은 모습입니다. 무엇이든 바꾸면 나만의 테마가 되며, 다른 이름으로 저장이 저장 위치를 묻습니다."
+"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","플러그인과 함께 제공되는 템플릿이라 플러그인을 업데이트하면 교체됩니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 템플릿은 제공된 그대로 둡니다."
+A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"데모와 함께 제공되는 테마입니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 이것은 제공된 그대로 둡니다."
+A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"프로젝트의 파일입니다. 저장하면 그 자리에 쓰이고 (Ctrl+S), 이 테마를 쓰는 열린 시트가 모두 다시 그려집니다."
+not a file: the colours come from Godot's editor theme,"파일이 아님: 색은 Godot 에디터 테마에서 옵니다"
