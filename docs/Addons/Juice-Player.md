@@ -92,9 +92,17 @@ Enemy: On damaged
 | Card | Fields | What it does |
 | --- | --- | --- |
 | **Pause** | Pause (default `0.25` s) | Waits this long before the next card, whatever the cards above are still doing. |
-| **Hold** | Then wait (default `0.0` s) | Waits for the slowest card above to finish, then this long. What is under a hold is what happens after the hit rather than during it. |
+| **Hold** | Waits for (all the cards above, or one of them), Then wait (default `0.0` s) | Waits for the slowest card above to finish, then this long; or, with **Waits for** set to one card, for that card alone, so the others carry on beside what comes next. What is under a hold is what happens after the hit rather than during it. The head says how long it will wait, and the line under its fields says for which card. Typing `wait` in the Add box finds it, and Pause. |
 | **Loop Start** | (none) | Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead. |
 | **Loop Back** | Pause (`0.25` s), Loop to last Hold (`true`), Loop to last Loop Start (`true`), Loops (`2`) | Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands. Shows **Loops left** counting down while the game runs. |
+
+**Three that end or move a sound, or move a hand (Stop Sound, Fade Bus, Vibrate):** the player plays these itself too. None of them is felt in the editor; Debug view names each as skipped.
+
+| Card | Fields | What it does |
+| --- | --- | --- |
+| **Stop Sound** | Sound card (one of the Sound cards above, or every sound of this player), Fade out (`0.0` s) | Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. It belongs to the `audio` family. |
+| **Fade Bus** | Bus, To (`-12` dB), Over (`0.3` s) | Moves a bus volume to a value over a time, and Restore Initial Values puts it back. A bus the project does not have is said once and left alone. It belongs to the `audio` family. |
+| **Vibrate** | Weak motor (`0.5`), Strong motor (`0.5`), For (`0.2` s) | Rumbles every connected controller and buzzes a phone for the time, each motor scaled by the strength of the play. Does nothing on the web. It belongs to the `device` family. |
 
 **Four that the player plays itself, because they are neither a moment word nor a wait (a sound, a value walked, a word said, another player played):**
 
@@ -104,6 +112,8 @@ Enemy: On damaged
 | **Tween Property** | Property (`rotation`), To (`1.0`), Over (`0.2` s) | Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back. |
 | **Emit Signal** | Word | Says one word out of the player's **On Juice Signal** trigger, so a sheet can hang anything at all off a point in the list. |
 | **Play Player** | Player, Strength (`1.0`) | Plays another Juice Player from inside this one, at a share of this play's strength. |
+
+**Selecting cards.** Click a card to select it, Shift+click for the run from the last click, Ctrl+click to add or take one out. A selected card is filled the way a selected row is in the Scene dock. Ctrl+C copies the selected cards, Ctrl+X cuts them, Ctrl+V pastes them under the last selected card (or at the end when none is selected, and nothing is replaced), Ctrl+D duplicates them in place and Delete removes them; each is one change, so one Ctrl+Z takes it back. A right click on a card opens its menu, which acts on everything selected when the card is part of the selection: Duplicate, Cut, Copy, Paste, Paste over, Move to top, Move up, Move down, Remove, and Play from here. Cards are copied as text, so select the other object, click in its list and paste: a card that pointed at a node by name may find no such node under the new object. Cards that start together sit on one faint band.
 
 **The unfolded card.** Click a card's arrow and it opens: a line saying what that juice card does, **Active**, **Label**, **Chance**, a **Timing** foldout, then the card's own fields drawn with the real drawers, and, while the game runs, the values the play is writing back, greyed. The Timing foldout is the same on every card: initial delay, cooldown, repeat count and interval, the clock (game time or real time), a strength window the card only plays inside, and skip on stop. Every one of those keys is absent by default, which is what keeps a plain card identical to a moment file's step.
 
@@ -205,6 +215,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | `direction` | `top to bottom` / `bottom to top` | `top to bottom` | Which end of the list a play starts from. |
 | `while_playing` | `restart` / `ignore` / `overlap` | `restart` | What a second play does while the first is still running. |
 | `cooldown` | float | `0.0` | The shortest gap between two plays, in seconds. A play asked for sooner than this is refused. |
+| `autoplay` | bool | `false` | Plays the list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. Off, nothing is written into the scene for it. |
 | `moment_file` | Resource | none | Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects. |
 
 ### Inspector properties are ACEs too
@@ -260,7 +271,7 @@ Enemy: On killed
   -> Loot: spawn drops
 ```
 
-Play Juice And Wait holds the rows under it until the last card is done. The plain Play Juice would have run them the same frame.
+Play Juice And Wait holds the rows under it until the last card is done, including a card still running when the head has walked past it (a 0.3 s shake on its own makes the rows under it wait 0.3 s). The plain Play Juice would have run them the same frame.
 
 ### 3. A door that closes by playing its opening backwards
 

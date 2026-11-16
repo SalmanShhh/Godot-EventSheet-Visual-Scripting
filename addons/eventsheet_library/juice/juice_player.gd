@@ -64,6 +64,8 @@ signal on_loop(loops_left: int)
 # @inspector_look toggle_row
 ## What a second play does while the first is still running: restart it, ignore the new one, or let the two overlap.
 @export_enum("restart", "ignore", "overlap") var while_playing: String = "restart"
+## Plays the list once, at full strength, when this node enters the scene: a spawn pop, a pickup shimmer.
+@export var autoplay: bool = false
 ## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
 ## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
@@ -111,6 +113,14 @@ const EMIT_SIGNAL: String = "emit_signal"
 const PLAY_PLAYER: String = "play_player"
 ## Step word: play a sound.
 const SOUND: String = "sound"
+## Step word: stop a sound an earlier Sound card started, by that card's name, with an optional fade.
+const STOP_SOUND: String = "stop_sound"
+## Step word: move a bus's volume to a value over a time. Restore Initial Values puts it back.
+const FADE_BUS: String = "fade_bus"
+## Step word: rumble a controller, or buzz a phone, for a time.
+const VIBRATE: String = "vibrate"
+## The volume a fade-out ends on, below which nothing is heard.
+const SILENT_DB: float = -80.0
 ## Heard-from word: the sound comes from the object this player is under, so it sits in space.
 const HEARD_HERE: String = "here"
 ## Heard-from word: the sound plays flat, the same wherever the listener is.
@@ -174,6 +184,15 @@ var _nested: Array[Node] = []
 
 ## The few players this node plays its Sound cards through, kept and reused instead of made per hit.
 var _voices: Array[Node] = []
+
+## The voice each Sound card's sound is on, by the card's name, so a Stop Sound card can find it.
+var _sounding: Dictionary = {}
+## The bus volumes a Fade Bus card moved, by bus name, as they were before the first one - what Restore puts back.
+var _bus_restore: Dictionary = {}
+## The tweens that are moving a bus volume right now.
+var _bus_tweens: Array[Tween] = []
+## When the card that ends last will have ended, on the wall clock, so a wait can last until the cards are done.
+var _ends_at: float = 0.0
 ## Which voice a run of hits takes next once every voice is busy.
 var _next_voice: int = 0
 ## The Sound cards already complained about, so a missing sound is said once and not on every hit.
@@ -263,6 +282,9 @@ const CATEGORY_OF: Dictionary = {
 	"emit_signal": "signal",
 	"play_player": "signal",
 	"sound": "audio",
+	"stop_sound": "audio",
+	"fade_bus": "audio",
+	"vibrate": "device",
 	"tween_property": "transform"
 }
 
@@ -315,6 +337,9 @@ func play(at_strength: float) -> void:
 func play_and_wait(at_strength: float) -> void:
 	if _may_start():
 		await _walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)
+		var still: float = _ends_at - float(Time.get_ticks_msec()) / 1000.0
+		if still > 0.0:
+			await MomentRunner.then(self, still, MomentRunner.CLOCK_REAL)
 
 ## @ace_action
 ## @ace_name("Play Juice Backwards")
@@ -399,6 +424,7 @@ func skip_to_end() -> void:
 ## @ace_codegen_template("$JuicePlayer.restore()")
 func restore() -> void:
 	_stop_tweens()
+	_restore_buses()
 	_told_nested("restore")
 	for entry: Variant in _restore_to:
 		var card: Dictionary = entry as Dictionary
@@ -1166,6 +1192,11 @@ func loops_left(label: String) -> int:
 			return int(_loops_left.get(at, 0))
 	return int(_card_named(label).get("loops", 0))
 
+## Autoplay: when the node enters the scene with the box ticked, the list plays once at full strength.
+func _ready() -> void:
+	if autoplay:
+		play(1.0)
+
 ## The steps this play walks: the moment file's when one is dropped on the slot, else the list.
 func _steps_now() -> Array:
 	if moment_file != null:
@@ -1246,7 +1277,8 @@ static func _is_timing(word: String) -> bool:
 ## signal, a nested player and a sound. The ten moment words are played by the Juice node beside this
 ## one; these four are done here, and a moment FILE has nowhere to keep them.
 static func _is_own_word(word: String) -> bool:
-	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER or word == SOUND
+	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER or word == SOUND \
+			or word == STOP_SOUND or word == FADE_BUS or word == VIBRATE
 
 ## The number a card's chance is answered with. One roll per card is thrown before the beat
 ## begins, so a Skip To End reads the decision the walk would have read rather than throwing the
@@ -1337,6 +1369,7 @@ func _take(order: Array, index: int, card: Dictionary, at_strength: float, token
 		_:
 			now_playing = str(card.get("label", word))
 			on_feedback_started.emit(_label_of(card))
+			_ends_at = maxf(_ends_at, float(Time.get_ticks_msec()) / 1000.0 + card_length(card))
 			_do_step(card, at_strength)
 			await _repeat_rest(card, at_strength, clock, token)
 			on_feedback_finished.emit(_label_of(card))
@@ -1409,6 +1442,15 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 			# A skip jumps to where the beat ends, and a sound is not a place: it is not heard late.
 			if not skipping:
 				_play_sound(card, at)
+		STOP_SOUND:
+			if not skipping:
+				_stop_sound(effect, seconds)
+		FADE_BUS:
+			if not skipping:
+				_fade_bus(effect, amount, seconds)
+		VIBRATE:
+			if not skipping:
+				_vibrate(card, at)
 		PLAY_PLAYER:
 			var other: Node = get_node_or_null(NodePath(effect))
 			if other != null and other.has_method("play"):
@@ -1532,6 +1574,7 @@ func _play_sound(card: Dictionary, at: float) -> void:
 	if kind != "AudioStreamPlayer":
 		voice.set("global_position", host.get("global_position"))
 	voice.call("play")
+	_sounding[_label_of(card)] = voice
 
 ## Says what is wrong with a Sound card once, naming this player and the card.
 func _tell_sound(card: Dictionary, what: String) -> void:
@@ -1616,6 +1659,7 @@ func _begin(order: Array, at_strength: float) -> int:
 	_jump_to = ""
 	progress = 0.0
 	_started_at = float(Time.get_ticks_msec()) / 1000.0
+	_ends_at = _started_at
 	_order = order
 	_head = 0
 	_head_strength = at_strength
@@ -1716,6 +1760,67 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 		written["scale"] = (base["scale"] as Vector2) * (1.0 + swell)
 	return written
 
+## Stops the sound a Sound card of that name started, fading it out over `fade` seconds when asked. An
+## empty name stops every sound this player has going. A sound that has already ended is left alone.
+func _stop_sound(card_name: String, fade: float) -> void:
+	var wanted: String = card_name.strip_edges()
+	for label: Variant in _sounding.keys():
+		if not wanted.is_empty() and str(label) != wanted:
+			continue
+		var voice: Node = _sounding[label] as Node
+		_sounding.erase(label)
+		if voice == null or not is_instance_valid(voice) or not bool(voice.get("playing")):
+			continue
+		if fade > 0.0:
+			var fading: Tween = create_tween()
+			fading.tween_property(voice, "volume_db", SILENT_DB, fade)
+			fading.tween_callback(voice.call.bind("stop"))
+		else:
+			voice.call("stop")
+
+## Moves a bus's volume to `target_db` over `seconds`, remembering where it was so Restore can put it back.
+## A bus this project does not have is said once and left alone.
+func _fade_bus(bus: String, target_db: float, seconds: float) -> void:
+	var index: int = AudioServer.get_bus_index(bus.strip_edges())
+	if index < 0:
+		_told_sound["bus " + bus] = true
+		push_warning("Juice Player: a Fade Bus card on %s names the bus \"%s\", which this project does not have, so it did nothing." % [name, bus])
+		return
+	var key: String = AudioServer.get_bus_name(index)
+	if not _bus_restore.has(key):
+		_bus_restore[key] = AudioServer.get_bus_volume_db(index)
+	if seconds <= 0.0:
+		AudioServer.set_bus_volume_db(index, target_db)
+		return
+	var moved: Tween = get_tree().create_tween()
+	_bus_tweens.append(moved)
+	moved.tween_method(func(level: float) -> void: AudioServer.set_bus_volume_db(index, level), AudioServer.get_bus_volume_db(index), target_db, seconds)
+
+## Puts every bus a Fade Bus card moved back to the volume it had.
+func _restore_buses() -> void:
+	for moved: Tween in _bus_tweens:
+		if moved != null and moved.is_valid():
+			moved.kill()
+	_bus_tweens.clear()
+	for key: Variant in _bus_restore:
+		var index: int = AudioServer.get_bus_index(str(key))
+		if index >= 0:
+			AudioServer.set_bus_volume_db(index, float(_bus_restore[key]))
+	_bus_restore.clear()
+
+## Rumbles every controller that is connected - the weak motor and the strong one, each scaled by the
+## strength of the play - and buzzes a phone for the same time. The web has neither, so there it does nothing.
+func _vibrate(card: Dictionary, at: float) -> void:
+	if OS.has_feature("web"):
+		return
+	var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0)
+	var weak: float = clampf(float(card.get("weak", 0.5)) * at, 0.0, 1.0)
+	var strong: float = clampf(float(card.get("strong", 0.5)) * at, 0.0, 1.0)
+	for device: int in Input.get_connected_joypads():
+		Input.start_joy_vibration(device, weak, strong, seconds)
+	if OS.has_feature("mobile"):
+		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
+
 ## What the editor can show of a card's word: "felt" when it plays for real (a shake, a punch, a
 ## tweened property and a sound), "time" when the editor shows only its length (a wait, a loop word,
 ## and the two that change the game's time), and "skipped:<why>" for the rest, with the reason in
@@ -1727,6 +1832,12 @@ static func editor_kind(word: String) -> String:
 			return "felt"
 		PAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK, "hitstop", "slowmo":
 			return "time"
+		STOP_SOUND:
+			return "skipped:it ends a sound the running game started"
+		FADE_BUS:
+			return "skipped:it moves a bus volume, which the editor leaves alone"
+		VIBRATE:
+			return "skipped:a controller or a phone is not in the editor"
 		EMIT_SIGNAL:
 			return "skipped:a signal runs the game's own code"
 		PLAY_PLAYER:

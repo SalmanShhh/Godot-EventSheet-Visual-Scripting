@@ -21,6 +21,9 @@ const TEST_NAME: String = "juice_card_waits"
 static func run() -> bool:
 	var ok: bool = true
 	ok = _waits_for_pins() and ok
+	ok = _kind_pins() and ok
+	ok = _autoplay_pins() and ok
+	ok = _search_pins() and ok
 	return ok
 
 
@@ -65,4 +68,64 @@ static func _waits_for_pins() -> bool:
 			snappedf(float(_pack().call("left_above", unnamed, 2)), 0.001), 0.5],
 		["the card name a Hold is asked for is the card's label, or its word when it has none",
 			[_pack().call("card_label", {"verb": "shake", "label": " Big "}), _pack().call("card_label", {"verb": "shake"})], ["Big", "shake"]]
+	])
+
+
+## The cards that stop a sound, fade a bus and rumble the hand are in the Add box, each in its family, and
+## the running game files them under the same families (a muted family silences them).
+static func _kind_pins() -> bool:
+	var schema: Dictionary = load(SCHEMA_PATH).call("schema")
+	var families: Dictionary = {}
+	var runtime: Dictionary = {}
+	var family_table: Dictionary = _pack().get_script_constant_map().get("CATEGORY_OF")
+	for word: String in ["stop_sound", "fade_bus", "vibrate"]:
+		families[word] = str(EventSheetCardSchemas.kind_entry(schema, word).get("category", "(none)"))
+		runtime[word] = str(family_table.get(word, "(none)"))
+	var expected: Dictionary = {"stop_sound": "audio", "fade_bus": "audio", "vibrate": "device"}
+	var editor_words: Dictionary = {}
+	for word: String in ["stop_sound", "fade_bus", "vibrate"]:
+		editor_words[word] = str(_pack().call("editor_kind", word)).begins_with("skipped:")
+	return SUPPORT.pins(TEST_NAME, [
+		["the three new cards are in the Add box, each in its family", families, expected],
+		["and the running game files them the same way", runtime, expected],
+		["the editor says it skips them rather than faking them", editor_words, {"stop_sound": true, "fade_bus": true, "vibrate": true}]
+	])
+
+
+## Autoplay: off by default, not written into a scene while off, plays once at strength 1.
+static func _autoplay_pins() -> bool:
+	var player: Node = _pack().new()
+	var found: bool = false
+	var default_value: Variant = null
+	for property: Dictionary in player.get_property_list():
+		if str(property.get("name")) == "autoplay":
+			found = int(property.get("usage")) & PROPERTY_USAGE_STORAGE != 0
+			default_value = player.get("autoplay")
+	var root: Node = Node.new()
+	root.add_child(player)
+	player.owner = root
+	var packed: PackedScene = PackedScene.new()
+	packed.pack(root)
+	var path: String = SUPPORT.own_path("juice_card_waits_autoplay.tscn")
+	ResourceSaver.save(packed, path)
+	var text: String = FileAccess.get_file_as_string(path)
+	root.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the player has an Autoplay box", found, true],
+		["it starts off", default_value, false],
+		["and while off it is not written into the scene", text.contains("autoplay"), false]
+	])
+
+
+## "wait" in the Add box finds the two cards that wait: the search reads a kind's own search words.
+static func _search_pins() -> bool:
+	var schema: Dictionary = load(SCHEMA_PATH).call("schema")
+	var found: PackedStringArray = PackedStringArray()
+	for entry: Variant in EventSheetCardSchemas.kinds_of(schema):
+		var words: String = " ".join(PackedStringArray((entry as Dictionary).get("search", PackedStringArray())))
+		if words.to_lower().contains("wait"):
+			found.append(str((entry as Dictionary).get("kind", "")))
+	found.sort()
+	return SUPPORT.pins(TEST_NAME, [
+		["searching wait finds Hold and Pause", found, PackedStringArray(["hold_until", "pause"])]
 	])

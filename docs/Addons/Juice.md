@@ -386,9 +386,11 @@ Four more words move the head instead of being felt:
 | Card | What it does |
 | --- | --- |
 | **Pause** | Waits this long before the next card, whatever the cards above are still doing |
-| **Hold** | Waits for the slowest card above to finish, then this long |
+| **Hold** | Waits for the slowest card above to finish, then this long; set **Waits for** to one card and it waits for that card alone |
 | **Loop Start** | Marks where a Loop Back below sends the head |
 | **Loop Back** | Moves the head back to the last Hold or Loop Start, a number of times, pausing each time it lands |
+
+Three more are for sound and the hand: **Stop Sound** ends a sound an earlier Sound card started (with a fade if you want one), **Fade Bus** moves a bus volume over a time and Restore puts it back, and **Vibrate** rumbles a controller or buzzes a phone for a time (nothing on the web). They are not felt in the editor; Debug view says so.
 
 And three are neither a feeling nor a wait:
 
@@ -421,6 +423,7 @@ a moment file's step.
 | **Direction** | Which end of the list a play starts from |
 | **While playing** | What a second play does while the first runs: restart, ignore, or overlap |
 | **Cooldown** | The shortest gap between two plays, so a rapid hit stops stacking its own juice |
+| **Autoplay** | Plays the list once, at full strength, when the node enters the scene (`autoplay` in a script) |
 | **Moment file** | Optional: a moment file to play INSTEAD of the list |
 
 **Save as file** writes the list out as a moment file, naming any card whose timing a file cannot

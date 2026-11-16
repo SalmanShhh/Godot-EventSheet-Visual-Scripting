@@ -60,8 +60,14 @@ const TWEEN_PROPERTY: String = "tween_property"
 const EMIT_SIGNAL: String = "emit_signal"
 const PLAY_PLAYER: String = "play_player"
 
-## The word of the card that plays a sound.
+## The word of the card that plays a sound, and the two that end or move one.
 const SOUND: String = "sound"
+const STOP_SOUND: String = "stop_sound"
+const FADE_BUS: String = "fade_bus"
+const VIBRATE: String = "vibrate"
+
+## The key a Hold names the card it waits for under.
+const WAITS_FOR: String = "waits_for"
 
 ## The editor-side file that plays things for a moment and puts them back: Listen on a Sound card, and
 ## the strip's play buttons. By path, so the first open of the editor does not compile it.
@@ -186,6 +192,7 @@ static func schema() -> Dictionary:
 	var kinds: Array = []
 	kinds.append_array(derived_kinds(pack_reading()))
 	kinds.append_array(sound_kinds())
+	kinds.append_array(sound_control_kinds())
 	kinds.append_array(timing_kinds())
 	kinds.append_array(other_kinds())
 	return {
@@ -197,6 +204,7 @@ static func schema() -> Dictionary:
 		"groups": GROUPS,
 		"group_order": GROUP_ORDER,
 		"tiles": true,
+		"together": start_together,
 		"footer": strip_footer,
 		"marks": {"run": play_card}
 	}
@@ -330,6 +338,150 @@ static func sound_kinds() -> Array:
 	]
 
 
+## The cards that end a sound, move a bus and rumble the hand. None of them is felt in the editor, so Debug
+## view names each as skipped rather than faking it.
+static func sound_control_kinds() -> Array:
+	return [
+		{
+			"kind": STOP_SOUND,
+			"category": str(family_of().get(STOP_SOUND, "")),
+			"label": "Stop Sound",
+			"help": "Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. Pick no card to stop every sound this player has going.",
+			"fields": [
+				{"key": EFFECT_KEY, "label": "Sound card", "drawer": "above", "above": sound_cards_above,
+					"all_label": EventSheetL10n.translate("Every sound of this player")},
+				{"key": SECONDS_KEY, "label": "Fade out", "drawer": "unit:time", "default": 0.0}
+			],
+			"live": [],
+			"defaults": {EFFECT_KEY: "", SECONDS_KEY: 0.0},
+			"badge": seconds_badge
+		},
+		{
+			"kind": FADE_BUS,
+			"category": str(family_of().get(FADE_BUS, "")),
+			"label": "Fade Bus",
+			"help": "Moves a bus volume to a value over a time: duck the music under a big hit. Restore puts the volume back.",
+			"fields": [
+				{"key": EFFECT_KEY, "label": "Bus", "drawer": "bus", "default": "Master"},
+				{"key": AMOUNT_KEY, "label": "To", "drawer": "num", "default": -12.0, "suffix": "dB"},
+				{"key": SECONDS_KEY, "label": "Over", "drawer": "unit:time", "default": 0.3}
+			],
+			"live": [],
+			"defaults": {EFFECT_KEY: "Master", AMOUNT_KEY: -12.0, SECONDS_KEY: 0.3},
+			"badge": seconds_badge
+		},
+		{
+			"kind": VIBRATE,
+			"category": str(family_of().get(VIBRATE, "")),
+			"label": "Vibrate",
+			"help": "Rumbles every connected controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play.",
+			"fields": [
+				{"key": "weak", "label": "Weak motor", "drawer": "num", "default": 0.5},
+				{"key": "strong", "label": "Strong motor", "drawer": "num", "default": 0.5},
+				{"key": SECONDS_KEY, "label": "For", "drawer": "unit:time", "default": 0.2}
+			],
+			"live": [],
+			"defaults": {"weak": 0.5, "strong": 0.5, SECONDS_KEY: 0.2},
+			"badge": seconds_badge
+		}
+	]
+
+
+## Which cards start together: one number per card, the same for the felt cards between two words that move
+## the head, and -1 for a card that stands apart (Pause, Hold, the two loop words).
+static func start_together(cards: Array) -> Array:
+	var ids: Array = []
+	var group: int = 0
+	var open_run: bool = false
+	for card: Variant in cards:
+		var word: String = str((card as Dictionary).get(WORD_KEY, "")).strip_edges().to_lower()
+		if [PAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK].has(word):
+			if open_run:
+				group += 1
+			open_run = false
+			ids.append(-1)
+		else:
+			open_run = true
+			ids.append(group)
+	return ids
+
+
+## The name a card answers to in the running game, which is what a Hold stores when it waits for it.
+static func pack_name_of(card: Dictionary) -> String:
+	return str(load(str(load(NAMES_PATH).pack_path())).call("card_label", card))
+
+
+## What a card is called where a person reads it: its own name, else its kind's title.
+static func shown_name_of(card: Dictionary) -> String:
+	var named: String = str(card.get(LABEL_KEY, "")).strip_edges()
+	if not named.is_empty():
+		return named
+	var entry: Dictionary = EventSheetCardSchemas.kind_entry(schema(), str(card.get(WORD_KEY, "")))
+	return str(entry.get("label", str(card.get(WORD_KEY, "")).capitalize()))
+
+
+## The cards a Hold at `index` can be told to wait for: the felt cards between it and the Hold above it.
+static func cards_a_hold_can_wait_for(cards: Array, index: int) -> Array:
+	var found: Array = []
+	var walk: int = index - 1
+	while walk >= 0:
+		var card: Dictionary = cards[walk] as Dictionary
+		var word: String = str(card.get(WORD_KEY, "")).strip_edges().to_lower()
+		if word == HOLD_UNTIL:
+			break
+		if not [PAUSE, LOOP_START, LOOP_BACK].has(word):
+			found.push_front({"value": pack_name_of(card), "text": shown_name_of(card)})
+		walk -= 1
+	return found
+
+
+## The Sound cards above a Stop Sound card, by name.
+static func sound_cards_above(cards: Array, index: int) -> Array:
+	var found: Array = []
+	for walk: int in range(mini(index, cards.size())):
+		var card: Dictionary = cards[walk] as Dictionary
+		if str(card.get(WORD_KEY, "")).strip_edges().to_lower() == SOUND:
+			found.append({"value": pack_name_of(card), "text": shown_name_of(card)})
+	return found
+
+
+## How long a Hold will wait: what is left of the cards it waits for when the head reaches it, then its own
+## wait. The same function the running game waits by.
+static func hold_wait(card: Dictionary, cards: Array, index: int) -> float:
+	var pack: Script = load(str(load(NAMES_PATH).pack_path())) as Script
+	var left: float = float(pack.call("left_above", cards, index)) if pack != null and index >= 0 else 0.0
+	return left + maxf(float(card.get(SECONDS_KEY, 0.0)), 0.0) + maxf(float(card.get("delay", 0.0)), 0.0)
+
+
+static func hold_badge(card: Dictionary, cards: Array, index: int) -> String:
+	return "%.2f s" % hold_wait(card, cards, index)
+
+
+## The line under a Hold's fields: how long it waits and for what.
+static func hold_note(card: Dictionary, cards: Array, index: int) -> String:
+	var waited: String = EventSheetL10n.translate("all the cards above")
+	var wanted: String = str(card.get(WAITS_FOR, "")).strip_edges()
+	if not wanted.is_empty():
+		for entry: Variant in cards_a_hold_can_wait_for(cards, index):
+			if str((entry as Dictionary).get("value", "")) == wanted:
+				waited = str((entry as Dictionary).get("text", wanted))
+	var said: String = EventSheetL10n.translate("Waiting %.2f s, for %s.") % [hold_wait(card, cards, index), waited]
+	if hold_names_nothing(card, cards, index):
+		said += " " + EventSheetL10n.translate("No card called \"%s\" is above this Hold, so it waits for all of them.") % wanted
+	return said
+
+
+## Whether the Hold names a card that is not above it any more.
+static func hold_names_nothing(card: Dictionary, cards: Array, index: int) -> bool:
+	var wanted: String = str(card.get(WAITS_FOR, "")).strip_edges()
+	if wanted.is_empty():
+		return false
+	for entry: Variant in cards_a_hold_can_wait_for(cards, index):
+		if str((entry as Dictionary).get("value", "")) == wanted:
+			return false
+	return true
+
+
 ## The strip under the list: the head line, the buttons that play the list in the editor and the debug
 ## timeline. Built once for the object being edited, and handed the drawer so it can light the card
 ## that is sounding.
@@ -382,6 +534,7 @@ static func timing_kinds() -> Array:
 			"fields": [{"key": SECONDS_KEY, "label": "Pause", "drawer": "unit:time", "default": 0.25}],
 			"live": [],
 			"defaults": {SECONDS_KEY: 0.25},
+			"search": PackedStringArray(["wait", "delay", "gap"]),
 			"badge": seconds_badge
 		},
 		{
@@ -389,10 +542,16 @@ static func timing_kinds() -> Array:
 			"category": str(family_of().get(HOLD_UNTIL, "")),
 			"label": "Hold",
 			"help": "Waits for the slowest card above to finish, then this long. What is under a hold is what happens AFTER the hit rather than during it.",
-			"fields": [{"key": SECONDS_KEY, "label": "Then wait", "drawer": "unit:time", "default": 0.0}],
+			"fields": [
+				{"key": WAITS_FOR, "label": "Waits for", "drawer": "above", "above": cards_a_hold_can_wait_for,
+					"all_label": EventSheetL10n.translate("All cards above")},
+				{"key": SECONDS_KEY, "label": "Then wait", "drawer": "unit:time", "default": 0.0},
+				{"key": "hold_note", "label": "", "drawer": "note", "text": hold_note, "warn_when": hold_names_nothing}
+			],
 			"live": [],
 			"defaults": {SECONDS_KEY: 0.0},
-			"badge": seconds_badge
+			"search": PackedStringArray(["wait", "until", "after"]),
+			"badge": hold_badge
 		},
 		{
 			"kind": LOOP_START,

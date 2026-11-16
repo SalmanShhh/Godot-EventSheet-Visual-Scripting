@@ -81,7 +81,7 @@ Moment  impact  (strength, from)
 | **Hold** | When the slowest step above has finished, plus a delay of its own. |
 | **Loop Back** | Back to the last Hold (or the top) for that many more passes. |
 
-A step that says how long it **lasts** is what a Hold waits for; a step that says nothing counts as
+In a Juice Player's list a Hold can also be told to wait for one card above it, by name, and then it waits for that card alone. A step that says how long it **lasts** is what a Hold waits for; a step that says nothing counts as
 instant, which is the common case. Each step also picks its clock: game time follows `time_scale`,
 so a slowmo stretches the beat with everything else, while real time ignores it, which is what the
 step after a hitstop wants.
@@ -221,7 +221,7 @@ behaviour beside the player, which is why one goes under the same object. Four m
 rather than being felt (**Pause**, **Hold**, **Loop Start**, **Loop Back**), and three are neither a
 feeling nor a wait (**Tween Property**, **Emit Signal**, **Play Player**, which plays another player
 from inside this one at a share of this play's strength). The last is the **Sound** card, described
-next.
+next. Three more are for sound and the hand: **Stop Sound** ends a sound an earlier Sound card started (with a fade if you want one), **Fade Bus** moves a bus volume over a time and Restore puts it back, and **Vibrate** rumbles a controller or buzzes a phone. Tick **Autoplay** on the node and the list plays once, at full strength, when the node enters the scene. Select cards with a click, Shift+click or Ctrl+click, then copy, cut, paste, duplicate and delete them with Godot's own keys.
 
 A new card starts with numbers that do something: a Hitstop freezes time completely for 0.08 s, a
 Slowmo slows to 0.3 for 0.3 s and a Zoom zooms in to 110 percent over 0.2 s. The amount means a
