@@ -232,7 +232,7 @@ static func _words_pins() -> bool:
 		["picking the label sets the length from its letters", kinds.call("reveal_length", card, label), {"seconds": 0.5}],
 		["a new speed sets the length again", kinds.call("reveal_length_for_speed", card, player, 17.0), {"seconds": 1.0}],
 		["the property picker's answer, with its leading colon, is the plain property name", fields.call("property_text", NodePath(":modulate")), "modulate"],
-		["a card the board promises a preview for says it is not shown yet", str(_pack().call("editor_kind", "particles")).begins_with("skipped:not shown in the editor yet"), true]
+		["a card that has a preview in the editor says it is played", _pack().call("editor_kind", "particles"), "felt"]
 	]
 	label.free()
 	player.free()

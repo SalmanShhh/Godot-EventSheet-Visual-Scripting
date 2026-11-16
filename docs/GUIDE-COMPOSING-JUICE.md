@@ -265,7 +265,7 @@ written down before it starts (the object's position, rotation, scale and colour
 Tween Property card names) and put back on Stop, on Restore, at the end of each pass and when the
 editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays
 for real what Godot can play - a shake as a wobble, a punch as a swell, a tweened property walking to its
-value and a sound - and shows the waits and the two time cards (Hitstop and Slowmo) as time. A flash, a
+value, a sound, and the cards that move another node (a label's text, a bar, a particles node, a clip) - and shows the waits and the two time cards (Hitstop and Slowmo) as time. A flash, a
 zoom and the screen effects are drawn by the running game, a signal runs your own code and another
 Juice Player runs its own list, so the editor skips those and says so. **Debug view** draws the
 timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came

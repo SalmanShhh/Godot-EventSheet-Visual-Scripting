@@ -1998,13 +1998,13 @@ func _vibrate(card: Dictionary, at: float) -> void:
 		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
 
 ## What the editor can show of a card's word: "felt" when it plays for real (a shake, a punch, a
-## tweened property and a sound), "time" when the editor shows only its length (a wait, a loop word,
+## tweened property, a sound, and the cards that move another node), "time" when the editor shows only its length (a wait, a loop word,
 ## and the two that change the game's time), and "skipped:<why>" for the rest, with the reason in
 ## words. One answer for the Inspector's play buttons, Debug view and the guide.
 ## @ace_hidden
 static func editor_kind(word: String) -> String:
 	match word:
-		"shake", "punch", TWEEN_PROPERTY, SOUND:
+		"shake", "punch", TWEEN_PROPERTY, SOUND, PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE:
 			return "felt"
 		PAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK, "hitstop", "slowmo":
 			return "time"
@@ -2014,8 +2014,8 @@ static func editor_kind(word: String) -> String:
 			return "skipped:it moves a bus volume, which the editor leaves alone"
 		VIBRATE:
 			return "skipped:a controller or a phone is not in the editor"
-		PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, GRAB_FOCUS, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE:
-			return "skipped:not shown in the editor yet, it plays when the game runs"
+		GRAB_FOCUS:
+			return "skipped:focus belongs to the running game"
 		PUSH, FORCE_FOR_A_TIME, GRAVITY_FOR_A_TIME, FREEZE_BODY:
 			return "skipped:not shown in the editor, physics needs the running game"
 		SPAWN_SCENE:

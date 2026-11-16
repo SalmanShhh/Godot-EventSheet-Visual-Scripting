@@ -32,6 +32,9 @@ const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_playe
 ## What the preview writes down, restores and lights marks with. By path for the same reason.
 const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
 
+## What the cards that reach other nodes are drawn by. By path, like the preview helper.
+const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_world_preview.gd"
+
 ## The moment file's own class, written when a list is saved out. Also by path, and also for the
 ## same reason.
 const MOMENT_RESOURCE_PATH: String = "res://eventsheet_addons/moment_resource/moment_resource.gd"
@@ -83,6 +86,12 @@ var _try_box: SpinBox = null
 var _sounded: Dictionary = {}
 var _voices: Array[AudioStreamPlayer] = []
 var _lit: PackedInt32Array = PackedInt32Array()
+## What the cards that reach other nodes may move, written down before the first frame: each entry is
+## [object, property, value]. The same list is what Stop, Restore, the end of a pass and the editor's save
+## put back, so a preview of a card on another node can never be the thing the scene saves.
+var _world_base: Array = []
+## The pass's own memory for those cards (the rest values, a started burst, a material copy).
+var _world_state: Dictionary = {}
 
 
 ## The strip for one player. The argument defaults so the class stays constructible with a bare
@@ -368,6 +377,7 @@ func _begin_pass() -> void:
 		var value: Variant = target.get(property)
 		if value != null:
 			_base[property] = value
+	_record_world(target)
 	_time = 0.0
 	_sounded.clear()
 	_did = _describe_pass(list)
@@ -399,6 +409,7 @@ func skip() -> void:
 
 func restore() -> void:
 	var target: Node = _host()
+	_restore_world()
 	if target != null:
 		for property: Variant in _base:
 			target.set(str(property), _base[property])
@@ -419,6 +430,7 @@ func _tick() -> void:
 	if written is Dictionary:
 		for property: Variant in written as Dictionary:
 			target.set(str(property), (written as Dictionary)[property])
+	_step_world(pack, target)
 	_play_sounds_due(pack)
 	_show_marks(load(PREVIEW_PATH).call("playing_at", _run_list, _run_positions, _time))
 	_time += FRAME_SECONDS
@@ -426,6 +438,58 @@ func _tick() -> void:
 		_timeline.queue_redraw()
 	if _time > duration_of(_run_list) + FRAME_SECONDS:
 		_end_pass()
+
+
+## Writes down every property the cards that reach other nodes may move, and the value each holds now.
+func _record_world(host: Node) -> void:
+	_world_base = []
+	_world_state = {}
+	var world: Script = load(WORLD_PATH) as Script
+	var seen: Dictionary = {}
+	for entry: Variant in _run_list:
+		var card: Dictionary = entry as Dictionary
+		if not bool(world.call("handles", card)):
+			continue
+		var node: Node = world.call("node_of", _player, card, host) as Node
+		for pair: Variant in world.call("watched", card, node) as Array:
+			var object: Object = (pair as Array)[0] as Object
+			var property: String = str((pair as Array)[1])
+			var key: String = "%d|%s" % [object.get_instance_id(), property]
+			if seen.has(key):
+				continue
+			seen[key] = true
+			_world_base.append([object, property, world.call("remember", _world_state, object, property)])
+
+
+## One frame of every card that reaches another node: each is `through` of the way into its own length.
+func _step_world(pack: Script, host: Node) -> void:
+	var world: Script = load(WORLD_PATH) as Script
+	var plan: Array = pack.call("schedule_of", _run_list)
+	for plan_index: int in range(plan.size()):
+		var entry: Dictionary = plan[plan_index] as Dictionary
+		var card: Dictionary = entry.get("card") as Dictionary
+		if not bool(world.call("handles", card)):
+			continue
+		var through: float = (_time - float(entry.get("at", 0.0))) / maxf(float(entry.get("seconds", 0.0)), 0.05)
+		if through < 0.0:
+			continue
+		world.call("step", card, world.call("node_of", _player, card, host), through, _strength(), _world_state, plan_index)
+
+
+## Puts back everything the cards that reach other nodes moved, in the opposite order it was written down.
+func _restore_world() -> void:
+	if _world_base.is_empty() and _world_state.is_empty():
+		return
+	load(WORLD_PATH).call("finish", _world_state)
+	for index: int in range(_world_base.size() - 1, -1, -1):
+		var held: Array = _world_base[index] as Array
+		var object: Object = held[0] as Object
+		if object == null or not is_instance_valid(object):
+			continue
+		if str(held[1]) == "assigned_animation" and str(held[2]).is_empty():
+			continue
+		object.set_indexed(NodePath(str(held[1])), held[2])
+	_world_base = []
 
 
 ## The end of a pass: everything put back, and then either the end or, with Repeat ticked, the next pass
