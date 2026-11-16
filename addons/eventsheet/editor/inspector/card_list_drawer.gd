@@ -1168,7 +1168,8 @@ func _card_mark(index: int, entry: Dictionary, category: String) -> Control:
 	if bool(drawn.get("tint", false)):
 		_pictures[index] = mark
 		_picture_tints[index] = EventSheetCardSchemas.tile_color(_schema, category, _on_light_ground())
-		mark.modulate = _picture_tints[index] if EventSheetCardSchemas.card_enabled(_schema, _cards[index]) 			else (_picture_tints[index] as Color).lerp(EventSheetLookStyle.quiet(), 0.6)
+		var family: Color = _picture_tints[index]
+		mark.modulate = family if EventSheetCardSchemas.card_enabled(_schema, _cards[index]) else family.lerp(EventSheetLookStyle.quiet(), 0.6)
 	return mark
 
 
