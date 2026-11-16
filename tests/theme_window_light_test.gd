@@ -28,6 +28,8 @@ static func run() -> bool:
 	ok = _the_file() and ok
 	ok = _quick_style_twice() and ok
 	ok = _the_tick_and_the_words() and ok
+	ok = _generate_reads() and ok
+	ok = _two_light_colours_move_two() and ok
 	return ok
 
 
@@ -68,6 +70,8 @@ static func _preview_as() -> bool:
 		["the light preview draws the light colour", light_ground, PALE],
 		["switching the preview is not an edit", edits, 0],
 		["and the title stays unchanged", window._dialog.title.contains("(changed)"), false],
+		["the chosen side is the pressed button", window._light_side._light_button.button_pressed and not window._light_side._dark_button.button_pressed, true],
+		["and a pressed button has a look of its own in every editor theme", window._light_side._light_button.has_theme_stylebox_override("pressed"), true],
 	])
 	window._dialog.free()
 	dock.free()
@@ -203,7 +207,7 @@ static func _quick_style_twice() -> bool:
 	var light_after: Variant = _light().entry_of(block, "sheet_background_color")
 	var ok: bool = SUPPORT.pins(P + ": Quick Style twice", [
 		["Generate gives the dark column the dark base", dark_after, Color("#1f2622").darkened(0.25)],
-		["and the light column the light base", light_after, Color("#e7eeea").darkened(0.25)],
+		["and the light column the editor light hand on the light base", light_after, EventSheetEditorThemeDeriver.native_style(Color("#e7eeea")).event_style.sheet_background_color],
 		["the light group title is the light text colour", _light().entry_of(block, "group_title_color"), Color("#14201a")],
 		["one Generate is one step on the undo list", window._edits.size(), 1],
 	])
@@ -238,3 +242,48 @@ static func _the_tick_and_the_words() -> bool:
 ## Whether a row's mark is showing: it keeps its room either way, so it is shown by its opacity.
 static func is_marked(row: Dictionary) -> bool:
 	return (row["mark"] as Label).modulate.a > 0.5
+
+
+## What Generate Theme writes reads: no word colour of the shared list is under its bar, in the dark column or
+## in the light one, and no swatch carries a mark.
+static func _generate_reads() -> bool:
+	var dock: Control = FILES.recorder_dock()
+	var path: String = FILES.theme_file("light_generate_reads.tres", Color("#202020"))
+	var window: EventSheetThemeEditor = FILES.open_window(path, dock)
+	window._generate_quick_style()
+	var pairs: GDScript = load("res://addons/eventsheet/theme/theme_contrast_pairs.gd")
+	var weak: Array[String] = []
+	for side: String in ["dark", "light"]:
+		var look: EventSheetEditorStyle = window._light_side.light_look() if side == "light" else window._working_style
+		for pair: Array in pairs.PAIRS:
+			var measured: Dictionary = pairs.measure(look, pair)
+			if float(measured["ratio"]) < float(measured["bar"]):
+				weak.append("%s %s %.2f" % [side, pair[2], measured["ratio"]])
+	var marked: Array[String] = []
+	for entry: Dictionary in window._light_side._rows:
+		if is_marked(entry):
+			marked.append(str(entry["token"]))
+	var ok: bool = SUPPORT.pins(P + ": after Generate", [
+		["no pair of the shared list reads under its bar", weak, []],
+		["and no swatch carries a mark", marked, []],
+	])
+	window._dialog.free()
+	dock.free()
+	return ok
+
+
+## A theme given two light colours draws a light editor differently from a dark one in those two colours and
+## nothing else: the light look is the dark look with exactly the light colours laid over it.
+static func _two_light_colours_move_two() -> bool:
+	var theme: EventSheetEditorStyle = ResourceLoader.load("res://demo/themes/nord_theme.tres", "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetEditorStyle
+	_light().set_entry(theme.event_style, "sheet_background_color", PALE)
+	_light().set_entry(theme.event_style, "row_background_color", PAPER)
+	var light: EventSheetEditorStyle = EventSheetEditorThemeDeriver.sheet_look(theme, Color("#e6e6e6"))
+	var moved: Array[String] = []
+	for pair: Array in _light().blocks_of(theme):
+		var lit: Resource = _light().blocks_of(light)[_light().blocks_of(theme).find(pair)][1]
+		for info: Dictionary in (pair[1] as Resource).get_property_list():
+			if int(info.get("type", TYPE_NIL)) == TYPE_COLOR and (pair[1] as Resource).get(str(info["name"])) != lit.get(str(info["name"])):
+				moved.append(str(info["name"]))
+	moved.sort()
+	return SUPPORT.check(P, "two light colours move those two colours and nothing else", moved, ["row_background_color", "sheet_background_color"])

@@ -20,6 +20,17 @@ const MARK_GLYPH := "!"
 ## The width of the name column on a row that has a light side, wide enough for the longest token name, so the
 ## dark swatches, the chains and the light swatches stand in columns down the form.
 const NAME_COLUMN_WIDTH := 230.0
+## Words the sheet draws that the shared list does not hold to a bar (the native look keeps them quiet), which a
+## generated theme still moves until they can be read: the scope word of a variable row.
+const GENERATED_PAIRS: Array = [
+	["variable scope word on a row", "reading", "variable_row_rule_color", "event:row_background_color", 3.0],
+	["variable scope word on its wash", "reading", "variable_row_rule_color", "reading:variable_row_wash_color", 4.5],
+	["muted words on a variable wash", "reading", "muted_text_color", "reading:variable_row_wash_color", 4.5],
+	["secondary words on a variable wash", "reading", "secondary_text_color", "reading:variable_row_wash_color", 4.5],
+	["inspector words on a variable wash", "reading", "inspector_chip_foreground_color", "reading:variable_row_wash_color", 4.5],
+	["inspector chip words on their chip", "reading", "inspector_chip_foreground_color", "reading:inspector_chip_background_color", 4.5],
+	["inspector chip words on a row", "reading", "inspector_chip_foreground_color", "event:row_background_color", 4.5],
+]
 
 ## True while the sample sheet is previewed as a light editor would draw it.
 var preview_light: bool = false
@@ -362,17 +373,27 @@ func step(entry: Dictionary, side: String) -> void:
 # ── Quick Style, twice ────────────────────────────────────────────────────────────────────────────
 
 
-## Fills the light column from a second pass of the same rule: every colour the light pass would draw
-## differently from the dark pass becomes the theme's light colour, and every other colour goes back to
-## having none. The accent is the dark pass's. Returns how many light colours the theme holds afterwards.
+## Fills the light column from the editor's own light hand: the look Godot's light editor gets (every fill,
+## word and mark already read on their ground) with the light base, the accent and the light text laid on
+## top. Every colour that differs from the dark column becomes the theme's light colour, and every other
+## colour goes back to having none. Then any words in either column that still read under their bar are
+## moved toward black or white until they clear it, so a generated theme carries no mark. Returns how many
+## light colours the theme holds afterwards.
 func generate(light_base: Color, accent: Color, light_text: Color) -> int:
 	var style: EventSheetEditorStyle = _window._working_style
-	var pass_two: EventSheetEditorStyle = style.duplicate(true) as EventSheetEditorStyle
-	EventSheetGodotTheme.apply(pass_two, light_base, light_base.darkened(0.15), light_base.darkened(0.25), accent, light_text)
+	var hand: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(light_base).duplicate(true) as EventSheetEditorStyle
+	hand.ensure_defaults()
+	var hand_event: EventSheetEventStyle = hand.get_event_style()
+	hand_event.group_accent_color = accent
+	hand_event.group_title_color = light_text
+	hand_event.trigger_badge_background_color = accent
+	hand_event.selection_fill_color = Color(accent.r, accent.g, accent.b, 0.16)
+	hand.get_condition_style().text_color = light_text
+	hand.get_action_style().text_color = light_text
 	var held: int = 0
 	for pair: Array in _light().blocks_of(style):
 		var block: Resource = pair[1]
-		var lit: Resource = _block_in(pass_two, str(pair[0]))
+		var lit: Resource = _block_in(hand, str(pair[0]))
 		for info: Dictionary in block.get_property_list():
 			var usage: int = int(info.get("usage", 0))
 			if not (usage & PROPERTY_USAGE_SCRIPT_VARIABLE) or int(info.get("type", TYPE_NIL)) != TYPE_COLOR:
@@ -384,4 +405,38 @@ func generate(light_base: Color, accent: Color, light_text: Color) -> int:
 			else:
 				_light().clear_entry(block, token)
 	invalidate()
+	make_legible()
 	return held
+
+
+## Moves every word colour that reads under its bar on its ground toward black or white until it clears the
+## bar, first in the dark column and then in the light one, over the pairs the contrast test holds.
+func make_legible() -> void:
+	for light: bool in [false, true]:
+		for pair: Array in _pairs().PAIRS + GENERATED_PAIRS:
+			var look: EventSheetEditorStyle = light_look() if light else _window._working_style
+			var measured: Dictionary = _pairs().measure(look, pair)
+			if float(measured["ratio"]) >= float(measured["bar"]):
+				continue
+			var block: Resource = _block_in(_window._working_style, str(pair[1]))
+			var token: String = str(pair[2])
+			var moved: Color = _nudged(measured["ink"], measured["fill"], float(measured["bar"]))
+			if not light:
+				block.set(token, moved)
+			elif moved == block.get(token):
+				_light().clear_entry(block, token)
+			else:
+				_light().set_entry(block, token, moved)
+			invalidate()
+
+
+## `ink` moved toward whichever of black and white stands furthest from `fill`, in small steps, until it
+## reads at `bar` or better on `fill`. The result is opaque.
+static func _nudged(ink: Color, fill: Color, bar: float) -> Color:
+	var target: Color = Color.WHITE if fill.get_luminance() < 0.5 else Color.BLACK
+	var moved: Color = Color(ink.r, ink.g, ink.b, 1.0)
+	for step_count: int in range(40):
+		if EventSheetEditorThemeDeriver.contrast_ratio(moved, fill) >= bar + 0.05:
+			break
+		moved = moved.lerp(target, 0.1)
+	return moved

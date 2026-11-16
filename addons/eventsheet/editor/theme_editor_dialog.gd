@@ -114,7 +114,7 @@ func _repaint_preview() -> void:
 		return
 	if _light_side != null:
 		_preview_viewport.editor_base_override = _light_side.preview_base()
-	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_preview_viewport.set_sheet(build_sample_sheet(_working_style, _light_side != null and _light_side.preview_light))
 
 
 ## What the window says about Apply when it opens. A sheet saved as a resource takes the look into itself;
@@ -212,7 +212,8 @@ static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEdit
 
 
 ## The sample sheet shown in the preview: one of everything the theme touches.
-static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResource:
+## `light_ground` draws the sample note that carries a colour of its own in a pale tone, for a light preview.
+static func build_sample_sheet(style: EventSheetEditorStyle, light_ground: bool = false) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.editor_style = style
 	sheet.variables = {"health": {"type": "int", "default": 100, "exported": true}}
@@ -232,7 +233,7 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	sheet.events.append(group)
 	var comment: CommentRow = CommentRow.new()
 	comment.text = "Colored comment\nsecond line"
-	comment.custom_color = Color(0.32, 0.27, 0.14, 1.0)
+	comment.custom_color = Color(0.96, 0.90, 0.70, 1.0) if light_ground else Color(0.32, 0.27, 0.14, 1.0)
 	sheet.events.append(comment)
 	# Newer row kinds so the live preview exercises their tokens too (keyword badges,
 	# declaration text, color swatches).

@@ -14,7 +14,7 @@ extends RefCounted
 const TEXT_BAR := 4.5
 const MARK_BAR := 3.0
 
-## [what, section ("event", "condition", "action"), ink token, fill token, bar]. A section holds the
+## [what, section ("event", "condition", "action", "reading"), ink token, fill token, bar]. A section holds the
 ## token; the fill's section is written before its name ("event:condition_lane_color").
 const PAIRS: Array = [
 	["condition sentence", "condition", "text_color", "event:condition_lane_color", TEXT_BAR],
@@ -46,6 +46,11 @@ const PAIRS: Array = [
 	["range badge", "event", "range_badge_foreground_color", "event:range_badge_background_color", MARK_BAR],
 	["tooltip badge", "event", "tooltip_badge_foreground_color", "event:tooltip_badge_background_color", MARK_BAR],
 	["saved badge", "event", "saved_badge_foreground_color", "event:saved_badge_background_color", MARK_BAR],
+	["muted words on a row", "reading", "muted_text_color", "event:row_background_color", TEXT_BAR],
+	["muted words on the sheet", "reading", "muted_text_color", "event:sheet_background_color", TEXT_BAR],
+	["secondary words on a row", "reading", "secondary_text_color", "event:row_background_color", TEXT_BAR],
+	["secondary words on the sheet", "reading", "secondary_text_color", "event:sheet_background_color", TEXT_BAR],
+	["inspector words on a row", "reading", "inspector_chip_foreground_color", "event:row_background_color", TEXT_BAR],
 ]
 
 
@@ -56,6 +61,8 @@ static func section_of(style: EventSheetEditorStyle, section_name: String) -> Re
 			return style.get_condition_style()
 		"action":
 			return style.get_action_style()
+		"reading":
+			return style.get_reading_style()
 	return style.get_event_style()
 
 
