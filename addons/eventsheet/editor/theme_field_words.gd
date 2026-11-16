@@ -11,8 +11,9 @@ extends RefCounted
 
 
 const FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
-## The side of a swatch, before the display scale.
-const SWATCH_SIZE := 14
+## The size of a swatch, before the display scale.
+const SWATCH_WIDTH := 30
+const SWATCH_HEIGHT := 14
 ## The gap between a name and its folder on an entry's line.
 const FOLDER_GAP := "     "
 
@@ -53,8 +54,9 @@ static func tip(path: String) -> String:
 	return where + "\n" + sentence(path)
 
 
-## A small square in the colour the theme's sheet is drawn on in the running editor, edged by a hairline.
-static func swatch(path: String) -> Texture2D:
+## The three colours a theme's swatch shows, for the side the running editor is in: its sheet ground, its accent
+## and its text.
+static func stripes(path: String) -> Array[Color]:
 	var base: Color = EventSheetEditorThemeDeriver.running_editor_base()
 	if base.a <= 0.0:
 		base = EventSheetEditorThemeDeriver.NATIVE_DARK_REFERENCE_BASE
@@ -63,16 +65,25 @@ static func swatch(path: String) -> Texture2D:
 		var loaded: Resource = ResourceLoader.load(path)
 		if loaded is EventSheetEditorStyle:
 			style = (loaded as EventSheetEditorStyle).duplicate(true) as EventSheetEditorStyle
-	var look: EventSheetEditorStyle = EventSheetEditorThemeDeriver.sheet_look(style, base) if style != null \
-		else EventSheetEditorThemeDeriver.default_style_for(base)
-	var fill: Color = look.get_event_style().sheet_background_color
-	var side: int = EventSheetPalette.scaled(SWATCH_SIZE)
-	var image: Image = Image.create(side, side, false, Image.FORMAT_RGBA8)
-	image.fill(Color(fill.r, fill.g, fill.b, 1.0))
-	var edge: Color = Color(0.5, 0.5, 0.5, 0.9)
-	for step: int in range(side):
-		for pair: Vector2i in [Vector2i(step, 0), Vector2i(step, side - 1), Vector2i(0, step), Vector2i(side - 1, step)]:
-			image.set_pixelv(pair, edge)
+	var look: EventSheetEditorStyle = EventSheetEditorThemeDeriver.sheet_look(style, base) if style != null else EventSheetEditorThemeDeriver.default_style_for(base)
+	look.ensure_defaults()
+	var colours: Array[Color] = [look.get_event_style().sheet_background_color,
+		look.get_event_style().group_accent_color, look.get_condition_style().text_color]
+	for index: int in range(colours.size()):
+		colours[index] = Color(colours[index].r, colours[index].g, colours[index].b, 1.0)
+	return colours
+
+
+## Three touching stripes, no outline: the theme's sheet ground, its accent and its text.
+static func swatch(path: String) -> Texture2D:
+	var colours: Array[Color] = stripes(path)
+	var width: int = EventSheetPalette.scaled(SWATCH_WIDTH)
+	var height: int = EventSheetPalette.scaled(SWATCH_HEIGHT)
+	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	for x: int in range(width):
+		var colour: Color = colours[mini(x * colours.size() / width, colours.size() - 1)]
+		for y: int in range(height):
+			image.set_pixel(x, y, colour)
 	return ImageTexture.create_from_image(image)
 
 

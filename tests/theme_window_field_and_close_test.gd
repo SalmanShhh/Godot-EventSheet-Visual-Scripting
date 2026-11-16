@@ -10,6 +10,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const FILES := preload("res://tests/theme_window_files_test.gd")
+const FIELD_WORDS := preload("res://addons/eventsheet/editor/theme_field_words.gd")
 const P := "theme_window_field_and_close_test"
 const STARTER := "res://addons/eventsheet/themes/editor_native_theme.tres"
 const NORD := "res://demo/themes/nord_theme.tres"
@@ -27,13 +28,20 @@ static func run() -> bool:
 static func _legend() -> bool:
 	var dock: Control = FILES.recorder_dock()
 	var window: EventSheetThemeEditor = FILES.open_window(STARTER, dock)
-	var legend: Node = window._detail_form.get_node_or_null("Legend")
+	var found: Array[Node] = window._dialog.find_children("Legend", "HFlowContainer", true, false)
+	var legend: Node = found[0] if not found.is_empty() else null
+	var inside_scroll: bool = false
+	var up: Node = legend
+	while up != null and up != window._dialog:
+		inside_scroll = inside_scroll or up is ScrollContainer
+		up = up.get_parent()
 	var words: Array[String] = []
 	if legend != null:
 		for label: Node in legend.find_children("*", "Label", true, false):
 			words.append((label as Label).text)
 	var ok: bool = SUPPORT.pins(P + ": the legend", [
-		["the legend sits above the swatch list", legend != null and legend.get_index() == 0, true],
+		["the legend stays in view outside the scrolling form", legend != null and not inside_scroll, true],
+		["and sits just above the strip", legend != null and legend.get_parent().get_child(legend.get_index() + 1) == window._strip, true],
 		["it names the dashed box, the chain and the mark", words.filter(func(word: String) -> bool: return word.length() > 1), ["worked out from the editor", "same colour in both", "hard to read on its row"]],
 	])
 	window._dialog.free()
@@ -89,6 +97,18 @@ static func _theme_field() -> bool:
 		["the closed field names only the theme", field.text, "Nord"],
 		["the sentence under it says a demo is saved as a copy", window._theme_note.text.contains("Save a Copy"), true],
 	])
+	var stripes: Array[Color] = FIELD_WORDS.stripes(NORD)
+	var nord_theme: EventSheetEditorStyle = ResourceLoader.load(NORD) as EventSheetEditorStyle
+	var look: EventSheetEditorStyle = EventSheetEditorThemeDeriver.sheet_look(nord_theme.duplicate(true) as EventSheetEditorStyle, EventSheetEditorThemeDeriver.NATIVE_DARK_REFERENCE_BASE)
+	ok = SUPPORT.pins(P + ": the swatch", [
+		["a swatch is three stripes", stripes.size(), 3],
+		["the first is the sheet ground", stripes[0], Color(look.event_style.sheet_background_color, 1.0)],
+		["the second is the accent", stripes[1], Color(look.event_style.group_accent_color, 1.0)],
+		["the third is the text", stripes[2], Color(look.condition_style.text_color, 1.0)],
+		["two themes give different stripes", FIELD_WORDS.stripes("res://demo/themes/dracula_theme.tres") != stripes, true],
+		["the icon is about 30 by 14 at 100 percent", field.get_item_icon(nord).get_size(), Vector2(30.0 * EventSheetPalette.scaled_f(1.0), 14.0 * EventSheetPalette.scaled_f(1.0))],
+		["and is not one flat colour", field.get_item_icon(nord).get_image().get_pixel(0, 5) != field.get_item_icon(nord).get_image().get_pixel(29, 5), true],
+	]) and ok
 	var mine: String = FILES.theme_file("field_close_mine.tres", Color("#202020"))
 	var own: EventSheetThemeEditor = FILES.open_window(mine, dock)
 	ok = SUPPORT.check(P, "a theme of the project's own says Save writes it in place", own._theme_note.text.contains("Save writes it in place"), true) and ok
