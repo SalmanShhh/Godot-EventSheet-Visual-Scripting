@@ -203,6 +203,9 @@ static func emitted_text(entry: Variant) -> String:
 		text = "" if descriptor == null else descriptor.codegen_template
 	var params: Variant = ace.get("params")
 	if params is Dictionary:
+		# A row with an optional line (a Building row's name line) keeps its segment markers in its
+		# template; they are settled first, so the line a sentence quotes is the line the row writes.
+		text = EventSheetActionCodegen.collapse_optional_segments(text, params as Dictionary)
 		for key: Variant in (params as Dictionary).keys():
 			text = text.replace("{%s}" % str(key), str((params as Dictionary)[key]))
 	return text
