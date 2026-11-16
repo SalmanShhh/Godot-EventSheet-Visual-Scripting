@@ -35,6 +35,7 @@ const FALLBACK_QUIET_ALPHA: float = 0.6
 const THEME_EDITOR: StringName = &"Editor"
 const THEME_ICONS: StringName = &"EditorIcons"
 const THEME_STYLES: StringName = &"EditorStyles"
+const THEME_TREE: StringName = &"Tree"
 const THEME_FONTS: StringName = &"EditorFonts"
 
 
@@ -142,6 +143,34 @@ static func panel_box() -> StyleBox:
 			flat.set_border_width_all(0)
 		return box
 	return field_box()
+
+
+## What a selected row wears in Godot's own lists (the Scene dock, any Tree): the editor's selected-row
+## fill, with no border and with the same margins as a field box, so a card line neither gains an
+## outline nor changes size when it is selected. `focused` asks for the slightly stronger fill a row
+## shows under the cursor while its list holds the keyboard. Godot draws a focused list's selection as
+## an outline with no fill, so that style is never used here: the fill of the plain selected row is.
+static func selected_row_box(focused: bool = true) -> StyleBox:
+	var margins: StyleBox = field_box()
+	var picked: StyleBox = typed_box(&"hovered_selected" if focused else &"selected", THEME_TREE)
+	var flat: StyleBoxFlat = (picked.duplicate() as StyleBoxFlat) if picked is StyleBoxFlat and (picked as StyleBoxFlat).draw_center else null
+	if flat == null:
+		flat = StyleBoxFlat.new()
+		var fill: Color = accent()
+		fill.a = 0.55 if focused else 0.3
+		flat.bg_color = fill
+		flat.set_corner_radius_all(int(px(3.0)))
+	flat.set_border_width_all(0)
+	flat.content_margin_left = margins.get_content_margin(SIDE_LEFT)
+	flat.content_margin_top = margins.get_content_margin(SIDE_TOP)
+	flat.content_margin_right = margins.get_content_margin(SIDE_RIGHT)
+	flat.content_margin_bottom = margins.get_content_margin(SIDE_BOTTOM)
+	return flat
+
+
+## The text colour a selected row of Godot's lists reads in, or the ordinary ink where there is no editor.
+static func selected_row_ink() -> Color:
+	return _colour(&"font_selected_color", THEME_TREE, ink())
 
 
 ## The height of one Inspector row's field.

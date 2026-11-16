@@ -76,6 +76,15 @@ var _notes: Array = []
 ## The cards whose play mark is lit (the ones sounding right now), and the mark buttons drawn, by position.
 var _lit: PackedInt32Array = PackedInt32Array()
 var _marks: Dictionary = {}
+## Which cards are selected, by index. Selecting is a view, like folding: it is never stored in the data,
+## it follows its cards through a move, and an outside change to the list (an undo) clears it.
+var _selected: Dictionary = {}
+## The card a Shift+click measures its run from: the one last clicked or Ctrl+clicked.
+var _anchor: int = -1
+## Each card's line and title as drawn right now, by index, so a selection can be painted in place
+## instead of rebuilding the list under the cursor (which would also lose the keyboard focus).
+var _lines: Dictionary = {}
+var _titles: Dictionary = {}
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -85,6 +94,10 @@ func _init(spec: Dictionary = {}) -> void:
 	for key: Variant in spec:
 		_spec[str(key)] = spec[key]
 	_schema = EventSheetCardSchemas.schema_for(_spec)
+	# The list holds the keyboard once a card is clicked, so Ctrl+C, Ctrl+V, Ctrl+D and Delete reach it.
+	focus_mode = Control.FOCUS_CLICK
+	focus_entered.connect(_paint_selection)
+	focus_exited.connect(_paint_selection)
 	_build_chrome()
 	_rebuild()
 
@@ -101,6 +114,8 @@ func set_value(cards: Array) -> void:
 		if card is Dictionary:
 			_cards.append((card as Dictionary).duplicate(true))
 	_unfolded.clear()
+	_selected.clear()
+	_anchor = -1
 	_rebuild()
 
 
@@ -168,6 +183,70 @@ func edited_object() -> Object:
 ## The footer the schema built, or null. The owner refreshes it when the list changes underneath it.
 func footer() -> Control:
 	return _footer
+
+
+# ── Selecting cards ─────────────────────────────────────────────────────────────────────────────
+# A selection is a view. Click selects one card, Shift+click the run from the last click, Ctrl+click
+# adds or takes one out; the list holds the keyboard from then on so the keys below act on it.
+
+
+## Selects by a gesture: "click" (this card alone), "shift" (the run from the anchor to this card) or
+## "ctrl" (this card added or taken out). Nothing is written to the list and nothing is announced.
+func select_card(index: int, mode: String = "click") -> void:
+	if index < 0 or index >= _cards.size():
+		return
+	match mode:
+		"shift":
+			if _anchor < 0 or _anchor >= _cards.size():
+				_anchor = index
+			_selected.clear()
+			for walked: int in range(mini(_anchor, index), maxi(_anchor, index) + 1):
+				_selected[walked] = true
+		"ctrl":
+			if _selected.has(index):
+				_selected.erase(index)
+			else:
+				_selected[index] = true
+			_anchor = index
+		_:
+			_selected.clear()
+			_selected[index] = true
+			_anchor = index
+	_paint_selection()
+	if is_inside_tree() and not has_focus():
+		grab_focus()
+
+
+## The selected cards' positions, in list order.
+func selected_cards() -> Array:
+	var chosen: Array = _selected.keys()
+	chosen.sort()
+	return chosen
+
+
+func clear_selection() -> void:
+	_selected.clear()
+	_anchor = -1
+	_paint_selection()
+
+
+## Paints every card's line in place: the selected ones in the fill Godot's lists select with.
+func _paint_selection() -> void:
+	for index: Variant in _lines:
+		_paint_line(int(index))
+
+
+## One card's line, selected or not. The selected fill is stronger while the list holds the keyboard.
+func _paint_line(index: int) -> void:
+	var line: PanelContainer = _lines.get(index) as PanelContainer
+	if line == null or not is_instance_valid(line) or index >= _cards.size():
+		return
+	var chosen: bool = _selected.has(index)
+	line.add_theme_stylebox_override("panel", EventSheetLookStyle.selected_row_box(has_focus()) if chosen else EventSheetLookStyle.field_box())
+	var title: Label = _titles.get(index) as Label
+	if title != null and is_instance_valid(title):
+		var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, _cards[index])
+		title.add_theme_color_override("font_color", EventSheetLookStyle.selected_row_ink() if chosen else (EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet()))
 
 
 func set_editable(flag: bool) -> void:
@@ -245,6 +324,10 @@ func _index_order() -> Array:
 ## The fold map read against a new order (new index -> old index, -1 for a card that is new).
 func _refold(order: Array) -> void:
 	_unfolded = EventSheetCardSchemas.remapped_folds(_unfolded, order)
+	# The selection travels with its cards the same way, and so does the card a run is measured from.
+	_selected = EventSheetCardSchemas.remapped_folds(_selected, order)
+	var anchor_now: int = order.find(_anchor)
+	_anchor = anchor_now if _anchor >= 0 and anchor_now >= 0 and _selected.has(anchor_now) else -1
 
 
 ## Switch one card on or off. Absent means on, so switching a card back on leaves the file exactly
@@ -408,6 +491,7 @@ func _on_paste_all() -> void:
 		return
 	_cards = pasted
 	_unfolded.clear()
+	clear_selection()
 	_commit()
 
 
@@ -486,6 +570,8 @@ func _rebuild() -> void:
 		stale.queue_free()
 	_notes.clear()
 	_marks.clear()
+	_lines.clear()
+	_titles.clear()
 	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
@@ -528,6 +614,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	# A panel keeps a click unless it is told to pass it on; the card behind this line is what a right
 	# click (its menu), a click (its selection) and a drag (its place in the list) are meant for.
 	line.mouse_filter = Control.MOUSE_FILTER_PASS
+	_lines[index] = line
 	var inside: HBoxContainer = HBoxContainer.new()
 	line.add_child(inside)
 	var open: bool = bool(_unfolded.get(index, false))
@@ -556,6 +643,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	title.text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
 	title.add_theme_font_override("font", EventSheetLookStyle.bold_font())
 	title.add_theme_color_override("font_color", EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet())
+	_titles[index] = title
 	inside.add_child(title)
 	var badge_text: String = EventSheetCardSchemas.card_badge(entry, card)
 	var badge: Label = Label.new()
@@ -566,6 +654,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	badge.visible = not badge_text.is_empty()
 	inside.add_child(badge)
 	header.add_child(line)
+	_paint_line(index)
 	if _marks_wanted():
 		var mark: Button = EventSheetLookStyle.icon_button(&"Play", "▶", EventSheetL10n.translate("Play this card alone."))
 		mark.pressed.connect(func() -> void: _on_mark_pressed(index))
@@ -1205,8 +1294,18 @@ class _CardRow:
 		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT:
-			_drawer.open_card_menu(_index, Vector2i(get_screen_position() + (event as InputEventMouseButton).position))
+		var click: InputEventMouseButton = event as InputEventMouseButton
+		if click == null or not click.pressed:
+			return
+		if click.button_index == MOUSE_BUTTON_LEFT:
+			_drawer.select_card(_index, "shift" if click.shift_pressed else ("ctrl" if click.is_command_or_control_pressed() else "click"))
+			accept_event()
+		elif click.button_index == MOUSE_BUTTON_RIGHT:
+			# Like Godot's own lists, a right click on a card outside the selection selects it first, so the
+			# menu that opens is about what was clicked.
+			if not _drawer.selected_cards().has(_index):
+				_drawer.select_card(_index, "click")
+			_drawer.open_card_menu(_index, Vector2i(get_screen_position() + click.position))
 			accept_event()
 
 	func _get_drag_data(_position: Vector2) -> Variant:
