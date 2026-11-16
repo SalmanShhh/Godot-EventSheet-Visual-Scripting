@@ -129,9 +129,17 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	# is read and added after whatever draws the field itself - Godot's plain one or one of ours.
 	var under_field: Array[Control] = []
 	var handled: bool = _parse_field(_object, type, name, hint_string, under_field, _hint_type)
+	var spans: bool = notes_span_row(hint_string)
 	for note: Control in under_field:
-		add_property_editor(name, widgets().NoteRow.new(note), true)
+		add_property_editor(name, widgets().NoteRow.new(note, "", spans), true)
 	return handled
+
+
+## Whether the notes under a property take the whole row rather than the value column. A card list
+## carries a paragraph of explanation, and in half the Inspector it wraps a dozen lines down; every
+## other property's note is a short line that belongs under its field.
+static func notes_span_row(hint_string: String) -> bool:
+	return str(parse_drawer_hint(hint_string).get("drawer", "")) == "cards"
 
 
 func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string: String, under_field: Array[Control], hint_type: int = PROPERTY_HINT_NONE) -> bool:

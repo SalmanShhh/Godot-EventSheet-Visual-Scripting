@@ -220,10 +220,12 @@ class NoteRow:
 	var _content: Control = null
 	## The words in the label column; empty for a note that sits under its field with none.
 	var _row_label: String = ""
+	## A note that is a paragraph rather than a line gives up the label column and spans the whole row.
 
-	func _init(content: Control = null, row_label: String = "") -> void:
+	func _init(content: Control = null, row_label: String = "", full_width: bool = false) -> void:
 		_content = content
 		_row_label = row_label
+		draw_label = label_wanted(full_width)
 		selectable = false
 		read_only = true
 		if _content != null:
@@ -233,6 +235,10 @@ class NoteRow:
 
 	func _follow_content() -> void:
 		visible = _content == null or _content.visible
+
+	## Whether the row keeps its label column: a paragraph asked to span the row does not.
+	static func label_wanted(full_width: bool) -> bool:
+		return not full_width
 
 	## The property this row is tied to once the Inspector has built it: none. The Inspector ties a row to the
 	## property it sits beside, and a row tied to a property shows that property's revert arrow (or, when the
