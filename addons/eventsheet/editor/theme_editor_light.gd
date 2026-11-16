@@ -75,6 +75,16 @@ func _mode_button(text: String, group: ButtonGroup, light: bool) -> Button:
 	button.text = text
 	button.toggle_mode = true
 	button.button_group = group
+	# The chosen side reads as pressed in every editor theme, the way Godot's own toggle buttons do.
+	var chosen: StyleBoxFlat = StyleBoxFlat.new()
+	var accent: Color = EventSheetPopupUI.accent_color()
+	chosen.bg_color = accent.lightened(0.55) if editor_is_light() else accent.darkened(0.35)
+	chosen.set_corner_radius_all(3)
+	chosen.set_content_margin_all(EventSheetPalette.scaled_f(5.0))
+	for state: String in ["pressed", "hover_pressed"]:
+		button.add_theme_stylebox_override(state, chosen)
+	for ink_state: String in ["font_pressed_color", "font_hover_pressed_color"]:
+		button.add_theme_color_override(ink_state, Color.BLACK if editor_is_light() else Color.WHITE)
 	button.tooltip_text = EventSheetL10n.translate("Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.")
 	button.pressed.connect(func() -> void: set_preview_light(light))
 	return button
