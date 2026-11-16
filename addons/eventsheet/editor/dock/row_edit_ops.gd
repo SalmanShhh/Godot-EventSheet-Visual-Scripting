@@ -474,6 +474,9 @@ func _context_row_is_disabled() -> bool:
 func _toggle_context_row_enabled() -> void:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
 		return
+	if _dock._context_row.source_resource is CustomBlockRow:
+		_dock._refuse_block_disable()
+		return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Toggle Row Enabled", func() -> bool:
 		if _dock._context_row.source_resource is EventRow:
 			var event_row: EventRow = _dock._context_row.source_resource as EventRow

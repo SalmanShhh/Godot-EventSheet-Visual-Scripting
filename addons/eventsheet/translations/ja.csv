@@ -10920,3 +10920,5 @@ Showing the cards of %s.,%s のカードを表示しています。
 No sheet in this project plays %s.,このプロジェクトに %s を再生するシートはありません。
 Find what plays this,これを再生するものを探す
 "There is no file at %s, so no sheet was opened.","%s にファイルがないため、シートを開きませんでした。"
+A block cannot be disabled. Delete it to stop it writing its line.,ブロックは無効にできません。行を書き出さないようにするには、ブロックを削除してください。
+"This block is marked disabled, but it still runs. Delete it to stop it writing its line.",このブロックは無効と記録されていますが、実際には実行されます。行を書き出さないようにするには、ブロックを削除してください。

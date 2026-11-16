@@ -10920,3 +10920,5 @@ Showing the cards of %s.,Mostrando las cartas de %s.
 No sheet in this project plays %s.,Ninguna hoja de este proyecto reproduce %s.
 Find what plays this,Buscar qué lo reproduce
 "There is no file at %s, so no sheet was opened.","No hay ningún archivo en %s, así que no se abrió ninguna hoja."
+A block cannot be disabled. Delete it to stop it writing its line.,Un bloque no se puede desactivar. Elimínalo para que deje de escribir su línea.
+"This block is marked disabled, but it still runs. Delete it to stop it writing its line.","Este bloque está marcado como desactivado, pero se sigue ejecutando. Elimínalo para que deje de escribir su línea."

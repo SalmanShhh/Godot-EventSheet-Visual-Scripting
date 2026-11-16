@@ -5458,11 +5458,13 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			)
 		]
 	# Everything a block has to say about itself is the quiet amber state, and the words are the strip's:
-	# what its kind says is wrong with its fields.
+	# what its kind says is wrong with its fields, and that a block marked disabled still runs.
 	var quiet: Array[Dictionary] = []
 	var problem: String = kind.validate(block) if kind != null else ""
 	if not problem.is_empty():
 		quiet.append({"family": FINDINGS_BLOCK, "message": problem})
+	if not block.enabled:
+		quiet.append({"family": FINDINGS_BLOCK, "message": EventSheetL10n.translate("This block is marked disabled, but it still runs. Delete it to stop it writing its line.")})
 	# A preload of a file the project does not have wears the quiet red state; the words are the strip's.
 	if block.kind_id == "preload":
 		var about_block: Array[Dictionary] = []

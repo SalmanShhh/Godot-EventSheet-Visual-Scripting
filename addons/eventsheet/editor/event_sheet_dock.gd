@@ -5474,10 +5474,15 @@ func _toggle_selected_rows_enabled() -> void:
 	if _viewport == null or _current_sheet == null:
 		return
 	var targets: Array[Resource] = []
+	var blocks: int = 0
 	for row_data: EventRowData in _active_view().get_selected_rows():
-		if row_data != null and row_data.source_resource != null:
+		if row_data != null and row_data.source_resource is CustomBlockRow:
+			blocks += 1
+		elif row_data != null and row_data.source_resource != null:
 			targets.append(row_data.source_resource)
 	if targets.is_empty():
+		if blocks > 0:
+			_refuse_block_disable()
 		return
 	var changed: bool = _perform_undoable_sheet_edit("Toggle Row Enabled", func() -> bool:
 		for target: Resource in targets:
@@ -5487,6 +5492,14 @@ func _toggle_selected_rows_enabled() -> void:
 	if changed:
 		_refresh_after_edit()
 		_mark_dirty("Toggled %d row(s)." % targets.size())
+		if blocks > 0:
+			_refuse_block_disable()
+
+
+## A block writes its line whether or not a flag says otherwise, so the keys that switch a row off
+## leave a block alone and say so, in the status bar's refusal voice.
+func _refuse_block_disable() -> void:
+	_set_status(EventSheetL10n.translate("A block cannot be disabled. Delete it to stop it writing its line."), true)
 
 
 ## Alt+Up/Down: moves the selected row past its flat neighbor (reuses the drag machinery).

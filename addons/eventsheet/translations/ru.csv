@@ -10920,3 +10920,5 @@ Showing the cards of %s.,Показаны карточки %s.
 No sheet in this project plays %s.,Ни один лист этого проекта не запускает %s.
 Find what plays this,"Найти, что это запускает"
 "There is no file at %s, so no sheet was opened.","По пути %s нет файла, поэтому лист не открыт."
+A block cannot be disabled. Delete it to stop it writing its line.,"Блок нельзя отключить. Удалите его, чтобы он перестал записывать свою строку."
+"This block is marked disabled, but it still runs. Delete it to stop it writing its line.","Этот блок помечен как отключённый, но всё равно выполняется. Удалите его, чтобы он перестал записывать свою строку."

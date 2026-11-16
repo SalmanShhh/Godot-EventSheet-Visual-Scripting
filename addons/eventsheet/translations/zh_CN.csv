@@ -10920,3 +10920,5 @@ Showing the cards of %s.,正在显示 %s 的卡片。
 No sheet in this project plays %s.,此项目中没有表播放 %s。
 Find what plays this,查找谁在播放它
 "There is no file at %s, so no sheet was opened.","%s 处没有文件，因此没有打开工作表。"
+A block cannot be disabled. Delete it to stop it writing its line.,代码块无法禁用。请删除它，让它不再写出自己的那一行。
+"This block is marked disabled, but it still runs. Delete it to stop it writing its line.",此代码块被标记为已禁用，但它仍会运行。请删除它，让它不再写出自己的那一行。
