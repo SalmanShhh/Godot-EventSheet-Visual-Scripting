@@ -2062,6 +2062,7 @@ static func builtin_action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.provider_id = descriptor.provider_id
 	action.ace_id = ace_id
 	action.params = params.duplicate(true)
+	action.folds_literals = true
 	action.codegen_template = str(descriptor.codegen_template)
 	if action.codegen_template.contains("{uid}"):
 		action.codegen_template = action.codegen_template.replace("{uid}", str(load("res://addons/eventsheet/editor/event_sheet_dock.gd").call("_fresh_uid_token")))

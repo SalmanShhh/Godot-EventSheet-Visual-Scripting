@@ -4502,6 +4502,7 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary, startin
 			condition.provider_id = definition.provider_id
 			condition.ace_id = definition.id
 			condition.params = values.duplicate()
+			condition.folds_literals = true
 			var expression: String = EventSheetConditionCodegen.generate_condition(condition).replace("{uid}", PREVIEW_UID)
 			return "" if expression.strip_edges().is_empty() else "if %s:" % expression
 		ACEDefinition.ACEType.ACTION:
@@ -4509,6 +4510,7 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary, startin
 			action.provider_id = definition.provider_id
 			action.ace_id = definition.id
 			action.params = values.duplicate()
+			action.folds_literals = true
 			return EventSheetActionCodegen.generate_action(action).strip_edges().replace("{uid}", PREVIEW_UID)
 	# An expression (and a trigger's parameters) has no statement of its own - the template with
 	# the values in it IS what the row contributes to whatever line encloses it.

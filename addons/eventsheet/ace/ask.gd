@@ -328,6 +328,7 @@ static func proposal_events(rows: Array, definitions: Array, uid_source: Callabl
 			action.provider_id = definition.provider_id
 			action.ace_id = definition.id
 			action.params = params
+			action.folds_literals = true
 			action.codegen_template = _baked_template(definition, uid_source)
 			current.actions.append(action)
 		else:
@@ -335,6 +336,7 @@ static func proposal_events(rows: Array, definitions: Array, uid_source: Callabl
 			condition.provider_id = definition.provider_id
 			condition.ace_id = definition.id
 			condition.params = params
+			condition.folds_literals = true
 			condition.codegen_template = _baked_template(definition, uid_source)
 			current.conditions.append(condition)
 	return events

@@ -952,6 +952,10 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
 	condition.ace_id = definition.id
 	condition.negated = negated
 	condition.params = _resolve_definition_params(definition, params)
+	# A row placed now writes a plain number where the template only guards it (`>= 2.0`, not
+	# `>= maxf(2.0, 0.001)`). The compiler decides from the value each time it writes the line. A row read
+	# from a file keeps writing the line the file had until it is edited here and this builds its replacement.
+	condition.folds_literals = true
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	condition.codegen_template = _baked_template_for(definition)
 	# And the reading beside it, for the same reason: a row must still say what it was written as
@@ -978,6 +982,7 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	action.provider_id = definition.provider_id
 	action.ace_id = definition.id
 	action.params = _resolve_definition_params(definition, params)
+	action.folds_literals = true
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	action.codegen_template = _baked_template_for(definition)
 	# A pop into a local over a typed list (`Array[Vector2i]`) types the local, so the type check and
