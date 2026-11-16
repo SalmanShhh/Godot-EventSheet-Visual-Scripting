@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: trying a Juice Player's list in the editor is honest about what it plays, and puts everything back
+
+Play under the list now plays what Godot can play for real (a shake, a punch, a tweened property and, new, a Sound card, heard through the editor's own audio), shows the waits and the two time cards (Hitstop, Slowmo) as time, and names what it skips: a flash, a zoom and the screen effects are drawn by the running game, a signal runs your own code and another Juice Player runs its own list. Debug view gains one line under the timeline for each card saying which of those it is. Everything a preview moves is written down before it starts, and now includes every property a Tween Property card names (it used to put back only the object's position, rotation, scale and colour); it is put back on Stop, on Restore, at the end of each pass and when the editor saves or runs the scene, so a scene saved in the middle of a preview never keeps a half-played value. Two new lines under the buttons: Repeat plays the list again each time it ends and reads the list as it is then, so a number you change is the number the next pass uses; Try at strength plays at any strength, and is the same number the toolbar's "at" box sets. The toolbar box no longer writes the Juice Player's saved Strength.
+
 ### Changed: the Juice Player's play buttons sit under the list they play
 
 The strip with the head line (how many cards and how long the beat is), Play, Stop, Skip, Restore, Debug view, Save as file and Load from file used to sit at the very top of the Inspector, above even the Acts On field. It now sits directly under the cards and the Add card button, and its head line counts the list as you edit it instead of only when the node is first selected. The buttons and what they do are the same.

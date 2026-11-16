@@ -1674,6 +1674,23 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 		written["scale"] = (base["scale"] as Vector2) * (1.0 + swell)
 	return written
 
+## What the editor can show of a card's word: "felt" when it plays for real (a shake, a punch, a
+## tweened property and a sound), "time" when the editor shows only its length (a wait, a loop word,
+## and the two that change the game's time), and "skipped:<why>" for the rest, with the reason in
+## words. One answer for the Inspector's play buttons, Debug view and the guide.
+## @ace_hidden
+static func editor_kind(word: String) -> String:
+	match word:
+		"shake", "punch", TWEEN_PROPERTY, SOUND:
+			return "felt"
+		PAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK, "hitstop", "slowmo":
+			return "time"
+		EMIT_SIGNAL:
+			return "skipped:a signal runs the game's own code"
+		PLAY_PLAYER:
+			return "skipped:another player runs its own list"
+	return "skipped:the running game draws it"
+
 ## The name one card answers to: what it was called in the list, or its own word when it was never
 ## named. THE ONE PLACE a label is derived, so every row addresses cards identically.
 func _label_of(card: Dictionary) -> String:

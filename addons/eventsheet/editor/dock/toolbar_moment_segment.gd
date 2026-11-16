@@ -212,8 +212,8 @@ func activate(kind: String) -> bool:
 	var strip: Control = _strip_for(player)
 	if strip == null or not strip.has_method(kind):
 		return false
-	if kind == "play" and _strength != null:
-		player.set("strength", float(_strength.value))
+	if kind == "play" and _strength != null and strip.has_method("set_try_strength"):
+		strip.call("set_try_strength", float(_strength.value))
 	strip.call(kind)
 	return true
 

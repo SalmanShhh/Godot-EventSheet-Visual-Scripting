@@ -1291,7 +1291,24 @@ static func _player_lines() -> PackedStringArray:
 		"\t\twritten[\"position\"] = (base[\"position\"] as Vector2) + offset",
 		"\tif base.get(\"scale\") is Vector2 and not is_zero_approx(swell):",
 		"\t\twritten[\"scale\"] = (base[\"scale\"] as Vector2) * (1.0 + swell)",
-		"\treturn written"
+		"\treturn written",
+		"",
+		"## What the editor can show of a card's word: \"felt\" when it plays for real (a shake, a punch, a",
+		"## tweened property and a sound), \"time\" when the editor shows only its length (a wait, a loop word,",
+		"## and the two that change the game's time), and \"skipped:<why>\" for the rest, with the reason in",
+		"## words. One answer for the Inspector's play buttons, Debug view and the guide.",
+		"## @ace_hidden",
+		"static func editor_kind(word: String) -> String:",
+		"\tmatch word:",
+		"\t\t\"shake\", \"punch\", TWEEN_PROPERTY, SOUND:",
+		"\t\t\treturn \"felt\"",
+		"\t\tPAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK, \"hitstop\", \"slowmo\":",
+		"\t\t\treturn \"time\"",
+		"\t\tEMIT_SIGNAL:",
+		"\t\t\treturn \"skipped:a signal runs the game's own code\"",
+		"\t\tPLAY_PLAYER:",
+		"\t\t\treturn \"skipped:another player runs its own list\"",
+		"\treturn \"skipped:the running game draws it\""
 	])
 
 

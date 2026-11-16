@@ -9,20 +9,28 @@
 # nothing here is emitted, and an exported game neither ships this file nor knows it existed.
 #
 # HOW PLAYING IN THE EDITOR WORKS. The pack script is not a `@tool` script, so its instance methods
-# do not run in the editor at all - but its STATICS do, and the pack publishes two: the plan of a
-# list (when each card starts and how long it lasts) and a sample of what the object would be doing
-# at one moment of it. That is the same opt-in contract the Tools-menu behaviour preview reads, so a
-# pack ships one pure function and both doors show the same picture. The host's rest state is
-# captured before a play and put back when it ends, so the scene's saved bytes are never touched.
+# do not run in the editor at all - but its STATICS do, and the pack publishes what the preview needs:
+# the plan of a list (when each card starts and how long it lasts), a sample of what the object would
+# be doing at one moment of it, what the editor can show of each kind of card, and what a Sound card
+# is made of. That is the same opt-in contract the Tools-menu behaviour preview reads, so a pack ships
+# pure functions and both doors show the same picture.
+#
+# WHAT IT TOUCHES IS WRITTEN DOWN FIRST. Before the first frame the preview records every property it
+# may move (the four every play writes and each property a Tween Property card names), and it puts
+# them back on Stop, on Restore, at the end of a pass and before the editor saves the scene, so a
+# scene's saved bytes are never the middle of a preview.
 @tool
 # No class_name on purpose: Create Node lists every named Node class, and an editor-only strip has no
-# business in that list. It is reached by path, from the Inspector plugin and the toolbar segment.
+# business in that list. It is reached by path, from the card drawer and the toolbar segment.
 extends VBoxContainer
 
 ## The file that says where the pack whose statics the preview reads lives (the code file, or the old
 ## name's file in a project holding the old copy). By PATH: naming the class here would compile the pack
 ## into every editor boot, in projects that hold no feedback player at all.
 const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
+
+## What the preview writes down, restores and lights marks with. By path for the same reason.
+const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
 
 ## The moment file's own class, written when a list is saved out. Also by path, and also for the
 ## same reason.
@@ -32,10 +40,8 @@ const MOMENT_RESOURCE_PATH: String = "res://eventsheet_addons/moment_resource/mo
 ## timing keys is named in the report instead of being written down half.
 const FILE_KEYS: PackedStringArray = ["verb", "amount", "effect", "seconds"]
 
-## How often the preview samples, and the properties it is allowed to write. The rest state is
-## captured for these and only these, so a preview can never leave anything else moved.
+## How often the preview samples.
 const FRAME_SECONDS: float = 1.0 / 30.0
-const PREVIEWED: PackedStringArray = ["position", "rotation", "scale", "modulate"]
 
 ## The timeline's own size, and the ground it is drawn on.
 const TIMELINE_HEIGHT: int = 74
@@ -43,9 +49,13 @@ const TIMELINE_BACKGROUND: Color = Color(0.11, 0.12, 0.15, 1.0)
 const TIMELINE_BAR: Color = Color(0.48, 0.62, 0.92, 0.85)
 const TIMELINE_HEAD: Color = Color(0.96, 0.72, 0.32, 0.95)
 
+## The most sounds a preview plays at once.
+const PREVIEW_VOICES: int = 4
+
 var _player: Node = null
 var _head: Label = null
 var _timeline: Control = null
+var _lines: VBoxContainer = null
 var _timer: Timer = null
 var _time: float = 0.0
 var _base: Dictionary = {}
@@ -53,6 +63,26 @@ var _dialog: EditorFileDialog = null
 var _saving: bool = true
 ## The card list this strip sits under, or null.
 var _drawer: Control = null
+## Which part of the list the preview plays, and where it starts: the whole list, one card, or a card
+## and everything under it. Kept so Repeat can play the same part again.
+var _mode: String = "all"
+var _from: int = 0
+## The cards this pass plays and where they sit in the live list.
+var _run_list: Array = []
+var _run_positions: PackedInt32Array = PackedInt32Array()
+## What each card of the live list did in the last pass, by position, for Debug view.
+var _did: Dictionary = {}
+## Repeat: when a pass ends, read the live list again and play the same part again.
+var _repeat: bool = false
+var _repeat_box: CheckBox = null
+## Set while a pass has ended and Repeat is about to start the next one, so a Stop in between wins.
+var _repeat_pending: bool = false
+## The strength to try the beat at. Untouched, the preview plays at the player's own strength.
+var _try_box: SpinBox = null
+## Which plan entries have already started a sound this pass.
+var _sounded: Dictionary = {}
+var _voices: Array[AudioStreamPlayer] = []
+var _lit: PackedInt32Array = PackedInt32Array()
 
 
 ## The strip for one player. The argument defaults so the class stays constructible with a bare
@@ -68,9 +98,21 @@ func _init(player: Node = null, drawer: Control = null) -> void:
 	_head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	add_child(_head)
 	add_child(_build_buttons())
+	add_child(_build_try_rows())
 	_timeline = _build_timeline()
 	add_child(_timeline)
+	_lines = VBoxContainer.new()
+	_lines.hide()
+	add_child(_lines)
 	refresh()
+	if _player != null:
+		load(PREVIEW_PATH).call("register", _player, self)
+
+
+func _exit_tree() -> void:
+	if _player != null and is_instance_valid(_player):
+		stop()
+		load(PREVIEW_PATH).call("unregister", _player, self)
 
 
 ## The head line and the timeline, re-read from the player as it is edited.
@@ -79,6 +121,8 @@ func refresh() -> void:
 	_head.text = head_text(list.size(), seconds_text(duration_of(list)))
 	if _timeline != null:
 		_timeline.queue_redraw()
+	if _lines != null and _lines.visible:
+		_show_lines()
 
 
 ## The head line over the list: how many juice cards it holds and how long the beat lasts. One card
@@ -114,8 +158,8 @@ static func seconds_text(seconds: float) -> String:
 
 
 ## The list as the steps a moment file can hold, plus the cards it cannot: {steps, left_behind}. A
-## card that uses a timing key is left behind by NAME rather than written down without its timing,
-## because a file that plays everything at once is not the beat the list was.
+## card that uses a key a file cannot hold is left behind by NAME rather than written down without it,
+## because a file that plays everything at once, or a sound it cannot play, is not the beat the list was.
 static func file_steps_of(list: Array) -> Dictionary:
 	var carried: Array = []
 	var left_behind: PackedStringArray = PackedStringArray()
@@ -153,6 +197,52 @@ func _build_buttons() -> Control:
 		button.pressed.connect(entry[1] as Callable)
 		row.add_child(button)
 	return row
+
+
+## Repeat and Try at strength: two lines that belong to the strip alone. They are view state, never
+## an export and never saved, so a scene's bytes are not touched by tuning with them.
+func _build_try_rows() -> Control:
+	var rows: VBoxContainer = VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 2)
+	var repeat_row: HBoxContainer = HBoxContainer.new()
+	var repeat_label: Label = Label.new()
+	repeat_label.text = EventSheetL10n.translate("Repeat")
+	repeat_label.custom_minimum_size = Vector2(EventSheetPalette.scaled(108), 0.0)
+	repeat_row.add_child(repeat_label)
+	_repeat_box = CheckBox.new()
+	_repeat_box.text = EventSheetL10n.translate("plays again each time it ends")
+	_repeat_box.tooltip_text = EventSheetL10n.translate("Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.")
+	_repeat_box.toggled.connect(func(pressed: bool) -> void: _repeat = pressed)
+	repeat_row.add_child(_repeat_box)
+	rows.add_child(repeat_row)
+	var strength_row: HBoxContainer = HBoxContainer.new()
+	var strength_label: Label = Label.new()
+	strength_label.text = EventSheetL10n.translate("Try at strength")
+	strength_label.custom_minimum_size = Vector2(EventSheetPalette.scaled(108), 0.0)
+	strength_row.add_child(strength_label)
+	_try_box = SpinBox.new()
+	_try_box.min_value = 0.0
+	_try_box.max_value = 4.0
+	_try_box.step = 0.05
+	_try_box.value = 1.0
+	_try_box.tooltip_text = EventSheetL10n.translate("What the preview scales every amount by. The same number the toolbar's \"at\" box sets.")
+	strength_row.add_child(_try_box)
+	rows.add_child(strength_row)
+	return rows
+
+
+## The strength the preview plays at: the one tried here (or set from the toolbar) times the player's own,
+## the way the running node scales a play by the row's strength and then by its own.
+func _strength() -> float:
+	var tried: float = float(_try_box.value) if _try_box != null else 1.0
+	var own: Variant = _player.get("strength") if _player != null else 1.0
+	return maxf(tried, 0.0) * maxf(float(own) if own != null else 1.0, 0.0)
+
+
+## Sets the strength to try at, from the toolbar's box. One number, so the two places cannot disagree.
+func set_try_strength(value: float) -> void:
+	if _try_box != null:
+		_try_box.set_value_no_signal(value)
 
 
 ## The timeline: a bar per card at the time it starts, holds as the gaps between them, and the head
@@ -193,41 +283,109 @@ func _draw_timeline(canvas: Control) -> void:
 		canvas.draw_line(Vector2(head, 0.0), Vector2(head, size.y), TIMELINE_HEAD, 2.0)
 
 
+## Debug view: the timeline, and under it one line per card saying what the editor does with it (or what
+## it did in the last pass): played for real, shown as time, or skipped and why.
 func _on_debug() -> void:
 	if _timeline != null:
 		_timeline.visible = not _timeline.visible
 		_timeline.queue_redraw()
+	if _lines != null:
+		_lines.visible = _timeline.visible
+		if _lines.visible:
+			_show_lines()
 
 
-## Start sampling. The host's rest state is written down first, so Stop and Restore have something
-## exact to put back rather than a guess at what the numbers were.
+## One line per card, in list order, in the words the guide uses.
+func _show_lines() -> void:
+	for stale: Node in _lines.get_children():
+		_lines.remove_child(stale)
+		stale.queue_free()
+	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
+	var list: Array = steps_of(_player)
+	for position: int in range(list.size()):
+		if not (list[position] is Dictionary):
+			continue
+		var card: Dictionary = list[position] as Dictionary
+		var title: String = str(card.get("label", card.get("verb", "")))
+		var said: String = str(_did.get(position, "")) if _did.has(position) else what_editor_does(card, pack)
+		var line: Label = Label.new()
+		line.text = "%s - %s" % [title, said]
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		line.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		_lines.add_child(line)
+
+
+## What the editor does with one card, in words: played for real, shown as time, skipped and why, or
+## switched off. Asks the pack, so the strip, Debug view and the guide say one thing.
+static func what_editor_does(card: Dictionary, pack: Script) -> String:
+	if not bool(card.get("active", true)):
+		return EventSheetL10n.translate("switched off")
+	var kind: String = str(pack.call("editor_kind", str(card.get("verb", "")))) if pack != null else "skipped:"
+	if kind == "felt":
+		return EventSheetL10n.translate("played")
+	if kind == "time":
+		return EventSheetL10n.translate("shown as time")
+	return EventSheetL10n.translate("not shown in the editor: %s") % kind.trim_prefix("skipped:")
+
+
+## Start sampling the whole list. The host's rest state is written down first, so Stop and Restore have
+## something exact to put back rather than a guess at what the numbers were.
 ##
 ## PUBLIC, because these four doors have TWO homes: the buttons under the list here, and the
 ## toolbar's Moment segment while a row about this player is selected. One preview, driven from
 ## either place, so the two can never show different pictures of the same beat.
 func play() -> void:
+	play_part("all", 0)
+
+
+## Play one card, a card and everything under it, or the whole list ("one", "from_here", "all").
+func play_part(mode: String, index: int) -> void:
 	restore()
+	_mode = mode
+	_from = index
+	_begin_pass()
+
+
+## Starts one pass: the part of the LIVE list asked for, the properties it may move written down.
+func _begin_pass() -> void:
 	var target: Node = _host()
 	if target == null:
 		return
+	var preview: Script = load(PREVIEW_PATH) as Script
+	var list: Array = steps_of(_player)
+	_run_positions = preview.call("sub_indices", list, _from, _mode)
+	_run_list = []
+	for taken: Variant in preview.call("sub_list", list, _from, _mode):
+		var card: Dictionary = taken as Dictionary
+		if _mode == "one":
+			# A card played on its own is played whether or not its box is ticked: pressing its mark is the ask.
+			card = card.duplicate()
+			card.erase("active")
+		_run_list.append(card)
 	_base = {}
-	for property: String in PREVIEWED:
+	for property: String in preview.call("watched_properties", _run_list):
 		var value: Variant = target.get(property)
 		if value != null:
 			_base[property] = value
 	_time = 0.0
+	_sounded.clear()
+	_did = _describe_pass(list)
 	if _timer == null:
 		_timer = Timer.new()
 		_timer.wait_time = FRAME_SECONDS
 		_timer.timeout.connect(_tick)
 		add_child(_timer)
 	_timer.start()
+	_show_marks(PackedInt32Array())
 
 
 func stop() -> void:
 	if _timer != null:
 		_timer.stop()
+	_repeat_pending = false
 	restore()
+	_show_marks(PackedInt32Array())
 	if _timeline != null:
 		_timeline.queue_redraw()
 
@@ -235,7 +393,7 @@ func stop() -> void:
 ## Jump to the end of the plan - the same door the running node's Skip To End is, in the one form an
 ## editor can honestly offer: the last frame of the beat, drawn.
 func skip() -> void:
-	_time = duration_of(steps_of(_player))
+	_time = duration_of(_run_list if not _run_list.is_empty() else steps_of(_player))
 	_tick()
 
 
@@ -245,6 +403,9 @@ func restore() -> void:
 		for property: Variant in _base:
 			target.set(str(property), _base[property])
 	_base = {}
+	for voice: AudioStreamPlayer in _voices:
+		if is_instance_valid(voice):
+			voice.stop()
 
 
 func _tick() -> void:
@@ -253,16 +414,105 @@ func _tick() -> void:
 	if target == null or pack == null:
 		stop()
 		return
-	var params: Dictionary = {"steps": steps_of(_player), "strength": float(_player.get("strength"))}
+	var params: Dictionary = {"steps": _run_list, "strength": _strength()}
 	var written: Variant = pack.call("editor_preview_sample", params, _base, _time)
 	if written is Dictionary:
 		for property: Variant in written as Dictionary:
 			target.set(str(property), (written as Dictionary)[property])
+	_play_sounds_due(pack)
+	_show_marks(load(PREVIEW_PATH).call("playing_at", _run_list, _run_positions, _time))
 	_time += FRAME_SECONDS
 	if _timeline != null:
 		_timeline.queue_redraw()
-	if _time > duration_of(steps_of(_player)) + FRAME_SECONDS:
-		stop()
+	if _time > duration_of(_run_list) + FRAME_SECONDS:
+		_end_pass()
+
+
+## The end of a pass: everything put back, and then either the end or, with Repeat ticked, the next pass
+## read from the list as it is now.
+func _end_pass() -> void:
+	if _timer != null:
+		_timer.stop()
+	restore()
+	_show_marks(PackedInt32Array())
+	if _lines != null and _lines.visible:
+		_show_lines()
+	if _timeline != null:
+		_timeline.queue_redraw()
+	if _repeat and is_inside_tree():
+		_repeat_pending = true
+		get_tree().create_timer(FRAME_SECONDS * 4.0).timeout.connect(_repeat_now)
+
+
+## Plays the next pass of a Repeat, unless Stop (or a new Play) has come in the meantime.
+func _repeat_now() -> void:
+	if _repeat_pending and is_instance_valid(self) and _repeat:
+		_repeat_pending = false
+		_begin_pass()
+
+
+## Starts the sound of each Sound card whose plan entry has just been reached. A voice is one of a few kept
+## under the strip, so nothing is added to the scene and a long list does not make a node per sound.
+func _play_sounds_due(pack: Script) -> void:
+	var plan: Array = pack.call("schedule_of", _run_list)
+	for plan_index: int in range(plan.size()):
+		var entry: Dictionary = plan[plan_index] as Dictionary
+		var card: Dictionary = entry.get("card") as Dictionary
+		if str(card.get("verb", "")) != "sound" or _sounded.has(plan_index) or _time < float(entry.get("at", 0.0)):
+			continue
+		_sounded[plan_index] = true
+		var settings: Dictionary = pack.call("sound_settings", card, _strength(), randf(), randf())
+		var path: String = str(settings.get("stream", ""))
+		var stream: AudioStream = load(path) as AudioStream if not path.is_empty() and ResourceLoader.exists(path) else null
+		if stream == null:
+			continue
+		var voice: AudioStreamPlayer = _free_voice()
+		var bus: String = str(settings.get("bus", "Master"))
+		voice.bus = bus if AudioServer.get_bus_index(bus) >= 0 else "Master"
+		voice.stream = stream
+		voice.volume_db = float(settings.get("volume_db", 0.0))
+		voice.pitch_scale = float(settings.get("pitch_scale", 1.0))
+		voice.play()
+
+
+func _free_voice() -> AudioStreamPlayer:
+	for voice: AudioStreamPlayer in _voices:
+		if is_instance_valid(voice) and not voice.playing:
+			return voice
+	if _voices.size() < PREVIEW_VOICES:
+		var fresh: AudioStreamPlayer = AudioStreamPlayer.new()
+		add_child(fresh)
+		_voices.append(fresh)
+		return fresh
+	return _voices[0]
+
+
+## What each card of the live list did in the pass that has just started, by position: the cards this
+## pass does not play say so.
+func _describe_pass(list: Array) -> Dictionary:
+	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
+	var did: Dictionary = {}
+	for position: int in range(list.size()):
+		if not (list[position] is Dictionary):
+			continue
+		if _run_positions.has(position):
+			var card: Dictionary = list[position] as Dictionary
+			if _mode == "one":
+				card = card.duplicate()
+				card.erase("active")
+			did[position] = what_editor_does(card, pack)
+		else:
+			did[position] = EventSheetL10n.translate("not in this pass")
+	return did
+
+
+## Tells the card list which cards to light a play mark on.
+func _show_marks(lit: PackedInt32Array) -> void:
+	if lit == _lit:
+		return
+	_lit = lit
+	if _drawer != null and is_instance_valid(_drawer) and _drawer.has_method("set_marks"):
+		_drawer.call("set_marks", lit)
 
 
 ## The object this player is under - the one a beat is felt on.

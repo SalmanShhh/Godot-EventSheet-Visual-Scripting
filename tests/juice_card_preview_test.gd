@@ -23,6 +23,10 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _strip_door_pins() and ok
 	ok = _footer_pins() and ok
+	ok = _editor_kind_pins() and ok
+	ok = _sub_list_pins() and ok
+	ok = _restore_list_pins() and ok
+	ok = _pass_pins() and ok
 	return ok
 
 
@@ -88,3 +92,105 @@ static func _footer_pins() -> bool:
 	plain.free()
 	player.free()
 	return result
+
+
+## What the editor does with each kind: plays it for real, shows it as time, or skips it with a
+## reason. One pack static, so the strip, Debug view and the guide say the same thing.
+static func _editor_kind_pins() -> bool:
+	var script: Script = _pack()
+	var asked: bool = _has_static(script, "editor_kind")
+	var answers: Dictionary = {}
+	for word: String in ["shake", "punch", "tween_property", "sound", "pause", "hold_until", "hitstop", "slowmo", "emit_signal", "play_player"]:
+		answers[word] = str(script.call("editor_kind", word)) if asked else "(no editor_kind)"
+	return SUPPORT.pins(TEST_NAME, [
+		["the pack publishes what the editor can show of each kind", asked, true],
+		["a shake, a punch, a tween and a sound are played for real",
+			[answers["shake"], answers["punch"], answers["tween_property"], answers["sound"]], ["felt", "felt", "felt", "felt"]],
+		["waits and time changes are shown as time",
+			[answers["pause"], answers["hold_until"], answers["hitstop"], answers["slowmo"]], ["time", "time", "time", "time"]],
+		["a signal and another player are skipped, and say why",
+			[str(answers["emit_signal"]).begins_with("skipped:"), str(answers["play_player"]).begins_with("skipped:")], [true, true]]
+	])
+
+
+## One card, from a card down, or all: the list the preview walks, cut from the live list without
+## copying a card the user did not ask to hear.
+static func _sub_list_pins() -> bool:
+	var exists: bool = ResourceLoader.exists(PREVIEW_PATH)
+	var preview: Script = load(PREVIEW_PATH) as Script if exists else null
+	var list: Array = [
+		{"verb": "shake", "amount": 0.4, "seconds": 0.2, "label": "Rattle"},
+		{"verb": "pause", "seconds": 0.1},
+		{"verb": "punch", "amount": 1.2, "seconds": 0.3, "label": "Swell"},
+		{"verb": "flash", "amount": 1.0, "seconds": 0.05, "active": false}
+	]
+	var one: Array = preview.call("sub_list", list, 2, "one") if _has_static(preview, "sub_list") else []
+	var down: Array = preview.call("sub_list", list, 1, "from_here") if _has_static(preview, "sub_list") else []
+	var all: Array = preview.call("sub_list", list, 0, "all") if _has_static(preview, "sub_list") else []
+	return SUPPORT.pins(TEST_NAME, [
+		["the preview lives in one file the plugin loads by path", exists, true],
+		["playing one card plays that card alone", _labels(one), ["Swell"]],
+		["playing from a card plays it and every card under it", _labels(down), ["pause", "Swell", "flash"]],
+		["playing all is the list itself", all.size(), 4]
+	])
+
+
+static func _labels(list: Array) -> Array:
+	var labels: Array = []
+	for entry: Variant in list:
+		var card: Dictionary = entry as Dictionary
+		labels.append(str(card.get("label", card.get("verb", ""))))
+	return labels
+
+
+## Everything a preview may move is written down first, and the list of what it wrote down is the
+## one the strip puts back on Stop, on Restore, at the end of a pass and before a save.
+static func _restore_list_pins() -> bool:
+	var preview: Script = load(PREVIEW_PATH) as Script if ResourceLoader.exists(PREVIEW_PATH) else null
+	var watched: PackedStringArray = PackedStringArray()
+	if _has_static(preview, "watched_properties"):
+		watched = preview.call("watched_properties", [
+			{"verb": "shake", "amount": 0.4, "seconds": 0.2},
+			{"verb": "tween_property", "effect": "self_modulate", "amount": 0.5, "seconds": 0.2}
+		])
+	return SUPPORT.pins(TEST_NAME, [
+		["the preview writes down the four it always moved and every tweened property",
+			watched, PackedStringArray(["position", "rotation", "scale", "modulate", "self_modulate"])]
+	])
+
+
+## What a pass of the preview lights and says: the plan's cards map back to their places in the live
+## list (a card played from the middle lights its own mark, not the first), a Pause is never lit, and
+## the strip says each card's fate in the same words the pack's kinds give. The plugin asks the preview
+## helper to put everything back before a save.
+static func _pass_pins() -> bool:
+	var preview: Script = load(PREVIEW_PATH) as Script
+	var list: Array = [
+		{"verb": "shake", "amount": 0.4, "seconds": 0.2},
+		{"verb": "pause", "seconds": 0.1},
+		{"verb": "punch", "amount": 1.2, "seconds": 0.3},
+		{"verb": "flash", "amount": 1.0, "seconds": 0.05, "active": false}
+	]
+	var from_two: Array = preview.call("sub_list", list, 2, "from_here")
+	var positions: PackedInt32Array = preview.call("sub_indices", list, 2, "from_here")
+	var one_position: PackedInt32Array = preview.call("sub_indices", list, 1, "one")
+	var all_lit: PackedInt32Array = preview.call("playing_at", list, preview.call("sub_indices", list, 0, "all"), 0.05)
+	var later_lit: PackedInt32Array = preview.call("playing_at", list, preview.call("sub_indices", list, 0, "all"), 0.25)
+	var down_lit: PackedInt32Array = preview.call("playing_at", from_two, positions, 0.1)
+	var strip: Script = load(STRIP_PATH) as Script
+	var pack: Script = _pack()
+	var plugin: Script = load("res://addons/eventforge/plugin.gd") as Script
+	return SUPPORT.pins(TEST_NAME, [
+		["a card played from the middle keeps its place in the live list", positions, PackedInt32Array([2, 3])],
+		["one card is its own place", one_position, PackedInt32Array([1])],
+		["the first card is lit at the start of the whole list", all_lit, PackedInt32Array([0])],
+		["a Pause is never lit and the card after it is, once it starts", later_lit, PackedInt32Array([2])],
+		["a card played from the middle lights its own place", down_lit, PackedInt32Array([2])],
+		["the strip says a shake is played", strip.call("what_editor_does", {"verb": "shake"}, pack), "played"],
+		["a hitstop is shown as time", strip.call("what_editor_does", {"verb": "hitstop"}, pack), "shown as time"],
+		["a switched off card says so", strip.call("what_editor_does", {"verb": "shake", "active": false}, pack), "switched off"],
+		["a signal is not shown, and says why",
+			str(strip.call("what_editor_does", {"verb": "emit_signal"}, pack)).begins_with("not shown in the editor: "), true],
+		["the plugin puts the previews back before the editor saves or runs a scene",
+			[_has_method(plugin, "_apply_changes"), _has_method(plugin, "_save_external_data")], [true, true]]
+	])

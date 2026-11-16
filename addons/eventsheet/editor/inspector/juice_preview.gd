@@ -97,27 +97,38 @@ static func pack_script() -> Script:
 	return load(str(load(NAMES_PATH).pack_path())) as Script
 
 
-## The strip for one object, registered so the plugin can restore it and a card's mark can find it.
+## A strip for one object, registered so the plugin can restore it and a card's mark can find it. An
+## object may have more than one (the one under its list and the toolbar's own).
 static func register(object: Object, strip: Control) -> void:
-	_live[object.get_instance_id()] = strip
+	var key: int = object.get_instance_id()
+	if not _live.has(key):
+		_live[key] = []
+	(_live[key] as Array).append(strip)
 
 
-static func unregister(object: Object) -> void:
-	_live.erase(object.get_instance_id())
+static func unregister(object: Object, strip: Control) -> void:
+	var key: int = object.get_instance_id()
+	if _live.has(key):
+		(_live[key] as Array).erase(strip)
+		if (_live[key] as Array).is_empty():
+			_live.erase(key)
 
 
-## The strip playing for an object, or null.
+## The strip under the list of an object, or null. The toolbar's own strip has no list under it and is
+## not the one a card's mark means.
 static func strip_for(object: Object) -> Control:
-	var found: Variant = _live.get(object.get_instance_id())
-	return found as Control if found != null and is_instance_valid(found) else null
+	for strip: Variant in _live.get(object.get_instance_id(), []):
+		if strip != null and is_instance_valid(strip) and (strip as Control).get("_drawer") != null:
+			return strip as Control
+	return null
 
 
 ## Puts everything every live preview moved back, now. The plugin calls it before a scene is saved or run.
 static func restore_all() -> void:
-	for key: Variant in _live.keys():
-		var strip: Variant = _live[key]
-		if strip != null and is_instance_valid(strip) and (strip as Control).has_method("stop"):
-			(strip as Control).call("stop")
+	for strips: Variant in _live.values():
+		for strip: Variant in strips as Array:
+			if strip != null and is_instance_valid(strip) and (strip as Control).has_method("stop"):
+				(strip as Control).call("stop")
 
 
 ## What a card does when the card list's play mark or its menu is pressed: finds the strip that plays

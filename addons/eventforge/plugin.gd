@@ -40,6 +40,8 @@ const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/
 const INSPECTOR_HANDLES_PATH: String = "res://addons/eventsheet/editor/inspector/handle_plugin.gd"
 const FEEDBACK_PLAYER_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_inspector_plugin.gd"
 const FEEDBACK_CARD_SCHEMA_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_card_schema.gd"
+## The helper behind the Juice Player's play buttons, asked before a save only if it was ever loaded.
+const JUICE_PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
 ## The name the Juice Player's export marker asks its card vocabulary for. Spelled here as a
 ## literal rather than read off the schema file: naming that class would compile it, and the ACE
 ## reflection behind it, into every editor boot to register one callable.
@@ -285,9 +287,24 @@ func _get_unsaved_status(_for_scene: String) -> String:
 ## Every sheet with unsaved edits is saved the way its own Save button saves it; one that cannot be
 ## written is named in the Output panel and on the sheet's status line instead of being skipped.
 func _save_external_data() -> void:
+	_put_previews_back()
 	if _event_sheet_editor == null:
 		return
 	load(UNSAVED_SHEETS_PATH).save_dirty_tabs(_event_sheet_editor)
+
+
+## Godot calls this before it saves or runs a scene. A Juice Player's preview in the Inspector may be
+## in the middle of moving the object it plays on, so everything it moved is put back first and the
+## saved scene never holds half a preview.
+func _apply_changes() -> void:
+	_put_previews_back()
+
+
+## Stops every live Juice Player preview and restores what it moved. Only if the preview helper was ever
+## loaded: a session that never played a list pays nothing for it.
+func _put_previews_back() -> void:
+	if ResourceLoader.has_cached(JUICE_PREVIEW_PATH):
+		load(JUICE_PREVIEW_PATH).call("restore_all")
 
 
 ## Connects (or disconnects) the FileSystem dock's tree and file list clicks. Only a left click does
