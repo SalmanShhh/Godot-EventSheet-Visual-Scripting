@@ -64,6 +64,16 @@ static func run() -> bool:
 	ok = SUPPORT.check(P, "and says the same line",
 		editor._status_label.text.contains("A block cannot be disabled"), true) and ok
 
+	# The refusal is reachable: a right-click on a block row opens the row's own menu (the same one every
+	# plain row of the sheet gets), and its Disable Row item is the door that ends in that line.
+	editor._context_menus._build_row_context_menu(editor._context_row)
+	var menu: PopupMenu = editor._row_context_menu
+	var items: PackedStringArray = PackedStringArray()
+	for item_index: int in menu.item_count:
+		items.append(menu.get_item_text(item_index))
+	ok = SUPPORT.check(P, "a block row's menu offers Disable Row", items.has("Disable Row"), true) and ok
+	ok = SUPPORT.check(P, "and the clipboard items beside it", [items.has("Cut"), items.has("Copy"), items.has("Delete")], [true, true, true]) and ok
+
 	# A row that can be switched off still can.
 	var comment_index: int = _index_of_source(viewport, comment)
 	viewport._select_row(comment_index, -1)
