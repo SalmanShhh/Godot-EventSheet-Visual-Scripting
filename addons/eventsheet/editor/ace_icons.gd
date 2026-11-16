@@ -368,6 +368,40 @@ static func path_icon(path: String) -> Texture2D:
 	return _path_icon_cache[icon_hint] as Texture2D
 
 
+## The icon file a script class names with `@icon`, following the bases of a class that names none, or ""
+## when it reaches an engine class (or nothing) first. Read off the project's class list, which is where the
+## editor reads it from too. Cached per class and dropped with the other icon reads.
+static func script_class_icon_path(class_name_text: String) -> String:
+	if class_name_text.is_empty() or ClassDB.class_exists(class_name_text):
+		return ""
+	if _script_class_cache.has(class_name_text):
+		return str(_script_class_cache[class_name_text])
+	var entries: Dictionary = {}
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		entries[str(entry.get("class", ""))] = entry
+	var found: String = ""
+	var walk: String = class_name_text
+	for _step: int in range(32):
+		if not entries.has(walk):
+			break
+		var entry: Dictionary = entries[walk]
+		if not str(entry.get("icon", "")).is_empty():
+			found = str(entry["icon"])
+			break
+		walk = str(entry.get("base", ""))
+	_script_class_cache[class_name_text] = found
+	return found
+
+
+static var _script_class_cache: Dictionary = {}
+
+
+## The icon of a script class (a pack's behaviour, a project's own class), or null where it names none.
+static func script_class_icon(class_name_text: String) -> Texture2D:
+	var path: String = script_class_icon_path(class_name_text)
+	return path_icon(path) if not path.is_empty() else null
+
+
 ## res:// icon path -> its texture, or null where the path resolves to nothing. Dropped with the
 ## other filesystem-derived reads when the editor reports a scan, so a pack dropped into the
 ## project (or an icon replaced in place) is picked up without a restart.
@@ -377,6 +411,7 @@ static var _path_icon_cache: Dictionary = {}
 ## Drops the resolved icons. The editor's filesystem ping calls this; nothing else needs to.
 static func clear_icon_cache() -> void:
 	_path_icon_cache.clear()
+	_script_class_cache.clear()
 
 
 static var _kind_dot_cache: Dictionary = {}

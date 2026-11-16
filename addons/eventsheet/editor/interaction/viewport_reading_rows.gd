@@ -2745,7 +2745,9 @@ static func class_icon_for(object_label: String, class_map: Dictionary) -> Textu
 	var class_name_str: String = str(class_map.get(trimmed, ""))
 	if class_name_str.is_empty():
 		return null
-	return EventSheetACEIcons.editor_icon(class_name_str)
+	var engine_icon: Texture2D = EventSheetACEIcons.editor_icon(class_name_str)
+	# A pack's behaviour (a script class) is no class of the editor theme's: it wears the icon its script names.
+	return engine_icon if engine_icon != null else EventSheetACEIcons.script_class_icon(class_name_str)
 
 
 ## The class name a node declaration shows after its value ("ProgressBar"), or "" when the
@@ -3650,6 +3652,8 @@ static func object_icon(entry: Dictionary, class_map: Dictionary, sheet_source_p
 	var class_name_str: String = str(entry.get("class", "")).strip_edges()
 	if not class_name_str.is_empty() and ClassDB.class_exists(class_name_str):
 		return EventSheetACEIcons.editor_icon(class_name_str)
+	if not class_name_str.is_empty() and EventSheetACEIcons.script_class_icon(class_name_str) != null:
+		return EventSheetACEIcons.script_class_icon(class_name_str)
 	return class_icon_for(str(entry.get("label", "")), class_map)
 
 
