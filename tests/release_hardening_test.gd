@@ -163,8 +163,8 @@ static func run() -> bool:
 	var failed_save: Error = theme_editor.save_preset("res://no_such_folder_for_presets/preset.tres")
 	all_passed = _check("a preset written into a missing folder fails", failed_save != OK, true) and all_passed
 	all_passed = _check("and the failure is said in the window's foot and on the status bar as an error",
-		[theme_editor._note.text.begins_with("Theme preset could not be saved: preset.tres"), theme_editor._note.tone,
-			str(status_dock.get("last_text")).begins_with("Theme preset could not be saved: preset.tres"), status_dock.get("last_is_error")],
+		[theme_editor._note.text.begins_with("Theme could not be saved: preset.tres"), theme_editor._note.tone,
+			str(status_dock.get("last_text")).begins_with("Theme could not be saved: preset.tres"), status_dock.get("last_is_error")],
 		[true, "error", true, true]) and all_passed
 	theme_editor._dock = null
 	status_dock.free()

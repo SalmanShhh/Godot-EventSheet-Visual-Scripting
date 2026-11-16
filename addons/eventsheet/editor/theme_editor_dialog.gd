@@ -15,6 +15,10 @@ const PREVIEW_MAX_WIDTH: float = 960.0
 ## What a condition line's words need beside the margin, padding and columns: the trigger's icon, its chip
 ## padding and "On process" at the sheet's size.
 const PREVIEW_WORDS_ROOM: float = 220.0
+## Reached by path, at the moment a theme file is asked about: what may be written and where a copy goes.
+const FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
+## The one shape a quick question takes (Save, Discard, Cancel).
+const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 
 var _dialog: ConfirmationDialog = null
 var _preview_viewport: EventSheetViewport = null
@@ -33,10 +37,32 @@ var _in_file: Label = null
 var _note: EventSheetPopupUI.StateNote = null
 var _focus_name: String = ""
 var _focus_resource: Resource = null
+## The theme file the window edits ("" for Match Editor, or a look that has no file yet), whether it was
+## opened on Match Editor, and what the window's own undo list holds. `_clean_depth` is how many steps the
+## list held when the file was last opened or saved: the window has changes while its list is any other length.
+var _source_path: String = ""
+var _from_editor: bool = true
+var _edits: Array = []
+var _redone: Array = []
+var _clean_depth: int = 0
+var _save_button: Button = null
+var _save_as_button: Button = null
+var _revert_button: Button = null
+var _theme_field: OptionButton = null
+var _close_prompt: ConfirmationDialog = null
 
 
-## Opens the theme editor seeded from the dock's active style (or defaults).
+## Opens the theme editor seeded from the dock's active style (or defaults). A window already open with
+## changes asks what to do with them before it takes the other theme.
 func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
+	if _dialog != null and _dialog.visible and is_changed():
+		_dock = dock
+		_ask_about_changes(func() -> void: _open_fresh(dock, base_style), Callable())
+		return
+	_open_fresh(dock, base_style)
+
+
+func _open_fresh(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_prepare(dock, base_style)
 	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(EventSheetPalette.scaled(1240 + roundi(preview_min_width(_working_style) - PREVIEW_BASE_WIDTH)), EventSheetPalette.scaled(640)))
 
@@ -48,15 +74,40 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 func _prepare(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_dock = dock
 	_working_style = duplicate_style(base_style)
+	_source_path = _files().file_of(base_style)
+	_from_editor = base_style == null
 	var existed: bool = _dialog != null
 	_ensure_dialog()
-	if existed:
+	_adopt(existed)
+
+
+## Makes the working copy the theme now open (its file is already named in `_source_path`): a clean undo
+## list, a form and a preview over it. `rebuild` is false only when the form was just built.
+func _adopt(rebuild: bool) -> void:
+	_edits.clear()
+	_redone.clear()
+	_clean_depth = 0
+	if rebuild:
 		_focus_name = ""
 		_rebuild_detail_form()
-	_note.say(EventSheetL10n.translate("Apply writes this look into the open sheet only"), EventSheetPopupUI.TONE_WARNING)
+	_note.say(opening_note(_dock), EventSheetPopupUI.TONE_WARNING)
 	_seed_quick_style()
 	_fit_preview_width()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_refresh_state()
+
+
+static func _files() -> GDScript:
+	return load(FILES_PATH)
+
+
+## What the window says about Apply when it opens. A sheet saved as a resource takes the look into itself;
+## a script cannot, so a theme kept in a file is remembered for it in the project instead.
+static func opening_note(dock: Control) -> String:
+	var path_value: Variant = dock.get("_current_sheet_path") if dock != null else null
+	if path_value is String and (path_value as String).get_extension() == "gd":
+		return EventSheetL10n.translate("Apply keeps a saved theme for this script in this project. Nothing is written into the script.")
+	return EventSheetL10n.translate("Apply writes this look into the open sheet only")
 
 
 ## The preview's width, before the display scale, that gives a condition line the room to say "On process"
@@ -560,11 +611,17 @@ func _ensure_dialog() -> void:
 	_dialog = parts["window"]
 	_dialog.confirmed.connect(_apply_to_sheet)
 	_note = parts["note"]
-	# Save As Preset… sits between the note and the two closing buttons.
-	var save_button: Button = _dialog.add_button(EventSheetL10n.translate("Save As Preset…"), false, "save_preset")
-	save_button.get_parent().move_child(save_button, _note.get_index() + 1)
-	save_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_dialog.custom_action.connect(func(_action: StringName) -> void: _open_save_dialog())
+	# Revert, Save As and Save (or Save a Copy) sit between the note and the two closing buttons, the
+	# buttons that write nothing on the left of the ones that write the file.
+	_save_button = _dialog.add_button("", false, "save")
+	_save_as_button = _dialog.add_button(EventSheetL10n.translate("Save As…"), false, "save_as")
+	_revert_button = _dialog.add_button(EventSheetL10n.translate("Revert"), false, "revert")
+	for button: Button in [_save_button, _save_as_button, _revert_button]:
+		button.get_parent().move_child(button, _note.get_index() + 1)
+		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_dialog.custom_action.connect(_on_custom_action)
+	_dialog.canceled.connect(_on_window_closed)
+	_dialog.window_input.connect(_on_window_input)
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_preview_scroll = ScrollContainer.new()
@@ -577,7 +634,9 @@ func _ensure_dialog() -> void:
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Quick Style (whole-palette recolour) on top, then how the letters are SHAPED, then the
+	# The theme field first: which theme this window edits, and the way to another without closing it.
+	_build_theme_field(form)
+	# Quick Style (whole-palette recolour) next, then how the letters are SHAPED, then the
 	# per-token detail form below both.
 	_build_quick_style(form)
 	_build_reading_comfort(form)
@@ -671,18 +730,23 @@ func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Co
 ## refreshes the detail form + live preview.
 func _generate_quick_style() -> void:
 	var base: Color = _quick_base.color
+	var before: EventSheetEditorStyle = _working_style.duplicate(true) as EventSheetEditorStyle
 	EventSheetGodotTheme.apply(_working_style, base, base.darkened(0.15), base.darkened(0.25), _quick_accent.color, _quick_font.color)
+	_record_whole(before, _working_style)
 	_reset_to_default(_working_style, false)
 
 
 ## Restores the bundled default look - a clean starting point - or shows `style` afresh.
 func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null), reseed: bool = true) -> void:
-	_working_style = style
+	if style != _working_style:
+		_record_whole(_working_style, style)
+		restore_values(_working_style, style)
 	_rebuild_detail_form()
 	_fit_preview_width()
 	if reseed:
 		_seed_quick_style()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_refresh_state()
 
 
 ## (Re)builds the reflective per-token form into _detail_form, clearing any prior fields so
@@ -740,6 +804,7 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 		var row: HBoxContainer = EventSheetPopupUI.form_row(token_name.capitalize(), field)
 		row.get_child(0).auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		row.set_meta("token", token_name)
+		row.set_meta("style_id", style_resource.get_instance_id())
 		for part: Control in [row, row.get_child(0), field]:
 			part.mouse_entered.connect(_focus_token.bind(style_resource, token_name))
 		field.focus_entered.connect(_focus_token.bind(style_resource, token_name))
@@ -768,7 +833,9 @@ func _focus_token(style_resource: Resource, token_name: String) -> void:
 
 
 func _on_token_edited(style_resource: Resource, token_name: String, value: Variant) -> void:
+	var old_value: Variant = style_resource.get(token_name)
 	if apply_token(style_resource, token_name, value) and _preview_viewport != null:
+		_record_edit({"style": style_resource, "token": token_name, "from": old_value, "to": value})
 		# Rebuild the sample sheet so BOTH colour and STRUCTURAL tokens (row height, corner radii, lane
 		# widths, line thickness) show live - a plain repaint keeps the old cached layout.
 		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
@@ -789,31 +856,286 @@ func _repaint_personal() -> void:
 
 
 func _apply_to_sheet() -> void:
-	if _dock != null and _dock.has_method("apply_theme_style"):
-		_dock.call("apply_theme_style", _working_style.duplicate(true))
+	if _dock == null or not _dock.has_method("apply_theme_style"):
+		return
+	# A script cannot hold a look, so a theme kept in a saved file is remembered for it by that file;
+	# anything else is worn for the session.
+	if not _source_path.is_empty() and not is_changed() and _is_script_sheet() and _dock.has_method("load_theme_style_from_path"):
+		_dock.call("load_theme_style_from_path", _source_path)
+		return
+	_dock.call("apply_theme_style", _working_style.duplicate(true))
 
 
-## The editor's own save dialog, with one line at its foot naming the file a Save would replace.
-func _open_save_dialog() -> void:
+func _is_script_sheet() -> bool:
+	var path_value: Variant = _dock.get("_current_sheet_path") if _dock != null else null
+	return path_value is String and (path_value as String).get_extension() == "gd"
+
+
+# ── The file the window edits ─────────────────────────────────────────────────────────────────────
+
+
+## Whether the window holds changes the file does not: its undo list is not the length it had when the
+## file was opened or last saved.
+func is_changed() -> bool:
+	return _edits.size() != _clean_depth
+
+
+## The name the window gives the theme it edits: the file's, Match Editor while nothing is changed, or an
+## untitled theme once a look with no file has been changed.
+func theme_name() -> String:
+	if not _source_path.is_empty():
+		return _source_path.get_file()
+	if _from_editor and not is_changed():
+		return EventSheetL10n.translate("Match Editor")
+	return EventSheetL10n.translate("Untitled theme")
+
+
+func window_title() -> String:
+	var title: String = EventSheetL10n.translate("Theme Editor - %s") % theme_name()
+	if is_changed():
+		title = EventSheetL10n.translate("%s (changed)") % title
+	return title
+
+
+## The words on the button that writes the file: Save for a theme of the project's own, Save a Copy for a
+## starter or a demo (the plugin's own files are never written), nothing where there is no file yet.
+func save_button_text() -> String:
+	if _source_path.is_empty():
+		return ""
+	if _files().can_save_in_place(_source_path):
+		return EventSheetL10n.translate("Save")
+	return EventSheetL10n.translate("Save a Copy…")
+
+
+## What the question on closing says its main button does.
+func _commit_text() -> String:
+	var text: String = save_button_text()
+	return text if not text.is_empty() else EventSheetL10n.translate("Save As…")
+
+
+## Brings the title, the buttons and the theme field in line with what the window holds.
+func _refresh_state() -> void:
+	if _dialog == null:
+		return
+	_dialog.title = window_title()
+	var save_text: String = save_button_text()
+	_save_button.text = save_text
+	_save_button.visible = not save_text.is_empty()
+	_save_as_button.visible = not _files().is_shipped(_source_path)
+	_revert_button.disabled = not is_changed()
+	_sync_theme_field()
+
+
+# ── The window's own undo list ────────────────────────────────────────────────────────────────────
+
+
+func _record_edit(entry: Dictionary) -> void:
+	# A new step after undoing past the saved point leaves no way back to the saved state.
+	if _clean_depth > _edits.size():
+		_clean_depth = -1
+	_edits.append(entry)
+	_redone.clear()
+	_refresh_state()
+
+
+## A change to the whole palette (Generate Theme, Reset To Default): both sides are kept as copies.
+func _record_whole(before: EventSheetEditorStyle, after: EventSheetEditorStyle) -> void:
+	_record_edit({"whole": true, "from": before.duplicate(true), "to": after.duplicate(true)})
+
+
+func undo_edit() -> void:
+	if _edits.is_empty():
+		return
+	var entry: Dictionary = _edits.pop_back()
+	_redone.append(entry)
+	_step(entry, "from")
+
+
+func redo_edit() -> void:
+	if _redone.is_empty():
+		return
+	var entry: Dictionary = _redone.pop_back()
+	_edits.append(entry)
+	_step(entry, "to")
+
+
+## Puts one side of an undo step on the working theme and on what the window shows.
+func _step(entry: Dictionary, side: String) -> void:
+	if bool(entry.get("whole", false)):
+		restore_values(_working_style, entry[side] as Resource)
+		_rebuild_detail_form()
+		_fit_preview_width()
+	else:
+		var style: Resource = entry["style"]
+		style.set(str(entry["token"]), entry[side])
+		_show_value(style, str(entry["token"]), entry[side])
+	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	if not bool(entry.get("whole", false)):
+		_focus_token(entry["style"], str(entry["token"]))
+	_refresh_state()
+
+
+## Copies every stored value of `source` onto `target`, a block at a time, so the blocks keep the identity
+## the window's undo steps point at.
+static func restore_values(target: Resource, source: Resource) -> void:
+	for info: Dictionary in source.get_property_list():
+		var usage: int = int(info.get("usage", 0))
+		if not (usage & PROPERTY_USAGE_SCRIPT_VARIABLE and usage & PROPERTY_USAGE_STORAGE):
+			continue
+		var property_name: String = str(info["name"])
+		var value: Variant = source.get(property_name)
+		var current: Variant = target.get(property_name)
+		if value is Resource and current is Resource:
+			restore_values(current as Resource, value as Resource)
+		elif value is Resource:
+			target.set(property_name, (value as Resource).duplicate(true))
+		else:
+			target.set(property_name, value)
+
+
+## Shows a token's value in its swatch without editing it again.
+func _show_value(style: Resource, token_name: String, value: Variant) -> void:
+	for row: Node in _detail_form.find_children("*", "HBoxContainer", true, false):
+		if not row.has_meta("token") or str(row.get_meta("token")) != token_name or row.get_child_count() < 2:
+			continue
+		if int(row.get_meta("style_id", 0)) != style.get_instance_id():
+			continue
+		var field: Node = row.get_child(1)
+		if field is ColorPickerButton:
+			(field as ColorPickerButton).color = value
+		elif field is CheckBox:
+			(field as CheckBox).set_pressed_no_signal(bool(value))
+		elif field is SpinBox:
+			(field as SpinBox).set_value_no_signal(float(value))
+
+
+## Goes back to the file as it was last saved, or to the editor-matched look for Match Editor. Nothing is
+## written.
+func revert() -> void:
+	var base: EventSheetEditorStyle = null
+	if not _source_path.is_empty():
+		base = ResourceLoader.load(_source_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetEditorStyle
+	_working_style = duplicate_style(base)
+	_adopt(true)
+
+
+func _on_window_input(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or key.echo or not key.is_command_or_control_pressed():
+		return
+	# A text box that is being typed in keeps its own Ctrl+Z, and a spin box's number is typed the same way.
+	var focus: Control = _dialog.gui_get_focus_owner()
+	if focus is LineEdit and not (focus.get_parent() is SpinBox) and (focus as LineEdit).editable:
+		return
+	match key.keycode:
+		KEY_S:
+			_save_pressed()
+		KEY_Z:
+			if key.shift_pressed:
+				redo_edit()
+			else:
+				undo_edit()
+		KEY_Y:
+			redo_edit()
+		_:
+			return
+	_dialog.set_input_as_handled()
+
+
+func _on_custom_action(action: StringName) -> void:
+	match action:
+		&"save":
+			_save_pressed()
+		&"save_as":
+			_open_save_dialog()
+		&"revert":
+			revert()
+
+
+# ── Saving ────────────────────────────────────────────────────────────────────────────────────────
+
+
+## Save: a theme of the project's own is written where it is; a starter, a demo theme or a look with no file
+## asks where a new file goes.
+func _save_pressed() -> void:
+	if _files().can_save_in_place(_source_path):
+		save()
+	else:
+		_open_save_dialog()
+
+
+## Writes the theme the window opened. Every sheet wearing that file repaints.
+func save() -> Error:
+	var error: Error = _files().write_in_place(_source_path, _working_style)
+	if error == OK:
+		_clean_depth = _edits.size()
+		_refresh_state()
+	_report(error, _source_path)
+	return error
+
+
+## Writes the working theme to a NEW file and makes the window edit that file from then on. A copy of a
+## starter also puts the open sheet on the copy, so the sheet leaves the starter that stays as shipped.
+func save_preset(path: String) -> Error:
+	var from_shipped: bool = _files().is_shipped(_source_path)
+	var error: Error = _files().write_in_place(path, _working_style)
+	if error == OK:
+		_source_path = path
+		_from_editor = false
+		_clean_depth = _edits.size()
+		_refresh_state()
+		if from_shipped and _dock != null and _dock.has_method("load_theme_style_from_path"):
+			_dock.call("load_theme_style_from_path", path)
+	_report(error, path)
+	return error
+
+
+## Says how a write went, in the window's foot and on the status bar.
+func _report(error: Error, path: String) -> void:
+	var said: String = EventSheetL10n.translate("Theme saved: %s") % path.get_file() if error == OK \
+		else EventSheetL10n.translate("Theme could not be saved: %s (%s)") % [path.get_file(), error_string(error)]
+	if _note != null:
+		_note.say(said, EventSheetPopupUI.TONE_OK if error == OK else EventSheetPopupUI.TONE_ERROR)
+	if _dock != null and _dock.has_method("_set_status"):
+		_dock.call("_set_status", said, error != OK)
+
+
+## The editor's own save dialog, with one line at its foot naming the file a Save would replace. It starts
+## in the project's themes folder with a free name, or beside the theme being copied.
+func _open_save_dialog(then: Callable = Callable(), on_cancel: Callable = Callable()) -> void:
+	var shipped_source: bool = _files().is_shipped(_source_path)
+	var folder: String = _source_path.get_base_dir() if _files().can_save_in_place(_source_path) else EventSheetThemePresets.PROJECT_DIR
 	# The project's own themes folder is where a saved theme is listed from, so the dialog starts there.
 	# Saving is the moment a project asks for that folder; one made for a dialog that is then cancelled
 	# is taken away again.
-	var folder: String = EventSheetThemePresets.PROJECT_DIR
 	var made: bool = not DirAccess.dir_exists_absolute(folder) and DirAccess.make_dir_recursive_absolute(folder) == OK
+	var suggested: String = _files().copy_path(_source_path, folder) if not _source_path.is_empty() \
+		else _files().unique_path(folder, "my_theme.tres")
 	var browser: ConfirmationDialog = EventSheetPopupUI.browse_file(_dialog, PackedStringArray(["*.tres ; EventSheetEditorStyle"]),
-		func(path: String) -> void: save_preset(path), {"title": EventSheetL10n.translate("Save Theme Preset"), "save": true,
-			"size": Vector2i(720, 480), "dir": folder})
+		func(path: String) -> void: _save_chosen(path, then),
+		{"title": EventSheetL10n.translate("Save a Copy") if shipped_source else EventSheetL10n.translate("Save Theme As"),
+			"save": true, "size": Vector2i(720, 480), "dir": folder, "path": suggested})
 	if browser == null:
 		if made:
 			DirAccess.remove_absolute(folder)
 		return
-	if made:
-		browser.canceled.connect(func() -> void: DirAccess.remove_absolute(folder))
+	browser.canceled.connect(func() -> void:
+		if made:
+			DirAccess.remove_absolute(folder)
+		if on_cancel.is_valid():
+			on_cancel.call())
 	var reason: Label = Label.new()
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
 	browser.call("get_vbox").add_child(reason)
 	poll_save_note(browser, reason)
+
+
+## A file chosen in the save dialog: written, and the question that waited on it goes on.
+func _save_chosen(path: String, then: Callable) -> void:
+	var target: String = path if not path.get_extension().is_empty() else path + ".tres"
+	if save_preset(target) == OK and then.is_valid():
+		then.call()
 
 
 ## The dialog reports no signal when a file in its list is clicked, so `reason` is re-read on a short
@@ -832,14 +1154,138 @@ static func poll_save_note(browser: Window, reason: Label) -> Timer:
 	return poll
 
 
-## Saves the working style as a shareable preset .tres, and says how it went in the window's foot and
-## on the status bar. Returns OK on success.
-func save_preset(path: String) -> Error:
-	var error: Error = ResourceSaver.save(_working_style.duplicate(true), path)
-	var said: String = EventSheetL10n.translate("Theme preset saved: %s") % path.get_file() if error == OK \
-		else EventSheetL10n.translate("Theme preset could not be saved: %s (%s)") % [path.get_file(), error_string(error)]
-	if _note != null:
-		_note.say(said, EventSheetPopupUI.TONE_OK if error == OK else EventSheetPopupUI.TONE_ERROR)
-	if _dock != null and _dock.has_method("_set_status"):
-		_dock.call("_set_status", said, error != OK)
-	return error
+# ── Changes left in the window ────────────────────────────────────────────────────────────────────
+
+
+## Closing the window with changes asks Save / Discard / Cancel the way Godot asks for a changed scene.
+## True when it asked.
+func request_close() -> bool:
+	if not is_changed():
+		return false
+	_ask_about_changes(Callable(), Callable())
+	return true
+
+
+## The window was closed by its Close button, Esc or its title bar: with changes it comes back to ask.
+func _on_window_closed() -> void:
+	if is_changed():
+		_ask_about_changes(Callable(), func() -> void: _dialog.show())
+
+
+## Asks what to do with the changes before `then` (opening another theme, or nothing when the window is
+## closing). Save writes them first and goes on once they are written; Discard goes on without them;
+## Cancel runs `on_cancel` and stays.
+func _ask_about_changes(then: Callable, on_cancel: Callable) -> void:
+	if _close_prompt != null and is_instance_valid(_close_prompt):
+		return
+	var go_on: Callable = func() -> void:
+		if then.is_valid():
+			then.call()
+	_close_prompt = load(SMALL_PROMPT_PATH).open(_dock if _dock != null else _dialog, {
+		"title": EventSheetL10n.translate("Save changes to %s?") % theme_name(),
+		"say": EventSheetL10n.translate("The swatches you changed are not in the file yet."),
+		"note": EventSheetL10n.translate("Discard throws the changes away. Cancel keeps the window as it is."),
+		"glyph": "!",
+		"main": _commit_text(),
+		"danger": EventSheetL10n.translate("Discard"),
+		"on_main": func() -> void:
+			if _files().can_save_in_place(_source_path):
+				if save() == OK:
+					go_on.call()
+			else:
+				_open_save_dialog(go_on, on_cancel),
+		"on_danger": go_on,
+		"on_cancel": func() -> void:
+			if on_cancel.is_valid():
+				on_cancel.call(),
+	})
+
+
+# ── Another theme ─────────────────────────────────────────────────────────────────────────────────
+
+
+## Every theme the window can switch to, grouped the way the Sheet theme menu groups them: Match Editor,
+## the project's own, the demos, the starters. A theme open from anywhere else is listed too.
+func theme_choices() -> Array[Dictionary]:
+	var choices: Array[Dictionary] = [{"name": EventSheetL10n.translate("Match Editor"), "path": "", "group": ""}]
+	var listed: Array[Dictionary] = EventSheetThemePresets.list_presets()
+	var groups: Array = [
+		[EventSheetThemePresets.PROJECT_DIR, EventSheetL10n.translate("Your themes")],
+		["res://demo/", EventSheetL10n.translate("In this project")],
+		["res://addons/", EventSheetL10n.translate("Starters")],
+	]
+	for group: Array in groups:
+		for preset: Dictionary in listed:
+			if str(preset.get("path", "")).begins_with(str(group[0])):
+				choices.append({"name": str(preset.get("name", "")), "path": str(preset["path"]), "group": str(group[1])})
+	if not _source_path.is_empty():
+		var listed_here: bool = false
+		for choice: Dictionary in choices:
+			listed_here = listed_here or str(choice["path"]) == _source_path
+		if not listed_here:
+			choices.append({"name": _source_path.get_file(), "path": _source_path, "group": EventSheetL10n.translate("Open now")})
+	return choices
+
+
+func _build_theme_field(form: VBoxContainer) -> void:
+	_theme_field = OptionButton.new()
+	_theme_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_theme_field.item_selected.connect(func(index: int) -> void:
+		if not switch_to(str(_theme_field.get_item_metadata(index))):
+			_sync_theme_field())
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Theme"), _theme_field))
+	_fill_theme_field()
+
+
+func _fill_theme_field() -> void:
+	_theme_field.clear()
+	var group: String = ""
+	for choice: Dictionary in theme_choices():
+		if str(choice["group"]) != group:
+			group = str(choice["group"])
+			_theme_field.add_separator(group)
+		_theme_field.add_item(str(choice["name"]))
+		_theme_field.set_item_metadata(_theme_field.item_count - 1, str(choice["path"]))
+	_select_theme_field()
+
+
+## Selects the entry for the theme the window edits, and lists it first when it is not listed yet.
+func _sync_theme_field() -> void:
+	if _theme_field == null:
+		return
+	if not _select_theme_field():
+		_fill_theme_field()
+
+
+func _select_theme_field() -> bool:
+	for index: int in range(_theme_field.item_count):
+		if str(_theme_field.get_item_metadata(index)) == _source_path and not _theme_field.is_item_separator(index):
+			_theme_field.select(index)
+			return true
+	return false
+
+
+## Makes the window edit another theme ("" is Match Editor). With changes it asks first, and the answer
+## decides; true means the window switched right now.
+func switch_to(path: String) -> bool:
+	if path == _source_path and (not path.is_empty() or _from_editor):
+		return true
+	if not is_changed():
+		_switch_now(path)
+		return true
+	_ask_about_changes(func() -> void: _switch_now(path), func() -> void: _sync_theme_field())
+	return false
+
+
+func _switch_now(path: String) -> void:
+	var base: EventSheetEditorStyle = null
+	if not path.is_empty():
+		base = ResourceLoader.load(path) as EventSheetEditorStyle
+		if base == null:
+			_report(ERR_FILE_UNRECOGNIZED, path)
+			_sync_theme_field()
+			return
+	_working_style = duplicate_style(base)
+	_source_path = path
+	_from_editor = base == null
+	_adopt(true)
