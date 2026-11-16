@@ -190,7 +190,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `source_map_kind() -> String` | both | The tag line-to-row tooling sees (`"enum"`, default `"custom_block"`). |
 | `addable() -> bool` | both | Whether the generic Add surfaces offer this kind. Resource kinds return `false` (their classes have dedicated flows). |
 | `edit(dock, block) -> bool` | both | Open your own editor and return `true`, or return `false` for the generic schema dialog. |
-| `validate(block) -> String` | both | Optional live validation. Return a short problem description, or `""` when the block is fine. The message renders inline on the row as a red `⚠ <message>`, so a bad field is caught while authoring instead of at compile time. |
+| `validate(block) -> String` | both | Optional live validation. Return a short problem description, or `""` when the block is fine. The row wears the quiet amber state and the message is said in full in the strip under the selected row (nothing is painted into the row), so a bad field is caught while authoring instead of at compile time. Keep it to a short plain sentence or two. |
 
 `CustomBlockRow` itself has three stored properties: `kind_id`, `fields`, and `enabled`.
 
@@ -211,7 +211,7 @@ Reach for a resource kind only when you genuinely need a dedicated Resource clas
 - **Add ▾ menu**: every `addable()` kind is listed under its category; choosing it opens the schema dialog with defaults filled in.
 - **Command palette**: Godot's Command Palette (Ctrl+Shift+P) lists "Add <Title>…" for every addable kind present when the Add menu was built; the Add menu itself always lists them all.
 - **The schema dialog**: one field control per schema entry: a `LineEdit` per String (Enter applies), a `CheckBox` per bool, a `SpinBox` per int/float, an `OptionButton` for a String field carrying `options`, a Browse button beside a `resource_path` String, and a tint checkbox plus colour picker per `TYPE_COLOR`. Add mode inserts below the selection; edit mode (double-click the row) prefills and rewrites. Both apply through the undo system, so Ctrl+Z works.
-- **The row**: a kind badge (your `title`) plus your `summary()` text, rendered by the same virtualized viewport as everything else. Disabled state and selection behave like built-in rows.
+- **The row**: a kind badge (your `title`) plus your `summary()` text, rendered by the same virtualized viewport as everything else. Selection behaves like built-in rows. A block cannot be disabled: it writes its line whether or not `enabled` says otherwise, so Ctrl+/ leaves it alone and says why, and a block already saved as disabled still compiles and says in its amber note that it still runs.
 - **A custom editor when you outgrow the schema**: override `edit(dock, block)`, open anything you like, and return `true`. The registry dispatches every block edit, so your dialog is reached exactly the way the built-in enum dialog is.
 
 ---
@@ -565,7 +565,7 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray(["const SAVE_SCHEMA := %d" % int(block.fields.get("version", 1))])
 ```
 
-`validate` returning a non-empty String paints the message on the row while authoring, so a zero is caught before it reaches a player's save file.
+`validate` returning a non-empty String marks the row amber and says the message in the strip under it while authoring, so a zero is caught before it reaches a player's save file.
 
 ### 26. A pack dependency stated on the sheet
 
