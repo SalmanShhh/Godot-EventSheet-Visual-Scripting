@@ -34,6 +34,16 @@ const CHECK_UNKNOWN_LABEL := EventSheetFeedbackFindings.KIND_UNKNOWN_LABEL
 ## name (the new one or the old one), so a file that never writes either can never earn the finding.
 const PLAYER_WORDS: PackedStringArray = ["$FeedbackPlayer", "$JuicePlayer"]
 
+## The id a card that points at a node or a file that is not there is filed under.
+const CHECK_TARGET_MISSING := "juice-card-target-missing"
+
+## The reader that finds such a card in a saved scene. By path, so the first open of the editor does not
+## compile it.
+const TARGETS_PATH: String = "res://addons/eventsheet/editor/interaction/juice_card_targets.gd"
+
+## What a scene has to hold before it is worth reading: a saved card has this key.
+const CARD_WORD: String = "\"verb\"" 
+
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
 ## run and a test that registers it by hand all leave exactly one.
@@ -45,6 +55,30 @@ static func ensure_registered() -> void:
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	findings.append_array(report(scripts_naming_a_player()))
+	findings.append_array(card_findings(scenes_with_cards()))
+
+
+## Every scene of the project that holds a juice card, in path order. The substring sweep comes first, as
+## the other sections do, so a project with no cards pays one test per scene.
+static func scenes_with_cards() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for scene_path: String in EventSheetSceneConnections.scene_paths():
+		if _is_shipped(scene_path) or EventSheetProjectDoctor.is_in_skipped_folder(scene_path):
+			continue
+		if EventSheetProjectDoctor.source_of(scene_path).contains(CARD_WORD):
+			found.append(scene_path)
+	return found
+
+
+## The cards of these scenes that point at a node or a file that is not there, one finding each, in the
+## words of two short sentences. Pure over a list of scenes, so a test can hand it one.
+static func card_findings(scenes: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for scene_path: String in scenes:
+		for missing: Dictionary in load(TARGETS_PATH).missing_targets_in_scene(scene_path):
+			findings.append(_finding("warning", CHECK_TARGET_MISSING, scene_path,
+				"%s: %s" % [scene_path.get_file(), str(missing.get("message", ""))], str(missing.get("subject", ""))))
+	return findings
 
 
 ## Every script in the project that addresses a Juice Player, in path order. Excludes the
