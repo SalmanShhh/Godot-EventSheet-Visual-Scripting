@@ -10731,3 +10731,150 @@ Sheets with no theme of their own match the editor again.,"没有自选主题的
 Every sheet with no theme of its own now wears %s.,"所有没有自选主题的事件表现在都使用 %s。"
 Project theme: %s,"项目主题：%s"
 Edit in Theme Editor,"在主题编辑器中编辑"
+A fixed direction,固定方向
+"A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.","标签从当前显示的数字数到目标数字。数字可以是普通数字,也可以是游戏里的名称,例如 GameState.score。"
+A node,一个节点
+"A progress bar or slider glides to a value. The value is a plain number or a name from your game, such as Player.health.","进度条或滑块平滑移动到某个值。该值可以是普通数字,也可以是游戏里的名称,例如 Player.health。"
+"A steady force on a RigidBody for a time: wind, a tractor beam, a rocket kick. It is taken away again when the time is up or on Restore.",在一段时间内持续作用于 RigidBody 的力:风、牵引光束、火箭推力。时间结束或还原时撤销。
+Add to the value,叠加到当前值
+"Adds a copy of a scene to the running game, at this object or at a node: a damage number, a decal, a dust puff. It takes the copy from the object pool when that scene has one.","在运行中的游戏里添加场景的副本,位置在此对象或某个节点处:伤害数字、贴花、尘土。若该场景有对象池,则从池中取副本。"
+Away from,远离
+Away from a node,远离某个节点
+Body,物体
+Bounce,弹跳
+Bus,总线
+Call Method,调用方法
+"Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.","在一段时间内改变 RigidBody 的重力缩放,然后还原:打击顶点处的悬浮瞬间。"
+Chromatic Kick,色差冲击
+Circ,Circ
+Control,控件
+Count To,数到
+Cubic,Cubic
+Delay,延迟
+Depth,纵深
+Device,设备
+Drop it at,放置位置
+Ease,缓动方式
+Effect,效果
+Elastic,Elastic
+Emit Signal,发出信号
+Everywhere,到处
+Expo,Expo
+Fade Bus,渐变总线
+Fade out,淡出
+Fade to,渐变到
+Fades a node in or out through its modulate.,通过 modulate 让节点淡入或淡出。
+Fill Bar,填充进度条
+Fires a signal when the list reaches this card. Left on this player it says one word out of the player's On Juice Signal trigger; pick a node and a signal its script declares to fire that instead.,"列表到达此卡时发出信号。保持为此播放器时,会通过播放器的“Juice 信号时”触发器发出一个词;选择一个节点及其脚本声明的信号,则改为发出该信号。"
+Flash,闪光
+Flow,流程
+Follows strength,跟随强度
+Force For A Time,持续施力
+Freeze Body,冻结物体
+"Gives a body a shove when the list reaches this card. A RigidBody takes it as an impulse; a CharacterBody has it added to its velocity once and carries on moving itself, so a script that sets its velocity every frame will overwrite it.","列表到达此卡时推一下物体。RigidBody 以冲量接受;CharacterBody 会把它一次性加到速度上然后继续自行移动,因此每帧都设置速度的脚本会将其覆盖。"
+Grab Focus,获取焦点
+Gravity For A Time,持续重力
+Gravity scale,重力缩放
+Heard from,声音来源
+Hitstop,顿帧
+Hold,保持
+Hold Effect,保持效果
+Holds one RigidBody still for a time: hitstop for a single object while the rest of the game runs.,"让一个 RigidBody 静止一段时间:只对单个对象顿帧,游戏其余部分照常运行。"
+In,缓入
+In and out,缓入缓出
+"Kicks the position of the object this player is under and springs it back, through the Juice node beside it.","通过旁边的 Juice 节点,把此播放器所在对象的位置弹开再弹回。"
+"Kicks the rotation of the object this player is under and springs it back, through the Juice node beside it.","通过旁边的 Juice 节点,把此播放器所在对象的旋转弹开再弹回。"
+Length,时长
+Listen,试听
+Loop Back,回到循环
+Loop Start,循环开始
+Loop to last Hold,回到上一个保持
+Loop to last Loop Start,回到上一个循环开始
+Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead.,标记下方的“回到循环”把播放头送到哪里。没有循环开始的列表则回到最后一个保持。
+Moves a bus volume to a value over a time: duck the music under a big hit. Restore puts the volume back.,在一段时间内把总线音量调到某个值:在重击下压低音乐。还原会恢复音量。
+Moves a property of a node to a value over a time. Restore Initial Values puts it back.,在一段时间内把节点的某个属性调到某个值。还原初始值会将其恢复。
+Moves keyboard and gamepad focus to a control: the first button of a menu that just popped in.,把键盘和手柄焦点移到某个控件:例如刚弹出的菜单的第一个按钮。
+"Moves one value of the shader on a node to a number, a colour or a vector, over a time, and back again. Restore puts it back.","在一段时间内把节点着色器的某个值调到数字、颜色或向量,再变回来。还原会将其恢复。"
+"Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands.","把播放头多次移回上方最近的保持或循环开始,每次到达时暂停。"
+Name (typed),名称(手输)
+Only this object,仅此对象
+Out,缓出
+Out and in,缓出缓入
+Pick a method,选择方法
+Pick a player,选择播放器
+Pick a signal,选择信号
+Pick a value,选择一个值
+Pick an animation,选择动画
+Pitch,音调
+Play Player,播放播放器
+"Plays a clip of an animation player you pick, stretched to this card's length.","播放所选动画播放器的片段,并拉伸到此卡的时长。"
+"Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.","列表到达此卡时播放声音。随声音类别静音,随其余卡片重新计时,勾选“跟随强度”时按播放强度缩放。"
+"Plays an animation of an animated sprite you pick, stretched to this card's length.","播放所选动画精灵的动画,并拉伸到此卡的时长。"
+"Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",在此播放器内部以本次播放强度的一部分播放另一个 Juice Player——整个对象的节奏就是这样由各部分的节奏组成的。
+Pop,弹出
+Pulse Vignette,暗角脉冲
+Punch Position,位置冲击
+Punch Rotation,旋转冲击
+Punch Scale,缩放冲击
+Push,推动
+Quad,Quad
+Quart,Quart
+Quint,Quint
+Random pitch,随机音调
+Random volume,随机音量
+"Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","重新开始、开始或停止所选的粒子节点。一次性发射时,时长即该节点的生命周期。"
+Reveal Text,逐字显示文本
+"Rumbles every connected controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play.","让所有已连接的手柄以弱电机和强电机震动,并让手机震动一段时间。在网页上不起作用。按播放强度缩放。"
+Scale to,缩放到
+Scaled by strength,按强度缩放
+Scales a node up from its middle and lets it settle back. The pivot is set for you.,从中心放大节点再让它回落。轴心会自动设置。
+Screen,屏幕
+Shader Value,着色器值
+Shake,震动
+Shockwave,冲击波
+Show for a time,显示一段时间
+Show or Hide,显示或隐藏
+"Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","显示节点、隐藏节点,或显示一段时间后再隐藏:命中火花、枪口火焰、警告图标。未选节点的卡片作用于此播放器所在的对象。"
+Sine,Sine
+Slowmo,慢动作
+Sound card,声音卡
+Spawn Scene,生成场景
+Spring,Spring
+Sprite Animation,精灵动画
+Squash And Stretch,挤压与拉伸
+"Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","通过旁边的 Juice 节点挤压拉伸此播放器所在的对象。请放在物体下面的精灵或网格上,不要放在物体本身上。"
+Stop Sound,停止声音
+"Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. Pick no card to stop every sound this player has going.","按名称停止前面某张声音卡开始的声音,可带淡出:例如松开时结束的蓄力嗡鸣。不选卡片则停止此播放器正在播放的所有声音。"
+Stream,音频流
+Stretch,拉伸量
+Strong motor,强电机
+"Tells a node to act: calls a function of its script with the values below. For whatever no card covers: pop a score label, open a door, start your own effect.",让节点执行动作:用下面的值调用其脚本中的函数。适用于没有卡片能做的事:弹出得分标签、开门、启动你自己的效果。
+The letters of a label appear one after another over the card's length.,标签的文字在此卡的时长内逐个出现。
+The way it is moving,它当前的运动方向
+Then come back,然后返回
+Then wait,然后等待
+This object,此对象
+This player,此播放器
+Transition,过渡
+Tween Property,补间属性
+Vibrate,震动
+Volume,音量
+Waits for,等待
+"Waits for the slowest card above to finish, or for the one card you pick, then this long. What is under a hold is what happens AFTER the hit rather than during it.","等待上方最慢的卡片结束,或你选择的那一张结束,再等这么久。保持下面的内容发生在打击之后,而不是打击期间。"
+"Waits this long before the next card, whatever the cards above are still doing.","无论上方的卡片还在做什么,都在下一张卡片之前等待这么久。"
+Weak motor,弱电机
+Word,词
+Zoom By Percent,按百分比缩放
+%s is not under this object any more.,%s 不再位于此对象之下。
+Pick a node with Godot's own node picker.,用 Godot 自带的节点选择器选择节点。
+Clear the node.,清除节点。
+Pick a property with Godot's own property picker.,用 Godot 自带的属性选择器选择属性。
+%s (not there any more),%s(已不存在)
+This kind of value cannot be set from a card.,这种类型的值无法通过卡片设置。
+Pick a scene. Until then this card drops nothing.,请选择一个场景。在此之前这张卡片不会放置任何东西。
+"That scene is not in the project any more, so this card drops nothing.","该场景已不在项目中,所以这张卡片不会放置任何东西。"
+"This is a physics body, so moving or scaling it fights the physics. Use a Push card, or put the card on the sprite under the body.","这是物理物体,移动或缩放会与物理相冲突。请使用“推动”卡片,或把卡片放在物体下面的精灵上。"
+"A container places its children itself and puts a moved position back. Tween the scale, rotation or colour instead.","容器会自行摆放其子节点,并把移动过的位置放回去。请改为补间缩放、旋转或颜色。"
+"The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","此播放器所在的对象是物理物体,缩放物体会同时缩放它的碰撞形状。请把播放器放到精灵下面。"
+"That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","该节点是物理物体,缩放物体会同时缩放它的碰撞形状。请改选它下面的精灵。"
+"This material is shared with other nodes. With ""Only this object"" off, they change too.","此材质与其他节点共用。关闭“仅此对象”后,它们也会一起变化。"

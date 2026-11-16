@@ -10731,3 +10731,150 @@ Sheets with no theme of their own match the editor again.,"Les feuilles sans th�
 Every sheet with no theme of its own now wears %s.,"Chaque feuille sans thème propre porte maintenant %s."
 Project theme: %s,"Thème du projet : %s"
 Edit in Theme Editor,"Modifier dans l'éditeur de thème"
+A fixed direction,Une direction fixe
+"A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.","Une étiquette compte du nombre affiché jusqu'à un nombre. Le nombre est un nombre simple ou un nom de votre jeu, comme GameState.score."
+A node,Un nœud
+"A progress bar or slider glides to a value. The value is a plain number or a name from your game, such as Player.health.","Une barre de progression ou un curseur glisse jusqu'à une valeur. La valeur est un nombre simple ou un nom de votre jeu, comme Player.health."
+"A steady force on a RigidBody for a time: wind, a tractor beam, a rocket kick. It is taken away again when the time is up or on Restore.","Une force constante sur un RigidBody pendant un temps : du vent, un rayon tracteur, une poussée de fusée. Elle est retirée à la fin du temps ou à la restauration."
+Add to the value,Ajouter à la valeur
+"Adds a copy of a scene to the running game, at this object or at a node: a damage number, a decal, a dust puff. It takes the copy from the object pool when that scene has one.","Ajoute une copie d'une scène au jeu en cours, sur cet objet ou sur un nœud : un nombre de dégâts, un décal, un nuage de poussière. La copie vient du pool d'objets quand la scène en a un."
+Away from,Loin de
+Away from a node,Loin d'un nœud
+Body,Corps
+Bounce,Rebond
+Bus,Bus
+Call Method,Appeler une méthode
+"Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.","Change l'échelle de gravité d'un RigidBody pendant un temps, puis la remet : un instant en apesanteur au sommet d'un coup."
+Chromatic Kick,Choc chromatique
+Circ,Circ
+Control,Contrôle
+Count To,Compter jusqu'à
+Cubic,Cubic
+Delay,Délai
+Depth,Profondeur
+Device,Appareil
+Drop it at,Le déposer à
+Ease,Ease
+Effect,Effet
+Elastic,Elastic
+Emit Signal,Émettre un signal
+Everywhere,Partout
+Expo,Expo
+Fade Bus,Atténuer un bus
+Fade out,Fondu sortant
+Fade to,Fondu vers
+Fades a node in or out through its modulate.,Fait apparaître ou disparaître un nœud via son modulate.
+Fill Bar,Remplir la barre
+Fires a signal when the list reaches this card. Left on this player it says one word out of the player's On Juice Signal trigger; pick a node and a signal its script declares to fire that instead.,"Déclenche un signal quand la liste atteint cette carte. Laissée sur ce lecteur, elle dit un mot par le déclencheur Sur signal Juice du lecteur ; choisissez un nœud et un signal déclaré par son script pour déclencher celui-ci."
+Flash,Flash
+Flow,Flux
+Follows strength,Suit l'intensité
+Force For A Time,Force pendant un temps
+Freeze Body,Figer un corps
+"Gives a body a shove when the list reaches this card. A RigidBody takes it as an impulse; a CharacterBody has it added to its velocity once and carries on moving itself, so a script that sets its velocity every frame will overwrite it.","Donne une poussée à un corps quand la liste atteint cette carte. Un RigidBody la reçoit comme une impulsion ; pour un CharacterBody elle est ajoutée une fois à sa vitesse et il continue de se déplacer seul, donc un script qui fixe sa vitesse à chaque image l'écrasera."
+Grab Focus,Prendre le focus
+Gravity For A Time,Gravité pendant un temps
+Gravity scale,Échelle de gravité
+Heard from,Entendu depuis
+Hitstop,Hitstop
+Hold,Attendre
+Hold Effect,Effet de maintien
+Holds one RigidBody still for a time: hitstop for a single object while the rest of the game runs.,Fige un RigidBody pendant un temps : un hitstop pour un seul objet pendant que le reste du jeu continue.
+In,Entrée
+In and out,Entrée et sortie
+"Kicks the position of the object this player is under and springs it back, through the Juice node beside it.","Donne un coup à la position de l'objet sous lequel se trouve ce lecteur et la ramène en ressort, via le nœud Juice à côté."
+"Kicks the rotation of the object this player is under and springs it back, through the Juice node beside it.","Donne un coup à la rotation de l'objet sous lequel se trouve ce lecteur et la ramène en ressort, via le nœud Juice à côté."
+Length,Durée
+Listen,Écouter
+Loop Back,Retour de boucle
+Loop Start,Début de boucle
+Loop to last Hold,Revenir à la dernière attente
+Loop to last Loop Start,Revenir au dernier début de boucle
+Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead.,Marque où un Retour de boucle plus bas renvoie la tête. Une liste sans Début de boucle revient à sa dernière attente.
+Moves a bus volume to a value over a time: duck the music under a big hit. Restore puts the volume back.,Amène le volume d'un bus à une valeur sur un temps : baisse la musique sous un gros coup. Restaurer remet le volume.
+Moves a property of a node to a value over a time. Restore Initial Values puts it back.,Amène une propriété d'un nœud à une valeur sur un temps. Restaurer les valeurs initiales la remet.
+Moves keyboard and gamepad focus to a control: the first button of a menu that just popped in.,Déplace le focus clavier et manette sur un contrôle : le premier bouton d'un menu qui vient d'apparaître.
+"Moves one value of the shader on a node to a number, a colour or a vector, over a time, and back again. Restore puts it back.","Amène une valeur du shader d'un nœud à un nombre, une couleur ou un vecteur sur un temps, puis la ramène. Restaurer la remet."
+"Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands.","Ramène la tête à la dernière attente ou au dernier début de boucle au-dessus, plusieurs fois, avec une pause à chaque arrivée."
+Name (typed),Nom (saisi)
+Only this object,Seulement cet objet
+Out,Sortie
+Out and in,Sortie et entrée
+Pick a method,Choisir une méthode
+Pick a player,Choisir un lecteur
+Pick a signal,Choisir un signal
+Pick a value,Choisir une valeur
+Pick an animation,Choisir une animation
+Pitch,Hauteur
+Play Player,Lancer un lecteur
+"Plays a clip of an animation player you pick, stretched to this card's length.","Joue un clip d'un lecteur d'animation de votre choix, étiré à la durée de cette carte."
+"Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.","Joue un son quand la liste atteint cette carte. Coupé avec la famille Son, recadencé avec le reste, et mis à l'échelle par l'intensité de lecture si vous cochez Suit l'intensité."
+"Plays an animation of an animated sprite you pick, stretched to this card's length.","Joue une animation d'un sprite animé de votre choix, étirée à la durée de cette carte."
+"Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.","Lance un autre Juice Player depuis celui-ci, avec une part de l'intensité de cette lecture - c'est ainsi que le rythme d'un objet entier se construit à partir de ceux de ses parties."
+Pop,Pop
+Pulse Vignette,Pulsation de vignette
+Punch Position,Coup de position
+Punch Rotation,Coup de rotation
+Punch Scale,Coup d'échelle
+Push,Pousser
+Quad,Quad
+Quart,Quart
+Quint,Quint
+Random pitch,Hauteur aléatoire
+Random volume,Volume aléatoire
+"Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","Redémarre, démarre ou arrête un nœud de particules de votre choix. Sa durée est la durée de vie du nœud quand il est à tir unique."
+Reveal Text,Révéler le texte
+"Rumbles every connected controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play.","Fait vibrer chaque manette connectée, moteur faible et moteur fort, et un téléphone, pendant un temps. Sans effet sur le web. Mis à l'échelle par l'intensité de lecture."
+Scale to,Mettre à l'échelle à
+Scaled by strength,Mis à l'échelle par l'intensité
+Scales a node up from its middle and lets it settle back. The pivot is set for you.,Agrandit un nœud depuis son centre puis le laisse revenir. Le pivot est réglé pour vous.
+Screen,Écran
+Shader Value,Valeur de shader
+Shake,Secousse
+Shockwave,Onde de choc
+Show for a time,Afficher un temps
+Show or Hide,Afficher ou masquer
+"Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","Affiche un nœud, le masque, ou l'affiche un temps puis le masque : une étincelle d'impact, un éclair de bouche, une icône d'alerte. Une carte sans nœud choisi agit sur l'objet sous lequel se trouve ce lecteur."
+Sine,Sine
+Slowmo,Ralenti
+Sound card,Carte de son
+Spawn Scene,Faire apparaître une scène
+Spring,Spring
+Sprite Animation,Animation de sprite
+Squash And Stretch,Écraser et étirer
+"Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","Écrase et étire l'objet sous lequel se trouve ce lecteur, via le nœud Juice à côté. Mettez-le sur le sprite ou le maillage sous un corps, jamais sur le corps."
+Stop Sound,Arrêter un son
+"Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. Pick no card to stop every sound this player has going.","Arrête le son lancé par une carte de son précédente, par le nom de cette carte, avec un fondu si vous voulez : un bourdonnement de charge qui s'arrête au relâchement. Sans carte choisie, arrête tous les sons de ce lecteur."
+Stream,Flux
+Stretch,Étirement
+Strong motor,Moteur fort
+"Tells a node to act: calls a function of its script with the values below. For whatever no card covers: pop a score label, open a door, start your own effect.","Dit à un nœud d'agir : appelle une fonction de son script avec les valeurs ci-dessous. Pour tout ce qu'aucune carte ne couvre : faire éclater une étiquette de score, ouvrir une porte, lancer votre propre effet."
+The letters of a label appear one after another over the card's length.,Les lettres d'une étiquette apparaissent l'une après l'autre sur la durée de la carte.
+The way it is moving,Le sens de son mouvement
+Then come back,Puis revenir
+Then wait,Puis attendre
+This object,Cet objet
+This player,Ce lecteur
+Transition,Transition
+Tween Property,Interpoler une propriété
+Vibrate,Vibrer
+Volume,Volume
+Waits for,Attend
+"Waits for the slowest card above to finish, or for the one card you pick, then this long. What is under a hold is what happens AFTER the hit rather than during it.","Attend la fin de la carte la plus lente au-dessus, ou de celle que vous choisissez, puis ce temps. Ce qui est sous une attente se passe APRÈS le coup, pas pendant."
+"Waits this long before the next card, whatever the cards above are still doing.","Attend ce temps avant la carte suivante, quoi que fassent encore les cartes au-dessus."
+Weak motor,Moteur faible
+Word,Mot
+Zoom By Percent,Zoom en pourcentage
+%s is not under this object any more.,%s n'est plus sous cet objet.
+Pick a node with Godot's own node picker.,Choisissez un nœud avec le sélecteur de nœuds de Godot.
+Clear the node.,Effacer le nœud.
+Pick a property with Godot's own property picker.,Choisissez une propriété avec le sélecteur de propriétés de Godot.
+%s (not there any more),%s (n'existe plus)
+This kind of value cannot be set from a card.,Ce type de valeur ne peut pas être réglé depuis une carte.
+Pick a scene. Until then this card drops nothing.,Choisissez une scène. D'ici là cette carte ne dépose rien.
+"That scene is not in the project any more, so this card drops nothing.","Cette scène n'est plus dans le projet, donc cette carte ne dépose rien."
+"This is a physics body, so moving or scaling it fights the physics. Use a Push card, or put the card on the sprite under the body.","C'est un corps physique : le déplacer ou le mettre à l'échelle lutte contre la physique. Utilisez une carte Pousser, ou mettez la carte sur le sprite sous le corps."
+"A container places its children itself and puts a moved position back. Tween the scale, rotation or colour instead.","Un conteneur place lui-même ses enfants et remet une position déplacée. Interpolez plutôt l'échelle, la rotation ou la couleur."
+"The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","L'objet sous lequel se trouve ce lecteur est un corps physique, et mettre un corps à l'échelle change aussi sa forme de collision. Placez plutôt le lecteur sous le sprite."
+"That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","Ce nœud est un corps physique, et mettre un corps à l'échelle change aussi sa forme de collision. Choisissez plutôt le sprite en dessous."
+"This material is shared with other nodes. With ""Only this object"" off, they change too.","Ce matériau est partagé avec d'autres nœuds. Avec ""Seulement cet objet"" désactivé, ils changent aussi."

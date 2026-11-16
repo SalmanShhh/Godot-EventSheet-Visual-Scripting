@@ -10731,3 +10731,150 @@ Sheets with no theme of their own match the editor again.,"자체 테마가 없�
 Every sheet with no theme of its own now wears %s.,"자체 테마가 없는 모든 시트가 이제 %s을(를) 씁니다."
 Project theme: %s,"프로젝트 테마: %s"
 Edit in Theme Editor,"테마 편집기에서 편집"
+A fixed direction,고정된 방향
+"A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.",라벨이 표시 중인 숫자에서 지정한 숫자까지 세어 올라갑니다. 숫자는 일반 숫자이거나 GameState.score 같은 게임 안의 이름입니다.
+A node,노드
+"A progress bar or slider glides to a value. The value is a plain number or a name from your game, such as Player.health.",진행 막대나 슬라이더가 지정한 값까지 부드럽게 움직입니다. 값은 일반 숫자이거나 Player.health 같은 게임 안의 이름입니다.
+"A steady force on a RigidBody for a time: wind, a tractor beam, a rocket kick. It is taken away again when the time is up or on Restore.","RigidBody에 일정 시간 동안 계속 가해지는 힘입니다. 바람, 견인 광선, 로켓 추진 등. 시간이 끝나거나 복원하면 사라집니다."
+Add to the value,값에 더하기
+"Adds a copy of a scene to the running game, at this object or at a node: a damage number, a decal, a dust puff. It takes the copy from the object pool when that scene has one.","실행 중인 게임에 씬의 사본을 추가합니다. 이 오브젝트나 지정한 노드의 위치에 놓습니다(피해 숫자, 데칼, 먼지 등). 그 씬에 오브젝트 풀이 있으면 거기서 가져옵니다."
+Away from,멀어질 대상
+Away from a node,노드에서 멀어지기
+Body,바디
+Bounce,바운스
+Bus,버스
+Call Method,메서드 호출
+"Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.",RigidBody의 중력 배율을 일정 시간 바꿨다가 되돌립니다. 타격의 정점에서 둥실 뜨는 순간에 좋습니다.
+Chromatic Kick,색수차 킥
+Circ,Circ
+Control,컨트롤
+Count To,숫자 세기
+Cubic,Cubic
+Delay,지연
+Depth,깊이
+Device,기기
+Drop it at,놓을 위치
+Ease,이즈
+Effect,효과
+Elastic,Elastic
+Emit Signal,시그널 보내기
+Everywhere,어디서나
+Expo,Expo
+Fade Bus,버스 페이드
+Fade out,페이드 아웃
+Fade to,페이드 목표
+Fades a node in or out through its modulate.,노드의 modulate로 페이드 인/아웃합니다.
+Fill Bar,막대 채우기
+Fires a signal when the list reaches this card. Left on this player it says one word out of the player's On Juice Signal trigger; pick a node and a signal its script declares to fire that instead.,"목록이 이 카드에 닿으면 시그널을 보냅니다. 이 플레이어에 그대로 두면 플레이어의 'Juice 시그널 시' 트리거로 단어 하나를 보내고, 노드와 그 스크립트가 선언한 시그널을 고르면 그 시그널을 보냅니다."
+Flash,플래시
+Flow,흐름
+Follows strength,강도를 따름
+Force For A Time,일정 시간 힘
+Freeze Body,바디 정지
+"Gives a body a shove when the list reaches this card. A RigidBody takes it as an impulse; a CharacterBody has it added to its velocity once and carries on moving itself, so a script that sets its velocity every frame will overwrite it.","목록이 이 카드에 닿으면 바디를 밀어 줍니다. RigidBody에는 충격으로, CharacterBody에는 속도에 한 번 더해지고 그 뒤로는 스스로 움직입니다. 매 프레임 속도를 설정하는 스크립트는 이를 덮어씁니다."
+Grab Focus,포커스 가져오기
+Gravity For A Time,일정 시간 중력
+Gravity scale,중력 배율
+Heard from,들리는 위치
+Hitstop,히트스톱
+Hold,홀드
+Hold Effect,홀드 효과
+Holds one RigidBody still for a time: hitstop for a single object while the rest of the game runs.,RigidBody 하나를 일정 시간 멈춥니다. 나머지 게임은 계속 돌아가고 한 오브젝트에만 히트스톱을 줍니다.
+In,인
+In and out,인 앤 아웃
+"Kicks the position of the object this player is under and springs it back, through the Juice node beside it.",이 플레이어가 속한 오브젝트의 위치를 튕겼다가 용수철처럼 되돌립니다. 옆에 있는 Juice 노드를 통해 동작합니다.
+"Kicks the rotation of the object this player is under and springs it back, through the Juice node beside it.",이 플레이어가 속한 오브젝트의 회전을 튕겼다가 용수철처럼 되돌립니다. 옆에 있는 Juice 노드를 통해 동작합니다.
+Length,길이
+Listen,듣기
+Loop Back,루프 되돌리기
+Loop Start,루프 시작
+Loop to last Hold,마지막 홀드로 되돌아가기
+Loop to last Loop Start,마지막 루프 시작으로 되돌아가기
+Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead.,아래의 루프 되돌리기가 헤드를 보낼 위치를 표시합니다. 루프 시작이 없는 목록은 마지막 홀드로 돌아갑니다.
+Moves a bus volume to a value over a time: duck the music under a big hit. Restore puts the volume back.,버스 볼륨을 일정 시간에 걸쳐 지정한 값으로 옮깁니다. 큰 타격 아래에서 음악을 낮출 때 좋습니다. 복원하면 볼륨이 돌아옵니다.
+Moves a property of a node to a value over a time. Restore Initial Values puts it back.,노드의 속성을 일정 시간에 걸쳐 지정한 값으로 옮깁니다. 초기값 복원으로 되돌립니다.
+Moves keyboard and gamepad focus to a control: the first button of a menu that just popped in.,키보드와 게임패드 포커스를 컨트롤로 옮깁니다. 방금 나타난 메뉴의 첫 번째 버튼 등에 씁니다.
+"Moves one value of the shader on a node to a number, a colour or a vector, over a time, and back again. Restore puts it back.","노드 셰이더의 값 하나를 숫자, 색, 벡터로 일정 시간에 걸쳐 옮기고 다시 되돌립니다. 복원하면 원래대로 돌아갑니다."
+"Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands.","위쪽의 마지막 홀드나 루프 시작으로 헤드를 여러 번 되돌리고, 도착할 때마다 잠시 멈춥니다."
+Name (typed),이름(입력)
+Only this object,이 오브젝트만
+Out,아웃
+Out and in,아웃 앤 인
+Pick a method,메서드 선택
+Pick a player,플레이어 선택
+Pick a signal,시그널 선택
+Pick a value,값 선택
+Pick an animation,애니메이션 선택
+Pitch,피치
+Play Player,플레이어 재생
+"Plays a clip of an animation player you pick, stretched to this card's length.",고른 애니메이션 플레이어의 클립을 이 카드의 길이에 맞춰 재생합니다.
+"Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.","목록이 이 카드에 닿으면 소리를 재생합니다. 사운드 계열과 함께 음소거되고, 나머지와 함께 시간이 조정되며, '강도를 따름'을 켜면 재생 강도로 크기가 조절됩니다."
+"Plays an animation of an animated sprite you pick, stretched to this card's length.",고른 애니메이션 스프라이트의 애니메이션을 이 카드의 길이에 맞춰 재생합니다.
+"Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",이 플레이어 안에서 다른 Juice Player를 이번 재생 강도의 일부로 재생합니다. 오브젝트 전체의 박자를 각 부분의 박자로 쌓아 올리는 방법입니다.
+Pop,팝
+Pulse Vignette,비네트 펄스
+Punch Position,위치 펀치
+Punch Rotation,회전 펀치
+Punch Scale,크기 펀치
+Push,밀기
+Quad,Quad
+Quart,Quart
+Quint,Quint
+Random pitch,무작위 피치
+Random volume,무작위 볼륨
+"Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","고른 파티클 노드를 다시 시작, 시작, 정지합니다. 원샷일 때 길이는 노드의 수명입니다."
+Reveal Text,텍스트 드러내기
+"Rumbles every connected controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play.",연결된 모든 컨트롤러를 약한 모터와 강한 모터로 진동시키고 휴대폰도 일정 시간 진동시킵니다. 웹에서는 아무 일도 하지 않습니다. 재생 강도에 따라 크기가 조절됩니다.
+Scale to,크기 목표
+Scaled by strength,강도로 조절
+Scales a node up from its middle and lets it settle back. The pivot is set for you.,노드를 중심에서 키웠다가 제자리로 가라앉힙니다. 피벗은 자동으로 설정됩니다.
+Screen,화면
+Shader Value,셰이더 값
+Shake,흔들기
+Shockwave,충격파
+Show for a time,잠시 표시
+Show or Hide,표시 또는 숨기기
+"Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","노드를 표시하거나 숨기거나, 잠시 표시했다가 다시 숨깁니다. 타격 불꽃, 총구 섬광, 경고 아이콘 등. 노드를 고르지 않은 카드는 이 플레이어가 속한 오브젝트에 작용합니다."
+Sine,Sine
+Slowmo,슬로모션
+Sound card,사운드 카드
+Spawn Scene,씬 생성
+Spring,Spring
+Sprite Animation,스프라이트 애니메이션
+Squash And Stretch,스쿼시 앤 스트레치
+"Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","이 플레이어가 속한 오브젝트를 옆의 Juice 노드를 통해 찌그러뜨리고 늘립니다. 바디 아래의 스프라이트나 메시에 두고, 바디 자체에는 두지 마세요."
+Stop Sound,사운드 멈추기
+"Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. Pick no card to stop every sound this player has going.",앞의 사운드 카드가 시작한 소리를 그 카드의 이름으로 멈춥니다. 원하면 페이드도 줄 수 있습니다. 차지 소리를 떼는 순간 끝내는 식으로 씁니다. 카드를 고르지 않으면 이 플레이어의 모든 소리를 멈춥니다.
+Stream,스트림
+Stretch,늘어남
+Strong motor,강한 모터
+"Tells a node to act: calls a function of its script with the values below. For whatever no card covers: pop a score label, open a door, start your own effect.","노드에게 동작을 지시합니다. 아래 값으로 그 스크립트의 함수를 호출합니다. 어떤 카드도 못 하는 일(점수 라벨 튀기기, 문 열기, 나만의 효과 시작)에 씁니다."
+The letters of a label appear one after another over the card's length.,라벨의 글자가 카드의 길이 동안 하나씩 나타납니다.
+The way it is moving,움직이는 방향
+Then come back,그 후 되돌아오기
+Then wait,그 후 대기
+This object,이 오브젝트
+This player,이 플레이어
+Transition,트랜지션
+Tween Property,속성 트윈
+Vibrate,진동
+Volume,볼륨
+Waits for,기다리는 대상
+"Waits for the slowest card above to finish, or for the one card you pick, then this long. What is under a hold is what happens AFTER the hit rather than during it.",위에서 가장 느린 카드나 고른 카드 하나가 끝나길 기다린 뒤 이 시간만큼 더 기다립니다. 홀드 아래의 것은 타격 도중이 아니라 타격 이후에 일어납니다.
+"Waits this long before the next card, whatever the cards above are still doing.",위의 카드가 아직 무엇을 하고 있든 다음 카드 전에 이 시간만큼 기다립니다.
+Weak motor,약한 모터
+Word,단어
+Zoom By Percent,퍼센트 줌
+%s is not under this object any more.,%s은(는) 더 이상 이 오브젝트 아래에 없습니다.
+Pick a node with Godot's own node picker.,Godot의 노드 선택기로 노드를 고릅니다.
+Clear the node.,노드 지우기.
+Pick a property with Godot's own property picker.,Godot의 속성 선택기로 속성을 고릅니다.
+%s (not there any more),%s(더 이상 없음)
+This kind of value cannot be set from a card.,이 종류의 값은 카드에서 설정할 수 없습니다.
+Pick a scene. Until then this card drops nothing.,씬을 고르세요. 그전까지 이 카드는 아무것도 놓지 않습니다.
+"That scene is not in the project any more, so this card drops nothing.",그 씬은 더 이상 프로젝트에 없어서 이 카드는 아무것도 놓지 않습니다.
+"This is a physics body, so moving or scaling it fights the physics. Use a Push card, or put the card on the sprite under the body.",물리 바디라서 이동이나 크기 조절이 물리와 충돌합니다. 밀기 카드를 쓰거나 바디 아래의 스프라이트에 카드를 두세요.
+"A container places its children itself and puts a moved position back. Tween the scale, rotation or colour instead.","컨테이너는 자식을 직접 배치하며 옮긴 위치를 되돌립니다. 대신 크기, 회전, 색을 트윈하세요."
+"The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.","이 플레이어가 속한 오브젝트는 물리 바디이며, 바디의 크기를 바꾸면 충돌 모양도 같이 바뀝니다. 대신 스프라이트 아래에 플레이어를 두세요."
+"That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.","그 노드는 물리 바디이며, 바디의 크기를 바꾸면 충돌 모양도 같이 바뀝니다. 대신 그 아래의 스프라이트를 고르세요."
+"This material is shared with other nodes. With ""Only this object"" off, they change too.",이 머티리얼은 다른 노드와 공유됩니다. '이 오브젝트만'을 끄면 그 노드들도 함께 바뀝니다.

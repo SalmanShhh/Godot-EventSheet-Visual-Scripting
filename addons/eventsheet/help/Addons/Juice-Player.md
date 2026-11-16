@@ -102,7 +102,26 @@ Enemy: On damaged
 | --- | --- | --- |
 | **Stop Sound** | Sound card (one of the Sound cards above, or every sound of this player), Fade out (`0.0` s) | Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. It belongs to the `audio` family. |
 | **Fade Bus** | Bus, To (`-12` dB), Over (`0.3` s) | Moves a bus volume to a value over a time, and Restore Initial Values puts it back. A bus the project does not have is said once and left alone. It belongs to the `audio` family. |
-| **Vibrate** | Weak motor (`0.5`), Strong motor (`0.5`), For (`0.2` s) | Rumbles every connected controller and buzzes a phone for the time, each motor scaled by the strength of the play. Does nothing on the web. It belongs to the `device` family. |
+| **Vibrate** | Weak motor (`0.5`), Strong motor (`0.5`), For (`0.2` s) | Rumbles every connected controller and buzzes a phone for the time, each motor scaled by the strength of the play. Does nothing on the web, and nothing when no controller is connected (it has been tried on a desktop with none, not on a real controller or a phone). It belongs to the `device` family. |
+
+**Cards that point at something in the scene.** A card that acts on a node keeps the way to it as a node path written from this player, picked with Godot's own node picker, so a renamed or moved node is followed and a scene copied elsewhere still finds its nodes. A card that picks no node acts on the object this player is under. When a picked node is gone the card says so in quiet amber, and when the game runs a card that finds nothing says so once in the Output panel and does nothing: it never raises an error. None of these cards is felt in the editor; Debug view names each as skipped.
+
+| Card | Fields | What it does |
+|---|---|---|
+| **Particles** | Node, Do (restart, start, stop), Length (`0.4` s) | Restarts, starts or stops a particles node. Picking a one-shot node sets the length to its lifetime. `scene` family. |
+| **Spawn Scene** | Scene, Drop it at (this object, a node), Node | Adds a copy of a scene to the running game, taking it from the object pool when that scene has a pool. `scene` family. |
+| **Animation** | Player, Animation, Length (`0.4` s) | Plays a clip of an animation player, stretched to the card's length. Choosing a clip sets the length to the clip's. |
+| **Sprite Animation** | Sprite, Animation, Length | The same for an animated sprite. |
+| **Show or Hide** | Node, Do (show, hide, show for a time), For (`0.2` s) | Shows or hides a node, or shows it for a time. |
+| **Tween Property** | Node, Property, To, Over, Transition, Ease, Then come back, Add to the value | Walks any property of any node to a value of its own kind: a number, a colour or a vector. A card saved with only a property, a number and a time is the one-number tween on this object it always was. |
+| **Squash And Stretch, Punch Position, Punch Rotation** | Stretch, Across and Down, Degrees; Over | Done by the Juice node beside the player, on the object the player is under. Put them on the sprite under a body, never on the body. |
+| **Push** | Body, Direction (away from a node, the way it is moving, fixed), Speed, Scaled by strength | A RigidBody takes an impulse; a CharacterBody has the speed added to its velocity once and carries on moving itself, so a script that sets velocity every frame overwrites it. |
+| **Force For A Time, Gravity For A Time, Freeze Body** | Body and the numbers | A force, a gravity scale or a hold on a RigidBody for a time, put back when the time is up or on Restore. Freezing is asked for at the end of the frame, the safe moment. |
+| **Pop, Fade, Grab Focus, Count To, Reveal Text, Fill Bar** | Node and the numbers | Cards for a Control: scale from the middle, fade the modulate, take focus, count a label to a number (a plain number or a name from the game such as `GameState.score`), reveal letters over the length, glide a bar to a value. They change scale, colour and text, never position, because a container owns that. |
+| **Shader Value** | Node, Value, To, Over, Transition, Then come back, Only this object | Moves one value of the node's shader. With Only this object on, the node gets a copy of its material for the play and Restore gives it back, so the others that share the file are left alone. |
+| **Emit Signal, Call Method** | Node, Signal or Method, and its values | Fire a signal or call a method of the picked node's script. Left on this player, Emit Signal says one word out of On Juice Signal as before. |
+
+Play Player now picks the other player instead of asking for its name; an older card that typed a name still plays. A player will not play itself or one that is playing it.
 
 **Four that the player plays itself, because they are neither a moment word nor a wait (a sound, a value walked, a word said, another player played):**
 

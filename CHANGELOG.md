@@ -27,6 +27,13 @@ A Density pick copies the sheet's theme, and the copy has no file, so the menu t
 ### Fixed: the Section right-click menu says Section in every entry, and the Shared sheet window is titled Shared Sheets
 
 The fold entries read "Open / Close Section", "Open All / Close All Sections" and "Open Section" or "Close Section", and the multi-row entry reads "Put Selection into New Section" (Group under the Familiar words preset). The Shared sheet window's title read "Manage what probe.gd includes"; it now reads "Shared Sheets in probe.gd" (Includes in probe.gd under the Familiar words). All eight languages are translated.
+### Added: juice cards that point at a node, an animation, a body, a Control or a shader
+
+The Add box gains Particles, Spawn Scene, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Push, Force For A Time, Gravity For A Time, Freeze Body, Pop, Fade, Grab Focus, Count To, Reveal Text, Fill Bar, Shader Value and Call Method. A node is picked with Godot's own node picker and kept as a path from the player, a property with Godot's property picker, and an animation, shader value, signal or method is chosen from what the picked node really has. When a picked node is gone the card says so in quiet amber; when the game runs, a card that finds nothing says so once in the Output panel and does nothing. Tween Property can now move any property of any node to a number, a colour or a vector with a transition, an ease, a way back and an "add to the value" tick (a card saved the old way plays exactly as before), Emit Signal can fire a signal of a node you pick, and Play Player picks the other player instead of asking for its name (a typed name still works, and a player will not play itself or one that is playing it). Quiet notes warn about moving a physics body by position, a container's child by position, scaling a body, and a shared shader material. Not yet: playing these cards in the editor (Debug view names each as skipped), a curve of your own for a tween, and the node list of a sheet's Add Juice Card row.
+
+### Fixed: a saved Sound card with no pitch shows the pitch the game will use
+
+A Sound card saved without a Pitch, or without Heard from, now shows 1.0 and This object, which are what the game plays, instead of 0.0 and nothing. The words on cards (titles, help, field names, choices) are translated in all eight languages, and the card menu shows the keys beside Duplicate, Cut, Copy, Paste and Remove.
 
 ### Changed: the Tool sheet notes about undo and rebuilds are two short plain sentences
 

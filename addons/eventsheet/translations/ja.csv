@@ -10731,3 +10731,150 @@ Sheets with no theme of their own match the editor again.,"自分のテーマを
 Every sheet with no theme of its own now wears %s.,"自分のテーマを持たないシートはすべて %s を使います。"
 Project theme: %s,"プロジェクトのテーマ: %s"
 Edit in Theme Editor,"テーマエディターで編集"
+A fixed direction,決まった方向
+"A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.",ラベルが表示中の数値から指定の数値までカウントします。数値は普通の数か、GameState.score のようなゲーム内の名前です。
+A node,ノード
+"A progress bar or slider glides to a value. The value is a plain number or a name from your game, such as Player.health.",プログレスバーやスライダーが指定の値まで滑らかに動きます。値は普通の数か、Player.health のようなゲーム内の名前です。
+"A steady force on a RigidBody for a time: wind, a tractor beam, a rocket kick. It is taken away again when the time is up or on Restore.",RigidBody に一定時間かかり続ける力です。風、トラクタービーム、ロケットの噴射など。時間が過ぎるか復元すると外れます。
+Add to the value,値に加算する
+"Adds a copy of a scene to the running game, at this object or at a node: a damage number, a decal, a dust puff. It takes the copy from the object pool when that scene has one.",実行中のゲームにシーンのコピーを追加します。このオブジェクトか指定のノードの位置に出します(ダメージ数字、デカール、砂ぼこりなど)。そのシーンにオブジェクトプールがあればそこから取ります。
+Away from,離れる方向
+Away from a node,ノードから離れる
+Body,ボディ
+Bounce,バウンス
+Bus,バス
+Call Method,メソッドを呼ぶ
+"Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.",RigidBody の重力スケールを一定時間変え、その後元に戻します。ヒットの頂点でふわっと浮く瞬間に。
+Chromatic Kick,色収差キック
+Circ,Circ
+Control,コントロール
+Count To,カウントアップ
+Cubic,Cubic
+Delay,遅延
+Depth,奥行き
+Device,デバイス
+Drop it at,出す場所
+Ease,イーズ
+Effect,エフェクト
+Elastic,Elastic
+Emit Signal,シグナルを発する
+Everywhere,どこでも
+Expo,Expo
+Fade Bus,バスをフェード
+Fade out,フェードアウト
+Fade to,フェード先
+Fades a node in or out through its modulate.,ノードの modulate でフェードイン・フェードアウトします。
+Fill Bar,バーを満たす
+Fires a signal when the list reaches this card. Left on this player it says one word out of the player's On Juice Signal trigger; pick a node and a signal its script declares to fire that instead.,リストがこのカードに達したときにシグナルを発します。このプレイヤーのままなら、プレイヤーの「Juice シグナル時」トリガーに言葉を1つ出します。ノードとそのスクリプトが宣言したシグナルを選ぶと、そちらを発します。
+Flash,フラッシュ
+Flow,フロー
+Follows strength,強さに従う
+Force For A Time,一定時間の力
+Freeze Body,ボディを固定
+"Gives a body a shove when the list reaches this card. A RigidBody takes it as an impulse; a CharacterBody has it added to its velocity once and carries on moving itself, so a script that sets its velocity every frame will overwrite it.",リストがこのカードに達したとき、ボディに一押しを与えます。RigidBody には衝撃として、CharacterBody には速度に1回だけ加算され、その後は自力で動き続けます。毎フレーム速度を設定するスクリプトがあると上書きされます。
+Grab Focus,フォーカスを取る
+Gravity For A Time,一定時間の重力
+Gravity scale,重力スケール
+Heard from,聞こえる場所
+Hitstop,ヒットストップ
+Hold,ホールド
+Hold Effect,ホールドエフェクト
+Holds one RigidBody still for a time: hitstop for a single object while the rest of the game runs.,RigidBody を一定時間固定します。ゲームの他の部分は動いたまま、1つのオブジェクトだけにヒットストップをかけます。
+In,イン
+In and out,インアウト
+"Kicks the position of the object this player is under and springs it back, through the Juice node beside it.",このプレイヤーがぶら下がっているオブジェクトの位置を弾いてばねのように戻します。隣の Juice ノードを通して動作します。
+"Kicks the rotation of the object this player is under and springs it back, through the Juice node beside it.",このプレイヤーがぶら下がっているオブジェクトの回転を弾いてばねのように戻します。隣の Juice ノードを通して動作します。
+Length,長さ
+Listen,試聴
+Loop Back,ループバック
+Loop Start,ループ開始
+Loop to last Hold,直前のホールドへ戻る
+Loop to last Loop Start,直前のループ開始へ戻る
+Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead.,下にあるループバックが戻る位置を示します。ループ開始がないリストは、代わりに最後のホールドへ戻ります。
+Moves a bus volume to a value over a time: duck the music under a big hit. Restore puts the volume back.,バスの音量を一定時間かけて指定値へ動かします。大きなヒットの下で音楽を下げるのに。復元すると音量が戻ります。
+Moves a property of a node to a value over a time. Restore Initial Values puts it back.,ノードのプロパティを一定時間かけて指定値へ動かします。初期値を復元すると元に戻ります。
+Moves keyboard and gamepad focus to a control: the first button of a menu that just popped in.,キーボードとゲームパッドのフォーカスをコントロールへ移します。表示されたばかりのメニューの最初のボタンなどに。
+"Moves one value of the shader on a node to a number, a colour or a vector, over a time, and back again. Restore puts it back.",ノードのシェーダーの値を、数・色・ベクトルへ一定時間かけて動かし、また戻します。復元すると元に戻ります。
+"Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands.",上にある最後のホールドまたはループ開始へ、指定の回数だけヘッドを戻します。戻るたびに一時停止します。
+Name (typed),名前(入力)
+Only this object,このオブジェクトだけ
+Out,アウト
+Out and in,アウトイン
+Pick a method,メソッドを選ぶ
+Pick a player,プレイヤーを選ぶ
+Pick a signal,シグナルを選ぶ
+Pick a value,値を選ぶ
+Pick an animation,アニメーションを選ぶ
+Pitch,ピッチ
+Play Player,プレイヤーを再生
+"Plays a clip of an animation player you pick, stretched to this card's length.",選んだアニメーションプレイヤーのクリップを、このカードの長さに合わせて再生します。
+"Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.",リストがこのカードに達したときに音を鳴らします。サウンドの系統のミュート、全体のリタイム、「強さに従う」にチェックした場合の再生の強さによる拡縮に従います。
+"Plays an animation of an animated sprite you pick, stretched to this card's length.",選んだアニメーションスプライトのアニメーションを、このカードの長さに合わせて再生します。
+"Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",このプレイヤーの中から別の Juice Player を、この再生の強さの一部で再生します。オブジェクト全体の拍を、各部分の拍から組み立てるための仕組みです。
+Pop,ポップ
+Pulse Vignette,ビネットパルス
+Punch Position,位置パンチ
+Punch Rotation,回転パンチ
+Punch Scale,スケールパンチ
+Push,押す
+Quad,Quad
+Quart,Quart
+Quint,Quint
+Random pitch,ランダムなピッチ
+Random volume,ランダムな音量
+"Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.",選んだパーティクルノードを再開・開始・停止します。ワンショットの場合、長さはそのノードのライフタイムです。
+Reveal Text,テキストを表示
+"Rumbles every connected controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play.",接続中のすべてのコントローラーを弱いモーターと強いモーターで振動させ、スマートフォンも一定時間振動させます。Web では何もしません。再生の強さで拡縮します。
+Scale to,拡大率
+Scaled by strength,強さで拡縮
+Scales a node up from its middle and lets it settle back. The pivot is set for you.,ノードを中心から拡大し、元に落ち着かせます。ピボットは自動で設定されます。
+Screen,画面
+Shader Value,シェーダーの値
+Shake,シェイク
+Shockwave,衝撃波
+Show for a time,一定時間表示
+Show or Hide,表示/非表示
+"Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.",ノードを表示、非表示、または一定時間だけ表示してまた隠します。ヒットの火花、マズルフラッシュ、警告アイコンなど。ノードを選ばないカードは、このプレイヤーがぶら下がっているオブジェクトに作用します。
+Sine,Sine
+Slowmo,スローモーション
+Sound card,サウンドカード
+Spawn Scene,シーンを生成
+Spring,Spring
+Sprite Animation,スプライトアニメーション
+Squash And Stretch,スクワッシュ&ストレッチ
+"Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.",このプレイヤーがぶら下がっているオブジェクトを、隣の Juice ノードを通して潰したり伸ばしたりします。ボディの下のスプライトやメッシュに付け、ボディ自体には付けないでください。
+Stop Sound,サウンドを止める
+"Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. Pick no card to stop every sound this player has going.",先にあるサウンドカードが鳴らした音を、そのカードの名前で止めます。必要ならフェード付き。ためる唸り音を離した瞬間に終える、などに。カードを選ばないと、このプレイヤーの鳴らしている音をすべて止めます。
+Stream,ストリーム
+Stretch,ストレッチ量
+Strong motor,強いモーター
+"Tells a node to act: calls a function of its script with the values below. For whatever no card covers: pop a score label, open a door, start your own effect.",ノードに動作を指示します。下の値でそのスクリプトの関数を呼びます。どのカードでもできないこと(スコアラベルをポップさせる、ドアを開ける、独自のエフェクトを始めるなど)に。
+The letters of a label appear one after another over the card's length.,ラベルの文字が、このカードの長さの間に1文字ずつ現れます。
+The way it is moving,動いている方向
+Then come back,その後戻る
+Then wait,その後待つ
+This object,このオブジェクト
+This player,このプレイヤー
+Transition,トランジション
+Tween Property,プロパティをトゥイーン
+Vibrate,振動
+Volume,音量
+Waits for,待つ対象
+"Waits for the slowest card above to finish, or for the one card you pick, then this long. What is under a hold is what happens AFTER the hit rather than during it.",上にある最も遅いカード、または選んだ1枚が終わるのを待ち、その後この時間待ちます。ホールドの下にあるものは、ヒット中ではなくヒットの後に起こります。
+"Waits this long before the next card, whatever the cards above are still doing.",上のカードがまだ動いていても、次のカードの前にこの時間だけ待ちます。
+Weak motor,弱いモーター
+Word,ワード
+Zoom By Percent,パーセントでズーム
+%s is not under this object any more.,%s はもうこのオブジェクトの下にありません。
+Pick a node with Godot's own node picker.,Godot 標準のノード選択でノードを選びます。
+Clear the node.,ノードを外す。
+Pick a property with Godot's own property picker.,Godot 標準のプロパティ選択でプロパティを選びます。
+%s (not there any more),%s(もう存在しません)
+This kind of value cannot be set from a card.,この種類の値はカードから設定できません。
+Pick a scene. Until then this card drops nothing.,シーンを選んでください。選ぶまでこのカードは何も出しません。
+"That scene is not in the project any more, so this card drops nothing.",そのシーンはもうプロジェクトにないため、このカードは何も出しません。
+"This is a physics body, so moving or scaling it fights the physics. Use a Push card, or put the card on the sprite under the body.",これは物理ボディなので、移動や拡大縮小は物理と衝突します。「押す」カードを使うか、ボディの下のスプライトにカードを付けてください。
+"A container places its children itself and puts a moved position back. Tween the scale, rotation or colour instead.",コンテナは子を自分で配置し、動かした位置を元に戻します。代わりにスケール、回転、色をトゥイーンしてください。
+"The object this player is under is a physics body, and scaling a body scales its collision shape. Put the player under the sprite instead.",このプレイヤーがぶら下がっているオブジェクトは物理ボディで、ボディを拡大縮小すると衝突形状も変わります。代わりにスプライトの下にプレイヤーを置いてください。
+"That node is a physics body, and scaling a body scales its collision shape. Pick the sprite under it instead.",そのノードは物理ボディで、ボディを拡大縮小すると衝突形状も変わります。代わりにその下のスプライトを選んでください。
+"This material is shared with other nodes. With ""Only this object"" off, they change too.",このマテリアルは他のノードと共有されています。「このオブジェクトだけ」をオフにすると、それらも変わります。
