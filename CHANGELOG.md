@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the field box of Set Juice Card Field and Juice Card Field offers the keys the named card holds
+
+When the scene the sheet runs in is saved, the field box reads the Juice Player the row is on and the card its label box names (a label, or a position counting from 1) from the scene's bytes, and offers that card's keys in the order the card holds them, each with the word the Inspector shows for it beside it (Stream, Volume, and a card of your own offers its exports). `verb` and `card_script` are never offered. Changing the label changes the list. When the scene, the player or the card cannot be found the box offers the eight names it always did, and a typed key is taken as before. A saved row keeps its bytes.
+
+### Fixed: Show its cards is offered on a Play Juice row that was reopened from a line of code
+
+A line written by hand (`$HitJuice.play(1.0)`) already reopens as the Juice Player's own row when the scene the script runs in says that node is a Juice Player, for every verb the pack has a row for (forty-three actions and conditions, each saved back byte for byte; a test now pins all of them against a fixture scene). Such a row carries the id `method:play` where one placed from the picker carries `play`, and the Show its cards entry only knew the second; it now offers the entry on both. The nine verbs that return a value (Juice Card Field, Feedbacks Duration and the like) are read inside other rows, so they have no row of their own to reopen as.
+
 ### Changed: every warning a running Juice Player prints names the player, the card and the reason
 
 A Tween Property card on a property the object does not have, a Fade Bus card on a bus the project does not have, Set Juice Card Field on a field no card holds (and on the word or script of a card, which it never changes), Copy Juice Cards From a node that is not a player, and the moment-file rows now all say which player and, where a card is the cause, the card's label and what is wrong, and say it once per card. Nothing about what the cards do changes.

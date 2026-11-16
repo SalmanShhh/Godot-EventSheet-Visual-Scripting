@@ -852,7 +852,7 @@ func disable_feedback(label: String) -> void:
 ## @ace_lift_example("$FeedbackPlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 ## @ace_lift_example("$JuicePlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 ## @ace_param(label, default: shake, desc: "The label of the card being tuned.")
-## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value on the card to write.")
+## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value on the card to write.")
 ## @ace_param(value, default: 1.0, desc: "What to write. A number for an amount or a length, a word for the extra one.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_feedback_field("{label}", "{field}", {value})")
@@ -1346,7 +1346,7 @@ func feedback_label_at(position: int) -> String:
 ## @ace_category("Juice Player")
 ## @ace_description("What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds.")
 ## @ace_param(label, default: shake, desc: "The label of the card being read.")
-## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value to read.")
+## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value to read.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_field("{label}", "{field}")")
 func feedback_field(label: String, field: String) -> Variant:

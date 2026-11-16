@@ -295,6 +295,7 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 	_default(sheet, "label", "shake")
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_param_hint(sheet, "field", "juice_card_field")
 	_default(sheet, "field", "amount")
 	_default(sheet, "value", "1.0")
 	_quoted_call(sheet, "set_feedback_field(\"{label}\", \"{field}\", {value})")
@@ -490,6 +491,7 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 	_default(sheet, "label", "shake")
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_param_hint(sheet, "field", "juice_card_field")
 	_default(sheet, "field", "amount")
 	_quoted_call(sheet, "feedback_field(\"{label}\", \"{field}\")")
 	Lib.number(sheet, "feedback_progress", "Juice Card Progress", "Juice Player",

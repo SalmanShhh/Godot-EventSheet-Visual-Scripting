@@ -784,6 +784,8 @@ func _ensure_hint_factories() -> void:
 			"mode_reference": _create_mode_reference_field,
 			"state_reference": _create_state_reference_field,
 			"scene_node": _create_scene_node_field,
+			# The field of a juice card: the keys the card named by the row's other box really holds.
+			"juice_card_field": _create_juice_card_field,
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
@@ -1209,7 +1211,7 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 ## filtered by what's already typed. Picking inserts a suggestion verbatim; typing any
 ## other value is still allowed. The LineEdit IS the value-bearing field (read like text).
 func _create_autocomplete_field(key: String, suggestions: Array, default_value: Variant,
-		note_provider: Callable = Callable()) -> Control:
+		note_provider: Callable = Callable(), suggestions_provider: Callable = Callable()) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var edit: LineEdit = LineEdit.new()
@@ -1235,7 +1237,9 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 	var recents_ace_id: String = _definition.id if _definition != null else ""
 	row.add_child(EventSheetPopupUI.autocomplete_combo(edit, func() -> PackedStringArray:
 		var pool: PackedStringArray = EventSheetRecentParamValues.recent_for(recents_provider_id, recents_ace_id, key)
-		for suggestion_text: String in suggestion_texts:
+		# A field whose words depend on another field of the same form asks for them each time it opens.
+		var offered_now: PackedStringArray = PackedStringArray(suggestions_provider.call()) if suggestions_provider.is_valid() else suggestion_texts
+		for suggestion_text: String in offered_now:
 			if not pool.has(suggestion_text):
 				pool.append(suggestion_text)
 		return pool, note_provider))
@@ -1244,7 +1248,8 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 	# completing field - Tab or Enter accepts, Escape keeps what was typed.
 	EventSheetCompletionPopup.attach_entries(edit, func(typed: String) -> Array[Dictionary]:
 		var offered: Array[Dictionary] = []
-		for suggestion_text: String in suggestion_texts:
+		var typed_from: PackedStringArray = PackedStringArray(suggestions_provider.call()) if suggestions_provider.is_valid() else suggestion_texts
+		for suggestion_text: String in typed_from:
 			offered.append({
 				"text": suggestion_text,
 				"detail": str(note_provider.call(suggestion_text)) if note_provider.is_valid() else "",
@@ -3281,6 +3286,30 @@ func _sheet_host_node() -> Node:
 ## choices at all, which leaves the ordinary text field the param had before.
 func _create_scene_node_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, scene_node_choices(_validation_scene_root()), default_value)
+
+
+## The field of a Juice Player row that names a value on a card. It offers the keys of the card the row's
+## label box names, read from the saved scene the sheet runs in, with the word the Inspector shows for each
+## beside it; when the player or the card cannot be found it offers the eight names every card may hold,
+## and any other key can still be typed.
+func _create_juice_card_field(key: String, default_value: Variant) -> Control:
+	var finder: Script = load("res://addons/eventsheet/editor/dock/juice_card_field_names.gd")
+	var words: Dictionary = {}
+	var read_now: Callable = func() -> PackedStringArray:
+		var label_field: Variant = _fields.get("label")
+		var label: String = str(_extract_value(label_field)).strip_edges().trim_prefix("\"").trim_suffix("\"") if label_field != null and is_instance_valid(label_field) else _opening_value("label")
+		var target_field: Variant = _fields.get("target")
+		var target: String = str(_extract_value(target_field)).strip_edges() if target_field != null and is_instance_valid(target_field) else _opening_value("target")
+		var found: Array = finder.call("for_sheet", _sheet_source_path(), target, label)
+		words.clear()
+		var keys: PackedStringArray = PackedStringArray()
+		for entry: Variant in found:
+			keys.append(str((entry as Dictionary).get("key")))
+			words[str((entry as Dictionary).get("key"))] = str((entry as Dictionary).get("word"))
+		return keys
+	read_now.call()
+	return _create_autocomplete_field(key, Array(read_now.call()), default_value,
+		func(name: String) -> String: return str(words.get(name, "")), read_now)
 
 
 ## The scenes this sheet's own spawners may make, as the quoted paths the row holds. An editable
