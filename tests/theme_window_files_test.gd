@@ -19,6 +19,7 @@ static func run() -> bool:
 	ok = _buttons_by_kind() and ok
 	ok = _close_question() and ok
 	ok = _theme_field() and ok
+	ok = _whole_palette_undo() and ok
 	return ok
 
 
@@ -184,6 +185,28 @@ static func _theme_field() -> bool:
 	]) and ok
 	if window._close_prompt != null:
 		window._close_prompt.free()
+	window._dialog.free()
+	dock.free()
+	return ok
+
+
+static func _whole_palette_undo() -> bool:
+	var dock: Control = recorder_dock()
+	var path: String = theme_file("window_files_whole.tres", Color("#402020"))
+	var window: EventSheetThemeEditor = open_window(path, dock)
+	edit(window, "row_background_color", Color("#103010"))
+	window._reset_to_default()
+	var reset_changed: bool = window._working_style.event_style.row_background_color != Color("#103010")
+	window.undo_edit()
+	var after_one: Color = window._working_style.event_style.row_background_color
+	window.undo_edit()
+	var after_two: Color = window._working_style.event_style.row_background_color
+	var ok: bool = SUPPORT.pins(P + ": whole palette", [
+		["Reset To Default replaces the colours", reset_changed, true],
+		["one undo brings back the palette before it", after_one, Color("#103010")],
+		["the next undo brings back the file's colour", after_two, Color("#402020")],
+		["and the window has no changes", window.is_changed(), false],
+	])
 	window._dialog.free()
 	dock.free()
 	return ok

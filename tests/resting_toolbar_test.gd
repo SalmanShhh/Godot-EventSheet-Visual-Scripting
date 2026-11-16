@@ -546,6 +546,8 @@ static func _test_the_sheet_theme_menu() -> bool:
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
 		expected.append(str(preset.get("name", "Theme")))
 	expected.append("")
+	expected.append("Use For Every Sheet")
+	expected.append("")
 	expected.append("Density")
 	var listed: PackedStringArray = PackedStringArray()
 	for item: int in theme_menu.item_count:
