@@ -819,7 +819,8 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	var badge: Label = Label.new()
 	badge.text = badge_text
 	badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# A short badge never wraps: it asks for exactly the room its words take.
+	badge.autowrap_mode = TextServer.AUTOWRAP_OFF if badge_text.length() <= 12 else TextServer.AUTOWRAP_WORD_SMART
 	# A wrapping label squeezed by a long title would break "0.30 s" one letter to a line. A short badge
 	# keeps room for all of its words; a long one keeps room for its longest word and wraps between them.
 	badge.custom_minimum_size.x = _badge_room(badge, badge_text)
@@ -843,16 +844,17 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 
 ## The width a badge asks for: all of its text when that is short, else its longest word.
 func _badge_room(badge: Label, text: String) -> float:
-	var font: Font = badge.get_theme_font("font")
-	var size: int = badge.get_theme_font_size("font_size")
+	# The editor's own font, which is what the Inspector draws the badge in once it is on screen.
+	var font: Font = EventSheetLookStyle.font()
+	var size: int = EventSheetLookStyle.font_size()
 	if font == null or text.is_empty():
 		return 0.0
 	if text.length() <= 12:
-		return font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 2.0
+		return font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 6.0
 	var widest: float = 0.0
 	for word: String in text.split(" ", false):
 		widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
-	return widest + 2.0
+	return widest + 6.0
 
 
 ## Whether the card line is a light ground, which decides which of a family's two colours a tile wears.

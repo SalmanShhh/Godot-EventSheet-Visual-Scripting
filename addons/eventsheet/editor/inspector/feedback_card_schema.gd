@@ -541,7 +541,7 @@ static func timing_kinds() -> Array:
 			"kind": HOLD_UNTIL,
 			"category": str(family_of().get(HOLD_UNTIL, "")),
 			"label": "Hold",
-			"help": "Waits for the slowest card above to finish, then this long. What is under a hold is what happens AFTER the hit rather than during it.",
+			"help": "Waits for the slowest card above to finish, or for the one card you pick, then this long. What is under a hold is what happens AFTER the hit rather than during it.",
 			"fields": [
 				{"key": WAITS_FOR, "label": "Waits for", "drawer": "above", "above": cards_a_hold_can_wait_for,
 					"all_label": EventSheetL10n.translate("All cards above")},
