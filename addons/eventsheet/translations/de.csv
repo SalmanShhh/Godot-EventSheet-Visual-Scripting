@@ -10941,3 +10941,13 @@ Only at strength,Nur bei Stärke
 "Only at strength, from","Nur bei Stärke, ab"
 "Only at strength, up to","Nur bei Stärke, bis"
 no limit,keine Grenze
+Circle,Kreis
+Ring,Ring
+Cone,Kegel
+Stamp,Stempel
+radius %s,Radius %s
+"radius %s, %s px thick","Radius %s, %s px dick"
+%s x %s,%s x %s
+%s px long,%s px lang
+%s° wide,%s° breit
+no texture,keine Textur

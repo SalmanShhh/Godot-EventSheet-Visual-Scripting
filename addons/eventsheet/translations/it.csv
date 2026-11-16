@@ -10941,3 +10941,13 @@ Only at strength,Solo con intensità
 "Only at strength, from","Solo con intensità, da"
 "Only at strength, up to","Solo con intensità, fino a"
 no limit,nessun limite
+Circle,Cerchio
+Ring,Anello
+Cone,Cono
+Stamp,Timbro
+radius %s,raggio %s
+"radius %s, %s px thick","raggio %s, spessore %s px"
+%s x %s,%s x %s
+%s px long,lungo %s px
+%s° wide,larghezza %s°
+no texture,nessuna texture

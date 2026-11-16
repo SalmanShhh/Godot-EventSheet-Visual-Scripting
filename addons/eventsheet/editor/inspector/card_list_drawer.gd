@@ -111,6 +111,10 @@ var _anchor: int = -1
 ## instead of rebuilding the list under the cursor (which would also lose the keyboard focus).
 var _lines: Dictionary = {}
 var _titles: Dictionary = {}
+## The picture on each card line and the summary beside it, by index, for a schema whose card line
+## follows its numbers (`live_head`): a write repaints them where they stand.
+var _head_tiles: Dictionary = {}
+var _badges: Dictionary = {}
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -771,6 +775,8 @@ func _rebuild() -> void:
 	_timing_marks.clear()
 	_lines.clear()
 	_titles.clear()
+	_head_tiles.clear()
+	_badges.clear()
 	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
@@ -873,7 +879,14 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 		box.tooltip_text = EventSheetL10n.translate("Untick to skip this card.")
 		box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(index, pressed))
 		inside.add_child(box)
-	if EventSheetCardSchemas.tiles_wanted(_schema):
+	var head_tile: Variant = _schema.get("head_tile")
+	if head_tile is Callable and (head_tile as Callable).is_valid():
+		# A schema may draw its own tile: a picture of what the card is, in the card's own colour.
+		var drawn: Variant = (head_tile as Callable).call(card, _on_light_ground())
+		if drawn is Control:
+			_head_tiles[index] = drawn
+			inside.add_child(drawn as Control)
+	elif EventSheetCardSchemas.tiles_wanted(_schema):
 		inside.add_child(_family_tile(EventSheetCardSchemas.card_category(_spec, entry, card)))
 	var title: Label = Label.new()
 	title.text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
@@ -900,6 +913,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	badge.custom_minimum_size.x = _badge_room(badge, badge_text)
 	badge.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 	badge.visible = not badge_text.is_empty()
+	_badges[index] = badge
 	inside.add_child(badge)
 	if open:
 		# The card's menu sits in the head line, before the play mark, so no control stands alone between
@@ -1281,6 +1295,7 @@ func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxCon
 				value_changed.emit(get_value())
 		_refresh_notes(index)
 		_refresh_timing_mark(index)
+		_refresh_head(index)
 		# Changing a card's KIND changes which fields it has, so the card is redrawn - deferred,
 		# because the control that just emitted is still finishing its own signal.
 		if written == str(_spec.get("kind_key", "kind")):
@@ -1314,6 +1329,38 @@ func _said(text: String) -> String:
 func write_card_key(index: int, key: String, value: Variant) -> void:
 	_write_field(index, key, value)
 	value_changed.emit(get_value())
+	_refresh_head(index)
+
+
+## Repaints one card's line in place after one of its numbers changed: the tile in the card's colour and the
+## summary beside it. Only a schema that says its line follows its numbers (`live_head`) has this; any other
+## list draws its line as it always did and keeps it until the list is rebuilt.
+func _refresh_head(index: int) -> void:
+	if not bool(_schema.get("live_head", false)) or index < 0 or index >= _cards.size():
+		return
+	var card: Dictionary = _cards[index]
+	var tile: Control = _head_tiles.get(index) as Control
+	if tile != null and is_instance_valid(tile) and tile.has_method("set_card"):
+		tile.call("set_card", card)
+	var badge: Label = _badges.get(index) as Label
+	if badge != null and is_instance_valid(badge):
+		var entry: Dictionary = _entry_for(card)
+		var badge_text: String = EventSheetCardSchemas.card_badge(entry, card, _cards, index)
+		badge.text = badge_text
+		badge.visible = not badge_text.is_empty()
+		badge.autowrap_mode = TextServer.AUTOWRAP_OFF if badge_text.length() <= 12 else TextServer.AUTOWRAP_WORD_SMART
+		badge.custom_minimum_size.x = _badge_room(badge, badge_text)
+
+
+## The tile on a card's line, or null: what a test and a repaint read back.
+func head_tile_of(index: int) -> Control:
+	return _head_tiles.get(index) as Control
+
+
+## The summary written beside a card's title right now.
+func head_summary_of(index: int) -> String:
+	var badge: Label = _badges.get(index) as Label
+	return badge.text if badge != null and is_instance_valid(badge) else ""
 
 
 ## Takes one key off a card, so a card that never used it is saved without it.

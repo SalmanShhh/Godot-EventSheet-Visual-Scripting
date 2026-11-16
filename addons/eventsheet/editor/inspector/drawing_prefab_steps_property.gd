@@ -90,6 +90,7 @@ class ShapeStepsEditor:
 	extends EventSheetCardListDrawer
 
 	const KINDS: Array[String] = ["circle", "ring", "rect", "line", "cone", "stamp"]
+	const SHAPE_TILE_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_shape_tile.gd"
 	## The four sections a card reads as, in order.
 	const GROUP_PLACEMENT: String = "Placement"
 	const GROUP_GEOMETRY: String = "Geometry"
@@ -153,22 +154,92 @@ class ShapeStepsEditor:
 		super._init({"kind_key": "kind", "stripe_key": "kind", "schema_dict": build_schema()})
 
 
-	## The prefab's vocabulary as a card schema: one kind per shape, its fields grouped into the four
-	## sections a designer reads in order. The stripe is coloured by the SHAPE, so a list of mixed
-	## shapes reads at a glance, and the schema declares no enable key because a step the rasterizer
-	## would still draw must not grow a checkbox that does nothing.
+	## The prefab's vocabulary as a card schema: one kind per shape. The stripe is coloured by the
+	## SHAPE, so a list of mixed shapes reads at a glance, and the schema declares no enable key because
+	## a step the rasterizer would still draw must not grow a checkbox that does nothing. Each card line
+	## wears a tile that draws its shape in the step's own colour and says its size in the shape's own
+	## words (`badge`), and both follow the numbers as they are typed (`live_head`).
 	static func build_schema() -> Dictionary:
 		var kinds: Array = []
 		for kind: String in KINDS:
 			kinds.append({
 				"kind": kind,
 				"category": kind,
-				"label": kind.capitalize(),
+				"label": kind_label(kind),
 				"help": SHAPE_HELP.get(kind, ""),
 				"fields": fields_for(kind),
 				"defaults": defaults_for(kind),
+				"badge": Callable(ShapeStepsEditor, "summary_of"),
 			})
-		return {"kinds": kinds}
+		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true}
+
+
+	## A shape's plain name, in the editor's language. The stored word (`rect`) never changes.
+	static func kind_label(kind: String) -> String:
+		match kind:
+			"circle":
+				return EventSheetL10n.translate("Circle")
+			"ring":
+				return EventSheetL10n.translate("Ring")
+			"rect":
+				return EventSheetL10n.translate("Rectangle")
+			"line":
+				return EventSheetL10n.translate("Line")
+			"cone":
+				return EventSheetL10n.translate("Cone")
+			"stamp":
+				return EventSheetL10n.translate("Stamp")
+		return kind.capitalize()
+
+
+	## A number as a person writes it: no trailing ".0", at most two decimals.
+	static func _num(value: Variant) -> String:
+		var text: String = str(snappedf(float(value), 0.01))
+		return text.trim_suffix(".0")
+
+
+	## The file a stamp's texture text names: a path as written, or the path a uid text stands for. "" when
+	## the card names none.
+	static func texture_path_of(card: Dictionary) -> String:
+		var text: String = str(card.get("texture", "")).strip_edges()
+		if text.begins_with("uid://"):
+			var id: int = ResourceUID.text_to_id(text)
+			return ResourceUID.get_id_path(id) if ResourceUID.has_id(id) else ""
+		return text
+
+
+	## What a card line says beside the shape's name, in that shape's own words: "radius 46, 5 px thick",
+	## "24 x 16", a line's true length, how wide a cone opens, a stamp's file.
+	static func summary_of(card: Dictionary) -> String:
+		var p1: float = float(card.get("p1", 0.0))
+		var p2: float = float(card.get("p2", 0.0))
+		match str(card.get("kind", "")):
+			"circle":
+				return EventSheetL10n.translate("radius %s") % _num(p1)
+			"ring":
+				return EventSheetL10n.translate("radius %s, %s px thick") % [_num(p1), _num(p2)]
+			"rect":
+				return EventSheetL10n.translate("%s x %s") % [_num(p1), _num(p2)]
+			"line":
+				var length: float = Vector2(float(card.get("x", 0.0)), float(card.get("y", 0.0))).distance_to(Vector2(p1, p2))
+				return EventSheetL10n.translate("%s px long") % _num(length)
+			"cone":
+				return EventSheetL10n.translate("%s° wide") % _num(p2)
+			"stamp":
+				var text: String = str(card.get("texture", "")).strip_edges()
+				if text.is_empty():
+					return EventSheetL10n.translate("no texture")
+				var path: String = texture_path_of(card)
+				return path.get_file() if not path.is_empty() else text.get_file()
+		return str(card.get("kind", ""))
+
+
+	## The tile on a card line: the shape drawn in the step's colour. Loaded by path, so nothing that runs
+	## at editor boot names it.
+	static func make_tile(card: Dictionary, on_light: bool) -> Control:
+		var tile: Control = load(SHAPE_TILE_PATH).new(int(EventSheetLookStyle.px(14.0)), on_light)
+		tile.call("set_card", card)
+		return tile
 
 
 	## One shape's fields, in the order the card draws them: where it sits, what it is, what colour it

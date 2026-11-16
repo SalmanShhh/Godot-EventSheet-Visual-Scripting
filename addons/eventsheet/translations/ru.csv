@@ -10941,3 +10941,13 @@ Only at strength,Только при силе
 "Only at strength, from","Только при силе, от"
 "Only at strength, up to","Только при силе, до"
 no limit,без предела
+Circle,Круг
+Ring,Кольцо
+Cone,Конус
+Stamp,Штамп
+radius %s,радиус %s
+"radius %s, %s px thick","радиус %s, толщина %s px"
+%s x %s,%s x %s
+%s px long,длина %s px
+%s° wide,шириной %s°
+no texture,нет текстуры

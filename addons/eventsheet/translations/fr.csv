@@ -10941,3 +10941,13 @@ Only at strength,Seulement à la force
 "Only at strength, from","Seulement à la force, à partir de"
 "Only at strength, up to","Seulement à la force, jusqu'à"
 no limit,sans limite
+Circle,Cercle
+Ring,Anneau
+Cone,Cône
+Stamp,Tampon
+radius %s,rayon %s
+"radius %s, %s px thick","rayon %s, %s px d'épaisseur"
+%s x %s,%s x %s
+%s px long,%s px de long
+%s° wide,%s° de large
+no texture,pas de texture

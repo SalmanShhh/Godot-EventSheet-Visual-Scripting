@@ -10941,3 +10941,13 @@ Only at strength,仅在强度范围内
 "Only at strength, from",仅在强度下限
 "Only at strength, up to",仅在强度上限
 no limit,无上限
+Circle,圆形
+Ring,圆环
+Cone,扇形
+Stamp,图章
+radius %s,半径 %s
+"radius %s, %s px thick","半径 %s，粗细 %s px"
+%s x %s,%s x %s
+%s px long,长 %s px
+%s° wide,宽 %s°
+no texture,无纹理

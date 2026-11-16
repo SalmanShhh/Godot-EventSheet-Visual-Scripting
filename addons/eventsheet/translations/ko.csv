@@ -10941,3 +10941,13 @@ Only at strength,세기가 이 범위일 때만
 "Only at strength, from",세기 하한
 "Only at strength, up to",세기 상한
 no limit,제한 없음
+Circle,원
+Ring,링
+Cone,부채꼴
+Stamp,스탬프
+radius %s,반지름 %s
+"radius %s, %s px thick","반지름 %s, 두께 %s px"
+%s x %s,%s x %s
+%s px long,길이 %s px
+%s° wide,너비 %s°
+no texture,텍스처 없음
