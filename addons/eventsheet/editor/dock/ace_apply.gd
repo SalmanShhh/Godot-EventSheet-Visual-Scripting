@@ -38,6 +38,8 @@ const GROUP_ARRIVAL_ACES := preload("res://addons/eventforge/registration/module
 ## The eight EDGE triggers and the gate each one puts under itself, read through the one file every
 ## reader of them shares.
 const COLLISION_EDGES := preload("res://addons/eventforge/registration/collision_edges.gd")
+## A guarded plain number written as the number, for the rebase line an edited Every row rewrites.
+const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
 ## The Building module, by path: it is read only when a row is dropped into a tool sheet, and the first open of a
 ## sheet must not compile it (and the Files module it shares a walk with) for nothing.
 const BUILDING_ACES_PATH := "res://addons/eventforge/registration/modules/building_aces.gd"
@@ -589,6 +591,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						var edited_condition: ACECondition = _create_condition_from_definition(definition, params, _context_negated(context))
 						_carry_notes(replace_row.conditions[condition_index], edited_condition)
 						_keep_legacy_template(replace_row.conditions[condition_index], edited_condition)
+						keep_lifted_clock(replace_row.conditions[condition_index], edited_condition, replace_row)
 						replace_row.conditions[condition_index] = edited_condition
 						message["text"] = "Updated condition."
 						return true
@@ -646,6 +649,8 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 							if not apply_keys.has(str(param_key)) and existing_params.has(param_key):
 								fresh_params[param_key] = _duplicated_if_container(existing_params[param_key])
 					_keep_legacy_template(existing, fresh)
+					if fresh is ACECondition:
+						keep_lifted_clock(existing, fresh as ACECondition, target_event)
 					lane_array[slot_index] = fresh
 					applied += 1
 				if applied > 0:
@@ -1660,3 +1665,43 @@ func _ace_type_label(ace_type: int) -> String:
 
 func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
 	_dock._set_status(message, is_error)
+
+
+## An Every X Seconds row read from a file keeps the clock it was read with when its seconds are edited.
+## The file already holds that clock - the `+= delta` line that feeds it and the rebase line that restarts
+## it - as two rows beside this one, so a replacement built from the picker would add a second clock of its
+## own (a new member, a second accumulating line, a rebase still naming the old seconds) and leave the first
+## one running for nothing. The replacement takes the file's clock instead, writes no member, and the
+## rebase row follows the new seconds. A row with no clock of its own (one placed from the picker) is left
+## as built.
+static func keep_lifted_clock(previous: Variant, edited: ACECondition, event_row: EventRow) -> void:
+	if not (previous is ACECondition) or edited == null or event_row == null:
+		return
+	var old: ACECondition = previous as ACECondition
+	if old.ace_id != "EveryXSeconds" or edited.ace_id != "EveryXSeconds":
+		return
+	if not old.member_declaration.is_empty() or not old.params.has("uid"):
+		return
+	var clock: String = "__every_%s" % str(old.params["uid"])
+	var old_seconds: String = str(old.params.get("seconds", ""))
+	edited.params["uid"] = old.params["uid"]
+	edited.codegen_template = ""
+	edited.member_declaration = ""
+	edited.codegen_prelude = ""
+	edited.codegen_on_true = ""
+	edited.codegen_on_exit = ""
+	var rebase_template: String = "fmod(%s, maxf({seconds}, 0.001))" % clock
+	var new_rebase: String = rebase_template
+	if edited.folds_literals:
+		new_rebase = LiteralFold.fold_template(rebase_template, edited.params)
+	new_rebase = new_rebase.replace("{seconds}", str(edited.params.get("seconds", "")))
+	var old_rebases: PackedStringArray = [
+		"fmod(%s, maxf(%s, 0.001))" % [clock, old_seconds],
+		"fmod(%s, %s)" % [clock, old_seconds],
+	]
+	for action: Variant in event_row.actions:
+		if not (action is ACEAction) or (action as ACEAction).ace_id != "SetVar":
+			continue
+		var rebase_row: ACEAction = action as ACEAction
+		if str(rebase_row.params.get("var_name", clock)) == clock and old_rebases.has(str(rebase_row.params.get("value", ""))):
+			rebase_row.params["value"] = new_rebase
