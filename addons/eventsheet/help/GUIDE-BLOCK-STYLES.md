@@ -209,7 +209,7 @@ A group's own variables read as **Local rows at the top of its body**, each echo
 the compiler writes for it. Add one with `V` while the head is selected.
 
 Right-click a head for the group's verbs: Edit Group… (name, description, Active on start, Can be
-switched at runtime, colour), Active On Start, Open / Close Group, Open All / Close All Groups
+switched at runtime, colour), Active On Start, Open / Close Section, Open All / Close All Sections
 (Ctrl+Shift+G), Add Local Variable…, Group Color… and Ungroup - Keep The Rows. `G` with rows
 selected wraps THEM in a new group and opens the name editor; `G` with nothing selected adds an
 empty one.

@@ -733,8 +733,8 @@ The group's menu:
 | Runs On | Everyone / The host / The owner, without opening the dialog |
 | Active On Start | the tick, without opening the dialog |
 | Can Be Switched At Runtime | the other tick, beside it |
-| Open / Close Group | fold this one |
-| Open All / Close All Groups | `Ctrl+Shift+G` |
+| Open / Close Section | fold this one |
+| Open All / Close All Sections | `Ctrl+Shift+G` |
 | Add Local Variable… | `V` with the head selected does the same |
 | Group Color… | paints the bracket, the badge and the head's left rule |
 | Turn Into Region | with the reason in the item itself when it cannot |

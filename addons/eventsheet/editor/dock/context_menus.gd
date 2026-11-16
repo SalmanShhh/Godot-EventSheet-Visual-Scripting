@@ -532,7 +532,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_separator()
 		menu.add_item(EventSheetL10n.translate("Add Local Variable…"), _dock.ROW_MENU_GROUP_ADD_LOCAL)
 		menu.add_item(EventSheetL10n.translate("Open / Close %s") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
-		menu.add_item(EventSheetL10n.translate("Open All / Close All %s") % (EventSheetL10n.translate(EventSheetWords.word("section_block")) + "s"), _dock.ROW_MENU_FOLD_ALL_GROUPS)
+		menu.add_item(EventSheetL10n.translate("Open All / Close All %s") % EventSheetL10n.translate(EventSheetWords.word("section_block") + "s"), _dock.ROW_MENU_FOLD_ALL_GROUPS)
 	elif is_region:
 		# What a region offers: rename the fence, fold it, and the two things it can become.
 		# No locals, no on/off switch, no ungroup - a region holds none of that. It folds by its own

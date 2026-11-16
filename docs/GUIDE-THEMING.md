@@ -19,10 +19,32 @@ Current additions on top of the model below:
   split, an object-column width or a Density picked for a script is kept in this project instead
   (in the editor's project metadata, per script path) and put back when the script is opened again.
   A script is never marked changed for it, and **Match Editor (default)** lets go of all of it. The
-  Theme Editor's **Apply To Current Sheet** has no file to remember, so a script wears that look
-  until it is closed; save the theme to a file and pick it to keep it. A theme switch, Apply
+  Theme Editor's **Apply To Current Sheet** keeps a theme from a saved file for the script, in the same
+  place; a look with no file yet is worn until the script is closed, so save it to a file to keep it. A theme switch, Apply
   included, is never an undo step: undo is for the sheet's content.
-- The built-in default is **Godot-adaptive** (`EventSheetGodotTheme.adapt_to_editor`):
+- **The Theme Editor edits one theme file.** Its title names the file ("Theme Editor - nord_copy.tres")
+  and gains "(changed)" the moment a swatch moves. **Ctrl+Z** and **Ctrl+Shift+Z** step the swatches,
+  **Revert** goes back to the file, and the **Theme** field at the top of the form switches to another
+  theme without closing the window. Closing the window, or switching theme, with changes asks to
+  Save, Discard or Cancel, the way Godot asks for a changed scene.
+  - **Save** (or **Ctrl+S**) writes the file the window opened, and every sheet wearing it repaints.
+  - **Save As...** makes a new file from what you see, and the window then edits that file.
+  - A starter that comes with the plugin, or a theme in `res://demo/`, is never written: the window offers
+    **Save a Copy...** instead, which starts in `res://eventsheet_themes/` with a free name, and puts the
+    open sheet on the copy.
+  - Match Editor has no file. Change a swatch and it becomes an untitled theme; **Save As...** asks where to
+    keep it.
+  - Godot renumbers the blocks inside a `.tres` every time it saves one, so two saves of the same
+    values give the same text only when those numbers are ignored; every value is the same.
+- **Right-click a theme file in the FileSystem dock and choose Edit in Theme Editor** to open the window
+  on it. Double-clicking a theme is left to Godot, so the Inspector keeps editing it.
+- **View ▸ Sheet theme ▸ Use For Every Sheet** names the sheet's theme file as the project's default
+  look, kept in the Project Settings entry `eventsheets/theme/default_theme`. A sheet that chose no
+  theme of its own wears it; a sheet's own theme always wins. Choose it again to take it off, or clear the
+  setting in Project Settings. While a project theme is set, the first entry of the Sheet theme menu reads
+  "Project theme: <name>" in place of Match Editor.
+- The built-in default is **Godot-adaptive**
+ (`EventSheetGodotTheme.adapt_to_editor`):
   with no theme assigned, the sheet derives its colors from your editor theme so it looks
   native in any Godot skin.
 - Newer semantic tokens include `object_label_color`, `value_highlight_color`,

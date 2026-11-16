@@ -282,7 +282,7 @@ const TUTORIALS: Array[Dictionary] = [
 				"check": "sheet_sends_a_message",
 			},
 			{
-				"text": "Say who runs what. Select the rows that DECIDE something, right-click ▸ Group Selection into New Group, then right-click the group's head ▸ Runs On ▸ The host. One word on the head instead of a condition on every row, and the compiler wraps those events in multiplayer.is_server().",
+				"text": "Say who runs what. Select the rows that DECIDE something, right-click ▸ Put Selection into New Section, then right-click the group's head ▸ Runs On ▸ The host. One word on the head instead of a condition on every row, and the compiler wraps those events in multiplayer.is_server().",
 				"control": "",
 				"check": "sheet_group_runs_on",
 			},
