@@ -10674,3 +10674,9 @@ Pick a shared sheet to see what it brings; Add… brings in another sheet.,Chois
 Applied default theme. Nothing is kept for this script.,Thème par défaut appliqué. Rien n'est retenu pour ce script.
 "Theme applied from the theme editor. It has no file, so this script wears it until you close it; save the theme to a file to keep it.",Thème appliqué depuis l'éditeur de thèmes. Il n'a pas de fichier : ce script le garde jusqu'à sa fermeture ; enregistrez le thème dans un fichier pour le conserver.
 Sets: %s. Change any of it later in Tools ▸ Words and the View menu.,Règle : %s. Tout cela se change plus tard dans Outils ▸ Mots et le menu Affichage.
+Nothing here yet. Add one.,Rien ici pour l'instant. Ajoutez-en une.
+Paste over,Coller par-dessus
+Move to top,Déplacer tout en haut
+Written by the game while it runs.,Écrit par le jeu pendant son exécution.
+Keep %s and this field in the ratio they have now.,Garder %s et ce champ dans la proportion actuelle.
+card,carte

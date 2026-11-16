@@ -10674,3 +10674,9 @@ Pick a shared sheet to see what it brings; Add… brings in another sheet.,选�
 Applied default theme. Nothing is kept for this script.,已应用默认主题。不会为此脚本记住任何内容。
 "Theme applied from the theme editor. It has no file, so this script wears it until you close it; save the theme to a file to keep it.",已从主题编辑器应用主题。它没有文件，因此此脚本只在关闭前使用它；把主题保存到文件即可保留。
 Sets: %s. Change any of it later in Tools ▸ Words and the View menu.,设置：%s。之后可在 工具 ▸ 用词 和 视图 菜单中更改。
+Nothing here yet. Add one.,这里还没有内容。请添加一个。
+Paste over,粘贴覆盖
+Move to top,移到顶部
+Written by the game while it runs.,游戏运行时由游戏写入。
+Keep %s and this field in the ratio they have now.,让 %s 与此字段保持当前的比例。
+card,卡片

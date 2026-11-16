@@ -10674,3 +10674,9 @@ Pick a shared sheet to see what it brings; Add… brings in another sheet.,共�
 Applied default theme. Nothing is kept for this script.,既定のテーマを適用しました。このスクリプトには何も記憶されません。
 "Theme applied from the theme editor. It has no file, so this script wears it until you close it; save the theme to a file to keep it.",テーマエディターからテーマを適用しました。ファイルがないため、閉じるまでこのスクリプトだけが使います。残すにはテーマをファイルに保存してください。
 Sets: %s. Change any of it later in Tools ▸ Words and the View menu.,設定内容: %s。どれも後から ツール ▸ 用語 と 表示 メニューで変えられます。
+Nothing here yet. Add one.,まだ何もありません。追加してください。
+Paste over,上に貼り付けて置き換え
+Move to top,先頭へ移動
+Written by the game while it runs.,ゲームの実行中にゲームが書き込みます。
+Keep %s and this field in the ratio they have now.,%s とこの項目を現在の比率に保ちます。
+card,カード

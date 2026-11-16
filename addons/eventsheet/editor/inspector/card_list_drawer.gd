@@ -419,7 +419,7 @@ func _on_add_pressed() -> void:
 		var box: VBoxContainer = VBoxContainer.new()
 		box.add_theme_constant_override("separation", 4)
 		_add_filter = LineEdit.new()
-		_add_filter.placeholder_text = "Search"
+		_add_filter.placeholder_text = EventSheetL10n.translate("Search")
 		_add_filter.clear_button_enabled = true
 		_add_filter.custom_minimum_size = Vector2(EventSheetPalette.scaled(220), 0.0)
 		_add_filter.text_changed.connect(func(_text: String) -> void: _fill_add_tree())
@@ -492,7 +492,7 @@ func _rebuild() -> void:
 	_add_button.tooltip_text = "" if EventSheetCardSchemas.kinds_of(_schema).size() <= 1 else EventSheetL10n.translate("Add a card. Type to search; the list is grouped the way its pack groups it.")
 	if _cards.is_empty():
 		var empty: Label = Label.new()
-		empty.text = "Nothing here yet. Add one."
+		empty.text = EventSheetL10n.translate("Nothing here yet. Add one.")
 		empty.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		_list.add_child(empty)
 		return
@@ -655,8 +655,13 @@ func _build_menu(index: int) -> Control:
 
 
 func _fill_card_menu(popup: PopupMenu) -> void:
-	for item: String in ["Duplicate", "Copy", "Paste over", "Move to top", "Move up", "Move down", "Remove"]:
-		popup.add_item(item)
+	popup.add_item(EventSheetL10n.translate("Duplicate"), 0)
+	popup.add_item(EventSheetL10n.translate("Copy"), 1)
+	popup.add_item(EventSheetL10n.translate("Paste over"), 2)
+	popup.add_item(EventSheetL10n.translate("Move to top"), 3)
+	popup.add_item(EventSheetL10n.translate("Move up"), 4)
+	popup.add_item(EventSheetL10n.translate("Move down"), 5)
+	popup.add_item(EventSheetL10n.translate("Remove"), 6)
 	if _marks_wanted():
 		popup.add_separator()
 		popup.add_item(EventSheetL10n.translate("Play from here"), MENU_PLAY_FROM)
@@ -736,7 +741,7 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 		readout.text = "%s  %s" % [str((live as Dictionary).get("label", "")), str(card.get(str((live as Dictionary).get("key", "")), ""))]
 		readout.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		readout.modulate = Color(1.0, 1.0, 1.0, 0.4)
-		readout.tooltip_text = "Written by the game while it runs."
+		readout.tooltip_text = EventSheetL10n.translate("Written by the game while it runs.")
 		body.add_child(readout)
 	var actions: Array = entry.get("actions") if entry.get("actions") is Array else []
 	if not actions.is_empty():
@@ -768,15 +773,15 @@ func _build_active_row(index: int, enabled: bool) -> Control:
 	var box: CheckBox = CheckBox.new()
 	box.button_pressed = enabled
 	box.disabled = not editable
-	box.tooltip_text = "Untick to skip this card."
+	box.tooltip_text = EventSheetL10n.translate("Untick to skip this card.")
 	box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(index, pressed))
-	return _titled_row("Active", box)
+	return _titled_row(EventSheetL10n.translate("Active"), box)
 
 
 ## The card's name, and beside it the colour of its stripe when the list stores one per card. A
 ## schema that declares no label key has no name to type, so this row is not built at all.
 func _build_label_row(index: int, card: Dictionary, entry: Dictionary) -> Control:
-	var row: HBoxContainer = _titled_row("Label", null)
+	var row: HBoxContainer = _titled_row(EventSheetL10n.translate("Label"), null)
 	var name_edit: LineEdit = LineEdit.new()
 	name_edit.text = str(card.get(str(_schema.get("label_key", "")), ""))
 	name_edit.placeholder_text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
@@ -820,7 +825,7 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 	if not linked.is_empty():
 		link_toggle = CheckButton.new()
 		link_toggle.text = "="
-		link_toggle.tooltip_text = "Keep %s and this field in the ratio they have now." % linked
+		link_toggle.tooltip_text = EventSheetL10n.translate("Keep %s and this field in the ratio they have now.") % linked
 		link_toggle.disabled = not editable
 		link_toggle.toggled.connect(func(pressed: bool) -> void:
 			if pressed:
@@ -1166,7 +1171,7 @@ func _curve_field(card: Dictionary, key: String, write: Callable) -> Control:
 func _resource_picker(base_type: String, current: Resource, on_changed: Callable) -> Control:
 	if not ClassDB.can_instantiate("EditorResourcePicker"):
 		var placeholder: Label = Label.new()
-		placeholder.text = current.resource_path if current != null else "(none)"
+		placeholder.text = current.resource_path if current != null else EventSheetL10n.translate("(none)")
 		placeholder.modulate = Color(1.0, 1.0, 1.0, 0.5)
 		return placeholder
 	var picker: EditorResourcePicker = EditorResourcePicker.new()
@@ -1209,7 +1214,7 @@ class _CardRow:
 			return null
 		var labels: PackedStringArray = _drawer.card_labels()
 		var ghost: Label = Label.new()
-		ghost.text = "  %s  " % (labels[_index] if _index < labels.size() else "card")
+		ghost.text = "  %s  " % (labels[_index] if _index < labels.size() else EventSheetL10n.translate("card"))
 		set_drag_preview(ghost)
 		return {EventSheetCardListDrawer.DRAG_KEY: _index, "drawer": _drawer}
 

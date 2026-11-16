@@ -10674,3 +10674,9 @@ Pick a shared sheet to see what it brings; Add… brings in another sheet.,"Вы
 Applied default theme. Nothing is kept for this script.,Тема по умолчанию применена. Для этого скрипта ничего не запоминается.
 "Theme applied from the theme editor. It has no file, so this script wears it until you close it; save the theme to a file to keep it.","Тема применена из редактора тем. У неё нет файла, поэтому этот скрипт носит её, пока вы его не закроете; сохраните тему в файл, чтобы оставить её."
 Sets: %s. Change any of it later in Tools ▸ Words and the View menu.,Задаёт: %s. Любое из этого можно позже изменить в Инструменты ▸ Слова и в меню Вид.
+Nothing here yet. Add one.,Здесь пока ничего нет. Добавьте карточку.
+Paste over,Вставить поверх
+Move to top,Переместить наверх
+Written by the game while it runs.,Записывается игрой во время работы.
+Keep %s and this field in the ratio they have now.,Сохранять соотношение %s и этого поля как сейчас.
+card,карточка

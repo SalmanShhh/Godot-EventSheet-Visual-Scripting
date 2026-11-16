@@ -10674,3 +10674,9 @@ Pick a shared sheet to see what it brings; Add… brings in another sheet.,공�
 Applied default theme. Nothing is kept for this script.,기본 테마를 적용했습니다. 이 스크립트에는 아무것도 기억되지 않습니다.
 "Theme applied from the theme editor. It has no file, so this script wears it until you close it; save the theme to a file to keep it.",테마 에디터에서 테마를 적용했습니다. 파일이 없으므로 닫을 때까지만 이 스크립트가 사용합니다. 유지하려면 테마를 파일로 저장하세요.
 Sets: %s. Change any of it later in Tools ▸ Words and the View menu.,설정: %s. 나중에 도구 ▸ 단어와 보기 메뉴에서 바꿀 수 있습니다.
+Nothing here yet. Add one.,아직 아무것도 없습니다. 하나 추가하세요.
+Paste over,덮어서 붙여넣기
+Move to top,맨 위로 이동
+Written by the game while it runs.,게임이 실행되는 동안 게임이 기록합니다.
+Keep %s and this field in the ratio they have now.,%s과(와) 이 필드를 현재 비율로 유지합니다.
+card,카드
