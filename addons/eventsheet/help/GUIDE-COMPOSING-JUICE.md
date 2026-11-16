@@ -256,9 +256,15 @@ Each card head wears a small tile in its family's colour (Sound, Scene, Object, 
 Screen, Time or Flow), the way a variable row shows its type, and the Add box groups by the same
 names. A card is still saved and muted by the family word it always had.
 
-Unfold a card and it opens: what that juice card does, **Active**, **Label**, **Chance**, a **Timing**
-foldout (delay, cooldown, repeat and interval, the clock, a strength window it only plays inside,
-skip on stop), and then the card's own fields drawn with the real Inspector drawers. While the game
+Unfold a card and it opens: what that juice card does, **Active**, **Label**, the card's own fields drawn
+with the real Inspector drawers, and, under them, a **Timing** foldout that is closed until you open it. It
+is the same on every kind of card: **Delay** (seconds before the card plays), **Repeat** and **Every** (how
+many times it is felt and how far apart), **Clock** (game time, which a slowmo slows, or real time, which it
+never does), **Chance** (the share of plays that feel it) and **Only at strength** (a card for the big hits
+or the small ones; leave the top empty for no limit). A grey line under the fold says in words what the
+numbers do, and a card whose timing is not the default wears a small clock mark on its head. The fold
+writes nothing until you change a number, so a card you never open stores nothing new. A Delay and a Repeat
+hold up that card only; to make everything under a card wait, put a Pause card above them. While the game
 runs, the values the play is writing back are shown greyed, through Godot's own remote Inspector.
 
 The strip of buttons sits under the cards. **Play** samples the list in the editor and applies it to

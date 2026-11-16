@@ -127,14 +127,14 @@ Play Player now picks the other player instead of asking for its name; an older 
 
 | Card | Fields | What it does |
 | --- | --- | --- |
-| **Sound** | Stream (a file picked with Godot's resource picker, kept as its uid), Volume (dB), Random volume (dB), Pitch, Random pitch, Bus, Heard from (`here` or `everywhere`), Follows strength, Delay | Plays a sound when the list reaches the card, through one of four reusable voices on the player. Each play lands somewhere between the two ends of the random volume and pitch. Its length is the file's length at its pitch, it is muted with the `audio` family, and a card with no sound says so and plays nothing. Listen on the open card plays it alone in the editor. A moment file cannot hold it. |
+| **Sound** | Stream (a file picked with Godot's resource picker, kept as its uid), Volume (dB), Random volume (dB), Pitch, Random pitch, Bus, Heard from (`here` or `everywhere`), Follows strength | Plays a sound when the list reaches the card, through one of four reusable voices on the player. Each play lands somewhere between the two ends of the random volume and pitch. Its length is the file's length at its pitch, it is muted with the `audio` family, and a card with no sound says so and plays nothing. Listen on the open card plays it alone in the editor. A moment file cannot hold it. |
 | **Tween Property** | Property (`rotation`), To (`1.0`), Over (`0.2` s) | Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back. |
 | **Emit Signal** | Word | Says one word out of the player's **On Juice Signal** trigger, so a sheet can hang anything at all off a point in the list. |
 | **Play Player** | Player, Strength (`1.0`) | Plays another Juice Player from inside this one, at a share of this play's strength. |
 
 **Selecting cards.** Click a card to select it, Shift+click for the run from the last click, Ctrl+click to add or take one out. A selected card is filled the way a selected row is in the Scene dock. Ctrl+C copies the selected cards, Ctrl+X cuts them, Ctrl+V pastes them under the last selected card (or at the end when none is selected, and nothing is replaced), Ctrl+D duplicates them in place and Delete removes them; each is one change, so one Ctrl+Z takes it back. A right click on a card opens its menu, which acts on everything selected when the card is part of the selection: Duplicate, Cut, Copy, Paste, Paste over, Move to top, Move up, Move down, Remove, and Play from here. Cards are copied as text, so select the other object, click in its list and paste: a card that pointed at a node by name may find no such node under the new object. Cards that start together sit on one faint band.
 
-**The unfolded card.** Click a card's arrow and it opens: a line saying what that juice card does, **Active**, **Label**, **Chance**, a **Timing** foldout, then the card's own fields drawn with the real drawers, and, while the game runs, the values the play is writing back, greyed. The Timing foldout is the same on every card: initial delay, cooldown, repeat count and interval, the clock (game time or real time), a strength window the card only plays inside, and skip on stop. Every one of those keys is absent by default, which is what keeps a plain card identical to a moment file's step.
+**The unfolded card.** Click a card's arrow and it opens: a line saying what that juice card does, **Active**, **Label**, the card's own fields drawn with the real drawers, a **Timing** foldout under them (closed until you open it), and, while the game runs, the values the play is writing back, greyed. The Timing foldout is the same on every card, including a card of your own: **Delay** in seconds, **Repeat** and **Every** (how many times it is felt and how far apart), **Clock** (Game time or Real time), **Chance** as a percentage, and **Only at strength** (from, to; the top empty means no limit). A grey line under the fold says what the numbers do ("Waits 0.05 s, then is felt 3 times, 0.08 s apart."), and a card whose timing is not the default shows a small clock mark on its head. Every one of those keys is absent until you change it, which is what keeps a plain card identical to a moment file's step, and they are the keys Set Juice Card Timing, Set Juice Card Chance and Set Juice Card Field write. A Delay and a Repeat hold up that card only; a Pause card holds up everything under it.
 
 **A card of your own.** The cards that ship are words the player knows. When none fits, write one: a script that extends `JuiceCard`, anywhere in the project.
 
@@ -196,12 +196,12 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Resume Juice | (none) | Carries on from where Pause Juice left off. |
 | Add Juice Card | `step` (card, `{"verb": "shake", "amount": 0.4, "seconds": 0.2}`), `after_label` (String, empty) | Adds one juice card to this player's list while the game runs - the same card the Inspector adds, with the same fields. Leave the after box empty to put it at the end, or name a card to put it straight after that one. |
 | Insert Juice Card Before | `step` (card, `{"verb": "flash", "amount": 1.0, "seconds": 0.1}`), `before_label` (String, `shake`) | Puts a juice card into the list immediately ABOVE the card you name - the other half of Add Juice Card, for a step that has to be felt before something already in the beat. |
-| Replace Juice Card | `label` (String, `kick`), `step` (card, `{"verb": "recoil", "amount": 1.0, "seconds": 0.1}`) | Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own. |
+| Replace Juice Card | `label` (String, `kick`), `step` (card, `{"verb": "punch", "amount": 1.0, "seconds": 0.1}`) | Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own. |
 | Remove Juice Card | `label` (String, `shake`) | Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Juice Card. |
 | Move Juice Card To | `label` (String, `shake`), `position` (int, `1`) | Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last. |
 | Enable Juice Card | `label` (String, `shake`) | Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row. |
 | Disable Juice Card | `label` (String, `shake`) | Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row. |
-| Set Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` or any value the card holds, default `amount`), `value` (`1.0`) | Retunes ONE value on one card: how much, how long, which extra word, or any value the card holds under that name (the export of a card of your own). The field box offers the keys of the card the label box names when the scene the sheet runs in is saved (with the Inspector's word beside each), and the eight common names when it is not. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. |
+| Set Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` \| `clock` \| `min_strength` \| `max_strength` or any value the card holds, default `amount`), `value` (`1.0`) | Retunes ONE value on one card: how much, how long, which extra word, or any value the card holds under that name (the export of a card of your own). The field box offers the keys of the card the label box names when the scene the sheet runs in is saved (with the Inspector's word beside each), and the eight common names when it is not. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. |
 | Set Juice Card Timing | `label` (String, `shake`), `delay` (float, `0.0`), `repeat` (int, `1`), `interval` (float, `0.0`), `clock` (`game` \| `real`, default `game`) | Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row. |
 | Set Juice Card Chance | `label` (String, `shake`), `percent` (float, `100.0`) | How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is. |
 | Rename Juice Card | `label` (String, `shake`), `new_label` (String, `big shake`) | Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say. |
@@ -244,7 +244,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Juice Duration | (none) | float | The longest path through the list in seconds - the same number the head of the Inspector shows, so a row can wait exactly as long as the beat lasts. |
 | Juice Card Count | (none) | int | How many cards this player's list holds, ticked or not - the number the head of the Inspector shows. |
 | Juice Card Label At | `position` (int, `1`) | String | The name of the card at a place in the list. The first card is 1; a number past the end answers with nothing. |
-| Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` or any value the card holds, default `amount`) | Variant | What one card says at one of its fields. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. |
+| Juice Card Field | `label` (String, `shake`), `field` (`amount` \| `effect` \| `seconds` \| `delay` \| `interval` \| `repeat` \| `chance` \| `loops` \| `clock` \| `min_strength` \| `max_strength` or any value the card holds, default `amount`) | Variant | What one card says at one of its fields. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. |
 | Juice Card Progress | `label` (String, `shake`) | float | How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing. |
 | Juice Card Duration | `label` (String, `shake`) | float | How long ONE card lasts, its own wait included - beside Juice Duration, which is how long the whole beat lasts. |
 | Current Juice Card | (none) | String | The label of the card the head is on right now, or nothing when no play is running. |
@@ -632,6 +632,24 @@ Boss: On phase change
 ```
 
 With `HeadJuice`, `ArmJuice` and `CameraJuice` named on Play Juice Player cards inside `BossJuice`, one row moves the whole boss. A nested play obeys the outer one, so stopping, skipping or restoring the outer list does the same to them.
+
+### 26. A list built On ready
+
+A player can start with no cards at all, and a sheet builds the list the moment the object arrives. Every kind of card a row's card box offers is the same card the Inspector adds, with the same fields, and a row changes the object it is on and no other, so two copies of one scene build their own lists. Nothing a row does while the game runs is written back to the saved scene.
+
+```
+On ready
+  -> HitJuice | Juice Player: Clear Juice Cards
+  -> HitJuice | Juice Player: Add Juice Card  {"verb": "shake", "label": "shake", "amount": 0.4, "seconds": 0.2}  after ""
+  -> HitJuice | Juice Player: Add Juice Card  {"verb": "hitstop", "label": "stop", "amount": 0.0, "seconds": 0.06}  after "shake"
+  -> HitJuice | Juice Player: Set Juice Card Timing  "shake"  delay 0.05, 3 times, 0.08 s apart, game
+  -> HitJuice | Juice Player: Set Juice Card Field  "shake"  min_strength  0.5
+
+Enemy: On damaged
+  -> HitJuice | Juice Player: Play Juice  0.6
+```
+
+The label box of every one of these rows lists the labels of the cards the player holds in the saved scene, so a list laid out in the Inspector cannot be misspelled from a sheet; a label typed still works, because a list built while the game runs is not in the scene. A label that names no card says so once, with the player and the row, and Project Doctor lists such rows before you run. Each row is one plain method call (`$HitJuice.set_feedback_timing("shake", 0.05, 3, 0.08, "game")`), so a teammate who writes code reads the same thing. The Timing keys the foldout draws are the keys Set Juice Card Timing, Set Juice Card Chance and Set Juice Card Field write, so a card a row retimed opens retimed in the Inspector.
 
 ### Other use cases
 
