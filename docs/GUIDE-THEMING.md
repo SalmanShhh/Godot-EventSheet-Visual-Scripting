@@ -26,7 +26,12 @@ Current additions on top of the model below:
   and gains "(changed)" the moment a swatch moves. **Ctrl+Z** and **Ctrl+Shift+Z** step the swatches,
   **Revert** goes back to the file, and the **Theme** field at the top of the form switches to another
   theme without closing the window. Closing the window, or switching theme, with changes asks to
-  Save, Discard or Cancel, the way Godot asks for a changed scene.
+  Save, Discard or Cancel, the way Godot asks for a changed scene. The question appears over the window,
+  which stays on screen until you answer: Cancel leaves it as it is, Discard puts the file's colours back and
+  closes it.
+  - The **Theme** field lists every theme with a small swatch of its sheet colour and the folder it lives in
+    (Godot's drop-down has one text column, so the folder shares the name's line). A tooltip gives the file,
+    and one sentence under the field says what the open theme is and what Save does to it.
   - **Save** (or **Ctrl+S**) writes the file the window opened, and every sheet wearing it repaints.
   - **Save As...** makes a new file from what you see, and the window then edits that file.
   - A starter that comes with the plugin, or a theme in `res://demo/`, is never written: the window offers
@@ -59,7 +64,10 @@ Current additions on top of the model below:
   - A small amber **!** after a swatch says its words would read under the bar on their ground (4.5 to 1 for
     sentences, 3 to 1 for marks and badge letters); the strip at the foot gives the ratio. Nothing blocks a
     save.
-  - **Quick Style** has a base and a text colour for dark and for light and one accent. **Generate Theme**
+  - Under the swatch list a line of quiet words explains the three small signs: the dashed box, the chain and
+    the mark.
+  - **Quick Style** has a base, an accent and a text colour for dark and for light; the light accent moves with
+    the dark one until you pick it on its own, so one accent still works. **Generate Theme**
     fills both columns at once as one undo step, and anything you change by hand afterwards stays yours.
   - An older build that opens a theme saved with light colours reads every other value and drops the light
     ones the next time it saves, so keep a theme with light colours in a build that knows them.

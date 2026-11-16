@@ -217,6 +217,66 @@ func light_file_line(block: Resource, token: String) -> String:
 	return EventSheetL10n.translate("(no light line: worked out from the editor)")
 
 
+# ── The legend ────────────────────────────────────────────────────────────────────────────────────
+
+
+## A dashed box drawn the way a worked-out swatch draws itself, for the legend: no colour of its own, only the
+## dashes.
+class DashedBox extends Control:
+
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(EventSheetPalette.scaled_f(18.0), EventSheetPalette.scaled_f(12.0))
+		size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+	func _draw() -> void:
+		var ink: Color = get_theme_color("font_color", "Label")
+		ink.a = 0.8
+		var box: Rect2 = Rect2(Vector2.ZERO, size).grow(-1.0)
+		var corners: Array[Vector2] = [box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)]
+		for index: int in range(4):
+			draw_dashed_line(corners[index], corners[(index + 1) % 4], ink, 1.0, 3.0)
+
+
+## Three lines of quiet words that say what the small signs beside a swatch mean: the dashed box, the chain and
+## the mark. Each sign is drawn the way the rows draw it.
+func build_legend() -> Control:
+	var legend: HFlowContainer = HFlowContainer.new()
+	legend.add_theme_constant_override("h_separation", EventSheetPalette.scaled(14))
+	legend.add_theme_constant_override("v_separation", EventSheetPalette.scaled(2))
+	legend.name = "Legend"
+	var chain: Control = null
+	var picture: Texture2D = EventSheetLookStyle.icon(&"Instance")
+	if picture != null:
+		var icon: TextureRect = TextureRect.new()
+		icon.texture = picture
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chain = icon
+	else:
+		var glyph: Label = Label.new()
+		glyph.text = "∞"
+		chain = glyph
+	var mark: Label = Label.new()
+	mark.text = MARK_GLYPH
+	mark.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
+	for entry: Array in [
+			[DashedBox.new(), EventSheetL10n.translate("worked out from the editor")],
+			[chain, EventSheetL10n.translate("same colour in both")],
+			[mark, EventSheetL10n.translate("hard to read on its row")]]:
+		var item: HBoxContainer = HBoxContainer.new()
+		item.add_theme_constant_override("separation", EventSheetPalette.scaled(6))
+		item.add_child(entry[0])
+		var words: Label = Label.new()
+		words.text = str(entry[1])
+		words.modulate = Color(1.0, 1.0, 1.0, 0.74)
+		item.add_child(words)
+		legend.add_child(item)
+	return legend
+
+
 # ── The swatches ──────────────────────────────────────────────────────────────────────────────────
 
 
@@ -376,7 +436,7 @@ func step(entry: Dictionary, side: String) -> void:
 
 ## Fills the light column from the editor's own light hand: the look Godot's light editor gets (every fill,
 ## word and mark already read on their ground) with the light base, the accent and the light text laid on
-## top. Every colour that differs from the dark column becomes the theme's light colour, and every other
+## top (`accent` is the light column's own accent; the dark column's is the window's business). Every colour that differs from the dark column becomes the theme's light colour, and every other
 ## colour goes back to having none. Then any words in either column that still read under their bar are
 ## moved toward black or white until they clear it, so a generated theme carries no mark. Returns how many
 ## light colours the theme holds afterwards.

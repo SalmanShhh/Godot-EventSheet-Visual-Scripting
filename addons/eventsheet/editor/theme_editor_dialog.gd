@@ -21,6 +21,7 @@ const FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
 ## The light side of the window (the light swatches, Preview as, the contrast marks), built by path when a theme is opened.
 const LIGHT_SIDE_PATH := "res://addons/eventsheet/editor/theme_editor_light.gd"
+const FIELD_WORDS_PATH := "res://addons/eventsheet/editor/theme_field_words.gd"
 ## The words a token that is not a colour or a number wears in the form, where its field name would not be plain.
 const TOKEN_LABELS := {"follow_editor_greys": "Follow the editor in light"}
 
@@ -57,6 +58,11 @@ var _close_prompt: ConfirmationDialog = null
 var _light_side: RefCounted = null
 var _quick_light_base: ColorPickerButton = null
 var _quick_light_font: ColorPickerButton = null
+var _quick_light_accent: ColorPickerButton = null
+## The dark accent the Quick Style pair last held, so a light accent still sitting on it follows the dark one.
+var _quick_accent_was: Color = Color("#569eff")
+## The words under the Theme field that say what kind of theme is open.
+var _theme_note: Label = null
 
 
 ## Opens the theme editor seeded from the dock's active style (or defaults). A window already open with
@@ -158,12 +164,15 @@ static func quick_style_seed(style: EventSheetEditorStyle) -> Dictionary:
 		"accent": event_style.group_accent_color,
 		"text": event_style.group_title_color,
 	}
-	# A theme that holds light colours opens the light pickers on them; any other leaves those pickers as they are.
+	# A theme that holds light colours opens the light pickers on them; any other leaves the light base and text as
+	# they are and gives the light accent the dark one, the way one accent always worked.
+	seeds["light_accent"] = event_style.group_accent_color
 	if load("res://addons/eventsheet/theme/light_colors.gd").has_entries(style):
 		var light: EventSheetEventStyle = EventSheetEditorThemeDeriver.sheet_look(style, EventSheetEditorThemeDeriver.NATIVE_LIGHT_REFERENCE_BASE).event_style
 		var light_row: Color = light.row_background_color
 		seeds["light_base"] = Color(minf(light_row.r / 0.85, 1.0), minf(light_row.g / 0.85, 1.0), minf(light_row.b / 0.85, 1.0), 1.0)
 		seeds["light_text"] = light.group_title_color
+		seeds["light_accent"] = light.group_accent_color
 	return seeds
 
 
@@ -174,12 +183,13 @@ func _seed_quick_style() -> void:
 	if _quick_base == null or seeds.is_empty():
 		return
 	for pair: Array in [[_quick_base, "base"], [_quick_accent, "accent"], [_quick_font, "text"],
-			[_quick_light_base, "light_base"], [_quick_light_font, "light_text"]]:
+			[_quick_light_base, "light_base"], [_quick_light_font, "light_text"], [_quick_light_accent, "light_accent"]]:
 		if not seeds.has(pair[1]):
 			continue
 		var seeded: Color = seeds[pair[1]]
 		if seeded.a > 0.0:
 			(pair[0] as ColorPickerButton).color = Color(seeded.r, seeded.g, seeded.b, 1.0)
+	_quick_accent_was = _quick_accent.color
 
 
 ## Deep-duplicates a style so live edits never touch the original resource.
@@ -718,7 +728,14 @@ func _build_quick_style(form: VBoxContainer) -> void:
 	var base_pickers: Array[ColorPickerButton] = _quick_pair_row(quick_box, EventSheetL10n.translate("Base (background tone)"), Color("#252525"), Color("#e6e6e6"))
 	_quick_base = base_pickers[0]
 	_quick_light_base = base_pickers[1]
-	_quick_accent = _quick_color_row(quick_box, EventSheetL10n.translate("Accent (Sections, selection)"), Color("#569eff"))
+	var accent_pickers: Array[ColorPickerButton] = _quick_pair_row(quick_box, EventSheetL10n.translate("Accent (Sections, selection)"), Color("#569eff"), Color("#569eff"))
+	_quick_accent = accent_pickers[0]
+	_quick_light_accent = accent_pickers[1]
+	# One accent still works: until the light one is picked on its own it moves with the dark one.
+	_quick_accent.color_changed.connect(func(value: Color) -> void:
+		if _quick_light_accent.color == _quick_accent_was:
+			_quick_light_accent.color = value
+		_quick_accent_was = value)
 	var font_pickers: Array[ColorPickerButton] = _quick_pair_row(quick_box, EventSheetL10n.translate("Text"), Color("#ced0d2"), Color("#0f0f0f"))
 	_quick_font = font_pickers[0]
 	_quick_light_font = font_pickers[1]
@@ -769,14 +786,6 @@ func _build_reading_comfort(form: VBoxContainer) -> void:
 	form.add_child(_fold(EventSheetL10n.translate("Reading Comfort"), box, true))
 
 
-## One labelled colour picker, returned so Quick Style can read it back on Generate.
-func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
-	var picker: ColorPickerButton = ColorPickerButton.new()
-	picker.color = default_color
-	form.add_child(EventSheetPopupUI.form_row(label_text, picker, EventSheetPalette.scaled_f(load(LIGHT_SIDE_PATH).NAME_COLUMN_WIDTH)))
-	return picker
-
-
 ## A labelled row of two colour pickers, the dark one and the light one, returned in that order.
 func _quick_pair_row(form: VBoxContainer, label_text: String, dark_default: Color, light_default: Color) -> Array[ColorPickerButton]:
 	var dark_picker: ColorPickerButton = ColorPickerButton.new()
@@ -800,7 +809,7 @@ func _generate_quick_style() -> void:
 	var base: Color = _quick_base.color
 	var before: EventSheetEditorStyle = _working_style.duplicate(true) as EventSheetEditorStyle
 	EventSheetGodotTheme.apply(_working_style, base, base.darkened(0.15), base.darkened(0.25), _quick_accent.color, _quick_font.color)
-	_light_side.generate(_quick_light_base.color, _quick_accent.color, _quick_light_font.color)
+	_light_side.generate(_quick_light_base.color, _quick_light_accent.color, _quick_light_font.color)
 	_record_whole(before, _working_style)
 	_reset_to_default(_working_style, false)
 
@@ -827,6 +836,8 @@ func _rebuild_detail_form() -> void:
 		_detail_form.remove_child(child)
 		child.queue_free()
 	_focus_resource = null
+	# What the small signs beside the swatches mean, above the list they appear in.
+	_detail_form.add_child(_light_side.build_legend())
 	_build_section(_detail_form, EventSheetL10n.translate("Editor (hover, selection, lanes)"), _working_style, true)
 	_build_section(_detail_form, EventSheetL10n.translate("Sheet & rows (event style)"), _working_style.event_style, true)
 	_build_section(_detail_form, EventSheetL10n.translate("Condition cells"), _working_style.condition_style, false)
@@ -1274,20 +1285,25 @@ static func poll_save_note(browser: Window, reason: Label) -> Timer:
 func request_close() -> bool:
 	if not is_changed():
 		return false
-	_ask_about_changes(Callable(), Callable())
+	_ask_about_changes(_dialog.hide, Callable(), revert)
 	return true
 
 
 ## The window was closed by its Close button, Esc or its title bar: with changes it comes back to ask.
 func _on_window_closed() -> void:
-	if is_changed():
-		_ask_about_changes(Callable(), func() -> void: _dialog.show())
+	if not is_changed():
+		return
+	# Godot has hidden the window by now. It is shown again before a frame is drawn, so the question stands
+	# over a window that never went away. Save and Discard close it afterwards; Cancel leaves it as it is.
+	_dialog.show.call_deferred()
+	_ask_about_changes.call_deferred(_dialog.hide, _dialog.grab_focus, revert)
 
 
 ## Asks what to do with the changes before `then` (opening another theme, or nothing when the window is
 ## closing). Save writes them first and goes on once they are written; Discard goes on without them;
-## Cancel runs `on_cancel` and stays.
-func _ask_about_changes(then: Callable, on_cancel: Callable) -> void:
+## Cancel runs `on_cancel` and stays. `on_discard` runs first when the changes are thrown away (the window
+## closing puts the file's own colours back in it).
+func _ask_about_changes(then: Callable, on_cancel: Callable, on_discard: Callable = Callable()) -> void:
 	if _close_prompt != null and is_instance_valid(_close_prompt):
 		return
 	var go_on: Callable = func() -> void:
@@ -1306,7 +1322,10 @@ func _ask_about_changes(then: Callable, on_cancel: Callable) -> void:
 					go_on.call()
 			else:
 				_open_save_dialog(go_on, on_cancel),
-		"on_danger": go_on,
+		"on_danger": func() -> void:
+			if on_discard.is_valid():
+				on_discard.call()
+			go_on.call(),
 		"on_cancel": func() -> void:
 			if on_cancel.is_valid():
 				on_cancel.call(),
@@ -1319,12 +1338,12 @@ func _ask_about_changes(then: Callable, on_cancel: Callable) -> void:
 ## Every theme the window can switch to, grouped the way the Sheet theme menu groups them: Match Editor,
 ## the project's own, the demos, the starters. A theme open from anywhere else is listed too.
 func theme_choices() -> Array[Dictionary]:
-	var choices: Array[Dictionary] = [{"name": EventSheetL10n.translate("Match Editor"), "path": "", "group": ""}]
+	var choices: Array[Dictionary] = [{"name": EventSheetL10n.translate("Match Editor"), "path": "", "group": EventSheetL10n.translate("Follows the editor")}]
 	var listed: Array[Dictionary] = EventSheetThemePresets.list_presets()
 	var groups: Array = [
 		[EventSheetThemePresets.PROJECT_DIR, EventSheetL10n.translate("Your themes")],
 		["res://demo/", EventSheetL10n.translate("In this project")],
-		["res://addons/", EventSheetL10n.translate("Starters")],
+		["res://addons/", EventSheetL10n.translate("Starters (copy to edit)")],
 	]
 	for group: Array in groups:
 		for preset: Dictionary in listed:
@@ -1346,18 +1365,14 @@ func _build_theme_field(form: VBoxContainer) -> void:
 		if not switch_to(str(_theme_field.get_item_metadata(index))):
 			_sync_theme_field())
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Theme"), _theme_field))
+	# One plain sentence under the field about the theme that is open.
+	_theme_note = EventSheetPopupUI.hint_label("")
+	form.add_child(_theme_note)
 	_fill_theme_field()
 
 
 func _fill_theme_field() -> void:
-	_theme_field.clear()
-	var group: String = ""
-	for choice: Dictionary in theme_choices():
-		if str(choice["group"]) != group:
-			group = str(choice["group"])
-			_theme_field.add_separator(group)
-		_theme_field.add_item(str(choice["name"]))
-		_theme_field.set_item_metadata(_theme_field.item_count - 1, str(choice["path"]))
+	load(FIELD_WORDS_PATH).fill(_theme_field, theme_choices())
 	_select_theme_field()
 
 
@@ -1373,6 +1388,9 @@ func _select_theme_field() -> bool:
 	for index: int in range(_theme_field.item_count):
 		if str(_theme_field.get_item_metadata(index)) == _source_path and not _theme_field.is_item_separator(index):
 			_theme_field.select(index)
+			# The closed field names the theme; the folder is for the list.
+			_theme_field.text = load(FIELD_WORDS_PATH).name_of(_theme_field.get_item_text(index))
+			_theme_note.text = load(FIELD_WORDS_PATH).sentence(_source_path)
 			return true
 	return false
 

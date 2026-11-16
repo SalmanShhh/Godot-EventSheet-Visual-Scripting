@@ -6,6 +6,14 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: the Theme Editor's legend, a light accent, and a Theme field that says what each theme is
+
+A line under the Theme Editor's form explains the dashed box, the chain and the mark beside a swatch. Quick Style's Accent row has a Dark and a Light picker like Base and Text, and Generate uses each for its own column; the light accent moves with the dark one until it is picked on its own, so one accent still works. The Theme field lists each theme with a swatch of its sheet colour and its folder, a tooltip with the file, group titles (\"Follows the editor\", \"Starters (copy to edit)\"), and one sentence under the field about the open theme. Godot's drop-down has a single text column, so the folder shares the name's line rather than standing in a column of its own.
+
+### Fixed: closing a Theme Editor with changes asks over the window
+
+The Save, Discard or Cancel question used to appear after the window had gone. It now appears over the window, which stays until you answer; Discard puts the file's colours back and closes it, so the window holds no changes afterwards. A sheet that carries its own copy of a theme still keeps that copy when the theme's file is saved, and the window says so, because nothing records which file a copy came from and refreshing it would overwrite changes made on the copy.
+
 ### Added: a theme can hold light colours, and the sheet wears the side that matches Godot
 
 Every block of a theme (`event_style`, `condition_style`, `action_style`, `reading_style`, `chrome_style`, `manual_style`) can hold `light_colors`, a dictionary of token name to colour that names only the colours given a light value. The colours a theme has always held are its dark colours and keep their lines. A light editor draws a theme's light colours, a dark editor never does, and a switch of Godot's editor theme changes the sheet over. A theme opts in by holding a light colour or by following the editor's greys; a theme that does neither is drawn in a light editor exactly as it always was, so no theme saved before this looks any different. An older build opens a theme saved with light colours and keeps every other value, but drops the light ones the next time it saves.

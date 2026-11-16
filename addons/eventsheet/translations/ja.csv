@@ -10899,3 +10899,13 @@ Separate colours: click to use the dark colour in both,"別々の色: クリッ�
 Worked out from the editor. Pick a colour to give light its own.,"エディターから算出された色です。色を選ぶと明に専用の色を設定できます。"
 auto,"自動"
 Follow the editor in light,"明でエディターに合わせる"
+Follows the editor,
+Starters (copy to edit),
+worked out from the editor,
+same colour in both,
+hard to read on its row,
+"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.",
+"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.",
+A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,
+A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,
+not a file: the colours come from Godot's editor theme,
