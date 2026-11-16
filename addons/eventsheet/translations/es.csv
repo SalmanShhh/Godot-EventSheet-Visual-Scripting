@@ -10947,7 +10947,7 @@ Cone,Cono
 Stamp,Sello
 radius %s,radio %s
 "radius %s, %s px thick","radio %s, %s px de grosor"
-%s x %s,%s x %s
+%s x %s,%s × %s
 %s px long,%s px de largo
 %s° wide,%s° de ancho
 no texture,sin textura

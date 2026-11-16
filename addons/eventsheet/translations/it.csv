@@ -10947,7 +10947,7 @@ Cone,Cono
 Stamp,Timbro
 radius %s,raggio %s
 "radius %s, %s px thick","raggio %s, spessore %s px"
-%s x %s,%s x %s
+%s x %s,%s × %s
 %s px long,lungo %s px
 %s° wide,larghezza %s°
 no texture,nessuna texture

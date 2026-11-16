@@ -10947,7 +10947,7 @@ Cone,扇形
 Stamp,图章
 radius %s,半径 %s
 "radius %s, %s px thick","半径 %s，粗细 %s px"
-%s x %s,%s x %s
+%s x %s,%s × %s
 %s px long,长 %s px
 %s° wide,宽 %s°
 no texture,无纹理

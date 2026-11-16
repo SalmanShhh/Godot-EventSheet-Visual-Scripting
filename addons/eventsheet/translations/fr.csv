@@ -10947,7 +10947,7 @@ Cone,Cône
 Stamp,Tampon
 radius %s,rayon %s
 "radius %s, %s px thick","rayon %s, %s px d'épaisseur"
-%s x %s,%s x %s
+%s x %s,%s × %s
 %s px long,%s px de long
 %s° wide,%s° de large
 no texture,pas de texture
@@ -10963,7 +10963,7 @@ End caps,Extrémités
 Follows scale,Suit l'échelle
 Dashed,En pointillés
 Dash,Tiret
-Style,Style
+Style,Motif
 Line look,Aspect de la ligne
 grows with the stamp,grandit avec le tampon
 "Drawn first, underneath","Dessiné en premier, dessous"

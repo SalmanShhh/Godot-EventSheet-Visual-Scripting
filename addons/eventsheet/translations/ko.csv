@@ -10947,7 +10947,7 @@ Cone,부채꼴
 Stamp,스탬프
 radius %s,반지름 %s
 "radius %s, %s px thick","반지름 %s, 두께 %s px"
-%s x %s,%s x %s
+%s x %s,%s × %s
 %s px long,길이 %s px
 %s° wide,너비 %s°
 no texture,텍스처 없음

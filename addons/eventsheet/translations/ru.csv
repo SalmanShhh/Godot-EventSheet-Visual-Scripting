@@ -10947,7 +10947,7 @@ Cone,Конус
 Stamp,Штамп
 radius %s,радиус %s
 "radius %s, %s px thick","радиус %s, толщина %s px"
-%s x %s,%s x %s
+%s x %s,%s × %s
 %s px long,длина %s px
 %s° wide,шириной %s°
 no texture,нет текстуры
