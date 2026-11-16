@@ -342,20 +342,50 @@ static func tile_icon(pack: Dictionary, source: String) -> Texture2D:
 	return EventSheetPopupUI._editor_icon(kind if not kind.is_empty() else "Node")
 
 
-## The pictures drawn from library files, by path.
+## The pictures drawn from library files, by path and by theme.
 static var _svg_cache: Dictionary = {}
+
+## Godot's own icon inks on the dark theme and the ones it swaps them for on the light theme (the pairs
+## of its icon colour conversion). The library is never imported, so its pictures are drawn from the
+## file text and do the same swap here.
+const LIGHT_THEME_INKS: Dictionary = {
+	"#e0e0e0": "#5a5a5a",
+	"#8da5f3": "#3d64dd",
+	"#fc7f7f": "#cd3838",
+	"#8eef97": "#2fa139",
+	"#c38ef1": "#a85de9",
+}
+
+
+## True when the editor draws its text darker than its ground: a light theme.
+static func editor_is_light() -> bool:
+	if not Engine.is_editor_hint():
+		return false
+	var theme: Theme = EditorInterface.get_editor_theme()
+	return theme != null and theme.get_color("font_color", "Label").get_luminance() < 0.5
+
+
+## The svg text with each of Godot's dark-theme inks swapped for its light-theme one.
+static func inked_for_theme(svg: String, light: bool) -> String:
+	if not light:
+		return svg
+	for dark: String in LIGHT_THEME_INKS:
+		svg = svg.replace("\"%s\"" % dark, "\"%s\"" % LIGHT_THEME_INKS[dark])
+	return svg
 
 
 ## A texture drawn from an .svg file Godot has not imported, or null when there is none to draw.
 static func _svg_from_file(path: String) -> Texture2D:
-	if _svg_cache.has(path):
-		return _svg_cache[path] as Texture2D
+	var light: bool = editor_is_light()
+	var key: String = path + ("|light" if light else "")
+	if _svg_cache.has(key):
+		return _svg_cache[key] as Texture2D
 	var drawn: Texture2D = null
 	if path.get_extension() == "svg" and FileAccess.file_exists(path):
 		var image: Image = Image.new()
-		if image.load_svg_from_string(FileAccess.get_file_as_string(path), 1.5) == OK:
+		if image.load_svg_from_string(inked_for_theme(FileAccess.get_file_as_string(path), light), 1.5) == OK:
 			drawn = ImageTexture.create_from_image(image)
-	_svg_cache[path] = drawn
+	_svg_cache[key] = drawn
 	return drawn
 
 

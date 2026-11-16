@@ -11,6 +11,8 @@ const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.g
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 const PLUGIN_ICON_PATH: String = "res://addons/eventsheet/icons/eventsheet.svg"
+## Keeps the pack icons and the picker's section icons in the editor's icon colours (loaded by path).
+const PACK_ICON_IMPORTS_PATH: String = "res://addons/eventforge/editor/pack_icon_imports.gd"
 ## The one ink the plugin icon is drawn in: the light grey Godot draws its own plain icons in on the
 ## dark theme. At load it is swapped for the editor's own icon colour, so the icon turns dark grey on
 ## a light theme the way its neighbours do.
@@ -194,14 +196,22 @@ func _refresh_plugin_icon_import() -> void:
 			file_system.filesystem_changed.connect(_refresh_plugin_icon_import, CONNECT_ONE_SHOT)
 		return
 	var ink: Color = editor_icon_ink(get_editor_interface().get_editor_theme())
+	var pack_icons: GDScript = load(PACK_ICON_IMPORTS_PATH)
+	# A pack that came from the behaviour library has an import with the flag off: turn it on, and
+	# import those icons again, whatever the theme did.
+	var to_import: PackedStringArray = pack_icons.follow_the_editor_theme(pack_icons.pack_icon_paths())
 	# Once per ink: a reimport that did not land in it (an importer told not to follow the editor's
 	# colours) is not asked again on every later theme notification, which kept the editor reimporting.
-	if ink.is_equal_approx(_plugin_icon_reimported_for):
-		return
-	var imported: Texture2D = load(PLUGIN_ICON_PATH) as Texture2D
-	if imported != null and not is_in_ink(imported, ink):
-		_plugin_icon_reimported_for = ink
-		file_system.reimport_files(PackedStringArray([PLUGIN_ICON_PATH]))
+	if not ink.is_equal_approx(_plugin_icon_reimported_for):
+		var imported: Texture2D = load(PLUGIN_ICON_PATH) as Texture2D
+		if imported != null and not is_in_ink(imported, ink):
+			_plugin_icon_reimported_for = ink
+			# The theme changed since the colours were baked: the pack and section icons are baked
+			# the same way, so they come with the plugin's own.
+			to_import = pack_icons.all_icon_paths()
+			to_import.append(PLUGIN_ICON_PATH)
+	if not to_import.is_empty():
+		file_system.reimport_files(to_import)
 
 
 func _on_editor_theme_changed() -> void:
@@ -631,6 +641,10 @@ func _enter_tree() -> void:
 	# the editor's colours of the day it ran. After a switch between a dark and a light editor theme it
 	# is redrawn once, so it does not stay pale on the light theme.
 	_schedule_plugin_icon_refresh()
+	# A pack added to the project while the editor runs is checked the same way once its files land.
+	var scanned: EditorFileSystem = get_editor_interface().get_resource_filesystem()
+	if scanned != null and not scanned.filesystem_changed.is_connected(_schedule_plugin_icon_refresh):
+		scanned.filesystem_changed.connect(_schedule_plugin_icon_refresh)
 	# A switch of the editor theme while the editor runs redraws the sheet resources' icon the same way.
 	var base: Control = get_editor_interface().get_base_control()
 	if base != null and not base.theme_changed.is_connected(_on_editor_theme_changed):
@@ -910,6 +924,9 @@ func _exit_tree() -> void:
 	var base: Control = get_editor_interface().get_base_control()
 	if base != null and base.theme_changed.is_connected(_on_editor_theme_changed):
 		base.theme_changed.disconnect(_on_editor_theme_changed)
+	var scanned_on_exit: EditorFileSystem = get_editor_interface().get_resource_filesystem()
+	if scanned_on_exit != null and scanned_on_exit.filesystem_changed.is_connected(_schedule_plugin_icon_refresh):
+		scanned_on_exit.filesystem_changed.disconnect(_schedule_plugin_icon_refresh)
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null
