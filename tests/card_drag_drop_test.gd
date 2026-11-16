@@ -18,6 +18,7 @@ static func run() -> bool:
 	ok = _slot_pins() and ok
 	ok = _drawer_pins() and ok
 	ok = _record_pins() and ok
+	ok = width_pins() and ok
 	return ok
 
 
@@ -106,4 +107,17 @@ static func _record_pins() -> bool:
 		["a card of a list that draws pictures has a picture record to keep", had_picture, true],
 		["the real card keeps its own picture record while a copy is made", same_picture, true],
 		["and its own title record", same_title, true],
+	])
+
+
+## A dragged card stays inside the list's width: it hangs to the right of the pointer, is pulled back left
+## before its right edge passes the list's, and is pushed right when the pointer is left of the list.
+static func width_pins() -> bool:
+	var edge: Callable = Callable(EventSheetCardListDrawer, "drag_left_edge")
+	return SUPPORT.pins(TEST_NAME, [
+		["a card hangs 24 to the right of the pointer while there is room", 100.0 + float(edge.call(100.0, 0.0, 400.0, 200.0, 24.0)), 124.0],
+		["near the right edge it is pulled back so it ends at the list's edge", 300.0 + float(edge.call(300.0, 0.0, 400.0, 200.0, 24.0)), 200.0],
+		["with the pointer past the list it still ends at the list's edge", 500.0 + float(edge.call(500.0, 0.0, 400.0, 200.0, 24.0)), 200.0],
+		["with the pointer left of the list it starts at the list's left edge", -50.0 + float(edge.call(-50.0, 20.0, 400.0, 200.0, 24.0)), 20.0],
+		["a card wider than the list starts at the list's left edge", 10.0 + float(edge.call(10.0, 0.0, 100.0, 300.0, 24.0)), 0.0],
 	])

@@ -636,12 +636,25 @@ func drag_picture(index: int, width: float, count: int) -> Control:
 	_make_picture(line)
 	line.custom_minimum_size.x = width
 	line.size = Vector2(width, 0.0)
-	var holder: Control = Control.new()
+	var holder: _DragHolder = _DragHolder.new()
 	holder.add_child(line)
-	# It hangs a little right of and below the pointer, so the line that shows where the card will land stays in view.
+	# It hangs a little right of and below the pointer, so the line that shows where the card will land stays in view,
+	# and it never leaves the width of the list: the holder moves it back inside as the pointer goes.
 	line.position = Vector2(EventSheetLookStyle.px(24.0), EventSheetLookStyle.px(18.0))
+	holder.line = line
+	holder.list = self
+	holder.hang = EventSheetLookStyle.px(24.0)
 	holder.modulate.a = 0.92
 	return holder
+
+
+## Where the dragged card's left edge sits, relative to the pointer, so that the card stays inside the list: it
+## hangs `hang` to the right of the pointer, and is pulled back left when that would carry its right edge past
+## the list's edge (and right when the pointer is left of the list).
+static func drag_left_edge(pointer_x: float, list_left: float, list_right: float, width: float, hang: float) -> float:
+	var wanted: float = pointer_x + hang
+	var latest: float = maxf(list_right - width, list_left)
+	return clampf(wanted, list_left, latest) - pointer_x
 
 
 ## Makes every control of a drag picture ignore the mouse and the keyboard.
@@ -2358,6 +2371,21 @@ static func _color_of(stored: Variant) -> Color:
 	if stored is Color:
 		return stored
 	return Color.from_string(str(stored), Color.WHITE)
+
+
+## The holder of a drag picture: it follows the pointer, and puts the card inside the list's width every frame.
+class _DragHolder:
+	extends Control
+
+	var line: Control = null
+	var list: Control = null
+	var hang: float = 24.0
+
+	func _process(_delta: float) -> void:
+		if line == null or list == null or not is_instance_valid(list):
+			return
+		var rect: Rect2 = list.get_global_rect()
+		line.position.x = EventSheetCardListDrawer.drag_left_edge(global_position.x, rect.position.x, rect.end.x, line.size.x, hang)
 
 
 ## One card's panel, and the whole of the drag-to-reorder: it hands its index over when dragged, and
