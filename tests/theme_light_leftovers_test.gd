@@ -20,6 +20,7 @@ static func run() -> bool:
 	ok = _reading_font_hint() and ok
 	ok = _shared_sheets_heading() and ok
 	ok = _the_way_back_to_the_editor() and ok
+	ok = _a_copy_stays() and ok
 	return ok
 
 
@@ -73,3 +74,35 @@ static func _the_way_back_to_the_editor() -> bool:
 		["with a project theme the starter is the way back to Match Editor", choices.entry_text("Editor Native", STARTER, NORD), "Match Editor"],
 		["any other theme keeps its name either way", choices.entry_text("Nord", NORD, NORD), "Nord"],
 	])
+
+
+## A recording dock that says which sheet is open.
+static func _dock_with_sheet(sheet: EventSheetResource) -> Control:
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends Control\nvar _current_sheet = null\nvar _current_sheet_path: String = \"\"\nfunc apply_theme_style(_style) -> void:\n\tpass\nfunc _set_status(_text: String, _is_error: bool = false) -> void:\n\tpass\n"
+	script.reload()
+	var dock: Control = Control.new()
+	dock.set_script(script)
+	dock.set("_current_sheet", sheet)
+	return dock
+
+
+static func _a_copy_stays() -> bool:
+	var path: String = FILES.theme_file("light_leftovers_copy.tres", Color("#202020"))
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.editor_style = EventSheetThemeEditor.duplicate_style(null)
+	var dock: Control = _dock_with_sheet(sheet)
+	var window: EventSheetThemeEditor = FILES.open_window(path, dock)
+	FILES.edit(window, "row_background_color", Color("#301010"))
+	window.save()
+	var said: String = window._note.text
+	sheet.editor_style = ResourceLoader.load(path) as EventSheetEditorStyle
+	window.save()
+	var said_again: String = window._note.text
+	var ok: bool = SUPPORT.pins(P + ": saving while the sheet carries a copy", [
+		["the foot says the copy stays", said, "Theme saved: %s The open sheet keeps its own copy of a theme; pick the theme again to update it." % path.get_file()],
+		["a sheet that wears the file is told nothing extra", said_again, "Theme saved: %s" % path.get_file()],
+	])
+	window._dialog.free()
+	dock.free()
+	return ok

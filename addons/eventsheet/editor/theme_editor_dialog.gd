@@ -1086,6 +1086,8 @@ static func restore_values(target: Resource, source: Resource) -> void:
 			restore_values(current as Resource, value as Resource)
 		elif value is Resource:
 			target.set(property_name, (value as Resource).duplicate(true))
+		elif value is Dictionary:
+			target.set(property_name, (value as Dictionary).duplicate(true))
 		else:
 			target.set(property_name, value)
 
@@ -1191,10 +1193,22 @@ func save_preset(path: String) -> Error:
 func _report(error: Error, path: String) -> void:
 	var said: String = EventSheetL10n.translate("Theme saved: %s") % path.get_file() if error == OK \
 		else EventSheetL10n.translate("Theme could not be saved: %s (%s)") % [path.get_file(), error_string(error)]
+	if error == OK and _sheet_wears_a_copy():
+		said += " " + EventSheetL10n.translate("The open sheet keeps its own copy of a theme; pick the theme again to update it.")
 	if _note != null:
 		_note.say(said, EventSheetPopupUI.TONE_OK if error == OK else EventSheetPopupUI.TONE_ERROR)
 	if _dock != null and _dock.has_method("_set_status"):
 		_dock.call("_set_status", said, error != OK)
+
+
+## Whether the open sheet carries a copy of a theme inside itself rather than wearing a theme file: such a
+## sheet does not take up what is saved into the file.
+func _sheet_wears_a_copy() -> bool:
+	var sheet: Variant = _dock.get("_current_sheet") if _dock != null else null
+	if not (sheet is EventSheetResource):
+		return false
+	var worn: EventSheetEditorStyle = (sheet as EventSheetResource).editor_style as EventSheetEditorStyle
+	return worn != null and _files().file_of(worn).is_empty()
 
 
 ## The editor's own save dialog, with one line at its foot naming the file a Save would replace. It starts
