@@ -1497,7 +1497,10 @@ func _play_sound(card: Dictionary, at: float) -> void:
 	var settings: Dictionary = sound_settings(card, at, randf(), randf())
 	var stream: AudioStream = _stream_at(str(settings.get("stream", "")))
 	if stream == null:
-		_tell_sound(card, "has no sound to play, so it stayed silent.")
+		if str(settings.get("stream", "")).is_empty():
+			_tell_sound(card, "has no sound picked, so it stayed silent.")
+		else:
+			_tell_sound(card, "cannot find its sound \"%s\", so it stayed silent." % str(settings.get("stream", "")))
 		return
 	var bus: String = str(settings.get("bus", "Master"))
 	if AudioServer.get_bus_index(bus) < 0:
