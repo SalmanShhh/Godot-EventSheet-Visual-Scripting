@@ -43,6 +43,8 @@ const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 ## checks validity, so a closed workspace never leaves the API pointing at a freed node.
 ## True while an edit() mutation is running: a second edit() from inside it is refused.
 static var _editing: bool = false
+## True when an edit() was refused for starting inside another one while the outer is still running.
+static var _nested_refused: bool = false
 
 ## Where the registries are emptied as the process ends (see the file for why).
 const REGISTRY_RELEASE_PATH := "res://addons/eventsheet/api/registry_release.gd"
@@ -315,9 +317,11 @@ static func edit(label: String, mutation: Callable) -> bool:
 	if not _dock_alive() or not mutation.is_valid():
 		return false
 	if _editing:
-		_dock._set_status(EventSheetL10n.translate("An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit."), true)
+		_nested_refused = true
+		_say_nested_edit_refused()
 		return false
 	_editing = true
+	_nested_refused = false
 	var stopped: Array = [false]
 	var changed: bool = _dock._perform_undoable_sheet_edit(label, func() -> bool:
 		var snapshot: EventSheetResource = _dock._capture_sheet_snapshot()
@@ -340,7 +344,16 @@ static func edit(label: String, mutation: Callable) -> bool:
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty(label)
+	# The outer edit's own "saved" line replaced the refusal the moment it was said, so it is said
+	# again last: it is the one a person must be left reading.
+	if _nested_refused:
+		_nested_refused = false
+		_say_nested_edit_refused()
 	return changed
+
+
+static func _say_nested_edit_refused() -> void:
+	_dock._set_status(EventSheetL10n.translate("An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit."), true)
 
 
 ## Signal-to-sheet connect (the "wire a signal into events" flow the Node dock uses):

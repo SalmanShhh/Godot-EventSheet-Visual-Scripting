@@ -344,9 +344,12 @@ static func _edit_is_atomic() -> bool:
 	ok = SUPPORT.check(P, "the outer edit still lands", outer, true) and ok
 	ok = SUPPORT.check(P, "only the outer write is in the sheet", EventSheets.current_sheet().events.size(), 4) and ok
 	ok = SUPPORT.check(P, "the outer edit is one undo step", undo._undo_stack.size(), steps_before + 2) and ok
+	ok = SUPPORT.check(P, "the refusal is what the status line is left saying, not the outer edit's own line",
+		dock._status_label.text.contains("started inside another edit"), true) and ok
 	var after_nested: bool = EventSheets.edit("After", func(sheet: EventSheetResource) -> bool:
 		sheet.events.append(CommentRow.new())
 		return true)
+	ok = SUPPORT.check(P, "and an edit after it does not repeat it", dock._status_label.text.contains("started inside another edit"), false) and ok
 	ok = SUPPORT.check(P, "an edit after a refused nested one works", after_nested, true) and ok
 	dock.free()
 	return ok
