@@ -78,6 +78,10 @@ Stop Sound ends a sound an earlier Sound card started, by that card's name, with
 ### Added: Autoplay on the Juice Player
 
 A new Autoplay tick on the node plays its list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. It starts off, and while it is off nothing is written into the scene, so a saved scene stays the bytes it was.
+### Changed: the States window shows everything it will write on a file with no states yet
+
+Declaring states on a script that has none writes more than the enum and the state variable: the variable's setter, the `state_changed` signal, and two helper variables (the state it came from, and when the current one began). The code box in the States window showed only the enum and the variable, so a hand-written file gained lines nobody had been shown. It now shows the whole set, in the order the file will hold it. A script that already has states shows no extra lines, because renaming or removing a state writes none.
+
 ### Changed: Migrate lists the two retired on-screen rows, to be replaced by hand
 
 Is On-Screen and Is Outside Screen were retired because they test the window rectangle, which is wrong as soon as a camera moves. Migrate used to skip them without a word, since neither has a newer row that means the same thing. They are now listed under the rows it leaves alone, with the reason: the row was retired and a replacement is picked by hand. Nothing is rewritten and nothing is forwarded on its own, so the point value the old row held is never dropped by accident.

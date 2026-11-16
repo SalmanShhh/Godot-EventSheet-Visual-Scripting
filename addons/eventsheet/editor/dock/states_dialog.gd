@@ -44,6 +44,7 @@ extends RefCounted
 var _entries: Array = []
 var _description: String = ""
 var _default_index: int = 0
+var _declares: bool = false
 
 var _dock: Control = null
 var _dialog: ConfirmationDialog = null
@@ -90,6 +91,7 @@ func open(variable_name: String = EventSheetStateFacts.STATE_VARIABLE, picked: S
 	_entries = model["states"]
 	_description = str(model["description"])
 	_default_index = int(model["default"])
+	_declares = bool(model.get("declares", false))
 	_picked = -1
 	for index: int in _entries.size():
 		if str((_entries[index] as Dictionary)["name"]) == picked:
@@ -375,7 +377,8 @@ func _refit() -> void:
 
 func _show_code() -> void:
 	if _code != null:
-		_code.text = code_for({"states": _entries, "description": _description, "default": _default_index})
+		_code.text = code_for({"states": _entries, "description": _description, "default": _default_index,
+			"declares": _declares})
 
 
 func _on_confirmed() -> void:
@@ -406,11 +409,14 @@ func _on_confirmed() -> void:
 ## to rewrite before Apply.
 static func model_of(sheet: EventSheetResource, found: Dictionary = {}) -> Dictionary:
 	var states: Array = []
+	# Applying writes the setter, the signal and the two helper variables only when the sheet has no
+	# machine yet; the preview says so by this flag, so it never shows a line a rename will not write.
+	var declares: bool = found.is_empty() and EventSheetStateFacts.machine(sheet).is_empty()
 	var declared: EnumRow = EventSheetStateFacts.enum_row(sheet) if found.is_empty() else found["enum"] as EnumRow
 	if declared == null or declared.members.is_empty():
 		for first: String in ["IDLE", "CHASE", "HURT"]:
 			states.append({"orig": "", "name": first, "note": ""})
-		return {"states": states, "description": "", "default": 0, "removed": PackedStringArray()}
+		return {"states": states, "description": "", "default": 0, "removed": PackedStringArray(), "declares": declares}
 	for member: String in declared.members:
 		var bare: String = EnumRow.bare_name(member)
 		states.append({"orig": bare, "name": bare, "note": declared.note_for(bare)})
@@ -419,7 +425,7 @@ static func model_of(sheet: EventSheetResource, found: Dictionary = {}) -> Dicti
 	for index: int in states.size():
 		if str((states[index] as Dictionary)["name"]) == default_name:
 			default_at = index
-	return {"states": states, "description": declared.description, "default": default_at, "removed": PackedStringArray()}
+	return {"states": states, "description": declared.description, "default": default_at, "removed": PackedStringArray(), "declares": declares}
 
 
 ## What is wrong with applying this working copy, said as one sentence, or "" when nothing is. A rename is
@@ -751,7 +757,8 @@ static func left_list_note_for(sheet: EventSheetResource, member: String) -> Str
 	return EventSheetL10n.translate("%s is still used by %d row(s), so it was not removed. Point those rows at another state first, then remove it.") % [member, used]
 
 
-## The enum and the variable the working copy will write, as the code a reader would see.
+## The code the working copy will write, as a reader would see it: the enum and the variable and, on a sheet
+## with no machine yet, the signal, the two helper variables and the setter that go with them.
 static func code_for(model: Dictionary) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	var description: String = str(model.get("description", "")).strip_edges()
@@ -767,8 +774,20 @@ static func code_for(model: Dictionary) -> String:
 	lines.append("}")
 	if not states.is_empty():
 		var at: int = clampi(int(model.get("default", 0)), 0, states.size() - 1)
-		lines.append("var %s: %s = %s.%s" % [EventSheetStateFacts.STATE_VARIABLE, EventSheetStateFacts.ENUM_NAME,
-			EventSheetStateFacts.ENUM_NAME, str((states[at] as Dictionary).get("name", ""))])
+		var opening: String = "%s.%s" % [EventSheetStateFacts.ENUM_NAME, str((states[at] as Dictionary).get("name", ""))]
+		var declaring: bool = bool(model.get("declares", false))
+		if declaring:
+			# Everything a first declare writes beside the enum, in the order the file will hold it.
+			lines.append("signal %s(%s)" % [EventSheetStateFacts.CHANGED_SIGNAL,
+				", ".join(EventSheetStateFacts.CHANGED_SIGNAL_PARAMS)])
+			lines.append("var %s: int = %s" % [EventSheetStateFacts.SINCE_VARIABLE, EventSheetStateFacts.SINCE_INITIAL])
+			lines.append("var %s: %s = %s" % [EventSheetStateFacts.PREVIOUS_VARIABLE, EventSheetStateFacts.ENUM_NAME, opening])
+		lines.append("var %s: %s = %s%s" % [EventSheetStateFacts.STATE_VARIABLE, EventSheetStateFacts.ENUM_NAME,
+			opening, ":" if declaring else ""])
+		if declaring:
+			lines.append("\tset(value):")
+			for body_line: String in EventSheetStateFacts.SETTER_BODY.split("\n"):
+				lines.append("\t\t" + body_line)
 	return "\n".join(lines)
 
 
