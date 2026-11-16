@@ -263,7 +263,7 @@ func _build_row(pack: Dictionary) -> Button:
 	icon.texture = tile_icon(pack, source)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(24.0)
+	icon.custom_minimum_size = Vector2.ONE * EventSheetPalette.scaled_f(ICON_SIDE)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(icon)
 	var words: VBoxContainer = VBoxContainer.new()
@@ -291,10 +291,10 @@ func _build_row(pack: Dictionary) -> Button:
 			label.add_theme_font_size_override("font_size", int(said[2]))
 		words.add_child(label)
 	row.add_child(inset)
-	# The row grows to the height its wrapped lines need (at most three times the one it opens at).
+	# The row grows to the height its wrapped lines need, however many that is: a description is read whole.
 	var row_floor: float = row.custom_minimum_size.y
-	inset.minimum_size_changed.connect(func() -> void: row.custom_minimum_size.y = clampf(
-		inset.get_combined_minimum_size().y + EventSheetPalette.scaled_f(8.0), row_floor, row_floor * 3.0))
+	inset.minimum_size_changed.connect(func() -> void: row.custom_minimum_size.y = maxf(
+		inset.get_combined_minimum_size().y + EventSheetPalette.scaled_f(8.0), row_floor))
 	return row
 
 
@@ -321,6 +321,10 @@ static func non_node_base(source: String) -> String:
 	return base
 
 
+## The side of a card's picture: twice the 16 px an icon is drawn at, made from the drawing at that size.
+const ICON_SIDE: float = 32.0
+
+
 ## A row's picture: the script's own @icon, else the pack's icon, else the editor icon of the kind
 ## of node it works on - what Godot's Scene dock would show for it.
 static func tile_icon(pack: Dictionary, source: String) -> Texture2D:
@@ -335,6 +339,11 @@ static func tile_icon(pack: Dictionary, source: String) -> Texture2D:
 			path.trim_prefix(EventSheetPackLibrary.PROJECT_ROOT).trim_prefix("/")))
 		if library_picture != null:
 			return library_picture
+	# A drawn icon is made at the card's size from the file itself, so it is sharp and not a stretched 16 px.
+	if path.get_extension() == "svg" and FileAccess.file_exists(path):
+		var sharp: Texture2D = _svg_from_file(path)
+		if sharp != null:
+			return sharp
 	var drawn_icon: Texture2D = EventSheetACEIcons.path_icon(path)
 	if drawn_icon != null:
 		return drawn_icon
@@ -383,7 +392,7 @@ static func _svg_from_file(path: String) -> Texture2D:
 	var drawn: Texture2D = null
 	if path.get_extension() == "svg" and FileAccess.file_exists(path):
 		var image: Image = Image.new()
-		if image.load_svg_from_string(inked_for_theme(FileAccess.get_file_as_string(path), light), 1.5) == OK:
+		if image.load_svg_from_string(inked_for_theme(FileAccess.get_file_as_string(path), light), ICON_SIDE / 16.0 * EventSheetPalette.scaled_f(1.0)) == OK:
 			drawn = ImageTexture.create_from_image(image)
 	_svg_cache[key] = drawn
 	return drawn
