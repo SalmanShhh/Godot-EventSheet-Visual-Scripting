@@ -157,3 +157,67 @@ static func keys_of(card: Dictionary) -> Array:
 		var shown: String = EventSheetL10n.translate(str(words.get(str(key), "")))
 		offered.append({"key": str(key), "word": shown if shown != str(key) else ""})
 	return offered
+
+
+## What KIND of value one field of one card holds, so the value box of Set Juice Card Field can be the box
+## that kind needs: {"kind": "number" | "colour" | "file" | "node" | "bool" | "choice" | "text" | "", "choices": [...]}.
+## The kind comes from the drawer the Inspector draws that field with, and where the drawer does not say (a
+## tween's value is typed by its property) from the value the card holds now. An empty kind means "not known":
+## the box stays the plain one it has always been.
+static func value_kind(sheet_path: String, target: String, label: String, key: String) -> Dictionary:
+	var scenes: PackedStringArray = EventSheetSceneConnections.scenes_using_script(sheet_path) if sheet_path.begins_with("res://") else PackedStringArray()
+	for scene_path: String in scenes:
+		var steps: Variant = player_steps(scene_path, target)
+		if not (steps is Array):
+			continue
+		var card: Dictionary = card_named(steps as Array, label)
+		if not card.is_empty():
+			return kind_in(card, key)
+	return {"kind": ""}
+
+
+## The kind of one key of a card, as `value_kind` answers it.
+static func kind_in(card: Dictionary, key: String) -> Dictionary:
+	var schema: Dictionary = load(SCHEMA_PATH).call("schema")
+	var entry: Dictionary = {}
+	if card.has("card_script"):
+		entry = load(OWN_PATH).call("entry_for", card)
+	else:
+		entry = EventSheetCardSchemas.kind_entry(schema, str(card.get("verb", "")))
+	for field: Variant in EventSheetCardSchemas.all_fields(schema, entry):
+		if not (field is Dictionary) or str((field as Dictionary).get("key", "")) != key:
+			continue
+		var spelling: String = str((field as Dictionary).get("drawer", "num")).strip_edges()
+		var word: String = spelling.get_slice(":", 0)
+		var tail: String = spelling.substr(word.length() + 1) if spelling.length() > word.length() else ""
+		match word:
+			"num", "int", "unit", "spread", "limit", "slider":
+				return {"kind": "number"}
+			"bool", "tick_words":
+				return {"kind": "bool"}
+			"color_button", "swatch_row":
+				return {"kind": "colour"}
+			"resource", "texture_preview":
+				return {"kind": "file"}
+			"node":
+				return {"kind": "node"}
+			"options":
+				var choices: Array = []
+				for spelled: String in tail.split(",", false):
+					choices.append(spelled.get_slice("=", 0))
+				return {"kind": "choice", "choices": choices}
+			"text", "bus":
+				return {"kind": "text"}
+		break
+	var held: Variant = card.get(key)
+	if held is float or held is int:
+		return {"kind": "number"}
+	if held is bool:
+		return {"kind": "bool"}
+	if held is Color:
+		return {"kind": "colour"}
+	if held is NodePath:
+		return {"kind": "node"}
+	if held is String and (str(held).begins_with("uid://") or str(held).begins_with("res://")):
+		return {"kind": "file"}
+	return {"kind": ""}

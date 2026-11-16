@@ -868,7 +868,7 @@ func disable_feedback(label: String) -> void:
 ## @ace_lift_example("$JuicePlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 ## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being tuned.")
 ## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, default: amount, desc: "Which value on the card to write.")
-## @ace_param(value, default: 1.0, desc: "What to write. A number for an amount or a length, a word for the extra one.")
+## @ace_param(value, hint: juice_card_value, default: 1.0, desc: "What to write. A number for an amount or a length, a word for the extra one.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_feedback_field("{label}", "{field}", {value})")
 func set_feedback_field(label: String, field: String, value: Variant) -> void:

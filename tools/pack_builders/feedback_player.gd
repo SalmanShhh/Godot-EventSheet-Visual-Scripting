@@ -299,6 +299,7 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 	_param_hint(sheet, "field", "juice_card_field")
 	_default(sheet, "field", "amount")
 	_default(sheet, "value", "1.0")
+	_param_hint(sheet, "value", "juice_card_value")
 	_quoted_call(sheet, "set_feedback_field(\"{label}\", \"{field}\", {value})")
 	Lib.append_function(sheet, "set_feedback_timing", "Set Juice Card Timing", "Juice Player",
 		"Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.",

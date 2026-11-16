@@ -788,6 +788,8 @@ func _ensure_hint_factories() -> void:
 			"juice_card_field": _create_juice_card_field,
 			# The label of a juice card: the labels the player the row acts on holds.
 			"juice_card_label": _create_juice_card_label_field,
+			# The value of a juice card's field: the box that kind of value needs.
+			"juice_card_value": _create_juice_card_value_field,
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
@@ -3326,6 +3328,110 @@ func _create_juice_card_label_field(key: String, default_value: Variant) -> Cont
 		var target: String = str(_extract_value(target_field)).strip_edges() if target_field != null and is_instance_valid(target_field) else _opening_value("target")
 		return PackedStringArray(finder.call("labels_for_sheet", _sheet_source_path(), target))
 	return _create_autocomplete_field(key, Array(read_now.call()), default_value, Callable(), read_now)
+
+
+## The value box of Set Juice Card Field: the box the chosen field's own kind of value needs, as the card in the
+## Inspector draws it - a number box for a number, a colour box for a colour, a file box for a file, a list of
+## nodes for a node, the card's own words for a choice, a tick for a tick. When the card or the field cannot be
+## found, or the value the row holds now is an expression the typed box could not show (a variable, a sum), the
+## box stays the plain one it has always been, so a row saved before reopens exactly as it was.
+func _create_juice_card_value_field(key: String, default_value: Variant) -> Control:
+	var finder: Script = load("res://addons/eventsheet/editor/dock/juice_card_field_names.gd")
+	var holder: VBoxContainer = VBoxContainer.new()
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var shown: Array = ["", default_value]
+	var rebuild: Callable = func() -> void:
+		var picked: Dictionary = _juice_card_value_kind(finder)
+		var word: String = str(picked.get("kind", ""))
+		var carried: Variant = shown[1]
+		var typed: Control = _juice_card_typed_box(word, picked, key, carried)
+		if typed == null:
+			word = ""
+			typed = _create_field(_param_dict(key), {key: carried}, key, "")
+		for old: Node in holder.get_children():
+			holder.remove_child(old)
+			old.queue_free()
+		holder.add_child(typed)
+		shown[0] = word
+	rebuild.call()
+	var field_box: Variant = _fields.get("field")
+	if field_box is LineEdit:
+		(field_box as LineEdit).text_changed.connect(func(_text: String) -> void:
+			var now: Variant = _fields.get(key)
+			if now != null and is_instance_valid(now):
+				shown[1] = _extract_value(now)
+			rebuild.call_deferred())
+	return holder
+
+
+## The kind of value the card the row names holds under the field the row names (`{"kind": ""}` when unknown).
+func _juice_card_value_kind(finder: Script) -> Dictionary:
+	var texts: Dictionary = {}
+	for word: String in ["label", "target", "field"]:
+		var box: Variant = _fields.get(word)
+		var said: String = str(_extract_value(box)).strip_edges() if box != null and is_instance_valid(box) else _opening_value(word)
+		texts[word] = said.trim_prefix("\"").trim_suffix("\"")
+	if str(texts["field"]).is_empty():
+		return {"kind": ""}
+	return finder.call("value_kind", _sheet_source_path(), str(texts["target"]), str(texts["label"]), str(texts["field"]))
+
+
+## One typed value box, or null when the value the row holds cannot be shown in it.
+func _juice_card_typed_box(word: String, picked: Dictionary, key: String, carried: Variant) -> Control:
+	var text: String = str(carried).strip_edges()
+	match word:
+		"number":
+			if not text.is_empty() and not text.is_valid_float():
+				return null
+			var spin: SpinBox = SpinBox.new()
+			spin.allow_greater = true
+			spin.allow_lesser = true
+			spin.step = 0.001
+			spin.rounded = false
+			spin.value = text.to_float()
+			spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_fields[key] = spin
+			return spin
+		"bool":
+			if not text.is_empty() and text != "true" and text != "false":
+				return null
+			var check: CheckBox = CheckBox.new()
+			check.button_pressed = text == "true"
+			_fields[key] = check
+			return check
+		"colour":
+			if not text.is_empty() and not (text.begins_with("Color(") or text.begins_with("Color.")):
+				return null
+			return _create_color_field(key, text if not text.is_empty() else "Color(1, 1, 1, 1)")
+		"file":
+			if not text.is_empty() and not (text.begins_with("\"") and text.ends_with("\"")):
+				return null
+			var base: Dictionary = _build_path_field_base(key, text)
+			var container: HBoxContainer = base["container"]
+			var browse: Button = Button.new()
+			browse.text = EventSheetL10n.translate("Browse…")
+			var path_edit: LineEdit = base["edit"]
+			browse.pressed.connect(func() -> void: _browse_for_file(path_edit, PackedStringArray(["*.*"]),
+				EventSheetL10n.translate("Files"), Callable(ACEParamsDialog, "format_quoted_literal")))
+			container.add_child(browse)
+			return container
+		"node":
+			if not text.is_empty() and not text.begins_with("NodePath(") and not text.begins_with("^"):
+				return null
+			var names: Array = []
+			var scene_root: Node = _validation_scene_root()
+			if scene_root != null:
+				for scene_path: String in scene_node_paths(scene_root):
+					names.append("NodePath(\"%s\")" % scene_path)
+			return _create_autocomplete_field(key, names, text)
+		"choice":
+			if not text.is_empty() and not (text.begins_with("\"") and text.ends_with("\"")):
+				return null
+			var quoted: Array = []
+			for choice: Variant in picked.get("choices", []):
+				quoted.append("\"%s\"" % str(choice))
+			return _create_autocomplete_field(key, quoted, text)
+	return null
 
 
 ## The scenes this sheet's own spawners may make, as the quoted paths the row holds. An editable
