@@ -1996,10 +1996,11 @@ static func unregister_asset_drop_handler(extensions: PackedStringArray) -> void
 			_asset_drop_handlers.erase(key)
 
 
-## The registered builder for one extension (an invalid Callable when unhandled).
+## The registered builder for one extension, with or without its dot and in any case (an invalid
+## Callable when unhandled).
 static func asset_drop_builder_for(extension: String) -> Callable:
 	_ensure_builtin_asset_drop_handlers()
-	return ((_asset_drop_handlers.get(extension.to_lower(), {}) as Dictionary).get("build", Callable()) as Callable)
+	return ((_asset_drop_handlers.get(extension.to_lower().trim_prefix("."), {}) as Dictionary).get("build", Callable()) as Callable)
 
 
 ## Every extension the canvas accepts, sorted - the viewport's drop filter reads this,

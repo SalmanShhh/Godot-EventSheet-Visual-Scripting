@@ -8,6 +8,7 @@
 #   registration  register_provider_script is for the session; add_provider_to_sheet edits the open sheet
 #   kinds         a block kind can be registered with a reason, and taken back
 #   copies        the lists the API hands out are copies: clearing one empties nothing
+#   extensions    an asset drop handler for ".DLG" is found for ".dlg", "dlg" and "DLG"
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -53,6 +54,7 @@ static func run() -> bool:
 	ok = _registration() and ok
 	ok = _kind_registration() and ok
 	ok = _copies() and ok
+	ok = _drop_extensions() and ok
 	return ok
 
 
@@ -329,3 +331,13 @@ static func _copies() -> bool:
 		["clearing what preference_builders() returned empties nothing", after[2], held[2]],
 		["the leaf the workspace reads still holds the API's own list", is_same(load("res://addons/eventsheet/api/dock_registry.gd").simple_aces(), EventSheets._simple_aces), true],
 	])
+
+
+static func _drop_extensions() -> bool:
+	EventSheets.register_asset_drop_handler(PackedStringArray([".DLG"]), func(_path: String, _target: Variant) -> Resource: return null)
+	var rows: Array = []
+	for asked: String in [".dlg", "dlg", ".DLG", "DLG"]:
+		rows.append(["a handler for \".DLG\" is found for \"%s\"" % asked, EventSheets.asset_drop_builder_for(asked).is_valid(), true])
+	rows.append(["and the list of handled extensions holds it once, bare and lower-case", Array(EventSheets.handled_asset_extensions()).count("dlg"), 1])
+	EventSheets.unregister_asset_drop_handler(PackedStringArray(["dlg"]))
+	return SUPPORT.pins(P, rows)
