@@ -1,4 +1,4 @@
-# Godot EventSheets - Event Trace timings (the Profile tab's numbers).
+# Godot EventSheets - Event Trace timings (the Event Trace's numbers).
 #
 # The trace already streams WHICH events fired. This is WHEN. The generated code stamps one
 # microsecond reading beside every fire it records, and marks - once per frame, at the top of

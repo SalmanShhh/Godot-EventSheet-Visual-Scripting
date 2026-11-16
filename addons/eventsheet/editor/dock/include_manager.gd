@@ -190,9 +190,9 @@ func _refresh_include_preview() -> void:
 		_include_preview_viewport.get_parent().visible = false
 	var path: String = _selected_path()
 	if path.is_empty():
-		_include_preview.text = EventSheetL10n.translate("Select an include to preview what it contributes.")
+		_include_preview.text = EventSheetL10n.translate("Select a shared sheet to preview what it contributes.")
 		_strip.describe(EventSheetL10n.translate("This sheet"),
-			EventSheetL10n.translate("Pick an include to see what it brings; Add… includes another sheet."))
+			EventSheetL10n.translate("Pick a shared sheet to see what it brings; Add… brings in another sheet."))
 		_strip.set_line(_adds_value, "")
 		return
 	var summary: Dictionary = EventSheetIncludes.summarize(path)

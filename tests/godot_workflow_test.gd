@@ -712,7 +712,7 @@ static func run() -> bool:
 		and event_labels.has("Add blank sub-event (B)") and event_labels.has("Make 'Or' block")
 		and event_labels.has("Cut")
 		and event_labels.has("Insert") and event_labels.has("More") and event_labels.has("Delete")
-		and not event_labels.has("Group Color…") and not event_labels.has("Edit Comment…"), true) and all_passed
+		and not event_labels.has("Section Color…") and not event_labels.has("Edit Comment…"), true) and all_passed
 	# Single-row disable uses the singular id so the live state can relabel it
 	# Disable Row / Enable Row (regression: a static "Disable / Enable" label was shipped).
 	all_passed = _check("single-row disable keeps the dynamic Row label",
@@ -723,8 +723,8 @@ static func run() -> bool:
 	menu_editor._context_menus._build_row_context_menu(group_row)
 	var group_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("group menu shows group items, hides event-only ones",
-		group_labels.has("Group Color…") and group_labels.has("Edit Group…")
-		and group_labels.has("Active On Start") and group_labels.has("Ungroup - Keep The Rows")
+		group_labels.has("Section Color…") and group_labels.has("Edit Section…")
+		and group_labels.has("Active On Start") and group_labels.has("Remove Section - Keep The Rows")
 		and not group_labels.has("Make 'Or' block") and not group_labels.has("Edit Comment…"), true) and all_passed
 	var comment_row: EventRowData = EventRowData.new()
 	comment_row.row_type = EventRowData.RowType.COMMENT
@@ -733,7 +733,7 @@ static func run() -> bool:
 	var comment_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("comment menu shows comment items, hides group/event ones",
 		comment_labels.has("Edit Comment…") and comment_labels.has("Attach To Event Above")
-		and not comment_labels.has("Group Color…") and not comment_labels.has("Add blank sub-event (B)"), true) and all_passed
+		and not comment_labels.has("Section Color…") and not comment_labels.has("Add blank sub-event (B)"), true) and all_passed
 	# The advanced/event-only authoring lives in More, not at the top.
 	menu_editor._context_row = event_row
 	menu_editor._context_menus._build_row_more_submenu(true)

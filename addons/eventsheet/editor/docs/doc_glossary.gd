@@ -38,7 +38,7 @@ const TERMS: Array[Dictionary] = [
 	{
 		"key": "family",
 		"term": "Family",
-		"here": "A base class and the scripts that extend it, shown as one thing - and a group of the same name shown on the same line. The word is a setting: Family, Base class, Kind or your own, from Settings ▸ Words.",
+		"here": "A base class and the scripts that extend it, shown as one thing - and a group of the same name shown on the same line. The word is a setting: Family, Base class, Kind or your own, from Tools ▸ Words.",
 		"note": "The base's variables, functions and behaviors are what its members share, so adding one there adds it to all of them. The Doctor says when a group and the class it is named after have drifted apart.",
 		"related": ["pick", "object-type"],
 	},

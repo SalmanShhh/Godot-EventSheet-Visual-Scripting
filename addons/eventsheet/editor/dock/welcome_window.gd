@@ -107,7 +107,7 @@ static func choice_summary(choice: String) -> String:
 		said.append(EventSheetL10n.translate("the migration guide open in the Manual"))
 	if bool(settings["tour"]):
 		said.append(EventSheetL10n.translate("the tour"))
-	return EventSheetL10n.translate("Sets: %s. Change any of it later in Settings ▸ Words and the View menu.") % ", ".join(said)
+	return EventSheetL10n.translate("Sets: %s. Change any of it later in Tools ▸ Words and the View menu.") % ", ".join(said)
 
 
 ## The SETS line of the help strip: every setting an answer writes, each with the value it gets.

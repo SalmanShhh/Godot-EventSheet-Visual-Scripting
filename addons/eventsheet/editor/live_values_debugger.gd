@@ -15,7 +15,7 @@ signal values_received(values: Dictionary, instance: String)
 ## (debugging rung 3 - live event trace). The editor highlights those rows.
 signal fired_events_received(uids: PackedStringArray)
 ## Emitted whenever a running game streams the TIMES beside the fires it just reported (the
-## Profile tab's numbers): {stamps, markers, flush} - one microsecond stamp per fire, the fire-count
+## Event Trace's numbers): {stamps, markers, flush} - one microsecond stamp per fire, the fire-count
 ## at the top of each frame in the window, and the moment the window was sent.
 signal event_times_received(window: Dictionary)
 ## Emitted when the running game is about to pause at a sheet breakpoint: the generated code

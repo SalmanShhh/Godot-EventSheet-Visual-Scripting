@@ -8482,7 +8482,7 @@ func _resource_contains_descendant(source: Resource, candidate: Resource) -> boo
 	return false
 
 
-# ── Settings ▸ Words, Tools ▸ Docs Housekeeping, Add behavior… ─────────────────────────────────
+# ── Tools ▸ Words, Tools ▸ Docs Housekeeping, Add behavior… ─────────────────────────────────
 # The vocabulary is a choice, the documentation chores are one report, and adding a behaviour to an
 # object is Godot's own Create Node window. The packs themselves are plain scripts in folders under
 # eventsheet_addons/. Each window is built on first open and kept, because a session that never
@@ -8492,7 +8492,7 @@ var _behaviour_library_window: ConfirmationDialog = null
 var _docs_housekeeping_dialog: AcceptDialog = null
 
 
-## Settings ▸ Words: every choosable word on one page. A change is baked into row TEXT at build
+## Tools ▸ Words: every choosable word on one page. A change is baked into row TEXT at build
 ## time, so every open view is rebuilt rather than redrawn.
 func open_words_settings() -> void:
 	if _words_settings_dialog == null:

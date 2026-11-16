@@ -472,8 +472,8 @@ static func _test_switchable_menu_item() -> bool:
 		["the menu offers the switch by name", label, "Can Be Switched At Runtime"],
 		["right after Active On Start", switch_index - active_index, 1],
 		["the group's own items read in the order the design gives them", head_items,
-			["Edit Group…", "Active On Start", "Can Be Switched At Runtime", "Runs On", "Group Color…",
-				"Turn Into Region", "Ungroup - Keep The Rows"]],
+			["Edit Section…", "Active On Start", "Can Be Switched At Runtime", "Runs On", "Section Color…",
+				"Turn Into Region", "Remove Section - Keep The Rows"]],
 		["ticked at the group's state", ticked_before, false],
 		["choosing it makes the group switchable", live.runtime_toggleable, true],
 	])
