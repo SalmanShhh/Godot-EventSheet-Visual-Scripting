@@ -92,6 +92,9 @@ static func native_quiet_words(style: EventSheetEditorStyle) -> void:
 	var reading: EventSheetReadingStyle = style.get_reading_style()
 	var grounds: Array = [event_style.sheet_background_color, event_style.row_background_color, event_style.head_bar_color]
 	reading.muted_text_color = mover.move(reading.muted_text_color, grounds)
+	# The Manual's breadcrumbs, captions and prompts are the same quiet voice, copied from it when the
+	# tokens were derived, so they take the moved colour too.
+	style.get_manual_style().page_muted_text_color = reading.muted_text_color
 	# Secondary keeps its step above the muted voice, which may have moved up to meet it.
 	var secondary: Color = mover.move(reading.secondary_text_color, grounds)
 	var primary: Color = reading.primary_text_color
