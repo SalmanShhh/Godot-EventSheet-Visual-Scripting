@@ -51,7 +51,7 @@ static func run() -> bool:
 		ok = SUPPORT.check(NAME, "the 3D icon of vector_shapes is drawn in Godot's style",
 			", ".join(shape_problems("vector_shapes_3d", svg_3d, path_3d, STYLE.INK_3D, false)), "") and ok
 		ok = SUPPORT.check(NAME, "the 3D icon is not the 2D one", svg_3d != FileAccess.get_file_as_string("%s/vector_shapes/icon.svg" % ADDONS_DIR), true) and ok
-	return _sections(ok)
+	return _cards(_sections(ok))
 
 
 ## The picker's section icons: drawn files of Godot's style, none sharing another's bytes, each section
@@ -83,6 +83,45 @@ static func _sections(ok_so_far: bool) -> bool:
 	return ok
 
 
+## The Juice card icons: one file per card kind in the Juice pack's folder, in the neutral ink (the card
+## line tints them), none sharing another's bytes, each made from its glyph source, and no file in the
+## folder that is not a card kind. The default for a card of your own is `own`.
+static func _cards(ok_so_far: bool) -> bool:
+	var ok: bool = ok_so_far
+	var kinds: PackedStringArray = card_kinds()
+	ok = SUPPORT.check(NAME, "the Juice Player offers forty-one kinds of card", kinds.size(), 41) and ok
+	var seen: Dictionary = {}
+	var wanted: PackedStringArray = kinds.duplicate()
+	wanted.append("own")
+	for kind: String in wanted:
+		var path: String = "%s/%s.svg" % [STYLE.CARD_DIR, kind]
+		ok = SUPPORT.check(NAME, "card kind %s has an icon" % kind, FileAccess.file_exists(path), true) and ok
+		if not FileAccess.file_exists(path):
+			continue
+		var svg: String = FileAccess.get_file_as_string(path)
+		ok = SUPPORT.check(NAME, "card icon %s is drawn in Godot's style, in the neutral ink" % kind,
+			", ".join(shape_problems(kind, svg, path, STYLE.INK_NEUTRAL, false, false, false)), "") and ok
+		ok = SUPPORT.check(NAME, "card icon %s draws a picture no other card draws" % kind, str(seen.get(svg.md5_text(), "")), "") and ok
+		seen[svg.md5_text()] = kind
+		var glyph_path: String = "%s/%s.glyph" % [STYLE.CARD_GLYPH_DIR, kind]
+		ok = SUPPORT.check(NAME, "card icon %s is made from its glyph source" % kind,
+			STYLE.render_card(FileAccess.get_file_as_string(glyph_path)) if FileAccess.file_exists(glyph_path) else "no glyph", svg) and ok
+	var strays: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at(STYLE.CARD_DIR):
+		if file_name.ends_with(".svg") and not wanted.has(file_name.get_basename()):
+			strays.append(file_name)
+	ok = SUPPORT.check(NAME, "the cards folder holds no icon for a kind that does not exist", ", ".join(strays), "") and ok
+	return ok
+
+
+## The kind of every card the Juice Player offers, in the order its Add box lists them.
+static func card_kinds() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for entry: Variant in EventSheetFeedbackCardSchema.schema().get("kinds", []):
+		out.append(str((entry as Dictionary).get("kind", "")))
+	return out
+
+
 ## What is wrong with a pack icon, as short phrases ([] when it is in Godot's style).
 static func problems_of(pack: String, svg: String, path: String) -> PackedStringArray:
 	var host: String = host_of(pack)
@@ -94,7 +133,7 @@ static func problems_of(pack: String, svg: String, path: String) -> PackedString
 
 
 ## The rules every icon keeps. `ink` is the one ink it must be drawn in, `dot` whether it wears the dot.
-static func shape_problems(_owner: String, svg: String, path: String, ink: String, dot: bool, check_dot: bool = true) -> PackedStringArray:
+static func shape_problems(_owner: String, svg: String, path: String, ink: String, dot: bool, check_dot: bool = true, check_import: bool = true) -> PackedStringArray:
 	var problems: PackedStringArray = PackedStringArray()
 	if not (svg.contains("width=\"16\"") and svg.contains("height=\"16\"") and svg.contains("viewBox=\"0 0 16 16\"")):
 		problems.append("not 16 x 16 on a 16 grid")
@@ -112,7 +151,7 @@ static func shape_problems(_owner: String, svg: String, path: String, ink: Strin
 	if check_dot and svg.contains(STYLE.DOT_PREFIX) != dot:
 		problems.append("the behaviour dot is %s" % ("missing" if dot else "worn by a pack with no host"))
 	var import_path: String = path + ".import"
-	if not (FileAccess.file_exists(import_path) and FileAccess.get_file_as_string(import_path).contains(STYLE.IMPORT_FLAG)):
+	if check_import and not (FileAccess.file_exists(import_path) and FileAccess.get_file_as_string(import_path).contains(STYLE.IMPORT_FLAG)):
 		problems.append("the import does not follow the editor theme")
 	return problems
 

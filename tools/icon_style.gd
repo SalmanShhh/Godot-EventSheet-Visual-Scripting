@@ -17,6 +17,9 @@ extends RefCounted
 const ADDONS_DIR: String = "res://eventsheet_addons"
 const SECTION_DIR: String = "res://addons/eventsheet/icons/sections"
 const GLYPH_DIR: String = "res://tools/pack_builders/icons"
+## The Juice card icons: one glyph per card kind here, one svg per kind in the Juice pack's own folder.
+const CARD_GLYPH_DIR: String = "res://tools/pack_builders/icons/cards"
+const CARD_DIR: String = "res://eventsheet_addons/juice/cards"
 ## The ink a glyph source is drawn in; every other ink is this one with the family's colour swapped in.
 const GLYPH_INK: String = "#e0e0e0"
 ## Godot's own icon inks (dark theme). Each is a key of the editor's light-theme conversion map, so a
@@ -30,6 +33,13 @@ const INKS: PackedStringArray = [INK_NEUTRAL, INK_2D, INK_3D, INK_UI, INK_ANIMAT
 const DOT_PREFIX: String = "<circle cx=\"13\" cy=\"13\" r=\"2\""
 ## The import flag that makes Godot draw an icon in the editor theme's colours.
 const IMPORT_FLAG: String = "editor/convert_colors_with_editor_theme=true"
+
+
+## The svg text of a Juice card icon: the glyph in the neutral ink, no dot. The card line tints it with the
+## card's family colour, so one file serves every family on a dark and on a light editor. It has no
+## import that follows the editor theme: a recolour on a light editor would hand the tint a dark ink.
+static func render_card(glyph: String) -> String:
+	return render(glyph, INK_NEUTRAL, false)
 
 
 ## The svg text of an icon: the glyph in `ink`, plus the behaviour dot when `dot` is set.

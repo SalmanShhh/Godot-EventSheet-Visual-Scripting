@@ -7,6 +7,8 @@
 # A glyph named <pack>_3d where <pack>_3d is not a pack but <pack> is gives that pack a second icon,
 # icon_3d.svg, for the classes in it that work in 3D; the pack's own icon.svg is then the 2D one.
 # Every picker section icon (addons/eventsheet/icons/sections) gets its import the same way.
+# Every Juice card kind has a glyph in tools/pack_builders/icons/cards/<kind>.glyph and gets
+# eventsheet_addons/juice/cards/<kind>.svg, in the neutral ink.
 # The writing is a pure function of the glyph and the pack's scripts (tools/icon_style.gd), so a build
 # twice over writes the same bytes.
 @tool
@@ -51,7 +53,31 @@ static func build(check: bool) -> Dictionary:
 		if file_name.ends_with(".svg"):
 			icons += 1
 			_put_import("%s/%s" % [STYLE.SECTION_DIR, file_name], check, drifted)
+	# The Juice card icons: one svg per card kind in the Juice pack's folder, no import beside them (the
+	# card line draws them itself, so the default import is all a project ever needs).
+	var cards: PackedStringArray = DirAccess.get_files_at(STYLE.CARD_GLYPH_DIR)
+	cards.sort()
+	if not cards.is_empty() and not check:
+		DirAccess.make_dir_recursive_absolute(STYLE.CARD_DIR)
+	for file_name: String in cards:
+		if file_name.ends_with(".glyph"):
+			icons += 1
+			var glyph_text: String = FileAccess.get_file_as_string("%s/%s" % [STYLE.CARD_GLYPH_DIR, file_name])
+			_put_svg("%s/%s.svg" % [STYLE.CARD_DIR, file_name.get_basename()], STYLE.render_card(glyph_text), check, drifted)
 	return {"icons": icons, "drifted": drifted}
+
+
+## Writes one svg alone (or records the path when it differs and `check` is set).
+static func _put_svg(svg_path: String, svg: String, check: bool, drifted: Array) -> void:
+	if FileAccess.file_exists(svg_path) and FileAccess.get_file_as_string(svg_path) == svg:
+		return
+	drifted.append(svg_path)
+	if not check:
+		var file: FileAccess = FileAccess.open(svg_path, FileAccess.WRITE)
+		if file == null:
+			push_error("[build_icons] cannot write %s" % svg_path)
+			return
+		file.store_string(svg)
 
 
 ## Writes the svg and its import (or records the path when a file differs and `check` is set).
