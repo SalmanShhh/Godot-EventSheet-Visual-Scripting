@@ -1422,6 +1422,13 @@ func _resource_text_field(card: Dictionary, key: String, write: Callable, base_t
 		# The notes under the picker (no sound picked, sound gone) change with the pick.
 		_rebuild.call_deferred()))
 	box.add_child(refusal)
+	# Godot's picker shows a picture of a sound, not its name, so the file's name is said under it.
+	if current != null:
+		var named: Label = Label.new()
+		named.text = stored.get_file() if not stored.begins_with("uid://") else current.resource_path.get_file()
+		named.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		named.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		box.add_child(named)
 	return box
 
 
