@@ -1752,6 +1752,12 @@ func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxCon
 	var editor: Control = _build_field_editor(card, field, write, index)
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(editor)
+	# A field the card does not read right now (the ticks while a curve is the shape) is shown greyed and cannot be touched.
+	var greyed: Variant = field.get("grey_when")
+	if greyed is Callable and index >= 0 and index < _cards.size() and bool(EventSheetCardSchemas.ask(greyed as Callable, _cards[index], _cards, index, _edited)):
+		editor.modulate = Color(1.0, 1.0, 1.0, 0.45)
+		if editor is BaseButton:
+			(editor as BaseButton).disabled = true
 	if str(field.get("drawer", "")) == "note":
 		_notes.append({"label": editor, "field": field, "index": index})
 		# A line with nothing to say takes no room, and neither does the row that holds it.
@@ -1763,7 +1769,7 @@ func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxCon
 	var suffix: String = str(field.get("suffix", ""))
 	if not suffix.is_empty():
 		var unit: Label = Label.new()
-		unit.text = suffix
+		unit.text = _said(suffix)
 		unit.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		row.add_child(unit)
 	if link_toggle != null and not tie_first:

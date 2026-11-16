@@ -112,6 +112,13 @@ const SEEDS: Dictionary = {
 	"zoom": {"amount": 110.0, "seconds": 0.2}
 }
 
+## What a new Shake card starts with once the pack can time a shake: a moderate amount for a length that is
+## felt, because a timed shake lasts exactly its Seconds. A stored card keeps the numbers it was saved with.
+const SHAKE_SEEDS: Dictionary = {"amount": 0.4, "seconds": 0.6}
+
+## The file that holds the Shake card's ticks and curve, loaded the first time the vocabulary is built.
+const SHAKE_PATH: String = "res://addons/eventsheet/editor/inspector/juice_shake_fields.gd"
+
 ## The words whose `effect` key means something. The other seven carry an amount and a duration and
 ## nothing else, so their cards do not offer a field that would never be read.
 const EFFECT_WORDS: PackedStringArray = ["flash", "pulse", "hold"]
@@ -238,6 +245,11 @@ static func own_entry(card: Dictionary) -> Dictionary:
 	return load(OWN_PATH).call("entry_for", card)
 
 
+## The file that holds the Shake card's ticks and curve.
+static func shake() -> Script:
+	return load(SHAKE_PATH) as Script
+
+
 ## The file that holds the kinds that point at other nodes, loaded the first time the vocabulary is built.
 static func world() -> Script:
 	return load(WORLD_PATH) as Script
@@ -315,6 +327,12 @@ static func derived_kinds(reading: Dictionary) -> Array:
 		var fields: Array = [_param_field(params, AMOUNT_KEY, "num"), _param_field(params, SECONDS_KEY, "unit:time")]
 		if EFFECT_WORDS.has(word):
 			fields.insert(1, _param_field(params, EFFECT_KEY, "text"))
+		var defaults: Dictionary = seeds_for(word)
+		# The Shake card's two ticks and its curve are offered only when the pack on disk can play them.
+		if word == "shake" and bool(shake().call("offered", reading)):
+			fields.append_array(shake().call("fields"))
+			defaults.merge(SHAKE_SEEDS, true)
+			defaults.merge(shake().call("new_card_keys"), true)
 		kinds.append({
 			"kind": word,
 			"category": str(family_of().get(word, "")),
@@ -322,7 +340,7 @@ static func derived_kinds(reading: Dictionary) -> Array:
 			"help": str(twin.get("help", (params.get(WORD_KEY, {}) as Dictionary).get("help", ""))),
 			"fields": fields,
 			"live": [],
-			"defaults": seeds_for(word),
+			"defaults": defaults,
 			"badge": seconds_badge
 		})
 	return kinds
