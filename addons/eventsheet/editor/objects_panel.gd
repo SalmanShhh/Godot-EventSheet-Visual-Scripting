@@ -50,6 +50,8 @@ signal object_starter_events_requested(object_label: String)
 ## Right-click > Duplicate events for… - this object's events, copied for other objects.
 signal object_duplicate_events_requested(object_label: String)
 
+## Reached by path, at the moment a pattern claim is asked about, so opening the panel does not compile it.
+const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
 const _META_KEY: String = "eventsheets_objects_panel"
 
 ## The drag payload a bar entry hands the canvas. Named so the viewport can recognise it without
@@ -570,10 +572,10 @@ func _add_could_adopt_line(parent_item: TreeItem, section_id: String, label: Str
 	var names: PackedStringArray = PackedStringArray()
 	var seen: Dictionary = {}
 	for claim: Variant in EventSheetPatternFacts.claims(_sheet):
-		if not EventSheetPatternAdopt.is_adoptable(claim as Dictionary):
+		if not load(PATTERN_ADOPT_PATH).is_adoptable(claim as Dictionary):
 			continue
 		var pack: String = EventSheetPatternVocabulary.pack_label(
-			EventSheetPatternAdopt.adoptable_of(claim as Dictionary))
+			load(PATTERN_ADOPT_PATH).adoptable_of(claim as Dictionary))
 		if pack.is_empty() or seen.has(pack):
 			continue
 		seen[pack] = true
