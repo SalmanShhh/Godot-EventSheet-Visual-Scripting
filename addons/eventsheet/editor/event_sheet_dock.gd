@@ -2517,6 +2517,10 @@ func _open_theme_editor() -> void:  # menu_bar.gd View menu
 func apply_theme_style(style: EventSheetEditorStyle) -> void:  # theme_editor_dialog.gd Apply-To-Current-Sheet
 	_theme_manager.apply_theme_style(style)
 
+
+func open_theme_file(path: String) -> void:  # the FileSystem's Edit in Theme Editor
+	_theme_manager.open_theme_file(path)
+
 # ── Inspector per-row param edits ───────────────────────────────────
 
 

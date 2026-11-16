@@ -15,6 +15,7 @@ const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
 const SCANNER_PATH: String = "res://addons/eventsheet/ace/project_scanner.gd"
 const SHIPPED_SCRIPTS_PATH: String = "res://addons/eventsheet/ace/shipped_scripts.gd"
 const L10N_PATH: String = "res://addons/eventsheet/editor/l10n.gd"
+const THEME_FILES_PATH: String = "res://addons/eventsheet/theme/theme_files.gd"
 
 var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
@@ -25,6 +26,7 @@ var connect_signal: Callable = Callable()  # Callable(node: Node)
 var open_workspace: Callable = Callable()  # Callable(scene_path: String)
 var show_events: Callable = Callable()   # Callable(node: Node)
 var use_in_sheets: Callable = Callable()  # Callable(script_path: String)
+var edit_theme: Callable = Callable()    # Callable(theme_path: String)
 
 
 func _popup_menu(paths: PackedStringArray) -> void:
@@ -57,6 +59,10 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# A script of yours gives sheets rows with one click; once it does, the entry opens its page.
 			if should_offer_use_in_sheets(slot, paths):
 				add_context_menu_item(use_in_sheets_text(paths[0]), _on_use_in_sheets_requested, _open_as_sheet_icon())
+			# A theme file opens in the Theme Editor from here. Double-clicking one is left to Godot, so the
+			# Inspector keeps editing it and a theme shown there never pulls the workspace forward.
+			if should_offer_edit_theme(slot, paths):
+				add_context_menu_item(load(L10N_PATH).translate("Edit in Theme Editor"), _on_edit_theme_requested, _open_as_sheet_icon())
 			# A script that names a class can be made a kind of: the new sheet extends it.
 			var kind_parent: String = class_declared_in(paths)
 			if not kind_parent.is_empty():
@@ -85,6 +91,23 @@ static func should_offer_use_in_sheets(menu_slot: int, paths: PackedStringArray)
 	if not path.begins_with("res://") or path.get_extension().to_lower() != "gd":
 		return false
 	return not load(SHIPPED_SCRIPTS_PATH).is_shipped(path)
+
+
+## True when this slot + paths should offer "Edit in Theme Editor": the FileSystem, exactly one file, and
+## that file is an event sheet theme (read from its first line, never loaded). Pure + static, so the
+## decision is unit-testable without the editor-only plugin.
+static func should_offer_edit_theme(menu_slot: int, paths: PackedStringArray) -> bool:
+	if menu_slot != EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM or paths.size() != 1:
+		return false
+	return load(THEME_FILES_PATH).is_theme_file(paths[0])
+
+
+func _on_edit_theme_requested(targets: Variant) -> void:
+	if not edit_theme.is_valid() or not (targets is PackedStringArray):
+		return
+	var paths: PackedStringArray = targets as PackedStringArray
+	if not paths.is_empty():
+		edit_theme.call(paths[0])
 
 
 ## The entry's words: it acts at once for a script not yet in use, and reads with an ellipsis (it opens

@@ -496,6 +496,15 @@ func _use_script_in_sheets(script_path: String) -> void:
 	load(SCRIPT_ROWS_FLOW_PATH).use(script_path, _event_sheet_editor)
 
 
+## The FileSystem's "Edit in Theme Editor": the Theme Editor opens on that theme file. It opens over whatever
+## the editor is showing and does not switch the main screen, so looking at a theme never leaves the scene.
+func _edit_theme_file(theme_path: String) -> void:
+	_ensure_editor()
+	if _event_sheet_editor == null or not _event_sheet_editor.has_method("open_theme_file"):
+		return
+	_event_sheet_editor.call("open_theme_file", theme_path)
+
+
 ## The FileSystem "Create New > Event Sheet..." entry: pop the name + starter dialog for the
 ## clicked folder. The dialog is parented to the editor's base control (always present), so it
 ## works even before the workspace editor has ever been built.
@@ -643,6 +652,7 @@ func _enter_tree() -> void:
 		menu.open_workspace = _open_scene_workspace
 		menu.show_events = _show_events_for_node
 		menu.use_in_sheets = _use_script_in_sheets
+		menu.edit_theme = _edit_theme_file
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.
