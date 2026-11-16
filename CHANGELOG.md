@@ -78,6 +78,10 @@ Stop Sound ends a sound an earlier Sound card started, by that card's name, with
 ### Added: Autoplay on the Juice Player
 
 A new Autoplay tick on the node plays its list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. It starts off, and while it is off nothing is written into the scene, so a saved scene stays the bytes it was.
+### Added: a Doctor note for groups used as states
+
+The Doctor now notices groups used as states. If a script puts an object into one group and takes it out of another in two or more separate places (add to "jumping", remove from "running", and the reverse), so that exactly one of the groups is true at a time, the Doctor says so once for that script, quietly, naming the groups, and points at the States window, which keeps the same idea in one variable you can read, rename and react to. Groups that are only joined (an "enemies" group, a "pickups" group) are never named, and a single swap on its own is not enough. It reads every script in the project, hand-written or compiled.
+
 ### Changed: the States window shows everything it will write on a file with no states yet
 
 Declaring states on a script that has none writes more than the enum and the state variable: the variable's setter, the `state_changed` signal, and two helper variables (the state it came from, and when the current one began). The code box in the States window showed only the enum and the variable, so a hand-written file gained lines nobody had been shown. It now shows the whole set, in the order the file will hold it. A script that already has states shows no extra lines, because renaming or removing a state writes none.
