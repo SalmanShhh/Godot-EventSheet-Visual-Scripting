@@ -10983,3 +10983,6 @@ texture not found,找不到纹理
 "The texture could not be loaded, so this shape draws nothing.","无法加载纹理，所以这个形状不会绘制任何内容。"
 """%s"" is not a shape this list knows. It is kept as it is.","“%s”不是此列表认识的形状，将原样保留。"
 Unknown shape,未知形状
+Shows this same list as a table. Nothing is saved differently.,
+Show as cards,显示为卡片
+Shows this list as cards again.,再次以卡片显示此列表。

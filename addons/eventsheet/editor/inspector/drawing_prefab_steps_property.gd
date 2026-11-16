@@ -15,14 +15,29 @@
 @tool
 extends EditorProperty
 
-var _editor: ShapeStepsEditor = null
+var _view: ShapeStepsView = null
 
 
 func _init() -> void:
-	_editor = ShapeStepsEditor.new()
-	_editor.value_changed.connect(_on_changed)
-	add_child(_editor)
-	set_bottom_editor(_editor)
+	_view = ShapeStepsView.new()
+	_view.value_changed.connect(_on_changed)
+	_view.view_switched.connect(_on_switched)
+	add_child(_view)
+	set_bottom_editor(_view)
+
+
+func _ready() -> void:
+	# The view this object was last left in, for as long as the editor runs: the Inspector rebuilds its rows on
+	# every selection, and a list shown as a table a moment ago comes back as a table. Nothing is written to the file.
+	var edited: Object = get_edited_object()
+	if edited != null and ShapeStepsView.remembered(edited.get_instance_id()):
+		_view.show_table(true)
+
+
+func _on_switched(table: bool) -> void:
+	var edited: Object = get_edited_object()
+	if edited != null:
+		ShapeStepsView.remember(edited.get_instance_id(), table)
 
 
 func _on_changed(steps: Array) -> void:
@@ -37,7 +52,7 @@ func _on_changed(steps: Array) -> void:
 ## A locked prefab (one inside an imported scene, or a read-only sub-resource) shows its cards but
 ## cannot be changed from them.
 func _set_read_only(read_only: bool) -> void:
-	_editor.set_editable(not read_only)
+	_view.set_editable(not read_only)
 
 
 func _update_property() -> void:
@@ -46,9 +61,9 @@ func _update_property() -> void:
 		incoming = []
 	# Skip the write-back the emit_changed round-trip causes (values already match) so an open
 	# SpinBox / picker keeps focus while you type.
-	if (incoming as Array) == _editor.get_steps():
+	if (incoming as Array) == _view.get_steps():
 		return
-	_editor.set_steps(incoming as Array)
+	_view.set_steps(incoming as Array)
 
 
 ## The shape-aware steps list: the SHARED card-list drawer, handed the prefab's own vocabulary. Each
@@ -88,6 +103,10 @@ func _update_property() -> void:
 ## control that changes nothing, which is worse than not offering it.
 class ShapeStepsEditor:
 	extends EventSheetCardListDrawer
+
+	## Asked for by the quiet link under the list: show this same list as a table.
+	signal table_requested
+
 
 	const KINDS: Array[String] = ["circle", "ring", "rect", "line", "cone", "stamp"]
 	const SHAPE_TILE_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_shape_tile.gd"
@@ -151,6 +170,18 @@ class ShapeStepsEditor:
 
 	func _init() -> void:
 		super._init({"kind_key": "kind", "stripe_key": "kind", "schema_dict": build_schema()})
+		# Under the list, quiet and at the right: the way to see the same shapes as a table, for edits across
+		# many of them. It only changes how THIS Inspector shows the list; nothing is written for it.
+		var under: HBoxContainer = HBoxContainer.new()
+		var gap: Control = Control.new()
+		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		under.add_child(gap)
+		var link: LinkButton = LinkButton.new()
+		link.text = EventSheetL10n.translate("Open as a table")
+		link.tooltip_text = EventSheetL10n.translate("Shows this same list as a table. Nothing is saved differently.")
+		link.pressed.connect(func() -> void: table_requested.emit())
+		under.add_child(link)
+		_body.add_child(under)
 
 
 	## The prefab's vocabulary as a card schema: one kind per shape. The stripe is coloured by the
@@ -404,3 +435,108 @@ class ShapeStepsEditor:
 	## a step exists. The Add dropdown names its own shape; this is the door for everything else.
 	func add_default_step() -> void:
 		add_first_kind()
+
+
+## The two ways to look at one list of steps - the cards and the table - in one place, so a quiet link under
+## the cards can switch THIS Inspector to the table and the table's own link can switch back. Both views hold
+## the same list: switching writes nothing, an edit in either is an edit of the list, and the keys the table has
+## no column for (a line's ends and dashes) ride through a table edit because the table writes into the very
+## row it was handed. Which view an object was left in is remembered for the session only, never in the file.
+class ShapeStepsView:
+	extends VBoxContainer
+
+	signal value_changed(steps: Array)
+	## The view changed: true for the table, false for the cards.
+	signal view_switched(table: bool)
+
+	## The columns the table has always had for this list.
+	const TABLE_COLUMNS: String = "kind=enum(circle|ring|rect|line|cone|stamp),x=float,y=float,p1=float,p2=float,p3=float,color=color,texture=String"
+
+	## The view each object was last left in, by instance id, for as long as the editor runs.
+	static var _left_as_table: Dictionary = {}
+
+	var _cards: ShapeStepsEditor = null
+	var _table: Control = null
+	var _table_on: bool = false
+	## Entries of the list that are not Dictionaries, as [original index, value], so a table edit hands them back.
+	var _junk: Array = []
+
+
+	func _init() -> void:
+		_cards = ShapeStepsEditor.new()
+		_cards.value_changed.connect(func(steps: Array) -> void: value_changed.emit(steps))
+		_cards.table_requested.connect(func() -> void: show_table(true))
+		add_child(_cards)
+		_table = EventSheetDrawerWidgets.DrawerTable.new(EventSheetAttributeDrawers.parse_table_columns(TABLE_COLUMNS))
+		_table.open_table = func() -> void: show_table(false)
+		_table.open_word = EventSheetL10n.translate("Show as cards")
+		_table.open_tip = EventSheetL10n.translate("Shows this list as cards again.")
+		_table.connect("value_changed", _on_table_changed)
+		_table.visible = false
+		add_child(_table)
+
+
+	static func remember(object_id: int, table: bool) -> void:
+		if table:
+			_left_as_table[object_id] = true
+		else:
+			_left_as_table.erase(object_id)
+
+
+	static func remembered(object_id: int) -> bool:
+		return bool(_left_as_table.get(object_id, false))
+
+
+	func cards() -> ShapeStepsEditor:
+		return _cards
+
+
+	func table() -> Control:
+		return _table
+
+
+	func table_shown() -> bool:
+		return _table_on
+
+
+	## Shows the table or the cards. The list is handed across as it is; nothing is announced and nothing is written.
+	func show_table(table: bool) -> void:
+		if table == _table_on:
+			return
+		var steps: Array = get_steps()
+		_table_on = table
+		if table:
+			_table.call("set_value", steps)
+		else:
+			_cards.set_steps(steps)
+		_cards.visible = not table
+		_table.visible = table
+		view_switched.emit(table)
+
+
+	func set_steps(steps: Array) -> void:
+		_junk = []
+		for position: int in range(steps.size()):
+			if not (steps[position] is Dictionary):
+				_junk.append([position, steps[position]])
+		_cards.set_steps(steps)
+		_table.call("set_value", steps)
+
+
+	func get_steps() -> Array:
+		if not _table_on:
+			return _cards.get_steps()
+		var rows: Array = _table.call("get_value")
+		for kept: Variant in _junk:
+			rows.insert(mini(int((kept as Array)[0]), rows.size()), (kept as Array)[1])
+		return rows
+
+
+	func set_editable(editable: bool) -> void:
+		_cards.set_editable(editable)
+		_table.set("editable", editable)
+		_table.call("_rebuild")
+
+
+	func _on_table_changed(_rows: Array) -> void:
+		value_changed.emit(get_steps())

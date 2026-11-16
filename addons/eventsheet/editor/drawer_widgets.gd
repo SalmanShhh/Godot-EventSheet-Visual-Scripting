@@ -1487,6 +1487,10 @@ class DrawerTable:
 	var _open_link: LinkButton = null
 	## Opens the file this list lives in as a table; the link shows only while it is set.
 	var open_table: Callable = Callable()
+	## What the link says and its hover, when the table is not opening a file but doing something else (a list
+	## that can also be shown as cards offers its way back). Empty keeps the words the link has always had.
+	var open_word: String = ""
+	var open_tip: String = ""
 	var _query: String = ""
 	var _sort_column: String = ""
 	var _descending: bool = false
@@ -1763,6 +1767,9 @@ class DrawerTable:
 		_previous_button.disabled = _page <= 0
 		_next_button.disabled = _page >= int(view.get("pages", 1)) - 1
 		_open_link.visible = open_table.is_valid()
+		if not open_word.is_empty():
+			_open_link.text = open_word
+			_open_link.tooltip_text = open_tip
 		_missing_label.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		_refresh_missing()
 
