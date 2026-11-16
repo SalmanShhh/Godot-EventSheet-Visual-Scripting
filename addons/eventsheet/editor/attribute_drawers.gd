@@ -599,6 +599,11 @@ class CardListProperty:
 		if edited is Resource:
 			(edited as Resource).emit_changed()
 
+	## A locked object (an imported scene's resource, a read-only sub-resource) shows its cards but
+	## cannot be changed from them.
+	func _set_read_only(read_only: bool) -> void:
+		_list.call("set_editable", not read_only)
+
 	func _update_property() -> void:
 		# Guard by VALUE: the echo of our own commit carries what the list already shows, so skipping
 		# it keeps the field being edited alive. Only an outside change (undo, reselecting) rebuilds.

@@ -678,12 +678,6 @@ func _enter_tree() -> void:
 	# stream, and feed them to the workspace editor's Live Values window.
 	_live_values_debugger = EventSheetLiveValuesDebugger.new()
 	add_debugger_plugin(_live_values_debugger)
-	# DrawingPrefabResource: a shape-aware `steps` editor + a live preview panel + a FileSystem/resource-picker
-	# thumbnail, all rendered by the tree-free rasterizer. Registered BEFORE the generic attribute drawers so
-	# its _parse_property claims `steps` (the titled per-shape editor) ahead of the generic p1/p2/p3 grid.
-	# Cosmetic - a prefab still edits as a plain steps table and draws identically without this plugin.
-	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
-	add_inspector_plugin(_drawing_prefab_inspector)
 	# The Juice Player (FeedbackPlayer before 0.21.0): the strip under its list (how long the beat is, the buttons that play it in the
 	# editor, the debug timeline, and the two doors to a moment file). The list itself is drawn by the
 	# shared card-list drawer through the ordinary marker on its export, so nothing is claimed here.
@@ -710,6 +704,14 @@ func _enter_tree() -> void:
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
 	_attribute_drawers_plugin.open_table = _open_sheet_in_workspace
 	add_inspector_plugin(_attribute_drawers_plugin)
+	# DrawingPrefabResource: a shape-aware `steps` editor + a live preview panel + a FileSystem/resource-picker
+	# thumbnail, all rendered by the tree-free rasterizer. Registered AFTER the generic attribute drawers:
+	# Godot asks the plugin added LAST first and the first to claim a property draws it, and the drawers
+	# claim `steps` too (its export carries a table marker), so added earlier this plugin was never asked
+	# and the steps opened as a plain table. Cosmetic - a prefab still edits as a table and draws
+	# identically without this plugin.
+	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
+	add_inspector_plugin(_drawing_prefab_inspector)
 	_drawing_prefab_preview_gen = load(DRAWING_PREFAB_PREVIEW_GEN_PATH).new()
 	var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()
 	if prefab_previewer != null:

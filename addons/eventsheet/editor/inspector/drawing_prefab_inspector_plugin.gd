@@ -60,8 +60,9 @@ static func rasterize_prefab(object: Object, size: Vector2i) -> Texture2D:
 		steps if steps is Array else [], size, load(PREVIEW_PANEL_PATH).BACKGROUND)
 
 
-## Claim the `steps` array with the shape-aware editor. This plugin is registered BEFORE the generic
-## attribute-drawers plugin, so returning true here wins the property before the opaque p1/p2/p3 grid runs.
+## Claim the `steps` array with the shape-aware editor. This plugin is registered AFTER the generic
+## attribute-drawers plugin - Godot asks the plugin added last first - so returning true here wins the
+## property before the generic table marker on the export claims it.
 func _parse_property(object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, _hint_string: String, _usage_flags: int, _wide: bool) -> bool:
 	if name == "steps" and type == TYPE_ARRAY and is_drawing_prefab(object):
 		add_property_editor(name, load(STEPS_PROPERTY_PATH).new())

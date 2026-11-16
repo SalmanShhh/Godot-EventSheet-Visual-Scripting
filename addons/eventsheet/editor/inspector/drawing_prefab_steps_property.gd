@@ -34,6 +34,12 @@ func _on_changed(steps: Array) -> void:
 		(edited as Resource).emit_changed()
 
 
+## A locked prefab (one inside an imported scene, or a read-only sub-resource) shows its cards but
+## cannot be changed from them.
+func _set_read_only(read_only: bool) -> void:
+	_editor.set_editable(not read_only)
+
+
 func _update_property() -> void:
 	var incoming: Variant = get_edited_object().get(get_edited_property())
 	if not (incoming is Array):
@@ -106,7 +112,8 @@ class ShapeStepsEditor:
 	const CAPPED_KINDS: Array[String] = ["line"]
 	const DASHABLE_KINDS: Array[String] = ["line"]
 	## And which have a THICKNESS for the scale rule to be about. A stamp is scaled by its own Scale
-	## field and a disc has no stroke at all, so neither is asked a question it cannot answer.
+	## field, a disc has no stroke at all, and a ring's outline is drawn at the thickness it says
+	## whatever the scale rule (no renderer reads one for a ring), so only a line is asked.
 	const THICKNESS_KINDS: Array[String] = ["ring", "line"]
 	## What a freshly ADDED step of each shape starts as, in storage order. Every slot is seeded so the
 	## Dictionary shape matches what the rasterizer and the round-trip expect the moment it is added -
