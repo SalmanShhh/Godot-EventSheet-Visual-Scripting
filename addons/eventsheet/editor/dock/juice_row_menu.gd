@@ -155,6 +155,13 @@ static func show_cards(dock: Control, player_name: String) -> void:
 	if player == null:
 		dock._set_status(EventSheetL10n.translate("%s has no node called %s.") % [scenes[0].get_file(), player_name])
 		return
+	# The dock follows a node picked in the Scene dock and offers to filter the sheet to it. This pick is ours,
+	# so the follow is told to treat its echo as ours: the line the reader sees is the true one, and no offer
+	# (and no filter) appears.
+	var link: Object = dock.call("_ensure_scene_link")
+	var label: String = str(link.call("object_label_for_node", EventSheetViewportReadingRows.object_census(sheet), str(player.name), player.get_class()))
+	if not label.is_empty():
+		link.set("_driven_label", label)
 	EditorInterface.get_selection().clear()
 	EditorInterface.get_selection().add_node(player)
 	EditorInterface.edit_node(player)
