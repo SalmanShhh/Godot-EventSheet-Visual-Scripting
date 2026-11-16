@@ -31,6 +31,8 @@ var _dock: Control = null
 ## [popup, item id, which word] for every menu item whose text follows the Words page, so a change
 ## of words relabels them in place instead of waiting for a restart.
 var _word_menu_items: Array = []
+## The titles of the palette commands the Add menu's block items registered, so a kind that goes takes its command with it.
+var _block_palette_titles: PackedStringArray = PackedStringArray()
 
 
 ## The page each of the Menu's two Manual doors asks for: What's new for What's new…, and "" for
@@ -543,21 +545,17 @@ func build(root: Node) -> void:
 	add_popup.add_separator()
 	add_popup.add_item("Code (GDScript) on Selected Event", 4)
 	# Custom Block API kinds (preloads, region markers, registered pack kinds): one item per
-	# registered kind, ids offset by 100 so the fixed ids above never collide.
+	# registered kind, ids offset by 100 so the fixed ids above never collide. Each item remembers the
+	# kind it was made for and the menu brings the list up to date every time it opens, so a kind
+	# registered later neither moves another kind's item nor waits for a restart.
 	add_popup.add_separator()
-	var registered_kinds: Array[EventSheetBlockKind] = EventSheetBlockRegistry.addable_kinds()
-	for kind_index: int in range(registered_kinds.size()):
-		# Kind TITLES localise (a pack can ship a CSV for its block names); kind_ids never do.
-		add_popup.add_item("%s…" % EventSheetL10n.translate(registered_kinds[kind_index].title), 100 + kind_index)
-		# And one command on Godot's own Command Palette, so a block kind is reachable from there too.
-		var palette_kind_id: String = registered_kinds[kind_index].kind_id
-		DOCK_REGISTRY.register_palette_command("Add %s…" % registered_kinds[kind_index].title,
-			func() -> void: _dock._open_custom_block_add(palette_kind_id))
+	fill_block_kind_items(add_popup)
+	add_popup.about_to_popup.connect(func() -> void: fill_block_kind_items(add_popup))
 	add_popup.id_pressed.connect(func(id: int) -> void:
 		if id >= 100:
-			var kinds_now: Array[EventSheetBlockKind] = EventSheetBlockRegistry.addable_kinds()
-			if id - 100 < kinds_now.size():
-				_dock._open_custom_block_add(kinds_now[id - 100].kind_id)
+			var picked: String = str(add_popup.get_item_metadata(add_popup.get_item_index(id)))
+			if not picked.is_empty():
+				_dock._open_custom_block_add(picked)
 			return
 		match id:
 			0: _dock._add_rows.on_add_signal_event_requested()
@@ -2001,3 +1999,28 @@ func _add_toolbar_separator(toolbar: HFlowContainer) -> void:
 ## Whether the View menu's Show Events in the Scene is on: read off the setting, so the menu does not compile the facts.
 static func _scene_events_enabled() -> bool:
 	return bool(ProjectSettings.get_setting(SCENE_EVENTS_SETTING, false))
+
+
+## The Add menu's block items, one per kind the registry offers right now. The items numbered 100 and
+## up are taken out and made again, each carrying its kind's id, and the palette's "Add ..." command
+## of a kind that has gone is taken back.
+func fill_block_kind_items(add_popup: PopupMenu) -> void:
+	for index: int in range(add_popup.item_count - 1, -1, -1):
+		if add_popup.get_item_id(index) >= 100:
+			add_popup.remove_item(index)
+	var kinds: Array[EventSheetBlockKind] = EventSheetBlockRegistry.addable_kinds()
+	var titles: PackedStringArray = PackedStringArray()
+	for kind_index: int in range(kinds.size()):
+		var kind: EventSheetBlockKind = kinds[kind_index]
+		# Kind TITLES localise (a pack can ship a CSV for its block names); kind_ids never do.
+		add_popup.add_item("%s…" % EventSheetL10n.translate(kind.title), 100 + kind_index)
+		add_popup.set_item_metadata(add_popup.item_count - 1, kind.kind_id)
+		# And one command on Godot's own Command Palette, so a block kind is reachable from there too.
+		var palette_kind_id: String = kind.kind_id
+		var palette_title: String = "Add %s…" % kind.title
+		titles.append(palette_title)
+		DOCK_REGISTRY.register_palette_command(palette_title, func() -> void: _dock._open_custom_block_add(palette_kind_id))
+	for old_title: String in _block_palette_titles:
+		if not titles.has(old_title):
+			DOCK_REGISTRY.unregister_palette_command(old_title)
+	_block_palette_titles = titles
