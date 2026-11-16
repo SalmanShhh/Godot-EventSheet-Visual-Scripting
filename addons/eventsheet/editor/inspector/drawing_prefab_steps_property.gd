@@ -171,7 +171,8 @@ class ShapeStepsEditor:
 				"badge": Callable(ShapeStepsEditor, "summary_of"),
 			})
 		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true,
-			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for")}
+			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for"),
+			"order_captions": [EventSheetL10n.translate("Drawn first, underneath"), EventSheetL10n.translate("Drawn last, on top")]}
 
 
 	## A shape's plain name, in the editor's language. The stored word (`rect`) never changes.

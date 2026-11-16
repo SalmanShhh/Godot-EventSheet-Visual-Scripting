@@ -788,6 +788,9 @@ func _rebuild() -> void:
 		_list.add_child(empty)
 		return
 	var groups: Array = EventSheetCardSchemas.together_groups(_schema, _cards)
+	var captions: Array = _order_captions()
+	if not captions.is_empty():
+		_list.add_child(_order_caption(str(captions[0])))
 	var index: int = 0
 	while index < _cards.size():
 		var group: int = int(groups[index]) if index < groups.size() else -1
@@ -799,6 +802,38 @@ func _rebuild() -> void:
 		else:
 			_list.add_child(_build_card(index))
 		index = last + 1
+	if not captions.is_empty():
+		_list.add_child(_order_caption(str(captions[1])))
+
+
+## The two words a schema puts at the ends of its list - what the first card is, and what the last is - or
+## nothing for a list whose order says nothing. Said only while there are cards to say it about.
+func _order_captions() -> Array:
+	var words: Variant = _schema.get("order_captions")
+	if words is Array and (words as Array).size() == 2 and not _cards.is_empty():
+		return words
+	return []
+
+
+func _order_caption(text: String) -> Label:
+	var caption: Label = Label.new()
+	caption.text = text
+	caption.set_meta("order_caption", true)
+	caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	caption.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return caption
+
+
+## The caption words showing at the ends of the list right now, in order: what a test reads back.
+func order_caption_texts() -> PackedStringArray:
+	var texts: PackedStringArray = PackedStringArray()
+	if _list == null:
+		return texts
+	for child: Node in _list.get_children():
+		if child is Label and child.has_meta("order_caption") and not child.is_queued_for_deletion():
+			texts.append((child as Label).text)
+	return texts
 
 
 ## Cards that start together on one faint band: a fill behind them and nothing drawn round them, so the groups

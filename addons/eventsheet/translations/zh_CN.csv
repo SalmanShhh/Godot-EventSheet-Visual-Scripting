@@ -10966,3 +10966,5 @@ Dash,线段
 Style,样式
 Line look,线条外观
 grows with the stamp,随图章一起缩放
+"Drawn first, underneath","最先绘制，位于最下层"
+"Drawn last, on top","最后绘制，位于最上层"
