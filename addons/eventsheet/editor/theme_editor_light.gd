@@ -104,6 +104,7 @@ func _mode_button(text: String, group: ButtonGroup, light: bool) -> Button:
 func set_preview_light(on: bool) -> void:
 	preview_light = on
 	if _dark_button != null:
+		(_dark_button if on else _light_button).set_pressed_no_signal(false)
 		(_light_button if on else _dark_button).set_pressed_no_signal(true)
 	_window._repaint_preview()
 
