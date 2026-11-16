@@ -43,9 +43,33 @@ const DOCK_REGISTRY := preload("res://addons/eventsheet/api/dock_registry.gd")
 ## checks validity, so a closed workspace never leaves the API pointing at a freed node.
 ## True while an edit() mutation is running: a second edit() from inside it is refused.
 static var _editing: bool = false
+
+## Where the registries are emptied as the process ends (see the file for why).
+const REGISTRY_RELEASE_PATH := "res://addons/eventsheet/api/registry_release.gd"
 static var _dock: Control:
 	get:
 		return DOCK_REGISTRY.dock()
+
+
+## Runs once, when this class is first loaded: arranges for every registered Callable to be let go
+## when the process ends, so a script that registers a lambda and quits exits with its own code.
+static func _static_init() -> void:
+	load(REGISTRY_RELEASE_PATH).arm()
+
+
+## Empties every registry that holds a Callable. Called as the scene tree leaves, never mid-session.
+static func _release_registrations() -> void:
+	DOCK_REGISTRY.release()
+	EventSheetProjectDoctor.release_extension_checks()
+	EXTENSION_REGISTRIES.release()
+	EventSheetCompletions.release_extra_sources()
+	_starters.clear()
+	_preference_builders.clear()
+	_editor_gizmo_drawers.clear()
+	_inspector_preview_renderers.clear()
+	_toggle_icon_providers.clear()
+	_asset_drop_handlers.clear()
+	_builtin_asset_drop_handlers_registered = false
 
 
 # ── Vocabulary ─────────────────────────────────────────────────────────────────────────

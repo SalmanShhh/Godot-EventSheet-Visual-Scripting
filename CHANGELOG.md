@@ -31,6 +31,10 @@ The box was a narrow list about 220 pixels wide that cut its last line in half. 
 ### Added: the Inspector's Play button shows the cards that move other nodes
 
 Play, Play this card and Play from here now show Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node, and Debug view calls each of them played. Before the first frame the preview writes down every property those cards may move on every node they point at (a label's text, a bar's value, a node's visible, modulate and scale, the tracks of the clip it plays, the shader value on a copy of the material that lives for the pass), and puts exactly those back on Stop, Restore, at the end of a pass and before the editor saves or runs the scene, so a scene saved in the middle of a preview holds the same text it held before. Spawn Scene, Push, Force, Gravity, Freeze Body, Grab Focus, Call Method, Emit Signal and Play Player still say why they are not shown.
+### Fixed: a script that registers a lambda and quits exits with its own code
+
+A headless script that registered a Doctor check, palette command, row menu item or listener as a lambda and then quit used to end in a crash (exit code 139, whatever code it asked for), so CI read every such run as a failure. Everything registered through `EventSheets` is now let go as the scene tree leaves, so the process exits with the code the script gave.
+
 ### Fixed: compiling a sheet that has no file no longer leaves a stray script
 
 Asking the compiler to write a sheet that has no file and no output path used to create `res://event_sheet_generated.gd`, a script declaring that sheet's class in your project. It now writes nothing and adds a warning to the result; the compiled text is still in `output`.

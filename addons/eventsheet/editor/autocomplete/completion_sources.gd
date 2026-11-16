@@ -1748,6 +1748,11 @@ static func register_source(field_kind: String, source: Callable) -> void:
 	clear_cache()
 
 
+## Lets go of every registered source, as the process ends (see registry_release.gd).
+static func release_extra_sources() -> void:
+	_extra_sources.clear()
+
+
 static func unregister_source(field_kind: String) -> void:
 	_extra_sources.erase(field_kind.strip_edges())
 	clear_cache()

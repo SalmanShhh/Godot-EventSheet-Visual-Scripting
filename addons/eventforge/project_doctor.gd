@@ -66,6 +66,11 @@ static func register_check(check_id: String, check: Callable) -> void:
 	_extension_checks.append({"id": check_id, "run": check})
 
 
+## Lets go of every check, the plugin's own included, as the process ends (see registry_release.gd).
+static func release_extension_checks() -> void:
+	_extension_checks.clear()
+
+
 static func unregister_check(check_id: String) -> void:
 	for index in range(_extension_checks.size() - 1, -1, -1):
 		if str(_extension_checks[index].get("id", "")) == check_id:

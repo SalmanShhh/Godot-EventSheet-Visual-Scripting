@@ -36,6 +36,14 @@ static var _param_commit_validators: Dictionary = {}
 static var _builtin_validators_registered: bool = false
 
 
+## Lets go of every Callable held here, as the process ends (see registry_release.gd).
+static func release() -> void:
+	_param_editors.clear()
+	_card_schemas.clear()
+	_param_commit_validators.clear()
+	_builtin_validators_registered = false
+
+
 static func register_param_editor(tag: String, factory: Callable) -> void:
 	_param_editors[tag] = factory
 

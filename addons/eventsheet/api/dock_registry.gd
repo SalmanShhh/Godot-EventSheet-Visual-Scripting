@@ -49,6 +49,16 @@ static var _lifecycle: Dictionary = {"opened": [], "saved": [], "compiled": []}
 static var _simple_aces: Array = []
 
 
+## Lets go of every Callable held here, as the process ends (see registry_release.gd).
+static func release() -> void:
+	_palette_commands.clear()
+	_row_menu_items.clear()
+	for event_name: Variant in _lifecycle:
+		(_lifecycle[event_name] as Array).clear()
+	_simple_aces = []
+	forwarder = Callable()
+
+
 static func register_dock(dock: Control) -> void:
 	_dock = dock
 
