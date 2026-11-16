@@ -80,7 +80,18 @@ static func _file_pins(pack: GDScript) -> bool:
 	var timed: PackedStringArray = pack.call("keys_a_file_drops",
 		{"verb": "shake", "label": "kick", "amount": 0.4, "effect": "", "seconds": 0.2, "delay": 0.05, "repeat": 3,
 			"chance": 50.0, "wobble_style": "soft"})
+	var player: Node = pack.new()
+	player.name = "HitJuice"
+	var none: PackedStringArray = player.call("_moment_file_notes", PackedStringArray(), PackedStringArray())
+	var both: PackedStringArray = player.call("_moment_file_notes", PackedStringArray(["pause", "wobble"]),
+		PackedStringArray(["kick (delay, repeat)", "boom (chance)"]))
+	player.free()
 	return SUPPORT.pins(TEST_NAME, [
+		["a save with nothing to leave out says nothing", none, PackedStringArray()],
+		["a save that leaves cards out says which, naming the player", both[0],
+			"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so HitJuice left these out of the file: pause, wobble."],
+		["and one that leaves keys off the cards it kept says which keys on which cards", both[1],
+			"Juice Player: a moment file holds a card's kind, amount, effect and seconds and nothing else, so HitJuice left these off the cards it kept: kick (delay, repeat); boom (chance)."],
 		["a card a file can hold loses nothing", plain, PackedStringArray()],
 		["a card with timing, a chance or a field of its own names each key it would lose", timed,
 			PackedStringArray(["delay", "repeat", "chance", "wobble_style"])],

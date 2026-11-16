@@ -1050,10 +1050,8 @@ func save_moment_file(path: String) -> void:
 	var file: Resource = kind.new()
 	file.set("moment_name", name)
 	file.set("steps", written)
-	if not left_behind.is_empty():
-		push_warning("Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s." % [name, ", ".join(left_behind)])
-	if not left_keys.is_empty():
-		push_warning("Juice Player: a moment file holds a card's kind, amount, effect and seconds and nothing else, so %s left these off the cards it kept: %s." % [name, "; ".join(left_keys)])
+	for note: String in _moment_file_notes(left_behind, left_keys):
+		push_warning(note)
 	if ResourceSaver.save(file, path) != OK:
 		push_warning("Juice Player: %s could not write \"%s\", so Save Moment File saved nothing." % [name, path])
 
@@ -2173,6 +2171,17 @@ static func keys_a_file_drops(card: Dictionary) -> PackedStringArray:
 		if not MOMENT_KEYS.has(str(key)):
 			dropped.append(str(key))
 	return dropped
+
+## What Save Moment File says before it writes: the cards it left out of the file altogether, and the keys it left
+## off the cards it kept, each in a sentence that names this player. Nothing a card holds is dropped unsaid.
+## @ace_hidden
+func _moment_file_notes(left_behind: PackedStringArray, left_keys: PackedStringArray) -> PackedStringArray:
+	var notes: PackedStringArray = PackedStringArray()
+	if not left_behind.is_empty():
+		notes.append("Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s." % [name, ", ".join(left_behind)])
+	if not left_keys.is_empty():
+		notes.append("Juice Player: a moment file holds a card's kind, amount, effect and seconds and nothing else, so %s left these off the cards it kept: %s." % [name, "; ".join(left_keys)])
+	return notes
 
 ## The name one card answers to: what it was called in the list, or its own word when it was never
 ## named. THE ONE PLACE a label is derived, so every row addresses cards identically, and a Hold that
