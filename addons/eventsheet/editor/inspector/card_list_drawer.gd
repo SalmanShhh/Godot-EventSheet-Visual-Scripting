@@ -881,7 +881,9 @@ func _build_chrome() -> void:
 
 ## The fold button reads "Cards (N)" and carries the arrow that says whether the cards are showing.
 func _show_fold() -> void:
-	_fold_button.text = EventSheetL10n.translate("Cards (%d)") % _cards.size()
+	# A schema may name what its cards are (`fold_word`, a format with one %d), as the shapes list does.
+	var word: String = str(_schema.get("fold_word", ""))
+	_fold_button.text = (word if not word.is_empty() else EventSheetL10n.translate("Cards (%d)")) % _cards.size()
 	var arrow: Texture2D = _editor_icon("GuiTreeArrowDown" if _fold_button.button_pressed else "GuiTreeArrowRight")
 	_fold_button.icon = arrow
 

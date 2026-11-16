@@ -22,6 +22,7 @@ static func run() -> bool:
 	all_passed = _pin_the_head_repaints_in_place() and all_passed
 	all_passed = _pin_the_wedge_and_the_stamp() and all_passed
 	all_passed = _pin_the_finding_colour() and all_passed
+	all_passed = _pin_the_fold_word() and all_passed
 	return all_passed
 
 
@@ -165,4 +166,20 @@ static func _pin_the_finding_colour() -> bool:
 		["a card that draws something keeps the quiet colour", grey.to_html(), EventSheetLookStyle.quiet().to_html()],
 		["mending the size puts the quiet colour back, in place", repaired.to_html(), EventSheetLookStyle.quiet().to_html()],
 		["and a size typed to 0 turns it amber, in place", broken.to_html(), EventSheetLookStyle.warning().to_html()],
+	])
+
+
+## The fold bar of the shapes list counts shapes; a list whose schema says nothing keeps counting cards.
+static func _pin_the_fold_word() -> bool:
+	var editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
+	editor.set_steps([_step("circle", {"p1": 5.0}), _step("ring", {"p1": 5.0})])
+	var shapes: String = editor._fold_button.text
+	editor.free()
+	var plain: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"kind_key": "kind", "schema_dict": {"kinds": [{"kind": "a", "label": "A", "fields": [], "defaults": {}}]}})
+	plain.set_value([{"kind": "a"}, {"kind": "a"}, {"kind": "a"}])
+	var cards: String = plain._fold_button.text
+	plain.free()
+	return SUPPORT.pins(PREFIX, [
+		["the shapes list counts shapes", shapes, "Shapes (2)"],
+		["any other list still counts cards", cards, "Cards (3)"],
 	])
