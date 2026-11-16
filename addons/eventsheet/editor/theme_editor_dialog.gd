@@ -795,10 +795,20 @@ func _apply_to_sheet() -> void:
 
 ## The editor's own save dialog, with one line at its foot naming the file a Save would replace.
 func _open_save_dialog() -> void:
+	# The project's own themes folder is where a saved theme is listed from, so the dialog starts there.
+	# Saving is the moment a project asks for that folder; one made for a dialog that is then cancelled
+	# is taken away again.
+	var folder: String = EventSheetThemePresets.PROJECT_DIR
+	var made: bool = not DirAccess.dir_exists_absolute(folder) and DirAccess.make_dir_recursive_absolute(folder) == OK
 	var browser: ConfirmationDialog = EventSheetPopupUI.browse_file(_dialog, PackedStringArray(["*.tres ; EventSheetEditorStyle"]),
-		func(path: String) -> void: save_preset(path), {"title": EventSheetL10n.translate("Save Theme Preset"), "save": true, "size": Vector2i(720, 480)})
+		func(path: String) -> void: save_preset(path), {"title": EventSheetL10n.translate("Save Theme Preset"), "save": true,
+			"size": Vector2i(720, 480), "dir": folder})
 	if browser == null:
+		if made:
+			DirAccess.remove_absolute(folder)
 		return
+	if made:
+		browser.canceled.connect(func() -> void: DirAccess.remove_absolute(folder))
 	var reason: Label = Label.new()
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	reason.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))

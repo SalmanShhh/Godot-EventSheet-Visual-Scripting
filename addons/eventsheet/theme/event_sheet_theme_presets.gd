@@ -5,11 +5,16 @@
 class_name EventSheetThemePresets
 extends RefCounted
 
+## The folder a project keeps its own themes in: listed in the theme menu, and where the Theme Editor's
+## save dialog starts.
+const PROJECT_DIR := "res://eventsheet_themes/"
+
 ## Directories scanned for theme resources, in priority order. Addon-local themes win over
-## demo themes when both define the same file name.
+## demo themes, and both win over the project's own, when two define the same file name.
 const THEME_DIRS: Array[String] = [
 	"res://addons/eventsheet/themes/",
-	"res://demo/themes/"
+	"res://demo/themes/",
+	PROJECT_DIR,
 ]
 
 
