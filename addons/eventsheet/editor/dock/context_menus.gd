@@ -17,6 +17,7 @@ extends RefCounted
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const GRID_CSV_DIALOG_PATH := "res://addons/eventsheet/editor/dock/grid_csv_dialog.gd"
 const MOMENT_FILE_DOOR_PATH := "res://addons/eventsheet/editor/dock/moment_file_door.gd"
+const MOMENT_FILE_PATH := "res://addons/eventforge/resources/moment_file.gd"
 const PATTERN_ADOPT_PATH := "res://addons/eventsheet/editor/dock/pattern_adopt.gd"
 const PATTERN_FACTS_PATH := "res://addons/eventsheet/editor/interaction/pattern_facts.gd"
 const REFACTOR_MENU_PATH := "res://addons/eventsheet/editor/dock/refactor_menu.gd"
@@ -368,7 +369,7 @@ func _context_moment_block() -> MomentBlockRow:
 	var block: MomentBlockRow = _dock._context_row.source_resource as MomentBlockRow
 	if block != null:
 		return block
-	return EventSheetMomentFile.owner_of(_dock._current_sheet,
+	return load(MOMENT_FILE_PATH).owner_of(_dock._current_sheet,
 		_dock._context_row.source_resource as MomentStepRow)
 
 
@@ -376,7 +377,7 @@ func _context_moment_block() -> MomentBlockRow:
 func _remove_context_moment_step() -> void:
 	var step: MomentStepRow = _dock._context_row.source_resource as MomentStepRow \
 		if _dock._context_row != null else null
-	var block: MomentBlockRow = EventSheetMomentFile.owner_of(_dock._current_sheet, step)
+	var block: MomentBlockRow = load(MOMENT_FILE_PATH).owner_of(_dock._current_sheet, step)
 	if block == null:
 		_dock._set_status("Right-click a step of a Moment block to take it off.", true)
 		return
