@@ -203,9 +203,10 @@ On Enemy died
   -> Enemy | Object: Destroy
 ```
 
-Each effect is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
+Each effect is a **card**: a small tile in its family's colour, a drag handle to reorder it, a fold
 arrow, a tick box, its label, a badge saying how long it takes, and a menu. Under the list sits
-**Add card**, a searchable dropdown grouped by family.
+**Add card**, a searchable dropdown grouped by family (Sound, Scene, Object, Device, Camera, Screen,
+Time and Flow).
 
 ![The Juice Player's Inspector: four cards, one of them unfolded](images/juice-player-inspector.png)
 
@@ -219,19 +220,63 @@ zoom, shockwave, chromatic, pulse and the screen-effect hold - and they are play
 behaviour beside the player, which is why one goes under the same object. Four more move the head
 rather than being felt (**Pause**, **Hold**, **Loop Start**, **Loop Back**), and three are neither a
 feeling nor a wait (**Tween Property**, **Emit Signal**, **Play Player**, which plays another player
-from inside this one at a share of this play's strength).
+from inside this one at a share of this play's strength). The last is the **Sound** card, described
+next.
+
+A new card starts with numbers that do something: a Hitstop freezes time completely for 0.08 s, a
+Slowmo slows to 0.3 for 0.3 s and a Zoom zooms in to 110 percent over 0.2 s. The amount means a
+different thing for each of those (the time scale it freezes to, the time scale it slows to, a
+percentage), so a card added with 1 and 0 s would have done nothing. Cards already in a list keep the
+numbers they were saved with.
+
+### The Sound card
+
+A hit is a sound as much as a shake, so the list holds one. Pick the sound with Godot's own resource
+picker; the card keeps the file's uid, so it still finds the file after you move it. Then set **Volume**
+and **Random volume** (decibels), **Pitch** and **Random pitch** (every play lands somewhere between the
+two ends, and a grey line says where, so one file sounds like several), the **Bus** (the project's
+audio buses, read the way Godot's own audio player nodes read them), **Heard from** (this object, which
+places the sound in space, or everywhere), **Follows strength** (quieter at a lighter play) and an
+optional **Delay**. **Listen** on the open card plays that one card alone in the editor with its own
+settings and a new random pitch each press, shows how long it lasts and stops on a second press. In
+Godot pitch and playback speed are one setting, so a higher pitch is also a shorter sound, and the
+card's length is the file's length at its pitch.
+
+In the game the card plays through four reusable voices on the Juice Player (a positioned player where
+the object is a 2D or 3D node, a flat one for Everywhere), so a fast run of hits does not make a node
+each, and it is muted with the Sound family, retimed with the rest, and counted by the head line, the
+badge and Hold. A card with no sound, or whose file has gone from the project, says so in quiet amber
+and plays nothing. Save as file leaves a Sound card out and names it, because a moment file cannot hold
+one. A Skip does not play a sound late: a sound is not a place the beat can jump to. For several
+different takes of one sound, put a Godot AudioStreamRandomizer in a file and pick that.
+
+Each card head wears a small tile in its family's colour (Sound, Scene, Object, Device, Camera,
+Screen, Time or Flow), the way a variable row shows its type, and the Add box groups by the same
+names. A card is still saved and muted by the family word it always had.
 
 Unfold a card and it opens: what that juice card does, **Active**, **Label**, **Chance**, a **Timing**
 foldout (delay, cooldown, repeat and interval, the clock, a strength window it only plays inside,
 skip on stop), and then the card's own fields drawn with the real Inspector drawers. While the game
 runs, the values the play is writing back are shown greyed, through Godot's own remote Inspector.
 
-**Play** on the Inspector strip samples the list in the editor and applies it to the object, and
-**Stop** and **Restore** put the object back the way they found it; the scene's saved bytes are
-never touched. Only the three things an editor can honestly show are drawn - a shake as a wobble, a
-punch as a swell, and a tweened property walking to its value - because a hitstop and a flash are
-things a running game does to time and to the screen. **Debug view** draws the timeline of the plan,
-a bar per card at the time it starts, which is how you see why the flash came late.
+The strip of buttons sits under the cards. **Play** samples the list in the editor and applies it to
+the object, and **Stop** and **Restore** put the object back the way they found it. What it moves is
+written down before it starts (the object's position, rotation, scale and colour, and every property a
+Tween Property card names) and put back on Stop, on Restore, at the end of each pass and when the
+editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays
+for real what Godot can play - a shake as a wobble, a punch as a swell, a tweened property walking to its
+value and a sound - and shows the waits and the two time cards (Hitstop and Slowmo) as time. A flash, a
+zoom and the screen effects are drawn by the running game, a signal runs your own code and another
+Juice Player runs its own list, so the editor skips those and says so. **Debug view** draws the
+timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came
+late, and writes one line under it per card: played, shown as time, or not shown in the editor and why.
+
+To hear or see one card, press the play mark on its head; it plays alone on the real object (whether
+or not its box is ticked) and turns into a stop mark while it sounds. The menu of an open card adds
+**Play from here**, which plays that card and everything under it. **Repeat** plays the list again each
+time it ends and reads the list as it is then, so a number you change while it repeats is the number the
+next pass uses. **Try at strength** plays at any strength; it is the same number the toolbar's "at" box
+sets, and neither is saved on the player.
 
 ---
 

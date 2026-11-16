@@ -6,6 +6,38 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: play one card, or play from a card down, without running the game
+
+Every juice card head now has a play mark. Press it and that one card plays alone, on the real object, in the editor (whether or not its box is ticked), and the mark turns into a stop mark while it sounds. The menu of a card gains Play from here, which plays that card and everything under it, so you can work on the end of a long list without sitting through the start. Play under the list still plays everything. A card that is sounding during any play lights its own mark, and Repeat and Try at strength apply to a part played this way as they do to the whole list.
+
+### Changed: trying a Juice Player's list in the editor is honest about what it plays, and puts everything back
+
+Play under the list now plays what Godot can play for real (a shake, a punch, a tweened property and, new, a Sound card, heard through the editor's own audio), shows the waits and the two time cards (Hitstop, Slowmo) as time, and names what it skips: a flash, a zoom and the screen effects are drawn by the running game, a signal runs your own code and another Juice Player runs its own list. Debug view gains one line under the timeline for each card saying which of those it is. Everything a preview moves is written down before it starts, and now includes every property a Tween Property card names (it used to put back only the object's position, rotation, scale and colour); it is put back on Stop, on Restore, at the end of each pass and when the editor saves or runs the scene, so a scene saved in the middle of a preview never keeps a half-played value. Two new lines under the buttons: Repeat plays the list again each time it ends and reads the list as it is then, so a number you change is the number the next pass uses; Try at strength plays at any strength, and is the same number the toolbar's \"at\" box sets. The toolbar box no longer writes the Juice Player's saved Strength.
+
+### Changed: the Juice Player's play buttons sit under the list they play
+
+The strip with the head line (how many cards and how long the beat is), Play, Stop, Skip, Restore, Debug view, Save as file and Load from file used to sit at the very top of the Inspector, above even the Acts On field. It now sits directly under the cards and the Add card button, and its head line counts the list as you edit it instead of only when the node is first selected. The buttons and what they do are the same.
+
+### Added: a family tile on each juice card, and the Add box says Sound, Object, Camera, Screen, Time and Flow
+
+Each card on a Juice Player's list now shows a small square in the colour of its family, the way a variable row shows its type, so a Sound card and a Camera card no longer look alike when eight cards are folded. A light editor gets a darker value of each colour so every tile reads against the card line. The Add box headings wear the same tile and read Sound, Scene, Object, Device, Camera, Screen, Time and Flow, in that order; Loop and Signal cards are both Flow, and Tween Property sits with the Object cards. These are words people read: a card is still saved and muted by the family word it always had (`audio`, `transform`, `camera`, `screen`, `pause`, `loop`, `signal`), and no saved scene changes. The Drawing Prefab list draws no tile.
+
+### Added: a Sound card for the Juice Player
+
+A hit is a sound as much as a shake, and until now the sound sat outside the list: the list could not mute it, retime it or play it when you pressed Play in the editor. The Add box now offers a Sound card. Pick the sound with Godot's own resource picker (the card keeps the file's uid, so it follows the file when you move it), then set the Volume and a Random volume, the Pitch and a Random pitch (each play lands somewhere between the two ends, and a grey line says where), the Bus (read from the project's audio buses), whether it is heard from this object or everywhere, whether it follows the play strength, and an optional Delay. The Listen row on the card plays that one card alone in the editor with a new random pitch each press, shows how long it lasts, and a second press stops it. In the game the card plays through four reusable voices on the Juice Player, so a fast run of hits does not make a node each, and it is muted with the Sound family. A card with no sound, or whose sound has gone from the project, says so in quiet amber and plays nothing. The card's length is the sound's length at its pitch, so the head line, the badge and Hold all count it. Save as file names a Sound card it leaves out, as it does for the other cards a moment file cannot hold.
+
+### Fixed: a new Hitstop, Slowmo or Zoom card does something the moment it is added
+
+A new juice card used to start at an amount of 1 and a length of 0 whatever its kind. For Hitstop the amount is the time scale it freezes to, so a new one froze nothing; a new Slowmo never slowed anything; and a new Zoom card zoomed the camera out to its floor, because its amount is a percentage. A new Hitstop card now freezes time completely for 0.08 s, a new Slowmo slows to 0.3 for 0.3 s and a new Zoom zooms in to 110 percent over 0.2 s. Cards already in a list keep the numbers they were saved with. The Amount help on the Moment Step row now reads the right way round (0 is a full stop).
+
+### Changed: muting a family of juice cards no longer shortens the beat
+
+Mute Juice Family used to take every card of the family out of the list, and Pause and Hold are in the Time family, so muting it removed the waits as well and the rest of the beat came early. A muted family now silences only what is felt: a Pause, a Hold and the two loop cards keep waiting, so a list is as long with the switch on as with it off. If you relied on the old shorter beat, delete the Pause card or shorten it. Tween Property now belongs to the Object family in the game (it already did in the Inspector), so muting \"transform\" mutes it too, and the card that plays another Juice Player is a Flow card in the Inspector as it is in the game. The words the Mute row takes are unchanged.
+
+### Fixed: two editors open, or the Doctor and Migrate at once, can no longer make a good sheet look broken
+
+Migrate's plan and the Doctor's stale-output check used to write a trial compile into a file with a fixed name in the project's user folder, and read the write's success as the answer. Every Godot editor, headless run or second copy of a project with the same name shares that one folder, so a second one writing the same name at the same moment made a good row ask a question it had no reason to ask (the file \"refuses\" it) and made the Doctor say \"Sheet no longer compiles: Could not write ...\" about a sheet that compiles. Both now ask the compiler for the text alone, which writes no file, so there is nothing left to collide on and nothing left behind in the user folder.
+
 ### Changed: Add Event keeps a door to the full list
 
 Add Event on the toolbar still opens on the short object page. That page now starts with one plain entry, Browse every row, which opens the full list with Favourites and Recent beside it, exactly as the toolbar opened it before, with no typing. A regression test pins the other half of the same change: a row on the open sheet follows its sentence at once after the sentence is changed.

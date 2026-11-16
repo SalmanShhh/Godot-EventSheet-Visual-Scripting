@@ -58,7 +58,7 @@ Juice Player is a Godot EventSheets node you add under any object so that object
 
 **2. Put a Juice node beside it.** The ten felt words are played by the Juice behaviour, found beside the player (a sibling under the same parent, or a child of the player). Without one, the shake, flash and hitstop cards do nothing and the player says so once.
 
-**3. Fill the list.** Select the player node and use **Add card** under the list. Each card gets a stripe coloured by its family, a drag handle, a fold arrow, a tick box, its label and a badge saying how long it takes. The head of the list counts the cards and adds up the longest path through them.
+**3. Fill the list.** Select the player node and use **Add card** under the list. Each card gets a small tile in its family's colour, a drag handle, a fold arrow, a tick box, its label and a badge saying how long it takes. The head of the list counts the cards and adds up the longest path through them.
 
 ```
 7 juice cards - 0.95 s total
@@ -79,7 +79,7 @@ Enemy: On damaged
   -> HitJuice | Juice Player: Play Juice  0.6
 ```
 
-**5. Preview without running the game.** **Play** on the strip samples the list in the editor and applies it to the object; **Stop** and **Restore** put the object back the way they found it, and the scene's saved bytes are never touched. Only the three things an editor can honestly show are drawn: a shake as a wobble, a punch as a swell, and a tweened property walking to its value. A hitstop and a flash are things a running game does to time and to the screen, so they are left out rather than guessed at. **Debug view** draws the timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came late.
+**5. Preview without running the game.** The strip sits under the cards. **Play** samples the list in the editor and applies it to the object; **Stop** and **Restore** put the object back the way they found it. Everything a preview may move (position, rotation, scale and colour, and each property a Tween Property card names) is written down first and put back on Stop, on Restore, at the end of each pass and when the editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays for real a shake, a punch, a tweened property and a Sound card, and shows the waits, Hitstop and Slowmo as time; a flash, a zoom and the screen effects are drawn by the running game, a signal runs your own code and another Juice Player runs its own list, so those are skipped and named. **Debug view** draws the timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came late, and writes a line per card saying which of those it is. The play mark on a card head plays that one card alone, the card menu's **Play from here** plays it and everything under it, **Repeat** plays again each time the list ends (reading the list as it is then), and **Try at strength** plays at any strength. None of the three is saved.
 
 ---
 
@@ -96,10 +96,11 @@ Enemy: On damaged
 | **Loop Start** | (none) | Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead. |
 | **Loop Back** | Pause (`0.25` s), Loop to last Hold (`true`), Loop to last Loop Start (`true`), Loops (`2`) | Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands. Shows **Loops left** counting down while the game runs. |
 
-**Three that are neither a feeling nor a wait:**
+**Four that the player plays itself, because they are neither a moment word nor a wait (a sound, a value walked, a word said, another player played):**
 
 | Card | Fields | What it does |
 | --- | --- | --- |
+| **Sound** | Stream (a file picked with Godot's resource picker, kept as its uid), Volume (dB), Random volume (dB), Pitch, Random pitch, Bus, Heard from (`here` or `everywhere`), Follows strength, Delay | Plays a sound when the list reaches the card, through one of four reusable voices on the player. Each play lands somewhere between the two ends of the random volume and pitch. Its length is the file's length at its pitch, it is muted with the `audio` family, and a card with no sound says so and plays nothing. Listen on the open card plays it alone in the editor. A moment file cannot hold it. |
 | **Tween Property** | Property (`rotation`), To (`1.0`), Over (`0.2` s) | Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back. |
 | **Emit Signal** | Word | Says one word out of the player's **On Juice Signal** trigger, so a sheet can hang anything at all off a point in the list. |
 | **Play Player** | Player, Strength (`1.0`) | Plays another Juice Player from inside this one, at a share of this play's strength. |
@@ -145,7 +146,7 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Set Juice Player Strength | `value` (float, `1.0`) | Turns this whole player up or down without retuning a single card - the object's own volume knob, on top of the strength the play row asks for. |
 | Set Juice Player Cooldown | `seconds` (float, `0.1`) | The shortest gap between two plays, in seconds. A play asked for sooner is refused, which is how a rapid-fire hit stops stacking its own juice. |
 | Set Can Play While Playing | `answer` (`restart` \| `ignore` \| `overlap`, default `restart`) | What a second play does while the first is still running: start again from the top, be ignored, or run alongside it. |
-| Mute Juice Family | `category` (`audio` \| `transform` \| `camera` \| `screen` \| `pause` \| `loop` \| `signal`, default `screen`), `muted` (bool, `true`) | Silences a whole family of cards at once and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked. |
+| Mute Juice Family | `category` (`audio` \| `transform` \| `camera` \| `screen` \| `pause` \| `loop` \| `signal`, default `screen`), `muted` (bool, `true`) | Silences a whole family of cards at once and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked. A Pause, a Hold and the loop cards only wait, so they are never muted and the beat keeps its length. |
 | Mute Juice Family On Channel | `channel` (String, `juice_players`), `category` (same seven, default `screen`), `muted` (bool, `true`) | The same switch, thrown for every Juice Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object. |
 | Scale Juice Amounts | `category` (empty \| the seven families, default empty), `factor` (float, `0.5`) | Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list. |
 | Scale Juice Timing | `factor` (float, `0.5`) | Stretches or squeezes the whole beat in time: every length, every wait and every gap multiplied by the same number. Half makes a snappier version of a beat nobody has to retune card by card. |

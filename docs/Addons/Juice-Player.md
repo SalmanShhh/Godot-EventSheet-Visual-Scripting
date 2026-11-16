@@ -79,7 +79,7 @@ Enemy: On damaged
   -> HitJuice | Juice Player: Play Juice  0.6
 ```
 
-**5. Preview without running the game.** **Play** on the strip samples the list in the editor and applies it to the object; **Stop** and **Restore** put the object back the way they found it, and the scene's saved bytes are never touched. Only the three things an editor can honestly show are drawn: a shake as a wobble, a punch as a swell, and a tweened property walking to its value. A hitstop and a flash are things a running game does to time and to the screen, so they are left out rather than guessed at. **Debug view** draws the timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came late.
+**5. Preview without running the game.** The strip sits under the cards. **Play** samples the list in the editor and applies it to the object; **Stop** and **Restore** put the object back the way they found it. Everything a preview may move (position, rotation, scale and colour, and each property a Tween Property card names) is written down first and put back on Stop, on Restore, at the end of each pass and when the editor saves or runs the scene, so the scene's saved bytes are never the middle of a preview. It plays for real a shake, a punch, a tweened property and a Sound card, and shows the waits, Hitstop and Slowmo as time; a flash, a zoom and the screen effects are drawn by the running game, a signal runs your own code and another Juice Player runs its own list, so those are skipped and named. **Debug view** draws the timeline of the plan, a bar per card at the time it starts, which is how you see why the flash came late, and writes a line per card saying which of those it is. The play mark on a card head plays that one card alone, the card menu's **Play from here** plays it and everything under it, **Repeat** plays again each time the list ends (reading the list as it is then), and **Try at strength** plays at any strength. None of the three is saved.
 
 ---
 
@@ -96,10 +96,11 @@ Enemy: On damaged
 | **Loop Start** | (none) | Marks where a Loop Back below sends the head. A list with no Loop Start loops back to its last Hold instead. |
 | **Loop Back** | Pause (`0.25` s), Loop to last Hold (`true`), Loop to last Loop Start (`true`), Loops (`2`) | Moves the head back to the last Hold or Loop Start above, a number of times, pausing each time it lands. Shows **Loops left** counting down while the game runs. |
 
-**Three that are neither a feeling nor a wait:**
+**Four that the player plays itself, because they are neither a moment word nor a wait (a sound, a value walked, a word said, another player played):**
 
 | Card | Fields | What it does |
 | --- | --- | --- |
+| **Sound** | Stream (a file picked with Godot's resource picker, kept as its uid), Volume (dB), Random volume (dB), Pitch, Random pitch, Bus, Heard from (`here` or `everywhere`), Follows strength, Delay | Plays a sound when the list reaches the card, through one of four reusable voices on the player. Each play lands somewhere between the two ends of the random volume and pitch. Its length is the file's length at its pitch, it is muted with the `audio` family, and a card with no sound says so and plays nothing. Listen on the open card plays it alone in the editor. A moment file cannot hold it. |
 | **Tween Property** | Property (`rotation`), To (`1.0`), Over (`0.2` s) | Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back. |
 | **Emit Signal** | Word | Says one word out of the player's **On Juice Signal** trigger, so a sheet can hang anything at all off a point in the list. |
 | **Play Player** | Player, Strength (`1.0`) | Plays another Juice Player from inside this one, at a share of this play's strength. |
