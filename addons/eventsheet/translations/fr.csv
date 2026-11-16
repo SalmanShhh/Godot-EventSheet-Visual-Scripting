@@ -10687,3 +10687,15 @@ all the cards above,toutes les cartes au-dessus
 "Waiting %.2f s, for %s.",Attend %.2f s pour %s.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","Aucune carte nommée ""%s"" n'est au-dessus de ce Hold, il attend donc toutes les autres."
 "this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand","cette ligne a été retirée et aucune ligne plus récente ne veut dire la même chose, elle reste donc telle quelle - choisis un remplaçant à la main"
+Each run adds another copy of these nodes.,Chaque exécution ajoute une autre copie de ces nœuds.
+Add %s at the top of this event.,Ajoute %s en haut de cet événement.
+"This row changes your scene, but Ctrl+Z will not undo it.","Cette ligne modifie ta scène, mais Ctrl+Z ne l'annulera pas."
+"This row adds a node to your scene, but Ctrl+Z will not take it back.","Cette ligne ajoute un nœud à ta scène, mais Ctrl+Z ne le retirera pas."
+"This row removes a node from your scene, but Ctrl+Z will not bring it back.","Cette ligne retire un nœud de ta scène, mais Ctrl+Z ne le ramènera pas."
+Use %s to make it one step you can undo.,Utilise %s pour en faire une seule étape que tu peux annuler.
+Nothing here can be rewritten on its own - 1 row is listed below with the reason.,Rien ici ne peut être réécrit tout seul - 1 ligne est listée ci-dessous avec la raison.
+Nothing here can be rewritten on its own - %d rows are listed below with the reason.,Rien ici ne peut être réécrit tout seul - %d lignes sont listées ci-dessous avec la raison.
+1 row would be rewritten in one step you can undo.,1 ligne serait réécrite en une seule étape que tu peux annuler.
+%d rows would be rewritten in one step you can undo.,%d lignes seraient réécrites en une seule étape que tu peux annuler.
+1 row is left exactly as it is.,1 ligne reste exactement comme elle est.
+%d rows are left exactly as they are.,%d lignes restent exactement comme elles sont.

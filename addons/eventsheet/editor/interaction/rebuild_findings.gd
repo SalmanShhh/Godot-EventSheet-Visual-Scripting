@@ -58,9 +58,9 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 
 ## The words, in one place, so the Doctor's line and the sentence the sheet's own help strip shows under
 ## the selected row are the same finding said once.
-static func message(label: String) -> String:
-	var said: String = EventSheetL10n.translate("%s builds nodes in the scene the editor has open, and nothing in this event or an earlier one for the same trigger removes what the last run built, so every run adds another copy.") % label
-	return said + " " + EventSheetL10n.translate("Remove What This Sheet Built clears what an earlier run built; Clear what it built first puts it at the top of this event.")
+static func message() -> String:
+	return EventSheetL10n.translate("Each run adds another copy of these nodes.") + " " \
+		+ EventSheetL10n.translate("Add %s at the top of this event.") % EventSheetL10n.translate("Remove What This Sheet Built")
 
 
 ## The index of the first row of an event that builds as a tool row, or -1.
@@ -124,7 +124,7 @@ static func _walk(items: Array, label: String, cleared: Dictionary, found: Array
 			var built: ACEAction = event_row.actions[slot] as ACEAction
 			found.append({
 				"kind": KIND_REBUILD, "severity": "warning", "anchor": ANCHOR_EVENT, "event": event_row,
-				"subject": built.ace_id, "message": message(label),
+				"subject": built.ace_id, "message": message(),
 				"fix": FIX_CLEAR_FIRST, "fix_label": EventSheetL10n.translate("Clear what it built first"),
 				"lane": "action", "index": slot,
 				"to": str(built.params.get("parent", built.params.get("target", "get_tree().edited_scene_root"))),

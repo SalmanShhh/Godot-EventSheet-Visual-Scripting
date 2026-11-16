@@ -315,9 +315,9 @@ static func _test_the_quiet_finding() -> bool:
 	ok = _check("it names the row to reach for", str(finding.get("to", "")), "SetPropertyUndoable") and ok
 	ok = _check("it names the slot the door rewrites", "%s/%d" % [
 		str(finding.get("lane", "")), int(finding.get("index", -1))], "action/0") and ok
-	ok = _check("its sentence says the file and the line",
-		str(finding.get("message", "")).contains("tidy.gd") \
-			and str(finding.get("message", "")).contains("Set Property (Undoable)"), true) and ok
+	ok = _check("its sentence says what is wrong, then which row to use",
+		str(finding.get("message", "")),
+		"This row changes your scene, but Ctrl+Z will not undo it. Use Set Property (Undoable) to make it one step you can undo.") and ok
 	ok = _check("it is anchored at the event", EventSheetViewportRowBuilder.findings_at_event(
 		found, sheet.events[0] as EventRow).size(), 1) and ok
 	# The door: the same row, respelled - values untouched, baked spelling cleared so the twin's own

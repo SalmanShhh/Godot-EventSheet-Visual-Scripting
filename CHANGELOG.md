@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the Tool sheet notes about undo and rebuilds are two short plain sentences
+
+The two notes a Tool sheet's Building rows can earn are now two short plain sentences each, what is wrong and then what to do. "This row adds a node to your scene, but Ctrl+Z will not take it back. Use Add Node (Undoable) to make it one step you can undo." and "Each run adds another copy of these nodes. Add Remove What This Sheet Built at the top of this event." They no longer start with the file name (the strip is on that file's own sheet, and the Doctor's list names the file beside the note), no longer quote the line the row writes, and two notes on one event are shown on two lines instead of joined by a dot. All eight languages are translated.
+
+### Changed: the Migrate window says 1 row or 2 rows
+
+The Migrate window's first line now says "1 row would be rewritten in one step you can undo." or "2 rows would be rewritten ...", and "1 row is left exactly as it is." or "3 rows are left exactly as they are.", instead of "row(s)". All eight languages are translated.
+
 ### Fixed: a theme, lane split, column width or density picked for a script sheet stays picked
 
 A sheet saved as a script (a `.gd` file) is plain code, so nothing about how it looks can be written into it, and the choices made for one were lost the moment it was closed. They are now kept in the project itself (the editor's project metadata, one small record per script) and put back when the script is opened again: the theme you picked in View, Sheet theme, how wide you dragged the conditions and actions lanes, how wide you dragged an object column, and the Density you picked. The script is no longer marked changed for any of them, since nothing about it changed, and the status line says where the choice is kept. Match Editor lets go of all of it. A sheet saved as a resource carries its look as before. The Sheet theme tooltip, which promised the choice travels with the file, now says what really happens.

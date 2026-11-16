@@ -342,7 +342,7 @@ static func _test_the_receipt() -> bool:
 		])) and ok
 	ok = _check("and the summary counts both halves",
 		EventSheetMigrateDialog.summary_text(planned),
-		"1 row(s) would be rewritten in one step you can undo, and 1 are left exactly as they are.") and ok
+		"1 row would be rewritten in one step you can undo. 1 row is left exactly as it is.") and ok
 	return ok
 
 
@@ -569,7 +569,7 @@ static func _test_the_shipped_address() -> bool:
 		EventSheetMigrateDialog.left_alone_lines(planned), PackedStringArray()) and ok
 	ok = _check("the summary counts one step",
 		EventSheetMigrateDialog.summary_text(planned),
-		"2 row(s) would be rewritten, in one step you can undo.") and ok
+		"2 rows would be rewritten in one step you can undo.") and ok
 	# THE EDIT.
 	dock._migrate_dialog.open()
 	dock._migrate_dialog.confirm()

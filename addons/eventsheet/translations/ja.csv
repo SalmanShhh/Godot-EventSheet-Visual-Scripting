@@ -10687,3 +10687,15 @@ all the cards above,上のすべてのカード
 "Waiting %.2f s, for %s.",%.2f 秒待ちます（待つ対象: %s）。
 "No card called ""%s"" is above this Hold, so it waits for all of them.",この Hold の上に「%s」というカードはないため、すべてのカードを待ちます。
 "this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand",この行は廃止され、同じ意味を持つ新しい行もないため、そのまま残ります - 置き換えは手動で選んでください
+Each run adds another copy of these nodes.,実行のたびに、これらのノードのコピーが増えます。
+Add %s at the top of this event.,このイベントの先頭に %s を追加してください。
+"This row changes your scene, but Ctrl+Z will not undo it.",この行はシーンを変更しますが、Ctrl+Z では元に戻せません。
+"This row adds a node to your scene, but Ctrl+Z will not take it back.",この行はシーンにノードを追加しますが、Ctrl+Z では取り消せません。
+"This row removes a node from your scene, but Ctrl+Z will not bring it back.",この行はシーンからノードを取り除きますが、Ctrl+Z では戻せません。
+Use %s to make it one step you can undo.,%s を使うと、元に戻せる 1 つの操作になります。
+Nothing here can be rewritten on its own - 1 row is listed below with the reason.,ここには自動で書き換えられるものはありません - 1 行を理由とともに下に挙げています。
+Nothing here can be rewritten on its own - %d rows are listed below with the reason.,ここには自動で書き換えられるものはありません - %d 行を理由とともに下に挙げています。
+1 row would be rewritten in one step you can undo.,1 行が、元に戻せる 1 回の操作で書き換えられます。
+%d rows would be rewritten in one step you can undo.,%d 行が、元に戻せる 1 回の操作で書き換えられます。
+1 row is left exactly as it is.,1 行はそのまま残ります。
+%d rows are left exactly as they are.,%d 行はそのまま残ります。

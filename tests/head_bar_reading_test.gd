@@ -89,7 +89,7 @@ static func _the_prose_stays_where_the_file_has_it() -> bool:
 static func _the_input_finding_is_quiet() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
-		["the head bar wears the finding", head[0].attention_note.get_slice(" · ", 0),
+		["the head bar wears the finding", head[0].attention_note.get_slice("\n", 0),
 			"\"demo_jump\" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling."],
 		["the finding carries its family", str(head[0].attention_findings[0].get("family", "")), "input"],
 		["the finding carries the control it is about",

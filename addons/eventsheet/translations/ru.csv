@@ -10687,3 +10687,15 @@ all the cards above,все карточки выше
 "Waiting %.2f s, for %s.",Ждёт %.2f с: %s.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","Над этим Hold нет карточки ""%s"", поэтому он ждёт все."
 "this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand","эта строка снята с использования, а равнозначной новой строки нет, поэтому она остаётся как есть - выберите замену вручную"
+Each run adds another copy of these nodes.,Каждый запуск добавляет ещё одну копию этих узлов.
+Add %s at the top of this event.,Добавьте %s в начало этого события.
+"This row changes your scene, but Ctrl+Z will not undo it.","Эта строка меняет вашу сцену, но Ctrl+Z этого не отменит."
+"This row adds a node to your scene, but Ctrl+Z will not take it back.","Эта строка добавляет узел в вашу сцену, но Ctrl+Z его не уберёт."
+"This row removes a node from your scene, but Ctrl+Z will not bring it back.","Эта строка убирает узел из вашей сцены, но Ctrl+Z его не вернёт."
+Use %s to make it one step you can undo.,"Используйте %s, чтобы это стало одним шагом, который можно отменить."
+Nothing here can be rewritten on its own - 1 row is listed below with the reason.,Здесь ничего нельзя переписать само - 1 строка перечислена ниже с причиной.
+Nothing here can be rewritten on its own - %d rows are listed below with the reason.,Здесь ничего нельзя переписать само - %d строк перечислены ниже с причиной.
+1 row would be rewritten in one step you can undo.,"1 строка будет переписана одним шагом, который можно отменить."
+%d rows would be rewritten in one step you can undo.,"%d строк будут переписаны одним шагом, который можно отменить."
+1 row is left exactly as it is.,1 строка остаётся ровно как есть.
+%d rows are left exactly as they are.,%d строк остаются ровно как есть.

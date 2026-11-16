@@ -104,11 +104,14 @@ static func summary_text(planned: Array[Dictionary]) -> String:
 	var moving: int = EventSheetMigrationPlan.migrating(planned).size()
 	var staying: int = EventSheetMigrationPlan.asking(planned).size()
 	if moving == 0:
-		return EventSheetL10n.translate("Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.") % staying
+		return EventSheetL10n.counted("Nothing here can be rewritten on its own - 1 row is listed below with the reason.",
+			"Nothing here can be rewritten on its own - %d rows are listed below with the reason.", staying)
+	var would: String = EventSheetL10n.counted("1 row would be rewritten in one step you can undo.",
+		"%d rows would be rewritten in one step you can undo.", moving)
 	if staying == 0:
-		return EventSheetL10n.translate("%d row(s) would be rewritten, in one step you can undo.") % moving
-	return EventSheetL10n.translate("%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.") % [
-		moving, staying]
+		return would
+	return would + " " + EventSheetL10n.counted("1 row is left exactly as it is.",
+		"%d rows are left exactly as they are.", staying)
 
 
 ## THE EDIT. One undo step for every proved row, through the funnel every other mutation takes.

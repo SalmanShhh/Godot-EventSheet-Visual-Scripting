@@ -162,15 +162,18 @@ static func make_it_undoable(finding: Dictionary) -> bool:
 
 
 ## The words, in one place, so the Doctor's line and the sentence the sheet's own help strip shows
-## under the selected row are the same finding said once. `label` is the file the sheet lives in,
-## `line` the change it makes, `kind` which of the three it is - and the row to reach for is named
-## per kind, because "make it undoable" is three different rows depending on what is being changed.
-static func not_undoable_message(label: String, line: String, kind: String) -> String:
-	var message: String = EventSheetL10n.translate("%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.") % [
-		label, line]
-	message += " " + EventSheetL10n.translate("%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.") % _row_for_kind(kind)
-	message += " " + EventSheetL10n.translate("This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.")
-	return message
+## under the selected row are the same finding said once: two short sentences, what is wrong and what
+## to do. `kind` is which of the three edits it is, and the row to reach for is named per kind, because
+## "make it undoable" is three different rows depending on what is being changed. The file is not
+## named: the strip is on that file's own sheet, and the Doctor's list carries the path beside it.
+static func not_undoable_message(kind: String) -> String:
+	var said: String = EventSheetL10n.translate("This row changes your scene, but Ctrl+Z will not undo it.")
+	match kind:
+		EventForgeUndoableEdits.EDIT_ADD:
+			said = EventSheetL10n.translate("This row adds a node to your scene, but Ctrl+Z will not take it back.")
+		EventForgeUndoableEdits.EDIT_REMOVE:
+			said = EventSheetL10n.translate("This row removes a node from your scene, but Ctrl+Z will not bring it back.")
+	return said + " " + EventSheetL10n.translate("Use %s to make it one step you can undo.") % _row_for_kind(kind)
 
 
 ## Which undoable row answers one kind of edit. Written out as literals rather than looked up in a
@@ -232,7 +235,7 @@ static func _walk(items: Array, label: String, members: Dictionary, own: Diction
 ## because three properties set in a row of three rows is one thing to fix and one sentence to read;
 ## the slot recorded is the first of them, which is the row the door rewrites and the row the reader
 ## is looking at when the strip speaks.
-static func _note_this_event(event_row: EventRow, label: String, own: Dictionary,
+static func _note_this_event(event_row: EventRow, _label: String, own: Dictionary,
 		found: Array[Dictionary]) -> void:
 	var seen: Dictionary = {}
 	for slot: int in event_row.actions.size():
@@ -252,7 +255,7 @@ static func _note_this_event(event_row: EventRow, label: String, own: Dictionary
 				"kind": KIND_NOT_UNDOABLE, "severity": "warning",
 				"anchor": ANCHOR_EVENT, "event": event_row,
 				"subject": line.strip_edges(),
-				"message": not_undoable_message(label, line.strip_edges(), kind),
+				"message": not_undoable_message(kind),
 				"fix": FIX_MAKE_IT_UNDOABLE if not twin.is_empty() else "",
 				"fix_label": EventSheetL10n.translate("Make it undoable") if not twin.is_empty() else "",
 				"lane": "action", "index": slot, "from": ace_id, "to": twin,

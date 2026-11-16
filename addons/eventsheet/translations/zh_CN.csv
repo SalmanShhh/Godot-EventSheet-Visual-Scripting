@@ -10687,3 +10687,15 @@ all the cards above,上方的所有卡片
 "Waiting %.2f s, for %s.",等待 %.2f 秒，等待对象：%s。
 "No card called ""%s"" is above this Hold, so it waits for all of them.",此 Hold 上方没有名为“%s”的卡片，因此会等待所有卡片。
 "this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand",这一行已被淘汰，没有含义相同的新行，因此保持原样 - 请手动选择替代项
+Each run adds another copy of these nodes.,每次运行都会多出一份这些节点的副本。
+Add %s at the top of this event.,在此事件的最上方添加 %s。
+"This row changes your scene, but Ctrl+Z will not undo it.",这一行会修改你的场景，但 Ctrl+Z 无法撤销。
+"This row adds a node to your scene, but Ctrl+Z will not take it back.",这一行会向你的场景添加节点，但 Ctrl+Z 无法撤回。
+"This row removes a node from your scene, but Ctrl+Z will not bring it back.",这一行会从你的场景中移除节点，但 Ctrl+Z 无法恢复。
+Use %s to make it one step you can undo.,使用 %s，让它成为可以撤销的一步。
+Nothing here can be rewritten on its own - 1 row is listed below with the reason.,这里没有可以自动改写的内容 - 1 行已连同原因列在下面。
+Nothing here can be rewritten on its own - %d rows are listed below with the reason.,这里没有可以自动改写的内容 - %d 行已连同原因列在下面。
+1 row would be rewritten in one step you can undo.,1 行将以可撤销的一步被改写。
+%d rows would be rewritten in one step you can undo.,%d 行将以可撤销的一步被改写。
+1 row is left exactly as it is.,1 行保持原样。
+%d rows are left exactly as they are.,%d 行保持原样。

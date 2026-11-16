@@ -12636,8 +12636,8 @@ func _successor_hint_for(provider_id: String, ace_id: String) -> String:
 	return EventSheetL10n.translate("newer spelling: %s") % EventSheetL10n.translate(newest.display_name)
 
 
-## The quiet amber state, stamped. The note text is every finding's sentence joined the way the
-## sheet joins facts elsewhere - the strip under the selected row reads it back verbatim.
+## The quiet amber state, stamped. The note text is every finding's sentence, one to a line - the
+## strip under the selected row reads it back verbatim.
 func _stamp_attention(row_data: EventRowData, found: Array[Dictionary]) -> void:
 	row_data.attention_findings = found
 	var said: PackedStringArray = PackedStringArray()
@@ -12647,7 +12647,7 @@ func _stamp_attention(row_data: EventRowData, found: Array[Dictionary]) -> void:
 		# A finding that says the line cannot run wears the red state; the rest wear amber. Only the
 		# families that mark themselves (`red`) ask for it, so no older family changes colour.
 		severe = severe or bool(finding.get("red", false))
-	row_data.attention_note = " · ".join(said)
+	row_data.attention_note = "\n".join(said)
 	row_data.attention_severe = severe
 
 

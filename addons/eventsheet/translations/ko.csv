@@ -10687,3 +10687,15 @@ all the cards above,위의 모든 카드
 "Waiting %.2f s, for %s.",%.2f초 동안 %s을(를) 기다립니다.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","이 Hold 위에 ""%s""라는 카드가 없어서 모든 카드를 기다립니다."
 "this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand",이 행은 폐기되었고 같은 의미의 새 행이 없으므로 그대로 남습니다 - 대체 항목은 직접 고르세요
+Each run adds another copy of these nodes.,실행할 때마다 이 노드의 복사본이 하나 더 늘어납니다.
+Add %s at the top of this event.,이 이벤트 맨 위에 %s을(를) 추가하세요.
+"This row changes your scene, but Ctrl+Z will not undo it.",이 행은 장면을 바꾸지만 Ctrl+Z로 되돌릴 수 없습니다.
+"This row adds a node to your scene, but Ctrl+Z will not take it back.",이 행은 장면에 노드를 추가하지만 Ctrl+Z로 되돌릴 수 없습니다.
+"This row removes a node from your scene, but Ctrl+Z will not bring it back.",이 행은 장면에서 노드를 제거하지만 Ctrl+Z로 되살릴 수 없습니다.
+Use %s to make it one step you can undo.,%s을(를) 사용하면 되돌릴 수 있는 한 단계가 됩니다.
+Nothing here can be rewritten on its own - 1 row is listed below with the reason.,여기서 저절로 다시 쓸 수 있는 것은 없습니다 - 1개 행을 이유와 함께 아래에 나열했습니다.
+Nothing here can be rewritten on its own - %d rows are listed below with the reason.,여기서 저절로 다시 쓸 수 있는 것은 없습니다 - %d개 행을 이유와 함께 아래에 나열했습니다.
+1 row would be rewritten in one step you can undo.,1개 행이 되돌릴 수 있는 한 단계로 다시 쓰여집니다.
+%d rows would be rewritten in one step you can undo.,%d개 행이 되돌릴 수 있는 한 단계로 다시 쓰여집니다.
+1 row is left exactly as it is.,1개 행은 그대로 남습니다.
+%d rows are left exactly as they are.,%d개 행은 그대로 남습니다.

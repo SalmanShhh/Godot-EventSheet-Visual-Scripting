@@ -10687,3 +10687,15 @@ all the cards above,todas las tarjetas de arriba
 "Waiting %.2f s, for %s.",Espera %.2f s a %s.
 "No card called ""%s"" is above this Hold, so it waits for all of them.","No hay ninguna tarjeta llamada ""%s"" sobre este Hold, así que espera a todas."
 "this row was retired and no newer row means the same thing, so it stays as written - pick a replacement by hand","esta fila se retiró y ninguna fila más nueva significa lo mismo, así que queda tal como está escrita - elige un reemplazo a mano"
+Each run adds another copy of these nodes.,Cada ejecución añade otra copia de estos nodos.
+Add %s at the top of this event.,Añade %s al principio de este evento.
+"This row changes your scene, but Ctrl+Z will not undo it.","Esta fila cambia tu escena, pero Ctrl+Z no lo deshará."
+"This row adds a node to your scene, but Ctrl+Z will not take it back.","Esta fila añade un nodo a tu escena, pero Ctrl+Z no lo quitará."
+"This row removes a node from your scene, but Ctrl+Z will not bring it back.","Esta fila quita un nodo de tu escena, pero Ctrl+Z no lo traerá de vuelta."
+Use %s to make it one step you can undo.,Usa %s para que sea un solo paso que puedas deshacer.
+Nothing here can be rewritten on its own - 1 row is listed below with the reason.,Nada de aquí se puede reescribir solo - 1 fila aparece abajo con el motivo.
+Nothing here can be rewritten on its own - %d rows are listed below with the reason.,Nada de aquí se puede reescribir solo - %d filas aparecen abajo con el motivo.
+1 row would be rewritten in one step you can undo.,1 fila se reescribiría en un solo paso que puedes deshacer.
+%d rows would be rewritten in one step you can undo.,%d filas se reescribirían en un solo paso que puedes deshacer.
+1 row is left exactly as it is.,1 fila se queda exactamente como está.
+%d rows are left exactly as they are.,%d filas se quedan exactamente como están.

@@ -28,6 +28,8 @@ static func run() -> bool:
 			["it is the not-undoable finding", str(note.get("kind", "")), EventSheetUndoableFindings.KIND_NOT_UNDOABLE],
 			["it sits on the row that builds", int(note.get("index", -1)), 0],
 			["it says what to reach for instead", str(note.get("message", "")).contains("Add Node (Undoable)"), true],
+			["it is two short sentences, with no file name and no baked variable", str(note.get("message", "")),
+				"This row adds a node to your scene, but Ctrl+Z will not take it back. Use Add Node (Undoable) to make it one step you can undo."],
 			["it offers no button, because there is no twin that loses nothing", str(note.get("fix", "")), ""],
 			["the line it quotes is the line the row writes, with no template markers", [str(note.get("subject", "")).contains("{"), str(note.get("subject", ""))], [false, "__scene_t1.add_child(fence, true)"]],
 		]) and ok

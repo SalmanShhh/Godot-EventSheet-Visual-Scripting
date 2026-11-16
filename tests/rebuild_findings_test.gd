@@ -72,7 +72,8 @@ static func _when_it_speaks() -> bool:
 		["a tool sheet that builds and clears nothing earns one note", found.size(), 1],
 		["it is the rebuild kind", str(found[0].get("kind", "")), "tool-builds-without-clearing"],
 		["it is anchored at the event", str(found[0].get("anchor", "")), "event"],
-		["it names the file", str(found[0].get("message", "")).begins_with("fence_tool.gd builds nodes"), true],
+		["it says what is wrong, then what to do", str(found[0].get("message", "")),
+			"Each run adds another copy of these nodes. Add Remove What This Sheet Built at the top of this event."],
 		["it offers the door", str(found[0].get("fix", "")), "clear_what_it_built_first"],
 		["the door builds under what the row builds under", str(found[0].get("to", "")), "get_tree().edited_scene_root"],
 	])
