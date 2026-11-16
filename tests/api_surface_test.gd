@@ -31,7 +31,7 @@ const KIND_VARIABLES: Array = [
 const TABLE: Dictionary = {
 	"EventSheets": [
 		"static add_behaviour_from_library(pack_dir: String) -> bool",
-		"static add_field_cell(row: EventRowData, label: String, text: String, metadata: Dictionary = null) -> EventRowData",
+		"static add_field_cell(row: EventRowData, label: String, text: String, metadata: Dictionary = {}) -> EventRowData",
 		"static add_save_support(script_path: String) -> String",
 		"static add_trigger_for_signal(signal_name: String, args_signature: String = \"\") -> bool",
 		"static addon_guide_for_pack(pack_dir: String) -> String",
@@ -88,10 +88,10 @@ const TABLE: Dictionary = {
 		"static module_guide_target(module_or_category: String) -> String",
 		"static module_guide_unit(module_or_category: String) -> String",
 		"static module_guide_units() -> PackedStringArray",
-		"static moment_block(moment_name: String, steps: Array = null) -> MomentBlockRow",
+		"static moment_block(moment_name: String, steps: Array = []) -> MomentBlockRow",
 		"static networking_coverage(sheet: EventSheetResource) -> Dictionary",
 		"static networking_coverage_text(sheet: EventSheetResource) -> String",
-		"static new_sheet(config: Dictionary = null) -> EventSheetResource",
+		"static new_sheet(config: Dictionary = {}) -> EventSheetResource",
 		"static on_sheet_compiled(callback: Callable) -> void",
 		"static on_sheet_opened(callback: Callable) -> void",
 		"static on_sheet_saved(callback: Callable) -> void",
@@ -148,7 +148,7 @@ const TABLE: Dictionary = {
 		"static register_translation_file(path: String) -> bool",
 		"static registered_starters() -> Array[Dictionary]",
 		"static report_runtime_error(message: String, script_path: String, line: int = 0) -> Dictionary",
-		"static resource_grid(columns: Array, options: Dictionary = null) -> Dictionary",
+		"static resource_grid(columns: Array, options: Dictionary = {}) -> Dictionary",
 		"static reveal_project_row(sheet_path: String, line: int) -> bool",
 		"static reveal_verb_row(provider_id: String, ace_id: String, index: int = 0) -> bool",
 		"static round_trip_failure(source: String) -> String",
@@ -177,7 +177,7 @@ const TABLE: Dictionary = {
 		"static synced_properties(sheet: EventSheetResource) -> Array[Dictionary]",
 		"static table_from_file(path: String, separator: String = \",\") -> Array",
 		"static table_from_text(text: String, separator: String = \",\") -> Array",
-		"static timeline(steps: Array = null) -> TimelineRow",
+		"static timeline(steps: Array = []) -> TimelineRow",
 		"static toggle_icon_provider_for(provider_name: String) -> Callable",
 		"static translate(text: String) -> String",
 		"static unregister_card_schema(schema_name: String) -> void",
@@ -290,12 +290,14 @@ static func signatures_of(class_name_text: String) -> PackedStringArray:
 		var method_name: String = str(method.get("name", ""))
 		if method_name.begins_with("_") or method_name.begins_with("@"):
 			continue
-		lines.append(_signature(method))
+		lines.append(_signature(method, script.source_code))
 	lines.sort()
 	return PackedStringArray(lines)
 
 
-static func _signature(method: Dictionary) -> String:
+## `source` is the script's own text: Godot's method list reports a `{}` or `[]` default as null, so a
+## null default is read back from the `static func name(` line the author wrote.
+static func _signature(method: Dictionary, source: String = "") -> String:
 	var arguments: Array = method.get("args", [])
 	var defaults: Array = method.get("default_args", [])
 	var first_default: int = arguments.size() - defaults.size()
@@ -304,7 +306,10 @@ static func _signature(method: Dictionary) -> String:
 		var argument: Dictionary = arguments[index]
 		var text: String = "%s: %s" % [str(argument.get("name", "")), _type_text(argument)]
 		if index >= first_default:
-			text += " = " + var_to_str(defaults[index - first_default]).replace("\n", " ")
+			var default_text: String = var_to_str(defaults[index - first_default]).replace("\n", " ")
+			if default_text == "null":
+				default_text = _default_in_source(source, str(method.get("name", "")), str(argument.get("name", "")), default_text)
+			text += " = " + default_text
 		parts.append(text)
 	var returned: Dictionary = method.get("return", {})
 	var return_text: String = _type_text(returned)
@@ -312,6 +317,18 @@ static func _signature(method: Dictionary) -> String:
 		return_text = "void"
 	var is_static: bool = (int(method.get("flags", 0)) & METHOD_FLAG_STATIC) != 0
 	return "%s%s(%s) -> %s" % ["static " if is_static else "", str(method.get("name", "")), ", ".join(parts), return_text]
+
+
+## The default written after `argument_name` in the declaration line of `function_name`, or `fallback`.
+static func _default_in_source(source: String, function_name: String, argument_name: String, fallback: String) -> String:
+	for line: String in source.split("\n"):
+		var declaration: String = line.strip_edges()
+		if not (declaration.begins_with("static func %s(" % function_name) or declaration.begins_with("func %s(" % function_name)):
+			continue
+		var expression: RegEx = RegEx.create_from_string("[(,]\\s*%s\\s*:[^=,)]*=\\s*(\\{\\}|\\[\\]|null)" % argument_name)
+		var found: RegExMatch = expression.search(declaration)
+		return found.get_string(1) if found != null else fallback
+	return fallback
 
 
 static func _type_text(info: Dictionary) -> String:
