@@ -512,7 +512,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# dialog, the two on/off answers, who runs it, its colour, then the things you do TO a group.
 		# The folds and Add Local Variable follow under a separator. Duplicate and Delete are the
 		# universal items below, so the group menu does not repeat them.
-		menu.add_item(EventSheetL10n.translate("Edit %s…") % EventSheetWords.word("section_block"), _dock.ROW_MENU_EDIT_GROUP)
+		menu.add_item(EventSheetL10n.translate("Edit %s…") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_EDIT_GROUP)
 		menu.add_check_item(EventSheetL10n.translate("Active On Start"), _dock.ROW_MENU_GROUP_ENABLED)
 		# Its partner: whether an event can switch the group while the game runs. Beside Active On
 		# Start because the two answers only mean something together.
@@ -520,7 +520,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# Who runs this group over a network, without opening the dialog for the one answer.
 		# Filled as it opens, ticked at what the group says now.
 		menu.add_submenu_node_item(EventSheetL10n.translate("Runs On"), _dock._group_runs_on_submenu, _dock.ROW_MENU_GROUP_RUNS_ON)
-		menu.add_item(EventSheetL10n.translate("%s Color…") % EventSheetWords.word("section_block"), _dock.ROW_MENU_GROUP_COLOR)
+		menu.add_item(EventSheetL10n.translate("%s Color…") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_GROUP_COLOR)
 		# The way back to the file's own kind of grouping. What a region cannot carry (locals, the
 		# runtime switch, off at start, who and when it runs) is said in the question the item asks
 		# before anything changes, so the item itself is always offered.
@@ -528,7 +528,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# offered nothing to convert.
 		if _dock._context_group() != null:
 			menu.add_item(EventSheetL10n.translate("Turn Into Region"), _dock.ROW_MENU_GROUP_TO_REGION)
-		menu.add_item(EventSheetL10n.translate("Remove %s - Keep The Rows") % EventSheetWords.word("section_block"), _dock.ROW_MENU_UNGROUP)
+		menu.add_item(EventSheetL10n.translate("Remove %s - Keep The Rows") % EventSheetL10n.translate(EventSheetWords.word("section_block")), _dock.ROW_MENU_UNGROUP)
 		menu.add_separator()
 		menu.add_item(EventSheetL10n.translate("Add Local Variable…"), _dock.ROW_MENU_GROUP_ADD_LOCAL)
 		menu.add_item(EventSheetL10n.translate("Open / Close Group"), _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
