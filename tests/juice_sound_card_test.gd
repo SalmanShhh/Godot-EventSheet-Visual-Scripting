@@ -233,7 +233,7 @@ static func _sound_card_pins() -> bool:
 		["the Add box offers a Sound card", str(entry.get("label", "")), "Sound"],
 		["it is a Sound-family card", str(entry.get("category", "")), "audio"],
 		["its fields, in the order the card draws them", keys,
-			PackedStringArray(["stream", "volume_db", "volume_spread_db", "pitch", "pitch_spread", "bus", "heard_from", "follows_strength", "delay"])],
+			PackedStringArray(["stream", "volume_db", "volume_spread_db", "pitch", "pitch_spread", "bus", "heard_from", "follows_strength"])],
 		["a new Sound card holds its settings and no delay until one is typed",
 			_sorted_keys(fresh), PackedStringArray(["bus", "follows_strength", "heard_from", "pitch", "pitch_spread", "stream", "verb", "volume_db", "volume_spread_db"])],
 		["a choice shows its words and not the word the card keeps", shown, "This object"],

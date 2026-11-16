@@ -218,7 +218,9 @@ static func schema() -> Dictionary:
 		"footer": strip_footer,
 		"marks": {"run": play_card},
 		"more_kinds": own_kinds,
-		"card_entry": own_entry
+		"card_entry": own_entry,
+		"fold_fields": timing_fields(),
+		"timing_differs": timing_differs
 	}
 
 
@@ -333,6 +335,78 @@ static func seeds_for(word: String) -> Dictionary:
 	}
 
 
+## The foldout every card ends with, closed until it is opened: when the card plays, how often, on which
+## clock, and for which strengths. The keys are the ones the running game already reads on every card, and the
+## ones Set Juice Card Timing and Set Juice Card Chance write. None of them has a `default`, so a new card holds
+## none of them and a card nobody opens stores nothing new; `unset` is only what the field SHOWS while the key is
+## absent, which is the number the game uses.
+const TIMING_FOLD: String = "Timing"
+
+
+static func timing_fields() -> Array:
+	return [
+		{"key": "delay", "label": "Delay", "drawer": "num", "unset": 0.0, "suffix": "s", "fold": TIMING_FOLD},
+		{"key": "repeat", "label": "Repeat", "drawer": "int", "whole": true, "unset": 1, "suffix": "times", "fold": TIMING_FOLD},
+		{"key": "interval", "label": "Every", "drawer": "num", "unset": 0.0, "suffix": "s", "fold": TIMING_FOLD},
+		{"key": "clock", "label": "Clock", "drawer": "options:game=Game time,real=Real time", "unset": "game", "fold": TIMING_FOLD},
+		{"key": "chance", "label": "Chance", "drawer": "num", "unset": 100.0, "suffix": "%", "fold": TIMING_FOLD},
+		{"key": "min_strength", "label": "Only at strength", "drawer": "num", "unset": 0.0, "fold": TIMING_FOLD},
+		{"key": "max_strength", "label": "", "drawer": "limit", "unset": 0.0, "beside": true, "to_word": "to",
+			"empty_word": "no limit", "fold": TIMING_FOLD},
+		{"key": "timing_says", "label": "", "drawer": "note", "text": timing_sentence, "fold": TIMING_FOLD}
+	]
+
+
+## Whether a card's timing is anything but the defaults (no delay, once, no gap, game time, every time, any
+## strength). The small clock mark on a card's head asks this.
+static func timing_differs(card: Dictionary) -> bool:
+	return float(card.get("delay", 0.0)) > 0.0 or int(card.get("repeat", 1)) > 1 or float(card.get("interval", 0.0)) > 0.0 \
+		or str(card.get("clock", "game")) == "real" or float(card.get("chance", 100.0)) < 100.0 \
+		or float(card.get("min_strength", 0.0)) > 0.0 or float(card.get("max_strength", 0.0)) > 0.0
+
+
+## What a card's timing does, in one grey sentence under the fold: "Waits 0.05 s, then is felt 3 times, 0.08 s
+## apart." Every number is the one the card holds, or the one the game uses while it holds none.
+static func timing_sentence(card: Dictionary) -> String:
+	var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
+	var repeat: int = maxi(int(card.get("repeat", 1)), 1)
+	var interval: float = maxf(float(card.get("interval", 0.0)), 0.0)
+	var apart: String = EventSheetL10n.translate(", %s s apart") % _plain_number(interval) if interval > 0.0 else ""
+	var line: String = ""
+	if delay > 0.0 and repeat > 1:
+		line = EventSheetL10n.translate("Waits %s s, then is felt %d times%s.") % [_plain_number(delay), repeat, apart]
+	elif delay > 0.0:
+		line = EventSheetL10n.translate("Waits %s s, then plays once.") % _plain_number(delay)
+	elif repeat > 1:
+		line = EventSheetL10n.translate("Plays as soon as the list reaches it, then is felt %d times%s.") % [repeat, apart]
+	else:
+		line = EventSheetL10n.translate("Plays as soon as the list reaches it, once.")
+	var extras: PackedStringArray = PackedStringArray()
+	var chance: float = float(card.get("chance", 100.0))
+	if chance < 100.0:
+		extras.append(EventSheetL10n.translate("Felt %s%% of the time") % _plain_number(chance))
+	if str(card.get("clock", "game")) == "real":
+		extras.append(EventSheetL10n.translate("counts real time"))
+	var from: float = float(card.get("min_strength", 0.0))
+	var to: float = float(card.get("max_strength", 0.0))
+	if from > 0.0 and to > 0.0:
+		extras.append(EventSheetL10n.translate("only at strength %s to %s") % [_plain_number(from), _plain_number(to)])
+	elif from > 0.0:
+		extras.append(EventSheetL10n.translate("only at strength %s and up") % _plain_number(from))
+	elif to > 0.0:
+		extras.append(EventSheetL10n.translate("only at strength up to %s") % _plain_number(to))
+	if not extras.is_empty():
+		var joined: String = ", ".join(extras)
+		line += " " + joined.substr(0, 1).to_upper() + joined.substr(1) + "."
+	return line
+
+
+## A number as a person writes it: no trailing zero, three places at most.
+static func _plain_number(value: float) -> String:
+	var written: String = str(snappedf(value, 0.001))
+	return written.trim_suffix(".0")
+
+
 ## The Sound card: a stream picked with Godot's own resource picker (kept as the file's uid), how loud and
 ## how high with a little random either side so one file does not sound like a machine gun, which bus it
 ## plays on and whether it is placed in space, and a Listen button that plays it alone. Its length is the
@@ -355,7 +429,6 @@ static func sound_kinds() -> Array:
 				{"key": "bus", "label": "Bus", "drawer": "bus", "default": "Master"},
 				{"key": "heard_from", "label": "Heard from", "drawer": "options:here=This object,everywhere=Everywhere", "default": "here", "unset": "here"},
 				{"key": "follows_strength", "label": "Follows strength", "drawer": "bool", "default": false},
-				{"key": "delay", "label": "Delay", "drawer": "num", "unset": 0.0, "suffix": "s"},
 				{"key": "listen", "label": "Listen", "drawer": "custom", "build": listen_row}
 			],
 			"live": [],
@@ -693,7 +766,10 @@ static func seconds_badge(card: Dictionary) -> String:
 static func card_seconds(card: Dictionary) -> float:
 	var pack: Script = load(str(load(NAMES_PATH).pack_path())) as Script if str(card.get(WORD_KEY, "")) == SOUND else null
 	var own: float = float(pack.call("card_length", card)) if pack != null else maxf(float(card.get(SECONDS_KEY, 0.0)), 0.0)
-	return own + maxf(float(card.get("delay", 0.0)), 0.0)
+	var repeats: float = 0.0
+	if not [PAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK].has(str(card.get(WORD_KEY, ""))):
+		repeats = float(maxi(int(card.get("repeat", 1)), 1) - 1) * maxf(float(card.get("interval", 0.0)), 0.0)
+	return own + repeats + maxf(float(card.get("delay", 0.0)), 0.0)
 
 
 ## The verb whose name begins with a prefix - how a word finds the verb that spells it out in full

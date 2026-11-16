@@ -79,6 +79,10 @@ var _schema: Dictionary = {}
 var _cards: Array = []
 ## Which cards are open, by index. Folding is a view, so it is deliberately not stored in the data.
 var _unfolded: Dictionary = {}
+## Which foldouts inside an open card are open, by "index:name". Closed until opened, and a view like the above.
+var _open_folds: Dictionary = {}
+## The clock marks drawn on card heads, by position, so one can be lit or put out as its card's timing changes.
+var _timing_marks: Dictionary = {}
 var _list: VBoxContainer = null
 var _fold_button: Button = null
 var _more_button: MenuButton = null
@@ -136,6 +140,7 @@ func set_value(cards: Array) -> void:
 		if card is Dictionary:
 			_cards.append((card as Dictionary).duplicate(true))
 	_unfolded.clear()
+	_open_folds.clear()
 	_selected.clear()
 	_anchor = -1
 	_rebuild()
@@ -763,6 +768,7 @@ func _rebuild() -> void:
 		stale.queue_free()
 	_notes.clear()
 	_marks.clear()
+	_timing_marks.clear()
 	_lines.clear()
 	_titles.clear()
 	_show_fold()
@@ -877,6 +883,12 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	title.add_theme_color_override("font_color", EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet())
 	_titles[index] = title
 	inside.add_child(title)
+	var differs: Variant = _schema.get("timing_differs")
+	if differs is Callable and (differs as Callable).is_valid():
+		var clock: Control = _glyph_control("Time", "◷", EventSheetL10n.translate("This card's timing is not the default: it waits, repeats, counts real time, or is not always felt."))
+		clock.visible = bool((differs as Callable).call(card))
+		_timing_marks[index] = clock
+		inside.add_child(clock)
 	var badge_text: String = EventSheetCardSchemas.card_badge(entry, card, _cards, index)
 	var badge: Label = Label.new()
 	badge.text = badge_text
@@ -1089,17 +1101,30 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 		body.add_child(_build_label_row(index, card, entry))
 	var fields: VBoxContainer = VBoxContainer.new()
 	fields.add_theme_constant_override("separation", 2)
+	var folded: Dictionary = {}
 	var drawn_group: String = ""
-	for field: Variant in EventSheetCardSchemas.fields_of(entry):
+	var last_row: HBoxContainer = null
+	for field: Variant in EventSheetCardSchemas.all_fields(_schema, entry):
 		if not (field is Dictionary) or not EventSheetCardSchemas.field_visible(field as Dictionary, card):
+			continue
+		var fold_name: String = EventSheetCardSchemas.field_fold(field as Dictionary)
+		if not fold_name.is_empty():
+			if not folded.has(fold_name):
+				var rows: VBoxContainer = VBoxContainer.new()
+				rows.add_theme_constant_override("separation", 2)
+				folded[fold_name] = rows
+				last_row = null
+			last_row = _add_field_row(folded[fold_name] as VBoxContainer, index, card, field as Dictionary, last_row)
 			continue
 		var group: String = EventSheetCardSchemas.field_group(field as Dictionary)
 		if group != drawn_group:
 			drawn_group = group
 			if not group.is_empty():
 				fields.add_child(_section_heading(group))
-		fields.add_child(_build_field(index, card, field as Dictionary))
+		last_row = _add_field_row(fields, index, card, field as Dictionary, last_row)
 	body.add_child(fields)
+	for fold_name: Variant in folded:
+		body.add_child(_build_foldout(index, str(fold_name), folded[fold_name] as VBoxContainer))
 	for live: Variant in EventSheetCardSchemas.live_of(entry):
 		if not (live is Dictionary):
 			continue
@@ -1120,6 +1145,45 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 			strip.add_child(_small_button(str((action as Dictionary).get("label", "Run")), "", func() -> void: run.call(_cards[index])))
 		body.add_child(strip)
 	return body
+
+
+## One field's row added to a box: a field marked `beside` goes on the row before it (the top of a range beside
+## its bottom) instead of starting its own. Returns the row the next field may sit beside.
+func _add_field_row(box: VBoxContainer, index: int, card: Dictionary, field: Dictionary, last_row: HBoxContainer) -> HBoxContainer:
+	if bool(field.get("beside", false)) and last_row != null:
+		_build_field(index, card, field, last_row)
+		return last_row
+	var row: Control = _build_field(index, card, field)
+	box.add_child(row)
+	return row as HBoxContainer
+
+
+## A foldout inside an open card: Godot's own foldable container, closed until it is opened, remembered
+## while the list is on screen and never written to the data.
+func _build_foldout(index: int, fold_name: String, rows: VBoxContainer) -> Control:
+	var key: String = "%d:%s" % [index, fold_name]
+	var fold: FoldableContainer = FoldableContainer.new()
+	fold.title = _said(fold_name)
+	fold.folded = not bool(_open_folds.get(key, false))
+	fold.add_child(rows)
+	# The card is already one surface, so the foldout is a heading on it and not a second panel: Godot's own
+	# container with its boxes left empty.
+	for box_name: String in ["title_panel", "title_collapsed_panel", "title_hover_panel", "title_collapsed_hover_panel", "panel"]:
+		var flat: StyleBoxEmpty = StyleBoxEmpty.new()
+		flat.content_margin_top = 2.0
+		flat.content_margin_bottom = 2.0
+		fold.add_theme_stylebox_override(box_name, flat)
+	fold.add_theme_font_override("font", EventSheetLookStyle.bold_font())
+	fold.folding_changed.connect(func(is_folded: bool) -> void: _open_folds[key] = not is_folded)
+	return fold
+
+
+## Lights or puts out the clock mark on a card's head after one of its timing numbers changed.
+func _refresh_timing_mark(index: int) -> void:
+	var mark: Control = _timing_marks.get(index) as Control
+	var differs: Variant = _schema.get("timing_differs")
+	if mark != null and is_instance_valid(mark) and differs is Callable and index >= 0 and index < _cards.size():
+		mark.visible = bool((differs as Callable).call(_cards[index]))
 
 
 ## A section heading inside an open card - the line that turns a column of twenty fields into four
@@ -1180,8 +1244,13 @@ func _titled_row(title: String, control: Control) -> HBoxContainer:
 ## this one, and every edit afterwards keeps that proportion - the SAME meaning the property-level
 ## "=" carries, so one glyph never stands for two things. A ratio only exists between numbers, so a
 ## link declared on a field holding text or a colour writes nothing.
-func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
-	var row: HBoxContainer = _titled_row(_said(str(field.get("label", field.get("key", "")))), null)
+func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxContainer = null) -> Control:
+	var row: HBoxContainer = into if into != null else _titled_row(_said(str(field.get("label", field.get("key", "")))), null)
+	if into != null and not str(field.get("to_word", "")).is_empty():
+		var joiner: Label = Label.new()
+		joiner.text = _said(str(field.get("to_word")))
+		joiner.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		row.add_child(joiner)
 	var linked: String = str(field.get("link", ""))
 	var link_toggle: CheckButton = null
 	# Held in a one-cell Array so the two lambdas below share the ratio the toggle wrote, rather than
@@ -1211,6 +1280,7 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 					_write_field(index, str(more_key), more[more_key])
 				value_changed.emit(get_value())
 		_refresh_notes(index)
+		_refresh_timing_mark(index)
 		# Changing a card's KIND changes which fields it has, so the card is redrawn - deferred,
 		# because the control that just emitted is still finishing its own signal.
 		if written == str(_spec.get("kind_key", "kind")):
@@ -1405,7 +1475,11 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 		"curve_editor":
 			return _curve_field(card, key, write)
 		"int":
-			return _number_field(card, key, write, INT_STEP)
+			# A field that holds a whole count writes one (a repeat of 3, not 3.0), as the row that writes it does.
+			var whole: bool = bool(field.get("whole", false))
+			return _number_field(card, key, (func(value: float) -> void: write.call(int(value))) if whole else write, INT_STEP)
+		"limit":
+			return _limit_field(card, key, write, _said(str(field.get("empty_word", ""))))
 		"spread":
 			return _spread_field(card, key, write)
 		"bus":
@@ -1440,6 +1514,19 @@ func _number_field(card: Dictionary, key: String, write: Callable, step: float) 
 	spin.value = float(card.get(key, 0.0))
 	spin.value_changed.connect(func(value: float) -> void: write.call(value))
 	return spin
+
+
+## A number box that says a word while the number is 0: "no limit" where 0 means there is none. Typing a number
+## writes it; clearing the box writes 0 again.
+func _limit_field(card: Dictionary, key: String, write: Callable, empty_word: String) -> Control:
+	var edit: LineEdit = LineEdit.new()
+	edit.placeholder_text = empty_word
+	edit.editable = editable
+	var held: float = float(card.get(key, 0.0))
+	edit.text = "" if held <= 0.0 else str(snappedf(held, 0.001)).trim_suffix(".0")
+	edit.text_changed.connect(func(text: String) -> void:
+		write.call(maxf(text.to_float(), 0.0) if text.is_valid_float() else 0.0))
+	return edit
 
 
 ## A number box with its unit as small quiet text at the right.

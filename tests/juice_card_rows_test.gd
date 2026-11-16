@@ -123,6 +123,7 @@ static func _annotation_pins(pack: GDScript) -> bool:
 		["its field box offers the keys the Inspector draws", not_offered, PackedStringArray()],
 		["every row's example card is a card the Inspector has", unknown_examples, PackedStringArray()],
 		["a label box lists the labels of the player it acts on", label_hinted, PackedStringArray()],
+		["a row that names no card says so, with the player and the row", text.contains("has no juice card labelled"), true],
 	])
 
 
