@@ -29,6 +29,7 @@ static func run() -> bool:
 	ok = _menu_pins() and ok
 	ok = _key_pins() and ok
 	ok = _header_pins() and ok
+	ok = _travel_pins() and ok
 	return ok
 
 
@@ -262,4 +263,34 @@ static func _header_pins() -> bool:
 		["the list can hold the keyboard focus the keys need", focusable, Control.FOCUS_CLICK],
 		["a selected card is drawn with a fill of its own", filled, true],
 		["and with no outline", outlined, false]
+	])
+
+
+## A card copied on one object and pasted on another keeps every key and type: a node path, a
+## colour, a whole number, a file kept as uid text, the enable box.
+static func _travel_pins() -> bool:
+	var card: Dictionary = {"verb": "particles", "node": NodePath("../Sparks"), "tint": Color(1, 0.5, 0, 1),
+		"loops": 3, "stream": "uid://abc123", "active": false, "label": "Burst"}
+	var text: String = EventSheetCardSchemas.cards_to_text([card])
+	var back: Array = EventSheetCardSchemas.cards_from_text(text)
+	var arrived: Dictionary = back[0] if not back.is_empty() else {}
+	var source: EventSheetCardListDrawer = _drawer([card, {"verb": "shake", "label": "Other"}])
+	source.select_card(0, "click")
+	var carried: String = source.copy_selected()
+	var target: EventSheetCardListDrawer = _drawer([{"verb": "flash", "label": "First"}, {"verb": "flash", "label": "Last"}])
+	target.select_card(0, "click")
+	target.paste_after_selection(carried)
+	var landed: Dictionary = (target.get_value()[1] as Dictionary) if target.get_value().size() > 1 else {}
+	source.free()
+	target.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["a card arrives whole", arrived, card],
+		["the node path is still a node path", typeof(arrived.get("node")), TYPE_NODE_PATH],
+		["the whole number is still whole", typeof(arrived.get("loops")), TYPE_INT],
+		["a resource object on a card is dropped rather than carried", EventSheetCardSchemas.cards_from_text(
+			EventSheetCardSchemas.cards_to_text([{"verb": "sound", "stream": AudioStreamWAV.new()}])), [{"verb": "sound"}]],
+		["a card copied out of one list lands whole in another, under the selected card", landed, card],
+		["text that came back through a Windows clipboard, whose lines end in CR LF, still pastes",
+			EventSheetCardSchemas.cards_from_text(text.replace("\n", "\r\n")), back],
+		["and a stray blank line at its end does not matter", EventSheetCardSchemas.cards_from_text(text + "\r\n"), back]
 	])

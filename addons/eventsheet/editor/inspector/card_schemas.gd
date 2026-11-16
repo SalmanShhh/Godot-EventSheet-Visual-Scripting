@@ -383,7 +383,9 @@ static func cards_to_text(cards: Array) -> String:
 ## Clipboard text back to cards. Text without the marker is not ours and yields nothing. Every value
 ## is sanitised on the way in - the variant spelling can describe an Object, and a paste is text from
 ## outside the editor, so anything that is not plain data is dropped rather than reconstructed.
-static func cards_from_text(text: String) -> Array:
+static func cards_from_text(text_in: String) -> Array:
+	# A Windows clipboard hands every line back ending in CR LF, so the marker line is read without it.
+	var text: String = text_in.replace("\r\n", "\n")
 	if not text.begins_with(CLIPBOARD_PREFIX):
 		return []
 	var parsed: Variant = str_to_var(text.substr(CLIPBOARD_PREFIX.length()))
