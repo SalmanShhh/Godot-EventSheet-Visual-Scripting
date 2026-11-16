@@ -17,6 +17,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _slot_pins() and ok
 	ok = _drawer_pins() and ok
+	ok = _record_pins() and ok
 	return ok
 
 
@@ -80,4 +81,29 @@ static func _drawer_pins() -> bool:
 		["the picture that rides is the card's own line, with its title and how many travel", picture_text.contains("+1"), true],
 		["and takes no mouse", picture_ignores_mouse, true],
 		["making the picture leaves the list's own records alone", row_still_there is String, true],
+	])
+
+
+## A card that wears a picture (the Juice Player's) keeps the records that repaint it in place: making the picture that
+## rides under the pointer must not swap them for its own copies.
+static func _drawn(_entry: Dictionary, _scale: float) -> Dictionary:
+	return {"texture": ImageTexture.create_from_image(Image.create(4, 4, false, Image.FORMAT_RGBA8)), "tint": true}
+
+
+static func _record_pins() -> bool:
+	var schema: Dictionary = {"tiles": true, "kinds": [{"kind": "a", "label": "A", "fields": [], "defaults": {}}], "icons": Callable(load("res://tests/card_drag_drop_test.gd"), "_drawn")}
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"kind_key": "verb", "schema_dict": schema})
+	drawer.set_value([{"verb": "a"}, {"verb": "a"}])
+	var before: Variant = drawer._pictures.get(0)
+	var had_picture: bool = before != null
+	var titles_before: Variant = drawer._titles.get(0)
+	var picture: Control = drawer.drag_picture(0, 220.0, 1)
+	var same_picture: bool = drawer._pictures.get(0) == before
+	var same_title: bool = drawer._titles.get(0) == titles_before
+	picture.free()
+	drawer.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["a card of a list that draws pictures has a picture record to keep", had_picture, true],
+		["the real card keeps its own picture record while a copy is made", same_picture, true],
+		["and its own title record", same_title, true],
 	])

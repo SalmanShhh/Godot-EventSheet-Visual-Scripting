@@ -613,7 +613,7 @@ func drag_picture(index: int, width: float, count: int) -> Control:
 	var card: Dictionary = _cards[index]
 	# The line is made by the same builder as the real one, which records the controls it makes by position so a
 	# write can repaint them in place; a picture must not take their place in those records.
-	var kept: Array = [_head_tiles.duplicate(), _badges.duplicate(), _titles.duplicate(), _timing_marks.duplicate(), _marks.duplicate()]
+	var kept: Array = [_head_tiles.duplicate(), _badges.duplicate(), _titles.duplicate(), _timing_marks.duplicate(), _marks.duplicate(), _pictures.duplicate(), _picture_tints.duplicate()]
 	var line: PanelContainer = PanelContainer.new()
 	line.add_theme_stylebox_override("panel", EventSheetLookStyle.selected_row_box(true))
 	var inside: HBoxContainer = HBoxContainer.new()
@@ -631,6 +631,8 @@ func drag_picture(index: int, width: float, count: int) -> Control:
 	_titles = kept[2]
 	_timing_marks = kept[3]
 	_marks = kept[4]
+	_pictures = kept[5]
+	_picture_tints = kept[6]
 	_make_picture(line)
 	line.custom_minimum_size.x = width
 	line.size = Vector2(width, 0.0)
