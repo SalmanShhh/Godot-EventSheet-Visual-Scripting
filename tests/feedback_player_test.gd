@@ -190,18 +190,20 @@ static func _outer_and_inner_pins() -> bool:
 	player.play(1.0)
 	var moved: float = snappedf(host.rotation, 0.001)
 
-	# The fold a Hold waits for, over cards the walk has already waited the delays of.
+	# What a Hold waits for: a delay holds up its own card only, so the Hold still waits for the delayed
+	# card to end (0.3 s of delay and 0.05 s of flash), not for the 0.05 s that was left once the delay
+	# had been spent by the walk.
 	var order: Array = [
 		{"verb": "shake", "seconds": 0.2},
 		{"verb": "flash", "delay": 0.3, "seconds": 0.05},
 		{"verb": "hold_until", "seconds": 0.0}
 	]
-	var fold: float = snappedf(player._longest_above(order, 2), 0.001)
+	var fold: int = roundi(player._longest_above(order, 2) * 1000.0)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["a nested play is remembered by the list that started it", remembered, 1],
 		["and let go of once it has been told", let_go, 0],
 		["the player's own strength scales a tween card too", moved, 1.0],
-		["a Hold waits for what is LEFT of the cards above it", fold, 0.05],
+		["a Hold waits for the end of the slowest card above it, delay included, in thousandths of a second", fold, 350],
 		["a channel speaks a name of this pack's own",
 			player.has_method("play_feedbacks_from_channel"), true]
 	])

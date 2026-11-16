@@ -166,6 +166,13 @@ var _head_strength: float = 1.0
 # card the walk is still in the middle of a second time.
 ## Whether the card the head is on has already been answered by the walk.
 var _head_taken: bool = false
+## Cards started beside the walk (a delay or repeats of their own), counted for each play by its token, so the
+## play is not closed while one of them is still to be felt.
+var _pending: Dictionary = {}
+## The cards waiting out their own delay, by ticket, which a Skip To End feels at once.
+var _waiting: Dictionary = {}
+## The ticket handed to the next card that waits.
+var _next_ticket: int = 0
 
 # A moment file dropped on two players is ONE resource shared by both, so a counter
 # written into its steps would have each play counting the other's loops down, and the file on
@@ -583,6 +590,7 @@ func stop() -> void:
 	if not playing:
 		return
 	_live.clear()
+	_waiting.clear()
 	_resumed.emit()
 	_told_nested("stop")
 	_close()
@@ -604,6 +612,8 @@ func skip_to_end() -> void:
 	var left: Array = _order
 	var from: int = _head + 1 if _head_taken else _head
 	var at_strength: float = _head_strength
+	var late: Array = _waiting.values()
+	_waiting.clear()
 	_close()
 	_told_nested("skip_to_end")
 	for index: int in range(from, left.size()):
@@ -612,6 +622,9 @@ func skip_to_end() -> void:
 		var card: Dictionary = left[index]
 		if _card_runs(card, at_strength, index) and not _is_timing(word_of(card)):
 			_do_step(card, at_strength, true)
+	for waiting: Variant in late:
+		var card: Dictionary = waiting as Dictionary
+		_do_step(card, at_strength, true)
 
 ## @ace_action
 ## @ace_name("Restore Initial Values")
@@ -1371,7 +1384,8 @@ func feedback_progress(label: String) -> float:
 ## @ace_codegen_template("$JuicePlayer.feedback_duration("{label}")")
 func feedback_duration(label: String) -> float:
 	var card: Dictionary = _card_named(label)
-	return card_length(card) + maxf(float(card.get("delay", 0.0)), 0.0)
+	var own: float = card_length(card) if _is_timing(word_of(card)) else card_span(card)
+	return own + maxf(float(card.get("delay", 0.0)), 0.0)
 
 ## @ace_expression
 ## @ace_name("Current Juice Card")
@@ -1430,6 +1444,7 @@ func _may_start() -> bool:
 		# play started through a Play Player card: half a beat carrying on under the restart is
 		# exactly what the restart was asked to replace.
 		_live.clear()
+		_waiting.clear()
 		_resumed.emit()
 		_told_nested("stop")
 		_close()
@@ -1442,8 +1457,19 @@ func _may_start() -> bool:
 ## the card badge and the expression all read this one function, so no two of them can disagree.
 ## @ace_hidden
 static func duration_of(list: Array) -> float:
-	var total: float = 0.0
-	var stretch: float = 0.0
+	var walked: Dictionary = _timeline(list)
+	return maxf(float(walked["at"]), float(walked["latest"]))
+
+## The one pass over a list that every answer about time reads: where each felt card starts, where the
+## head is after the Pauses and Holds, and when the latest card ends. A card's Delay and Repeat hold up
+## THAT card only, so the cards under it start where they would have without it; a Pause moves the head
+## along, and a Hold waits for the latest END of the cards since the last Hold (or for the one card it
+## names), then its own wait. Returns {plan, at, latest, ends}: `at` is the head, `latest` the last end,
+## `ends` the end of each card of the stretch by label.
+static func _timeline(list: Array) -> Dictionary:
+	var plan: Array = []
+	var at: float = 0.0
+	var latest: float = 0.0
 	var ends: Dictionary = {}
 	for entry: Variant in list:
 		if not (entry is Dictionary):
@@ -1452,25 +1478,39 @@ static func duration_of(list: Array) -> float:
 		if not bool(card.get("active", true)):
 			continue
 		var word: String = word_of(card)
-		var seconds: float = card_length(card) + maxf(float(card.get("delay", 0.0)), 0.0)
+		if word == LOOP_START or word == LOOP_BACK:
+			continue
+		var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
+		var seconds: float = card_length(card)
 		if word == HOLD_UNTIL:
-			var waited: float = _waited_for(card, ends, stretch)
-			total += waited + seconds
-			stretch = maxf(stretch - waited, 0.0)
+			var arrived: float = at + delay
+			at = maxf(arrived, _waited_until(card, ends, latest)) + seconds
+			latest = maxf(latest, at)
 			ends.clear()
 		elif word == PAUSE:
-			total += seconds
-		elif word != LOOP_START and word != LOOP_BACK:
-			stretch = maxf(stretch, seconds)
-			ends[card_label(card)] = maxf(float(ends.get(card_label(card), 0.0)), seconds)
-	return total + stretch
+			at += delay + seconds
+		else:
+			var starts: float = at + delay
+			var ends_at: float = starts + card_span(card)
+			plan.append({"card": card, "at": starts, "seconds": seconds})
+			latest = maxf(latest, ends_at)
+			ends[card_label(card)] = maxf(float(ends.get(card_label(card), 0.0)), ends_at)
+	return {"plan": plan, "at": at, "latest": latest, "ends": ends}
 
-## How far into its stretch a Hold's wait reaches: the end of the card it names, or the end of the whole
-## stretch when it names nothing or names a card that is not above it in that stretch.
-static func _waited_for(hold: Dictionary, ends: Dictionary, stretch: float) -> float:
+## How long a felt card lasts from its first play to the end of its last: its own length plus the gaps
+## of its repeats. A card that is not repeated lasts its length.
+## @ace_hidden
+static func card_span(card: Dictionary) -> float:
+	var repeat: int = maxi(int(card.get("repeat", 1)), 1)
+	var interval: float = maxf(float(card.get("interval", 0.0)), 0.0)
+	return card_length(card) + float(repeat - 1) * interval
+
+## The moment a Hold stops waiting: the end of the card it names, or the latest end of the stretch when it
+## names nothing or names a card that is not above it in that stretch.
+static func _waited_until(hold: Dictionary, ends: Dictionary, latest: float) -> float:
 	var wanted: String = str(hold.get("waits_for", "")).strip_edges()
 	if wanted.is_empty() or not ends.has(wanted):
-		return stretch
+		return latest
 	return float(ends[wanted])
 
 ## The word a card is played under: `yours` for a card of your own (it holds the address of its script),
@@ -1526,6 +1566,9 @@ func _walk(list: Array, at_strength: float, backwards: bool) -> void:
 		progress = float(index) / float(maxi(order.size(), 1))
 		index = await _take(order, index, order[index] as Dictionary, at_strength, token)
 		index = _landing(order, index)
+	while _alive(token) and int(_pending.get(token, 0)) > 0:
+		await _resumed
+	_pending.erase(token)
 	if _alive(token) and index < order.size():
 		push_warning("Juice Player: a loop on %s never came back, so the play was given up after %d steps." % [name, MAX_PLAY_STEPS])
 	if _alive(token):
@@ -1556,6 +1599,12 @@ func _take(order: Array, index: int, card: Dictionary, at_strength: float, token
 		return index + 1
 	var clock: String = MomentRunner.CLOCK_REAL if str(card.get("clock", "")) == "real" else MomentRunner.CLOCK_GAME
 	var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
+	# A card that is felt and waits or repeats on its own is run beside the walk: its Delay and Repeat hold
+	# up THAT card only, and the cards under it start when they would have without it. A Pause, a Hold and
+	# the loop cards are the head's own waits, so their delay is waited out here.
+	if not _is_timing(word) and (delay > 0.0 or int(card.get("repeat", 1)) > 1):
+		_run_beside(card, at_strength, clock, token)
+		return index + 1
 	if delay > 0.0:
 		await MomentRunner.at(self, delay, clock)
 		if not _alive(token):
@@ -1578,13 +1627,36 @@ func _take(order: Array, index: int, card: Dictionary, at_strength: float, token
 				return back
 			_loops_left[index] = int(card.get("loops", 1))
 		_:
-			now_playing = str(card.get("label", word))
-			on_feedback_started.emit(_label_of(card))
-			_ends_at = maxf(_ends_at, float(Time.get_ticks_msec()) / 1000.0 + card_length(card))
-			_do_step(card, at_strength)
-			await _repeat_rest(card, at_strength, clock, token)
-			on_feedback_finished.emit(_label_of(card))
+			await _feel(card, at_strength, clock, token)
 	return index + 1
+
+## One felt card, played: announced, done, and repeated as often as it asks. Every felt card comes through here
+## whether the walk waited for it or started it beside itself.
+func _feel(card: Dictionary, at_strength: float, clock: String, token: int) -> void:
+	now_playing = str(card.get("label", word_of(card)))
+	on_feedback_started.emit(_label_of(card))
+	_ends_at = maxf(_ends_at, float(Time.get_ticks_msec()) / 1000.0 + card_span(card))
+	_do_step(card, at_strength)
+	await _repeat_rest(card, at_strength, clock, token)
+	on_feedback_finished.emit(_label_of(card))
+
+## A felt card that waits out its own delay or plays more than once, started beside the walk. The head has
+## moved on already; the play stays open until this card has finished, and a Stop ends it where it is.
+func _run_beside(card: Dictionary, at_strength: float, clock: String, token: int) -> void:
+	_pending[token] = int(_pending.get(token, 0)) + 1
+	_next_ticket += 1
+	var ticket: int = _next_ticket
+	var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
+	_ends_at = maxf(_ends_at, float(Time.get_ticks_msec()) / 1000.0 + delay + card_span(card))
+	if delay > 0.0:
+		_waiting[ticket] = card
+		await MomentRunner.at(self, delay, clock)
+	if _alive(token):
+		_waiting.erase(ticket)
+		await _feel(card, at_strength, clock, token)
+	_waiting.erase(ticket)
+	_pending[token] = int(_pending.get(token, 1)) - 1
+	_resumed.emit()
 
 ## The repeats a card asks for after its first play, each one an interval apart.
 func _repeat_rest(card: Dictionary, at_strength: float, clock: String, token: int) -> void:
@@ -1845,48 +1917,22 @@ func _tell_sound(card: Dictionary, what: String) -> void:
 	push_warning("Juice Player: the sound card \"%s\" on %s %s" % [_label_of(card), name, what])
 
 ## How much of the cards above is still to run when a Hold is reached - the number the Hold waits for.
-## Read back over the cards between this Hold and the one above it: the slowest of them, or only the card
-## the Hold names when it names one that is there (a name that is no card above waits for the slowest, as a
-## Hold that names nothing does).
+## Read off the same pass the plan reads: the latest END of the cards since the last Hold (their delays and
+## repeats counted), or only the end of the card the Hold names when it names one that is there (a name that
+## is no card above waits for the slowest, as a Hold that names nothing does), less the time the head has
+## already spent getting here.
 static func left_above(order: Array, index: int) -> float:
+	var walked: Dictionary = _timeline(order.slice(0, maxi(index, 0)))
+	var delay: float = 0.0
 	var wanted: String = ""
 	if index >= 0 and index < order.size() and order[index] is Dictionary:
+		delay = maxf(float((order[index] as Dictionary).get("delay", 0.0)), 0.0)
 		wanted = str((order[index] as Dictionary).get("waits_for", "")).strip_edges()
-	if not wanted.is_empty():
-		var named: float = _left_of_cards(order, index, wanted)
-		if named >= 0.0:
-			return named
-	return _left_of_cards(order, index, "")
-
-## What is left of the cards above `index` (all of them, or the one called `wanted`), or -1 when `wanted`
-## names no card above it.
-static func _left_of_cards(order: Array, index: int, wanted: String) -> float:
-	var longest: float = 0.0
-	var matched: bool = false
-	# A card's delay is waited out by the walk itself, so by the time the Hold is reached the
-	# cards above it have already been running for the sum of the delays under them. What is
-	# LEFT of each one is its length less that, which is what the head of the list draws.
-	var spent: float = 0.0
-	var walk: int = index - 1
-	while walk >= 0:
-		var card: Dictionary = order[walk] as Dictionary
-		var word: String = word_of(card)
-		if word == HOLD_UNTIL:
-			break
-		if bool(card.get("active", true)):
-			var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
-			var seconds: float = card_length(card)
-			if word == PAUSE:
-				spent += delay + seconds
-			else:
-				if word != LOOP_START and word != LOOP_BACK and (wanted.is_empty() or card_label(card) == wanted):
-					longest = seconds - spent if not matched else maxf(longest, seconds - spent)
-					matched = true
-				spent += delay
-		walk -= 1
-	if not wanted.is_empty() and not matched:
-		return -1.0
-	return maxf(longest, 0.0)
+	var arrived: float = float(walked["at"]) + delay
+	var until: float = float(walked["latest"])
+	if not wanted.is_empty() and (walked["ends"] as Dictionary).has(wanted):
+		until = float((walked["ends"] as Dictionary)[wanted])
+	return maxf(until - arrived, 0.0)
 
 ## The same number, asked of the walk's own copy of the list.
 func _longest_above(order: Array, index: int) -> float:
@@ -1925,6 +1971,7 @@ func _begin(order: Array, at_strength: float) -> int:
 	_head_strength = at_strength
 	_head_taken = false
 	_nested.clear()
+	_waiting.clear()
 	_loops_left.clear()
 	_rolls.clear()
 	for index: int in order.size():
@@ -1951,34 +1998,7 @@ func _close() -> void:
 ## editor preview both read this, so the picture and the sample can never disagree.
 ## @ace_hidden
 static func schedule_of(list: Array) -> Array:
-	var plan: Array = []
-	var at: float = 0.0
-	var stretch: float = 0.0
-	var ends: Dictionary = {}
-	for entry: Variant in list:
-		if not (entry is Dictionary):
-			continue
-		var card: Dictionary = entry as Dictionary
-		if not bool(card.get("active", true)):
-			continue
-		var word: String = word_of(card)
-		var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
-		var seconds: float = card_length(card)
-		if word == HOLD_UNTIL:
-			var waited: float = _waited_for(card, ends, stretch)
-			at += waited + delay + seconds
-			stretch = maxf(stretch - waited, 0.0)
-			ends.clear()
-			continue
-		if word == PAUSE:
-			at += delay + seconds
-			continue
-		if word == LOOP_START or word == LOOP_BACK:
-			continue
-		plan.append({"card": card, "at": at + delay, "seconds": seconds})
-		stretch = maxf(stretch, delay + seconds)
-		ends[card_label(card)] = maxf(float(ends.get(card_label(card), 0.0)), delay + seconds)
-	return plan
+	return _timeline(list)["plan"]
 
 ## What the object would be doing `time` into a play - the editor's look at the list, sampled rather
 ## than run. The shape is the plugin's shared behaviour-preview contract (exported values in, the
