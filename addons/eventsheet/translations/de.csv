@@ -10897,5 +10897,5 @@ Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"Kontrast %s : 1 auf %s (%
 Same colour in dark and light: click to give light its own,"Gleiche Farbe in Dunkel und Hell: klicken, damit Hell eine eigene bekommt"
 Separate colours: click to use the dark colour in both,"Getrennte Farben: klicken, um in beiden die dunkle Farbe zu verwenden"
 Worked out from the editor. Pick a colour to give light its own.,"Aus dem Editor berechnet. Wähle eine Farbe, damit Hell eine eigene bekommt."
-auto,"auto"
+auto,"automatisch"
 Follow the editor in light,"Dem Editor in Hell folgen"
