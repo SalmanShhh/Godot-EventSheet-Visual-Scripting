@@ -62,6 +62,35 @@ const KIND_ICONS := {
 	"project": ["Folder", "File", "TextFile"],
 }
 
+## The picker section a module page wears the icon of, for the pages whose modules name no section of
+## their own (a page is written for a reader's question and its modules are files, so most pages derive
+## their section from a module's name and these few are the ones that cannot). An OVERRIDE list: the
+## derivation runs first, and a page it answers is not here.
+const MODULE_PAGE_SECTIONS := {
+	"Making-Web-Requests": "AJAX",
+	"Around-Objects": "Nodes",
+	"Working-With-Lists": "Variables",
+	"Making-Things-Move-In-2D": "Move To",
+	"Copying-Sharing-And-Remembering-Values": "Utility",
+	"Comparing-Values": "Compare",
+	"Groups-Tags-And-Systems": "Groups",
+	"Debugging-And-Printing": "Debug",
+	"Triggers-Signals-And-When-Rows-Run": "Signals / Scene / Input",
+	"Raycasting-And-Overlaps-In-2D": "Raycast 2D",
+	"Raycasting-And-Overlaps-In-3D": "Raycast 3D",
+	"Automating-The-Editor": "Editor Tools",
+	"Game-Options-And-The-Window": "Game Options",
+	"Game-Feel": "Juice",
+	"Game-Mechanics": "Systems",
+	"Calling-Your-Own-Code-From-Rows": "Functions",
+	"Doing-Math-And-Randomness": "Math & Random",
+	"Working-With-Vectors-And-Directions": "Utility",
+	"Making-Text-Readable-On-Screen": "Text",
+	"Buttons-Sliders-Labels-And-Menus": "UI",
+	"Colors-Gradients-And-Curves": "Canvas",
+	"Working-With-Records": "Variables",
+}
+
 ## The widest a line of prose is allowed to get, before display scaling: about eighty characters
 ## at the editor's documentation font. A page that fills a floated Manual edge to edge is a page
 ## whose lines the eye loses its place in, so the column stops growing and the room goes to the
@@ -744,6 +773,23 @@ static func kind_for_page(page_id: String) -> String:
 	return "guide"
 
 
+## The icon a module page wears, as the picker names it (a drawn file's path or an editor class): the icon of
+## the section one of the page's modules lists its rows under, so the page and its section in the picker read
+## as one thing. "" when nothing answers, which leaves the page the generic module mark. PURE over the
+## project's files, so the suite pins it headless.
+static func module_section_icon_name(page_id: String) -> String:
+	var page: String = page_id.strip_edges().get_file().trim_suffix(".md")
+	for unit: String in EventSheets.module_guide_units():
+		if EventSheets.module_guide_name(unit) != page:
+			continue
+		var named: String = EventSheetACEIcons.category_icon_name(unit.replace("_", " ").capitalize())
+		if not named.is_empty():
+			return named
+	if MODULE_PAGE_SECTIONS.has(page):
+		return EventSheetACEIcons.category_icon_name(str(MODULE_PAGE_SECTIONS[page]))
+	return ""
+
+
 ## Whether a host of this width should fold its sidebar away. Pure, so the breakpoint is pinned as
 ## a decision rather than inferred from a screenshot.
 static func wants_compact(width: float) -> bool:
@@ -1384,6 +1430,14 @@ func _style_group_row(item: TreeItem, title: String) -> void:
 ## rather than a button.
 func _style_page_row(item: TreeItem, page_id: String) -> void:
 	var icon: Texture2D = _kind_icon(page_id)
+	if kind_for_page(page_id) == "module":
+		var named: String = module_section_icon_name(page_id)
+		var section_icon: Texture2D = null
+		if named.begins_with("res://"):
+			section_icon = EventSheetACEIcons.path_icon(named)
+		elif not named.is_empty():
+			section_icon = EventSheetEditorIcons.icon(named)
+		icon = section_icon if section_icon != null else icon
 	if icon == null:
 		return
 	item.set_icon(0, icon)
