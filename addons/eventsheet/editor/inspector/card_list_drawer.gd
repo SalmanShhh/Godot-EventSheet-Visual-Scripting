@@ -677,8 +677,7 @@ func _fill_add_tree() -> void:
 		var group_dict: Dictionary = group as Dictionary
 		var matching: Array = []
 		for entry: Variant in group_dict.get("kinds", []):
-			var label: String = str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", "")))
-			if needle.is_empty() or label.to_lower().contains(needle) or str((entry as Dictionary).get("kind", "")).to_lower().contains(needle):
+			if EventSheetCardSchemas.kind_matches(entry as Dictionary, needle):
 				matching.append(entry)
 		if matching.is_empty():
 			continue
@@ -729,8 +728,32 @@ func _rebuild() -> void:
 		empty.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		_list.add_child(empty)
 		return
-	for index: int in range(_cards.size()):
-		_list.add_child(_build_card(index))
+	var groups: Array = EventSheetCardSchemas.together_groups(_schema, _cards)
+	var index: int = 0
+	while index < _cards.size():
+		var group: int = int(groups[index]) if index < groups.size() else -1
+		var last: int = index
+		while group >= 0 and last + 1 < _cards.size() and last + 1 < groups.size() and int(groups[last + 1]) == group:
+			last += 1
+		if last > index:
+			_list.add_child(_band_of(index, last))
+		else:
+			_list.add_child(_build_card(index))
+		index = last + 1
+
+
+## Cards that start together on one faint band: a fill behind them and nothing drawn round them, so the groups
+## read without unfolding anything.
+func _band_of(first: int, last: int) -> Control:
+	var band: PanelContainer = PanelContainer.new()
+	band.set_meta("band", true)
+	band.mouse_filter = Control.MOUSE_FILTER_PASS
+	band.add_theme_stylebox_override("panel", EventSheetLookStyle.band_box())
+	var stack: VBoxContainer = VBoxContainer.new()
+	band.add_child(stack)
+	for index: int in range(first, last + 1):
+		stack.add_child(_build_card(index))
+	return band
 
 
 func _build_card(index: int) -> Control:
@@ -792,11 +815,14 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	title.add_theme_color_override("font_color", EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet())
 	_titles[index] = title
 	inside.add_child(title)
-	var badge_text: String = EventSheetCardSchemas.card_badge(entry, card)
+	var badge_text: String = EventSheetCardSchemas.card_badge(entry, card, _cards, index)
 	var badge: Label = Label.new()
 	badge.text = badge_text
 	badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# A wrapping label squeezed by a long title would break "0.30 s" one letter to a line. A short badge
+	# keeps room for all of its words; a long one keeps room for its longest word and wraps between them.
+	badge.custom_minimum_size.x = _badge_room(badge, badge_text)
 	badge.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 	badge.visible = not badge_text.is_empty()
 	inside.add_child(badge)
@@ -813,6 +839,20 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	remove.pressed.connect(func() -> void: remove_card(index))
 	header.add_child(remove)
 	return header
+
+
+## The width a badge asks for: all of its text when that is short, else its longest word.
+func _badge_room(badge: Label, text: String) -> float:
+	var font: Font = badge.get_theme_font("font")
+	var size: int = badge.get_theme_font_size("font_size")
+	if font == null or text.is_empty():
+		return 0.0
+	if text.length() <= 12:
+		return font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 2.0
+	var widest: float = 0.0
+	for word: String in text.split(" ", false):
+		widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+	return widest + 2.0
 
 
 ## Whether the card line is a light ground, which decides which of a family's two colours a tile wears.
@@ -1270,8 +1310,10 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			return _bus_field(card, key, write)
 		"resource":
 			return _resource_text_field(card, key, write, tail)
+		"above":
+			return _above_field(card, field, write, index)
 		"note":
-			return _note_line(card, field)
+			return _note_line(card, field, index)
 		"custom":
 			return _custom_field(index, field)
 	return _number_field(card, key, write, FLOAT_STEP)
@@ -1363,16 +1405,51 @@ func _refresh_notes(index: int) -> void:
 		var entry: Dictionary = note as Dictionary
 		var maker: Variant = (entry.get("field") as Dictionary).get("text")
 		if int(entry.get("index", -1)) == index and maker is Callable and is_instance_valid(entry.get("label")):
-			(entry.get("label") as Label).text = str((maker as Callable).call(_cards[index]))
+			(entry.get("label") as Label).text = str(EventSheetCardSchemas.ask(maker as Callable, _cards[index], _cards, index))
+
+
+## A choice among the cards above this one, by name: the first entry stands for all of them and is what a card
+## nobody changed holds (nothing is stored), the others are the names the schema lists. A name the card holds
+## that is no card above any more is still shown, so it is never dropped without being seen.
+func _above_field(card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:
+	var key: String = str(field.get("key", ""))
+	var choice: OptionButton = OptionButton.new()
+	var values: PackedStringArray = PackedStringArray([""])
+	choice.add_item(str(field.get("all_label", EventSheetL10n.translate("All cards above"))))
+	var maker: Variant = field.get("above")
+	var listed: Array = []
+	if maker is Callable and index >= 0:
+		var answer: Variant = (maker as Callable).call(_cards, index)
+		listed = answer if answer is Array else []
+	for entry: Variant in listed:
+		values.append(str((entry as Dictionary).get("value", "")))
+		choice.add_item(str((entry as Dictionary).get("text", "")))
+	var current: String = str(card.get(key, ""))
+	var picked: int = values.find(current) if not current.is_empty() else 0
+	if picked < 0:
+		values.append(current)
+		choice.add_item(EventSheetL10n.translate("%s (not above this card)") % current)
+		picked = values.size() - 1
+	choice.select(picked)
+	choice.disabled = not editable
+	choice.item_selected.connect(func(chosen: int) -> void:
+		if chosen == 0:
+			if index >= 0 and index < _cards.size() and (_cards[index] as Dictionary).has(key):
+				(_cards[index] as Dictionary).erase(key)
+				value_changed.emit(get_value())
+				_refresh_notes(index)
+		elif chosen > 0 and chosen < values.size():
+			write.call(values[chosen]))
+	return choice
 
 
 ## A line of words under a field, computed from the card by the schema, never stored. It turns amber
 ## when the schema says the card needs attention.
-func _note_line(card: Dictionary, field: Dictionary) -> Control:
+func _note_line(card: Dictionary, field: Dictionary, index: int = -1) -> Control:
 	var maker: Variant = field.get("text")
-	var said: String = str((maker as Callable).call(card)) if maker is Callable else str(field.get("label", ""))
+	var said: String = str(EventSheetCardSchemas.ask(maker as Callable, card, _cards, index)) if maker is Callable else str(field.get("label", ""))
 	var warn: Variant = field.get("warn_when")
-	var needs_care: bool = warn is Callable and bool((warn as Callable).call(card))
+	var needs_care: bool = warn is Callable and bool(EventSheetCardSchemas.ask(warn as Callable, card, _cards, index))
 	var line: Label = EventSheetLookStyle.message_line(said, EventSheetLookStyle.Tone.WARNING if needs_care else EventSheetLookStyle.Tone.NOTE)
 	line.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	return line

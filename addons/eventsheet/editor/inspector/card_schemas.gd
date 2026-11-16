@@ -219,13 +219,51 @@ static func card_label(schema: Dictionary, spec: Dictionary, entry: Dictionary, 
 
 
 ## The badge text on the right of a card's header. The schema computes it (a duration, a count, a
-## warning) and an entry without a badge callable simply has none - the drawer never invents one.
-static func card_badge(entry: Dictionary, card: Dictionary) -> String:
+## warning) and an entry without a badge callable simply has none - the drawer never invents one. A badge
+## that takes three arguments is handed the list and the card's place in it, for the kind of badge that
+## depends on the cards around it (how long a Hold will wait); one that takes the card alone is called as it
+## always was.
+static func card_badge(entry: Dictionary, card: Dictionary, cards: Array = [], index: int = -1) -> String:
 	var badge: Variant = entry.get("badge")
 	if not (badge is Callable) or not (badge as Callable).is_valid():
 		return ""
-	var answer: Variant = (badge as Callable).call(card)
+	var answer: Variant = ask(badge as Callable, card, cards, index)
 	return str(answer) if answer != null else ""
+
+
+## Calls a schema callable with the card, and with the list and the card's place in it when the callable
+## takes three arguments.
+static func ask(maker: Callable, card: Dictionary, cards: Array, index: int) -> Variant:
+	if maker.get_argument_count() >= 3:
+		return maker.call(card, cards, index)
+	return maker.call(card)
+
+
+## Whether a kind answers to what was typed in the Add box: its title, its word, or any of its own search
+## words ("wait" finds Hold and Pause). An empty search matches every kind.
+static func kind_matches(entry: Dictionary, needle: String) -> bool:
+	var wanted: String = needle.strip_edges().to_lower()
+	if wanted.is_empty():
+		return true
+	if str(entry.get("label", entry.get("kind", ""))).to_lower().contains(wanted) or str(entry.get("kind", "")).to_lower().contains(wanted):
+		return true
+	var words: Variant = entry.get("search")
+	if words is PackedStringArray or words is Array:
+		for word: Variant in words:
+			if str(word).to_lower().contains(wanted):
+				return true
+	return false
+
+
+## The group each card belongs to when the schema says which cards start together: one number per card, the
+## same for cards that start together and -1 for a card that stands apart (a wait). A schema that does not say
+## has no groups.
+static func together_groups(schema: Dictionary, cards: Array) -> Array:
+	var maker: Variant = schema.get("together")
+	if not (maker is Callable) or not (maker as Callable).is_valid():
+		return []
+	var answer: Variant = (maker as Callable).call(cards)
+	return answer if answer is Array else []
 
 
 ## The card key holding the enable box, or "" when the schema declares none. A schema whose runtime

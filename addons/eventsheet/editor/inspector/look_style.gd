@@ -168,6 +168,19 @@ static func selected_row_box(focused: bool = true) -> StyleBox:
 	return flat
 
 
+## A faint fill behind a group of cards that belong together: the editor's own ink at a whisper of opacity,
+## rounded, with no border, so it reads as a background and never as an outline.
+static func band_box() -> StyleBox:
+	var flat: StyleBoxFlat = StyleBoxFlat.new()
+	var tint: Color = ink()
+	tint.a = 0.07
+	flat.bg_color = tint
+	flat.set_corner_radius_all(int(px(4.0)))
+	flat.set_border_width_all(0)
+	flat.set_content_margin_all(px(3.0))
+	return flat
+
+
 ## The text colour a selected row of Godot's lists reads in, or the ordinary ink where there is no editor.
 static func selected_row_ink() -> Color:
 	return _colour(&"font_selected_color", THEME_TREE, ink())

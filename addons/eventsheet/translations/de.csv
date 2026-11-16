@@ -10680,3 +10680,9 @@ Move to top,Ganz nach oben
 Written by the game while it runs.,"Wird vom Spiel geschrieben, während es läuft."
 Keep %s and this field in the ratio they have now.,%s und dieses Feld im aktuellen Verhältnis halten.
 card,Karte
+All cards above,Alle Karten darüber
+%s (not above this card),%s (nicht über dieser Karte)
+Every sound of this player,Jeder Sound dieses Players
+all the cards above,alle Karten darüber
+"Waiting %.2f s, for %s.",Wartet %.2f s auf %s.
+"No card called ""%s"" is above this Hold, so it waits for all of them.","Über diesem Halten gibt es keine Karte namens ""%s"", daher wartet es auf alle."

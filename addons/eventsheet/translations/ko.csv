@@ -10680,3 +10680,9 @@ Move to top,맨 위로 이동
 Written by the game while it runs.,게임이 실행되는 동안 게임이 기록합니다.
 Keep %s and this field in the ratio they have now.,%s과(와) 이 필드를 현재 비율로 유지합니다.
 card,카드
+All cards above,위의 모든 카드
+%s (not above this card),%s (이 카드 위에 없음)
+Every sound of this player,이 플레이어의 모든 소리
+all the cards above,위의 모든 카드
+"Waiting %.2f s, for %s.",%.2f초 동안 %s을(를) 기다립니다.
+"No card called ""%s"" is above this Hold, so it waits for all of them.","이 Hold 위에 ""%s""라는 카드가 없어서 모든 카드를 기다립니다."

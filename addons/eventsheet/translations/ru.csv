@@ -10680,3 +10680,9 @@ Move to top,Переместить наверх
 Written by the game while it runs.,Записывается игрой во время работы.
 Keep %s and this field in the ratio they have now.,Сохранять соотношение %s и этого поля как сейчас.
 card,карточка
+All cards above,Все карточки выше
+%s (not above this card),%s (нет выше этой карточки)
+Every sound of this player,Все звуки этого проигрывателя
+all the cards above,все карточки выше
+"Waiting %.2f s, for %s.",Ждёт %.2f с: %s.
+"No card called ""%s"" is above this Hold, so it waits for all of them.","Над этим Hold нет карточки ""%s"", поэтому он ждёт все."

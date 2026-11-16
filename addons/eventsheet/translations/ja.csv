@@ -10680,3 +10680,9 @@ Move to top,先頭へ移動
 Written by the game while it runs.,ゲームの実行中にゲームが書き込みます。
 Keep %s and this field in the ratio they have now.,%s とこの項目を現在の比率に保ちます。
 card,カード
+All cards above,上のすべてのカード
+%s (not above this card),%s（このカードの上にありません）
+Every sound of this player,このプレイヤーのすべてのサウンド
+all the cards above,上のすべてのカード
+"Waiting %.2f s, for %s.",%.2f 秒待ちます（待つ対象: %s）。
+"No card called ""%s"" is above this Hold, so it waits for all of them.",この Hold の上に「%s」というカードはないため、すべてのカードを待ちます。
