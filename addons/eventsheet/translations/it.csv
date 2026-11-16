@@ -11001,3 +11001,5 @@ Starts at nothing and reaches %s at %s s.,Parte da zero e raggiunge %s a %s s.
 Starts at %s and is gone at %s s.,Parte da %s e finisce a %s s.
 "Holds %s for %s s, then stops.","Mantiene %s per %s s, poi si ferma."
 Save the new file where the card can find it,Salva il nuovo file dove la carta può trovarlo
+Preview its behaviours,"Anteprima dei suoi comportamenti"
+Stop previews,"Interrompi le anteprime"

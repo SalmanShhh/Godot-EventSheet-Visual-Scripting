@@ -11001,3 +11001,5 @@ Starts at nothing and reaches %s at %s s.,Начинается с нуля и д
 Starts at %s and is gone at %s s.,Начинается с %s и пропадает на %s с.
 "Holds %s for %s s, then stops.","Держит %s в течение %s с, затем останавливается."
 Save the new file where the card can find it,"Сохраните новый файл там, где карточка сможет его найти"
+Preview its behaviours,"Предпросмотр его поведений"
+Stop previews,"Остановить предпросмотры"

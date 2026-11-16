@@ -11001,3 +11001,5 @@ Starts at nothing and reaches %s at %s s.,ゼロから始まり、%s 秒で %s �
 Starts at %s and is gone at %s s.,%s から始まり、%s 秒で消えます。
 "Holds %s for %s s, then stops.",%s を %s 秒保ち、その後止まります。
 Save the new file where the card can find it,カードが見つけられる場所に新しいファイルを保存
+Preview its behaviours,"ビヘイビアをプレビュー"
+Stop previews,"プレビューを停止"

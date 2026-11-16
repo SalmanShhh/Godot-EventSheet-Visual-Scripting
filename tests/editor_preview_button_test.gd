@@ -186,6 +186,13 @@ static func _scene_dock_shortcut() -> bool:
 		["a node with none finds none", EventSheetContextMenu.previewing_behaviours_under(plain), []],
 		["no node finds none", EventSheetContextMenu.previewing_behaviours_under(null), []],
 	])
+	var menu_source: String = FileAccess.get_file_as_string("res://addons/eventforge/editor/context_menu_plugin.gd")
+	var german: String = FileAccess.get_file_as_string("res://addons/eventsheet/translations/de.csv")
+	passed = SUPPORT.pins(NAME, [
+		["the Preview menu word is looked up in the editor's language", menu_source.contains("translate(\"Preview its behaviours\")"), true],
+		["the Stop menu word is looked up in the editor's language", menu_source.contains("translate(\"Stop previews\")"), true],
+		["both words have a German row", german.contains("\nPreview its behaviours,\"") and german.contains("\nStop previews,\""), true],
+	]) and passed
 	host.free()
 	return passed
 

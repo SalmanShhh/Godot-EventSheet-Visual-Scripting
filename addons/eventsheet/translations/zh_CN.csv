@@ -11001,3 +11001,5 @@ Starts at nothing and reaches %s at %s s.,"从零开始,在 %s 秒时达到 %s�
 Starts at %s and is gone at %s s.,"从 %s 开始,在 %s 秒时消失。"
 "Holds %s for %s s, then stops.","保持 %s 共 %s 秒,然后停止。"
 Save the new file where the card can find it,将新文件保存在卡片能找到的位置
+Preview its behaviours,"预览其行为"
+Stop previews,"停止预览"

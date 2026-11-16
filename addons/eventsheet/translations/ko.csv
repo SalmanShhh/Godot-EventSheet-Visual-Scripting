@@ -11001,3 +11001,5 @@ Starts at nothing and reaches %s at %s s.,0에서 시작해 %s초에 %s에 이�
 Starts at %s and is gone at %s s.,%s에서 시작해 %s초에 사라집니다.
 "Holds %s for %s s, then stops.",%s을(를) %s초 동안 유지한 뒤 멈춥니다.
 Save the new file where the card can find it,카드가 찾을 수 있는 곳에 새 파일 저장
+Preview its behaviours,"동작 미리보기"
+Stop previews,"미리보기 중지"

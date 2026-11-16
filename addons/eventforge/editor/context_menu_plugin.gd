@@ -44,8 +44,9 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				# in its own Inspector, so this works for any pack that has it and does nothing else.
 				var previewing: Array[Node] = _previewing_behaviours_of_selection()
 				if not previewing.is_empty():
-					add_context_menu_item("Preview its behaviours", _on_preview_behaviours_requested)
-					add_context_menu_item("Stop previews", _on_stop_previews_requested)
+					var words: GDScript = load(L10N_PATH)
+					add_context_menu_item(words.translate("Preview its behaviours"), _on_preview_behaviours_requested)
+					add_context_menu_item(words.translate("Stop previews"), _on_stop_previews_requested)
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
 			# Right-clicking ANY .gd (or a sheet .tres) in the FileSystem offers "Open as Event Sheet" -
 			# a GDScript-backed sheet opens an arbitrary script losslessly. The Script glyph makes the item
