@@ -10970,3 +10970,16 @@ grows with the stamp,grandit avec le tampon
 "Drawn last, on top","Dessiné en dernier, dessus"
 Add shape,Ajouter une forme
 Enter adds the highlighted shape.,Entrée ajoute la forme en surbrillance.
+texture not found,texture introuvable
+%s (not found),%s (introuvable)
+"Radius is 0, so this circle draws nothing.","Le rayon est 0, donc ce cercle ne dessine rien."
+"Radius is 0, so this ring draws nothing.","Le rayon est 0, donc cet anneau ne dessine rien."
+"Width is 0, so this rectangle draws nothing.","La largeur est 0, donc ce rectangle ne dessine rien."
+"Height is 0, so this rectangle draws nothing.","La hauteur est 0, donc ce rectangle ne dessine rien."
+"The start and the end are the same point, so this line has no length.","Le début et la fin sont le même point, donc cette ligne n'a pas de longueur."
+"FOV is 0, so this cone draws nothing.","Le champ de vision est 0, donc ce cône ne dessine rien."
+"Radius is 0, so this cone draws nothing.","Le rayon est 0, donc ce cône ne dessine rien."
+"No texture yet, so this shape draws nothing.","Pas encore de texture, donc cette forme ne dessine rien."
+"The texture could not be loaded, so this shape draws nothing.","La texture n'a pas pu être chargée, donc cette forme ne dessine rien."
+"""%s"" is not a shape this list knows. It is kept as it is.","""%s"" n'est pas une forme connue de cette liste. Elle est conservée telle quelle."
+Unknown shape,Forme inconnue

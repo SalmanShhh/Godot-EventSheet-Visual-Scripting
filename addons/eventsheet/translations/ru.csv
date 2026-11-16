@@ -10970,3 +10970,16 @@ grows with the stamp,растёт вместе со штампом
 "Drawn last, on top","Рисуется последней, сверху"
 Add shape,Добавить фигуру
 Enter adds the highlighted shape.,Enter добавляет выбранную фигуру.
+texture not found,текстура не найдена
+%s (not found),%s (не найден)
+"Radius is 0, so this circle draws nothing.","Радиус равен 0, поэтому этот круг ничего не рисует."
+"Radius is 0, so this ring draws nothing.","Радиус равен 0, поэтому это кольцо ничего не рисует."
+"Width is 0, so this rectangle draws nothing.","Ширина равна 0, поэтому этот прямоугольник ничего не рисует."
+"Height is 0, so this rectangle draws nothing.","Высота равна 0, поэтому этот прямоугольник ничего не рисует."
+"The start and the end are the same point, so this line has no length.","Начало и конец совпадают, поэтому у этой линии нет длины."
+"FOV is 0, so this cone draws nothing.","Угол обзора равен 0, поэтому этот конус ничего не рисует."
+"Radius is 0, so this cone draws nothing.","Радиус равен 0, поэтому этот конус ничего не рисует."
+"No texture yet, so this shape draws nothing.","Текстуры пока нет, поэтому эта фигура ничего не рисует."
+"The texture could not be loaded, so this shape draws nothing.","Не удалось загрузить текстуру, поэтому эта фигура ничего не рисует."
+"""%s"" is not a shape this list knows. It is kept as it is.","""%s"" - неизвестная для этого списка фигура. Она сохраняется как есть."
+Unknown shape,Неизвестная фигура

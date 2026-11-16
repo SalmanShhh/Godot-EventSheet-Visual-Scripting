@@ -10970,3 +10970,16 @@ grows with the stamp,スタンプと一緒に拡大
 "Drawn last, on top","最後に描かれる、一番上"
 Add shape,図形を追加
 Enter adds the highlighted shape.,Enter で選択中の図形を追加します。
+texture not found,テクスチャが見つかりません
+%s (not found),%s (見つかりません)
+"Radius is 0, so this circle draws nothing.","半径が 0 なので、この円は何も描きません。"
+"Radius is 0, so this ring draws nothing.","半径が 0 なので、このリングは何も描きません。"
+"Width is 0, so this rectangle draws nothing.","幅が 0 なので、この長方形は何も描きません。"
+"Height is 0, so this rectangle draws nothing.","高さが 0 なので、この長方形は何も描きません。"
+"The start and the end are the same point, so this line has no length.","始点と終点が同じ位置なので、この線には長さがありません。"
+"FOV is 0, so this cone draws nothing.","視野が 0 なので、この扇形は何も描きません。"
+"Radius is 0, so this cone draws nothing.","半径が 0 なので、この扇形は何も描きません。"
+"No texture yet, so this shape draws nothing.","まだテクスチャがないので、この図形は何も描きません。"
+"The texture could not be loaded, so this shape draws nothing.","テクスチャを読み込めないので、この図形は何も描きません。"
+"""%s"" is not a shape this list knows. It is kept as it is.","「%s」はこのリストにない図形です。そのまま保持されます。"
+Unknown shape,不明な図形

@@ -171,7 +171,7 @@ class ShapeStepsEditor:
 				"badge": Callable(ShapeStepsEditor, "summary_of"),
 			})
 		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true,
-			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for"),
+			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for"), "fallback_entry": Callable(ShapeStepsEditor, "unknown_entry"),
 			"order_captions": [EventSheetL10n.translate("Drawn first, underneath"), EventSheetL10n.translate("Drawn last, on top")],
 			"add_word": EventSheetL10n.translate("Add shape"), "add_hint": EventSheetL10n.translate("Enter adds the highlighted shape."),
 			"flat_add": true, "open_new": true, "kind_icon": Callable(ShapeStepsEditor, "kind_icon")}
@@ -236,7 +236,9 @@ class ShapeStepsEditor:
 				if text.is_empty():
 					return EventSheetL10n.translate("no texture")
 				var path: String = texture_path_of(card)
-				return path.get_file() if not path.is_empty() else text.get_file()
+				if path.is_empty():
+					return EventSheetL10n.translate("texture not found")
+				return path.get_file() if ResourceLoader.exists(path) else EventSheetL10n.translate("%s (not found)") % path.get_file()
 		return str(card.get("kind", ""))
 
 
@@ -246,6 +248,73 @@ class ShapeStepsEditor:
 		var tile: Control = load(SHAPE_TILE_PATH).new(int(EventSheetLookStyle.px(14.0)), on_light)
 		tile.call("set_card", card)
 		return tile
+
+
+	## What is wrong with a step, in at most two short plain sentences - or "" when it draws something. A
+	## finding is said under the field on the open card and, through the summary, on the folded line.
+	static func finding_of(card: Dictionary) -> String:
+		var p1: float = float(card.get("p1", 0.0))
+		var p2: float = float(card.get("p2", 0.0))
+		var p3: float = float(card.get("p3", 0.0))
+		match str(card.get("kind", "")):
+			"circle":
+				if p1 <= 0.0:
+					return EventSheetL10n.translate("Radius is 0, so this circle draws nothing.")
+			"ring":
+				if p1 <= 0.0:
+					return EventSheetL10n.translate("Radius is 0, so this ring draws nothing.")
+			"rect":
+				if p1 <= 0.0:
+					return EventSheetL10n.translate("Width is 0, so this rectangle draws nothing.")
+				if p2 <= 0.0:
+					return EventSheetL10n.translate("Height is 0, so this rectangle draws nothing.")
+			"line":
+				if Vector2(float(card.get("x", 0.0)), float(card.get("y", 0.0))).is_equal_approx(Vector2(p1, p2)):
+					return EventSheetL10n.translate("The start and the end are the same point, so this line has no length.")
+			"cone":
+				if p2 <= 0.0:
+					return EventSheetL10n.translate("FOV is 0, so this cone draws nothing.")
+				if p3 <= 0.0:
+					return EventSheetL10n.translate("Radius is 0, so this cone draws nothing.")
+			"stamp":
+				if str(card.get("texture", "")).strip_edges().is_empty():
+					return EventSheetL10n.translate("No texture yet, so this shape draws nothing.")
+				var path: String = texture_path_of(card)
+				if path.is_empty() or not ResourceLoader.exists(path):
+					return EventSheetL10n.translate("The texture could not be loaded, so this shape draws nothing.")
+			_:
+				return EventSheetL10n.translate("\"%s\" is not a shape this list knows. It is kept as it is.") % str(card.get("kind", ""))
+		return ""
+
+
+	static func has_finding(card: Dictionary) -> bool:
+		return not finding_of(card).is_empty()
+
+
+	## The card a step whose shape is none of the six is shown as: it says so, keeps a Shape row to repair it
+	## with, and holds everything it held. Nothing about it is dropped or rewritten.
+	static func unknown_entry(card: Dictionary) -> Dictionary:
+		return {
+			"kind": str(card.get("kind", "")),
+			"category": "",
+			"label": EventSheetL10n.translate("Unknown shape"),
+			"fields": [shape_row(), finding_row()],
+			"badge": Callable(ShapeStepsEditor, "summary_of"),
+		}
+
+
+	## The Shape drop-down every card starts with. A word that is none of the six shows as nothing chosen.
+	static func shape_row() -> Dictionary:
+		var shape_choices: PackedStringArray = PackedStringArray()
+		for named: String in KINDS:
+			shape_choices.append("%s=%s" % [named, kind_label(named)])
+		return {"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(shape_choices), "blank_unknown": true}
+
+
+	## The quiet amber line under a card's fields: empty (and taking no room) while the step draws something.
+	static func finding_row() -> Dictionary:
+		return {"key": "finding", "label": "", "drawer": "note", "text": Callable(ShapeStepsEditor, "finding_of"),
+			"warn_when": Callable(ShapeStepsEditor, "has_finding"), "hide_empty": true, "full_width": true}
 
 
 	## The picture a kind wears in the Add box: its tile, in the colour a new step of that kind starts as.
@@ -258,14 +327,11 @@ class ShapeStepsEditor:
 	## One shape's fields, in the order the card draws them: where it sits, what it is, what colour it
 	## is, and (for a shape with a length to run one along) its dashes.
 	static func fields_for(kind: String) -> Array:
-		var shape_choices: PackedStringArray = PackedStringArray()
-		for named: String in KINDS:
-			shape_choices.append("%s=%s" % [named, kind_label(named)])
 		# The card is one surface with no section headings: the shape first (changing it keeps p1, p2 and p3
 		# under the new names), the offset as ONE row of x and y, the shape's own named fields with their
 		# units as small plain text, the colour, and - on a line only - its look in a fold.
 		var fields: Array = [
-			{"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(shape_choices)},
+			shape_row(),
 			{"key": "x", "label": "Offset", "drawer": "pair", "pair": "y", "suffix": "px"},
 		]
 		for field: Variant in SHAPE_FIELDS.get(kind, []):
@@ -284,6 +350,7 @@ class ShapeStepsEditor:
 			fields.append({"key": "dash_style", "label": "Style", "drawer": "toggle_row:plain,angled,rounded:segmented", "show_if": "dashed", "fold": LOOK_FOLD})
 		if HELP_LINE_KINDS.has(kind):
 			fields.append({"key": "help_note", "label": "", "drawer": "note", "text": Callable(ShapeStepsEditor, "help_line"), "full_width": true})
+		fields.append(finding_row())
 		return fields
 
 

@@ -10970,3 +10970,16 @@ grows with the stamp,crece con el sello
 "Drawn last, on top","Se dibuja al final, encima"
 Add shape,Añadir forma
 Enter adds the highlighted shape.,Intro añade la forma resaltada.
+texture not found,textura no encontrada
+%s (not found),%s (no encontrado)
+"Radius is 0, so this circle draws nothing.","El radio es 0, así que este círculo no dibuja nada."
+"Radius is 0, so this ring draws nothing.","El radio es 0, así que este anillo no dibuja nada."
+"Width is 0, so this rectangle draws nothing.","El ancho es 0, así que este rectángulo no dibuja nada."
+"Height is 0, so this rectangle draws nothing.","La altura es 0, así que este rectángulo no dibuja nada."
+"The start and the end are the same point, so this line has no length.","El inicio y el final son el mismo punto, así que esta línea no tiene longitud."
+"FOV is 0, so this cone draws nothing.","El campo de visión es 0, así que este cono no dibuja nada."
+"Radius is 0, so this cone draws nothing.","El radio es 0, así que este cono no dibuja nada."
+"No texture yet, so this shape draws nothing.","Todavía no hay textura, así que esta forma no dibuja nada."
+"The texture could not be loaded, so this shape draws nothing.","No se pudo cargar la textura, así que esta forma no dibuja nada."
+"""%s"" is not a shape this list knows. It is kept as it is.","""%s"" no es una forma que esta lista conozca. Se conserva tal cual."
+Unknown shape,Forma desconocida

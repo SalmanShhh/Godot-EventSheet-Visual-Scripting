@@ -115,6 +115,9 @@ var _titles: Dictionary = {}
 ## follows its numbers (`live_head`): a write repaints them where they stand.
 var _head_tiles: Dictionary = {}
 var _badges: Dictionary = {}
+## Entries of the list that are not Dictionaries (nothing a card can show), as [original index, value]. They
+## are not drawn, but they are handed back where they were instead of being dropped from the file.
+var _junk: Array = []
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -140,9 +143,13 @@ func schema() -> Dictionary:
 
 func set_value(cards: Array) -> void:
 	_cards = []
-	for card: Variant in cards:
+	_junk = []
+	for position: int in range(cards.size()):
+		var card: Variant = cards[position]
 		if card is Dictionary:
 			_cards.append((card as Dictionary).duplicate(true))
+		else:
+			_junk.append([position, card])
 	_unfolded.clear()
 	_open_folds.clear()
 	_selected.clear()
@@ -151,7 +158,12 @@ func set_value(cards: Array) -> void:
 
 
 func get_value() -> Array:
-	return _cards.duplicate(true)
+	var value: Array = _cards.duplicate(true)
+	# What the list held that is not a card goes back where it was (or at the end, when the list is shorter
+	# now): an edit never drops an entry it does not understand.
+	for kept: Variant in _junk:
+		value.insert(mini(int((kept as Array)[0]), value.size()), (kept as Array)[1])
+	return value
 
 
 ## Whether the schema asks for a play mark on each card and a "Play from here" entry in each menu.
@@ -598,7 +610,15 @@ func _entry_for(card: Dictionary) -> Dictionary:
 		var found: Dictionary = (by_script as Callable).call(card)
 		if not found.is_empty():
 			return found
-	return EventSheetCardSchemas.kind_entry(_schema, str(card.get(str(_spec.get("kind_key", "kind")), "")))
+	var entry: Dictionary = EventSheetCardSchemas.kind_entry(_schema, str(card.get(str(_spec.get("kind_key", "kind")), "")))
+	# A card whose kind the schema does not know is still shown, as the card the schema makes of it, so it
+	# can say so and be repaired rather than sitting there with no fields.
+	var fallback: Variant = _schema.get("fallback_entry")
+	if entry.is_empty() and fallback is Callable and (fallback as Callable).is_valid():
+		var made: Variant = (fallback as Callable).call(card)
+		if made is Dictionary:
+			return made
+	return entry
 
 
 # ── The chrome around the list: the head line, the list itself, the Add dropdown ────────────────
@@ -697,6 +717,7 @@ func _on_paste_all() -> void:
 	if pasted.is_empty():
 		return
 	_cards = pasted
+	_junk = []
 	_unfolded.clear()
 	clear_selection()
 	_commit()
@@ -1523,6 +1544,16 @@ func _refresh_head(index: int) -> void:
 		badge.custom_minimum_size.x = _badge_room(badge, badge_text)
 
 
+## The words of the note lines showing in the open cards right now: what a test reads back.
+func visible_notes() -> PackedStringArray:
+	var words: PackedStringArray = PackedStringArray()
+	for note: Variant in _notes:
+		var label: Variant = (note as Dictionary).get("label")
+		if is_instance_valid(label) and (label as Label).visible and not (label as Label).text.is_empty():
+			words.append((label as Label).text)
+	return words
+
+
 ## Opens or shuts one card, and draws the list again. A card's openness is a view, never stored.
 func set_unfolded(index: int, open: bool) -> void:
 	_unfolded[index] = open
@@ -1650,6 +1681,9 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 				choice.add_item(_said(spelled.get_slice("=", 1) if spelled.contains("=") else spelled))
 				if options[options.size() - 1] == current:
 					choice.select(options.size() - 1)
+			if bool(field.get("blank_unknown", false)) and not options.has(current):
+				# A word that is none of the choices shows as nothing chosen, not as the first choice.
+				choice.select(-1)
 			choice.disabled = not editable
 			choice.item_selected.connect(func(chosen: int) -> void:
 				if chosen >= 0 and chosen < options.size():

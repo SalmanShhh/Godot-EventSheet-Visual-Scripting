@@ -77,11 +77,11 @@ static func _pin_the_card() -> bool:
 	var circle_fields: Array = steps_editor.call("fields_for", "circle")
 	return SUPPORT.pins(PREFIX, [
 		["a line's card, field by field", _keys_of(line_fields),
-			"kind,x,p1,p2,p3,color,caps,scale_mode,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
+			"kind,x,p1,p2,p3,color,caps,scale_mode,dashed,dash_size,dash_spacing,dash_offset,dash_style,finding"],
 		["a line's card has no section headings, only its look sits in a fold", _groups_of(line_fields) + "|" + _folds_of(line_fields),
-			",".repeat(12) + "|" + ",".repeat(6) + ",".join(PackedStringArray(["Line look", "Line look", "Line look", "Line look", "Line look", "Line look", "Line look"]))],
+			",".repeat(13) + "|" + ",".repeat(6) + ",".join(PackedStringArray(["Line look", "Line look", "Line look", "Line look", "Line look", "Line look", "Line look"])) + ","],
 		["a circle has no ends and no dashes to offer", _keys_of(circle_fields),
-			"kind,x,p1,color"],
+			"kind,x,p1,color,finding"],
 		["a new circle step, key by key", ",".join(PackedStringArray(
 			(steps_editor.call("defaults_for", "circle") as Dictionary).keys())),
 			"x,y,p1,p2,p3,color,texture"],
