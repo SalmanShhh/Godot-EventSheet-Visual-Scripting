@@ -4,6 +4,46 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a theme, lane split, column width or density picked for a script sheet stays picked
+
+A sheet saved as a script (a `.gd` file) is plain code, so nothing about how it looks can be written into it, and the choices made for one were lost the moment it was closed. They are now kept in the project itself (the editor's project metadata, one small record per script) and put back when the script is opened again: the theme you picked in View, Sheet theme, how wide you dragged the conditions and actions lanes, how wide you dragged an object column, and the Density you picked. The script is no longer marked changed for any of them, since nothing about it changed, and the status line says where the choice is kept. Match Editor lets go of all of it. A sheet saved as a resource carries its look as before. The Sheet theme tooltip, which promised the choice travels with the file, now says what really happens.
+
+### Changed: Apply To Current Sheet in the Theme Editor is not an undo step
+
+Every other way of changing a sheet's theme already stayed out of the undo history, because undo is for what a sheet says and not how it looks. Apply To Current Sheet now does too, so Ctrl+Z no longer takes a theme off. On a script sheet, which has no file to keep a look in, it says the look lasts until the script is closed and that saving the theme to a file keeps it.
+
+### Added: your project's own themes folder is listed in the theme menu
+
+A theme saved into `res://eventsheet_themes/` now appears in View, Sheet theme beside the bundled ones, and the Theme Editor's save dialog starts in that folder. The folder is made when the dialog opens and taken away again if you cancel and nothing was put in it. A theme file you already keep there is listed with no step.
+
+### Fixed: the Manual's quiet words read on the editor's own ground
+
+The Manual's breadcrumbs, captions and prompts took a grey that was nearly invisible on a light editor and under the readable line on a dark one. They now use the same raised quiet-words colour as the sheet, in the Editor Native starter and in whatever the sheet follows onto a light or dark editor.
+
+### Fixed: the light example theme's finding colour reads on its own rows
+
+One of the example themes (the light one) stored a tan for every finding that read faintly on its cream rows. Its finding colour and the colours derived from it are now the darker tone the shared rule gives a light sheet. The tool that rebuilds the example themes also lost six stated colours and a run of layout switches each time it ran, and now writes them back, so rebuilding changes only what it should.
+
+### Added: four more settings are in Project Settings
+
+The angle unit a bare number means (`eventsheets/angles/default_unit`, degrees or radians), caption notes from the Project Doctor (`eventsheets/doctor/caption_sounds`), whether the Doctor suggests an error report (`eventsheets/doctor/suggest_error_report`) and the extra scripts and folders that join the vocabulary (`eventsheets/vocabulary/extra_paths`) were read by the editor and named in the Manual, but never registered, so a reader told to turn one on found nothing to turn on. Each is now listed with its hover text. The defaults are what the editor already assumed, so nothing is written to `project.godot` for a project that never heard of them.
+
+### Fixed: the Words page lists only words that something in the editor says
+
+Thirty-one of its rows changed a word that no row, menu or window ever printed, so typing a new word there did nothing. The page now lists the fifteen words the editor does say (the family, the process callback and the other callbacks, destroy, the angle, overlaps, the two collision words, and the Section, Shared sheet and System names). Nothing is deleted: a choice saved under one of the other words still reads back, and the Manual's list of the editor-building words is unchanged. The page's preview also reads the spawn verb the rows read.
+
+### Fixed: the Section block's menu, the Shared sheet window and the Welcome sentence use today's words
+
+A Section's right-click menu still said Edit Group, Group Color and Ungroup, and now reads the word the block is called (Section, or Group under the Familiar words). The Shared sheet window said "include", the shortcut list described the section command as grouping, the Welcome sentence and the glossary sent a reader to Settings, Words (it is under Tools), and two comments named a Profile tab that was removed. They now say what the editor says.
+
+### Fixed: twenty-three menu labels had no translation
+
+Declare and its entries, Docs Housekeeping, Familiar Words, Lift Workbench, Project View, Translation Studio, Preview In Language and a dozen more stayed English in every language. Each now has a row in all eight languages, and a test fails when a menu label is added without one.
+
+### Changed: the building guide names every public function
+
+Thirty-eight functions of the `EventSheets` API added since the guide was written are now in it, in a new section: opening and searching the Manual, finding a pack's or a module's guide, reading what a project uses, and building rows and tables.
+
 ### Added: play one card, or play from a card down, without running the game
 
 Every juice card head now has a play mark. Press it and that one card plays alone, on the real object, in the editor (whether or not its box is ticked), and the mark turns into a stop mark while it sounds. The menu of a card gains Play from here, which plays that card and everything under it, so you can work on the end of a long list without sitting through the start. Play under the list still plays everything. A card that is sounding during any play lights its own mark, and Repeat and Try at strength apply to a part played this way as they do to the whole list.

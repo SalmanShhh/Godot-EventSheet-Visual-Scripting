@@ -11,8 +11,17 @@ This editor uses Godot-native resources instead of runtime CSS. The goal is stil
 
 Current additions on top of the model below:
 
-- **View ▸ Sheet theme** lists "Match Editor (default)" plus the bundled presets, the one this
-  sheet wears ticked - no file dialog needed for the common case.
+- **View ▸ Sheet theme** lists "Match Editor (default)" plus the bundled presets and every theme
+  in your project's own `res://eventsheet_themes/` folder, the one this sheet wears ticked - no file
+  dialog needed for the common case. The Theme Editor's save dialog starts in that folder.
+- **A sheet saved as a resource carries its theme; a sheet saved as a script does not.** A script
+  (`.gd`) is plain code, and nothing about how it looks is ever written into it. So a theme, a lane
+  split, an object-column width or a Density picked for a script is kept in this project instead
+  (in the editor's project metadata, per script path) and put back when the script is opened again.
+  A script is never marked changed for it, and **Match Editor (default)** lets go of all of it. The
+  Theme Editor's **Apply To Current Sheet** has no file to remember, so a script wears that look
+  until it is closed; save the theme to a file and pick it to keep it. A theme switch, Apply
+  included, is never an undo step: undo is for the sheet's content.
 - The built-in default is **Godot-adaptive** (`EventSheetGodotTheme.adapt_to_editor`):
   with no theme assigned, the sheet derives its colors from your editor theme so it looks
   native in any Godot skin.
@@ -224,7 +233,8 @@ event's click target is unchanged either way - the whole card, gutter included.
 
 **View ▸ Compact Rows** stays what it always was and composes with the tokens: it is a per-user,
 per-project multiplier on vertical whitespace, applied on top of whatever density the theme states.
-Density is the project's choice and travels with the sheet; Compact Rows is yours and does not.
+Density is the project's choice and travels with the sheet (kept in the project for a script sheet);
+Compact Rows is yours and does not.
 
 ## Custom theme import/install
 
