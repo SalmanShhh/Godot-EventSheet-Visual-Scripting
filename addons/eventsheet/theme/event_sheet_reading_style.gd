@@ -2,6 +2,10 @@
 class_name EventSheetReadingStyle
 extends Resource
 
+## The tokens of this block given a colour of their own for a light editor, as token name to colour. Kept in
+## the theme file; the Theme Editor's light swatches write it. Empty draws the block the same in a light editor.
+@export_storage var light_colors: Dictionary = {}
+
 ## Theme tokens for the READING MARKS inside a sheet - everything the sheet draws to say what a row
 ## IS, as opposed to the row shells and lanes (EventSheetEventStyle) or the chips in them
 ## (EventSheetElementStyle).

@@ -2,6 +2,10 @@
 class_name EventSheetChromeStyle
 extends Resource
 
+## The tokens of this block given a colour of their own for a light editor, as token name to colour. Kept in
+## the theme file; the Theme Editor's light swatches write it. Empty draws the block the same in a light editor.
+@export_storage var light_colors: Dictionary = {}
+
 ## Theme tokens for the BARS AROUND the sheet - the editor chrome that frames the canvas rather than
 ## painting a row: the Object bar, the status strip with its row address, the tab title's unsaved dot
 ## and file path, and the wash the Object bar throws over the rows that use the object you point at.

@@ -2,6 +2,10 @@
 class_name EventSheetManualStyle
 extends Resource
 
+## The tokens of this block given a colour of their own for a light editor, as token name to colour. Kept in
+## the theme file; the Theme Editor's light swatches write it. Empty draws the block the same in a light editor.
+@export_storage var light_colors: Dictionary = {}
+
 ## Theme tokens for the MANUAL - the docked help pages, their headings, the amber a search hit wears,
 ## the contents entry for the page you are on, the note above a deprecated verb, and the rule under a
 ## table's header row.

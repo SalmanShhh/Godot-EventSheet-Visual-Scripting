@@ -2,6 +2,10 @@
 class_name EventSheetElementStyle
 extends Resource
 
+## The tokens of this block given a colour of their own for a light editor, as token name to colour. Kept in
+## the theme file; the Theme Editor's light swatches write it. Empty draws the block the same in a light editor.
+@export_storage var light_colors: Dictionary = {}
+
 const MIN_LINE_HEIGHT_EXTRA := 10
 
 @export var text_color: Color = EventSheetPalette.TEXT_PRIMARY
