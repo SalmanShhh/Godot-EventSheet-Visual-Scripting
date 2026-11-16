@@ -12,6 +12,26 @@ When the scene the sheet runs in is saved, the field box reads the Juice Player 
 
 A line written by hand (`$HitJuice.play(1.0)`) already reopens as the Juice Player's own row when the scene the script runs in says that node is a Juice Player, for every verb the pack has a row for (forty-three actions and conditions, each saved back byte for byte; a test now pins all of them against a fixture scene). Such a row carries the id `method:play` where one placed from the picker carries `play`, and the Show its cards entry only knew the second; it now offers the entry on both. The nine verbs that return a value (Juice Card Field, Feedbacks Duration and the like) are read inside other rows, so they have no row of their own to reopen as.
 
+### Changed: a block kind's validate() is the quiet amber note, not red text in the row
+
+What a kind's `validate()` says about one of its rows used to be painted into the row as red text. It now does what every other check on the canvas does: the row wears the quiet amber state and the sentence is said in full in the strip under the selected row. Nothing is drawn inside the row and the hook's shape does not change. A kind that wrote a long sentence should shorten it to a plain sentence or two.
+
+### Changed: a block cannot be disabled
+
+A block writes its line into the file whether or not its enabled flag says otherwise, and the compiler never read that flag for blocks, so switching one off only looked like it worked. Ctrl+/ and the row menu now leave a block as it is, make no edit and say so in one plain line. A sheet that already holds a block saved as disabled keeps compiling exactly the same bytes, and the row says in its amber note that it still runs.
+
+### Fixed: the Add menu opens the block kind it names
+
+The block items of the Add menu were numbered by their place in the registry's list at the moment the menu was built, and a click read the current list by that number, so a kind registered later moved every kind after it one place along and a click opened its neighbour. Each item now remembers its kind, and the menu brings the list up to date each time it opens, so a newly registered kind appears without a restart.
+
+### Fixed: the migration band reaches scripts that hold only retired rows and sheets saved as .tres
+
+A sheet whose only rows to migrate used a verb that was retired with nothing to replace it (so there was no newer spelling to count) showed no band, and a `.tres` sheet, which has no scaffold lines to build a head from, never showed one. Both now say "1 row asks you" or "1 row has a newer spelling" with the same Migrate door, so the window is reachable from the sheet and not only from the Doctor. The other head bands of a `.tres` sheet are left as they were.
+
+### Fixed: the refusal of a nested `EventSheets.edit()` stays on the status bar
+
+An `edit()` started inside another `edit()` was refused, but the outer edit's own "saved" line replaced the refusal a moment later, so nobody saw it. The refusal is now the line left on the bar.
+
 ### Changed: every warning a running Juice Player prints names the player, the card and the reason
 
 A Tween Property card on a property the object does not have, a Fade Bus card on a bus the project does not have, Set Juice Card Field on a field no card holds (and on the word or script of a card, which it never changes), Copy Juice Cards From a node that is not a player, and the moment-file rows now all say which player and, where a card is the cause, the card's label and what is wrong, and say it once per card. Nothing about what the cards do changes.
