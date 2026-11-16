@@ -78,6 +78,10 @@ Stop Sound ends a sound an earlier Sound card started, by that card's name, with
 ### Added: Autoplay on the Juice Player
 
 A new Autoplay tick on the node plays its list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. It starts off, and while it is off nothing is written into the scene, so a saved scene stays the bytes it was.
+### Changed: a Tool sheet's Building rows are named as edits Ctrl+Z does not take back
+
+A Tool sheet's Building rows (Add New Node and its siblings, and Remove What This Sheet Built) add and free nodes in the scene the editor has open, and Ctrl+Z does not take that back. The quiet finding about edits the editor cannot undo used to miss them, because those rows reach the open scene through the tree's own edited root instead of the editor interface. It now reads them: the event that builds wears the quiet amber state, and the Doctor's Tool edits section says the same sentence, naming the rows that do take a Ctrl+Z (Add Node (Undoable) and Remove Node (Undoable)). Nothing about the rows changed, there is no button on the note (their values do not map onto the undoable rows one for one), and a game sheet is never asked.
+
 ### Added: a Doctor note for groups used as states
 
 The Doctor now notices groups used as states. If a script puts an object into one group and takes it out of another in two or more separate places (add to "jumping", remove from "running", and the reverse), so that exactly one of the groups is true at a time, the Doctor says so once for that script, quietly, naming the groups, and points at the States window, which keeps the same idea in one variable you can read, rename and react to. Groups that are only joined (an "enemies" group, a "pickups" group) are never named, and a single swap on its own is not enough. It reads every script in the project, hand-written or compiled.

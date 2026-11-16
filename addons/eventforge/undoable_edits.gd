@@ -101,11 +101,17 @@ const REMOVE_CALLS: Array[String] = [".remove_child(", ".queue_free(", ".free("]
 ## an ordinary node sets its own properties all day long and is perfectly correct doing so, because
 ## it is not editing anybody's scene and there is no history for it to be missing from. A sheet that
 ## reaches for the edited scene root or for the editor's selection IS editing somebody's scene, and
-## that is the sheet the rule has something to say about.
+## that is the sheet the rule has something to say about. The tree's own edited root is the same
+## scene reached the other way, and it is how the Building rows of a Tool sheet reach it.
 const OPEN_SCENE_MARKS: Array[String] = [
 	"EditorInterface.get_edited_scene_root()",
 	"EditorInterface.get_selection()",
+	"get_tree().edited_scene_root",
 ]
+
+## The line a Building row writes to keep a node it added in the saved scene. It is half of the add
+## and is said once, by the add_child line, so it is not a second edit of its own.
+const OWNER_LINE_SUFFIX: String = ".owner = get_tree().edited_scene_root"
 
 ## Compiled once for the life of the session: the property assignment the plain Set Property row and
 ## a hand-typed line both write, and the opening line of a gesture with its name captured.
@@ -205,7 +211,7 @@ static func gesture_of_trigger(provider_id: String, trigger_id: String) -> Strin
 ## A line that already goes through the history is NOT an edit by this reading: it is the answer.
 static func raw_edit_kind(line: String) -> String:
 	var text: String = line.strip_edges()
-	if text.is_empty() or text.contains(HISTORY):
+	if text.is_empty() or text.contains(HISTORY) or text.ends_with(OWNER_LINE_SUFFIX):
 		return ""
 	for call_text: String in ADD_CALLS:
 		if text.contains(call_text):
