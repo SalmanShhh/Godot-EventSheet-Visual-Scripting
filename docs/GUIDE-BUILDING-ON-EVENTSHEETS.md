@@ -460,7 +460,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
 | Seams | `register_param_help(hint: String, paragraph: String)` / `param_help_for(hint)` - what the Parameters dialog's help strip says about a field carrying that hint, under the parameter's own description. A registration overrides the builtin wording; one paragraph per hint, last registration wins | `void` / `String` | no |
 | Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
-| Seams | `on_sheet_opened/saved/compiled(callback: Callable)` / `off_sheet_opened/saved/compiled(callback: Callable)` - the same Callable takes a listener back | `void` | no |
+| Seams | `on_sheet_opened/saved/compiled(callback: Callable)` / `off_sheet_opened(callback)` / `off_sheet_saved(callback)` / `off_sheet_compiled(callback)` - the same Callable takes a listener back | `void` | no |
 | Seams | `register_starter({label, build})` / `unregister_starter(label)` / `registered_starters()` | `void` / `Array[Dictionary]` | no |
 | Seams | `register_quick_add_synonyms(map: Dictionary)` / `unregister_quick_add_synonyms(keys: PackedStringArray)` | `void` | no |
 | Seams | `register_section_description(name, blurb)` / `unregister_section_description(name)` - a built-in blurb it replaced comes back | `void` | no |

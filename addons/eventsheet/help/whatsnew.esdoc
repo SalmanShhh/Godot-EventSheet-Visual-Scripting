@@ -33,6 +33,53 @@ The box was a narrow list about 220 pixels wide that cut its last line in half. 
 ### Added: the Inspector's Play button shows the cards that move other nodes
 
 Play, Play this card and Play from here now show Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node, and Debug view calls each of them played. Before the first frame the preview writes down every property those cards may move on every node they point at (a label's text, a bar's value, a node's visible, modulate and scale, the tracks of the clip it plays, the shader value on a copy of the material that lives for the pass), and puts exactly those back on Stop, Restore, at the end of a pass and before the editor saves or runs the scene, so a scene saved in the middle of a preview holds the same text it held before. Spawn Scene, Push, Force, Gravity, Freeze Body, Grab Focus, Call Method, Emit Signal and Play Player still say why they are not shown.
+### Fixed: smaller API answers
+
+`stabilize_row_uids(null)` and `pack_shipped_assets` on a folder that is not there answer quietly instead of raising engine errors. A plain string a registered completion source returns is offered as `text` rather than `variable`, so it no longer wears a variable's badge in the popup. `asset_drop_builder_for()` ignores case and a leading dot.
+
+### Fixed: an asset drop handler registered for \".DLG\" is found for \".dlg\"
+
+`asset_drop_builder_for()` lower-cased the extension but kept its dot, so a handler registered as `.DLG` (stored as `dlg`) was missed when asked for `.dlg`. A leading dot and the case no longer matter on either side.
+
+### Fixed: simple_aces(), registered_starters() and preference_builders() hand out copies
+
+These three returned the plugin's own live list, so a caller that cleared or edited what it was given changed what the editor offered. Each now returns a copy; use `unregister_simple_ace`, `unregister_starter` or `unregister_preference` to take one back.
+
+### Added: try_register_block_kind and unregister_block_kind
+
+`EventSheets.try_register_block_kind(kind)` registers a Custom Block kind the way `register_block_kind` does and returns \"\" on success or the plain reason it was refused, instead of a warning in the Output panel. `EventSheets.unregister_block_kind(kind_id)` (and `EventSheetBlockRegistry.unregister_kind`) takes a pack's kind back; a built-in kind cannot be removed.
+
+### Changed: register_provider_script no longer edits the open sheet
+
+`EventSheets.register_provider_script(path)` used to add the script to the sheet that was open when there was one, which marked that sheet changed and added an undo step, and only joined the session when no sheet was open. It now always registers for the session and edits no sheet. The new `EventSheets.add_provider_to_sheet(path)` does the per-sheet edit (one undo step).
+
+### Fixed: a palette command registered with a category can be taken back
+
+`unregister_palette_command(title)` could not find a command registered with a category, because the palette lists it as \"Category: Title\". It now takes the category too (`unregister_palette_command(title, category)`); the old call with the combined title still works.
+
+### Added: everything an extension can register can be taken back
+
+New calls on `EventSheets` undo a registration: `unregister_starter(label)`, `unregister_preference(builder)`, `off_sheet_opened/saved/compiled(callback)`, `unregister_quick_add_synonyms(keys)`, `unregister_section_description(name)`, `unregister_asset_drop_handler(extensions)`, `unregister_simple_ace(id, provider_id)` and `unregister_editor_gizmo(script_path)`. A section description or asset drop handler that replaced one of the plugin's own comes back when you take yours away. A tool that reloads no longer has to restart the editor to drop its own registrations.
+
+### Added: set_editor_language(\"\") goes back to following Godot's language
+
+Choosing a language through `EventSheets.set_editor_language()` was remembered with no way back: an empty string used to pin English. It now forgets the saved choice and follows Godot's own editor language again.
+
+### Fixed: EventSheets.open_sheet() tells the truth about a file that is not there
+
+`open_sheet()` returned true for a path with no file and printed engine errors. It now returns false and the status line says there is no file at that path. Asking for a file that is already open brings its tab forward instead of opening a second tab of it.
+
+### Fixed: a script that registers a lambda and quits exits with its own code
+
+A headless script that registered a Doctor check, palette command, row menu item or listener as a lambda and then quit used to end in a crash (exit code 139, whatever code it asked for), so CI read every such run as a failure. Everything registered through `EventSheets` is now let go as the scene tree leaves, so the process exits with the code the script gave.
+
+### Fixed: compiling a sheet that has no file no longer leaves a stray script
+
+Asking the compiler to write a sheet that has no file and no output path used to create `res://event_sheet_generated.gd`, a script declaring that sheet's class in your project. It now writes nothing and adds a warning to the result; the compiled text is still in `output`.
+
+### Added: a block kind can say a row writes nothing
+
+A Custom Block kind can define `writes_nothing(block)` and return true for a row that rightly has no line to write, such as a marker that is switched off. The compile no longer fails for that row. A kind that does not define it keeps today's check: a row with fields that writes nothing still fails the compile and names the kind.
 
 ### Added: the Theme Editor's legend, a light accent, and a Theme field that says what each theme is
 

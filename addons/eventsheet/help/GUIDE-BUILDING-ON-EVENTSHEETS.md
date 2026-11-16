@@ -63,7 +63,7 @@ These add words to the event sheet language. They work with or without the edito
 
 | Method | What it does |
 |--------|----------------|
-| `register_provider_script(path)` | A `class_name` script becomes an ACE provider (it only has to be instantiable; `@tool` is optional and needed only when the script's own code should run in the editor): public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
+| `register_provider_script(path)` | A `class_name` script becomes an ACE provider for every sheet, for the session; no sheet is edited (`add_provider_to_sheet(path)` records it in the open sheet instead) (it only has to be instantiable; `@tool` is optional and needed only when the script's own code should run in the editor): public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
 | `register_block_kind(kind)` | A new NON-ACE row type (markers, notes, data tables). The kind gets the Add menu, palette, edit dialog, compile and lift wiring for free; the contract is in [GUIDE-CUSTOM-BLOCKS.md](GUIDE-CUSTOM-BLOCKS.md). |
 | `simple_block_kind(config)` | Build a whole block kind from a Dictionary (an `emit` template with `{field}` placeholders, a `summary` template, a `fields` schema) with NO subclassing. Forward emission works immediately; reverse recovery is opt-in via a `lift` Callable, else the block re-imports as a verbatim GDScript block. Pass the result to `register_block_kind()`. |
 | `find_ace(provider_id, ace_id)` | Look a definition up in the live registry (editor only). Definitions are session-cached and shared: treat them as IMMUTABLE, bake changes into row copies. |
@@ -86,7 +86,7 @@ EventSheets.edit("Shout Comments", func(sheet: EventSheetResource) -> bool:
 	return changed)
 ```
 
-Palette commands are the discoverability seam: `register_palette_command(title, action)` puts your tool in Godot's own Command Palette (Ctrl+Shift+P), listed under EventSheets next to the plugin's commands (re-register the same title to replace it, `unregister_palette_command` to remove it). Registration works even before a dock exists, and `palette_commands()` keeps listing every entry.
+Palette commands are the discoverability seam: `register_palette_command(title, action)` puts your tool in Godot's own Command Palette (Ctrl+Shift+P), listed under EventSheets next to the plugin's commands (re-register the same title to replace it, `unregister_palette_command(title, category)` to remove it). Registration works even before a dock exists, and `palette_commands()` keeps listing every entry.
 
 **Asset drops.** Files dragged from the FileSystem dock onto the sheet canvas become pre-filled rows, and the mapping is a registry you can extend. `register_asset_drop_handler(extensions, build)` takes a builder `build(asset_path: String, target_event: Resource) -> Resource`; registering it also lights up the drop cursor for those extensions with no other wiring. Return an `ACEAction` and it joins the event row the file landed on (or a fresh On Ready event on an empty-space drop) - an effect is always an action. Return any other row resource (a preload `CustomBlockRow`, a `RawCodeRow`) and it lands at the sheet's top level as a declaration. Return `null` to decline. The built-ins run through this same seam: scenes spawn, sounds play, images and `.tres`/`.res`/`.gd` become preload blocks (a `const` that compiles on any host), and JSON loads into a variable (auto-declared so the sheet always compiles). Registering a handler registers the built-ins first, so retargeting a built-in extension wins (last registration wins). The dock never lets a dropped preload redefine an existing name (deduped by path, suffixed on clash).
 
@@ -383,17 +383,20 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Group | Method | Returns | Needs dock? |
 |-------|--------|---------|-------------|
 | Vocabulary | `register_provider_script(script_path: String)` | `bool` | no (bridges when closed) |
+| Vocabulary | `add_provider_to_sheet(script_path: String)` - the one-sheet version: records the script in the open sheet as one undo step | `bool` | yes |
 | Vocabulary | `register_block_kind(kind: EventSheetBlockKind)` | `void` | no |
+| Vocabulary | `try_register_block_kind(kind: EventSheetBlockKind)` - the same registration, answering `""` when it worked and the plain reason when it did not (no id, a built-in's id, an id already taken) | `String` | no |
+| Vocabulary | `unregister_block_kind(kind_id: String)` - takes a kind back; a built-in kind stays. Rows of it already in a sheet show as a missing kind until it is registered again | `bool` | no |
 | Vocabulary | `simple_block_kind(config: Dictionary)` | `EventSheetBlockKind` | no |
 | Vocabulary | `find_ace(provider_id: String, ace_id: String)` | `ACEDefinition` | yes |
 | Vocabulary | `class_vocabulary(target_class: String)` | `Array[ACEDefinition]` | no |
 | Editor | `current_sheet()` | `EventSheetResource` | yes |
-| Editor | `open_sheet(path: String)` | `bool` | yes |
+| Editor | `open_sheet(path: String)` - opens the sheet, or brings its tab forward when that file is already open; false when there is no file at the path | `bool` | yes |
 | Editor | `edit(label: String, mutation: Callable)` | `bool` (changed) | yes |
 | Editor | `set_status(text: String, is_error := false)` | `void` | yes |
 | Editor | `refresh()` | `void` | yes |
 | Editor | `register_palette_command(title: String, action: Callable, category := "")` - an optional `category` prefixes the display title ("My Pack: Reroll Loot") so a pack's commands group together in the palette's filter | `void` | no (shows when open) |
-| Editor | `unregister_palette_command(title: String)` | `void` | no |
+| Editor | `unregister_palette_command(title: String, category: String = "")` - pass the category you registered it with, if any | `void` | no |
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
 | Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |
@@ -443,7 +446,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Health | `scenes_using_resource(resource_path: String, own_scene := "")` - every OTHER scene of the project that loads this file, from ONE indexed scan shared by everything that asks and dropped whole on the editor's filesystem signal. The first ask blocks until the scan finishes; every ask after it is a table lookup | `PackedStringArray` | no |
 | Health | `scripts_calling(function_name: String, own_script := "")` - every project script that calls a function of this name, off the same one scan. Matched BY NAME, so show it as a list to check rather than to act on | `PackedStringArray` | no |
 | Seams | `register_row_menu_item(label, filter, action)` / `unregister_row_menu_item(label)` / `row_menu_items_for(resource)` | `void` / `Array[Dictionary]` | no (shows when open) |
-| Seams | `register_simple_ace(config: Dictionary)` / `simple_ace(config)` / `simple_aces()` | `ACEDefinition` / `Array[ACEDefinition]` | no (joins next refresh) |
+| Seams | `register_simple_ace(config: Dictionary)` / `unregister_simple_ace(id, provider_id := "Extension")` / `simple_ace(config)` / `simple_aces()` | `ACEDefinition` / `Array[ACEDefinition]` | no (joins next refresh) |
 | Seams | `param_spec(config: Dictionary)` - normalizes one param/field config: `default` and `default_value` are interchangeable, `options` takes a plain list / a `{value: label}` dictionary / ready-made pairs, and `hint: "comparison"` expands to the whole labeled operator dropdown seeded to `==`. `simple_ace()` and `simple_block_kind()` run every param through it | `Dictionary` | no |
 | Seams | `combo_options(source)` / `comparison_options(equal_token := "==")` - dropdown options as `{key, label}` pairs, so a row READS as English while INSERTING the real token. Pass `equal_token` when your runtime stores a single `=` | `Array` | no |
 | Seams | `curate_provider(script_path, edits)` - writes `## @ace_*` annotations into a script you own (label, category, kind, opt-out, param specs). Only `##` comments are added or removed - never a signature or body - the file is backed up first, and re-applying the same edits is a no-op | `Dictionary` | no |
@@ -457,21 +460,21 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
 | Seams | `register_param_help(hint: String, paragraph: String)` / `param_help_for(hint)` - what the Parameters dialog's help strip says about a field carrying that hint, under the parameter's own description. A registration overrides the builtin wording; one paragraph per hint, last registration wins | `void` / `String` | no |
 | Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
-| Seams | `on_sheet_opened/saved/compiled(callback: Callable)` | `void` | no |
-| Seams | `register_starter({label, build})` / `registered_starters()` | `void` / `Array[Dictionary]` | no |
-| Seams | `register_quick_add_synonyms(map: Dictionary)` | `void` | no |
-| Seams | `register_section_description(name, blurb)` | `void` | no |
-| Seams | `register_preference(builder: Callable)` / `preference_builders()` | `void` / `Array[Callable]` | no |
+| Seams | `on_sheet_opened/saved/compiled(callback: Callable)` / `off_sheet_opened(callback)` / `off_sheet_saved(callback)` / `off_sheet_compiled(callback)` - the same Callable takes a listener back | `void` | no |
+| Seams | `register_starter({label, build})` / `unregister_starter(label)` / `registered_starters()` | `void` / `Array[Dictionary]` | no |
+| Seams | `register_quick_add_synonyms(map: Dictionary)` / `unregister_quick_add_synonyms(keys: PackedStringArray)` | `void` | no |
+| Seams | `register_section_description(name, blurb)` / `unregister_section_description(name)` - a built-in blurb it replaced comes back | `void` | no |
+| Seams | `register_preference(builder: Callable)` / `unregister_preference(builder)` / `preference_builders()` | `void` / `Array[Callable]` | no |
 | Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
 | Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` (kept, do nothing: behaviours preview with their own Preview button) | `void` / `Callable` | no |
-| Seams | `register_editor_gizmo(script_path, drawer)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
+| Seams | `register_editor_gizmo(script_path, drawer)` / `unregister_editor_gizmo(script_path)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
 | Seams | `register_card_schema(name, provider)` / `unregister_card_schema(name)` / `card_schema(name)` - the vocabulary behind a card-list Inspector drawer (`eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>` on an Array of Dictionaries). `provider()` returns `{kinds: [{kind, category, label, help, fields, live, defaults, badge, actions}], label_key, enabled_key, stripes}`; a field's `drawer` word is the same word an export marker uses. A callable rather than a Dictionary because a pack's kinds are known when the Inspector opens, not when the plugin boots. Unregistered reads as `{}`, and such a list still draws and still saves its own bytes | `void` / `void` / `Dictionary` | no |
 | Seams | `card_schema_from_aces(aces, fallback_category := "")` - a card schema DERIVED from ACE descriptors: one kind per verb, its label and help from the words the picker reads out, its fields from the verb's own parameters. The whole registration is then one line: `register_card_schema("my_steps", EventSheets.card_schema_from_aces.bind(my_aces))` | `Dictionary` | no |
 | Seams | `register_inspector_preview(script_path, renderer)` / `unregister_inspector_preview(script_path)` / `inspector_preview_renderer_for(script_path)` - the picture at the top of an object's Inspector for a script that cannot ship `inspector_preview_texture(size)` itself. `renderer(object, size) -> Texture2D`, and it outranks the method. The object asks for the card with a `# @inspector_preview` comment | `void` / `void` / `Callable` | no |
 | Seams | `register_toggle_icon_provider(name, renderer)` / `unregister_toggle_icon_provider(name)` / `toggle_icon_provider_for(name)` - pictures for a toggle-buttons drawer whose marker names this provider (`...:icons=<name>`; a source holding `%s` is a path pattern instead and needs nothing registered). `renderer(option, size) -> Texture2D`, called once per option as the row builds, at edit time only; return null and the button keeps its word | `void` / `void` / `Callable` | no |
 | Editor | `add_trigger_for_signal(signal_name, args_signature)` | `bool` | yes |
 | Vocabulary | `build_signal_trigger_event(signal_name, args_signature)` / `signals_of(node)` | `EventRow` / `Array[Dictionary]` | no |
-| Seams | `register_asset_drop_handler(extensions, build, description := "")` - files dropped on the canvas become rows (actions join the hit event; other rows land top-level) | `void` | no (fires when open) |
+| Seams | `register_asset_drop_handler(extensions, build, description := "")` / `unregister_asset_drop_handler(extensions)` (a built-in handler it replaced comes back) - files dropped on the canvas become rows (actions join the hit event; other rows land top-level) | `void` | no (fires when open) |
 | Seams | `asset_drop_builder_for(extension)` / `handled_asset_extensions()` | `Callable` / `PackedStringArray` | no |
 | Seams | `builtin_action(ace_id, params)` - a picker-identical ACEAction from a built-in descriptor, {uid} baked | `ACEAction` | no |
 | Seams | `preload_block_for(asset_path)` - a preload Custom Block row with a safe constant name | `CustomBlockRow` | no |
@@ -482,7 +485,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
 | Localisation | `available_languages()` | `PackedStringArray` | no |
-| Localisation | `set_editor_language(locale: String)` | `void` | no |
+| Localisation | `set_editor_language(locale: String)` - a language code is remembered for this user; an empty string forgets it and follows Godot's editor language again | `void` | no |
 
 `compile()`'s and `echo()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
 
