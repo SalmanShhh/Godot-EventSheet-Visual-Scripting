@@ -53,6 +53,7 @@ extends RefCounted
 ## The files this helper reaches BY PATH, at the moment something asks: naming one of these
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const THEME_EDITOR_PATH := "res://addons/eventsheet/editor/theme_editor_dialog.gd"
+const LOOK_MEMORY_PATH := "res://addons/eventsheet/theme/sheet_look_memory.gd"
 
 const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ; EventSheetEditorStyle"]
 
@@ -81,6 +82,7 @@ func use_default_theme() -> bool:
 		return false
 	# Out of undo history, like every theme switch (presentation, not content).
 	_dock._current_sheet.editor_style = null
+	load(LOOK_MEMORY_PATH).forget(_dock._current_sheet_path)
 	_dock._refresh_after_edit()
 	return true
 
@@ -97,12 +99,36 @@ func load_theme_style_from_path(path: String) -> bool:
 		_dock._set_status("Theme load failed: %s is not an EventSheetEditorStyle." % resolved_path.get_file(), true)
 		return false
 	# Theme switches stay OUT of the undo history (user call: undo is for sheet
-	# content - ACEs and variables - never presentation). Still marks dirty: the
-	# style is persisted on the sheet.
+	# content - ACEs and variables - never presentation). A sheet saved as a resource carries the
+	# style, so it is marked changed; a script sheet cannot, so the pick is kept for it in the project.
 	_dock._current_sheet.editor_style = loaded as EventSheetEditorStyle
 	_dock._refresh_after_edit()
-	_dock._mark_dirty("Applied theme: %s." % resolved_path.get_file())
+	note_look_change("theme", resolved_path, "Applied theme: %s." % resolved_path.get_file())
 	return true
+
+
+## Puts a script sheet's remembered look on it, right as its tab comes to the front.
+func restore_remembered_look() -> void:
+	if _dock._current_sheet != null:
+		load(LOOK_MEMORY_PATH).restore(_dock._current_sheet, _dock._current_sheet_path)
+
+
+## Says a look choice was made for the open sheet. A sheet saved as a resource carries its look, so it
+## is marked changed. A script sheet is plain code with no room for one: the choice is kept in the
+## project for that script instead, and nothing is marked changed. `key` is the record's key for the
+## choice (the theme, the density, a lane number); `value` is what to keep.
+func note_look_change(key: String, value: Variant, message: String) -> void:
+	var memory: Object = load(LOOK_MEMORY_PATH)
+	if not memory.is_script_sheet(_dock._current_sheet_path):
+		_dock._mark_dirty(message)
+		return
+	if key == "theme":
+		memory.forget(_dock._current_sheet_path)
+	elif key == "density":
+		memory.erase(_dock._current_sheet_path, "condition_column")
+		memory.erase(_dock._current_sheet_path, "action_column")
+	memory.remember(_dock._current_sheet_path, key, value)
+	_dock._set_status(EventSheetL10n.translate("%s Kept for this script in this project; nothing is written into the script.") % message)
 
 
 func reload_active_theme() -> bool:
@@ -155,7 +181,10 @@ func _on_theme_file_selected(path: String) -> void:
 
 func _on_set_default_theme_requested() -> void:
 	if use_default_theme():
-		_dock._mark_dirty("Applied default theme.")
+		if not load(LOOK_MEMORY_PATH).is_script_sheet(_dock._current_sheet_path):
+			_dock._mark_dirty("Applied default theme.")
+		else:
+			_dock._set_status(EventSheetL10n.translate("Applied default theme. Nothing is kept for this script."))
 	else:
 		_dock._set_status("Default theme already active.", true)
 
@@ -254,7 +283,10 @@ func _active_style_or_default() -> EventSheetEditorStyle:
 func _on_density_preset_selected(index: int) -> void:
 	if _density_menu == null or index < 0 or index >= _density_menu.item_count:
 		return
-	var path: String = str(_density_menu.get_item_metadata(index))
+	apply_density_path(str(_density_menu.get_item_metadata(index)))
+
+
+func apply_density_path(path: String) -> void:
 	if path.is_empty() or _dock._current_sheet == null:
 		return
 	var loaded: Resource = ResourceLoader.load(path)
@@ -277,7 +309,7 @@ func _on_density_preset_selected(index: int) -> void:
 	# left the old style connected and the new one deaf to an edit on disk.
 	_sync_active_theme_binding()
 	_dock._refresh_after_edit()
-	_dock._mark_dirty("Row density: %s." % EventSheetDensityPresets._humanize(path.get_file()))
+	note_look_change("density", path, "Row density: %s." % EventSheetDensityPresets._humanize(path.get_file()))
 	_populate_density_menu()
 
 
@@ -322,19 +354,19 @@ func _open_theme_editor() -> void:
 
 
 ## Called by the theme editor's "Apply To Current Sheet": assigns the working style to the
-## active sheet undoably and repaints.
+## active sheet and repaints. Out of the undo history, like every other theme switch: a look is
+## presentation, never content, so Ctrl+Z must not take it off.
 func apply_theme_style(style: EventSheetEditorStyle) -> void:
 	if _dock._current_sheet == null or style == null:
 		return
-	var changed: bool = _dock._perform_undoable_sheet_edit("Apply Theme", func() -> bool:
-		_dock._current_sheet.editor_style = style
-		return true
-	)
-	if changed:
-		_active_theme_style = style
-		_publish_active_style()
-		_dock._refresh_after_edit()
-		_refresh_theme_menu_selection()
+	_dock._current_sheet.editor_style = style
+	_active_theme_style = style
+	_publish_active_style()
+	_dock._refresh_after_edit()
+	_refresh_theme_menu_selection()
+	if load(LOOK_MEMORY_PATH).is_script_sheet(_dock._current_sheet_path):
+		_dock._set_status(EventSheetL10n.translate("Theme applied from the theme editor. It has no file, so this script wears it until you close it; save the theme to a file to keep it."))
+	else:
 		_dock._mark_dirty("Theme applied from the theme editor.")
 
 

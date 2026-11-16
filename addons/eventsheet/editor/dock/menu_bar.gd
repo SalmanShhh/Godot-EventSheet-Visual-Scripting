@@ -786,7 +786,7 @@ func build(root: Node) -> void:
 	view_popup.add_submenu_item(EventSheetL10n.translate("Sheet theme"), "EventSheetSheetThemeMenu",
 		SHEET_THEME_VIEW_ID)
 	view_popup.set_item_tooltip(view_popup.get_item_index(SHEET_THEME_VIEW_ID),
-		EventSheetL10n.translate("The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file."))
+		EventSheetL10n.translate("The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. A sheet saved as a resource carries it; a script sheet keeps the choice in this project, never in the script."))
 	_dock._bind_sheet_theme_menu(sheet_theme_menu)
 	view_popup.about_to_popup.connect(func() -> void: _dock._populate_sheet_theme_menu())
 	view_popup.add_item("Load Theme…", 6)

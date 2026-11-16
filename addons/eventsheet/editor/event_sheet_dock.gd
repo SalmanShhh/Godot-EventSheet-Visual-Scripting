@@ -1266,6 +1266,7 @@ func _activate_tab(index: int) -> void:
 	_current_sheet = tab.get("sheet")
 	_current_sheet_path = str(tab.get("path", ""))
 	_dirty = bool(tab.get("dirty", false))
+	_theme_manager.restore_remembered_look()
 	_viewport.set_debug_overlay_states({})
 	# The vocabulary is kept unless the sheet lists other providers or the addon fleet moved: ACE
 	# definitions are immutable and shared across tabs, so keeping one is keeping a list of sources.
@@ -5720,7 +5721,7 @@ func _on_viewport_lane_ratio_changed(ratio: float) -> void:
 			style, EventSheetEditorThemeDeriver.running_editor_base()))
 	else:
 		_current_sheet.editor_style.get_event_style().condition_lane_ratio = ratio
-	_mark_dirty("Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
+	_theme_manager.note_look_change("lane_ratio", ratio, "Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
 
 
 ## Persists an object-column resize (the event-sheet sub-lane between object names and display text),
@@ -5740,7 +5741,7 @@ func _on_viewport_object_column_width_changed(lane: String, width: int) -> void:
 	if promoted:
 		_viewport.apply_editor_style(EventSheetEditorThemeDeriver.sheet_look(
 			_current_sheet.editor_style, EventSheetEditorThemeDeriver.running_editor_base()))
-	_mark_dirty("Resized the %s lane's object column to %dpx." % [lane, width])
+	_theme_manager.note_look_change("%s_column" % lane, width, "Resized the %s lane's object column to %dpx." % [lane, width])
 
 
 func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2) -> void:
