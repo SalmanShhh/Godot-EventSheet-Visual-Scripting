@@ -204,9 +204,9 @@ mode the ribbon smears onto the texture as it moves: instant tire marks.
 
 ### 5. Drawing prefabs - author once, stamp everywhere
 
-Create a **DrawingPrefabResource** (.tres), fill its ordered steps grid in the Inspector -
-kind (circle / ring / rect / line / cone / stamp), an x/y offset, per-kind p1/p2/p3 numbers,
-and a color - and replay it anywhere:
+Create a **DrawingPrefabResource** (.tres), fill its ordered list of steps in the Inspector (one
+card per shape) - kind (circle / ring / rect / line / cone / stamp), an x/y offset, per-kind
+p1/p2/p3 numbers, and a color - and replay it anywhere:
 
 ```
 On Ready       -> Level | Drawing Canvas: Draw Prefab  preload("res://fx/target_marker.tres"), 400, 300, 1.0, 0
@@ -217,12 +217,26 @@ The Inspector shows a **live preview** of the composed drawing at the top of the
 as you edit the steps), and the saved `.tres` gets a matching **thumbnail** in the FileSystem dock and
 the Draw Prefab prefab picker - so you choose a formation by its picture, not its filename.
 
-Beside the steps grid the resource has three whole-formation knobs: `prefab_name` (a label for your own reference - the canvas does not read it), `prefab_scale` (a uniform scale applied to the whole formation, 1 by default) and `prefab_rotation` (the rotation of the whole formation, in degrees, 0 by default).
+Beside the steps the resource has one more field, `prefab_name` (a label for your own reference - the canvas does not read it). The whole-formation scale and rotation are not on the resource: Draw Prefab takes them as the scale and rotation parameters of its row, and a **DrawingPrefabStamp** node (the placeable viewport stamp) has them as its own `prefab_scale` (a uniform scale for the whole formation, 1 by default) and `prefab_rotation` (the rotation of the whole formation, in degrees, 0 by default).
 
 Steps draw top to bottom (the formation is ordered), and the whole prefab translates,
 scales, and rotates as one - rings-and-crosshair markers, explosion scorches, magic circles,
 minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you
 press Space.
+
+**What each shape means.** Every shape sits at its offset (`x`, `y`) in the prefab's own space, and all
+of them are measured from the prefab's origin:
+
+- **Circle** and **Ring** are centred on the offset; `p1` is the radius, and a ring's `p2` is how thick its outline is.
+- **Rect** is drawn from the offset as its top-left corner, right and down by `p1` (width) and `p2` (height).
+- **Line** runs from its offset to its **End** (`p1`, `p2`). The End is a point in the prefab's own space,
+  measured from the prefab's origin - not a length added to the offset - so a line from -60,0 with an End of
+  60,0 crosses the origin and is 120 long. `p3` is its thickness.
+- **Cone** is a wedge at the offset: `p1` which way it faces, `p2` how wide it opens (degrees), `p3` how far it reaches.
+- **Stamp** is a texture centred on the offset: `p1` scales it, and `p2` is its **Spin** in degrees, turning it about its centre.
+
+Every picture of a prefab - Draw Prefab in a game, the DrawingPrefabStamp node in the viewport and in a
+game, the Inspector picture, the FileSystem thumbnail and the 3D billboard - draws these the same way.
 
 **The step card.** Each step in the Inspector is a card titled by its shape, read top to bottom as
 four short sections: **Placement** (which shape, its offset, and for a stroke whether its thickness
@@ -239,10 +253,12 @@ draws exactly what it always drew. A thickness is read
 in whichever unit its own dropdown is showing (px, world, screen) and is always STORED in pixels, so
 switching the view never moves a stored value.
 
-**Every field on the card changes the picture.** The canvas, the stamp node and the off-thread
-thumbnail all draw with the engine's own draw calls, and one normaliser feeds all three - so the
-card offers a field only when a draw call reads it: a line's ends, its dashes, the scale rule and
-one colour. There is deliberately no per-step blend and no second colour: a draw call has no blend
+**Every field on the card changes the picture.** Draw Prefab, the stamp node and the off-thread
+thumbnail all draw what a step says, and one normaliser feeds them - so the card offers a field only
+when a draw call reads it: a line's ends, its dashes, the scale rule (a line's only: it says whether
+the thickness grows with the prefab's scale or holds its own width) and one colour. Draw Prefab draws
+a line's end caps, dashes and scale rule the way the stamp node does; a line that carries none of
+those keys draws the plain line it always did. There is deliberately no per-step blend and no second colour: a draw call has no blend
 mode of its own (blending is a material on the whole node), and a ramp needs a Gradient to point at,
 which a step of numbers has nowhere to keep. Those looks are what the **Vector Shapes** nodes are
 for - each is its own node, so each carries its own material and its own ramp - and a shape you
@@ -252,7 +268,7 @@ place is the right tool when the picture matters more than the stamping.
 result, so Draw Prefab and the DrawingPrefabStamp node stay cheap when a thousand-plus stamps share one
 prefab - each draw reuses the compiled steps instead of re-parsing. The cache refreshes when the resource
 changes; if game code edits a prefab's `steps` at runtime, call `emit_changed()` on it afterwards (the
-Inspector does this for you when you edit in the grid).
+Inspector does this for you when you edit in the cards).
 
 **Place it in the editor.** Set a Drawing Canvas's **Editor Preview** knobs (`preview_prefab`,
 `preview_scale`, `preview_rotation`) and select the node: the formation draws right in the 2D viewport

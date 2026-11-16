@@ -33,7 +33,7 @@ In Godot, a `Resource` is a saveable data container. The engine's own `.tres` fi
 Three resources that ship with this plugin show the pattern at full scale, and each one is an ordinary Resource-host sheet like the ones you will build:
 
 - **`LootTableResource`** (`eventsheet_addons/loot_table_resource/`) - a drops table (`item`, `weight`, `tags` columns) plus pity settings. Drop a saved `.tres` onto a Loot Table Loader behavior and the LootBox autoload serves those drops.
-- **`DrawingPrefabResource`** (`eventsheet_addons/drawing_prefab_resource/`) - an ordered grid of shape steps (kind dropdown, offsets, sizes, color) that the Drawing Canvas replays as a reusable stamp.
+- **`DrawingPrefabResource`** (`eventsheet_addons/drawing_prefab_resource/`) - an ordered list of shape steps (shown in the Inspector as one card per shape: kind, offsets, sizes, color) that the Drawing Canvas replays as a reusable stamp.
 - **`UHTNPlanResource`** (`eventsheet_addons/uhtn_plan_resource/`) - an entire AI planner's brain as four grids (tasks, methods, preconditions, utility scorers). A whole hierarchical-task-network plan, authored in the Inspector, dropped onto a planner node.
 
 If a grid of rows can describe an AI's decision-making, it can describe your shop stock.
@@ -478,7 +478,7 @@ min_playtime: float
 
 ### 15. Reusable drawing stamps
 
-One entry is a "Shape Step". This is the shipped `DrawingPrefabResource` shape: an ordered grid of steps the Drawing Canvas replays at any position, scale, and rotation - a spell circle or minimap marker authored as rows.
+One entry is a "Shape Step". This is the shipped `DrawingPrefabResource` shape: an ordered list of steps the Drawing Canvas replays at any position, scale, and rotation - a spell circle or minimap marker authored as rows. It is the data a table or a card list edits; the Inspector shows each step as a card.
 
 ```
 kind: circle|ring|rect|line|cone|stamp
