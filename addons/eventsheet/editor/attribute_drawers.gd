@@ -131,7 +131,7 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	var handled: bool = _parse_field(_object, type, name, hint_string, under_field, _hint_type)
 	var spans: bool = notes_span_row(hint_string)
 	for note: Control in under_field:
-		add_property_editor(name, widgets().NoteRow.new(note, "", spans), true)
+		add_property_editor(name, widgets().NoteRow.new(note, "", spans or bool(note.get_meta("spans_row", false))), true)
 	return handled
 
 

@@ -20,6 +20,7 @@ static func run() -> bool:
 		["a full-width note gives the column up", row_type.label_wanted(true), false],
 		["a card list's notes span the row", EventSheetAttributeDrawers.notes_span_row("eventsheet:cards:kind=verb,schema=feedback_steps"), true],
 		["a table's notes stay in the value column", EventSheetAttributeDrawers.notes_span_row("eventsheet:table:cols=a|b"), false],
-		["so does a plain property's", EventSheetAttributeDrawers.notes_span_row(""), false]
+		["so does a plain property's", EventSheetAttributeDrawers.notes_span_row(""), false],
+		["an info paragraph from any pack asks to span the row", bool(EventSheetAttributeDrawers.widgets().build_info_panel("words").get_meta("spans_row", false)), true]
 	]
 	return SUPPORT.pins(TEST_NAME, rows)

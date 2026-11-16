@@ -209,7 +209,10 @@ static func build_header_label(text: String, _accent: String) -> Control:
 ## A quiet, wrapping grey line - the place for "this resource is shared - edits affect every user".
 ## No box and no outline: the words sit under their field in the editor's own font.
 static func build_info_panel(text: String) -> Control:
-	return EventSheetLookStyle.message_line(text, EventSheetLookStyle.Tone.NOTE)
+	var line: Label = EventSheetLookStyle.message_line(text, EventSheetLookStyle.Tone.NOTE)
+	# A paragraph of explanation spans the whole Inspector row, label column included, whichever pack wrote it.
+	line.set_meta("spans_row", true)
+	return line
 
 
 ## A line for a row of the Inspector that holds only a note: an EditorProperty with no label, so its
