@@ -20,6 +20,7 @@ static func run() -> bool:
 	all_passed = _pin_the_titles() and all_passed
 	all_passed = _pin_the_tile_image() and all_passed
 	all_passed = _pin_the_head_repaints_in_place() and all_passed
+	all_passed = _pin_the_wedge_and_the_stamp() and all_passed
 	return all_passed
 
 
@@ -122,4 +123,24 @@ static func _pin_the_head_repaints_in_place() -> bool:
 		["a colour write keeps the tile node", same_tile, true],
 		["and the tile now shows the new colour", tile_colour.to_html(false), "ff0000"],
 		["a size write rewrites the summary in place", summary_after, "radius 10, 5 px thick"],
+	])
+
+
+## The cone is a pie wedge (the apex on the left, an arc on the right), and the stamp is a pair of squares set
+## corner to corner rather than a frame, so a pale one on the light theme does not read as a box inside a box.
+static func _pin_the_wedge_and_the_stamp() -> bool:
+	var tile: Script = load(TILE_PATH) as Script
+	var side: int = 32
+	var red: Color = Color(1.0, 0.0, 0.0)
+	var wedge: Image = tile.call("shape_image", "cone", red, side, false)
+	var pale_stamp: Image = tile.call("shape_image", "stamp", Color(1.0, 1.0, 1.0), side, true)
+	return SUPPORT.pins(PREFIX, [
+		["the wedge is filled near its apex", _alpha_at(wedge, 8, 16) > 0.95, true],
+		["the wedge is filled across its middle", _alpha_at(wedge, 20, 16) > 0.95, true],
+		["the wedge is empty to the left of its apex", _alpha_at(wedge, 2, 16) < 0.05, true],
+		["the wedge has a round rim, so its far corners are empty (a triangle would fill them)", _alpha_at(wedge, 27, 6) < 0.05, true],
+		["the wedge is narrow at the apex", _alpha_at(wedge, 8, 8) < 0.05, true],
+		["a stamp is filled in its top left quarter", _alpha_at(pale_stamp, 8, 8) > 0.95, true],
+		["and in its bottom right quarter", _alpha_at(pale_stamp, 24, 24) > 0.95, true],
+		["and empty in the other two, so it is not a frame", [_alpha_at(pale_stamp, 24, 8) < 0.05, _alpha_at(pale_stamp, 8, 24) < 0.05], [true, true]],
 	])

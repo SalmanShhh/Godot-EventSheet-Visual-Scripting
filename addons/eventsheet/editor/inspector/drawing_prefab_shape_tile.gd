@@ -81,9 +81,11 @@ static func _distance(kind: String, point: Vector2, half: float) -> float:
 		"cone":
 			return _wedge(point, reach)
 		"stamp":
-			# A frame with a dot at its centre: the mark a texture carries.
-			var frame: float = absf(_box(point, Vector2(reach, reach)) + 1.0) - 0.75
-			return minf(frame, point.length() - 1.4)
+			# Two squares set corner to corner, the way a picture shows it has a texture. Two solid squares keep a
+			# single edge each on a light ground; a frame there read as a box inside a box.
+			var quarter: float = reach * 0.5
+			var extent: Vector2 = Vector2(quarter - 0.3, quarter - 0.3)
+			return minf(_box(point - Vector2(-quarter, -quarter), extent), _box(point - Vector2(quarter, quarter), extent))
 	# Unknown: a hollow square, so the line says "something is here that is not a shape".
 	return absf(_box(point, Vector2(reach, reach)) + 0.8) - 0.8
 
@@ -99,15 +101,12 @@ static func _segment(point: Vector2, a: Vector2, b: Vector2) -> float:
 	return (point - (a + along * t)).length()
 
 
-## A wedge opening to the left, like the cone's own picture: the apex on the right, a 90 degree fan.
+## A pie wedge opening to the right, as a cone drawn in a game is: the apex at the left, a 76 degree fan, and a round rim
+## on the right. Short enough that the whole of the arc sits inside the tile, so it reads as a slice and not a triangle.
 static func _wedge(point: Vector2, reach: float) -> float:
-	var apex: Vector2 = Vector2(reach, 0.0)
+	var apex: Vector2 = Vector2(-reach * 0.8, 0.0)
 	var local: Vector2 = point - apex
-	var spread: float = deg_to_rad(36.0)
-	# Distance to a sector of the given half-angle pointing along -x, clipped at `reach * 2` from the apex.
-	var radius: float = reach * 2.0
-	var along: float = -local.x
-	var across: float = absf(local.y)
-	var rim: float = local.length() - radius
-	var side_line: float = (Vector2(sin(spread), -cos(spread)).dot(Vector2(across, along)))
+	var spread: float = deg_to_rad(38.0)
+	var rim: float = local.length() - reach * 1.6
+	var side_line: float = absf(local.y) * cos(spread) - local.x * sin(spread)
 	return maxf(rim, side_line)
