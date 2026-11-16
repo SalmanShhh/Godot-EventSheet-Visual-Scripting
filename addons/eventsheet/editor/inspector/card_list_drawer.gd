@@ -1772,6 +1772,9 @@ func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxCon
 		editor.modulate = Color(1.0, 1.0, 1.0, 0.45)
 		if editor is BaseButton:
 			(editor as BaseButton).disabled = true
+	# A control the schema builds and leaves hidden takes no room, and neither does the row that holds it.
+	if str(field.get("drawer", "")) == "custom" and not editor.visible:
+		row.visible = false
 	if str(field.get("drawer", "")) == "note":
 		_notes.append({"label": editor, "field": field, "index": index})
 		# A line with nothing to say takes no room, and neither does the row that holds it.
