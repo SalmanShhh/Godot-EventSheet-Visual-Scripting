@@ -76,18 +76,27 @@ static func _release_registrations() -> void:
 # ── Vocabulary ─────────────────────────────────────────────────────────────────────────
 
 
-## Registers a @tool class_name script as an ACE provider: its public methods, signals,
-## and @export vars become actions/conditions/expressions/triggers (see the Custom ACEs
-## guide for the annotation and registrar dialects). Registers on the sheet that is open - not on the
-## whole project - so another sheet does not see it until the script is added there too; with no
-## workspace open it joins the runtime bridge instead. Idempotent.
+## Registers a class_name script as an ACE provider for the whole session: its public methods,
+## signals, and @export vars become actions/conditions/expressions/triggers (see the Custom ACEs
+## guide for the annotation and registrar dialects). Every sheet sees it, none is edited, and an open
+## workspace refreshes its vocabulary at once. To record the script in ONE sheet (an undoable edit
+## that marks it changed), call add_provider_to_sheet(). Idempotent.
 static func register_provider_script(script_path: String) -> bool:
 	if script_path.strip_edges().is_empty():
 		return false
-	if _dock_alive():
-		return _dock.add_ace_provider_script(script_path)
 	EventForgeBridgeRuntime.register_provider_script(script_path)
+	if _dock_alive() and _dock.has_method("_refresh_ace_registry"):
+		_dock.call("_refresh_ace_registry")
 	return true
+
+
+## Adds a provider script to the sheet that is open: the same edit as the sheet's Teach entry, one
+## undo step, and the sheet is marked changed. False when no workspace is open or the script cannot
+## be added. For a script every sheet should see without editing any, use register_provider_script().
+static func add_provider_to_sheet(script_path: String) -> bool:
+	if script_path.strip_edges().is_empty() or not _dock_alive():
+		return false
+	return _dock.add_ace_provider_script(script_path)
 
 
 ## Tells every sheet in the project to read this script of yours: writes the path into the taught-scripts

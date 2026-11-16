@@ -63,7 +63,7 @@ These add words to the event sheet language. They work with or without the edito
 
 | Method | What it does |
 |--------|----------------|
-| `register_provider_script(path)` | A `class_name` script becomes an ACE provider (it only has to be instantiable; `@tool` is optional and needed only when the script's own code should run in the editor): public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
+| `register_provider_script(path)` | A `class_name` script becomes an ACE provider for every sheet, for the session; no sheet is edited (`add_provider_to_sheet(path)` records it in the open sheet instead) (it only has to be instantiable; `@tool` is optional and needed only when the script's own code should run in the editor): public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
 | `register_block_kind(kind)` | A new NON-ACE row type (markers, notes, data tables). The kind gets the Add menu, palette, edit dialog, compile and lift wiring for free; the contract is in [GUIDE-CUSTOM-BLOCKS.md](GUIDE-CUSTOM-BLOCKS.md). |
 | `simple_block_kind(config)` | Build a whole block kind from a Dictionary (an `emit` template with `{field}` placeholders, a `summary` template, a `fields` schema) with NO subclassing. Forward emission works immediately; reverse recovery is opt-in via a `lift` Callable, else the block re-imports as a verbatim GDScript block. Pass the result to `register_block_kind()`. |
 | `find_ace(provider_id, ace_id)` | Look a definition up in the live registry (editor only). Definitions are session-cached and shared: treat them as IMMUTABLE, bake changes into row copies. |
@@ -383,6 +383,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Group | Method | Returns | Needs dock? |
 |-------|--------|---------|-------------|
 | Vocabulary | `register_provider_script(script_path: String)` | `bool` | no (bridges when closed) |
+| Vocabulary | `add_provider_to_sheet(script_path: String)` - the one-sheet version: records the script in the open sheet as one undo step | `bool` | yes |
 | Vocabulary | `register_block_kind(kind: EventSheetBlockKind)` | `void` | no |
 | Vocabulary | `simple_block_kind(config: Dictionary)` | `EventSheetBlockKind` | no |
 | Vocabulary | `find_ace(provider_id: String, ace_id: String)` | `ACEDefinition` | yes |

@@ -203,6 +203,7 @@ const TABLE: Dictionary = {
 		"static unregister_section_description(section_name: String) -> void",
 		"static unregister_simple_ace(id: String, provider_id: String = \"Extension\") -> void",
 		"static unregister_starter(label: String) -> void",
+		"static add_provider_to_sheet(script_path: String) -> bool",
 	],
 	"EventSheetBlockKind": [
 		"addable() -> bool",

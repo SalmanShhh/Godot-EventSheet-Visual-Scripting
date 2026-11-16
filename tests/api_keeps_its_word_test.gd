@@ -5,6 +5,7 @@
 #   the compiler  a sheet with no file and no output path writes no stray script
 #   unregister    everything an extension can register can be taken back
 #   palette       a command registered with a category is taken back by its title and category
+#   registration  register_provider_script is for the session; add_provider_to_sheet edits the open sheet
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -47,6 +48,7 @@ static func run() -> bool:
 	ok = _language() and ok
 	ok = _unregister_set() and ok
 	ok = _palette() and ok
+	ok = _registration() and ok
 	return ok
 
 
@@ -238,3 +240,30 @@ static func _palette_titles() -> PackedStringArray:
 	for entry: Dictionary in EventSheets.palette_commands():
 		titles.append(str(entry.get("title", "")))
 	return titles
+
+
+static func _registration() -> bool:
+	var fixture: String = "res://tests/fixtures/runtime_provider_fixture.gd"
+	var dock: EventSheetDock = _dock()
+	var providers_before: int = dock.get_current_sheet().ace_provider_scripts.size()
+	var registered: bool = EventSheets.register_provider_script(fixture)
+	var providers_after: int = dock.get_current_sheet().ace_provider_scripts.size()
+	var dirty: bool = bool(dock._dirty)
+	var in_session: bool = EventForgeBridgeRuntime.get_registered_provider_scripts().has(fixture)
+	var added: bool = false
+	var per_sheet: int = providers_after
+	if _has_method("add_provider_to_sheet"):
+		added = bool((load("res://addons/eventsheet/api/eventsheets.gd") as Script).call("add_provider_to_sheet", fixture))
+		per_sheet = dock.get_current_sheet().ace_provider_scripts.size()
+	var rows: Array = [
+		["register_provider_script registers", registered, true],
+		["for the session", in_session, true],
+		["and leaves the open sheet's providers alone", providers_after, providers_before],
+		["and does not mark the sheet changed", dirty, false],
+		["add_provider_to_sheet exists", _has_method("add_provider_to_sheet"), true],
+		["add_provider_to_sheet adds it to the open sheet", added, true],
+		["so the sheet now lists it", per_sheet, providers_before + 1],
+	]
+	EventForgeBridgeRuntime.unregister_provider_script(fixture)
+	dock.free()
+	return SUPPORT.pins(P, rows)
