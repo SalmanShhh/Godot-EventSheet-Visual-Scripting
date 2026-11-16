@@ -202,7 +202,8 @@ static func _menu_pins() -> bool:
 	var rows: Array = []
 	for word: String in ["Duplicate", "Cut", "Copy", "Paste", "Remove"]:
 		rows.append(["the menu shows a key beside %s" % word, int(hints.get(word, 0)) != 0, true])
-	rows.append(["the others show none", int(hints.get("Move up", 0)), 0])
+	rows.append(["the others show none", int(hints.get("Paste over", 0)) + int(hints.get("Move to top", 0)) + int(hints.get("Move to bottom", 0)), 0])
+	rows.append(["Move up and Move down show the keys that walk the selection", [OS.get_keycode_string(hints.get("Move up", 0)), OS.get_keycode_string(hints.get("Move down", 0))], ["Alt+Up", "Alt+Down"]])
 	popup.free()
 	drawer.free()
 	return SUPPORT.pins(TEST_NAME, rows)

@@ -233,7 +233,7 @@ static func _mark_pins() -> bool:
 		["pressing a sounding card's mark stops it", asked[1], [true, "stop", 1]],
 		["the card menu offers Play from here", entries.has("Play from here"), true],
 		["and choosing it asks for the part of the list from that card", asked[2], [true, "play_from", 0]],
-		["a list that does not ask has no marks and no extra menu entry", [plain._marks.size(), plain_popup.item_count], [0, 9]]
+		["a list that does not ask has no marks and no extra menu entry", [plain._marks.size(), plain_popup.item_count], [0, 10]]
 	])
 	marked.free()
 	plain.free()
