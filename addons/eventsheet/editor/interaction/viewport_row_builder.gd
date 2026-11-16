@@ -68,6 +68,9 @@ const SYNC_BADGE_GLYPHS: Dictionary = {
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
 ## The model of classes and their kinds, loaded only by a row that needs it.
 const CLASS_KINDS_PATH := "res://addons/eventsheet/editor/dock/class_kinds.gd"
+## Set by the game catalog while a preview language is on, empty otherwise: a value reads as it is stored
+## until then, and the catalog file is not compiled to find that out.
+static var preview_param_door: Callable = Callable()
 ## What the last kind of a project class inherited, and the parent files' versions it was read at.
 var _inherited_cache: Dictionary = {}
 ## A test's own table of classes, asked before the project's.
@@ -22021,7 +22024,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# A value that IS a comparison operator renders as the glyph the row means - ≤ ≥ ≠,
 			# and `=` for equality - the same spellings an opened script's readings already use. Only
 			# the six operator tokens change; every other param value is the author's own GDScript.
-			shown = EventSheetGameCatalog.preview_param(shown)
+			shown = _preview_param(shown)
 			shown = EventForgeACEFactory.comparison_glyph(shown)
 			# A param that declares a READING LENS has its own answer for what its value means,
 			# so the lens REPLACES the general readings rather than running after them: a stored
@@ -22062,7 +22065,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		# The same reading lens the registry branch applies, so a builtin descriptor and the
 		# registry's copy of it say the same sentence about the same row.
 		var param_shown: String = _read_through_lens(param.display_lens,
-			EventForgeACEFactory.comparison_glyph(EventSheetGameCatalog.preview_param(
+			EventForgeACEFactory.comparison_glyph(_preview_param(
 				_translated_option_label(param.display_value(param_value), str(param_value)))))
 		param_shown = _read_group_name(descriptor.codegen_template, param_key, param_shown, param_value)
 		param_shown = _note_colour_param(param_key, i, str(param_value), param_shown, param.hint, param.type,
@@ -22099,6 +22102,11 @@ func _read_group_name(codegen_template: String, key: String, shown: String, valu
 ## goes through the catalog, a GDScript expression the author typed never does.
 func _translated_option_label(shown: String, raw: String) -> String:
 	return shown if shown == raw else EventSheetL10n.translate(shown)
+
+
+## A stored value as the preview language reads it: as stored until the catalog says a preview is on.
+func _preview_param(value: Variant) -> String:
+	return str(value) if preview_param_door.is_null() else str(preview_param_door.call(value))
 
 
 func _resolve_template(raw_template: String) -> String:

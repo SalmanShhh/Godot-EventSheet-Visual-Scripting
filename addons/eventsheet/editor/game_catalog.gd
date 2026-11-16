@@ -61,6 +61,7 @@ static func set_preview(locale: String, messages: Dictionary = {}, source: Strin
 	_preview_messages = messages.duplicate()
 	_preview_source = source
 	_pseudo_cache.clear()
+	EventSheetViewportRowBuilder.preview_param_door = Callable(EventSheetGameCatalog, "preview_param")
 
 
 ## Turns the preview off. Every row goes back to reading exactly as it did - this is what makes the
@@ -70,6 +71,7 @@ static func clear_preview() -> void:
 	_preview_messages = {}
 	_preview_source = ""
 	_pseudo_cache.clear()
+	EventSheetViewportRowBuilder.preview_param_door = Callable()
 
 
 static func preview_locale() -> String:
