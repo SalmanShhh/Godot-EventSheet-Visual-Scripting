@@ -10699,3 +10699,6 @@ Nothing here can be rewritten on its own - %d rows are listed below with the rea
 %d rows would be rewritten in one step you can undo.,%d 行が、元に戻せる 1 回の操作で書き換えられます。
 1 row is left exactly as it is.,1 行はそのまま残ります。
 %d rows are left exactly as they are.,%d 行はそのまま残ります。
+After the hold,Hold のあと
+Start together,同時に始まる
+s,秒

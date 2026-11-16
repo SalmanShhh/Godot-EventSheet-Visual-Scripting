@@ -52,6 +52,7 @@ static func run() -> bool:
 	ok = _band_pins() and ok
 	ok = _above_pins() and ok
 	ok = _surface_pins() and ok
+	ok = _alignment_pins() and ok
 	return ok
 
 
@@ -112,7 +113,7 @@ static func _band_pins() -> bool:
 	drawer.free()
 	return SUPPORT.pins(TEST_NAME, [
 		["two cards that start together sit on one band, a card alone does not", kids.size(), 3],
-		["the band holds the two cards", in_band, 2],
+		["the band holds a caption and the two cards", in_band, 3],
 		["the band is a faint fill", faint, true],
 		["and has no border", border, 0]
 	])
@@ -182,4 +183,35 @@ static func _surface_pins() -> bool:
 		["no menu button stands alone between them", alone, 0],
 		["the menu is in the head line", menus_in_head, 1],
 		["one hairline goes round the whole open card", hairline, 4]
+	])
+
+
+## Every card keeps the same place whether or not a band sits behind it: the band adds no inset of its own, and
+## every card row carries the same one. A time field shows its unit as plain words, never as a dropdown.
+static func _alignment_pins() -> bool:
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"kind_key": "verb", "schema_dict": _schema()})
+	drawer.set_value([{"verb": "a"}, {"verb": "b"}, {"verb": "wait"}, {"verb": "a"}])
+	var margins: Array = []
+	for index: int in range(4):
+		var row: Node = (drawer._lines[index] as Node).get_parent()
+		var box: StyleBoxEmpty = row.get_theme_stylebox("panel") as StyleBoxEmpty
+		margins.append([box.content_margin_left, box.content_margin_right])
+	var band: PanelContainer = null
+	for child: Node in drawer._list.get_children():
+		if child.has_meta("band"):
+			band = child as PanelContainer
+	var band_box: StyleBoxFlat = band.get_theme_stylebox("panel") as StyleBoxFlat
+	var band_sides: Array = [band_box.content_margin_left, band_box.content_margin_right]
+	var unit_row: Control = drawer._build_field_editor({"verb": "a", "seconds": 0.2}, {"key": "seconds", "drawer": "unit:time"}, func(_v: Variant) -> void: pass, 0)
+	var dropdowns: int = unit_row.find_children("*", "OptionButton", true, false).size()
+	var words: Array = []
+	for label: Node in unit_row.find_children("*", "Label", true, false):
+		words.append((label as Label).text)
+	unit_row.free()
+	drawer.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["every card row has the same inset, banded or not", margins, [[4.0, 4.0], [4.0, 4.0], [4.0, 4.0], [4.0, 4.0]]],
+		["the band adds none at the sides", band_sides, [0.0, 0.0]],
+		["a time field has no unit dropdown", dropdowns, 0],
+		["and shows its unit as plain words", words, ["s"]]
 	])

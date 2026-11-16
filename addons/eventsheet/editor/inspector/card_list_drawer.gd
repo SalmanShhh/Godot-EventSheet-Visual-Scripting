@@ -752,6 +752,19 @@ func _band_of(first: int, last: int) -> Control:
 	band.add_theme_stylebox_override("panel", EventSheetLookStyle.band_box())
 	var stack: VBoxContainer = VBoxContainer.new()
 	band.add_child(stack)
+	# A small quiet caption says what the band is: cards that start together, or the ones that follow a Hold.
+	var caption: Label = Label.new()
+	var after_hold: bool = first > 0 and str((_cards[first - 1] as Dictionary).get(str(_spec.get("kind_key", "kind")), "")) == "hold_until"
+	caption.text = EventSheetL10n.translate("After the hold") if after_hold else EventSheetL10n.translate("Start together")
+	caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	caption.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.add_theme_constant_override("line_spacing", 0)
+	var inset: MarginContainer = MarginContainer.new()
+	inset.add_theme_constant_override("margin_left", int(EventSheetLookStyle.px(8.0)))
+	inset.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inset.add_child(caption)
+	stack.add_child(inset)
 	for index: int in range(first, last + 1):
 		stack.add_child(_build_card(index))
 	return band
@@ -1260,6 +1273,10 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			var unit_ids: PackedStringArray = unit_spec.get("units", PackedStringArray())
 			if unit_ids.is_empty():
 				return _number_field(card, key, write, FLOAT_STEP)
+			# A card holds its times in seconds, so the unit is a word beside the number, as it is for every
+			# other unit on a card (dB), and not a second dropdown on the one row that has seconds.
+			if unit_ids.has("s") and str(unit_spec.get("store", "s")) == "s":
+				return _number_with_unit(card, key, write, EventSheetL10n.translate("s"))
 			var unit_field: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(
 				unit_ids, str(unit_spec.get("store", "")))
 			unit_field.set_value(float(card.get(key, 0.0)))
@@ -1331,6 +1348,20 @@ func _number_field(card: Dictionary, key: String, write: Callable, step: float) 
 	spin.value = float(card.get(key, 0.0))
 	spin.value_changed.connect(func(value: float) -> void: write.call(value))
 	return spin
+
+
+## A number box with its unit as small quiet text at the right.
+func _number_with_unit(card: Dictionary, key: String, write: Callable, unit_text: String) -> Control:
+	var box: HBoxContainer = HBoxContainer.new()
+	var spin: Control = _number_field(card, key, write, FLOAT_STEP)
+	spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(spin)
+	var unit: Label = Label.new()
+	unit.text = unit_text
+	unit.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	unit.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	box.add_child(unit)
+	return box
 
 
 ## A number with a plus-or-minus sign in front of it: how far a random roll may land either side of
@@ -1538,7 +1569,11 @@ class _CardRow:
 		_drawer = drawer
 		_index = index
 		mouse_default_cursor_shape = Control.CURSOR_MOVE
-		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		# Every card has the same inset, so a card keeps its place whether or not a band sits behind it.
+		var inset: StyleBoxEmpty = StyleBoxEmpty.new()
+		inset.content_margin_left = 4.0
+		inset.content_margin_right = 4.0
+		add_theme_stylebox_override("panel", inset)
 
 	func _gui_input(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton

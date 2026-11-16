@@ -177,6 +177,11 @@ static func card_box(open: bool) -> StyleBox:
 	if flat == null:
 		return box
 	if open:
+		# The open card is on the Inspector's own panel ground, so the boxed fields inside it keep the field
+		# look Godot gives them instead of dissolving into a surface of the same colour.
+		var ground: StyleBoxFlat = panel_box() as StyleBoxFlat
+		if ground != null:
+			flat.bg_color = ground.bg_color
 		var line: Color = ink()
 		line.a = 0.22
 		flat.set_border_width_all(1)
@@ -194,7 +199,10 @@ static func band_box() -> StyleBox:
 	flat.bg_color = tint
 	flat.set_corner_radius_all(int(px(4.0)))
 	flat.set_border_width_all(0)
-	flat.set_content_margin_all(px(3.0))
+	flat.content_margin_left = 0.0
+	flat.content_margin_right = 0.0
+	flat.content_margin_top = px(3.0)
+	flat.content_margin_bottom = px(3.0)
 	return flat
 
 
