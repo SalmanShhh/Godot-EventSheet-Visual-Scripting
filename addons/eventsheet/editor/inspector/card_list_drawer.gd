@@ -1307,7 +1307,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	# A wrapping label squeezed by a long title would break "0.30 s" one letter to a line. A short badge
 	# keeps room for all of its words; a long one keeps room for its longest word and wraps between them.
 	badge.custom_minimum_size.x = _badge_room(badge, badge_text)
-	badge.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	badge.add_theme_color_override("font_color", _badge_colour(card, index))
 	badge.visible = not badge_text.is_empty()
 	_badges[index] = badge
 	inside.add_child(badge)
@@ -1768,6 +1768,15 @@ func write_card_key(index: int, key: String, value: Variant) -> void:
 	_refresh_head(index)
 
 
+## The colour of a card line's summary: the quiet grey, or the quiet amber when the schema says (`badge_warn`) this card
+## needs attention, so a list of folded cards still shows which one has something wrong.
+func _badge_colour(card: Dictionary, index: int) -> Color:
+	var warn: Variant = _schema.get("badge_warn")
+	if warn is Callable and (warn as Callable).is_valid() and bool(EventSheetCardSchemas.ask(warn as Callable, card, _cards, index, _edited)):
+		return EventSheetLookStyle.warning()
+	return EventSheetLookStyle.quiet()
+
+
 ## Repaints one card's line in place after one of its numbers changed: the tile in the card's colour and the
 ## summary beside it. Only a schema that says its line follows its numbers (`live_head`) has this; any other
 ## list draws its line as it always did and keeps it until the list is rebuilt.
@@ -1786,6 +1795,7 @@ func _refresh_head(index: int) -> void:
 		badge.visible = not badge_text.is_empty()
 		badge.autowrap_mode = TextServer.AUTOWRAP_OFF if badge_text.length() <= 12 else TextServer.AUTOWRAP_WORD_SMART
 		badge.custom_minimum_size.x = _badge_room(badge, badge_text)
+		badge.add_theme_color_override("font_color", _badge_colour(card, index))
 
 
 ## The words of the note lines showing in the open cards right now: what a test reads back.

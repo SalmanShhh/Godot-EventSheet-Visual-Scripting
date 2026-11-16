@@ -21,6 +21,7 @@ static func run() -> bool:
 	all_passed = _pin_the_tile_image() and all_passed
 	all_passed = _pin_the_head_repaints_in_place() and all_passed
 	all_passed = _pin_the_wedge_and_the_stamp() and all_passed
+	all_passed = _pin_the_finding_colour() and all_passed
 	return all_passed
 
 
@@ -143,4 +144,25 @@ static func _pin_the_wedge_and_the_stamp() -> bool:
 		["a stamp is filled in its top left quarter", _alpha_at(pale_stamp, 8, 8) > 0.95, true],
 		["and in its bottom right quarter", _alpha_at(pale_stamp, 24, 24) > 0.95, true],
 		["and empty in the other two, so it is not a frame", [_alpha_at(pale_stamp, 24, 8) < 0.05, _alpha_at(pale_stamp, 8, 24) < 0.05], [true, true]],
+	])
+
+
+## A folded card whose shape draws nothing says so in the quiet amber the open card uses; the others keep the quiet grey.
+static func _pin_the_finding_colour() -> bool:
+	var editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
+	editor.set_steps([_step("rect", {"p1": 0.0, "p2": 16.0}), _step("circle", {"p1": 5.0})])
+	var bad: Label = editor._badges[0] as Label
+	var fine: Label = editor._badges[1] as Label
+	var amber: Color = bad.get_theme_color("font_color")
+	var grey: Color = fine.get_theme_color("font_color")
+	editor.write_card_key(0, "p1", 24.0)
+	var repaired: Color = (editor._badges[0] as Label).get_theme_color("font_color")
+	editor.write_card_key(1, "p1", 0.0)
+	var broken: Color = (editor._badges[1] as Label).get_theme_color("font_color")
+	editor.free()
+	return SUPPORT.pins(PREFIX, [
+		["a folded card that draws nothing has its summary in the warning colour", amber.to_html(), EventSheetLookStyle.warning().to_html()],
+		["a card that draws something keeps the quiet colour", grey.to_html(), EventSheetLookStyle.quiet().to_html()],
+		["mending the size puts the quiet colour back, in place", repaired.to_html(), EventSheetLookStyle.quiet().to_html()],
+		["and a size typed to 0 turns it amber, in place", broken.to_html(), EventSheetLookStyle.warning().to_html()],
 	])

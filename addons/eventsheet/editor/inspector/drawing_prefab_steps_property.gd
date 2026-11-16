@@ -206,7 +206,7 @@ class ShapeStepsEditor:
 				"defaults": defaults_for(kind),
 				"badge": Callable(ShapeStepsEditor, "summary_of"),
 			})
-		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true,
+		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true, "badge_warn": Callable(ShapeStepsEditor, "has_finding"),
 			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for"), "fallback_entry": Callable(ShapeStepsEditor, "unknown_entry"),
 			"order_captions": [EventSheetL10n.translate("Drawn first, underneath"), EventSheetL10n.translate("Drawn last, on top")],
 			"add_word": EventSheetL10n.translate("Add shape"), "add_hint": EventSheetL10n.translate("Enter adds the highlighted shape."),
