@@ -286,9 +286,9 @@ static func _tile_pins() -> bool:
 		["every family reads 3:1 on its card line in both editor themes", weak, PackedStringArray()],
 		["the Sound family is one of them", dark.has("audio") and light.has("audio"), true],
 		["a light editor draws the light colour and a dark one the dark", [on_light.to_html(false), on_dark.to_html(false)], ["a88a2f", "f2c744"]],
-		["the Add box headings, in order", headings, PackedStringArray(["Sound", "Object", "Device", "Camera", "Screen", "Time", "Flow"])],
+		["the Add box headings, in order", headings, PackedStringArray(["Sound", "Scene", "Object", "Device", "Camera", "Screen", "Time", "Flow"])],
 		["Loop and signal cards share the Flow heading", contents.get("Flow"),
-			PackedStringArray(["Loop Start", "Loop Back", "Emit Signal", "Play Player"])],
+			PackedStringArray(["Loop Start", "Loop Back", "Emit Signal", "Play Player", "Call Method"])],
 		["Tween Property sits with the Object cards", (contents.get("Object") as PackedStringArray).has("Tween Property"), true],
 		["a card is still saved and muted by the family word it always was", str(_kind("shake").get("category", "")), "camera"]
 	])

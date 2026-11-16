@@ -56,6 +56,14 @@ static var _drawers_script: Script = null
 
 
 ## The attribute-drawers script, loaded on first use and cached for the session.
+## The file that draws the fields that point at something in the scene, loaded the first time one is drawn.
+const SCENE_FIELDS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_fields.gd"
+
+
+static func attribute_fields() -> Script:
+	return load(SCENE_FIELDS_PATH) as Script
+
+
 static func attribute_drawers() -> Script:
 	if _drawers_script == null:
 		_drawers_script = load(ATTRIBUTE_DRAWERS_PATH)
@@ -684,7 +692,7 @@ func _fill_add_tree() -> void:
 			continue
 		var category: String = str(group_dict.get("category", ""))
 		var parent: TreeItem = _add_tree.create_item(root)
-		parent.set_text(0, str(group_dict.get("name", category.capitalize() if not category.is_empty() else "Other")))
+		parent.set_text(0, _said(str(group_dict.get("name", category.capitalize() if not category.is_empty() else "Other"))))
 		parent.set_selectable(0, false)
 		if EventSheetCardSchemas.tiles_wanted(_schema):
 			# A heading wears the family's tile, the same square the cards of that family wear.
@@ -693,8 +701,8 @@ func _fill_add_tree() -> void:
 			parent.set_custom_color(0, EventSheetCardSchemas.stripe_color(_schema, category))
 		for entry: Variant in matching:
 			var leaf: TreeItem = _add_tree.create_item(parent)
-			leaf.set_text(0, str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", ""))))
-			leaf.set_tooltip_text(0, str((entry as Dictionary).get("help", "")))
+			leaf.set_text(0, _said(str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", "")))))
+			leaf.set_tooltip_text(0, _said(str((entry as Dictionary).get("help", ""))))
 			leaf.set_metadata(0, str((entry as Dictionary).get("kind", "")))
 
 
@@ -825,6 +833,8 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 		inside.add_child(_family_tile(EventSheetCardSchemas.card_category(_spec, entry, card)))
 	var title: Label = Label.new()
 	title.text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
+	if title.text == str(entry.get("label", "")):
+		title.text = _said(title.text)
 	title.add_theme_font_override("font", EventSheetLookStyle.bold_font())
 	title.add_theme_color_override("font_color", EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet())
 	_titles[index] = title
@@ -958,6 +968,10 @@ func _fill_card_menu(popup: PopupMenu) -> void:
 	popup.add_item(EventSheetL10n.translate("Move up"), MENU_MOVE_UP)
 	popup.add_item(EventSheetL10n.translate("Move down"), MENU_MOVE_DOWN)
 	popup.add_item(EventSheetL10n.translate("Remove"), MENU_REMOVE)
+	# The keys that do the same thing from the list, shown beside the words the way Godot's own menus show them.
+	for hint: Array in [[MENU_DUPLICATE, KEY_D | KEY_MASK_CMD_OR_CTRL], [MENU_CUT, KEY_X | KEY_MASK_CMD_OR_CTRL],
+			[MENU_COPY, KEY_C | KEY_MASK_CMD_OR_CTRL], [MENU_PASTE_AFTER, KEY_V | KEY_MASK_CMD_OR_CTRL], [MENU_REMOVE, KEY_DELETE]]:
+		popup.set_item_accelerator(popup.get_item_index(int(hint[0])), int(hint[1]) as Key)
 	if _marks_wanted():
 		popup.add_separator()
 		popup.add_item(EventSheetL10n.translate("Play from here"), MENU_PLAY_FROM)
@@ -1023,7 +1037,7 @@ func _choose(index: int) -> void:
 ## writing back. Per-card hooks are whatever the schema declared - a card with none shows none.
 func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 	var body: VBoxContainer = VBoxContainer.new()
-	var help: String = str(entry.get("help", "")).strip_edges()
+	var help: String = _said(str(entry.get("help", "")).strip_edges())
 	if not help.is_empty():
 		var info: Label = Label.new()
 		info.text = help
@@ -1129,7 +1143,7 @@ func _titled_row(title: String, control: Control) -> HBoxContainer:
 ## "=" carries, so one glyph never stands for two things. A ratio only exists between numbers, so a
 ## link declared on a field holding text or a colour writes nothing.
 func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
-	var row: HBoxContainer = _titled_row(str(field.get("label", field.get("key", ""))), null)
+	var row: HBoxContainer = _titled_row(_said(str(field.get("label", field.get("key", "")))), null)
 	var linked: String = str(field.get("link", ""))
 	var link_toggle: CheckButton = null
 	# Held in a one-cell Array so the two lambdas below share the ratio the toggle wrote, rather than
@@ -1160,6 +1174,8 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 	row.add_child(editor)
 	if str(field.get("drawer", "")) == "note":
 		_notes.append({"label": editor, "field": field, "index": index})
+		# A line with nothing to say takes no room, and neither does the row that holds it.
+		row.visible = editor.visible
 	var suffix: String = str(field.get("suffix", ""))
 	if not suffix.is_empty():
 		var unit: Label = Label.new()
@@ -1169,6 +1185,32 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 	if link_toggle != null:
 		row.add_child(link_toggle)
 	return row
+
+
+## A word a schema wrote, said in the editor's language. A word with no row in the translation tables
+## reads as written, so a schema of a pack's own (the Drawing Prefab's, a project's) is unchanged.
+func _said(text: String) -> String:
+	return EventSheetL10n.translate(text) if not text.is_empty() else text
+
+
+## Writes one key of one card and tells the owner, the way a field's own write does. For the fields that
+## write more than the key they stand for (a picked node that also sets the card's length).
+func write_card_key(index: int, key: String, value: Variant) -> void:
+	_write_field(index, key, value)
+	value_changed.emit(get_value())
+
+
+## Takes one key off a card, so a card that never used it is saved without it.
+func erase_card_key(index: int, key: String) -> void:
+	if index < 0 or index >= _cards.size() or not (_cards[index] as Dictionary).has(key):
+		return
+	(_cards[index] as Dictionary).erase(key)
+	value_changed.emit(get_value())
+
+
+## Draws the list again once the control that asked has finished its own signal.
+func rebuild_soon() -> void:
+	_rebuild.call_deferred()
 
 
 ## Write one value into one card, KEEPING the spelling the file already used: a number stored as an
@@ -1250,7 +1292,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			var current: String = str(card.get(key, ""))
 			for spelled: String in tail.split(",", false):
 				options.append(spelled.get_slice("=", 0))
-				choice.add_item(spelled.get_slice("=", 1) if spelled.contains("=") else spelled)
+				choice.add_item(_said(spelled.get_slice("=", 1) if spelled.contains("=") else spelled))
 				if options[options.size() - 1] == current:
 					choice.select(options.size() - 1)
 			choice.disabled = not editable
@@ -1330,6 +1372,8 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			return _note_line(card, field, index)
 		"custom":
 			return _custom_field(index, field)
+		"node", "property", "typed", "choices", "arguments":
+			return attribute_fields().call(drawer + "_field", self, card, field, write, index)
 	return _number_field(card, key, write, FLOAT_STEP)
 
 
@@ -1440,7 +1484,10 @@ func _refresh_notes(index: int) -> void:
 		var entry: Dictionary = note as Dictionary
 		var maker: Variant = (entry.get("field") as Dictionary).get("text")
 		if int(entry.get("index", -1)) == index and maker is Callable and is_instance_valid(entry.get("label")):
-			(entry.get("label") as Label).text = str(EventSheetCardSchemas.ask(maker as Callable, _cards[index], _cards, index))
+			(entry.get("label") as Label).text = str(EventSheetCardSchemas.ask(maker as Callable, _cards[index], _cards, index, _edited))
+			if bool((entry.get("field") as Dictionary).get("hide_empty", false)):
+				(entry.get("label") as Label).visible = not (entry.get("label") as Label).text.is_empty()
+				(entry.get("label") as Label).get_parent().visible = (entry.get("label") as Label).visible
 
 
 ## A choice among the cards above this one, by name: the first entry stands for all of them and is what a card
@@ -1482,11 +1529,13 @@ func _above_field(card: Dictionary, field: Dictionary, write: Callable, index: i
 ## when the schema says the card needs attention.
 func _note_line(card: Dictionary, field: Dictionary, index: int = -1) -> Control:
 	var maker: Variant = field.get("text")
-	var said: String = str(EventSheetCardSchemas.ask(maker as Callable, card, _cards, index)) if maker is Callable else str(field.get("label", ""))
+	var said: String = str(EventSheetCardSchemas.ask(maker as Callable, card, _cards, index, _edited)) if maker is Callable else EventSheetL10n.translate(str(field.get("label", "")))
 	var warn: Variant = field.get("warn_when")
-	var needs_care: bool = warn is Callable and bool(EventSheetCardSchemas.ask(warn as Callable, card, _cards, index))
+	var needs_care: bool = warn is Callable and bool(EventSheetCardSchemas.ask(warn as Callable, card, _cards, index, _edited))
 	var line: Label = EventSheetLookStyle.message_line(said, EventSheetLookStyle.Tone.WARNING if needs_care else EventSheetLookStyle.Tone.NOTE)
 	line.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	# A line that has nothing to say takes no room at all.
+	line.visible = said.is_empty() == false or not bool(field.get("hide_empty", false))
 	return line
 
 

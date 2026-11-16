@@ -285,7 +285,27 @@ const CATEGORY_OF: Dictionary = {
 	"stop_sound": "audio",
 	"fade_bus": "audio",
 	"vibrate": "device",
-	"tween_property": "transform"
+	"tween_property": "transform",
+	"particles": "scene",
+	"spawn_scene": "scene",
+	"push": "scene",
+	"force_for_a_time": "scene",
+	"gravity_for_a_time": "scene",
+	"freeze_body": "scene",
+	"animation": "transform",
+	"sprite_animation": "transform",
+	"show_hide": "transform",
+	"squash_stretch": "transform",
+	"punch_position": "transform",
+	"punch_rotation": "transform",
+	"pop": "transform",
+	"fade": "transform",
+	"grab_focus": "transform",
+	"count_to": "transform",
+	"reveal_text": "transform",
+	"fill_bar": "transform",
+	"shader_value": "transform",
+	"call_method": "signal"
 }
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
@@ -307,6 +327,152 @@ var _jump_to: String = ""
 
 ## When this play began, on the wall clock, so one card's own progress can be answered without a tick running to count it.
 var _started_at: float = 0.0
+
+# --- Cards that reach other nodes: particles, animation, scenes, bodies, UI and shaders ---
+# A card of these words points at a node with a NodePath written relative to this player (the editor
+# fills it in with Godot's node picker), so a scene can be moved or copied and its cards still find
+# their nodes. A card that points at nothing acts on the object this player is under. A path that
+# finds no node is said ONCE, in the Output panel, and the card does nothing: it never raises an
+# error and never says it again on the next play.
+
+## Step word: restart, start or stop a particles node.
+const PARTICLES: String = "particles"
+## Step word: play a clip of an AnimationPlayer.
+const ANIMATION: String = "animation"
+## Step word: play an animation of an AnimatedSprite2D or AnimatedSprite3D.
+const SPRITE_ANIMATION: String = "sprite_animation"
+## Step word: show a node, hide it, or show it for a time.
+const SHOW_HIDE: String = "show_hide"
+## Step word: call a method of a node.
+const CALL_METHOD: String = "call_method"
+## Step word: add a copy of a scene to the running scene.
+const SPAWN_SCENE: String = "spawn_scene"
+## Step word: give a body one shove.
+const PUSH: String = "push"
+## Step word: a steady force on a RigidBody for a time.
+const FORCE_FOR_A_TIME: String = "force_for_a_time"
+## Step word: a different gravity scale on a RigidBody for a time.
+const GRAVITY_FOR_A_TIME: String = "gravity_for_a_time"
+## Step word: hold a RigidBody still for a time.
+const FREEZE_BODY: String = "freeze_body"
+## Step word: squash and stretch the object this player is under, through the Juice node.
+const SQUASH_STRETCH: String = "squash_stretch"
+## Step word: kick the position of the object this player is under, through the Juice node.
+const PUNCH_POSITION: String = "punch_position"
+## Step word: kick the rotation of the object this player is under, through the Juice node.
+const PUNCH_ROTATION: String = "punch_rotation"
+## Step word: scale a node up from its middle and let it settle.
+const POP: String = "pop"
+## Step word: fade a node through its modulate.
+const FADE: String = "fade"
+## Step word: give a Control the keyboard and gamepad focus.
+const GRAB_FOCUS: String = "grab_focus"
+## Step word: a label counts to a number.
+const COUNT_TO: String = "count_to"
+## Step word: the letters of a label appear one after another.
+const REVEAL_TEXT: String = "reveal_text"
+## Step word: a bar glides to a value.
+const FILL_BAR: String = "fill_bar"
+## Step word: move one value of the shader on a node.
+const SHADER_VALUE: String = "shader_value"
+
+## Every word this node plays itself that points at another node or at the world.
+const WORLD_WORDS: PackedStringArray = [
+	"particles", "animation", "sprite_animation", "show_hide", "call_method", "spawn_scene", "push",
+	"force_for_a_time", "gravity_for_a_time", "freeze_body", "squash_stretch", "punch_position",
+	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value"
+]
+
+## Particles word: play the burst again from the start.
+const DO_RESTART: String = "restart"
+## Particles word: switch emitting on.
+const DO_START: String = "start"
+## Particles word: switch emitting off.
+const DO_STOP: String = "stop"
+## Show or Hide word: show the node.
+const DO_SHOW: String = "show"
+## Show or Hide word: hide the node.
+const DO_HIDE: String = "hide"
+## Show or Hide word: show the node for the card's seconds, then hide it.
+const DO_FLASH: String = "flash"
+
+## Push direction word: along a fixed direction.
+const PUSH_FIXED: String = "fixed"
+## Push direction word: away from a picked node.
+const PUSH_AWAY: String = "away"
+## Push direction word: the way the body is already moving.
+const PUSH_ALONG: String = "along"
+
+## The transition words of a Tween, as Godot names them.
+const TRANSITIONS: Dictionary = {
+	"linear": Tween.TRANS_LINEAR, "sine": Tween.TRANS_SINE, "quint": Tween.TRANS_QUINT,
+	"quart": Tween.TRANS_QUART, "quad": Tween.TRANS_QUAD, "expo": Tween.TRANS_EXPO,
+	"elastic": Tween.TRANS_ELASTIC, "cubic": Tween.TRANS_CUBIC, "circ": Tween.TRANS_CIRC,
+	"bounce": Tween.TRANS_BOUNCE, "back": Tween.TRANS_BACK, "spring": Tween.TRANS_SPRING
+}
+
+## The ease words of a Tween, as Godot names them.
+const EASES: Dictionary = {
+	"in": Tween.EASE_IN, "out": Tween.EASE_OUT, "in_out": Tween.EASE_IN_OUT, "out_in": Tween.EASE_OUT_IN
+}
+
+## The cards that have already said their node is missing, by label, so it is said once.
+var _told_cards: Dictionary = {}
+
+## The materials a Shader Value card gave one node of its own, by node id, so a second card on the same
+## node keeps working on the copy it already made.
+var _own_materials: Dictionary = {}
+
+## The forces a Force For A Time card is holding on bodies right now: body, force and the timer's end.
+var _held_forces: Array[Dictionary] = []
+## The path a card holds under a key, or an empty path when it holds none. A card written by hand may
+## hold the path as text, so both spellings read.
+static func _path_of(card: Dictionary, key: String) -> NodePath:
+	var stored: Variant = card.get(key, NodePath())
+	return stored if stored is NodePath else NodePath(str(stored))
+## The node a card points at, or null. A card that names none acts on the object this player is under
+## when `host_when_empty` is set, and on nothing otherwise.
+func _target(card: Dictionary, key: String, host_when_empty: bool) -> Node:
+	var path: NodePath = _path_of(card, key)
+	if path.is_empty():
+		return host if host_when_empty else null
+	return get_node_or_null(path)
+## A tween of this player's own, kept so a Restore or a stop can end it. Tweens that have finished are let go.
+func _new_tween() -> Tween:
+	for held: int in range(_tweens.size() - 1, -1, -1):
+		if not is_instance_valid(_tweens[held]) or not _tweens[held].is_running():
+			_tweens.remove_at(held)
+	var made: Tween = create_tween()
+	_tweens.append(made)
+	return made
+## The body a body card acts on, or null (said once) when the card names one that is not there.
+func _body_of(card: Dictionary) -> Node:
+	var body: Node = _target(card, "body", true)
+	if body == null:
+		_card_missing(card, "points at no body")
+	return body
+## The shader material of a node: a CanvasItem's material, or a 3D object's material override.
+static func _shader_material_of(target: Node) -> ShaderMaterial:
+	if target is CanvasItem:
+		return (target as CanvasItem).material as ShaderMaterial
+	if target is GeometryInstance3D:
+		return (target as GeometryInstance3D).material_override as ShaderMaterial
+	return null
+## The player a Play Player card plays: the one it picked, else the one its old typed name finds. Said
+## once, and refused, when it is this player itself or a player that is playing this one.
+func _player_to_play(card: Dictionary, typed: String) -> Node:
+	var other: Node = null
+	if _names_a_node(card, "player"):
+		other = _target(card, "player", false)
+		if other == null:
+			_card_missing(card, "points at no Juice Player")
+			return null
+	else:
+		other = get_node_or_null(NodePath(typed))
+	if other == self or (other != null and _plays_through(other, self, 0)):
+		_card_missing(card, "would play a player that is already playing it")
+		return null
+	return other
 
 ## @ace_action
 ## @ace_featured
@@ -425,6 +591,7 @@ func skip_to_end() -> void:
 func restore() -> void:
 	_stop_tweens()
 	_restore_buses()
+	_release_forces()
 	_told_nested("restore")
 	for entry: Variant in _restore_to:
 		var card: Dictionary = entry as Dictionary
@@ -1278,7 +1445,7 @@ static func _is_timing(word: String) -> bool:
 ## one; these four are done here, and a moment FILE has nowhere to keep them.
 static func _is_own_word(word: String) -> bool:
 	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER or word == SOUND \
-			or word == STOP_SOUND or word == FADE_BUS or word == VIBRATE
+			or word == STOP_SOUND or word == FADE_BUS or word == VIBRATE or WORLD_WORDS.has(word)
 
 ## The number a card's chance is answered with. One roll per card is thrown before the beat
 ## begins, so a Skip To End reads the decision the walk would have read rather than throwing the
@@ -1433,11 +1600,21 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 	# Holding a tween to 200 pixels down to 0.3 would not be less flashing, it would be the wrong
 	# number. The ten moment words below ARE in the list, and the Juice node holds them to it as
 	# they arrive.
+	if WORLD_WORDS.has(word):
+		_play_world_card(word, card, at, seconds)
+		return
 	match word:
 		TWEEN_PROPERTY:
-			_tween_property(effect, amount * at, maxf(seconds, 0.0))
+			# A card that holds none of the newer keys is the one-number tween it always was.
+			if _is_whole_tween(card):
+				_tween_card(card, at, seconds)
+			else:
+				_tween_property(effect, amount * at, maxf(seconds, 0.0))
 		EMIT_SIGNAL:
-			on_feedback_signal.emit(effect)
+			if _names_a_node(card, "node") and not str(card.get("signal", "")).is_empty():
+				_emit_on_node(card)
+			else:
+				on_feedback_signal.emit(effect)
 		SOUND:
 			# A skip jumps to where the beat ends, and a sound is not a place: it is not heard late.
 			if not skipping:
@@ -1452,7 +1629,7 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 			if not skipping:
 				_vibrate(card, at)
 		PLAY_PLAYER:
-			var other: Node = get_node_or_null(NodePath(effect))
+			var other: Node = _player_to_play(card, effect)
 			if other != null and other.has_method("play"):
 				if not _nested.has(other):
 					_nested.append(other)
@@ -1750,7 +1927,7 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 			offset += Vector2(sin(time * 47.0), cos(time * 53.0)) * amount * 8.0 * (1.0 - through)
 		elif word == "punch":
 			swell += amount * 0.2 * sin(through * PI)
-		elif word == TWEEN_PROPERTY:
+		elif word == TWEEN_PROPERTY and not card.has("node") and not card.has("to"):
 			var property: String = str(card.get("effect", ""))
 			if base.has(property) and (base[property] is float or base[property] is int):
 				written[property] = lerpf(float(base[property]), amount, through)
@@ -1838,6 +2015,12 @@ static func editor_kind(word: String) -> String:
 			return "skipped:it moves a bus volume, which the editor leaves alone"
 		VIBRATE:
 			return "skipped:a controller or a phone is not in the editor"
+		PUSH, FORCE_FOR_A_TIME, GRAVITY_FOR_A_TIME, FREEZE_BODY:
+			return "skipped:physics does not run in the editor"
+		SPAWN_SCENE:
+			return "skipped:it adds a scene to the running game"
+		CALL_METHOD:
+			return "skipped:a method runs the game's own code"
 		EMIT_SIGNAL:
 			return "skipped:a signal runs the game's own code"
 		PLAY_PLAYER:
@@ -1978,5 +2161,492 @@ func for_each_feedback() -> Array:
 		if entry is Dictionary:
 			labels.append(_label_of(entry as Dictionary))
 	return labels
+
+## Says once that a card could not do its work, and tells On Juice Card Skipped why.
+func _card_missing(card: Dictionary, reason: String) -> void:
+	var label: String = _label_of(card)
+	on_feedback_skipped.emit(label, "target missing")
+	if _told_cards.has(label):
+		return
+	_told_cards[label] = true
+	push_warning("Juice Player: the card \"%s\" on %s %s, so it did nothing." % [label, name, reason])
+
+## Writes down what a property was, so Restore Initial Values can put it back.
+func _remember(object: Object, property: String) -> Variant:
+	var before: Variant = object.get_indexed(NodePath(property))
+	_restore_to.append({"object": object, "property": property, "value": before})
+	return before
+
+## The number a card's text means: a plain number, or a name read from the game - an autoload and then
+## its properties ("GameState.score"), else a property of the object this player is under. Null when
+## the text names nothing that holds a number.
+func _number_from(text: String) -> Variant:
+	var said: String = text.strip_edges()
+	if said.is_empty():
+		return null
+	if said.is_valid_float():
+		return said.to_float()
+	var parts: PackedStringArray = said.split(".")
+	var current: Variant = get_node_or_null("/root/" + parts[0])
+	if current == null and host != null:
+		current = host.get(parts[0])
+	for part: int in range(1, parts.size()):
+		if not (current is Object):
+			return null
+		current = (current as Object).get(parts[part])
+	if current is float or current is int:
+		return float(current)
+	return null
+
+## One world card, done. The words are the ones in WORLD_WORDS; `at` is the strength already multiplied
+## by this player's own, and `seconds` the card's length.
+func _play_world_card(word: String, card: Dictionary, at: float, seconds: float) -> void:
+	match word:
+		PARTICLES:
+			_particles(card)
+		ANIMATION:
+			_animation(card, seconds)
+		SPRITE_ANIMATION:
+			_sprite_animation(card, seconds)
+		SHOW_HIDE:
+			_show_hide(card, seconds)
+		CALL_METHOD:
+			_call_method(card)
+		SPAWN_SCENE:
+			_spawn_scene(card)
+		PUSH:
+			_push(card, at)
+		FORCE_FOR_A_TIME:
+			_force_for_a_time(card, seconds)
+		GRAVITY_FOR_A_TIME:
+			_gravity_for_a_time(card, seconds)
+		FREEZE_BODY:
+			_freeze_body(card, seconds)
+		SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION:
+			_punch_through_juice(word, card, at, seconds)
+		POP:
+			_pop(card, seconds)
+		FADE:
+			_fade(card, seconds)
+		GRAB_FOCUS:
+			_grab_focus(card)
+		COUNT_TO:
+			_count_to(card, seconds)
+		REVEAL_TEXT:
+			_reveal_text(card, seconds)
+		FILL_BAR:
+			_fill_bar(card, seconds)
+		SHADER_VALUE:
+			_shader_value(card, seconds)
+
+## Restarts, starts or stops a particles node.
+func _particles(card: Dictionary) -> void:
+	var target: Node = _target(card, "node", false)
+	if target == null or not ("emitting" in target):
+		_card_missing(card, "points at no particles node")
+		return
+	_remember(target, "emitting")
+	match str(card.get("do", DO_RESTART)):
+		DO_STOP:
+			target.set("emitting", false)
+		DO_START:
+			target.set("emitting", true)
+		_:
+			if target.has_method("restart"):
+				target.call("restart")
+			target.set("emitting", true)
+
+## Plays a clip of an AnimationPlayer. The card's seconds stretch the clip to that length, so Scale
+## Juice Timing speeds an animation up with the rest of the list.
+func _animation(card: Dictionary, seconds: float) -> void:
+	var target: AnimationPlayer = _target(card, "node", false) as AnimationPlayer
+	if target == null:
+		_card_missing(card, "points at no animation player")
+		return
+	var clip_name: String = str(card.get("animation", ""))
+	if not target.has_animation(clip_name):
+		_card_missing(card, "names the animation \"%s\", which that player does not have" % clip_name)
+		return
+	var length: float = target.get_animation(clip_name).length
+	var speed: float = length / seconds if seconds > 0.0 and length > 0.0 else 1.0
+	target.play(clip_name, -1.0, speed)
+
+## Plays an animation of an AnimatedSprite2D or AnimatedSprite3D, stretched to the card's seconds.
+func _sprite_animation(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", false)
+	var frames: SpriteFrames = target.get("sprite_frames") as SpriteFrames if target != null else null
+	if frames == null or not target.has_method("play"):
+		_card_missing(card, "points at no animated sprite")
+		return
+	var clip_name: String = str(card.get("animation", ""))
+	if not frames.has_animation(clip_name):
+		_card_missing(card, "names the animation \"%s\", which that sprite does not have" % clip_name)
+		return
+	var length: float = float(frames.get_frame_count(clip_name)) / maxf(frames.get_animation_speed(clip_name), 0.001)
+	target.call("play", clip_name, length / seconds if seconds > 0.0 and length > 0.0 else 1.0)
+
+## Shows a node, hides it, or shows it for the card's seconds and hides it again.
+func _show_hide(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	if target == null or not ("visible" in target):
+		_card_missing(card, "points at no node that can be shown or hidden")
+		return
+	_remember(target, "visible")
+	var word: String = str(card.get("do", DO_FLASH))
+	target.set("visible", word != DO_HIDE)
+	if word == DO_FLASH:
+		get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:
+			if is_instance_valid(target):
+				target.set("visible", false))
+
+## Calls a method of a node with the values the card holds.
+func _call_method(card: Dictionary) -> void:
+	var target: Node = _target(card, "node", false)
+	var method: String = str(card.get("method", ""))
+	if target == null or not target.has_method(method):
+		_card_missing(card, "points at no node with a method called \"%s\"" % method)
+		return
+	var given: Variant = card.get("args", [])
+	target.callv(method, given if given is Array else [])
+
+## Adds a copy of a scene to the running scene, at this object or at a node, taking it from the
+## object pool when that scene has one.
+func _spawn_scene(card: Dictionary) -> void:
+	var path: String = str(card.get("scene", ""))
+	var scene: PackedScene = load(path) as PackedScene if not path.is_empty() and ResourceLoader.exists(path) else null
+	if scene == null:
+		_card_missing(card, "names a scene that is not in the project")
+		return
+	var anchor: Node = _target(card, "node", true) if str(card.get("at", "here")) == "node" else host
+	if anchor == null:
+		_card_missing(card, "points at no node to drop the scene at")
+		return
+	var place: Variant = anchor.get("global_position")
+	var pool: Node = get_node_or_null("/root/ObjectPool")
+	var pooled: String = _pool_named_for(pool, scene)
+	if not pooled.is_empty() and place != null:
+		pool.call("spawn_safely", pooled, place)
+		return
+	var made: Node = scene.instantiate()
+	var world: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	world.add_child.call_deferred(made)
+	if place != null:
+		made.set.call_deferred("global_position", place)
+
+## The name of the object pool that holds copies of this scene, or "" when none does.
+func _pool_named_for(pool: Node, scene: PackedScene) -> String:
+	if pool == null or not pool.has_method("spawn_safely"):
+		return ""
+	var pools: Variant = pool.get("_pools")
+	if not (pools is Dictionary):
+		return ""
+	for pool_name: Variant in (pools as Dictionary):
+		var entry: Variant = (pools as Dictionary)[pool_name]
+		if entry is Dictionary and (entry as Dictionary).get("scene") == scene:
+			return str(pool_name)
+	return ""
+
+## The direction a Push goes, always of length one, or a zero vector when it has none.
+func _push_direction(card: Dictionary, body: Node) -> Variant:
+	var in_3d: bool = body is Node3D
+	match str(card.get("direction", PUSH_AWAY)):
+		PUSH_FIXED:
+			var fixed: Vector3 = Vector3(float(card.get("x", 0.0)), float(card.get("y", -1.0)), float(card.get("z", 0.0)))
+			if in_3d:
+				return fixed.normalized()
+			return Vector2(fixed.x, fixed.y).normalized()
+		PUSH_ALONG:
+			var moving: Variant = body.get("linear_velocity")
+			if moving == null:
+				moving = body.get("velocity")
+			if moving is Vector2 or moving is Vector3:
+				return moving.normalized()
+			return _no_direction(in_3d)
+	var from: Variant = body.get("global_position")
+	var other: Node = _target(card, "from", false)
+	var there: Variant = null
+	if other != null:
+		there = other.get("global_position")
+	if from == null or there == null or typeof(there) != typeof(from):
+		return _no_direction(in_3d)
+	return (from - there).normalized()
+
+## The direction of a push that has none: a vector of no length, of the kind the body uses.
+static func _no_direction(in_3d: bool) -> Variant:
+	if in_3d:
+		return Vector3.ZERO
+	return Vector2.ZERO
+
+## A shove. A RigidBody takes it as an impulse, a CharacterBody has it added to its velocity once and
+## carries on moving itself. Anything else is not a body, and the card says so.
+func _push(card: Dictionary, at: float) -> void:
+	var body: Node = _body_of(card)
+	if body == null:
+		return
+	var speed: float = float(card.get("speed", 300.0)) * (at if bool(card.get("scaled", true)) else 1.0)
+	var way: Variant = _push_direction(card, body)
+	if body is RigidBody2D:
+		(body as RigidBody2D).apply_central_impulse((way as Vector2) * speed * (body as RigidBody2D).mass)
+	elif body is RigidBody3D:
+		(body as RigidBody3D).apply_central_impulse((way as Vector3) * speed * (body as RigidBody3D).mass)
+	elif body is CharacterBody2D:
+		(body as CharacterBody2D).velocity += (way as Vector2) * speed
+	elif body is CharacterBody3D:
+		(body as CharacterBody3D).velocity += (way as Vector3) * speed
+	else:
+		_card_missing(card, "points at something that is not a physics body")
+
+## A steady force on a RigidBody for a time, taken away again when the time is up or on Restore.
+func _force_for_a_time(card: Dictionary, seconds: float) -> void:
+	var body: Node = _body_of(card)
+	if body == null:
+		return
+	var force: Variant = Vector3(float(card.get("x", 0.0)), float(card.get("y", -400.0)), float(card.get("z", 0.0)))
+	if body is RigidBody2D:
+		force = Vector2((force as Vector3).x, (force as Vector3).y)
+		(body as RigidBody2D).add_constant_central_force(force)
+	elif body is RigidBody3D:
+		(body as RigidBody3D).add_constant_central_force(force)
+	else:
+		_card_missing(card, "points at something that is not a RigidBody")
+		return
+	var held: Dictionary = {"body": body, "force": force}
+	_held_forces.append(held)
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(_release_force.bind(held))
+
+## Takes one held force off its body, once.
+func _release_force(held: Dictionary) -> void:
+	if not _held_forces.has(held):
+		return
+	_held_forces.erase(held)
+	var body: Object = held.get("body") as Object
+	if body == null or not is_instance_valid(body):
+		return
+	if body is RigidBody2D:
+		(body as RigidBody2D).add_constant_central_force(-(held["force"] as Vector2))
+	elif body is RigidBody3D:
+		(body as RigidBody3D).add_constant_central_force(-(held["force"] as Vector3))
+
+## Takes every held force off, at once.
+func _release_forces() -> void:
+	for held: Dictionary in _held_forces.duplicate():
+		_release_force(held)
+
+## A different gravity scale on a RigidBody for a time, then the one it had.
+func _gravity_for_a_time(card: Dictionary, seconds: float) -> void:
+	var body: Node = _body_of(card)
+	if body == null:
+		return
+	if not (body is RigidBody2D or body is RigidBody3D):
+		_card_missing(card, "points at something that is not a RigidBody")
+		return
+	var before: Variant = _remember(body, "gravity_scale")
+	body.set("gravity_scale", float(card.get("amount", 0.2)))
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:
+		if is_instance_valid(body):
+			body.set("gravity_scale", before))
+
+## Holds a RigidBody still for a time. Freezing is not allowed in the middle of a physics step, so it
+## is asked for at the end of the frame.
+func _freeze_body(card: Dictionary, seconds: float) -> void:
+	var body: Node = _body_of(card)
+	if body == null:
+		return
+	if not (body is RigidBody2D or body is RigidBody3D):
+		_card_missing(card, "points at something that is not a RigidBody")
+		return
+	var before: Variant = _remember(body, "freeze")
+	body.set_deferred("freeze", true)
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:
+		if is_instance_valid(body):
+			body.set_deferred("freeze", before))
+
+## Squash and stretch, a position kick or a rotation kick, done by the Juice node beside this one.
+func _punch_through_juice(word: String, card: Dictionary, at: float, seconds: float) -> void:
+	var juice: Node = _juice()
+	if juice == null:
+		return
+	match word:
+		SQUASH_STRETCH:
+			juice.call("squash_and_stretch", float(card.get("amount", 0.3)) * at, seconds)
+		PUNCH_POSITION:
+			juice.call("punch_position", Vector2(float(card.get("x", 0.0)), float(card.get("y", -10.0))) * at, seconds)
+		PUNCH_ROTATION:
+			juice.call("punch_rotation", float(card.get("amount", 10.0)) * at, seconds)
+
+## Scales a node up from its middle and lets it settle back.
+func _pop(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	if target == null or not ("scale" in target):
+		_card_missing(card, "points at no node that can be scaled")
+		return
+	if target is Control:
+		(target as Control).pivot_offset = (target as Control).size / 2.0
+	var rest: Variant = _remember(target, "scale")
+	var peak: float = float(card.get("amount", 1.3))
+	var made: Tween = _new_tween()
+	made.tween_property(target, "scale", rest * peak, seconds * 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	made.tween_property(target, "scale", rest, seconds * 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+## Fades a node to an alpha through its modulate.
+func _fade(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	if not (target is CanvasItem):
+		_card_missing(card, "points at no node that can be faded")
+		return
+	_remember(target, "modulate")
+	_new_tween().tween_property(target, "modulate:a", float(card.get("amount", 0.0)), seconds)
+
+## Gives a Control the keyboard and gamepad focus.
+func _grab_focus(card: Dictionary) -> void:
+	var target: Control = _target(card, "node", false) as Control
+	if target == null:
+		_card_missing(card, "points at no control")
+		return
+	target.grab_focus()
+
+## A label counts from the number it shows to a number.
+func _count_to(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", false)
+	var goal: Variant = _number_from(str(card.get("to", "")))
+	if target == null or not ("text" in target):
+		_card_missing(card, "points at no label")
+		return
+	if goal == null:
+		_card_missing(card, "names a number that is not there (\"%s\")" % str(card.get("to", "")))
+		return
+	_remember(target, "text")
+	var shown: String = str(target.get("text")).strip_edges()
+	var from: float = shown.to_float() if shown.is_valid_float() else 0.0
+	_new_tween().tween_method(func(value: float) -> void:
+		if is_instance_valid(target):
+			target.set("text", str(int(round(value)))), from, float(goal), seconds)
+
+## The letters of a label appear one after another over the card's seconds.
+func _reveal_text(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", false)
+	if target == null or not ("visible_ratio" in target):
+		_card_missing(card, "points at no label")
+		return
+	_remember(target, "visible_ratio")
+	target.set("visible_ratio", 0.0)
+	_new_tween().tween_property(target, "visible_ratio", 1.0, seconds)
+
+## A bar or slider glides to a number.
+func _fill_bar(card: Dictionary, seconds: float) -> void:
+	var target: Range = _target(card, "node", false) as Range
+	var goal: Variant = _number_from(str(card.get("to", "")))
+	if target == null:
+		_card_missing(card, "points at no bar")
+		return
+	if goal == null:
+		_card_missing(card, "names a number that is not there (\"%s\")" % str(card.get("to", "")))
+		return
+	_remember(target, "value")
+	_new_tween().tween_property(target, "value", float(goal), seconds)
+
+## Moves one value of the shader on a node. With "only this object" on, the node gets a copy of its
+## material to itself first, so the others that share the file are left alone; Restore gives the node
+## its own material back.
+func _shader_value(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	var shared: ShaderMaterial = _shader_material_of(target) if target != null else null
+	var value_name: String = str(card.get("parameter", ""))
+	if shared == null or shared.shader == null or value_name.is_empty():
+		_card_missing(card, "points at no node with a shader to move")
+		return
+	var material: ShaderMaterial = shared
+	if bool(card.get("only_this", true)):
+		var key: int = target.get_instance_id()
+		if not _own_materials.has(key) or not is_instance_valid(_own_materials[key]):
+			_own_materials[key] = shared.duplicate()
+			var slot: String = "material" if target is CanvasItem else "material_override"
+			_remember(target, slot)
+			target.set(slot, _own_materials[key])
+		material = _own_materials[key]
+	var property: String = "shader_parameter/" + value_name
+	var before: Variant = material.get_shader_parameter(value_name)
+	if before == null:
+		before = RenderingServer.shader_get_parameter_default(material.shader.get_rid(), value_name)
+	if before == null:
+		_card_missing(card, "names the shader value \"%s\", which that shader does not declare" % value_name)
+		return
+	_restore_to.append({"object": material, "property": property, "value": before})
+	var goal: Variant = card.get("to", before)
+	var made: Tween = _new_tween()
+	var way: Tween = made.set_trans(TRANSITIONS.get(str(card.get("trans", "sine")), Tween.TRANS_SINE) as Tween.TransitionType)
+	if bool(card.get("back", false)):
+		way.tween_property(material, property, goal, seconds * 0.5)
+		way.tween_property(material, property, before, seconds * 0.5)
+	else:
+		way.tween_property(material, property, goal, seconds)
+
+## A property of a node walked to a value, the whole card: any node, a typed value, where it starts,
+## its transition and ease, and whether it comes back. Cards that hold none of these keys never reach
+## here and play exactly as they always did.
+func _tween_card(card: Dictionary, at: float, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	var property: String = str(card.get("effect", "")).strip_edges()
+	if target == null:
+		_card_missing(card, "points at a node that is not there")
+		return
+	if property.is_empty():
+		return
+	var before: Variant = target.get_indexed(NodePath(property))
+	if before == null:
+		_card_missing(card, "points at %s, which has no property called \"%s\"" % [target.name, property])
+		return
+	_restore_to.append({"object": target, "property": property, "value": before})
+	var goal: Variant = card.get("to", float(card.get("amount", 1.0)))
+	var relative: bool = bool(card.get("relative", false))
+	# A number is scaled by the strength of the play, as the one-number tween always was; a colour or a
+	# position is a place, not an amount, so only a value added to what is there is scaled.
+	if goal is float or goal is int or (relative and (goal is Vector2 or goal is Vector3)):
+		goal = goal * at
+	if card.has("from"):
+		target.set_indexed(NodePath(property), card["from"])
+	var made: Tween = _new_tween()
+	var shaped: Tween = made.set_trans(TRANSITIONS.get(str(card.get("trans", "linear")), Tween.TRANS_LINEAR) as Tween.TransitionType)
+	shaped.set_ease(EASES.get(str(card.get("ease", "in_out")), Tween.EASE_IN_OUT) as Tween.EaseType)
+	var there: PropertyTweener = shaped.tween_property(target, NodePath(property), goal, seconds * (0.5 if bool(card.get("back", false)) else 1.0))
+	if relative:
+		there.as_relative()
+	if bool(card.get("back", false)):
+		shaped.tween_property(target, NodePath(property), before, seconds * 0.5)
+
+## Whether a Tween Property card holds any of the keys that make it the whole card. A card that holds
+## none of them is the one-number tween on this object it has always been.
+static func _is_whole_tween(card: Dictionary) -> bool:
+	for key: String in ["node", "to", "from", "trans", "ease", "relative", "back"]:
+		if card.has(key):
+			return true
+	return false
+
+## Whether the card names a node under this key at all.
+static func _names_a_node(card: Dictionary, key: String) -> bool:
+	return not _path_of(card, key).is_empty()
+
+## Fires a signal of a node, with the values the card holds.
+func _emit_on_node(card: Dictionary) -> void:
+	var target: Node = _target(card, "node", false)
+	var wanted: String = str(card.get("signal", ""))
+	if target == null or not target.has_signal(wanted):
+		_card_missing(card, "points at no node with a signal called \"%s\"" % wanted)
+		return
+	var given: Variant = card.get("args", [])
+	target.callv("emit_signal", [wanted] + (given as Array if given is Array else []))
+
+## Whether `from` is playing, through the players it started, the one named `wanted`. The depth is a
+## guard against a ring of players that has no end.
+static func _plays_through(from: Node, wanted: Node, depth: int) -> bool:
+	if depth > 8 or not bool(from.get("playing")):
+		return false
+	var started: Variant = from.get("_nested")
+	if not (started is Array):
+		return false
+	for other: Variant in (started as Array):
+		if other == wanted or (other is Node and _plays_through(other as Node, wanted, depth + 1)):
+			return true
+	return false
 
 # Juice Player: add this node under an object (the node was called Feedback Player before version 0.21.0), fill its list in the Inspector, and one row plays the whole beat. Cards are dragged into order, ticked off, and tuned in place; Pause and Hold space them out and Loop Back repeats a stretch. The ten shake-and-flash words are played by the Juice behaviour beside this node, so put one there too. The list is the same shape a moment file holds - drop a file on the slot to play it instead, or save the list out as one. This pack is an event sheet - extend it by editing it.

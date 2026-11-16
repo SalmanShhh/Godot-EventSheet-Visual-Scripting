@@ -233,7 +233,9 @@ static func card_badge(entry: Dictionary, card: Dictionary, cards: Array = [], i
 
 ## Calls a schema callable with the card, and with the list and the card's place in it when the callable
 ## takes three arguments.
-static func ask(maker: Callable, card: Dictionary, cards: Array, index: int) -> Variant:
+static func ask(maker: Callable, card: Dictionary, cards: Array, index: int, edited: Object = null) -> Variant:
+	if maker.get_argument_count() >= 4:
+		return maker.call(card, cards, index, edited)
 	if maker.get_argument_count() >= 3:
 		return maker.call(card, cards, index)
 	return maker.call(card)

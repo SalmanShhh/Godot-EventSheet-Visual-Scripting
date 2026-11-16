@@ -73,6 +73,9 @@ const WAITS_FOR: String = "waits_for"
 ## the strip's play buttons. By path, so the first open of the editor does not compile it.
 const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
 
+## The kinds that point at other nodes and at the world: particles, animation, spawning, bodies, UI, shaders.
+const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_kinds.gd"
+
 ## The strip of buttons that plays the whole list, drawn under it.
 const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
 
@@ -195,6 +198,7 @@ static func schema() -> Dictionary:
 	kinds.append_array(sound_control_kinds())
 	kinds.append_array(timing_kinds())
 	kinds.append_array(other_kinds())
+	kinds.append_array(world().call("kinds", family_of()))
 	return {
 		"kinds": kinds,
 		"label_key": LABEL_KEY,
@@ -208,6 +212,11 @@ static func schema() -> Dictionary:
 		"footer": strip_footer,
 		"marks": {"run": play_card}
 	}
+
+
+## The file that holds the kinds that point at other nodes, loaded the first time the vocabulary is built.
+static func world() -> Script:
+	return load(WORLD_PATH) as Script
 
 
 ## The Juice pack's vocabulary, read once and kept for the session.
@@ -322,11 +331,11 @@ static func sound_kinds() -> Array:
 				{"key": "sound_missing", "label": "", "drawer": "note", "text": sound_note, "visible_when": sound_needs_care, "warn_when": sound_needs_care},
 				{"key": "volume_db", "label": "Volume", "drawer": "num", "default": 0.0, "suffix": "dB"},
 				{"key": "volume_spread_db", "label": "Random volume", "drawer": "spread", "default": 2.0, "suffix": "dB"},
-				{"key": "pitch", "label": "Pitch", "drawer": "num", "default": 1.0},
+				{"key": "pitch", "label": "Pitch", "drawer": "num", "default": 1.0, "unset": 1.0},
 				{"key": "pitch_spread", "label": "Random pitch", "drawer": "spread", "default": 0.1},
 				{"key": "pitch_range", "label": "", "drawer": "note", "text": pitch_note},
 				{"key": "bus", "label": "Bus", "drawer": "bus", "default": "Master"},
-				{"key": "heard_from", "label": "Heard from", "drawer": "options:here=This object,everywhere=Everywhere", "default": "here"},
+				{"key": "heard_from", "label": "Heard from", "drawer": "options:here=This object,everywhere=Everywhere", "default": "here", "unset": "here"},
 				{"key": "follows_strength", "label": "Follows strength", "drawer": "bool", "default": false},
 				{"key": "delay", "label": "Delay", "drawer": "num", "unset": 0.0, "suffix": "s"},
 				{"key": "listen", "label": "Listen", "drawer": "custom", "build": listen_row}
@@ -581,6 +590,22 @@ static func timing_kinds() -> Array:
 	]
 
 
+## Whether the card names no node, so its word is the only thing it fires.
+static func no_node_picked(card: Dictionary) -> bool:
+	return str(card.get("node", "")).is_empty()
+
+
+## Whether the card names a node, so its signal is the thing to pick.
+static func a_node_picked(card: Dictionary) -> bool:
+	return not str(card.get("node", "")).is_empty()
+
+
+## Whether an older Play Player card still plays by a typed name: it keeps working, and keeps its box, until
+## a player is picked.
+static func typed_player_used(card: Dictionary) -> bool:
+	return str(card.get("player", "")).is_empty() and not str(card.get(EFFECT_KEY, "")).is_empty()
+
+
 ## The three cards that are not a feeling and not a wait: a value walked, a word said, another
 ## player played. They are what keeps a list from having to leave the Inspector for the one step
 ## that is about this object rather than about the screen.
@@ -590,11 +615,17 @@ static func other_kinds() -> Array:
 			"kind": TWEEN_PROPERTY,
 			"category": str(family_of().get(TWEEN_PROPERTY, "")),
 			"label": "Tween Property",
-			"help": "Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back.",
+			"help": "Moves a property of a node to a value over a time. Restore Initial Values puts it back.",
 			"fields": [
-				{"key": EFFECT_KEY, "label": "Property", "drawer": "text", "default": "rotation"},
-				{"key": AMOUNT_KEY, "label": "To", "drawer": "num", "default": 1.0},
-				{"key": SECONDS_KEY, "label": "Over", "drawer": "unit:time", "default": 0.2}
+				{"key": "node", "label": "Node", "drawer": "node", "types": ["Node"], "empty": "This object"},
+				{"key": EFFECT_KEY, "label": "Property", "drawer": "property", "node_key": "node", "default": "rotation"},
+				{"key": "to", "label": "To", "drawer": "typed", "node_key": "node", "property_key": EFFECT_KEY, "fallback_key": AMOUNT_KEY},
+				{"key": SECONDS_KEY, "label": "Over", "drawer": "unit:time", "default": 0.2},
+				{"key": "trans", "label": "Transition", "drawer": "options:linear=Linear,sine=Sine,quad=Quad,cubic=Cubic,quart=Quart,quint=Quint,expo=Expo,circ=Circ,back=Back,elastic=Elastic,bounce=Bounce,spring=Spring", "unset": "linear"},
+				{"key": "ease", "label": "Ease", "drawer": "options:in=In,out=Out,in_out=In and out,out_in=Out and in", "unset": "in_out"},
+				{"key": "back", "label": "Then come back", "drawer": "bool", "unset": false},
+				{"key": "relative", "label": "Add to the value", "drawer": "bool", "unset": false},
+				{"key": "tween_note", "label": "", "drawer": "note", "text": Callable(world(), &"tween_note"), "hide_empty": true, "warn_when": Callable(world(), &"tween_needs_care")}
 			],
 			"live": [],
 			"defaults": {EFFECT_KEY: "", AMOUNT_KEY: 1.0, SECONDS_KEY: 0.2},
@@ -604,8 +635,13 @@ static func other_kinds() -> Array:
 			"kind": EMIT_SIGNAL,
 			"category": str(family_of().get(EMIT_SIGNAL, "")),
 			"label": "Emit Signal",
-			"help": "Says one word out of the player's On Juice Signal trigger, so a sheet can hang anything at all off a point in the list.",
-			"fields": [{"key": EFFECT_KEY, "label": "Word", "drawer": "text", "default": ""}],
+			"help": "Fires a signal when the list reaches this card. Left on this player it says one word out of the player's On Juice Signal trigger; pick a node and a signal its script declares to fire that instead.",
+			"fields": [
+				{"key": "node", "label": "On", "drawer": "node", "types": ["Node"], "empty": "This player"},
+				{"key": EFFECT_KEY, "label": "Word", "drawer": "text", "default": "", "visible_when": no_node_picked},
+				{"key": "signal", "label": "Signal", "drawer": "choices", "choices": Callable(world(), &"script_signals"), "empty": "Pick a signal", "visible_when": a_node_picked},
+				{"key": "args", "label": "", "drawer": "arguments", "arguments": Callable(world(), &"signal_arguments"), "visible_when": a_node_picked}
+			],
 			"live": [],
 			"defaults": {EFFECT_KEY: ""},
 			"badge": seconds_badge
@@ -616,7 +652,8 @@ static func other_kinds() -> Array:
 			"label": "Play Player",
 			"help": "Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",
 			"fields": [
-				{"key": EFFECT_KEY, "label": "Player", "drawer": "text", "default": ""},
+				{"key": "player", "label": "Player", "drawer": "node", "types": ["JuicePlayer"], "empty": "Pick a player"},
+				{"key": EFFECT_KEY, "label": "Name (typed)", "drawer": "text", "default": "", "visible_when": typed_player_used},
 				{"key": AMOUNT_KEY, "label": "Strength", "drawer": "num", "default": 1.0}
 			],
 			"live": [],
