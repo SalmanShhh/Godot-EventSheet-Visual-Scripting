@@ -10968,3 +10968,5 @@ Line look,線の見た目
 grows with the stamp,スタンプと一緒に拡大
 "Drawn first, underneath","最初に描かれる、一番下"
 "Drawn last, on top","最後に描かれる、一番上"
+Add shape,図形を追加
+Enter adds the highlighted shape.,Enter で選択中の図形を追加します。

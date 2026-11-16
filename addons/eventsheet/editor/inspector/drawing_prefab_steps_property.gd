@@ -172,7 +172,9 @@ class ShapeStepsEditor:
 			})
 		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true,
 			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for"),
-			"order_captions": [EventSheetL10n.translate("Drawn first, underneath"), EventSheetL10n.translate("Drawn last, on top")]}
+			"order_captions": [EventSheetL10n.translate("Drawn first, underneath"), EventSheetL10n.translate("Drawn last, on top")],
+			"add_word": EventSheetL10n.translate("Add shape"), "add_hint": EventSheetL10n.translate("Enter adds the highlighted shape."),
+			"flat_add": true, "open_new": true, "kind_icon": Callable(ShapeStepsEditor, "kind_icon")}
 
 
 	## A shape's plain name, in the editor's language. The stored word (`rect`) never changes.
@@ -244,6 +246,13 @@ class ShapeStepsEditor:
 		var tile: Control = load(SHAPE_TILE_PATH).new(int(EventSheetLookStyle.px(14.0)), on_light)
 		tile.call("set_card", card)
 		return tile
+
+
+	## The picture a kind wears in the Add box: its tile, in the colour a new step of that kind starts as.
+	static func kind_icon(kind: String, on_light: bool) -> Texture2D:
+		var defaults: Dictionary = defaults_for(kind)
+		var colour: Color = Color.from_string(str(defaults.get("color", "#ffffff")), Color.WHITE)
+		return ImageTexture.create_from_image(load(SHAPE_TILE_PATH).call("shape_image", kind, colour, int(EventSheetLookStyle.px(14.0)), on_light))
 
 
 	## One shape's fields, in the order the card draws them: where it sits, what it is, what colour it

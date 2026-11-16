@@ -446,7 +446,40 @@ func add_card(kind: String) -> void:
 	if entry.is_empty():
 		return
 	_cards.append(EventSheetCardSchemas.new_card(_spec, entry))
+	# A schema may open the card it just added, with its first field ready, so the next thing a person does is
+	# fill it in rather than hunt for it at the foot of the list.
+	var opens_new: bool = bool(_schema.get("open_new", false))
+	if opens_new:
+		_unfolded[_cards.size() - 1] = true
 	_commit()
+	if opens_new:
+		_ready_card.call_deferred(_cards.size() - 1)
+
+
+## Gives a card's first field the keyboard and scrolls the card into view, once it is on screen.
+func _ready_card(index: int) -> void:
+	var surface: Control = _lines.get(index) as Control
+	if surface == null or not is_instance_valid(surface) or not is_inside_tree():
+		return
+	var first: Control = _first_focusable(surface)
+	if first != null:
+		first.grab_focus()
+	var scroller: Node = get_parent()
+	while scroller != null and not (scroller is ScrollContainer):
+		scroller = scroller.get_parent()
+	if scroller != null:
+		(scroller as ScrollContainer).ensure_control_visible(surface)
+
+
+func _first_focusable(node: Node) -> Control:
+	for child: Node in node.get_children():
+		var found: Control = child as Control
+		if found != null and found.visible and found.focus_mode == Control.FOCUS_ALL and not (found is BaseButton and (found as BaseButton).flat):
+			return found
+		var deeper: Control = _first_focusable(child)
+		if deeper != null:
+			return deeper
+	return null
 
 
 ## Move the card at `from` to `to` - what a finished drag, and "Move to top", write. The open cards
@@ -606,7 +639,7 @@ func _build_chrome() -> void:
 	_list = VBoxContainer.new()
 	_body.add_child(_list)
 	_add_button = Button.new()
-	_add_button.text = EventSheetL10n.translate("Add card")
+	_add_button.text = str(_schema.get("add_word", "")) if not str(_schema.get("add_word", "")).is_empty() else EventSheetL10n.translate("Add card")
 	var add_picture: Texture2D = _editor_icon("Add")
 	if add_picture != null:
 		_add_button.icon = add_picture
@@ -672,6 +705,17 @@ func _on_paste_all() -> void:
 ## The Add dropdown: a field you type into over a tree grouped by category - the engine's own "search
 ## a long list" shape, so there is nothing new to learn.
 func _on_add_pressed() -> void:
+	prepare_add_box()
+	_size_add_box()
+	var below: Vector2i = Vector2i(_add_button.get_screen_position()) + Vector2i(0, int(_add_button.size.y))
+	EventSheetWindowPlacement.popup_below(_add_popup, Rect2i(Vector2i(_add_button.get_screen_position()), Vector2i(_add_button.size)))
+	_add_filter.grab_focus()
+
+
+## Builds the Add box the first time it is wanted and fills it fresh, without showing it. The box is a field
+## to type into over a tree; a schema that asks for a flat list (`flat_add`) gets one line per kind with
+## the kind's own picture, and the up and down keys walk it from the field.
+func prepare_add_box() -> void:
 	if _add_popup == null:
 		_add_popup = PopupPanel.new()
 		var box: VBoxContainer = VBoxContainer.new()
@@ -681,21 +725,62 @@ func _on_add_pressed() -> void:
 		_add_filter.clear_button_enabled = true
 		_add_filter.custom_minimum_size = Vector2(EventSheetPalette.scaled(220), 0.0)
 		_add_filter.text_changed.connect(func(_text: String) -> void: _fill_add_tree())
-		_add_filter.text_submitted.connect(func(_text: String) -> void: _add_first_match())
+		_add_filter.text_submitted.connect(func(_text: String) -> void: add_highlighted_or_first())
+		_add_filter.gui_input.connect(_on_add_filter_key)
 		box.add_child(_add_filter)
 		_add_tree = Tree.new()
 		_add_tree.hide_root = true
 		_add_tree.custom_minimum_size = Vector2(EventSheetPalette.scaled(220), EventSheetPalette.scaled(220))
 		_add_tree.item_activated.connect(_on_add_chosen)
 		box.add_child(_add_tree)
+		var hint_words: String = str(_schema.get("add_hint", ""))
+		if not hint_words.is_empty():
+			var hint: Label = Label.new()
+			hint.text = hint_words
+			hint.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+			hint.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+			box.add_child(hint)
 		_add_popup.add_child(box)
 		add_child(_add_popup)
 	_add_filter.text = ""
 	_fill_add_tree()
-	_size_add_box()
-	var below: Vector2i = Vector2i(_add_button.get_screen_position()) + Vector2i(0, int(_add_button.size.y))
-	EventSheetWindowPlacement.popup_below(_add_popup, Rect2i(Vector2i(_add_button.get_screen_position()), Vector2i(_add_button.size)))
-	_add_filter.grab_focus()
+
+
+## The up and down keys in the Add box's field move the highlighted line, as the type-to-search boxes in
+## Godot do, so a shape can be chosen without the mouse. Only a flat list is walked this way.
+func _on_add_filter_key(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or not bool(_schema.get("flat_add", false)):
+		return
+	if key.keycode != KEY_DOWN and key.keycode != KEY_UP:
+		return
+	var current: TreeItem = _add_tree.get_selected()
+	var step_to: TreeItem = null
+	if current == null:
+		step_to = _add_tree.get_root().get_first_child() if _add_tree.get_root() != null else null
+	else:
+		step_to = current.get_next() if key.keycode == KEY_DOWN else current.get_prev()
+	if step_to != null:
+		step_to.select(0)
+		_add_tree.scroll_to_item(step_to)
+	_add_filter.accept_event()
+
+
+## The pieces a test reads: the tree, the field, the button's words.
+func add_box_tree() -> Tree:
+	return _add_tree
+
+
+func add_box_filter() -> LineEdit:
+	return _add_filter
+
+
+func refill_add_box() -> void:
+	_fill_add_tree()
+
+
+func add_button_text() -> String:
+	return _add_button.text
 
 
 ## The Add box is as wide as the Add card button above it, and as tall as a whole number of lines, so
@@ -710,13 +795,17 @@ func _size_add_box() -> void:
 	# The tree starts its first line a little below its own top edge; the box ends where its last whole
 	# line does, so no part of a next line shows under it.
 	var top: float = _add_tree.get_item_area_rect(first).position.y if first != null else 0.0
-	_add_tree.custom_minimum_size = Vector2(wide, top + line * float(ADD_BOX_LINES))
+	var lines: int = EventSheetCardSchemas.kinds_of(_schema).size() if bool(_schema.get("flat_add", false)) else ADD_BOX_LINES
+	_add_tree.custom_minimum_size = Vector2(wide, top + line * float(mini(lines, ADD_BOX_LINES)))
 
 
 func _fill_add_tree() -> void:
 	_add_tree.clear()
 	var root: TreeItem = _add_tree.create_item()
 	var needle: String = _add_filter.text.strip_edges().to_lower()
+	if bool(_schema.get("flat_add", false)):
+		_fill_flat_add(root, needle)
+		return
 	for group: Variant in EventSheetCardSchemas.kinds_by_category(_schema):
 		var group_dict: Dictionary = group as Dictionary
 		var matching: Array = []
@@ -739,6 +828,39 @@ func _fill_add_tree() -> void:
 			leaf.set_text(0, _said(str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", "")))))
 			leaf.set_tooltip_text(0, _said(str((entry as Dictionary).get("help", ""))))
 			leaf.set_metadata(0, str((entry as Dictionary).get("kind", "")))
+
+
+## The flat form of the Add box: every kind that answers to what was typed, one line each, wearing the
+## picture the schema draws for it (`kind_icon`). The first line is highlighted so Enter has something to add.
+func _fill_flat_add(root: TreeItem, needle: String) -> void:
+	var picture: Variant = _schema.get("kind_icon")
+	var first: TreeItem = null
+	for entry: Variant in EventSheetCardSchemas.kinds_of(_schema):
+		if not (entry is Dictionary) or not EventSheetCardSchemas.kind_matches(entry as Dictionary, needle):
+			continue
+		var leaf: TreeItem = _add_tree.create_item(root)
+		leaf.set_text(0, _said(str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", "")))))
+		leaf.set_tooltip_text(0, _said(str((entry as Dictionary).get("help", ""))))
+		leaf.set_metadata(0, str((entry as Dictionary).get("kind", "")))
+		if picture is Callable and (picture as Callable).is_valid():
+			leaf.set_icon(0, (picture as Callable).call(str((entry as Dictionary).get("kind", "")), _on_light_ground()) as Texture2D)
+		if first == null:
+			first = leaf
+	if first != null:
+		first.select(0)
+
+
+## Enter in the Add box: the highlighted line of a flat list, else the first card the search found.
+func add_highlighted_or_first() -> void:
+	if bool(_schema.get("flat_add", false)):
+		var chosen: TreeItem = _add_tree.get_selected()
+		if chosen == null and _add_tree.get_root() != null:
+			chosen = _add_tree.get_root().get_first_child()
+		if chosen != null and chosen.get_metadata(0) != null:
+			_add_popup.hide()
+			add_card(str(chosen.get_metadata(0)))
+		return
+	_add_first_match()
 
 
 ## Enter in the search box adds the first card the search found.
