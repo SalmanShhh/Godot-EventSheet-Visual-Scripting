@@ -113,7 +113,9 @@ static func players_of_sheet(sheet: EventSheetResource) -> PackedStringArray:
 static func player_name_of(action: Resource, players: PackedStringArray = PackedStringArray()) -> String:
 	if action == null:
 		return ""
-	if PROVIDERS.has(str(action.get("provider_id"))) and PLAY_IDS.has(str(action.get("ace_id"))):
+	# A row placed from the picker is called `play`; the same row reopened from a line of code is called
+	# `method:play`. Both are the pack's own row.
+	if PROVIDERS.has(str(action.get("provider_id"))) and PLAY_IDS.has(str(action.get("ace_id")).trim_prefix("method:")):
 		return _node_of_call(str(action.get("codegen_template")))
 	var params: Variant = action.get("params")
 	if not (params is Dictionary):

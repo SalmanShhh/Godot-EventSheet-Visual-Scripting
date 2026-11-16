@@ -178,6 +178,10 @@ static func _door_pins() -> bool:
 	other_provider.provider_id = "Core"
 	other_provider.ace_id = "play"
 	other_provider.codegen_template = "$HitJuice.play()"
+	var reopened: ACEAction = ACEAction.new()
+	reopened.provider_id = "FeedbackPlayer"
+	reopened.ace_id = "method:play"
+	reopened.codegen_template = "$HitJuice.play({at_strength})"
 	var stops: ACEAction = ACEAction.new()
 	stops.provider_id = "JuicePlayer"
 	stops.ace_id = "stop"
@@ -215,6 +219,7 @@ static func _door_pins() -> bool:
 	$Other.play_backwards(1.0)
 "), PackedStringArray(["HitJuice", "Other"])],
 		["a Play Juice row names the player it plays", menu.call("player_name_of", plays), "HitJuice"],
+		["and so does the same row reopened from a line of code, whose id is method:play", menu.call("player_name_of", reopened), "HitJuice"],
 		["and so does Play Juice And Wait, whose call waits", menu.call("player_name_of", waits), "HitJuice"],
 		["a row of another pack, or another verb of the player, offers nothing", [menu.call("player_name_of", other_provider), menu.call("player_name_of", stops), menu.call("player_name_of", null)], ["", "", ""]],
 		["the sheets that play a player are the ones that call it", menu.call("sheets_in", PackedStringArray([sheet_path, other_path]), "HitJuice"), PackedStringArray([sheet_path])],
