@@ -862,10 +862,10 @@ func set_feedback_field(label: String, field: String, value: Variant) -> void:
 	if card.is_empty():
 		return
 	if field == "verb" or field == "card_script":
-		push_warning("Juice Player: the %s of a card is what makes it that card, so Set Juice Card Field left it alone. Replace the card instead." % field)
+		push_warning("Juice Player: the card \"%s\" on %s cannot have its %s changed, because that is what makes it the card it is, so Set Juice Card Field left it alone. Replace the card instead." % [label, name, field])
 		return
 	if not FIELD_KEYS.has(field) and not card.has(field):
-		push_warning("Juice Player: a card has no field called \"%s\", so Set Juice Card Field did nothing." % field)
+		push_warning("Juice Player: the card \"%s\" on %s has no field called \"%s\", so Set Juice Card Field did nothing." % [label, name, field])
 		return
 	card[field] = value
 
@@ -974,7 +974,7 @@ func copy_feedbacks_from(other: Node) -> void:
 		return
 	var carried: Variant = other.get("steps")
 	if not (carried is Array):
-		push_warning("Juice Player: %s is not a Juice Player, so Copy Juice Cards From did nothing." % other.name)
+		push_warning("Juice Player: %s cannot copy cards from %s, which is not a Juice Player, so Copy Juice Cards From did nothing." % [name, other.name])
 		return
 	var list: Array = _own_list()
 	list.clear()
@@ -994,11 +994,11 @@ func copy_feedbacks_from(other: Node) -> void:
 ## @ace_codegen_template("$JuicePlayer.load_moment_file("{path}")")
 func load_moment_file(path: String) -> void:
 	if not ResourceLoader.exists(path):
-		push_warning("Juice Player: there is no moment file at \"%s\", so Load Moment File did nothing." % path)
+		push_warning("Juice Player: %s has no moment file at \"%s\" to load, so Load Moment File did nothing." % [name, path])
 		return
 	var file: Resource = load(path)
 	if file == null or not (file.get("steps") is Array):
-		push_warning("Juice Player: \"%s\" is not a moment file, so Load Moment File did nothing." % path)
+		push_warning("Juice Player: %s cannot load \"%s\", which is not a moment file, so Load Moment File did nothing." % [name, path])
 		return
 	moment_file = file
 	_own_list()
@@ -1016,7 +1016,7 @@ func load_moment_file(path: String) -> void:
 func save_moment_file(path: String) -> void:
 	var kind: Script = load("res://eventsheet_addons/moment_resource/moment_resource.gd") as Script
 	if kind == null:
-		push_warning("Juice Player: this project has no moment file script, so Save Moment File did nothing.")
+		push_warning("Juice Player: %s cannot save a moment file because this project has no moment file script, so Save Moment File did nothing." % name)
 		return
 	var written: Array[Dictionary] = []
 	var left_behind: PackedStringArray = PackedStringArray()
@@ -1033,9 +1033,9 @@ func save_moment_file(path: String) -> void:
 	file.set("moment_name", name)
 	file.set("steps", written)
 	if not left_behind.is_empty():
-		push_warning("Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so these were left out of the file: %s." % ", ".join(left_behind))
+		push_warning("Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s." % [name, ", ".join(left_behind)])
 	if ResourceSaver.save(file, path) != OK:
-		push_warning("Juice Player: \"%s\" could not be written, so Save Moment File saved nothing." % path)
+		push_warning("Juice Player: %s could not write \"%s\", so Save Moment File saved nothing." % [name, path])
 
 ## @ace_action
 ## @ace_name("Set Juice Player Strength")
@@ -1657,7 +1657,7 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 			if _is_whole_tween(card):
 				_tween_card(card, at, seconds)
 			else:
-				_tween_property(effect, amount * at, maxf(seconds, 0.0))
+				_tween_property(card, effect, amount * at, maxf(seconds, 0.0))
 		EMIT_SIGNAL:
 			if _names_a_node(card, "node") and not str(card.get("signal", "")).is_empty():
 				_emit_on_node(card)
@@ -1672,7 +1672,7 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 				_stop_sound(effect, seconds)
 		FADE_BUS:
 			if not skipping:
-				_fade_bus(effect, amount, seconds)
+				_fade_bus(card, effect, amount, seconds)
 		VIBRATE:
 			if not skipping:
 				_vibrate(card, at)
@@ -1718,13 +1718,14 @@ func _stop_tweens() -> void:
 	_tweens.clear()
 
 ## A property on the host walked to a value, with what it was written down first so Restore can put
-## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing.
-func _tween_property(property: String, value: float, seconds: float) -> void:
+## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing. A property the
+## host does not have is said once, naming this player and the card.
+func _tween_property(card: Dictionary, property: String, value: float, seconds: float) -> void:
 	if host == null or property.strip_edges().is_empty():
 		return
 	var before: Variant = host.get(property)
 	if before == null:
-		push_warning("Juice Player: %s has no property called \"%s\", so that step did nothing." % [host.name, property])
+		_card_missing(card, "points at %s, which has no property called \"%s\"" % [host.name, property])
 		return
 	_restore_to.append({"object": host, "property": property, "value": before})
 	if seconds <= 0.0:
@@ -2040,11 +2041,10 @@ func _stop_sound(card_name: String, fade: float) -> void:
 
 ## Moves a bus's volume to `target_db` over `seconds`, remembering where it was so Restore can put it back.
 ## A bus this project does not have is said once and left alone.
-func _fade_bus(bus: String, target_db: float, seconds: float) -> void:
+func _fade_bus(card: Dictionary, bus: String, target_db: float, seconds: float) -> void:
 	var index: int = AudioServer.get_bus_index(bus.strip_edges())
 	if index < 0:
-		_told_sound["bus " + bus] = true
-		push_warning("Juice Player: a Fade Bus card on %s names the bus \"%s\", which this project does not have, so it did nothing." % [name, bus])
+		_card_missing(card, "names the bus \"%s\", which this project does not have" % bus)
 		return
 	var key: String = AudioServer.get_bus_name(index)
 	if not _bus_restore.has(key):

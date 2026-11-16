@@ -291,7 +291,7 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		[["label", "String", "The label of the card being tuned."],
 			["field", "String", "Which value on the card to write."],
 			["value", "Variant", "What to write. A number for an amount or a length, a word for the extra one."]],
-		"var card: Dictionary = _edited(label, \"Set Juice Card Field\")\nif card.is_empty():\n\treturn\nif field == \"verb\" or field == \"card_script\":\n\tpush_warning(\"Juice Player: the %s of a card is what makes it that card, so Set Juice Card Field left it alone. Replace the card instead.\" % field)\n\treturn\nif not FIELD_KEYS.has(field) and not card.has(field):\n\tpush_warning(\"Juice Player: a card has no field called \\\"%s\\\", so Set Juice Card Field did nothing.\" % field)\n\treturn\ncard[field] = value")
+		"var card: Dictionary = _edited(label, \"Set Juice Card Field\")\nif card.is_empty():\n\treturn\nif field == \"verb\" or field == \"card_script\":\n\tpush_warning(\"Juice Player: the card \\\"%s\\\" on %s cannot have its %s changed, because that is what makes it the card it is, so Set Juice Card Field left it alone. Replace the card instead.\" % [label, name, field])\n\treturn\nif not FIELD_KEYS.has(field) and not card.has(field):\n\tpush_warning(\"Juice Player: the card \\\"%s\\\" on %s has no field called \\\"%s\\\", so Set Juice Card Field did nothing.\" % [label, name, field])\n\treturn\ncard[field] = value")
 	_default(sheet, "label", "shake")
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
@@ -343,17 +343,17 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "copy_feedbacks_from", "Copy Juice Cards From", "Juice Player",
 		"Takes another player's whole list and makes it this one's - a copy, so retuning either afterwards leaves the other alone. One tuned enemy hit, given to every enemy that spawns.",
 		[["other", "Node", "The Juice Player to copy the list off."]],
-		"if other == null:\n\treturn\nvar carried: Variant = other.get(\"steps\")\nif not (carried is Array):\n\tpush_warning(\"Juice Player: %s is not a Juice Player, so Copy Juice Cards From did nothing.\" % other.name)\n\treturn\nvar list: Array = _own_list()\nlist.clear()\nfor entry: Variant in carried as Array:\n\tif entry is Dictionary:\n\t\tlist.append((entry as Dictionary).duplicate(true))")
+		"if other == null:\n\treturn\nvar carried: Variant = other.get(\"steps\")\nif not (carried is Array):\n\tpush_warning(\"Juice Player: %s cannot copy cards from %s, which is not a Juice Player, so Copy Juice Cards From did nothing.\" % [name, other.name])\n\treturn\nvar list: Array = _own_list()\nlist.clear()\nfor entry: Variant in carried as Array:\n\tif entry is Dictionary:\n\t\tlist.append((entry as Dictionary).duplicate(true))")
 	Lib.append_function(sheet, "load_moment_file", "Load Moment File", "Juice Player",
 		"Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.",
 		[["path", "String", "The moment file to read, as its res:// path."]],
-		"if not ResourceLoader.exists(path):\n\tpush_warning(\"Juice Player: there is no moment file at \\\"%s\\\", so Load Moment File did nothing.\" % path)\n\treturn\nvar file: Resource = load(path)\nif file == null or not (file.get(\"steps\") is Array):\n\tpush_warning(\"Juice Player: \\\"%s\\\" is not a moment file, so Load Moment File did nothing.\" % path)\n\treturn\nmoment_file = file\n_own_list()")
+		"if not ResourceLoader.exists(path):\n\tpush_warning(\"Juice Player: %s has no moment file at \\\"%s\\\" to load, so Load Moment File did nothing.\" % [name, path])\n\treturn\nvar file: Resource = load(path)\nif file == null or not (file.get(\"steps\") is Array):\n\tpush_warning(\"Juice Player: %s cannot load \\\"%s\\\", which is not a moment file, so Load Moment File did nothing.\" % [name, path])\n\treturn\nmoment_file = file\n_own_list()")
 	_default(sheet, "path", "res://eventsheet_addons/juice/impact.tres")
 	_quoted_call(sheet, "load_moment_file(\"{path}\")")
 	Lib.append_function(sheet, "save_moment_file", "Save Moment File", "Juice Player",
 		"Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.",
 		[["path", "String", "Where to write it. At run time that is a user:// path, which is the only place a game may write."]],
-		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Juice Player: this project has no moment file script, so Save Moment File did nothing.\")\n\treturn\nvar written: Array[Dictionary] = []\nvar left_behind: PackedStringArray = PackedStringArray()\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tvar word: String = word_of(card)\n\tif not bool(card.get(\"active\", true)) or _is_timing(word) or _is_own_word(word):\n\t\tleft_behind.append(_label_of(card))\n\t\tcontinue\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif not left_behind.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so these were left out of the file: %s.\" % \", \".join(left_behind))\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Juice Player: \\\"%s\\\" could not be written, so Save Moment File saved nothing.\" % path)")
+		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Juice Player: %s cannot save a moment file because this project has no moment file script, so Save Moment File did nothing.\" % name)\n\treturn\nvar written: Array[Dictionary] = []\nvar left_behind: PackedStringArray = PackedStringArray()\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tvar word: String = word_of(card)\n\tif not bool(card.get(\"active\", true)) or _is_timing(word) or _is_own_word(word):\n\t\tleft_behind.append(_label_of(card))\n\t\tcontinue\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif not left_behind.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s.\" % [name, \", \".join(left_behind)])\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Juice Player: %s could not write \\\"%s\\\", so Save Moment File saved nothing.\" % [name, path])")
 	_default(sheet, "path", "user://my_moment.tres")
 	_quoted_call(sheet, "save_moment_file(\"{path}\")")
 	Lib.append_function(sheet, "set_player_strength", "Set Juice Player Strength", "Juice Player",
@@ -1037,7 +1037,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t\tif _is_whole_tween(card):",
 		"\t\t\t\t_tween_card(card, at, seconds)",
 		"\t\t\telse:",
-		"\t\t\t\t_tween_property(effect, amount * at, maxf(seconds, 0.0))",
+		"\t\t\t\t_tween_property(card, effect, amount * at, maxf(seconds, 0.0))",
 		"\t\tEMIT_SIGNAL:",
 		"\t\t\tif _names_a_node(card, \"node\") and not str(card.get(\"signal\", \"\")).is_empty():",
 		"\t\t\t\t_emit_on_node(card)",
@@ -1052,7 +1052,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t\t\t_stop_sound(effect, seconds)",
 		"\t\tFADE_BUS:",
 		"\t\t\tif not skipping:",
-		"\t\t\t\t_fade_bus(effect, amount, seconds)",
+		"\t\t\t\t_fade_bus(card, effect, amount, seconds)",
 		"\t\tVIBRATE:",
 		"\t\t\tif not skipping:",
 		"\t\t\t\t_vibrate(card, at)",
@@ -1098,13 +1098,14 @@ static func _player_lines() -> PackedStringArray:
 		"\t_tweens.clear()",
 		"",
 		"## A property on the host walked to a value, with what it was written down first so Restore can put",
-		"## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing.",
-		"func _tween_property(property: String, value: float, seconds: float) -> void:",
+		"## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing. A property the",
+		"## host does not have is said once, naming this player and the card.",
+		"func _tween_property(card: Dictionary, property: String, value: float, seconds: float) -> void:",
 		"\tif host == null or property.strip_edges().is_empty():",
 		"\t\treturn",
 		"\tvar before: Variant = host.get(property)",
 		"\tif before == null:",
-		"\t\tpush_warning(\"Juice Player: %s has no property called \\\"%s\\\", so that step did nothing.\" % [host.name, property])",
+		"\t\t_card_missing(card, \"points at %s, which has no property called \\\"%s\\\"\" % [host.name, property])",
 		"\t\treturn",
 		"\t_restore_to.append({\"object\": host, \"property\": property, \"value\": before})",
 		"\tif seconds <= 0.0:",
@@ -1501,11 +1502,10 @@ static func _player_lines() -> PackedStringArray:
 		"",
 		"## Moves a bus's volume to `target_db` over `seconds`, remembering where it was so Restore can put it back.",
 		"## A bus this project does not have is said once and left alone.",
-		"func _fade_bus(bus: String, target_db: float, seconds: float) -> void:",
+		"func _fade_bus(card: Dictionary, bus: String, target_db: float, seconds: float) -> void:",
 		"\tvar index: int = AudioServer.get_bus_index(bus.strip_edges())",
 		"\tif index < 0:",
-		"\t\t_told_sound[\"bus \" + bus] = true",
-		"\t\tpush_warning(\"Juice Player: a Fade Bus card on %s names the bus \\\"%s\\\", which this project does not have, so it did nothing.\" % [name, bus])",
+		"\t\t_card_missing(card, \"names the bus \\\"%s\\\", which this project does not have\" % bus)",
 		"\t\treturn",
 		"\tvar key: String = AudioServer.get_bus_name(index)",
 		"\tif not _bus_restore.has(key):",
