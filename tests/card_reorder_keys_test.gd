@@ -28,6 +28,7 @@ static func run() -> bool:
 	ok = _key_pins() and ok
 	ok = _menu_pins() and ok
 	ok = _order_pins() and ok
+	ok = fold_pins() and ok
 	return ok
 
 
@@ -148,3 +149,28 @@ static func _order_pins() -> bool:
 	rows.append(["the menu moves a card outside the selection on its own", menu_alone, ["A", "B", "D", "C"]])
 	rows.append(["and that is one change", one_change, 1])
 	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## An open Timing foldout belongs to its CARD: after the cards are moved or one is removed, the fold that
+## was open is still open on the same card, and no other card opens by chance.
+static func fold_pins() -> bool:
+	var drawer: EventSheetCardListDrawer = _drawer()
+	drawer.set("_open_folds", {"1:Timing": true})
+	drawer.select_card(1, "click")
+	drawer.handle_key(_alt(KEY_DOWN))
+	var after_move: Dictionary = (drawer.get("_open_folds") as Dictionary).duplicate()
+	drawer.handle_key(_alt(KEY_UP))
+	drawer.handle_key(_alt(KEY_UP))
+	var after_back: Dictionary = (drawer.get("_open_folds") as Dictionary).duplicate()
+	drawer.free()
+	drawer = _drawer()
+	drawer.set("_open_folds", {"2:Timing": true})
+	drawer.select_card(0, "click")
+	drawer.remove_selected()
+	var after_remove: Dictionary = (drawer.get("_open_folds") as Dictionary).duplicate()
+	drawer.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["moving card B down one place takes its open Timing fold with it", after_move, {"2:Timing": true}],
+		["and moving it up twice takes it to the top", after_back, {"0:Timing": true}],
+		["removing a card above it moves the fold to its new place", after_remove, {"1:Timing": true}],
+	])

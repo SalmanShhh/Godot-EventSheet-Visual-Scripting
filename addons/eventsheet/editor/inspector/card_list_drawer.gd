@@ -753,6 +753,7 @@ func _index_order() -> Array:
 ## The fold map read against a new order (new index -> old index, -1 for a card that is new).
 func _refold(order: Array) -> void:
 	_unfolded = EventSheetCardSchemas.remapped_folds(_unfolded, order)
+	_open_folds = EventSheetCardSchemas.remapped_fold_keys(_open_folds, order)
 	# The selection travels with its cards the same way, and so does the card a run is measured from.
 	_selected = EventSheetCardSchemas.remapped_folds(_selected, order)
 	var anchor_now: int = order.find(_anchor)

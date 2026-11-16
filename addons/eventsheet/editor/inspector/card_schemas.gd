@@ -448,6 +448,21 @@ static func remapped_folds(folds: Dictionary, order: Array) -> Dictionary:
 	return remapped
 
 
+## The same remap for the open foldouts inside cards, which are remembered under "index:name": a foldout that
+## was open on a card is open on that card after it moves, and a card that is new opens nothing.
+static func remapped_fold_keys(folds: Dictionary, order: Array) -> Dictionary:
+	var remapped: Dictionary = {}
+	for new_index: int in range(order.size()):
+		var old_index: int = int(order[new_index])
+		if old_index < 0:
+			continue
+		for key: Variant in folds:
+			var text: String = str(key)
+			if text.get_slice(":", 0) == str(old_index):
+				remapped["%d:%s" % [new_index, text.substr(text.find(":") + 1)]] = folds[key]
+	return remapped
+
+
 ## The list without the card at `index`.
 static func remove_card(cards: Array, index: int) -> Array:
 	var kept: Array = _copy_cards(cards)
