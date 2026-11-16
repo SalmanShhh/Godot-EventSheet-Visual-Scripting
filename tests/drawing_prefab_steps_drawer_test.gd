@@ -59,7 +59,8 @@ static func _shape_word_pins() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["a rectangle is not said to be centred", str(help.get("rect", "")).contains("centred"), false],
 		["a rectangle is said to be drawn from its offset", str(help.get("rect", "")).contains("right and down from the offset"), true],
-		["a line is offered the scale rule", line_keys.has("scale_mode"), true],
+		["a ring is not offered the scale rule nothing reads", ring_keys.has("scale_mode"), false],
+		["a line still is", line_keys.has("scale_mode"), true],
 	])
 
 

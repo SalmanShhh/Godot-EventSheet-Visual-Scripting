@@ -114,7 +114,7 @@ class ShapeStepsEditor:
 	## And which have a THICKNESS for the scale rule to be about. A stamp is scaled by its own Scale
 	## field, a disc has no stroke at all, and a ring's outline is drawn at the thickness it says
 	## whatever the scale rule (no renderer reads one for a ring), so only a line is asked.
-	const THICKNESS_KINDS: Array[String] = ["ring", "line"]
+	const THICKNESS_KINDS: Array[String] = ["line"]
 	## What a freshly ADDED step of each shape starts as, in storage order. Every slot is seeded so the
 	## Dictionary shape matches what the rasterizer and the round-trip expect the moment it is added -
 	## and only then: loading a step never writes one of these.
