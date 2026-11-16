@@ -26,6 +26,7 @@ static func run() -> bool:
 	ok = _selection_pins() and ok
 	ok = _paste_pins() and ok
 	ok = _gesture_pins() and ok
+	ok = _menu_pins() and ok
 	ok = _key_pins() and ok
 	ok = _header_pins() and ok
 	return ok
@@ -163,6 +164,41 @@ static func _gesture_pins() -> bool:
 		["Cut takes the same text", cut, copied],
 		["and removes them as one change", [after_cut, emitted_by_cut], [["A"], 1]],
 		["Delete with nothing selected does nothing and says so", nothing_to_remove, false]
+	])
+
+
+## The card menu acts on the selection when the card is part of it, gains Cut and Paste, and says its
+## words through the translation table.
+static func _menu_pins() -> bool:
+	var drawer: EventSheetCardListDrawer = _drawer(_three())
+	var popup: PopupMenu = PopupMenu.new()
+	drawer._fill_card_menu(popup)
+	var words: Array = []
+	for index: int in range(popup.item_count):
+		if not popup.is_item_separator(index):
+			words.append(popup.get_item_text(index))
+	popup.free()
+	drawer.select_card(0, "click")
+	drawer.select_card(1, "ctrl")
+	drawer._on_menu(1, EventSheetCardListDrawer.MENU_REMOVE)
+	var removed_both: Array = _labels(drawer)
+	drawer.set_value(_three())
+	drawer.select_card(0, "click")
+	drawer._on_menu(2, EventSheetCardListDrawer.MENU_REMOVE)
+	var removed_only_it: Array = _labels(drawer)
+	var chose_it: Array = drawer.selected_cards()
+	drawer.set_value(_three())
+	drawer.paste_after_selection("")
+	drawer._on_menu(0, EventSheetCardListDrawer.MENU_PASTE_AFTER)
+	var empty_paste: Array = _labels(drawer)
+	drawer.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the card menu offers Cut and Paste beside Copy", words, ["Duplicate", "Cut", "Copy", "Paste", "Paste over",
+			"Move to top", "Move up", "Move down", "Remove"]],
+		["Remove on a selected card removes everything selected", removed_both, ["C"]],
+		["Remove on a card outside the selection removes that card alone", removed_only_it, ["A", "B"]],
+		["and a selection elsewhere stays on its own card", chose_it, [0]],
+		["Paste with nothing on the clipboard changes nothing", empty_paste, ["A", "B", "C"]]
 	])
 
 

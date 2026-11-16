@@ -21,7 +21,18 @@ extends VBoxContainer
 
 signal value_changed(value: Array)
 
-## The id of the card menu's "Play from here" entry, past the seven that every list has.
+## The ids of the card menu's entries. The first seven are the ones every list has had; the ids are kept
+## so a saved shortcut or a test that names one still means the same entry.
+const MENU_DUPLICATE: int = 0
+const MENU_COPY: int = 1
+const MENU_PASTE_OVER: int = 2
+const MENU_MOVE_TO_TOP: int = 3
+const MENU_MOVE_UP: int = 4
+const MENU_MOVE_DOWN: int = 5
+const MENU_REMOVE: int = 6
+const MENU_CUT: int = 7
+const MENU_PASTE_AFTER: int = 8
+## And the one that only a list that can play its cards has.
 const MENU_PLAY_FROM: int = 20
 
 ## The drag payload's own key. Cards only accept a drag that came from the SAME drawer instance, so
@@ -246,7 +257,7 @@ func handle_key(event: InputEvent) -> bool:
 			KEY_X:
 				return not cut_selected().is_empty()
 			KEY_V:
-				return paste_after_selection(DisplayServer.clipboard_get())
+				return paste_after_selection(_clipboard_text())
 			KEY_D:
 				return duplicate_selected()
 	elif (key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE) and not key.shift_pressed:
@@ -259,6 +270,16 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 
+## The clipboard's text, or "" where the display server has none (a headless run).
+func _clipboard_text() -> String:
+	return DisplayServer.clipboard_get() if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD) else ""
+
+
+func _set_clipboard(text: String) -> void:
+	if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+		DisplayServer.clipboard_set(text)
+
+
 ## The selected cards as clipboard text, and on the clipboard. "" when nothing is selected.
 func copy_selected() -> String:
 	var chosen: Array = []
@@ -267,7 +288,7 @@ func copy_selected() -> String:
 	if chosen.is_empty():
 		return ""
 	var text: String = EventSheetCardSchemas.cards_to_text(chosen)
-	DisplayServer.clipboard_set(text)
+	_set_clipboard(text)
 	return text
 
 
@@ -608,11 +629,11 @@ func _small_button(text: String, tooltip: String, action: Callable) -> Button:
 
 
 func _on_copy_all() -> void:
-	DisplayServer.clipboard_set(EventSheetCardSchemas.cards_to_text(_cards))
+	_set_clipboard(EventSheetCardSchemas.cards_to_text(_cards))
 
 
 func _on_paste_all() -> void:
-	var pasted: Array = EventSheetCardSchemas.cards_from_text(DisplayServer.clipboard_get())
+	var pasted: Array = EventSheetCardSchemas.cards_from_text(_clipboard_text())
 	if pasted.is_empty():
 		return
 	_cards = pasted
@@ -870,13 +891,15 @@ func _build_menu(index: int) -> Control:
 
 
 func _fill_card_menu(popup: PopupMenu) -> void:
-	popup.add_item(EventSheetL10n.translate("Duplicate"), 0)
-	popup.add_item(EventSheetL10n.translate("Copy"), 1)
-	popup.add_item(EventSheetL10n.translate("Paste over"), 2)
-	popup.add_item(EventSheetL10n.translate("Move to top"), 3)
-	popup.add_item(EventSheetL10n.translate("Move up"), 4)
-	popup.add_item(EventSheetL10n.translate("Move down"), 5)
-	popup.add_item(EventSheetL10n.translate("Remove"), 6)
+	popup.add_item(EventSheetL10n.translate("Duplicate"), MENU_DUPLICATE)
+	popup.add_item(EventSheetL10n.translate("Cut"), MENU_CUT)
+	popup.add_item(EventSheetL10n.translate("Copy"), MENU_COPY)
+	popup.add_item(EventSheetL10n.translate("Paste"), MENU_PASTE_AFTER)
+	popup.add_item(EventSheetL10n.translate("Paste over"), MENU_PASTE_OVER)
+	popup.add_item(EventSheetL10n.translate("Move to top"), MENU_MOVE_TO_TOP)
+	popup.add_item(EventSheetL10n.translate("Move up"), MENU_MOVE_UP)
+	popup.add_item(EventSheetL10n.translate("Move down"), MENU_MOVE_DOWN)
+	popup.add_item(EventSheetL10n.translate("Remove"), MENU_REMOVE)
 	if _marks_wanted():
 		popup.add_separator()
 		popup.add_item(EventSheetL10n.translate("Play from here"), MENU_PLAY_FROM)
@@ -894,24 +917,48 @@ func open_card_menu(index: int, at: Vector2i) -> void:
 	EventSheetWindowPlacement.popup_at(popup, at)
 
 
+## What a menu entry does. Duplicate, Cut, Copy and Remove act on everything selected when the card the menu
+## belongs to is part of the selection, and on that one card otherwise; Paste adds under the card (or under
+## the selection it is part of); Paste over and the moves are about this card alone.
 func _on_menu(index: int, id: int) -> void:
+	var in_selection: bool = _selected.has(index)
 	match id:
-		0:
-			duplicate_card(index)
-		1:
-			DisplayServer.clipboard_set(EventSheetCardSchemas.cards_to_text([_cards[index]] if index < _cards.size() else []))
-		2:
-			paste_over(index, DisplayServer.clipboard_get())
-		3:
+		MENU_DUPLICATE:
+			if in_selection:
+				duplicate_selected()
+			else:
+				duplicate_card(index)
+		MENU_CUT:
+			_choose(index)
+			cut_selected()
+		MENU_COPY:
+			_choose(index)
+			copy_selected()
+		MENU_PASTE_AFTER:
+			_choose(index)
+			paste_after_selection(_clipboard_text())
+		MENU_PASTE_OVER:
+			paste_over(index, _clipboard_text())
+		MENU_MOVE_TO_TOP:
 			move_card(index, 0)
-		4:
+		MENU_MOVE_UP:
 			move_card(index, index - 1)
-		5:
+		MENU_MOVE_DOWN:
 			move_card(index, index + 1)
-		6:
-			remove_card(index)
+		MENU_REMOVE:
+			if in_selection:
+				remove_selected()
+			else:
+				remove_card(index)
 		MENU_PLAY_FROM:
 			_run_mark("play_from", index)
+
+
+## Makes the card the menu belongs to the selection when it is not part of it, so an entry that acts on
+## "the selection" acts on what was clicked.
+func _choose(index: int) -> void:
+	if not _selected.has(index):
+		select_card(index, "click")
 
 
 ## The unfolded card: what this kind explains, then its own fields, then what the running game is
