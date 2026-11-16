@@ -10983,6 +10983,6 @@ texture not found,Textur nicht gefunden
 "The texture could not be loaded, so this shape draws nothing.","Die Textur konnte nicht geladen werden, daher zeichnet diese Form nichts."
 """%s"" is not a shape this list knows. It is kept as it is.","""%s"" ist keine Form, die diese Liste kennt. Sie bleibt unverändert."
 Unknown shape,Unbekannte Form
-Shows this same list as a table. Nothing is saved differently.,
+Shows this same list as a table. Nothing is saved differently.,Zeigt dieselbe Liste als Tabelle. Gespeichert wird nichts anders.
 Show as cards,Als Karten anzeigen
 Shows this list as cards again.,Zeigt diese Liste wieder als Karten.

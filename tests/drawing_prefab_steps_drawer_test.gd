@@ -73,7 +73,7 @@ static func _read_only_pins() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["the prefab's steps property passes the lock to its cards",
 			prefab_source.contains("func _set_read_only(read_only: bool) -> void:
-	_editor.set_editable(not read_only)"), true],
+	_view.set_editable(not read_only)"), true],
 		["the shared card list property passes the lock to its list",
 			shared_source.contains("func _set_read_only(read_only: bool) -> void:
 		_list.call(\"set_editable\", not read_only)"), true],

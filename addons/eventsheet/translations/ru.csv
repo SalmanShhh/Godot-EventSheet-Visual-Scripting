@@ -10983,6 +10983,6 @@ texture not found,текстура не найдена
 "The texture could not be loaded, so this shape draws nothing.","Не удалось загрузить текстуру, поэтому эта фигура ничего не рисует."
 """%s"" is not a shape this list knows. It is kept as it is.","""%s"" - неизвестная для этого списка фигура. Она сохраняется как есть."
 Unknown shape,Неизвестная фигура
-Shows this same list as a table. Nothing is saved differently.,
+Shows this same list as a table. Nothing is saved differently.,Показывает тот же список в виде таблицы. Сохраняется всё так же.
 Show as cards,Показать карточками
 Shows this list as cards again.,Снова показывает этот список карточками.

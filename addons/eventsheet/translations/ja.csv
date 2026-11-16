@@ -10983,6 +10983,6 @@ texture not found,テクスチャが見つかりません
 "The texture could not be loaded, so this shape draws nothing.","テクスチャを読み込めないので、この図形は何も描きません。"
 """%s"" is not a shape this list knows. It is kept as it is.","「%s」はこのリストにない図形です。そのまま保持されます。"
 Unknown shape,不明な図形
-Shows this same list as a table. Nothing is saved differently.,
+Shows this same list as a table. Nothing is saved differently.,同じリストを表として表示します。保存内容は変わりません。
 Show as cards,カードで表示
 Shows this list as cards again.,このリストをもう一度カードで表示します。
