@@ -2216,6 +2216,17 @@ func _resource_text_field(card: Dictionary, key: String, write: Callable, base_t
 	refusal.visible = false
 	box.add_child(_resource_picker(base_type, current, func(picked: Resource) -> void:
 		var text: String = EventSheetCardSchemas.resource_reference(picked)
+		# A NEW curve (the picker's New Curve) has no file yet: ask where to save it, then keep that file.
+		if picked is Curve and text.is_empty() and picked.resource_path.is_empty():
+			refusal.visible = false
+			load("res://addons/eventsheet/editor/inspector/juice_card_resource_save.gd").call("ask", self, picked, func(saved: String) -> void:
+				if saved.is_empty():
+					refusal.text = EventSheetL10n.translate("Save it as a file first. A card keeps the file, not a copy inside the scene.")
+					refusal.visible = true
+					return
+				write.call(saved)
+				_rebuild.call_deferred())
+			return
 		if picked != null and text.is_empty():
 			refusal.text = EventSheetL10n.translate("Save it as a file first. A card keeps the file, not a copy inside the scene.")
 			refusal.visible = true
@@ -2362,6 +2373,11 @@ func _resource_picker(base_type: String, current: Resource, on_changed: Callable
 	picker.edited_resource = current
 	picker.editable = editable
 	picker.resource_changed.connect(on_changed)
+	# Clicking the resource itself opens it in the Inspector, where Godot's own editor for it is (a Curve's
+	# is the curve editor), and the Inspector's back arrow returns to the node.
+	picker.resource_selected.connect(func(picked: Resource, inspect: bool) -> void:
+		if picked != null and inspect and ClassDB.can_instantiate("EditorInterface"):
+			EditorInterface.edit_resource(picked))
 	return picker
 
 
