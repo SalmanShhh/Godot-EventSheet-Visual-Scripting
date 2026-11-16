@@ -43,6 +43,26 @@ Current additions on top of the model below:
   theme of its own wears it; a sheet's own theme always wins. Choose it again to take it off, or clear the
   setting in Project Settings. While a project theme is set, the first entry of the Sheet theme menu reads
   "Project theme: <name>" in place of Match Editor.
+- **Every colour has a dark swatch and a light one.** The colours a theme has always held are its dark
+  colours, and its file keeps every line it had. A block of the theme (`event_style`, `condition_style`,
+  `action_style`, `reading_style`, `chrome_style`, `manual_style`) can also hold `light_colors`, a dictionary
+  of token name to colour that names only the colours given a light value of their own. The sheet wears the
+  side that matches Godot's editor theme and changes over when you switch Godot; **Preview as** at the top
+  of the Theme Editor changes only the sample sheet.
+  - A theme opts in to a light look by holding at least one light colour, or by ticking **Follow the editor
+    in light** (`follow_editor_greys`). A theme that does neither is drawn in a light editor exactly as it is
+    in a dark one, so every theme saved before light colours existed looks as it did.
+  - A dashed **auto** swatch is a light colour that is worked out, not chosen: the greys the editor gives
+    when the theme follows the editor, otherwise the dark colour. Pick a colour on it and it becomes the
+    theme's own. The chain between the two swatches means one colour serves both sides and writes no light
+    line; click it to give light a colour of its own, and click it again to use the dark colour in both.
+  - A small amber **!** after a swatch says its words would read under the bar on their ground (4.5 to 1 for
+    sentences, 3 to 1 for marks and badge letters); the strip at the foot gives the ratio. Nothing blocks a
+    save.
+  - **Quick Style** has a base and a text colour for dark and for light and one accent. **Generate Theme**
+    fills both columns at once as one undo step, and anything you change by hand afterwards stays yours.
+  - An older build that opens a theme saved with light colours reads every other value and drops the light
+    ones the next time it saves, so keep a theme with light colours in a build that knows them.
 - The built-in default is **Godot-adaptive**
  (`EventSheetGodotTheme.adapt_to_editor`):
   with no theme assigned, the sheet derives its colors from your editor theme so it looks
@@ -175,7 +195,7 @@ Two more ship inside the addon, in `res://addons/eventsheet/themes/`:
   `follow_editor_greys` on: its greys are rebuilt from the running editor's base colour, so it is
   dark in a dark editor and light in a light one, and its colours swap to their light partners on a
   light editor. Following only ever touches a token still at the value the starter shipped with - a
-  colour you change is yours and stays put. Untick `follow_editor_greys` in the Theme Editor to
+  colour you change is yours and stays put. Untick **Follow the editor in light** (`follow_editor_greys`) in the Theme Editor to
   freeze it as saved.
   It also turns on `toolbar_text_labels`, which lays the toolbar out as words (Sheet, Save, Add
   Event, Add Condition, Add Action, Find, Sentences) until you pick a layout yourself under View >

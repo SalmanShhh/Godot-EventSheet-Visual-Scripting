@@ -4,6 +4,50 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a theme can hold light colours, and the sheet wears the side that matches Godot
+
+Every block of a theme (`event_style`, `condition_style`, `action_style`, `reading_style`, `chrome_style`, `manual_style`) can hold `light_colors`, a dictionary of token name to colour that names only the colours given a light value. The colours a theme has always held are its dark colours and keep their lines. A light editor draws a theme's light colours, a dark editor never does, and a switch of Godot's editor theme changes the sheet over. A theme opts in by holding a light colour or by following the editor's greys; a theme that does neither is drawn in a light editor exactly as it always was, so no theme saved before this looks any different. An older build opens a theme saved with light colours and keeps every other value, but drops the light ones the next time it saves.
+
+### Added: every colour in the Theme Editor has a dark swatch and a light one
+
+A light swatch sits beside each colour, with a chain between the two. A dashed "auto" swatch is a light colour that is worked out (the editor's greys when the theme follows the editor, otherwise the dark colour); picking a colour on it makes it the theme's own. The chain gives light a colour of its own or sends it back to the dark one, and a colour nobody gave a light value writes no light line. Every light edit is a step of the window's own undo list, and the strip's IN FILE line shows the light line a colour writes.
+
+### Added: Preview as in the Theme Editor
+
+Dark and Light above the sample sheet change only the preview, so a theme can be judged on both sides without switching Godot. The window opens on the editor's own mode.
+
+### Added: a swatch whose words would read badly on their ground is marked
+
+A small amber mark after a colour says its words read under the bar on the ground they are drawn on (4.5 to 1 for sentences, 3 to 1 for marks and badge letters), and the strip says the ratio, the ground and the side. Nothing blocks a save. The pairs come from the one list the Editor Native contrast test already holds.
+
+### Changed: Quick Style fills the dark and the light column at once
+
+Quick Style has a base and a text colour for dark and for light and one accent, and Generate Theme fills both columns as one undo step. The follow-the-editor tick reads "Follow the editor in light".
+
+### Changed: Match Editor opens on a theme's own colours in a light editor
+
+The window used to open Match Editor on colours a light editor had already moved onto its light greys, so the dark swatches held light values. It opens on the colours the theme holds, and the Light preview shows the rest.
+
+### Fixed: the Reading font field says what goes in it, whole
+
+The hint ended in "blank keeps the editor's ow". The words now have a line of their own above a short field.
+
+### Fixed: the list in the Shared Sheets window is headed Shared Sheets
+
+It still said "Included sheets".
+
+### Fixed: one sheet can go back to the editor's own look while the project names a theme
+
+While Use For Every Sheet names a theme, the first entry of the Sheet theme menu is that theme, so there was no way for one sheet to match the editor. The Editor Native entry now reads Match Editor then.
+
+### Changed: saving a theme says so when the open sheet keeps its own copy
+
+A sheet that carries a copy of a theme inside itself does not take up what is saved into the file. The foot now adds "The open sheet keeps its own copy of a theme; pick the theme again to update it."
+
+### Changed: the editor closure has room again
+
+Four files that are only needed once a menu or a right-click asks for them (the game catalog, the pattern adopt helper, the Moment file helpers and the scene events facts) are compiled at that moment instead of when the first sheet opens, 1,002 lines fewer in the first open.
+
 ### Added: the Theme Editor edits one theme file, and saves it
 
 The Theme Editor's title now names the theme file it opened ("Theme Editor - nord_copy.tres") and gains "(changed)" the moment a swatch moves. Ctrl+Z and Ctrl+Shift+Z step the swatches back and forward inside the window, and Revert goes back to the file. A Theme field at the top of the form switches to another theme without closing the window, grouped as Match Editor, Your themes, In this project and Starters. Save (or Ctrl+S) writes the file the window opened, and every sheet wearing that theme repaints at once. Save As... makes a new file from what you see and the window then edits that file; it replaces the old Save As Preset button. A starter that comes with the plugin, or a theme in the demo folder, is never written: the window offers Save a Copy... instead, which starts in `res://eventsheet_themes/` with a free name such as `editor_native_copy.tres` and puts the open sheet on the copy. Match Editor has no file: change a swatch and it becomes an untitled theme that Save As... asks where to keep. Closing the window, or switching theme, with changes asks Save, Discard or Cancel the way Godot asks for a changed scene. Godot renumbers the blocks inside a `.tres` on every save, so two saves of the same values read the same only when those numbers are ignored; every value is the same. A theme file saved before this change opens, saves and reloads with every value kept. All eight languages are translated.
