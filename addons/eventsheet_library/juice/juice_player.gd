@@ -1202,12 +1202,14 @@ func _may_start() -> bool:
 	return true
 
 ## The longest path through a list of steps: a stretch between two holds runs at once, so it is as
-## long as its slowest card, and the holds and pauses add up. The Inspector head, the card badge and
-## the expression all read this one function, so no two of them can disagree.
+## long as its slowest card, and the holds and pauses add up. A Hold that names a card waits for that
+## card alone, so what is still running beside it carries on into what comes next. The Inspector head,
+## the card badge and the expression all read this one function, so no two of them can disagree.
 ## @ace_hidden
 static func duration_of(list: Array) -> float:
 	var total: float = 0.0
 	var stretch: float = 0.0
+	var ends: Dictionary = {}
 	for entry: Variant in list:
 		if not (entry is Dictionary):
 			continue
@@ -1217,13 +1219,24 @@ static func duration_of(list: Array) -> float:
 		var word: String = str(card.get("verb", ""))
 		var seconds: float = card_length(card) + maxf(float(card.get("delay", 0.0)), 0.0)
 		if word == HOLD_UNTIL:
-			total += stretch + seconds
-			stretch = 0.0
+			var waited: float = _waited_for(card, ends, stretch)
+			total += waited + seconds
+			stretch = maxf(stretch - waited, 0.0)
+			ends.clear()
 		elif word == PAUSE:
 			total += seconds
 		elif word != LOOP_START and word != LOOP_BACK:
 			stretch = maxf(stretch, seconds)
+			ends[card_label(card)] = maxf(float(ends.get(card_label(card), 0.0)), seconds)
 	return total + stretch
+
+## How far into its stretch a Hold's wait reaches: the end of the card it names, or the end of the whole
+## stretch when it names nothing or names a card that is not above it in that stretch.
+static func _waited_for(hold: Dictionary, ends: Dictionary, stretch: float) -> float:
+	var wanted: String = str(hold.get("waits_for", "")).strip_edges()
+	if wanted.is_empty() or not ends.has(wanted):
+		return stretch
+	return float(ends[wanted])
 
 ## Whether a word moves the head rather than being felt.
 static func _is_timing(word: String) -> bool:
@@ -1309,7 +1322,7 @@ func _take(order: Array, index: int, card: Dictionary, at_strength: float, token
 			await MomentRunner.then(self, MomentRunner.seconds_of(float(card.get("seconds", 0.0))), clock)
 		HOLD_UNTIL:
 			on_hold_reached.emit()
-			await MomentRunner.hold(self, _longest_above(order, index), float(card.get("seconds", 0.0)), clock)
+			await MomentRunner.hold(self, left_above(order, index), float(card.get("seconds", 0.0)), clock)
 		LOOP_START:
 			pass
 		LOOP_BACK:
@@ -1528,10 +1541,25 @@ func _tell_sound(card: Dictionary, what: String) -> void:
 	_told_sound[told] = true
 	push_warning("Juice Player: the sound card \"%s\" on %s %s" % [_label_of(card), name, what])
 
-## How much of the slowest step above is still to run when a Hold is reached - the number the hold
-## word waits for. Read back over the cards between this hold and the one above it.
-func _longest_above(order: Array, index: int) -> float:
+## How much of the cards above is still to run when a Hold is reached - the number the Hold waits for.
+## Read back over the cards between this Hold and the one above it: the slowest of them, or only the card
+## the Hold names when it names one that is there (a name that is no card above waits for the slowest, as a
+## Hold that names nothing does).
+static func left_above(order: Array, index: int) -> float:
+	var wanted: String = ""
+	if index >= 0 and index < order.size() and order[index] is Dictionary:
+		wanted = str((order[index] as Dictionary).get("waits_for", "")).strip_edges()
+	if not wanted.is_empty():
+		var named: float = _left_of_cards(order, index, wanted)
+		if named >= 0.0:
+			return named
+	return _left_of_cards(order, index, "")
+
+## What is left of the cards above `index` (all of them, or the one called `wanted`), or -1 when `wanted`
+## names no card above it.
+static func _left_of_cards(order: Array, index: int, wanted: String) -> float:
 	var longest: float = 0.0
+	var matched: bool = false
 	# A card's delay is waited out by the walk itself, so by the time the Hold is reached the
 	# cards above it have already been running for the sum of the delays under them. What is
 	# LEFT of each one is its length less that, which is what the head of the list draws.
@@ -1548,11 +1576,18 @@ func _longest_above(order: Array, index: int) -> float:
 			if word == PAUSE:
 				spent += delay + seconds
 			else:
-				if word != LOOP_START and word != LOOP_BACK:
-					longest = maxf(longest, seconds - spent)
+				if word != LOOP_START and word != LOOP_BACK and (wanted.is_empty() or card_label(card) == wanted):
+					longest = seconds - spent if not matched else maxf(longest, seconds - spent)
+					matched = true
 				spent += delay
 		walk -= 1
+	if not wanted.is_empty() and not matched:
+		return -1.0
 	return maxf(longest, 0.0)
+
+## The same number, asked of the walk's own copy of the list.
+func _longest_above(order: Array, index: int) -> float:
+	return left_above(order, index)
 
 ## Where a Loop Back sends the head: the nearest Hold or Loop Start above it that the card is willing
 ## to land on. -1 when there is none, which makes the loop a step that does nothing.
@@ -1615,6 +1650,7 @@ static func schedule_of(list: Array) -> Array:
 	var plan: Array = []
 	var at: float = 0.0
 	var stretch: float = 0.0
+	var ends: Dictionary = {}
 	for entry: Variant in list:
 		if not (entry is Dictionary):
 			continue
@@ -1625,8 +1661,10 @@ static func schedule_of(list: Array) -> Array:
 		var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
 		var seconds: float = card_length(card)
 		if word == HOLD_UNTIL:
-			at += stretch + delay + seconds
-			stretch = 0.0
+			var waited: float = _waited_for(card, ends, stretch)
+			at += waited + delay + seconds
+			stretch = maxf(stretch - waited, 0.0)
+			ends.clear()
 			continue
 		if word == PAUSE:
 			at += delay + seconds
@@ -1635,6 +1673,7 @@ static func schedule_of(list: Array) -> Array:
 			continue
 		plan.append({"card": card, "at": at + delay, "seconds": seconds})
 		stretch = maxf(stretch, delay + seconds)
+		ends[card_label(card)] = maxf(float(ends.get(card_label(card), 0.0)), delay + seconds)
 	return plan
 
 ## What the object would be doing `time` into a play - the editor's look at the list, sampled rather
@@ -1695,10 +1734,16 @@ static func editor_kind(word: String) -> String:
 	return "skipped:the running game draws it"
 
 ## The name one card answers to: what it was called in the list, or its own word when it was never
-## named. THE ONE PLACE a label is derived, so every row addresses cards identically.
-func _label_of(card: Dictionary) -> String:
+## named. THE ONE PLACE a label is derived, so every row addresses cards identically, and a Hold that
+## waits for one card names it the same way.
+## @ace_hidden
+static func card_label(card: Dictionary) -> String:
 	var named: String = str(card.get("label", "")).strip_edges()
 	return named if not named.is_empty() else str(card.get("verb", "")).strip_edges()
+
+## The same name, asked of the card by this node.
+func _label_of(card: Dictionary) -> String:
+	return card_label(card)
 
 ## Which family a card belongs to: its own word for it when it carries one, else the family its
 ## word belongs to, else none at all.
