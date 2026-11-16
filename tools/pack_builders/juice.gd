@@ -92,6 +92,10 @@ static func build() -> bool:
 		"var shake_time: float = 0.0",
 		"## True while a shake is running.",
 		"var _shaking: bool = false",
+		"## The timed shakes running now: a Shake For row, or a Shake card with a tick or a curve. Each holds its amount, its length, the time gone and its shape.",
+		"var _timed_shakes: Array[Dictionary] = []",
+		"## What the camera mixer drew its shake with on the last frame: the trauma plus every timed shake, held to 1.",
+		"var _shake_level: float = 0.0",
 		"# True while ANY camera effect is holding the camera away from its captured rest pose.",
 		"## True while this node is the one moving the camera.",
 		"var _cam_driving: bool = false",
@@ -203,7 +207,7 @@ static func build() -> bool:
 		"## @ace_condition",
 		"## @ace_name(\"Is Shaking\")",
 		"func is_shaking() -> bool:",
-		"\treturn trauma > 0.0",
+		"\treturn trauma > 0.0 or not _timed_shakes.is_empty()",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Trauma\")",
@@ -285,7 +289,13 @@ static func build() -> bool:
 		"\t_slowmo_tween.kill()",
 		"_slowmo_tween = null",
 		"if __owned_time:",
-		"\tEngine.time_scale = 1.0"
+		"\tEngine.time_scale = 1.0",
+		"# A camera this node was still shaking is handed back exactly as it was found.",
+		"_timed_shakes.clear()",
+		"if _cam_driving and _last_camera != null and is_instance_valid(_last_camera):",
+		"\t_last_camera.offset = _base_offset",
+		"\t_last_camera.rotation = _base_rotation",
+		"_cam_driving = false"
 	]))
 	teardown.actions.append(teardown_body)
 	sheet.events.append(teardown)
@@ -307,11 +317,17 @@ static func build() -> bool:
 	tick_body.code = "\n".join(PackedStringArray([
 		"# Effect STATE advances camera-or-not (headless-safe: trauma must decay and recoil must",
 		"# recover even when no viewport exists); only the camera write below needs a camera.",
+		"# A timed shake is counted by its own clock and added to the trauma; only the trauma decays, so the level",
+		"# the mixer draws never drops to nothing in the middle of a shake and the stop is heard once.",
+		"var timed_level: float = _tick_timed_shakes(delta)",
+		"var shaking_now: bool = trauma > 0.0 or timed_level > 0.0 or not _timed_shakes.is_empty()",
 		"if trauma > 0.0:",
 		"\ttrauma = maxf(trauma - shake_decay * delta, 0.0)",
+		"if shaking_now:",
 		"\tshake_time += delta",
 		"\t_shaking = true",
-		"if trauma <= 0.0 and _shaking:",
+		"_shake_level = clampf(trauma + timed_level, 0.0, 1.0)",
+		"if _shake_level <= 0.0 and _timed_shakes.is_empty() and _shaking:",
 		"\t_shaking = false",
 		"\tshake_stopped.emit()",
 		"if _recoil_vec != Vector2.ZERO:",
@@ -330,7 +346,7 @@ static func build() -> bool:
 		"\t\t_cam_driving = false",
 		"\t# One mixer for every camera effect: all contributions sum around ONE captured rest pose,",
 		"\t# so shake + recoil + bob + jitter + tilt compose instead of fighting over the offset.",
-		"\tvar cam_wants: bool = trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
+		"\tvar cam_wants: bool = _shake_level > 0.0 or not _timed_shakes.is_empty() or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
 		"\tif cam_wants:",
 		"\t\tif not _cam_driving:",
 		"\t\t\t_cam_driving = true",
@@ -339,9 +355,9 @@ static func build() -> bool:
 		"\t\t\t_base_rotation = cam.rotation",
 		"\t\tvar fx_offset: Vector2 = _recoil_vec",
 		"\t\tvar fx_roll: float = deg_to_rad(_tilt_roll)",
-		"\t\tif trauma > 0.0:",
-		"\t\t\t# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model).",
-		"\t\t\tvar amount: float = trauma * trauma",
+		"\t\tif _shake_level > 0.0:",
+		"\t\t\t# Square the level so the shake ramps in perceptually (Squirrel Eiserloh's model).",
+		"\t\t\tvar amount: float = _shake_level * _shake_level",
 		"\t\t\tvar t: float = shake_time * shake_frequency",
 		"\t\t\tfx_offset += Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))",
 		"\t\t\tfx_roll += deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)",
@@ -653,7 +669,7 @@ static func build() -> bool:
 		"# another effect. A held camera counts as work - _cam_driving stays true until the mixer above",
 		"# has handed the camera back to the pose it was found in - and so does a running Tilt tween,",
 		"# which writes _tilt_roll for the mixer to apply rather than touching the camera itself.",
-		"var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
+		"var camera_busy: bool = _cam_driving or trauma > 0.0 or not _timed_shakes.is_empty() or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
 		"var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()",
 		"if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active",
 		"\t\tor _chroma_shake_active or _moment_busy() or _channel_busy()):",
@@ -662,6 +678,62 @@ static func build() -> bool:
 	tick_extras.actions.append(tick_extras_body)
 	sheet.events.append(tick_extras)
 
+	# ── Timed shakes: a shake that lasts the Seconds it was given and has a shape ──
+	var timed_shake_block: RawCodeRow = RawCodeRow.new()
+	timed_shake_block.code = "\n".join(PackedStringArray([
+		"# A TIMED SHAKE is the other kind of shake. Shake adds trauma, which fades at Shake Decay whatever length a",
+		"# card says; a timed shake lasts exactly its length and has a shape (fade in, fade out, both, neither, or a",
+		"# curve). The shape is applied to the amount BEFORE the camera mixer squares it, timed shakes add to the",
+		"# trauma and to each other up to the same top of 1, and only the trauma decays.",
+		"",
+		"## Starts one timed shake of `amount` that lasts `seconds` (never under a twentieth of a second) with the",
+		"## shape the two ticks and the curve ask for. A curve is the shape on its own and the ticks are not read.",
+		"## @ace_hidden",
+		"func _start_timed_shake(amount: float, seconds: float, fade_in: bool, fade_out: bool, curve: Curve) -> void:",
+		"\tif amount <= 0.0:",
+		"\t\treturn",
+		"\t_timed_shakes.append({\"amount\": amount, \"seconds\": maxf(seconds, MomentRunner.NATURAL_SECONDS), \"elapsed\": 0.0,",
+		"\t\t\"fade_in\": fade_in, \"fade_out\": fade_out, \"curve\": curve})",
+		"\tset_process(true)",
+		"",
+		"## Plays a Shake card that holds a tick or a curve: the same amount and length rules a moment step has (the",
+		"## play's strength and the no-flashing ceiling and floor), then a timed shake. The Juice Player calls this by",
+		"## name when it finds it here, so an older copy of this pack without it keeps shaking the old way.",
+		"## @ace_hidden",
+		"func shake_from_card(card: Dictionary, strength: float) -> void:",
+		"\tvar amount: float = _moment_amount(\"shake\", float(card.get(\"amount\", 1.0)), strength)",
+		"\tvar seconds: float = _moment_seconds(\"shake\", maxf(float(card.get(\"seconds\", 0.0)), 0.0))",
+		"\tvar curve: Curve = null",
+		"\tvar kept: String = str(card.get(\"curve\", \"\")).strip_edges()",
+		"\tif not kept.is_empty():",
+		"\t\tcurve = load(kept) as Curve if ResourceLoader.exists(kept) else null",
+		"\t\tif curve == null:",
+		"\t\t\tpush_warning(\"Juice: a Shake card keeps the curve \\\"%s\\\", which is no Curve file now, so it shakes with its ticks instead.\" % kept)",
+		"\t_start_timed_shake(amount, seconds, bool(card.get(\"fade_in\", false)), bool(card.get(\"fade_out\", false)), curve)",
+		"",
+		"## Moves every timed shake on by one frame and gives back the level they add to the trauma. A shake that has",
+		"## run its whole length is let go, and the ones left keep their own clocks.",
+		"## @ace_hidden",
+		"func _tick_timed_shakes(delta: float) -> float:",
+		"\tvar level: float = 0.0",
+		"\tfor at: int in range(_timed_shakes.size() - 1, -1, -1):",
+		"\t\tvar one: Dictionary = _timed_shakes[at]",
+		"\t\tone[\"elapsed\"] = float(one[\"elapsed\"]) + delta",
+		"\t\tvar span: float = float(one[\"seconds\"])",
+		"\t\tif float(one[\"elapsed\"]) >= span:",
+		"\t\t\t_timed_shakes.remove_at(at)",
+		"\t\t\tcontinue",
+		"\t\tlevel += float(one[\"amount\"]) * MomentRunner.shake_shape(float(one[\"elapsed\"]) / span, bool(one[\"fade_in\"]), bool(one[\"fade_out\"]), one[\"curve\"] as Curve)",
+		"\treturn level",
+		"",
+		"## What the camera mixer drew its shake with on the last frame, before squaring: the trauma plus every",
+		"## timed shake, held to 1.",
+		"## @ace_hidden",
+		"func shake_level() -> float:",
+		"\treturn _shake_level"
+	]))
+	sheet.events.append(timed_shake_block)
+
 	# --- Actions (fire-and-forget) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice", "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.",
 		[["strength", "float"]],
@@ -669,7 +741,29 @@ static func build() -> bool:
 	_default(sheet, "strength", "0.4")
 	Lib.append_function(sheet, "stop_shake", "Stop Shake", "Juice", "Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).",
 		[],
-		"trauma = 0.0\nshake_time = 0.0\n_shaking = false\nvar cam: Camera2D = _camera()\nif cam != null and _cam_driving and not (_bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001):\n\tcam.offset = _base_offset\n\tcam.rotation = _base_rotation\n\t_cam_driving = false")
+		"var was_shaking: bool = _shaking or trauma > 0.0 or not _timed_shakes.is_empty()\ntrauma = 0.0\n_timed_shakes.clear()\n_shake_level = 0.0\nshake_time = 0.0\n_shaking = false\nvar cam: Camera2D = _camera()\nif cam != null and _cam_driving and not (_bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001):\n\tcam.offset = _base_offset\n\tcam.rotation = _base_rotation\n\t_cam_driving = false\nif was_shaking:\n\tshake_stopped.emit()")
+	Lib.append_function(sheet, "shake_for", "Shake For", "Juice", "Shakes the active camera for exactly this long. Fade in rises from nothing to the amount, Fade out goes down from the amount to nothing, both swell and die away, and neither holds the full amount and then stops. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.",
+		[["amount", "float"], ["seconds", "float"], ["fade_in", "bool"], ["fade_out", "bool"]],
+		"_start_timed_shake(amount, seconds, fade_in, fade_out, null)",
+		"Shake [b]{amount}[/b] for [b]{seconds}[/b] s, fade in [b]{fade_in}[/b], fade out [b]{fade_out}[/b]")
+	_default(sheet, "amount", "0.4")
+	_param_desc(sheet, "amount", "How hard the shake is at its strongest, from 0 to 1.")
+	_default(sheet, "seconds", "0.5")
+	_param_desc(sheet, "seconds", "How long the shake lasts. It lasts exactly this long, whatever the Shake Decay says.")
+	_default(sheet, "fade_in", "false")
+	_param_desc(sheet, "fade_in", "On: the shake rises from nothing to the amount.")
+	_default(sheet, "fade_out", "true")
+	_param_desc(sheet, "fade_out", "On: the shake goes down from the amount to nothing by the end.")
+	Lib.append_function(sheet, "shake_with_curve", "Shake With Curve", "Juice", "Shakes the active camera for exactly this long, following a Curve you drew: left to right is the time of the shake, and how high the line is says how much of the amount is felt. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.",
+		[["amount", "float"], ["seconds", "float"], ["curve", "Curve"]],
+		"_start_timed_shake(amount, seconds, false, false, curve)",
+		"Shake [b]{amount}[/b] for [b]{seconds}[/b] s along a curve")
+	_default(sheet, "amount", "0.4")
+	_param_desc(sheet, "amount", "How hard the shake is where the curve is at its top, from 0 to 1.")
+	_default(sheet, "seconds", "0.5")
+	_param_desc(sheet, "seconds", "How long the shake lasts: the whole curve is played over this time.")
+	_default(sheet, "curve", "null")
+	_param_desc(sheet, "curve", "The Curve that is the shape of the shake. A Curve file you made in the Inspector, loaded with load or preload.")
 	Lib.append_function(sheet, "use_camera", "Use Camera", "Juice", "Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.",
 		[["camera_path", "NodePath"]],
 		"_camera_override = get_node_or_null(camera_path) as Camera2D")

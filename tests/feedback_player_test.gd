@@ -251,7 +251,7 @@ static func _schema_pins() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["shake is titled the way the pack titles it", str(shake.get("label", "")), "Shake"],
 		["shake is a camera-family card", str(shake.get("category", "")), "camera"],
-		["shake offers the two fields a step carries", _field_keys(shake), PackedStringArray(["amount", "seconds"])],
+		["shake offers the two fields a step carries, and the ticks and curve a pack that can time a shake adds", _field_keys(shake), PackedStringArray(["amount", "seconds", "fade_in", "fade_out", "curve", "shake_shape", "shake_says", "shake_old"])],
 		["flash is titled the way the pack titles it", str(flash.get("label", "")), "Flash"],
 		["flash offers the extra word as well", _field_keys(flash), PackedStringArray(["amount", "effect", "seconds"])],
 		["the enable box is an absent-means-on key", str(schema.get("enabled_key", "")), "active"],

@@ -44,6 +44,8 @@ The pack is small. Learn these ideas and every ACE falls into place.
 
 **Screenshake is trauma-based and additive.** Shake does not set a shake amount, it adds `strength` (0 to 1) to a hidden trauma value that then decays every second. The camera offset and roll are driven from trauma squared, so the shake ramps in perceptually and eases out as trauma bleeds off. Because it is additive on top of the camera's own offset and rotation, it composes with a follow camera instead of fighting it. Fire a little Shake on each hit and it stacks and settles by itself. When trauma reaches zero, On Shake Stopped fires.
 
+**A shake for a length is the other kind of shake.** Shake For and Shake With Curve last exactly the seconds you give them, whatever Shake Decay says, and have a shape: Fade out goes down to nothing, Fade in rises from nothing, both swell and die away, neither holds the full amount and then stops, and a Curve is any shape you draw with Godot's own curve editor. The shape is applied to the amount before the camera squares it, so the shake still ramps in perceptually. A timed shake adds to the trauma and to other timed shakes and never passes the top of 1; only the trauma decays. Stop Shake ends both kinds and fires On Shake Stopped once, and On Shake Stopped fires when the last shake of either kind has ended. The accessibility dial and a play's strength scale the amount, never the time. A Juice node freed in the middle of a shake hands the camera back exactly where it was.
+
 **The Inspector knobs are the feel.** You tune how the effects look in the Inspector, not in the event rows. `max_offset`, `max_roll_degrees`, `shake_decay` and `shake_frequency` shape the shake; `min_zoom` and `max_zoom` clamp every zoom; the `slowmo_fade_*` knobs and the `squash_stiffness` / `squash_damping` knobs shape slowmo ramps and the spring bounce. The action rows carry only the "what and how much" - the "how it feels" lives on the node.
 
 **Zoom comes in three flavors.** All three read a `percent` where 100 means no change, 150 means zoom in to 1.5x, and 50 means zoom out to half, and all three clamp the result to `min_zoom` / `max_zoom`. Zoom By Percent just changes the zoom. Zoom To Position also glides the camera so a world point ends up centred. Zoom Toward Point keeps a world point pinned under the same screen spot as it zooms (the cursor-anchored feel). Each ends with On Zoom Finished.
@@ -638,7 +640,9 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Action | Parameters | Description |
 |---|---|---|
 | Shake | `strength` (float) | Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit. Opens at 0.4. |
-| Stop Shake | (none) | Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it). |
+| Stop Shake | (none) | Cancels any shake immediately, of either kind, and fires On Shake Stopped once (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it). |
+| Shake For | `amount` (float), `seconds` (float), `fade_in` (bool), `fade_out` (bool) | Shakes the active camera for exactly this long. Fade in rises from nothing to the amount, Fade out goes down from the amount to nothing, both swell and die away, and neither holds the full amount and then stops. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it. Opens at 0.4, 0.5, no, yes. |
+| Shake With Curve | `amount` (float), `seconds` (float), `curve` (Curve) | Shakes the active camera for exactly this long, following a Curve you drew: left to right is the time of the shake, and how high the line is says how much of the amount is felt. Opens at 0.4, 0.5, no curve. |
 | Use Camera | `camera_path` (NodePath) | Pins the effects to a specific `Camera2D` by path. Leave it unset to auto-target whichever camera is active. |
 | Recoil | `angle_degrees` (float), `strength` (float) | Kicks the camera `strength` pixels in a direction (-90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Opens at -90, 12. |
 | Start Head Bob | `amplitude` (float), `frequency` (float) | Starts a walking head-bob: a figure-8 sway (side at half rate, one vertical dip per step). Pixels and steps-per-second. Call while moving; Stop Head Bob when halting. Opens at 6, 2.2. |
@@ -717,7 +721,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 
 | Trigger | Fires when |
 |---|---|
-| On Shake Stopped | Trauma reaches zero and the camera settles back to rest after a shake. |
+| On Shake Stopped | The last shake of either kind has ended and the camera settles back to rest, or Stop Shake ended a shake. |
 | On Tilt Finished | A Tilt To ease reaches its target angle. |
 | On Flash Finished | A Flash has faded back to the host's own look. |
 | On Punch Finished | A Punch Scale / Rotation / Position has sprung back to rest. |

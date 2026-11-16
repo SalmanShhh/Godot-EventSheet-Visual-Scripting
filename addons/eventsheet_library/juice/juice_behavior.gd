@@ -265,6 +265,10 @@ var trauma: float = 0.0
 var shake_time: float = 0.0
 ## True while a shake is running.
 var _shaking: bool = false
+## The timed shakes running now: a Shake For row, or a Shake card with a tick or a curve. Each holds its amount, its length, the time gone and its shape.
+var _timed_shakes: Array[Dictionary] = []
+## What the camera mixer drew its shake with on the last frame: the trauma plus every timed shake, held to 1.
+var _shake_level: float = 0.0
 # True while ANY camera effect is holding the camera away from its captured rest pose.
 ## True while this node is the one moving the camera.
 var _cam_driving: bool = false
@@ -744,6 +748,12 @@ func _on_tree_exiting() -> void:
 	_slowmo_tween = null
 	if __owned_time:
 		Engine.time_scale = 1.0
+	# A camera this node was still shaking is handed back exactly as it was found.
+	_timed_shakes.clear()
+	if _cam_driving and _last_camera != null and is_instance_valid(_last_camera):
+		_last_camera.offset = _base_offset
+		_last_camera.rotation = _base_rotation
+	_cam_driving = false
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() and not _previewing:
@@ -751,11 +761,17 @@ func _process(delta: float) -> void:
 	_chroma_shake_step(delta)
 	# Effect STATE advances camera-or-not (headless-safe: trauma must decay and recoil must
 	# recover even when no viewport exists); only the camera write below needs a camera.
+	# A timed shake is counted by its own clock and added to the trauma; only the trauma decays, so the level
+	# the mixer draws never drops to nothing in the middle of a shake and the stop is heard once.
+	var timed_level: float = _tick_timed_shakes(delta)
+	var shaking_now: bool = trauma > 0.0 or timed_level > 0.0 or not _timed_shakes.is_empty()
 	if trauma > 0.0:
 		trauma = maxf(trauma - shake_decay * delta, 0.0)
+	if shaking_now:
 		shake_time += delta
 		_shaking = true
-	if trauma <= 0.0 and _shaking:
+	_shake_level = clampf(trauma + timed_level, 0.0, 1.0)
+	if _shake_level <= 0.0 and _timed_shakes.is_empty() and _shaking:
 		_shaking = false
 		shake_stopped.emit()
 	if _recoil_vec != Vector2.ZERO:
@@ -774,7 +790,7 @@ func _process(delta: float) -> void:
 			_cam_driving = false
 		# One mixer for every camera effect: all contributions sum around ONE captured rest pose,
 		# so shake + recoil + bob + jitter + tilt compose instead of fighting over the offset.
-		var cam_wants: bool = trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
+		var cam_wants: bool = _shake_level > 0.0 or not _timed_shakes.is_empty() or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
 		if cam_wants:
 			if not _cam_driving:
 				_cam_driving = true
@@ -783,9 +799,9 @@ func _process(delta: float) -> void:
 				_base_rotation = cam.rotation
 			var fx_offset: Vector2 = _recoil_vec
 			var fx_roll: float = deg_to_rad(_tilt_roll)
-			if trauma > 0.0:
-				# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model).
-				var amount: float = trauma * trauma
+			if _shake_level > 0.0:
+				# Square the level so the shake ramps in perceptually (Squirrel Eiserloh's model).
+				var amount: float = _shake_level * _shake_level
 				var t: float = shake_time * shake_frequency
 				fx_offset += Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))
 				fx_roll += deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)
@@ -837,7 +853,7 @@ func _process(delta: float) -> void:
 	# another effect. A held camera counts as work - _cam_driving stays true until the mixer above
 	# has handed the camera back to the pose it was found in - and so does a running Tilt tween,
 	# which writes _tilt_roll for the mixer to apply rather than touching the camera itself.
-	var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
+	var camera_busy: bool = _cam_driving or trauma > 0.0 or not _timed_shakes.is_empty() or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
 	var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()
 	if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active
 			or _chroma_shake_active or _moment_busy() or _channel_busy()):
@@ -862,7 +878,10 @@ func shake(strength: float) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.stop_shake()")
 func stop_shake() -> void:
+	var was_shaking: bool = _shaking or trauma > 0.0 or not _timed_shakes.is_empty()
 	trauma = 0.0
+	_timed_shakes.clear()
+	_shake_level = 0.0
 	shake_time = 0.0
 	_shaking = false
 	var cam: Camera2D = _camera()
@@ -870,6 +889,35 @@ func stop_shake() -> void:
 		cam.offset = _base_offset
 		cam.rotation = _base_rotation
 		_cam_driving = false
+	if was_shaking:
+		shake_stopped.emit()
+
+## @ace_action
+## @ace_name("Shake For")
+## @ace_category("Juice")
+## @ace_description("Shakes the active camera for exactly this long. Fade in rises from nothing to the amount, Fade out goes down from the amount to nothing, both swell and die away, and neither holds the full amount and then stops. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.")
+## @ace_display_template("Shake [b]{amount}[/b] for [b]{seconds}[/b] s, fade in [b]{fade_in}[/b], fade out [b]{fade_out}[/b]")
+## @ace_param(amount, default: 0.4, desc: "How hard the shake is at its strongest, from 0 to 1.")
+## @ace_param(seconds, default: 0.5, desc: "How long the shake lasts. It lasts exactly this long, whatever the Shake Decay says.")
+## @ace_param(fade_in, default: false, desc: "On: the shake rises from nothing to the amount.")
+## @ace_param(fade_out, default: true, desc: "On: the shake goes down from the amount to nothing by the end.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.shake_for({amount}, {seconds}, {fade_in}, {fade_out})")
+func shake_for(amount: float, seconds: float, fade_in: bool, fade_out: bool) -> void:
+	_start_timed_shake(amount, seconds, fade_in, fade_out, null)
+
+## @ace_action
+## @ace_name("Shake With Curve")
+## @ace_category("Juice")
+## @ace_description("Shakes the active camera for exactly this long, following a Curve you drew: left to right is the time of the shake, and how high the line is says how much of the amount is felt. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.")
+## @ace_display_template("Shake [b]{amount}[/b] for [b]{seconds}[/b] s along a curve")
+## @ace_param(amount, default: 0.4, desc: "How hard the shake is where the curve is at its top, from 0 to 1.")
+## @ace_param(seconds, default: 0.5, desc: "How long the shake lasts: the whole curve is played over this time.")
+## @ace_param(curve, default: null, desc: "The Curve that is the shape of the shake. A Curve file you made in the Inspector, loaded with load or preload.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.shake_with_curve({amount}, {seconds}, {curve})")
+func shake_with_curve(amount: float, seconds: float, curve: Curve) -> void:
+	_start_timed_shake(amount, seconds, false, false, curve)
 
 ## @ace_action
 ## @ace_name("Use Camera")
@@ -1706,7 +1754,7 @@ func _zoom_anchored_step(f: float) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.is_shaking()")
 func is_shaking() -> bool:
-	return trauma > 0.0
+	return trauma > 0.0 or not _timed_shakes.is_empty()
 
 ## @ace_expression
 ## @ace_name("Trauma")
@@ -2564,5 +2612,55 @@ func _channel_put_back() -> void:
 ## @ace_hidden
 func _channel_busy() -> bool:
 	return _channel_left > 0.0 or _channel_driving
+
+## Starts one timed shake of `amount` that lasts `seconds` (never under a twentieth of a second) with the
+## shape the two ticks and the curve ask for. A curve is the shape on its own and the ticks are not read.
+## @ace_hidden
+func _start_timed_shake(amount: float, seconds: float, fade_in: bool, fade_out: bool, curve: Curve) -> void:
+	if amount <= 0.0:
+		return
+	_timed_shakes.append({"amount": amount, "seconds": maxf(seconds, MomentRunner.NATURAL_SECONDS), "elapsed": 0.0,
+		"fade_in": fade_in, "fade_out": fade_out, "curve": curve})
+	set_process(true)
+
+## Plays a Shake card that holds a tick or a curve: the same amount and length rules a moment step has (the
+## play's strength and the no-flashing ceiling and floor), then a timed shake. The Juice Player calls this by
+## name when it finds it here, so an older copy of this pack without it keeps shaking the old way.
+## @ace_hidden
+func shake_from_card(card: Dictionary, strength: float) -> void:
+	# A TIMED SHAKE is the other kind of shake. Shake adds trauma, which fades at Shake Decay whatever length a
+	# card says; a timed shake lasts exactly its length and has a shape (fade in, fade out, both, neither, or a
+	# curve). The shape is applied to the amount BEFORE the camera mixer squares it, timed shakes add to the
+	# trauma and to each other up to the same top of 1, and only the trauma decays.
+	var amount: float = _moment_amount("shake", float(card.get("amount", 1.0)), strength)
+	var seconds: float = _moment_seconds("shake", maxf(float(card.get("seconds", 0.0)), 0.0))
+	var curve: Curve = null
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	if not kept.is_empty():
+		curve = load(kept) as Curve if ResourceLoader.exists(kept) else null
+		if curve == null:
+			push_warning("Juice: a Shake card keeps the curve \"%s\", which is no Curve file now, so it shakes with its ticks instead." % kept)
+	_start_timed_shake(amount, seconds, bool(card.get("fade_in", false)), bool(card.get("fade_out", false)), curve)
+
+## Moves every timed shake on by one frame and gives back the level they add to the trauma. A shake that has
+## run its whole length is let go, and the ones left keep their own clocks.
+## @ace_hidden
+func _tick_timed_shakes(delta: float) -> float:
+	var level: float = 0.0
+	for at: int in range(_timed_shakes.size() - 1, -1, -1):
+		var one: Dictionary = _timed_shakes[at]
+		one["elapsed"] = float(one["elapsed"]) + delta
+		var span: float = float(one["seconds"])
+		if float(one["elapsed"]) >= span:
+			_timed_shakes.remove_at(at)
+			continue
+		level += float(one["amount"]) * MomentRunner.shake_shape(float(one["elapsed"]) / span, bool(one["fade_in"]), bool(one["fade_out"]), one["curve"] as Curve)
+	return level
+
+## What the camera mixer drew its shake with on the last frame, before squaring: the trauma plus every
+## timed shake, held to 1.
+## @ace_hidden
+func shake_level() -> float:
+	return _shake_level
 
 # Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.) A whole beat of feedback is one row: Moment plays a file of steps - impact, kill, triumph, danger, calm and cut ship beside this pack as starters to edit.

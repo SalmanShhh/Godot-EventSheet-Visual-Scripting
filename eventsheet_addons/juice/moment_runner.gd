@@ -305,3 +305,26 @@ static func touched_by_steps(steps: Array) -> PackedStringArray:
 		if not key.is_empty() and not keys.has(key):
 			keys.append(key)
 	return keys
+
+## Whether a shake card is a TIMED shake: it holds a Fade in tick, a Fade out tick (ticked or not) or a
+## curve, so its Seconds is the real length of the shake. A card with none of those keys shakes as it always
+## has - trauma that fades at the Juice node's Shake Decay - and Seconds does not set how long that lasts.
+static func is_timed_shake(card: Dictionary) -> bool:
+	return card.has("fade_in") or card.has("fade_out") or not str(card.get("curve", "")).strip_edges().is_empty()
+
+## The share of its amount a timed shake has `through` its length (0 at the first frame, 1 at the last).
+## Fade out falls from the full amount to nothing, Fade in rises from nothing, both swell and die away in
+## a straight rise and fall, and neither holds the full amount and then stops. A curve is the shape on its
+## own and the ticks are not read: its x runs over the time and its y is the share of the amount. This is
+## the one place the shape is written, so the running shake and the editor's preview cannot disagree.
+static func shake_shape(through: float, fade_in: bool, fade_out: bool, curve: Curve = null) -> float:
+	var t: float = clampf(through, 0.0, 1.0)
+	if curve != null and curve.point_count > 0:
+		return maxf(curve.sample(lerpf(curve.min_domain, curve.max_domain, t)), 0.0)
+	if fade_in and fade_out:
+		return 1.0 - absf(2.0 * t - 1.0)
+	if fade_in:
+		return t
+	if fade_out:
+		return 1.0 - t
+	return 1.0

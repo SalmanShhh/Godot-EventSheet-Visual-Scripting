@@ -1768,7 +1768,11 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 					other.call("skip_to_end")
 		_:
 			var juice: Node = _juice()
-			if juice != null:
+			if juice != null and word == "shake" and MomentRunner.is_timed_shake(card) and juice.has_method("shake_from_card"):
+				# A Shake card with a tick or a curve lasts its Seconds and has a shape; one without keeps shaking
+				# as it always has, and so does a Juice node too old to know the difference.
+				juice.call("shake_from_card", card, at)
+			elif juice != null:
 				juice.call("moment_step", word, amount, effect, seconds, at)
 
 ## What a broadcast on a channel arrives as. A NAME OF THIS PACK'S OWN, never the bare word play:
@@ -2048,7 +2052,14 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 		var amount: float = float(card.get("amount", 1.0)) * at_strength
 		var word: String = word_of(card)
 		if word == "shake":
-			offset += Vector2(sin(time * 47.0), cos(time * 53.0)) * amount * 8.0 * (1.0 - through)
+			# A card with a tick or a curve draws the shape the running shake has; one without draws the fall
+			# it always drew.
+			var level: float = 1.0 - through
+			if MomentRunner.is_timed_shake(card):
+				var kept: String = str(card.get("curve", "")).strip_edges()
+				var curve: Curve = load(kept) as Curve if not kept.is_empty() and ResourceLoader.exists(kept) else null
+				level = MomentRunner.shake_shape(through, bool(card.get("fade_in", false)), bool(card.get("fade_out", false)), curve)
+			offset += Vector2(sin(time * 47.0), cos(time * 53.0)) * amount * 8.0 * level
 		elif word == "punch":
 			swell += amount * 0.2 * sin(through * PI)
 		elif word == TWEEN_PROPERTY and not card.has("node") and not card.has("to"):
