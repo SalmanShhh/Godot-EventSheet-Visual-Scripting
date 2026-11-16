@@ -19,6 +19,10 @@ const PREVIEW_WORDS_ROOM: float = 220.0
 const FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
 ## The one shape a quick question takes (Save, Discard, Cancel).
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
+## The light side of the window (the light swatches, Preview as, the contrast marks), built by path when a theme is opened.
+const LIGHT_SIDE_PATH := "res://addons/eventsheet/editor/theme_editor_light.gd"
+## The words a token that is not a colour or a number wears in the form, where its field name would not be plain.
+const TOKEN_LABELS := {"follow_editor_greys": "Follow the editor in light"}
 
 var _dialog: ConfirmationDialog = null
 var _preview_viewport: EventSheetViewport = null
@@ -50,6 +54,9 @@ var _save_as_button: Button = null
 var _revert_button: Button = null
 var _theme_field: OptionButton = null
 var _close_prompt: ConfirmationDialog = null
+var _light_side: RefCounted = null
+var _quick_light_base: ColorPickerButton = null
+var _quick_light_font: ColorPickerButton = null
 
 
 ## Opens the theme editor seeded from the dock's active style (or defaults). A window already open with
@@ -93,12 +100,21 @@ func _adopt(rebuild: bool) -> void:
 	_note.say(opening_note(_dock), EventSheetPopupUI.TONE_WARNING)
 	_seed_quick_style()
 	_fit_preview_width()
-	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_repaint_preview()
 	_refresh_state()
 
 
 static func _files() -> GDScript:
 	return load(FILES_PATH)
+
+
+## Draws the sample sheet again for the theme as it now is, as the side Preview as names.
+func _repaint_preview() -> void:
+	if _preview_viewport == null or _working_style == null:
+		return
+	if _light_side != null:
+		_preview_viewport.editor_base_override = _light_side.preview_base()
+	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 
 
 ## What the window says about Apply when it opens. A sheet saved as a resource takes the look into itself;
@@ -137,20 +153,30 @@ static func quick_style_seed(style: EventSheetEditorStyle) -> Dictionary:
 	if event_style == null:
 		return {}
 	var row: Color = event_style.row_background_color
-	return {
+	var seeds: Dictionary = {
 		"base": Color(minf(row.r / 0.85, 1.0), minf(row.g / 0.85, 1.0), minf(row.b / 0.85, 1.0), 1.0),
 		"accent": event_style.group_accent_color,
 		"text": event_style.group_title_color,
 	}
+	# A theme that holds light colours opens the light pickers on them; any other leaves those pickers as they are.
+	if load("res://addons/eventsheet/theme/light_colors.gd").has_entries(style):
+		var light: EventSheetEventStyle = EventSheetEditorThemeDeriver.sheet_look(style, EventSheetEditorThemeDeriver.NATIVE_LIGHT_REFERENCE_BASE).event_style
+		var light_row: Color = light.row_background_color
+		seeds["light_base"] = Color(minf(light_row.r / 0.85, 1.0), minf(light_row.g / 0.85, 1.0), minf(light_row.b / 0.85, 1.0), 1.0)
+		seeds["light_text"] = light.group_title_color
+	return seeds
 
 
-## Puts the open theme's colours into the three Quick Style pickers. A colour the theme leaves clear
+## Puts the open theme's colours into the Quick Style pickers. A colour the theme leaves clear
 ## keeps whatever the picker already holds.
 func _seed_quick_style() -> void:
 	var seeds: Dictionary = quick_style_seed(_working_style)
 	if _quick_base == null or seeds.is_empty():
 		return
-	for pair: Array in [[_quick_base, "base"], [_quick_accent, "accent"], [_quick_font, "text"]]:
+	for pair: Array in [[_quick_base, "base"], [_quick_accent, "accent"], [_quick_font, "text"],
+			[_quick_light_base, "light_base"], [_quick_light_font, "light_text"]]:
+		if not seeds.has(pair[1]):
+			continue
 		var seeded: Color = seeds[pair[1]]
 		if seeded.a > 0.0:
 			(pair[0] as ColorPickerButton).color = Color(seeded.r, seeded.g, seeded.b, 1.0)
@@ -169,8 +195,19 @@ static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEdit
 	if base_style != null:
 		return style
 	# In the editor that default is Editor Native followed onto the editor's base colour.
-	if EventSheetEditorThemeDeriver.running_editor_base().a > 0.0:
-		return EventSheetEditorThemeDeriver.default_style().duplicate(true) as EventSheetEditorStyle
+	var editor_base: Color = EventSheetEditorThemeDeriver.running_editor_base()
+	if editor_base.a > 0.0:
+		var matched: EventSheetEditorStyle = EventSheetEditorThemeDeriver.default_style().duplicate(true) as EventSheetEditorStyle
+		if EventSheetEditorThemeDeriver.is_light_base(editor_base):
+			# A light editor has already moved that look onto its light greys; the swatches name the colours the
+			# theme holds, so the window opens on the file's own colours and the Light preview shows the rest.
+			var held: EventSheetEditorStyle = _files().project_default_style()
+			if held == null:
+				held = load(EventSheetEditorThemeDeriver.NATIVE_STARTER_PATH) as EventSheetEditorStyle
+			if held != null:
+				matched = held.duplicate(true) as EventSheetEditorStyle
+				matched.ensure_defaults()
+		return matched
 	return EventSheetThemeDerivation.fill_derived_tokens(EventSheetGodotTheme.adapt_to_editor(style))
 
 
@@ -622,13 +659,19 @@ func _ensure_dialog() -> void:
 	_dialog.custom_action.connect(_on_custom_action)
 	_dialog.canceled.connect(_on_window_closed)
 	_dialog.window_input.connect(_on_window_input)
+	_light_side = load(LIGHT_SIDE_PATH).new(self)
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_preview_scroll = ScrollContainer.new()
 	_preview_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(preview_min_width(_working_style)), EventSheetPalette.scaled_f(440.0))
+	_preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_preview_viewport = EventSheetViewport.new()
 	_preview_scroll.add_child(_preview_viewport)
-	split.add_child(_preview_scroll)
+	# Above the sample sheet: which side of the theme it is drawn as.
+	var preview_side: VBoxContainer = VBoxContainer.new()
+	preview_side.add_child(_light_side.build_preview_header())
+	preview_side.add_child(_preview_scroll)
+	split.add_child(preview_side)
 	var form_scroll: ScrollContainer = ScrollContainer.new()
 	form_scroll.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(460.0), 0.0)
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -669,10 +712,15 @@ static func _fold(title: String, content: Control, open: bool) -> FoldableContai
 ## "pick a colour, click Generate" instead of tuning thirty fields by hand.
 func _build_quick_style(form: VBoxContainer) -> void:
 	var quick_box: VBoxContainer = EventSheetPopupUI.form_box()
-	quick_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("Pick a base + accent, then Generate. Fine-tune individual tokens below.")))
-	_quick_base = _quick_color_row(quick_box, EventSheetL10n.translate("Base (background tone)"), Color("#252525"))
+	quick_box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.")))
+	quick_box.add_child(_light_side.column_header())
+	var base_pickers: Array[ColorPickerButton] = _quick_pair_row(quick_box, EventSheetL10n.translate("Base (background tone)"), Color("#252525"), Color("#e6e6e6"))
+	_quick_base = base_pickers[0]
+	_quick_light_base = base_pickers[1]
 	_quick_accent = _quick_color_row(quick_box, EventSheetL10n.translate("Accent (Sections, selection)"), Color("#569eff"))
-	_quick_font = _quick_color_row(quick_box, EventSheetL10n.translate("Text"), Color("#ced0d2"))
+	var font_pickers: Array[ColorPickerButton] = _quick_pair_row(quick_box, EventSheetL10n.translate("Text"), Color("#ced0d2"), Color("#0f0f0f"))
+	_quick_font = font_pickers[0]
+	_quick_light_font = font_pickers[1]
 	var buttons: HBoxContainer = HBoxContainer.new()
 	var reset: Button = Button.new()
 	reset.text = EventSheetL10n.translate("Reset To Default")
@@ -681,7 +729,7 @@ func _build_quick_style(form: VBoxContainer) -> void:
 	buttons.add_child(reset)
 	var generate: Button = Button.new()
 	generate.text = EventSheetL10n.translate("Generate Theme")
-	generate.tooltip_text = EventSheetL10n.translate("Rebuild every colour token from the three colours above.")
+	generate.tooltip_text = EventSheetL10n.translate("Rebuild every colour token, dark and light, from the colours above.")
 	generate.pressed.connect(_generate_quick_style)
 	buttons.add_child(generate)
 	quick_box.add_child(buttons)
@@ -726,12 +774,30 @@ func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Co
 	return picker
 
 
-## Derives the two dark tones from the base, regenerates the whole sheet palette, and
-## refreshes the detail form + live preview.
+## A labelled row of two colour pickers, the dark one and the light one, returned in that order.
+func _quick_pair_row(form: VBoxContainer, label_text: String, dark_default: Color, light_default: Color) -> Array[ColorPickerButton]:
+	var dark_picker: ColorPickerButton = ColorPickerButton.new()
+	dark_picker.color = dark_default
+	var row: HBoxContainer = EventSheetPopupUI.form_row(label_text, dark_picker)
+	var light_picker: ColorPickerButton = ColorPickerButton.new()
+	light_picker.color = light_default
+	light_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var link_room: Control = Control.new()
+	link_room.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(28.0), 0.0)
+	row.add_child(link_room)
+	row.add_child(light_picker)
+	form.add_child(row)
+	return [dark_picker, light_picker]
+
+
+## Derives the two dark tones from the base, regenerates the whole sheet palette, then does the same again
+## for the light pickers and keeps what differs as the theme's light colours, and refreshes the detail
+## form + live preview.
 func _generate_quick_style() -> void:
 	var base: Color = _quick_base.color
 	var before: EventSheetEditorStyle = _working_style.duplicate(true) as EventSheetEditorStyle
 	EventSheetGodotTheme.apply(_working_style, base, base.darkened(0.15), base.darkened(0.25), _quick_accent.color, _quick_font.color)
+	_light_side.generate(_quick_light_base.color, _quick_accent.color, _quick_light_font.color)
 	_record_whole(before, _working_style)
 	_reset_to_default(_working_style, false)
 
@@ -745,7 +811,7 @@ func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null), res
 	_fit_preview_width()
 	if reseed:
 		_seed_quick_style()
-	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+	_repaint_preview()
 	_refresh_state()
 
 
@@ -753,6 +819,7 @@ func _reset_to_default(style: EventSheetEditorStyle = duplicate_style(null), res
 ## the spinboxes/pickers always reflect the current (possibly just-regenerated) style. The token
 ## the strip was describing is described again from the rebuilt style.
 func _rebuild_detail_form() -> void:
+	_light_side.forget_rows()
 	for child: Node in _detail_form.get_children():
 		_detail_form.remove_child(child)
 		child.queue_free()
@@ -776,6 +843,9 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 	if section_tokens.is_empty():
 		return
 	var section_box: VBoxContainer = EventSheetPopupUI.form_box()
+	var has_light_side: bool = _light_side.supports(style_resource)
+	if has_light_side:
+		section_box.add_child(_light_side.column_header())
 	for token: Dictionary in section_tokens:
 		var token_name: String = str(token.get("name"))
 		var field: Control = null
@@ -801,13 +871,16 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 				field = spin
 		# The label is the field's name in plain words, the way Godot's own Inspector spells a property
 		# (follow_editor_greys reads "Follow Editor Greys"); the exact field name is in the strip.
-		var row: HBoxContainer = EventSheetPopupUI.form_row(token_name.capitalize(), field)
+		var row: HBoxContainer = EventSheetPopupUI.form_row(token_label(token_name), field)
 		row.get_child(0).auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		row.set_meta("token", token_name)
 		row.set_meta("style_id", style_resource.get_instance_id())
 		for part: Control in [row, row.get_child(0), field]:
 			part.mouse_entered.connect(_focus_token.bind(style_resource, token_name))
 		field.focus_entered.connect(_focus_token.bind(style_resource, token_name))
+		# A colour has a light side beside it: the chain, the light swatch and the mark of a hard-to-read pair.
+		if has_light_side and int(token.get("type")) == TYPE_COLOR:
+			_light_side.add_controls(row, style_resource, token_name, _focus_token.bind(style_resource, token_name))
 		if _focus_resource == null and (_focus_name.is_empty() or _focus_name == token_name):
 			_focus_token(style_resource, token_name)
 		section_box.add_child(row)
@@ -823,22 +896,40 @@ static func fit_section_word(text: String) -> String:
 	return text.replace("Section", word).replace("section", word.to_lower())
 
 
-## Puts one token in the strip: what it does, and the line it writes into a saved preset.
+## The name a token wears in the form: its field name in plain words, the way Godot's own Inspector spells a
+## property, unless the field name would not be plain.
+static func token_label(token_name: String) -> String:
+	if TOKEN_LABELS.has(token_name):
+		return EventSheetL10n.translate(str(TOKEN_LABELS[token_name]))
+	return token_name.capitalize()
+
+
+## Puts one token in the strip: what it does, how it reads when it is words on a ground, and the lines it
+## writes into a saved preset (the dark one and, for a colour with a light side, the light one).
 func _focus_token(style_resource: Resource, token_name: String) -> void:
 	_focus_name = token_name
 	_focus_resource = style_resource
 	if _strip != null:
-		_strip.set_line(_this_field, "%s: %s" % [token_name, fit_section_word(EventSheetL10n.translate(_token_description(token_name)))])
-		_strip.set_line(_in_file, file_line(style_resource, token_name))
+		var said: String = "%s: %s" % [token_name, fit_section_word(EventSheetL10n.translate(_token_description(token_name)))]
+		var in_file: String = file_line(style_resource, token_name)
+		if _light_side != null and _light_side.supports(style_resource) and typeof(style_resource.get(token_name)) == TYPE_COLOR:
+			var contrast: String = _light_side.contrast_sentence(style_resource, token_name)
+			if not contrast.is_empty():
+				said += " " + contrast
+			in_file += "\n" + _light_side.light_file_line(style_resource, token_name)
+		_strip.set_line(_this_field, said)
+		_strip.set_line(_in_file, in_file)
 
 
 func _on_token_edited(style_resource: Resource, token_name: String, value: Variant) -> void:
 	var old_value: Variant = style_resource.get(token_name)
 	if apply_token(style_resource, token_name, value) and _preview_viewport != null:
 		_record_edit({"style": style_resource, "token": token_name, "from": old_value, "to": value})
+		_light_side.invalidate()
+		_light_side.refresh_all()
 		# Rebuild the sample sheet so BOTH colour and STRUCTURAL tokens (row height, corner radii, lane
 		# widths, line thickness) show live - a plain repaint keeps the old cached layout.
-		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+		_repaint_preview()
 		_focus_token(style_resource, token_name)
 
 
@@ -846,7 +937,7 @@ func _on_token_edited(style_resource: Resource, token_name: String, value: Varia
 ## into the sheet: the workbench theme is still unsaved, and these settings belong to the reader.
 func _repaint_personal() -> void:
 	if _preview_viewport != null and _working_style != null:
-		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+		_repaint_preview()
 	if _dock == null:
 		return
 	var dock_viewport: Variant = _dock.get("_viewport")
@@ -965,11 +1056,15 @@ func _step(entry: Dictionary, side: String) -> void:
 		restore_values(_working_style, entry[side] as Resource)
 		_rebuild_detail_form()
 		_fit_preview_width()
+	elif bool(entry.get("light", false)):
+		_light_side.step(entry, side)
 	else:
 		var style: Resource = entry["style"]
 		style.set(str(entry["token"]), entry[side])
 		_show_value(style, str(entry["token"]), entry[side])
-	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+		_light_side.invalidate()
+		_light_side.refresh_all()
+	_repaint_preview()
 	if not bool(entry.get("whole", false)):
 		_focus_token(entry["style"], str(entry["token"]))
 	_refresh_state()

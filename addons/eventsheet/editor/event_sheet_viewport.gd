@@ -1252,6 +1252,11 @@ func get_editor_style() -> EventSheetEditorStyle:
 	return _editor_style
 
 
+## The editor base colour this viewport draws its sheet for instead of the running editor's (the Theme Editor's
+## preview of the other side); clear asks the running editor.
+var editor_base_override: Color = Color(0.0, 0.0, 0.0, 0.0)
+
+
 func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
 	# A chosen theme comes back as saved (one that asks to follow the editor, the Editor Native
 	# starter, is painted from a copy moved onto the running editor's base colour). A sheet with no
@@ -1260,7 +1265,8 @@ func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
 	var chosen: EventSheetEditorStyle = null
 	if sheet != null and sheet.editor_style is EventSheetEditorStyle:
 		chosen = sheet.editor_style as EventSheetEditorStyle
-	return EventSheetEditorThemeDeriver.sheet_look(chosen, EventSheetEditorThemeDeriver.running_editor_base())
+	var base: Color = editor_base_override if editor_base_override.a > 0.0 else EventSheetEditorThemeDeriver.running_editor_base()
+	return EventSheetEditorThemeDeriver.sheet_look(chosen, base)
 
 
 func _get_event_style() -> EventSheetEventStyle:
