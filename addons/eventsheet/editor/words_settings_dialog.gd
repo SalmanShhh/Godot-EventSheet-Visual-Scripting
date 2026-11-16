@@ -77,6 +77,25 @@ func _build_presets() -> Control:
 	return EventSheetPopupUI.form_row("Words", EventSheetPopupUI.described_field(_preset_option, 400.0), 150.0)
 
 
+## The words the page offers: the ones some row, menu or window of the editor actually says. The rest
+## of the table (the other game nouns and the editor-building glossary) keeps its keys, so a choice
+## saved under one still reads back, but a row for a word nothing prints would change nothing on screen.
+const READ_KEYS: Array[String] = [
+	"inheritance_set", "every_tick", "destroy", "angle", "overlaps", "body_entered", "body_exited",
+	"scene_ready", "scene_exit", "node_enter", "node_exit", "every_physics_tick",
+	"section_block", "shared_sheet", "system_card",
+]
+
+
+## The table's keys, in page order, that the page shows.
+static func page_keys() -> Array[String]:
+	var out: Array[String] = []
+	for key: String in EventSheetWords.keys():
+		if READ_KEYS.has(key):
+			out.append(key)
+	return out
+
+
 func _build_table() -> Control:
 	var grid: GridContainer = GridContainer.new()
 	grid.columns = 3
@@ -85,7 +104,7 @@ func _build_table() -> Control:
 	grid.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("what it names")))
 	grid.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("with Familiar Words on")))
 	grid.add_child(EventSheetPopupUI.small_caps_label(EventSheetL10n.translate("off")))
-	for key: String in EventSheetWords.keys():
+	for key: String in page_keys():
 		var label: Label = Label.new()
 		label.text = EventSheetL10n.translate(EventSheetWords.names_what(key))
 		label.custom_minimum_size = Vector2(170.0, 0.0)
@@ -149,7 +168,7 @@ func _build_preview() -> Control:
 ## change, so the page never drifts from what the sheet will actually read.
 func refresh() -> void:
 	var familiar_now: bool = EventSheetWords.familiar_words_enabled()
-	for key: String in EventSheetWords.keys():
+	for key: String in page_keys():
 		for familiar: bool in [true, false]:
 			var entry: Variant = _rows.get("%s|%s" % [key, EventSheetWords.state_key(familiar)], null)
 			if not (entry is Dictionary):
@@ -222,7 +241,7 @@ func _refresh_preview(familiar: bool) -> void:
 		# page says: "On process" by default and "Every tick" in the Familiar words.
 		_preview_verbs.text = "System ▸ %s      Player ▸ %s Bullet" % [
 			EventSheetWords.word_for("every_tick", familiar, override_map),
-			EventSheetWords.word_for("instantiate", familiar, override_map),
+			EventSheetWords.verb_row_words_for("Core::SpawnNewCopy", "Instantiate", EventSheetWords.verb_words_enabled()),
 		]
 
 
