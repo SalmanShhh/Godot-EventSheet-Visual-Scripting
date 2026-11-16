@@ -15805,6 +15805,9 @@ func _dress_line_object_icons(spans: Array[EventSheetSemanticSpan]) -> void:
 		var object_label: String = str(metadata.get("object_label", "")).strip_edges()
 		if object_label.is_empty() or bool(metadata.get("badge", false)) or metadata.has("object_glyph"):
 			continue
+		var worn: Variant = metadata.get("object_icon")
+		if worn is Texture2D and _pack_icon_ids.has((worn as Texture2D).get_instance_id()):
+			continue
 		var icon: Texture2D = line_object_icon(object_label)
 		if icon != null:
 			metadata["object_icon"] = icon
@@ -22290,8 +22293,16 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 		icon = EventSheetACEIcons.resolve_definition_icon(definition)
 	if icon == null and is_core:
 		icon = EventSheetACEIcons.editor_icon("Tools")
+	# A verb a pack publishes leads with the pack's own icon: remembered, so the pass that dresses a line
+	# with the icon of the object it names does not put the sheet's own class icon over it.
+	if icon != null and not is_core and definition != null and EventSheetACEIcons.path_icon(definition.icon) == icon:
+		_pack_icon_ids[icon.get_instance_id()] = true
 	_ace_icon_cache[cache_key] = icon
 	return icon
+
+
+## The instance ids of the pictures that are a pack's icon, as `_object_icon_for` handed them out.
+var _pack_icon_ids: Dictionary = {}
 
 
 # ── Arrange by object / trigger / group (appended block - keep together) ───────────────────────
