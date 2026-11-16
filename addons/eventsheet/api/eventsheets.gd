@@ -128,6 +128,23 @@ static func register_block_kind(kind: EventSheetBlockKind) -> void:
 	EventSheetBlockRegistry.register_kind(kind)
 
 
+## Like register_block_kind, but says what happened: "" when the kind is registered, otherwise the
+## plain reason it was not (no kind, no kind_id, an id a built-in kind holds, an id already taken).
+static func try_register_block_kind(kind: EventSheetBlockKind) -> String:
+	var refusal: String = EventSheetBlockRegistry._refusal(kind)
+	if refusal.is_empty():
+		EventSheetBlockRegistry.register_kind(kind)
+	return refusal
+
+
+## Takes a block kind back (a pack that is being unloaded, a test cleaning up). True when it was
+## registered and is now gone; false for an id nothing holds and for a built-in kind, which stays.
+## Rows of that kind already in a sheet stay in it and show as a missing kind until it is registered
+## again.
+static func unregister_block_kind(kind_id: String) -> bool:
+	return EventSheetBlockRegistry.unregister_kind(kind_id)
+
+
 ## Builds a Custom Block kind from a plain Dictionary, so a beginner never has to subclass:
 ##   {"kind_id": "my_pack.note", "title": "Note", "category": "Blocks",
 ##    "fields": [{"id": "text", "label": "Text", "type": TYPE_STRING, "default": "hi"}],

@@ -6,6 +6,7 @@
 #   unregister    everything an extension can register can be taken back
 #   palette       a command registered with a category is taken back by its title and category
 #   registration  register_provider_script is for the session; add_provider_to_sheet edits the open sheet
+#   kinds         a block kind can be registered with a reason, and taken back
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -49,6 +50,7 @@ static func run() -> bool:
 	ok = _unregister_set() and ok
 	ok = _palette() and ok
 	ok = _registration() and ok
+	ok = _kind_registration() and ok
 	return ok
 
 
@@ -68,6 +70,8 @@ static func _writes_nothing() -> bool:
 	var quiet_on: Dictionary = _compile_block("keeps_its_word.quiet", {"on": true})
 	# A kind that does not say so still fails the compile when its row with fields writes nothing.
 	var silent: Dictionary = _compile_block("keeps_its_word.muted", {"on": true})
+	EventSheets.unregister_block_kind("keeps_its_word.quiet")
+	EventSheets.unregister_block_kind("keeps_its_word.muted")
 	return SUPPORT.pins(P, [
 		["a kind that says it writes nothing for this row compiles", quiet_off.get("success"), true],
 		["and the same kind switched on writes its line", (quiet_on.get("output", "") as String).contains("# quiet"), true],
@@ -266,4 +270,36 @@ static func _registration() -> bool:
 	]
 	EventForgeBridgeRuntime.unregister_provider_script(fixture)
 	dock.free()
+	return SUPPORT.pins(P, rows)
+
+
+static func _kind_registration() -> bool:
+	var api: Script = load("res://addons/eventsheet/api/eventsheets.gd")
+	var rows: Array = []
+	if not (_has_method("try_register_block_kind") and _has_method("unregister_block_kind")):
+		return SUPPORT.check(P, "try_register_block_kind and unregister_block_kind exist", false, true)
+	var kind: EventSheetBlockKind = QuietKind.new()
+	var first: String = str(api.call("try_register_block_kind", kind))
+	var again: String = str(api.call("try_register_block_kind", QuietKind.new()))
+	var registered: bool = EventSheetBlockRegistry.get_kind("keeps_its_word.quiet") == kind
+	var built_in_kind: EventSheetBlockKind = EventSheets.simple_block_kind({"kind_id": "preload", "title": "Fake"})
+	var built_in: String = str(api.call("try_register_block_kind", built_in_kind))
+	var empty: String = str(api.call("try_register_block_kind", EventSheets.simple_block_kind({})))
+	var none: String = str(api.call("try_register_block_kind", null))
+	var removed: bool = bool(api.call("unregister_block_kind", "keeps_its_word.quiet"))
+	var removed_again: bool = bool(api.call("unregister_block_kind", "keeps_its_word.quiet"))
+	var built_in_removed: bool = bool(api.call("unregister_block_kind", "preload"))
+	rows.append_array([
+		["a new kind registers and answers nothing", first, ""],
+		["and is the registered one", registered, true],
+		["an id already taken says why", again.contains("keeps_its_word.quiet"), true],
+		["an id a built-in holds says so", built_in.contains("built-in"), true],
+		["a kind with no id says so", empty.contains("kind_id"), true],
+		["no kind at all is a reason too", none.is_empty(), false],
+		["unregister_block_kind takes a kind back", removed, true],
+		["and says false the second time", removed_again, false],
+		["a built-in kind stays", built_in_removed, false],
+		["the preload kind is still there", EventSheetBlockRegistry.get_kind("preload") != null, true],
+		["the registry's own unregister_kind is the same door", EventSheetBlockRegistry.unregister_kind("keeps_its_word.quiet"), false],
+	])
 	return SUPPORT.pins(P, rows)

@@ -17,14 +17,34 @@ static var _built_in_ids: Array = []  # the ids the five built-in kinds hold; a 
 
 
 static func register_kind(kind: EventSheetBlockKind) -> void:
-	_ensure_built_ins()
 	if kind == null or kind.kind_id.strip_edges().is_empty():
+		_ensure_built_ins()
 		return
-	var refusal: String = load("res://addons/eventforge/registration/block_kind_rules.gd").refusal(kind.kind_id, _kinds, _built_in_ids)
+	var refusal: String = _refusal(kind)
 	if not refusal.is_empty():
 		push_warning(refusal)
 		return
 	_kinds[kind.kind_id] = kind
+
+
+## Takes a registered kind back. False when no kind has that id or it belongs to a built-in kind,
+## which cannot be removed. Rows of that kind already in a sheet stay in it and show as a kind that
+## is missing, and a compile reports them, until the kind is registered again.
+static func unregister_kind(kind_id: String) -> bool:
+	_ensure_built_ins()
+	if _built_in_ids.has(kind_id):
+		return false
+	return _kinds.erase(kind_id)
+
+
+## Why `kind` would not be registered, in the words a caller reads, or "" when it would be.
+static func _refusal(kind: EventSheetBlockKind) -> String:
+	_ensure_built_ins()
+	if kind == null:
+		return "EventSheets: a block kind was expected and none was given."
+	if kind.kind_id.strip_edges().is_empty():
+		return "EventSheets: a block kind needs a kind_id, such as 'my_pack.note'."
+	return load("res://addons/eventforge/registration/block_kind_rules.gd").refusal(kind.kind_id, _kinds, _built_in_ids)
 
 
 static func get_kind(kind_id: String) -> EventSheetBlockKind:

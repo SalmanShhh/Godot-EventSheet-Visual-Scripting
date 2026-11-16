@@ -31,6 +31,10 @@ The box was a narrow list about 220 pixels wide that cut its last line in half. 
 ### Added: the Inspector's Play button shows the cards that move other nodes
 
 Play, Play this card and Play from here now show Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node, and Debug view calls each of them played. Before the first frame the preview writes down every property those cards may move on every node they point at (a label's text, a bar's value, a node's visible, modulate and scale, the tracks of the clip it plays, the shader value on a copy of the material that lives for the pass), and puts exactly those back on Stop, Restore, at the end of a pass and before the editor saves or runs the scene, so a scene saved in the middle of a preview holds the same text it held before. Spawn Scene, Push, Force, Gravity, Freeze Body, Grab Focus, Call Method, Emit Signal and Play Player still say why they are not shown.
+### Added: try_register_block_kind and unregister_block_kind
+
+`EventSheets.try_register_block_kind(kind)` registers a Custom Block kind the way `register_block_kind` does and returns "" on success or the plain reason it was refused, instead of a warning in the Output panel. `EventSheets.unregister_block_kind(kind_id)` (and `EventSheetBlockRegistry.unregister_kind`) takes a pack's kind back; a built-in kind cannot be removed.
+
 ### Changed: register_provider_script no longer edits the open sheet
 
 `EventSheets.register_provider_script(path)` used to add the script to the sheet that was open when there was one, which marked that sheet changed and added an undo step, and only joined the session when no sheet was open. It now always registers for the session and edits no sheet. The new `EventSheets.add_provider_to_sheet(path)` does the per-sheet edit (one undo step).

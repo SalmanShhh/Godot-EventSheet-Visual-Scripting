@@ -385,6 +385,8 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Vocabulary | `register_provider_script(script_path: String)` | `bool` | no (bridges when closed) |
 | Vocabulary | `add_provider_to_sheet(script_path: String)` - the one-sheet version: records the script in the open sheet as one undo step | `bool` | yes |
 | Vocabulary | `register_block_kind(kind: EventSheetBlockKind)` | `void` | no |
+| Vocabulary | `try_register_block_kind(kind: EventSheetBlockKind)` - the same registration, answering `""` when it worked and the plain reason when it did not (no id, a built-in's id, an id already taken) | `String` | no |
+| Vocabulary | `unregister_block_kind(kind_id: String)` - takes a kind back; a built-in kind stays. Rows of it already in a sheet show as a missing kind until it is registered again | `bool` | no |
 | Vocabulary | `simple_block_kind(config: Dictionary)` | `EventSheetBlockKind` | no |
 | Vocabulary | `find_ace(provider_id: String, ace_id: String)` | `ACEDefinition` | yes |
 | Vocabulary | `class_vocabulary(target_class: String)` | `Array[ACEDefinition]` | no |

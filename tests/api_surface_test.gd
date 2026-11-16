@@ -204,6 +204,8 @@ const TABLE: Dictionary = {
 		"static unregister_simple_ace(id: String, provider_id: String = \"Extension\") -> void",
 		"static unregister_starter(label: String) -> void",
 		"static add_provider_to_sheet(script_path: String) -> bool",
+		"static try_register_block_kind(kind: EventSheetBlockKind) -> String",
+		"static unregister_block_kind(kind_id: String) -> bool",
 	],
 	"EventSheetBlockKind": [
 		"addable() -> bool",
@@ -232,6 +234,7 @@ const TABLE: Dictionary = {
 		"static register_kind(kind: EventSheetBlockKind) -> void",
 		"static rescan_pack_kinds() -> void",
 		"static split_params_top_level(params_text: String) -> PackedStringArray",
+		"static unregister_kind(kind_id: String) -> bool",
 	],
 	"EventSheetSimpleBlockKind": [
 		"addable() -> bool",
