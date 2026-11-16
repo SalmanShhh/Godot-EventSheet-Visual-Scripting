@@ -118,6 +118,10 @@ var _badges: Dictionary = {}
 ## Entries of the list that are not Dictionaries (nothing a card can show), as [original index, value]. They
 ## are not drawn, but they are handed back where they were instead of being dropped from the file.
 var _junk: Array = []
+## The picture a card wears in place of the family square, by index, and the colour it is drawn in. Only a
+## schema that draws pictures (`icons`) fills these.
+var _pictures: Dictionary = {}
+var _picture_tints: Dictionary = {}
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -427,6 +431,11 @@ func _paint_line(index: int) -> void:
 	if title != null and is_instance_valid(title):
 		var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, _cards[index])
 		title.add_theme_color_override("font_color", EventSheetLookStyle.selected_row_ink() if chosen else (EventSheetLookStyle.ink() if enabled else EventSheetLookStyle.quiet()))
+	var picture: TextureRect = _pictures.get(index) as TextureRect
+	if picture != null and is_instance_valid(picture) and _picture_tints.has(index):
+		var family: Color = _picture_tints[index]
+		var live: bool = EventSheetCardSchemas.card_enabled(_schema, _cards[index])
+		picture.modulate = EventSheetLookStyle.selected_row_ink() if chosen else (family if live else family.lerp(EventSheetLookStyle.quiet(), 0.6))
 
 
 func set_editable(flag: bool) -> void:
@@ -850,6 +859,12 @@ func _fill_add_tree() -> void:
 			leaf.set_text(0, _said(str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", "")))))
 			leaf.set_tooltip_text(0, _said(str((entry as Dictionary).get("help", ""))))
 			leaf.set_metadata(0, str((entry as Dictionary).get("kind", "")))
+			# A kind the schema draws a picture for wears it, in its family's colour; the headings keep the tile.
+			var drawn: Dictionary = EventSheetCardSchemas.card_icon(_schema, entry as Dictionary, EventSheetLookStyle.px(1.0))
+			if drawn.get("texture") is Texture2D:
+				leaf.set_icon(0, drawn["texture"] as Texture2D)
+				if bool(drawn.get("tint", false)):
+					leaf.set_icon_modulate(0, EventSheetCardSchemas.tile_color(_schema, str((entry as Dictionary).get("category", category)), _on_light_ground()))
 
 
 ## The flat form of the Add box: every kind that answers to what was typed, one line each, wearing the
@@ -921,6 +936,8 @@ func _rebuild() -> void:
 	_titles.clear()
 	_head_tiles.clear()
 	_badges.clear()
+	_pictures.clear()
+	_picture_tints.clear()
 	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
@@ -1066,7 +1083,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 			_head_tiles[index] = drawn
 			inside.add_child(drawn as Control)
 	elif EventSheetCardSchemas.tiles_wanted(_schema):
-		inside.add_child(_family_tile(EventSheetCardSchemas.card_category(_spec, entry, card)))
+		inside.add_child(_card_mark(index, entry, EventSheetCardSchemas.card_category(_spec, entry, card)))
 	var title: Label = Label.new()
 	title.text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
 	if title.text == str(entry.get("label", "")):
@@ -1129,6 +1146,30 @@ func _badge_room(badge: Label, text: String) -> float:
 ## Whether the card line is a light ground, which decides which of a family's two colours a tile wears.
 func _on_light_ground() -> bool:
 	return EventSheetLookStyle.field_fill().get_luminance() > 0.5
+
+
+## What a card wears at the head of its line: the picture its schema draws for it, in its family's colour,
+## or the family square where the schema draws none (every card of the Drawing Prefab, and a card whose kind
+## the pack no longer has). A picture that carries colours of its own keeps them.
+func _card_mark(index: int, entry: Dictionary, category: String) -> Control:
+	var drawn: Dictionary = EventSheetCardSchemas.card_icon(_schema, entry, EventSheetLookStyle.px(1.0))
+	var texture: Texture2D = drawn.get("texture") as Texture2D
+	if texture == null:
+		return _family_tile(category)
+	var mark: TextureRect = TextureRect.new()
+	var side: float = EventSheetLookStyle.px(16.0)
+	mark.texture = texture
+	mark.custom_minimum_size = Vector2(side, side)
+	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mark.mouse_filter = Control.MOUSE_FILTER_PASS
+	mark.tooltip_text = EventSheetCardSchemas.group_name(_schema, category)
+	if bool(drawn.get("tint", false)):
+		_pictures[index] = mark
+		_picture_tints[index] = EventSheetCardSchemas.tile_color(_schema, category, _on_light_ground())
+		mark.modulate = _picture_tints[index] if EventSheetCardSchemas.card_enabled(_schema, _cards[index]) 			else (_picture_tints[index] as Color).lerp(EventSheetLookStyle.quiet(), 0.6)
+	return mark
 
 
 ## The small square in a family's colour on a card head: what kind of thing the card is, at a glance, the

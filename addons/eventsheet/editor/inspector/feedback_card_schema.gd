@@ -79,6 +79,9 @@ const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_
 ## The cards a project wrote for itself (scripts that extend JuiceCard), read from its class list.
 const OWN_PATH: String = "res://addons/eventsheet/editor/inspector/juice_own_cards.gd"
 
+## The drawings the cards wear on their lines and in the Add box (one per kind, in the Juice pack's folder).
+const ICONS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_icons.gd"
+
 ## The strip of buttons that plays the whole list, drawn under it.
 const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
 
@@ -214,6 +217,7 @@ static func schema() -> Dictionary:
 		"groups": GROUPS,
 		"group_order": GROUP_ORDER,
 		"tiles": true,
+		"icons": Callable(load(ICONS_PATH), "icon_for"),
 		"together": start_together,
 		"footer": strip_footer,
 		"marks": {"run": play_card},

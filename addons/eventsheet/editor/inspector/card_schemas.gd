@@ -165,6 +165,19 @@ static func tiles_wanted(schema: Dictionary) -> bool:
 	return bool(schema.get("tiles", false))
 
 
+## The picture a schema draws on a card in place of the family square: {"texture": Texture2D, "tint": bool},
+## or {} when the schema draws none. A schema opts in with an `icons` callable that takes the kind entry and
+## the editor's scale; one that has no such key (the Drawing Prefab's) keeps the square on every card.
+## `tint` says the family colour is to be put on the picture; a picture that carries colours of its own
+## says false.
+static func card_icon(schema: Dictionary, entry: Dictionary, scale: float) -> Dictionary:
+	var maker: Variant = schema.get("icons")
+	if not (maker is Callable) or not (maker as Callable).is_valid() or entry.is_empty():
+		return {}
+	var drawn: Variant = (maker as Callable).call(entry, scale)
+	return drawn as Dictionary if drawn is Dictionary else {}
+
+
 ## The colour of a family's tile on the editor's ground: the light value where the schema has one and
 ## the ground is light, else the dark one.
 static func tile_color(schema: Dictionary, category: String, on_light: bool) -> Color:
