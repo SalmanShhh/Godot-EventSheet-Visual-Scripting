@@ -350,8 +350,8 @@ static func timing_fields() -> Array:
 		{"key": "interval", "label": "Every", "drawer": "num", "unset": 0.0, "suffix": "s", "fold": TIMING_FOLD},
 		{"key": "clock", "label": "Clock", "drawer": "options:game=Game time,real=Real time", "unset": "game", "fold": TIMING_FOLD},
 		{"key": "chance", "label": "Chance", "drawer": "num", "unset": 100.0, "suffix": "%", "fold": TIMING_FOLD},
-		{"key": "min_strength", "label": "Only at strength", "drawer": "num", "unset": 0.0, "fold": TIMING_FOLD},
-		{"key": "max_strength", "label": "", "drawer": "limit", "unset": 0.0, "beside": true, "to_word": "to",
+		{"key": "min_strength", "label": "Only at strength", "word": "Only at strength, from", "drawer": "num", "unset": 0.0, "fold": TIMING_FOLD},
+		{"key": "max_strength", "label": "", "word": "Only at strength, up to", "drawer": "limit", "unset": 0.0, "beside": true, "to_word": "to",
 			"empty_word": "no limit", "fold": TIMING_FOLD},
 		{"key": "timing_says", "label": "", "drawer": "note", "text": timing_sentence, "fold": TIMING_FOLD}
 	]

@@ -24,7 +24,7 @@ const OWN_PATH: String = "res://addons/eventsheet/editor/inspector/juice_own_car
 const EVERY_CARD: Dictionary = {
 	"amount": "Amount", "effect": "Effect", "seconds": "Seconds", "delay": "Delay", "interval": "Every",
 	"repeat": "Repeat", "chance": "Chance", "loops": "Loops", "clock": "Clock",
-	"min_strength": "Only at strength", "max_strength": "Only at strength, up to"}
+	"min_strength": "Only at strength, from", "max_strength": "Only at strength, up to"}
 
 ## The words of the two keys every card carries that no kind draws as a field.
 const SHARED_WORDS: Dictionary = {"label": "Label", "active": "Active"}
@@ -147,8 +147,9 @@ static func keys_of(card: Dictionary) -> Array:
 	else:
 		entry = EventSheetCardSchemas.kind_entry(schema, str(card.get("verb", "")))
 	for field: Variant in EventSheetCardSchemas.all_fields(schema, entry):
-		if field is Dictionary and not str((field as Dictionary).get("key", "")).is_empty() and not str((field as Dictionary).get("label", "")).is_empty():
-			words[str((field as Dictionary).get("key"))] = str((field as Dictionary).get("label", ""))
+		var said: String = str((field as Dictionary).get("word", (field as Dictionary).get("label", ""))) if field is Dictionary else ""
+		if field is Dictionary and not str((field as Dictionary).get("key", "")).is_empty() and not said.is_empty():
+			words[str((field as Dictionary).get("key"))] = said
 	var offered: Array = []
 	for key: Variant in card:
 		if NEVER.has(str(key)):
