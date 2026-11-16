@@ -10922,3 +10922,22 @@ Find what plays this,"Finden, was das abspielt"
 "There is no file at %s, so no sheet was opened.","Unter %s gibt es keine Datei, daher wurde kein Blatt geöffnet."
 A block cannot be disabled. Delete it to stop it writing its line.,"Ein Block kann nicht deaktiviert werden. Löschen Sie ihn, damit er seine Zeile nicht mehr schreibt."
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.","Dieser Block ist als deaktiviert markiert, wird aber trotzdem ausgeführt. Löschen Sie ihn, damit er seine Zeile nicht mehr schreibt."
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.","Das Zeitverhalten dieser Karte ist nicht der Standard: Sie wartet, wiederholt sich, zählt Echtzeit oder wird nicht immer gespürt."
+", %s s apart",", %s s Abstand"
+"Waits %s s, then is felt %d times%s.",Wartet %s s und wird dann %d Mal gespürt%s.
+"Waits %s s, then plays once.",Wartet %s s und spielt dann einmal.
+"Plays as soon as the list reaches it, then is felt %d times%s.","Spielt, sobald die Liste sie erreicht, und wird dann %d Mal gespürt%s."
+"Plays as soon as the list reaches it, once.","Spielt, sobald die Liste sie erreicht, einmal."
+Felt %s%% of the time,Wird in %s%% der Fälle gespürt
+counts real time,zählt Echtzeit
+only at strength %s to %s,nur bei Stärke %s bis %s
+only at strength %s and up,nur bei Stärke ab %s
+only at strength up to %s,nur bei Stärke bis %s
+Timing,Zeitverhalten
+Chance,Wahrscheinlichkeit
+Game time,Spielzeit
+Real time,Echtzeit
+Only at strength,Nur bei Stärke
+"Only at strength, from","Nur bei Stärke, ab"
+"Only at strength, up to","Nur bei Stärke, bis"
+no limit,keine Grenze

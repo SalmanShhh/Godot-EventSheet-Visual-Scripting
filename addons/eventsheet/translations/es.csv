@@ -10922,3 +10922,22 @@ Find what plays this,Buscar qué lo reproduce
 "There is no file at %s, so no sheet was opened.","No hay ningún archivo en %s, así que no se abrió ninguna hoja."
 A block cannot be disabled. Delete it to stop it writing its line.,Un bloque no se puede desactivar. Elimínalo para que deje de escribir su línea.
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.","Este bloque está marcado como desactivado, pero se sigue ejecutando. Elimínalo para que deje de escribir su línea."
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.","Los tiempos de esta carta no son los predeterminados: espera, se repite, cuenta tiempo real o no siempre se nota."
+", %s s apart",", con %s s entre cada una"
+"Waits %s s, then is felt %d times%s.",Espera %s s y luego se nota %d veces%s.
+"Waits %s s, then plays once.",Espera %s s y luego se reproduce una vez.
+"Plays as soon as the list reaches it, then is felt %d times%s.",Se reproduce en cuanto la lista la alcanza y luego se nota %d veces%s.
+"Plays as soon as the list reaches it, once.","Se reproduce en cuanto la lista la alcanza, una vez."
+Felt %s%% of the time,Se nota el %s%% de las veces
+counts real time,cuenta tiempo real
+only at strength %s to %s,solo con intensidad de %s a %s
+only at strength %s and up,solo con intensidad desde %s
+only at strength up to %s,solo con intensidad hasta %s
+Timing,Tiempos
+Chance,Probabilidad
+Game time,Tiempo de juego
+Real time,Tiempo real
+Only at strength,Solo con intensidad
+"Only at strength, from","Solo con intensidad, desde"
+"Only at strength, up to","Solo con intensidad, hasta"
+no limit,sin límite

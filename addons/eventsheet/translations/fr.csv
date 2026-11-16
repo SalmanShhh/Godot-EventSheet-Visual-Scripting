@@ -10922,3 +10922,22 @@ Find what plays this,Trouver ce qui le joue
 "There is no file at %s, so no sheet was opened.","Il n'y a aucun fichier à %s, donc aucune feuille n'a été ouverte."
 A block cannot be disabled. Delete it to stop it writing its line.,Un bloc ne peut pas être désactivé. Supprimez-le pour qu'il cesse d'écrire sa ligne.
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.","Ce bloc est marqué comme désactivé, mais il s'exécute quand même. Supprimez-le pour qu'il cesse d'écrire sa ligne."
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.","Le minutage de cette carte n'est pas celui par défaut : elle attend, se répète, compte en temps réel ou n'est pas toujours ressentie."
+", %s s apart",", à %s s d'intervalle"
+"Waits %s s, then is felt %d times%s.","Attend %s s, puis est ressentie %d fois%s."
+"Waits %s s, then plays once.","Attend %s s, puis se joue une fois."
+"Plays as soon as the list reaches it, then is felt %d times%s.","Se joue dès que la liste l'atteint, puis est ressentie %d fois%s."
+"Plays as soon as the list reaches it, once.","Se joue dès que la liste l'atteint, une fois."
+Felt %s%% of the time,Ressentie %s%% du temps
+counts real time,compte en temps réel
+only at strength %s to %s,seulement à la force %s à %s
+only at strength %s and up,seulement à partir de la force %s
+only at strength up to %s,seulement jusqu'à la force %s
+Timing,Minutage
+Chance,Probabilité
+Game time,Temps de jeu
+Real time,Temps réel
+Only at strength,Seulement à la force
+"Only at strength, from","Seulement à la force, à partir de"
+"Only at strength, up to","Seulement à la force, jusqu'à"
+no limit,sans limite

@@ -10922,3 +10922,22 @@ Find what plays this,이것을 재생하는 것 찾기
 "There is no file at %s, so no sheet was opened.","%s에 파일이 없어서 시트를 열지 않았습니다."
 A block cannot be disabled. Delete it to stop it writing its line.,블록은 비활성화할 수 없습니다. 줄이 기록되지 않게 하려면 블록을 삭제하세요.
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.",이 블록은 비활성화로 표시되어 있지만 그래도 실행됩니다. 줄이 기록되지 않게 하려면 블록을 삭제하세요.
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.","이 카드의 타이밍은 기본값이 아닙니다. 기다리거나, 반복하거나, 실제 시간으로 세거나, 항상 재생되지는 않습니다."
+", %s s apart",", %s초 간격"
+"Waits %s s, then is felt %d times%s.",%s초 기다린 뒤 %d번 재생됩니다%s.
+"Waits %s s, then plays once.",%s초 기다린 뒤 한 번 재생됩니다.
+"Plays as soon as the list reaches it, then is felt %d times%s.","목록이 도달하면 바로 재생되고, 이후 %d번 재생됩니다%s."
+"Plays as soon as the list reaches it, once.",목록이 도달하면 바로 한 번 재생됩니다.
+Felt %s%% of the time,%s%%의 확률로 재생
+counts real time,실제 시간으로 센다
+only at strength %s to %s,세기 %s에서 %s 사이에서만
+only at strength %s and up,세기 %s 이상일 때만
+only at strength up to %s,세기 %s 이하일 때만
+Timing,타이밍
+Chance,확률
+Game time,게임 시간
+Real time,실제 시간
+Only at strength,세기가 이 범위일 때만
+"Only at strength, from",세기 하한
+"Only at strength, up to",세기 상한
+no limit,제한 없음

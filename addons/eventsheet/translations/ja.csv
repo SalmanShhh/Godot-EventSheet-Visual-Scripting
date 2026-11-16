@@ -10922,3 +10922,22 @@ Find what plays this,これを再生するものを探す
 "There is no file at %s, so no sheet was opened.","%s にファイルがないため、シートを開きませんでした。"
 A block cannot be disabled. Delete it to stop it writing its line.,ブロックは無効にできません。行を書き出さないようにするには、ブロックを削除してください。
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.",このブロックは無効と記録されていますが、実際には実行されます。行を書き出さないようにするには、ブロックを削除してください。
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.",このカードのタイミングは初期設定ではありません。待つ、繰り返す、実時間で数える、または毎回は再生されません。
+", %s s apart",、%s 秒間隔
+"Waits %s s, then is felt %d times%s.",%s 秒待ってから %d 回再生されます%s。
+"Waits %s s, then plays once.",%s 秒待ってから 1 回再生されます。
+"Plays as soon as the list reaches it, then is felt %d times%s.",リストが到達するとすぐに再生され、その後 %d 回再生されます%s。
+"Plays as soon as the list reaches it, once.",リストが到達するとすぐに 1 回再生されます。
+Felt %s%% of the time,%s%% の確率で再生
+counts real time,実時間で数える
+only at strength %s to %s,強さ %s から %s のときだけ
+only at strength %s and up,強さ %s 以上のときだけ
+only at strength up to %s,強さ %s 以下のときだけ
+Timing,タイミング
+Chance,確率
+Game time,ゲーム時間
+Real time,実時間
+Only at strength,強さがこの範囲のときだけ
+"Only at strength, from",強さの下限
+"Only at strength, up to",強さの上限
+no limit,上限なし

@@ -10922,3 +10922,22 @@ Find what plays this,查找谁在播放它
 "There is no file at %s, so no sheet was opened.","%s 处没有文件，因此没有打开工作表。"
 A block cannot be disabled. Delete it to stop it writing its line.,代码块无法禁用。请删除它，让它不再写出自己的那一行。
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.",此代码块被标记为已禁用，但它仍会运行。请删除它，让它不再写出自己的那一行。
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.",这张卡片的时序不是默认值：它会等待、重复、按真实时间计时，或并非每次都触发。
+", %s s apart",，间隔 %s 秒
+"Waits %s s, then is felt %d times%s.",等待 %s 秒，然后触发 %d 次%s。
+"Waits %s s, then plays once.",等待 %s 秒，然后触发一次。
+"Plays as soon as the list reaches it, then is felt %d times%s.",列表到达时立即触发，然后触发 %d 次%s。
+"Plays as soon as the list reaches it, once.",列表到达时立即触发一次。
+Felt %s%% of the time,有 %s%% 的几率触发
+counts real time,按真实时间计时
+only at strength %s to %s,仅在强度 %s 到 %s 之间
+only at strength %s and up,仅在强度 %s 及以上
+only at strength up to %s,仅在强度 %s 及以下
+Timing,时序
+Chance,概率
+Game time,游戏时间
+Real time,真实时间
+Only at strength,仅在强度范围内
+"Only at strength, from",仅在强度下限
+"Only at strength, up to",仅在强度上限
+no limit,无上限

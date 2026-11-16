@@ -10922,3 +10922,22 @@ Find what plays this,"Найти, что это запускает"
 "There is no file at %s, so no sheet was opened.","По пути %s нет файла, поэтому лист не открыт."
 A block cannot be disabled. Delete it to stop it writing its line.,"Блок нельзя отключить. Удалите его, чтобы он перестал записывать свою строку."
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.","Этот блок помечен как отключённый, но всё равно выполняется. Удалите его, чтобы он перестал записывать свою строку."
+"This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.","Время этой карты не стандартное: она ждёт, повторяется, считает реальное время или срабатывает не всегда."
+", %s s apart",", с интервалом %s с"
+"Waits %s s, then is felt %d times%s.","Ждёт %s с, затем срабатывает %d раз%s."
+"Waits %s s, then plays once.","Ждёт %s с, затем срабатывает один раз."
+"Plays as soon as the list reaches it, then is felt %d times%s.","Срабатывает, как только до неё доходит список, затем ещё %d раз%s."
+"Plays as soon as the list reaches it, once.","Срабатывает, как только до неё доходит список, один раз."
+Felt %s%% of the time,Срабатывает в %s%% случаев
+counts real time,считает реальное время
+only at strength %s to %s,только при силе от %s до %s
+only at strength %s and up,только при силе от %s
+only at strength up to %s,только при силе до %s
+Timing,Время
+Chance,Вероятность
+Game time,Игровое время
+Real time,Реальное время
+Only at strength,Только при силе
+"Only at strength, from","Только при силе, от"
+"Only at strength, up to","Только при силе, до"
+no limit,без предела
