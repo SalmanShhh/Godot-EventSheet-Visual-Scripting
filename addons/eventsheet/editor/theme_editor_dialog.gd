@@ -757,11 +757,13 @@ func _build_reading_comfort(form: VBoxContainer) -> void:
 		_repaint_personal())
 	box.add_child(dyslexia_check)
 	var font_edit: LineEdit = LineEdit.new()
-	font_edit.placeholder_text = EventSheetL10n.translate("res://… .ttf or .otf - blank keeps the editor's own font")
+	# The field is short; the words that say what goes in it have a line of their own, whole, above it.
+	font_edit.placeholder_text = "res://…"
 	font_edit.text = EventSheetAccessibility.reading_font_path()
 	font_edit.text_submitted.connect(func(path: String) -> void:
 		EventSheetAccessibility.set_reading_font_path(path)
 		_repaint_personal())
+	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("res://… .ttf or .otf - blank keeps the editor's own font")))
 	box.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Reading font"), font_edit))
 	form.add_child(_fold(EventSheetL10n.translate("Reading Comfort"), box, true))
 
