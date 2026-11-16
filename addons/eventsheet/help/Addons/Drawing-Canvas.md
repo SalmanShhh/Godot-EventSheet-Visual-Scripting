@@ -238,12 +238,24 @@ of them are measured from the prefab's origin:
 Every picture of a prefab - Draw Prefab in a game, the DrawingPrefabStamp node in the viewport and in a
 game, the Inspector picture, the FileSystem thumbnail and the 3D billboard - draws these the same way.
 
-**The step card.** Each step in the Inspector is a card titled by its shape, read top to bottom as
-four short sections: **Placement** (which shape, its offset, and for a stroke whether its thickness
-follows the stamp's scale), **Geometry** (that shape's own fields, with the thickness on a unit
-dropdown), **Colour** (the swatch, and a line's end caps), and **Dashed**, which
-unfolds from its checkbox and ties the dash to its gap with the "=" beside them. Add a shape from
-the searchable dropdown under the list; drag a card by its handle to change the draw order.
+**The step card.** Each step in the Inspector is a card. Folded, its line shows a small picture of the
+shape in the step's own colour, the shape's plain name (a `rect` step reads Rectangle) and a quiet
+summary in that shape's words: `radius 46, 5 px thick`, `24 x 16`, a line's true length (`120 px
+long`), `60° wide`, a stamp's file name. Open, the card is one surface: **Shape** first (changing it
+keeps p1, p2 and p3 under the new shape's names), **Offset** as one row of x and y, the shape's own
+named fields with their units as small text, and the colour as a button that opens Godot's colour
+picker. A Stamp's texture is picked with Godot's resource picker and kept as the file's uid text, so
+it survives a move; a path typed by an older version still loads and saves as it was. A line has a
+**Line look** fold (end caps, **Follows scale**, **Dashed** and the dash settings, the dash tied to
+its gap with the "=" beside them), open by itself when the line is not plain. The first and last
+cards carry two quiet captions, "Drawn first, underneath" and "Drawn last, on top". **Add shape**
+opens one flat list of the six shapes, each with its picture; typing narrows it, Enter adds the
+highlighted one, and the new card goes last and opens. Drag a card by its handle to change the draw
+order. A shape that would draw nothing (a stamp with no texture or one that does not load, a size of
+0, a line with no length) says so in one quiet amber line, and a step whose shape is none of the six
+shows as an Unknown shape card and is kept as it is. **Open as a table** under the list shows the same
+list as a table for bulk edits, and the table's **Show as cards** link comes back; nothing about the
+choice is saved in the file.
 
 The eight stored keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what
 they always did, so a prefab saved before the card existed opens, edits and saves as the same file.
