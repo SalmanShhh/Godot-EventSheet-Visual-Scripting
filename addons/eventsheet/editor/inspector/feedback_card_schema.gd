@@ -197,7 +197,8 @@ static func schema() -> Dictionary:
 		"groups": GROUPS,
 		"group_order": GROUP_ORDER,
 		"tiles": true,
-		"footer": strip_footer
+		"footer": strip_footer,
+		"marks": {"run": play_card}
 	}
 
 
@@ -334,6 +335,12 @@ static func sound_kinds() -> Array:
 ## that is sounding.
 static func strip_footer(object: Object, drawer: Control) -> Control:
 	return load(STRIP_PATH).new(object, drawer) as Control
+
+
+## What a card's play mark and the "Play from here" entry of its menu do: ask the strip under this list to
+## play that part of it ("play_one", "play_from") or to stop ("stop").
+static func play_card(object: Object, action: String, index: int) -> void:
+	load(PREVIEW_PATH).call("card_action", object, action, index)
 
 
 ## The grey line under the pitch: the range a random roll lands in.

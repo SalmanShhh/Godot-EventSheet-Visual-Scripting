@@ -27,6 +27,7 @@ static func run() -> bool:
 	ok = _sub_list_pins() and ok
 	ok = _restore_list_pins() and ok
 	ok = _pass_pins() and ok
+	ok = _mark_pins() and ok
 	return ok
 
 
@@ -194,3 +195,48 @@ static func _pass_pins() -> bool:
 		["the plugin puts the previews back before the editor saves or runs a scene",
 			[_has_method(plugin, "_apply_changes"), _has_method(plugin, "_save_external_data")], [true, true]]
 	])
+
+
+## The play mark on each card head and "Play from here" in its menu: drawn only where the schema asks,
+## handing the request and the card's place to the schema's handler, and lit and unlit in place.
+static func _mark_pins() -> bool:
+	var asked: Array = []
+	var schema: Dictionary = {"kinds": [{"kind": "a", "label": "A", "fields": []}, {"kind": "b", "label": "B", "fields": []}],
+		"marks": {"run": func(object: Object, action: String, index: int) -> void: asked.append([object != null, action, index])}}
+	var owner_object: Node = Node.new()
+	var marked: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": schema})
+	marked.set_edited_object(owner_object)
+	marked.set_value([{"kind": "a"}, {"kind": "b"}])
+	var buttons: Dictionary = marked._marks
+	(buttons[1] as Button).pressed.emit()
+	marked.set_marks(PackedInt32Array([1]))
+	var lit_tip: String = (buttons[1] as Button).tooltip_text
+	var rested_tip: String = (buttons[0] as Button).tooltip_text
+	(buttons[1] as Button).pressed.emit()
+	marked.set_marks(PackedInt32Array())
+	var popup: PopupMenu = PopupMenu.new()
+	marked._fill_card_menu(popup)
+	var entries: PackedStringArray = PackedStringArray()
+	for item: int in range(popup.item_count):
+		entries.append(popup.get_item_text(item))
+	marked._on_menu(0, EventSheetCardListDrawer.MENU_PLAY_FROM)
+	var plain: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": {"kinds": [{"kind": "a", "label": "A", "fields": []}]}})
+	plain.set_value([{"kind": "a"}])
+	var plain_popup: PopupMenu = PopupMenu.new()
+	plain._fill_card_menu(plain_popup)
+	var result: bool = SUPPORT.pins(TEST_NAME, [
+		["every card of a list that asks has a play mark", buttons.size(), 2],
+		["pressing a mark plays that one card", asked[0], [true, "play_one", 1]],
+		["a sounding card's mark says Stop, and the others still say Play",
+			[lit_tip, rested_tip], ["Stop.", "Play this card alone."]],
+		["pressing a sounding card's mark stops it", asked[1], [true, "stop", 1]],
+		["the card menu offers Play from here", entries.has("Play from here"), true],
+		["and choosing it asks for the part of the list from that card", asked[2], [true, "play_from", 0]],
+		["a list that does not ask has no marks and no extra menu entry", [plain._marks.size(), plain_popup.item_count], [0, 7]]
+	])
+	marked.free()
+	plain.free()
+	popup.free()
+	plain_popup.free()
+	owner_object.free()
+	return result

@@ -21,6 +21,9 @@ extends VBoxContainer
 
 signal value_changed(value: Array)
 
+## The id of the card menu's "Play from here" entry, past the seven that every list has.
+const MENU_PLAY_FROM: int = 20
+
 ## The drag payload's own key. Cards only accept a drag that came from the SAME drawer instance, so
 ## two card lists open in one Inspector cannot swallow each other's rows.
 const DRAG_KEY: String = "eventsheet_card_index"
@@ -70,6 +73,9 @@ var _footer: Control = null
 ## The note lines drawn right now, so one can be rewritten in place when a number beside it changes
 ## instead of rebuilding the card under the cursor. Each is {label, field, index}.
 var _notes: Array = []
+## The cards whose play mark is lit (the ones sounding right now), and the mark buttons drawn, by position.
+var _lit: PackedInt32Array = PackedInt32Array()
+var _marks: Dictionary = {}
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -100,6 +106,46 @@ func set_value(cards: Array) -> void:
 
 func get_value() -> Array:
 	return _cards.duplicate(true)
+
+
+## Whether the schema asks for a play mark on each card and a "Play from here" entry in each menu.
+func _marks_wanted() -> bool:
+	var marks: Variant = _schema.get("marks")
+	return marks is Dictionary and (marks as Dictionary).get("run") is Callable
+
+
+## Hands a play request to the schema's handler, with the object this list belongs to.
+func _run_mark(action: String, index: int) -> void:
+	var marks: Variant = _schema.get("marks")
+	if marks is Dictionary and (marks as Dictionary).get("run") is Callable and _edited != null:
+		((marks as Dictionary).get("run") as Callable).call(_edited, action, index)
+
+
+## A mark pressed: plays that card alone, or stops it while it is sounding.
+func _on_mark_pressed(index: int) -> void:
+	_run_mark("stop" if _lit.has(index) else "play_one", index)
+
+
+## Lights the marks of the cards that are sounding. Done in place: the cards are not rebuilt, so a
+## number being typed in an open card is not lost to a frame of the preview.
+func set_marks(lit: PackedInt32Array) -> void:
+	_lit = lit
+	for index: Variant in _marks:
+		_paint_mark(int(index))
+
+
+## One mark in its resting or sounding look: the editor's Play icon, or its Stop icon while it sounds.
+func _paint_mark(index: int) -> void:
+	var mark: Button = _marks.get(index) as Button
+	if mark == null or not is_instance_valid(mark):
+		return
+	var sounding: bool = _lit.has(index)
+	var picture: Texture2D = EventSheetLookStyle.icon(&"Stop" if sounding else &"Play")
+	if picture != null:
+		mark.icon = picture
+	else:
+		mark.text = "■" if sounding else "▶"
+	mark.tooltip_text = EventSheetL10n.translate("Stop.") if sounding else EventSheetL10n.translate("Play this card alone.")
 
 
 ## Tells the drawer which object it is editing, and builds the footer the schema declares for it
@@ -439,6 +485,7 @@ func _rebuild() -> void:
 		_list.remove_child(stale)
 		stale.queue_free()
 	_notes.clear()
+	_marks.clear()
 	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
@@ -516,6 +563,12 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	badge.visible = not badge_text.is_empty()
 	inside.add_child(badge)
 	header.add_child(line)
+	if _marks_wanted():
+		var mark: Button = EventSheetLookStyle.icon_button(&"Play", "▶", EventSheetL10n.translate("Play this card alone."))
+		mark.pressed.connect(func() -> void: _on_mark_pressed(index))
+		_marks[index] = mark
+		_paint_mark(index)
+		inside.add_child(mark)
 	var remove: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this card."))
 	remove.disabled = not editable
 	remove.pressed.connect(func() -> void: remove_card(index))
@@ -601,6 +654,9 @@ func _build_menu(index: int) -> Control:
 func _fill_card_menu(popup: PopupMenu) -> void:
 	for item: String in ["Duplicate", "Copy", "Paste over", "Move to top", "Move up", "Move down", "Remove"]:
 		popup.add_item(item)
+	if _marks_wanted():
+		popup.add_separator()
+		popup.add_item(EventSheetL10n.translate("Play from here"), MENU_PLAY_FROM)
 
 
 ## Opens the card's menu at a screen point, for a right click on its line.
@@ -631,6 +687,8 @@ func _on_menu(index: int, id: int) -> void:
 			move_card(index, index + 1)
 		6:
 			remove_card(index)
+		MENU_PLAY_FROM:
+			_run_mark("play_from", index)
 
 
 ## The unfolded card: what this kind explains, then its own fields, then what the running game is

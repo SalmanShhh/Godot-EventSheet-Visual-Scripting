@@ -135,7 +135,11 @@ static func restore_all() -> void:
 ## for this object and has it play the part of the list asked for.
 static func card_action(object: Object, action: String, index: int) -> void:
 	var strip: Control = strip_for(object)
-	if strip != null and strip.has_method("play_part"):
+	if strip == null:
+		return
+	if action == "stop":
+		strip.call("stop")
+	elif strip.has_method("play_part"):
 		strip.call("play_part", ONE if action == "play_one" else FROM_HERE, index)
 
 
